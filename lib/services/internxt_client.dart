@@ -5,26 +5,22 @@ import 'dart:async';
 import 'dart:typed_data';
 
 class InternxtClient {
-  // Static placeholders
   static const String networkUrl = 'https://placeholder.api';
   static const String driveApiUrl = 'https://placeholder.api';
   static const String appCryptoSecret = 'placeholder';
 
   final ConfigService config;
   bool debugMode = false;
-  
-  // --- ADDED: Public fields needed by Adapter/Extensions ---
+
+  // --- ADDED: Public fields required by Adapter/Extensions ---
   String? userId;
   String? bucketId;
-  String? mnemonic; // Needed by some internals if referenced
+  String? mnemonic; 
   // --------------------------------------------------------
 
-  // Constructor
   InternxtClient({required this.config});
 
-  // --- Auth Stubs ---
   void setAuth(Map<String, dynamic> creds) {
-    // In placeholder mode, we might just store them so checks pass
     userId = creds['userId'];
     bucketId = creds['bucketId'];
   }
@@ -39,7 +35,6 @@ class InternxtClient {
   
   Future<void> refreshToken() async {}
 
-  // --- Path & List Stubs ---
   Future<Map<String, dynamic>> resolvePath(String path) async {
     throw UnsupportedError('Internxt support is currently disabled.');
   }
@@ -52,7 +47,6 @@ class InternxtClient {
     return [];
   }
 
-  // --- File Operation Stubs ---
   Future<void> upload(
     List<String> sources,
     String targetPath, {
@@ -96,12 +90,10 @@ class InternxtClient {
     throw UnsupportedError('Internxt support is currently disabled.');
   }
 
-  // --- Folder Management Stubs ---
   Future<Map<String, dynamic>> createFolderRecursive(String path) async {
     throw UnsupportedError('Internxt support is currently disabled.');
   }
 
-  // --- Delete/Move/Rename Stubs ---
   Future<void> trashItems(String uuid, String type) async {
     throw UnsupportedError('Internxt support is currently disabled.');
   }
@@ -130,7 +122,6 @@ class InternxtClient {
     throw UnsupportedError('Internxt support is currently disabled.');
   }
 
-  // --- Search Stubs ---
   Future<Map<String, List<Map<String, dynamic>>>> search(String query, {bool detailed = false}) async {
     return {'folders': [], 'files': []};
   }
@@ -139,7 +130,6 @@ class InternxtClient {
     return [];
   }
   
-  // --- Misc ---
   Future<void> printTree(
     String path,
     void Function(String) printLine, {

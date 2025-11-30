@@ -43,6 +43,7 @@ dependencies:
   url_launcher: ^6.3.2
   flutter_launcher_icons: ^0.14.4
   macos_secure_bookmarks: ^0.2.1
+  dartssh2: ^2.10.0
 
   # WebDAV Dependencies
   shelf: ^1.4.0

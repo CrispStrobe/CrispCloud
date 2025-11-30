@@ -600,90 +600,97 @@ class _FilePanelState extends State<FilePanel> {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
       color: theme.colorScheme.secondaryContainer,
-      child: LayoutBuilder(
-        builder: (context, constraints) {
-          // Show labels if the bar is wide enough
-          final bool showLabels = constraints.maxWidth > 450;
-          
-          return Row(
-            children: [
-              Icon(
-                Icons.check_circle,
-                size: 20,
-                color: theme.colorScheme.onSecondaryContainer,
-              ),
-              const SizedBox(width: 8),
-              Text(
-                '${selection.length} selected',
-                style: TextStyle(
-                  fontWeight: FontWeight.bold,
+      // FIX: Wrap Row in SingleChildScrollView to prevent overflow
+      child: SingleChildScrollView(
+        scrollDirection: Axis.horizontal,
+        child: LayoutBuilder(
+          builder: (context, constraints) {
+            // Show labels if we have lots of horizontal space (arbitrary breakpoint)
+            // Note: constraints.maxWidth inside SingleChildScrollView is infinite, 
+            // so this check is less effective here, defaulting to icons is safer or use MediaQuery
+            final bool showLabels = MediaQuery.of(context).size.width > 600;
+            
+            return Row(
+              mainAxisSize: MainAxisSize.min, // Shrink wrap children
+              children: [
+                Icon(
+                  Icons.check_circle,
+                  size: 20,
                   color: theme.colorScheme.onSecondaryContainer,
                 ),
-              ),
-              if (totalSize > 0) ...[
                 const SizedBox(width: 8),
                 Text(
-                  '• ${_formatBytes(totalSize)}',
+                  '${selection.length} selected',
                   style: TextStyle(
+                    fontWeight: FontWeight.bold,
                     color: theme.colorScheme.onSecondaryContainer,
                   ),
                 ),
+                if (totalSize > 0) ...[
+                  const SizedBox(width: 8),
+                  Text(
+                    '• ${_formatBytes(totalSize)}',
+                    style: TextStyle(
+                      color: theme.colorScheme.onSecondaryContainer,
+                    ),
+                  ),
+                ],
+                const SizedBox(width: 16),
+
+                // --- RESPONSIVE BUTTONS ---
+                if (widget.side == PanelSide.local && appState.isConnected)
+                  responsiveButton(
+                    icon: Icons.upload,
+                    label: 'Upload',
+                    tooltip: 'Upload',
+                    showLabel: showLabels,
+                    onPressed: () => appState.uploadFiles(files),
+                  ),
+                
+                if (widget.side == PanelSide.remote)
+                  responsiveButton(
+                    icon: Icons.download,
+                    label: 'Download',
+                    tooltip: 'Download',
+                    showLabel: showLabels,
+                    onPressed: () => appState.downloadFiles(files),
+                  ),
+                
+                const SizedBox(width: 8),
+
+                // Other actions as icons
+                IconButton(
+                  icon: const Icon(Icons.content_copy, size: 20),
+                  tooltip: 'Copy to...',
+                  color: theme.colorScheme.onSecondaryContainer,
+                  onPressed: () => _showCopyDialog(context, appState, files),
+                ),
+                IconButton(
+                  icon: const Icon(Icons.drive_file_move, size: 20),
+                  tooltip: 'Move to...',
+                  color: theme.colorScheme.onSecondaryContainer,
+                  onPressed: () => _showMoveDialog(context, appState, files),
+                ),
+                IconButton(
+                  icon: const Icon(Icons.delete, size: 20),
+                  tooltip: 'Delete',
+                  color: theme.colorScheme.onSecondaryContainer,
+                  onPressed: () => _confirmDelete(context, appState, files),
+                ),
+                // --- END RESPONSIVE BUTTONS ---
+
+                const SizedBox(width: 16), // Spacing instead of Spacer inside ScrollView
+                responsiveButton(
+                  icon: Icons.clear,
+                  label: 'Clear',
+                  tooltip: 'Clear selection',
+                  showLabel: showLabels,
+                  onPressed: () => appState.clearSelection(widget.side),
+                ),
               ],
-              const SizedBox(width: 16),
-
-              // --- RESPONSIVE BUTTONS ---
-              if (widget.side == PanelSide.local && appState.isConnected)
-                responsiveButton(
-                  icon: Icons.upload,
-                  label: 'Upload',
-                  tooltip: 'Upload',
-                  showLabel: showLabels,
-                  onPressed: () => appState.uploadFiles(files),
-                ),
-              
-              if (widget.side == PanelSide.remote)
-                responsiveButton(
-                  icon: Icons.download,
-                  label: 'Download',
-                  tooltip: 'Download',
-                  showLabel: showLabels,
-                  onPressed: () => appState.downloadFiles(files),
-                ),
-              
-              if (showLabels) const SizedBox(width: 8),
-
-              // Other actions as icons
-              IconButton(
-                icon: const Icon(Icons.content_copy, size: 20),
-                tooltip: 'Copy to...',
-                color: theme.colorScheme.onSecondaryContainer,
-                onPressed: () => _showCopyDialog(context, appState, files),
-              ),
-              IconButton(
-                icon: const Icon(Icons.drive_file_move, size: 20),
-                tooltip: 'Move to...',
-                color: theme.colorScheme.onSecondaryContainer,
-                onPressed: () => _showMoveDialog(context, appState, files),
-              ),
-              IconButton(
-                icon: const Icon(Icons.delete, size: 20),
-                tooltip: 'Delete',
-                color: theme.colorScheme.onSecondaryContainer,
-                onPressed: () => _confirmDelete(context, appState, files),
-              ),
-              // --- END RESPONSIVE BUTTONS ---
-
-              const Spacer(),
-              responsiveButton(
-                icon: Icons.clear,
-                label: 'Clear',
-                tooltip: 'Clear selection',
-                showLabel: showLabels,
-                onPressed: () => appState.clearSelection(widget.side),
-              ),
-            ],
-          );
-        },
+            );
+          },
+        ),
       ),
     );
   }

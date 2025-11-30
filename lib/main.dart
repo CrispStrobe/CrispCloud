@@ -12,6 +12,7 @@ import 'dart:io';
 
 import 'services/filen_config_service.dart';
 import 'services/internxt_client.dart' show ConfigService; //
+import 'services/sftp_config_service.dart';
 
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -64,6 +65,9 @@ Future<CloudProvider> _getDefaultProvider() async {
       case 'internxt':
         print('✅ Using saved provider: Internxt');
         return CloudProvider.internxt;
+      case 'sftp': 
+        print('✅ Using saved provider: SFTP');
+        return CloudProvider.sftp;
       default:
         print('⚠️ Unknown provider: $providerName, defaulting to Filen');
         return CloudProvider.filen;
@@ -82,6 +86,9 @@ Future<dynamic> _createConfigService(String configPath, CloudProvider provider) 
       case CloudProvider.filen:
         print('🔧 Creating Filen config service');
         return FilenConfigService(configPath: configPath);
+      case CloudProvider.sftp:
+        print('🔧 Creating SFTP config service');
+        return SFTPConfigService(configPath: configPath);
       case CloudProvider.internxt:
         // Only attempt to create if supported
         if (CloudStorageFactory.isInternxtSupported) {

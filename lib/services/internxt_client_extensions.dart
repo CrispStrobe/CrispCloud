@@ -5,20 +5,13 @@ import 'dart:typed_data';
 
 extension InternxtClientExtensions on InternxtClient {
   Future<Map<String, dynamic>> listPath(String path) async {
-    // 1. Resolve Path
-    // The client method returns a Map<String, dynamic>
     final resolved = await resolvePath(path);
-    
-    // Check if resolvePath threw or returned error structure (depending on implementation)
-    // The placeholder throws UnsupportedError, which will propagate up.
-    
+    // resolvePath might throw if disabled, or return map if enabled
     if (resolved['type'] != 'folder') {
       throw Exception('Path is not a folder: $path');
     }
     
     final folderId = resolved['uuid'];
-    
-    // IMPORTANT: Pass detailed: true to get date fields
     final folders = await listFolders(folderId, detailed: true);
     final files = await listFolderFiles(folderId, detailed: true);
     
@@ -39,12 +32,9 @@ extension InternxtClientExtensions on InternxtClient {
     await tempFile.writeAsBytes(fileData);
     
     try {
-      // Access fields on 'this' (the InternxtClient instance)
-      final currentUserId = this.userId;
-      final currentBucketId = this.bucketId;
-
-      if (currentUserId == null || currentBucketId == null) {
-        throw Exception('Not authenticated (missing userId or bucketId)');
+      // FIX: Access fields directly
+      if (this.userId == null || this.bucketId == null) {
+        throw Exception('Not authenticated');
       }
       
       final batchId = 'upload_${DateTime.now().millisecondsSinceEpoch}';
@@ -57,11 +47,10 @@ extension InternxtClientExtensions on InternxtClient {
         preserveTimestamps: false,
         include: [],
         exclude: [],
-        bridgeUser: currentBucketId, // bridgeUser is often the bucketId in Internxt legacy logic
-        userIdForAuth: currentUserId,
+        bridgeUser: this.bucketId!,
+        userIdForAuth: this.userId!,
         batchId: batchId,
         saveStateCallback: (state) async {},
-        initialBatchState: null,
       );
     } finally {
       if (await tempFile.exists()) {
@@ -76,16 +65,13 @@ extension InternxtClientExtensions on InternxtClient {
     Function(int, int)? onProgress,
   }) async {
     final resolved = await resolvePath(remotePath);
-    // If resolvePath succeeds, 'resolved' is not null in current implementation
     
     if (resolved['type'] != 'file') {
       throw Exception('Path is not a file: $remotePath');
     }
     
-    final currentUserId = this.userId;
-    final currentBucketId = this.bucketId;
-
-    if (currentUserId == null || currentBucketId == null) {
+    // FIX: Access fields directly
+    if (this.userId == null || this.bucketId == null) {
       throw Exception('Not authenticated');
     }
     
@@ -100,25 +86,20 @@ extension InternxtClientExtensions on InternxtClient {
       preserveTimestamps: false,
       include: [],
       exclude: [],
-      bridgeUser: currentBucketId,
-      userIdForAuth: currentUserId,
+      bridgeUser: this.bucketId!,
+      userIdForAuth: this.userId!,
       batchId: batchId,
       saveStateCallback: (state) async {},
-      initialBatchState: null,
     );
     
-    // Move if the filename differed
     final expectedPath = '$localDir/${resolved['name']}';
-    // Simple check if download saved as original name but we wanted 'localPath' name
     if (expectedPath != localPath && File(expectedPath).existsSync()) {
       try {
         if (File(localPath).existsSync()) {
           await File(localPath).delete();
         }
         await File(expectedPath).rename(localPath);
-      } catch (e) {
-        print('⚠️ Could not rename downloaded file: $e');
-      }
+      } catch (_) {}
     }
   }
 

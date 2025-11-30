@@ -2,6 +2,7 @@
 import 'dart:typed_data';
 import 'filen_client_adapter.dart';
 import 'internxt_client_adapter.dart'; //
+import 'sftp_client_adapter.dart';
 
 /// Abstract interface for cloud storage providers
 abstract class CloudStorageClient {
@@ -47,6 +48,7 @@ abstract class CloudStorageClient {
 enum CloudProvider {
   filen,
   internxt,
+  sftp
 }
 
 /// Factory for creating cloud storage clients
@@ -62,16 +64,14 @@ class CloudStorageFactory {
       if (config.runtimeType.toString().contains('Filen')) {
          return FilenClientAdapter(config: config);
       }
-      // If we are stuck with Internxt config but it's disabled, we can't easily switch 
-      // without re-initializing main.dart. 
-      // In this case, we create the adapter but it might be unused.
-      // Better approach: Since we control the UI, the user shouldn't reach here.
     }
 
     try {
       switch (provider) {
         case CloudProvider.filen:
           return FilenClientAdapter(config: config);
+        case CloudProvider.sftp:
+          return SFTPClientAdapter(config: config);
         case CloudProvider.internxt:
           if (isInternxtSupported) {
              return InternxtClientAdapter(config: config);

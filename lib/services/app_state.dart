@@ -4,9 +4,18 @@ import '../models/file_item.dart';
 import '../models/operation_progress.dart';
 import 'dart:io';
 import 'package:path/path.dart' as p;
+import 'package:shared_preferences/shared_preferences.dart';
+
 import 'cloud_storage_interface.dart';
+
 import 'filen_client_adapter.dart';
 import 'internxt_client_adapter.dart';
+import 'sftp_client_adapter.dart';
+
+import 'filen_config_service.dart'; // Needed for type checking
+import 'sftp_config_service.dart';  // Needed for switching
+import 'internxt_client.dart';      // Needed for type checking
+
 import 'share_service.dart';
 import 'receive_service.dart';
 import 'local_file_service.dart'; 
@@ -19,7 +28,8 @@ class AppState extends ChangeNotifier {
   // Cloud storage abstraction
   CloudProvider _currentProvider = CloudProvider.filen;
   late CloudStorageClient _cloudClient;
-  final dynamic _config;
+  dynamic _config;
+  String _configPath = ''; // Store path to recreate configs
 
   late final LocalFileService _localFileService; 
 
@@ -241,6 +251,11 @@ class AppState extends ChangeNotifier {
       : _config = config,
         _currentProvider = initialProvider ?? CloudProvider.filen,
         _localFileService = LocalFileService() {
+
+    // EXTRACT PATH from initial config to reuse when switching
+    if (config is FilenConfigService) _configPath = config.configPath;
+    else if (config is SFTPConfigService) _configPath = config.configPath;
+    else if (config is ConfigService) _configPath = config.configPath;
     
     // Initialize cloud client based on provider
     _cloudClient = CloudStorageFactory.create(_currentProvider, config: config);
@@ -257,27 +272,46 @@ class AppState extends ChangeNotifier {
   Future<void> switchProvider(CloudProvider provider) async {
     if (_currentProvider == provider) return;
     
-    print('🔄 Switching cloud provider from $_currentProvider to $provider');
+    print('🔄 Switching cloud provider to $provider');
     
-    // Logout from current provider
     if (_isConnected) {
       await logout();
     }
     
-    // Switch to new provider
+    // 1. Save Preference
+    final prefs = await SharedPreferences.getInstance();
+    String providerKey;
+    switch (provider) {
+      case CloudProvider.filen: providerKey = 'filen'; break;
+      case CloudProvider.sftp: providerKey = 'sftp'; break;
+      case CloudProvider.internxt: providerKey = 'internxt'; break;
+    }
+    await prefs.setString('cloud_provider', providerKey);
+    print('💾 Saved provider preference: $providerKey');
+
+    // 2. Instantiate correct config service
+    // This ensures the new adapter gets the right config type with the correct path
+    if (provider == CloudProvider.filen) {
+      _config = FilenConfigService(configPath: _configPath);
+    } else if (provider == CloudProvider.sftp) {
+      _config = SFTPConfigService(configPath: _configPath);
+    } else if (provider == CloudProvider.internxt) {
+      _config = ConfigService(configPath: _configPath);
+    }
+
+    // 3. Create Client
     _currentProvider = provider;
     _cloudClient = CloudStorageFactory.create(provider, config: _config);
-    
-    
-    
     _remotePath = _cloudClient.rootPath;
     _remoteFiles = null;
     
+    // 4. Try auto-login with new provider
+    await _attemptAutoLogin();
+    
     notifyListeners();
-    print('✅ Switched to $provider');
   }
 
-  // NEW: Getters for cloud client info
+  // Getters for cloud client info
   CloudProvider get currentProvider => _currentProvider;
   String get providerName => _cloudClient.providerName;
   CloudStorageClient get client => _cloudClient;
@@ -393,57 +427,53 @@ class AppState extends ChangeNotifier {
   }
 
   Future<void> _attemptAutoLogin() async {
+    print('🔄 Attempting auto-login for provider: ${_cloudClient.providerName}');
+    
     try {
       if (_cloudClient is InternxtClientAdapter) {
         final adapter = _cloudClient as InternxtClientAdapter;
         final creds = await adapter.config.readCredentials();
-        if (creds == null || creds['token'] == null || creds['mnemonic'] == null) {
-          print('⚠️ No saved credentials found');
-          return;
+        if (creds == null || creds['token'] == null) {
+           print('⚠️ Internxt: No credentials found');
+           return;
         }
-
-        print('🔄 Attempting auto-login...');
-        
         adapter.setAuth(creds);
         _userEmail = creds['email'];
         _isConnected = true;
-        
-        print('✅ Auto-login successful');
-        print('   Email: $_userEmail');
-        
         await refreshPanel(PanelSide.remote);
         notifyListeners();
       } else if (_cloudClient is FilenClientAdapter) {
         final adapter = _cloudClient as FilenClientAdapter;
         final creds = await adapter.filenConfig.readCredentials();
-        
         if (creds == null || creds['email'] == null) {
-          print('⚠️ No saved credentials found');
-          return;
+           print('⚠️ Filen: No credentials found');
+           return;
         }
-
-        print('🔄 Attempting auto-login...');
-        
-        // FIX: Check for API key and use setAuth to restore FULL state.
         if (creds['apiKey'] != null && creds['apiKey']!.isNotEmpty) {
-          // Use the client's native method to restore state (keys, root UUID, etc.)
           adapter.client.setAuth(creds);
-          
           _userEmail = creds['email'];
           _isConnected = true;
+          await refreshPanel(PanelSide.remote);
+          notifyListeners();
+        }
+      } else if (_cloudClient is SFTPClientAdapter) {
+        final adapter = _cloudClient as SFTPClientAdapter;
+        final creds = await adapter.config.readCredentials();
+        
+        if (creds != null && creds['host'] != null && creds['username'] != null) {
+          _userEmail = '${creds['username']}@${creds['host']}';
+          _isConnected = true;
+          print('✅ SFTP: Auto-login successful for $_userEmail');
           
-          print('✅ Auto-login successful');
-          print('   Email: $_userEmail');
-          
-          // Refresh immediately to confirm access
+          // Force a refresh to list files immediately
           await refreshPanel(PanelSide.remote);
           notifyListeners();
         } else {
-          print('⚠️ API key missing in credentials');
+          print('⚠️ SFTP: No saved credentials found');
         }
       }
     } catch (e) {
-      print('⚠️ Auto-login failed: $e');
+      print('⚠️ Auto-login exception: $e');
       _lastError = 'Session expired. Please log in again.';
       _isConnected = false;
       notifyListeners();
@@ -534,70 +564,55 @@ class AppState extends ChangeNotifier {
     notifyListeners();
   }
 
-  // CHANGED: Uses cloud client abstraction
   Future<void> refreshPanel(PanelSide side) async {
     if (side == PanelSide.local) {
       await _loadLocalFiles();
     } else {
       try {
-        if (!_cloudClient.isAuthenticated) {
-          print('⚠️ Not authenticated, attempting auto-login...');
+        // FIX: Only attempt auto-login if we are NOT authenticated AND NOT logically connected.
+        // SFTP is often !isAuthenticated (socket closed) but _isConnected (creds loaded).
+        if (!_cloudClient.isAuthenticated && !_isConnected) {
           await _attemptAutoLogin();
-          
-          if (!_cloudClient.isAuthenticated) {
-            print('⚠️ Auto-login failed, user needs to login manually');
+          // If still not connected after attempt, clear files and return
+          if (!_isConnected) {
             _remoteFiles = [];
-            _lastError = 'Session expired. Please log in again.';
             notifyListeners();
             return;
           }
         }
-
-        print('📁 Loading remote path: $_remotePath');
+        
         final result = await _cloudClient.listPath(_remotePath);
         
-        final folders = (result['folders'] as List<dynamic>?)
-            ?.map((item) {
+        final folders = (result['folders'] as List<dynamic>?)?.map((item) {
               final map = item as Map<String, dynamic>;
-              final folderName = map['name'] ?? 'Unknown Folder';
-              final modTime = map['modificationTime'] ?? 
-                            map['updatedAt'] ?? 
-                            map['creationTime'] ?? 
-                            map['createdAt'];
               DateTime? folderDate;
-              if (modTime != null) {
-                try {
-                  folderDate = DateTime.parse(modTime.toString());
-                } catch (e) {
-                  print('⚠️ Could not parse folder date: $modTime');
-                }
+              if (map['modificationTime'] != null) {
+                try { folderDate = DateTime.parse(map['modificationTime'].toString()); } catch (_) {}
               }
               return FileItem(
-                name: folderName,
+                name: map['name'] ?? 'Unknown',
                 isFolder: true,
                 uuid: map['uuid'],
                 updatedAt: folderDate,
               );
-            })
-            .toList() ?? [];
+            }).toList() ?? [];
 
-        final files = (result['files'] as List<dynamic>?)
-            ?.map((item) {
+        final files = (result['files'] as List<dynamic>?)?.map((item) {
               final map = item as Map<String, dynamic>;
               final fileName = map['name'] ?? 'Unknown';
-              final fileType = map['fileType'] ?? map['type'] ?? '';
-              final fullName = fileType.isNotEmpty ? '$fileName.$fileType' : fileName;
+              
+              // Logic to handle extensions ONLY if the provider separates them (like Internxt)
+              final rawType = map['fileType'] ?? map['type'] ?? '';
+              final fileType = rawType.toString().toLowerCase();
+              
+              String fullName = fileName;
+              if (fileType.isNotEmpty && fileType != 'file' && !fileName.toLowerCase().endsWith('.$fileType')) {
+                 fullName = '$fileName.$rawType';
+              }
+                  
               DateTime? fileDate;
-              final modTime = map['modificationTime'] ?? 
-                            map['updatedAt'] ?? 
-                            map['creationTime'] ?? 
-                            map['createdAt'];
-              if (modTime != null) {
-                try {
-                  fileDate = DateTime.parse(modTime.toString());
-                } catch (e) {
-                  print('⚠️ Could not parse file date: $modTime');
-                }
+              if (map['modificationTime'] != null) {
+                try { fileDate = DateTime.parse(map['modificationTime'].toString()); } catch (_) {}
               }
               return FileItem(
                 name: fullName,
@@ -606,19 +621,16 @@ class AppState extends ChangeNotifier {
                 uuid: map['uuid'],
                 updatedAt: fileDate,
               );
-            })
-            .toList() ?? [];
+            }).toList() ?? [];
 
-        final items = [...folders, ...files];
-        _remoteFiles = items;
-        
+        _remoteFiles = [...folders, ...files];
         _sortFiles(_remoteFiles, _remoteSortBy, _remoteSortOrder);
-        print('✅ Loaded ${_remoteFiles?.length ?? 0} remote items');
         _lastError = null; 
         notifyListeners();
-      } catch (e, stackTrace) {
-        print('❌ Error refreshing remote files: $e');
-        print('Stack trace: $stackTrace');
+      } catch (e) {
+        // Don't clear files on temporary network errors if possible, 
+        // but for now we follow standard pattern
+        print('❌ Refresh Error: $e');
         _remoteFiles = [];
         _lastError = e.toString(); 
         notifyListeners();
@@ -789,7 +801,6 @@ class AppState extends ChangeNotifier {
   
   // File operations
   
-  // CHANGED: Upload now uses cloud client abstraction
   Future<void> uploadFiles(List<FileItem> files, {String? targetPath}) async {
     if (kIsWeb) {
       _lastError = 'File upload not supported on web.';
@@ -808,10 +819,17 @@ class AppState extends ChangeNotifier {
     
     // Get credentials (provider-specific)
     Map<String, String>? creds;
+    String? identityLog; // For logging purposes
+
     if (_cloudClient is InternxtClientAdapter) {
       creds = await (_cloudClient as InternxtClientAdapter).config.readCredentials();
+      identityLog = creds?['email'];
     } else if (_cloudClient is FilenClientAdapter) {
       creds = await (_cloudClient as FilenClientAdapter).filenConfig.readCredentials();
+      identityLog = creds?['email'];
+    } else if (_cloudClient is SFTPClientAdapter) {
+      creds = await (_cloudClient as SFTPClientAdapter).config.readCredentials();
+      if (creds != null) identityLog = '${creds['username']}@${creds['host']}';
     }
     
     if (creds == null) {
@@ -819,8 +837,7 @@ class AppState extends ChangeNotifier {
       throw Exception('Not authenticated');
     }
     
-    print('✅ Credentials loaded:');
-    print('   Email: ${creds['email']}');
+    print('✅ Credentials loaded for: $identityLog');
     
     print('');
     print('📊 Calculating sizes...');
@@ -1076,10 +1093,16 @@ class AppState extends ChangeNotifier {
     final target = localPath ?? _localFileService.currentPath;
     
     Map<String, String>? creds;
+    String? identityLog;
     if (_cloudClient is InternxtClientAdapter) {
       creds = await (_cloudClient as InternxtClientAdapter).config.readCredentials();
+      identityLog = creds?['email'];
     } else if (_cloudClient is FilenClientAdapter) {
       creds = await (_cloudClient as FilenClientAdapter).filenConfig.readCredentials();
+      identityLog = creds?['email'];
+    } else if (_cloudClient is SFTPClientAdapter) {
+      creds = await (_cloudClient as SFTPClientAdapter).config.readCredentials();
+      if (creds != null) identityLog = '${creds['username']}@${creds['host']}';
     }
     
     if (creds == null) {
@@ -1087,8 +1110,7 @@ class AppState extends ChangeNotifier {
       throw Exception('Not authenticated');
     }
     
-    print('✅ Credentials loaded:');
-    print('   Email: ${creds['email']}');
+    print('✅ Credentials loaded for: $identityLog');
     
     print('');
     print('📊 Preparing download...');
