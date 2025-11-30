@@ -1,57 +1,61 @@
 # Cloud Storage Client (Unofficial)
 
-An unofficial, cross-platform Flutter client for secure cloud storage services, currently supporting **Filen.io**.
+An unofficial, cross-platform Flutter client for secure cloud storage services, currently supporting **Filen.io** and **SFTP** (Secure File Transfer Protocol).
 
 This client provides a robust **two-panel Commander-style interface** for managing your local files and your remote cloud drive side-by-side, focusing on speed, efficiency, privacy, and batch operations.
 
 ## ⚠️ Disclaimer
 
-This is an unofficial, open-source project and is **not** affiliated with, endorsed by, or supported by **Filen.io**. It is a personal project built for learning and to provide an alternative interface. It is work in progress. Use it at your own risk.
+This is an unofficial, open-source project and is **not** affiliated with, endorsed by, or supported by **Filen.io** or any other storage cloud probider. It is a personal project built for learning and to provide an alternative interface. It is work in progress. Use it at your own risk.
 
 ## Features
 
-* **Provider Support:**
-    * **Filen.io:** Upload, Download, file management.
-* **Cross-Platform:** Runs on **macOS**, **Windows**, **Linux**, **Android**, and **iOS**.
-* **Two-Panel View:** efficient "Commander" interface for moving files between Local and Remote.
-* **MacOS Security Scoped Bookmarks:** Support for macOS App Sandbox permissions. The app remembers granted folder access across restarts.
-* **Resumable Operations:** Auto-login and state restoration for seamless sessions.
-* **Batch Operations:**
-    * **Recursive Upload/Download:** Transfer entire folder structures.
-    * **Queuing:** Manage multiple transfers with a progress panel.
-    * **Conflict Resolution:** Options to skip, overwrite, or rename files.
-* **File Management:** Create folders, Rename, Move, Copy, and Delete (Trash/Permanent).
-* **Search & Find:**
-    * **Deep Search:** Recursively find files within the cloud drive.
-    * **Pattern Matching:** Supports glob patterns (e.g., `*.pdf`).
-* **Keyboard Centric:** Fully navigable via keyboard shortcuts.
+  * **Provider Support:**
+      * **Filen.io:** End-to-end encrypted Upload, Download, and file management.
+      * **SFTP:** Support for standard SFTP connections (e.g. for Hetzner Storage Boxes, or self-hosted NAS devices).
+  * **Cross-Platform:** Runs on **macOS**, **Windows**, **Linux**, **Android**, and **iOS**.
+  * **Two-Panel View:** Efficient "Commander" interface for moving files between Local and Remote.
+  * **MacOS Security Scoped Bookmarks:** Support for macOS App Sandbox permissions. The app remembers granted folder access across restarts.
+  * **Resumable Operations:** Auto-login and state restoration for seamless sessions.
+  * **Batch Operations:**
+      * **Recursive Upload/Download:** Transfer entire folder structures.
+      * **Queuing:** Manage multiple transfers with a progress panel.
+      * **Conflict Resolution:** Options to skip, overwrite, or rename files.
+  * **File Management:** Create folders, Rename, Move, Copy, and Delete (Trash/Permanent).
+  * **Search & Find:**
+      * **Deep Search:** Recursively find files within the cloud drive.
+      * **Pattern Matching:** Supports glob patterns (e.g., `*.pdf`).
+  * **Keyboard Centric:** Fully navigable via keyboard shortcuts.
 
 ## Getting Started
 
 ### Prerequisites
 
-* [Flutter SDK](https://flutter.dev/docs/get-started/install) (>=3.0.0)
-* A Filen.io account (or Internxt if enabling that module).
+  * [Flutter SDK](https://flutter.dev/docs/get-started/install) (\>=3.0.0)
+  * A Filen.io account, or credentials for an SFTP server (Host, Username, Password/Key).
 
 ### Installation
 
 1.  **Clone the repository:**
+
     ```bash
-    git clone [https://github.com/CrispStrobe/cloud-dart.git](https://github.com/CrispStrobe/cloud-dart.git)
+    git clone https://github.com/CrispStrobe/cloud-dart.git
     cd cloud-dart
     ```
 
 2.  **Get dependencies:**
+
     ```bash
     flutter pub get
     ```
 
 3.  **Run the app:**
     Select your target device and run:
+
     ```bash
     # For macOS
     flutter run -d macos
-    
+
     # For Windows
     flutter run -d windows
     ```
@@ -80,9 +84,10 @@ The interface is designed for speed. Use these keys to navigate:
 
 This project uses a modular Adapter pattern to abstract specific cloud provider APIs:
 
-* **`CloudStorageClient`**: The abstract interface defining common operations (login, list, upload, download).
-* **`FilenClientAdapter`**: Implementation using the Filen API.
-* **`LocalFileService`**: Abstracts file system access to handle platform differences (e.g., macOS Scoped Bookmarks vs. standard `dart:io`).
+  * **`CloudStorageClient`**: The abstract interface defining common operations (login, list, upload, download).
+  * **`FilenClientAdapter`**: Implementation using the Filen API.
+  * **`SFTPClientAdapter`**: Implementation using `dartssh2` for generic SFTP support.
+  * **`LocalFileService`**: Abstracts file system access to handle platform differences (e.g., macOS Scoped Bookmarks vs. standard `dart:io`).
 
 ## 📄 License
 
