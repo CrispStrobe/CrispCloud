@@ -1,6 +1,6 @@
 # Cloud Storage Client (Unofficial)
 
-An unofficial, cross-platform Flutter client for secure cloud storage services, currently supporting **Filen.io** and **SFTP** (Secure File Transfer Protocol).
+An unofficial, cross-platform Flutter client for secure cloud storage services, currently supporting **Filen.io**, **WebDAV** and **SFTP** (Secure File Transfer Protocol).
 
 This client provides a robust **two-panel Commander-style interface** for managing your local files and your remote cloud drive side-by-side, focusing on speed, efficiency, privacy, and batch operations.
 
@@ -12,6 +12,7 @@ This is an unofficial, open-source project and is **not** affiliated with, endor
 
   * **Provider Support:**
       * **Filen.io:** End-to-end encrypted Upload, Download, and file management.
+      * **WebDAV:** Standard operations.
       * **SFTP:** Support for standard SFTP connections (e.g. for Hetzner Storage Boxes, or self-hosted NAS devices).
   * **Cross-Platform:** Runs on **macOS**, **Windows**, **Linux**, **Android**, and **iOS**.
   * **Two-Panel View:** Efficient "Commander" interface for moving files between Local and Remote.
@@ -32,7 +33,7 @@ This is an unofficial, open-source project and is **not** affiliated with, endor
 ### Prerequisites
 
   * [Flutter SDK](https://flutter.dev/docs/get-started/install) (\>=3.0.0)
-  * A Filen.io account, or credentials for an SFTP server (Host, Username, Password/Key).
+  * A Filen.io account, or credentials for an SFTP or WebDAV server (Host and Port, Username, Password/Key).
 
 ### Installation
 
@@ -87,6 +88,7 @@ This project uses a modular Adapter pattern to abstract specific cloud provider 
   * **`CloudStorageClient`**: The abstract interface defining common operations (login, list, upload, download).
   * **`FilenClientAdapter`**: Implementation using the Filen API.
   * **`SFTPClientAdapter`**: Implementation using `dartssh2` for generic SFTP support.
+  * **`WebDAVClientAdapter`**: Implementation using `webdav_client` for generic WebDAV support.
   * **`LocalFileService`**: Abstracts file system access to handle platform differences (e.g., macOS Scoped Bookmarks vs. standard `dart:io`).
 
 ## 📄 License
