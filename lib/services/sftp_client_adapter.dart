@@ -4,6 +4,8 @@ import 'dart:io';
 import 'dart:typed_data';
 import 'package:dartssh2/dartssh2.dart';
 import 'package:path/path.dart' as p;
+import 'package:web_socket_channel/web_socket_channel.dart';
+import 'package:flutter/foundation.dart'; // for kIsWeb
 
 import 'cloud_storage_interface.dart';
 import 'sftp_config_service.dart'; 
@@ -52,27 +54,55 @@ class SFTPClientAdapter implements CloudStorageClient {
     _username = creds['username'];
     _host = creds['host'];
     final password = creds['password'];
-    _port = int.tryParse(creds['port'] ?? '23') ?? 23;
+    _port = int.tryParse(creds['port'] ?? '22') ?? 22;
 
     if (_host == null || _username == null || password == null) {
-       throw Exception('Incomplete credentials');
+      throw Exception('Incomplete credentials');
     }
 
     try {
-      final socket = await SSHSocket.connect(_host!, _port);
-      
-      _sshClient = SSHClient(
-        socket,
-        username: _username!,
-        onPasswordRequest: () => password,
-      );
-      
+      if (kIsWeb) {
+        print('🌐 Web Environment: Connecting via WebSocket to $_host...');
+
+        // 1. Determine WebSocket URI
+        Uri uri;
+        if (_host!.startsWith('ws://') || _host!.startsWith('wss://')) {
+          uri = Uri.parse(_host!);
+        } else {
+          // Default to ws://HOST:PORT if no scheme provided
+          uri = Uri.parse('ws://$_host:$_port');
+        }
+
+        // 2. Connect WebSocket
+        final wsChannel = WebSocketChannel.connect(uri);
+        await wsChannel.ready;
+
+        // 3. Wrap in SSHSocket implementation (Fixes the type error)
+        final sshSocket = WebSSHSocket(wsChannel);
+
+        _sshClient = SSHClient(
+          sshSocket,
+          username: _username!,
+          onPasswordRequest: () => password,
+        );
+      } else {
+        // Native TCP Connection
+        final socket = await SSHSocket.connect(_host!, _port);
+        
+        _sshClient = SSHClient(
+          socket,
+          username: _username!,
+          onPasswordRequest: () => password,
+        );
+      }
+
       await _sshClient!.authenticated;
       _sftp = await _sshClient!.sftp();
     } catch (e) {
       _sshClient?.close();
       _sshClient = null;
       _sftp = null;
+      print('❌ SFTP Connection Error: $e');
       throw Exception('Connection failed: $e');
     }
   }
@@ -354,4 +384,57 @@ class SFTPClientAdapter implements CloudStorageClient {
     final newPath = p.posix.join(p.dirname(path), newName);
     await _sftp!.rename(path, newPath);
   }
+}
+
+// --- HELPER CLASSES FOR WEB SOCKET SFTP ---
+
+/// Wraps a WebSocketChannel to implement the SSHSocket interface.
+/// This allows dartssh2 to use WebSockets on the web.
+class WebSSHSocket implements SSHSocket {
+  final WebSocketChannel _ws;
+
+  WebSSHSocket(this._ws);
+
+  @override
+  Stream<Uint8List> get stream => _ws.stream.map((event) {
+        if (event is Uint8List) return event;
+        if (event is List<int>) return Uint8List.fromList(event);
+        throw FormatException('Invalid payload from WebSocket: ${event.runtimeType}');
+      });
+
+  @override
+  StreamSink<Uint8List> get sink => _WebSSHSink(_ws.sink);
+
+  @override
+  Future<void> close() => _ws.sink.close();
+
+  @override
+  Future<void> get done => _ws.sink.done;
+
+  @override
+  void destroy() {
+    _ws.sink.close();
+  }
+}
+
+/// Helper sink to cast Uint8List to dynamic for WebSocketChannel
+class _WebSSHSink implements StreamSink<Uint8List> {
+  final StreamSink _sink;
+  _WebSSHSink(this._sink);
+
+  @override
+  void add(Uint8List event) => _sink.add(event);
+
+  @override
+  void addError(Object error, [StackTrace? stackTrace]) =>
+      _sink.addError(error, stackTrace);
+
+  @override
+  Future addStream(Stream<Uint8List> stream) => _sink.addStream(stream);
+
+  @override
+  Future close() => _sink.close();
+
+  @override
+  Future get done => _sink.done;
 }

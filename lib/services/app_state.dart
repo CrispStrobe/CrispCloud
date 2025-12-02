@@ -372,38 +372,43 @@ class AppState extends ChangeNotifier {
       
       if (entities == null) {
          _localFiles = [];
+         // On web, empty list might just mean no folder selected yet
          if (!kIsWeb) _lastError = 'Local file access is not supported on this platform.';
          notifyListeners();
          return;
       }
 
       final items = <FileItem>[];
-      print('📦 Found ${entities.length} entities');
+      // print('📦 Found ${entities.length} entities');
 
       for (final entity in entities) {
         try {
           final name = p.basename(entity.path);
           if (name.startsWith('.')) continue;
 
-          // --- FIX START: HANDLE WEB SEPARATELY ---
+          // --- WEB SPECIFIC LOGIC ---
           if (kIsWeb) {
-            // On web, we cannot stat() virtual files.
-            // We rely on the type we created in WebFileService.
             final isFolder = entity is Directory;
-            
-            // We can't get size/date easily here without async overhead, 
-            // so we set defaults for the list view.
+            int size = 0;
+            DateTime updated = DateTime.now();
+
+            if (!isFolder) {
+              // Retrieve real size from WebFileService
+              final meta = _localFileService.getWebMetadata(entity.path);
+              size = meta['size'] ?? 0;
+              updated = meta['modified'] ?? DateTime.now();
+            }
+
             items.add(FileItem(
               name: name,
               path: entity.path,
               isFolder: isFolder,
-              size: 0,
-              updatedAt: DateTime.now(),
-              // We pass the XFile if available in future improvements
+              size: size,
+              updatedAt: updated,
             ));
             continue; 
           }
-          // --- FIX END ---
+          // --- Web logic end ---
 
           final stat = await entity.stat(); 
           if (stat.type == FileSystemEntityType.directory) {
@@ -423,19 +428,17 @@ class AppState extends ChangeNotifier {
             ));
           }
         } catch (e) {
-          print('Error processing file $entity: $e');
           continue;
         }
       }
 
       _localFiles = items;
       _sortFiles(_localFiles, _localSortBy, _localSortOrder);
-      print('✅ Loaded ${_localFiles?.length ?? 0} local items');
+      // print('✅ Loaded ${_localFiles?.length ?? 0} local items');
       _lastError = null;
       notifyListeners();
     } catch (e, stackTrace) {
       if (!kIsWeb && (e is PathAccessException || e.toString().contains('Operation not permitted') || e.toString().contains('Permission denied'))) {
-        print('⚠️ Permission denied for: ${localPath}');
         _localFiles = [];
         _lastError = 'Permission denied. Use the Browse button (folder icon) to grant access.';
         notifyListeners();
@@ -707,13 +710,16 @@ class AppState extends ChangeNotifier {
 
   Future<void> navigateToPath(PanelSide side, String path, {FileItem? selectItem}) async {
     if (side == PanelSide.local) {
-      if (kIsWeb) return; 
       
-      if (!await _localFileService.hasAccessToPath(path)) {
+      // We allow web navigation per a Virtual File System.
+      // On Web, we treat the virtual root '/' as accessible.
+      // On Desktop/Mobile, we check strict permissions.
+      if (!kIsWeb && !await _localFileService.hasAccessToPath(path)) {
         print('⚠️ Path $path is outside granted directory');
         _lastError = 'Cannot access paths outside the granted directory. Please grant access to a parent folder.';
         notifyListeners();
         
+        // Attempt to request access to the new path
         final newGrant = await _localFileService.requestDirectoryAccess(
           initialDirectory: path,
         );
@@ -723,6 +729,11 @@ class AppState extends ChangeNotifier {
         } else {
           return; 
         }
+      } else if (kIsWeb && !await _localFileService.hasAccessToPath(path)) {
+         // On Web, if we try to go somewhere our virtual tree doesn't know about
+         // (should only be possible via manual manipulation), block it.
+         print('⚠️ Virtual path not found: $path');
+         return;
       }
       
       _localFileService.currentPath = path; 
@@ -745,6 +756,7 @@ class AppState extends ChangeNotifier {
       notifyListeners();
       print('📁 Navigated to: $localPath');
     } else {
+      // Remote Navigation Logic
       _remotePath = path;
       await refreshPanel(PanelSide.remote);
       

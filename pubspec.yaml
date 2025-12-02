@@ -1,7 +1,7 @@
-name: cloud_dart
-description: Flutter/Dart Cloud storage client for Filen.io
+name: crisp_cloud
+description: Flutter/Dart Cloud storage client
 publish_to: 'none'
-version: 1.0.0+1
+version: 0.0.1
 
 environment:
   sdk: '>=3.0.0 <4.0.0'
@@ -46,7 +46,10 @@ dependencies:
   url_launcher: ^6.3.2
   flutter_launcher_icons: ^0.14.4
   macos_secure_bookmarks: ^0.2.1
+
+  # SFTP
   dartssh2: ^2.10.0
+  web_socket_channel: ^3.0.0 # for sockified (needed for web builds)
 
   # WebDAV Dependencies
   shelf: ^1.4.0

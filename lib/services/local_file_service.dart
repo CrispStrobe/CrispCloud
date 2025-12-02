@@ -1,5 +1,6 @@
 // services/local_file_service.dart
 import 'dart:convert';
+import 'dart:async';
 import 'dart:io';
 import 'dart:typed_data';
 import 'package:flutter/foundation.dart'; // Import for kIsWeb
@@ -29,6 +30,9 @@ abstract class LocalFileService {
   
   /// We need this to read files while maintaining the security scope e.g. on macOS
   Future<Uint8List> readFile(String path, {FileItem? fileItem});
+
+  // Helper for Web to get metadata without stat()
+  Map<String, dynamic> getWebMetadata(String path) => {};
   
   factory LocalFileService() {
     if (kIsWeb) {
@@ -66,83 +70,127 @@ class WebFileService implements LocalFileService {
   Future<String> getInitialPath() async => '/';
 
   @override
+  Map<String, dynamic> getWebMetadata(String path) {
+    final f = _fileRefs[path];
+    if (f != null) {
+      return {
+        'size': f.size,
+        'modified': DateTime.fromMillisecondsSinceEpoch(f.lastModified ?? DateTime.now().millisecondsSinceEpoch),
+      };
+    }
+    return {};
+  }
+
+  @override
   Future<String?> requestDirectoryAccess({String? initialDirectory}) async {
+    final completer = Completer<String?>();
     final input = html.FileUploadInputElement();
     
-    // FIX: Use setAttribute instead of .directory = true
     input.setAttribute('webkitdirectory', ''); 
     input.setAttribute('directory', '');      
-    
     input.multiple = true;  
-    input.click();
-
-    await input.onChange.first;
-    if (input.files == null || input.files!.isEmpty) return null;
-
-    // 2. Clear old data (Re-initiation)
-    _virtualTree.clear();
-    _fileRefs.clear();
-
-    // 3. Parse Metadata into Virtual Tree
-    String rootName = 'root';
-    if (input.files!.isNotEmpty) {
-      // relativePath looks like "MyFolder/sub/file.txt"
-      rootName = input.files!.first.relativePath?.split('/')[0] ?? 'root';
-    }
-
-    for (final file in input.files!) {
-      final relPath = file.relativePath ?? file.name;
-      final fullPath = '/$relPath';
-      
-      // Store reference for reading later
-      _fileRefs[fullPath] = file;
-
-      // Build Tree Nodes
-      final parts = relPath.split('/');
-      String parentPath = '/';
-      
-      for (int i = 0; i < parts.length; i++) {
-        final part = parts[i];
-        final isFile = i == parts.length - 1;
-        
-        if (!_virtualTree.containsKey(parentPath)) {
-          _virtualTree[parentPath] = [];
-        }
-
-        final entryPath = parentPath == '/' ? '/$part' : '$parentPath/$part';
-        final exists = _virtualTree[parentPath]!.any((e) => e.path == entryPath);
-
-        if (!exists) {
-          if (isFile) {
-            _virtualTree[parentPath]!.add(File(entryPath));
-          } else {
-            _virtualTree[parentPath]!.add(Directory(entryPath));
-          }
-        }
-        parentPath = entryPath;
+    
+    // Handle cancel/close somewhat (imperfect on web)
+    bool isSelected = false;
+    
+    input.onChange.listen((e) {
+      isSelected = true;
+      if (input.files == null || input.files!.isEmpty) {
+        completer.complete(null);
+        return;
       }
-    }
 
-    currentPath = '/$rootName';
-    return currentPath;
+      // RESET EVERYTHING
+      _virtualTree.clear();
+      _fileRefs.clear();
+
+      String rootName = 'root';
+      // Detect root folder name
+      if (input.files!.isNotEmpty) {
+        final firstPath = input.files!.first.relativePath ?? input.files!.first.name;
+        rootName = firstPath.split('/')[0];
+      }
+
+      for (final file in input.files!) {
+        // relativePath: "RootFolder/Sub/File.txt"
+        final relPath = file.relativePath ?? file.name;
+        
+        // Full Virtual Path: "/RootFolder/Sub/File.txt"
+        final fullPath = '/$relPath';
+        
+        _fileRefs[fullPath] = file;
+
+        final parts = relPath.split('/');
+        String parentPath = '/'; // Start at absolute root
+        
+        for (int i = 0; i < parts.length; i++) {
+          final partName = parts[i];
+          final isFile = (i == parts.length - 1);
+          
+          // Current item path: "/RootFolder" or "/RootFolder/Sub"
+          final currentItemPath = parentPath == '/' ? '/$partName' : '$parentPath/$partName';
+
+          // Ensure parent list exists
+          if (!_virtualTree.containsKey(parentPath)) {
+            _virtualTree[parentPath] = [];
+          }
+
+          // Check for duplicates in this folder
+          final exists = _virtualTree[parentPath]!.any((e) => e.path == currentItemPath);
+
+          if (!exists) {
+            if (isFile) {
+              _virtualTree[parentPath]!.add(File(currentItemPath));
+            } else {
+              _virtualTree[parentPath]!.add(Directory(currentItemPath));
+            }
+          }
+          
+          // Advance
+          parentPath = currentItemPath;
+        }
+      }
+
+      // Set current path to the actual selected folder name (e.g. "/Photos")
+      // NOT just "/"
+      final startPath = '/$rootName';
+      currentPath = startPath;
+      completer.complete(startPath);
+    });
+
+    input.click();
+    
+    // On Web, we can't easily detect "Cancel", so we rely on the user picking something.
+    return completer.future;
   }
 
   @override
   Future<List<FileSystemEntity>?> listDirectory(String path) async {
-    // Return from memory map
-    return _virtualTree[path] ?? [];
+    // Normalize path: ensure no trailing slash (unless root)
+    String lookup = path;
+    if (lookup.length > 1 && lookup.endsWith('/')) {
+      lookup = lookup.substring(0, lookup.length - 1);
+    }
+    
+    return _virtualTree[lookup] ?? [];
   }
 
   @override
-  Future<bool> hasAccessToPath(String path) async => 
-      _virtualTree.containsKey(path) || _fileRefs.containsKey(path);
+  Future<bool> hasAccessToPath(String path) async {
+    // On virtual FS, we have access if it exists in our tree or file refs
+    // Normalize logic
+    String lookup = path;
+    if (lookup.length > 1 && lookup.endsWith('/')) {
+      lookup = lookup.substring(0, lookup.length - 1);
+    }
+    return _virtualTree.containsKey(lookup) || _fileRefs.containsKey(lookup);
+  }
 
   @override
   Future<String> getSafeFallbackDirectory() async => '/';
 
   @override
   Future<Uint8List> readFile(String path, {FileItem? fileItem}) async {
-    // Read from the stored reference
     final fileRef = _fileRefs[path];
     if (fileRef == null) throw Exception('File ref not found: $path');
     
@@ -160,9 +208,13 @@ class MacosFileService implements LocalFileService {
   FileSystemEntity? _resolvedBookmarkFile;
   
   @override
-  String currentPath = Platform.environment['HOME'] ?? '/';
+  String currentPath = !kIsWeb ? (Platform.environment['HOME'] ?? '/') : '/';
+
   @override
   String? get grantedBasePath => _grantedBasePath;
+
+  @override
+  Map<String, dynamic> getWebMetadata(String path) => {};
 
   Future<bool> _loadAndResolveBookmark() async {
     try {
@@ -241,7 +293,6 @@ class MacosFileService implements LocalFileService {
     }
   }
 
-  // --- ADDED: This fixes the upload permissions ---
   @override
   Future<Uint8List> readFile(String path, {FileItem? fileItem}) async {
     if (_resolvedBookmarkFile == null) {
@@ -286,9 +337,13 @@ class MacosFileService implements LocalFileService {
 // --- Windows/Linux Implementation ---
 class DesktopFileService implements LocalFileService {
   @override
-  String currentPath = Platform.environment['HOME'] ?? Platform.environment['USERPROFILE'] ?? '/';
+  String currentPath = !kIsWeb ? (Platform.environment['HOME'] ?? Platform.environment['USERPROFILE'] ?? '/') : '/';
+  
   @override
   String? get grantedBasePath => null; 
+
+  @override
+  Map<String, dynamic> getWebMetadata(String path) => {};
 
   @override
   Future<String> getInitialPath() async {
@@ -348,8 +403,12 @@ class MobileFileService implements LocalFileService {
   
   @override
   String currentPath = '/'; 
+
   @override
   String? get grantedBasePath => _grantedBasePath;
+
+  @override
+  Map<String, dynamic> getWebMetadata(String path) => {};
   
   Future<bool> _loadAndResolveBookmark() async {
     try {
