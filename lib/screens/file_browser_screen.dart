@@ -543,46 +543,9 @@ class _FileBrowserScreenState extends State<FileBrowserScreen> {
 
   // --- UPDATED ABOUT DIALOG ---
   void _showAboutDialog(BuildContext context) {
-    final githubUrl = Uri.parse('https://github.com/CrispStrobe/dart-cloud');
-
-    showAboutDialog(
+    showDialog(
       context: context,
-      applicationName: 'Cloud Drive (Unofficial Client)',
-      applicationVersion: '1.0.0',
-      applicationIcon: const Icon(Icons.cloud, size: 48),
-      applicationLegalese: '© 2025 CrispStrobe\nThis app is not affiliated with Filen.io or Internxt, Inc.',
-      children: [
-        const Text(
-          'This is an unofficial, open-source client for Filen.io and Internxt Drive, built with Flutter and Dart.',
-        ),
-        const SizedBox(height: 24),
-        const Text(
-          'Author / Impressum:',
-          style: TextStyle(fontWeight: FontWeight.bold),
-        ),
-        const Text(
-          'CrispStrobe',
-        ),
-        const SizedBox(height: 16),
-        const Text(
-          'Source Code on GitHub:',
-          style: TextStyle(fontWeight: FontWeight.bold),
-        ),
-        InkWell(
-          child: Text(
-            githubUrl.toString(),
-            style: TextStyle(
-              color: Theme.of(context).colorScheme.primary,
-              decoration: TextDecoration.underline,
-            ),
-          ),
-          onTap: () async {
-            if (await canLaunchUrl(githubUrl)) {
-              await launchUrl(githubUrl);
-            }
-          },
-        ),
-      ],
+      builder: (context) => const _CustomAboutDialog(),
     );
   }
   // --- END UPDATED DIALOG ---
@@ -1232,3 +1195,150 @@ class _PanelTab extends StatelessWidget {
 }
 
 enum PanelSide { local, remote }
+
+class _CustomAboutDialog extends StatelessWidget {
+  const _CustomAboutDialog();
+
+  Future<void> _launchURL(String urlString) async {
+    final Uri url = Uri.parse(urlString);
+    if (await canLaunchUrl(url)) {
+      await launchUrl(url, mode: LaunchMode.externalApplication);
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final isDark = theme.brightness == Brightness.dark;
+
+    return SimpleDialog(
+      title: Row(
+        children: [
+          Icon(Icons.info_outline, color: theme.colorScheme.primary),
+          const SizedBox(width: 12),
+          Text('About / Legal', style: TextStyle(color: theme.colorScheme.onSurface)),
+        ],
+      ),
+      contentPadding: const EdgeInsets.all(24.0),
+      children: [
+        SizedBox(
+          width: 600, // Constrain width for desktop/web
+          child: SingleChildScrollView(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                // App Info Header
+                Center(
+                  child: Column(
+                    children: [
+                      const Icon(Icons.cloud_circle, size: 64, color: Colors.blue),
+                      const SizedBox(height: 8),
+                      Text(
+                        'Cloud Drive',
+                        style: theme.textTheme.headlineSmall?.copyWith(fontWeight: FontWeight.bold),
+                      ),
+                      Text(
+                        'Version 1.0.0',
+                        style: theme.textTheme.bodySmall,
+                      ),
+                      const SizedBox(height: 16),
+                      Text(
+                        'An unofficial, open-source client for Filen.io, SFTP & WebDAV.',
+                        textAlign: TextAlign.center,
+                        style: theme.textTheme.bodyMedium,
+                      ),
+                    ],
+                  ),
+                ),
+                const Divider(height: 32),
+
+                // Imprint / Legal Section
+                _buildSectionTitle(context, 'Service Provider'),
+                _buildSectionText(context, 'Christian Ströbele\nNikolausstr. 5\n70190 Stuttgart\nDeutschland/Germany'),
+
+                const SizedBox(height: 16),
+                _buildSectionTitle(context, 'Contact'),
+                _buildSectionText(context, 'Email: postmaster@crispstro.be\nPhone: +49 176 6421 8601'),
+
+                const SizedBox(height: 16),
+                _buildSectionTitle(context, 'Disclaimer'),
+                _buildSectionText(context, 'This software is provided "as is", without warranty of any kind. This app is not affiliated with Filen.io, or any other cloud provider.'),
+
+                const SizedBox(height: 24),
+                
+                // Links
+                Wrap(
+                  spacing: 16,
+                  runSpacing: 8,
+                  alignment: WrapAlignment.center,
+                  children: [
+                    TextButton.icon(
+                      icon: const Icon(Icons.code),
+                      label: const Text('Source Code (GitHub)'),
+                      onPressed: () => _launchURL('https://github.com/CrispStrobe/dart-cloud'),
+                    ),
+                    TextButton.icon(
+                      icon: const Icon(Icons.web),
+                      label: const Text('Website'),
+                      onPressed: () => _launchURL('https://www.crispstro.be'),
+                    ),
+                  ],
+                ),
+
+                const SizedBox(height: 16),
+                
+                // Licenses Button
+                Center(
+                  child: OutlinedButton.icon(
+                    icon: const Icon(Icons.description),
+                    label: const Text('View Open Source Licenses'),
+                    onPressed: () {
+                      showLicensePage(
+                        context: context,
+                        applicationName: 'Cloud Drive',
+                        applicationVersion: '1.0.0',
+                        applicationIcon: const Icon(Icons.cloud, size: 48),
+                        applicationLegalese: '© 2025 CrispStrobe',
+                      );
+                    },
+                  ),
+                ),
+
+                const SizedBox(height: 24),
+                Center(
+                  child: ElevatedButton(
+                    onPressed: () => Navigator.of(context).pop(),
+                    child: const Text('Close'),
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ),
+      ],
+    );
+  }
+
+  Widget _buildSectionTitle(BuildContext context, String title) {
+    return Text(
+      title,
+      style: Theme.of(context).textTheme.titleMedium?.copyWith(
+        fontWeight: FontWeight.bold,
+        color: Theme.of(context).colorScheme.primary,
+      ),
+    );
+  }
+
+  Widget _buildSectionText(BuildContext context, String text) {
+    return Padding(
+      padding: const EdgeInsets.only(top: 4.0),
+      child: SelectableText( // Make address/email copyable
+        text,
+        style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+          color: Theme.of(context).colorScheme.onSurfaceVariant,
+        ),
+      ),
+    );
+  }
+}

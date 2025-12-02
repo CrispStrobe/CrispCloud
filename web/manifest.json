@@ -1,11 +1,11 @@
 {
-    "name": "internxt_flutter",
-    "short_name": "internxt_flutter",
+    "name": "crisp_cloud",
+    "short_name": "CrispCloud",
     "start_url": ".",
     "display": "standalone",
     "background_color": "#0175C2",
     "theme_color": "#0175C2",
-    "description": "A new Flutter project.",
+    "description": "Cross-platform Commander-style Client for Cloud Storage providers, supporting (unofficially) Filen.io, WebDAV, SFTP (as for Hetzner StorageBoxes etc) written in Flutter/Dart.",
     "orientation": "portrait-primary",
     "prefer_related_applications": false,
     "icons": [
