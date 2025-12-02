@@ -272,6 +272,40 @@ class SFTPClientAdapter implements CloudStorageClient {
   }
 
   @override
+  Future<Uint8List> downloadFileBytes(
+    String remotePath, {
+    Function(int, int)? onProgress,
+  }) async {
+    await _ensureConnection();
+    
+    final file = await _sftp!.open(remotePath, mode: SftpFileOpenMode.read);
+    final fileSize = (await file.stat()).size ?? 0;
+    
+    // Use a BytesBuilder to collect chunks efficiently
+    final builder = BytesBuilder(copy: false);
+    
+    try {
+      int downloaded = 0;
+      int offset = 0;
+      
+      while(true) {
+         final chunk = await file.readBytes(length: 32 * 1024, offset: offset);
+         if (chunk.isEmpty) break;
+         
+         builder.add(chunk);
+         offset += chunk.length;
+         downloaded += chunk.length;
+         
+         if (onProgress != null) onProgress(downloaded, fileSize);
+      }
+      
+      return builder.takeBytes();
+    } finally {
+      await file.close();
+    }
+  }
+
+  @override
   Future<void> createFolderPath(String path) async {
     await _ensureConnection();
     try {

@@ -33,6 +33,9 @@ abstract class CloudStorageClient {
     String localPath, {
     Function(int, int)? onProgress,
   });
+
+  /// Download a file and return its bytes directly (Used for Web downloads)
+  Future<Uint8List> downloadFileBytes(String remotePath, {Function(int, int)? onProgress});
   
   // Folder operations
   Future<void> createFolderPath(String path);

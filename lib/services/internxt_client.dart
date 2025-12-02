@@ -32,6 +32,13 @@ class InternxtClient {
   Future<Map<String, String?>> login(String email, String password, {String? tfaCode}) async {
     throw UnsupportedError('Internxt support is currently disabled.');
   }
+
+  Future<Uint8List> downloadFileBytes(
+    String remotePath, {
+    Function(int bytesDownloaded, int totalBytes)? onProgress,
+  }) async {
+    throw UnsupportedError('Internxt support is currently disabled.');
+  }
   
   Future<void> refreshToken() async {}
 

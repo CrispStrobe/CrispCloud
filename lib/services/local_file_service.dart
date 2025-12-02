@@ -5,10 +5,17 @@ import 'dart:typed_data';
 import 'package:flutter/foundation.dart'; // Import for kIsWeb
 import 'package:path_provider/path_provider.dart';
 import 'package:file_picker/file_picker.dart';
-import 'macos_bookmark_service.dart';
 import 'bookmark_service.dart';
-import 'package:macos_secure_bookmarks/macos_secure_bookmarks.dart';
+
+// If running on web (dart.library.html), load the stub. Otherwise, load the real package.
+import 'macos_bookmark_service.dart' if (dart.library.html) 'macos_bookmark_service_stub.dart';
+import 'package:macos_secure_bookmarks/macos_secure_bookmarks.dart' if (dart.library.html) 'macos_bookmark_service_stub.dart';
+
 import 'package:shared_preferences/shared_preferences.dart';
+import 'package:universal_html/html.dart' as html; // For Web Input
+import 'package:cross_file/cross_file.dart'; 
+import '../models/file_item.dart';
+import 'package:path/path.dart' as p;
 
 /// Abstract interface for handling local file system access.
 abstract class LocalFileService {
@@ -20,11 +27,9 @@ abstract class LocalFileService {
   Future<bool> hasAccessToPath(String path);
   Future<String> getSafeFallbackDirectory();
   
-  // --- ADDED METHOD ---
-  // We need this to read files while maintaining the security scope on macOS
-  Future<Uint8List> readFile(String path);
-  // --------------------
-
+  /// We need this to read files while maintaining the security scope e.g. on macOS
+  Future<Uint8List> readFile(String path, {FileItem? fileItem});
+  
   factory LocalFileService() {
     if (kIsWeb) {
       return WebFileService();
@@ -45,27 +50,106 @@ abstract class LocalFileService {
 
 // --- Web Implementation (Stubbed) ---
 class WebFileService implements LocalFileService {
+  // Stores directory structure: Key='/Photos', Value=[Entity('img.jpg')]
+  final Map<String, List<FileSystemEntity>> _virtualTree = {};
+  
+  // Stores actual file references: Key='/Photos/img.jpg', Value=FileObject
+  final Map<String, html.File> _fileRefs = {};
+
   @override
   String currentPath = '/';
+
   @override
   String? get grantedBasePath => null;
+
   @override
-  Future<String> getInitialPath() async {
-    currentPath = '/web/not-supported';
+  Future<String> getInitialPath() async => '/';
+
+  @override
+  Future<String?> requestDirectoryAccess({String? initialDirectory}) async {
+    final input = html.FileUploadInputElement();
+    
+    // FIX: Use setAttribute instead of .directory = true
+    input.setAttribute('webkitdirectory', ''); 
+    input.setAttribute('directory', '');      
+    
+    input.multiple = true;  
+    input.click();
+
+    await input.onChange.first;
+    if (input.files == null || input.files!.isEmpty) return null;
+
+    // 2. Clear old data (Re-initiation)
+    _virtualTree.clear();
+    _fileRefs.clear();
+
+    // 3. Parse Metadata into Virtual Tree
+    String rootName = 'root';
+    if (input.files!.isNotEmpty) {
+      // relativePath looks like "MyFolder/sub/file.txt"
+      rootName = input.files!.first.relativePath?.split('/')[0] ?? 'root';
+    }
+
+    for (final file in input.files!) {
+      final relPath = file.relativePath ?? file.name;
+      final fullPath = '/$relPath';
+      
+      // Store reference for reading later
+      _fileRefs[fullPath] = file;
+
+      // Build Tree Nodes
+      final parts = relPath.split('/');
+      String parentPath = '/';
+      
+      for (int i = 0; i < parts.length; i++) {
+        final part = parts[i];
+        final isFile = i == parts.length - 1;
+        
+        if (!_virtualTree.containsKey(parentPath)) {
+          _virtualTree[parentPath] = [];
+        }
+
+        final entryPath = parentPath == '/' ? '/$part' : '$parentPath/$part';
+        final exists = _virtualTree[parentPath]!.any((e) => e.path == entryPath);
+
+        if (!exists) {
+          if (isFile) {
+            _virtualTree[parentPath]!.add(File(entryPath));
+          } else {
+            _virtualTree[parentPath]!.add(Directory(entryPath));
+          }
+        }
+        parentPath = entryPath;
+      }
+    }
+
+    currentPath = '/$rootName';
     return currentPath;
   }
+
   @override
-  Future<String?> requestDirectoryAccess({String? initialDirectory}) async => null;
+  Future<List<FileSystemEntity>?> listDirectory(String path) async {
+    // Return from memory map
+    return _virtualTree[path] ?? [];
+  }
+
   @override
-  Future<List<FileSystemEntity>?> listDirectory(String path) async => null;
-  @override
-  Future<bool> hasAccessToPath(String path) async => false;
+  Future<bool> hasAccessToPath(String path) async => 
+      _virtualTree.containsKey(path) || _fileRefs.containsKey(path);
+
   @override
   Future<String> getSafeFallbackDirectory() async => '/';
-  
+
   @override
-  Future<Uint8List> readFile(String path) async {
-    throw UnsupportedError('Direct file reading not supported on web');
+  Future<Uint8List> readFile(String path, {FileItem? fileItem}) async {
+    // Read from the stored reference
+    final fileRef = _fileRefs[path];
+    if (fileRef == null) throw Exception('File ref not found: $path');
+    
+    final reader = html.FileReader();
+    reader.readAsArrayBuffer(fileRef);
+    await reader.onLoad.first;
+    return reader.result as Uint8List;
   }
 }
 
@@ -159,7 +243,7 @@ class MacosFileService implements LocalFileService {
 
   // --- ADDED: This fixes the upload permissions ---
   @override
-  Future<Uint8List> readFile(String path) async {
+  Future<Uint8List> readFile(String path, {FileItem? fileItem}) async {
     if (_resolvedBookmarkFile == null) {
       await _loadAndResolveBookmark();
     }
@@ -242,7 +326,7 @@ class DesktopFileService implements LocalFileService {
   }
   
   @override
-  Future<Uint8List> readFile(String path) async {
+  Future<Uint8List> readFile(String path, {FileItem? fileItem}) async {
     return File(path).readAsBytes();
   }
 
@@ -364,7 +448,7 @@ class MobileFileService implements LocalFileService {
   }
   
   @override
-  Future<Uint8List> readFile(String path) async {
+  Future<Uint8List> readFile(String path, {FileItem? fileItem}) async {
     if (_resolvedBookmarkFile == null) {
       await _loadAndResolveBookmark();
     }

@@ -3,6 +3,7 @@ import 'cloud_storage_interface.dart';
 import 'filen.dart';
 import 'filen_config_service.dart';
 import 'dart:io';
+import 'dart:typed_data';
 
 class FilenClientAdapter implements CloudStorageClient {
   final FilenClient _client;
@@ -62,6 +63,28 @@ class FilenClientAdapter implements CloudStorageClient {
   Future<bool> is2faNeeded(String email) async {
     // Filen API doesn't have a specific pre-check for 2FA status without attempting login
     return false; 
+  }
+
+  @override
+  Future<Uint8List> downloadFileBytes(
+    String remotePath, {
+    Function(int, int)? onProgress,
+  }) async {
+    // 1. Resolve remote path to UUID
+    final resolved = await _client.resolvePath(remotePath);
+    if (resolved['type'] != 'file') {
+      throw Exception('Remote path is not a file');
+    }
+    final uuid = resolved['uuid'];
+
+    // 2. Download bytes directly
+    // Note: FilenClient needs a method for this.
+    // Assuming you have added `downloadFileBytes(uuid)` to FilenClient as discussed, 
+    // or use the internal HTTP client logic here.
+    
+    // If FilenClient doesn't support this yet, you must add it there.
+    // Here is how you would call it:
+    return await _client.downloadFileBytes(uuid, onProgress: onProgress);
   }
   
   @override

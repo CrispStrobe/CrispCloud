@@ -3075,6 +3075,51 @@ class FilenClient {
     return buffer.toBytes();
   }
 
+  /// Download file directly to memory (Uint8List) without writing to disk.
+  /// Used for Web downloads where file system access is restricted.
+  Future<Uint8List> downloadFileBytes(
+    String uuid, {
+    Function(int bytesDownloaded, int totalBytes)? onProgress,
+  }) async {
+    _log('Downloading file to memory: $uuid');
+
+    // 1. Fetch File Metadata
+    final info = await _post('/v3/file', {'uuid': uuid});
+    final d = info['data'];
+
+    // 2. Decrypt Metadata
+    final metaStr = await _tryDecrypt(d['metadata']);
+    final meta = json.decode(metaStr);
+    final keyBytes = _decodeUniversalKey(meta['key']);
+    final chunks = int.parse(d['chunks'].toString());
+    final host = 'https://egest.filen.io'; 
+
+    final fileSize = meta['size'] ?? 0;
+
+    // Use BytesBuilder to collect chunks efficiently in memory
+    final buffer = BytesBuilder(copy: false); 
+    int bytesDownloaded = 0;
+
+    // 3. Download Chunks
+    for (var i = 0; i < chunks; i++) {
+      final r = await http
+          .get(Uri.parse('$host/${d['region']}/${d['bucket']}/$uuid/$i'));
+      if (r.statusCode != 200) throw Exception('Chunk download failed: $i');
+
+      // 4. Decrypt Chunk
+      final decrypted = await _decryptData(r.bodyBytes, keyBytes);
+      buffer.add(decrypted);
+
+      bytesDownloaded += decrypted.length;
+
+      if (onProgress != null) {
+        onProgress(bytesDownloaded, fileSize);
+      }
+    }
+
+    return buffer.takeBytes();
+  }
+
   Future<Map<String, dynamic>> downloadFile(
     String uuid, {
     String? savePath,

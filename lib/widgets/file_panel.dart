@@ -1,17 +1,19 @@
 // widgets/file_panel.dart
+
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:desktop_drop/desktop_drop.dart';
 import 'package:cross_file/cross_file.dart';
-// --- FIX: Conditional import for dart:io ---
-import 'dart:io' if (dart.library.html) 'dart:html' show Platform;
-import 'package:flutter/foundation.dart' show kIsWeb; // Import kIsWeb
-// --- END FIX ---
+import 'package:flutter/foundation.dart' show kIsWeb;
+
+// Only import dart:io on non-web platforms
+import 'dart:io'; // if (dart.library.js) 'dart:html';
+
 import '../services/app_state.dart';
 import '../models/file_item.dart';
 import 'package:provider/provider.dart';
 import '../screens/file_browser_screen.dart';
-import 'package:path/path.dart' as p; 
+import 'package:path/path.dart' as p;
 
 class FilePanel extends StatefulWidget {
   final PanelSide side;
@@ -107,26 +109,23 @@ class _FilePanelState extends State<FilePanel> {
     }
     // --- End scroll logic ---
 
-    // --- FIX: Handle web local panel ---
-    if (kIsWeb && widget.side == PanelSide.local) {
-      return Container(
-        color: Colors.grey[200],
-        child: Center(
-          child: Column(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: [
-              Icon(Icons.web_asset_off, size: 64, color: Colors.grey[700]),
-              const SizedBox(height: 16),
-              Text(
-                'Local file browsing is not supported on Web.',
-                style: Theme.of(context).textTheme.titleMedium,
-              ),
-            ],
-          ),
+    // Empty State prompt
+    if (kIsWeb && widget.side == PanelSide.local && (files == null || files.isEmpty)) {
+      return Center(
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Icon(Icons.folder_open, size: 64, color: Theme.of(context).colorScheme.primary),
+            const SizedBox(height: 16),
+            const Text('No folder selected'),
+            ElevatedButton(
+              onPressed: () => appState.pickLocalDirectory(),
+              child: const Text('Open Local Folder'),
+            ),
+          ],
         ),
       );
     }
-    // --- END FIX ---
 
     return GestureDetector(
       onTap: widget.onTap,
@@ -848,7 +847,7 @@ class _FilePanelState extends State<FilePanel> {
     }
 
     // Share (mobile platforms only)
-    if ((Platform.isAndroid || Platform.isIOS) && widget.side == PanelSide.local) {
+    if (!kIsWeb && (Platform.isAndroid || Platform.isIOS) && widget.side == PanelSide.local) {
       items.add(
         PopupMenuItem(
           child: Row(

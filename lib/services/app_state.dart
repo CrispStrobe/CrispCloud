@@ -25,6 +25,8 @@ import 'receive_service.dart';
 import 'local_file_service.dart'; 
 import '../screens/file_browser_screen.dart';
 
+import 'package:universal_html/html.dart' as html;
+
 enum SortBy { name, size, date, extension }
 enum SortOrder { ascending, descending }
 
@@ -363,13 +365,6 @@ class AppState extends ChangeNotifier {
   }
 
   Future<void> _loadLocalFiles() async {
-    if (kIsWeb) {
-      print('📁 Local file browsing not supported on web.');
-      _localFiles = []; 
-      notifyListeners();
-      return;
-    }
-
     try {
       print('📁 Loading local files from: ${localPath}');
       
@@ -377,7 +372,7 @@ class AppState extends ChangeNotifier {
       
       if (entities == null) {
          _localFiles = [];
-         _lastError = 'Local file access is not supported on this platform.';
+         if (!kIsWeb) _lastError = 'Local file access is not supported on this platform.';
          notifyListeners();
          return;
       }
@@ -389,6 +384,26 @@ class AppState extends ChangeNotifier {
         try {
           final name = p.basename(entity.path);
           if (name.startsWith('.')) continue;
+
+          // --- FIX START: HANDLE WEB SEPARATELY ---
+          if (kIsWeb) {
+            // On web, we cannot stat() virtual files.
+            // We rely on the type we created in WebFileService.
+            final isFolder = entity is Directory;
+            
+            // We can't get size/date easily here without async overhead, 
+            // so we set defaults for the list view.
+            items.add(FileItem(
+              name: name,
+              path: entity.path,
+              isFolder: isFolder,
+              size: 0,
+              updatedAt: DateTime.now(),
+              // We pass the XFile if available in future improvements
+            ));
+            continue; 
+          }
+          // --- FIX END ---
 
           final stat = await entity.stat(); 
           if (stat.type == FileSystemEntityType.directory) {
@@ -408,6 +423,7 @@ class AppState extends ChangeNotifier {
             ));
           }
         } catch (e) {
+          print('Error processing file $entity: $e');
           continue;
         }
       }
@@ -418,7 +434,7 @@ class AppState extends ChangeNotifier {
       _lastError = null;
       notifyListeners();
     } catch (e, stackTrace) {
-      if (e is PathAccessException || e.toString().contains('Operation not permitted') || e.toString().contains('Permission denied')) {
+      if (!kIsWeb && (e is PathAccessException || e.toString().contains('Operation not permitted') || e.toString().contains('Permission denied'))) {
         print('⚠️ Permission denied for: ${localPath}');
         _localFiles = [];
         _lastError = 'Permission denied. Use the Browse button (folder icon) to grant access.';
@@ -672,9 +688,11 @@ class AppState extends ChangeNotifier {
 
   Future<void> navigateUp(PanelSide side) async {
     if (side == PanelSide.local) {
-      if (kIsWeb) return; 
+      
       final parent = p.dirname(localPath);
-      if (parent != localPath) {
+
+      // Ensure we don't navigate above our virtual root
+      if (parent != localPath && parent != '.') {
         await navigateToPath(side, parent);
       }
     } else {
@@ -834,11 +852,6 @@ class AppState extends ChangeNotifier {
   // File operations
   
   Future<void> uploadFiles(List<FileItem> files, {String? targetPath}) async {
-    if (kIsWeb) {
-      _lastError = 'File upload not supported on web.';
-      notifyListeners();
-      return;
-    }
     
     print('');
     print('═══════════════════════════════════════════');
@@ -918,7 +931,6 @@ class AppState extends ChangeNotifier {
     _runUploadInBackground(operation, files, fileProgresses, target, creds);
   }
 
-  // CHANGED: Upload background task uses cloud client
   Future<void> _runUploadInBackground(
     OperationProgress operation,
     List<FileItem> files,
@@ -966,13 +978,16 @@ class AppState extends ChangeNotifier {
         }
 
         try {
-          // Use cloud client abstraction
+          // We use the cloud client abstraction
           if (file.isFolder) {
             await _uploadFolderViaClient(file.path!, target, operation);
           } else {
-            // FIX: Use _localFileService to read data securely
+            // We use _localFileService to read data securely
             // This ensures macOS security scope is active during the read
-            final fileData = await _localFileService.readFile(file.path!);
+            final fileData = await _localFileService.readFile(
+              file.path!, 
+              fileItem: file // Here we pass the FileItem so WebService can find the file reference.
+            );
             
             await _cloudClient.uploadFile(
               fileData,
@@ -1072,9 +1087,8 @@ class AppState extends ChangeNotifier {
   }
 
   Future<int> _calculateFolderSize(String folderPath) async {
-    if (kIsWeb) return 0;
     try {
-      // FIX: Use _localFileService to list directory. This handles macOS security scopes 
+      // We use _localFileService to list directory. This handles macOS security scopes 
       // which prevents the "Operation not permitted" error.
       final entities = await _localFileService.listDirectory(folderPath);
       
@@ -1112,11 +1126,6 @@ class AppState extends ChangeNotifier {
 
   // CHANGED: Download now uses cloud client abstraction
   Future<void> downloadFiles(List<FileItem> files, {String? localPath}) async {
-    if (kIsWeb) {
-      _lastError = 'File download not supported on web.';
-      notifyListeners();
-      return;
-    }
     
     print('');
     print('═══════════════════════════════════════════');
@@ -1178,7 +1187,6 @@ class AppState extends ChangeNotifier {
     _runDownloadInBackground(operation, files, fileProgresses, target, creds);
   }
 
-  // CHANGED: Download background task uses cloud client
   Future<void> _runDownloadInBackground(
     OperationProgress operation,
     List<FileItem> files,
@@ -1219,31 +1227,61 @@ class AppState extends ChangeNotifier {
         print('Is folder: ${file.isFolder}');
 
         try {
-          final remotePath = p.posix.join(_remotePath, file.name);
-          final localFilePath = p.join(target, file.name);
-          
-          // Use cloud client abstraction
-          if (file.isFolder) {
-            await _downloadFolderViaClient(remotePath, target, operation);
+          if (kIsWeb) {
+            // --- WEB DOWNLOAD LOGIC ---
+            if (file.isFolder) {
+               print('Folder download not supported on Web (requires zipping)');
+               // skip or handle error
+            } else {
+               // 1. Get Path
+               final remotePath = p.posix.join(_remotePath, file.name);
+               
+               // 2. We need to fetch bytes directly. 
+               // NOTE: We must ensure our CloudClients have a way to get bytes, or use a temp path approach that returns bytes.
+               // Assuming downloadFileByPath might not work on web if it uses File(path).openWrite.
+               // We might need to add `downloadFileBytes` to interface, OR hack it:
+               
+               // For now, assuming standard clients use HTTP, we might need a specific method.
+               // But if we assume downloadFileByPath fails, we need:
+               final bytes = await _cloudClient.downloadFileBytes(remotePath);
+
+               // 3. Create Blob and Anchor
+               final blob = html.Blob([bytes]);
+               final url = html.Url.createObjectUrlFromBlob(blob);
+               final anchor = html.AnchorElement(href: url)
+                 ..setAttribute("download", file.name)
+                 ..click();
+               html.Url.revokeObjectUrl(url);
+            }
+            // --- end web logic ---
           } else {
-            await _cloudClient.downloadFileByPath(
-              remotePath,
-              localFilePath,
-              onProgress: (current, total) {
-                operation.currentBytes = completedBytes + current;
-                notifyListeners();
-              },
-            );
-          }
-          
-          print('✅ Download complete: ${file.name}');
-          
-          fileProgress.isComplete = true;
-          completedBytes += fileProgress.size;
-          operation.currentBytes = completedBytes;
-          
-          print('📊 Overall progress: ${operation.currentBytes}/${operation.totalBytes} bytes (${(operation.progress * 100).toStringAsFixed(1)}%)');
-          notifyListeners();
+              // --- DESKTOP/MOBILE LOGIC  ---
+            final remotePath = p.posix.join(_remotePath, file.name);
+            final localFilePath = p.join(target, file.name);
+            
+            // Use cloud client abstraction
+            if (file.isFolder) {
+              await _downloadFolderViaClient(remotePath, target, operation);
+            } else {
+              await _cloudClient.downloadFileByPath(
+                remotePath,
+                localFilePath,
+                onProgress: (current, total) {
+                  operation.currentBytes = completedBytes + current;
+                  notifyListeners();
+                },
+              );
+            }
+            
+            print('✅ Download complete: ${file.name}');
+            
+            fileProgress.isComplete = true;
+            completedBytes += fileProgress.size;
+            operation.currentBytes = completedBytes;
+            
+            print('📊 Overall progress: ${operation.currentBytes}/${operation.totalBytes} bytes (${(operation.progress * 100).toStringAsFixed(1)}%)');
+            notifyListeners();
+          } // end desktop logic
           
         } catch (e, stackTrace) {
           if (operation.isCancelled || e.toString().contains('Cancelled')) {

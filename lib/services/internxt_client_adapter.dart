@@ -1,6 +1,7 @@
 // lib/services/internxt_client_adapter.dart
 import 'cloud_storage_interface.dart';
 import 'internxt_client.dart';
+import 'dart:typed_data';
 import 'internxt_client_extensions.dart'; // Import the extensions
 
 class InternxtClientAdapter implements CloudStorageClient {
@@ -55,6 +56,15 @@ class InternxtClientAdapter implements CloudStorageClient {
     _client.userId = null;
     _client.bucketId = null;
     await _client.config.clearCredentials();
+  }
+
+  @override
+  Future<Uint8List> downloadFileBytes(
+    String remotePath, {
+    Function(int, int)? onProgress,
+  }) {
+    // Forward to client extension
+    return _client.downloadFileBytes(remotePath, onProgress: onProgress);
   }
 
   @override

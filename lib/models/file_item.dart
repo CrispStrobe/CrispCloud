@@ -1,4 +1,7 @@
 // models/file_item.dart
+
+import 'package:cross_file/cross_file.dart'; // Add this import
+
 class FileItem {
   final String name;
   final String? path;
@@ -6,6 +9,7 @@ class FileItem {
   final bool isFolder;
   final int? size;
   final DateTime? updatedAt;
+  final XFile? xFile;
 
   FileItem({
     required this.name,
@@ -14,6 +18,7 @@ class FileItem {
     required this.isFolder,
     this.size,
     this.updatedAt,
+    this.xFile,
   });
 
   String get sizeFormatted {

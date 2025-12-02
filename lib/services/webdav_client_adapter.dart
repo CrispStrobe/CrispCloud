@@ -78,6 +78,24 @@ class WebDavClientAdapter implements CloudStorageClient {
   }
 
   @override
+  Future<Uint8List> downloadFileBytes(
+    String remotePath, {
+    Function(int, int)? onProgress,
+  }) async {
+    await _ensureClient();
+    
+    // Note: webdav_client 1.2.2 returns a List<int>, but it loads fully into memory.
+    // It does not expose a stream directly for progress updates easily without modifying the lib.
+    final data = await _client!.read(remotePath);
+    
+    if (onProgress != null) {
+      onProgress(data.length, data.length);
+    }
+    
+    return Uint8List.fromList(data);
+  }
+
+  @override
   Future<void> logout() async {
     _client = null;
     await _config.clearCredentials();
