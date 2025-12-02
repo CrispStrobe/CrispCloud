@@ -662,15 +662,26 @@ class AppState extends ChangeNotifier {
               }
                   
               DateTime? fileDate;
-              if (map['modificationTime'] != null) {
-                try { fileDate = DateTime.parse(map['modificationTime'].toString()); } catch (_) {}
+              // Check 'lastModified' AND 'modificationTime'
+              final rawDate = map['modificationTime'] ?? map['lastModified'];
+              
+              if (rawDate != null) {
+                try { 
+                  // Handle Timestamp (int) vs ISO String
+                  if (rawDate is int) {
+                    fileDate = DateTime.fromMillisecondsSinceEpoch(rawDate);
+                  } else {
+                    fileDate = DateTime.parse(rawDate.toString()); 
+                  }
+                } catch (_) {}
               }
+
               return FileItem(
                 name: fullName,
                 isFolder: false,
                 size: map['size'] as int?,
                 uuid: map['uuid'],
-                updatedAt: fileDate,
+                updatedAt: fileDate, 
               );
             }).toList() ?? [];
 

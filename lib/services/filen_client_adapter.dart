@@ -141,49 +141,52 @@ class FilenClientAdapter implements CloudStorageClient {
   }
   
   @override
-  @override
   Future<void> uploadFile(
     List<int> fileData,
     String fileName,
     String targetPath, {
     Function(int, int)? onProgress,
   }) async {
-    // Resolve Target
+    // 1. Resolve Target
     final resolvedFolder = await _client.resolvePath(targetPath);
     if (resolvedFolder['type'] != 'folder') {
       throw Exception('Target path is not a folder');
     }
     final parentUuid = resolvedFolder['uuid'];
 
-    // --- WEB SUPPORT ---
     if (kIsWeb) {
-      // Use the memory-based upload
+      // --- WEB PATH (Memory) ---
+      // This path purely uses memory and HTTP, avoiding all filesystem calls
+      print('🌐 Web Upload: uploading bytes directly...');
       await _client.uploadBytes(
         Uint8List.fromList(fileData),
         fileName,
         parentUuid,
         onProgress: onProgress,
       );
-      return;
-    }
-    // --- END WEB Logic ---
-
-    // Desktop/Mobile Logic (Write to Temp File)
-    final tempDir = Directory.systemTemp;
-    final tempFile = File('${tempDir.path}/$fileName');
-    await tempFile.writeAsBytes(fileData);
-    
-    try {
-      await _client.uploadFile(
-        tempFile,
-        parentUuid,
-      );
-      if (onProgress != null) {
-        onProgress(fileData.length, fileData.length);
-      }
-    } finally {
-      if (await tempFile.exists()) {
-        await tempFile.delete();
+    } else {
+      // --- NATIVE PATH (Disk) ---
+      // Wrapped in 'else' to ensure Directory.systemTemp is unreachable on Web
+      try {
+        final tempDir = Directory.systemTemp;
+        final tempFile = File('${tempDir.path}/$fileName');
+        await tempFile.writeAsBytes(fileData);
+        
+        try {
+          await _client.uploadFile(
+            tempFile,
+            parentUuid,
+          );
+          if (onProgress != null) {
+            onProgress(fileData.length, fileData.length);
+          }
+        } finally {
+          if (await tempFile.exists()) {
+            await tempFile.delete();
+          }
+        }
+      } catch (e) {
+        rethrow;
       }
     }
   }
