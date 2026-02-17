@@ -60,7 +60,7 @@ enum CloudProvider {
 /// Factory for creating cloud storage clients
 class CloudStorageFactory {
   // --- TOGGLE: Set this to false to disable Internxt globally ---
-  static const bool isInternxtSupported = false; 
+  static const bool isInternxtSupported = true;
 
   static CloudStorageClient create(CloudProvider provider, {required dynamic config}) {
     // Robust fallback: If Internxt is selected but disabled, force Filen or throw

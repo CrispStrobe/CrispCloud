@@ -252,21 +252,41 @@ class AppState extends ChangeNotifier {
     super.dispose();
   }
 
-  // CHANGED: Constructor now accepts config and initializes cloud client
   AppState({required dynamic config, CloudProvider? initialProvider}) 
       : _config = config,
         _currentProvider = initialProvider ?? CloudProvider.filen,
         _localFileService = LocalFileService() {
 
-    // EXTRACT PATH from initial config to reuse when switching
-    if (config is FilenConfigService) _configPath = config.configPath;
-    else if (config is SFTPConfigService) _configPath = config.configPath;
-    else if (config is ConfigService) _configPath = config.configPath;
+    // EXTRACT PATH: Attempt to extract, but handle failure robustly
+    try {
+        if (config is FilenConfigService) _configPath = config.configPath;
+        else if (config is SFTPConfigService) _configPath = config.configPath;
+        else if (config is ConfigService) _configPath = config.configPath;
+        // Fallback: try dynamic access if types didn't match due to import issues
+        else {
+            try {
+                _configPath = (config as dynamic).configPath;
+            } catch (_) {}
+        }
+    } catch (e) {
+        print("⚠️ AppState: Error extracting config path: $e");
+    }
+
+    // FALLBACK if extraction failed
+    if (_configPath.isEmpty) {
+        print("⚠️ AppState: Config path is empty. Using fallback default.");
+        if (!kIsWeb && (Platform.isLinux || Platform.isMacOS || Platform.isWindows)) {
+             final home = Platform.environment['HOME'] ?? Platform.environment['USERPROFILE'] ?? '.';
+             _configPath = p.join(home, '.cloud-storage-config');
+        } else {
+             _configPath = '.cloud-storage-config';
+        }
+    }
+    
+    print("🔧 AppState initialized with config path: $_configPath");
     
     // Initialize cloud client based on provider
     _cloudClient = CloudStorageFactory.create(_currentProvider, config: config);
-    
-    
     
     _activePanel = PanelSide.local;
     
@@ -458,7 +478,9 @@ class AppState extends ChangeNotifier {
     try {
       if (_cloudClient is InternxtClientAdapter) {
         final adapter = _cloudClient as InternxtClientAdapter;
-        final creds = await adapter.config.readCredentials();
+        final rawCreds = await (_cloudClient as InternxtClientAdapter).config.readCredentials();
+        final Map<String, String>? creds = rawCreds?.cast<String, String>();
+
         if (creds == null || creds['token'] == null) {
            print('⚠️ Internxt: No credentials found');
            return;
@@ -893,7 +915,8 @@ class AppState extends ChangeNotifier {
     String? identityLog; // For logging purposes
 
     if (_cloudClient is InternxtClientAdapter) {
-      creds = await (_cloudClient as InternxtClientAdapter).config.readCredentials();
+      final rawCreds = await (_cloudClient as InternxtClientAdapter).config.readCredentials();
+      creds = rawCreds?.map((key, value) => MapEntry(key, value.toString()));
       identityLog = creds?['email'];
     } else if (_cloudClient is FilenClientAdapter) {
       creds = await (_cloudClient as FilenClientAdapter).filenConfig.readCredentials();
@@ -1142,7 +1165,8 @@ class AppState extends ChangeNotifier {
     Map<String, String>? creds;
     String? identityLog;
     if (_cloudClient is InternxtClientAdapter) {
-      creds = await (_cloudClient as InternxtClientAdapter).config.readCredentials();
+      final rawCreds = await (_cloudClient as InternxtClientAdapter).config.readCredentials();
+      creds = rawCreds?.cast<String, String>();
       identityLog = creds?['email'];
     } else if (_cloudClient is FilenClientAdapter) {
       creds = await (_cloudClient as FilenClientAdapter).filenConfig.readCredentials();

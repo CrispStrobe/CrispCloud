@@ -41,10 +41,19 @@ class InternxtClientAdapter implements CloudStorageClient {
 
   @override
   Future<void> login(String email, String password, {String? twoFactorCode}) async {
-    final response = await _client.login(email, password, tfaCode: twoFactorCode);
-    _lastLoginResponse = response;
-    // login() inside client should set the internal state, but we ensure it here if needed
-    _client.setAuth(response); 
+    print("🔌 Adapter: Calling InternxtClient login...");
+    try {
+        final response = await _client.login(email, password, tfaCode: twoFactorCode);
+        _lastLoginResponse = response;
+        
+        print("🔌 Adapter: Login successful. Keys received: ${response.keys}");
+        
+        // Ensure the client state is updated
+        _client.setAuth(response); 
+    } catch (e) {
+        print("🔌 Adapter: Login failed with error: $e");
+        rethrow;
+    }
   }
 
   @override

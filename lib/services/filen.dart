@@ -3,7 +3,7 @@
 /// ---------------------------------------------------------------------------
 /// FILEN CLI (v0.0.4)
 /// ---------------------------------------------------------------------------
-import 'package:flutter/foundation.dart'; // For kIsWeb
+import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:universal_html/html.dart' as html; // For Web Crypto
 import 'dart:async';
 import 'dart:convert';
@@ -19,7 +19,8 @@ import 'package:path/path.dart' as p;
 import 'package:pointycastle/export.dart' hide Digest, HMac, SHA512Digest;
 import 'package:glob/glob.dart';
 import 'package:glob/list_local_fs.dart';
-import 'dart:js_util' as js_util; // For calling JS methods safely
+import 'filen_web_stub.dart' 
+  if (dart.library.js_util) 'dart:js_util' as js_util;
 
 // WebDAV Imports
 import 'package:shelf/shelf.dart'; // for Pipeline/Middleware
@@ -4354,7 +4355,7 @@ class ConfigService {
     configDir = configPath;
     credentialsFile = p.join(configDir, 'credentials.json');
     batchStateDir = p.join(configDir, 'batch_states');
-    webdavPidFile = p.join(configDir, 'webdav.pid'); // ADD THIS
+    webdavPidFile = p.join(configDir, 'webdav.pid'); 
 
     try {
       Directory(configDir).createSync(recursive: true);
@@ -4363,6 +4364,8 @@ class ConfigService {
       print("⚠️ Warning: Could not create config directory: $e");
     }
   }
+
+  String get configPath => configDir;
 
   Future<int?> readWebdavPid() async {
     final file = File(webdavPidFile);
