@@ -38,7 +38,7 @@ This is an unofficial, open-source project and is **not** affiliated with, endor
 
 ## Web (PWA) Notes
 
-The Web version (Ddemo available at [crisp-cloud.vercel.app](https://crisp-cloud.vercel.app/)) has specific browser security constraints:
+The Web version (Demo available at [crisp-cloud.vercel.app](https://crisp-cloud.vercel.app/)) has specific browser security constraints:
 
 1.  **Local File System:** Browsers do not allow direct access to your drive. The "Local" pane works as a **Virtual Staging Area**. You must click "Open Local Folder" to import files/folders into the browser's memory before uploading.
 2.  **WebDAV:** Your WebDAV server **must** support CORS (Cross-Origin Resource Sharing) and allow headers like `Depth`, `Destination`, and `Authorization`.
