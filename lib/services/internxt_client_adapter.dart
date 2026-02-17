@@ -33,8 +33,6 @@ class InternxtClientAdapter implements CloudStorageClient {
   @override
   String? get bucketId => _client.bucketId;
 
-  // ... (rest of the adapter delegates to _client or extensions) ...
-
   void setAuth(Map<String, dynamic> creds) {
     _client.setAuth(creds);
   }
@@ -106,8 +104,21 @@ class InternxtClientAdapter implements CloudStorageClient {
   Future<void> deletePath(String path) => _client.deletePath(path);
 
   @override
-  Future<void> movePath(String sourcePath, String targetPath) => _client.movePath(sourcePath, targetPath);
+  Future<void> movePath(String sourcePath, String targetPath) async {
+    // We delegate completely to client which handles cache invalidation
+    final sourceResolved = await resolvePath(sourcePath);
+    final targetResolved = await resolvePath(targetPath);
+    
+    if (sourceResolved == null) throw Exception("Source not found");
+    if (targetResolved == null) throw Exception("Target not found");
 
+    if (sourceResolved['type'] == 'file') {
+      await _client.moveFile(sourceResolved['uuid'], targetResolved['uuid']);
+    } else {
+      await _client.moveFolder(sourceResolved['uuid'], targetResolved['uuid']);
+    }
+  }
+  
   @override
   Future<void> renamePath(String path, String newName) => _client.renamePath(path, newName);
   

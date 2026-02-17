@@ -1736,9 +1736,10 @@ class InternxtClient {
   String? userId;
   String? rootFolderId;
   String? bucketId;
+  String? bridgeUser;
 
   // Caching variables
-  static const Duration _cacheDuration = Duration(minutes: 10);
+  static const Duration _cacheDuration = Duration(minutes: 5);
   final Map<String, _CacheEntry> _folderCache = {};
   final Map<String, _CacheEntry> _fileCache = {};
 
@@ -1765,8 +1766,9 @@ class InternxtClient {
     userId       = creds['userId']?.toString();      // Hydrated field
     rootFolderId = creds['rootFolderId']?.toString();
     bucketId     = creds['bucketId']?.toString();    // Hydrated field
+    bridgeUser   = creds['bridgeUser']?.toString();
     
-    log("📊 TRACE: Session loaded for $userEmail (Bucket: $bucketId)");
+    log("📊 TRACE: Session loaded for $userEmail. Bucket: $bucketId, BridgeUser: $bridgeUser");
   }
   // --- Token Refresh ---
 
@@ -1793,6 +1795,60 @@ class InternxtClient {
     } catch (e) {
       log('Token refresh network error: $e');
       throw Exception('Token refresh failed: $e');
+    }
+  }
+
+  void invalidateCache(String folderUuid) {
+    _folderCache.remove(folderUuid);
+    _fileCache.remove(folderUuid);
+    log('🧹 Cache CLEARED for folder: $folderUuid');
+  }
+
+  Future<void> uploadFile(
+    List<int> fileData,
+    String fileName,
+    String targetPath, {
+    Function(int, int)? onProgress,
+  }) async {
+    // 1. Validation
+    if (userId == null || bucketId == null || bridgeUser == null) {
+      throw Exception('Not authenticated (Missing userId, bucketId, or bridgeUser). Please re-login.');
+    }
+
+    // Resolve Target Parent
+    final targetFolderInfo = await _resolveOrCreateRemoteFolder(targetPath);
+    final targetFolderUuid = targetFolderInfo['uuid'];
+
+    // 2. Prepare Temp File (Batch upload requires a file path)
+    final tempDir = io.Directory.systemTemp;
+    final tempFile = io.File('${tempDir.path}/$fileName');
+    await tempFile.writeAsBytes(fileData);
+    
+    try {
+      final batchId = 'upload_single_${DateTime.now().millisecondsSinceEpoch}';
+      
+      // 3. Call the batch upload with CORRECT credentials
+      await upload(
+        [tempFile.path],
+        targetPath,
+        recursive: false,
+        onConflict: 'skip',
+        preserveTimestamps: false,
+        include: [],
+        exclude: [],
+        bridgeUser: bridgeUser!, // <--- ??? Use bridgeUser, NOT bucketId
+        userIdForAuth: userId!,
+        batchId: batchId,
+        saveStateCallback: (_) async {},
+      );
+
+      // 4. Force Cache Update
+      invalidateCache(targetFolderUuid);
+
+    } finally {
+      if (await tempFile.exists()) {
+        await tempFile.delete();
+      }
     }
   }
 
@@ -1836,6 +1892,57 @@ class InternxtClient {
     } finally {
       _isRefreshingToken = false;
     }
+  }
+
+  Future<void> downloadFileByPath(
+    String remotePath, 
+    String localPath, 
+    {Function(int, int)? onProgress}
+  ) async {
+    log('📥 downloadFileByPath: $remotePath -> $localPath');
+
+    // Check credentials explicitly
+    if (bridgeUser == null || userId == null) {
+       throw Exception("Cannot download: Bridge credentials missing. Please re-login.");
+    }
+
+    // 1. Resolve path to UUID
+    final resolved = await resolvePath(remotePath);
+    if (resolved['type'] == 'folder') {
+       throw Exception("Path '$remotePath' is a folder, use downloadPath or recursive logic.");
+    }
+    final fileUuid = resolved['uuid'];
+
+    // 2. Perform Download
+    final result = await downloadFile(
+      fileUuid,
+      bridgeUser!, // Now available
+      userId!,     // Now available
+      preserveTimestamps: true,
+    );
+
+    // 3. Write to Disk
+    final data = result['data'] as Uint8List;
+    final file = io.File(localPath);
+
+    // (This throws PathAccessException if OS blocks it)
+    await file.parent.create(recursive: true);
+    await file.writeAsBytes(data);
+
+    // 4. Set Timestamps
+    if (result['modificationTime'] != null) {
+      try {
+        final mTime = DateTime.parse(result['modificationTime']);
+        await file.setLastModified(mTime);
+      } catch (e) {
+        log("⚠️ Failed to set modification time: $e");
+      }
+    }
+    
+    if (onProgress != null) {
+      onProgress(data.length, data.length);
+    }
+    log('✅ Download complete: $localPath');
   }
 
   Future<Uint8List> downloadFileBytes(
@@ -2281,12 +2388,20 @@ class InternxtClient {
         final metadata = await getFolderMetadata(itemUuid);
         parentUuid = metadata['parentId'] ?? metadata['parentUuid'];
       }
+      
+      // Fallback to root if parent is missing (common for root files)
+      if (parentUuid == null && rootFolderId != null) {
+         log("⚠️ Parent UUID null for $itemUuid, assuming Root.");
+         parentUuid = rootFolderId;
+      }
+
       if (parentUuid != null) {
-        _invalidateCache(parentUuid);
+        invalidateCache(parentUuid);
       }
     } catch (e) {
-      log(
-          'Could not clear parent cache for $itemUuid (parent: $parentUuid): $e');
+      log('⚠️ Could not clear parent cache for $itemUuid: $e');
+      // If we fail to find parent, assume root to be safe
+      if (rootFolderId != null) invalidateCache(rootFolderId!);
     }
   }
 
@@ -2572,14 +2687,19 @@ class InternxtClient {
   }) async {
     log('Starting file download: $fileUuid');
 
+    // 1. Fetch Drive Metadata (to get the Network File ID and Bucket ID)
     print('   📋 Fetching file metadata...');
     final metadataUrl = Uri.parse('$driveApiUrl/files/$fileUuid/meta');
 
     final metadataResponse = await _makeRequest('GET', metadataUrl);
-
     final metadata = json.decode(metadataResponse.body);
+
+    // Validate critical metadata
     final bucketId = metadata['bucket'];
     final networkFileId = metadata['fileId'];
+    if (bucketId == null || networkFileId == null) {
+      throw Exception('Invalid metadata: bucketId or fileId is missing for $fileUuid');
+    }
 
     final fileSize = metadata['size'] is int
         ? metadata['size'] as int
@@ -2595,27 +2715,42 @@ class InternxtClient {
     print('   📄 File: $filename');
     print('   📊 Size: ${formatSize(fileSize)}');
 
+    // 2. Prepare Network Credentials
     final networkAuth = _getNetworkAuth(bridgeUser, userIdForAuth);
     final networkUser = networkAuth['user']!;
-    final networkPass = networkAuth['pass']!;
+    final networkPass = networkAuth['pass']!; // This is the SHA256 of userId
 
+    // 3. Get Download Links from Network API
     print('   🔗 Fetching download links...');
+    // IMPORTANT: Pass the networkFileId, NOT the fileUuid
     final linksResponse = await _getDownloadLinks(
         bucketId, networkFileId, networkUser, networkPass);
-    final downloadUrl = linksResponse['shards'][0]['url'];
+    
+    final shards = linksResponse['shards'] as List<dynamic>?;
+    if (shards == null || shards.isEmpty) {
+      throw Exception('No download shards found for file');
+    }
+
+    final downloadUrl = shards[0]['url'];
     final fileIndexHex = linksResponse['index'];
 
+    // 4. Download Encrypted Data
     print('   ☁️  Downloading encrypted data...');
     final downloadResponse = await http.get(Uri.parse(downloadUrl));
 
     if (downloadResponse.statusCode != 200) {
       throw Exception(
-          'Failed to download file: ${downloadResponse.statusCode}');
+          'Failed to download file: ${downloadResponse.statusCode} - ${downloadResponse.reasonPhrase}');
     }
 
     final encryptedData = downloadResponse.bodyBytes;
 
+    // 5. Decrypt
     print('   🔐 Decrypting...');
+    if (mnemonic == null) {
+      throw Exception('Mnemonic key is missing. Cannot decrypt.');
+    }
+
     final decryptedData = _decryptStream(
       encryptedData,
       mnemonic!,
@@ -2623,7 +2758,11 @@ class InternxtClient {
       fileIndexHex,
     );
 
-    final trimmedData = decryptedData.sublist(0, fileSize);
+    // 6. Trim padding (decrypted data might be slightly larger due to block size)
+    // Ensure we don't trim if decrypted length is unexpectedly smaller than fileSize
+    final actualSize = decryptedData.length;
+    final trimLength = (fileSize <= actualSize) ? fileSize : actualSize;
+    final trimmedData = decryptedData.sublist(0, trimLength);
 
     return {
       'data': trimmedData,
@@ -3591,28 +3730,36 @@ class InternxtClient {
     }
   }
 
+  // HELPER: Resolve or Create Remote Folder
   Future<Map<String, dynamic>> _resolveOrCreateRemoteFolder(String targetPath) async {
     Map<String, dynamic> targetFolderInfo;
-      try {
-        targetFolderInfo = await resolvePath(targetPath);
-        if (targetFolderInfo['type'] != 'folder') {
-          throw Exception("Target path '$targetPath' exists but is not a folder.");
-        }
-        log("✅ Target folder exists: '${targetFolderInfo['path'] ?? targetPath}'");
-      } on Exception catch (e) {
-        if (e.toString().contains("Path not found")) {
-          log("⏳ Target path '$targetPath' not found. Attempting to create...");
-          try {
-            targetFolderInfo = await createFolderRecursive(targetPath);
-            log("✅ Created target folder '$targetPath'");
-          } catch (createErr) {
-            throw Exception("Failed to create target folder '$targetPath': $createErr");
-          }
-        } else {
-          throw e;
-        }
+    try {
+      // 1. Try to resolve the path
+      targetFolderInfo = await resolvePath(targetPath);
+      
+      // 2. Ensure it's actually a folder
+      if (targetFolderInfo['type'] != 'folder') {
+        throw Exception("Target path '$targetPath' exists but is not a folder.");
       }
-      return targetFolderInfo;
+      
+      log("✅ Target folder exists: '${targetFolderInfo['path'] ?? targetPath}'");
+      
+    } on Exception catch (e) {
+      // 3. If path is not found, attempt to create it recursively
+      if (e.toString().contains("Path not found")) {
+        log("⏳ Target path '$targetPath' not found. Attempting to create...");
+        try {
+          targetFolderInfo = await createFolderRecursive(targetPath);
+          log("✅ Created target folder '$targetPath'");
+        } catch (createErr) {
+          throw Exception("Failed to create target folder '$targetPath': $createErr");
+        }
+      } else {
+        // Rethrow other errors (e.g., auth errors, network issues)
+        rethrow;
+      }
+    }
+    return targetFolderInfo;
   }
 
   Future<Map<String, dynamic>> _getDownloadLinks(
@@ -3726,6 +3873,9 @@ class InternxtClient {
 
   Future<void> moveFolder(
       String folderUuid, String destinationFolderUuid) async {
+    
+    log('🚀 Moving folder $folderUuid -> $destinationFolderUuid');
+    
     await _clearParentCache(folderUuid, 'folder');
 
     final url = Uri.parse('$driveApiUrl/folders/$folderUuid');

@@ -1225,11 +1225,13 @@ class AppState extends ChangeNotifier {
     
     try {
       for (int i = 0; i < files.length; i++) {
+        // 1. Check Cancellation
         if (operation.isCancelled) {
           print('🚫 Download cancelled by user');
           break;
         }
         
+        // 2. Check Pause
         if (operation.isPaused) {
           print('⏸️  Download paused, waiting for resume...');
           await operation.pauseFuture;
@@ -1244,12 +1246,20 @@ class AppState extends ChangeNotifier {
         final file = files[i];
         final fileProgress = fileProgresses[i];
         
+        // --- CRITICAL FIX START ---
+        // Use the absolute path stored in the file item if available.
+        // This prevents the download from breaking if the user navigates 
+        // to a different folder while the background process is running.
+        final remotePath = file.path ?? p.posix.join(_remotePath, file.name);
+        // --- CRITICAL FIX END ---
+        
         print('');
         print('───────────────────────────────────────────');
         print('⬇️  FILE ${i + 1}/${files.length}');
         print('───────────────────────────────────────────');
         print('Name: ${file.name}');
         print('UUID: ${file.uuid}');
+        print('Remote Path: $remotePath');
         print('Size: ${fileProgress.size} bytes');
         print('Is folder: ${file.isFolder}');
 
@@ -1258,21 +1268,13 @@ class AppState extends ChangeNotifier {
             // --- WEB DOWNLOAD LOGIC ---
             if (file.isFolder) {
                print('Folder download not supported on Web (requires zipping)');
-               // skip or handle error
+               // Mark as skipped or error if strictly required, otherwise just log
             } else {
-               // 1. Get Path
-               final remotePath = p.posix.join(_remotePath, file.name);
-               
-               // 2. We need to fetch bytes directly. 
-               // NOTE: We must ensure our CloudClients have a way to get bytes, or use a temp path approach that returns bytes.
-               // Assuming downloadFileByPath might not work on web if it uses File(path).openWrite.
-               // We might need to add `downloadFileBytes` to interface, OR hack it:
-               
-               // For now, assuming standard clients use HTTP, we might need a specific method.
-               // But if we assume downloadFileByPath fails, we need:
+               // 1. Fetch bytes directly to memory
+               // This ensures we don't rely on Dart IO FileSystem which doesn't exist on Web
                final bytes = await _cloudClient.downloadFileBytes(remotePath);
 
-               // 3. Create Blob and Anchor
+               // 2. Create Blob and Anchor to trigger browser download
                final blob = html.Blob([bytes]);
                final url = html.Url.createObjectUrlFromBlob(blob);
                final anchor = html.AnchorElement(href: url)
@@ -1280,13 +1282,12 @@ class AppState extends ChangeNotifier {
                  ..click();
                html.Url.revokeObjectUrl(url);
             }
-            // --- end web logic ---
+            // --- END WEB LOGIC ---
           } else {
-              // --- DESKTOP/MOBILE LOGIC  ---
-            final remotePath = p.posix.join(_remotePath, file.name);
+            // --- DESKTOP/MOBILE LOGIC ---
             final localFilePath = p.join(target, file.name);
             
-            // Use cloud client abstraction
+            // Delegate based on type
             if (file.isFolder) {
               await _downloadFolderViaClient(remotePath, target, operation);
             } else {
@@ -1308,7 +1309,7 @@ class AppState extends ChangeNotifier {
             
             print('📊 Overall progress: ${operation.currentBytes}/${operation.totalBytes} bytes (${(operation.progress * 100).toStringAsFixed(1)}%)');
             notifyListeners();
-          } // end desktop logic
+          } 
           
         } catch (e, stackTrace) {
           if (operation.isCancelled || e.toString().contains('Cancelled')) {
@@ -1318,12 +1319,14 @@ class AppState extends ChangeNotifier {
           } else {
             print('❌ DOWNLOAD FAILED: ${file.name}');
             print('   Error: $e');
+            print('   Stack: $stackTrace');
             fileProgress.error = e.toString();
           }
           notifyListeners();
         }
       }
 
+      // Final Status Check
       if (operation.isCancelled) {
         print('🚫 Download operation cancelled');
         operation.fail('Cancelled by user');
@@ -1444,10 +1447,11 @@ class AppState extends ChangeNotifier {
             await File(file.path!).delete();
           }
         } else {
-          await _cloudClient.deletePath(p.posix.join(_remotePath, file.name));
+          // FIX: Use absolute path
+          final deletePath = file.path ?? p.posix.join(_remotePath, file.name);
+          await _cloudClient.deletePath(deletePath);
         }
       }
-
       await refreshPanel(side);
       clearSelection(side);
     } catch (e) {
@@ -1457,7 +1461,6 @@ class AppState extends ChangeNotifier {
     }
   }
 
-  // CHANGED: Uses cloud client abstraction
   Future<void> moveFiles(PanelSide side, List<FileItem> files, String targetPath) async {
     if (kIsWeb && side == PanelSide.local) return;
     try {
@@ -1470,7 +1473,9 @@ class AppState extends ChangeNotifier {
             await File(file.path!).rename(newPath);
           }
         } else {
-          final sourcePath = p.posix.join(_remotePath, file.name);
+          // FIX: Use file.path (absolute) instead of combining _remotePath + name
+          final sourcePath = file.path ?? p.posix.join(_remotePath, file.name);
+          print('🚀 Moving: $sourcePath -> $targetPath');
           await _cloudClient.movePath(sourcePath, targetPath);
         }
       }
@@ -1485,7 +1490,6 @@ class AppState extends ChangeNotifier {
     }
   }
 
-  // CHANGED: Uses cloud client abstraction
   Future<void> copyFiles(PanelSide side, List<FileItem> files, String targetPath) async {
     if (kIsWeb && side == PanelSide.local) return;
     try {
@@ -1542,9 +1546,10 @@ class AppState extends ChangeNotifier {
           await File(file.path!).rename(newPath);
         }
       } else {
-        await _cloudClient.renamePath(p.posix.join(_remotePath, file.name), newName);
+        // FIX: Use absolute path
+        final sourcePath = file.path ?? p.posix.join(_remotePath, file.name);
+        await _cloudClient.renamePath(sourcePath, newName);
       }
-
       await refreshPanel(side);
     } catch (e) {
       print('❌ Error renaming file: $e');
