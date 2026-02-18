@@ -66,6 +66,7 @@ class WebFileService implements LocalFileService {
 
   // Stores directory structure: Key='/Photos', Value=[Entity('img.jpg')]
   static final Map<String, List<FileSystemEntity>> _virtualTree = {};
+  
   // Stores actual file references: Key='/Photos/img.jpg', Value=FileObject
   static final Map<String, html.File> _fileRefs = {};
   
@@ -102,27 +103,27 @@ class WebFileService implements LocalFileService {
     _rootDirHandle = null;
 
     // 2. Try File System Access API (Chrome/Edge/Opera)
-    // We use js_util.hasProperty on the window object
     if (js_util.hasProperty(html.window, 'showDirectoryPicker')) {
       try {
-        print("🌐 [Web] Attempting 'showDirectoryPicker' (Write Access)...");
+        print("🌐 [Web] Attempting 'showDirectoryPicker' with Read/Write access...");
         
-        // FIX: Use js_util.callMethod and promiseToFuture
-        final promise = js_util.callMethod(html.window, 'showDirectoryPicker', []);
+        // We request 'readwrite' mode upfront! 
+        // This grants write permission immediately so we don't need a user gesture later.
+        final opts = js_util.newObject();
+        js_util.setProperty(opts, 'mode', 'readwrite');
+        
+        final promise = js_util.callMethod(html.window, 'showDirectoryPicker', [opts]);
         _rootDirHandle = await js_util.promiseToFuture(promise);
         
-        // Access 'name' property
         final rootName = js_util.getProperty(_rootDirHandle, 'name');
-        print("✅ [Web] Got handle for folder: $rootName");
+        print("✅ [Web] Got Read/Write handle for folder: $rootName");
 
-        // Recursively build the virtual tree from the handle
         await _buildTreeFromHandle(_rootDirHandle, '/$rootName');
         
         currentPath = '/$rootName';
         return currentPath;
       } catch (e) {
         print("⚠️ [Web] showDirectoryPicker cancelled or failed: $e. Falling back to input.");
-        // Fallthrough to legacy input if user cancels or API fails
       }
     }
 
