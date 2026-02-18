@@ -2004,13 +2004,12 @@ class InternxtClient {
     final requestHeaders = {
       'Content-Type': 'application/json',
       'Accept': 'application/json',
-      
+      'internxt-client': 'cli', // for ALL platforms
       ...?headers,
     };
 
-    // Only add custom User-Agent if NOT on web to avoid CORS preflight rejection
+    // Only add custom User-Agent on Native (Browsers block modifying this)
     if (!kIsWeb) {
-       requestHeaders['internxt-client'] = 'cli';
        requestHeaders['User-Agent'] = 'InternxtCLI/1.0.0 (Dart)';
     }
 
