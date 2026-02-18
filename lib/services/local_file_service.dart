@@ -14,6 +14,7 @@ import 'package:macos_secure_bookmarks/macos_secure_bookmarks.dart' if (dart.lib
 
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:universal_html/html.dart' as html; // For Web Input
+import 'package:universal_html/js.dart' as js;     // For JS Interop (File System Access API)
 import 'package:cross_file/cross_file.dart'; 
 import '../models/file_item.dart';
 import 'package:path/path.dart' as p;
@@ -31,12 +32,15 @@ abstract class LocalFileService {
   /// We need this to read files while maintaining the security scope e.g. on macOS
   Future<Uint8List> readFile(String path, {FileItem? fileItem});
 
+  /// Save data to a file, handling platform-specific permissions (Web download or Secure Bookmarks)
+  Future<void> saveFile(String path, Uint8List data);
+
   // Helper for Web to get metadata without stat()
   Map<String, dynamic> getWebMetadata(String path) => {};
   
   factory LocalFileService() {
     if (kIsWeb) {
-      return WebFileService();
+      return WebFileService.instance; // RETURN SINGLETON
     }
     
     if (Platform.isMacOS) {
@@ -52,13 +56,19 @@ abstract class LocalFileService {
   }
 }
 
-// --- Web Implementation (Stubbed) ---
+// --- Web Implementation (Singleton & Enhanced) ---
 class WebFileService implements LocalFileService {
+  // Singleton pattern to preserve state across reloads/instantiations
+  static final WebFileService instance = WebFileService._internal();
+  WebFileService._internal();
+
   // Stores directory structure: Key='/Photos', Value=[Entity('img.jpg')]
-  final Map<String, List<FileSystemEntity>> _virtualTree = {};
-  
+  static final Map<String, List<FileSystemEntity>> _virtualTree = {};
   // Stores actual file references: Key='/Photos/img.jpg', Value=FileObject
-  final Map<String, html.File> _fileRefs = {};
+  static final Map<String, html.File> _fileRefs = {};
+  
+  // File System Access API Handle (Chrome/Edge only)
+  static dynamic _rootDirHandle;
 
   @override
   String currentPath = '/';
@@ -81,8 +91,37 @@ class WebFileService implements LocalFileService {
     return {};
   }
 
+  /// Tries to use Modern API (Chrome), falls back to Legacy Input (Safari)
   @override
   Future<String?> requestDirectoryAccess({String? initialDirectory}) async {
+    // 1. Reset State
+    _virtualTree.clear();
+    _fileRefs.clear();
+    _rootDirHandle = null;
+
+    // 2. Try File System Access API (Chrome/Edge/Opera)
+    if (js.context.hasProperty('showDirectoryPicker')) {
+      try {
+        print("🌐 [Web] Attempting 'showDirectoryPicker' (Write Access)...");
+        final promise = js.context.callMethod('showDirectoryPicker');
+        _rootDirHandle = await js.promiseToFuture(promise);
+        
+        final rootName = _rootDirHandle['name'];
+        print("✅ [Web] Got handle for folder: $rootName");
+
+        // Recursively build the virtual tree from the handle
+        await _buildTreeFromHandle(_rootDirHandle, '/$rootName');
+        
+        currentPath = '/$rootName';
+        return currentPath;
+      } catch (e) {
+        print("⚠️ [Web] showDirectoryPicker cancelled or failed: $e. Falling back to input.");
+        // Fallthrough to legacy input if user cancels or API fails
+      }
+    }
+
+    // 3. Legacy Fallback (Safari/Firefox)
+    // No write access, download goes to Downloads folder.
     final completer = Completer<String?>();
     final input = html.FileUploadInputElement();
     
@@ -90,95 +129,116 @@ class WebFileService implements LocalFileService {
     input.setAttribute('directory', '');      
     input.multiple = true;  
     
-    // Handle cancel/close somewhat (imperfect on web)
-    bool isSelected = false;
-    
     input.onChange.listen((e) {
-      isSelected = true;
       if (input.files == null || input.files!.isEmpty) {
         completer.complete(null);
         return;
       }
 
-      // RESET EVERYTHING
-      _virtualTree.clear();
-      _fileRefs.clear();
-
       String rootName = 'root';
-      // Detect root folder name
+      // Heuristic to detect root folder name from relative paths
       if (input.files!.isNotEmpty) {
         final firstPath = input.files!.first.relativePath ?? input.files!.first.name;
-        rootName = firstPath.split('/')[0];
+        final parts = firstPath.split('/');
+        if (parts.isNotEmpty) rootName = parts[0];
       }
 
+      print("📂 [Web] Processing ${input.files!.length} files via legacy input...");
+
       for (final file in input.files!) {
-        // relativePath: "RootFolder/Sub/File.txt"
+        // Filter out macOS metadata files
+        if (file.name.startsWith('._')) continue;
+
         final relPath = file.relativePath ?? file.name;
-        
-        // Full Virtual Path: "/RootFolder/Sub/File.txt"
         final fullPath = '/$relPath';
         
         _fileRefs[fullPath] = file;
-
-        final parts = relPath.split('/');
-        String parentPath = '/'; // Start at absolute root
-        
-        for (int i = 0; i < parts.length; i++) {
-          final partName = parts[i];
-          final isFile = (i == parts.length - 1);
-          
-          // Current item path: "/RootFolder" or "/RootFolder/Sub"
-          final currentItemPath = parentPath == '/' ? '/$partName' : '$parentPath/$partName';
-
-          // Ensure parent list exists
-          if (!_virtualTree.containsKey(parentPath)) {
-            _virtualTree[parentPath] = [];
-          }
-
-          // Check for duplicates in this folder
-          final exists = _virtualTree[parentPath]!.any((e) => e.path == currentItemPath);
-
-          if (!exists) {
-            if (isFile) {
-              _virtualTree[parentPath]!.add(File(currentItemPath));
-            } else {
-              _virtualTree[parentPath]!.add(Directory(currentItemPath));
-            }
-          }
-          
-          // Advance
-          parentPath = currentItemPath;
-        }
+        _populateVirtualTree(relPath);
       }
 
-      // Set current path to the actual selected folder name (e.g. "/Photos")
-      // NOT just "/"
       final startPath = '/$rootName';
       currentPath = startPath;
       completer.complete(startPath);
     });
 
     input.click();
-    
-    // On Web, we can't easily detect "Cancel", so we rely on the user picking something.
     return completer.future;
+  }
+
+  // Recursive walker for File System Access API
+  Future<void> _buildTreeFromHandle(dynamic dirHandle, String currentAbsPath) async {
+    // Ensure entry exists for this folder
+    if (!_virtualTree.containsKey(currentAbsPath)) {
+      _virtualTree[currentAbsPath] = [];
+    }
+
+    // Iterate values(). This is AsyncIterable in JS.
+    final valuesIterator = dirHandle.callMethod('values');
+    
+    while (true) {
+      final next = await js.promiseToFuture(valuesIterator.callMethod('next'));
+      if (next['done'] == true) break;
+      
+      final handle = next['value'];
+      final name = handle['name'];
+      
+      // Filter hidden/system files
+      if (name.startsWith('.') || name.startsWith('._')) continue;
+
+      final itemAbsPath = "$currentAbsPath/$name";
+      
+      if (handle['kind'] == 'file') {
+        _virtualTree[currentAbsPath]!.add(File(itemAbsPath));
+        
+        // Get the File object for reading
+        final fileObj = await js.promiseToFuture(handle.callMethod('getFile'));
+        _fileRefs[itemAbsPath] = fileObj;
+        
+      } else if (handle['kind'] == 'directory') {
+        _virtualTree[currentAbsPath]!.add(Directory(itemAbsPath));
+        await _buildTreeFromHandle(handle, itemAbsPath);
+      }
+    }
+  }
+
+  // Helper for Legacy Input
+  void _populateVirtualTree(String relPath) {
+    final parts = relPath.split('/');
+    String parentPath = '/'; // Start at absolute root
+    
+    for (int i = 0; i < parts.length; i++) {
+      final partName = parts[i];
+      final isFile = (i == parts.length - 1);
+      final currentItemPath = parentPath == '/' ? '/$partName' : '$parentPath/$partName';
+
+      if (!_virtualTree.containsKey(parentPath)) {
+        _virtualTree[parentPath] = [];
+      }
+
+      final exists = _virtualTree[parentPath]!.any((e) => e.path == currentItemPath);
+
+      if (!exists) {
+        if (isFile) {
+          _virtualTree[parentPath]!.add(File(currentItemPath));
+        } else {
+          _virtualTree[parentPath]!.add(Directory(currentItemPath));
+        }
+      }
+      parentPath = currentItemPath;
+    }
   }
 
   @override
   Future<List<FileSystemEntity>?> listDirectory(String path) async {
-    // Normalize path: ensure no trailing slash (unless root)
     String lookup = path;
     if (lookup.length > 1 && lookup.endsWith('/')) {
       lookup = lookup.substring(0, lookup.length - 1);
     }
-    
     return _virtualTree[lookup] ?? [];
   }
 
   @override
   Future<bool> hasAccessToPath(String path) async {
-    // On virtual FS, we have access if it exists in our tree or file refs
-    // Normalize logic
     String lookup = path;
     if (lookup.length > 1 && lookup.endsWith('/')) {
       lookup = lookup.substring(0, lookup.length - 1);
@@ -198,6 +258,53 @@ class WebFileService implements LocalFileService {
     reader.readAsArrayBuffer(fileRef);
     await reader.onLoad.first;
     return reader.result as Uint8List;
+  }
+
+  @override
+  Future<void> saveFile(String path, Uint8List data) async {
+    // 1. Try Modern "Save to Folder" (Chrome/Edge)
+    if (_rootDirHandle != null) {
+      try {
+        print('🌐 [Web] Attempting direct write to folder handle...');
+        // We need to walk the handle to find the correct subfolder if path is deep
+        // For simplicity, we assume writing relative to root handle for now, 
+        // or implement a path walker.
+        
+        // Simple implementation: Write to root of selected folder if path matches
+        // Extract filename
+        final fileName = p.basename(path);
+        
+        // Get File Handle (create: true)
+        final fileHandlePromise = _rootDirHandle.callMethod('getFileHandle', [
+          fileName, 
+          js.JsObject.jsify({'create': true})
+        ]);
+        final fileHandle = await js.promiseToFuture(fileHandlePromise);
+        
+        // Create Writable
+        final writablePromise = fileHandle.callMethod('createWritable');
+        final writable = await js.promiseToFuture(writablePromise);
+        
+        // Write
+        await js.promiseToFuture(writable.callMethod('write', [data]));
+        await js.promiseToFuture(writable.callMethod('close'));
+        
+        print('✅ [Web] Successfully wrote to $fileName');
+        return;
+      } catch (e) {
+        print('⚠️ [Web] Direct write failed ($e). Falling back to download.');
+      }
+    }
+
+    // 2. Fallback "Save As" (Safari/Firefox)
+    print('🌐 [Web] Triggering browser download for $path');
+    final fileName = p.basename(path);
+    final blob = html.Blob([data]);
+    final url = html.Url.createObjectUrlFromBlob(blob);
+    final anchor = html.AnchorElement(href: url)
+      ..setAttribute("download", fileName)
+      ..click();
+    html.Url.revokeObjectUrl(url);
   }
 }
 
@@ -241,7 +348,6 @@ class MacosFileService implements LocalFileService {
       currentPath = grantedPath;
       return currentPath;
     }
-    
     currentPath = await getSafeFallbackDirectory();
     _grantedBasePath = null;
     return currentPath;
@@ -265,41 +371,37 @@ class MacosFileService implements LocalFileService {
     currentPath = path;
     if (_resolvedBookmarkFile == null) {
       if (!await _loadAndResolveBookmark()) {
-         throw Exception('No bookmark found. Please grant access.');
+         // If no bookmark, try mostly harmless listing, might throw
       }
     }
 
-    if (!path.startsWith(_resolvedBookmarkFile!.path)) {
-      throw Exception('Path $path is outside of granted bookmark ${_resolvedBookmarkFile!.path}.');
-    }
-
-    try {
-      await _bookmarks.startAccessingSecurityScopedResource(_resolvedBookmarkFile!);
-      // print('🔐 Started security access for ${_resolvedBookmarkFile!.path}');
-
-      final dir = Directory(path);
-      final entities = await dir.list().toList();
-      
-      await _bookmarks.stopAccessingSecurityScopedResource(_resolvedBookmarkFile!);
-      // print('🔓 Stopped security access for ${_resolvedBookmarkFile!.path}');
-      
-      return entities;
-    } catch (e) {
-      print('❌ Failed to list directory with bookmark: $e');
+    // Try secure listing if we have a bookmark and path is inside it
+    if (_resolvedBookmarkFile != null && path.startsWith(_resolvedBookmarkFile!.path)) {
       try {
+        await _bookmarks.startAccessingSecurityScopedResource(_resolvedBookmarkFile!);
+        final dir = Directory(path);
+        final entities = await dir.list().toList();
         await _bookmarks.stopAccessingSecurityScopedResource(_resolvedBookmarkFile!);
-      } catch (e2) { /* ignore */ }
-      rethrow; 
+        return entities;
+      } catch (e) {
+        try { await _bookmarks.stopAccessingSecurityScopedResource(_resolvedBookmarkFile!); } catch (_) {}
+        // Fallthrough to try normal listing
+      }
+    }
+    
+    // Normal listing fallback
+    try {
+      return await Directory(path).list().toList();
+    } catch (e) {
+      print('❌ Failed to list directory: $e');
+      rethrow;
     }
   }
 
   @override
   Future<Uint8List> readFile(String path, {FileItem? fileItem}) async {
-    if (_resolvedBookmarkFile == null) {
-      await _loadAndResolveBookmark();
-    }
+    if (_resolvedBookmarkFile == null) await _loadAndResolveBookmark();
     
-    // If we have a secure bookmark, wrap the read operation
     if (_resolvedBookmarkFile != null && path.startsWith(_resolvedBookmarkFile!.path)) {
       try {
         await _bookmarks.startAccessingSecurityScopedResource(_resolvedBookmarkFile!);
@@ -307,16 +409,45 @@ class MacosFileService implements LocalFileService {
         await _bookmarks.stopAccessingSecurityScopedResource(_resolvedBookmarkFile!);
         return data;
       } catch (e) {
-        // Ensure we stop accessing even if read fails
-        try {
-          await _bookmarks.stopAccessingSecurityScopedResource(_resolvedBookmarkFile!);
-        } catch (_) {}
+        try { await _bookmarks.stopAccessingSecurityScopedResource(_resolvedBookmarkFile!); } catch (_) {}
+        rethrow;
+      }
+    }
+    return File(path).readAsBytes();
+  }
+
+  @override
+  Future<void> saveFile(String path, Uint8List data) async {
+    if (_resolvedBookmarkFile == null) await _loadAndResolveBookmark();
+
+    if (_resolvedBookmarkFile != null && path.startsWith(_resolvedBookmarkFile!.path)) {
+      try {
+        print('🔐 [MacOS] Writing to secure path: $path');
+        await _bookmarks.startAccessingSecurityScopedResource(_resolvedBookmarkFile!);
+        
+        final file = File(path);
+        // Ensure parent exists
+        if (!await file.parent.exists()) {
+           await file.parent.create(recursive: true);
+        }
+        await file.writeAsBytes(data);
+        
+        await _bookmarks.stopAccessingSecurityScopedResource(_resolvedBookmarkFile!);
+        return;
+      } catch (e) {
+        try { await _bookmarks.stopAccessingSecurityScopedResource(_resolvedBookmarkFile!); } catch (_) {}
+        print('❌ [MacOS] Secure write failed: $e');
         rethrow;
       }
     }
     
-    // Fallback if no bookmark is involved (e.g. non-sandboxed parts)
-    return File(path).readAsBytes();
+    // Fallback normal write
+    print('💾 [MacOS] Writing to path (no bookmark scope): $path');
+    final file = File(path);
+    if (!await file.parent.exists()) {
+       await file.parent.create(recursive: true);
+    }
+    await file.writeAsBytes(data);
   }
 
   @override
@@ -324,8 +455,8 @@ class MacosFileService implements LocalFileService {
     if (_grantedBasePath == null) {
       _grantedBasePath = await MacOSBookmarkService.getLastGrantedDirectory();
     }
-    if (_grantedBasePath == null) return false;
-    return path.startsWith(_grantedBasePath!);
+    if (_grantedBasePath != null && path.startsWith(_grantedBasePath!)) return true;
+    return path.startsWith(Platform.environment['HOME'] ?? '/');
   }
   
   @override
@@ -383,6 +514,15 @@ class DesktopFileService implements LocalFileService {
   @override
   Future<Uint8List> readFile(String path, {FileItem? fileItem}) async {
     return File(path).readAsBytes();
+  }
+
+  @override
+  Future<void> saveFile(String path, Uint8List data) async {
+    final file = File(path);
+    if (!await file.parent.exists()) {
+       await file.parent.create(recursive: true);
+    }
+    await file.writeAsBytes(data);
   }
 
   @override
@@ -530,10 +670,31 @@ class MobileFileService implements LocalFileService {
   }
 
   @override
+  Future<void> saveFile(String path, Uint8List data) async {
+    if (_resolvedBookmarkFile == null) await _loadAndResolveBookmark();
+
+    if (_resolvedBookmarkFile != null && path.startsWith(_resolvedBookmarkFile!.path)) {
+      try {
+        await _bookmarks.startAccessingSecurityScopedResource(_resolvedBookmarkFile!);
+        final file = File(path);
+        if (!await file.parent.exists()) await file.parent.create(recursive: true);
+        await file.writeAsBytes(data);
+        await _bookmarks.stopAccessingSecurityScopedResource(_resolvedBookmarkFile!);
+        return;
+      } catch (e) {
+        try { await _bookmarks.stopAccessingSecurityScopedResource(_resolvedBookmarkFile!); } catch (_) {}
+        rethrow;
+      }
+    }
+    final file = File(path);
+    if (!await file.parent.exists()) await file.parent.create(recursive: true);
+    await file.writeAsBytes(data);
+  }
+
+  @override
   Future<bool> hasAccessToPath(String path) async {
     if (path.startsWith(currentPath)) return true;
     if (_grantedBasePath != null && path.startsWith(_grantedBasePath!)) return true;
-    
     try {
       await Directory(path).stat();
       return true;
