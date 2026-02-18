@@ -50,6 +50,7 @@ class InternxtClientAdapter implements CloudStorageClient {
         _client.setAuth(response); 
     } catch (e) {
         print("🔌 Adapter: Login failed with error: $e");
+        print("🔌 Stacktrace: $stack");
         rethrow;
     }
   }
@@ -118,7 +119,7 @@ class InternxtClientAdapter implements CloudStorageClient {
       await _client.moveFolder(sourceResolved['uuid'], targetResolved['uuid']);
     }
   }
-  
+
   @override
   Future<void> renamePath(String path, String newName) => _client.renamePath(path, newName);
   

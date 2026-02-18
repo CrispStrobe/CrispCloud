@@ -5,6 +5,7 @@ import 'dart:async'; // For TimeoutException
 import 'dart:io' as io; // Use a prefix for dart:io
 import 'package:file/file.dart' as pkg_file;
 import 'package:flutter/foundation.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 import 'dart:math';
 import 'dart:typed_data';
@@ -4341,6 +4342,10 @@ class InternxtClient {
 
 /// Handles persistent storage for credentials, batch states, and WebDAV metadata.
 
+// ============================================================================
+// CONFIG SERVICE (FIXED FOR WEB & NATIVE)
+// ============================================================================
+
 class ConfigService {
   late final String internxtCliDataDir;
   late final String internxtCliLogsDir;
@@ -4349,34 +4354,55 @@ class ConfigService {
   late final String webdavPidFile;
 
   ConfigService({required String configPath}) {
-    // Fallback if path is empty to prevent crash
-    if (configPath.trim().isEmpty) {
-      print("⚠️ ConfigService received empty path. Falling back to default.");
-      final home = io.Platform.environment['HOME'] ?? io.Platform.environment['USERPROFILE'] ?? '.';
-      internxtCliDataDir = p.join(home, '.internxt-cli');
+    print("🔧 [ConfigService] Initializing...");
+
+    if (kIsWeb) {
+      print("🌍 [ConfigService] Web environment detected. File system paths will be virtual/unused.");
+      // On Web, these paths are placeholders/keys for SharedPreferences
+      internxtCliDataDir = 'web_internxt_data';
+      internxtCliLogsDir = 'web_internxt_logs';
+      batchStateDir = 'web_batch_states';
+      credentialsFile = 'web_internxt_creds';
+      webdavPidFile = 'web_webdav.pid';
     } else {
-      internxtCliDataDir = configPath;
-    }
-    
-    print("🔧 ConfigService initialized at: $internxtCliDataDir");
+      // --- NATIVE LOGIC ---
+      if (configPath.trim().isEmpty) {
+        print("⚠️ [ConfigService] Received empty config path. Falling back to default.");
+        try {
+          final home = io.Platform.environment['HOME'] ?? io.Platform.environment['USERPROFILE'] ?? '.';
+          internxtCliDataDir = p.join(home, '.internxt-cli');
+        } catch (e) {
+          print("❌ [ConfigService] Failed to determine HOME dir: $e. Using current directory.");
+          internxtCliDataDir = '.internxt-cli';
+        }
+      } else {
+        internxtCliDataDir = configPath;
+      }
+      
+      print("📂 [ConfigService] Root Data Dir: $internxtCliDataDir");
 
-    internxtCliLogsDir = p.join(internxtCliDataDir, 'logs');
-    batchStateDir = p.join(internxtCliDataDir, 'batch_states'); 
-    credentialsFile = p.join(internxtCliDataDir, '.inxtcli-dart-creds.json');
-    webdavPidFile = p.join(internxtCliDataDir, 'webdav.pid');
+      internxtCliLogsDir = p.join(internxtCliDataDir, 'logs');
+      batchStateDir = p.join(internxtCliDataDir, 'batch_states'); 
+      credentialsFile = p.join(internxtCliDataDir, '.inxtcli-dart-creds.json');
+      webdavPidFile = p.join(internxtCliDataDir, 'webdav.pid');
 
-    try {
-      if (!io.Directory(internxtCliDataDir).existsSync()) {
-         io.Directory(internxtCliDataDir).createSync(recursive: true);
+      // Create directories (Native only)
+      try {
+        if (!io.Directory(internxtCliDataDir).existsSync()) {
+           print("   Creating root dir...");
+           io.Directory(internxtCliDataDir).createSync(recursive: true);
+        }
+        if (!io.Directory(internxtCliLogsDir).existsSync()) {
+           print("   Creating logs dir...");
+           io.Directory(internxtCliLogsDir).createSync(recursive: true);
+        }
+        if (!io.Directory(batchStateDir).existsSync()) {
+           print("   Creating batch dir...");
+           io.Directory(batchStateDir).createSync(recursive: true);
+        }
+      } catch (e) {
+        print("❌ [ConfigService] Directory Creation Failed: $e");
       }
-      if (!io.Directory(internxtCliLogsDir).existsSync()) {
-         io.Directory(internxtCliLogsDir).createSync(recursive: true);
-      }
-      if (!io.Directory(batchStateDir).existsSync()) {
-         io.Directory(batchStateDir).createSync(recursive: true);
-      }
-    } catch (e) {
-      print("❌ ConfigService Directory Creation Failed: $e");
     }
   }
 
@@ -4385,33 +4411,39 @@ class ConfigService {
   String get configPath => internxtCliDataDir;
 
   // --- WebDAV PID Management ---
+  // (Only relevant on Native, harmless on Web)
   Future<void> saveWebdavPid(int pid) async {
+    if (kIsWeb) return;
     try {
       await io.File(webdavPidFile).writeAsString(pid.toString());
+      print("💾 [Config] Saved WebDAV PID: $pid");
     } catch (e) {
-      print('⚠️  Warning: Could not save WebDAV PID file: $e');
+      print('⚠️ [Config] Warning: Could not save WebDAV PID file: $e');
     }
   }
 
   Future<int?> readWebdavPid() async {
+    if (kIsWeb) return null;
     try {
       if (await io.File(webdavPidFile).exists()) {
         final content = await io.File(webdavPidFile).readAsString();
         return int.tryParse(content.trim());
       }
     } catch (e) {
-      print('⚠️  Warning: Could not read WebDAV PID file: $e');
+      print('⚠️ [Config] Warning: Could not read WebDAV PID file: $e');
     }
     return null;
   }
 
   Future<void> clearWebdavPid() async {
+    if (kIsWeb) return;
     try {
       if (await io.File(webdavPidFile).exists()) {
         await io.File(webdavPidFile).delete();
+        print("🧹 [Config] Cleared WebDAV PID file");
       }
     } catch (e) {
-      print('⚠️  Warning: Could not clear WebDAV PID file: $e');
+      print('⚠️ [Config] Warning: Could not clear WebDAV PID file: $e');
     }
   }
 
@@ -4424,10 +4456,29 @@ class ConfigService {
   }
 
   String getBatchStateFilePath(String batchId) {
+    // Native only helper
     return p.join(batchStateDir, 'batch_state_$batchId.json');
   }
 
   Future<Map<String, dynamic>?> loadBatchState(String batchId) async {
+    print("📥 [Config] Loading batch state: $batchId");
+    
+    // --- WEB ---
+    if (kIsWeb) {
+      try {
+        final prefs = await SharedPreferences.getInstance();
+        final content = prefs.getString('batch_$batchId');
+        if (content != null) {
+          return json.decode(content) as Map<String, dynamic>;
+        }
+        return null;
+      } catch (e) {
+        print("⚠️ [Config] Web Load Error: $e");
+        return null;
+      }
+    }
+
+    // --- NATIVE ---
     final filePath = getBatchStateFilePath(batchId);
     final file = io.File(filePath);
     if (await file.exists()) {
@@ -4435,7 +4486,7 @@ class ConfigService {
         final content = await file.readAsString();
         return json.decode(content) as Map<String, dynamic>;
       } catch (e) {
-        print("⚠️ Warning: Could not read batch state file '$filePath': $e");
+        print("⚠️ [Config] Corrupt batch state file '$filePath': $e");
         await deleteBatchState(batchId);
         return null;
       }
@@ -4444,48 +4495,124 @@ class ConfigService {
   }
 
   Future<void> saveBatchState(String batchId, Map<String, dynamic> state) async {
+     // --- WEB ---
+     if (kIsWeb) {
+       try {
+         final prefs = await SharedPreferences.getInstance();
+         await prefs.setString('batch_$batchId', json.encode(state));
+         // print("💾 [Config] Saved batch state (Web): $batchId");
+       } catch (e) {
+         print("⚠️ [Config] Web Save Error: $e");
+       }
+       return;
+     }
+
+     // --- NATIVE ---
      final filePath = getBatchStateFilePath(batchId);
      final file = io.File(filePath);
      try {
         await file.writeAsString(json.encode(state));
+        // print("💾 [Config] Saved batch state (Native): $filePath");
      } catch (e) {
-        print("⚠️ Warning: Could not save batch state file '$filePath': $e");
+        print("⚠️ [Config] Could not save batch state file '$filePath': $e");
      }
   }
 
   Future<void> deleteBatchState(String batchId) async {
+    print("🗑️ [Config] Deleting batch state: $batchId");
+    
+    // --- WEB ---
+    if (kIsWeb) {
+      final prefs = await SharedPreferences.getInstance();
+      await prefs.remove('batch_$batchId');
+      return;
+    }
+
+    // --- NATIVE ---
     final filePath = getBatchStateFilePath(batchId);
     final file = io.File(filePath);
     if (await file.exists()) {
       try {
         await file.delete();
       } catch (e) {
-         print("⚠️ Warning: Could not delete batch state file '$filePath': $e");
+         print("⚠️ [Config] Could not delete batch state file '$filePath': $e");
       }
     }
   }
 
   // --- Hydrated Credentials Management ---
   Future<void> saveCredentials(Map<String, dynamic> credentials) async {
-    final file = io.File(credentialsFile);
-    await file.writeAsString(json.encode(credentials), flush: true);
+    print("🔐 [Config] Saving credentials...");
+    
+    // --- WEB ---
+    if (kIsWeb) {
+      try {
+        final prefs = await SharedPreferences.getInstance();
+        await prefs.setString('internxt_creds', json.encode(credentials));
+        print("✅ [Config] Credentials saved to SharedPreferences.");
+      } catch (e) {
+        print("❌ [Config] Web Creds Save Error: $e");
+      }
+      return;
+    }
+
+    // --- NATIVE ---
+    try {
+      final file = io.File(credentialsFile);
+      await file.writeAsString(json.encode(credentials), flush: true);
+      print("✅ [Config] Credentials saved to file: $credentialsFile");
+    } catch (e) {
+      print("❌ [Config] Native Creds Save Error: $e");
+    }
   }
 
   Future<Map<String, dynamic>?> readCredentials() async {
+    // print("🔐 [Config] Reading credentials...");
+
+    // --- WEB ---
+    if (kIsWeb) {
+      try {
+        final prefs = await SharedPreferences.getInstance();
+        final content = prefs.getString('internxt_creds');
+        if (content != null && content.isNotEmpty) {
+          return json.decode(content) as Map<String, dynamic>;
+        }
+      } catch (e) {
+        print("⚠️ [Config] Web Creds Read Error: $e");
+      }
+      return null;
+    }
+
+    // --- NATIVE ---
     final file = io.File(credentialsFile);
     if (!await file.exists()) return null;
     try {
       final contents = await file.readAsString();
       return json.decode(contents) as Map<String, dynamic>;
     } catch (e) {
+      print("⚠️ [Config] Native Creds Read Error: $e");
       return null;
     }
   }
 
   Future<void> clearCredentials() async {
+    print("🔒 [Config] Clearing credentials...");
+    
+    // --- WEB ---
+    if (kIsWeb) {
+      final prefs = await SharedPreferences.getInstance();
+      await prefs.remove('internxt_creds');
+      return;
+    }
+
+    // --- NATIVE ---
     final file = io.File(credentialsFile);
     if (await file.exists()) {
-      await file.delete();
+      try {
+        await file.delete();
+      } catch (e) {
+        print("⚠️ [Config] Error deleting creds file: $e");
+      }
     }
   }
 }

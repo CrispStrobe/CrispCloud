@@ -9,6 +9,7 @@ import 'package:path_provider/path_provider.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:path/path.dart' as p;
 import 'dart:io';
+import 'dart:async';
 
 import 'services/filen_config_service.dart';
 import 'services/internxt_client.dart' show ConfigService; //
@@ -16,36 +17,52 @@ import 'services/sftp_config_service.dart';
 import 'services/webdav_config_service.dart';
 
 Future<void> main() async {
-  WidgetsFlutterBinding.ensureInitialized();
+  // Catch errors that happen during startup (like ConfigService crashing on Web)
+  runZonedGuarded(() async {
+    WidgetsFlutterBinding.ensureInitialized();
 
-  // Determine the platform-specific config path
-  String configPath;
-  if (kIsWeb) {
-    configPath = '/.cloud-storage-config-web';
-  } else if (Platform.isAndroid || Platform.isIOS) {
-    final dir = await getApplicationSupportDirectory();
-    configPath = p.join(dir.path, '.cloud-storage-config');
-  } else {
-    final home = Platform.environment['HOME'] ?? Platform.environment['USERPROFILE'] ?? '.';
-    configPath = p.join(home, '.cloud-storage-config');
-  }
+    print("🚀 [Main] App starting...");
 
-  // Determine which provider to use
-  CloudProvider defaultProvider = await _getDefaultProvider();
+    // Determine the platform-specific config path
+    String configPath;
+    if (kIsWeb) {
+      // NOTE: On Web, this path is symbolic. 
+      // If ConfigService uses io.File(configPath).writeAsString, it WILL crash.
+      // Ideally, ConfigService should use SharedPreferences on Web.
+      configPath = 'cloud-storage-config'; 
+    } else if (Platform.isAndroid || Platform.isIOS) {
+      final dir = await getApplicationSupportDirectory();
+      configPath = p.join(dir.path, '.cloud-storage-config');
+    } else {
+      final home = Platform.environment['HOME'] ?? Platform.environment['USERPROFILE'] ?? '.';
+      configPath = p.join(home, '.cloud-storage-config');
+    }
 
-  // ROBUSTNESS CHECK: If Internxt is selected but disabled via flag, force Filen
-  if (defaultProvider == CloudProvider.internxt && !CloudStorageFactory.isInternxtSupported) {
-    print('⚠️ Internxt preference detected but provider is disabled. Forcing Filen.');
-    defaultProvider = CloudProvider.filen;
-  }
-  
-  // Create the appropriate config service based on provider
-  final configService = await _createConfigService(configPath, defaultProvider);
-  
-  runApp(MyApp(
-    configService: configService,
-    initialProvider: defaultProvider,
-  ));
+    print("📂 [Main] Config path: $configPath");
+
+    CloudProvider defaultProvider = await _getDefaultProvider();
+
+    if (defaultProvider == CloudProvider.internxt && !CloudStorageFactory.isInternxtSupported) {
+      print('⚠️ Internxt preference detected but provider is disabled. Forcing Filen.');
+      defaultProvider = CloudProvider.filen;
+    }
+    
+    try {
+      final configService = await _createConfigService(configPath, defaultProvider);
+      
+      runApp(MyApp(
+        configService: configService,
+        initialProvider: defaultProvider,
+      ));
+    } catch (e, stack) {
+      print("🔥 [Main] Critical Error creating config service: $e");
+      print(stack);
+      // Fallback to basic app or error screen could go here
+    }
+  }, (error, stack) {
+    print("🔥 [Global Error Catch] $error");
+    print(stack);
+  });
 }
 
 // Helper to determine default provider from saved preference
