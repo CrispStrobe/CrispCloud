@@ -1224,100 +1224,117 @@ class AppState extends ChangeNotifier {
     int completedBytes = 0;
     
     try {
+      print('🚀 [Download] Starting batch for ${files.length} files to: $target');
+
       for (int i = 0; i < files.length; i++) {
         // 1. Check Cancellation
         if (operation.isCancelled) {
-          print('🚫 Download cancelled by user');
+          print('🚫 [Download] Cancelled by user');
           break;
         }
         
         // 2. Check Pause
         if (operation.isPaused) {
-          print('⏸️  Download paused, waiting for resume...');
+          print('⏸️  [Download] Paused, waiting for resume...');
           await operation.pauseFuture;
-          print('▶️  Download resumed, continuing...');
-          
+          print('▶️  [Download] Resumed');
           if (operation.isCancelled) {
-            print('🚫 Download cancelled during pause');
-            break;
+             print('🚫 [Download] Cancelled during pause');
+             break;
           }
         }
         
         final file = files[i];
         final fileProgress = fileProgresses[i];
         
-        // --- CRITICAL FIX START ---
-        // Use the absolute path stored in the file item if available.
-        // This prevents the download from breaking if the user navigates 
-        // to a different folder while the background process is running.
+        // --- CRITICAL FIX: Path Construction ---
+        // Use absolute path if available, otherwise fallback to joining with current view
         final remotePath = file.path ?? p.posix.join(_remotePath, file.name);
-        // --- CRITICAL FIX END ---
         
         print('');
         print('───────────────────────────────────────────');
-        print('⬇️  FILE ${i + 1}/${files.length}');
+        print('⬇️  FILE ${i + 1}/${files.length}: ${file.name}');
+        print('   UUID: ${file.uuid}');
+        print('   Remote Path: $remotePath');
+        print('   Target Dir: $target');
+        print('   Is Folder: ${file.isFolder}');
         print('───────────────────────────────────────────');
-        print('Name: ${file.name}');
-        print('UUID: ${file.uuid}');
-        print('Remote Path: $remotePath');
-        print('Size: ${fileProgress.size} bytes');
-        print('Is folder: ${file.isFolder}');
 
         try {
-          if (kIsWeb) {
-            // --- WEB DOWNLOAD LOGIC ---
-            if (file.isFolder) {
-               print('Folder download not supported on Web (requires zipping)');
-               // Mark as skipped or error if strictly required, otherwise just log
+          // --- FOLDER HANDLING ---
+          if (file.isFolder) {
+            if (kIsWeb) {
+              print('⚠️ [Download] Folder download not supported on Web (skipping)');
             } else {
-               // 1. Fetch bytes directly to memory
-               // This ensures we don't rely on Dart IO FileSystem which doesn't exist on Web
-               final bytes = await _cloudClient.downloadFileBytes(remotePath);
-
-               // 2. Create Blob and Anchor to trigger browser download
-               final blob = html.Blob([bytes]);
-               final url = html.Url.createObjectUrlFromBlob(blob);
-               final anchor = html.AnchorElement(href: url)
-                 ..setAttribute("download", file.name)
-                 ..click();
-               html.Url.revokeObjectUrl(url);
-            }
-            // --- END WEB LOGIC ---
-          } else {
-            // --- DESKTOP/MOBILE LOGIC ---
-            final localFilePath = p.join(target, file.name);
-            
-            // Delegate based on type
-            if (file.isFolder) {
+              print('📂 [Download] Processing folder structure...');
+              // For folders, we still use the recursive client helper, 
+              // BUT we must ensure it doesn't crash on permissions. 
+              // Since recursively passing byte arrays is complex, we assume
+              // folder downloads might still use the legacy path. 
+              // If _downloadFolderViaClient uses standard IO, it might fail in Sandbox.
+              // Ideally, it should be refactored to use LocalFileService too.
+              // For now, we wrap it try/catch.
               await _downloadFolderViaClient(remotePath, target, operation);
-            } else {
-              await _cloudClient.downloadFileByPath(
-                remotePath,
-                localFilePath,
-                onProgress: (current, total) {
-                  operation.currentBytes = completedBytes + current;
-                  notifyListeners();
-                },
-              );
             }
-            
-            print('✅ Download complete: ${file.name}');
-            
-            fileProgress.isComplete = true;
-            completedBytes += fileProgress.size;
-            operation.currentBytes = completedBytes;
-            
-            print('📊 Overall progress: ${operation.currentBytes}/${operation.totalBytes} bytes (${(operation.progress * 100).toStringAsFixed(1)}%)');
-            notifyListeners();
           } 
+          // --- FILE HANDLING ---
+          else {
+             print('📥 [Download] Fetching bytes for ${file.name}...');
+             
+             // 1. Download bytes into memory
+             // This bypasses the Client Adapter trying to write to disk directly
+             final bytes = await _cloudClient.downloadFileBytes(
+               remotePath,
+               onProgress: (current, total) {
+                 if (total > 0) {
+                    operation.currentBytes = completedBytes + current;
+                    // Debounce notification could be added here
+                    notifyListeners();
+                 }
+               }
+             );
+             
+             print('💾 [Download] Saving ${bytes.length} bytes to local storage...');
+             
+             // 2. Save using LocalFileService
+             // This handles Web (Blob download) and Native (Secure Bookmarks)
+             final localFilePath = p.join(target, file.name);
+             
+             await _localFileService.saveFile(
+               localFilePath, 
+               bytes,
+             );
+             
+             // 3. Attempt to restore timestamps (Native only)
+             if (!kIsWeb && files[i].updatedAt != null) {
+               try {
+                  // We need to touch the file via LocalFileService logic implicitly 
+                  // or just try direct IO (might fail in strict sandbox if not covered by bookmark scope)
+                  // For now, simple attempt:
+                  final f = File(localFilePath);
+                  if (await f.exists()) {
+                    await f.setLastModified(files[i].updatedAt!);
+                  }
+               } catch (e) {
+                 print('⚠️ [Download] Timestamp update failed: $e');
+               }
+             }
+          }
+          
+          print('✅ [Download] Complete: ${file.name}');
+          
+          fileProgress.isComplete = true;
+          completedBytes += fileProgress.size;
+          operation.currentBytes = completedBytes;
+          notifyListeners();
           
         } catch (e, stackTrace) {
           if (operation.isCancelled || e.toString().contains('Cancelled')) {
-            print('🚫 File download cancelled: ${file.name}');
+            print('🚫 [Download] File cancelled: ${file.name}');
             fileProgress.error = 'Cancelled';
             break;
           } else {
-            print('❌ DOWNLOAD FAILED: ${file.name}');
+            print('❌ [Download] FAILED: ${file.name}');
             print('   Error: $e');
             print('   Stack: $stackTrace');
             fileProgress.error = e.toString();
@@ -1328,34 +1345,27 @@ class AppState extends ChangeNotifier {
 
       // Final Status Check
       if (operation.isCancelled) {
-        print('🚫 Download operation cancelled');
         operation.fail('Cancelled by user');
       } else {
         final failedCount = fileProgresses.where((f) => f.error != null).length;
         if (failedCount == 0) {
-          print('✅ All files downloaded successfully');
+          print('🎉 [Download] All files finished successfully');
           operation.complete();
         } else if (failedCount == files.length) {
-          print('❌ All files failed to download');
+          print('💀 [Download] All files failed');
           operation.fail('All files failed');
         } else {
-          print('⚠️ Some files failed to download: $failedCount/${files.length}');
+          print('⚠️ [Download] Partial success ($failedCount failed)');
           operation.complete();
         }
       }
+
     } catch (e) {
-      print('❌ Unexpected error in background download: $e');
+      print('🔥 [Download] Critical Batch Error: $e');
       operation.fail(e.toString());
     }
     
     notifyListeners();
-    
-    print('');
-    print('═══════════════════════════════════════════');
-    print('⬇️  DOWNLOAD BATCH COMPLETE');
-    print('═══════════════════════════════════════════');
-    print('');
-    
     await refreshPanel(PanelSide.local);
     clearSelection(PanelSide.remote);
   }
