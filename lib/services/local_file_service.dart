@@ -14,7 +14,9 @@ import 'package:macos_secure_bookmarks/macos_secure_bookmarks.dart' if (dart.lib
 
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:universal_html/html.dart' as html; // For Web Input
-import 'package:universal_html/js.dart' as js;     // For JS Interop (File System Access API)
+// FIX: Import js_util conditionally for promiseToFuture and raw JS calls
+import 'filen_web_stub.dart' if (dart.library.js_util) 'dart:js_util' as js_util; 
+
 import 'package:cross_file/cross_file.dart'; 
 import '../models/file_item.dart';
 import 'package:path/path.dart' as p;
@@ -100,13 +102,17 @@ class WebFileService implements LocalFileService {
     _rootDirHandle = null;
 
     // 2. Try File System Access API (Chrome/Edge/Opera)
-    if (js.context.hasProperty('showDirectoryPicker')) {
+    // We use js_util.hasProperty on the window object
+    if (js_util.hasProperty(html.window, 'showDirectoryPicker')) {
       try {
         print("🌐 [Web] Attempting 'showDirectoryPicker' (Write Access)...");
-        final promise = js.context.callMethod('showDirectoryPicker');
-        _rootDirHandle = await js.promiseToFuture(promise);
         
-        final rootName = _rootDirHandle['name'];
+        // FIX: Use js_util.callMethod and promiseToFuture
+        final promise = js_util.callMethod(html.window, 'showDirectoryPicker', []);
+        _rootDirHandle = await js_util.promiseToFuture(promise);
+        
+        // Access 'name' property
+        final rootName = js_util.getProperty(_rootDirHandle, 'name');
         print("✅ [Web] Got handle for folder: $rootName");
 
         // Recursively build the virtual tree from the handle
@@ -173,28 +179,32 @@ class WebFileService implements LocalFileService {
     }
 
     // Iterate values(). This is AsyncIterable in JS.
-    final valuesIterator = dirHandle.callMethod('values');
+    final valuesIterator = js_util.callMethod(dirHandle, 'values', []);
     
     while (true) {
-      final next = await js.promiseToFuture(valuesIterator.callMethod('next'));
-      if (next['done'] == true) break;
+      final nextPromise = js_util.callMethod(valuesIterator, 'next', []);
+      final next = await js_util.promiseToFuture(nextPromise);
       
-      final handle = next['value'];
-      final name = handle['name'];
+      if (js_util.getProperty(next, 'done') == true) break;
+      
+      final handle = js_util.getProperty(next, 'value');
+      final name = js_util.getProperty(handle, 'name');
+      final kind = js_util.getProperty(handle, 'kind');
       
       // Filter hidden/system files
       if (name.startsWith('.') || name.startsWith('._')) continue;
 
       final itemAbsPath = "$currentAbsPath/$name";
       
-      if (handle['kind'] == 'file') {
+      if (kind == 'file') {
         _virtualTree[currentAbsPath]!.add(File(itemAbsPath));
         
         // Get the File object for reading
-        final fileObj = await js.promiseToFuture(handle.callMethod('getFile'));
+        final filePromise = js_util.callMethod(handle, 'getFile', []);
+        final fileObj = await js_util.promiseToFuture(filePromise);
         _fileRefs[itemAbsPath] = fileObj;
         
-      } else if (handle['kind'] == 'directory') {
+      } else if (kind == 'directory') {
         _virtualTree[currentAbsPath]!.add(Directory(itemAbsPath));
         await _buildTreeFromHandle(handle, itemAbsPath);
       }
@@ -266,28 +276,29 @@ class WebFileService implements LocalFileService {
     if (_rootDirHandle != null) {
       try {
         print('🌐 [Web] Attempting direct write to folder handle...');
-        // We need to walk the handle to find the correct subfolder if path is deep
-        // For simplicity, we assume writing relative to root handle for now, 
-        // or implement a path walker.
         
         // Simple implementation: Write to root of selected folder if path matches
-        // Extract filename
         final fileName = p.basename(path);
         
-        // Get File Handle (create: true)
-        final fileHandlePromise = _rootDirHandle.callMethod('getFileHandle', [
-          fileName, 
-          js.JsObject.jsify({'create': true})
-        ]);
-        final fileHandle = await js.promiseToFuture(fileHandlePromise);
+        // Create params object using js_util
+        final createOpts = js_util.newObject();
+        js_util.setProperty(createOpts, 'create', true);
+
+        // Get File Handle
+        final fileHandlePromise = js_util.callMethod(_rootDirHandle, 'getFileHandle', [fileName, createOpts]);
+        final fileHandle = await js_util.promiseToFuture(fileHandlePromise);
         
         // Create Writable
-        final writablePromise = fileHandle.callMethod('createWritable');
-        final writable = await js.promiseToFuture(writablePromise);
+        final writablePromise = js_util.callMethod(fileHandle, 'createWritable', []);
+        final writable = await js_util.promiseToFuture(writablePromise);
         
         // Write
-        await js.promiseToFuture(writable.callMethod('write', [data]));
-        await js.promiseToFuture(writable.callMethod('close'));
+        final writePromise = js_util.callMethod(writable, 'write', [data]);
+        await js_util.promiseToFuture(writePromise);
+        
+        // Close
+        final closePromise = js_util.callMethod(writable, 'close', []);
+        await js_util.promiseToFuture(closePromise);
         
         print('✅ [Web] Successfully wrote to $fileName');
         return;
