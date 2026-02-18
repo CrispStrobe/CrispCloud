@@ -31,9 +31,6 @@ abstract class LocalFileService {
   /// We need this to read files while maintaining the security scope e.g. on macOS
   Future<Uint8List> readFile(String path, {FileItem? fileItem});
 
-  /// Save data to a file, handling platform-specific permissions (Web download or Secure Bookmarks)
-  Future<void> saveFile(String path, Uint8List data);
-
   // Helper for Web to get metadata without stat()
   Map<String, dynamic> getWebMetadata(String path) => {};
   
@@ -93,7 +90,11 @@ class WebFileService implements LocalFileService {
     input.setAttribute('directory', '');      
     input.multiple = true;  
     
+    // Handle cancel/close somewhat (imperfect on web)
+    bool isSelected = false;
+    
     input.onChange.listen((e) {
+      isSelected = true;
       if (input.files == null || input.files!.isEmpty) {
         completer.complete(null);
         return;
@@ -111,7 +112,10 @@ class WebFileService implements LocalFileService {
       }
 
       for (final file in input.files!) {
+        // relativePath: "RootFolder/Sub/File.txt"
         final relPath = file.relativePath ?? file.name;
+        
+        // Full Virtual Path: "/RootFolder/Sub/File.txt"
         final fullPath = '/$relPath';
         
         _fileRefs[fullPath] = file;
@@ -122,12 +126,16 @@ class WebFileService implements LocalFileService {
         for (int i = 0; i < parts.length; i++) {
           final partName = parts[i];
           final isFile = (i == parts.length - 1);
+          
+          // Current item path: "/RootFolder" or "/RootFolder/Sub"
           final currentItemPath = parentPath == '/' ? '/$partName' : '$parentPath/$partName';
 
+          // Ensure parent list exists
           if (!_virtualTree.containsKey(parentPath)) {
             _virtualTree[parentPath] = [];
           }
 
+          // Check for duplicates in this folder
           final exists = _virtualTree[parentPath]!.any((e) => e.path == currentItemPath);
 
           if (!exists) {
@@ -137,30 +145,40 @@ class WebFileService implements LocalFileService {
               _virtualTree[parentPath]!.add(Directory(currentItemPath));
             }
           }
+          
+          // Advance
           parentPath = currentItemPath;
         }
       }
 
+      // Set current path to the actual selected folder name (e.g. "/Photos")
+      // NOT just "/"
       final startPath = '/$rootName';
       currentPath = startPath;
       completer.complete(startPath);
     });
 
     input.click();
+    
+    // On Web, we can't easily detect "Cancel", so we rely on the user picking something.
     return completer.future;
   }
 
   @override
   Future<List<FileSystemEntity>?> listDirectory(String path) async {
+    // Normalize path: ensure no trailing slash (unless root)
     String lookup = path;
     if (lookup.length > 1 && lookup.endsWith('/')) {
       lookup = lookup.substring(0, lookup.length - 1);
     }
+    
     return _virtualTree[lookup] ?? [];
   }
 
   @override
   Future<bool> hasAccessToPath(String path) async {
+    // On virtual FS, we have access if it exists in our tree or file refs
+    // Normalize logic
     String lookup = path;
     if (lookup.length > 1 && lookup.endsWith('/')) {
       lookup = lookup.substring(0, lookup.length - 1);
@@ -180,19 +198,6 @@ class WebFileService implements LocalFileService {
     reader.readAsArrayBuffer(fileRef);
     await reader.onLoad.first;
     return reader.result as Uint8List;
-  }
-
-  @override
-  Future<void> saveFile(String path, Uint8List data) async {
-    // Web "Save": Trigger a browser download
-    print('🌐 [Web] Triggering download for $path (${data.length} bytes)');
-    final fileName = p.basename(path);
-    final blob = html.Blob([data]);
-    final url = html.Url.createObjectUrlFromBlob(blob);
-    final anchor = html.AnchorElement(href: url)
-      ..setAttribute("download", fileName)
-      ..click();
-    html.Url.revokeObjectUrl(url);
   }
 }
 
@@ -236,6 +241,7 @@ class MacosFileService implements LocalFileService {
       currentPath = grantedPath;
       return currentPath;
     }
+    
     currentPath = await getSafeFallbackDirectory();
     _grantedBasePath = null;
     return currentPath;
@@ -259,37 +265,41 @@ class MacosFileService implements LocalFileService {
     currentPath = path;
     if (_resolvedBookmarkFile == null) {
       if (!await _loadAndResolveBookmark()) {
-         // If no bookmark, try mostly harmless listing, might throw
+         throw Exception('No bookmark found. Please grant access.');
       }
     }
 
-    // Try secure listing if we have a bookmark and path is inside it
-    if (_resolvedBookmarkFile != null && path.startsWith(_resolvedBookmarkFile!.path)) {
-      try {
-        await _bookmarks.startAccessingSecurityScopedResource(_resolvedBookmarkFile!);
-        final dir = Directory(path);
-        final entities = await dir.list().toList();
-        await _bookmarks.stopAccessingSecurityScopedResource(_resolvedBookmarkFile!);
-        return entities;
-      } catch (e) {
-        try { await _bookmarks.stopAccessingSecurityScopedResource(_resolvedBookmarkFile!); } catch (_) {}
-        // Fallthrough to try normal listing
-      }
+    if (!path.startsWith(_resolvedBookmarkFile!.path)) {
+      throw Exception('Path $path is outside of granted bookmark ${_resolvedBookmarkFile!.path}.');
     }
-    
-    // Normal listing fallback
+
     try {
-      return await Directory(path).list().toList();
+      await _bookmarks.startAccessingSecurityScopedResource(_resolvedBookmarkFile!);
+      // print('🔐 Started security access for ${_resolvedBookmarkFile!.path}');
+
+      final dir = Directory(path);
+      final entities = await dir.list().toList();
+      
+      await _bookmarks.stopAccessingSecurityScopedResource(_resolvedBookmarkFile!);
+      // print('🔓 Stopped security access for ${_resolvedBookmarkFile!.path}');
+      
+      return entities;
     } catch (e) {
-      print('❌ Failed to list directory: $e');
-      rethrow;
+      print('❌ Failed to list directory with bookmark: $e');
+      try {
+        await _bookmarks.stopAccessingSecurityScopedResource(_resolvedBookmarkFile!);
+      } catch (e2) { /* ignore */ }
+      rethrow; 
     }
   }
 
   @override
   Future<Uint8List> readFile(String path, {FileItem? fileItem}) async {
-    if (_resolvedBookmarkFile == null) await _loadAndResolveBookmark();
+    if (_resolvedBookmarkFile == null) {
+      await _loadAndResolveBookmark();
+    }
     
+    // If we have a secure bookmark, wrap the read operation
     if (_resolvedBookmarkFile != null && path.startsWith(_resolvedBookmarkFile!.path)) {
       try {
         await _bookmarks.startAccessingSecurityScopedResource(_resolvedBookmarkFile!);
@@ -297,45 +307,16 @@ class MacosFileService implements LocalFileService {
         await _bookmarks.stopAccessingSecurityScopedResource(_resolvedBookmarkFile!);
         return data;
       } catch (e) {
-        try { await _bookmarks.stopAccessingSecurityScopedResource(_resolvedBookmarkFile!); } catch (_) {}
-        rethrow;
-      }
-    }
-    return File(path).readAsBytes();
-  }
-
-  @override
-  Future<void> saveFile(String path, Uint8List data) async {
-    if (_resolvedBookmarkFile == null) await _loadAndResolveBookmark();
-
-    if (_resolvedBookmarkFile != null && path.startsWith(_resolvedBookmarkFile!.path)) {
-      try {
-        print('🔐 [MacOS] Writing to secure path: $path');
-        await _bookmarks.startAccessingSecurityScopedResource(_resolvedBookmarkFile!);
-        
-        final file = File(path);
-        // Ensure parent exists
-        if (!await file.parent.exists()) {
-           await file.parent.create(recursive: true);
-        }
-        await file.writeAsBytes(data);
-        
-        await _bookmarks.stopAccessingSecurityScopedResource(_resolvedBookmarkFile!);
-        return;
-      } catch (e) {
-        try { await _bookmarks.stopAccessingSecurityScopedResource(_resolvedBookmarkFile!); } catch (_) {}
-        print('❌ [MacOS] Secure write failed: $e');
+        // Ensure we stop accessing even if read fails
+        try {
+          await _bookmarks.stopAccessingSecurityScopedResource(_resolvedBookmarkFile!);
+        } catch (_) {}
         rethrow;
       }
     }
     
-    // Fallback normal write
-    print('💾 [MacOS] Writing to path (no bookmark scope): $path');
-    final file = File(path);
-    if (!await file.parent.exists()) {
-       await file.parent.create(recursive: true);
-    }
-    await file.writeAsBytes(data);
+    // Fallback if no bookmark is involved (e.g. non-sandboxed parts)
+    return File(path).readAsBytes();
   }
 
   @override
@@ -343,8 +324,8 @@ class MacosFileService implements LocalFileService {
     if (_grantedBasePath == null) {
       _grantedBasePath = await MacOSBookmarkService.getLastGrantedDirectory();
     }
-    if (_grantedBasePath != null && path.startsWith(_grantedBasePath!)) return true;
-    return path.startsWith(Platform.environment['HOME'] ?? '/');
+    if (_grantedBasePath == null) return false;
+    return path.startsWith(_grantedBasePath!);
   }
   
   @override
@@ -402,15 +383,6 @@ class DesktopFileService implements LocalFileService {
   @override
   Future<Uint8List> readFile(String path, {FileItem? fileItem}) async {
     return File(path).readAsBytes();
-  }
-
-  @override
-  Future<void> saveFile(String path, Uint8List data) async {
-    final file = File(path);
-    if (!await file.parent.exists()) {
-       await file.parent.create(recursive: true);
-    }
-    await file.writeAsBytes(data);
   }
 
   @override
@@ -558,31 +530,10 @@ class MobileFileService implements LocalFileService {
   }
 
   @override
-  Future<void> saveFile(String path, Uint8List data) async {
-    if (_resolvedBookmarkFile == null) await _loadAndResolveBookmark();
-
-    if (_resolvedBookmarkFile != null && path.startsWith(_resolvedBookmarkFile!.path)) {
-      try {
-        await _bookmarks.startAccessingSecurityScopedResource(_resolvedBookmarkFile!);
-        final file = File(path);
-        if (!await file.parent.exists()) await file.parent.create(recursive: true);
-        await file.writeAsBytes(data);
-        await _bookmarks.stopAccessingSecurityScopedResource(_resolvedBookmarkFile!);
-        return;
-      } catch (e) {
-        try { await _bookmarks.stopAccessingSecurityScopedResource(_resolvedBookmarkFile!); } catch (_) {}
-        rethrow;
-      }
-    }
-    final file = File(path);
-    if (!await file.parent.exists()) await file.parent.create(recursive: true);
-    await file.writeAsBytes(data);
-  }
-
-  @override
   Future<bool> hasAccessToPath(String path) async {
     if (path.startsWith(currentPath)) return true;
     if (_grantedBasePath != null && path.startsWith(_grantedBasePath!)) return true;
+    
     try {
       await Directory(path).stat();
       return true;
