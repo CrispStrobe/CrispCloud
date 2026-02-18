@@ -50,7 +50,7 @@ class InternxtClientAdapter implements CloudStorageClient {
         _client.setAuth(response); 
     } catch (e) {
         print("🔌 Adapter: Login failed with error: $e");
-        print("🔌 Stacktrace: $stack");
+        
         rethrow;
     }
   }
