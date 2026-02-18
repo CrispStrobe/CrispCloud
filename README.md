@@ -14,34 +14,26 @@ This is an unofficial, open-source project and is **not** affiliated with, endor
 ## Features
 
 * **Provider Support:**
-* **Filen.io:** End-to-end encrypted Upload, Download, and file management. (Web version uses WebCrypto API for higher performance).
-* **Internxt:** Decentralized, encrypted cloud storage support.
-* **WebDAV:** Standard operations (Requires CORS support on Web).
-* **SFTP:** Support for standard SFTP connections (Requires WebSocket proxy on Web).
-
-
+    * **Filen.io:** End-to-end encrypted Upload, Download, and file management. (Web version uses WebCrypto API for higher performance).
+    * **Internxt:** Decentralized, encrypted cloud storage support.
+    * **WebDAV:** Standard operations (Requires CORS support on Web).
+    * **SFTP:** Support for standard SFTP connections (Requires WebSocket proxy on Web).
 * **Cross-Platform:** Runs on **Web (PWA)**, **macOS**, **Windows**, **Linux**, **Android**, and **iOS**.
 * **Two-Panel View:** Efficient "Commander" interface for moving files between Local and Remote.
 * **Web Virtual File System:**
-* On the Web, the "Local" pane acts as a **Virtual Staging Area**.
-* Supports picking entire folders (Chrome/Edge) via the File System Access API.
-* In-memory processing for "Save As" downloads.
-
-
+    * On the Web, the "Local" pane acts as a **Virtual Staging Area**.
+    * Supports picking entire folders (Chrome/Edge) via the File System Access API.
+    * In-memory processing for "Save As" downloads.
 * **MacOS Security Scoped Bookmarks:** Support for macOS App Sandbox permissions. The app remembers granted folder access across restarts.
 * **Resumable Operations:** Auto-login and state restoration for seamless sessions.
 * **Batch Operations:**
-* **Recursive Upload/Download:** Transfer entire folder structures.
-* **Queuing:** Manage multiple transfers with a progress panel.
-* **Conflict Resolution:** Options to skip, overwrite, or rename files.
-
-
+    * **Recursive Upload/Download:** Transfer entire folder structures.
+    * **Queuing:** Manage multiple transfers with a progress panel.
+    * **Conflict Resolution:** Options to skip, overwrite, or rename files.
 * **File Management:** Create folders, Rename, Move, Copy, and Delete (Trash/Permanent).
 * **Search & Find:**
-* **Deep Search:** Recursively find files within the cloud drive.
-* **Pattern Matching:** Supports glob patterns (e.g., `*.pdf`).
-
-
+    * **Deep Search:** Recursively find files within the cloud drive.
+    * **Pattern Matching:** Supports glob patterns (e.g., `*.pdf`).
 * **Keyboard Centric:** Fully navigable via keyboard shortcuts.
 
 ## 🌍 Important: How it works on Web
