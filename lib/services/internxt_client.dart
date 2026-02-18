@@ -4,6 +4,7 @@ import 'dart:convert'; // Required for latin1, json, utf8, base64
 import 'dart:async'; // For TimeoutException
 import 'dart:io' as io; // Use a prefix for dart:io
 import 'package:file/file.dart' as pkg_file;
+import 'package:flutter/foundation.dart';
 
 import 'dart:math';
 import 'dart:typed_data';
@@ -1722,8 +1723,15 @@ Future<void> handleDownload(List<String> args) async {
 // ============================================================================
 
 class InternxtClient {
-  static const String networkUrl = 'https://gateway.internxt.com/network';
-  static const String driveApiUrl = 'https://gateway.internxt.com/drive';
+  static String get networkUrl {
+    // If Web, use the relative Vercel proxy path.
+    // If Native (macOS/Android), use the real URL.
+    return kIsWeb ? '/api/internxt-network' : 'https://gateway.internxt.com/network';
+  }
+
+  static String get driveApiUrl {
+    return kIsWeb ? '/api/internxt-drive' : 'https://gateway.internxt.com/drive';
+  }
   static const String appCryptoSecret = '6KYQBP847D4ATSFA';
 
   bool debugMode = false;
@@ -1996,10 +2004,15 @@ class InternxtClient {
     final requestHeaders = {
       'Content-Type': 'application/json',
       'Accept': 'application/json',
-      'internxt-client': 'cli',
-      'User-Agent': 'InternxtCLI/1.0.0 (Dart)',
+      
       ...?headers,
     };
+
+    // Only add custom User-Agent if NOT on web to avoid CORS preflight rejection
+    if (!kIsWeb) {
+       requestHeaders['internxt-client'] = 'cli';
+       requestHeaders['User-Agent'] = 'InternxtCLI/1.0.0 (Dart)';
+    }
 
     if (isNetworkAuth && networkUser != null && networkPass != null) {
       final auth = base64Encode(utf8.encode('$networkUser:$networkPass'));

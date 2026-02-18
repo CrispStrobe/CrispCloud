@@ -1,6 +1,14 @@
 {
   "rewrites": [
     {
+      "source": "/api/internxt-drive/:path*",
+      "destination": "https://gateway.internxt.com/drive/:path*"
+    },
+    {
+      "source": "/api/internxt-network/:path*",
+      "destination": "https://gateway.internxt.com/network/:path*"
+    },
+    {
       "source": "/(.*)",
       "destination": "/index.html"
     }
