@@ -639,6 +639,12 @@ class AppState extends ChangeNotifier {
 
   Future<void> refreshPanel(PanelSide side) async {
     if (side == PanelSide.local) {
+      // --- FIX START ---
+      // Force the LocalFileService to re-scan the directory handle/disk.
+      // This updates the virtual tree on Web so new downloads appear.
+      await _localFileService.refresh(); 
+      // --- FIX END ---
+      
       await _loadLocalFiles();
     } else {
       try {

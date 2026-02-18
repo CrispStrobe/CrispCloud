@@ -1,5 +1,4 @@
 // services/local_file_service.dart
-import 'dart:convert';
 import 'dart:async';
 import 'dart:io';
 import 'dart:typed_data';
@@ -39,6 +38,9 @@ abstract class LocalFileService {
 
   // Helper for Web to get metadata without stat()
   Map<String, dynamic> getWebMetadata(String path) => {};
+
+  /// Force a refresh of the file listing (useful for Web handles)
+  Future<void> refresh() async {}
   
   factory LocalFileService() {
     if (kIsWeb) {
@@ -66,7 +68,6 @@ class WebFileService implements LocalFileService {
 
   // Stores directory structure: Key='/Photos', Value=[Entity('img.jpg')]
   static final Map<String, List<FileSystemEntity>> _virtualTree = {};
-  
   // Stores actual file references: Key='/Photos/img.jpg', Value=FileObject
   static final Map<String, html.File> _fileRefs = {};
   
@@ -97,18 +98,20 @@ class WebFileService implements LocalFileService {
   /// Tries to use Modern API (Chrome), falls back to Legacy Input (Safari)
   @override
   Future<String?> requestDirectoryAccess({String? initialDirectory}) async {
-    // 1. Reset State
+    // 1. Reset State completely so we can "Redo" selection
     _virtualTree.clear();
     _fileRefs.clear();
     _rootDirHandle = null;
+    
+    // Initialize Root in virtual tree so navigation to '/' works
+    _virtualTree['/'] = []; 
 
     // 2. Try File System Access API (Chrome/Edge/Opera)
     if (js_util.hasProperty(html.window, 'showDirectoryPicker')) {
       try {
-        print("🌐 [Web] Attempting 'showDirectoryPicker' with Read/Write access...");
+        print("🌐 [Web] Attempting 'showDirectoryPicker' (Write Access)...");
         
-        // We request 'readwrite' mode upfront! 
-        // This grants write permission immediately so we don't need a user gesture later.
+        // FIX: Request 'readwrite' mode upfront! 
         final opts = js_util.newObject();
         js_util.setProperty(opts, 'mode', 'readwrite');
         
@@ -116,19 +119,27 @@ class WebFileService implements LocalFileService {
         _rootDirHandle = await js_util.promiseToFuture(promise);
         
         final rootName = js_util.getProperty(_rootDirHandle, 'name');
-        print("✅ [Web] Got Read/Write handle for folder: $rootName");
+        print("✅ [Web] Got handle for folder: $rootName");
 
+        // Add the root folder itself to the top-level listing
+        _virtualTree['/']!.add(Directory('/$rootName'));
+
+        // Recursively build the virtual tree from the handle
         await _buildTreeFromHandle(_rootDirHandle, '/$rootName');
         
         currentPath = '/$rootName';
         return currentPath;
       } catch (e) {
-        print("⚠️ [Web] showDirectoryPicker cancelled or failed: $e. Falling back to input.");
+        if (e.toString().contains('AbortError') || e.toString().contains('user aborted')) {
+           print("⚠️ [Web] User cancelled directory picker.");
+           return null; // Don't fallback if user explicitly cancelled
+        }
+        print("⚠️ [Web] showDirectoryPicker failed: $e. Falling back to input.");
+        // Fallthrough to legacy input
       }
     }
 
     // 3. Legacy Fallback (Safari/Firefox)
-    // No write access, download goes to Downloads folder.
     final completer = Completer<String?>();
     final input = html.FileUploadInputElement();
     
@@ -152,6 +163,9 @@ class WebFileService implements LocalFileService {
 
       print("📂 [Web] Processing ${input.files!.length} files via legacy input...");
 
+      // Add root to virtual tree
+      _virtualTree['/']!.add(Directory('/$rootName'));
+
       for (final file in input.files!) {
         // Filter out macOS metadata files
         if (file.name.startsWith('._')) continue;
@@ -174,12 +188,10 @@ class WebFileService implements LocalFileService {
 
   // Recursive walker for File System Access API
   Future<void> _buildTreeFromHandle(dynamic dirHandle, String currentAbsPath) async {
-    // Ensure entry exists for this folder
     if (!_virtualTree.containsKey(currentAbsPath)) {
       _virtualTree[currentAbsPath] = [];
     }
 
-    // Iterate values(). This is AsyncIterable in JS.
     final valuesIterator = js_util.callMethod(dirHandle, 'values', []);
     
     while (true) {
@@ -192,7 +204,6 @@ class WebFileService implements LocalFileService {
       final name = js_util.getProperty(handle, 'name');
       final kind = js_util.getProperty(handle, 'kind');
       
-      // Filter hidden/system files
       if (name.startsWith('.') || name.startsWith('._')) continue;
 
       final itemAbsPath = "$currentAbsPath/$name";
@@ -215,7 +226,7 @@ class WebFileService implements LocalFileService {
   // Helper for Legacy Input
   void _populateVirtualTree(String relPath) {
     final parts = relPath.split('/');
-    String parentPath = '/'; // Start at absolute root
+    String parentPath = '/'; 
     
     for (int i = 0; i < parts.length; i++) {
       final partName = parts[i];
@@ -241,15 +252,19 @@ class WebFileService implements LocalFileService {
 
   @override
   Future<List<FileSystemEntity>?> listDirectory(String path) async {
+    // FIX: Normalize root lookup
     String lookup = path;
     if (lookup.length > 1 && lookup.endsWith('/')) {
       lookup = lookup.substring(0, lookup.length - 1);
     }
+    
     return _virtualTree[lookup] ?? [];
   }
 
   @override
   Future<bool> hasAccessToPath(String path) async {
+    if (path == '/') return true; 
+    
     String lookup = path;
     if (lookup.length > 1 && lookup.endsWith('/')) {
       lookup = lookup.substring(0, lookup.length - 1);
@@ -272,44 +287,115 @@ class WebFileService implements LocalFileService {
   }
 
   @override
+  Future<void> refresh() async {
+    // If we have a handle, we can re-scan the folder to get fresh files
+    if (_rootDirHandle != null) {
+      print('🔄 [Web] Refreshing file list from handle...');
+      // Keep the root listing but clear children to rebuild
+      final rootEntries = _virtualTree['/'] ?? [];
+      _virtualTree.clear();
+      _fileRefs.clear();
+      
+      // Restore root entry
+      _virtualTree['/'] = rootEntries; 
+      
+      // Access 'name' property again to reconstruct root path
+      final rootName = js_util.getProperty(_rootDirHandle, 'name');
+      await _buildTreeFromHandle(_rootDirHandle, '/$rootName');
+      print('✅ [Web] Refresh complete.');
+    }
+  }
+
+  @override
   Future<void> saveFile(String path, Uint8List data) async {
-    // 1. Try Modern "Save to Folder" (Chrome/Edge)
     if (_rootDirHandle != null) {
       try {
         print('🌐 [Web] Attempting direct write to folder handle...');
         
-        // Simple implementation: Write to root of selected folder if path matches
-        final fileName = p.basename(path);
-        
-        // Create params object using js_util
-        final createOpts = js_util.newObject();
-        js_util.setProperty(createOpts, 'create', true);
+        // 1. RE-VERIFY PERMISSION
+        final permState = await _verifyPermission(_rootDirHandle, 'readwrite');
+        if (!permState) {
+           print('⚠️ [Web] Permission denied/dismissed. Falling back.');
+        } else {
+          final fileName = p.basename(path);
+          final createOpts = js_util.newObject();
+          js_util.setProperty(createOpts, 'create', true);
 
-        // Get File Handle
-        final fileHandlePromise = js_util.callMethod(_rootDirHandle, 'getFileHandle', [fileName, createOpts]);
-        final fileHandle = await js_util.promiseToFuture(fileHandlePromise);
-        
-        // Create Writable
-        final writablePromise = js_util.callMethod(fileHandle, 'createWritable', []);
-        final writable = await js_util.promiseToFuture(writablePromise);
-        
-        // Write
-        final writePromise = js_util.callMethod(writable, 'write', [data]);
-        await js_util.promiseToFuture(writePromise);
-        
-        // Close
-        final closePromise = js_util.callMethod(writable, 'close', []);
-        await js_util.promiseToFuture(closePromise);
-        
-        print('✅ [Web] Successfully wrote to $fileName');
-        return;
+          // 2. GET HANDLE & WRITE
+          final fileHandlePromise = js_util.callMethod(_rootDirHandle, 'getFileHandle', [fileName, createOpts]);
+          final fileHandle = await js_util.promiseToFuture(fileHandlePromise);
+          
+          final writablePromise = js_util.callMethod(fileHandle, 'createWritable', []);
+          final writable = await js_util.promiseToFuture(writablePromise);
+          
+          final writePromise = js_util.callMethod(writable, 'write', [data]);
+          await js_util.promiseToFuture(writePromise);
+          
+          final closePromise = js_util.callMethod(writable, 'close', []);
+          await js_util.promiseToFuture(closePromise);
+          
+          print('✅ [Web] Successfully wrote to $fileName');
+
+          // --- CRITICAL FIX: UPDATE CACHE ---
+          // Fetch the actual File object to update our virtual tree immediately
+          final fileObjPromise = js_util.callMethod(fileHandle, 'getFile', []);
+          final fileObj = await js_util.promiseToFuture(fileObjPromise);
+          
+          final dirPath = p.dirname(path); // e.g. /Folder
+          
+          // 1. Register reference
+          _fileRefs[path] = fileObj;
+          
+          // 2. Add to Virtual Tree if not already there
+          if (!_virtualTree.containsKey(dirPath)) {
+            _virtualTree[dirPath] = [];
+          }
+          
+          final existing = _virtualTree[dirPath]!.where((e) => e.path == path).isEmpty;
+          if (existing) {
+             _virtualTree[dirPath]!.add(File(path));
+          }
+          // ----------------------------------
+
+          return; 
+        }
       } catch (e) {
-        print('⚠️ [Web] Direct write failed ($e). Falling back to download.');
+        print('⚠️ [Web] Direct write failed ($e). Falling back.');
       }
     }
 
-    // 2. Fallback "Save As" (Safari/Firefox)
-    print('🌐 [Web] Triggering the browser download for $path');
+    // Fallback
+    _triggerBrowserDownload(path, data);
+  }
+
+  // Helper to query and request permission if needed
+  Future<bool> _verifyPermission(dynamic handle, String mode) async {
+    try {
+      final opts = js_util.newObject();
+      js_util.setProperty(opts, 'mode', mode);
+      
+      // Check current state
+      final queryPromise = js_util.callMethod(handle, 'queryPermission', [opts]);
+      final state = await js_util.promiseToFuture(queryPromise);
+      
+      if (state == 'granted') {
+        return true;
+      }
+      
+      // If prompt/denied, try to request (this triggers the browser dialog)
+      print('🔐 [Web] Permission is "$state", querying user...');
+      final reqPromise = js_util.callMethod(handle, 'requestPermission', [opts]);
+      final newState = await js_util.promiseToFuture(reqPromise);
+      
+      return newState == 'granted';
+    } catch (e) {
+      print('⚠️ [Web] Permission verification error: $e');
+      return false;
+    }
+  }
+
+  void _triggerBrowserDownload(String path, Uint8List data) {
+    print('🌐 [Web] Triggering browser download for $path');
     final fileName = p.basename(path);
     final blob = html.Blob([data]);
     final url = html.Url.createObjectUrlFromBlob(blob);
@@ -334,6 +420,13 @@ class MacosFileService implements LocalFileService {
 
   @override
   Map<String, dynamic> getWebMetadata(String path) => {};
+
+  @override
+  Future<void> refresh() async {
+    // Native implementations hit the disk directly on 'listDirectory', 
+    // so explicit cache clearing isn't strictly needed unless you add caching later.
+    // This exists to satisfy the interface.
+  }
 
   Future<bool> _loadAndResolveBookmark() async {
     try {
@@ -489,6 +582,13 @@ class DesktopFileService implements LocalFileService {
   Map<String, dynamic> getWebMetadata(String path) => {};
 
   @override
+  Future<void> refresh() async {
+    // Native implementations hit the disk directly on 'listDirectory', 
+    // so explicit cache clearing isn't strictly needed unless you add caching later.
+    // This exists to satisfy the interface.
+  }
+
+  @override
   Future<String> getInitialPath() async {
     final lastPath = await BookmarkService.getLastPath();
     try {
@@ -561,6 +661,13 @@ class MobileFileService implements LocalFileService {
 
   @override
   Map<String, dynamic> getWebMetadata(String path) => {};
+
+  @override
+  Future<void> refresh() async {
+    // Native implementations hit the disk directly on 'listDirectory', 
+    // so explicit cache clearing isn't strictly needed unless you add caching later.
+    // This exists to satisfy the interface.
+  }
   
   Future<bool> _loadAndResolveBookmark() async {
     try {
