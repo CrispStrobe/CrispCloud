@@ -2020,6 +2020,10 @@ class InternxtClient {
       requestHeaders['Authorization'] = 'Bearer $newToken';
     }
 
+    print('🌐 [HTTP Request] $method $url');
+    print('   Headers: $requestHeaders');
+    if (body != null) print('   Body: $body');
+
     try {
       http.Response response;
       switch (method.toUpperCase()) {
@@ -2029,6 +2033,16 @@ class InternxtClient {
         case 'PATCH':  response = await http.patch(url, headers: requestHeaders, body: body); break;
         case 'DELETE': response = await http.delete(url, headers: requestHeaders, body: body); break;
         default: throw Exception('Unsupported method');
+      }
+
+      if (response.statusCode >= 400) {
+        print('❌ [HTTP Error] Status: ${response.statusCode}');
+        print('   Reason: ${response.reasonPhrase}');
+        print('   Body: ${response.body}');
+      } else {
+        print('✅ [HTTP Success] ${response.statusCode}');
+        // Uncomment to see success bodies (can be verbose)
+        // print('   Body: ${response.body}'); 
       }
 
       // Optimization: Handle transient 5xx errors with exponential backoff (Go style)
@@ -3265,7 +3279,6 @@ class InternxtClient {
       ]
     });
 
-    // Uses your actual _makeRequest signature
     final response = await _makeRequest(
       'POST',
       url,
