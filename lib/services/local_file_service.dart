@@ -118,7 +118,7 @@ class WebFileService implements LocalFileService {
         final promise = js_util.callMethod(html.window, 'showDirectoryPicker', [opts]);
         _rootDirHandle = await js_util.promiseToFuture(promise);
         
-        final rootName = js_util.getProperty(_rootDirHandle, 'name');
+        final rootName = _sanitizeFsaName(js_util.getProperty(_rootDirHandle, 'name') as String);
         print("✅ [Web] Got handle for folder: $rootName");
 
         // Add the root folder itself to the top-level listing
@@ -186,6 +186,32 @@ class WebFileService implements LocalFileService {
     return completer.future;
   }
 
+  // Sanitize Android SAF document IDs returned by Chrome's File System Access API.
+  // On Android, handle.name returns encoded doc IDs like 'primary%3ADownload$2Ffile.jpg'
+  // instead of plain names like 'file.jpg'.
+  static String _sanitizeFsaName(String raw) {
+    // 1. URL-decode percent-encoded chars (e.g. %3A -> :, %2F -> /)
+    String decoded;
+    try {
+      decoded = Uri.decodeComponent(raw);
+    } catch (_) {
+      decoded = raw;
+    }
+    // 2. Handle dollar-sign encoding used by some Android versions ($2F -> /)
+    decoded = decoded.replaceAll('\$2F', '/').replaceAll('\$3A', ':');
+
+    // 3. If it looks like an Android document ID (contains ':'), extract the leaf name.
+    //    e.g. 'primary:Download/file.jpg' -> 'file.jpg'
+    //         'primary:Download'           -> 'Download'
+    if (decoded.contains(':')) {
+      final afterColon = decoded.substring(decoded.indexOf(':') + 1);
+      final parts = afterColon.split('/');
+      return parts.last.isEmpty ? afterColon : parts.last;
+    }
+
+    return decoded;
+  }
+
   // Recursive walker for File System Access API
   Future<void> _buildTreeFromHandle(dynamic dirHandle, String currentAbsPath) async {
     if (!_virtualTree.containsKey(currentAbsPath)) {
@@ -193,15 +219,15 @@ class WebFileService implements LocalFileService {
     }
 
     final valuesIterator = js_util.callMethod(dirHandle, 'values', []);
-    
+
     while (true) {
       final nextPromise = js_util.callMethod(valuesIterator, 'next', []);
       final next = await js_util.promiseToFuture(nextPromise);
-      
+
       if (js_util.getProperty(next, 'done') == true) break;
-      
+
       final handle = js_util.getProperty(next, 'value');
-      final name = js_util.getProperty(handle, 'name');
+      final name = _sanitizeFsaName(js_util.getProperty(handle, 'name') as String);
       final kind = js_util.getProperty(handle, 'kind');
       
       if (name.startsWith('.') || name.startsWith('._')) continue;
@@ -300,7 +326,7 @@ class WebFileService implements LocalFileService {
       _virtualTree['/'] = rootEntries; 
       
       // Access 'name' property again to reconstruct root path
-      final rootName = js_util.getProperty(_rootDirHandle, 'name');
+      final rootName = _sanitizeFsaName(js_util.getProperty(_rootDirHandle, 'name') as String);
       await _buildTreeFromHandle(_rootDirHandle, '/$rootName');
       print('✅ [Web] Refresh complete.');
     }
