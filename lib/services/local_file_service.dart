@@ -154,14 +154,17 @@ class WebFileService implements LocalFileService {
       }
 
       String rootName = 'root';
-      // Heuristic to detect root folder name from relative paths
+      // Heuristic to detect root folder name from relative paths.
+      // On Android, relativePath comes back as a SAF doc ID like
+      // 'primary%3ADownload$2Ffile.jpg' – sanitize it first.
       if (input.files!.isNotEmpty) {
         final firstPath = input.files!.first.relativePath ?? input.files!.first.name;
-        final parts = firstPath.split('/');
+        final cleanFirst = _sanitizeRelPath(firstPath);
+        final parts = cleanFirst.split('/');
         if (parts.isNotEmpty) rootName = parts[0];
       }
 
-      print("📂 [Web] Processing ${input.files!.length} files via legacy input...");
+      print("📂 [Web] Processing ${input.files!.length} files via legacy input (root: $rootName)...");
 
       // Add root to virtual tree
       _virtualTree['/']!.add(Directory('/$rootName'));
@@ -170,9 +173,10 @@ class WebFileService implements LocalFileService {
         // Filter out macOS metadata files
         if (file.name.startsWith('._')) continue;
 
-        final relPath = file.relativePath ?? file.name;
+        final rawRelPath = file.relativePath ?? file.name;
+        final relPath = _sanitizeRelPath(rawRelPath);
         final fullPath = '/$relPath';
-        
+
         _fileRefs[fullPath] = file;
         _populateVirtualTree(relPath);
       }
@@ -186,30 +190,35 @@ class WebFileService implements LocalFileService {
     return completer.future;
   }
 
-  // Sanitize Android SAF document IDs returned by Chrome's File System Access API.
-  // On Android, handle.name returns encoded doc IDs like 'primary%3ADownload$2Ffile.jpg'
-  // instead of plain names like 'file.jpg'.
-  static String _sanitizeFsaName(String raw) {
-    // 1. URL-decode percent-encoded chars (e.g. %3A -> :, %2F -> /)
+  // Decode Android SAF document IDs into a clean relative path.
+  // On Android, webkitRelativePath returns encoded doc IDs like:
+  //   'primary%3ADownload$2Fsubdir$2Ffile.jpg'  (legacy input)
+  // After sanitization: 'Download/subdir/file.jpg'
+  static String _sanitizeRelPath(String raw) {
     String decoded;
     try {
       decoded = Uri.decodeComponent(raw);
     } catch (_) {
       decoded = raw;
     }
-    // 2. Handle dollar-sign encoding used by some Android versions ($2F -> /)
+    // Handle dollar-sign slash encoding used on some Android versions
     decoded = decoded.replaceAll('\$2F', '/').replaceAll('\$3A', ':');
 
-    // 3. If it looks like an Android document ID (contains ':'), extract the leaf name.
-    //    e.g. 'primary:Download/file.jpg' -> 'file.jpg'
-    //         'primary:Download'           -> 'Download'
+    // Strip Android volume prefix: 'primary:Download/...' -> 'Download/...'
     if (decoded.contains(':')) {
-      final afterColon = decoded.substring(decoded.indexOf(':') + 1);
-      final parts = afterColon.split('/');
-      return parts.last.isEmpty ? afterColon : parts.last;
+      decoded = decoded.substring(decoded.indexOf(':') + 1);
     }
-
     return decoded;
+  }
+
+  // Sanitize Android SAF document IDs returned by Chrome's File System Access API.
+  // On Android, handle.name returns encoded doc IDs like 'primary%3ADownload$2Ffile.jpg'
+  // instead of plain names like 'file.jpg'.
+  static String _sanitizeFsaName(String raw) {
+    // Decode to a clean relative path, then take only the leaf segment.
+    final rel = _sanitizeRelPath(raw);
+    final parts = rel.split('/');
+    return parts.last.isEmpty ? rel : parts.last;
   }
 
   // Recursive walker for File System Access API
