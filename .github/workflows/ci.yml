@@ -9,10 +9,10 @@ name: CI
 # Internxt creds and auto-skip when IXT_ACCOUNT / IXT_PWD are
 # absent — CI doesn't set them, so they're cleanly skipped here.
 #
-# Build verification: macOS + Web cover the two strategic targets
-# (host platform + the kIsWeb code path). iOS / Android / Linux /
-# Windows could be added if mobile/desktop CI signal becomes
-# valuable; not bundled here to keep CI under 10 minutes.
+# internxt_client is fetched as a git dep from
+# github.com/CrispStrobe/internxt-dart (see pubspec.yaml).
+# Local dev pins to ../internxt-dart via pubspec_overrides.yaml
+# (gitignored) for fast iteration; CI uses the published main.
 
 on:
   push:
@@ -29,19 +29,6 @@ jobs:
 
     steps:
       - uses: actions/checkout@v4
-
-      # internxt_client is a path dep at ../internxt-dart. Check it
-      # out into the workspace so flutter pub get can resolve it.
-      - name: Check out internxt-dart sibling
-        uses: actions/checkout@v4
-        with:
-          repository: CrispStrobe/internxt-dart
-          path: internxt-dart-sibling
-          ref: main
-
-      - name: Move sibling to expected location
-        run: |
-          mv internxt-dart-sibling ../internxt-dart
 
       - uses: subosito/flutter-action@v2
         with:
@@ -77,16 +64,6 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
-      - name: Check out internxt-dart sibling
-        uses: actions/checkout@v4
-        with:
-          repository: CrispStrobe/internxt-dart
-          path: internxt-dart-sibling
-          ref: main
-
-      - name: Move sibling to expected location
-        run: mv internxt-dart-sibling ../internxt-dart
-
       - uses: subosito/flutter-action@v2
         with:
           channel: stable
@@ -110,16 +87,6 @@ jobs:
 
     steps:
       - uses: actions/checkout@v4
-
-      - name: Check out internxt-dart sibling
-        uses: actions/checkout@v4
-        with:
-          repository: CrispStrobe/internxt-dart
-          path: internxt-dart-sibling
-          ref: main
-
-      - name: Move sibling to expected location
-        run: mv internxt-dart-sibling ../internxt-dart
 
       - uses: subosito/flutter-action@v2
         with:

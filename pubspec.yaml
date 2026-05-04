@@ -60,10 +60,15 @@ dependencies:
 
   # Internxt protocol — sourced from the published library instead
   # of the previous embedded copy in lib/services/internxt_client.dart
-  # (Phase 6.c). Path dep during local development; switch to a
-  # version constraint once internxt_client publishes to pub.dev.
+  # (Phase 6.c). Git dep so Vercel + CI can fetch it without needing
+  # a sibling checkout dance. Local dev can pin to ../internxt-dart
+  # via a gitignored pubspec_overrides.yaml (faster iteration
+  # against in-flight library changes). Switch to a version
+  # constraint once internxt_client publishes to pub.dev.
   internxt_client:
-    path: ../internxt-dart
+    git:
+      url: https://github.com/CrispStrobe/internxt-dart.git
+      ref: main
 
 dev_dependencies:
   flutter_test:
