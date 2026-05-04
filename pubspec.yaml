@@ -58,6 +58,13 @@ dependencies:
   file: ^7.0.0         # The virtual filesystem interface
   webdav_client: ^1.2.2
 
+  # Internxt protocol — sourced from the published library instead
+  # of the previous embedded copy in lib/services/internxt_client.dart
+  # (Phase 6.c). Path dep during local development; switch to a
+  # version constraint once internxt_client publishes to pub.dev.
+  internxt_client:
+    path: ../internxt-dart
+
 dev_dependencies:
   flutter_test:
     sdk: flutter

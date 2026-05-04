@@ -1,35 +1,68 @@
 // lib/services/internxt_client_adapter.dart
-import 'cloud_storage_interface.dart';
-import 'internxt_client.dart';
+//
+// Adapter that exposes the published internxt_client package
+// through cloud-dart's CloudStorageClient interface (so AppState
+// can treat Internxt the same way it treats Filen / SFTP / WebDAV).
+//
+// Phase 6.c: previously delegated to an embedded ~2700-line copy
+// of the protocol (see ../internxt_client.dart pre-rewire). Now
+// constructs a real InternxtClient from the package, passing:
+//   - URL overrides for kIsWeb (Vercel proxy paths)
+//   - SharedPreferencesStorage for kIsWeb (file-IO unavailable)
+// Path-based facade methods (listPath, uploadFileBytes, movePath,
+// etc.) come from the package's `paths.dart` extension methods —
+// no local extensions file needed anymore.
+
 import 'dart:typed_data';
-import 'internxt_client_extensions.dart'; // Import the extensions
+
+import 'package:flutter/foundation.dart' show kIsWeb;
+import 'package:internxt_client/internxt_client.dart';
+
+import 'cloud_storage_interface.dart';
+import 'internxt_client.dart' show InternxtUrls;
+import 'internxt_flutter/shared_prefs_storage.dart';
 
 class InternxtClientAdapter implements CloudStorageClient {
   final InternxtClient _client;
-  
-  InternxtClientAdapter({required ConfigService config}) 
-      : _client = InternxtClient(config: config);
 
-  // Expose config for AppState to use
+  InternxtClientAdapter({required ConfigService config})
+      : _client = InternxtClient(
+          // Adapter accepts whatever ConfigService AppState constructed.
+          // For Web that means a ConfigService whose storage is
+          // SharedPreferencesStorage; for native it's the default
+          // FileConfigStorage. Either way, just pass it through.
+          config: config,
+          networkUrl: InternxtUrls.networkUrl,
+          driveApiUrl: InternxtUrls.driveApiUrl,
+        );
+
+  /// Convenience constructor that builds the right ConfigService
+  /// for the host platform. Use this when AppState doesn't already
+  /// have one in hand.
+  factory InternxtClientAdapter.forHost({required String configPath}) {
+    final storage = kIsWeb ? SharedPreferencesStorage() : null;
+    return InternxtClientAdapter(
+      config: ConfigService(configPath: configPath, storage: storage),
+    );
+  }
+
   ConfigService get config => _client.config;
-  
-  // Expose last login response for AppState
+
   Map<String, dynamic>? get lastLoginResponse => _lastLoginResponse;
   Map<String, dynamic>? _lastLoginResponse;
-  
+
   @override
   String get providerName => 'Internxt';
-  
+
   @override
   String get rootPath => '/';
-  
+
   @override
-  // Check if userId is set on the client instance
   bool get isAuthenticated => _client.userId != null;
-  
+
   @override
   String? get userId => _client.userId;
-  
+
   @override
   String? get bucketId => _client.bucketId;
 
@@ -38,20 +71,17 @@ class InternxtClientAdapter implements CloudStorageClient {
   }
 
   @override
-  Future<void> login(String email, String password, {String? twoFactorCode}) async {
+  Future<void> login(String email, String password,
+      {String? twoFactorCode}) async {
     print("🔌 Adapter: Calling InternxtClient login...");
     try {
-        final response = await _client.login(email, password, tfaCode: twoFactorCode);
-        _lastLoginResponse = response;
-        
-        print("🔌 Adapter: Login successful. Keys received: ${response.keys}");
-        
-        // Ensure the client state is updated
-        _client.setAuth(response); 
+      final response = await _client.login(email, password, tfaCode: twoFactorCode);
+      _lastLoginResponse = response;
+      print("🔌 Adapter: Login successful. Keys received: ${response.keys}");
+      _client.setAuth(response);
     } catch (e) {
-        print("🔌 Adapter: Login failed with error: $e");
-        
-        rethrow;
+      print("🔌 Adapter: Login failed with error: $e");
+      rethrow;
     }
   }
 
@@ -60,7 +90,6 @@ class InternxtClientAdapter implements CloudStorageClient {
 
   @override
   Future<void> logout() async {
-    // Clear client state
     _client.userId = null;
     _client.bucketId = null;
     await _client.config.clearCredentials();
@@ -71,8 +100,8 @@ class InternxtClientAdapter implements CloudStorageClient {
     String remotePath, {
     Function(int, int)? onProgress,
   }) {
-    // Forward to client extension
-    return _client.downloadFileBytes(remotePath, onProgress: onProgress);
+    // Path-based variant from the package's `paths.dart` extension.
+    return _client.downloadFileBytesByPath(remotePath, onProgress: onProgress);
   }
 
   @override
@@ -80,7 +109,7 @@ class InternxtClientAdapter implements CloudStorageClient {
     try {
       return await _client.resolvePath(path);
     } catch (e) {
-      if (e is UnsupportedError) rethrow; // Pass up "Disabled" error
+      if (e is UnsupportedError) rethrow;
       return null;
     }
   }
@@ -89,13 +118,23 @@ class InternxtClientAdapter implements CloudStorageClient {
   Future<Map<String, dynamic>> listPath(String path) => _client.listPath(path);
 
   @override
-  Future<void> uploadFile(List<int> fileData, String fileName, String targetPath, {Function(int p1, int p2)? onProgress}) {
-    return _client.uploadFile(fileData, fileName, targetPath, onProgress: onProgress);
+  Future<void> uploadFile(
+    List<int> fileData,
+    String fileName,
+    String targetPath, {
+    Function(int p1, int p2)? onProgress,
+  }) {
+    // Path-based bytes upload from `paths.dart`.
+    return _client.uploadFileBytes(fileData, fileName, targetPath);
   }
 
   @override
-  Future<void> downloadFileByPath(String remotePath, String localPath, {Function(int p1, int p2)? onProgress}) {
-    return _client.downloadFileByPath(remotePath, localPath, onProgress: onProgress);
+  Future<void> downloadFileByPath(
+    String remotePath,
+    String localPath, {
+    Function(int p1, int p2)? onProgress,
+  }) {
+    return _client.downloadFileByPath(remotePath, localPath);
   }
 
   @override
@@ -106,25 +145,19 @@ class InternxtClientAdapter implements CloudStorageClient {
 
   @override
   Future<void> movePath(String sourcePath, String targetPath) async {
-    // We delegate completely to client which handles cache invalidation
-    final sourceResolved = await resolvePath(sourcePath);
-    final targetResolved = await resolvePath(targetPath);
-    
-    if (sourceResolved == null) throw Exception("Source not found");
-    if (targetResolved == null) throw Exception("Target not found");
-
-    if (sourceResolved['type'] == 'file') {
-      await _client.moveFile(sourceResolved['uuid'], targetResolved['uuid']);
-    } else {
-      await _client.moveFolder(sourceResolved['uuid'], targetResolved['uuid']);
-    }
+    await _client.movePath(sourcePath, targetPath);
   }
 
   @override
-  Future<void> renamePath(String path, String newName) => _client.renamePath(path, newName);
-  
-  // Specific methods for Internxt searching if needed by AppState
-  Future<Map<String, List<Map<String, dynamic>>>> search(String query, {bool detailed = false}) => _client.search(query, detailed: detailed);
-  
-  Future<List<Map<String, dynamic>>> findFiles(String path, String pattern, {int maxDepth = -1}) => _client.findFiles(path, pattern, maxDepth: maxDepth);
+  Future<void> renamePath(String path, String newName) =>
+      _client.renamePath(path, newName);
+
+  // Internxt-specific operations exposed for AppState's search UI.
+  Future<Map<String, List<Map<String, dynamic>>>> search(String query,
+          {bool detailed = false}) =>
+      _client.search(query, detailed: detailed);
+
+  Future<List<Map<String, dynamic>>> findFiles(String path, String pattern,
+          {int maxDepth = -1}) =>
+      _client.findFiles(path, pattern, maxDepth: maxDepth);
 }

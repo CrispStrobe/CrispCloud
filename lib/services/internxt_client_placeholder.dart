@@ -29,7 +29,9 @@ class InternxtClient {
     throw UnsupportedError('Internxt support is currently disabled.');
   }
 
-  Future<Map<String, String?>> login(String email, String password, {String? tfaCode}) async {
+  // Phase 6.c: signature must match the published library
+  // (Future<Map<String, dynamic>>, not Future<Map<String, String?>>).
+  Future<Map<String, dynamic>> login(String email, String password, {String? tfaCode}) async {
     throw UnsupportedError('Internxt support is currently disabled.');
   }
 
