@@ -1,0 +1,135 @@
+name: CI
+
+# Runs flutter analyze + non-live tests on every push to main and
+# every PR. Catches the kind of drift that motivated AUDIT_6B in
+# the internxt-dart repo (e.g. the placeholder signature mismatch
+# we fixed during Phase 6.c).
+#
+# Live tests (test/internxt_rewire_live_test.dart) need real
+# Internxt creds and auto-skip when IXT_ACCOUNT / IXT_PWD are
+# absent — CI doesn't set them, so they're cleanly skipped here.
+#
+# Build verification: macOS + Web cover the two strategic targets
+# (host platform + the kIsWeb code path). iOS / Android / Linux /
+# Windows could be added if mobile/desktop CI signal becomes
+# valuable; not bundled here to keep CI under 10 minutes.
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+  workflow_dispatch:
+
+jobs:
+  analyze:
+    name: Analyze + tests (Linux)
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+
+    steps:
+      - uses: actions/checkout@v4
+
+      # internxt_client is a path dep at ../internxt-dart. Check it
+      # out into the workspace so flutter pub get can resolve it.
+      - name: Check out internxt-dart sibling
+        uses: actions/checkout@v4
+        with:
+          repository: CrispStrobe/internxt-dart
+          path: internxt-dart-sibling
+          ref: main
+
+      - name: Move sibling to expected location
+        run: |
+          mv internxt-dart-sibling ../internxt-dart
+
+      - uses: subosito/flutter-action@v2
+        with:
+          channel: stable
+
+      - name: Show Flutter version
+        run: flutter --version
+
+      - name: Install dependencies
+        run: flutter pub get
+
+      - name: flutter analyze (errors fail the build)
+        run: |
+          # Fail on errors only — the 700+ pre-existing info/warning
+          # issues in the repo predate this CI workflow and would
+          # need a focused cleanup pass to address.
+          set -o pipefail
+          flutter analyze 2>&1 | tee analyze.log
+          if grep -q "error • " analyze.log; then
+            echo "::error::flutter analyze surfaced errors"
+            exit 1
+          fi
+
+      - name: flutter test (live tests auto-skip without creds)
+        run: flutter test test/widget_test.dart test/internxt_rewire_test.dart
+
+  build-web:
+    name: Build Web bundle
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    needs: analyze
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Check out internxt-dart sibling
+        uses: actions/checkout@v4
+        with:
+          repository: CrispStrobe/internxt-dart
+          path: internxt-dart-sibling
+          ref: main
+
+      - name: Move sibling to expected location
+        run: mv internxt-dart-sibling ../internxt-dart
+
+      - uses: subosito/flutter-action@v2
+        with:
+          channel: stable
+
+      - name: flutter pub get
+        run: flutter pub get
+
+      - name: flutter build web
+        run: flutter build web --release
+
+  build-macos:
+    # macOS runners are slower + more expensive than Linux; only run
+    # on push to main, not every PR. Web build above already
+    # exercises the cross-platform code paths that matter for the
+    # internxt_client wiring.
+    name: Build macOS
+    runs-on: macos-latest
+    timeout-minutes: 30
+    needs: analyze
+    if: github.event_name == 'push'
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Check out internxt-dart sibling
+        uses: actions/checkout@v4
+        with:
+          repository: CrispStrobe/internxt-dart
+          path: internxt-dart-sibling
+          ref: main
+
+      - name: Move sibling to expected location
+        run: mv internxt-dart-sibling ../internxt-dart
+
+      - uses: subosito/flutter-action@v2
+        with:
+          channel: stable
+
+      - name: Enable macOS desktop
+        run: flutter config --enable-macos-desktop
+
+      - name: flutter pub get
+        run: flutter pub get
+
+      - name: flutter build macos --debug
+        run: flutter build macos --debug
