@@ -40,7 +40,9 @@ void main() {
     );
   });
 
-  tearDown(() {
+  tearDown(() async {
+    // Wait for async init in PanelNotifier/AuthNotifier to settle
+    await Future.delayed(const Duration(milliseconds: 200));
     container.dispose();
   });
 

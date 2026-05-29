@@ -89,13 +89,14 @@ void main() {
       expect(appState.providerName, equals('Filen'));
     });
 
-    test('can be set via initialProvider parameter', () {
+    test('can be set via initialProvider parameter', () async {
       final sftpState = AppState(
         config: configService,
         initialProvider: CloudProvider.filen,
         secureStorage: secureStorage,
       );
       expect(sftpState.currentProvider, equals(CloudProvider.filen));
+      await Future.delayed(const Duration(milliseconds: 100));
       sftpState.dispose();
     });
   });
