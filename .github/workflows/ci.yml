@@ -48,12 +48,12 @@ jobs:
 
       - name: flutter analyze (errors fail the build)
         run: |
-          set -o pipefail
-          flutter analyze 2>&1 | tee analyze.log
-          if grep -q "error • " analyze.log; then
+          flutter analyze 2>&1 | tee analyze.log || true
+          if grep -q "  error • " analyze.log; then
             echo "::error::flutter analyze surfaced errors"
             exit 1
           fi
+          echo "No errors found (warnings/info are OK)"
 
       - name: flutter test (unit tests, live tests auto-skip without creds)
         run: flutter test
