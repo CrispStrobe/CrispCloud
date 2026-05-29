@@ -6,7 +6,7 @@ import 'dart:io';
 import 'dart:typed_data';
 import 'package:flutter/foundation.dart'; // for kIsWeb
 
-class FilenClientAdapter implements CloudStorageClient {
+class FilenClientAdapter extends CloudStorageClient {
   final FilenClient _client;
   final FilenConfigService filenConfig;
 

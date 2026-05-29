@@ -25,7 +25,7 @@ import 'cloud_storage_interface.dart';
 import 'dropbox_config_service.dart';
 import 'secure_storage_service.dart';
 
-class DropboxClientAdapter implements CloudStorageClient {
+class DropboxClientAdapter extends CloudStorageClient {
   final DropboxConfigService _config;
 
   DropboxConfigService get config => _config;

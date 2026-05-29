@@ -21,7 +21,7 @@ import 'cloud_storage_interface.dart';
 import 'onedrive_config_service.dart';
 import 'secure_storage_service.dart';
 
-class OneDriveClientAdapter implements CloudStorageClient {
+class OneDriveClientAdapter extends CloudStorageClient {
   final OneDriveConfigService _config;
 
   OneDriveConfigService get config => _config;

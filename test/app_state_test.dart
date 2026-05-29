@@ -90,6 +90,7 @@ void main() {
       final sftpState = AppState(
         config: configService,
         initialProvider: CloudProvider.filen,
+        secureStorage: secureStorage,
       );
       expect(sftpState.currentProvider, equals(CloudProvider.filen));
       sftpState.dispose();

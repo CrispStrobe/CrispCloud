@@ -189,6 +189,13 @@ class SyncPair extends DataClass implements Insertable<SyncPair> {
   @override
   bool operator ==(Object other) =>
       identical(this, other) || (other is SyncPair && other.id == id);
+
+  @override
+  Map<String, dynamic> toJson({ValueSerializer? serializer}) => {
+    'id': id, 'name': name, 'localPath': localPath, 'remotePath': remotePath,
+    'provider': provider, 'conflictPolicy': conflictPolicy, 'direction': direction,
+    'enabled': enabled, 'lastSyncAt': lastSyncAt?.toIso8601String(), 'createdAt': createdAt.toIso8601String(),
+  };
 }
 
 class SyncPairsCompanion extends UpdateCompanion<SyncPair> {
@@ -292,7 +299,7 @@ class $SyncEntriesTable extends SyncEntries with TableInfo<$SyncEntriesTable, Sy
   @override
   Set<GeneratedColumn> get $primaryKey => {id};
   @override
-  List<Set<Column>> get uniqueKeys => [{pairId, relativePath}];
+  List<Set<GeneratedColumn>> get uniqueKeys => [{pairId, relativePath}];
   @override
   String get aliasedName => _alias ?? actualTableName;
   @override
@@ -385,6 +392,12 @@ class SyncEntry extends DataClass implements Insertable<SyncEntry> {
 
   @override
   bool operator ==(Object other) => identical(this, other) || (other is SyncEntry && other.id == id);
+
+  @override
+  Map<String, dynamic> toJson({ValueSerializer? serializer}) => {
+    'id': id, 'pairId': pairId, 'relativePath': relativePath, 'status': status,
+    'localHash': localHash, 'remoteHash': remoteHash, 'isFolder': isFolder,
+  };
 }
 
 class SyncEntriesCompanion extends UpdateCompanion<SyncEntry> {
@@ -549,6 +562,12 @@ class OfflineQueueEntry extends DataClass implements Insertable<OfflineQueueEntr
 
   @override
   String toString() => 'OfflineQueueEntry(id: $id, operation: $operation, path: $path)';
+
+  @override
+  Map<String, dynamic> toJson({ValueSerializer? serializer}) => {
+    'id': id, 'pairId': pairId, 'operation': operation, 'path': path,
+    'targetPath': targetPath, 'completed': completed,
+  };
 }
 
 class OfflineQueueCompanion extends UpdateCompanion<OfflineQueueEntry> {

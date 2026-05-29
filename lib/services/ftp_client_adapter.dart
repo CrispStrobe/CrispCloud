@@ -9,7 +9,7 @@ import 'cloud_storage_interface.dart';
 import 'secure_storage_service.dart';
 import 'ftp_config_service.dart';
 
-class FTPClientAdapter implements CloudStorageClient {
+class FTPClientAdapter extends CloudStorageClient {
   final FTPConfigService _config;
 
   // Expose config for AppState to read credentials
@@ -73,7 +73,7 @@ class FTPClientAdapter implements CloudStorageClient {
         port: _port,
         user: _username!,
         pass: password,
-        securityType: _useTLS ? SecurityType.FTPS : SecurityType.FTP,
+        securityType: _useTLS ? SecurityType.ftps : SecurityType.ftp,
         timeout: 30,
       );
 
@@ -207,7 +207,7 @@ class FTPClientAdapter implements CloudStorageClient {
         if (name == '.' || name == '..') continue;
 
         final fullPath = p.posix.join(path, name);
-        final isDir = item.type == FTPEntryType.DIR;
+        final isDir = item.type == FTPEntryType.dir;
 
         final modTimeStr = item.modifyTime?.toIso8601String();
 
@@ -359,7 +359,7 @@ class FTPClientAdapter implements CloudStorageClient {
       if (item.name == '.' || item.name == '..') continue;
       final fullPath = p.posix.join(path, item.name);
 
-      if (item.type == FTPEntryType.DIR) {
+      if (item.type == FTPEntryType.dir) {
         await _deleteDirectoryRecursive(fullPath);
       } else {
         await _ftpClient!.deleteFile(fullPath);

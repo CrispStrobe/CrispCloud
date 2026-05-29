@@ -9,7 +9,7 @@ import 'secure_storage_service.dart';
 import 'webdav_config_service.dart';
 import 'dart:io' as dart_io;
 
-class WebDavClientAdapter implements CloudStorageClient {
+class WebDavClientAdapter extends CloudStorageClient {
   final WebDavConfigService _config;
 
   WebDavConfigService get config => _config;

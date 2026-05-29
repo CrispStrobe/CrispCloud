@@ -22,7 +22,7 @@ import 'cloud_storage_interface.dart';
 import 'internxt_client.dart' show InternxtUrls;
 import 'internxt_flutter/shared_prefs_storage.dart';
 
-class InternxtClientAdapter implements CloudStorageClient {
+class InternxtClientAdapter extends CloudStorageClient {
   final InternxtClient _client;
 
   InternxtClientAdapter({required ConfigService config})

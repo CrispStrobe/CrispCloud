@@ -11,7 +11,7 @@ import 'cloud_storage_interface.dart';
 import 'secure_storage_service.dart';
 import 'sftp_config_service.dart';
 
-class SFTPClientAdapter implements CloudStorageClient {
+class SFTPClientAdapter extends CloudStorageClient {
   final SFTPConfigService _config;
 
   // FIX: Expose config for AppState to read credentials

@@ -120,8 +120,8 @@ class SyncNotifier extends ChangeNotifier {
   }
 
   Future<void> togglePair(int id, bool enabled) async {
-    final pair = await _db.getPair(id);
-    await _db.updatePair(pair.toCompanion(true).copyWith(enabled: Value(enabled)));
+    await (_db.update(_db.syncPairs)..where((t) => t.id.equals(id)))
+        .write(SyncPairsCompanion(enabled: Value(enabled)));
     await _loadPairs();
   }
 

@@ -19,7 +19,7 @@ import 'cloud_storage_interface.dart';
 import 's3_config_service.dart';
 import 'secure_storage_service.dart';
 
-class S3ClientAdapter implements CloudStorageClient {
+class S3ClientAdapter extends CloudStorageClient {
   final S3ConfigService _config;
 
   S3ConfigService get config => _config;

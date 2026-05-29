@@ -295,7 +295,7 @@ class TransferNotifier extends ChangeNotifier {
           final fileName = p.basename(entity.path);
           final fileData = await localFileService.readFile(entity.path);
           await client.uploadFile(fileData, fileName, newRemotePath);
-          operation.currentBytes += fileData.length;
+          operation.currentBytes += fileData.length as int;
           notifyListeners();
         } catch (_) {}
       } else if (entity is Directory) {

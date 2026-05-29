@@ -186,9 +186,8 @@ class SyncEngine {
     }
 
     // 6. Update pair last sync time
-    await db.updatePair(pair.toCompanion(true).copyWith(
-      lastSyncAt: Value(DateTime.now()),
-    ));
+    await (db.update(db.syncPairs)..where((t) => t.id.equals(pair.id)))
+        .write(SyncPairsCompanion(lastSyncAt: Value(DateTime.now())));
 
     debugPrint('SyncEngine: sync complete — $result');
     return result;

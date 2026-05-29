@@ -20,7 +20,7 @@ import 'cloud_storage_interface.dart';
 import 'gdrive_config_service.dart';
 import 'secure_storage_service.dart';
 
-class GDriveClientAdapter implements CloudStorageClient {
+class GDriveClientAdapter extends CloudStorageClient {
   final GDriveConfigService _config;
 
   GDriveConfigService get config => _config;

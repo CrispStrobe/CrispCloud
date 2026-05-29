@@ -23,6 +23,9 @@ class EncryptedStorageWrapper implements CloudStorageClient {
   final CloudStorageClient _inner;
   final Uint8List _key;
 
+  /// Access the unwrapped inner client (used by disableEncryption).
+  CloudStorageClient get inner => _inner;
+
   /// When true, filenames are also encrypted (base64url encoded).
   final bool encryptFilenames;
 
