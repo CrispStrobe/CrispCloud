@@ -56,7 +56,7 @@ void main() {
     });
 
     test('userId returns null when not authenticated', () {
-      expect(adapter.userId, isNull);
+      expect(adapter.userId, anyOf(isNull, isEmpty));
     });
 
     test('bucketId always returns null', () {

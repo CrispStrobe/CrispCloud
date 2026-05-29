@@ -6,7 +6,12 @@ import 'package:flutter_test/flutter_test.dart';
 String applyFindReplace(String name, String find, String replace, {bool useRegex = false}) {
   if (find.isEmpty) return name;
   if (useRegex) {
-    return name.replaceAll(RegExp(find), replace);
+    return name.replaceAllMapped(RegExp(find), (m) {
+      return replace.replaceAllMapped(RegExp(r'\$(\d+)'), (ref) {
+        final groupIndex = int.parse(ref.group(1)!);
+        return m.group(groupIndex) ?? '';
+      });
+    });
   }
   return name.replaceAll(find, replace);
 }

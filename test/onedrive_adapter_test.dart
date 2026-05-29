@@ -11,6 +11,8 @@ import 'package:crisp_cloud/services/secure_storage_service.dart';
 import 'package:crisp_cloud/services/cloud_storage_interface.dart';
 
 void main() {
+  TestWidgetsFlutterBinding.ensureInitialized();
+
   late OneDriveClientAdapter adapter;
   late OneDriveConfigService configService;
   late InMemorySecureStorage secureStorage;

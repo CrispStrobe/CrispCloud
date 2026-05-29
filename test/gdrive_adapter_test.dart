@@ -13,6 +13,8 @@ import 'package:crisp_cloud/services/secure_storage_service.dart';
 import 'package:crisp_cloud/services/cloud_storage_interface.dart';
 
 void main() {
+  TestWidgetsFlutterBinding.ensureInitialized();
+
   late GDriveClientAdapter adapter;
   late GDriveConfigService configService;
   late InMemorySecureStorage secureStorage;

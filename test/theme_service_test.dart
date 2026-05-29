@@ -50,7 +50,7 @@ void main() {
       expect(service.customAccent, isNull);
 
       await service.setAccentColor(Colors.red);
-      expect(service.customAccent, Colors.red);
+      expect(service.customAccent?.value, equals(Colors.red.value));
 
       await service.setAccentColor(null);
       expect(service.customAccent, isNull);
