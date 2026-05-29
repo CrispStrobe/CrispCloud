@@ -23,6 +23,17 @@ import 'share_service.dart';
 import 'webdav_client_adapter.dart';
 import 'webdav_config_service.dart';
 
+class AppError {
+  final String message;
+  final DateTime timestamp;
+  final String? context;
+
+  AppError(this.message, {this.context}) : timestamp = DateTime.now();
+
+  @override
+  String toString() => message;
+}
+
 /// A simple async lock using [Completer] to serialize access to critical sections.
 /// Each lock instance is independent, so methods guarded by different locks
 /// can run concurrently (avoiding deadlocks when one locked method calls another).
@@ -101,8 +112,22 @@ class AppState extends ChangeNotifier {
   List<FileItem> get selectedLocalFiles => _selectedLocalFiles.toList();
   List<FileItem> get selectedRemoteFiles => _selectedRemoteFiles.toList();
 
-  String? _lastError;
-  String? get lastError => _lastError;
+  final List<AppError> _errors = [];
+  String? get lastError => _errors.isEmpty ? null : _errors.last.message;
+  List<AppError> get errors => List.unmodifiable(_errors);
+  bool get hasErrors => _errors.isNotEmpty;
+
+  void clearErrors() {
+    _errors.clear();
+    notifyListeners();
+  }
+
+  void clearLastError() {
+    if (_errors.isNotEmpty) {
+      _errors.removeLast();
+      notifyListeners();
+    }
+  }
 
   SortBy _localSortBy = SortBy.name;
   SortOrder _localSortOrder = SortOrder.ascending;
@@ -215,7 +240,7 @@ class AppState extends ChangeNotifier {
       }
     } catch (e) {
       debugPrint('❌ Error picking directory: $e');
-      _lastError = 'Error picking directory: $e';
+      _errors.add(AppError('Error picking directory: $e'));
       notifyListeners();
     }
   }
@@ -388,13 +413,13 @@ class AppState extends ChangeNotifier {
     } catch (e) {
       debugPrint('❌ Error initializing local path: $e');
       _localFileService.currentPath = await _localFileService.getSafeFallbackDirectory();
-      _lastError = e.toString();
+      _errors.add(AppError(e.toString()));
       notifyListeners();
     }
   }
 
   Future<void> _requestInitialDirectoryAccess() async {
-    _lastError = 'Please select a base directory to grant access (e.g., your home folder)';
+    _errors.add(AppError('Please select a base directory to grant access (e.g., your home folder)'));
     notifyListeners();
 
     final grantedPath = await _localFileService.requestDirectoryAccess(
@@ -402,12 +427,12 @@ class AppState extends ChangeNotifier {
     );
 
     if (grantedPath != null) {
-      _lastError = null;
+      _errors.clear();
       await _loadLocalFiles();
       notifyListeners();
     } else {
       _localFileService.currentPath = await _localFileService.getSafeFallbackDirectory();
-      _lastError = 'Access cancelled. Using fallback directory.';
+      _errors.add(AppError('Access cancelled. Using fallback directory.'));
       await _loadLocalFiles(); 
       notifyListeners();
     }
@@ -422,7 +447,7 @@ class AppState extends ChangeNotifier {
       if (entities == null) {
          _localFiles = [];
          // On web, empty list might just mean no folder selected yet
-         if (!kIsWeb) _lastError = 'Local file access is not supported on this platform.';
+         if (!kIsWeb) _errors.add(AppError('Local file access is not supported on this platform.'));
          notifyListeners();
          return;
       }
@@ -484,19 +509,19 @@ class AppState extends ChangeNotifier {
       _localFiles = items;
       _sortFiles(_localFiles, _localSortBy, _localSortOrder);
       // print('✅ Loaded ${_localFiles?.length ?? 0} local items');
-      _lastError = null;
+      _errors.clear();
       notifyListeners();
     } catch (e, stackTrace) {
       if (!kIsWeb && (e is PathAccessException || e.toString().contains('Operation not permitted') || e.toString().contains('Permission denied'))) {
         _localFiles = [];
-        _lastError = 'Permission denied. Use the Browse button (folder icon) to grant access.';
+        _errors.add(AppError('Permission denied. Use the Browse button (folder icon) to grant access.'));
         notifyListeners();
         return; 
       }
       
       debugPrint('❌ Error loading local files: $e');
       _localFiles = [];
-      _lastError = e.toString();
+      _errors.add(AppError(e.toString()));
       notifyListeners();
     }
   }
@@ -565,7 +590,7 @@ class AppState extends ChangeNotifier {
         }
       } catch (e) {
         debugPrint('⚠️ Auto-login exception: $e');
-        _lastError = 'Session expired. Please log in again.';
+        _errors.add(AppError('Session expired. Please log in again.'));
         _isConnected = false;
         notifyListeners();
       }
@@ -637,7 +662,7 @@ class AppState extends ChangeNotifier {
     
     _userEmail = email;
     _isConnected = true;
-    _lastError = null; 
+    _errors.clear(); 
     notifyListeners();
     await refreshPanel(PanelSide.remote);
   }
@@ -752,14 +777,14 @@ class AppState extends ChangeNotifier {
 
           _remoteFiles = [...folders, ...files];
           _sortFiles(_remoteFiles, _remoteSortBy, _remoteSortOrder);
-          _lastError = null;
+          _errors.clear();
           notifyListeners();
         } catch (e) {
           // Don't clear files on temporary network errors if possible,
           // but for now we follow standard pattern
           debugPrint('❌ Refresh Error: $e');
           _remoteFiles = [];
-          _lastError = e.toString();
+          _errors.add(AppError(e.toString()));
           notifyListeners();
         }
       }
@@ -793,7 +818,7 @@ class AppState extends ChangeNotifier {
       // On Desktop/Mobile, we check strict permissions.
       if (!kIsWeb && !await _localFileService.hasAccessToPath(path)) {
         debugPrint('⚠️ Path $path is outside granted directory');
-        _lastError = 'Cannot access paths outside the granted directory. Please grant access to a parent folder.';
+        _errors.add(AppError('Cannot access paths outside the granted directory. Please grant access to a parent folder.'));
         notifyListeners();
         
         // Attempt to request access to the new path
@@ -871,7 +896,7 @@ class AppState extends ChangeNotifier {
       } catch (e) {
         debugPrint('⚠️ Navigation failed: $e');
         
-        _lastError = 'Cannot open folder: ${item.name}. Path may not exist.';
+        _errors.add(AppError('Cannot open folder: ${item.name}. Path may not exist.'));
         notifyListeners();
       }
     }
@@ -1507,7 +1532,7 @@ class AppState extends ChangeNotifier {
       clearSelection(side);
     } catch (e) {
       debugPrint('❌ Error deleting files: $e');
-      _lastError = 'Delete failed: $e';
+      _errors.add(AppError('Delete failed: $e'));
       notifyListeners();
     }
   }
@@ -1535,7 +1560,7 @@ class AppState extends ChangeNotifier {
       clearSelection(side);
     } catch (e) {
       debugPrint('❌ Error moving files: $e');
-      _lastError = 'Move failed: $e';
+      _errors.add(AppError('Move failed: $e'));
       notifyListeners();
       await refreshPanel(side);
     }
@@ -1565,7 +1590,7 @@ class AppState extends ChangeNotifier {
       await refreshPanel(side);
     } catch (e) {
       debugPrint('❌ Error copying files: $e');
-      _lastError = 'Copy failed: $e';
+      _errors.add(AppError('Copy failed: $e'));
       notifyListeners();
     }
   }
@@ -1604,7 +1629,7 @@ class AppState extends ChangeNotifier {
       await refreshPanel(side);
     } catch (e) {
       debugPrint('❌ Error renaming file: $e');
-      _lastError = 'Rename failed: $e';
+      _errors.add(AppError('Rename failed: $e'));
       notifyListeners();
     }
   }
@@ -1622,7 +1647,7 @@ class AppState extends ChangeNotifier {
       await refreshPanel(side);
     } catch (e) {
       debugPrint('❌ Error creating folder: $e');
-      _lastError = 'Create folder failed: $e';
+      _errors.add(AppError('Create folder failed: $e'));
       notifyListeners();
     }
   }
@@ -1674,7 +1699,7 @@ class AppState extends ChangeNotifier {
         throw UnsupportedError('Search not supported for ${_cloudClient.providerName}');
       }
     } catch (e) {
-      _lastError = "Search failed: $e";
+      _errors.add(AppError("Search failed: $e"));
       _isSearching = false;
       notifyListeners();
       return {};
@@ -1719,7 +1744,7 @@ class AppState extends ChangeNotifier {
         throw UnsupportedError('Find not supported for ${_cloudClient.providerName}');
       }
     } catch (e) {
-      _lastError = "Find failed: $e";
+      _errors.add(AppError("Find failed: $e"));
       _isSearching = false;
       notifyListeners();
       return [];
