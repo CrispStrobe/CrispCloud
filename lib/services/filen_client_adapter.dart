@@ -1,6 +1,6 @@
 // lib/services/filen_client_adapter.dart
 import 'cloud_storage_interface.dart';
-import 'filen.dart';
+import 'package:filen_dart/filen_client.dart';
 import 'filen_config_service.dart';
 import 'dart:io';
 import 'dart:typed_data';
@@ -9,8 +9,8 @@ import 'package:flutter/foundation.dart'; // for kIsWeb
 class FilenClientAdapter implements CloudStorageClient {
   final FilenClient _client;
   final FilenConfigService filenConfig;
-  
-  FilenClientAdapter({required FilenConfigService config}) 
+
+  FilenClientAdapter({required FilenConfigService config})
       : filenConfig = config,
         _client = FilenClient(config: ConfigService(configPath: config.configPath));
   

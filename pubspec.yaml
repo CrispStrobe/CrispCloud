@@ -70,6 +70,14 @@ dependencies:
       url: https://github.com/CrispStrobe/internxt-dart.git
       ref: main
 
+  # Filen protocol — sourced from the published library instead
+  # of the previous embedded copy in lib/services/filen.dart.
+  # Same pattern as internxt_client above.
+  filen_dart:
+    git:
+      url: https://github.com/CrispStrobe/filen-dart.git
+      ref: main
+
 dev_dependencies:
   flutter_test:
     sdk: flutter

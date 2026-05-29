@@ -9,7 +9,7 @@ import 'package:file/file.dart';
 import 'package:file/local.dart';
 import 'package:path/path.dart' as p;
 
-import 'filen.dart'; // exports FilenClient and ConfigService
+import 'package:filen_dart/filen_client.dart'; // exports FilenClient and all modules
 
 // --- Helper: Virtual FileStat ---
 class _VirtualFileStat implements io.FileStat {
@@ -76,7 +76,7 @@ class FilenFileSink implements io.IOSink {
   void _switchToDisk() {
     if (_usingDisk) return;
 
-    client._log('WebDAV: Switching to disk for large upload $remotePath');
+    client.log('WebDAV: Switching to disk for large upload $remotePath');
     _usingDisk = true;
     _tempFile = io.File(p.join(
       io.Directory.systemTemp.path,
@@ -117,7 +117,7 @@ class FilenFileSink implements io.IOSink {
       return _doneCompleter.future;
     }
 
-    client._log('WebDAV: close() called on file sink for $remotePath');
+    client.log('WebDAV: close() called on file sink for $remotePath');
 
     try {
       final remoteParentPath = p.dirname(remotePath);
@@ -135,10 +135,10 @@ class FilenFileSink implements io.IOSink {
         await _tempFileSink!.close();
         localFileToUpload = _tempFile!;
         client
-            ._log('WebDAV: Uploading large file from disk: ${_tempFile!.path}');
+            .log('WebDAV: Uploading large file from disk: ${_tempFile!.path}');
       } else {
         final bytes = _memoryBuffer.takeBytes();
-        client._log(
+        client.log(
             'WebDAV: Uploading small file from memory (${bytes.length} bytes)');
         final tempFile = io.File(p.join(
           io.Directory.systemTemp.path,
@@ -169,7 +169,7 @@ class FilenFileSink implements io.IOSink {
 
       _doneCompleter.complete();
     } catch (e, s) {
-      client._log('WebDAV: Error during sink close: $e\n$s');
+      client.log('WebDAV: Error during sink close: $e\n$s');
       _doneCompleter.completeError(e, s);
       throw io.FileSystemException('Error writing file', remotePath);
     } finally {
@@ -183,7 +183,7 @@ class FilenFileSink implements io.IOSink {
 
   @override
   void addError(Object error, [StackTrace? stackTrace]) {
-    client._log('WebDAV Sink Error: $error');
+    client.log('WebDAV Sink Error: $error');
     if (!_doneCompleter.isCompleted) {
       _doneCompleter.completeError(error, stackTrace);
     }
@@ -438,7 +438,7 @@ class FilenDirectory implements Directory {
 
         return entities;
       } catch (e) {
-        client._log('WebDAV: Error listing $path: $e');
+        client.log('WebDAV: Error listing $path: $e');
         return <FileSystemEntity>[];
       }
     }())
@@ -447,14 +447,14 @@ class FilenDirectory implements Directory {
 
   @override
   Future<Directory> create({bool recursive = false}) async {
-    client._log('WebDAV: MKCOL $path');
+    client.log('WebDAV: MKCOL $path');
     await client.createFolderRecursive(path);
     return this;
   }
 
   @override
   Future<FileSystemEntity> delete({bool recursive = false}) async {
-    client._log('WebDAV: DELETE (Folder) $path');
+    client.log('WebDAV: DELETE (Folder) $path');
     final resolved = await client.resolvePath(path);
     await client.trashItem(resolved['uuid'], 'folder');
     return this;
@@ -462,7 +462,7 @@ class FilenDirectory implements Directory {
 
   @override
   Future<Directory> rename(String newPath) async {
-    client._log('WebDAV: MOVE (Folder) $path -> $newPath');
+    client.log('WebDAV: MOVE (Folder) $path -> $newPath');
     final newName = p.basename(newPath);
     final newParentPath = p.dirname(newPath);
     final oldParentPath = p.dirname(path);
@@ -504,7 +504,7 @@ class FilenDirectory implements Directory {
   @override
   Future<void> setStat(io.FileStat stat) async {
     client
-        ._log('WebDAV: PROPPATCH (Folder) $path - not supported by Filen API');
+        .log('WebDAV: PROPPATCH (Folder) $path - not supported by Filen API');
     // Filen API maybe doesn't provide folder timestamp updates
     // Silently ignore or throw based on requirements
   }
@@ -608,7 +608,7 @@ class FilenFile implements File {
 
   @override
   Future<Uint8List> readAsBytes() async {
-    client._log('WebDAV: GET $path');
+    client.log('WebDAV: GET $path');
     try {
       final resolved = await client.resolvePath(path);
       if (resolved['type'] != 'file') {
@@ -618,7 +618,7 @@ class FilenFile implements File {
       final result = await client.downloadFile(resolved['uuid']);
       return result['data'] as Uint8List;
     } catch (e) {
-      client._log('WebDAV: Error reading $path: $e');
+      client.log('WebDAV: Error reading $path: $e');
       throw io.FileSystemException('Error reading file', path);
     }
   }
@@ -629,7 +629,7 @@ class FilenFile implements File {
     io.FileMode mode = io.FileMode.write,
     bool flush = false,
   }) async {
-    client._log('WebDAV: PUT (writeAsBytes) $path (${bytes.length} bytes)');
+    client.log('WebDAV: PUT (writeAsBytes) $path (${bytes.length} bytes)');
 
     final sink = openWrite(mode: mode);
     sink.add(bytes);
@@ -642,7 +642,7 @@ class FilenFile implements File {
     io.FileMode mode = io.FileMode.write,
     Encoding encoding = utf8,
   }) {
-    client._log('WebDAV: PUT (openWrite) $path');
+    client.log('WebDAV: PUT (openWrite) $path');
     return FilenFileSink(
       this,
       client,
@@ -653,7 +653,7 @@ class FilenFile implements File {
 
   @override
   Future<FileSystemEntity> delete({bool recursive = false}) async {
-    client._log('WebDAV: DELETE (File) $path');
+    client.log('WebDAV: DELETE (File) $path');
     final resolved = await client.resolvePath(path);
     await client.trashItem(resolved['uuid'], 'file');
     return this;
@@ -661,7 +661,7 @@ class FilenFile implements File {
 
   @override
   Future<File> rename(String newPath) async {
-    client._log('WebDAV: MOVE (File) $path -> $newPath');
+    client.log('WebDAV: MOVE (File) $path -> $newPath');
     final newName = p.basename(newPath);
     final newParentPath = p.dirname(newPath);
     final oldParentPath = p.dirname(path);
@@ -687,7 +687,7 @@ class FilenFile implements File {
 
   @override
   Future<File> copy(String newPath) async {
-    client._log('WebDAV: COPY $path -> $newPath');
+    client.log('WebDAV: COPY $path -> $newPath');
 
     final bytes = await readAsBytes();
     final newFile = fs.file(newPath) as FilenFile;
@@ -713,7 +713,7 @@ class FilenFile implements File {
   // This is a stub for interface compliance
   @override
   Future<void> setStat(io.FileStat stat) async {
-    client._log('WebDAV: PROPPATCH (File) $path - not supported by Filen API');
+    client.log('WebDAV: PROPPATCH (File) $path - not supported by Filen API');
     // Filen API doesn't provide file timestamp updates after upload
     // Silently ignore or throw based on requirements
   }
@@ -886,11 +886,3 @@ class FilenFile implements File {
       throw UnimplementedError('Sync operations not supported');
 }
 
-// --- Extension for FilenClient logging ---
-extension FilenClientLogging on FilenClient {
-  void _log(String message) {
-    if (debugMode) {
-      print('🔍 [DEBUG] $message');
-    }
-  }
-}
