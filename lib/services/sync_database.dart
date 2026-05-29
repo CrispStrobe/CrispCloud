@@ -7,13 +7,10 @@
 //
 // Uses drift's "manager" API with typed tables for compile-time safety.
 
-import 'dart:io';
-
 import 'package:drift/drift.dart';
-import 'package:drift/native.dart';
 import 'package:flutter/foundation.dart';
-import 'package:path/path.dart' as p;
-import 'package:path_provider/path_provider.dart';
+
+import 'sync_database_connection.dart';
 
 part 'sync_database.g.dart';
 
@@ -78,7 +75,7 @@ class OfflineQueue extends Table {
 
 @DriftDatabase(tables: [SyncPairs, SyncEntries, OfflineQueue])
 class SyncDatabase extends _$SyncDatabase {
-  SyncDatabase() : super(_openConnection());
+  SyncDatabase() : super(openSyncDatabase());
 
   /// For testing: inject a custom executor.
   SyncDatabase.forTesting(super.e);
@@ -153,12 +150,4 @@ class SyncDatabase extends _$SyncDatabase {
 
   Future<int> clearCompletedOffline() =>
       (delete(offlineQueue)..where((t) => t.completed.equals(true))).go();
-}
-
-LazyDatabase _openConnection() {
-  return LazyDatabase(() async {
-    final dbFolder = await getApplicationSupportDirectory();
-    final file = File(p.join(dbFolder.path, 'crispcloud_sync.db'));
-    return NativeDatabase.createInBackground(file);
-  });
 }
