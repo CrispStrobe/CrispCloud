@@ -64,7 +64,7 @@ void main() {
   group('DropboxClientAdapter login validation', () {
     test('login throws on empty app key', () async {
       expect(
-        () => adapter.login('', '', null),
+        () => adapter.login('', ''),
         throwsA(isA<Exception>().having(
           (e) => e.toString(), 'message', contains('App Key is required'),
         )),

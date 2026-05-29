@@ -86,7 +86,7 @@ void main() {
   group('OneDriveClientAdapter login validation', () {
     test('login throws on empty client ID', () async {
       expect(
-        () => adapter.login('', '', null),
+        () => adapter.login('', ''),
         throwsA(isA<Exception>().having(
           (e) => e.toString(), 'message', contains('Application (Client) ID is required'),
         )),
@@ -96,7 +96,7 @@ void main() {
     test('login with pipe-separated clientId|secret parses correctly', () async {
       // Will fail on network, but tests the format acceptance
       try {
-        await adapter.login('test-client-id|test-secret', '', null);
+        await adapter.login('test-client-id|test-secret', '');
       } catch (e) {
         // Expected network/browser error — we just verify it got past validation
         expect(e, isA<Exception>());

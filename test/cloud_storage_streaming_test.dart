@@ -1,3 +1,4 @@
+import 'dart:io';
 import 'dart:typed_data';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:crisp_cloud/services/cloud_storage_interface.dart';
@@ -15,6 +16,14 @@ class MockCloudClient implements CloudStorageClient {
   @override bool get isAuthenticated => true;
   @override String? get userId => 'test';
   @override String? get bucketId => null;
+
+  @override bool get supportsStreaming => false;
+  @override bool get supportsMultipart => false;
+  @override bool get supportsVersioning => false;
+  @override bool get supportsSharing => false;
+  @override bool get supportsSearch => false;
+  @override bool get supportsThumbnails => false;
+  @override bool get supportsTrash => true;
 
   @override Future<void> login(String email, String password, {String? twoFactorCode}) async {}
   @override Future<bool> is2faNeeded(String email) async => false;
@@ -34,6 +43,27 @@ class MockCloudClient implements CloudStorageClient {
 
   @override
   Future<void> downloadFileByPath(String remotePath, String localPath, {Function(int, int)? onProgress}) async {}
+
+  @override
+  Future<void> uploadStream(
+    Stream<List<int>> dataStream,
+    int length,
+    String fileName,
+    String targetPath, {
+    Function(int, int)? onProgress,
+  }) async {
+    final builder = BytesBuilder(copy: false);
+    await for (final chunk in dataStream) {
+      builder.add(chunk);
+    }
+    await uploadFile(builder.takeBytes(), fileName, targetPath, onProgress: onProgress);
+  }
+
+  @override
+  Stream<List<int>> downloadStream(String remotePath, {Function(int, int)? onProgress}) async* {
+    final bytes = await downloadFileBytes(remotePath, onProgress: onProgress);
+    yield bytes;
+  }
 
   @override
   Future<Uint8List> downloadFileBytes(String remotePath, {Function(int, int)? onProgress}) async {

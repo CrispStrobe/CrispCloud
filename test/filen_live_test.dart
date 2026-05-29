@@ -52,8 +52,8 @@ void main() {
 
   test('listPath returns folders and files', () async {
     final result = await adapter.listPath('/');
-    expect(result, containsKey('folders'));
-    expect(result, containsKey('files'));
+    expect(result.containsKey('folders'), isTrue);
+    expect(result.containsKey('files'), isTrue);
   });
 
   test('upload and download round-trip', () async {

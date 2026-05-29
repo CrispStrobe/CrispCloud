@@ -88,7 +88,7 @@ void main() {
   group('GDriveClientAdapter login format', () {
     test('login throws on empty client ID', () async {
       expect(
-        () => adapter.login('', '', null),
+        () => adapter.login('', ''),
         throwsA(isA<Exception>().having((e) => e.toString(), 'message', contains('Client ID is required'))),
       );
     });
@@ -99,7 +99,7 @@ void main() {
       // The adapter will try browser flow (which fails in test) or throw if no refresh token.
       // We verify it doesn't crash with a valid client ID but no network.
       try {
-        await adapter.login('test-client-id.apps.googleusercontent.com', '', null);
+        await adapter.login('test-client-id.apps.googleusercontent.com', '');
       } catch (e) {
         // Expected: either "Could not open browser" or network error
         expect(e, isA<Exception>());

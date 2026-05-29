@@ -5,7 +5,10 @@ void main() {
   group('OperationProgress', () {
     test('creates with correct initial state', () {
       final op = OperationProgress(
+        id: 'op-1',
         type: OperationType.upload,
+        sourcePath: '/local/test.txt',
+        targetPath: '/remote/test.txt',
         fileName: 'test.txt',
         totalBytes: 1024,
       );
@@ -13,7 +16,7 @@ void main() {
       expect(op.type, equals(OperationType.upload));
       expect(op.fileName, equals('test.txt'));
       expect(op.totalBytes, equals(1024));
-      expect(op.bytesTransferred, equals(0));
+      expect(op.currentBytes, equals(0));
       expect(op.isComplete, isFalse);
       expect(op.isCancelled, isFalse);
       expect(op.progress, equals(0.0));
@@ -21,21 +24,27 @@ void main() {
 
     test('progress updates correctly', () {
       final op = OperationProgress(
+        id: 'op-2',
         type: OperationType.download,
+        sourcePath: '/remote/file.pdf',
+        targetPath: '/local/file.pdf',
         fileName: 'file.pdf',
         totalBytes: 1000,
       );
 
-      op.bytesTransferred = 500;
+      op.currentBytes = 500;
       expect(op.progress, closeTo(0.5, 0.01));
 
-      op.bytesTransferred = 1000;
+      op.currentBytes = 1000;
       expect(op.progress, closeTo(1.0, 0.01));
     });
 
     test('handles zero totalBytes', () {
       final op = OperationProgress(
+        id: 'op-3',
         type: OperationType.upload,
+        sourcePath: '/local/empty.txt',
+        targetPath: '/remote/empty.txt',
         fileName: 'empty.txt',
         totalBytes: 0,
       );
@@ -45,7 +54,10 @@ void main() {
 
     test('cancel sets isCancelled', () {
       final op = OperationProgress(
+        id: 'op-4',
         type: OperationType.upload,
+        sourcePath: '/local/test.txt',
+        targetPath: '/remote/test.txt',
         fileName: 'test.txt',
         totalBytes: 100,
       );
@@ -54,27 +66,33 @@ void main() {
       expect(op.isCancelled, isTrue);
     });
 
-    test('markComplete sets isComplete', () {
+    test('complete() sets isComplete', () {
       final op = OperationProgress(
+        id: 'op-5',
         type: OperationType.upload,
+        sourcePath: '/local/test.txt',
+        targetPath: '/remote/test.txt',
         fileName: 'test.txt',
         totalBytes: 100,
       );
 
-      op.markComplete();
+      op.complete();
       expect(op.isComplete, isTrue);
     });
 
-    test('markError stores error message', () {
+    test('fail() stores error message', () {
       final op = OperationProgress(
+        id: 'op-6',
         type: OperationType.upload,
+        sourcePath: '/local/test.txt',
+        targetPath: '/remote/test.txt',
         fileName: 'test.txt',
         totalBytes: 100,
       );
 
-      op.markError('Upload failed');
+      op.fail('Upload failed');
       expect(op.error, equals('Upload failed'));
-      expect(op.hasError, isTrue);
+      expect(op.error != null, isTrue);
     });
   });
 

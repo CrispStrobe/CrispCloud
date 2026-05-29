@@ -1,7 +1,7 @@
 // test/checksum_service_test.dart
 
 import 'dart:typed_data';
-import 'package:test/test.dart';
+import 'package:flutter_test/flutter_test.dart';
 import 'package:crisp_cloud/services/checksum_service.dart';
 
 void main() {
