@@ -37,15 +37,14 @@ class EncryptionService {
     cipher.init(
         true, AEADParameters(KeyParameter(key), 128, nonce, Uint8List(0)));
 
-    final ciphertext = Uint8List(cipher.getOutputSize(plaintext.length));
-    final len =
-        cipher.processBytes(plaintext, 0, plaintext.length, ciphertext, 0);
-    cipher.doFinal(ciphertext, len);
+    final output = Uint8List(cipher.getOutputSize(plaintext.length));
+    var offset = cipher.processBytes(plaintext, 0, plaintext.length, output, 0);
+    offset += cipher.doFinal(output, offset);
 
-    // Prepend nonce: [nonce (12)] [ciphertext + tag]
-    final result = Uint8List(12 + ciphertext.length);
+    // Prepend nonce: [nonce (12)] [ciphertext + tag (offset bytes)]
+    final result = Uint8List(12 + offset);
     result.setRange(0, 12, nonce);
-    result.setRange(12, result.length, ciphertext);
+    result.setRange(12, 12 + offset, output);
     return result;
   }
 
@@ -67,13 +66,13 @@ class EncryptionService {
     cipher.init(
         false, AEADParameters(KeyParameter(key), 128, nonce, Uint8List(0)));
 
-    final plaintext =
-        Uint8List(cipher.getOutputSize(ciphertextWithTag.length));
-    final len = cipher.processBytes(
-        ciphertextWithTag, 0, ciphertextWithTag.length, plaintext, 0);
-    cipher.doFinal(plaintext, len);
+    final output = Uint8List(cipher.getOutputSize(ciphertextWithTag.length));
+    var offset = cipher.processBytes(
+        ciphertextWithTag, 0, ciphertextWithTag.length, output, 0);
+    offset += cipher.doFinal(output, offset);
 
-    return plaintext;
+    // Return only the actual plaintext bytes (offset may be < output.length)
+    return Uint8List.fromList(output.sublist(0, offset));
   }
 
   /// Encrypt a filename, returning a base64url-safe encoded string.

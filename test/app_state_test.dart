@@ -20,7 +20,10 @@ void main() {
     appState = AppState(config: configService, secureStorage: secureStorage);
   });
 
-  tearDown(() {
+  tearDown(() async {
+    // Wait for async init (_initializeLocalPath, _attemptAutoLogin) to settle
+    // before disposing, otherwise they call notifyListeners() on a disposed object.
+    await Future.delayed(const Duration(milliseconds: 100));
     appState.dispose();
   });
 
