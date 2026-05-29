@@ -1,27 +1,37 @@
 // lib/services/sftp_config_service.dart
-import 'dart:convert';
-import 'dart:io';
-import 'package:shared_preferences/shared_preferences.dart';
+import 'package:flutter/foundation.dart';
+import 'secure_storage_service.dart';
 
 class SFTPConfigService {
   final String configPath;
+  final SecureStorage _secure;
 
-  SFTPConfigService({required this.configPath});
+  SFTPConfigService({required this.configPath, required SecureStorage secureStorage})
+      : _secure = secureStorage;
 
   Future<Map<String, String>?> readCredentials() async {
-    final prefs = await SharedPreferences.getInstance();
-    final jsonStr = prefs.getString('sftp_credentials');
-    if (jsonStr == null) return null;
-    return Map<String, String>.from(json.decode(jsonStr));
+    try {
+      return await _secure.readMap('sftp_credentials');
+    } catch (e) {
+      debugPrint('⚠️ Error reading SFTP credentials: $e');
+      return null;
+    }
   }
 
   Future<void> saveCredentials(Map<String, String> creds) async {
-    final prefs = await SharedPreferences.getInstance();
-    await prefs.setString('sftp_credentials', json.encode(creds));
+    try {
+      await _secure.writeMap('sftp_credentials', creds);
+    } catch (e) {
+      debugPrint('❌ Error saving SFTP credentials: $e');
+      rethrow;
+    }
   }
 
   Future<void> clearCredentials() async {
-    final prefs = await SharedPreferences.getInstance();
-    await prefs.remove('sftp_credentials');
+    try {
+      await _secure.delete('sftp_credentials');
+    } catch (e) {
+      debugPrint('⚠️ Error clearing SFTP credentials: $e');
+    }
   }
 }

@@ -5,22 +5,23 @@ import 'package:flutter/foundation.dart';
 import 'package:webdav_client/webdav_client.dart' as webdav;
 import 'package:path/path.dart' as p;
 import 'cloud_storage_interface.dart';
+import 'secure_storage_service.dart';
 import 'webdav_config_service.dart';
 import 'dart:io' as dart_io;
 
 class WebDavClientAdapter implements CloudStorageClient {
   final WebDavConfigService _config;
-  
+
   WebDavConfigService get config => _config;
 
   webdav.Client? _client;
   String? _user;
   String? _host;
 
-  WebDavClientAdapter({required dynamic config}) 
-      : _config = (config is WebDavConfigService) 
-            ? config 
-            : WebDavConfigService(configPath: '');
+  WebDavClientAdapter({required dynamic config})
+      : _config = (config is WebDavConfigService)
+            ? config
+            : WebDavConfigService(configPath: '', secureStorage: InMemorySecureStorage());
 
   @override
   String get providerName => 'WebDAV';

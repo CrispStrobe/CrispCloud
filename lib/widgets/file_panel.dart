@@ -3,16 +3,17 @@
 import 'package:flutter/material.dart';
 import 'package:desktop_drop/desktop_drop.dart';
 import 'package:flutter/foundation.dart' show kIsWeb;
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 
-import '../services/app_state.dart';
 import '../models/file_item.dart';
-import 'package:provider/provider.dart';
 import '../models/panel_side.dart';
-
+import '../providers/providers.dart';
+import 'file_grid_view.dart';
 import 'file_toolbar.dart';
-import 'file_list_view.dart';
+import 'file_list_view.dart' show FileListView, PanelDragData, getFileIcon;
+import 'panel_tab_bar.dart';
 
-class FilePanel extends StatefulWidget {
+class FilePanel extends ConsumerStatefulWidget {
   final PanelSide side;
   final bool isActive;
   final VoidCallback onTap;
@@ -25,40 +26,44 @@ class FilePanel extends StatefulWidget {
   });
 
   @override
-  State<FilePanel> createState() => _FilePanelState();
+  ConsumerState<FilePanel> createState() => _FilePanelState();
 }
 
-class _FilePanelState extends State<FilePanel> {
+class _FilePanelState extends ConsumerState<FilePanel> {
   bool _isDragging = false;
+  bool _isEditingPath = false;
   late final ScrollController _scrollController;
+  late final TextEditingController _pathController;
 
   @override
   void initState() {
     super.initState();
     _scrollController = ScrollController();
+    _pathController = TextEditingController();
   }
 
   @override
   void dispose() {
     _scrollController.dispose();
+    _pathController.dispose();
     super.dispose();
   }
 
   @override
   Widget build(BuildContext context) {
-
-    final appState = context.watch<AppState>();
+    final panel = ref.watch(panelProvider(widget.side));
+    final errors = ref.watch(errorProvider);
 
     // Show error if present
-    if (appState.lastError != null && widget.side == PanelSide.local) {
+    if (errors.lastError != null && widget.side == PanelSide.local) {
       WidgetsBinding.instance.addPostFrameCallback((_) {
         if (context.mounted) {
           ScaffoldMessenger.of(context).showSnackBar(
             SnackBar(
-              content: Text(appState.lastError!),
+              content: Text(errors.lastError!),
               action: SnackBarAction(
                 label: 'Browse',
-                onPressed: () => appState.pickLocalDirectory(),
+                onPressed: () => panel.pickLocalDirectory(),
               ),
               duration: const Duration(seconds: 5),
             ),
@@ -67,46 +72,34 @@ class _FilePanelState extends State<FilePanel> {
       });
     }
 
-    // --- FIX: Use new getter 'localFileItems' ---
-    final files = widget.side == PanelSide.local ? appState.localFileItems : appState.remoteFiles;
-    // --- END FIX ---
+    final files = panel.files;
+    final currentPath = panel.currentPath;
+    final selection = panel.selection;
 
-    final currentPath = widget.side == PanelSide.local ? appState.localPath : appState.remotePath;
-    final selection = widget.side == PanelSide.local ? appState.localSelection : appState.remoteSelection;
-
-    // --- Scroll logic ---
-    FileItem? itemToScroll = appState.itemToScrollTo;
-
+    // Scroll logic
+    final itemToScroll = panel.itemToScrollTo;
     if (itemToScroll != null && files != null) {
       final index = files.indexWhere((f) =>
         (f.uuid != null && f.uuid == itemToScroll.uuid) ||
-        (f.path != null && f.path == itemToScroll.path)
-      );
+        (f.path != null && f.path == itemToScroll.path));
 
       if (index != -1) {
-        bool belongsToPanel = (widget.side == PanelSide.local && itemToScroll.path != null && itemToScroll.path!.startsWith(appState.localPath)) ||
-                              (widget.side == PanelSide.remote && itemToScroll.uuid != null && (itemToScroll.path ?? '/').startsWith(appState.remotePath));
-
-        if (belongsToPanel) {
-          WidgetsBinding.instance.addPostFrameCallback((_) {
-            if (_scrollController.hasClients) {
-              final offset = index * 56.0;
-              _scrollController.animateTo(
-                offset,
-                duration: const Duration(milliseconds: 300),
-                curve: Curves.easeInOut,
-              );
-              appState.clearItemToScrollTo();
-            }
-          });
-        }
+        WidgetsBinding.instance.addPostFrameCallback((_) {
+          if (_scrollController.hasClients) {
+            _scrollController.animateTo(
+              index * 56.0,
+              duration: const Duration(milliseconds: 300),
+              curve: Curves.easeInOut,
+            );
+            panel.clearItemToScrollTo();
+          }
+        });
       } else {
-        appState.clearItemToScrollTo();
+        panel.clearItemToScrollTo();
       }
     }
-    // --- End scroll logic ---
 
-    // Empty State prompt
+    // Web empty state
     if (kIsWeb && widget.side == PanelSide.local && (files == null || files.isEmpty)) {
       return Center(
         child: Column(
@@ -116,7 +109,7 @@ class _FilePanelState extends State<FilePanel> {
             const SizedBox(height: 16),
             const Text('No folder selected'),
             ElevatedButton(
-              onPressed: () => appState.pickLocalDirectory(),
+              onPressed: () => panel.pickLocalDirectory(),
               child: const Text('Open Local Folder'),
             ),
           ],
@@ -124,30 +117,85 @@ class _FilePanelState extends State<FilePanel> {
       );
     }
 
+    // Wrap in DragTarget for inter-panel file dragging
+    Widget content = _buildPanelContent(context, panel, files, currentPath, selection);
+
+    // Flutter DragTarget for cross-panel drops
+    content = DragTarget<PanelDragData>(
+      onWillAcceptWithDetails: (details) {
+        // Accept drops from the OTHER panel only
+        return details.data.sourceSide != widget.side;
+      },
+      onAcceptWithDetails: (details) async {
+        final data = details.data;
+        final transfers = ref.read(transferProvider);
+        if (data.sourceSide == PanelSide.local && widget.side == PanelSide.remote) {
+          await transfers.uploadFiles(data.files);
+        } else if (data.sourceSide == PanelSide.remote && widget.side == PanelSide.local) {
+          await transfers.downloadFiles(data.files);
+        }
+      },
+      builder: (context, candidateData, rejectedData) {
+        final isDropTarget = candidateData.isNotEmpty;
+        return Container(
+          decoration: isDropTarget
+              ? BoxDecoration(border: Border.all(color: Theme.of(context).colorScheme.primary, width: 2))
+              : null,
+          child: content,
+        );
+      },
+    );
+
     return GestureDetector(
       onTap: widget.onTap,
-      // --- FIX: Disable drop target on web ---
-      child: kIsWeb ? _buildPanelContent(context, appState, files, currentPath, selection) : DropTarget(
-      // --- END FIX ---
-        onDragEntered: (_) => setState(() => _isDragging = true),
-        onDragExited: (_) => setState(() => _isDragging = false),
-        onDragDone: (details) async {
-          setState(() => _isDragging = false);
-          if (widget.side == PanelSide.remote && appState.isConnected) {
-            final items = details.files.map((xFile) => FileItem(
-              name: xFile.name,
-              path: xFile.path,
-              isFolder: false,
-            )).toList();
-            await appState.uploadFiles(items);
-          }
-        },
-        child: _buildPanelContent(context, appState, files, currentPath, selection),
-      ),
+      child: kIsWeb
+          ? content
+          : DropTarget(
+              onDragEntered: (_) => setState(() => _isDragging = true),
+              onDragExited: (_) => setState(() => _isDragging = false),
+              onDragDone: (details) async {
+                setState(() => _isDragging = false);
+                final auth = ref.read(authProvider);
+                if (widget.side == PanelSide.remote && auth.isConnected) {
+                  final items = details.files.map((xFile) => FileItem(
+                    name: xFile.name,
+                    path: xFile.path,
+                    isFolder: false,
+                  )).toList();
+                  await ref.read(transferProvider).uploadFiles(items);
+                }
+              },
+              child: content,
+            ),
     );
   }
 
-  Widget _buildPanelContent(BuildContext context, AppState appState, List<FileItem>? files, String currentPath, Set<FileItem> selection) {
+  Widget _buildFileView(PanelSide side, List<FileItem> files) {
+    final viewMode = side == PanelSide.local
+        ? ref.watch(localViewModeProvider)
+        : ref.watch(remoteViewModeProvider);
+
+    if (viewMode == ViewMode.grid) {
+      return FileGridView(
+        side: side,
+        files: files,
+        scrollController: _scrollController,
+      );
+    }
+    return FileListView(
+      side: side,
+      files: files,
+      scrollController: _scrollController,
+    );
+  }
+
+  Widget _buildPanelContent(
+    BuildContext context,
+    PanelNotifier panel,
+    List<FileItem>? files,
+    String currentPath,
+    Set<FileItem> selection,
+  ) {
     return Container(
       decoration: BoxDecoration(
         color: widget.isActive ? null : Colors.black.withOpacity(0.02),
@@ -157,21 +205,75 @@ class _FilePanelState extends State<FilePanel> {
       ),
       child: Column(
         children: [
+          PanelTabBar(
+            tabs: panel.tabs,
+            activeTabId: panel.activeTabId,
+            onTabSelected: (id) => panel.selectTab(id),
+            onTabClosed: (id) => panel.closeTab(id),
+            onNewTab: () => panel.addTab(),
+            onTabPinToggle: (id) => panel.toggleTabPin(id),
+          ),
           FileToolbar(
             side: widget.side,
-            appState: appState,
             currentPath: currentPath,
           ),
           if (currentPath != '/' && currentPath != '')
-            FileBreadcrumbs(
-              side: widget.side,
-              appState: appState,
-              currentPath: currentPath,
-            ),
+            _isEditingPath
+                ? Padding(
+                    padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                    child: Row(
+                      children: [
+                        Expanded(
+                          child: TextField(
+                            controller: _pathController,
+                            autofocus: true,
+                            style: const TextStyle(fontSize: 13),
+                            decoration: const InputDecoration(
+                              isDense: true,
+                              contentPadding: EdgeInsets.symmetric(horizontal: 8, vertical: 8),
+                              border: OutlineInputBorder(),
+                              hintText: 'Enter path...',
+                              prefixIcon: Icon(Icons.folder_open, size: 18),
+                            ),
+                            onSubmitted: (value) {
+                              if (value.isNotEmpty) {
+                                panel.navigateToPath(value);
+                              }
+                              setState(() => _isEditingPath = false);
+                            },
+                          ),
+                        ),
+                        IconButton(
+                          icon: const Icon(Icons.close, size: 18),
+                          tooltip: 'Cancel',
+                          onPressed: () => setState(() => _isEditingPath = false),
+                        ),
+                      ],
+                    ),
+                  )
+                : Row(
+                    children: [
+                      Expanded(
+                        child: FileBreadcrumbs(
+                          side: widget.side,
+                          currentPath: currentPath,
+                        ),
+                      ),
+                      IconButton(
+                        icon: const Icon(Icons.edit, size: 16),
+                        tooltip: 'Edit path',
+                        padding: const EdgeInsets.all(4),
+                        constraints: const BoxConstraints(),
+                        onPressed: () {
+                          _pathController.text = currentPath;
+                          setState(() => _isEditingPath = true);
+                        },
+                      ),
+                    ],
+                  ),
           if (selection.isNotEmpty)
             FileSelectionBar(
               side: widget.side,
-              appState: appState,
               selection: selection,
             ),
           Expanded(
@@ -183,26 +285,14 @@ class _FilePanelState extends State<FilePanel> {
                             ? Column(
                                 mainAxisAlignment: MainAxisAlignment.center,
                                 children: [
-                                  Icon(
-                                    Icons.upload_file,
-                                    size: 64,
-                                    color: Theme.of(context).colorScheme.primary,
-                                  ),
+                                  Icon(Icons.upload_file, size: 64, color: Theme.of(context).colorScheme.primary),
                                   const SizedBox(height: 16),
-                                  Text(
-                                    'Drop files here to upload',
-                                    style: Theme.of(context).textTheme.titleMedium,
-                                  ),
+                                  Text('Drop files here to upload', style: Theme.of(context).textTheme.titleMedium),
                                 ],
                               )
                             : const Text('Empty folder'),
                       )
-                    : FileListView(
-                        side: widget.side,
-                        files: files,
-                        appState: appState,
-                        scrollController: _scrollController,
-                      ),
+                    : _buildFileView(widget.side, files),
           ),
         ],
       ),

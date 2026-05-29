@@ -1,9 +1,15 @@
 // lib/services/cloud_storage_interface.dart
+import 'dart:async';
 import 'dart:typed_data';
 import 'package:flutter/foundation.dart';
 
+import 'dropbox_client_adapter.dart';
 import 'filen_client_adapter.dart';
+import 'ftp_client_adapter.dart';
+import 'gdrive_client_adapter.dart';
 import 'internxt_client_adapter.dart';
+import 'onedrive_client_adapter.dart';
+import 's3_client_adapter.dart';
 import 'sftp_client_adapter.dart';
 import 'webdav_client_adapter.dart';
 
@@ -49,11 +55,52 @@ abstract class CloudStorageClient {
   // Provider-specific info
   String get providerName;
   String get rootPath;
+
+  // Capability flags — providers override these
+  bool get supportsStreaming => false;
+  bool get supportsMultipart => false;
+  bool get supportsVersioning => false;
+  bool get supportsSharing => false;
+  bool get supportsSearch => false;
+  bool get supportsThumbnails => false;
+  bool get supportsTrash => true;
+
+  /// Stream-based upload. Providers that support streaming override this.
+  /// Default implementation buffers the stream and calls uploadFile.
+  Future<void> uploadStream(
+    Stream<List<int>> dataStream,
+    int length,
+    String fileName,
+    String targetPath, {
+    Function(int, int)? onProgress,
+  }) async {
+    // Default: buffer to memory and delegate to uploadFile
+    final builder = BytesBuilder(copy: false);
+    await for (final chunk in dataStream) {
+      builder.add(chunk);
+    }
+    await uploadFile(builder.takeBytes(), fileName, targetPath, onProgress: onProgress);
+  }
+
+  /// Stream-based download. Returns a stream of chunks.
+  /// Default implementation downloads all bytes then yields them as one chunk.
+  Stream<List<int>> downloadStream(
+    String remotePath, {
+    Function(int, int)? onProgress,
+  }) async* {
+    final bytes = await downloadFileBytes(remotePath, onProgress: onProgress);
+    yield bytes;
+  }
 }
 
 enum CloudProvider {
+  dropbox,
   filen,
+  ftp,
+  gdrive,
   internxt,
+  onedrive,
+  s3,
   sftp,
   webdav
 }
@@ -75,8 +122,18 @@ class CloudStorageFactory {
 
     try {
       switch (provider) {
+        case CloudProvider.dropbox:
+          return DropboxClientAdapter(config: config);
         case CloudProvider.filen:
           return FilenClientAdapter(config: config);
+        case CloudProvider.ftp:
+          return FTPClientAdapter(config: config);
+        case CloudProvider.gdrive:
+          return GDriveClientAdapter(config: config);
+        case CloudProvider.onedrive:
+          return OneDriveClientAdapter(config: config);
+        case CloudProvider.s3:
+          return S3ClientAdapter(config: config);
         case CloudProvider.sftp:
           return SFTPClientAdapter(config: config);
         case CloudProvider.webdav:

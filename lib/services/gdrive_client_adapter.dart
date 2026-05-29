@@ -1,0 +1,687 @@
+// lib/services/gdrive_client_adapter.dart
+//
+// Google Drive adapter using the Drive REST API v3 with pure HTTP.
+// OAuth2 browser flow: opens browser → user authorizes → redirect to
+// localhost callback → exchange code for tokens → store in SecureStorage.
+//
+// Does NOT depend on googleapis or google_sign_in packages.
+
+import 'dart:async';
+import 'dart:convert';
+import 'dart:io';
+import 'dart:typed_data';
+
+import 'package:flutter/foundation.dart';
+import 'package:http/http.dart' as http;
+import 'package:path/path.dart' as p;
+import 'package:url_launcher/url_launcher.dart';
+
+import 'cloud_storage_interface.dart';
+import 'gdrive_config_service.dart';
+import 'secure_storage_service.dart';
+
+class GDriveClientAdapter implements CloudStorageClient {
+  final GDriveConfigService _config;
+
+  GDriveConfigService get config => _config;
+
+  String? _accessToken;
+  String? _refreshToken;
+  String? _email;
+  String? _clientId;
+  String? _clientSecret;
+  DateTime? _tokenExpiry;
+  bool _authenticated = false;
+
+  /// Folder-ID stack: Google Drive uses file IDs, not paths.
+  /// We maintain a map of path → folder ID for navigation.
+  final Map<String, String> _pathToId = {'/': 'root'};
+
+  static const _apiBase = 'https://www.googleapis.com/drive/v3';
+  static const _uploadBase = 'https://www.googleapis.com/upload/drive/v3';
+  static const _authUrl = 'https://accounts.google.com/o/oauth2/v2/auth';
+  static const _tokenUrl = 'https://oauth2.googleapis.com/token';
+  static const _scopes = 'https://www.googleapis.com/auth/drive';
+  static const _redirectPort = 43823; // Arbitrary high port for localhost redirect
+
+  GDriveClientAdapter({required dynamic config})
+      : _config = (config is GDriveConfigService)
+            ? config
+            : GDriveConfigService(configPath: '', secureStorage: InMemorySecureStorage());
+
+  @override
+  String get providerName => 'Google Drive';
+
+  @override
+  String get rootPath => '/';
+
+  @override
+  bool get isAuthenticated => _authenticated && _accessToken != null;
+
+  @override
+  String? get userId => _email;
+
+  @override
+  String? get bucketId => null;
+
+  // Capability flags
+  @override
+  bool get supportsVersioning => true;
+  @override
+  bool get supportsSharing => true;
+  @override
+  bool get supportsSearch => true;
+  @override
+  bool get supportsThumbnails => true;
+  @override
+  bool get supportsTrash => true;
+
+  // --- Auth ---
+
+  @override
+  Future<void> login(String identity, String password, {String? twoFactorCode}) async {
+    // identity format: "clientId|clientSecret" or just "clientId" for public clients
+    // password: not used (OAuth2 — handled via browser redirect)
+
+    final parts = identity.split('|');
+    _clientId = parts[0].trim();
+    _clientSecret = parts.length > 1 ? parts[1].trim() : null;
+
+    if (_clientId == null || _clientId!.isEmpty) {
+      throw Exception('Client ID is required');
+    }
+
+    // Check for stored refresh token first (re-auth without browser)
+    final creds = await _config.readCredentials();
+    if (creds != null &&
+        creds['refresh_token'] != null &&
+        creds['client_id'] == _clientId) {
+      _refreshToken = creds['refresh_token'];
+      _email = creds['email'];
+      try {
+        await _refreshAccessToken();
+        _authenticated = true;
+        return;
+      } catch (_) {
+        // Refresh failed — fall through to browser flow
+      }
+    }
+
+    // Browser-based OAuth2 flow
+    if (kIsWeb) {
+      throw Exception('Google Drive OAuth2 on web requires a different redirect flow. Use desktop or mobile.');
+    }
+
+    await _browserOAuthFlow();
+    _authenticated = true;
+
+    // Fetch user email for display
+    await _fetchUserEmail();
+
+    // Persist credentials
+    await _config.saveCredentials({
+      'client_id': _clientId!,
+      if (_clientSecret != null) 'client_secret': _clientSecret!,
+      'refresh_token': _refreshToken ?? '',
+      'email': _email ?? '',
+    });
+  }
+
+  @override
+  Future<bool> is2faNeeded(String email) async => false;
+
+  @override
+  Future<void> logout() async {
+    // Optionally revoke the token
+    if (_accessToken != null) {
+      try {
+        await http.post(Uri.parse('https://oauth2.googleapis.com/revoke?token=$_accessToken'));
+      } catch (_) {}
+    }
+    _accessToken = null;
+    _refreshToken = null;
+    _email = null;
+    _authenticated = false;
+    _pathToId.clear();
+    _pathToId['/'] = 'root';
+  }
+
+  /// Restore credentials from secure storage for auto-login.
+  Future<bool> restoreCredentials() async {
+    final creds = await _config.readCredentials();
+    if (creds == null || creds['refresh_token'] == null || creds['refresh_token']!.isEmpty) {
+      return false;
+    }
+    _clientId = creds['client_id'];
+    _clientSecret = creds['client_secret'];
+    _refreshToken = creds['refresh_token'];
+    _email = creds['email'];
+
+    try {
+      await _refreshAccessToken();
+      _authenticated = true;
+      return true;
+    } catch (e) {
+      debugPrint('GDrive: Token refresh failed: $e');
+      return false;
+    }
+  }
+
+  // --- Path Resolution ---
+
+  @override
+  Future<Map<String, dynamic>?> resolvePath(String path) async {
+    final id = await _resolvePathToId(path);
+    if (id == null) return null;
+    return {'id': id, 'path': path};
+  }
+
+  /// Resolve a path like /Documents/Photos to a Google Drive folder ID.
+  /// Caches results in [_pathToId].
+  Future<String?> _resolvePathToId(String path) async {
+    if (path == '/' || path.isEmpty) return 'root';
+    if (_pathToId.containsKey(path)) return _pathToId[path];
+
+    // Walk segments: /a/b/c → resolve a under root, b under a, c under b
+    final segments = path.split('/').where((s) => s.isNotEmpty).toList();
+    String parentId = 'root';
+    String accumulated = '';
+
+    for (final segment in segments) {
+      accumulated = '$accumulated/$segment';
+
+      if (_pathToId.containsKey(accumulated)) {
+        parentId = _pathToId[accumulated]!;
+        continue;
+      }
+
+      // Query for folder with this name under parent
+      final query = "name='${_escapeQuery(segment)}' and '$parentId' in parents and mimeType='application/vnd.google-apps.folder' and trashed=false";
+      final resp = await _apiGet('/files', queryParams: {
+        'q': query,
+        'fields': 'files(id,name)',
+        'pageSize': '1',
+      });
+
+      final files = (resp['files'] as List?) ?? [];
+      if (files.isEmpty) return null;
+
+      final folderId = files[0]['id'] as String;
+      _pathToId[accumulated] = folderId;
+      parentId = folderId;
+    }
+
+    return parentId;
+  }
+
+  // --- List ---
+
+  @override
+  Future<Map<String, dynamic>> listPath(String path) async {
+    await _ensureToken();
+
+    final parentId = await _resolvePathToId(path) ?? 'root';
+    final query = "'$parentId' in parents and trashed=false";
+
+    final folders = <Map<String, dynamic>>[];
+    final files = <Map<String, dynamic>>[];
+    String? pageToken;
+
+    do {
+      final params = <String, String>{
+        'q': query,
+        'fields': 'nextPageToken,files(id,name,mimeType,size,modifiedTime,parents)',
+        'pageSize': '1000',
+        'orderBy': 'folder,name',
+      };
+      if (pageToken != null) params['pageToken'] = pageToken;
+
+      final resp = await _apiGet('/files', queryParams: params);
+
+      for (final item in (resp['files'] as List?) ?? []) {
+        final map = item as Map<String, dynamic>;
+        final isFolder = map['mimeType'] == 'application/vnd.google-apps.folder';
+        final name = map['name'] as String? ?? 'Unknown';
+        final id = map['id'] as String;
+
+        // Cache folder ID
+        if (isFolder) {
+          _pathToId['$path${path.endsWith('/') ? '' : '/'}$name'] = id;
+        }
+
+        final entry = <String, dynamic>{
+          'name': name,
+          'uuid': id,
+          if (map['modifiedTime'] != null) 'lastModified': map['modifiedTime'],
+          if (map['size'] != null) 'size': int.tryParse(map['size'].toString()) ?? 0,
+        };
+
+        if (isFolder) {
+          folders.add(entry);
+        } else {
+          files.add(entry);
+        }
+      }
+
+      pageToken = resp['nextPageToken'] as String?;
+    } while (pageToken != null);
+
+    return {'folders': folders, 'files': files};
+  }
+
+  // --- Upload ---
+
+  @override
+  Future<void> uploadFile(
+    List<int> fileData,
+    String fileName,
+    String targetPath, {
+    Function(int, int)? onProgress,
+  }) async {
+    await _ensureToken();
+
+    final parentId = await _resolvePathToId(targetPath) ?? 'root';
+
+    // Check if file already exists — update instead of create
+    final existingId = await _findFileInFolder(parentId, fileName);
+
+    if (existingId != null) {
+      // Update existing file
+      final uri = Uri.parse('$_uploadBase/files/$existingId?uploadType=media');
+      final req = http.Request('PATCH', uri);
+      req.headers['Authorization'] = 'Bearer $_accessToken';
+      req.headers['Content-Type'] = 'application/octet-stream';
+      req.bodyBytes = Uint8List.fromList(fileData);
+
+      final resp = await http.Response.fromStream(await req.send());
+      if (resp.statusCode != 200) {
+        throw Exception('GDrive upload update failed (${resp.statusCode}): ${resp.body}');
+      }
+    } else {
+      // Multipart upload: metadata + file content
+      final metadata = json.encode({
+        'name': fileName,
+        'parents': [parentId],
+      });
+
+      final boundary = 'crisp_cloud_${DateTime.now().millisecondsSinceEpoch}';
+      final body = StringBuffer();
+      body.writeln('--$boundary');
+      body.writeln('Content-Type: application/json; charset=UTF-8');
+      body.writeln();
+      body.writeln(metadata);
+      body.writeln('--$boundary');
+      body.writeln('Content-Type: application/octet-stream');
+      body.writeln();
+      // We need binary content, so use raw bytes approach
+
+      final metaPart = utf8.encode(
+        '--$boundary\r\n'
+        'Content-Type: application/json; charset=UTF-8\r\n'
+        '\r\n'
+        '$metadata\r\n'
+        '--$boundary\r\n'
+        'Content-Type: application/octet-stream\r\n'
+        '\r\n',
+      );
+      final endPart = utf8.encode('\r\n--$boundary--');
+
+      final bodyBytes = Uint8List.fromList([...metaPart, ...fileData, ...endPart]);
+
+      final uri = Uri.parse('$_uploadBase/files?uploadType=multipart');
+      final req = http.Request('POST', uri);
+      req.headers['Authorization'] = 'Bearer $_accessToken';
+      req.headers['Content-Type'] = 'multipart/related; boundary=$boundary';
+      req.bodyBytes = bodyBytes;
+
+      final resp = await http.Response.fromStream(await req.send());
+      if (resp.statusCode != 200) {
+        throw Exception('GDrive upload failed (${resp.statusCode}): ${resp.body}');
+      }
+    }
+
+    onProgress?.call(fileData.length, fileData.length);
+  }
+
+  // --- Download ---
+
+  @override
+  Future<Uint8List> downloadFileBytes(String remotePath, {Function(int, int)? onProgress}) async {
+    await _ensureToken();
+
+    final fileId = await _resolveFileId(remotePath);
+    if (fileId == null) throw Exception('File not found: $remotePath');
+
+    final uri = Uri.parse('$_apiBase/files/$fileId?alt=media');
+    final resp = await http.get(uri, headers: {'Authorization': 'Bearer $_accessToken'});
+
+    if (resp.statusCode != 200) {
+      throw Exception('GDrive download failed (${resp.statusCode}): ${resp.body}');
+    }
+
+    onProgress?.call(resp.bodyBytes.length, resp.bodyBytes.length);
+    return resp.bodyBytes;
+  }
+
+  @override
+  Future<void> downloadFileByPath(String remotePath, String localPath, {Function(int, int)? onProgress}) async {
+    final bytes = await downloadFileBytes(remotePath, onProgress: onProgress);
+    final file = File(localPath);
+    await file.writeAsBytes(bytes);
+  }
+
+  // --- Folder ---
+
+  @override
+  Future<void> createFolderPath(String path) async {
+    await _ensureToken();
+
+    final segments = path.split('/').where((s) => s.isNotEmpty).toList();
+    String parentId = 'root';
+    String accumulated = '';
+
+    for (final segment in segments) {
+      accumulated = '$accumulated/$segment';
+
+      if (_pathToId.containsKey(accumulated)) {
+        parentId = _pathToId[accumulated]!;
+        continue;
+      }
+
+      // Check if folder already exists
+      final existing = await _findFolderInParent(parentId, segment);
+      if (existing != null) {
+        _pathToId[accumulated] = existing;
+        parentId = existing;
+        continue;
+      }
+
+      // Create folder
+      final metadata = json.encode({
+        'name': segment,
+        'mimeType': 'application/vnd.google-apps.folder',
+        'parents': [parentId],
+      });
+
+      final resp = await _apiPost('/files', body: metadata, contentType: 'application/json');
+      final id = resp['id'] as String;
+      _pathToId[accumulated] = id;
+      parentId = id;
+    }
+  }
+
+  // --- Delete / Move / Rename ---
+
+  @override
+  Future<void> deletePath(String path) async {
+    await _ensureToken();
+    final fileId = await _resolveFileId(path);
+    if (fileId == null) throw Exception('Not found: $path');
+
+    final uri = Uri.parse('$_apiBase/files/$fileId');
+    final resp = await http.delete(uri, headers: {'Authorization': 'Bearer $_accessToken'});
+
+    if (resp.statusCode != 204 && resp.statusCode != 200) {
+      throw Exception('GDrive delete failed (${resp.statusCode}): ${resp.body}');
+    }
+
+    // Invalidate cache
+    _pathToId.remove(path);
+  }
+
+  @override
+  Future<void> movePath(String sourcePath, String targetPath) async {
+    await _ensureToken();
+    final fileId = await _resolveFileId(sourcePath);
+    if (fileId == null) throw Exception('Not found: $sourcePath');
+
+    // Get current parents
+    final meta = await _apiGet('/files/$fileId', queryParams: {'fields': 'parents'});
+    final currentParents = ((meta['parents'] as List?) ?? []).join(',');
+
+    // Resolve new parent
+    final newParentId = await _resolvePathToId(targetPath) ?? 'root';
+
+    // Move via PATCH
+    final uri = Uri.parse('$_apiBase/files/$fileId?addParents=$newParentId&removeParents=$currentParents');
+    final resp = await http.patch(uri, headers: {'Authorization': 'Bearer $_accessToken'});
+
+    if (resp.statusCode != 200) {
+      throw Exception('GDrive move failed (${resp.statusCode}): ${resp.body}');
+    }
+
+    _pathToId.remove(sourcePath);
+  }
+
+  @override
+  Future<void> renamePath(String path, String newName) async {
+    await _ensureToken();
+    final fileId = await _resolveFileId(path);
+    if (fileId == null) throw Exception('Not found: $path');
+
+    final body = json.encode({'name': newName});
+    final uri = Uri.parse('$_apiBase/files/$fileId');
+    final resp = await http.patch(
+      uri,
+      headers: {
+        'Authorization': 'Bearer $_accessToken',
+        'Content-Type': 'application/json',
+      },
+      body: body,
+    );
+
+    if (resp.statusCode != 200) {
+      throw Exception('GDrive rename failed (${resp.statusCode}): ${resp.body}');
+    }
+
+    _pathToId.remove(path);
+  }
+
+  // --- Internal helpers ---
+
+  Future<void> _ensureToken() async {
+    if (_accessToken == null) throw Exception('Not authenticated');
+    if (_tokenExpiry != null && DateTime.now().isAfter(_tokenExpiry!)) {
+      await _refreshAccessToken();
+    }
+  }
+
+  Future<void> _refreshAccessToken() async {
+    if (_refreshToken == null || _clientId == null) {
+      throw Exception('Cannot refresh: missing refresh token or client ID');
+    }
+
+    final body = <String, String>{
+      'client_id': _clientId!,
+      'grant_type': 'refresh_token',
+      'refresh_token': _refreshToken!,
+    };
+    if (_clientSecret != null) body['client_secret'] = _clientSecret!;
+
+    final resp = await http.post(Uri.parse(_tokenUrl), body: body);
+    if (resp.statusCode != 200) {
+      throw Exception('Token refresh failed (${resp.statusCode}): ${resp.body}');
+    }
+
+    final data = json.decode(resp.body) as Map<String, dynamic>;
+    _accessToken = data['access_token'] as String;
+    final expiresIn = data['expires_in'] as int? ?? 3600;
+    _tokenExpiry = DateTime.now().add(Duration(seconds: expiresIn - 60));
+  }
+
+  Future<void> _browserOAuthFlow() async {
+    final redirectUri = 'http://localhost:$_redirectPort';
+
+    final authUri = Uri.parse(_authUrl).replace(queryParameters: {
+      'client_id': _clientId!,
+      'redirect_uri': redirectUri,
+      'response_type': 'code',
+      'scope': _scopes,
+      'access_type': 'offline',
+      'prompt': 'consent',
+    });
+
+    // Start local server to capture redirect
+    final server = await HttpServer.bind(InternetAddress.loopbackIPv4, _redirectPort);
+
+    // Open browser
+    if (await canLaunchUrl(authUri)) {
+      await launchUrl(authUri, mode: LaunchMode.externalApplication);
+    } else {
+      await server.close();
+      throw Exception('Could not open browser for Google Drive authorization');
+    }
+
+    // Wait for redirect with auth code
+    String? authCode;
+    try {
+      await for (final request in server) {
+        final code = request.uri.queryParameters['code'];
+        final error = request.uri.queryParameters['error'];
+
+        if (error != null) {
+          request.response
+            ..statusCode = 200
+            ..headers.contentType = ContentType.html
+            ..write('<html><body><h2>Authorization denied: $error</h2><p>You can close this window.</p></body></html>');
+          await request.response.close();
+          break;
+        }
+
+        if (code != null) {
+          authCode = code;
+          request.response
+            ..statusCode = 200
+            ..headers.contentType = ContentType.html
+            ..write('<html><body><h2>Authorization successful!</h2><p>You can close this window and return to CrispCloud.</p></body></html>');
+          await request.response.close();
+          break;
+        }
+
+        // Ignore other requests (favicon etc)
+        request.response
+          ..statusCode = 404
+          ..write('Not found');
+        await request.response.close();
+      }
+    } finally {
+      await server.close();
+    }
+
+    if (authCode == null) {
+      throw Exception('Google Drive authorization was cancelled or failed');
+    }
+
+    // Exchange code for tokens
+    final tokenBody = <String, String>{
+      'code': authCode,
+      'client_id': _clientId!,
+      'redirect_uri': redirectUri,
+      'grant_type': 'authorization_code',
+    };
+    if (_clientSecret != null) tokenBody['client_secret'] = _clientSecret!;
+
+    final tokenResp = await http.post(Uri.parse(_tokenUrl), body: tokenBody);
+    if (tokenResp.statusCode != 200) {
+      throw Exception('Token exchange failed (${tokenResp.statusCode}): ${tokenResp.body}');
+    }
+
+    final tokenData = json.decode(tokenResp.body) as Map<String, dynamic>;
+    _accessToken = tokenData['access_token'] as String;
+    _refreshToken = tokenData['refresh_token'] as String?;
+    final expiresIn = tokenData['expires_in'] as int? ?? 3600;
+    _tokenExpiry = DateTime.now().add(Duration(seconds: expiresIn - 60));
+  }
+
+  Future<void> _fetchUserEmail() async {
+    try {
+      final resp = await http.get(
+        Uri.parse('https://www.googleapis.com/oauth2/v2/userinfo'),
+        headers: {'Authorization': 'Bearer $_accessToken'},
+      );
+      if (resp.statusCode == 200) {
+        final data = json.decode(resp.body) as Map<String, dynamic>;
+        _email = data['email'] as String?;
+      }
+    } catch (_) {}
+  }
+
+  /// Resolve a full path (e.g., /Documents/report.pdf) to a file ID.
+  /// For files (not just folders), we look up the parent and search by name.
+  Future<String?> _resolveFileId(String path) async {
+    if (path == '/' || path.isEmpty) return 'root';
+
+    final parentPath = p.posix.dirname(path);
+    final fileName = p.posix.basename(path);
+    final parentId = await _resolvePathToId(parentPath) ?? 'root';
+
+    return await _findFileInFolder(parentId, fileName);
+  }
+
+  Future<String?> _findFileInFolder(String parentId, String name) async {
+    final query = "name='${_escapeQuery(name)}' and '$parentId' in parents and trashed=false";
+    final resp = await _apiGet('/files', queryParams: {
+      'q': query,
+      'fields': 'files(id)',
+      'pageSize': '1',
+    });
+    final files = (resp['files'] as List?) ?? [];
+    if (files.isEmpty) return null;
+    return files[0]['id'] as String;
+  }
+
+  Future<String?> _findFolderInParent(String parentId, String name) async {
+    final query = "name='${_escapeQuery(name)}' and '$parentId' in parents and mimeType='application/vnd.google-apps.folder' and trashed=false";
+    final resp = await _apiGet('/files', queryParams: {
+      'q': query,
+      'fields': 'files(id)',
+      'pageSize': '1',
+    });
+    final files = (resp['files'] as List?) ?? [];
+    if (files.isEmpty) return null;
+    return files[0]['id'] as String;
+  }
+
+  String _escapeQuery(String s) => s.replaceAll("'", "\\'");
+
+  // --- HTTP helpers ---
+
+  Future<Map<String, dynamic>> _apiGet(String endpoint, {Map<String, String>? queryParams}) async {
+    final uri = Uri.parse('$_apiBase$endpoint').replace(queryParameters: queryParams);
+    final resp = await http.get(uri, headers: {'Authorization': 'Bearer $_accessToken'});
+
+    if (resp.statusCode == 401) {
+      // Try refresh
+      await _refreshAccessToken();
+      final retryResp = await http.get(uri, headers: {'Authorization': 'Bearer $_accessToken'});
+      if (retryResp.statusCode != 200) {
+        throw Exception('GDrive API error (${retryResp.statusCode}): ${retryResp.body}');
+      }
+      return json.decode(retryResp.body) as Map<String, dynamic>;
+    }
+
+    if (resp.statusCode != 200) {
+      throw Exception('GDrive API error (${resp.statusCode}): ${resp.body}');
+    }
+
+    return json.decode(resp.body) as Map<String, dynamic>;
+  }
+
+  Future<Map<String, dynamic>> _apiPost(String endpoint, {required String body, String contentType = 'application/json'}) async {
+    final uri = Uri.parse('$_apiBase$endpoint');
+    final resp = await http.post(
+      uri,
+      headers: {
+        'Authorization': 'Bearer $_accessToken',
+        'Content-Type': contentType,
+      },
+      body: body,
+    );
+
+    if (resp.statusCode != 200) {
+      throw Exception('GDrive API error (${resp.statusCode}): ${resp.body}');
+    }
+
+    return json.decode(resp.body) as Map<String, dynamic>;
+  }
+}

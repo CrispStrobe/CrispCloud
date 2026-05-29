@@ -1,40 +1,39 @@
 // widgets/operations_panel.dart
 import 'package:flutter/material.dart';
-import 'package:provider/provider.dart';
-import '../services/app_state.dart';
-import '../models/operation_progress.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 
-class OperationsPanel extends StatefulWidget {
+import '../models/operation_progress.dart';
+import '../providers/providers.dart';
+import '../utils/formatters.dart' show formatBytes;
+
+class OperationsPanel extends ConsumerStatefulWidget {
   const OperationsPanel({super.key});
 
   @override
-  State<OperationsPanel> createState() => _OperationsPanelState();
+  ConsumerState<OperationsPanel> createState() => _OperationsPanelState();
 }
 
-class _OperationsPanelState extends State<OperationsPanel> {
+class _OperationsPanelState extends ConsumerState<OperationsPanel> {
   String? _expandedOperationId;
   bool _isPanelExpanded = true;
 
   @override
   Widget build(BuildContext context) {
-    final appState = context.watch<AppState>();
-    
-    if (appState.operations.isEmpty) {
-      // If there are no operations, don't show the panel at all.
+    final transfers = ref.watch(transferProvider);
+
+    if (transfers.operations.isEmpty) {
       return const SizedBox.shrink();
     }
 
-    // Calculate overall progress
     int totalBytes = 0;
     int transferredBytes = 0;
     int activeCount = 0;
     int completeCount = 0;
     int errorCount = 0;
 
-    for (final op in appState.operations) {
+    for (final op in transfers.operations) {
       totalBytes += op.totalBytes;
       transferredBytes += op.transferredBytes;
-      
       if (op.isCancelled) {
         errorCount++;
       } else if (op.error != null) {
@@ -51,16 +50,12 @@ class _OperationsPanelState extends State<OperationsPanel> {
     return Container(
       decoration: BoxDecoration(
         color: Theme.of(context).colorScheme.surfaceVariant,
-        border: Border(
-          top: BorderSide(color: Theme.of(context).dividerColor),
-        ),
+        border: Border(top: BorderSide(color: Theme.of(context).dividerColor)),
       ),
       child: ExpansionTile(
-        title: _buildPanelHeader(context, appState, activeCount, completeCount, errorCount, overallProgress, transferredBytes, totalBytes),
+        title: _buildPanelHeader(context, transfers, activeCount, completeCount, errorCount, overallProgress, transferredBytes, totalBytes),
         initiallyExpanded: true,
-        onExpansionChanged: (isExpanded) {
-          setState(() => _isPanelExpanded = isExpanded);
-        },
+        onExpansionChanged: (isExpanded) => setState(() => _isPanelExpanded = isExpanded),
         trailing: Row(
           mainAxisSize: MainAxisSize.min,
           children: [
@@ -68,36 +63,32 @@ class _OperationsPanelState extends State<OperationsPanel> {
               IconButton(
                 icon: const Icon(Icons.clear_all, size: 20),
                 tooltip: 'Clear completed',
-                onPressed: () => appState.clearCompletedOperations(),
+                onPressed: () => transfers.clearCompletedOperations(),
               ),
-            Icon(
-              _isPanelExpanded ? Icons.expand_less : Icons.expand_more,
-            ),
+            Icon(_isPanelExpanded ? Icons.expand_less : Icons.expand_more),
           ],
         ),
         children: [
-          // Constrain the height of the list view
           Container(
-            constraints: const BoxConstraints(maxHeight: 250), // Max height for the list
+            constraints: const BoxConstraints(maxHeight: 250),
             child: ListView.builder(
               shrinkWrap: true,
-              itemCount: appState.operations.length,
+              itemCount: transfers.operations.length,
               itemBuilder: (context, index) {
-                final op = appState.operations[index];
+                final op = transfers.operations[index];
                 final isExpanded = _expandedOperationId == op.id;
-                
                 return _OperationTile(
                   operation: op,
                   isExpanded: isExpanded,
-                  onToggleExpanded: () {
-                    setState(() {
-                      _expandedOperationId = isExpanded ? null : op.id;
-                    });
-                  },
-                  onRemove: () => appState.removeOperation(op.id),
-                  onCancel: !op.isComplete && !op.isCancelled 
-                      ? () => appState.cancelOperation(op.id)
+                  onToggleExpanded: () => setState(() {
+                    _expandedOperationId = isExpanded ? null : op.id;
+                  }),
+                  onRemove: () => transfers.removeOperation(op.id),
+                  onCancel: !op.isComplete && !op.isCancelled
+                      ? () => transfers.cancelOperation(op.id)
                       : null,
+                  onPause: () => transfers.pauseOperation(op.id),
+                  onResume: () => transfers.resumeOperation(op.id),
                 );
               },
             ),
@@ -109,13 +100,9 @@ class _OperationsPanelState extends State<OperationsPanel> {
 
   Widget _buildPanelHeader(
     BuildContext context,
-    AppState appState,
-    int activeCount,
-    int completeCount,
-    int errorCount,
-    double overallProgress,
-    int transferredBytes,
-    int totalBytes,
+    TransferNotifier transfers,
+    int activeCount, int completeCount, int errorCount,
+    double overallProgress, int transferredBytes, int totalBytes,
   ) {
     return Container(
       padding: const EdgeInsets.symmetric(vertical: 12),
@@ -124,14 +111,13 @@ class _OperationsPanelState extends State<OperationsPanel> {
           Icon(
             activeCount > 0 ? Icons.sync : Icons.check_circle,
             size: 20,
-            color: errorCount > 0 
+            color: errorCount > 0
                 ? Theme.of(context).colorScheme.error
                 : activeCount > 0
                     ? Theme.of(context).colorScheme.primary
                     : Colors.green,
           ),
           const SizedBox(width: 12),
-          
           Expanded(
             child: Column(
               mainAxisSize: MainAxisSize.min,
@@ -140,42 +126,26 @@ class _OperationsPanelState extends State<OperationsPanel> {
                 Row(
                   children: [
                     Text(
-                      '${appState.operations.length} operation(s)',
-                      style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                        fontWeight: FontWeight.bold,
-                      ),
+                      '${transfers.operations.length} operation(s)',
+                      style: Theme.of(context).textTheme.bodyMedium?.copyWith(fontWeight: FontWeight.bold),
                     ),
                     if (activeCount > 0) ...[
                       const SizedBox(width: 8),
-                      Text(
-                        '• ${(overallProgress * 100).toStringAsFixed(0)}%',
-                        style: Theme.of(context).textTheme.bodyMedium,
-                      ),
+                      Text('• ${(overallProgress * 100).toStringAsFixed(0)}%', style: Theme.of(context).textTheme.bodyMedium),
                       const SizedBox(width: 8),
-                      Text(
-                        '${_formatBytes(transferredBytes)} / ${_formatBytes(totalBytes)}',
-                        style: Theme.of(context).textTheme.bodySmall,
-                      ),
+                      Text('${formatBytes(transferredBytes)} / ${formatBytes(totalBytes)}', style: Theme.of(context).textTheme.bodySmall),
                     ],
                     if (completeCount > 0) ...[
                       const SizedBox(width: 8),
-                      Text(
-                        '✓ $completeCount',
-                        style: TextStyle(color: Colors.green[700]),
-                      ),
+                      Text('✓ $completeCount', style: TextStyle(color: Colors.green[700])),
                     ],
                     if (errorCount > 0) ...[
                       const SizedBox(width: 8),
-                      Text(
-                        '✗ $errorCount',
-                        style: TextStyle(color: Theme.of(context).colorScheme.error),
-                      ),
+                      Text('✗ $errorCount', style: TextStyle(color: Theme.of(context).colorScheme.error)),
                     ],
                   ],
                 ),
                 const SizedBox(height: 6),
-                
-                // Segmented progress bar
                 SizedBox(
                   height: 8,
                   child: ClipRRect(
@@ -184,11 +154,10 @@ class _OperationsPanelState extends State<OperationsPanel> {
                       children: [
                         Container(color: Colors.grey[300]),
                         Row(
-                          children: appState.operations.map((op) {
-                            final segmentWidth = totalBytes > 0 
-                                ? op.totalBytes / totalBytes 
-                                : 1.0 / appState.operations.length;
-                            
+                          children: transfers.operations.map((op) {
+                            final segmentWidth = totalBytes > 0
+                                ? op.totalBytes / totalBytes
+                                : 1.0 / transfers.operations.length;
                             Color segmentColor;
                             if (op.isCancelled) {
                               segmentColor = Colors.orange;
@@ -199,7 +168,6 @@ class _OperationsPanelState extends State<OperationsPanel> {
                             } else {
                               segmentColor = Theme.of(context).colorScheme.primary;
                             }
-
                             return Expanded(
                               flex: (segmentWidth * 1000).toInt(),
                               child: Container(
@@ -220,22 +188,10 @@ class _OperationsPanelState extends State<OperationsPanel> {
               ],
             ),
           ),
-          
           const SizedBox(width: 12),
-          
-          // Action buttons are no longer needed here
         ],
       ),
     );
-  }
-
-  String _formatBytes(int bytes) {
-    if (bytes < 1024) return '$bytes B';
-    if (bytes < 1024 * 1024) return '${(bytes / 1024).toStringAsFixed(1)} KB';
-    if (bytes < 1024 * 1024 * 1024) {
-      return '${(bytes / (1024 * 1024)).toStringAsFixed(1)} MB';
-    }
-    return '${(bytes / (1024 * 1024 * 1024)).toStringAsFixed(1)} GB';
   }
 }
 
@@ -245,6 +201,8 @@ class _OperationTile extends StatelessWidget {
   final VoidCallback onToggleExpanded;
   final VoidCallback onRemove;
   final VoidCallback? onCancel;
+  final VoidCallback onPause;
+  final VoidCallback onResume;
 
   const _OperationTile({
     required this.operation,
@@ -252,6 +210,8 @@ class _OperationTile extends StatelessWidget {
     required this.onToggleExpanded,
     required this.onRemove,
     this.onCancel,
+    required this.onPause,
+    required this.onResume,
   });
 
   @override
@@ -260,21 +220,15 @@ class _OperationTile extends StatelessWidget {
     Color? color;
 
     if (operation.isCancelled) {
-      icon = Icons.cancel;
-      color = Colors.orange;
+      icon = Icons.cancel; color = Colors.orange;
     } else if (operation.isPaused) {
-      icon = Icons.pause_circle;
-      color = Colors.blue;
+      icon = Icons.pause_circle; color = Colors.blue;
     } else if (operation.isComplete) {
-      icon = Icons.check_circle;
-      color = Colors.green;
+      icon = Icons.check_circle; color = Colors.green;
     } else if (operation.error != null) {
-      icon = Icons.error;
-      color = Colors.red;
+      icon = Icons.error; color = Colors.red;
     } else {
-      icon = operation.type == OperationType.upload 
-          ? Icons.upload 
-          : Icons.download;
+      icon = operation.type == OperationType.upload ? Icons.upload : Icons.download;
       color = Theme.of(context).colorScheme.primary;
     }
 
@@ -285,14 +239,7 @@ class _OperationTile extends StatelessWidget {
           leading: Icon(icon, size: 20, color: color),
           title: Row(
             children: [
-              Expanded(
-                child: Text(
-                  operation.fileName,
-                  maxLines: 1,
-                  overflow: TextOverflow.ellipsis,
-                  style: const TextStyle(fontSize: 13),
-                ),
-              ),
+              Expanded(child: Text(operation.fileName, maxLines: 1, overflow: TextOverflow.ellipsis, style: const TextStyle(fontSize: 13))),
               if (operation.isBatch) ...[
                 const SizedBox(width: 8),
                 Container(
@@ -303,10 +250,7 @@ class _OperationTile extends StatelessWidget {
                   ),
                   child: Text(
                     '${operation.completedFiles}/${operation.totalFiles} files',
-                    style: TextStyle(
-                      fontSize: 10,
-                      color: Theme.of(context).colorScheme.onPrimaryContainer,
-                    ),
+                    style: TextStyle(fontSize: 10, color: Theme.of(context).colorScheme.onPrimaryContainer),
                   ),
                 ),
               ],
@@ -316,77 +260,46 @@ class _OperationTile extends StatelessWidget {
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               if (!operation.isComplete && operation.error == null && !operation.isCancelled)
-                LinearProgressIndicator(
-                  value: operation.progress,
-                  backgroundColor: Colors.grey[300],
-                ),
+                LinearProgressIndicator(value: operation.progress, backgroundColor: Colors.grey[300]),
               const SizedBox(height: 2),
               Text(
-                operation.isCancelled 
-                    ? 'Cancelled'
-                    : operation.isPaused
-                        ? 'Paused'
-                        : operation.error ?? _getStatusText(operation),
+                operation.isCancelled ? 'Cancelled'
+                    : operation.isPaused ? 'Paused'
+                    : operation.error ?? _getStatusText(operation),
                 style: TextStyle(
                   fontSize: 11,
-                  color: operation.error != null ? Colors.red : 
-                        operation.isCancelled ? Colors.orange :
-                        operation.isPaused ? Colors.blue : null,
+                  color: operation.error != null ? Colors.red
+                      : operation.isCancelled ? Colors.orange
+                      : operation.isPaused ? Colors.blue : null,
                 ),
-                maxLines: 1,
-                overflow: TextOverflow.ellipsis,
+                maxLines: 1, overflow: TextOverflow.ellipsis,
               ),
             ],
           ),
           trailing: Row(
             mainAxisSize: MainAxisSize.min,
             children: [
-              // Pause/Resume button for in-progress operations
               if (!operation.isComplete && !operation.isCancelled)
                 IconButton(
-                  icon: Icon(
-                    operation.isPaused ? Icons.play_arrow : Icons.pause,
-                    size: 16,
-                  ),
+                  icon: Icon(operation.isPaused ? Icons.play_arrow : Icons.pause, size: 16),
                   tooltip: operation.isPaused ? 'Resume' : 'Pause',
                   color: Colors.blue,
-                  onPressed: operation.isPaused
-                      ? () => context.read<AppState>().resumeOperation(operation.id)
-                      : () => context.read<AppState>().pauseOperation(operation.id),
+                  onPressed: operation.isPaused ? onResume : onPause,
                 ),
-              // Cancel button for in-progress operations
               if (!operation.isComplete && !operation.isCancelled && onCancel != null)
-                IconButton(
-                  icon: const Icon(Icons.cancel, size: 16),
-                  tooltip: 'Cancel',
-                  color: Colors.red,
-                  onPressed: onCancel,
-                ),
-              // Expand button for batch operations
+                IconButton(icon: const Icon(Icons.cancel, size: 16), tooltip: 'Cancel', color: Colors.red, onPressed: onCancel),
               if (operation.isBatch)
-                IconButton(
-                  icon: Icon(
-                    isExpanded ? Icons.expand_less : Icons.expand_more,
-                    size: 16,
-                  ),
-                  onPressed: onToggleExpanded,
-                ),
-              // Remove button for completed/failed/cancelled operations
+                IconButton(icon: Icon(isExpanded ? Icons.expand_less : Icons.expand_more, size: 16), onPressed: onToggleExpanded),
               if (operation.isComplete || operation.error != null || operation.isCancelled)
-                IconButton(
-                  icon: const Icon(Icons.close, size: 16),
-                  onPressed: onRemove,
-                ),
+                IconButton(icon: const Icon(Icons.close, size: 16), onPressed: onRemove),
             ],
           ),
         ),
-        
-        // Expanded batch details
         if (isExpanded && operation.isBatch && operation.files != null)
           Container(
             color: Theme.of(context).colorScheme.surface,
             padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-            constraints: const BoxConstraints(maxHeight: 150), // Max height for sub-list
+            constraints: const BoxConstraints(maxHeight: 150),
             child: ListView.builder(
               shrinkWrap: true,
               itemCount: operation.files!.length,
@@ -397,34 +310,13 @@ class _OperationTile extends StatelessWidget {
                   child: Row(
                     children: [
                       Icon(
-                        file.error != null 
-                            ? Icons.error
-                            : file.isComplete 
-                                ? Icons.check_circle 
-                                : Icons.pending,
+                        file.error != null ? Icons.error : file.isComplete ? Icons.check_circle : Icons.pending,
                         size: 12,
-                        color: file.error != null
-                            ? Colors.red
-                            : file.isComplete
-                                ? Colors.green
-                                : Colors.grey,
+                        color: file.error != null ? Colors.red : file.isComplete ? Colors.green : Colors.grey,
                       ),
                       const SizedBox(width: 8),
-                      Expanded(
-                        child: Text(
-                          file.name,
-                          style: const TextStyle(fontSize: 11),
-                          maxLines: 1,
-                          overflow: TextOverflow.ellipsis,
-                        ),
-                      ),
-                      Text(
-                        _formatBytes(file.size),
-                        style: TextStyle(
-                          fontSize: 10,
-                          color: Colors.grey[600],
-                        ),
-                      ),
+                      Expanded(child: Text(file.name, style: const TextStyle(fontSize: 11), maxLines: 1, overflow: TextOverflow.ellipsis)),
+                      Text(formatBytes(file.size), style: TextStyle(fontSize: 10, color: Colors.grey[600])),
                     ],
                   ),
                 );
@@ -438,17 +330,7 @@ class _OperationTile extends StatelessWidget {
   String _getStatusText(OperationProgress op) {
     if (op.isComplete) return 'Complete';
     if (op.error != null) return 'Error: ${op.error}';
-    
     final percent = (op.progress * 100).toStringAsFixed(0);
-    return '$percent% • ${_formatBytes(op.transferredBytes)} / ${_formatBytes(op.totalBytes)}';
-  }
-
-  String _formatBytes(int bytes) {
-    if (bytes < 1024) return '$bytes B';
-    if (bytes < 1024 * 1024) return '${(bytes / 1024).toStringAsFixed(1)} KB';
-    if (bytes < 1024 * 1024 * 1024) {
-      return '${(bytes / (1024 * 1024)).toStringAsFixed(1)} MB';
-    }
-    return '${(bytes / (1024 * 1024 * 1024)).toStringAsFixed(1)} GB';
+    return '$percent% • ${formatBytes(op.transferredBytes)} / ${formatBytes(op.totalBytes)}';
   }
 }

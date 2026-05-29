@@ -8,14 +8,15 @@ import 'package:web_socket_channel/web_socket_channel.dart';
 import 'package:flutter/foundation.dart'; // for kIsWeb
 
 import 'cloud_storage_interface.dart';
-import 'sftp_config_service.dart'; 
+import 'secure_storage_service.dart';
+import 'sftp_config_service.dart';
 
 class SFTPClientAdapter implements CloudStorageClient {
   final SFTPConfigService _config;
-  
+
   // FIX: Expose config for AppState to read credentials
   SFTPConfigService get config => _config;
-  
+
   // SSH State
   SSHClient? _sshClient;
   SftpClient? _sftp;
@@ -23,10 +24,10 @@ class SFTPClientAdapter implements CloudStorageClient {
   String? _host;
   int _port = 22;
 
-  SFTPClientAdapter({required dynamic config}) 
-      : _config = (config is SFTPConfigService) 
-            ? config 
-            : SFTPConfigService(configPath: ''); 
+  SFTPClientAdapter({required dynamic config})
+      : _config = (config is SFTPConfigService)
+            ? config
+            : SFTPConfigService(configPath: '', secureStorage: InMemorySecureStorage());
 
   @override
   String get providerName => 'SFTP';
@@ -383,6 +384,67 @@ class SFTPClientAdapter implements CloudStorageClient {
     await _ensureConnection();
     final newPath = p.posix.join(p.dirname(path), newName);
     await _sftp!.rename(path, newPath);
+  }
+
+  // --- Streaming Support ---
+
+  @override
+  bool get supportsStreaming => true;
+
+  @override
+  Future<void> uploadStream(
+    Stream<List<int>> dataStream,
+    int length,
+    String fileName,
+    String targetPath, {
+    Function(int, int)? onProgress,
+  }) async {
+    await _ensureConnection();
+    final remoteFilePath = p.posix.join(targetPath, fileName);
+
+    final file = await _sftp!.open(
+      remoteFilePath,
+      mode: SftpFileOpenMode.create | SftpFileOpenMode.write | SftpFileOpenMode.truncate,
+    );
+
+    try {
+      int written = 0;
+      await for (final chunk in dataStream) {
+        await file.writeBytes(Uint8List.fromList(chunk));
+        written += chunk.length;
+        onProgress?.call(written, length);
+      }
+    } finally {
+      await file.close();
+    }
+  }
+
+  @override
+  Stream<List<int>> downloadStream(
+    String remotePath, {
+    Function(int, int)? onProgress,
+  }) async* {
+    await _ensureConnection();
+
+    final file = await _sftp!.open(remotePath, mode: SftpFileOpenMode.read);
+    final fileSize = (await file.stat()).size ?? 0;
+
+    try {
+      int downloaded = 0;
+      int offset = 0;
+
+      while (true) {
+        final chunk = await file.readBytes(length: 32 * 1024, offset: offset);
+        if (chunk.isEmpty) break;
+
+        yield chunk;
+        offset += chunk.length;
+        downloaded += chunk.length;
+        onProgress?.call(downloaded, fileSize);
+      }
+    } finally {
+      await file.close();
+    }
   }
 }
 

@@ -6,6 +6,7 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:crisp_cloud/services/sftp_client_adapter.dart';
 import 'package:crisp_cloud/services/sftp_config_service.dart';
+import 'package:crisp_cloud/services/secure_storage_service.dart';
 
 /// Live integration tests for SFTP adapter.
 /// Requires SFTP_HOST, SFTP_USER, and SFTP_PASSWORD environment variables.
@@ -29,7 +30,7 @@ void main() {
 
   setUpAll(() async {
     SharedPreferences.setMockInitialValues({});
-    final config = SFTPConfigService(configPath: '/tmp/crispcloud_sftp_test');
+    final config = SFTPConfigService(configPath: '/tmp/crispcloud_sftp_test', secureStorage: InMemorySecureStorage());
     adapter = SFTPClientAdapter(config: config);
 
     final identity = '$user@$host:$port';

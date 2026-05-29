@@ -2,51 +2,53 @@
 
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+
 import '../models/file_item.dart';
 import '../models/panel_side.dart';
-import '../services/app_state.dart';
+import '../providers/providers.dart';
+import '../utils/formatters.dart';
 import 'file_context_menu.dart';
 
-class FileListView extends StatelessWidget {
+class FileListView extends ConsumerWidget {
   final PanelSide side;
   final List<FileItem> files;
-  final AppState appState;
   final ScrollController scrollController;
 
   const FileListView({
     super.key,
     required this.side,
     required this.files,
-    required this.appState,
     required this.scrollController,
   });
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
+    final panel = ref.watch(panelProvider(side));
+
     try {
       if (files.isEmpty) {
-        return const Center(
-          child: Text('Empty folder'),
-        );
+        return const Center(child: Text('Empty folder'));
       }
 
       return ListView.builder(
         controller: scrollController,
         itemCount: files.length,
+        itemExtent: 64,
         itemBuilder: (context, index) {
           try {
             final file = files[index];
-            final isSelected = appState.isSelected(side, file);
+            final isSelected = panel.isSelected(file);
 
             return FileListTile(
               file: file,
               side: side,
               isSelected: isSelected,
               onTap: (shiftKey, ctrlKey) {
-                appState.toggleSelection(side, file, shiftKey: shiftKey, ctrlKey: ctrlKey);
+                panel.toggleSelection(file, shiftKey: shiftKey, ctrlKey: ctrlKey);
               },
-              onDoubleTap: () => appState.navigateInto(side, file),
-              onSecondaryTap: (details) => showFileContextMenu(context, appState, side, file, details.globalPosition),
+              onDoubleTap: () => panel.navigateInto(file),
+              onSecondaryTap: (details) => showFileContextMenu(context, ref, side, file, details.globalPosition),
             );
           } catch (e) {
             debugPrint('Error building file tile at index $index: $e');
@@ -69,7 +71,7 @@ class FileListView extends StatelessWidget {
             Text('Error loading files: $e'),
             const SizedBox(height: 8),
             ElevatedButton(
-              onPressed: () => appState.refreshPanel(side),
+              onPressed: () => panel.refresh(),
               child: const Text('Retry'),
             ),
           ],
@@ -77,6 +79,13 @@ class FileListView extends StatelessWidget {
       );
     }
   }
+}
+
+/// Data carried during a drag operation between panels.
+class PanelDragData {
+  final PanelSide sourceSide;
+  final List<FileItem> files;
+  const PanelDragData({required this.sourceSide, required this.files});
 }
 
 class FileListTile extends StatelessWidget {
@@ -99,15 +108,13 @@ class FileListTile extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return GestureDetector(
+    final tile = GestureDetector(
       onSecondaryTapDown: onSecondaryTap,
       child: Focus(
         onKeyEvent: (node, event) {
-          if (event is KeyDownEvent) {
-            if (event.logicalKey == LogicalKeyboardKey.enter) {
-              onDoubleTap();
-              return KeyEventResult.handled;
-            }
+          if (event is KeyDownEvent && event.logicalKey == LogicalKeyboardKey.enter) {
+            onDoubleTap();
+            return KeyEventResult.handled;
           }
           return KeyEventResult.ignored;
         },
@@ -119,11 +126,7 @@ class FileListTile extends StatelessWidget {
             color: file.isFolder ? Colors.amber : null,
             size: 32,
           ),
-          title: Text(
-            file.name,
-            maxLines: 1,
-            overflow: TextOverflow.ellipsis,
-          ),
+          title: Text(file.name, maxLines: 1, overflow: TextOverflow.ellipsis),
           subtitle: Row(
             children: [
               if (!file.isFolder && file.size != null) ...[
@@ -137,124 +140,59 @@ class FileListTile extends StatelessWidget {
             ],
           ),
           trailing: file.isFolder
-              ? IconButton(
-                  icon: const Icon(Icons.chevron_right),
-                  onPressed: onDoubleTap,
-                )
+              ? IconButton(icon: const Icon(Icons.chevron_right), onPressed: onDoubleTap)
               : null,
           onTap: () {
             final shiftPressed = HardwareKeyboard.instance.isShiftPressed;
-            final ctrlPressed = HardwareKeyboard.instance.isControlPressed ||
-                              HardwareKeyboard.instance.isMetaPressed;
+            final ctrlPressed = HardwareKeyboard.instance.isControlPressed || HardwareKeyboard.instance.isMetaPressed;
             onTap(shiftPressed, ctrlPressed);
           },
           onLongPress: onDoubleTap,
         ),
       ),
     );
+
+    // Wrap with LongPressDraggable for inter-panel drag
+    return LongPressDraggable<PanelDragData>(
+      data: PanelDragData(sourceSide: side, files: [file]),
+      feedback: Material(
+        elevation: 4,
+        borderRadius: BorderRadius.circular(8),
+        child: Container(
+          padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+          decoration: BoxDecoration(
+            color: Theme.of(context).colorScheme.primaryContainer,
+            borderRadius: BorderRadius.circular(8),
+          ),
+          child: Row(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Icon(file.isFolder ? Icons.folder : getFileIcon(file.name), size: 20),
+              const SizedBox(width: 8),
+              Text(file.name, style: const TextStyle(fontSize: 12)),
+            ],
+          ),
+        ),
+      ),
+      childWhenDragging: Opacity(opacity: 0.3, child: tile),
+      child: tile,
+    );
   }
 }
-
-// Shared utility functions
 
 IconData getFileIcon(String filename) {
   final ext = filename.split('.').last.toLowerCase();
   switch (ext) {
-    case 'pdf':
-      return Icons.picture_as_pdf;
-    case 'doc':
-    case 'docx':
-      return Icons.description;
-    case 'xls':
-    case 'xlsx':
-    case 'csv':
-      return Icons.table_chart;
-    case 'ppt':
-    case 'pptx':
-      return Icons.slideshow;
-    case 'txt':
-    case 'md':
-      return Icons.text_snippet;
-    case 'jpg':
-    case 'jpeg':
-    case 'png':
-    case 'gif':
-    case 'bmp':
-    case 'webp':
-      return Icons.image;
-    case 'mp4':
-    case 'avi':
-    case 'mov':
-    case 'mkv':
-    case 'webm':
-      return Icons.video_file;
-    case 'mp3':
-    case 'wav':
-    case 'flac':
-    case 'ogg':
-    case 'm4a':
-      return Icons.audio_file;
-    case 'zip':
-    case 'rar':
-    case '7z':
-    case 'tar':
-    case 'gz':
-      return Icons.archive;
-    case 'html':
-    case 'css':
-    case 'js':
-    case 'json':
-    case 'xml':
-    case 'py':
-    case 'java':
-    case 'cpp':
-    case 'c':
-    case 'dart':
-      return Icons.code;
-    default:
-      return Icons.insert_drive_file;
+    case 'pdf': return Icons.picture_as_pdf;
+    case 'doc': case 'docx': return Icons.description;
+    case 'xls': case 'xlsx': case 'csv': return Icons.table_chart;
+    case 'ppt': case 'pptx': return Icons.slideshow;
+    case 'txt': case 'md': return Icons.text_snippet;
+    case 'jpg': case 'jpeg': case 'png': case 'gif': case 'bmp': case 'webp': return Icons.image;
+    case 'mp4': case 'avi': case 'mov': case 'mkv': case 'webm': return Icons.video_file;
+    case 'mp3': case 'wav': case 'flac': case 'ogg': case 'm4a': return Icons.audio_file;
+    case 'zip': case 'rar': case '7z': case 'tar': case 'gz': return Icons.archive;
+    case 'html': case 'css': case 'js': case 'json': case 'xml': case 'py': case 'java': case 'cpp': case 'c': case 'dart': return Icons.code;
+    default: return Icons.insert_drive_file;
   }
-}
-
-String formatBytes(int bytes) {
-  if (bytes < 1024) return '$bytes B';
-  if (bytes < 1024 * 1024) return '${(bytes / 1024).toStringAsFixed(1)} KB';
-  if (bytes < 1024 * 1024 * 1024) {
-    return '${(bytes / (1024 * 1024)).toStringAsFixed(1)} MB';
-  }
-  return '${(bytes / (1024 * 1024 * 1024)).toStringAsFixed(1)} GB';
-}
-
-String formatDate(DateTime date) {
-  final now = DateTime.now();
-  final difference = now.difference(date);
-
-  if (difference.inDays == 0) {
-    return 'Today';
-  } else if (difference.inDays == 1) {
-    return 'Yesterday';
-  } else if (difference.inDays < 7) {
-    return '${difference.inDays} days ago';
-  } else {
-    return '${date.year}-${date.month.toString().padLeft(2, '0')}-${date.day.toString().padLeft(2, '0')}';
-  }
-}
-
-String formatDateFull(DateTime date) {
-  final now = DateTime.now();
-  final today = DateTime(now.year, now.month, now.day);
-  final yesterday = today.subtract(const Duration(days: 1));
-  final fileDate = DateTime(date.year, date.month, date.day);
-
-  String dateStr;
-  if (fileDate == today) {
-    dateStr = 'Today';
-  } else if (fileDate == yesterday) {
-    dateStr = 'Yesterday';
-  } else {
-    dateStr = '${date.year}-${date.month.toString().padLeft(2, '0')}-${date.day.toString().padLeft(2, '0')}';
-  }
-
-  final timeStr = '${date.hour.toString().padLeft(2, '0')}:${date.minute.toString().padLeft(2, '0')}';
-  return '$dateStr at $timeStr';
 }

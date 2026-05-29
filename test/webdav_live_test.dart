@@ -6,6 +6,7 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:crisp_cloud/services/webdav_client_adapter.dart';
 import 'package:crisp_cloud/services/webdav_config_service.dart';
+import 'package:crisp_cloud/services/secure_storage_service.dart';
 
 /// Live integration tests for WebDAV adapter.
 /// Requires WEBDAV_URL, WEBDAV_USER, and WEBDAV_PASSWORD environment variables.
@@ -27,7 +28,7 @@ void main() {
 
   setUpAll(() async {
     SharedPreferences.setMockInitialValues({});
-    final config = WebDavConfigService(configPath: '/tmp/crispcloud_webdav_test');
+    final config = WebDavConfigService(configPath: '/tmp/crispcloud_webdav_test', secureStorage: InMemorySecureStorage());
     adapter = WebDavClientAdapter(config: config);
 
     final identity = '$user@$url';

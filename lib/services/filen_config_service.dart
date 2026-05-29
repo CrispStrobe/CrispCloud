@@ -1,45 +1,36 @@
 // services/filen_config_service.dart
-import 'dart:io';
 import 'dart:convert';
 import 'package:flutter/foundation.dart';
-import 'package:path/path.dart' as p;
 import 'package:shared_preferences/shared_preferences.dart';
+import 'secure_storage_service.dart';
 
 class FilenConfigService {
   final String configPath;
-  
-  FilenConfigService({required this.configPath});
+  final SecureStorage _secure;
 
-  // Read stored credentials
+  FilenConfigService({required this.configPath, required SecureStorage secureStorage})
+      : _secure = secureStorage;
+
+  // --- Credential operations (secure storage) ---
+
   Future<Map<String, String>?> readCredentials() async {
     try {
-      final prefs = await SharedPreferences.getInstance();
-      final credentialsJson = prefs.getString('filen_credentials');
-      
-      if (credentialsJson == null) {
-        debugPrint('📂 No Filen credentials found in SharedPreferences');
+      final creds = await _secure.readMap('filen_credentials');
+      if (creds == null) {
+        debugPrint('📂 No Filen credentials found');
         return null;
       }
-      
-      final credentials = Map<String, String>.from(
-        json.decode(credentialsJson) as Map
-      );
-      
-      debugPrint('✅ Loaded Filen credentials from SharedPreferences');
-      return credentials;
+      debugPrint('✅ Loaded Filen credentials from secure storage');
+      return creds;
     } catch (e) {
       debugPrint('⚠️ Error reading Filen credentials: $e');
       return null;
     }
   }
 
-  // Save credentials
   Future<void> saveCredentials(Map<String, String> credentials) async {
     try {
-      final prefs = await SharedPreferences.getInstance();
-      final credentialsJson = json.encode(credentials);
-      await prefs.setString('filen_credentials', credentialsJson);
-      
+      await _secure.writeMap('filen_credentials', credentials);
       // Credentials saved (do not log sensitive data)
     } catch (e) {
       debugPrint('❌ Error saving Filen credentials: $e');
@@ -47,25 +38,23 @@ class FilenConfigService {
     }
   }
 
-  // Clear credentials
   Future<void> clearCredentials() async {
     try {
-      final prefs = await SharedPreferences.getInstance();
-      await prefs.remove('filen_credentials');
+      await _secure.delete('filen_credentials');
       debugPrint('🗑️ Cleared Filen credentials');
     } catch (e) {
       debugPrint('⚠️ Error clearing Filen credentials: $e');
     }
   }
 
-  // Generate batch ID for operations
+  // --- Non-credential operations (SharedPreferences) ---
+
   String generateBatchId(String operation, List<String> sources, String target) {
     final timestamp = DateTime.now().millisecondsSinceEpoch;
     final hash = sources.join('|').hashCode;
     return 'filen_${operation}_${timestamp}_$hash';
   }
 
-  // Save batch state (for resumable operations)
   Future<void> saveBatchState(String batchId, Map<String, dynamic> state) async {
     try {
       final prefs = await SharedPreferences.getInstance();
@@ -77,14 +66,11 @@ class FilenConfigService {
     }
   }
 
-  // Read batch state
   Future<Map<String, dynamic>?> readBatchState(String batchId) async {
     try {
       final prefs = await SharedPreferences.getInstance();
       final stateJson = prefs.getString('filen_batch_$batchId');
-      
       if (stateJson == null) return null;
-      
       return Map<String, dynamic>.from(json.decode(stateJson) as Map);
     } catch (e) {
       debugPrint('⚠️ Error reading batch state: $e');
@@ -92,7 +78,6 @@ class FilenConfigService {
     }
   }
 
-  // Delete batch state
   Future<void> deleteBatchState(String batchId) async {
     try {
       final prefs = await SharedPreferences.getInstance();
@@ -103,7 +88,6 @@ class FilenConfigService {
     }
   }
 
-  // Get all batch IDs (for resuming operations)
   Future<List<String>> getAllBatchIds() async {
     try {
       final prefs = await SharedPreferences.getInstance();
@@ -118,7 +102,6 @@ class FilenConfigService {
     }
   }
 
-  // Save provider preference
   Future<void> saveProviderPreference(String provider) async {
     try {
       final prefs = await SharedPreferences.getInstance();
@@ -129,7 +112,6 @@ class FilenConfigService {
     }
   }
 
-  // Get provider preference
   Future<String?> getProviderPreference() async {
     try {
       final prefs = await SharedPreferences.getInstance();

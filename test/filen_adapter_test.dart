@@ -2,6 +2,7 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:crisp_cloud/services/filen_client_adapter.dart';
 import 'package:crisp_cloud/services/filen_config_service.dart';
+import 'package:crisp_cloud/services/secure_storage_service.dart';
 
 void main() {
   late FilenClientAdapter adapter;
@@ -9,7 +10,7 @@ void main() {
 
   setUp(() {
     SharedPreferences.setMockInitialValues({});
-    configService = FilenConfigService(configPath: '/tmp/filen_test_config');
+    configService = FilenConfigService(configPath: '/tmp/filen_test_config', secureStorage: InMemorySecureStorage());
     adapter = FilenClientAdapter(config: configService);
   });
 

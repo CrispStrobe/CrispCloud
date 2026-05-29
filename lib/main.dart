@@ -1,9 +1,6 @@
 // lib/main.dart
 import 'package:flutter/material.dart';
-import 'package:provider/provider.dart';
-import 'screens/file_browser_screen.dart';
-import 'services/app_state.dart';
-import 'services/cloud_storage_interface.dart'; //
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:path_provider/path_provider.dart';
 import 'package:shared_preferences/shared_preferences.dart';
@@ -11,25 +8,37 @@ import 'package:path/path.dart' as p;
 import 'dart:io';
 import 'dart:async';
 
+import 'package:provider/provider.dart' as legacy_provider;
+
+import 'providers/providers.dart';
+import 'screens/file_browser_screen.dart';
+import 'services/cloud_storage_interface.dart';
+import 'services/dropbox_config_service.dart';
 import 'services/filen_config_service.dart';
-import 'services/internxt_client.dart' show ConfigService; //
+import 'services/ftp_config_service.dart';
+import 'services/gdrive_config_service.dart';
+import 'services/internxt_client.dart' show ConfigService;
+import 'services/onedrive_config_service.dart';
+import 'services/s3_config_service.dart';
 import 'services/sftp_config_service.dart';
 import 'services/webdav_config_service.dart';
+import 'services/secure_storage_service.dart';
+import 'services/theme_service.dart';
 
 Future<void> main() async {
-  // Catch errors that happen during startup (like ConfigService crashing on Web)
   runZonedGuarded(() async {
     WidgetsFlutterBinding.ensureInitialized();
 
-    debugPrint("🚀 [Main] App starting...");
+    debugPrint('[Main] App starting...');
 
-    // Determine the platform-specific config path
+    // Initialize secure storage and migrate credentials
+    final secureStorage = PlatformSecureStorage();
+    await CredentialMigration.migrateIfNeeded(secureStorage);
+
+    // Platform-specific config path
     String configPath;
     if (kIsWeb) {
-      // NOTE: On Web, this path is symbolic. 
-      // If ConfigService uses io.File(configPath).writeAsString, it WILL crash.
-      // Ideally, ConfigService should use SharedPreferences on Web.
-      configPath = 'cloud-storage-config'; 
+      configPath = 'cloud-storage-config';
     } else if (Platform.isAndroid || Platform.isIOS) {
       final dir = await getApplicationSupportDirectory();
       configPath = p.join(dir.path, '.cloud-storage-config');
@@ -38,129 +47,121 @@ Future<void> main() async {
       configPath = p.join(home, '.cloud-storage-config');
     }
 
-    debugPrint("📂 [Main] Config path: $configPath");
+    debugPrint('[Main] Config path: $configPath');
 
     CloudProvider defaultProvider = await _getDefaultProvider();
 
     if (defaultProvider == CloudProvider.internxt && !CloudStorageFactory.isInternxtSupported) {
-      debugPrint('⚠️ Internxt preference detected but provider is disabled. Forcing Filen.');
+      debugPrint('Internxt preference detected but provider is disabled. Forcing Filen.');
       defaultProvider = CloudProvider.filen;
     }
-    
+
     try {
-      final configService = await _createConfigService(configPath, defaultProvider);
-      
-      runApp(MyApp(
-        configService: configService,
-        initialProvider: defaultProvider,
+      final configService = await _createConfigService(configPath, defaultProvider, secureStorage);
+
+      runApp(ProviderScope(
+        overrides: [
+          secureStorageProvider.overrideWithValue(secureStorage),
+          configPathProvider.overrideWithValue(configPath),
+          authProvider.overrideWith((ref) => AuthNotifier(
+            ref,
+            initialProvider: defaultProvider,
+            config: configService,
+            configPath: configPath,
+            secureStorage: secureStorage,
+          )),
+        ],
+        child: const MyApp(),
       ));
     } catch (e, stack) {
-      debugPrint("🔥 [Main] Critical Error creating config service: $e");
-      debugPrint(stack);
-      // Fallback to basic app or error screen could go here
+      debugPrint('[Main] Critical Error creating config service: $e');
+      debugPrint('$stack');
     }
   }, (error, stack) {
-    debugPrint("🔥 [Global Error Catch] $error");
-    debugPrint(stack);
+    debugPrint('[Global Error Catch] $error');
+    debugPrint('$stack');
   });
 }
 
-// Helper to determine default provider from saved preference
 Future<CloudProvider> _getDefaultProvider() async {
   try {
     final prefs = await SharedPreferences.getInstance();
     final providerName = prefs.getString('cloud_provider');
-    
-    if (providerName == null) {
-      debugPrint('📂 No saved provider preference, defaulting to Filen');
-      return CloudProvider.filen;
-    }
-    
+
+    if (providerName == null) return CloudProvider.filen;
+
     switch (providerName.toLowerCase()) {
-      case 'filen':
-        debugPrint('✅ Using saved provider: Filen');
-        return CloudProvider.filen;
-      case 'internxt':
-        debugPrint('✅ Using saved provider: Internxt');
-        return CloudProvider.internxt;
-      case 'sftp': 
-        debugPrint('✅ Using saved provider: SFTP');
-        return CloudProvider.sftp;
-      case 'webdav':
-        debugPrint('✅ Using saved provider: WebDAV');
-        return CloudProvider.webdav;
-      default:
-        debugPrint('⚠️ Unknown provider: $providerName, defaulting to Filen');
-        return CloudProvider.filen;
+      case 'dropbox': return CloudProvider.dropbox;
+      case 'filen': return CloudProvider.filen;
+      case 'ftp': return CloudProvider.ftp;
+      case 'gdrive': return CloudProvider.gdrive;
+      case 'internxt': return CloudProvider.internxt;
+      case 'onedrive': return CloudProvider.onedrive;
+      case 's3': return CloudProvider.s3;
+      case 'sftp': return CloudProvider.sftp;
+      case 'webdav': return CloudProvider.webdav;
+      default: return CloudProvider.filen;
     }
   } catch (e) {
-    debugPrint('⚠️ Error reading provider preference: $e, defaulting to Filen');
+    debugPrint('Error reading provider preference: $e, defaulting to Filen');
     return CloudProvider.filen;
   }
 }
 
-// Helper to create appropriate config service
-Future<dynamic> _createConfigService(String configPath, CloudProvider provider) async {
-  // ROBUSTNESS: Wrap creation in try/catch to handle missing dependencies or logic errors
+Future<dynamic> _createConfigService(
+  String configPath,
+  CloudProvider provider,
+  SecureStorage secureStorage,
+) async {
   try {
     switch (provider) {
+      case CloudProvider.dropbox:
+        return DropboxConfigService(configPath: configPath, secureStorage: secureStorage);
       case CloudProvider.filen:
-        debugPrint('🔧 Creating Filen config service');
-        return FilenConfigService(configPath: configPath);
+        return FilenConfigService(configPath: configPath, secureStorage: secureStorage);
+      case CloudProvider.ftp:
+        return FTPConfigService(configPath: configPath, secureStorage: secureStorage);
+      case CloudProvider.gdrive:
+        return GDriveConfigService(configPath: configPath, secureStorage: secureStorage);
+      case CloudProvider.onedrive:
+        return OneDriveConfigService(configPath: configPath, secureStorage: secureStorage);
+      case CloudProvider.s3:
+        return S3ConfigService(configPath: configPath, secureStorage: secureStorage);
       case CloudProvider.sftp:
-        debugPrint('🔧 Creating SFTP config service');
-        return SFTPConfigService(configPath: configPath);
+        return SFTPConfigService(configPath: configPath, secureStorage: secureStorage);
       case CloudProvider.webdav:
-        debugPrint('🔧 Creating WebDAV config service');
-        return WebDavConfigService(configPath: configPath);
+        return WebDavConfigService(configPath: configPath, secureStorage: secureStorage);
       case CloudProvider.internxt:
-        // Only attempt to create if supported
         if (CloudStorageFactory.isInternxtSupported) {
-          debugPrint('🔧 Creating Internxt config service');
           return ConfigService(configPath: configPath);
         } else {
-           debugPrint('⚠️ Internxt config requested but disabled. Falling back to Filen config.');
-           return FilenConfigService(configPath: configPath);
+          return FilenConfigService(configPath: configPath, secureStorage: secureStorage);
         }
     }
   } catch (e) {
-    debugPrint('❌ Critical error creating config service: $e');
-    debugPrint('   Falling back to Filen defaults.');
-    return FilenConfigService(configPath: configPath);
+    debugPrint('Critical error creating config service: $e');
+    return FilenConfigService(configPath: configPath, secureStorage: secureStorage);
   }
 }
 
-class MyApp extends StatelessWidget {
-  final dynamic configService;
-  final CloudProvider initialProvider;
-  
-  const MyApp({
-    super.key, 
-    required this.configService,
-    required this.initialProvider,
-  });
+/// ThemeService exposed via Riverpod.
+final themeProvider = ChangeNotifierProvider<ThemeService>((ref) => ThemeService());
+
+class MyApp extends ConsumerWidget {
+  const MyApp({super.key});
 
   @override
-  Widget build(BuildContext context) {
-    return ChangeNotifierProvider(
-      create: (_) => AppState(
-        config: configService,
-        initialProvider: initialProvider,
-      ),
+  Widget build(BuildContext context, WidgetRef ref) {
+    final themeService = ref.watch(themeProvider);
+
+    // ThemeService also exposed via legacy Provider for widgets not yet migrated
+    return legacy_provider.ChangeNotifierProvider<ThemeService>.value(
+      value: themeService,
       child: MaterialApp(
-        title: 'Cloud Storage Manager',
-        theme: ThemeData(
-          colorScheme: ColorScheme.fromSeed(seedColor: Colors.blue),
-          useMaterial3: true,
-        ),
-        darkTheme: ThemeData(
-          colorScheme: ColorScheme.fromSeed(
-            seedColor: Colors.blue,
-            brightness: Brightness.dark,
-          ),
-          useMaterial3: true,
-        ),
-        themeMode: ThemeMode.system,
+        title: 'CrispCloud',
+        theme: themeService.lightTheme,
+        darkTheme: themeService.darkTheme,
+        themeMode: themeService.themeMode,
         home: const FileBrowserScreen(),
       ),
     );

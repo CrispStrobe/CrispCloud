@@ -9,17 +9,30 @@ import 'package:universal_html/html.dart' as html;
 import '../models/file_item.dart';
 import '../models/operation_progress.dart';
 import '../models/panel_side.dart';
+import '../models/panel_tab.dart';
+import '../utils/formatters.dart' as fmt;
 
 import 'cloud_storage_interface.dart';
+import 'encrypted_storage_wrapper.dart';
+import 'encryption_service.dart';
 import 'filen_client_adapter.dart';
 import 'filen_config_service.dart';
+import 'ftp_client_adapter.dart';
+import 'ftp_config_service.dart';
+import 'dropbox_config_service.dart';
+import 'gdrive_config_service.dart';
 import 'internxt_client.dart';
+import 'onedrive_config_service.dart';
 import 'internxt_client_adapter.dart';
 import 'local_file_service.dart';
 import 'receive_service.dart';
+import 's3_client_adapter.dart';
+import 's3_config_service.dart';
+import 'secure_storage_service.dart';
 import 'sftp_client_adapter.dart';
 import 'sftp_config_service.dart';
 import 'share_service.dart';
+import 'transfer_queue.dart';
 import 'webdav_client_adapter.dart';
 import 'webdav_config_service.dart';
 
@@ -71,7 +84,9 @@ class AppState extends ChangeNotifier {
   dynamic _config;
   String _configPath = ''; // Store path to recreate configs
 
-  late final LocalFileService _localFileService; 
+  late final LocalFileService _localFileService;
+  late final SecureStorage _secureStorage;
+  final TransferQueue _transferQueue = TransferQueue();
 
   bool _isConnected = false;
   String? _userEmail;
@@ -95,6 +110,127 @@ class AppState extends ChangeNotifier {
 
   bool _isSearching = false;
   bool get isSearching => _isSearching;
+
+  bool _showPreview = false;
+  bool get showPreview => _showPreview;
+  void togglePreview() {
+    _showPreview = !_showPreview;
+    notifyListeners();
+  }
+
+  // --- Tab management ---
+  int _tabIdCounter = 0;
+  final List<PanelTab> _localTabs = [];
+  final List<PanelTab> _remoteTabs = [];
+  String _activeLocalTabId = '';
+  String _activeRemoteTabId = '';
+
+  List<PanelTab> get localTabs => _localTabs;
+  List<PanelTab> get remoteTabs => _remoteTabs;
+  String get activeLocalTabId => _activeLocalTabId;
+  String get activeRemoteTabId => _activeRemoteTabId;
+
+  PanelTab? get activeLocalTab =>
+      _localTabs.isEmpty ? null : _localTabs.firstWhere(
+        (t) => t.id == _activeLocalTabId,
+        orElse: () => _localTabs.first,
+      );
+
+  PanelTab? get activeRemoteTab =>
+      _remoteTabs.isEmpty ? null : _remoteTabs.firstWhere(
+        (t) => t.id == _activeRemoteTabId,
+        orElse: () => _remoteTabs.first,
+      );
+
+  String _nextTabId() => 'tab_${_tabIdCounter++}';
+
+  void _initTabs() {
+    if (_localTabs.isEmpty) {
+      final id = _nextTabId();
+      _localTabs.add(PanelTab(id: id, path: _localFileService.currentPath));
+      _activeLocalTabId = id;
+    }
+    if (_remoteTabs.isEmpty) {
+      final id = _nextTabId();
+      _remoteTabs.add(PanelTab(id: id, path: _remotePath));
+      _activeRemoteTabId = id;
+    }
+  }
+
+  void addTab(PanelSide side, {String? path}) {
+    final tabs = side == PanelSide.local ? _localTabs : _remoteTabs;
+    final currentPath = side == PanelSide.local ? localPath : _remotePath;
+    final id = _nextTabId();
+    tabs.add(PanelTab(id: id, path: path ?? currentPath));
+    if (side == PanelSide.local) {
+      _activeLocalTabId = id;
+    } else {
+      _activeRemoteTabId = id;
+    }
+    notifyListeners();
+  }
+
+  void closeTab(PanelSide side, String tabId) {
+    final tabs = side == PanelSide.local ? _localTabs : _remoteTabs;
+    if (tabs.length <= 1) return; // Keep at least one tab
+    final tab = tabs.firstWhere((t) => t.id == tabId, orElse: () => tabs.first);
+    if (tab.isPinned) return;
+    final idx = tabs.indexOf(tab);
+    tabs.remove(tab);
+    // If closing active tab, activate the nearest one
+    final activeId = side == PanelSide.local ? _activeLocalTabId : _activeRemoteTabId;
+    if (activeId == tabId) {
+      final newIdx = idx.clamp(0, tabs.length - 1);
+      if (side == PanelSide.local) {
+        _activeLocalTabId = tabs[newIdx].id;
+      } else {
+        _activeRemoteTabId = tabs[newIdx].id;
+      }
+    }
+    notifyListeners();
+  }
+
+  void selectTab(PanelSide side, String tabId) {
+    if (side == PanelSide.local) {
+      _activeLocalTabId = tabId;
+      final tab = activeLocalTab;
+      if (tab != null) {
+        _localFileService.currentPath = tab.path;
+      }
+    } else {
+      _activeRemoteTabId = tabId;
+      final tab = activeRemoteTab;
+      if (tab != null) {
+        _remotePath = tab.path;
+      }
+    }
+    notifyListeners();
+    refreshPanel(side);
+  }
+
+  void toggleTabPin(PanelSide side, String tabId) {
+    final tabs = side == PanelSide.local ? _localTabs : _remoteTabs;
+    final tab = tabs.firstWhere((t) => t.id == tabId, orElse: () => tabs.first);
+    tab.isPinned = !tab.isPinned;
+    notifyListeners();
+  }
+
+  /// Sync the active tab's path when navigating
+  void _syncTabPath(PanelSide side) {
+    if (side == PanelSide.local) {
+      final tab = activeLocalTab;
+      if (tab != null) {
+        tab.path = localPath;
+        tab.updateLabel();
+      }
+    } else {
+      final tab = activeRemoteTab;
+      if (tab != null) {
+        tab.path = _remotePath;
+        tab.updateLabel();
+      }
+    }
+  }
 
   FileItem? _itemToScrollTo;
   FileItem? get itemToScrollTo => _itemToScrollTo;
@@ -300,14 +436,16 @@ class AppState extends ChangeNotifier {
     super.dispose();
   }
 
-  AppState({required dynamic config, CloudProvider? initialProvider}) 
+  AppState({required dynamic config, CloudProvider? initialProvider, required SecureStorage secureStorage})
       : _config = config,
         _currentProvider = initialProvider ?? CloudProvider.filen,
-        _localFileService = LocalFileService() {
+        _localFileService = LocalFileService(),
+        _secureStorage = secureStorage {
 
     // EXTRACT PATH: Attempt to extract, but handle failure robustly
     try {
         if (config is FilenConfigService) _configPath = config.configPath;
+        else if (config is FTPConfigService) _configPath = config.configPath;
         else if (config is SFTPConfigService) _configPath = config.configPath;
         else if (config is ConfigService) _configPath = config.configPath;
         // Fallback: try dynamic access if types didn't match due to import issues
@@ -339,7 +477,8 @@ class AppState extends ChangeNotifier {
     _cloudClient = CloudStorageFactory.create(_currentProvider, config: config);
     
     _activePanel = PanelSide.local;
-    
+    _initTabs();
+
     _initializeLocalPath();
     _attemptAutoLogin();
   }
@@ -362,7 +501,12 @@ class AppState extends ChangeNotifier {
       final prefs = await SharedPreferences.getInstance();
       String providerKey;
       switch (provider) {
+        case CloudProvider.dropbox: providerKey = 'dropbox'; break;
         case CloudProvider.filen: providerKey = 'filen'; break;
+        case CloudProvider.ftp: providerKey = 'ftp'; break;
+        case CloudProvider.gdrive: providerKey = 'gdrive'; break;
+        case CloudProvider.onedrive: providerKey = 'onedrive'; break;
+        case CloudProvider.s3: providerKey = 's3'; break;
         case CloudProvider.sftp: providerKey = 'sftp'; break;
         case CloudProvider.webdav: providerKey = 'webdav'; break;
         case CloudProvider.internxt: providerKey = 'internxt'; break;
@@ -371,12 +515,22 @@ class AppState extends ChangeNotifier {
       debugPrint('💾 Saved provider preference: $providerKey');
 
       // 2. Instantiate correct config service
-      if (provider == CloudProvider.filen) {
-        _config = FilenConfigService(configPath: _configPath);
+      if (provider == CloudProvider.dropbox) {
+        _config = DropboxConfigService(configPath: _configPath, secureStorage: _secureStorage);
+      } else if (provider == CloudProvider.filen) {
+        _config = FilenConfigService(configPath: _configPath, secureStorage: _secureStorage);
+      } else if (provider == CloudProvider.ftp) {
+        _config = FTPConfigService(configPath: _configPath, secureStorage: _secureStorage);
+      } else if (provider == CloudProvider.gdrive) {
+        _config = GDriveConfigService(configPath: _configPath, secureStorage: _secureStorage);
+      } else if (provider == CloudProvider.onedrive) {
+        _config = OneDriveConfigService(configPath: _configPath, secureStorage: _secureStorage);
+      } else if (provider == CloudProvider.s3) {
+        _config = S3ConfigService(configPath: _configPath, secureStorage: _secureStorage);
       } else if (provider == CloudProvider.sftp) {
-        _config = SFTPConfigService(configPath: _configPath);
+        _config = SFTPConfigService(configPath: _configPath, secureStorage: _secureStorage);
       } else if (provider == CloudProvider.webdav) {
-        _config = WebDavConfigService(configPath: _configPath);
+        _config = WebDavConfigService(configPath: _configPath, secureStorage: _secureStorage);
       } else if (provider == CloudProvider.internxt) {
         _config = ConfigService(configPath: _configPath);
       }
@@ -398,6 +552,28 @@ class AppState extends ChangeNotifier {
   CloudProvider get currentProvider => _currentProvider;
   String get providerName => _cloudClient.providerName;
   CloudStorageClient get client => _cloudClient;
+  bool get isEncryptionEnabled => _cloudClient is EncryptedStorageWrapper;
+
+  /// Wrap the current cloud client with encryption.
+  /// Call after login to enable client-side encryption.
+  void enableEncryption(String passphrase) {
+    if (_cloudClient is EncryptedStorageWrapper) return; // Already wrapped
+    final salt = EncryptionService.generateSalt();
+    final key = EncryptionService.deriveKey(passphrase, salt);
+    _cloudClient = EncryptedStorageWrapper(
+      inner: _cloudClient,
+      encryptionKey: key,
+    );
+    notifyListeners();
+  }
+
+  /// Remove encryption wrapper, restoring the inner client.
+  void disableEncryption() {
+    if (_cloudClient is EncryptedStorageWrapper) {
+      _cloudClient = (_cloudClient as EncryptedStorageWrapper).inner;
+      notifyListeners();
+    }
+  }
 
   Future<void> _initializeLocalPath() async {
     try {
@@ -559,6 +735,19 @@ class AppState extends ChangeNotifier {
             await refreshPanel(PanelSide.remote);
             notifyListeners();
           }
+        } else if (_cloudClient is FTPClientAdapter) {
+          final adapter = _cloudClient as FTPClientAdapter;
+          final creds = await adapter.config.readCredentials();
+
+          if (creds != null && creds['host'] != null && creds['username'] != null) {
+            _userEmail = '${creds['username']}@${creds['host']}';
+            _isConnected = true;
+            debugPrint('FTP: Auto-login successful for $_userEmail');
+            await refreshPanel(PanelSide.remote);
+            notifyListeners();
+          } else {
+            debugPrint('FTP: No saved credentials found');
+          }
         } else if (_cloudClient is SFTPClientAdapter) {
           final adapter = _cloudClient as SFTPClientAdapter;
           final creds = await adapter.config.readCredentials();
@@ -573,6 +762,18 @@ class AppState extends ChangeNotifier {
             notifyListeners();
           } else {
             debugPrint('⚠️ SFTP: No saved credentials found');
+          }
+        } else if (_cloudClient is S3ClientAdapter) {
+          final adapter = _cloudClient as S3ClientAdapter;
+          final restored = await adapter.restoreCredentials();
+          if (restored) {
+            _userEmail = '${adapter.userId}@${adapter.bucketId}';
+            _isConnected = true;
+            debugPrint('✅ S3: Auto-login successful for $_userEmail');
+            await refreshPanel(PanelSide.remote);
+            notifyListeners();
+          } else {
+            debugPrint('⚠️ S3: No saved credentials found');
           }
         } else if (_cloudClient is WebDavClientAdapter) {
           final adapter = _cloudClient as WebDavClientAdapter;
@@ -646,6 +847,18 @@ class AppState extends ChangeNotifier {
       if (savedCreds == null) {
         debugPrint('⚠️ Warning: Filen credentials were not saved properly');
       }
+    } else if (_cloudClient is FTPClientAdapter) {
+      final adapter = _cloudClient as FTPClientAdapter;
+      final savedCreds = await adapter.config.readCredentials();
+      if (savedCreds == null) {
+        debugPrint('Warning: FTP credentials were not saved properly');
+      }
+    } else if (_cloudClient is S3ClientAdapter) {
+      final adapter = _cloudClient as S3ClientAdapter;
+      final savedCreds = await adapter.config.readCredentials();
+      if (savedCreds == null) {
+        debugPrint('⚠️ Warning: S3 credentials were not saved properly');
+      }
     } else if (_cloudClient is SFTPClientAdapter) {
       final adapter = _cloudClient as SFTPClientAdapter;
       final savedCreds = await adapter.config.readCredentials();
@@ -674,6 +887,10 @@ class AppState extends ChangeNotifier {
       await (_cloudClient as InternxtClientAdapter).config.clearCredentials();
     } else if (_cloudClient is FilenClientAdapter) {
       await (_cloudClient as FilenClientAdapter).filenConfig.clearCredentials();
+    } else if (_cloudClient is FTPClientAdapter) {
+      await (_cloudClient as FTPClientAdapter).config.clearCredentials();
+    } else if (_cloudClient is S3ClientAdapter) {
+      await (_cloudClient as S3ClientAdapter).config.clearCredentials();
     } else if (_cloudClient is SFTPClientAdapter) {
       await (_cloudClient as SFTPClientAdapter).config.clearCredentials();
     } else if (_cloudClient is WebDavClientAdapter) {
@@ -878,6 +1095,7 @@ class AppState extends ChangeNotifier {
       
       debugPrint('📁 Navigated to: $_remotePath');
     }
+    _syncTabPath(side);
   }
 
   Future<void> navigateInto(PanelSide side, FileItem item) async {
@@ -963,72 +1181,54 @@ class AppState extends ChangeNotifier {
     notifyListeners();
   }
   
-  // File operations
-  
-  Future<void> uploadFiles(List<FileItem> files, {String? targetPath}) async {
-    
-    debugPrint('');
-    debugPrint('═══════════════════════════════════════════');
-    debugPrint('📤 UPLOAD STARTED (${_cloudClient.providerName})');
-    debugPrint('═══════════════════════════════════════════');
-    debugPrint('Files to upload: ${files.length}');
-    debugPrint('Target path: ${targetPath ?? _remotePath}');
-    
-    final target = targetPath ?? _remotePath;
-    
-    // Get credentials (provider-specific)
-    Map<String, String>? creds;
-    String? identityLog; // For logging purposes
+  // --- Credential helper (shared by upload/download) ---
 
+  Future<void> _ensureAuthenticated() async {
     if (_cloudClient is InternxtClientAdapter) {
-      final rawCreds = await (_cloudClient as InternxtClientAdapter).config.readCredentials();
-      creds = rawCreds?.map((key, value) => MapEntry(key, value.toString()));
-      identityLog = creds?['email'];
+      final creds = await (_cloudClient as InternxtClientAdapter).config.readCredentials();
+      if (creds == null) throw Exception('Not authenticated');
     } else if (_cloudClient is FilenClientAdapter) {
-      creds = await (_cloudClient as FilenClientAdapter).filenConfig.readCredentials();
-      identityLog = creds?['email'];
+      final creds = await (_cloudClient as FilenClientAdapter).filenConfig.readCredentials();
+      if (creds == null) throw Exception('Not authenticated');
+    } else if (_cloudClient is FTPClientAdapter) {
+      final creds = await (_cloudClient as FTPClientAdapter).config.readCredentials();
+      if (creds == null) throw Exception('Not authenticated');
+    } else if (_cloudClient is S3ClientAdapter) {
+      final creds = await (_cloudClient as S3ClientAdapter).config.readCredentials();
+      if (creds == null) throw Exception('Not authenticated');
     } else if (_cloudClient is SFTPClientAdapter) {
-      creds = await (_cloudClient as SFTPClientAdapter).config.readCredentials();
-      if (creds != null) identityLog = '${creds['username']}@${creds['host']}';
+      final creds = await (_cloudClient as SFTPClientAdapter).config.readCredentials();
+      if (creds == null) throw Exception('Not authenticated');
     } else if (_cloudClient is WebDavClientAdapter) {
-      creds = await (_cloudClient as WebDavClientAdapter).config.readCredentials();
-      if (creds != null) identityLog = '${creds['username']}@${creds['host']}';
+      final creds = await (_cloudClient as WebDavClientAdapter).config.readCredentials();
+      if (creds == null) throw Exception('Not authenticated');
     }
-    
-    if (creds == null) {
-      debugPrint('❌ ERROR: Not authenticated');
-      throw Exception('Not authenticated');
-    }
-    
-    debugPrint('✅ Credentials loaded for: $identityLog');
-    
-    debugPrint('');
-    debugPrint('📊 Calculating sizes...');
+  }
+
+  // --- File operations (queue-based) ---
+
+  Future<void> uploadFiles(List<FileItem> files, {String? targetPath}) async {
+    debugPrint('📤 UPLOAD: ${files.length} files via ${_cloudClient.providerName}');
+
+    await _ensureAuthenticated();
+    final target = targetPath ?? _remotePath;
+
     final fileProgresses = <FileProgress>[];
     int totalBytes = 0;
-    
+
     for (final file in files) {
       int fileSize = 0;
-      
       if (file.isFolder && file.path != null) {
         fileSize = await _calculateFolderSize(file.path!);
-        debugPrint('   📁 ${file.name}: ${_formatBytes(fileSize)}');
       } else {
         fileSize = file.size ?? 0;
-        debugPrint('   📄 ${file.name}: ${_formatBytes(fileSize)}');
       }
-      
-      fileProgresses.add(FileProgress(
-        name: file.name,
-        path: file.path!,
-        size: fileSize,
-      ));
-      
+      fileProgresses.add(FileProgress(name: file.name, path: file.path!, size: fileSize));
       totalBytes += fileSize;
     }
-    
-    debugPrint('📊 Total size: ${_formatBytes(totalBytes)}');
-    
+
+    debugPrint('📊 Total size: ${fmt.formatBytes(totalBytes)}');
+
     final operation = OperationProgress(
       id: DateTime.now().millisecondsSinceEpoch.toString(),
       type: OperationType.upload,
@@ -1038,144 +1238,164 @@ class AppState extends ChangeNotifier {
       totalBytes: totalBytes,
       files: fileProgresses,
     );
-    
+
     _operations.add(operation);
     notifyListeners();
-    debugPrint('✅ Created single operation for ${files.length} files ($totalBytes bytes)');
-    
-    _runUploadInBackground(operation, files, fileProgresses, target, creds);
-  }
 
-  Future<void> _runUploadInBackground(
-    OperationProgress operation,
-    List<FileItem> files,
-    List<FileProgress> fileProgresses,
-    String target,
-    Map<String, String> creds,
-  ) async {
     int completedBytes = 0;
-    
-    try {
-      for (int i = 0; i < files.length; i++) {
-        // 1. Check Cancellation/Pause
-        if (operation.isCancelled) {
-          debugPrint('🚫 Upload cancelled by user');
-          break;
-        }
-        
-        if (operation.isPaused) {
-          debugPrint('⏸️  Upload paused, waiting for resume...');
-          await operation.pauseFuture;
-          debugPrint('▶️  Upload resumed, continuing...');
-          
-          if (operation.isCancelled) {
-            debugPrint('🚫 Upload cancelled during pause');
-            break;
-          }
-        }
-        
-        final file = files[i];
-        final fileProgress = fileProgresses[i];
-        
-        debugPrint('');
-        debugPrint('───────────────────────────────────────────');
-        debugPrint('📤 FILE ${i + 1}/${files.length}');
-        debugPrint('───────────────────────────────────────────');
-        debugPrint('Name: ${file.name}');
-        debugPrint('Path: ${file.path}');
-        debugPrint('Size: ${fileProgress.size} bytes');
-        
-        if (file.path == null) {
-          debugPrint('❌ ERROR: File has no path, skipping');
-          fileProgress.error = 'No path';
-          notifyListeners();
-          continue;
-        }
+    int tasksFinished = 0;
 
-        try {
+    for (int i = 0; i < files.length; i++) {
+      final file = files[i];
+      final fileProgress = fileProgresses[i];
+      final taskId = '${operation.id}_upload_$i';
+
+      _transferQueue.enqueue(TransferTask(
+        id: taskId,
+        operation: operation,
+        execute: () async {
+          if (operation.isCancelled) return;
+          if (operation.isPaused) await operation.pauseFuture;
+          if (operation.isCancelled) return;
+
+          if (file.path == null) {
+            fileProgress.error = 'No path';
+            return;
+          }
+
           if (file.isFolder) {
             await _uploadFolderViaClient(file.path!, target, operation);
           } else {
-            // --- STEP A: READ FILE TO MEMORY ---
-            debugPrint('   📖 Reading file into memory (Size: ${fileProgress.size})...');
-            final startRead = DateTime.now();
-            
-            // CRITICAL LIMITATION: This loads the ENTIRE file into RAM.
-            final fileData = await _localFileService.readFile(
-              file.path!, 
-              fileItem: file 
-            );
-            
-            final readTime = DateTime.now().difference(startRead).inMilliseconds;
-            debugPrint('   ✅ Read complete (${readTime}ms). Starting upload...');
-
-            // --- STEP B: UPLOAD MEMORY BUFFER ---
+            final fileData = await _localFileService.readFile(file.path!, fileItem: file);
             await _cloudClient.uploadFile(
               fileData,
               file.name,
               target,
               onProgress: (current, total) {
-                // Update State
                 operation.currentBytes = completedBytes + current;
                 notifyListeners();
-
-                // Throttle Console Logs (Only log every ~5MB or at 100%)
-                if (total > 0 && (current % (1024 * 1024 * 5) < 1024 * 64 || current == total)) {
-                   final pct = (current / total * 100).toStringAsFixed(1);
-                   debugPrint('   🚀 Uploading: $pct% ($current/$total)');
-                }
               },
             );
           }
-          
-          debugPrint('   ✅ Upload complete: ${file.name}');
-          
+
           fileProgress.isComplete = true;
           completedBytes += fileProgress.size;
           operation.currentBytes = completedBytes;
-          notifyListeners();
-          
-        } catch (e, stackTrace) {
-          if (operation.isCancelled || e.toString().contains('Cancelled')) {
-            debugPrint('🚫 File upload cancelled: ${file.name}');
-            fileProgress.error = 'Cancelled';
-            break; // Stop batch
-          } else {
-            debugPrint('❌ UPLOAD FAILED: ${file.name}');
-            debugPrint('   Error: $e');
-            debugPrint('   Stack: $stackTrace');
-            fileProgress.error = e.toString();
-          }
-          notifyListeners();
-        }
-      }
 
-      // Final Status Check
-      if (operation.isCancelled) {
-        debugPrint('🚫 Upload operation cancelled');
-        operation.fail('Cancelled by user');
-      } else {
-        final failedCount = fileProgresses.where((f) => f.error != null).length;
-        if (failedCount == 0) {
-          debugPrint('✅ All files uploaded successfully');
-          operation.complete();
-        } else if (failedCount == files.length) {
-          debugPrint('❌ All files failed to upload');
-          operation.fail('All files failed');
-        } else {
-          debugPrint('⚠️ Some files failed to upload: $failedCount/${files.length}');
-          operation.complete();
-        }
-      }
-    } catch (e) {
-      debugPrint('❌ Unexpected error in background upload: $e');
-      operation.fail(e.toString());
+          tasksFinished++;
+          if (tasksFinished == files.length) {
+            _finalizeBatchOperation(operation, fileProgresses);
+            await refreshPanel(PanelSide.remote);
+            clearSelection(PanelSide.local);
+          }
+        },
+      ));
     }
-    
+  }
+
+  Future<void> downloadFiles(List<FileItem> files, {String? localPath}) async {
+    debugPrint('⬇️ DOWNLOAD: ${files.length} files via ${_cloudClient.providerName}');
+
+    await _ensureAuthenticated();
+    final target = localPath ?? _localFileService.currentPath;
+
+    final fileProgresses = files
+        .map((f) => FileProgress(name: f.name, path: f.uuid ?? f.name, size: f.size ?? 0))
+        .toList();
+    final totalBytes = files.fold(0, (sum, f) => sum + (f.size ?? 0));
+
+    debugPrint('📊 Total size: ${fmt.formatBytes(totalBytes)}');
+
+    final operation = OperationProgress(
+      id: DateTime.now().millisecondsSinceEpoch.toString(),
+      type: OperationType.download,
+      sourcePath: files.length == 1 ? files.first.name : '${files.length} files',
+      targetPath: target,
+      fileName: files.length == 1 ? files.first.name : '${files.length} files',
+      totalBytes: totalBytes,
+      files: fileProgresses,
+    );
+
+    _operations.add(operation);
     notifyListeners();
-    
-    await refreshPanel(PanelSide.remote);
-    clearSelection(PanelSide.local);
+
+    int completedBytes = 0;
+    int tasksFinished = 0;
+
+    for (int i = 0; i < files.length; i++) {
+      final file = files[i];
+      final fileProgress = fileProgresses[i];
+      final taskId = '${operation.id}_download_$i';
+
+      _transferQueue.enqueue(TransferTask(
+        id: taskId,
+        operation: operation,
+        execute: () async {
+          if (operation.isCancelled) return;
+          if (operation.isPaused) await operation.pauseFuture;
+          if (operation.isCancelled) return;
+
+          final remotePath = file.path ?? p.posix.join(_remotePath, file.name);
+
+          if (file.isFolder) {
+            if (!kIsWeb) {
+              await _downloadFolderViaClient(remotePath, target, operation);
+            }
+          } else {
+            final bytes = await _cloudClient.downloadFileBytes(
+              remotePath,
+              onProgress: (current, total) {
+                if (total > 0) {
+                  operation.currentBytes = completedBytes + current;
+                  notifyListeners();
+                }
+              },
+            );
+
+            final localFilePath = p.join(target, file.name);
+            await _localFileService.saveFile(localFilePath, bytes);
+
+            if (!kIsWeb && file.updatedAt != null) {
+              try {
+                final f = File(localFilePath);
+                if (await f.exists()) {
+                  await f.setLastModified(file.updatedAt!);
+                }
+              } catch (e) {
+                debugPrint('⚠️ Timestamp update failed: $e');
+              }
+            }
+          }
+
+          fileProgress.isComplete = true;
+          completedBytes += fileProgress.size;
+          operation.currentBytes = completedBytes;
+
+          tasksFinished++;
+          if (tasksFinished == files.length) {
+            _finalizeBatchOperation(operation, fileProgresses);
+            await refreshPanel(PanelSide.local);
+            clearSelection(PanelSide.remote);
+          }
+        },
+      ));
+    }
+  }
+
+  void _finalizeBatchOperation(OperationProgress operation, List<FileProgress> fileProgresses) {
+    if (operation.isCancelled) {
+      operation.fail('Cancelled by user');
+    } else {
+      final failedCount = fileProgresses.where((f) => f.error != null).length;
+      if (failedCount == 0) {
+        operation.complete();
+      } else if (failedCount == fileProgresses.length) {
+        operation.fail('All files failed');
+      } else {
+        operation.complete();
+      }
+    }
+    notifyListeners();
   }
 
   Future<int> _calculateFolderSize(String folderPath) async {
@@ -1207,235 +1427,6 @@ class AppState extends ChangeNotifier {
     }
   }
 
-  String _formatBytes(int bytes) {
-    if (bytes < 1024) return '$bytes B';
-    if (bytes < 1024 * 1024) return '${(bytes / 1024).toStringAsFixed(1)} KB';
-    if (bytes < 1024 * 1024 * 1024) {
-      return '${(bytes / (1024 * 1024)).toStringAsFixed(1)} MB';
-    }
-    return '${(bytes / (1024 * 1024 * 1024)).toStringAsFixed(1)} GB';
-  }
-
-  // CHANGED: Download now uses cloud client abstraction
-  Future<void> downloadFiles(List<FileItem> files, {String? localPath}) async {
-    
-    debugPrint('');
-    debugPrint('═══════════════════════════════════════════');
-    debugPrint('⬇️  DOWNLOAD STARTED (${_cloudClient.providerName})');
-    debugPrint('═══════════════════════════════════════════');
-    debugPrint('Files to download: ${files.length}');
-    debugPrint('Local path: ${localPath ?? _localFileService.currentPath}'); 
-    
-    final target = localPath ?? _localFileService.currentPath;
-    
-    Map<String, String>? creds;
-    String? identityLog;
-    if (_cloudClient is InternxtClientAdapter) {
-      final rawCreds = await (_cloudClient as InternxtClientAdapter).config.readCredentials();
-      creds = rawCreds?.cast<String, String>();
-      identityLog = creds?['email'];
-    } else if (_cloudClient is FilenClientAdapter) {
-      creds = await (_cloudClient as FilenClientAdapter).filenConfig.readCredentials();
-      identityLog = creds?['email'];
-    } else if (_cloudClient is SFTPClientAdapter) {
-      creds = await (_cloudClient as SFTPClientAdapter).config.readCredentials();
-      if (creds != null) identityLog = '${creds['username']}@${creds['host']}';
-    } else if (_cloudClient is WebDavClientAdapter) {
-      creds = await (_cloudClient as WebDavClientAdapter).config.readCredentials();
-      if (creds != null) identityLog = '${creds['username']}@${creds['host']}';
-    }
-    
-    if (creds == null) {
-      debugPrint('❌ ERROR: Not authenticated');
-      throw Exception('Not authenticated');
-    }
-    
-    debugPrint('✅ Credentials loaded for: $identityLog');
-    
-    debugPrint('');
-    debugPrint('📊 Preparing download...');
-    final fileProgresses = files.map((f) => FileProgress(
-      name: f.name,
-      path: f.uuid ?? f.name, 
-      size: f.size ?? 0,
-    )).toList();
-    
-    final totalBytes = files.fold(0, (sum, f) => sum + (f.size ?? 0));
-    debugPrint('📊 Total size: ${_formatBytes(totalBytes)}');
-    
-    final operation = OperationProgress(
-      id: DateTime.now().millisecondsSinceEpoch.toString(),
-      type: OperationType.download,
-      sourcePath: files.length == 1 ? files.first.name : '${files.length} files',
-      targetPath: target,
-      fileName: files.length == 1 ? files.first.name : '${files.length} files',
-      totalBytes: totalBytes,
-      files: fileProgresses,
-    );
-    
-    _operations.add(operation);
-    notifyListeners();
-    debugPrint('✅ Created single operation for ${files.length} files ($totalBytes bytes)');
-    
-    _runDownloadInBackground(operation, files, fileProgresses, target, creds);
-  }
-
-  Future<void> _runDownloadInBackground(
-    OperationProgress operation,
-    List<FileItem> files,
-    List<FileProgress> fileProgresses,
-    String target,
-    Map<String, String> creds,
-  ) async {
-    int completedBytes = 0;
-    
-    try {
-      debugPrint('🚀 [Download] Starting batch for ${files.length} files to: $target');
-
-      for (int i = 0; i < files.length; i++) {
-        // 1. Check Cancellation
-        if (operation.isCancelled) {
-          debugPrint('🚫 [Download] Cancelled by user');
-          break;
-        }
-        
-        // 2. Check Pause
-        if (operation.isPaused) {
-          debugPrint('⏸️  [Download] Paused, waiting for resume...');
-          await operation.pauseFuture;
-          debugPrint('▶️  [Download] Resumed');
-          if (operation.isCancelled) {
-             debugPrint('🚫 [Download] Cancelled during pause');
-             break;
-          }
-        }
-        
-        final file = files[i];
-        final fileProgress = fileProgresses[i];
-        
-        // --- CRITICAL FIX: Path Construction ---
-        // Use absolute path if available, otherwise fallback to joining with current view
-        final remotePath = file.path ?? p.posix.join(_remotePath, file.name);
-        
-        debugPrint('');
-        debugPrint('───────────────────────────────────────────');
-        debugPrint('⬇️  FILE ${i + 1}/${files.length}: ${file.name}');
-        debugPrint('   UUID: ${file.uuid}');
-        debugPrint('   Remote Path: $remotePath');
-        debugPrint('   Target Dir: $target');
-        debugPrint('   Is Folder: ${file.isFolder}');
-        debugPrint('───────────────────────────────────────────');
-
-        try {
-          // --- FOLDER HANDLING ---
-          if (file.isFolder) {
-            if (kIsWeb) {
-              debugPrint('⚠️ [Download] Folder download not supported on Web (skipping)');
-            } else {
-              debugPrint('📂 [Download] Processing folder structure...');
-              // For folders, we still use the recursive client helper, 
-              // BUT we must ensure it doesn't crash on permissions. 
-              // Since recursively passing byte arrays is complex, we assume
-              // folder downloads might still use the legacy path. 
-              // If _downloadFolderViaClient uses standard IO, it might fail in Sandbox.
-              // Ideally, it should be refactored to use LocalFileService too.
-              // For now, we wrap it try/catch.
-              await _downloadFolderViaClient(remotePath, target, operation);
-            }
-          } 
-          // --- FILE HANDLING ---
-          else {
-             debugPrint('📥 [Download] Fetching bytes for ${file.name}...');
-             
-             // 1. Download bytes into memory
-             // This bypasses the Client Adapter trying to write to disk directly
-             final bytes = await _cloudClient.downloadFileBytes(
-               remotePath,
-               onProgress: (current, total) {
-                 if (total > 0) {
-                    operation.currentBytes = completedBytes + current;
-                    // Debounce notification could be added here
-                    notifyListeners();
-                 }
-               }
-             );
-             
-             debugPrint('💾 [Download] Saving ${bytes.length} bytes to local storage...');
-             
-             // 2. Save using LocalFileService
-             // This handles Web (Blob download) and Native (Secure Bookmarks)
-             final localFilePath = p.join(target, file.name);
-             
-             await _localFileService.saveFile(
-               localFilePath, 
-               bytes,
-             );
-             
-             // 3. Attempt to restore timestamps (Native only)
-             if (!kIsWeb && files[i].updatedAt != null) {
-               try {
-                  // We need to touch the file via LocalFileService logic implicitly 
-                  // or just try direct IO (might fail in strict sandbox if not covered by bookmark scope)
-                  // For now, simple attempt:
-                  final f = File(localFilePath);
-                  if (await f.exists()) {
-                    await f.setLastModified(files[i].updatedAt!);
-                  }
-               } catch (e) {
-                 debugPrint('⚠️ [Download] Timestamp update failed: $e');
-               }
-             }
-          }
-          
-          debugPrint('✅ [Download] Complete: ${file.name}');
-          
-          fileProgress.isComplete = true;
-          completedBytes += fileProgress.size;
-          operation.currentBytes = completedBytes;
-          notifyListeners();
-          
-        } catch (e, stackTrace) {
-          if (operation.isCancelled || e.toString().contains('Cancelled')) {
-            debugPrint('🚫 [Download] File cancelled: ${file.name}');
-            fileProgress.error = 'Cancelled';
-            break;
-          } else {
-            debugPrint('❌ [Download] FAILED: ${file.name}');
-            debugPrint('   Error: $e');
-            debugPrint('   Stack: $stackTrace');
-            fileProgress.error = e.toString();
-          }
-          notifyListeners();
-        }
-      }
-
-      // Final Status Check
-      if (operation.isCancelled) {
-        operation.fail('Cancelled by user');
-      } else {
-        final failedCount = fileProgresses.where((f) => f.error != null).length;
-        if (failedCount == 0) {
-          debugPrint('🎉 [Download] All files finished successfully');
-          operation.complete();
-        } else if (failedCount == files.length) {
-          debugPrint('💀 [Download] All files failed');
-          operation.fail('All files failed');
-        } else {
-          debugPrint('⚠️ [Download] Partial success ($failedCount failed)');
-          operation.complete();
-        }
-      }
-
-    } catch (e) {
-      debugPrint('🔥 [Download] Critical Batch Error: $e');
-      operation.fail(e.toString());
-    }
-    
-    notifyListeners();
-    await refreshPanel(PanelSide.local);
-    clearSelection(PanelSide.remote);
-  }
-  
   // Helper methods for folder operations via cloud client
   Future<void> _uploadFolderViaClient(String localPath, String remotePath, OperationProgress operation) async {
     if (kIsWeb) return;

@@ -3,21 +3,25 @@ import 'package:shared_preferences/shared_preferences.dart';
 import 'package:crisp_cloud/services/filen_config_service.dart';
 import 'package:crisp_cloud/services/sftp_config_service.dart';
 import 'package:crisp_cloud/services/webdav_config_service.dart';
+import 'package:crisp_cloud/services/secure_storage_service.dart';
 
 void main() {
   group('FilenConfigService', () {
+    late InMemorySecureStorage secure;
+
     setUp(() {
       SharedPreferences.setMockInitialValues({});
+      secure = InMemorySecureStorage();
     });
 
     test('readCredentials returns null when empty', () async {
-      final config = FilenConfigService(configPath: '/tmp/test');
+      final config = FilenConfigService(configPath: '/tmp/test', secureStorage: secure);
       final creds = await config.readCredentials();
       expect(creds, isNull);
     });
 
     test('saveCredentials and readCredentials round-trip', () async {
-      final config = FilenConfigService(configPath: '/tmp/test');
+      final config = FilenConfigService(configPath: '/tmp/test', secureStorage: secure);
       await config.saveCredentials({
         'email': 'user@example.com',
         'apiKey': 'test-key',
@@ -32,7 +36,7 @@ void main() {
     });
 
     test('clearCredentials removes stored data', () async {
-      final config = FilenConfigService(configPath: '/tmp/test');
+      final config = FilenConfigService(configPath: '/tmp/test', secureStorage: secure);
       await config.saveCredentials({'email': 'test@test.com'});
       await config.clearCredentials();
       final creds = await config.readCredentials();
@@ -40,13 +44,13 @@ void main() {
     });
 
     test('generateBatchId returns non-empty string', () {
-      final config = FilenConfigService(configPath: '/tmp/test');
+      final config = FilenConfigService(configPath: '/tmp/test', secureStorage: secure);
       final id = config.generateBatchId('upload', ['file.txt'], '/docs');
       expect(id, isNotEmpty);
     });
 
     test('batch state CRUD', () async {
-      final config = FilenConfigService(configPath: '/tmp/test');
+      final config = FilenConfigService(configPath: '/tmp/test', secureStorage: secure);
       final batchId = 'test-batch';
 
       await config.saveBatchState(batchId, {'status': 'running'});
@@ -60,7 +64,7 @@ void main() {
     });
 
     test('getAllBatchIds returns matching keys', () async {
-      final config = FilenConfigService(configPath: '/tmp/test');
+      final config = FilenConfigService(configPath: '/tmp/test', secureStorage: secure);
       await config.saveBatchState('batch1', {'a': 1});
       await config.saveBatchState('batch2', {'b': 2});
 
@@ -69,7 +73,7 @@ void main() {
     });
 
     test('provider preference CRUD', () async {
-      final config = FilenConfigService(configPath: '/tmp/test');
+      final config = FilenConfigService(configPath: '/tmp/test', secureStorage: secure);
       await config.saveProviderPreference('filen');
       final pref = await config.getProviderPreference();
       expect(pref, equals('filen'));
@@ -77,18 +81,20 @@ void main() {
   });
 
   group('SFTPConfigService', () {
+    late InMemorySecureStorage secure;
+
     setUp(() {
-      SharedPreferences.setMockInitialValues({});
+      secure = InMemorySecureStorage();
     });
 
     test('readCredentials returns null when empty', () async {
-      final config = SFTPConfigService(configPath: '/tmp/test');
+      final config = SFTPConfigService(configPath: '/tmp/test', secureStorage: secure);
       final creds = await config.readCredentials();
       expect(creds, isNull);
     });
 
     test('saveCredentials and readCredentials round-trip', () async {
-      final config = SFTPConfigService(configPath: '/tmp/test');
+      final config = SFTPConfigService(configPath: '/tmp/test', secureStorage: secure);
       await config.saveCredentials({
         'host': 'example.com',
         'port': '22',
@@ -101,7 +107,7 @@ void main() {
     });
 
     test('clearCredentials removes data', () async {
-      final config = SFTPConfigService(configPath: '/tmp/test');
+      final config = SFTPConfigService(configPath: '/tmp/test', secureStorage: secure);
       await config.saveCredentials({'host': 'test.com'});
       await config.clearCredentials();
       final creds = await config.readCredentials();
@@ -110,18 +116,20 @@ void main() {
   });
 
   group('WebDavConfigService', () {
+    late InMemorySecureStorage secure;
+
     setUp(() {
-      SharedPreferences.setMockInitialValues({});
+      secure = InMemorySecureStorage();
     });
 
     test('readCredentials returns null when empty', () async {
-      final config = WebDavConfigService(configPath: '/tmp/test');
+      final config = WebDavConfigService(configPath: '/tmp/test', secureStorage: secure);
       final creds = await config.readCredentials();
       expect(creds, isNull);
     });
 
     test('saveCredentials and readCredentials round-trip', () async {
-      final config = WebDavConfigService(configPath: '/tmp/test');
+      final config = WebDavConfigService(configPath: '/tmp/test', secureStorage: secure);
       await config.saveCredentials({
         'url': 'https://dav.example.com',
         'username': 'admin',

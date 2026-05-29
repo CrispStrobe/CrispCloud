@@ -1,6 +1,7 @@
 // models/operation_progress.dart
 import 'dart:async';
 import 'package:flutter/foundation.dart';
+import '../utils/formatters.dart' show formatBytes;
 
 enum OperationType {
   upload,
@@ -230,15 +231,6 @@ class FileProgress {
   
   @override
   String toString() {
-    return '$statusIcon $name (${_formatBytes(size)})${error != null ? ' - $error' : ''}';
-  }
-  
-  String _formatBytes(int bytes) {
-    if (bytes < 1024) return '$bytes B';
-    if (bytes < 1024 * 1024) return '${(bytes / 1024).toStringAsFixed(1)} KB';
-    if (bytes < 1024 * 1024 * 1024) {
-      return '${(bytes / (1024 * 1024)).toStringAsFixed(1)} MB';
-    }
-    return '${(bytes / (1024 * 1024 * 1024)).toStringAsFixed(1)} GB';
+    return '$statusIcon $name (${formatBytes(size)})${error != null ? ' - $error' : ''}';
   }
 }

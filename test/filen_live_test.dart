@@ -6,6 +6,7 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:crisp_cloud/services/filen_client_adapter.dart';
 import 'package:crisp_cloud/services/filen_config_service.dart';
+import 'package:crisp_cloud/services/secure_storage_service.dart';
 
 /// Live integration tests for Filen adapter.
 /// Requires FILEN_EMAIL and FILEN_PASSWORD environment variables.
@@ -26,7 +27,7 @@ void main() {
 
   setUpAll(() async {
     SharedPreferences.setMockInitialValues({});
-    final config = FilenConfigService(configPath: '/tmp/crispcloud_filen_test');
+    final config = FilenConfigService(configPath: '/tmp/crispcloud_filen_test', secureStorage: InMemorySecureStorage());
     adapter = FilenClientAdapter(config: config);
 
     await adapter.login(email, password);

@@ -2,25 +2,30 @@
 
 import 'package:flutter/material.dart';
 import 'package:flutter/foundation.dart' show kIsWeb;
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'dart:io';
-import '../services/app_state.dart';
 import '../models/file_item.dart';
 import '../models/panel_side.dart';
+import '../providers/providers.dart';
+import '../services/archive_service.dart';
+import '../services/checksum_service.dart';
+import '../services/share_service.dart';
+import '../utils/formatters.dart' show formatBytes, formatDateFull;
 import 'package:path/path.dart' as p;
-import 'file_list_view.dart' show getFileIcon, formatBytes, formatDateFull;
+import 'batch_rename_dialog.dart' show showBatchRenameDialog;
+import 'file_list_view.dart' show getFileIcon;
 
-void showFileContextMenu(BuildContext context, AppState appState, PanelSide side, FileItem file, Offset position) {
-  final selection = side == PanelSide.local
-      ? appState.localSelection
-      : appState.remoteSelection;
+void showFileContextMenu(BuildContext context, WidgetRef ref, PanelSide side, FileItem file, Offset position) {
+  final panel = ref.read(panelProvider(side));
+  final selection = panel.selection;
 
   final files = selection.contains(file) && selection.isNotEmpty
       ? selection.toList()
       : [file];
 
   if (!selection.contains(file)) {
-    appState.clearSelection(side);
-    appState.toggleSelection(side, file);
+    panel.clearSelection();
+    panel.toggleSelection(file);
   }
 
   final isMultiSelect = files.length > 1;
@@ -42,14 +47,14 @@ void showFileContextMenu(BuildContext context, AppState appState, PanelSide side
         ),
         onTap: () => Future.delayed(
           Duration.zero,
-          () => appState.navigateInto(side, file),
+          () => ref.read(panelProvider(side)).navigateInto(file),
         ),
       ),
     );
   }
 
   // Upload to Remote
-  if (side == PanelSide.local && appState.isConnected) {
+  if (side == PanelSide.local && ref.read(authProvider).isConnected) {
     items.add(
       PopupMenuItem(
         child: Row(
@@ -61,7 +66,7 @@ void showFileContextMenu(BuildContext context, AppState appState, PanelSide side
         ),
         onTap: () => Future.delayed(
           Duration.zero,
-          () => appState.uploadFiles(files),
+          () => ref.read(transferProvider).uploadFiles(files),
         ),
       ),
     );
@@ -80,7 +85,7 @@ void showFileContextMenu(BuildContext context, AppState appState, PanelSide side
         ),
         onTap: () => Future.delayed(
           Duration.zero,
-          () => appState.downloadFiles(files),
+          () => ref.read(transferProvider).downloadFiles(files),
         ),
       ),
     );
@@ -99,14 +104,17 @@ void showFileContextMenu(BuildContext context, AppState appState, PanelSide side
         ),
         onTap: () => Future.delayed(
           Duration.zero,
-          () => appState.shareFiles(files),
+          () {
+            final paths = files.where((f) => f.path != null).map((f) => f.path!).toList();
+            ShareService.shareFiles(paths);
+          },
         ),
       ),
     );
   }
 
   // Divider
-  if ((side == PanelSide.local && appState.isConnected) ||
+  if ((side == PanelSide.local && ref.read(authProvider).isConnected) ||
       side == PanelSide.remote) {
     items.add(const PopupMenuDivider());
   }
@@ -123,7 +131,7 @@ void showFileContextMenu(BuildContext context, AppState appState, PanelSide side
       ),
       onTap: () => Future.delayed(
         Duration.zero,
-        () => _showCopyDialog(context, appState, side, files),
+        () => _showCopyDialog(context, ref, side, files),
       ),
     ),
   );
@@ -140,7 +148,7 @@ void showFileContextMenu(BuildContext context, AppState appState, PanelSide side
       ),
       onTap: () => Future.delayed(
         Duration.zero,
-        () => _showMoveDialog(context, appState, side, files),
+        () => _showMoveDialog(context, ref, side, files),
       ),
     ),
   );
@@ -158,10 +166,103 @@ void showFileContextMenu(BuildContext context, AppState appState, PanelSide side
         ),
         onTap: () => Future.delayed(
           Duration.zero,
-          () => showRenameDialog(context, appState, side, file),
+          () => showRenameDialog(context, ref, side, file),
         ),
       ),
     );
+  }
+
+  // Batch rename (multi-select)
+  if (isMultiSelect) {
+    items.add(
+      PopupMenuItem(
+        child: Row(
+          children: [
+            const Icon(Icons.drive_file_rename_outline),
+            const SizedBox(width: 8),
+            Text('Batch Rename (${files.length})'),
+          ],
+        ),
+        onTap: () => Future.delayed(
+          Duration.zero,
+          () => showBatchRenameDialog(context, ref, side, files),
+        ),
+      ),
+    );
+  }
+
+  // Archive operations (local files only, not on web)
+  if (!kIsWeb && side == PanelSide.local) {
+    // Extract: show for single .zip file
+    if (!isMultiSelect && ArchiveService.isArchive(file.name) && file.path != null) {
+      items.add(
+        PopupMenuItem(
+          child: const Row(
+            children: [
+              Icon(Icons.unarchive),
+              SizedBox(width: 8),
+              Text('Extract Here'),
+            ],
+          ),
+          onTap: () => Future.delayed(Duration.zero, () async {
+            try {
+              final dir = p.dirname(file.path!);
+              await ArchiveService.extractZip(file.path!, dir);
+              ref.read(panelProvider(PanelSide.local)).refresh();
+              if (context.mounted) {
+                ScaffoldMessenger.of(context).showSnackBar(
+                  const SnackBar(content: Text('Archive extracted successfully')),
+                );
+              }
+            } catch (e) {
+              if (context.mounted) {
+                ScaffoldMessenger.of(context).showSnackBar(
+                  SnackBar(content: Text('Extract failed: $e')),
+                );
+              }
+            }
+          }),
+        ),
+      );
+    }
+
+    // Create zip: show when files are selected
+    if (files.isNotEmpty && files.any((f) => f.path != null)) {
+      items.add(
+        PopupMenuItem(
+          child: Row(
+            children: [
+              const Icon(Icons.archive),
+              const SizedBox(width: 8),
+              Text('Create Zip${isMultiSelect ? ' (${files.length})' : ''}'),
+            ],
+          ),
+          onTap: () => Future.delayed(Duration.zero, () async {
+            try {
+              final paths = files.where((f) => f.path != null && !f.isFolder).map((f) => f.path!).toList();
+              if (paths.isEmpty) return;
+              final basePath = p.dirname(paths.first);
+              final zipBytes = await ArchiveService.createZip(paths, basePath: basePath);
+              final zipName = isMultiSelect ? 'archive.zip' : '${p.basenameWithoutExtension(files.first.name)}.zip';
+              final zipPath = p.join(basePath, zipName);
+              await File(zipPath).writeAsBytes(zipBytes);
+              ref.read(panelProvider(PanelSide.local)).refresh();
+              if (context.mounted) {
+                ScaffoldMessenger.of(context).showSnackBar(
+                  SnackBar(content: Text('Created $zipName')),
+                );
+              }
+            } catch (e) {
+              if (context.mounted) {
+                ScaffoldMessenger.of(context).showSnackBar(
+                  SnackBar(content: Text('Zip creation failed: $e')),
+                );
+              }
+            }
+          }),
+        ),
+      );
+    }
   }
 
   items.add(const PopupMenuDivider());
@@ -185,6 +286,44 @@ void showFileContextMenu(BuildContext context, AppState appState, PanelSide side
     );
   }
 
+  // Calculate Size (folders only, not on web)
+  if (isSingleFolder && !kIsWeb && side == PanelSide.local) {
+    items.add(
+      PopupMenuItem(
+        child: const Row(
+          children: [
+            Icon(Icons.data_usage),
+            SizedBox(width: 8),
+            Text('Calculate Size'),
+          ],
+        ),
+        onTap: () => Future.delayed(
+          Duration.zero,
+          () => _showFolderSize(context, file),
+        ),
+      ),
+    );
+  }
+
+  // Checksum (local files only, not folders, not on web)
+  if (!isMultiSelect && !file.isFolder && !kIsWeb && side == PanelSide.local && file.path != null) {
+    items.add(
+      PopupMenuItem(
+        child: const Row(
+          children: [
+            Icon(Icons.fingerprint),
+            SizedBox(width: 8),
+            Text('Checksum'),
+          ],
+        ),
+        onTap: () => Future.delayed(
+          Duration.zero,
+          () => _showChecksumDialog(context, file),
+        ),
+      ),
+    );
+  }
+
   items.add(const PopupMenuDivider());
 
   // Delete
@@ -202,7 +341,7 @@ void showFileContextMenu(BuildContext context, AppState appState, PanelSide side
       ),
       onTap: () => Future.delayed(
         Duration.zero,
-        () => confirmDelete(context, appState, side, files),
+        () => confirmDelete(context, ref, side, files),
       ),
     ),
   );
@@ -214,7 +353,7 @@ void showFileContextMenu(BuildContext context, AppState appState, PanelSide side
   );
 }
 
-void showRenameDialog(BuildContext context, AppState appState, PanelSide side, FileItem file) {
+void showRenameDialog(BuildContext context, WidgetRef ref, PanelSide side, FileItem file) {
   final controller = TextEditingController(text: file.name);
 
   // Select filename without extension
@@ -239,7 +378,7 @@ void showRenameDialog(BuildContext context, AppState appState, PanelSide side, F
         autofocus: true,
         onSubmitted: (value) async {
           if (value.isNotEmpty && value != file.name) {
-            await appState.renameFile(side, file, value);
+            await ref.read(panelProvider(side)).renameFile(file, value);
             if (context.mounted) Navigator.pop(context);
           }
         },
@@ -252,7 +391,7 @@ void showRenameDialog(BuildContext context, AppState appState, PanelSide side, F
         ElevatedButton(
           onPressed: () async {
             if (controller.text.isNotEmpty && controller.text != file.name) {
-              await appState.renameFile(side, file, controller.text);
+              await ref.read(panelProvider(side)).renameFile(file, controller.text);
               if (context.mounted) Navigator.pop(context);
             }
           },
@@ -263,32 +402,34 @@ void showRenameDialog(BuildContext context, AppState appState, PanelSide side, F
   );
 }
 
-void _showCopyDialog(BuildContext context, AppState appState, PanelSide side, List<FileItem> files) {
-  _showPathDialog(context, appState, side, files, 'Copy', appState.copyFiles);
+void _showCopyDialog(BuildContext context, WidgetRef ref, PanelSide side, List<FileItem> files) {
+  _showPathDialog(context, ref, side, files, 'Copy',
+      (fs, path) => ref.read(panelProvider(side)).copyFiles(fs, path));
 }
 
-void _showMoveDialog(BuildContext context, AppState appState, PanelSide side, List<FileItem> files) {
-  _showPathDialog(context, appState, side, files, 'Move', appState.moveFiles);
+void _showMoveDialog(BuildContext context, WidgetRef ref, PanelSide side, List<FileItem> files) {
+  _showPathDialog(context, ref, side, files, 'Move',
+      (fs, path) => ref.read(panelProvider(side)).moveFiles(fs, path));
 }
 
-void showCopyDialog(BuildContext context, AppState appState, PanelSide side, List<FileItem> files) {
-  _showCopyDialog(context, appState, side, files);
+void showCopyDialog(BuildContext context, WidgetRef ref, PanelSide side, List<FileItem> files) {
+  _showCopyDialog(context, ref, side, files);
 }
 
-void showMoveDialog(BuildContext context, AppState appState, PanelSide side, List<FileItem> files) {
-  _showMoveDialog(context, appState, side, files);
+void showMoveDialog(BuildContext context, WidgetRef ref, PanelSide side, List<FileItem> files) {
+  _showMoveDialog(context, ref, side, files);
 }
 
 void _showPathDialog(
   BuildContext context,
-  AppState appState,
+  WidgetRef ref,
   PanelSide side,
   List<FileItem> files,
   String operation,
-  Future<void> Function(PanelSide, List<FileItem>, String) action,
+  Future<void> Function(List<FileItem>, String) action,
 ) {
   final controller = TextEditingController(
-    text: side == PanelSide.local ? appState.localPath : appState.remotePath,
+    text: ref.read(panelProvider(side)).currentPath,
   );
 
   showDialog(
@@ -339,7 +480,7 @@ void _showPathDialog(
             autofocus: true,
             onSubmitted: (value) async {
               if (value.isNotEmpty) {
-                await action(side, files, value);
+                await action(files, value);
                 if (context.mounted) Navigator.pop(context);
               }
             },
@@ -354,7 +495,7 @@ void _showPathDialog(
         ElevatedButton(
           onPressed: () async {
             if (controller.text.isNotEmpty) {
-              await action(side, files, controller.text);
+              await action(files, controller.text);
               if (context.mounted) Navigator.pop(context);
             }
           },
@@ -365,7 +506,7 @@ void _showPathDialog(
   );
 }
 
-void confirmDelete(BuildContext context, AppState appState, PanelSide side, List<FileItem> files) {
+void confirmDelete(BuildContext context, WidgetRef ref, PanelSide side, List<FileItem> files) {
   final totalSize = files.fold<int>(0, (sum, file) => sum + (file.size ?? 0));
 
   showDialog(
@@ -427,7 +568,7 @@ void confirmDelete(BuildContext context, AppState appState, PanelSide side, List
         ),
         ElevatedButton(
           onPressed: () async {
-            await appState.deleteFiles(side, files);
+            await ref.read(panelProvider(side)).deleteFiles(files);
             if (context.mounted) Navigator.pop(context);
           },
           style: ElevatedButton.styleFrom(
@@ -519,142 +660,178 @@ Widget _propertyRow(BuildContext context, String label, String value, {bool mono
   );
 }
 
-void showSearchDialog(BuildContext context, AppState appState) {
-  final controller = TextEditingController();
-  final BuildContext panelContext = context;
-
-  showDialog(
-    context: context,
-    builder: (dialogContext) => AlertDialog(
-      title: const Text('Fuzzy Search (All Files)'),
-      content: TextField(
-        controller: controller,
-        decoration: const InputDecoration(
-          labelText: 'Search query',
-          border: OutlineInputBorder(),
-          prefixIcon: Icon(Icons.search),
-        ),
-        autofocus: true,
-        onSubmitted: (value) async {
-          if (value.isNotEmpty) {
-            Navigator.pop(dialogContext);
-            final results = await appState.searchFiles(value);
-            if (panelContext.mounted) {
-              _showSearchResultsDialog(panelContext, appState, value, results['folders'] ?? [], results['files'] ?? []);
-            }
-          }
-        },
-      ),
-      actions: [
-        TextButton(
-          onPressed: () => Navigator.pop(dialogContext),
-          child: const Text('Cancel'),
-        ),
-        ElevatedButton(
-          onPressed: () async {
-            if (controller.text.isNotEmpty) {
-              Navigator.pop(dialogContext);
-              final results = await appState.searchFiles(controller.text);
-              if (panelContext.mounted) {
-                _showSearchResultsDialog(panelContext, appState, controller.text, results['folders'] ?? [], results['files'] ?? []);
-              }
-            }
-          },
-          child: const Text('Search'),
-        ),
-      ],
-    ),
-  );
+Future<int> _calculateFolderSize(String path) async {
+  int totalSize = 0;
+  final dir = Directory(path);
+  if (!await dir.exists()) return 0;
+  await for (final entity in dir.list(recursive: true, followLinks: false)) {
+    if (entity is File) {
+      try {
+        totalSize += await entity.length();
+      } catch (_) {
+        // Skip files we can't read
+      }
+    }
+  }
+  return totalSize;
 }
 
-void showFindDialog(BuildContext context, AppState appState) {
-  final controller = TextEditingController();
-  final BuildContext panelContext = context;
+void _showFolderSize(BuildContext context, FileItem file) {
+  if (file.path == null) return;
 
   showDialog(
     context: context,
-    builder: (dialogContext) => AlertDialog(
-      title: Text('Find in "${p.basename(appState.remotePath)}"'),
-      content: TextField(
-        controller: controller,
-        decoration: const InputDecoration(
-          labelText: 'Pattern (e.g. *.pdf, report-*)',
-          border: OutlineInputBorder(),
-          prefixIcon: Icon(Icons.find_in_page),
-        ),
-        autofocus: true,
-        onSubmitted: (value) async {
-          if (value.isNotEmpty) {
-            Navigator.pop(dialogContext);
-            final results = await appState.findFiles(value);
-            if (panelContext.mounted) {
-              _showSearchResultsDialog(panelContext, appState, value, [], results);
-            }
-          }
-        },
-      ),
-      actions: [
-        TextButton(
-          onPressed: () => Navigator.pop(dialogContext),
-          child: const Text('Cancel'),
-        ),
-        ElevatedButton(
-          onPressed: () async {
-            if (controller.text.isNotEmpty) {
-              Navigator.pop(dialogContext);
-              final results = await appState.findFiles(controller.text);
-              if (panelContext.mounted) {
-                _showSearchResultsDialog(panelContext, appState, controller.text, [], results);
-              }
-            }
-          },
-          child: const Text('Find'),
-        ),
-      ],
-    ),
-  );
-}
-
-void _showSearchResultsDialog(BuildContext context, AppState appState, String query, List<FileItem> folders, List<FileItem> files) {
-  final allItems = [...folders, ...files];
-
-  showDialog(
-    context: context,
-    builder: (context) => AlertDialog(
-      title: Text('Search Results for "$query"'),
-      content: Container(
-        width: double.maxFinite,
-        height: 400,
-        child: allItems.isEmpty
-            ? const Center(child: Text('No results found.'))
-            : ListView.builder(
-                itemCount: allItems.length,
-                itemBuilder: (context, index) {
-                  final item = allItems[index];
-                  return ListTile(
-                    leading: Icon(item.isFolder ? Icons.folder : getFileIcon(item.name)),
-                    title: Text(p.basename(item.name)),
-                    subtitle: Text(
-                      p.dirname(item.path ?? '/'),
+    barrierDismissible: false,
+    builder: (ctx) {
+      return FutureBuilder<int>(
+        future: _calculateFolderSize(file.path!),
+        builder: (context, snapshot) {
+          if (snapshot.connectionState == ConnectionState.waiting) {
+            return AlertDialog(
+              title: Row(
+                children: [
+                  const Icon(Icons.folder),
+                  const SizedBox(width: 8),
+                  Expanded(
+                    child: Text(
+                      file.name,
                       overflow: TextOverflow.ellipsis,
                     ),
-                    onTap: () {
-                      if (item.path != null) {
-                        final parentPath = p.dirname(item.path!);
-                        appState.navigateToPath(PanelSide.remote, parentPath, selectItem: item);
-                        Navigator.pop(context);
-                      }
-                    },
-                  );
-                },
+                  ),
+                ],
               ),
-      ),
-      actions: [
-        TextButton(
-          onPressed: () => Navigator.pop(context),
-          child: const Text('Close'),
-        ),
-      ],
-    ),
+              content: const Row(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  CircularProgressIndicator(),
+                  SizedBox(width: 16),
+                  Text('Calculating folder size...'),
+                ],
+              ),
+            );
+          }
+
+          final size = snapshot.data ?? 0;
+          return AlertDialog(
+            title: Row(
+              children: [
+                const Icon(Icons.folder),
+                const SizedBox(width: 8),
+                Expanded(
+                  child: Text(
+                    file.name,
+                    overflow: TextOverflow.ellipsis,
+                  ),
+                ),
+              ],
+            ),
+            content: Column(
+              mainAxisSize: MainAxisSize.min,
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                _propertyRow(context, 'Total Size', formatBytes(size)),
+                _propertyRow(context, 'Bytes', size.toString()),
+              ],
+            ),
+            actions: [
+              TextButton(
+                onPressed: () => Navigator.pop(ctx),
+                child: const Text('Close'),
+              ),
+            ],
+          );
+        },
+      );
+    },
   );
 }
+
+void _showChecksumDialog(BuildContext context, FileItem file) {
+  if (file.path == null) return;
+
+  showDialog(
+    context: context,
+    barrierDismissible: false,
+    builder: (ctx) {
+      return FutureBuilder<Map<String, String>>(
+        future: () async {
+          final md5 = await ChecksumService.md5File(file.path!);
+          final sha256 = await ChecksumService.sha256File(file.path!);
+          return {'MD5': md5, 'SHA-256': sha256};
+        }(),
+        builder: (context, snapshot) {
+          if (snapshot.connectionState == ConnectionState.waiting) {
+            return AlertDialog(
+              title: Row(
+                children: [
+                  const Icon(Icons.fingerprint),
+                  const SizedBox(width: 8),
+                  Expanded(
+                    child: Text(
+                      file.name,
+                      overflow: TextOverflow.ellipsis,
+                    ),
+                  ),
+                ],
+              ),
+              content: const Row(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  CircularProgressIndicator(),
+                  SizedBox(width: 16),
+                  Text('Calculating checksums...'),
+                ],
+              ),
+            );
+          }
+
+          if (snapshot.hasError) {
+            return AlertDialog(
+              title: const Text('Checksum Error'),
+              content: Text('Failed to calculate checksum: ${snapshot.error}'),
+              actions: [
+                TextButton(
+                  onPressed: () => Navigator.pop(ctx),
+                  child: const Text('Close'),
+                ),
+              ],
+            );
+          }
+
+          final checksums = snapshot.data!;
+          return AlertDialog(
+            title: Row(
+              children: [
+                const Icon(Icons.fingerprint),
+                const SizedBox(width: 8),
+                Expanded(
+                  child: Text(
+                    file.name,
+                    overflow: TextOverflow.ellipsis,
+                  ),
+                ),
+              ],
+            ),
+            content: SingleChildScrollView(
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: checksums.entries.map((e) =>
+                  _propertyRow(context, e.key, e.value, mono: true),
+                ).toList(),
+              ),
+            ),
+            actions: [
+              TextButton(
+                onPressed: () => Navigator.pop(ctx),
+                child: const Text('Close'),
+              ),
+            ],
+          );
+        },
+      );
+    },
+  );
+}
+
+// showSearchDialog, showFindDialog, showSearchResultsDialog moved to search_dialogs.dart

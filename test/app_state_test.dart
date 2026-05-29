@@ -3,6 +3,7 @@ import 'package:shared_preferences/shared_preferences.dart';
 import 'package:crisp_cloud/services/app_state.dart';
 import 'package:crisp_cloud/services/cloud_storage_interface.dart';
 import 'package:crisp_cloud/services/filen_config_service.dart';
+import 'package:crisp_cloud/services/secure_storage_service.dart';
 import 'package:crisp_cloud/models/panel_side.dart';
 import 'package:crisp_cloud/models/file_item.dart';
 import 'package:crisp_cloud/models/operation_progress.dart';
@@ -10,11 +11,13 @@ import 'package:crisp_cloud/models/operation_progress.dart';
 void main() {
   late AppState appState;
   late FilenConfigService configService;
+  late InMemorySecureStorage secureStorage;
 
   setUp(() {
     SharedPreferences.setMockInitialValues({});
-    configService = FilenConfigService(configPath: '/tmp/app_state_test_config');
-    appState = AppState(config: configService);
+    secureStorage = InMemorySecureStorage();
+    configService = FilenConfigService(configPath: '/tmp/app_state_test_config', secureStorage: secureStorage);
+    appState = AppState(config: configService, secureStorage: secureStorage);
   });
 
   tearDown(() {
