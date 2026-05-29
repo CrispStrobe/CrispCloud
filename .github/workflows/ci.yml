@@ -1,18 +1,16 @@
 name: CI
 
 # Runs flutter analyze + non-live tests on every push to main and
-# every PR. Catches the kind of drift that motivated AUDIT_6B in
-# the internxt-dart repo (e.g. the placeholder signature mismatch
-# we fixed during Phase 6.c).
+# every PR.
 #
-# Live tests (test/internxt_rewire_live_test.dart) need real
-# Internxt creds and auto-skip when IXT_ACCOUNT / IXT_PWD are
-# absent — CI doesn't set them, so they're cleanly skipped here.
+# IMPORTANT: This project has git dependencies on private repos
+# (internxt-dart, filen-dart). To make pub get work, either:
+#   1. Make those repos public (simplest), or
+#   2. Add a GH_PAT secret (Settings → Secrets → Actions) with a
+#      Personal Access Token that has `repo` scope.
 #
-# internxt_client is fetched as a git dep from
-# github.com/CrispStrobe/internxt-dart (see pubspec.yaml).
-# Local dev pins to ../internxt-dart via pubspec_overrides.yaml
-# (gitignored) for fast iteration; CI uses the published main.
+# For Vercel: add the same token as GIT_AUTH_TOKEN in Vercel
+# project settings → Environment Variables.
 
 on:
   push:
@@ -34,6 +32,14 @@ jobs:
         with:
           channel: stable
 
+      # Configure git to authenticate when cloning private dependencies.
+      # Uses GH_PAT secret if available, falls back to GITHUB_TOKEN (which
+      # only works for public repos or same-repo refs).
+      - name: Configure git auth for private deps
+        run: |
+          TOKEN="${{ secrets.GH_PAT || github.token }}"
+          git config --global url."https://x-access-token:${TOKEN}@github.com/".insteadOf "https://github.com/"
+
       - name: Show Flutter version
         run: flutter --version
 
@@ -42,9 +48,6 @@ jobs:
 
       - name: flutter analyze (errors fail the build)
         run: |
-          # Fail on errors only — the 700+ pre-existing info/warning
-          # issues in the repo predate this CI workflow and would
-          # need a focused cleanup pass to address.
           set -o pipefail
           flutter analyze 2>&1 | tee analyze.log
           if grep -q "error • " analyze.log; then
@@ -68,6 +71,11 @@ jobs:
         with:
           channel: stable
 
+      - name: Configure git auth for private deps
+        run: |
+          TOKEN="${{ secrets.GH_PAT || github.token }}"
+          git config --global url."https://x-access-token:${TOKEN}@github.com/".insteadOf "https://github.com/"
+
       - name: flutter pub get
         run: flutter pub get
 
@@ -75,10 +83,6 @@ jobs:
         run: flutter build web --release
 
   build-macos:
-    # macOS runners are slower + more expensive than Linux; only run
-    # on push to main, not every PR. Web build above already
-    # exercises the cross-platform code paths that matter for the
-    # internxt_client wiring.
     name: Build macOS
     runs-on: macos-latest
     timeout-minutes: 30
@@ -91,6 +95,11 @@ jobs:
       - uses: subosito/flutter-action@v2
         with:
           channel: stable
+
+      - name: Configure git auth for private deps
+        run: |
+          TOKEN="${{ secrets.GH_PAT || github.token }}"
+          git config --global url."https://x-access-token:${TOKEN}@github.com/".insteadOf "https://github.com/"
 
       - name: Enable macOS desktop
         run: flutter config --enable-macos-desktop
