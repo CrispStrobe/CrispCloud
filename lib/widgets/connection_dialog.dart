@@ -268,16 +268,28 @@ class _ConnectionDialogState extends State<ConnectionDialog> {
           throw Exception('Host and Username are required');
         }
         
+        // Validate port
+        final portStr = _portController.text.isEmpty ? '22' : _portController.text;
+        final portNum = int.tryParse(portStr);
+        if (portNum == null || portNum < 1 || portNum > 65535) {
+          throw Exception('Port must be a number between 1 and 65535');
+        }
         // Construct composite identity for SFTP Adapter: "username@host:port"
-        // The adapter must parse this format.
-        final port = _portController.text.isEmpty ? '22' : _portController.text;
-        identity = '${_sftpUserController.text}@${_hostController.text}:$port';
+        identity = '${_sftpUserController.text}@${_hostController.text}:$portStr';
       } else if (_selectedProvider == CloudProvider.webdav) {
          if (_hostController.text.isEmpty || _emailController.text.isEmpty) {
             throw Exception('Server URL and Username are required');
          }
+         final url = _hostController.text.trim();
+         if (!url.startsWith('http://') && !url.startsWith('https://')) {
+            throw Exception('Server URL must start with http:// or https://');
+         }
+         final parsed = Uri.tryParse(url);
+         if (parsed == null || !parsed.hasAuthority) {
+            throw Exception('Invalid server URL');
+         }
          // Pack as: username@https://server.com/dav
-         identity = '${_emailController.text}@${_hostController.text}';
+         identity = '${_emailController.text}@$url';
       } else {
         // Standard Email
         if (_emailController.text.isEmpty) {

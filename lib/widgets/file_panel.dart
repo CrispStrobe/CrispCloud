@@ -12,7 +12,7 @@ import 'dart:io'; // if (dart.library.js) 'dart:html';
 import '../services/app_state.dart';
 import '../models/file_item.dart';
 import 'package:provider/provider.dart';
-import '../screens/file_browser_screen.dart';
+import '../models/panel_side.dart';
 import 'package:path/path.dart' as p;
 
 class FilePanel extends StatefulWidget {

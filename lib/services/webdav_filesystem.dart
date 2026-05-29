@@ -7,6 +7,7 @@ import 'dart:typed_data';
 
 import 'package:file/file.dart';
 import 'package:file/local.dart';
+import 'package:flutter/foundation.dart';
 import 'package:path/path.dart' as p;
 
 import 'package:filen_dart/filen_client.dart'; // exports FilenClient and all modules
@@ -156,7 +157,9 @@ class FilenFileSink implements io.IOSink {
           final stat = await localFileToUpload.stat();
           modificationTime = stat.modified.millisecondsSinceEpoch.toString();
           creationTime = stat.changed.millisecondsSinceEpoch.toString();
-        } catch (_) {}
+        } catch (e) {
+          debugPrint('Failed to read file timestamps for upload: $e');
+        }
       }
 
       // Upload the file

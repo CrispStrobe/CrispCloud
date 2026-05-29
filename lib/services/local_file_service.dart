@@ -524,7 +524,7 @@ class MacosFileService implements LocalFileService {
         await _bookmarks.stopAccessingSecurityScopedResource(_resolvedBookmarkFile!);
         return entities;
       } catch (e) {
-        try { await _bookmarks.stopAccessingSecurityScopedResource(_resolvedBookmarkFile!); } catch (_) {}
+        try { await _bookmarks.stopAccessingSecurityScopedResource(_resolvedBookmarkFile!); } catch (e2) { debugPrint('Failed to stop security-scoped resource access during directory listing cleanup: $e2'); }
         // Fallthrough to try normal listing
       }
     }
@@ -549,7 +549,7 @@ class MacosFileService implements LocalFileService {
         await _bookmarks.stopAccessingSecurityScopedResource(_resolvedBookmarkFile!);
         return data;
       } catch (e) {
-        try { await _bookmarks.stopAccessingSecurityScopedResource(_resolvedBookmarkFile!); } catch (_) {}
+        try { await _bookmarks.stopAccessingSecurityScopedResource(_resolvedBookmarkFile!); } catch (e2) { debugPrint('Failed to stop security-scoped resource access during readFile cleanup: $e2'); }
         rethrow;
       }
     }
@@ -564,18 +564,18 @@ class MacosFileService implements LocalFileService {
       try {
         print('🔐 [MacOS] Writing to secure path: $path');
         await _bookmarks.startAccessingSecurityScopedResource(_resolvedBookmarkFile!);
-        
+
         final file = File(path);
         // Ensure parent exists
         if (!await file.parent.exists()) {
            await file.parent.create(recursive: true);
         }
         await file.writeAsBytes(data);
-        
+
         await _bookmarks.stopAccessingSecurityScopedResource(_resolvedBookmarkFile!);
         return;
       } catch (e) {
-        try { await _bookmarks.stopAccessingSecurityScopedResource(_resolvedBookmarkFile!); } catch (_) {}
+        try { await _bookmarks.stopAccessingSecurityScopedResource(_resolvedBookmarkFile!); } catch (e2) { debugPrint('Failed to stop security-scoped resource access during saveFile cleanup: $e2'); }
         print('❌ [MacOS] Secure write failed: $e');
         rethrow;
       }
@@ -815,7 +815,9 @@ class MobileFileService implements LocalFileService {
       } catch (e) {
         try {
           await _bookmarks.stopAccessingSecurityScopedResource(_resolvedBookmarkFile!);
-        } catch (_) {}
+        } catch (e2) {
+          debugPrint('Failed to stop security-scoped resource access during MobileFileService readFile cleanup: $e2');
+        }
         rethrow;
       }
     }
@@ -836,7 +838,7 @@ class MobileFileService implements LocalFileService {
         await _bookmarks.stopAccessingSecurityScopedResource(_resolvedBookmarkFile!);
         return;
       } catch (e) {
-        try { await _bookmarks.stopAccessingSecurityScopedResource(_resolvedBookmarkFile!); } catch (_) {}
+        try { await _bookmarks.stopAccessingSecurityScopedResource(_resolvedBookmarkFile!); } catch (e2) { debugPrint('Failed to stop security-scoped resource access during MobileFileService saveFile cleanup: $e2'); }
         rethrow;
       }
     }

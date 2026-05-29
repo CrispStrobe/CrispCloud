@@ -21,7 +21,7 @@ class SFTPClientAdapter implements CloudStorageClient {
   SftpClient? _sftp;
   String? _username;
   String? _host;
-  int _port = 23; 
+  int _port = 22;
 
   SFTPClientAdapter({required dynamic config}) 
       : _config = (config is SFTPConfigService) 
@@ -69,8 +69,8 @@ class SFTPClientAdapter implements CloudStorageClient {
         if (_host!.startsWith('ws://') || _host!.startsWith('wss://')) {
           uri = Uri.parse(_host!);
         } else {
-          // Default to ws://HOST:PORT if no scheme provided
-          uri = Uri.parse('ws://$_host:$_port');
+          // Default to wss://HOST:PORT if no scheme provided
+          uri = Uri.parse('wss://$_host:$_port');
         }
 
         // 2. Connect WebSocket

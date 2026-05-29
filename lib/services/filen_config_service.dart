@@ -39,8 +39,7 @@ class FilenConfigService {
       final credentialsJson = json.encode(credentials);
       await prefs.setString('filen_credentials', credentialsJson);
       
-      print('💾 Saved Filen credentials to SharedPreferences');
-      print('   Email: ${credentials['email']}');
+      // Credentials saved (do not log sensitive data)
     } catch (e) {
       print('❌ Error saving Filen credentials: $e');
       rethrow;

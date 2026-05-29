@@ -38,7 +38,7 @@ class FilenClientAdapter implements CloudStorageClient {
   @override
   Future<void> login(String email, String password, {String? twoFactorCode}) async {
     // Authenticate
-    final credentials = await _client.login(email, password, twoFactorCode: twoFactorCode ?? "XXXXXX");
+    final credentials = await _client.login(email, password, twoFactorCode: twoFactorCode ?? "");
     
     // Set auth on the client instance immediately
     _client.setAuth(credentials);

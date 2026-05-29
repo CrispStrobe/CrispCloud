@@ -1,0 +1,1 @@
+enum PanelSide { local, remote }

@@ -8,6 +8,7 @@ import '../widgets/connection_dialog.dart';
 import '../widgets/operations_panel.dart';
 import '../services/app_state.dart';
 import '../models/file_item.dart';
+import '../models/panel_side.dart';
 import 'package:provider/provider.dart';
 import 'package:url_launcher/url_launcher.dart'; // Import url_launcher
 
@@ -42,21 +43,7 @@ class _FileBrowserScreenState extends State<FileBrowserScreen> {
 
   void _onAppStateChanged() {
     final appState = context.read<AppState>();
-    
-    // no longer needed, as AppState already handles asking for permission during initialization now
-    /* Show initial permission request dialog
-    if (!_hasShownPermissionDialog && 
-        appState.lastError != null && 
-        appState.lastError!.contains('Please select a base directory')) {
-      _hasShownPermissionDialog = true;
-      
-      WidgetsBinding.instance.addPostFrameCallback((_) {
-        if (mounted) {
-          _showInitialPermissionDialog(context, appState);
-        }
-      });
-    } */
-    
+
     // Handle received files
     if (appState.receivedFiles.isNotEmpty) {
       _showReceivedFilesDialog(appState.receivedFiles);
@@ -1194,7 +1181,7 @@ class _PanelTab extends StatelessWidget {
   }
 }
 
-enum PanelSide { local, remote }
+// PanelSide enum moved to lib/models/panel_side.dart
 
 class _CustomAboutDialog extends StatelessWidget {
   const _CustomAboutDialog();

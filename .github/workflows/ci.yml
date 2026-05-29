@@ -52,8 +52,8 @@ jobs:
             exit 1
           fi
 
-      - name: flutter test (live tests auto-skip without creds)
-        run: flutter test test/widget_test.dart test/internxt_rewire_test.dart
+      - name: flutter test (unit tests, live tests auto-skip without creds)
+        run: flutter test
 
   build-web:
     name: Build Web bundle

@@ -23,7 +23,7 @@ import 'internxt_client.dart';      // Needed for type checking
 import 'share_service.dart';
 import 'receive_service.dart';
 import 'local_file_service.dart'; 
-import '../screens/file_browser_screen.dart';
+import '../models/panel_side.dart';
 
 import 'package:universal_html/html.dart' as html;
 
@@ -266,7 +266,9 @@ class AppState extends ChangeNotifier {
         else {
             try {
                 _configPath = (config as dynamic).configPath;
-            } catch (_) {}
+            } catch (e) {
+                debugPrint('AppState: Could not extract configPath: $e');
+            }
         }
     } catch (e) {
         print("⚠️ AppState: Error extracting config path: $e");
@@ -673,9 +675,11 @@ class AppState extends ChangeNotifier {
                 try { 
                    if (rawDate is int) folderDate = DateTime.fromMillisecondsSinceEpoch(rawDate);
                    else folderDate = DateTime.parse(rawDate.toString()); 
-                } catch (_) {}
+                } catch (e) {
+                  debugPrint('Failed to parse folder date from rawDate=$rawDate: $e');
+                }
               }
-              
+
               return FileItem(
                 name: map['name'] ?? 'Unknown',
                 isFolder: true,
@@ -704,9 +708,11 @@ class AppState extends ChangeNotifier {
                 try { 
                    if (rawDate is int) fileDate = DateTime.fromMillisecondsSinceEpoch(rawDate);
                    else fileDate = DateTime.parse(rawDate.toString()); 
-                } catch (_) {}
+                } catch (e) {
+                  debugPrint('Failed to parse file date from rawDate=$rawDate: $e');
+                }
               }
-              
+
               return FileItem(
                 name: fullName,
                 isFolder: false,
