@@ -536,7 +536,7 @@ class _FilePanelState extends State<FilePanel> {
                 ),
                 InkWell(
                   onTap: isLast ? null : () {
-                    print('🔗 Breadcrumb clicked: ${crumb['name']} -> ${crumb['path']}');
+                    debugPrint('🔗 Breadcrumb clicked: ${crumb['name']} -> ${crumb['path']}');
                     appState.navigateToPath(widget.side, crumb['path']!);
                   },
                   child: Padding(
@@ -721,7 +721,7 @@ class _FilePanelState extends State<FilePanel> {
               onSecondaryTap: (details) => _showContextMenu(context, appState, file, details.globalPosition),
             );
           } catch (e) {
-            print('Error building file tile at index $index: $e');
+            debugPrint('Error building file tile at index $index: $e');
             return ListTile(
               title: Text('Error loading item: $e'),
               leading: const Icon(Icons.error, color: Colors.red),
@@ -730,8 +730,8 @@ class _FilePanelState extends State<FilePanel> {
         },
       );
     } catch (e, stackTrace) {
-      print('Error building file list: $e');
-      print('Stack trace: $stackTrace');
+      debugPrint('Error building file list: $e');
+      debugPrint('Stack trace: $stackTrace');
       return Center(
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
@@ -759,12 +759,13 @@ class _FilePanelState extends State<FilePanel> {
         appState.clearSelection(widget.side);
         break;
       case 'sort_name':
+        appState.setSortBy(widget.side, SortBy.name);
+        break;
       case 'sort_date':
+        appState.setSortBy(widget.side, SortBy.date);
+        break;
       case 'sort_size':
-        // TODO: Implement sorting
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Sorting by ${action.split('_')[1]} - Coming soon')),
-        );
+        appState.setSortBy(widget.side, SortBy.size);
         break;
     }
   }

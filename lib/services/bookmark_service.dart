@@ -1,5 +1,6 @@
 // services/bookmark_service.dart
 import 'dart:io';
+import 'package:flutter/foundation.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 class BookmarkService {
@@ -11,9 +12,9 @@ class BookmarkService {
     try {
       final prefs = await SharedPreferences.getInstance();
       await prefs.setString(_lastPathKey, path);
-      print('💾 Saved last path: $path');
+      debugPrint('💾 Saved last path: $path');
     } catch (e) {
-      print('⚠️ Could not save last path: $e');
+      debugPrint('⚠️ Could not save last path: $e');
     }
   }
 
@@ -22,10 +23,10 @@ class BookmarkService {
     try {
       final prefs = await SharedPreferences.getInstance();
       final path = prefs.getString(_lastPathKey);
-      print('📂 Retrieved last path: $path');
+      debugPrint('📂 Retrieved last path: $path');
       return path;
     } catch (e) {
-      print('⚠️ Could not retrieve last path: $e');
+      debugPrint('⚠️ Could not retrieve last path: $e');
       return null;
     }
   }
@@ -56,10 +57,10 @@ class BookmarkService {
             try {
             // Test if we can actually list the directory
             await dir.list().first.timeout(const Duration(seconds: 1));
-            print('✅ Found accessible directory: $path');
+            debugPrint('✅ Found accessible directory: $path');
             return path;
             } catch (e) {
-            print('⚠️ Cannot access $path: $e');
+            debugPrint('⚠️ Cannot access $path: $e');
             continue;
             }
         }

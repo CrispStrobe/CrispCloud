@@ -312,7 +312,7 @@ class _ConnectionDialogState extends State<ConnectionDialog> {
           }
         } catch (e) {
           // Ignore pre-check errors, let login fail normally if needed
-          print('2FA check skipped/failed: $e');
+          debugPrint('2FA check skipped/failed: $e');
         }
       }
 

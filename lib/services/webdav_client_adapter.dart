@@ -1,6 +1,7 @@
 // lib/services/webdav_client_adapter.dart
 import 'dart:async';
 import 'dart:typed_data';
+import 'package:flutter/foundation.dart';
 import 'package:webdav_client/webdav_client.dart' as webdav;
 import 'package:path/path.dart' as p;
 import 'cloud_storage_interface.dart';
@@ -169,7 +170,7 @@ class WebDavClientAdapter implements CloudStorageClient {
         }
       }
     } catch (e) {
-      print('WebDAV List Error: $e');
+      debugPrint('WebDAV List Error: $e');
       throw Exception('Failed to list path $path: $e');
     }
 

@@ -1,6 +1,7 @@
 // services/macos_bookmark_service.dart
 import 'dart:io';
 import 'dart:convert'; // Import for base64
+import 'package:flutter/foundation.dart';
 import 'package:file_selector/file_selector.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:macos_secure_bookmarks/macos_secure_bookmarks.dart';
@@ -27,13 +28,13 @@ class MacOSBookmarkService {
         await prefs.setString(_bookmarkDataKey, bookmarkData);
         await prefs.setString(_bookmarkPathKey, directoryPath); 
         
-        print('✅ User granted access and saved bookmark for: $directoryPath');
+        debugPrint('✅ User granted access and saved bookmark for: $directoryPath');
         return directoryPath;
       }
 
       return null;
     } catch (e) {
-      print('❌ Error requesting directory access: $e');
+      debugPrint('❌ Error requesting directory access: $e');
       return null;
     }
   }
@@ -45,7 +46,7 @@ class MacOSBookmarkService {
       final prefs = await SharedPreferences.getInstance();
       return prefs.getString(_bookmarkPathKey);
     } catch (e) {
-      print('⚠️ Could not retrieve last granted directory path: $e');
+      debugPrint('⚠️ Could not retrieve last granted directory path: $e');
       return null;
     }
   }
@@ -58,7 +59,7 @@ class MacOSBookmarkService {
         final bookmarkBase64 = prefs.getString(_bookmarkDataKey);
         
         if (bookmarkBase64 == null) {
-          print('📂 No saved bookmark found.');
+          debugPrint('📂 No saved bookmark found.');
           return null;
         }
 
@@ -69,7 +70,7 @@ class MacOSBookmarkService {
         // --- END FIX ---
 
      } catch (e) {
-        print('⚠️ Could not retrieve or resolve last granted directory: $e');
+        debugPrint('⚠️ Could not retrieve or resolve last granted directory: $e');
         await clearBookmarks(); // Clear bad bookmark
         return null;
      }

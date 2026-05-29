@@ -104,7 +104,7 @@ class FilenClientAdapter implements CloudStorageClient {
     } catch (e) {
       // Return null if not found (standardize behavior)
       if (e.toString().contains('not found')) return null;
-      print('⚠️ Error resolving path: $e');
+      debugPrint('⚠️ Error resolving path: $e');
       return null;
     }
   }
@@ -131,7 +131,7 @@ class FilenClientAdapter implements CloudStorageClient {
         'files': files,
       };
     } catch (e) {
-      print('⚠️ Error listing path: $e');
+      debugPrint('⚠️ Error listing path: $e');
       // Return empty structure on error to prevent UI crash
       return {
         'folders': <Map<String, dynamic>>[],
@@ -157,7 +157,7 @@ class FilenClientAdapter implements CloudStorageClient {
     if (kIsWeb) {
       // --- WEB PATH (Memory) ---
       // This path purely uses memory and HTTP, avoiding all filesystem calls
-      print('🌐 Web Upload: uploading bytes directly...');
+      debugPrint('🌐 Web Upload: uploading bytes directly...');
       await _client.uploadBytes(
         Uint8List.fromList(fileData),
         fileName,

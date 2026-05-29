@@ -1,36 +1,59 @@
 // services/app_state.dart
-import 'package:flutter/foundation.dart';
-import '../models/file_item.dart';
-import '../models/operation_progress.dart';
+import 'dart:async';
 import 'dart:io';
+import 'package:flutter/foundation.dart';
 import 'package:path/path.dart' as p;
 import 'package:shared_preferences/shared_preferences.dart';
+import 'package:universal_html/html.dart' as html;
+
+import '../models/file_item.dart';
+import '../models/operation_progress.dart';
+import '../models/panel_side.dart';
 
 import 'cloud_storage_interface.dart';
-
 import 'filen_client_adapter.dart';
+import 'filen_config_service.dart';
+import 'internxt_client.dart';
 import 'internxt_client_adapter.dart';
+import 'local_file_service.dart';
+import 'receive_service.dart';
 import 'sftp_client_adapter.dart';
-
+import 'sftp_config_service.dart';
+import 'share_service.dart';
 import 'webdav_client_adapter.dart';
 import 'webdav_config_service.dart';
 
-import 'filen_config_service.dart'; // Needed for type checking
-import 'sftp_config_service.dart';  // Needed for switching
+/// A simple async lock using [Completer] to serialize access to critical sections.
+/// Each lock instance is independent, so methods guarded by different locks
+/// can run concurrently (avoiding deadlocks when one locked method calls another).
+class _AsyncLock {
+  Completer<void>? _completer;
 
-import 'internxt_client.dart';      // Needed for type checking
-
-import 'share_service.dart';
-import 'receive_service.dart';
-import 'local_file_service.dart'; 
-import '../models/panel_side.dart';
-
-import 'package:universal_html/html.dart' as html;
+  Future<T> synchronized<T>(Future<T> Function() action) async {
+    while (_completer != null) {
+      await _completer!.future;
+    }
+    _completer = Completer<void>();
+    try {
+      return await action();
+    } finally {
+      final c = _completer!;
+      _completer = null;
+      c.complete();
+    }
+  }
+}
 
 enum SortBy { name, size, date, extension }
 enum SortOrder { ascending, descending }
 
 class AppState extends ChangeNotifier {
+  // Async locks — one per critical method to avoid deadlocks when locked
+  // methods call each other (switchProvider -> _attemptAutoLogin -> refreshPanel).
+  final _switchProviderLock = _AsyncLock();
+  final _refreshPanelLock = _AsyncLock();
+  final _autoLoginLock = _AsyncLock();
+
   // Cloud storage abstraction
   CloudProvider _currentProvider = CloudProvider.filen;
   late CloudStorageClient _cloudClient;
@@ -120,12 +143,12 @@ class AppState extends ChangeNotifier {
 
   void _sortFiles(List<FileItem>? files, SortBy sortBy, SortOrder order) {
     if (files == null || files.isEmpty) {
-      print('⚠️ No files to sort');
+      debugPrint('⚠️ No files to sort');
       return;
     }
 
     try {
-      print('🔄 Sorting ${files.length} files by $sortBy ($order)');
+      debugPrint('🔄 Sorting ${files.length} files by $sortBy ($order)');
       
       files.sort((a, b) {
         try {
@@ -162,36 +185,36 @@ class AppState extends ChangeNotifier {
           }
           return order == SortOrder.ascending ? comparison : -comparison;
         } catch (e) {
-          print('⚠️ Error comparing items: $e');
+          debugPrint('⚠️ Error comparing items: $e');
           return 0;
         }
       });
       
-      print('✅ Sorting complete');
+      debugPrint('✅ Sorting complete');
     } catch (e, stackTrace) {
-      print('❌ Error in sorting function: $e');
-      print('Stack trace: $stackTrace');
+      debugPrint('❌ Error in sorting function: $e');
+      debugPrint('Stack trace: $stackTrace');
     }
   }
 
   Future<void> pickLocalDirectory() async {
     try {
-      print('📂 Opening directory picker...');
+      debugPrint('📂 Opening directory picker...');
       
       final selectedDirectory = await _localFileService.requestDirectoryAccess(
         initialDirectory: _localFileService.currentPath,
       );
       
       if (selectedDirectory != null) {
-        print('📁 User selected: $selectedDirectory');
+        debugPrint('📁 User selected: $selectedDirectory');
         _localFileService.currentPath = selectedDirectory;
         await _loadLocalFiles();
         notifyListeners();
       } else {
-        print('⚠️ User cancelled directory selection');
+        debugPrint('⚠️ User cancelled directory selection');
       }
     } catch (e) {
-      print('❌ Error picking directory: $e');
+      debugPrint('❌ Error picking directory: $e');
       _lastError = 'Error picking directory: $e';
       notifyListeners();
     }
@@ -199,7 +222,7 @@ class AppState extends ChangeNotifier {
 
   void initializeReceiving() {
     if (kIsWeb) {
-      print('⚠️ Receive sharing intent not supported on web.');
+      debugPrint('⚠️ Receive sharing intent not supported on web.');
       return;
     }
     
@@ -211,20 +234,20 @@ class AppState extends ChangeNotifier {
             notifyListeners();
           },
           onTextReceived: (text) {
-            print('Received text: $text');
+            debugPrint('Received text: $text');
           },
         );
       } else {
-        print('⚠️ Receive sharing intent not supported on this platform.');
+        debugPrint('⚠️ Receive sharing intent not supported on this platform.');
       }
     } catch (e) {
-      print('Could not initialize receive service: $e');
+      debugPrint('Could not initialize receive service: $e');
     }
   }
 
   Future<void> shareFiles(List<FileItem> files) async {
     if (kIsWeb) {
-       print('⚠️ File sharing not supported on web.');
+       debugPrint('⚠️ File sharing not supported on web.');
        return;
     }
     
@@ -234,7 +257,7 @@ class AppState extends ChangeNotifier {
         await ShareService.shareFiles(paths);
       }
     } else {
-      print('⚠️ File sharing not supported on this platform.');
+      debugPrint('⚠️ File sharing not supported on this platform.');
     }
   }
 
@@ -271,12 +294,12 @@ class AppState extends ChangeNotifier {
             }
         }
     } catch (e) {
-        print("⚠️ AppState: Error extracting config path: $e");
+        debugPrint("⚠️ AppState: Error extracting config path: $e");
     }
 
     // FALLBACK if extraction failed
     if (_configPath.isEmpty) {
-        print("⚠️ AppState: Config path is empty. Using fallback default.");
+        debugPrint("⚠️ AppState: Config path is empty. Using fallback default.");
         if (!kIsWeb && (Platform.isLinux || Platform.isMacOS || Platform.isWindows)) {
              final home = Platform.environment['HOME'] ?? Platform.environment['USERPROFILE'] ?? '.';
              _configPath = p.join(home, '.cloud-storage-config');
@@ -285,7 +308,7 @@ class AppState extends ChangeNotifier {
         }
     }
     
-    print("🔧 AppState initialized with config path: $_configPath");
+    debugPrint("🔧 AppState initialized with config path: $_configPath");
     
     // Initialize cloud client based on provider
     _cloudClient = CloudStorageFactory.create(_currentProvider, config: config);
@@ -299,47 +322,51 @@ class AppState extends ChangeNotifier {
   // NEW: Method to switch cloud providers
   Future<void> switchProvider(CloudProvider provider) async {
     if (_currentProvider == provider) return;
-    
-    print('🔄 Switching cloud provider to $provider');
-    
-    if (_isConnected) {
-      await logout();
-    }
-    
-    // 1. Save Preference
-    final prefs = await SharedPreferences.getInstance();
-    String providerKey;
-    switch (provider) {
-      case CloudProvider.filen: providerKey = 'filen'; break;
-      case CloudProvider.sftp: providerKey = 'sftp'; break;
-      case CloudProvider.webdav: providerKey = 'webdav'; break;
-      case CloudProvider.internxt: providerKey = 'internxt'; break;
-    }
-    await prefs.setString('cloud_provider', providerKey);
-    print('💾 Saved provider preference: $providerKey');
 
-    // 2. Instantiate correct config service
-    // This ensures the new adapter gets the right config type with the correct path
-    if (provider == CloudProvider.filen) {
-      _config = FilenConfigService(configPath: _configPath);
-    } else if (provider == CloudProvider.sftp) {
-      _config = SFTPConfigService(configPath: _configPath);
-    } else if (provider == CloudProvider.webdav) { 
-      _config = WebDavConfigService(configPath: _configPath);
-    } else if (provider == CloudProvider.internxt) {
-      _config = ConfigService(configPath: _configPath);
-    }
+    await _switchProviderLock.synchronized(() async {
+      // Re-check after acquiring the lock in case another call already switched.
+      if (_currentProvider == provider) return;
 
-    // 3. Create Client
-    _currentProvider = provider;
-    _cloudClient = CloudStorageFactory.create(provider, config: _config);
-    _remotePath = _cloudClient.rootPath;
-    _remoteFiles = null;
-    
-    // 4. Try auto-login with new provider
-    await _attemptAutoLogin();
-    
-    notifyListeners();
+      debugPrint('🔄 Switching cloud provider to $provider');
+
+      if (_isConnected) {
+        await logout();
+      }
+
+      // 1. Save Preference
+      final prefs = await SharedPreferences.getInstance();
+      String providerKey;
+      switch (provider) {
+        case CloudProvider.filen: providerKey = 'filen'; break;
+        case CloudProvider.sftp: providerKey = 'sftp'; break;
+        case CloudProvider.webdav: providerKey = 'webdav'; break;
+        case CloudProvider.internxt: providerKey = 'internxt'; break;
+      }
+      await prefs.setString('cloud_provider', providerKey);
+      debugPrint('💾 Saved provider preference: $providerKey');
+
+      // 2. Instantiate correct config service
+      if (provider == CloudProvider.filen) {
+        _config = FilenConfigService(configPath: _configPath);
+      } else if (provider == CloudProvider.sftp) {
+        _config = SFTPConfigService(configPath: _configPath);
+      } else if (provider == CloudProvider.webdav) {
+        _config = WebDavConfigService(configPath: _configPath);
+      } else if (provider == CloudProvider.internxt) {
+        _config = ConfigService(configPath: _configPath);
+      }
+
+      // 3. Create Client
+      _currentProvider = provider;
+      _cloudClient = CloudStorageFactory.create(provider, config: _config);
+      _remotePath = _cloudClient.rootPath;
+      _remoteFiles = null;
+
+      // 4. Try auto-login with new provider
+      await _attemptAutoLogin();
+
+      notifyListeners();
+    });
   }
 
   // Getters for cloud client info
@@ -352,14 +379,14 @@ class AppState extends ChangeNotifier {
       await _localFileService.getInitialPath(); 
       
       if (!kIsWeb && Platform.isMacOS && _localFileService.grantedBasePath == null) {
-        print('📂 No previous directory access, prompting user...');
+        debugPrint('📂 No previous directory access, prompting user...');
         await _requestInitialDirectoryAccess();
       } else {
         await _loadLocalFiles(); 
         notifyListeners();
       }
     } catch (e) {
-      print('❌ Error initializing local path: $e');
+      debugPrint('❌ Error initializing local path: $e');
       _localFileService.currentPath = await _localFileService.getSafeFallbackDirectory();
       _lastError = e.toString();
       notifyListeners();
@@ -388,7 +415,7 @@ class AppState extends ChangeNotifier {
 
   Future<void> _loadLocalFiles() async {
     try {
-      print('📁 Loading local files from: ${localPath}');
+      debugPrint('📁 Loading local files from: ${localPath}');
       
       final entities = await _localFileService.listDirectory(localPath);
       
@@ -467,7 +494,7 @@ class AppState extends ChangeNotifier {
         return; 
       }
       
-      print('❌ Error loading local files: $e');
+      debugPrint('❌ Error loading local files: $e');
       _localFiles = [];
       _lastError = e.toString();
       notifyListeners();
@@ -475,72 +502,74 @@ class AppState extends ChangeNotifier {
   }
 
   Future<void> _attemptAutoLogin() async {
-    print('🔄 Attempting auto-login for provider: ${_cloudClient.providerName}');
-    
-    try {
-      if (_cloudClient is InternxtClientAdapter) {
-        final adapter = _cloudClient as InternxtClientAdapter;
-        final rawCreds = await (_cloudClient as InternxtClientAdapter).config.readCredentials();
-        final Map<String, String>? creds = rawCreds?.cast<String, String>();
+    await _autoLoginLock.synchronized(() async {
+      debugPrint('🔄 Attempting auto-login for provider: ${_cloudClient.providerName}');
 
-        if (creds == null || creds['token'] == null) {
-           print('⚠️ Internxt: No credentials found');
-           return;
-        }
-        adapter.setAuth(creds);
-        _userEmail = creds['email'];
-        _isConnected = true;
-        await refreshPanel(PanelSide.remote);
-        notifyListeners();
-      } else if (_cloudClient is FilenClientAdapter) {
-        final adapter = _cloudClient as FilenClientAdapter;
-        final creds = await adapter.filenConfig.readCredentials();
-        if (creds == null || creds['email'] == null) {
-           print('⚠️ Filen: No credentials found');
-           return;
-        }
-        if (creds['apiKey'] != null && creds['apiKey']!.isNotEmpty) {
-          adapter.client.setAuth(creds);
+      try {
+        if (_cloudClient is InternxtClientAdapter) {
+          final adapter = _cloudClient as InternxtClientAdapter;
+          final rawCreds = await (_cloudClient as InternxtClientAdapter).config.readCredentials();
+          final Map<String, String>? creds = rawCreds?.cast<String, String>();
+
+          if (creds == null || creds['token'] == null) {
+             debugPrint('⚠️ Internxt: No credentials found');
+             return;
+          }
+          adapter.setAuth(creds);
           _userEmail = creds['email'];
           _isConnected = true;
           await refreshPanel(PanelSide.remote);
           notifyListeners();
+        } else if (_cloudClient is FilenClientAdapter) {
+          final adapter = _cloudClient as FilenClientAdapter;
+          final creds = await adapter.filenConfig.readCredentials();
+          if (creds == null || creds['email'] == null) {
+             debugPrint('⚠️ Filen: No credentials found');
+             return;
+          }
+          if (creds['apiKey'] != null && creds['apiKey']!.isNotEmpty) {
+            adapter.client.setAuth(creds);
+            _userEmail = creds['email'];
+            _isConnected = true;
+            await refreshPanel(PanelSide.remote);
+            notifyListeners();
+          }
+        } else if (_cloudClient is SFTPClientAdapter) {
+          final adapter = _cloudClient as SFTPClientAdapter;
+          final creds = await adapter.config.readCredentials();
+
+          if (creds != null && creds['host'] != null && creds['username'] != null) {
+            _userEmail = '${creds['username']}@${creds['host']}';
+            _isConnected = true;
+            debugPrint('✅ SFTP: Auto-login successful for $_userEmail');
+
+            // Force a refresh to list files immediately
+            await refreshPanel(PanelSide.remote);
+            notifyListeners();
+          } else {
+            debugPrint('⚠️ SFTP: No saved credentials found');
+          }
+        } else if (_cloudClient is WebDavClientAdapter) {
+          final adapter = _cloudClient as WebDavClientAdapter;
+          final creds = await adapter.config.readCredentials();
+
+          if (creds != null && creds['host'] != null && creds['username'] != null) {
+            _userEmail = '${creds['username']}@${creds['host']}';
+            _isConnected = true;
+            debugPrint('✅ WebDAV: Auto-login successful for $_userEmail');
+            await refreshPanel(PanelSide.remote);
+            notifyListeners();
+          } else {
+            debugPrint('⚠️ WebDAV: No credentials found');
+          }
         }
-      } else if (_cloudClient is SFTPClientAdapter) {
-        final adapter = _cloudClient as SFTPClientAdapter;
-        final creds = await adapter.config.readCredentials();
-        
-        if (creds != null && creds['host'] != null && creds['username'] != null) {
-          _userEmail = '${creds['username']}@${creds['host']}';
-          _isConnected = true;
-          print('✅ SFTP: Auto-login successful for $_userEmail');
-          
-          // Force a refresh to list files immediately
-          await refreshPanel(PanelSide.remote);
-          notifyListeners();
-        } else {
-          print('⚠️ SFTP: No saved credentials found');
-        }
-      } else if (_cloudClient is WebDavClientAdapter) {
-        final adapter = _cloudClient as WebDavClientAdapter;
-        final creds = await adapter.config.readCredentials();
-        
-        if (creds != null && creds['host'] != null && creds['username'] != null) {
-          _userEmail = '${creds['username']}@${creds['host']}';
-          _isConnected = true;
-          print('✅ WebDAV: Auto-login successful for $_userEmail');
-          await refreshPanel(PanelSide.remote);
-          notifyListeners();
-        } else {
-          print('⚠️ WebDAV: No credentials found');
-        }
+      } catch (e) {
+        debugPrint('⚠️ Auto-login exception: $e');
+        _lastError = 'Session expired. Please log in again.';
+        _isConnected = false;
+        notifyListeners();
       }
-    } catch (e) {
-      print('⚠️ Auto-login exception: $e');
-      _lastError = 'Session expired. Please log in again.';
-      _isConnected = false;
-      notifyListeners();
-    }
+    });
   }
 
   void clearCompletedOperations() {
@@ -590,19 +619,19 @@ class AppState extends ChangeNotifier {
       final adapter = _cloudClient as FilenClientAdapter;
       final savedCreds = await adapter.filenConfig.readCredentials();
       if (savedCreds == null) {
-        print('⚠️ Warning: Filen credentials were not saved properly');
+        debugPrint('⚠️ Warning: Filen credentials were not saved properly');
       }
     } else if (_cloudClient is SFTPClientAdapter) {
       final adapter = _cloudClient as SFTPClientAdapter;
       final savedCreds = await adapter.config.readCredentials();
       if (savedCreds == null) {
-        print('⚠️ Warning: SFTP credentials were not saved properly');
+        debugPrint('⚠️ Warning: SFTP credentials were not saved properly');
       }
     } else if (_cloudClient is WebDavClientAdapter) {
       final adapter = _cloudClient as WebDavClientAdapter;
       final savedCreds = await adapter.config.readCredentials();
       if (savedCreds == null) {
-        print('⚠️ Warning: WebDAV credentials were not saved properly');
+        debugPrint('⚠️ Warning: WebDAV credentials were not saved properly');
       }
     }
     
@@ -640,101 +669,101 @@ class AppState extends ChangeNotifier {
   }
 
   Future<void> refreshPanel(PanelSide side) async {
-    if (side == PanelSide.local) {
-      // --- FIX START ---
-      // Force the LocalFileService to re-scan the directory handle/disk.
-      // This updates the virtual tree on Web so new downloads appear.
-      await _localFileService.refresh(); 
-      // --- FIX END ---
-      
-      await _loadLocalFiles();
-    } else {
-      try {
-        // FIX: Only attempt auto-login if we are NOT authenticated AND NOT logically connected.
-        // SFTP is often !isAuthenticated (socket closed) but _isConnected (creds loaded).
-        if (!_cloudClient.isAuthenticated && !_isConnected) {
-          await _attemptAutoLogin();
-          // If still not connected after attempt, clear files and return
-          if (!_isConnected) {
-            _remoteFiles = [];
-            notifyListeners();
-            return;
+    await _refreshPanelLock.synchronized(() async {
+      if (side == PanelSide.local) {
+        // Force the LocalFileService to re-scan the directory handle/disk.
+        // This updates the virtual tree on Web so new downloads appear.
+        await _localFileService.refresh();
+
+        await _loadLocalFiles();
+      } else {
+        try {
+          // Only attempt auto-login if we are NOT authenticated AND NOT logically connected.
+          // SFTP is often !isAuthenticated (socket closed) but _isConnected (creds loaded).
+          if (!_cloudClient.isAuthenticated && !_isConnected) {
+            await _attemptAutoLogin();
+            // If still not connected after attempt, clear files and return
+            if (!_isConnected) {
+              _remoteFiles = [];
+              notifyListeners();
+              return;
+            }
           }
+
+          final result = await _cloudClient.listPath(_remotePath);
+
+          final folders = (result['folders'] as List<dynamic>?)?.map((item) {
+                final map = item as Map<String, dynamic>;
+                DateTime? folderDate;
+
+                // Check keys used by different providers
+                final rawDate = map['modificationTime'] ?? map['lastModified'] ?? map['timestamp'];
+
+                if (rawDate != null) {
+                  try {
+                     if (rawDate is int) folderDate = DateTime.fromMillisecondsSinceEpoch(rawDate);
+                     else folderDate = DateTime.parse(rawDate.toString());
+                  } catch (e) {
+                    debugPrint('Failed to parse folder date from rawDate=$rawDate: $e');
+                  }
+                }
+
+                return FileItem(
+                  name: map['name'] ?? 'Unknown',
+                  isFolder: true,
+                  uuid: map['uuid'],
+                  updatedAt: folderDate,
+                );
+              }).toList() ?? [];
+
+          final files = (result['files'] as List<dynamic>?)?.map((item) {
+                final map = item as Map<String, dynamic>;
+                final fileName = map['name'] ?? 'Unknown';
+
+                final rawType = map['fileType'] ?? map['type'] ?? '';
+                final fileType = rawType.toString().toLowerCase();
+
+                String fullName = fileName;
+                if (fileType.isNotEmpty && fileType != 'file' && !fileName.toLowerCase().endsWith('.$fileType')) {
+                   fullName = '$fileName.$rawType';
+                }
+
+                DateTime? fileDate;
+                // Check keys used by different providers
+                final rawDate = map['modificationTime'] ?? map['lastModified'];
+
+                if (rawDate != null) {
+                  try {
+                     if (rawDate is int) fileDate = DateTime.fromMillisecondsSinceEpoch(rawDate);
+                     else fileDate = DateTime.parse(rawDate.toString());
+                  } catch (e) {
+                    debugPrint('Failed to parse file date from rawDate=$rawDate: $e');
+                  }
+                }
+
+                return FileItem(
+                  name: fullName,
+                  isFolder: false,
+                  size: map['size'] as int?,
+                  uuid: map['uuid'],
+                  updatedAt: fileDate,
+                );
+              }).toList() ?? [];
+
+          _remoteFiles = [...folders, ...files];
+          _sortFiles(_remoteFiles, _remoteSortBy, _remoteSortOrder);
+          _lastError = null;
+          notifyListeners();
+        } catch (e) {
+          // Don't clear files on temporary network errors if possible,
+          // but for now we follow standard pattern
+          debugPrint('❌ Refresh Error: $e');
+          _remoteFiles = [];
+          _lastError = e.toString();
+          notifyListeners();
         }
-        
-        final result = await _cloudClient.listPath(_remotePath);
-        
-        final folders = (result['folders'] as List<dynamic>?)?.map((item) {
-              final map = item as Map<String, dynamic>;
-              DateTime? folderDate;
-              
-              // Check keys used by different providers
-              final rawDate = map['modificationTime'] ?? map['lastModified'] ?? map['timestamp'];
-              
-              if (rawDate != null) {
-                try { 
-                   if (rawDate is int) folderDate = DateTime.fromMillisecondsSinceEpoch(rawDate);
-                   else folderDate = DateTime.parse(rawDate.toString()); 
-                } catch (e) {
-                  debugPrint('Failed to parse folder date from rawDate=$rawDate: $e');
-                }
-              }
-
-              return FileItem(
-                name: map['name'] ?? 'Unknown',
-                isFolder: true,
-                uuid: map['uuid'],
-                updatedAt: folderDate,
-              );
-            }).toList() ?? [];
-
-        final files = (result['files'] as List<dynamic>?)?.map((item) {
-              final map = item as Map<String, dynamic>;
-              final fileName = map['name'] ?? 'Unknown';
-              
-              final rawType = map['fileType'] ?? map['type'] ?? '';
-              final fileType = rawType.toString().toLowerCase();
-              
-              String fullName = fileName;
-              if (fileType.isNotEmpty && fileType != 'file' && !fileName.toLowerCase().endsWith('.$fileType')) {
-                 fullName = '$fileName.$rawType';
-              }
-                  
-              DateTime? fileDate;
-              // Check keys used by different providers
-              final rawDate = map['modificationTime'] ?? map['lastModified'];
-              
-              if (rawDate != null) {
-                try { 
-                   if (rawDate is int) fileDate = DateTime.fromMillisecondsSinceEpoch(rawDate);
-                   else fileDate = DateTime.parse(rawDate.toString()); 
-                } catch (e) {
-                  debugPrint('Failed to parse file date from rawDate=$rawDate: $e');
-                }
-              }
-
-              return FileItem(
-                name: fullName,
-                isFolder: false,
-                size: map['size'] as int?,
-                uuid: map['uuid'],
-                updatedAt: fileDate, // should populate correctly
-              );
-            }).toList() ?? [];
-
-        _remoteFiles = [...folders, ...files];
-        _sortFiles(_remoteFiles, _remoteSortBy, _remoteSortOrder);
-        _lastError = null; 
-        notifyListeners();
-      } catch (e) {
-        // Don't clear files on temporary network errors if possible, 
-        // but for now we follow standard pattern
-        print('❌ Refresh Error: $e');
-        _remoteFiles = [];
-        _lastError = e.toString(); 
-        notifyListeners();
       }
-    }
+    });
   }
 
   Future<void> navigateUp(PanelSide side) async {
@@ -751,7 +780,7 @@ class AppState extends ChangeNotifier {
         _remotePath = p.dirname(_remotePath);
         if (_remotePath.isEmpty) _remotePath = '/';
         await refreshPanel(PanelSide.remote);
-        print('📁 Navigated up to: $_remotePath');
+        debugPrint('📁 Navigated up to: $_remotePath');
       }
     }
   }
@@ -763,7 +792,7 @@ class AppState extends ChangeNotifier {
       // On Web, we treat the virtual root '/' as accessible.
       // On Desktop/Mobile, we check strict permissions.
       if (!kIsWeb && !await _localFileService.hasAccessToPath(path)) {
-        print('⚠️ Path $path is outside granted directory');
+        debugPrint('⚠️ Path $path is outside granted directory');
         _lastError = 'Cannot access paths outside the granted directory. Please grant access to a parent folder.';
         notifyListeners();
         
@@ -780,7 +809,7 @@ class AppState extends ChangeNotifier {
       } else if (kIsWeb && !await _localFileService.hasAccessToPath(path)) {
          // On Web, if we try to go somewhere our virtual tree doesn't know about
          // (should only be possible via manual manipulation), block it.
-         print('⚠️ Virtual path not found: $path');
+         debugPrint('⚠️ Virtual path not found: $path');
          return;
       }
       
@@ -797,12 +826,12 @@ class AppState extends ChangeNotifier {
           _lastSelectedLocal = itemToSelect;
           _itemToScrollTo = itemToSelect; 
         } catch (e) {
-          print('⚠️ Could not find item to select after navigation: ${selectItem.name}');
+          debugPrint('⚠️ Could not find item to select after navigation: ${selectItem.name}');
         }
       }
       
       notifyListeners();
-      print('📁 Navigated to: $localPath');
+      debugPrint('📁 Navigated to: $localPath');
     } else {
       // Remote Navigation Logic
       _remotePath = path;
@@ -818,11 +847,11 @@ class AppState extends ChangeNotifier {
           _lastSelectedRemote = itemToSelect;
           _itemToScrollTo = itemToSelect; 
         } catch (e) {
-          print('⚠️ Could not find item to select after navigation: ${selectItem.name}');
+          debugPrint('⚠️ Could not find item to select after navigation: ${selectItem.name}');
         }
       }
       
-      print('📁 Navigated to: $_remotePath');
+      debugPrint('📁 Navigated to: $_remotePath');
     }
   }
 
@@ -835,12 +864,12 @@ class AppState extends ChangeNotifier {
       }
     } else {
       final newPath = p.posix.join(_remotePath, item.name);
-      print('🔍 Attempting to navigate to: $newPath');
+      debugPrint('🔍 Attempting to navigate to: $newPath');
       
       try {
         await navigateToPath(side, newPath);
       } catch (e) {
-        print('⚠️ Navigation failed: $e');
+        debugPrint('⚠️ Navigation failed: $e');
         
         _lastError = 'Cannot open folder: ${item.name}. Path may not exist.';
         notifyListeners();
@@ -913,12 +942,12 @@ class AppState extends ChangeNotifier {
   
   Future<void> uploadFiles(List<FileItem> files, {String? targetPath}) async {
     
-    print('');
-    print('═══════════════════════════════════════════');
-    print('📤 UPLOAD STARTED (${_cloudClient.providerName})');
-    print('═══════════════════════════════════════════');
-    print('Files to upload: ${files.length}');
-    print('Target path: ${targetPath ?? _remotePath}');
+    debugPrint('');
+    debugPrint('═══════════════════════════════════════════');
+    debugPrint('📤 UPLOAD STARTED (${_cloudClient.providerName})');
+    debugPrint('═══════════════════════════════════════════');
+    debugPrint('Files to upload: ${files.length}');
+    debugPrint('Target path: ${targetPath ?? _remotePath}');
     
     final target = targetPath ?? _remotePath;
     
@@ -942,14 +971,14 @@ class AppState extends ChangeNotifier {
     }
     
     if (creds == null) {
-      print('❌ ERROR: Not authenticated');
+      debugPrint('❌ ERROR: Not authenticated');
       throw Exception('Not authenticated');
     }
     
-    print('✅ Credentials loaded for: $identityLog');
+    debugPrint('✅ Credentials loaded for: $identityLog');
     
-    print('');
-    print('📊 Calculating sizes...');
+    debugPrint('');
+    debugPrint('📊 Calculating sizes...');
     final fileProgresses = <FileProgress>[];
     int totalBytes = 0;
     
@@ -958,10 +987,10 @@ class AppState extends ChangeNotifier {
       
       if (file.isFolder && file.path != null) {
         fileSize = await _calculateFolderSize(file.path!);
-        print('   📁 ${file.name}: ${_formatBytes(fileSize)}');
+        debugPrint('   📁 ${file.name}: ${_formatBytes(fileSize)}');
       } else {
         fileSize = file.size ?? 0;
-        print('   📄 ${file.name}: ${_formatBytes(fileSize)}');
+        debugPrint('   📄 ${file.name}: ${_formatBytes(fileSize)}');
       }
       
       fileProgresses.add(FileProgress(
@@ -973,7 +1002,7 @@ class AppState extends ChangeNotifier {
       totalBytes += fileSize;
     }
     
-    print('📊 Total size: ${_formatBytes(totalBytes)}');
+    debugPrint('📊 Total size: ${_formatBytes(totalBytes)}');
     
     final operation = OperationProgress(
       id: DateTime.now().millisecondsSinceEpoch.toString(),
@@ -987,7 +1016,7 @@ class AppState extends ChangeNotifier {
     
     _operations.add(operation);
     notifyListeners();
-    print('✅ Created single operation for ${files.length} files ($totalBytes bytes)');
+    debugPrint('✅ Created single operation for ${files.length} files ($totalBytes bytes)');
     
     _runUploadInBackground(operation, files, fileProgresses, target, creds);
   }
@@ -1005,17 +1034,17 @@ class AppState extends ChangeNotifier {
       for (int i = 0; i < files.length; i++) {
         // 1. Check Cancellation/Pause
         if (operation.isCancelled) {
-          print('🚫 Upload cancelled by user');
+          debugPrint('🚫 Upload cancelled by user');
           break;
         }
         
         if (operation.isPaused) {
-          print('⏸️  Upload paused, waiting for resume...');
+          debugPrint('⏸️  Upload paused, waiting for resume...');
           await operation.pauseFuture;
-          print('▶️  Upload resumed, continuing...');
+          debugPrint('▶️  Upload resumed, continuing...');
           
           if (operation.isCancelled) {
-            print('🚫 Upload cancelled during pause');
+            debugPrint('🚫 Upload cancelled during pause');
             break;
           }
         }
@@ -1023,16 +1052,16 @@ class AppState extends ChangeNotifier {
         final file = files[i];
         final fileProgress = fileProgresses[i];
         
-        print('');
-        print('───────────────────────────────────────────');
-        print('📤 FILE ${i + 1}/${files.length}');
-        print('───────────────────────────────────────────');
-        print('Name: ${file.name}');
-        print('Path: ${file.path}');
-        print('Size: ${fileProgress.size} bytes');
+        debugPrint('');
+        debugPrint('───────────────────────────────────────────');
+        debugPrint('📤 FILE ${i + 1}/${files.length}');
+        debugPrint('───────────────────────────────────────────');
+        debugPrint('Name: ${file.name}');
+        debugPrint('Path: ${file.path}');
+        debugPrint('Size: ${fileProgress.size} bytes');
         
         if (file.path == null) {
-          print('❌ ERROR: File has no path, skipping');
+          debugPrint('❌ ERROR: File has no path, skipping');
           fileProgress.error = 'No path';
           notifyListeners();
           continue;
@@ -1043,7 +1072,7 @@ class AppState extends ChangeNotifier {
             await _uploadFolderViaClient(file.path!, target, operation);
           } else {
             // --- STEP A: READ FILE TO MEMORY ---
-            print('   📖 Reading file into memory (Size: ${fileProgress.size})...');
+            debugPrint('   📖 Reading file into memory (Size: ${fileProgress.size})...');
             final startRead = DateTime.now();
             
             // CRITICAL LIMITATION: This loads the ENTIRE file into RAM.
@@ -1053,7 +1082,7 @@ class AppState extends ChangeNotifier {
             );
             
             final readTime = DateTime.now().difference(startRead).inMilliseconds;
-            print('   ✅ Read complete (${readTime}ms). Starting upload...');
+            debugPrint('   ✅ Read complete (${readTime}ms). Starting upload...');
 
             // --- STEP B: UPLOAD MEMORY BUFFER ---
             await _cloudClient.uploadFile(
@@ -1068,13 +1097,13 @@ class AppState extends ChangeNotifier {
                 // Throttle Console Logs (Only log every ~5MB or at 100%)
                 if (total > 0 && (current % (1024 * 1024 * 5) < 1024 * 64 || current == total)) {
                    final pct = (current / total * 100).toStringAsFixed(1);
-                   print('   🚀 Uploading: $pct% ($current/$total)');
+                   debugPrint('   🚀 Uploading: $pct% ($current/$total)');
                 }
               },
             );
           }
           
-          print('   ✅ Upload complete: ${file.name}');
+          debugPrint('   ✅ Upload complete: ${file.name}');
           
           fileProgress.isComplete = true;
           completedBytes += fileProgress.size;
@@ -1083,13 +1112,13 @@ class AppState extends ChangeNotifier {
           
         } catch (e, stackTrace) {
           if (operation.isCancelled || e.toString().contains('Cancelled')) {
-            print('🚫 File upload cancelled: ${file.name}');
+            debugPrint('🚫 File upload cancelled: ${file.name}');
             fileProgress.error = 'Cancelled';
             break; // Stop batch
           } else {
-            print('❌ UPLOAD FAILED: ${file.name}');
-            print('   Error: $e');
-            print('   Stack: $stackTrace');
+            debugPrint('❌ UPLOAD FAILED: ${file.name}');
+            debugPrint('   Error: $e');
+            debugPrint('   Stack: $stackTrace');
             fileProgress.error = e.toString();
           }
           notifyListeners();
@@ -1098,23 +1127,23 @@ class AppState extends ChangeNotifier {
 
       // Final Status Check
       if (operation.isCancelled) {
-        print('🚫 Upload operation cancelled');
+        debugPrint('🚫 Upload operation cancelled');
         operation.fail('Cancelled by user');
       } else {
         final failedCount = fileProgresses.where((f) => f.error != null).length;
         if (failedCount == 0) {
-          print('✅ All files uploaded successfully');
+          debugPrint('✅ All files uploaded successfully');
           operation.complete();
         } else if (failedCount == files.length) {
-          print('❌ All files failed to upload');
+          debugPrint('❌ All files failed to upload');
           operation.fail('All files failed');
         } else {
-          print('⚠️ Some files failed to upload: $failedCount/${files.length}');
+          debugPrint('⚠️ Some files failed to upload: $failedCount/${files.length}');
           operation.complete();
         }
       }
     } catch (e) {
-      print('❌ Unexpected error in background upload: $e');
+      debugPrint('❌ Unexpected error in background upload: $e');
       operation.fail(e.toString());
     }
     
@@ -1139,7 +1168,7 @@ class AppState extends ChangeNotifier {
             final stat = await entity.stat();
             totalSize += stat.size;
           } catch (e) {
-            print('⚠️ Could not stat file: ${entity.path}');
+            debugPrint('⚠️ Could not stat file: ${entity.path}');
           }
         } else if (entity is Directory) {
           // Recursive call for subdirectories using the same safe listing method
@@ -1148,7 +1177,7 @@ class AppState extends ChangeNotifier {
       }
       return totalSize;
     } catch (e) {
-      print('⚠️ Error calculating folder size: $e');
+      debugPrint('⚠️ Error calculating folder size: $e');
       return 0;
     }
   }
@@ -1165,12 +1194,12 @@ class AppState extends ChangeNotifier {
   // CHANGED: Download now uses cloud client abstraction
   Future<void> downloadFiles(List<FileItem> files, {String? localPath}) async {
     
-    print('');
-    print('═══════════════════════════════════════════');
-    print('⬇️  DOWNLOAD STARTED (${_cloudClient.providerName})');
-    print('═══════════════════════════════════════════');
-    print('Files to download: ${files.length}');
-    print('Local path: ${localPath ?? _localFileService.currentPath}'); 
+    debugPrint('');
+    debugPrint('═══════════════════════════════════════════');
+    debugPrint('⬇️  DOWNLOAD STARTED (${_cloudClient.providerName})');
+    debugPrint('═══════════════════════════════════════════');
+    debugPrint('Files to download: ${files.length}');
+    debugPrint('Local path: ${localPath ?? _localFileService.currentPath}'); 
     
     final target = localPath ?? _localFileService.currentPath;
     
@@ -1192,14 +1221,14 @@ class AppState extends ChangeNotifier {
     }
     
     if (creds == null) {
-      print('❌ ERROR: Not authenticated');
+      debugPrint('❌ ERROR: Not authenticated');
       throw Exception('Not authenticated');
     }
     
-    print('✅ Credentials loaded for: $identityLog');
+    debugPrint('✅ Credentials loaded for: $identityLog');
     
-    print('');
-    print('📊 Preparing download...');
+    debugPrint('');
+    debugPrint('📊 Preparing download...');
     final fileProgresses = files.map((f) => FileProgress(
       name: f.name,
       path: f.uuid ?? f.name, 
@@ -1207,7 +1236,7 @@ class AppState extends ChangeNotifier {
     )).toList();
     
     final totalBytes = files.fold(0, (sum, f) => sum + (f.size ?? 0));
-    print('📊 Total size: ${_formatBytes(totalBytes)}');
+    debugPrint('📊 Total size: ${_formatBytes(totalBytes)}');
     
     final operation = OperationProgress(
       id: DateTime.now().millisecondsSinceEpoch.toString(),
@@ -1221,7 +1250,7 @@ class AppState extends ChangeNotifier {
     
     _operations.add(operation);
     notifyListeners();
-    print('✅ Created single operation for ${files.length} files ($totalBytes bytes)');
+    debugPrint('✅ Created single operation for ${files.length} files ($totalBytes bytes)');
     
     _runDownloadInBackground(operation, files, fileProgresses, target, creds);
   }
@@ -1236,22 +1265,22 @@ class AppState extends ChangeNotifier {
     int completedBytes = 0;
     
     try {
-      print('🚀 [Download] Starting batch for ${files.length} files to: $target');
+      debugPrint('🚀 [Download] Starting batch for ${files.length} files to: $target');
 
       for (int i = 0; i < files.length; i++) {
         // 1. Check Cancellation
         if (operation.isCancelled) {
-          print('🚫 [Download] Cancelled by user');
+          debugPrint('🚫 [Download] Cancelled by user');
           break;
         }
         
         // 2. Check Pause
         if (operation.isPaused) {
-          print('⏸️  [Download] Paused, waiting for resume...');
+          debugPrint('⏸️  [Download] Paused, waiting for resume...');
           await operation.pauseFuture;
-          print('▶️  [Download] Resumed');
+          debugPrint('▶️  [Download] Resumed');
           if (operation.isCancelled) {
-             print('🚫 [Download] Cancelled during pause');
+             debugPrint('🚫 [Download] Cancelled during pause');
              break;
           }
         }
@@ -1263,22 +1292,22 @@ class AppState extends ChangeNotifier {
         // Use absolute path if available, otherwise fallback to joining with current view
         final remotePath = file.path ?? p.posix.join(_remotePath, file.name);
         
-        print('');
-        print('───────────────────────────────────────────');
-        print('⬇️  FILE ${i + 1}/${files.length}: ${file.name}');
-        print('   UUID: ${file.uuid}');
-        print('   Remote Path: $remotePath');
-        print('   Target Dir: $target');
-        print('   Is Folder: ${file.isFolder}');
-        print('───────────────────────────────────────────');
+        debugPrint('');
+        debugPrint('───────────────────────────────────────────');
+        debugPrint('⬇️  FILE ${i + 1}/${files.length}: ${file.name}');
+        debugPrint('   UUID: ${file.uuid}');
+        debugPrint('   Remote Path: $remotePath');
+        debugPrint('   Target Dir: $target');
+        debugPrint('   Is Folder: ${file.isFolder}');
+        debugPrint('───────────────────────────────────────────');
 
         try {
           // --- FOLDER HANDLING ---
           if (file.isFolder) {
             if (kIsWeb) {
-              print('⚠️ [Download] Folder download not supported on Web (skipping)');
+              debugPrint('⚠️ [Download] Folder download not supported on Web (skipping)');
             } else {
-              print('📂 [Download] Processing folder structure...');
+              debugPrint('📂 [Download] Processing folder structure...');
               // For folders, we still use the recursive client helper, 
               // BUT we must ensure it doesn't crash on permissions. 
               // Since recursively passing byte arrays is complex, we assume
@@ -1291,7 +1320,7 @@ class AppState extends ChangeNotifier {
           } 
           // --- FILE HANDLING ---
           else {
-             print('📥 [Download] Fetching bytes for ${file.name}...');
+             debugPrint('📥 [Download] Fetching bytes for ${file.name}...');
              
              // 1. Download bytes into memory
              // This bypasses the Client Adapter trying to write to disk directly
@@ -1306,7 +1335,7 @@ class AppState extends ChangeNotifier {
                }
              );
              
-             print('💾 [Download] Saving ${bytes.length} bytes to local storage...');
+             debugPrint('💾 [Download] Saving ${bytes.length} bytes to local storage...');
              
              // 2. Save using LocalFileService
              // This handles Web (Blob download) and Native (Secure Bookmarks)
@@ -1328,12 +1357,12 @@ class AppState extends ChangeNotifier {
                     await f.setLastModified(files[i].updatedAt!);
                   }
                } catch (e) {
-                 print('⚠️ [Download] Timestamp update failed: $e');
+                 debugPrint('⚠️ [Download] Timestamp update failed: $e');
                }
              }
           }
           
-          print('✅ [Download] Complete: ${file.name}');
+          debugPrint('✅ [Download] Complete: ${file.name}');
           
           fileProgress.isComplete = true;
           completedBytes += fileProgress.size;
@@ -1342,13 +1371,13 @@ class AppState extends ChangeNotifier {
           
         } catch (e, stackTrace) {
           if (operation.isCancelled || e.toString().contains('Cancelled')) {
-            print('🚫 [Download] File cancelled: ${file.name}');
+            debugPrint('🚫 [Download] File cancelled: ${file.name}');
             fileProgress.error = 'Cancelled';
             break;
           } else {
-            print('❌ [Download] FAILED: ${file.name}');
-            print('   Error: $e');
-            print('   Stack: $stackTrace');
+            debugPrint('❌ [Download] FAILED: ${file.name}');
+            debugPrint('   Error: $e');
+            debugPrint('   Stack: $stackTrace');
             fileProgress.error = e.toString();
           }
           notifyListeners();
@@ -1361,19 +1390,19 @@ class AppState extends ChangeNotifier {
       } else {
         final failedCount = fileProgresses.where((f) => f.error != null).length;
         if (failedCount == 0) {
-          print('🎉 [Download] All files finished successfully');
+          debugPrint('🎉 [Download] All files finished successfully');
           operation.complete();
         } else if (failedCount == files.length) {
-          print('💀 [Download] All files failed');
+          debugPrint('💀 [Download] All files failed');
           operation.fail('All files failed');
         } else {
-          print('⚠️ [Download] Partial success ($failedCount failed)');
+          debugPrint('⚠️ [Download] Partial success ($failedCount failed)');
           operation.complete();
         }
       }
 
     } catch (e) {
-      print('🔥 [Download] Critical Batch Error: $e');
+      debugPrint('🔥 [Download] Critical Batch Error: $e');
       operation.fail(e.toString());
     }
     
@@ -1412,7 +1441,7 @@ class AppState extends ChangeNotifier {
           operation.currentBytes += fileData.length;
           notifyListeners();
         } catch (e) {
-          print('⚠️ Error reading/uploading file in folder ${entity.path}: $e');
+          debugPrint('⚠️ Error reading/uploading file in folder ${entity.path}: $e');
         }
       } else if (entity is Directory) {
         await _uploadFolderViaClient(entity.path, newRemotePath, operation);
@@ -1477,7 +1506,7 @@ class AppState extends ChangeNotifier {
       await refreshPanel(side);
       clearSelection(side);
     } catch (e) {
-      print('❌ Error deleting files: $e');
+      debugPrint('❌ Error deleting files: $e');
       _lastError = 'Delete failed: $e';
       notifyListeners();
     }
@@ -1497,7 +1526,7 @@ class AppState extends ChangeNotifier {
         } else {
           // FIX: Use file.path (absolute) instead of combining _remotePath + name
           final sourcePath = file.path ?? p.posix.join(_remotePath, file.name);
-          print('🚀 Moving: $sourcePath -> $targetPath');
+          debugPrint('🚀 Moving: $sourcePath -> $targetPath');
           await _cloudClient.movePath(sourcePath, targetPath);
         }
       }
@@ -1505,7 +1534,7 @@ class AppState extends ChangeNotifier {
       await refreshPanel(side);
       clearSelection(side);
     } catch (e) {
-      print('❌ Error moving files: $e');
+      debugPrint('❌ Error moving files: $e');
       _lastError = 'Move failed: $e';
       notifyListeners();
       await refreshPanel(side);
@@ -1535,7 +1564,7 @@ class AppState extends ChangeNotifier {
 
       await refreshPanel(side);
     } catch (e) {
-      print('❌ Error copying files: $e');
+      debugPrint('❌ Error copying files: $e');
       _lastError = 'Copy failed: $e';
       notifyListeners();
     }
@@ -1574,7 +1603,7 @@ class AppState extends ChangeNotifier {
       }
       await refreshPanel(side);
     } catch (e) {
-      print('❌ Error renaming file: $e');
+      debugPrint('❌ Error renaming file: $e');
       _lastError = 'Rename failed: $e';
       notifyListeners();
     }
@@ -1592,7 +1621,7 @@ class AppState extends ChangeNotifier {
 
       await refreshPanel(side);
     } catch (e) {
-      print('❌ Error creating folder: $e');
+      debugPrint('❌ Error creating folder: $e');
       _lastError = 'Create folder failed: $e';
       notifyListeners();
     }
@@ -1703,7 +1732,7 @@ class AppState extends ChangeNotifier {
       operation.pause();
       notifyListeners();
     } catch (e) {
-      print('⚠️ Error pausing operation: $e');
+      debugPrint('⚠️ Error pausing operation: $e');
     }
   }
 
@@ -1713,7 +1742,7 @@ class AppState extends ChangeNotifier {
       operation.resume();
       notifyListeners();
     } catch (e) {
-      print('⚠️ Error resuming operation: $e');
+      debugPrint('⚠️ Error resuming operation: $e');
     }
   }
 
@@ -1724,7 +1753,7 @@ class AppState extends ChangeNotifier {
       // Optionally remove it immediately or let the UI handle it
       notifyListeners();
     } catch (e) {
-      print('⚠️ Error cancelling operation: $e');
+      debugPrint('⚠️ Error cancelling operation: $e');
     }
   }
 }

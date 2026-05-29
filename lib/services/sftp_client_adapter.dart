@@ -62,7 +62,7 @@ class SFTPClientAdapter implements CloudStorageClient {
 
     try {
       if (kIsWeb) {
-        print('🌐 Web Environment: Connecting via WebSocket to $_host...');
+        debugPrint('🌐 Web Environment: Connecting via WebSocket to $_host...');
 
         // 1. Determine WebSocket URI
         Uri uri;
@@ -102,7 +102,7 @@ class SFTPClientAdapter implements CloudStorageClient {
       _sshClient?.close();
       _sshClient = null;
       _sftp = null;
-      print('❌ SFTP Connection Error: $e');
+      debugPrint('❌ SFTP Connection Error: $e');
       throw Exception('Connection failed: $e');
     }
   }
@@ -220,7 +220,7 @@ class SFTPClientAdapter implements CloudStorageClient {
         }
       }
     } catch (e) {
-      print('SFTP List Error: $e');
+      debugPrint('SFTP List Error: $e');
       throw Exception('Failed to list path $path: $e');
     }
 

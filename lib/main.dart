@@ -21,7 +21,7 @@ Future<void> main() async {
   runZonedGuarded(() async {
     WidgetsFlutterBinding.ensureInitialized();
 
-    print("🚀 [Main] App starting...");
+    debugPrint("🚀 [Main] App starting...");
 
     // Determine the platform-specific config path
     String configPath;
@@ -38,12 +38,12 @@ Future<void> main() async {
       configPath = p.join(home, '.cloud-storage-config');
     }
 
-    print("📂 [Main] Config path: $configPath");
+    debugPrint("📂 [Main] Config path: $configPath");
 
     CloudProvider defaultProvider = await _getDefaultProvider();
 
     if (defaultProvider == CloudProvider.internxt && !CloudStorageFactory.isInternxtSupported) {
-      print('⚠️ Internxt preference detected but provider is disabled. Forcing Filen.');
+      debugPrint('⚠️ Internxt preference detected but provider is disabled. Forcing Filen.');
       defaultProvider = CloudProvider.filen;
     }
     
@@ -55,13 +55,13 @@ Future<void> main() async {
         initialProvider: defaultProvider,
       ));
     } catch (e, stack) {
-      print("🔥 [Main] Critical Error creating config service: $e");
-      print(stack);
+      debugPrint("🔥 [Main] Critical Error creating config service: $e");
+      debugPrint(stack);
       // Fallback to basic app or error screen could go here
     }
   }, (error, stack) {
-    print("🔥 [Global Error Catch] $error");
-    print(stack);
+    debugPrint("🔥 [Global Error Catch] $error");
+    debugPrint(stack);
   });
 }
 
@@ -72,29 +72,29 @@ Future<CloudProvider> _getDefaultProvider() async {
     final providerName = prefs.getString('cloud_provider');
     
     if (providerName == null) {
-      print('📂 No saved provider preference, defaulting to Filen');
+      debugPrint('📂 No saved provider preference, defaulting to Filen');
       return CloudProvider.filen;
     }
     
     switch (providerName.toLowerCase()) {
       case 'filen':
-        print('✅ Using saved provider: Filen');
+        debugPrint('✅ Using saved provider: Filen');
         return CloudProvider.filen;
       case 'internxt':
-        print('✅ Using saved provider: Internxt');
+        debugPrint('✅ Using saved provider: Internxt');
         return CloudProvider.internxt;
       case 'sftp': 
-        print('✅ Using saved provider: SFTP');
+        debugPrint('✅ Using saved provider: SFTP');
         return CloudProvider.sftp;
       case 'webdav':
-        print('✅ Using saved provider: WebDAV');
+        debugPrint('✅ Using saved provider: WebDAV');
         return CloudProvider.webdav;
       default:
-        print('⚠️ Unknown provider: $providerName, defaulting to Filen');
+        debugPrint('⚠️ Unknown provider: $providerName, defaulting to Filen');
         return CloudProvider.filen;
     }
   } catch (e) {
-    print('⚠️ Error reading provider preference: $e, defaulting to Filen');
+    debugPrint('⚠️ Error reading provider preference: $e, defaulting to Filen');
     return CloudProvider.filen;
   }
 }
@@ -105,27 +105,27 @@ Future<dynamic> _createConfigService(String configPath, CloudProvider provider) 
   try {
     switch (provider) {
       case CloudProvider.filen:
-        print('🔧 Creating Filen config service');
+        debugPrint('🔧 Creating Filen config service');
         return FilenConfigService(configPath: configPath);
       case CloudProvider.sftp:
-        print('🔧 Creating SFTP config service');
+        debugPrint('🔧 Creating SFTP config service');
         return SFTPConfigService(configPath: configPath);
       case CloudProvider.webdav:
-        print('🔧 Creating WebDAV config service');
+        debugPrint('🔧 Creating WebDAV config service');
         return WebDavConfigService(configPath: configPath);
       case CloudProvider.internxt:
         // Only attempt to create if supported
         if (CloudStorageFactory.isInternxtSupported) {
-          print('🔧 Creating Internxt config service');
+          debugPrint('🔧 Creating Internxt config service');
           return ConfigService(configPath: configPath);
         } else {
-           print('⚠️ Internxt config requested but disabled. Falling back to Filen config.');
+           debugPrint('⚠️ Internxt config requested but disabled. Falling back to Filen config.');
            return FilenConfigService(configPath: configPath);
         }
     }
   } catch (e) {
-    print('❌ Critical error creating config service: $e');
-    print('   Falling back to Filen defaults.');
+    debugPrint('❌ Critical error creating config service: $e');
+    debugPrint('   Falling back to Filen defaults.');
     return FilenConfigService(configPath: configPath);
   }
 }

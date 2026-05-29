@@ -109,7 +109,7 @@ class WebFileService implements LocalFileService {
     // 2. Try File System Access API (Chrome/Edge/Opera)
     if (js_util.hasProperty(html.window, 'showDirectoryPicker')) {
       try {
-        print("🌐 [Web] Attempting 'showDirectoryPicker' (Write Access)...");
+        debugPrint("🌐 [Web] Attempting 'showDirectoryPicker' (Write Access)...");
         
         // FIX: Request 'readwrite' mode upfront! 
         final opts = js_util.newObject();
@@ -119,7 +119,7 @@ class WebFileService implements LocalFileService {
         _rootDirHandle = await js_util.promiseToFuture(promise);
         
         final rootName = _sanitizeFsaName(js_util.getProperty(_rootDirHandle, 'name') as String);
-        print("✅ [Web] Got handle for folder: $rootName");
+        debugPrint("✅ [Web] Got handle for folder: $rootName");
 
         // Add the root folder itself to the top-level listing
         _virtualTree['/']!.add(Directory('/$rootName'));
@@ -131,10 +131,10 @@ class WebFileService implements LocalFileService {
         return currentPath;
       } catch (e) {
         if (e.toString().contains('AbortError') || e.toString().contains('user aborted')) {
-           print("⚠️ [Web] User cancelled directory picker.");
+           debugPrint("⚠️ [Web] User cancelled directory picker.");
            return null; // Don't fallback if user explicitly cancelled
         }
-        print("⚠️ [Web] showDirectoryPicker failed: $e. Falling back to input.");
+        debugPrint("⚠️ [Web] showDirectoryPicker failed: $e. Falling back to input.");
         // Fallthrough to legacy input
       }
     }
@@ -164,7 +164,7 @@ class WebFileService implements LocalFileService {
         if (parts.isNotEmpty) rootName = parts[0];
       }
 
-      print("📂 [Web] Processing ${input.files!.length} files via legacy input (root: $rootName)...");
+      debugPrint("📂 [Web] Processing ${input.files!.length} files via legacy input (root: $rootName)...");
 
       // Add root to virtual tree
       _virtualTree['/']!.add(Directory('/$rootName'));
@@ -325,7 +325,7 @@ class WebFileService implements LocalFileService {
   Future<void> refresh() async {
     // If we have a handle, we can re-scan the folder to get fresh files
     if (_rootDirHandle != null) {
-      print('🔄 [Web] Refreshing file list from handle...');
+      debugPrint('🔄 [Web] Refreshing file list from handle...');
       // Keep the root listing but clear children to rebuild
       final rootEntries = _virtualTree['/'] ?? [];
       _virtualTree.clear();
@@ -337,7 +337,7 @@ class WebFileService implements LocalFileService {
       // Access 'name' property again to reconstruct root path
       final rootName = _sanitizeFsaName(js_util.getProperty(_rootDirHandle, 'name') as String);
       await _buildTreeFromHandle(_rootDirHandle, '/$rootName');
-      print('✅ [Web] Refresh complete.');
+      debugPrint('✅ [Web] Refresh complete.');
     }
   }
 
@@ -345,12 +345,12 @@ class WebFileService implements LocalFileService {
   Future<void> saveFile(String path, Uint8List data) async {
     if (_rootDirHandle != null) {
       try {
-        print('🌐 [Web] Attempting direct write to folder handle...');
+        debugPrint('🌐 [Web] Attempting direct write to folder handle...');
         
         // 1. RE-VERIFY PERMISSION
         final permState = await _verifyPermission(_rootDirHandle, 'readwrite');
         if (!permState) {
-           print('⚠️ [Web] Permission denied/dismissed. Falling back.');
+           debugPrint('⚠️ [Web] Permission denied/dismissed. Falling back.');
         } else {
           final fileName = p.basename(path);
           final createOpts = js_util.newObject();
@@ -369,7 +369,7 @@ class WebFileService implements LocalFileService {
           final closePromise = js_util.callMethod(writable, 'close', []);
           await js_util.promiseToFuture(closePromise);
           
-          print('✅ [Web] Successfully wrote to $fileName');
+          debugPrint('✅ [Web] Successfully wrote to $fileName');
 
           // --- CRITICAL FIX: UPDATE CACHE ---
           // Fetch the actual File object to update our virtual tree immediately
@@ -395,7 +395,7 @@ class WebFileService implements LocalFileService {
           return; 
         }
       } catch (e) {
-        print('⚠️ [Web] Direct write failed ($e). Falling back.');
+        debugPrint('⚠️ [Web] Direct write failed ($e). Falling back.');
       }
     }
 
@@ -418,19 +418,19 @@ class WebFileService implements LocalFileService {
       }
       
       // If prompt/denied, try to request (this triggers the browser dialog)
-      print('🔐 [Web] Permission is "$state", querying user...');
+      debugPrint('🔐 [Web] Permission is "$state", querying user...');
       final reqPromise = js_util.callMethod(handle, 'requestPermission', [opts]);
       final newState = await js_util.promiseToFuture(reqPromise);
       
       return newState == 'granted';
     } catch (e) {
-      print('⚠️ [Web] Permission verification error: $e');
+      debugPrint('⚠️ [Web] Permission verification error: $e');
       return false;
     }
   }
 
   void _triggerBrowserDownload(String path, Uint8List data) {
-    print('🌐 [Web] Triggering browser download for $path');
+    debugPrint('🌐 [Web] Triggering browser download for $path');
     final fileName = p.basename(path);
     final blob = html.Blob([data]);
     final url = html.Url.createObjectUrlFromBlob(blob);
@@ -472,7 +472,7 @@ class MacosFileService implements LocalFileService {
       }
       return false;
     } catch (e) {
-      print('⚠️ Failed to load or resolve bookmark: $e');
+      debugPrint('⚠️ Failed to load or resolve bookmark: $e');
       _resolvedBookmarkFile = null;
       _grantedBasePath = null;
       return false;
@@ -483,7 +483,7 @@ class MacosFileService implements LocalFileService {
   Future<String> getInitialPath() async {
     final grantedPath = await MacOSBookmarkService.getLastGrantedDirectory();
     if (grantedPath != null) {
-      print('✅ Found bookmarked path: $grantedPath');
+      debugPrint('✅ Found bookmarked path: $grantedPath');
       _grantedBasePath = grantedPath;
       currentPath = grantedPath;
       return currentPath;
@@ -533,7 +533,7 @@ class MacosFileService implements LocalFileService {
     try {
       return await Directory(path).list().toList();
     } catch (e) {
-      print('❌ Failed to list directory: $e');
+      debugPrint('❌ Failed to list directory: $e');
       rethrow;
     }
   }
@@ -562,7 +562,7 @@ class MacosFileService implements LocalFileService {
 
     if (_resolvedBookmarkFile != null && path.startsWith(_resolvedBookmarkFile!.path)) {
       try {
-        print('🔐 [MacOS] Writing to secure path: $path');
+        debugPrint('🔐 [MacOS] Writing to secure path: $path');
         await _bookmarks.startAccessingSecurityScopedResource(_resolvedBookmarkFile!);
 
         final file = File(path);
@@ -576,13 +576,13 @@ class MacosFileService implements LocalFileService {
         return;
       } catch (e) {
         try { await _bookmarks.stopAccessingSecurityScopedResource(_resolvedBookmarkFile!); } catch (e2) { debugPrint('Failed to stop security-scoped resource access during saveFile cleanup: $e2'); }
-        print('❌ [MacOS] Secure write failed: $e');
+        debugPrint('❌ [MacOS] Secure write failed: $e');
         rethrow;
       }
     }
     
     // Fallback normal write
-    print('💾 [MacOS] Writing to path (no bookmark scope): $path');
+    debugPrint('💾 [MacOS] Writing to path (no bookmark scope): $path');
     final file = File(path);
     if (!await file.parent.exists()) {
        await file.parent.create(recursive: true);
@@ -632,7 +632,7 @@ class DesktopFileService implements LocalFileService {
         return lastPath;
       }
     } catch(e) {
-      print('⚠️ Could not access last path, using fallback. Error: $e');
+      debugPrint('⚠️ Could not access last path, using fallback. Error: $e');
     }
     currentPath = await getSafeFallbackDirectory();
     return currentPath;
@@ -714,7 +714,7 @@ class MobileFileService implements LocalFileService {
       _resolvedBookmarkFile = await _bookmarks.resolveBookmark(bookmarkBase64);
       return true;
     } catch (e) {
-      print('⚠️ Failed to load or resolve mobile bookmark: $e');
+      debugPrint('⚠️ Failed to load or resolve mobile bookmark: $e');
       _resolvedBookmarkFile = null;
       final prefs = await SharedPreferences.getInstance();
       await prefs.remove(_mobileBookmarkKey); 
@@ -727,16 +727,16 @@ class MobileFileService implements LocalFileService {
     if (await _loadAndResolveBookmark()) {
       try {
         if (await _resolvedBookmarkFile!.exists()) {
-          print('✅ Resolved saved mobile path: ${_resolvedBookmarkFile!.path}');
+          debugPrint('✅ Resolved saved mobile path: ${_resolvedBookmarkFile!.path}');
           _grantedBasePath = _resolvedBookmarkFile!.path;
           currentPath = _resolvedBookmarkFile!.path;
           return currentPath;
         } else {
-          print('⚠️ Saved mobile bookmark path no longer exists.');
+          debugPrint('⚠️ Saved mobile bookmark path no longer exists.');
           await SharedPreferences.getInstance().then((p) => p.remove(_mobileBookmarkKey));
         }
       } catch (e) {
-         print('⚠️ Error checking existence of bookmarked path: $e');
+         debugPrint('⚠️ Error checking existence of bookmarked path: $e');
          await SharedPreferences.getInstance().then((p) => p.remove(_mobileBookmarkKey));
       }
     }
@@ -759,12 +759,12 @@ class MobileFileService implements LocalFileService {
         final String bookmarkData = await _bookmarks.bookmark(Directory(path));
         final prefs = await SharedPreferences.getInstance();
         await prefs.setString(_mobileBookmarkKey, bookmarkData);
-        print('✅ Saved mobile bookmark for: $path');
+        debugPrint('✅ Saved mobile bookmark for: $path');
         _grantedBasePath = path;
         currentPath = path;
         await _loadAndResolveBookmark(); 
       } catch (e) {
-        print('❌ Error saving mobile bookmark: $e');
+        debugPrint('❌ Error saving mobile bookmark: $e');
       }
     }
     return path; 
@@ -792,7 +792,7 @@ class MobileFileService implements LocalFileService {
       
       return entities;
     } catch (e) {
-      print('❌ Failed to list mobile directory: $e');
+      debugPrint('❌ Failed to list mobile directory: $e');
       if (_resolvedBookmarkFile != null && path.startsWith(_resolvedBookmarkFile!.path)) {
          await _bookmarks.stopAccessingSecurityScopedResource(_resolvedBookmarkFile!);
       }

@@ -1,6 +1,7 @@
 // services/filen_config_service.dart
 import 'dart:io';
 import 'dart:convert';
+import 'package:flutter/foundation.dart';
 import 'package:path/path.dart' as p;
 import 'package:shared_preferences/shared_preferences.dart';
 
@@ -16,7 +17,7 @@ class FilenConfigService {
       final credentialsJson = prefs.getString('filen_credentials');
       
       if (credentialsJson == null) {
-        print('📂 No Filen credentials found in SharedPreferences');
+        debugPrint('📂 No Filen credentials found in SharedPreferences');
         return null;
       }
       
@@ -24,10 +25,10 @@ class FilenConfigService {
         json.decode(credentialsJson) as Map
       );
       
-      print('✅ Loaded Filen credentials from SharedPreferences');
+      debugPrint('✅ Loaded Filen credentials from SharedPreferences');
       return credentials;
     } catch (e) {
-      print('⚠️ Error reading Filen credentials: $e');
+      debugPrint('⚠️ Error reading Filen credentials: $e');
       return null;
     }
   }
@@ -41,7 +42,7 @@ class FilenConfigService {
       
       // Credentials saved (do not log sensitive data)
     } catch (e) {
-      print('❌ Error saving Filen credentials: $e');
+      debugPrint('❌ Error saving Filen credentials: $e');
       rethrow;
     }
   }
@@ -51,9 +52,9 @@ class FilenConfigService {
     try {
       final prefs = await SharedPreferences.getInstance();
       await prefs.remove('filen_credentials');
-      print('🗑️ Cleared Filen credentials');
+      debugPrint('🗑️ Cleared Filen credentials');
     } catch (e) {
-      print('⚠️ Error clearing Filen credentials: $e');
+      debugPrint('⚠️ Error clearing Filen credentials: $e');
     }
   }
 
@@ -70,9 +71,9 @@ class FilenConfigService {
       final prefs = await SharedPreferences.getInstance();
       final stateJson = json.encode(state);
       await prefs.setString('filen_batch_$batchId', stateJson);
-      print('💾 Saved batch state for $batchId');
+      debugPrint('💾 Saved batch state for $batchId');
     } catch (e) {
-      print('⚠️ Error saving batch state: $e');
+      debugPrint('⚠️ Error saving batch state: $e');
     }
   }
 
@@ -86,7 +87,7 @@ class FilenConfigService {
       
       return Map<String, dynamic>.from(json.decode(stateJson) as Map);
     } catch (e) {
-      print('⚠️ Error reading batch state: $e');
+      debugPrint('⚠️ Error reading batch state: $e');
       return null;
     }
   }
@@ -96,9 +97,9 @@ class FilenConfigService {
     try {
       final prefs = await SharedPreferences.getInstance();
       await prefs.remove('filen_batch_$batchId');
-      print('🗑️ Deleted batch state for $batchId');
+      debugPrint('🗑️ Deleted batch state for $batchId');
     } catch (e) {
-      print('⚠️ Error deleting batch state: $e');
+      debugPrint('⚠️ Error deleting batch state: $e');
     }
   }
 
@@ -112,7 +113,7 @@ class FilenConfigService {
           .map((key) => key.replaceFirst('filen_batch_', ''))
           .toList();
     } catch (e) {
-      print('⚠️ Error getting batch IDs: $e');
+      debugPrint('⚠️ Error getting batch IDs: $e');
       return [];
     }
   }
@@ -122,9 +123,9 @@ class FilenConfigService {
     try {
       final prefs = await SharedPreferences.getInstance();
       await prefs.setString('cloud_provider', provider);
-      print('💾 Saved provider preference: $provider');
+      debugPrint('💾 Saved provider preference: $provider');
     } catch (e) {
-      print('⚠️ Error saving provider preference: $e');
+      debugPrint('⚠️ Error saving provider preference: $e');
     }
   }
 
@@ -134,7 +135,7 @@ class FilenConfigService {
       final prefs = await SharedPreferences.getInstance();
       return prefs.getString('cloud_provider');
     } catch (e) {
-      print('⚠️ Error getting provider preference: $e');
+      debugPrint('⚠️ Error getting provider preference: $e');
       return null;
     }
   }

@@ -1,5 +1,6 @@
 // models/operation_progress.dart
 import 'dart:async';
+import 'package:flutter/foundation.dart';
 
 enum OperationType {
   upload,
@@ -80,7 +81,7 @@ class OperationProgress {
       if (_isPaused) {
         resume();
       }
-      print('🚫 Operation cancelled: $fileName');
+      debugPrint('🚫 Operation cancelled: $fileName');
     }
   }
   
@@ -89,7 +90,7 @@ class OperationProgress {
     if (!_isPaused && !isComplete && !_isCancelled) {
       _isPaused = true;
       _pauseCompleter = Completer<void>();
-      print('⏸️  Operation paused: $fileName');
+      debugPrint('⏸️  Operation paused: $fileName');
     }
   }
   
@@ -101,7 +102,7 @@ class OperationProgress {
         _pauseCompleter!.complete();
       }
       _pauseCompleter = null;
-      print('▶️  Operation resumed: $fileName');
+      debugPrint('▶️  Operation resumed: $fileName');
     }
   }
 

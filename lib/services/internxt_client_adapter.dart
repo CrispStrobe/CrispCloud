@@ -15,7 +15,7 @@
 
 import 'dart:typed_data';
 
-import 'package:flutter/foundation.dart' show kIsWeb;
+import 'package:flutter/foundation.dart';
 import 'package:internxt_client/internxt_client.dart';
 
 import 'cloud_storage_interface.dart';
@@ -73,14 +73,14 @@ class InternxtClientAdapter implements CloudStorageClient {
   @override
   Future<void> login(String email, String password,
       {String? twoFactorCode}) async {
-    print("🔌 Adapter: Calling InternxtClient login...");
+    debugPrint("🔌 Adapter: Calling InternxtClient login...");
     try {
       final response = await _client.login(email, password, tfaCode: twoFactorCode);
       _lastLoginResponse = response;
-      print("🔌 Adapter: Login successful. Keys received: ${response.keys}");
+      debugPrint("🔌 Adapter: Login successful. Keys received: ${response.keys}");
       _client.setAuth(response);
     } catch (e) {
-      print("🔌 Adapter: Login failed with error: $e");
+      debugPrint("🔌 Adapter: Login failed with error: $e");
       rethrow;
     }
   }
