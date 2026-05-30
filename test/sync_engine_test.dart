@@ -253,7 +253,7 @@ void main() {
     });
 
     test('SyncStatus enum has all expected values', () {
-      expect(SyncStatus.values.length, equals(7));
+      expect(SyncStatus.values.length, equals(8)); // includes placeholder
     });
 
     test('SyncDirection enum has all expected values', () {
