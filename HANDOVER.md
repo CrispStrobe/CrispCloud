@@ -80,25 +80,21 @@ The project uses the **Adapter pattern** (`CloudStorageClient` interface) with *
 - **Offline file cache**: `FileCacheService` with LRU eviction (500MB default), preview pane integration
 - **Delta sync**: content hash comparison (Dropbox `content_hash`, OneDrive `crc32Hash`/`sha1Hash`)
 - **Thumbnails**: compute-isolate generation, disk+memory cache, grid view integration
+- **Placeholder files**: cloud-only `.crispcloud` stubs, hydrate/dehydrate on demand, per-pair toggle, DB schema v3
+
+### Additional UI/UX
+- **Biometric auth**: FaceID/TouchID/fingerprint via `local_auth`, auto-prompt on lock screen, toggle in setup dialog
+- **Column view**: Finder-style layout with 220px columns, toolbar cycles list→grid→column
+- **Video/Audio preview**: inline player via `video_player` (mp4/mov/avi/mkv/webm + mp3/wav/aac/flac/ogg), seek/play/pause/volume controls
 
 ## What Needs to Be Done (in priority order)
 
-### 1. Security — Remaining
+### 1. Remaining Core Features
 - **Cryptomator vault format** (7.1): interop with Cyberduck/Mountain Duck
-- **Biometric auth** (7.3): FaceID/TouchID/fingerprint via `local_auth`
-
-### 2. Power User Features — Remaining
 - **SSH terminal** (6.2): embed `xterm` for SFTP connections
-
-### 3. Sync Engine — Remaining
 - **Mobile background sync** (4.4): `workmanager` (Android) + `BGTaskScheduler` (iOS)
-- **Placeholder files** (4.2): cloud-only files on desktop (like OneDrive Files On-Demand)
 
-### 4. Remaining UI/UX
-- **Video/Audio preview** (5.1): streaming player
-- **Column view** (5.5): Finder-style as layout alternative
-
-### 5. Platform Polish (Phase 8)
+### 2. Platform Polish (Phase 8)
 - macOS: native menu bar, Finder extension, notarization
 - Windows: Explorer context menu, Windows Hello, MSIX
 - Linux: .deb/.rpm/AppImage/Flatpak/Snap, XDG compliance
@@ -106,13 +102,13 @@ The project uses the **Adapter pattern** (`CloudStorageClient` interface) with *
 - iOS: Files.app integration, share extension, App Store
 - Web: Service Worker, Web Push, OPFS
 
-### 6. Distribution & Quality (Phase 10)
+### 3. Distribution & Quality (Phase 10)
 - **i18n**: extract strings to ARB, support 9+ languages
 - **a11y**: screen reader labels, focus management, WCAG 2.1 AA
 - **CI/CD**: build all 6 platforms, code signing, auto-update
 - **Docs**: user guide, provider setup guides, plugin dev guide
 
-### 7. Differentiation (Phase 11)
+### 4. Differentiation (Phase 11)
 - **Migration wizard**: Provider A → Provider B guided workflow
 - **Backup engine**: scheduled incremental backups with versioning
 - **CLI companion**: `crisp` Dart CLI for scripting
@@ -149,6 +145,8 @@ The project uses the **Adapter pattern** (`CloudStorageClient` interface) with *
 | `lib/widgets/lock_screen.dart` | Lock screen + setup dialog |
 | `lib/widgets/proxy_settings_dialog.dart` | Proxy configuration UI |
 | `lib/widgets/panel_splitter.dart` | Draggable resizable panel divider |
+| `lib/widgets/file_column_view.dart` | Finder-style column view |
+| `lib/services/placeholder_service.dart` | Cloud-only file stubs (hydrate/dehydrate) |
 | `lib/screens/file_browser_screen.dart` | Main scaffold + layout |
 | `PLAN.md` | Full roadmap with checkboxes |
 | `HISTORY.md` | Completed work audit trail |

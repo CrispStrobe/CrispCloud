@@ -1,12 +1,17 @@
 // lib/widgets/preview_pane.dart
 //
 // Toggleable preview pane that shows file details and content previews.
-// Supports: images (inline), text/code (read-only), and metadata for other types.
+// Supports: images (inline), text/code (read-only), markdown (rendered),
+// PDF (scrollable), video/audio (streaming player), and metadata for other types.
 
+import 'dart:io';
 import 'dart:typed_data';
+import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:path_provider/path_provider.dart';
 import 'package:pdfx/pdfx.dart';
+import 'package:video_player/video_player.dart';
 import '../models/file_item.dart';
 import '../models/panel_side.dart';
 import '../providers/providers.dart';
@@ -16,7 +21,7 @@ import 'file_list_view.dart' show getFileIcon;
 import 'package:flutter_markdown/flutter_markdown.dart';
 
 /// File types we can preview inline.
-enum PreviewType { image, text, markdown, pdf, none }
+enum PreviewType { image, text, markdown, pdf, video, audio, none }
 
 PreviewType _classifyFile(String name) {
   final ext = name.split('.').last.toLowerCase();
@@ -34,6 +39,26 @@ PreviewType _classifyFile(String name) {
       return PreviewType.markdown;
     case 'pdf':
       return PreviewType.pdf;
+    // Video files
+    case 'mp4':
+    case 'mov':
+    case 'avi':
+    case 'mkv':
+    case 'webm':
+    case 'wmv':
+    case 'flv':
+    case 'm4v':
+      return PreviewType.video;
+    // Audio files
+    case 'mp3':
+    case 'wav':
+    case 'aac':
+    case 'flac':
+    case 'ogg':
+    case 'm4a':
+    case 'wma':
+    case 'opus':
+      return PreviewType.audio;
     case 'txt':
     case 'json':
     case 'yaml':
@@ -105,6 +130,7 @@ class _PreviewPaneState extends ConsumerState<PreviewPane> {
   Uint8List? _previewBytes;
   String? _textContent;
   PdfController? _pdfController;
+  VideoPlayerController? _videoController;
   bool _loading = false;
   String? _error;
   FileItem? _loadedFile; // track which file we loaded
@@ -127,6 +153,7 @@ class _PreviewPaneState extends ConsumerState<PreviewPane> {
   @override
   void dispose() {
     _pdfController?.dispose();
+    _videoController?.dispose();
     super.dispose();
   }
 
@@ -136,6 +163,8 @@ class _PreviewPaneState extends ConsumerState<PreviewPane> {
     _textContent = null;
     _pdfController?.dispose();
     _pdfController = null;
+    _videoController?.dispose();
+    _videoController = null;
     _error = null;
     _loadedFile = file;
 
@@ -150,16 +179,24 @@ class _PreviewPaneState extends ConsumerState<PreviewPane> {
       return;
     }
 
-    // Only preview small files (< 5 MB for text, < 20 MB for images/PDF)
+    // Video/audio: size limits are more generous (100 MB) since they stream
     final maxSize = previewType == PreviewType.text || previewType == PreviewType.markdown
         ? 5 * 1024 * 1024
-        : 20 * 1024 * 1024;
+        : previewType == PreviewType.video || previewType == PreviewType.audio
+            ? 100 * 1024 * 1024
+            : 20 * 1024 * 1024;
     if (file.size != null && file.size! > maxSize) {
       setState(() => _error = 'File too large to preview (${formatBytes(file.size!)})');
       return;
     }
 
     setState(() => _loading = true);
+
+    // Video/audio: download to temp file and play via VideoPlayerController
+    if (previewType == PreviewType.video || previewType == PreviewType.audio) {
+      _fetchMediaPreview(file, previewType);
+      return;
+    }
 
     _fetchPreview(file, previewType);
   }
@@ -224,6 +261,80 @@ class _PreviewPaneState extends ConsumerState<PreviewPane> {
       if (!mounted || _loadedFile != file) return;
       setState(() {
         _error = 'Preview failed: $e';
+        _loading = false;
+      });
+    }
+  }
+
+  Future<void> _fetchMediaPreview(FileItem file, PreviewType type) async {
+    try {
+      Uint8List bytes;
+      final client = ref.read(authProvider).client;
+
+      if (widget.side == PanelSide.local && file.path != null) {
+        // Local file: play directly from file path
+        if (!kIsWeb) {
+          final controller = VideoPlayerController.file(File(file.path!));
+          await controller.initialize();
+          if (!mounted || _loadedFile != file) {
+            controller.dispose();
+            return;
+          }
+          setState(() {
+            _videoController = controller;
+            _loading = false;
+          });
+          return;
+        }
+        bytes = await client.downloadFileBytes(file.path!);
+      } else {
+        // Remote file: download to temp, then play
+        final remotePath = file.path ?? '/${file.name}';
+        final providerName = ref.read(authProvider).providerName;
+        final cache = ref.read(fileCacheProvider);
+
+        final cached = await cache.get(remotePath, providerName);
+        if (cached != null) {
+          bytes = Uint8List.fromList(cached);
+        } else {
+          bytes = await client.downloadFileBytes(remotePath);
+          cache.put(remotePath, providerName, bytes);
+        }
+      }
+
+      if (!mounted || _loadedFile != file) return;
+
+      if (kIsWeb) {
+        // Web: can't write to temp file, show metadata instead
+        setState(() {
+          _error = 'Media preview not supported on web. Download to play.';
+          _loading = false;
+        });
+        return;
+      }
+
+      // Write to temp file for VideoPlayerController
+      final tempDir = await getTemporaryDirectory();
+      final ext = file.name.contains('.') ? '.${file.name.split('.').last}' : '';
+      final tempFile = File('${tempDir.path}/crispcloud_preview$ext');
+      await tempFile.writeAsBytes(bytes);
+
+      final controller = VideoPlayerController.file(tempFile);
+      await controller.initialize();
+
+      if (!mounted || _loadedFile != file) {
+        controller.dispose();
+        return;
+      }
+
+      setState(() {
+        _videoController = controller;
+        _loading = false;
+      });
+    } catch (e) {
+      if (!mounted || _loadedFile != file) return;
+      setState(() {
+        _error = 'Media preview failed: $e';
         _loading = false;
       });
     }
@@ -353,6 +464,14 @@ class _PreviewPaneState extends ConsumerState<PreviewPane> {
       );
     }
 
+    // Video/Audio preview
+    if (_videoController != null) {
+      return _MediaPlayer(
+        controller: _videoController!,
+        isAudio: _classifyFile(file.name) == PreviewType.audio,
+      );
+    }
+
     // Markdown preview
     if (_textContent != null && _classifyFile(file.name) == PreviewType.markdown) {
       return Container(
@@ -455,6 +574,152 @@ class _PreviewPaneState extends ConsumerState<PreviewPane> {
           ),
         ],
       ),
+    );
+  }
+}
+
+/// Inline media player for video and audio files.
+class _MediaPlayer extends StatefulWidget {
+  final VideoPlayerController controller;
+  final bool isAudio;
+
+  const _MediaPlayer({
+    required this.controller,
+    this.isAudio = false,
+  });
+
+  @override
+  State<_MediaPlayer> createState() => _MediaPlayerState();
+}
+
+class _MediaPlayerState extends State<_MediaPlayer> {
+  @override
+  void initState() {
+    super.initState();
+    widget.controller.addListener(_onUpdate);
+  }
+
+  void _onUpdate() {
+    if (mounted) setState(() {});
+  }
+
+  @override
+  void dispose() {
+    widget.controller.removeListener(_onUpdate);
+    super.dispose();
+  }
+
+  String _formatDuration(Duration d) {
+    final h = d.inHours;
+    final m = d.inMinutes.remainder(60).toString().padLeft(2, '0');
+    final s = d.inSeconds.remainder(60).toString().padLeft(2, '0');
+    return h > 0 ? '$h:$m:$s' : '$m:$s';
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final controller = widget.controller;
+    final isPlaying = controller.value.isPlaying;
+    final position = controller.value.position;
+    final duration = controller.value.duration;
+
+    return Column(
+      children: [
+        // Video display or audio icon
+        Expanded(
+          child: widget.isAudio
+              ? Center(
+                  child: Column(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      Icon(Icons.music_note, size: 64, color: theme.colorScheme.primary),
+                      const SizedBox(height: 8),
+                      Text(
+                        isPlaying ? 'Playing' : 'Paused',
+                        style: TextStyle(color: theme.colorScheme.onSurfaceVariant),
+                      ),
+                    ],
+                  ),
+                )
+              : Center(
+                  child: controller.value.isInitialized
+                      ? AspectRatio(
+                          aspectRatio: controller.value.aspectRatio,
+                          child: VideoPlayer(controller),
+                        )
+                      : const CircularProgressIndicator(),
+                ),
+        ),
+        // Controls
+        Container(
+          padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+          decoration: BoxDecoration(
+            color: theme.colorScheme.surfaceContainerHighest,
+            border: Border(top: BorderSide(color: theme.dividerColor)),
+          ),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              // Seek bar
+              SliderTheme(
+                data: SliderThemeData(
+                  trackHeight: 3,
+                  thumbShape: const RoundSliderThumbShape(enabledThumbRadius: 6),
+                  overlayShape: const RoundSliderOverlayShape(overlayRadius: 12),
+                  activeTrackColor: theme.colorScheme.primary,
+                  inactiveTrackColor: theme.colorScheme.surfaceContainerHigh,
+                  thumbColor: theme.colorScheme.primary,
+                ),
+                child: Slider(
+                  value: duration.inMilliseconds > 0
+                      ? position.inMilliseconds / duration.inMilliseconds
+                      : 0.0,
+                  onChanged: (v) {
+                    controller.seekTo(Duration(
+                      milliseconds: (v * duration.inMilliseconds).round(),
+                    ));
+                  },
+                ),
+              ),
+              // Play/pause + time
+              Row(
+                children: [
+                  IconButton(
+                    icon: Icon(isPlaying ? Icons.pause : Icons.play_arrow, size: 20),
+                    onPressed: () {
+                      if (isPlaying) {
+                        controller.pause();
+                      } else {
+                        controller.play();
+                      }
+                    },
+                    padding: EdgeInsets.zero,
+                    constraints: const BoxConstraints(minWidth: 32, minHeight: 32),
+                  ),
+                  Text(
+                    '${_formatDuration(position)} / ${_formatDuration(duration)}',
+                    style: TextStyle(fontSize: 11, color: theme.colorScheme.onSurfaceVariant),
+                  ),
+                  const Spacer(),
+                  // Volume toggle
+                  IconButton(
+                    icon: Icon(
+                      controller.value.volume > 0 ? Icons.volume_up : Icons.volume_off,
+                      size: 18,
+                    ),
+                    onPressed: () {
+                      controller.setVolume(controller.value.volume > 0 ? 0.0 : 1.0);
+                    },
+                    padding: EdgeInsets.zero,
+                    constraints: const BoxConstraints(minWidth: 32, minHeight: 32),
+                  ),
+                ],
+              ),
+            ],
+          ),
+        ),
+      ],
     );
   }
 }

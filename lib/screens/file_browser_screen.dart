@@ -3,7 +3,9 @@
 // Main scaffold and layout for the two-panel file browser.
 // Keyboard handling, dialogs, and about dialog are in separate files.
 
+import 'package:flutter/foundation.dart' show TargetPlatform, defaultTargetPlatform, kIsWeb;
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:provider/provider.dart' as legacy;
 
@@ -20,6 +22,7 @@ import '../widgets/key_management_dialog.dart';
 import '../widgets/sync_dialog.dart';
 import '../widgets/tree_sidebar.dart';
 import '../widgets/lock_screen.dart';
+import '../widgets/command_palette.dart';
 import '../widgets/theme_picker.dart';
 import '../main.dart' show appLockServiceProvider;
 import 'about_dialog.dart';
@@ -43,7 +46,7 @@ class _FileBrowserScreenState extends ConsumerState<FileBrowserScreen> {
     final showPreview = ref.watch(showPreviewProvider);
     final transfers = ref.watch(transferProvider);
 
-    return Scaffold(
+    final scaffold = Scaffold(
       appBar: AppBar(
         title: const Text('Crisp Cloud'),
         actions: [
@@ -163,6 +166,129 @@ class _FileBrowserScreenState extends ConsumerState<FileBrowserScreen> {
           ? _buildDrawer(context)
           : null,
     );
+
+    // macOS: wrap with native menu bar
+    if (!kIsWeb && defaultTargetPlatform == TargetPlatform.macOS) {
+      return PlatformMenuBar(
+        menus: _buildMacMenus(context, ref),
+        body: scaffold,
+      );
+    }
+
+    return scaffold;
+  }
+
+  List<PlatformMenuItem> _buildMacMenus(BuildContext context, WidgetRef ref) {
+    return [
+      PlatformMenu(
+        label: 'CrispCloud',
+        menus: [
+          PlatformMenuItemGroup(members: [
+            PlatformMenuItem(
+              label: 'About CrispCloud',
+              onSelected: () => showDialog(
+                context: context,
+                builder: (_) => const AboutAppDialog(),
+              ),
+            ),
+          ]),
+          PlatformMenuItemGroup(members: [
+            PlatformMenuItem(
+              label: 'Preferences...',
+              shortcut: const SingleActivator(LogicalKeyboardKey.comma, meta: true),
+              onSelected: () {
+                final themeService = legacy.Provider.of<ThemeService>(context, listen: false);
+                showDialog(
+                  context: context,
+                  builder: (_) => legacy.ChangeNotifierProvider<ThemeService>.value(
+                    value: themeService,
+                    child: legacy.Consumer<ThemeService>(
+                      builder: (ctx, ts, _) => ThemePickerDialog(themeService: ts),
+                    ),
+                  ),
+                );
+              },
+            ),
+          ]),
+          const PlatformMenuItemGroup(members: [
+            PlatformProvidedMenuItem(type: PlatformProvidedMenuItemType.quit),
+          ]),
+        ],
+      ),
+      PlatformMenu(
+        label: 'File',
+        menus: [
+          PlatformMenuItem(
+            label: 'New Tab',
+            shortcut: const SingleActivator(LogicalKeyboardKey.keyT, meta: true),
+            onSelected: () {
+              final side = ref.read(activePanelProvider);
+              ref.read(panelProvider(side)).addTab();
+            },
+          ),
+          PlatformMenuItem(
+            label: 'Close Tab',
+            shortcut: const SingleActivator(LogicalKeyboardKey.keyW, meta: true),
+            onSelected: () {
+              final side = ref.read(activePanelProvider);
+              final panel = ref.read(panelProvider(side));
+              panel.closeTab(panel.activeTab.id);
+            },
+          ),
+          PlatformMenuItemGroup(members: [
+            PlatformMenuItem(
+              label: 'Connect...',
+              shortcut: const SingleActivator(LogicalKeyboardKey.keyK, meta: true),
+              onSelected: () => showConnectionDialogScreen(context),
+            ),
+          ]),
+          PlatformMenuItemGroup(members: [
+            PlatformMenuItem(
+              label: 'Go to Path...',
+              shortcut: const SingleActivator(LogicalKeyboardKey.keyG, meta: true),
+              onSelected: () => showGoToDialog(context, ref),
+            ),
+          ]),
+        ],
+      ),
+      PlatformMenu(
+        label: 'View',
+        menus: [
+          PlatformMenuItem(
+            label: 'Toggle Preview',
+            shortcut: const SingleActivator(LogicalKeyboardKey.space),
+            onSelected: () {
+              final current = ref.read(showPreviewProvider);
+              ref.read(showPreviewProvider.notifier).state = !current;
+            },
+          ),
+          PlatformMenuItem(
+            label: 'Toggle Tree Sidebar',
+            onSelected: () {
+              final current = ref.read(showTreeSidebarProvider);
+              ref.read(showTreeSidebarProvider.notifier).state = !current;
+            },
+          ),
+          PlatformMenuItemGroup(members: [
+            PlatformMenuItem(
+              label: 'Sync Manager',
+              onSelected: () => showSyncDialog(context),
+            ),
+            PlatformMenuItem(
+              label: 'Find Duplicates',
+              onSelected: () => showDuplicateFinderDialog(context, ref),
+            ),
+          ]),
+          PlatformMenuItemGroup(members: [
+            PlatformMenuItem(
+              label: 'Command Palette',
+              shortcut: const SingleActivator(LogicalKeyboardKey.keyP, meta: true, shift: true),
+              onSelected: () => showCommandPalette(context, ref),
+            ),
+          ]),
+        ],
+      ),
+    ];
   }
 
   Widget _buildTwoPanelLayout(BuildContext context) {

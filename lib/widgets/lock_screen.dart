@@ -1,9 +1,8 @@
 // lib/widgets/lock_screen.dart
 //
-// Full-screen lock overlay requiring PIN/password to access the app.
+// Full-screen lock overlay requiring PIN/password or biometric to access the app.
 
 import 'package:flutter/material.dart';
-import 'package:flutter/services.dart';
 
 import '../services/app_lock_service.dart';
 
@@ -27,11 +26,47 @@ class _LockScreenState extends State<LockScreen> {
   String? _error;
   bool _isVerifying = false;
   int _attempts = 0;
+  bool _biometricAvailable = false;
+  String _biometricLabel = 'Biometric';
 
   @override
   void initState() {
     super.initState();
     _focusNode.requestFocus();
+    _checkBiometric();
+  }
+
+  Future<void> _checkBiometric() async {
+    final enabled = await widget.lockService.isBiometricEnabled();
+    if (!enabled) return;
+
+    final available = await widget.lockService.isBiometricAvailable();
+    if (!available) return;
+
+    final label = await widget.lockService.getBiometricLabel();
+    if (mounted) {
+      setState(() {
+        _biometricAvailable = true;
+        _biometricLabel = label;
+      });
+      // Auto-prompt biometric on lock screen show
+      _authenticateBiometric();
+    }
+  }
+
+  Future<void> _authenticateBiometric() async {
+    setState(() => _isVerifying = true);
+    final ok = await widget.lockService.authenticateWithBiometric();
+    if (ok) {
+      widget.onUnlocked();
+    } else {
+      if (mounted) {
+        setState(() {
+          _isVerifying = false;
+          _focusNode.requestFocus();
+        });
+      }
+    }
   }
 
   @override
@@ -58,12 +93,46 @@ class _LockScreenState extends State<LockScreen> {
               ),
               const SizedBox(height: 8),
               Text(
-                'Enter your PIN or password to continue',
+                _biometricAvailable
+                    ? 'Use $_biometricLabel or enter your PIN/password'
+                    : 'Enter your PIN or password to continue',
                 style: theme.textTheme.bodyMedium?.copyWith(
                   color: theme.colorScheme.onSurfaceVariant,
                 ),
+                textAlign: TextAlign.center,
               ),
               const SizedBox(height: 32),
+              if (_biometricAvailable) ...[
+                SizedBox(
+                  width: double.infinity,
+                  height: 48,
+                  child: OutlinedButton.icon(
+                    onPressed: isLocked || _isVerifying
+                        ? null
+                        : _authenticateBiometric,
+                    icon: Icon(_biometricIcon),
+                    label: Text('Unlock with $_biometricLabel'),
+                  ),
+                ),
+                const SizedBox(height: 16),
+                Row(
+                  children: [
+                    const Expanded(child: Divider()),
+                    Padding(
+                      padding: const EdgeInsets.symmetric(horizontal: 12),
+                      child: Text(
+                        'or',
+                        style: TextStyle(
+                          color: theme.colorScheme.onSurfaceVariant,
+                          fontSize: 12,
+                        ),
+                      ),
+                    ),
+                    const Expanded(child: Divider()),
+                  ],
+                ),
+                const SizedBox(height: 16),
+              ],
               if (_error != null)
                 Container(
                   padding: const EdgeInsets.all(8),
@@ -74,12 +143,14 @@ class _LockScreenState extends State<LockScreen> {
                   ),
                   child: Row(
                     children: [
-                      Icon(Icons.error_outline, color: theme.colorScheme.error, size: 18),
+                      Icon(Icons.error_outline,
+                          color: theme.colorScheme.error, size: 18),
                       const SizedBox(width: 8),
                       Expanded(
                         child: Text(
                           _error!,
-                          style: TextStyle(color: theme.colorScheme.error, fontSize: 13),
+                          style: TextStyle(
+                              color: theme.colorScheme.error, fontSize: 13),
                         ),
                       ),
                     ],
@@ -106,9 +177,6 @@ class _LockScreenState extends State<LockScreen> {
                       : null,
                 ),
                 onSubmitted: isLocked ? null : (_) => _verify(),
-                inputFormatters: [
-                  // Allow any characters (PIN or password)
-                ],
               ),
               const SizedBox(height: 16),
               SizedBox(
@@ -134,6 +202,12 @@ class _LockScreenState extends State<LockScreen> {
         ),
       ),
     );
+  }
+
+  IconData get _biometricIcon {
+    if (_biometricLabel == 'Face ID') return Icons.face;
+    if (_biometricLabel == 'Fingerprint') return Icons.fingerprint;
+    return Icons.security;
   }
 
   Future<void> _verify() async {
@@ -190,16 +264,30 @@ class _AppLockSetupDialogState extends State<AppLockSetupDialog> {
   final _confirmController = TextEditingController();
   String? _error;
   int _timeout = 300;
+  bool _biometricAvailable = false;
+  bool _biometricEnabled = false;
+  String _biometricLabel = 'Biometric';
 
   @override
   void initState() {
     super.initState();
-    _loadTimeout();
+    _loadSettings();
   }
 
-  Future<void> _loadTimeout() async {
+  Future<void> _loadSettings() async {
     final t = await widget.lockService.getTimeout();
-    if (mounted) setState(() => _timeout = t);
+    final bioAvail = await widget.lockService.isBiometricAvailable();
+    final bioEnabled = await widget.lockService.isBiometricEnabled();
+    final label =
+        bioAvail ? await widget.lockService.getBiometricLabel() : 'Biometric';
+    if (mounted) {
+      setState(() {
+        _timeout = t;
+        _biometricAvailable = bioAvail;
+        _biometricEnabled = bioEnabled;
+        _biometricLabel = label;
+      });
+    }
   }
 
   @override
@@ -217,7 +305,8 @@ class _AppLockSetupDialogState extends State<AppLockSetupDialog> {
                 padding: const EdgeInsets.all(8),
                 margin: const EdgeInsets.only(bottom: 12),
                 color: Colors.red.shade100,
-                child: Text(_error!, style: const TextStyle(color: Colors.red, fontSize: 13)),
+                child: Text(_error!,
+                    style: const TextStyle(color: Colors.red, fontSize: 13)),
               ),
             if (widget.isChanging) ...[
               TextField(
@@ -265,6 +354,25 @@ class _AppLockSetupDialogState extends State<AppLockSetupDialog> {
               ],
               onChanged: (v) => setState(() => _timeout = v ?? 300),
             ),
+            if (_biometricAvailable) ...[
+              const SizedBox(height: 16),
+              SwitchListTile(
+                title: Text('Unlock with $_biometricLabel'),
+                subtitle: Text(
+                  'Use $_biometricLabel as an alternative to your PIN/password',
+                ),
+                secondary: Icon(
+                  _biometricLabel == 'Face ID'
+                      ? Icons.face
+                      : _biometricLabel == 'Fingerprint'
+                          ? Icons.fingerprint
+                          : Icons.security,
+                ),
+                value: _biometricEnabled,
+                onChanged: (v) => setState(() => _biometricEnabled = v),
+                contentPadding: EdgeInsets.zero,
+              ),
+            ],
           ],
         ),
       ),
@@ -295,7 +403,8 @@ class _AppLockSetupDialogState extends State<AppLockSetupDialog> {
     }
 
     if (widget.isChanging) {
-      final ok = await widget.lockService.changeCode(_currentController.text, newCode);
+      final ok =
+          await widget.lockService.changeCode(_currentController.text, newCode);
       if (!ok) {
         setState(() => _error = 'Current PIN/password is incorrect');
         return;
@@ -305,6 +414,9 @@ class _AppLockSetupDialogState extends State<AppLockSetupDialog> {
     }
 
     await widget.lockService.setTimeout(_timeout);
+    if (_biometricAvailable) {
+      await widget.lockService.setBiometricEnabled(_biometricEnabled);
+    }
 
     if (mounted) Navigator.pop(context, true);
   }

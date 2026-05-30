@@ -57,6 +57,8 @@ dependencies:
   file_picker: ^10.3.3
   shared_preferences: ^2.5.3
   flutter_secure_storage: ^9.2.4
+  local_auth: ^2.3.0
+  video_player: ^2.9.2
   file_selector: ^1.0.4
   file_selector_macos: ^0.9.4+5
   url_launcher: ^6.3.2
@@ -106,9 +108,13 @@ dev_dependencies:
 
 dependency_overrides:
   libdbm:
-    git: 
+    git:
       url: https://github.com/CrispStrobe/libdbm
-    # path: ../libdbm # 
+    # path: ../libdbm #
+
+  # system_tray (unmaintained) pins uuid ^3.x but pdfx needs ^4.x.
+  # Force uuid 4.x — system_tray only uses uuid.v4() which is unchanged.
+  uuid: ^4.5.1
 
 flutter:
   uses-material-design: true

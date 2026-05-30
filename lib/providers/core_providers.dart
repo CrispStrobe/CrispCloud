@@ -39,7 +39,7 @@ final showTreeSidebarProvider = StateProvider<bool>((ref) => false);
 final panelSplitRatioProvider = StateProvider<double>((ref) => 0.5);
 
 /// File view mode per panel.
-enum ViewMode { list, grid }
+enum ViewMode { list, grid, column }
 final localViewModeProvider = StateProvider<ViewMode>((ref) => ViewMode.list);
 final remoteViewModeProvider = StateProvider<ViewMode>((ref) => ViewMode.list);
 

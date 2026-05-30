@@ -46,6 +46,19 @@ class $SyncPairsTable extends SyncPairs with TableInfo<$SyncPairsTable, SyncPair
   late final GeneratedColumn<DateTime> createdAt = GeneratedColumn<DateTime>('created_at', aliasedName, false,
       type: DriftSqlType.dateTime, defaultValue: currentDateAndTime);
 
+  static const VerificationMeta _includePatternsMeta = VerificationMeta('includePatterns');
+  @override
+  late final GeneratedColumn<String> includePatterns = GeneratedColumn<String>('include_patterns', aliasedName, false,
+      type: DriftSqlType.string, defaultValue: const Constant(''));
+  static const VerificationMeta _excludePatternsMeta = VerificationMeta('excludePatterns');
+  @override
+  late final GeneratedColumn<String> excludePatterns = GeneratedColumn<String>('exclude_patterns', aliasedName, false,
+      type: DriftSqlType.string, defaultValue: const Constant(''));
+  static const VerificationMeta _usePlaceholdersMeta = VerificationMeta('usePlaceholders');
+  @override
+  late final GeneratedColumn<bool> usePlaceholders = GeneratedColumn<bool>('use_placeholders', aliasedName, false,
+      type: DriftSqlType.bool, defaultConstraints: GeneratedColumn.constraintIsAlways('CHECK ("use_placeholders" IN (0, 1))'), defaultValue: const Constant(false));
+
   @override
   Set<GeneratedColumn> get $primaryKey => {id};
   @override
@@ -83,11 +96,14 @@ class $SyncPairsTable extends SyncPairs with TableInfo<$SyncPairsTable, SyncPair
     if (data.containsKey('enabled')) context.handle(_enabledMeta, enabled.isAcceptableOrUnknown(data['enabled']!, _enabledMeta));
     if (data.containsKey('last_sync_at')) context.handle(_lastSyncAtMeta, lastSyncAt.isAcceptableOrUnknown(data['last_sync_at']!, _lastSyncAtMeta));
     if (data.containsKey('created_at')) context.handle(_createdAtMeta, createdAt.isAcceptableOrUnknown(data['created_at']!, _createdAtMeta));
+    if (data.containsKey('include_patterns')) context.handle(_includePatternsMeta, includePatterns.isAcceptableOrUnknown(data['include_patterns']!, _includePatternsMeta));
+    if (data.containsKey('exclude_patterns')) context.handle(_excludePatternsMeta, excludePatterns.isAcceptableOrUnknown(data['exclude_patterns']!, _excludePatternsMeta));
+    if (data.containsKey('use_placeholders')) context.handle(_usePlaceholdersMeta, usePlaceholders.isAcceptableOrUnknown(data['use_placeholders']!, _usePlaceholdersMeta));
     return context;
   }
 
   @override
-  List<GeneratedColumn> get $columns => [id, name, localPath, remotePath, provider, conflictPolicy, direction, enabled, lastSyncAt, createdAt];
+  List<GeneratedColumn> get $columns => [id, name, localPath, remotePath, provider, conflictPolicy, direction, enabled, lastSyncAt, createdAt, includePatterns, excludePatterns, usePlaceholders];
   @override
   SyncPair map(Map<String, dynamic> data, {String? tablePrefix}) {
     final effectivePrefix = tablePrefix != null ? '$tablePrefix.' : '';
@@ -102,6 +118,9 @@ class $SyncPairsTable extends SyncPairs with TableInfo<$SyncPairsTable, SyncPair
       enabled: attachedDatabase.typeMapping.read(DriftSqlType.bool, data['${effectivePrefix}enabled'])!,
       lastSyncAt: attachedDatabase.typeMapping.read(DriftSqlType.dateTime, data['${effectivePrefix}last_sync_at']),
       createdAt: attachedDatabase.typeMapping.read(DriftSqlType.dateTime, data['${effectivePrefix}created_at'])!,
+      includePatterns: attachedDatabase.typeMapping.read(DriftSqlType.string, data['${effectivePrefix}include_patterns'])!,
+      excludePatterns: attachedDatabase.typeMapping.read(DriftSqlType.string, data['${effectivePrefix}exclude_patterns'])!,
+      usePlaceholders: attachedDatabase.typeMapping.read(DriftSqlType.bool, data['${effectivePrefix}use_placeholders'])!,
     );
   }
 
@@ -120,6 +139,9 @@ class SyncPair extends DataClass implements Insertable<SyncPair> {
   final bool enabled;
   final DateTime? lastSyncAt;
   final DateTime createdAt;
+  final String includePatterns;
+  final String excludePatterns;
+  final bool usePlaceholders;
 
   const SyncPair({
     required this.id,
@@ -132,6 +154,9 @@ class SyncPair extends DataClass implements Insertable<SyncPair> {
     required this.enabled,
     this.lastSyncAt,
     required this.createdAt,
+    this.includePatterns = '',
+    this.excludePatterns = '',
+    this.usePlaceholders = false,
   });
 
   @override
@@ -147,6 +172,9 @@ class SyncPair extends DataClass implements Insertable<SyncPair> {
     map['enabled'] = Variable<bool>(enabled);
     if (!nullToAbsent || lastSyncAt != null) map['last_sync_at'] = Variable<DateTime>(lastSyncAt);
     map['created_at'] = Variable<DateTime>(createdAt);
+    map['include_patterns'] = Variable<String>(includePatterns);
+    map['exclude_patterns'] = Variable<String>(excludePatterns);
+    map['use_placeholders'] = Variable<bool>(usePlaceholders);
     return map;
   }
 
@@ -162,10 +190,13 @@ class SyncPair extends DataClass implements Insertable<SyncPair> {
       enabled: Value(enabled),
       lastSyncAt: lastSyncAt == null && nullToAbsent ? const Value.absent() : Value(lastSyncAt),
       createdAt: Value(createdAt),
+      includePatterns: Value(includePatterns),
+      excludePatterns: Value(excludePatterns),
+      usePlaceholders: Value(usePlaceholders),
     );
   }
 
-  SyncPair copyWith({int? id, String? name, String? localPath, String? remotePath, String? provider, String? conflictPolicy, String? direction, bool? enabled, Value<DateTime?>? lastSyncAt, DateTime? createdAt}) {
+  SyncPair copyWith({int? id, String? name, String? localPath, String? remotePath, String? provider, String? conflictPolicy, String? direction, bool? enabled, Value<DateTime?>? lastSyncAt, DateTime? createdAt, String? includePatterns, String? excludePatterns, bool? usePlaceholders}) {
     return SyncPair(
       id: id ?? this.id,
       name: name ?? this.name,
@@ -177,6 +208,9 @@ class SyncPair extends DataClass implements Insertable<SyncPair> {
       enabled: enabled ?? this.enabled,
       lastSyncAt: lastSyncAt == null ? this.lastSyncAt : lastSyncAt.value,
       createdAt: createdAt ?? this.createdAt,
+      includePatterns: includePatterns ?? this.includePatterns,
+      excludePatterns: excludePatterns ?? this.excludePatterns,
+      usePlaceholders: usePlaceholders ?? this.usePlaceholders,
     );
   }
 
@@ -195,6 +229,7 @@ class SyncPair extends DataClass implements Insertable<SyncPair> {
     'id': id, 'name': name, 'localPath': localPath, 'remotePath': remotePath,
     'provider': provider, 'conflictPolicy': conflictPolicy, 'direction': direction,
     'enabled': enabled, 'lastSyncAt': lastSyncAt?.toIso8601String(), 'createdAt': createdAt.toIso8601String(),
+    'includePatterns': includePatterns, 'excludePatterns': excludePatterns, 'usePlaceholders': usePlaceholders,
   };
 }
 
@@ -209,6 +244,9 @@ class SyncPairsCompanion extends UpdateCompanion<SyncPair> {
   final Value<bool> enabled;
   final Value<DateTime?> lastSyncAt;
   final Value<DateTime> createdAt;
+  final Value<String> includePatterns;
+  final Value<String> excludePatterns;
+  final Value<bool> usePlaceholders;
 
   const SyncPairsCompanion({
     this.id = const Value.absent(),
@@ -221,6 +259,9 @@ class SyncPairsCompanion extends UpdateCompanion<SyncPair> {
     this.enabled = const Value.absent(),
     this.lastSyncAt = const Value.absent(),
     this.createdAt = const Value.absent(),
+    this.includePatterns = const Value.absent(),
+    this.excludePatterns = const Value.absent(),
+    this.usePlaceholders = const Value.absent(),
   });
 
   SyncPairsCompanion.insert({
@@ -234,6 +275,9 @@ class SyncPairsCompanion extends UpdateCompanion<SyncPair> {
     this.enabled = const Value.absent(),
     this.lastSyncAt = const Value.absent(),
     this.createdAt = const Value.absent(),
+    this.includePatterns = const Value.absent(),
+    this.excludePatterns = const Value.absent(),
+    this.usePlaceholders = const Value.absent(),
   })  : name = Value(name),
         localPath = Value(localPath),
         remotePath = Value(remotePath),
@@ -252,6 +296,9 @@ class SyncPairsCompanion extends UpdateCompanion<SyncPair> {
     if (enabled.present) map['enabled'] = Variable<bool>(enabled.value);
     if (lastSyncAt.present) map['last_sync_at'] = Variable<DateTime>(lastSyncAt.value);
     if (createdAt.present) map['created_at'] = Variable<DateTime>(createdAt.value);
+    if (includePatterns.present) map['include_patterns'] = Variable<String>(includePatterns.value);
+    if (excludePatterns.present) map['exclude_patterns'] = Variable<String>(excludePatterns.value);
+    if (usePlaceholders.present) map['use_placeholders'] = Variable<bool>(usePlaceholders.value);
     return map;
   }
 

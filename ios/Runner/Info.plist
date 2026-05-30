@@ -54,6 +54,8 @@
 	<string>This app needs access to your Documents folder to upload and download files.</string>
 	<key>NSDownloadsFolderUsageDescription</key>
 	<string>This app needs access to your Downloads folder to upload and download files.</string>
+	<key>NSFaceIDUsageDescription</key>
+	<string>CrispCloud uses Face ID to unlock the app when app lock is enabled.</string>
 
 	<key>CFBundleURLTypes</key>
 	<array>

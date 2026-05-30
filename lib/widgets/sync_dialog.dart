@@ -144,6 +144,7 @@ class _SyncManagerDialog extends ConsumerWidget {
     final excludeController = TextEditingController();
     var policy = ConflictPolicy.newestWins;
     var direction = SyncDirection.twoWay;
+    var usePlaceholders = false;
 
     final auth = ref.read(authProvider);
 
@@ -236,6 +237,18 @@ class _SyncManagerDialog extends ConsumerWidget {
                       prefixIcon: Icon(Icons.filter_alt_off),
                     ),
                   ),
+                  const SizedBox(height: 12),
+                  SwitchListTile(
+                    title: const Text('Cloud-only files'),
+                    subtitle: const Text(
+                      'New remote files appear as lightweight stubs. '
+                      'Download on demand to save disk space.',
+                    ),
+                    secondary: const Icon(Icons.cloud_outlined),
+                    value: usePlaceholders,
+                    onChanged: (v) => setState(() => usePlaceholders = v),
+                    contentPadding: EdgeInsets.zero,
+                  ),
                 ],
               ),
             ),
@@ -254,6 +267,7 @@ class _SyncManagerDialog extends ConsumerWidget {
                   direction: direction,
                   includePatterns: includeController.text,
                   excludePatterns: excludeController.text,
+                  usePlaceholders: usePlaceholders,
                 );
                 if (ctx.mounted) Navigator.pop(ctx);
               },
@@ -290,7 +304,19 @@ class _SyncPairTile extends ConsumerWidget {
         pair.enabled ? Icons.sync : Icons.sync_disabled,
         color: isActive ? Theme.of(context).colorScheme.primary : null,
       ),
-      title: Text(pair.name),
+      title: Row(
+        children: [
+          Text(pair.name),
+          if (pair.usePlaceholders) ...[
+            const SizedBox(width: 6),
+            Tooltip(
+              message: 'Cloud-only mode: files download on demand',
+              child: Icon(Icons.cloud_outlined, size: 14,
+                  color: Theme.of(context).colorScheme.primary),
+            ),
+          ],
+        ],
+      ),
       subtitle: Text(
         '${pair.localPath} ↔ ${pair.remotePath}\n'
         'Last sync: ${pair.lastSyncAt != null ? _formatTime(pair.lastSyncAt!) : 'Never'}',
@@ -300,6 +326,19 @@ class _SyncPairTile extends ConsumerWidget {
       trailing: Row(
         mainAxisSize: MainAxisSize.min,
         children: [
+          if (pair.usePlaceholders)
+            IconButton(
+              icon: const Icon(Icons.cloud_download, size: 18),
+              tooltip: 'Download All Cloud-Only Files',
+              onPressed: isActive ? null : () async {
+                final count = await ref.read(syncProvider).hydrateAllPlaceholders(pair.id);
+                if (context.mounted) {
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    SnackBar(content: Text('Downloaded $count files')),
+                  );
+                }
+              },
+            ),
           Switch(
             value: pair.enabled,
             onChanged: (v) => ref.read(syncProvider).togglePair(pair.id, v),

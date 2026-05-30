@@ -11,6 +11,7 @@ import 'package:flutter/foundation.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../services/cloud_storage_interface.dart';
+import '../services/placeholder_service.dart';
 import '../services/sync_database.dart';
 import '../services/sync_engine.dart';
 import '../services/sync_watcher.dart';
@@ -106,6 +107,7 @@ class SyncNotifier extends ChangeNotifier {
     SyncDirection direction = SyncDirection.twoWay,
     String includePatterns = '',
     String excludePatterns = '',
+    bool usePlaceholders = false,
   }) async {
     await _db.insertPair(SyncPairsCompanion.insert(
       name: name,
@@ -116,6 +118,7 @@ class SyncNotifier extends ChangeNotifier {
       direction: Value(direction.name),
       includePatterns: Value(includePatterns),
       excludePatterns: Value(excludePatterns),
+      usePlaceholders: Value(usePlaceholders),
     ));
     await _loadPairs();
   }
@@ -353,6 +356,76 @@ class SyncNotifier extends ChangeNotifier {
         break;
       default:
         throw UnsupportedError('Unknown offline operation: ${op.operation}');
+    }
+  }
+
+  // --- Placeholder / Cloud-Only Files ---
+
+  /// Toggle placeholder mode for a sync pair.
+  Future<void> setPlaceholders(int pairId, bool enabled) async {
+    await (_db.update(_db.syncPairs)..where((t) => t.id.equals(pairId)))
+        .write(SyncPairsCompanion(usePlaceholders: Value(enabled)));
+    await _loadPairs();
+  }
+
+  /// Hydrate (download) a single placeholder file.
+  Future<String?> hydratePlaceholder(int pairId, String relativePath) async {
+    try {
+      final pair = await _db.getPair(pairId);
+      final auth = _ref.read(authProvider);
+      final placeholder = PlaceholderService(_db);
+      final localPath = await placeholder.hydrate(
+        pairId: pairId,
+        localBasePath: pair.localPath,
+        relativePath: relativePath,
+        client: auth.client,
+      );
+      notifyListeners();
+      return localPath;
+    } catch (e) {
+      _log.error('Failed to hydrate placeholder: $e');
+      _ref.read(errorProvider).addError('Failed to download file: $e');
+      return null;
+    }
+  }
+
+  /// Free up space: convert a synced file back to a placeholder.
+  Future<void> dehydrateFile(int pairId, String relativePath) async {
+    try {
+      final pair = await _db.getPair(pairId);
+      final remoteBase = pair.remotePath;
+      final placeholder = PlaceholderService(_db);
+      await placeholder.dehydrate(
+        pairId: pairId,
+        localBasePath: pair.localPath,
+        relativePath: relativePath,
+        remotePath: '$remoteBase/$relativePath',
+        provider: pair.provider,
+      );
+      notifyListeners();
+    } catch (e) {
+      _log.error('Failed to dehydrate file: $e');
+      _ref.read(errorProvider).addError('Failed to free up space: $e');
+    }
+  }
+
+  /// Download all placeholder files for a pair.
+  Future<int> hydrateAllPlaceholders(int pairId) async {
+    try {
+      final pair = await _db.getPair(pairId);
+      final auth = _ref.read(authProvider);
+      final placeholder = PlaceholderService(_db);
+      final count = await placeholder.hydrateAll(
+        pairId: pairId,
+        localBasePath: pair.localPath,
+        client: auth.client,
+      );
+      notifyListeners();
+      return count;
+    } catch (e) {
+      _log.error('Failed to hydrate all: $e');
+      _ref.read(errorProvider).addError('Failed to download all files: $e');
+      return 0;
     }
   }
 

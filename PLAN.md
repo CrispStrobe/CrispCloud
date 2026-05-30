@@ -35,7 +35,7 @@ CrispCloud becomes the **open-source Cyberduck/Transmit/Commander One killer**: 
 - **Duplicate finder**: MD5-based (local) or size-based (remote) duplicate detection
 - **Diff viewer**: side-by-side file comparison with LCS algorithm, sync scrolling
 - **SFTP permissions**: chmod/chown with visual rwx grid + octal presets
-- **Sync engine**: two-way sync with **selective sync**, **offline replay**, **delta sync** (content hash), **file cache** (LRU)
+- **Sync engine**: two-way sync with **selective sync**, **offline replay**, **delta sync** (content hash), **file cache** (LRU), **placeholder files** (cloud-only on demand)
 - **Security**: HTTP/SOCKS5 **proxy** (env auto-detect), **app lock** (PIN/password + auto-lock), **certificate pinning** (Google/Microsoft/Dropbox/Amazon)
 - **Thumbnails**: compute-isolate generation, disk+memory cache, grid view integration
 - **37 test files**, ~340+ unit tests + gated E2E suites
@@ -44,7 +44,7 @@ CrispCloud becomes the **open-source Cyberduck/Transmit/Commander One killer**: 
 - ~~Monolithic state (AppState)~~ — **Riverpod migration done** (8 focused providers)
 - ~~Sync engine v1~~ — done (two-way, conflicts, selective sync, offline replay, filesystem watcher, system tray)
 - ~~GDrive~~ + ~~OneDrive~~ + ~~Dropbox~~ — all Tier 1 providers done
-- ~~Security hardening~~ — proxy, app lock, cert pinning done; biometric + Cryptomator pending
+- ~~Security hardening~~ — proxy, app lock, biometric, cert pinning done; Cryptomator pending
 - No plugin/extension system
 - No i18n, no accessibility audit
 
@@ -60,7 +60,7 @@ CrispCloud becomes the **open-source Cyberduck/Transmit/Commander One killer**: 
 - [x] `SecureStorage` abstraction + `InMemorySecureStorage` test double
 - [x] All config services + adapters + tests updated
 - [ ] Web: encrypted IndexedDB with user-derived key (PBKDF2 from master password)
-- [ ] Biometric unlock option (FaceID / TouchID / fingerprint) for mobile
+- [x] Biometric unlock option (FaceID / TouchID / fingerprint) via `local_auth`
 
 ### 1.2 State Management Overhaul
 - [x] Migrate from `Provider` + single `ChangeNotifier` to **Riverpod 2**
@@ -195,7 +195,7 @@ CrispCloud becomes the **open-source Cyberduck/Transmit/Commander One killer**: 
 
 ### 4.2 Selective Sync
 - [x] Choose which remote folders to sync locally — include/exclude glob patterns on SyncPairs, filtered in SyncEngine
-- [ ] Placeholder / "cloud-only" files on desktop (like OneDrive Files On-Demand)
+- [x] Placeholder / "cloud-only" files (like OneDrive Files On-Demand) — `PlaceholderService` with `.crispcloud` stubs, hydrate/dehydrate, per-pair toggle
 - [ ] Smart sync: auto-evict files not accessed in N days
 - [ ] Bandwidth scheduling: sync only on Wi-Fi, or during specified hours
 
@@ -229,7 +229,7 @@ CrispCloud becomes the **open-source Cyberduck/Transmit/Commander One killer**: 
 - [ ] Thumbnail cache (local SQLite + file cache)
 - [x] Markdown: rendered preview — `flutter_markdown` with theme-aware styling
 - [x] PDF: page viewer — `pdfx` package, scrollable PDF in preview pane
-- [ ] Video/Audio: streaming player
+- [x] Video/Audio: streaming player via `video_player`, inline controls (seek, play/pause, volume)
 
 ### 5.2 Tabbed Interface
 - [x] Multiple tabs per panel — `PanelTab` model, tab bar widget, add/close/pin
@@ -263,7 +263,7 @@ CrispCloud becomes the **open-source Cyberduck/Transmit/Commander One killer**: 
 - [x] Bookmarks / Favorites — `BookmarksNotifier` with SharedPreferences persistence, add/remove from tree sidebar
 - [x] Recent locations — `RecentLocationsNotifier` with persistence, shown in tree sidebar
 - [x] Go-to-folder dialog (Ctrl+G)
-- [ ] Column view (Finder-style) as layout alternative
+- [x] Column view (Finder-style) as layout alternative — `FileColumnView` widget, toolbar cycles list→grid→column
 - [x] Grid / Gallery view for image-heavy folders (toggle in toolbar)
 - [x] Tree view sidebar (expandable folder tree, toggle in app bar)
 
@@ -354,6 +354,7 @@ CrispCloud becomes the **open-source Cyberduck/Transmit/Commander One killer**: 
 ### 7.3 Access Control
 - [x] App lock: PIN/password required to open — `AppLockService` with salted SHA-256 hashing, `LockScreen` + `AppLockSetupDialog`
 - [x] Auto-lock after configurable timeout — `_AppLockGate` with `WidgetsBindingObserver` lifecycle detection
+- [x] Biometric unlock: FaceID/TouchID/fingerprint via `local_auth`, auto-prompt on lock screen, toggle in setup dialog
 - [x] Secure clipboard: auto-clear after 30s via `SecureClipboard` utility
 - [ ] Disable screenshots on mobile (opt-in)
 
@@ -368,7 +369,7 @@ CrispCloud becomes the **open-source Cyberduck/Transmit/Commander One killer**: 
 ## Phase 8: Platform-Specific Polish (Weeks 12-18)
 
 ### 8.1 macOS
-- [ ] Native menu bar integration (File, Edit, View, Go menus)
+- [x] Native menu bar integration (CrispCloud, File, View menus) via `PlatformMenuBar`
 - [ ] Finder Quick Action extension: right-click → "Upload to CrispCloud"
 - [ ] Share extension (share from any app)
 - [ ] Spotlight integration for synced files
@@ -553,11 +554,11 @@ CrispCloud becomes the **open-source Cyberduck/Transmit/Commander One killer**: 
 | 2. Performance & Streaming | High | Medium | **~70% done** — streaming, queue, virtual scroll done; multipart/large-file pending |
 | 3.1 S3 + GDrive + OneDrive + Dropbox | High | Medium | **All 4 done** |
 | 3.2 Tier 2 providers | Medium | Medium | **FTP done** — Azure, B2, Mega, pCloud pending |
-| 4. Sync Engine | Very High | Very High | **~85% done** — two-way, selective, offline replay+cache, watcher, tray, delta sync done; mobile bg pending |
-| 5. UI/UX | High | Medium | **~85% done** — preview, tabs, themes, nav, DnD, tree, grid+thumbnails, bookmarks done |
+| 4. Sync Engine | Very High | Very High | **~90% done** — two-way, selective, offline replay+cache, watcher, tray, delta sync, placeholder files done; mobile bg pending |
+| 5. UI/UX | High | Medium | **~95% done** — preview (image/text/md/pdf/video/audio), tabs, themes, nav, DnD, tree, grid+thumbnails, column view, bookmarks done |
 | 6. Power User Features | Medium | High | **~75% done** — editor, palette, batch rename, archives, versions+restore, share, dupes, diff, permissions done |
 | 7.1 Client-Side Encryption | High | High | **~90% done** — encryption + key management + BIP39 done; Cryptomator compat pending |
-| 7.2-7.4 Security extras | Medium | Medium | **~70% done** — proxy, app lock, cert pinning, secure clipboard done; biometric pending |
+| 7.2-7.4 Security extras | Medium | Medium | **~85% done** — proxy, app lock, biometric, cert pinning, secure clipboard done |
 | 8. Platform Polish | Medium | High | **P3 — Later** |
 | 9. Extensibility & CLI | Medium | High | **P3 — Later** |
 | 10. Quality & Distribution | High | High | **P3 — Ongoing** |

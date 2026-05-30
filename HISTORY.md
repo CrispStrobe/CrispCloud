@@ -2,6 +2,115 @@
 
 Audit trail of bugs found, issues discovered, and fixes applied.
 
+## 2026-05-30 — Platform: macOS Native Menu Bar
+
+### 8.1 macOS Native Menu Bar
+- **Updated `lib/screens/file_browser_screen.dart`**:
+  - Wrapped `Scaffold` in `PlatformMenuBar` on macOS only (platform guard)
+  - CrispCloud menu: About, Preferences (Cmd+,), Quit
+  - File menu: New Tab (Cmd+T), Close Tab (Cmd+W), Connect (Cmd+K), Go to Path (Cmd+G)
+  - View menu: Toggle Preview, Toggle Tree Sidebar, Sync Manager, Find Duplicates, Command Palette (Cmd+Shift+P)
+  - All menu items wired to existing actions via Riverpod providers
+  - Imported `command_palette.dart` for palette action
+
+## 2026-05-30 — UI: Column View + Video/Audio Preview
+
+### 5.5 Column View (Finder-style)
+- **Created `lib/widgets/file_column_view.dart`** (~200 lines):
+  - `FileColumnView`: Finder-style column layout with 220px columns
+  - Each folder click navigates and shows contents in the panel
+  - Horizontal scrolling with animated scroll-to-new-column
+  - Compact 32px row height with file icon, name, size, and chevron for folders
+  - Selection, double-tap, and right-click context menu support
+- **Updated `lib/providers/core_providers.dart`**: `ViewMode` enum extended with `column`
+- **Updated `lib/widgets/file_panel.dart`**: `_buildFileView()` handles `ViewMode.column`
+- **Updated `lib/widgets/file_toolbar.dart`**: toolbar cycles list → grid → column → list
+
+### 5.1 Video/Audio Preview
+- **Added `video_player: ^2.9.2`** to pubspec.yaml
+- **Updated `lib/widgets/preview_pane.dart`**:
+  - Added `PreviewType.video` and `PreviewType.audio` to classifier
+  - Supported extensions: mp4/mov/avi/mkv/webm/wmv/flv/m4v (video), mp3/wav/aac/flac/ogg/m4a/wma/opus (audio)
+  - `_fetchMediaPreview()`: downloads remote files to temp, plays local files directly
+  - Uses file cache for remote media (avoids re-download)
+  - 100MB size limit for media (vs 20MB for images)
+  - Web fallback: shows metadata (can't write to temp file)
+  - `_MediaPlayer` widget: full inline player with:
+    - Video display with aspect ratio, or music icon for audio
+    - Seek slider with custom theme
+    - Play/pause button with position/duration display
+    - Volume toggle (mute/unmute)
+    - Auto-updates via controller listener
+
+## 2026-05-30 — Sync: Placeholder / Cloud-Only Files
+
+### 4.2 Placeholder Files (OneDrive Files On-Demand style)
+- **Created `lib/services/placeholder_service.dart`** (~230 lines):
+  - `PlaceholderMeta` model: JSON metadata stored in `.crispcloud` stub files
+  - `PlaceholderService`: manages cloud-only file stubs with the sync database
+  - `createPlaceholder()`: writes lightweight JSON stub with remote path, size, hash, provider
+  - `hydrate()`: downloads real file, replaces stub, updates DB status from `placeholder` to `synced`
+  - `dehydrate()`: converts synced file back to placeholder (free up disk space)
+  - `isFilePlaceholder()`, `getPlaceholders()`: query placeholder status from DB
+  - `hydrateAll()`: batch download all placeholders for a sync pair
+  - Static helpers: `isPlaceholder()`, `realName()`, `placeholderName()`
+- **Updated `lib/services/sync_database.dart`**:
+  - Added `SyncStatus.placeholder` enum value
+  - Added `usePlaceholders` boolean column to `SyncPairs` table
+  - Schema version bumped to 3 with migration
+- **Updated `lib/services/sync_database.g.dart`**:
+  - Added `includePatterns`, `excludePatterns`, `usePlaceholders` to `$SyncPairsTable`, `SyncPair`, `SyncPairsCompanion`
+- **Updated `lib/services/sync_engine.dart`**:
+  - Import `PlaceholderService`; skip `.crispcloud` files during local scan
+  - `SyncAction.remoteSize` field for placeholder creation
+  - All download actions now carry `remoteSize`
+  - `_executeAction()`: when `pair.usePlaceholders` is true and file is new, creates placeholder instead of downloading
+- **Updated `lib/providers/sync_provider.dart`**:
+  - `addPair()` accepts `usePlaceholders` parameter
+  - `setPlaceholders()`: toggle cloud-only mode per pair
+  - `hydratePlaceholder()`: download a single placeholder file
+  - `dehydrateFile()`: convert synced file back to placeholder
+  - `hydrateAllPlaceholders()`: batch download all placeholders for a pair
+- **Updated `lib/widgets/sync_dialog.dart`**:
+  - Add Pair dialog: `SwitchListTile` for "Cloud-only files" toggle with cloud icon
+  - Pair tile: cloud icon badge when placeholder mode is enabled
+  - "Download All Cloud-Only Files" button per pair
+- **Tests**: `test/placeholder_service_test.dart` (~100 lines, 12 tests):
+  - PlaceholderMeta: toJson/fromJson round-trip, encode/decode, invalid content, version field, missing fields
+  - Static methods: isPlaceholder detection, realName/placeholderName conversion, round-trip
+  - SyncStatus: placeholder enum presence and distinctness
+  - Constants: placeholderExtension value
+
+## 2026-05-30 — Security: Biometric Authentication
+
+### 7.3 Biometric Unlock (FaceID / TouchID / Fingerprint)
+- **Added `local_auth: ^2.3.0`** to pubspec.yaml
+- **Updated `lib/services/app_lock_service.dart`**:
+  - Added `LocalAuthentication` dependency (injectable for testing)
+  - `isBiometricAvailable()`: checks device support via `canCheckBiometrics` + `isDeviceSupported()`
+  - `getAvailableBiometrics()`: returns list of biometric types on device
+  - `isBiometricEnabled()` / `setBiometricEnabled()`: user preference persisted in SecureStorage
+  - `authenticateWithBiometric()`: prompts biometric auth with `stickyAuth: true`, `biometricOnly: true`
+  - `getBiometricLabel()`: returns human-readable name (Face ID / Fingerprint / Biometric)
+  - `disable()` now also clears biometric setting
+  - Web platform guard: all biometric methods return false/empty on web
+- **Updated `lib/widgets/lock_screen.dart`**:
+  - `LockScreen`: auto-prompts biometric on show when enabled + available
+  - Biometric unlock button with appropriate icon (face/fingerprint/security)
+  - "or" divider between biometric and PIN/password entry
+  - Contextual subtitle text adapts to biometric availability
+  - `AppLockSetupDialog`: `SwitchListTile` for biometric toggle with icon and description
+  - Loads biometric availability on init, saves setting on dialog save
+- **Updated `android/app/src/main/AndroidManifest.xml`**: `USE_BIOMETRIC` permission
+- **Updated `android/.../MainActivity.kt`**: changed `FlutterActivity` to `FlutterFragmentActivity`
+  (required by `local_auth` for biometric prompt on Android)
+- **Updated `ios/Runner/Info.plist`**: `NSFaceIDUsageDescription` for Face ID permission prompt
+- **Tests**: added 4 biometric tests to `test/security_features_test.dart`:
+  - Biometric not enabled by default
+  - setBiometricEnabled persists true/false
+  - disable() clears biometric setting
+  - Biometric enabled survives new service instance
+
 ## 2026-05-30 — Infrastructure: Cert Pinning, File Cache, Delta Sync, Thumbnails
 
 ### 7.2 Certificate Pinning

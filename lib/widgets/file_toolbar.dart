@@ -97,22 +97,45 @@ class FileToolbar extends ConsumerWidget {
             ),
           ],
 
-          // View mode toggle
+          // View mode toggle (cycles: list → grid → column → list)
           Builder(builder: (context) {
             final viewMode = side == PanelSide.local
                 ? ref.watch(localViewModeProvider)
                 : ref.watch(remoteViewModeProvider);
+            IconData icon;
+            String tooltip;
+            switch (viewMode) {
+              case ViewMode.list:
+                icon = Icons.grid_view;
+                tooltip = 'Grid View';
+                break;
+              case ViewMode.grid:
+                icon = Icons.view_column;
+                tooltip = 'Column View';
+                break;
+              case ViewMode.column:
+                icon = Icons.view_list;
+                tooltip = 'List View';
+                break;
+            }
             return IconButton(
-              icon: Icon(
-                viewMode == ViewMode.list ? Icons.grid_view : Icons.view_list,
-                color: Theme.of(context).colorScheme.onPrimaryContainer,
-              ),
-              tooltip: viewMode == ViewMode.list ? 'Grid View' : 'List View',
+              icon: Icon(icon, color: Theme.of(context).colorScheme.onPrimaryContainer),
+              tooltip: tooltip,
               onPressed: () {
                 final notifier = side == PanelSide.local
                     ? ref.read(localViewModeProvider.notifier)
                     : ref.read(remoteViewModeProvider.notifier);
-                notifier.state = viewMode == ViewMode.list ? ViewMode.grid : ViewMode.list;
+                switch (viewMode) {
+                  case ViewMode.list:
+                    notifier.state = ViewMode.grid;
+                    break;
+                  case ViewMode.grid:
+                    notifier.state = ViewMode.column;
+                    break;
+                  case ViewMode.column:
+                    notifier.state = ViewMode.list;
+                    break;
+                }
               },
             );
           }),

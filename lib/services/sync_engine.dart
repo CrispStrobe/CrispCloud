@@ -16,6 +16,7 @@ import 'package:path/path.dart' as p;
 
 import 'cloud_storage_interface.dart';
 import 'log_service.dart';
+import 'placeholder_service.dart';
 import 'sync_database.dart';
 
 /// A single action the sync engine wants to perform.
@@ -32,6 +33,9 @@ class SyncAction {
   /// Remote content hash for delta sync (stored in DB after sync).
   final String? remoteContentHash;
 
+  /// Remote file size (used for placeholder creation).
+  final int? remoteSize;
+
   SyncAction({
     required this.type,
     required this.relativePath,
@@ -40,6 +44,7 @@ class SyncAction {
     this.localModified,
     this.remoteModified,
     this.remoteContentHash,
+    this.remoteSize,
   });
 
   @override
@@ -269,7 +274,7 @@ class SyncEngine {
         if (remote!.isFolder) {
           return SyncAction(type: SyncActionType.createLocalFolder, relativePath: relativePath, isFolder: true);
         }
-        return SyncAction(type: SyncActionType.download, relativePath: relativePath, remoteModified: remote.modified, remoteContentHash: remote.contentHash);
+        return SyncAction(type: SyncActionType.download, relativePath: relativePath, remoteModified: remote.modified, remoteContentHash: remote.contentHash, remoteSize: remote.size);
       }
       return SyncAction(type: SyncActionType.skip, relativePath: relativePath);
     }
@@ -284,7 +289,7 @@ class SyncEngine {
     // Deleted locally, still exists remote → delete remote or re-download
     if (!existsLocal && existsRemote) {
       if (direction == SyncDirection.downloadOnly) {
-        return SyncAction(type: SyncActionType.download, relativePath: relativePath, remoteModified: remote!.modified, remoteContentHash: remote.contentHash);
+        return SyncAction(type: SyncActionType.download, relativePath: relativePath, remoteModified: remote!.modified, remoteContentHash: remote.contentHash, remoteSize: remote.size);
       }
       // Check if remote was also modified since last sync
       if (known.remoteModified != null && remote!.modified != null &&
@@ -327,7 +332,7 @@ class SyncEngine {
       if (direction == SyncDirection.uploadOnly) {
         return SyncAction(type: SyncActionType.skip, relativePath: relativePath);
       }
-      return SyncAction(type: SyncActionType.download, relativePath: relativePath, remoteModified: remote.modified, remoteContentHash: remote.contentHash);
+      return SyncAction(type: SyncActionType.download, relativePath: relativePath, remoteModified: remote.modified, remoteContentHash: remote.contentHash, remoteSize: remote.size);
     }
 
     // Both changed → conflict
@@ -345,14 +350,14 @@ class SyncEngine {
       case ConflictPolicy.localWins:
         return SyncAction(type: SyncActionType.upload, relativePath: relativePath, localModified: local?.modified);
       case ConflictPolicy.remoteWins:
-        return SyncAction(type: SyncActionType.download, relativePath: relativePath, remoteModified: remote?.modified);
+        return SyncAction(type: SyncActionType.download, relativePath: relativePath, remoteModified: remote?.modified, remoteSize: remote?.size);
       case ConflictPolicy.newestWins:
         final localTime = local?.modified ?? DateTime(1970);
         final remoteTime = remote?.modified ?? DateTime(1970);
         if (localTime.isAfter(remoteTime)) {
           return SyncAction(type: SyncActionType.upload, relativePath: relativePath, localModified: localTime);
         } else {
-          return SyncAction(type: SyncActionType.download, relativePath: relativePath, remoteModified: remoteTime);
+          return SyncAction(type: SyncActionType.download, relativePath: relativePath, remoteModified: remoteTime, remoteSize: remote?.size);
         }
       case ConflictPolicy.keepBoth:
         // Upload local with a renamed copy, then download remote
@@ -415,6 +420,21 @@ class SyncEngine {
           return const SyncResult(uploaded: 1);
 
         case SyncActionType.download:
+          // Placeholder mode: create stub instead of downloading (for new files only)
+          if (pair.usePlaceholders && action.dbEntry == null) {
+            final placeholder = PlaceholderService(db);
+            await placeholder.createPlaceholder(
+              pairId: pair.id,
+              localBasePath: localBase,
+              relativePath: action.relativePath,
+              remotePath: remotePath,
+              provider: pair.provider,
+              sizeBytes: action.remoteSize ?? 0,
+              remoteModified: action.remoteModified,
+              contentHash: action.remoteContentHash,
+            );
+            return const SyncResult(downloaded: 1);
+          }
           final bytes = await client.downloadFileBytes(remotePath);
           final file = File(localPath);
           await file.parent.create(recursive: true);
@@ -510,8 +530,9 @@ class SyncEngine {
 
     await for (final entity in dir.list(recursive: true, followLinks: false)) {
       final relative = p.relative(entity.path, from: basePath);
-      // Skip hidden files
+      // Skip hidden files and placeholder stubs
       if (p.split(relative).any((s) => s.startsWith('.'))) continue;
+      if (PlaceholderService.isPlaceholder(relative)) continue;
 
       final stat = await entity.stat();
       result[relative] = _FileInfo(

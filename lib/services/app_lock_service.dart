@@ -2,11 +2,14 @@
 //
 // App lock service: PIN or password protection for the app.
 // Stores a salted SHA-256 hash in SecureStorage. Supports auto-lock timeout.
+// Optional biometric unlock via local_auth (FaceID / TouchID / fingerprint).
 
 import 'dart:convert';
 import 'dart:typed_data';
 
 import 'package:crypto/crypto.dart';
+import 'package:flutter/foundation.dart';
+import 'package:local_auth/local_auth.dart';
 
 import 'log_service.dart';
 import 'secure_storage_service.dart';
@@ -18,10 +21,13 @@ class AppLockService {
   static const _saltKey = 'app_lock_salt';
   static const _enabledKey = 'app_lock_enabled';
   static const _timeoutKey = 'app_lock_timeout';
+  static const _biometricKey = 'app_lock_biometric';
 
   final SecureStorage _storage;
+  final LocalAuthentication _localAuth;
 
-  AppLockService(this._storage);
+  AppLockService(this._storage, {LocalAuthentication? localAuth})
+      : _localAuth = localAuth ?? LocalAuthentication();
 
   /// Check if app lock is configured.
   Future<bool> isEnabled() async {
@@ -77,6 +83,7 @@ class AppLockService {
     await _storage.delete(_hashKey);
     await _storage.delete(_saltKey);
     await _storage.write(_enabledKey, 'false');
+    await _storage.write(_biometricKey, 'false');
     _log.info('App lock disabled');
   }
 
@@ -85,6 +92,79 @@ class AppLockService {
     if (!await verify(currentCode)) return false;
     await setup(newCode);
     return true;
+  }
+
+  // --- Biometric ---
+
+  /// Check if the device supports biometric authentication.
+  Future<bool> isBiometricAvailable() async {
+    // Biometrics not available on web or desktop (except macOS Touch ID)
+    if (kIsWeb) return false;
+    try {
+      final canCheck = await _localAuth.canCheckBiometrics;
+      final isDeviceSupported = await _localAuth.isDeviceSupported();
+      return canCheck || isDeviceSupported;
+    } catch (e) {
+      _log.warn('Biometric availability check failed: $e');
+      return false;
+    }
+  }
+
+  /// Get the available biometric types on this device.
+  Future<List<BiometricType>> getAvailableBiometrics() async {
+    if (kIsWeb) return [];
+    try {
+      return await _localAuth.getAvailableBiometrics();
+    } catch (e) {
+      _log.warn('Failed to get available biometrics: $e');
+      return [];
+    }
+  }
+
+  /// Check if biometric unlock is enabled by the user.
+  Future<bool> isBiometricEnabled() async {
+    final val = await _storage.read(_biometricKey);
+    return val == 'true';
+  }
+
+  /// Enable or disable biometric unlock.
+  Future<void> setBiometricEnabled(bool enabled) async {
+    await _storage.write(_biometricKey, enabled.toString());
+    _log.info('Biometric unlock ${enabled ? 'enabled' : 'disabled'}');
+  }
+
+  /// Attempt biometric authentication. Returns true if successful.
+  Future<bool> authenticateWithBiometric() async {
+    if (kIsWeb) return false;
+    try {
+      final result = await _localAuth.authenticate(
+        localizedReason: 'Unlock CrispCloud',
+        options: const AuthenticationOptions(
+          stickyAuth: true,
+          biometricOnly: true,
+        ),
+      );
+      if (result) {
+        _log.info('Biometric authentication succeeded');
+      } else {
+        _log.debug('Biometric authentication cancelled or failed');
+      }
+      return result;
+    } catch (e) {
+      _log.error('Biometric authentication error: $e');
+      return false;
+    }
+  }
+
+  /// Get a human-readable label for the primary biometric type.
+  Future<String> getBiometricLabel() async {
+    final types = await getAvailableBiometrics();
+    if (types.contains(BiometricType.face)) return 'Face ID';
+    if (types.contains(BiometricType.fingerprint)) return 'Fingerprint';
+    if (types.contains(BiometricType.iris)) return 'Iris';
+    if (types.contains(BiometricType.strong)) return 'Biometric';
+    if (types.contains(BiometricType.weak)) return 'Biometric';
+    return 'Biometric';
   }
 
   String _hashCode(String code, String salt) {

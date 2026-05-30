@@ -8,6 +8,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../models/file_item.dart';
 import '../models/panel_side.dart';
 import '../providers/providers.dart';
+import 'file_column_view.dart';
 import 'file_grid_view.dart';
 import 'file_toolbar.dart';
 import 'file_list_view.dart' show FileListView, PanelDragData, getFileIcon;
@@ -177,6 +178,13 @@ class _FilePanelState extends ConsumerState<FilePanel> {
 
     if (viewMode == ViewMode.grid) {
       return FileGridView(
+        side: side,
+        files: files,
+        scrollController: _scrollController,
+      );
+    }
+    if (viewMode == ViewMode.column) {
+      return FileColumnView(
         side: side,
         files: files,
         scrollController: _scrollController,

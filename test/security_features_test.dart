@@ -3,7 +3,7 @@
 // Tests for security and power user features:
 // - ProxyConfig model
 // - ProxyService
-// - AppLockService
+// - AppLockService (PIN/password + biometric)
 // - Diff computation
 // - Permissions dialog parsing
 
@@ -236,6 +236,31 @@ void main() {
       await lockService.setup('second');
       expect(await lockService.verify('first'), false);
       expect(await lockService.verify('second'), true);
+    });
+
+    test('biometric not enabled by default', () async {
+      expect(await lockService.isBiometricEnabled(), false);
+    });
+
+    test('setBiometricEnabled persists', () async {
+      await lockService.setBiometricEnabled(true);
+      expect(await lockService.isBiometricEnabled(), true);
+      await lockService.setBiometricEnabled(false);
+      expect(await lockService.isBiometricEnabled(), false);
+    });
+
+    test('disable clears biometric setting', () async {
+      await lockService.setup('1234');
+      await lockService.setBiometricEnabled(true);
+      expect(await lockService.isBiometricEnabled(), true);
+      await lockService.disable();
+      expect(await lockService.isBiometricEnabled(), false);
+    });
+
+    test('biometric enabled survives new service instance', () async {
+      await lockService.setBiometricEnabled(true);
+      final lockService2 = AppLockService(storage);
+      expect(await lockService2.isBiometricEnabled(), true);
     });
   });
 

@@ -20,7 +20,7 @@ part 'sync_database.g.dart';
 enum ConflictPolicy { newestWins, localWins, remoteWins, keepBoth, manual }
 
 /// Current sync status of a file entry.
-enum SyncStatus { synced, localModified, remoteModified, conflict, pendingUpload, pendingDownload, error }
+enum SyncStatus { synced, localModified, remoteModified, conflict, pendingUpload, pendingDownload, error, placeholder }
 
 /// Direction of sync.
 enum SyncDirection { twoWay, uploadOnly, downloadOnly }
@@ -47,6 +47,10 @@ class SyncPairs extends Table {
   /// Comma-separated glob patterns to exclude.
   /// Example: ".git/**,*.tmp,node_modules/**"
   TextColumn get excludePatterns => text().withDefault(const Constant(''))();
+
+  /// When true, new remote files are created as lightweight placeholders
+  /// instead of being fully downloaded. Users can hydrate on demand.
+  BoolColumn get usePlaceholders => boolean().withDefault(const Constant(false))();
 }
 
 /// Per-file sync state within a sync pair.
@@ -89,7 +93,7 @@ class SyncDatabase extends _$SyncDatabase {
   SyncDatabase.forTesting(super.e);
 
   @override
-  int get schemaVersion => 2;
+  int get schemaVersion => 3;
 
   @override
   MigrationStrategy get migration => MigrationStrategy(
@@ -98,6 +102,9 @@ class SyncDatabase extends _$SyncDatabase {
       if (from < 2) {
         await m.addColumn(syncPairs, syncPairs.includePatterns);
         await m.addColumn(syncPairs, syncPairs.excludePatterns);
+      }
+      if (from < 3) {
+        await m.addColumn(syncPairs, syncPairs.usePlaceholders);
       }
     },
   );
