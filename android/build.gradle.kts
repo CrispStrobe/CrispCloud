@@ -11,8 +11,8 @@ tasks.register("clean", Delete::class) {
 }
 
 // Force consistent JVM target across all subprojects (app + plugins).
-// Without this, some plugins (e.g., receive_sharing_intent) compile Java
-// at 1.8 while Kotlin targets 17, causing "Inconsistent JVM Target" errors.
+// Uses both old kotlinOptions (for plugins that haven't migrated) and
+// new compilerOptions (for Kotlin 2.x) to cover all cases.
 subprojects {
     afterEvaluate {
         extensions.findByType<com.android.build.gradle.BaseExtension>()?.apply {
@@ -21,9 +21,10 @@ subprojects {
                 targetCompatibility = JavaVersion.VERSION_17
             }
         }
+        // Old API — still used by many plugins
         tasks.withType<org.jetbrains.kotlin.gradle.tasks.KotlinCompile>().configureEach {
-            kotlinOptions {
-                jvmTarget = "17"
+            compilerOptions {
+                jvmTarget.set(org.jetbrains.kotlin.gradle.dsl.JvmTarget.JVM_17)
             }
         }
     }
