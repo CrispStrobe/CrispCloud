@@ -30,16 +30,21 @@ CrispCloud becomes the **open-source Cyberduck/Transmit/Commander One killer**: 
 - **Batch rename**: 4 modes (find/replace, numbering, prefix/suffix, extension)
 - **Archive support**: extract .zip, create .zip from selected files
 - **Bookmarks**: pin favorite folders with persistence
-- **Version history**: view file versions (GDrive, Dropbox, OneDrive)
+- **Version history**: view + **restore** file versions (GDrive, Dropbox, OneDrive)
 - **Share links**: generate provider-native shareable URLs
 - **Duplicate finder**: MD5-based (local) or size-based (remote) duplicate detection
-- **Sync engine**: two-way sync with **selective sync** (include/exclude globs) + **offline replay**
-- **35 test files**, ~250+ unit tests + gated E2E suites
+- **Diff viewer**: side-by-side file comparison with LCS algorithm, sync scrolling
+- **SFTP permissions**: chmod/chown with visual rwx grid + octal presets
+- **Sync engine**: two-way sync with **selective sync**, **offline replay**, **delta sync** (content hash), **file cache** (LRU)
+- **Security**: HTTP/SOCKS5 **proxy** (env auto-detect), **app lock** (PIN/password + auto-lock), **certificate pinning** (Google/Microsoft/Dropbox/Amazon)
+- **Thumbnails**: compute-isolate generation, disk+memory cache, grid view integration
+- **37 test files**, ~340+ unit tests + gated E2E suites
 
 **What's still needed:**
 - ~~Monolithic state (AppState)~~ — **Riverpod migration done** (8 focused providers)
 - ~~Sync engine v1~~ — done (two-way, conflicts, selective sync, offline replay, filesystem watcher, system tray)
 - ~~GDrive~~ + ~~OneDrive~~ + ~~Dropbox~~ — all Tier 1 providers done
+- ~~Security hardening~~ — proxy, app lock, cert pinning done; biometric + Cryptomator pending
 - No plugin/extension system
 - No i18n, no accessibility audit
 
@@ -567,24 +572,24 @@ Phases 1 + 2. Secure credentials, streaming transfers, transfer queue, Riverpod,
 Remaining: multipart upload, large file streaming on Web.
 *The app you'd trust with real data.*
 
-### v0.2.0 — "See Everything" *(~80% complete)*
-Phases 5.1-5.3. Preview (image/text/markdown/PDF), tabs+persistence, themes, responsive layout, bookmarks, tree view, grid view, drag-and-drop.
-Remaining: column view, thumbnails, video/audio preview.
+### v0.2.0 — "See Everything" *(~90% complete)*
+Phases 5.1-5.3. Preview (image/text/markdown/PDF), tabs+persistence, themes, responsive layout, bookmarks, tree view, grid view+thumbnails, drag-and-drop.
+Remaining: column view, video/audio preview.
 *The app that looks as good as Transmit.*
 
 ### v0.3.0 — "Connect Everywhere" *(done)*
 Phase 3.1. S3 + FTP + Google Drive + OneDrive + Dropbox all done.
-Remaining: connection profiles, Tier 2 providers (Azure, B2, Mega, pCloud).
+Remaining: connection profiles done, Tier 2 providers (Azure, B2, Mega, pCloud).
 *The app that replaces Cyberduck.*
 
-### v0.5.0 — "Privacy First" *(~80% complete)*
-Phase 7. Encryption layer + key management + BIP39 recovery + proxy support + app lock done.
-Remaining: Cryptomator compat, certificate pinning, biometric auth.
+### v0.5.0 — "Privacy First" *(~90% complete)*
+Phase 7. Encryption + key management + BIP39 + proxy + app lock + cert pinning done.
+Remaining: Cryptomator compat, biometric auth.
 *The app privacy advocates recommend.*
 
-### v0.7.0 — "Always In Sync" *(~75% complete)*
-Phase 4. Two-way sync, selective sync (glob filters), offline replay, filesystem watcher, system tray done.
-Remaining: delta sync, mobile background sync, offline file cache.
+### v0.7.0 — "Always In Sync" *(~85% complete)*
+Phase 4. Two-way sync, selective sync, offline replay, file cache (LRU), delta sync (content hash), filesystem watcher, system tray done.
+Remaining: mobile background sync, placeholder files.
 *The app that replaces Mountain Duck.*
 
 ### v1.0.0 — "Ready for Everyone"

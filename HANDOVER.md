@@ -73,13 +73,18 @@ The project uses the **Adapter pattern** (`CloudStorageClient` interface) with *
 - **Key management**: export/import hex key, BIP39 24-word mnemonic, backup bundle with verification
 - **Proxy support**: HTTP/SOCKS5 via `ProxyService` + env auto-detection + global `HttpOverrides`
 - **App lock**: PIN/password with salted SHA-256, auto-lock on timeout, setup/change/disable UI
+- **Certificate pinning**: SPKI SHA-256 for Google/Microsoft/Dropbox/Amazon, opt-in toggle
 - Wired into connection dialog (toggle + passphrase), authProvider, and `KeyManagementDialog`
+
+### Infrastructure
+- **Offline file cache**: `FileCacheService` with LRU eviction (500MB default), preview pane integration
+- **Delta sync**: content hash comparison (Dropbox `content_hash`, OneDrive `crc32Hash`/`sha1Hash`)
+- **Thumbnails**: compute-isolate generation, disk+memory cache, grid view integration
 
 ## What Needs to Be Done (in priority order)
 
-### 1. Security Additions — Remaining
+### 1. Security — Remaining
 - **Cryptomator vault format** (7.1): interop with Cyberduck/Mountain Duck
-- **Certificate pinning** (7.2): for known providers
 - **Biometric auth** (7.3): FaceID/TouchID/fingerprint via `local_auth`
 
 ### 2. Power User Features — Remaining
@@ -87,15 +92,11 @@ The project uses the **Adapter pattern** (`CloudStorageClient` interface) with *
 
 ### 3. Sync Engine — Remaining
 - **Mobile background sync** (4.4): `workmanager` (Android) + `BGTaskScheduler` (iOS)
-- **Delta sync**: only transfer changed bytes (OneDrive, Dropbox support this)
 - **Placeholder files** (4.2): cloud-only files on desktop (like OneDrive Files On-Demand)
-- **Offline file cache** (4.3): cache recently accessed files, LRU eviction
 
 ### 4. Remaining UI/UX
-- **Thumbnails** (5.1): generate in isolate, cache in drift DB
 - **Video/Audio preview** (5.1): streaming player
 - **Column view** (5.5): Finder-style as layout alternative
-- **Ctrl+Tab** (5.2): cycle between tabs
 
 ### 5. Platform Polish (Phase 8)
 - macOS: native menu bar, Finder extension, notarization
@@ -138,8 +139,11 @@ The project uses the **Adapter pattern** (`CloudStorageClient` interface) with *
 | `lib/services/transfer_queue.dart` | Concurrent transfer manager |
 | `lib/widgets/file_panel.dart` | Panel orchestrator (tabs, toolbar, breadcrumbs, file list/grid, drag target) |
 | `lib/widgets/sync_dialog.dart` | Sync pair management UI |
-| `lib/services/proxy_service.dart` | HTTP/SOCKS5 proxy config, global HttpOverrides |
+| `lib/services/proxy_service.dart` | HTTP/SOCKS5 proxy config + cert pinning, global HttpOverrides |
+| `lib/services/cert_pinning_service.dart` | SPKI SHA-256 certificate pinning for known providers |
 | `lib/services/app_lock_service.dart` | PIN/password lock with salted SHA-256 |
+| `lib/services/file_cache_service.dart` | LRU offline file cache (500MB default) |
+| `lib/services/thumbnail_service.dart` | Compute-isolate thumbnail generation + disk/memory cache |
 | `lib/widgets/permissions_dialog.dart` | SFTP chmod/chown UI with rwx grid |
 | `lib/widgets/diff_viewer_dialog.dart` | Side-by-side file comparison (LCS diff) |
 | `lib/widgets/lock_screen.dart` | Lock screen + setup dialog |
