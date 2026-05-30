@@ -66,6 +66,14 @@ class _ConnectionDialogState extends ConsumerState<ConnectionDialog> {
   final _dropboxAppKeyController = TextEditingController();
   final _dropboxAppSecretController = TextEditingController();
 
+  // pCloud Controllers
+  final _pcloudAppKeyController = TextEditingController();
+  bool _pcloudUseEu = false;
+
+  // Nextcloud Controllers
+  final _nextcloudServerUrlController = TextEditingController();
+  final _nextcloudUsernameController = TextEditingController();
+
   // Default to Filen, or SFTP if preferred
   CloudProvider _selectedProvider = CloudProvider.filen;
 
@@ -96,6 +104,10 @@ class _ConnectionDialogState extends ConsumerState<ConnectionDialog> {
         return {'clientId': _onedriveClientIdController.text, 'clientSecret': _onedriveClientSecretController.text};
       case CloudProvider.dropbox:
         return {'appKey': _dropboxAppKeyController.text, 'appSecret': _dropboxAppSecretController.text};
+      case CloudProvider.pcloud:
+        return {'appKey': _pcloudAppKeyController.text, 'eu': _pcloudUseEu.toString()};
+      case CloudProvider.nextcloud:
+        return {'serverUrl': _nextcloudServerUrlController.text, 'username': _nextcloudUsernameController.text};
       case CloudProvider.webdav:
         return {'host': _hostController.text, 'user': _emailController.text};
       default:
@@ -135,6 +147,14 @@ class _ConnectionDialogState extends ConsumerState<ConnectionDialog> {
       case CloudProvider.dropbox:
         _dropboxAppKeyController.text = f['appKey'] ?? '';
         _dropboxAppSecretController.text = f['appSecret'] ?? '';
+        break;
+      case CloudProvider.pcloud:
+        _pcloudAppKeyController.text = f['appKey'] ?? '';
+        _pcloudUseEu = f['eu'] == 'true';
+        break;
+      case CloudProvider.nextcloud:
+        _nextcloudServerUrlController.text = f['serverUrl'] ?? '';
+        _nextcloudUsernameController.text = f['username'] ?? '';
         break;
       case CloudProvider.webdav:
         _hostController.text = f['host'] ?? '';
@@ -192,11 +212,13 @@ class _ConnectionDialogState extends ConsumerState<ConnectionDialog> {
     final isFtp = _selectedProvider == CloudProvider.ftp;
     final isGDrive = _selectedProvider == CloudProvider.gdrive;
     final isOneDrive = _selectedProvider == CloudProvider.onedrive;
+    final isPCloud = _selectedProvider == CloudProvider.pcloud;
+    final isNextcloud = _selectedProvider == CloudProvider.nextcloud;
     final isSftp = _selectedProvider == CloudProvider.sftp;
     final isS3 = _selectedProvider == CloudProvider.s3;
     final isInternxt = _selectedProvider == CloudProvider.internxt;
     final isWebDav = _selectedProvider == CloudProvider.webdav;
-    final isOAuth = isGDrive || isOneDrive || isDropbox;
+    final isOAuth = isGDrive || isOneDrive || isDropbox || isPCloud;
 
     return AlertDialog(
       title: const Text('Connect to Cloud Storage'),
@@ -238,6 +260,11 @@ class _ConnectionDialogState extends ConsumerState<ConnectionDialog> {
                   value: CloudProvider.onedrive,
                   child: Text('OneDrive / SharePoint'),
                 ),
+                // pCloud
+                const DropdownMenuItem(
+                  value: CloudProvider.pcloud,
+                  child: Text('pCloud'),
+                ),
                 // SFTP / Storage Box
                 const DropdownMenuItem(
                   value: CloudProvider.sftp,
@@ -247,6 +274,11 @@ class _ConnectionDialogState extends ConsumerState<ConnectionDialog> {
                 const DropdownMenuItem(
                   value: CloudProvider.s3,
                   child: Text('S3 / S3-Compatible'),
+                ),
+                // Nextcloud
+                const DropdownMenuItem(
+                  value: CloudProvider.nextcloud,
+                  child: Text('Nextcloud'),
                 ),
                 // WebDAV
                 const DropdownMenuItem(
@@ -501,6 +533,49 @@ class _ConnectionDialogState extends ConsumerState<ConnectionDialog> {
                   ],
                 ),
               ),
+            ] else if (isPCloud) ...[
+              TextField(
+                controller: _pcloudAppKeyController,
+                decoration: const InputDecoration(
+                  labelText: 'App Key',
+                  hintText: 'your_pcloud_app_key',
+                  border: OutlineInputBorder(),
+                  prefixIcon: Icon(Icons.key),
+                  helperText: 'From pCloud Developer Console → My Applications',
+                ),
+                enabled: !_isLoading,
+              ),
+              const SizedBox(height: 12),
+              CheckboxListTile(
+                title: const Text('Use EU servers (eapi.pcloud.com)'),
+                subtitle: const Text('Required if your account is registered in the EU', style: TextStyle(fontSize: 11)),
+                value: _pcloudUseEu,
+                onChanged: _isLoading ? null : (v) => setState(() => _pcloudUseEu = v ?? false),
+                controlAffinity: ListTileControlAffinity.leading,
+                contentPadding: EdgeInsets.zero,
+                dense: true,
+              ),
+              const SizedBox(height: 4),
+              Container(
+                padding: const EdgeInsets.all(8),
+                decoration: BoxDecoration(
+                  color: Theme.of(context).colorScheme.primaryContainer.withOpacity(0.3),
+                  borderRadius: BorderRadius.circular(8),
+                ),
+                child: const Row(
+                  children: [
+                    Icon(Icons.info_outline, size: 16),
+                    SizedBox(width: 8),
+                    Expanded(
+                      child: Text(
+                        'Click Connect to open pCloud sign-in in your browser. '
+                        'Authorize CrispCloud, then return here.',
+                        style: TextStyle(fontSize: 12),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
             ] else if (isS3) ...[
               // S3: Endpoint URL
               TextField(
@@ -691,7 +766,31 @@ class _ConnectionDialogState extends ConsumerState<ConnectionDialog> {
                 ),
                 enabled: !_isLoading,
               ),
-            
+
+            ] else if (isNextcloud) ...[
+              // Nextcloud: Server URL
+              TextField(
+                controller: _nextcloudServerUrlController,
+                decoration: const InputDecoration(
+                  labelText: 'Server URL',
+                  hintText: 'https://nextcloud.example.com',
+                  border: OutlineInputBorder(),
+                  prefixIcon: Icon(Icons.cloud_outlined),
+                  helperText: 'Your Nextcloud server address',
+                ),
+                enabled: !_isLoading,
+              ),
+              const SizedBox(height: 16),
+              // Nextcloud: Username
+              TextField(
+                controller: _nextcloudUsernameController,
+                decoration: const InputDecoration(
+                  labelText: 'Username',
+                  border: OutlineInputBorder(),
+                  prefixIcon: Icon(Icons.person_outline),
+                ),
+                enabled: !_isLoading,
+              ),
             ] else ...[
               // Standard: Email
               TextField(
@@ -845,6 +944,14 @@ class _ConnectionDialogState extends ConsumerState<ConnectionDialog> {
         final clientSecret = _onedriveClientSecretController.text.trim();
         identity = clientSecret.isNotEmpty ? '$clientId|$clientSecret' : clientId;
         password = '';
+      } else if (_selectedProvider == CloudProvider.pcloud) {
+        // pCloud: OAuth2 browser flow
+        if (_pcloudAppKeyController.text.isEmpty) {
+          throw Exception('App Key is required');
+        }
+        final appKey = _pcloudAppKeyController.text.trim();
+        identity = _pcloudUseEu ? '$appKey|eu' : appKey;
+        password = '';
       } else if (_selectedProvider == CloudProvider.s3) {
         // S3 Validation
         if (_s3EndpointController.text.isEmpty ||
@@ -910,6 +1017,21 @@ class _ConnectionDialogState extends ConsumerState<ConnectionDialog> {
          // Pack as: username@https://server.com/dav
          identity = '${_emailController.text}@$url';
          password = _passwordController.text;
+      } else if (_selectedProvider == CloudProvider.nextcloud) {
+         if (_nextcloudUsernameController.text.isEmpty || _nextcloudServerUrlController.text.isEmpty) {
+            throw Exception('Server URL and Username are required');
+         }
+         final url = _nextcloudServerUrlController.text.trim();
+         if (!url.startsWith('http://') && !url.startsWith('https://')) {
+            throw Exception('Server URL must start with http:// or https://');
+         }
+         final parsed = Uri.tryParse(url);
+         if (parsed == null || !parsed.hasAuthority) {
+            throw Exception('Invalid server URL');
+         }
+         // Pack as: username@https://nextcloud.example.com
+         identity = '${_nextcloudUsernameController.text.trim()}@$url';
+         password = _passwordController.text;
       } else {
         // Standard Email
         if (_emailController.text.isEmpty) {
@@ -920,7 +1042,7 @@ class _ConnectionDialogState extends ConsumerState<ConnectionDialog> {
       }
 
       // 3. Check 2FA (Internxt/Filen only)
-      final skipTwoFa = _selectedProvider == CloudProvider.dropbox || _selectedProvider == CloudProvider.gdrive || _selectedProvider == CloudProvider.onedrive || _selectedProvider == CloudProvider.ftp || _selectedProvider == CloudProvider.sftp || _selectedProvider == CloudProvider.s3;
+      final skipTwoFa = _selectedProvider == CloudProvider.dropbox || _selectedProvider == CloudProvider.gdrive || _selectedProvider == CloudProvider.onedrive || _selectedProvider == CloudProvider.pcloud || _selectedProvider == CloudProvider.nextcloud || _selectedProvider == CloudProvider.ftp || _selectedProvider == CloudProvider.sftp || _selectedProvider == CloudProvider.s3;
       if (!_needs2fa && !skipTwoFa && auth.client.isAuthenticated == false) {
         try {
           final needs2fa = await auth.client.is2faNeeded(identity);
@@ -977,6 +1099,9 @@ class _ConnectionDialogState extends ConsumerState<ConnectionDialog> {
     _ftpUserController.dispose();
     _dropboxAppKeyController.dispose();
     _dropboxAppSecretController.dispose();
+    _pcloudAppKeyController.dispose();
+    _nextcloudServerUrlController.dispose();
+    _nextcloudUsernameController.dispose();
     _gdriveClientIdController.dispose();
     _gdriveClientSecretController.dispose();
     _onedriveClientIdController.dispose();

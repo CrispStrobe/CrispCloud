@@ -6,7 +6,11 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../providers/providers.dart';
+import '../services/background_sync_service.dart';
 import '../services/sync_database.dart';
+
+// Auto-evict options: 0=disabled, then days
+const _kAutoEvictOptions = [0, 7, 14, 30, 60, 90];
 
 void showSyncDialog(BuildContext context) {
   showDialog(
@@ -77,6 +81,14 @@ class _SyncManagerDialog extends ConsumerWidget {
               ),
               const SizedBox(height: 12),
             ],
+            // Background sync toggle (Android / iOS only)
+            if (BackgroundSyncService.isSupported) ...[
+              _BackgroundSyncTile(sync: sync),
+              const Divider(height: 20),
+            ],
+            // Auto-evict setting (applies to all pairs with placeholders)
+            _AutoEvictTile(sync: sync),
+            const Divider(height: 20),
             if (sync.pairs.isEmpty)
               const Padding(
                 padding: EdgeInsets.symmetric(vertical: 24),
@@ -290,6 +302,92 @@ class _SyncManagerDialog extends ConsumerWidget {
   }
 }
 
+// ---------------------------------------------------------------------------
+// Background sync tile
+// ---------------------------------------------------------------------------
+
+class _BackgroundSyncTile extends ConsumerStatefulWidget {
+  final SyncNotifier sync;
+  const _BackgroundSyncTile({required this.sync});
+
+  @override
+  ConsumerState<_BackgroundSyncTile> createState() => _BackgroundSyncTileState();
+}
+
+class _BackgroundSyncTileState extends ConsumerState<_BackgroundSyncTile> {
+  late int _intervalMinutes;
+
+  @override
+  void initState() {
+    super.initState();
+    _intervalMinutes = widget.sync.backgroundSyncIntervalMinutes;
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final sync = ref.watch(syncProvider);
+    final enabled = sync.isBackgroundSyncEnabled;
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        SwitchListTile(
+          secondary: const Icon(Icons.sync_lock),
+          title: const Text('Background Sync'),
+          subtitle: Text(
+            enabled
+                ? 'Syncing every $_intervalMinutes min'
+                : 'Sync only when the app is open',
+            style: const TextStyle(fontSize: 12),
+          ),
+          value: enabled,
+          contentPadding: EdgeInsets.zero,
+          onChanged: (v) async {
+            if (v) {
+              await ref.read(syncProvider).enableBackgroundSync(
+                    intervalMinutes: _intervalMinutes,
+                  );
+            } else {
+              await ref.read(syncProvider).disableBackgroundSync();
+            }
+          },
+        ),
+        if (enabled)
+          Padding(
+            padding: const EdgeInsets.only(left: 4, bottom: 4),
+            child: Row(
+              children: [
+                const Text('Interval:', style: TextStyle(fontSize: 12)),
+                const SizedBox(width: 8),
+                DropdownButton<int>(
+                  value: _intervalMinutes,
+                  isDense: true,
+                  items: const [
+                    DropdownMenuItem(value: 15, child: Text('15 min')),
+                    DropdownMenuItem(value: 30, child: Text('30 min')),
+                    DropdownMenuItem(value: 60, child: Text('1 hour')),
+                    DropdownMenuItem(value: 120, child: Text('2 hours')),
+                  ],
+                  onChanged: (v) async {
+                    if (v == null) return;
+                    setState(() => _intervalMinutes = v);
+                    await ref.read(syncProvider).enableBackgroundSync(
+                          intervalMinutes: v,
+                        );
+                  },
+                ),
+              ],
+            ),
+          ),
+      ],
+    );
+  }
+}
+
+// ---------------------------------------------------------------------------
+// Sync pair tile
+// ---------------------------------------------------------------------------
+
 class _SyncPairTile extends ConsumerWidget {
   final SyncPair pair;
   const _SyncPairTile({required this.pair});
@@ -364,5 +462,52 @@ class _SyncPairTile extends ConsumerWidget {
     if (diff.inHours < 1) return '${diff.inMinutes}m ago';
     if (diff.inDays < 1) return '${diff.inHours}h ago';
     return '${diff.inDays}d ago';
+  }
+}
+
+// ---------------------------------------------------------------------------
+// Auto-evict tile
+// ---------------------------------------------------------------------------
+
+class _AutoEvictTile extends ConsumerWidget {
+  final SyncNotifier sync;
+  const _AutoEvictTile({required this.sync});
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final days = ref.watch(syncProvider).autoEvictDays;
+
+    return Row(
+      children: [
+        const Icon(Icons.auto_delete_outlined, size: 20),
+        const SizedBox(width: 8),
+        Expanded(
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              const Text('Auto-evict cloud-only files',
+                  style: TextStyle(fontSize: 13, fontWeight: FontWeight.w500)),
+              Text(
+                days == 0
+                    ? 'Disabled — synced files are kept locally'
+                    : 'Free up space after $days days without access',
+                style: const TextStyle(fontSize: 11, color: Colors.grey),
+              ),
+            ],
+          ),
+        ),
+        DropdownButton<int>(
+          value: days,
+          isDense: true,
+          items: _kAutoEvictOptions.map((d) => DropdownMenuItem(
+            value: d,
+            child: Text(d == 0 ? 'Off' : '${d}d'),
+          )).toList(),
+          onChanged: (v) {
+            if (v != null) ref.read(syncProvider).setAutoEvictDays(v);
+          },
+        ),
+      ],
+    );
   }
 }

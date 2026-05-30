@@ -57,6 +57,19 @@
 	<key>NSFaceIDUsageDescription</key>
 	<string>CrispCloud uses Face ID to unlock the app when app lock is enabled.</string>
 
+	<!-- Background task identifiers registered with BGTaskScheduler (workmanager) -->
+	<key>BGTaskSchedulerPermittedIdentifiers</key>
+	<array>
+		<string>crisp_cloud.background_sync</string>
+	</array>
+
+	<!-- Required for iOS 13+ background processing / fetch capabilities -->
+	<key>UIBackgroundModes</key>
+	<array>
+		<string>fetch</string>
+		<string>processing</string>
+	</array>
+
 	<key>CFBundleURLTypes</key>
 	<array>
 		<dict>

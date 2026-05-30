@@ -249,6 +249,55 @@ class PlaceholderService {
         .toList();
   }
 
+  /// Auto-evict synced files that haven't been accessed in [maxAgeDays] days.
+  ///
+  /// Iterates all 'synced' entries for every pair that has placeholders
+  /// enabled and calls [dehydrate] on those not accessed recently.
+  /// Returns the number of files evicted.
+  Future<int> autoEvict(int maxAgeDays, SyncDatabase db) async {
+    if (maxAgeDays <= 0) return 0;
+
+    final cutoff = DateTime.now().subtract(Duration(days: maxAgeDays));
+    final pairs = await db.getAllPairs();
+    int evicted = 0;
+
+    for (final pair in pairs) {
+      if (!pair.usePlaceholders) continue;
+
+      final entries = await db.getEntriesForPair(pair.id);
+      final syncedEntries = entries.where((e) => e.status == 'synced' && !e.isFolder);
+
+      for (final entry in syncedEntries) {
+        final realLocalPath = p.join(pair.localPath, entry.relativePath);
+        final realFile = File(realLocalPath);
+
+        if (!await realFile.exists()) continue;
+
+        try {
+          final stat = await realFile.stat();
+          // Use last-accessed time; fall back to modified if not available
+          final lastAccess = stat.accessed;
+          if (lastAccess.isBefore(cutoff)) {
+            await dehydrate(
+              pairId: pair.id,
+              localBasePath: pair.localPath,
+              relativePath: entry.relativePath,
+              remotePath: '${pair.remotePath}/${entry.relativePath}',
+              provider: pair.provider,
+            );
+            evicted++;
+            _log.info('Auto-evicted ${entry.relativePath} (last accessed: $lastAccess)');
+          }
+        } catch (e) {
+          _log.error('Auto-evict error for ${entry.relativePath}: $e');
+        }
+      }
+    }
+
+    _log.info('Auto-eviction complete: $evicted file(s) evicted (maxAge: ${maxAgeDays}d)');
+    return evicted;
+  }
+
   /// Hydrate all placeholders for a sync pair (download everything).
   Future<int> hydrateAll({
     required int pairId,

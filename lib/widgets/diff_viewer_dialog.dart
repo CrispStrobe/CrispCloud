@@ -15,6 +15,26 @@ import '../providers/providers.dart';
 import '../services/log_service.dart';
 import '../utils/formatters.dart';
 
+/// Show a diff dialog comparing two raw text strings.
+/// Used for version diff where content is already loaded.
+void showDiffViewerFromContent(
+  BuildContext context, {
+  required String leftContent,
+  required String rightContent,
+  String leftLabel = 'Left',
+  String rightLabel = 'Right',
+}) {
+  showDialog(
+    context: context,
+    builder: (_) => _ContentDiffDialog(
+      leftContent: leftContent,
+      rightContent: rightContent,
+      leftLabel: leftLabel,
+      rightLabel: rightLabel,
+    ),
+  );
+}
+
 void showDiffViewerDialog(BuildContext context, WidgetRef ref, FileItem leftFile, FileItem rightFile, {PanelSide leftSide = PanelSide.local, PanelSide rightSide = PanelSide.remote}) {
   showDialog(
     context: context,
@@ -354,4 +374,157 @@ class _DiffLine {
   final String text;
 
   _DiffLine({required this.type, this.leftLine, this.rightLine, required this.text});
+}
+
+/// Compute LCS diff (standalone, reusable outside the dialog state).
+List<_DiffLine> computeLcsDiff(List<String> left, List<String> right) {
+  final m = left.length;
+  final n = right.length;
+  final lcs = List.generate(m + 1, (_) => List.filled(n + 1, 0));
+
+  for (int i = 1; i <= m; i++) {
+    for (int j = 1; j <= n; j++) {
+      if (left[i - 1] == right[j - 1]) {
+        lcs[i][j] = lcs[i - 1][j - 1] + 1;
+      } else {
+        lcs[i][j] = lcs[i - 1][j] > lcs[i][j - 1] ? lcs[i - 1][j] : lcs[i][j - 1];
+      }
+    }
+  }
+
+  int i = m, j = n;
+  final stack = <_DiffLine>[];
+  while (i > 0 || j > 0) {
+    if (i > 0 && j > 0 && left[i - 1] == right[j - 1]) {
+      stack.add(_DiffLine(type: _DiffType.equal, leftLine: i, rightLine: j, text: left[i - 1]));
+      i--; j--;
+    } else if (j > 0 && (i == 0 || lcs[i][j - 1] >= lcs[i - 1][j])) {
+      stack.add(_DiffLine(type: _DiffType.added, rightLine: j, text: right[j - 1]));
+      j--;
+    } else {
+      stack.add(_DiffLine(type: _DiffType.removed, leftLine: i, text: left[i - 1]));
+      i--;
+    }
+  }
+  return stack.reversed.toList();
+}
+
+/// Diff viewer for pre-loaded content (used by version diff).
+class _ContentDiffDialog extends StatelessWidget {
+  final String leftContent;
+  final String rightContent;
+  final String leftLabel;
+  final String rightLabel;
+
+  const _ContentDiffDialog({
+    required this.leftContent,
+    required this.rightContent,
+    required this.leftLabel,
+    required this.rightLabel,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final leftLines = leftContent.split('\n');
+    final rightLines = rightContent.split('\n');
+    final diffResult = computeLcsDiff(leftLines, rightLines);
+
+    final added = diffResult.where((d) => d.type == _DiffType.added).length;
+    final removed = diffResult.where((d) => d.type == _DiffType.removed).length;
+    final addedColor = Colors.green.withOpacity(0.15);
+    final removedColor = Colors.red.withOpacity(0.15);
+
+    return Dialog(
+      insetPadding: const EdgeInsets.all(16),
+      child: SizedBox(
+        width: MediaQuery.of(context).size.width * 0.9,
+        height: MediaQuery.of(context).size.height * 0.8,
+        child: Column(
+          children: [
+            Container(
+              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
+              color: theme.colorScheme.surfaceContainerHighest,
+              child: Row(
+                children: [
+                  const Icon(Icons.compare, size: 20),
+                  const SizedBox(width: 8),
+                  Text('Version Diff', style: theme.textTheme.titleMedium),
+                  const Spacer(),
+                  Text('+$added', style: const TextStyle(color: Colors.green, fontWeight: FontWeight.bold)),
+                  const SizedBox(width: 8),
+                  Text('-$removed', style: const TextStyle(color: Colors.red, fontWeight: FontWeight.bold)),
+                  const SizedBox(width: 16),
+                  IconButton(icon: const Icon(Icons.close, size: 20), onPressed: () => Navigator.pop(context)),
+                ],
+              ),
+            ),
+            Expanded(
+              child: diffResult.isEmpty
+                  ? const Center(child: Text('Files are identical'))
+                  : Row(
+                      children: [
+                        _buildPane(theme, leftLabel, diffResult, true, addedColor, removedColor),
+                        Container(width: 1, color: theme.dividerColor),
+                        _buildPane(theme, rightLabel, diffResult, false, addedColor, removedColor),
+                      ],
+                    ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildPane(ThemeData theme, String label, List<_DiffLine> diff, bool isLeft, Color addedColor, Color removedColor) {
+    return Expanded(
+      child: Column(
+        children: [
+          Container(
+            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+            color: theme.colorScheme.surfaceContainerHighest.withOpacity(0.5),
+            child: Row(
+              children: [
+                const Icon(Icons.description, size: 14),
+                const SizedBox(width: 6),
+                Expanded(child: Text(label, style: const TextStyle(fontSize: 12, fontWeight: FontWeight.w500), overflow: TextOverflow.ellipsis)),
+              ],
+            ),
+          ),
+          Expanded(
+            child: ListView.builder(
+              itemCount: diff.length,
+              itemExtent: 20,
+              itemBuilder: (_, index) {
+                final d = diff[index];
+                // Skip lines not visible on this side
+                if (isLeft && d.type == _DiffType.added) return Container(height: 20, color: addedColor);
+                if (!isLeft && d.type == _DiffType.removed) return Container(height: 20, color: removedColor);
+
+                return Container(
+                  height: 20,
+                  color: d.type == _DiffType.removed ? removedColor : d.type == _DiffType.added ? addedColor : null,
+                  padding: const EdgeInsets.symmetric(horizontal: 8),
+                  child: Row(
+                    children: [
+                      SizedBox(
+                        width: 40,
+                        child: Text(
+                          (isLeft ? d.leftLine : d.rightLine)?.toString() ?? '',
+                          style: TextStyle(fontSize: 11, color: theme.colorScheme.onSurfaceVariant, fontFamily: 'monospace'),
+                        ),
+                      ),
+                      Expanded(
+                        child: Text(d.text, style: const TextStyle(fontSize: 12, fontFamily: 'monospace'), overflow: TextOverflow.clip, maxLines: 1),
+                      ),
+                    ],
+                  ),
+                );
+              },
+            ),
+          ),
+        ],
+      ),
+    );
+  }
 }

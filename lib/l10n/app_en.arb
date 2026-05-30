@@ -1,0 +1,218 @@
+{
+  "@@locale": "en",
+  "appTitle": "CrispCloud",
+  "@appTitle": { "description": "Application title" },
+
+  "local": "Local",
+  "remote": "Remote",
+
+  "connect": "Connect",
+  "disconnect": "Disconnect",
+  "login": "Login",
+  "logout": "Logout",
+
+  "upload": "Upload",
+  "download": "Download",
+  "delete": "Delete",
+  "rename": "Rename",
+  "move": "Move",
+  "copy": "Copy",
+  "cancel": "Cancel",
+  "save": "Save",
+  "create": "Create",
+  "close": "Close",
+  "done": "Done",
+  "clear": "Clear",
+  "ok": "OK",
+  "yes": "Yes",
+  "no": "No",
+  "retry": "Retry",
+  "refresh": "Refresh",
+  "search": "Search",
+  "filter": "Filter",
+  "settings": "Settings",
+  "about": "About",
+  "help": "Help",
+
+  "newFolder": "New Folder",
+  "folderName": "Folder name",
+  "emptyFolder": "Empty folder",
+  "noFolderSelected": "No folder selected",
+  "openLocalFolder": "Open Local Folder",
+
+  "sortByName": "Sort by Name",
+  "sortBySize": "Sort by Size",
+  "sortByDate": "Sort by Date",
+  "sortByExtension": "Sort by Extension",
+  "ascending": "Ascending",
+  "descending": "Descending",
+  "selectAll": "Select All",
+  "clearSelection": "Clear Selection",
+
+  "nSelected": "{count} selected",
+  "@nSelected": {
+    "placeholders": { "count": { "type": "int" } }
+  },
+
+  "filterFiles": "Filter Files",
+  "typeToFilter": "Type to filter...",
+  "filterFilesShortcut": "Filter files (Ctrl+F)",
+  "clearFilter": "Clear filter",
+
+  "browseTooltip": "Browse...",
+  "upTooltip": "Up (Backspace)",
+  "refreshTooltip": "Refresh (F5)",
+  "newFolderTooltip": "New Folder (Ctrl+N)",
+  "searchAllFiles": "Fuzzy search all files",
+  "findByPattern": "Find files by pattern in this folder (e.g. *.pdf)",
+
+  "listView": "List View",
+  "gridView": "Grid View",
+  "columnView": "Column View",
+
+  "copyTo": "Copy to...",
+  "moveTo": "Move to...",
+
+  "connected": "Connected",
+  "disconnected": "Disconnected",
+  "connecting": "Connecting...",
+  "connectionFailed": "Connection failed",
+
+  "provider": "Provider",
+  "username": "Username",
+  "password": "Password",
+  "host": "Host",
+  "port": "Port",
+  "serverUrl": "Server URL",
+  "appKey": "App Key",
+  "clientId": "Client ID",
+  "clientSecret": "Client Secret",
+  "accessKey": "Access Key",
+  "secretKey": "Secret Key",
+  "endpoint": "Endpoint",
+  "region": "Region",
+  "bucket": "Bucket",
+  "twoFactorCode": "2FA Code",
+
+  "transferProgress": "{percent}% complete",
+  "@transferProgress": {
+    "placeholders": { "percent": { "type": "int" } }
+  },
+  "transferSpeed": "{speed}/s",
+  "@transferSpeed": {
+    "placeholders": { "speed": { "type": "String" } }
+  },
+  "transferEta": "{time} left",
+  "@transferEta": {
+    "placeholders": { "time": { "type": "String" } }
+  },
+
+  "syncManager": "Sync Manager",
+  "syncAll": "Sync All",
+  "syncNow": "Sync Now",
+  "addPair": "Add Pair",
+  "syncPairName": "Pair Name",
+  "localPath": "Local Path",
+  "remotePath": "Remote Path",
+  "conflictPolicy": "Conflict Policy",
+  "syncDirection": "Direction",
+  "twoWay": "Two-Way",
+  "uploadOnly": "Upload Only",
+  "downloadOnly": "Download Only",
+  "newestWins": "Newest Wins",
+  "localWins": "Local Wins",
+  "remoteWins": "Remote Wins",
+  "keepBoth": "Keep Both",
+  "manual": "Manual",
+  "backgroundSync": "Background Sync",
+  "cloudOnlyFiles": "Cloud-only files",
+  "includePatterns": "Include patterns",
+  "excludePatterns": "Exclude patterns",
+
+  "encryption": "Encryption",
+  "encryptionEnabled": "Encryption enabled",
+  "passphrase": "Passphrase",
+  "keyManagement": "Key Management",
+  "exportKey": "Export Key",
+  "importKey": "Import Key",
+  "mnemonic": "Mnemonic",
+  "backupBundle": "Backup Bundle",
+
+  "appLock": "App Lock",
+  "setupLock": "Set Up Lock",
+  "changeLock": "Change Lock",
+  "disableLock": "Disable Lock",
+  "enterPin": "Enter PIN or Password",
+  "biometricUnlock": "Biometric Unlock",
+  "autoLockTimeout": "Auto-Lock Timeout",
+
+  "proxySettings": "Proxy Settings",
+  "noProxy": "No Proxy",
+  "httpProxy": "HTTP Proxy",
+  "socks5Proxy": "SOCKS5 Proxy",
+  "certificatePinning": "Certificate Pinning",
+
+  "preview": "Preview",
+  "edit": "Edit",
+  "compare": "Compare",
+  "permissions": "Permissions",
+  "checksum": "Checksum",
+  "calculateSize": "Calculate Size",
+  "batchRename": "Batch Rename",
+  "extractHere": "Extract Here",
+  "createZip": "Create Zip",
+  "shareLink": "Share Link",
+  "versionHistory": "Version History",
+  "findDuplicates": "Find Duplicates",
+  "commandPalette": "Command Palette",
+
+  "theme": "Theme",
+  "systemTheme": "System",
+  "lightTheme": "Light",
+  "darkTheme": "Dark",
+  "oledTheme": "OLED Black",
+  "nordTheme": "Nord",
+  "draculaTheme": "Dracula",
+  "accentColor": "Accent Color",
+
+  "tabs": "Tabs",
+  "newTab": "New Tab",
+  "closeTab": "Close Tab",
+  "pinTab": "Pin Tab",
+  "unpinTab": "Unpin Tab",
+  "duplicateTab": "Duplicate Tab",
+  "closeOtherTabs": "Close Other Tabs",
+
+  "bookmarks": "Bookmarks",
+  "addBookmark": "Add Bookmark",
+  "removeBookmark": "Remove Bookmark",
+  "recentLocations": "Recent Locations",
+
+  "sandboxedPathWarning": "Sandboxed path - Use Browse button to select a real folder",
+  "permissionDenied": "Permission denied. Use the Browse button to grant access.",
+  "accessCancelled": "Access cancelled. Using fallback directory.",
+  "deleteFailed": "Delete failed: {error}",
+  "@deleteFailed": {
+    "placeholders": { "error": { "type": "String" } }
+  },
+  "renameFailed": "Rename failed: {error}",
+  "@renameFailed": {
+    "placeholders": { "error": { "type": "String" } }
+  },
+  "operationFailed": "Operation failed: {error}",
+  "@operationFailed": {
+    "placeholders": { "error": { "type": "String" } }
+  },
+
+  "dropFilesToUpload": "Drop files here to upload",
+  "confirmDeleteTitle": "Confirm Delete",
+  "confirmDeleteMessage": "Delete {count} item(s)?",
+  "@confirmDeleteMessage": {
+    "placeholders": { "count": { "type": "int" } }
+  },
+
+  "multiCloudManager": "Multi-Cloud Manager",
+  "addConnection": "Add Connection",
+  "cloudToCloudTransfer": "Cloud-to-Cloud Transfer",
+  "compareProviders": "Compare Providers"
+}

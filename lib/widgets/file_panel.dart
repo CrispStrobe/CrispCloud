@@ -73,7 +73,7 @@ class _FilePanelState extends ConsumerState<FilePanel> {
       });
     }
 
-    final files = panel.files;
+    final files = panel.filteredFiles;
     final currentPath = panel.currentPath;
     final selection = panel.selection;
 
@@ -138,11 +138,43 @@ class _FilePanelState extends ConsumerState<FilePanel> {
       },
       builder: (context, candidateData, rejectedData) {
         final isDropTarget = candidateData.isNotEmpty;
-        return Container(
-          decoration: isDropTarget
-              ? BoxDecoration(border: Border.all(color: Theme.of(context).colorScheme.primary, width: 2))
-              : null,
-          child: content,
+        if (!isDropTarget) return content;
+
+        // Determine operation hint
+        final sourceIsLocal = candidateData.first?.sourceSide == PanelSide.local;
+        final opIcon = sourceIsLocal ? Icons.upload : Icons.download;
+        final opLabel = sourceIsLocal ? 'Upload' : 'Download';
+        final fileCount = candidateData.first?.files.length ?? 0;
+
+        return Stack(
+          children: [
+            content,
+            Positioned.fill(
+              child: Container(
+                decoration: BoxDecoration(
+                  border: Border.all(color: Theme.of(context).colorScheme.primary, width: 2),
+                  color: Theme.of(context).colorScheme.primary.withOpacity(0.08),
+                ),
+                child: Center(
+                  child: Column(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      Icon(opIcon, size: 48, color: Theme.of(context).colorScheme.primary),
+                      const SizedBox(height: 8),
+                      Text(
+                        '$opLabel ${fileCount > 1 ? "$fileCount files" : "file"}',
+                        style: TextStyle(
+                          fontSize: 16,
+                          fontWeight: FontWeight.bold,
+                          color: Theme.of(context).colorScheme.primary,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+            ),
+          ],
         );
       },
     );
@@ -300,7 +332,11 @@ class _FilePanelState extends ConsumerState<FilePanel> {
                               )
                             : const Text('Empty folder'),
                       )
-                    : _buildFileView(widget.side, files),
+                    // Pull-to-refresh on mobile
+                    : RefreshIndicator(
+                        onRefresh: () => panel.refresh(),
+                        child: _buildFileView(widget.side, files),
+                      ),
           ),
         ],
       ),

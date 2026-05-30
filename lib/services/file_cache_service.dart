@@ -206,6 +206,7 @@ class FileCacheService {
   // --- LRU Eviction ---
 
   Future<void> _evictIfNeeded() async {
+    if (_maxSizeBytes == 0) return; // 0 = unlimited
     if (_totalSize <= _maxSizeBytes) return;
 
     // Sort by last accessed (oldest first)

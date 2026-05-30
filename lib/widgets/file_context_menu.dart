@@ -3,13 +3,18 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:url_launcher/url_launcher.dart';
 import 'dart:io';
+import 'package:share_plus/share_plus.dart';
+import 'package:cross_file/cross_file.dart';
 import '../models/file_item.dart';
 import '../models/panel_side.dart';
 import '../providers/providers.dart';
+import '../providers/core_providers.dart' show preferExternalEditorProvider;
 import '../services/archive_service.dart';
 import '../services/checksum_service.dart';
 import '../services/cloud_storage_interface.dart' show CloudProvider;
+import '../services/log_service.dart';
 import '../services/sftp_client_adapter.dart';
 import '../services/share_service.dart';
 import '../utils/formatters.dart' show formatBytes, formatDateFull;
@@ -21,6 +26,32 @@ import 'file_list_view.dart' show getFileIcon;
 import 'share_link_dialog.dart' show showShareLinkDialog;
 import 'permissions_dialog.dart' show showPermissionsDialog;
 import 'version_history_dialog.dart' show showVersionHistoryDialog;
+
+final _log = Log('FileContextMenu');
+
+/// Open a local file with the OS default application via a file:// URI.
+Future<void> openWithSystemEditor(BuildContext context, String path) async {
+  try {
+    final uri = Uri.file(path);
+    if (await canLaunchUrl(uri)) {
+      await launchUrl(uri);
+    } else {
+      _log.warn('Cannot launch file URI: $uri');
+      if (context.mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('No system editor found for this file type')),
+        );
+      }
+    }
+  } catch (e) {
+    _log.error('Failed to open with system editor: $e');
+    if (context.mounted) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Failed to open file: $e')),
+      );
+    }
+  }
+}
 
 void showFileContextMenu(BuildContext context, WidgetRef ref, PanelSide side, FileItem file, Offset position) {
   final panel = ref.read(panelProvider(side));
@@ -60,7 +91,7 @@ void showFileContextMenu(BuildContext context, WidgetRef ref, PanelSide side, Fi
     );
   }
 
-  // Edit (single text/code file, not folder)
+  // Edit (single text/code file, not folder) — submenu: built-in vs system editor
   if (!isMultiSelect && !isSingleFolder) {
     final editableExts = {
       'txt', 'json', 'yaml', 'yml', 'xml', 'csv', 'log', 'ini', 'cfg',
@@ -71,20 +102,48 @@ void showFileContextMenu(BuildContext context, WidgetRef ref, PanelSide side, Fi
       'lua', 'vim', 'makefile', 'properties', 'gradle',
     };
     final ext = file.name.split('.').last.toLowerCase();
+    final preferExternal = ref.read(preferExternalEditorProvider);
     if (editableExts.contains(ext) || !file.name.contains('.')) {
+      // Primary "Edit" action respects the user's editor preference
       items.add(
         PopupMenuItem(
-          child: const Row(
+          child: Row(
             children: [
-              Icon(Icons.edit),
-              SizedBox(width: 8),
-              Text('Edit'),
+              const Icon(Icons.edit),
+              const SizedBox(width: 8),
+              Text(preferExternal ? 'Edit (System Editor)' : 'Edit (Built-in)'),
             ],
           ),
-          onTap: () => Future.delayed(
-            Duration.zero,
-            () => showFileEditorDialog(context, ref, file, side),
+          onTap: () => Future.delayed(Duration.zero, () {
+            if (preferExternal && file.path != null && !kIsWeb) {
+              openWithSystemEditor(context, file.path!);
+            } else {
+              showFileEditorDialog(context, ref, file, side);
+            }
+          }),
+        ),
+      );
+      // Secondary option (the other editor)
+      items.add(
+        PopupMenuItem(
+          child: Row(
+            children: [
+              Icon(preferExternal ? Icons.edit_note : Icons.open_in_new, size: 20),
+              const SizedBox(width: 8),
+              Text(preferExternal ? 'Edit (Built-in)' : 'Open with System Editor'),
+            ],
           ),
+          onTap: () => Future.delayed(Duration.zero, () {
+            if (preferExternal) {
+              showFileEditorDialog(context, ref, file, side);
+            } else if (file.path != null && !kIsWeb) {
+              openWithSystemEditor(context, file.path!);
+            } else {
+              ScaffoldMessenger.of(context).showSnackBar(
+                const SnackBar(content: Text('System editor not available')),
+              );
+            }
+          }),
         ),
       );
     }
@@ -154,7 +213,7 @@ void showFileContextMenu(BuildContext context, WidgetRef ref, PanelSide side, Fi
     );
   }
 
-  // Share (mobile platforms only)
+  // Share (mobile platforms only — local files)
   if (!kIsWeb && (Platform.isAndroid || Platform.isIOS) && side == PanelSide.local) {
     items.add(
       PopupMenuItem(
@@ -172,6 +231,71 @@ void showFileContextMenu(BuildContext context, WidgetRef ref, PanelSide side, Fi
             ShareService.shareFiles(paths);
           },
         ),
+      ),
+    );
+  }
+
+  // Share (mobile platforms only — remote files)
+  if (!kIsWeb && (Platform.isAndroid || Platform.isIOS) && side == PanelSide.remote && !isMultiSelect && !isSingleFolder) {
+    final client = ref.read(authProvider).client;
+
+    // "Share Link" — only for providers with native share APIs
+    if (client.supportsNativeShare) {
+      items.add(
+        PopupMenuItem(
+          child: const Row(
+            children: [Icon(Icons.link), SizedBox(width: 8), Text('Share Link')],
+          ),
+          onTap: () => Future.delayed(Duration.zero, () async {
+            try {
+              await showShareLinkDialog(context, ref, file);
+            } catch (e) {
+              if (context.mounted) {
+                ScaffoldMessenger.of(context).showSnackBar(
+                  SnackBar(content: Text('Share link failed: $e')),
+                );
+              }
+            }
+          }),
+        ),
+      );
+    }
+
+    // "Share File" — download to temp then share binary
+    items.add(
+      PopupMenuItem(
+        child: const Row(
+          children: [Icon(Icons.share), SizedBox(width: 8), Text('Share File')],
+        ),
+        onTap: () => Future.delayed(Duration.zero, () async {
+          // Show loading snackbar
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(
+              content: Row(
+                children: [
+                  SizedBox(width: 20, height: 20, child: CircularProgressIndicator(strokeWidth: 2)),
+                  SizedBox(width: 12),
+                  Text('Preparing file for sharing...'),
+                ],
+              ),
+              duration: Duration(seconds: 30),
+            ),
+          );
+          try {
+            final remotePath = file.path ?? p.posix.join(panel.currentPath, file.name);
+            final tempPath = p.join(Directory.systemTemp.path, file.name);
+            await client.downloadFileByPath(remotePath, tempPath);
+            if (context.mounted) ScaffoldMessenger.of(context).hideCurrentSnackBar();
+            await Share.shareXFiles([XFile(tempPath)], text: file.name);
+          } catch (e) {
+            if (context.mounted) {
+              ScaffoldMessenger.of(context).hideCurrentSnackBar();
+              ScaffoldMessenger.of(context).showSnackBar(
+                SnackBar(content: Text('Share failed: $e')),
+              );
+            }
+          }
+        }),
       ),
     );
   }
@@ -254,16 +378,20 @@ void showFileContextMenu(BuildContext context, WidgetRef ref, PanelSide side, Fi
     );
   }
 
-  // Share link (remote, single file, provider supports sharing)
+  // Share link (remote, single file, provider supports sharing — non-mobile or no supportsNativeShare)
   if (side == PanelSide.remote && !isMultiSelect && ref.read(authProvider).client.supportsSharing) {
-    items.add(
-      PopupMenuItem(
-        child: const Row(
-          children: [Icon(Icons.link), SizedBox(width: 8), Text('Share Link')],
+    // On mobile with supportsNativeShare, Share Link is already shown above; avoid duplicate
+    final isMobileNative = !kIsWeb && (Platform.isAndroid || Platform.isIOS) && ref.read(authProvider).client.supportsNativeShare;
+    if (!isMobileNative) {
+      items.add(
+        PopupMenuItem(
+          child: const Row(
+            children: [Icon(Icons.link), SizedBox(width: 8), Text('Share Link')],
+          ),
+          onTap: () => Future.delayed(Duration.zero, () => showShareLinkDialog(context, ref, file)),
         ),
-        onTap: () => Future.delayed(Duration.zero, () => showShareLinkDialog(context, ref, file)),
-      ),
-    );
+      );
+    }
   }
 
   // Version history (remote, single file, provider supports versioning)

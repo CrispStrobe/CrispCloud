@@ -5,6 +5,7 @@
 
 import 'package:flutter/material.dart';
 import '../models/panel_tab.dart';
+import 'file_list_view.dart' show PanelDragData;
 
 class PanelTabBar extends StatelessWidget {
   final List<PanelTab> tabs;
@@ -13,6 +14,7 @@ class PanelTabBar extends StatelessWidget {
   final ValueChanged<String> onTabClosed;
   final VoidCallback onNewTab;
   final ValueChanged<String>? onTabPinToggle;
+  final void Function(String tabId, List<dynamic> files)? onFilesDroppedOnTab;
 
   const PanelTabBar({
     super.key,
@@ -22,6 +24,7 @@ class PanelTabBar extends StatelessWidget {
     required this.onTabClosed,
     required this.onNewTab,
     this.onTabPinToggle,
+    this.onFilesDroppedOnTab,
   });
 
   @override
@@ -52,7 +55,11 @@ class PanelTabBar extends StatelessWidget {
                 final tab = tabs[index];
                 final isActive = tab.id == activeTabId;
 
-                return GestureDetector(
+                return DragTarget<PanelDragData>(
+                  onAcceptWithDetails: (details) {
+                    onFilesDroppedOnTab?.call(tab.id, details.data.files);
+                  },
+                  builder: (ctx, candidateData, rejectedData) => GestureDetector(
                   onSecondaryTapDown: (details) {
                     _showTabContextMenu(context, tab, details.globalPosition);
                   },
@@ -123,7 +130,7 @@ class PanelTabBar extends StatelessWidget {
                       ),
                     ),
                   ),
-                );
+                ));
               },
             ),
           ),

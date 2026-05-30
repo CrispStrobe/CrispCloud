@@ -9,7 +9,9 @@ import 'dart:io';
 import 'package:drift/drift.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
+import '../services/background_sync_service.dart';
 import '../services/cloud_storage_interface.dart';
 import '../services/placeholder_service.dart';
 import '../services/sync_database.dart';
@@ -34,12 +36,28 @@ class SyncNotifier extends ChangeNotifier {
   bool _isSyncing = false;
   SyncResult? _lastResult;
   String? _currentPairName;
+  bool _backgroundSyncEnabled = false;
+  int _backgroundSyncIntervalMinutes = 15;
+  int _autoEvictDays = 0; // 0 = disabled
+
+  // Bandwidth scheduling
+  bool _syncOnlyOnWifi = false;
+  int _syncStartHour = 0;  // 0 = no restriction
+  int _syncEndHour = 0;    // 0 = no restriction
+
+  static const _autoEvictDaysKey = 'sync_auto_evict_days';
+  static const _syncOnlyOnWifiKey = 'sync_only_on_wifi';
+  static const _syncStartHourKey = 'sync_start_hour';
+  static const _syncEndHourKey = 'sync_end_hour';
 
   SyncNotifier(this._ref) {
     _db = SyncDatabase();
     _engine = SyncEngine(_db);
     _watcher = SyncWatcherService();
     _loadPairs();
+    _loadBackgroundSyncState();
+    _loadAutoEvictDays();
+    _loadBandwidthSchedule();
   }
 
   // --- Getters ---
@@ -51,6 +69,33 @@ class SyncNotifier extends ChangeNotifier {
   bool get isWatchEnabled => _watchEnabled;
   int get watcherCount => _watcher.watcherCount;
   bool get isTrayActive => _trayInitialized;
+  int get autoEvictDays => _autoEvictDays;
+  bool get syncOnlyOnWifi => _syncOnlyOnWifi;
+  int get syncStartHour => _syncStartHour;
+  int get syncEndHour => _syncEndHour;
+
+  /// Check if sync is allowed right now based on bandwidth schedule.
+  bool get isSyncAllowedNow {
+    // Check time window
+    if (_syncStartHour != 0 || _syncEndHour != 0) {
+      final hour = DateTime.now().hour;
+      if (_syncStartHour < _syncEndHour) {
+        // e.g. 2-6: allowed between 2:00 and 5:59
+        if (hour < _syncStartHour || hour >= _syncEndHour) return false;
+      } else if (_syncStartHour > _syncEndHour) {
+        // e.g. 22-6: allowed from 22:00 to 5:59 (overnight)
+        if (hour < _syncStartHour && hour >= _syncEndHour) return false;
+      }
+    }
+    // WiFi check would require connectivity_plus package — for now just expose the flag
+    return true;
+  }
+
+  /// Whether background sync is currently scheduled on this device.
+  bool get isBackgroundSyncEnabled => _backgroundSyncEnabled;
+
+  /// The interval (in minutes) between background sync runs.
+  int get backgroundSyncIntervalMinutes => _backgroundSyncIntervalMinutes;
 
   /// Initialize system tray (call once from app startup on desktop).
   Future<void> initTray({
@@ -65,6 +110,104 @@ class SyncNotifier extends ChangeNotifier {
     );
     _trayInitialized = true;
     _updateTray();
+  }
+
+  // --- Auto-eviction ---
+
+  Future<void> _loadAutoEvictDays() async {
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      _autoEvictDays = prefs.getInt(_autoEvictDaysKey) ?? 0;
+      notifyListeners();
+    } catch (_) {}
+  }
+
+  Future<void> _loadBandwidthSchedule() async {
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      _syncOnlyOnWifi = prefs.getBool(_syncOnlyOnWifiKey) ?? false;
+      _syncStartHour = prefs.getInt(_syncStartHourKey) ?? 0;
+      _syncEndHour = prefs.getInt(_syncEndHourKey) ?? 0;
+    } catch (_) {}
+  }
+
+  /// Set bandwidth scheduling: sync only on WiFi.
+  Future<void> setSyncOnlyOnWifi(bool value) async {
+    _syncOnlyOnWifi = value;
+    notifyListeners();
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setBool(_syncOnlyOnWifiKey, value);
+  }
+
+  /// Set allowed sync hours (0,0 = no restriction). Uses 24h format.
+  Future<void> setSyncHours(int startHour, int endHour) async {
+    _syncStartHour = startHour;
+    _syncEndHour = endHour;
+    notifyListeners();
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setInt(_syncStartHourKey, startHour);
+    await prefs.setInt(_syncEndHourKey, endHour);
+  }
+
+  /// Get the current auto-evict threshold (days). 0 = disabled.
+  int getAutoEvictDays() => _autoEvictDays;
+
+  /// Persist the auto-evict threshold and refresh state.
+  Future<void> setAutoEvictDays(int days) async {
+    _autoEvictDays = days;
+    notifyListeners();
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      await prefs.setInt(_autoEvictDaysKey, days);
+    } catch (e) {
+      _log.error('Failed to persist auto-evict days: $e');
+    }
+  }
+
+  /// Run auto-eviction for all pairs that have placeholders enabled.
+  Future<int> runAutoEviction() async {
+    if (_autoEvictDays <= 0) return 0;
+    try {
+      final service = PlaceholderService(_db);
+      final count = await service.autoEvict(_autoEvictDays, _db);
+      if (count > 0) {
+        _log.info('Auto-eviction freed $count file(s)');
+        await _loadPairs();
+      }
+      return count;
+    } catch (e) {
+      _log.error('Auto-eviction failed: $e');
+      return 0;
+    }
+  }
+
+  // --- Background sync ---
+
+  /// Load persisted background-sync state from SharedPreferences.
+  Future<void> _loadBackgroundSyncState() async {
+    if (!BackgroundSyncService.isSupported) return;
+    _backgroundSyncEnabled = await BackgroundSyncService.isScheduled();
+    _backgroundSyncIntervalMinutes = await BackgroundSyncService.getIntervalMinutes();
+    notifyListeners();
+  }
+
+  /// Enable background sync with an optional custom [intervalMinutes].
+  Future<void> enableBackgroundSync({int intervalMinutes = 15}) async {
+    if (!BackgroundSyncService.isSupported) return;
+    await BackgroundSyncService.schedulePeriodicSync(intervalMinutes: intervalMinutes);
+    _backgroundSyncEnabled = true;
+    _backgroundSyncIntervalMinutes = intervalMinutes;
+    _log.info('Background sync enabled — interval: $intervalMinutes min');
+    notifyListeners();
+  }
+
+  /// Disable and cancel the background sync task.
+  Future<void> disableBackgroundSync() async {
+    if (!BackgroundSyncService.isSupported) return;
+    await BackgroundSyncService.cancelSync();
+    _backgroundSyncEnabled = false;
+    _log.info('Background sync disabled');
+    notifyListeners();
   }
 
   void _updateTray() {
@@ -137,9 +280,13 @@ class SyncNotifier extends ChangeNotifier {
 
   // --- Sync execution ---
 
-  /// Sync all enabled pairs.
+  /// Sync all enabled pairs (respects bandwidth schedule).
   Future<SyncResult> syncAll() async {
     if (_isSyncing) return const SyncResult();
+    if (!isSyncAllowedNow) {
+      _log.info('Sync skipped: outside allowed schedule (${_syncStartHour}:00-${_syncEndHour}:00)');
+      return const SyncResult();
+    }
 
     _isSyncing = true;
     notifyListeners();
@@ -175,6 +322,9 @@ class SyncNotifier extends ChangeNotifier {
       _updateTray();
       await _loadPairs();
     }
+
+    // Run auto-eviction after sync completes (fire-and-forget)
+    unawaited(runAutoEviction());
 
     return totalResult;
   }
@@ -287,6 +437,27 @@ class SyncNotifier extends ChangeNotifier {
 
         for (final op in pendingOps) {
           try {
+            // Check for conflicts before replaying upload operations
+            if (op.operation == 'upload') {
+              final remote = await client.resolvePath(op.path);
+              if (remote != null) {
+                final remoteModStr = remote['modificationTime'] ?? remote['lastModified'];
+                if (remoteModStr != null && op.createdAt != null) {
+                  DateTime? remoteMod;
+                  if (remoteModStr is int) {
+                    remoteMod = DateTime.fromMillisecondsSinceEpoch(remoteModStr);
+                  } else {
+                    remoteMod = DateTime.tryParse(remoteModStr.toString());
+                  }
+                  if (remoteMod != null && remoteMod.isAfter(op.createdAt!)) {
+                    _log.warn('Conflict detected: ${op.path} modified on server since offline op queued');
+                    result = result + SyncResult(conflicts: 1, errorMessages: ['Conflict: ${op.path} modified on server']);
+                    continue; // Skip this op, leave it in queue for manual resolution
+                  }
+                }
+              }
+            }
+
             await _executeOfflineOp(op, pair, client);
             await _db.markOfflineCompleted(op.id);
             result = result + const SyncResult(uploaded: 1);

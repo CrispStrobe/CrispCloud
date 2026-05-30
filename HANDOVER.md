@@ -8,7 +8,7 @@
 
 You are continuing development on **CrispCloud**, a cross-platform Flutter cloud file manager at `/mnt/akademie_storage/CrispCloud`. Read `PLAN.md` for the full roadmap and `HISTORY.md` for what's been done.
 
-The project uses the **Adapter pattern** (`CloudStorageClient` interface) with **9 providers** (Filen, Internxt, SFTP, WebDAV, S3, FTP, Google Drive, OneDrive, Dropbox). State management is **Riverpod 2** with 9 focused providers. Tests are in `test/`, ~35 files, ~280+ unit tests.
+The project uses the **Adapter pattern** (`CloudStorageClient` interface) with **11 providers** (Filen, Internxt, SFTP, WebDAV, S3, FTP, Google Drive, OneDrive, Dropbox, Nextcloud, pCloud). State management is **Riverpod 2** with 10+ focused providers. Tests are in `test/`, ~42+ files, ~400+ unit tests.
 
 ## What's Been Done (don't redo these)
 

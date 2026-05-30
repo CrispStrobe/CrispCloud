@@ -201,20 +201,20 @@ class SFTPClientAdapter extends CloudStorageClient {
         
         final fullPath = p.posix.join(path, item.filename);
         final isDir = item.attr.isDirectory;
-        
+        final isLink = item.attr.isSymbolicLink;
+
         // FIX: Handle int timestamp safely
         final modTimeInt = item.attr.modifyTime ?? 0;
         final modTimeStr = DateTime.fromMillisecondsSinceEpoch(modTimeInt * 1000).toIso8601String();
-        
+
         final map = {
-          'uuid': fullPath, 
-          'name': item.filename, // Keep full name (e.g. file.txt)
+          'uuid': fullPath,
+          'name': item.filename,
           'size': item.attr.size,
           'modificationTime': modTimeStr,
           'type': isDir ? 'folder' : 'file',
           'path': fullPath,
-          // AppState adds extension if fileType exists. 
-          // Since SFTP returns full names, we leave fileType null/empty.
+          if (isLink) 'isSymlink': true,
         };
 
         if (isDir) {

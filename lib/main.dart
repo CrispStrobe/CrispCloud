@@ -1,5 +1,7 @@
 // lib/main.dart
 import 'package:flutter/material.dart';
+import 'package:flutter_localizations/flutter_localizations.dart';
+import 'package:flutter_gen/gen_l10n/app_localizations.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:path_provider/path_provider.dart';
@@ -20,9 +22,13 @@ import 'services/gdrive_config_service.dart';
 import 'services/internxt_client.dart' show ConfigService;
 import 'services/onedrive_config_service.dart';
 import 'services/s3_config_service.dart';
+import 'services/nextcloud_config_service.dart';
+import 'services/pcloud_config_service.dart';
 import 'services/sftp_config_service.dart';
 import 'services/webdav_config_service.dart';
 import 'services/app_lock_service.dart';
+import 'services/audit_service.dart';
+import 'services/background_sync_service.dart';
 import 'services/cert_pinning_service.dart';
 import 'services/file_cache_service.dart';
 import 'services/log_service.dart';
@@ -37,6 +43,10 @@ final _log = Log('Main');
 Future<void> main() async {
   runZonedGuarded(() async {
     WidgetsFlutterBinding.ensureInitialized();
+
+    // Register the Workmanager background task callback (Android/iOS only).
+    // Must be called before runApp() so the callback isolate can be spawned.
+    await BackgroundSyncService.initialize();
 
     _log.info('App starting...');
 
@@ -67,12 +77,15 @@ Future<void> main() async {
     proxyService.setCertPinning(certPinning);
     proxyService.applyGlobally();
 
-    // Initialize file cache and thumbnail service
+    // Initialize file cache, thumbnail service, and audit service
     final fileCache = FileCacheService();
     await fileCache.init();
 
     final thumbnailService = ThumbnailService();
     await thumbnailService.init();
+
+    final auditService = AuditService();
+    await auditService.init();
 
     CloudProvider defaultProvider = await _getDefaultProvider();
 
@@ -92,6 +105,7 @@ Future<void> main() async {
           certPinningProvider.overrideWithValue(certPinning),
           fileCacheProvider.overrideWithValue(fileCache),
           thumbnailServiceProvider.overrideWithValue(thumbnailService),
+          auditServiceProvider.overrideWithValue(auditService),
           authProvider.overrideWith((ref) => AuthNotifier(
             ref,
             initialProvider: defaultProvider,
@@ -123,7 +137,9 @@ Future<CloudProvider> _getDefaultProvider() async {
       case 'ftp': return CloudProvider.ftp;
       case 'gdrive': return CloudProvider.gdrive;
       case 'internxt': return CloudProvider.internxt;
+      case 'nextcloud': return CloudProvider.nextcloud;
       case 'onedrive': return CloudProvider.onedrive;
+      case 'pcloud': return CloudProvider.pcloud;
       case 's3': return CloudProvider.s3;
       case 'sftp': return CloudProvider.sftp;
       case 'webdav': return CloudProvider.webdav;
@@ -154,6 +170,10 @@ Future<dynamic> _createConfigService(
         return OneDriveConfigService(configPath: configPath, secureStorage: secureStorage);
       case CloudProvider.s3:
         return S3ConfigService(configPath: configPath, secureStorage: secureStorage);
+      case CloudProvider.nextcloud:
+        return NextcloudConfigService(configPath: configPath, secureStorage: secureStorage);
+      case CloudProvider.pcloud:
+        return PCloudConfigService(configPath: configPath, secureStorage: secureStorage);
       case CloudProvider.sftp:
         return SFTPConfigService(configPath: configPath, secureStorage: secureStorage);
       case CloudProvider.webdav:
@@ -199,6 +219,13 @@ class MyApp extends ConsumerWidget {
         theme: themeService.lightTheme,
         darkTheme: themeService.darkTheme,
         themeMode: themeService.themeMode,
+        localizationsDelegates: const [
+          AppLocalizations.delegate,
+          GlobalMaterialLocalizations.delegate,
+          GlobalWidgetsLocalizations.delegate,
+          GlobalCupertinoLocalizations.delegate,
+        ],
+        supportedLocales: AppLocalizations.supportedLocales,
         home: const _AppLockGate(),
       ),
     );

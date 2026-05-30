@@ -2,10 +2,12 @@
 //
 // Barrel export for all Riverpod providers.
 
+export 'action_history_provider.dart';
 export 'auth_provider.dart';
 export 'bookmarks_provider.dart';
 export 'core_providers.dart';
 export 'error_provider.dart';
+export 'multi_cloud_provider.dart';
 export 'panel_provider.dart';
 export 'recent_locations_provider.dart';
 export 'search_provider.dart';

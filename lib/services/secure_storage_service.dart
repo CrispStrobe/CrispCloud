@@ -129,7 +129,7 @@ class CredentialMigration {
     _secureLog.info('Migrating credentials from SharedPreferences to SecureStorage...');
 
     // Migrate each provider's credentials
-    for (final key in ['dropbox_credentials', 'filen_credentials', 'ftp_credentials', 'gdrive_credentials', 'onedrive_credentials', 's3_credentials', 'sftp_credentials', 'webdav_credentials']) {
+    for (final key in ['dropbox_credentials', 'filen_credentials', 'ftp_credentials', 'gdrive_credentials', 'nextcloud_credentials', 'onedrive_credentials', 'pcloud_credentials', 's3_credentials', 'sftp_credentials', 'webdav_credentials']) {
       final raw = prefs.getString(key);
       if (raw != null) {
         await secure.write(key, raw);

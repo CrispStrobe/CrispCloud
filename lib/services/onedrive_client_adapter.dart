@@ -72,11 +72,15 @@ class OneDriveClientAdapter extends CloudStorageClient {
   @override
   bool get supportsSharing => true;
   @override
+  bool get supportsNativeShare => true;
+  @override
   bool get supportsSearch => true;
   @override
   bool get supportsThumbnails => true;
   @override
   bool get supportsTrash => true;
+  @override
+  bool get supportsServerSideCopy => true;
 
   // --- Auth ---
 
@@ -130,6 +134,18 @@ class OneDriveClientAdapter extends CloudStorageClient {
     _refreshToken = null;
     _email = null;
     _authenticated = false;
+  }
+
+  @override
+  Future<Uint8List?> getThumbnail(String remotePath) async {
+    await _ensureToken();
+    try {
+      final encodedPath = Uri.encodeComponent(remotePath.startsWith('/') ? remotePath.substring(1) : remotePath);
+      final uri = Uri.parse('https://graph.microsoft.com/v1.0/me/drive/root:/$encodedPath:/thumbnails/0/medium/content');
+      final resp = await http.get(uri, headers: {'Authorization': 'Bearer $_accessToken'});
+      if (resp.statusCode == 200) return resp.bodyBytes;
+    } catch (_) {}
+    return null;
   }
 
   Future<bool> restoreCredentials() async {
@@ -345,6 +361,37 @@ class OneDriveClientAdapter extends CloudStorageClient {
       }
 
       parentPath = '$parentPath/$segment';
+    }
+  }
+
+  // --- Copy ---
+
+  @override
+  Future<void> copyPath(String sourcePath, String targetPath) async {
+    await _ensureToken();
+    // Resolve the target folder ID
+    final targetMeta = await _graphGet('${_drivePath(targetPath)}?\$select=id,parentReference');
+    final targetId = targetMeta['id'] as String?;
+    if (targetId == null) throw Exception('Target folder not found: $targetPath');
+    final fileName = p.posix.basename(sourcePath);
+    _log.info('Server-side copy (OneDrive): $sourcePath → $targetPath');
+    final body = json.encode({
+      'parentReference': {'id': targetId},
+      'name': fileName,
+      '@microsoft.graph.conflictBehavior': 'rename',
+    });
+    final resp = await http.post(
+      Uri.parse('$_graphBase${_drivePath(sourcePath)}/copy'),
+      headers: {
+        ..._authHeaders(),
+        'Content-Type': 'application/json',
+        'Prefer': 'respond-async',
+      },
+      body: body,
+    );
+    // Graph API returns 202 Accepted for async copy; treat 200/202 as success
+    if (resp.statusCode != 200 && resp.statusCode != 202) {
+      throw Exception('OneDrive copy failed (${resp.statusCode}): ${resp.body}');
     }
   }
 

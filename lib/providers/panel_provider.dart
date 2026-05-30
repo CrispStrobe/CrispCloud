@@ -15,8 +15,10 @@ import 'package:shared_preferences/shared_preferences.dart';
 import '../models/file_item.dart';
 import '../models/panel_side.dart';
 import '../models/panel_tab.dart';
+import '../services/audit_service.dart';
 import '../services/local_file_service.dart';
 import '../services/log_service.dart';
+import 'action_history_provider.dart';
 import 'auth_provider.dart';
 import 'core_providers.dart';
 import 'error_provider.dart';
@@ -41,6 +43,9 @@ class PanelNotifier extends ChangeNotifier {
   SortBy _sortBy = SortBy.name;
   SortOrder _sortOrder = SortOrder.ascending;
 
+  // Client-side incremental filter (no re-fetch)
+  String _filterQuery = '';
+
   // Tabs
   int _tabIdCounter = 0;
   final List<PanelTab> _tabs = [];
@@ -48,6 +53,11 @@ class PanelNotifier extends ChangeNotifier {
 
   final _refreshLock = _AsyncLock();
   Timer? _refreshDebounce;
+
+  /// When true, [_files] holds search results instead of the real directory
+  /// listing; normal refresh/navigation calls restore the real listing.
+  bool _showingSearchResults = false;
+  bool get showingSearchResults => _showingSearchResults;
 
   PanelNotifier(this._ref, this.side)
       : _localFileService = _ref.read(localFileServiceProvider) {
@@ -66,6 +76,47 @@ class PanelNotifier extends ChangeNotifier {
 
   SortBy get sortBy => _sortBy;
   SortOrder get sortOrder => _sortOrder;
+  String get filterQuery => _filterQuery;
+
+  /// Returns files filtered by the current filter query (client-side, no re-fetch).
+  List<FileItem>? get filteredFiles {
+    if (_files == null) return null;
+    if (_filterQuery.isEmpty) return _files;
+    final q = _filterQuery.toLowerCase();
+    return _files!.where((f) => f.name.toLowerCase().contains(q)).toList();
+  }
+
+  /// Set a client-side filter query. Filters without re-fetching from server.
+  void setFilter(String query) {
+    _filterQuery = query;
+    notifyListeners();
+  }
+
+  /// Clear the client-side filter.
+  void clearFilter() {
+    _filterQuery = '';
+    notifyListeners();
+  }
+
+  // --- Search-results virtual folder ---
+
+  /// Replace the file listing with [results] from a search/find operation.
+  /// The actual remote path is preserved so [clearSearchResults] can restore it.
+  void showSearchResults(List<FileItem> results) {
+    _log.info('Showing ${results.length} search results as virtual folder');
+    _showingSearchResults = true;
+    _files = List.of(results);
+    _sortFiles();
+    notifyListeners();
+  }
+
+  /// Restore the real directory listing by re-loading the current remote path.
+  void clearSearchResults() {
+    if (!_showingSearchResults) return;
+    _log.info('Clearing search results, restoring directory listing');
+    _showingSearchResults = false;
+    refresh();
+  }
 
   String get currentPath {
     if (side == PanelSide.local) return _localFileService.currentPath;
@@ -276,10 +327,14 @@ class PanelNotifier extends ChangeNotifier {
   // --- File operations (local panel helpers) ---
   Future<void> deleteFiles(List<FileItem> files) async {
     final errors = _ref.read(errorProvider);
+    final audit = _ref.read(auditServiceProvider);
+    final actionHistory = _ref.read(actionHistoryProvider.notifier);
+    final providerName = side == PanelSide.local ? 'local' : _ref.read(authProvider).client.providerName;
     if (kIsWeb && side == PanelSide.local) return;
     try {
       final client = _ref.read(authProvider).client;
       for (final file in files) {
+        final src = file.path ?? p.posix.join(_remotePath, file.name);
         if (side == PanelSide.local) {
           if (file.isFolder) {
             await Directory(file.path!).delete(recursive: true);
@@ -290,36 +345,89 @@ class PanelNotifier extends ChangeNotifier {
           final deletePath = file.path ?? p.posix.join(_remotePath, file.name);
           await client.deletePath(deletePath);
         }
+        await audit.logSuccess(
+          operation: AuditOperation.delete,
+          sourcePath: src,
+          provider: providerName,
+          sizeBytes: file.size,
+        );
+        actionHistory.record(
+          type: ActionType.delete,
+          originalPath: src,
+          provider: providerName,
+          metadata: {'name': file.name, 'isFolder': file.isFolder},
+        );
       }
       await refresh();
       clearSelection();
     } catch (e) {
       errors.addError('Delete failed: $e');
+      for (final file in files) {
+        final src = file.path ?? p.posix.join(_remotePath, file.name);
+        await audit.logError(
+          operation: AuditOperation.delete,
+          sourcePath: src,
+          provider: providerName,
+          error: e.toString(),
+        );
+      }
     }
   }
 
   Future<void> renameFile(FileItem file, String newName) async {
+    final audit = _ref.read(auditServiceProvider);
+    final actionHistory = _ref.read(actionHistoryProvider.notifier);
+    final providerName = side == PanelSide.local ? 'local' : _ref.read(authProvider).client.providerName;
+    final src = file.path ?? p.posix.join(_remotePath, file.name);
     if (kIsWeb && side == PanelSide.local) return;
     try {
+      String computedNewPath;
       if (side == PanelSide.local) {
-        final newPath = p.join(p.dirname(file.path!), newName);
+        computedNewPath = p.join(p.dirname(file.path!), newName);
         if (file.isFolder) {
-          await Directory(file.path!).rename(newPath);
+          await Directory(file.path!).rename(computedNewPath);
         } else {
-          await File(file.path!).rename(newPath);
+          await File(file.path!).rename(computedNewPath);
         }
       } else {
         final client = _ref.read(authProvider).client;
         final sourcePath = file.path ?? p.posix.join(_remotePath, file.name);
+        computedNewPath = p.posix.join(p.posix.dirname(sourcePath), newName);
         await client.renamePath(sourcePath, newName);
       }
+      await audit.logSuccess(
+        operation: AuditOperation.rename,
+        sourcePath: src,
+        targetPath: newName,
+        provider: providerName,
+      );
+      actionHistory.record(
+        type: ActionType.rename,
+        originalPath: src,
+        newPath: computedNewPath,
+        provider: providerName,
+        metadata: {'oldName': file.name, 'newName': newName},
+      );
       await refresh();
     } catch (e) {
       _ref.read(errorProvider).addError('Rename failed: $e');
+      await audit.logError(
+        operation: AuditOperation.rename,
+        sourcePath: src,
+        targetPath: newName,
+        provider: providerName,
+        error: e.toString(),
+      );
     }
   }
 
   Future<void> createFolder(String name) async {
+    final audit = _ref.read(auditServiceProvider);
+    final actionHistory = _ref.read(actionHistoryProvider.notifier);
+    final providerName = side == PanelSide.local ? 'local' : _ref.read(authProvider).client.providerName;
+    final folderPath = side == PanelSide.local
+        ? p.join(currentPath, name)
+        : p.posix.join(_remotePath, name);
     if (kIsWeb && side == PanelSide.local) return;
     try {
       if (side == PanelSide.local) {
@@ -328,61 +436,146 @@ class PanelNotifier extends ChangeNotifier {
         final client = _ref.read(authProvider).client;
         await client.createFolderPath(p.posix.join(_remotePath, name));
       }
+      await audit.logSuccess(
+        operation: AuditOperation.createFolder,
+        sourcePath: folderPath,
+        provider: providerName,
+      );
+      actionHistory.record(
+        type: ActionType.createFolder,
+        originalPath: folderPath,
+        provider: providerName,
+        metadata: {'name': name},
+      );
       await refresh();
     } catch (e) {
       _ref.read(errorProvider).addError('Create folder failed: $e');
+      await audit.logError(
+        operation: AuditOperation.createFolder,
+        sourcePath: folderPath,
+        provider: providerName,
+        error: e.toString(),
+      );
     }
   }
 
   Future<void> moveFiles(List<FileItem> files, String targetPath) async {
+    final audit = _ref.read(auditServiceProvider);
+    final actionHistory = _ref.read(actionHistoryProvider.notifier);
+    final providerName = side == PanelSide.local ? 'local' : _ref.read(authProvider).client.providerName;
     if (kIsWeb && side == PanelSide.local) return;
     try {
       for (final file in files) {
+        final src = file.path ?? p.posix.join(_remotePath, file.name);
+        final String movedToPath;
         if (side == PanelSide.local) {
-          final newPath = p.join(targetPath, file.name);
+          movedToPath = p.join(targetPath, file.name);
           if (file.isFolder) {
-            await Directory(file.path!).rename(newPath);
+            await Directory(file.path!).rename(movedToPath);
           } else {
-            await File(file.path!).rename(newPath);
+            await File(file.path!).rename(movedToPath);
           }
         } else {
           final client = _ref.read(authProvider).client;
           final sourcePath = file.path ?? p.posix.join(_remotePath, file.name);
+          movedToPath = p.posix.join(targetPath, file.name);
           await client.movePath(sourcePath, targetPath);
         }
+        await audit.logSuccess(
+          operation: AuditOperation.move,
+          sourcePath: src,
+          targetPath: targetPath,
+          provider: providerName,
+          sizeBytes: file.size,
+        );
+        actionHistory.record(
+          type: ActionType.move,
+          originalPath: src,
+          newPath: movedToPath,
+          provider: providerName,
+          metadata: {'name': file.name, 'targetDir': targetPath},
+        );
       }
       await refresh();
       clearSelection();
     } catch (e) {
       _ref.read(errorProvider).addError('Move failed: $e');
+      for (final file in files) {
+        final src = file.path ?? p.posix.join(_remotePath, file.name);
+        await audit.logError(
+          operation: AuditOperation.move,
+          sourcePath: src,
+          targetPath: targetPath,
+          provider: providerName,
+          error: e.toString(),
+        );
+      }
       await refresh();
     }
   }
 
   Future<void> copyFiles(List<FileItem> files, String targetPath) async {
+    final audit = _ref.read(auditServiceProvider);
+    final actionHistory = _ref.read(actionHistoryProvider.notifier);
+    final providerName = side == PanelSide.local ? 'local' : _ref.read(authProvider).client.providerName;
     if (kIsWeb && side == PanelSide.local) return;
     try {
       for (final file in files) {
+        final src = file.path ?? p.posix.join(_remotePath, file.name);
+        // copyPath is the new file that was created — used for undo (delete the copy)
+        final String copyPath;
         if (side == PanelSide.local) {
-          final newPath = p.join(targetPath, file.name);
+          copyPath = p.join(targetPath, file.name);
           if (file.isFolder) {
-            await _copyDirectory(file.path!, newPath);
+            await _copyDirectory(file.path!, copyPath);
           } else {
-            await File(file.path!).copy(newPath);
+            await File(file.path!).copy(copyPath);
           }
         } else {
           if (kIsWeb) throw UnsupportedError('Remote copy not supported on web');
           final client = _ref.read(authProvider).client;
-          final tempPath = p.join(Directory.systemTemp.path, file.name);
-          await client.downloadFileByPath(p.posix.join(_remotePath, file.name), tempPath);
-          final data = await File(tempPath).readAsBytes();
-          await client.uploadFile(data, file.name, targetPath);
-          await File(tempPath).delete();
+          final sourcePath = file.path ?? p.posix.join(_remotePath, file.name);
+          copyPath = p.posix.join(targetPath, file.name);
+          if (client.supportsServerSideCopy) {
+            _log.info('Using server-side copy for ${file.name}');
+            await client.copyPath(sourcePath, targetPath);
+          } else {
+            final tempPath = p.join(Directory.systemTemp.path, file.name);
+            await client.downloadFileByPath(sourcePath, tempPath);
+            final data = await File(tempPath).readAsBytes();
+            await client.uploadFile(data, file.name, targetPath);
+            await File(tempPath).delete();
+          }
         }
+        await audit.logSuccess(
+          operation: AuditOperation.copy,
+          sourcePath: src,
+          targetPath: targetPath,
+          provider: providerName,
+          sizeBytes: file.size,
+        );
+        // For copy: originalPath = the new copy, newPath = source (for display)
+        actionHistory.record(
+          type: ActionType.copy,
+          originalPath: copyPath,
+          newPath: src,
+          provider: providerName,
+          metadata: {'name': file.name, 'sourceDir': p.dirname(src), 'targetDir': targetPath},
+        );
       }
       await refresh();
     } catch (e) {
       _ref.read(errorProvider).addError('Copy failed: $e');
+      for (final file in files) {
+        final src = file.path ?? p.posix.join(_remotePath, file.name);
+        await audit.logError(
+          operation: AuditOperation.copy,
+          sourcePath: src,
+          targetPath: targetPath,
+          provider: providerName,
+          error: e.toString(),
+        );
+      }
     }
   }
 
@@ -618,6 +811,13 @@ class PanelNotifier extends ChangeNotifier {
   }
 
   Future<void> _loadRemoteFiles() async {
+    // When the panel is showing search results, skip the normal directory
+    // listing unless clearSearchResults() has already reset the flag.
+    if (_showingSearchResults) {
+      _log.debug('Skipping _loadRemoteFiles — panel is showing search results');
+      return;
+    }
+
     final auth = _ref.read(authProvider);
     try {
       if (!auth.client.isAuthenticated && !auth.isConnected) {

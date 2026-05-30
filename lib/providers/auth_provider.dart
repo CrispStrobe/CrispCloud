@@ -28,6 +28,10 @@ import '../services/internxt_client_adapter.dart';
 import '../services/s3_client_adapter.dart';
 import '../services/s3_config_service.dart';
 import '../services/secure_storage_service.dart';
+import '../services/nextcloud_client_adapter.dart';
+import '../services/nextcloud_config_service.dart';
+import '../services/pcloud_client_adapter.dart';
+import '../services/pcloud_config_service.dart';
 import '../services/sftp_client_adapter.dart';
 import '../services/sftp_config_service.dart';
 import '../services/webdav_client_adapter.dart';
@@ -112,6 +116,10 @@ class AuthNotifier extends ChangeNotifier {
         return S3ConfigService(configPath: _configPath, secureStorage: _secureStorage);
       case CloudProvider.sftp:
         return SFTPConfigService(configPath: _configPath, secureStorage: _secureStorage);
+      case CloudProvider.nextcloud:
+        return NextcloudConfigService(configPath: _configPath, secureStorage: _secureStorage);
+      case CloudProvider.pcloud:
+        return PCloudConfigService(configPath: _configPath, secureStorage: _secureStorage);
       case CloudProvider.webdav:
         return WebDavConfigService(configPath: _configPath, secureStorage: _secureStorage);
       case CloudProvider.internxt:
@@ -213,6 +221,12 @@ class AuthNotifier extends ChangeNotifier {
     } else if (_cloudClient is WebDavClientAdapter) {
       final creds = await (_cloudClient as WebDavClientAdapter).config.readCredentials();
       if (creds == null) throw Exception('Not authenticated');
+    } else if (_cloudClient is NextcloudClientAdapter) {
+      final creds = await (_cloudClient as NextcloudClientAdapter).config.readCredentials();
+      if (creds == null) throw Exception('Not authenticated');
+    } else if (_cloudClient is PCloudClientAdapter) {
+      final creds = await (_cloudClient as PCloudClientAdapter).config.readCredentials();
+      if (creds == null) throw Exception('Not authenticated');
     }
   }
 
@@ -296,6 +310,22 @@ class AuthNotifier extends ChangeNotifier {
             _isConnected = true;
             notifyListeners();
           }
+        } else if (_cloudClient is NextcloudClientAdapter) {
+          final adapter = _cloudClient as NextcloudClientAdapter;
+          final restored = await adapter.restoreCredentials();
+          if (restored) {
+            _userEmail = '${adapter.userId}@${adapter.bucketId}';
+            _isConnected = true;
+            notifyListeners();
+          }
+        } else if (_cloudClient is PCloudClientAdapter) {
+          final adapter = _cloudClient as PCloudClientAdapter;
+          final restored = await adapter.restoreCredentials();
+          if (restored) {
+            _userEmail = adapter.userId ?? 'pCloud';
+            _isConnected = true;
+            notifyListeners();
+          }
         }
       } catch (e) {
         _log.warn('Auto-login exception', e);
@@ -346,6 +376,10 @@ class AuthNotifier extends ChangeNotifier {
       await (_cloudClient as SFTPClientAdapter).config.clearCredentials();
     } else if (_cloudClient is WebDavClientAdapter) {
       await (_cloudClient as WebDavClientAdapter).config.clearCredentials();
+    } else if (_cloudClient is NextcloudClientAdapter) {
+      await (_cloudClient as NextcloudClientAdapter).config.clearCredentials();
+    } else if (_cloudClient is PCloudClientAdapter) {
+      await (_cloudClient as PCloudClientAdapter).config.clearCredentials();
     }
   }
 }

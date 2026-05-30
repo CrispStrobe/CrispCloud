@@ -17,6 +17,7 @@ import '../services/dropbox_client_adapter.dart';
 import '../services/onedrive_client_adapter.dart';
 import '../services/log_service.dart';
 import '../utils/formatters.dart';
+import 'diff_viewer_dialog.dart';
 
 void showVersionHistoryDialog(BuildContext context, WidgetRef ref, FileItem file) {
   showDialog(
@@ -280,6 +281,87 @@ class _VersionHistoryDialogState extends ConsumerState<_VersionHistoryDialog> {
     }
   }
 
+  /// Download version content for diff comparison.
+  Future<String?> _downloadVersionContent(Map<String, dynamic> version) async {
+    try {
+      final auth = ref.read(authProvider);
+      final client = auth.client;
+      final provider = version['provider'] as String;
+
+      if (provider == 'gdrive') {
+        final token = (client as GDriveClientAdapter).accessToken!;
+        final fileId = version['fileId'] as String;
+        final revisionId = version['id'] as String;
+        final resp = await http.get(
+          Uri.parse('https://www.googleapis.com/drive/v3/files/$fileId/revisions/$revisionId?alt=media'),
+          headers: {'Authorization': 'Bearer $token'},
+        );
+        if (resp.statusCode == 200) return utf8.decode(resp.bodyBytes, allowMalformed: true);
+      } else if (provider == 'dropbox') {
+        final token = (client as DropboxClientAdapter).accessToken!;
+        final path = version['path'] as String;
+        final rev = version['id'] as String;
+        final arg = json.encode({'path': 'rev:$rev'});
+        final resp = await http.post(
+          Uri.parse('https://content.dropboxapi.com/2/files/download'),
+          headers: {'Authorization': 'Bearer $token', 'Dropbox-API-Arg': arg},
+        );
+        if (resp.statusCode == 200) return utf8.decode(resp.bodyBytes, allowMalformed: true);
+      } else if (provider == 'onedrive') {
+        final token = (client as OneDriveClientAdapter).accessToken!;
+        final fileId = version['fileId'] as String;
+        final versionId = version['id'] as String;
+        final resp = await http.get(
+          Uri.parse('https://graph.microsoft.com/v1.0/me/drive/items/$fileId/versions/$versionId/content'),
+          headers: {'Authorization': 'Bearer $token'},
+        );
+        if (resp.statusCode == 200) return utf8.decode(resp.bodyBytes, allowMalformed: true);
+      }
+    } catch (e) {
+      _log.error('Failed to download version content', e);
+    }
+    return null;
+  }
+
+  /// Compare a version with the current version using the diff viewer.
+  Future<void> _compareVersion(Map<String, dynamic> version) async {
+    setState(() => _restoring = true); // reuse loading overlay
+
+    try {
+      // Download the old version
+      final oldContent = await _downloadVersionContent(version);
+      if (oldContent == null) throw Exception('Failed to download version');
+
+      // Download the current version
+      final auth = ref.read(authProvider);
+      final remotePath = widget.file.path ?? '/${widget.file.name}';
+      final currentBytes = await auth.client.downloadFileBytes(remotePath);
+      final currentContent = utf8.decode(currentBytes, allowMalformed: true);
+
+      if (!mounted) return;
+      setState(() => _restoring = false);
+
+      final modified = DateTime.tryParse(version['modified'] ?? '');
+      final versionLabel = modified != null ? formatDateFull(modified) : 'Version ${version['id']}';
+
+      showDiffViewerFromContent(
+        context,
+        leftContent: oldContent,
+        rightContent: currentContent,
+        leftLabel: 'Version: $versionLabel',
+        rightLabel: 'Current',
+      );
+    } catch (e) {
+      _log.error('Version diff failed', e);
+      if (mounted) {
+        setState(() => _restoring = false);
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Diff failed: $e')),
+        );
+      }
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
@@ -327,9 +409,18 @@ class _VersionHistoryDialogState extends ConsumerState<_VersionHistoryDialog> {
                                 ),
                                 trailing: index == 0
                                     ? Chip(label: const Text('Current', style: TextStyle(fontSize: 10)), visualDensity: VisualDensity.compact)
-                                    : TextButton(
-                                        onPressed: _restoring ? null : () => _restoreVersion(v),
-                                        child: const Text('Restore', style: TextStyle(fontSize: 12)),
+                                    : Row(
+                                        mainAxisSize: MainAxisSize.min,
+                                        children: [
+                                          TextButton(
+                                            onPressed: _restoring ? null : () => _compareVersion(v),
+                                            child: const Text('Diff', style: TextStyle(fontSize: 12)),
+                                          ),
+                                          TextButton(
+                                            onPressed: _restoring ? null : () => _restoreVersion(v),
+                                            child: const Text('Restore', style: TextStyle(fontSize: 12)),
+                                          ),
+                                        ],
                                       ),
                               );
                             },

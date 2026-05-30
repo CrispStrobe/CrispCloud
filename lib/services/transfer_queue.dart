@@ -20,6 +20,7 @@ class TransferTask {
   final Future<void> Function() execute;
   final void Function(Object? error)? onDone;
   final int priority; // higher = runs first
+  final String? providerName; // for per-provider rate limiting
 
   TransferTask({
     required this.id,
@@ -27,6 +28,7 @@ class TransferTask {
     required this.execute,
     this.onDone,
     this.priority = 0,
+    this.providerName,
   });
 }
 
@@ -41,11 +43,31 @@ class TransferQueue extends ChangeNotifier {
   final Map<String, TransferTask> _active = {};
   final List<TransferTask> _completed = [];
 
+  /// Per-provider rate limits: max concurrent transfers per provider.
+  /// Defaults to maxConcurrent if not set.
+  final Map<String, int> _providerLimits = {};
+
+  /// Track last request time per provider for rate-limit delay.
+  final Map<String, DateTime> _providerLastRequest = {};
+
+  /// Minimum delay between requests per provider (milliseconds).
+  final Map<String, int> _providerMinDelayMs = {};
+
   TransferQueue({
     this.maxConcurrent = 3,
     this.maxRetries = 3,
     this.retryBaseDelay = const Duration(seconds: 2),
   });
+
+  /// Set max concurrent transfers for a specific provider.
+  void setProviderLimit(String provider, int limit) {
+    _providerLimits[provider] = limit;
+  }
+
+  /// Set minimum delay between requests for a provider (rate limiting).
+  void setProviderRateLimit(String provider, {int minDelayMs = 100}) {
+    _providerMinDelayMs[provider] = minDelayMs;
+  }
 
   int get pendingCount => _pending.length;
   int get activeCount => _active.length;
@@ -77,16 +99,54 @@ class TransferQueue extends ChangeNotifier {
     notifyListeners();
   }
 
+  int _activeCountForProvider(String? provider) {
+    if (provider == null) return 0;
+    return _active.values.where((t) => t.providerName == provider).length;
+  }
+
   void _processQueue() {
+    final skipped = <TransferTask>[];
+
     while (_active.length < maxConcurrent && _pending.isNotEmpty) {
       final task = _pending.removeFirst();
+
+      // Check per-provider limit
+      if (task.providerName != null) {
+        final limit = _providerLimits[task.providerName] ?? maxConcurrent;
+        if (_activeCountForProvider(task.providerName) >= limit) {
+          skipped.add(task);
+          continue;
+        }
+      }
+
       _active[task.id] = task;
       _runTask(task);
     }
+
+    // Put back skipped tasks
+    for (final task in skipped) {
+      _pending.addFirst(task);
+    }
+
     notifyListeners();
   }
 
   Future<void> _runTask(TransferTask task, {int attempt = 0}) async {
+    // Per-provider rate limiting: enforce minimum delay between requests
+    if (task.providerName != null) {
+      final minDelay = _providerMinDelayMs[task.providerName];
+      if (minDelay != null && minDelay > 0) {
+        final lastReq = _providerLastRequest[task.providerName!];
+        if (lastReq != null) {
+          final elapsed = DateTime.now().difference(lastReq).inMilliseconds;
+          if (elapsed < minDelay) {
+            await Future.delayed(Duration(milliseconds: minDelay - elapsed));
+          }
+        }
+        _providerLastRequest[task.providerName!] = DateTime.now();
+      }
+    }
+
     Object? taskError;
     try {
       await task.execute();

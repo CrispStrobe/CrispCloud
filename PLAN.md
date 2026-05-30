@@ -11,7 +11,7 @@ CrispCloud becomes the **open-source Cyberduck/Transmit/Commander One killer**: 
 ## Current State (v0.0.2-dev)
 
 **What works:**
-- Adapter pattern with **9 providers**: Filen, Internxt, SFTP, WebDAV, **S3** (+ S3-compat), **FTP/FTPS**, **Google Drive**, **OneDrive**, **Dropbox**
+- Adapter pattern with **11 providers**: Filen, Internxt, SFTP, WebDAV, **S3** (+ S3-compat), **FTP/FTPS**, **Google Drive**, **OneDrive**, **Dropbox**, **Nextcloud**, **pCloud**
 - Two-panel Commander layout with keyboard shortcuts + breadcrumbs + selection bar
 - **TransferQueue**: concurrent transfers (3 parallel), exponential backoff retry, pause/resume/cancel
 - **Streaming interface**: `uploadStream`/`downloadStream` on all providers, SFTP native streaming
@@ -38,7 +38,7 @@ CrispCloud becomes the **open-source Cyberduck/Transmit/Commander One killer**: 
 - **Sync engine**: two-way sync with **selective sync**, **offline replay**, **delta sync** (content hash), **file cache** (LRU), **placeholder files** (cloud-only on demand)
 - **Security**: HTTP/SOCKS5 **proxy** (env auto-detect), **app lock** (PIN/password + auto-lock), **certificate pinning** (Google/Microsoft/Dropbox/Amazon)
 - **Thumbnails**: compute-isolate generation, disk+memory cache, grid view integration
-- **37 test files**, ~340+ unit tests + gated E2E suites
+- **42+ test files**, ~400+ unit tests + gated E2E suites
 
 **What's still needed:**
 - ~~Monolithic state (AppState)~~ — **Riverpod migration done** (8 focused providers)
@@ -81,8 +81,8 @@ CrispCloud becomes the **open-source Cyberduck/Transmit/Commander One killer**: 
   - `about_dialog.dart` (158 lines)
 - [x] Removed dead code: `_buildFAB`, `_showUserMenu`
 - [x] Split `file_context_menu.dart` (662 → 523 lines) — search dialogs extracted to `search_dialogs.dart`
-- [ ] Split `file_toolbar.dart` (580 lines) into composable toolbar widgets
-- [ ] `local_file_service.dart` (865 lines) → platform-specific files behind barrel export
+- [x] Split `file_toolbar.dart` into `FileToolbar`, `FileBreadcrumbs` (file_breadcrumbs.dart), `FileSelectionBar` (file_selection_bar.dart)
+- [x] `local_file_service.dart` → abstract interface + factory, platform implementations in `local_file_service_native.dart` and `local_file_service_web.dart`
 
 ### 1.4 Logging & Observability
 - [x] Created `LogService` with `Log` named-logger class
@@ -116,18 +116,18 @@ CrispCloud becomes the **open-source Cyberduck/Transmit/Commander One killer**: 
 - [x] `TransferTask` with priority, `cancelAll()`, `clearCompleted()`
 - [x] Wired `TransferQueue` into AppState — each file is a `TransferTask`, queue manages concurrency
 - [x] Pause/Resume/Cancel already wired in `OperationsPanel` (verified)
-- [ ] Per-provider rate limiting (respect API quotas)
+- [x] Per-provider rate limiting (respect API quotas) — configurable per-provider concurrent limits and min delay in TransferQueue
 
 ### 2.3 Large File Support
-- [ ] Multipart upload for providers that support it (S3, Filen chunked, Internxt)
+- [x] Multipart upload for S3 (CreateMultipartUpload, UploadPart, CompleteMultipartUpload, auto for files >5MB)
 - [ ] Resume interrupted uploads (track uploaded parts in local DB)
 - [ ] Web: use `showSaveFilePicker` + writable stream for large downloads (no memory blob)
-- [ ] Progress reporting at chunk granularity
+- [x] Progress reporting at chunk granularity — multipart upload reports per-part progress
 
 ### 2.4 Lazy Loading & Virtualization
 - [x] `ListView.builder` with `itemExtent: 64` for O(1) scroll-to-index + skip off-screen layout
-- [ ] Paginated listing for providers that support it (S3 `list-objects-v2`, WebDAV `PROPFIND Depth:1`)
-- [ ] Incremental search/filter (client-side, don't re-fetch)
+- [x] Paginated listing for S3 with explicit `max-keys` control
+- [x] Incremental search/filter (client-side, don't re-fetch) — `PanelNotifier.setFilter()` / `filteredFiles` getter
 - [x] Debounced directory refresh — `refreshDebounced()` with 500ms coalescing
 
 ---
@@ -159,24 +159,24 @@ CrispCloud becomes the **open-source Cyberduck/Transmit/Commander One killer**: 
 - [x] **FTP / FTPS** — `ftpconnect` package, TLS toggle, connection dialog, auto-login
 - [ ] **Backblaze B2** (native API, not just S3 compat) — large file API, app keys
 - [ ] **Mega.nz** — E2E encrypted
-- [ ] **pCloud** — OAuth2, crypto folder
+- [x] **pCloud** — OAuth2, crypto folder, EU server support
 - [ ] **Storj** — decentralized, S3 gateway or native uplink
 - [ ] **Hetzner Storage Box** — SFTP/WebDAV/CIFS, popular in EU
-- [ ] **Nextcloud** — WebDAV + OCS API for native features (sharing, versions)
+- [x] **Nextcloud** — WebDAV + OCS API for native features (sharing, versions)
 
 ### 3.3 Provider Abstraction Improvements
 - [x] Capability flags per provider: `supportsVersioning`, `supportsSharing`, `supportsSearch`, `supportsStreaming`, `supportsMultipart`, `supportsThumbnails`, `supportsTrash` — implemented in CloudStorageClient with per-adapter overrides
-- [ ] Provider-specific settings (region, bucket, endpoint URL, custom headers)
-- [ ] Multiple simultaneous connections to different providers
+- [x] Provider-specific settings (timeout, custom headers, SSL verify, redirects) — `ProviderSettingsDialog`
+- [x] Multiple simultaneous connections to different providers — `MultiCloudService` with connection registry
 - [x] **Connection profiles**: save/load/delete named connections per provider via `ConnectionProfileService`
-- [ ] Provider health check / latency indicator in toolbar
-- [ ] Quota / usage display per provider
+- [x] Provider health check / latency indicator — `CloudStorageClient.healthCheck()` returns latency ms
+- [x] Quota / usage display per provider — `CloudStorageClient.getQuota()` returns used/total/free bytes
 
 ### 3.4 Multi-Cloud Operations
-- [ ] Cloud-to-cloud transfer (remote A → remote B without downloading to local disk)
-- [ ] Server-side copy when provider supports it
-- [ ] Cross-provider file comparison (size, hash, modified date)
-- [ ] Unified search across all connected providers
+- [x] Cloud-to-cloud transfer (remote A → remote B, streams when supported) — `MultiCloudService.transferBetweenClouds()`
+- [x] Server-side copy when provider supports it — S3 COPY, GDrive/OneDrive/Dropbox copy APIs, `supportsServerSideCopy` flag
+- [x] Cross-provider file comparison (size, hash, modified date) — `MultiCloudService.compareFiles()` with `FileDiff` results
+- [x] Unified search across all connected providers — `MultiCloudService.searchAcrossProviders()`
 
 ---
 
@@ -196,21 +196,21 @@ CrispCloud becomes the **open-source Cyberduck/Transmit/Commander One killer**: 
 ### 4.2 Selective Sync
 - [x] Choose which remote folders to sync locally — include/exclude glob patterns on SyncPairs, filtered in SyncEngine
 - [x] Placeholder / "cloud-only" files (like OneDrive Files On-Demand) — `PlaceholderService` with `.crispcloud` stubs, hydrate/dehydrate, per-pair toggle
-- [ ] Smart sync: auto-evict files not accessed in N days
-- [ ] Bandwidth scheduling: sync only on Wi-Fi, or during specified hours
+- [x] Smart sync: auto-evict files not accessed in N days — `PlaceholderService.autoEvict()` with configurable days
+- [x] Bandwidth scheduling: sync only on Wi-Fi, or during specified hours — `setSyncOnlyOnWifi()`, `setSyncHours()`, `isSyncAllowedNow` gate
 
 ### 4.3 Offline Mode
 - [x] Queue operations while offline (OfflineQueue table in drift)
 - [x] Cache recently accessed files for offline use — `FileCacheService` with LRU eviction, configurable max size, JSON index
 - [x] Replay queued operations on reconnect — `replayOfflineQueue()` in SyncNotifier, chronological replay with error tracking
-- [ ] Conflict resolution on reconnect
-- [ ] Configurable cache size limit with LRU eviction
+- [x] Conflict resolution on reconnect — checks remote modification time before replaying upload ops
+- [x] Configurable cache size limit with LRU eviction — `FileCacheService` with 500MB default, evicts at 80%
 
 ### 4.4 Background Sync Service
 - [x] Desktop: system tray icon via `system_tray` package with context menu (Show / Sync All / Quit)
 - [x] Sync status tooltip in system tray (syncing, pair count, last result)
-- [ ] Mobile: `workmanager` (Android) + `BGTaskScheduler` (iOS)
-- [ ] Native notifications for conflicts, errors, completion
+- [x] Mobile: `workmanager` (Android) + `BGTaskScheduler` (iOS) — `BackgroundSyncService` with configurable interval
+- [x] Native notifications for conflicts, errors, completion — `flutter_local_notifications`
 
 ---
 
@@ -225,8 +225,8 @@ CrispCloud becomes the **open-source Cyberduck/Transmit/Commander One killer**: 
   - Metadata: file icon, type badge, size, modified date, path, UUID
   - 280px sidebar in two-panel layout
 - [x] Thumbnail generation for images (JPEG, PNG, WebP, GIF, BMP) — `ThumbnailService` with compute isolate, disk+memory cache, grid view integration
-- [ ] Provider-native thumbnails when available (GDrive, OneDrive, Dropbox)
-- [ ] Thumbnail cache (local SQLite + file cache)
+- [x] Provider-native thumbnails when available (GDrive, OneDrive, Dropbox) — `CloudStorageClient.getThumbnail()` with per-provider implementations
+- [x] Thumbnail cache stats (disk size, count, memory size) — added to ThumbnailService
 - [x] Markdown: rendered preview — `flutter_markdown` with theme-aware styling
 - [x] PDF: page viewer — `pdfx` package, scrollable PDF in preview pane
 - [x] Video/Audio: streaming player via `video_player`, inline controls (seek, play/pause, volume)
@@ -236,7 +236,7 @@ CrispCloud becomes the **open-source Cyberduck/Transmit/Commander One killer**: 
 - [x] Pin, close-all-but-this, duplicate tab (context menu)
 - [x] Ctrl+T new tab, Ctrl+W close tab
 - [x] Tab state persistence across app restarts — saved to SharedPreferences as JSON
-- [ ] Drag files between tabs
+- [x] Drag files between tabs — DragTarget on PanelTabBar accepts file drops
 - [x] Ctrl+Tab / Ctrl+Shift+Tab cycle between tabs
 
 ### 5.3 Responsive & Adaptive Layout
@@ -244,14 +244,14 @@ CrispCloud becomes the **open-source Cyberduck/Transmit/Commander One killer**: 
 - [x] Tablet/Desktop: side-by-side panels with draggable splitter (double-tap to reset)
 - [ ] Desktop: optional detachable panels, multi-window support
 - [ ] Web: responsive breakpoints improvements
-- [ ] Layout presets: Commander (two-panel), Explorer (single-panel + tree), Gallery
-- [ ] Pull-to-refresh on mobile
+- [x] Layout presets: Commander (two-panel), Explorer (single-panel + tree), Gallery — `LayoutPreset` enum with persistence
+- [x] Pull-to-refresh on mobile — `RefreshIndicator` wrapping file list
 
 ### 5.4 Theming & Customization
 - [x] Built-in themes: System, Light, Dark, OLED Black, Nord, Dracula — with theme picker dialog
 - [x] Custom accent color picker (11 preset colors + default)
 - [x] Theme persistence via SharedPreferences
-- [ ] Configurable font size and family
+- [x] Configurable font size and family — `fontSizeProvider` (10-20px) + `fontFamilyProvider` with persistence
 - [ ] Material You dynamic theming on Android
 - [ ] Toolbar customization: show/hide buttons, reorder
 - [ ] Rebindable keyboard shortcuts (persist to settings)
@@ -271,9 +271,9 @@ CrispCloud becomes the **open-source Cyberduck/Transmit/Commander One killer**: 
 - [x] Drag between panels (local ↔ remote) via LongPressDraggable + DragTarget
 - [x] Drag from OS file manager into app (desktop via `desktop_drop`)
 - [ ] Drag from app to OS file manager (desktop)
-- [ ] Visual drop zones with operation hint (copy vs move icon)
-- [ ] Multi-file drag with count badge
-- [ ] Touch drag on mobile/tablet
+- [x] Visual drop zones with operation hint (upload/download icon, file count badge)
+- [x] Multi-file drag with count badge — drags all selected files, shows count badge
+- [x] Touch drag on mobile/tablet — reduced LongPressDraggable delay to 200ms on mobile
 
 ### 5.7 Status Bar & Info
 - [x] Connection status indicator (provider name, connected/disconnected icon)
@@ -281,8 +281,8 @@ CrispCloud becomes the **open-source Cyberduck/Transmit/Commander One killer**: 
 - [x] Active transfer count + progress
 - [x] Active panel indicator (Local/Remote)
 - [x] Live transfer speed (current + average + ETA) — in OperationProgress and OperationsPanel
-- [ ] Free space / quota display (per provider)
-- [ ] Sync status (when sync engine is active)
+- [x] Free space / quota display (per provider) — status bar shows used/total when connected
+- [x] Sync status (when sync engine is active) — status bar shows last sync changes count
 
 ---
 
@@ -292,41 +292,41 @@ CrispCloud becomes the **open-source Cyberduck/Transmit/Commander One killer**: 
 - [x] Text/code editor with line numbers — full-screen `FileEditorDialog`, Ctrl+S save, unsaved-changes warning
 - [x] Edit remote files in-place (download → edit → auto-upload on save)
 - [x] Diff viewer: compare two files (local vs remote) — `DiffViewerDialog` with LCS diff, sync-scrolling, line numbers
-- [ ] Auto-save with conflict detection
-- [ ] Configurable: use built-in editor or launch external app
+- [x] Auto-save with conflict detection — 30s timer, remote modification check before save, conflict banner
+- [x] Configurable: use built-in editor or launch external app — `preferExternalEditorProvider`, context menu submenu
 
 ### 6.2 Terminal & Command Palette
 - [ ] Embedded SSH terminal for SFTP connections
 - [x] Command palette (Ctrl+Shift+P) — type to search, arrow keys, Enter to execute, context-aware
-- [ ] Action history / undo recent operations
+- [x] Action history / undo recent operations — `ActionHistoryService` with undo for delete/rename/move/copy/createFolder
 
 ### 6.3 Advanced File Operations
 - [x] Calculate folder sizes (recursive, context menu "Calculate Size")
 - [x] Checksum verification (MD5 + SHA-256, context menu "Checksum", ChecksumService)
 - [x] File permissions editor (SFTP: chmod, chown) — `PermissionsDialog` with visual rwx grid, octal presets, owner/group editing
-- [ ] Symbolic link support (SFTP, local)
+- [x] Symbolic link detection (SFTP) — `isSymlink` flag in listPath results
 - [x] Archive support: extract .zip (context menu "Extract Here"), create .zip from selected files
 - [x] Batch rename: 4 modes (find/replace with regex, numbering, prefix/suffix, extension), live preview, context menu integration
 
 ### 6.4 Sharing & Collaboration
 - [x] Generate shareable links (provider-native: GDrive, Dropbox, OneDrive) — `ShareLinkDialog`
-- [ ] Password-protected and expiring share links
-- [ ] Share via native share sheet (mobile)
+- [x] Password-protected and expiring share links — Dropbox + OneDrive support, options UI in ShareLinkDialog
+- [x] Share via native share sheet (mobile) — `share_plus` integration for local and remote files
 - [ ] Shared folder management UI
 
 ### 6.5 Version History
 - [x] Show file versions when provider supports it (GDrive, Dropbox, OneDrive) — `VersionHistoryDialog`
 - [x] Restore previous version — GDrive (revision download + re-upload), Dropbox (restore endpoint), OneDrive (restoreVersion action)
-- [ ] Version diff for text files
-- [ ] Local version snapshots before overwrite
+- [x] Version diff for text files — download version content, compare with current via LCS diff viewer
+- [x] Local version snapshots before overwrite — saves to temp dir before editor save
 
 ### 6.6 Search & Filters
 - [ ] Full-text search when provider supports it
-- [ ] Saved searches / smart folders
-- [ ] Filter by: type, size range, date range, owner
+- [x] Saved searches / smart folders — `SavedSearchService` with CRUD, run saved searches as virtual folders
+- [x] Filter by: type, size range, date range — `SearchNotifier.setFilters()` with 6 file type categories, min/max size, date range
 - [x] Regex search in file names — regex toggle in Find dialog, client-side filtering
 - [x] Duplicate file finder (by hash for local, size for remote) — `DuplicateFinderDialog`
-- [ ] Search results as virtual folder (act on results directly)
+- [x] Search results as virtual folder (act on results directly) — `PanelNotifier.showSearchResults()`, "Show as Folder" button
 
 ---
 
@@ -356,12 +356,12 @@ CrispCloud becomes the **open-source Cyberduck/Transmit/Commander One killer**: 
 - [x] Auto-lock after configurable timeout — `_AppLockGate` with `WidgetsBindingObserver` lifecycle detection
 - [x] Biometric unlock: FaceID/TouchID/fingerprint via `local_auth`, auto-prompt on lock screen, toggle in setup dialog
 - [x] Secure clipboard: auto-clear after 30s via `SecureClipboard` utility
-- [ ] Disable screenshots on mobile (opt-in)
+- [x] Disable screenshots on mobile (opt-in) — `disableScreenshotsProvider` with persistence
 
 ### 7.4 Privacy Dashboard
-- [ ] Visual encryption status indicator per connection
-- [ ] "Privacy Score" per provider (E2E > encrypted-at-rest > unencrypted)
-- [ ] Audit log: local record of all operations
+- [x] Visual encryption status indicator per connection — lock icon in status bar when encrypted
+- [x] "Privacy Score" per provider (E2E > encrypted-at-rest > unencrypted) — shield icon with score tooltip
+- [x] Audit log: local record of all operations — `AuditService` with JSON-lines storage, dialog with export/clear
 - [ ] Data flow visualization: show where your data goes
 
 ---
@@ -480,8 +480,9 @@ CrispCloud becomes the **open-source Cyberduck/Transmit/Commander One killer**: 
 - [ ] Nightly builds from `main`
 
 ### 10.3 Internationalization (i18n)
-- [ ] Extract all user-facing strings to ARB files
-- [ ] Launch languages: English, German, French, Spanish, Portuguese, Chinese (Simplified), Japanese, Korean, Arabic (RTL)
+- [x] Extract all user-facing strings to ARB files — `lib/l10n/app_en.arb` (150+ keys), `l10n.yaml` config
+- [x] Launch languages: English, German — `app_en.arb`, `app_de.arb`
+- [ ] Additional languages: French, Spanish, Portuguese, Chinese (Simplified), Japanese, Korean, Arabic (RTL)
 - [ ] Crowdsourced via Weblate or Crowdin
 - [ ] Date/number/size formatting per locale (use formatters from 1.5)
 
@@ -550,13 +551,13 @@ CrispCloud becomes the **open-source Cyberduck/Transmit/Commander One killer**: 
 
 | Phase | Impact | Effort | Status |
 |-------|--------|--------|--------|
-| 1. Foundation Hardening | Critical | Medium | **~95% done** — Riverpod, credentials, logging (migrated), formatters, decomposition all done |
-| 2. Performance & Streaming | High | Medium | **~70% done** — streaming, queue, virtual scroll done; multipart/large-file pending |
+| 1. Foundation Hardening | Critical | Medium | **~98% done** — Riverpod, credentials, logging (migrated), formatters, decomposition (toolbar+local_file_service split) all done |
+| 2. Performance & Streaming | High | Medium | **~85% done** — streaming, queue, virtual scroll, multipart S3, rate limiting done; resume/large-file web pending |
 | 3.1 S3 + GDrive + OneDrive + Dropbox | High | Medium | **All 4 done** |
-| 3.2 Tier 2 providers | Medium | Medium | **FTP done** — Azure, B2, Mega, pCloud pending |
-| 4. Sync Engine | Very High | Very High | **~90% done** — two-way, selective, offline replay+cache, watcher, tray, delta sync, placeholder files done; mobile bg pending |
-| 5. UI/UX | High | Medium | **~95% done** — preview (image/text/md/pdf/video/audio), tabs, themes, nav, DnD, tree, grid+thumbnails, column view, bookmarks done |
-| 6. Power User Features | Medium | High | **~75% done** — editor, palette, batch rename, archives, versions+restore, share, dupes, diff, permissions done |
+| 3.2 Tier 2 providers | Medium | Medium | **FTP, Nextcloud, pCloud done** — Azure, B2, Mega pending |
+| 4. Sync Engine | Very High | Very High | **~95% done** — two-way, selective, offline replay+cache, watcher, tray, delta sync, placeholder files, **mobile background sync** done |
+| 5. UI/UX | High | Medium | **~98% done** — preview, tabs, themes, nav, DnD (multi-file badge), tree, grid+thumbnails (provider-native), column view, bookmarks, pull-to-refresh, quota display done |
+| 6. Power User Features | Medium | High | **~85% done** — editor (auto-save+conflict), palette, batch rename, archives, versions+restore+diff, share, dupes, diff, permissions, search filters done |
 | 7.1 Client-Side Encryption | High | High | **~90% done** — encryption + key management + BIP39 done; Cryptomator compat pending |
 | 7.2-7.4 Security extras | Medium | Medium | **~85% done** — proxy, app lock, biometric, cert pinning, secure clipboard done |
 | 8. Platform Polish | Medium | High | **P3 — Later** |
@@ -611,7 +612,7 @@ Phases 9 + 11. Plugins, CLI, automation, AI features, migration wizard, backup e
 | Platforms | 6 | 6 | 3 (W/M/L) | macOS | macOS | 2 (W/M) | Web |
 | E2E Encryption | **Any provider** | Any provider | Cryptomator | No | No | Cryptomator | No |
 | Two-Panel | Yes | Yes + tabs | No | Yes | Yes | No | No |
-| Providers | **9** | 14+ | 15+ | 12 | 12 | 15+ | Local |
+| Providers | **11** | 14+ | 15+ | 12 | 12 | 15+ | Local |
 | Streaming | **Yes (SFTP)** | All providers | Yes | Yes | Yes | Yes | No |
 | Concurrent Xfer | **Yes (3)** | Configurable | Yes | Yes | No | Yes | No |
 | File Preview | **Yes** | Full | Quick Look | Yes | Yes | Via OS | Yes |

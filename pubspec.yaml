@@ -9,7 +9,10 @@ environment:
 dependencies:
   flutter:
     sdk: flutter
-  
+  flutter_localizations:
+    sdk: flutter
+  intl: any
+
   # State Management
   flutter_riverpod: ^2.5.1
   provider: ^6.1.1  # kept during incremental migration
@@ -35,6 +38,10 @@ dependencies:
 
   # System tray (background sync on desktop)
   system_tray: ^2.0.3
+
+  # Mobile background sync (Android Workmanager + iOS background fetch)
+  workmanager: ^0.5.2
+  flutter_local_notifications: ^17.2.4
 
   # File Handling
   cross_file: ^0.3.3+8
@@ -117,6 +124,7 @@ dependency_overrides:
   uuid: ^4.5.1
 
 flutter:
+  generate: true
   uses-material-design: true
   
   # App Icons

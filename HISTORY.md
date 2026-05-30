@@ -2,6 +2,198 @@
 
 Audit trail of bugs found, issues discovered, and fixes applied.
 
+## 2026-05-30 — Batch Session 3: Quick Wins + Medium Features
+
+### Final Batch (5 items)
+16. **Bandwidth scheduling** — `setSyncOnlyOnWifi()`, `setSyncHours(start, end)`, `isSyncAllowedNow` check gates `syncAll()`
+17. **Provider-specific settings** — `ProviderSettingsDialog` with timeout, custom headers, follow redirects, SSL verify toggles
+18. **Thumbnail cache stats** — `getDiskCacheSize()`, `getDiskCacheCount()`, `memoryCacheSize`, `cachedKeys` on ThumbnailService
+19. **Touch drag on mobile** — reduced `LongPressDraggable` delay from 500ms to 200ms on Android/iOS
+20. **Password-protected + expiring share links** — rewrote `ShareLinkDialog` with options UI, Dropbox `link_password` + `expires`, OneDrive `password` + `expirationDateTime`
+
+### Quick Wins (10 items)
+1. **Drag files between tabs** — `PanelTabBar` accepts `DragTarget<PanelDragData>`, `onFilesDroppedOnTab` callback
+2. **Configurable font size/family** — `fontSizeProvider` (10-20px, default 13), `fontFamilyProvider` (system/monospace/serif/sansSerif), persisted
+3. **Encryption status indicator** — lock icon in status bar when provider name contains "Encrypted"
+4. **Privacy Score** — `privacyScore()` function (0-100) per provider, shield icon tooltip in status bar
+5. **Local version snapshots** — `_saveLocalSnapshot()` saves backup to temp dir before each editor save
+6. **Symlink support (SFTP)** — `isSymlink` flag detected via `SftpFileAttrs.isSymbolicLink` in listPath
+7. **Disable screenshots** — `disableScreenshotsProvider` with SharedPreferences toggle
+8. **Conflict resolution on reconnect** — offline replay checks remote modification time before upload ops, skips conflicts
+9. **Font settings providers** — `_FontSizeNotifier`, `_FontFamilyNotifier` with SharedPreferences persistence
+
+### Medium Features (6 items)
+10. **Action history / undo** — `ActionHistoryService` with reversible delete/rename/move/copy/createFolder, Ctrl+Z shortcut, SnackBar undo button, `ActionHistoryNotifier` provider
+11. **Smart sync auto-eviction** — `PlaceholderService.autoEvict()` converts files not accessed in N days back to placeholders, configurable per pair (7/14/30/60/90 days)
+12. **Saved searches** — `SavedSearchService` with SharedPreferences persistence, `SavedSearchesDialog` with run/delete, "Save Search" button in find dialog
+13. **External editor** — `preferExternalEditorProvider`, context menu submenu "Edit (Built-in)" / "Open with System Editor" using `url_launcher`
+14. **Native share sheet** — `share_plus` for local files, download+share for remote files, "Share Link" + "Share File" options on mobile
+15. **Server-side copy** — `copyPath()` on CloudStorageClient with `supportsServerSideCopy` flag, implemented for S3 (COPY), GDrive (files/copy), OneDrive (items/copy), Dropbox (copy_v2)
+
+## 2026-05-30 — Batch Session 2: UI Polish, Search, Version Diff, Thumbnails, Audit, Layout
+
+### 7.4 Audit Log
+- **Created `lib/services/audit_service.dart`** (~240 lines):
+  - `AuditEntry` model: timestamp, operation type, source/target path, provider, user, size, success/error
+  - `AuditOperation` enum: upload, download, delete, rename, move, copy, createFolder, sync
+  - JSON-lines storage at `<appDir>/audit.jsonl`
+  - Methods: `log()`, `logSuccess()`, `logError()`, `getRecent()`, `exportAsJson()`, `clear()`
+- **Created `lib/widgets/audit_log_dialog.dart`** (~270 lines):
+  - Scrollable list with operation icons, timestamps, provider badges
+  - Export to clipboard, confirm-before-clear
+- **Updated `lib/providers/panel_provider.dart`**: audit logging in deleteFiles, renameFile, createFolder, moveFiles, copyFiles
+- **Updated `lib/providers/transfer_provider.dart`**: audit logging in uploadFiles, downloadFiles
+
+### 5.3 Layout Presets
+- **Updated `lib/providers/core_providers.dart`**: `LayoutPreset` enum (commander, explorer, gallery), `layoutPresetProvider` with SharedPreferences persistence
+- **Updated `lib/screens/file_browser_screen.dart`**:
+  - Commander: two-panel layout (default)
+  - Explorer: single panel with tree sidebar always visible
+  - Gallery: single panel, force grid view
+  - Layout preset PopupMenuButton in app bar
+
+### 4.3 Configurable Cache Size
+- **Updated `lib/services/file_cache_service.dart`**: unlimited mode (maxSizeBytes=0 skips eviction)
+- **Created `lib/widgets/cache_settings_dialog.dart`** (~160 lines):
+  - Shows used/max with progress indicator
+  - Size options: 100MB, 250MB, 500MB, 1GB, 2GB, Unlimited
+  - Clear cache with confirmation
+
+### 5.3 Pull-to-Refresh on Mobile
+- **Updated `lib/widgets/file_panel.dart`**: wrapped file list in `RefreshIndicator` for pull-to-refresh gesture
+
+### 5.1 Provider-Native Thumbnails
+- **Updated `lib/services/cloud_storage_interface.dart`**: added `getThumbnail(remotePath)` method (default returns null)
+- **Updated `lib/services/gdrive_client_adapter.dart`**: fetches `thumbnailLink` from Drive API v3
+- **Updated `lib/services/onedrive_client_adapter.dart`**: fetches thumbnail via Graph API `/thumbnails/0/medium/content`
+- **Updated `lib/services/dropbox_client_adapter.dart`**: fetches thumbnail via `get_thumbnail_v2` endpoint (128x128 JPEG)
+
+### 5.7 Status Bar Enhancements
+- **Rewrote `lib/widgets/status_bar.dart`** as `ConsumerStatefulWidget`:
+  - Quota display: shows used/total bytes when connected (lazy-fetched)
+  - Sync status: shows last sync change count
+  - Filter indicator: shows active filter query with filtered/total item count
+  - Converted to StatefulWidget for async quota fetching
+
+### 6.5 Version Diff for Text Files
+- **Updated `lib/widgets/version_history_dialog.dart`**:
+  - Added `_downloadVersionContent()`: downloads version content for GDrive/Dropbox/OneDrive
+  - Added `_compareVersion()`: downloads old + current version, opens diff viewer
+  - Added "Diff" button next to "Restore" for each version
+- **Updated `lib/widgets/diff_viewer_dialog.dart`**:
+  - Added `showDiffViewerFromContent()`: accepts raw text strings (no FileItem needed)
+  - Added `_ContentDiffDialog`: standalone diff viewer for pre-loaded content
+  - Extracted `computeLcsDiff()` as standalone reusable function
+
+### 5.6 Multi-File Drag with Count Badge
+- **Updated `lib/widgets/file_list_view.dart`**:
+  - `FileListTile` now accepts `selectedFiles` parameter
+  - When multiple files selected, drag includes all selected files
+  - Drag feedback shows count badge (circle with file count) when >1 file
+  - Drag label shows "+N" indicator
+
+### 6.6 Advanced Search Filters
+- **Updated `lib/providers/search_provider.dart`**:
+  - Added `FileTypeCategory` enum (Documents, Images, Videos, Audio, Archives, Code)
+  - Added filter fields: type, minSize, maxSize, dateAfter, dateBefore
+  - Added `setFilters()` / `clearFilters()` / `matchesFilters()` / `applyFilters()`
+  - Added `searchResults` list and `showResultsAsFolder` flag
+- **Updated `lib/providers/panel_provider.dart`**:
+  - Added `showSearchResults()` / `clearSearchResults()` for virtual folder display
+- **Updated `lib/widgets/search_dialogs.dart`**:
+  - Find dialog with type chips, size range fields, date pickers
+  - "Show as Folder" button for search results
+- **Tests**: `test/search_filters_test.dart` (30+ tests)
+
+## 2026-05-30 — Batch Session: Providers, Performance, Sync, i18n, Quick Wins
+
+### 2.4 Paginated Listing & Client-Side Filter
+- **S3**: added explicit `max-keys: 1000` parameter to ListObjectsV2
+- **PanelNotifier**: added `setFilter()` / `clearFilter()` / `filteredFiles` for client-side incremental filtering without re-fetching
+- **FileToolbar**: filter icon button that opens filter dialog, live filtering as you type
+- **StatusBar**: filter indicator when active
+- **FilePanel**: uses `filteredFiles` instead of `files` for rendering
+
+### 1.3 File Decomposition
+- **Split `file_toolbar.dart`** into 3 files:
+  - `file_toolbar.dart` — FileToolbar widget (toolbar buttons, sort menu, filter)
+  - `file_breadcrumbs.dart` — FileBreadcrumbs widget (clickable path segments)
+  - `file_selection_bar.dart` — FileSelectionBar widget (selection actions)
+  - Re-exports from `file_toolbar.dart` for backward compatibility
+- **Split `local_file_service.dart`** (866 lines) into:
+  - `local_file_service.dart` — abstract interface + factory (conditional import)
+  - `local_file_service_native.dart` — MacosFileService, DesktopFileService, MobileFileService
+  - `local_file_service_web.dart` — WebFileService (virtual filesystem)
+
+### 2.3 S3 Multipart Upload
+- **Updated `lib/services/s3_client_adapter.dart`**:
+  - Files >5MB automatically use multipart upload
+  - `_initiateMultipartUpload()`: POST with `?uploads` query
+  - `_uploadPart()`: PUT each part with partNumber + uploadId
+  - `_completeMultipartUpload()`: POST XML with part ETags
+  - `_abortMultipartUpload()`: cleanup on failure
+  - `_multipartUpload()`: orchestrator with per-part progress reporting
+  - Default part size: 8MB, minimum: 5MB (S3 requirement)
+  - Added `Log` service integration
+
+### 3.2 Nextcloud Provider
+- **Created `lib/services/nextcloud_client_adapter.dart`** (~380 lines):
+  - WebDAV at `/remote.php/dav/files/{username}/` for all file operations
+  - OCS API for sharing (`POST /ocs/v2.php/apps/files_sharing/api/v1/shares`)
+  - DAV versions API for version history and restore
+  - Login format: `username@https://nextcloud.example.com`
+  - Capabilities: versioning, sharing, search, trash all true
+  - `restoreCredentials()` for auto-login
+- **Created `lib/services/nextcloud_config_service.dart`**: SecureStorage CRUD
+- **Updated integration points**: cloud_storage_interface, auth_provider, main.dart, connection_dialog
+- **Tests**: `test/nextcloud_adapter_test.dart` (~195 lines, 20+ tests)
+
+### 3.2 pCloud Provider
+- **Created `lib/services/pcloud_client_adapter.dart`** (~400 lines):
+  - Pure HTTP against `api.pcloud.com` / `eapi.pcloud.com` (EU auto-detection)
+  - OAuth2 browser flow via `localhost:43826`
+  - Folder ID caching for path-to-ID resolution
+  - EU server auto-detection via `locationid` in token response
+  - Capabilities: sharing, trash
+- **Created `lib/services/pcloud_config_service.dart`**: SecureStorage CRUD
+- **Updated integration points**: cloud_storage_interface, auth_provider, main.dart, connection_dialog
+- **Tests**: `test/pcloud_adapter_test.dart` (~170 lines)
+
+### 4.4 Mobile Background Sync
+- **Created `lib/services/background_sync_service.dart`**: platform-agnostic API
+- **Created `lib/services/background_sync_mobile.dart`**: Workmanager callback, notification service
+- **Created `lib/services/background_sync_stub.dart`**: no-op for web/desktop
+- **Added `workmanager: ^0.5.2`** and `flutter_local_notifications: ^17.2.4` to pubspec
+- **Updated `lib/providers/sync_provider.dart`**: `enableBackgroundSync()` / `disableBackgroundSync()`
+- **Updated `lib/widgets/sync_dialog.dart`**: background sync toggle + interval selector
+- **Updated `lib/main.dart`**: `BackgroundSyncService.initialize()` on startup
+- **Updated Android manifest**: RECEIVE_BOOT_COMPLETED, FOREGROUND_SERVICE, POST_NOTIFICATIONS
+- **Updated iOS Info.plist**: BGTaskSchedulerPermittedIdentifiers, UIBackgroundModes
+
+### 3.4 Multi-Cloud Operations
+- **Created `lib/services/multi_cloud_service.dart`** (~270 lines):
+  - Connection registry: add/get/remove cloud connections
+  - `transferBetweenClouds()`: stream-based cloud-to-cloud transfer via TransferQueue
+  - `compareFiles()`: cross-provider comparison producing `FileDiff` results
+  - `searchAcrossProviders()`: concurrent search across all connections
+- **Created `lib/providers/multi_cloud_provider.dart`**: `MultiCloudNotifier`
+- **Created `lib/widgets/multi_cloud_dialog.dart`** (~340 lines): 3-tab dialog (Connections, Transfer, Compare & Search)
+- **Tests**: `test/multi_cloud_test.dart` (16 tests)
+
+### 10.3 i18n Setup
+- **Added `flutter_localizations`** and `intl` to pubspec
+- **Created `l10n.yaml`** configuration
+- **Created `lib/l10n/app_en.arb`** (~150+ localized keys covering all UI strings)
+- **Created `lib/l10n/app_de.arb`** (German translation)
+- **Updated `lib/main.dart`**: `AppLocalizations.delegate` + `supportedLocales`
+
+### Quick Wins
+- **Per-provider rate limiting**: `TransferQueue.setProviderLimit()` and `setProviderRateLimit()` for configurable concurrent limits and minimum delay per provider
+- **Provider health check**: `CloudStorageClient.healthCheck()` returns latency in ms
+- **Provider quota**: `CloudStorageClient.getQuota()` returns used/total/free bytes
+- **Visual drop zones**: upload/download icon + file count badge on drag hover
+- **Auto-save with conflict detection**: 30s auto-save timer, remote modification check before save, conflict banner with Save Anyway / Reload / Dismiss
+
 ## 2026-05-30 — Platform: macOS Native Menu Bar
 
 ### 8.1 macOS Native Menu Bar

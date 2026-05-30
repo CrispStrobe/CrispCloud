@@ -76,11 +76,15 @@ class GDriveClientAdapter extends CloudStorageClient {
   @override
   bool get supportsSharing => true;
   @override
+  bool get supportsNativeShare => true;
+  @override
   bool get supportsSearch => true;
   @override
   bool get supportsThumbnails => true;
   @override
   bool get supportsTrash => true;
+  @override
+  bool get supportsServerSideCopy => true;
 
   // --- Auth ---
 
@@ -150,6 +154,24 @@ class GDriveClientAdapter extends CloudStorageClient {
     _authenticated = false;
     _pathToId.clear();
     _pathToId['/'] = 'root';
+  }
+
+  @override
+  Future<Uint8List?> getThumbnail(String remotePath) async {
+    await _ensureToken();
+    final fileId = await _resolveFileId(remotePath);
+    if (fileId == null) return null;
+    try {
+      final uri = Uri.parse('$_apiBase/files/$fileId?fields=thumbnailLink');
+      final resp = await http.get(uri, headers: {'Authorization': 'Bearer $_accessToken'});
+      if (resp.statusCode != 200) return null;
+      final data = json.decode(resp.body);
+      final thumbUrl = data['thumbnailLink'] as String?;
+      if (thumbUrl == null) return null;
+      final thumbResp = await http.get(Uri.parse(thumbUrl));
+      if (thumbResp.statusCode == 200) return thumbResp.bodyBytes;
+    } catch (_) {}
+    return null;
   }
 
   /// Restore credentials from secure storage for auto-login.
@@ -413,6 +435,34 @@ class GDriveClientAdapter extends CloudStorageClient {
       final id = resp['id'] as String;
       _pathToId[accumulated] = id;
       parentId = id;
+    }
+  }
+
+  // --- Copy ---
+
+  @override
+  Future<void> copyPath(String sourcePath, String targetPath) async {
+    await _ensureToken();
+    final fileId = await _resolveFileId(sourcePath);
+    if (fileId == null) throw Exception('File not found: $sourcePath');
+    final parentId = await _resolvePathToId(targetPath) ?? 'root';
+    final fileName = p.posix.basename(sourcePath);
+    _log.info('Server-side copy (GDrive): $sourcePath → $targetPath');
+    final body = json.encode({
+      'name': fileName,
+      'parents': [parentId],
+    });
+    final uri = Uri.parse('$_apiBase/files/$fileId/copy');
+    final resp = await http.post(
+      uri,
+      headers: {
+        'Authorization': 'Bearer $_accessToken',
+        'Content-Type': 'application/json',
+      },
+      body: body,
+    );
+    if (resp.statusCode != 200) {
+      throw Exception('GDrive copy failed (${resp.statusCode}): ${resp.body}');
     }
   }
 

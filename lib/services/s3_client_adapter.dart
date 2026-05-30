@@ -16,11 +16,18 @@ import 'package:http/http.dart' as http;
 import 'package:path/path.dart' as p;
 
 import 'cloud_storage_interface.dart';
+import 'log_service.dart';
 import 's3_config_service.dart';
 import 'secure_storage_service.dart';
 
 class S3ClientAdapter extends CloudStorageClient {
+  static final _log = Log('S3Client');
   final S3ConfigService _config;
+
+  /// Minimum part size for multipart upload (5MB, S3 minimum)
+  static const int multipartThreshold = 5 * 1024 * 1024;
+  /// Default part size for multipart upload (8MB)
+  static const int defaultPartSize = 8 * 1024 * 1024;
 
   S3ConfigService get config => _config;
 
@@ -56,6 +63,9 @@ class S3ClientAdapter extends CloudStorageClient {
 
   @override
   bool get supportsStreaming => true;
+
+  @override
+  bool get supportsServerSideCopy => true;
 
   // --- Addressing helpers ---
 
@@ -470,6 +480,7 @@ class S3ClientAdapter extends CloudStorageClient {
       final params = <String, String>{
         'list-type': '2',
         'delimiter': '/',
+        'max-keys': '1000',
       };
       if (normalizedPrefix.isNotEmpty) {
         params['prefix'] = normalizedPrefix;
@@ -572,6 +583,12 @@ class S3ClientAdapter extends CloudStorageClient {
     _ensureAuth();
     final key = _pathToKey(p.posix.join(targetPath, fileName));
 
+    // Use multipart upload for files > 5MB
+    if (fileData.length > multipartThreshold) {
+      await _multipartUpload(key, fileData, onProgress: onProgress);
+      return;
+    }
+
     final uri = _buildUri(key);
     final response = await _signedRequest(
       'PUT',
@@ -585,6 +602,114 @@ class S3ClientAdapter extends CloudStorageClient {
     }
 
     onProgress?.call(fileData.length, fileData.length);
+  }
+
+  // --- Multipart Upload ---
+
+  /// Initiate a multipart upload and return the upload ID.
+  Future<String> _initiateMultipartUpload(String key) async {
+    final uri = _buildUri(key, queryParams: {'uploads': ''});
+    final response = await _signedRequest(
+      'POST',
+      uri,
+      extraHeaders: {'content-type': 'application/octet-stream'},
+    );
+
+    if (response.statusCode != 200) {
+      throw Exception('S3 initiate multipart failed (HTTP ${response.statusCode}): ${response.body}');
+    }
+
+    final match = RegExp(r'<UploadId>([^<]+)</UploadId>').firstMatch(response.body);
+    if (match == null) {
+      throw Exception('S3 initiate multipart: no UploadId in response');
+    }
+    return match.group(1)!;
+  }
+
+  /// Upload a single part and return its ETag.
+  Future<String> _uploadPart(String key, String uploadId, int partNumber, List<int> partData) async {
+    final uri = _buildUri(key, queryParams: {
+      'partNumber': partNumber.toString(),
+      'uploadId': uploadId,
+    });
+    final response = await _signedRequest(
+      'PUT',
+      uri,
+      body: partData,
+    );
+
+    if (response.statusCode != 200) {
+      throw Exception('S3 upload part $partNumber failed (HTTP ${response.statusCode})');
+    }
+
+    final etag = response.headers['etag'];
+    if (etag == null) {
+      throw Exception('S3 upload part $partNumber: no ETag in response');
+    }
+    return etag;
+  }
+
+  /// Complete a multipart upload with the list of part ETags.
+  Future<void> _completeMultipartUpload(String key, String uploadId, List<_PartETag> parts) async {
+    final xmlParts = parts.map((p) =>
+      '<Part><PartNumber>${p.partNumber}</PartNumber><ETag>${p.etag}</ETag></Part>'
+    ).join();
+    final body = '<CompleteMultipartUpload>$xmlParts</CompleteMultipartUpload>';
+
+    final uri = _buildUri(key, queryParams: {'uploadId': uploadId});
+    final response = await _signedRequest(
+      'POST',
+      uri,
+      extraHeaders: {'content-type': 'application/xml'},
+      body: utf8.encode(body),
+    );
+
+    if (response.statusCode != 200) {
+      throw Exception('S3 complete multipart failed (HTTP ${response.statusCode}): ${response.body}');
+    }
+  }
+
+  /// Abort a multipart upload.
+  Future<void> _abortMultipartUpload(String key, String uploadId) async {
+    final uri = _buildUri(key, queryParams: {'uploadId': uploadId});
+    await _signedRequest('DELETE', uri);
+  }
+
+  /// Perform a full multipart upload: initiate, upload parts, complete.
+  Future<void> _multipartUpload(
+    String key,
+    List<int> fileData, {
+    Function(int, int)? onProgress,
+    int partSize = defaultPartSize,
+  }) async {
+    final totalSize = fileData.length;
+    _log.info('Starting multipart upload: ${totalSize} bytes, part size: $partSize');
+
+    final uploadId = await _initiateMultipartUpload(key);
+    final parts = <_PartETag>[];
+    int uploaded = 0;
+
+    try {
+      int partNumber = 1;
+      for (int offset = 0; offset < totalSize; offset += partSize) {
+        final end = (offset + partSize > totalSize) ? totalSize : offset + partSize;
+        final partData = fileData.sublist(offset, end);
+
+        final etag = await _uploadPart(key, uploadId, partNumber, partData);
+        parts.add(_PartETag(partNumber, etag));
+
+        uploaded += partData.length;
+        onProgress?.call(uploaded, totalSize);
+        partNumber++;
+      }
+
+      await _completeMultipartUpload(key, uploadId, parts);
+      _log.info('Multipart upload complete: $key ($partNumber parts)');
+    } catch (e) {
+      _log.error('Multipart upload failed, aborting: $key', e);
+      await _abortMultipartUpload(key, uploadId);
+      rethrow;
+    }
   }
 
   @override
@@ -673,6 +798,16 @@ class S3ClientAdapter extends CloudStorageClient {
     await deletePath(path);
   }
 
+  @override
+  Future<void> copyPath(String sourcePath, String targetPath) async {
+    _ensureAuth();
+    final sourceKey = _pathToKey(sourcePath);
+    final fileName = p.posix.basename(sourceKey);
+    final targetKey = _pathToKey(p.posix.join(targetPath, fileName));
+    _log.info('Server-side copy: $sourceKey → $targetKey');
+    await _copyObject(sourceKey, targetKey);
+  }
+
   Future<void> _copyObject(String sourceKey, String targetKey) async {
     final uri = _buildUri(targetKey);
     final copySource = '/$_bucket/$sourceKey';
@@ -712,4 +847,11 @@ class S3ClientAdapter extends CloudStorageClient {
     }
     return false;
   }
+}
+
+/// Helper class for multipart upload part tracking.
+class _PartETag {
+  final int partNumber;
+  final String etag;
+  _PartETag(this.partNumber, this.etag);
 }

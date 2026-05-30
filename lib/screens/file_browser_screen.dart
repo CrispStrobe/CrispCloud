@@ -11,14 +11,18 @@ import 'package:provider/provider.dart' as legacy;
 
 import '../models/panel_side.dart';
 import '../providers/providers.dart';
+import '../providers/core_providers.dart' show preferExternalEditorProvider;
 import '../services/theme_service.dart';
+import '../widgets/audit_log_dialog.dart';
 import '../widgets/file_panel.dart';
 import '../widgets/operations_panel.dart';
 import '../widgets/panel_splitter.dart';
 import '../widgets/preview_pane.dart';
 import '../widgets/status_bar.dart';
+import '../widgets/cache_settings_dialog.dart';
 import '../widgets/duplicate_finder_dialog.dart';
 import '../widgets/key_management_dialog.dart';
+import '../widgets/multi_cloud_dialog.dart';
 import '../widgets/sync_dialog.dart';
 import '../widgets/tree_sidebar.dart';
 import '../widgets/lock_screen.dart';
@@ -45,11 +49,33 @@ class _FileBrowserScreenState extends ConsumerState<FileBrowserScreen> {
     final activePanel = ref.watch(activePanelProvider);
     final showPreview = ref.watch(showPreviewProvider);
     final transfers = ref.watch(transferProvider);
+    final layoutPreset = ref.watch(layoutPresetProvider);
 
     final scaffold = Scaffold(
       appBar: AppBar(
         title: const Text('Crisp Cloud'),
         actions: [
+          // Layout preset selector
+          PopupMenuButton<LayoutPreset>(
+            icon: Icon(_layoutPresetIcon(layoutPreset), size: 20),
+            tooltip: 'Layout Preset',
+            onSelected: (preset) =>
+                ref.read(layoutPresetProvider.notifier).setPreset(preset),
+            itemBuilder: (context) => [
+              const PopupMenuItem(
+                enabled: false,
+                child: Text('Layout Preset', style: TextStyle(fontSize: 12, fontWeight: FontWeight.bold)),
+              ),
+              _presetMenuItem(LayoutPreset.commander, 'Commander (Two Panels)', Icons.view_column, layoutPreset),
+              _presetMenuItem(LayoutPreset.explorer, 'Explorer (Tree + Panel)', Icons.account_tree, layoutPreset),
+              _presetMenuItem(LayoutPreset.gallery, 'Gallery (Grid View)', Icons.grid_view, layoutPreset),
+            ],
+          ),
+          IconButton(
+            icon: const Icon(Icons.cloud_sync, size: 20),
+            tooltip: 'Multi-Cloud',
+            onPressed: () => showMultiCloudDialog(context),
+          ),
           IconButton(
             icon: const Icon(Icons.sync, size: 20),
             tooltip: 'Sync Manager',
@@ -59,6 +85,16 @@ class _FileBrowserScreenState extends ConsumerState<FileBrowserScreen> {
             icon: const Icon(Icons.find_replace, size: 20),
             tooltip: 'Find Duplicates',
             onPressed: () => showDuplicateFinderDialog(context, ref),
+          ),
+          IconButton(
+            icon: const Icon(Icons.history, size: 20),
+            tooltip: 'Audit Log',
+            onPressed: () => showAuditLogDialog(context),
+          ),
+          IconButton(
+            icon: const Icon(Icons.storage, size: 20),
+            tooltip: 'Cache Settings',
+            onPressed: () => showCacheSettingsDialog(context, ref),
           ),
           IconButton(
             icon: Icon(
@@ -140,11 +176,31 @@ class _FileBrowserScreenState extends ConsumerState<FileBrowserScreen> {
             Expanded(
               child: LayoutBuilder(
                 builder: (context, constraints) {
-                  final showTree = ref.watch(showTreeSidebarProvider) && constraints.maxWidth > 800;
-                  final layout = constraints.maxWidth > 800
-                      ? _buildTwoPanelLayout(context)
-                      : _buildSinglePanelLayout(context);
+                  final isWide = constraints.maxWidth > 800;
+                  final Widget layout;
 
+                  if (!isWide) {
+                    // Narrow screen: always single-panel regardless of preset
+                    layout = _buildSinglePanelLayout(context);
+                  } else {
+                    switch (layoutPreset) {
+                      case LayoutPreset.commander:
+                        layout = _buildTwoPanelLayout(context);
+                        break;
+                      case LayoutPreset.explorer:
+                        layout = _buildExplorerLayout(context);
+                        break;
+                      case LayoutPreset.gallery:
+                        layout = _buildGalleryLayout(context);
+                        break;
+                    }
+                  }
+
+                  // The tree sidebar toggle is independent of the layout preset
+                  // (only applies in commander and gallery modes when manually toggled)
+                  final showTree = ref.watch(showTreeSidebarProvider) &&
+                      isWide &&
+                      layoutPreset != LayoutPreset.explorer; // explorer already embeds tree
                   if (showTree) {
                     return Row(
                       children: [
@@ -290,6 +346,102 @@ class _FileBrowserScreenState extends ConsumerState<FileBrowserScreen> {
         ],
       ),
     ];
+  }
+
+  // --- Layout helpers ---
+
+  IconData _layoutPresetIcon(LayoutPreset preset) {
+    switch (preset) {
+      case LayoutPreset.commander:
+        return Icons.view_column;
+      case LayoutPreset.explorer:
+        return Icons.account_tree;
+      case LayoutPreset.gallery:
+        return Icons.grid_view;
+    }
+  }
+
+  PopupMenuItem<LayoutPreset> _presetMenuItem(
+    LayoutPreset preset,
+    String label,
+    IconData icon,
+    LayoutPreset current,
+  ) {
+    return PopupMenuItem<LayoutPreset>(
+      value: preset,
+      child: Row(
+        children: [
+          Icon(icon, size: 18),
+          const SizedBox(width: 10),
+          Text(label),
+          const Spacer(),
+          if (preset == current) const Icon(Icons.check, size: 16),
+        ],
+      ),
+    );
+  }
+
+  /// Explorer preset: tree sidebar always visible, single panel.
+  Widget _buildExplorerLayout(BuildContext context) {
+    final activePanel = ref.watch(activePanelProvider);
+    final showPreview = ref.watch(showPreviewProvider);
+    final activePanelNotifier = ref.watch(panelProvider(activePanel));
+    final previewFile = activePanelNotifier.selection.length == 1
+        ? activePanelNotifier.selection.first
+        : null;
+
+    return Row(
+      children: [
+        const TreeSidebar(),
+        Expanded(
+          child: showPreview && previewFile != null
+              ? Row(
+                  children: [
+                    Expanded(
+                      child: FilePanel(
+                        side: activePanel,
+                        isActive: true,
+                        onTap: () {},
+                      ),
+                    ),
+                    SizedBox(
+                      width: 320,
+                      child: PreviewPane(file: previewFile, side: activePanel),
+                    ),
+                  ],
+                )
+              : FilePanel(
+                  side: activePanel,
+                  isActive: true,
+                  onTap: () {},
+                ),
+        ),
+      ],
+    );
+  }
+
+  /// Gallery preset: single active panel, grid view forced.
+  Widget _buildGalleryLayout(BuildContext context) {
+    final activePanel = ref.watch(activePanelProvider);
+
+    // Force grid view for the active panel
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (activePanel == PanelSide.local) {
+        if (ref.read(localViewModeProvider) != ViewMode.grid) {
+          ref.read(localViewModeProvider.notifier).state = ViewMode.grid;
+        }
+      } else {
+        if (ref.read(remoteViewModeProvider) != ViewMode.grid) {
+          ref.read(remoteViewModeProvider.notifier).state = ViewMode.grid;
+        }
+      }
+    });
+
+    return FilePanel(
+      side: activePanel,
+      isActive: true,
+      onTap: () {},
+    );
   }
 
   Widget _buildTwoPanelLayout(BuildContext context) {
@@ -506,6 +658,42 @@ class _FileBrowserScreenState extends ConsumerState<FileBrowserScreen> {
                 Navigator.pop(context);
                 ref.read(panelProvider(PanelSide.local)).clearSelection();
                 ref.read(panelProvider(PanelSide.remote)).clearSelection();
+              },
+            ),
+            const Divider(),
+            ListTile(
+              leading: const Icon(Icons.history),
+              title: const Text('Audit Log'),
+              onTap: () {
+                Navigator.pop(context);
+                showAuditLogDialog(context);
+              },
+            ),
+            ListTile(
+              leading: const Icon(Icons.storage),
+              title: const Text('Cache Settings'),
+              onTap: () {
+                Navigator.pop(context);
+                showCacheSettingsDialog(context, ref);
+              },
+            ),
+            // External editor preference
+            Consumer(
+              builder: (ctx, cref, _) {
+                final preferExternal = cref.watch(preferExternalEditorProvider);
+                return SwitchListTile(
+                  secondary: const Icon(Icons.open_in_new),
+                  title: const Text('Prefer System Editor'),
+                  subtitle: Text(
+                    preferExternal
+                        ? 'Edit opens with the OS default app'
+                        : 'Edit opens built-in editor',
+                    style: const TextStyle(fontSize: 11),
+                  ),
+                  value: preferExternal,
+                  onChanged: (_) =>
+                      cref.read(preferExternalEditorProvider.notifier).toggle(),
+                );
               },
             ),
             const Divider(),

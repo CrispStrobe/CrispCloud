@@ -1,5 +1,7 @@
 // widgets/file_list_view.dart
 
+import 'dart:io' show Platform;
+import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -47,6 +49,7 @@ class FileListView extends ConsumerWidget {
               file: file,
               side: side,
               isSelected: isSelected,
+              selectedFiles: panel.selection.toList(),
               onTap: (shiftKey, ctrlKey) {
                 panel.toggleSelection(file, shiftKey: shiftKey, ctrlKey: ctrlKey);
               },
@@ -94,6 +97,7 @@ class FileListTile extends StatelessWidget {
   final FileItem file;
   final PanelSide side;
   final bool isSelected;
+  final List<FileItem> selectedFiles;
   final Function(bool shiftKey, bool ctrlKey) onTap;
   final VoidCallback onDoubleTap;
   final Function(TapDownDetails)? onSecondaryTap;
@@ -103,6 +107,7 @@ class FileListTile extends StatelessWidget {
     required this.file,
     required this.side,
     required this.isSelected,
+    this.selectedFiles = const [],
     required this.onTap,
     required this.onDoubleTap,
     this.onSecondaryTap,
@@ -155,25 +160,64 @@ class FileListTile extends StatelessWidget {
     );
 
     // Wrap with LongPressDraggable for inter-panel drag
+    // If this file is selected and there are multiple selections, drag all selected files
+    final dragFiles = isSelected && selectedFiles.length > 1
+        ? selectedFiles
+        : [file];
+    final dragCount = dragFiles.length;
+
+    // On mobile, use shorter delay for touch drag; on desktop, use long press
+    final isMobile = !kIsWeb && (Platform.isAndroid || Platform.isIOS);
+
     return LongPressDraggable<PanelDragData>(
-      data: PanelDragData(sourceSide: side, files: [file]),
+      delay: isMobile ? const Duration(milliseconds: 200) : const Duration(milliseconds: 500),
+      data: PanelDragData(sourceSide: side, files: dragFiles),
       feedback: Material(
         elevation: 4,
         borderRadius: BorderRadius.circular(8),
-        child: Container(
-          padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
-          decoration: BoxDecoration(
-            color: Theme.of(context).colorScheme.primaryContainer,
-            borderRadius: BorderRadius.circular(8),
-          ),
-          child: Row(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              Icon(file.isFolder ? Icons.folder : getFileIcon(file.name), size: 20),
-              const SizedBox(width: 8),
-              Text(file.name, style: const TextStyle(fontSize: 12)),
-            ],
-          ),
+        child: Stack(
+          clipBehavior: Clip.none,
+          children: [
+            Container(
+              padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+              decoration: BoxDecoration(
+                color: Theme.of(context).colorScheme.primaryContainer,
+                borderRadius: BorderRadius.circular(8),
+              ),
+              child: Row(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Icon(file.isFolder ? Icons.folder : getFileIcon(file.name), size: 20),
+                  const SizedBox(width: 8),
+                  Text(
+                    dragCount > 1 ? '${file.name} +${dragCount - 1}' : file.name,
+                    style: const TextStyle(fontSize: 12),
+                  ),
+                ],
+              ),
+            ),
+            // Count badge for multi-file drag
+            if (dragCount > 1)
+              Positioned(
+                top: -8,
+                right: -8,
+                child: Container(
+                  padding: const EdgeInsets.all(4),
+                  decoration: BoxDecoration(
+                    color: Theme.of(context).colorScheme.primary,
+                    shape: BoxShape.circle,
+                  ),
+                  child: Text(
+                    '$dragCount',
+                    style: TextStyle(
+                      fontSize: 10,
+                      fontWeight: FontWeight.bold,
+                      color: Theme.of(context).colorScheme.onPrimary,
+                    ),
+                  ),
+                ),
+              ),
+          ],
         ),
       ),
       childWhenDragging: Opacity(opacity: 0.3, child: tile),

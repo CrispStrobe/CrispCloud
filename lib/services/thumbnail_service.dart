@@ -98,6 +98,34 @@ class ThumbnailService {
     }
   }
 
+  /// Get all cached thumbnail keys.
+  List<String> get cachedKeys => _memoryCache.keys.toList();
+
+  /// Get total size of memory-cached thumbnails.
+  int get memoryCacheSize => _memoryCache.values.fold(0, (sum, bytes) => sum + bytes.length);
+
+  /// Get disk cache size (approximate — counts files).
+  Future<int> getDiskCacheSize() async {
+    if (_cacheDir == null) return 0;
+    final dir = Directory(_cacheDir!);
+    if (!await dir.exists()) return 0;
+    int total = 0;
+    await for (final entity in dir.list()) {
+      if (entity is File) {
+        total += await entity.length();
+      }
+    }
+    return total;
+  }
+
+  /// Get number of cached thumbnails on disk.
+  Future<int> getDiskCacheCount() async {
+    if (_cacheDir == null) return 0;
+    final dir = Directory(_cacheDir!);
+    if (!await dir.exists()) return 0;
+    return await dir.list().length;
+  }
+
   /// Clear all cached thumbnails.
   Future<void> clear() async {
     _memoryCache.clear();

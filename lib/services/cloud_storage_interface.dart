@@ -8,7 +8,9 @@ import 'filen_client_adapter.dart';
 import 'ftp_client_adapter.dart';
 import 'gdrive_client_adapter.dart';
 import 'internxt_client_adapter.dart';
+import 'nextcloud_client_adapter.dart';
 import 'onedrive_client_adapter.dart';
+import 'pcloud_client_adapter.dart';
 import 's3_client_adapter.dart';
 import 'sftp_client_adapter.dart';
 import 'webdav_client_adapter.dart';
@@ -65,6 +67,41 @@ abstract class CloudStorageClient {
   bool get supportsThumbnails => false;
   bool get supportsTrash => true;
 
+  /// True if the provider has a native share-link API (GDrive, OneDrive, Dropbox).
+  bool get supportsNativeShare => false;
+
+  /// True if the provider supports server-side copy (no download+reupload needed).
+  bool get supportsServerSideCopy => false;
+
+  /// Fetch a provider-native thumbnail for a file. Returns bytes or null.
+  /// Providers that support thumbnails (GDrive, OneDrive, Dropbox) override this.
+  Future<Uint8List?> getThumbnail(String remotePath) async => null;
+
+  /// Get storage quota info. Returns null if not supported.
+  /// Keys: 'used' (bytes), 'total' (bytes), 'free' (bytes).
+  Future<Map<String, int>?> getQuota() async => null;
+
+  /// Ping/health check. Returns latency in milliseconds, or -1 on failure.
+  Future<int> healthCheck() async {
+    final sw = Stopwatch()..start();
+    try {
+      await resolvePath(rootPath);
+      sw.stop();
+      return sw.elapsedMilliseconds;
+    } catch (_) {
+      return -1;
+    }
+  }
+
+  /// Server-side copy a file from [sourcePath] to [targetPath].
+  /// Default implementation downloads the file bytes and re-uploads them.
+  /// Providers that support server-side copy should override this.
+  Future<void> copyPath(String sourcePath, String targetPath) async {
+    final fileName = sourcePath.split('/').last;
+    final bytes = await downloadFileBytes(sourcePath);
+    await uploadFile(bytes, fileName, targetPath);
+  }
+
   /// Stream-based upload. Providers that support streaming override this.
   /// Default implementation buffers the stream and calls uploadFile.
   Future<void> uploadStream(
@@ -99,7 +136,9 @@ enum CloudProvider {
   ftp,
   gdrive,
   internxt,
+  nextcloud,
   onedrive,
+  pcloud,
   s3,
   sftp,
   webdav
@@ -146,6 +185,10 @@ class CloudStorageFactory {
           } else {
              throw UnsupportedError('Internxt is disabled in this build.');
           }
+        case CloudProvider.nextcloud:
+          return NextcloudClientAdapter(config: config);
+        case CloudProvider.pcloud:
+          return PCloudClientAdapter(config: config);
       }
     } catch (e) {
       _log.error('Error creating client for $provider', e);

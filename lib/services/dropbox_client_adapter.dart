@@ -76,11 +76,15 @@ class DropboxClientAdapter extends CloudStorageClient {
   @override
   bool get supportsSharing => true;
   @override
+  bool get supportsNativeShare => true;
+  @override
   bool get supportsSearch => true;
   @override
   bool get supportsThumbnails => true;
   @override
   bool get supportsTrash => true;
+  @override
+  bool get supportsServerSideCopy => true;
 
   // --- Auth ---
 
@@ -142,6 +146,21 @@ class DropboxClientAdapter extends CloudStorageClient {
     _refreshToken = null;
     _email = null;
     _authenticated = false;
+  }
+
+  @override
+  Future<Uint8List?> getThumbnail(String remotePath) async {
+    await _ensureToken();
+    try {
+      final path = remotePath.isEmpty || remotePath == '/' ? '' : remotePath;
+      final arg = json.encode({'resource': {'.tag': 'path', 'path': path}, 'format': 'jpeg', 'size': 'w128h128'});
+      final resp = await http.post(
+        Uri.parse('https://content.dropboxapi.com/2/files/get_thumbnail_v2'),
+        headers: {'Authorization': 'Bearer $_accessToken', 'Dropbox-API-Arg': arg},
+      );
+      if (resp.statusCode == 200) return resp.bodyBytes;
+    } catch (_) {}
+    return null;
   }
 
   Future<bool> restoreCredentials() async {
@@ -325,6 +344,21 @@ class DropboxClientAdapter extends CloudStorageClient {
         rethrow;
       }
     }
+  }
+
+  // --- Copy ---
+
+  @override
+  Future<void> copyPath(String sourcePath, String targetPath) async {
+    await _ensureToken();
+    final fileName = p.posix.basename(sourcePath);
+    final dest = '$targetPath/$fileName';
+    _log.info('Server-side copy (Dropbox): $sourcePath → $dest');
+    await _rpcPost('/files/copy_v2', {
+      'from_path': _dbxPath(sourcePath),
+      'to_path': _dbxPath(dest),
+      'autorename': true,
+    });
   }
 
   // --- Delete / Move / Rename ---

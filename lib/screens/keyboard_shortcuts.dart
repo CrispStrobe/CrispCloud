@@ -9,6 +9,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../models/panel_side.dart';
 import '../providers/providers.dart';
+import '../services/action_history_service.dart';
 import '../widgets/command_palette.dart';
 import 'screen_dialogs.dart';
 
@@ -36,6 +37,12 @@ KeyEventResult handleKeyEvent(
   // Ctrl+Shift+P - Command palette
   if (isCtrl && isShift && event.logicalKey == LogicalKeyboardKey.keyP) {
     showCommandPalette(context, ref);
+    return KeyEventResult.handled;
+  }
+
+  // Ctrl+Z - Undo last action
+  if (isCtrl && !isShift && event.logicalKey == LogicalKeyboardKey.keyZ) {
+    _undoLastAction(context, ref, activePanel);
     return KeyEventResult.handled;
   }
 
@@ -149,4 +156,66 @@ KeyEventResult handleKeyEvent(
   }
 
   return KeyEventResult.ignored;
+}
+
+// ---------------------------------------------------------------------------
+// Undo helper
+// ---------------------------------------------------------------------------
+
+/// Undo the most-recent action from [ActionHistoryNotifier] and show a
+/// SnackBar with the result.
+void _undoLastAction(BuildContext context, WidgetRef ref, PanelSide activePanel) {
+  final historyNotifier = ref.read(actionHistoryProvider.notifier);
+  final last = historyNotifier.lastAction;
+  if (last == null) {
+    ScaffoldMessenger.of(context).showSnackBar(
+      const SnackBar(
+        content: Text('Nothing to undo'),
+        duration: Duration(seconds: 2),
+      ),
+    );
+    return;
+  }
+
+  if (!historyNotifier.canUndo(last)) {
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Text('Cannot undo: ${last.description}'),
+        duration: const Duration(seconds: 3),
+      ),
+    );
+    return;
+  }
+
+  // Build undo context from the active panel's provider.
+  final undoCtx = _buildUndoContext(ref, activePanel);
+
+  historyNotifier.undo(last.id, undoCtx).then((result) {
+    if (!context.mounted) return;
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Text(result.message),
+        duration: const Duration(seconds: 3),
+        backgroundColor: result.success ? null : Theme.of(context).colorScheme.error,
+      ),
+    );
+    if (result.success) {
+      // Refresh the active panel so changes are visible.
+      ref.read(panelProvider(activePanel)).refresh();
+    }
+  });
+}
+
+/// Build an [UndoContext] with remote callbacks from the active panel's client.
+UndoContext _buildUndoContext(WidgetRef ref, PanelSide side) {
+  if (side == PanelSide.local) {
+    // Local undo uses dart:io directly inside ActionHistoryService — no callbacks needed.
+    return const UndoContext();
+  }
+  final client = ref.read(authProvider).client;
+  return UndoContext(
+    remoteRename: (currentPath, name) => client.renamePath(currentPath, name),
+    remoteMove: (currentPath, targetDir) => client.movePath(currentPath, targetDir),
+    remoteDelete: (path) => client.deletePath(path),
+  );
 }

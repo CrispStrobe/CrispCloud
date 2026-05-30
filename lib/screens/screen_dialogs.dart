@@ -11,6 +11,7 @@ import 'package:path/path.dart' as p;
 import '../models/file_item.dart';
 import '../models/panel_side.dart';
 import '../providers/providers.dart';
+import '../services/action_history_service.dart';
 import '../widgets/connection_dialog.dart';
 
 void showConnectionDialogScreen(BuildContext context) {
@@ -62,6 +63,7 @@ void showKeyboardShortcutsDialog(BuildContext context) {
           mainAxisSize: MainAxisSize.min,
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
+            _shortcutRow('Ctrl+Z', 'Undo last action'),
             _shortcutRow('Ctrl+A', 'Select all'),
             _shortcutRow('Escape', 'Clear selection'),
             _shortcutRow('Delete', 'Delete selected'),
@@ -127,13 +129,22 @@ void confirmDeleteSelected(BuildContext context, WidgetRef ref) {
     context: context,
     builder: (context) => AlertDialog(
       title: const Text('Confirm Delete'),
-      content: Text('Delete ${panel.selection.length} item(s)? This cannot be undone.'),
+      content: Text('Delete ${panel.selection.length} item(s)?'),
       actions: [
         TextButton(onPressed: () => Navigator.pop(context), child: const Text('Cancel')),
         ElevatedButton(
           onPressed: () async {
-            await panel.deleteFiles(panel.selection.toList());
-            if (context.mounted) Navigator.pop(context);
+            final files = panel.selection.toList();
+            await panel.deleteFiles(files);
+            if (context.mounted) {
+              Navigator.pop(context);
+              _showUndoSnackBar(
+                context,
+                ref,
+                activePanel,
+                'Deleted ${files.length} item(s)',
+              );
+            }
           },
           style: ElevatedButton.styleFrom(
             backgroundColor: Theme.of(context).colorScheme.error,
@@ -154,6 +165,16 @@ void showRenameDialog(BuildContext context, WidgetRef ref) {
   final file = panel.selection.first;
   final controller = TextEditingController(text: file.name);
 
+  Future<void> doRename(String value) async {
+    if (value.isNotEmpty && value != file.name) {
+      await panel.renameFile(file, value);
+      if (context.mounted) {
+        Navigator.pop(context);
+        _showUndoSnackBar(context, ref, activePanel, 'Renamed "${file.name}" to "$value"');
+      }
+    }
+  }
+
   showDialog(
     context: context,
     builder: (context) => AlertDialog(
@@ -162,22 +183,12 @@ void showRenameDialog(BuildContext context, WidgetRef ref) {
         controller: controller,
         decoration: const InputDecoration(labelText: 'New name', border: OutlineInputBorder()),
         autofocus: true,
-        onSubmitted: (value) async {
-          if (value.isNotEmpty && value != file.name) {
-            await panel.renameFile(file, value);
-            if (context.mounted) Navigator.pop(context);
-          }
-        },
+        onSubmitted: doRename,
       ),
       actions: [
         TextButton(onPressed: () => Navigator.pop(context), child: const Text('Cancel')),
         ElevatedButton(
-          onPressed: () async {
-            if (controller.text.isNotEmpty && controller.text != file.name) {
-              await panel.renameFile(file, controller.text);
-              if (context.mounted) Navigator.pop(context);
-            }
-          },
+          onPressed: () => doRename(controller.text),
           child: const Text('Rename'),
         ),
       ],
@@ -189,24 +200,41 @@ void showCopyDialogFromSelection(BuildContext context, WidgetRef ref) {
   final activePanel = ref.read(activePanelProvider);
   final panel = ref.read(panelProvider(activePanel));
   if (panel.selection.isEmpty) return;
-  _showPathDialog(context, panel, panel.selection.toList(), 'Copy', panel.copyFiles);
+  _showPathDialog(context, ref, activePanel, panel, panel.selection.toList(), 'Copy', panel.copyFiles);
 }
 
 void showMoveDialogFromSelection(BuildContext context, WidgetRef ref) {
   final activePanel = ref.read(activePanelProvider);
   final panel = ref.read(panelProvider(activePanel));
   if (panel.selection.isEmpty) return;
-  _showPathDialog(context, panel, panel.selection.toList(), 'Move', panel.moveFiles);
+  _showPathDialog(context, ref, activePanel, panel, panel.selection.toList(), 'Move', panel.moveFiles);
 }
 
 void _showPathDialog(
   BuildContext context,
+  WidgetRef ref,
+  PanelSide activePanel,
   PanelNotifier panel,
   List<FileItem> files,
   String operation,
   Future<void> Function(List<FileItem>, String) action,
 ) {
   final controller = TextEditingController(text: panel.currentPath);
+
+  Future<void> doAction(String value) async {
+    if (value.isNotEmpty) {
+      await action(files, value);
+      if (context.mounted) {
+        Navigator.pop(context);
+        _showUndoSnackBar(
+          context,
+          ref,
+          activePanel,
+          '${operation}d ${files.length} item(s) to $value',
+        );
+      }
+    }
+  }
 
   showDialog(
     context: context,
@@ -216,22 +244,12 @@ void _showPathDialog(
         controller: controller,
         decoration: const InputDecoration(labelText: 'Target path', border: OutlineInputBorder()),
         autofocus: true,
-        onSubmitted: (value) async {
-          if (value.isNotEmpty) {
-            await action(files, value);
-            if (context.mounted) Navigator.pop(context);
-          }
-        },
+        onSubmitted: doAction,
       ),
       actions: [
         TextButton(onPressed: () => Navigator.pop(context), child: const Text('Cancel')),
         ElevatedButton(
-          onPressed: () async {
-            if (controller.text.isNotEmpty) {
-              await action(files, controller.text);
-              if (context.mounted) Navigator.pop(context);
-            }
-          },
+          onPressed: () => doAction(controller.text),
           child: Text(operation),
         ),
       ],
@@ -243,6 +261,16 @@ void showCreateFolderDialog(BuildContext context, WidgetRef ref, PanelSide side)
   final panel = ref.read(panelProvider(side));
   final controller = TextEditingController();
 
+  Future<void> doCreate(String value) async {
+    if (value.isNotEmpty) {
+      await panel.createFolder(value);
+      if (context.mounted) {
+        Navigator.pop(context);
+        _showUndoSnackBar(context, ref, side, 'Created folder "$value"');
+      }
+    }
+  }
+
   showDialog(
     context: context,
     builder: (context) => AlertDialog(
@@ -251,22 +279,12 @@ void showCreateFolderDialog(BuildContext context, WidgetRef ref, PanelSide side)
         controller: controller,
         decoration: const InputDecoration(labelText: 'Folder name', border: OutlineInputBorder()),
         autofocus: true,
-        onSubmitted: (value) async {
-          if (value.isNotEmpty) {
-            await panel.createFolder(value);
-            if (context.mounted) Navigator.pop(context);
-          }
-        },
+        onSubmitted: doCreate,
       ),
       actions: [
         TextButton(onPressed: () => Navigator.pop(context), child: const Text('Cancel')),
         ElevatedButton(
-          onPressed: () async {
-            if (controller.text.isNotEmpty) {
-              await panel.createFolder(controller.text);
-              if (context.mounted) Navigator.pop(context);
-            }
-          },
+          onPressed: () => doCreate(controller.text),
           child: const Text('Create'),
         ),
       ],
@@ -346,5 +364,64 @@ void showGoToDialog(BuildContext context, WidgetRef ref) {
         ),
       ],
     ),
+  );
+}
+
+// ---------------------------------------------------------------------------
+// Undo SnackBar helper
+// ---------------------------------------------------------------------------
+
+/// Show a SnackBar confirming [message] with an "Undo" action button.
+///
+/// Pressing "Undo" undoes the most-recent action in the history for [side].
+void _showUndoSnackBar(
+  BuildContext context,
+  WidgetRef ref,
+  PanelSide side,
+  String message,
+) {
+  final historyNotifier = ref.read(actionHistoryProvider.notifier);
+  final last = historyNotifier.lastAction;
+  final canUndo = last != null && historyNotifier.canUndo(last);
+
+  ScaffoldMessenger.of(context).showSnackBar(
+    SnackBar(
+      content: Text(message),
+      duration: const Duration(seconds: 4),
+      action: canUndo
+          ? SnackBarAction(
+              label: 'Undo',
+              onPressed: () {
+                final undoCtx = _buildUndoCtx(ref, side);
+                historyNotifier.undo(last.id, undoCtx).then((result) {
+                  if (!context.mounted) return;
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    SnackBar(
+                      content: Text(result.message),
+                      duration: const Duration(seconds: 3),
+                      backgroundColor: result.success
+                          ? null
+                          : Theme.of(context).colorScheme.error,
+                    ),
+                  );
+                  if (result.success) {
+                    ref.read(panelProvider(side)).refresh();
+                  }
+                });
+              },
+            )
+          : null,
+    ),
+  );
+}
+
+/// Build an [UndoContext] for [side] using the current auth client.
+UndoContext _buildUndoCtx(WidgetRef ref, PanelSide side) {
+  if (side == PanelSide.local) return const UndoContext();
+  final client = ref.read(authProvider).client;
+  return UndoContext(
+    remoteRename: (currentPath, name) => client.renamePath(currentPath, name),
+    remoteMove: (currentPath, targetDir) => client.movePath(currentPath, targetDir),
+    remoteDelete: (path) => client.deletePath(path),
   );
 }

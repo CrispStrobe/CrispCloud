@@ -4,6 +4,7 @@
 // Downloads the file, presents it in an editable text area with line numbers,
 // and re-uploads on save. Warns on unsaved changes.
 
+import 'dart:async';
 import 'dart:convert';
 import 'dart:io';
 import 'dart:typed_data';
@@ -46,9 +47,14 @@ class _FileEditorPageState extends ConsumerState<_FileEditorPage> {
   bool _loading = true;
   bool _saving = false;
   bool _modified = false;
+  bool _conflictDetected = false;
   String? _error;
   Uint8List? _originalBytes;
   int _lineCount = 1;
+  Timer? _autoSaveTimer;
+  DateTime? _loadedAt;
+
+  static const _autoSaveDelay = Duration(seconds: 30);
 
   @override
   void initState() {
@@ -69,6 +75,53 @@ class _FileEditorPageState extends ConsumerState<_FileEditorPage> {
     if (newLineCount != _lineCount) {
       setState(() => _lineCount = newLineCount);
     }
+
+    // Reset auto-save timer on each change
+    if (nowModified) {
+      _autoSaveTimer?.cancel();
+      _autoSaveTimer = Timer(_autoSaveDelay, () {
+        if (_modified && !_saving && mounted) {
+          _autoSave();
+        }
+      });
+    }
+  }
+
+  Future<void> _autoSave() async {
+    // Check for conflicts before auto-saving
+    if (await _checkForConflict()) {
+      setState(() => _conflictDetected = true);
+      return;
+    }
+    await _saveFile();
+  }
+
+  /// Check if the remote file was modified since we loaded it.
+  Future<bool> _checkForConflict() async {
+    if (_loadedAt == null || widget.side == PanelSide.local) return false;
+    try {
+      final client = ref.read(authProvider).client;
+      final remotePath = widget.file.path ?? '/${widget.file.name}';
+      final info = await client.resolvePath(remotePath);
+      if (info == null) return false;
+
+      final rawDate = info['modificationTime'] ?? info['lastModified'];
+      if (rawDate == null) return false;
+
+      DateTime? remoteModified;
+      if (rawDate is int) {
+        remoteModified = DateTime.fromMillisecondsSinceEpoch(rawDate);
+      } else {
+        remoteModified = DateTime.tryParse(rawDate.toString());
+      }
+
+      if (remoteModified != null && remoteModified.isAfter(_loadedAt!)) {
+        return true; // File was modified on server since we loaded it
+      }
+    } catch (_) {
+      // Can't check — proceed without conflict detection
+    }
+    return false;
   }
 
   String _tryDecode(Uint8List bytes) {
@@ -101,6 +154,7 @@ class _FileEditorPageState extends ConsumerState<_FileEditorPage> {
       setState(() {
         _loading = false;
         _modified = false;
+        _loadedAt = DateTime.now();
       });
 
       _focusNode.requestFocus();
@@ -113,9 +167,29 @@ class _FileEditorPageState extends ConsumerState<_FileEditorPage> {
     }
   }
 
+  /// Save a local snapshot before overwriting (version backup).
+  Future<void> _saveLocalSnapshot() async {
+    if (kIsWeb || _originalBytes == null) return;
+    try {
+      final snapshotDir = Directory(p.join(
+        Directory.systemTemp.path, 'crispcloud_snapshots',
+      ));
+      if (!await snapshotDir.exists()) await snapshotDir.create(recursive: true);
+      final timestamp = DateTime.now().millisecondsSinceEpoch;
+      final name = widget.file.name;
+      final snapshotPath = p.join(snapshotDir.path, '${timestamp}_$name');
+      await File(snapshotPath).writeAsBytes(_originalBytes!);
+    } catch (_) {
+      // Snapshot is best-effort, don't fail the save
+    }
+  }
+
   Future<void> _saveFile() async {
     setState(() => _saving = true);
     try {
+      // Save a local snapshot before overwriting
+      await _saveLocalSnapshot();
+
       final client = ref.read(authProvider).client;
       final bytes = Uint8List.fromList(utf8.encode(_controller.text));
 
@@ -176,7 +250,9 @@ class _FileEditorPageState extends ConsumerState<_FileEditorPage> {
   }
 
   @override
+  @override
   void dispose() {
+    _autoSaveTimer?.cancel();
     _controller.removeListener(_onTextChanged);
     _controller.dispose();
     _scrollController.dispose();
@@ -261,7 +337,36 @@ class _FileEditorPageState extends ConsumerState<_FileEditorPage> {
                   ),
           ],
         ),
-        body: KeyboardListener(
+        body: Column(children: [
+          if (_conflictDetected)
+            MaterialBanner(
+              content: const Text(
+                'This file was modified on the server since you opened it. '
+                'Saving will overwrite the remote version.',
+              ),
+              leading: const Icon(Icons.warning, color: Colors.orange),
+              actions: [
+                TextButton(
+                  onPressed: () {
+                    setState(() => _conflictDetected = false);
+                    _saveFile();
+                  },
+                  child: const Text('Save Anyway'),
+                ),
+                TextButton(
+                  onPressed: () {
+                    setState(() => _conflictDetected = false);
+                    _loadFile();
+                  },
+                  child: const Text('Reload'),
+                ),
+                TextButton(
+                  onPressed: () => setState(() => _conflictDetected = false),
+                  child: const Text('Dismiss'),
+                ),
+              ],
+            ),
+          Expanded(child: KeyboardListener(
           focusNode: FocusNode(),
           onKeyEvent: (event) {
             if (event is KeyDownEvent &&
@@ -272,8 +377,8 @@ class _FileEditorPageState extends ConsumerState<_FileEditorPage> {
             }
           },
           child: _buildBody(theme),
-        ),
-      ),
+        )),
+      ]),
     );
   }
 

@@ -12,6 +12,7 @@ import 'package:path/path.dart' as p;
 import '../models/file_item.dart';
 import '../models/operation_progress.dart';
 import '../models/panel_side.dart';
+import '../services/audit_service.dart';
 import '../services/transfer_queue.dart';
 import '../utils/formatters.dart' as fmt;
 import '../services/log_service.dart';
@@ -123,19 +124,39 @@ class TransferNotifier extends ChangeNotifier {
             return;
           }
 
-          if (file.isFolder) {
-            await _uploadFolder(file.path!, target, operation, client, localFileService);
-          } else {
-            final fileData = await localFileService.readFile(file.path!, fileItem: file);
-            await client.uploadFile(
-              fileData,
-              file.name,
-              target,
-              onProgress: (current, total) {
-                operation.currentBytes = completedBytes + current;
-                notifyListeners();
-              },
+          final audit = _ref.read(auditServiceProvider);
+          try {
+            if (file.isFolder) {
+              await _uploadFolder(file.path!, target, operation, client, localFileService);
+            } else {
+              final fileData = await localFileService.readFile(file.path!, fileItem: file);
+              await client.uploadFile(
+                fileData,
+                file.name,
+                target,
+                onProgress: (current, total) {
+                  operation.currentBytes = completedBytes + current;
+                  notifyListeners();
+                },
+              );
+            }
+            await audit.logSuccess(
+              operation: AuditOperation.upload,
+              sourcePath: file.path ?? file.name,
+              targetPath: target,
+              provider: client.providerName,
+              sizeBytes: file.size,
             );
+          } catch (e) {
+            fileProgress.error = e.toString();
+            await audit.logError(
+              operation: AuditOperation.upload,
+              sourcePath: file.path ?? file.name,
+              targetPath: target,
+              provider: client.providerName,
+              error: e.toString(),
+            );
+            rethrow;
           }
 
           fileProgress.isComplete = true;
@@ -199,31 +220,51 @@ class TransferNotifier extends ChangeNotifier {
           if (operation.isCancelled) return;
 
           final fileRemotePath = file.path ?? p.posix.join(remotePath, file.name);
+          final audit = _ref.read(auditServiceProvider);
 
-          if (file.isFolder) {
-            if (!kIsWeb) {
-              await _downloadFolder(fileRemotePath, target, operation, client);
+          try {
+            if (file.isFolder) {
+              if (!kIsWeb) {
+                await _downloadFolder(fileRemotePath, target, operation, client);
+              }
+            } else {
+              final bytes = await client.downloadFileBytes(
+                fileRemotePath,
+                onProgress: (current, total) {
+                  if (total > 0) {
+                    operation.currentBytes = completedBytes + current;
+                    notifyListeners();
+                  }
+                },
+              );
+
+              final localFilePath = p.join(target, file.name);
+              await localFileService.saveFile(localFilePath, bytes);
+
+              if (!kIsWeb && file.updatedAt != null) {
+                try {
+                  final f = File(localFilePath);
+                  if (await f.exists()) await f.setLastModified(file.updatedAt!);
+                } catch (_) {}
+              }
             }
-          } else {
-            final bytes = await client.downloadFileBytes(
-              fileRemotePath,
-              onProgress: (current, total) {
-                if (total > 0) {
-                  operation.currentBytes = completedBytes + current;
-                  notifyListeners();
-                }
-              },
+            await audit.logSuccess(
+              operation: AuditOperation.download,
+              sourcePath: fileRemotePath,
+              targetPath: target,
+              provider: client.providerName,
+              sizeBytes: file.size,
             );
-
-            final localFilePath = p.join(target, file.name);
-            await localFileService.saveFile(localFilePath, bytes);
-
-            if (!kIsWeb && file.updatedAt != null) {
-              try {
-                final f = File(localFilePath);
-                if (await f.exists()) await f.setLastModified(file.updatedAt!);
-              } catch (_) {}
-            }
+          } catch (e) {
+            fileProgress.error = e.toString();
+            await audit.logError(
+              operation: AuditOperation.download,
+              sourcePath: fileRemotePath,
+              targetPath: target,
+              provider: client.providerName,
+              error: e.toString(),
+            );
+            rethrow;
           }
 
           fileProgress.isComplete = true;
