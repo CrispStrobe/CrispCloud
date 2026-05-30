@@ -73,6 +73,10 @@ abstract class CloudStorageClient {
   /// True if the provider supports server-side copy (no download+reupload needed).
   bool get supportsServerSideCopy => false;
 
+  /// True if the provider supports native full-text (content) search.
+  /// GDrive, Dropbox, and OneDrive support this natively.
+  bool get supportsFullTextSearch => false;
+
   /// Fetch a provider-native thumbnail for a file. Returns bytes or null.
   /// Providers that support thumbnails (GDrive, OneDrive, Dropbox) override this.
   Future<Uint8List?> getThumbnail(String remotePath) async => null;
@@ -100,6 +104,76 @@ abstract class CloudStorageClient {
     final fileName = sourcePath.split('/').last;
     final bytes = await downloadFileBytes(sourcePath);
     await uploadFile(bytes, fileName, targetPath);
+  }
+
+  /// Full-text search: search inside file contents in the given directory.
+  /// Returns a list of maps with 'item' (FileItem-compatible map) and 'snippet'
+  /// (context around the match).
+  ///
+  /// Providers with native full-text search (GDrive, Dropbox, OneDrive) override
+  /// this. The default implementation downloads small text files (<1 MB) from
+  /// the directory and searches their contents locally.
+  Future<List<Map<String, dynamic>>> fullTextSearch(
+    String query,
+    String remotePath,
+  ) async {
+    // Default fallback: list directory, download small text files, search contents
+    final listing = await listPath(remotePath);
+    final files = (listing['files'] as List<dynamic>?) ?? [];
+    final results = <Map<String, dynamic>>[];
+
+    const maxSize = 1024 * 1024; // 1 MB
+    const textExtensions = {
+      'txt', 'md', 'csv', 'json', 'yaml', 'yml', 'xml', 'html', 'css',
+      'js', 'ts', 'dart', 'py', 'java', 'kt', 'swift', 'go', 'rs', 'c',
+      'cpp', 'h', 'hpp', 'cs', 'rb', 'php', 'sh', 'bash', 'sql', 'rtf',
+      'log', 'ini', 'cfg', 'conf', 'toml', 'properties',
+    };
+
+    final lowerQuery = query.toLowerCase();
+
+    for (final file in files) {
+      final map = file as Map<String, dynamic>;
+      final name = (map['name'] as String?) ?? '';
+      final size = map['size'] as int? ?? 0;
+
+      // Skip files that are too large or not text
+      final ext = name.contains('.') ? name.split('.').last.toLowerCase() : '';
+      if (!textExtensions.contains(ext)) continue;
+      if (size > maxSize) continue;
+
+      try {
+        final filePath = remotePath.endsWith('/')
+            ? '$remotePath$name'
+            : '$remotePath/$name';
+        final bytes = await downloadFileBytes(filePath);
+        final content = String.fromCharCodes(bytes);
+        final lowerContent = content.toLowerCase();
+        final idx = lowerContent.indexOf(lowerQuery);
+        if (idx == -1) continue;
+
+        // Extract snippet (up to 100 chars around match)
+        final start = (idx - 50).clamp(0, content.length);
+        final end = (idx + query.length + 50).clamp(0, content.length);
+        final snippet = '${start > 0 ? "..." : ""}${content.substring(start, end)}${end < content.length ? "..." : ""}';
+
+        results.add({
+          'name': name,
+          'uuid': map['uuid'],
+          'path': remotePath.endsWith('/')
+              ? '$remotePath$name'
+              : '$remotePath/$name',
+          'size': size,
+          if (map['lastModified'] != null) 'lastModified': map['lastModified'],
+          'snippet': snippet,
+        });
+      } catch (_) {
+        // Skip files that can't be downloaded or decoded
+        continue;
+      }
+    }
+
+    return results;
   }
 
   /// Stream-based upload. Providers that support streaming override this.

@@ -2,7 +2,11 @@
 //
 // Manages file transfers: upload/download via TransferQueue,
 // operation tracking, pause/resume/cancel.
+//
+// On desktop/mobile, uploads and downloads use streaming I/O to avoid
+// buffering entire files in memory. Web falls back to byte-buffer methods.
 
+import 'dart:async';
 import 'dart:io';
 
 import 'package:flutter/foundation.dart';
@@ -13,6 +17,7 @@ import '../models/file_item.dart';
 import '../models/operation_progress.dart';
 import '../models/panel_side.dart';
 import '../services/audit_service.dart';
+import '../services/s3_client_adapter.dart';
 import '../services/transfer_queue.dart';
 import '../utils/formatters.dart' as fmt;
 import '../services/log_service.dart';
@@ -128,7 +133,47 @@ class TransferNotifier extends ChangeNotifier {
           try {
             if (file.isFolder) {
               await _uploadFolder(file.path!, target, operation, client, localFileService);
+            } else if (!kIsWeb && file.path != null) {
+              // Streaming upload on desktop/mobile — avoids buffering entire
+              // file in memory.  A StreamTransformer caps buffered-ahead
+              // chunks at 2 to keep resident memory low.
+              final localFile = File(file.path!);
+              final length = await localFile.length();
+              final rawStream = localFile.openRead();
+
+              // Limit to 2 chunks buffered ahead via a back-pressure
+              // transformer (StreamController in paused mode).
+              final controller = StreamController<List<int>>();
+              int pending = 0;
+              const maxPending = 2;
+              late StreamSubscription<List<int>> sub;
+              sub = rawStream.listen(
+                (chunk) {
+                  controller.add(chunk);
+                  pending++;
+                  if (pending >= maxPending) sub.pause();
+                },
+                onDone: () => controller.close(),
+                onError: (e, st) => controller.addError(e, st),
+              );
+              controller.onCancel = () => sub.cancel();
+              controller.onResume = () {
+                pending = 0;
+                sub.resume();
+              };
+
+              await client.uploadStream(
+                controller.stream,
+                length,
+                file.name,
+                target,
+                onProgress: (current, total) {
+                  operation.currentBytes = completedBytes + current;
+                  notifyListeners();
+                },
+              );
             } else {
+              // Fallback for web: buffer-based upload
               final fileData = await localFileService.readFile(file.path!, fileItem: file);
               await client.uploadFile(
                 fileData,
@@ -149,6 +194,13 @@ class TransferNotifier extends ChangeNotifier {
             );
           } catch (e) {
             fileProgress.error = e.toString();
+            // If an S3 multipart upload was interrupted, persist state
+            // for future resume.
+            if (client is S3ClientAdapter) {
+              try {
+                await client.persistInterruptedUploads();
+              } catch (_) {}
+            }
             await audit.logError(
               operation: AuditOperation.upload,
               sourcePath: file.path ?? file.name,
@@ -227,7 +279,39 @@ class TransferNotifier extends ChangeNotifier {
               if (!kIsWeb) {
                 await _downloadFolder(fileRemotePath, target, operation, client);
               }
+            } else if (!kIsWeb) {
+              // Streaming download on desktop/mobile — pipe chunks to disk
+              // without buffering the entire file in memory.
+              final localFilePath = p.join(target, file.name);
+              final sink = File(localFilePath).openWrite();
+              int received = 0;
+              final totalSize = file.size ?? 0;
+
+              try {
+                await for (final chunk in client.downloadStream(
+                  fileRemotePath,
+                  onProgress: (current, total) {
+                    // Some providers report progress via this callback;
+                    // we also track via byte counting below.
+                  },
+                )) {
+                  sink.add(chunk);
+                  received += chunk.length;
+                  operation.currentBytes = completedBytes + received;
+                  notifyListeners();
+                }
+              } finally {
+                await sink.close();
+              }
+
+              if (file.updatedAt != null) {
+                try {
+                  final f = File(localFilePath);
+                  if (await f.exists()) await f.setLastModified(file.updatedAt!);
+                } catch (_) {}
+              }
             } else {
+              // Fallback for web: buffer-based download
               final bytes = await client.downloadFileBytes(
                 fileRemotePath,
                 onProgress: (current, total) {
@@ -240,13 +324,6 @@ class TransferNotifier extends ChangeNotifier {
 
               final localFilePath = p.join(target, file.name);
               await localFileService.saveFile(localFilePath, bytes);
-
-              if (!kIsWeb && file.updatedAt != null) {
-                try {
-                  final f = File(localFilePath);
-                  if (await f.exists()) await f.setLastModified(file.updatedAt!);
-                } catch (_) {}
-              }
             }
             await audit.logSuccess(
               operation: AuditOperation.download,

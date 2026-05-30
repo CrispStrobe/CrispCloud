@@ -78,7 +78,8 @@ void showFindDialog(BuildContext context, WidgetRef ref) {
 }
 
 void showSearchResultsDialog(BuildContext context, WidgetRef ref,
-    String query, List<FileItem> folders, List<FileItem> files) {
+    String query, List<FileItem> folders, List<FileItem> files,
+    {Map<String, String>? snippets}) {
   final allItems = [...folders, ...files];
 
   showDialog(
@@ -94,13 +95,34 @@ void showSearchResultsDialog(BuildContext context, WidgetRef ref,
                 itemCount: allItems.length,
                 itemBuilder: (ctx2, index) {
                   final item = allItems[index];
+                  final snippet = snippets?[item.path ?? item.name];
                   return ListTile(
                     leading:
                         Icon(item.isFolder ? Icons.folder : getFileIcon(item.name)),
                     title: Text(p.basename(item.name)),
-                    subtitle: Text(
-                      p.dirname(item.path ?? '/'),
-                      overflow: TextOverflow.ellipsis,
+                    subtitle: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        Text(
+                          p.dirname(item.path ?? '/'),
+                          overflow: TextOverflow.ellipsis,
+                        ),
+                        if (snippet != null && snippet.isNotEmpty)
+                          Padding(
+                            padding: const EdgeInsets.only(top: 2),
+                            child: Text(
+                              snippet,
+                              style: TextStyle(
+                                fontSize: 11,
+                                fontStyle: FontStyle.italic,
+                                color: Theme.of(ctx).colorScheme.onSurfaceVariant,
+                              ),
+                              maxLines: 2,
+                              overflow: TextOverflow.ellipsis,
+                            ),
+                          ),
+                      ],
                     ),
                     onTap: () {
                       if (item.path != null) {
@@ -156,6 +178,7 @@ class _FindDialogState extends State<_FindDialog> {
   final _maxSizeCtrl = TextEditingController();
 
   bool _useRegex = false;
+  bool _searchContents = false;
 
   // Type-filter chips
   final Set<FileTypeCategory> _selectedCategories = {};
@@ -221,7 +244,18 @@ class _FindDialogState extends State<_FindDialog> {
     final ref = widget.ref;
     final panelCtx = widget.panelContext;
 
-    if (_useRegex) {
+    if (_searchContents) {
+      // Full-text search (search inside file contents)
+      final results =
+          await ref.read(searchProvider).fullTextSearch(_patternCtrl.text);
+      final snippets = ref.read(searchProvider).lastSnippets;
+      if (panelCtx.mounted) {
+        showSearchResultsDialog(
+          panelCtx, ref, _patternCtrl.text, [], results,
+          snippets: snippets,
+        );
+      }
+    } else if (_useRegex) {
       try {
         final regex = RegExp(_patternCtrl.text, caseSensitive: false);
         final activePanel = ref.read(activePanelProvider);
@@ -295,13 +329,36 @@ class _FindDialogState extends State<_FindDialog> {
               children: [
                 Checkbox(
                   value: _useRegex,
-                  onChanged: (v) => setState(() => _useRegex = v ?? false),
+                  onChanged: _searchContents
+                      ? null
+                      : (v) => setState(() => _useRegex = v ?? false),
                 ),
                 const Text('Use regex', style: TextStyle(fontSize: 13)),
                 const Spacer(),
                 if (_useRegex)
                   Text(
                     'Filters current listing',
+                    style: TextStyle(
+                        fontSize: 11, color: colorScheme.onSurfaceVariant),
+                  ),
+              ],
+            ),
+
+            // Search file contents toggle
+            Row(
+              children: [
+                Checkbox(
+                  value: _searchContents,
+                  onChanged: (v) => setState(() {
+                    _searchContents = v ?? false;
+                    if (_searchContents) _useRegex = false;
+                  }),
+                ),
+                const Text('Search file contents', style: TextStyle(fontSize: 13)),
+                const Spacer(),
+                if (_searchContents)
+                  Text(
+                    'Full-text search',
                     style: TextStyle(
                         fontSize: 11, color: colorScheme.onSurfaceVariant),
                   ),

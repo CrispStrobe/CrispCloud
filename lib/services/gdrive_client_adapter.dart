@@ -85,6 +85,8 @@ class GDriveClientAdapter extends CloudStorageClient {
   bool get supportsTrash => true;
   @override
   bool get supportsServerSideCopy => true;
+  @override
+  bool get supportsFullTextSearch => true;
 
   // --- Auth ---
 
@@ -531,6 +533,56 @@ class GDriveClientAdapter extends CloudStorageClient {
     }
 
     _pathToId.remove(path);
+  }
+
+  // --- Full-text search ---
+
+  @override
+  Future<List<Map<String, dynamic>>> fullTextSearch(
+    String query,
+    String remotePath,
+  ) async {
+    await _ensureToken();
+
+    // Google Drive API: fullText contains 'query'
+    final escaped = _escapeQuery(query);
+    final q = "fullText contains '$escaped' and trashed=false";
+
+    final results = <Map<String, dynamic>>[];
+    String? pageToken;
+
+    do {
+      final params = <String, String>{
+        'q': q,
+        'fields': 'nextPageToken,files(id,name,mimeType,size,modifiedTime,parents)',
+        'pageSize': '100',
+      };
+      if (pageToken != null) params['pageToken'] = pageToken;
+
+      final resp = await _apiGet('/files', queryParams: params);
+
+      for (final item in (resp['files'] as List?) ?? []) {
+        final map = item as Map<String, dynamic>;
+        final isFolder = map['mimeType'] == 'application/vnd.google-apps.folder';
+        if (isFolder) continue; // Skip folders for content search
+
+        final name = map['name'] as String? ?? 'Unknown';
+        final id = map['id'] as String;
+
+        results.add({
+          'name': name,
+          'uuid': id,
+          'path': name, // GDrive doesn't return full path in search
+          'size': int.tryParse(map['size']?.toString() ?? '') ?? 0,
+          if (map['modifiedTime'] != null) 'lastModified': map['modifiedTime'],
+          'snippet': 'Content matches "$query"',
+        });
+      }
+
+      pageToken = resp['nextPageToken'] as String?;
+    } while (pageToken != null);
+
+    return results;
   }
 
   // --- Internal helpers ---

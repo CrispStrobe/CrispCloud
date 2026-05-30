@@ -81,6 +81,8 @@ class OneDriveClientAdapter extends CloudStorageClient {
   bool get supportsTrash => true;
   @override
   bool get supportsServerSideCopy => true;
+  @override
+  bool get supportsFullTextSearch => true;
 
   // --- Auth ---
 
@@ -453,6 +455,79 @@ class OneDriveClientAdapter extends CloudStorageClient {
     if (resp.statusCode != 200) {
       throw Exception('OneDrive rename failed (${resp.statusCode}): ${resp.body}');
     }
+  }
+
+  // --- Full-text search ---
+
+  @override
+  Future<List<Map<String, dynamic>>> fullTextSearch(
+    String query,
+    String remotePath,
+  ) async {
+    await _ensureToken();
+
+    // Microsoft Graph search endpoint
+    final body = json.encode({
+      'requests': [
+        {
+          'entityTypes': ['driveItem'],
+          'query': {
+            'queryString': query,
+          },
+          'from': 0,
+          'size': 100,
+        },
+      ],
+    });
+
+    final resp = await http.post(
+      Uri.parse('$_graphBase/search/query'),
+      headers: {
+        ..._authHeaders(),
+        'Content-Type': 'application/json',
+      },
+      body: body,
+    );
+
+    if (resp.statusCode != 200) {
+      // Fallback to default implementation if search endpoint unavailable
+      return super.fullTextSearch(query, remotePath);
+    }
+
+    final data = json.decode(resp.body) as Map<String, dynamic>;
+    final results = <Map<String, dynamic>>[];
+
+    final values = (data['value'] as List?) ?? [];
+    for (final resultSet in values) {
+      final hits = (resultSet['hitsContainers'] as List?) ?? [];
+      for (final container in hits) {
+        final hitList = (container['hits'] as List?) ?? [];
+        for (final hit in hitList) {
+          final resource = hit['resource'] as Map<String, dynamic>?;
+          if (resource == null) continue;
+
+          final name = resource['name'] as String? ?? 'Unknown';
+          final id = resource['id'] as String? ?? '';
+          final size = resource['size'] as int? ?? 0;
+          final webUrl = resource['webUrl'] as String? ?? '';
+
+          // Extract summary/snippet from hit
+          final summary = hit['summary'] as String? ?? 'Content matches "$query"';
+
+          results.add({
+            'name': name,
+            'uuid': id,
+            'path': webUrl,
+            'size': size,
+            if (resource['lastModifiedDateTime'] != null)
+              'lastModified': resource['lastModifiedDateTime'],
+            'snippet': summary,
+          });
+        }
+      }
+    }
+
+    return results;
   }
 
   // --- Internal ---

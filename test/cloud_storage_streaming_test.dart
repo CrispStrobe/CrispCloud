@@ -31,6 +31,8 @@ class MockCloudClient implements CloudStorageClient {
   @override Future<Map<String, int>?> getQuota() async => null;
   @override Future<int> healthCheck() async => -1;
   @override Future<void> copyPath(String sourcePath, String targetPath) async {}
+  @override bool get supportsFullTextSearch => false;
+  @override Future<List<Map<String, dynamic>>> fullTextSearch(String query, String remotePath) async => [];
 
   @override Future<void> login(String email, String password, {String? twoFactorCode}) async {}
   @override Future<bool> is2faNeeded(String email) async => false;

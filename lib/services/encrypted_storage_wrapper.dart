@@ -231,4 +231,10 @@ class EncryptedStorageWrapper implements CloudStorageClient {
     final fileName = sourcePath.split('/').last;
     await uploadFile(bytes, fileName, targetPath);
   }
+
+  @override
+  bool get supportsFullTextSearch => false; // encrypted content can't be searched server-side
+
+  @override
+  Future<List<Map<String, dynamic>>> fullTextSearch(String query, String remotePath) async => [];
 }

@@ -85,6 +85,8 @@ class DropboxClientAdapter extends CloudStorageClient {
   bool get supportsTrash => true;
   @override
   bool get supportsServerSideCopy => true;
+  @override
+  bool get supportsFullTextSearch => true;
 
   // --- Auth ---
 
@@ -391,6 +393,75 @@ class DropboxClientAdapter extends CloudStorageClient {
       'to_path': _dbxPath(newPath),
       'autorename': false,
     });
+  }
+
+  // --- Full-text search ---
+
+  @override
+  Future<List<Map<String, dynamic>>> fullTextSearch(
+    String query,
+    String remotePath,
+  ) async {
+    await _ensureToken();
+
+    // Dropbox search_v2 supports content search via options.file_status
+    final body = <String, dynamic>{
+      'query': query,
+      'options': {
+        'path': _dbxPath(remotePath),
+        'max_results': 100,
+        'file_status': 'active',
+        'filename_only': false, // Search file contents too
+      },
+    };
+
+    final results = <Map<String, dynamic>>[];
+    var hasMore = true;
+    String? cursor;
+
+    while (hasMore) {
+      Map<String, dynamic> resp;
+      if (cursor != null) {
+        resp = await _rpcPost('/files/search/continue_v2', {'cursor': cursor});
+      } else {
+        resp = await _rpcPost('/files/search_v2', body);
+      }
+
+      final matches = (resp['matches'] as List?) ?? [];
+      for (final match in matches) {
+        final metadata = match['metadata'] as Map<String, dynamic>?;
+        final inner = metadata?['metadata'] as Map<String, dynamic>?;
+        if (inner == null) continue;
+        if (inner['.tag'] == 'folder') continue;
+
+        final name = inner['name'] as String? ?? 'Unknown';
+        final pathDisplay = inner['path_display'] as String? ?? '';
+
+        // Extract highlight snippet if available
+        final highlight = match['highlight_spans'] as List?;
+        String snippet;
+        if (highlight != null && highlight.isNotEmpty) {
+          snippet = highlight.map((s) => s['highlight_str'] ?? '').join('...');
+        } else {
+          snippet = 'Content matches "$query"';
+        }
+
+        results.add({
+          'name': name,
+          'uuid': inner['id'] ?? '',
+          'path': pathDisplay,
+          'size': inner['size'] as int? ?? 0,
+          if (inner['server_modified'] != null)
+            'lastModified': inner['server_modified'],
+          'snippet': snippet,
+        });
+      }
+
+      hasMore = resp['has_more'] == true;
+      cursor = resp['cursor'] as String?;
+    }
+
+    return results;
   }
 
   // --- Internal ---

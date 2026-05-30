@@ -294,6 +294,51 @@ class SearchNotifier extends ChangeNotifier {
     }
   }
 
+  /// Perform a full-text (content) search using the active provider.
+  /// Returns matching files with context snippets.
+  Future<List<FileItem>> fullTextSearch(String query) async {
+    if (_isSearching) return [];
+    _isSearching = true;
+    notifyListeners();
+
+    try {
+      final client = _ref.read(authProvider).client;
+      final remotePath = _ref.read(panelProvider(PanelSide.remote)).currentPath;
+
+      final results = await client.fullTextSearch(query, remotePath);
+      final files = results.map((map) => FileItem(
+        name: map['name'] as String? ?? 'Unknown',
+        isFolder: false,
+        uuid: map['uuid'] as String?,
+        size: map['size'] as int?,
+        path: map['path'] as String?,
+        updatedAt: DateTime.tryParse(map['lastModified'] ?? ''),
+      )).toList();
+
+      // Apply client-side filters
+      final filtered = applyFilters(files);
+
+      // Store snippets for UI display (keyed by file path or name)
+      _lastSnippets = {
+        for (final map in results)
+          (map['path'] ?? map['name']) as String: (map['snippet'] ?? '') as String,
+      };
+
+      _isSearching = false;
+      notifyListeners();
+      return filtered;
+    } catch (e) {
+      _ref.read(errorProvider).addError('Full-text search failed: $e');
+      _isSearching = false;
+      notifyListeners();
+      return [];
+    }
+  }
+
+  /// Snippets from the last full-text search, keyed by file path.
+  Map<String, String> _lastSnippets = {};
+  Map<String, String> get lastSnippets => Map.unmodifiable(_lastSnippets);
+
   Future<List<FileItem>> findFiles(String pattern) async {
     if (_isSearching) return [];
     _isSearching = true;

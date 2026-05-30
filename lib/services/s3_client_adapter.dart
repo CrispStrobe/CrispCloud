@@ -14,6 +14,7 @@ import 'package:crypto/crypto.dart';
 import 'package:flutter/foundation.dart';
 import 'package:http/http.dart' as http;
 import 'package:path/path.dart' as p;
+import 'package:shared_preferences/shared_preferences.dart';
 
 import 'cloud_storage_interface.dart';
 import 'log_service.dart';
@@ -676,6 +677,7 @@ class S3ClientAdapter extends CloudStorageClient {
   }
 
   /// Perform a full multipart upload: initiate, upload parts, complete.
+  /// Tracks uploaded parts via SharedPreferences for resume support.
   Future<void> _multipartUpload(
     String key,
     List<int> fileData, {
@@ -696,7 +698,11 @@ class S3ClientAdapter extends CloudStorageClient {
         final partData = fileData.sublist(offset, end);
 
         final etag = await _uploadPart(key, uploadId, partNumber, partData);
-        parts.add(_PartETag(partNumber, etag));
+        final part = _PartETag(partNumber, etag);
+        parts.add(part);
+
+        // Track each uploaded part for resume
+        await _trackUploadedPart(uploadId, key, part);
 
         uploaded += partData.length;
         onProgress?.call(uploaded, totalSize);
@@ -704,10 +710,216 @@ class S3ClientAdapter extends CloudStorageClient {
       }
 
       await _completeMultipartUpload(key, uploadId, parts);
+      await _clearUploadTracking(uploadId);
       _log.info('Multipart upload complete: $key ($partNumber parts)');
     } catch (e) {
-      _log.error('Multipart upload failed, aborting: $key', e);
-      await _abortMultipartUpload(key, uploadId);
+      _log.error('Multipart upload failed: $key (uploadId=$uploadId)', e);
+      // Do NOT abort — keep parts on server so the upload can be resumed.
+      // The tracking data is already persisted per-part.
+      rethrow;
+    }
+  }
+
+  // ---------------------------------------------------------------------------
+  // Multipart resume support
+  // ---------------------------------------------------------------------------
+
+  /// SharedPreferences key prefix for multipart upload tracking.
+  static const String _multipartTrackingPrefix = 'crisp_s3_multipart_';
+
+  /// In-memory tracking of active multipart uploads for persistence on failure.
+  final Map<String, _MultipartTrackingState> _activeMultipartUploads = {};
+
+  /// Track a successfully uploaded part in SharedPreferences.
+  Future<void> _trackUploadedPart(String uploadId, String key, _PartETag part) async {
+    // Update in-memory state
+    final state = _activeMultipartUploads.putIfAbsent(
+      uploadId,
+      () => _MultipartTrackingState(
+        uploadId: uploadId,
+        bucket: _bucket ?? '',
+        key: key,
+      ),
+    );
+    state.parts.add(part);
+
+    // Persist to SharedPreferences
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      final json = jsonEncode({
+        'uploadId': uploadId,
+        'bucket': _bucket,
+        'key': key,
+        'parts': state.parts
+            .map((p) => {'partNumber': p.partNumber, 'etag': p.etag})
+            .toList(),
+      });
+      await prefs.setString('$_multipartTrackingPrefix$uploadId', json);
+    } catch (e) {
+      _log.warn('Failed to persist multipart tracking: $e');
+    }
+  }
+
+  /// Clear tracking data after a successful upload or explicit abort.
+  Future<void> _clearUploadTracking(String uploadId) async {
+    _activeMultipartUploads.remove(uploadId);
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      await prefs.remove('$_multipartTrackingPrefix$uploadId');
+    } catch (e) {
+      _log.warn('Failed to clear multipart tracking: $e');
+    }
+  }
+
+  /// Persist any active multipart upload state to SharedPreferences.
+  /// Called by TransferNotifier when an S3 upload fails mid-multipart.
+  Future<void> persistInterruptedUploads() async {
+    // In-memory state is already persisted per-part in _trackUploadedPart,
+    // so this is a no-op but available as an explicit flush point.
+    _log.info('Persisting ${_activeMultipartUploads.length} interrupted uploads');
+  }
+
+  /// List parts already uploaded for a multipart upload via the S3 ListParts API.
+  Future<List<_PartETag>> listParts(String key, String uploadId) async {
+    _ensureAuth();
+    final parts = <_PartETag>[];
+    String? partMarker;
+
+    do {
+      final params = <String, String>{'uploadId': uploadId};
+      if (partMarker != null) {
+        params['part-number-marker'] = partMarker;
+      }
+
+      final uri = _buildUri(key, queryParams: params);
+      final response = await _signedRequest('GET', uri);
+
+      if (response.statusCode != 200) {
+        throw Exception(
+          'S3 ListParts failed (HTTP ${response.statusCode}): ${response.body}',
+        );
+      }
+
+      final body = response.body;
+
+      // Parse <Part> elements
+      final partMatches = RegExp(
+        r'<Part>\s*'
+        r'<PartNumber>(\d+)</PartNumber>\s*'
+        r'(?:<LastModified>[^<]*</LastModified>\s*)?'
+        r'<ETag>([^<]+)</ETag>\s*'
+        r'(?:<Size>[^<]*</Size>\s*)?'
+        r'</Part>',
+      ).allMatches(body);
+
+      for (final match in partMatches) {
+        final partNumber = int.parse(match.group(1)!);
+        final etag = match.group(2)!;
+        parts.add(_PartETag(partNumber, etag));
+      }
+
+      // Check for truncation
+      final isTruncated =
+          RegExp(r'<IsTruncated>true</IsTruncated>').hasMatch(body);
+      if (isTruncated) {
+        final markerMatch = RegExp(
+          r'<NextPartNumberMarker>(\d+)</NextPartNumberMarker>',
+        ).firstMatch(body);
+        partMarker = markerMatch?.group(1);
+        if (partMarker == null) break;
+      } else {
+        partMarker = null;
+      }
+    } while (partMarker != null);
+
+    return parts;
+  }
+
+  /// Retrieve all interrupted multipart uploads from SharedPreferences.
+  Future<List<Map<String, dynamic>>> getInterruptedUploads() async {
+    final prefs = await SharedPreferences.getInstance();
+    final results = <Map<String, dynamic>>[];
+
+    for (final key in prefs.getKeys()) {
+      if (key.startsWith(_multipartTrackingPrefix)) {
+        final json = prefs.getString(key);
+        if (json != null) {
+          try {
+            results.add(jsonDecode(json) as Map<String, dynamic>);
+          } catch (_) {}
+        }
+      }
+    }
+    return results;
+  }
+
+  /// Resume an interrupted multipart upload.
+  ///
+  /// Queries the S3 ListParts API to discover which parts are already on the
+  /// server, then uploads the remaining parts and completes the upload.
+  Future<void> resumeMultipartUpload(
+    String remotePath,
+    List<int> fileData, {
+    Function(int, int)? onProgress,
+    int partSize = defaultPartSize,
+  }) async {
+    _ensureAuth();
+    final key = _pathToKey(remotePath);
+
+    // Find the tracked upload for this key
+    final interrupted = await getInterruptedUploads();
+    final tracked = interrupted.where((u) => u['key'] == key).toList();
+    if (tracked.isEmpty) {
+      throw Exception('No interrupted upload found for $remotePath');
+    }
+    final uploadId = tracked.last['uploadId'] as String;
+    _log.info('Resuming multipart upload: $key (uploadId=$uploadId)');
+
+    // Query the server for actually uploaded parts
+    final existingParts = await listParts(key, uploadId);
+    final existingPartNumbers = existingParts.map((p) => p.partNumber).toSet();
+    _log.info('Found ${existingParts.length} existing parts on server');
+
+    final totalSize = fileData.length;
+    final allParts = <_PartETag>[...existingParts];
+
+    // Calculate bytes already uploaded
+    int uploaded = 0;
+    for (final part in existingParts) {
+      final offset = (part.partNumber - 1) * partSize;
+      final end = (offset + partSize > totalSize) ? totalSize : offset + partSize;
+      uploaded += (end - offset);
+    }
+    onProgress?.call(uploaded, totalSize);
+
+    try {
+      int partNumber = 1;
+      for (int offset = 0; offset < totalSize; offset += partSize) {
+        if (existingPartNumbers.contains(partNumber)) {
+          partNumber++;
+          continue;
+        }
+
+        final end = (offset + partSize > totalSize) ? totalSize : offset + partSize;
+        final partData = fileData.sublist(offset, end);
+
+        final etag = await _uploadPart(key, uploadId, partNumber, partData);
+        final part = _PartETag(partNumber, etag);
+        allParts.add(part);
+        await _trackUploadedPart(uploadId, key, part);
+
+        uploaded += partData.length;
+        onProgress?.call(uploaded, totalSize);
+        partNumber++;
+      }
+
+      // Sort parts by part number before completing
+      allParts.sort((a, b) => a.partNumber.compareTo(b.partNumber));
+      await _completeMultipartUpload(key, uploadId, allParts);
+      await _clearUploadTracking(uploadId);
+      _log.info('Resumed multipart upload complete: $key');
+    } catch (e) {
+      _log.error('Resumed multipart upload failed: $key', e);
       rethrow;
     }
   }
@@ -854,4 +1066,18 @@ class _PartETag {
   final int partNumber;
   final String etag;
   _PartETag(this.partNumber, this.etag);
+}
+
+/// In-memory tracking state for an active multipart upload.
+class _MultipartTrackingState {
+  final String uploadId;
+  final String bucket;
+  final String key;
+  final List<_PartETag> parts = [];
+
+  _MultipartTrackingState({
+    required this.uploadId,
+    required this.bucket,
+    required this.key,
+  });
 }

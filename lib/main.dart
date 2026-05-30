@@ -35,6 +35,7 @@ import 'services/log_service.dart';
 import 'services/thumbnail_service.dart';
 import 'services/proxy_service.dart';
 import 'services/secure_storage_service.dart';
+import 'services/secure_storage_web.dart';
 import 'services/theme_service.dart';
 import 'widgets/lock_screen.dart';
 
@@ -50,9 +51,19 @@ Future<void> main() async {
 
     _log.info('App starting...');
 
-    // Initialize secure storage and migrate credentials
-    final secureStorage = PlatformSecureStorage();
-    await CredentialMigration.migrateIfNeeded(secureStorage);
+    // Initialize secure storage and migrate credentials.
+    // On web, use encrypted localStorage with a master password.
+    // On native platforms, use OS-level secure storage (Keychain, etc.).
+    final SecureStorage secureStorage;
+    if (kIsWeb) {
+      final webStorage = WebEncryptedStorage(LocalStorageBackend());
+      // The master password prompt is handled by _MasterPasswordGate below.
+      // We pass the un-initialized storage and let the gate handle it.
+      secureStorage = webStorage;
+    } else {
+      secureStorage = PlatformSecureStorage();
+      await CredentialMigration.migrateIfNeeded(secureStorage);
+    }
 
     // Platform-specific config path
     String configPath;
@@ -226,7 +237,7 @@ class MyApp extends ConsumerWidget {
           GlobalCupertinoLocalizations.delegate,
         ],
         supportedLocales: AppLocalizations.supportedLocales,
-        home: const _AppLockGate(),
+        home: kIsWeb ? const _MasterPasswordGate() : const _AppLockGate(),
       ),
     );
   }
@@ -304,6 +315,121 @@ class _AppLockGateState extends ConsumerState<_AppLockGate> with WidgetsBindingO
   @override
   void dispose() {
     WidgetsBinding.instance.removeObserver(this);
+    super.dispose();
+  }
+}
+
+/// Gate widget shown on web that prompts for a master password to unlock
+/// encrypted credential storage before proceeding to the app.
+class _MasterPasswordGate extends ConsumerStatefulWidget {
+  const _MasterPasswordGate();
+
+  @override
+  ConsumerState<_MasterPasswordGate> createState() =>
+      _MasterPasswordGateState();
+}
+
+class _MasterPasswordGateState extends ConsumerState<_MasterPasswordGate> {
+  final _controller = TextEditingController();
+  String? _error;
+  bool _loading = false;
+
+  Future<void> _submit() async {
+    final password = _controller.text.trim();
+    if (password.isEmpty) return;
+
+    setState(() {
+      _loading = true;
+      _error = null;
+    });
+
+    try {
+      final storage = ref.read(secureStorageProvider) as WebEncryptedStorage;
+      await storage.initialize(password);
+      if (mounted) {
+        Navigator.of(context).pushReplacement(
+          MaterialPageRoute<void>(builder: (_) => const _AppLockGate()),
+        );
+      }
+    } on StateError catch (e) {
+      if (mounted) {
+        setState(() {
+          _error = e.message;
+          _loading = false;
+        });
+      }
+    } catch (e) {
+      if (mounted) {
+        setState(() {
+          _error = 'Failed to initialize: $e';
+          _loading = false;
+        });
+      }
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      body: Center(
+        child: ConstrainedBox(
+          constraints: const BoxConstraints(maxWidth: 400),
+          child: Card(
+            margin: const EdgeInsets.all(32),
+            child: Padding(
+              padding: const EdgeInsets.all(24),
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  const Icon(Icons.lock_outline, size: 48),
+                  const SizedBox(height: 16),
+                  Text(
+                    'CrispCloud — Web Vault',
+                    style: Theme.of(context).textTheme.titleLarge,
+                  ),
+                  const SizedBox(height: 8),
+                  const Text(
+                    'Enter your master password to unlock encrypted credential storage.',
+                    textAlign: TextAlign.center,
+                  ),
+                  const SizedBox(height: 24),
+                  TextField(
+                    controller: _controller,
+                    obscureText: true,
+                    autofocus: true,
+                    decoration: InputDecoration(
+                      labelText: 'Master Password',
+                      errorText: _error,
+                      border: const OutlineInputBorder(),
+                    ),
+                    onSubmitted: (_) => _submit(),
+                  ),
+                  const SizedBox(height: 16),
+                  SizedBox(
+                    width: double.infinity,
+                    child: ElevatedButton(
+                      onPressed: _loading ? null : _submit,
+                      child: _loading
+                          ? const SizedBox(
+                              width: 20,
+                              height: 20,
+                              child: CircularProgressIndicator(strokeWidth: 2),
+                            )
+                          : const Text('Unlock'),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+
+  @override
+  void dispose() {
+    _controller.dispose();
     super.dispose();
   }
 }
