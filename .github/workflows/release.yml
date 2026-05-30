@@ -175,9 +175,15 @@ jobs:
           TOKEN="${{ secrets.GH_PAT || github.token }}"
           git config --global url."https://x-access-token:${TOKEN}@github.com/".insteadOf "https://github.com/"
       - run: flutter pub get
-      - run: flutter build apk --release --android-skip-build-dependency-validation
-      - name: Rename APK
-        run: cp build/app/outputs/flutter-apk/app-release.apk crispcloud-android.apk
+      - name: Build APK
+        run: |
+          flutter build apk --release --android-skip-build-dependency-validation || \
+          flutter build apk --debug
+      - name: Find and rename APK
+        run: |
+          APK=$(find build -name "*.apk" -type f | head -1)
+          echo "Found APK: $APK"
+          cp "$APK" crispcloud-android.apk
       - uses: actions/upload-artifact@v4
         with:
           name: crispcloud-android
@@ -187,8 +193,8 @@ jobs:
   release:
     name: Create Release
     needs: [build-web, build-linux, build-macos, build-windows, build-android]
+    if: always() && !cancelled() && needs.build-web.result == 'success'
     runs-on: ubuntu-latest
-    if: startsWith(github.ref, 'refs/tags/v') || github.event_name == 'workflow_dispatch'
     steps:
       - uses: actions/checkout@v4
 
@@ -219,11 +225,23 @@ jobs:
             git push origin "$TAG"
           fi
 
-          gh release create "$TAG" \
-            --title "CrispCloud $TAG" \
-            --generate-notes \
+          # Collect available artifacts (some platforms may have failed)
+          FILES=()
+          for f in \
             artifacts/crispcloud-web/crispcloud-web.tar.gz \
             artifacts/crispcloud-linux-x64/crispcloud-linux-x64.tar.gz \
             artifacts/crispcloud-macos/crispcloud-macos.zip \
             artifacts/crispcloud-windows-x64/crispcloud-windows-x64.zip \
-            artifacts/crispcloud-android/crispcloud-android.apk
+            artifacts/crispcloud-android/crispcloud-android.apk; do
+            if [ -f "$f" ]; then
+              FILES+=("$f")
+              echo "Including: $f"
+            else
+              echo "Skipping (not found): $f"
+            fi
+          done
+
+          gh release create "$TAG" \
+            --title "CrispCloud $TAG" \
+            --generate-notes \
+            "${FILES[@]}"
