@@ -2,6 +2,36 @@
 
 Audit trail of bugs found, issues discovered, and fixes applied.
 
+## 2026-05-30 — Session 2: Security Hardening + Test Coverage
+
+### 7.2 Custom CA Certificate Support
+- **Updated `lib/services/cert_pinning_service.dart`**:
+  - `CustomCaCertInfo` class for cert metadata (subject, issuer, raw bytes)
+  - `addCustomCaCert(pemBytes)` / `removeCustomCaCert(index)` / `getCustomCaCerts()`
+  - `loadCustomCaCerts()` / `saveCustomCaCerts()` via SharedPreferences (base64 list)
+  - `validateWithCustomCAs(X509Certificate)` — matches cert issuer against stored CA subjects
+  - PEM parsing helpers: `_extractPemField()`, `_extractCnFromPem()`
+- **Updated `lib/services/proxy_service.dart`**:
+  - `ProxyHttpOverrides.createHttpClient()` injects custom CAs into `SecurityContext` via `setTrustedCertificatesBytes()`
+  - `badCertificateCallback` checks custom CAs as fallback when cert pinning rejects
+- **Updated `lib/widgets/proxy_settings_dialog.dart`**:
+  - "Custom CA Certificates" section with import button (file_picker for PEM/CRT/CER)
+  - List of imported certs with subject DN and delete buttons
+
+### 7.2 TLS Version Enforcement
+- **Updated `lib/services/cert_pinning_service.dart`**: `TlsVersion` enum (tls12/tls13/any), `setMinTlsVersion()` / `getMinTlsVersion()` with SharedPreferences
+- **Updated `lib/services/proxy_service.dart`**: `SecurityContext.allowLegacyUnsafeRenegotiation = false` for TLS 1.2+
+- **Updated `lib/widgets/proxy_settings_dialog.dart`**: "Minimum TLS Version" dropdown with warning on "Any"
+
+### Test Coverage Expansion (825 → 965, +140 tests)
+- **`test/proxy_service_test.dart`** (24 tests): ProxyConfig parsing, bypass matching, overrides, CRUD
+- **`test/tray_service_test.dart`** (10 tests): platform guards, uninitialized safety, dispose
+- **`test/background_sync_test.dart`** (16 tests): stub no-ops, scheduling, constants
+- **`test/thumbnail_service_test.dart`** (26 tests): supported extensions, key generation, memory cache
+- **`test/batch_rename_logic_test.dart`** (23 tests): unicode, edge cases, undo error handling
+- **`test/placeholder_service_test.dart`** (+19 tests): encode/decode edges, static helpers
+- **`test/custom_ca_test.dart`** (22 tests): CA management, TLS prefs, persistence
+
 ## 2026-05-30 — Stabilization + Core Gaps (Option B)
 
 ### Stabilization (v0.1.0)

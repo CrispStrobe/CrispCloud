@@ -8,23 +8,26 @@
 
 You are continuing development on **CrispCloud**, a cross-platform Flutter cloud file manager at `/mnt/akademie_storage/CrispCloud`. Read `PLAN.md` for the full roadmap and `HISTORY.md` for what's been done.
 
-The project uses the **Adapter pattern** (`CloudStorageClient` interface) with **11 providers** (Filen, Internxt, SFTP, WebDAV, S3, FTP, Google Drive, OneDrive, Dropbox, Nextcloud, pCloud). State management is **Riverpod 2** with 10+ focused providers. Tests are in `test/`, ~42+ files, ~400+ unit tests.
+The project uses the **Adapter pattern** (`CloudStorageClient` interface) with **11 providers** (Filen, Internxt, SFTP, WebDAV, S3, FTP, Google Drive, OneDrive, Dropbox, Nextcloud, pCloud). State management is **Riverpod 2** with 10+ focused providers. Tests are in `test/`, ~61 files, **965 unit tests**.
 
 ## What's Been Done (don't redo these)
 
-### Foundation (Phase 1)
+### Foundation (Phase 1) — ~100%
 - Secure credentials via `flutter_secure_storage` + auto-migration from plaintext
+- **Web encrypted credentials**: `WebEncryptedStorage` with PBKDF2 + AES-256-GCM, master password gate
 - `SecureStorage` abstraction with `InMemorySecureStorage` test double
 - Structured logging (`Log` service with ring buffer + export) — **migrated 33+ files from debugPrint**
 - Centralized `formatters.dart` (formatBytes/Date/Duration/Speed)
 - File decomposition: screen split to 4 files, context menu split, search dialogs extracted
 - **Riverpod 2 state management**: `AppState` split into `authProvider`, `panelProvider(side)`, `transferProvider`, `errorProvider`, `searchProvider`, `syncProvider`, `activePanelProvider`, `showPreviewProvider`, `bookmarksProvider`
 
-### Performance (Phase 2)
+### Performance (Phase 2) — ~95%
 - `uploadStream`/`downloadStream` on `CloudStorageClient` with SFTP native streaming
+- **Streaming wired to desktop/mobile**: `File.openRead()` → `uploadStream` with 2-chunk back-pressure, `downloadStream` → `File.openWrite()`
 - `TransferQueue` with 3 concurrent transfers, exponential backoff retry, cancel
 - Queue wired into `transferProvider.uploadFiles()`/`downloadFiles()`
 - `ListView.builder` with `itemExtent: 64` for virtual scrolling
+- **S3 multipart resume**: part tracking in SharedPreferences, `listParts` API, `resumeMultipartUpload()`
 
 ### Providers (Phase 3) — 9 total
 - **S3** adapter (715 lines): SigV4 signing, path/virtual-hosted auto-detect, XML parsing
@@ -68,12 +71,17 @@ The project uses the **Adapter pattern** (`CloudStorageClient` interface) with *
 - **Diff viewer**: side-by-side file comparison (LCS diff, sync scroll, line numbers)
 - **SFTP permissions**: chmod/chown via `PermissionsDialog` with rwx grid + presets
 
-### Security (Phase 7)
+### Power Features (Phase 6) — continued
+- **Full-text search**: GDrive (`fullText contains`), Dropbox (`search_v2`), OneDrive (`/search/query`), fallback (download+search text files), "Search file contents" checkbox, result snippets
+
+### Security (Phase 7) — ~95%
 - **Encryption**: `EncryptionService` (AES-256-GCM, PBKDF2) + `EncryptedStorageWrapper`
 - **Key management**: export/import hex key, BIP39 24-word mnemonic, backup bundle with verification
 - **Proxy support**: HTTP/SOCKS5 via `ProxyService` + env auto-detection + global `HttpOverrides`
 - **App lock**: PIN/password with salted SHA-256, auto-lock on timeout, setup/change/disable UI
 - **Certificate pinning**: SPKI SHA-256 for Google/Microsoft/Dropbox/Amazon, opt-in toggle
+- **Custom CA certificates**: import PEM/CRT/CER, persist as base64, inject into SecurityContext, issuer matching
+- **TLS version enforcement**: minimum TLS 1.2 (default), TLS 1.3 (strict), Any (user override), dropdown in proxy settings
 - Wired into connection dialog (toggle + passphrase), authProvider, and `KeyManagementDialog`
 
 ### Infrastructure
@@ -87,23 +95,28 @@ The project uses the **Adapter pattern** (`CloudStorageClient` interface) with *
 - **Column view**: Finder-style layout with 220px columns, toolbar cycles list→grid→column
 - **Video/Audio preview**: inline player via `video_player` (mp4/mov/avi/mkv/webm + mp3/wav/aac/flac/ogg), seek/play/pause/volume controls
 
+### Platform (Phase 8)
+- **iOS Files.app**: FileProvider extension (NSFileProviderReplicatedExtension, iOS 16+), browse+download, App Group credential sharing, Flutter bridge via MethodChannel
+
+### Testing
+- **965 tests** across ~61 test files, 0 failures, 7 skipped (env-gated live tests)
+
 ## What Needs to Be Done (in priority order)
 
 ### 1. Remaining Core Features
 - **Cryptomator vault format** (7.1): interop with Cyberduck/Mountain Duck
 - **SSH terminal** (6.2): embed `xterm` for SFTP connections
-- **Mobile background sync** (4.4): `workmanager` (Android) + `BGTaskScheduler` (iOS)
 
 ### 2. Platform Polish (Phase 8)
-- macOS: native menu bar, Finder extension, notarization
+- macOS: Finder extension, notarization, Mac App Store
 - Windows: Explorer context menu, Windows Hello, MSIX
 - Linux: .deb/.rpm/AppImage/Flatpak/Snap, XDG compliance
 - Android: SAF, Material You, foreground service, Play Store
-- iOS: Files.app integration, share extension, App Store
+- iOS: ~~Files.app integration~~ (done), share extension, App Store
 - Web: Service Worker, Web Push, OPFS
 
 ### 3. Distribution & Quality (Phase 10)
-- **i18n**: extract strings to ARB, support 9+ languages
+- **i18n**: EN + DE done; add French, Spanish, Portuguese, Chinese, Japanese, Korean, Arabic
 - **a11y**: screen reader labels, focus management, WCAG 2.1 AA
 - **CI/CD**: build all 6 platforms, code signing, auto-update
 - **Docs**: user guide, provider setup guides, plugin dev guide
@@ -135,8 +148,10 @@ The project uses the **Adapter pattern** (`CloudStorageClient` interface) with *
 | `lib/services/transfer_queue.dart` | Concurrent transfer manager |
 | `lib/widgets/file_panel.dart` | Panel orchestrator (tabs, toolbar, breadcrumbs, file list/grid, drag target) |
 | `lib/widgets/sync_dialog.dart` | Sync pair management UI |
-| `lib/services/proxy_service.dart` | HTTP/SOCKS5 proxy config + cert pinning, global HttpOverrides |
-| `lib/services/cert_pinning_service.dart` | SPKI SHA-256 certificate pinning for known providers |
+| `lib/services/proxy_service.dart` | HTTP/SOCKS5 proxy config + cert pinning + custom CAs, global HttpOverrides |
+| `lib/services/cert_pinning_service.dart` | SPKI SHA-256 cert pinning + custom CA certs + TLS version enforcement |
+| `lib/services/secure_storage_web.dart` | Web encrypted credentials (PBKDF2 + AES-256-GCM in localStorage) |
+| `lib/services/file_provider_bridge.dart` | Flutter ↔ iOS FileProvider extension bridge via MethodChannel |
 | `lib/services/app_lock_service.dart` | PIN/password lock with salted SHA-256 |
 | `lib/services/file_cache_service.dart` | LRU offline file cache (500MB default) |
 | `lib/services/thumbnail_service.dart` | Compute-isolate thumbnail generation + disk/memory cache |
