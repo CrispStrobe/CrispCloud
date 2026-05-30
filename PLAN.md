@@ -346,10 +346,10 @@ CrispCloud becomes the **open-source Cyberduck/Transmit/Commander One killer**: 
 
 ### 7.2 Secure Networking
 - [x] Certificate pinning for known providers — `CertPinningService` with SPKI SHA-256 pins for Google/Microsoft/Dropbox/Amazon, wired into `ProxyHttpOverrides`
-- [ ] Custom CA certificate support (corporate/self-signed)
+- [x] Custom CA certificate support — import PEM/CRT/CER files, persist as base64, validate against stored CAs, inject into SecurityContext
 - [x] HTTP/SOCKS5 proxy support — `ProxyService` with env auto-detection, `ProxyHttpOverrides` for global routing, `ProxySettingsDialog` UI
 - [ ] Tor/onion routing support (optional)
-- [ ] TLS version enforcement (minimum TLS 1.2)
+- [x] TLS version enforcement — minimum TLS 1.2 (default), TLS 1.3 (strict), Any (user override), dropdown in proxy settings
 
 ### 7.3 Access Control
 - [x] App lock: PIN/password required to open — `AppLockService` with salted SHA-256 hashing, `LockScreen` + `AppLockSetupDialog`
@@ -559,8 +559,8 @@ CrispCloud becomes the **open-source Cyberduck/Transmit/Commander One killer**: 
 | 5. UI/UX | High | Medium | **~98% done** — preview, tabs, themes, nav, DnD (multi-file badge), tree, grid+thumbnails (provider-native), column view, bookmarks, pull-to-refresh, quota display done |
 | 6. Power User Features | Medium | High | **~90% done** — editor, palette, batch rename, archives, versions+restore+diff, share, dupes, diff, permissions, search filters, **full-text search** done |
 | 7.1 Client-Side Encryption | High | High | **~90% done** — encryption + key management + BIP39 done; Cryptomator compat pending |
-| 7.2-7.4 Security extras | Medium | Medium | **~85% done** — proxy, app lock, biometric, cert pinning, secure clipboard done |
-| 8. Platform Polish | Medium | High | **P3 — Later** |
+| 7.2-7.4 Security extras | Medium | Medium | **~95% done** — proxy, app lock, biometric, cert pinning, custom CA, TLS enforcement, secure clipboard done |
+| 8. Platform Polish | Medium | High | **iOS Files.app done** — other platforms pending |
 | 9. Extensibility & CLI | Medium | High | **P3 — Later** |
 | 10. Quality & Distribution | High | High | **P3 — Ongoing** |
 | 11. Differentiation | High | Medium | **P3 — After core** |

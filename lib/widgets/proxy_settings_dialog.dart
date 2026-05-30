@@ -2,11 +2,15 @@
 //
 // Dialog for configuring HTTP/SOCKS5 proxy settings.
 
+import 'dart:typed_data';
+
+import 'package:file_picker/file_picker.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../main.dart' show certPinningProvider;
 import '../providers/core_providers.dart';
+import '../services/cert_pinning_service.dart';
 import '../services/proxy_service.dart';
 
 class ProxySettingsDialog extends ConsumerStatefulWidget {
@@ -24,6 +28,8 @@ class _ProxySettingsDialogState extends ConsumerState<ProxySettingsDialog> {
   final _passwordController = TextEditingController();
   final _noProxyController = TextEditingController();
   bool _certPinningEnabled = false;
+  late TlsVersion _minTlsVersion;
+  List<CustomCaCertInfo> _customCaCerts = [];
 
   @override
   void initState() {
@@ -36,6 +42,8 @@ class _ProxySettingsDialogState extends ConsumerState<ProxySettingsDialog> {
     _passwordController.text = config.password ?? '';
     _noProxyController.text = config.noProxy;
     _certPinningEnabled = ref.read(certPinningProvider).isEnabled;
+    _minTlsVersion = ref.read(certPinningProvider).getMinTlsVersion();
+    _customCaCerts = ref.read(certPinningProvider).getCustomCaCertInfos();
   }
 
   @override
@@ -161,6 +169,93 @@ class _ProxySettingsDialogState extends ConsumerState<ProxySettingsDialog> {
               dense: true,
               contentPadding: EdgeInsets.zero,
             ),
+            const Divider(),
+            // --- Minimum TLS Version ---
+            Padding(
+              padding: const EdgeInsets.symmetric(vertical: 4),
+              child: DropdownButtonFormField<TlsVersion>(
+                value: _minTlsVersion,
+                decoration: const InputDecoration(
+                  labelText: 'Minimum TLS Version',
+                  border: OutlineInputBorder(),
+                  isDense: true,
+                ),
+                items: const [
+                  DropdownMenuItem(value: TlsVersion.tls12, child: Text('TLS 1.2 (recommended)')),
+                  DropdownMenuItem(value: TlsVersion.tls13, child: Text('TLS 1.3 (strict)')),
+                  DropdownMenuItem(value: TlsVersion.any, child: Text('Any (legacy override)')),
+                ],
+                onChanged: (v) => setState(() => _minTlsVersion = v ?? TlsVersion.tls12),
+              ),
+            ),
+            if (_minTlsVersion == TlsVersion.any)
+              Container(
+                margin: const EdgeInsets.only(top: 4, bottom: 4),
+                padding: const EdgeInsets.all(8),
+                decoration: BoxDecoration(
+                  color: Colors.orange.withOpacity(0.12),
+                  borderRadius: BorderRadius.circular(8),
+                ),
+                child: const Row(
+                  children: [
+                    Icon(Icons.warning_amber_rounded, size: 16, color: Colors.orange),
+                    SizedBox(width: 8),
+                    Expanded(
+                      child: Text(
+                        'Allowing any TLS version may expose connections to downgrade attacks.',
+                        style: TextStyle(fontSize: 11, color: Colors.orange),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            const Divider(),
+            // --- Custom CA Certificates ---
+            Padding(
+              padding: const EdgeInsets.symmetric(vertical: 4),
+              child: Text(
+                'Custom CA Certificates',
+                style: Theme.of(context).textTheme.titleSmall,
+              ),
+            ),
+            if (_customCaCerts.isEmpty)
+              const Padding(
+                padding: EdgeInsets.only(bottom: 8),
+                child: Text(
+                  'No custom CA certificates imported.',
+                  style: TextStyle(fontSize: 12, color: Colors.grey),
+                ),
+              ),
+            for (var i = 0; i < _customCaCerts.length; i++)
+              ListTile(
+                dense: true,
+                contentPadding: EdgeInsets.zero,
+                leading: const Icon(Icons.security, size: 18),
+                title: Text(
+                  _customCaCerts[i].subjectDn,
+                  style: const TextStyle(fontSize: 12),
+                  overflow: TextOverflow.ellipsis,
+                ),
+                trailing: IconButton(
+                  icon: const Icon(Icons.delete_outline, size: 18),
+                  tooltip: 'Remove certificate',
+                  onPressed: () async {
+                    await ref.read(certPinningProvider).removeCustomCaCert(i);
+                    setState(() {
+                      _customCaCerts =
+                          ref.read(certPinningProvider).getCustomCaCertInfos();
+                    });
+                  },
+                ),
+              ),
+            Align(
+              alignment: Alignment.centerLeft,
+              child: TextButton.icon(
+                icon: const Icon(Icons.add, size: 16),
+                label: const Text('Import Certificate', style: TextStyle(fontSize: 13)),
+                onPressed: _importCaCert,
+              ),
+            ),
           ],
         ),
       ),
@@ -185,6 +280,24 @@ class _ProxySettingsDialogState extends ConsumerState<ProxySettingsDialog> {
     );
   }
 
+  Future<void> _importCaCert() async {
+    final result = await FilePicker.platform.pickFiles(
+      type: FileType.custom,
+      allowedExtensions: ['pem', 'crt', 'cer'],
+      withData: true,
+    );
+    if (result == null || result.files.isEmpty) return;
+    final bytes = result.files.first.bytes;
+    if (bytes == null || bytes.isEmpty) return;
+
+    await ref.read(certPinningProvider).addCustomCaCert(Uint8List.fromList(bytes));
+    if (mounted) {
+      setState(() {
+        _customCaCerts = ref.read(certPinningProvider).getCustomCaCertInfos();
+      });
+    }
+  }
+
   Future<void> _save() async {
     final port = int.tryParse(_portController.text) ?? 0;
     if (_type != ProxyType.none && (_hostController.text.isEmpty || port <= 0)) {
@@ -205,9 +318,10 @@ class _ProxySettingsDialogState extends ConsumerState<ProxySettingsDialog> {
 
     await ref.read(proxyServiceProvider).save(config);
 
-    // Save cert pinning setting and re-apply global overrides
+    // Save cert pinning and TLS settings, then re-apply global overrides
     final pinning = ref.read(certPinningProvider);
     await pinning.setEnabled(_certPinningEnabled);
+    await pinning.setMinTlsVersion(_minTlsVersion);
     ref.read(proxyServiceProvider).applyGlobally();
 
     if (mounted) {

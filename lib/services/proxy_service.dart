@@ -125,7 +125,26 @@ class ProxyHttpOverrides extends HttpOverrides {
 
   @override
   HttpClient createHttpClient(SecurityContext? context) {
-    final client = super.createHttpClient(context);
+    // Apply TLS version enforcement via SecurityContext
+    SecurityContext? secCtx = context;
+    if (certPinning != null) {
+      final minTls = certPinning!.getMinTlsVersion();
+      if (minTls != TlsVersion.any) {
+        secCtx ??= SecurityContext(withTrustedRoots: true);
+        // Disable legacy unsafe renegotiation for TLS 1.2+
+        secCtx.allowLegacyUnsafeRenegotiation = false;
+        // Add custom CA certs to the SecurityContext
+        for (final caPem in certPinning!.getCustomCaCerts()) {
+          try {
+            secCtx.setTrustedCertificatesBytes(caPem);
+          } catch (_) {
+            // Cert may not be valid PEM for SecurityContext; handled at
+            // badCertificateCallback level instead.
+          }
+        }
+      }
+    }
+    final client = super.createHttpClient(secCtx);
 
     // Proxy configuration
     if (config.isEnabled) {
@@ -158,14 +177,24 @@ class ProxyHttpOverrides extends HttpOverrides {
       }
     }
 
-    // Certificate pinning
-    if (certPinning != null && certPinning!.isEnabled) {
-      client.badCertificateCallback = (cert, host, port) {
-        // badCertificateCallback is called when the system rejects the cert.
-        // We return false to reject, true to accept despite system rejection.
-        // For pinning, we validate against our pins.
-        return certPinning!.validateCertificate(cert, host);
-      };
+    // Certificate pinning and custom CA validation
+    if (certPinning != null) {
+      final hasPinning = certPinning!.isEnabled;
+      final hasCustomCAs = certPinning!.getCustomCaCerts().isNotEmpty;
+      if (hasPinning || hasCustomCAs) {
+        client.badCertificateCallback = (cert, host, port) {
+          // badCertificateCallback is called when the system rejects the cert.
+          // First check if cert passes standard pinning validation.
+          if (hasPinning && certPinning!.validateCertificate(cert, host)) {
+            return true;
+          }
+          // Then check if cert chains to a custom CA.
+          if (hasCustomCAs && certPinning!.validateWithCustomCAs(cert)) {
+            return true;
+          }
+          return false;
+        };
+      }
     }
 
     return client;

@@ -21,6 +21,31 @@ import 'package:shared_preferences/shared_preferences.dart';
 
 import 'log_service.dart';
 
+/// Minimum TLS version enforcement preference.
+enum TlsVersion {
+  /// Allow any TLS version (legacy override).
+  any,
+
+  /// Require TLS 1.2 or higher (default).
+  tls12,
+
+  /// Require TLS 1.3 or higher (strict).
+  tls13,
+}
+
+/// Information about a stored custom CA certificate.
+class CustomCaCertInfo {
+  final String subjectDn;
+  final String issuerDn;
+  final Uint8List pemBytes;
+
+  const CustomCaCertInfo({
+    required this.subjectDn,
+    required this.issuerDn,
+    required this.pemBytes,
+  });
+}
+
 /// Known provider certificate pins.
 ///
 /// Each entry maps a hostname pattern to a set of SHA-256 fingerprints
@@ -114,14 +139,21 @@ const _knownPins = <CertPinSet>[
 class CertPinningService {
   static final _log = Log('CertPinning');
   static const _enabledKey = 'cert_pinning_enabled';
+  static const _customCaCertsKey = 'custom_ca_certs';
+  static const _minTlsVersionKey = 'min_tls_version';
 
   bool _enabled = false;
   bool get isEnabled => _enabled;
+
+  final List<Uint8List> _customCaCerts = [];
+  TlsVersion _minTlsVersion = TlsVersion.tls12;
 
   /// Load setting from SharedPreferences.
   Future<void> load() async {
     final prefs = await SharedPreferences.getInstance();
     _enabled = prefs.getBool(_enabledKey) ?? false;
+    await loadCustomCaCerts();
+    await _loadMinTlsVersion();
   }
 
   /// Enable or disable certificate pinning.
@@ -184,6 +216,141 @@ class CertPinningService {
     } catch (e) {
       _log.error('Error computing cert hash', e);
       return null;
+    }
+  }
+
+  // ---------------------------------------------------------------------------
+  // Custom CA certificates
+  // ---------------------------------------------------------------------------
+
+  /// Add a custom CA certificate from PEM-encoded bytes.
+  Future<void> addCustomCaCert(Uint8List pemBytes) async {
+    _customCaCerts.add(pemBytes);
+    await saveCustomCaCerts();
+    _log.info('Added custom CA certificate (${_customCaCerts.length} total)');
+  }
+
+  /// Remove a custom CA certificate by index.
+  Future<void> removeCustomCaCert(int index) async {
+    if (index < 0 || index >= _customCaCerts.length) return;
+    _customCaCerts.removeAt(index);
+    await saveCustomCaCerts();
+    _log.info('Removed custom CA certificate (${_customCaCerts.length} remaining)');
+  }
+
+  /// Return list of stored custom CA certs (PEM bytes).
+  List<Uint8List> getCustomCaCerts() => List.unmodifiable(_customCaCerts);
+
+  /// Get descriptive info for each stored custom CA cert for UI display.
+  List<CustomCaCertInfo> getCustomCaCertInfos() {
+    return _customCaCerts.map((pem) {
+      final text = utf8.decode(pem, allowMalformed: true);
+      final subject = _extractPemField(text, 'Subject:') ??
+          _extractCnFromPem(text) ??
+          'Unknown';
+      final issuer = _extractPemField(text, 'Issuer:') ?? subject;
+      return CustomCaCertInfo(
+        subjectDn: subject,
+        issuerDn: issuer,
+        pemBytes: pem,
+      );
+    }).toList();
+  }
+
+  /// Load custom CA certs from SharedPreferences.
+  Future<void> loadCustomCaCerts() async {
+    final prefs = await SharedPreferences.getInstance();
+    final stored = prefs.getStringList(_customCaCertsKey);
+    _customCaCerts.clear();
+    if (stored != null) {
+      for (final b64 in stored) {
+        try {
+          _customCaCerts.add(base64Decode(b64));
+        } catch (e) {
+          _log.warn('Skipping corrupt custom CA cert entry', e);
+        }
+      }
+    }
+    if (_customCaCerts.isNotEmpty) {
+      _log.info('Loaded ${_customCaCerts.length} custom CA certificate(s)');
+    }
+  }
+
+  /// Save custom CA certs to SharedPreferences as base64 list.
+  Future<void> saveCustomCaCerts() async {
+    final prefs = await SharedPreferences.getInstance();
+    final encoded = _customCaCerts.map((b) => base64Encode(b)).toList();
+    await prefs.setStringList(_customCaCertsKey, encoded);
+  }
+
+  /// Validate a certificate against custom CAs.
+  ///
+  /// Returns true if the cert's issuer DN contains the subject DN (or CN)
+  /// of any stored custom CA, indicating the cert chains to a trusted
+  /// custom CA.
+  bool validateWithCustomCAs(X509Certificate cert) {
+    if (_customCaCerts.isEmpty) return false;
+    final certIssuer = cert.issuer.toLowerCase();
+    for (final caPem in _customCaCerts) {
+      final caText = utf8.decode(caPem, allowMalformed: true);
+      final caSubject = (_extractPemField(caText, 'Subject:') ??
+              _extractCnFromPem(caText) ??
+              '')
+          .toLowerCase();
+      if (caSubject.isNotEmpty && certIssuer.contains(caSubject)) {
+        _log.info('Certificate accepted via custom CA: $caSubject');
+        return true;
+      }
+      // Also match if the full PEM subject appears as a substring of the issuer
+      final caCn = (_extractCnFromPem(caText) ?? '').toLowerCase();
+      if (caCn.isNotEmpty && certIssuer.contains(caCn)) {
+        _log.info('Certificate accepted via custom CA CN: $caCn');
+        return true;
+      }
+    }
+    return false;
+  }
+
+  /// Extract a labelled field from PEM text (e.g. "Subject: ...").
+  static String? _extractPemField(String text, String label) {
+    final idx = text.indexOf(label);
+    if (idx < 0) return null;
+    final start = idx + label.length;
+    var end = text.indexOf('\n', start);
+    if (end < 0) end = text.length;
+    return text.substring(start, end).trim();
+  }
+
+  /// Try to extract a CN= value from PEM text.
+  static String? _extractCnFromPem(String text) {
+    final re = RegExp(r'CN\s*=\s*([^\n,/]+)', caseSensitive: false);
+    final match = re.firstMatch(text);
+    return match?.group(1)?.trim();
+  }
+
+  // ---------------------------------------------------------------------------
+  // TLS version enforcement
+  // ---------------------------------------------------------------------------
+
+  /// Get the current minimum TLS version setting.
+  TlsVersion getMinTlsVersion() => _minTlsVersion;
+
+  /// Set the minimum TLS version and persist.
+  Future<void> setMinTlsVersion(TlsVersion version) async {
+    _minTlsVersion = version;
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setString(_minTlsVersionKey, version.name);
+    _log.info('Minimum TLS version set to ${version.name}');
+  }
+
+  Future<void> _loadMinTlsVersion() async {
+    final prefs = await SharedPreferences.getInstance();
+    final stored = prefs.getString(_minTlsVersionKey);
+    if (stored != null) {
+      _minTlsVersion = TlsVersion.values.firstWhere(
+        (v) => v.name == stored,
+        orElse: () => TlsVersion.tls12,
+      );
     }
   }
 
