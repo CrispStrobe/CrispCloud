@@ -176,14 +176,9 @@ jobs:
           git config --global url."https://x-access-token:${TOKEN}@github.com/".insteadOf "https://github.com/"
       - run: flutter pub get
       - name: Build APK
-        run: |
-          flutter build apk --release --android-skip-build-dependency-validation || \
-          flutter build apk --debug
-      - name: Find and rename APK
-        run: |
-          APK=$(find build -name "*.apk" -type f | head -1)
-          echo "Found APK: $APK"
-          cp "$APK" crispcloud-android.apk
+        run: flutter build apk --release
+      - name: Rename APK
+        run: cp build/app/outputs/flutter-apk/app-release.apk crispcloud-android.apk
       - uses: actions/upload-artifact@v4
         with:
           name: crispcloud-android

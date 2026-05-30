@@ -3,7 +3,6 @@
 import java.util.Properties
 import java.io.FileInputStream
 
-// Load the key.properties file
 val keyPropertiesFile = rootProject.file("key.properties")
 val keyProperties = Properties()
 if (keyPropertiesFile.exists()) {
@@ -12,7 +11,6 @@ if (keyPropertiesFile.exists()) {
 
 plugins {
     id("com.android.application")
-    id("kotlin-android")
     id("dev.flutter.flutter-gradle-plugin")
 }
 
@@ -26,10 +24,6 @@ android {
         targetCompatibility = JavaVersion.VERSION_17
     }
 
-    kotlinOptions {
-        jvmTarget = "17"
-    }
-
     signingConfigs {
         create("release") {
             keyAlias = keyProperties["keyAlias"] as String?
@@ -41,9 +35,7 @@ android {
 
     defaultConfig {
         applicationId = "com.CrispStrobe.cloud_dart"
-        // --- FIX: super_drag_and_drop requires minSdk 23 ---
         minSdk = flutter.minSdkVersion
-        // --- END FIX ---
         targetSdk = flutter.targetSdkVersion
         versionCode = flutter.versionCode
         versionName = flutter.versionName
@@ -51,7 +43,6 @@ android {
 
     buildTypes {
         release {
-            // Use release keystore if key.properties exists, otherwise fall back to debug signing
             signingConfig = if (keyPropertiesFile.exists())
                 signingConfigs.getByName("release")
             else
@@ -62,8 +53,4 @@ android {
 
 flutter {
     source = "../.."
-}
-
-dependencies {
-    implementation(kotlin("stdlib-jdk8"))
 }
