@@ -59,7 +59,7 @@ class _PermissionsDialogState extends ConsumerState<_PermissionsDialog> {
       final attrs = await client.getAttributes(path);
 
       // Parse permissions from SftpFileAttrs
-      final mode = attrs.permissions?.mode ?? 0;
+      final mode = attrs.mode?.value ?? 0;
       _parseMode(mode);
 
       // Load ownership

@@ -95,7 +95,7 @@ void showFileContextMenu(BuildContext context, WidgetRef ref, PanelSide side, Fi
     final oppositeSide = side == PanelSide.local ? PanelSide.remote : PanelSide.local;
     final oppositePanel = ref.read(panelProvider(oppositeSide));
     // Look for a file with the same name in the opposite panel
-    final matchingFile = oppositePanel.files.where((f) => f.name == file.name && !f.isFolder).toList();
+    final matchingFile = (oppositePanel.files ?? []).where((f) => f.name == file.name && !f.isFolder).toList();
     if (matchingFile.isNotEmpty) {
       items.add(
         PopupMenuItem(
