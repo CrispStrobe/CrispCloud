@@ -12,6 +12,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:path/path.dart' as p;
 
 import '../models/panel_side.dart';
+import '../providers/bookmarks_provider.dart';
 import '../providers/providers.dart';
 
 class TreeSidebar extends ConsumerStatefulWidget {
@@ -61,6 +62,26 @@ class _TreeSidebarState extends ConsumerState<TreeSidebar> {
                   ),
                 ),
                 IconButton(
+                  icon: Icon(
+                    ref.watch(bookmarksProvider).isBookmarked(panel.currentPath, activePanel)
+                        ? Icons.bookmark
+                        : Icons.bookmark_border,
+                    size: 14,
+                  ),
+                  padding: EdgeInsets.zero,
+                  constraints: const BoxConstraints(),
+                  tooltip: 'Bookmark current folder',
+                  onPressed: () {
+                    final bm = ref.read(bookmarksProvider);
+                    if (bm.isBookmarked(panel.currentPath, activePanel)) {
+                      bm.remove(panel.currentPath, activePanel);
+                    } else {
+                      bm.add(_pathLabel(panel.currentPath), panel.currentPath, activePanel);
+                    }
+                  },
+                ),
+                const SizedBox(width: 4),
+                IconButton(
                   icon: const Icon(Icons.refresh, size: 14),
                   padding: EdgeInsets.zero,
                   constraints: const BoxConstraints(),
@@ -73,6 +94,8 @@ class _TreeSidebarState extends ConsumerState<TreeSidebar> {
               ],
             ),
           ),
+          // Bookmarks section
+          _buildBookmarks(context, activePanel),
           // Tree content
           Expanded(
             child: SingleChildScrollView(
@@ -81,6 +104,46 @@ class _TreeSidebarState extends ConsumerState<TreeSidebar> {
           ),
         ],
       ),
+    );
+  }
+
+  Widget _buildBookmarks(BuildContext context, PanelSide activePanel) {
+    final bm = ref.watch(bookmarksProvider);
+    final filtered = bm.bookmarks.where((b) => b.side == activePanel).toList();
+    if (filtered.isEmpty) return const SizedBox.shrink();
+
+    final theme = Theme.of(context);
+    final panel = ref.read(panelProvider(activePanel));
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Padding(
+          padding: const EdgeInsets.only(left: 12, top: 8, bottom: 4),
+          child: Text('BOOKMARKS', style: TextStyle(
+            fontSize: 10, fontWeight: FontWeight.w700, color: theme.colorScheme.onSurfaceVariant,
+            letterSpacing: 0.5,
+          )),
+        ),
+        ...filtered.map((b) => InkWell(
+          onTap: () => panel.navigateToPath(b.path),
+          child: Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 3),
+            child: Row(
+              children: [
+                Icon(Icons.bookmark, size: 14, color: theme.colorScheme.primary),
+                const SizedBox(width: 6),
+                Expanded(child: Text(b.name, style: const TextStyle(fontSize: 12), overflow: TextOverflow.ellipsis)),
+                InkWell(
+                  onTap: () => ref.read(bookmarksProvider).remove(b.path, b.side),
+                  child: Icon(Icons.close, size: 12, color: theme.colorScheme.onSurfaceVariant),
+                ),
+              ],
+            ),
+          ),
+        )),
+        Divider(height: 1, color: theme.dividerColor),
+      ],
     );
   }
 

@@ -24,6 +24,9 @@ dependencies:
   drift: ^2.22.1
   sqlite3_flutter_libs: ^0.5.28
 
+  # Markdown preview
+  flutter_markdown: ^0.7.6
+
   # Filesystem watching (sync engine)
   watcher: ^1.1.0
 

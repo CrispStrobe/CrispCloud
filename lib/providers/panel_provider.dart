@@ -4,11 +4,13 @@
 // Used as a family provider keyed by PanelSide.
 
 import 'dart:async';
+import 'dart:convert';
 import 'dart:io';
 
 import 'package:flutter/foundation.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:path/path.dart' as p;
+import 'package:shared_preferences/shared_preferences.dart';
 
 import '../models/file_item.dart';
 import '../models/panel_side.dart';
@@ -44,7 +46,7 @@ class PanelNotifier extends ChangeNotifier {
 
   PanelNotifier(this._ref, this.side)
       : _localFileService = _ref.read(localFileServiceProvider) {
-    _initFirstTab();
+    _restoreTabs();
     if (side == PanelSide.local) {
       _initializeLocalPath();
     }
@@ -381,6 +383,8 @@ class PanelNotifier extends ChangeNotifier {
   // --- Tabs ---
   String _nextTabId() => 'tab_${_tabIdCounter++}';
 
+  String get _tabStorageKey => 'panel_tabs_${side.name}';
+
   void _initFirstTab() {
     final id = _nextTabId();
     final path = side == PanelSide.local ? _localFileService.currentPath : _remotePath;
@@ -388,11 +392,62 @@ class PanelNotifier extends ChangeNotifier {
     _activeTabId = id;
   }
 
+  /// Restore tabs from SharedPreferences. Falls back to single default tab.
+  Future<void> _restoreTabs() async {
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      final raw = prefs.getString(_tabStorageKey);
+      if (raw != null) {
+        final List<dynamic> list = json.decode(raw);
+        if (list.isNotEmpty) {
+          _tabs.clear();
+          for (final item in list) {
+            final id = _nextTabId();
+            _tabs.add(PanelTab(
+              id: id,
+              path: item['path'] ?? '/',
+              isPinned: item['pinned'] == true,
+            ));
+          }
+          final savedActiveIdx = prefs.getInt('${_tabStorageKey}_active') ?? 0;
+          _activeTabId = _tabs[savedActiveIdx.clamp(0, _tabs.length - 1)].id;
+
+          // Sync local file service to restored path
+          if (side == PanelSide.local) {
+            final tab = activeTab;
+            if (tab != null) _localFileService.currentPath = tab.path;
+          } else {
+            final tab = activeTab;
+            if (tab != null) _remotePath = tab.path;
+          }
+          notifyListeners();
+          return;
+        }
+      }
+    } catch (e) {
+      debugPrint('Tab restore failed: $e');
+    }
+    _initFirstTab();
+  }
+
+  /// Persist current tabs to SharedPreferences.
+  Future<void> _saveTabs() async {
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      final list = _tabs.map((t) => {'path': t.path, 'pinned': t.isPinned}).toList();
+      await prefs.setString(_tabStorageKey, json.encode(list));
+      await prefs.setInt('${_tabStorageKey}_active', _tabs.indexWhere((t) => t.id == _activeTabId).clamp(0, _tabs.length - 1));
+    } catch (e) {
+      debugPrint('Tab save failed: $e');
+    }
+  }
+
   void addTab({String? path}) {
     final id = _nextTabId();
     _tabs.add(PanelTab(id: id, path: path ?? currentPath));
     _activeTabId = id;
     notifyListeners();
+    _saveTabs();
   }
 
   void closeTab(String tabId) {
@@ -406,6 +461,7 @@ class PanelNotifier extends ChangeNotifier {
       _activeTabId = _tabs[newIdx].id;
     }
     notifyListeners();
+    _saveTabs();
   }
 
   void selectTab(String tabId) {
@@ -419,6 +475,7 @@ class PanelNotifier extends ChangeNotifier {
       }
     }
     notifyListeners();
+    _saveTabs();
     refresh();
   }
 
@@ -426,6 +483,7 @@ class PanelNotifier extends ChangeNotifier {
     final tab = _tabs.firstWhere((t) => t.id == tabId, orElse: () => _tabs.first);
     tab.isPinned = !tab.isPinned;
     notifyListeners();
+    _saveTabs();
   }
 
   void _syncTabPath() {
@@ -434,6 +492,7 @@ class PanelNotifier extends ChangeNotifier {
       tab.path = currentPath;
       tab.updateLabel();
     }
+    _saveTabs();
   }
 
   // --- Internal loading ---

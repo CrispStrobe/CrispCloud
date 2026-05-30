@@ -3,6 +3,7 @@
 // Barrel export for all Riverpod providers.
 
 export 'auth_provider.dart';
+export 'bookmarks_provider.dart';
 export 'core_providers.dart';
 export 'error_provider.dart';
 export 'panel_provider.dart';

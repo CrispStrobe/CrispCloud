@@ -12,8 +12,10 @@ import '../providers/providers.dart';
 import '../utils/formatters.dart';
 import 'file_list_view.dart' show getFileIcon;
 
+import 'package:flutter_markdown/flutter_markdown.dart';
+
 /// File types we can preview inline.
-enum PreviewType { image, text, none }
+enum PreviewType { image, text, markdown, none }
 
 PreviewType _classifyFile(String name) {
   final ext = name.split('.').last.toLowerCase();
@@ -26,8 +28,10 @@ PreviewType _classifyFile(String name) {
     case 'webp':
     case 'ico':
       return PreviewType.image;
-    case 'txt':
     case 'md':
+    case 'markdown':
+      return PreviewType.markdown;
+    case 'txt':
     case 'json':
     case 'yaml':
     case 'yml':
@@ -172,7 +176,7 @@ class _PreviewPaneState extends ConsumerState<PreviewPane> {
           _previewBytes = bytes;
           _loading = false;
         });
-      } else {
+      } else if (type == PreviewType.text || type == PreviewType.markdown) {
         // Decode as text (UTF-8 with fallback)
         try {
           _textContent = String.fromCharCodes(bytes);
@@ -300,6 +304,24 @@ class _PreviewPaneState extends ConsumerState<PreviewPane> {
             _previewBytes!,
             fit: BoxFit.contain,
             errorBuilder: (_, e, __) => _buildMetadataView(context, file),
+          ),
+        ),
+      );
+    }
+
+    // Markdown preview
+    if (_textContent != null && _classifyFile(file.name) == PreviewType.markdown) {
+      return Container(
+        color: theme.colorScheme.surfaceContainerLowest,
+        child: Markdown(
+          data: _textContent!,
+          selectable: true,
+          padding: const EdgeInsets.all(12),
+          styleSheet: MarkdownStyleSheet.fromTheme(theme).copyWith(
+            codeblockDecoration: BoxDecoration(
+              color: theme.colorScheme.surfaceContainerHighest,
+              borderRadius: BorderRadius.circular(4),
+            ),
           ),
         ),
       );

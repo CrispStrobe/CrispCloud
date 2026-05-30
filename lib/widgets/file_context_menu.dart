@@ -14,6 +14,8 @@ import '../utils/formatters.dart' show formatBytes, formatDateFull;
 import 'package:path/path.dart' as p;
 import 'batch_rename_dialog.dart' show showBatchRenameDialog;
 import 'file_list_view.dart' show getFileIcon;
+import 'share_link_dialog.dart' show showShareLinkDialog;
+import 'version_history_dialog.dart' show showVersionHistoryDialog;
 
 void showFileContextMenu(BuildContext context, WidgetRef ref, PanelSide side, FileItem file, Offset position) {
   final panel = ref.read(panelProvider(side));
@@ -187,6 +189,31 @@ void showFileContextMenu(BuildContext context, WidgetRef ref, PanelSide side, Fi
           Duration.zero,
           () => showBatchRenameDialog(context, ref, side, files),
         ),
+      ),
+    );
+  }
+
+  // Share link (remote, single file, provider supports sharing)
+  if (side == PanelSide.remote && !isMultiSelect && ref.read(authProvider).client.supportsSharing) {
+    items.add(
+      PopupMenuItem(
+        child: const Row(
+          children: [Icon(Icons.link), SizedBox(width: 8), Text('Share Link')],
+        ),
+        onTap: () => Future.delayed(Duration.zero, () => showShareLinkDialog(context, ref, file)),
+      ),
+    );
+  }
+
+  // Version history (remote, single file, provider supports versioning)
+  if (side == PanelSide.remote && !isMultiSelect && !isSingleFolder && ref.read(authProvider).client.supportsVersioning) {
+    items.add(const PopupMenuDivider());
+    items.add(
+      PopupMenuItem(
+        child: const Row(
+          children: [Icon(Icons.history), SizedBox(width: 8), Text('Version History')],
+        ),
+        onTap: () => Future.delayed(Duration.zero, () => showVersionHistoryDialog(context, ref, file)),
       ),
     );
   }
