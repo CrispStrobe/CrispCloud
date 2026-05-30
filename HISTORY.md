@@ -2,6 +2,48 @@
 
 Audit trail of bugs found, issues discovered, and fixes applied.
 
+## 2026-05-30 — Stabilization + Core Gaps (Option B)
+
+### Stabilization (v0.1.0)
+- **Dependency conflicts resolved**: fixed internxt_client intl constraint (>=0.19.0), pubspec_overrides.yaml uuid/libdbm overrides, file_selector_macos relaxed
+- **14 analyze errors fixed**: AppLocalizations import, non-exhaustive switch (nextcloud/pcloud), EncryptedStorageWrapper missing methods, background_sync_mobile SecureStorage stubs, local_file_service web factory, file_context_menu void result, file_editor_dialog syntax, multi_cloud_dialog getter name, test mock stubs
+- **3 test failures fixed**: search type filter exempts folders, multi_cloud unmodifiable list test passes valid object
+- **Result**: 0 errors, 734 tests passing (up from 688)
+
+### 1.1 Web Encrypted Credentials
+- **Created `lib/services/secure_storage_web.dart`** (~220 lines):
+  - `WebEncryptedStorage implements SecureStorage`: PBKDF2 key derivation + AES-256-GCM encryption
+  - Values stored as base64 nonce+ciphertext+tag in localStorage under `crisp_enc_*` prefix
+  - Salt persisted unencrypted; derived key held in memory only
+  - `initialize(masterPassword)` with verification token for wrong-password detection
+  - `WebStorageBackend` abstraction: `LocalStorageBackend` (browser) + `InMemoryWebStorageBackend` (tests)
+- **Updated `lib/main.dart`**: `_MasterPasswordGate` widget prompts for password on web before app loads
+- **Tests**: 16 tests (round-trip, wrong password, readMap/writeMap, unicode, delete, encrypted backing)
+
+### 2.1 Streaming Transfers (Desktop/Mobile)
+- **Updated `lib/providers/transfer_provider.dart`**:
+  - Upload: `File.openRead()` stream with 2-chunk back-pressure → `client.uploadStream()`
+  - Download: `client.downloadStream()` piped to `File.openWrite()` with byte-counting progress
+  - Web fallback: buffer-based `uploadFile`/`downloadFileBytes`
+
+### 2.3 Resume Interrupted S3 Multipart Uploads
+- **Updated `lib/services/s3_client_adapter.dart`**:
+  - Part tracking via SharedPreferences per uploadId (JSON with bucket, key, parts)
+  - `listParts(key, uploadId)`: S3 ListParts API with pagination
+  - `resumeMultipartUpload(remotePath, fileData)`: resumes from last successful part
+  - `getInterruptedUploads()`: retrieves saved upload state
+  - Failed uploads no longer abort — parts preserved for resume
+- **Tests**: 14 tests (tracking CRUD, ListParts XML parsing, resume error handling, constants)
+
+### 6.6 Full-Text Search
+- **Updated `lib/services/cloud_storage_interface.dart`**: `supportsFullTextSearch` flag + `fullTextSearch(query, path)` with default fallback (download small text files, search locally)
+- **Updated `lib/services/gdrive_client_adapter.dart`**: Drive API `fullText contains` query
+- **Updated `lib/services/dropbox_client_adapter.dart`**: `/files/search_v2` content search with pagination
+- **Updated `lib/services/onedrive_client_adapter.dart`**: Graph `/search/query` endpoint
+- **Updated `lib/providers/search_provider.dart`**: `fullTextSearch()` method + `lastSnippets` for UI
+- **Updated `lib/widgets/search_dialogs.dart`**: "Search file contents" checkbox, snippet display in results
+- **Tests**: 13 tests (capability flags, fallback search, content matching, size limits, snippets)
+
 ## 2026-05-30 — Batch Session 3: Quick Wins + Medium Features
 
 ### Final Batch (5 items)

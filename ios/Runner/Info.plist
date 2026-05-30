@@ -70,6 +70,10 @@
 		<string>processing</string>
 	</array>
 
+	<!-- FileProvider domain declaration -->
+	<key>NSFileProviderDomainUsageDescription</key>
+	<string>CrispCloud uses the Files app to let you browse your cloud storage providers.</string>
+
 	<key>CFBundleURLTypes</key>
 	<array>
 		<dict>

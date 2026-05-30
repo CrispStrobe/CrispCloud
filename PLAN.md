@@ -59,7 +59,7 @@ CrispCloud becomes the **open-source Cyberduck/Transmit/Commander One killer**: 
 - [x] Migration path: `CredentialMigration.migrateIfNeeded()` — idempotent, wipes old keys
 - [x] `SecureStorage` abstraction + `InMemorySecureStorage` test double
 - [x] All config services + adapters + tests updated
-- [ ] Web: encrypted IndexedDB with user-derived key (PBKDF2 from master password)
+- [x] Web: encrypted localStorage with user-derived key (PBKDF2 + AES-256-GCM from master password)
 - [x] Biometric unlock option (FaceID / TouchID / fingerprint) via `local_auth`
 
 ### 1.2 State Management Overhaul
@@ -106,9 +106,9 @@ CrispCloud becomes the **open-source Cyberduck/Transmit/Commander One killer**: 
 - [x] Added `uploadStream` / `downloadStream` to `CloudStorageClient` with buffer-fallback defaults
 - [x] SFTP adapter: true streaming upload/download (32KB chunks, no full-file buffering)
 - [x] Added 7 capability flags (`supportsStreaming`, `supportsMultipart`, etc.)
-- [ ] Desktop/Mobile: stream from disk via `LocalFileService` (wire `uploadStream` into AppState)
+- [x] Desktop/Mobile: stream from disk via `File.openRead()` → `uploadStream`, `downloadStream` → `File.openWrite()`
 - [ ] Web: use `ReadableStream` via File System Access API for chunked reads
-- [ ] Memory ceiling: never buffer more than 2 chunks ahead
+- [x] Memory ceiling: 2-chunk back-pressure via StreamController transform
 
 ### 2.2 Concurrent Transfers
 - [x] `TransferQueue` service with configurable `maxConcurrent` (default 3)
@@ -120,7 +120,7 @@ CrispCloud becomes the **open-source Cyberduck/Transmit/Commander One killer**: 
 
 ### 2.3 Large File Support
 - [x] Multipart upload for S3 (CreateMultipartUpload, UploadPart, CompleteMultipartUpload, auto for files >5MB)
-- [ ] Resume interrupted uploads (track uploaded parts in local DB)
+- [x] Resume interrupted uploads (track parts in SharedPreferences, listParts API, resumeMultipartUpload)
 - [ ] Web: use `showSaveFilePicker` + writable stream for large downloads (no memory blob)
 - [x] Progress reporting at chunk granularity — multipart upload reports per-part progress
 
@@ -321,7 +321,7 @@ CrispCloud becomes the **open-source Cyberduck/Transmit/Commander One killer**: 
 - [x] Local version snapshots before overwrite — saves to temp dir before editor save
 
 ### 6.6 Search & Filters
-- [ ] Full-text search when provider supports it
+- [x] Full-text search — GDrive (fullText query), Dropbox (search_v2), OneDrive (Graph /search/query), fallback (download+search text files)
 - [x] Saved searches / smart folders — `SavedSearchService` with CRUD, run saved searches as virtual folders
 - [x] Filter by: type, size range, date range — `SearchNotifier.setFilters()` with 6 file type categories, min/max size, date range
 - [x] Regex search in file names — regex toggle in Find dialog, client-side filtering
@@ -551,13 +551,13 @@ CrispCloud becomes the **open-source Cyberduck/Transmit/Commander One killer**: 
 
 | Phase | Impact | Effort | Status |
 |-------|--------|--------|--------|
-| 1. Foundation Hardening | Critical | Medium | **~98% done** — Riverpod, credentials, logging (migrated), formatters, decomposition (toolbar+local_file_service split) all done |
-| 2. Performance & Streaming | High | Medium | **~85% done** — streaming, queue, virtual scroll, multipart S3, rate limiting done; resume/large-file web pending |
+| 1. Foundation Hardening | Critical | Medium | **~100% done** — Riverpod, credentials (incl. web encrypted storage), logging, formatters, decomposition all done |
+| 2. Performance & Streaming | High | Medium | **~95% done** — streaming (desktop/mobile wired), queue, virtual scroll, multipart S3 + resume, rate limiting, back-pressure done; web streaming pending |
 | 3.1 S3 + GDrive + OneDrive + Dropbox | High | Medium | **All 4 done** |
 | 3.2 Tier 2 providers | Medium | Medium | **FTP, Nextcloud, pCloud done** — Azure, B2, Mega pending |
 | 4. Sync Engine | Very High | Very High | **~95% done** — two-way, selective, offline replay+cache, watcher, tray, delta sync, placeholder files, **mobile background sync** done |
 | 5. UI/UX | High | Medium | **~98% done** — preview, tabs, themes, nav, DnD (multi-file badge), tree, grid+thumbnails (provider-native), column view, bookmarks, pull-to-refresh, quota display done |
-| 6. Power User Features | Medium | High | **~85% done** — editor (auto-save+conflict), palette, batch rename, archives, versions+restore+diff, share, dupes, diff, permissions, search filters done |
+| 6. Power User Features | Medium | High | **~90% done** — editor, palette, batch rename, archives, versions+restore+diff, share, dupes, diff, permissions, search filters, **full-text search** done |
 | 7.1 Client-Side Encryption | High | High | **~90% done** — encryption + key management + BIP39 done; Cryptomator compat pending |
 | 7.2-7.4 Security extras | Medium | Medium | **~85% done** — proxy, app lock, biometric, cert pinning, secure clipboard done |
 | 8. Platform Polish | Medium | High | **P3 — Later** |
