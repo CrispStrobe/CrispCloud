@@ -248,7 +248,7 @@ void showFileContextMenu(BuildContext context, WidgetRef ref, PanelSide side, Fi
           ),
           onTap: () => Future.delayed(Duration.zero, () async {
             try {
-              await showShareLinkDialog(context, ref, file);
+              showShareLinkDialog(context, ref, file);
             } catch (e) {
               if (context.mounted) {
                 ScaffoldMessenger.of(context).showSnackBar(

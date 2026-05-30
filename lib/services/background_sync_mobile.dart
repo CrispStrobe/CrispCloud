@@ -12,6 +12,7 @@
 // Flutter engine, so providers that rely solely on secure storage will be
 // skipped gracefully).
 
+import 'dart:convert';
 import 'dart:io';
 
 import 'package:flutter/foundation.dart';
@@ -282,5 +283,18 @@ class _SharedPrefsSecureStorage implements SecureStorage {
     for (final k in keys) {
       await _prefs.remove(k);
     }
+  }
+
+  @override
+  Future<void> writeMap(String key, Map<String, String> data) async {
+    await write(key, json.encode(data));
+  }
+
+  @override
+  Future<Map<String, String>?> readMap(String key) async {
+    final raw = await read(key);
+    if (raw == null) return null;
+    final decoded = json.decode(raw) as Map<String, dynamic>;
+    return decoded.map((k, v) => MapEntry(k, v.toString()));
   }
 }

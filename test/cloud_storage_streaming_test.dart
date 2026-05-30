@@ -24,6 +24,13 @@ class MockCloudClient implements CloudStorageClient {
   @override bool get supportsSearch => false;
   @override bool get supportsThumbnails => false;
   @override bool get supportsTrash => true;
+  @override bool get supportsNativeShare => false;
+  @override bool get supportsServerSideCopy => false;
+
+  @override Future<Uint8List?> getThumbnail(String remotePath) async => null;
+  @override Future<Map<String, int>?> getQuota() async => null;
+  @override Future<int> healthCheck() async => -1;
+  @override Future<void> copyPath(String sourcePath, String targetPath) async {}
 
   @override Future<void> login(String email, String password, {String? twoFactorCode}) async {}
   @override Future<bool> is2faNeeded(String email) async => false;

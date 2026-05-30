@@ -510,6 +510,8 @@ class AppState extends ChangeNotifier {
         case CloudProvider.sftp: providerKey = 'sftp'; break;
         case CloudProvider.webdav: providerKey = 'webdav'; break;
         case CloudProvider.internxt: providerKey = 'internxt'; break;
+        case CloudProvider.nextcloud: providerKey = 'nextcloud'; break;
+        case CloudProvider.pcloud: providerKey = 'pcloud'; break;
       }
       await prefs.setString('cloud_provider', providerKey);
       debugPrint('💾 Saved provider preference: $providerKey');

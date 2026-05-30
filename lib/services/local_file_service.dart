@@ -36,9 +36,6 @@ abstract class LocalFileService {
   Future<void> refresh() async {}
 
   factory LocalFileService() {
-    if (kIsWeb) {
-      return platform.WebFileService.instance;
-    }
     return platform.createPlatformFileService();
   }
 }

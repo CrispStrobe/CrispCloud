@@ -163,7 +163,7 @@ class _MultiCloudDialogState extends ConsumerState<_MultiCloudDialog>
                   dense: true,
                   leading: const Icon(Icons.cloud, size: 20),
                   title: Text(conn.label),
-                  subtitle: Text(conn.providerName),
+                  subtitle: Text(conn.provider.name),
                   trailing: IconButton(
                     icon: const Icon(Icons.link_off, size: 16),
                     tooltip: 'Disconnect',

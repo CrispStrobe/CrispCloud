@@ -4,6 +4,7 @@ import 'dart:typed_data';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:crisp_cloud/services/local_file_service.dart';
+import 'package:crisp_cloud/services/local_file_service_native.dart';
 
 void main() {
   setUp(() {

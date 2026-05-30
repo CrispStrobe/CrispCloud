@@ -177,8 +177,8 @@ class SearchNotifier extends ChangeNotifier {
 
   /// Returns true when [item] satisfies all currently active filters.
   bool matchesFilters(FileItem item) {
-    // Type filter
-    if (_filterByType.isNotEmpty) {
+    // Type filter (folders always pass)
+    if (_filterByType.isNotEmpty && !item.isFolder) {
       final ext = _extensionOf(item.name);
       if (!_filterByType.contains(ext)) return false;
     }

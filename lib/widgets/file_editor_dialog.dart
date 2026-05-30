@@ -379,6 +379,7 @@ class _FileEditorPageState extends ConsumerState<_FileEditorPage> {
           child: _buildBody(theme),
         )),
       ]),
+    ),
     );
   }
 

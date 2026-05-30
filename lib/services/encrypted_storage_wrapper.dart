@@ -204,4 +204,31 @@ class EncryptedStorageWrapper implements CloudStorageClient {
         await downloadFileBytes(remotePath, onProgress: onProgress);
     yield decrypted;
   }
+
+  // ---------------------------------------------------------------------------
+  // Pass-through: new CloudStorageClient methods
+  // ---------------------------------------------------------------------------
+
+  @override
+  bool get supportsNativeShare => false; // Shared links serve encrypted data
+
+  @override
+  bool get supportsServerSideCopy => _inner.supportsServerSideCopy;
+
+  @override
+  Future<Uint8List?> getThumbnail(String remotePath) async => null;
+
+  @override
+  Future<Map<String, int>?> getQuota() => _inner.getQuota();
+
+  @override
+  Future<int> healthCheck() => _inner.healthCheck();
+
+  @override
+  Future<void> copyPath(String sourcePath, String targetPath) async {
+    // Cannot use server-side copy because data is encrypted; download, re-encrypt, upload.
+    final bytes = await downloadFileBytes(sourcePath);
+    final fileName = sourcePath.split('/').last;
+    await uploadFile(bytes, fileName, targetPath);
+  }
 }

@@ -156,7 +156,7 @@ void main() {
       final c = MockCloudClient('P');
       svc.addConnection(id: 'z', label: 'Z', provider: CloudProvider.sftp, client: c);
       final list = svc.getAllConnections();
-      expect(() => (list as dynamic).add(null), throwsUnsupportedError);
+      expect(() => list.add(CloudConnection(id: 'x', label: 'X', provider: CloudProvider.sftp, client: c)), throwsUnsupportedError);
     });
   });
 
