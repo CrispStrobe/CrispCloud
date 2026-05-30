@@ -6,6 +6,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../models/panel_side.dart';
 import '../services/local_file_service.dart';
+import '../services/proxy_service.dart';
 import '../services/secure_storage_service.dart';
 
 /// Platform secure storage — overridden in main.dart with the real instance.
@@ -39,3 +40,8 @@ final panelSplitRatioProvider = StateProvider<double>((ref) => 0.5);
 enum ViewMode { list, grid }
 final localViewModeProvider = StateProvider<ViewMode>((ref) => ViewMode.list);
 final remoteViewModeProvider = StateProvider<ViewMode>((ref) => ViewMode.list);
+
+/// Proxy service — overridden in main.dart with the loaded instance.
+final proxyServiceProvider = Provider<ProxyService>((ref) {
+  return ProxyService(); // Default: no proxy
+});

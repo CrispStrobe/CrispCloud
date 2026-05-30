@@ -63,27 +63,27 @@ The project uses the **Adapter pattern** (`CloudStorageClient` interface) with *
 - **Archive support**: extract .zip, create .zip from selected files
 - **Command palette**: context-aware action search
 - **Share links**: provider-native shareable URLs (GDrive, Dropbox, OneDrive)
-- **Version history**: view file versions (GDrive, Dropbox, OneDrive)
+- **Version history**: view + **restore** file versions (GDrive, Dropbox, OneDrive)
 - **Duplicate finder**: MD5 (local) or size-based (remote) duplicate detection
+- **Diff viewer**: side-by-side file comparison (LCS diff, sync scroll, line numbers)
+- **SFTP permissions**: chmod/chown via `PermissionsDialog` with rwx grid + presets
 
 ### Security (Phase 7)
 - **Encryption**: `EncryptionService` (AES-256-GCM, PBKDF2) + `EncryptedStorageWrapper`
 - **Key management**: export/import hex key, BIP39 24-word mnemonic, backup bundle with verification
+- **Proxy support**: HTTP/SOCKS5 via `ProxyService` + env auto-detection + global `HttpOverrides`
+- **App lock**: PIN/password with salted SHA-256, auto-lock on timeout, setup/change/disable UI
 - Wired into connection dialog (toggle + passphrase), authProvider, and `KeyManagementDialog`
 
 ## What Needs to Be Done (in priority order)
 
-### 1. Security Additions — HIGH PRIORITY
+### 1. Security Additions — Remaining
 - **Cryptomator vault format** (7.1): interop with Cyberduck/Mountain Duck
-- **App lock** (7.3): PIN/biometric via `local_auth`
-- **Proxy support** (7.2): HTTP/SOCKS5 via environment variables
 - **Certificate pinning** (7.2): for known providers
+- **Biometric auth** (7.3): FaceID/TouchID/fingerprint via `local_auth`
 
 ### 2. Power User Features — Remaining
 - **SSH terminal** (6.2): embed `xterm` for SFTP connections
-- **Version restore** (6.5): actually call provider APIs to restore old versions (UI exists)
-- **Diff viewer** (6.1): compare two files (local vs remote)
-- **File permissions editor** (6.3): chmod/chown for SFTP
 
 ### 3. Sync Engine — Remaining
 - **Mobile background sync** (4.4): `workmanager` (Android) + `BGTaskScheduler` (iOS)
@@ -138,6 +138,12 @@ The project uses the **Adapter pattern** (`CloudStorageClient` interface) with *
 | `lib/services/transfer_queue.dart` | Concurrent transfer manager |
 | `lib/widgets/file_panel.dart` | Panel orchestrator (tabs, toolbar, breadcrumbs, file list/grid, drag target) |
 | `lib/widgets/sync_dialog.dart` | Sync pair management UI |
+| `lib/services/proxy_service.dart` | HTTP/SOCKS5 proxy config, global HttpOverrides |
+| `lib/services/app_lock_service.dart` | PIN/password lock with salted SHA-256 |
+| `lib/widgets/permissions_dialog.dart` | SFTP chmod/chown UI with rwx grid |
+| `lib/widgets/diff_viewer_dialog.dart` | Side-by-side file comparison (LCS diff) |
+| `lib/widgets/lock_screen.dart` | Lock screen + setup dialog |
+| `lib/widgets/proxy_settings_dialog.dart` | Proxy configuration UI |
 | `lib/widgets/panel_splitter.dart` | Draggable resizable panel divider |
 | `lib/screens/file_browser_screen.dart` | Main scaffold + layout |
 | `PLAN.md` | Full roadmap with checkboxes |

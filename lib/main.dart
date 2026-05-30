@@ -22,9 +22,12 @@ import 'services/onedrive_config_service.dart';
 import 'services/s3_config_service.dart';
 import 'services/sftp_config_service.dart';
 import 'services/webdav_config_service.dart';
+import 'services/app_lock_service.dart';
 import 'services/log_service.dart';
+import 'services/proxy_service.dart';
 import 'services/secure_storage_service.dart';
 import 'services/theme_service.dart';
+import 'widgets/lock_screen.dart';
 
 final _log = Log('Main');
 
@@ -52,6 +55,11 @@ Future<void> main() async {
 
     _log.info('Config path: $configPath');
 
+    // Load proxy configuration and install global overrides
+    final proxyService = ProxyService();
+    await proxyService.load();
+    proxyService.applyGlobally();
+
     CloudProvider defaultProvider = await _getDefaultProvider();
 
     if (defaultProvider == CloudProvider.internxt && !CloudStorageFactory.isInternxtSupported) {
@@ -66,6 +74,7 @@ Future<void> main() async {
         overrides: [
           secureStorageProvider.overrideWithValue(secureStorage),
           configPathProvider.overrideWithValue(configPath),
+          proxyServiceProvider.overrideWithValue(proxyService),
           authProvider.overrideWith((ref) => AuthNotifier(
             ref,
             initialProvider: defaultProvider,
@@ -148,6 +157,11 @@ Future<dynamic> _createConfigService(
 /// ThemeService exposed via Riverpod.
 final themeProvider = ChangeNotifierProvider<ThemeService>((ref) => ThemeService());
 
+/// App lock service provider.
+final appLockServiceProvider = Provider<AppLockService>((ref) {
+  return AppLockService(ref.watch(secureStorageProvider));
+});
+
 class MyApp extends ConsumerWidget {
   const MyApp({super.key});
 
@@ -163,8 +177,84 @@ class MyApp extends ConsumerWidget {
         theme: themeService.lightTheme,
         darkTheme: themeService.darkTheme,
         themeMode: themeService.themeMode,
-        home: const FileBrowserScreen(),
+        home: const _AppLockGate(),
       ),
     );
+  }
+}
+
+/// Gate widget that shows the lock screen if app lock is enabled.
+class _AppLockGate extends ConsumerStatefulWidget {
+  const _AppLockGate();
+
+  @override
+  ConsumerState<_AppLockGate> createState() => _AppLockGateState();
+}
+
+class _AppLockGateState extends ConsumerState<_AppLockGate> with WidgetsBindingObserver {
+  bool _isLocked = false;
+  bool _isChecking = true;
+  DateTime? _lastPaused;
+
+  @override
+  void initState() {
+    super.initState();
+    WidgetsBinding.instance.addObserver(this);
+    _checkLock();
+  }
+
+  Future<void> _checkLock() async {
+    final lockService = ref.read(appLockServiceProvider);
+    final enabled = await lockService.isEnabled();
+    if (mounted) {
+      setState(() {
+        _isLocked = enabled;
+        _isChecking = false;
+      });
+    }
+  }
+
+  @override
+  void didChangeAppLifecycleState(AppLifecycleState state) {
+    if (state == AppLifecycleState.paused || state == AppLifecycleState.hidden) {
+      _lastPaused = DateTime.now();
+    } else if (state == AppLifecycleState.resumed && _lastPaused != null) {
+      _checkAutoLock();
+    }
+  }
+
+  Future<void> _checkAutoLock() async {
+    if (_isLocked) return;
+    final lockService = ref.read(appLockServiceProvider);
+    final enabled = await lockService.isEnabled();
+    if (!enabled) return;
+
+    final timeout = await lockService.getTimeout();
+    final elapsed = DateTime.now().difference(_lastPaused!).inSeconds;
+    if (elapsed >= timeout) {
+      if (mounted) setState(() => _isLocked = true);
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    if (_isChecking) {
+      return const Scaffold(body: Center(child: CircularProgressIndicator()));
+    }
+
+    if (_isLocked) {
+      return LockScreen(
+        lockService: ref.read(appLockServiceProvider),
+        onUnlocked: () => setState(() => _isLocked = false),
+      );
+    }
+
+    return const FileBrowserScreen();
+  }
+
+  @override
+  void dispose() {
+    WidgetsBinding.instance.removeObserver(this);
+    super.dispose();
   }
 }

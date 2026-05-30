@@ -389,6 +389,56 @@ class SFTPClientAdapter extends CloudStorageClient {
     await _sftp!.rename(path, newPath);
   }
 
+  // --- Permissions ---
+
+  /// Get file stat including permissions.
+  Future<SftpFileAttrs> getAttributes(String path) async {
+    await _ensureConnection();
+    return await _sftp!.stat(path);
+  }
+
+  /// Set file/folder permissions via SSH chmod command.
+  /// [mode] is the octal permission string (e.g. "755", "644").
+  Future<void> chmod(String path, String mode) async {
+    await _ensureConnection();
+    // Use SSH exec as the most portable approach
+    final result = await _sshClient!.run('chmod $mode ${_shellEscape(path)}');
+    final stderr = String.fromCharCodes(result.stderr);
+    if (stderr.isNotEmpty) {
+      throw Exception('chmod failed: $stderr');
+    }
+    _log.info('chmod $path to $mode');
+  }
+
+  /// Change file/folder owner via SSH chown command.
+  /// [owner] format: "user:group" or just "user".
+  Future<void> chown(String path, String owner) async {
+    await _ensureConnection();
+    final result = await _sshClient!.run('chown $owner ${_shellEscape(path)}');
+    final stderr = String.fromCharCodes(result.stderr);
+    if (stderr.isNotEmpty) {
+      throw Exception('chown failed: $stderr');
+    }
+    _log.info('chown $path to $owner');
+  }
+
+  /// Get file owner and group via stat command.
+  Future<Map<String, String>> getOwnership(String path) async {
+    await _ensureConnection();
+    final result = await _sshClient!.run('stat -c "%U:%G" ${_shellEscape(path)}');
+    final output = String.fromCharCodes(result.stdout).trim();
+    if (output.contains(':')) {
+      final parts = output.split(':');
+      return {'user': parts[0], 'group': parts[1]};
+    }
+    return {'user': output, 'group': ''};
+  }
+
+  /// Shell-escape a path for safe use in commands.
+  static String _shellEscape(String path) {
+    return "'${path.replaceAll("'", "'\\''")}'";
+  }
+
   // --- Streaming Support ---
 
   @override

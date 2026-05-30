@@ -286,7 +286,7 @@ CrispCloud becomes the **open-source Cyberduck/Transmit/Commander One killer**: 
 ### 6.1 Built-in Editor
 - [x] Text/code editor with line numbers — full-screen `FileEditorDialog`, Ctrl+S save, unsaved-changes warning
 - [x] Edit remote files in-place (download → edit → auto-upload on save)
-- [ ] Diff viewer: compare two files (local vs remote, or across providers)
+- [x] Diff viewer: compare two files (local vs remote) — `DiffViewerDialog` with LCS diff, sync-scrolling, line numbers
 - [ ] Auto-save with conflict detection
 - [ ] Configurable: use built-in editor or launch external app
 
@@ -298,7 +298,7 @@ CrispCloud becomes the **open-source Cyberduck/Transmit/Commander One killer**: 
 ### 6.3 Advanced File Operations
 - [x] Calculate folder sizes (recursive, context menu "Calculate Size")
 - [x] Checksum verification (MD5 + SHA-256, context menu "Checksum", ChecksumService)
-- [ ] File permissions editor (SFTP: chmod, chown)
+- [x] File permissions editor (SFTP: chmod, chown) — `PermissionsDialog` with visual rwx grid, octal presets, owner/group editing
 - [ ] Symbolic link support (SFTP, local)
 - [x] Archive support: extract .zip (context menu "Extract Here"), create .zip from selected files
 - [x] Batch rename: 4 modes (find/replace with regex, numbering, prefix/suffix, extension), live preview, context menu integration
@@ -311,7 +311,7 @@ CrispCloud becomes the **open-source Cyberduck/Transmit/Commander One killer**: 
 
 ### 6.5 Version History
 - [x] Show file versions when provider supports it (GDrive, Dropbox, OneDrive) — `VersionHistoryDialog`
-- [ ] Restore previous version (UI exists, API calls TODO)
+- [x] Restore previous version — GDrive (revision download + re-upload), Dropbox (restore endpoint), OneDrive (restoreVersion action)
 - [ ] Version diff for text files
 - [ ] Local version snapshots before overwrite
 
@@ -342,13 +342,13 @@ CrispCloud becomes the **open-source Cyberduck/Transmit/Commander One killer**: 
 ### 7.2 Secure Networking
 - [ ] Certificate pinning for known providers
 - [ ] Custom CA certificate support (corporate/self-signed)
-- [ ] HTTP/SOCKS5 proxy support (system proxy auto-detection)
+- [x] HTTP/SOCKS5 proxy support — `ProxyService` with env auto-detection, `ProxyHttpOverrides` for global routing, `ProxySettingsDialog` UI
 - [ ] Tor/onion routing support (optional)
 - [ ] TLS version enforcement (minimum TLS 1.2)
 
 ### 7.3 Access Control
-- [ ] App lock: PIN, password, or biometric required to open
-- [ ] Auto-lock after configurable timeout
+- [x] App lock: PIN/password required to open — `AppLockService` with salted SHA-256 hashing, `LockScreen` + `AppLockSetupDialog`
+- [x] Auto-lock after configurable timeout — `_AppLockGate` with `WidgetsBindingObserver` lifecycle detection
 - [x] Secure clipboard: auto-clear after 30s via `SecureClipboard` utility
 - [ ] Disable screenshots on mobile (opt-in)
 
@@ -550,9 +550,9 @@ CrispCloud becomes the **open-source Cyberduck/Transmit/Commander One killer**: 
 | 3.2 Tier 2 providers | Medium | Medium | **FTP done** — Azure, B2, Mega, pCloud pending |
 | 4. Sync Engine | Very High | Very High | **~75% done** — two-way, selective, offline replay, watcher, tray done; delta sync, mobile bg pending |
 | 5. UI/UX | High | Medium | **~80% done** — preview (img/txt/md/pdf), tabs+persistence, themes, nav, DnD, tree, grid, bookmarks done |
-| 6. Power User Features | Medium | High | **~60% done** — editor, command palette, batch rename, archives, versions, share, dupes done |
+| 6. Power User Features | Medium | High | **~75% done** — editor, palette, batch rename, archives, versions+restore, share, dupes, diff, permissions done |
 | 7.1 Client-Side Encryption | High | High | **~90% done** — encryption + key management + BIP39 done; Cryptomator compat pending |
-| 7.2-7.4 Security extras | Medium | Medium | **P2 — Next** |
+| 7.2-7.4 Security extras | Medium | Medium | **~50% done** — proxy, app lock, secure clipboard done; cert pinning, biometric pending |
 | 8. Platform Polish | Medium | High | **P3 — Later** |
 | 9. Extensibility & CLI | Medium | High | **P3 — Later** |
 | 10. Quality & Distribution | High | High | **P3 — Ongoing** |
@@ -577,9 +577,9 @@ Phase 3.1. S3 + FTP + Google Drive + OneDrive + Dropbox all done.
 Remaining: connection profiles, Tier 2 providers (Azure, B2, Mega, pCloud).
 *The app that replaces Cyberduck.*
 
-### v0.5.0 — "Privacy First" *(~70% complete)*
-Phase 7. Encryption layer + key management + BIP39 recovery done.
-Remaining: Cryptomator compat, secure networking, app lock.
+### v0.5.0 — "Privacy First" *(~80% complete)*
+Phase 7. Encryption layer + key management + BIP39 recovery + proxy support + app lock done.
+Remaining: Cryptomator compat, certificate pinning, biometric auth.
 *The app privacy advocates recommend.*
 
 ### v0.7.0 — "Always In Sync" *(~75% complete)*

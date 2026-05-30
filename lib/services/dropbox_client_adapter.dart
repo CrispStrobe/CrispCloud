@@ -61,6 +61,9 @@ class DropboxClientAdapter extends CloudStorageClient {
   @override
   bool get isAuthenticated => _authenticated && _accessToken != null;
 
+  /// Expose access token for direct API calls (e.g. version history, restore).
+  String? get accessToken => _accessToken;
+
   @override
   String? get userId => _email;
 

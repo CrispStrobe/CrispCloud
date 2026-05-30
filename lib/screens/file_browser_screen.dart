@@ -19,7 +19,9 @@ import '../widgets/duplicate_finder_dialog.dart';
 import '../widgets/key_management_dialog.dart';
 import '../widgets/sync_dialog.dart';
 import '../widgets/tree_sidebar.dart';
+import '../widgets/lock_screen.dart';
 import '../widgets/theme_picker.dart';
+import '../main.dart' show appLockServiceProvider;
 import 'about_dialog.dart';
 import 'keyboard_shortcuts.dart';
 import 'screen_dialogs.dart';
@@ -386,6 +388,62 @@ class _FileBrowserScreenState extends ConsumerState<FileBrowserScreen> {
               onTap: () {
                 Navigator.pop(context);
                 showKeyboardShortcutsDialog(context);
+              },
+            ),
+            ListTile(
+              leading: const Icon(Icons.lock_outline),
+              title: const Text('App Lock'),
+              onTap: () async {
+                Navigator.pop(context);
+                final lockService = ref.read(appLockServiceProvider);
+                final enabled = await lockService.isEnabled();
+                if (enabled) {
+                  // Show options: change or disable
+                  final action = await showDialog<String>(
+                    context: context,
+                    builder: (ctx) => AlertDialog(
+                      title: const Text('App Lock'),
+                      content: const Text('App lock is currently enabled.'),
+                      actions: [
+                        TextButton(
+                          onPressed: () => Navigator.pop(ctx, 'disable'),
+                          child: const Text('Disable'),
+                        ),
+                        TextButton(
+                          onPressed: () => Navigator.pop(ctx, 'change'),
+                          child: const Text('Change Code'),
+                        ),
+                        TextButton(
+                          onPressed: () => Navigator.pop(ctx),
+                          child: const Text('Cancel'),
+                        ),
+                      ],
+                    ),
+                  );
+                  if (action == 'disable') {
+                    await lockService.disable();
+                    if (mounted) {
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        const SnackBar(content: Text('App lock disabled')),
+                      );
+                    }
+                  } else if (action == 'change') {
+                    if (mounted) {
+                      showDialog(
+                        context: context,
+                        builder: (_) => AppLockSetupDialog(
+                          lockService: lockService,
+                          isChanging: true,
+                        ),
+                      );
+                    }
+                  }
+                } else {
+                  showDialog(
+                    context: context,
+                    builder: (_) => AppLockSetupDialog(lockService: lockService),
+                  );
+                }
               },
             ),
             ListTile(

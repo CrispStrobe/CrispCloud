@@ -2,6 +2,78 @@
 
 Audit trail of bugs found, issues discovered, and fixes applied.
 
+## 2026-05-30 — Security & Power User: Proxy, App Lock, Version Restore, Permissions, Diff Viewer
+
+### 7.2 HTTP/SOCKS5 Proxy Support
+- **Created `lib/services/proxy_service.dart`** (~200 lines):
+  - `ProxyConfig` model: type (none/http/socks5), host, port, username, password, noProxy bypass list
+  - `ProxyConfig.fromEnvironment()`: auto-detects HTTP_PROXY/HTTPS_PROXY/NO_PROXY env vars
+  - `ProxyConfig.toJson()`/`fromJson()` for persistence in SharedPreferences
+  - `ProxyService`: load/save/clear config, `createHttpClient()` for explicit proxy client
+  - `ProxyHttpOverrides`: global `HttpOverrides` that routes ALL `http.get/post/etc.` through proxy
+  - `applyGlobally()`: installs overrides so all adapters use proxy without per-adapter changes
+- **Created `lib/widgets/proxy_settings_dialog.dart`** (~180 lines):
+  - Proxy type dropdown (None/HTTP/SOCKS5), host+port, username/password, no-proxy bypass list
+  - Save/Reset/Cancel actions, validation
+- **Updated `lib/main.dart`**: loads `ProxyService` on startup, calls `applyGlobally()`
+- **Updated `lib/providers/core_providers.dart`**: added `proxyServiceProvider`
+- **Updated `lib/widgets/connection_dialog.dart`**: "Proxy Settings" button before encryption toggle
+
+### 7.3 App Lock (PIN/Password)
+- **Created `lib/services/app_lock_service.dart`** (~100 lines):
+  - `setup(code)`: salted SHA-256 hash (10,000 rounds), stored in SecureStorage
+  - `verify(code)`, `disable()`, `changeCode()`, `getTimeout()`/`setTimeout()`
+  - Rejects codes shorter than 4 characters
+- **Created `lib/widgets/lock_screen.dart`** (~250 lines):
+  - `LockScreen`: full-screen lock overlay with PIN/password input, 5 attempt limit
+  - `AppLockSetupDialog`: setup/change code with confirmation, auto-lock timeout dropdown
+- **Updated `lib/main.dart`**:
+  - `_AppLockGate`: wrapper widget with `WidgetsBindingObserver` for auto-lock on app pause/resume
+  - `appLockServiceProvider`: Riverpod provider for lock service
+- **Updated `lib/screens/file_browser_screen.dart`**: "App Lock" entry in drawer menu (enable/disable/change)
+
+### 6.5 Version Restore
+- **Updated `lib/widgets/version_history_dialog.dart`**:
+  - Implemented `_restoreVersion()` with confirmation dialog
+  - `_restoreGDriveVersion()`: download revision content via revisions API, re-upload via PATCH
+  - `_restoreDropboxVersion()`: Dropbox `files/restore` endpoint with rev parameter
+  - `_restoreOneDriveVersion()`: Microsoft Graph `restoreVersion` action
+  - Loading overlay during restore, auto-refresh panel + version list after restore
+  - Fixed `_getToken()` to use actual adapter `accessToken` getter
+- **Updated adapters** (gdrive, dropbox, onedrive): added public `accessToken` getter
+
+### 6.3 SFTP Permissions Editor
+- **Updated `lib/services/sftp_client_adapter.dart`**:
+  - `getAttributes(path)`: returns SftpFileAttrs from stat
+  - `chmod(path, mode)`: executes `chmod` via SSH command
+  - `chown(path, owner)`: executes `chown` via SSH command
+  - `getOwnership(path)`: reads user:group via `stat -c "%U:%G"`
+  - `_shellEscape()`: safe path escaping for shell commands
+- **Created `lib/widgets/permissions_dialog.dart`** (~230 lines):
+  - Visual rwxrwxrwx grid with per-bit checkboxes (Owner/Group/Other)
+  - Live octal + symbolic display (e.g. "755 rwxr-xr-x")
+  - Quick preset chips: 644, 755, 700, 600, 777
+  - Owner/Group text fields with SSH chown support
+  - Loads current permissions on open, applies on Save
+- **Updated `lib/widgets/file_context_menu.dart`**: "Permissions" entry for SFTP connections
+
+### 6.1 Diff Viewer
+- **Created `lib/widgets/diff_viewer_dialog.dart`** (~300 lines):
+  - Side-by-side file comparison with LCS-based diff algorithm
+  - Downloads both files (local from disk, remote via adapter)
+  - Color-coded: green for added lines, red for removed
+  - Line numbers, synchronized scrolling between panels
+  - Header with change count, file labels with panel side
+- **Updated `lib/widgets/file_context_menu.dart`**: "Compare" entry when same-named file exists in opposite panel
+
+### Tests
+- **Created `test/security_features_test.dart`** (~300 lines, 35+ tests):
+  - ProxyConfig: disabled by default, HTTP/SOCKS5 enabled, toJson/fromJson round-trip, missing fields, disabled constant
+  - ProxyService: default disabled, save/load round-trip, clear, createHttpClient
+  - AppLockService: not enabled by default, setup/verify/disable, wrong code, changeCode, short code rejection, timeout
+  - Diff algorithm: identical files, empty, added/removed lines, mixed changes, insert/delete in middle
+  - Permission parsing: 755/644/700/777/000 octal↔symbolic, round-trip mode parsing
+
 ## 2026-05-30 — Quick Wins: Tab Cycling, Recent Locations, Debounce, Regex Search, Secure Clipboard, Connection Profiles, Live Speed
 
 ### 5.2 Ctrl+Tab Tab Cycling

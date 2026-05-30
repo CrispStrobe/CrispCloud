@@ -9,13 +9,17 @@ import '../models/panel_side.dart';
 import '../providers/providers.dart';
 import '../services/archive_service.dart';
 import '../services/checksum_service.dart';
+import '../services/cloud_storage_interface.dart' show CloudProvider;
+import '../services/sftp_client_adapter.dart';
 import '../services/share_service.dart';
 import '../utils/formatters.dart' show formatBytes, formatDateFull;
 import 'package:path/path.dart' as p;
 import 'batch_rename_dialog.dart' show showBatchRenameDialog;
+import 'diff_viewer_dialog.dart' show showDiffViewerDialog;
 import 'file_editor_dialog.dart' show showFileEditorDialog;
 import 'file_list_view.dart' show getFileIcon;
 import 'share_link_dialog.dart' show showShareLinkDialog;
+import 'permissions_dialog.dart' show showPermissionsDialog;
 import 'version_history_dialog.dart' show showVersionHistoryDialog;
 
 void showFileContextMenu(BuildContext context, WidgetRef ref, PanelSide side, FileItem file, Offset position) {
@@ -81,6 +85,32 @@ void showFileContextMenu(BuildContext context, WidgetRef ref, PanelSide side, Fi
             Duration.zero,
             () => showFileEditorDialog(context, ref, file, side),
           ),
+        ),
+      );
+    }
+  }
+
+  // Compare with opposite panel (single non-folder file, both panels connected)
+  if (!isMultiSelect && !isSingleFolder && ref.read(authProvider).isConnected) {
+    final oppositeSide = side == PanelSide.local ? PanelSide.remote : PanelSide.local;
+    final oppositePanel = ref.read(panelProvider(oppositeSide));
+    // Look for a file with the same name in the opposite panel
+    final matchingFile = oppositePanel.files.where((f) => f.name == file.name && !f.isFolder).toList();
+    if (matchingFile.isNotEmpty) {
+      items.add(
+        PopupMenuItem(
+          child: const Row(
+            children: [Icon(Icons.compare_arrows), SizedBox(width: 8), Text('Compare')],
+          ),
+          onTap: () => Future.delayed(Duration.zero, () {
+            if (side == PanelSide.local) {
+              showDiffViewerDialog(context, ref, file, matchingFile.first,
+                  leftSide: PanelSide.local, rightSide: PanelSide.remote);
+            } else {
+              showDiffViewerDialog(context, ref, matchingFile.first, file,
+                  leftSide: PanelSide.local, rightSide: PanelSide.remote);
+            }
+          }),
         ),
       );
     }
@@ -247,6 +277,21 @@ void showFileContextMenu(BuildContext context, WidgetRef ref, PanelSide side, Fi
         onTap: () => Future.delayed(Duration.zero, () => showVersionHistoryDialog(context, ref, file)),
       ),
     );
+  }
+
+  // Permissions (SFTP only, single file)
+  if (!isMultiSelect && side == PanelSide.remote) {
+    final auth = ref.read(authProvider);
+    if (auth.client is SFTPClientAdapter) {
+      items.add(
+        PopupMenuItem(
+          child: const Row(
+            children: [Icon(Icons.security), SizedBox(width: 8), Text('Permissions')],
+          ),
+          onTap: () => Future.delayed(Duration.zero, () => showPermissionsDialog(context, ref, file)),
+        ),
+      );
+    }
   }
 
   // Archive operations (local files only, not on web)

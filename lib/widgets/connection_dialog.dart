@@ -7,6 +7,7 @@ import '../providers/providers.dart';
 import '../services/cloud_storage_interface.dart';
 import '../services/connection_profiles.dart';
 import '../services/log_service.dart';
+import 'proxy_settings_dialog.dart';
 
 class ConnectionDialog extends ConsumerStatefulWidget {
   const ConnectionDialog({super.key});
@@ -734,8 +735,24 @@ class _ConnectionDialogState extends ConsumerState<ConnectionDialog> {
               ),
             ],
 
-            // --- Encryption Toggle ---
+            // --- Proxy Settings ---
             const SizedBox(height: 8),
+            const Divider(),
+            Align(
+              alignment: Alignment.centerLeft,
+              child: TextButton.icon(
+                icon: const Icon(Icons.vpn_lock, size: 16),
+                label: const Text('Proxy Settings', style: TextStyle(fontSize: 12)),
+                onPressed: () {
+                  showDialog(
+                    context: context,
+                    builder: (_) => const ProxySettingsDialog(),
+                  );
+                },
+              ),
+            ),
+
+            // --- Encryption Toggle ---
             const Divider(),
             CheckboxListTile(
               value: _enableEncryption,
