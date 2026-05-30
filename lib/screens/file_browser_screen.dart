@@ -171,7 +171,7 @@ class _FileBrowserScreenState extends ConsumerState<FileBrowserScreen> {
     if (!kIsWeb && defaultTargetPlatform == TargetPlatform.macOS) {
       return PlatformMenuBar(
         menus: _buildMacMenus(context, ref),
-        body: scaffold,
+        child: scaffold,
       );
     }
 
@@ -232,7 +232,8 @@ class _FileBrowserScreenState extends ConsumerState<FileBrowserScreen> {
             onSelected: () {
               final side = ref.read(activePanelProvider);
               final panel = ref.read(panelProvider(side));
-              panel.closeTab(panel.activeTab.id);
+              final tab = panel.activeTab;
+              if (tab != null) panel.closeTab(tab.id);
             },
           ),
           PlatformMenuItemGroup(members: [

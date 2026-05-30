@@ -401,11 +401,11 @@ class SFTPClientAdapter extends CloudStorageClient {
   /// [mode] is the octal permission string (e.g. "755", "644").
   Future<void> chmod(String path, String mode) async {
     await _ensureConnection();
-    // Use SSH exec as the most portable approach
-    final result = await _sshClient!.run('chmod $mode ${_shellEscape(path)}');
-    final stderr = String.fromCharCodes(result.stderr);
-    if (stderr.isNotEmpty) {
-      throw Exception('chmod failed: $stderr');
+    // run() returns stdout as Uint8List; use '&& echo OK' to verify success
+    final result = await _sshClient!.run('chmod $mode ${_shellEscape(path)} 2>&1');
+    final output = String.fromCharCodes(result).trim();
+    if (output.isNotEmpty && !output.contains('OK')) {
+      throw Exception('chmod failed: $output');
     }
     _log.info('chmod $path to $mode');
   }
@@ -414,10 +414,10 @@ class SFTPClientAdapter extends CloudStorageClient {
   /// [owner] format: "user:group" or just "user".
   Future<void> chown(String path, String owner) async {
     await _ensureConnection();
-    final result = await _sshClient!.run('chown $owner ${_shellEscape(path)}');
-    final stderr = String.fromCharCodes(result.stderr);
-    if (stderr.isNotEmpty) {
-      throw Exception('chown failed: $stderr');
+    final result = await _sshClient!.run('chown $owner ${_shellEscape(path)} 2>&1');
+    final output = String.fromCharCodes(result).trim();
+    if (output.isNotEmpty) {
+      throw Exception('chown failed: $output');
     }
     _log.info('chown $path to $owner');
   }
@@ -426,7 +426,7 @@ class SFTPClientAdapter extends CloudStorageClient {
   Future<Map<String, String>> getOwnership(String path) async {
     await _ensureConnection();
     final result = await _sshClient!.run('stat -c "%U:%G" ${_shellEscape(path)}');
-    final output = String.fromCharCodes(result.stdout).trim();
+    final output = String.fromCharCodes(result).trim();
     if (output.contains(':')) {
       final parts = output.split(':');
       return {'user': parts[0], 'group': parts[1]};
