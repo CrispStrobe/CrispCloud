@@ -1,0 +1,226 @@
+name: Release
+
+# Builds release artifacts for all platforms and creates a GitHub Release.
+#
+# Triggered by:
+#   - Pushing a tag like v0.1.0
+#   - Manual dispatch (workflow_dispatch)
+#
+# Artifacts:
+#   - Web: .tar.gz of build/web
+#   - macOS: .zip of .app bundle
+#   - Linux: .tar.gz of bundle
+#   - Windows: .zip of release bundle
+#   - Android: APK (debug-signed if no keystore configured)
+#   - iOS: skipped (needs Apple Developer certs)
+
+on:
+  push:
+    tags: ['v*']
+  workflow_dispatch:
+    inputs:
+      tag:
+        description: 'Release tag (e.g., v0.1.0). Leave empty to use HEAD.'
+        required: false
+
+permissions:
+  contents: write  # for creating GitHub releases
+
+env:
+  FLUTTER_VERSION: stable
+
+jobs:
+  # ---------- Analyze + Test (gate) ----------
+  test:
+    name: Test
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+      - uses: subosito/flutter-action@v2
+        with: { channel: stable }
+      - name: Git auth
+        run: |
+          TOKEN="${{ secrets.GH_PAT || github.token }}"
+          git config --global url."https://x-access-token:${TOKEN}@github.com/".insteadOf "https://github.com/"
+      - run: flutter pub get
+      - name: Analyze
+        run: |
+          flutter analyze 2>&1 | tee analyze.log || true
+          if grep -q "  error • " analyze.log; then exit 1; fi
+      - run: flutter test
+
+  # ---------- Web ----------
+  build-web:
+    name: Build Web
+    needs: test
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+      - uses: subosito/flutter-action@v2
+        with: { channel: stable }
+      - name: Git auth
+        run: |
+          TOKEN="${{ secrets.GH_PAT || github.token }}"
+          git config --global url."https://x-access-token:${TOKEN}@github.com/".insteadOf "https://github.com/"
+      - run: flutter pub get
+      - run: flutter build web --release
+      - name: Package
+        run: tar czf crispcloud-web.tar.gz -C build/web .
+      - uses: actions/upload-artifact@v4
+        with:
+          name: crispcloud-web
+          path: crispcloud-web.tar.gz
+
+  # ---------- Linux ----------
+  build-linux:
+    name: Build Linux
+    needs: test
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+      - uses: subosito/flutter-action@v2
+        with: { channel: stable }
+      - name: Git auth
+        run: |
+          TOKEN="${{ secrets.GH_PAT || github.token }}"
+          git config --global url."https://x-access-token:${TOKEN}@github.com/".insteadOf "https://github.com/"
+      - name: Install Linux deps
+        run: |
+          sudo apt-get update -y
+          sudo apt-get install -y ninja-build libgtk-3-dev libsecret-1-dev libjsoncpp-dev libsecret-1-0 libsqlite3-dev
+      - run: flutter config --enable-linux-desktop
+      - run: flutter pub get
+      - run: flutter build linux --release
+      - name: Package
+        run: tar czf crispcloud-linux-x64.tar.gz -C build/linux/x64/release/bundle .
+      - uses: actions/upload-artifact@v4
+        with:
+          name: crispcloud-linux-x64
+          path: crispcloud-linux-x64.tar.gz
+
+  # ---------- macOS ----------
+  build-macos:
+    name: Build macOS
+    needs: test
+    runs-on: macos-latest
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v4
+      - uses: subosito/flutter-action@v2
+        with: { channel: stable }
+      - name: Git auth
+        run: |
+          TOKEN="${{ secrets.GH_PAT || github.token }}"
+          git config --global url."https://x-access-token:${TOKEN}@github.com/".insteadOf "https://github.com/"
+      - run: flutter config --enable-macos-desktop
+      - run: flutter pub get
+      - run: flutter build macos --release
+      - name: Package
+        run: |
+          cd build/macos/Build/Products/Release
+          zip -r -y "$GITHUB_WORKSPACE/crispcloud-macos.zip" "crisp_cloud.app"
+      - uses: actions/upload-artifact@v4
+        with:
+          name: crispcloud-macos
+          path: crispcloud-macos.zip
+
+  # ---------- Windows ----------
+  build-windows:
+    name: Build Windows
+    needs: test
+    runs-on: windows-latest
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v4
+      - uses: subosito/flutter-action@v2
+        with: { channel: stable }
+      - name: Git auth
+        shell: bash
+        run: |
+          TOKEN="${{ secrets.GH_PAT || github.token }}"
+          git config --global url."https://x-access-token:${TOKEN}@github.com/".insteadOf "https://github.com/"
+      - run: flutter config --enable-windows-desktop
+      - run: flutter pub get
+      - run: flutter build windows --release
+      - name: Package
+        shell: pwsh
+        run: Compress-Archive -Path build\windows\x64\runner\Release\* -DestinationPath crispcloud-windows-x64.zip
+      - uses: actions/upload-artifact@v4
+        with:
+          name: crispcloud-windows-x64
+          path: crispcloud-windows-x64.zip
+
+  # ---------- Android APK ----------
+  build-android:
+    name: Build Android APK
+    needs: test
+    runs-on: ubuntu-latest
+    timeout-minutes: 25
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-java@v4
+        with:
+          distribution: zulu
+          java-version: '17'
+      - uses: subosito/flutter-action@v2
+        with: { channel: stable }
+      - name: Git auth
+        run: |
+          TOKEN="${{ secrets.GH_PAT || github.token }}"
+          git config --global url."https://x-access-token:${TOKEN}@github.com/".insteadOf "https://github.com/"
+      - run: flutter pub get
+      - run: flutter build apk --release
+      - name: Rename APK
+        run: cp build/app/outputs/flutter-apk/app-release.apk crispcloud-android.apk
+      - uses: actions/upload-artifact@v4
+        with:
+          name: crispcloud-android
+          path: crispcloud-android.apk
+
+  # ---------- Create GitHub Release ----------
+  release:
+    name: Create Release
+    needs: [build-web, build-linux, build-macos, build-windows, build-android]
+    runs-on: ubuntu-latest
+    if: startsWith(github.ref, 'refs/tags/v') || github.event_name == 'workflow_dispatch'
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/download-artifact@v4
+        with:
+          path: artifacts
+
+      - name: Determine tag
+        id: tag
+        run: |
+          if [[ "${{ github.ref }}" == refs/tags/* ]]; then
+            echo "tag=${GITHUB_REF#refs/tags/}" >> "$GITHUB_OUTPUT"
+          elif [[ -n "${{ inputs.tag }}" ]]; then
+            echo "tag=${{ inputs.tag }}" >> "$GITHUB_OUTPUT"
+          else
+            echo "tag=v$(grep 'version:' pubspec.yaml | head -1 | awk '{print $2}')" >> "$GITHUB_OUTPUT"
+          fi
+
+      - name: Create Release
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          TAG="${{ steps.tag.outputs.tag }}"
+
+          # Create tag if it doesn't exist (workflow_dispatch)
+          if ! git rev-parse "$TAG" >/dev/null 2>&1; then
+            git tag "$TAG"
+            git push origin "$TAG"
+          fi
+
+          gh release create "$TAG" \
+            --title "CrispCloud $TAG" \
+            --generate-notes \
+            artifacts/crispcloud-web/crispcloud-web.tar.gz \
+            artifacts/crispcloud-linux-x64/crispcloud-linux-x64.tar.gz \
+            artifacts/crispcloud-macos/crispcloud-macos.zip \
+            artifacts/crispcloud-windows-x64/crispcloud-windows-x64.zip \
+            artifacts/crispcloud-android/crispcloud-android.apk
