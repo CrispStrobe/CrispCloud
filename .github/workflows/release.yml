@@ -176,9 +176,28 @@ jobs:
           git config --global url."https://x-access-token:${TOKEN}@github.com/".insteadOf "https://github.com/"
       - run: flutter pub get
       - name: Build APK
-        run: flutter build apk --release
-      - name: Rename APK
-        run: cp build/app/outputs/flutter-apk/app-release.apk crispcloud-android.apk
+        run: |
+          # Build with verbose output to diagnose path issues
+          flutter build apk --release 2>&1 || true
+          # Search for any APK produced by Gradle
+          echo "=== Searching for APKs ==="
+          find build -name "*.apk" -type f 2>/dev/null || true
+          find . -path "*/outputs/*" -name "*.apk" -type f 2>/dev/null || true
+          # If flutter couldn't find it, try Gradle directly
+          if [ ! -f build/app/outputs/flutter-apk/app-release.apk ]; then
+            echo "Flutter APK not at expected path, trying Gradle directly..."
+            cd android && ./gradlew assembleRelease --no-daemon 2>&1 && cd ..
+            find . -name "*.apk" -type f 2>/dev/null || true
+          fi
+      - name: Find and rename APK
+        run: |
+          APK=$(find . -name "*.apk" -not -path "*/intermediates/*" -type f 2>/dev/null | head -1)
+          if [ -z "$APK" ]; then
+            echo "::error::No APK found anywhere in the build tree"
+            exit 1
+          fi
+          echo "Found APK: $APK ($(stat -c%s "$APK") bytes)"
+          cp "$APK" crispcloud-android.apk
       - uses: actions/upload-artifact@v4
         with:
           name: crispcloud-android
@@ -219,6 +238,9 @@ jobs:
             git tag "$TAG"
             git push origin "$TAG"
           fi
+
+          # Delete existing release if re-running
+          gh release delete "$TAG" --yes 2>/dev/null || true
 
           # Collect available artifacts (some platforms may have failed)
           FILES=()
