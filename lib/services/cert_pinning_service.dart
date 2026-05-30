@@ -49,7 +49,8 @@ class CertPinSet {
   bool matchesHost(String host) {
     final h = host.toLowerCase();
     for (final pattern in hostPatterns) {
-      if (h == pattern || h.endsWith('.$pattern')) return true;
+      final p = pattern.toLowerCase();
+      if (h == p || h.endsWith('.$p')) return true;
     }
     return false;
   }

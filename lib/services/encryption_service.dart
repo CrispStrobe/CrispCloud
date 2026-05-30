@@ -170,7 +170,7 @@ class EncryptionService {
     final verifyB64 = data['verify'] as String?;
 
     final key = recoverKeyFromMnemonic(mnemonic);
-    final salt = importKeyFromHex(saltHex);
+    final salt = _hexToBytes(saltHex);
 
     // Verify if token is present
     if (verifyB64 != null) {
@@ -189,5 +189,18 @@ class EncryptionService {
     }
 
     return {'key': key, 'salt': salt};
+  }
+
+  /// Decode an arbitrary-length hex string to bytes.
+  static Uint8List _hexToBytes(String hex) {
+    final clean = hex.replaceAll(RegExp(r'\s+'), '').toLowerCase();
+    if (clean.length % 2 != 0) {
+      throw FormatException('Hex string must have even length, got ${clean.length}');
+    }
+    final bytes = Uint8List(clean.length ~/ 2);
+    for (var i = 0; i < bytes.length; i++) {
+      bytes[i] = int.parse(clean.substring(i * 2, i * 2 + 2), radix: 16);
+    }
+    return bytes;
   }
 }

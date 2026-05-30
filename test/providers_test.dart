@@ -276,22 +276,27 @@ void main() {
   });
 
   // --- Tabs ---
+  // Note: PanelNotifier._restoreTabs() is async (reads SharedPreferences),
+  // so we must await a microtask flush before checking tab state.
   group('PanelNotifier tabs', () {
-    test('starts with one tab', () {
+    test('starts with one tab', () async {
       final panel = container.read(panelProvider(PanelSide.local));
+      await Future.delayed(Duration.zero); // flush async _restoreTabs
       expect(panel.tabs.length, equals(1));
     });
 
-    test('addTab adds a tab and activates it', () {
+    test('addTab adds a tab and activates it', () async {
       final panel = container.read(panelProvider(PanelSide.local));
+      await Future.delayed(Duration.zero);
       final originalTabId = panel.activeTabId;
       panel.addTab();
       expect(panel.tabs.length, equals(2));
       expect(panel.activeTabId, isNot(equals(originalTabId)));
     });
 
-    test('closeTab removes non-pinned tab', () {
+    test('closeTab removes non-pinned tab', () async {
       final panel = container.read(panelProvider(PanelSide.local));
+      await Future.delayed(Duration.zero);
       panel.addTab();
       expect(panel.tabs.length, equals(2));
       final newTabId = panel.activeTabId;
@@ -299,15 +304,17 @@ void main() {
       expect(panel.tabs.length, equals(1));
     });
 
-    test('closeTab does not remove last tab', () {
+    test('closeTab does not remove last tab', () async {
       final panel = container.read(panelProvider(PanelSide.local));
+      await Future.delayed(Duration.zero);
       final tabId = panel.activeTabId;
       panel.closeTab(tabId);
       expect(panel.tabs.length, equals(1));
     });
 
-    test('toggleTabPin toggles pin state', () {
+    test('toggleTabPin toggles pin state', () async {
       final panel = container.read(panelProvider(PanelSide.local));
+      await Future.delayed(Duration.zero);
       final tabId = panel.activeTabId;
       expect(panel.activeTab!.isPinned, isFalse);
       panel.toggleTabPin(tabId);

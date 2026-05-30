@@ -194,19 +194,19 @@ void main() {
     });
 
     test('changeCode with correct current code', () async {
-      await lockService.setup('old');
-      final ok = await lockService.changeCode('old', 'new');
+      await lockService.setup('oldcode');
+      final ok = await lockService.changeCode('oldcode', 'newcode');
       expect(ok, true);
-      expect(await lockService.verify('new'), true);
-      expect(await lockService.verify('old'), false);
+      expect(await lockService.verify('newcode'), true);
+      expect(await lockService.verify('oldcode'), false);
     });
 
     test('changeCode with wrong current code fails', () async {
-      await lockService.setup('correct');
-      final ok = await lockService.changeCode('wrong', 'new');
+      await lockService.setup('correct1');
+      final ok = await lockService.changeCode('wrong', 'newcode');
       expect(ok, false);
       // Original code still works
-      expect(await lockService.verify('correct'), true);
+      expect(await lockService.verify('correct1'), true);
     });
 
     test('setup rejects short codes', () async {
