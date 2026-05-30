@@ -39,6 +39,14 @@ class SyncPairs extends Table {
   BoolColumn get enabled => boolean().withDefault(const Constant(true))();
   DateTimeColumn get lastSyncAt => dateTime().nullable()();
   DateTimeColumn get createdAt => dateTime().withDefault(currentDateAndTime)();
+
+  /// Comma-separated glob patterns to include (empty = include all).
+  /// Example: "*.dart,*.yaml,lib/**"
+  TextColumn get includePatterns => text().withDefault(const Constant(''))();
+
+  /// Comma-separated glob patterns to exclude.
+  /// Example: ".git/**,*.tmp,node_modules/**"
+  TextColumn get excludePatterns => text().withDefault(const Constant(''))();
 }
 
 /// Per-file sync state within a sync pair.
@@ -81,7 +89,18 @@ class SyncDatabase extends _$SyncDatabase {
   SyncDatabase.forTesting(super.e);
 
   @override
-  int get schemaVersion => 1;
+  int get schemaVersion => 2;
+
+  @override
+  MigrationStrategy get migration => MigrationStrategy(
+    onCreate: (m) => m.createAll(),
+    onUpgrade: (m, from, to) async {
+      if (from < 2) {
+        await m.addColumn(syncPairs, syncPairs.includePatterns);
+        await m.addColumn(syncPairs, syncPairs.excludePatterns);
+      }
+    },
+  );
 
   // --- SyncPair CRUD ---
 

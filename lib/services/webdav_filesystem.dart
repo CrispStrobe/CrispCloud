@@ -7,10 +7,11 @@ import 'dart:typed_data';
 
 import 'package:file/file.dart';
 import 'package:file/local.dart';
-import 'package:flutter/foundation.dart';
 import 'package:path/path.dart' as p;
 
 import 'package:filen_dart/filen_client.dart'; // exports FilenClient and all modules
+
+import 'log_service.dart';
 
 // --- Helper: Virtual FileStat ---
 class _VirtualFileStat implements io.FileStat {
@@ -53,6 +54,8 @@ class _VirtualFileStat implements io.FileStat {
 
 // --- Helper: Streaming File Sink ---
 class FilenFileSink implements io.IOSink {
+  static final _log = Log('WebDAVFilesystem');
+
   final FilenFile filenFile;
   final FilenClient client;
   final String remotePath;
@@ -158,7 +161,7 @@ class FilenFileSink implements io.IOSink {
           modificationTime = stat.modified.millisecondsSinceEpoch.toString();
           creationTime = stat.changed.millisecondsSinceEpoch.toString();
         } catch (e) {
-          debugPrint('Failed to read file timestamps for upload: $e');
+          _log.warn('Failed to read file timestamps for upload: $e');
         }
       }
 

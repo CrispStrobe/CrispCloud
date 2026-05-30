@@ -1,8 +1,10 @@
 // lib/services/ftp_config_service.dart
-import 'package:flutter/foundation.dart';
+import 'log_service.dart';
 import 'secure_storage_service.dart';
 
 class FTPConfigService {
+  static final _log = Log('FtpConfig');
+
   final String configPath;
   final SecureStorage _secure;
 
@@ -13,7 +15,7 @@ class FTPConfigService {
     try {
       return await _secure.readMap('ftp_credentials');
     } catch (e) {
-      debugPrint('Warning: Error reading FTP credentials: $e');
+      _log.warn('Error reading credentials', e);
       return null;
     }
   }
@@ -22,7 +24,7 @@ class FTPConfigService {
     try {
       await _secure.writeMap('ftp_credentials', creds);
     } catch (e) {
-      debugPrint('Error saving FTP credentials: $e');
+      _log.error('Error saving credentials', e);
       rethrow;
     }
   }
@@ -31,7 +33,7 @@ class FTPConfigService {
     try {
       await _secure.delete('ftp_credentials');
     } catch (e) {
-      debugPrint('Warning: Error clearing FTP credentials: $e');
+      _log.warn('Error clearing credentials', e);
     }
   }
 }

@@ -1,10 +1,13 @@
 // services/receive_service.dart
 import 'package:receive_sharing_intent/receive_sharing_intent.dart';
-import 'package:flutter/foundation.dart';
 import 'dart:async';
 import 'dart:io';
 
+import 'log_service.dart';
+
 class ReceiveService {
+  static final _log = Log('ReceiveService');
+
   static StreamSubscription? _intentSubscription;
 
   static void initialize({
@@ -13,7 +16,7 @@ class ReceiveService {
   }) {
     // Only initialize on mobile platforms
     if (!Platform.isAndroid && !Platform.isIOS) {
-      debugPrint('⚠️ Receive sharing intent not supported on ${Platform.operatingSystem}');
+      _log.warn('Receive sharing intent not supported on ${Platform.operatingSystem}');
       return;
     }
 
@@ -27,7 +30,7 @@ class ReceiveService {
           }
         },
         onError: (err) {
-          debugPrint("Error receiving shared files: $err");
+          _log.error("Error receiving shared files: $err");
         },
       );
 
@@ -39,10 +42,10 @@ class ReceiveService {
         }
         ReceiveSharingIntent.instance.reset();
       }).catchError((err) {
-        debugPrint("Error getting initial media: $err");
+        _log.error("Error getting initial media: $err");
       });
     } catch (e) {
-      debugPrint("Error initializing receive service: $e");
+      _log.error("Error initializing receive service: $e");
     }
   }
 

@@ -111,6 +111,22 @@ class _SyncManagerDialog extends ConsumerWidget {
           onPressed: () => Navigator.pop(context),
           child: const Text('Close'),
         ),
+        TextButton.icon(
+          icon: const Icon(Icons.replay, size: 16),
+          label: const Text('Replay Offline'),
+          onPressed: sync.isSyncing ? null : () async {
+            final result = await ref.read(syncProvider).replayOfflineQueue();
+            if (context.mounted) {
+              ScaffoldMessenger.of(context).showSnackBar(
+                SnackBar(content: Text(
+                  result.hasChanges || result.errors > 0
+                      ? 'Replayed: ${result.uploaded + result.downloaded} ops, ${result.errors} errors'
+                      : 'No offline operations to replay',
+                )),
+              );
+            }
+          },
+        ),
         ElevatedButton.icon(
           icon: const Icon(Icons.add, size: 18),
           label: const Text('Add Pair'),
@@ -124,6 +140,8 @@ class _SyncManagerDialog extends ConsumerWidget {
     final nameController = TextEditingController();
     final localController = TextEditingController();
     final remoteController = TextEditingController(text: '/');
+    final includeController = TextEditingController();
+    final excludeController = TextEditingController();
     var policy = ConflictPolicy.newestWins;
     var direction = SyncDirection.twoWay;
 
@@ -136,66 +154,90 @@ class _SyncManagerDialog extends ConsumerWidget {
           title: const Text('New Sync Pair'),
           content: SizedBox(
             width: 400,
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                TextField(
-                  controller: nameController,
-                  decoration: const InputDecoration(
-                    labelText: 'Name',
-                    hintText: 'e.g., Documents Sync',
-                    border: OutlineInputBorder(),
+            child: SingleChildScrollView(
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  TextField(
+                    controller: nameController,
+                    decoration: const InputDecoration(
+                      labelText: 'Name',
+                      hintText: 'e.g., Documents Sync',
+                      border: OutlineInputBorder(),
+                    ),
+                    autofocus: true,
                   ),
-                  autofocus: true,
-                ),
-                const SizedBox(height: 12),
-                TextField(
-                  controller: localController,
-                  decoration: const InputDecoration(
-                    labelText: 'Local Folder Path',
-                    hintText: '/home/user/Documents',
-                    border: OutlineInputBorder(),
-                    prefixIcon: Icon(Icons.folder),
+                  const SizedBox(height: 12),
+                  TextField(
+                    controller: localController,
+                    decoration: const InputDecoration(
+                      labelText: 'Local Folder Path',
+                      hintText: '/home/user/Documents',
+                      border: OutlineInputBorder(),
+                      prefixIcon: Icon(Icons.folder),
+                    ),
                   ),
-                ),
-                const SizedBox(height: 12),
-                TextField(
-                  controller: remoteController,
-                  decoration: const InputDecoration(
-                    labelText: 'Remote Folder Path',
-                    hintText: '/Documents',
-                    border: OutlineInputBorder(),
-                    prefixIcon: Icon(Icons.cloud),
+                  const SizedBox(height: 12),
+                  TextField(
+                    controller: remoteController,
+                    decoration: const InputDecoration(
+                      labelText: 'Remote Folder Path',
+                      hintText: '/Documents',
+                      border: OutlineInputBorder(),
+                      prefixIcon: Icon(Icons.cloud),
+                    ),
                   ),
-                ),
-                const SizedBox(height: 12),
-                DropdownButtonFormField<ConflictPolicy>(
-                  value: policy,
-                  decoration: const InputDecoration(
-                    labelText: 'Conflict Policy',
-                    border: OutlineInputBorder(),
+                  const SizedBox(height: 12),
+                  DropdownButtonFormField<ConflictPolicy>(
+                    value: policy,
+                    decoration: const InputDecoration(
+                      labelText: 'Conflict Policy',
+                      border: OutlineInputBorder(),
+                    ),
+                    items: ConflictPolicy.values.map((p) => DropdownMenuItem(
+                      value: p,
+                      child: Text(_policyLabel(p)),
+                    )).toList(),
+                    onChanged: (v) => setState(() => policy = v ?? policy),
                   ),
-                  items: ConflictPolicy.values.map((p) => DropdownMenuItem(
-                    value: p,
-                    child: Text(_policyLabel(p)),
-                  )).toList(),
-                  onChanged: (v) => setState(() => policy = v ?? policy),
-                ),
-                const SizedBox(height: 12),
-                DropdownButtonFormField<SyncDirection>(
-                  value: direction,
-                  decoration: const InputDecoration(
-                    labelText: 'Direction',
-                    border: OutlineInputBorder(),
+                  const SizedBox(height: 12),
+                  DropdownButtonFormField<SyncDirection>(
+                    value: direction,
+                    decoration: const InputDecoration(
+                      labelText: 'Direction',
+                      border: OutlineInputBorder(),
+                    ),
+                    items: const [
+                      DropdownMenuItem(value: SyncDirection.twoWay, child: Text('Two-Way')),
+                      DropdownMenuItem(value: SyncDirection.uploadOnly, child: Text('Upload Only')),
+                      DropdownMenuItem(value: SyncDirection.downloadOnly, child: Text('Download Only')),
+                    ],
+                    onChanged: (v) => setState(() => direction = v ?? direction),
                   ),
-                  items: const [
-                    DropdownMenuItem(value: SyncDirection.twoWay, child: Text('Two-Way')),
-                    DropdownMenuItem(value: SyncDirection.uploadOnly, child: Text('Upload Only')),
-                    DropdownMenuItem(value: SyncDirection.downloadOnly, child: Text('Download Only')),
-                  ],
-                  onChanged: (v) => setState(() => direction = v ?? direction),
-                ),
-              ],
+                  const SizedBox(height: 12),
+                  TextField(
+                    controller: includeController,
+                    decoration: const InputDecoration(
+                      labelText: 'Include Patterns (optional)',
+                      hintText: '*.dart, *.yaml, lib/**',
+                      helperText: 'Comma-separated globs. Empty = all files.',
+                      border: OutlineInputBorder(),
+                      prefixIcon: Icon(Icons.filter_alt),
+                    ),
+                  ),
+                  const SizedBox(height: 12),
+                  TextField(
+                    controller: excludeController,
+                    decoration: const InputDecoration(
+                      labelText: 'Exclude Patterns (optional)',
+                      hintText: '.git/**, *.tmp, node_modules/**',
+                      helperText: 'Comma-separated globs to skip.',
+                      border: OutlineInputBorder(),
+                      prefixIcon: Icon(Icons.filter_alt_off),
+                    ),
+                  ),
+                ],
+              ),
             ),
           ),
           actions: [
@@ -210,6 +252,8 @@ class _SyncManagerDialog extends ConsumerWidget {
                   provider: auth.currentProvider.name,
                   conflictPolicy: policy,
                   direction: direction,
+                  includePatterns: includeController.text,
+                  excludePatterns: excludeController.text,
                 );
                 if (ctx.mounted) Navigator.pop(ctx);
               },

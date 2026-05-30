@@ -8,17 +8,17 @@
 
 You are continuing development on **CrispCloud**, a cross-platform Flutter cloud file manager at `/mnt/akademie_storage/CrispCloud`. Read `PLAN.md` for the full roadmap and `HISTORY.md` for what's been done.
 
-The project uses the **Adapter pattern** (`CloudStorageClient` interface) with **9 providers** (Filen, Internxt, SFTP, WebDAV, S3, FTP, Google Drive, OneDrive, Dropbox). State management is **Riverpod 2** with 8 focused providers. Tests are in `test/`, ~35+ files, ~250+ unit tests.
+The project uses the **Adapter pattern** (`CloudStorageClient` interface) with **9 providers** (Filen, Internxt, SFTP, WebDAV, S3, FTP, Google Drive, OneDrive, Dropbox). State management is **Riverpod 2** with 9 focused providers. Tests are in `test/`, ~35 files, ~280+ unit tests.
 
 ## What's Been Done (don't redo these)
 
 ### Foundation (Phase 1)
 - Secure credentials via `flutter_secure_storage` + auto-migration from plaintext
 - `SecureStorage` abstraction with `InMemorySecureStorage` test double
-- Structured logging (`Log` service with ring buffer + export)
+- Structured logging (`Log` service with ring buffer + export) — **migrated 33+ files from debugPrint**
 - Centralized `formatters.dart` (formatBytes/Date/Duration/Speed)
 - File decomposition: screen split to 4 files, context menu split, search dialogs extracted
-- **Riverpod 2 state management**: `AppState` split into `authProvider`, `panelProvider(side)`, `transferProvider`, `errorProvider`, `searchProvider`, `syncProvider`, `activePanelProvider`, `showPreviewProvider`
+- **Riverpod 2 state management**: `AppState` split into `authProvider`, `panelProvider(side)`, `transferProvider`, `errorProvider`, `searchProvider`, `syncProvider`, `activePanelProvider`, `showPreviewProvider`, `bookmarksProvider`
 
 ### Performance (Phase 2)
 - `uploadStream`/`downloadStream` on `CloudStorageClient` with SFTP native streaming
@@ -35,19 +35,22 @@ The project uses the **Adapter pattern** (`CloudStorageClient` interface) with *
 - 7 capability flags on all providers
 
 ### Sync Engine (Phase 4)
-- **Database**: drift/SQLite with 3 tables (SyncPairs, SyncEntries, OfflineQueue)
+- **Database**: drift/SQLite with 3 tables (SyncPairs, SyncEntries, OfflineQueue), schema v2
 - **Engine**: two-way sync with 5 conflict policies (newest/local/remote/keep-both/manual), 3 directions
+- **Selective sync**: include/exclude glob patterns per pair, filtered in SyncEngine
+- **Offline replay**: `replayOfflineQueue()` replays queued ops on reconnect
 - **Filesystem watcher**: `package:watcher` with 5s debounce for real-time change detection
 - **System tray**: `system_tray` on desktop with context menu + status tooltip
-- **UI**: Sync Manager dialog, pair CRUD, watch toggle
+- **UI**: Sync Manager dialog, pair CRUD, watch toggle, replay button
 
 ### UI/UX (Phase 5)
-- **Preview pane**: image (zoom/pan), text/code (40+ extensions), metadata — Space key toggle
+- **Preview pane**: image (zoom/pan), text/code (40+ extensions), **markdown** (rendered), **PDF** (pdfx), metadata — Space key toggle
 - **Status bar**: connection status, item count, selection, transfer progress, sync status
-- **Tabs**: multiple tabs per panel, pin, close, duplicate, Ctrl+T/W
+- **Tabs**: multiple tabs per panel, pin, close, duplicate, Ctrl+T/W, **tab persistence across restarts**
 - **Themes**: 6 built-in (System/Light/Dark/OLED/Nord/Dracula) + accent color picker
 - **Command palette**: Ctrl+Shift+P with type-to-filter
 - **Breadcrumbs + selection bar**: clickable path segments, editable address bar
+- **Bookmarks**: pin favorite folders, persistent via SharedPreferences
 - **Draggable panel splitter**: resizable two-panel layout, double-tap to reset
 - **Tree view sidebar**: toggleable folder tree (like VS Code), click to navigate
 - **Grid/Gallery view**: toggle between list and icon grid per panel
@@ -55,41 +58,44 @@ The project uses the **Adapter pattern** (`CloudStorageClient` interface) with *
 - **Mobile swipe**: horizontal gesture to switch panels
 
 ### Power Features (Phase 6)
+- **Built-in editor**: edit remote files in-place (download → edit → Ctrl+S → upload), line numbers, unsaved warning
 - **Batch rename**: 4 modes (find/replace/regex, numbering, prefix/suffix, extension)
 - **Archive support**: extract .zip, create .zip from selected files
 - **Command palette**: context-aware action search
+- **Share links**: provider-native shareable URLs (GDrive, Dropbox, OneDrive)
+- **Version history**: view file versions (GDrive, Dropbox, OneDrive)
+- **Duplicate finder**: MD5 (local) or size-based (remote) duplicate detection
 
 ### Security (Phase 7)
 - **Encryption**: `EncryptionService` (AES-256-GCM, PBKDF2) + `EncryptedStorageWrapper`
-- Wired into connection dialog (toggle + passphrase) and authProvider
+- **Key management**: export/import hex key, BIP39 24-word mnemonic, backup bundle with verification
+- Wired into connection dialog (toggle + passphrase), authProvider, and `KeyManagementDialog`
 
 ## What Needs to Be Done (in priority order)
 
-### 1. Power User Features — HIGH PRIORITY
-- **Built-in editor** (6.1): `code_text_field` or `re_editor`, edit remote files in-place
-- **SSH terminal** (6.2): embed `xterm` for SFTP connections
-- **Shareable links** (6.4): provider-native share link generation
-- **Version history** (6.5): show/restore file versions (GDrive, Dropbox, S3, OneDrive)
-- **Duplicate finder** (6.6): hash-based dedup across providers
-
-### 2. Security Additions
-- **Key management** (7.1): export/import master key, BIP39 mnemonic recovery
+### 1. Security Additions — HIGH PRIORITY
 - **Cryptomator vault format** (7.1): interop with Cyberduck/Mountain Duck
 - **App lock** (7.3): PIN/biometric via `local_auth`
 - **Proxy support** (7.2): HTTP/SOCKS5 via environment variables
+- **Certificate pinning** (7.2): for known providers
+
+### 2. Power User Features — Remaining
+- **SSH terminal** (6.2): embed `xterm` for SFTP connections
+- **Version restore** (6.5): actually call provider APIs to restore old versions (UI exists)
+- **Diff viewer** (6.1): compare two files (local vs remote)
+- **File permissions editor** (6.3): chmod/chown for SFTP
 
 ### 3. Sync Engine — Remaining
-- **Selective sync** (4.2): choose which remote folders to sync, placeholder files
-- **Offline replay** (4.3): replay queued operations on reconnect
 - **Mobile background sync** (4.4): `workmanager` (Android) + `BGTaskScheduler` (iOS)
 - **Delta sync**: only transfer changed bytes (OneDrive, Dropbox support this)
+- **Placeholder files** (4.2): cloud-only files on desktop (like OneDrive Files On-Demand)
+- **Offline file cache** (4.3): cache recently accessed files, LRU eviction
 
 ### 4. Remaining UI/UX
 - **Thumbnails** (5.1): generate in isolate, cache in drift DB
-- **Markdown/PDF preview** (5.1): `flutter_markdown` for .md, `pdfx` for .pdf
-- **Tab state persistence**: save/restore tabs across app restarts
-- **Bookmarks/Favorites**: pin frequently used folders
-- **Column view**: Finder-style as layout alternative
+- **Video/Audio preview** (5.1): streaming player
+- **Column view** (5.5): Finder-style as layout alternative
+- **Ctrl+Tab** (5.2): cycle between tabs
 
 ### 5. Platform Polish (Phase 8)
 - macOS: native menu bar, Finder extension, notarization
@@ -116,13 +122,17 @@ The project uses the **Adapter pattern** (`CloudStorageClient` interface) with *
 
 | File | Purpose |
 |------|---------|
-| `lib/providers/` | 8 Riverpod providers (auth, panel, transfer, error, search, sync, settings) |
-| `lib/providers/auth_provider.dart` | Login/logout, provider switching, encryption, auto-login |
-| `lib/providers/panel_provider.dart` | File listing, selection, sort, tabs, navigation (family per PanelSide) |
-| `lib/providers/sync_provider.dart` | Sync pair CRUD, syncAll/syncOne, filesystem watcher, system tray |
+| `lib/providers/` | 9 Riverpod providers (auth, panel, transfer, error, search, sync, bookmarks, settings) |
+| `lib/providers/auth_provider.dart` | Login/logout, provider switching, encryption + key management, auto-login |
+| `lib/providers/panel_provider.dart` | File listing, selection, sort, tabs (with persistence), navigation (family per PanelSide) |
+| `lib/providers/sync_provider.dart` | Sync pair CRUD, syncAll/syncOne, filesystem watcher, system tray, offline replay |
+| `lib/providers/bookmarks_provider.dart` | Bookmark CRUD with SharedPreferences persistence |
 | `lib/services/cloud_storage_interface.dart` | `CloudStorageClient` abstract + `CloudProvider` enum (9 values) + factory |
-| `lib/services/sync_engine.dart` | Core two-way sync: scan, diff, conflict resolution, execute |
-| `lib/services/sync_database.dart` | Drift/SQLite tables for sync metadata |
+| `lib/services/sync_engine.dart` | Core two-way sync: scan, diff, conflict resolution, selective filters, execute |
+| `lib/services/sync_database.dart` | Drift/SQLite tables for sync metadata (schema v2: include/exclude patterns) |
+| `lib/services/encryption_service.dart` | AES-256-GCM + key management (hex, BIP39, backup bundles) |
+| `lib/widgets/key_management_dialog.dart` | Key export/import/recovery UI |
+| `lib/widgets/file_editor_dialog.dart` | Full-screen text editor for remote files |
 | `lib/services/gdrive_client_adapter.dart` | Google Drive — good template for new OAuth2 providers |
 | `lib/services/s3_client_adapter.dart` | S3 reference adapter (715 lines) — template for non-OAuth providers |
 | `lib/services/transfer_queue.dart` | Concurrent transfer manager |
@@ -141,6 +151,7 @@ The project uses the **Adapter pattern** (`CloudStorageClient` interface) with *
 - **OAuth2 adapters**: browser flow via `url_launcher` + localhost `HttpServer`, `restoreCredentials()` for auto-login.
 - **Riverpod**: widgets use `ConsumerWidget`/`ConsumerStatefulWidget`, `ref.watch()` for reactive, `ref.read()` for one-shot.
 - **File naming**: `<provider>_client_adapter.dart`, `<provider>_config_service.dart`
+- **Logging**: use `static final _log = Log('ClassName')` with `_log.info/debug/warn/error`. Never use `debugPrint` directly.
 - **When done**: check off items in `PLAN.md`, add entries to `HISTORY.md`
 
 ## How to Verify

@@ -1,8 +1,10 @@
 // lib/services/webdav_config_service.dart
-import 'package:flutter/foundation.dart';
+import 'log_service.dart';
 import 'secure_storage_service.dart';
 
 class WebDavConfigService {
+  static final _log = Log('WebDavConfig');
+
   final String configPath;
   final SecureStorage _secure;
 
@@ -13,7 +15,7 @@ class WebDavConfigService {
     try {
       return await _secure.readMap('webdav_credentials');
     } catch (e) {
-      debugPrint('⚠️ Error reading WebDAV credentials: $e');
+      _log.warn('Error reading credentials', e);
       return null;
     }
   }
@@ -22,7 +24,7 @@ class WebDavConfigService {
     try {
       await _secure.writeMap('webdav_credentials', creds);
     } catch (e) {
-      debugPrint('❌ Error saving WebDAV credentials: $e');
+      _log.error('Error saving credentials', e);
       rethrow;
     }
   }
@@ -31,7 +33,7 @@ class WebDavConfigService {
     try {
       await _secure.delete('webdav_credentials');
     } catch (e) {
-      debugPrint('⚠️ Error clearing WebDAV credentials: $e');
+      _log.warn('Error clearing credentials', e);
     }
   }
 }

@@ -8,10 +8,13 @@ import 'package:web_socket_channel/web_socket_channel.dart';
 import 'package:flutter/foundation.dart'; // for kIsWeb
 
 import 'cloud_storage_interface.dart';
+import 'log_service.dart';
 import 'secure_storage_service.dart';
 import 'sftp_config_service.dart';
 
 class SFTPClientAdapter extends CloudStorageClient {
+  static final _log = Log('SFTPClient');
+
   final SFTPConfigService _config;
 
   // FIX: Expose config for AppState to read credentials
@@ -63,7 +66,7 @@ class SFTPClientAdapter extends CloudStorageClient {
 
     try {
       if (kIsWeb) {
-        debugPrint('🌐 Web Environment: Connecting via WebSocket to $_host...');
+        _log.info('Web environment: connecting via WebSocket to $_host...');
 
         // 1. Determine WebSocket URI
         Uri uri;
@@ -103,7 +106,7 @@ class SFTPClientAdapter extends CloudStorageClient {
       _sshClient?.close();
       _sshClient = null;
       _sftp = null;
-      debugPrint('❌ SFTP Connection Error: $e');
+      _log.error('Connection error', e);
       throw Exception('Connection failed: $e');
     }
   }
@@ -221,7 +224,7 @@ class SFTPClientAdapter extends CloudStorageClient {
         }
       }
     } catch (e) {
-      debugPrint('SFTP List Error: $e');
+      _log.error('List error', e);
       throw Exception('Failed to list path $path: $e');
     }
 

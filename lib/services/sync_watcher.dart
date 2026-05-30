@@ -10,6 +10,7 @@ import 'dart:io';
 import 'package:flutter/foundation.dart';
 import 'package:watcher/watcher.dart';
 
+import 'log_service.dart';
 import 'sync_database.dart';
 
 /// Callback when a watched directory has changes.
@@ -19,6 +20,8 @@ typedef SyncWatchCallback = Future<void> Function(int pairId);
 /// On desktop, uses native directory watching (inotify/FSEvents/ReadDirectoryChanges).
 /// Debounces rapid changes to avoid syncing on every keystroke in an editor.
 class SyncWatcherService {
+  static final _log = Log('SyncWatcher');
+
   final Map<int, DirectoryWatcher> _watchers = {};
   final Map<int, StreamSubscription> _subscriptions = {};
   final Map<int, Timer?> _debounceTimers = {};
@@ -38,19 +41,19 @@ class SyncWatcherService {
       _watchers[pair.id] = watcher;
 
       _subscriptions[pair.id] = watcher.events.listen((event) {
-        debugPrint('SyncWatcher: ${event.type} ${event.path} (pair ${pair.id})');
+        _log.debug('${event.type} ${event.path} (pair ${pair.id})');
 
         // Debounce: reset timer on each event
         _debounceTimers[pair.id]?.cancel();
         _debounceTimers[pair.id] = Timer(debounceDelay, () {
-          debugPrint('SyncWatcher: triggering sync for pair ${pair.id}');
+          _log.debug('Triggering sync for pair ${pair.id}');
           onChanged(pair.id);
         });
       });
 
-      debugPrint('SyncWatcher: watching ${pair.localPath} for pair ${pair.id}');
+      _log.info('Watching ${pair.localPath} for pair ${pair.id}');
     } catch (e) {
-      debugPrint('SyncWatcher: failed to watch ${pair.localPath}: $e');
+      _log.error('Failed to watch ${pair.localPath}', e);
     }
   }
 
@@ -61,7 +64,7 @@ class SyncWatcherService {
     _subscriptions[pairId]?.cancel();
     _subscriptions.remove(pairId);
     _watchers.remove(pairId);
-    debugPrint('SyncWatcher: stopped watching pair $pairId');
+    _log.info('Stopped watching pair $pairId');
   }
 
   /// Stop watching all pairs.

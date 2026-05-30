@@ -22,14 +22,17 @@ import 'services/onedrive_config_service.dart';
 import 'services/s3_config_service.dart';
 import 'services/sftp_config_service.dart';
 import 'services/webdav_config_service.dart';
+import 'services/log_service.dart';
 import 'services/secure_storage_service.dart';
 import 'services/theme_service.dart';
+
+final _log = Log('Main');
 
 Future<void> main() async {
   runZonedGuarded(() async {
     WidgetsFlutterBinding.ensureInitialized();
 
-    debugPrint('[Main] App starting...');
+    _log.info('App starting...');
 
     // Initialize secure storage and migrate credentials
     final secureStorage = PlatformSecureStorage();
@@ -47,12 +50,12 @@ Future<void> main() async {
       configPath = p.join(home, '.cloud-storage-config');
     }
 
-    debugPrint('[Main] Config path: $configPath');
+    _log.info('Config path: $configPath');
 
     CloudProvider defaultProvider = await _getDefaultProvider();
 
     if (defaultProvider == CloudProvider.internxt && !CloudStorageFactory.isInternxtSupported) {
-      debugPrint('Internxt preference detected but provider is disabled. Forcing Filen.');
+      _log.warn('Internxt preference detected but provider is disabled. Forcing Filen.');
       defaultProvider = CloudProvider.filen;
     }
 
@@ -74,12 +77,10 @@ Future<void> main() async {
         child: const MyApp(),
       ));
     } catch (e, stack) {
-      debugPrint('[Main] Critical Error creating config service: $e');
-      debugPrint('$stack');
+      _log.error('Critical error creating config service', e, stack);
     }
   }, (error, stack) {
-    debugPrint('[Global Error Catch] $error');
-    debugPrint('$stack');
+    _log.error('Uncaught error', error, stack);
   });
 }
 
@@ -103,7 +104,7 @@ Future<CloudProvider> _getDefaultProvider() async {
       default: return CloudProvider.filen;
     }
   } catch (e) {
-    debugPrint('Error reading provider preference: $e, defaulting to Filen');
+    _log.warn('Error reading provider preference, defaulting to Filen', e);
     return CloudProvider.filen;
   }
 }
@@ -139,7 +140,7 @@ Future<dynamic> _createConfigService(
         }
     }
   } catch (e) {
-    debugPrint('Critical error creating config service: $e');
+    _log.error('Critical error creating config service', e);
     return FilenConfigService(configPath: configPath, secureStorage: secureStorage);
   }
 }

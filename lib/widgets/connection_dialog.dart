@@ -5,6 +5,8 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../models/panel_side.dart';
 import '../providers/providers.dart';
 import '../services/cloud_storage_interface.dart';
+import '../services/connection_profiles.dart';
+import '../services/log_service.dart';
 
 class ConnectionDialog extends ConsumerStatefulWidget {
   const ConnectionDialog({super.key});
@@ -14,6 +16,8 @@ class ConnectionDialog extends ConsumerStatefulWidget {
 }
 
 class _ConnectionDialogState extends ConsumerState<ConnectionDialog> {
+  static final _log = Log('ConnectionDialog');
+
   // General Controllers
   final _emailController = TextEditingController();
   final _passwordController = TextEditingController();
@@ -45,6 +49,10 @@ class _ConnectionDialogState extends ConsumerState<ConnectionDialog> {
   bool _needs2fa = false;
   String? _error;
 
+  // Connection profiles
+  List<ConnectionProfile> _profiles = [];
+  ConnectionProfileService? _profileService;
+
   // Google Drive Controllers
   final _gdriveClientIdController = TextEditingController();
   final _gdriveClientSecretController = TextEditingController();
@@ -59,6 +67,122 @@ class _ConnectionDialogState extends ConsumerState<ConnectionDialog> {
 
   // Default to Filen, or SFTP if preferred
   CloudProvider _selectedProvider = CloudProvider.filen;
+
+  @override
+  void initState() {
+    super.initState();
+    _loadProfiles();
+  }
+
+  Future<void> _loadProfiles() async {
+    _profileService = ConnectionProfileService(ref.read(secureStorageProvider));
+    _profiles = await _profileService!.getForProvider(_selectedProvider.name);
+    if (mounted) setState(() {});
+  }
+
+  /// Collect current form fields into a map for saving.
+  Map<String, String> _collectFields() {
+    switch (_selectedProvider) {
+      case CloudProvider.sftp:
+        return {'host': _hostController.text, 'port': _portController.text, 'user': _sftpUserController.text};
+      case CloudProvider.ftp:
+        return {'host': _ftpHostController.text, 'port': _ftpPortController.text, 'user': _ftpUserController.text, 'tls': _ftpUseTLS.toString()};
+      case CloudProvider.s3:
+        return {'endpoint': _s3EndpointController.text, 'region': _s3RegionController.text, 'bucket': _s3BucketController.text, 'accessKey': _s3AccessKeyController.text};
+      case CloudProvider.gdrive:
+        return {'clientId': _gdriveClientIdController.text, 'clientSecret': _gdriveClientSecretController.text};
+      case CloudProvider.onedrive:
+        return {'clientId': _onedriveClientIdController.text, 'clientSecret': _onedriveClientSecretController.text};
+      case CloudProvider.dropbox:
+        return {'appKey': _dropboxAppKeyController.text, 'appSecret': _dropboxAppSecretController.text};
+      case CloudProvider.webdav:
+        return {'host': _hostController.text, 'user': _emailController.text};
+      default:
+        return {'email': _emailController.text};
+    }
+  }
+
+  /// Restore form fields from a profile.
+  void _applyProfile(ConnectionProfile profile) {
+    final f = profile.fields;
+    switch (_selectedProvider) {
+      case CloudProvider.sftp:
+        _hostController.text = f['host'] ?? '';
+        _portController.text = f['port'] ?? '22';
+        _sftpUserController.text = f['user'] ?? '';
+        break;
+      case CloudProvider.ftp:
+        _ftpHostController.text = f['host'] ?? '';
+        _ftpPortController.text = f['port'] ?? '21';
+        _ftpUserController.text = f['user'] ?? '';
+        _ftpUseTLS = f['tls'] == 'true';
+        break;
+      case CloudProvider.s3:
+        _s3EndpointController.text = f['endpoint'] ?? 'https://s3.amazonaws.com';
+        _s3RegionController.text = f['region'] ?? 'us-east-1';
+        _s3BucketController.text = f['bucket'] ?? '';
+        _s3AccessKeyController.text = f['accessKey'] ?? '';
+        break;
+      case CloudProvider.gdrive:
+        _gdriveClientIdController.text = f['clientId'] ?? '';
+        _gdriveClientSecretController.text = f['clientSecret'] ?? '';
+        break;
+      case CloudProvider.onedrive:
+        _onedriveClientIdController.text = f['clientId'] ?? '';
+        _onedriveClientSecretController.text = f['clientSecret'] ?? '';
+        break;
+      case CloudProvider.dropbox:
+        _dropboxAppKeyController.text = f['appKey'] ?? '';
+        _dropboxAppSecretController.text = f['appSecret'] ?? '';
+        break;
+      case CloudProvider.webdav:
+        _hostController.text = f['host'] ?? '';
+        _emailController.text = f['user'] ?? '';
+        break;
+      default:
+        _emailController.text = f['email'] ?? '';
+    }
+    setState(() {});
+  }
+
+  Future<void> _saveProfile() async {
+    final nameController = TextEditingController();
+    final name = await showDialog<String>(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        title: const Text('Save Profile'),
+        content: TextField(
+          controller: nameController,
+          decoration: const InputDecoration(
+            labelText: 'Profile Name',
+            hintText: 'e.g., Work S3, Personal SFTP',
+            border: OutlineInputBorder(),
+          ),
+          autofocus: true,
+          onSubmitted: (v) => Navigator.pop(ctx, v),
+        ),
+        actions: [
+          TextButton(onPressed: () => Navigator.pop(ctx), child: const Text('Cancel')),
+          ElevatedButton(
+            onPressed: () => Navigator.pop(ctx, nameController.text),
+            child: const Text('Save'),
+          ),
+        ],
+      ),
+    );
+    if (name == null || name.isEmpty) return;
+    await _profileService?.save(ConnectionProfile(
+      name: name,
+      provider: _selectedProvider.name,
+      fields: _collectFields(),
+    ));
+    await _loadProfiles();
+    if (mounted) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Profile "$name" saved')),
+      );
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -154,10 +278,78 @@ class _ConnectionDialogState extends ConsumerState<ConnectionDialog> {
                     _error = null;
                     _needs2fa = false;
                   });
+                  _loadProfiles();
                 }
               },
             ),
-            const SizedBox(height: 16),
+
+            // --- 1b. Connection Profiles ---
+            if (_profiles.isNotEmpty) ...[
+              const SizedBox(height: 8),
+              Row(
+                children: [
+                  Expanded(
+                    child: DropdownButtonFormField<String>(
+                      decoration: const InputDecoration(
+                        labelText: 'Saved Profiles',
+                        border: OutlineInputBorder(),
+                        isDense: true,
+                      ),
+                      hint: const Text('Load a saved profile...'),
+                      items: _profiles.map((p) => DropdownMenuItem(
+                        value: p.name,
+                        child: Text(p.name),
+                      )).toList(),
+                      onChanged: (name) {
+                        if (name == null) return;
+                        final profile = _profiles.firstWhere((p) => p.name == name);
+                        _applyProfile(profile);
+                      },
+                    ),
+                  ),
+                  const SizedBox(width: 8),
+                  IconButton(
+                    icon: const Icon(Icons.delete, size: 18),
+                    tooltip: 'Delete selected profile',
+                    onPressed: () async {
+                      if (_profiles.isEmpty) return;
+                      // Delete the last selected (or first)
+                      final name = await showDialog<String>(
+                        context: context,
+                        builder: (ctx) => AlertDialog(
+                          title: const Text('Delete Profile'),
+                          content: Column(
+                            mainAxisSize: MainAxisSize.min,
+                            children: _profiles.map((p) => ListTile(
+                              title: Text(p.name),
+                              trailing: IconButton(
+                                icon: const Icon(Icons.delete, color: Colors.red, size: 18),
+                                onPressed: () => Navigator.pop(ctx, p.name),
+                              ),
+                            )).toList(),
+                          ),
+                          actions: [TextButton(onPressed: () => Navigator.pop(ctx), child: const Text('Cancel'))],
+                        ),
+                      );
+                      if (name != null) {
+                        await _profileService?.delete(name, _selectedProvider.name);
+                        _loadProfiles();
+                      }
+                    },
+                  ),
+                ],
+              ),
+            ],
+            const SizedBox(height: 8),
+            Align(
+              alignment: Alignment.centerRight,
+              child: TextButton.icon(
+                icon: const Icon(Icons.save, size: 14),
+                label: const Text('Save as Profile', style: TextStyle(fontSize: 12)),
+                onPressed: _saveProfile,
+              ),
+            ),
+            const SizedBox(height: 8),
 
             // --- 2. Error Message ---
             if (_error != null)
@@ -723,7 +915,7 @@ class _ConnectionDialogState extends ConsumerState<ConnectionDialog> {
             return;
           }
         } catch (e) {
-          debugPrint('2FA check skipped/failed: $e');
+          _log.debug('2FA check skipped/failed: $e');
         }
       }
 

@@ -1,8 +1,10 @@
 // lib/services/gdrive_config_service.dart
-import 'package:flutter/foundation.dart';
+import 'log_service.dart';
 import 'secure_storage_service.dart';
 
 class GDriveConfigService {
+  static final _log = Log('GDriveConfig');
+
   final String configPath;
   final SecureStorage _secure;
 
@@ -13,7 +15,7 @@ class GDriveConfigService {
     try {
       return await _secure.readMap('gdrive_credentials');
     } catch (e) {
-      debugPrint('Warning: Error reading GDrive credentials: $e');
+      _log.warn('Error reading credentials', e);
       return null;
     }
   }
@@ -22,7 +24,7 @@ class GDriveConfigService {
     try {
       await _secure.writeMap('gdrive_credentials', creds);
     } catch (e) {
-      debugPrint('Error saving GDrive credentials: $e');
+      _log.error('Error saving credentials', e);
       rethrow;
     }
   }
@@ -31,7 +33,7 @@ class GDriveConfigService {
     try {
       await _secure.delete('gdrive_credentials');
     } catch (e) {
-      debugPrint('Warning: Error clearing GDrive credentials: $e');
+      _log.warn('Error clearing credentials', e);
     }
   }
 }

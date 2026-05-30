@@ -64,50 +64,85 @@ void showSearchDialog(BuildContext context, WidgetRef ref) {
 void showFindDialog(BuildContext context, WidgetRef ref) {
   final controller = TextEditingController();
   final panelContext = context;
+  final activePanel = ref.read(activePanelProvider);
   final remotePath = ref.read(panelProvider(PanelSide.remote)).currentPath;
+  var useRegex = false;
 
   showDialog(
     context: context,
-    builder: (dialogContext) => AlertDialog(
-      title: Text('Find in "${p.basename(remotePath)}"'),
-      content: TextField(
-        controller: controller,
-        decoration: const InputDecoration(
-          labelText: 'Pattern (e.g. *.pdf, report-*)',
-          border: OutlineInputBorder(),
-          prefixIcon: Icon(Icons.find_in_page),
-        ),
-        autofocus: true,
-        onSubmitted: (value) async {
-          if (value.isNotEmpty) {
-            Navigator.pop(dialogContext);
-            final results = await ref.read(searchProvider).findFiles(value);
-            if (panelContext.mounted) {
-              showSearchResultsDialog(
-                  panelContext, ref, value, [], results);
-            }
-          }
-        },
-      ),
-      actions: [
-        TextButton(
-          onPressed: () => Navigator.pop(dialogContext),
-          child: const Text('Cancel'),
-        ),
-        ElevatedButton(
-          onPressed: () async {
-            if (controller.text.isNotEmpty) {
-              Navigator.pop(dialogContext);
-              final results = await ref.read(searchProvider).findFiles(controller.text);
+    builder: (dialogContext) => StatefulBuilder(
+      builder: (dialogContext, setState) {
+        Future<void> doFind() async {
+          if (controller.text.isEmpty) return;
+          Navigator.pop(dialogContext);
+
+          if (useRegex) {
+            // Regex filter: filter the current panel's files client-side
+            try {
+              final regex = RegExp(controller.text, caseSensitive: false);
+              final panel = ref.read(panelProvider(activePanel));
+              final files = panel.files?.where((f) => regex.hasMatch(f.name)).toList() ?? [];
               if (panelContext.mounted) {
-                showSearchResultsDialog(
-                    panelContext, ref, controller.text, [], results);
+                showSearchResultsDialog(panelContext, ref, controller.text, [], files);
+              }
+            } catch (e) {
+              if (panelContext.mounted) {
+                ScaffoldMessenger.of(panelContext).showSnackBar(
+                  SnackBar(content: Text('Invalid regex: $e')),
+                );
               }
             }
-          },
-          child: const Text('Find'),
-        ),
-      ],
+          } else {
+            final results = await ref.read(searchProvider).findFiles(controller.text);
+            if (panelContext.mounted) {
+              showSearchResultsDialog(panelContext, ref, controller.text, [], results);
+            }
+          }
+        }
+
+        return AlertDialog(
+          title: Text('Find in "${p.basename(remotePath)}"'),
+          content: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              TextField(
+                controller: controller,
+                decoration: InputDecoration(
+                  labelText: useRegex ? 'Regex pattern' : 'Pattern (e.g. *.pdf, report-*)',
+                  border: const OutlineInputBorder(),
+                  prefixIcon: const Icon(Icons.find_in_page),
+                ),
+                autofocus: true,
+                onSubmitted: (_) => doFind(),
+              ),
+              const SizedBox(height: 8),
+              Row(
+                children: [
+                  Checkbox(
+                    value: useRegex,
+                    onChanged: (v) => setState(() => useRegex = v ?? false),
+                  ),
+                  const Text('Use regex', style: TextStyle(fontSize: 13)),
+                  const Spacer(),
+                  if (useRegex)
+                    Text('Filters current listing',
+                        style: TextStyle(fontSize: 11, color: Theme.of(dialogContext).colorScheme.onSurfaceVariant)),
+                ],
+              ),
+            ],
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.pop(dialogContext),
+              child: const Text('Cancel'),
+            ),
+            ElevatedButton(
+              onPressed: doFind,
+              child: const Text('Find'),
+            ),
+          ],
+        );
+      },
     ),
   );
 }

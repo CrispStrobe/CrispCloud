@@ -23,9 +23,12 @@ import 'package:url_launcher/url_launcher.dart';
 
 import 'cloud_storage_interface.dart';
 import 'dropbox_config_service.dart';
+import 'log_service.dart';
 import 'secure_storage_service.dart';
 
 class DropboxClientAdapter extends CloudStorageClient {
+  static final _log = Log('DropboxClient');
+
   final DropboxConfigService _config;
 
   DropboxConfigService get config => _config;
@@ -153,7 +156,7 @@ class DropboxClientAdapter extends CloudStorageClient {
       _authenticated = true;
       return true;
     } catch (e) {
-      debugPrint('Dropbox: Token refresh failed: $e');
+      _log.warn('Token refresh failed', e);
       return false;
     }
   }

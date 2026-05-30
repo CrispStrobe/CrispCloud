@@ -1,6 +1,6 @@
 // models/operation_progress.dart
 import 'dart:async';
-import 'package:flutter/foundation.dart';
+import '../services/log_service.dart';
 import '../utils/formatters.dart' show formatBytes;
 
 enum OperationType {
@@ -18,6 +18,8 @@ enum OperationStatus {
 }
 
 class OperationProgress {
+  static final _log = Log('OperationProgress');
+
   final String id;
   final OperationType type;
   final String sourcePath;
@@ -40,6 +42,12 @@ class OperationProgress {
   Completer<void>? _pauseCompleter;
   bool _isPaused = false;
   
+  // Speed tracking
+  DateTime? _transferStartTime;
+  DateTime? _lastSpeedUpdate;
+  int _lastSpeedBytes = 0;
+  double _currentSpeed = 0; // bytes per second
+
   OperationProgress({
     required this.id,
     required this.type,
@@ -52,7 +60,7 @@ class OperationProgress {
     this.errorMessage,
     this.batchId,
     this.files,
-  });
+  }) : _transferStartTime = DateTime.now();
 
   double get progress => totalBytes > 0 ? currentBytes / totalBytes : 0;
   
@@ -82,7 +90,7 @@ class OperationProgress {
       if (_isPaused) {
         resume();
       }
-      debugPrint('🚫 Operation cancelled: $fileName');
+      _log.debug('Operation cancelled: $fileName');
     }
   }
   
@@ -91,7 +99,7 @@ class OperationProgress {
     if (!_isPaused && !isComplete && !_isCancelled) {
       _isPaused = true;
       _pauseCompleter = Completer<void>();
-      debugPrint('⏸️  Operation paused: $fileName');
+      _log.debug('Operation paused: $fileName');
     }
   }
   
@@ -103,7 +111,7 @@ class OperationProgress {
         _pauseCompleter!.complete();
       }
       _pauseCompleter = null;
-      debugPrint('▶️  Operation resumed: $fileName');
+      _log.debug('Operation resumed: $fileName');
     }
   }
 
@@ -144,7 +152,39 @@ class OperationProgress {
     errorMessage = error;
   }
 
+  /// Current transfer speed in bytes per second.
+  double get currentSpeed => _currentSpeed;
+
+  /// Average speed since transfer started.
+  double get averageSpeed {
+    if (_transferStartTime == null) return 0;
+    final elapsed = DateTime.now().difference(_transferStartTime!).inMilliseconds;
+    if (elapsed <= 0) return 0;
+    return currentBytes / (elapsed / 1000);
+  }
+
+  /// Estimated time remaining in seconds.
+  double get estimatedSecondsRemaining {
+    if (_currentSpeed <= 0 || totalBytes <= 0) return 0;
+    final remaining = totalBytes - currentBytes;
+    return remaining / _currentSpeed;
+  }
+
   void updateProgress(int bytes) {
+    final now = DateTime.now();
+    // Calculate instantaneous speed (smoothed over 1-second windows)
+    if (_lastSpeedUpdate != null) {
+      final elapsed = now.difference(_lastSpeedUpdate!).inMilliseconds;
+      if (elapsed >= 500) {
+        final bytesDelta = bytes - _lastSpeedBytes;
+        _currentSpeed = bytesDelta / (elapsed / 1000);
+        _lastSpeedBytes = bytes;
+        _lastSpeedUpdate = now;
+      }
+    } else {
+      _lastSpeedUpdate = now;
+      _lastSpeedBytes = bytes;
+    }
     currentBytes = bytes;
   }
   

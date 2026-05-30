@@ -1,8 +1,10 @@
 // lib/services/sftp_config_service.dart
-import 'package:flutter/foundation.dart';
+import 'log_service.dart';
 import 'secure_storage_service.dart';
 
 class SFTPConfigService {
+  static final _log = Log('SftpConfig');
+
   final String configPath;
   final SecureStorage _secure;
 
@@ -13,7 +15,7 @@ class SFTPConfigService {
     try {
       return await _secure.readMap('sftp_credentials');
     } catch (e) {
-      debugPrint('⚠️ Error reading SFTP credentials: $e');
+      _log.warn('Error reading credentials', e);
       return null;
     }
   }
@@ -22,7 +24,7 @@ class SFTPConfigService {
     try {
       await _secure.writeMap('sftp_credentials', creds);
     } catch (e) {
-      debugPrint('❌ Error saving SFTP credentials: $e');
+      _log.error('Error saving credentials', e);
       rethrow;
     }
   }
@@ -31,7 +33,7 @@ class SFTPConfigService {
     try {
       await _secure.delete('sftp_credentials');
     } catch (e) {
-      debugPrint('⚠️ Error clearing SFTP credentials: $e');
+      _log.warn('Error clearing credentials', e);
     }
   }
 }

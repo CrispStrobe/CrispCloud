@@ -4,7 +4,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../models/operation_progress.dart';
 import '../providers/providers.dart';
-import '../utils/formatters.dart' show formatBytes;
+import '../utils/formatters.dart' show formatBytes, formatSpeed;
 
 class OperationsPanel extends ConsumerStatefulWidget {
   const OperationsPanel({super.key});
@@ -134,6 +134,20 @@ class _OperationsPanelState extends ConsumerState<OperationsPanel> {
                       Text('• ${(overallProgress * 100).toStringAsFixed(0)}%', style: Theme.of(context).textTheme.bodyMedium),
                       const SizedBox(width: 8),
                       Text('${formatBytes(transferredBytes)} / ${formatBytes(totalBytes)}', style: Theme.of(context).textTheme.bodySmall),
+                      // Aggregate speed
+                      Builder(builder: (_) {
+                        final totalSpeed = transfers.operations
+                            .where((op) => !op.isComplete && !op.isCancelled)
+                            .fold<double>(0, (s, op) => s + op.currentSpeed);
+                        if (totalSpeed > 0) {
+                          return Padding(
+                            padding: const EdgeInsets.only(left: 8),
+                            child: Text(formatSpeed(totalSpeed),
+                                style: TextStyle(fontSize: 11, color: Theme.of(context).colorScheme.primary)),
+                          );
+                        }
+                        return const SizedBox.shrink();
+                      }),
                     ],
                     if (completeCount > 0) ...[
                       const SizedBox(width: 8),
@@ -331,6 +345,17 @@ class _OperationTile extends StatelessWidget {
     if (op.isComplete) return 'Complete';
     if (op.error != null) return 'Error: ${op.error}';
     final percent = (op.progress * 100).toStringAsFixed(0);
-    return '$percent% • ${formatBytes(op.transferredBytes)} / ${formatBytes(op.totalBytes)}';
+    final speedStr = op.currentSpeed > 0 ? ' • ${formatSpeed(op.currentSpeed)}' : '';
+    final etaStr = op.estimatedSecondsRemaining > 0
+        ? ' • ${_formatEta(op.estimatedSecondsRemaining)}'
+        : '';
+    return '$percent% • ${formatBytes(op.transferredBytes)} / ${formatBytes(op.totalBytes)}$speedStr$etaStr';
+  }
+
+  String _formatEta(double seconds) {
+    final s = seconds.round();
+    if (s < 60) return '${s}s left';
+    if (s < 3600) return '${s ~/ 60}m ${s % 60}s left';
+    return '${s ~/ 3600}h ${(s % 3600) ~/ 60}m left';
   }
 }

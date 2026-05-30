@@ -18,10 +18,13 @@ import 'package:path/path.dart' as p;
 import 'package:url_launcher/url_launcher.dart';
 
 import 'cloud_storage_interface.dart';
+import 'log_service.dart';
 import 'onedrive_config_service.dart';
 import 'secure_storage_service.dart';
 
 class OneDriveClientAdapter extends CloudStorageClient {
+  static final _log = Log('OneDriveClient');
+
   final OneDriveConfigService _config;
 
   OneDriveConfigService get config => _config;
@@ -141,7 +144,7 @@ class OneDriveClientAdapter extends CloudStorageClient {
       _authenticated = true;
       return true;
     } catch (e) {
-      debugPrint('OneDrive: Token refresh failed: $e');
+      _log.warn('Token refresh failed', e);
       return false;
     }
   }

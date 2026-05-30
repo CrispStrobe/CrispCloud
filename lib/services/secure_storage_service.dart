@@ -16,6 +16,9 @@ import 'dart:convert';
 import 'package:flutter/foundation.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import 'log_service.dart';
+
+final _secureLog = Log('SecureStorage');
 
 /// Abstract interface for secure key-value storage of credentials.
 ///
@@ -40,7 +43,7 @@ abstract class SecureStorage {
     try {
       return Map<String, String>.from(json.decode(raw) as Map);
     } catch (e) {
-      debugPrint('SecureStorage: failed to decode map for key "$key": $e');
+      _secureLog.warn('Failed to decode map for key "$key"', e);
       return null;
     }
   }
@@ -62,9 +65,8 @@ class PlatformSecureStorage extends SecureStorage {
 
   PlatformSecureStorage() {
     if (kIsWeb) {
-      debugPrint(
-        '⚠️ SecureStorage: running on Web — credentials are stored in '
-        'localStorage (not encrypted at rest). This is a known limitation.',
+      _secureLog.warn(
+        'Running on Web — credentials are stored in localStorage (not encrypted at rest). This is a known limitation.',
       );
     }
   }
@@ -124,7 +126,7 @@ class CredentialMigration {
 
     if (prefs.getBool(_migrationDoneKey) == true) return;
 
-    debugPrint('🔄 Migrating credentials from SharedPreferences to SecureStorage...');
+    _secureLog.info('Migrating credentials from SharedPreferences to SecureStorage...');
 
     // Migrate each provider's credentials
     for (final key in ['dropbox_credentials', 'filen_credentials', 'ftp_credentials', 'gdrive_credentials', 'onedrive_credentials', 's3_credentials', 'sftp_credentials', 'webdav_credentials']) {
@@ -132,11 +134,11 @@ class CredentialMigration {
       if (raw != null) {
         await secure.write(key, raw);
         await prefs.remove(key);
-        debugPrint('  ✅ Migrated $key');
+        _secureLog.debug('Migrated $key');
       }
     }
 
     await prefs.setBool(_migrationDoneKey, true);
-    debugPrint('✅ Credential migration complete');
+    _secureLog.info('Credential migration complete');
   }
 }

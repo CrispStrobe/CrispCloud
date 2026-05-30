@@ -2,6 +2,137 @@
 
 Audit trail of bugs found, issues discovered, and fixes applied.
 
+## 2026-05-30 — Quick Wins: Tab Cycling, Recent Locations, Debounce, Regex Search, Secure Clipboard, Connection Profiles, Live Speed
+
+### 5.2 Ctrl+Tab Tab Cycling
+- **Updated `lib/providers/panel_provider.dart`**: added `nextTab()` and `previousTab()` methods
+  that cycle through tabs with wrap-around.
+- **Updated `lib/screens/keyboard_shortcuts.dart`**: Ctrl+Tab = next tab, Ctrl+Shift+Tab = previous tab.
+  Fixed plain Tab to only trigger panel switch when Ctrl is NOT pressed.
+
+### 5.5 Recent Locations
+- **Created `lib/providers/recent_locations_provider.dart`** (~95 lines):
+  - `RecentLocationsNotifier`: tracks last 20 navigated paths per panel side.
+  - Persisted in SharedPreferences as JSON. Deduplicates (re-visiting moves to top).
+  - `forSide()` filters by PanelSide.
+- **Updated `lib/providers/panel_provider.dart`**: records navigation in `navigateToPath()`.
+- **Updated `lib/widgets/tree_sidebar.dart`**: "RECENT" section showing last 8 locations
+  with click-to-navigate and clear-all button.
+- **Added to barrel export** in `providers.dart`.
+
+### 2.4 Debounced Directory Refresh
+- **Updated `lib/providers/panel_provider.dart`**: added `refreshDebounced()` with configurable
+  delay (default 500ms) that coalesces rapid refresh calls via `Timer`.
+  Added `refreshFiles()` alias for widget compatibility.
+
+### 6.6 Regex Search in File Names
+- **Updated `lib/widgets/search_dialogs.dart`**: Find dialog now has a regex toggle checkbox.
+  When enabled, uses `RegExp` to filter the current panel's file listing client-side.
+  Invalid regex shows error snackbar. Non-regex mode uses the existing provider find API.
+
+### 7.3 Secure Clipboard
+- **Created `lib/utils/secure_clipboard.dart`**: `SecureClipboard.copy()` sets clipboard data
+  and auto-clears after 30 seconds via a `Timer`.
+- **Updated `lib/widgets/key_management_dialog.dart`**: uses `SecureClipboard` for all
+  key/mnemonic/bundle copy operations. Shows "(auto-clears in 30s)" in snackbar.
+
+### 3.3 Connection Profiles
+- **Created `lib/services/connection_profiles.dart`** (~85 lines):
+  - `ConnectionProfile` model: name, provider, fields map.
+  - `ConnectionProfileService`: CRUD operations via SecureStorage, keyed by name+provider.
+- **Updated `lib/widgets/connection_dialog.dart`**:
+  - Loads profiles for selected provider on init and provider switch.
+  - Profile dropdown to load saved configurations into form fields.
+  - "Save as Profile" button with name prompt dialog.
+  - Delete profile dialog with per-profile delete buttons.
+  - `_collectFields()` / `_applyProfile()` for field serialization per provider type.
+
+### 5.7 Live Transfer Speed
+- **Updated `lib/models/operation_progress.dart`**: added speed tracking fields:
+  - `currentSpeed` (bytes/sec, smoothed over 500ms windows)
+  - `averageSpeed` (total bytes / elapsed time)
+  - `estimatedSecondsRemaining` (remaining bytes / current speed)
+  - `updateProgress()` now calculates instantaneous speed.
+- **Updated `lib/widgets/operations_panel.dart`**:
+  - Per-operation status line shows speed + ETA (e.g. "45% • 2.3 MB / 5.1 MB • 1.2 MB/s • 2s left")
+  - Panel header shows aggregate speed across all active transfers.
+
+## 2026-05-30 — Phase 7.1+6.1+5.1+4.2+4.3+1.4: Key Management, Editor, PDF, Selective Sync, Offline Replay, Log Migration
+
+### 7.1 Key Management (BIP39 Mnemonic Recovery)
+- **Updated `lib/services/encryption_service.dart`**: added key management methods:
+  - `exportKeyAsHex()` / `importKeyFromHex()` — raw 32-byte key as hex string
+  - `generateMnemonic()` — BIP39 24-word mnemonic encoding the 256-bit key
+  - `recoverKeyFromMnemonic()` — recover key from mnemonic phrase
+  - `exportBackupBundle()` / `importBackupBundle()` — JSON bundle with mnemonic, salt, and verification token
+- **Updated `lib/providers/auth_provider.dart`**: `encryptionKey`/`encryptionSalt` getters,
+  `enableEncryptionWithKey()` for importing pre-existing keys.
+- **Created `lib/widgets/key_management_dialog.dart`** (~300 lines):
+  - Two tabs: Export/Backup and Import/Recover
+  - Export: shows BIP39 mnemonic, raw hex key, and full backup bundle with copy buttons
+  - Import: restore from backup bundle (recommended), mnemonic (24 words), or raw hex key
+  - Validation and error feedback on import
+- **Wired into app bar**: key icon appears when encryption is active.
+
+### 6.1 Built-in Code Editor
+- **Created `lib/widgets/file_editor_dialog.dart`** (~280 lines):
+  - Full-screen editor with line number gutter
+  - Downloads file content (remote via `downloadFileBytes`, local via `File`)
+  - Editable `TextField` with monospace font
+  - Ctrl+S save shortcut (uploads back to remote or writes to local)
+  - Modified indicator badge, unsaved changes confirmation dialog
+  - Auto-refreshes panel after save
+- **Updated `lib/widgets/file_context_menu.dart`**: "Edit" option for text/code files
+  (40+ extensions), appears for single non-folder files.
+
+### 5.1 PDF Preview
+- **Added `pdfx: ^2.6.0`** to pubspec.yaml.
+- **Updated `lib/widgets/preview_pane.dart`**:
+  - Added `PreviewType.pdf` to classification (`.pdf` extension)
+  - Opens PDF via `PdfDocument.openData()` from downloaded bytes
+  - Renders with `PdfView` widget (scrollable, vertical, no page snapping)
+  - 20MB size limit for PDF preview (same as images)
+
+### 4.2 Selective Sync
+- **Updated `lib/services/sync_database.dart`**: added `includePatterns` and `excludePatterns`
+  text columns to `SyncPairs` table. Schema version bumped to 2 with migration.
+- **Updated `lib/services/sync_engine.dart`**: `passesFilter()` static method using `package:glob`
+  for pattern matching. Integrated into `syncPair()` to skip paths that don't pass filters.
+- **Updated `lib/widgets/sync_dialog.dart`**: include/exclude pattern fields in Add Pair dialog
+  with helper text and filter icons.
+- **Updated `lib/providers/sync_provider.dart`**: `addPair()` accepts `includePatterns`/`excludePatterns`.
+
+### 4.3 Offline Replay
+- **Updated `lib/providers/sync_provider.dart`**: added offline queue methods:
+  - `enqueueOfflineOp()` — queue upload/download/delete/rename/move for later
+  - `replayOfflineQueue()` — replays all pending ops chronologically per pair,
+    marks completed ops, records errors on failures
+  - `_executeOfflineOp()` — executes individual ops (upload, download, delete, rename, move)
+- **Updated `lib/widgets/sync_dialog.dart`**: "Replay Offline" button in dialog actions.
+
+### Tests for Recent Features
+- **Created `test/recent_features_test.dart`** (~300 lines, 30+ tests):
+  - Bookmark model: toJson/fromJson round-trip, side handling
+  - BookmarksNotifier: add/remove, dedup, side separation, SharedPreferences persistence
+  - Key management: hex export/import, BIP39 mnemonic round-trip, backup bundle round-trip,
+    tamper detection, validation errors
+  - PanelTab: label derivation, Windows paths, pin, copyWith, updateLabel
+  - SyncEngine.passesFilter: include, exclude, precedence, glob **, whitespace trimming
+  - Duplicate finder logic: size grouping, folder filtering, zero-size skip
+  - FileItem: equality by uuid/path, sizeFormatted ranges
+  - SyncResult: addition, hasChanges
+
+### 1.4 debugPrint → Log Migration
+- **Migrated 33+ files** from `debugPrint` to structured `Log` service:
+  - All Riverpod providers (auth, panel, transfer, sync, bookmarks)
+  - All cloud adapters (S3, FTP, SFTP, WebDAV, GDrive, OneDrive, Dropbox, Internxt, Filen)
+  - All config services (9 files)
+  - Core services (sync_engine, sync_watcher, transfer_queue, tray_service, cloud_storage_interface, secure_storage_service)
+  - Widgets (connection_dialog, file_list_view), models (operation_progress)
+  - main.dart, share_service, receive_service, webdav_filesystem
+- **Remaining**: app_state.dart (legacy), local_file_service.dart (platform-specific), bookmark/macos_bookmark (platform startup), log_service.dart (correct — uses debugPrint for output)
+- Stripped all emoji from log messages, used appropriate levels (info/debug/warn/error)
+
 ## 2026-05-29 — Phase 5.3+5.5+5.6: UI/UX Improvements (PLAN.md)
 
 ### 5.3 Responsive Layout

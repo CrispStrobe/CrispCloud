@@ -5,8 +5,11 @@ import 'filen_config_service.dart';
 import 'dart:io';
 import 'dart:typed_data';
 import 'package:flutter/foundation.dart'; // for kIsWeb
+import 'log_service.dart';
 
 class FilenClientAdapter extends CloudStorageClient {
+  static final _log = Log('FilenClient');
+
   final FilenClient _client;
   final FilenConfigService filenConfig;
 
@@ -104,7 +107,7 @@ class FilenClientAdapter extends CloudStorageClient {
     } catch (e) {
       // Return null if not found (standardize behavior)
       if (e.toString().contains('not found')) return null;
-      debugPrint('⚠️ Error resolving path: $e');
+      _log.warn('Error resolving path', e);
       return null;
     }
   }
@@ -131,7 +134,7 @@ class FilenClientAdapter extends CloudStorageClient {
         'files': files,
       };
     } catch (e) {
-      debugPrint('⚠️ Error listing path: $e');
+      _log.warn('Error listing path', e);
       // Return empty structure on error to prevent UI crash
       return {
         'folders': <Map<String, dynamic>>[],
@@ -157,7 +160,7 @@ class FilenClientAdapter extends CloudStorageClient {
     if (kIsWeb) {
       // --- WEB PATH (Memory) ---
       // This path purely uses memory and HTTP, avoiding all filesystem calls
-      debugPrint('🌐 Web Upload: uploading bytes directly...');
+      _log.info('Web upload: uploading bytes directly...');
       await _client.uploadBytes(
         Uint8List.fromList(fileData),
         fileName,

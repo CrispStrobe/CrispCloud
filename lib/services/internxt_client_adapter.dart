@@ -21,8 +21,10 @@ import 'package:internxt_client/internxt_client.dart';
 import 'cloud_storage_interface.dart';
 import 'internxt_client.dart' show InternxtUrls;
 import 'internxt_flutter/shared_prefs_storage.dart';
+import 'log_service.dart';
 
 class InternxtClientAdapter extends CloudStorageClient {
+  static final _log = Log('InternxtClient');
   final InternxtClient _client;
 
   InternxtClientAdapter({required ConfigService config})
@@ -73,14 +75,14 @@ class InternxtClientAdapter extends CloudStorageClient {
   @override
   Future<void> login(String email, String password,
       {String? twoFactorCode}) async {
-    debugPrint("🔌 Adapter: Calling InternxtClient login...");
+    _log.debug('Calling InternxtClient login...');
     try {
       final response = await _client.login(email, password, tfaCode: twoFactorCode);
       _lastLoginResponse = response;
-      debugPrint("🔌 Adapter: Login successful. Keys received: ${response.keys}");
+      _log.debug('Login successful. Keys received: ${response.keys}');
       _client.setAuth(response);
     } catch (e) {
-      debugPrint("🔌 Adapter: Login failed with error: $e");
+      _log.error('Login failed', e);
       rethrow;
     }
   }

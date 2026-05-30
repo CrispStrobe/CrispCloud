@@ -4,6 +4,7 @@
 // triggers sync runs, and exposes sync status to the UI.
 
 import 'dart:async';
+import 'dart:io';
 
 import 'package:drift/drift.dart';
 import 'package:flutter/foundation.dart';
@@ -14,10 +15,12 @@ import '../services/sync_database.dart';
 import '../services/sync_engine.dart';
 import '../services/sync_watcher.dart';
 import '../services/tray_service.dart';
+import '../services/log_service.dart';
 import 'auth_provider.dart';
 import 'error_provider.dart';
 
 class SyncNotifier extends ChangeNotifier {
+  static final _log = Log('SyncNotifier');
   final Ref _ref;
   late final SyncDatabase _db;
   late final SyncEngine _engine;
@@ -101,6 +104,8 @@ class SyncNotifier extends ChangeNotifier {
     required String provider,
     ConflictPolicy conflictPolicy = ConflictPolicy.newestWins,
     SyncDirection direction = SyncDirection.twoWay,
+    String includePatterns = '',
+    String excludePatterns = '',
   }) async {
     await _db.insertPair(SyncPairsCompanion.insert(
       name: name,
@@ -109,6 +114,8 @@ class SyncNotifier extends ChangeNotifier {
       provider: provider,
       conflictPolicy: Value(conflictPolicy.name),
       direction: Value(direction.name),
+      includePatterns: Value(includePatterns),
+      excludePatterns: Value(excludePatterns),
     ));
     await _loadPairs();
   }
@@ -152,7 +159,7 @@ class SyncNotifier extends ChangeNotifier {
           final result = await _engine.syncPair(pair, client);
           totalResult = totalResult + result;
         } catch (e) {
-          debugPrint('SyncProvider: error syncing "${pair.name}": $e');
+          _log.error('Error syncing "${pair.name}"', e);
           _ref.read(errorProvider).addError('Sync failed for "${pair.name}": $e');
           totalResult = totalResult + SyncResult(errors: 1, errorMessages: ['${pair.name}: $e']);
         }
@@ -229,6 +236,124 @@ class SyncNotifier extends ChangeNotifier {
       error: const Value(null),
     ));
     notifyListeners();
+  }
+
+  // --- Offline Queue ---
+
+  /// Enqueue an operation for later replay (when offline).
+  Future<void> enqueueOfflineOp({
+    required int pairId,
+    required String operation,
+    required String path,
+    String? targetPath,
+  }) async {
+    await _db.enqueueOffline(OfflineQueueCompanion.insert(
+      pairId: pairId,
+      operation: operation,
+      path: path,
+      targetPath: Value(targetPath),
+    ));
+    notifyListeners();
+  }
+
+  /// Replay all pending offline operations for all pairs.
+  ///
+  /// Call this when the app comes back online. Operations are replayed
+  /// in chronological order. Failed ops are marked with an error but not
+  /// retried (the user can trigger replay again).
+  Future<SyncResult> replayOfflineQueue() async {
+    if (_isSyncing) return const SyncResult();
+
+    _isSyncing = true;
+    _currentPairName = 'Replaying offline queue';
+    notifyListeners();
+
+    var result = const SyncResult();
+
+    try {
+      final auth = _ref.read(authProvider);
+      final client = auth.client;
+      final allPairs = await _db.getAllPairs();
+
+      for (final pair in allPairs) {
+        if (pair.provider != auth.currentProvider.name) continue;
+        final pendingOps = await _db.getPendingOfflineOps(pair.id);
+        if (pendingOps.isEmpty) continue;
+
+        _log.info('Replaying ${pendingOps.length} offline ops for "${pair.name}"');
+
+        for (final op in pendingOps) {
+          try {
+            await _executeOfflineOp(op, pair, client);
+            await _db.markOfflineCompleted(op.id);
+            result = result + const SyncResult(uploaded: 1);
+          } catch (e) {
+            _log.error('Offline replay failed for ${op.operation} ${op.path}', e);
+            // Mark the op with an error but leave it in the queue
+            await (_db.update(_db.offlineQueue)..where((t) => t.id.equals(op.id)))
+                .write(OfflineQueueCompanion(error: Value(e.toString())));
+            result = result + SyncResult(errors: 1, errorMessages: ['${op.path}: $e']);
+          }
+        }
+      }
+
+      // Clean up completed ops
+      await _db.clearCompletedOffline();
+    } finally {
+      _isSyncing = false;
+      _currentPairName = null;
+      _lastResult = result;
+      notifyListeners();
+    }
+
+    return result;
+  }
+
+  /// Execute a single offline operation.
+  Future<void> _executeOfflineOp(
+    OfflineQueueEntry op,
+    SyncPair pair,
+    CloudStorageClient client,
+  ) async {
+    final localBase = pair.localPath;
+    final remoteBase = pair.remotePath;
+
+    switch (op.operation) {
+      case 'upload':
+        final localPath = '$localBase/${op.path}';
+        final remotePath = '$remoteBase/${op.path}';
+        final file = File(localPath);
+        if (!await file.exists()) return; // file was deleted since queue
+        final bytes = await file.readAsBytes();
+        final fileName = op.path.split('/').last;
+        final targetDir = remotePath.substring(0, remotePath.lastIndexOf('/'));
+        await client.uploadFile(bytes, fileName, targetDir.isEmpty ? '/' : targetDir);
+        break;
+      case 'download':
+        final remotePath = '$remoteBase/${op.path}';
+        final localPath = '$localBase/${op.path}';
+        final bytes = await client.downloadFileBytes(remotePath);
+        final file = File(localPath);
+        await file.parent.create(recursive: true);
+        await file.writeAsBytes(bytes);
+        break;
+      case 'delete':
+        final remotePath = '$remoteBase/${op.path}';
+        await client.deletePath(remotePath);
+        break;
+      case 'rename':
+        final remotePath = '$remoteBase/${op.path}';
+        final newName = op.targetPath ?? op.path.split('/').last;
+        await client.renamePath(remotePath, newName);
+        break;
+      case 'move':
+        final sourcePath = '$remoteBase/${op.path}';
+        final targetPath = '$remoteBase/${op.targetPath ?? op.path}';
+        await client.movePath(sourcePath, targetPath);
+        break;
+      default:
+        throw UnsupportedError('Unknown offline operation: ${op.operation}');
+    }
   }
 
   @override

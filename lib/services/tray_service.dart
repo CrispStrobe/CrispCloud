@@ -9,10 +9,12 @@ import 'dart:io';
 import 'package:flutter/foundation.dart';
 import 'package:system_tray/system_tray.dart';
 
+import 'log_service.dart';
 import 'sync_engine.dart';
 
 /// Manages the system tray icon and menu for background sync.
 class TrayService {
+  static final _log = Log('TrayService');
   SystemTray? _tray;
   AppWindow? _appWindow;
   bool _initialized = false;
@@ -59,7 +61,7 @@ class TrayService {
     });
 
     _initialized = true;
-    debugPrint('TrayService: initialized');
+    _log.info('Initialized');
   }
 
   /// Update the tray tooltip to show sync status.

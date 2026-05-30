@@ -14,12 +14,14 @@ import '../models/operation_progress.dart';
 import '../models/panel_side.dart';
 import '../services/transfer_queue.dart';
 import '../utils/formatters.dart' as fmt;
+import '../services/log_service.dart';
 import 'auth_provider.dart';
 import 'core_providers.dart';
 import 'error_provider.dart';
 import 'panel_provider.dart';
 
 class TransferNotifier extends ChangeNotifier {
+  static final _log = Log('TransferNotifier');
   final Ref _ref;
   final TransferQueue _queue = TransferQueue();
   final List<OperationProgress> _operations = [];
@@ -68,7 +70,7 @@ class TransferNotifier extends ChangeNotifier {
     final localFileService = _ref.read(localFileServiceProvider);
     final client = auth.client;
 
-    debugPrint('UPLOAD: ${files.length} files via ${client.providerName}');
+    _log.info('UPLOAD: ${files.length} files via ${client.providerName}');
     await auth.ensureAuthenticated();
 
     final remotePath = _ref.read(panelProvider(PanelSide.remote)).currentPath;
@@ -156,7 +158,7 @@ class TransferNotifier extends ChangeNotifier {
     final localFileService = _ref.read(localFileServiceProvider);
     final client = auth.client;
 
-    debugPrint('DOWNLOAD: ${files.length} files via ${client.providerName}');
+    _log.info('DOWNLOAD: ${files.length} files via ${client.providerName}');
     await auth.ensureAuthenticated();
 
     final target = localPath ?? localFileService.currentPath;

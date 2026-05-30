@@ -1,29 +1,32 @@
 // services/share_service.dart
 import 'package:share_plus/share_plus.dart';
 import 'package:cross_file/cross_file.dart';
-import 'package:flutter/foundation.dart';
 import 'dart:io';
 
+import 'log_service.dart';
+
 class ShareService {
+  static final _log = Log('ShareService');
+
   static Future<void> shareFiles(List<String> filePaths) async {
     if (filePaths.isEmpty) return;
-    
+
     // Check if sharing is supported on this platform
     if (!Platform.isAndroid && !Platform.isIOS) {
-      debugPrint('⚠️ File sharing not fully supported on ${Platform.operatingSystem}');
+      _log.warn('File sharing not fully supported on ${Platform.operatingSystem}');
       // On desktop, we can still try share_plus but it might open default app
     }
-    
+
     try {
       final files = filePaths.map((path) => XFile(path)).toList();
-      
+
       if (files.length == 1) {
         await Share.shareXFiles(files, text: 'Shared from Internxt');
       } else {
         await Share.shareXFiles(files, text: 'Shared ${files.length} files from Internxt');
       }
     } catch (e) {
-      debugPrint('Error sharing files: $e');
+      _log.error('Error sharing files: $e');
       rethrow;
     }
   }
@@ -35,7 +38,7 @@ class ShareService {
         text: text ?? 'Shared from Internxt',
       );
     } catch (e) {
-      debugPrint('Error sharing file: $e');
+      _log.error('Error sharing file: $e');
       rethrow;
     }
   }
@@ -44,7 +47,7 @@ class ShareService {
     try {
       await Share.share(text);
     } catch (e) {
-      debugPrint('Error sharing text: $e');
+      _log.error('Error sharing text: $e');
       rethrow;
     }
   }

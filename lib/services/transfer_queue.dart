@@ -7,6 +7,7 @@ import 'dart:async';
 import 'dart:collection';
 import 'package:flutter/foundation.dart';
 import '../models/operation_progress.dart';
+import 'log_service.dart';
 
 /// A single transfer task that the queue can execute.
 ///
@@ -31,6 +32,7 @@ class TransferTask {
 
 /// Manages concurrent transfers with a configurable pool size.
 class TransferQueue extends ChangeNotifier {
+  static final _log = Log('TransferQueue');
   final int maxConcurrent;
   final int maxRetries;
   final Duration retryBaseDelay;
@@ -93,7 +95,7 @@ class TransferQueue extends ChangeNotifier {
         taskError = e;
       } else if (_isRetryable(e) && attempt < maxRetries) {
         final delay = retryBaseDelay * (1 << attempt); // exponential backoff
-        debugPrint('⏳ Retry ${attempt + 1}/$maxRetries for ${task.id} in ${delay.inSeconds}s');
+        _log.info('Retry ${attempt + 1}/$maxRetries for ${task.id} in ${delay.inSeconds}s');
         await Future.delayed(delay);
         if (!task.operation.isCancelled) {
           await _runTask(task, attempt: attempt + 1);

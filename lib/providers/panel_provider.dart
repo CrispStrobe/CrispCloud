@@ -16,14 +16,18 @@ import '../models/file_item.dart';
 import '../models/panel_side.dart';
 import '../models/panel_tab.dart';
 import '../services/local_file_service.dart';
+import '../services/log_service.dart';
 import 'auth_provider.dart';
 import 'core_providers.dart';
 import 'error_provider.dart';
+import 'recent_locations_provider.dart';
 
 enum SortBy { name, size, date, extension }
 enum SortOrder { ascending, descending }
 
 class PanelNotifier extends ChangeNotifier {
+  static final _log = Log('PanelNotifier');
+
   final Ref _ref;
   final PanelSide side;
 
@@ -43,6 +47,7 @@ class PanelNotifier extends ChangeNotifier {
   String _activeTabId = '';
 
   final _refreshLock = _AsyncLock();
+  Timer? _refreshDebounce;
 
   PanelNotifier(this._ref, this.side)
       : _localFileService = _ref.read(localFileServiceProvider) {
@@ -164,6 +169,9 @@ class PanelNotifier extends ChangeNotifier {
   }
 
   // --- Navigation ---
+
+  /// Refresh the current directory listing. Debounced to avoid rapid re-fetches
+  /// (e.g. from multiple filesystem events or repeated F5 presses).
   Future<void> refresh() async {
     await _refreshLock.synchronized(() async {
       if (side == PanelSide.local) {
@@ -174,6 +182,15 @@ class PanelNotifier extends ChangeNotifier {
       }
     });
   }
+
+  /// Debounced refresh — coalesces rapid refresh calls within [delay].
+  void refreshDebounced({Duration delay = const Duration(milliseconds: 500)}) {
+    _refreshDebounce?.cancel();
+    _refreshDebounce = Timer(delay, () => refresh());
+  }
+
+  /// Alias used by widgets and keyboard shortcuts.
+  void refreshFiles() => refresh();
 
   Future<void> navigateUp() async {
     if (side == PanelSide.local) {
@@ -227,6 +244,8 @@ class PanelNotifier extends ChangeNotifier {
     }
 
     _syncTabPath();
+    // Record in recent locations
+    _ref.read(recentLocationsProvider).add(currentPath, side);
     notifyListeners();
   }
 
@@ -425,7 +444,7 @@ class PanelNotifier extends ChangeNotifier {
         }
       }
     } catch (e) {
-      debugPrint('Tab restore failed: $e');
+      _log.warn('Tab restore failed', e);
     }
     _initFirstTab();
   }
@@ -438,7 +457,7 @@ class PanelNotifier extends ChangeNotifier {
       await prefs.setString(_tabStorageKey, json.encode(list));
       await prefs.setInt('${_tabStorageKey}_active', _tabs.indexWhere((t) => t.id == _activeTabId).clamp(0, _tabs.length - 1));
     } catch (e) {
-      debugPrint('Tab save failed: $e');
+      _log.warn('Tab save failed', e);
     }
   }
 
@@ -477,6 +496,22 @@ class PanelNotifier extends ChangeNotifier {
     notifyListeners();
     _saveTabs();
     refresh();
+  }
+
+  /// Cycle to the next tab. Wraps around.
+  void nextTab() {
+    if (_tabs.length <= 1) return;
+    final idx = _tabs.indexWhere((t) => t.id == _activeTabId);
+    final nextIdx = (idx + 1) % _tabs.length;
+    selectTab(_tabs[nextIdx].id);
+  }
+
+  /// Cycle to the previous tab. Wraps around.
+  void previousTab() {
+    if (_tabs.length <= 1) return;
+    final idx = _tabs.indexWhere((t) => t.id == _activeTabId);
+    final prevIdx = (idx - 1 + _tabs.length) % _tabs.length;
+    selectTab(_tabs[prevIdx].id);
   }
 
   void toggleTabPin(String tabId) {
@@ -631,7 +666,7 @@ class PanelNotifier extends ChangeNotifier {
       _ref.read(errorProvider).clearErrors();
       notifyListeners();
     } catch (e) {
-      debugPrint('Refresh Error: $e');
+      _log.error('Refresh error', e);
       _files = [];
       _ref.read(errorProvider).addError(e.toString());
       notifyListeners();

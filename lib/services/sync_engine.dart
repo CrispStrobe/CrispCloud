@@ -11,10 +11,11 @@ import 'dart:io';
 
 import 'package:crypto/crypto.dart';
 import 'package:drift/drift.dart';
-import 'package:flutter/foundation.dart';
+import 'package:glob/glob.dart' as globpkg;
 import 'package:path/path.dart' as p;
 
 import 'cloud_storage_interface.dart';
+import 'log_service.dart';
 import 'sync_database.dart';
 
 /// A single action the sync engine wants to perform.
@@ -89,9 +90,35 @@ class SyncResult {
 }
 
 class SyncEngine {
+  static final _log = Log('SyncEngine');
+
   final SyncDatabase db;
 
   SyncEngine(this.db);
+
+  /// Check if a relative path passes the include/exclude filters for a pair.
+  ///
+  /// If include patterns are set, the path must match at least one.
+  /// If exclude patterns are set, the path must not match any.
+  static bool passesFilter(String relativePath, String includePatterns, String excludePatterns) {
+    // Parse patterns (comma-separated, trim whitespace, skip empty)
+    final includes = includePatterns.split(',').map((s) => s.trim()).where((s) => s.isNotEmpty).toList();
+    final excludes = excludePatterns.split(',').map((s) => s.trim()).where((s) => s.isNotEmpty).toList();
+
+    // Check excludes first
+    for (final pattern in excludes) {
+      if (globpkg.Glob(pattern).matches(relativePath)) return false;
+    }
+
+    // If no include patterns, everything passes
+    if (includes.isEmpty) return true;
+
+    // Must match at least one include pattern
+    for (final pattern in includes) {
+      if (globpkg.Glob(pattern).matches(relativePath)) return true;
+    }
+    return false;
+  }
 
   /// Run a full sync for a given pair.
   ///
@@ -103,7 +130,7 @@ class SyncEngine {
   /// 6. Execute actions
   /// 7. Update DB state
   Future<SyncResult> syncPair(SyncPair pair, CloudStorageClient client) async {
-    debugPrint('SyncEngine: starting sync for "${pair.name}"');
+    _log.info('Starting sync for "${pair.name}"');
     final policy = ConflictPolicy.values.firstWhere(
       (p) => p.name == pair.conflictPolicy,
       orElse: () => ConflictPolicy.newestWins,
@@ -126,7 +153,11 @@ class SyncEngine {
       dbMap[e.relativePath] = e;
     }
 
-    // 4. Compute actions
+    // 4. Compute actions (applying selective sync filters)
+    final includePatterns = pair.includePatterns;
+    final excludePatterns = pair.excludePatterns;
+    final hasFilters = includePatterns.isNotEmpty || excludePatterns.isNotEmpty;
+
     final allPaths = <String>{
       ...localFiles.keys,
       ...remoteFiles.keys,
@@ -135,6 +166,10 @@ class SyncEngine {
 
     final actions = <SyncAction>[];
     for (final path in allPaths) {
+      // Apply selective sync filters
+      if (hasFilters && !passesFilter(path, includePatterns, excludePatterns)) {
+        continue;
+      }
       final local = localFiles[path];
       final remote = remoteFiles[path];
       final known = dbMap[path];
@@ -149,7 +184,7 @@ class SyncEngine {
       }
     }
 
-    debugPrint('SyncEngine: ${actions.length} actions to execute');
+    _log.info('${actions.length} actions to execute');
 
     // 5. Execute actions
     var result = const SyncResult();
@@ -189,7 +224,7 @@ class SyncEngine {
     await (db.update(db.syncPairs)..where((t) => t.id.equals(pair.id)))
         .write(SyncPairsCompanion(lastSyncAt: Value(DateTime.now())));
 
-    debugPrint('SyncEngine: sync complete — $result');
+    _log.info('Sync complete — $result');
     return result;
   }
 
@@ -425,7 +460,7 @@ class SyncEngine {
           return const SyncResult();
       }
     } catch (e) {
-      debugPrint('SyncEngine: error executing $action: $e');
+      _log.error('Error executing $action', e);
       await db.upsertEntry(SyncEntriesCompanion.insert(
         pairId: pair.id,
         relativePath: action.relativePath,

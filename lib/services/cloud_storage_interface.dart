@@ -1,9 +1,9 @@
 // lib/services/cloud_storage_interface.dart
 import 'dart:async';
 import 'dart:typed_data';
-import 'package:flutter/foundation.dart';
 
 import 'dropbox_client_adapter.dart';
+import 'log_service.dart';
 import 'filen_client_adapter.dart';
 import 'ftp_client_adapter.dart';
 import 'gdrive_client_adapter.dart';
@@ -107,13 +107,15 @@ enum CloudProvider {
 
 /// Factory for creating cloud storage clients
 class CloudStorageFactory {
+  static final _log = Log('CloudStorageFactory');
+
   // --- TOGGLE: Set this to false to disable Internxt globally ---
   static const bool isInternxtSupported = true;
 
   static CloudStorageClient create(CloudProvider provider, {required dynamic config}) {
     // Robust fallback: If Internxt is selected but disabled, force Filen or throw
     if (provider == CloudProvider.internxt && !isInternxtSupported) {
-      debugPrint('⚠️ Internxt is currently disabled. Defaulting to Filen.');
+      _log.warn('Internxt is currently disabled. Defaulting to Filen.');
       // Fallback to Filen if config matches, otherwise throw safe error
       if (config.runtimeType.toString().contains('Filen')) {
          return FilenClientAdapter(config: config);
@@ -146,7 +148,7 @@ class CloudStorageFactory {
           }
       }
     } catch (e) {
-      debugPrint('❌ Error creating client for $provider: $e');
+      _log.error('Error creating client for $provider', e);
       // Emergency fallback to avoid crash
       // Assuming config is compatible with Filen or we just re-throw
       rethrow;

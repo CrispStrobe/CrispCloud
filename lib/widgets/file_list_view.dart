@@ -7,10 +7,13 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../models/file_item.dart';
 import '../models/panel_side.dart';
 import '../providers/providers.dart';
+import '../services/log_service.dart';
 import '../utils/formatters.dart';
 import 'file_context_menu.dart';
 
 class FileListView extends ConsumerWidget {
+  static final _log = Log('FileListView');
+
   final PanelSide side;
   final List<FileItem> files;
   final ScrollController scrollController;
@@ -51,7 +54,7 @@ class FileListView extends ConsumerWidget {
               onSecondaryTap: (details) => showFileContextMenu(context, ref, side, file, details.globalPosition),
             );
           } catch (e) {
-            debugPrint('Error building file tile at index $index: $e');
+            _log.error('Error building file tile at index $index: $e');
             return ListTile(
               title: Text('Error loading item: $e'),
               leading: const Icon(Icons.error, color: Colors.red),
@@ -60,8 +63,7 @@ class FileListView extends ConsumerWidget {
         },
       );
     } catch (e, stackTrace) {
-      debugPrint('Error building file list: $e');
-      debugPrint('Stack trace: $stackTrace');
+      _log.error('Error building file list: $e', e, stackTrace);
       return Center(
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,

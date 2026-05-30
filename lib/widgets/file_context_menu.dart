@@ -13,6 +13,7 @@ import '../services/share_service.dart';
 import '../utils/formatters.dart' show formatBytes, formatDateFull;
 import 'package:path/path.dart' as p;
 import 'batch_rename_dialog.dart' show showBatchRenameDialog;
+import 'file_editor_dialog.dart' show showFileEditorDialog;
 import 'file_list_view.dart' show getFileIcon;
 import 'share_link_dialog.dart' show showShareLinkDialog;
 import 'version_history_dialog.dart' show showVersionHistoryDialog;
@@ -53,6 +54,36 @@ void showFileContextMenu(BuildContext context, WidgetRef ref, PanelSide side, Fi
         ),
       ),
     );
+  }
+
+  // Edit (single text/code file, not folder)
+  if (!isMultiSelect && !isSingleFolder) {
+    final editableExts = {
+      'txt', 'json', 'yaml', 'yml', 'xml', 'csv', 'log', 'ini', 'cfg',
+      'conf', 'toml', 'env', 'gitignore', 'dockerfile', 'md', 'markdown',
+      'dart', 'js', 'ts', 'jsx', 'tsx', 'py', 'rb', 'go', 'rs', 'java',
+      'kt', 'swift', 'c', 'cpp', 'h', 'hpp', 'cs', 'php', 'html', 'css',
+      'scss', 'less', 'sql', 'sh', 'bash', 'zsh', 'ps1', 'bat', 'r',
+      'lua', 'vim', 'makefile', 'properties', 'gradle',
+    };
+    final ext = file.name.split('.').last.toLowerCase();
+    if (editableExts.contains(ext) || !file.name.contains('.')) {
+      items.add(
+        PopupMenuItem(
+          child: const Row(
+            children: [
+              Icon(Icons.edit),
+              SizedBox(width: 8),
+              Text('Edit'),
+            ],
+          ),
+          onTap: () => Future.delayed(
+            Duration.zero,
+            () => showFileEditorDialog(context, ref, file, side),
+          ),
+        ),
+      );
+    }
   }
 
   // Upload to Remote

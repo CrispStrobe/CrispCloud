@@ -10,6 +10,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 import '../models/panel_side.dart';
+import '../services/log_service.dart';
 
 class Bookmark {
   final String name;
@@ -28,6 +29,7 @@ class Bookmark {
 }
 
 class BookmarksNotifier extends ChangeNotifier {
+  static final _log = Log('BookmarksNotifier');
   static const _storageKey = 'bookmarks';
   final List<Bookmark> _bookmarks = [];
 
@@ -48,7 +50,7 @@ class BookmarksNotifier extends ChangeNotifier {
         notifyListeners();
       }
     } catch (e) {
-      debugPrint('Bookmarks load failed: $e');
+      _log.warn('Bookmarks load failed', e);
     }
   }
 
@@ -57,7 +59,7 @@ class BookmarksNotifier extends ChangeNotifier {
       final prefs = await SharedPreferences.getInstance();
       await prefs.setString(_storageKey, json.encode(_bookmarks.map((b) => b.toJson()).toList()));
     } catch (e) {
-      debugPrint('Bookmarks save failed: $e');
+      _log.warn('Bookmarks save failed', e);
     }
   }
 

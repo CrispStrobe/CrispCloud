@@ -1,8 +1,10 @@
 // lib/services/dropbox_config_service.dart
-import 'package:flutter/foundation.dart';
+import 'log_service.dart';
 import 'secure_storage_service.dart';
 
 class DropboxConfigService {
+  static final _log = Log('DropboxConfig');
+
   final String configPath;
   final SecureStorage _secure;
 
@@ -13,7 +15,7 @@ class DropboxConfigService {
     try {
       return await _secure.readMap('dropbox_credentials');
     } catch (e) {
-      debugPrint('Warning: Error reading Dropbox credentials: $e');
+      _log.warn('Error reading credentials', e);
       return null;
     }
   }
@@ -22,7 +24,7 @@ class DropboxConfigService {
     try {
       await _secure.writeMap('dropbox_credentials', creds);
     } catch (e) {
-      debugPrint('Error saving Dropbox credentials: $e');
+      _log.error('Error saving credentials', e);
       rethrow;
     }
   }
@@ -31,7 +33,7 @@ class DropboxConfigService {
     try {
       await _secure.delete('dropbox_credentials');
     } catch (e) {
-      debugPrint('Warning: Error clearing Dropbox credentials: $e');
+      _log.warn('Error clearing credentials', e);
     }
   }
 }

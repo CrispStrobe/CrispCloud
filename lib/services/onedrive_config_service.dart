@@ -1,8 +1,10 @@
 // lib/services/onedrive_config_service.dart
-import 'package:flutter/foundation.dart';
+import 'log_service.dart';
 import 'secure_storage_service.dart';
 
 class OneDriveConfigService {
+  static final _log = Log('OneDriveConfig');
+
   final String configPath;
   final SecureStorage _secure;
 
@@ -13,7 +15,7 @@ class OneDriveConfigService {
     try {
       return await _secure.readMap('onedrive_credentials');
     } catch (e) {
-      debugPrint('Warning: Error reading OneDrive credentials: $e');
+      _log.warn('Error reading credentials', e);
       return null;
     }
   }
@@ -22,7 +24,7 @@ class OneDriveConfigService {
     try {
       await _secure.writeMap('onedrive_credentials', creds);
     } catch (e) {
-      debugPrint('Error saving OneDrive credentials: $e');
+      _log.error('Error saving credentials', e);
       rethrow;
     }
   }
@@ -31,7 +33,7 @@ class OneDriveConfigService {
     try {
       await _secure.delete('onedrive_credentials');
     } catch (e) {
-      debugPrint('Warning: Error clearing OneDrive credentials: $e');
+      _log.warn('Error clearing credentials', e);
     }
   }
 }

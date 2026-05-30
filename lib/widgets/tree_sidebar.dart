@@ -96,6 +96,8 @@ class _TreeSidebarState extends ConsumerState<TreeSidebar> {
           ),
           // Bookmarks section
           _buildBookmarks(context, activePanel),
+          // Recent locations section
+          _buildRecent(context, activePanel),
           // Tree content
           Expanded(
             child: SingleChildScrollView(
@@ -138,6 +140,52 @@ class _TreeSidebarState extends ConsumerState<TreeSidebar> {
                   onTap: () => ref.read(bookmarksProvider).remove(b.path, b.side),
                   child: Icon(Icons.close, size: 12, color: theme.colorScheme.onSurfaceVariant),
                 ),
+              ],
+            ),
+          ),
+        )),
+        Divider(height: 1, color: theme.dividerColor),
+      ],
+    );
+  }
+
+  Widget _buildRecent(BuildContext context, PanelSide activePanel) {
+    final recent = ref.watch(recentLocationsProvider).forSide(activePanel);
+    if (recent.isEmpty) return const SizedBox.shrink();
+
+    final theme = Theme.of(context);
+    final panel = ref.read(panelProvider(activePanel));
+    // Show max 8 recent entries
+    final shown = recent.take(8).toList();
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Padding(
+          padding: const EdgeInsets.only(left: 12, top: 8, bottom: 4, right: 8),
+          child: Row(
+            children: [
+              Text('RECENT', style: TextStyle(
+                fontSize: 10, fontWeight: FontWeight.w700, color: theme.colorScheme.onSurfaceVariant,
+                letterSpacing: 0.5,
+              )),
+              const Spacer(),
+              InkWell(
+                onTap: () => ref.read(recentLocationsProvider).clear(),
+                child: Icon(Icons.clear_all, size: 12, color: theme.colorScheme.onSurfaceVariant),
+              ),
+            ],
+          ),
+        ),
+        ...shown.map((r) => InkWell(
+          onTap: () => panel.navigateToPath(r.path),
+          child: Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 3),
+            child: Row(
+              children: [
+                Icon(Icons.history, size: 14, color: theme.colorScheme.onSurfaceVariant),
+                const SizedBox(width: 6),
+                Expanded(child: Text(r.label, style: const TextStyle(fontSize: 12), overflow: TextOverflow.ellipsis)),
               ],
             ),
           ),

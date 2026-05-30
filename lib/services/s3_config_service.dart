@@ -1,8 +1,10 @@
 // lib/services/s3_config_service.dart
-import 'package:flutter/foundation.dart';
+import 'log_service.dart';
 import 'secure_storage_service.dart';
 
 class S3ConfigService {
+  static final _log = Log('S3Config');
+
   final String configPath;
   final SecureStorage _secure;
 
@@ -13,7 +15,7 @@ class S3ConfigService {
     try {
       return await _secure.readMap('s3_credentials');
     } catch (e) {
-      debugPrint('Warning: Error reading S3 credentials: $e');
+      _log.warn('Error reading credentials', e);
       return null;
     }
   }
@@ -22,7 +24,7 @@ class S3ConfigService {
     try {
       await _secure.writeMap('s3_credentials', creds);
     } catch (e) {
-      debugPrint('Error saving S3 credentials: $e');
+      _log.error('Error saving credentials', e);
       rethrow;
     }
   }
@@ -31,7 +33,7 @@ class S3ConfigService {
     try {
       await _secure.delete('s3_credentials');
     } catch (e) {
-      debugPrint('Warning: Error clearing S3 credentials: $e');
+      _log.warn('Error clearing credentials', e);
     }
   }
 }

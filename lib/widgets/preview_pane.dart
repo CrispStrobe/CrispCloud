@@ -6,6 +6,7 @@
 import 'dart:typed_data';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:pdfx/pdfx.dart';
 import '../models/file_item.dart';
 import '../models/panel_side.dart';
 import '../providers/providers.dart';
@@ -15,7 +16,7 @@ import 'file_list_view.dart' show getFileIcon;
 import 'package:flutter_markdown/flutter_markdown.dart';
 
 /// File types we can preview inline.
-enum PreviewType { image, text, markdown, none }
+enum PreviewType { image, text, markdown, pdf, none }
 
 PreviewType _classifyFile(String name) {
   final ext = name.split('.').last.toLowerCase();
@@ -31,6 +32,8 @@ PreviewType _classifyFile(String name) {
     case 'md':
     case 'markdown':
       return PreviewType.markdown;
+    case 'pdf':
+      return PreviewType.pdf;
     case 'txt':
     case 'json':
     case 'yaml':
@@ -101,6 +104,7 @@ class PreviewPane extends ConsumerStatefulWidget {
 class _PreviewPaneState extends ConsumerState<PreviewPane> {
   Uint8List? _previewBytes;
   String? _textContent;
+  PdfController? _pdfController;
   bool _loading = false;
   String? _error;
   FileItem? _loadedFile; // track which file we loaded
@@ -120,10 +124,18 @@ class _PreviewPaneState extends ConsumerState<PreviewPane> {
     _loadPreview();
   }
 
+  @override
+  void dispose() {
+    _pdfController?.dispose();
+    super.dispose();
+  }
+
   void _loadPreview() {
     final file = widget.file;
     _previewBytes = null;
     _textContent = null;
+    _pdfController?.dispose();
+    _pdfController = null;
     _error = null;
     _loadedFile = file;
 
@@ -138,8 +150,10 @@ class _PreviewPaneState extends ConsumerState<PreviewPane> {
       return;
     }
 
-    // Only preview small files (< 5 MB for text, < 20 MB for images)
-    final maxSize = previewType == PreviewType.text ? 5 * 1024 * 1024 : 20 * 1024 * 1024;
+    // Only preview small files (< 5 MB for text, < 20 MB for images/PDF)
+    final maxSize = previewType == PreviewType.text || previewType == PreviewType.markdown
+        ? 5 * 1024 * 1024
+        : 20 * 1024 * 1024;
     if (file.size != null && file.size! > maxSize) {
       setState(() => _error = 'File too large to preview (${formatBytes(file.size!)})');
       return;
@@ -176,6 +190,17 @@ class _PreviewPaneState extends ConsumerState<PreviewPane> {
           _previewBytes = bytes;
           _loading = false;
         });
+      } else if (type == PreviewType.pdf) {
+        try {
+          final doc = await PdfDocument.openData(bytes);
+          _pdfController = PdfController(document: Future.value(doc));
+          setState(() => _loading = false);
+        } catch (e) {
+          setState(() {
+            _error = 'PDF render failed: $e';
+            _loading = false;
+          });
+        }
       } else if (type == PreviewType.text || type == PreviewType.markdown) {
         // Decode as text (UTF-8 with fallback)
         try {
@@ -306,6 +331,15 @@ class _PreviewPaneState extends ConsumerState<PreviewPane> {
             errorBuilder: (_, e, __) => _buildMetadataView(context, file),
           ),
         ),
+      );
+    }
+
+    // PDF preview
+    if (_pdfController != null) {
+      return PdfView(
+        controller: _pdfController!,
+        scrollDirection: Axis.vertical,
+        pageSnapping: false,
       );
     }
 

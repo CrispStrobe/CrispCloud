@@ -5,7 +5,6 @@
 
 import 'dart:async';
 
-import 'package:flutter/foundation.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
@@ -31,10 +30,12 @@ import '../services/sftp_client_adapter.dart';
 import '../services/sftp_config_service.dart';
 import '../services/webdav_client_adapter.dart';
 import '../services/webdav_config_service.dart';
+import '../services/log_service.dart';
 import 'core_providers.dart';
 import 'error_provider.dart';
 
 class AuthNotifier extends ChangeNotifier {
+  static final _log = Log('AuthNotifier');
   final Ref _ref;
 
   CloudProvider _currentProvider;
@@ -75,7 +76,7 @@ class AuthNotifier extends ChangeNotifier {
     if (_currentProvider == provider) return;
     await _switchLock.synchronized(() async {
       if (_currentProvider == provider) return;
-      debugPrint('Switching cloud provider to $provider');
+      _log.info('Switching cloud provider to $provider');
 
       if (_isConnected) await logout();
 
@@ -138,10 +139,33 @@ class AuthNotifier extends ChangeNotifier {
   }
 
   // --- Encryption ---
+  Uint8List? _encryptionKey;
+  Uint8List? _encryptionSalt;
+
+  /// The current encryption key (null if encryption is disabled).
+  Uint8List? get encryptionKey => _encryptionKey;
+
+  /// The salt used to derive the encryption key.
+  Uint8List? get encryptionSalt => _encryptionSalt;
+
   void enableEncryption(String passphrase) {
     if (_cloudClient is EncryptedStorageWrapper) return;
     final salt = EncryptionService.generateSalt();
     final key = EncryptionService.deriveKey(passphrase, salt);
+    _encryptionKey = key;
+    _encryptionSalt = salt;
+    _cloudClient = EncryptedStorageWrapper(
+      inner: _cloudClient,
+      encryptionKey: key,
+    );
+    notifyListeners();
+  }
+
+  /// Enable encryption with a pre-existing key and salt (e.g. from mnemonic recovery).
+  void enableEncryptionWithKey(Uint8List key, Uint8List salt) {
+    if (_cloudClient is EncryptedStorageWrapper) return;
+    _encryptionKey = key;
+    _encryptionSalt = salt;
     _cloudClient = EncryptedStorageWrapper(
       inner: _cloudClient,
       encryptionKey: key,
@@ -152,6 +176,8 @@ class AuthNotifier extends ChangeNotifier {
   void disableEncryption() {
     if (_cloudClient is EncryptedStorageWrapper) {
       _cloudClient = (_cloudClient as EncryptedStorageWrapper).inner;
+      _encryptionKey = null;
+      _encryptionSalt = null;
       notifyListeners();
     }
   }
@@ -191,7 +217,7 @@ class AuthNotifier extends ChangeNotifier {
   // --- Auto-login ---
   Future<void> _attemptAutoLogin() async {
     await _autoLoginLock.synchronized(() async {
-      debugPrint('Attempting auto-login for ${_cloudClient.providerName}');
+      _log.info('Attempting auto-login for ${_cloudClient.providerName}');
       try {
         if (_cloudClient is DropboxClientAdapter) {
           final adapter = _cloudClient as DropboxClientAdapter;
@@ -270,7 +296,7 @@ class AuthNotifier extends ChangeNotifier {
           }
         }
       } catch (e) {
-        debugPrint('Auto-login exception: $e');
+        _log.warn('Auto-login exception', e);
         _ref.read(errorProvider).addError('Session expired. Please log in again.');
         _isConnected = false;
         notifyListeners();

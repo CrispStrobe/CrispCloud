@@ -18,9 +18,12 @@ import 'package:url_launcher/url_launcher.dart';
 
 import 'cloud_storage_interface.dart';
 import 'gdrive_config_service.dart';
+import 'log_service.dart';
 import 'secure_storage_service.dart';
 
 class GDriveClientAdapter extends CloudStorageClient {
+  static final _log = Log('GDriveClient');
+
   final GDriveConfigService _config;
 
   GDriveConfigService get config => _config;
@@ -162,7 +165,7 @@ class GDriveClientAdapter extends CloudStorageClient {
       _authenticated = true;
       return true;
     } catch (e) {
-      debugPrint('GDrive: Token refresh failed: $e');
+      _log.warn('Token refresh failed', e);
       return false;
     }
   }

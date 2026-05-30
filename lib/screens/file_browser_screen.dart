@@ -16,6 +16,7 @@ import '../widgets/panel_splitter.dart';
 import '../widgets/preview_pane.dart';
 import '../widgets/status_bar.dart';
 import '../widgets/duplicate_finder_dialog.dart';
+import '../widgets/key_management_dialog.dart';
 import '../widgets/sync_dialog.dart';
 import '../widgets/tree_sidebar.dart';
 import '../widgets/theme_picker.dart';
@@ -71,6 +72,12 @@ class _FileBrowserScreenState extends ConsumerState<FileBrowserScreen> {
             tooltip: showPreview ? 'Hide Preview' : 'Show Preview',
             onPressed: () => ref.read(showPreviewProvider.notifier).state = !showPreview,
           ),
+          if (auth.isEncryptionEnabled)
+            IconButton(
+              icon: const Icon(Icons.key, size: 20),
+              tooltip: 'Key Management',
+              onPressed: () => showKeyManagementDialog(context, ref),
+            ),
           IconButton(
             icon: const Icon(Icons.palette, size: 20),
             tooltip: 'Theme',

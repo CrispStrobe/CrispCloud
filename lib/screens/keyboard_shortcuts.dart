@@ -51,6 +51,16 @@ KeyEventResult handleKeyEvent(
     return KeyEventResult.handled;
   }
 
+  // Ctrl+Tab - Next tab / Ctrl+Shift+Tab - Previous tab
+  if (isCtrl && event.logicalKey == LogicalKeyboardKey.tab) {
+    if (isShift) {
+      panel.previousTab();
+    } else {
+      panel.nextTab();
+    }
+    return KeyEventResult.handled;
+  }
+
   // Ctrl+G - Go to path
   if (isCtrl && event.logicalKey == LogicalKeyboardKey.keyG) {
     showGoToDialog(context, ref);
@@ -112,8 +122,8 @@ KeyEventResult handleKeyEvent(
     return KeyEventResult.handled;
   }
 
-  // Tab - Switch panels
-  if (event.logicalKey == LogicalKeyboardKey.tab) {
+  // Tab (without Ctrl) - Switch panels
+  if (!isCtrl && event.logicalKey == LogicalKeyboardKey.tab) {
     final newPanel = activePanel == PanelSide.local ? PanelSide.remote : PanelSide.local;
     ref.read(activePanelProvider.notifier).state = newPanel;
     onPanelSwitch?.call(newPanel);

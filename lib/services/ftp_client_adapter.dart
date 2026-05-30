@@ -6,10 +6,13 @@ import 'package:path/path.dart' as p;
 import 'package:flutter/foundation.dart';
 
 import 'cloud_storage_interface.dart';
-import 'secure_storage_service.dart';
 import 'ftp_config_service.dart';
+import 'log_service.dart';
+import 'secure_storage_service.dart';
 
 class FTPClientAdapter extends CloudStorageClient {
+  static final _log = Log('FTPClient');
+
   final FTPConfigService _config;
 
   // Expose config for AppState to read credentials
@@ -85,7 +88,7 @@ class FTPClientAdapter extends CloudStorageClient {
     } catch (e) {
       _ftpClient = null;
       _authenticated = false;
-      debugPrint('FTP Connection Error: $e');
+      _log.error('Connection error', e);
       throw Exception('Connection failed: $e');
     }
   }
@@ -154,7 +157,7 @@ class FTPClientAdapter extends CloudStorageClient {
       try {
         await _ftpClient!.disconnect();
       } catch (e) {
-        debugPrint('FTP disconnect error: $e');
+        _log.warn('Disconnect error', e);
       }
     }
     _ftpClient = null;
@@ -227,7 +230,7 @@ class FTPClientAdapter extends CloudStorageClient {
         }
       }
     } catch (e) {
-      debugPrint('FTP List Error: $e');
+      _log.error('List error', e);
       throw Exception('Failed to list path $path: $e');
     }
 
@@ -327,7 +330,7 @@ class FTPClientAdapter extends CloudStorageClient {
       await _ftpClient!.makeDirectory(path);
     } catch (e) {
       // Ignore if already exists
-      debugPrint('FTP mkdir note: $e');
+      _log.debug('mkdir note: $e');
     }
   }
 
