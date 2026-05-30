@@ -176,9 +176,19 @@ class _PreviewPaneState extends ConsumerState<PreviewPane> {
           throw Exception('Local preview requires file path access');
         });
       } else if (widget.side == PanelSide.remote) {
-        // Remote files: download bytes
+        // Remote files: check cache first, then download
         final remotePath = file.path ?? '/${file.name}';
-        bytes = await client.downloadFileBytes(remotePath);
+        final providerName = ref.read(authProvider).providerName;
+        final cache = ref.read(fileCacheProvider);
+
+        final cached = await cache.get(remotePath, providerName);
+        if (cached != null) {
+          bytes = Uint8List.fromList(cached);
+        } else {
+          bytes = await client.downloadFileBytes(remotePath);
+          // Cache for offline access (fire-and-forget)
+          cache.put(remotePath, providerName, bytes);
+        }
       } else {
         throw Exception('Cannot determine file source');
       }

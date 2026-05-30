@@ -5,6 +5,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import '../main.dart' show certPinningProvider;
 import '../providers/core_providers.dart';
 import '../services/proxy_service.dart';
 
@@ -22,6 +23,7 @@ class _ProxySettingsDialogState extends ConsumerState<ProxySettingsDialog> {
   final _usernameController = TextEditingController();
   final _passwordController = TextEditingController();
   final _noProxyController = TextEditingController();
+  bool _certPinningEnabled = false;
 
   @override
   void initState() {
@@ -33,6 +35,7 @@ class _ProxySettingsDialogState extends ConsumerState<ProxySettingsDialog> {
     _usernameController.text = config.username ?? '';
     _passwordController.text = config.password ?? '';
     _noProxyController.text = config.noProxy;
+    _certPinningEnabled = ref.read(certPinningProvider).isEnabled;
   }
 
   @override
@@ -141,6 +144,23 @@ class _ProxySettingsDialogState extends ConsumerState<ProxySettingsDialog> {
                 ],
               ),
             ),
+            const SizedBox(height: 12),
+            const Divider(),
+            CheckboxListTile(
+              value: _certPinningEnabled,
+              onChanged: (v) => setState(() => _certPinningEnabled = v ?? false),
+              title: const Text('Certificate Pinning', style: TextStyle(fontSize: 14)),
+              subtitle: const Text(
+                'Verify TLS certificates for Google, Microsoft, Dropbox, Amazon',
+                style: TextStyle(fontSize: 11),
+              ),
+              secondary: Icon(
+                _certPinningEnabled ? Icons.verified_user : Icons.shield_outlined,
+                color: _certPinningEnabled ? Theme.of(context).colorScheme.primary : null,
+              ),
+              dense: true,
+              contentPadding: EdgeInsets.zero,
+            ),
           ],
         ),
       ),
@@ -184,14 +204,19 @@ class _ProxySettingsDialogState extends ConsumerState<ProxySettingsDialog> {
     );
 
     await ref.read(proxyServiceProvider).save(config);
+
+    // Save cert pinning setting and re-apply global overrides
+    final pinning = ref.read(certPinningProvider);
+    await pinning.setEnabled(_certPinningEnabled);
+    ref.read(proxyServiceProvider).applyGlobally();
+
     if (mounted) {
       Navigator.pop(context, true);
+      final parts = <String>[];
+      if (config.isEnabled) parts.add('Proxy: ${config.type.name} ${config.host}:${config.port}');
+      if (_certPinningEnabled) parts.add('Cert pinning: on');
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text(config.isEnabled
-              ? 'Proxy configured: ${config.type.name} ${config.host}:${config.port}'
-              : 'Proxy disabled'),
-        ),
+        SnackBar(content: Text(parts.isEmpty ? 'Proxy disabled' : parts.join(' | '))),
       );
     }
   }

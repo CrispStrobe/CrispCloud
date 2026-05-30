@@ -29,6 +29,9 @@ class SyncAction {
   final DateTime? localModified;
   final DateTime? remoteModified;
 
+  /// Remote content hash for delta sync (stored in DB after sync).
+  final String? remoteContentHash;
+
   SyncAction({
     required this.type,
     required this.relativePath,
@@ -36,6 +39,7 @@ class SyncAction {
     this.dbEntry,
     this.localModified,
     this.remoteModified,
+    this.remoteContentHash,
   });
 
   @override
@@ -265,7 +269,7 @@ class SyncEngine {
         if (remote!.isFolder) {
           return SyncAction(type: SyncActionType.createLocalFolder, relativePath: relativePath, isFolder: true);
         }
-        return SyncAction(type: SyncActionType.download, relativePath: relativePath, remoteModified: remote.modified);
+        return SyncAction(type: SyncActionType.download, relativePath: relativePath, remoteModified: remote.modified, remoteContentHash: remote.contentHash);
       }
       return SyncAction(type: SyncActionType.skip, relativePath: relativePath);
     }
@@ -280,7 +284,7 @@ class SyncEngine {
     // Deleted locally, still exists remote → delete remote or re-download
     if (!existsLocal && existsRemote) {
       if (direction == SyncDirection.downloadOnly) {
-        return SyncAction(type: SyncActionType.download, relativePath: relativePath, remoteModified: remote!.modified);
+        return SyncAction(type: SyncActionType.download, relativePath: relativePath, remoteModified: remote!.modified, remoteContentHash: remote.contentHash);
       }
       // Check if remote was also modified since last sync
       if (known.remoteModified != null && remote!.modified != null &&
@@ -305,7 +309,8 @@ class SyncEngine {
 
     // Both exist — check for modifications
     final localChanged = _isModified(local!, known.localModified, known.localSize);
-    final remoteChanged = _isRemoteModified(remote!, known.remoteModified, known.remoteSize);
+    final remoteChanged = _isRemoteModified(remote!, known.remoteModified, known.remoteSize,
+        knownHash: known.remoteHash);
 
     if (!localChanged && !remoteChanged) {
       return SyncAction(type: SyncActionType.skip, relativePath: relativePath);
@@ -322,7 +327,7 @@ class SyncEngine {
       if (direction == SyncDirection.uploadOnly) {
         return SyncAction(type: SyncActionType.skip, relativePath: relativePath);
       }
-      return SyncAction(type: SyncActionType.download, relativePath: relativePath, remoteModified: remote.modified);
+      return SyncAction(type: SyncActionType.download, relativePath: relativePath, remoteModified: remote.modified, remoteContentHash: remote.contentHash);
     }
 
     // Both changed → conflict
@@ -374,9 +379,17 @@ class SyncEngine {
     return timeDiff > 1 || file.size != knownSize;
   }
 
-  bool _isRemoteModified(_FileInfo file, DateTime? knownModified, int knownSize) {
+  bool _isRemoteModified(_FileInfo file, DateTime? knownModified, int knownSize, {String? knownHash}) {
     if (file.isFolder) return false;
     if (knownModified == null) return true;
+
+    // Delta sync: if both sides have content hashes, use those
+    // (more reliable than timestamp comparison, and enables delta detection)
+    if (file.contentHash != null && knownHash != null) {
+      return file.contentHash != knownHash;
+    }
+
+    // Fallback: timestamp + size comparison
     final timeDiff = file.modified != null
         ? file.modified!.difference(knownModified).inSeconds.abs()
         : 0;
@@ -407,7 +420,8 @@ class SyncEngine {
           await file.parent.create(recursive: true);
           await file.writeAsBytes(bytes);
           final stat = await file.stat();
-          await _updateEntryAfterSync(pair.id, action.relativePath, stat, bytes.length);
+          await _updateEntryAfterSync(pair.id, action.relativePath, stat, bytes.length,
+              remoteContentHash: action.remoteContentHash);
           return const SyncResult(downloaded: 1);
 
         case SyncActionType.deleteLocal:
@@ -471,7 +485,7 @@ class SyncEngine {
     }
   }
 
-  Future<void> _updateEntryAfterSync(int pairId, String relativePath, FileStat stat, int size) async {
+  Future<void> _updateEntryAfterSync(int pairId, String relativePath, FileStat stat, int size, {String? remoteContentHash}) async {
     await db.upsertEntry(SyncEntriesCompanion.insert(
       pairId: pairId,
       relativePath: relativePath,
@@ -479,6 +493,7 @@ class SyncEngine {
       remoteModified: Value(stat.modified), // After sync they match
       localSize: Value(size),
       remoteSize: Value(size),
+      remoteHash: Value(remoteContentHash),
       status: const Value('synced'),
       error: const Value(null),
       lastSyncAt: Value(DateTime.now()),
@@ -552,7 +567,9 @@ class SyncEngine {
         } catch (_) {}
       }
       final size = file['size'] as int? ?? 0;
-      result[relative] = _FileInfo(isFolder: false, modified: modified, size: size);
+      // Capture provider content hash for delta sync (Dropbox, OneDrive)
+      final contentHash = file['content_hash'] as String? ?? file['crc32Hash'] as String?;
+      result[relative] = _FileInfo(isFolder: false, modified: modified, size: size, contentHash: contentHash);
     }
   }
 }
@@ -563,5 +580,9 @@ class _FileInfo {
   final DateTime? modified;
   final int size;
 
-  const _FileInfo({required this.isFolder, this.modified, this.size = 0});
+  /// Provider-supplied content hash (e.g. Dropbox content_hash, OneDrive crc32Hash).
+  /// When available, enables delta sync — only transfer files whose hash changed.
+  final String? contentHash;
+
+  const _FileInfo({required this.isFolder, this.modified, this.size = 0, this.contentHash});
 }

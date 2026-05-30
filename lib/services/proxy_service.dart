@@ -18,6 +18,7 @@ import 'package:http/http.dart' as http;
 import 'package:http/io_client.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
+import 'cert_pinning_service.dart';
 import 'log_service.dart';
 
 /// Proxy type.
@@ -111,48 +112,60 @@ class ProxyConfig {
   static const ProxyConfig disabled = ProxyConfig();
 }
 
-/// Global HttpOverrides that routes all HTTP traffic through the configured proxy.
+/// Global HttpOverrides that handles proxy routing and certificate pinning.
 ///
 /// When installed via [HttpOverrides.global], this affects all dart:io HTTP
 /// clients including those created by the `http` package. This means all
-/// `http.get/post/put/delete` calls automatically use the proxy.
+/// `http.get/post/put/delete` calls automatically use the proxy and cert pins.
 class ProxyHttpOverrides extends HttpOverrides {
   final ProxyConfig config;
+  final CertPinningService? certPinning;
 
-  ProxyHttpOverrides(this.config);
+  ProxyHttpOverrides(this.config, {this.certPinning});
 
   @override
   HttpClient createHttpClient(SecurityContext? context) {
     final client = super.createHttpClient(context);
 
-    if (!config.isEnabled) return client;
+    // Proxy configuration
+    if (config.isEnabled) {
+      final noProxyHosts = config.noProxy
+          .split(',')
+          .map((h) => h.trim().toLowerCase())
+          .where((h) => h.isNotEmpty)
+          .toSet();
 
-    final noProxyHosts = config.noProxy
-        .split(',')
-        .map((h) => h.trim().toLowerCase())
-        .where((h) => h.isNotEmpty)
-        .toSet();
-
-    client.findProxy = (uri) {
-      final host = uri.host.toLowerCase();
-      for (final bypass in noProxyHosts) {
-        if (host == bypass || host.endsWith('.$bypass')) {
-          return 'DIRECT';
+      client.findProxy = (uri) {
+        final host = uri.host.toLowerCase();
+        for (final bypass in noProxyHosts) {
+          if (host == bypass || host.endsWith('.$bypass')) {
+            return 'DIRECT';
+          }
         }
-      }
-      return config.toProxyString();
-    };
+        return config.toProxyString();
+      };
 
-    if (config.username != null) {
-      client.addProxyCredentials(
-        config.host,
-        config.port,
-        'Basic',
-        HttpClientBasicCredentials(
-          config.username!,
-          config.password ?? '',
-        ),
-      );
+      if (config.username != null) {
+        client.addProxyCredentials(
+          config.host,
+          config.port,
+          'Basic',
+          HttpClientBasicCredentials(
+            config.username!,
+            config.password ?? '',
+          ),
+        );
+      }
+    }
+
+    // Certificate pinning
+    if (certPinning != null && certPinning!.isEnabled) {
+      client.badCertificateCallback = (cert, host, port) {
+        // badCertificateCallback is called when the system rejects the cert.
+        // We return false to reject, true to accept despite system rejection.
+        // For pinning, we validate against our pins.
+        return certPinning!.validateCertificate(cert, host);
+      };
     }
 
     return client;
@@ -165,10 +178,12 @@ class ProxyService {
   static const _prefsKey = 'proxy_config';
 
   ProxyConfig _config;
+  CertPinningService? _certPinning;
 
   ProxyConfig get config => _config;
+  CertPinningService? get certPinning => _certPinning;
 
-  ProxyService([ProxyConfig? initial])
+  ProxyService([ProxyConfig? initial, this._certPinning])
       : _config = initial ?? const ProxyConfig();
 
   /// Load proxy config from SharedPreferences, falling back to environment.
@@ -217,14 +232,26 @@ class ProxyService {
   /// Call after load() or save().
   void applyGlobally() => _installOverrides();
 
+  /// Set cert pinning service (called from main after both are loaded).
+  void setCertPinning(CertPinningService service) {
+    _certPinning = service;
+  }
+
   void _installOverrides() {
     if (kIsWeb) return;
-    if (_config.isEnabled) {
-      HttpOverrides.global = ProxyHttpOverrides(_config);
-      _log.info('Installed global proxy overrides: ${_config.type.name} ${_config.host}:${_config.port}');
+    final needsProxy = _config.isEnabled;
+    final needsPinning = _certPinning != null && _certPinning!.isEnabled;
+
+    if (needsProxy || needsPinning) {
+      HttpOverrides.global = ProxyHttpOverrides(_config, certPinning: _certPinning);
+      if (needsProxy) {
+        _log.info('Installed global overrides: proxy=${_config.type.name} ${_config.host}:${_config.port}, pinning=$needsPinning');
+      } else {
+        _log.info('Installed global overrides: pinning=$needsPinning');
+      }
     } else {
       HttpOverrides.global = null;
-      _log.debug('Cleared global proxy overrides');
+      _log.debug('Cleared global HTTP overrides');
     }
   }
 

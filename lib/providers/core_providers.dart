@@ -5,7 +5,9 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../models/panel_side.dart';
+import '../services/file_cache_service.dart';
 import '../services/local_file_service.dart';
+import '../services/thumbnail_service.dart';
 import '../services/proxy_service.dart';
 import '../services/secure_storage_service.dart';
 
@@ -44,4 +46,14 @@ final remoteViewModeProvider = StateProvider<ViewMode>((ref) => ViewMode.list);
 /// Proxy service — overridden in main.dart with the loaded instance.
 final proxyServiceProvider = Provider<ProxyService>((ref) {
   return ProxyService(); // Default: no proxy
+});
+
+/// File cache service — overridden in main.dart with initialized instance.
+final fileCacheProvider = Provider<FileCacheService>((ref) {
+  return FileCacheService();
+});
+
+/// Thumbnail service — overridden in main.dart with initialized instance.
+final thumbnailServiceProvider = Provider<ThumbnailService>((ref) {
+  return ThumbnailService();
 });

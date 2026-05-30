@@ -224,6 +224,16 @@ class OneDriveClientAdapter extends CloudStorageClient {
           if (map['size'] != null) 'size': map['size'] as int,
         };
 
+        // Capture content hash for delta sync
+        if (!isFolder) {
+          final fileInfo = map['file'] as Map<String, dynamic>?;
+          final hashes = fileInfo?['hashes'] as Map<String, dynamic>?;
+          final crc = hashes?['crc32Hash'] as String?;
+          final sha1 = hashes?['sha1Hash'] as String?;
+          if (crc != null) entry['crc32Hash'] = crc;
+          if (sha1 != null) entry['content_hash'] = sha1;
+        }
+
         if (isFolder) {
           folders.add(entry);
         } else {

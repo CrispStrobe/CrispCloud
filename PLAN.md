@@ -185,7 +185,7 @@ CrispCloud becomes the **open-source Cyberduck/Transmit/Commander One killer**: 
 - [x] Conflict policies: newest wins, local wins, remote wins, keep both, manual
 - [x] Change detection: recursive local fs scan + remote listing comparison against DB state
 - [x] Filesystem watcher (`watcher` package on desktop) with 5s debounce for real-time change detection
-- [ ] Delta sync: only transfer changed bytes when provider supports it (OneDrive, Dropbox)
+- [x] Delta sync: content hash comparison (Dropbox content_hash, OneDrive crc32/sha1) — hash-based change detection in SyncEngine, stored in DB remoteHash
 - [x] Sync metadata stored in local SQLite (via `drift`)
 
 ### 4.2 Selective Sync
@@ -196,7 +196,7 @@ CrispCloud becomes the **open-source Cyberduck/Transmit/Commander One killer**: 
 
 ### 4.3 Offline Mode
 - [x] Queue operations while offline (OfflineQueue table in drift)
-- [ ] Cache recently accessed files for offline use
+- [x] Cache recently accessed files for offline use — `FileCacheService` with LRU eviction, configurable max size, JSON index
 - [x] Replay queued operations on reconnect — `replayOfflineQueue()` in SyncNotifier, chronological replay with error tracking
 - [ ] Conflict resolution on reconnect
 - [ ] Configurable cache size limit with LRU eviction
@@ -219,7 +219,7 @@ CrispCloud becomes the **open-source Cyberduck/Transmit/Commander One killer**: 
   - Text/Code: monospace read-only viewer for 40+ extensions, up to 5MB
   - Metadata: file icon, type badge, size, modified date, path, UUID
   - 280px sidebar in two-panel layout
-- [ ] Thumbnail generation for images (JPEG, PNG, WebP, HEIC, SVG)
+- [x] Thumbnail generation for images (JPEG, PNG, WebP, GIF, BMP) — `ThumbnailService` with compute isolate, disk+memory cache, grid view integration
 - [ ] Provider-native thumbnails when available (GDrive, OneDrive, Dropbox)
 - [ ] Thumbnail cache (local SQLite + file cache)
 - [x] Markdown: rendered preview — `flutter_markdown` with theme-aware styling
@@ -340,7 +340,7 @@ CrispCloud becomes the **open-source Cyberduck/Transmit/Commander One killer**: 
 - [ ] Compatible with Cryptomator vault format (interop with other tools)
 
 ### 7.2 Secure Networking
-- [ ] Certificate pinning for known providers
+- [x] Certificate pinning for known providers — `CertPinningService` with SPKI SHA-256 pins for Google/Microsoft/Dropbox/Amazon, wired into `ProxyHttpOverrides`
 - [ ] Custom CA certificate support (corporate/self-signed)
 - [x] HTTP/SOCKS5 proxy support — `ProxyService` with env auto-detection, `ProxyHttpOverrides` for global routing, `ProxySettingsDialog` UI
 - [ ] Tor/onion routing support (optional)
@@ -548,11 +548,11 @@ CrispCloud becomes the **open-source Cyberduck/Transmit/Commander One killer**: 
 | 2. Performance & Streaming | High | Medium | **~70% done** — streaming, queue, virtual scroll done; multipart/large-file pending |
 | 3.1 S3 + GDrive + OneDrive + Dropbox | High | Medium | **All 4 done** |
 | 3.2 Tier 2 providers | Medium | Medium | **FTP done** — Azure, B2, Mega, pCloud pending |
-| 4. Sync Engine | Very High | Very High | **~75% done** — two-way, selective, offline replay, watcher, tray done; delta sync, mobile bg pending |
-| 5. UI/UX | High | Medium | **~80% done** — preview (img/txt/md/pdf), tabs+persistence, themes, nav, DnD, tree, grid, bookmarks done |
+| 4. Sync Engine | Very High | Very High | **~85% done** — two-way, selective, offline replay+cache, watcher, tray, delta sync done; mobile bg pending |
+| 5. UI/UX | High | Medium | **~85% done** — preview, tabs, themes, nav, DnD, tree, grid+thumbnails, bookmarks done |
 | 6. Power User Features | Medium | High | **~75% done** — editor, palette, batch rename, archives, versions+restore, share, dupes, diff, permissions done |
 | 7.1 Client-Side Encryption | High | High | **~90% done** — encryption + key management + BIP39 done; Cryptomator compat pending |
-| 7.2-7.4 Security extras | Medium | Medium | **~50% done** — proxy, app lock, secure clipboard done; cert pinning, biometric pending |
+| 7.2-7.4 Security extras | Medium | Medium | **~70% done** — proxy, app lock, cert pinning, secure clipboard done; biometric pending |
 | 8. Platform Polish | Medium | High | **P3 — Later** |
 | 9. Extensibility & CLI | Medium | High | **P3 — Later** |
 | 10. Quality & Distribution | High | High | **P3 — Ongoing** |

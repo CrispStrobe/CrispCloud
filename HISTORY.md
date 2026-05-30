@@ -2,6 +2,67 @@
 
 Audit trail of bugs found, issues discovered, and fixes applied.
 
+## 2026-05-30 — Infrastructure: Cert Pinning, File Cache, Delta Sync, Thumbnails
+
+### 7.2 Certificate Pinning
+- **Created `lib/services/cert_pinning_service.dart`** (~175 lines):
+  - `CertPinSet` model: hostname patterns + SPKI SHA-256 pin set
+  - Built-in pins for Google (GTS roots), Microsoft (DigiCert), Dropbox, Amazon S3
+  - `validateCertificate()`: checks cert SPKI hash against known pins
+  - `getPinnedProviders()`: returns list of pinned providers for UI
+  - Opt-in via SharedPreferences, toggle in proxy settings dialog
+- **Updated `lib/services/proxy_service.dart`**:
+  - `ProxyHttpOverrides` now accepts `CertPinningService?`, installs `badCertificateCallback`
+  - `ProxyService.setCertPinning()`: links cert service for global overrides
+  - `_installOverrides()`: activates both proxy and pinning together
+- **Updated `lib/widgets/proxy_settings_dialog.dart`**: cert pinning toggle checkbox
+- **Updated `lib/main.dart`**: loads `CertPinningService` on startup, passes to proxy service
+
+### 4.3 Offline File Cache (LRU)
+- **Created `lib/services/file_cache_service.dart`** (~230 lines):
+  - `FileCacheService`: local file cache with JSON index
+  - `put()` / `get()` / `remove()` / `clear()` operations
+  - LRU eviction: evicts oldest-accessed files when over `maxSizeBytes` (default 500MB)
+  - Evicts down to 80% of limit to avoid thrashing
+  - `CacheEntry` model with remote path, provider, size, timestamps
+  - Disk cache in `<appDir>/file_cache/files/` keyed by SHA-1
+- **Updated `lib/widgets/preview_pane.dart`**: remote file previews check cache first,
+  then download and cache for offline access
+- **Updated `lib/providers/core_providers.dart`**: `fileCacheProvider`
+- **Updated `lib/main.dart`**: initializes and overrides `FileCacheService`
+
+### 4.1 Delta Sync (Content Hash)
+- **Updated `lib/services/sync_engine.dart`**:
+  - `_FileInfo.contentHash`: captures provider content hashes
+  - `_isRemoteModified()`: uses content hash comparison when available (overrides timestamp)
+  - `SyncAction.remoteContentHash`: passes hash through to DB update
+  - `_updateEntryAfterSync()`: stores `remoteHash` in DB for future comparisons
+  - Remote scan captures `content_hash` and `crc32Hash` from provider responses
+- **Updated `lib/services/dropbox_client_adapter.dart`**: captures `content_hash` in listPath
+- **Updated `lib/services/onedrive_client_adapter.dart`**: captures `crc32Hash` and `sha1Hash` from
+  `file.hashes` in listPath responses
+
+### 5.1 Thumbnail Generation
+- **Created `lib/services/thumbnail_service.dart`** (~160 lines):
+  - `ThumbnailService`: generates thumbnails via `compute()` isolate
+  - Disk cache in `<appDir>/thumbnails/` keyed by SHA-1
+  - Memory cache (LRU, 200 entries max) for instant display
+  - `isSupported()`: checks file extension (jpg/png/gif/webp/bmp/ico)
+  - `generate()`: decode → resize to 120x120 → encode PNG
+  - `cacheProviderThumbnail()`: for server-side thumbnails (GDrive/OneDrive/Dropbox)
+- **Updated `lib/widgets/file_grid_view.dart`**: grid tiles load thumbnails for image files,
+  show image preview instead of generic icon
+- **Updated `lib/providers/core_providers.dart`**: `thumbnailServiceProvider`
+- **Updated `lib/main.dart`**: initializes and overrides `ThumbnailService`
+
+### Tests
+- **Created `test/infrastructure_test.dart`** (~250 lines, 25+ tests):
+  - CertPinSet: host matching (exact, subdomain, case insensitive, multiple patterns)
+  - CertPinningService: disabled by default, enable/disable, pinned providers list
+  - CacheEntry: toJson/fromJson round-trip, date serialization
+  - ThumbnailService: isSupported (images vs non-images), key formats, getCached miss
+  - Delta sync: hash comparison (same/different hash, hash vs timestamp precedence, fallback)
+
 ## 2026-05-30 — Security & Power User: Proxy, App Lock, Version Restore, Permissions, Diff Viewer
 
 ### 7.2 HTTP/SOCKS5 Proxy Support

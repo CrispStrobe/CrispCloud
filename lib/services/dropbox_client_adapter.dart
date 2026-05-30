@@ -212,6 +212,8 @@ class DropboxClientAdapter extends CloudStorageClient {
           'uuid': id,
           if (map['server_modified'] != null) 'lastModified': map['server_modified'],
           if (map['size'] != null) 'size': map['size'] as int,
+          // Content hash for delta sync (256-bit block hash)
+          if (map['content_hash'] != null) 'content_hash': map['content_hash'],
         };
 
         if (tag == 'folder') {

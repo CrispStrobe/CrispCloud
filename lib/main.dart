@@ -23,7 +23,10 @@ import 'services/s3_config_service.dart';
 import 'services/sftp_config_service.dart';
 import 'services/webdav_config_service.dart';
 import 'services/app_lock_service.dart';
+import 'services/cert_pinning_service.dart';
+import 'services/file_cache_service.dart';
 import 'services/log_service.dart';
+import 'services/thumbnail_service.dart';
 import 'services/proxy_service.dart';
 import 'services/secure_storage_service.dart';
 import 'services/theme_service.dart';
@@ -55,10 +58,21 @@ Future<void> main() async {
 
     _log.info('Config path: $configPath');
 
-    // Load proxy configuration and install global overrides
+    // Load proxy and certificate pinning configuration
+    final certPinning = CertPinningService();
+    await certPinning.load();
+
     final proxyService = ProxyService();
     await proxyService.load();
+    proxyService.setCertPinning(certPinning);
     proxyService.applyGlobally();
+
+    // Initialize file cache and thumbnail service
+    final fileCache = FileCacheService();
+    await fileCache.init();
+
+    final thumbnailService = ThumbnailService();
+    await thumbnailService.init();
 
     CloudProvider defaultProvider = await _getDefaultProvider();
 
@@ -75,6 +89,9 @@ Future<void> main() async {
           secureStorageProvider.overrideWithValue(secureStorage),
           configPathProvider.overrideWithValue(configPath),
           proxyServiceProvider.overrideWithValue(proxyService),
+          certPinningProvider.overrideWithValue(certPinning),
+          fileCacheProvider.overrideWithValue(fileCache),
+          thumbnailServiceProvider.overrideWithValue(thumbnailService),
           authProvider.overrideWith((ref) => AuthNotifier(
             ref,
             initialProvider: defaultProvider,
@@ -160,6 +177,11 @@ final themeProvider = ChangeNotifierProvider<ThemeService>((ref) => ThemeService
 /// App lock service provider.
 final appLockServiceProvider = Provider<AppLockService>((ref) {
   return AppLockService(ref.watch(secureStorageProvider));
+});
+
+/// Certificate pinning service provider.
+final certPinningProvider = Provider<CertPinningService>((ref) {
+  return CertPinningService(); // Overridden in ProviderScope
 });
 
 class MyApp extends ConsumerWidget {
