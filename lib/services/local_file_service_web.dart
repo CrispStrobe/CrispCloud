@@ -241,6 +241,9 @@ class WebFileService implements LocalFileService {
   Future<String> getSafeFallbackDirectory() async => '/';
 
   @override
+  Object? getWebFileRef(String path) => _fileRefs[path];
+
+  @override
   Future<Uint8List> readFile(String path, {FileItem? fileItem}) async {
     final fileRef = _fileRefs[path];
     if (fileRef == null) throw Exception('File ref not found: $path');

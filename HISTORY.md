@@ -2,6 +2,55 @@
 
 Audit trail of bugs found, issues discovered, and fixes applied.
 
+## 2026-05-31 — Session 4: Infrastructure, Automation, Backup, API, CI/CD, Docs (1227 → 1651 tests, +424)
+
+### 1.4 Crash Reporting (opt-in)
+- **Created `lib/services/crash_reporting_service.dart`** (~770 lines): `CrashReportingService` with opt-in toggle (SharedPreferences), local JSONL storage, breadcrumb ring buffer (50), `CrashReport` model with platform info, `CrashReportingBackend` abstraction with `LocalBackend` + `SentryBackend` placeholder, `CrashLog` subclass hooks into `LogService` error calls
+- **Created `lib/providers/crash_reporting_provider.dart`**: `crashReportingEnabledProvider`, `crashReportingServiceProvider`
+- **Tests**: 77 tests (opt-in/out, error reporting, breadcrumb buffer, serialization, platform info, backends, export, CrashLog hook)
+
+### 2.1/2.3 Web Streaming Transfers
+- **Created `lib/services/web_streaming_service.dart`** — conditional import facade
+- **Created `lib/services/web_streaming_service_stub.dart`** — no-op stub for non-web
+- **Created `lib/services/web_streaming_service_web.dart`** (~270 lines): blob slicing uploads via `FileReader`, `showSaveFilePicker` + `createWritable` streaming downloads, fallback on user cancel
+- **Updated `lib/providers/transfer_provider.dart`**: two-tier web path — streaming when supported, buffer fallback
+- **Updated `lib/services/local_file_service.dart`**: added `getWebFileRef()` to abstract interface
+- **Updated `lib/services/local_file_service_web.dart`**: implemented `getWebFileRef` returning `_fileRefs[path]`
+- **Updated `lib/services/local_file_service_native.dart`**: added `getWebFileRef` override on all native classes
+- **Tests**: 37 tests (stub behavior, chunk logic, progress tracking, transfer provider path selection, edge cases)
+
+### 9.3 Automation & Rules Engine
+- **Created `lib/services/automation_rule_service.dart`** (~745 lines): sealed `AutomationTrigger` (FilePattern/Schedule/Event) + `AutomationAction` (Transfer/Webhook/Move/Delete/RunCommand) hierarchies, `AutomationRule` model with CRUD, `CronParser` (5-field, `*`, `N`, `*/N`, `N-M`, `N,M`), glob pattern matching
+- **Created `lib/services/automation_engine.dart`** (~519 lines): directory watchers via `package:watcher`, per-minute schedule timer, event listener, `WebhookExecutor` (HTTP methods + headers), 100-entry execution history ring buffer
+- **Created `lib/providers/automation_provider.dart`**: rules, engine lifecycle, history stream providers
+- **Tests**: 106 tests (trigger/action serialization, CRUD, glob matching, cron parsing, webhook payloads, execution history, engine lifecycle)
+
+### 11.3 Backup Engine
+- **Created `lib/services/backup_service.dart`** (~1017 lines): `BackupPlan` model (cron, maxVersions, encryption, exclude globs), `BackupSnapshot` + `BackupFileEntry` models, plan CRUD, `runBackup()` with incremental MD5 detection, `pruneSnapshots()`, `verifySnapshot()`, `getRestorePreview()`, `restoreSnapshot()`, concurrency guard
+- **Created `lib/providers/backup_provider.dart`**: plans, snapshots (family), running state, backup controller
+- **Tests**: 75 tests (model serialization, plan CRUD, incremental detection, glob exclusion, snapshot pruning, hash verification, restore preview, concurrency guard, web guard)
+
+### 9.4 Local REST API (Headless Mode)
+- **Created `lib/services/local_api_service.dart`** (~490 lines): `dart:io` HttpServer on localhost:9847, `ApiTokenManager` (48-char hex, rotate), `ApiRouter` (method+path dispatch), 11 REST endpoints (status, providers, files CRUD, sync, transfers), rate limiting (100 req/min/IP), CORS headers, Bearer auth middleware
+- **Created `lib/services/local_api_service_stub.dart`** — web no-op
+- **Created `lib/services/local_api_service_native.dart`** — HttpServer binding, request parsing
+- **Created `lib/providers/local_api_provider.dart`**: enabled toggle, port config, service lifecycle
+- **Tests**: 82 tests (token gen/validation/rotation, API response factories, routing, auth middleware, rate limiting, port validation, platform guard, all endpoints)
+
+### 10.2 CI/CD Pipeline Expansion
+- **Updated `.github/workflows/ci.yml`**: all 6 platforms build on PRs (matrix), iOS --no-codesign, code coverage, Flutter SDK caching, concurrency cancellation
+- **Updated `.github/workflows/release.yml`**: iOS build, code signing placeholders (macOS/Windows/Android/iOS), changelog from git log, pre-release support
+- **Created `.github/workflows/nightly.yml`**: daily 2:00 AM UTC, change detection guard, builds all platforms, creates/updates "nightly" pre-release
+- **Created `lib/services/auto_update_service.dart`** (~270 lines): `AutoUpdateService` with GitHub Releases API, semver comparison, `UpdateChannel` (stable/beta/nightly), platform URL selection, `AutoUpdateException`
+- **Created `lib/providers/update_provider.dart`**: channel, auto-check toggle, update check future provider
+- **Tests**: 47 tests (version comparison, release parsing, platform URLs, channel filtering, serialization, error handling)
+
+### 10.5 Documentation
+- **Created `docs/USER_GUIDE.md`** (640 lines): all 21 feature areas with keyboard shortcuts reference
+- **Created `docs/PROVIDER_SETUP.md`** (413 lines): all 11 providers + S3-compat table + troubleshooting
+- **Created `docs/CONTRIBUTING.md`** (463 lines): dev setup, 6-step provider guide, code style, PR process
+- **Created 6 ADRs in `docs/adr/`**: Riverpod, adapter pattern, encryption, drift/SQLite, streaming, secure credentials
+
 ## 2026-05-30 — Session 3: Platform Polish, CLI, FUSE (965 → 1227 tests, +262)
 
 ### 8.1 macOS Finder Quick Action Extension

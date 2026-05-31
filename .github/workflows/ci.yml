@@ -1,16 +1,13 @@
 name: CI
 
-# Runs flutter analyze + non-live tests on every push to main and
-# every PR.
+# Runs flutter analyze + tests on every push to main and every PR.
+# On PRs, also builds all 6 platforms and uploads artifacts for testing.
 #
 # IMPORTANT: This project has git dependencies on private repos
 # (internxt-dart, filen-dart). To make pub get work, either:
 #   1. Make those repos public (simplest), or
 #   2. Add a GH_PAT secret (Settings → Secrets → Actions) with a
 #      Personal Access Token that has `repo` scope.
-#
-# For Vercel: add the same token as GIT_AUTH_TOKEN in Vercel
-# project settings → Environment Variables.
 
 on:
   push:
@@ -19,22 +16,40 @@ on:
     branches: [main]
   workflow_dispatch:
 
+# Cancel in-progress runs for the same PR/branch
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+env:
+  FLUTTER_CHANNEL: stable
+
 jobs:
+  # ---------- Analyze + Test with coverage ----------
   analyze:
-    name: Analyze + tests (Linux)
+    name: Analyze + Test (Linux)
     runs-on: ubuntu-latest
-    timeout-minutes: 15
+    timeout-minutes: 20
 
     steps:
       - uses: actions/checkout@v4
 
+      # Cache Flutter SDK
+      - name: Cache Flutter SDK
+        uses: actions/cache@v4
+        with:
+          path: |
+            /opt/hostedtoolcache/flutter
+            ~/.pub-cache
+          key: flutter-${{ env.FLUTTER_CHANNEL }}-${{ runner.os }}-${{ hashFiles('pubspec.yaml') }}
+          restore-keys: |
+            flutter-${{ env.FLUTTER_CHANNEL }}-${{ runner.os }}-
+
       - uses: subosito/flutter-action@v2
         with:
-          channel: stable
+          channel: ${{ env.FLUTTER_CHANNEL }}
+          cache: true
 
-      # Configure git to authenticate when cloning private dependencies.
-      # Uses GH_PAT secret if available, falls back to GITHUB_TOKEN (which
-      # only works for public repos or same-repo refs).
       - name: Configure git auth for private deps
         run: |
           TOKEN="${{ secrets.GH_PAT || github.token }}"
@@ -55,57 +70,274 @@ jobs:
           fi
           echo "No errors found (warnings/info are OK)"
 
-      - name: flutter test (unit tests, live tests auto-skip without creds)
-        run: flutter test
+      - name: flutter test with coverage
+        run: flutter test --coverage
 
-  build-web:
-    name: Build Web bundle
+      - name: Upload coverage report
+        uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: coverage-report
+          path: coverage/lcov.info
+          retention-days: 14
+
+  # ---------- Multi-platform builds (matrix) ----------
+  # Linux, Android, and Web build on ubuntu-latest.
+  # Windows builds on windows-latest. macOS and iOS on macos-latest.
+  build-ubuntu:
+    name: Build ${{ matrix.platform }} (Ubuntu)
     runs-on: ubuntu-latest
-    timeout-minutes: 20
+    timeout-minutes: 30
     needs: analyze
+
+    strategy:
+      fail-fast: false
+      matrix:
+        platform: [web, linux, android]
+        include:
+          - platform: web
+            build_cmd: flutter build web --release
+            artifact_name: crispcloud-web
+            package_cmd: tar czf crispcloud-web.tar.gz -C build/web .
+            artifact_path: crispcloud-web.tar.gz
+
+          - platform: linux
+            build_cmd: flutter build linux --release
+            artifact_name: crispcloud-linux-x64
+            package_cmd: tar czf crispcloud-linux-x64.tar.gz -C build/linux/x64/release/bundle .
+            artifact_path: crispcloud-linux-x64.tar.gz
+
+          - platform: android
+            build_cmd: ""   # handled inline below
+            artifact_name: crispcloud-android
+            package_cmd: ""  # handled inline below
+            artifact_path: crispcloud-android.apk
 
     steps:
       - uses: actions/checkout@v4
 
+      - name: Cache Flutter SDK + pub
+        uses: actions/cache@v4
+        with:
+          path: |
+            /opt/hostedtoolcache/flutter
+            ~/.pub-cache
+          key: flutter-${{ env.FLUTTER_CHANNEL }}-${{ runner.os }}-${{ hashFiles('pubspec.yaml') }}
+          restore-keys: |
+            flutter-${{ env.FLUTTER_CHANNEL }}-${{ runner.os }}-
+
       - uses: subosito/flutter-action@v2
         with:
-          channel: stable
+          channel: ${{ env.FLUTTER_CHANNEL }}
+          cache: true
 
       - name: Configure git auth for private deps
         run: |
           TOKEN="${{ secrets.GH_PAT || github.token }}"
           git config --global url."https://x-access-token:${TOKEN}@github.com/".insteadOf "https://github.com/"
 
-      - name: flutter pub get
+      # Java only needed for Android
+      - name: Set up Java (Android only)
+        if: matrix.platform == 'android'
+        uses: actions/setup-java@v4
+        with:
+          distribution: zulu
+          java-version: '17'
+
+      # Linux desktop dependencies
+      - name: Install Linux desktop deps
+        if: matrix.platform == 'linux'
+        run: |
+          sudo apt-get update -y
+          sudo apt-get install -y ninja-build libgtk-3-dev libsecret-1-dev \
+            libjsoncpp-dev libsecret-1-0 libsqlite3-dev libayatana-appindicator3-dev
+
+      - name: Enable Linux desktop
+        if: matrix.platform == 'linux'
+        run: flutter config --enable-linux-desktop
+
+      - name: Install dependencies
         run: flutter pub get
 
-      - name: flutter build web
-        run: flutter build web --release
+      # --- Web / Linux builds ---
+      - name: Build ${{ matrix.platform }}
+        if: matrix.platform != 'android'
+        run: ${{ matrix.build_cmd }}
 
+      - name: Package ${{ matrix.platform }}
+        if: matrix.platform != 'android'
+        run: ${{ matrix.package_cmd }}
+
+      # --- Android build (more complex) ---
+      - name: Build Android APK
+        if: matrix.platform == 'android'
+        run: |
+          flutter build apk --release 2>&1 || true
+          echo "=== Searching for APKs ==="
+          find build -name "*.apk" -type f 2>/dev/null || true
+          if [ ! -f build/app/outputs/flutter-apk/app-release.apk ]; then
+            echo "Flutter APK not at expected path, trying Gradle directly..."
+            cd android && ./gradlew assembleRelease --no-daemon 2>&1 && cd ..
+            find . -name "*.apk" -type f 2>/dev/null || true
+          fi
+
+      - name: Find and rename APK
+        if: matrix.platform == 'android'
+        run: |
+          APK=$(find . -name "*.apk" -not -path "*/intermediates/*" -type f 2>/dev/null | head -1)
+          if [ -z "$APK" ]; then
+            echo "::error::No APK found anywhere in the build tree"
+            exit 1
+          fi
+          echo "Found APK: $APK ($(stat -c%s "$APK") bytes)"
+          cp "$APK" crispcloud-android.apk
+
+      - name: Upload ${{ matrix.platform }} artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: ${{ matrix.artifact_name }}
+          path: ${{ matrix.artifact_path }}
+          retention-days: 14
+
+  # ---------- Windows ----------
+  build-windows:
+    name: Build Windows
+    runs-on: windows-latest
+    timeout-minutes: 35
+    needs: analyze
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Cache Flutter SDK + pub
+        uses: actions/cache@v4
+        with:
+          path: |
+            C:\hostedtoolcache\windows\flutter
+            ~\AppData\Local\Pub\Cache
+          key: flutter-${{ env.FLUTTER_CHANNEL }}-windows-${{ hashFiles('pubspec.yaml') }}
+          restore-keys: |
+            flutter-${{ env.FLUTTER_CHANNEL }}-windows-
+
+      - uses: subosito/flutter-action@v2
+        with:
+          channel: ${{ env.FLUTTER_CHANNEL }}
+          cache: true
+
+      - name: Configure git auth for private deps
+        shell: bash
+        run: |
+          TOKEN="${{ secrets.GH_PAT || github.token }}"
+          git config --global url."https://x-access-token:${TOKEN}@github.com/".insteadOf "https://github.com/"
+
+      - run: flutter config --enable-windows-desktop
+      - run: flutter pub get
+      - run: flutter build windows --release
+
+      - name: Package Windows build
+        shell: pwsh
+        run: Compress-Archive -Path build\windows\x64\runner\Release\* -DestinationPath crispcloud-windows-x64.zip
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: crispcloud-windows-x64
+          path: crispcloud-windows-x64.zip
+          retention-days: 14
+
+  # ---------- macOS + iOS (both on macos-latest) ----------
   build-macos:
     name: Build macOS
     runs-on: macos-latest
-    timeout-minutes: 30
+    timeout-minutes: 40
     needs: analyze
-    if: github.event_name == 'push'
 
     steps:
       - uses: actions/checkout@v4
 
+      - name: Cache Flutter SDK + pub
+        uses: actions/cache@v4
+        with:
+          path: |
+            ~/hostedtoolcache/flutter
+            ~/.pub-cache
+          key: flutter-${{ env.FLUTTER_CHANNEL }}-macos-${{ hashFiles('pubspec.yaml') }}
+          restore-keys: |
+            flutter-${{ env.FLUTTER_CHANNEL }}-macos-
+
       - uses: subosito/flutter-action@v2
         with:
-          channel: stable
+          channel: ${{ env.FLUTTER_CHANNEL }}
+          cache: true
 
       - name: Configure git auth for private deps
         run: |
           TOKEN="${{ secrets.GH_PAT || github.token }}"
           git config --global url."https://x-access-token:${TOKEN}@github.com/".insteadOf "https://github.com/"
 
-      - name: Enable macOS desktop
-        run: flutter config --enable-macos-desktop
+      - run: flutter config --enable-macos-desktop
+      - run: flutter pub get
+      - run: flutter build macos --debug
 
-      - name: flutter pub get
-        run: flutter pub get
+      - name: Package macOS build
+        run: |
+          cd build/macos/Build/Products/Debug
+          APP_NAME=$(ls -d *.app 2>/dev/null | head -1)
+          if [ -n "$APP_NAME" ]; then
+            zip -r -y "$GITHUB_WORKSPACE/crispcloud-macos-debug.zip" "$APP_NAME"
+          fi
 
-      - name: flutter build macos --debug
-        run: flutter build macos --debug
+      - uses: actions/upload-artifact@v4
+        with:
+          name: crispcloud-macos-debug
+          path: crispcloud-macos-debug.zip
+          retention-days: 14
+
+  build-ios:
+    name: Build iOS (no-codesign)
+    runs-on: macos-latest
+    timeout-minutes: 40
+    needs: analyze
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Cache Flutter SDK + pub
+        uses: actions/cache@v4
+        with:
+          path: |
+            ~/hostedtoolcache/flutter
+            ~/.pub-cache
+          key: flutter-${{ env.FLUTTER_CHANNEL }}-macos-${{ hashFiles('pubspec.yaml') }}
+          restore-keys: |
+            flutter-${{ env.FLUTTER_CHANNEL }}-macos-
+
+      - uses: subosito/flutter-action@v2
+        with:
+          channel: ${{ env.FLUTTER_CHANNEL }}
+          cache: true
+
+      - name: Configure git auth for private deps
+        run: |
+          TOKEN="${{ secrets.GH_PAT || github.token }}"
+          git config --global url."https://x-access-token:${TOKEN}@github.com/".insteadOf "https://github.com/"
+
+      - run: flutter pub get
+
+      - name: Build iOS (no code sign)
+        run: flutter build ios --release --no-codesign
+
+      - name: Archive .app for later signing
+        run: |
+          APP_PATH=$(find build/ios/iphoneos -name "*.app" -maxdepth 1 | head -1)
+          if [ -n "$APP_PATH" ]; then
+            zip -r -y crispcloud-ios-nosign.zip "$APP_PATH"
+          else
+            echo "::warning::iOS .app not found at expected path, archiving build dir"
+            zip -r -y crispcloud-ios-nosign.zip build/ios/iphoneos/
+          fi
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: crispcloud-ios-nosign
+          path: crispcloud-ios-nosign.zip
+          retention-days: 14

@@ -4,7 +4,10 @@
 // operation tracking, pause/resume/cancel.
 //
 // On desktop/mobile, uploads and downloads use streaming I/O to avoid
-// buffering entire files in memory. Web falls back to byte-buffer methods.
+// buffering entire files in memory.
+// On web with browser support, downloads use showSaveFilePicker +
+// WritableStream (no memory Blob) and uploads use FileReader slice reads.
+// Older browsers fall back to byte-buffer methods.
 
 import 'dart:async';
 import 'dart:io';
@@ -19,6 +22,7 @@ import '../models/panel_side.dart';
 import '../services/audit_service.dart';
 import '../services/s3_client_adapter.dart';
 import '../services/transfer_queue.dart';
+import '../services/web_streaming_service.dart';
 import '../utils/formatters.dart' as fmt;
 import '../services/log_service.dart';
 import 'auth_provider.dart';
@@ -173,17 +177,50 @@ class TransferNotifier extends ChangeNotifier {
                 },
               );
             } else {
-              // Fallback for web: buffer-based upload
-              final fileData = await localFileService.readFile(file.path!, fileItem: file);
-              await client.uploadFile(
-                fileData,
-                file.name,
-                target,
-                onProgress: (current, total) {
-                  operation.currentBytes = completedBytes + current;
+              // Web upload path.
+              // When a raw Blob reference exists (e.g. from directory-picker
+              // grant), stream it in chunks rather than reading the whole file
+              // into memory.
+              final webStreaming = WebStreamingService();
+              final blobRef = kIsWeb
+                  ? localFileService.getWebFileRef(file.path!)
+                  : null;
+
+              if (kIsWeb && webStreaming.isSupported && blobRef != null) {
+                int sent = 0;
+                final blobStream = webStreaming.streamFromBlob(blobRef);
+                final trackedStream = blobStream.map((chunk) {
+                  sent += chunk.length;
+                  operation.currentBytes = completedBytes + sent;
                   notifyListeners();
-                },
-              );
+                  return chunk;
+                });
+
+                final length = file.size ?? 0;
+                await client.uploadStream(
+                  trackedStream,
+                  length,
+                  file.name,
+                  target,
+                  onProgress: (current, total) {
+                    operation.currentBytes = completedBytes + current;
+                    notifyListeners();
+                  },
+                );
+              } else {
+                // Fallback for web: buffer-based upload (no Blob ref or older
+                // browser without streaming support).
+                final fileData = await localFileService.readFile(file.path!, fileItem: file);
+                await client.uploadFile(
+                  fileData,
+                  file.name,
+                  target,
+                  onProgress: (current, total) {
+                    operation.currentBytes = completedBytes + current;
+                    notifyListeners();
+                  },
+                );
+              }
             }
             await audit.logSuccess(
               operation: AuditOperation.upload,
@@ -311,19 +348,54 @@ class TransferNotifier extends ChangeNotifier {
                 } catch (_) {}
               }
             } else {
-              // Fallback for web: buffer-based download
-              final bytes = await client.downloadFileBytes(
-                fileRemotePath,
-                onProgress: (current, total) {
-                  if (total > 0) {
-                    operation.currentBytes = completedBytes + current;
-                    notifyListeners();
-                  }
-                },
-              );
+              // Web download path.
+              // Prefer streaming via showSaveFilePicker + WritableStream so the
+              // browser never buffers the entire file as a Blob in memory.
+              final webStreaming = WebStreamingService();
+              if (kIsWeb && webStreaming.isSupported) {
+                int received = 0;
+                final rawStream = client.downloadStream(
+                  fileRemotePath,
+                  onProgress: (current, total) {},
+                );
 
-              final localFilePath = p.join(target, file.name);
-              await localFileService.saveFile(localFilePath, bytes);
+                // Wrap the raw stream so we can track progress before piping
+                // to the writable stream.
+                final trackedStream = rawStream.map((chunk) {
+                  received += chunk.length;
+                  operation.currentBytes = completedBytes + received;
+                  notifyListeners();
+                  return chunk;
+                });
+
+                final saved = await webStreaming.downloadWithWritableStream(
+                  trackedStream,
+                  file.name,
+                  totalSize: file.size,
+                );
+
+                if (!saved) {
+                  // User cancelled the picker — treat as a no-op (not an error).
+                  _log.info('DOWNLOAD: web streaming cancelled by user',
+                      {'file': file.name});
+                }
+              } else {
+                // Fallback for web browsers without showSaveFilePicker: load
+                // into memory and hand off to the local file service (which on
+                // web triggers a download-link click).
+                final bytes = await client.downloadFileBytes(
+                  fileRemotePath,
+                  onProgress: (current, total) {
+                    if (total > 0) {
+                      operation.currentBytes = completedBytes + current;
+                      notifyListeners();
+                    }
+                  },
+                );
+
+                final localFilePath = p.join(target, file.name);
+                await localFileService.saveFile(localFilePath, bytes);
+              }
             }
             await audit.logSuccess(
               operation: AuditOperation.download,

@@ -32,6 +32,13 @@ abstract class LocalFileService {
   /// Get web metadata without stat()
   Map<String, dynamic> getWebMetadata(String path) => {};
 
+  /// Return the raw platform file reference for [path] (web only).
+  /// On web returns the underlying [html.File] object that was stored when
+  /// the user granted directory access; on all other platforms returns null.
+  /// The return type is [Object?] to avoid importing universal_html in the
+  /// abstract interface.
+  Object? getWebFileRef(String path) => null;
+
   /// Force a refresh of the file listing
   Future<void> refresh() async {}
 

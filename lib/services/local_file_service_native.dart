@@ -38,6 +38,9 @@ class MacosFileService implements LocalFileService {
   Map<String, dynamic> getWebMetadata(String path) => {};
 
   @override
+  Object? getWebFileRef(String path) => null;
+
+  @override
   Future<void> refresh() async {}
 
   Future<bool> _loadAndResolveBookmark() async {
@@ -174,6 +177,9 @@ class DesktopFileService implements LocalFileService {
   Map<String, dynamic> getWebMetadata(String path) => {};
 
   @override
+  Object? getWebFileRef(String path) => null;
+
+  @override
   Future<void> refresh() async {}
 
   @override
@@ -247,6 +253,9 @@ class MobileFileService implements LocalFileService {
 
   @override
   Map<String, dynamic> getWebMetadata(String path) => {};
+
+  @override
+  Object? getWebFileRef(String path) => null;
 
   @override
   Future<void> refresh() async {}
