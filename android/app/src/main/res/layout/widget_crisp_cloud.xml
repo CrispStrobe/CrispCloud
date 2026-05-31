@@ -1,0 +1,159 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- android/app/src/main/res/layout/widget_crisp_cloud.xml
+     Home screen widget layout for CrispCloud.
+
+     Shows:
+       • App title and sync status badge
+       • Quick-upload button
+       • Up to 3 recent file rows
+-->
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:orientation="vertical"
+    android:background="@drawable/widget_background"
+    android:padding="12dp">
+
+    <!-- Header row: app name + sync status -->
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="horizontal"
+        android:gravity="center_vertical"
+        android:layout_marginBottom="8dp">
+
+        <TextView
+            android:id="@+id/widget_title"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:text="CrispCloud"
+            android:textSize="14sp"
+            android:textStyle="bold"
+            android:textColor="@android:color/white" />
+
+        <TextView
+            android:id="@+id/widget_sync_status"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="Synced"
+            android:textSize="10sp"
+            android:textColor="#CCFFFFFF"
+            android:background="@drawable/widget_badge_background"
+            android:paddingHorizontal="6dp"
+            android:paddingVertical="2dp" />
+
+    </LinearLayout>
+
+    <!-- Quick-upload button -->
+    <Button
+        android:id="@+id/widget_btn_upload"
+        android:layout_width="match_parent"
+        android:layout_height="36dp"
+        android:layout_marginBottom="8dp"
+        android:text="Quick Upload"
+        android:textSize="12sp"
+        android:textColor="@android:color/white"
+        android:backgroundTint="#BB000000"
+        style="@android:style/Widget.Material.Button.Borderless" />
+
+    <!-- Recent files list (3 rows, RemoteViews-compatible) -->
+    <LinearLayout
+        android:id="@+id/widget_recent_container"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="vertical">
+
+        <!-- Row 1 -->
+        <LinearLayout
+            android:id="@+id/widget_recent_1"
+            android:layout_width="match_parent"
+            android:layout_height="28dp"
+            android:orientation="horizontal"
+            android:gravity="center_vertical"
+            android:clickable="true"
+            android:focusable="true">
+
+            <ImageView
+                android:id="@+id/widget_icon_1"
+                android:layout_width="16dp"
+                android:layout_height="16dp"
+                android:layout_marginEnd="6dp"
+                android:src="@android:drawable/ic_menu_upload" />
+
+            <TextView
+                android:id="@+id/widget_name_1"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:text="—"
+                android:textSize="11sp"
+                android:textColor="#DDFFFFFF"
+                android:singleLine="true"
+                android:ellipsize="middle" />
+
+        </LinearLayout>
+
+        <!-- Row 2 -->
+        <LinearLayout
+            android:id="@+id/widget_recent_2"
+            android:layout_width="match_parent"
+            android:layout_height="28dp"
+            android:orientation="horizontal"
+            android:gravity="center_vertical"
+            android:clickable="true"
+            android:focusable="true">
+
+            <ImageView
+                android:id="@+id/widget_icon_2"
+                android:layout_width="16dp"
+                android:layout_height="16dp"
+                android:layout_marginEnd="6dp"
+                android:src="@android:drawable/ic_menu_upload" />
+
+            <TextView
+                android:id="@+id/widget_name_2"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:text="—"
+                android:textSize="11sp"
+                android:textColor="#DDFFFFFF"
+                android:singleLine="true"
+                android:ellipsize="middle" />
+
+        </LinearLayout>
+
+        <!-- Row 3 -->
+        <LinearLayout
+            android:id="@+id/widget_recent_3"
+            android:layout_width="match_parent"
+            android:layout_height="28dp"
+            android:orientation="horizontal"
+            android:gravity="center_vertical"
+            android:clickable="true"
+            android:focusable="true">
+
+            <ImageView
+                android:id="@+id/widget_icon_3"
+                android:layout_width="16dp"
+                android:layout_height="16dp"
+                android:layout_marginEnd="6dp"
+                android:src="@android:drawable/ic_menu_upload" />
+
+            <TextView
+                android:id="@+id/widget_name_3"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:text="—"
+                android:textSize="11sp"
+                android:textColor="#DDFFFFFF"
+                android:singleLine="true"
+                android:ellipsize="middle" />
+
+        </LinearLayout>
+
+    </LinearLayout>
+
+</LinearLayout>

@@ -28,5 +28,19 @@
 	<string>MainMenu</string>
 	<key>NSPrincipalClass</key>
 	<string>NSApplication</string>
+	<!-- URL scheme used by the Finder Sync extension to open the app
+	     with a list of paths to upload:
+	     crispcloud://upload?paths=<percent-encoded,comma-joined paths> -->
+	<key>CFBundleURLTypes</key>
+	<array>
+		<dict>
+			<key>CFBundleURLName</key>
+			<string>com.example.internxtFlutter.upload</string>
+			<key>CFBundleURLSchemes</key>
+			<array>
+				<string>crispcloud</string>
+			</array>
+		</dict>
+	</array>
 </dict>
 </plist>

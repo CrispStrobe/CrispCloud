@@ -23,12 +23,14 @@ import '../widgets/cache_settings_dialog.dart';
 import '../widgets/duplicate_finder_dialog.dart';
 import '../widgets/key_management_dialog.dart';
 import '../widgets/multi_cloud_dialog.dart';
+import '../widgets/mount_dialog.dart';
 import '../widgets/sync_dialog.dart';
 import '../widgets/tree_sidebar.dart';
 import '../widgets/lock_screen.dart';
 import '../widgets/command_palette.dart';
 import '../widgets/theme_picker.dart';
 import '../main.dart' show appLockServiceProvider;
+import '../services/windows_integration_service.dart';
 import 'about_dialog.dart';
 import 'keyboard_shortcuts.dart';
 import 'screen_dialogs.dart';
@@ -80,6 +82,11 @@ class _FileBrowserScreenState extends ConsumerState<FileBrowserScreen> {
             icon: const Icon(Icons.sync, size: 20),
             tooltip: 'Sync Manager',
             onPressed: () => showSyncDialog(context),
+          ),
+          IconButton(
+            icon: const Icon(Icons.storage_rounded, size: 20),
+            tooltip: 'Mount as Drive',
+            onPressed: () => showMountDialog(context),
           ),
           IconButton(
             icon: const Icon(Icons.find_replace, size: 20),
@@ -696,6 +703,10 @@ class _FileBrowserScreenState extends ConsumerState<FileBrowserScreen> {
                 );
               },
             ),
+            // Windows Explorer integration (Windows desktop only)
+            if (!kIsWeb &&
+                defaultTargetPlatform == TargetPlatform.windows)
+              _WindowsExplorerIntegrationTile(),
             const Divider(),
             ListTile(
               leading: const Icon(Icons.keyboard),
@@ -781,6 +792,85 @@ class _FileBrowserScreenState extends ConsumerState<FileBrowserScreen> {
           ],
         ],
       ),
+    );
+  }
+}
+
+/// Settings drawer tile that toggles Windows Explorer context menu integration.
+/// Only rendered on Windows desktop (guarded at the call site as well).
+class _WindowsExplorerIntegrationTile extends StatefulWidget {
+  @override
+  State<_WindowsExplorerIntegrationTile> createState() =>
+      _WindowsExplorerIntegrationTileState();
+}
+
+class _WindowsExplorerIntegrationTileState
+    extends State<_WindowsExplorerIntegrationTile> {
+  final _service = WindowsIntegrationService();
+  bool _registered = false;
+  bool _loading = true;
+
+  @override
+  void initState() {
+    super.initState();
+    _checkStatus();
+  }
+
+  Future<void> _checkStatus() async {
+    final registered = await _service.isContextMenuRegistered();
+    if (mounted) {
+      setState(() {
+        _registered = registered;
+        _loading = false;
+      });
+    }
+  }
+
+  Future<void> _toggle(bool enable) async {
+    setState(() => _loading = true);
+    final success = enable
+        ? await _service.registerContextMenu()
+        : await _service.unregisterContextMenu();
+
+    if (mounted) {
+      setState(() {
+        _loading = false;
+        if (success) _registered = enable;
+      });
+
+      if (!success) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(
+              enable
+                  ? 'Failed to register context menu. Check app permissions.'
+                  : 'Failed to unregister context menu.',
+            ),
+          ),
+        );
+      }
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return SwitchListTile(
+      secondary: _loading
+          ? const SizedBox(
+              width: 24,
+              height: 24,
+              child: CircularProgressIndicator(strokeWidth: 2),
+            )
+          : const Icon(Icons.folder_open),
+      title: const Text('Windows Explorer Integration'),
+      subtitle: Text(
+        _registered
+            ? 'Right-click files to upload to CrispCloud'
+            : 'Add "Upload to CrispCloud" to Explorer context menu',
+        style: const TextStyle(fontSize: 11),
+      ),
+      value: _registered,
+      onChanged: _loading ? null : _toggle,
     );
   }
 }

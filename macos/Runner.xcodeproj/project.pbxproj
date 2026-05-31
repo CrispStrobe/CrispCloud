@@ -29,9 +29,33 @@
 		33CC11132044BFA00003C045 /* MainFlutterWindow.swift in Sources */ = {isa = PBXBuildFile; fileRef = 33CC11122044BFA00003C045 /* MainFlutterWindow.swift */; };
 		4DE472FAD5CB7BFB34B8D10B /* Pods_RunnerTests.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = DCC7D61164E652A1F5A81AEF /* Pods_RunnerTests.framework */; };
 		E5878A68877F22CC64B0071F /* Pods_Runner.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = FA6CEBC4889E893ECB6B598D /* Pods_Runner.framework */; };
+		/* FinderExtension build files */
+		CC001A012044A3C60003F001 /* FinderSync.swift in Sources */ = {isa = PBXBuildFile; fileRef = CC001A002044A3C60003F001 /* FinderSync.swift */; };
+		CC001A032044A3C60003F001 /* FinderExtension.appex in CopyFiles */ = {isa = PBXBuildFile; fileRef = CC001A042044A3C60003F001 /* FinderExtension.appex */; settings = {ATTRIBUTES = (RemoveHeadersOnCopy, ); }; };
 /* End PBXBuildFile section */
 
+/* Begin PBXCopyFilesBuildPhase section (FinderExtension embed) */
+		CC001A072044A3C60003F001 /* Embed App Extensions */ = {
+			isa = PBXCopyFilesBuildPhase;
+			buildActionMask = 2147483647;
+			dstPath = "";
+			dstSubfolderSpec = 13;
+			files = (
+				CC001A032044A3C60003F001 /* FinderExtension.appex in CopyFiles */,
+			);
+			name = "Embed App Extensions";
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXCopyFilesBuildPhase section (FinderExtension embed) */
+
 /* Begin PBXContainerItemProxy section */
+		CC001A052044A3C60003F001 /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = 33CC10E52044A3C60003C045 /* Project object */;
+			proxyType = 1;
+			remoteGlobalIDString = CC001A062044A3C60003F001;
+			remoteInfo = FinderExtension;
+		};
 		331C80D9294CF71000263BE5 /* PBXContainerItemProxy */ = {
 			isa = PBXContainerItemProxy;
 			containerPortal = 33CC10E52044A3C60003C045 /* Project object */;
@@ -88,6 +112,11 @@
 		DCC7D61164E652A1F5A81AEF /* Pods_RunnerTests.framework */ = {isa = PBXFileReference; explicitFileType = wrapper.framework; includeInIndex = 0; path = Pods_RunnerTests.framework; sourceTree = BUILT_PRODUCTS_DIR; };
 		E8FC9A66E6C713DDBF93D02D /* Pods-RunnerTests.debug.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-RunnerTests.debug.xcconfig"; path = "Target Support Files/Pods-RunnerTests/Pods-RunnerTests.debug.xcconfig"; sourceTree = "<group>"; };
 		FA6CEBC4889E893ECB6B598D /* Pods_Runner.framework */ = {isa = PBXFileReference; explicitFileType = wrapper.framework; includeInIndex = 0; path = Pods_Runner.framework; sourceTree = BUILT_PRODUCTS_DIR; };
+		/* FinderExtension file references */
+		CC001A002044A3C60003F001 /* FinderSync.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FinderSync.swift; sourceTree = "<group>"; };
+		CC001A082044A3C60003F001 /* FinderExtension.entitlements */ = {isa = PBXFileReference; lastKnownFileType = text.plist.entitlements; path = FinderExtension.entitlements; sourceTree = "<group>"; };
+		CC001A092044A3C60003F001 /* FinderExtension.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
+		CC001A042044A3C60003F001 /* FinderExtension.appex */ = {isa = PBXFileReference; explicitFileType = "wrapper.app-extension"; includeInIndex = 0; path = FinderExtension.appex; sourceTree = BUILT_PRODUCTS_DIR; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -129,12 +158,23 @@
 			path = Configs;
 			sourceTree = "<group>";
 		};
+		CC001A0A2044A3C60003F001 /* FinderExtension */ = {
+			isa = PBXGroup;
+			children = (
+				CC001A002044A3C60003F001 /* FinderSync.swift */,
+				CC001A082044A3C60003F001 /* FinderExtension.entitlements */,
+				CC001A092044A3C60003F001 /* FinderExtension.plist */,
+			);
+			path = FinderExtension;
+			sourceTree = "<group>";
+		};
 		33CC10E42044A3C60003C045 = {
 			isa = PBXGroup;
 			children = (
 				33FAB671232836740065AC1E /* Runner */,
 				33CEB47122A05771004F2AC0 /* Flutter */,
 				331C80D6294CF71000263BE5 /* RunnerTests */,
+				CC001A0A2044A3C60003F001 /* FinderExtension */,
 				33CC10EE2044A3C60003C045 /* Products */,
 				D73912EC22F37F3D000D13A0 /* Frameworks */,
 				D61CED569636B398DC5DD9A5 /* Pods */,
@@ -146,6 +186,7 @@
 			children = (
 				33CC10ED2044A3C60003C045 /* internxt_flutter.app */,
 				331C80D5294CF71000263BE5 /* RunnerTests.xctest */,
+				CC001A042044A3C60003F001 /* FinderExtension.appex */,
 			);
 			name = Products;
 			sourceTree = "<group>";
@@ -230,6 +271,23 @@
 			productReference = 331C80D5294CF71000263BE5 /* RunnerTests.xctest */;
 			productType = "com.apple.product-type.bundle.unit-test";
 		};
+		CC001A062044A3C60003F001 /* FinderExtension */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = CC001A0B2044A3C60003F001 /* Build configuration list for PBXNativeTarget "FinderExtension" */;
+			buildPhases = (
+				CC001A0C2044A3C60003F001 /* Sources */,
+				CC001A0D2044A3C60003F001 /* Frameworks */,
+				CC001A0E2044A3C60003F001 /* Resources */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+			);
+			name = FinderExtension;
+			productName = FinderExtension;
+			productReference = CC001A042044A3C60003F001 /* FinderExtension.appex */;
+			productType = "com.apple.product-type.app-extension";
+		};
 		33CC10EC2044A3C60003C045 /* Runner */ = {
 			isa = PBXNativeTarget;
 			buildConfigurationList = 33CC10FB2044A3C60003C045 /* Build configuration list for PBXNativeTarget "Runner" */;
@@ -241,11 +299,13 @@
 				33CC110E2044A8840003C045 /* Bundle Framework */,
 				3399D490228B24CF009A79C7 /* ShellScript */,
 				1AEE8BF84B498AA2ACDD5B94 /* [CP] Embed Pods Frameworks */,
+				CC001A072044A3C60003F001 /* Embed App Extensions */,
 			);
 			buildRules = (
 			);
 			dependencies = (
 				33CC11202044C79F0003C045 /* PBXTargetDependency */,
+				CC001A0F2044A3C60003F001 /* PBXTargetDependency */,
 			);
 			name = Runner;
 			productName = Runner;
@@ -281,6 +341,15 @@
 						CreatedOnToolsVersion = 9.2;
 						ProvisioningStyle = Manual;
 					};
+					CC001A062044A3C60003F001 = {
+						CreatedOnToolsVersion = 15.0;
+						ProvisioningStyle = Automatic;
+						SystemCapabilities = {
+							com.apple.Sandbox = {
+								enabled = 1;
+							};
+						};
+					};
 				};
 			};
 			buildConfigurationList = 33CC10E82044A3C60003C045 /* Build configuration list for PBXProject "Runner" */;
@@ -299,9 +368,31 @@
 				33CC10EC2044A3C60003C045 /* Runner */,
 				331C80D4294CF70F00263BE5 /* RunnerTests */,
 				33CC111A2044C6BA0003C045 /* Flutter Assemble */,
+				CC001A062044A3C60003F001 /* FinderExtension */,
 			);
 		};
 /* End PBXProject section */
+
+/* Begin PBXSourcesBuildPhase section (FinderExtension) */
+		CC001A0C2044A3C60003F001 /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				CC001A012044A3C60003F001 /* FinderSync.swift in Sources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXSourcesBuildPhase section (FinderExtension) */
+
+/* Begin PBXFrameworksBuildPhase section (FinderExtension) */
+		CC001A0D2044A3C60003F001 /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXFrameworksBuildPhase section (FinderExtension) */
 
 /* Begin PBXResourcesBuildPhase section */
 		331C80D3294CF70F00263BE5 /* Resources */ = {
@@ -317,6 +408,13 @@
 			files = (
 				33CC10F32044A3C60003C045 /* Assets.xcassets in Resources */,
 				33CC10F62044A3C60003C045 /* MainMenu.xib in Resources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		CC001A0E2044A3C60003F001 /* Resources */ = {
+			isa = PBXResourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -446,6 +544,11 @@
 /* End PBXSourcesBuildPhase section */
 
 /* Begin PBXTargetDependency section */
+		CC001A0F2044A3C60003F001 /* PBXTargetDependency */ = {
+			isa = PBXTargetDependency;
+			target = CC001A062044A3C60003F001 /* FinderExtension */;
+			targetProxy = CC001A052044A3C60003F001 /* PBXContainerItemProxy */;
+		};
 		331C80DA294CF71000263BE5 /* PBXTargetDependency */ = {
 			isa = PBXTargetDependency;
 			target = 33CC10EC2044A3C60003C045 /* Runner */;
@@ -471,6 +574,71 @@
 /* End PBXVariantGroup section */
 
 /* Begin XCBuildConfiguration section */
+		/* FinderExtension build configurations */
+		CC001A102044A3C60003F001 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				CLANG_ENABLE_MODULES = YES;
+				CODE_SIGN_ENTITLEMENTS = FinderExtension/FinderExtension.entitlements;
+				CODE_SIGN_STYLE = Automatic;
+				INFOPLIST_FILE = FinderExtension/Info.plist;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/../Frameworks",
+					"@executable_path/../../../../Frameworks",
+				);
+				MACOSX_DEPLOYMENT_TARGET = 10.15;
+				PRODUCT_BUNDLE_IDENTIFIER = com.example.internxtFlutter.FinderExtension;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SKIP_INSTALL = YES;
+				SWIFT_VERSION = 5.0;
+			};
+			name = Debug;
+		};
+		CC001A112044A3C60003F001 /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				CLANG_ENABLE_MODULES = YES;
+				CODE_SIGN_ENTITLEMENTS = FinderExtension/FinderExtension.entitlements;
+				CODE_SIGN_STYLE = Automatic;
+				INFOPLIST_FILE = FinderExtension/Info.plist;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/../Frameworks",
+					"@executable_path/../../../../Frameworks",
+				);
+				MACOSX_DEPLOYMENT_TARGET = 10.15;
+				PRODUCT_BUNDLE_IDENTIFIER = com.example.internxtFlutter.FinderExtension;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SKIP_INSTALL = YES;
+				SWIFT_COMPILATION_MODE = wholemodule;
+				SWIFT_OPTIMIZATION_LEVEL = "-O";
+				SWIFT_VERSION = 5.0;
+			};
+			name = Release;
+		};
+		CC001A122044A3C60003F001 /* Profile */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				CLANG_ENABLE_MODULES = YES;
+				CODE_SIGN_ENTITLEMENTS = FinderExtension/FinderExtension.entitlements;
+				CODE_SIGN_STYLE = Automatic;
+				INFOPLIST_FILE = FinderExtension/Info.plist;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/../Frameworks",
+					"@executable_path/../../../../Frameworks",
+				);
+				MACOSX_DEPLOYMENT_TARGET = 10.15;
+				PRODUCT_BUNDLE_IDENTIFIER = com.example.internxtFlutter.FinderExtension;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SKIP_INSTALL = YES;
+				SWIFT_COMPILATION_MODE = wholemodule;
+				SWIFT_OPTIMIZATION_LEVEL = "-O";
+				SWIFT_VERSION = 5.0;
+			};
+			name = Profile;
+		};
 		331C80DB294CF71000263BE5 /* Debug */ = {
 			isa = XCBuildConfiguration;
 			baseConfigurationReference = E8FC9A66E6C713DDBF93D02D /* Pods-RunnerTests.debug.xcconfig */;
@@ -755,6 +923,16 @@
 /* End XCBuildConfiguration section */
 
 /* Begin XCConfigurationList section */
+		CC001A0B2044A3C60003F001 /* Build configuration list for PBXNativeTarget "FinderExtension" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				CC001A102044A3C60003F001 /* Debug */,
+				CC001A112044A3C60003F001 /* Release */,
+				CC001A122044A3C60003F001 /* Profile */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
 		331C80DE294CF71000263BE5 /* Build configuration list for PBXNativeTarget "RunnerTests" */ = {
 			isa = XCConfigurationList;
 			buildConfigurations = (

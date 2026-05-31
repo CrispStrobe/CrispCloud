@@ -100,6 +100,8 @@ class ThemePickerDialog extends StatelessWidget {
         return const Color(0xFF2E3440);
       case AppThemeMode.dracula:
         return const Color(0xFF282A36);
+      case AppThemeMode.materialYou:
+        return Colors.blueGrey;
     }
   }
 

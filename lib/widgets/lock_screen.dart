@@ -205,6 +205,7 @@ class _LockScreenState extends State<LockScreen> {
   }
 
   IconData get _biometricIcon {
+    if (_biometricLabel == 'Windows Hello') return Icons.verified_user; // Windows Hello
     if (_biometricLabel == 'Face ID') return Icons.face;
     if (_biometricLabel == 'Fingerprint') return Icons.fingerprint;
     return Icons.security;
@@ -362,11 +363,13 @@ class _AppLockSetupDialogState extends State<AppLockSetupDialog> {
                   'Use $_biometricLabel as an alternative to your PIN/password',
                 ),
                 secondary: Icon(
-                  _biometricLabel == 'Face ID'
-                      ? Icons.face
-                      : _biometricLabel == 'Fingerprint'
-                          ? Icons.fingerprint
-                          : Icons.security,
+                  _biometricLabel == 'Windows Hello'
+                      ? Icons.verified_user
+                      : _biometricLabel == 'Face ID'
+                          ? Icons.face
+                          : _biometricLabel == 'Fingerprint'
+                              ? Icons.fingerprint
+                              : Icons.security,
                 ),
                 value: _biometricEnabled,
                 onChanged: (v) => setState(() => _biometricEnabled = v),

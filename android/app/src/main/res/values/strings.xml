@@ -1,0 +1,5 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="app_name">CrispCloud</string>
+    <string name="widget_description">Shows quick-upload, sync status and recent files.</string>
+</resources>

@@ -8,19 +8,21 @@
     <!-- WorkManager: allow task to restart after device reboot -->
     <uses-permission android:name="android.permission.RECEIVE_BOOT_COMPLETED"/>
 
-    <!-- WorkManager: allow background tasks to show a foreground-service
-         notification so Android does not kill long-running syncs -->
+    <!-- WorkManager / long transfers: allow foreground service notifications -->
     <uses-permission android:name="android.permission.FOREGROUND_SERVICE"/>
+
+    <!-- Android 14+: declare the type of foreground service used for transfers -->
+    <uses-permission android:name="android.permission.FOREGROUND_SERVICE_DATA_SYNC"/>
 
     <!-- flutter_local_notifications: required to post notifications on API 33+ -->
     <uses-permission android:name="android.permission.POST_NOTIFICATIONS"/>
 
     <application
-        android:label="Internxt Drive"
+        android:label="@string/app_name"
         android:name="${applicationName}"
         android:icon="@mipmap/ic_launcher"
         android:requestLegacyExternalStorage="true">
-        
+
         <activity
             android:name=".MainActivity"
             android:exported="true"
@@ -29,31 +31,38 @@
             android:configChanges="orientation|keyboardHidden|keyboard|screenSize|smallestScreenSize|locale|layoutDirection|fontScale|screenLayout|density|uiMode"
             android:hardwareAccelerated="true"
             android:windowSoftInputMode="adjustResize">
-            
+
             <meta-data
               android:name="io.flutter.embedding.android.NormalTheme"
               android:resource="@style/NormalTheme"
               />
-            
+
             <intent-filter>
                 <action android:name="android.intent.action.MAIN"/>
                 <category android:name="android.intent.category.LAUNCHER"/>
             </intent-filter>
-            
+
             <!-- Intent filters for receiving shared content -->
             <intent-filter>
                 <action android:name="android.intent.action.SEND" />
                 <category android:name="android.intent.category.DEFAULT" />
                 <data android:mimeType="*/*" />
             </intent-filter>
-            
+
             <intent-filter>
                 <action android:name="android.intent.action.SEND_MULTIPLE" />
                 <category android:name="android.intent.category.DEFAULT" />
                 <data android:mimeType="*/*" />
             </intent-filter>
-            
-            <!-- Deep linking -->
+
+            <!-- Open-with: other apps can open files in CrispCloud -->
+            <intent-filter>
+                <action android:name="android.intent.action.VIEW" />
+                <category android:name="android.intent.category.DEFAULT" />
+                <data android:mimeType="*/*" />
+            </intent-filter>
+
+            <!-- Deep linking (OAuth callbacks, widget navigation) -->
             <intent-filter>
                 <action android:name="android.intent.action.VIEW" />
                 <category android:name="android.intent.category.DEFAULT" />
@@ -61,7 +70,26 @@
                 <data android:scheme="internxtdrive" />
             </intent-filter>
         </activity>
-        
+
+        <!-- Home screen widget -->
+        <receiver
+            android:name=".CrispCloudWidget"
+            android:exported="true"
+            android:label="CrispCloud Widget">
+            <intent-filter>
+                <action android:name="android.appwidget.action.APPWIDGET_UPDATE" />
+            </intent-filter>
+            <meta-data
+                android:name="android.appwidget.provider"
+                android:resource="@xml/crisp_cloud_widget_info" />
+        </receiver>
+
+        <!-- Foreground service for long file transfers (dataSync type, Android 14+) -->
+        <service
+            android:name=".TransferForegroundService"
+            android:exported="false"
+            android:foregroundServiceType="dataSync" />
+
         <meta-data
             android:name="flutterEmbedding"
             android:value="2" />
@@ -79,7 +107,7 @@
                 tools:node="remove" />
         </provider>
     </application>
-    
+
     <queries>
         <intent>
             <action android:name="android.intent.action.SEND" />

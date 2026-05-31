@@ -5,6 +5,7 @@
 // Optional biometric unlock via local_auth (FaceID / TouchID / fingerprint).
 
 import 'dart:convert';
+import 'dart:io';
 import 'dart:typed_data';
 
 import 'package:crypto/crypto.dart';
@@ -97,12 +98,19 @@ class AppLockService {
   // --- Biometric ---
 
   /// Check if the device supports biometric authentication.
+  ///
+  /// On Windows, `local_auth` delegates to Windows Hello (PIN, face, or
+  /// fingerprint). `isDeviceSupported()` returns true when Windows Hello is
+  /// configured, so we rely on that check rather than `canCheckBiometrics`.
   Future<bool> isBiometricAvailable() async {
-    // Biometrics not available on web or desktop (except macOS Touch ID)
     if (kIsWeb) return false;
     try {
-      final canCheck = await _localAuth.canCheckBiometrics;
       final isDeviceSupported = await _localAuth.isDeviceSupported();
+      if (!isDeviceSupported) return false;
+      // On Windows, canCheckBiometrics may be false even when Windows Hello
+      // is set up (e.g. PIN-only Hello). Treat device support as sufficient.
+      if (!kIsWeb && Platform.isWindows) return true;
+      final canCheck = await _localAuth.canCheckBiometrics;
       return canCheck || isDeviceSupported;
     } catch (e) {
       _log.warn('Biometric availability check failed: $e');
@@ -134,14 +142,21 @@ class AppLockService {
   }
 
   /// Attempt biometric authentication. Returns true if successful.
+  ///
+  /// On Windows, `biometricOnly: true` is not supported by Windows Hello
+  /// (which also accepts a PIN as fallback). We therefore set `biometricOnly`
+  /// to false on Windows so the plugin does not throw an unsupported-option
+  /// error while still delegating to Windows Hello for authentication.
   Future<bool> authenticateWithBiometric() async {
     if (kIsWeb) return false;
+    final isWindows = !kIsWeb && Platform.isWindows;
     try {
       final result = await _localAuth.authenticate(
         localizedReason: 'Unlock CrispCloud',
-        options: const AuthenticationOptions(
+        options: AuthenticationOptions(
           stickyAuth: true,
-          biometricOnly: true,
+          // Windows Hello does not support biometric-only enforcement.
+          biometricOnly: !isWindows,
         ),
       );
       if (result) {
@@ -157,7 +172,12 @@ class AppLockService {
   }
 
   /// Get a human-readable label for the primary biometric type.
+  ///
+  /// Returns "Windows Hello" on Windows regardless of the reported biometric
+  /// types, since Windows Hello is the umbrella brand for all Windows
+  /// authentication methods (PIN, face recognition, fingerprint).
   Future<String> getBiometricLabel() async {
+    if (!kIsWeb && Platform.isWindows) return 'Windows Hello';
     final types = await getAvailableBiometrics();
     if (types.contains(BiometricType.face)) return 'Face ID';
     if (types.contains(BiometricType.fingerprint)) return 'Fingerprint';

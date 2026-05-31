@@ -1,27 +1,66 @@
 import Flutter
 import UIKit
 import FileProvider
+import Intents
 
 @main
 @objc class AppDelegate: FlutterAppDelegate {
+
+  /// Shared Flutter engine.  SceneDelegate instances re-use this engine so
+  /// that all windows share one Dart isolate.
+  lazy var flutterEngine: FlutterEngine = {
+    let engine = FlutterEngine(name: "crisp_cloud_engine")
+    engine.run()
+    GeneratedPluginRegistrant.register(with: engine)
+    return engine
+  }()
+
   override func application(
     _ application: UIApplication,
     didFinishLaunchingWithOptions launchOptions: [UIApplication.LaunchOptionsKey: Any]?
   ) -> Bool {
-    GeneratedPluginRegistrant.register(with: self)
+    // Pre-warm the engine so the first scene connects instantly.
+    _ = flutterEngine
 
-    // Set up the FileProvider bridge method channel.
-    if let controller = window?.rootViewController as? FlutterViewController {
-      let channel = FlutterMethodChannel(
-        name: "com.crispcloud/file_provider",
-        binaryMessenger: controller.binaryMessenger
-      )
-      channel.setMethodCallHandler { [weak self] call, result in
-        self?.handleFileProviderCall(call, result: result)
+    // When UIApplicationSceneManifest is present (multi-window) the system
+    // creates FlutterViewControllers through SceneDelegate, so we only need
+    // the legacy single-window path when there is no scene support.
+    if #available(iOS 13.0, *) {
+      // Scene-based setup handled in SceneDelegate.swift.
+    } else {
+      GeneratedPluginRegistrant.register(with: self)
+      // Set up the FileProvider bridge method channel for iOS < 13.
+      if let controller = window?.rootViewController as? FlutterViewController {
+        setupFileProviderChannel(messenger: controller.binaryMessenger)
       }
     }
 
     return super.application(application, didFinishLaunchingWithOptions: launchOptions)
+  }
+
+  // Called when the app is launched via a Siri shortcut on iOS < 13.
+  override func application(
+    _ application: UIApplication,
+    continue userActivity: NSUserActivity,
+    restorationHandler: @escaping ([UIUserActivityRestoring]?) -> Void
+  ) -> Bool {
+    NSLog("[CrispCloud] AppDelegate continue userActivity: \(userActivity.activityType)")
+    // Handled by SceneDelegate on iOS 13+.
+    return super.application(application,
+                             continue: userActivity,
+                             restorationHandler: restorationHandler)
+  }
+
+  // MARK: - FileProvider channel wiring (iOS < 13 path)
+
+  private func setupFileProviderChannel(messenger: FlutterBinaryMessenger) {
+    let channel = FlutterMethodChannel(
+      name: "com.crispcloud/file_provider",
+      binaryMessenger: messenger
+    )
+    channel.setMethodCallHandler { [weak self] call, result in
+      self?.handleFileProviderCall(call, result: result)
+    }
   }
 
   // MARK: - FileProvider method channel

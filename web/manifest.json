@@ -1,13 +1,14 @@
 {
-    "name": "crisp_cloud",
+    "name": "CrispCloud",
     "short_name": "CrispCloud",
     "start_url": ".",
     "display": "standalone",
     "background_color": "#0175C2",
     "theme_color": "#0175C2",
-    "description": "Cross-platform Commander-style Client for Cloud Storage providers, supporting (unofficially) Filen.io, WebDAV, SFTP (as for Hetzner StorageBoxes etc) written in Flutter/Dart.",
-    "orientation": "portrait-primary",
+    "description": "Cross-platform Commander-style Client for Cloud Storage providers, supporting Filen.io, WebDAV, SFTP, S3, Google Drive, OneDrive, Dropbox and more.",
+    "orientation": "any",
     "prefer_related_applications": false,
+    "categories": ["productivity", "utilities", "cloud"],
     "icons": [
         {
             "src": "icons/Icon-192.png",
@@ -31,5 +32,52 @@
             "type": "image/png",
             "purpose": "maskable"
         }
-    ]
+    ],
+    "screenshots": [
+        {
+            "src": "icons/Icon-512.png",
+            "sizes": "512x512",
+            "type": "image/png",
+            "label": "CrispCloud file browser"
+        }
+    ],
+    "shortcuts": [
+        {
+            "name": "Upload Files",
+            "short_name": "Upload",
+            "description": "Upload files to the current cloud provider",
+            "url": "/?action=upload",
+            "icons": [{"src": "icons/Icon-192.png", "sizes": "192x192"}]
+        },
+        {
+            "name": "Recent Transfers",
+            "short_name": "Transfers",
+            "description": "View recent file transfers",
+            "url": "/?action=transfers",
+            "icons": [{"src": "icons/Icon-192.png", "sizes": "192x192"}]
+        },
+        {
+            "name": "Providers",
+            "short_name": "Providers",
+            "description": "Manage cloud storage providers",
+            "url": "/?action=providers",
+            "icons": [{"src": "icons/Icon-192.png", "sizes": "192x192"}]
+        }
+    ],
+    "share_target": {
+        "action": "/share-target",
+        "method": "POST",
+        "enctype": "multipart/form-data",
+        "params": {
+            "title": "title",
+            "text": "text",
+            "url": "url",
+            "files": [
+                {
+                    "name": "files",
+                    "accept": ["*/*"]
+                }
+            ]
+        }
+    }
 }

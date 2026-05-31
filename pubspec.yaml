@@ -71,6 +71,9 @@ dependencies:
   flutter_launcher_icons: ^0.14.4
   macos_secure_bookmarks: ^0.2.1
 
+  # Material You / dynamic color (Android 12+)
+  dynamic_color: ^1.7.0
+
   # FTP/FTPS
   ftpconnect: ^2.0.5
 

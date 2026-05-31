@@ -63,9 +63,11 @@ void main() {
       expect(theme.scaffoldBackgroundColor, Colors.black);
     });
 
-    test('builtInThemes contains all non-system modes', () {
+    test('builtInThemes contains all non-system, non-materialYou modes', () {
       for (final mode in AppThemeMode.values) {
         if (mode == AppThemeMode.system) continue;
+        // materialYou is resolved at runtime via DynamicColorBuilder, not in builtInThemes
+        if (mode == AppThemeMode.materialYou) continue;
         expect(builtInThemes.containsKey(mode), isTrue,
             reason: 'Missing built-in theme for $mode');
       }

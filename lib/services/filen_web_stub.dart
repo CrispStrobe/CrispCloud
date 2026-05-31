@@ -10,3 +10,4 @@ void setProperty(dynamic object, dynamic name, dynamic value) => throw Unimpleme
 dynamic callMethod(dynamic object, String method, List args) => throw UnimplementedError();
 Future<dynamic> promiseToFuture(dynamic promise) => throw UnimplementedError();
 bool hasProperty(dynamic object, dynamic name) => throw UnimplementedError();
+dynamic jsify(dynamic object) => throw UnimplementedError();

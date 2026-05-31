@@ -1,0 +1,21 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- android/app/src/main/res/xml/crisp_cloud_widget_info.xml
+     AppWidgetProviderInfo for the CrispCloud home screen widget.
+
+     minWidth / minHeight target a 4×2 cell grid (each cell ≈ 74dp).
+     updatePeriodMillis: Android enforces a minimum of 30 minutes;
+     we request 30 minutes so the recent-files list stays reasonably fresh.
+     For real-time updates the widget accepts APPWIDGET_UPDATE broadcasts
+     triggered by the app itself.
+-->
+<appwidget-provider xmlns:android="http://schemas.android.com/apk/res/android"
+    android:minWidth="250dp"
+    android:minHeight="110dp"
+    android:minResizeWidth="180dp"
+    android:minResizeHeight="80dp"
+    android:updatePeriodMillis="1800000"
+    android:initialLayout="@layout/widget_crisp_cloud"
+    android:previewImage="@mipmap/ic_launcher"
+    android:resizeMode="horizontal|vertical"
+    android:widgetCategory="home_screen"
+    android:description="@string/widget_description" />

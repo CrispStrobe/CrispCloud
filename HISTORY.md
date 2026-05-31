@@ -2,6 +2,78 @@
 
 Audit trail of bugs found, issues discovered, and fixes applied.
 
+## 2026-05-30 — Session 3: Platform Polish, CLI, FUSE (965 → 1227 tests, +262)
+
+### 8.1 macOS Finder Quick Action Extension
+- **Created `macos/FinderExtension/FinderSync.swift`**: FIFinderSync subclass, monitors home directory, "Upload to CrispCloud" context menu, opens `crispcloud://upload?paths=...` URL
+- **Created `macos/FinderExtension/Info.plist`** + **`FinderExtension.entitlements`**: extension config with sandbox
+- **Updated `macos/Runner/AppDelegate.swift`**: `application(_:open:)` handler forwards URL to Flutter via MethodChannel, deferred retry for engine readiness
+- **Updated `macos/Runner/Info.plist`**: `CFBundleURLTypes` for `crispcloud` URL scheme
+- **Updated `macos/Runner.xcodeproj/project.pbxproj`**: FinderExtension target, build phases, embed extension
+- **Created `lib/services/finder_extension_service.dart`**: URL parsing, upload processing, macOS-only guard
+- **Tests**: 27 tests (URL parsing, special chars, unicode, lifecycle, mock channel)
+
+### 8.2 Windows Explorer Context Menu + Windows Hello
+- **Created `windows/runner/context_menu_registration.h/.cpp`**: C++ HKCU registry-based shell extension
+- **Updated `windows/runner/main.cpp`**: `--register-context-menu` / `--unregister-context-menu` CLI flags
+- **Updated `windows/runner/CMakeLists.txt`**: added context_menu_registration.cpp
+- **Created `lib/services/windows_integration_service.dart`**: Dart wrapper for `reg.exe` calls, Windows-only guard
+- **Updated `lib/screens/file_browser_screen.dart`**: Windows Explorer Integration toggle in settings drawer
+- **Updated `lib/services/app_lock_service.dart`**: Windows Hello fixes — `isDeviceSupported()` short-circuit, `biometricOnly: false` on Windows, "Windows Hello" label
+- **Updated `lib/widgets/lock_screen.dart`**: Windows Hello icon mapping
+- **Tests**: 21 tests (platform guards, registry contracts, biometric label/auth/availability)
+
+### 8.4 Android Platform Polish (5 features)
+- **Created `lib/services/saf_service.dart`** + **`android/.../SAFHandler.kt`**: SAF document/folder picker via Activity Result API
+- **Updated `lib/services/theme_service.dart`**: `AppThemeMode.materialYou` (7th theme), `DynamicColorBuilder` support, `dynamic_color: ^1.7.0` added
+- **Created `android/.../CrispCloudWidget.kt`** + XML layouts: home screen widget with upload button, recent files, sync status
+- **Created `lib/services/foreground_transfer_service.dart`** + **`android/.../TransferForegroundService.kt`**: auto-promote to foreground after 5s, progress notification
+- **Created `lib/services/intent_handler_service.dart`**: `receive_sharing_intent` wrapper with upload callback
+- **Updated `AndroidManifest.xml`**: foreground service type, widget receiver, VIEW intent filter
+- **Tests**: 37 tests (SAF data classes, Material You logic, foreground service, intent handler, widget keys)
+
+### 8.5 iOS Platform Polish (3 features)
+- **Created `ios/ShareExtension/ShareViewController.swift`** + Info.plist + entitlements: Share Extension accepting files/images/videos/URLs via App Group shared container
+- **Created `lib/services/share_extension_service.dart`**: reads pending-upload manifest, processes uploads, iOS-only guard
+- **Created `lib/services/siri_shortcuts_service.dart`**: 3 shortcuts (upload, recent, sync), MethodChannel activation handler
+- **Created `lib/services/multi_window_service.dart`**: Stage Manager multi-window support, scene lifecycle
+- **Created `ios/Runner/SceneDelegate.swift`**: UISceneDelegate wiring all MethodChannels, shared FlutterEngine
+- **Updated `ios/Runner/AppDelegate.swift`**: shared `lazy var flutterEngine` for multi-scene
+- **Updated `ios/Runner/Info.plist`**: `UIApplicationSceneManifest` with multiple scenes support
+- **Tests**: 30 tests (service guards, model parsing, shortcut uniqueness, multi-window state, channel no-ops)
+
+### 8.6 Web PWA Enhancements (6 features)
+- **Created `web/service-worker.js`**: cache-first for assets, network-first for API, offline fallback, push events
+- **Updated `web/index.html`**: title "CrispCloud", SW registration, apple-mobile-web-app meta tags
+- **Updated `web/manifest.json`**: share_target, shortcuts, screenshots, categories
+- **Created `lib/services/web_push_service.dart`** + stub + web: browser Notification API, conditional import
+- **Created `lib/services/file_system_access_service.dart`** + stub + web: FSA picker + IndexedDB handle persistence
+- **Created `lib/services/web_share_target_service.dart`** + stub + web: detect share-target launches
+- **Created `lib/services/opfs_service.dart`** + stub + web: OPFS read/write/delete via JS interop
+- **Tests**: 95 tests (stub contracts, model tests, manifest/HTML/SW file assertions)
+
+### 9.2 CLI Companion (`crisp`)
+- **Created `cli/` subdirectory**: pure Dart CLI (no Flutter dependency)
+- **`cli/lib/adapters/`**: S3 (SigV4 signing, multipart, pre-signed URLs), SFTP (dartssh2), WebDAV (HTTP PROPFIND/MKCOL)
+- **`cli/lib/commands/`**: connect, ls, upload, download, sync, search, share, providers, config (with subcommands)
+- **`cli/lib/config/cli_config.dart`**: YAML config at `~/.config/crispcloud/config.yaml`
+- **`cli/lib/cli_app.dart`**: CommandRunner with completion generation (bash/zsh/fish)
+- **Tests**: 55 tests (config YAML, S3/SFTP/WebDAV adapters, search glob→regex, CLI runner wiring)
+
+### 11.4 FUSE Mounted Drives
+- **Created `lib/services/fuse_mount_service.dart`**: mount/unmount lifecycle, MountEntry model, platform detection (macFUSE/libfuse/WinFsp), SharedPreferences persistence
+- **Created `lib/services/fuse_filesystem.dart`**: IPC bridge with 12 opcodes, dir listing cache (30s TTL), read-ahead buffer (256KB), write-back cache
+- **Created `lib/services/fuse_helper_script.dart`**: platform-specific mount helper scripts (Linux/macOS/Windows)
+- **Created `lib/providers/mount_provider.dart`**: MountNotifier with auto-unmount on exit
+- **Created `lib/widgets/mount_dialog.dart`**: mount configuration UI, status indicators, browse button
+- **Updated `lib/screens/file_browser_screen.dart`**: mount icon in app bar
+- **Tests**: 52 tests (platform guard, model serialization, attribute encoding, cache TTL, opcode uniqueness, write-back buffer, helper scripts)
+
+### Bug Fixes
+- **Fixed 10 analyze errors**: non-exhaustive `AppThemeMode.materialYou` switch in theme_picker, `jsify` stub missing from filen_web_stub, IDB type names in file_system_access_service_web (use dynamic), WebPushService convenience methods missing in web impl
+- **Updated `lib/services/filen_web_stub.dart`**: added `jsify` stub
+- **Updated `lib/widgets/theme_picker.dart`**: added `materialYou` case
+
 ## 2026-05-30 — Session 2: Security Hardening + Test Coverage
 
 ### 7.2 Custom CA Certificate Support
