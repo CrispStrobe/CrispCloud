@@ -22,7 +22,7 @@ import android.content.Intent
 import android.content.SharedPreferences
 import android.net.Uri
 import android.widget.RemoteViews
-import com.example.internxt_flutter.R
+import com.CrispStrobe.cloud_dart.R
 
 class CrispCloudWidget : AppWidgetProvider() {
 
