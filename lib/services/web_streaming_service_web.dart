@@ -64,7 +64,7 @@ class _WebStreamingService implements WebStreamingService {
     try {
       // handle.getFile() → File (Blob subtype)
       final filePromise = js.callMethod(fileHandle, 'getFile', []);
-      final file = await js.promiseToFuture<Object>(filePromise);
+      final file = await js.promiseToFuture(filePromise);
 
       final size = (js.getProperty(file, 'size') as num).toInt();
       _log.info('uploadWithReadableStream: starting', {
@@ -198,7 +198,7 @@ class _WebStreamingService implements WebStreamingService {
       js.setProperty(opts, 'suggestedName', filename);
 
       final promise = js.callMethod(html.window, 'showSaveFilePicker', [opts]);
-      fileHandle = await js.promiseToFuture<Object>(promise);
+      fileHandle = await js.promiseToFuture(promise);
     } catch (e) {
       if (_isAbort(e)) {
         _log.info('downloadWithWritableStream: user cancelled picker');
@@ -212,7 +212,7 @@ class _WebStreamingService implements WebStreamingService {
     final Object writable;
     try {
       final writablePromise = js.callMethod(fileHandle, 'createWritable', []);
-      writable = await js.promiseToFuture<Object>(writablePromise);
+      writable = await js.promiseToFuture(writablePromise);
     } catch (e, st) {
       _log.error('downloadWithWritableStream: createWritable failed', e, st);
       return false;

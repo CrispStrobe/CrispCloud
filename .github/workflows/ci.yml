@@ -63,7 +63,8 @@ jobs:
 
       - name: flutter analyze (errors fail the build)
         run: |
-          flutter analyze 2>&1 | tee analyze.log || true
+          # Exclude cli/ — it's a separate Dart package with its own pubspec
+          flutter analyze --no-fatal-warnings 2>&1 | grep -v "cli/" | tee analyze.log || true
           if grep -q "  error • " analyze.log; then
             echo "::error::flutter analyze surfaced errors"
             exit 1

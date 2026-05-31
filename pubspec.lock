@@ -372,10 +372,12 @@ packages:
   filen_dart:
     dependency: "direct main"
     description:
-      path: "../filen-dart"
-      relative: true
-    source: path
-    version: "0.0.2"
+      path: "."
+      ref: main
+      resolved-ref: fff762e51c9bddbcd5a5c2cf4f218c6ec5c7a5e9
+      url: "https://github.com/CrispStrobe/filen-dart.git"
+    source: git
+    version: "0.1.0"
   fixnum:
     dependency: transitive
     description:
