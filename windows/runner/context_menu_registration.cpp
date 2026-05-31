@@ -3,7 +3,7 @@
 // Registry-based Windows Explorer context menu integration for CrispCloud.
 // Adds "Upload to CrispCloud" to the shell context menu for all file types.
 //
-// Registry layout (HKCU):
+// Registry layout (HKEY_CURRENT_USER):
 //   Software\Classes\*\shell\CrispCloud
 //     (Default)   = "Upload to CrispCloud"
 //     Icon        = "<exe_path>,0"
@@ -20,7 +20,7 @@
 
 namespace {
 
-// Registry key path under HKCU
+// Registry key path under HKEY_CURRENT_USER
 static const wchar_t kShellKeyPath[] =
     L"Software\\Classes\\*\\shell\\CrispCloud";
 static const wchar_t kCommandKeyPath[] =
@@ -54,7 +54,7 @@ RegistrationResult Register() {
 
   // --- Shell key: label and icon ---
   HKEY shell_key = nullptr;
-  LONG rc = RegCreateKeyExW(HKCU, kShellKeyPath, 0, nullptr,
+  LONG rc = RegCreateKeyExW(HKEY_CURRENT_USER, kShellKeyPath, 0, nullptr,
                              REG_OPTION_NON_VOLATILE, KEY_SET_VALUE, nullptr,
                              &shell_key, nullptr);
   if (rc != ERROR_SUCCESS) {
@@ -76,7 +76,7 @@ RegistrationResult Register() {
 
   // --- Command key: crispcloud://upload?paths=%1 ---
   HKEY cmd_key = nullptr;
-  rc = RegCreateKeyExW(HKCU, kCommandKeyPath, 0, nullptr,
+  rc = RegCreateKeyExW(HKEY_CURRENT_USER, kCommandKeyPath, 0, nullptr,
                         REG_OPTION_NON_VOLATILE, KEY_SET_VALUE, nullptr,
                         &cmd_key, nullptr);
   if (rc != ERROR_SUCCESS) {
@@ -97,7 +97,7 @@ RegistrationResult Register() {
 
 RegistrationResult Unregister() {
   // Delete the entire CrispCloud shell key subtree.
-  LONG rc = RegDeleteTreeW(HKCU, kShellKeyPath);
+  LONG rc = RegDeleteTreeW(HKEY_CURRENT_USER, kShellKeyPath);
   if (rc == ERROR_SUCCESS || rc == ERROR_FILE_NOT_FOUND) {
     return RegistrationResult::kSuccess;
   }
@@ -106,7 +106,7 @@ RegistrationResult Unregister() {
 
 bool IsRegistered() {
   HKEY key = nullptr;
-  LONG rc = RegOpenKeyExW(HKCU, kShellKeyPath, 0, KEY_READ, &key);
+  LONG rc = RegOpenKeyExW(HKEY_CURRENT_USER, kShellKeyPath, 0, KEY_READ, &key);
   if (rc == ERROR_SUCCESS) {
     RegCloseKey(key);
     return true;

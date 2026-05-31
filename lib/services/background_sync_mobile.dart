@@ -82,7 +82,7 @@ Future<void> scheduleWorkmanagerTask({
       networkType: NetworkType.connected,
       requiresBatteryNotLow: true,
     ),
-    existingWorkPolicy: ExistingWorkPolicy.replace,
+    existingWorkPolicy: ExistingPeriodicWorkPolicy.replace,
     backoffPolicy: BackoffPolicy.linear,
     backoffPolicyDelay: const Duration(minutes: 5),
   );

@@ -39,7 +39,7 @@ dependencies:
   system_tray: ^2.0.3
 
   # Mobile background sync (Android Workmanager + iOS background fetch)
-  workmanager: ^0.5.2
+  workmanager: ^0.9.0
   flutter_local_notifications: ^17.2.4
 
   # File Handling
