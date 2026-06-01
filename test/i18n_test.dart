@@ -141,8 +141,8 @@ void main() {
         final file = File('${_findProjectRoot()}/lib/l10n/app_$locale.arb');
         if (!file.existsSync()) return;
         final content = file.readAsStringSync();
-        // Walk the raw text to count top-level key occurrences.
-        final keyPattern = RegExp(r'^\s*"([^"@][^"]*)"\s*:', multiLine: true);
+        // Walk the raw text to count top-level key occurrences (2-space indent only).
+        final keyPattern = RegExp(r'^  "([^"]+)"\s*:', multiLine: true);
         final allMatches = keyPattern.allMatches(content).map((m) => m.group(1)!).toList();
         final seen = <String>{};
         final duplicates = <String>[];
