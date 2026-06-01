@@ -2,6 +2,31 @@
 
 Audit trail of bugs found, issues discovered, and fixes applied.
 
+## 2026-06-01 — Session 5: i18n, Fuzz, Analytics, Comparison, Migration (1651 → 1947+ tests, +296)
+
+### 10.3 i18n Expansion (5 languages)
+- **Created `lib/l10n/app_fr.arb`** (French), **`app_es.arb`** (Spanish), **`app_pt.arb`** (Portuguese), **`app_zh.arb`** (Chinese), **`app_ja.arb`** (Japanese) — all 166 keys translated
+- **Tests**: 156 runtime tests (key parity, placeholder preservation, locale matching, brand name, metadata)
+
+### 10.1 Fuzz Testing
+- **Created `lib/services/path_sanitizer.dart`**: `sanitizeFilename()`, `isPathTraversal()`, `normalizePathSeparators()`, `isReservedName()` + helpers
+- **Tests**: 131 tests (Unicode filenames, CJK/emoji/RTL/combining chars, special chars, SQL/XSS injection, path traversal, long paths, Windows reserved names, edge cases)
+
+### 11.1 Storage Analytics
+- **Created `lib/services/storage_analytics_service.dart`** (~710 lines): `FileCategory` enum (9 categories), 160+ extension mappings, `StorageBreakdown`/`CategoryStats`/`StaleFile`/`DuplicateGroup`/`CleanupSuggestion` models, `analyzeProvider()`, `findDuplicatesAcrossProviders()`, `findStaleFiles()`, `findLargestFiles()`, `generateCleanupSuggestions()`, `estimateSavings()`, SharedPreferences caching
+- **Created `lib/providers/storage_analytics_provider.dart`**: breakdown, duplicates, suggestions providers
+- **Tests**: 92 tests (categorization, breakdown, duplicates, stale files, largest files, suggestions, savings, serialization)
+
+### 11.2 Provider Comparison
+- **Created `lib/services/provider_comparison_service.dart`** (~925 lines): `ProviderPricing`/`ProviderFeatures`/`PrivacyInfo`/`ProviderLimits`/`ProviderInfo` models, built-in data for all 11 providers, privacy score algorithm (+20 E2E, +15 zero-knowledge, +15 GDPR, etc.), `compareProviders()`, `rankByPrice()`/`rankByPrivacy()`/`rankByFeatures()`, `getRecommendation()` for 5 use cases
+- **Created `lib/providers/provider_comparison_provider.dart`**: comparison, ranking, recommendation providers
+- **Tests**: 72 tests (all providers present, privacy scores, price ranking, feature counting, comparisons, recommendations, serialization)
+
+### 11.2 Migration Wizard
+- **Created `lib/services/migration_service.dart`** (~1175 lines): `MigrationPlan`/`MigrationProgress`/`MigrationFileEntry`/`MigrationVerification` models, `createPlan()`, `scanSource()` with glob filtering, `executeMigration()` with pause/resume/cancel, 4 conflict policies (skip/overwrite/rename/newest), bandwidth throttling, `verifyMigration()` with hash comparison
+- **Created `lib/providers/migration_provider.dart`**: plans, progress, active migration providers
+- **Tests**: 84 tests (plan serialization, validation, CRUD, conflict resolution, glob filtering, progress tracking, pause/resume/cancel, throttle calculation, verification, concurrent guard)
+
 ## 2026-05-31 — Session 4: Infrastructure, Automation, Backup, API, CI/CD, Docs (1227 → 1651 tests, +424)
 
 ### 1.4 Crash Reporting (opt-in)

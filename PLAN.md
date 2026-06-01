@@ -469,7 +469,7 @@ CrispCloud becomes the **open-source Cyberduck/Transmit/Commander One killer**: 
 - [ ] Integration tests: full user flows (connect → browse → transfer → disconnect)
 - [ ] Golden tests for UI regression
 - [ ] Performance benchmarks: 1K-file listing, 1GB upload, 10K-file sync
-- [ ] Fuzz testing: Unicode filenames, special chars, path traversal, long paths
+- [x] Fuzz testing: Unicode filenames, special chars, path traversal, long paths — `PathSanitizer` utility + 131 tests
 - [ ] Provider mock server for offline CI testing
 
 ### 10.2 CI/CD
@@ -483,7 +483,8 @@ CrispCloud becomes the **open-source Cyberduck/Transmit/Commander One killer**: 
 ### 10.3 Internationalization (i18n)
 - [x] Extract all user-facing strings to ARB files — `lib/l10n/app_en.arb` (150+ keys), `l10n.yaml` config
 - [x] Launch languages: English, German — `app_en.arb`, `app_de.arb`
-- [ ] Additional languages: French, Spanish, Portuguese, Chinese (Simplified), Japanese, Korean, Arabic (RTL)
+- [x] Additional languages: French, Spanish, Portuguese, Chinese (Simplified), Japanese — `app_fr.arb`, `app_es.arb`, `app_pt.arb`, `app_zh.arb`, `app_ja.arb`
+- [ ] Additional languages: Korean, Arabic (RTL)
 - [ ] Crowdsourced via Weblate or Crowdin
 - [ ] Date/number/size formatting per locale (use formatters from 1.5)
 
@@ -516,19 +517,19 @@ CrispCloud becomes the **open-source Cyberduck/Transmit/Commander One killer**: 
 ## Phase 11: Differentiation — What No Competitor Has
 
 ### 11.1 Smart Features (On-Device AI, No Cloud)
-- [ ] On-device file categorization (documents, photos, videos, code, archives)
-- [ ] Duplicate detection across all connected providers
-- [ ] Storage analytics dashboard: what's using space, what's stale, what's duplicated
-- [ ] Smart cleanup: "You have 3 copies of this 2GB video across Filen, S3, and local"
+- [x] On-device file categorization (documents, photos, videos, code, archives) — `StorageAnalyticsService.categorizeFile()` with 160+ extension mappings
+- [x] Duplicate detection across all connected providers — `findDuplicatesAcrossProviders()` by size+name
+- [x] Storage analytics dashboard: what's using space, what's stale, what's duplicated — `StorageBreakdown`, `CategoryStats`, stale/largest file detection
+- [x] Smart cleanup: "You have 3 copies of this 2GB video across Filen, S3, and local" — `generateCleanupSuggestions()` with savings estimation
 - [ ] OCR on images/PDFs for searchable content (on-device via `google_mlkit_text_recognition` or WASM)
 
 ### 11.2 Migration Wizard
-- [ ] "Move from Provider A to Provider B" guided workflow
-- [ ] Progress tracking, resumable, full conflict handling
-- [ ] Preserve folder structure, metadata, timestamps
-- [ ] Bandwidth throttling to avoid API rate limits
-- [ ] Post-migration verification (hash comparison)
-- [ ] Provider comparison: cost/GB, features, privacy score
+- [x] "Move from Provider A to Provider B" guided workflow — `MigrationService` with `MigrationPlan`, guided workflow
+- [x] Progress tracking, resumable, full conflict handling — pause/resume/cancel, 4 conflict policies (skip/overwrite/rename/newest)
+- [x] Preserve folder structure, metadata, timestamps — `preserveStructure` flag, recursive scan
+- [x] Bandwidth throttling to avoid API rate limits — configurable `throttleMBps` with delay calculation
+- [x] Post-migration verification (hash comparison) — `verifyMigration()` with size + hash comparison
+- [x] Provider comparison: cost/GB, features, privacy score — `ProviderComparisonService` with data for all 11 providers, privacy scoring algorithm
 
 ### 11.3 Backup Engine
 - [x] Scheduled backups: local folder → cloud provider — `BackupService` with `BackupPlan` model, cron scheduling

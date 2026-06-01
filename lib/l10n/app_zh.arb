@@ -1,0 +1,218 @@
+{
+  "@@locale": "zh",
+  "appTitle": "CrispCloud",
+  "@appTitle": { "description": "Application title" },
+
+  "local": "本地",
+  "remote": "远程",
+
+  "connect": "连接",
+  "disconnect": "断开连接",
+  "login": "登录",
+  "logout": "退出登录",
+
+  "upload": "上传",
+  "download": "下载",
+  "delete": "删除",
+  "rename": "重命名",
+  "move": "移动",
+  "copy": "复制",
+  "cancel": "取消",
+  "save": "保存",
+  "create": "新建",
+  "close": "关闭",
+  "done": "完成",
+  "clear": "清除",
+  "ok": "确定",
+  "yes": "是",
+  "no": "否",
+  "retry": "重试",
+  "refresh": "刷新",
+  "search": "搜索",
+  "filter": "筛选",
+  "settings": "设置",
+  "about": "关于",
+  "help": "帮助",
+
+  "newFolder": "新建文件夹",
+  "folderName": "文件夹名称",
+  "emptyFolder": "空文件夹",
+  "noFolderSelected": "未选择文件夹",
+  "openLocalFolder": "打开本地文件夹",
+
+  "sortByName": "按名称排序",
+  "sortBySize": "按大小排序",
+  "sortByDate": "按日期排序",
+  "sortByExtension": "按扩展名排序",
+  "ascending": "升序",
+  "descending": "降序",
+  "selectAll": "全选",
+  "clearSelection": "清除选择",
+
+  "nSelected": "已选择 {count} 项",
+  "@nSelected": {
+    "placeholders": { "count": { "type": "int" } }
+  },
+
+  "filterFiles": "筛选文件",
+  "typeToFilter": "输入以筛选...",
+  "filterFilesShortcut": "筛选文件 (Ctrl+F)",
+  "clearFilter": "清除筛选",
+
+  "browseTooltip": "浏览...",
+  "upTooltip": "向上 (退格键)",
+  "refreshTooltip": "刷新 (F5)",
+  "newFolderTooltip": "新建文件夹 (Ctrl+N)",
+  "searchAllFiles": "模糊搜索所有文件",
+  "findByPattern": "在此文件夹中按模式查找文件（如 *.pdf）",
+
+  "listView": "列表视图",
+  "gridView": "网格视图",
+  "columnView": "列视图",
+
+  "copyTo": "复制到...",
+  "moveTo": "移动到...",
+
+  "connected": "已连接",
+  "disconnected": "已断开",
+  "connecting": "连接中...",
+  "connectionFailed": "连接失败",
+
+  "provider": "提供商",
+  "username": "用户名",
+  "password": "密码",
+  "host": "主机",
+  "port": "端口",
+  "serverUrl": "服务器地址",
+  "appKey": "应用密钥",
+  "clientId": "客户端 ID",
+  "clientSecret": "客户端密钥",
+  "accessKey": "访问密钥",
+  "secretKey": "私有密钥",
+  "endpoint": "端点",
+  "region": "区域",
+  "bucket": "存储桶",
+  "twoFactorCode": "2FA 验证码",
+
+  "transferProgress": "已完成 {percent}%",
+  "@transferProgress": {
+    "placeholders": { "percent": { "type": "int" } }
+  },
+  "transferSpeed": "{speed}/秒",
+  "@transferSpeed": {
+    "placeholders": { "speed": { "type": "String" } }
+  },
+  "transferEta": "剩余 {time}",
+  "@transferEta": {
+    "placeholders": { "time": { "type": "String" } }
+  },
+
+  "syncManager": "同步管理器",
+  "syncAll": "全部同步",
+  "syncNow": "立即同步",
+  "addPair": "添加配对",
+  "syncPairName": "配对名称",
+  "localPath": "本地路径",
+  "remotePath": "远程路径",
+  "conflictPolicy": "冲突策略",
+  "syncDirection": "方向",
+  "twoWay": "双向",
+  "uploadOnly": "仅上传",
+  "downloadOnly": "仅下载",
+  "newestWins": "最新优先",
+  "localWins": "本地优先",
+  "remoteWins": "远程优先",
+  "keepBoth": "保留两者",
+  "manual": "手动",
+  "backgroundSync": "后台同步",
+  "cloudOnlyFiles": "仅限云端文件",
+  "includePatterns": "包含模式",
+  "excludePatterns": "排除模式",
+
+  "encryption": "加密",
+  "encryptionEnabled": "已启用加密",
+  "passphrase": "密码短语",
+  "keyManagement": "密钥管理",
+  "exportKey": "导出密钥",
+  "importKey": "导入密钥",
+  "mnemonic": "助记词",
+  "backupBundle": "备份包",
+
+  "appLock": "应用锁定",
+  "setupLock": "设置锁定",
+  "changeLock": "更改锁定",
+  "disableLock": "禁用锁定",
+  "enterPin": "输入 PIN 或密码",
+  "biometricUnlock": "生物识别解锁",
+  "autoLockTimeout": "自动锁定超时",
+
+  "proxySettings": "代理设置",
+  "noProxy": "无代理",
+  "httpProxy": "HTTP 代理",
+  "socks5Proxy": "SOCKS5 代理",
+  "certificatePinning": "证书固定",
+
+  "preview": "预览",
+  "edit": "编辑",
+  "compare": "比较",
+  "permissions": "权限",
+  "checksum": "校验和",
+  "calculateSize": "计算大小",
+  "batchRename": "批量重命名",
+  "extractHere": "解压到此处",
+  "createZip": "创建 Zip",
+  "shareLink": "分享链接",
+  "versionHistory": "版本历史",
+  "findDuplicates": "查找重复项",
+  "commandPalette": "命令面板",
+
+  "theme": "主题",
+  "systemTheme": "系统",
+  "lightTheme": "浅色",
+  "darkTheme": "深色",
+  "oledTheme": "OLED Black",
+  "nordTheme": "Nord",
+  "draculaTheme": "Dracula",
+  "accentColor": "强调色",
+
+  "tabs": "标签页",
+  "newTab": "新标签页",
+  "closeTab": "关闭标签页",
+  "pinTab": "固定标签页",
+  "unpinTab": "取消固定标签页",
+  "duplicateTab": "复制标签页",
+  "closeOtherTabs": "关闭其他标签页",
+
+  "bookmarks": "书签",
+  "addBookmark": "添加书签",
+  "removeBookmark": "删除书签",
+  "recentLocations": "最近位置",
+
+  "sandboxedPathWarning": "沙盒路径 - 请使用浏览按钮选择真实文件夹",
+  "permissionDenied": "权限被拒绝。请使用浏览按钮来授予访问权限。",
+  "accessCancelled": "访问已取消。使用备用目录。",
+  "deleteFailed": "删除失败：{error}",
+  "@deleteFailed": {
+    "placeholders": { "error": { "type": "String" } }
+  },
+  "renameFailed": "重命名失败：{error}",
+  "@renameFailed": {
+    "placeholders": { "error": { "type": "String" } }
+  },
+  "operationFailed": "操作失败：{error}",
+  "@operationFailed": {
+    "placeholders": { "error": { "type": "String" } }
+  },
+
+  "dropFilesToUpload": "将文件拖放到此处以上传",
+  "confirmDeleteTitle": "确认删除",
+  "confirmDeleteMessage": "删除 {count} 个项目？",
+  "@confirmDeleteMessage": {
+    "placeholders": { "count": { "type": "int" } }
+  },
+
+  "multiCloudManager": "多云管理器",
+  "addConnection": "添加连接",
+  "cloudToCloudTransfer": "云到云传输",
+  "compareProviders": "比较提供商"
+}

@@ -1,0 +1,218 @@
+{
+  "@@locale": "fr",
+  "appTitle": "CrispCloud",
+  "@appTitle": { "description": "Application title" },
+
+  "local": "Local",
+  "remote": "Distant",
+
+  "connect": "Connecter",
+  "disconnect": "Déconnecter",
+  "login": "Connexion",
+  "logout": "Déconnexion",
+
+  "upload": "Envoyer",
+  "download": "Télécharger",
+  "delete": "Supprimer",
+  "rename": "Renommer",
+  "move": "Déplacer",
+  "copy": "Copier",
+  "cancel": "Annuler",
+  "save": "Enregistrer",
+  "create": "Créer",
+  "close": "Fermer",
+  "done": "Terminé",
+  "clear": "Effacer",
+  "ok": "OK",
+  "yes": "Oui",
+  "no": "Non",
+  "retry": "Réessayer",
+  "refresh": "Actualiser",
+  "search": "Rechercher",
+  "filter": "Filtrer",
+  "settings": "Paramètres",
+  "about": "À propos",
+  "help": "Aide",
+
+  "newFolder": "Nouveau dossier",
+  "folderName": "Nom du dossier",
+  "emptyFolder": "Dossier vide",
+  "noFolderSelected": "Aucun dossier sélectionné",
+  "openLocalFolder": "Ouvrir le dossier local",
+
+  "sortByName": "Trier par nom",
+  "sortBySize": "Trier par taille",
+  "sortByDate": "Trier par date",
+  "sortByExtension": "Trier par extension",
+  "ascending": "Croissant",
+  "descending": "Décroissant",
+  "selectAll": "Tout sélectionner",
+  "clearSelection": "Effacer la sélection",
+
+  "nSelected": "{count} sélectionné(s)",
+  "@nSelected": {
+    "placeholders": { "count": { "type": "int" } }
+  },
+
+  "filterFiles": "Filtrer les fichiers",
+  "typeToFilter": "Tapez pour filtrer...",
+  "filterFilesShortcut": "Filtrer les fichiers (Ctrl+F)",
+  "clearFilter": "Effacer le filtre",
+
+  "browseTooltip": "Parcourir...",
+  "upTooltip": "Haut (Retour arrière)",
+  "refreshTooltip": "Actualiser (F5)",
+  "newFolderTooltip": "Nouveau dossier (Ctrl+N)",
+  "searchAllFiles": "Recherche floue dans tous les fichiers",
+  "findByPattern": "Trouver des fichiers par motif dans ce dossier (ex. *.pdf)",
+
+  "listView": "Vue liste",
+  "gridView": "Vue grille",
+  "columnView": "Vue colonnes",
+
+  "copyTo": "Copier vers...",
+  "moveTo": "Déplacer vers...",
+
+  "connected": "Connecté",
+  "disconnected": "Déconnecté",
+  "connecting": "Connexion en cours...",
+  "connectionFailed": "Échec de la connexion",
+
+  "provider": "Fournisseur",
+  "username": "Nom d'utilisateur",
+  "password": "Mot de passe",
+  "host": "Hôte",
+  "port": "Port",
+  "serverUrl": "URL du serveur",
+  "appKey": "Clé d'application",
+  "clientId": "ID client",
+  "clientSecret": "Secret client",
+  "accessKey": "Clé d'accès",
+  "secretKey": "Clé secrète",
+  "endpoint": "Point de terminaison",
+  "region": "Région",
+  "bucket": "Bucket",
+  "twoFactorCode": "Code 2FA",
+
+  "transferProgress": "{percent}% terminé",
+  "@transferProgress": {
+    "placeholders": { "percent": { "type": "int" } }
+  },
+  "transferSpeed": "{speed}/s",
+  "@transferSpeed": {
+    "placeholders": { "speed": { "type": "String" } }
+  },
+  "transferEta": "{time} restant",
+  "@transferEta": {
+    "placeholders": { "time": { "type": "String" } }
+  },
+
+  "syncManager": "Gestionnaire de synchronisation",
+  "syncAll": "Tout synchroniser",
+  "syncNow": "Synchroniser maintenant",
+  "addPair": "Ajouter une paire",
+  "syncPairName": "Nom de la paire",
+  "localPath": "Chemin local",
+  "remotePath": "Chemin distant",
+  "conflictPolicy": "Politique de conflit",
+  "syncDirection": "Direction",
+  "twoWay": "Bidirectionnel",
+  "uploadOnly": "Envoi uniquement",
+  "downloadOnly": "Téléchargement uniquement",
+  "newestWins": "Le plus récent l'emporte",
+  "localWins": "Local l'emporte",
+  "remoteWins": "Distant l'emporte",
+  "keepBoth": "Garder les deux",
+  "manual": "Manuel",
+  "backgroundSync": "Synchronisation en arrière-plan",
+  "cloudOnlyFiles": "Fichiers cloud uniquement",
+  "includePatterns": "Motifs d'inclusion",
+  "excludePatterns": "Motifs d'exclusion",
+
+  "encryption": "Chiffrement",
+  "encryptionEnabled": "Chiffrement activé",
+  "passphrase": "Phrase de passe",
+  "keyManagement": "Gestion des clés",
+  "exportKey": "Exporter la clé",
+  "importKey": "Importer la clé",
+  "mnemonic": "Mnémonique",
+  "backupBundle": "Paquet de sauvegarde",
+
+  "appLock": "Verrouillage de l'application",
+  "setupLock": "Configurer le verrou",
+  "changeLock": "Modifier le verrou",
+  "disableLock": "Désactiver le verrou",
+  "enterPin": "Entrer le PIN ou le mot de passe",
+  "biometricUnlock": "Déverrouillage biométrique",
+  "autoLockTimeout": "Délai de verrouillage automatique",
+
+  "proxySettings": "Paramètres du proxy",
+  "noProxy": "Pas de proxy",
+  "httpProxy": "Proxy HTTP",
+  "socks5Proxy": "Proxy SOCKS5",
+  "certificatePinning": "Épinglage de certificat",
+
+  "preview": "Aperçu",
+  "edit": "Modifier",
+  "compare": "Comparer",
+  "permissions": "Permissions",
+  "checksum": "Somme de contrôle",
+  "calculateSize": "Calculer la taille",
+  "batchRename": "Renommage par lot",
+  "extractHere": "Extraire ici",
+  "createZip": "Créer un Zip",
+  "shareLink": "Partager le lien",
+  "versionHistory": "Historique des versions",
+  "findDuplicates": "Trouver les doublons",
+  "commandPalette": "Palette de commandes",
+
+  "theme": "Thème",
+  "systemTheme": "Système",
+  "lightTheme": "Clair",
+  "darkTheme": "Sombre",
+  "oledTheme": "OLED Black",
+  "nordTheme": "Nord",
+  "draculaTheme": "Dracula",
+  "accentColor": "Couleur d'accentuation",
+
+  "tabs": "Onglets",
+  "newTab": "Nouvel onglet",
+  "closeTab": "Fermer l'onglet",
+  "pinTab": "Épingler l'onglet",
+  "unpinTab": "Désépingler l'onglet",
+  "duplicateTab": "Dupliquer l'onglet",
+  "closeOtherTabs": "Fermer les autres onglets",
+
+  "bookmarks": "Signets",
+  "addBookmark": "Ajouter un signet",
+  "removeBookmark": "Supprimer le signet",
+  "recentLocations": "Emplacements récents",
+
+  "sandboxedPathWarning": "Chemin sandbox - Utilisez le bouton Parcourir pour sélectionner un vrai dossier",
+  "permissionDenied": "Permission refusée. Utilisez le bouton Parcourir pour accorder l'accès.",
+  "accessCancelled": "Accès annulé. Utilisation du répertoire de secours.",
+  "deleteFailed": "Échec de la suppression : {error}",
+  "@deleteFailed": {
+    "placeholders": { "error": { "type": "String" } }
+  },
+  "renameFailed": "Échec du renommage : {error}",
+  "@renameFailed": {
+    "placeholders": { "error": { "type": "String" } }
+  },
+  "operationFailed": "Échec de l'opération : {error}",
+  "@operationFailed": {
+    "placeholders": { "error": { "type": "String" } }
+  },
+
+  "dropFilesToUpload": "Déposez les fichiers ici pour les envoyer",
+  "confirmDeleteTitle": "Confirmer la suppression",
+  "confirmDeleteMessage": "Supprimer {count} élément(s) ?",
+  "@confirmDeleteMessage": {
+    "placeholders": { "count": { "type": "int" } }
+  },
+
+  "multiCloudManager": "Gestionnaire multi-cloud",
+  "addConnection": "Ajouter une connexion",
+  "cloudToCloudTransfer": "Transfert cloud à cloud",
+  "compareProviders": "Comparer les fournisseurs"
+}

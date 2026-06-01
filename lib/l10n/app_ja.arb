@@ -1,0 +1,218 @@
+{
+  "@@locale": "ja",
+  "appTitle": "CrispCloud",
+  "@appTitle": { "description": "Application title" },
+
+  "local": "ローカル",
+  "remote": "リモート",
+
+  "connect": "接続",
+  "disconnect": "切断",
+  "login": "ログイン",
+  "logout": "ログアウト",
+
+  "upload": "アップロード",
+  "download": "ダウンロード",
+  "delete": "削除",
+  "rename": "名前を変更",
+  "move": "移動",
+  "copy": "コピー",
+  "cancel": "キャンセル",
+  "save": "保存",
+  "create": "作成",
+  "close": "閉じる",
+  "done": "完了",
+  "clear": "クリア",
+  "ok": "OK",
+  "yes": "はい",
+  "no": "いいえ",
+  "retry": "再試行",
+  "refresh": "更新",
+  "search": "検索",
+  "filter": "フィルター",
+  "settings": "設定",
+  "about": "このアプリについて",
+  "help": "ヘルプ",
+
+  "newFolder": "新しいフォルダ",
+  "folderName": "フォルダ名",
+  "emptyFolder": "空のフォルダ",
+  "noFolderSelected": "フォルダが選択されていません",
+  "openLocalFolder": "ローカルフォルダを開く",
+
+  "sortByName": "名前で並び替え",
+  "sortBySize": "サイズで並び替え",
+  "sortByDate": "日付で並び替え",
+  "sortByExtension": "拡張子で並び替え",
+  "ascending": "昇順",
+  "descending": "降順",
+  "selectAll": "すべて選択",
+  "clearSelection": "選択を解除",
+
+  "nSelected": "{count} 件選択中",
+  "@nSelected": {
+    "placeholders": { "count": { "type": "int" } }
+  },
+
+  "filterFiles": "ファイルをフィルター",
+  "typeToFilter": "フィルターするには入力...",
+  "filterFilesShortcut": "ファイルをフィルター (Ctrl+F)",
+  "clearFilter": "フィルターをクリア",
+
+  "browseTooltip": "参照...",
+  "upTooltip": "上へ (Backspace)",
+  "refreshTooltip": "更新 (F5)",
+  "newFolderTooltip": "新しいフォルダ (Ctrl+N)",
+  "searchAllFiles": "全ファイルをあいまい検索",
+  "findByPattern": "このフォルダでパターンによりファイルを検索（例: *.pdf）",
+
+  "listView": "リスト表示",
+  "gridView": "グリッド表示",
+  "columnView": "列表示",
+
+  "copyTo": "コピー先...",
+  "moveTo": "移動先...",
+
+  "connected": "接続済み",
+  "disconnected": "切断済み",
+  "connecting": "接続中...",
+  "connectionFailed": "接続に失敗しました",
+
+  "provider": "プロバイダー",
+  "username": "ユーザー名",
+  "password": "パスワード",
+  "host": "ホスト",
+  "port": "ポート",
+  "serverUrl": "サーバー URL",
+  "appKey": "アプリキー",
+  "clientId": "クライアント ID",
+  "clientSecret": "クライアントシークレット",
+  "accessKey": "アクセスキー",
+  "secretKey": "シークレットキー",
+  "endpoint": "エンドポイント",
+  "region": "リージョン",
+  "bucket": "バケット",
+  "twoFactorCode": "2FA コード",
+
+  "transferProgress": "{percent}% 完了",
+  "@transferProgress": {
+    "placeholders": { "percent": { "type": "int" } }
+  },
+  "transferSpeed": "{speed}/秒",
+  "@transferSpeed": {
+    "placeholders": { "speed": { "type": "String" } }
+  },
+  "transferEta": "残り {time}",
+  "@transferEta": {
+    "placeholders": { "time": { "type": "String" } }
+  },
+
+  "syncManager": "同期マネージャー",
+  "syncAll": "すべて同期",
+  "syncNow": "今すぐ同期",
+  "addPair": "ペアを追加",
+  "syncPairName": "ペア名",
+  "localPath": "ローカルパス",
+  "remotePath": "リモートパス",
+  "conflictPolicy": "競合ポリシー",
+  "syncDirection": "方向",
+  "twoWay": "双方向",
+  "uploadOnly": "アップロードのみ",
+  "downloadOnly": "ダウンロードのみ",
+  "newestWins": "最新優先",
+  "localWins": "ローカル優先",
+  "remoteWins": "リモート優先",
+  "keepBoth": "両方を保持",
+  "manual": "手動",
+  "backgroundSync": "バックグラウンド同期",
+  "cloudOnlyFiles": "クラウド専用ファイル",
+  "includePatterns": "含めるパターン",
+  "excludePatterns": "除外するパターン",
+
+  "encryption": "暗号化",
+  "encryptionEnabled": "暗号化が有効",
+  "passphrase": "パスフレーズ",
+  "keyManagement": "鍵管理",
+  "exportKey": "鍵をエクスポート",
+  "importKey": "鍵をインポート",
+  "mnemonic": "ニーモニック",
+  "backupBundle": "バックアップバンドル",
+
+  "appLock": "アプリロック",
+  "setupLock": "ロックを設定",
+  "changeLock": "ロックを変更",
+  "disableLock": "ロックを無効化",
+  "enterPin": "PIN またはパスワードを入力",
+  "biometricUnlock": "生体認証でロック解除",
+  "autoLockTimeout": "自動ロックのタイムアウト",
+
+  "proxySettings": "プロキシ設定",
+  "noProxy": "プロキシなし",
+  "httpProxy": "HTTP プロキシ",
+  "socks5Proxy": "SOCKS5 プロキシ",
+  "certificatePinning": "証明書ピンニング",
+
+  "preview": "プレビュー",
+  "edit": "編集",
+  "compare": "比較",
+  "permissions": "権限",
+  "checksum": "チェックサム",
+  "calculateSize": "サイズを計算",
+  "batchRename": "一括名前変更",
+  "extractHere": "ここに展開",
+  "createZip": "Zip を作成",
+  "shareLink": "リンクを共有",
+  "versionHistory": "バージョン履歴",
+  "findDuplicates": "重複を検索",
+  "commandPalette": "コマンドパレット",
+
+  "theme": "テーマ",
+  "systemTheme": "システム",
+  "lightTheme": "ライト",
+  "darkTheme": "ダーク",
+  "oledTheme": "OLED Black",
+  "nordTheme": "Nord",
+  "draculaTheme": "Dracula",
+  "accentColor": "アクセントカラー",
+
+  "tabs": "タブ",
+  "newTab": "新しいタブ",
+  "closeTab": "タブを閉じる",
+  "pinTab": "タブをピン留め",
+  "unpinTab": "タブのピン留めを解除",
+  "duplicateTab": "タブを複製",
+  "closeOtherTabs": "他のタブを閉じる",
+
+  "bookmarks": "ブックマーク",
+  "addBookmark": "ブックマークを追加",
+  "removeBookmark": "ブックマークを削除",
+  "recentLocations": "最近の場所",
+
+  "sandboxedPathWarning": "サンドボックスパス - 参照ボタンを使用して実際のフォルダを選択してください",
+  "permissionDenied": "アクセスが拒否されました。参照ボタンを使用してアクセスを許可してください。",
+  "accessCancelled": "アクセスがキャンセルされました。代替ディレクトリを使用します。",
+  "deleteFailed": "削除に失敗しました：{error}",
+  "@deleteFailed": {
+    "placeholders": { "error": { "type": "String" } }
+  },
+  "renameFailed": "名前の変更に失敗しました：{error}",
+  "@renameFailed": {
+    "placeholders": { "error": { "type": "String" } }
+  },
+  "operationFailed": "操作に失敗しました：{error}",
+  "@operationFailed": {
+    "placeholders": { "error": { "type": "String" } }
+  },
+
+  "dropFilesToUpload": "ファイルをここにドロップしてアップロード",
+  "confirmDeleteTitle": "削除の確認",
+  "confirmDeleteMessage": "{count} 件のアイテムを削除しますか？",
+  "@confirmDeleteMessage": {
+    "placeholders": { "count": { "type": "int" } }
+  },
+
+  "multiCloudManager": "マルチクラウドマネージャー",
+  "addConnection": "接続を追加",
+  "cloudToCloudTransfer": "クラウド間転送",
+  "compareProviders": "プロバイダーを比較"
+}
