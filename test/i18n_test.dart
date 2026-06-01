@@ -2,9 +2,21 @@ import 'dart:convert';
 import 'dart:io';
 import 'package:flutter_test/flutter_test.dart';
 
+/// Find the project root by looking for pubspec.yaml.
+String _findProjectRoot() {
+  var dir = Directory.current;
+  while (true) {
+    if (File('${dir.path}/pubspec.yaml').existsSync()) return dir.path;
+    final parent = dir.parent;
+    if (parent.path == dir.path) return Directory.current.path;
+    dir = parent;
+  }
+}
+
 /// Loads an ARB file and returns a parsed Map.
 Map<String, dynamic> _loadArb(String locale) {
-  final file = File('lib/l10n/app_$locale.arb');
+  final root = _findProjectRoot();
+  final file = File('$root/lib/l10n/app_$locale.arb');
   expect(file.existsSync(), isTrue,
       reason: 'ARB file for locale "$locale" must exist at ${file.path}');
   final content = file.readAsStringSync();

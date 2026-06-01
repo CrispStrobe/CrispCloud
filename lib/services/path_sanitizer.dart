@@ -65,8 +65,8 @@ class PathSanitizer {
     // Remove other control characters (0x01–0x1F, 0x7F)
     result = result.replaceAll(RegExp(r'[\x01-\x1F\x7F]'), '');
 
-    // Replace Windows/shell forbidden characters
-    result = result.replaceAll(RegExp(r'[<>:"/\\|?*]'), '_');
+    // Replace Windows/shell forbidden and dangerous characters
+    result = result.replaceAll(RegExp(r'[<>:"/\\|?*;`$&!]'), '_');
 
     // Trim trailing dots and spaces (Windows rejects these)
     result = result.trimRight().replaceAll(RegExp(r'[. ]+$'), '');
