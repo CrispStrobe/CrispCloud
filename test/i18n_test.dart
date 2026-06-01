@@ -14,11 +14,13 @@ String _findProjectRoot() {
 }
 
 /// Loads an ARB file and returns a parsed Map.
+/// Safe to call at group scope (no expect() calls).
 Map<String, dynamic> _loadArb(String locale) {
   final root = _findProjectRoot();
   final file = File('$root/lib/l10n/app_$locale.arb');
-  expect(file.existsSync(), isTrue,
-      reason: 'ARB file for locale "$locale" must exist at ${file.path}');
+  if (!file.existsSync()) {
+    throw StateError('ARB file for locale "$locale" not found at ${file.path}');
+  }
   final content = file.readAsStringSync();
   return jsonDecode(content) as Map<String, dynamic>;
 }
