@@ -54,7 +54,7 @@ void main() {
   group('ARB file existence', () {
     for (final locale in _locales) {
       test('app_$locale.arb exists', () {
-        final file = File('lib/l10n/app_$locale.arb');
+        final file = File('${_findProjectRoot()}/lib/l10n/app_$locale.arb');
         expect(file.existsSync(), isTrue,
             reason: 'Missing lib/l10n/app_$locale.arb');
       });
@@ -67,7 +67,7 @@ void main() {
   group('ARB files are valid JSON', () {
     for (final locale in _locales) {
       test('app_$locale.arb parses as valid JSON', () {
-        final file = File('lib/l10n/app_$locale.arb');
+        final file = File('${_findProjectRoot()}/lib/l10n/app_$locale.arb');
         if (!file.existsSync()) return; // covered by existence test
         expect(
           () => jsonDecode(file.readAsStringSync()),
@@ -138,7 +138,7 @@ void main() {
   group('No duplicate keys', () {
     for (final locale in _locales) {
       test('app_$locale.arb has no duplicate keys', () {
-        final file = File('lib/l10n/app_$locale.arb');
+        final file = File('${_findProjectRoot()}/lib/l10n/app_$locale.arb');
         if (!file.existsSync()) return;
         final content = file.readAsStringSync();
         // Walk the raw text to count top-level key occurrences.
