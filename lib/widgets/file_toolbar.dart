@@ -38,61 +38,7 @@ class FileToolbar extends ConsumerWidget {
     final sortBy = panel.sortBy;
     final sortOrder = panel.sortOrder;
 
-    return Column(
-      mainAxisSize: MainAxisSize.min,
-      children: [
-        // Archive / flat view banner
-        if (panel.isInArchive)
-          Container(
-            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
-            color: Theme.of(context).colorScheme.tertiaryContainer,
-            child: Row(
-              children: [
-                Icon(Icons.folder_zip, size: 16, color: Theme.of(context).colorScheme.onTertiaryContainer),
-                const SizedBox(width: 8),
-                Expanded(
-                  child: Text(
-                    'Inside archive: ${panel.archiveSource?.archiveName ?? ""}',
-                    style: TextStyle(
-                      fontSize: 12,
-                      color: Theme.of(context).colorScheme.onTertiaryContainer,
-                    ),
-                    overflow: TextOverflow.ellipsis,
-                  ),
-                ),
-                TextButton.icon(
-                  icon: const Icon(Icons.exit_to_app, size: 14),
-                  label: const Text('Exit', style: TextStyle(fontSize: 12)),
-                  onPressed: () => panel.exitArchive(),
-                ),
-              ],
-            ),
-          ),
-        if (panel.isFlatView)
-          Container(
-            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
-            color: Theme.of(context).colorScheme.secondaryContainer,
-            child: Row(
-              children: [
-                Icon(Icons.layers, size: 16, color: Theme.of(context).colorScheme.onSecondaryContainer),
-                const SizedBox(width: 8),
-                Text(
-                  'Flat view — all subdirectories',
-                  style: TextStyle(
-                    fontSize: 12,
-                    color: Theme.of(context).colorScheme.onSecondaryContainer,
-                  ),
-                ),
-                const Spacer(),
-                TextButton.icon(
-                  icon: const Icon(Icons.close, size: 14),
-                  label: const Text('Exit', style: TextStyle(fontSize: 12)),
-                  onPressed: () => panel.toggleFlatView(),
-                ),
-              ],
-            ),
-          ),
-        Container(
+    return Container(
       padding: const EdgeInsets.all(12),
       color: Theme.of(context).colorScheme.primaryContainer,
       child: Row(
@@ -220,47 +166,6 @@ class FileToolbar extends ConsumerWidget {
             },
           ),
 
-          // Custom toolbar commands
-          ...ref.watch(customToolbarCommandServiceProvider).commands.map((cmd) =>
-            IconButton(
-              icon: const Icon(Icons.terminal, size: 18),
-              tooltip: cmd.label,
-              color: Theme.of(context).colorScheme.onPrimaryContainer,
-              onPressed: () async {
-                final service = ref.read(customToolbarCommandServiceProvider);
-                final selectedPaths = panel.selection
-                    .where((f) => f.path != null)
-                    .map((f) => f.path!)
-                    .toList();
-                final output = await service.execute(
-                  cmd,
-                  currentPath: panel.currentPath,
-                  selectedPaths: selectedPaths,
-                );
-                if (context.mounted) {
-                  showDialog(
-                    context: context,
-                    builder: (ctx) => AlertDialog(
-                      title: Text(cmd.label),
-                      content: SingleChildScrollView(
-                        child: SelectableText(
-                          output.isEmpty ? '(no output)' : output,
-                          style: const TextStyle(fontFamily: 'monospace', fontSize: 11),
-                        ),
-                      ),
-                      actions: [
-                        TextButton(
-                          onPressed: () { Navigator.pop(ctx); panel.refresh(); },
-                          child: const Text('Close'),
-                        ),
-                      ],
-                    ),
-                  );
-                }
-              },
-            ),
-          ),
-
           // Flat view toggle (local panel only)
           if (side == PanelSide.local)
             IconButton(
@@ -337,8 +242,6 @@ class FileToolbar extends ConsumerWidget {
           ),
         ],
       ),
-    ),
-      ],
     );
   }
 

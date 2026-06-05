@@ -6,7 +6,7 @@
 //
 // Version bump triggers automatic cache invalidation.
 
-const CACHE_VERSION = 'v2';
+const CACHE_VERSION = 'v3';
 const STATIC_CACHE  = `crisp-cloud-static-${CACHE_VERSION}`;
 const DYNAMIC_CACHE = `crisp-cloud-dynamic-${CACHE_VERSION}`;
 
@@ -76,6 +76,13 @@ self.addEventListener('fetch', (event) => {
   // Skip non-GET requests and browser-extension / chrome-extension URLs.
   if (request.method !== 'GET') return;
   if (!url.protocol.startsWith('http')) return;
+
+  // Never intercept WASM, worker scripts, or source maps — let them 404
+  // naturally instead of returning cached HTML from the SPA rewrite.
+  const skipExtensions = ['.wasm', '.map'];
+  const skipFiles = ['drift_worker.js', 'sqlite3.wasm'];
+  if (skipExtensions.some(ext => url.pathname.endsWith(ext))) return;
+  if (skipFiles.some(f => url.pathname.endsWith(f))) return;
 
   const isNetworkFirst = NETWORK_FIRST_PATTERNS.some((re) => re.test(url.pathname));
 

@@ -1,17 +1,10 @@
 // lib/services/sync_database_connection_web.dart
 //
-// Web fallback: drift supports WebDatabase via sql.js wasm.
-// For now, use in-memory database (sync state is ephemeral on web).
+// Web fallback: use in-memory database. Sync state is ephemeral on web
+// since sqlite3.wasm and drift_worker.js are not bundled in the web build.
 import 'package:drift/drift.dart';
-import 'package:drift/wasm.dart';
+import 'package:drift/web.dart';
 
 QueryExecutor openSyncDatabase() {
-  return LazyDatabase(() async {
-    final result = await WasmDatabase.open(
-      databaseName: 'crispcloud_sync',
-      sqlite3Uri: Uri.parse('sqlite3.wasm'),
-      driftWorkerUri: Uri.parse('drift_worker.js'),
-    );
-    return result.resolvedExecutor;
-  });
+  return WebDatabase('crispcloud_sync');
 }
