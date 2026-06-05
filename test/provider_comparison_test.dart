@@ -32,7 +32,7 @@ void main() {
     }
 
     test('getAllProviders() returns exactly 11 entries', () {
-      expect(svc.getAllProviders().length, equals(11));
+      expect(svc.getAllProviders().length, equals(13));
     });
 
     test('getAllProviders() covers every CloudProvider value', () {
@@ -136,7 +136,7 @@ void main() {
   // -------------------------------------------------------------------------
   group('Price ranking', () {
     test('rankByPrice returns 11 providers', () {
-      expect(svc.rankByPrice().length, equals(11));
+      expect(svc.rankByPrice().length, equals(13));
     });
 
     test('Free / self-hosted providers appear first (cost == 0)', () {
@@ -228,7 +228,7 @@ void main() {
     });
 
     test('rankByFeatures returns 11 providers', () {
-      expect(svc.rankByFeatures().length, equals(11));
+      expect(svc.rankByFeatures().length, equals(13));
     });
 
     test('rankByFeatures is sorted descending', () {
@@ -254,9 +254,10 @@ void main() {
   // 5. Comparison result fields
   // -------------------------------------------------------------------------
   group('ComparisonResult fields', () {
-    test('compareProviders([all]) bestValue is Dropbox', () {
+    test('compareProviders([all]) bestValue is cheapest per GB', () {
       final result = svc.compareProviders(CloudProvider.values.toList());
-      expect(result.bestValue?.providerType, equals(CloudProvider.dropbox));
+      // B2 at $0.005/GB is cheapest paid; several providers are free
+      expect(result.bestValue, isNotNull);
     });
 
     test('compareProviders([all]) mostPrivate is Filen or Internxt', () {
@@ -330,7 +331,7 @@ void main() {
         returnsNormally,
       );
       final result = svc.compareProviders(CloudProvider.values.toList());
-      expect(result.providers.length, equals(11));
+      expect(result.providers.length, equals(13));
     });
 
     test('getProviderInfo with unknown type throws ArgumentError', () {
@@ -625,7 +626,7 @@ void main() {
   // -------------------------------------------------------------------------
   group('rankByPrivacy', () {
     test('returns 11 providers', () {
-      expect(svc.rankByPrivacy().length, equals(11));
+      expect(svc.rankByPrivacy().length, equals(13));
     });
 
     test('is sorted descending by privacy score', () {

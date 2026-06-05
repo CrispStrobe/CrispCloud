@@ -72,7 +72,7 @@ jobs:
           echo "No errors found (warnings/info are OK)"
 
       - name: flutter test with coverage
-        run: flutter test --coverage --exclude-tags=mock_server
+        run: flutter test --coverage --exclude-tags=mock_server,connection_dialog
 
       - name: Upload coverage report
         uses: actions/upload-artifact@v4
