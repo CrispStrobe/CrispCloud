@@ -39,7 +39,7 @@ class PanelSourceSelector extends ConsumerWidget {
 
 class _SourceDropdown extends StatelessWidget {
   final PanelSource current;
-  final List<_SourceEntry> available;
+  final List<AvailableSource> available;
   final void Function(PanelSource source) onSelect;
 
   const _SourceDropdown({
@@ -129,18 +129,4 @@ class _SourceDropdown extends StatelessWidget {
   }
 }
 
-// ---------------------------------------------------------------------------
-// _SourceEntry — a selectable item in the dropdown
-// ---------------------------------------------------------------------------
-
-class _SourceEntry {
-  final String key;
-  final String label;
-  final PanelSource source;
-
-  const _SourceEntry({
-    required this.key,
-    required this.label,
-    required this.source,
-  });
-}
+// AvailableSource is defined in panel_source_provider.dart
