@@ -167,7 +167,7 @@ class CrispCloudDocumentsProvider : DocumentsProvider() {
                     DocumentsContract.Root.COLUMN_MIME_TYPES ->
                         row.add("*/*")
                     DocumentsContract.Root.COLUMN_ICON ->
-                        row.add(R.mipmap.ic_launcher)
+                        row.add(com.CrispStrobe.cloud_dart.R.mipmap.ic_launcher)
                     DocumentsContract.Root.COLUMN_AVAILABLE_BYTES ->
                         row.add(-1L)
                     else ->
