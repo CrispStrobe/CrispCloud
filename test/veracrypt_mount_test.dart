@@ -1079,7 +1079,10 @@ void main() {
       final svc = VeraCryptMountService();
       final mounts = svc.activeMounts;
       expect(
-        () => (mounts as List<dynamic>).add(null),
+        () => mounts.add(VeraCryptMountPoint(
+          containerPath: '/x.vc', mountPoint: '/mnt/x', slot: 1,
+          readOnly: false, mountedAt: DateTime.now(), sizeBytes: 0,
+        )),
         throwsUnsupportedError,
       );
     });
