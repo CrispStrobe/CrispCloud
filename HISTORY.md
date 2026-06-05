@@ -38,6 +38,14 @@ Audit trail of bugs found, issues discovered, and fixes applied.
 - **Created `lib/providers/veracrypt_mount_provider.dart`**: installed check, mounts state notifier, busy/error tracking
 - **Tests**: 102 tests (model serialization, CLI arg building, --list parsing, version parsing, slot allocation, password redaction, platform guards, algorithm validation)
 
+### 11.5 Dual-Panel Power Mode
+- **Created `lib/services/panel_source_service.dart`** (~276 lines): `PanelSource` sealed class with `LocalPanelSource`, `RemotePanelSource`, `ArchivePanelSource`, `ContainerPanelSource`, `PanelSourceService` with enter/exit archive/container navigation, archive/container detection (.zip/.tar.gz/.7z/.rar/.vc/.hc)
+- **Created `lib/services/fkey_action_service.dart`** (~222 lines): `FKeyAction` enum (F3-F8), `FKeyContext`, `FKeyActionResult` sealed hierarchy (Success/NeedsPrompt/NeedsConfirm/OpenViewer/OpenEditor/Error/Cancelled), `FKeyActionService` with context-aware action dispatch
+- **Created `lib/widgets/fkey_bar.dart`** (~160 lines): responsive F3-F8 button bar, context-aware graying, icons-only on narrow screens, toggleable
+- **Created `lib/widgets/panel_source_selector.dart`** (~105 lines): per-panel dropdown with source-type icons
+- **Created `lib/providers/panel_source_provider.dart`**: per-panel source notifier, F-key bar visibility, available sources
+- **Tests**: 117 tests (56 panel source + 61 F-key actions)
+
 ### 3.2 Azure Blob Storage Adapter
 - **Created `lib/services/azure_blob_adapter.dart`** (~885 lines): `CloudStorageClient` implementation with SAS token + SharedKey auth, HMAC-SHA256 signing, container/blob listing (XML parsing), blob tiers (Hot/Cool/Cold/Archive), server-side copy for move/rename
 - **Created `lib/services/azure_config_service.dart`**: connection string parsing, SAS token extraction, SecureStorage persistence

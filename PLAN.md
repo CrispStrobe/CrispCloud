@@ -56,7 +56,7 @@ CrispCloud becomes the **open-source Cyberduck/Transmit/Commander One killer**: 
 - **Plugin system**: `CrispCloudPlugin` interface with sandboxed execution
 - **Opt-in analytics**: anonymous feature usage tracking
 - **Linux integration**: Nautilus/Dolphin/Thunar, D-Bus notifications, .deb/.rpm/AppImage packaging
-- **90+ test files**, **2900+ unit tests** + gated E2E suites
+- **100+ test files**, **3212 unit tests** + gated E2E suites
 
 **What's still needed:**
 - ~~Monolithic state (AppState)~~ — **Riverpod migration done** (8 focused providers)
@@ -586,9 +586,9 @@ CrispCloud becomes the **open-source Cyberduck/Transmit/Commander One killer**: 
 | 6. Power User Features | Medium | High | **~90% done** — editor, palette, batch rename, archives, versions+restore+diff, share, dupes, diff, permissions, search filters, **full-text search** done |
 | 7.1 Client-Side Encryption | High | High | **100% done** — encryption + key management + BIP39 + Cryptomator v8 + VeraCrypt done |
 | 7.2-7.4 Security extras | Medium | Medium | **~95% done** — proxy, app lock, biometric, cert pinning, custom CA, TLS enforcement, secure clipboard done |
-| 8. Platform Polish | Medium | High | **~75% done** — macOS (Finder ext), Windows (Explorer menu, Hello), Android (SAF, Material You, widget, foreground, intents), iOS (Share ext, Siri, Stage Manager), Web (SW, Push, FSA, Share Target, OPFS, PWA) done |
-| 9. Extensibility & CLI | Medium | High | **~85% done** — CLI, automation rules, local REST API done; plugin system pending |
-| 10. Quality & Distribution | High | High | **2500+ tests** — CI/CD, docs, i18n (7 langs), fuzz, benchmarks, mock servers done; a11y, distribution pending |
+| 8. Platform Polish | Medium | High | **~85% done** — macOS, Windows, Android, iOS, Web, **Linux** (Nautilus/Dolphin/Thunar, D-Bus, .deb/.rpm/AppImage) done |
+| 9. Extensibility & CLI | Medium | High | **~95% done** — CLI, automation rules, local REST API, plugin system done |
+| 10. Quality & Distribution | High | High | **3212 tests** — CI/CD, docs, i18n (7 langs), fuzz, benchmarks, mock servers, plugin system done; a11y, distribution pending |
 | 11. Differentiation | High | Medium | **~80% done** — mounted drives, backup, migration, analytics, comparison, delta sync done; **dual-panel power mode (priority)**, OCR pending |
 
 ---
