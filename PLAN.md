@@ -358,6 +358,8 @@ CrispCloud becomes the **open-source Cyberduck/Transmit/Commander One killer**: 
 - [x] Key management: export/import master key (hex), BIP39 24-word mnemonic, backup bundle with verification — `KeyManagementDialog`
 - [x] Compatible with Cryptomator vault format (interop with other tools) — `CryptomatorService` with v8 vault detection, scrypt KDF, AES key wrap (RFC 3394), SIV filename encryption, directory ID hashing
 - [x] VeraCrypt container support (.vc/.hc) — `VeraCryptService` with AES-256-XTS header decryption, SHA-512/SHA-256/Whirlpool KDF, live integration tests
+- [x] VeraCrypt mount service — `VeraCryptMountService` CLI wrapper for mount/unmount/create, slot management, platform detection
+- [x] Block-level delta sync — `DeltaSyncService` with Adler-32 rolling hash + SHA-256, block maps, transfer plans, only upload changed segments
 
 ### 7.2 Secure Networking
 - [x] Certificate pinning for known providers — `CertPinningService` with SPKI SHA-256 pins for Google/Microsoft/Dropbox/Amazon, wired into `ProxyHttpOverrides`

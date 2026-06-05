@@ -33,6 +33,16 @@ Audit trail of bugs found, issues discovered, and fixes applied.
 - **Created `test/mock_server/mock_webdav_server.dart`** (~399 lines): in-process WebDAV HTTP server with PROPFIND (Depth 0/1), GET/PUT/DELETE, MKCOL, MOVE, COPY, multistatus XML
 - **Tests**: 50 tests (S3: lifecycle, CRUD, prefix/delimiter listing, pagination, multi-bucket; WebDAV: lifecycle, CRUD, PROPFIND depth, MKCOL, MOVE, COPY, nested folders)
 
+### 7.1 VeraCrypt Mount Service (CLI wrapper)
+- **Created `lib/services/veracrypt_mount_service.dart`** (~747 lines): `VeraCryptMountPoint` model, `VeraCryptMountService` with `mount()`/`unmount()`/`unmountAll()`/`listMounted()`/`createContainer()`, CLI path detection (Linux/macOS/Windows), slot management (1-64), password redaction in logs, `VeraCryptException` with CLI error parsing
+- **Created `lib/providers/veracrypt_mount_provider.dart`**: installed check, mounts state notifier, busy/error tracking
+- **Tests**: 102 tests (model serialization, CLI arg building, --list parsing, version parsing, slot allocation, password redaction, platform guards, algorithm validation)
+
+### Block-Level Delta Sync
+- **Created `lib/services/delta_sync_service.dart`** (~600 lines): `BlockSignature`/`BlockMap`/`DeltaResult`/`BlockTransferPlan`/`BlockOperation` models, Adler-32 rolling hash (pure Dart), SHA-256 strong hash, `computeBlockMap()` (stream-based, no full-file buffering), `compareBlockMaps()`, `createTransferPlan()`, `applyDelta()` (random-access file patching), `estimateSavings()`, blockmap JSON persistence, configurable block size (64KB-64MB, default 4MB)
+- **Created `lib/providers/delta_sync_provider.dart`**: block size + enabled toggle with SharedPreferences persistence
+- **Tests**: 75 tests (Adler-32 vectors + rolling equivalence, SHA-256 FIPS vectors, block map computation + serialization, delta comparison for identical/changed/grown/shrunk files, transfer plan generation, applyDelta file patching, savings estimation, persistence round-trip)
+
 ## 2026-06-01 — Session 5: i18n, Fuzz, Analytics, Comparison, Migration (1651 → 1947+ tests, +296)
 
 ### 10.3 i18n Expansion (5 languages)
