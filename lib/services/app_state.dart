@@ -512,6 +512,8 @@ class AppState extends ChangeNotifier {
         case CloudProvider.internxt: providerKey = 'internxt'; break;
         case CloudProvider.nextcloud: providerKey = 'nextcloud'; break;
         case CloudProvider.pcloud: providerKey = 'pcloud'; break;
+        case CloudProvider.azure: providerKey = 'azure'; break;
+        case CloudProvider.b2: providerKey = 'b2'; break;
       }
       await prefs.setString('cloud_provider', providerKey);
       debugPrint('💾 Saved provider preference: $providerKey');

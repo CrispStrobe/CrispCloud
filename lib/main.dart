@@ -26,6 +26,8 @@ import 'services/nextcloud_config_service.dart';
 import 'services/pcloud_config_service.dart';
 import 'services/sftp_config_service.dart';
 import 'services/webdav_config_service.dart';
+import 'services/azure_config_service.dart';
+import 'services/b2_config_service.dart';
 import 'services/app_lock_service.dart';
 import 'services/audit_service.dart';
 import 'services/background_sync_service.dart';
@@ -195,6 +197,10 @@ Future<dynamic> _createConfigService(
         } else {
           return FilenConfigService(configPath: configPath, secureStorage: secureStorage);
         }
+      case CloudProvider.azure:
+        return AzureConfigService(secureStorage: secureStorage);
+      case CloudProvider.b2:
+        return B2ConfigService(secureStorage: secureStorage);
     }
   } catch (e) {
     _log.error('Critical error creating config service', e);

@@ -32,7 +32,7 @@ class _MockCloudClient extends CloudStorageClient {
   final String _name;
   final bool _connected;
 
-  const _MockCloudClient({String name = 'Mock', bool connected = false})
+  _MockCloudClient({String name = 'Mock', bool connected = false})
       : _name = name,
         _connected = connected;
 
