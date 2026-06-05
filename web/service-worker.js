@@ -6,7 +6,7 @@
 //
 // Version bump triggers automatic cache invalidation.
 
-const CACHE_VERSION = 'v1';
+const CACHE_VERSION = 'v2';
 const STATIC_CACHE  = `crisp-cloud-static-${CACHE_VERSION}`;
 const DYNAMIC_CACHE = `crisp-cloud-dynamic-${CACHE_VERSION}`;
 
