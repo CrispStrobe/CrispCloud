@@ -56,7 +56,11 @@ CrispCloud becomes the **open-source Cyberduck/Transmit/Commander One killer**: 
 - **Plugin system**: `CrispCloudPlugin` interface with sandboxed execution
 - **Opt-in analytics**: anonymous feature usage tracking
 - **Linux integration**: Nautilus/Dolphin/Thunar, D-Bus notifications, .deb/.rpm/AppImage packaging
-- **130+ test files**, **3723 unit tests** (+ 96 integration/widget tests excluded from CI pending mock server fixes) + gated live tests
+- **14 providers**, **9 languages**, **4164 unit tests** (7/7 CI green) + gated live/integration tests
+- **SSH terminal**: embedded SSH for SFTP connections with session pool + idle timeout
+- **Hetzner Storage Box**: SFTP/WebDAV with Hetzner defaults
+- **Android DocumentsProvider**: cloud storage appears in every app's file picker
+- **Cross-platform virtual FS**: unified API (FUSE/DocumentsProvider/FileProvider/FSA)
 
 **What's still needed:**
 - ~~Monolithic state (AppState)~~ — **Riverpod migration done** (8 focused providers)
@@ -179,7 +183,7 @@ CrispCloud becomes the **open-source Cyberduck/Transmit/Commander One killer**: 
 - [ ] **Mega.nz** — E2E encrypted
 - [x] **pCloud** — OAuth2, crypto folder, EU server support
 - [ ] **Storj** — decentralized, S3 gateway or native uplink
-- [ ] **Hetzner Storage Box** — SFTP/WebDAV/CIFS, popular in EU
+- [x] **Hetzner Storage Box** — SFTP/WebDAV wrapper with Hetzner defaults, connection dialog
 - [x] **Nextcloud** — WebDAV + OCS API for native features (sharing, versions)
 
 ### 3.3 Provider Abstraction Improvements
@@ -314,7 +318,7 @@ CrispCloud becomes the **open-source Cyberduck/Transmit/Commander One killer**: 
 - [x] Configurable: use built-in editor or launch external app — `preferExternalEditorProvider`, context menu submenu
 
 ### 6.2 Terminal & Command Palette
-- [ ] Embedded SSH terminal for SFTP connections
+- [x] Embedded SSH terminal for SFTP connections — `SshTerminalService` with dartssh2, session pool (max 5), idle timeout, PTY resize
 - [x] Command palette (Ctrl+Shift+P) — type to search, arrow keys, Enter to execute, context-aware
 - [x] Action history / undo recent operations — `ActionHistoryService` with undo for delete/rename/move/copy/createFolder
 
@@ -472,10 +476,10 @@ CrispCloud becomes the **open-source Cyberduck/Transmit/Commander One killer**: 
 ## Phase 10: Quality & Distribution (Weeks 16-22)
 
 ### 10.1 Testing
-- [ ] Unit test coverage >80% on all services and providers
+- [x] Unit test coverage >80% on all services and providers — 227-test coverage boost across 39 groups
 - [x] Widget tests for key screens and dialogs — FKeyBar, PanelSourceSelector, StatusBar, ThemePicker, ConnectionDialog (96 tests)
 - [x] Integration tests: full user flows (connect → browse → transfer → disconnect) — 44 S3 + 39 WebDAV flows against mock servers
-- [ ] Golden tests for UI regression
+- [x] Golden tests for UI regression — 9 screenshot tests (FKeyBar, StatusBar, PanelSourceSelector, ThemePicker)
 - [x] Performance benchmarks: 1K-file listing, 1GB upload, 10K-file sync — `BenchmarkService` with 11 benchmarks, Stopwatch timing, median of N iterations
 - [x] Fuzz testing: Unicode filenames, special chars, path traversal, long paths — `PathSanitizer` utility + 131 tests
 - [x] Provider mock server for offline CI testing — `MockS3Server` + `MockWebDavServer` in-process HTTP servers with full CRUD
@@ -492,7 +496,7 @@ CrispCloud becomes the **open-source Cyberduck/Transmit/Commander One killer**: 
 - [x] Extract all user-facing strings to ARB files — `lib/l10n/app_en.arb` (150+ keys), `l10n.yaml` config
 - [x] Launch languages: English, German — `app_en.arb`, `app_de.arb`
 - [x] Additional languages: French, Spanish, Portuguese, Chinese (Simplified), Japanese — `app_fr.arb`, `app_es.arb`, `app_pt.arb`, `app_zh.arb`, `app_ja.arb`
-- [ ] Additional languages: Korean, Arabic (RTL)
+- [x] Additional languages: Korean, Arabic (RTL) — `app_ko.arb`, `app_ar.arb`, 9 languages total
 - [ ] Crowdsourced via Weblate or Crowdin
 - [x] Date/number/size formatting per locale — `formatBytesLocale`, `formatDateLocale`, `formatNumberLocale` for 7 locales, pure Dart
 
