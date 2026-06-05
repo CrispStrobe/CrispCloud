@@ -1,6 +1,10 @@
 // test/mock_server_test.dart
 //
 // Tests for MockS3Server and MockWebDavServer — offline CI mock servers.
+//
+// These tests use real HTTP servers on localhost and are sensitive to
+// timing and platform differences. Skip with: flutter test --exclude-tags=mock_server
+@Tags(['mock_server'])
 
 import 'dart:convert';
 import 'dart:io';
