@@ -94,6 +94,20 @@
             android:name="flutterEmbedding"
             android:value="2" />
 
+        <!-- CrispCloud DocumentsProvider: exposes cloud storage as a native
+             storage location in the Android system file picker (SAF).
+             Requires MANAGE_DOCUMENTS permission to appear in the picker. -->
+        <provider
+            android:name=".CrispCloudDocumentsProvider"
+            android:authorities="${applicationId}.documents"
+            android:grantUriPermissions="true"
+            android:exported="true"
+            android:permission="android.permission.MANAGE_DOCUMENTS">
+            <intent-filter>
+                <action android:name="android.content.action.DOCUMENTS_PROVIDER" />
+            </intent-filter>
+        </provider>
+
         <!-- WorkManager: disable default initializer so flutter_workmanager
              can register its own (avoids double-init crash on some OEMs) -->
         <provider
