@@ -38,6 +38,14 @@ Audit trail of bugs found, issues discovered, and fixes applied.
 - **Created `lib/providers/veracrypt_mount_provider.dart`**: installed check, mounts state notifier, busy/error tracking
 - **Tests**: 102 tests (model serialization, CLI arg building, --list parsing, version parsing, slot allocation, password redaction, platform guards, algorithm validation)
 
+### 11.5 Internal Viewer + Panel Swap + Toolbar + View Modes + Accessibility
+- **Created `lib/services/internal_viewer_service.dart`** (~310 lines): `ViewerMode` enum (7 modes), `HexLine`/`ViewerContent` models, `detectMode()` (magic bytes + extensions), `formatHexDump()` (16 bytes/line, offset+hex+ASCII), `getTextPreview()` (UTF-8 BOM stripping, Latin-1 fallback), `searchInContent()`, 50MB file size guard
+- **Created `lib/services/panel_swap_service.dart`** (~35 lines): `swap()` returns swapped sources, `canSwap()` always true (symmetric panels)
+- **Created `lib/services/toolbar_customization_service.dart`** (~258 lines): `ToolbarItem` enum (14 items), `ToolbarConfig` model, show/hide/reorder with SharedPreferences persistence
+- **Created `lib/services/panel_view_mode_service.dart`** (~123 lines): `PanelViewMode` enum (brief/full/tree), per-panel persistence, cycle mode
+- **Created `lib/services/accessibility_service.dart`** (~260 lines): `AccessibilityService` (high contrast + reduced motion toggles), `SemanticLabels` (57 labels across 5 groups), `HighContrastTheme` (WCAG AAA 7:1), `FocusHelper`
+- **Tests**: 214 tests (82 viewer + 20 swap + 29 toolbar + 22 view mode + 61 accessibility)
+
 ### 11.5 Dual-Panel Power Mode
 - **Created `lib/services/panel_source_service.dart`** (~276 lines): `PanelSource` sealed class with `LocalPanelSource`, `RemotePanelSource`, `ArchivePanelSource`, `ContainerPanelSource`, `PanelSourceService` with enter/exit archive/container navigation, archive/container detection (.zip/.tar.gz/.7z/.rar/.vc/.hc)
 - **Created `lib/services/fkey_action_service.dart`** (~222 lines): `FKeyAction` enum (F3-F8), `FKeyContext`, `FKeyActionResult` sealed hierarchy (Success/NeedsPrompt/NeedsConfirm/OpenViewer/OpenEditor/Error/Cancelled), `FKeyActionService` with context-aware action dispatch
