@@ -56,7 +56,7 @@ CrispCloud becomes the **open-source Cyberduck/Transmit/Commander One killer**: 
 - **Plugin system**: `CrispCloudPlugin` interface with sandboxed execution
 - **Opt-in analytics**: anonymous feature usage tracking
 - **Linux integration**: Nautilus/Dolphin/Thunar, D-Bus notifications, .deb/.rpm/AppImage packaging
-- **120+ test files**, **3524 unit tests** + gated E2E + live tests
+- **130+ test files**, **3723 unit tests** (+ 96 integration/widget tests excluded from CI pending mock server fixes) + gated live tests
 
 **What's still needed:**
 - ~~Monolithic state (AppState)~~ — **Riverpod migration done** (8 focused providers)
