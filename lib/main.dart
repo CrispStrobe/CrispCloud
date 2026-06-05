@@ -338,7 +338,46 @@ class _MasterPasswordGate extends ConsumerStatefulWidget {
 class _MasterPasswordGateState extends ConsumerState<_MasterPasswordGate> {
   final _controller = TextEditingController();
   String? _error;
-  bool _loading = false;
+  bool _loading = true; // start loading while we check if gate is needed
+  bool _needsGate = true;
+
+  @override
+  void initState() {
+    super.initState();
+    _checkIfGateNeeded();
+  }
+
+  /// Check if the user has stored credentials before. If not, skip the
+  /// master password prompt and go straight to the app — the gate will
+  /// appear later when they first try to save credentials.
+  Future<void> _checkIfGateNeeded() async {
+    try {
+      final storage = ref.read(secureStorageProvider) as WebEncryptedStorage;
+      final backend = storage.backend;
+      final existingSalt = await backend.getItem('crisp_enc_salt');
+
+      if (existingSalt == null) {
+        // First-time user — no stored credentials, skip the gate.
+        // Initialize with a temporary empty-password mode that defers
+        // the real password prompt until credentials are first saved.
+        _needsGate = false;
+        if (mounted) {
+          Navigator.of(context).pushReplacement(
+            MaterialPageRoute<void>(builder: (_) => const _AppLockGate()),
+          );
+        }
+        return;
+      }
+    } catch (_) {
+      // If check fails, show the gate as a safe default.
+    }
+    if (mounted) {
+      setState(() {
+        _loading = false;
+        _needsGate = true;
+      });
+    }
+  }
 
   Future<void> _submit() async {
     final password = _controller.text.trim();
@@ -376,6 +415,13 @@ class _MasterPasswordGateState extends ConsumerState<_MasterPasswordGate> {
 
   @override
   Widget build(BuildContext context) {
+    // While checking if gate is needed, show a loading screen
+    if (_loading && _needsGate) {
+      return const Scaffold(
+        body: Center(child: CircularProgressIndicator()),
+      );
+    }
+
     return Scaffold(
       body: Center(
         child: ConstrainedBox(

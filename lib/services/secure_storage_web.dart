@@ -54,6 +54,10 @@ class WebEncryptedStorage extends SecureStorage {
   /// instead of requiring a browser environment.
   final WebStorageBackend _backend;
 
+  /// Expose the backing store for checking if credentials exist
+  /// (e.g., to decide whether to show the master password gate).
+  WebStorageBackend get backend => _backend;
+
   /// Derived AES-256 key — held in memory only, never persisted.
   Uint8List? _derivedKey;
 
@@ -130,7 +134,9 @@ class WebEncryptedStorage extends SecureStorage {
 
   @override
   Future<String?> read(String key) async {
-    _checkInit();
+    // If not initialized (first-time user who skipped the gate),
+    // return null — there are no stored credentials to read.
+    if (!isInitialized) return null;
     final raw = await _backend.getItem(_storageKey(key));
     if (raw == null) return null;
     try {
@@ -147,7 +153,12 @@ class WebEncryptedStorage extends SecureStorage {
 
   @override
   Future<void> write(String key, String value) async {
-    _checkInit();
+    if (!isInitialized) {
+      throw StateError(
+        'Set a master password before saving credentials. '
+        'Go to Settings to configure encrypted storage.',
+      );
+    }
     final encrypted = EncryptionService.encrypt(
       Uint8List.fromList(utf8.encode(value)),
       _derivedKey!,
@@ -163,7 +174,7 @@ class WebEncryptedStorage extends SecureStorage {
 
   @override
   Future<bool> containsKey(String key) async {
-    _checkInit();
+    if (!isInitialized) return false;
     return await _backend.getItem(_storageKey(key)) != null;
   }
 
