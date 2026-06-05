@@ -4,7 +4,7 @@
 //   • AzureConnectionDialog — auth modes, field visibility, validation
 //   • B2ConnectionDialog    — field rendering, validation
 //   • SettingsDialog        — section rendering, toggle behaviour
-
+@Tags(['connection_dialog'])
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
