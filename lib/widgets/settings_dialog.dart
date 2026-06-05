@@ -13,6 +13,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../providers/accessibility_provider.dart';
 import '../providers/analytics_provider.dart';
 import '../providers/delta_sync_provider.dart';
+import '../providers/file_type_color_provider.dart';
 import '../providers/panel_source_provider.dart';
 
 // ---------------------------------------------------------------------------
@@ -51,6 +52,8 @@ class SettingsDialog extends ConsumerWidget {
             _AccessibilitySection(),
             const Divider(height: 1),
             _PrivacySection(),
+            const Divider(height: 1),
+            _FileColorsSection(),
             const Divider(height: 1),
             _AdvancedSection(),
           ],
@@ -347,6 +350,70 @@ class _AdvancedSection extends ConsumerWidget {
             child: Text(
               'Current: $blockSizeLabel',
               style: Theme.of(context).textTheme.bodySmall,
+            ),
+          ),
+        ],
+      ],
+    );
+  }
+}
+
+// ---------------------------------------------------------------------------
+// Section: File Colors
+// ---------------------------------------------------------------------------
+
+class _FileColorsSection extends ConsumerWidget {
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final colorService = ref.watch(fileTypeColorProvider);
+
+    return _Section(
+      title: 'File Colors',
+      icon: Icons.palette_outlined,
+      children: [
+        SwitchListTile(
+          key: const Key('settings_file_colors_toggle'),
+          value: colorService.enabled,
+          onChanged: (value) => colorService.setEnabled(value),
+          title: const Text('Colorize Files by Type'),
+          subtitle: const Text(
+            'Apply per-extension colors to file names and icons in the file list',
+          ),
+          secondary: Icon(
+            colorService.enabled
+                ? Icons.format_color_fill
+                : Icons.format_color_reset,
+            color: colorService.enabled
+                ? Theme.of(context).colorScheme.primary
+                : null,
+          ),
+          dense: false,
+          contentPadding:
+              const EdgeInsets.symmetric(horizontal: 24, vertical: 4),
+        ),
+        if (colorService.enabled) ...[
+          ...colorService.rules.map((rule) => ListTile(
+            dense: true,
+            contentPadding: const EdgeInsets.symmetric(horizontal: 24),
+            leading: Container(
+              width: 16,
+              height: 16,
+              decoration: BoxDecoration(
+                color: rule.color,
+                borderRadius: BorderRadius.circular(3),
+              ),
+            ),
+            title: Text(
+              rule.extensions,
+              style: const TextStyle(fontSize: 12, fontFamily: 'monospace'),
+            ),
+          )),
+          Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 4),
+            child: TextButton.icon(
+              icon: const Icon(Icons.restore, size: 16),
+              label: const Text('Reset to Defaults'),
+              onPressed: () => colorService.resetToDefaults(),
             ),
           ),
         ],

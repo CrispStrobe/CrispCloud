@@ -4,7 +4,6 @@
 // retry logic, and pause/resume/cancel support.
 
 import 'dart:async';
-import 'dart:collection';
 import 'package:flutter/foundation.dart';
 import '../models/operation_progress.dart';
 import 'log_service.dart';
@@ -39,7 +38,7 @@ class TransferQueue extends ChangeNotifier {
   final int maxRetries;
   final Duration retryBaseDelay;
 
-  final Queue<TransferTask> _pending = Queue();
+  final List<TransferTask> _pending = [];
   final Map<String, TransferTask> _active = {};
   final List<TransferTask> _completed = [];
 
@@ -74,10 +73,53 @@ class TransferQueue extends ChangeNotifier {
   int get completedCount => _completed.length;
   bool get hasActive => _active.isNotEmpty;
 
-  /// Enqueue a transfer task. Starts immediately if capacity available.
+  /// Read-only view of pending tasks (for UI display).
+  List<TransferTask> get pendingTasks => List.unmodifiable(_pending);
+
+  /// Read-only view of active tasks (for UI display).
+  List<TransferTask> get activeTasks => List.unmodifiable(_active.values.toList());
+
+  /// Enqueue a transfer task. Sorted by priority (higher first).
+  /// Starts immediately if capacity available.
   void enqueue(TransferTask task) {
-    _pending.add(task);
+    // Insert maintaining priority order (descending)
+    int insertIdx = _pending.length;
+    for (var i = 0; i < _pending.length; i++) {
+      if (task.priority > _pending[i].priority) {
+        insertIdx = i;
+        break;
+      }
+    }
+    _pending.insert(insertIdx, task);
     _processQueue();
+  }
+
+  /// Reorder a pending task from [oldIndex] to [newIndex].
+  void reorderPending(int oldIndex, int newIndex) {
+    if (oldIndex < 0 || oldIndex >= _pending.length) return;
+    if (newIndex < 0 || newIndex > _pending.length) return;
+    final task = _pending.removeAt(oldIndex);
+    if (newIndex > oldIndex) newIndex--;
+    _pending.insert(newIndex, task);
+    notifyListeners();
+  }
+
+  /// Move a pending task to the front of the queue.
+  void movePendingToTop(String taskId) {
+    final idx = _pending.indexWhere((t) => t.id == taskId);
+    if (idx <= 0) return;
+    final task = _pending.removeAt(idx);
+    _pending.insert(0, task);
+    notifyListeners();
+  }
+
+  /// Move a pending task to the end of the queue.
+  void movePendingToBottom(String taskId) {
+    final idx = _pending.indexWhere((t) => t.id == taskId);
+    if (idx < 0 || idx == _pending.length - 1) return;
+    final task = _pending.removeAt(idx);
+    _pending.add(task);
+    notifyListeners();
   }
 
   /// Cancel all pending and active transfers.
@@ -108,7 +150,7 @@ class TransferQueue extends ChangeNotifier {
     final skipped = <TransferTask>[];
 
     while (_active.length < maxConcurrent && _pending.isNotEmpty) {
-      final task = _pending.removeFirst();
+      final task = _pending.removeAt(0);
 
       // Check per-provider limit
       if (task.providerName != null) {
@@ -123,9 +165,9 @@ class TransferQueue extends ChangeNotifier {
       _runTask(task);
     }
 
-    // Put back skipped tasks
-    for (final task in skipped) {
-      _pending.addFirst(task);
+    // Put back skipped tasks at the front
+    for (var i = skipped.length - 1; i >= 0; i--) {
+      _pending.insert(0, skipped[i]);
     }
 
     notifyListeners();

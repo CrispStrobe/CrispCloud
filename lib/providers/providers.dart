@@ -4,6 +4,7 @@
 
 export 'action_history_provider.dart';
 export 'auth_provider.dart';
+export 'file_type_color_provider.dart';
 export 'bookmarks_provider.dart';
 export 'core_providers.dart';
 export 'error_provider.dart';

@@ -15,9 +15,11 @@ import 'package:shared_preferences/shared_preferences.dart';
 import '../models/file_item.dart';
 import '../models/panel_side.dart';
 import '../models/panel_tab.dart';
+import '../services/archive_service.dart';
 import '../services/audit_service.dart';
 import '../services/local_file_service.dart';
 import '../services/log_service.dart';
+import '../services/panel_source_service.dart';
 import 'action_history_provider.dart';
 import 'auth_provider.dart';
 import 'core_providers.dart';
@@ -58,6 +60,21 @@ class PanelNotifier extends ChangeNotifier {
   /// listing; normal refresh/navigation calls restore the real listing.
   bool _showingSearchResults = false;
   bool get showingSearchResults => _showingSearchResults;
+
+  /// When non-null, the panel is browsing inside a compressed archive.
+  ArchivePanelSource? _archiveSource;
+  bool get isInArchive => _archiveSource != null;
+  ArchivePanelSource? get archiveSource => _archiveSource;
+
+  /// Secondary sort key for multi-key sorting (Phase 1.2).
+  SortBy? _secondarySortBy;
+  SortOrder _secondarySortOrder = SortOrder.ascending;
+  SortBy? get secondarySortBy => _secondarySortBy;
+  SortOrder get secondarySortOrder => _secondarySortOrder;
+
+  /// Whether the panel is in flat (recursive) view mode.
+  bool _isFlatView = false;
+  bool get isFlatView => _isFlatView;
 
   PanelNotifier(this._ref, this.side)
       : _localFileService = _ref.read(localFileServiceProvider) {
@@ -118,7 +135,136 @@ class PanelNotifier extends ChangeNotifier {
     refresh();
   }
 
+  // --- Archive navigation ---
+
+  /// Enter a compressed archive for browsing.
+  Future<void> enterArchive(FileItem file) async {
+    if (file.path == null && file.name.isEmpty) return;
+    final archivePath = file.path ?? p.posix.join(_remotePath, file.name);
+    final parentSource = side == PanelSide.local
+        ? LocalPanelSource(currentPath)
+        : LocalPanelSource(currentPath); // Simplified — local archives only for now
+    _archiveSource = const PanelSourceService().enterArchive(archivePath, parentSource);
+    await _loadArchiveFiles();
+    notifyListeners();
+  }
+
+  /// Navigate deeper into a folder within the archive.
+  Future<void> _navigateArchive(String innerPath) async {
+    if (_archiveSource == null) return;
+    _archiveSource = _archiveSource!.withPath(innerPath);
+    await _loadArchiveFiles();
+    notifyListeners();
+  }
+
+  /// Navigate up one level within the archive, or exit if at root.
+  Future<void> navigateUpArchive() async {
+    if (_archiveSource == null) return;
+    final inner = _archiveSource!.innerPath;
+    if (inner.isEmpty) {
+      exitArchive();
+      return;
+    }
+    // Go up one directory level within the archive
+    var parent = inner.endsWith('/') ? inner.substring(0, inner.length - 1) : inner;
+    final lastSlash = parent.lastIndexOf('/');
+    parent = lastSlash > 0 ? parent.substring(0, lastSlash + 1) : '';
+    _archiveSource = _archiveSource!.withPath(parent) as ArchivePanelSource;
+    await _loadArchiveFiles();
+    notifyListeners();
+  }
+
+  /// Exit the archive and restore the parent directory listing.
+  void exitArchive() {
+    _archiveSource = null;
+    refresh();
+  }
+
+  Future<void> _loadArchiveFiles() async {
+    if (_archiveSource == null) return;
+    try {
+      _files = await const PanelSourceService().listFiles(_archiveSource!);
+      _sortFiles();
+    } catch (e) {
+      _files = [];
+      _ref.read(errorProvider).addError('Failed to read archive: $e');
+    }
+  }
+
+  // --- Multi-key sort ---
+
+  void setSecondarySortBy(SortBy? sortBy) {
+    _secondarySortBy = sortBy;
+    _sortFiles();
+    notifyListeners();
+  }
+
+  void toggleSecondarySortOrder() {
+    _secondarySortOrder = _secondarySortOrder == SortOrder.ascending
+        ? SortOrder.descending
+        : SortOrder.ascending;
+    _sortFiles();
+    notifyListeners();
+  }
+
+  // --- Flat view ---
+
+  Future<void> toggleFlatView() async {
+    if (_isFlatView) {
+      _isFlatView = false;
+      await refresh();
+    } else {
+      _isFlatView = true;
+      await _loadFlatFiles();
+    }
+    notifyListeners();
+  }
+
+  Future<void> _loadFlatFiles() async {
+    if (kIsWeb || side != PanelSide.local) {
+      _ref.read(errorProvider).addError('Flat view is only available for local directories');
+      _isFlatView = false;
+      return;
+    }
+    try {
+      final items = <FileItem>[];
+      const maxItems = 10000;
+      await _walkDirectory(currentPath, items, maxItems);
+      _files = items;
+      _sortFiles();
+      notifyListeners();
+    } catch (e) {
+      _ref.read(errorProvider).addError('Flat view failed: $e');
+      _isFlatView = false;
+    }
+  }
+
+  Future<void> _walkDirectory(String dirPath, List<FileItem> items, int maxItems) async {
+    if (items.length >= maxItems) return;
+    final entities = await Directory(dirPath).list().toList();
+    for (final entity in entities) {
+      if (items.length >= maxItems) return;
+      final name = p.basename(entity.path);
+      if (name.startsWith('.')) continue;
+      final stat = await entity.stat();
+      if (stat.type == FileSystemEntityType.directory) {
+        await _walkDirectory(entity.path, items, maxItems);
+      } else if (stat.type == FileSystemEntityType.file) {
+        items.add(FileItem(
+          name: name,
+          path: entity.path,
+          isFolder: false,
+          size: stat.size,
+          updatedAt: stat.modified,
+        ));
+      }
+    }
+  }
+
   String get currentPath {
+    if (isInArchive) {
+      return '${_archiveSource!.archiveName}:/${_archiveSource!.innerPath}';
+    }
     if (side == PanelSide.local) return _localFileService.currentPath;
     return _remotePath;
   }
@@ -147,34 +293,39 @@ class PanelNotifier extends ChangeNotifier {
     notifyListeners();
   }
 
+  /// Compare two file items by a single sort key. Exposed for testing.
+  static int compareSortKey(FileItem a, FileItem b, SortBy key) {
+    switch (key) {
+      case SortBy.name:
+        return a.name.toLowerCase().compareTo(b.name.toLowerCase());
+      case SortBy.size:
+        return (a.size ?? 0).compareTo(b.size ?? 0);
+      case SortBy.date:
+        return (a.updatedAt ?? DateTime(1970)).compareTo(b.updatedAt ?? DateTime(1970));
+      case SortBy.extension:
+        if (a.isFolder || b.isFolder) return 0;
+        final extA = a.name.contains('.') ? a.name.split('.').last.toLowerCase() : '';
+        final extB = b.name.contains('.') ? b.name.split('.').last.toLowerCase() : '';
+        return extA.compareTo(extB);
+    }
+  }
+
   void _sortFiles() {
     if (_files == null || _files!.isEmpty) return;
     _files!.sort((a, b) {
       if (a.isFolder && !b.isFolder) return -1;
       if (!a.isFolder && b.isFolder) return 1;
 
-      int comparison = 0;
-      switch (_sortBy) {
-        case SortBy.name:
-          comparison = (a.name).toLowerCase().compareTo((b.name).toLowerCase());
-          break;
-        case SortBy.size:
-          comparison = (a.size ?? 0).compareTo(b.size ?? 0);
-          break;
-        case SortBy.date:
-          comparison = (a.updatedAt ?? DateTime(1970)).compareTo(b.updatedAt ?? DateTime(1970));
-          break;
-        case SortBy.extension:
-          if (a.isFolder || b.isFolder) {
-            comparison = 0;
-          } else {
-            final extA = a.name.contains('.') ? a.name.split('.').last.toLowerCase() : '';
-            final extB = b.name.contains('.') ? b.name.split('.').last.toLowerCase() : '';
-            comparison = extA.compareTo(extB);
-          }
-          break;
+      int comparison = compareSortKey(a, b, _sortBy);
+      comparison = _sortOrder == SortOrder.ascending ? comparison : -comparison;
+
+      // Secondary sort key when primary ties
+      if (comparison == 0 && _secondarySortBy != null) {
+        int secondary = compareSortKey(a, b, _secondarySortBy!);
+        comparison = _secondarySortOrder == SortOrder.ascending ? secondary : -secondary;
       }
-      return _sortOrder == SortOrder.ascending ? comparison : -comparison;
+
+      return comparison;
     });
   }
 
@@ -225,7 +376,11 @@ class PanelNotifier extends ChangeNotifier {
   /// (e.g. from multiple filesystem events or repeated F5 presses).
   Future<void> refresh() async {
     await _refreshLock.synchronized(() async {
-      if (side == PanelSide.local) {
+      if (isInArchive) {
+        await _loadArchiveFiles();
+      } else if (_isFlatView) {
+        await _loadFlatFiles();
+      } else if (side == PanelSide.local) {
         await _localFileService.refresh();
         await _loadLocalFiles();
       } else {
@@ -244,6 +399,17 @@ class PanelNotifier extends ChangeNotifier {
   void refreshFiles() => refresh();
 
   Future<void> navigateUp() async {
+    // If inside an archive, navigate up within archive or exit
+    if (isInArchive) {
+      await navigateUpArchive();
+      return;
+    }
+    // If in flat view, exit flat view
+    if (_isFlatView) {
+      _isFlatView = false;
+      await refresh();
+      return;
+    }
     if (side == PanelSide.local) {
       final parent = p.dirname(currentPath);
       if (parent != currentPath && parent != '.') {
@@ -301,6 +467,18 @@ class PanelNotifier extends ChangeNotifier {
   }
 
   Future<void> navigateInto(FileItem item) async {
+    // If we're inside an archive, navigate within it
+    if (isInArchive) {
+      if (item.isFolder && item.path != null) {
+        await _navigateArchive(item.path!);
+      }
+      return;
+    }
+    // If a non-folder file is an archive, enter it
+    if (!item.isFolder && ArchiveService.isArchive(item.name)) {
+      await enterArchive(item);
+      return;
+    }
     if (!item.isFolder) return;
     if (side == PanelSide.local) {
       if (item.path != null) await navigateToPath(item.path!);
@@ -322,6 +500,15 @@ class PanelNotifier extends ChangeNotifier {
     } catch (e) {
       _ref.read(errorProvider).addError('Error picking directory: $e');
     }
+  }
+
+  /// Update a file item's calculated size (for inline directory size display).
+  void updateItemCalculatedSize(FileItem item, int size) {
+    if (_files == null) return;
+    final idx = _files!.indexOf(item);
+    if (idx == -1) return;
+    _files![idx] = item.copyWith(calculatedSize: size);
+    notifyListeners();
   }
 
   // --- File operations (local panel helpers) ---
@@ -783,10 +970,16 @@ class PanelNotifier extends ChangeNotifier {
           }
 
           final stat = await entity.stat();
+          final linkType = await FileSystemEntity.type(entity.path, followLinks: false);
+          final isLink = linkType == FileSystemEntityType.link;
+          String? linkTarget;
+          if (isLink) {
+            try { linkTarget = await Link(entity.path).target(); } catch (_) {}
+          }
           if (stat.type == FileSystemEntityType.directory) {
-            items.add(FileItem(name: name, path: entity.path, isFolder: true, updatedAt: stat.modified));
+            items.add(FileItem(name: name, path: entity.path, isFolder: true, updatedAt: stat.modified, isSymlink: isLink ? true : null, symlinkTarget: linkTarget));
           } else if (stat.type == FileSystemEntityType.file) {
-            items.add(FileItem(name: name, path: entity.path, isFolder: false, size: stat.size, updatedAt: stat.modified));
+            items.add(FileItem(name: name, path: entity.path, isFolder: false, size: stat.size, updatedAt: stat.modified, isSymlink: isLink ? true : null, symlinkTarget: linkTarget));
           }
         } catch (_) {
           continue;
@@ -838,7 +1031,9 @@ class PanelNotifier extends ChangeNotifier {
             else folderDate = DateTime.parse(rawDate.toString());
           } catch (_) {}
         }
-        return FileItem(name: map['name'] ?? 'Unknown', isFolder: true, uuid: map['uuid'], updatedAt: folderDate);
+        final meta = Map<String, dynamic>.from(map)
+          ..removeWhere((k, _) => const {'name', 'uuid', 'modificationTime', 'lastModified', 'timestamp'}.contains(k));
+        return FileItem(name: map['name'] ?? 'Unknown', isFolder: true, uuid: map['uuid'], updatedAt: folderDate, metadata: meta.isNotEmpty ? meta : null);
       }).toList() ?? [];
 
       final files = (result['files'] as List<dynamic>?)?.map((item) {
@@ -858,7 +1053,9 @@ class PanelNotifier extends ChangeNotifier {
             else fileDate = DateTime.parse(rawDate.toString());
           } catch (_) {}
         }
-        return FileItem(name: fullName, isFolder: false, size: map['size'] as int?, uuid: map['uuid'], updatedAt: fileDate);
+        final meta = Map<String, dynamic>.from(map)
+          ..removeWhere((k, _) => const {'name', 'uuid', 'size', 'modificationTime', 'lastModified', 'fileType', 'type', 'timestamp'}.contains(k));
+        return FileItem(name: fullName, isFolder: false, size: map['size'] as int?, uuid: map['uuid'], updatedAt: fileDate, metadata: meta.isNotEmpty ? meta : null);
       }).toList() ?? [];
 
       _files = [...folders, ...files];

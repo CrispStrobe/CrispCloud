@@ -13,7 +13,9 @@ import '../providers/providers.dart';
 import '../providers/core_providers.dart' show preferExternalEditorProvider;
 import '../services/archive_service.dart';
 import '../services/checksum_service.dart';
-import '../services/cloud_storage_interface.dart' show CloudProvider;
+import '../services/file_split_service.dart';
+import '../services/link_service.dart';
+import '../services/secure_wipe_service.dart';
 import '../services/log_service.dart';
 import '../services/sftp_client_adapter.dart';
 import '../services/share_service.dart';
@@ -424,7 +426,24 @@ void showFileContextMenu(BuildContext context, WidgetRef ref, PanelSide side, Fi
 
   // Archive operations (local files only, not on web)
   if (!kIsWeb && side == PanelSide.local) {
-    // Extract: show for single .zip file
+    // Browse archive: show for single archive file
+    if (!isMultiSelect && ArchiveService.isArchive(file.name) && file.path != null) {
+      items.add(
+        PopupMenuItem(
+          child: const Row(
+            children: [
+              Icon(Icons.folder_zip),
+              SizedBox(width: 8),
+              Text('Browse Archive'),
+            ],
+          ),
+          onTap: () => Future.delayed(Duration.zero, () {
+            ref.read(panelProvider(side)).enterArchive(file);
+          }),
+        ),
+      );
+    }
+    // Extract: show for single archive file
     if (!isMultiSelect && ArchiveService.isArchive(file.name) && file.path != null) {
       items.add(
         PopupMenuItem(
@@ -555,6 +574,63 @@ void showFileContextMenu(BuildContext context, WidgetRef ref, PanelSide side, Fi
     );
   }
 
+  // Split file (local, single file > 1 MB, not web)
+  if (!kIsWeb && side == PanelSide.local && !isMultiSelect && !file.isFolder && file.path != null && (file.size ?? 0) > 1024 * 1024) {
+    items.add(
+      PopupMenuItem(
+        child: const Row(
+          children: [Icon(Icons.call_split, size: 20), SizedBox(width: 8), Text('Split File')],
+        ),
+        onTap: () => Future.delayed(Duration.zero, () => _showSplitDialog(context, ref, side, file)),
+      ),
+    );
+  }
+
+  // Combine parts (local, multi-select with .partNNN files)
+  if (!kIsWeb && side == PanelSide.local && isMultiSelect && files.any((f) => RegExp(r'\.part\d{3}$').hasMatch(f.name))) {
+    items.add(
+      PopupMenuItem(
+        child: const Row(
+          children: [Icon(Icons.merge_type, size: 20), SizedBox(width: 8), Text('Combine Parts')],
+        ),
+        onTap: () => Future.delayed(Duration.zero, () => _showCombineDialog(context, ref, side, files)),
+      ),
+    );
+  }
+
+  // Create symlink (local or SFTP, single file, desktop only)
+  if (!kIsWeb && !isMultiSelect && (side == PanelSide.local || (side == PanelSide.remote && ref.read(authProvider).client is SFTPClientAdapter))) {
+    if (!kIsWeb && (Platform.isMacOS || Platform.isLinux || Platform.isWindows)) {
+      items.add(
+        PopupMenuItem(
+          child: const Row(
+            children: [Icon(Icons.link, size: 20), SizedBox(width: 8), Text('Create Link...')],
+          ),
+          onTap: () => Future.delayed(Duration.zero, () => _showCreateLinkDialog(context, ref, side, file)),
+        ),
+      );
+    }
+  }
+
+  // Secure wipe (local files, desktop only)
+  if (!kIsWeb && side == PanelSide.local && (Platform.isMacOS || Platform.isLinux || Platform.isWindows)) {
+    items.add(
+      PopupMenuItem(
+        child: Row(
+          children: [
+            Icon(Icons.delete_forever, size: 20, color: Theme.of(context).colorScheme.error),
+            const SizedBox(width: 8),
+            Text(
+              'Secure Wipe${isMultiSelect ? ' (${files.length})' : ''}',
+              style: TextStyle(color: Theme.of(context).colorScheme.error),
+            ),
+          ],
+        ),
+        onTap: () => Future.delayed(Duration.zero, () => _showSecureWipeDialog(context, ref, side, files)),
+      ),
+    );
+  }
+
   items.add(const PopupMenuDivider());
 
   // Delete
@@ -576,6 +652,31 @@ void showFileContextMenu(BuildContext context, WidgetRef ref, PanelSide side, Fi
       ),
     ),
   );
+
+  // Plugin-contributed context menu items
+  final pluginRegistry = ref.read(pluginRegistryProvider);
+  final filePaths = files.where((f) => f.path != null).map((f) => f.path!).toList();
+  final pluginItems = pluginRegistry.getContextMenuItems(filePaths);
+  if (pluginItems.isNotEmpty) {
+    items.add(const PopupMenuDivider());
+    for (final menuItem in pluginItems) {
+      if (!menuItem.enabled) continue;
+      items.add(
+        PopupMenuItem(
+          child: Row(
+            children: [
+              const Icon(Icons.extension, size: 20),
+              const SizedBox(width: 8),
+              Text(menuItem.label),
+            ],
+          ),
+          onTap: menuItem.onSelected != null
+              ? () => Future.delayed(Duration.zero, () => menuItem.onSelected!(filePaths))
+              : null,
+        ),
+      );
+    }
+  }
 
   showMenu(
     context: context,
@@ -1062,6 +1163,273 @@ void _showChecksumDialog(BuildContext context, FileItem file) {
         },
       );
     },
+  );
+}
+
+// --- Split / Combine / Link / Secure Wipe dialogs ---
+
+void _showSplitDialog(BuildContext context, WidgetRef ref, PanelSide side, FileItem file) {
+  int chunkSize = 10 * 1024 * 1024; // 10 MB default
+  showDialog(
+    context: context,
+    builder: (context) => StatefulBuilder(
+      builder: (context, setState) => AlertDialog(
+        title: const Text('Split File'),
+        content: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text('File: ${file.name}'),
+            if (file.size != null) Text('Size: ${formatBytes(file.size!)}'),
+            const SizedBox(height: 16),
+            DropdownButtonFormField<int>(
+              value: chunkSize,
+              decoration: const InputDecoration(
+                labelText: 'Chunk size',
+                border: OutlineInputBorder(),
+              ),
+              items: const [
+                DropdownMenuItem(value: 1024 * 1024, child: Text('1 MB')),
+                DropdownMenuItem(value: 10 * 1024 * 1024, child: Text('10 MB')),
+                DropdownMenuItem(value: 50 * 1024 * 1024, child: Text('50 MB')),
+                DropdownMenuItem(value: 100 * 1024 * 1024, child: Text('100 MB')),
+                DropdownMenuItem(value: 500 * 1024 * 1024, child: Text('500 MB')),
+              ],
+              onChanged: (v) => setState(() => chunkSize = v!),
+            ),
+            if (file.size != null)
+              Padding(
+                padding: const EdgeInsets.only(top: 8),
+                child: Text(
+                  'Will create ${((file.size! + chunkSize - 1) / chunkSize).ceil()} parts',
+                  style: Theme.of(context).textTheme.bodySmall,
+                ),
+              ),
+          ],
+        ),
+        actions: [
+          TextButton(onPressed: () => Navigator.pop(context), child: const Text('Cancel')),
+          ElevatedButton(
+            onPressed: () async {
+              Navigator.pop(context);
+              try {
+                final dir = p.dirname(file.path!);
+                await FileSplitService.splitFile(file.path!, dir, chunkSizeBytes: chunkSize);
+                ref.read(panelProvider(side)).refresh();
+                if (context.mounted) {
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    const SnackBar(content: Text('File split successfully')),
+                  );
+                }
+              } catch (e) {
+                if (context.mounted) {
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    SnackBar(content: Text('Split failed: $e')),
+                  );
+                }
+              }
+            },
+            child: const Text('Split'),
+          ),
+        ],
+      ),
+    ),
+  );
+}
+
+void _showCombineDialog(BuildContext context, WidgetRef ref, PanelSide side, List<FileItem> files) {
+  // Find the base name from the first part file
+  final partFile = files.firstWhere((f) => RegExp(r'\.part\d{3}$').hasMatch(f.name));
+  final baseName = partFile.name.replaceAll(RegExp(r'\.part\d{3}$'), '');
+  final dir = p.dirname(partFile.path ?? '');
+
+  showDialog(
+    context: context,
+    builder: (context) => AlertDialog(
+      title: const Text('Combine Parts'),
+      content: Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Text('Base name: $baseName'),
+          const SizedBox(height: 8),
+          Text('Will scan for all .partNNN files in the directory.'),
+        ],
+      ),
+      actions: [
+        TextButton(onPressed: () => Navigator.pop(context), child: const Text('Cancel')),
+        ElevatedButton(
+          onPressed: () async {
+            Navigator.pop(context);
+            try {
+              final parts = FileSplitService.detectParts(dir, baseName);
+              if (parts.isEmpty) {
+                if (context.mounted) {
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    const SnackBar(content: Text('No parts found')),
+                  );
+                }
+                return;
+              }
+              final outputPath = p.join(dir, baseName);
+              await FileSplitService.combineFiles(parts, outputPath);
+              ref.read(panelProvider(side)).refresh();
+              if (context.mounted) {
+                ScaffoldMessenger.of(context).showSnackBar(
+                  SnackBar(content: Text('Combined ${parts.length} parts into $baseName')),
+                );
+              }
+            } catch (e) {
+              if (context.mounted) {
+                ScaffoldMessenger.of(context).showSnackBar(
+                  SnackBar(content: Text('Combine failed: $e')),
+                );
+              }
+            }
+          },
+          child: const Text('Combine'),
+        ),
+      ],
+    ),
+  );
+}
+
+void _showCreateLinkDialog(BuildContext context, WidgetRef ref, PanelSide side, FileItem file) {
+  final controller = TextEditingController(
+    text: file.path != null ? '${file.path!}_link' : '',
+  );
+  bool isSymlink = true;
+
+  showDialog(
+    context: context,
+    builder: (context) => StatefulBuilder(
+      builder: (context, setState) => AlertDialog(
+        title: const Text('Create Link'),
+        content: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Text('Target: ${file.name}'),
+            const SizedBox(height: 16),
+            SegmentedButton<bool>(
+              segments: const [
+                ButtonSegment(value: true, label: Text('Symlink')),
+                ButtonSegment(value: false, label: Text('Hard Link')),
+              ],
+              selected: {isSymlink},
+              onSelectionChanged: (v) => setState(() => isSymlink = v.first),
+            ),
+            const SizedBox(height: 16),
+            TextField(
+              controller: controller,
+              decoration: const InputDecoration(
+                labelText: 'Link path',
+                border: OutlineInputBorder(),
+              ),
+            ),
+          ],
+        ),
+        actions: [
+          TextButton(onPressed: () => Navigator.pop(context), child: const Text('Cancel')),
+          ElevatedButton(
+            onPressed: () async {
+              Navigator.pop(context);
+              try {
+                if (isSymlink) {
+                  await LinkService.createSymlink(file.path!, controller.text);
+                } else {
+                  await LinkService.createHardlink(file.path!, controller.text);
+                }
+                ref.read(panelProvider(side)).refresh();
+                if (context.mounted) {
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    SnackBar(content: Text('${isSymlink ? "Symlink" : "Hard link"} created')),
+                  );
+                }
+              } catch (e) {
+                if (context.mounted) {
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    SnackBar(content: Text('Link creation failed: $e')),
+                  );
+                }
+              }
+            },
+            child: const Text('Create'),
+          ),
+        ],
+      ),
+    ),
+  );
+}
+
+void _showSecureWipeDialog(BuildContext context, WidgetRef ref, PanelSide side, List<FileItem> files) {
+  int passes = 3;
+
+  showDialog(
+    context: context,
+    builder: (context) => StatefulBuilder(
+      builder: (context, setState) => AlertDialog(
+        icon: Icon(Icons.warning, color: Theme.of(context).colorScheme.error, size: 48),
+        title: const Text('Secure Wipe'),
+        content: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Text(
+              'This will overwrite ${files.length} item(s) with random data before deletion. This cannot be undone.',
+              style: Theme.of(context).textTheme.bodyMedium,
+            ),
+            const SizedBox(height: 16),
+            DropdownButtonFormField<int>(
+              value: passes,
+              decoration: const InputDecoration(
+                labelText: 'Overwrite passes',
+                border: OutlineInputBorder(),
+              ),
+              items: const [
+                DropdownMenuItem(value: 1, child: Text('1 pass (quick)')),
+                DropdownMenuItem(value: 3, child: Text('3 passes (DoD standard)')),
+                DropdownMenuItem(value: 7, child: Text('7 passes (high security)')),
+              ],
+              onChanged: (v) => setState(() => passes = v!),
+            ),
+          ],
+        ),
+        actions: [
+          TextButton(onPressed: () => Navigator.pop(context), child: const Text('Cancel')),
+          ElevatedButton(
+            style: ElevatedButton.styleFrom(
+              backgroundColor: Theme.of(context).colorScheme.error,
+              foregroundColor: Theme.of(context).colorScheme.onError,
+            ),
+            onPressed: () async {
+              Navigator.pop(context);
+              try {
+                for (final file in files) {
+                  if (file.path == null) continue;
+                  if (file.isFolder) {
+                    await SecureWipeService.secureWipeDirectory(file.path!, passes: passes);
+                  } else {
+                    await SecureWipeService.secureWipe(file.path!, passes: passes);
+                  }
+                }
+                ref.read(panelProvider(side)).refresh();
+                ref.read(panelProvider(side)).clearSelection();
+                if (context.mounted) {
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    const SnackBar(content: Text('Secure wipe completed')),
+                  );
+                }
+              } catch (e) {
+                if (context.mounted) {
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    SnackBar(content: Text('Secure wipe failed: $e')),
+                  );
+                }
+              }
+            },
+            child: const Text('Wipe'),
+          ),
+        ],
+      ),
+    ),
   );
 }
 

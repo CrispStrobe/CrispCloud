@@ -53,11 +53,15 @@ class PluginMenuItem {
   final String icon;
   final bool enabled;
 
+  /// Optional callback invoked when the menu item is selected.
+  final void Function(List<String> filePaths)? onSelected;
+
   const PluginMenuItem({
     required this.id,
     required this.label,
     required this.icon,
     this.enabled = true,
+    this.onSelected,
   });
 
   Map<String, dynamic> toJson() => {

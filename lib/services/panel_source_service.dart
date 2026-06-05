@@ -5,6 +5,7 @@
 // panel sources — the foundation for orthodox dual-panel navigation.
 
 import '../models/file_item.dart';
+import 'archive_service.dart';
 import 'cloud_storage_interface.dart';
 
 // ---------------------------------------------------------------------------
@@ -247,7 +248,7 @@ class ContainerPanelSource extends PanelSource {
 // ---------------------------------------------------------------------------
 
 /// Extensions treated as browsable compressed archives.
-const _archiveExtensions = {'.zip', '.tar.gz', '.tgz', '.7z', '.rar'};
+const _archiveExtensions = {'.zip', '.tar', '.tar.gz', '.tgz', '.tar.bz2', '.tbz2', '.7z', '.rar'};
 
 /// Filenames / extensions treated as encrypted containers.
 const _containerExtensions = {'.vc', '.hc'};
@@ -334,7 +335,7 @@ class PanelSourceService {
     return switch (source) {
       final LocalPanelSource s => await _listLocal(s),
       final RemotePanelSource s => await _listRemote(s),
-      final ArchivePanelSource s => _listArchive(s),
+      final ArchivePanelSource s => await _listArchive(s),
       final ContainerPanelSource s => _listContainer(s),
     };
   }
@@ -367,12 +368,17 @@ class PanelSourceService {
     }
   }
 
-  /// Simulated archive listing.  A real implementation would use `archive`
-  /// package or shell out to `unzip -l` / `7z l`.
-  List<FileItem> _listArchive(ArchivePanelSource source) {
-    // Return an empty list as a safe default; real implementation would
-    // parse the archive TOC without extracting.
-    return [];
+  /// List the contents of an archive at its current inner path without
+  /// extracting. Delegates to [ArchiveService.listArchiveContents].
+  Future<List<FileItem>> _listArchive(ArchivePanelSource source) async {
+    try {
+      return await ArchiveService.listArchiveContents(
+        source.archivePath,
+        source.innerPath,
+      );
+    } catch (_) {
+      return [];
+    }
   }
 
   /// Simulated container listing using the unlocked session.

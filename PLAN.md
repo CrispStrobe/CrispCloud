@@ -62,13 +62,16 @@ CrispCloud becomes the **open-source Cyberduck/Transmit/Commander One killer**: 
 - **Android DocumentsProvider**: cloud storage appears in every app's file picker
 - **Cross-platform virtual FS**: unified API (FUSE/DocumentsProvider/FileProvider/FSA)
 
+- **DoubleCommander-parity features** (2026-06-05): archive browsing, multi-key sort, flat view, colorized file lists, syntax highlighting, embedded terminal, file split/combine, secure wipe, symlinks, directory size inline, queue reorder, custom toolbar commands, plugin context menu wiring
+
 **What's still needed:**
 - ~~Monolithic state (AppState)~~ — **Riverpod migration done** (8 focused providers)
 - ~~Sync engine v1~~ — done (two-way, conflicts, selective sync, offline replay, filesystem watcher, system tray)
 - ~~GDrive~~ + ~~OneDrive~~ + ~~Dropbox~~ — all Tier 1 providers done
 - ~~Security hardening~~ — proxy, app lock, biometric, cert pinning done; Cryptomator pending
-- No plugin/extension system
-- No i18n, no accessibility audit
+- ~~Plugin system~~ — CrispCloudPlugin interface + context menu wiring done
+- ~~i18n~~ — 9 languages done
+- ~~DoubleCommander parity~~ — 14 features implemented (archive browsing, multi-key sort, flat view, colorized lists, syntax highlighting, terminal panel, file split/combine, secure wipe, symlinks, dir size, queue reorder, custom commands, plugin wiring, FileItem extensions)
 
 ---
 

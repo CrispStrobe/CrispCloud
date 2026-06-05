@@ -39,8 +39,138 @@ class _FileEditorPage extends ConsumerStatefulWidget {
   ConsumerState<_FileEditorPage> createState() => _FileEditorPageState();
 }
 
+/// Detect a language from file extension for syntax highlighting.
+String? _detectLanguage(String filename) {
+  final ext = filename.contains('.') ? filename.split('.').last.toLowerCase() : '';
+  const map = {
+    'dart': 'dart', 'js': 'javascript', 'ts': 'typescript',
+    'jsx': 'javascript', 'tsx': 'typescript',
+    'py': 'python', 'rs': 'rust', 'go': 'go', 'java': 'java',
+    'json': 'json', 'yaml': 'yaml', 'yml': 'yaml', 'xml': 'xml',
+    'html': 'html', 'css': 'css', 'sh': 'bash', 'bash': 'bash',
+    'md': 'markdown', 'sql': 'sql', 'cpp': 'cpp', 'c': 'c',
+    'h': 'cpp', 'hpp': 'cpp', 'kt': 'kotlin', 'swift': 'swift',
+    'php': 'php', 'rb': 'ruby', 'lua': 'lua', 'r': 'r',
+    'toml': 'toml', 'ini': 'ini',
+  };
+  return map[ext];
+}
+
+/// Keywords for common languages, used for basic syntax highlighting.
+const _languageKeywords = <String, List<String>>{
+  'dart': ['import', 'export', 'class', 'extends', 'implements', 'mixin', 'enum', 'abstract', 'final', 'const', 'var', 'late', 'static', 'void', 'return', 'if', 'else', 'for', 'while', 'do', 'switch', 'case', 'break', 'continue', 'try', 'catch', 'throw', 'async', 'await', 'Future', 'Stream', 'dynamic', 'int', 'double', 'String', 'bool', 'List', 'Map', 'Set', 'null', 'true', 'false', 'this', 'super', 'new', 'with', 'as', 'is', 'in', 'get', 'set', 'required', 'override'],
+  'javascript': ['import', 'export', 'from', 'class', 'extends', 'function', 'const', 'let', 'var', 'return', 'if', 'else', 'for', 'while', 'do', 'switch', 'case', 'break', 'continue', 'try', 'catch', 'throw', 'async', 'await', 'new', 'this', 'super', 'null', 'undefined', 'true', 'false', 'typeof', 'instanceof', 'in', 'of', 'default', 'yield'],
+  'typescript': ['import', 'export', 'from', 'class', 'extends', 'implements', 'interface', 'type', 'enum', 'function', 'const', 'let', 'var', 'return', 'if', 'else', 'for', 'while', 'do', 'switch', 'case', 'break', 'continue', 'try', 'catch', 'throw', 'async', 'await', 'new', 'this', 'super', 'null', 'undefined', 'true', 'false', 'typeof', 'instanceof', 'as', 'readonly', 'abstract', 'private', 'protected', 'public'],
+  'python': ['import', 'from', 'class', 'def', 'return', 'if', 'elif', 'else', 'for', 'while', 'break', 'continue', 'try', 'except', 'finally', 'raise', 'with', 'as', 'in', 'not', 'and', 'or', 'is', 'None', 'True', 'False', 'lambda', 'yield', 'async', 'await', 'pass', 'self', 'global', 'nonlocal'],
+  'go': ['package', 'import', 'func', 'var', 'const', 'type', 'struct', 'interface', 'return', 'if', 'else', 'for', 'range', 'switch', 'case', 'break', 'continue', 'defer', 'go', 'select', 'chan', 'map', 'nil', 'true', 'false', 'make', 'new', 'len', 'append', 'error', 'string', 'int', 'bool', 'byte'],
+  'rust': ['use', 'mod', 'pub', 'fn', 'struct', 'enum', 'impl', 'trait', 'let', 'mut', 'const', 'static', 'return', 'if', 'else', 'for', 'while', 'loop', 'match', 'break', 'continue', 'async', 'await', 'move', 'self', 'Self', 'super', 'true', 'false', 'Some', 'None', 'Ok', 'Err', 'unsafe', 'where', 'type', 'as', 'in', 'ref'],
+  'java': ['import', 'package', 'class', 'extends', 'implements', 'interface', 'enum', 'abstract', 'final', 'static', 'void', 'return', 'if', 'else', 'for', 'while', 'do', 'switch', 'case', 'break', 'continue', 'try', 'catch', 'throw', 'throws', 'new', 'this', 'super', 'null', 'true', 'false', 'public', 'private', 'protected', 'int', 'long', 'double', 'float', 'boolean', 'String', 'synchronized'],
+};
+
+/// A TextEditingController that applies basic syntax highlighting.
+class _HighlightingController extends TextEditingController {
+  final String? language;
+  late final Set<String> _keywords;
+  bool highlightEnabled;
+
+  _HighlightingController({this.language, this.highlightEnabled = true}) {
+    _keywords = (_languageKeywords[language] ?? []).toSet();
+  }
+
+  @override
+  TextSpan buildTextSpan({
+    required BuildContext context,
+    TextStyle? style,
+    required bool withComposing,
+  }) {
+    if (!highlightEnabled || language == null || _keywords.isEmpty) {
+      return super.buildTextSpan(context: context, style: style, withComposing: withComposing);
+    }
+
+    // Performance guard: skip highlighting for large files
+    if (text.length > 500000) {
+      return super.buildTextSpan(context: context, style: style, withComposing: withComposing);
+    }
+
+    final theme = Theme.of(context);
+    final isDark = theme.brightness == Brightness.dark;
+    final keywordColor = isDark ? const Color(0xFF569CD6) : const Color(0xFF0000FF);
+    final stringColor = isDark ? const Color(0xFFCE9178) : const Color(0xFFA31515);
+    final commentColor = isDark ? const Color(0xFF6A9955) : const Color(0xFF008000);
+    final numberColor = isDark ? const Color(0xFFB5CEA8) : const Color(0xFF098658);
+
+    final spans = <TextSpan>[];
+    final lines = text.split('\n');
+
+    for (var lineIdx = 0; lineIdx < lines.length; lineIdx++) {
+      if (lineIdx > 0) spans.add(TextSpan(text: '\n', style: style));
+
+      final line = lines[lineIdx];
+      var i = 0;
+
+      while (i < line.length) {
+        // Comment (// or #)
+        if ((i < line.length - 1 && line[i] == '/' && line[i + 1] == '/') ||
+            (line[i] == '#' && (language == 'python' || language == 'bash' || language == 'ruby'))) {
+          spans.add(TextSpan(text: line.substring(i), style: style?.copyWith(color: commentColor)));
+          i = line.length;
+          continue;
+        }
+
+        // String literal
+        if (line[i] == '"' || line[i] == "'") {
+          final quote = line[i];
+          var end = i + 1;
+          while (end < line.length && line[end] != quote) {
+            if (line[end] == '\\') end++; // Skip escaped char
+            end++;
+          }
+          if (end < line.length) end++; // Include closing quote
+          spans.add(TextSpan(text: line.substring(i, end), style: style?.copyWith(color: stringColor)));
+          i = end;
+          continue;
+        }
+
+        // Number literal
+        if (RegExp(r'[0-9]').hasMatch(line[i]) &&
+            (i == 0 || !RegExp(r'[a-zA-Z_]').hasMatch(line[i - 1]))) {
+          var end = i;
+          while (end < line.length && RegExp(r'[0-9.xXa-fA-F]').hasMatch(line[end])) {
+            end++;
+          }
+          spans.add(TextSpan(text: line.substring(i, end), style: style?.copyWith(color: numberColor)));
+          i = end;
+          continue;
+        }
+
+        // Word (potential keyword)
+        if (RegExp(r'[a-zA-Z_]').hasMatch(line[i])) {
+          var end = i;
+          while (end < line.length && RegExp(r'[a-zA-Z0-9_]').hasMatch(line[end])) {
+            end++;
+          }
+          final word = line.substring(i, end);
+          if (_keywords.contains(word)) {
+            spans.add(TextSpan(text: word, style: style?.copyWith(color: keywordColor, fontWeight: FontWeight.bold)));
+          } else {
+            spans.add(TextSpan(text: word, style: style));
+          }
+          i = end;
+          continue;
+        }
+
+        // Other character
+        spans.add(TextSpan(text: line[i], style: style));
+        i++;
+      }
+    }
+
+    return TextSpan(children: spans, style: style);
+  }
+}
+
 class _FileEditorPageState extends ConsumerState<_FileEditorPage> {
-  final _controller = TextEditingController();
+  late final _HighlightingController _controller;
   final _scrollController = ScrollController();
   final _focusNode = FocusNode();
 
@@ -48,7 +178,9 @@ class _FileEditorPageState extends ConsumerState<_FileEditorPage> {
   bool _saving = false;
   bool _modified = false;
   bool _conflictDetected = false;
+  bool _highlightEnabled = true;
   String? _error;
+  String? _language;
   Uint8List? _originalBytes;
   int _lineCount = 1;
   Timer? _autoSaveTimer;
@@ -59,6 +191,11 @@ class _FileEditorPageState extends ConsumerState<_FileEditorPage> {
   @override
   void initState() {
     super.initState();
+    _language = _detectLanguage(widget.file.name);
+    _controller = _HighlightingController(
+      language: _language,
+      highlightEnabled: _highlightEnabled,
+    );
     _loadFile();
     _controller.addListener(_onTextChanged);
   }
@@ -305,12 +442,27 @@ class _FileEditorPageState extends ConsumerState<_FileEditorPage> {
             ],
           ),
           actions: [
+            // Syntax highlighting toggle
+            if (_language != null)
+              IconButton(
+                icon: Icon(
+                  _highlightEnabled ? Icons.code : Icons.code_off,
+                  size: 20,
+                ),
+                tooltip: _highlightEnabled ? 'Disable Highlighting' : 'Enable Highlighting',
+                onPressed: () {
+                  setState(() {
+                    _highlightEnabled = !_highlightEnabled;
+                    _controller.highlightEnabled = _highlightEnabled;
+                  });
+                },
+              ),
             // File info
             Padding(
               padding: const EdgeInsets.only(right: 8),
               child: Center(
                 child: Text(
-                  '$ext  |  $_lineCount lines',
+                  '${_language?.toUpperCase() ?? ext}  |  $_lineCount lines',
                   style: TextStyle(
                       fontSize: 12,
                       color: theme.colorScheme.onSurfaceVariant),

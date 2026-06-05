@@ -36,7 +36,9 @@ import '../widgets/sync_dialog.dart';
 import '../widgets/tree_sidebar.dart';
 import '../widgets/lock_screen.dart';
 import '../widgets/command_palette.dart';
+import '../widgets/terminal_panel.dart';
 import '../widgets/theme_picker.dart';
+import '../providers/terminal_provider.dart';
 import '../main.dart' show appLockServiceProvider;
 import '../services/windows_integration_service.dart';
 import 'about_dialog.dart';
@@ -70,6 +72,18 @@ class _FileBrowserScreenState extends ConsumerState<FileBrowserScreen> {
             icon: const Icon(Icons.swap_horiz, size: 20),
             tooltip: 'Swap Panels (Ctrl+U)',
             onPressed: () => _swapPanels(),
+          ),
+          // Terminal toggle
+          Consumer(
+            builder: (ctx, cref, _) {
+              final showTerminal = cref.watch(showTerminalProvider);
+              return IconButton(
+                icon: Icon(Icons.terminal, size: 20,
+                  color: showTerminal ? Theme.of(ctx).colorScheme.primary : null),
+                tooltip: showTerminal ? 'Hide Terminal' : 'Show Terminal',
+                onPressed: () => cref.read(showTerminalProvider.notifier).state = !showTerminal,
+              );
+            },
           ),
           // View mode cycle for active panel (brief → full → tree)
           Consumer(
@@ -253,6 +267,12 @@ class _FileBrowserScreenState extends ConsumerState<FileBrowserScreen> {
               ),
             ),
             const OperationsPanel(),
+            // Embedded terminal panel
+            Consumer(builder: (context, ref, _) {
+              final showTerminal = ref.watch(showTerminalProvider);
+              if (!showTerminal) return const SizedBox.shrink();
+              return const TerminalPanel();
+            }),
             const FKeyBar(),
             const StatusBar(),
           ],

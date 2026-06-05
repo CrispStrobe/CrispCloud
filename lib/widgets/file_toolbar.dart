@@ -5,11 +5,20 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../models/panel_side.dart';
 import '../providers/providers.dart';
+import '../services/custom_toolbar_command_service.dart';
 import 'search_dialogs.dart' show showSearchDialog, showFindDialog;
 
 // Re-export decomposed widgets for backward compatibility
 export 'file_breadcrumbs.dart';
 export 'file_selection_bar.dart';
+
+/// Provider for custom toolbar commands.
+final customToolbarCommandServiceProvider =
+    ChangeNotifierProvider<CustomToolbarCommandService>((ref) {
+  final service = CustomToolbarCommandService();
+  service.load();
+  return service;
+});
 
 class FileToolbar extends ConsumerWidget {
   final PanelSide side;
@@ -29,7 +38,61 @@ class FileToolbar extends ConsumerWidget {
     final sortBy = panel.sortBy;
     final sortOrder = panel.sortOrder;
 
-    return Container(
+    return Column(
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        // Archive / flat view banner
+        if (panel.isInArchive)
+          Container(
+            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
+            color: Theme.of(context).colorScheme.tertiaryContainer,
+            child: Row(
+              children: [
+                Icon(Icons.folder_zip, size: 16, color: Theme.of(context).colorScheme.onTertiaryContainer),
+                const SizedBox(width: 8),
+                Expanded(
+                  child: Text(
+                    'Inside archive: ${panel.archiveSource?.archiveName ?? ""}',
+                    style: TextStyle(
+                      fontSize: 12,
+                      color: Theme.of(context).colorScheme.onTertiaryContainer,
+                    ),
+                    overflow: TextOverflow.ellipsis,
+                  ),
+                ),
+                TextButton.icon(
+                  icon: const Icon(Icons.exit_to_app, size: 14),
+                  label: const Text('Exit', style: TextStyle(fontSize: 12)),
+                  onPressed: () => panel.exitArchive(),
+                ),
+              ],
+            ),
+          ),
+        if (panel.isFlatView)
+          Container(
+            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
+            color: Theme.of(context).colorScheme.secondaryContainer,
+            child: Row(
+              children: [
+                Icon(Icons.layers, size: 16, color: Theme.of(context).colorScheme.onSecondaryContainer),
+                const SizedBox(width: 8),
+                Text(
+                  'Flat view — all subdirectories',
+                  style: TextStyle(
+                    fontSize: 12,
+                    color: Theme.of(context).colorScheme.onSecondaryContainer,
+                  ),
+                ),
+                const Spacer(),
+                TextButton.icon(
+                  icon: const Icon(Icons.close, size: 14),
+                  label: const Text('Exit', style: TextStyle(fontSize: 12)),
+                  onPressed: () => panel.toggleFlatView(),
+                ),
+              ],
+            ),
+          ),
+        Container(
       padding: const EdgeInsets.all(12),
       color: Theme.of(context).colorScheme.primaryContainer,
       child: Row(
@@ -157,6 +220,60 @@ class FileToolbar extends ConsumerWidget {
             },
           ),
 
+          // Custom toolbar commands
+          ...ref.watch(customToolbarCommandServiceProvider).commands.map((cmd) =>
+            IconButton(
+              icon: const Icon(Icons.terminal, size: 18),
+              tooltip: cmd.label,
+              color: Theme.of(context).colorScheme.onPrimaryContainer,
+              onPressed: () async {
+                final service = ref.read(customToolbarCommandServiceProvider);
+                final selectedPaths = panel.selection
+                    .where((f) => f.path != null)
+                    .map((f) => f.path!)
+                    .toList();
+                final output = await service.execute(
+                  cmd,
+                  currentPath: panel.currentPath,
+                  selectedPaths: selectedPaths,
+                );
+                if (context.mounted) {
+                  showDialog(
+                    context: context,
+                    builder: (ctx) => AlertDialog(
+                      title: Text(cmd.label),
+                      content: SingleChildScrollView(
+                        child: SelectableText(
+                          output.isEmpty ? '(no output)' : output,
+                          style: const TextStyle(fontFamily: 'monospace', fontSize: 11),
+                        ),
+                      ),
+                      actions: [
+                        TextButton(
+                          onPressed: () { Navigator.pop(ctx); panel.refresh(); },
+                          child: const Text('Close'),
+                        ),
+                      ],
+                    ),
+                  );
+                }
+              },
+            ),
+          ),
+
+          // Flat view toggle (local panel only)
+          if (side == PanelSide.local)
+            IconButton(
+              icon: Icon(
+                Icons.layers,
+                color: panel.isFlatView
+                    ? Theme.of(context).colorScheme.primary
+                    : Theme.of(context).colorScheme.onPrimaryContainer,
+              ),
+              tooltip: panel.isFlatView ? 'Exit Flat View' : 'Flat View (all subdirectories)',
+              onPressed: () => panel.toggleFlatView(),
+            ),
+
           PopupMenuButton<String>(
             icon: Icon(Icons.sort, color: Theme.of(context).colorScheme.onPrimaryContainer),
             tooltip: 'Sort',
@@ -185,6 +302,31 @@ class FileToolbar extends ConsumerWidget {
                 Text(sortOrder == SortOrder.ascending ? 'Ascending' : 'Descending'),
               ])),
               const PopupMenuDivider(),
+              // Secondary sort
+              PopupMenuItem(
+                enabled: false,
+                child: Text('Secondary Sort', style: TextStyle(
+                  fontWeight: FontWeight.bold,
+                  color: Theme.of(context).colorScheme.onSurface,
+                )),
+              ),
+              PopupMenuItem(value: 'secondary_none', child: Row(children: [
+                Icon(panel.secondarySortBy == null ? Icons.check : Icons.remove),
+                const SizedBox(width: 8), const Text('None'),
+              ])),
+              PopupMenuItem(value: 'secondary_name', child: Row(children: [
+                Icon(panel.secondarySortBy == SortBy.name ? Icons.check : Icons.sort_by_alpha),
+                const SizedBox(width: 8), const Text('by Name'),
+              ])),
+              PopupMenuItem(value: 'secondary_size', child: Row(children: [
+                Icon(panel.secondarySortBy == SortBy.size ? Icons.check : Icons.data_usage),
+                const SizedBox(width: 8), const Text('by Size'),
+              ])),
+              PopupMenuItem(value: 'secondary_date', child: Row(children: [
+                Icon(panel.secondarySortBy == SortBy.date ? Icons.check : Icons.access_time),
+                const SizedBox(width: 8), const Text('by Date'),
+              ])),
+              const PopupMenuDivider(),
               const PopupMenuItem(value: 'select_all', child: Row(children: [
                 Icon(Icons.select_all), SizedBox(width: 8), Text('Select All'),
               ])),
@@ -195,6 +337,8 @@ class FileToolbar extends ConsumerWidget {
           ),
         ],
       ),
+    ),
+      ],
     );
   }
 
@@ -205,6 +349,10 @@ class FileToolbar extends ConsumerWidget {
       case 'date': panel.setSortBy(SortBy.date); break;
       case 'extension': panel.setSortBy(SortBy.extension); break;
       case 'toggle_order': panel.toggleSortOrder(); break;
+      case 'secondary_none': panel.setSecondarySortBy(null); break;
+      case 'secondary_name': panel.setSecondarySortBy(SortBy.name); break;
+      case 'secondary_size': panel.setSecondarySortBy(SortBy.size); break;
+      case 'secondary_date': panel.setSecondarySortBy(SortBy.date); break;
       case 'select_all': panel.selectAll(); break;
       case 'clear_selection': panel.clearSelection(); break;
     }
