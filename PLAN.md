@@ -56,7 +56,7 @@ CrispCloud becomes the **open-source Cyberduck/Transmit/Commander One killer**: 
 - **Plugin system**: `CrispCloudPlugin` interface with sandboxed execution
 - **Opt-in analytics**: anonymous feature usage tracking
 - **Linux integration**: Nautilus/Dolphin/Thunar, D-Bus notifications, .deb/.rpm/AppImage packaging
-- **120+ test files**, **3504+ unit tests** (63 widget test scaffolding fixes pending) + gated E2E suites
+- **120+ test files**, **3524 unit tests** + gated E2E + live tests
 
 **What's still needed:**
 - ~~Monolithic state (AppState)~~ — **Riverpod migration done** (8 focused providers)
@@ -588,7 +588,7 @@ CrispCloud becomes the **open-source Cyberduck/Transmit/Commander One killer**: 
 | 7.2-7.4 Security extras | Medium | Medium | **~95% done** — proxy, app lock, biometric, cert pinning, custom CA, TLS enforcement, secure clipboard done |
 | 8. Platform Polish | Medium | High | **~85% done** — macOS, Windows, Android, iOS, Web, **Linux** (Nautilus/Dolphin/Thunar, D-Bus, .deb/.rpm/AppImage) done |
 | 9. Extensibility & CLI | Medium | High | **~95% done** — CLI, automation rules, local REST API, plugin system done |
-| 10. Quality & Distribution | High | High | **3212 tests** — CI/CD, docs, i18n (7 langs), fuzz, benchmarks, mock servers, plugin system done; a11y, distribution pending |
+| 10. Quality & Distribution | High | High | **3524 tests** — CI/CD, docs, i18n (7 langs), fuzz, benchmarks, mock servers, plugin system, widget tests, a11y done; distribution pending |
 | 11. Differentiation | High | Medium | **~80% done** — mounted drives, backup, migration, analytics, comparison, delta sync done; **dual-panel power mode (priority)**, OCR pending |
 
 ---

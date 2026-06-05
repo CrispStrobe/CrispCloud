@@ -38,6 +38,18 @@ Audit trail of bugs found, issues discovered, and fixes applied.
 - **Created `lib/providers/veracrypt_mount_provider.dart`**: installed check, mounts state notifier, busy/error tracking
 - **Tests**: 102 tests (model serialization, CLI arg building, --list parsing, version parsing, slot allocation, password redaction, platform guards, algorithm validation)
 
+### UI Integration (Dual-Panel Wiring)
+- **Updated `lib/screens/file_browser_screen.dart`**: FKeyBar between OperationsPanel/StatusBar, PanelSourceSelector on both panels, swap button + view mode cycle in AppBar, F-key bar toggle in drawer
+- **Updated `lib/screens/keyboard_shortcuts.dart`**: Ctrl+U panel swap, Ctrl+1/2/3 view mode switching
+- **Created `lib/widgets/azure_connection_dialog.dart`** (~420 lines): 3 auth modes (Account Key/SAS/Connection String)
+- **Created `lib/widgets/b2_connection_dialog.dart`** (~270 lines): Key ID + App Key + Bucket
+- **Created `lib/widgets/settings_dialog.dart`** (~390 lines): F-key, accessibility, analytics, delta sync sections
+- **Updated `lib/services/cloud_storage_interface.dart`**: added `azure`, `b2` to CloudProvider enum
+- **Updated `lib/widgets/connection_dialog.dart`**: Azure/B2 in provider dropdown
+- **Widget tests**: FKeyBar (26), PanelSourceSelector (20), StatusBar (25), ThemePicker (25) = 96 tests
+- **Live tests**: Azure Blob (41 gated), B2 (34 gated)
+- **Connection dialog tests**: 36 tests (6 tagged for finder fixes)
+
 ### 11.5 Internal Viewer + Panel Swap + Toolbar + View Modes + Accessibility
 - **Created `lib/services/internal_viewer_service.dart`** (~310 lines): `ViewerMode` enum (7 modes), `HexLine`/`ViewerContent` models, `detectMode()` (magic bytes + extensions), `formatHexDump()` (16 bytes/line, offset+hex+ASCII), `getTextPreview()` (UTF-8 BOM stripping, Latin-1 fallback), `searchInContent()`, 50MB file size guard
 - **Created `lib/services/panel_swap_service.dart`** (~35 lines): `swap()` returns swapped sources, `canSwap()` always true (symmetric panels)
