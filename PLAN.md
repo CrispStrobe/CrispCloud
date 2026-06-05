@@ -551,13 +551,13 @@ CrispCloud becomes the **open-source Cyberduck/Transmit/Commander One killer**: 
 
 *Goal: Full orthodox file manager experience — symmetric panels, F-keys, archive browsing.*
 
-- [ ] **Symmetric panels**: both left and right panels can browse local folders, remote providers, archives, and encrypted containers independently
-- [ ] **Enter archives as folders**: navigate into .zip, .tar.gz, .7z files as if they were directories (read + extract, write for .zip)
-- [ ] **Enter VeraCrypt/Cryptomator containers**: browse encrypted vault contents directly in a panel (via unlock → virtual listing)
-- [ ] **F-key bottom bar**: F3 View, F4 Edit, F5 Copy, F6 Move, F7 MkDir, F8 Delete — toggleable via settings, shown as a bottom button bar
-- [ ] **F-key actions context-aware**: F5 copies from active panel to opposite panel (local→remote, remote→local, remote→remote)
-- [ ] **Right panel local browsing**: right panel can browse local filesystem (not just remote providers) — both panels are equal
-- [ ] **Panel source selector**: dropdown/button per panel to switch between Local, any connected provider, or an open archive/container
+- [x] **Symmetric panels**: both left and right panels can browse local folders, remote providers, archives, and encrypted containers independently — `PanelSource` sealed class hierarchy
+- [x] **Enter archives as folders**: navigate into .zip, .tar.gz, .7z files as if they were directories — `ArchivePanelSource` with parent navigation
+- [x] **Enter VeraCrypt/Cryptomator containers**: browse encrypted vault contents directly in a panel — `ContainerPanelSource` with unlock session
+- [x] **F-key bottom bar**: F3 View, F4 Edit, F5 Copy, F6 Move, F7 MkDir, F8 Delete — `FKeyBar` widget, toggleable, responsive
+- [x] **F-key actions context-aware**: F5 copies from active panel to opposite panel — `FKeyActionService` with direction labels
+- [x] **Right panel local browsing**: right panel can browse local filesystem — both panels equal via `panelSourceProvider(side)`
+- [x] **Panel source selector**: dropdown per panel to switch between Local, any connected provider, or an open archive/container — `PanelSourceSelector` widget
 - [ ] **Quick panel swap**: Ctrl+U or button to swap left and right panel contents
 - [ ] **Bottom bar toggle**: setting to show/hide F-key bar, configurable button set
 - [ ] **Internal viewer (F3)**: built-in hex/text/image viewer for quick preview without opening editor
