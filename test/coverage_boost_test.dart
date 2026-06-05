@@ -81,7 +81,7 @@ class _MockClient extends CloudStorageClient {
     onProgress?.call(data.length, data.length);
   }
   @override
-  Future<void> downloadFileByPath(String rp, String lp, {Function(int, int)? onP}) async {}
+  Future<void> downloadFileByPath(String rp, String lp, {Function(int, int)? onProgress}) async {}
   @override
   Future<Uint8List> downloadFileBytes(String rp, {Function(int, int)? onProgress}) async =>
       Uint8List.fromList([1, 2, 3]);
