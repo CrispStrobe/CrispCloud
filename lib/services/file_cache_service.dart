@@ -17,6 +17,7 @@
 import 'dart:convert';
 import 'dart:io';
 
+import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:crypto/crypto.dart';
 import 'package:path/path.dart' as p;
 import 'package:path_provider/path_provider.dart';
@@ -78,6 +79,7 @@ class FileCacheService {
 
   /// Initialize the cache: create directories, load index.
   Future<void> init() async {
+    if (kIsWeb) return; // File cache uses dart:io — not available on web
     final appDir = await getApplicationSupportDirectory();
     _cacheDir = p.join(appDir.path, 'file_cache');
 
