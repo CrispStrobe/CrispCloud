@@ -3,13 +3,6 @@
 #
 
 list(APPEND FLUTTER_PLUGIN_LIST
-  desktop_drop
-  dynamic_color
-  file_selector_linux
-  flutter_secure_storage_linux
-  sqlite3_flutter_libs
-  system_tray
-  url_launcher_linux
 )
 
 list(APPEND FLUTTER_FFI_PLUGIN_LIST

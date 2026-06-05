@@ -7,6 +7,8 @@ import '../providers/providers.dart';
 import '../services/cloud_storage_interface.dart';
 import '../services/connection_profiles.dart';
 import '../services/log_service.dart';
+import 'azure_connection_dialog.dart';
+import 'b2_connection_dialog.dart';
 import 'proxy_settings_dialog.dart';
 
 class ConnectionDialog extends ConsumerStatefulWidget {
@@ -92,6 +94,10 @@ class _ConnectionDialogState extends ConsumerState<ConnectionDialog> {
   /// Collect current form fields into a map for saving.
   Map<String, String> _collectFields() {
     switch (_selectedProvider) {
+      case CloudProvider.azure:
+        return {'email': _emailController.text};
+      case CloudProvider.b2:
+        return {'email': _emailController.text};
       case CloudProvider.sftp:
         return {'host': _hostController.text, 'port': _portController.text, 'user': _sftpUserController.text};
       case CloudProvider.ftp:
@@ -208,6 +214,8 @@ class _ConnectionDialogState extends ConsumerState<ConnectionDialog> {
   @override
   Widget build(BuildContext context) {
     // Determine which fields to show based on provider
+    final isAzure = _selectedProvider == CloudProvider.azure;
+    final isB2 = _selectedProvider == CloudProvider.b2;
     final isDropbox = _selectedProvider == CloudProvider.dropbox;
     final isFtp = _selectedProvider == CloudProvider.ftp;
     final isGDrive = _selectedProvider == CloudProvider.gdrive;
@@ -236,6 +244,16 @@ class _ConnectionDialogState extends ConsumerState<ConnectionDialog> {
                 border: OutlineInputBorder(),
               ),
               items: [
+                // Azure Blob Storage
+                const DropdownMenuItem(
+                  value: CloudProvider.azure,
+                  child: Text('Azure Blob Storage'),
+                ),
+                // Backblaze B2
+                const DropdownMenuItem(
+                  value: CloudProvider.b2,
+                  child: Text('Backblaze B2'),
+                ),
                 // Dropbox
                 const DropdownMenuItem(
                   value: CloudProvider.dropbox,
@@ -401,7 +419,49 @@ class _ConnectionDialogState extends ConsumerState<ConnectionDialog> {
 
             // --- 3. Dynamic Fields ---
 
-            if (isDropbox) ...[
+            if (isAzure) ...[
+              Container(
+                padding: const EdgeInsets.all(10),
+                decoration: BoxDecoration(
+                  color: Theme.of(context).colorScheme.primaryContainer.withOpacity(0.3),
+                  borderRadius: BorderRadius.circular(8),
+                ),
+                child: const Row(
+                  children: [
+                    Icon(Icons.info_outline, size: 16),
+                    SizedBox(width: 8),
+                    Expanded(
+                      child: Text(
+                        'Click Connect to open the Azure Blob Storage connection dialog '
+                        'where you can enter your Account Key, SAS Token, or Connection String.',
+                        style: TextStyle(fontSize: 12),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ] else if (isB2) ...[
+              Container(
+                padding: const EdgeInsets.all(10),
+                decoration: BoxDecoration(
+                  color: Theme.of(context).colorScheme.primaryContainer.withOpacity(0.3),
+                  borderRadius: BorderRadius.circular(8),
+                ),
+                child: const Row(
+                  children: [
+                    Icon(Icons.info_outline, size: 16),
+                    SizedBox(width: 8),
+                    Expanded(
+                      child: Text(
+                        'Click Connect to open the Backblaze B2 connection dialog '
+                        'where you can enter your Application Key ID and Application Key.',
+                        style: TextStyle(fontSize: 12),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ] else if (isDropbox) ...[
               TextField(
                 controller: _dropboxAppKeyController,
                 decoration: const InputDecoration(
@@ -918,7 +978,29 @@ class _ConnectionDialogState extends ConsumerState<ConnectionDialog> {
       // 2. Prepare Credentials
       String identity;
       String password;
-      if (_selectedProvider == CloudProvider.dropbox) {
+      if (_selectedProvider == CloudProvider.azure) {
+        // Delegate to the dedicated Azure dialog.
+        setState(() => _isLoading = false);
+        if (mounted) {
+          Navigator.pop(context);
+          showDialog(
+            context: context,
+            builder: (_) => const _AzureDialogProxy(),
+          );
+        }
+        return;
+      } else if (_selectedProvider == CloudProvider.b2) {
+        // Delegate to the dedicated B2 dialog.
+        setState(() => _isLoading = false);
+        if (mounted) {
+          Navigator.pop(context);
+          showDialog(
+            context: context,
+            builder: (_) => const _B2DialogProxy(),
+          );
+        }
+        return;
+      } else if (_selectedProvider == CloudProvider.dropbox) {
         if (_dropboxAppKeyController.text.isEmpty) {
           throw Exception('App Key is required');
         }
@@ -1114,4 +1196,23 @@ class _ConnectionDialogState extends ConsumerState<ConnectionDialog> {
     _passphraseController.dispose();
     super.dispose();
   }
+}
+
+// ---------------------------------------------------------------------------
+// Thin proxy widgets — allows showDialog to reference the dedicated dialogs
+// without a circular import (they are defined in separate files).
+// ---------------------------------------------------------------------------
+
+class _AzureDialogProxy extends StatelessWidget {
+  const _AzureDialogProxy();
+
+  @override
+  Widget build(BuildContext context) => const AzureConnectionDialog();
+}
+
+class _B2DialogProxy extends StatelessWidget {
+  const _B2DialogProxy();
+
+  @override
+  Widget build(BuildContext context) => const B2ConnectionDialog();
 }

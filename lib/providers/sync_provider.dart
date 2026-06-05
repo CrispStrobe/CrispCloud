@@ -60,6 +60,16 @@ class SyncNotifier extends ChangeNotifier {
     _loadBandwidthSchedule();
   }
 
+  /// Testing constructor: injects a pre-built [SyncDatabase] (e.g. in-memory)
+  /// and skips background loading so no disk / tray access occurs in tests.
+  @visibleForTesting
+  SyncNotifier.forTesting(this._ref, SyncDatabase db) {
+    _db = db;
+    _engine = SyncEngine(_db);
+    _watcher = SyncWatcherService();
+    // Do NOT call _loadPairs / _loadBackgroundSyncState etc. in tests.
+  }
+
   // --- Getters ---
   List<SyncPair> get pairs => _pairs;
   bool get isSyncing => _isSyncing;

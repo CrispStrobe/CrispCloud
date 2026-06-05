@@ -12,12 +12,30 @@ import '../models/file_item.dart';
 import '../models/panel_side.dart';
 import '../providers/providers.dart';
 import '../services/action_history_service.dart';
+import '../widgets/azure_connection_dialog.dart';
+import '../widgets/b2_connection_dialog.dart';
 import '../widgets/connection_dialog.dart';
 
 void showConnectionDialogScreen(BuildContext context) {
   showDialog(
     context: context,
     builder: (context) => const ConnectionDialog(),
+  );
+}
+
+/// Directly open the Azure Blob Storage connection dialog.
+void showAzureConnectionDialog(BuildContext context) {
+  showDialog(
+    context: context,
+    builder: (context) => const AzureConnectionDialog(),
+  );
+}
+
+/// Directly open the Backblaze B2 connection dialog.
+void showB2ConnectionDialog(BuildContext context) {
+  showDialog(
+    context: context,
+    builder: (context) => const B2ConnectionDialog(),
   );
 }
 

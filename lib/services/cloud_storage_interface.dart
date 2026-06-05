@@ -2,6 +2,8 @@
 import 'dart:async';
 import 'dart:typed_data';
 
+import 'azure_blob_adapter.dart'; // AzureBlobAdapter
+import 'b2_client_adapter.dart';
 import 'dropbox_client_adapter.dart';
 import 'log_service.dart';
 import 'filen_client_adapter.dart';
@@ -205,6 +207,8 @@ abstract class CloudStorageClient {
 }
 
 enum CloudProvider {
+  azure,
+  b2,
   dropbox,
   filen,
   ftp,
@@ -263,6 +267,10 @@ class CloudStorageFactory {
           return NextcloudClientAdapter(config: config);
         case CloudProvider.pcloud:
           return PCloudClientAdapter(config: config);
+        case CloudProvider.azure:
+          return AzureBlobAdapter(config: config);
+        case CloudProvider.b2:
+          return B2ClientAdapter(config: config);
       }
     } catch (e) {
       _log.error('Error creating client for $provider', e);

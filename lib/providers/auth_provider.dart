@@ -10,6 +10,8 @@ import 'package:flutter/foundation.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
+import '../services/azure_config_service.dart';
+import '../services/b2_config_service.dart';
 import '../services/cloud_storage_interface.dart';
 import '../services/dropbox_client_adapter.dart';
 import '../services/dropbox_config_service.dart';
@@ -124,6 +126,10 @@ class AuthNotifier extends ChangeNotifier {
         return WebDavConfigService(configPath: _configPath, secureStorage: _secureStorage);
       case CloudProvider.internxt:
         return ConfigService(configPath: _configPath);
+      case CloudProvider.azure:
+        return AzureConfigService(secureStorage: _secureStorage);
+      case CloudProvider.b2:
+        return B2ConfigService(secureStorage: _secureStorage);
     }
   }
 

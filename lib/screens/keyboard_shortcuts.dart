@@ -9,7 +9,11 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../models/panel_side.dart';
 import '../providers/providers.dart';
+import '../providers/panel_source_provider.dart' show panelSourceProvider;
+import '../providers/toolbar_provider.dart' show panelViewModeProvider;
+import '../services/panel_view_mode_service.dart' show PanelViewMode;
 import '../services/action_history_service.dart';
+import '../services/panel_swap_service.dart';
 import '../widgets/command_palette.dart';
 import 'screen_dialogs.dart';
 
@@ -137,15 +141,43 @@ KeyEventResult handleKeyEvent(
     return KeyEventResult.handled;
   }
 
-  // Ctrl+U - Upload
-  if (isCtrl && event.logicalKey == LogicalKeyboardKey.keyU && ref.read(authProvider).isConnected) {
-    uploadSelected(context, ref);
+  // Ctrl+U - Swap panel sources (orthodox FM convention, like Midnight Commander)
+  if (isCtrl && !isShift && event.logicalKey == LogicalKeyboardKey.keyU) {
+    const service = PanelSwapService();
+    final leftSrc = ref.read(panelSourceProvider(PanelSide.local));
+    final rightSrc = ref.read(panelSourceProvider(PanelSide.remote));
+    if (service.canSwap(leftSrc, rightSrc)) {
+      final (newLeft, newRight) = service.swap(leftSrc, rightSrc);
+      ref.read(panelSourceProvider(PanelSide.local).notifier).setSource(newLeft);
+      ref.read(panelSourceProvider(PanelSide.remote).notifier).setSource(newRight);
+    }
     return KeyEventResult.handled;
   }
 
   // Ctrl+D - Download
   if (isCtrl && event.logicalKey == LogicalKeyboardKey.keyD && ref.read(authProvider).isConnected) {
     downloadSelected(context, ref);
+    return KeyEventResult.handled;
+  }
+
+  // Ctrl+1 - Brief view mode for active panel
+  if (isCtrl && event.logicalKey == LogicalKeyboardKey.digit1) {
+    ref.read(panelViewModeProvider(activePanel).notifier)
+        .setMode(PanelViewMode.brief);
+    return KeyEventResult.handled;
+  }
+
+  // Ctrl+2 - Full view mode for active panel
+  if (isCtrl && event.logicalKey == LogicalKeyboardKey.digit2) {
+    ref.read(panelViewModeProvider(activePanel).notifier)
+        .setMode(PanelViewMode.full);
+    return KeyEventResult.handled;
+  }
+
+  // Ctrl+3 - Tree view mode for active panel
+  if (isCtrl && event.logicalKey == LogicalKeyboardKey.digit3) {
+    ref.read(panelViewModeProvider(activePanel).notifier)
+        .setMode(PanelViewMode.tree);
     return KeyEventResult.handled;
   }
 

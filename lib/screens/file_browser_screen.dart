@@ -12,10 +12,18 @@ import 'package:provider/provider.dart' as legacy;
 import '../models/panel_side.dart';
 import '../providers/providers.dart';
 import '../providers/core_providers.dart' show preferExternalEditorProvider;
+import '../providers/panel_source_provider.dart'
+    show fkeyBarVisibleProvider, panelSourceProvider;
+import '../providers/toolbar_provider.dart'
+    show panelViewModeProvider;
+import '../services/panel_swap_service.dart';
+import '../services/panel_view_mode_service.dart' show PanelViewMode, PanelViewModeX;
 import '../services/theme_service.dart';
 import '../widgets/audit_log_dialog.dart';
 import '../widgets/file_panel.dart';
+import '../widgets/fkey_bar.dart';
 import '../widgets/operations_panel.dart';
+import '../widgets/panel_source_selector.dart';
 import '../widgets/panel_splitter.dart';
 import '../widgets/preview_pane.dart';
 import '../widgets/status_bar.dart';
@@ -57,6 +65,30 @@ class _FileBrowserScreenState extends ConsumerState<FileBrowserScreen> {
       appBar: AppBar(
         title: const Text('Crisp Cloud'),
         actions: [
+          // Panel swap (Ctrl+U): exchange left and right panel sources
+          IconButton(
+            icon: const Icon(Icons.swap_horiz, size: 20),
+            tooltip: 'Swap Panels (Ctrl+U)',
+            onPressed: () => _swapPanels(),
+          ),
+          // View mode cycle for active panel (brief → full → tree)
+          Consumer(
+            builder: (ctx, cref, _) {
+              final ap = cref.watch(activePanelProvider);
+              final mode = cref.watch(panelViewModeProvider(ap));
+              final icon = switch (mode) {
+                PanelViewMode.brief => Icons.view_list,
+                PanelViewMode.full  => Icons.view_headline,
+                PanelViewMode.tree  => Icons.account_tree_outlined,
+              };
+              return IconButton(
+                icon: Icon(icon, size: 20),
+                tooltip: 'View Mode: ${mode.displayName} — click to cycle (Ctrl+1/2/3)',
+                onPressed: () =>
+                    cref.read(panelViewModeProvider(ap).notifier).cycleMode(),
+              );
+            },
+          ),
           // Layout preset selector
           PopupMenuButton<LayoutPreset>(
             icon: Icon(_layoutPresetIcon(layoutPreset), size: 20),
@@ -221,6 +253,7 @@ class _FileBrowserScreenState extends ConsumerState<FileBrowserScreen> {
               ),
             ),
             const OperationsPanel(),
+            const FKeyBar(),
             const StatusBar(),
           ],
         ),
@@ -464,15 +497,31 @@ class _FileBrowserScreenState extends ConsumerState<FileBrowserScreen> {
     return PanelSplitter(
       initialRatio: splitRatio,
       onRatioChanged: (r) => ref.read(panelSplitRatioProvider.notifier).state = r,
-      first: FilePanel(
-        side: PanelSide.local,
-        isActive: activePanel == PanelSide.local,
-        onTap: () => ref.read(activePanelProvider.notifier).state = PanelSide.local,
+      first: Column(
+        children: [
+          const PanelSourceSelector(side: PanelSide.local),
+          Expanded(
+            child: FilePanel(
+              side: PanelSide.local,
+              isActive: activePanel == PanelSide.local,
+              onTap: () =>
+                  ref.read(activePanelProvider.notifier).state = PanelSide.local,
+            ),
+          ),
+        ],
       ),
-      second: FilePanel(
-        side: PanelSide.remote,
-        isActive: activePanel == PanelSide.remote,
-        onTap: () => ref.read(activePanelProvider.notifier).state = PanelSide.remote,
+      second: Column(
+        children: [
+          const PanelSourceSelector(side: PanelSide.remote),
+          Expanded(
+            child: FilePanel(
+              side: PanelSide.remote,
+              isActive: activePanel == PanelSide.remote,
+              onTap: () =>
+                  ref.read(activePanelProvider.notifier).state = PanelSide.remote,
+            ),
+          ),
+        ],
       ),
       third: showPreview
           ? PreviewPane(file: previewFile, side: activePanel)
@@ -508,6 +557,8 @@ class _FileBrowserScreenState extends ConsumerState<FileBrowserScreen> {
       },
       child: Column(
         children: [
+          // Tab row: left/right tabs use PanelSourceSelector so the source
+          // label reflects the actual chosen source, not a hardcoded string.
           Container(
             decoration: BoxDecoration(
               color: Theme.of(context).colorScheme.surfaceContainerHighest,
@@ -516,21 +567,45 @@ class _FileBrowserScreenState extends ConsumerState<FileBrowserScreen> {
             child: Row(
               children: [
                 Expanded(
-                  child: _PanelTab(
-                    label: 'Local',
-                    icon: Icons.folder,
-                    isActive: _activePanelMobile == PanelSide.local,
+                  child: InkWell(
                     onTap: () => switchTo(PanelSide.local),
+                    child: Container(
+                      padding: const EdgeInsets.symmetric(vertical: 6, horizontal: 8),
+                      decoration: BoxDecoration(
+                        border: Border(
+                          bottom: BorderSide(
+                            color: _activePanelMobile == PanelSide.local
+                                ? Theme.of(context).colorScheme.primary
+                                : Colors.transparent,
+                            width: 2,
+                          ),
+                        ),
+                      ),
+                      child: const PanelSourceSelector(side: PanelSide.local),
+                    ),
                   ),
                 ),
                 Container(width: 1, height: 40, color: Theme.of(context).dividerColor),
                 Expanded(
-                  child: _PanelTab(
-                    label: 'Remote',
-                    icon: Icons.cloud,
-                    isActive: _activePanelMobile == PanelSide.remote,
-                    enabled: auth.isConnected,
-                    onTap: () => switchTo(PanelSide.remote),
+                  child: InkWell(
+                    onTap: auth.isConnected ? () => switchTo(PanelSide.remote) : null,
+                    child: Container(
+                      padding: const EdgeInsets.symmetric(vertical: 6, horizontal: 8),
+                      decoration: BoxDecoration(
+                        border: Border(
+                          bottom: BorderSide(
+                            color: _activePanelMobile == PanelSide.remote
+                                ? Theme.of(context).colorScheme.primary
+                                : Colors.transparent,
+                            width: 2,
+                          ),
+                        ),
+                      ),
+                      child: Opacity(
+                        opacity: auth.isConnected ? 1.0 : 0.4,
+                        child: const PanelSourceSelector(side: PanelSide.remote),
+                      ),
+                    ),
                   ),
                 ),
               ],
@@ -546,6 +621,18 @@ class _FileBrowserScreenState extends ConsumerState<FileBrowserScreen> {
         ],
       ),
     );
+  }
+
+  /// Exchange the left (local) and right (remote) panel sources.
+  /// Called by the AppBar swap button and Ctrl+U.
+  void _swapPanels() {
+    const service = PanelSwapService();
+    final leftSrc = ref.read(panelSourceProvider(PanelSide.local));
+    final rightSrc = ref.read(panelSourceProvider(PanelSide.remote));
+    if (!service.canSwap(leftSrc, rightSrc)) return;
+    final (newLeft, newRight) = service.swap(leftSrc, rightSrc);
+    ref.read(panelSourceProvider(PanelSide.local).notifier).setSource(newLeft);
+    ref.read(panelSourceProvider(PanelSide.remote).notifier).setSource(newRight);
   }
 
   Widget _buildUserMenu(BuildContext context, AuthNotifier auth) {
@@ -708,6 +795,52 @@ class _FileBrowserScreenState extends ConsumerState<FileBrowserScreen> {
                 defaultTargetPlatform == TargetPlatform.windows)
               _WindowsExplorerIntegrationTile(),
             const Divider(),
+            // F-Key Bar visibility toggle
+            Consumer(
+              builder: (ctx, cref, _) {
+                final fkeyVisible = cref.watch(fkeyBarVisibleProvider);
+                return SwitchListTile(
+                  secondary: const Icon(Icons.keyboard_alt_outlined),
+                  title: const Text('F-Key Bar'),
+                  subtitle: Text(
+                    fkeyVisible ? 'F3–F8 bar is shown' : 'F3–F8 bar is hidden',
+                    style: const TextStyle(fontSize: 11),
+                  ),
+                  value: fkeyVisible,
+                  onChanged: (_) =>
+                      cref.read(fkeyBarVisibleProvider.notifier).toggle(),
+                );
+              },
+            ),
+            // Toolbar customization
+            ListTile(
+              leading: const Icon(Icons.tune),
+              title: const Text('Toolbar Customization'),
+              subtitle: const Text(
+                'Show/hide and reorder toolbar buttons',
+                style: TextStyle(fontSize: 11),
+              ),
+              onTap: () {
+                Navigator.pop(context);
+                showDialog(
+                  context: context,
+                  builder: (_) => AlertDialog(
+                    title: const Text('Toolbar Customization'),
+                    content: const Text(
+                      'Toolbar button visibility and order can be configured '
+                      'via the toolbar customization service. '
+                      'Full drag-and-drop reorder dialog coming soon.',
+                    ),
+                    actions: [
+                      TextButton(
+                        onPressed: () => Navigator.pop(_),
+                        child: const Text('Close'),
+                      ),
+                    ],
+                  ),
+                );
+              },
+            ),
             ListTile(
               leading: const Icon(Icons.keyboard),
               title: const Text('Keyboard Shortcuts'),
@@ -871,66 +1004,6 @@ class _WindowsExplorerIntegrationTileState
       ),
       value: _registered,
       onChanged: _loading ? null : _toggle,
-    );
-  }
-}
-
-class _PanelTab extends StatelessWidget {
-  final String label;
-  final IconData icon;
-  final bool isActive;
-  final VoidCallback onTap;
-  final bool enabled;
-
-  const _PanelTab({
-    required this.label,
-    required this.icon,
-    required this.isActive,
-    required this.onTap,
-    this.enabled = true,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    return InkWell(
-      onTap: enabled ? onTap : null,
-      child: Container(
-        padding: const EdgeInsets.symmetric(vertical: 12),
-        decoration: BoxDecoration(
-          border: Border(
-            bottom: BorderSide(
-              color: isActive ? Theme.of(context).colorScheme.primary : Colors.transparent,
-              width: 2,
-            ),
-          ),
-        ),
-        child: Row(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            Icon(
-              icon,
-              size: 20,
-              color: !enabled
-                  ? Theme.of(context).disabledColor
-                  : isActive
-                      ? Theme.of(context).colorScheme.primary
-                      : Theme.of(context).colorScheme.onSurfaceVariant,
-            ),
-            const SizedBox(width: 8),
-            Text(
-              label,
-              style: TextStyle(
-                fontWeight: isActive ? FontWeight.bold : FontWeight.normal,
-                color: !enabled
-                    ? Theme.of(context).disabledColor
-                    : isActive
-                        ? Theme.of(context).colorScheme.primary
-                        : Theme.of(context).colorScheme.onSurfaceVariant,
-              ),
-            ),
-          ],
-        ),
-      ),
     );
   }
 }
