@@ -1,0 +1,218 @@
+{
+  "@@locale": "ar",
+  "appTitle": "CrispCloud",
+  "@appTitle": { "description": "Application title" },
+
+  "local": "محلي",
+  "remote": "بعيد",
+
+  "connect": "اتصال",
+  "disconnect": "قطع الاتصال",
+  "login": "تسجيل الدخول",
+  "logout": "تسجيل الخروج",
+
+  "upload": "رفع",
+  "download": "تنزيل",
+  "delete": "حذف",
+  "rename": "إعادة التسمية",
+  "move": "نقل",
+  "copy": "نسخ",
+  "cancel": "إلغاء",
+  "save": "حفظ",
+  "create": "إنشاء",
+  "close": "إغلاق",
+  "done": "تم",
+  "clear": "مسح",
+  "ok": "موافق",
+  "yes": "نعم",
+  "no": "لا",
+  "retry": "إعادة المحاولة",
+  "refresh": "تحديث",
+  "search": "بحث",
+  "filter": "تصفية",
+  "settings": "الإعدادات",
+  "about": "حول التطبيق",
+  "help": "مساعدة",
+
+  "newFolder": "مجلد جديد",
+  "folderName": "اسم المجلد",
+  "emptyFolder": "مجلد فارغ",
+  "noFolderSelected": "لم يتم تحديد مجلد",
+  "openLocalFolder": "فتح مجلد محلي",
+
+  "sortByName": "ترتيب حسب الاسم",
+  "sortBySize": "ترتيب حسب الحجم",
+  "sortByDate": "ترتيب حسب التاريخ",
+  "sortByExtension": "ترتيب حسب الامتداد",
+  "ascending": "تصاعدي",
+  "descending": "تنازلي",
+  "selectAll": "تحديد الكل",
+  "clearSelection": "إلغاء التحديد",
+
+  "nSelected": "تم تحديد {count}",
+  "@nSelected": {
+    "placeholders": { "count": { "type": "int" } }
+  },
+
+  "filterFiles": "تصفية الملفات",
+  "typeToFilter": "اكتب للتصفية...",
+  "filterFilesShortcut": "تصفية الملفات (Ctrl+F)",
+  "clearFilter": "مسح التصفية",
+
+  "browseTooltip": "استعراض...",
+  "upTooltip": "للأعلى (Backspace)",
+  "refreshTooltip": "تحديث (F5)",
+  "newFolderTooltip": "مجلد جديد (Ctrl+N)",
+  "searchAllFiles": "البحث الضبابي في جميع الملفات",
+  "findByPattern": "البحث عن ملفات بنمط في هذا المجلد (مثال: *.pdf)",
+
+  "listView": "عرض القائمة",
+  "gridView": "عرض الشبكة",
+  "columnView": "عرض الأعمدة",
+
+  "copyTo": "نسخ إلى...",
+  "moveTo": "نقل إلى...",
+
+  "connected": "متصل",
+  "disconnected": "غير متصل",
+  "connecting": "جارٍ الاتصال...",
+  "connectionFailed": "فشل الاتصال",
+
+  "provider": "المزود",
+  "username": "اسم المستخدم",
+  "password": "كلمة المرور",
+  "host": "المضيف",
+  "port": "المنفذ",
+  "serverUrl": "عنوان URL للخادم",
+  "appKey": "مفتاح التطبيق",
+  "clientId": "معرف العميل",
+  "clientSecret": "سر العميل",
+  "accessKey": "مفتاح الوصول",
+  "secretKey": "المفتاح السري",
+  "endpoint": "نقطة النهاية",
+  "region": "المنطقة",
+  "bucket": "الحاوية",
+  "twoFactorCode": "رمز المصادقة الثنائية",
+
+  "transferProgress": "{percent}% مكتمل",
+  "@transferProgress": {
+    "placeholders": { "percent": { "type": "int" } }
+  },
+  "transferSpeed": "{speed}/ث",
+  "@transferSpeed": {
+    "placeholders": { "speed": { "type": "String" } }
+  },
+  "transferEta": "متبقي {time}",
+  "@transferEta": {
+    "placeholders": { "time": { "type": "String" } }
+  },
+
+  "syncManager": "مدير المزامنة",
+  "syncAll": "مزامنة الكل",
+  "syncNow": "مزامنة الآن",
+  "addPair": "إضافة زوج",
+  "syncPairName": "اسم الزوج",
+  "localPath": "المسار المحلي",
+  "remotePath": "المسار البعيد",
+  "conflictPolicy": "سياسة التعارض",
+  "syncDirection": "الاتجاه",
+  "twoWay": "ثنائي الاتجاه",
+  "uploadOnly": "رفع فقط",
+  "downloadOnly": "تنزيل فقط",
+  "newestWins": "الأحدث يفوز",
+  "localWins": "المحلي يفوز",
+  "remoteWins": "البعيد يفوز",
+  "keepBoth": "الاحتفاظ بكليهما",
+  "manual": "يدوي",
+  "backgroundSync": "المزامنة في الخلفية",
+  "cloudOnlyFiles": "ملفات السحابة فقط",
+  "includePatterns": "أنماط التضمين",
+  "excludePatterns": "أنماط الاستبعاد",
+
+  "encryption": "التشفير",
+  "encryptionEnabled": "التشفير مفعّل",
+  "passphrase": "عبارة المرور",
+  "keyManagement": "إدارة المفاتيح",
+  "exportKey": "تصدير المفتاح",
+  "importKey": "استيراد المفتاح",
+  "mnemonic": "العبارة التذكيرية",
+  "backupBundle": "حزمة النسخ الاحتياطي",
+
+  "appLock": "قفل التطبيق",
+  "setupLock": "إعداد القفل",
+  "changeLock": "تغيير القفل",
+  "disableLock": "تعطيل القفل",
+  "enterPin": "أدخل PIN أو كلمة المرور",
+  "biometricUnlock": "فتح القفل البيومتري",
+  "autoLockTimeout": "مهلة القفل التلقائي",
+
+  "proxySettings": "إعدادات الوكيل",
+  "noProxy": "بلا وكيل",
+  "httpProxy": "وكيل HTTP",
+  "socks5Proxy": "وكيل SOCKS5",
+  "certificatePinning": "تثبيت الشهادة",
+
+  "preview": "معاينة",
+  "edit": "تحرير",
+  "compare": "مقارنة",
+  "permissions": "الأذونات",
+  "checksum": "مجموع الاختبار",
+  "calculateSize": "حساب الحجم",
+  "batchRename": "إعادة التسمية الجماعية",
+  "extractHere": "استخراج هنا",
+  "createZip": "إنشاء Zip",
+  "shareLink": "مشاركة الرابط",
+  "versionHistory": "سجل الإصدارات",
+  "findDuplicates": "البحث عن المكررات",
+  "commandPalette": "لوحة الأوامر",
+
+  "theme": "السمة",
+  "systemTheme": "النظام",
+  "lightTheme": "فاتح",
+  "darkTheme": "داكن",
+  "oledTheme": "OLED Black",
+  "nordTheme": "Nord",
+  "draculaTheme": "Dracula",
+  "accentColor": "لون التمييز",
+
+  "tabs": "علامات التبويب",
+  "newTab": "علامة تبويب جديدة",
+  "closeTab": "إغلاق علامة التبويب",
+  "pinTab": "تثبيت علامة التبويب",
+  "unpinTab": "إلغاء تثبيت علامة التبويب",
+  "duplicateTab": "تكرار علامة التبويب",
+  "closeOtherTabs": "إغلاق علامات التبويب الأخرى",
+
+  "bookmarks": "الإشارات المرجعية",
+  "addBookmark": "إضافة إشارة مرجعية",
+  "removeBookmark": "إزالة الإشارة المرجعية",
+  "recentLocations": "المواقع الأخيرة",
+
+  "sandboxedPathWarning": "مسار محمي - استخدم زر الاستعراض لتحديد مجلد حقيقي",
+  "permissionDenied": "تم رفض الإذن. استخدم زر الاستعراض لمنح الوصول.",
+  "accessCancelled": "تم إلغاء الوصول. يتم استخدام الدليل الاحتياطي.",
+  "deleteFailed": "فشل الحذف: {error}",
+  "@deleteFailed": {
+    "placeholders": { "error": { "type": "String" } }
+  },
+  "renameFailed": "فشلت إعادة التسمية: {error}",
+  "@renameFailed": {
+    "placeholders": { "error": { "type": "String" } }
+  },
+  "operationFailed": "فشلت العملية: {error}",
+  "@operationFailed": {
+    "placeholders": { "error": { "type": "String" } }
+  },
+
+  "dropFilesToUpload": "أسقط الملفات هنا للرفع",
+  "confirmDeleteTitle": "تأكيد الحذف",
+  "confirmDeleteMessage": "هل تريد حذف {count} عنصر؟",
+  "@confirmDeleteMessage": {
+    "placeholders": { "count": { "type": "int" } }
+  },
+
+  "multiCloudManager": "مدير السحابة المتعددة",
+  "addConnection": "إضافة اتصال",
+  "cloudToCloudTransfer": "نقل من سحابة إلى سحابة",
+  "compareProviders": "مقارنة المزودين"
+}

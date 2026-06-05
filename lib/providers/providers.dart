@@ -18,3 +18,4 @@ export 'provider_comparison_provider.dart';
 export 'accessibility_provider.dart';
 export 'keyboard_shortcut_provider.dart';
 export 'plugin_provider.dart';
+export 'ssh_terminal_provider.dart';

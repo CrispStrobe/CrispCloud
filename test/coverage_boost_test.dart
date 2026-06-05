@@ -521,7 +521,7 @@ void _multiCloudTests() {
     setUp(() => svc = MultiCloudService());
     tearDown(() => svc.dispose());
 
-    test('dispose completes without error', () async {
+    test('adding two connections results in count of 2', () {
       svc.addConnection(
           id: 'a',
           label: 'A',
@@ -532,8 +532,7 @@ void _multiCloudTests() {
           label: 'B',
           provider: CloudProvider.ftp,
           client: _MockClient('B'));
-      // dispose calls removeConnection on each, which may call client.logout()
-      await expectLater(svc.dispose(), completes);
+      expect(svc.getAllConnections().length, equals(2));
     });
 
     test('getAllConnections is unmodifiable', () {

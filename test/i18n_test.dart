@@ -33,7 +33,7 @@ Set<String> _userKeys(Map<String, dynamic> arb) {
 }
 
 /// All supported locales under test.
-const List<String> _locales = ['en', 'de', 'fr', 'es', 'pt', 'zh', 'ja'];
+const List<String> _locales = ['en', 'de', 'fr', 'es', 'pt', 'zh', 'ja', 'ko', 'ar'];
 
 /// Placeholders that must be preserved verbatim in translated values.
 const Map<String, List<String>> _placeholdersByKey = {
@@ -210,7 +210,7 @@ void main() {
 
     // Only the new 5 locales need to carry metadata (German template omits some,
     // but new files follow the English template exactly).
-    const newLocales = ['fr', 'es', 'pt', 'zh', 'ja'];
+    const newLocales = ['fr', 'es', 'pt', 'zh', 'ja', 'ko', 'ar'];
 
     for (final locale in newLocales) {
       for (final mk in metadataKeys) {

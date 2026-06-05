@@ -1,0 +1,218 @@
+{
+  "@@locale": "ko",
+  "appTitle": "CrispCloud",
+  "@appTitle": { "description": "Application title" },
+
+  "local": "로컬",
+  "remote": "원격",
+
+  "connect": "연결",
+  "disconnect": "연결 해제",
+  "login": "로그인",
+  "logout": "로그아웃",
+
+  "upload": "업로드",
+  "download": "다운로드",
+  "delete": "삭제",
+  "rename": "이름 변경",
+  "move": "이동",
+  "copy": "복사",
+  "cancel": "취소",
+  "save": "저장",
+  "create": "만들기",
+  "close": "닫기",
+  "done": "완료",
+  "clear": "지우기",
+  "ok": "OK",
+  "yes": "예",
+  "no": "아니요",
+  "retry": "다시 시도",
+  "refresh": "새로 고침",
+  "search": "검색",
+  "filter": "필터",
+  "settings": "설정",
+  "about": "앱 정보",
+  "help": "도움말",
+
+  "newFolder": "새 폴더",
+  "folderName": "폴더 이름",
+  "emptyFolder": "빈 폴더",
+  "noFolderSelected": "선택된 폴더 없음",
+  "openLocalFolder": "로컬 폴더 열기",
+
+  "sortByName": "이름순 정렬",
+  "sortBySize": "크기순 정렬",
+  "sortByDate": "날짜순 정렬",
+  "sortByExtension": "확장자순 정렬",
+  "ascending": "오름차순",
+  "descending": "내림차순",
+  "selectAll": "모두 선택",
+  "clearSelection": "선택 해제",
+
+  "nSelected": "{count}개 선택됨",
+  "@nSelected": {
+    "placeholders": { "count": { "type": "int" } }
+  },
+
+  "filterFiles": "파일 필터",
+  "typeToFilter": "필터 입력...",
+  "filterFilesShortcut": "파일 필터 (Ctrl+F)",
+  "clearFilter": "필터 지우기",
+
+  "browseTooltip": "찾아보기...",
+  "upTooltip": "위로 (Backspace)",
+  "refreshTooltip": "새로 고침 (F5)",
+  "newFolderTooltip": "새 폴더 (Ctrl+N)",
+  "searchAllFiles": "모든 파일 퍼지 검색",
+  "findByPattern": "이 폴더에서 패턴으로 파일 찾기 (예: *.pdf)",
+
+  "listView": "목록 보기",
+  "gridView": "격자 보기",
+  "columnView": "열 보기",
+
+  "copyTo": "복사 위치...",
+  "moveTo": "이동 위치...",
+
+  "connected": "연결됨",
+  "disconnected": "연결 해제됨",
+  "connecting": "연결 중...",
+  "connectionFailed": "연결 실패",
+
+  "provider": "공급자",
+  "username": "사용자 이름",
+  "password": "비밀번호",
+  "host": "호스트",
+  "port": "포트",
+  "serverUrl": "서버 URL",
+  "appKey": "앱 키",
+  "clientId": "클라이언트 ID",
+  "clientSecret": "클라이언트 시크릿",
+  "accessKey": "액세스 키",
+  "secretKey": "시크릿 키",
+  "endpoint": "엔드포인트",
+  "region": "리전",
+  "bucket": "버킷",
+  "twoFactorCode": "2FA 코드",
+
+  "transferProgress": "{percent}% 완료",
+  "@transferProgress": {
+    "placeholders": { "percent": { "type": "int" } }
+  },
+  "transferSpeed": "{speed}/초",
+  "@transferSpeed": {
+    "placeholders": { "speed": { "type": "String" } }
+  },
+  "transferEta": "남은 시간 {time}",
+  "@transferEta": {
+    "placeholders": { "time": { "type": "String" } }
+  },
+
+  "syncManager": "동기화 관리자",
+  "syncAll": "모두 동기화",
+  "syncNow": "지금 동기화",
+  "addPair": "쌍 추가",
+  "syncPairName": "쌍 이름",
+  "localPath": "로컬 경로",
+  "remotePath": "원격 경로",
+  "conflictPolicy": "충돌 정책",
+  "syncDirection": "방향",
+  "twoWay": "양방향",
+  "uploadOnly": "업로드만",
+  "downloadOnly": "다운로드만",
+  "newestWins": "최신 우선",
+  "localWins": "로컬 우선",
+  "remoteWins": "원격 우선",
+  "keepBoth": "둘 다 보존",
+  "manual": "수동",
+  "backgroundSync": "백그라운드 동기화",
+  "cloudOnlyFiles": "클라우드 전용 파일",
+  "includePatterns": "포함 패턴",
+  "excludePatterns": "제외 패턴",
+
+  "encryption": "암호화",
+  "encryptionEnabled": "암호화 활성화됨",
+  "passphrase": "암호 문구",
+  "keyManagement": "키 관리",
+  "exportKey": "키 내보내기",
+  "importKey": "키 가져오기",
+  "mnemonic": "니모닉",
+  "backupBundle": "백업 번들",
+
+  "appLock": "앱 잠금",
+  "setupLock": "잠금 설정",
+  "changeLock": "잠금 변경",
+  "disableLock": "잠금 비활성화",
+  "enterPin": "PIN 또는 비밀번호 입력",
+  "biometricUnlock": "생체 인식 잠금 해제",
+  "autoLockTimeout": "자동 잠금 시간",
+
+  "proxySettings": "프록시 설정",
+  "noProxy": "프록시 없음",
+  "httpProxy": "HTTP 프록시",
+  "socks5Proxy": "SOCKS5 프록시",
+  "certificatePinning": "인증서 고정",
+
+  "preview": "미리 보기",
+  "edit": "편집",
+  "compare": "비교",
+  "permissions": "권한",
+  "checksum": "체크섬",
+  "calculateSize": "크기 계산",
+  "batchRename": "일괄 이름 변경",
+  "extractHere": "여기에 압축 해제",
+  "createZip": "Zip 만들기",
+  "shareLink": "링크 공유",
+  "versionHistory": "버전 기록",
+  "findDuplicates": "중복 찾기",
+  "commandPalette": "명령 팔레트",
+
+  "theme": "테마",
+  "systemTheme": "시스템",
+  "lightTheme": "라이트",
+  "darkTheme": "다크",
+  "oledTheme": "OLED Black",
+  "nordTheme": "Nord",
+  "draculaTheme": "Dracula",
+  "accentColor": "강조색",
+
+  "tabs": "탭",
+  "newTab": "새 탭",
+  "closeTab": "탭 닫기",
+  "pinTab": "탭 고정",
+  "unpinTab": "탭 고정 해제",
+  "duplicateTab": "탭 복제",
+  "closeOtherTabs": "다른 탭 닫기",
+
+  "bookmarks": "북마크",
+  "addBookmark": "북마크 추가",
+  "removeBookmark": "북마크 제거",
+  "recentLocations": "최근 위치",
+
+  "sandboxedPathWarning": "샌드박스 경로 - 찾아보기 버튼을 사용하여 실제 폴더를 선택하세요",
+  "permissionDenied": "권한이 거부되었습니다. 찾아보기 버튼을 사용하여 액세스 권한을 부여하세요.",
+  "accessCancelled": "액세스가 취소되었습니다. 대체 디렉터리를 사용합니다.",
+  "deleteFailed": "삭제 실패: {error}",
+  "@deleteFailed": {
+    "placeholders": { "error": { "type": "String" } }
+  },
+  "renameFailed": "이름 변경 실패: {error}",
+  "@renameFailed": {
+    "placeholders": { "error": { "type": "String" } }
+  },
+  "operationFailed": "작업 실패: {error}",
+  "@operationFailed": {
+    "placeholders": { "error": { "type": "String" } }
+  },
+
+  "dropFilesToUpload": "파일을 여기에 드래그하여 업로드",
+  "confirmDeleteTitle": "삭제 확인",
+  "confirmDeleteMessage": "{count}개 항목을 삭제하시겠습니까?",
+  "@confirmDeleteMessage": {
+    "placeholders": { "count": { "type": "int" } }
+  },
+
+  "multiCloudManager": "멀티 클라우드 관리자",
+  "addConnection": "연결 추가",
+  "cloudToCloudTransfer": "클라우드 간 전송",
+  "compareProviders": "공급자 비교"
+}
