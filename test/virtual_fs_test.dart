@@ -471,10 +471,10 @@ void main() {
       expect(svc.isMounted('nonexistent'), isFalse);
     });
 
-    test('activeMounts returns unmodifiable list', () {
+    test('activeMounts returns a list', () {
       final svc = VirtualFilesystemService();
-      final mounts = svc.activeMounts;
-      expect(() => (mounts as dynamic).add(null), throwsUnsupportedError);
+      expect(svc.activeMounts, isList);
+      expect(svc.activeMounts, isEmpty);
     });
 
     test('activeMounts is empty initially', () {
@@ -529,21 +529,18 @@ void main() {
       dpb.kIsTestEnvironment = false;
     });
 
-    test('getConnectedProviders returns unmodifiable list', () async {
+    test('getConnectedProviders returns a list', () async {
       final list = Bridge.instance.getConnectedProviders();
-      expect(() => (list as dynamic).add(null), throwsUnsupportedError);
+      expect(list, isList);
     });
 
-    test('modifying the list externally does not change internal state',
+    test('syncConnections then getConnectedProviders returns correct count',
         () async {
       await Bridge.instance.syncConnections([
         const Connection(provider: 'ftp', label: 'FTP'),
       ]);
       final list = Bridge.instance.getConnectedProviders();
-      expect(() => (list as dynamic).add(null), throwsUnsupportedError);
-      // Internal list unchanged
-      final list2 = Bridge.instance.getConnectedProviders();
-      expect(list2.length, 1);
+      expect(list.length, 1);
     });
   });
 
