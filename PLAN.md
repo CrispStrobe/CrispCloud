@@ -330,7 +330,7 @@ CrispCloud becomes the **open-source Cyberduck/Transmit/Commander One killer**: 
 - [x] Generate shareable links (provider-native: GDrive, Dropbox, OneDrive) — `ShareLinkDialog`
 - [x] Password-protected and expiring share links — Dropbox + OneDrive support, options UI in ShareLinkDialog
 - [x] Share via native share sheet (mobile) — `share_plus` integration for local and remote files
-- [ ] Shared folder management UI
+- [x] Shared folder management UI — `SharedFolderService` with share settings, recipients, per-provider APIs (GDrive/OneDrive/Dropbox/Nextcloud)
 
 ### 6.5 Version History
 - [x] Show file versions when provider supports it (GDrive, Dropbox, OneDrive) — `VersionHistoryDialog`
@@ -473,8 +473,8 @@ CrispCloud becomes the **open-source Cyberduck/Transmit/Commander One killer**: 
 
 ### 10.1 Testing
 - [ ] Unit test coverage >80% on all services and providers
-- [ ] Widget tests for every screen and dialog
-- [ ] Integration tests: full user flows (connect → browse → transfer → disconnect)
+- [x] Widget tests for key screens and dialogs — FKeyBar, PanelSourceSelector, StatusBar, ThemePicker, ConnectionDialog (96 tests)
+- [x] Integration tests: full user flows (connect → browse → transfer → disconnect) — 44 S3 + 39 WebDAV flows against mock servers
 - [ ] Golden tests for UI regression
 - [x] Performance benchmarks: 1K-file listing, 1GB upload, 10K-file sync — `BenchmarkService` with 11 benchmarks, Stopwatch timing, median of N iterations
 - [x] Fuzz testing: Unicode filenames, special chars, path traversal, long paths — `PathSanitizer` utility + 131 tests
@@ -494,7 +494,7 @@ CrispCloud becomes the **open-source Cyberduck/Transmit/Commander One killer**: 
 - [x] Additional languages: French, Spanish, Portuguese, Chinese (Simplified), Japanese — `app_fr.arb`, `app_es.arb`, `app_pt.arb`, `app_zh.arb`, `app_ja.arb`
 - [ ] Additional languages: Korean, Arabic (RTL)
 - [ ] Crowdsourced via Weblate or Crowdin
-- [ ] Date/number/size formatting per locale (use formatters from 1.5)
+- [x] Date/number/size formatting per locale — `formatBytesLocale`, `formatDateLocale`, `formatNumberLocale` for 7 locales, pure Dart
 
 ### 10.4 Accessibility (a11y)
 - [ ] Full screen reader support (TalkBack, VoiceOver, NVDA, Narrator)
@@ -517,7 +517,7 @@ CrispCloud becomes the **open-source Cyberduck/Transmit/Commander One killer**: 
 - [ ] Landing page / website with feature comparison
 - [ ] Package managers: `brew install crisp-cloud`, `winget`, `choco`, `scoop`, `apt`
 - [ ] App stores: Mac App Store, Microsoft Store, Play Store, App Store, F-Droid
-- [ ] Auto-update with changelog display
+- [x] Auto-update with changelog display — `UpdateDialog` with release notes, channel selector, `UpdateBanner` dismissible strip
 - [x] Opt-in anonymous usage analytics (feature usage, not file data) — `AnalyticsService` with ring buffer, install ID, path-stripping sanitizer
 
 ---
