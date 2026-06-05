@@ -26,12 +26,15 @@ final autoUpdateServiceProvider = Provider<AutoUpdateService>((ref) {
 // Update channel
 // ---------------------------------------------------------------------------
 
-class _UpdateChannelNotifier extends StateNotifier<UpdateChannel> {
+class UpdateChannelNotifier extends StateNotifier<UpdateChannel> {
   final AutoUpdateService _svc;
 
-  _UpdateChannelNotifier(this._svc) : super(UpdateChannel.stable) {
+  UpdateChannelNotifier(this._svc) : super(UpdateChannel.stable) {
     _load();
   }
+
+  /// Test-only constructor that sets the value directly without async load.
+  UpdateChannelNotifier.withValue(UpdateChannel value) : _svc = AutoUpdateService(), super(value);
 
   Future<void> _load() async {
     final channel = await _svc.loadChannel();
@@ -46,21 +49,24 @@ class _UpdateChannelNotifier extends StateNotifier<UpdateChannel> {
 
 /// Persisted update channel preference (stable / beta / nightly).
 final updateChannelProvider =
-    StateNotifierProvider<_UpdateChannelNotifier, UpdateChannel>((ref) {
+    StateNotifierProvider<UpdateChannelNotifier, UpdateChannel>((ref) {
   final svc = ref.watch(autoUpdateServiceProvider);
-  return _UpdateChannelNotifier(svc);
+  return UpdateChannelNotifier(svc);
 });
 
 // ---------------------------------------------------------------------------
 // Auto-update toggle
 // ---------------------------------------------------------------------------
 
-class _AutoUpdateEnabledNotifier extends StateNotifier<bool> {
+class AutoUpdateEnabledNotifier extends StateNotifier<bool> {
   final AutoUpdateService _svc;
 
-  _AutoUpdateEnabledNotifier(this._svc) : super(true) {
+  AutoUpdateEnabledNotifier(this._svc) : super(true) {
     _load();
   }
+
+  /// Test-only constructor that sets the value directly without async load.
+  AutoUpdateEnabledNotifier.withValue(bool value) : _svc = AutoUpdateService(), super(value);
 
   Future<void> _load() async {
     final enabled = await _svc.isAutoCheckEnabled();
@@ -75,9 +81,9 @@ class _AutoUpdateEnabledNotifier extends StateNotifier<bool> {
 
 /// Toggle: whether the app automatically checks for updates on startup.
 final autoUpdateEnabledProvider =
-    StateNotifierProvider<_AutoUpdateEnabledNotifier, bool>((ref) {
+    StateNotifierProvider<AutoUpdateEnabledNotifier, bool>((ref) {
   final svc = ref.watch(autoUpdateServiceProvider);
-  return _AutoUpdateEnabledNotifier(svc);
+  return AutoUpdateEnabledNotifier(svc);
 });
 
 // ---------------------------------------------------------------------------

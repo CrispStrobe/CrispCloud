@@ -81,10 +81,10 @@ List<Override> _overrides({
         );
       }),
     updateChannelProvider.overrideWith((ref) {
-      return _FixedChannelNotifier(channel);
+      return _TestChannelNotifier(channel);
     }),
     autoUpdateEnabledProvider.overrideWith((ref) {
-      return _FixedBoolNotifier(autoEnabled);
+      return _TestBoolNotifier(autoEnabled);
     }),
   ];
 }
@@ -93,13 +93,12 @@ List<Override> _overrides({
 // Stub StateNotifiers for test overrides
 // ---------------------------------------------------------------------------
 
-class _FixedChannelNotifier extends StateNotifier<UpdateChannel> {
-  _FixedChannelNotifier(UpdateChannel value) : super(value);
-  Future<void> setChannel(UpdateChannel ch) async => state = ch;
+class _TestChannelNotifier extends UpdateChannelNotifier {
+  _TestChannelNotifier(UpdateChannel value) : super.withValue(value);
 }
 
-class _FixedBoolNotifier extends StateNotifier<bool> {
-  _FixedBoolNotifier(bool value) : super(value);
+class _TestBoolNotifier extends AutoUpdateEnabledNotifier {
+  _TestBoolNotifier(bool value) : super.withValue(value);
   Future<void> setEnabled(bool v) async => state = v;
 }
 
@@ -343,9 +342,9 @@ void main() {
         overrides: [
           updateCheckProvider.overrideWith(
               (ref) => Future.delayed(const Duration(seconds: 60))),
-          updateChannelProvider.overrideWith((ref) => _FixedChannelNotifier(UpdateChannel.stable)),
+          updateChannelProvider.overrideWith((ref) => _TestChannelNotifier(UpdateChannel.stable)),
           autoUpdateEnabledProvider
-              .overrideWith((ref) => _FixedBoolNotifier(true)),
+              .overrideWith((ref) => _TestBoolNotifier(true)),
         ],
         child: MaterialApp(
           home: Scaffold(
@@ -378,9 +377,9 @@ void main() {
           updateCheckProvider.overrideWith(
               (ref) => Future.error(
                   const AutoUpdateException('Network error: no connection'))),
-          updateChannelProvider.overrideWith((ref) => _FixedChannelNotifier(UpdateChannel.stable)),
+          updateChannelProvider.overrideWith((ref) => _TestChannelNotifier(UpdateChannel.stable)),
           autoUpdateEnabledProvider
-              .overrideWith((ref) => _FixedBoolNotifier(true)),
+              .overrideWith((ref) => _TestBoolNotifier(true)),
         ],
         child: MaterialApp(
           home: Scaffold(
@@ -405,9 +404,9 @@ void main() {
           updateCheckProvider.overrideWith(
               (ref) => Future.error(
                   const AutoUpdateException('rate limit exceeded'))),
-          updateChannelProvider.overrideWith((ref) => _FixedChannelNotifier(UpdateChannel.stable)),
+          updateChannelProvider.overrideWith((ref) => _TestChannelNotifier(UpdateChannel.stable)),
           autoUpdateEnabledProvider
-              .overrideWith((ref) => _FixedBoolNotifier(true)),
+              .overrideWith((ref) => _TestBoolNotifier(true)),
         ],
         child: MaterialApp(
           home: Scaffold(
@@ -432,9 +431,9 @@ void main() {
           updateCheckProvider.overrideWith(
               (ref) =>
                   Future.error(const AutoUpdateException('Network error'))),
-          updateChannelProvider.overrideWith((ref) => _FixedChannelNotifier(UpdateChannel.stable)),
+          updateChannelProvider.overrideWith((ref) => _TestChannelNotifier(UpdateChannel.stable)),
           autoUpdateEnabledProvider
-              .overrideWith((ref) => _FixedBoolNotifier(true)),
+              .overrideWith((ref) => _TestBoolNotifier(true)),
         ],
         child: MaterialApp(
           home: Scaffold(
@@ -545,9 +544,9 @@ void main() {
         const UpdateBanner(),
         overrides: [
           updateCheckProvider.overrideWith((ref) async => _info()),
-          updateChannelProvider.overrideWith((ref) => _FixedChannelNotifier(UpdateChannel.stable)),
+          updateChannelProvider.overrideWith((ref) => _TestChannelNotifier(UpdateChannel.stable)),
           autoUpdateEnabledProvider
-              .overrideWith((ref) => _FixedBoolNotifier(true)),
+              .overrideWith((ref) => _TestBoolNotifier(true)),
         ],
       ));
       await tester.pumpAndSettle();
@@ -561,9 +560,9 @@ void main() {
         const UpdateBanner(),
         overrides: [
           updateCheckProvider.overrideWith((ref) async => null),
-          updateChannelProvider.overrideWith((ref) => _FixedChannelNotifier(UpdateChannel.stable)),
+          updateChannelProvider.overrideWith((ref) => _TestChannelNotifier(UpdateChannel.stable)),
           autoUpdateEnabledProvider
-              .overrideWith((ref) => _FixedBoolNotifier(true)),
+              .overrideWith((ref) => _TestBoolNotifier(true)),
         ],
       ));
       await tester.pumpAndSettle();
@@ -578,9 +577,9 @@ void main() {
         overrides: [
           updateCheckProvider
               .overrideWith((ref) async => _info(isPreRelease: true)),
-          updateChannelProvider.overrideWith((ref) => _FixedChannelNotifier(UpdateChannel.beta)),
+          updateChannelProvider.overrideWith((ref) => _TestChannelNotifier(UpdateChannel.beta)),
           autoUpdateEnabledProvider
-              .overrideWith((ref) => _FixedBoolNotifier(true)),
+              .overrideWith((ref) => _TestBoolNotifier(true)),
         ],
       ));
       await tester.pumpAndSettle();
@@ -595,9 +594,9 @@ void main() {
         overrides: [
           updateCheckProvider
               .overrideWith((ref) async => _info(isPreRelease: true)),
-          updateChannelProvider.overrideWith((ref) => _FixedChannelNotifier(UpdateChannel.nightly)),
+          updateChannelProvider.overrideWith((ref) => _TestChannelNotifier(UpdateChannel.nightly)),
           autoUpdateEnabledProvider
-              .overrideWith((ref) => _FixedBoolNotifier(true)),
+              .overrideWith((ref) => _TestBoolNotifier(true)),
         ],
       ));
       await tester.pumpAndSettle();
@@ -610,9 +609,9 @@ void main() {
         const UpdateBanner(),
         overrides: [
           updateCheckProvider.overrideWith((ref) async => _info()),
-          updateChannelProvider.overrideWith((ref) => _FixedChannelNotifier(UpdateChannel.stable)),
+          updateChannelProvider.overrideWith((ref) => _TestChannelNotifier(UpdateChannel.stable)),
           autoUpdateEnabledProvider
-              .overrideWith((ref) => _FixedBoolNotifier(true)),
+              .overrideWith((ref) => _TestBoolNotifier(true)),
         ],
       ));
       await tester.pumpAndSettle();
@@ -625,9 +624,9 @@ void main() {
         const UpdateBanner(),
         overrides: [
           updateCheckProvider.overrideWith((ref) async => _info()),
-          updateChannelProvider.overrideWith((ref) => _FixedChannelNotifier(UpdateChannel.stable)),
+          updateChannelProvider.overrideWith((ref) => _TestChannelNotifier(UpdateChannel.stable)),
           autoUpdateEnabledProvider
-              .overrideWith((ref) => _FixedBoolNotifier(true)),
+              .overrideWith((ref) => _TestBoolNotifier(true)),
         ],
       ));
       await tester.pumpAndSettle();
@@ -647,9 +646,9 @@ void main() {
         const UpdateBanner(),
         overrides: [
           updateCheckProvider.overrideWith((ref) async => _info()),
-          updateChannelProvider.overrideWith((ref) => _FixedChannelNotifier(UpdateChannel.stable)),
+          updateChannelProvider.overrideWith((ref) => _TestChannelNotifier(UpdateChannel.stable)),
           autoUpdateEnabledProvider
-              .overrideWith((ref) => _FixedBoolNotifier(true)),
+              .overrideWith((ref) => _TestBoolNotifier(true)),
         ],
       ));
       await tester.pumpAndSettle();
@@ -665,9 +664,9 @@ void main() {
         const UpdateBanner(),
         overrides: [
           updateCheckProvider.overrideWith((ref) async => _info()),
-          updateChannelProvider.overrideWith((ref) => _FixedChannelNotifier(UpdateChannel.stable)),
+          updateChannelProvider.overrideWith((ref) => _TestChannelNotifier(UpdateChannel.stable)),
           autoUpdateEnabledProvider
-              .overrideWith((ref) => _FixedBoolNotifier(true)),
+              .overrideWith((ref) => _TestBoolNotifier(true)),
         ],
       ));
       await tester.pumpAndSettle();
@@ -694,9 +693,9 @@ void main() {
         const UpdateBanner(),
         overrides: [
           updateCheckProvider.overrideWith((ref) async => _info()),
-          updateChannelProvider.overrideWith((ref) => _FixedChannelNotifier(UpdateChannel.stable)),
+          updateChannelProvider.overrideWith((ref) => _TestChannelNotifier(UpdateChannel.stable)),
           autoUpdateEnabledProvider
-              .overrideWith((ref) => _FixedBoolNotifier(true)),
+              .overrideWith((ref) => _TestBoolNotifier(true)),
         ],
       ));
       await tester.pumpAndSettle();
@@ -716,9 +715,9 @@ void main() {
         const UpdateBanner(),
         overrides: [
           updateCheckProvider.overrideWith((ref) async => _info()),
-          updateChannelProvider.overrideWith((ref) => _FixedChannelNotifier(UpdateChannel.stable)),
+          updateChannelProvider.overrideWith((ref) => _TestChannelNotifier(UpdateChannel.stable)),
           autoUpdateEnabledProvider
-              .overrideWith((ref) => _FixedBoolNotifier(true)),
+              .overrideWith((ref) => _TestBoolNotifier(true)),
         ],
       ));
       await tester.pumpAndSettle();
