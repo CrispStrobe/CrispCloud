@@ -762,11 +762,13 @@ class AzureBlobAdapter extends CloudStorageClient {
   }
 
   Future<void> _serverCopyBlob(String sourcePath, String targetPath) async {
-    final (:container, blob: sourceBlob) = _splitPath(sourcePath);
-    final (:container: destContainer, blob: destBlob) = _splitPath(targetPath);
+    final srcParts = _splitPath(sourcePath);
+    final dstParts = _splitPath(targetPath);
+    final sourceBlob = srcParts.blob;
+    final destBlob = dstParts.blob;
 
-    final sc = _effectiveContainer(container);
-    final dc = _effectiveContainer(destContainer);
+    final sc = _effectiveContainer(srcParts.container);
+    final dc = _effectiveContainer(dstParts.container);
 
     if (sourceBlob.isEmpty || destBlob.isEmpty) {
       throw ArgumentError('Source and target must be blob paths, not container roots');
