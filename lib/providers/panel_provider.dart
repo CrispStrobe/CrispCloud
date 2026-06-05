@@ -946,9 +946,11 @@ class PanelNotifier extends ChangeNotifier {
         if (!kIsWeb) {
           _ref.read(errorProvider).addError('Local file access is not supported on this platform.');
         }
+        _log.warn('listDirectory returned null for "$currentPath"');
         notifyListeners();
         return;
       }
+      _log.debug('listDirectory("$currentPath") returned ${entities.length} entities');
 
       final items = <FileItem>[];
       for (final entity in entities) {

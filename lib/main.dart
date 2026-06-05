@@ -358,8 +358,27 @@ class _MasterPasswordGateState extends ConsumerState<_MasterPasswordGate> {
 
       if (existingSalt == null) {
         // First-time user — no stored credentials, skip the gate.
-        // Initialize with a temporary empty-password mode that defers
-        // the real password prompt until credentials are first saved.
+        _needsGate = false;
+        if (mounted) {
+          Navigator.of(context).pushReplacement(
+            MaterialPageRoute<void>(builder: (_) => const _AppLockGate()),
+          );
+        }
+        return;
+      }
+
+      // Check if there are any actual credentials stored beyond
+      // just the salt and verify token. If not, the user never
+      // saved any credentials — clear the stale salt and skip.
+      final allKeys = await backend.allKeys();
+      final credKeys = allKeys.where((k) =>
+          k.startsWith('crisp_enc_') &&
+          k != 'crisp_enc_salt' &&
+          k != 'crisp_enc_verify').toList();
+      if (credKeys.isEmpty) {
+        // Only salt/verify exist, no actual credentials — clean up and skip.
+        await backend.removeItem('crisp_enc_salt');
+        await backend.removeItem('crisp_enc_verify');
         _needsGate = false;
         if (mounted) {
           Navigator.of(context).pushReplacement(
