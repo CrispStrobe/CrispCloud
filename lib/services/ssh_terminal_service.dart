@@ -335,7 +335,7 @@ class SshTerminalService {
 
     // Close existing shell if any.
     if (state.shellSession != null) {
-      await state.shellSession!.close();
+      state.shellSession!.close();
       await state.shellOutput?.close();
     }
 
@@ -389,7 +389,7 @@ class SshTerminalService {
     }
 
     _touch(sessionId);
-    shell.stdin.add(input.codeUnits);
+    shell.stdin.add(Uint8List.fromList(input.codeUnits));
   }
 
   /// Notifies the remote host of a terminal resize to [width] × [height].
@@ -473,7 +473,7 @@ class SshTerminalService {
 
   Future<void> _closeState(_SessionState state) async {
     try {
-      await state.shellSession?.close();
+      state.shellSession?.close();
     } catch (_) {}
     try {
       await state.shellOutput?.close();
@@ -500,7 +500,8 @@ class SshTerminalService {
   /// Returns null when parsing fails (falls back to no identity).
   SSHKeyPair? _parseKeyPair(String pemKey) {
     try {
-      return SSHKeyPair.fromPem(pemKey);
+      final pairs = SSHKeyPair.fromPem(pemKey);
+      return pairs.isNotEmpty ? pairs.first : null;
     } catch (e) {
       _log.error('Failed to parse private key', e);
       return null;
