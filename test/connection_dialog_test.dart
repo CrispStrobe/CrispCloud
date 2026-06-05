@@ -4,10 +4,6 @@
 //   • AzureConnectionDialog — auth modes, field visibility, validation
 //   • B2ConnectionDialog    — field rendering, validation
 //   • SettingsDialog        — section rendering, toggle behaviour
-//
-// Some widget tests require precise finder tuning for duplicate labels.
-// Skip flaky tests with: flutter test --exclude-tags=connection_dialog
-@Tags(['connection_dialog'])
 
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -54,6 +50,16 @@ Future<void> _openDialog(WidgetTester tester) async {
   await tester.pumpAndSettle();
 }
 
+/// Opens the settings dialog, allowing an extra pump-and-settle beforehand
+/// so that all async provider initialisation (SharedPreferences _load())
+/// completes before the dialog is shown.
+Future<void> _openSettingsDialog(WidgetTester tester) async {
+  // Flush async _load() calls in Riverpod StateNotifier constructors.
+  await tester.pumpAndSettle();
+  await tester.tap(find.text('Open'));
+  await tester.pumpAndSettle();
+}
+
 // ---------------------------------------------------------------------------
 // AzureConnectionDialog tests
 // ---------------------------------------------------------------------------
@@ -72,9 +78,12 @@ void main() {
       await tester.pumpWidget(_wrap(const AzureConnectionDialog()));
       await _openDialog(tester);
 
-      expect(find.text('Account Key'), findsOneWidget);
-      expect(find.text('SAS Token'), findsOneWidget);
-      expect(find.text('Connection String'), findsOneWidget);
+      // Use RadioListTile-specific finder to avoid also matching the
+      // 'Account Key' TextField decoration label in the form below the radios.
+      expect(find.widgetWithText(RadioListTile, 'Account Key'), findsOneWidget);
+      expect(find.widgetWithText(RadioListTile, 'SAS Token'), findsOneWidget);
+      expect(
+          find.widgetWithText(RadioListTile, 'Connection String'), findsOneWidget);
     });
 
     testWidgets('shows dialog title', (tester) async {
@@ -129,8 +138,14 @@ void main() {
       await tester.pumpWidget(_wrap(const AzureConnectionDialog()));
       await _openDialog(tester);
 
+      // 'Account Name' appears only as a field label.
       expect(find.text('Account Name'), findsOneWidget);
-      expect(find.text('Account Key'), findsOneWidget);
+
+      // 'Account Key' appears twice: as the RadioListTile title AND as the
+      // TextField decoration label — both confirm the UI is correct.
+      expect(find.text('Account Key'), findsNWidgets(2));
+
+      // 'Container' appears only as a field label.
       expect(find.text('Container'), findsOneWidget);
     });
   });
@@ -141,8 +156,8 @@ void main() {
       await tester.pumpWidget(_wrap(const AzureConnectionDialog()));
       await _openDialog(tester);
 
-      // Tap the SAS Token radio
-      await tester.tap(find.text('SAS Token'));
+      // Tap via RadioListTile to avoid ambiguity with other 'SAS Token' text.
+      await tester.tap(find.widgetWithText(RadioListTile, 'SAS Token'));
       await tester.pumpAndSettle();
 
       expect(find.byKey(const Key('azure_sas_url')), findsOneWidget);
@@ -152,7 +167,7 @@ void main() {
       await tester.pumpWidget(_wrap(const AzureConnectionDialog()));
       await _openDialog(tester);
 
-      await tester.tap(find.text('SAS Token'));
+      await tester.tap(find.widgetWithText(RadioListTile, 'SAS Token'));
       await tester.pumpAndSettle();
 
       expect(find.byKey(const Key('azure_account_key')), findsNothing);
@@ -162,7 +177,7 @@ void main() {
       await tester.pumpWidget(_wrap(const AzureConnectionDialog()));
       await _openDialog(tester);
 
-      await tester.tap(find.text('SAS Token'));
+      await tester.tap(find.widgetWithText(RadioListTile, 'SAS Token'));
       await tester.pumpAndSettle();
 
       expect(find.text('Full SAS URL'), findsOneWidget);
@@ -175,7 +190,7 @@ void main() {
       await tester.pumpWidget(_wrap(const AzureConnectionDialog()));
       await _openDialog(tester);
 
-      await tester.tap(find.text('SAS Token'));
+      await tester.tap(find.widgetWithText(RadioListTile, 'SAS Token'));
       await tester.pumpAndSettle();
 
       // Switch to separate-fields sub-mode
@@ -195,7 +210,8 @@ void main() {
       await tester.pumpWidget(_wrap(const AzureConnectionDialog()));
       await _openDialog(tester);
 
-      await tester.tap(find.text('Connection String'));
+      await tester
+          .tap(find.widgetWithText(RadioListTile, 'Connection String'));
       await tester.pumpAndSettle();
 
       expect(
@@ -207,7 +223,8 @@ void main() {
       await tester.pumpWidget(_wrap(const AzureConnectionDialog()));
       await _openDialog(tester);
 
-      await tester.tap(find.text('Connection String'));
+      await tester
+          .tap(find.widgetWithText(RadioListTile, 'Connection String'));
       await tester.pumpAndSettle();
 
       expect(find.byKey(const Key('azure_account_name')), findsNothing);
@@ -249,7 +266,8 @@ void main() {
       await tester.pumpWidget(_wrap(const AzureConnectionDialog()));
       await _openDialog(tester);
 
-      await tester.tap(find.text('Connection String'));
+      await tester
+          .tap(find.widgetWithText(RadioListTile, 'Connection String'));
       await tester.pumpAndSettle();
 
       await tester.enterText(
@@ -392,7 +410,7 @@ void main() {
   group('SettingsDialog – section rendering', () {
     testWidgets('renders all section headings', (tester) async {
       await tester.pumpWidget(_wrap(const SettingsDialog()));
-      await _openDialog(tester);
+      await _openSettingsDialog(tester);
 
       expect(find.text('General'), findsOneWidget);
       expect(find.text('Accessibility'), findsOneWidget);
@@ -402,14 +420,14 @@ void main() {
 
     testWidgets('renders F-key bar toggle', (tester) async {
       await tester.pumpWidget(_wrap(const SettingsDialog()));
-      await _openDialog(tester);
+      await _openSettingsDialog(tester);
 
       expect(find.byKey(const Key('settings_fkey_bar_toggle')), findsOneWidget);
     });
 
     testWidgets('renders high contrast toggle', (tester) async {
       await tester.pumpWidget(_wrap(const SettingsDialog()));
-      await _openDialog(tester);
+      await _openSettingsDialog(tester);
 
       expect(
           find.byKey(const Key('settings_high_contrast_toggle')),
@@ -418,7 +436,7 @@ void main() {
 
     testWidgets('renders reduced motion toggle', (tester) async {
       await tester.pumpWidget(_wrap(const SettingsDialog()));
-      await _openDialog(tester);
+      await _openSettingsDialog(tester);
 
       expect(
           find.byKey(const Key('settings_reduced_motion_toggle')),
@@ -427,7 +445,7 @@ void main() {
 
     testWidgets('renders analytics toggle', (tester) async {
       await tester.pumpWidget(_wrap(const SettingsDialog()));
-      await _openDialog(tester);
+      await _openSettingsDialog(tester);
 
       expect(
           find.byKey(const Key('settings_analytics_toggle')), findsOneWidget);
@@ -435,7 +453,7 @@ void main() {
 
     testWidgets('renders delta sync toggle', (tester) async {
       await tester.pumpWidget(_wrap(const SettingsDialog()));
-      await _openDialog(tester);
+      await _openSettingsDialog(tester);
 
       expect(
           find.byKey(const Key('settings_delta_sync_toggle')), findsOneWidget);
@@ -443,14 +461,14 @@ void main() {
 
     testWidgets('renders Done button', (tester) async {
       await tester.pumpWidget(_wrap(const SettingsDialog()));
-      await _openDialog(tester);
+      await _openSettingsDialog(tester);
 
       expect(find.text('Done'), findsOneWidget);
     });
 
     testWidgets('Done button dismisses dialog', (tester) async {
       await tester.pumpWidget(_wrap(const SettingsDialog()));
-      await _openDialog(tester);
+      await _openSettingsDialog(tester);
 
       await tester.tap(find.text('Done'));
       await tester.pumpAndSettle();
@@ -463,7 +481,7 @@ void main() {
     testWidgets('toggle is on by default (SharedPreferences empty)',
         (tester) async {
       await tester.pumpWidget(_wrap(const SettingsDialog()));
-      await _openDialog(tester);
+      await _openSettingsDialog(tester);
 
       final tile = tester.widget<SwitchListTile>(
         find.byKey(const Key('settings_fkey_bar_toggle')),
@@ -473,7 +491,7 @@ void main() {
 
     testWidgets('tapping toggle calls provider notifier', (tester) async {
       await tester.pumpWidget(_wrap(const SettingsDialog()));
-      await _openDialog(tester);
+      await _openSettingsDialog(tester);
 
       final tileFinder = find.byKey(const Key('settings_fkey_bar_toggle'));
       final initialTile = tester.widget<SwitchListTile>(tileFinder);
@@ -490,7 +508,7 @@ void main() {
   group('SettingsDialog – high contrast toggle', () {
     testWidgets('high contrast is off by default', (tester) async {
       await tester.pumpWidget(_wrap(const SettingsDialog()));
-      await _openDialog(tester);
+      await _openSettingsDialog(tester);
 
       final tile = tester.widget<SwitchListTile>(
         find.byKey(const Key('settings_high_contrast_toggle')),
@@ -500,7 +518,7 @@ void main() {
 
     testWidgets('tapping high contrast toggle changes value', (tester) async {
       await tester.pumpWidget(_wrap(const SettingsDialog()));
-      await _openDialog(tester);
+      await _openSettingsDialog(tester);
 
       final tileFinder =
           find.byKey(const Key('settings_high_contrast_toggle'));
@@ -516,7 +534,7 @@ void main() {
   group('SettingsDialog – analytics toggle', () {
     testWidgets('analytics is off by default', (tester) async {
       await tester.pumpWidget(_wrap(const SettingsDialog()));
-      await _openDialog(tester);
+      await _openSettingsDialog(tester);
 
       final tile = tester.widget<SwitchListTile>(
         find.byKey(const Key('settings_analytics_toggle')),
@@ -526,7 +544,7 @@ void main() {
 
     testWidgets('tapping analytics toggle turns it on', (tester) async {
       await tester.pumpWidget(_wrap(const SettingsDialog()));
-      await _openDialog(tester);
+      await _openSettingsDialog(tester);
 
       final tileFinder = find.byKey(const Key('settings_analytics_toggle'));
 
@@ -540,7 +558,7 @@ void main() {
     testWidgets(
         'enabling analytics shows informational banner', (tester) async {
       await tester.pumpWidget(_wrap(const SettingsDialog()));
-      await _openDialog(tester);
+      await _openSettingsDialog(tester);
 
       // Enable analytics
       await tester.tap(find.byKey(const Key('settings_analytics_toggle')));
@@ -554,7 +572,7 @@ void main() {
   group('SettingsDialog – delta sync toggle', () {
     testWidgets('delta sync is on by default', (tester) async {
       await tester.pumpWidget(_wrap(const SettingsDialog()));
-      await _openDialog(tester);
+      await _openSettingsDialog(tester);
 
       final tile = tester.widget<SwitchListTile>(
         find.byKey(const Key('settings_delta_sync_toggle')),
@@ -564,7 +582,7 @@ void main() {
 
     testWidgets('tapping delta sync toggle turns it off', (tester) async {
       await tester.pumpWidget(_wrap(const SettingsDialog()));
-      await _openDialog(tester);
+      await _openSettingsDialog(tester);
 
       final tileFinder = find.byKey(const Key('settings_delta_sync_toggle'));
 
@@ -578,7 +596,7 @@ void main() {
     testWidgets('enabling delta sync shows block size selector',
         (tester) async {
       await tester.pumpWidget(_wrap(const SettingsDialog()));
-      await _openDialog(tester);
+      await _openSettingsDialog(tester);
 
       // Delta sync is on by default — block size selector should be visible
       expect(
@@ -588,7 +606,7 @@ void main() {
     testWidgets('disabling delta sync hides block size selector',
         (tester) async {
       await tester.pumpWidget(_wrap(const SettingsDialog()));
-      await _openDialog(tester);
+      await _openSettingsDialog(tester);
 
       // Turn off delta sync
       await tester.tap(find.byKey(const Key('settings_delta_sync_toggle')));

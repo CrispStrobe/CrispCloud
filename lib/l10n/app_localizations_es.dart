@@ -1,0 +1,528 @@
+// ignore: unused_import
+import 'package:intl/intl.dart' as intl;
+import 'app_localizations.dart';
+
+// ignore_for_file: type=lint
+
+/// The translations for Spanish Castilian (`es`).
+class AppLocalizationsEs extends AppLocalizations {
+  AppLocalizationsEs([String locale = 'es']) : super(locale);
+
+  @override
+  String get appTitle => 'CrispCloud';
+
+  @override
+  String get local => 'Local';
+
+  @override
+  String get remote => 'Remoto';
+
+  @override
+  String get connect => 'Conectar';
+
+  @override
+  String get disconnect => 'Desconectar';
+
+  @override
+  String get login => 'Iniciar sesión';
+
+  @override
+  String get logout => 'Cerrar sesión';
+
+  @override
+  String get upload => 'Subir';
+
+  @override
+  String get download => 'Descargar';
+
+  @override
+  String get delete => 'Eliminar';
+
+  @override
+  String get rename => 'Renombrar';
+
+  @override
+  String get move => 'Mover';
+
+  @override
+  String get copy => 'Copiar';
+
+  @override
+  String get cancel => 'Cancelar';
+
+  @override
+  String get save => 'Guardar';
+
+  @override
+  String get create => 'Crear';
+
+  @override
+  String get close => 'Cerrar';
+
+  @override
+  String get done => 'Listo';
+
+  @override
+  String get clear => 'Limpiar';
+
+  @override
+  String get ok => 'OK';
+
+  @override
+  String get yes => 'Sí';
+
+  @override
+  String get no => 'No';
+
+  @override
+  String get retry => 'Reintentar';
+
+  @override
+  String get refresh => 'Actualizar';
+
+  @override
+  String get search => 'Buscar';
+
+  @override
+  String get filter => 'Filtrar';
+
+  @override
+  String get settings => 'Ajustes';
+
+  @override
+  String get about => 'Acerca de';
+
+  @override
+  String get help => 'Ayuda';
+
+  @override
+  String get newFolder => 'Nueva carpeta';
+
+  @override
+  String get folderName => 'Nombre de carpeta';
+
+  @override
+  String get emptyFolder => 'Carpeta vacía';
+
+  @override
+  String get noFolderSelected => 'Ninguna carpeta seleccionada';
+
+  @override
+  String get openLocalFolder => 'Abrir carpeta local';
+
+  @override
+  String get sortByName => 'Ordenar por nombre';
+
+  @override
+  String get sortBySize => 'Ordenar por tamaño';
+
+  @override
+  String get sortByDate => 'Ordenar por fecha';
+
+  @override
+  String get sortByExtension => 'Ordenar por extensión';
+
+  @override
+  String get ascending => 'Ascendente';
+
+  @override
+  String get descending => 'Descendente';
+
+  @override
+  String get selectAll => 'Seleccionar todo';
+
+  @override
+  String get clearSelection => 'Borrar selección';
+
+  @override
+  String nSelected(int count) {
+    return '$count seleccionado(s)';
+  }
+
+  @override
+  String get filterFiles => 'Filtrar archivos';
+
+  @override
+  String get typeToFilter => 'Escriba para filtrar...';
+
+  @override
+  String get filterFilesShortcut => 'Filtrar archivos (Ctrl+F)';
+
+  @override
+  String get clearFilter => 'Borrar filtro';
+
+  @override
+  String get browseTooltip => 'Examinar...';
+
+  @override
+  String get upTooltip => 'Arriba (Retroceso)';
+
+  @override
+  String get refreshTooltip => 'Actualizar (F5)';
+
+  @override
+  String get newFolderTooltip => 'Nueva carpeta (Ctrl+N)';
+
+  @override
+  String get searchAllFiles => 'Búsqueda difusa en todos los archivos';
+
+  @override
+  String get findByPattern =>
+      'Buscar archivos por patrón en esta carpeta (p. ej. *.pdf)';
+
+  @override
+  String get listView => 'Vista de lista';
+
+  @override
+  String get gridView => 'Vista de cuadrícula';
+
+  @override
+  String get columnView => 'Vista de columnas';
+
+  @override
+  String get copyTo => 'Copiar a...';
+
+  @override
+  String get moveTo => 'Mover a...';
+
+  @override
+  String get connected => 'Conectado';
+
+  @override
+  String get disconnected => 'Desconectado';
+
+  @override
+  String get connecting => 'Conectando...';
+
+  @override
+  String get connectionFailed => 'Error de conexión';
+
+  @override
+  String get provider => 'Proveedor';
+
+  @override
+  String get username => 'Nombre de usuario';
+
+  @override
+  String get password => 'Contraseña';
+
+  @override
+  String get host => 'Host';
+
+  @override
+  String get port => 'Puerto';
+
+  @override
+  String get serverUrl => 'URL del servidor';
+
+  @override
+  String get appKey => 'Clave de aplicación';
+
+  @override
+  String get clientId => 'ID de cliente';
+
+  @override
+  String get clientSecret => 'Secreto de cliente';
+
+  @override
+  String get accessKey => 'Clave de acceso';
+
+  @override
+  String get secretKey => 'Clave secreta';
+
+  @override
+  String get endpoint => 'Punto de enlace';
+
+  @override
+  String get region => 'Región';
+
+  @override
+  String get bucket => 'Bucket';
+
+  @override
+  String get twoFactorCode => 'Código 2FA';
+
+  @override
+  String transferProgress(int percent) {
+    return '$percent% completado';
+  }
+
+  @override
+  String transferSpeed(String speed) {
+    return '$speed/s';
+  }
+
+  @override
+  String transferEta(String time) {
+    return '$time restante';
+  }
+
+  @override
+  String get syncManager => 'Administrador de sincronización';
+
+  @override
+  String get syncAll => 'Sincronizar todo';
+
+  @override
+  String get syncNow => 'Sincronizar ahora';
+
+  @override
+  String get addPair => 'Agregar par';
+
+  @override
+  String get syncPairName => 'Nombre del par';
+
+  @override
+  String get localPath => 'Ruta local';
+
+  @override
+  String get remotePath => 'Ruta remota';
+
+  @override
+  String get conflictPolicy => 'Política de conflictos';
+
+  @override
+  String get syncDirection => 'Dirección';
+
+  @override
+  String get twoWay => 'Bidireccional';
+
+  @override
+  String get uploadOnly => 'Solo subida';
+
+  @override
+  String get downloadOnly => 'Solo descarga';
+
+  @override
+  String get newestWins => 'Más reciente gana';
+
+  @override
+  String get localWins => 'Local gana';
+
+  @override
+  String get remoteWins => 'Remoto gana';
+
+  @override
+  String get keepBoth => 'Conservar ambos';
+
+  @override
+  String get manual => 'Manual';
+
+  @override
+  String get backgroundSync => 'Sincronización en segundo plano';
+
+  @override
+  String get cloudOnlyFiles => 'Archivos solo en la nube';
+
+  @override
+  String get includePatterns => 'Patrones de inclusión';
+
+  @override
+  String get excludePatterns => 'Patrones de exclusión';
+
+  @override
+  String get encryption => 'Cifrado';
+
+  @override
+  String get encryptionEnabled => 'Cifrado habilitado';
+
+  @override
+  String get passphrase => 'Frase de contraseña';
+
+  @override
+  String get keyManagement => 'Gestión de claves';
+
+  @override
+  String get exportKey => 'Exportar clave';
+
+  @override
+  String get importKey => 'Importar clave';
+
+  @override
+  String get mnemonic => 'Mnemónico';
+
+  @override
+  String get backupBundle => 'Paquete de copia de seguridad';
+
+  @override
+  String get appLock => 'Bloqueo de aplicación';
+
+  @override
+  String get setupLock => 'Configurar bloqueo';
+
+  @override
+  String get changeLock => 'Cambiar bloqueo';
+
+  @override
+  String get disableLock => 'Desactivar bloqueo';
+
+  @override
+  String get enterPin => 'Introduzca PIN o contraseña';
+
+  @override
+  String get biometricUnlock => 'Desbloqueo biométrico';
+
+  @override
+  String get autoLockTimeout => 'Tiempo de bloqueo automático';
+
+  @override
+  String get proxySettings => 'Configuración de proxy';
+
+  @override
+  String get noProxy => 'Sin proxy';
+
+  @override
+  String get httpProxy => 'Proxy HTTP';
+
+  @override
+  String get socks5Proxy => 'Proxy SOCKS5';
+
+  @override
+  String get certificatePinning => 'Fijación de certificado';
+
+  @override
+  String get preview => 'Vista previa';
+
+  @override
+  String get edit => 'Editar';
+
+  @override
+  String get compare => 'Comparar';
+
+  @override
+  String get permissions => 'Permisos';
+
+  @override
+  String get checksum => 'Suma de verificación';
+
+  @override
+  String get calculateSize => 'Calcular tamaño';
+
+  @override
+  String get batchRename => 'Renombrado por lotes';
+
+  @override
+  String get extractHere => 'Extraer aquí';
+
+  @override
+  String get createZip => 'Crear Zip';
+
+  @override
+  String get shareLink => 'Compartir enlace';
+
+  @override
+  String get versionHistory => 'Historial de versiones';
+
+  @override
+  String get findDuplicates => 'Buscar duplicados';
+
+  @override
+  String get commandPalette => 'Paleta de comandos';
+
+  @override
+  String get theme => 'Tema';
+
+  @override
+  String get systemTheme => 'Sistema';
+
+  @override
+  String get lightTheme => 'Claro';
+
+  @override
+  String get darkTheme => 'Oscuro';
+
+  @override
+  String get oledTheme => 'OLED Black';
+
+  @override
+  String get nordTheme => 'Nord';
+
+  @override
+  String get draculaTheme => 'Dracula';
+
+  @override
+  String get accentColor => 'Color de acento';
+
+  @override
+  String get tabs => 'Pestañas';
+
+  @override
+  String get newTab => 'Nueva pestaña';
+
+  @override
+  String get closeTab => 'Cerrar pestaña';
+
+  @override
+  String get pinTab => 'Fijar pestaña';
+
+  @override
+  String get unpinTab => 'Desfijar pestaña';
+
+  @override
+  String get duplicateTab => 'Duplicar pestaña';
+
+  @override
+  String get closeOtherTabs => 'Cerrar otras pestañas';
+
+  @override
+  String get bookmarks => 'Marcadores';
+
+  @override
+  String get addBookmark => 'Agregar marcador';
+
+  @override
+  String get removeBookmark => 'Eliminar marcador';
+
+  @override
+  String get recentLocations => 'Ubicaciones recientes';
+
+  @override
+  String get sandboxedPathWarning =>
+      'Ruta de sandbox - Use el botón Examinar para seleccionar una carpeta real';
+
+  @override
+  String get permissionDenied =>
+      'Permiso denegado. Use el botón Examinar para otorgar acceso.';
+
+  @override
+  String get accessCancelled =>
+      'Acceso cancelado. Usando directorio alternativo.';
+
+  @override
+  String deleteFailed(String error) {
+    return 'Error al eliminar: $error';
+  }
+
+  @override
+  String renameFailed(String error) {
+    return 'Error al renombrar: $error';
+  }
+
+  @override
+  String operationFailed(String error) {
+    return 'Error en la operación: $error';
+  }
+
+  @override
+  String get dropFilesToUpload => 'Suelte archivos aquí para subir';
+
+  @override
+  String get confirmDeleteTitle => 'Confirmar eliminación';
+
+  @override
+  String confirmDeleteMessage(int count) {
+    return '¿Eliminar $count elemento(s)?';
+  }
+
+  @override
+  String get multiCloudManager => 'Administrador multi-nube';
+
+  @override
+  String get addConnection => 'Agregar conexión';
+
+  @override
+  String get cloudToCloudTransfer => 'Transferencia nube a nube';
+
+  @override
+  String get compareProviders => 'Comparar proveedores';
+}

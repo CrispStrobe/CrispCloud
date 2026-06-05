@@ -3,6 +3,16 @@
 #
 
 list(APPEND FLUTTER_PLUGIN_LIST
+  desktop_drop
+  dynamic_color
+  file_selector_windows
+  flutter_secure_storage_windows
+  local_auth_windows
+  pdfx
+  share_plus
+  sqlite3_flutter_libs
+  system_tray
+  url_launcher_windows
 )
 
 list(APPEND FLUTTER_FFI_PLUGIN_LIST
