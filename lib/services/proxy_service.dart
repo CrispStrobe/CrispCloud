@@ -77,6 +77,7 @@ class ProxyConfig {
 
   /// Create from environment variables (HTTP_PROXY, HTTPS_PROXY, NO_PROXY).
   factory ProxyConfig.fromEnvironment() {
+    if (kIsWeb) return const ProxyConfig();
     final proxyUrl = Platform.environment['HTTPS_PROXY'] ??
         Platform.environment['https_proxy'] ??
         Platform.environment['HTTP_PROXY'] ??

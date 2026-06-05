@@ -125,7 +125,12 @@ class AuthNotifier extends ChangeNotifier {
       case CloudProvider.webdav:
         return WebDavConfigService(configPath: _configPath, secureStorage: _secureStorage);
       case CloudProvider.internxt:
-        return ConfigService(configPath: _configPath);
+        // On web, ConfigService must receive a configPath to avoid
+        // calling Platform.environment (which throws _Namespace on web).
+        return ConfigService(
+          configPath: _configPath,
+          storage: kIsWeb ? _WebConfigStorage() : null,
+        );
       case CloudProvider.azure:
         return AzureConfigService(secureStorage: _secureStorage);
       case CloudProvider.b2:
@@ -415,3 +420,30 @@ final authProvider = ChangeNotifierProvider<AuthNotifier>((ref) {
     'it requires startup config from main()',
   );
 });
+
+/// No-op ConfigStorage for web — Internxt on web stores config in memory only.
+/// Prevents dart:io Platform.environment calls that crash on web.
+class _WebConfigStorage extends ConfigStorage {
+  final Map<String, String> _store = {};
+
+  @override
+  void init(String dataDir, List<String> subDirs) {
+    // No filesystem on web — no-op.
+  }
+
+  @override
+  Future<bool> exists(String key) async => _store.containsKey(key);
+
+  @override
+  Future<String?> read(String key) async => _store[key];
+
+  @override
+  Future<void> write(String key, String value) async {
+    _store[key] = value;
+  }
+
+  @override
+  Future<void> delete(String key) async {
+    _store.remove(key);
+  }
+}

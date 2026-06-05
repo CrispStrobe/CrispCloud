@@ -33,6 +33,7 @@ class BookmarkService {
 
   // Get a safe starting directory that the app can access
   static Future<String> getSafeStartDirectory() async {
+    if (kIsWeb) return '/';
     if (Platform.isMacOS || Platform.isLinux) {
         // Get ACTUAL home directory, not sandbox
         final home = Platform.environment['HOME'];

@@ -3,6 +3,8 @@ import 'package:receive_sharing_intent/receive_sharing_intent.dart';
 import 'dart:async';
 import 'dart:io';
 
+import 'package:flutter/foundation.dart' show kIsWeb;
+
 import 'log_service.dart';
 
 class ReceiveService {
@@ -15,6 +17,7 @@ class ReceiveService {
     required Function(String) onTextReceived,
   }) {
     // Only initialize on mobile platforms
+    if (kIsWeb) return;
     if (!Platform.isAndroid && !Platform.isIOS) {
       _log.warn('Receive sharing intent not supported on ${Platform.operatingSystem}');
       return;

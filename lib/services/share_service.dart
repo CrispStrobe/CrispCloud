@@ -1,4 +1,5 @@
 // services/share_service.dart
+import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:share_plus/share_plus.dart';
 import 'package:cross_file/cross_file.dart';
 import 'dart:io';
@@ -12,6 +13,7 @@ class ShareService {
     if (filePaths.isEmpty) return;
 
     // Check if sharing is supported on this platform
+    if (kIsWeb) return;
     if (!Platform.isAndroid && !Platform.isIOS) {
       _log.warn('File sharing not fully supported on ${Platform.operatingSystem}');
       // On desktop, we can still try share_plus but it might open default app
