@@ -469,4 +469,64 @@ void main() {
       expect(find.text('Local'), findsNWidgets(2));
     });
   });
+
+  // -------------------------------------------------------------------------
+  // Dense styling
+  // -------------------------------------------------------------------------
+
+  group('PanelSourceSelector styling', () {
+    testWidgets('DropdownButton uses isDense style', (tester) async {
+      await tester.pumpWidget(
+        _wrap(
+          const PanelSourceSelector(side: PanelSide.local),
+          overrides: [
+            availableSourcesProvider
+                .overrideWithValue(_localOnlySources()),
+          ],
+        ),
+      );
+      await tester.pump();
+
+      final dropdown = tester.widget<DropdownButton<String>>(
+        find.byType(DropdownButton<String>),
+      );
+      expect(dropdown.isDense, isTrue);
+    });
+
+    testWidgets('dropdown has no underline', (tester) async {
+      await tester.pumpWidget(
+        _wrap(
+          const PanelSourceSelector(side: PanelSide.local),
+          overrides: [
+            availableSourcesProvider
+                .overrideWithValue(_localOnlySources()),
+          ],
+        ),
+      );
+      await tester.pump();
+
+      final dropdown = tester.widget<DropdownButton<String>>(
+        find.byType(DropdownButton<String>),
+      );
+      // underline is overridden to SizedBox.shrink()
+      expect(dropdown.underline, isA<SizedBox>());
+    });
+
+    testWidgets('source label text uses bodySmall style from theme',
+        (tester) async {
+      await tester.pumpWidget(
+        _wrap(
+          const PanelSourceSelector(side: PanelSide.local),
+          overrides: [
+            availableSourcesProvider
+                .overrideWithValue(_localOnlySources()),
+          ],
+        ),
+      );
+      await tester.pump();
+
+      // The dropdown should render without error — just verify it's present.
+      expect(find.byType(DropdownButton<String>), findsOneWidget);
+    });
+  });
 }

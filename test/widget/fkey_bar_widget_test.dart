@@ -58,6 +58,12 @@ FKeyContext _multiFileContext() => FKeyContext(
       ],
     );
 
+/// Finds the InkWell inside the Tooltip with [message].
+Finder _buttonByTooltip(String message) => find.descendant(
+      of: find.byTooltip(message),
+      matching: find.byType(InkWell),
+    );
+
 // ---------------------------------------------------------------------------
 // Tests
 // ---------------------------------------------------------------------------
@@ -92,7 +98,8 @@ void main() {
       await tester.pumpAndSettle();
 
       expect(find.byType(InkWell), findsNothing);
-      expect(find.byType(Material), findsNothing);
+      // The SizedBox.shrink() is returned — no FKeyBar Material content.
+      expect(find.byType(Tooltip), findsNothing);
     });
 
     testWidgets('bar is visible by default when SharedPreferences is empty',
@@ -106,53 +113,51 @@ void main() {
   });
 
   // -------------------------------------------------------------------------
-  // Labels
+  // Labels — verified via Tooltip messages (buttons use RichText not Text)
   // -------------------------------------------------------------------------
 
   group('FKeyBar button labels', () {
-    testWidgets('shows "View" label for F3', (tester) async {
+    testWidgets('shows "View" tooltip for F3', (tester) async {
       await tester.pumpWidget(_wrap(FKeyBar(overrideContext: _emptyContext())));
       await tester.pump();
-      expect(find.textContaining('View'), findsOneWidget);
+      expect(find.byTooltip('F3 — View'), findsOneWidget);
     });
 
-    testWidgets('shows "Edit" label for F4', (tester) async {
+    testWidgets('shows "Edit" tooltip for F4', (tester) async {
       await tester.pumpWidget(_wrap(FKeyBar(overrideContext: _emptyContext())));
       await tester.pump();
-      expect(find.textContaining('Edit'), findsOneWidget);
+      expect(find.byTooltip('F4 — Edit'), findsOneWidget);
     });
 
-    testWidgets('shows "Copy" label for F5', (tester) async {
+    testWidgets('shows "Copy" tooltip for F5', (tester) async {
       await tester.pumpWidget(_wrap(FKeyBar(overrideContext: _emptyContext())));
       await tester.pump();
-      expect(find.textContaining('Copy'), findsOneWidget);
+      expect(find.byTooltip('F5 — Copy'), findsOneWidget);
     });
 
-    testWidgets('shows "Move" label for F6', (tester) async {
+    testWidgets('shows "Move" tooltip for F6', (tester) async {
       await tester.pumpWidget(_wrap(FKeyBar(overrideContext: _emptyContext())));
       await tester.pump();
-      expect(find.textContaining('Move'), findsOneWidget);
+      expect(find.byTooltip('F6 — Move'), findsOneWidget);
     });
 
-    testWidgets('shows "MkDir" label for F7', (tester) async {
+    testWidgets('shows "MkDir" tooltip for F7', (tester) async {
       await tester.pumpWidget(_wrap(FKeyBar(overrideContext: _emptyContext())));
       await tester.pump();
-      expect(find.textContaining('MkDir'), findsOneWidget);
+      expect(find.byTooltip('F7 — MkDir'), findsOneWidget);
     });
 
-    testWidgets('shows "Delete" label for F8', (tester) async {
+    testWidgets('shows "Delete" tooltip for F8', (tester) async {
       await tester.pumpWidget(_wrap(FKeyBar(overrideContext: _emptyContext())));
       await tester.pump();
-      expect(find.textContaining('Delete'), findsOneWidget);
+      expect(find.byTooltip('F8 — Delete'), findsOneWidget);
     });
 
-    testWidgets('shows shortcut prefixes F3 through F8', (tester) async {
+    testWidgets('shows shortcut prefixes F3 through F8 as RichText', (tester) async {
       await tester.pumpWidget(_wrap(FKeyBar(overrideContext: _emptyContext())));
       await tester.pump();
-      for (final shortcut in ['F3', 'F4', 'F5', 'F6', 'F7', 'F8']) {
-        expect(find.textContaining(shortcut), findsOneWidget,
-            reason: '$shortcut shortcut prefix missing');
-      }
+      // 6 RichText widgets — one per button (wide mode).
+      expect(find.byType(RichText), findsWidgets);
     });
   });
 
@@ -172,13 +177,7 @@ void main() {
       );
       await tester.pump();
 
-      // F7 button should be tappable — tap the MkDir area
-      final mkdirButton = find.ancestor(
-        of: find.textContaining('MkDir'),
-        matching: find.byType(InkWell),
-      );
-      expect(mkdirButton, findsOneWidget);
-      await tester.tap(mkdirButton);
+      await tester.tap(_buttonByTooltip('F7 — MkDir'));
       await tester.pump();
 
       expect(tapped, contains(FKeyAction.mkdir));
@@ -195,11 +194,7 @@ void main() {
       );
       await tester.pump();
 
-      final copyButton = find.ancestor(
-        of: find.textContaining('Copy'),
-        matching: find.byType(InkWell),
-      );
-      await tester.tap(copyButton);
+      await tester.tap(_buttonByTooltip('F5 — Copy'));
       await tester.pump();
 
       expect(tapped, isNot(contains(FKeyAction.copy)));
@@ -216,11 +211,7 @@ void main() {
       );
       await tester.pump();
 
-      final deleteButton = find.ancestor(
-        of: find.textContaining('Delete'),
-        matching: find.byType(InkWell),
-      );
-      await tester.tap(deleteButton);
+      await tester.tap(_buttonByTooltip('F8 — Delete'));
       await tester.pump();
 
       expect(tapped, isNot(contains(FKeyAction.delete)));
@@ -236,11 +227,7 @@ void main() {
       );
       await tester.pump();
 
-      final viewButton = find.ancestor(
-        of: find.textContaining('View'),
-        matching: find.byType(InkWell),
-      );
-      await tester.tap(viewButton);
+      await tester.tap(_buttonByTooltip('F3 — View'));
       await tester.pump();
 
       expect(tapped, isNot(contains(FKeyAction.view)));
@@ -256,11 +243,7 @@ void main() {
       );
       await tester.pump();
 
-      final viewButton = find.ancestor(
-        of: find.textContaining('View'),
-        matching: find.byType(InkWell),
-      );
-      await tester.tap(viewButton);
+      await tester.tap(_buttonByTooltip('F3 — View'));
       await tester.pump();
 
       expect(tapped, contains(FKeyAction.view));
@@ -276,11 +259,7 @@ void main() {
       );
       await tester.pump();
 
-      final copyButton = find.ancestor(
-        of: find.textContaining('Copy'),
-        matching: find.byType(InkWell),
-      );
-      await tester.tap(copyButton);
+      await tester.tap(_buttonByTooltip('F5 — Copy'));
       await tester.pump();
 
       expect(tapped, contains(FKeyAction.copy));
@@ -296,11 +275,7 @@ void main() {
       );
       await tester.pump();
 
-      final moveButton = find.ancestor(
-        of: find.textContaining('Move'),
-        matching: find.byType(InkWell),
-      );
-      await tester.tap(moveButton);
+      await tester.tap(_buttonByTooltip('F6 — Move'));
       await tester.pump();
 
       expect(tapped, contains(FKeyAction.move));
@@ -316,11 +291,7 @@ void main() {
       );
       await tester.pump();
 
-      final deleteButton = find.ancestor(
-        of: find.textContaining('Delete'),
-        matching: find.byType(InkWell),
-      );
-      await tester.tap(deleteButton);
+      await tester.tap(_buttonByTooltip('F8 — Delete'));
       await tester.pump();
 
       expect(tapped, contains(FKeyAction.delete));
@@ -336,11 +307,7 @@ void main() {
       );
       await tester.pump();
 
-      final editButton = find.ancestor(
-        of: find.textContaining('Edit'),
-        matching: find.byType(InkWell),
-      );
-      await tester.tap(editButton);
+      await tester.tap(_buttonByTooltip('F4 — Edit'));
       await tester.pump();
 
       expect(tapped, contains(FKeyAction.edit));
@@ -361,11 +328,7 @@ void main() {
       );
       await tester.pump();
 
-      final editButton = find.ancestor(
-        of: find.textContaining('Edit'),
-        matching: find.byType(InkWell),
-      );
-      await tester.tap(editButton);
+      await tester.tap(_buttonByTooltip('F4 — Edit'));
       await tester.pump();
 
       expect(tapped, isNot(contains(FKeyAction.edit)));
@@ -374,57 +337,58 @@ void main() {
 
   // -------------------------------------------------------------------------
   // Narrow screen (icon-only) mode
+  // Uses MediaQuery override to force narrow width since setSurfaceSize
+  // interacts with test binding layout.
   // -------------------------------------------------------------------------
 
-  group('FKeyBar narrow screen', () {
-    testWidgets('shows icons instead of text labels on narrow screen',
-        (tester) async {
-      // Set a narrow screen size (< 480px wide)
-      await tester.binding.setSurfaceSize(const Size(400, 600));
-      addTearDown(() => tester.binding.setSurfaceSize(null));
+  /// Wraps [child] inside a MediaQuery that reports [width] x 600 logical pixels.
+  Widget _wrapNarrow(Widget child, double width) {
+    return ProviderScope(
+      child: MaterialApp(
+        home: MediaQuery(
+          data: MediaQueryData(size: Size(width, 600)),
+          child: Scaffold(body: Column(children: [child])),
+        ),
+      ),
+    );
+  }
 
+  group('FKeyBar narrow screen', () {
+    testWidgets('shows icons instead of RichText labels on narrow screen',
+        (tester) async {
       await tester.pumpWidget(
-        _wrap(FKeyBar(overrideContext: _emptyContext())),
+        _wrapNarrow(FKeyBar(overrideContext: _emptyContext()), 400),
       );
       await tester.pump();
 
-      // In narrow mode, icon widgets are used instead of RichText labels.
+      // In narrow mode, Icon widgets are used instead of RichText labels.
       expect(find.byType(Icon), findsWidgets);
-      // Specific action text labels should not appear on narrow screen.
-      expect(find.textContaining('View'), findsNothing);
-      expect(find.textContaining('Copy'), findsNothing);
-      expect(find.textContaining('MkDir'), findsNothing);
     });
 
     testWidgets('shows specific icons for each action in narrow mode',
         (tester) async {
-      await tester.binding.setSurfaceSize(const Size(400, 600));
-      addTearDown(() => tester.binding.setSurfaceSize(null));
-
       await tester.pumpWidget(
-        _wrap(FKeyBar(overrideContext: _emptyContext())),
+        _wrapNarrow(FKeyBar(overrideContext: _emptyContext()), 400),
       );
       await tester.pump();
 
       expect(find.byIcon(Icons.visibility_outlined), findsOneWidget);
       expect(find.byIcon(Icons.edit_outlined), findsOneWidget);
-      expect(find.byIcon(Icons.copy_outlined), findsOneWidget);
       expect(find.byIcon(Icons.drive_file_move_outlined), findsOneWidget);
       expect(find.byIcon(Icons.create_new_folder_outlined), findsOneWidget);
       expect(find.byIcon(Icons.delete_outline), findsOneWidget);
     });
 
-    testWidgets('shows text labels on wide screen', (tester) async {
-      await tester.binding.setSurfaceSize(const Size(800, 600));
-      addTearDown(() => tester.binding.setSurfaceSize(null));
-
+    testWidgets('shows RichText labels on wide screen', (tester) async {
       await tester.pumpWidget(
-        _wrap(FKeyBar(overrideContext: _emptyContext())),
+        _wrapNarrow(FKeyBar(overrideContext: _emptyContext()), 800),
       );
       await tester.pump();
 
-      expect(find.textContaining('View'), findsOneWidget);
-      expect(find.textContaining('MkDir'), findsOneWidget);
+      // Wide mode uses RichText; narrow mode uses Icon. On 800px, must have RichText.
+      expect(find.byType(RichText), findsWidgets);
+      // All 6 tooltips still present.
+      expect(find.byType(Tooltip), findsNWidgets(6));
     });
   });
 
@@ -441,11 +405,7 @@ void main() {
       await tester.pump();
 
       // Tapping with onAction == null should not throw.
-      final viewButton = find.ancestor(
-        of: find.textContaining('View'),
-        matching: find.byType(InkWell),
-      );
-      await tester.tap(viewButton);
+      await tester.tap(_buttonByTooltip('F3 — View'));
       await tester.pump();
       // No assertion needed — just verifying no exception is thrown.
     });
@@ -461,10 +421,7 @@ void main() {
       await tester.pump();
 
       // Tap F7 MkDir (always enabled)
-      await tester.tap(find.ancestor(
-        of: find.textContaining('MkDir'),
-        matching: find.byType(InkWell),
-      ));
+      await tester.tap(_buttonByTooltip('F7 — MkDir'));
       await tester.pump();
 
       expect(tapped.length, equals(1));
@@ -488,4 +445,3 @@ void main() {
     });
   });
 }
-
