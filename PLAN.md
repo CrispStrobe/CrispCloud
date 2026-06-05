@@ -52,7 +52,11 @@ CrispCloud becomes the **open-source Cyberduck/Transmit/Commander One killer**: 
 - **XDG compliance** (Linux): proper config/data/cache/state paths
 - **Performance benchmarks**: 11 benchmarks with timing validation
 - **Mock S3 + WebDAV servers** for offline CI testing
-- **80+ test files**, **2500+ unit tests** + gated E2E suites
+- **13 providers**: Filen, Internxt, SFTP, WebDAV, S3, FTP, Google Drive, OneDrive, Dropbox, Nextcloud, pCloud, **Azure Blob**, **Backblaze B2**
+- **Plugin system**: `CrispCloudPlugin` interface with sandboxed execution
+- **Opt-in analytics**: anonymous feature usage tracking
+- **Linux integration**: Nautilus/Dolphin/Thunar, D-Bus notifications, .deb/.rpm/AppImage packaging
+- **90+ test files**, **2900+ unit tests** + gated E2E suites
 
 **What's still needed:**
 - ~~Monolithic state (AppState)~~ — **Riverpod migration done** (8 focused providers)
@@ -169,9 +173,9 @@ CrispCloud becomes the **open-source Cyberduck/Transmit/Commander One killer**: 
   - [ ] Shared folders, Paper docs, content hash for dedup
 
 ### 3.2 New Providers — Tier 2
-- [ ] **Azure Blob Storage** — SAS token + OAuth2, blob tiers
+- [x] **Azure Blob Storage** — SAS token + SharedKey auth, blob tiers (Hot/Cool/Cold/Archive), server-side copy
 - [x] **FTP / FTPS** — `ftpconnect` package, TLS toggle, connection dialog, auto-login
-- [ ] **Backblaze B2** (native API, not just S3 compat) — large file API, app keys
+- [x] **Backblaze B2** (native API, not just S3 compat) — large file API, app keys, SHA1 checksums, auto-retry
 - [ ] **Mega.nz** — E2E encrypted
 - [x] **pCloud** — OAuth2, crypto folder, EU server support
 - [ ] **Storj** — decentralized, S3 gateway or native uplink
@@ -402,9 +406,10 @@ CrispCloud becomes the **open-source Cyberduck/Transmit/Commander One killer**: 
 - [ ] Virtual filesystem driver for mounted drives (like Mountain Duck)
 
 ### 8.3 Linux
-- [ ] Nautilus/Dolphin/Thunar right-click integration
-- [ ] D-Bus notifications
-- [ ] Distribution: .deb, .rpm, AppImage, Flatpak, Snap
+- [x] Nautilus/Dolphin/Thunar right-click integration — `LinuxIntegrationService` with install/uninstall per file manager
+- [x] D-Bus notifications — `sendNotification()` via `notify-send` CLI wrapper
+- [x] Distribution: .deb, .rpm, AppImage — packaging scripts in `linux/packaging/`
+- [ ] Distribution: Flatpak, Snap
 - [ ] GNOME Keyring / KDE Wallet integration (via flutter_secure_storage)
 - [x] XDG compliance (config in `~/.config/crispcloud/`) — `XdgService` with config/data/cache/state/runtime paths, env var resolution, legacy migration
 
@@ -437,15 +442,10 @@ CrispCloud becomes the **open-source Cyberduck/Transmit/Commander One killer**: 
 ## Phase 9: Developer Experience & Extensibility (Weeks 14-20)
 
 ### 9.1 Plugin System
-- [ ] Plugin API: `CrispCloudPlugin` interface
-  - `onFileAction(action, files)` — hook into operations
-  - Custom context menu entries
-  - Custom toolbar buttons
-  - Custom preview renderers
-  - Custom provider implementations
-- [ ] Plugin discovery: pub.dev packages tagged `crisp_cloud_plugin`
-- [ ] Plugin settings UI (per-plugin configuration)
-- [ ] Sandboxed execution (plugins can't access credentials)
+- [x] Plugin API: `CrispCloudPlugin` interface — file action hooks, context menu, toolbar, preview, provider capabilities
+- [x] Plugin discovery: `PluginRegistry` with register/unregister, enable/disable, SharedPreferences persistence
+- [x] Plugin settings UI (per-plugin configuration) — `PluginSettings` model with defaults + CRUD
+- [x] Sandboxed execution (plugins can't access credentials) — `PluginContext` with tempDir + settings only, no credential access
 
 ### 9.2 CLI Companion (`crisp`)
 - [x] Standalone Dart CLI for headless/scripted use — `cli/` subdirectory with 9 commands (connect, ls, upload, download, sync, search, share, providers, config)
@@ -518,7 +518,7 @@ CrispCloud becomes the **open-source Cyberduck/Transmit/Commander One killer**: 
 - [ ] Package managers: `brew install crisp-cloud`, `winget`, `choco`, `scoop`, `apt`
 - [ ] App stores: Mac App Store, Microsoft Store, Play Store, App Store, F-Droid
 - [ ] Auto-update with changelog display
-- [ ] Opt-in anonymous usage analytics (feature usage, not file data)
+- [x] Opt-in anonymous usage analytics (feature usage, not file data) — `AnalyticsService` with ring buffer, install ID, path-stripping sanitizer
 
 ---
 
@@ -547,6 +547,22 @@ CrispCloud becomes the **open-source Cyberduck/Transmit/Commander One killer**: 
 - [x] Restore wizard: browse snapshots, restore individual files or full backup — `getRestorePreview()` + `restoreSnapshot()`
 - [x] Backup encryption (independent of provider encryption) — encryption flag + key on `BackupPlan`, callback-based encrypt/decrypt
 
+### 11.5 Dual-Panel Power Mode (Priority)
+
+*Goal: Full orthodox file manager experience — symmetric panels, F-keys, archive browsing.*
+
+- [ ] **Symmetric panels**: both left and right panels can browse local folders, remote providers, archives, and encrypted containers independently
+- [ ] **Enter archives as folders**: navigate into .zip, .tar.gz, .7z files as if they were directories (read + extract, write for .zip)
+- [ ] **Enter VeraCrypt/Cryptomator containers**: browse encrypted vault contents directly in a panel (via unlock → virtual listing)
+- [ ] **F-key bottom bar**: F3 View, F4 Edit, F5 Copy, F6 Move, F7 MkDir, F8 Delete — toggleable via settings, shown as a bottom button bar
+- [ ] **F-key actions context-aware**: F5 copies from active panel to opposite panel (local→remote, remote→local, remote→remote)
+- [ ] **Right panel local browsing**: right panel can browse local filesystem (not just remote providers) — both panels are equal
+- [ ] **Panel source selector**: dropdown/button per panel to switch between Local, any connected provider, or an open archive/container
+- [ ] **Quick panel swap**: Ctrl+U or button to swap left and right panel contents
+- [ ] **Bottom bar toggle**: setting to show/hide F-key bar, configurable button set
+- [ ] **Internal viewer (F3)**: built-in hex/text/image viewer for quick preview without opening editor
+- [ ] **Brief/Full/Tree view modes per panel**: like TC's Ctrl+1/Ctrl+2 view toggles
+
 ### 11.4 Mounted Drives (Desktop)
 - [x] Mount remote storage as a local drive letter / mount point — `FuseMountService` + `MountDialog` + `MountNotifier`
 - [x] macOS: FUSE / macFUSE integration — helper script detects macFUSE/FUSE-T
@@ -573,7 +589,7 @@ CrispCloud becomes the **open-source Cyberduck/Transmit/Commander One killer**: 
 | 8. Platform Polish | Medium | High | **~75% done** — macOS (Finder ext), Windows (Explorer menu, Hello), Android (SAF, Material You, widget, foreground, intents), iOS (Share ext, Siri, Stage Manager), Web (SW, Push, FSA, Share Target, OPFS, PWA) done |
 | 9. Extensibility & CLI | Medium | High | **~85% done** — CLI, automation rules, local REST API done; plugin system pending |
 | 10. Quality & Distribution | High | High | **2500+ tests** — CI/CD, docs, i18n (7 langs), fuzz, benchmarks, mock servers done; a11y, distribution pending |
-| 11. Differentiation | High | Medium | **~95% done** — mounted drives, backup, migration wizard, storage analytics, provider comparison done; OCR pending |
+| 11. Differentiation | High | Medium | **~80% done** — mounted drives, backup, migration, analytics, comparison, delta sync done; **dual-panel power mode (priority)**, OCR pending |
 
 ---
 

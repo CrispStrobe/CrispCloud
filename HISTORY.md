@@ -38,6 +38,32 @@ Audit trail of bugs found, issues discovered, and fixes applied.
 - **Created `lib/providers/veracrypt_mount_provider.dart`**: installed check, mounts state notifier, busy/error tracking
 - **Tests**: 102 tests (model serialization, CLI arg building, --list parsing, version parsing, slot allocation, password redaction, platform guards, algorithm validation)
 
+### 3.2 Azure Blob Storage Adapter
+- **Created `lib/services/azure_blob_adapter.dart`** (~885 lines): `CloudStorageClient` implementation with SAS token + SharedKey auth, HMAC-SHA256 signing, container/blob listing (XML parsing), blob tiers (Hot/Cool/Cold/Archive), server-side copy for move/rename
+- **Created `lib/services/azure_config_service.dart`**: connection string parsing, SAS token extraction, SecureStorage persistence
+- **Tests**: 84 tests (auth modes, XML parsing, blob tiers, URL encoding, capability flags)
+
+### 3.2 Backblaze B2 Native Adapter
+- **Created `lib/services/b2_client_adapter.dart`** (~530 lines): native B2 API with `b2_authorize_account`, `b2_list_file_names`, large file upload (start→parts→finish), `b2_download_file_by_name`, soft delete (`b2_hide_file`), SHA1 checksums, 429/503 auto-retry with Retry-After
+- **Created `lib/services/b2_config_service.dart`**: keyId/applicationKey persistence, auth session caching
+- **Tests**: 100 tests (auth, listing, upload headers, large file sequence, download URLs, delete modes, retry logic)
+
+### 9.1 Plugin System
+- **Created `lib/services/plugin_service.dart`** (~564 lines): `CrispCloudPlugin` interface, `PluginCapability`/`FileAction` enums, `PluginMenuItem`/`PluginToolbarButton` models, `PluginContext` (sandboxed — tempDir + settings only, no credentials), `PluginRegistry` with register/unregister, enable/disable, file action broadcasting, context menu + toolbar aggregation
+- **Created `lib/providers/plugin_provider.dart`**: registry notifier, enabled plugins, per-plugin settings
+- **Tests**: 67 tests (registration, enable/disable, sandbox isolation, event broadcasting, menu/toolbar aggregation, settings CRUD)
+
+### 10.6 Opt-in Usage Analytics
+- **Created `lib/services/analytics_service.dart`** (~380 lines): `AnalyticsEvent`/`UsageSummary` models, `EventCategory` enum (10 categories), opt-in toggle, ring buffer (1000 events), anonymous install ID (UUID), path-stripping sanitizer, `LocalBackend`/`RemoteBackend` abstraction
+- **Created `lib/providers/analytics_provider.dart`**: enabled toggle, service, summary providers
+- **Tests**: 90 tests (opt-in/out, event recording, path stripping, ring buffer cap, install ID, export, summary)
+
+### 8.3 Linux Desktop Integration
+- **Created `lib/services/linux_integration_service.dart`** (~535 lines): Nautilus script, Dolphin .desktop, Thunar UCA XML install/uninstall, `.desktop` file, `notify-send` D-Bus notifications, file manager detection
+- **Created `linux/packaging/`**: `build_deb.sh`, `build_appimage.sh`, `build_rpm.sh`, `crispcloud.desktop`
+- **Created `lib/providers/linux_integration_provider.dart`**: file manager detection, per-FM enable toggle
+- **Tests**: 66 tests (platform guards, script content, .desktop content, XML structure, notification args, packaging scripts)
+
 ### Block-Level Delta Sync
 - **Created `lib/services/delta_sync_service.dart`** (~600 lines): `BlockSignature`/`BlockMap`/`DeltaResult`/`BlockTransferPlan`/`BlockOperation` models, Adler-32 rolling hash (pure Dart), SHA-256 strong hash, `computeBlockMap()` (stream-based, no full-file buffering), `compareBlockMaps()`, `createTransferPlan()`, `applyDelta()` (random-access file patching), `estimateSavings()`, blockmap JSON persistence, configurable block size (64KB-64MB, default 4MB)
 - **Created `lib/providers/delta_sync_provider.dart`**: block size + enabled toggle with SharedPreferences persistence

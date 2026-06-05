@@ -16,3 +16,4 @@ export 'sync_provider.dart';
 export 'transfer_provider.dart';
 export 'provider_comparison_provider.dart';
 export 'keyboard_shortcut_provider.dart';
+export 'plugin_provider.dart';

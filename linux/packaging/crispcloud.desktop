@@ -1,0 +1,12 @@
+[Desktop Entry]
+Name=CrispCloud
+Comment=Cross-platform cloud file manager
+Exec=crispcloud %U
+Icon=crispcloud
+Terminal=false
+Type=Application
+Categories=Network;FileTransfer;Cloud;
+MimeType=x-scheme-handler/crispcloud;
+StartupNotify=true
+StartupWMClass=CrispCloud
+Keywords=cloud;storage;files;upload;download;sync;
