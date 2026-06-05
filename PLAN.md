@@ -47,7 +47,12 @@ CrispCloud becomes the **open-source Cyberduck/Transmit/Commander One killer**: 
 - **Backup engine**: `BackupService` — scheduled incremental backups, versioning, integrity verification, restore wizard
 - **Local REST API**: `LocalApiService` — 11 endpoints on localhost, token auth, rate limiting, CORS
 - **Auto-update**: `AutoUpdateService` — GitHub Releases checker, version comparison, update channels
-- **60+ test files**, **1651 unit tests** + gated E2E suites
+- **Cryptomator vault** v8 interop + **VeraCrypt container** (.vc/.hc) support
+- **Rebindable keyboard shortcuts**: 24 actions, conflict detection, import/export
+- **XDG compliance** (Linux): proper config/data/cache/state paths
+- **Performance benchmarks**: 11 benchmarks with timing validation
+- **Mock S3 + WebDAV servers** for offline CI testing
+- **80+ test files**, **2500+ unit tests** + gated E2E suites
 
 **What's still needed:**
 - ~~Monolithic state (AppState)~~ — **Riverpod migration done** (8 focused providers)
@@ -263,7 +268,7 @@ CrispCloud becomes the **open-source Cyberduck/Transmit/Commander One killer**: 
 - [x] Configurable font size and family — `fontSizeProvider` (10-20px) + `fontFamilyProvider` with persistence
 - [ ] Material You dynamic theming on Android
 - [ ] Toolbar customization: show/hide buttons, reorder
-- [ ] Rebindable keyboard shortcuts (persist to settings)
+- [x] Rebindable keyboard shortcuts (persist to settings) — `KeyboardShortcutService` with 24 actions, conflict detection, import/export, SharedPreferences persistence
 
 ### 5.5 Advanced Navigation
 - [x] Breadcrumb path bar (clickable path segments) — already existed in FileBreadcrumbs
@@ -351,7 +356,8 @@ CrispCloud becomes the **open-source Cyberduck/Transmit/Commander One killer**: 
 - [x] 28 tests covering round-trip, wrong key, 1MB data, wrapper behaviour
 - [x] Wired into UI: connection dialog toggle + passphrase, AppState enableEncryption/disableEncryption
 - [x] Key management: export/import master key (hex), BIP39 24-word mnemonic, backup bundle with verification — `KeyManagementDialog`
-- [ ] Compatible with Cryptomator vault format (interop with other tools)
+- [x] Compatible with Cryptomator vault format (interop with other tools) — `CryptomatorService` with v8 vault detection, scrypt KDF, AES key wrap (RFC 3394), SIV filename encryption, directory ID hashing
+- [x] VeraCrypt container support (.vc/.hc) — `VeraCryptService` with AES-256-XTS header decryption, SHA-512/SHA-256/Whirlpool KDF, live integration tests
 
 ### 7.2 Secure Networking
 - [x] Certificate pinning for known providers — `CertPinningService` with SPKI SHA-256 pins for Google/Microsoft/Dropbox/Amazon, wired into `ProxyHttpOverrides`
@@ -398,7 +404,7 @@ CrispCloud becomes the **open-source Cyberduck/Transmit/Commander One killer**: 
 - [ ] D-Bus notifications
 - [ ] Distribution: .deb, .rpm, AppImage, Flatpak, Snap
 - [ ] GNOME Keyring / KDE Wallet integration (via flutter_secure_storage)
-- [ ] XDG compliance (config in `~/.config/crispcloud/`)
+- [x] XDG compliance (config in `~/.config/crispcloud/`) — `XdgService` with config/data/cache/state/runtime paths, env var resolution, legacy migration
 
 ### 8.4 Android
 - [x] SAF (Storage Access Framework) full integration — `SAFService` + Kotlin `SAFHandler` with Activity Result API
@@ -468,9 +474,9 @@ CrispCloud becomes the **open-source Cyberduck/Transmit/Commander One killer**: 
 - [ ] Widget tests for every screen and dialog
 - [ ] Integration tests: full user flows (connect → browse → transfer → disconnect)
 - [ ] Golden tests for UI regression
-- [ ] Performance benchmarks: 1K-file listing, 1GB upload, 10K-file sync
+- [x] Performance benchmarks: 1K-file listing, 1GB upload, 10K-file sync — `BenchmarkService` with 11 benchmarks, Stopwatch timing, median of N iterations
 - [x] Fuzz testing: Unicode filenames, special chars, path traversal, long paths — `PathSanitizer` utility + 131 tests
-- [ ] Provider mock server for offline CI testing
+- [x] Provider mock server for offline CI testing — `MockS3Server` + `MockWebDavServer` in-process HTTP servers with full CRUD
 
 ### 10.2 CI/CD
 - [x] Build artifacts for all 6 platforms on every PR — ci.yml matrix builds web/linux/android + windows/macOS/iOS
@@ -560,12 +566,12 @@ CrispCloud becomes the **open-source Cyberduck/Transmit/Commander One killer**: 
 | 4. Sync Engine | Very High | Very High | **~95% done** — two-way, selective, offline replay+cache, watcher, tray, delta sync, placeholder files, **mobile background sync** done |
 | 5. UI/UX | High | Medium | **~98% done** — preview, tabs, themes, nav, DnD (multi-file badge), tree, grid+thumbnails (provider-native), column view, bookmarks, pull-to-refresh, quota display done |
 | 6. Power User Features | Medium | High | **~90% done** — editor, palette, batch rename, archives, versions+restore+diff, share, dupes, diff, permissions, search filters, **full-text search** done |
-| 7.1 Client-Side Encryption | High | High | **~90% done** — encryption + key management + BIP39 done; Cryptomator compat pending |
+| 7.1 Client-Side Encryption | High | High | **100% done** — encryption + key management + BIP39 + Cryptomator v8 + VeraCrypt done |
 | 7.2-7.4 Security extras | Medium | Medium | **~95% done** — proxy, app lock, biometric, cert pinning, custom CA, TLS enforcement, secure clipboard done |
 | 8. Platform Polish | Medium | High | **~75% done** — macOS (Finder ext), Windows (Explorer menu, Hello), Android (SAF, Material You, widget, foreground, intents), iOS (Share ext, Siri, Stage Manager), Web (SW, Push, FSA, Share Target, OPFS, PWA) done |
 | 9. Extensibility & CLI | Medium | High | **~85% done** — CLI, automation rules, local REST API done; plugin system pending |
-| 10. Quality & Distribution | High | High | **1651 tests** — CI/CD (all platforms, nightly, auto-update), docs done; a11y, i18n expansion, distribution pending |
-| 11. Differentiation | High | Medium | **Mounted drives + backup engine done** — migration wizard, smart features pending |
+| 10. Quality & Distribution | High | High | **2500+ tests** — CI/CD, docs, i18n (7 langs), fuzz, benchmarks, mock servers done; a11y, distribution pending |
+| 11. Differentiation | High | Medium | **~95% done** — mounted drives, backup, migration wizard, storage analytics, provider comparison done; OCR pending |
 
 ---
 

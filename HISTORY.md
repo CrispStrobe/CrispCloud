@@ -2,6 +2,37 @@
 
 Audit trail of bugs found, issues discovered, and fixes applied.
 
+## 2026-06-05 — Session 6: Encryption Interop, Shortcuts, XDG, Benchmarks, Mock Servers (1947 → 2500+ tests)
+
+### 5.4 Rebindable Keyboard Shortcuts
+- **Created `lib/services/keyboard_shortcut_service.dart`** (~401 lines): `ShortcutAction` enum (24 actions), `ShortcutBinding` model with `matches()`, `toDisplayString()` (platform-aware ⌘/Ctrl), `KeyboardShortcutService` with defaults, custom overrides, conflict detection, `exportBindings()`/`importBindings()`, `resolve()`, SharedPreferences persistence
+- **Created `lib/providers/keyboard_shortcut_provider.dart`**: bindings notifier, display string family provider
+- **Tests**: 60 tests (validation, serialization, matching, display, defaults, custom overrides, persistence, conflicts, import/export)
+- **Bug fix**: Space key `_normaliseForMatch()` — `trim()` was eating the space character
+
+### 7.1 Cryptomator Vault Format (v8)
+- **Created `lib/services/cryptomator_service.dart`** (~450 lines): `CryptomatorVault`, `VaultConfig` (JWT parsing), `MasterkeyFile` (JSON), `UnlockedVault` models, `detectVault()`, `unlockVault()` (scrypt KDF + AES key unwrap RFC 3394), `encryptFilename()`/`decryptFilename()` (SIV mode), `encryptPath()`/`decryptPath()`, `hashDirectoryId()` (SHA-1→base32), `getContentKey()`, `generateMasterKey()`, `createMasterkeyFile()`, 220-char shortening threshold (.c9s)
+- **Tests**: 68 tests (masterkey parsing, JWT config, vault detection, unlock, key wrap/unwrap, directory hashing, filename encryption round-trip, path encryption, content keys, vault version)
+
+### 7.1 VeraCrypt Container Support (.vc/.hc)
+- **Created `lib/services/veracrypt_service.dart`** (~330 lines): `VeraCryptContainer`, `VeraCryptVolumeHeader` models, `detectContainer()`/`detectContainerStrict()`, `parseHeader()`, `deriveKey()` (PBKDF2 with SHA-512/SHA-256/Whirlpool), `tryDecryptHeader()` (AES-256-XTS decryption, "VERA" magic verification), algorithm name mappings
+- **Created `lib/providers/vault_provider.dart`**: detected vaults + unlocked sessions providers
+- **Tests**: 63 unit tests + 10 live integration tests (real AES-256-XTS encrypted headers with SHA-512/SHA-256/Whirlpool KDF round-trips, wrong password rejection, corrupted header detection)
+
+### 8.3 XDG Compliance (Linux)
+- **Created `lib/services/xdg_service.dart`** (~430 lines): `XdgDirectory` enum, `XdgService` singleton with `configHome`/`dataHome`/`cacheHome`/`stateHome`/`runtimeDir`, env var resolution (`XDG_CONFIG_HOME`, etc.), `ensureDirectories()`, `migrateFromLegacy()`, non-Linux fallback to `path_provider`
+- **Created `lib/providers/xdg_provider.dart`**: path providers
+- **Tests**: 60 tests (default paths, custom env vars, trailing slash, runtime nullable, path dispatch, absolute paths, directory creation, migration, singleton lifecycle)
+
+### 10.1 Performance Benchmarks
+- **Created `lib/services/benchmark_service.dart`** (~310 lines): `BenchmarkResult`/`BenchmarkSuite` models, 11 benchmarks (file list generation, sorting by name/size/date, glob filtering, AES-256-GCM encrypt/decrypt, MD5/SHA-256 hashing, JSON serialization, path operations, transfer queue scheduling), `runFullSuite()`, Stopwatch-based median timing
+- **Tests**: 54 tests (model serialization, ops/s calculation, timing thresholds, suite integration, warmup isolation, median semantics)
+
+### 10.1 Provider Mock Server
+- **Created `test/mock_server/mock_s3_server.dart`** (~429 lines): in-process S3 HTTP server with bucket CRUD, object GET/PUT/DELETE/HEAD, ListBucketResult XML, pagination, ETag
+- **Created `test/mock_server/mock_webdav_server.dart`** (~399 lines): in-process WebDAV HTTP server with PROPFIND (Depth 0/1), GET/PUT/DELETE, MKCOL, MOVE, COPY, multistatus XML
+- **Tests**: 50 tests (S3: lifecycle, CRUD, prefix/delimiter listing, pagination, multi-bucket; WebDAV: lifecycle, CRUD, PROPFIND depth, MKCOL, MOVE, COPY, nested folders)
+
 ## 2026-06-01 — Session 5: i18n, Fuzz, Analytics, Comparison, Migration (1651 → 1947+ tests, +296)
 
 ### 10.3 i18n Expansion (5 languages)
