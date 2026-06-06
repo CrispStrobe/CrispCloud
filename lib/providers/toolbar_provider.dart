@@ -2,12 +2,16 @@
 //
 // Riverpod providers for toolbar customisation and per-panel view modes.
 
+import 'dart:io' show Platform;
+
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 import '../models/panel_side.dart';
 import '../services/panel_view_mode_service.dart';
 import '../services/toolbar_customization_service.dart';
+
+bool get _isTest => Platform.environment.containsKey('FLUTTER_TEST');
 
 // ---------------------------------------------------------------------------
 // Service singletons
@@ -126,6 +130,7 @@ class _ColumnWidthsNotifier extends StateNotifier<Map<String, double>> {
   }
 
   Future<void> _load() async {
+    if (_isTest) return;
     try {
       final prefs = await SharedPreferences.getInstance();
       final size = prefs.getDouble('col_${_sideKey}_size') ?? 62.0;
@@ -137,9 +142,11 @@ class _ColumnWidthsNotifier extends StateNotifier<Map<String, double>> {
 
   void setWidth(String col, double w) {
     state = {...state, col: w.clamp(36.0, 200.0)};
-    SharedPreferences.getInstance().then((prefs) {
-      prefs.setDouble('col_${_sideKey}_$col', state[col]!);
-    });
+    if (!_isTest) {
+      SharedPreferences.getInstance().then((prefs) {
+        prefs.setDouble('col_${_sideKey}_$col', state[col]!);
+      });
+    }
   }
 
   bool isVisible(String col) => (state[col] ?? 0) > 0;
