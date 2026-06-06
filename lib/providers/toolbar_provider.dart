@@ -3,6 +3,7 @@
 // Riverpod providers for toolbar customisation and per-panel view modes.
 
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 import '../models/panel_side.dart';
 import '../services/panel_view_mode_service.dart';
@@ -110,6 +111,32 @@ final panelViewModeProvider = StateNotifierProvider.family<
 
 /// Per-panel column widths for the compact "Full" view.
 /// Keys: 'size', 'date'. Values: pixel widths. Shared between header and tiles.
-final columnWidthsProvider = StateProvider.family<Map<String, double>, dynamic>(
-  (ref, side) => {'size': 62.0, 'date': 78.0},
+/// Persisted to SharedPreferences.
+final columnWidthsProvider =
+    StateNotifierProvider.family<_ColumnWidthsNotifier, Map<String, double>, dynamic>(
+  (ref, side) => _ColumnWidthsNotifier(side.toString()),
 );
+
+class _ColumnWidthsNotifier extends StateNotifier<Map<String, double>> {
+  final String _sideKey;
+
+  _ColumnWidthsNotifier(this._sideKey) : super({'size': 62.0, 'date': 78.0}) {
+    _load();
+  }
+
+  Future<void> _load() async {
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      final size = prefs.getDouble('col_${_sideKey}_size') ?? 62.0;
+      final date = prefs.getDouble('col_${_sideKey}_date') ?? 78.0;
+      state = {'size': size, 'date': date};
+    } catch (_) {}
+  }
+
+  void setWidth(String col, double w) {
+    state = {...state, col: w.clamp(36.0, 200.0)};
+    SharedPreferences.getInstance().then((prefs) {
+      prefs.setDouble('col_${_sideKey}_$col', state[col]!);
+    });
+  }
+}

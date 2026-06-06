@@ -475,10 +475,7 @@ class _CompactColumnHeader extends ConsumerWidget {
         onHorizontalDragUpdate: (details) {
           final current = colWidths[colKey] ?? 62.0;
           final newW = (current + details.delta.dx).clamp(36.0, 200.0);
-          ref.read(columnWidthsProvider(side).notifier).state = {
-            ...colWidths,
-            colKey: newW,
-          };
+          ref.read(columnWidthsProvider(side).notifier).setWidth(colKey, newW);
         },
         child: MouseRegion(
           cursor: SystemMouseCursors.resizeColumn,
