@@ -430,9 +430,13 @@ class _CompactColumnHeader extends ConsumerWidget {
     final style = TextStyle(fontSize: 11, fontWeight: FontWeight.w600,
         color: theme.colorScheme.onSurface.withValues(alpha: 0.7));
     final colWidths = ref.watch(columnWidthsProvider(side));
-    final sizeW = colWidths['size'] ?? 62.0;
-    final dateW = colWidths['date'] ?? 78.0;
-    final extW = colWidths['ext'] ?? 40.0;
+    final colNotifier = ref.read(columnWidthsProvider(side).notifier);
+    final sizeW = (colWidths['size'] ?? 62.0).abs();
+    final dateW = (colWidths['date'] ?? 78.0).abs();
+    final extW = (colWidths['ext'] ?? 40.0).abs();
+    final showSize = colNotifier.isVisible('size');
+    final showDate = colNotifier.isVisible('date');
+    final showExt = colNotifier.isVisible('ext');
 
     Widget colLabel(String label, SortBy by, {double? width}) {
       final isPrimary = panel.sortBy == by;
@@ -502,16 +506,39 @@ class _CompactColumnHeader extends ConsumerWidget {
       child: Row(
         children: [
           const SizedBox(width: 18 + 2 + 14 + 4), // icon space matches CompactFileTile
-          Expanded(child: colLabel('Name', SortBy.name)),
-          dragHandle('size'),
-          colLabel('Size', SortBy.size, width: sizeW),
-          dragHandle('date'),
-          colLabel('Date', SortBy.date, width: dateW),
-          dragHandle('ext'),
-          colLabel('Ext', SortBy.extension, width: extW),
+          Expanded(child: GestureDetector(
+            onSecondaryTap: () => _showColumnMenu(context, ref, side, colNotifier),
+            child: colLabel('Name', SortBy.name),
+          )),
+          if (showSize) ...[dragHandle('size'), colLabel('Size', SortBy.size, width: sizeW)],
+          if (showDate) ...[dragHandle('date'), colLabel('Date', SortBy.date, width: dateW)],
+          if (showExt) ...[dragHandle('ext'), colLabel('Ext', SortBy.extension, width: extW)],
           const SizedBox(width: 4),
         ],
       ),
     );
   }
+}
+
+/// Show column visibility menu on right-click of column header.
+void _showColumnMenu(
+    BuildContext context, WidgetRef ref, PanelSide side, dynamic colNotifier) {
+  final position = RelativeRect.fromLTRB(
+    MediaQuery.sizeOf(context).width / 2, 80, MediaQuery.sizeOf(context).width / 2 + 1, 81);
+  showMenu<String>(
+    context: context,
+    position: position,
+    items: [
+      for (final col in ['size', 'date', 'ext'])
+        CheckedPopupMenuItem<String>(
+          value: col,
+          checked: colNotifier.isVisible(col),
+          child: Text(col[0].toUpperCase() + col.substring(1)),
+        ),
+    ],
+  ).then((selected) {
+    if (selected != null) {
+      ref.read(columnWidthsProvider(side).notifier).toggleVisibility(selected);
+    }
+  });
 }

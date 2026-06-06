@@ -173,7 +173,7 @@ void showFileContextMenu(BuildContext context, WidgetRef ref, PanelSide side, Fi
   // Verify copy: compare local file MD5 against same-named file in opposite panel (DC-15)
   if (!isMultiSelect && !isSingleFolder && !kIsWeb && side == PanelSide.local &&
       file.path != null && !file.isFolder) {
-    final oppSide = PanelSide.remote;
+    const oppSide = PanelSide.remote;
     final oppPanel = ref.read(panelProvider(oppSide));
     final oppMatch = (oppPanel.files ?? [])
         .where((f) => f.name == file.name && !f.isFolder)

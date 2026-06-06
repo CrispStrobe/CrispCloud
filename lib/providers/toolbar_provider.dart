@@ -141,4 +141,22 @@ class _ColumnWidthsNotifier extends StateNotifier<Map<String, double>> {
       prefs.setDouble('col_${_sideKey}_$col', state[col]!);
     });
   }
+
+  bool isVisible(String col) => (state[col] ?? 0) > 0;
+
+  void toggleVisibility(String col) {
+    final current = state[col] ?? 0;
+    if (current <= 0) {
+      // Restore to default
+      final defaults = {'size': 62.0, 'date': 78.0, 'ext': 40.0};
+      setWidth(col, defaults[col] ?? 62.0);
+    } else {
+      // Hide: store as negative (remember last width)
+      final hidden = -current;
+      state = {...state, col: hidden};
+      SharedPreferences.getInstance().then((prefs) {
+        prefs.setDouble('col_${_sideKey}_$col', hidden);
+      });
+    }
+  }
 }

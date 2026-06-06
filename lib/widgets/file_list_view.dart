@@ -472,10 +472,13 @@ class CompactFileTile extends ConsumerWidget {
     final colorService = ref.watch(fileTypeColorProvider);
     final fileColor = colorService.colorForFile(file);
     final theme = Theme.of(context);
-    final colWidths = ref.watch(columnWidthsProvider(side));
-    final sizeColW = colWidths['size'] ?? 62.0;
-    final dateColW = colWidths['date'] ?? 78.0;
-    final extColW = colWidths['ext'] ?? 40.0;
+    final colNotifier = ref.watch(columnWidthsProvider(side));
+    final sizeColW = colNotifier['size'] ?? 62.0;
+    final dateColW = colNotifier['date'] ?? 78.0;
+    final extColW = colNotifier['ext'] ?? 40.0;
+    final showSize = sizeColW > 0;
+    final showDate = dateColW > 0;
+    final showExt = extColW > 0;
 
     // Selected = fill; cursor = left border (can combine both)
     final bgColor = isSelected
@@ -537,14 +540,14 @@ class CompactFileTile extends ConsumerWidget {
                 overflow: TextOverflow.ellipsis,
               ),
             ),
-            if (sizeStr.isNotEmpty) ...[
+            if (showSize && sizeStr.isNotEmpty) ...[
               const SizedBox(width: 8),
               SizedBox(
                 width: sizeColW,
                 child: Text(sizeStr, style: dimStyle, textAlign: TextAlign.right, maxLines: 1),
               ),
             ],
-            if (dateStr.isNotEmpty) ...[
+            if (showDate && dateStr.isNotEmpty) ...[
               const SizedBox(width: 8),
               SizedBox(
                 width: dateColW,
@@ -552,11 +555,12 @@ class CompactFileTile extends ConsumerWidget {
               ),
             ],
             // Extension column
-            SizedBox(
-              width: extColW,
-              child: Text(extStr, style: dimStyle, textAlign: TextAlign.right,
-                  maxLines: 1, overflow: TextOverflow.clip),
-            ),
+            if (showExt)
+              SizedBox(
+                width: extColW,
+                child: Text(extStr, style: dimStyle, textAlign: TextAlign.right,
+                    maxLines: 1, overflow: TextOverflow.clip),
+              ),
             const SizedBox(width: 4),
           ],
         ),

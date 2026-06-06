@@ -6,7 +6,6 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'dart:io';
 
 import '../models/panel_side.dart';
-import '../providers/bookmarks_provider.dart' show bookmarksProvider;
 import '../providers/providers.dart';
 
 class FileBreadcrumbs extends ConsumerWidget {

@@ -13,7 +13,6 @@ import '../providers/panel_source_provider.dart' show panelSourceProvider;
 import '../providers/toolbar_provider.dart' show panelViewModeProvider;
 import '../services/panel_view_mode_service.dart' show PanelViewMode;
 import '../services/panel_swap_service.dart';
-import '../providers/bookmarks_provider.dart' show bookmarksProvider;
 import '../widgets/command_palette.dart';
 import '../widgets/file_context_menu.dart' show showPropertiesDialog;
 import '../widgets/file_toolbar.dart' show showPanelFilterDialog;
@@ -195,7 +194,7 @@ KeyEventResult handleKeyEvent(
   if (isCtrl && event.logicalKey == LogicalKeyboardKey.enter) {
     final item = panel.cursorItem;
     if (item != null && item.isFolder) {
-      final targetPath = item.path ?? (panel.currentPath + '/' + item.name);
+      final targetPath = item.path ?? '${panel.currentPath}/${item.name}';
       final oppPanel = activePanel == PanelSide.local ? PanelSide.remote : PanelSide.local;
       ref.read(panelProvider(oppPanel)).navigateToPath(targetPath);
     }
