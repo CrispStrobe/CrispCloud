@@ -107,3 +107,9 @@ final panelViewModeProvider = StateNotifierProvider.family<
     return PanelViewModeNotifier(svc, side);
   },
 );
+
+/// Per-panel column widths for the compact "Full" view.
+/// Keys: 'size', 'date'. Values: pixel widths. Shared between header and tiles.
+final columnWidthsProvider = StateProvider.family<Map<String, double>, dynamic>(
+  (ref, side) => {'size': 62.0, 'date': 78.0},
+);

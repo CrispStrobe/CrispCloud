@@ -8,7 +8,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../models/file_item.dart';
 import '../models/panel_side.dart';
 import '../providers/providers.dart';
-import '../providers/toolbar_provider.dart' show panelViewModeProvider;
+import '../providers/toolbar_provider.dart' show columnWidthsProvider, panelViewModeProvider;
 import '../services/panel_view_mode_service.dart' show PanelViewMode;
 import 'file_column_view.dart';
 import 'file_grid_view.dart';
@@ -16,6 +16,7 @@ import 'file_toolbar.dart';
 import 'file_list_view.dart' show FileListView, PanelDragData, getFileIcon;
 import 'file_tree_view_stub.dart'
     if (dart.library.io) 'file_tree_view.dart';
+import 'drive_bar.dart';
 import 'panel_tab_bar.dart';
 import '../screens/screen_dialogs.dart' show showConnectionDialogScreen;
 
@@ -247,6 +248,7 @@ class _FilePanelState extends ConsumerState<FilePanel> {
             side: widget.side,
             currentPath: currentPath,
           ),
+          DriveBar(side: widget.side),
           if (currentPath != '/' && currentPath != '')
             _isEditingPath
                 ? Padding(
@@ -415,27 +417,29 @@ class _FilePanelState extends ConsumerState<FilePanel> {
 }
 
 /// Sortable column headers for compact ("Full") view, matching CompactFileTile layout.
-class _CompactColumnHeader extends StatelessWidget {
+/// Supports drag-to-resize Size and Date columns (DC-11).
+class _CompactColumnHeader extends ConsumerWidget {
   final PanelSide side;
   final PanelNotifier panel;
   const _CompactColumnHeader({required this.side, required this.panel});
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
     final theme = Theme.of(context);
     final bg = theme.colorScheme.surfaceContainerHighest.withValues(alpha: 0.6);
     final style = TextStyle(fontSize: 11, fontWeight: FontWeight.w600,
         color: theme.colorScheme.onSurface.withValues(alpha: 0.7));
+    final colWidths = ref.watch(columnWidthsProvider(side));
+    final sizeW = colWidths['size'] ?? 62.0;
+    final dateW = colWidths['date'] ?? 78.0;
 
-    Widget col(String label, SortBy by, {TextAlign align = TextAlign.left, double? width}) {
+    Widget colLabel(String label, SortBy by, {double? width}) {
       final isPrimary = panel.sortBy == by;
       final isSecondary = panel.secondarySortBy == by;
       final primaryArrow = isPrimary
-          ? (panel.sortOrder == SortOrder.ascending ? ' ↑' : ' ↓')
-          : '';
+          ? (panel.sortOrder == SortOrder.ascending ? ' ↑' : ' ↓') : '';
       final secondaryArrow = isSecondary && !isPrimary
-          ? (panel.secondarySortOrder == SortOrder.ascending ? '↑' : '↓')
-          : '';
+          ? (panel.secondarySortOrder == SortOrder.ascending ? '↑' : '↓') : '';
       final cell = Row(
         mainAxisSize: MainAxisSize.min,
         children: [
@@ -444,15 +448,14 @@ class _CompactColumnHeader extends StatelessWidget {
           ), maxLines: 1, overflow: TextOverflow.clip),
           if (secondaryArrow.isNotEmpty)
             Text(secondaryArrow, style: style.copyWith(
-              fontSize: 9,
-              color: theme.colorScheme.tertiary,
+              fontSize: 9, color: theme.colorScheme.tertiary,
             )),
         ],
       );
-      final tappable = GestureDetector(
+      return GestureDetector(
         onTap: () => isPrimary ? panel.toggleSortOrder() : panel.setSortBy(by),
-        onSecondaryTap: () => isSecondary
-            ? (isPrimary ? null : panel.setSecondarySortBy(null))
+        onSecondaryTap: () => isSecondary && !isPrimary
+            ? panel.setSecondarySortBy(null)
             : panel.setSecondarySortBy(by),
         onLongPress: () => isSecondary && !isPrimary
             ? panel.setSecondarySortBy(null)
@@ -461,12 +464,37 @@ class _CompactColumnHeader extends StatelessWidget {
           message: isSecondary
               ? 'Secondary sort (right-click/long-press to clear)'
               : 'Right-click/long-press to set as secondary sort',
-          child: width != null
-              ? SizedBox(width: width, child: cell)
-              : cell,
+          child: width != null ? SizedBox(width: width, child: cell) : cell,
         ),
       );
-      return tappable;
+    }
+
+    // Drag handle between columns
+    Widget dragHandle(String colKey) {
+      return GestureDetector(
+        onHorizontalDragUpdate: (details) {
+          final current = colWidths[colKey] ?? 62.0;
+          final newW = (current + details.delta.dx).clamp(36.0, 200.0);
+          ref.read(columnWidthsProvider(side).notifier).state = {
+            ...colWidths,
+            colKey: newW,
+          };
+        },
+        child: MouseRegion(
+          cursor: SystemMouseCursors.resizeColumn,
+          child: Container(
+            width: 6,
+            color: Colors.transparent,
+            child: Center(
+              child: Container(
+                width: 1,
+                height: 12,
+                color: theme.dividerColor,
+              ),
+            ),
+          ),
+        ),
+      );
     }
 
     return Container(
@@ -476,11 +504,11 @@ class _CompactColumnHeader extends StatelessWidget {
       child: Row(
         children: [
           const SizedBox(width: 18 + 2 + 14 + 4), // icon space matches CompactFileTile
-          Expanded(child: col('Name', SortBy.name)),
-          const SizedBox(width: 8),
-          col('Size', SortBy.size, align: TextAlign.right, width: 62),
-          const SizedBox(width: 8),
-          col('Date', SortBy.date, align: TextAlign.right, width: 78),
+          Expanded(child: colLabel('Name', SortBy.name)),
+          dragHandle('size'),
+          colLabel('Size', SortBy.size, width: sizeW),
+          dragHandle('date'),
+          colLabel('Date', SortBy.date, width: dateW),
           const SizedBox(width: 4),
         ],
       ),

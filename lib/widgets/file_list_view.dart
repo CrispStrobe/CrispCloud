@@ -9,7 +9,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../models/file_item.dart';
 import '../models/panel_side.dart';
 import '../providers/providers.dart';
-import '../providers/toolbar_provider.dart' show panelViewModeProvider;
+import '../providers/toolbar_provider.dart' show columnWidthsProvider, panelViewModeProvider;
 import '../services/log_service.dart';
 import '../services/panel_view_mode_service.dart' show PanelViewMode;
 import '../utils/formatters.dart';
@@ -464,6 +464,9 @@ class CompactFileTile extends ConsumerWidget {
     final colorService = ref.watch(fileTypeColorProvider);
     final fileColor = colorService.colorForFile(file);
     final theme = Theme.of(context);
+    final colWidths = ref.watch(columnWidthsProvider(side));
+    final sizeColW = colWidths['size'] ?? 62.0;
+    final dateColW = colWidths['date'] ?? 78.0;
 
     // Selected = fill; cursor = left border (can combine both)
     final bgColor = isSelected
@@ -526,14 +529,14 @@ class CompactFileTile extends ConsumerWidget {
             if (sizeStr.isNotEmpty) ...[
               const SizedBox(width: 8),
               SizedBox(
-                width: 62,
+                width: sizeColW,
                 child: Text(sizeStr, style: dimStyle, textAlign: TextAlign.right, maxLines: 1),
               ),
             ],
             if (dateStr.isNotEmpty) ...[
               const SizedBox(width: 8),
               SizedBox(
-                width: 78,
+                width: dateColW,
                 child: Text(dateStr, style: dimStyle, textAlign: TextAlign.right, maxLines: 1),
               ),
             ],
