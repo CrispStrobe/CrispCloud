@@ -1439,6 +1439,9 @@ class PanelNotifier extends ChangeNotifier {
   }
 
   void _updateFreeSpace(String path) {
+    // Skip in test environments to avoid pending OS-process timers that
+    // cause "test failed after it had already completed" assertions.
+    if (Platform.environment.containsKey('FLUTTER_TEST')) return;
     Process.run('df', ['-k', path]).then((result) {
       final lines = result.stdout.toString().trim().split('\n');
       if (lines.length >= 2) {

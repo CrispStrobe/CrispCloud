@@ -1042,7 +1042,11 @@ void confirmDelete(BuildContext context, WidgetRef ref, PanelSide side, List<Fil
   );
 }
 
-void _showPropertiesDialog(BuildContext context, FileItem file) {
+void _showPropertiesDialog(BuildContext context, FileItem file) =>
+    showPropertiesDialog(context, file);
+
+/// Public entry point — also callable from keyboard shortcuts (Ctrl+I).
+void showPropertiesDialog(BuildContext context, FileItem file) {
   showDialog(
     context: context,
     builder: (context) => _PropertiesDialog(file: file),

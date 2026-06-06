@@ -185,6 +185,11 @@ class FileListView extends ConsumerWidget {
             p.invertSelection();
             return KeyEventResult.handled;
           }
+          // Numpad 5 - Select all (DC convention)
+          if (event.logicalKey == LogicalKeyboardKey.numpad5) {
+            p.selectAll();
+            return KeyEventResult.handled;
+          }
           final isCtrl = HardwareKeyboard.instance.isControlPressed ||
               HardwareKeyboard.instance.isMetaPressed;
           final isAlt = HardwareKeyboard.instance.isAltPressed;

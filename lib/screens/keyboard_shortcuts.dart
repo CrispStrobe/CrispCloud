@@ -15,6 +15,7 @@ import '../services/panel_view_mode_service.dart' show PanelViewMode;
 import '../services/panel_swap_service.dart';
 import '../providers/bookmarks_provider.dart' show bookmarksProvider;
 import '../widgets/command_palette.dart';
+import '../widgets/file_context_menu.dart' show showPropertiesDialog;
 import '../widgets/file_toolbar.dart' show showPanelFilterDialog;
 import 'screen_dialogs.dart';
 
@@ -383,6 +384,16 @@ KeyEventResult handleKeyEvent(
   // Ctrl+. - Toggle hidden (dot-prefixed) files
   if (isCtrl && event.logicalKey == LogicalKeyboardKey.period) {
     panel.toggleShowHiddenFiles();
+    return KeyEventResult.handled;
+  }
+
+  // Ctrl+I / Alt+Enter - Show properties for cursor item (DC convention)
+  if ((isCtrl && event.logicalKey == LogicalKeyboardKey.keyI) ||
+      (HardwareKeyboard.instance.isAltPressed && event.logicalKey == LogicalKeyboardKey.enter)) {
+    final item = panel.cursorItem;
+    if (item != null && item.name != '..') {
+      showPropertiesDialog(context, item);
+    }
     return KeyEventResult.handled;
   }
 

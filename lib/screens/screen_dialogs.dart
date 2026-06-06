@@ -127,6 +127,7 @@ void showKeyboardShortcutsHelp(BuildContext context) {
             _shortcutRow('Ctrl+F6', 'Sort by size'),
             _shortcutRow('Ctrl+.', 'Toggle hidden files'),
             _shortcutRow('Ctrl+B', 'Toggle bookmark for current folder'),
+            _shortcutRow('Ctrl+I / Alt+Enter', 'File properties'),
             const Divider(),
             // View / Tabs
             _shortcutRow('Ctrl+1', 'Brief view mode'),
