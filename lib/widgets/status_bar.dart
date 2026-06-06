@@ -3,9 +3,6 @@
 // Bottom status bar showing connection info, item counts,
 // transfer speed, active operations, sync status, quota.
 
-import 'dart:io' show Platform, Process;
-
-import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
@@ -24,35 +21,6 @@ class _StatusBarState extends ConsumerState<StatusBar> {
   Map<String, int>? _quota;
   bool _quotaLoading = false;
   String? _lastProvider;
-  int? _freeBytes;
-  String? _lastFreePath;
-
-  Future<void> _fetchFreeSpace(String path) async {
-    if (kIsWeb || path == _lastFreePath) return;
-    _lastFreePath = path;
-    try {
-      if (Platform.isWindows) {
-        // GetDiskFreeSpaceEx via PowerShell
-        final result = await Process.run(
-          'powershell', ['-Command',
-          '(Get-PSDrive -PSProvider FileSystem | Where-Object {\'$path\'.StartsWith(\$_.Root)}).Free'],
-        );
-        final bytes = int.tryParse(result.stdout.toString().trim());
-        if (bytes != null && mounted) setState(() => _freeBytes = bytes);
-      } else {
-        // POSIX df: df -k <path> → "filesystem 1K-blocks used available ..."
-        final result = await Process.run('df', ['-k', path]);
-        final lines = result.stdout.toString().trim().split('\n');
-        if (lines.length >= 2) {
-          final parts = lines.last.trim().split(RegExp(r'\s+'));
-          if (parts.length >= 4) {
-            final kb = int.tryParse(parts[3]);
-            if (kb != null && mounted) setState(() => _freeBytes = kb * 1024);
-          }
-        }
-      }
-    } catch (_) {}
-  }
 
   void _fetchQuota() {
     final auth = ref.read(authProvider);
@@ -103,10 +71,6 @@ class _StatusBarState extends ConsumerState<StatusBar> {
 
     // Lazy-fetch quota when connected
     _fetchQuota();
-    // Lazy-fetch free space for local panel
-    if (!kIsWeb && isLocal) {
-      _fetchFreeSpace(panel.currentPath);
-    }
 
     return Container(
       height: 28,
@@ -255,9 +219,9 @@ class _StatusBarState extends ConsumerState<StatusBar> {
           Icon(isLocal ? Icons.folder : Icons.cloud, size: 14, color: color),
           const SizedBox(width: 4),
           Text(isLocal ? 'Local' : 'Remote', style: style),
-          if (isLocal && _freeBytes != null) ...[
+          if (isLocal && panel.freeBytes != null) ...[
             const SizedBox(width: 8),
-            Text('Free: ${formatBytes(_freeBytes!)}',
+            Text('Free: ${formatBytes(panel.freeBytes!)}',
                 style: style.copyWith(fontSize: 11)),
           ],
         ],

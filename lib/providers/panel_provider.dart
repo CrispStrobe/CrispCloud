@@ -89,6 +89,10 @@ class PanelNotifier extends ChangeNotifier {
   FileItem? _renamingItem;
   FileItem? get renamingItem => _renamingItem;
 
+  // Free space for the current local path (populated after _loadLocalFiles)
+  int? _freeBytes;
+  int? get freeBytes => _freeBytes;
+
   PanelNotifier(this._ref, this.side)
       : _localFileService = _ref.read(localFileServiceProvider) {
     _restoreTabs();
@@ -1374,6 +1378,8 @@ class PanelNotifier extends ChangeNotifier {
       _sortFiles();
       _resetCursor(preserveItem: prev);
       _ref.read(errorProvider).clearErrors();
+      // Fire-and-forget free space fetch (result stored in _freeBytes, shown in status bar)
+      if (!kIsWeb && side == PanelSide.local) _updateFreeSpace(currentPath);
       notifyListeners();
     } catch (e) {
       if (!kIsWeb && (e is PathAccessException || e.toString().contains('Operation not permitted'))) {
@@ -1387,6 +1393,20 @@ class PanelNotifier extends ChangeNotifier {
       notifyListeners();
     }
   }
+
+  void _updateFreeSpace(String path) {
+    Process.run('df', ['-k', path]).then((result) {
+      final lines = result.stdout.toString().trim().split('\n');
+      if (lines.length >= 2) {
+        final parts = lines.last.trim().split(RegExp(r'\s+'));
+        if (parts.length >= 4) {
+          final kb = int.tryParse(parts[3]);
+          if (kb != null) { _freeBytes = kb * 1024; notifyListeners(); }
+        }
+      }
+    }).catchError((_) {});
+  }
+
 
   Future<void> _loadRemoteFiles() async {
     // When the panel is showing search results, skip the normal directory
