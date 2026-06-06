@@ -36,13 +36,13 @@ extension PanelViewModeX on PanelViewMode {
     }
   }
 
-  /// The next mode in the cycle: brief → full → tree → brief.
+  /// Toggle between the two implemented modes: brief (comfortable) ↔ full (compact).
+  /// Tree view is reserved for a future implementation.
   PanelViewMode get next {
     switch (this) {
       case PanelViewMode.brief:
         return PanelViewMode.full;
       case PanelViewMode.full:
-        return PanelViewMode.tree;
       case PanelViewMode.tree:
         return PanelViewMode.brief;
     }

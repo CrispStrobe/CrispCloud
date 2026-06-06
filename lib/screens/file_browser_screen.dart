@@ -17,7 +17,7 @@ import '../providers/panel_source_provider.dart'
 import '../providers/toolbar_provider.dart'
     show panelViewModeProvider;
 import '../services/panel_swap_service.dart';
-import '../services/panel_view_mode_service.dart' show PanelViewMode, PanelViewModeX;
+import '../services/panel_view_mode_service.dart' show PanelViewMode;
 import '../services/theme_service.dart';
 import '../widgets/audit_log_dialog.dart';
 import '../widgets/file_panel.dart';
@@ -85,19 +85,18 @@ class _FileBrowserScreenState extends ConsumerState<FileBrowserScreen> {
               );
             },
           ),
-          // View mode cycle for active panel (brief → full → tree)
+          // Density toggle for active panel (comfortable ↔ compact)
           Consumer(
             builder: (ctx, cref, _) {
               final ap = cref.watch(activePanelProvider);
               final mode = cref.watch(panelViewModeProvider(ap));
-              final icon = switch (mode) {
-                PanelViewMode.brief => Icons.view_list,
-                PanelViewMode.full  => Icons.view_headline,
-                PanelViewMode.tree  => Icons.account_tree_outlined,
-              };
+              final isCompact = mode == PanelViewMode.full;
               return IconButton(
-                icon: Icon(icon, size: 20),
-                tooltip: 'View Mode: ${mode.displayName} — click to cycle (Ctrl+1/2/3)',
+                icon: Icon(
+                  isCompact ? Icons.density_large : Icons.density_small,
+                  size: 20,
+                ),
+                tooltip: isCompact ? 'Switch to touch-friendly view' : 'Switch to compact view',
                 onPressed: () =>
                     cref.read(panelViewModeProvider(ap).notifier).cycleMode(),
               );
