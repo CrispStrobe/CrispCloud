@@ -35,7 +35,7 @@
 	<array>
 		<dict>
 			<key>CFBundleURLName</key>
-			<string>com.example.internxtFlutter.upload</string>
+			<string>com.crispcloud.app.upload</string>
 			<key>CFBundleURLSchemes</key>
 			<array>
 				<string>crispcloud</string>

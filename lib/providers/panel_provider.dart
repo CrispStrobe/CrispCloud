@@ -82,13 +82,17 @@ class PanelNotifier extends ChangeNotifier {
     if (side == PanelSide.local) {
       _initializeLocalPath();
     } else {
-      // Refresh remote panel whenever the auth connection state turns on
+      // Refresh remote panel when auth connection changes
       _ref.listen<AuthNotifier>(authProvider, (prev, next) {
         if (!(prev?.isConnected ?? false) && next.isConnected) {
+          _remotePath = '/'; // start at cloud root when connecting
           refresh();
         } else if ((prev?.isConnected ?? false) && !next.isConnected) {
-          _files = [];
-          notifyListeners();
+          // On disconnect, show local filesystem
+          if (!kIsWeb) {
+            _remotePath = Platform.environment['HOME'] ?? '/';
+          }
+          refresh();
         }
       });
     }
@@ -393,8 +397,10 @@ class PanelNotifier extends ChangeNotifier {
       } else if (side == PanelSide.local) {
         await _localFileService.refresh();
         await _loadLocalFiles();
-      } else {
+      } else if (_ref.read(authProvider).isConnected) {
         await _loadRemoteFiles();
+      } else {
+        await _loadLocalFiles();
       }
     });
   }
@@ -435,6 +441,8 @@ class PanelNotifier extends ChangeNotifier {
   }
 
   Future<void> navigateToPath(String path, {FileItem? selectItem}) async {
+    _selection.clear();
+    _lastSelected = null;
     if (side == PanelSide.local) {
       if (!kIsWeb && !await _localFileService.hasAccessToPath(path)) {
         final newGrant = await _localFileService.requestDirectoryAccess(initialDirectory: path);
@@ -453,7 +461,11 @@ class PanelNotifier extends ChangeNotifier {
       await _loadLocalFiles();
     } else {
       _remotePath = path;
-      await _loadRemoteFiles();
+      if (_ref.read(authProvider).isConnected) {
+        await _loadRemoteFiles();
+      } else {
+        await _loadLocalFiles();
+      }
     }
 
     if (selectItem != null && _files != null) {
@@ -830,9 +842,7 @@ class PanelNotifier extends ChangeNotifier {
             if (tab != null) _remotePath = tab.path;
           }
           notifyListeners();
-          if (side == PanelSide.remote && _ref.read(authProvider).isConnected) {
-            refresh();
-          }
+          if (side == PanelSide.remote) refresh();
           return;
         }
       }
@@ -840,7 +850,12 @@ class PanelNotifier extends ChangeNotifier {
       _log.warn('Tab restore failed', e);
     }
     _initFirstTab();
-    if (side == PanelSide.remote && _ref.read(authProvider).isConnected) {
+    if (side == PanelSide.remote) {
+      if (!kIsWeb && !_ref.read(authProvider).isConnected) {
+        _remotePath = Platform.environment['HOME'] ?? '/';
+        final tab = activeTab;
+        if (tab != null) tab.path = _remotePath;
+      }
       refresh();
     }
   }
