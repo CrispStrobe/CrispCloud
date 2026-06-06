@@ -549,6 +549,8 @@ class PanelNotifier extends ChangeNotifier {
   }
 
   /// DC-style Space / Insert: toggle selection mark on cursor item, advance down.
+  /// When pressed on a folder with no calculated size yet, also triggers async
+  /// folder size computation (shown inline in the size column, like DC).
   void spaceSelectAndAdvance() {
     if (_files == null || _files!.isEmpty) return;
     final idx = _cursorIndex.clamp(0, _files!.length - 1);
@@ -562,11 +564,36 @@ class PanelNotifier extends ChangeNotifier {
         _selection.add(item);
       }
       _lastSelected = item;
+      // DC: Space on a folder triggers inline size calculation
+      if (item.isFolder && item.calculatedSize == null && item.path != null && !kIsWeb) {
+        _calculateFolderSizeInBackground(item);
+      }
     }
     final next = (idx + 1).clamp(0, _files!.length - 1);
     _cursorIndex = next;
     _itemToScrollTo = _files![next];
     notifyListeners();
+  }
+
+  /// Calculate folder size in a background isolate and update the file list entry.
+  void _calculateFolderSizeInBackground(FileItem folder) {
+    _computeFolderSize(folder.path!).then((size) {
+      updateItemCalculatedSize(folder, size);
+    }).catchError((_) {});
+  }
+
+  Future<int> _computeFolderSize(String path) async {
+    int total = 0;
+    try {
+      final entities = await Directory(path).list(recursive: true).toList();
+      for (final e in entities) {
+        if (e is File) {
+          final stat = await e.stat();
+          total += stat.size;
+        }
+      }
+    } catch (_) {}
+    return total;
   }
 
   /// Shift+Arrow: move cursor AND extend/shrink selection range.
@@ -880,8 +907,16 @@ class PanelNotifier extends ChangeNotifier {
           metadata: {'name': file.name, 'isFolder': file.isFolder},
         );
       }
+      // Remember cursor position so we can land on the next item after delete
+      final savedIdx = _cursorIndex;
       await refresh();
       clearSelection();
+      // Move cursor to the same index (now points to the next item) or clamp to last
+      if (_files != null && _files!.isNotEmpty) {
+        _cursorIndex = savedIdx.clamp(0, _files!.length - 1);
+        _itemToScrollTo = _files![_cursorIndex];
+        notifyListeners();
+      }
     } catch (e) {
       errors.addError('Delete failed: $e');
       for (final file in files) {

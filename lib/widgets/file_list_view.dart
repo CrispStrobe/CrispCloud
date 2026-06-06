@@ -341,7 +341,10 @@ class FileListTile extends ConsumerWidget {
                   child: Text(file.path!, maxLines: 1, overflow: TextOverflow.ellipsis, style: const TextStyle(fontSize: 11)),
                 ),
               ] else ...[
-                if (!file.isFolder && file.displaySize != null) ...[
+                if (file.isFolder && file.calculatedSize != null) ...[
+                  Text(formatBytes(file.calculatedSize!)),
+                  if (file.updatedAt != null) ...[const Text(' • '), Text(formatDate(file.updatedAt!))],
+                ] else if (!file.isFolder && file.displaySize != null) ...[
                   Text(formatBytes(file.displaySize!)),
                   if (file.updatedAt != null) ...[const Text(' • '), Text(formatDate(file.updatedAt!))],
                 ] else if (file.updatedAt != null)
@@ -484,7 +487,8 @@ class CompactFileTile extends ConsumerWidget {
     final sizeStr = file.name == '..'
         ? ''
         : file.isFolder
-            ? '<DIR>'
+            // Show calculated folder size if available (from Space key), else <DIR>
+            ? (file.calculatedSize != null ? formatBytes(file.calculatedSize!) : '<DIR>')
             : (file.displaySize != null ? formatBytes(file.displaySize!) : '');
     final dateStr = file.updatedAt != null ? formatDate(file.updatedAt!) : '';
 
