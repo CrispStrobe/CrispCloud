@@ -253,8 +253,10 @@ class PanelNotifier extends ChangeNotifier {
       final items = <FileItem>[];
       const maxItems = 10000;
       await _walkDirectory(currentPath, items, maxItems);
+      final prev = cursorItem;
       _files = items;
       _sortFiles();
+      _resetCursor(preserveItem: prev);
       notifyListeners();
     } catch (e) {
       _ref.read(errorProvider).addError('Flat view failed: $e');
@@ -477,8 +479,31 @@ class PanelNotifier extends ChangeNotifier {
     notifyListeners();
   }
 
-  void _resetCursor() {
-    _cursorIndex = (_files != null && _files!.isNotEmpty) ? 0 : -1;
+  /// Reset or preserve cursor after a file listing changes.
+  /// On first load (_cursorIndex == -1) or if files are empty, goes to 0.
+  /// Otherwise keeps the cursor on the same item by name/path/uuid,
+  /// falling back to clamping the current index within the new list length.
+  void _resetCursor({FileItem? preserveItem}) {
+    if (_files == null || _files!.isEmpty) {
+      _cursorIndex = -1;
+      return;
+    }
+    final anchor = preserveItem ?? cursorItem;
+    if (anchor != null) {
+      final idx = _files!.indexWhere((f) =>
+          (f.uuid != null && f.uuid == anchor.uuid) ||
+          (f.path != null && f.path == anchor.path) ||
+          f.name == anchor.name);
+      if (idx != -1) {
+        _cursorIndex = idx;
+        return;
+      }
+    }
+    if (_cursorIndex < 0) {
+      _cursorIndex = 0;
+    } else {
+      _cursorIndex = _cursorIndex.clamp(0, _files!.length - 1);
+    }
   }
 
   // --- Navigation ---
@@ -1116,9 +1141,10 @@ class PanelNotifier extends ChangeNotifier {
         }
       }
 
+      final prev = cursorItem;
       _files = items;
       _sortFiles();
-      _resetCursor();
+      _resetCursor(preserveItem: prev);
       _ref.read(errorProvider).clearErrors();
       notifyListeners();
     } catch (e) {
@@ -1189,9 +1215,10 @@ class PanelNotifier extends ChangeNotifier {
         return FileItem(name: fullName, isFolder: false, size: map['size'] as int?, uuid: map['uuid'], updatedAt: fileDate, metadata: meta.isNotEmpty ? meta : null);
       }).toList() ?? [];
 
+      final prev = cursorItem;
       _files = [...folders, ...files];
       _sortFiles();
-      _resetCursor();
+      _resetCursor(preserveItem: prev);
       _ref.read(errorProvider).clearErrors();
       notifyListeners();
     } catch (e) {

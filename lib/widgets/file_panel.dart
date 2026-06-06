@@ -298,7 +298,9 @@ class _FilePanelState extends ConsumerState<FilePanel> {
                       ),
                     ],
                   ),
-          if (selection.length > 1)
+          // Selection bar: off by default (DC mode — info is in status bar).
+          // Enable in settings for touch/tablet mode.
+          if (ref.watch(showSelectionBarProvider) && selection.isNotEmpty)
             FileSelectionBar(
               side: widget.side,
               selection: selection,

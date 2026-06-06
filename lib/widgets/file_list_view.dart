@@ -46,14 +46,27 @@ class FileListView extends ConsumerWidget {
       if (idx != -1) {
         WidgetsBinding.instance.addPostFrameCallback((_) {
           if (!scrollController.hasClients) return;
-          final offset = idx * itemHeight;
+          final itemTop = idx * itemHeight;
+          final itemBot = itemTop + itemHeight;
           final viewMin = scrollController.offset;
-          final viewMax = scrollController.offset + scrollController.position.viewportDimension;
-          // Only scroll if item is outside visible area
-          if (offset < viewMin || offset + itemHeight > viewMax) {
+          final viewportH = scrollController.position.viewportDimension;
+          final viewMax = viewMin + viewportH;
+          final maxScroll = scrollController.position.maxScrollExtent;
+
+          // DC-style: scroll the minimum distance to keep cursor visible.
+          // Cursor above viewport → scroll up so cursor is at top edge.
+          // Cursor below viewport → scroll down so cursor is at bottom edge.
+          double? target;
+          if (itemTop < viewMin) {
+            target = itemTop; // scroll up: cursor at top
+          } else if (itemBot > viewMax) {
+            target = itemBot - viewportH; // scroll down: cursor at bottom
+          }
+
+          if (target != null) {
             scrollController.animateTo(
-              offset.clamp(0.0, scrollController.position.maxScrollExtent),
-              duration: const Duration(milliseconds: 120),
+              target.clamp(0.0, maxScroll),
+              duration: const Duration(milliseconds: 80),
               curve: Curves.easeOut,
             );
           }

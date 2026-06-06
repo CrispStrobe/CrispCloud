@@ -37,6 +37,10 @@ final showPreviewProvider = StateProvider<bool>((ref) => false);
 /// Whether the tree sidebar is visible.
 final showTreeSidebarProvider = StateProvider<bool>((ref) => false);
 
+/// Show the selection action bar inside the panel (touch/tablet mode).
+/// Default false: DC-mode uses status bar + F-keys + keyboard shortcuts only.
+final showSelectionBarProvider = StateProvider<bool>((ref) => false);
+
 /// Panel split ratio (0.0–1.0, left panel share).
 final panelSplitRatioProvider = StateProvider<double>((ref) => 0.5);
 

@@ -11,7 +11,7 @@ import 'package:provider/provider.dart' as legacy;
 
 import '../models/panel_side.dart';
 import '../providers/providers.dart';
-import '../providers/core_providers.dart' show preferExternalEditorProvider;
+import '../providers/core_providers.dart' show preferExternalEditorProvider, showSelectionBarProvider;
 import '../providers/panel_source_provider.dart'
     show fkeyBarVisibleProvider, panelSourceProvider;
 import '../providers/toolbar_provider.dart'
@@ -829,6 +829,25 @@ class _FileBrowserScreenState extends ConsumerState<FileBrowserScreen> {
                   value: fkeyVisible,
                   onChanged: (_) =>
                       cref.read(fkeyBarVisibleProvider.notifier).toggle(),
+                );
+              },
+            ),
+            // Selection action bar (touch/tablet mode)
+            Consumer(
+              builder: (ctx, cref, _) {
+                final show = cref.watch(showSelectionBarProvider);
+                return SwitchListTile(
+                  secondary: const Icon(Icons.checklist),
+                  title: const Text('Selection Bar'),
+                  subtitle: Text(
+                    show
+                        ? 'Action bar shown when files are selected (touch mode)'
+                        : 'Hidden — use F-keys / keyboard (DC mode)',
+                    style: const TextStyle(fontSize: 11),
+                  ),
+                  value: show,
+                  onChanged: (v) =>
+                      cref.read(showSelectionBarProvider.notifier).state = v,
                 );
               },
             ),
