@@ -63,6 +63,7 @@ CrispCloud becomes the **open-source Cyberduck/Transmit/Commander One killer**: 
 - **Cross-platform virtual FS**: unified API (FUSE/DocumentsProvider/FileProvider/FSA)
 
 - **DoubleCommander-parity features** (2026-06-05): archive browsing, multi-key sort, flat view, colorized file lists, syntax highlighting, embedded terminal, file split/combine, secure wipe, symlinks, directory size inline, queue reorder, custom toolbar commands, plugin context menu wiring
+- **DC selection UX + view modes** (2026-06-06): cursor separate from selection marks, arrow-key navigation, Space/Insert mark-and-advance, Shift+Arrow extend selection, compact 26px "Full" view with columns, comfortable 64px "Brief" view for touch, per-panel density toggle, right panel falls back to local FS when disconnected, web crash fixes (pdfx, DragTarget StackOverflow, infinite spinner), macOS app renamed CrispCloud
 
 **What's still needed:**
 - ~~Monolithic state (AppState)~~ — **Riverpod migration done** (8 focused providers)
@@ -563,12 +564,40 @@ CrispCloud becomes the **open-source Cyberduck/Transmit/Commander One killer**: 
 - [x] **Enter VeraCrypt/Cryptomator containers**: browse encrypted vault contents directly in a panel — `ContainerPanelSource` with unlock session
 - [x] **F-key bottom bar**: F3 View, F4 Edit, F5 Copy, F6 Move, F7 MkDir, F8 Delete — `FKeyBar` widget, toggleable, responsive
 - [x] **F-key actions context-aware**: F5 copies from active panel to opposite panel — `FKeyActionService` with direction labels
-- [x] **Right panel local browsing**: right panel can browse local filesystem — both panels equal via `panelSourceProvider(side)`
+- [x] **Right panel local browsing**: right panel can browse local filesystem when no cloud connected (DC default) — falls back to `$HOME`, switches to cloud root on connect
 - [x] **Panel source selector**: dropdown per panel to switch between Local, any connected provider, or an open archive/container — `PanelSourceSelector` widget
 - [x] **Quick panel swap**: Ctrl+U swaps left/right panel contents — `PanelSwapService`
 - [x] **Bottom bar toggle**: setting to show/hide F-key bar — `fkeyBarVisibleProvider` + `FKeyBar` toggleable
 - [x] **Internal viewer (F3)**: built-in hex/text/image/markdown/pdf viewer — `InternalViewerService` with magic byte detection, hex dump, search
-- [x] **Brief/Full/Tree view modes per panel**: cycle with toolbar button — `PanelViewModeService` with per-panel persistence
+- [x] **Brief (comfortable) / Full (compact) view modes per panel**: binary toggle in toolbar + app bar, per-panel persistence — `PanelViewModeService`; `density_large`/`density_small` icons, one-click switch
+- [x] **DC-style cursor + keyboard selection**: cursor (separate from selection marks), ↑/↓ move cursor, Space/Insert toggle mark + advance, Shift+↑↓ extend selection, Enter open, auto-scroll to cursor; KeyRepeatEvent handled so holding arrow key works
+- [x] **Compact "Full" view**: `CompactFileTile` — 26px rows, icon + name + size + date columns (like DC full view)
+- [x] **Comfortable "Brief" view**: `FileListTile` — 64px tiles, finger-sized touch targets for iPad
+- [x] **Per-panel density toggle**: `density_small`/`density_large` button in each panel's toolbar, one tap to switch
+
+### 11.5.1 Tree View (Planned — DC-style, not yet implemented)
+
+*Goal: Panel shows a hierarchical folder tree you can navigate without leaving the panel — like DC's "Tree" mode or Windows Explorer's left pane.*
+
+**How it works in Double Commander (reference implementation):**
+- The panel renders a folder tree instead of a flat file list
+- Root is the filesystem root (or current drive on Windows)
+- Each node: expand/collapse chevron + folder icon + name
+- Keyboard: ↑↓ move between nodes, → expand or enter folder, ← collapse or go to parent, Enter navigate panel to selected folder
+- The node matching the panel's current path is highlighted/selected
+- The tree updates live as the panel navigates (if you navigate via breadcrumbs, the tree scrolls to and selects the new path)
+- Optionally show file count or size per folder
+
+**Implementation plan:**
+- [ ] `FileTreeView` widget — `TreeView`-style widget using a `ListView.builder` with indent levels; nodes are `_TreeNode` objects with `path`, `isExpanded`, `children` (lazy-loaded)
+- [ ] `TreeNodeData` model — `path`, `name`, `isExpanded`, `childCount`, `depth`
+- [ ] Lazy expansion: when a node is expanded, list its immediate subdirectories (not files); collapse hides children
+- [ ] Sync with panel path: `PanelNotifier.currentPath` changes → tree scrolls to and highlights the matching node; clicking a tree node → `panel.navigateToPath(node.path)`
+- [ ] Keyboard handling in tree: `Focus` with `onKeyEvent` — ↑↓ move cursor between visible nodes, → expand + optionally navigate, ← collapse, Enter navigate panel; same cursor/KeyRepeatEvent pattern as list view
+- [ ] Activated when `panelViewModeProvider(side) == PanelViewMode.tree` (already persisted)
+- [ ] `file_panel.dart` `_buildFileView`: add `if (viewMode == PanelViewMode.tree) return FileTreeView(side: side, panel: panel)`
+- [ ] Re-enable `PanelViewMode.tree` in the cycle (currently skipped): `brief → full → tree → brief`
+- [ ] Ctrl+3 shortcut restored once implemented
 
 ### 11.4 Mounted Drives (Desktop)
 - [x] Mount remote storage as a local drive letter / mount point — `FuseMountService` + `MountDialog` + `MountNotifier`

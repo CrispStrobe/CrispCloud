@@ -2,6 +2,67 @@
 
 Audit trail of bugs found, issues discovered, and fixes applied.
 
+## 2026-06-06 — Session 7: Web Fixes, macOS Polish, DC Selection UX, Compact View, Density Toggle
+
+### Web: Three Crash Fixes
+
+**Bug 1 — App blank on load (pdfx assertion)**
+- `pdfx` throws a fatal assertion at startup if `pdf.js` is not present in `web/index.html`
+- The script was never added after `pdfx` was added to pubspec
+- Fix: ran `flutter pub run pdfx:install_web`; added CDN scripts for pdfjs-dist@4.6.82
+
+**Bug 2 — DragTarget Stack Overflow (right panel red screen)**
+- `file_panel.dart`: `Widget content = _buildPanelContent(...)` then `content = DragTarget(builder: (ctx, ...) { return content; })` — builder returned itself → infinite recursion
+- Fix: renamed inner widget to `panelContent`; `DragTarget` builder and overlay `Stack` both reference `panelContent` (not `content`)
+
+**Bug 3 — Remote panel stuck in loading spinner**
+- `PanelNotifier` for remote side: constructor only called `_restoreTabs()`, never triggered `refresh()`; after auto-login succeeded `_files` stayed `null` forever
+- Fix: added `_ref.listen<AuthNotifier>(authProvider, ...)` in constructor — calls `refresh()` when `isConnected` transitions false→true (also resets `_remotePath = '/'`); calls `refresh()` unconditionally at end of `_restoreTabs()` for remote panel
+
+### macOS App Rename
+- `macos/Runner/Configs/AppInfo.xcconfig`: `PRODUCT_NAME = CrispCloud`, `PRODUCT_BUNDLE_IDENTIFIER = com.crispcloud.app`
+- `project.pbxproj`: all `internxt_flutter.app` → `CrispCloud.app`, `internxt_flutter` executable → `CrispCloud`; `com.example.internxtFlutter.FinderExtension` → `com.crispcloud.app.FinderExtension`; `RunnerTests` bundle ID updated
+- `Runner/Info.plist`: URL scheme handler updated to `com.crispcloud.app.upload`
+
+### Remote Panel: Local Filesystem Fallback (DC Default)
+- When not connected to cloud, remote panel now falls back to local filesystem (like Double Commander's default two-local-panel mode)
+- `PanelNotifier.refresh()`: when `side == PanelSide.remote && !auth.isConnected` → calls `_loadLocalFiles()` instead of `_loadRemoteFiles()`
+- `navigateToPath()`: same condition; updates `_remotePath` and loads local
+- Auth listener: on disconnect → sets `_remotePath = Platform.environment['HOME']` (non-web) + calls `refresh()`; on connect → resets `_remotePath = '/'` + refreshes cloud
+- First run without credentials: `_restoreTabs()` initializes `_remotePath = $HOME` (non-web)
+
+### DC-Style Selection UX
+- **Cursor concept** (`panel_provider.dart`): `_cursorIndex` tracked separately from `_selection`; `_resetCursor()` called after every file load; `moveCursor(delta)`, `spaceSelectAndAdvance()`, `shiftMoveCursor(delta)`, `setCursorToItem()`, `cursorItem` getter
+- **Click syncs cursor**: `toggleSelection()` updates `_cursorIndex` to clicked item's index
+- **Keyboard shortcuts** (`keyboard_shortcuts.dart`): `↑`/`↓` → `moveCursor`; `Shift+↑`/`↓` → `shiftMoveCursor`; `Space`/`Insert` → `spaceSelectAndAdvance`; `Enter` → `navigateInto(cursorItem)`
+- **KeyRepeatEvent**: `handleKeyEvent` now passes `KeyRepeatEvent` through for navigation keys only (arrow/space/insert); all other shortcuts still require `KeyDownEvent` — prevents repeated deletes/renames
+- **Focus fix**: `FileListView` wraps `ListView` in `Focus(autofocus: isActivePanel, onKeyEvent: ...)` that intercepts arrows before `ListView`'s own `ScrollIntent`; also handles `KeyRepeatEvent`
+- **Cursor visual**: 3px primary-color left border on both `FileListTile` and `CompactFileTile`; can combine with selection fill
+
+### Compact View ("Full" mode)
+- `CompactFileTile`: 26px single-line rows — icon + name (Expanded) + size (62px right-aligned) + date (78px right-aligned); selected = `primaryContainer` fill + bold name
+- `FileListView`: `panelViewModeProvider(side) == PanelViewMode.full` → `itemHeight = 26`, uses `CompactFileTile`; otherwise `itemHeight = 64`, uses `FileListTile`
+- `FileListView.Focus`: also handles `onKeyEvent` with `autofocus: isActivePanel`; passes `isCursor = index == cursorIndex` to both tile types
+
+### Per-Panel Density Toggle
+- `FileToolbar`: added `density_small`/`density_large` `IconButton` that calls `panelViewModeProvider(side).notifier.setMode(brief ↔ full)` — one tap, per-panel, persisted
+- `file_browser_screen.dart`: app bar density button updated to same binary toggle (was cycling through phantom `tree` mode)
+- `PanelViewModeService.next`: `full → brief`, `tree → brief` (tree is not implemented; enum value kept for prefs deserialization)
+- `PanelViewMode.tree` removed from keyboard shortcuts (Ctrl+3 was setting a mode identical to `brief`)
+- `FileSelectionBar`: now only shown when `selection.length > 1` (single-item cursor selection no longer pops a noisy action bar)
+
+### Double-Scroll Bug Fix
+- Root cause: `file_panel.dart` had a legacy `addPostFrameCallback` that scrolled to `index * 56.0` (old full-tile height) unconditionally, firing before `FileListView`'s correct handler (`idx * itemHeight` with viewport bounds check)
+- Parent builds before child in Flutter so `file_panel.dart`'s handler always fired first, over-scrolling to the wrong offset in compact mode, making cursor appear stuck
+- Fix: removed the scroll handler from `file_panel.dart` entirely; scroll is now owned exclusively by `FileListView`
+
+### Clear Selection on Navigation
+- `PanelNotifier.navigateToPath()`: `_selection.clear(); _lastSelected = null;` at top — clears marks when changing folders
+
+### Vercel Deploy + CI
+- `web/index.html` now has `pdf.js` CDN script (pdfx install)
+- All fixes deployed to Vercel production; each commit triggered CI + Vercel build
+
 ## 2026-06-05 — Session 6: Encryption Interop, Shortcuts, XDG, Benchmarks, Mock Servers (1947 → 2500+ tests)
 
 ### 5.4 Rebindable Keyboard Shortcuts
