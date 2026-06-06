@@ -118,7 +118,11 @@ class FileListView extends ConsumerWidget {
 
       // Wrap with a Focus that intercepts arrow/space/enter BEFORE the
       // ListView's own Shortcuts handler consumes them for scrolling.
+      // autofocus = true when this is the active panel so compact tiles
+      // (which have no inner Focus widget) still drive key events here.
+      final isActivePanel = ref.read(activePanelProvider) == side;
       return Focus(
+        autofocus: isActivePanel,
         canRequestFocus: true,
         skipTraversal: true,
         onKeyEvent: (node, event) {

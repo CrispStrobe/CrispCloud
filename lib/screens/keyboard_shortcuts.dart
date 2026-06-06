@@ -30,7 +30,18 @@ KeyEventResult handleKeyEvent(
   KeyEvent event, {
   void Function(PanelSide)? onPanelSwitch,
 }) {
-  if (event is! KeyDownEvent) return KeyEventResult.ignored;
+  // Allow key-repeat only for navigation keys; block for everything else
+  if (event is KeyRepeatEvent) {
+    final k = event.logicalKey;
+    if (k != LogicalKeyboardKey.arrowDown &&
+        k != LogicalKeyboardKey.arrowUp &&
+        k != LogicalKeyboardKey.space &&
+        k != LogicalKeyboardKey.insert) {
+      return KeyEventResult.ignored;
+    }
+  } else if (event is! KeyDownEvent) {
+    return KeyEventResult.ignored;
+  }
 
   final isCtrl = HardwareKeyboard.instance.isControlPressed ||
       HardwareKeyboard.instance.isMetaPressed;

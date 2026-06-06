@@ -311,7 +311,7 @@ class _FilePanelState extends ConsumerState<FilePanel> {
                       ),
                     ],
                   ),
-          if (selection.isNotEmpty)
+          if (selection.length > 1)
             FileSelectionBar(
               side: widget.side,
               selection: selection,
