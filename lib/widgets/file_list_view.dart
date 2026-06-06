@@ -153,6 +153,27 @@ class FileListView extends ConsumerWidget {
             if (item != null) p.navigateInto(item);
             return KeyEventResult.handled;
           }
+          if (event.logicalKey == LogicalKeyboardKey.home) {
+            p.moveCursorTo(0);
+            return KeyEventResult.handled;
+          }
+          if (event.logicalKey == LogicalKeyboardKey.end) {
+            p.moveCursorTo((p.filteredFiles?.length ?? 1) - 1);
+            return KeyEventResult.handled;
+          }
+          if (event.logicalKey == LogicalKeyboardKey.pageDown ||
+              event.logicalKey == LogicalKeyboardKey.pageUp) {
+            final pageSize = scrollController.hasClients
+                ? (scrollController.position.viewportDimension / itemHeight).floor().clamp(1, 999)
+                : 15;
+            final delta = event.logicalKey == LogicalKeyboardKey.pageDown ? pageSize : -pageSize;
+            p.moveCursor(delta);
+            return KeyEventResult.handled;
+          }
+          if (event.logicalKey == LogicalKeyboardKey.numpadMultiply) {
+            p.invertSelection();
+            return KeyEventResult.handled;
+          }
           return KeyEventResult.ignored;
         },
         child: listView,

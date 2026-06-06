@@ -99,6 +99,26 @@ KeyEventResult handleKeyEvent(
     return KeyEventResult.handled;
   }
 
+  // Home / End — jump to first / last
+  if (event.logicalKey == LogicalKeyboardKey.home) {
+    panel.moveCursorTo(0);
+    return KeyEventResult.handled;
+  }
+  if (event.logicalKey == LogicalKeyboardKey.end) {
+    panel.moveCursorTo((panel.filteredFiles?.length ?? 1) - 1);
+    return KeyEventResult.handled;
+  }
+
+  // Page Up / Down — jump by ~15 rows (fixed fallback; FileListView uses exact viewport)
+  if (event.logicalKey == LogicalKeyboardKey.pageDown) {
+    panel.moveCursor(15);
+    return KeyEventResult.handled;
+  }
+  if (event.logicalKey == LogicalKeyboardKey.pageUp) {
+    panel.moveCursor(-15);
+    return KeyEventResult.handled;
+  }
+
   // Shift+Arrow — extend selection
   if (isShift && event.logicalKey == LogicalKeyboardKey.arrowDown) {
     panel.shiftMoveCursor(1);
@@ -127,6 +147,12 @@ KeyEventResult handleKeyEvent(
   // Ctrl+A - Select All
   if (isCtrl && event.logicalKey == LogicalKeyboardKey.keyA) {
     panel.selectAll();
+    return KeyEventResult.handled;
+  }
+
+  // Numpad * - Invert selection (DC orthodox FM convention)
+  if (event.logicalKey == LogicalKeyboardKey.numpadMultiply) {
+    panel.invertSelection();
     return KeyEventResult.handled;
   }
 
@@ -220,7 +246,12 @@ KeyEventResult handleKeyEvent(
     return KeyEventResult.handled;
   }
 
-  // Ctrl+3 - (tree view reserved, not yet implemented)
+  // Ctrl+3 - Tree view mode for active panel
+  if (isCtrl && event.logicalKey == LogicalKeyboardKey.digit3) {
+    ref.read(panelViewModeProvider(activePanel).notifier)
+        .setMode(PanelViewMode.tree);
+    return KeyEventResult.handled;
+  }
 
   // Space - Toggle preview pane
   if (event.logicalKey == LogicalKeyboardKey.space && !isCtrl) {

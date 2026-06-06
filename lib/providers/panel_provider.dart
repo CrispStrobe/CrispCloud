@@ -392,6 +392,16 @@ class PanelNotifier extends ChangeNotifier {
     }
   }
 
+  void invertSelection() {
+    if (_files == null) return;
+    final newSel = _files!.where((f) => !_selection.contains(f)).toSet();
+    _selection
+      ..clear()
+      ..addAll(newSel);
+    _lastSelected = null;
+    notifyListeners();
+  }
+
   void clearSelection() {
     _selection.clear();
     _lastSelected = null;
@@ -454,6 +464,16 @@ class PanelNotifier extends ChangeNotifier {
     _lastSelected = _files![next];
     _cursorIndex = next;
     _itemToScrollTo = _files![next];
+    notifyListeners();
+  }
+
+  /// Jump cursor to an absolute index (clamped). Used for Home/End/PgUp/PgDn.
+  void moveCursorTo(int index) {
+    if (_files == null || _files!.isEmpty) return;
+    final newIdx = index.clamp(0, _files!.length - 1);
+    if (newIdx == _cursorIndex) return;
+    _cursorIndex = newIdx;
+    _itemToScrollTo = _files![_cursorIndex];
     notifyListeners();
   }
 

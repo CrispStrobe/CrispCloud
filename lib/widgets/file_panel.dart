@@ -8,11 +8,15 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../models/file_item.dart';
 import '../models/panel_side.dart';
 import '../providers/providers.dart';
+import '../providers/toolbar_provider.dart' show panelViewModeProvider;
+import '../services/panel_view_mode_service.dart' show PanelViewMode;
 import 'file_column_view.dart';
 import 'file_grid_view.dart';
 import 'file_toolbar.dart';
 import 'file_list_view.dart' show FileListView, PanelDragData, getFileIcon;
+import 'file_tree_view.dart';
 import 'panel_tab_bar.dart';
+import '../screens/screen_dialogs.dart' show showConnectionDialogScreen;
 
 class FilePanel extends ConsumerStatefulWidget {
   final PanelSide side;
@@ -181,6 +185,12 @@ class _FilePanelState extends ConsumerState<FilePanel> {
   }
 
   Widget _buildFileView(PanelSide side, List<FileItem> files) {
+    // Tree mode overrides the list/grid/column choice
+    final densityMode = ref.watch(panelViewModeProvider(side));
+    if (densityMode == PanelViewMode.tree) {
+      return FileTreeView(side: side);
+    }
+
     final viewMode = side == PanelSide.local
         ? ref.watch(localViewModeProvider)
         : ref.watch(remoteViewModeProvider);
@@ -293,6 +303,8 @@ class _FilePanelState extends ConsumerState<FilePanel> {
               side: widget.side,
               selection: selection,
             ),
+          if (ref.watch(panelViewModeProvider(widget.side)) == PanelViewMode.full)
+            _CompactColumnHeader(side: widget.side, panel: panel),
           Expanded(
             child: files == null
                 ? const Center(child: CircularProgressIndicator())
@@ -307,7 +319,25 @@ class _FilePanelState extends ConsumerState<FilePanel> {
                                   Text('Drop files here to upload', style: Theme.of(context).textTheme.titleMedium),
                                 ],
                               )
-                            : const Text('Empty folder'),
+                            : widget.side == PanelSide.remote && !ref.read(authProvider).isConnected
+                                ? Column(
+                                    mainAxisAlignment: MainAxisAlignment.center,
+                                    children: [
+                                      Icon(Icons.cloud_off, size: 56,
+                                          color: Theme.of(context).colorScheme.onSurface.withOpacity(0.3)),
+                                      const SizedBox(height: 12),
+                                      Text('Not connected',
+                                          style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                                              color: Theme.of(context).colorScheme.onSurface.withOpacity(0.5))),
+                                      const SizedBox(height: 16),
+                                      ElevatedButton.icon(
+                                        icon: const Icon(Icons.login, size: 18),
+                                        label: const Text('Connect to cloud'),
+                                        onPressed: () => showConnectionDialogScreen(context),
+                                      ),
+                                    ],
+                                  )
+                                : const Text('Empty folder'),
                       )
                     // Pull-to-refresh on mobile
                     : RefreshIndicator(
@@ -315,6 +345,55 @@ class _FilePanelState extends ConsumerState<FilePanel> {
                         child: _buildFileView(widget.side, files),
                       ),
           ),
+        ],
+      ),
+    );
+  }
+}
+
+/// Sortable column headers for compact ("Full") view, matching CompactFileTile layout.
+class _CompactColumnHeader extends StatelessWidget {
+  final PanelSide side;
+  final PanelNotifier panel;
+  const _CompactColumnHeader({required this.side, required this.panel});
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final bg = theme.colorScheme.surfaceContainerHighest.withOpacity(0.6);
+    final style = TextStyle(fontSize: 11, fontWeight: FontWeight.w600,
+        color: theme.colorScheme.onSurface.withOpacity(0.7));
+
+    Widget col(String label, SortBy by, {TextAlign align = TextAlign.left, double? width}) {
+      final active = panel.sortBy == by;
+      final arrow = active
+          ? (panel.sortOrder == SortOrder.ascending ? ' ↑' : ' ↓')
+          : '';
+      final cell = Text(label + arrow, style: style.copyWith(
+        color: active ? theme.colorScheme.primary : style.color,
+      ), textAlign: align, maxLines: 1, overflow: TextOverflow.clip);
+      final tappable = GestureDetector(
+        onTap: () => active ? panel.toggleSortOrder() : panel.setSortBy(by),
+        child: width != null
+            ? SizedBox(width: width, child: cell)
+            : cell,
+      );
+      return tappable;
+    }
+
+    return Container(
+      height: 20,
+      color: bg,
+      padding: const EdgeInsets.symmetric(horizontal: 4),
+      child: Row(
+        children: [
+          const SizedBox(width: 18 + 2 + 14 + 4), // icon space matches CompactFileTile
+          Expanded(child: col('Name', SortBy.name)),
+          const SizedBox(width: 8),
+          col('Size', SortBy.size, align: TextAlign.right, width: 62),
+          const SizedBox(width: 8),
+          col('Date', SortBy.date, align: TextAlign.right, width: 78),
+          const SizedBox(width: 4),
         ],
       ),
     );

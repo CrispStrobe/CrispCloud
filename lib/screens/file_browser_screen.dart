@@ -85,18 +85,19 @@ class _FileBrowserScreenState extends ConsumerState<FileBrowserScreen> {
               );
             },
           ),
-          // Density toggle for active panel (comfortable ↔ compact)
+          // View density cycle: comfortable → compact → tree → comfortable
           Consumer(
             builder: (ctx, cref, _) {
               final ap = cref.watch(activePanelProvider);
               final mode = cref.watch(panelViewModeProvider(ap));
-              final isCompact = mode == PanelViewMode.full;
+              final (icon, tip) = switch (mode) {
+                PanelViewMode.brief => (Icons.density_small,  'Switch to compact view'),
+                PanelViewMode.full  => (Icons.account_tree,   'Switch to tree view'),
+                PanelViewMode.tree  => (Icons.density_large,  'Switch to touch-friendly view'),
+              };
               return IconButton(
-                icon: Icon(
-                  isCompact ? Icons.density_large : Icons.density_small,
-                  size: 20,
-                ),
-                tooltip: isCompact ? 'Switch to touch-friendly view' : 'Switch to compact view',
+                icon: Icon(icon, size: 20),
+                tooltip: tip,
                 onPressed: () =>
                     cref.read(panelViewModeProvider(ap).notifier).cycleMode(),
               );

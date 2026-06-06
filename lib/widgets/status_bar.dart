@@ -124,13 +124,22 @@ class _StatusBarState extends ConsumerState<StatusBar> {
           Container(width: 1, height: 14, color: theme.dividerColor),
           const SizedBox(width: 16),
 
-          // Item count (show filtered count if filter active)
+          // Item count + cursor position (DC-style "15 / 169")
           Text(
             panel.filterQuery.isNotEmpty
                 ? '$itemCount / $totalCount items'
                 : '$itemCount items',
             style: style,
           ),
+          if (panel.cursorIndex >= 0 && itemCount > 0) ...[
+            const SizedBox(width: 8),
+            Text('•', style: style),
+            const SizedBox(width: 8),
+            Text(
+              '${panel.cursorIndex + 1} / $itemCount',
+              style: style.copyWith(color: theme.colorScheme.onSurface.withOpacity(0.6)),
+            ),
+          ],
 
           if (selectedCount > 0) ...[
             const SizedBox(width: 8),
