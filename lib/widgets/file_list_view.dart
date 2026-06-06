@@ -129,7 +129,6 @@ class FileListView extends ConsumerWidget {
           if (event is! KeyDownEvent && event is! KeyRepeatEvent) {
             return KeyEventResult.ignored;
           }
-          // Only handle if this is the active panel
           final activePanel = ref.read(activePanelProvider);
           if (side != activePanel) return KeyEventResult.ignored;
 

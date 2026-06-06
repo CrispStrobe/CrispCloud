@@ -77,29 +77,6 @@ class _FilePanelState extends ConsumerState<FilePanel> {
     final currentPath = panel.currentPath;
     final selection = panel.selection;
 
-    // Scroll logic
-    final itemToScroll = panel.itemToScrollTo;
-    if (itemToScroll != null && files != null) {
-      final index = files.indexWhere((f) =>
-        (f.uuid != null && f.uuid == itemToScroll.uuid) ||
-        (f.path != null && f.path == itemToScroll.path));
-
-      if (index != -1) {
-        WidgetsBinding.instance.addPostFrameCallback((_) {
-          if (_scrollController.hasClients) {
-            _scrollController.animateTo(
-              index * 56.0,
-              duration: const Duration(milliseconds: 300),
-              curve: Curves.easeInOut,
-            );
-            panel.clearItemToScrollTo();
-          }
-        });
-      } else {
-        panel.clearItemToScrollTo();
-      }
-    }
-
     // Web empty state
     if (kIsWeb && widget.side == PanelSide.local && (files == null || files.isEmpty)) {
       return Center(
