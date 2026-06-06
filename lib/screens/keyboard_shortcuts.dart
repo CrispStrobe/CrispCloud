@@ -220,12 +220,7 @@ KeyEventResult handleKeyEvent(
     return KeyEventResult.handled;
   }
 
-  // Ctrl+3 - Tree view mode for active panel
-  if (isCtrl && event.logicalKey == LogicalKeyboardKey.digit3) {
-    ref.read(panelViewModeProvider(activePanel).notifier)
-        .setMode(PanelViewMode.tree);
-    return KeyEventResult.handled;
-  }
+  // Ctrl+3 - (tree view reserved, not yet implemented)
 
   // Space - Toggle preview pane
   if (event.logicalKey == LogicalKeyboardKey.space && !isCtrl) {
