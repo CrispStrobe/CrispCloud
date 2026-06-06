@@ -6,6 +6,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'dart:io';
 
 import '../models/panel_side.dart';
+import '../providers/bookmarks_provider.dart' show bookmarksProvider;
 import '../providers/providers.dart';
 
 class FileBreadcrumbs extends ConsumerWidget {
@@ -80,6 +81,8 @@ class FileBreadcrumbs extends ConsumerWidget {
 
     final canBack = panel.canNavigateBack;
     final canForward = panel.canNavigateForward;
+    final bm = ref.watch(bookmarksProvider);
+    final isBookmarked = bm.isBookmarked(currentPath, side);
 
     return SingleChildScrollView(
       scrollDirection: Axis.horizontal,
@@ -128,6 +131,27 @@ class FileBreadcrumbs extends ConsumerWidget {
               child: Icon(Icons.home, size: 16, color: Theme.of(context).colorScheme.onSurfaceVariant),
             ),
           ),
+          // Bookmark star (Ctrl+B to toggle)
+          InkWell(
+            onTap: () {
+              if (isBookmarked) {
+                bm.remove(currentPath, side);
+              } else {
+                final name = currentPath.split('/').where((s) => s.isNotEmpty).lastOrNull ?? '/';
+                bm.add(name, currentPath, side);
+              }
+            },
+            child: Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 2),
+              child: Icon(
+                isBookmarked ? Icons.star : Icons.star_border,
+                size: 14,
+                color: isBookmarked
+                    ? Theme.of(context).colorScheme.primary
+                    : Theme.of(context).colorScheme.onSurfaceVariant.withValues(alpha: 0.5),
+              ),
+            ),
+          ),
           ...breadcrumbs.asMap().entries.map((entry) {
             final index = entry.key;
             final crumb = entry.value;
@@ -138,6 +162,17 @@ class FileBreadcrumbs extends ConsumerWidget {
                 Icon(Icons.chevron_right, size: 16, color: Theme.of(context).colorScheme.onSurfaceVariant),
                 InkWell(
                   onTap: isLast ? null : () => panel.navigateToPath(crumb['path']!),
+                  onLongPress: isLast ? null : () {
+                    // Long-press on breadcrumb = bookmark that path
+                    final bmNotifier = ref.read(bookmarksProvider);
+                    final p = crumb['path']!;
+                    final name = crumb['name']!;
+                    if (bmNotifier.isBookmarked(p, side)) {
+                      bmNotifier.remove(p, side);
+                    } else {
+                      bmNotifier.add(name.isEmpty ? '/' : name, p, side);
+                    }
+                  },
                   child: Padding(
                     padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 2),
                     child: Text(

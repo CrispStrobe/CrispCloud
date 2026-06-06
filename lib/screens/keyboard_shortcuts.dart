@@ -13,6 +13,7 @@ import '../providers/panel_source_provider.dart' show panelSourceProvider;
 import '../providers/toolbar_provider.dart' show panelViewModeProvider;
 import '../services/panel_view_mode_service.dart' show PanelViewMode;
 import '../services/panel_swap_service.dart';
+import '../providers/bookmarks_provider.dart' show bookmarksProvider;
 import '../widgets/command_palette.dart';
 import '../widgets/file_toolbar.dart' show showPanelFilterDialog;
 import 'screen_dialogs.dart';
@@ -382,6 +383,20 @@ KeyEventResult handleKeyEvent(
   // Ctrl+. - Toggle hidden (dot-prefixed) files
   if (isCtrl && event.logicalKey == LogicalKeyboardKey.period) {
     panel.toggleShowHiddenFiles();
+    return KeyEventResult.handled;
+  }
+
+  // Ctrl+B - Toggle bookmark for current directory
+  if (isCtrl && !isShift && event.logicalKey == LogicalKeyboardKey.keyB) {
+    final bm = ref.read(bookmarksProvider);
+    final currentPath = panel.currentPath;
+    final p = panel.currentPath.split('/').last;
+    final name = p.isEmpty ? '/' : p;
+    if (bm.isBookmarked(currentPath, activePanel)) {
+      bm.remove(currentPath, activePanel);
+    } else {
+      bm.add(name, currentPath, activePanel);
+    }
     return KeyEventResult.handled;
   }
 
