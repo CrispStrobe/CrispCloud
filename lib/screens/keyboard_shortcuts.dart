@@ -78,6 +78,41 @@ KeyEventResult handleKeyEvent(
     return KeyEventResult.handled;
   }
 
+  // Arrow Up / Down — move cursor
+  if (!isCtrl && !isShift && event.logicalKey == LogicalKeyboardKey.arrowDown) {
+    panel.moveCursor(1);
+    return KeyEventResult.handled;
+  }
+  if (!isCtrl && !isShift && event.logicalKey == LogicalKeyboardKey.arrowUp) {
+    panel.moveCursor(-1);
+    return KeyEventResult.handled;
+  }
+
+  // Shift+Arrow — extend selection
+  if (isShift && event.logicalKey == LogicalKeyboardKey.arrowDown) {
+    panel.shiftMoveCursor(1);
+    return KeyEventResult.handled;
+  }
+  if (isShift && event.logicalKey == LogicalKeyboardKey.arrowUp) {
+    panel.shiftMoveCursor(-1);
+    return KeyEventResult.handled;
+  }
+
+  // Space / Insert — DC-style: toggle mark on cursor item, advance
+  if (!isCtrl && !isShift &&
+      (event.logicalKey == LogicalKeyboardKey.space ||
+       event.logicalKey == LogicalKeyboardKey.insert)) {
+    panel.spaceSelectAndAdvance();
+    return KeyEventResult.handled;
+  }
+
+  // Enter — open cursor item
+  if (event.logicalKey == LogicalKeyboardKey.enter) {
+    final item = panel.cursorItem;
+    if (item != null) panel.navigateInto(item);
+    return KeyEventResult.handled;
+  }
+
   // Ctrl+A - Select All
   if (isCtrl && event.logicalKey == LogicalKeyboardKey.keyA) {
     panel.selectAll();

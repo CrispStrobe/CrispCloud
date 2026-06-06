@@ -36,6 +36,30 @@ class FileListView extends ConsumerWidget {
     final viewMode = ref.watch(panelViewModeProvider(side));
     final isCompact = viewMode == PanelViewMode.full;
     final itemHeight = isCompact ? 26.0 : 64.0;
+    final cursorIndex = panel.cursorIndex;
+
+    // Auto-scroll to cursor when it changes
+    final itemToScroll = panel.itemToScrollTo;
+    if (itemToScroll != null && scrollController.hasClients) {
+      final idx = files.indexOf(itemToScroll);
+      if (idx != -1) {
+        WidgetsBinding.instance.addPostFrameCallback((_) {
+          if (!scrollController.hasClients) return;
+          final offset = idx * itemHeight;
+          final viewMin = scrollController.offset;
+          final viewMax = scrollController.offset + scrollController.position.viewportDimension;
+          // Only scroll if item is outside visible area
+          if (offset < viewMin || offset + itemHeight > viewMax) {
+            scrollController.animateTo(
+              offset.clamp(0.0, scrollController.position.maxScrollExtent),
+              duration: const Duration(milliseconds: 120),
+              curve: Curves.easeOut,
+            );
+          }
+          panel.clearItemToScrollTo();
+        });
+      }
+    }
 
     try {
       if (files.isEmpty) {
@@ -50,12 +74,14 @@ class FileListView extends ConsumerWidget {
           try {
             final file = files[index];
             final isSelected = panel.isSelected(file);
+            final isCursor = index == cursorIndex;
 
             if (isCompact) {
               return CompactFileTile(
                 file: file,
                 side: side,
                 isSelected: isSelected,
+                isCursor: isCursor,
                 selectedFiles: panel.selection.toList(),
                 showRelativePath: panel.isFlatView,
                 onTap: (shiftKey, ctrlKey) =>
@@ -70,6 +96,7 @@ class FileListView extends ConsumerWidget {
               file: file,
               side: side,
               isSelected: isSelected,
+              isCursor: isCursor,
               selectedFiles: panel.selection.toList(),
               showRelativePath: panel.isFlatView,
               onTap: (shiftKey, ctrlKey) {
@@ -119,6 +146,7 @@ class FileListTile extends ConsumerWidget {
   final FileItem file;
   final PanelSide side;
   final bool isSelected;
+  final bool isCursor;
   final List<FileItem> selectedFiles;
   final Function(bool shiftKey, bool ctrlKey) onTap;
   final VoidCallback onDoubleTap;
@@ -130,6 +158,7 @@ class FileListTile extends ConsumerWidget {
     required this.file,
     required this.side,
     required this.isSelected,
+    this.isCursor = false,
     this.selectedFiles = const [],
     required this.onTap,
     required this.onDoubleTap,
@@ -171,7 +200,18 @@ class FileListTile extends ConsumerWidget {
           }
           return KeyEventResult.ignored;
         },
-        child: ListTile(
+        child: Container(
+          decoration: isCursor
+              ? BoxDecoration(
+                  border: Border(
+                    left: BorderSide(
+                      color: Theme.of(context).colorScheme.primary,
+                      width: 3,
+                    ),
+                  ),
+                )
+              : null,
+          child: ListTile(
           selected: isSelected,
           selectedTileColor: Theme.of(context).colorScheme.primaryContainer.withOpacity(0.5),
           leading: iconWidget,
@@ -206,6 +246,7 @@ class FileListTile extends ConsumerWidget {
           },
           onLongPress: onDoubleTap,
         ),
+        ),  // Container (cursor border)
       ),
     );
 
@@ -282,6 +323,7 @@ class CompactFileTile extends ConsumerWidget {
   final FileItem file;
   final PanelSide side;
   final bool isSelected;
+  final bool isCursor;
   final List<FileItem> selectedFiles;
   final Function(bool shiftKey, bool ctrlKey) onTap;
   final VoidCallback onDoubleTap;
@@ -293,6 +335,7 @@ class CompactFileTile extends ConsumerWidget {
     required this.file,
     required this.side,
     required this.isSelected,
+    this.isCursor = false,
     this.selectedFiles = const [],
     required this.onTap,
     required this.onDoubleTap,
@@ -306,11 +349,17 @@ class CompactFileTile extends ConsumerWidget {
     final fileColor = colorService.colorForFile(file);
     final theme = Theme.of(context);
 
+    // Selected = fill; cursor = left border (can combine both)
     final bgColor = isSelected
-        ? theme.colorScheme.primaryContainer.withOpacity(0.6)
+        ? theme.colorScheme.primaryContainer.withOpacity(0.55)
         : Colors.transparent;
 
-    final style = TextStyle(fontSize: 12, color: fileColor, height: 1.0);
+    final nameStyle = TextStyle(
+      fontSize: 12,
+      color: isSelected ? theme.colorScheme.onPrimaryContainer : fileColor,
+      fontWeight: isSelected ? FontWeight.w600 : FontWeight.normal,
+      height: 1.0,
+    );
     final dimStyle = TextStyle(fontSize: 11, color: theme.colorScheme.onSurface.withOpacity(0.55), height: 1.0);
 
     final sizeStr = (!file.isFolder && file.displaySize != null)
@@ -327,7 +376,17 @@ class CompactFileTile extends ConsumerWidget {
       onDoubleTap: onDoubleTap,
       onSecondaryTapDown: onSecondaryTap,
       child: Container(
-        color: bgColor,
+        decoration: BoxDecoration(
+          color: bgColor,
+          border: isCursor
+              ? Border(
+                  left: BorderSide(
+                    color: theme.colorScheme.primary,
+                    width: 3,
+                  ),
+                )
+              : null,
+        ),
         padding: const EdgeInsets.symmetric(horizontal: 4),
         alignment: Alignment.centerLeft,
         child: Row(
@@ -341,7 +400,7 @@ class CompactFileTile extends ConsumerWidget {
             Expanded(
               child: Text(
                 showRelativePath && file.path != null ? file.path! : file.name,
-                style: style,
+                style: nameStyle,
                 maxLines: 1,
                 overflow: TextOverflow.ellipsis,
               ),

@@ -42,6 +42,9 @@ class PanelNotifier extends ChangeNotifier {
   FileItem? _lastSelected;
   FileItem? _itemToScrollTo;
 
+  // Cursor: keyboard-focus position (separate from selection marks)
+  int _cursorIndex = -1;
+
   SortBy _sortBy = SortBy.name;
   SortOrder _sortOrder = SortOrder.ascending;
 
@@ -104,6 +107,12 @@ class PanelNotifier extends ChangeNotifier {
   FileItem? get lastSelected => _lastSelected;
   FileItem? get itemToScrollTo => _itemToScrollTo;
   void clearItemToScrollTo() { _itemToScrollTo = null; }
+
+  int get cursorIndex => _cursorIndex;
+  FileItem? get cursorItem =>
+      (_files != null && _cursorIndex >= 0 && _cursorIndex < _files!.length)
+          ? _files![_cursorIndex]
+          : null;
 
   SortBy get sortBy => _sortBy;
   SortOrder get sortOrder => _sortOrder;
@@ -347,6 +356,11 @@ class PanelNotifier extends ChangeNotifier {
   bool isSelected(FileItem item) => _selection.contains(item);
 
   void toggleSelection(FileItem item, {bool shiftKey = false, bool ctrlKey = false}) {
+    // Sync cursor to clicked item
+    if (_files != null) {
+      final idx = _files!.indexOf(item);
+      if (idx != -1) _cursorIndex = idx;
+    }
     if (shiftKey && _lastSelected != null && _files != null) {
       final startIdx = _files!.indexOf(_lastSelected!);
       final endIdx = _files!.indexOf(item);
@@ -382,6 +396,69 @@ class PanelNotifier extends ChangeNotifier {
     _selection.clear();
     _lastSelected = null;
     notifyListeners();
+  }
+
+  // --- Cursor (keyboard focus, separate from selection marks) ---
+
+  /// Set cursor to a specific item by reference.
+  void setCursorToItem(FileItem item) {
+    if (_files == null) return;
+    final idx = _files!.indexOf(item);
+    if (idx != -1) {
+      _cursorIndex = idx;
+      _itemToScrollTo = item;
+      notifyListeners();
+    }
+  }
+
+  /// Move cursor by [delta] rows. Clamps at list bounds.
+  void moveCursor(int delta) {
+    if (_files == null || _files!.isEmpty) return;
+    final newIdx = (_cursorIndex + delta).clamp(0, _files!.length - 1);
+    if (newIdx == _cursorIndex) return;
+    _cursorIndex = newIdx;
+    _itemToScrollTo = _files![_cursorIndex];
+    notifyListeners();
+  }
+
+  /// DC-style Space / Insert: toggle selection mark on cursor item, advance down.
+  void spaceSelectAndAdvance() {
+    if (_files == null || _files!.isEmpty) return;
+    final idx = _cursorIndex.clamp(0, _files!.length - 1);
+    _cursorIndex = idx;
+    final item = _files![idx];
+    if (_selection.contains(item)) {
+      _selection.remove(item);
+    } else {
+      _selection.add(item);
+    }
+    _lastSelected = item;
+    final next = (idx + 1).clamp(0, _files!.length - 1);
+    _cursorIndex = next;
+    _itemToScrollTo = _files![next];
+    notifyListeners();
+  }
+
+  /// Shift+Arrow: move cursor AND extend/shrink selection range.
+  void shiftMoveCursor(int delta) {
+    if (_files == null || _files!.isEmpty) return;
+    final cur = _cursorIndex.clamp(0, _files!.length - 1);
+    final next = (cur + delta).clamp(0, _files!.length - 1);
+    if (next == cur) return;
+    // Add items swept over to selection
+    final start = cur < next ? cur : next;
+    final end = cur < next ? next : cur;
+    for (var i = start; i <= end; i++) {
+      _selection.add(_files![i]);
+    }
+    _lastSelected = _files![next];
+    _cursorIndex = next;
+    _itemToScrollTo = _files![next];
+    notifyListeners();
+  }
+
+  void _resetCursor() {
+    _cursorIndex = (_files != null && _files!.isNotEmpty) ? 0 : -1;
   }
 
   // --- Navigation ---
@@ -1021,6 +1098,7 @@ class PanelNotifier extends ChangeNotifier {
 
       _files = items;
       _sortFiles();
+      _resetCursor();
       _ref.read(errorProvider).clearErrors();
       notifyListeners();
     } catch (e) {
@@ -1093,6 +1171,7 @@ class PanelNotifier extends ChangeNotifier {
 
       _files = [...folders, ...files];
       _sortFiles();
+      _resetCursor();
       _ref.read(errorProvider).clearErrors();
       notifyListeners();
     } catch (e) {
