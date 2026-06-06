@@ -18,7 +18,7 @@ enum OperationStatus {
 }
 
 class OperationProgress {
-  static final _log = Log('OperationProgress');
+  static const _log = Log('OperationProgress');
 
   final String id;
   final OperationType type;
@@ -43,7 +43,7 @@ class OperationProgress {
   bool _isPaused = false;
   
   // Speed tracking
-  DateTime? _transferStartTime;
+  final DateTime? _transferStartTime;
   DateTime? _lastSpeedUpdate;
   int _lastSpeedBytes = 0;
   double _currentSpeed = 0; // bytes per second
@@ -139,7 +139,7 @@ class OperationProgress {
     
     // Mark all files as complete if this is a batch
     if (files != null) {
-      for (var file in files!) {
+      for (final file in files!) {
         if (!file.isComplete && file.error == null) {
           file.isComplete = true;
         }
@@ -232,7 +232,7 @@ class OperationProgress {
     if (!isBatch) return displayName;
     
     if (status == OperationStatus.failed) {
-      return '$displayName - ${failedFiles} failed';
+      return '$displayName - $failedFiles failed';
     }
     
     if (status == OperationStatus.completed) {

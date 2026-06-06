@@ -41,7 +41,7 @@ import 'services/secure_storage_web.dart';
 import 'services/theme_service.dart';
 import 'widgets/lock_screen.dart';
 
-final _log = Log('Main');
+const _log = Log('Main');
 
 Future<void> main() async {
   runZonedGuarded(() async {

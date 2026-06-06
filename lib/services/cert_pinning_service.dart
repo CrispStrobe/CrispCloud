@@ -137,7 +137,7 @@ const _knownPins = <CertPinSet>[
 ];
 
 class CertPinningService {
-  static final _log = Log('CertPinning');
+  static const _log = Log('CertPinning');
   static const _enabledKey = 'cert_pinning_enabled';
   static const _customCaCertsKey = 'custom_ca_certs';
   static const _minTlsVersionKey = 'min_tls_version';

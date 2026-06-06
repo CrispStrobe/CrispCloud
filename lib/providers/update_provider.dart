@@ -34,7 +34,7 @@ class UpdateChannelNotifier extends StateNotifier<UpdateChannel> {
   }
 
   /// Test-only constructor that sets the value directly without async load.
-  UpdateChannelNotifier.withValue(UpdateChannel value) : _svc = AutoUpdateService(owner: '', repo: ''), super(value);
+  UpdateChannelNotifier.withValue(super.value) : _svc = AutoUpdateService(owner: '', repo: '');
 
   Future<void> _load() async {
     final channel = await _svc.loadChannel();
@@ -66,7 +66,7 @@ class AutoUpdateEnabledNotifier extends StateNotifier<bool> {
   }
 
   /// Test-only constructor that sets the value directly without async load.
-  AutoUpdateEnabledNotifier.withValue(bool value) : _svc = AutoUpdateService(owner: '', repo: ''), super(value);
+  AutoUpdateEnabledNotifier.withValue(super.value) : _svc = AutoUpdateService(owner: '', repo: '');
 
   Future<void> _load() async {
     final enabled = await _svc.isAutoCheckEnabled();

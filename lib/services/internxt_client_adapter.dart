@@ -13,7 +13,6 @@
 // etc.) come from the package's `paths.dart` extension methods —
 // no local extensions file needed anymore.
 
-import 'dart:typed_data';
 
 import 'package:flutter/foundation.dart';
 import 'package:internxt_client/internxt_client.dart';
@@ -24,7 +23,7 @@ import 'internxt_flutter/shared_prefs_storage.dart';
 import 'log_service.dart';
 
 class InternxtClientAdapter extends CloudStorageClient {
-  static final _log = Log('InternxtClient');
+  static const _log = Log('InternxtClient');
   final InternxtClient _client;
 
   InternxtClientAdapter({required ConfigService config})

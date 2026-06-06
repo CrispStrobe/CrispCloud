@@ -340,7 +340,7 @@ class _AppLockSetupDialogState extends State<AppLockSetupDialog> {
             ),
             const SizedBox(height: 16),
             DropdownButtonFormField<int>(
-              value: _timeout,
+              initialValue: _timeout,
               decoration: const InputDecoration(
                 labelText: 'Auto-lock after',
                 border: OutlineInputBorder(),

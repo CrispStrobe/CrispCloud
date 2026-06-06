@@ -223,7 +223,7 @@ class _PrivacySection extends ConsumerWidget {
                 color: Theme.of(context)
                     .colorScheme
                     .surfaceContainerHighest
-                    .withOpacity(0.5),
+                    .withValues(alpha: 0.5),
                 borderRadius: BorderRadius.circular(8),
               ),
               child: const Row(
@@ -312,7 +312,7 @@ class _AdvancedSection extends ConsumerWidget {
             padding: const EdgeInsets.fromLTRB(24, 0, 24, 8),
             child: DropdownButtonFormField<int>(
               key: const Key('settings_delta_block_size'),
-              value: _kBlockSizeOptions
+              initialValue: _kBlockSizeOptions
                       .cast<(int, String)?>()
                       .firstWhere(
                         (o) => o!.$1 == blockSize,

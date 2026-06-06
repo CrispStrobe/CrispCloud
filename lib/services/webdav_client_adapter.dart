@@ -11,7 +11,7 @@ import 'webdav_config_service.dart';
 import 'dart:io' as dart_io;
 
 class WebDavClientAdapter extends CloudStorageClient {
-  static final _log = Log('WebDAVClient');
+  static const _log = Log('WebDAVClient');
 
   final WebDavConfigService _config;
 

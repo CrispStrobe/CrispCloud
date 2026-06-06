@@ -12,7 +12,7 @@ import 'web_push_service.dart';
 WebPushService createWebPushService() => _WebPushServiceImpl();
 
 class _WebPushServiceImpl implements WebPushService {
-  static final _log = Log('WebPushService');
+  static const _log = Log('WebPushService');
 
   // Track whether the browser supports the Notification API.
   static bool get _apiAvailable {

@@ -12,7 +12,7 @@
 // delegates to the platform implementation via conditional import.
 
 import 'web_push_service_stub.dart'
-    if (dart.library.html) 'web_push_service_web.dart' as _impl;
+    if (dart.library.html) 'web_push_service_web.dart' as impl;
 
 /// Notification types emitted by CrispCloud.
 enum PushNotificationType {
@@ -64,5 +64,5 @@ abstract class WebPushService {
       );
 
   /// Factory: returns the correct platform implementation.
-  factory WebPushService() => _impl.createWebPushService();
+  factory WebPushService() => impl.createWebPushService();
 }

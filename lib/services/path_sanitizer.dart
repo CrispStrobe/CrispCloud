@@ -136,7 +136,7 @@ class PathSanitizer {
 
     // Collapse consecutive slashes, but preserve leading // (UNC)
     if (result.startsWith('//')) {
-      result = '//' + result.substring(2).replaceAll(RegExp(r'/+'), '/');
+      result = '//${result.substring(2).replaceAll(RegExp(r'/+'), '/')}';
     } else {
       result = result.replaceAll(RegExp(r'/+'), '/');
     }

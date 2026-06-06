@@ -204,7 +204,7 @@ class ProxyHttpOverrides extends HttpOverrides {
 
 /// Manages proxy configuration and produces proxy-aware HTTP clients.
 class ProxyService {
-  static final _log = Log('ProxyService');
+  static const _log = Log('ProxyService');
   static const _prefsKey = 'proxy_config';
 
   ProxyConfig _config;

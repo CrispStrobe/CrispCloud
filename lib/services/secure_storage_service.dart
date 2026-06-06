@@ -18,7 +18,7 @@ import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'log_service.dart';
 
-final _secureLog = Log('SecureStorage');
+const _secureLog = Log('SecureStorage');
 
 /// Abstract interface for secure key-value storage of credentials.
 ///

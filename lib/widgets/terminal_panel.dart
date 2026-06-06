@@ -110,7 +110,7 @@ class _TerminalPanelState extends ConsumerState<TerminalPanel> {
             child: Center(child: Container(
               width: 40, height: 3,
               decoration: BoxDecoration(
-                color: theme.colorScheme.onSurfaceVariant.withOpacity(0.4),
+                color: theme.colorScheme.onSurfaceVariant.withValues(alpha: 0.4),
                 borderRadius: BorderRadius.circular(2),
               ),
             )),

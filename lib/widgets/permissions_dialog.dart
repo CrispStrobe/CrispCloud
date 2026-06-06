@@ -27,7 +27,7 @@ class _PermissionsDialog extends ConsumerStatefulWidget {
 }
 
 class _PermissionsDialogState extends ConsumerState<_PermissionsDialog> {
-  static final _log = Log('PermissionsDialog');
+  static const _log = Log('PermissionsDialog');
 
   // Permission bits: owner(rwx), group(rwx), other(rwx)
   final List<bool> _perms = List.filled(9, false);

@@ -28,7 +28,7 @@ final migrationServiceProvider = Provider<MigrationService>((ref) {
 
 class MigrationPlansNotifier
     extends StateNotifier<AsyncValue<List<MigrationPlan>>> {
-  static final _log = Log('MigrationPlansNotifier');
+  static const _log = Log('MigrationPlansNotifier');
   final MigrationService _service;
 
   MigrationPlansNotifier(this._service) : super(const AsyncValue.loading()) {
@@ -134,7 +134,7 @@ final migrationProgressProvider =
 
 /// Tracks which plan IDs currently have a running migration.
 class ActiveMigrationNotifier extends StateNotifier<Set<String>> {
-  static final _log = Log('ActiveMigrationNotifier');
+  static const _log = Log('ActiveMigrationNotifier');
 
   ActiveMigrationNotifier() : super({});
 
@@ -160,7 +160,7 @@ final activeMigrationProvider =
 
 /// High-level controller that drives migrations and keeps providers in sync.
 class MigrationController {
-  static final _log = Log('MigrationController');
+  static const _log = Log('MigrationController');
   final Ref _ref;
 
   MigrationController(this._ref);

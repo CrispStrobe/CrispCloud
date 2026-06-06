@@ -19,7 +19,7 @@ class ConnectionDialog extends ConsumerStatefulWidget {
 }
 
 class _ConnectionDialogState extends ConsumerState<ConnectionDialog> {
-  static final _log = Log('ConnectionDialog');
+  static const _log = Log('ConnectionDialog');
 
   // General Controllers
   final _emailController = TextEditingController();
@@ -238,7 +238,7 @@ class _ConnectionDialogState extends ConsumerState<ConnectionDialog> {
           children: [
             // --- 1. Provider Selection ---
             DropdownButtonFormField<CloudProvider>(
-              value: _selectedProvider,
+              initialValue: _selectedProvider,
               decoration: const InputDecoration(
                 labelText: 'Provider',
                 border: OutlineInputBorder(),
@@ -423,7 +423,7 @@ class _ConnectionDialogState extends ConsumerState<ConnectionDialog> {
               Container(
                 padding: const EdgeInsets.all(10),
                 decoration: BoxDecoration(
-                  color: Theme.of(context).colorScheme.primaryContainer.withOpacity(0.3),
+                  color: Theme.of(context).colorScheme.primaryContainer.withValues(alpha: 0.3),
                   borderRadius: BorderRadius.circular(8),
                 ),
                 child: const Row(
@@ -444,7 +444,7 @@ class _ConnectionDialogState extends ConsumerState<ConnectionDialog> {
               Container(
                 padding: const EdgeInsets.all(10),
                 decoration: BoxDecoration(
-                  color: Theme.of(context).colorScheme.primaryContainer.withOpacity(0.3),
+                  color: Theme.of(context).colorScheme.primaryContainer.withValues(alpha: 0.3),
                   borderRadius: BorderRadius.circular(8),
                 ),
                 child: const Row(
@@ -488,7 +488,7 @@ class _ConnectionDialogState extends ConsumerState<ConnectionDialog> {
               Container(
                 padding: const EdgeInsets.all(8),
                 decoration: BoxDecoration(
-                  color: Theme.of(context).colorScheme.primaryContainer.withOpacity(0.3),
+                  color: Theme.of(context).colorScheme.primaryContainer.withValues(alpha: 0.3),
                   borderRadius: BorderRadius.circular(8),
                 ),
                 child: const Row(
@@ -532,7 +532,7 @@ class _ConnectionDialogState extends ConsumerState<ConnectionDialog> {
               Container(
                 padding: const EdgeInsets.all(8),
                 decoration: BoxDecoration(
-                  color: Theme.of(context).colorScheme.primaryContainer.withOpacity(0.3),
+                  color: Theme.of(context).colorScheme.primaryContainer.withValues(alpha: 0.3),
                   borderRadius: BorderRadius.circular(8),
                 ),
                 child: const Row(
@@ -576,7 +576,7 @@ class _ConnectionDialogState extends ConsumerState<ConnectionDialog> {
               Container(
                 padding: const EdgeInsets.all(8),
                 decoration: BoxDecoration(
-                  color: Theme.of(context).colorScheme.primaryContainer.withOpacity(0.3),
+                  color: Theme.of(context).colorScheme.primaryContainer.withValues(alpha: 0.3),
                   borderRadius: BorderRadius.circular(8),
                 ),
                 child: const Row(
@@ -619,7 +619,7 @@ class _ConnectionDialogState extends ConsumerState<ConnectionDialog> {
               Container(
                 padding: const EdgeInsets.all(8),
                 decoration: BoxDecoration(
-                  color: Theme.of(context).colorScheme.primaryContainer.withOpacity(0.3),
+                  color: Theme.of(context).colorScheme.primaryContainer.withValues(alpha: 0.3),
                   borderRadius: BorderRadius.circular(8),
                 ),
                 child: const Row(

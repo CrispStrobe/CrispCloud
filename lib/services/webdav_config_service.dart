@@ -3,7 +3,7 @@ import 'log_service.dart';
 import 'secure_storage_service.dart';
 
 class WebDavConfigService {
-  static final _log = Log('WebDavConfig');
+  static const _log = Log('WebDavConfig');
 
   final String configPath;
   final SecureStorage _secure;

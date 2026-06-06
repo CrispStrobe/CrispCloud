@@ -59,7 +59,7 @@ typedef ShareUiCallback = Future<void> Function(
 );
 
 class IntentHandlerService {
-  static final _log = Log('IntentHandlerService');
+  static const _log = Log('IntentHandlerService');
 
   /// True only on Android (non-web dart:io build).
   static bool get isSupported {

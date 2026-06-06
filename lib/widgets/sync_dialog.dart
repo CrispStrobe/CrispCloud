@@ -202,7 +202,7 @@ class _SyncManagerDialog extends ConsumerWidget {
                   ),
                   const SizedBox(height: 12),
                   DropdownButtonFormField<ConflictPolicy>(
-                    value: policy,
+                    initialValue: policy,
                     decoration: const InputDecoration(
                       labelText: 'Conflict Policy',
                       border: OutlineInputBorder(),
@@ -215,7 +215,7 @@ class _SyncManagerDialog extends ConsumerWidget {
                   ),
                   const SizedBox(height: 12),
                   DropdownButtonFormField<SyncDirection>(
-                    value: direction,
+                    initialValue: direction,
                     decoration: const InputDecoration(
                       labelText: 'Direction',
                       border: OutlineInputBorder(),

@@ -11,7 +11,7 @@
 // same interface as no-ops / false returns.
 
 import 'web_streaming_service_stub.dart'
-    if (dart.library.html) 'web_streaming_service_web.dart' as _impl;
+    if (dart.library.html) 'web_streaming_service_web.dart' as impl;
 
 /// Default chunk size used for chunked FileReader slice reads (1 MiB).
 const int _kDefaultChunkSize = 1024 * 1024;
@@ -62,5 +62,5 @@ abstract class WebStreamingService {
     int? totalSize,
   });
 
-  factory WebStreamingService() => _impl.createWebStreamingService();
+  factory WebStreamingService() => impl.createWebStreamingService();
 }

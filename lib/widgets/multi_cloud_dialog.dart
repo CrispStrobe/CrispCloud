@@ -9,7 +9,6 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../models/file_item.dart';
 import '../models/operation_progress.dart';
 import '../providers/providers.dart';
-import '../services/multi_cloud_service.dart';
 
 void showMultiCloudDialog(BuildContext context) {
   showDialog(
@@ -522,7 +521,7 @@ class _MultiCloudDialogState extends ConsumerState<_MultiCloudDialog>
     required ValueChanged<String?> onChanged,
   }) =>
       DropdownButtonFormField<String>(
-        value: value,
+        initialValue: value,
         isExpanded: true,
         decoration: InputDecoration(
           isDense: true,

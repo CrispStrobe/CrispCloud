@@ -28,7 +28,7 @@ final localApiEnabledProvider =
 );
 
 class LocalApiEnabledNotifier extends StateNotifier<bool> {
-  static final _log = Log('LocalApiEnabledNotifier');
+  static const _log = Log('LocalApiEnabledNotifier');
   final Ref _ref;
 
   LocalApiEnabledNotifier(this._ref) : super(false) {
@@ -86,7 +86,7 @@ final localApiPortProvider =
 );
 
 class LocalApiPortNotifier extends StateNotifier<int> {
-  static final _log = Log('LocalApiPortNotifier');
+  static const _log = Log('LocalApiPortNotifier');
 
   LocalApiPortNotifier() : super(kLocalApiDefaultPort) {
     _load();
@@ -161,14 +161,14 @@ class LocalApiServiceState {
 
 class LocalApiServiceNotifier
     extends StateNotifier<LocalApiServiceState> {
-  static final _log = Log('LocalApiServiceNotifier');
+  static const _log = Log('LocalApiServiceNotifier');
 
   final Ref _ref;
   final LocalApiService _service;
 
   LocalApiServiceNotifier(this._ref)
       : _service = LocalApiService(),
-        super(LocalApiServiceState(
+        super(const LocalApiServiceState(
           running: false,
           port: kLocalApiDefaultPort,
         ));

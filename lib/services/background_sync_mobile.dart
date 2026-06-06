@@ -29,7 +29,7 @@ import 'secure_storage_service.dart';
 import 'webdav_client_adapter.dart';
 import 'webdav_config_service.dart';
 
-final _log = Log('BackgroundSyncMobile');
+const _log = Log('BackgroundSyncMobile');
 
 /// True on all dart:io platforms — further narrowed to Android/iOS by the
 /// conditional import guard in [BackgroundSyncService].

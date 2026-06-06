@@ -1,6 +1,6 @@
 // services/macos_bookmark_service.dart
 import 'dart:io';
-import 'dart:convert'; // Import for base64
+// Import for base64
 import 'package:flutter/foundation.dart';
 import 'package:file_selector/file_selector.dart';
 import 'package:shared_preferences/shared_preferences.dart';

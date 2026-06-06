@@ -23,15 +23,13 @@ import '../services/audit_service.dart';
 import '../services/s3_client_adapter.dart';
 import '../services/transfer_queue.dart';
 import '../services/web_streaming_service.dart';
-import '../utils/formatters.dart' as fmt;
 import '../services/log_service.dart';
 import 'auth_provider.dart';
 import 'core_providers.dart';
-import 'error_provider.dart';
 import 'panel_provider.dart';
 
 class TransferNotifier extends ChangeNotifier {
-  static final _log = Log('TransferNotifier');
+  static const _log = Log('TransferNotifier');
   final Ref _ref;
   final TransferQueue _queue = TransferQueue();
   final List<OperationProgress> _operations = [];

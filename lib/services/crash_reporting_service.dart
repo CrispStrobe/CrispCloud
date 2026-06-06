@@ -274,7 +274,7 @@ abstract class CrashReportingBackend {
 /// Writes crash reports as JSON-lines to <appSupportDir>/crash_reports.jsonl.
 /// On web, stores in-memory only.
 class LocalBackend extends CrashReportingBackend {
-  static final _log = Log('LocalBackend');
+  static const _log = Log('LocalBackend');
 
   String? _filePath;
 
@@ -399,7 +399,7 @@ class LocalBackend extends CrashReportingBackend {
 /// switch backends without changes to [CrashReportingService]. Add
 /// `sentry_flutter` to pubspec.yaml and flesh out [send] to activate it.
 class SentryBackend extends CrashReportingBackend {
-  static final _log = Log('SentryBackend');
+  static const _log = Log('SentryBackend');
 
   final String dsn;
   final String? environment;
@@ -449,12 +449,12 @@ class SentryBackend extends CrashReportingBackend {
 /// The service hooks into [LogConfig] so that any [Log.error()] call
 /// automatically triggers [reportError] when crash reporting is enabled.
 class CrashReportingService {
-  static final _log = Log('CrashReportingService');
+  static const _log = Log('CrashReportingService');
 
   CrashReportingBackend _backend;
   bool _enabled = false;
   String? _userId;
-  String? _appVersion;
+  final String? _appVersion;
 
   // Breadcrumb ring buffer
   final Queue<Breadcrumb> _breadcrumbs = Queue<Breadcrumb>();

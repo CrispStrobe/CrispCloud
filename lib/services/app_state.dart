@@ -4,7 +4,6 @@ import 'dart:io';
 import 'package:flutter/foundation.dart';
 import 'package:path/path.dart' as p;
 import 'package:shared_preferences/shared_preferences.dart';
-import 'package:universal_html/html.dart' as html;
 
 import '../models/file_item.dart';
 import '../models/operation_progress.dart';
@@ -444,8 +443,9 @@ class AppState extends ChangeNotifier {
 
     // EXTRACT PATH: Attempt to extract, but handle failure robustly
     try {
-        if (config is FilenConfigService) _configPath = config.configPath;
-        else if (config is FTPConfigService) _configPath = config.configPath;
+        if (config is FilenConfigService) {
+          _configPath = config.configPath;
+        } else if (config is FTPConfigService) _configPath = config.configPath;
         else if (config is SFTPConfigService) _configPath = config.configPath;
         else if (config is ConfigService) _configPath = config.configPath;
         // Fallback: try dynamic access if types didn't match due to import issues
@@ -620,7 +620,7 @@ class AppState extends ChangeNotifier {
 
   Future<void> _loadLocalFiles() async {
     try {
-      debugPrint('📁 Loading local files from: ${localPath}');
+      debugPrint('📁 Loading local files from: $localPath');
       
       final entities = await _localFileService.listDirectory(localPath);
       
@@ -691,7 +691,7 @@ class AppState extends ChangeNotifier {
       // print('✅ Loaded ${_localFiles?.length ?? 0} local items');
       _errors.clear();
       notifyListeners();
-    } catch (e, stackTrace) {
+    } catch (e) {
       if (!kIsWeb && (e is PathAccessException || e.toString().contains('Operation not permitted') || e.toString().contains('Permission denied'))) {
         _localFiles = [];
         _errors.add(AppError('Permission denied. Use the Browse button (folder icon) to grant access.'));
@@ -947,8 +947,11 @@ class AppState extends ChangeNotifier {
 
                 if (rawDate != null) {
                   try {
-                     if (rawDate is int) folderDate = DateTime.fromMillisecondsSinceEpoch(rawDate);
-                     else folderDate = DateTime.parse(rawDate.toString());
+                     if (rawDate is int) {
+                       folderDate = DateTime.fromMillisecondsSinceEpoch(rawDate);
+                     } else {
+                       folderDate = DateTime.parse(rawDate.toString());
+                     }
                   } catch (e) {
                     debugPrint('Failed to parse folder date from rawDate=$rawDate: $e');
                   }
@@ -980,8 +983,11 @@ class AppState extends ChangeNotifier {
 
                 if (rawDate != null) {
                   try {
-                     if (rawDate is int) fileDate = DateTime.fromMillisecondsSinceEpoch(rawDate);
-                     else fileDate = DateTime.parse(rawDate.toString());
+                     if (rawDate is int) {
+                       fileDate = DateTime.fromMillisecondsSinceEpoch(rawDate);
+                     } else {
+                       fileDate = DateTime.parse(rawDate.toString());
+                     }
                   } catch (e) {
                     debugPrint('Failed to parse file date from rawDate=$rawDate: $e');
                   }

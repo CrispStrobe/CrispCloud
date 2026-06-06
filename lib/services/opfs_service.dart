@@ -16,7 +16,7 @@
 import 'dart:typed_data';
 
 import 'opfs_service_stub.dart'
-    if (dart.library.html) 'opfs_service_web.dart' as _impl;
+    if (dart.library.html) 'opfs_service_web.dart' as impl;
 
 /// Abstract interface for the OPFS-backed cache.
 abstract class OpfsService {
@@ -43,5 +43,5 @@ abstract class OpfsService {
   /// Remove all cached files (full cache wipe).
   Future<void> clearAll();
 
-  factory OpfsService() => _impl.createOpfsService();
+  factory OpfsService() => impl.createOpfsService();
 }

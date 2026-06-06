@@ -285,7 +285,7 @@ class AutoUpdateService {
     }
 
     if (response.statusCode == 403) {
-      throw AutoUpdateException(
+      throw const AutoUpdateException(
           'GitHub API rate limit exceeded. Try again later.');
     }
     if (response.statusCode == 404) {
@@ -298,7 +298,7 @@ class AutoUpdateService {
 
     final decoded = jsonDecode(response.body);
     if (decoded is! List) {
-      throw AutoUpdateException('Unexpected GitHub API response format');
+      throw const AutoUpdateException('Unexpected GitHub API response format');
     }
 
     return decoded.cast<Map<String, dynamic>>();

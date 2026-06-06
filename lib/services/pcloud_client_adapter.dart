@@ -25,7 +25,6 @@
 import 'dart:async';
 import 'dart:convert';
 import 'dart:io';
-import 'dart:typed_data';
 
 import 'package:flutter/foundation.dart';
 import 'package:http/http.dart' as http;
@@ -38,7 +37,7 @@ import 'log_service.dart';
 import 'secure_storage_service.dart';
 
 class PCloudClientAdapter extends CloudStorageClient {
-  static final _log = Log('PCloudClient');
+  static const _log = Log('PCloudClient');
 
   final PCloudConfigService _config;
 
@@ -577,7 +576,7 @@ class PCloudClientAdapter extends CloudStorageClient {
   }
 
   Future<void> _browserOAuthFlow() async {
-    final redirectUri = 'http://localhost:$_redirectPort';
+    const redirectUri = 'http://localhost:$_redirectPort';
 
     final authUri = Uri.parse(_authUrl).replace(queryParameters: {
       'client_id': _appKey!,

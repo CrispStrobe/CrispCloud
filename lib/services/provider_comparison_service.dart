@@ -313,7 +313,7 @@ class ProviderComparisonService {
     CloudProvider.filen: const ProviderInfo(
       name: 'Filen',
       providerType: CloudProvider.filen,
-      pricing: const ProviderPricing(
+      pricing: ProviderPricing(
         freeStorageGB: 10,
         costPerGBMonthly: 0.030,
         currency: 'EUR',
@@ -321,7 +321,7 @@ class ProviderComparisonService {
         paidPlanName: 'Filen 100 GB',
         paidPlanPriceMonthly: 2.99,
       ),
-      features: const ProviderFeatures(
+      features: ProviderFeatures(
         e2eEncryption: true,
         versionHistory: true,
         sharing: true,
@@ -333,7 +333,7 @@ class ProviderComparisonService {
         serverSideCopy: false,
         fullTextSearch: false,
       ),
-      privacy: const PrivacyInfo(
+      privacy: PrivacyInfo(
         encryptionAtRest: true,
         encryptionInTransit: true,
         zeroKnowledge: true,
@@ -341,7 +341,7 @@ class ProviderComparisonService {
         gdprCompliant: true,
         openSource: true,
       ),
-      limits: const ProviderLimits(
+      limits: ProviderLimits(
         maxFileSizeMB: null,      // unlimited
         maxStorageGB: null,
         rateLimitPerMinute: null,
@@ -356,7 +356,7 @@ class ProviderComparisonService {
     CloudProvider.internxt: const ProviderInfo(
       name: 'Internxt',
       providerType: CloudProvider.internxt,
-      pricing: const ProviderPricing(
+      pricing: ProviderPricing(
         freeStorageGB: 10,
         costPerGBMonthly: 0.050,
         currency: 'EUR',
@@ -364,7 +364,7 @@ class ProviderComparisonService {
         paidPlanName: 'Internxt 200 GB',
         paidPlanPriceMonthly: 3.49,
       ),
-      features: const ProviderFeatures(
+      features: ProviderFeatures(
         e2eEncryption: true,
         versionHistory: true,
         sharing: true,
@@ -376,7 +376,7 @@ class ProviderComparisonService {
         serverSideCopy: false,
         fullTextSearch: false,
       ),
-      privacy: const PrivacyInfo(
+      privacy: PrivacyInfo(
         encryptionAtRest: true,
         encryptionInTransit: true,
         zeroKnowledge: true,
@@ -384,7 +384,7 @@ class ProviderComparisonService {
         gdprCompliant: true,
         openSource: true,
       ),
-      limits: const ProviderLimits(
+      limits: ProviderLimits(
         maxFileSizeMB: null,
         maxStorageGB: null,
         rateLimitPerMinute: null,
@@ -399,7 +399,7 @@ class ProviderComparisonService {
     CloudProvider.sftp: const ProviderInfo(
       name: 'SFTP',
       providerType: CloudProvider.sftp,
-      pricing: const ProviderPricing(
+      pricing: ProviderPricing(
         freeStorageGB: double.infinity,
         costPerGBMonthly: 0.0,
         currency: 'USD',
@@ -407,7 +407,7 @@ class ProviderComparisonService {
         paidPlanName: null,
         paidPlanPriceMonthly: null,
       ),
-      features: const ProviderFeatures(
+      features: ProviderFeatures(
         e2eEncryption: false,
         versionHistory: false,
         sharing: false,
@@ -419,7 +419,7 @@ class ProviderComparisonService {
         serverSideCopy: false,
         fullTextSearch: false,
       ),
-      privacy: const PrivacyInfo(
+      privacy: PrivacyInfo(
         encryptionAtRest: false,
         encryptionInTransit: true,  // SSH transport
         zeroKnowledge: false,
@@ -427,7 +427,7 @@ class ProviderComparisonService {
         gdprCompliant: false,
         openSource: true,
       ),
-      limits: const ProviderLimits(
+      limits: ProviderLimits(
         maxFileSizeMB: null,
         maxStorageGB: null,
         rateLimitPerMinute: null,
@@ -441,7 +441,7 @@ class ProviderComparisonService {
     CloudProvider.webdav: const ProviderInfo(
       name: 'WebDAV',
       providerType: CloudProvider.webdav,
-      pricing: const ProviderPricing(
+      pricing: ProviderPricing(
         freeStorageGB: double.infinity,
         costPerGBMonthly: 0.0,
         currency: 'USD',
@@ -449,7 +449,7 @@ class ProviderComparisonService {
         paidPlanName: null,
         paidPlanPriceMonthly: null,
       ),
-      features: const ProviderFeatures(
+      features: ProviderFeatures(
         e2eEncryption: false,
         versionHistory: false,
         sharing: false,
@@ -461,7 +461,7 @@ class ProviderComparisonService {
         serverSideCopy: false,
         fullTextSearch: false,
       ),
-      privacy: const PrivacyInfo(
+      privacy: PrivacyInfo(
         encryptionAtRest: false,
         encryptionInTransit: true,  // TLS when https://
         zeroKnowledge: false,
@@ -469,7 +469,7 @@ class ProviderComparisonService {
         gdprCompliant: false,
         openSource: true,
       ),
-      limits: const ProviderLimits(
+      limits: ProviderLimits(
         maxFileSizeMB: null,
         maxStorageGB: null,
         rateLimitPerMinute: null,
@@ -484,7 +484,7 @@ class ProviderComparisonService {
     CloudProvider.s3: const ProviderInfo(
       name: 'S3',
       providerType: CloudProvider.s3,
-      pricing: const ProviderPricing(
+      pricing: ProviderPricing(
         freeStorageGB: 5,
         costPerGBMonthly: 0.023,
         currency: 'USD',
@@ -492,7 +492,7 @@ class ProviderComparisonService {
         paidPlanName: 'S3 Standard',
         paidPlanPriceMonthly: null, // pay-as-you-go
       ),
-      features: const ProviderFeatures(
+      features: ProviderFeatures(
         e2eEncryption: false,
         versionHistory: true,
         sharing: true,
@@ -504,7 +504,7 @@ class ProviderComparisonService {
         serverSideCopy: true,
         fullTextSearch: false,
       ),
-      privacy: const PrivacyInfo(
+      privacy: PrivacyInfo(
         encryptionAtRest: true,
         encryptionInTransit: true,
         zeroKnowledge: false,
@@ -512,7 +512,7 @@ class ProviderComparisonService {
         gdprCompliant: true,
         openSource: false,
       ),
-      limits: const ProviderLimits(
+      limits: ProviderLimits(
         maxFileSizeMB: null, // effectively unlimited (5 TB per object via multipart)
         maxStorageGB: null,
         rateLimitPerMinute: 3500,
@@ -526,7 +526,7 @@ class ProviderComparisonService {
     CloudProvider.ftp: const ProviderInfo(
       name: 'FTP',
       providerType: CloudProvider.ftp,
-      pricing: const ProviderPricing(
+      pricing: ProviderPricing(
         freeStorageGB: double.infinity,
         costPerGBMonthly: 0.0,
         currency: 'USD',
@@ -534,7 +534,7 @@ class ProviderComparisonService {
         paidPlanName: null,
         paidPlanPriceMonthly: null,
       ),
-      features: const ProviderFeatures(
+      features: ProviderFeatures(
         e2eEncryption: false,
         versionHistory: false,
         sharing: false,
@@ -546,7 +546,7 @@ class ProviderComparisonService {
         serverSideCopy: false,
         fullTextSearch: false,
       ),
-      privacy: const PrivacyInfo(
+      privacy: PrivacyInfo(
         encryptionAtRest: false,
         encryptionInTransit: false, // plain FTP; FTPS adds TLS
         zeroKnowledge: false,
@@ -554,7 +554,7 @@ class ProviderComparisonService {
         gdprCompliant: false,
         openSource: true,
       ),
-      limits: const ProviderLimits(
+      limits: ProviderLimits(
         maxFileSizeMB: null,
         maxStorageGB: null,
         rateLimitPerMinute: null,
@@ -568,7 +568,7 @@ class ProviderComparisonService {
     CloudProvider.gdrive: const ProviderInfo(
       name: 'Google Drive',
       providerType: CloudProvider.gdrive,
-      pricing: const ProviderPricing(
+      pricing: ProviderPricing(
         freeStorageGB: 15,
         costPerGBMonthly: 0.020,
         currency: 'USD',
@@ -576,7 +576,7 @@ class ProviderComparisonService {
         paidPlanName: 'Google One 100 GB',
         paidPlanPriceMonthly: 1.99,
       ),
-      features: const ProviderFeatures(
+      features: ProviderFeatures(
         e2eEncryption: false,
         versionHistory: true,
         sharing: true,
@@ -588,7 +588,7 @@ class ProviderComparisonService {
         serverSideCopy: true,
         fullTextSearch: true,
       ),
-      privacy: const PrivacyInfo(
+      privacy: PrivacyInfo(
         encryptionAtRest: true,
         encryptionInTransit: true,
         zeroKnowledge: false,
@@ -596,7 +596,7 @@ class ProviderComparisonService {
         gdprCompliant: true,
         openSource: false,
       ),
-      limits: const ProviderLimits(
+      limits: ProviderLimits(
         maxFileSizeMB: 5 * 1024, // 5 GB per file
         maxStorageGB: null,
         rateLimitPerMinute: 100,
@@ -610,7 +610,7 @@ class ProviderComparisonService {
     CloudProvider.onedrive: const ProviderInfo(
       name: 'OneDrive',
       providerType: CloudProvider.onedrive,
-      pricing: const ProviderPricing(
+      pricing: ProviderPricing(
         freeStorageGB: 5,
         costPerGBMonthly: 0.020,
         currency: 'USD',
@@ -618,7 +618,7 @@ class ProviderComparisonService {
         paidPlanName: 'Microsoft 365 Basic',
         paidPlanPriceMonthly: 1.99,
       ),
-      features: const ProviderFeatures(
+      features: ProviderFeatures(
         e2eEncryption: false,
         versionHistory: true,
         sharing: true,
@@ -630,7 +630,7 @@ class ProviderComparisonService {
         serverSideCopy: true,
         fullTextSearch: true,
       ),
-      privacy: const PrivacyInfo(
+      privacy: PrivacyInfo(
         encryptionAtRest: true,
         encryptionInTransit: true,
         zeroKnowledge: false,
@@ -638,7 +638,7 @@ class ProviderComparisonService {
         gdprCompliant: true,
         openSource: false,
       ),
-      limits: const ProviderLimits(
+      limits: ProviderLimits(
         maxFileSizeMB: 250 * 1024, // 250 GB per file
         maxStorageGB: null,
         rateLimitPerMinute: 10000,
@@ -652,7 +652,7 @@ class ProviderComparisonService {
     CloudProvider.dropbox: const ProviderInfo(
       name: 'Dropbox',
       providerType: CloudProvider.dropbox,
-      pricing: const ProviderPricing(
+      pricing: ProviderPricing(
         freeStorageGB: 2,
         costPerGBMonthly: 0.005,
         currency: 'USD',
@@ -660,7 +660,7 @@ class ProviderComparisonService {
         paidPlanName: 'Dropbox Plus',
         paidPlanPriceMonthly: 9.99,
       ),
-      features: const ProviderFeatures(
+      features: ProviderFeatures(
         e2eEncryption: false,
         versionHistory: true,
         sharing: true,
@@ -672,7 +672,7 @@ class ProviderComparisonService {
         serverSideCopy: true,
         fullTextSearch: true,
       ),
-      privacy: const PrivacyInfo(
+      privacy: PrivacyInfo(
         encryptionAtRest: true,
         encryptionInTransit: true,
         zeroKnowledge: false,
@@ -680,7 +680,7 @@ class ProviderComparisonService {
         gdprCompliant: true,
         openSource: false,
       ),
-      limits: const ProviderLimits(
+      limits: ProviderLimits(
         maxFileSizeMB: null,      // no hard per-file limit (web 50 GB cap)
         maxStorageGB: null,
         rateLimitPerMinute: null,
@@ -694,7 +694,7 @@ class ProviderComparisonService {
     CloudProvider.nextcloud: const ProviderInfo(
       name: 'Nextcloud',
       providerType: CloudProvider.nextcloud,
-      pricing: const ProviderPricing(
+      pricing: ProviderPricing(
         freeStorageGB: double.infinity,
         costPerGBMonthly: 0.0,
         currency: 'USD',
@@ -702,7 +702,7 @@ class ProviderComparisonService {
         paidPlanName: null,
         paidPlanPriceMonthly: null,
       ),
-      features: const ProviderFeatures(
+      features: ProviderFeatures(
         e2eEncryption: true,   // E2E encryption app available
         versionHistory: true,
         sharing: true,
@@ -714,7 +714,7 @@ class ProviderComparisonService {
         serverSideCopy: false,
         fullTextSearch: false,
       ),
-      privacy: const PrivacyInfo(
+      privacy: PrivacyInfo(
         encryptionAtRest: true,
         encryptionInTransit: true,
         zeroKnowledge: false,   // server-side encryption, not zero-knowledge
@@ -722,7 +722,7 @@ class ProviderComparisonService {
         gdprCompliant: true,
         openSource: true,
       ),
-      limits: const ProviderLimits(
+      limits: ProviderLimits(
         maxFileSizeMB: null,
         maxStorageGB: null,
         rateLimitPerMinute: null,
@@ -737,7 +737,7 @@ class ProviderComparisonService {
     CloudProvider.pcloud: const ProviderInfo(
       name: 'pCloud',
       providerType: CloudProvider.pcloud,
-      pricing: const ProviderPricing(
+      pricing: ProviderPricing(
         freeStorageGB: 10,
         costPerGBMonthly: 0.010,
         currency: 'USD',
@@ -745,7 +745,7 @@ class ProviderComparisonService {
         paidPlanName: 'pCloud Premium 500 GB',
         paidPlanPriceMonthly: 4.99,
       ),
-      features: const ProviderFeatures(
+      features: ProviderFeatures(
         e2eEncryption: false,   // pCloud Crypto is an add-on
         versionHistory: false,
         sharing: true,
@@ -757,7 +757,7 @@ class ProviderComparisonService {
         serverSideCopy: false,
         fullTextSearch: false,
       ),
-      privacy: const PrivacyInfo(
+      privacy: PrivacyInfo(
         encryptionAtRest: true,
         encryptionInTransit: true,
         zeroKnowledge: false,
@@ -765,7 +765,7 @@ class ProviderComparisonService {
         gdprCompliant: true,
         openSource: false,
       ),
-      limits: const ProviderLimits(
+      limits: ProviderLimits(
         maxFileSizeMB: null,
         maxStorageGB: null,
         rateLimitPerMinute: null,

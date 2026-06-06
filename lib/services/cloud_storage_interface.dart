@@ -224,7 +224,7 @@ enum CloudProvider {
 
 /// Factory for creating cloud storage clients
 class CloudStorageFactory {
-  static final _log = Log('CloudStorageFactory');
+  static const _log = Log('CloudStorageFactory');
 
   // --- TOGGLE: Set this to false to disable Internxt globally ---
   static const bool isInternxtSupported = true;

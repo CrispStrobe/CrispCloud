@@ -3,7 +3,7 @@ import 'log_service.dart';
 import 'secure_storage_service.dart';
 
 class OneDriveConfigService {
-  static final _log = Log('OneDriveConfig');
+  static const _log = Log('OneDriveConfig');
 
   final String configPath;
   final SecureStorage _secure;

@@ -13,7 +13,7 @@ import 'package:flutter/foundation.dart';
 import 'log_service.dart';
 
 class WindowsIntegrationService {
-  static final _log = Log('WindowsIntegrationService');
+  static const _log = Log('WindowsIntegrationService');
 
   /// Registry key path for the CrispCloud shell entry (user-level).
   static const _shellKey = r'HKCU\Software\Classes\*\shell\CrispCloud';

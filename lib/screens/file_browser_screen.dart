@@ -11,7 +11,6 @@ import 'package:provider/provider.dart' as legacy;
 
 import '../models/panel_side.dart';
 import '../providers/providers.dart';
-import '../providers/core_providers.dart' show preferExternalEditorProvider, showSelectionBarProvider;
 import '../providers/panel_source_provider.dart'
     show fkeyBarVisibleProvider, panelSourceProvider;
 import '../providers/toolbar_provider.dart'

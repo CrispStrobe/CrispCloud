@@ -94,7 +94,7 @@ class _PanelSplitterState extends State<PanelSplitter> {
                     width: isHorizontal ? 2 : 24,
                     height: isHorizontal ? 24 : 2,
                     decoration: BoxDecoration(
-                      color: Theme.of(context).colorScheme.onSurfaceVariant.withOpacity(0.3),
+                      color: Theme.of(context).colorScheme.onSurfaceVariant.withValues(alpha: 0.3),
                       borderRadius: BorderRadius.circular(1),
                     ),
                   ),

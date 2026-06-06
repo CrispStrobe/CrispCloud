@@ -11,7 +11,7 @@ import 'secure_storage_service.dart';
 enum HetznerProtocol { sftp, webdav }
 
 class HetznerConfigService {
-  static final _log = Log('HetznerConfig');
+  static const _log = Log('HetznerConfig');
 
   static const _storageKey = 'hetzner_credentials';
 

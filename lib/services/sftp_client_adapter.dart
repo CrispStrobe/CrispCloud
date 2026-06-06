@@ -13,7 +13,7 @@ import 'secure_storage_service.dart';
 import 'sftp_config_service.dart';
 
 class SFTPClientAdapter extends CloudStorageClient {
-  static final _log = Log('SFTPClient');
+  static const _log = Log('SFTPClient');
 
   final SFTPConfigService _config;
 
@@ -363,7 +363,7 @@ class SFTPClientAdapter extends CloudStorageClient {
   
   Future<void> _deleteDirectoryRecursive(String path) async {
     final items = await _sftp!.listdir(path);
-    for (var item in items) {
+    for (final item in items) {
       if (item.filename == '.' || item.filename == '..') continue;
       final fullPath = p.posix.join(path, item.filename);
       

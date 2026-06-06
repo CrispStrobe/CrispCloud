@@ -18,7 +18,7 @@ export '../services/multi_cloud_service.dart'
     show CloudConnection, FileDiff, FileDiffKind, MultiCloudSearchResult;
 
 class MultiCloudNotifier extends ChangeNotifier {
-  static final _log = Log('MultiCloudNotifier');
+  static const _log = Log('MultiCloudNotifier');
 
   final Ref _ref;
   final MultiCloudService _service = MultiCloudService();

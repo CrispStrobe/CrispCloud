@@ -373,7 +373,7 @@ String _md5OfBytes(List<int> bytes) {
 /// Platform note: all methods return early / return empty values on web
 /// because local filesystem access is not available in that environment.
 class BackupService {
-  static final _log = Log('BackupService');
+  static const _log = Log('BackupService');
   static const _uuid = Uuid();
 
   static const _plansKey = 'backup_plans';

@@ -9,7 +9,6 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 import '../models/file_item.dart';
-import '../models/panel_side.dart';
 import '../providers/search_provider.dart';
 import 'log_service.dart';
 
@@ -98,7 +97,7 @@ class SavedSearch {
 // ---------------------------------------------------------------------------
 
 class SavedSearchService {
-  static final _log = Log('SavedSearchService');
+  static const _log = Log('SavedSearchService');
   static const _prefsKey = 'saved_searches';
 
   /// Load all saved searches from SharedPreferences.

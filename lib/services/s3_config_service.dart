@@ -3,7 +3,7 @@ import 'log_service.dart';
 import 'secure_storage_service.dart';
 
 class S3ConfigService {
-  static final _log = Log('S3Config');
+  static const _log = Log('S3Config');
 
   final String configPath;
   final SecureStorage _secure;

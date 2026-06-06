@@ -33,7 +33,7 @@ class LinkService {
     String linkPath,
     Future<String> Function(String command) execute,
   ) async {
-    final escaped = (String s) => s.replaceAll("'", "'\\''");
+    String escaped(String s) => s.replaceAll("'", "'\\''");
     final result = await execute("ln -s '${escaped(target)}' '${escaped(linkPath)}'");
     if (result.contains('Permission denied') || result.contains('Operation not permitted')) {
       throw Exception('Permission denied creating symlink');

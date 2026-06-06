@@ -54,7 +54,7 @@ class _VirtualFileStat implements io.FileStat {
 
 // --- Helper: Streaming File Sink ---
 class FilenFileSink implements io.IOSink {
-  static final _log = Log('WebDAVFilesystem');
+  static const _log = Log('WebDAVFilesystem');
 
   final FilenFile filenFile;
   final FilenClient client;
@@ -361,14 +361,14 @@ class FilenFileSystem implements FileSystem {
       throw UnimplementedError('Sync operations not supported');
 
   @override
-  Directory get currentDirectory => LocalFileSystem().currentDirectory;
+  Directory get currentDirectory => const LocalFileSystem().currentDirectory;
 
   @override
   set currentDirectory(dynamic path) =>
       throw UnimplementedError('Not applicable for virtual filesystem');
 
   @override
-  Directory get systemTempDirectory => LocalFileSystem().systemTempDirectory;
+  Directory get systemTempDirectory => const LocalFileSystem().systemTempDirectory;
 
   @override
   Directory get homeDirectory =>
@@ -432,12 +432,12 @@ class FilenDirectory implements Directory {
 
         final List<FileSystemEntity> entities = [];
 
-        for (var folder in folders) {
+        for (final folder in folders) {
           final name = folder['name'] ?? 'unknown_folder';
           entities.add(fs.directory(p.join(path, name)));
         }
 
-        for (var file in files) {
+        for (final file in files) {
           final name = file['name'] ?? 'unknown_file';
           entities.add(fs.file(p.join(path, name)));
         }
@@ -794,7 +794,7 @@ class FilenFile implements File {
 
   @override
   Future<List<String>> readAsLines({Encoding encoding = utf8}) async =>
-      LineSplitter().convert(await readAsString(encoding: encoding));
+      const LineSplitter().convert(await readAsString(encoding: encoding));
 
   @override
   List<String> readAsLinesSync({Encoding encoding = utf8}) =>

@@ -3,7 +3,7 @@ import 'log_service.dart';
 import 'secure_storage_service.dart';
 
 class NextcloudConfigService {
-  static final _log = Log('NextcloudConfig');
+  static const _log = Log('NextcloudConfig');
 
   final String configPath;
   final SecureStorage _secure;

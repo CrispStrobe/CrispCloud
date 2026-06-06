@@ -29,7 +29,7 @@ class Bookmark {
 }
 
 class BookmarksNotifier extends ChangeNotifier {
-  static final _log = Log('BookmarksNotifier');
+  static const _log = Log('BookmarksNotifier');
   static const _storageKey = 'bookmarks';
   final List<Bookmark> _bookmarks = [];
 

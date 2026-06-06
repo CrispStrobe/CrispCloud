@@ -3,7 +3,7 @@ import 'log_service.dart';
 import 'secure_storage_service.dart';
 
 class DropboxConfigService {
-  static final _log = Log('DropboxConfig');
+  static const _log = Log('DropboxConfig');
 
   final String configPath;
   final SecureStorage _secure;

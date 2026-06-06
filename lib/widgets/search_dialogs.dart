@@ -10,7 +10,6 @@ import 'package:path/path.dart' as p;
 import '../models/file_item.dart';
 import '../models/panel_side.dart';
 import '../providers/providers.dart';
-import '../providers/search_provider.dart';
 import 'file_list_view.dart' show getFileIcon;
 import 'saved_searches_dialog.dart'
     show showSavedSearchesDialog, showSaveSearchDialog;

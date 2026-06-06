@@ -113,9 +113,9 @@ class _SourceDropdown extends StatelessWidget {
   static String _keyFor(PanelSource source) {
     return switch (source) {
       LocalPanelSource _ => 'local',
-      RemotePanelSource s => 'remote:${s.providerName}',
-      ArchivePanelSource s => 'archive:${s.archivePath}',
-      ContainerPanelSource s => 'container:${s.containerPath}',
+      final RemotePanelSource s => 'remote:${s.providerName}',
+      final ArchivePanelSource s => 'archive:${s.archivePath}',
+      final ContainerPanelSource s => 'container:${s.containerPath}',
     };
   }
 

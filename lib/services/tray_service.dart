@@ -14,7 +14,7 @@ import 'sync_engine.dart';
 
 /// Manages the system tray icon and menu for background sync.
 class TrayService {
-  static final _log = Log('TrayService');
+  static const _log = Log('TrayService');
   SystemTray? _tray;
   AppWindow? _appWindow;
   bool _initialized = false;

@@ -3,7 +3,7 @@ import 'log_service.dart';
 import 'secure_storage_service.dart';
 
 class SFTPConfigService {
-  static final _log = Log('SftpConfig');
+  static const _log = Log('SftpConfig');
 
   final String configPath;
   final SecureStorage _secure;

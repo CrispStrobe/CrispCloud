@@ -46,7 +46,7 @@ List<String> extensionsForCategories(Set<FileTypeCategory> categories) {
 // ---------------------------------------------------------------------------
 
 class SearchNotifier extends ChangeNotifier {
-  static final _log = Log('SearchNotifier');
+  static const _log = Log('SearchNotifier');
   final Ref _ref;
 
   // ---- Saved searches ----

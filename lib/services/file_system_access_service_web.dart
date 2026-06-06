@@ -22,7 +22,7 @@ const _kStoreName = 'handles';
 const _kDbVersion = 1;
 
 class _WebFileSystemAccessService implements FileSystemAccessService {
-  static final _log = Log('FileSystemAccessService');
+  static const _log = Log('FileSystemAccessService');
 
   @override
   bool get isSupported =>

@@ -27,7 +27,7 @@ final backupServiceProvider = Provider<BackupService>((ref) {
 // ---------------------------------------------------------------------------
 
 class BackupPlansNotifier extends StateNotifier<AsyncValue<List<BackupPlan>>> {
-  static final _log = Log('BackupPlansNotifier');
+  static const _log = Log('BackupPlansNotifier');
   final BackupService _service;
 
   BackupPlansNotifier(this._service) : super(const AsyncValue.loading()) {
@@ -117,7 +117,7 @@ final backupPlansProvider =
 // ---------------------------------------------------------------------------
 
 class BackupSnapshotsNotifier extends StateNotifier<AsyncValue<List<BackupSnapshot>>> {
-  static final _log = Log('BackupSnapshotsNotifier');
+  static const _log = Log('BackupSnapshotsNotifier');
   final BackupService _service;
   final String planId;
 
@@ -176,7 +176,7 @@ final backupRunningProvider =
 
 /// Controller for triggering backup operations and refreshing providers.
 class BackupController {
-  static final _log = Log('BackupController');
+  static const _log = Log('BackupController');
   final Ref _ref;
 
   BackupController(this._ref);

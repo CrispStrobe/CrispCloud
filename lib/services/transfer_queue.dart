@@ -33,7 +33,7 @@ class TransferTask {
 
 /// Manages concurrent transfers with a configurable pool size.
 class TransferQueue extends ChangeNotifier {
-  static final _log = Log('TransferQueue');
+  static const _log = Log('TransferQueue');
   final int maxConcurrent;
   final int maxRetries;
   final Duration retryBaseDelay;

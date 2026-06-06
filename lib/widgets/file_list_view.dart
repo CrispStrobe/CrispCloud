@@ -8,8 +8,6 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../models/file_item.dart';
 import '../models/panel_side.dart';
-import '../providers/core_providers.dart' show activePanelProvider;
-import '../providers/file_type_color_provider.dart';
 import '../providers/providers.dart';
 import '../providers/toolbar_provider.dart' show panelViewModeProvider;
 import '../services/log_service.dart';
@@ -18,7 +16,7 @@ import '../utils/formatters.dart';
 import 'file_context_menu.dart';
 
 class FileListView extends ConsumerWidget {
-  static final _log = Log('FileListView');
+  static const _log = Log('FileListView');
 
   final PanelSide side;
   final List<FileItem> files;
@@ -323,7 +321,7 @@ class FileListTile extends ConsumerWidget {
               : null,
           child: ListTile(
           selected: isSelected,
-          selectedTileColor: Theme.of(context).colorScheme.primaryContainer.withOpacity(0.65),
+          selectedTileColor: Theme.of(context).colorScheme.primaryContainer.withValues(alpha: 0.65),
           leading: file.name == '..'
               ? const Icon(Icons.arrow_upward, size: 28, color: Colors.amber)
               : iconWidget,
@@ -469,7 +467,7 @@ class CompactFileTile extends ConsumerWidget {
 
     // Selected = fill; cursor = left border (can combine both)
     final bgColor = isSelected
-        ? theme.colorScheme.primaryContainer.withOpacity(0.55)
+        ? theme.colorScheme.primaryContainer.withValues(alpha: 0.55)
         : Colors.transparent;
 
     final nameStyle = TextStyle(
@@ -478,7 +476,7 @@ class CompactFileTile extends ConsumerWidget {
       fontWeight: isSelected ? FontWeight.w600 : FontWeight.normal,
       height: 1.0,
     );
-    final dimStyle = TextStyle(fontSize: 11, color: theme.colorScheme.onSurface.withOpacity(0.55), height: 1.0);
+    final dimStyle = TextStyle(fontSize: 11, color: theme.colorScheme.onSurface.withValues(alpha: 0.55), height: 1.0);
 
     final sizeStr = file.name == '..'
         ? ''

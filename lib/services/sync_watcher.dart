@@ -5,7 +5,6 @@
 // desktop; falls back to periodic polling on web/mobile.
 
 import 'dart:async';
-import 'dart:io';
 
 import 'package:flutter/foundation.dart';
 import 'package:watcher/watcher.dart';
@@ -20,7 +19,7 @@ typedef SyncWatchCallback = Future<void> Function(int pairId);
 /// On desktop, uses native directory watching (inotify/FSEvents/ReadDirectoryChanges).
 /// Debounces rapid changes to avoid syncing on every keystroke in an editor.
 class SyncWatcherService {
-  static final _log = Log('SyncWatcher');
+  static const _log = Log('SyncWatcher');
 
   final Map<int, DirectoryWatcher> _watchers = {};
   final Map<int, StreamSubscription> _subscriptions = {};

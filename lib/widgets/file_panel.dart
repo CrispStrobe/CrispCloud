@@ -104,7 +104,7 @@ class _FilePanelState extends ConsumerState<FilePanel> {
     final panelContent = _buildPanelContent(context, panel, files, currentPath, selection);
 
     // Flutter DragTarget for cross-panel drops
-    Widget content = DragTarget<PanelDragData>(
+    final Widget content = DragTarget<PanelDragData>(
       onWillAcceptWithDetails: (details) {
         // Accept drops from the OTHER panel only
         return details.data.sourceSide != widget.side;
@@ -135,7 +135,7 @@ class _FilePanelState extends ConsumerState<FilePanel> {
               child: Container(
                 decoration: BoxDecoration(
                   border: Border.all(color: Theme.of(context).colorScheme.primary, width: 2),
-                  color: Theme.of(context).colorScheme.primary.withOpacity(0.08),
+                  color: Theme.of(context).colorScheme.primary.withValues(alpha: 0.08),
                 ),
                 child: Center(
                   child: Column(
@@ -226,7 +226,7 @@ class _FilePanelState extends ConsumerState<FilePanel> {
   ) {
     return Container(
       decoration: BoxDecoration(
-        color: widget.isActive ? null : Colors.black.withOpacity(0.02),
+        color: widget.isActive ? null : Colors.black.withValues(alpha: 0.02),
         border: _isDragging
             ? Border.all(color: Theme.of(context).colorScheme.primary, width: 2)
             : null,
@@ -236,10 +236,12 @@ class _FilePanelState extends ConsumerState<FilePanel> {
           PanelTabBar(
             tabs: panel.tabs,
             activeTabId: panel.activeTabId,
+            activeSelectionCount: selection.length,
             onTabSelected: (id) => panel.selectTab(id),
             onTabClosed: (id) => panel.closeTab(id),
             onNewTab: () => panel.addTab(),
             onTabPinToggle: (id) => panel.toggleTabPin(id),
+            onTabRenamed: (id, name) => panel.renameTab(id, name),
           ),
           FileToolbar(
             side: widget.side,
@@ -396,23 +398,48 @@ class _CompactColumnHeader extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
-    final bg = theme.colorScheme.surfaceContainerHighest.withOpacity(0.6);
+    final bg = theme.colorScheme.surfaceContainerHighest.withValues(alpha: 0.6);
     final style = TextStyle(fontSize: 11, fontWeight: FontWeight.w600,
-        color: theme.colorScheme.onSurface.withOpacity(0.7));
+        color: theme.colorScheme.onSurface.withValues(alpha: 0.7));
 
     Widget col(String label, SortBy by, {TextAlign align = TextAlign.left, double? width}) {
-      final active = panel.sortBy == by;
-      final arrow = active
+      final isPrimary = panel.sortBy == by;
+      final isSecondary = panel.secondarySortBy == by;
+      final primaryArrow = isPrimary
           ? (panel.sortOrder == SortOrder.ascending ? ' ↑' : ' ↓')
           : '';
-      final cell = Text(label + arrow, style: style.copyWith(
-        color: active ? theme.colorScheme.primary : style.color,
-      ), textAlign: align, maxLines: 1, overflow: TextOverflow.clip);
+      final secondaryArrow = isSecondary && !isPrimary
+          ? (panel.secondarySortOrder == SortOrder.ascending ? '↑' : '↓')
+          : '';
+      final cell = Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Text(label + primaryArrow, style: style.copyWith(
+            color: isPrimary ? theme.colorScheme.primary : style.color,
+          ), maxLines: 1, overflow: TextOverflow.clip),
+          if (secondaryArrow.isNotEmpty)
+            Text(secondaryArrow, style: style.copyWith(
+              fontSize: 9,
+              color: theme.colorScheme.tertiary,
+            )),
+        ],
+      );
       final tappable = GestureDetector(
-        onTap: () => active ? panel.toggleSortOrder() : panel.setSortBy(by),
-        child: width != null
-            ? SizedBox(width: width, child: cell)
-            : cell,
+        onTap: () => isPrimary ? panel.toggleSortOrder() : panel.setSortBy(by),
+        onSecondaryTap: () => isSecondary
+            ? (isPrimary ? null : panel.setSecondarySortBy(null))
+            : panel.setSecondarySortBy(by),
+        onLongPress: () => isSecondary && !isPrimary
+            ? panel.setSecondarySortBy(null)
+            : panel.setSecondarySortBy(by),
+        child: Tooltip(
+          message: isSecondary
+              ? 'Secondary sort (right-click/long-press to clear)'
+              : 'Right-click/long-press to set as secondary sort',
+          child: width != null
+              ? SizedBox(width: width, child: cell)
+              : cell,
+        ),
       );
       return tappable;
     }

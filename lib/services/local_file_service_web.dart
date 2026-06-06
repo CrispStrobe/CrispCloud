@@ -4,7 +4,6 @@
 
 import 'dart:async';
 import 'dart:io';
-import 'dart:typed_data';
 import 'package:flutter/foundation.dart';
 import 'package:universal_html/html.dart' as html;
 import 'filen_web_stub.dart' if (dart.library.js_util) 'dart:js_util' as js_util;

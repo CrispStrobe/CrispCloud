@@ -5,7 +5,7 @@ import 'log_service.dart';
 import 'secure_storage_service.dart';
 
 class FilenConfigService {
-  static final _log = Log('FilenConfig');
+  static const _log = Log('FilenConfig');
 
   final String configPath;
   final SecureStorage _secure;

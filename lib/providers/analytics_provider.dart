@@ -46,7 +46,7 @@ final analyticsEnabledProvider =
 );
 
 class AnalyticsEnabledNotifier extends StateNotifier<bool> {
-  static final _log = Log('AnalyticsEnabledNotifier');
+  static const _log = Log('AnalyticsEnabledNotifier');
   static const _key = 'analytics_enabled';
 
   final Ref _ref;

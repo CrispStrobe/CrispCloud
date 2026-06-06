@@ -239,7 +239,7 @@ class XdgService {
   /// On non-Linux platforms this is a no-op.
   Future<XdgMigrationResult> migrateFromLegacy() async {
     if (!isLinux) {
-      return XdgMigrationResult(
+      return const XdgMigrationResult(
         needed: false,
         completed: false,
         message: 'Migration only applies to Linux.',
@@ -250,7 +250,7 @@ class XdgService {
     try {
       legacyDir = await getApplicationSupportDirectory();
     } catch (_) {
-      return XdgMigrationResult(
+      return const XdgMigrationResult(
         needed: false,
         completed: false,
         message: 'Could not determine legacy path.',
@@ -276,7 +276,7 @@ class XdgService {
         Directory(legacyPath).listSync(recursive: false),
       );
     } catch (_) {
-      return XdgMigrationResult(
+      return const XdgMigrationResult(
         needed: false,
         completed: false,
         message: 'Legacy directory is empty or unreadable.',
@@ -284,7 +284,7 @@ class XdgService {
     }
 
     if (legacyFiles.isEmpty) {
-      return XdgMigrationResult(
+      return const XdgMigrationResult(
         needed: false,
         completed: false,
         message: 'Legacy directory is empty.',

@@ -12,7 +12,7 @@ WebShareTargetService createWebShareTargetService() =>
     _WebShareTargetServiceImpl();
 
 class _WebShareTargetServiceImpl implements WebShareTargetService {
-  static final _log = Log('WebShareTargetService');
+  static const _log = Log('WebShareTargetService');
 
   SharedContent? _content;
 

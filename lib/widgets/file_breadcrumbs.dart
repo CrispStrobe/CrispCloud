@@ -38,7 +38,7 @@ class FileBreadcrumbs extends ConsumerWidget {
       );
     }
 
-    List<Map<String, String>> breadcrumbs = [];
+    final List<Map<String, String>> breadcrumbs = [];
 
     if (side == PanelSide.local) {
       if (!kIsWeb && Platform.isWindows) {

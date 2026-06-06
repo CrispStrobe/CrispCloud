@@ -12,7 +12,6 @@ import '../providers/providers.dart';
 import '../providers/panel_source_provider.dart' show panelSourceProvider;
 import '../providers/toolbar_provider.dart' show panelViewModeProvider;
 import '../services/panel_view_mode_service.dart' show PanelViewMode;
-import '../services/action_history_service.dart';
 import '../services/panel_swap_service.dart';
 import '../widgets/command_palette.dart';
 import '../widgets/file_toolbar.dart' show showPanelFilterDialog;
@@ -413,7 +412,11 @@ void _showPatternDialog(BuildContext context, PanelNotifier panel, {required boo
         autofocus: true,
         decoration: const InputDecoration(hintText: 'e.g. *.dart, doc*, *test*'),
         onSubmitted: (v) {
-          if (select) panel.selectByPattern(v); else panel.deselectByPattern(v);
+          if (select) {
+            panel.selectByPattern(v);
+          } else {
+            panel.deselectByPattern(v);
+          }
           Navigator.pop(ctx);
         },
       ),
@@ -421,8 +424,11 @@ void _showPatternDialog(BuildContext context, PanelNotifier panel, {required boo
         TextButton(onPressed: () => Navigator.pop(ctx), child: const Text('Cancel')),
         ElevatedButton(
           onPressed: () {
-            if (select) panel.selectByPattern(ctrl.text);
-            else panel.deselectByPattern(ctrl.text);
+            if (select) {
+              panel.selectByPattern(ctrl.text);
+            } else {
+              panel.deselectByPattern(ctrl.text);
+            }
             Navigator.pop(ctx);
           },
           child: Text(select ? 'Select' : 'Deselect'),

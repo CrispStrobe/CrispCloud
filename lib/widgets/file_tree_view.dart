@@ -12,7 +12,6 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:path/path.dart' as p;
 
 import '../models/panel_side.dart';
-import '../providers/core_providers.dart' show activePanelProvider, localFileServiceProvider;
 import '../providers/providers.dart';
 
 class _TreeNode {
@@ -20,7 +19,7 @@ class _TreeNode {
   final String name;
   final int depth;
   bool isExpanded;
-  bool isLoading;
+  bool isLoading = false;
   List<_TreeNode>? children;
 
   _TreeNode({
@@ -28,8 +27,6 @@ class _TreeNode {
     required this.name,
     required this.depth,
     this.isExpanded = false,
-    this.isLoading = false,
-    this.children,
   });
 }
 
@@ -132,7 +129,7 @@ class _FileTreeViewState extends ConsumerState<FileTreeView> {
     if (!node.isExpanded) return;
     node.isExpanded = false;
     _flatList.removeWhere((n) => n.path.startsWith(node.path + p.separator) ||
-        (n.path.startsWith(node.path + '/') && n != node));
+        (n.path.startsWith('${node.path}/') && n != node));
     if (mounted) setState(() {});
   }
 
@@ -268,9 +265,9 @@ class _FileTreeViewState extends ConsumerState<FileTreeView> {
           final isCursor = idx == _cursorIdx;
           final isCurrentPath = node.path == currentPath;
           final bgColor = isCursor
-              ? theme.colorScheme.primaryContainer.withOpacity(0.5)
+              ? theme.colorScheme.primaryContainer.withValues(alpha: 0.5)
               : isCurrentPath
-                  ? theme.colorScheme.primaryContainer.withOpacity(0.2)
+                  ? theme.colorScheme.primaryContainer.withValues(alpha: 0.2)
                   : Colors.transparent;
 
           return GestureDetector(
@@ -316,7 +313,7 @@ class _FileTreeViewState extends ConsumerState<FileTreeView> {
                                   ? Icons.arrow_drop_down
                                   : Icons.arrow_right,
                               size: 18,
-                              color: theme.colorScheme.onSurface.withOpacity(0.6),
+                              color: theme.colorScheme.onSurface.withValues(alpha: 0.6),
                             ),
                           ),
                   ),

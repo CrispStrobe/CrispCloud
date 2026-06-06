@@ -77,7 +77,7 @@ class MultiCloudSearchResult {
 /// Service that manages multiple simultaneous cloud connections and provides
 /// cloud-to-cloud operations: transfer, compare, and unified search.
 class MultiCloudService {
-  static final _log = Log('MultiCloudService');
+  static const _log = Log('MultiCloudService');
 
   final Map<String, CloudConnection> _connections = {};
   final TransferQueue _queue = TransferQueue(maxConcurrent: 2);

@@ -9,7 +9,6 @@
 
 import 'dart:io';
 
-import 'package:crypto/crypto.dart';
 import 'package:drift/drift.dart';
 import 'package:glob/glob.dart' as globpkg;
 import 'package:path/path.dart' as p;
@@ -99,7 +98,7 @@ class SyncResult {
 }
 
 class SyncEngine {
-  static final _log = Log('SyncEngine');
+  static const _log = Log('SyncEngine');
 
   final SyncDatabase db;
 
@@ -217,7 +216,7 @@ class SyncEngine {
       result = result + await _executeAction(action, pair, client);
     }
     for (final action in conflictActions) {
-      result = result + SyncResult(conflicts: 1);
+      result = result + const SyncResult(conflicts: 1);
       // Mark as conflict in DB
       await db.upsertEntry(SyncEntriesCompanion.insert(
         pairId: pair.id,
@@ -261,7 +260,7 @@ class SyncEngine {
         if (direction == SyncDirection.downloadOnly) {
           return SyncAction(type: SyncActionType.skip, relativePath: relativePath);
         }
-        if (local!.isFolder) {
+        if (local.isFolder) {
           return SyncAction(type: SyncActionType.createRemoteFolder, relativePath: relativePath, isFolder: true);
         }
         return SyncAction(type: SyncActionType.upload, relativePath: relativePath, localModified: local.modified);
@@ -271,7 +270,7 @@ class SyncEngine {
         if (direction == SyncDirection.uploadOnly) {
           return SyncAction(type: SyncActionType.skip, relativePath: relativePath);
         }
-        if (remote!.isFolder) {
+        if (remote.isFolder) {
           return SyncAction(type: SyncActionType.createLocalFolder, relativePath: relativePath, isFolder: true);
         }
         return SyncAction(type: SyncActionType.download, relativePath: relativePath, remoteModified: remote.modified, remoteContentHash: remote.contentHash, remoteSize: remote.size);
@@ -289,10 +288,10 @@ class SyncEngine {
     // Deleted locally, still exists remote → delete remote or re-download
     if (!existsLocal && existsRemote) {
       if (direction == SyncDirection.downloadOnly) {
-        return SyncAction(type: SyncActionType.download, relativePath: relativePath, remoteModified: remote!.modified, remoteContentHash: remote.contentHash, remoteSize: remote.size);
+        return SyncAction(type: SyncActionType.download, relativePath: relativePath, remoteModified: remote.modified, remoteContentHash: remote.contentHash, remoteSize: remote.size);
       }
       // Check if remote was also modified since last sync
-      if (known.remoteModified != null && remote!.modified != null &&
+      if (known.remoteModified != null && remote.modified != null &&
           remote.modified!.isAfter(known.remoteModified!)) {
         // Remote changed after our last sync — conflict
         return _resolveConflict(relativePath, local, remote, known, policy);
@@ -303,9 +302,9 @@ class SyncEngine {
     // Deleted remotely, still exists local → delete local or re-upload
     if (existsLocal && !existsRemote) {
       if (direction == SyncDirection.uploadOnly) {
-        return SyncAction(type: SyncActionType.upload, relativePath: relativePath, localModified: local!.modified);
+        return SyncAction(type: SyncActionType.upload, relativePath: relativePath, localModified: local.modified);
       }
-      if (known.localModified != null && local!.modified != null &&
+      if (known.localModified != null && local.modified != null &&
           local.modified!.isAfter(known.localModified!)) {
         return _resolveConflict(relativePath, local, remote, known, policy);
       }
@@ -567,8 +566,11 @@ class SyncEngine {
       final rawDate = folder['lastModified'] ?? folder['modificationTime'];
       if (rawDate != null) {
         try {
-          if (rawDate is int) modified = DateTime.fromMillisecondsSinceEpoch(rawDate);
-          else modified = DateTime.parse(rawDate.toString());
+          if (rawDate is int) {
+            modified = DateTime.fromMillisecondsSinceEpoch(rawDate);
+          } else {
+            modified = DateTime.parse(rawDate.toString());
+          }
         } catch (_) {}
       }
       result[relative] = _FileInfo(isFolder: true, modified: modified, size: 0);
@@ -583,8 +585,11 @@ class SyncEngine {
       final rawDate = file['lastModified'] ?? file['modificationTime'];
       if (rawDate != null) {
         try {
-          if (rawDate is int) modified = DateTime.fromMillisecondsSinceEpoch(rawDate);
-          else modified = DateTime.parse(rawDate.toString());
+          if (rawDate is int) {
+            modified = DateTime.fromMillisecondsSinceEpoch(rawDate);
+          } else {
+            modified = DateTime.parse(rawDate.toString());
+          }
         } catch (_) {}
       }
       final size = file['size'] as int? ?? 0;

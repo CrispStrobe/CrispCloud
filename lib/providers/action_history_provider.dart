@@ -20,7 +20,7 @@ export '../services/action_history_service.dart'
 // ---------------------------------------------------------------------------
 
 class ActionHistoryNotifier extends ChangeNotifier {
-  static final _log = Log('ActionHistoryNotifier');
+  static const _log = Log('ActionHistoryNotifier');
 
   final _service = ActionHistoryService();
 

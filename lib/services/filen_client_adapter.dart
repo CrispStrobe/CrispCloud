@@ -3,12 +3,11 @@ import 'cloud_storage_interface.dart';
 import 'package:filen_dart/filen_client.dart';
 import 'filen_config_service.dart';
 import 'dart:io';
-import 'dart:typed_data';
 import 'package:flutter/foundation.dart'; // for kIsWeb
 import 'log_service.dart';
 
 class FilenClientAdapter extends CloudStorageClient {
-  static final _log = Log('FilenClient');
+  static const _log = Log('FilenClient');
 
   final FilenClient _client;
   final FilenConfigService filenConfig;

@@ -212,7 +212,7 @@ abstract class AnalyticsBackend {
 /// Appends events as JSON-lines to <appSupportDir>/analytics_events.jsonl.
 /// On web, operates fully in-memory.
 class LocalBackend extends AnalyticsBackend {
-  static final _log = Log('AnalyticsLocalBackend');
+  static const _log = Log('AnalyticsLocalBackend');
 
   String? _filePath;
   final List<AnalyticsEvent> _memStore = [];
@@ -302,7 +302,7 @@ class LocalBackend extends AnalyticsBackend {
 ///
 /// To activate, add an HTTP client dependency and implement [persistEvents].
 class RemoteBackend extends AnalyticsBackend {
-  static final _log = Log('AnalyticsRemoteBackend');
+  static const _log = Log('AnalyticsRemoteBackend');
 
   final String endpointUrl;
   final String? apiKey;
@@ -355,7 +355,7 @@ String _generateUuid() {
 /// consent. No file names, paths, credentials, or personal data are ever
 /// recorded.
 class AnalyticsService {
-  static final _log = Log('AnalyticsService');
+  static const _log = Log('AnalyticsService');
 
   AnalyticsBackend _backend;
   bool _enabled = false;

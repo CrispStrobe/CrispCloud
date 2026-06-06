@@ -78,7 +78,7 @@ class PlaceholderMeta {
 }
 
 class PlaceholderService {
-  static final _log = Log('PlaceholderService');
+  static const _log = Log('PlaceholderService');
 
   final SyncDatabase _db;
 

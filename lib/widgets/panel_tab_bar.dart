@@ -15,6 +15,9 @@ class PanelTabBar extends StatelessWidget {
   final VoidCallback onNewTab;
   final ValueChanged<String>? onTabPinToggle;
   final void Function(String tabId, List<dynamic> files)? onFilesDroppedOnTab;
+  /// Number of selected items in the active tab (shown as [N] badge).
+  final int activeSelectionCount;
+  final void Function(String tabId, String newLabel)? onTabRenamed;
 
   const PanelTabBar({
     super.key,
@@ -25,6 +28,8 @@ class PanelTabBar extends StatelessWidget {
     required this.onNewTab,
     this.onTabPinToggle,
     this.onFilesDroppedOnTab,
+    this.activeSelectionCount = 0,
+    this.onTabRenamed,
   });
 
   @override
@@ -99,7 +104,9 @@ class PanelTabBar extends StatelessWidget {
                             ),
                           Flexible(
                             child: Text(
-                              tab.label,
+                              isActive && activeSelectionCount > 0
+                                  ? '[$activeSelectionCount] ${tab.label}'
+                                  : tab.label,
                               style: TextStyle(
                                 fontSize: 12,
                                 fontWeight:
@@ -198,6 +205,7 @@ class PanelTabBar extends StatelessWidget {
           },
         ),
         PopupMenuItem(
+          onTap: onNewTab,
           child: const Row(
             children: [
               Icon(Icons.content_copy, size: 16),
@@ -205,9 +213,58 @@ class PanelTabBar extends StatelessWidget {
               Text('Duplicate Tab'),
             ],
           ),
-          onTap: onNewTab,
         ),
+        if (onTabRenamed != null)
+          PopupMenuItem(
+            child: const Row(
+              children: [
+                Icon(Icons.edit, size: 16),
+                SizedBox(width: 8),
+                Text('Rename Tab'),
+              ],
+            ),
+            onTap: () => Future.delayed(
+              Duration.zero,
+              () => _showRenameTabDialog(context, tab),
+            ),
+          ),
       ],
+    );
+  }
+
+  void _showRenameTabDialog(BuildContext context, PanelTab tab) {
+    final ctrl = TextEditingController(text: tab.label);
+    showDialog(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        title: const Text('Rename Tab'),
+        content: TextField(
+          controller: ctrl,
+          autofocus: true,
+          decoration: const InputDecoration(
+            labelText: 'Tab name',
+            border: OutlineInputBorder(),
+          ),
+          onSubmitted: (v) {
+            if (v.trim().isNotEmpty) onTabRenamed!(tab.id, v.trim());
+            Navigator.pop(ctx);
+          },
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(ctx),
+            child: const Text('Cancel'),
+          ),
+          ElevatedButton(
+            onPressed: () {
+              final v = ctrl.text.trim();
+              if (v.isNotEmpty) onTabRenamed!(tab.id, v);
+              Navigator.pop(ctx);
+            },
+            child: const Text('Rename'),
+          ),
+        ],
+      ),
     );
   }
 }

@@ -22,7 +22,7 @@ import 's3_config_service.dart';
 import 'secure_storage_service.dart';
 
 class S3ClientAdapter extends CloudStorageClient {
-  static final _log = Log('S3Client');
+  static const _log = Log('S3Client');
   final S3ConfigService _config;
 
   /// Minimum part size for multipart upload (5MB, S3 minimum)
@@ -685,7 +685,7 @@ class S3ClientAdapter extends CloudStorageClient {
     int partSize = defaultPartSize,
   }) async {
     final totalSize = fileData.length;
-    _log.info('Starting multipart upload: ${totalSize} bytes, part size: $partSize');
+    _log.info('Starting multipart upload: $totalSize bytes, part size: $partSize');
 
     final uploadId = await _initiateMultipartUpload(key);
     final parts = <_PartETag>[];

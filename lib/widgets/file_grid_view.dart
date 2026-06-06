@@ -7,7 +7,6 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
-import 'dart:typed_data';
 import 'dart:io';
 
 import '../models/file_item.dart';
@@ -167,7 +166,7 @@ class _FileGridTileState extends ConsumerState<_FileGridTile> {
           decoration: BoxDecoration(
             borderRadius: BorderRadius.circular(8),
             color: widget.isSelected
-                ? theme.colorScheme.primaryContainer.withOpacity(0.5)
+                ? theme.colorScheme.primaryContainer.withValues(alpha: 0.5)
                 : null,
             border: widget.isSelected
                 ? Border.all(color: theme.colorScheme.primary, width: 1.5)

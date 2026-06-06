@@ -227,7 +227,7 @@ class _CommandPaletteState extends ConsumerState<CommandPalette> {
                           },
                           child: Container(
                             color: isSelected
-                                ? theme.colorScheme.primaryContainer.withOpacity(0.5)
+                                ? theme.colorScheme.primaryContainer.withValues(alpha: 0.5)
                                 : null,
                             padding: const EdgeInsets.symmetric(
                                 horizontal: 12, vertical: 8),

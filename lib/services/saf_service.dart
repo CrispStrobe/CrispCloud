@@ -62,7 +62,7 @@ class SAFService {
   static const _channelName = 'com.example.crisp_cloud/saf';
   static const _channel = MethodChannel(_channelName);
 
-  static final _log = Log('SAFService');
+  static const _log = Log('SAFService');
 
   // -------------------------------------------------------------------------
   // Platform guard

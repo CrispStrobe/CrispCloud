@@ -3,7 +3,6 @@
 // Dialog helpers for the file browser screen.
 // All functions are top-level, taking BuildContext and WidgetRef as parameters.
 
-import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:path/path.dart' as p;
@@ -11,7 +10,6 @@ import 'package:path/path.dart' as p;
 import '../models/file_item.dart';
 import '../models/panel_side.dart';
 import '../providers/providers.dart';
-import '../services/action_history_service.dart';
 import '../widgets/azure_connection_dialog.dart';
 import '../widgets/b2_connection_dialog.dart';
 import '../widgets/connection_dialog.dart';

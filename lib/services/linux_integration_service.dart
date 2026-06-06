@@ -30,7 +30,7 @@ enum NotificationUrgency { low, normal, critical }
 // ---------------------------------------------------------------------------
 
 class LinuxIntegrationService {
-  static final _log = Log('LinuxIntegrationService');
+  static const _log = Log('LinuxIntegrationService');
 
   // XDG paths (resolved lazily so tests can override via [home]).
   final String? _overrideHome;

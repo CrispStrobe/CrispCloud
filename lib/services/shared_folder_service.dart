@@ -383,7 +383,7 @@ class ShareNotFoundException implements Exception {
 /// throw [SharingNotSupportedException] from mutating methods and return empty
 /// lists from query methods.
 class SharedFolderService {
-  static final _log = Log('SharedFolderService');
+  static const _log = Log('SharedFolderService');
 
   // In-memory store keyed by shareId. In a production app this would be backed
   // by a database or provider API response cache.

@@ -4,15 +4,12 @@
 // Shows the folder hierarchy for the active panel.
 // Clicking a folder navigates the panel to that path.
 
-import 'dart:io';
 
-import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:path/path.dart' as p;
 
 import '../models/panel_side.dart';
-import '../providers/bookmarks_provider.dart';
 import '../providers/providers.dart';
 
 class TreeSidebar extends ConsumerStatefulWidget {
@@ -276,7 +273,7 @@ class _TreeNode extends StatelessWidget {
       onTap: onTap,
       child: Container(
         padding: EdgeInsets.only(left: indent, right: 8, top: 4, bottom: 4),
-        color: isCurrent ? theme.colorScheme.primaryContainer.withOpacity(0.3) : null,
+        color: isCurrent ? theme.colorScheme.primaryContainer.withValues(alpha: 0.3) : null,
         child: Row(
           children: [
             Icon(

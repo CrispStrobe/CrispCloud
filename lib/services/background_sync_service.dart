@@ -18,7 +18,7 @@ import 'sync_engine.dart';
 // Workmanager and flutter_local_notifications are only used on Android/iOS.
 // Conditional imports prevent compilation errors on web/desktop.
 import 'background_sync_stub.dart'
-    if (dart.library.io) 'background_sync_mobile.dart' as _mobile;
+    if (dart.library.io) 'background_sync_mobile.dart' as mobile;
 
 /// Unique task name registered with Workmanager.
 const kBackgroundSyncTaskName = 'crisp_cloud_background_sync';
@@ -40,11 +40,11 @@ const _kDefaultInterval = 15;
 /// All public methods are safe to call on any platform — they silently
 /// return on web and desktop without doing any work.
 class BackgroundSyncService {
-  static final _log = Log('BackgroundSyncService');
+  static const _log = Log('BackgroundSyncService');
 
   /// Whether this service can do anything on the current platform.
   static bool get isSupported =>
-      !kIsWeb && _mobile.isMobileSupported;
+      !kIsWeb && mobile.isMobileSupported;
 
   // -------------------------------------------------------------------------
   // Initialization
@@ -56,7 +56,7 @@ class BackgroundSyncService {
   static Future<void> initialize() async {
     if (!isSupported) return;
     try {
-      await _mobile.initializeWorkmanager();
+      await mobile.initializeWorkmanager();
       _log.info('Workmanager initialized');
     } catch (e, st) {
       _log.error('Failed to initialize Workmanager', e, st);
@@ -77,7 +77,7 @@ class BackgroundSyncService {
   }) async {
     if (!isSupported) return;
     try {
-      await _mobile.scheduleWorkmanagerTask(
+      await mobile.scheduleWorkmanagerTask(
         uniqueName: kBackgroundSyncTaskName,
         taskId: kBackgroundSyncTaskId,
         intervalMinutes: intervalMinutes,
@@ -95,7 +95,7 @@ class BackgroundSyncService {
   static Future<void> cancelSync() async {
     if (!isSupported) return;
     try {
-      await _mobile.cancelWorkmanagerTask(kBackgroundSyncTaskName);
+      await mobile.cancelWorkmanagerTask(kBackgroundSyncTaskName);
       final prefs = await SharedPreferences.getInstance();
       await prefs.setBool(_kPrefEnabled, false);
       _log.info('Background sync cancelled');
@@ -154,7 +154,7 @@ class BackgroundSyncService {
 
       for (final pair in pairs) {
         try {
-          final client = await _mobile.buildClientForProvider(pair.provider);
+          final client = await mobile.buildClientForProvider(pair.provider);
           if (client == null) {
             _log.warn('Could not build client for provider "${pair.provider}" — skipping "${pair.name}"');
             continue;
@@ -178,7 +178,7 @@ class BackgroundSyncService {
           errors: errors,
           errorMessages: errorMessages,
         );
-        await _mobile.showLocalNotification(
+        await mobile.showLocalNotification(
           id: 1001,
           title: 'CrispCloud Sync',
           body: message,
@@ -192,7 +192,7 @@ class BackgroundSyncService {
     } catch (e, st) {
       _log.error('Background sync task failed', e, st);
       try {
-        await _mobile.showLocalNotification(
+        await mobile.showLocalNotification(
           id: 1002,
           title: 'CrispCloud Sync Error',
           body: 'Background sync failed: $e',

@@ -1,6 +1,5 @@
 // lib/services/ftp_client_adapter.dart
 import 'dart:io';
-import 'dart:typed_data';
 import 'package:ftpconnect/ftpconnect.dart';
 import 'package:path/path.dart' as p;
 import 'package:flutter/foundation.dart';
@@ -11,7 +10,7 @@ import 'log_service.dart';
 import 'secure_storage_service.dart';
 
 class FTPClientAdapter extends CloudStorageClient {
-  static final _log = Log('FTPClient');
+  static const _log = Log('FTPClient');
 
   final FTPConfigService _config;
 

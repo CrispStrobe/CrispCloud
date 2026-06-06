@@ -49,7 +49,7 @@ class _OperationsPanelState extends ConsumerState<OperationsPanel> {
 
     return Container(
       decoration: BoxDecoration(
-        color: Theme.of(context).colorScheme.surfaceVariant,
+        color: Theme.of(context).colorScheme.surfaceContainerHighest,
         border: Border(top: BorderSide(color: Theme.of(context).dividerColor)),
       ),
       child: ExpansionTile(

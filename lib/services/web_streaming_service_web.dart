@@ -29,7 +29,7 @@ import 'web_streaming_service.dart';
 WebStreamingService createWebStreamingService() => _WebStreamingService();
 
 class _WebStreamingService implements WebStreamingService {
-  static final _log = Log('WebStreamingService');
+  static const _log = Log('WebStreamingService');
 
   // ---- isSupported --------------------------------------------------------
 

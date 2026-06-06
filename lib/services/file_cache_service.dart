@@ -63,7 +63,7 @@ class CacheEntry {
 }
 
 class FileCacheService {
-  static final _log = Log('FileCache');
+  static const _log = Log('FileCache');
   static const _maxSizeKey = 'file_cache_max_size';
   static const _defaultMaxSize = 500 * 1024 * 1024; // 500 MB
 

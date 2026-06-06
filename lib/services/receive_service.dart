@@ -8,7 +8,7 @@ import 'package:flutter/foundation.dart' show kIsWeb;
 import 'log_service.dart';
 
 class ReceiveService {
-  static final _log = Log('ReceiveService');
+  static const _log = Log('ReceiveService');
 
   static StreamSubscription? _intentSubscription;
 

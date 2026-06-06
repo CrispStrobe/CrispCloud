@@ -28,7 +28,7 @@ class AzureConnectionInfo {
 }
 
 class AzureConfigService {
-  static final _log = Log('AzureConfig');
+  static const _log = Log('AzureConfig');
   static const _credKey = 'azure_credentials';
 
   final SecureStorage _secure;

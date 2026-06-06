@@ -14,7 +14,7 @@ import 'opfs_service.dart';
 OpfsService createOpfsService() => _WebOpfsService();
 
 class _WebOpfsService implements OpfsService {
-  static final _log = Log('OpfsService');
+  static const _log = Log('OpfsService');
 
   // Root OPFS directory handle (FileSystemDirectoryHandle).
   dynamic _root;

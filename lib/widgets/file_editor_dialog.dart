@@ -7,7 +7,6 @@
 import 'dart:async';
 import 'dart:convert';
 import 'dart:io';
-import 'dart:typed_data';
 
 import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:flutter/material.dart';
@@ -18,7 +17,6 @@ import 'package:path/path.dart' as p;
 import '../models/file_item.dart';
 import '../models/panel_side.dart';
 import '../providers/providers.dart';
-import '../utils/formatters.dart';
 
 /// Opens a full-screen editor dialog for the given file.
 void showFileEditorDialog(

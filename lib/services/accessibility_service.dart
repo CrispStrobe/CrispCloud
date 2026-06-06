@@ -270,13 +270,13 @@ class HighContrastTheme {
   }
 
   static double _relativeLuminance(Color color) {
-    double _channel(double v) {
+    double channel(double v) {
       return v <= 0.03928 ? v / 12.92 : ((v + 0.055) / 1.055) * ((v + 0.055) / 1.055);
     }
 
-    final r = _channel(color.red / 255.0);
-    final g = _channel(color.green / 255.0);
-    final b = _channel(color.blue / 255.0);
+    final r = channel(color.red / 255.0);
+    final g = channel(color.green / 255.0);
+    final b = channel(color.blue / 255.0);
     return 0.2126 * r + 0.7152 * g + 0.0722 * b;
   }
 
@@ -301,7 +301,6 @@ class HighContrastTheme {
       scaffoldBackgroundColor: background,
       canvasColor: background,
       cardColor: background,
-      dialogBackgroundColor: background,
       useMaterial3: true,
       textTheme: const TextTheme(
         bodyMedium: TextStyle(color: foreground),
@@ -354,7 +353,7 @@ class HighContrastTheme {
         backgroundColor: background,
         foregroundColor: foreground,
         surfaceTintColor: Colors.transparent,
-      ),
+      ), dialogTheme: const DialogThemeData(backgroundColor: background),
     );
   }
 }

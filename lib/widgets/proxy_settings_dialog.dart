@@ -58,7 +58,7 @@ class _ProxySettingsDialogState extends ConsumerState<ProxySettingsDialog> {
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             DropdownButtonFormField<ProxyType>(
-              value: _type,
+              initialValue: _type,
               decoration: const InputDecoration(
                 labelText: 'Proxy Type',
                 border: OutlineInputBorder(),
@@ -134,7 +134,7 @@ class _ProxySettingsDialogState extends ConsumerState<ProxySettingsDialog> {
             Container(
               padding: const EdgeInsets.all(8),
               decoration: BoxDecoration(
-                color: Theme.of(context).colorScheme.surfaceContainerHighest.withOpacity(0.5),
+                color: Theme.of(context).colorScheme.surfaceContainerHighest.withValues(alpha: 0.5),
                 borderRadius: BorderRadius.circular(8),
               ),
               child: Row(
@@ -174,7 +174,7 @@ class _ProxySettingsDialogState extends ConsumerState<ProxySettingsDialog> {
             Padding(
               padding: const EdgeInsets.symmetric(vertical: 4),
               child: DropdownButtonFormField<TlsVersion>(
-                value: _minTlsVersion,
+                initialValue: _minTlsVersion,
                 decoration: const InputDecoration(
                   labelText: 'Minimum TLS Version',
                   border: OutlineInputBorder(),
@@ -193,7 +193,7 @@ class _ProxySettingsDialogState extends ConsumerState<ProxySettingsDialog> {
                 margin: const EdgeInsets.only(top: 4, bottom: 4),
                 padding: const EdgeInsets.all(8),
                 decoration: BoxDecoration(
-                  color: Colors.orange.withOpacity(0.12),
+                  color: Colors.orange.withValues(alpha: 0.12),
                   borderRadius: BorderRadius.circular(8),
                 ),
                 child: const Row(

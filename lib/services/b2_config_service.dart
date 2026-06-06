@@ -9,7 +9,7 @@ import 'log_service.dart';
 import 'secure_storage_service.dart';
 
 class B2ConfigService {
-  static final _log = Log('B2Config');
+  static const _log = Log('B2Config');
 
   static const _credentialsKey = 'b2_credentials';
 

@@ -4,7 +4,6 @@
 // encryption toggle, and auto-login on startup.
 
 import 'dart:async';
-import 'dart:typed_data';
 
 import 'package:flutter/foundation.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -39,11 +38,10 @@ import '../services/sftp_config_service.dart';
 import '../services/webdav_client_adapter.dart';
 import '../services/webdav_config_service.dart';
 import '../services/log_service.dart';
-import 'core_providers.dart';
 import 'error_provider.dart';
 
 class AuthNotifier extends ChangeNotifier {
-  static final _log = Log('AuthNotifier');
+  static const _log = Log('AuthNotifier');
   final Ref _ref;
 
   CloudProvider _currentProvider;

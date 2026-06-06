@@ -13,9 +13,7 @@
 //   await service.stop();
 
 import 'dart:async';
-import 'dart:convert';
 import 'dart:math';
-import 'dart:typed_data';
 
 import 'package:flutter/foundation.dart';
 import 'package:shared_preferences/shared_preferences.dart';
@@ -26,7 +24,7 @@ import 'log_service.dart';
 // Conditional dart:io import — web stub provides no-op types.
 // ---------------------------------------------------------------------------
 import 'local_api_service_stub.dart'
-    if (dart.library.io) 'local_api_service_native.dart' as _native;
+    if (dart.library.io) 'local_api_service_native.dart' as native;
 
 // ---------------------------------------------------------------------------
 // Public constants
@@ -82,14 +80,14 @@ class ApiResponse {
       );
 
   /// 401 Unauthorized (missing token).
-  factory ApiResponse.unauthorized() => ApiResponse(
+  factory ApiResponse.unauthorized() => const ApiResponse(
         statusCode: 401,
         body: {'error': 'Authorization header missing or malformed'},
         error: 'unauthorized',
       );
 
   /// 403 Forbidden (wrong token).
-  factory ApiResponse.forbidden() => ApiResponse(
+  factory ApiResponse.forbidden() => const ApiResponse(
         statusCode: 403,
         body: {'error': 'Invalid token'},
         error: 'forbidden',
@@ -110,7 +108,7 @@ class ApiResponse {
       );
 
   /// 429 Too Many Requests.
-  factory ApiResponse.tooManyRequests() => ApiResponse(
+  factory ApiResponse.tooManyRequests() => const ApiResponse(
         statusCode: 429,
         body: {'error': 'Rate limit exceeded. Max 100 requests/minute.'},
         error: 'rate_limit_exceeded',
@@ -148,7 +146,7 @@ class ApiResponse {
 /// It is stored in SharedPreferences under the key [_kTokenKey].
 /// On first call to [getOrCreate] it generates and persists a token.
 class ApiTokenManager {
-  static final _log = Log('ApiTokenManager');
+  static const _log = Log('ApiTokenManager');
   static const _kTokenKey = 'local_api_token';
 
   /// Length of the token in hex characters (24 bytes × 2).
@@ -289,7 +287,7 @@ typedef _HandlerFn = Future<ApiResponse> Function(ApiRequest request);
 
 /// Routes an [ApiRequest] to the correct handler function.
 class ApiRouter {
-  static final _log = Log('ApiRouter');
+  static const _log = Log('ApiRouter');
 
   // Route table: method → path → handler
   final Map<String, Map<String, _HandlerFn>> _routes = {};
@@ -360,7 +358,7 @@ abstract class ApiTransferSource {
 /// implementation in [local_api_service_native.dart].
 /// On web it is a no-op.
 class LocalApiService {
-  static final _log = Log('LocalApiService');
+  static const _log = Log('LocalApiService');
 
   final ApiTokenManager _tokenManager;
   final _RateLimiter _rateLimiter = _RateLimiter();
@@ -415,7 +413,7 @@ class LocalApiService {
     _port = port;
 
     try {
-      _serverHandle = await _native.startHttpServer(
+      _serverHandle = await native.startHttpServer(
         port: port,
         handleRequest: _handleNativeRequest,
       );
@@ -434,7 +432,7 @@ class LocalApiService {
     if (!_running) return;
     try {
       if (_serverHandle != null) {
-        await _native.stopHttpServer(_serverHandle!);
+        await native.stopHttpServer(_serverHandle!);
         _serverHandle = null;
       }
     } catch (e, st) {
@@ -514,7 +512,7 @@ class LocalApiService {
   // Route handlers
   // ---------------------------------------------------------------------------
 
-  Future<ApiResponse> _handleStatus(ApiRequest _req) async {
+  Future<ApiResponse> _handleStatus(ApiRequest req) async {
     final uptimeSeconds = _startTime == null
         ? 0
         : DateTime.now().difference(_startTime!).inSeconds;
@@ -527,7 +525,7 @@ class LocalApiService {
     });
   }
 
-  Future<ApiResponse> _handleProviders(ApiRequest _req) async {
+  Future<ApiResponse> _handleProviders(ApiRequest req) async {
     final providers = providerSource?.listApiProviders() ?? [];
     return ApiResponse.ok({'providers': providers});
   }
@@ -648,12 +646,12 @@ class LocalApiService {
     });
   }
 
-  Future<ApiResponse> _handleSyncStatus(ApiRequest _req) async {
+  Future<ApiResponse> _handleSyncStatus(ApiRequest req) async {
     final status = syncSource?.syncStatus() ?? {'status': 'idle', 'pairs': []};
     return ApiResponse.ok(status);
   }
 
-  Future<ApiResponse> _handleTransfers(ApiRequest _req) async {
+  Future<ApiResponse> _handleTransfers(ApiRequest req) async {
     final transfers = transferSource?.transferStatus() ?? [];
     return ApiResponse.ok({'transfers': transfers});
   }

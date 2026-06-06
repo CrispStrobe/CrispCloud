@@ -8,7 +8,6 @@
 //   linuxIntegrationEnabledProvider — per-file-manager bool toggle (in-memory;
 //                                     persist via shared_preferences if needed).
 
-import 'package:flutter/foundation.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../services/linux_integration_service.dart';

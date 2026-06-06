@@ -7,13 +7,11 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:url_launcher/url_launcher.dart';
 import 'dart:io';
 import 'package:share_plus/share_plus.dart';
-import 'package:cross_file/cross_file.dart';
 import '../models/file_item.dart';
 import '../models/panel_side.dart';
 import '../providers/providers.dart';
-import '../providers/core_providers.dart' show preferExternalEditorProvider;
 import '../services/archive_service.dart';
-import '../services/checksum_service.dart';
+import '../services/checksum_service.dart' show ChecksumService, ChecksumVerifyResult;
 import '../services/file_split_service.dart';
 import '../services/link_service.dart';
 import '../services/secure_wipe_service.dart';
@@ -25,12 +23,11 @@ import 'package:path/path.dart' as p;
 import 'batch_rename_dialog.dart' show showBatchRenameDialog;
 import 'diff_viewer_dialog.dart' show showDiffViewerDialog;
 import 'file_editor_dialog.dart' show showFileEditorDialog;
-import 'file_list_view.dart' show getFileIcon;
 import 'share_link_dialog.dart' show showShareLinkDialog;
 import 'permissions_dialog.dart' show showPermissionsDialog;
 import 'version_history_dialog.dart' show showVersionHistoryDialog;
 
-final _log = Log('FileContextMenu');
+const _log = Log('FileContextMenu');
 
 /// Open a local file with the OS default application via a file:// URI.
 Future<void> openWithSystemEditor(BuildContext context, String path) async {
@@ -605,6 +602,38 @@ void showFileContextMenu(BuildContext context, WidgetRef ref, PanelSide side, Fi
     );
   }
 
+  // Create/verify .md5 checksum files (local files, not web)
+  if (!kIsWeb && side == PanelSide.local) {
+    final selectedFiles = panel.selection.isEmpty ? [file] : panel.selection.toList();
+    final localFiles = selectedFiles.where((f) => !f.isFolder && f.path != null && f.name != '..').toList();
+    if (localFiles.isNotEmpty) {
+      items.add(
+        PopupMenuItem(
+          child: const Row(children: [
+            Icon(Icons.playlist_add_check, size: 20), SizedBox(width: 8), Text('Create .md5 file'),
+          ]),
+          onTap: () => Future.delayed(Duration.zero, () =>
+            _createChecksumFileDialog(context, localFiles, 'md5')),
+        ),
+      );
+    }
+    // Verify if single .md5/.sha256 file selected
+    if (!isMultiSelect && !file.isFolder && file.path != null) {
+      final ext = file.name.toLowerCase();
+      if (ext.endsWith('.md5') || ext.endsWith('.sha256')) {
+        items.add(
+          PopupMenuItem(
+            child: const Row(children: [
+              Icon(Icons.verified, size: 20), SizedBox(width: 8), Text('Verify checksum file'),
+            ]),
+            onTap: () => Future.delayed(Duration.zero, () =>
+              _verifyChecksumFileDialog(context, file.path!)),
+          ),
+        );
+      }
+    }
+  }
+
   // Split file (local, single file > 1 MB, not web)
   if (!kIsWeb && side == PanelSide.local && !isMultiSelect && !file.isFolder && file.path != null && (file.size ?? 0) > 1024 * 1024) {
     items.add(
@@ -694,6 +723,9 @@ void showFileContextMenu(BuildContext context, WidgetRef ref, PanelSide side, Fi
       if (!menuItem.enabled) continue;
       items.add(
         PopupMenuItem(
+          onTap: menuItem.onSelected != null
+              ? () => Future.delayed(Duration.zero, () => menuItem.onSelected!(filePaths))
+              : null,
           child: Row(
             children: [
               const Icon(Icons.extension, size: 20),
@@ -701,9 +733,6 @@ void showFileContextMenu(BuildContext context, WidgetRef ref, PanelSide side, Fi
               Text(menuItem.label),
             ],
           ),
-          onTap: menuItem.onSelected != null
-              ? () => Future.delayed(Duration.zero, () => menuItem.onSelected!(filePaths))
-              : null,
         ),
       );
     }
@@ -1214,7 +1243,7 @@ void _showSplitDialog(BuildContext context, WidgetRef ref, PanelSide side, FileI
             if (file.size != null) Text('Size: ${formatBytes(file.size!)}'),
             const SizedBox(height: 16),
             DropdownButtonFormField<int>(
-              value: chunkSize,
+              initialValue: chunkSize,
               decoration: const InputDecoration(
                 labelText: 'Chunk size',
                 border: OutlineInputBorder(),
@@ -1283,7 +1312,7 @@ void _showCombineDialog(BuildContext context, WidgetRef ref, PanelSide side, Lis
         children: [
           Text('Base name: $baseName'),
           const SizedBox(height: 8),
-          Text('Will scan for all .partNNN files in the directory.'),
+          const Text('Will scan for all .partNNN files in the directory.'),
         ],
       ),
       actions: [
@@ -1409,7 +1438,7 @@ void _showSecureWipeDialog(BuildContext context, WidgetRef ref, PanelSide side, 
             ),
             const SizedBox(height: 16),
             DropdownButtonFormField<int>(
-              value: passes,
+              initialValue: passes,
               decoration: const InputDecoration(
                 labelText: 'Overwrite passes',
                 border: OutlineInputBorder(),
@@ -1465,3 +1494,95 @@ void _showSecureWipeDialog(BuildContext context, WidgetRef ref, PanelSide side, 
 }
 
 // showSearchDialog, showFindDialog, showSearchResultsDialog moved to search_dialogs.dart
+
+Future<void> _createChecksumFileDialog(
+  BuildContext context,
+  List<FileItem> files,
+  String format,
+) async {
+  if (files.isEmpty) return;
+  final dir = p.dirname(files.first.path!);
+  final defaultName = 'checksums.$format';
+
+  showDialog(
+    context: context,
+    barrierDismissible: false,
+    builder: (ctx) => FutureBuilder<String>(
+      future: format == 'md5'
+          ? ChecksumService.generateMd5File(files.map((f) => f.path!).toList(), dir, outputName: defaultName)
+          : ChecksumService.generateSha256File(files.map((f) => f.path!).toList(), dir, outputName: defaultName),
+      builder: (context, snap) {
+        if (snap.connectionState != ConnectionState.done) {
+          return const AlertDialog(
+            content: Row(children: [
+              CircularProgressIndicator(), SizedBox(width: 16), Text('Generating checksums...'),
+            ]),
+          );
+        }
+        final error = snap.error;
+        return AlertDialog(
+          title: error != null ? const Text('Error') : const Text('Checksum file created'),
+          content: error != null
+              ? Text('Failed: $error')
+              : Text('Created: ${snap.data}'),
+          actions: [
+            TextButton(onPressed: () => Navigator.pop(ctx), child: const Text('OK')),
+          ],
+        );
+      },
+    ),
+  );
+}
+
+Future<void> _verifyChecksumFileDialog(BuildContext context, String checksumPath) async {
+  showDialog(
+    context: context,
+    barrierDismissible: false,
+    builder: (ctx) => FutureBuilder<List<ChecksumVerifyResult>>(
+      future: ChecksumService.verifyChecksumFile(checksumPath),
+      builder: (context, snap) {
+        if (snap.connectionState != ConnectionState.done) {
+          return const AlertDialog(
+            content: Row(children: [
+              CircularProgressIndicator(), SizedBox(width: 16), Text('Verifying...'),
+            ]),
+          );
+        }
+        if (snap.error != null) {
+          return AlertDialog(
+            title: const Text('Verify failed'),
+            content: Text('${snap.error}'),
+            actions: [TextButton(onPressed: () => Navigator.pop(ctx), child: const Text('OK'))],
+          );
+        }
+        final results = snap.data ?? [];
+        final failed = results.where((r) => !r.ok).toList();
+        return AlertDialog(
+          title: Row(children: [
+            Icon(failed.isEmpty ? Icons.check_circle : Icons.error,
+                color: failed.isEmpty ? Colors.green : Colors.red),
+            const SizedBox(width: 8),
+            Text(failed.isEmpty ? 'All OK' : '${failed.length} mismatch(es)'),
+          ]),
+          content: SizedBox(
+            width: 400,
+            child: ListView(
+              shrinkWrap: true,
+              children: results.map((r) => ListTile(
+                dense: true,
+                leading: Icon(r.ok ? Icons.check : Icons.close,
+                    color: r.ok ? Colors.green : Colors.red, size: 16),
+                title: Text(r.filename, style: const TextStyle(fontSize: 12)),
+                subtitle: r.ok ? null : Text('Expected: ${r.expected.substring(0, 8)}…\nGot: ${r.actual.substring(0, 8)}…',
+                    style: const TextStyle(fontSize: 11)),
+              )).toList(),
+            ),
+          ),
+          actions: [
+            TextButton(onPressed: () => Navigator.pop(ctx), child: const Text('Close')),
+          ],
+        );
+      },
+    ),
+  );
+}

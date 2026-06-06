@@ -108,6 +108,9 @@ dependencies:
       url: https://github.com/CrispStrobe/filen-dart.git
       ref: main
 
+  intl: any
+  uuid: any
+  xml: any
 dev_dependencies:
   flutter_test:
     sdk: flutter

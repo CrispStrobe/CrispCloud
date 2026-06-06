@@ -25,7 +25,7 @@ import 'nextcloud_config_service.dart';
 import 'secure_storage_service.dart';
 
 class NextcloudClientAdapter extends CloudStorageClient {
-  static final _log = Log('NextcloudClient');
+  static const _log = Log('NextcloudClient');
 
   final NextcloudConfigService _config;
 

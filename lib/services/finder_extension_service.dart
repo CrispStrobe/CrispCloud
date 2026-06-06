@@ -51,7 +51,7 @@ class FinderUploadResult {
 /// Platform guard: [initialize] is a no-op on non-macOS platforms, so it is
 /// safe to instantiate and call unconditionally in the app bootstrap.
 class FinderExtensionService {
-  static final _log = Log('FinderExtensionService');
+  static const _log = Log('FinderExtensionService');
 
   /// The channel name matches the one declared in AppDelegate.swift.
   static const _channel = MethodChannel('com.crispcloud/finder_extension');
@@ -136,7 +136,7 @@ class FinderExtensionService {
     if (rawQuery.isEmpty) return [];
 
     // Extract the raw value of the `paths` parameter.
-    final prefix = 'paths=';
+    const prefix = 'paths=';
     final paramIndex = rawQuery.indexOf(prefix);
     if (paramIndex < 0) return [];
 

@@ -3,7 +3,7 @@ import 'log_service.dart';
 import 'secure_storage_service.dart';
 
 class PCloudConfigService {
-  static final _log = Log('PCloudConfig');
+  static const _log = Log('PCloudConfig');
 
   final String configPath;
   final SecureStorage _secure;

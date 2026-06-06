@@ -23,7 +23,7 @@ import 'auth_provider.dart';
 import 'error_provider.dart';
 
 class SyncNotifier extends ChangeNotifier {
-  static final _log = Log('SyncNotifier');
+  static const _log = Log('SyncNotifier');
   final Ref _ref;
   late final SyncDatabase _db;
   late final SyncEngine _engine;
@@ -294,7 +294,7 @@ class SyncNotifier extends ChangeNotifier {
   Future<SyncResult> syncAll() async {
     if (_isSyncing) return const SyncResult();
     if (!isSyncAllowedNow) {
-      _log.info('Sync skipped: outside allowed schedule (${_syncStartHour}:00-${_syncEndHour}:00)');
+      _log.info('Sync skipped: outside allowed schedule ($_syncStartHour:00-$_syncEndHour:00)');
       return const SyncResult();
     }
 
@@ -452,14 +452,14 @@ class SyncNotifier extends ChangeNotifier {
               final remote = await client.resolvePath(op.path);
               if (remote != null) {
                 final remoteModStr = remote['modificationTime'] ?? remote['lastModified'];
-                if (remoteModStr != null && op.createdAt != null) {
+                if (remoteModStr != null) {
                   DateTime? remoteMod;
                   if (remoteModStr is int) {
                     remoteMod = DateTime.fromMillisecondsSinceEpoch(remoteModStr);
                   } else {
                     remoteMod = DateTime.tryParse(remoteModStr.toString());
                   }
-                  if (remoteMod != null && remoteMod.isAfter(op.createdAt!)) {
+                  if (remoteMod != null && remoteMod.isAfter(op.createdAt)) {
                     _log.warn('Conflict detected: ${op.path} modified on server since offline op queued');
                     result = result + SyncResult(conflicts: 1, errorMessages: ['Conflict: ${op.path} modified on server']);
                     continue; // Skip this op, leave it in queue for manual resolution

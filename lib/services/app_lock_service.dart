@@ -6,7 +6,6 @@
 
 import 'dart:convert';
 import 'dart:io';
-import 'dart:typed_data';
 
 import 'package:crypto/crypto.dart';
 import 'package:flutter/foundation.dart';
@@ -16,7 +15,7 @@ import 'log_service.dart';
 import 'secure_storage_service.dart';
 
 class AppLockService {
-  static final _log = Log('AppLockService');
+  static const _log = Log('AppLockService');
 
   static const _hashKey = 'app_lock_hash';
   static const _saltKey = 'app_lock_salt';

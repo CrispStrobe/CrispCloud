@@ -188,7 +188,9 @@ String _formatNumber(
 
 int _pow10(int exp) {
   var result = 1;
-  for (var i = 0; i < exp; i++) result *= 10;
+  for (var i = 0; i < exp; i++) {
+    result *= 10;
+  }
   return result;
 }
 
@@ -232,22 +234,22 @@ String formatBytesLocale(int bytes, String locale) {
 
   final spec = LocaleFormats._specFor(locale);
 
-  String _fmt(double value, String unit) {
+  String fmt(double value, String unit) {
     final formatted = _formatNumber(value, locale, decimals: 1);
     return '$formatted ${spec.unitLabel(unit)}';
   }
 
   if (bytes < 1024) return '$bytes ${spec.unitLabel('B')}';
   if (bytes < 1024 * 1024) {
-    return _fmt(bytes / 1024, 'KB');
+    return fmt(bytes / 1024, 'KB');
   }
   if (bytes < 1024 * 1024 * 1024) {
-    return _fmt(bytes / (1024 * 1024), 'MB');
+    return fmt(bytes / (1024 * 1024), 'MB');
   }
   if (bytes < 1024 * 1024 * 1024 * 1024) {
-    return _fmt(bytes / (1024 * 1024 * 1024), 'GB');
+    return fmt(bytes / (1024 * 1024 * 1024), 'GB');
   }
-  return _fmt(bytes / (1024 * 1024 * 1024 * 1024), 'TB');
+  return fmt(bytes / (1024 * 1024 * 1024 * 1024), 'TB');
 }
 
 /// Format [date] as a short date string appropriate for [locale].

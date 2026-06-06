@@ -8,7 +8,6 @@
 // Uses drift's "manager" API with typed tables for compile-time safety.
 
 import 'package:drift/drift.dart';
-import 'package:flutter/foundation.dart';
 
 import 'sync_database_connection.dart';
 

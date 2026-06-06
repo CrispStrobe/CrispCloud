@@ -94,7 +94,7 @@ class AuditEntry {
 
 /// Service that appends audit entries to a JSON-lines file and reads them back.
 class AuditService {
-  static final _log = Log('AuditService');
+  static const _log = Log('AuditService');
 
   String? _logFilePath;
 

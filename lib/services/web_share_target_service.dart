@@ -12,7 +12,7 @@
 import 'dart:typed_data';
 
 import 'web_share_target_service_stub.dart'
-    if (dart.library.html) 'web_share_target_service_web.dart' as _impl;
+    if (dart.library.html) 'web_share_target_service_web.dart' as impl;
 
 /// Data received via the Share Target API.
 class SharedContent {
@@ -65,5 +65,5 @@ abstract class WebShareTargetService {
   /// Clear the shared content after the UI has consumed it.
   void clear();
 
-  factory WebShareTargetService() => _impl.createWebShareTargetService();
+  factory WebShareTargetService() => impl.createWebShareTargetService();
 }

@@ -30,7 +30,7 @@ enum SortBy { name, size, date, extension }
 enum SortOrder { ascending, descending }
 
 class PanelNotifier extends ChangeNotifier {
-  static final _log = Log('PanelNotifier');
+  static const _log = Log('PanelNotifier');
 
   final Ref _ref;
   final PanelSide side;
@@ -293,7 +293,7 @@ class PanelNotifier extends ChangeNotifier {
     var parent = inner.endsWith('/') ? inner.substring(0, inner.length - 1) : inner;
     final lastSlash = parent.lastIndexOf('/');
     parent = lastSlash > 0 ? parent.substring(0, lastSlash + 1) : '';
-    _archiveSource = _archiveSource!.withPath(parent) as ArchivePanelSource;
+    _archiveSource = _archiveSource!.withPath(parent);
     await _loadArchiveFiles();
     notifyListeners();
   }
@@ -451,7 +451,7 @@ class PanelNotifier extends ChangeNotifier {
 
       // Secondary sort key when primary ties
       if (comparison == 0 && _secondarySortBy != null) {
-        int secondary = compareSortKey(a, b, _secondarySortBy!);
+        final int secondary = compareSortKey(a, b, _secondarySortBy!);
         comparison = _secondarySortOrder == SortOrder.ascending ? secondary : -secondary;
       }
 
@@ -1265,6 +1265,13 @@ class PanelNotifier extends ChangeNotifier {
     _saveTabs();
   }
 
+  void renameTab(String tabId, String newLabel) {
+    final tab = _tabs.firstWhere((t) => t.id == tabId, orElse: () => _tabs.first);
+    tab.label = newLabel;
+    notifyListeners();
+    _saveTabs();
+  }
+
   void _syncTabPath() {
     final tab = activeTab;
     if (tab != null) {
@@ -1405,8 +1412,11 @@ class PanelNotifier extends ChangeNotifier {
         final rawDate = map['modificationTime'] ?? map['lastModified'] ?? map['timestamp'];
         if (rawDate != null) {
           try {
-            if (rawDate is int) folderDate = DateTime.fromMillisecondsSinceEpoch(rawDate);
-            else folderDate = DateTime.parse(rawDate.toString());
+            if (rawDate is int) {
+              folderDate = DateTime.fromMillisecondsSinceEpoch(rawDate);
+            } else {
+              folderDate = DateTime.parse(rawDate.toString());
+            }
           } catch (_) {}
         }
         final meta = Map<String, dynamic>.from(map)
@@ -1427,8 +1437,11 @@ class PanelNotifier extends ChangeNotifier {
         final rawDate = map['modificationTime'] ?? map['lastModified'];
         if (rawDate != null) {
           try {
-            if (rawDate is int) fileDate = DateTime.fromMillisecondsSinceEpoch(rawDate);
-            else fileDate = DateTime.parse(rawDate.toString());
+            if (rawDate is int) {
+              fileDate = DateTime.fromMillisecondsSinceEpoch(rawDate);
+            } else {
+              fileDate = DateTime.parse(rawDate.toString());
+            }
           } catch (_) {}
         }
         final meta = Map<String, dynamic>.from(map)

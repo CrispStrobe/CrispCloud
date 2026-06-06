@@ -135,7 +135,7 @@ class _FileColumnViewState extends ConsumerState<FileColumnView> {
       decoration: BoxDecoration(
         border: Border(
           right: BorderSide(
-            color: theme.dividerColor.withOpacity(0.3),
+            color: theme.dividerColor.withValues(alpha: 0.3),
             width: 1,
           ),
         ),
@@ -162,7 +162,7 @@ class _FileColumnViewState extends ConsumerState<FileColumnView> {
               child: Container(
                 padding: const EdgeInsets.symmetric(horizontal: 8),
                 color: isSelected
-                    ? theme.colorScheme.primaryContainer.withOpacity(0.5)
+                    ? theme.colorScheme.primaryContainer.withValues(alpha: 0.5)
                     : null,
                 child: Row(
                   children: [

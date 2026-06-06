@@ -18,7 +18,6 @@
 import 'dart:async';
 import 'dart:convert';
 import 'dart:io';
-import 'dart:typed_data';
 
 import 'package:crypto/crypto.dart';
 import 'package:flutter/foundation.dart';
@@ -43,7 +42,7 @@ const int _defaultPartSize = 10 * 1024 * 1024; // 10 MB
 const int _maxRetries = 5;
 
 class B2ClientAdapter extends CloudStorageClient {
-  static final _log = Log('B2Client');
+  static const _log = Log('B2Client');
 
   final B2ConfigService _config;
 

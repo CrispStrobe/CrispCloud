@@ -351,7 +351,7 @@ class _UpdateAvailableBanner extends StatelessWidget {
             _formatDate(info.publishedAt),
             style: TextStyle(
               fontSize: 11,
-              color: theme.colorScheme.onPrimaryContainer.withOpacity(0.7),
+              color: theme.colorScheme.onPrimaryContainer.withValues(alpha: 0.7),
             ),
           ),
         ],

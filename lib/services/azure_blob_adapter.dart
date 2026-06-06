@@ -16,7 +16,6 @@ import 'dart:io';
 import 'dart:typed_data';
 
 import 'package:crypto/crypto.dart';
-import 'package:flutter/foundation.dart';
 import 'package:http/http.dart' as http;
 
 import 'azure_config_service.dart';
@@ -65,7 +64,7 @@ extension AzureBlobTierName on AzureBlobTier {
 // ────────────────────────────────────────────────────────────────────────────
 
 class AzureBlobAdapter extends CloudStorageClient {
-  static final _log = Log('AzureBlob');
+  static const _log = Log('AzureBlob');
 
   /// Azure REST API version used in every request.
   static const _apiVersion = '2023-11-03';
@@ -346,7 +345,7 @@ class AzureBlobAdapter extends CloudStorageClient {
 
     final contentLength = body.isEmpty ? '' : '${body.length}';
     final contentType = headers['Content-Type'] ?? '';
-    final date = ''; // x-ms-date takes precedence; leave this empty
+    const date = ''; // x-ms-date takes precedence; leave this empty
     final msDate = headers['x-ms-date'] ?? '';
 
     // Canonicalized headers: sort x-ms-* headers (lowercase), newline-delimited

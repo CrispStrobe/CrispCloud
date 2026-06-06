@@ -95,7 +95,7 @@ class _StatusBarState extends ConsumerState<StatusBar> {
           // Encryption status indicator
           if (auth.isConnected && auth.providerName.contains('Encrypted')) ...[
             const SizedBox(width: 4),
-            Icon(Icons.lock, size: 12, color: Colors.green),
+            const Icon(Icons.lock, size: 12, color: Colors.green),
           ],
 
           // Privacy score
@@ -137,7 +137,7 @@ class _StatusBarState extends ConsumerState<StatusBar> {
             const SizedBox(width: 8),
             Text(
               '${panel.cursorIndex + 1} / $itemCount',
-              style: style.copyWith(color: theme.colorScheme.onSurface.withOpacity(0.6)),
+              style: style.copyWith(color: theme.colorScheme.onSurface.withValues(alpha: 0.6)),
             ),
           ],
 
@@ -185,7 +185,7 @@ class _StatusBarState extends ConsumerState<StatusBar> {
             Container(width: 1, height: 14, color: theme.dividerColor),
             const SizedBox(width: 16),
           ] else if (sync.lastResult != null && sync.lastResult!.hasChanges) ...[
-            Icon(Icons.sync_alt, size: 14, color: Colors.green),
+            const Icon(Icons.sync_alt, size: 14, color: Colors.green),
             const SizedBox(width: 4),
             Text(
               'Last sync: ${sync.lastResult!.uploaded + sync.lastResult!.downloaded} changes',

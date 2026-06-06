@@ -35,7 +35,7 @@ class _VersionHistoryDialog extends ConsumerStatefulWidget {
 }
 
 class _VersionHistoryDialogState extends ConsumerState<_VersionHistoryDialog> {
-  static final _log = Log('VersionHistory');
+  static const _log = Log('VersionHistory');
 
   List<Map<String, dynamic>> _versions = [];
   bool _loading = true;
@@ -408,7 +408,7 @@ class _VersionHistoryDialogState extends ConsumerState<_VersionHistoryDialog> {
                                   style: const TextStyle(fontSize: 11),
                                 ),
                                 trailing: index == 0
-                                    ? Chip(label: const Text('Current', style: TextStyle(fontSize: 10)), visualDensity: VisualDensity.compact)
+                                    ? const Chip(label: Text('Current', style: TextStyle(fontSize: 10)), visualDensity: VisualDensity.compact)
                                     : Row(
                                         mainAxisSize: MainAxisSize.min,
                                         children: [

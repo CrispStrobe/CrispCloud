@@ -4,7 +4,6 @@
 // Returns a LazyDatabase that throws on first access, but since
 // sync features are disabled on web, it's never actually opened.
 import 'package:drift/drift.dart';
-import 'package:drift/backends.dart';
 
 QueryExecutor openSyncDatabase() {
   // Return a no-op executor. Sync is not supported on web.

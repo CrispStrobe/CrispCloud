@@ -22,7 +22,7 @@ import 'encryption_service.dart';
 import 'log_service.dart';
 import 'secure_storage_service.dart';
 
-final _log = Log('WebEncryptedStorage');
+const _log = Log('WebEncryptedStorage');
 
 /// Prefix for all encrypted entries in the backing store.
 const _keyPrefix = 'crisp_enc_';

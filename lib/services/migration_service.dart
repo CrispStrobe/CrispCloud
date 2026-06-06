@@ -483,7 +483,7 @@ String _globToRegex(String glob) {
 ///   4. executeMigration(plan, entries, onProgress: ...)
 ///   5. [optional] verifyMigration(plan, entries)
 class MigrationService {
-  static final _log = Log('MigrationService');
+  static const _log = Log('MigrationService');
   static const _uuid = Uuid();
 
   static const _plansKey = 'migration_plans';
@@ -968,7 +968,7 @@ class MigrationService {
     final ext = lastDot > 0 ? fileName.substring(lastDot) : '';
 
     for (int i = 1; i <= 999; i++) {
-      final candidate = '$base\_$i$ext';
+      final candidate = '${base}_$i$ext';
       final candidatePath = dir.isEmpty ? candidate : '$dir/$candidate';
       final existing = await _tryResolvePath(destination, candidatePath);
       if (existing == null) return candidatePath;
@@ -1125,14 +1125,14 @@ class MigrationService {
           meta['sha256Hash'] as String? ??
           meta['hash'] as String?;
 
-      String? resolvedDestHash = destHashFromMeta ?? entry.destHash;
+      final String? resolvedDestHash = destHashFromMeta ?? entry.destHash;
 
       if (!sizeMatch) {
         mismatched++;
         mismatches.add({
           'path': entry.relativePath,
           'sourceHash': entry.sourceHash ?? '(size:${entry.sizeBytes})',
-          'destHash': '(size:${destSize?.toString() ?? "unknown"})',
+          'destHash': '(size:${destSize.toString() ?? "unknown"})',
         });
       } else if (entry.sourceHash != null &&
           resolvedDestHash != null &&

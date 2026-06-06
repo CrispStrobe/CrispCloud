@@ -33,7 +33,7 @@ final crashReportingEnabledProvider =
 );
 
 class CrashReportingEnabledNotifier extends StateNotifier<bool> {
-  static final _log = Log('CrashReportingEnabledNotifier');
+  static const _log = Log('CrashReportingEnabledNotifier');
   static const _key = 'crash_reporting_enabled';
 
   CrashReportingEnabledNotifier() : super(false) {

@@ -1,13 +1,12 @@
 // services/share_service.dart
 import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:share_plus/share_plus.dart';
-import 'package:cross_file/cross_file.dart';
 import 'dart:io';
 
 import 'log_service.dart';
 
 class ShareService {
-  static final _log = Log('ShareService');
+  static const _log = Log('ShareService');
 
   static Future<void> shareFiles(List<String> filePaths) async {
     if (filePaths.isEmpty) return;

@@ -8,7 +8,6 @@
 
 import 'dart:convert';
 import 'dart:io';
-import 'dart:typed_data';
 import 'dart:ui' as ui;
 
 import 'package:crypto/crypto.dart';
@@ -19,7 +18,7 @@ import 'package:path_provider/path_provider.dart';
 import 'log_service.dart';
 
 class ThumbnailService {
-  static final _log = Log('Thumbnails');
+  static const _log = Log('Thumbnails');
 
   String? _cacheDir;
   final Map<String, Uint8List> _memoryCache = {};

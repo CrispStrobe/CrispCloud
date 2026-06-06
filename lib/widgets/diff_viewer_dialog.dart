@@ -4,7 +4,6 @@
 // Compares two text files (local vs remote, or two selected files).
 
 import 'dart:io';
-import 'dart:typed_data';
 
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -13,7 +12,6 @@ import '../models/file_item.dart';
 import '../models/panel_side.dart';
 import '../providers/providers.dart';
 import '../services/log_service.dart';
-import '../utils/formatters.dart';
 
 /// Show a diff dialog comparing two raw text strings.
 /// Used for version diff where content is already loaded.
@@ -65,7 +63,7 @@ class _DiffViewerDialog extends ConsumerStatefulWidget {
 }
 
 class _DiffViewerDialogState extends ConsumerState<_DiffViewerDialog> {
-  static final _log = Log('DiffViewer');
+  static const _log = Log('DiffViewer');
 
   List<String> _leftLines = [];
   List<String> _rightLines = [];
@@ -75,7 +73,7 @@ class _DiffViewerDialogState extends ConsumerState<_DiffViewerDialog> {
 
   final _leftScrollController = ScrollController();
   final _rightScrollController = ScrollController();
-  bool _syncScroll = true;
+  final bool _syncScroll = true;
 
   @override
   void initState() {
@@ -223,8 +221,8 @@ class _DiffViewerDialogState extends ConsumerState<_DiffViewerDialog> {
   }
 
   Widget _buildDiffView(ThemeData theme) {
-    final addedColor = Colors.green.withOpacity(0.15);
-    final removedColor = Colors.red.withOpacity(0.15);
+    final addedColor = Colors.green.withValues(alpha: 0.15);
+    final removedColor = Colors.red.withValues(alpha: 0.15);
 
     return Row(
       children: [
@@ -234,7 +232,7 @@ class _DiffViewerDialogState extends ConsumerState<_DiffViewerDialog> {
             children: [
               Container(
                 padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
-                color: theme.colorScheme.surfaceContainerHighest.withOpacity(0.5),
+                color: theme.colorScheme.surfaceContainerHighest.withValues(alpha: 0.5),
                 child: Row(
                   children: [
                     const Icon(Icons.description, size: 14),
@@ -298,7 +296,7 @@ class _DiffViewerDialogState extends ConsumerState<_DiffViewerDialog> {
             children: [
               Container(
                 padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
-                color: theme.colorScheme.surfaceContainerHighest.withOpacity(0.5),
+                color: theme.colorScheme.surfaceContainerHighest.withValues(alpha: 0.5),
                 child: Row(
                   children: [
                     const Icon(Icons.description, size: 14),
@@ -432,8 +430,8 @@ class _ContentDiffDialog extends StatelessWidget {
 
     final added = diffResult.where((d) => d.type == _DiffType.added).length;
     final removed = diffResult.where((d) => d.type == _DiffType.removed).length;
-    final addedColor = Colors.green.withOpacity(0.15);
-    final removedColor = Colors.red.withOpacity(0.15);
+    final addedColor = Colors.green.withValues(alpha: 0.15);
+    final removedColor = Colors.red.withValues(alpha: 0.15);
 
     return Dialog(
       insetPadding: const EdgeInsets.all(16),
@@ -482,7 +480,7 @@ class _ContentDiffDialog extends StatelessWidget {
         children: [
           Container(
             padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
-            color: theme.colorScheme.surfaceContainerHighest.withOpacity(0.5),
+            color: theme.colorScheme.surfaceContainerHighest.withValues(alpha: 0.5),
             child: Row(
               children: [
                 const Icon(Icons.description, size: 14),

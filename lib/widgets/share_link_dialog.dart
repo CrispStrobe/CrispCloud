@@ -33,7 +33,7 @@ class _ShareLinkDialog extends ConsumerStatefulWidget {
 }
 
 class _ShareLinkDialogState extends ConsumerState<_ShareLinkDialog> {
-  static final _log = Log('ShareLink');
+  static const _log = Log('ShareLink');
 
   String? _shareUrl;
   bool _loading = false;

@@ -34,7 +34,7 @@ class ConnectionProfile {
 }
 
 class ConnectionProfileService {
-  static final _log = Log('ConnectionProfiles');
+  static const _log = Log('ConnectionProfiles');
   static const _storageKey = 'connection_profiles';
 
   final SecureStorage _storage;

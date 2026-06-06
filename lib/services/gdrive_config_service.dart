@@ -3,7 +3,7 @@ import 'log_service.dart';
 import 'secure_storage_service.dart';
 
 class GDriveConfigService {
-  static final _log = Log('GDriveConfig');
+  static const _log = Log('GDriveConfig');
 
   final String configPath;
   final SecureStorage _secure;

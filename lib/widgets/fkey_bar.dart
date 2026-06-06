@@ -28,7 +28,7 @@ class FKeyBar extends ConsumerWidget {
     if (!visible) return const SizedBox.shrink();
 
     final fkeyCtx = overrideContext ?? ref.watch(activeFKeyContextProvider);
-    final service = const FKeyActionService();
+    const service = FKeyActionService();
 
     return _FKeyBarContent(
       fkeyContext: fkeyCtx,

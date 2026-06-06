@@ -53,7 +53,7 @@ String hetznerEffectiveUsername(String username, String? subAccount) {
 // ---------------------------------------------------------------------------
 
 class HetznerStorageBoxAdapter extends CloudStorageClient {
-  static final _log = Log('HetznerAdapter');
+  static const _log = Log('HetznerAdapter');
 
   final HetznerConfigService _config;
 

@@ -53,7 +53,7 @@ class _TransferState {
 
 /// Service that manages foreground-service-style transfer notifications.
 class ForegroundTransferService {
-  static final _log = Log('ForegroundTransferService');
+  static const _log = Log('ForegroundTransferService');
 
   /// True only on Android (non-web dart:io build).
   static bool get isSupported {

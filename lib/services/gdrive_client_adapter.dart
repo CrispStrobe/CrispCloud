@@ -9,7 +9,6 @@
 import 'dart:async';
 import 'dart:convert';
 import 'dart:io';
-import 'dart:typed_data';
 
 import 'package:flutter/foundation.dart';
 import 'package:http/http.dart' as http;
@@ -22,7 +21,7 @@ import 'log_service.dart';
 import 'secure_storage_service.dart';
 
 class GDriveClientAdapter extends CloudStorageClient {
-  static final _log = Log('GDriveClient');
+  static const _log = Log('GDriveClient');
 
   final GDriveConfigService _config;
 
@@ -618,7 +617,7 @@ class GDriveClientAdapter extends CloudStorageClient {
   }
 
   Future<void> _browserOAuthFlow() async {
-    final redirectUri = 'http://localhost:$_redirectPort';
+    const redirectUri = 'http://localhost:$_redirectPort';
 
     final authUri = Uri.parse(_authUrl).replace(queryParameters: {
       'client_id': _clientId!,

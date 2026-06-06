@@ -12,7 +12,7 @@
 import 'dart:typed_data';
 
 import 'file_system_access_service_stub.dart'
-    if (dart.library.html) 'file_system_access_service_web.dart' as _impl;
+    if (dart.library.html) 'file_system_access_service_web.dart' as impl;
 
 /// Represents a resolved file handle (name + bytes).
 class FsaFileResult {
@@ -52,5 +52,5 @@ abstract class FileSystemAccessService {
   /// Remove a persisted handle from IndexedDB.
   Future<void> removePersistedHandle(String key);
 
-  factory FileSystemAccessService() => _impl.createFileSystemAccessService();
+  factory FileSystemAccessService() => impl.createFileSystemAccessService();
 }

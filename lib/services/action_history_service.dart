@@ -112,7 +112,7 @@ class UndoResult {
 /// remote calls back to the caller via the [UndoContext] parameter so that it
 /// remains independent of any specific cloud client.
 class ActionHistoryService {
-  static final _log = Log('ActionHistoryService');
+  static const _log = Log('ActionHistoryService');
   static const int _maxHistory = 50;
 
   final _uuid = const Uuid();

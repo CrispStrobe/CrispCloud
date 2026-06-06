@@ -225,7 +225,7 @@ class _PluginContextImpl implements PluginContext {
   final String _pluginId;
   final String _tempDir;
   final Map<String, dynamic> _defaults;
-  static final _log = Log('PluginContext');
+  static const _log = Log('PluginContext');
 
   _PluginContextImpl({
     required String pluginId,
@@ -332,7 +332,7 @@ abstract class CrispCloudPlugin {
 /// Preserves registration order. Use [initializeAll] during app startup
 /// and [disposeAll] on shutdown.
 class PluginRegistry {
-  static final _log = Log('PluginRegistry');
+  static const _log = Log('PluginRegistry');
 
   // Ordered list preserves registration order.
   final List<CrispCloudPlugin> _plugins = [];
