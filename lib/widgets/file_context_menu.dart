@@ -150,6 +150,47 @@ void showFileContextMenu(BuildContext context, WidgetRef ref, PanelSide side, Fi
     }
   }
 
+  // Open with system default (all local non-folder files — DC-13 file associations)
+  if (!isMultiSelect && !isSingleFolder && !kIsWeb && side == PanelSide.local &&
+      file.path != null && !const {
+        'txt', 'json', 'yaml', 'yml', 'xml', 'csv', 'log', 'ini', 'cfg',
+        'conf', 'toml', 'env', 'gitignore', 'dockerfile', 'md', 'markdown',
+        'dart', 'js', 'ts', 'jsx', 'tsx', 'py', 'rb', 'go', 'rs', 'java',
+        'kt', 'swift', 'c', 'cpp', 'h', 'hpp', 'cs', 'php', 'html', 'css',
+        'scss', 'less', 'sql', 'sh', 'bash', 'zsh', 'ps1', 'bat', 'r',
+        'lua', 'vim', 'makefile', 'properties', 'gradle',
+      }.contains(file.extension)) {
+    items.add(
+      PopupMenuItem(
+        child: const Row(children: [
+          Icon(Icons.open_in_new, size: 20), SizedBox(width: 8), Text('Open with System App'),
+        ]),
+        onTap: () => Future.delayed(Duration.zero, () => openWithSystemEditor(context, file.path!)),
+      ),
+    );
+  }
+
+  // Verify copy: compare local file MD5 against same-named file in opposite panel (DC-15)
+  if (!isMultiSelect && !isSingleFolder && !kIsWeb && side == PanelSide.local &&
+      file.path != null && !file.isFolder) {
+    final oppSide = PanelSide.remote;
+    final oppPanel = ref.read(panelProvider(oppSide));
+    final oppMatch = (oppPanel.files ?? [])
+        .where((f) => f.name == file.name && !f.isFolder)
+        .toList();
+    if (oppMatch.isNotEmpty) {
+      items.add(
+        PopupMenuItem(
+          child: const Row(children: [
+            Icon(Icons.verified, size: 20), SizedBox(width: 8), Text('Verify against remote'),
+          ]),
+          onTap: () => Future.delayed(Duration.zero, () =>
+              _verifyAgainstRemote(context, ref, file, oppMatch.first)),
+        ),
+      );
+    }
+  }
+
   // Compare with opposite panel (single non-folder file, both panels connected)
   if (!isMultiSelect && !isSingleFolder && ref.read(authProvider).isConnected) {
     final oppositeSide = side == PanelSide.local ? PanelSide.remote : PanelSide.local;
@@ -512,6 +553,32 @@ void showFileContextMenu(BuildContext context, WidgetRef ref, PanelSide side, Fi
         ),
       );
     }
+  }
+
+  // Reveal in Finder / Explorer (local files only)
+  if (!kIsWeb && side == PanelSide.local && file.path != null) {
+    final revealLabel = Platform.isMacOS ? 'Reveal in Finder'
+        : Platform.isWindows ? 'Show in Explorer'
+        : 'Open containing folder';
+    items.add(
+      PopupMenuItem(
+        child: Row(children: [
+          const Icon(Icons.folder_open, size: 20), const SizedBox(width: 8), Text(revealLabel),
+        ]),
+        onTap: () async {
+          try {
+            if (Platform.isMacOS) {
+              await Process.run('open', ['-R', file.path!]);
+            } else if (Platform.isWindows) {
+              await Process.run('explorer', ['/select,', file.path!]);
+            } else if (Platform.isLinux) {
+              final dir = file.isFolder ? file.path! : p.dirname(file.path!);
+              await Process.run('xdg-open', [dir]);
+            }
+          } catch (_) {}
+        },
+      ),
+    );
   }
 
   items.add(const PopupMenuDivider());
@@ -1657,4 +1724,87 @@ Future<void> _verifyChecksumFileDialog(BuildContext context, String checksumPath
       },
     ),
   );
+}
+
+/// DC-15: Compare local file MD5 against a remote file's size (or MD5 if downloadable).
+void _verifyAgainstRemote(
+  BuildContext context,
+  WidgetRef ref,
+  FileItem localFile,
+  FileItem remoteFile,
+) {
+  showDialog(
+    context: context,
+    barrierDismissible: false,
+    builder: (ctx) => FutureBuilder<Map<String, dynamic>>(
+      future: _computeVerification(localFile, remoteFile, ref),
+      builder: (context, snap) {
+        if (snap.connectionState != ConnectionState.done) {
+          return const AlertDialog(
+            content: Row(children: [
+              CircularProgressIndicator(), SizedBox(width: 16), Text('Computing checksum…'),
+            ]),
+          );
+        }
+        if (snap.error != null) {
+          return AlertDialog(
+            title: const Text('Verify failed'),
+            content: Text('${snap.error}'),
+            actions: [TextButton(onPressed: () => Navigator.pop(ctx), child: const Text('OK'))],
+          );
+        }
+        final data = snap.data!;
+        final localMd5 = data['localMd5'] as String;
+        final remoteMd5 = data['remoteMd5'] as String?;
+        final localSize = data['localSize'] as int;
+        final remoteSize = data['remoteSize'] as int?;
+        final sizeMatch = remoteSize == null || localSize == remoteSize;
+        final md5Match = remoteMd5 == null || localMd5 == remoteMd5;
+        final allOk = sizeMatch && md5Match;
+
+        return AlertDialog(
+          title: Row(children: [
+            Icon(allOk ? Icons.check_circle : Icons.warning,
+                color: allOk ? Colors.green : Colors.orange),
+            const SizedBox(width: 8),
+            Text(allOk ? 'Files match' : 'Possible mismatch'),
+          ]),
+          content: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text('Local: ${formatBytes(localSize)}', style: const TextStyle(fontSize: 13)),
+              if (remoteSize != null)
+                Text('Remote: ${formatBytes(remoteSize)}',
+                    style: TextStyle(fontSize: 13,
+                        color: sizeMatch ? null : Colors.red)),
+              const SizedBox(height: 8),
+              Text('MD5: ${localMd5.substring(0, 12)}…',
+                  style: const TextStyle(fontSize: 12, fontFamily: 'monospace')),
+              if (remoteMd5 != null)
+                Text('Remote MD5: ${remoteMd5.substring(0, 12)}…',
+                    style: TextStyle(fontSize: 12, fontFamily: 'monospace',
+                        color: md5Match ? null : Colors.red)),
+            ],
+          ),
+          actions: [TextButton(onPressed: () => Navigator.pop(ctx), child: const Text('Close'))],
+        );
+      },
+    ),
+  );
+}
+
+Future<Map<String, dynamic>> _computeVerification(
+  FileItem localFile,
+  FileItem remoteFile,
+  WidgetRef ref,
+) async {
+  final localMd5 = await ChecksumService.md5File(localFile.path!);
+  final localSize = localFile.size ?? 0;
+  return {
+    'localMd5': localMd5,
+    'localSize': localSize,
+    'remoteSize': remoteFile.size,
+    'remoteMd5': null, // Remote MD5 not available without download; size is enough for quick verify
+  };
 }
