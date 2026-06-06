@@ -123,7 +123,11 @@ class PanelNotifier extends ChangeNotifier {
     if (_files == null) return null;
     if (_filterQuery.isEmpty) return _files;
     final q = _filterQuery.toLowerCase();
-    return _files!.where((f) => f.name.toLowerCase().contains(q)).toList();
+    // ".." always stays visible even when a filter is active
+    return [
+      if (_files!.isNotEmpty && _files!.first.name == '..') _files!.first,
+      ..._files!.where((f) => f.name != '..' && f.name.toLowerCase().contains(q)),
+    ];
   }
 
   /// Set a client-side filter query. Filters without re-fetching from server.
@@ -367,6 +371,12 @@ class PanelNotifier extends ChangeNotifier {
       final idx = _files!.indexOf(item);
       if (idx != -1) _cursorIndex = idx;
     }
+    // ".." cannot be selection-marked — clicking it just moves cursor
+    if (item.name == '..') {
+      _lastSelected = null;
+      notifyListeners();
+      return;
+    }
     if (shiftKey && _lastSelected != null && _files != null) {
       final startIdx = _files!.indexOf(_lastSelected!);
       final endIdx = _files!.indexOf(item);
@@ -374,7 +384,7 @@ class PanelNotifier extends ChangeNotifier {
         final start = startIdx < endIdx ? startIdx : endIdx;
         final end = startIdx < endIdx ? endIdx : startIdx;
         for (var i = start; i <= end; i++) {
-          _selection.add(_files![i]);
+          if (_files![i].name != '..') _selection.add(_files![i]);
         }
       }
     } else if (ctrlKey) {
@@ -539,17 +549,23 @@ class PanelNotifier extends ChangeNotifier {
   }
 
   /// Jump cursor to the first file whose name starts with [char] (case-insensitive).
-  /// If cursor is already on a match, finds the NEXT match (cycles).
+  /// Searches within the currently displayed (filtered) list and cycles.
   void quickJumpToChar(String char) {
-    if (_files == null || _files!.isEmpty) return;
+    final displayed = filteredFiles;
+    if (displayed == null || displayed.isEmpty) return;
     final q = char.toLowerCase();
-    final start = _cursorIndex >= 0 ? _cursorIndex : 0;
-    // Search from item after cursor, wrapping around
-    for (int i = 1; i <= _files!.length; i++) {
-      final idx = (start + i) % _files!.length;
-      final f = _files![idx];
+    final start = _cursorIndex.clamp(0, displayed.length - 1);
+    for (int i = 1; i <= displayed.length; i++) {
+      final idx = (start + i) % displayed.length;
+      final f = displayed[idx];
       if (f.name != '..' && f.name.toLowerCase().startsWith(q)) {
-        _cursorIndex = idx;
+        // Map displayed index back to _files index for _cursorIndex
+        if (_files != null) {
+          final rawIdx = _files!.indexOf(f);
+          if (rawIdx != -1) _cursorIndex = rawIdx;
+        } else {
+          _cursorIndex = idx;
+        }
         _itemToScrollTo = f;
         notifyListeners();
         return;
@@ -1298,8 +1314,18 @@ class PanelNotifier extends ChangeNotifier {
         return FileItem(name: fullName, isFolder: false, size: map['size'] as int?, uuid: map['uuid'], updatedAt: fileDate, metadata: meta.isNotEmpty ? meta : null);
       }).toList() ?? [];
 
+      // Prepend ".." for cloud paths that aren't root
+      final allItems = [...folders, ...files];
+      if (_remotePath != '/' && _remotePath.isNotEmpty) {
+        final parentRemote = p.posix.dirname(_remotePath);
+        allItems.insert(0, FileItem(
+          name: '..',
+          path: parentRemote.isEmpty ? '/' : parentRemote,
+          isFolder: true,
+        ));
+      }
       final prev = cursorItem;
-      _files = [...folders, ...files];
+      _files = allItems;
       _sortFiles();
       _resetCursor(preserveItem: prev);
       _ref.read(errorProvider).clearErrors();

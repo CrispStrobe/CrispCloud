@@ -15,6 +15,7 @@ import '../services/panel_view_mode_service.dart' show PanelViewMode;
 import '../services/action_history_service.dart';
 import '../services/panel_swap_service.dart';
 import '../widgets/command_palette.dart';
+import '../widgets/file_toolbar.dart' show showPanelFilterDialog;
 import 'screen_dialogs.dart';
 
 /// Handles all keyboard events for the file browser screen.
@@ -86,6 +87,12 @@ KeyEventResult handleKeyEvent(
   }
   if (isCtrl && event.logicalKey == LogicalKeyboardKey.pageUp) {
     panel.previousTab();
+    return KeyEventResult.handled;
+  }
+
+  // Ctrl+F - Filter files
+  if (isCtrl && !isShift && event.logicalKey == LogicalKeyboardKey.keyF) {
+    showPanelFilterDialog(context, panel);
     return KeyEventResult.handled;
   }
 

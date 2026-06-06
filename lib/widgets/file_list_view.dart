@@ -343,6 +343,9 @@ class FileListTile extends ConsumerWidget {
       ),
     );
 
+    // ".." cannot be dragged
+    if (file.name == '..') return tile;
+
     // Wrap with LongPressDraggable for inter-panel drag
     // If this file is selected and there are multiple selections, drag all selected files
     final dragFiles = isSelected && selectedFiles.length > 1
@@ -455,9 +458,11 @@ class CompactFileTile extends ConsumerWidget {
     );
     final dimStyle = TextStyle(fontSize: 11, color: theme.colorScheme.onSurface.withOpacity(0.55), height: 1.0);
 
-    final sizeStr = (!file.isFolder && file.displaySize != null)
-        ? formatBytes(file.displaySize!)
-        : '';
+    final sizeStr = file.name == '..'
+        ? ''
+        : file.isFolder
+            ? '<DIR>'
+            : (file.displaySize != null ? formatBytes(file.displaySize!) : '');
     final dateStr = file.updatedAt != null ? formatDate(file.updatedAt!) : '';
 
     return GestureDetector(

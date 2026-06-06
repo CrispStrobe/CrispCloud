@@ -281,39 +281,8 @@ class FileToolbar extends ConsumerWidget {
     }
   }
 
-  void _showFilterBar(BuildContext context, PanelNotifier panel) {
-    final controller = TextEditingController(text: panel.filterQuery);
-    showDialog(
-      context: context,
-      builder: (context) => AlertDialog(
-        title: const Text('Filter Files'),
-        content: TextField(
-          controller: controller,
-          decoration: const InputDecoration(
-            labelText: 'Type to filter...',
-            border: OutlineInputBorder(),
-            prefixIcon: Icon(Icons.filter_list),
-          ),
-          autofocus: true,
-          onChanged: (value) => panel.setFilter(value),
-          onSubmitted: (_) => Navigator.pop(context),
-        ),
-        actions: [
-          TextButton(
-            onPressed: () {
-              panel.clearFilter();
-              Navigator.pop(context);
-            },
-            child: const Text('Clear'),
-          ),
-          ElevatedButton(
-            onPressed: () => Navigator.pop(context),
-            child: const Text('Done'),
-          ),
-        ],
-      ),
-    );
-  }
+  void _showFilterBar(BuildContext context, PanelNotifier panel) =>
+      showPanelFilterDialog(context, panel);
 
   void _showCreateFolderDialog(BuildContext context, PanelNotifier panel) {
     final controller = TextEditingController();
@@ -351,4 +320,39 @@ class FileToolbar extends ConsumerWidget {
       ),
     );
   }
+}
+
+/// Show the panel filter dialog — also callable from keyboard shortcuts (Ctrl+F).
+void showPanelFilterDialog(BuildContext context, PanelNotifier panel) {
+  final controller = TextEditingController(text: panel.filterQuery);
+  showDialog(
+    context: context,
+    builder: (context) => AlertDialog(
+      title: const Text('Filter Files'),
+      content: TextField(
+        controller: controller,
+        decoration: const InputDecoration(
+          labelText: 'Type to filter...',
+          border: OutlineInputBorder(),
+          prefixIcon: Icon(Icons.filter_list),
+        ),
+        autofocus: true,
+        onChanged: (value) => panel.setFilter(value),
+        onSubmitted: (_) => Navigator.pop(context),
+      ),
+      actions: [
+        TextButton(
+          onPressed: () {
+            panel.clearFilter();
+            Navigator.pop(context);
+          },
+          child: const Text('Clear'),
+        ),
+        ElevatedButton(
+          onPressed: () => Navigator.pop(context),
+          child: const Text('Done'),
+        ),
+      ],
+    ),
+  );
 }
