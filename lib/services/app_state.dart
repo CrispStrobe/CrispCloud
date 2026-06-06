@@ -445,9 +445,13 @@ class AppState extends ChangeNotifier {
     try {
         if (config is FilenConfigService) {
           _configPath = config.configPath;
-        } else if (config is FTPConfigService) _configPath = config.configPath;
-        else if (config is SFTPConfigService) _configPath = config.configPath;
-        else if (config is ConfigService) _configPath = config.configPath;
+        } else if (config is FTPConfigService) {
+          _configPath = config.configPath;
+        } else if (config is SFTPConfigService) {
+          _configPath = config.configPath;
+        } else if (config is ConfigService) {
+          _configPath = config.configPath;
+        }
         // Fallback: try dynamic access if types didn't match due to import issues
         else {
             try {

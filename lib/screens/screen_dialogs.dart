@@ -88,8 +88,9 @@ void showKeyboardShortcutsHelp(BuildContext context) {
             // F-keys (DC orthodox FM)
             _shortcutRow('F1', 'This help dialog'),
             _shortcutRow('F2', 'Rename (in-place)'),
-            _shortcutRow('F3', 'View file'),
-            _shortcutRow('F4', 'Edit file'),
+            _shortcutRow('F3', 'View file (full-screen)'),
+            _shortcutRow('F4', 'Edit file (built-in)'),
+            _shortcutRow('Shift+F4', 'Open with system editor'),
             _shortcutRow('F5 / Ctrl+C', 'Copy to…'),
             _shortcutRow('Ctrl+R', 'Refresh'),
             _shortcutRow('F6 / Ctrl+X', 'Move to…'),

@@ -13,8 +13,10 @@ import '../providers/panel_source_provider.dart' show panelSourceProvider;
 import '../providers/toolbar_provider.dart' show panelViewModeProvider;
 import '../services/panel_view_mode_service.dart' show PanelViewMode;
 import '../services/panel_swap_service.dart';
+import 'package:flutter/foundation.dart' show kIsWeb;
+
 import '../widgets/command_palette.dart';
-import '../widgets/file_context_menu.dart' show showPropertiesDialog;
+import '../widgets/file_context_menu.dart' show openWithSystemEditor, showPropertiesDialog;
 import '../widgets/file_toolbar.dart' show showPanelFilterDialog;
 import 'screen_dialogs.dart';
 
@@ -268,8 +270,19 @@ KeyEventResult handleKeyEvent(
   }
 
   // F4 - Edit file in internal editor
+  // Shift+F4 - Edit file in system editor
   if (event.logicalKey == LogicalKeyboardKey.f4) {
-    editSelectedFile(context, ref);
+    if (isShift) {
+      // Open with system editor
+      final activePanel = ref.read(activePanelProvider);
+      final pnl = ref.read(panelProvider(activePanel));
+      final target = pnl.selection.isEmpty ? pnl.cursorItem : pnl.selection.first;
+      if (target?.path != null && !kIsWeb) {
+        openWithSystemEditor(context, target!.path!);
+      }
+    } else {
+      editSelectedFile(context, ref);
+    }
     return KeyEventResult.handled;
   }
 
