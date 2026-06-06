@@ -2,6 +2,7 @@
 //
 // Main scaffold and layout for the two-panel file browser.
 // Keyboard handling, dialogs, and about dialog are in separate files.
+// ignore_for_file: use_build_context_synchronously
 
 import 'package:flutter/foundation.dart' show TargetPlatform, defaultTargetPlatform, kIsWeb;
 import 'package:flutter/material.dart';
@@ -894,6 +895,7 @@ class _FileBrowserScreenState extends ConsumerState<FileBrowserScreen> {
                 Navigator.pop(context);
                 final lockService = ref.read(appLockServiceProvider);
                 final enabled = await lockService.isEnabled();
+                if (!mounted) return;
                 if (enabled) {
                   // Show options: change or disable
                   final action = await showDialog<String>(
@@ -919,21 +921,19 @@ class _FileBrowserScreenState extends ConsumerState<FileBrowserScreen> {
                   );
                   if (action == 'disable') {
                     await lockService.disable();
-                    if (mounted) {
-                      ScaffoldMessenger.of(context).showSnackBar(
-                        const SnackBar(content: Text('App lock disabled')),
-                      );
-                    }
+                    if (!mounted) return;
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      const SnackBar(content: Text('App lock disabled')),
+                    );
                   } else if (action == 'change') {
-                    if (mounted) {
-                      showDialog(
-                        context: context,
-                        builder: (_) => AppLockSetupDialog(
-                          lockService: lockService,
-                          isChanging: true,
-                        ),
-                      );
-                    }
+                    if (!mounted) return;
+                    showDialog(
+                      context: context,
+                      builder: (_) => AppLockSetupDialog(
+                        lockService: lockService,
+                        isChanging: true,
+                      ),
+                    );
                   }
                 } else {
                   showDialog(

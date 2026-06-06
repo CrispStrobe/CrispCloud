@@ -52,6 +52,7 @@ class _AuditLogDialogState extends ConsumerState<_AuditLogDialog> {
     final json = await audit.exportAsJson();
     if (!mounted) return;
     await Clipboard.setData(ClipboardData(text: json));
+    if (!mounted) return;
     ScaffoldMessenger.of(context).showSnackBar(
       const SnackBar(content: Text('Audit log copied to clipboard as JSON')),
     );

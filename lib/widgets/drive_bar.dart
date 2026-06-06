@@ -11,7 +11,6 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../models/panel_side.dart';
-import '../providers/bookmarks_provider.dart' show bookmarksProvider;
 import '../providers/providers.dart';
 
 /// A volume/drive entry shown in the drive bar.
@@ -79,7 +78,9 @@ Future<List<_DriveEntry>> _linuxMounts() async {
         }
         if (mountPoint == '/' || mountPoint == home) continue;
         if (mountPoint.startsWith('/dev') || mountPoint.startsWith('/proc') ||
-            mountPoint.startsWith('/sys') || mountPoint.startsWith('/run')) continue;
+            mountPoint.startsWith('/sys') || mountPoint.startsWith('/run')) {
+          continue;
+        }
         final label = mountPoint.split('/').last;
         entries.add(_DriveEntry(path: mountPoint, label: label.isEmpty ? mountPoint : label, icon: Icons.usb));
       }

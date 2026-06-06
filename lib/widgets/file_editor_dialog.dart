@@ -414,7 +414,8 @@ class _FileEditorPageState extends ConsumerState<_FileEditorPage> {
             icon: const Icon(Icons.close),
             onPressed: () async {
               if (await _confirmDiscard()) {
-                if (mounted) Navigator.of(context).pop();
+                if (!mounted) return;
+                Navigator.of(context).pop();
               }
             },
           ),
