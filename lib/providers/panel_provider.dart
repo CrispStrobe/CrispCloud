@@ -81,6 +81,16 @@ class PanelNotifier extends ChangeNotifier {
     _restoreTabs();
     if (side == PanelSide.local) {
       _initializeLocalPath();
+    } else {
+      // Refresh remote panel whenever the auth connection state turns on
+      _ref.listen<AuthNotifier>(authProvider, (prev, next) {
+        if (!(prev?.isConnected ?? false) && next.isConnected) {
+          refresh();
+        } else if ((prev?.isConnected ?? false) && !next.isConnected) {
+          _files = [];
+          notifyListeners();
+        }
+      });
     }
   }
 
@@ -820,6 +830,9 @@ class PanelNotifier extends ChangeNotifier {
             if (tab != null) _remotePath = tab.path;
           }
           notifyListeners();
+          if (side == PanelSide.remote && _ref.read(authProvider).isConnected) {
+            refresh();
+          }
           return;
         }
       }
@@ -827,6 +840,9 @@ class PanelNotifier extends ChangeNotifier {
       _log.warn('Tab restore failed', e);
     }
     _initFirstTab();
+    if (side == PanelSide.remote && _ref.read(authProvider).isConnected) {
+      refresh();
+    }
   }
 
   /// Persist current tabs to SharedPreferences.

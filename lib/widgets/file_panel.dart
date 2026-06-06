@@ -119,10 +119,10 @@ class _FilePanelState extends ConsumerState<FilePanel> {
     }
 
     // Wrap in DragTarget for inter-panel file dragging
-    Widget content = _buildPanelContent(context, panel, files, currentPath, selection);
+    final panelContent = _buildPanelContent(context, panel, files, currentPath, selection);
 
     // Flutter DragTarget for cross-panel drops
-    content = DragTarget<PanelDragData>(
+    Widget content = DragTarget<PanelDragData>(
       onWillAcceptWithDetails: (details) {
         // Accept drops from the OTHER panel only
         return details.data.sourceSide != widget.side;
@@ -138,7 +138,7 @@ class _FilePanelState extends ConsumerState<FilePanel> {
       },
       builder: (context, candidateData, rejectedData) {
         final isDropTarget = candidateData.isNotEmpty;
-        if (!isDropTarget) return content;
+        if (!isDropTarget) return panelContent;
 
         // Determine operation hint
         final sourceIsLocal = candidateData.first?.sourceSide == PanelSide.local;
@@ -148,7 +148,7 @@ class _FilePanelState extends ConsumerState<FilePanel> {
 
         return Stack(
           children: [
-            content,
+            panelContent,
             Positioned.fill(
               child: Container(
                 decoration: BoxDecoration(
