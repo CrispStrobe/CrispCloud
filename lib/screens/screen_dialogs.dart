@@ -14,6 +14,7 @@ import '../widgets/azure_connection_dialog.dart';
 import '../widgets/b2_connection_dialog.dart';
 import '../widgets/connection_dialog.dart';
 import '../widgets/file_editor_dialog.dart' show showFileEditorDialog;
+import '../widgets/preview_pane.dart' show PreviewPane;
 
 void showConnectionDialogScreen(BuildContext context) {
   showDialog(
@@ -256,15 +257,28 @@ void showRenameDialog(BuildContext context, WidgetRef ref) {
   );
 }
 
-/// F3: Open cursor item (or selection) in the internal viewer / preview pane.
+/// F3: Open cursor item in a full-screen internal viewer dialog.
 void viewSelectedFile(BuildContext context, WidgetRef ref) {
   final activePanel = ref.read(activePanelProvider);
   final panel = ref.read(panelProvider(activePanel));
   final target = panel.selection.isEmpty ? panel.cursorItem : panel.selection.first;
   if (target == null || target.isFolder) return;
-  // Toggle preview with this file focused, or show full-screen preview dialog
-  ref.read(showPreviewProvider.notifier).state = true;
-  if (panel.selection.isEmpty) panel.toggleSelection(target);
+  // Show as full-screen dialog (DC-style F3 viewer)
+  showDialog(
+    context: context,
+    builder: (ctx) => Dialog.fullscreen(
+      child: Scaffold(
+        appBar: AppBar(
+          title: Text(target.name),
+          leading: IconButton(
+            icon: const Icon(Icons.close),
+            onPressed: () => Navigator.pop(ctx),
+          ),
+        ),
+        body: PreviewPane(file: target, side: activePanel),
+      ),
+    ),
+  );
 }
 
 /// F4: Open cursor item in the file editor.
