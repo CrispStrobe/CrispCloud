@@ -432,6 +432,7 @@ class _CompactColumnHeader extends ConsumerWidget {
     final colWidths = ref.watch(columnWidthsProvider(side));
     final sizeW = colWidths['size'] ?? 62.0;
     final dateW = colWidths['date'] ?? 78.0;
+    final extW = colWidths['ext'] ?? 40.0;
 
     Widget colLabel(String label, SortBy by, {double? width}) {
       final isPrimary = panel.sortBy == by;
@@ -506,6 +507,8 @@ class _CompactColumnHeader extends ConsumerWidget {
           colLabel('Size', SortBy.size, width: sizeW),
           dragHandle('date'),
           colLabel('Date', SortBy.date, width: dateW),
+          dragHandle('ext'),
+          colLabel('Ext', SortBy.extension, width: extW),
           const SizedBox(width: 4),
         ],
       ),

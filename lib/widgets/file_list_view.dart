@@ -470,6 +470,7 @@ class CompactFileTile extends ConsumerWidget {
     final colWidths = ref.watch(columnWidthsProvider(side));
     final sizeColW = colWidths['size'] ?? 62.0;
     final dateColW = colWidths['date'] ?? 78.0;
+    final extColW = colWidths['ext'] ?? 40.0;
 
     // Selected = fill; cursor = left border (can combine both)
     final bgColor = isSelected
@@ -491,6 +492,7 @@ class CompactFileTile extends ConsumerWidget {
             ? (file.calculatedSize != null ? formatBytes(file.calculatedSize!) : '<DIR>')
             : (file.displaySize != null ? formatBytes(file.displaySize!) : '');
     final dateStr = file.updatedAt != null ? formatDate(file.updatedAt!) : '';
+    final extStr = file.isFolder || file.name == '..' ? '' : file.extension.toUpperCase();
 
     return GestureDetector(
       onTap: () {
@@ -544,6 +546,12 @@ class CompactFileTile extends ConsumerWidget {
                 child: Text(dateStr, style: dimStyle, textAlign: TextAlign.right, maxLines: 1),
               ),
             ],
+            // Extension column
+            SizedBox(
+              width: extColW,
+              child: Text(extStr, style: dimStyle, textAlign: TextAlign.right,
+                  maxLines: 1, overflow: TextOverflow.clip),
+            ),
             const SizedBox(width: 4),
           ],
         ),

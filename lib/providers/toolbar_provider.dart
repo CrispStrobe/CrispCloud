@@ -120,7 +120,8 @@ final columnWidthsProvider =
 class _ColumnWidthsNotifier extends StateNotifier<Map<String, double>> {
   final String _sideKey;
 
-  _ColumnWidthsNotifier(this._sideKey) : super({'size': 62.0, 'date': 78.0}) {
+  _ColumnWidthsNotifier(this._sideKey)
+      : super({'size': 62.0, 'date': 78.0, 'ext': 40.0}) {
     _load();
   }
 
@@ -129,7 +130,8 @@ class _ColumnWidthsNotifier extends StateNotifier<Map<String, double>> {
       final prefs = await SharedPreferences.getInstance();
       final size = prefs.getDouble('col_${_sideKey}_size') ?? 62.0;
       final date = prefs.getDouble('col_${_sideKey}_date') ?? 78.0;
-      state = {'size': size, 'date': date};
+      final ext = prefs.getDouble('col_${_sideKey}_ext') ?? 40.0;
+      state = {'size': size, 'date': date, 'ext': ext};
     } catch (_) {}
   }
 
