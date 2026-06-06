@@ -125,25 +125,23 @@ CrispCloud becomes the **open-source Cyberduck/Transmit/Commander One killer**: 
 | Theme system | ✅ Done | 6 themes |
 | `..` parent-dir entry in file list | ✅ Done | cloud paths |
 | `<DIR>` label for folders in size column | ✅ Done | |
-| Secondary sort (infrastructure) | ⚠️ Partial | not exposed in UI |
-| Search (find files) | ⚠️ Partial | dialog only, no persistent panel |
-| Properties dialog | ⚠️ Partial | basic — missing permissions, creation date, owner |
+| Secondary sort in UI | ✅ Done | right-click/long-press column header |
+| Search results panel (persistent) | ✅ Done | search replaces panel listing + header bar |
+| Properties dialog | ✅ Done | permissions, symlink target, creation date, on-demand MD5 |
 | Hardlinks | ⚠️ Partial | local only, not in UI clearly |
-| **History navigation (Alt+Left/Right)** | ❌ Missing | per-panel back/forward stack |
-| **In-place rename (F2 inline)** | ❌ Missing | currently modal dialog |
-| **Panel sync (Ctrl+=)** | ❌ Missing | make both panels same dir |
-| **Copy file list to clipboard** | ❌ Missing | copy names/paths as text |
-| **Type-ahead quick search bar** | ❌ Missing | incremental find without dialog |
+| History navigation (Alt+Left/Right) | ✅ Done | per-panel back/forward, breadcrumb buttons |
+| In-place rename (F2 inline) | ✅ Done | _InlineRenameField, Enter commits, Esc cancels |
+| Panel sync (Ctrl+=) | ✅ Done | makes opposite panel navigate to active path |
+| Copy file list to clipboard | ✅ Done | Ctrl+Shift+C/N + context menu |
+| Type-ahead quick search bar | ✅ Done | type in file list, overlay bar at bottom |
+| Selection count in tab title | ✅ Done | [N] prefix in active tab |
+| Tab rename | ✅ Done | right-click tab → Rename Tab |
+| Free space indicator | ✅ Done | status bar shows "Free: X GB" for local panel |
+| Checksum file create/verify (.md5/.sha256) | ✅ Done | context menu + ChecksumService |
 | **Drive/volume bar** | ❌ Missing | quick volume/drive buttons |
 | **Column resizing** | ❌ Missing | drag column widths |
 | **Custom columns** | ❌ Missing | user-configurable column set |
-| **Checksum file create/verify** (.md5/.sha1/.sfv) | ❌ Missing | only computes, no file I/O |
 | **File associations** | ❌ Missing | open with specific app per ext |
-| **Symlink target display** | ❌ Missing | show → target in properties |
-| **Selection count in tab title** | ❌ Missing | |
-| **Free space indicator** in status bar | ❌ Missing | |
-| **Secondary sort in UI** | ❌ Missing | UI for the existing infrastructure |
-| **Persistent search results panel** | ❌ Missing | search results replace panel listing |
 | **Verify checksums after transfer** | ❌ Missing | |
 | **File attributes editor** (Win: hidden/system/archive) | ❌ Missing | |
 | **Copy file names only** (without path) to clipboard | ❌ Missing | |

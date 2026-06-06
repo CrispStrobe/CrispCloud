@@ -977,17 +977,75 @@ void confirmDelete(BuildContext context, WidgetRef ref, PanelSide side, List<Fil
 void _showPropertiesDialog(BuildContext context, FileItem file) {
   showDialog(
     context: context,
-    builder: (context) => AlertDialog(
+    builder: (context) => _PropertiesDialog(file: file),
+  );
+}
+
+class _PropertiesDialog extends StatefulWidget {
+  final FileItem file;
+  const _PropertiesDialog({required this.file});
+
+  @override
+  State<_PropertiesDialog> createState() => _PropertiesDialogState();
+}
+
+class _PropertiesDialogState extends State<_PropertiesDialog> {
+  FileStat? _stat;
+  String? _md5;
+  bool _computingMd5 = false;
+
+  @override
+  void initState() {
+    super.initState();
+    _loadStat();
+  }
+
+  Future<void> _loadStat() async {
+    if (widget.file.path != null && !kIsWeb) {
+      try {
+        final stat = await FileStat.stat(widget.file.path!);
+        if (mounted) setState(() => _stat = stat);
+      } catch (_) {}
+    }
+  }
+
+  String _modeString(int mode) {
+    final bits = mode & 0x1FF;
+    final chars = <String>[];
+    for (final shift in [6, 3, 0]) {
+      final seg = (bits >> shift) & 7;
+      chars.add((seg & 4) != 0 ? 'r' : '-');
+      chars.add((seg & 2) != 0 ? 'w' : '-');
+      chars.add((seg & 1) != 0 ? 'x' : '-');
+    }
+    return chars.join();
+  }
+
+  Future<void> _computeMd5() async {
+    if (widget.file.path == null) return;
+    setState(() => _computingMd5 = true);
+    try {
+      final hash = await ChecksumService.md5File(widget.file.path!);
+      if (mounted) setState(() { _md5 = hash; _computingMd5 = false; });
+    } catch (e) {
+      if (mounted) setState(() { _md5 = 'Error: $e'; _computingMd5 = false; });
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final file = widget.file;
+    final isLocal = file.path != null && !kIsWeb;
+    final mimeType = file.isFolder ? 'Directory'
+        : file.extension.isNotEmpty ? 'File (${file.extension.toUpperCase()})' : 'File';
+
+    return AlertDialog(
       title: Row(
         children: [
-          Icon(file.isFolder ? Icons.folder : Icons.insert_drive_file),
+          Icon(file.isSymlink == true ? Icons.link
+              : file.isFolder ? Icons.folder : Icons.insert_drive_file),
           const SizedBox(width: 8),
-          Expanded(
-            child: Text(
-              file.name,
-              overflow: TextOverflow.ellipsis,
-            ),
-          ),
+          Expanded(child: Text(file.name, overflow: TextOverflow.ellipsis)),
         ],
       ),
       content: SingleChildScrollView(
@@ -995,36 +1053,49 @@ void _showPropertiesDialog(BuildContext context, FileItem file) {
           mainAxisSize: MainAxisSize.min,
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            _propertyRow(context, 'Type', file.isFolder ? 'Folder' : 'File'),
+            _propertyRow(context, 'Type', mimeType),
+            if (file.isSymlink == true && file.symlinkTarget != null)
+              _propertyRow(context, '→ Target', file.symlinkTarget!, mono: true),
             if (file.size != null)
-              _propertyRow(context, 'Size', formatBytes(file.size!)),
+              _propertyRow(context, 'Size', '${formatBytes(file.size!)} (${file.size} bytes)'),
             if (file.path != null)
               _propertyRow(context, 'Path', file.path!, mono: true),
             if (file.uuid != null)
               _propertyRow(context, 'UUID', file.uuid!, mono: true),
             if (file.updatedAt != null)
-              _propertyRow(
-                context,
-                'Modified',
-                formatDateFull(file.updatedAt!),
+              _propertyRow(context, 'Modified', formatDateFull(file.updatedAt!)),
+            if (_stat != null) ...[
+              _propertyRow(context, 'Created', formatDateFull(_stat!.changed)),
+              _propertyRow(context, 'Accessed', formatDateFull(_stat!.accessed)),
+              if (!kIsWeb && !Platform.isWindows)
+                _propertyRow(context, 'Permissions', _modeString(_stat!.mode), mono: true),
+            ],
+            if (file.metadata != null)
+              ...file.metadata!.entries.map(
+                (e) => _propertyRow(context, e.key, '${e.value}', mono: true),
               ),
-            if (!file.isFolder && file.name.contains('.'))
-              _propertyRow(
-                context,
-                'Extension',
-                file.name.split('.').last.toUpperCase(),
-              ),
+            // MD5 on demand (local files only)
+            if (isLocal && !file.isFolder) ...[
+              const Divider(),
+              if (_md5 != null)
+                _propertyRow(context, 'MD5', _md5!, mono: true)
+              else
+                TextButton.icon(
+                  onPressed: _computingMd5 ? null : _computeMd5,
+                  icon: _computingMd5
+                      ? const SizedBox(width: 16, height: 16, child: CircularProgressIndicator(strokeWidth: 2))
+                      : const Icon(Icons.fingerprint, size: 16),
+                  label: const Text('Compute MD5'),
+                ),
+            ],
           ],
         ),
       ),
       actions: [
-        TextButton(
-          onPressed: () => Navigator.pop(context),
-          child: const Text('Close'),
-        ),
+        TextButton(onPressed: () => Navigator.pop(context), child: const Text('Close')),
       ],
-    ),
-  );
+    );
+  }
 }
 
 Widget _propertyRow(BuildContext context, String label, String value, {bool mono = false}) {

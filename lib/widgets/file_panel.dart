@@ -301,6 +301,31 @@ class _FilePanelState extends ConsumerState<FilePanel> {
                       ),
                     ],
                   ),
+          // Search results header: shows when panel is displaying search results
+          if (panel.showingSearchResults)
+            Container(
+              color: Theme.of(context).colorScheme.secondaryContainer,
+              padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
+              child: Row(
+                children: [
+                  Icon(Icons.search, size: 14,
+                      color: Theme.of(context).colorScheme.onSecondaryContainer),
+                  const SizedBox(width: 6),
+                  Expanded(
+                    child: Text(
+                      'Search results — ${files?.length ?? 0} file(s)',
+                      style: TextStyle(fontSize: 12,
+                          color: Theme.of(context).colorScheme.onSecondaryContainer),
+                    ),
+                  ),
+                  GestureDetector(
+                    onTap: () => panel.clearSearchResults(),
+                    child: Icon(Icons.close, size: 14,
+                        color: Theme.of(context).colorScheme.onSecondaryContainer),
+                  ),
+                ],
+              ),
+            ),
           // Selection bar: off by default (DC mode — info is in status bar).
           // Enable in settings for touch/tablet mode.
           if (ref.watch(showSelectionBarProvider) && selection.isNotEmpty)
