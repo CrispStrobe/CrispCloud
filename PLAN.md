@@ -138,14 +138,14 @@ CrispCloud becomes the **open-source Cyberduck/Transmit/Commander One killer**: 
 | Tab rename | ✅ Done | right-click tab → Rename Tab |
 | Free space indicator | ✅ Done | status bar shows "Free: X GB" for local panel |
 | Checksum file create/verify (.md5/.sha256) | ✅ Done | context menu + ChecksumService |
-| **Drive/volume bar** | ❌ Missing | quick volume/drive buttons |
-| **Column resizing** | ❌ Missing | drag column widths |
+| Drive/volume bar | ✅ Done | drive_bar.dart: /Volumes (mac), /proc/mounts (Linux), drives (Win) |
+| Column resizing | ✅ Done | drag handles between Size/Date column headers (columnWidthsProvider) |
 | **Custom columns** | ❌ Missing | user-configurable column set |
 | **File associations** | ❌ Missing | open with specific app per ext |
 | **Verify checksums after transfer** | ❌ Missing | |
 | **File attributes editor** (Win: hidden/system/archive) | ❌ Missing | |
-| **Copy file names only** (without path) to clipboard | ❌ Missing | |
-| **Rename in tab bar** | ❌ Missing | right-click tab to rename |
+| Copy file names/paths to clipboard | ✅ Done | Ctrl+Shift+C/N + context menu |
+| Tab rename | ✅ Done | right-click tab → Rename Tab |
 
 ### DC Parity Roadmap (ordered by impact)
 

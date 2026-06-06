@@ -320,7 +320,123 @@ void main() {
       panel.toggleTabPin(tabId);
       expect(panel.activeTab!.isPinned, isTrue);
     });
+
+    test('renameTab sets custom label', () async {
+      final panel = container.read(panelProvider(PanelSide.local));
+      await Future.delayed(Duration.zero);
+      final tabId = panel.activeTabId;
+      panel.renameTab(tabId, 'MyCustomLabel');
+      expect(panel.activeTab!.label, 'MyCustomLabel');
+    });
   });
+
+  // --- DC Parity: Navigation History ---
+  group('PanelNotifier navigation history', () {
+    test('canNavigateBack is false initially', () async {
+      final panel = container.read(panelProvider(PanelSide.local));
+      await Future.delayed(const Duration(milliseconds: 100));
+      // After initial load, history has 1 entry — can't go back
+      expect(panel.canNavigateBack, isFalse);
+    });
+
+    test('canNavigateForward is false initially', () async {
+      final panel = container.read(panelProvider(PanelSide.local));
+      await Future.delayed(const Duration(milliseconds: 100));
+      expect(panel.canNavigateForward, isFalse);
+    });
+
+    test('navigateBack does not throw when no history', () async {
+      final panel = container.read(panelProvider(PanelSide.local));
+      await Future.delayed(const Duration(milliseconds: 100));
+      await panel.navigateBack(); // Should silently do nothing
+    });
+
+    test('navigateForward does not throw when no forward history', () async {
+      final panel = container.read(panelProvider(PanelSide.local));
+      await Future.delayed(const Duration(milliseconds: 100));
+      await panel.navigateForward();
+    });
+  });
+
+  // --- DC Parity: In-place Rename ---
+  group('PanelNotifier in-place rename', () {
+    test('startRename sets renamingItem', () {
+      final panel = container.read(panelProvider(PanelSide.local));
+      final item = FileItem(name: 'test.txt', isFolder: false);
+      panel.startRename(item);
+      expect(panel.renamingItem, item);
+    });
+
+    test('cancelRename clears renamingItem', () {
+      final panel = container.read(panelProvider(PanelSide.local));
+      final item = FileItem(name: 'test.txt', isFolder: false);
+      panel.startRename(item);
+      panel.cancelRename();
+      expect(panel.renamingItem, isNull);
+    });
+
+    test('startRename ignores .. entry', () {
+      final panel = container.read(panelProvider(PanelSide.local));
+      final dotDot = FileItem(name: '..', isFolder: true);
+      panel.startRename(dotDot);
+      expect(panel.renamingItem, isNull);
+    });
+
+    test('commitRename with empty name cancels silently', () async {
+      final panel = container.read(panelProvider(PanelSide.local));
+      final item = FileItem(name: 'test.txt', isFolder: false);
+      panel.startRename(item);
+      await panel.commitRename(''); // Should clear without rename
+      expect(panel.renamingItem, isNull);
+    });
+  });
+
+  // --- DC Parity: Type-ahead Search ---
+  group('PanelNotifier type-ahead', () {
+    test('isTypeahead is false initially', () {
+      final panel = container.read(panelProvider(PanelSide.local));
+      expect(panel.isTypeahead, isFalse);
+    });
+
+    test('typeaheadAppend sets isTypeahead and filterQuery', () {
+      final panel = container.read(panelProvider(PanelSide.local));
+      panel.typeaheadAppend('a');
+      expect(panel.isTypeahead, isTrue);
+      expect(panel.filterQuery, 'a');
+    });
+
+    test('typeaheadAppend accumulates chars', () {
+      final panel = container.read(panelProvider(PanelSide.local));
+      panel.typeaheadAppend('a');
+      panel.typeaheadAppend('b');
+      panel.typeaheadAppend('c');
+      expect(panel.filterQuery, 'abc');
+    });
+
+    test('typeaheadBackspace removes last char', () {
+      final panel = container.read(panelProvider(PanelSide.local));
+      panel.typeaheadAppend('a');
+      panel.typeaheadAppend('b');
+      panel.typeaheadBackspace();
+      expect(panel.filterQuery, 'a');
+    });
+
+    test('typeaheadBackspace on empty string does nothing', () {
+      final panel = container.read(panelProvider(PanelSide.local));
+      panel.typeaheadBackspace(); // Should not throw
+      expect(panel.filterQuery, '');
+    });
+
+    test('clearTypeahead clears filter and isTypeahead', () {
+      final panel = container.read(panelProvider(PanelSide.local));
+      panel.typeaheadAppend('ab');
+      panel.clearTypeahead();
+      expect(panel.filterQuery, '');
+      expect(panel.isTypeahead, isFalse);
+    });
+  });
+
+  // --- DC Parity: Checksum Service ---
 
   // --- Transfer Provider ---
   group('TransferNotifier', () {
