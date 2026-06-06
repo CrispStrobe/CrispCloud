@@ -20,7 +20,7 @@ class FileBreadcrumbs extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final panel = ref.read(panelProvider(side));
+    final panel = ref.watch(panelProvider(side));
 
     if (!kIsWeb && !Platform.isAndroid && !Platform.isIOS && side == PanelSide.local && currentPath.contains('Containers')) {
       return Padding(
@@ -78,10 +78,41 @@ class FileBreadcrumbs extends ConsumerWidget {
       }
     }
 
+    final canBack = panel.canNavigateBack;
+    final canForward = panel.canNavigateForward;
+
     return SingleChildScrollView(
       scrollDirection: Axis.horizontal,
       child: Row(
         children: [
+          // Back button (Alt+Left)
+          InkWell(
+            onTap: canBack ? () => panel.navigateBack() : null,
+            child: Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 2, vertical: 2),
+              child: Icon(
+                Icons.arrow_back,
+                size: 16,
+                color: canBack
+                    ? Theme.of(context).colorScheme.onSurfaceVariant
+                    : Theme.of(context).colorScheme.onSurfaceVariant.withValues(alpha: 0.3),
+              ),
+            ),
+          ),
+          // Forward button (Alt+Right)
+          InkWell(
+            onTap: canForward ? () => panel.navigateForward() : null,
+            child: Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 2, vertical: 2),
+              child: Icon(
+                Icons.arrow_forward,
+                size: 16,
+                color: canForward
+                    ? Theme.of(context).colorScheme.onSurfaceVariant
+                    : Theme.of(context).colorScheme.onSurfaceVariant.withValues(alpha: 0.3),
+              ),
+            ),
+          ),
           InkWell(
             onTap: () {
               if (side == PanelSide.local) {

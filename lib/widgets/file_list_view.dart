@@ -187,14 +187,24 @@ class FileListView extends ConsumerWidget {
             p.invertSelection();
             return KeyEventResult.handled;
           }
-          // Quick jump: unmodified printable character → jump to first match
           final isCtrl = HardwareKeyboard.instance.isControlPressed ||
               HardwareKeyboard.instance.isMetaPressed;
           final isAlt = HardwareKeyboard.instance.isAltPressed;
           if (!isCtrl && !isAlt && event is KeyDownEvent) {
+            // Escape: clear type-ahead if active
+            if (event.logicalKey == LogicalKeyboardKey.escape) {
+              if (p.isTypeahead) { p.clearTypeahead(); return KeyEventResult.handled; }
+              return KeyEventResult.ignored;
+            }
+            // Backspace: remove last type-ahead char
+            if (event.logicalKey == LogicalKeyboardKey.backspace && p.isTypeahead) {
+              p.typeaheadBackspace();
+              return KeyEventResult.handled;
+            }
+            // Printable char: enter type-ahead mode (accumulates + filters)
             final char = event.character;
             if (char != null && char.isNotEmpty && char.codeUnitAt(0) >= 32) {
-              p.quickJumpToChar(char);
+              p.typeaheadAppend(char);
               return KeyEventResult.handled;
             }
           }
@@ -256,8 +266,20 @@ class FileListTile extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
+    final panel = ref.watch(panelProvider(side));
+    final isRenaming = panel.renamingItem == file;
     final colorService = ref.watch(fileTypeColorProvider);
     final fileColor = colorService.colorForFile(file);
+
+    // Inline rename mode: replace the whole tile with an editable field
+    if (isRenaming) {
+      return _InlineRenameField(
+        file: file,
+        side: side,
+        isCursor: isCursor,
+        isSelected: isSelected,
+      );
+    }
 
     // Symlink indicator
     final isLink = file.isSymlink == true;
@@ -519,6 +541,96 @@ class CompactFileTile extends ConsumerWidget {
             ],
             const SizedBox(width: 4),
           ],
+        ),
+      ),
+    );
+  }
+}
+
+/// Inline rename text field shown in-place of the filename when F2 is pressed.
+class _InlineRenameField extends ConsumerStatefulWidget {
+  final FileItem file;
+  final PanelSide side;
+  final bool isCursor;
+  final bool isSelected;
+
+  const _InlineRenameField({
+    required this.file,
+    required this.side,
+    required this.isCursor,
+    required this.isSelected,
+  });
+
+  @override
+  ConsumerState<_InlineRenameField> createState() => _InlineRenameFieldState();
+}
+
+class _InlineRenameFieldState extends ConsumerState<_InlineRenameField> {
+  late final TextEditingController _ctrl;
+  late final FocusNode _focus;
+
+  @override
+  void initState() {
+    super.initState();
+    final name = widget.file.name;
+    _ctrl = TextEditingController(text: name);
+    _focus = FocusNode();
+    // Select filename without extension (like DC)
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      _focus.requestFocus();
+      final dotIdx = name.lastIndexOf('.');
+      if (!widget.file.isFolder && dotIdx > 0) {
+        _ctrl.selection = TextSelection(baseOffset: 0, extentOffset: dotIdx);
+      } else {
+        _ctrl.selection = TextSelection(baseOffset: 0, extentOffset: name.length);
+      }
+    });
+  }
+
+  @override
+  void dispose() {
+    _ctrl.dispose();
+    _focus.dispose();
+    super.dispose();
+  }
+
+  void _commit() => ref.read(panelProvider(widget.side)).commitRename(_ctrl.text);
+  void _cancel() => ref.read(panelProvider(widget.side)).cancelRename();
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final bgColor = widget.isSelected
+        ? theme.colorScheme.primaryContainer.withValues(alpha: 0.55)
+        : theme.colorScheme.primaryContainer.withValues(alpha: 0.2);
+
+    return Container(
+      height: ref.read(panelViewModeProvider(widget.side)) == PanelViewMode.full ? 26.0 : 64.0,
+      color: bgColor,
+      alignment: Alignment.centerLeft,
+      padding: const EdgeInsets.symmetric(horizontal: 8),
+      child: KeyboardListener(
+        focusNode: FocusNode(),
+        onKeyEvent: (event) {
+          if (event is KeyDownEvent) {
+            if (event.logicalKey == LogicalKeyboardKey.escape) _cancel();
+          }
+        },
+        child: TextField(
+          controller: _ctrl,
+          focusNode: _focus,
+          autofocus: true,
+          onSubmitted: (_) => _commit(),
+          style: TextStyle(fontSize: 13, color: theme.colorScheme.onSurface),
+          decoration: InputDecoration(
+            isDense: true,
+            contentPadding: const EdgeInsets.symmetric(horizontal: 4, vertical: 4),
+            border: OutlineInputBorder(borderRadius: BorderRadius.circular(4)),
+            focusedBorder: OutlineInputBorder(
+              borderRadius: BorderRadius.circular(4),
+              borderSide: BorderSide(color: theme.colorScheme.primary, width: 2),
+            ),
+          ),
         ),
       ),
     );

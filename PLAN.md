@@ -64,6 +64,7 @@ CrispCloud becomes the **open-source Cyberduck/Transmit/Commander One killer**: 
 
 - **DoubleCommander-parity features** (2026-06-05): archive browsing, multi-key sort, flat view, colorized file lists, syntax highlighting, embedded terminal, file split/combine, secure wipe, symlinks, directory size inline, queue reorder, custom toolbar commands, plugin context menu wiring
 - **DC selection UX + view modes** (2026-06-06): cursor separate from selection marks, arrow-key navigation, Space/Insert mark-and-advance, Shift+Arrow extend selection, compact 26px "Full" view with columns, comfortable 64px "Brief" view for touch, per-panel density toggle, right panel falls back to local FS when disconnected, web crash fixes (pdfx, DragTarget StackOverflow, infinite spinner), macOS app renamed CrispCloud
+- **DC UX cont.** (2026-06-06): `..` parent-dir entry for cloud paths, filter keeps `..` visible, `<DIR>` in size column, Ctrl+F filter shortcut, `.` cannot be selection-marked/dragged, quickJump searches filtered list
 
 **What's still needed:**
 - ~~Monolithic state (AppState)~~ — **Riverpod migration done** (8 focused providers)
@@ -72,7 +73,185 @@ CrispCloud becomes the **open-source Cyberduck/Transmit/Commander One killer**: 
 - ~~Security hardening~~ — proxy, app lock, biometric, cert pinning done; Cryptomator pending
 - ~~Plugin system~~ — CrispCloudPlugin interface + context menu wiring done
 - ~~i18n~~ — 9 languages done
-- ~~DoubleCommander parity~~ — 14 features implemented (archive browsing, multi-key sort, flat view, colorized lists, syntax highlighting, terminal panel, file split/combine, secure wipe, symlinks, dir size, queue reorder, custom commands, plugin wiring, FileItem extensions)
+- **DoubleCommander 99% parity** — see Phase DC below (in progress)
+
+---
+
+## Phase DC: DoubleCommander 99% Parity
+
+*Goal: Make CrispCloud feel like DC for power users — every DC muscle-memory shortcut just works.*
+
+### DC Status as of 2026-06-06 (audit complete)
+
+| Feature | Status | Notes |
+|---------|--------|-------|
+| Two-panel layout | ✅ Done | |
+| Tabs per panel | ✅ Done | Ctrl+T/W, persist across restarts |
+| Keyboard navigation (arrows, PgUp/Dn, Home/End) | ✅ Done | |
+| Cursor separate from selection marks | ✅ Done | Space/Insert to mark |
+| Shift+Arrow extend selection | ✅ Done | |
+| Select/deselect by pattern (Numpad+/-) | ✅ Done | |
+| Invert selection | ✅ Done | |
+| Select all (Ctrl+A) | ✅ Done | |
+| F-key bar (F3–F8 bottom buttons) | ✅ Done | fkey_bar.dart |
+| View file F3 / Edit F4 | ✅ Done | internal viewer + editor |
+| Copy F5 / Move F6 | ✅ Done | |
+| New folder F7 / Delete F8 | ✅ Done | |
+| Rename F2 (dialog) | ✅ Done | dialog-based |
+| Batch rename | ✅ Done | 4 modes |
+| Directory comparison (diff viewer) | ✅ Done | LCS-based |
+| Audit/operations log | ✅ Done | audit_log_dialog.dart |
+| Flat view | ✅ Done | recursive file listing |
+| Tree view panel | ✅ Done | Ctrl+3, file_tree_view.dart |
+| Column headers + sort | ✅ Done | name/size/date/ext |
+| Brief view / Full view toggle | ✅ Done | Ctrl+1/Ctrl+2 |
+| Syntax highlight in viewer | ✅ Done | |
+| Hex viewer | ✅ Done | internal_viewer_service.dart |
+| Embedded terminal | ✅ Done | terminal_panel.dart |
+| Bookmarks/hotlist | ✅ Done | |
+| Breadcrumbs + path bar | ✅ Done | |
+| Quick jump (type first char) | ✅ Done | |
+| Filter (Ctrl+F dialog) | ✅ Done | showPanelFilterDialog |
+| Archive pack/unpack | ✅ Done | zip |
+| Archive browse | ✅ Done | |
+| Split/combine files | ✅ Done | |
+| Secure wipe | ✅ Done | |
+| Symlinks create | ✅ Done | |
+| Directory size inline (Ctrl+L or Space on folder) | ✅ Done | |
+| Drag-and-drop between panels | ✅ Done | |
+| Checksum compute (MD5/SHA256) | ✅ Done | checksum_service.dart |
+| Duplicate finder | ✅ Done | |
+| Colorized file lists (by type/ext) | ✅ Done | |
+| Theme system | ✅ Done | 6 themes |
+| `..` parent-dir entry in file list | ✅ Done | cloud paths |
+| `<DIR>` label for folders in size column | ✅ Done | |
+| Secondary sort (infrastructure) | ⚠️ Partial | not exposed in UI |
+| Search (find files) | ⚠️ Partial | dialog only, no persistent panel |
+| Properties dialog | ⚠️ Partial | basic — missing permissions, creation date, owner |
+| Hardlinks | ⚠️ Partial | local only, not in UI clearly |
+| **History navigation (Alt+Left/Right)** | ❌ Missing | per-panel back/forward stack |
+| **In-place rename (F2 inline)** | ❌ Missing | currently modal dialog |
+| **Panel sync (Ctrl+=)** | ❌ Missing | make both panels same dir |
+| **Copy file list to clipboard** | ❌ Missing | copy names/paths as text |
+| **Type-ahead quick search bar** | ❌ Missing | incremental find without dialog |
+| **Drive/volume bar** | ❌ Missing | quick volume/drive buttons |
+| **Column resizing** | ❌ Missing | drag column widths |
+| **Custom columns** | ❌ Missing | user-configurable column set |
+| **Checksum file create/verify** (.md5/.sha1/.sfv) | ❌ Missing | only computes, no file I/O |
+| **File associations** | ❌ Missing | open with specific app per ext |
+| **Symlink target display** | ❌ Missing | show → target in properties |
+| **Selection count in tab title** | ❌ Missing | |
+| **Free space indicator** in status bar | ❌ Missing | |
+| **Secondary sort in UI** | ❌ Missing | UI for the existing infrastructure |
+| **Persistent search results panel** | ❌ Missing | search results replace panel listing |
+| **Verify checksums after transfer** | ❌ Missing | |
+| **File attributes editor** (Win: hidden/system/archive) | ❌ Missing | |
+| **Copy file names only** (without path) to clipboard | ❌ Missing | |
+| **Rename in tab bar** | ❌ Missing | right-click tab to rename |
+
+### DC Parity Roadmap (ordered by impact)
+
+#### DC-1: History Navigation — Alt+Left/Right (per-panel back/forward)
+- [ ] Add `_history` stack + `_historyIndex` to `PanelNotifier`
+- [ ] Push to history on every `navigate()` call; truncate forward history
+- [ ] `navigateBack()` / `navigateForward()` methods
+- [ ] Wire Alt+Left / Alt+Right in `keyboard_shortcuts.dart`
+- [ ] Add back/forward buttons to breadcrumbs toolbar (← →)
+- [ ] Test: unit tests for history stack push/pop/truncate
+
+#### DC-2: In-place Rename (F2 inline editing in file list)
+- [ ] Add `renamingItem` + `renameController` state to `PanelNotifier`
+- [ ] `startRename(item)` / `commitRename()` / `cancelRename()` methods
+- [ ] `FileListTile`: if `renamingItem == file`, show `TextField` instead of filename text
+- [ ] Wire F2 / Enter to commit, Escape to cancel
+- [ ] Pre-select filename without extension (like DC)
+- [ ] Test: unit tests for rename state transitions
+
+#### DC-3: Panel Sync (Ctrl+=) — make opposite panel navigate to active panel's path
+- [ ] `PanelNotifier.navigateTo(path)` method (or reuse existing navigate)
+- [ ] Keyboard shortcut Ctrl+= reads active panel path, calls opposite panel navigate
+- [ ] Also add "=" button in toolbar or context action
+- [ ] Test: unit test sync logic
+
+#### DC-4: Copy File List to Clipboard
+- [ ] Context menu item "Copy names" and "Copy paths" for selection
+- [ ] Keyboard shortcut (e.g. Ctrl+Shift+C for paths, Ctrl+Shift+N for names)
+- [ ] Copies newline-separated list to system clipboard
+- [ ] Test: unit test the formatting logic
+
+#### DC-5: Type-ahead Quick Search Bar (DC-style incremental search)
+- [ ] When user types printable chars in file list (no Ctrl/Alt), show an inline search bar at bottom
+- [ ] Filter displayed list in real-time as user types (already have filter infrastructure)
+- [ ] Escape closes and clears; Enter/Arrow navigates to first match
+- [ ] Different from Ctrl+F dialog — no dialog, overlay bar like DC
+- [ ] Test: widget test for type-ahead trigger and clear
+
+#### DC-6: Secondary Sort exposed in UI
+- [ ] Add secondary sort popup in column header right-click or sort dialog
+- [ ] Show "Name ▲ then Size ▼" compound sort label in toolbar
+- [ ] Wire to existing `_secondarySortBy` / `_secondarySortOrder` in `PanelNotifier`
+- [ ] Test: unit tests for compound sort ordering
+
+#### DC-7: Checksum File Create/Verify (.md5, .sha1, .sfv)
+- [ ] `ChecksumFileService`: generate .md5 / .sha1 / .sfv sidecar files for selection
+- [ ] Verify: read existing .md5/.sha1/.sfv, recompute, diff report
+- [ ] Context menu: "Create checksum file…" + "Verify checksum file…"
+- [ ] Works for local files; remote: download-and-check or upload sidecar
+- [ ] Test: unit tests for .sfv parse/generate, .md5 verify
+
+#### DC-8: Properties Dialog (Full)
+- [ ] Expand existing properties to show: creation date, owner/group, permissions (rwx), MIME type, checksum on demand
+- [ ] For SFTP: show chmod bits, uid/gid
+- [ ] For local: show macOS/Linux/Windows native attrs
+- [ ] Symlink: show → target path
+- [ ] Test: property extraction from mock FileItem
+
+#### DC-9: Drive/Volume Bar
+- [ ] `VolumeService`: enumerate mounted drives (local_file_service extension)
+- [ ] Horizontal scrollable row of drive buttons above/below breadcrumbs
+- [ ] Click navigates panel to that volume's root
+- [ ] Show free space on hover/tooltip
+- [ ] macOS: volumes from `/Volumes`; Linux: `/proc/mounts`; Windows: `getDrives`
+- [ ] Remote panel: show provider bookmarks instead of drives
+- [ ] Test: mock volume list parsing
+
+#### DC-10: Free Space Indicator in Status Bar
+- [ ] `LocalFileService.getFreeSpace(path)` via `df -k` or `statfs`
+- [ ] Show in status bar: `Free: 42.3 GB` updated on navigate
+- [ ] Test: mock syscall, unit test formatting
+
+#### DC-11: Column Resizing (drag column widths)
+- [ ] Add `columnWidths` state to `PanelNotifier` (map of column → width)
+- [ ] `LayoutBuilder` + `GestureDetector` drag handles between column headers
+- [ ] Persist column widths to SharedPreferences per panel side
+- [ ] Test: widget test for drag interaction
+
+#### DC-12: Persistent Search Results Panel
+- [ ] Search results replace panel file listing (not a dialog)
+- [ ] Panel shows "Search results: N files matching X in /path" header
+- [ ] Arrow keys navigate results; Enter opens; Escape exits back to dir
+- [ ] Test: unit test search results panel state
+
+#### DC-13: File Associations (Open With)
+- [ ] `FileAssociationsService`: map ext → executable/handler
+- [ ] Right-click "Open with…" shows registered apps + "Choose app…"
+- [ ] Default app for ext remembered, configurable in settings
+- [ ] macOS: use `NSWorkspace`; Linux: `xdg-open`; Windows: `ShellExecute`
+
+#### DC-14: Selection Count in Tab Title
+- [ ] Tab title shows `[3]` when 3 items selected in that tab
+- [ ] Reset to path name when selection cleared
+- [ ] Test: unit test title generation
+
+#### DC-15: Verify Checksums After Transfer
+- [ ] Option in transfer dialog: "Verify after copy/move" checkbox
+- [ ] Post-transfer: compute MD5 of source and destination, compare
+- [ ] Report mismatches in transfer result
+
+#### DC-16: Rename Tab (right-click tab to set custom name)
+- [ ] Long-press or right-click tab shows "Rename tab…" dialog
+- [ ] Custom name persists alongside path in tab state
+- [ ] Test: unit test tab rename persistence
 
 ---
 

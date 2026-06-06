@@ -50,6 +50,12 @@ class PanelNotifier extends ChangeNotifier {
 
   // Client-side incremental filter (no re-fetch)
   String _filterQuery = '';
+  // true when filter was set via type-ahead (vs the Ctrl+F dialog)
+  bool _isTypeahead = false;
+
+  // Per-panel navigation history (back/forward like a browser)
+  final List<String> _navHistory = [];
+  int _historyIndex = -1;
 
   // Tabs
   int _tabIdCounter = 0;
@@ -78,6 +84,10 @@ class PanelNotifier extends ChangeNotifier {
   /// Whether the panel is in flat (recursive) view mode.
   bool _isFlatView = false;
   bool get isFlatView => _isFlatView;
+
+  // In-place rename state
+  FileItem? _renamingItem;
+  FileItem? get renamingItem => _renamingItem;
 
   PanelNotifier(this._ref, this.side)
       : _localFileService = _ref.read(localFileServiceProvider) {
@@ -117,6 +127,7 @@ class PanelNotifier extends ChangeNotifier {
   SortBy get sortBy => _sortBy;
   SortOrder get sortOrder => _sortOrder;
   String get filterQuery => _filterQuery;
+  bool get isTypeahead => _isTypeahead;
 
   /// Returns files filtered by the current filter query (client-side, no re-fetch).
   List<FileItem>? get filteredFiles {
@@ -139,6 +150,92 @@ class PanelNotifier extends ChangeNotifier {
   /// Clear the client-side filter.
   void clearFilter() {
     _filterQuery = '';
+    _isTypeahead = false;
+    notifyListeners();
+  }
+
+  // --- Type-ahead incremental search (DC-style: type directly in file list) ---
+
+  /// Append [char] to the type-ahead search query and filter the file list.
+  void typeaheadAppend(String char) {
+    _filterQuery += char;
+    _isTypeahead = true;
+    // Jump cursor to first match
+    final displayed = filteredFiles;
+    if (displayed != null && displayed.isNotEmpty) {
+      final first = displayed.firstWhere(
+        (f) => f.name != '..',
+        orElse: () => displayed.first,
+      );
+      final rawIdx = _files?.indexOf(first) ?? -1;
+      if (rawIdx != -1) {
+        _cursorIndex = rawIdx;
+        _itemToScrollTo = first;
+      }
+    }
+    notifyListeners();
+  }
+
+  /// Remove last character from the type-ahead query.
+  void typeaheadBackspace() {
+    if (_filterQuery.isEmpty) return;
+    _filterQuery = _filterQuery.substring(0, _filterQuery.length - 1);
+    if (_filterQuery.isEmpty) _isTypeahead = false;
+    notifyListeners();
+  }
+
+  /// Clear type-ahead on navigation/escape.
+  void clearTypeahead() {
+    if (!_isTypeahead) return;
+    _filterQuery = '';
+    _isTypeahead = false;
+    notifyListeners();
+  }
+
+  // --- Navigation history (Alt+Left / Alt+Right) ---
+
+  bool get canNavigateBack => _historyIndex > 0;
+  bool get canNavigateForward => _historyIndex < _navHistory.length - 1;
+
+  void _pushHistory(String path) {
+    // Drop forward stack when navigating to a new location
+    if (_historyIndex < _navHistory.length - 1) {
+      _navHistory.removeRange(_historyIndex + 1, _navHistory.length);
+    }
+    if (_navHistory.isNotEmpty && _navHistory.last == path) return;
+    _navHistory.add(path);
+    _historyIndex = _navHistory.length - 1;
+  }
+
+  Future<void> navigateBack() async {
+    if (!canNavigateBack) return;
+    _historyIndex--;
+    await _navigateRaw(_navHistory[_historyIndex]);
+  }
+
+  Future<void> navigateForward() async {
+    if (!canNavigateForward) return;
+    _historyIndex++;
+    await _navigateRaw(_navHistory[_historyIndex]);
+  }
+
+  /// Navigate to [path] without recording to history (used by back/forward).
+  Future<void> _navigateRaw(String path) async {
+    _selection.clear();
+    _lastSelected = null;
+    if (_isTypeahead) { _filterQuery = ''; _isTypeahead = false; }
+    if (side == PanelSide.local) {
+      _localFileService.currentPath = path;
+      await _loadLocalFiles();
+    } else {
+      _remotePath = path;
+      if (_ref.read(authProvider).isConnected) {
+        await _loadRemoteFiles();
+      } else {
+        await _loadLocalFiles();
+      }
+    }
+    _syncTabPath();
     notifyListeners();
   }
 
@@ -645,9 +742,8 @@ class PanelNotifier extends ChangeNotifier {
       }
     } else {
       if (_remotePath != '/') {
-        _remotePath = p.dirname(_remotePath);
-        if (_remotePath.isEmpty) _remotePath = '/';
-        await refresh();
+        final parent = p.dirname(_remotePath);
+        await navigateToPath(parent.isEmpty ? '/' : parent);
       }
     }
   }
@@ -655,6 +751,7 @@ class PanelNotifier extends ChangeNotifier {
   Future<void> navigateToPath(String path, {FileItem? selectItem}) async {
     _selection.clear();
     _lastSelected = null;
+    if (_isTypeahead) { _filterQuery = ''; _isTypeahead = false; }
     if (side == PanelSide.local) {
       if (!kIsWeb && !await _localFileService.hasAccessToPath(path)) {
         final newGrant = await _localFileService.requestDirectoryAccess(initialDirectory: path);
@@ -695,7 +792,7 @@ class PanelNotifier extends ChangeNotifier {
     }
 
     _syncTabPath();
-    // Record in recent locations
+    _pushHistory(currentPath);
     _ref.read(recentLocationsProvider).add(currentPath, side);
     notifyListeners();
   }
@@ -793,6 +890,30 @@ class PanelNotifier extends ChangeNotifier {
         );
       }
     }
+  }
+
+  // --- In-place rename ---
+
+  void startRename(FileItem item) {
+    if (item.name == '..') return;
+    _renamingItem = item;
+    notifyListeners();
+  }
+
+  void cancelRename() {
+    if (_renamingItem == null) return;
+    _renamingItem = null;
+    notifyListeners();
+  }
+
+  Future<void> commitRename(String newName) async {
+    final item = _renamingItem;
+    if (item == null) return;
+    _renamingItem = null;
+    notifyListeners();
+    final trimmed = newName.trim();
+    if (trimmed.isEmpty || trimmed == item.name) return;
+    await renameFile(item, trimmed);
   }
 
   Future<void> renameFile(FileItem file, String newName) async {
@@ -1173,6 +1294,7 @@ class PanelNotifier extends ChangeNotifier {
         }
       }
       await _loadLocalFiles();
+      _pushHistory(currentPath);
       notifyListeners();
     } catch (e) {
       _localFileService.currentPath = await _localFileService.getSafeFallbackDirectory();

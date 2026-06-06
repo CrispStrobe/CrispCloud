@@ -96,6 +96,39 @@ KeyEventResult handleKeyEvent(
     return KeyEventResult.handled;
   }
 
+  // Alt+Left - Navigate back in history
+  if (!isCtrl && HardwareKeyboard.instance.isAltPressed &&
+      event.logicalKey == LogicalKeyboardKey.arrowLeft) {
+    panel.navigateBack();
+    return KeyEventResult.handled;
+  }
+
+  // Alt+Right - Navigate forward in history
+  if (!isCtrl && HardwareKeyboard.instance.isAltPressed &&
+      event.logicalKey == LogicalKeyboardKey.arrowRight) {
+    panel.navigateForward();
+    return KeyEventResult.handled;
+  }
+
+  // Ctrl+= - Sync opposite panel to current panel's path (DC convention)
+  if (isCtrl && !isShift && event.logicalKey == LogicalKeyboardKey.equal) {
+    final oppositePanel = activePanel == PanelSide.local ? PanelSide.remote : PanelSide.local;
+    ref.read(panelProvider(oppositePanel)).navigateToPath(panel.currentPath);
+    return KeyEventResult.handled;
+  }
+
+  // Ctrl+Shift+C - Copy selected file paths to clipboard
+  if (isCtrl && isShift && event.logicalKey == LogicalKeyboardKey.keyC) {
+    _copySelectionToClipboard(ref, panel, namesOnly: false);
+    return KeyEventResult.handled;
+  }
+
+  // Ctrl+Shift+N - Copy selected file names to clipboard
+  if (isCtrl && isShift && event.logicalKey == LogicalKeyboardKey.keyN) {
+    _copySelectionToClipboard(ref, panel, namesOnly: true);
+    return KeyEventResult.handled;
+  }
+
   // Ctrl+G - Go to path
   if (isCtrl && event.logicalKey == LogicalKeyboardKey.keyG) {
     showGoToDialog(context, ref);
@@ -193,9 +226,14 @@ KeyEventResult handleKeyEvent(
     return KeyEventResult.handled;
   }
 
-  // F2 - Rename (if single file selected)
+  // F2 - In-place rename of cursor item (falls back to dialog if item can't rename inline)
   if (event.logicalKey == LogicalKeyboardKey.f2) {
-    showRenameDialog(context, ref);
+    final cursor = panel.cursorItem;
+    if (cursor != null && cursor.name != '..') {
+      panel.startRename(cursor);
+    } else {
+      showRenameDialog(context, ref);
+    }
     return KeyEventResult.handled;
   }
 
@@ -285,6 +323,21 @@ KeyEventResult handleKeyEvent(
   }
 
   return KeyEventResult.ignored;
+}
+
+// ---------------------------------------------------------------------------
+// Clipboard helpers
+// ---------------------------------------------------------------------------
+
+/// Copy names or full paths of the current selection to the system clipboard.
+void _copySelectionToClipboard(WidgetRef ref, dynamic panel, {required bool namesOnly}) {
+  final selection = panel.selection as Set;
+  final items = selection.isEmpty
+      ? (panel.cursorItem != null ? {panel.cursorItem} : <dynamic>{})
+      : selection;
+  if (items.isEmpty) return;
+  final lines = items.map((f) => namesOnly ? f.name : (f.path ?? f.name)).join('\n');
+  Clipboard.setData(ClipboardData(text: lines));
 }
 
 // ---------------------------------------------------------------------------

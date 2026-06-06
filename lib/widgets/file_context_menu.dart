@@ -1,6 +1,7 @@
 // widgets/file_context_menu.dart
 
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart' show Clipboard, ClipboardData;
 import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:url_launcher/url_launcher.dart';
@@ -554,6 +555,36 @@ void showFileContextMenu(BuildContext context, WidgetRef ref, PanelSide side, Fi
       ),
     );
   }
+
+  // Copy names / paths to clipboard
+  items.add(
+    PopupMenuItem(
+      child: const Row(children: [Icon(Icons.content_copy, size: 20), SizedBox(width: 8), Text('Copy name(s)')]),
+      onTap: () {
+        final sel = panel.selection;
+        final items2 = sel.isEmpty
+            ? (file.name != '..' ? {file} : <FileItem>{})
+            : sel;
+        Clipboard.setData(ClipboardData(
+          text: items2.map((f) => f.name).join('\n'),
+        ));
+      },
+    ),
+  );
+  items.add(
+    PopupMenuItem(
+      child: const Row(children: [Icon(Icons.link, size: 20), SizedBox(width: 8), Text('Copy path(s)')]),
+      onTap: () {
+        final sel = panel.selection;
+        final items2 = sel.isEmpty
+            ? (file.name != '..' ? {file} : <FileItem>{})
+            : sel;
+        Clipboard.setData(ClipboardData(
+          text: items2.map((f) => f.path ?? f.name).join('\n'),
+        ));
+      },
+    ),
+  );
 
   // Checksum (local files only, not folders, not on web)
   if (!isMultiSelect && !file.isFolder && !kIsWeb && side == PanelSide.local && file.path != null) {

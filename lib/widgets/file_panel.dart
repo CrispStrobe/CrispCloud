@@ -327,11 +327,11 @@ class _FilePanelState extends ConsumerState<FilePanel> {
                                     mainAxisAlignment: MainAxisAlignment.center,
                                     children: [
                                       Icon(Icons.cloud_off, size: 56,
-                                          color: Theme.of(context).colorScheme.onSurface.withOpacity(0.3)),
+                                          color: Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.3)),
                                       const SizedBox(height: 12),
                                       Text('Not connected',
                                           style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                                              color: Theme.of(context).colorScheme.onSurface.withOpacity(0.5))),
+                                              color: Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.5))),
                                       const SizedBox(height: 16),
                                       ElevatedButton.icon(
                                         icon: const Icon(Icons.login, size: 18),
@@ -342,10 +342,43 @@ class _FilePanelState extends ConsumerState<FilePanel> {
                                   )
                                 : const Text('Empty folder'),
                       )
-                    // Pull-to-refresh on mobile
-                    : RefreshIndicator(
-                        onRefresh: () => panel.refresh(),
-                        child: _buildFileView(widget.side, files),
+                    // Pull-to-refresh on mobile, with type-ahead overlay
+                    : Stack(
+                        children: [
+                          RefreshIndicator(
+                            onRefresh: () => panel.refresh(),
+                            child: _buildFileView(widget.side, files),
+                          ),
+                          if (panel.isTypeahead)
+                            Positioned(
+                              left: 0, right: 0, bottom: 0,
+                              child: Container(
+                                color: Theme.of(context).colorScheme.inverseSurface.withValues(alpha: 0.9),
+                                padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
+                                child: Row(
+                                  children: [
+                                    Icon(Icons.search, size: 16,
+                                        color: Theme.of(context).colorScheme.onInverseSurface),
+                                    const SizedBox(width: 8),
+                                    Expanded(
+                                      child: Text(
+                                        panel.filterQuery,
+                                        style: TextStyle(
+                                          fontSize: 13,
+                                          color: Theme.of(context).colorScheme.onInverseSurface,
+                                        ),
+                                      ),
+                                    ),
+                                    GestureDetector(
+                                      onTap: () => panel.clearTypeahead(),
+                                      child: Icon(Icons.close, size: 16,
+                                          color: Theme.of(context).colorScheme.onInverseSurface),
+                                    ),
+                                  ],
+                                ),
+                              ),
+                            ),
+                        ],
                       ),
           ),
         ],
