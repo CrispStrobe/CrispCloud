@@ -8,6 +8,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../models/file_item.dart';
 import '../models/panel_side.dart';
+import '../providers/core_providers.dart' show activePanelProvider;
 import '../providers/file_type_color_provider.dart';
 import '../providers/providers.dart';
 import '../providers/toolbar_provider.dart' show panelViewModeProvider;
@@ -66,7 +67,7 @@ class FileListView extends ConsumerWidget {
         return const Center(child: Text('Empty folder'));
       }
 
-      return ListView.builder(
+      final listView = ListView.builder(
         controller: scrollController,
         itemCount: files.length,
         itemExtent: itemHeight,
@@ -113,6 +114,45 @@ class FileListView extends ConsumerWidget {
             );
           }
         },
+      );
+
+      // Wrap with a Focus that intercepts arrow/space/enter BEFORE the
+      // ListView's own Shortcuts handler consumes them for scrolling.
+      return Focus(
+        canRequestFocus: true,
+        skipTraversal: true,
+        onKeyEvent: (node, event) {
+          if (event is! KeyDownEvent && event is! KeyRepeatEvent) {
+            return KeyEventResult.ignored;
+          }
+          // Only handle if this is the active panel
+          final activePanel = ref.read(activePanelProvider);
+          if (side != activePanel) return KeyEventResult.ignored;
+
+          final isShift = HardwareKeyboard.instance.isShiftPressed;
+          final p = ref.read(panelProvider(side));
+
+          if (event.logicalKey == LogicalKeyboardKey.arrowDown) {
+            isShift ? p.shiftMoveCursor(1) : p.moveCursor(1);
+            return KeyEventResult.handled;
+          }
+          if (event.logicalKey == LogicalKeyboardKey.arrowUp) {
+            isShift ? p.shiftMoveCursor(-1) : p.moveCursor(-1);
+            return KeyEventResult.handled;
+          }
+          if (event.logicalKey == LogicalKeyboardKey.space ||
+              event.logicalKey == LogicalKeyboardKey.insert) {
+            p.spaceSelectAndAdvance();
+            return KeyEventResult.handled;
+          }
+          if (event.logicalKey == LogicalKeyboardKey.enter) {
+            final item = p.cursorItem;
+            if (item != null) p.navigateInto(item);
+            return KeyEventResult.handled;
+          }
+          return KeyEventResult.ignored;
+        },
+        child: listView,
       );
     } catch (e, stackTrace) {
       _log.error('Error building file list: $e', e, stackTrace);
