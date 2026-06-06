@@ -15,7 +15,7 @@ import '../services/panel_view_mode_service.dart' show PanelViewMode;
 import '../services/panel_swap_service.dart';
 import '../widgets/command_palette.dart';
 import '../widgets/file_toolbar.dart' show showPanelFilterDialog;
-import 'screen_dialogs.dart' hide registerEditorCallback;
+import 'screen_dialogs.dart';
 
 /// Handles all keyboard events for the file browser screen.
 ///
@@ -183,9 +183,20 @@ KeyEventResult handleKeyEvent(
   }
 
   // Enter — open cursor item
-  if (event.logicalKey == LogicalKeyboardKey.enter) {
+  if (!isCtrl && event.logicalKey == LogicalKeyboardKey.enter) {
     final item = panel.cursorItem;
     if (item != null) panel.navigateInto(item);
+    return KeyEventResult.handled;
+  }
+
+  // Ctrl+Enter — open cursor item in opposite panel (DC: navigate other panel to same path)
+  if (isCtrl && event.logicalKey == LogicalKeyboardKey.enter) {
+    final item = panel.cursorItem;
+    if (item != null && item.isFolder) {
+      final targetPath = item.path ?? (panel.currentPath + '/' + item.name);
+      final oppPanel = activePanel == PanelSide.local ? PanelSide.remote : PanelSide.local;
+      ref.read(panelProvider(oppPanel)).navigateToPath(targetPath);
+    }
     return KeyEventResult.handled;
   }
 

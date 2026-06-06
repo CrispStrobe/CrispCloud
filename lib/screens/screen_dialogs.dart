@@ -13,6 +13,7 @@ import '../providers/providers.dart';
 import '../widgets/azure_connection_dialog.dart';
 import '../widgets/b2_connection_dialog.dart';
 import '../widgets/connection_dialog.dart';
+import '../widgets/file_editor_dialog.dart' show showFileEditorDialog;
 
 void showConnectionDialogScreen(BuildContext context) {
   showDialog(
@@ -98,6 +99,7 @@ void showKeyboardShortcutsHelp(BuildContext context) {
             _shortcutRow('Alt+← / Alt+→', 'Back / Forward (history)'),
             _shortcutRow('Backspace', 'Navigate up'),
             _shortcutRow('Enter', 'Open folder / file'),
+            _shortcutRow('Ctrl+Enter', 'Open folder in opposite panel'),
             _shortcutRow('Tab', 'Switch panels'),
             _shortcutRow('Ctrl+G', 'Go to path'),
             _shortcutRow('Ctrl+F', 'Filter files'),
@@ -262,20 +264,7 @@ void editSelectedFile(BuildContext context, WidgetRef ref) {
   final panel = ref.read(panelProvider(activePanel));
   final target = panel.selection.isEmpty ? panel.cursorItem : panel.selection.first;
   if (target == null || target.isFolder) return;
-  // Import is deferred to avoid circular imports — use a lookup callback
-  _showEditorForFile(context, ref, target, activePanel);
-}
-
-// Callback filled in at startup to avoid a circular import
-void Function(BuildContext, WidgetRef, FileItem, PanelSide) _showEditorForFile =
-    (ctx, ref, file, side) {
-  // Falls back to toggling preview if editor integration not set up
-  ref.read(showPreviewProvider.notifier).state = true;
-};
-
-/// Register the file editor callback (called from file_browser_screen.dart).
-void registerEditorCallback(void Function(BuildContext, WidgetRef, FileItem, PanelSide) cb) {
-  _showEditorForFile = cb;
+  showFileEditorDialog(context, ref, target, activePanel);
 }
 
 void showCopyDialogFromSelection(BuildContext context, WidgetRef ref) {
