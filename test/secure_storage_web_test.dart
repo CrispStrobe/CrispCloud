@@ -20,12 +20,15 @@ void main() {
       expect(storage.isInitialized, isTrue);
     });
 
-    test('operations throw before initialize()', () async {
-      expect(() => storage.read('key'), throwsStateError);
-      expect(() => storage.write('key', 'val'), throwsStateError);
-      expect(() => storage.delete('key'), throwsStateError);
-      expect(() => storage.containsKey('key'), throwsStateError);
-      expect(() => storage.deleteAll(), throwsStateError);
+    test('operations before initialize() — reads return null/false, writes throw', () async {
+      // read() and containsKey() gracefully return null/false (first-time user
+      // who hasn't set a master password yet — no credentials to decrypt).
+      expect(await storage.read('key'), isNull);
+      expect(await storage.containsKey('key'), isFalse);
+      // Mutating operations require initialization and throw StateError.
+      await expectLater(() => storage.write('key', 'val'), throwsStateError);
+      await expectLater(() => storage.delete('key'), throwsStateError);
+      await expectLater(() => storage.deleteAll(), throwsStateError);
     });
 
     test('write and read round-trip', () async {
