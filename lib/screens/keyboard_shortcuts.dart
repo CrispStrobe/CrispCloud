@@ -254,7 +254,11 @@ KeyEventResult handleKeyEvent(
     return KeyEventResult.handled;
   }
 
-  // F5 handled below (Ctrl+R or F5 — Refresh)
+  // F5 - Copy (DC orthodox FM convention; Ctrl+R stays as Refresh)
+  if (!isCtrl && event.logicalKey == LogicalKeyboardKey.f5) {
+    showCopyDialogFromSelection(context, ref);
+    return KeyEventResult.handled;
+  }
 
   // F6 - Move
   if (event.logicalKey == LogicalKeyboardKey.f6) {
@@ -274,7 +278,7 @@ KeyEventResult handleKeyEvent(
     return KeyEventResult.handled;
   }
 
-  // Ctrl+C or F5 (copy) - Copy to...
+  // Ctrl+C - Copy to...
   if (isCtrl && event.logicalKey == LogicalKeyboardKey.keyC) {
     showCopyDialogFromSelection(context, ref);
     return KeyEventResult.handled;
@@ -292,9 +296,8 @@ KeyEventResult handleKeyEvent(
     return KeyEventResult.handled;
   }
 
-  // Ctrl+R or F5 - Refresh
-  if ((isCtrl && event.logicalKey == LogicalKeyboardKey.keyR) ||
-      event.logicalKey == LogicalKeyboardKey.f5) {
+  // Ctrl+R - Refresh (F5 = Copy per DC orthodox FM convention)
+  if (isCtrl && event.logicalKey == LogicalKeyboardKey.keyR) {
     panel.refresh();
     return KeyEventResult.handled;
   }
