@@ -224,9 +224,15 @@ KeyEventResult handleKeyEvent(
     return KeyEventResult.handled;
   }
 
-  // Escape - Clear selection
+  // Escape - Clear type-ahead if active, else clear selection and rename
   if (event.logicalKey == LogicalKeyboardKey.escape) {
-    panel.clearSelection();
+    if (panel.isTypeahead) {
+      panel.clearTypeahead();
+    } else if (panel.renamingItem != null) {
+      panel.cancelRename();
+    } else {
+      panel.clearSelection();
+    }
     return KeyEventResult.handled;
   }
 

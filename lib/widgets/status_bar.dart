@@ -203,17 +203,29 @@ class _StatusBarState extends ConsumerState<StatusBar> {
             const SizedBox(width: 16),
           ],
 
-          // Filter indicator
+          // Filter / type-ahead indicator
           if (panel.filterQuery.isNotEmpty) ...[
-            Icon(Icons.filter_list, size: 14, color: theme.colorScheme.primary),
+            Icon(panel.isTypeahead ? Icons.search : Icons.filter_list,
+                size: 14, color: theme.colorScheme.primary),
             const SizedBox(width: 4),
             Text(
-              'Filter: "${panel.filterQuery}"',
+              panel.isTypeahead
+                  ? '"${panel.filterQuery}"'
+                  : 'Filter: "${panel.filterQuery}"',
               style: style.copyWith(color: theme.colorScheme.primary),
             ),
             const SizedBox(width: 16),
             Container(width: 1, height: 14, color: theme.dividerColor),
             const SizedBox(width: 16),
+          ],
+
+          // Hidden files indicator
+          if (isLocal && panel.showHiddenFiles) ...[
+            Icon(Icons.visibility, size: 14, color: theme.colorScheme.secondary),
+            const SizedBox(width: 4),
+            Text('Hidden', style: style.copyWith(
+                color: theme.colorScheme.secondary, fontSize: 11)),
+            const SizedBox(width: 8),
           ],
 
           Icon(isLocal ? Icons.folder : Icons.cloud, size: 14, color: color),
