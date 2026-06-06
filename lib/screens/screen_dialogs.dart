@@ -69,7 +69,11 @@ void confirmLogoutRiverpod(BuildContext context, WidgetRef ref) {
   );
 }
 
-void showKeyboardShortcutsDialog(BuildContext context) {
+void showKeyboardShortcutsDialog(BuildContext context) =>
+    showKeyboardShortcutsHelp(context);
+
+/// Full keyboard shortcut help dialog (F1 or from menu).
+void showKeyboardShortcutsHelp(BuildContext context) {
   showDialog(
     context: context,
     builder: (context) => AlertDialog(
@@ -79,25 +83,53 @@ void showKeyboardShortcutsDialog(BuildContext context) {
           mainAxisSize: MainAxisSize.min,
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            _shortcutRow('Ctrl+Z', 'Undo last action'),
-            _shortcutRow('Ctrl+A', 'Select all'),
-            _shortcutRow('Escape', 'Clear selection'),
-            _shortcutRow('Delete', 'Delete selected'),
-            _shortcutRow('F2', 'Rename'),
-            _shortcutRow('Ctrl+C', 'Copy to...'),
-            _shortcutRow('Ctrl+X', 'Move to...'),
-            _shortcutRow('Ctrl+N', 'New folder'),
-            _shortcutRow('Ctrl+R / F5', 'Refresh'),
+            // F-keys (DC orthodox FM)
+            _shortcutRow('F1', 'This help dialog'),
+            _shortcutRow('F2', 'Rename (in-place)'),
+            _shortcutRow('F3', 'View file'),
+            _shortcutRow('F4', 'Edit file'),
+            _shortcutRow('F5 / Ctrl+R', 'Refresh'),
+            _shortcutRow('F6 / Ctrl+X', 'Move to…'),
+            _shortcutRow('F7 / Ctrl+N', 'New folder'),
+            _shortcutRow('F8 / Delete', 'Delete selected'),
+            const Divider(),
+            // Navigation
+            _shortcutRow('Alt+← / Alt+→', 'Back / Forward (history)'),
             _shortcutRow('Backspace', 'Navigate up'),
+            _shortcutRow('Enter', 'Open folder / file'),
             _shortcutRow('Tab', 'Switch panels'),
-            _shortcutRow('Ctrl+Shift+P', 'Command palette'),
+            _shortcutRow('Ctrl+G', 'Go to path'),
+            _shortcutRow('Ctrl+F', 'Filter files'),
+            const Divider(),
+            // Selection
+            _shortcutRow('Ctrl+A', 'Select all'),
+            _shortcutRow('Numpad *', 'Invert selection'),
+            _shortcutRow('Numpad +', 'Select by pattern'),
+            _shortcutRow('Numpad -', 'Deselect by pattern'),
+            _shortcutRow('Space / Insert', 'Mark + advance'),
+            _shortcutRow('Shift+↑/↓', 'Extend selection'),
+            _shortcutRow('Escape', 'Clear selection / type-ahead'),
+            const Divider(),
+            // File operations
+            _shortcutRow('Ctrl+C', 'Copy to…'),
+            _shortcutRow('Ctrl+Z', 'Undo last action'),
+            _shortcutRow('Ctrl+Shift+C', 'Copy paths to clipboard'),
+            _shortcutRow('Ctrl+Shift+N', 'Copy names to clipboard'),
+            _shortcutRow('Ctrl+=', 'Sync opposite panel to here'),
+            const Divider(),
+            // View / Tabs
+            _shortcutRow('Ctrl+1', 'Brief view mode'),
+            _shortcutRow('Ctrl+2', 'Full view mode'),
+            _shortcutRow('Ctrl+3', 'Tree view mode'),
             _shortcutRow('Ctrl+T', 'New tab'),
             _shortcutRow('Ctrl+W', 'Close tab'),
+            _shortcutRow('Ctrl+Tab', 'Next tab'),
+            _shortcutRow('Ctrl+Shift+Tab', 'Previous tab'),
+            _shortcutRow('Ctrl+Shift+P', 'Command palette'),
+            const Divider(),
+            // Transfer
             _shortcutRow('Ctrl+U', 'Upload'),
             _shortcutRow('Ctrl+D', 'Download'),
-            _shortcutRow('Ctrl+G', 'Go to path'),
-            _shortcutRow('Space', 'Toggle preview'),
-            _shortcutRow('Enter', 'Open folder'),
           ],
         ),
       ),
@@ -210,6 +242,39 @@ void showRenameDialog(BuildContext context, WidgetRef ref) {
       ],
     ),
   );
+}
+
+/// F3: Open cursor item (or selection) in the internal viewer / preview pane.
+void viewSelectedFile(BuildContext context, WidgetRef ref) {
+  final activePanel = ref.read(activePanelProvider);
+  final panel = ref.read(panelProvider(activePanel));
+  final target = panel.selection.isEmpty ? panel.cursorItem : panel.selection.first;
+  if (target == null || target.isFolder) return;
+  // Toggle preview with this file focused, or show full-screen preview dialog
+  ref.read(showPreviewProvider.notifier).state = true;
+  if (panel.selection.isEmpty) panel.toggleSelection(target);
+}
+
+/// F4: Open cursor item in the file editor.
+void editSelectedFile(BuildContext context, WidgetRef ref) {
+  final activePanel = ref.read(activePanelProvider);
+  final panel = ref.read(panelProvider(activePanel));
+  final target = panel.selection.isEmpty ? panel.cursorItem : panel.selection.first;
+  if (target == null || target.isFolder) return;
+  // Import is deferred to avoid circular imports — use a lookup callback
+  _showEditorForFile(context, ref, target, activePanel);
+}
+
+// Callback filled in at startup to avoid a circular import
+void Function(BuildContext, WidgetRef, FileItem, PanelSide) _showEditorForFile =
+    (ctx, ref, file, side) {
+  // Falls back to toggling preview if editor integration not set up
+  ref.read(showPreviewProvider.notifier).state = true;
+};
+
+/// Register the file editor callback (called from file_browser_screen.dart).
+void registerEditorCallback(void Function(BuildContext, WidgetRef, FileItem, PanelSide) cb) {
+  _showEditorForFile = cb;
 }
 
 void showCopyDialogFromSelection(BuildContext context, WidgetRef ref) {

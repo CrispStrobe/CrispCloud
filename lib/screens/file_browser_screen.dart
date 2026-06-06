@@ -22,6 +22,7 @@ import '../services/theme_service.dart';
 import '../widgets/audit_log_dialog.dart';
 import '../widgets/file_panel.dart';
 import '../widgets/fkey_bar.dart';
+import '../services/fkey_action_service.dart' show FKeyAction;
 import '../widgets/operations_panel.dart';
 import '../widgets/panel_source_selector.dart';
 import '../widgets/panel_splitter.dart';
@@ -273,7 +274,7 @@ class _FileBrowserScreenState extends ConsumerState<FileBrowserScreen> {
               if (!showTerminal) return const SizedBox.shrink();
               return const TerminalPanel();
             }),
-            const FKeyBar(),
+            FKeyBar(onAction: (action) => _handleFKeyAction(context, ref, action)),
             const StatusBar(),
           ],
         ),
@@ -653,6 +654,23 @@ class _FileBrowserScreenState extends ConsumerState<FileBrowserScreen> {
     final (newLeft, newRight) = service.swap(leftSrc, rightSrc);
     ref.read(panelSourceProvider(PanelSide.local).notifier).setSource(newLeft);
     ref.read(panelSourceProvider(PanelSide.remote).notifier).setSource(newRight);
+  }
+
+  void _handleFKeyAction(BuildContext context, WidgetRef ref, FKeyAction action) {
+    switch (action) {
+      case FKeyAction.view:
+        viewSelectedFile(context, ref);
+      case FKeyAction.edit:
+        editSelectedFile(context, ref);
+      case FKeyAction.copy:
+        showCopyDialogFromSelection(context, ref);
+      case FKeyAction.move:
+        showMoveDialogFromSelection(context, ref);
+      case FKeyAction.mkdir:
+        showCreateFolderDialog(context, ref, ref.read(activePanelProvider));
+      case FKeyAction.delete:
+        confirmDeleteSelected(context, ref);
+    }
   }
 
   Widget _buildUserMenu(BuildContext context, AuthNotifier auth) {

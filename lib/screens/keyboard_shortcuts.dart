@@ -15,7 +15,7 @@ import '../services/panel_view_mode_service.dart' show PanelViewMode;
 import '../services/panel_swap_service.dart';
 import '../widgets/command_palette.dart';
 import '../widgets/file_toolbar.dart' show showPanelFilterDialog;
-import 'screen_dialogs.dart';
+import 'screen_dialogs.dart' hide registerEditorCallback;
 
 /// Handles all keyboard events for the file browser screen.
 ///
@@ -225,6 +225,12 @@ KeyEventResult handleKeyEvent(
     return KeyEventResult.handled;
   }
 
+  // F1 - Show keyboard shortcuts help
+  if (event.logicalKey == LogicalKeyboardKey.f1) {
+    showKeyboardShortcutsHelp(context);
+    return KeyEventResult.handled;
+  }
+
   // F2 - In-place rename of cursor item (falls back to dialog if item can't rename inline)
   if (event.logicalKey == LogicalKeyboardKey.f2) {
     final cursor = panel.cursorItem;
@@ -236,7 +242,39 @@ KeyEventResult handleKeyEvent(
     return KeyEventResult.handled;
   }
 
-  // Ctrl+C - Copy
+  // F3 - View file with internal viewer / preview pane
+  if (event.logicalKey == LogicalKeyboardKey.f3) {
+    viewSelectedFile(context, ref);
+    return KeyEventResult.handled;
+  }
+
+  // F4 - Edit file in internal editor
+  if (event.logicalKey == LogicalKeyboardKey.f4) {
+    editSelectedFile(context, ref);
+    return KeyEventResult.handled;
+  }
+
+  // F5 handled below (Ctrl+R or F5 — Refresh)
+
+  // F6 - Move
+  if (event.logicalKey == LogicalKeyboardKey.f6) {
+    showMoveDialogFromSelection(context, ref);
+    return KeyEventResult.handled;
+  }
+
+  // F7 - New folder
+  if (event.logicalKey == LogicalKeyboardKey.f7) {
+    showCreateFolderDialog(context, ref, activePanel);
+    return KeyEventResult.handled;
+  }
+
+  // F8 - Delete
+  if (event.logicalKey == LogicalKeyboardKey.f8) {
+    confirmDeleteSelected(context, ref);
+    return KeyEventResult.handled;
+  }
+
+  // Ctrl+C or F5 (copy) - Copy to...
   if (isCtrl && event.logicalKey == LogicalKeyboardKey.keyC) {
     showCopyDialogFromSelection(context, ref);
     return KeyEventResult.handled;
