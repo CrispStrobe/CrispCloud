@@ -373,6 +373,36 @@ KeyEventResult handleKeyEvent(
     return KeyEventResult.handled;
   }
 
+  // Ctrl+. - Toggle hidden (dot-prefixed) files
+  if (isCtrl && event.logicalKey == LogicalKeyboardKey.period) {
+    panel.toggleShowHiddenFiles();
+    return KeyEventResult.handled;
+  }
+
+  // Ctrl+F3 - Sort by name
+  if (isCtrl && event.logicalKey == LogicalKeyboardKey.f3) {
+    panel.setSortBy(SortBy.name);
+    return KeyEventResult.handled;
+  }
+
+  // Ctrl+F4 - Sort by extension
+  if (isCtrl && event.logicalKey == LogicalKeyboardKey.f4) {
+    panel.setSortBy(SortBy.extension);
+    return KeyEventResult.handled;
+  }
+
+  // Ctrl+F5 - Sort by date
+  if (isCtrl && event.logicalKey == LogicalKeyboardKey.f5) {
+    panel.setSortBy(SortBy.date);
+    return KeyEventResult.handled;
+  }
+
+  // Ctrl+F6 - Sort by size
+  if (isCtrl && event.logicalKey == LogicalKeyboardKey.f6) {
+    panel.setSortBy(SortBy.size);
+    return KeyEventResult.handled;
+  }
+
   return KeyEventResult.ignored;
 }
 

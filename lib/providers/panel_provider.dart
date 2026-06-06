@@ -89,6 +89,15 @@ class PanelNotifier extends ChangeNotifier {
   FileItem? _renamingItem;
   FileItem? get renamingItem => _renamingItem;
 
+  // Whether to show hidden (dot-prefixed) files — toggle via Ctrl+.
+  bool _showHiddenFiles = false;
+  bool get showHiddenFiles => _showHiddenFiles;
+
+  void toggleShowHiddenFiles() {
+    _showHiddenFiles = !_showHiddenFiles;
+    refresh();
+  }
+
   // Free space for the current local path (populated after _loadLocalFiles)
   int? _freeBytes;
   int? get freeBytes => _freeBytes;
@@ -375,7 +384,7 @@ class PanelNotifier extends ChangeNotifier {
     for (final entity in entities) {
       if (items.length >= maxItems) return;
       final name = p.basename(entity.path);
-      if (name.startsWith('.')) continue;
+      if (!_showHiddenFiles && name.startsWith('.')) continue;
       final stat = await entity.stat();
       if (stat.type == FileSystemEntityType.directory) {
         await _walkDirectory(entity.path, items, maxItems);
@@ -1367,7 +1376,7 @@ class PanelNotifier extends ChangeNotifier {
       for (final entity in entities) {
         try {
           final name = p.basename(entity.path);
-          if (name.startsWith('.')) continue;
+          if (!_showHiddenFiles && name.startsWith('.')) continue;
 
           if (kIsWeb) {
             final isFolder = entity is Directory;

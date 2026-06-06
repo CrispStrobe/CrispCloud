@@ -120,6 +120,13 @@ void showKeyboardShortcutsHelp(BuildContext context) {
             _shortcutRow('Ctrl+Shift+N', 'Copy names to clipboard'),
             _shortcutRow('Ctrl+=', 'Sync opposite panel to here'),
             const Divider(),
+            // Sort
+            _shortcutRow('Ctrl+F3', 'Sort by name'),
+            _shortcutRow('Ctrl+F4', 'Sort by extension'),
+            _shortcutRow('Ctrl+F5', 'Sort by date'),
+            _shortcutRow('Ctrl+F6', 'Sort by size'),
+            _shortcutRow('Ctrl+.', 'Toggle hidden files'),
+            const Divider(),
             // View / Tabs
             _shortcutRow('Ctrl+1', 'Brief view mode'),
             _shortcutRow('Ctrl+2', 'Full view mode'),
