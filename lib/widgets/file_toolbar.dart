@@ -199,6 +199,19 @@ class FileToolbar extends ConsumerWidget {
               onPressed: () => panel.toggleFlatView(),
             ),
 
+          // Hidden files toggle (local panel only) — Ctrl+.
+          if (side == PanelSide.local)
+            IconButton(
+              icon: Icon(
+                panel.showHiddenFiles ? Icons.visibility : Icons.visibility_off,
+                color: panel.showHiddenFiles
+                    ? Theme.of(context).colorScheme.secondary
+                    : Theme.of(context).colorScheme.onPrimaryContainer,
+              ),
+              tooltip: panel.showHiddenFiles ? 'Hide hidden files (Ctrl+.)' : 'Show hidden files (Ctrl+.)',
+              onPressed: () => panel.toggleShowHiddenFiles(),
+            ),
+
           PopupMenuButton<String>(
             icon: Icon(Icons.sort, color: Theme.of(context).colorScheme.onPrimaryContainer),
             tooltip: 'Sort',

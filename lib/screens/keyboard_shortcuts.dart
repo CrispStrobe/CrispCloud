@@ -250,8 +250,9 @@ KeyEventResult handleKeyEvent(
     return KeyEventResult.handled;
   }
 
-  // F2 - In-place rename of cursor item (falls back to dialog if item can't rename inline)
-  if (event.logicalKey == LogicalKeyboardKey.f2) {
+  // F2 or Shift+F6 - In-place rename of cursor item
+  if (event.logicalKey == LogicalKeyboardKey.f2 ||
+      (isShift && event.logicalKey == LogicalKeyboardKey.f6)) {
     final cursor = panel.cursorItem;
     if (cursor != null && cursor.name != '..') {
       panel.startRename(cursor);
@@ -273,9 +274,16 @@ KeyEventResult handleKeyEvent(
     return KeyEventResult.handled;
   }
 
-  // F5 - Copy (DC orthodox FM convention; Ctrl+R stays as Refresh)
-  if (!isCtrl && event.logicalKey == LogicalKeyboardKey.f5) {
+  // F5 - Copy to opposite panel (DC orthodox FM convention; Ctrl+R stays as Refresh)
+  // Shift+F5 - Copy here (same dir, prompts for new name) = same as batch rename
+  if (!isCtrl && !isShift && event.logicalKey == LogicalKeyboardKey.f5) {
     showCopyDialogFromSelection(context, ref);
+    return KeyEventResult.handled;
+  }
+
+  // Shift+F5 - Copy to same directory (= duplicate with new name)
+  if (isShift && event.logicalKey == LogicalKeyboardKey.f5) {
+    showRenameDialog(context, ref); // Opens rename dialog for the selected item
     return KeyEventResult.handled;
   }
 
