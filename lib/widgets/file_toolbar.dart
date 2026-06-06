@@ -5,7 +5,9 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../models/panel_side.dart';
 import '../providers/providers.dart';
+import '../providers/toolbar_provider.dart' show panelViewModeProvider;
 import '../services/custom_toolbar_command_service.dart';
+import '../services/panel_view_mode_service.dart' show PanelViewMode;
 import 'search_dialogs.dart' show showSearchDialog, showFindDialog;
 
 // Re-export decomposed widgets for backward compatibility
@@ -104,6 +106,24 @@ class FileToolbar extends ConsumerWidget {
               onPressed: search.isSearching ? null : () => showFindDialog(context, ref),
             ),
           ],
+
+          // Density toggle: compact (desktop) ↔ comfortable (touch/iPad)
+          Builder(builder: (context) {
+            final density = ref.watch(panelViewModeProvider(side));
+            final isCompact = density == PanelViewMode.full;
+            return IconButton(
+              icon: Icon(
+                isCompact ? Icons.density_large : Icons.density_small,
+                color: Theme.of(context).colorScheme.onPrimaryContainer,
+              ),
+              tooltip: isCompact ? 'Switch to touch-friendly view' : 'Switch to compact view',
+              onPressed: () {
+                ref.read(panelViewModeProvider(side).notifier).setMode(
+                  isCompact ? PanelViewMode.brief : PanelViewMode.full,
+                );
+              },
+            );
+          }),
 
           // View mode toggle (cycles: list -> grid -> column -> list)
           Builder(builder: (context) {
