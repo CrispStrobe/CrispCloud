@@ -73,13 +73,19 @@ KeyEventResult handleKeyEvent(
     return KeyEventResult.handled;
   }
 
-  // Ctrl+Tab - Next tab / Ctrl+Shift+Tab - Previous tab
-  if (isCtrl && event.logicalKey == LogicalKeyboardKey.tab) {
-    if (isShift) {
+  // Ctrl+Tab / Ctrl+PgDn - Next tab
+  // Ctrl+Shift+Tab / Ctrl+PgUp - Previous tab
+  if (isCtrl && (event.logicalKey == LogicalKeyboardKey.tab ||
+      event.logicalKey == LogicalKeyboardKey.pageDown)) {
+    if (isShift || event.logicalKey == LogicalKeyboardKey.pageUp) {
       panel.previousTab();
     } else {
       panel.nextTab();
     }
+    return KeyEventResult.handled;
+  }
+  if (isCtrl && event.logicalKey == LogicalKeyboardKey.pageUp) {
+    panel.previousTab();
     return KeyEventResult.handled;
   }
 
@@ -153,6 +159,18 @@ KeyEventResult handleKeyEvent(
   // Numpad * - Invert selection (DC orthodox FM convention)
   if (event.logicalKey == LogicalKeyboardKey.numpadMultiply) {
     panel.invertSelection();
+    return KeyEventResult.handled;
+  }
+
+  // Numpad + - Select by pattern (e.g. *.dart)
+  if (event.logicalKey == LogicalKeyboardKey.numpadAdd) {
+    _showPatternDialog(context, panel, select: true);
+    return KeyEventResult.handled;
+  }
+
+  // Numpad - - Deselect by pattern
+  if (event.logicalKey == LogicalKeyboardKey.numpadSubtract) {
+    _showPatternDialog(context, panel, select: false);
     return KeyEventResult.handled;
   }
 
@@ -321,5 +339,35 @@ UndoContext _buildUndoContext(WidgetRef ref, PanelSide side) {
     remoteRename: (currentPath, name) => client.renamePath(currentPath, name),
     remoteMove: (currentPath, targetDir) => client.movePath(currentPath, targetDir),
     remoteDelete: (path) => client.deletePath(path),
+  );
+}
+
+void _showPatternDialog(BuildContext context, PanelNotifier panel, {required bool select}) {
+  final ctrl = TextEditingController(text: '*.*');
+  showDialog<void>(
+    context: context,
+    builder: (ctx) => AlertDialog(
+      title: Text(select ? 'Select by pattern' : 'Deselect by pattern'),
+      content: TextField(
+        controller: ctrl,
+        autofocus: true,
+        decoration: const InputDecoration(hintText: 'e.g. *.dart, doc*, *test*'),
+        onSubmitted: (v) {
+          if (select) panel.selectByPattern(v); else panel.deselectByPattern(v);
+          Navigator.pop(ctx);
+        },
+      ),
+      actions: [
+        TextButton(onPressed: () => Navigator.pop(ctx), child: const Text('Cancel')),
+        ElevatedButton(
+          onPressed: () {
+            if (select) panel.selectByPattern(ctrl.text);
+            else panel.deselectByPattern(ctrl.text);
+            Navigator.pop(ctx);
+          },
+          child: Text(select ? 'Select' : 'Deselect'),
+        ),
+      ],
+    ),
   );
 }

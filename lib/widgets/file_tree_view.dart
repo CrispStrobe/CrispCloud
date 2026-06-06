@@ -3,7 +3,7 @@
 // DC-style in-panel folder tree (PanelViewMode.tree).
 // Shows a hierarchical list of directories; clicking/Enter navigates the panel.
 
-import 'dart:io';
+import 'dart:io' show Directory, Platform;
 
 import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:flutter/material.dart';

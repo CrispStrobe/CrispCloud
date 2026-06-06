@@ -14,7 +14,8 @@ import 'file_column_view.dart';
 import 'file_grid_view.dart';
 import 'file_toolbar.dart';
 import 'file_list_view.dart' show FileListView, PanelDragData, getFileIcon;
-import 'file_tree_view.dart';
+import 'file_tree_view_stub.dart'
+    if (dart.library.io) 'file_tree_view.dart';
 import 'panel_tab_bar.dart';
 import '../screens/screen_dialogs.dart' show showConnectionDialogScreen;
 
@@ -185,9 +186,9 @@ class _FilePanelState extends ConsumerState<FilePanel> {
   }
 
   Widget _buildFileView(PanelSide side, List<FileItem> files) {
-    // Tree mode overrides the list/grid/column choice
+    // Tree mode overrides the list/grid/column choice (desktop only)
     final densityMode = ref.watch(panelViewModeProvider(side));
-    if (densityMode == PanelViewMode.tree) {
+    if (densityMode == PanelViewMode.tree && !kIsWeb) {
       return FileTreeView(side: side);
     }
 

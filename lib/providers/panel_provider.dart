@@ -338,6 +338,10 @@ class PanelNotifier extends ChangeNotifier {
   void _sortFiles() {
     if (_files == null || _files!.isEmpty) return;
     _files!.sort((a, b) {
+      // ".." always stays at the top
+      if (a.name == '..') return -1;
+      if (b.name == '..') return 1;
+
       if (a.isFolder && !b.isFolder) return -1;
       if (!a.isFolder && b.isFolder) return 1;
 
@@ -389,14 +393,14 @@ class PanelNotifier extends ChangeNotifier {
 
   void selectAll() {
     if (_files != null) {
-      _selection.addAll(_files!);
+      _selection.addAll(_files!.where((f) => f.name != '..'));
       notifyListeners();
     }
   }
 
   void invertSelection() {
     if (_files == null) return;
-    final newSel = _files!.where((f) => !_selection.contains(f)).toSet();
+    final newSel = _files!.where((f) => f.name != '..' && !_selection.contains(f)).toSet();
     _selection
       ..clear()
       ..addAll(newSel);
@@ -439,12 +443,15 @@ class PanelNotifier extends ChangeNotifier {
     final idx = _cursorIndex.clamp(0, _files!.length - 1);
     _cursorIndex = idx;
     final item = _files![idx];
-    if (_selection.contains(item)) {
-      _selection.remove(item);
-    } else {
-      _selection.add(item);
+    // ".." cannot be marked
+    if (item.name != '..') {
+      if (_selection.contains(item)) {
+        _selection.remove(item);
+      } else {
+        _selection.add(item);
+      }
+      _lastSelected = item;
     }
-    _lastSelected = item;
     final next = (idx + 1).clamp(0, _files!.length - 1);
     _cursorIndex = next;
     _itemToScrollTo = _files![next];
@@ -483,6 +490,73 @@ class PanelNotifier extends ChangeNotifier {
   /// On first load (_cursorIndex == -1) or if files are empty, goes to 0.
   /// Otherwise keeps the cursor on the same item by name/path/uuid,
   /// falling back to clamping the current index within the new list length.
+  /// Select all files matching [glob] pattern (e.g. "*.dart"). Numpad +.
+  void selectByPattern(String glob) {
+    if (_files == null) return;
+    final lower = glob.toLowerCase();
+    // Simple glob: "*.ext" or "prefix*" — convert to prefix/suffix match
+    final isExtGlob = lower.startsWith('*.') && !lower.substring(2).contains('*');
+    for (final f in _files!) {
+      if (f.name == '..') continue;
+      final name = f.name.toLowerCase();
+      final matches = isExtGlob
+          ? name.endsWith(lower.substring(1)) // "*.dart" → ".dart" suffix
+          : _globMatch(lower, name);
+      if (matches) _selection.add(f);
+    }
+    notifyListeners();
+  }
+
+  /// Deselect all files matching [glob] pattern. Numpad -.
+  void deselectByPattern(String glob) {
+    if (_files == null) return;
+    final lower = glob.toLowerCase();
+    final isExtGlob = lower.startsWith('*.') && !lower.substring(2).contains('*');
+    _selection.removeWhere((f) {
+      final name = f.name.toLowerCase();
+      return isExtGlob
+          ? name.endsWith(lower.substring(1))
+          : _globMatch(lower, name);
+    });
+    notifyListeners();
+  }
+
+  bool _globMatch(String pattern, String text) {
+    // Minimal glob: * matches anything
+    if (!pattern.contains('*')) return pattern == text;
+    final parts = pattern.split('*');
+    int pos = 0;
+    for (int i = 0; i < parts.length; i++) {
+      final part = parts[i];
+      if (part.isEmpty) continue;
+      final idx = text.indexOf(part, pos);
+      if (idx == -1) return false;
+      if (i == 0 && idx != 0) return false; // must start with prefix
+      pos = idx + part.length;
+    }
+    if (!pattern.endsWith('*') && pos != text.length) return false;
+    return true;
+  }
+
+  /// Jump cursor to the first file whose name starts with [char] (case-insensitive).
+  /// If cursor is already on a match, finds the NEXT match (cycles).
+  void quickJumpToChar(String char) {
+    if (_files == null || _files!.isEmpty) return;
+    final q = char.toLowerCase();
+    final start = _cursorIndex >= 0 ? _cursorIndex : 0;
+    // Search from item after cursor, wrapping around
+    for (int i = 1; i <= _files!.length; i++) {
+      final idx = (start + i) % _files!.length;
+      final f = _files![idx];
+      if (f.name != '..' && f.name.toLowerCase().startsWith(q)) {
+        _cursorIndex = idx;
+        _itemToScrollTo = f;
+        notifyListeners();
+        return;
+      }
+    }
+  }
+
   void _resetCursor({FileItem? preserveItem}) {
     if (_files == null || _files!.isEmpty) {
       _cursorIndex = -1;
@@ -1141,6 +1215,15 @@ class PanelNotifier extends ChangeNotifier {
         }
       }
 
+      // Prepend ".." parent-dir entry unless we're at root
+      final parentPath = p.dirname(currentPath);
+      if (parentPath != currentPath && currentPath != '/') {
+        items.insert(0, FileItem(
+          name: '..',
+          path: parentPath,
+          isFolder: true,
+        ));
+      }
       final prev = cursorItem;
       _files = items;
       _sortFiles();

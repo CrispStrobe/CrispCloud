@@ -187,6 +187,17 @@ class FileListView extends ConsumerWidget {
             p.invertSelection();
             return KeyEventResult.handled;
           }
+          // Quick jump: unmodified printable character → jump to first match
+          final isCtrl = HardwareKeyboard.instance.isControlPressed ||
+              HardwareKeyboard.instance.isMetaPressed;
+          final isAlt = HardwareKeyboard.instance.isAltPressed;
+          if (!isCtrl && !isAlt && event is KeyDownEvent) {
+            final char = event.character;
+            if (char != null && char.isNotEmpty && char.codeUnitAt(0) >= 32) {
+              p.quickJumpToChar(char);
+              return KeyEventResult.handled;
+            }
+          }
           return KeyEventResult.ignored;
         },
         child: listView,
@@ -290,15 +301,20 @@ class FileListTile extends ConsumerWidget {
               : null,
           child: ListTile(
           selected: isSelected,
-          selectedTileColor: Theme.of(context).colorScheme.primaryContainer.withOpacity(0.5),
-          leading: iconWidget,
+          selectedTileColor: Theme.of(context).colorScheme.primaryContainer.withOpacity(0.65),
+          leading: file.name == '..'
+              ? const Icon(Icons.arrow_upward, size: 28, color: Colors.amber)
+              : iconWidget,
           title: Text(
             file.name,
             maxLines: 1,
             overflow: TextOverflow.ellipsis,
-            style: TextStyle(color: fileColor),
+            style: TextStyle(
+              color: isSelected ? Theme.of(context).colorScheme.onPrimaryContainer : fileColor,
+              fontWeight: isSelected ? FontWeight.w600 : FontWeight.normal,
+            ),
           ),
-          subtitle: Row(
+          subtitle: file.name == '..' ? null : Row(
             children: [
               if (showRelativePath && file.path != null) ...[
                 Expanded(
