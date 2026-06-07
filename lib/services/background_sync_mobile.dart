@@ -62,7 +62,6 @@ void callbackDispatcher() {
 Future<void> initializeWorkmanager() async {
   await Workmanager().initialize(
     callbackDispatcher,
-    isInDebugMode: kDebugMode,
   );
 }
 

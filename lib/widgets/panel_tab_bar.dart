@@ -223,11 +223,13 @@ class PanelTabBar extends StatelessWidget {
                 Text('Rename Tab'),
               ],
             ),
-            onTap: () => Future.delayed(
-              Duration.zero,
-              // ignore: use_build_context_synchronously
-              () => _showRenameTabDialog(context, tab),
-            ),
+            onTap: () {
+              final ctx = context;
+              Future.delayed(Duration.zero, () {
+                if (!ctx.mounted) return;
+                _showRenameTabDialog(ctx, tab);
+              });
+            },
           ),
       ],
     );

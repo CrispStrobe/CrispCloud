@@ -129,6 +129,7 @@ class AccessibilityService extends ChangeNotifier {
     TextDirection textDirection = TextDirection.ltr,
     Assertiveness assertiveness = Assertiveness.polite,
   }) async {
+    // ignore: deprecated_member_use
     await SemanticsService.announce(message, textDirection,
         assertiveness: assertiveness);
   }
@@ -274,9 +275,9 @@ class HighContrastTheme {
       return v <= 0.03928 ? v / 12.92 : ((v + 0.055) / 1.055) * ((v + 0.055) / 1.055);
     }
 
-    final r = channel(color.red / 255.0);
-    final g = channel(color.green / 255.0);
-    final b = channel(color.blue / 255.0);
+    final r = channel(color.r);
+    final g = channel(color.g);
+    final b = channel(color.b);
     return 0.2126 * r + 0.7152 * g + 0.0722 * b;
   }
 
@@ -398,6 +399,7 @@ class FocusHelper {
     TextDirection textDirection = TextDirection.ltr,
     Assertiveness assertiveness = Assertiveness.polite,
   }) async {
+    // ignore: deprecated_member_use
     await SemanticsService.announce(
       label,
       textDirection,

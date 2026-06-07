@@ -34,7 +34,6 @@ class _KeyManagementDialogState extends ConsumerState<_KeyManagementDialog>
   // Export tab
   String? _mnemonic;
   String? _keyHex;
-  String? _saltHex;
   String? _backupBundle;
 
   // Import tab
@@ -60,7 +59,6 @@ class _KeyManagementDialogState extends ConsumerState<_KeyManagementDialog>
     final mnemonicData = EncryptionService.generateMnemonic(key, salt);
     _mnemonic = mnemonicData['mnemonic'];
     _keyHex = EncryptionService.exportKeyAsHex(key);
-    _saltHex = mnemonicData['salt'];
     _backupBundle = EncryptionService.exportBackupBundle(key, salt);
   }
 

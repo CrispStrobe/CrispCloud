@@ -20,6 +20,7 @@ import '../services/audit_service.dart';
 import '../services/local_file_service.dart';
 import '../services/log_service.dart';
 import '../services/panel_source_service.dart';
+import '../utils/async_lock.dart';
 import 'action_history_provider.dart';
 import 'auth_provider.dart';
 import 'core_providers.dart';
@@ -62,7 +63,7 @@ class PanelNotifier extends ChangeNotifier {
   final List<PanelTab> _tabs = [];
   String _activeTabId = '';
 
-  final _refreshLock = _AsyncLock();
+  final _refreshLock = AsyncLock();
   Timer? _refreshDebounce;
 
   /// When true, [_files] holds search results instead of the real directory
@@ -1448,6 +1449,8 @@ class PanelNotifier extends ChangeNotifier {
     // Skip in test environments to avoid pending OS-process timers that
     // cause "test failed after it had already completed" assertions.
     if (Platform.environment.containsKey('FLUTTER_TEST')) return;
+    // `df` is a Unix utility — skip on Windows to avoid a crash.
+    if (Platform.isWindows) return;
     Process.run('df', ['-k', path]).then((result) {
       final lines = result.stdout.toString().trim().split('\n');
       if (lines.length >= 2) {
@@ -1543,23 +1546,6 @@ class PanelNotifier extends ChangeNotifier {
       _files = [];
       _ref.read(errorProvider).addError(e.toString());
       notifyListeners();
-    }
-  }
-}
-
-class _AsyncLock {
-  Completer<void>? _completer;
-  Future<T> synchronized<T>(Future<T> Function() action) async {
-    while (_completer != null) {
-      await _completer!.future;
-    }
-    _completer = Completer<void>();
-    try {
-      return await action();
-    } finally {
-      final c = _completer!;
-      _completer = null;
-      c.complete();
     }
   }
 }

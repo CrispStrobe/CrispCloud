@@ -1,5 +1,4 @@
 // widgets/file_context_menu.dart
-// ignore_for_file: use_build_context_synchronously
 
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart' show Clipboard, ClipboardData;
@@ -29,6 +28,16 @@ import 'permissions_dialog.dart' show showPermissionsDialog;
 import 'version_history_dialog.dart' show showVersionHistoryDialog;
 
 const _log = Log('FileContextMenu');
+
+/// Text/code file extensions that can be edited in the built-in editor.
+const _editableExts = <String>{
+  'txt', 'json', 'yaml', 'yml', 'xml', 'csv', 'log', 'ini', 'cfg',
+  'conf', 'toml', 'env', 'gitignore', 'dockerfile', 'md', 'markdown',
+  'dart', 'js', 'ts', 'jsx', 'tsx', 'py', 'rb', 'go', 'rs', 'java',
+  'kt', 'swift', 'c', 'cpp', 'h', 'hpp', 'cs', 'php', 'html', 'css',
+  'scss', 'less', 'sql', 'sh', 'bash', 'zsh', 'ps1', 'bat', 'r',
+  'lua', 'vim', 'makefile', 'properties', 'gradle',
+};
 
 /// Open a local file with the OS default application via a file:// URI.
 Future<void> openWithSystemEditor(BuildContext context, String path) async {
@@ -94,17 +103,9 @@ void showFileContextMenu(BuildContext context, WidgetRef ref, PanelSide side, Fi
 
   // Edit (single text/code file, not folder) — submenu: built-in vs system editor
   if (!isMultiSelect && !isSingleFolder) {
-    final editableExts = {
-      'txt', 'json', 'yaml', 'yml', 'xml', 'csv', 'log', 'ini', 'cfg',
-      'conf', 'toml', 'env', 'gitignore', 'dockerfile', 'md', 'markdown',
-      'dart', 'js', 'ts', 'jsx', 'tsx', 'py', 'rb', 'go', 'rs', 'java',
-      'kt', 'swift', 'c', 'cpp', 'h', 'hpp', 'cs', 'php', 'html', 'css',
-      'scss', 'less', 'sql', 'sh', 'bash', 'zsh', 'ps1', 'bat', 'r',
-      'lua', 'vim', 'makefile', 'properties', 'gradle',
-    };
     final ext = file.name.split('.').last.toLowerCase();
     final preferExternal = ref.read(preferExternalEditorProvider);
-    if (editableExts.contains(ext) || !file.name.contains('.')) {
+    if (_editableExts.contains(ext) || !file.name.contains('.')) {
       // Primary "Edit" action respects the user's editor preference
       items.add(
         PopupMenuItem(
@@ -116,6 +117,7 @@ void showFileContextMenu(BuildContext context, WidgetRef ref, PanelSide side, Fi
             ],
           ),
           onTap: () => Future.delayed(Duration.zero, () {
+            if (!context.mounted) return;
             if (preferExternal && file.path != null && !kIsWeb) {
               openWithSystemEditor(context, file.path!);
             } else {
@@ -135,6 +137,7 @@ void showFileContextMenu(BuildContext context, WidgetRef ref, PanelSide side, Fi
             ],
           ),
           onTap: () => Future.delayed(Duration.zero, () {
+            if (!context.mounted) return;
             if (preferExternal) {
               showFileEditorDialog(context, ref, file, side);
             } else if (file.path != null && !kIsWeb) {
@@ -152,20 +155,16 @@ void showFileContextMenu(BuildContext context, WidgetRef ref, PanelSide side, Fi
 
   // Open with system default (all local non-folder files — DC-13 file associations)
   if (!isMultiSelect && !isSingleFolder && !kIsWeb && side == PanelSide.local &&
-      file.path != null && !const {
-        'txt', 'json', 'yaml', 'yml', 'xml', 'csv', 'log', 'ini', 'cfg',
-        'conf', 'toml', 'env', 'gitignore', 'dockerfile', 'md', 'markdown',
-        'dart', 'js', 'ts', 'jsx', 'tsx', 'py', 'rb', 'go', 'rs', 'java',
-        'kt', 'swift', 'c', 'cpp', 'h', 'hpp', 'cs', 'php', 'html', 'css',
-        'scss', 'less', 'sql', 'sh', 'bash', 'zsh', 'ps1', 'bat', 'r',
-        'lua', 'vim', 'makefile', 'properties', 'gradle',
-      }.contains(file.extension)) {
+      file.path != null && !_editableExts.contains(file.extension)) {
     items.add(
       PopupMenuItem(
         child: const Row(children: [
           Icon(Icons.open_in_new, size: 20), SizedBox(width: 8), Text('Open with System App'),
         ]),
-        onTap: () => Future.delayed(Duration.zero, () => openWithSystemEditor(context, file.path!)),
+        onTap: () => Future.delayed(Duration.zero, () {
+          if (!context.mounted) return;
+          openWithSystemEditor(context, file.path!);
+        }),
       ),
     );
   }
@@ -184,8 +183,10 @@ void showFileContextMenu(BuildContext context, WidgetRef ref, PanelSide side, Fi
           child: const Row(children: [
             Icon(Icons.verified, size: 20), SizedBox(width: 8), Text('Verify against remote'),
           ]),
-          onTap: () => Future.delayed(Duration.zero, () =>
-              _verifyAgainstRemote(context, ref, file, oppMatch.first)),
+          onTap: () => Future.delayed(Duration.zero, () {
+            if (!context.mounted) return;
+            _verifyAgainstRemote(context, ref, file, oppMatch.first);
+          }),
         ),
       );
     }
@@ -204,6 +205,7 @@ void showFileContextMenu(BuildContext context, WidgetRef ref, PanelSide side, Fi
             children: [Icon(Icons.compare_arrows), SizedBox(width: 8), Text('Compare')],
           ),
           onTap: () => Future.delayed(Duration.zero, () {
+            if (!context.mounted) return;
             if (side == PanelSide.local) {
               showDiffViewerDialog(context, ref, file, matchingFile.first,
                   leftSide: PanelSide.local, rightSide: PanelSide.remote);
@@ -289,6 +291,7 @@ void showFileContextMenu(BuildContext context, WidgetRef ref, PanelSide side, Fi
             children: [Icon(Icons.link), SizedBox(width: 8), Text('Share Link')],
           ),
           onTap: () => Future.delayed(Duration.zero, () async {
+            if (!context.mounted) return;
             try {
               showShareLinkDialog(context, ref, file);
             } catch (e) {
@@ -310,6 +313,7 @@ void showFileContextMenu(BuildContext context, WidgetRef ref, PanelSide side, Fi
           children: [Icon(Icons.share), SizedBox(width: 8), Text('Share File')],
         ),
         onTap: () => Future.delayed(Duration.zero, () async {
+          if (!context.mounted) return;
           // Show loading snackbar
           ScaffoldMessenger.of(context).showSnackBar(
             const SnackBar(
@@ -358,10 +362,10 @@ void showFileContextMenu(BuildContext context, WidgetRef ref, PanelSide side, Fi
           Text('Copy to...${isMultiSelect ? ' (${files.length})' : ''}'),
         ],
       ),
-      onTap: () => Future.delayed(
-        Duration.zero,
-        () => _showCopyDialog(context, ref, side, files),
-      ),
+      onTap: () => Future.delayed(Duration.zero, () {
+        if (!context.mounted) return;
+        _showCopyDialog(context, ref, side, files);
+      }),
     ),
   );
 
@@ -375,10 +379,10 @@ void showFileContextMenu(BuildContext context, WidgetRef ref, PanelSide side, Fi
           Text('Move to...${isMultiSelect ? ' (${files.length})' : ''}'),
         ],
       ),
-      onTap: () => Future.delayed(
-        Duration.zero,
-        () => _showMoveDialog(context, ref, side, files),
-      ),
+      onTap: () => Future.delayed(Duration.zero, () {
+        if (!context.mounted) return;
+        _showMoveDialog(context, ref, side, files);
+      }),
     ),
   );
 
@@ -393,10 +397,10 @@ void showFileContextMenu(BuildContext context, WidgetRef ref, PanelSide side, Fi
             Text('Rename (F2)'),
           ],
         ),
-        onTap: () => Future.delayed(
-          Duration.zero,
-          () => showRenameDialog(context, ref, side, file),
-        ),
+        onTap: () => Future.delayed(Duration.zero, () {
+          if (!context.mounted) return;
+          showRenameDialog(context, ref, side, file);
+        }),
       ),
     );
   }
@@ -412,10 +416,10 @@ void showFileContextMenu(BuildContext context, WidgetRef ref, PanelSide side, Fi
             Text('Batch Rename (${files.length})'),
           ],
         ),
-        onTap: () => Future.delayed(
-          Duration.zero,
-          () => showBatchRenameDialog(context, ref, side, files),
-        ),
+        onTap: () => Future.delayed(Duration.zero, () {
+          if (!context.mounted) return;
+          showBatchRenameDialog(context, ref, side, files);
+        }),
       ),
     );
   }
@@ -430,7 +434,10 @@ void showFileContextMenu(BuildContext context, WidgetRef ref, PanelSide side, Fi
           child: const Row(
             children: [Icon(Icons.link), SizedBox(width: 8), Text('Share Link')],
           ),
-          onTap: () => Future.delayed(Duration.zero, () => showShareLinkDialog(context, ref, file)),
+          onTap: () => Future.delayed(Duration.zero, () {
+            if (!context.mounted) return;
+            showShareLinkDialog(context, ref, file);
+          }),
         ),
       );
     }
@@ -444,7 +451,10 @@ void showFileContextMenu(BuildContext context, WidgetRef ref, PanelSide side, Fi
         child: const Row(
           children: [Icon(Icons.history), SizedBox(width: 8), Text('Version History')],
         ),
-        onTap: () => Future.delayed(Duration.zero, () => showVersionHistoryDialog(context, ref, file)),
+        onTap: () => Future.delayed(Duration.zero, () {
+          if (!context.mounted) return;
+          showVersionHistoryDialog(context, ref, file);
+        }),
       ),
     );
   }
@@ -458,7 +468,10 @@ void showFileContextMenu(BuildContext context, WidgetRef ref, PanelSide side, Fi
           child: const Row(
             children: [Icon(Icons.security), SizedBox(width: 8), Text('Permissions')],
           ),
-          onTap: () => Future.delayed(Duration.zero, () => showPermissionsDialog(context, ref, file)),
+          onTap: () => Future.delayed(Duration.zero, () {
+            if (!context.mounted) return;
+            showPermissionsDialog(context, ref, file);
+          }),
         ),
       );
     }
@@ -594,10 +607,10 @@ void showFileContextMenu(BuildContext context, WidgetRef ref, PanelSide side, Fi
             Text('Properties'),
           ],
         ),
-        onTap: () => Future.delayed(
-          Duration.zero,
-          () => _showPropertiesDialog(context, file),
-        ),
+        onTap: () => Future.delayed(Duration.zero, () {
+          if (!context.mounted) return;
+          _showPropertiesDialog(context, file);
+        }),
       ),
     );
   }
@@ -613,10 +626,10 @@ void showFileContextMenu(BuildContext context, WidgetRef ref, PanelSide side, Fi
             Text('Calculate Size'),
           ],
         ),
-        onTap: () => Future.delayed(
-          Duration.zero,
-          () => _showFolderSize(context, file),
-        ),
+        onTap: () => Future.delayed(Duration.zero, () {
+          if (!context.mounted) return;
+          _showFolderSize(context, file);
+        }),
       ),
     );
   }
@@ -662,10 +675,10 @@ void showFileContextMenu(BuildContext context, WidgetRef ref, PanelSide side, Fi
             Text('Checksum'),
           ],
         ),
-        onTap: () => Future.delayed(
-          Duration.zero,
-          () => _showChecksumDialog(context, file),
-        ),
+        onTap: () => Future.delayed(Duration.zero, () {
+          if (!context.mounted) return;
+          _showChecksumDialog(context, file);
+        }),
       ),
     );
   }
@@ -680,8 +693,10 @@ void showFileContextMenu(BuildContext context, WidgetRef ref, PanelSide side, Fi
           child: const Row(children: [
             Icon(Icons.playlist_add_check, size: 20), SizedBox(width: 8), Text('Create .md5 file'),
           ]),
-          onTap: () => Future.delayed(Duration.zero, () =>
-            _createChecksumFileDialog(context, localFiles, 'md5')),
+          onTap: () => Future.delayed(Duration.zero, () {
+            if (!context.mounted) return;
+            _createChecksumFileDialog(context, localFiles, 'md5');
+          }),
         ),
       );
     }
@@ -694,8 +709,10 @@ void showFileContextMenu(BuildContext context, WidgetRef ref, PanelSide side, Fi
             child: const Row(children: [
               Icon(Icons.verified, size: 20), SizedBox(width: 8), Text('Verify checksum file'),
             ]),
-            onTap: () => Future.delayed(Duration.zero, () =>
-              _verifyChecksumFileDialog(context, file.path!)),
+            onTap: () => Future.delayed(Duration.zero, () {
+              if (!context.mounted) return;
+              _verifyChecksumFileDialog(context, file.path!);
+            }),
           ),
         );
       }
@@ -709,7 +726,10 @@ void showFileContextMenu(BuildContext context, WidgetRef ref, PanelSide side, Fi
         child: const Row(
           children: [Icon(Icons.call_split, size: 20), SizedBox(width: 8), Text('Split File')],
         ),
-        onTap: () => Future.delayed(Duration.zero, () => _showSplitDialog(context, ref, side, file)),
+        onTap: () => Future.delayed(Duration.zero, () {
+          if (!context.mounted) return;
+          _showSplitDialog(context, ref, side, file);
+        }),
       ),
     );
   }
@@ -721,7 +741,10 @@ void showFileContextMenu(BuildContext context, WidgetRef ref, PanelSide side, Fi
         child: const Row(
           children: [Icon(Icons.merge_type, size: 20), SizedBox(width: 8), Text('Combine Parts')],
         ),
-        onTap: () => Future.delayed(Duration.zero, () => _showCombineDialog(context, ref, side, files)),
+        onTap: () => Future.delayed(Duration.zero, () {
+          if (!context.mounted) return;
+          _showCombineDialog(context, ref, side, files);
+        }),
       ),
     );
   }
@@ -734,7 +757,10 @@ void showFileContextMenu(BuildContext context, WidgetRef ref, PanelSide side, Fi
           child: const Row(
             children: [Icon(Icons.link, size: 20), SizedBox(width: 8), Text('Create Link...')],
           ),
-          onTap: () => Future.delayed(Duration.zero, () => _showCreateLinkDialog(context, ref, side, file)),
+          onTap: () => Future.delayed(Duration.zero, () {
+            if (!context.mounted) return;
+            _showCreateLinkDialog(context, ref, side, file);
+          }),
         ),
       );
     }
@@ -754,7 +780,10 @@ void showFileContextMenu(BuildContext context, WidgetRef ref, PanelSide side, Fi
             ),
           ],
         ),
-        onTap: () => Future.delayed(Duration.zero, () => _showSecureWipeDialog(context, ref, side, files)),
+        onTap: () => Future.delayed(Duration.zero, () {
+          if (!context.mounted) return;
+          _showSecureWipeDialog(context, ref, side, files);
+        }),
       ),
     );
   }
@@ -774,10 +803,10 @@ void showFileContextMenu(BuildContext context, WidgetRef ref, PanelSide side, Fi
           ),
         ],
       ),
-      onTap: () => Future.delayed(
-        Duration.zero,
-        () => confirmDelete(context, ref, side, files),
-      ),
+      onTap: () => Future.delayed(Duration.zero, () {
+        if (!context.mounted) return;
+        confirmDelete(context, ref, side, files);
+      }),
     ),
   );
 

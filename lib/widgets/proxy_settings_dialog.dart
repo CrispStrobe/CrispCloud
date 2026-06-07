@@ -264,8 +264,8 @@ class _ProxySettingsDialogState extends ConsumerState<ProxySettingsDialog> {
           TextButton(
             onPressed: () async {
               await ref.read(proxyServiceProvider).clear();
-              if (!mounted) return;
-              Navigator.pop(context, true); // ignore: use_build_context_synchronously
+              if (!context.mounted) return;
+              Navigator.pop(context, true);
             },
             child: const Text('Reset'),
           ),

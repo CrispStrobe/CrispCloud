@@ -134,8 +134,6 @@ final migrationProgressProvider =
 
 /// Tracks which plan IDs currently have a running migration.
 class ActiveMigrationNotifier extends StateNotifier<Set<String>> {
-  static const _log = Log('ActiveMigrationNotifier');
-
   ActiveMigrationNotifier() : super({});
 
   void markRunning(String planId) {

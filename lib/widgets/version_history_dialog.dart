@@ -299,7 +299,6 @@ class _VersionHistoryDialogState extends ConsumerState<_VersionHistoryDialog> {
         if (resp.statusCode == 200) return utf8.decode(resp.bodyBytes, allowMalformed: true);
       } else if (provider == 'dropbox') {
         final token = (client as DropboxClientAdapter).accessToken!;
-        final path = version['path'] as String;
         final rev = version['id'] as String;
         final arg = json.encode({'path': 'rev:$rev'});
         final resp = await http.post(

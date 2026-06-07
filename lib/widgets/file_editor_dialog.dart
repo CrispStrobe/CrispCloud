@@ -402,11 +402,14 @@ class _FileEditorPageState extends ConsumerState<_FileEditorPage> {
         ? widget.file.name.split('.').last.toUpperCase()
         : 'TXT';
 
-    // ignore: deprecated_member_use
-    return WillPopScope(
-      onWillPop: () async {
-        if (!_modified) return true;
-        return await _confirmDiscard();
+    return PopScope(
+      canPop: !_modified,
+      onPopInvokedWithResult: (didPop, _) async {
+        if (didPop) return;
+        if (await _confirmDiscard()) {
+          if (!context.mounted) return;
+          Navigator.of(context).pop();
+        }
       },
       child: Scaffold(
         appBar: AppBar(
@@ -414,7 +417,7 @@ class _FileEditorPageState extends ConsumerState<_FileEditorPage> {
             icon: const Icon(Icons.close),
             onPressed: () async {
               if (await _confirmDiscard()) {
-                if (!mounted) return;
+                if (!context.mounted) return;
                 Navigator.of(context).pop();
               }
             },

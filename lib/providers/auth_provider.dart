@@ -9,8 +9,12 @@ import 'package:flutter/foundation.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
+import '../services/azure_blob_adapter.dart';
 import '../services/azure_config_service.dart';
+import '../services/b2_client_adapter.dart';
 import '../services/b2_config_service.dart';
+import '../services/hetzner_adapter.dart';
+import '../utils/async_lock.dart';
 import '../services/cloud_storage_interface.dart';
 import '../services/dropbox_client_adapter.dart';
 import '../services/dropbox_config_service.dart';
@@ -53,8 +57,8 @@ class AuthNotifier extends ChangeNotifier {
   bool _isConnected = false;
   String? _userEmail;
 
-  final _switchLock = _AsyncLock();
-  final _autoLoginLock = _AsyncLock();
+  final _switchLock = AsyncLock();
+  final _autoLoginLock = AsyncLock();
 
   AuthNotifier(this._ref, {
     required CloudProvider initialProvider,
@@ -389,25 +393,12 @@ class AuthNotifier extends ChangeNotifier {
       await (_cloudClient as NextcloudClientAdapter).config.clearCredentials();
     } else if (_cloudClient is PCloudClientAdapter) {
       await (_cloudClient as PCloudClientAdapter).config.clearCredentials();
-    }
-  }
-}
-
-/// Simple async lock (same as was in AppState).
-class _AsyncLock {
-  Completer<void>? _completer;
-
-  Future<T> synchronized<T>(Future<T> Function() action) async {
-    while (_completer != null) {
-      await _completer!.future;
-    }
-    _completer = Completer<void>();
-    try {
-      return await action();
-    } finally {
-      final c = _completer!;
-      _completer = null;
-      c.complete();
+    } else if (_cloudClient is AzureBlobAdapter) {
+      await (_cloudClient as AzureBlobAdapter).config.clearCredentials();
+    } else if (_cloudClient is B2ClientAdapter) {
+      await (_cloudClient as B2ClientAdapter).config.clearCredentials();
+    } else if (_cloudClient is HetznerStorageBoxAdapter) {
+      await (_cloudClient as HetznerStorageBoxAdapter).config.clearCredentials();
     }
   }
 }

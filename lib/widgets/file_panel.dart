@@ -13,7 +13,7 @@ import '../services/panel_view_mode_service.dart' show PanelViewMode;
 import 'file_column_view.dart';
 import 'file_grid_view.dart';
 import 'file_toolbar.dart';
-import 'file_list_view.dart' show FileListView, PanelDragData, getFileIcon;
+import 'file_list_view.dart' show FileListView, PanelDragData;
 import 'file_tree_view_stub.dart'
     if (dart.library.io) 'file_tree_view.dart';
 import 'drive_bar.dart';

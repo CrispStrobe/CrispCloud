@@ -351,7 +351,7 @@ class WebFileService implements LocalFileService {
     final fileName = p.basename(path);
     final blob = html.Blob([data]);
     final url = html.Url.createObjectUrlFromBlob(blob);
-    final anchor = html.AnchorElement(href: url)
+    html.AnchorElement(href: url)
       ..setAttribute("download", fileName)
       ..click();
     html.Url.revokeObjectUrl(url);

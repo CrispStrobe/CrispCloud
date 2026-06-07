@@ -286,41 +286,32 @@ class _AzureConnectionDialogState
               style: Theme.of(context).textTheme.labelLarge,
             ),
             const SizedBox(height: 8),
-            _ModeRadio<_AzureAuthMode>(
-              value: _AzureAuthMode.accountKey,
+            RadioGroup<_AzureAuthMode>(
               groupValue: _authMode,
-              label: 'Account Key',
-              onChanged: _isLoading
-                  ? null
-                  : (v) => setState(() {
-                        _authMode = v!;
-                        _error = null;
-                        _testResult = null;
-                      }),
-            ),
-            _ModeRadio<_AzureAuthMode>(
-              value: _AzureAuthMode.sasToken,
-              groupValue: _authMode,
-              label: 'SAS Token',
-              onChanged: _isLoading
-                  ? null
-                  : (v) => setState(() {
-                        _authMode = v!;
-                        _error = null;
-                        _testResult = null;
-                      }),
-            ),
-            _ModeRadio<_AzureAuthMode>(
-              value: _AzureAuthMode.connectionString,
-              groupValue: _authMode,
-              label: 'Connection String',
-              onChanged: _isLoading
-                  ? null
-                  : (v) => setState(() {
-                        _authMode = v!;
-                        _error = null;
-                        _testResult = null;
-                      }),
+              onChanged: (v) {
+                if (_isLoading || v == null) return;
+                setState(() {
+                  _authMode = v;
+                  _error = null;
+                  _testResult = null;
+                });
+              },
+              child: Column(
+                children: [
+                  _ModeRadio<_AzureAuthMode>(
+                    value: _AzureAuthMode.accountKey,
+                    label: 'Account Key',
+                  ),
+                  _ModeRadio<_AzureAuthMode>(
+                    value: _AzureAuthMode.sasToken,
+                    label: 'SAS Token',
+                  ),
+                  _ModeRadio<_AzureAuthMode>(
+                    value: _AzureAuthMode.connectionString,
+                    label: 'Connection String',
+                  ),
+                ],
+              ),
             ),
             const SizedBox(height: 16),
             const Divider(height: 1),
@@ -425,33 +416,32 @@ class _AzureConnectionDialogState
 
   List<Widget> _sasTokenFields() => [
         // Toggle: full URL or separate fields
-        Row(
-          children: [
-            Expanded(
-              child: RadioListTile<bool>(
-                value: true,
-                groupValue: _sasUseFull,
-                title: const Text('Full SAS URL', style: TextStyle(fontSize: 13)),
-                dense: true,
-                contentPadding: EdgeInsets.zero,
-                onChanged: _isLoading
-                    ? null
-                    : (v) => setState(() => _sasUseFull = v!),
+        RadioGroup<bool>(
+          groupValue: _sasUseFull,
+          onChanged: (v) {
+            if (_isLoading || v == null) return;
+            setState(() => _sasUseFull = v);
+          },
+          child: Row(
+            children: [
+              Expanded(
+                child: RadioListTile<bool>(
+                  value: true,
+                  title: const Text('Full SAS URL', style: TextStyle(fontSize: 13)),
+                  dense: true,
+                  contentPadding: EdgeInsets.zero,
+                ),
               ),
-            ),
-            Expanded(
-              child: RadioListTile<bool>(
-                value: false,
-                groupValue: _sasUseFull,
-                title: const Text('Token + Account', style: TextStyle(fontSize: 13)),
-                dense: true,
-                contentPadding: EdgeInsets.zero,
-                onChanged: _isLoading
-                    ? null
-                    : (v) => setState(() => _sasUseFull = v!),
+              Expanded(
+                child: RadioListTile<bool>(
+                  value: false,
+                  title: const Text('Token + Account', style: TextStyle(fontSize: 13)),
+                  dense: true,
+                  contentPadding: EdgeInsets.zero,
+                ),
               ),
-            ),
-          ],
+            ],
+          ),
         ),
         const SizedBox(height: 8),
         if (_sasUseFull) ...[
@@ -550,24 +540,18 @@ class _AzureConnectionDialogState
 
 class _ModeRadio<T> extends StatelessWidget {
   final T value;
-  final T groupValue;
   final String label;
-  final ValueChanged<T?>? onChanged;
 
   const _ModeRadio({
     required this.value,
-    required this.groupValue,
     required this.label,
-    this.onChanged,
   });
 
   @override
   Widget build(BuildContext context) {
     return RadioListTile<T>(
       value: value,
-      groupValue: groupValue,
       title: Text(label),
-      onChanged: onChanged,
       dense: true,
       contentPadding: EdgeInsets.zero,
     );

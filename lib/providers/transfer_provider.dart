@@ -320,7 +320,6 @@ class TransferNotifier extends ChangeNotifier {
               final localFilePath = p.join(target, file.name);
               final sink = File(localFilePath).openWrite();
               int received = 0;
-              final totalSize = file.size ?? 0;
 
               try {
                 await for (final chunk in client.downloadStream(

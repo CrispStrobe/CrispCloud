@@ -651,7 +651,7 @@ class S3ClientAdapter extends CloudStorageClient {
   }
 
   /// Complete a multipart upload with the list of part ETags.
-  Future<void> _completeMultipartUpload(String key, String uploadId, List<_PartETag> parts) async {
+  Future<void> _completeMultipartUpload(String key, String uploadId, List<PartETag> parts) async {
     final xmlParts = parts.map((p) =>
       '<Part><PartNumber>${p.partNumber}</PartNumber><ETag>${p.etag}</ETag></Part>'
     ).join();
@@ -670,12 +670,6 @@ class S3ClientAdapter extends CloudStorageClient {
     }
   }
 
-  /// Abort a multipart upload.
-  Future<void> _abortMultipartUpload(String key, String uploadId) async {
-    final uri = _buildUri(key, queryParams: {'uploadId': uploadId});
-    await _signedRequest('DELETE', uri);
-  }
-
   /// Perform a full multipart upload: initiate, upload parts, complete.
   /// Tracks uploaded parts via SharedPreferences for resume support.
   Future<void> _multipartUpload(
@@ -688,7 +682,7 @@ class S3ClientAdapter extends CloudStorageClient {
     _log.info('Starting multipart upload: $totalSize bytes, part size: $partSize');
 
     final uploadId = await _initiateMultipartUpload(key);
-    final parts = <_PartETag>[];
+    final parts = <PartETag>[];
     int uploaded = 0;
 
     try {
@@ -698,7 +692,7 @@ class S3ClientAdapter extends CloudStorageClient {
         final partData = fileData.sublist(offset, end);
 
         final etag = await _uploadPart(key, uploadId, partNumber, partData);
-        final part = _PartETag(partNumber, etag);
+        final part = PartETag(partNumber, etag);
         parts.add(part);
 
         // Track each uploaded part for resume
@@ -731,7 +725,7 @@ class S3ClientAdapter extends CloudStorageClient {
   final Map<String, _MultipartTrackingState> _activeMultipartUploads = {};
 
   /// Track a successfully uploaded part in SharedPreferences.
-  Future<void> _trackUploadedPart(String uploadId, String key, _PartETag part) async {
+  Future<void> _trackUploadedPart(String uploadId, String key, PartETag part) async {
     // Update in-memory state
     final state = _activeMultipartUploads.putIfAbsent(
       uploadId,
@@ -780,9 +774,9 @@ class S3ClientAdapter extends CloudStorageClient {
   }
 
   /// List parts already uploaded for a multipart upload via the S3 ListParts API.
-  Future<List<_PartETag>> listParts(String key, String uploadId) async {
+  Future<List<PartETag>> listParts(String key, String uploadId) async {
     _ensureAuth();
-    final parts = <_PartETag>[];
+    final parts = <PartETag>[];
     String? partMarker;
 
     do {
@@ -815,7 +809,7 @@ class S3ClientAdapter extends CloudStorageClient {
       for (final match in partMatches) {
         final partNumber = int.parse(match.group(1)!);
         final etag = match.group(2)!;
-        parts.add(_PartETag(partNumber, etag));
+        parts.add(PartETag(partNumber, etag));
       }
 
       // Check for truncation
@@ -881,7 +875,7 @@ class S3ClientAdapter extends CloudStorageClient {
     _log.info('Found ${existingParts.length} existing parts on server');
 
     final totalSize = fileData.length;
-    final allParts = <_PartETag>[...existingParts];
+    final allParts = <PartETag>[...existingParts];
 
     // Calculate bytes already uploaded
     int uploaded = 0;
@@ -904,7 +898,7 @@ class S3ClientAdapter extends CloudStorageClient {
         final partData = fileData.sublist(offset, end);
 
         final etag = await _uploadPart(key, uploadId, partNumber, partData);
-        final part = _PartETag(partNumber, etag);
+        final part = PartETag(partNumber, etag);
         allParts.add(part);
         await _trackUploadedPart(uploadId, key, part);
 
@@ -1062,10 +1056,10 @@ class S3ClientAdapter extends CloudStorageClient {
 }
 
 /// Helper class for multipart upload part tracking.
-class _PartETag {
+class PartETag {
   final int partNumber;
   final String etag;
-  _PartETag(this.partNumber, this.etag);
+  PartETag(this.partNumber, this.etag);
 }
 
 /// In-memory tracking state for an active multipart upload.
@@ -1073,7 +1067,7 @@ class _MultipartTrackingState {
   final String uploadId;
   final String bucket;
   final String key;
-  final List<_PartETag> parts = [];
+  final List<PartETag> parts = [];
 
   _MultipartTrackingState({
     required this.uploadId,

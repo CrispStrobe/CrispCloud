@@ -1132,7 +1132,7 @@ class MigrationService {
         mismatches.add({
           'path': entry.relativePath,
           'sourceHash': entry.sourceHash ?? '(size:${entry.sizeBytes})',
-          'destHash': '(size:${destSize.toString() ?? "unknown"})',
+          'destHash': '(size:${destSize.toString()})',
         });
       } else if (entry.sourceHash != null &&
           resolvedDestHash != null &&

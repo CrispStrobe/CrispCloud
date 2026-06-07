@@ -99,8 +99,6 @@ class DocumentsProviderBridge {
       MethodChannel('com.crispcloud/documents_provider');
 
   // SharedPreferences keys (must match CrispCloudDocumentsProvider.kt).
-  // ignore: unused_field
-  static const _prefsName = 'crisp_cloud_documents_provider';
   static const _prefsKeyProviders = 'connected_providers';
 
   // Cached list of connections for synchronous access.
@@ -397,5 +395,6 @@ class DocumentsProviderBridge {
 // ---------------------------------------------------------------------------
 
 /// Set to `true` in unit tests to suppress the Android platform check.
+// This is intentionally non-const so tests can reassign it.
 // ignore: prefer_const_declarations
 bool kIsTestEnvironment = false;

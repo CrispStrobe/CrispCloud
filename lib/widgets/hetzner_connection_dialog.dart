@@ -273,35 +273,34 @@ class _HetznerConnectionDialogState
               style: Theme.of(context).textTheme.labelLarge,
             ),
             const SizedBox(height: 4),
-            Row(
-              children: [
-                Expanded(
-                  child: RadioListTile<HetznerProtocol>(
-                    key: const Key('hetzner_proto_sftp'),
-                    title: const Text('SFTP  (port 23)'),
-                    value: HetznerProtocol.sftp,
-                    groupValue: _protocol,
-                    dense: true,
-                    contentPadding: EdgeInsets.zero,
-                    onChanged: busy
-                        ? null
-                        : (v) => setState(() => _protocol = v!),
+            RadioGroup<HetznerProtocol>(
+              groupValue: _protocol,
+              onChanged: (v) {
+                if (busy || v == null) return;
+                setState(() => _protocol = v);
+              },
+              child: Row(
+                children: [
+                  Expanded(
+                    child: RadioListTile<HetznerProtocol>(
+                      key: const Key('hetzner_proto_sftp'),
+                      title: const Text('SFTP  (port 23)'),
+                      value: HetznerProtocol.sftp,
+                      dense: true,
+                      contentPadding: EdgeInsets.zero,
+                    ),
                   ),
-                ),
-                Expanded(
-                  child: RadioListTile<HetznerProtocol>(
-                    key: const Key('hetzner_proto_webdav'),
-                    title: const Text('WebDAV  (HTTPS)'),
-                    value: HetznerProtocol.webdav,
-                    groupValue: _protocol,
-                    dense: true,
-                    contentPadding: EdgeInsets.zero,
-                    onChanged: busy
-                        ? null
-                        : (v) => setState(() => _protocol = v!),
+                  Expanded(
+                    child: RadioListTile<HetznerProtocol>(
+                      key: const Key('hetzner_proto_webdav'),
+                      title: const Text('WebDAV  (HTTPS)'),
+                      value: HetznerProtocol.webdav,
+                      dense: true,
+                      contentPadding: EdgeInsets.zero,
+                    ),
                   ),
-                ),
-              ],
+                ],
+              ),
             ),
             const SizedBox(height: 8),
 

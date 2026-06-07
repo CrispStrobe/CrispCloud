@@ -7,6 +7,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import '../models/file_item.dart';
 import '../models/panel_side.dart';
 import '../providers/providers.dart';
 import '../providers/panel_source_provider.dart' show panelSourceProvider;
@@ -463,10 +464,10 @@ KeyEventResult handleKeyEvent(
 // ---------------------------------------------------------------------------
 
 /// Copy names or full paths of the current selection to the system clipboard.
-void _copySelectionToClipboard(WidgetRef ref, dynamic panel, {required bool namesOnly}) {
-  final selection = panel.selection as Set;
+void _copySelectionToClipboard(WidgetRef ref, PanelNotifier panel, {required bool namesOnly}) {
+  final selection = panel.selection;
   final items = selection.isEmpty
-      ? (panel.cursorItem != null ? {panel.cursorItem} : <dynamic>{})
+      ? (panel.cursorItem != null ? {panel.cursorItem!} : <FileItem>{})
       : selection;
   if (items.isEmpty) return;
   final lines = items.map((f) => namesOnly ? f.name : (f.path ?? f.name)).join('\n');

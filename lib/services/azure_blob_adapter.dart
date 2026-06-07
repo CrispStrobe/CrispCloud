@@ -71,6 +71,8 @@ class AzureBlobAdapter extends CloudStorageClient {
 
   final AzureConfigService _config;
 
+  AzureConfigService get config => _config;
+
   // Resolved after login()
   String? _accountName;
   String? _accountKey; // base64-encoded 512-bit key
@@ -346,7 +348,6 @@ class AzureBlobAdapter extends CloudStorageClient {
     final contentLength = body.isEmpty ? '' : '${body.length}';
     final contentType = headers['Content-Type'] ?? '';
     const date = ''; // x-ms-date takes precedence; leave this empty
-    final msDate = headers['x-ms-date'] ?? '';
 
     // Canonicalized headers: sort x-ms-* headers (lowercase), newline-delimited
     final msHeaders = headers.entries

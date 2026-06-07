@@ -162,7 +162,7 @@ class ThemeService extends ChangeNotifier {
     notifyListeners();
     final prefs = await SharedPreferences.getInstance();
     if (color != null) {
-      await prefs.setInt(_accentKey, color.value);
+      await prefs.setInt(_accentKey, color.toARGB32());
     } else {
       await prefs.remove(_accentKey);
     }

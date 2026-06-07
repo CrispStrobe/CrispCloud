@@ -63,7 +63,7 @@ class FilenFileSink implements io.IOSink {
 
   static const int _maxMemorySize = 100 * 1024 * 1024; // 100MB
   bool _usingDisk = false;
-  io.BytesBuilder _memoryBuffer = io.BytesBuilder(copy: false);
+  BytesBuilder _memoryBuffer = BytesBuilder(copy: false);
   io.File? _tempFile;
   io.IOSink? _tempFileSink;
   int _bytesWritten = 0;
@@ -93,7 +93,7 @@ class FilenFileSink implements io.IOSink {
       _tempFileSink!.add(bufferedBytes);
     }
 
-    _memoryBuffer = io.BytesBuilder(copy: false);
+    _memoryBuffer = BytesBuilder(copy: false);
   }
 
   @override
@@ -125,7 +125,6 @@ class FilenFileSink implements io.IOSink {
 
     try {
       final remoteParentPath = p.dirname(remotePath);
-      final remoteFilename = p.basename(remotePath);
 
       // Resolve parent folder
       final parentResolved = await client.resolvePath(remoteParentPath);
@@ -370,7 +369,6 @@ class FilenFileSystem implements FileSystem {
   @override
   Directory get systemTempDirectory => const LocalFileSystem().systemTempDirectory;
 
-  @override
   Directory get homeDirectory =>
       throw UnimplementedError('Not applicable for virtual filesystem');
 
@@ -378,21 +376,17 @@ class FilenFileSystem implements FileSystem {
   Link link(dynamic path) =>
       throw UnimplementedError('Links are not supported');
 
-  @override
   String get pathSeparator => '/';
 
   @override
   bool get isWatchSupported => false;
 
-  @override
   Future<String> symbolicLinkTarget(String path) =>
       throw UnimplementedError('Links not supported');
 
-  @override
   Future<File> createTemp(String prefix) => throw UnimplementedError(
       'Temp operations not supported on virtual filesystem');
 
-  @override
   File createTempSync(String prefix) =>
       throw UnimplementedError('Sync operations not supported');
 }
@@ -404,7 +398,6 @@ class FilenDirectory implements Directory {
   @override
   final String path;
 
-  @override
   final FilenFileSystem fs;
 
   FilenDirectory({
@@ -507,7 +500,6 @@ class FilenDirectory implements Directory {
 
   // Note: Must check of Filen does support setting timestamps directly on folders via API
   // This is a stub for interface compliance
-  @override
   Future<void> setStat(io.FileStat stat) async {
     client
         .log('WebDAV: PROPPATCH (Folder) $path - not supported by Filen API');
@@ -603,7 +595,6 @@ class FilenFile implements File {
   @override
   final String path;
 
-  @override
   final FilenFileSystem fs;
 
   FilenFile({
@@ -717,7 +708,6 @@ class FilenFile implements File {
 
   // Note: Filen doesn't support setting timestamps directly via API
   // This is a stub for interface compliance
-  @override
   Future<void> setStat(io.FileStat stat) async {
     client.log('WebDAV: PROPPATCH (File) $path - not supported by Filen API');
     // Filen API doesn't provide file timestamp updates after upload

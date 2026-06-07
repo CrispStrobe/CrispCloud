@@ -2,6 +2,45 @@
 
 Audit trail of bugs found, issues discovered, and fixes applied.
 
+## 2026-06-07 — Session 9: DC Parity Completion, Lint Zero, Code Quality Fixes
+
+### DC Parity — All 5 Remaining Items Verified Complete
+- **11.5.1 Tree View**: `FileTreeView` widget with lazy expansion, keyboard nav, panel sync, web stub — already done
+- **11.5.2 Column Headers**: `_CompactColumnHeader` with sort, drag-resize, secondary sort — already done
+- **11.5.3 Home/End/PgUp/PgDn**: `moveCursorTo()` in PanelNotifier, viewport-aware page size in FileListView — already done
+- **11.5.4 Cursor Position in Status Bar**: "15 / 169" display next to item count — already done
+- **11.5.5 Numpad * Invert Selection**: `invertSelection()` wired in both keyboard_shortcuts and FileListView — already done
+- **11.5.6 Remote Panel "Not Connected"**: cloud_off icon + "Connect to cloud" button in empty state — already done
+- Updated PLAN.md to check off all items; DC parity milestone **100% complete**
+
+### Lint Cleanup: 0 Warnings / 0 Errors in lib/
+**Starting state:** 62 issues in lib/ (15 errors, ~55 warnings, ~228 info)
+
+**Fixes applied:**
+- **WillPopScope → PopScope**: Migrated `file_editor_dialog.dart` from deprecated `WillPopScope` to `PopScope` with `onPopInvokedWithResult`
+- **use_build_context_synchronously**: Removed whole-file ignores from `file_browser_screen.dart` and `file_context_menu.dart`; added 25+ `if (!context.mounted) return;` guards in async callbacks; changed `mounted` → `context.mounted` in State methods
+- **Deprecated API migration**: `Color.red/green/blue` → `.r/.g/.b`; `Color.value` → `.toARGB32()`; `Radio.groupValue/onChanged` → `RadioGroup<T>` wrapper (azure + hetzner dialogs); removed deprecated `isInDebugMode` parameter; `BytesBuilder` imported from `dart:typed_data`
+- **Unused code removed**: 14 unused variables/fields/elements across 14 files; removed `_abortMultipartUpload` dead method from S3 adapter; removed `_prefsName`, `_bookmarksKey`, `_encryptedHeaderSize`, `_saltHex` unused fields
+- **Private-type-in-public-API**: Renamed `_RecentEntry` → `RecentEntry`, `_DiffLine` → `DiffLine`, `_DiffType` → `DiffType`, `_HandlerFn` → `ApiHandlerFn`, `_PartETag` → `PartETag`
+- **override_on_non_overriding_member**: Removed 9 incorrect `@override` annotations from webdav_filesystem.dart
+- **dead_null_aware_expression**: Removed unnecessary `??` operators where left operand was non-nullable (app_state.dart, migration_service.dart)
+
+### Code Quality Fixes — 5 Bugs Fixed
+
+1. **FocusNode leak** (`file_list_view.dart`): `_InlineRenameField` created inline `FocusNode()` in `KeyboardListener` — never disposed. Moved to State field with proper init/dispose lifecycle.
+
+2. **End key cursor bug** (`file_list_view.dart`): End key used `filteredFiles?.length` but `moveCursorTo` operates on unfiltered `_files` list — caused wrong position when filter was active. Fixed to use `files?.length`.
+
+3. **Windows crash** (`panel_provider.dart`): `_updateFreeSpace()` called `Process.run('df', ...)` without platform guard. Added `Platform.isWindows` early return.
+
+4. **Duplicate `_AsyncLock`**: Identical class defined in `panel_provider.dart`, `auth_provider.dart`, and `app_state.dart`. Extracted to shared `lib/utils/async_lock.dart`.
+
+5. **Missing credential clearing**: `_clearCredentials()` in `auth_provider.dart` didn't handle Azure, B2, or Hetzner providers — credentials persisted on disk after logout. Added proper clearing for all three.
+
+### Code Quality Improvements
+- Extracted duplicate `editableExts` set (30 extensions, duplicated in 2 places) to shared `_editableExts` constant in `file_context_menu.dart`
+- Added public `config` getter to `AzureBlobAdapter` and `HetznerStorageBoxAdapter` for credential clearing
+
 ## 2026-06-06 — Session 7: Web Fixes, macOS Polish, DC Selection UX, Compact View, Density Toggle
 
 ### Web: Three Crash Fixes

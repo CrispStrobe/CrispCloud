@@ -15,12 +15,12 @@ class RecentLocationsNotifier extends ChangeNotifier {
   static const _storageKey = 'recent_locations';
   static const maxRecent = 20;
 
-  final List<_RecentEntry> _entries = [];
+  final List<RecentEntry> _entries = [];
 
-  List<_RecentEntry> get entries => List.unmodifiable(_entries);
+  List<RecentEntry> get entries => List.unmodifiable(_entries);
 
   /// Get recent entries for a specific side.
-  List<_RecentEntry> forSide(PanelSide side) =>
+  List<RecentEntry> forSide(PanelSide side) =>
       _entries.where((e) => e.side == side).toList();
 
   RecentLocationsNotifier() {
@@ -31,7 +31,7 @@ class RecentLocationsNotifier extends ChangeNotifier {
   void add(String path, PanelSide side) {
     // Remove existing entry for same path+side (move to top)
     _entries.removeWhere((e) => e.path == path && e.side == side);
-    _entries.insert(0, _RecentEntry(path: path, side: side, visitedAt: DateTime.now()));
+    _entries.insert(0, RecentEntry(path: path, side: side, visitedAt: DateTime.now()));
     // Trim to max
     while (_entries.length > maxRecent) {
       _entries.removeLast();
@@ -53,7 +53,7 @@ class RecentLocationsNotifier extends ChangeNotifier {
       if (raw != null) {
         final list = json.decode(raw) as List;
         _entries.clear();
-        _entries.addAll(list.map((e) => _RecentEntry.fromJson(e as Map<String, dynamic>)));
+        _entries.addAll(list.map((e) => RecentEntry.fromJson(e as Map<String, dynamic>)));
         notifyListeners();
       }
     } catch (_) {}
@@ -67,12 +67,12 @@ class RecentLocationsNotifier extends ChangeNotifier {
   }
 }
 
-class _RecentEntry {
+class RecentEntry {
   final String path;
   final PanelSide side;
   final DateTime visitedAt;
 
-  const _RecentEntry({required this.path, required this.side, required this.visitedAt});
+  const RecentEntry({required this.path, required this.side, required this.visitedAt});
 
   String get label {
     if (path == '/' || path.isEmpty) return '/';
@@ -86,7 +86,7 @@ class _RecentEntry {
     'visitedAt': visitedAt.toIso8601String(),
   };
 
-  factory _RecentEntry.fromJson(Map<String, dynamic> json) => _RecentEntry(
+  factory RecentEntry.fromJson(Map<String, dynamic> json) => RecentEntry(
     path: json['path'] as String,
     side: PanelSide.values.firstWhere((s) => s.name == json['side'], orElse: () => PanelSide.local),
     visitedAt: DateTime.tryParse(json['visitedAt'] ?? '') ?? DateTime.now(),

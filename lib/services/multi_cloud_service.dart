@@ -182,11 +182,9 @@ class MultiCloudService {
           try {
             if (sourceClient.supportsStreaming && targetClient.supportsStreaming) {
               // True streaming path: pipe download stream into upload stream
-              int transferred = 0;
               final stream = sourceClient.downloadStream(
                 remoteFilePath,
                 onProgress: (current, total) {
-                  transferred = current;
                   operation.currentBytes = completedBytes + current;
                   onFileProgress?.call(file.name, current, total);
                 },

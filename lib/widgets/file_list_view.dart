@@ -169,7 +169,7 @@ class FileListView extends ConsumerWidget {
             return KeyEventResult.handled;
           }
           if (event.logicalKey == LogicalKeyboardKey.end) {
-            p.moveCursorTo((p.filteredFiles?.length ?? 1) - 1);
+            p.moveCursorTo((p.files?.length ?? 1) - 1);
             return KeyEventResult.handled;
           }
           if (event.logicalKey == LogicalKeyboardKey.pageDown ||
@@ -590,6 +590,7 @@ class _InlineRenameField extends ConsumerStatefulWidget {
 class _InlineRenameFieldState extends ConsumerState<_InlineRenameField> {
   late final TextEditingController _ctrl;
   late final FocusNode _focus;
+  late final FocusNode _keyboardListenerFocus;
 
   @override
   void initState() {
@@ -597,6 +598,7 @@ class _InlineRenameFieldState extends ConsumerState<_InlineRenameField> {
     final name = widget.file.name;
     _ctrl = TextEditingController(text: name);
     _focus = FocusNode();
+    _keyboardListenerFocus = FocusNode();
     // Select filename without extension (like DC)
     WidgetsBinding.instance.addPostFrameCallback((_) {
       _focus.requestFocus();
@@ -613,6 +615,7 @@ class _InlineRenameFieldState extends ConsumerState<_InlineRenameField> {
   void dispose() {
     _ctrl.dispose();
     _focus.dispose();
+    _keyboardListenerFocus.dispose();
     super.dispose();
   }
 
@@ -632,7 +635,7 @@ class _InlineRenameFieldState extends ConsumerState<_InlineRenameField> {
       alignment: Alignment.centerLeft,
       padding: const EdgeInsets.symmetric(horizontal: 8),
       child: KeyboardListener(
-        focusNode: FocusNode(),
+        focusNode: _keyboardListenerFocus,
         onKeyEvent: (event) {
           if (event is KeyDownEvent) {
             if (event.logicalKey == LogicalKeyboardKey.escape) _cancel();

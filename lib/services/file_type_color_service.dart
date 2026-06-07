@@ -23,7 +23,7 @@ class FileTypeColorRule {
 
   Map<String, dynamic> toJson() => {
         'extensions': extensions,
-        'color': color.value,
+        'color': color.toARGB32(),
       };
 
   factory FileTypeColorRule.fromJson(Map<String, dynamic> json) =>

@@ -57,6 +57,8 @@ class HetznerStorageBoxAdapter extends CloudStorageClient {
 
   final HetznerConfigService _config;
 
+  HetznerConfigService get config => _config;
+
   /// The inner adapter that performs the actual I/O.  Null until [login].
   CloudStorageClient? _inner;
 

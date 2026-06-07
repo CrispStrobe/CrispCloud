@@ -97,7 +97,6 @@ class _DuplicateFinderDialogState extends ConsumerState<_DuplicateFinderDialog> 
 
   @override
   Widget build(BuildContext context) {
-    final theme = Theme.of(context);
     final activePanel = ref.watch(activePanelProvider);
     final totalDuplicates = _duplicateGroups.fold<int>(0, (s, g) => s + g.length - 1);
     final wastedBytes = _duplicateGroups.fold<int>(0, (s, g) {

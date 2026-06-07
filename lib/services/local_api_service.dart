@@ -283,17 +283,17 @@ class ApiRequest {
   }
 }
 
-typedef _HandlerFn = Future<ApiResponse> Function(ApiRequest request);
+typedef ApiHandlerFn = Future<ApiResponse> Function(ApiRequest request);
 
 /// Routes an [ApiRequest] to the correct handler function.
 class ApiRouter {
   static const _log = Log('ApiRouter');
 
   // Route table: method → path → handler
-  final Map<String, Map<String, _HandlerFn>> _routes = {};
+  final Map<String, Map<String, ApiHandlerFn>> _routes = {};
 
   /// Register a handler for [method] + exact [path].
-  void register(String method, String path, _HandlerFn handler) {
+  void register(String method, String path, ApiHandlerFn handler) {
     _routes.putIfAbsent(method.toUpperCase(), () => {})[path] = handler;
   }
 

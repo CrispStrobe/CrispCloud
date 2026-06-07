@@ -154,7 +154,6 @@ class VeraCryptService {
   static const int _headerSize = 512;
   static const int _saltSize = 64;
   static const int _encryptedHeaderOffset = 64;
-  static const int _encryptedHeaderSize = 448;
 
   // Magic "VERA" at offset 0 inside decrypted area
   static const List<int> _magic = [0x56, 0x45, 0x52, 0x41];

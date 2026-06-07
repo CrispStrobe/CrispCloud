@@ -67,7 +67,7 @@ class _DiffViewerDialogState extends ConsumerState<_DiffViewerDialog> {
 
   List<String> _leftLines = [];
   List<String> _rightLines = [];
-  List<_DiffLine> _diffResult = [];
+  List<DiffLine> _diffResult = [];
   bool _loading = true;
   String? _error;
 
@@ -121,8 +121,8 @@ class _DiffViewerDialogState extends ConsumerState<_DiffViewerDialog> {
   }
 
   /// Simple line-by-line diff using the Longest Common Subsequence approach.
-  List<_DiffLine> _computeDiff(List<String> left, List<String> right) {
-    final result = <_DiffLine>[];
+  List<DiffLine> _computeDiff(List<String> left, List<String> right) {
+    final result = <DiffLine>[];
 
     // LCS table
     final m = left.length;
@@ -141,18 +141,18 @@ class _DiffViewerDialogState extends ConsumerState<_DiffViewerDialog> {
 
     // Backtrack to produce diff
     int i = m, j = n;
-    final stack = <_DiffLine>[];
+    final stack = <DiffLine>[];
 
     while (i > 0 || j > 0) {
       if (i > 0 && j > 0 && left[i - 1] == right[j - 1]) {
-        stack.add(_DiffLine(type: _DiffType.equal, leftLine: i, rightLine: j, text: left[i - 1]));
+        stack.add(DiffLine(type: DiffType.equal, leftLine: i, rightLine: j, text: left[i - 1]));
         i--;
         j--;
       } else if (j > 0 && (i == 0 || lcs[i][j - 1] >= lcs[i - 1][j])) {
-        stack.add(_DiffLine(type: _DiffType.added, rightLine: j, text: right[j - 1]));
+        stack.add(DiffLine(type: DiffType.added, rightLine: j, text: right[j - 1]));
         j--;
       } else {
-        stack.add(_DiffLine(type: _DiffType.removed, leftLine: i, text: left[i - 1]));
+        stack.add(DiffLine(type: DiffType.removed, leftLine: i, text: left[i - 1]));
         i--;
       }
     }
@@ -164,7 +164,7 @@ class _DiffViewerDialogState extends ConsumerState<_DiffViewerDialog> {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
-    final changes = _diffResult.where((d) => d.type != _DiffType.equal).length;
+    final changes = _diffResult.where((d) => d.type != DiffType.equal).length;
 
     return Dialog(
       child: SizedBox(
@@ -254,12 +254,12 @@ class _DiffViewerDialogState extends ConsumerState<_DiffViewerDialog> {
                   itemExtent: 20,
                   itemBuilder: (_, index) {
                     final d = _diffResult[index];
-                    if (d.type == _DiffType.added) {
+                    if (d.type == DiffType.added) {
                       return Container(height: 20, color: addedColor);
                     }
                     return Container(
                       height: 20,
-                      color: d.type == _DiffType.removed ? removedColor : null,
+                      color: d.type == DiffType.removed ? removedColor : null,
                       padding: const EdgeInsets.symmetric(horizontal: 8),
                       child: Row(
                         children: [
@@ -318,12 +318,12 @@ class _DiffViewerDialogState extends ConsumerState<_DiffViewerDialog> {
                   itemExtent: 20,
                   itemBuilder: (_, index) {
                     final d = _diffResult[index];
-                    if (d.type == _DiffType.removed) {
+                    if (d.type == DiffType.removed) {
                       return Container(height: 20, color: removedColor);
                     }
                     return Container(
                       height: 20,
-                      color: d.type == _DiffType.added ? addedColor : null,
+                      color: d.type == DiffType.added ? addedColor : null,
                       padding: const EdgeInsets.symmetric(horizontal: 8),
                       child: Row(
                         children: [
@@ -363,19 +363,19 @@ class _DiffViewerDialogState extends ConsumerState<_DiffViewerDialog> {
   }
 }
 
-enum _DiffType { equal, added, removed }
+enum DiffType { equal, added, removed }
 
-class _DiffLine {
-  final _DiffType type;
+class DiffLine {
+  final DiffType type;
   final int? leftLine;
   final int? rightLine;
   final String text;
 
-  _DiffLine({required this.type, this.leftLine, this.rightLine, required this.text});
+  DiffLine({required this.type, this.leftLine, this.rightLine, required this.text});
 }
 
 /// Compute LCS diff (standalone, reusable outside the dialog state).
-List<_DiffLine> computeLcsDiff(List<String> left, List<String> right) {
+List<DiffLine> computeLcsDiff(List<String> left, List<String> right) {
   final m = left.length;
   final n = right.length;
   final lcs = List.generate(m + 1, (_) => List.filled(n + 1, 0));
@@ -391,16 +391,16 @@ List<_DiffLine> computeLcsDiff(List<String> left, List<String> right) {
   }
 
   int i = m, j = n;
-  final stack = <_DiffLine>[];
+  final stack = <DiffLine>[];
   while (i > 0 || j > 0) {
     if (i > 0 && j > 0 && left[i - 1] == right[j - 1]) {
-      stack.add(_DiffLine(type: _DiffType.equal, leftLine: i, rightLine: j, text: left[i - 1]));
+      stack.add(DiffLine(type: DiffType.equal, leftLine: i, rightLine: j, text: left[i - 1]));
       i--; j--;
     } else if (j > 0 && (i == 0 || lcs[i][j - 1] >= lcs[i - 1][j])) {
-      stack.add(_DiffLine(type: _DiffType.added, rightLine: j, text: right[j - 1]));
+      stack.add(DiffLine(type: DiffType.added, rightLine: j, text: right[j - 1]));
       j--;
     } else {
-      stack.add(_DiffLine(type: _DiffType.removed, leftLine: i, text: left[i - 1]));
+      stack.add(DiffLine(type: DiffType.removed, leftLine: i, text: left[i - 1]));
       i--;
     }
   }
@@ -428,8 +428,8 @@ class _ContentDiffDialog extends StatelessWidget {
     final rightLines = rightContent.split('\n');
     final diffResult = computeLcsDiff(leftLines, rightLines);
 
-    final added = diffResult.where((d) => d.type == _DiffType.added).length;
-    final removed = diffResult.where((d) => d.type == _DiffType.removed).length;
+    final added = diffResult.where((d) => d.type == DiffType.added).length;
+    final removed = diffResult.where((d) => d.type == DiffType.removed).length;
     final addedColor = Colors.green.withValues(alpha: 0.15);
     final removedColor = Colors.red.withValues(alpha: 0.15);
 
@@ -474,7 +474,7 @@ class _ContentDiffDialog extends StatelessWidget {
     );
   }
 
-  Widget _buildPane(ThemeData theme, String label, List<_DiffLine> diff, bool isLeft, Color addedColor, Color removedColor) {
+  Widget _buildPane(ThemeData theme, String label, List<DiffLine> diff, bool isLeft, Color addedColor, Color removedColor) {
     return Expanded(
       child: Column(
         children: [
@@ -496,12 +496,12 @@ class _ContentDiffDialog extends StatelessWidget {
               itemBuilder: (_, index) {
                 final d = diff[index];
                 // Skip lines not visible on this side
-                if (isLeft && d.type == _DiffType.added) return Container(height: 20, color: addedColor);
-                if (!isLeft && d.type == _DiffType.removed) return Container(height: 20, color: removedColor);
+                if (isLeft && d.type == DiffType.added) return Container(height: 20, color: addedColor);
+                if (!isLeft && d.type == DiffType.removed) return Container(height: 20, color: removedColor);
 
                 return Container(
                   height: 20,
-                  color: d.type == _DiffType.removed ? removedColor : d.type == _DiffType.added ? addedColor : null,
+                  color: d.type == DiffType.removed ? removedColor : d.type == DiffType.added ? addedColor : null,
                   padding: const EdgeInsets.symmetric(horizontal: 8),
                   child: Row(
                     children: [

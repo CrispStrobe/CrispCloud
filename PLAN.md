@@ -129,6 +129,7 @@ CrispCloud becomes the **open-source Cyberduck/Transmit/Commander One killer**: 
 | Secondary sort in UI | ✅ Done | right-click/long-press column header |
 | Search results panel (persistent) | ✅ Done | search replaces panel listing + header bar |
 | Properties dialog | ✅ Done | permissions, symlink target, creation date, on-demand MD5 |
+| Tree view panel (Ctrl+3) | ✅ Done | file_tree_view.dart, desktop-only, web stub |
 | Hardlinks | ⚠️ Partial | local only, not in UI clearly |
 | History navigation (Alt+Left/Right) | ✅ Done | per-panel back/forward, breadcrumb buttons |
 | In-place rename (F2 inline) | ✅ Done | _InlineRenameField, Enter commits, Esc cancels |
@@ -141,9 +142,9 @@ CrispCloud becomes the **open-source Cyberduck/Transmit/Commander One killer**: 
 | Checksum file create/verify (.md5/.sha256) | ✅ Done | context menu + ChecksumService |
 | Drive/volume bar | ✅ Done | drive_bar.dart: /Volumes (mac), /proc/mounts (Linux), drives (Win) |
 | Column resizing | ✅ Done | drag handles between Size/Date column headers (columnWidthsProvider) |
-| **Custom columns** | ❌ Missing | user-configurable column set |
-| **File associations** | ❌ Missing | open with specific app per ext |
-| **Verify checksums after transfer** | ❌ Missing | |
+| Custom columns (toggle visibility) | ✅ Done | right-click header to show/hide Size/Date/Ext |
+| **File associations** | ✅ Done | "Open with System App" + "Reveal in Finder/Explorer" |
+| **Verify checksums after transfer** | ✅ Done | "Verify against remote" in context menu |
 | **File attributes editor** (Win: hidden/system/archive) | ❌ Missing | |
 | Copy file names/paths to clipboard | ✅ Done | Ctrl+Shift+C/N + context menu |
 | Tab rename | ✅ Done | right-click tab → Rename Tab |
@@ -741,55 +742,55 @@ CrispCloud becomes the **open-source Cyberduck/Transmit/Commander One killer**: 
 - The tree follows the panel: navigating via breadcrumbs/F-keys scrolls the tree to the new path
 
 **Implementation plan:**
-- [ ] `FileTreeView` widget — `ListView.builder` with `_TreeNode` model (`path`, `name`, `depth`, `isExpanded`, `isLoading`); list is a flat ordered list of visible nodes (expand inserts children after node, collapse removes them)
-- [ ] Lazy expansion: on expand, call `localFileService.listDirectory(path)` and keep only subdirectories; insert as children after parent node
-- [ ] Sync with panel: watch `panel.currentPath`; when it changes, ensure the matching node is expanded/visible and highlighted; highlight = left border + background (same cursor style)
-- [ ] Keyboard in tree: `Focus(autofocus: isActivePanel, onKeyEvent: ...)` — ↑/↓ move `_treeCursorIdx`, → expand if collapsed else navigate panel, ← collapse if expanded else go to parent, Enter navigate panel to cursor node; `KeyRepeatEvent` handled
-- [ ] Click node: `panel.navigateToPath(node.path)`; double-click: toggle expand
-- [ ] `file_panel.dart._buildFileView`: when `viewMode == PanelViewMode.tree` return `FileTreeView`
-- [ ] Re-enable `PanelViewMode.tree` in `PanelViewModeService.next` cycle: `brief → full → tree → brief`
-- [ ] Restore Ctrl+3 shortcut in `keyboard_shortcuts.dart`
+- [x] `FileTreeView` widget — `ListView.builder` with `_TreeNode` model (`path`, `name`, `depth`, `isExpanded`, `isLoading`); list is a flat ordered list of visible nodes (expand inserts children after node, collapse removes them)
+- [x] Lazy expansion: on expand, call `localFileService.listDirectory(path)` and keep only subdirectories; insert as children after parent node
+- [x] Sync with panel: watch `panel.currentPath`; when it changes, ensure the matching node is expanded/visible and highlighted; highlight = left border + background (same cursor style)
+- [x] Keyboard in tree: `Focus(autofocus: isActivePanel, onKeyEvent: ...)` — ↑/↓ move `_treeCursorIdx`, → expand if collapsed else navigate panel, ← collapse if expanded else go to parent, Enter navigate panel to cursor node; `KeyRepeatEvent` handled
+- [x] Click node: `panel.navigateToPath(node.path)`; double-click: toggle expand
+- [x] `file_panel.dart._buildFileView`: when `viewMode == PanelViewMode.tree` return `FileTreeView`
+- [x] Re-enable `PanelViewMode.tree` in `PanelViewModeService.next` cycle: `brief → full → tree → brief`
+- [x] Restore Ctrl+3 shortcut in `keyboard_shortcuts.dart`
 
 ### 11.5.2 Compact View Column Headers
 
 *Sortable header row above the file list in compact ("Full") mode — like DC's column headers.*
 
-- [ ] `CompactColumnHeader` widget — `Row` matching `CompactFileTile` column widths: name (Expanded) | size (62px) | date (78px); each column is a `GestureDetector` that calls `panel.setSortBy(SortBy.name/size/date)` and toggles `SortOrder`
-- [ ] Show sort indicator arrow (↑/↓) on the active column
-- [ ] Only rendered in compact mode (`PanelViewMode.full`); sits between `FileToolbar` and the `FileListView` in `_buildPanelContent`
+- [x] `CompactColumnHeader` widget — `Row` matching `CompactFileTile` column widths: name (Expanded) | size (62px) | date (78px); each column is a `GestureDetector` that calls `panel.setSortBy(SortBy.name/size/date)` and toggles `SortOrder`
+- [x] Show sort indicator arrow (↑/↓) on the active column
+- [x] Only rendered in compact mode (`PanelViewMode.full`); sits between `FileToolbar` and the `FileListView` in `_buildPanelContent`
 
 ### 11.5.3 Home / End / Page Up / Page Down Navigation
 
 *Jump to start/end of list and scroll by full page — standard orthodox FM keyboard navigation.*
 
-- [ ] `Home` → `panel.moveCursorTo(0)`
-- [ ] `End` → `panel.moveCursorTo(files.length - 1)`
-- [ ] `Page Down` → `panel.moveCursor(+pageSize)` where `pageSize = (viewportHeight / itemHeight).floor()`
-- [ ] `Page Up` → `panel.moveCursor(-pageSize)`
-- [ ] `moveCursorTo(int index)` method on `PanelNotifier` (absolute move, clamps, sets `_itemToScrollTo`)
-- [ ] Wired in `keyboard_shortcuts.dart` and in `FileListView.Focus.onKeyEvent`; `KeyRepeatEvent` supported for Page keys
+- [x] `Home` → `panel.moveCursorTo(0)`
+- [x] `End` → `panel.moveCursorTo(files.length - 1)`
+- [x] `Page Down` → `panel.moveCursor(+pageSize)` where `pageSize = (viewportHeight / itemHeight).floor()`
+- [x] `Page Up` → `panel.moveCursor(-pageSize)`
+- [x] `moveCursorTo(int index)` method on `PanelNotifier` (absolute move, clamps, sets `_itemToScrollTo`)
+- [x] Wired in `keyboard_shortcuts.dart` and in `FileListView.Focus.onKeyEvent`; `KeyRepeatEvent` supported for Page keys
 
 ### 11.5.4 Status Bar Cursor Position
 
 *Show cursor index / total item count in the status bar, DC-style (e.g. "15 / 169").*
 
-- [ ] `status_bar.dart`: read `panel.cursorIndex` and `panel.files?.length`; show `"${cursorIndex + 1} / $total"` next to the item count — only when `cursorIndex >= 0` and files are loaded
-- [ ] Uses the existing `panelProvider(activePanel)` watch already present in `StatusBar`
+- [x] `status_bar.dart`: read `panel.cursorIndex` and `panel.files?.length`; show `"${cursorIndex + 1} / $total"` next to the item count — only when `cursorIndex >= 0` and files are loaded
+- [x] Uses the existing `panelProvider(activePanel)` watch already present in `StatusBar`
 
 ### 11.5.5 Numpad \* — Invert Selection
 
 *Toggle-invert all selection marks, like DC's Numpad \*.*
 
-- [ ] `PanelNotifier.invertSelection()`: for each file, if selected → remove; if not → add; update `_lastSelected`
-- [ ] Wired in `keyboard_shortcuts.dart`: `LogicalKeyboardKey.numpadMultiply` → `panel.invertSelection()`
-- [ ] Also wired in `FileListView.Focus.onKeyEvent` for the same key
+- [x] `PanelNotifier.invertSelection()`: for each file, if selected → remove; if not → add; update `_lastSelected`
+- [x] Wired in `keyboard_shortcuts.dart`: `LogicalKeyboardKey.numpadMultiply` → `panel.invertSelection()`
+- [x] Also wired in `FileListView.Focus.onKeyEvent` for the same key
 
 ### 11.5.6 Remote Panel "Not Connected" State
 
 *When the remote panel is empty because no cloud is connected, show a friendly prompt instead of "Empty folder".*
 
-- [ ] In `file_panel.dart._buildPanelContent`, in the `files.isEmpty` branch: if `side == PanelSide.remote && !auth.isConnected` show a dedicated `_NotConnectedEmptyState` widget — cloud icon, "Not connected" message, "Connect" `ElevatedButton` that opens `showConnectionDialogScreen(context)`
-- [ ] Replace the generic "Empty folder" text for this specific case only
+- [x] In `file_panel.dart._buildPanelContent`, in the `files.isEmpty` branch: if `side == PanelSide.remote && !auth.isConnected` show a dedicated empty state — cloud_off icon, "Not connected" message, "Connect to cloud" `ElevatedButton` that opens `showConnectionDialogScreen(context)`
+- [x] Replace the generic "Empty folder" text for this specific case only
 
 ### 11.4 Mounted Drives (Desktop)
 - [x] Mount remote storage as a local drive letter / mount point — `FuseMountService` + `MountDialog` + `MountNotifier`

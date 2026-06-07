@@ -213,10 +213,10 @@ packages:
     dependency: transitive
     description:
       name: dbus
-      sha256: d0c98dcd4f5169878b6cf8f6e0a52403a9dff371a3e2f019697accbf6f44a270
+      sha256: "0ce9b0a839e6dee59a37a623d2fc26a35bbbe6404213e419b0d6411023d62645"
       url: "https://pub.dev"
     source: hosted
-    version: "0.7.12"
+    version: "0.7.14"
   desktop_drop:
     dependency: "direct main"
     description:
@@ -372,11 +372,9 @@ packages:
   filen_dart:
     dependency: "direct main"
     description:
-      path: "."
-      ref: main
-      resolved-ref: fff762e51c9bddbcd5a5c2cf4f218c6ec5c7a5e9
-      url: "https://github.com/CrispStrobe/filen-dart.git"
-    source: git
+      path: "/tmp/filen-dart-clone"
+      relative: false
+    source: path
     version: "0.1.0"
   fixnum:
     dependency: transitive
@@ -601,11 +599,9 @@ packages:
   internxt_client:
     dependency: "direct main"
     description:
-      path: "."
-      ref: main
-      resolved-ref: f0dba4d4b69e6a14db29ba816f8ed652722a0ecc
-      url: "https://github.com/CrispStrobe/internxt-dart.git"
-    source: git
+      path: "/tmp/internxt-dart-clone"
+      relative: false
+    source: path
     version: "0.1.0"
   intl:
     dependency: "direct main"
@@ -664,13 +660,12 @@ packages:
     source: hosted
     version: "3.0.2"
   libdbm:
-    dependency: "direct overridden"
+    dependency: transitive
     description:
-      path: "."
-      ref: HEAD
-      resolved-ref: "547b5bfce1d3cd663810a3ceae35336857956139"
-      url: "https://github.com/CrispStrobe/libdbm"
-    source: git
+      name: libdbm
+      sha256: f3e038d4138ff95839525094aefb72aa1dd34b18c14e9322b1135ebe6ae1f1ea
+      url: "https://pub.dev"
+    source: hosted
     version: "0.2.1"
   lints:
     dependency: transitive
@@ -772,10 +767,10 @@ packages:
     dependency: transitive
     description:
       name: meta
-      sha256: "23f08335362185a5ea2ad3a4e597f1375e78bce8a040df5c600c8d3552ef2394"
+      sha256: e3641ec5d63ebf0d9b41bd43201a66e3fc79a65db5f61fc181f04cd27aab950c
       url: "https://pub.dev"
     source: hosted
-    version: "1.17.0"
+    version: "1.16.0"
   mime:
     dependency: transitive
     description:
@@ -1201,10 +1196,10 @@ packages:
     dependency: transitive
     description:
       name: test_api
-      sha256: ab2726c1a94d3176a45960b6234466ec367179b87dd74f1611adb1f3b5fb9d55
+      sha256: "522f00f556e73044315fa4585ec3270f1808a4b186c936e612cab0b565ff1e00"
       url: "https://pub.dev"
     source: hosted
-    version: "0.7.7"
+    version: "0.7.6"
   timezone:
     dependency: transitive
     description:

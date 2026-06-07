@@ -9,6 +9,7 @@ import '../models/file_item.dart';
 import '../models/operation_progress.dart';
 import '../models/panel_side.dart';
 import '../models/panel_tab.dart';
+import '../utils/async_lock.dart';
 import '../utils/formatters.dart' as fmt;
 
 import 'cloud_storage_interface.dart';
@@ -46,36 +47,15 @@ class AppError {
   String toString() => message;
 }
 
-/// A simple async lock using [Completer] to serialize access to critical sections.
-/// Each lock instance is independent, so methods guarded by different locks
-/// can run concurrently (avoiding deadlocks when one locked method calls another).
-class _AsyncLock {
-  Completer<void>? _completer;
-
-  Future<T> synchronized<T>(Future<T> Function() action) async {
-    while (_completer != null) {
-      await _completer!.future;
-    }
-    _completer = Completer<void>();
-    try {
-      return await action();
-    } finally {
-      final c = _completer!;
-      _completer = null;
-      c.complete();
-    }
-  }
-}
-
 enum SortBy { name, size, date, extension }
 enum SortOrder { ascending, descending }
 
 class AppState extends ChangeNotifier {
   // Async locks — one per critical method to avoid deadlocks when locked
   // methods call each other (switchProvider -> _attemptAutoLogin -> refreshPanel).
-  final _switchProviderLock = _AsyncLock();
-  final _refreshPanelLock = _AsyncLock();
-  final _autoLoginLock = _AsyncLock();
+  final _switchProviderLock = AsyncLock();
+  final _refreshPanelLock = AsyncLock();
+  final _autoLoginLock = AsyncLock();
 
   // Cloud storage abstraction
   CloudProvider _currentProvider = CloudProvider.filen;
@@ -319,7 +299,7 @@ class AppState extends ChangeNotifier {
           
           switch (sortBy) {
             case SortBy.name:
-              comparison = (a.name ?? '').toLowerCase().compareTo((b.name ?? '').toLowerCase());
+              comparison = a.name.toLowerCase().compareTo(b.name.toLowerCase());
               break;
             case SortBy.size:
               final sizeA = a.size ?? 0;
@@ -335,8 +315,8 @@ class AppState extends ChangeNotifier {
               if (a.isFolder || b.isFolder) {
                 comparison = 0;
               } else {
-                final nameA = a.name ?? '';
-                final nameB = b.name ?? '';
+                final nameA = a.name;
+                final nameB = b.name;
                 final extA = nameA.contains('.') ? nameA.split('.').last.toLowerCase() : '';
                 final extB = nameB.contains('.') ? nameB.split('.').last.toLowerCase() : '';
                 comparison = extA.compareTo(extB);

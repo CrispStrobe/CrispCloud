@@ -5,7 +5,6 @@ import 'package:shared_preferences/shared_preferences.dart';
 
 class BookmarkService {
   static const String _lastPathKey = 'last_local_path';
-  static const String _bookmarksKey = 'folder_bookmarks';
 
   // Save the last accessed path
   static Future<void> saveLastPath(String path) async {
