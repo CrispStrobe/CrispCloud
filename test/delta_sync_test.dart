@@ -662,6 +662,74 @@ void main() {
           reason: 'Block 2 should be preserved');
     });
 
+    test('download: only first block changed, rest preserved', () async {
+      final local  = [..._fill(bs, 0x11), ..._fill(bs, 0x22), ..._fill(bs, 0x33), ..._fill(bs, 0x44)];
+      final remote = [..._fill(bs, 0xFF), ..._fill(bs, 0x22), ..._fill(bs, 0x33), ..._fill(bs, 0x44)];
+
+      final localPath  = await _writeTempFile(local);
+      final remotePath = await _writeTempFile(remote);
+      final lm = await svc.computeBlockMap(localPath, blockSize: bs);
+      final rm = await svc.computeBlockMap(remotePath, blockSize: bs);
+      final delta = svc.compareBlockMaps(rm, lm);
+      final plan  = svc.createTransferPlan(delta, TransferDirection.download, rm);
+      final remoteData = await File(remotePath).readAsBytes();
+
+      await svc.applyDelta(plan, localPath,
+        remoteReadBlock: (idx, offset, size) async => remoteData.sublist(offset, offset + size));
+
+      final result = await File(localPath).readAsBytes();
+      expect(result.sublist(0, bs), equals(_fill(bs, 0xFF)), reason: 'Block 0 updated');
+      expect(result.sublist(bs, 2 * bs), equals(_fill(bs, 0x22)), reason: 'Block 1 preserved');
+      expect(result.sublist(2 * bs, 3 * bs), equals(_fill(bs, 0x33)), reason: 'Block 2 preserved');
+      expect(result.sublist(3 * bs, 4 * bs), equals(_fill(bs, 0x44)), reason: 'Block 3 preserved');
+    });
+
+    test('download: only last block changed, rest preserved', () async {
+      final local  = [..._fill(bs, 0x11), ..._fill(bs, 0x22), ..._fill(bs, 0x33)];
+      final remote = [..._fill(bs, 0x11), ..._fill(bs, 0x22), ..._fill(bs, 0xEE)];
+
+      final localPath  = await _writeTempFile(local);
+      final remotePath = await _writeTempFile(remote);
+      final lm = await svc.computeBlockMap(localPath, blockSize: bs);
+      final rm = await svc.computeBlockMap(remotePath, blockSize: bs);
+      final delta = svc.compareBlockMaps(rm, lm);
+      final plan  = svc.createTransferPlan(delta, TransferDirection.download, rm);
+      final remoteData = await File(remotePath).readAsBytes();
+
+      await svc.applyDelta(plan, localPath,
+        remoteReadBlock: (idx, offset, size) async => remoteData.sublist(offset, offset + size));
+
+      final result = await File(localPath).readAsBytes();
+      expect(result.sublist(0, bs), equals(_fill(bs, 0x11)), reason: 'Block 0 preserved');
+      expect(result.sublist(bs, 2 * bs), equals(_fill(bs, 0x22)), reason: 'Block 1 preserved');
+      expect(result.sublist(2 * bs, 3 * bs), equals(_fill(bs, 0xEE)), reason: 'Block 2 updated');
+    });
+
+    test('download: multiple non-contiguous blocks changed', () async {
+      final local  = [..._fill(bs, 0x11), ..._fill(bs, 0x22), ..._fill(bs, 0x33), ..._fill(bs, 0x44), ..._fill(bs, 0x55)];
+      final remote = [..._fill(bs, 0xAA), ..._fill(bs, 0x22), ..._fill(bs, 0xCC), ..._fill(bs, 0x44), ..._fill(bs, 0xEE)];
+
+      final localPath  = await _writeTempFile(local);
+      final remotePath = await _writeTempFile(remote);
+      final lm = await svc.computeBlockMap(localPath, blockSize: bs);
+      final rm = await svc.computeBlockMap(remotePath, blockSize: bs);
+      final delta = svc.compareBlockMaps(rm, lm);
+      expect(delta.changedBlocks.toSet(), equals({0, 2, 4}));
+
+      final plan = svc.createTransferPlan(delta, TransferDirection.download, rm);
+      final remoteData = await File(remotePath).readAsBytes();
+
+      await svc.applyDelta(plan, localPath,
+        remoteReadBlock: (idx, offset, size) async => remoteData.sublist(offset, offset + size));
+
+      final result = await File(localPath).readAsBytes();
+      expect(result.sublist(0, bs), equals(_fill(bs, 0xAA)), reason: 'Block 0 updated');
+      expect(result.sublist(bs, 2 * bs), equals(_fill(bs, 0x22)), reason: 'Block 1 preserved');
+      expect(result.sublist(2 * bs, 3 * bs), equals(_fill(bs, 0xCC)), reason: 'Block 2 updated');
+      expect(result.sublist(3 * bs, 4 * bs), equals(_fill(bs, 0x44)), reason: 'Block 3 preserved');
+      expect(result.sublist(4 * bs, 5 * bs), equals(_fill(bs, 0xEE)), reason: 'Block 4 updated');
+    });
+
     test('all-skip plan calls onProgress for every block', () async {
       final data = _fill(3 * bs, 0x42);
       final path = await _writeTempFile(data);
