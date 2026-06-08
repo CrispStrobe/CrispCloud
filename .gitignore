@@ -68,3 +68,4 @@ app.*.map.json
 pubspec_overrides.yaml
 .vercel
 .env*.local
+handover-prompts/
