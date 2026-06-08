@@ -539,6 +539,173 @@ class GDriveClientAdapter extends CloudStorageClient {
     onProgress?.call(fileData.length, fileData.length);
   }
 
+  // --- Google Docs MIME type handling ---
+
+  /// Google Apps MIME types that require export (can't be downloaded directly).
+  static const _googleDocsMimeTypes = <String, String>{
+    'application/vnd.google-apps.document': 'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
+    'application/vnd.google-apps.spreadsheet': 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+    'application/vnd.google-apps.presentation': 'application/vnd.openxmlformats-officedocument.presentationml.presentation',
+    'application/vnd.google-apps.drawing': 'application/pdf',
+    'application/vnd.google-apps.script': 'application/vnd.google-apps.script+json',
+  };
+
+  /// File extensions for exported Google Docs.
+  static const _exportExtensions = <String, String>{
+    'application/vnd.google-apps.document': '.docx',
+    'application/vnd.google-apps.spreadsheet': '.xlsx',
+    'application/vnd.google-apps.presentation': '.pptx',
+    'application/vnd.google-apps.drawing': '.pdf',
+    'application/vnd.google-apps.script': '.json',
+  };
+
+  /// Check if a MIME type is a Google Apps type that requires export.
+  static bool isGoogleDocsMimeType(String mimeType) =>
+      _googleDocsMimeTypes.containsKey(mimeType);
+
+  /// Get the export extension for a Google Docs MIME type.
+  static String? getExportExtension(String mimeType) =>
+      _exportExtensions[mimeType];
+
+  /// Export a Google Docs file to the specified format.
+  ///
+  /// [fileId] — the Google Drive file ID.
+  /// [exportMimeType] — the target MIME type (e.g., 'application/pdf').
+  /// Defaults to the standard export format for the document type.
+  Future<Uint8List> exportGoogleDoc(String fileId, {String? exportMimeType}) async {
+    await _ensureToken();
+
+    // Get file metadata to determine MIME type
+    final meta = await _apiGet('/files/$fileId', queryParams: {
+      'fields': 'mimeType',
+    });
+    final docMimeType = meta['mimeType'] as String? ?? '';
+    final targetMime = exportMimeType ?? _googleDocsMimeTypes[docMimeType];
+    if (targetMime == null) {
+      throw Exception('Not a Google Docs file or unknown type: $docMimeType');
+    }
+
+    final uri = Uri.parse('$_apiBase/files/$fileId/export?mimeType=${Uri.encodeComponent(targetMime)}');
+    final resp = await http.get(uri, headers: {'Authorization': 'Bearer $_accessToken'});
+
+    if (resp.statusCode != 200) {
+      throw Exception('GDrive export failed (${resp.statusCode}): ${resp.body}');
+    }
+
+    return resp.bodyBytes;
+  }
+
+  /// List available export formats for a Google Docs file.
+  static List<Map<String, String>> getExportFormats(String mimeType) {
+    switch (mimeType) {
+      case 'application/vnd.google-apps.document':
+        return [
+          {'mimeType': 'application/vnd.openxmlformats-officedocument.wordprocessingml.document', 'ext': '.docx', 'label': 'Word'},
+          {'mimeType': 'application/pdf', 'ext': '.pdf', 'label': 'PDF'},
+          {'mimeType': 'text/plain', 'ext': '.txt', 'label': 'Plain Text'},
+          {'mimeType': 'application/rtf', 'ext': '.rtf', 'label': 'Rich Text'},
+          {'mimeType': 'text/html', 'ext': '.html', 'label': 'HTML'},
+          {'mimeType': 'application/epub+zip', 'ext': '.epub', 'label': 'EPUB'},
+        ];
+      case 'application/vnd.google-apps.spreadsheet':
+        return [
+          {'mimeType': 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet', 'ext': '.xlsx', 'label': 'Excel'},
+          {'mimeType': 'application/pdf', 'ext': '.pdf', 'label': 'PDF'},
+          {'mimeType': 'text/csv', 'ext': '.csv', 'label': 'CSV'},
+          {'mimeType': 'text/tab-separated-values', 'ext': '.tsv', 'label': 'TSV'},
+        ];
+      case 'application/vnd.google-apps.presentation':
+        return [
+          {'mimeType': 'application/vnd.openxmlformats-officedocument.presentationml.presentation', 'ext': '.pptx', 'label': 'PowerPoint'},
+          {'mimeType': 'application/pdf', 'ext': '.pdf', 'label': 'PDF'},
+          {'mimeType': 'text/plain', 'ext': '.txt', 'label': 'Plain Text'},
+        ];
+      case 'application/vnd.google-apps.drawing':
+        return [
+          {'mimeType': 'application/pdf', 'ext': '.pdf', 'label': 'PDF'},
+          {'mimeType': 'image/png', 'ext': '.png', 'label': 'PNG'},
+          {'mimeType': 'image/svg+xml', 'ext': '.svg', 'label': 'SVG'},
+        ];
+      default:
+        return [];
+    }
+  }
+
+  // --- File Versions (Revisions API) ---
+
+  /// List all revisions (versions) of a file.
+  ///
+  /// Returns a list of revision metadata maps with keys:
+  ///   id, modifiedTime, originalFilename, mimeType, size, lastModifyingUser
+  Future<List<Map<String, dynamic>>> listVersions(String fileId) async {
+    await _ensureToken();
+
+    final resp = await _apiGet('/files/$fileId/revisions', queryParams: {
+      'fields': 'revisions(id,modifiedTime,originalFilename,mimeType,size,lastModifyingUser/displayName,keepForever)',
+      'pageSize': '1000',
+    });
+
+    final revisions = (resp['revisions'] as List?) ?? [];
+    return revisions.map((r) {
+      final rev = r as Map<String, dynamic>;
+      return <String, dynamic>{
+        'id': rev['id'],
+        'modifiedTime': rev['modifiedTime'],
+        if (rev['originalFilename'] != null) 'originalFilename': rev['originalFilename'],
+        if (rev['mimeType'] != null) 'mimeType': rev['mimeType'],
+        if (rev['size'] != null) 'size': int.tryParse(rev['size'].toString()) ?? 0,
+        if (rev['lastModifyingUser'] != null)
+          'lastModifyingUser': (rev['lastModifyingUser'] as Map)['displayName'],
+        'keepForever': rev['keepForever'] ?? false,
+      };
+    }).toList();
+  }
+
+  /// Download a specific revision (version) of a file.
+  Future<Uint8List> downloadVersion(String fileId, String revisionId) async {
+    await _ensureToken();
+
+    final uri = Uri.parse('$_apiBase/files/$fileId/revisions/$revisionId?alt=media');
+    final resp = await http.get(uri, headers: {'Authorization': 'Bearer $_accessToken'});
+
+    if (resp.statusCode != 200) {
+      throw Exception('GDrive revision download failed (${resp.statusCode}): ${resp.body}');
+    }
+
+    return resp.bodyBytes;
+  }
+
+  /// Pin a revision so it won't be automatically purged.
+  Future<void> pinVersion(String fileId, String revisionId) async {
+    await _ensureToken();
+
+    final uri = Uri.parse('$_apiBase/files/$fileId/revisions/$revisionId');
+    final resp = await http.patch(
+      uri,
+      headers: {
+        'Authorization': 'Bearer $_accessToken',
+        'Content-Type': 'application/json',
+      },
+      body: json.encode({'keepForever': true}),
+    );
+
+    if (resp.statusCode != 200) {
+      throw Exception('GDrive pin revision failed (${resp.statusCode}): ${resp.body}');
+    }
+  }
+
+  /// Delete a specific revision (version) of a file.
+  Future<void> deleteVersion(String fileId, String revisionId) async {
+    await _ensureToken();
+
+    final uri = Uri.parse('$_apiBase/files/$fileId/revisions/$revisionId');
+    final resp = await http.delete(uri, headers: {'Authorization': 'Bearer $_accessToken'});
+
+    if (resp.statusCode != 200 && resp.statusCode != 204) {
+      throw Exception('GDrive delete revision failed (${resp.statusCode}): ${resp.body}');
+    }
+  }
+
   // --- Download ---
 
   @override
@@ -547,6 +714,19 @@ class GDriveClientAdapter extends CloudStorageClient {
 
     final fileId = await _resolveFileId(remotePath);
     if (fileId == null) throw Exception('File not found: $remotePath');
+
+    // Check if this is a Google Docs file that needs export
+    final meta = await _apiGet('/files/$fileId', queryParams: {
+      'fields': 'mimeType',
+    });
+    final mimeType = meta['mimeType'] as String? ?? '';
+
+    if (isGoogleDocsMimeType(mimeType)) {
+      _log.info('Exporting Google Docs file: $remotePath ($mimeType)');
+      final bytes = await exportGoogleDoc(fileId);
+      onProgress?.call(bytes.length, bytes.length);
+      return bytes;
+    }
 
     final uri = Uri.parse('$_apiBase/files/$fileId?alt=media');
     final resp = await http.get(uri, headers: {'Authorization': 'Bearer $_accessToken'});

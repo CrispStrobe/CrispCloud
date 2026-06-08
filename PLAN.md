@@ -326,17 +326,17 @@ CrispCloud becomes the **definitive open-source cloud file manager**: a single, 
   - Pure HTTP + OAuth2 browser flow (no googleapis SDK dependency)
   - Path-to-ID resolution with caching, paginated listing, multipart upload
   - [x] Shared drives (listSharedDrives, listSharedDrivePath with corpora/driveId), starred files (list + star/unstar)
-  - [ ] File versions, Google Docs export
+  - [x] File versions (Revisions API: list, download, pin, delete), Google Docs export (Docs→docx/pdf/txt/rtf/html/epub, Sheets→xlsx/pdf/csv/tsv, Slides→pptx/pdf/txt, Drawings→pdf/png/svg)
 - [x] **OneDrive / SharePoint**
   - Pure HTTP + Microsoft Graph API v1.0, OAuth2 browser flow (no MSAL)
   - Path-based addressing (no ID resolution needed), paginated listing
   - [x] Delta sync (fetchDelta with deltaToken tracking, added/deleted items, hash extraction)
-  - [ ] Shared libraries
+  - [x] Shared libraries (SharePoint sites: list sites, list drives, browse library files, cross-site search)
 - [x] **Dropbox**
   - Pure HTTP + Dropbox API v2, OAuth2 browser flow
   - Paginated list_folder, overwrite upload, content download
   - [x] Shared folders (list/mount/unmount), content hash for dedup (computeContentHash with 4MB block SHA-256)
-  - [ ] Paper docs
+  - [x] Paper docs (list + search Paper files, export to markdown/HTML)
 
 ### 3.2 New Providers — Tier 2
 - [x] **Azure Blob Storage** — SAS token + SharedKey auth, blob tiers (Hot/Cool/Cold/Archive), server-side copy
@@ -671,7 +671,7 @@ CrispCloud becomes the **definitive open-source cloud file manager**: a single, 
 - [x] High-contrast mode — `HighContrastTheme` with WCAG AAA 7:1 contrast ratio
 - [x] Reduced-motion mode (respect `prefers-reduced-motion`) — `AccessibilityService` with platform detection + manual toggle
 - [x] Minimum 48dp touch targets on mobile — adaptive sizing for breadcrumbs, FKey bar, tree view, column view, file panel, operations panel
-- [ ] WCAG 2.1 AA compliance
+- [ ] WCAG 2.1 AA compliance (partial: CompactFileTile Semantics added; audit complete — remaining: icon semanticLabels, text scale factor, SemanticsService.announce, high-contrast theme wiring)
 
 ### 10.5 Documentation
 - [x] User guide with screenshots (hosted on docs site) — `docs/USER_GUIDE.md` (640 lines), all 21 feature areas

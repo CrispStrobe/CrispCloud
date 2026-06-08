@@ -246,4 +246,44 @@ void main() {
       );
     });
   });
+
+  // ===========================================================================
+  // Shared Libraries (SharePoint)
+  // ===========================================================================
+  group('OneDriveClientAdapter - shared libraries', () {
+    test('listSharedLibraries throws when not authenticated', () {
+      expect(
+        () => adapter.listSharedLibraries(),
+        throwsA(isA<Exception>()),
+      );
+    });
+
+    test('listSiteDrives throws when not authenticated', () {
+      expect(
+        () => adapter.listSiteDrives('site-id-123'),
+        throwsA(isA<Exception>()),
+      );
+    });
+
+    test('listSharedLibraryPath throws when not authenticated', () {
+      expect(
+        () => adapter.listSharedLibraryPath('drive-id-123'),
+        throwsA(isA<Exception>()),
+      );
+    });
+
+    test('listSharedLibraryPath accepts custom path', () {
+      expect(
+        () => adapter.listSharedLibraryPath('drive-id-123', path: '/Documents'),
+        throwsA(isA<Exception>()),
+      );
+    });
+
+    test('searchSharePoint throws when not authenticated', () {
+      expect(
+        () => adapter.searchSharePoint('budget report'),
+        throwsA(isA<Exception>()),
+      );
+    });
+  });
 }

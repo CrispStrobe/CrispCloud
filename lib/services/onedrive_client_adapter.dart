@@ -753,6 +753,120 @@ class OneDriveClientAdapter extends CloudStorageClient {
     _tokenExpiry = DateTime.now().add(Duration(seconds: expiresIn - 60));
   }
 
+  // --- Shared Libraries (SharePoint Sites) ---
+
+  /// List SharePoint sites the user has access to.
+  ///
+  /// Returns site metadata: id, displayName, webUrl.
+  Future<List<Map<String, dynamic>>> listSharedLibraries() async {
+    await _ensureToken();
+
+    final resp = await _graphGet('/me/followedSites?\$select=id,displayName,webUrl');
+    final sites = (resp['value'] as List?) ?? [];
+
+    return sites.map((s) {
+      final site = s as Map<String, dynamic>;
+      return <String, dynamic>{
+        'id': site['id'],
+        'name': site['displayName'] ?? 'Unknown Site',
+        'webUrl': site['webUrl'],
+      };
+    }).toList();
+  }
+
+  /// List document libraries (drives) within a SharePoint site.
+  Future<List<Map<String, dynamic>>> listSiteDrives(String siteId) async {
+    await _ensureToken();
+
+    final resp = await _graphGet('/sites/$siteId/drives?\$select=id,name,driveType,webUrl');
+    final drives = (resp['value'] as List?) ?? [];
+
+    return drives.map((d) {
+      final drive = d as Map<String, dynamic>;
+      return <String, dynamic>{
+        'id': drive['id'],
+        'name': drive['name'] ?? 'Document Library',
+        'driveType': drive['driveType'] ?? 'documentLibrary',
+        'webUrl': drive['webUrl'],
+      };
+    }).toList();
+  }
+
+  /// List files and folders in a SharePoint document library.
+  ///
+  /// [driveId] — the drive ID from [listSiteDrives].
+  /// [path] — folder path within the library (default: root).
+  Future<Map<String, List<Map<String, dynamic>>>> listSharedLibraryPath(
+    String driveId, {
+    String path = '/',
+  }) async {
+    await _ensureToken();
+
+    final endpoint = path == '/' || path.isEmpty
+        ? '/drives/$driveId/root/children'
+        : '/drives/$driveId/root:$path:/children';
+
+    final folders = <Map<String, dynamic>>[];
+    final files = <Map<String, dynamic>>[];
+
+    String? nextLink;
+    var resp = await _graphGet(
+        '$endpoint?\$select=id,name,size,lastModifiedDateTime,folder,file&\$top=200');
+
+    do {
+      for (final item in (resp['value'] as List?) ?? []) {
+        final map = item as Map<String, dynamic>;
+        final isFolder = map.containsKey('folder');
+        final entry = <String, dynamic>{
+          'name': map['name'] as String? ?? 'Unknown',
+          'uuid': map['id'] as String,
+          if (map['lastModifiedDateTime'] != null) 'lastModified': map['lastModifiedDateTime'],
+          if (map['size'] != null) 'size': (map['size'] as num).toInt(),
+        };
+
+        if (isFolder) {
+          folders.add(entry);
+        } else {
+          files.add(entry);
+        }
+      }
+
+      nextLink = resp['@odata.nextLink'] as String?;
+      if (nextLink != null) {
+        resp = await _graphGet(nextLink);
+      }
+    } while (nextLink != null);
+
+    return {'folders': folders, 'files': files};
+  }
+
+  /// Search for content across all accessible SharePoint sites.
+  Future<List<Map<String, dynamic>>> searchSharePoint(String query) async {
+    await _ensureToken();
+
+    final resp = await _graphGet(
+        "/search/query?requests=[{\"entityTypes\":[\"driveItem\"],"
+        "\"query\":{\"queryString\":\"${Uri.encodeComponent(query)}\"}}]");
+
+    final results = <Map<String, dynamic>>[];
+    final hits = resp['value'] as List? ?? [];
+    for (final hitSet in hits) {
+      final hitsResult = (hitSet as Map)['hitsContainers'] as List? ?? [];
+      for (final container in hitsResult) {
+        for (final hit in ((container as Map)['hits'] as List? ?? [])) {
+          final resource = (hit as Map)['resource'] as Map<String, dynamic>? ?? {};
+          results.add({
+            'name': resource['name'] ?? 'Unknown',
+            'webUrl': resource['webUrl'],
+            'size': resource['size'],
+            'lastModified': resource['lastModifiedDateTime'],
+          });
+        }
+      }
+    }
+    return results;
+  }
+
   Future<void> _fetchUserEmail() async {
     try {
       final data = await _graphGet('/me?\$select=userPrincipalName,mail');

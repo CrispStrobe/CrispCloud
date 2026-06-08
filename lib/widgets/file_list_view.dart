@@ -515,7 +515,17 @@ class CompactFileTile extends ConsumerWidget {
     final dateStr = file.updatedAt != null ? formatDate(file.updatedAt!) : '';
     final extStr = file.isFolder || file.name == '..' ? '' : file.extension.toUpperCase();
 
-    return GestureDetector(
+    final semanticType = file.isFolder ? 'Folder' : 'File';
+    final semanticSize = file.isFolder ? '' : ', ${sizeStr.isNotEmpty ? sizeStr : 'unknown size'}';
+    final semanticSel = isSelected ? ', selected' : '';
+    final semanticLabel = '$semanticType ${file.name}$semanticSize$semanticSel';
+
+    return Semantics(
+      label: semanticLabel,
+      selected: isSelected,
+      focused: isCursor,
+      button: true,
+      child: GestureDetector(
       onTap: () {
         final shiftPressed = HardwareKeyboard.instance.isShiftPressed;
         final ctrlPressed = HardwareKeyboard.instance.isControlPressed || HardwareKeyboard.instance.isMetaPressed;
@@ -578,6 +588,7 @@ class CompactFileTile extends ConsumerWidget {
           ],
         ),
       ),
+    ),
     );
   }
 }

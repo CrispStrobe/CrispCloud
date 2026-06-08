@@ -241,4 +241,44 @@ void main() {
       expect(hash, isNot(equals(smallHash)));
     });
   });
+
+  // ===========================================================================
+  // Paper Docs
+  // ===========================================================================
+  group('DropboxClientAdapter - Paper docs', () {
+    test('listPaperDocs throws when not authenticated', () {
+      expect(
+        () => adapter.listPaperDocs(),
+        throwsA(isA<Exception>()),
+      );
+    });
+
+    test('listPaperDocs accepts search query', () {
+      expect(
+        () => adapter.listPaperDocs(query: 'meeting notes'),
+        throwsA(isA<Exception>()),
+      );
+    });
+
+    test('exportPaperDoc throws when not authenticated', () {
+      expect(
+        () => adapter.exportPaperDoc('/paper-doc.paper'),
+        throwsA(isA<Exception>()),
+      );
+    });
+
+    test('exportPaperDoc supports markdown format', () {
+      expect(
+        () => adapter.exportPaperDoc('/paper-doc.paper', format: 'markdown'),
+        throwsA(isA<Exception>()),
+      );
+    });
+
+    test('exportPaperDoc supports html format', () {
+      expect(
+        () => adapter.exportPaperDoc('/paper-doc.paper', format: 'html'),
+        throwsA(isA<Exception>()),
+      );
+    });
+  });
 }

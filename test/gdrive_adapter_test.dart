@@ -278,4 +278,140 @@ void main() {
       );
     });
   });
+
+  // ===========================================================================
+  // Google Docs MIME type handling
+  // ===========================================================================
+  group('Google Docs MIME type detection', () {
+    test('isGoogleDocsMimeType returns true for Google Docs', () {
+      expect(GDriveClientAdapter.isGoogleDocsMimeType('application/vnd.google-apps.document'), isTrue);
+    });
+
+    test('isGoogleDocsMimeType returns true for Google Sheets', () {
+      expect(GDriveClientAdapter.isGoogleDocsMimeType('application/vnd.google-apps.spreadsheet'), isTrue);
+    });
+
+    test('isGoogleDocsMimeType returns true for Google Slides', () {
+      expect(GDriveClientAdapter.isGoogleDocsMimeType('application/vnd.google-apps.presentation'), isTrue);
+    });
+
+    test('isGoogleDocsMimeType returns true for Google Drawings', () {
+      expect(GDriveClientAdapter.isGoogleDocsMimeType('application/vnd.google-apps.drawing'), isTrue);
+    });
+
+    test('isGoogleDocsMimeType returns false for regular files', () {
+      expect(GDriveClientAdapter.isGoogleDocsMimeType('application/pdf'), isFalse);
+      expect(GDriveClientAdapter.isGoogleDocsMimeType('image/png'), isFalse);
+      expect(GDriveClientAdapter.isGoogleDocsMimeType('application/vnd.google-apps.folder'), isFalse);
+    });
+
+    test('getExportExtension returns correct extensions', () {
+      expect(GDriveClientAdapter.getExportExtension('application/vnd.google-apps.document'), equals('.docx'));
+      expect(GDriveClientAdapter.getExportExtension('application/vnd.google-apps.spreadsheet'), equals('.xlsx'));
+      expect(GDriveClientAdapter.getExportExtension('application/vnd.google-apps.presentation'), equals('.pptx'));
+      expect(GDriveClientAdapter.getExportExtension('application/vnd.google-apps.drawing'), equals('.pdf'));
+    });
+
+    test('getExportExtension returns null for non-Google types', () {
+      expect(GDriveClientAdapter.getExportExtension('application/pdf'), isNull);
+      expect(GDriveClientAdapter.getExportExtension('text/plain'), isNull);
+    });
+  });
+
+  // ===========================================================================
+  // Google Docs export formats
+  // ===========================================================================
+  group('Google Docs export formats', () {
+    test('Google Docs has 6 export formats', () {
+      final formats = GDriveClientAdapter.getExportFormats('application/vnd.google-apps.document');
+      expect(formats.length, equals(6));
+      expect(formats.any((f) => f['label'] == 'Word'), isTrue);
+      expect(formats.any((f) => f['label'] == 'PDF'), isTrue);
+      expect(formats.any((f) => f['label'] == 'Plain Text'), isTrue);
+      expect(formats.any((f) => f['label'] == 'EPUB'), isTrue);
+    });
+
+    test('Google Sheets has 4 export formats', () {
+      final formats = GDriveClientAdapter.getExportFormats('application/vnd.google-apps.spreadsheet');
+      expect(formats.length, equals(4));
+      expect(formats.any((f) => f['label'] == 'Excel'), isTrue);
+      expect(formats.any((f) => f['label'] == 'CSV'), isTrue);
+    });
+
+    test('Google Slides has 3 export formats', () {
+      final formats = GDriveClientAdapter.getExportFormats('application/vnd.google-apps.presentation');
+      expect(formats.length, equals(3));
+      expect(formats.any((f) => f['label'] == 'PowerPoint'), isTrue);
+      expect(formats.any((f) => f['label'] == 'PDF'), isTrue);
+    });
+
+    test('Google Drawings has 3 export formats', () {
+      final formats = GDriveClientAdapter.getExportFormats('application/vnd.google-apps.drawing');
+      expect(formats.length, equals(3));
+      expect(formats.any((f) => f['label'] == 'PDF'), isTrue);
+      expect(formats.any((f) => f['label'] == 'PNG'), isTrue);
+      expect(formats.any((f) => f['label'] == 'SVG'), isTrue);
+    });
+
+    test('unknown MIME type returns empty export list', () {
+      expect(GDriveClientAdapter.getExportFormats('application/pdf'), isEmpty);
+      expect(GDriveClientAdapter.getExportFormats('text/plain'), isEmpty);
+    });
+
+    test('all export format entries have required keys', () {
+      for (final docType in [
+        'application/vnd.google-apps.document',
+        'application/vnd.google-apps.spreadsheet',
+        'application/vnd.google-apps.presentation',
+        'application/vnd.google-apps.drawing',
+      ]) {
+        for (final fmt in GDriveClientAdapter.getExportFormats(docType)) {
+          expect(fmt.containsKey('mimeType'), isTrue, reason: '$docType format missing mimeType');
+          expect(fmt.containsKey('ext'), isTrue, reason: '$docType format missing ext');
+          expect(fmt.containsKey('label'), isTrue, reason: '$docType format missing label');
+          expect(fmt['ext']!.startsWith('.'), isTrue, reason: '$docType ext should start with dot');
+        }
+      }
+    });
+  });
+
+  // ===========================================================================
+  // Version methods (auth guards)
+  // ===========================================================================
+  group('GDriveClientAdapter - version methods', () {
+    test('listVersions throws when not authenticated', () {
+      expect(
+        () => adapter.listVersions('file-id-123'),
+        throwsA(isA<Exception>()),
+      );
+    });
+
+    test('downloadVersion throws when not authenticated', () {
+      expect(
+        () => adapter.downloadVersion('file-id-123', 'rev-1'),
+        throwsA(isA<Exception>()),
+      );
+    });
+
+    test('pinVersion throws when not authenticated', () {
+      expect(
+        () => adapter.pinVersion('file-id-123', 'rev-1'),
+        throwsA(isA<Exception>()),
+      );
+    });
+
+    test('deleteVersion throws when not authenticated', () {
+      expect(
+        () => adapter.deleteVersion('file-id-123', 'rev-1'),
+        throwsA(isA<Exception>()),
+      );
+    });
+
+    test('exportGoogleDoc throws when not authenticated', () {
+      expect(
+        () => adapter.exportGoogleDoc('file-id-123'),
+        throwsA(isA<Exception>()),
+      );
+    });
+  });
 }

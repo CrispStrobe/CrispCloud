@@ -691,4 +691,64 @@ class DropboxClientAdapter extends CloudStorageClient {
     if (resp.body.isEmpty) return {};
     return json.decode(resp.body) as Map<String, dynamic>;
   }
+
+  // --- Paper Docs ---
+
+  /// List Dropbox Paper documents accessible to the user.
+  ///
+  /// Uses the files/search API to find Paper documents by MIME type.
+  /// Returns document metadata: name, id, path, lastModified.
+  Future<List<Map<String, dynamic>>> listPaperDocs({String query = ''}) async {
+    await _ensureToken();
+
+    final searchQuery = query.isNotEmpty
+        ? query
+        : ''; // Empty query lists recent Paper docs
+    final body = json.encode({
+      'query': searchQuery,
+      'options': {
+        'file_categories': ['.paper'],
+        'max_results': 100,
+      },
+    });
+
+    final resp = await _rpcPost('/files/search_v2', body);
+    final matches = (resp['matches'] as List?) ?? [];
+
+    return matches.map((m) {
+      final metadata = ((m as Map)['metadata'] as Map)['metadata'] as Map<String, dynamic>;
+      return <String, dynamic>{
+        'name': metadata['name'] ?? 'Untitled',
+        'id': metadata['id'],
+        'path': metadata['path_display'],
+        if (metadata['server_modified'] != null) 'lastModified': metadata['server_modified'],
+        if (metadata['size'] != null) 'size': (metadata['size'] as num).toInt(),
+        'isPaper': true,
+      };
+    }).toList();
+  }
+
+  /// Export a Dropbox Paper document to markdown or HTML.
+  ///
+  /// [docPath] — the Dropbox path to the Paper document.
+  /// [format] — 'markdown' or 'html' (default: 'markdown').
+  Future<String> exportPaperDoc(String docPath, {String format = 'markdown'}) async {
+    await _ensureToken();
+
+    final uri = Uri.parse('$_contentBase/files/export');
+    final req = http.Request('POST', uri);
+    req.headers['Authorization'] = 'Bearer $_accessToken';
+    req.headers['Dropbox-API-Arg'] = json.encode({
+      'path': docPath,
+      'export_format': format,
+    });
+
+    final resp = await http.Response.fromStream(await req.send());
+
+    if (resp.statusCode != 200) {
+      throw Exception('Paper export failed (${resp.statusCode}): ${resp.body}');
+    }
+
+    return resp.body;
+  }
 }
