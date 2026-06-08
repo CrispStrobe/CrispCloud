@@ -122,6 +122,29 @@ class NextcloudClientAdapter extends CloudStorageClient {
     });
 
     _log.info('Logged in to Nextcloud as $username @ $serverUrl');
+
+    // Auto-detect delta sync server app
+    await _detectDeltaSyncApp();
+  }
+
+  /// Probe for the CrispCloud delta sync server app.
+  /// Sets [deltaSyncServerAppUrl] if the app is installed and responding.
+  Future<void> _detectDeltaSyncApp() async {
+    if (_serverUrl == null) return;
+    final appUrl = '$_serverUrl/index.php/apps/crispcloud_delta';
+    try {
+      final resp = await http.get(
+        Uri.parse('$appUrl/api/status'),
+        headers: {'Authorization': _basicAuth(_username!, _password!)},
+      );
+      if (resp.statusCode == 200 && resp.body.contains('crispcloud_delta')) {
+        deltaSyncServerAppUrl = appUrl;
+        _log.info('Delta sync server app detected at $appUrl');
+      }
+    } catch (e) {
+      // App not installed — delta sync will use client-cached block maps
+      _log.debug('Delta sync server app not detected: $e');
+    }
   }
 
   @override
@@ -656,7 +679,8 @@ class NextcloudClientAdapter extends CloudStorageClient {
 
   /// Base URL for the CrispCloud delta sync Nextcloud app API.
   /// Set to non-null when the server has the companion app installed.
-  /// e.g. 'https://nextcloud.example.com/apps/crispcloud_delta'
+  /// e.g. 'https://nextcloud.example.com/index.php/apps/crispcloud_delta'
+  /// Note: requires /index.php/ prefix for Nextcloud routing.
   String? deltaSyncServerAppUrl;
 
   final DeltaSyncService _deltaSyncService = DeltaSyncService();
@@ -802,10 +826,10 @@ class NextcloudClientAdapter extends CloudStorageClient {
         final buf = Uint8List(op.size);
         await raf.readInto(buf);
 
-        // PUT /api/blocks/{remotePath}?offset={offset}&size={size}
+        // POST /api/blocks/{remotePath}?offset={offset}&size={size}
         final blockUri = Uri.parse(
             '$appBase/api/blocks/$encodedPath?offset=${op.offset}&size=${op.size}');
-        final resp = await http.put(blockUri, headers: {
+        final resp = await http.post(blockUri, headers: {
           'Authorization': authHeader,
           'Content-Type': 'application/octet-stream',
         }, body: buf);

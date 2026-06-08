@@ -73,10 +73,21 @@ CrispCloud still works — it falls back to:
 - **Full file re-upload via chunked upload v2** when blocks change (no partial update)
 - Block map comparison still saves computation on subsequent syncs
 
-## Requirements
+## Compatibility
 
-- Nextcloud 25+ (tested up to 31)
+| Platform | Supported | Notes |
+|----------|-----------|-------|
+| **Nextcloud 25–31** | Yes | Primary target |
+| **ownCloud 10.11+** | Yes | Shared OCP AppFramework + Files API from pre-fork era |
+| **ownCloud Infinite Scale (oCIS)** | No | Go-based, no PHP apps — use Graph/delta API instead (same as OneDrive) |
+
+### Requirements
+
 - PHP 8.0+
+- The app uses only stable OCP APIs that exist in both Nextcloud and ownCloud 10:
+  - `OCP\Files\IRootFolder`, `OCP\Files\File`, `OCP\Files\FileInfo`
+  - `OCP\AppFramework\Controller`, `OCP\AppFramework\Http\JSONResponse`
+  - `OCP\IConfig`, `OCP\IRequest`
 
 ## License
 

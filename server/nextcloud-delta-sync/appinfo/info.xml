@@ -6,6 +6,7 @@
     <summary>Block-level delta sync for CrispCloud file manager</summary>
     <description><![CDATA[
 Companion server app for CrispCloud that enables block-level delta sync.
+Compatible with both Nextcloud and ownCloud 10.
 
 Instead of re-uploading entire files when only a few blocks changed, this app
 maintains block-level indexes (Adler-32 + SHA-256 hashes per 4 MB block) and
@@ -20,6 +21,12 @@ files, disk images, VM snapshots, PST archives.
 - `PUT  /api/blocks/{path}?offset=N&size=M` — write a single block at offset
 - `POST /api/finalize/{path}` — finalize after block writes (update mtime/etag)
 - `GET  /api/status` — check if the app is installed and working
+
+## Compatibility
+
+- Nextcloud 25–31
+- ownCloud 10.11+ (uses shared OCP\Files and OCP\AppFramework APIs)
+- ownCloud Infinite Scale (oCIS): not supported (use Graph/delta API instead)
     ]]></description>
     <version>0.1.0</version>
     <licence>agpl</licence>
@@ -27,7 +34,8 @@ files, disk images, VM snapshots, PST archives.
     <namespace>CrispCloudDelta</namespace>
     <category>files</category>
     <dependencies>
-        <nextcloud min-version="25" max-version="31"/>
+        <!-- Works on both Nextcloud 25+ and ownCloud 10.11+ -->
+        <!-- ownCloud 10 shares the OCP app framework from the pre-fork era -->
         <php min-version="8.0"/>
     </dependencies>
 </info>

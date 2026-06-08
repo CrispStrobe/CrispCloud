@@ -105,8 +105,17 @@ class BlockMapService {
         try {
             for ($i = 0; $i < $blockCount; $i++) {
                 $offset = $i * $blockSize;
-                $data = fread($handle, $blockSize);
-                if ($data === false) {
+                $remaining = min($blockSize, $size - $offset);
+                $data = '';
+                // fread may return short reads — loop until we have the full block
+                while (strlen($data) < $remaining) {
+                    $chunk = fread($handle, $remaining - strlen($data));
+                    if ($chunk === false || $chunk === '') {
+                        break;
+                    }
+                    $data .= $chunk;
+                }
+                if (strlen($data) === 0) {
                     break;
                 }
                 $actualSize = strlen($data);
