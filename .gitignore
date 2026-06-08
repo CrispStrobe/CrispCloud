@@ -69,3 +69,4 @@ pubspec_overrides.yaml
 .vercel
 .env*.local
 handover-prompts/
+docs/internal/
