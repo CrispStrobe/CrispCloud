@@ -4,7 +4,7 @@
 
 ## Vision
 
-CrispCloud becomes the **open-source Cyberduck/Transmit/Commander One killer**: a single, beautiful, blazing-fast app that connects to *any* cloud or server, runs on *every* platform, and treats privacy and encryption as first-class citizens — not afterthoughts.
+CrispCloud becomes the **definitive open-source cloud file manager**: a single, beautiful, blazing-fast app that connects to *any* cloud or server, runs on *every* platform, and treats privacy and encryption as first-class citizens — not afterthoughts.
 
 ---
 
@@ -56,7 +56,8 @@ CrispCloud becomes the **open-source Cyberduck/Transmit/Commander One killer**: 
 - **Plugin system**: `CrispCloudPlugin` interface with sandboxed execution
 - **Opt-in analytics**: anonymous feature usage tracking
 - **Linux integration**: Nautilus/Dolphin/Thunar, D-Bus notifications, .deb/.rpm/AppImage packaging
-- **14 providers**, **9 languages**, **4164 unit tests** (7/7 CI green) + gated live/integration tests
+- **14 providers**, **9 languages**, **4361+ unit tests** (7/7 CI green) + gated live/integration tests
+- **Block-level delta sync**: DeltaSyncService + Nextcloud server app + pCloud pread/pwrite + S3 Range GET wiring
 - **SSH terminal**: embedded SSH for SFTP connections with session pool + idle timeout
 - **Hetzner Storage Box**: SFTP/WebDAV with Hetzner defaults
 - **Android DocumentsProvider**: cloud storage appears in every app's file picker
@@ -401,7 +402,7 @@ CrispCloud becomes the **open-source Cyberduck/Transmit/Commander One killer**: 
 
 ## Phase 5: UI/UX Overhaul (Weeks 6-12)
 
-*Goal: Look and feel as good as Transmit / Forklift / Commander One.*
+*Goal: Best-in-class UI for a cloud file manager.*
 
 ### 5.1 File Preview & Thumbnails
 - [x] Preview pane (toggle with Space key or eye icon in app bar):
@@ -570,7 +571,7 @@ CrispCloud becomes the **open-source Cyberduck/Transmit/Commander One killer**: 
 - [x] Windows Hello biometric support — `local_auth` fixes for Windows (biometricOnly, canCheckBiometrics, label)
 - [ ] Jump list (recent connections in taskbar)
 - [ ] Microsoft Store (MSIX) distribution
-- [ ] Virtual filesystem driver for mounted drives (like Mountain Duck)
+- [ ] Virtual filesystem driver for mounted drives
 
 ### 8.3 Linux
 - [x] Nautilus/Dolphin/Thunar right-click integration — `LinuxIntegrationService` with install/uninstall per file manager
@@ -814,16 +815,16 @@ CrispCloud becomes the **open-source Cyberduck/Transmit/Commander One killer**: 
 | 1. Foundation Hardening | Critical | Medium | **~100% done** — Riverpod, credentials (incl. web encrypted storage), logging, formatters, decomposition all done |
 | 2. Performance & Streaming | High | Medium | **100% done** — streaming (all platforms including web), queue, virtual scroll, multipart S3 + resume, rate limiting, back-pressure done |
 | 3.1 S3 + GDrive + OneDrive + Dropbox | High | Medium | **All 4 done** |
-| 3.2 Tier 2 providers | Medium | Medium | **FTP, Nextcloud, pCloud done** — Azure, B2, Mega pending |
-| 4. Sync Engine | Very High | Very High | **~95% done** — two-way, selective, offline replay+cache, watcher, tray, delta sync, placeholder files, **mobile background sync** done |
+| 3.2 Tier 2 providers | Medium | Medium | **FTP, Nextcloud, pCloud, Hetzner done** — Azure, B2 done, Mega/Storj pending |
+| 4. Sync Engine | Very High | Very High | **~98% done** — two-way, selective, offline replay+cache, watcher, tray, delta sync (Nextcloud+pCloud+S3), placeholder files, **mobile background sync** done |
 | 5. UI/UX | High | Medium | **~98% done** — preview, tabs, themes, nav, DnD (multi-file badge), tree, grid+thumbnails (provider-native), column view, bookmarks, pull-to-refresh, quota display done |
 | 6. Power User Features | Medium | High | **~90% done** — editor, palette, batch rename, archives, versions+restore+diff, share, dupes, diff, permissions, search filters, **full-text search** done |
 | 7.1 Client-Side Encryption | High | High | **100% done** — encryption + key management + BIP39 + Cryptomator v8 + VeraCrypt done |
 | 7.2-7.4 Security extras | Medium | Medium | **~95% done** — proxy, app lock, biometric, cert pinning, custom CA, TLS enforcement, secure clipboard done |
 | 8. Platform Polish | Medium | High | **~85% done** — macOS, Windows, Android, iOS, Web, **Linux** (Nautilus/Dolphin/Thunar, D-Bus, .deb/.rpm/AppImage) done |
 | 9. Extensibility & CLI | Medium | High | **~95% done** — CLI, automation rules, local REST API, plugin system done |
-| 10. Quality & Distribution | High | High | **3524 tests** — CI/CD, docs, i18n (7 langs), fuzz, benchmarks, mock servers, plugin system, widget tests, a11y done; distribution pending |
-| 11. Differentiation | High | Medium | **~80% done** — mounted drives, backup, migration, analytics, comparison, delta sync done; **dual-panel power mode (priority)**, OCR pending |
+| 10. Quality & Distribution | High | High | **4361+ tests** — CI/CD, docs, i18n (9 langs), fuzz, benchmarks, mock servers, plugin system, widget tests, a11y done; distribution pending |
+| 11. Differentiation | High | Medium | **~85% done** — mounted drives, backup, migration, analytics, comparison, delta sync (3 providers + server app) done; OCR pending |
 
 ---
 
@@ -837,22 +838,22 @@ Remaining: multipart upload, large file streaming on Web.
 ### v0.2.0 — "See Everything" *(~90% complete)*
 Phases 5.1-5.3. Preview (image/text/markdown/PDF), tabs+persistence, themes, responsive layout, bookmarks, tree view, grid view+thumbnails, drag-and-drop.
 Remaining: column view, video/audio preview.
-*The app that looks as good as Transmit.*
+*The app that looks beautiful on every platform.*
 
 ### v0.3.0 — "Connect Everywhere" *(done)*
 Phase 3.1. S3 + FTP + Google Drive + OneDrive + Dropbox all done.
 Remaining: connection profiles done, Tier 2 providers (Azure, B2, Mega, pCloud).
-*The app that replaces Cyberduck.*
+*The app that connects to any cloud.*
 
 ### v0.5.0 — "Privacy First" *(~90% complete)*
 Phase 7. Encryption + key management + BIP39 + proxy + app lock + cert pinning done.
 Remaining: Cryptomator compat, biometric auth.
 *The app privacy advocates recommend.*
 
-### v0.7.0 — "Always In Sync" *(~85% complete)*
-Phase 4. Two-way sync, selective sync, offline replay, file cache (LRU), delta sync (content hash), filesystem watcher, system tray done.
-Remaining: mobile background sync, placeholder files.
-*The app that replaces Mountain Duck.*
+### v0.7.0 — "Always In Sync" *(~98% complete)*
+Phase 4. Two-way sync, selective sync, offline replay, file cache (LRU), delta sync (block-level for Nextcloud+pCloud+S3), filesystem watcher, system tray, mobile background sync, placeholder files done.
+Remaining: delta sync for remaining providers.
+*The app that keeps everything in sync.*
 
 ### v1.0.0 — "Ready for Everyone"
 Phases 8 + 10. Platform polish, i18n, a11y, app store distribution, auto-update.
@@ -864,25 +865,9 @@ Phases 9 + 11. Plugins, CLI, automation, AI features, migration wizard, backup e
 
 ---
 
-## Competitor Landscape
+## CrispCloud's Position
 
-| Feature | CrispCloud (now) | CrispCloud (v2) | Cyberduck | Transmit | Commander One | Mountain Duck | FileBrowser |
-|---------|:-:|:-:|:-:|:-:|:-:|:-:|:-:|
-| Open Source | AGPL | AGPL | GPL | No | No | No | Apache |
-| Platforms | 6 | 6 | 3 (W/M/L) | macOS | macOS | 2 (W/M) | Web |
-| E2E Encryption | **Any provider** | Any provider | Cryptomator | No | No | Cryptomator | No |
-| Two-Panel | Yes | Yes + tabs | No | Yes | Yes | No | No |
-| Providers | **11** | 14+ | 15+ | 12 | 12 | 15+ | Local |
-| Streaming | **Yes (SFTP)** | All providers | Yes | Yes | Yes | Yes | No |
-| Concurrent Xfer | **Yes (3)** | Configurable | Yes | Yes | No | Yes | No |
-| File Preview | **Yes** | Full | Quick Look | Yes | Yes | Via OS | Yes |
-| Secure Creds | **Yes** | Yes | Yes | Yes | Yes | Yes | No |
-| Sync Engine | **Yes** | Yes | No | No | No | Yes | No |
-| Mobile | Basic | Full | No | No | No | No | Responsive |
-| CLI | No | Yes | Yes | No | No | No | No |
-| Price | Free | Free | Free/$ | $55 | $30-60 | $39/yr | Free |
-
-**CrispCloud's unique position:** The only open-source, truly cross-platform (6 platforms including mobile + web), privacy-first cloud file manager with two-panel interface, sync engine, and multi-provider support. No competitor covers all these axes simultaneously.
+The only open-source, truly cross-platform (6 platforms including mobile + web), privacy-first cloud file manager with two-panel interface, block-level delta sync, and 14-provider support.
 
 ---
 

@@ -104,7 +104,7 @@ The project uses the **Adapter pattern** (`CloudStorageClient` interface) with *
 ## What Needs to Be Done (in priority order)
 
 ### 1. Remaining Core Features
-- **Cryptomator vault format** (7.1): interop with Cyberduck/Mountain Duck
+- **Cryptomator vault format** (7.1): interop with other Cryptomator-compatible clients
 - **SSH terminal** (6.2): embed `xterm` for SFTP connections
 
 ### 2. Platform Polish (Phase 8)
