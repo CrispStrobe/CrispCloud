@@ -21,6 +21,95 @@ import 'log_service.dart';
 import 's3_config_service.dart';
 import 'secure_storage_service.dart';
 
+/// S3 server-side encryption modes.
+enum S3Encryption {
+  /// No server-side encryption.
+  none,
+  /// SSE-S3: AES-256 managed by S3 (x-amz-server-side-encryption: AES256).
+  sseS3,
+  /// SSE-KMS: AWS KMS managed key (x-amz-server-side-encryption: aws:kms).
+  sseKms,
+  /// SSE-C: Customer-provided key (x-amz-server-side-encryption-customer-*).
+  sseC,
+}
+
+/// S3 storage classes per AWS documentation.
+enum S3StorageClass {
+  standard,
+  standardIa,
+  onezoneIa,
+  intelligentTiering,
+  glacier,
+  glacierIr,
+  deepArchive,
+  reducedRedundancy,
+}
+
+extension S3StorageClassX on S3StorageClass {
+  String get headerValue {
+    switch (this) {
+      case S3StorageClass.standard:
+        return 'STANDARD';
+      case S3StorageClass.standardIa:
+        return 'STANDARD_IA';
+      case S3StorageClass.onezoneIa:
+        return 'ONEZONE_IA';
+      case S3StorageClass.intelligentTiering:
+        return 'INTELLIGENT_TIERING';
+      case S3StorageClass.glacier:
+        return 'GLACIER';
+      case S3StorageClass.glacierIr:
+        return 'GLACIER_IR';
+      case S3StorageClass.deepArchive:
+        return 'DEEP_ARCHIVE';
+      case S3StorageClass.reducedRedundancy:
+        return 'REDUCED_REDUNDANCY';
+    }
+  }
+
+  String get displayName {
+    switch (this) {
+      case S3StorageClass.standard:
+        return 'Standard';
+      case S3StorageClass.standardIa:
+        return 'Standard-IA';
+      case S3StorageClass.onezoneIa:
+        return 'One Zone-IA';
+      case S3StorageClass.intelligentTiering:
+        return 'Intelligent-Tiering';
+      case S3StorageClass.glacier:
+        return 'Glacier Flexible Retrieval';
+      case S3StorageClass.glacierIr:
+        return 'Glacier Instant Retrieval';
+      case S3StorageClass.deepArchive:
+        return 'Glacier Deep Archive';
+      case S3StorageClass.reducedRedundancy:
+        return 'Reduced Redundancy';
+    }
+  }
+
+  static S3StorageClass fromHeaderValue(String value) {
+    switch (value.toUpperCase()) {
+      case 'STANDARD_IA':
+        return S3StorageClass.standardIa;
+      case 'ONEZONE_IA':
+        return S3StorageClass.onezoneIa;
+      case 'INTELLIGENT_TIERING':
+        return S3StorageClass.intelligentTiering;
+      case 'GLACIER':
+        return S3StorageClass.glacier;
+      case 'GLACIER_IR':
+        return S3StorageClass.glacierIr;
+      case 'DEEP_ARCHIVE':
+        return S3StorageClass.deepArchive;
+      case 'REDUCED_REDUNDANCY':
+        return S3StorageClass.reducedRedundancy;
+      default:
+        return S3StorageClass.standard;
+    }
+  }
+}
+
 class S3ClientAdapter extends CloudStorageClient {
   static const _log = Log('S3Client');
   final S3ConfigService _config;
@@ -38,6 +127,15 @@ class S3ClientAdapter extends CloudStorageClient {
   String? _accessKey;
   String? _secretKey;
   bool _authenticated = false;
+
+  /// Server-side encryption mode for uploads.
+  S3Encryption encryption = S3Encryption.none;
+  /// KMS key ID (for SSE-KMS).
+  String? kmsKeyId;
+  /// Customer encryption key (base64, for SSE-C).
+  String? customerEncryptionKey;
+  /// Storage class for new objects.
+  S3StorageClass storageClass = S3StorageClass.standard;
 
   S3ClientAdapter({required dynamic config})
       : _config = (config is S3ConfigService)
@@ -67,6 +165,48 @@ class S3ClientAdapter extends CloudStorageClient {
 
   @override
   bool get supportsServerSideCopy => true;
+
+  @override
+  bool get supportsNativeShare => true;
+
+  // --- Upload header helpers ---
+
+  /// Build extra headers for SSE + storage class on PUT requests.
+  Map<String, String> _uploadHeaders({String contentType = 'application/octet-stream'}) {
+    final headers = <String, String>{'content-type': contentType};
+
+    // Storage class
+    if (storageClass != S3StorageClass.standard) {
+      headers['x-amz-storage-class'] = storageClass.headerValue;
+    }
+
+    // Server-side encryption
+    switch (encryption) {
+      case S3Encryption.sseS3:
+        headers['x-amz-server-side-encryption'] = 'AES256';
+        break;
+      case S3Encryption.sseKms:
+        headers['x-amz-server-side-encryption'] = 'aws:kms';
+        if (kmsKeyId != null && kmsKeyId!.isNotEmpty) {
+          headers['x-amz-server-side-encryption-aws-kms-key-id'] = kmsKeyId!;
+        }
+        break;
+      case S3Encryption.sseC:
+        if (customerEncryptionKey != null) {
+          headers['x-amz-server-side-encryption-customer-algorithm'] = 'AES256';
+          headers['x-amz-server-side-encryption-customer-key'] = customerEncryptionKey!;
+          // MD5 of the raw key bytes
+          final keyBytes = base64.decode(customerEncryptionKey!);
+          final keyMd5 = base64.encode(md5.convert(keyBytes).bytes);
+          headers['x-amz-server-side-encryption-customer-key-MD5'] = keyMd5;
+        }
+        break;
+      case S3Encryption.none:
+        break;
+    }
+
+    return headers;
+  }
 
   // --- Addressing helpers ---
 
@@ -310,13 +450,16 @@ class S3ClientAdapter extends CloudStorageClient {
       );
     }
 
-    // Save credentials
+    // Save credentials (including encryption + storage class settings)
     await _config.saveCredentials({
       'accessKey': _accessKey!,
       'secretKey': _secretKey!,
       'endpoint': _endpoint!,
       'bucket': _bucket!,
       'region': _region!,
+      'encryption': encryption.name,
+      if (kmsKeyId != null) 'kmsKeyId': kmsKeyId!,
+      'storageClass': storageClass.headerValue,
     });
 
     // Test connection by listing with max-keys=1
@@ -594,7 +737,7 @@ class S3ClientAdapter extends CloudStorageClient {
     final response = await _signedRequest(
       'PUT',
       uri,
-      extraHeaders: {'content-type': 'application/octet-stream'},
+      extraHeaders: _uploadHeaders(),
       body: fileData,
     );
 
@@ -613,7 +756,7 @@ class S3ClientAdapter extends CloudStorageClient {
     final response = await _signedRequest(
       'POST',
       uri,
-      extraHeaders: {'content-type': 'application/octet-stream'},
+      extraHeaders: _uploadHeaders(),
     );
 
     if (response.statusCode != 200) {
@@ -1030,6 +1173,134 @@ class S3ClientAdapter extends CloudStorageClient {
     }
   }
 
+  // ---------------------------------------------------------------------------
+  // Presigned URLs
+  // ---------------------------------------------------------------------------
+
+  /// Generate a presigned URL for downloading (GET) a remote object.
+  /// [expires] defaults to 1 hour.
+  String generatePresignedUrl(String remotePath, {Duration? expires}) {
+    _ensureAuth();
+    final key = _pathToKey(remotePath);
+    final expiresSeconds = (expires ?? const Duration(hours: 1)).inSeconds;
+    final now = DateTime.now().toUtc();
+    final dateStamp = _formatDateStamp(now);
+    final amzDate = _formatAmzDate(now);
+    final region = _region ?? 'us-east-1';
+    const service = 's3';
+    final scope = '$dateStamp/$region/$service/aws4_request';
+    final uri = _buildUri(key);
+
+    final credentialParam = '$_accessKey/$scope';
+    final queryParams = <String, String>{
+      'X-Amz-Algorithm': 'AWS4-HMAC-SHA256',
+      'X-Amz-Credential': credentialParam,
+      'X-Amz-Date': amzDate,
+      'X-Amz-Expires': expiresSeconds.toString(),
+      'X-Amz-SignedHeaders': 'host',
+    };
+
+    final sortedQuery = queryParams.entries.toList()
+      ..sort((a, b) => a.key.compareTo(b.key));
+    final canonicalQueryString = sortedQuery
+        .map((e) =>
+            '${Uri.encodeQueryComponent(e.key)}=${Uri.encodeQueryComponent(e.value)}')
+        .join('&');
+
+    final host = uri.host +
+        (uri.hasPort && uri.port != 443 && uri.port != 80 ? ':${uri.port}' : '');
+    final canonicalRequest = [
+      'GET',
+      _canonicalPath(uri),
+      canonicalQueryString,
+      'host:$host\n',
+      'host',
+      'UNSIGNED-PAYLOAD',
+    ].join('\n');
+
+    final stringToSign = [
+      'AWS4-HMAC-SHA256',
+      amzDate,
+      scope,
+      sha256.convert(utf8.encode(canonicalRequest)).toString(),
+    ].join('\n');
+
+    final signingKey = _deriveSigningKey(dateStamp, region, service);
+    final signature =
+        Hmac(sha256, signingKey).convert(utf8.encode(stringToSign)).toString();
+
+    final signedUrl = uri.replace(
+      queryParameters: {
+        ...queryParams,
+        'X-Amz-Signature': signature,
+      },
+    );
+
+    return signedUrl.toString();
+  }
+
+  /// Generate a presigned PUT URL for uploading.
+  /// [expires] defaults to 1 hour.
+  String generatePresignedUploadUrl(String remotePath, {Duration? expires}) {
+    _ensureAuth();
+    final key = _pathToKey(remotePath);
+    final expiresSeconds = (expires ?? const Duration(hours: 1)).inSeconds;
+    final now = DateTime.now().toUtc();
+    final dateStamp = _formatDateStamp(now);
+    final amzDate = _formatAmzDate(now);
+    final region = _region ?? 'us-east-1';
+    const service = 's3';
+    final scope = '$dateStamp/$region/$service/aws4_request';
+    final uri = _buildUri(key);
+
+    final credentialParam = '$_accessKey/$scope';
+    final queryParams = <String, String>{
+      'X-Amz-Algorithm': 'AWS4-HMAC-SHA256',
+      'X-Amz-Credential': credentialParam,
+      'X-Amz-Date': amzDate,
+      'X-Amz-Expires': expiresSeconds.toString(),
+      'X-Amz-SignedHeaders': 'host',
+    };
+
+    final sortedQuery = queryParams.entries.toList()
+      ..sort((a, b) => a.key.compareTo(b.key));
+    final canonicalQueryString = sortedQuery
+        .map((e) =>
+            '${Uri.encodeQueryComponent(e.key)}=${Uri.encodeQueryComponent(e.value)}')
+        .join('&');
+
+    final host = uri.host +
+        (uri.hasPort && uri.port != 443 && uri.port != 80 ? ':${uri.port}' : '');
+    final canonicalRequest = [
+      'PUT',
+      _canonicalPath(uri),
+      canonicalQueryString,
+      'host:$host\n',
+      'host',
+      'UNSIGNED-PAYLOAD',
+    ].join('\n');
+
+    final stringToSign = [
+      'AWS4-HMAC-SHA256',
+      amzDate,
+      scope,
+      sha256.convert(utf8.encode(canonicalRequest)).toString(),
+    ].join('\n');
+
+    final signingKey = _deriveSigningKey(dateStamp, region, service);
+    final signature =
+        Hmac(sha256, signingKey).convert(utf8.encode(stringToSign)).toString();
+
+    final signedUrl = uri.replace(
+      queryParameters: {
+        ...queryParams,
+        'X-Amz-Signature': signature,
+      },
+    );
+
+    return signedUrl.toString();
+  }
+
   void _ensureAuth() {
     if (!_authenticated || _accessKey == null || _secretKey == null) {
       throw Exception('Not authenticated. Call login() first.');
@@ -1046,6 +1317,22 @@ class S3ClientAdapter extends CloudStorageClient {
     _endpoint = creds['endpoint'];
     _bucket = creds['bucket'];
     _region = creds['region'] ?? 'us-east-1';
+
+    // Restore encryption settings
+    final encName = creds['encryption'];
+    if (encName != null) {
+      encryption = S3Encryption.values.firstWhere(
+        (e) => e.name == encName,
+        orElse: () => S3Encryption.none,
+      );
+    }
+    kmsKeyId = creds['kmsKeyId'];
+
+    // Restore storage class
+    final scValue = creds['storageClass'];
+    if (scValue != null) {
+      storageClass = S3StorageClassX.fromHeaderValue(scValue);
+    }
 
     if (_accessKey != null && _secretKey != null && _endpoint != null && _bucket != null) {
       _authenticated = true;

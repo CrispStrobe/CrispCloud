@@ -2,6 +2,34 @@
 
 Audit trail of bugs found, issues discovered, and fixes applied.
 
+## 2026-06-08 — Session 11: S3 Enhancements, Provider Features, CLI Fix
+
+### CLI Companion Fix
+- **Root cause**: `flutter analyze` was analyzing `cli/` (a separate Dart package) without its own pub dependencies resolved, causing 328 errors
+- **Fix**: Added `cli/**` to analysis_options.yaml exclude list; ran `dart pub get` in cli/; added `analysis_options.yaml` for cli/; fixed cascade lint issue in `cli_app.dart`
+- **Result**: cli/ analyzes clean independently; main project no longer reports cli/ errors
+
+### lib/ Lint Cleanup (18 → 1 info)
+- Added `const` to `Column`, `Row`, `Expanded`, `RadioListTile` in Azure/Hetzner connection dialogs
+- Remaining 1 info is `use_super_parameters` in generated file `sync_database.g.dart`
+
+### S3 Enhancements (3 features)
+- **Presigned URLs**: `generatePresignedUrl()` (GET) and `generatePresignedUploadUrl()` (PUT) with query-string SigV4 signing, configurable expiration, virtual-hosted + path-style support
+- **Server-Side Encryption**: SSE-S3 (AES256), SSE-KMS (with optional key ID), SSE-C (customer key with MD5) — headers injected on upload + multipart initiate
+- **Storage Classes**: 8 classes (Standard, Standard-IA, One Zone-IA, Intelligent-Tiering, Glacier, Glacier IR, Deep Archive, Reduced Redundancy) — applied via `x-amz-storage-class` header
+- **Connection Dialog**: Added encryption mode dropdown + KMS Key ID field + storage class selector
+- **Persistence**: Encryption + storage class settings saved with credentials, restored on auto-login
+- **Share Dialog**: S3 presigned URL generation wired into `ShareLinkDialog` with expiration support
+- **Tests**: 17 new tests covering presigned URLs, encryption settings, storage class roundtrips
+
+### Provider Enhancements
+- **Google Drive Shared Drives**: `listSharedDrives()`, `listSharedDrivePath(driveId, path)` with `corpora=drive`/`includeItemsFromAllDrives`/`supportsAllDrives` params, `_resolveSharedDrivePathToId()` for path navigation
+- **Google Drive Starred Files**: `listStarredFiles()` and `setStarred(fileId, bool)` via PATCH
+- **OneDrive Delta Sync**: `fetchDelta({deltaToken})` using Microsoft Graph `/delta` endpoint — returns added/modified items + deleted item IDs + new deltaToken for incremental sync
+- **Dropbox Shared Folders**: `listSharedFolders()`, `mountSharedFolder()`, `unmountSharedFolder()` via `/sharing/list_folders` API
+- **Dropbox Content Hash**: `computeContentHash()` static method implementing Dropbox's 4MB-block SHA-256 hash algorithm for dedup comparison
+- **Tests**: 5 new Dropbox content hash tests (determinism, empty data, multi-block, different data)
+
 ## 2026-06-08 — Session 10: Test Suite Fix (124 → 0 failures)
 
 ### Mock Server Bug: `req.drain<List<int>>()` Crash

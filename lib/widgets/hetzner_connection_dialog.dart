@@ -279,12 +279,12 @@ class _HetznerConnectionDialogState
                 if (busy || v == null) return;
                 setState(() => _protocol = v);
               },
-              child: Row(
+              child: const Row(
                 children: [
                   Expanded(
                     child: RadioListTile<HetznerProtocol>(
-                      key: const Key('hetzner_proto_sftp'),
-                      title: const Text('SFTP  (port 23)'),
+                      key: Key('hetzner_proto_sftp'),
+                      title: Text('SFTP  (port 23)'),
                       value: HetznerProtocol.sftp,
                       dense: true,
                       contentPadding: EdgeInsets.zero,
@@ -292,8 +292,8 @@ class _HetznerConnectionDialogState
                   ),
                   Expanded(
                     child: RadioListTile<HetznerProtocol>(
-                      key: const Key('hetzner_proto_webdav'),
-                      title: const Text('WebDAV  (HTTPS)'),
+                      key: Key('hetzner_proto_webdav'),
+                      title: Text('WebDAV  (HTTPS)'),
                       value: HetznerProtocol.webdav,
                       dense: true,
                       contentPadding: EdgeInsets.zero,

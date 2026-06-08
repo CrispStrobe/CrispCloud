@@ -30,8 +30,7 @@ CommandRunner<int> buildRunner({String? configPath}) {
   );
 
   // Top-level flags
-  runner.argParser
-    ..addFlag(
+  runner.argParser.addFlag(
       'version',
       abbr: 'V',
       negatable: false,

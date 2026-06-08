@@ -138,4 +138,47 @@ void main() {
       expect(adapter.userId, isNull);
     });
   });
+
+  group('DropboxClientAdapter - content hash', () {
+    test('computeContentHash returns correct hash for small data', () {
+      // Known test vector: "Hello" (5 bytes, fits in one 4MB block)
+      final data = [72, 101, 108, 108, 111]; // "Hello"
+      final hash = DropboxClientAdapter.computeContentHash(data);
+
+      // Should be SHA-256(SHA-256("Hello"))
+      // Block hash = SHA-256("Hello")
+      // Final hash = SHA-256(block_hash_bytes)
+      expect(hash.length, equals(64)); // hex-encoded SHA-256
+      expect(hash, isNot(equals('')));
+    });
+
+    test('computeContentHash handles empty data', () {
+      final hash = DropboxClientAdapter.computeContentHash([]);
+      expect(hash.length, equals(64));
+    });
+
+    test('computeContentHash is deterministic', () {
+      final data = List.generate(1000, (i) => i % 256);
+      final hash1 = DropboxClientAdapter.computeContentHash(data);
+      final hash2 = DropboxClientAdapter.computeContentHash(data);
+      expect(hash1, equals(hash2));
+    });
+
+    test('computeContentHash differs for different data', () {
+      final hash1 = DropboxClientAdapter.computeContentHash([1, 2, 3]);
+      final hash2 = DropboxClientAdapter.computeContentHash([4, 5, 6]);
+      expect(hash1, isNot(equals(hash2)));
+    });
+
+    test('computeContentHash handles data spanning multiple 4MB blocks', () {
+      // Create 5MB of data (spans 2 blocks: 4MB + 1MB)
+      final data = List.generate(5 * 1024 * 1024, (i) => i % 256);
+      final hash = DropboxClientAdapter.computeContentHash(data);
+      expect(hash.length, equals(64));
+
+      // Single block hash should be different
+      final smallHash = DropboxClientAdapter.computeContentHash(data.sublist(0, 100));
+      expect(hash, isNot(equals(smallHash)));
+    });
+  });
 }

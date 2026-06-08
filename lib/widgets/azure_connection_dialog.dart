@@ -296,7 +296,7 @@ class _AzureConnectionDialogState
                   _testResult = null;
                 });
               },
-              child: Column(
+              child: const Column(
                 children: [
                   _ModeRadio<_AzureAuthMode>(
                     value: _AzureAuthMode.accountKey,
@@ -422,12 +422,12 @@ class _AzureConnectionDialogState
             if (_isLoading || v == null) return;
             setState(() => _sasUseFull = v);
           },
-          child: Row(
+          child: const Row(
             children: [
               Expanded(
                 child: RadioListTile<bool>(
                   value: true,
-                  title: const Text('Full SAS URL', style: TextStyle(fontSize: 13)),
+                  title: Text('Full SAS URL', style: TextStyle(fontSize: 13)),
                   dense: true,
                   contentPadding: EdgeInsets.zero,
                 ),
@@ -435,7 +435,7 @@ class _AzureConnectionDialogState
               Expanded(
                 child: RadioListTile<bool>(
                   value: false,
-                  title: const Text('Token + Account', style: TextStyle(fontSize: 13)),
+                  title: Text('Token + Account', style: TextStyle(fontSize: 13)),
                   dense: true,
                   contentPadding: EdgeInsets.zero,
                 ),

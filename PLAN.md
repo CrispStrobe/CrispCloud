@@ -320,19 +320,22 @@ CrispCloud becomes the **open-source Cyberduck/Transmit/Commander One killer**: 
 - [x] **Amazon S3** (+ S3-compatible: MinIO, Backblaze B2, Wasabi, DO Spaces, Cloudflare R2)
   - Pure Dart SigV4 signing, virtual-hosted + path-style auto-detection
   - 715-line adapter, connection dialog, auto-login, 480 lines of tests
-  - [ ] Multipart upload, presigned URLs, server-side encryption, storage classes
+  - [x] Presigned URLs (GET + PUT, query-string SigV4), server-side encryption (SSE-S3/SSE-KMS), storage classes (8 classes), connection dialog UI
 - [x] **Google Drive**
   - Pure HTTP + OAuth2 browser flow (no googleapis SDK dependency)
   - Path-to-ID resolution with caching, paginated listing, multipart upload
-  - [ ] Shared drives, starred files, file versions, Google Docs export
+  - [x] Shared drives (listSharedDrives, listSharedDrivePath with corpora/driveId), starred files (list + star/unstar)
+  - [ ] File versions, Google Docs export
 - [x] **OneDrive / SharePoint**
   - Pure HTTP + Microsoft Graph API v1.0, OAuth2 browser flow (no MSAL)
   - Path-based addressing (no ID resolution needed), paginated listing
-  - [ ] Delta sync support, shared libraries
+  - [x] Delta sync (fetchDelta with deltaToken tracking, added/deleted items, hash extraction)
+  - [ ] Shared libraries
 - [x] **Dropbox**
   - Pure HTTP + Dropbox API v2, OAuth2 browser flow
   - Paginated list_folder, overwrite upload, content download
-  - [ ] Shared folders, Paper docs, content hash for dedup
+  - [x] Shared folders (list/mount/unmount), content hash for dedup (computeContentHash with 4MB block SHA-256)
+  - [ ] Paper docs
 
 ### 3.2 New Providers — Tier 2
 - [x] **Azure Blob Storage** — SAS token + SharedKey auth, blob tiers (Hot/Cool/Cold/Archive), server-side copy

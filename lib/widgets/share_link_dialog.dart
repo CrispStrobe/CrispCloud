@@ -15,6 +15,7 @@ import '../providers/providers.dart';
 import '../services/gdrive_client_adapter.dart';
 import '../services/dropbox_client_adapter.dart';
 import '../services/onedrive_client_adapter.dart';
+import '../services/s3_client_adapter.dart';
 import '../services/log_service.dart';
 
 void showShareLinkDialog(BuildContext context, WidgetRef ref, FileItem file) {
@@ -157,6 +158,11 @@ class _ShareLinkDialogState extends ConsumerState<_ShareLinkDialog> {
         } else {
           throw Exception('OneDrive share failed: ${resp.statusCode} ${resp.body}');
         }
+      } else if (client is S3ClientAdapter) {
+        final expiry = _useExpiration
+            ? Duration(days: _expirationDays)
+            : const Duration(hours: 1);
+        url = client.generatePresignedUrl(path, expires: expiry);
       } else if (client.supportsSharing) {
         url = 'Share links not yet implemented for ${client.providerName}';
       } else {

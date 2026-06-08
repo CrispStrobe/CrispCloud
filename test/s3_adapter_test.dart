@@ -372,4 +372,175 @@ void main() {
       );
     });
   });
+
+  group('S3ClientAdapter - presigned URLs', () {
+    test('generatePresignedUrl throws when not authenticated', () {
+      expect(
+        () => adapter.generatePresignedUrl('/test.txt'),
+        throwsA(isA<Exception>()),
+      );
+    });
+
+    test('generatePresignedUrl produces valid URL when authenticated', () async {
+      await configService.saveCredentials({
+        'accessKey': 'AKIAIOSFODNN7EXAMPLE',
+        'secretKey': 'wJalrXUtnFEMI/K7MDENG/bPxRfiCYEXAMPLEKEY',
+        'endpoint': 'https://s3.amazonaws.com',
+        'bucket': 'test-bucket',
+        'region': 'us-east-1',
+      });
+      await adapter.restoreCredentials();
+
+      final url = adapter.generatePresignedUrl('/photos/cat.jpg');
+      final parsed = Uri.parse(url);
+
+      expect(parsed.queryParameters['X-Amz-Algorithm'], equals('AWS4-HMAC-SHA256'));
+      expect(parsed.queryParameters['X-Amz-Credential'], contains('AKIAIOSFODNN7EXAMPLE'));
+      expect(parsed.queryParameters['X-Amz-Expires'], equals('3600'));
+      expect(parsed.queryParameters['X-Amz-Signature'], isNotNull);
+      expect(parsed.queryParameters['X-Amz-Signature']!.length, equals(64));
+      expect(parsed.queryParameters['X-Amz-SignedHeaders'], equals('host'));
+    });
+
+    test('generatePresignedUrl respects custom expiration', () async {
+      await configService.saveCredentials({
+        'accessKey': 'AKIAIOSFODNN7EXAMPLE',
+        'secretKey': 'wJalrXUtnFEMI/K7MDENG/bPxRfiCYEXAMPLEKEY',
+        'endpoint': 'https://s3.amazonaws.com',
+        'bucket': 'test-bucket',
+        'region': 'us-east-1',
+      });
+      await adapter.restoreCredentials();
+
+      final url = adapter.generatePresignedUrl(
+        '/photos/cat.jpg',
+        expires: const Duration(minutes: 30),
+      );
+      final parsed = Uri.parse(url);
+      expect(parsed.queryParameters['X-Amz-Expires'], equals('1800'));
+    });
+
+    test('generatePresignedUploadUrl produces PUT-signed URL', () async {
+      await configService.saveCredentials({
+        'accessKey': 'AKIAIOSFODNN7EXAMPLE',
+        'secretKey': 'wJalrXUtnFEMI/K7MDENG/bPxRfiCYEXAMPLEKEY',
+        'endpoint': 'https://s3.amazonaws.com',
+        'bucket': 'test-bucket',
+        'region': 'us-east-1',
+      });
+      await adapter.restoreCredentials();
+
+      final url = adapter.generatePresignedUploadUrl('/uploads/new-file.txt');
+      final parsed = Uri.parse(url);
+
+      expect(parsed.queryParameters['X-Amz-Algorithm'], equals('AWS4-HMAC-SHA256'));
+      expect(parsed.queryParameters['X-Amz-Signature'], isNotNull);
+      // PUT and GET URLs should differ because canonical request includes method
+      final getUrl = adapter.generatePresignedUrl('/uploads/new-file.txt');
+      expect(url, isNot(equals(getUrl)));
+    });
+
+    test('presigned URL uses virtual-hosted style for AWS', () async {
+      await configService.saveCredentials({
+        'accessKey': 'AKIAIOSFODNN7EXAMPLE',
+        'secretKey': 'wJalrXUtnFEMI/K7MDENG/bPxRfiCYEXAMPLEKEY',
+        'endpoint': 'https://s3.us-east-1.amazonaws.com',
+        'bucket': 'my-bucket',
+        'region': 'us-east-1',
+      });
+      await adapter.restoreCredentials();
+
+      final url = adapter.generatePresignedUrl('/test.txt');
+      expect(url, contains('my-bucket.s3.us-east-1.amazonaws.com'));
+    });
+
+    test('presigned URL uses path style for non-AWS endpoints', () async {
+      await configService.saveCredentials({
+        'accessKey': 'minioadmin',
+        'secretKey': 'minioadmin',
+        'endpoint': 'http://localhost:9000',
+        'bucket': 'test',
+        'region': 'us-east-1',
+      });
+      await adapter.restoreCredentials();
+
+      final url = adapter.generatePresignedUrl('/test.txt');
+      expect(url, contains('localhost:9000/test/'));
+    });
+  });
+
+  group('S3ClientAdapter - server-side encryption', () {
+    test('default encryption is none', () {
+      expect(adapter.encryption, equals(S3Encryption.none));
+    });
+
+    test('encryption can be set to SSE-S3', () {
+      adapter.encryption = S3Encryption.sseS3;
+      expect(adapter.encryption, equals(S3Encryption.sseS3));
+    });
+
+    test('encryption can be set to SSE-KMS with key ID', () {
+      adapter.encryption = S3Encryption.sseKms;
+      adapter.kmsKeyId = 'arn:aws:kms:us-east-1:123456:key/abcdef';
+      expect(adapter.encryption, equals(S3Encryption.sseKms));
+      expect(adapter.kmsKeyId, isNotNull);
+    });
+
+    test('restoreCredentials restores encryption settings', () async {
+      await configService.saveCredentials({
+        'accessKey': 'TEST_KEY',
+        'secretKey': 'TEST_SECRET',
+        'endpoint': 'https://s3.amazonaws.com',
+        'bucket': 'test',
+        'region': 'us-east-1',
+        'encryption': 'sseKms',
+        'kmsKeyId': 'arn:aws:kms:us-east-1:123:key/abc',
+        'storageClass': 'STANDARD_IA',
+      });
+
+      final result = await adapter.restoreCredentials();
+      expect(result, isTrue);
+      expect(adapter.encryption, equals(S3Encryption.sseKms));
+      expect(adapter.kmsKeyId, equals('arn:aws:kms:us-east-1:123:key/abc'));
+      expect(adapter.storageClass, equals(S3StorageClass.standardIa));
+    });
+  });
+
+  group('S3ClientAdapter - storage classes', () {
+    test('default storage class is standard', () {
+      expect(adapter.storageClass, equals(S3StorageClass.standard));
+    });
+
+    test('all storage classes have correct header values', () {
+      expect(S3StorageClass.standard.headerValue, equals('STANDARD'));
+      expect(S3StorageClass.standardIa.headerValue, equals('STANDARD_IA'));
+      expect(S3StorageClass.onezoneIa.headerValue, equals('ONEZONE_IA'));
+      expect(S3StorageClass.intelligentTiering.headerValue, equals('INTELLIGENT_TIERING'));
+      expect(S3StorageClass.glacier.headerValue, equals('GLACIER'));
+      expect(S3StorageClass.glacierIr.headerValue, equals('GLACIER_IR'));
+      expect(S3StorageClass.deepArchive.headerValue, equals('DEEP_ARCHIVE'));
+      expect(S3StorageClass.reducedRedundancy.headerValue, equals('REDUCED_REDUNDANCY'));
+    });
+
+    test('storage class display names are human-readable', () {
+      expect(S3StorageClass.standard.displayName, equals('Standard'));
+      expect(S3StorageClass.standardIa.displayName, equals('Standard-IA'));
+      expect(S3StorageClass.glacier.displayName, equals('Glacier Flexible Retrieval'));
+      expect(S3StorageClass.deepArchive.displayName, equals('Glacier Deep Archive'));
+    });
+
+    test('fromHeaderValue roundtrips all storage classes', () {
+      for (final sc in S3StorageClass.values) {
+        expect(S3StorageClassX.fromHeaderValue(sc.headerValue), equals(sc));
+      }
+    });
+
+    test('fromHeaderValue handles unknown values gracefully', () {
+      expect(S3StorageClassX.fromHeaderValue('UNKNOWN'), equals(S3StorageClass.standard));
+    });
+
+    test('supportsNativeShare is true for S3', () {
+      expect(adapter.supportsNativeShare, isTrue);
+    });
+  });
 }

@@ -265,6 +265,108 @@ class OneDriveClientAdapter extends CloudStorageClient {
     return {'folders': folders, 'files': files};
   }
 
+  // --- Delta Sync ---
+
+  /// Fetch changes since the last delta token.
+  ///
+  /// Returns a map with:
+  /// - `'added'`: list of new/modified items (folders + files)
+  /// - `'deleted'`: list of deleted item IDs
+  /// - `'deltaToken'`: token to pass on the next call (null on first call)
+  ///
+  /// Pass [deltaToken] from a previous call to get incremental changes only.
+  /// Pass `null` to get a full enumeration.
+  Future<Map<String, dynamic>> fetchDelta({String? deltaToken}) async {
+    await _ensureToken();
+
+    final added = <Map<String, dynamic>>[];
+    final deleted = <String>[];
+    String? newDeltaToken;
+
+    var url = deltaToken ?? '$_graphBase/me/drive/root/delta?\$select=id,name,size,lastModifiedDateTime,folder,file,deleted,parentReference';
+
+    do {
+      final resp = await http.get(
+        Uri.parse(url),
+        headers: _authHeaders(),
+      );
+
+      if (resp.statusCode == 401) {
+        await _refreshAccessToken();
+        continue;
+      }
+
+      if (resp.statusCode != 200) {
+        throw Exception('OneDrive delta failed (${resp.statusCode}): ${resp.body}');
+      }
+
+      final data = json.decode(resp.body) as Map<String, dynamic>;
+      final items = (data['value'] as List?) ?? [];
+
+      for (final item in items) {
+        final map = item as Map<String, dynamic>;
+
+        // Deleted items have a 'deleted' key
+        if (map.containsKey('deleted')) {
+          final id = map['id'] as String?;
+          if (id != null) deleted.add(id);
+          continue;
+        }
+
+        final name = map['name'] as String? ?? '';
+        final id = map['id'] as String;
+        final isFolder = map.containsKey('folder');
+
+        final entry = <String, dynamic>{
+          'name': name,
+          'uuid': id,
+          'type': isFolder ? 'folder' : 'file',
+          if (map['lastModifiedDateTime'] != null)
+            'lastModified': map['lastModifiedDateTime'],
+          if (map['size'] != null) 'size': map['size'] as int,
+        };
+
+        // Extract parent path info
+        final parentRef = map['parentReference'] as Map<String, dynamic>?;
+        if (parentRef != null) {
+          entry['parentId'] = parentRef['id'];
+          if (parentRef['path'] != null) {
+            entry['parentPath'] = parentRef['path'];
+          }
+        }
+
+        // Capture hashes for files
+        if (!isFolder) {
+          final fileInfo = map['file'] as Map<String, dynamic>?;
+          final hashes = fileInfo?['hashes'] as Map<String, dynamic>?;
+          final crc = hashes?['crc32Hash'] as String?;
+          final sha1 = hashes?['sha1Hash'] as String?;
+          if (crc != null) entry['crc32Hash'] = crc;
+          if (sha1 != null) entry['content_hash'] = sha1;
+        }
+
+        added.add(entry);
+      }
+
+      // Check for next page or delta link
+      final nextLink = data['@odata.nextLink'] as String?;
+      final deltaLink = data['@odata.deltaLink'] as String?;
+
+      if (nextLink != null) {
+        url = nextLink;
+      } else {
+        newDeltaToken = deltaLink;
+        break;
+      }
+    } while (true);
+
+    return {
+      'added': added,
+      'deleted': deleted,
+      'deltaToken': newDeltaToken,
+    };
+  }
+
   // --- Upload ---
 
   @override

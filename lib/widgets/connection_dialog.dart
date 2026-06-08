@@ -7,6 +7,7 @@ import '../providers/providers.dart';
 import '../services/cloud_storage_interface.dart';
 import '../services/connection_profiles.dart';
 import '../services/log_service.dart';
+import '../services/s3_client_adapter.dart';
 import 'azure_connection_dialog.dart';
 import 'b2_connection_dialog.dart';
 import 'proxy_settings_dialog.dart';
@@ -43,6 +44,9 @@ class _ConnectionDialogState extends ConsumerState<ConnectionDialog> {
   final _s3BucketController = TextEditingController();
   final _s3AccessKeyController = TextEditingController();
   final _s3SecretKeyController = TextEditingController();
+  S3Encryption _s3Encryption = S3Encryption.none;
+  final _s3KmsKeyIdController = TextEditingController();
+  S3StorageClass _s3StorageClass = S3StorageClass.standard;
 
   // Encryption
   bool _enableEncryption = false;
@@ -103,7 +107,7 @@ class _ConnectionDialogState extends ConsumerState<ConnectionDialog> {
       case CloudProvider.ftp:
         return {'host': _ftpHostController.text, 'port': _ftpPortController.text, 'user': _ftpUserController.text, 'tls': _ftpUseTLS.toString()};
       case CloudProvider.s3:
-        return {'endpoint': _s3EndpointController.text, 'region': _s3RegionController.text, 'bucket': _s3BucketController.text, 'accessKey': _s3AccessKeyController.text};
+        return {'endpoint': _s3EndpointController.text, 'region': _s3RegionController.text, 'bucket': _s3BucketController.text, 'accessKey': _s3AccessKeyController.text, 'encryption': _s3Encryption.name, 'storageClass': _s3StorageClass.headerValue, if (_s3KmsKeyIdController.text.isNotEmpty) 'kmsKeyId': _s3KmsKeyIdController.text};
       case CloudProvider.gdrive:
         return {'clientId': _gdriveClientIdController.text, 'clientSecret': _gdriveClientSecretController.text};
       case CloudProvider.onedrive:
@@ -141,6 +145,16 @@ class _ConnectionDialogState extends ConsumerState<ConnectionDialog> {
         _s3RegionController.text = f['region'] ?? 'us-east-1';
         _s3BucketController.text = f['bucket'] ?? '';
         _s3AccessKeyController.text = f['accessKey'] ?? '';
+        final encName = f['encryption'];
+        if (encName != null) {
+          _s3Encryption = S3Encryption.values.firstWhere(
+            (e) => e.name == encName, orElse: () => S3Encryption.none);
+        }
+        final scVal = f['storageClass'];
+        if (scVal != null) {
+          _s3StorageClass = S3StorageClassX.fromHeaderValue(scVal);
+        }
+        _s3KmsKeyIdController.text = f['kmsKeyId'] ?? '';
         break;
       case CloudProvider.gdrive:
         _gdriveClientIdController.text = f['clientId'] ?? '';
@@ -701,6 +715,55 @@ class _ConnectionDialogState extends ConsumerState<ConnectionDialog> {
                 obscureText: true,
                 enabled: !_isLoading,
               ),
+              const SizedBox(height: 16),
+              // S3: Server-Side Encryption
+              DropdownButtonFormField<S3Encryption>(
+                value: _s3Encryption,
+                decoration: const InputDecoration(
+                  labelText: 'Server-Side Encryption',
+                  border: OutlineInputBorder(),
+                  prefixIcon: Icon(Icons.enhanced_encryption_outlined),
+                ),
+                items: const [
+                  DropdownMenuItem(value: S3Encryption.none, child: Text('None')),
+                  DropdownMenuItem(value: S3Encryption.sseS3, child: Text('SSE-S3 (AES-256)')),
+                  DropdownMenuItem(value: S3Encryption.sseKms, child: Text('SSE-KMS')),
+                ],
+                onChanged: _isLoading ? null : (v) {
+                  if (v != null) setState(() => _s3Encryption = v);
+                },
+              ),
+              if (_s3Encryption == S3Encryption.sseKms) ...[
+                const SizedBox(height: 12),
+                TextField(
+                  controller: _s3KmsKeyIdController,
+                  decoration: const InputDecoration(
+                    labelText: 'KMS Key ID (optional, uses default if empty)',
+                    border: OutlineInputBorder(),
+                    hintText: 'arn:aws:kms:region:account:key/key-id',
+                  ),
+                  enabled: !_isLoading,
+                ),
+              ],
+              const SizedBox(height: 16),
+              // S3: Storage Class
+              DropdownButtonFormField<S3StorageClass>(
+                value: _s3StorageClass,
+                decoration: const InputDecoration(
+                  labelText: 'Storage Class',
+                  border: OutlineInputBorder(),
+                  prefixIcon: Icon(Icons.storage_outlined),
+                ),
+                items: S3StorageClass.values
+                    .map((sc) => DropdownMenuItem(
+                          value: sc,
+                          child: Text(sc.displayName),
+                        ))
+                    .toList(),
+                onChanged: _isLoading ? null : (v) {
+                  if (v != null) setState(() => _s3StorageClass = v);
+                },
+              ),
             ] else if (isFtp) ...[
               // FTP: Host & Port Row
               Row(
@@ -1147,10 +1210,22 @@ class _ConnectionDialogState extends ConsumerState<ConnectionDialog> {
         _tfaController.text.isEmpty ? null : _tfaController.text,
       );
 
-      // 5. Refresh remote panel after login
+      // 5. Apply S3-specific settings after login
+      if (_selectedProvider == CloudProvider.s3) {
+        final client = auth.client;
+        if (client is S3ClientAdapter) {
+          client.encryption = _s3Encryption;
+          if (_s3Encryption == S3Encryption.sseKms && _s3KmsKeyIdController.text.isNotEmpty) {
+            client.kmsKeyId = _s3KmsKeyIdController.text.trim();
+          }
+          client.storageClass = _s3StorageClass;
+        }
+      }
+
+      // 6. Refresh remote panel after login
       await ref.read(panelProvider(PanelSide.remote)).refresh();
 
-      // 6. Enable encryption if toggled
+      // 7. Enable encryption if toggled
       if (_enableEncryption && _passphraseController.text.isNotEmpty) {
         auth.enableEncryption(_passphraseController.text);
       }
@@ -1193,6 +1268,7 @@ class _ConnectionDialogState extends ConsumerState<ConnectionDialog> {
     _s3BucketController.dispose();
     _s3AccessKeyController.dispose();
     _s3SecretKeyController.dispose();
+    _s3KmsKeyIdController.dispose();
     _passphraseController.dispose();
     super.dispose();
   }

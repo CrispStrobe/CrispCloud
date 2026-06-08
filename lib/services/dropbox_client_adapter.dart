@@ -13,6 +13,8 @@
 
 import 'dart:async';
 import 'dart:convert';
+
+import 'package:crypto/crypto.dart';
 import 'dart:io';
 
 import 'package:flutter/foundation.dart';
@@ -255,6 +257,77 @@ class DropboxClientAdapter extends CloudStorageClient {
     }
 
     return {'folders': folders, 'files': files};
+  }
+
+  // --- Shared Folders ---
+
+  /// List shared folders the user has mounted.
+  /// Returns a list of `{id, name, path, sharedFolderId}` maps.
+  Future<List<Map<String, dynamic>>> listSharedFolders() async {
+    await _ensureToken();
+    final results = <Map<String, dynamic>>[];
+    String? cursor;
+
+    do {
+      final Map<String, dynamic> resp;
+      if (cursor == null) {
+        resp = await _rpcPost('/sharing/list_folders', {'limit': 100});
+      } else {
+        resp = await _rpcPost('/sharing/list_folders/continue', {'cursor': cursor});
+      }
+
+      for (final item in (resp['entries'] as List?) ?? []) {
+        final map = item as Map<String, dynamic>;
+        results.add({
+          'name': map['name'] as String? ?? 'Unknown',
+          'sharedFolderId': map['shared_folder_id'] as String? ?? '',
+          if (map['path_lower'] != null) 'path': map['path_lower'],
+          'accessType': (map['access_type'] as Map<String, dynamic>?)?['.tag'] ?? 'viewer',
+        });
+      }
+
+      cursor = resp['cursor'] as String?;
+    } while (cursor != null);
+
+    return results;
+  }
+
+  /// Mount a shared folder by its shared folder ID.
+  Future<void> mountSharedFolder(String sharedFolderId) async {
+    await _ensureToken();
+    await _rpcPost('/sharing/mount_folder', {
+      'shared_folder_id': sharedFolderId,
+    });
+  }
+
+  /// Unmount a shared folder by its shared folder ID.
+  Future<void> unmountSharedFolder(String sharedFolderId) async {
+    await _ensureToken();
+    await _rpcPost('/sharing/unmount_folder', {
+      'shared_folder_id': sharedFolderId,
+    });
+  }
+
+  /// Compute the Dropbox content hash for local data (for dedup comparison).
+  ///
+  /// The Dropbox content hash splits data into 4MB blocks, SHA-256 hashes each,
+  /// concatenates those hashes, and SHA-256 hashes the result.
+  static String computeContentHash(List<int> data) {
+    const blockSize = 4 * 1024 * 1024; // 4 MB
+    final blockHashes = <int>[];
+
+    for (int offset = 0; offset < data.length; offset += blockSize) {
+      final end = (offset + blockSize > data.length) ? data.length : offset + blockSize;
+      final block = data.sublist(offset, end);
+      blockHashes.addAll(sha256.convert(block).bytes);
+    }
+
+    // Handle empty data
+    if (data.isEmpty) {
+      blockHashes.addAll(sha256.convert(<int>[]).bytes);
+    }
+
+    return sha256.convert(blockHashes).toString();
   }
 
   // --- Upload ---

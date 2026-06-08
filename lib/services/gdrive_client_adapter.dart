@@ -298,6 +298,173 @@ class GDriveClientAdapter extends CloudStorageClient {
     return {'folders': folders, 'files': files};
   }
 
+  // --- Shared Drives ---
+
+  /// List all shared drives the user has access to.
+  /// Returns a list of `{id, name}` maps.
+  Future<List<Map<String, String>>> listSharedDrives() async {
+    await _ensureToken();
+    final drives = <Map<String, String>>[];
+    String? pageToken;
+
+    do {
+      final params = <String, String>{
+        'pageSize': '100',
+        'fields': 'nextPageToken,drives(id,name)',
+      };
+      if (pageToken != null) params['pageToken'] = pageToken;
+
+      final resp = await _apiGet('/drives', queryParams: params);
+      for (final item in (resp['drives'] as List?) ?? []) {
+        final map = item as Map<String, dynamic>;
+        drives.add({
+          'id': map['id'] as String,
+          'name': map['name'] as String? ?? 'Unknown',
+        });
+      }
+      pageToken = resp['nextPageToken'] as String?;
+    } while (pageToken != null);
+
+    return drives;
+  }
+
+  /// List files in a shared drive at the given path.
+  /// [driveId] is the shared drive ID from [listSharedDrives].
+  Future<Map<String, dynamic>> listSharedDrivePath(
+    String driveId,
+    String path,
+  ) async {
+    await _ensureToken();
+
+    final parentId = path == '/' || path.isEmpty
+        ? driveId
+        : await _resolveSharedDrivePathToId(driveId, path) ?? driveId;
+
+    final query = "'$parentId' in parents and trashed=false";
+    final folders = <Map<String, dynamic>>[];
+    final files = <Map<String, dynamic>>[];
+    String? pageToken;
+
+    do {
+      final params = <String, String>{
+        'q': query,
+        'fields': 'nextPageToken,files(id,name,mimeType,size,modifiedTime,parents)',
+        'pageSize': '1000',
+        'orderBy': 'folder,name',
+        'corpora': 'drive',
+        'driveId': driveId,
+        'includeItemsFromAllDrives': 'true',
+        'supportsAllDrives': 'true',
+      };
+      if (pageToken != null) params['pageToken'] = pageToken;
+
+      final resp = await _apiGet('/files', queryParams: params);
+
+      for (final item in (resp['files'] as List?) ?? []) {
+        final map = item as Map<String, dynamic>;
+        final isFolder = map['mimeType'] == 'application/vnd.google-apps.folder';
+        final name = map['name'] as String? ?? 'Unknown';
+        final id = map['id'] as String;
+
+        final entry = <String, dynamic>{
+          'name': name,
+          'uuid': id,
+          if (map['modifiedTime'] != null) 'lastModified': map['modifiedTime'],
+          if (map['size'] != null) 'size': int.tryParse(map['size'].toString()) ?? 0,
+        };
+
+        if (isFolder) {
+          folders.add(entry);
+        } else {
+          files.add(entry);
+        }
+      }
+
+      pageToken = resp['nextPageToken'] as String?;
+    } while (pageToken != null);
+
+    return {'folders': folders, 'files': files};
+  }
+
+  /// Resolve a path inside a shared drive to a folder ID.
+  Future<String?> _resolveSharedDrivePathToId(String driveId, String path) async {
+    if (path == '/' || path.isEmpty) return driveId;
+
+    final segments = path.split('/').where((s) => s.isNotEmpty).toList();
+    String parentId = driveId;
+
+    for (final segment in segments) {
+      final query =
+          "name='${_escapeQuery(segment)}' and '$parentId' in parents "
+          "and mimeType='application/vnd.google-apps.folder' and trashed=false";
+      final resp = await _apiGet('/files', queryParams: {
+        'q': query,
+        'fields': 'files(id,name)',
+        'pageSize': '1',
+        'corpora': 'drive',
+        'driveId': driveId,
+        'includeItemsFromAllDrives': 'true',
+        'supportsAllDrives': 'true',
+      });
+
+      final files = (resp['files'] as List?) ?? [];
+      if (files.isEmpty) return null;
+      parentId = files[0]['id'] as String;
+    }
+
+    return parentId;
+  }
+
+  // --- Starred Files ---
+
+  /// List starred files across the user's Drive.
+  Future<List<Map<String, dynamic>>> listStarredFiles() async {
+    await _ensureToken();
+    final results = <Map<String, dynamic>>[];
+    String? pageToken;
+
+    do {
+      final params = <String, String>{
+        'q': 'starred=true and trashed=false',
+        'fields': 'nextPageToken,files(id,name,mimeType,size,modifiedTime)',
+        'pageSize': '1000',
+        'orderBy': 'modifiedTime desc',
+      };
+      if (pageToken != null) params['pageToken'] = pageToken;
+
+      final resp = await _apiGet('/files', queryParams: params);
+
+      for (final item in (resp['files'] as List?) ?? []) {
+        final map = item as Map<String, dynamic>;
+        results.add({
+          'name': map['name'] as String? ?? 'Unknown',
+          'uuid': map['id'] as String,
+          'type': map['mimeType'] == 'application/vnd.google-apps.folder' ? 'folder' : 'file',
+          if (map['modifiedTime'] != null) 'lastModified': map['modifiedTime'],
+          if (map['size'] != null) 'size': int.tryParse(map['size'].toString()) ?? 0,
+        });
+      }
+
+      pageToken = resp['nextPageToken'] as String?;
+    } while (pageToken != null);
+
+    return results;
+  }
+
+  /// Star or unstar a file by its ID.
+  Future<void> setStarred(String fileId, bool starred) async {
+    await _ensureToken();
+    final url = Uri.parse('$_apiBase/files/$fileId');
+    await http.patch(
+      url,
+      headers: {
+        'Authorization': 'Bearer $_accessToken',
+        'Content-Type': 'application/json',
+      },
+      body: json.encode({'starred': starred}),
+    );
+  }
+
   // --- Upload ---
 
   @override
