@@ -30,6 +30,11 @@ Audit trail of bugs found, issues discovered, and fixes applied.
 - **Dropbox Content Hash**: `computeContentHash()` static method implementing Dropbox's 4MB-block SHA-256 hash algorithm for dedup comparison
 - **Tests**: 5 new Dropbox content hash tests (determinism, empty data, multi-block, different data)
 
+### Nextcloud Block-Level Delta Sync
+- **Client-side** (`nextcloud_client_adapter.dart`): ETag in PROPFIND + parsing, `getFileETag()` via HEAD, `downloadRange()` with Range header, `_uploadChunked()` via WebDAV chunked upload v2 (MKCOL→PUT chunks→MOVE), `deltaUpload()`/`deltaDownload()` orchestrators with cached block map comparison, `fetchServerBlockMap()` for server app integration. All gated behind `deltaSyncEnabled` flag (opt-in).
+- **Server-side** (`server/nextcloud-delta-sync/`): Nextcloud PHP app with `BlockMapService` (Adler-32 + SHA-256 per 4MB block, ETag-gated cache in `.crispcloud_delta/`), `DeltaController` with 4 REST endpoints (`GET /api/blockmap/{path}`, `PUT /api/blocks/{path}`, `POST /api/finalize/{path}`, `GET /api/status`). Compatible with Nextcloud 25–31.
+- **Design**: Without server app, client caches block maps locally and uses ETag to detect staleness; with server app, block maps are computed server-side and partial block writes avoid full re-upload. Ideal for VeraCrypt containers, database files, disk images.
+
 ### Accessibility
 - **48dp touch targets on mobile**: Adaptive sizing using `Theme.of(context).platform` — FKey bar (36→48dp), tree view (28→48dp), column view (32→48dp), breadcrumb buttons (20→48dp via ConstrainedBox), operations panel icons (16→20px), file panel edit button (removed BoxConstraints override)
 - **Screen reader support**: `Semantics` widgets on `FileListTile` (type/name/size/selected state), breadcrumb nav buttons (label + enabled state)

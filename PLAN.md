@@ -346,6 +346,8 @@ CrispCloud becomes the **open-source Cyberduck/Transmit/Commander One killer**: 
 - [ ] **Storj** — decentralized, S3 gateway or native uplink
 - [x] **Hetzner Storage Box** — SFTP/WebDAV wrapper with Hetzner defaults, connection dialog
 - [x] **Nextcloud** — WebDAV + OCS API for native features (sharing, versions)
+  - [x] Block-level delta sync wiring — ETag tracking, Range GET, chunked upload v2, DeltaSyncService integration, optional server app client
+  - [x] Server-side companion app (`server/nextcloud-delta-sync/`) — PHP Nextcloud app with block map compute/cache, partial block PUT, finalize API
 
 ### 3.3 Provider Abstraction Improvements
 - [x] Capability flags per provider: `supportsVersioning`, `supportsSharing`, `supportsSearch`, `supportsStreaming`, `supportsMultipart`, `supportsThumbnails`, `supportsTrash` — implemented in CloudStorageClient with per-adapter overrides

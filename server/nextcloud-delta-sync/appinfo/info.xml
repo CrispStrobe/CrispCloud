@@ -1,0 +1,33 @@
+<?xml version="1.0"?>
+<info xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+      xsi:noNamespaceSchemaLocation="https://apps.nextcloud.com/schema/apps/info.xsd">
+    <id>crispcloud_delta</id>
+    <name>CrispCloud Delta Sync</name>
+    <summary>Block-level delta sync for CrispCloud file manager</summary>
+    <description><![CDATA[
+Companion server app for CrispCloud that enables block-level delta sync.
+
+Instead of re-uploading entire files when only a few blocks changed, this app
+maintains block-level indexes (Adler-32 + SHA-256 hashes per 4 MB block) and
+accepts partial block updates via a REST API.
+
+Ideal for large files that change incrementally: VeraCrypt containers, database
+files, disk images, VM snapshots, PST archives.
+
+## API Endpoints
+
+- `GET  /api/blockmap/{path}` — retrieve the block map for a file
+- `PUT  /api/blocks/{path}?offset=N&size=M` — write a single block at offset
+- `POST /api/finalize/{path}` — finalize after block writes (update mtime/etag)
+- `GET  /api/status` — check if the app is installed and working
+    ]]></description>
+    <version>0.1.0</version>
+    <licence>agpl</licence>
+    <author>CrispCloud Contributors</author>
+    <namespace>CrispCloudDelta</namespace>
+    <category>files</category>
+    <dependencies>
+        <nextcloud min-version="25" max-version="31"/>
+        <php min-version="8.0"/>
+    </dependencies>
+</info>
