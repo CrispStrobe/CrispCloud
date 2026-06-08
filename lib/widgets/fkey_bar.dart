@@ -60,11 +60,15 @@ class _FKeyBarContent extends StatelessWidget {
     final screenWidth = MediaQuery.sizeOf(context).width;
     final isNarrow = screenWidth < 480;
 
+    final platform = Theme.of(context).platform;
+    final isMobile = platform == TargetPlatform.android || platform == TargetPlatform.iOS;
+    final barHeight = isMobile ? 48.0 : 36.0;
+
     return Material(
       color: colorScheme.surfaceContainerHighest,
       elevation: 4,
       child: SizedBox(
-        height: 36,
+        height: barHeight,
         child: Row(
           children: FKeyAction.values.map((action) {
             final available = fkeyContext != null &&

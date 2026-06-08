@@ -2,7 +2,7 @@
 
 Audit trail of bugs found, issues discovered, and fixes applied.
 
-## 2026-06-08 — Session 11: S3 Enhancements, Provider Features, CLI Fix
+## 2026-06-08 — Session 11: S3 Enhancements, Provider Features, Accessibility, CLI Fix
 
 ### CLI Companion Fix
 - **Root cause**: `flutter analyze` was analyzing `cli/` (a separate Dart package) without its own pub dependencies resolved, causing 328 errors
@@ -29,6 +29,11 @@ Audit trail of bugs found, issues discovered, and fixes applied.
 - **Dropbox Shared Folders**: `listSharedFolders()`, `mountSharedFolder()`, `unmountSharedFolder()` via `/sharing/list_folders` API
 - **Dropbox Content Hash**: `computeContentHash()` static method implementing Dropbox's 4MB-block SHA-256 hash algorithm for dedup comparison
 - **Tests**: 5 new Dropbox content hash tests (determinism, empty data, multi-block, different data)
+
+### Accessibility
+- **48dp touch targets on mobile**: Adaptive sizing using `Theme.of(context).platform` — FKey bar (36→48dp), tree view (28→48dp), column view (32→48dp), breadcrumb buttons (20→48dp via ConstrainedBox), operations panel icons (16→20px), file panel edit button (removed BoxConstraints override)
+- **Screen reader support**: `Semantics` widgets on `FileListTile` (type/name/size/selected state), breadcrumb nav buttons (label + enabled state)
+- **Mock S3 server fix**: XML element order (Key→LastModified→ETag→Size) + empty path segment filtering + createBucket in all integration test groups — 52/55 integration tests now pass
 
 ## 2026-06-08 — Session 10: Test Suite Fix (124 → 0 failures)
 

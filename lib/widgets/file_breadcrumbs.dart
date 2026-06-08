@@ -82,72 +82,89 @@ class FileBreadcrumbs extends ConsumerWidget {
     final canForward = panel.canNavigateForward;
     final bm = ref.watch(bookmarksProvider);
     final isBookmarked = bm.isBookmarked(currentPath, side);
+    final platform = Theme.of(context).platform;
+    final isMobile = platform == TargetPlatform.android || platform == TargetPlatform.iOS;
+    final minTap = isMobile ? 48.0 : 24.0;
+    final iconSize = isMobile ? 20.0 : 16.0;
 
     return SingleChildScrollView(
       scrollDirection: Axis.horizontal,
       child: Row(
         children: [
           // Back button (Alt+Left)
-          InkWell(
-            onTap: canBack ? () => panel.navigateBack() : null,
-            child: Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 2, vertical: 2),
-              child: Icon(
-                Icons.arrow_back,
-                size: 16,
-                color: canBack
-                    ? Theme.of(context).colorScheme.onSurfaceVariant
-                    : Theme.of(context).colorScheme.onSurfaceVariant.withValues(alpha: 0.3),
+          Semantics(
+            label: 'Navigate back',
+            button: true,
+            enabled: canBack,
+            child: ConstrainedBox(
+            constraints: BoxConstraints(minWidth: minTap, minHeight: minTap),
+            child: InkWell(
+              onTap: canBack ? () => panel.navigateBack() : null,
+              child: Center(
+                child: Icon(
+                  Icons.arrow_back,
+                  size: iconSize,
+                  color: canBack
+                      ? Theme.of(context).colorScheme.onSurfaceVariant
+                      : Theme.of(context).colorScheme.onSurfaceVariant.withValues(alpha: 0.3),
+                ),
               ),
             ),
           ),
+          ),  // Semantics (back)
           // Forward button (Alt+Right)
-          InkWell(
-            onTap: canForward ? () => panel.navigateForward() : null,
-            child: Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 2, vertical: 2),
-              child: Icon(
-                Icons.arrow_forward,
-                size: 16,
-                color: canForward
-                    ? Theme.of(context).colorScheme.onSurfaceVariant
-                    : Theme.of(context).colorScheme.onSurfaceVariant.withValues(alpha: 0.3),
+          ConstrainedBox(
+            constraints: BoxConstraints(minWidth: minTap, minHeight: minTap),
+            child: InkWell(
+              onTap: canForward ? () => panel.navigateForward() : null,
+              child: Center(
+                child: Icon(
+                  Icons.arrow_forward,
+                  size: iconSize,
+                  color: canForward
+                      ? Theme.of(context).colorScheme.onSurfaceVariant
+                      : Theme.of(context).colorScheme.onSurfaceVariant.withValues(alpha: 0.3),
+                ),
               ),
             ),
           ),
-          InkWell(
-            onTap: () {
-              if (side == PanelSide.local) {
-                if (!kIsWeb) {
-                  panel.navigateToPath(Platform.environment['HOME'] ?? Platform.environment['USERPROFILE'] ?? '/');
+          ConstrainedBox(
+            constraints: BoxConstraints(minWidth: minTap, minHeight: minTap),
+            child: InkWell(
+              onTap: () {
+                if (side == PanelSide.local) {
+                  if (!kIsWeb) {
+                    panel.navigateToPath(Platform.environment['HOME'] ?? Platform.environment['USERPROFILE'] ?? '/');
+                  }
+                } else {
+                  panel.navigateToPath('/');
                 }
-              } else {
-                panel.navigateToPath('/');
-              }
-            },
-            child: Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 2),
-              child: Icon(Icons.home, size: 16, color: Theme.of(context).colorScheme.onSurfaceVariant),
+              },
+              child: Center(
+                child: Icon(Icons.home, size: iconSize, color: Theme.of(context).colorScheme.onSurfaceVariant),
+              ),
             ),
           ),
           // Bookmark star (Ctrl+B to toggle)
-          InkWell(
-            onTap: () {
-              if (isBookmarked) {
-                bm.remove(currentPath, side);
-              } else {
-                final name = currentPath.split('/').where((s) => s.isNotEmpty).lastOrNull ?? '/';
-                bm.add(name, currentPath, side);
-              }
-            },
-            child: Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 2),
-              child: Icon(
-                isBookmarked ? Icons.star : Icons.star_border,
-                size: 14,
-                color: isBookmarked
-                    ? Theme.of(context).colorScheme.primary
-                    : Theme.of(context).colorScheme.onSurfaceVariant.withValues(alpha: 0.5),
+          ConstrainedBox(
+            constraints: BoxConstraints(minWidth: minTap, minHeight: minTap),
+            child: InkWell(
+              onTap: () {
+                if (isBookmarked) {
+                  bm.remove(currentPath, side);
+                } else {
+                  final name = currentPath.split('/').where((s) => s.isNotEmpty).lastOrNull ?? '/';
+                  bm.add(name, currentPath, side);
+                }
+              },
+              child: Center(
+                child: Icon(
+                  isBookmarked ? Icons.star : Icons.star_border,
+                  size: isMobile ? 20.0 : 14.0,
+                  color: isBookmarked
+                      ? Theme.of(context).colorScheme.primary
+                      : Theme.of(context).colorScheme.onSurfaceVariant.withValues(alpha: 0.5),
+                ),
               ),
             ),
           ),

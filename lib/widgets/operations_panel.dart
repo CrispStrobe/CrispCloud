@@ -295,17 +295,17 @@ class _OperationTile extends StatelessWidget {
             children: [
               if (!operation.isComplete && !operation.isCancelled)
                 IconButton(
-                  icon: Icon(operation.isPaused ? Icons.play_arrow : Icons.pause, size: 16),
+                  icon: Icon(operation.isPaused ? Icons.play_arrow : Icons.pause, size: 20),
                   tooltip: operation.isPaused ? 'Resume' : 'Pause',
                   color: Colors.blue,
                   onPressed: operation.isPaused ? onResume : onPause,
                 ),
               if (!operation.isComplete && !operation.isCancelled && onCancel != null)
-                IconButton(icon: const Icon(Icons.cancel, size: 16), tooltip: 'Cancel', color: Colors.red, onPressed: onCancel),
+                IconButton(icon: const Icon(Icons.cancel, size: 20), tooltip: 'Cancel', color: Colors.red, onPressed: onCancel),
               if (operation.isBatch)
-                IconButton(icon: Icon(isExpanded ? Icons.expand_less : Icons.expand_more, size: 16), onPressed: onToggleExpanded),
+                IconButton(icon: Icon(isExpanded ? Icons.expand_less : Icons.expand_more, size: 20), onPressed: onToggleExpanded),
               if (operation.isComplete || operation.error != null || operation.isCancelled)
-                IconButton(icon: const Icon(Icons.close, size: 16), onPressed: onRemove),
+                IconButton(icon: const Icon(Icons.close, size: 20), onPressed: onRemove),
             ],
           ),
         ),

@@ -435,7 +435,7 @@ CrispCloud becomes the **open-source Cyberduck/Transmit/Commander One killer**: 
 - [x] Custom accent color picker (11 preset colors + default)
 - [x] Theme persistence via SharedPreferences
 - [x] Configurable font size and family — `fontSizeProvider` (10-20px) + `fontFamilyProvider` with persistence
-- [ ] Material You dynamic theming on Android
+- [x] Material You dynamic theming on Android — `dynamic_color` package (see Phase 8.4)
 - [x] Toolbar customization: show/hide buttons, reorder — `ToolbarCustomizationService` with persistence
 - [x] Rebindable keyboard shortcuts (persist to settings) — `KeyboardShortcutService` with 24 actions, conflict detection, import/export, SharedPreferences persistence
 
@@ -662,12 +662,12 @@ CrispCloud becomes the **open-source Cyberduck/Transmit/Commander One killer**: 
 - [x] Date/number/size formatting per locale — `formatBytesLocale`, `formatDateLocale`, `formatNumberLocale` for 7 locales, pure Dart
 
 ### 10.4 Accessibility (a11y)
-- [ ] Full screen reader support (TalkBack, VoiceOver, NVDA, Narrator)
+- [x] Screen reader support — Semantics on FileListTile (type/name/size/selected), breadcrumb nav buttons, leverages SemanticLabels constants
 - [x] Semantic labels on all interactive elements — `SemanticLabels` with 57 static const strings across 5 groups
 - [x] Focus management and tab order audit — `FocusHelper` with requestInitialFocus, trapFocus, announceFocusChange
 - [x] High-contrast mode — `HighContrastTheme` with WCAG AAA 7:1 contrast ratio
 - [x] Reduced-motion mode (respect `prefers-reduced-motion`) — `AccessibilityService` with platform detection + manual toggle
-- [ ] Minimum 48dp touch targets on mobile
+- [x] Minimum 48dp touch targets on mobile — adaptive sizing for breadcrumbs, FKey bar, tree view, column view, file panel, operations panel
 - [ ] WCAG 2.1 AA compliance
 
 ### 10.5 Documentation

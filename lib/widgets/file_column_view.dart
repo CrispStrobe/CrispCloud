@@ -140,9 +140,12 @@ class _FileColumnViewState extends ConsumerState<FileColumnView> {
           ),
         ),
       ),
-      child: ListView.builder(
+      child: Builder(builder: (ctx) {
+        final isMobile = Theme.of(ctx).platform == TargetPlatform.android ||
+            Theme.of(ctx).platform == TargetPlatform.iOS;
+        return ListView.builder(
         itemCount: files.length,
-        itemExtent: 32,
+        itemExtent: isMobile ? 48.0 : 32.0,
         itemBuilder: (context, index) {
           final file = files[index];
           final isSelected = panel.isSelected(file);
@@ -207,7 +210,8 @@ class _FileColumnViewState extends ConsumerState<FileColumnView> {
             ),
           );
         },
-      ),
+      );
+      }),
     );
   }
 }

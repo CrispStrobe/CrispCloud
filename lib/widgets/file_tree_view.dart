@@ -256,10 +256,13 @@ class _FileTreeViewState extends ConsumerState<FileTreeView> {
         }
         return KeyEventResult.ignored;
       },
-      child: ListView.builder(
+      child: Builder(builder: (context) {
+        final platform = Theme.of(context).platform;
+        final isMobile = platform == TargetPlatform.android || platform == TargetPlatform.iOS;
+        return ListView.builder(
         controller: _scrollController,
         itemCount: _flatList.length,
-        itemExtent: 28.0,
+        itemExtent: isMobile ? 48.0 : 28.0,
         itemBuilder: (context, idx) {
           final node = _flatList[idx];
           final isCursor = idx == _cursorIdx;
@@ -343,7 +346,8 @@ class _FileTreeViewState extends ConsumerState<FileTreeView> {
             ),
           );
         },
-      ),
+      );
+      }),
     );
   }
 }

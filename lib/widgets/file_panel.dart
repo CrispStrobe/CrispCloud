@@ -292,10 +292,8 @@ class _FilePanelState extends ConsumerState<FilePanel> {
                         ),
                       ),
                       IconButton(
-                        icon: const Icon(Icons.edit, size: 16),
+                        icon: const Icon(Icons.edit, size: 18),
                         tooltip: 'Edit path',
-                        padding: const EdgeInsets.all(4),
-                        constraints: const BoxConstraints(),
                         onPressed: () {
                           _pathController.text = currentPath;
                           setState(() => _isEditingPath = true);

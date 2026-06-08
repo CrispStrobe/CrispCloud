@@ -267,6 +267,13 @@ class FileListTile extends ConsumerWidget {
     this.showRelativePath = false,
   });
 
+  String _buildSemanticLabel(FileItem f, bool selected, bool cursor) {
+    final type = f.isFolder ? 'Folder' : 'File';
+    final size = f.isFolder ? '' : ', ${formatBytes(f.size ?? 0)}';
+    final sel = selected ? ', selected' : '';
+    return '$type ${f.name}$size$sel';
+  }
+
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final panel = ref.watch(panelProvider(side));
@@ -313,7 +320,12 @@ class FileListTile extends ConsumerWidget {
           }
           return KeyEventResult.ignored;
         },
-        child: Container(
+        child: Semantics(
+          label: _buildSemanticLabel(file, isSelected, isCursor),
+          selected: isSelected,
+          focused: isCursor,
+          button: true,
+          child: Container(
           decoration: isCursor
               ? BoxDecoration(
                   border: Border(
@@ -368,6 +380,7 @@ class FileListTile extends ConsumerWidget {
           onLongPress: onDoubleTap,
         ),
         ),  // Container (cursor border)
+        ),  // Semantics
       ),
     );
 
