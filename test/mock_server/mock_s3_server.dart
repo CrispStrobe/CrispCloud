@@ -180,7 +180,7 @@ $bucketXml
 
   Future<void> _createBucket(HttpRequest req, String bucket) async {
     // Drain body (may contain CreateBucketConfiguration)
-    await req.drain<List<int>>();
+    await req.drain<void>();
     _store.putIfAbsent(bucket, () => {});
     _meta.putIfAbsent(bucket, () => {});
     req.response.statusCode = 200;
@@ -317,7 +317,7 @@ $prefixesXml
   }
 
   Future<void> _deleteObject(HttpRequest req, String bucket, String key) async {
-    await req.drain<List<int>>();
+    await req.drain<void>();
     if (!_store.containsKey(bucket)) {
       _sendXmlError(req.response, 404, 'NoSuchBucket', 'The bucket does not exist');
       return;
@@ -329,7 +329,7 @@ $prefixesXml
   }
 
   Future<void> _headObject(HttpRequest req, String bucket, String key) async {
-    await req.drain<List<int>>();
+    await req.drain<void>();
     if (!_store.containsKey(bucket)) {
       req.response.statusCode = 404;
       await req.response.close();

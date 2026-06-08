@@ -1,3 +1,9 @@
 tags:
   live:
     skip: "Live tests require provider credentials. Run with: flutter test --tags live"
+  integration:
+    skip: "Integration tests use mock servers with I/O. Run with: flutter test --tags integration"
+  golden:
+    skip: "Golden tests require baseline images. Run with: flutter test --tags golden"
+  connection_dialog:
+    skip: "Connection dialog widget tests. Run with: flutter test --tags connection_dialog"

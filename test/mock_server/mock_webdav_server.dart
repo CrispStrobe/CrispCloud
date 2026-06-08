@@ -167,7 +167,7 @@ class MockWebDavServer {
           req.response.statusCode = 405;
           await req.response.close();
       }
-    } catch (e) {
+    } catch (_) {
       try {
         req.response.statusCode = 500;
         await req.response.close();
@@ -180,7 +180,7 @@ class MockWebDavServer {
   // ---------------------------------------------------------------------------
 
   Future<void> _propfind(HttpRequest req, String path) async {
-    await req.drain<List<int>>(); // consume body (we don't parse the XML query)
+    await req.drain<void>(); // consume body (we don't parse the XML query)
 
     final node = _fs[path];
     if (node == null) {
@@ -258,7 +258,7 @@ ${responses.join('\n')}
   }
 
   Future<void> _head(HttpRequest req, String path) async {
-    await req.drain<List<int>>();
+    await req.drain<void>();
     final node = _fs[path];
     if (node == null || node.isDirectory) {
       req.response.statusCode = node == null ? 404 : 405;
@@ -283,7 +283,7 @@ ${responses.join('\n')}
   }
 
   Future<void> _delete(HttpRequest req, String path) async {
-    await req.drain<List<int>>();
+    await req.drain<void>();
     if (!_fs.containsKey(path)) {
       req.response.statusCode = 404;
       await req.response.close();
@@ -299,7 +299,7 @@ ${responses.join('\n')}
   }
 
   Future<void> _mkcol(HttpRequest req, String path) async {
-    await req.drain<List<int>>();
+    await req.drain<void>();
     if (_fs.containsKey(path)) {
       req.response.statusCode = 405; // already exists
       await req.response.close();
@@ -317,7 +317,7 @@ ${responses.join('\n')}
   }
 
   Future<void> _move(HttpRequest req, String path) async {
-    await req.drain<List<int>>();
+    await req.drain<void>();
     final destHeader = req.headers.value('Destination');
     if (destHeader == null) {
       req.response.statusCode = 400;
@@ -346,7 +346,7 @@ ${responses.join('\n')}
   }
 
   Future<void> _copy(HttpRequest req, String path) async {
-    await req.drain<List<int>>();
+    await req.drain<void>();
     final destHeader = req.headers.value('Destination');
     if (destHeader == null) {
       req.response.statusCode = 400;
