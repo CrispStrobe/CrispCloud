@@ -516,7 +516,10 @@ class DeltaSyncService {
       if (!file.existsSync()) {
         await file.create(recursive: true);
       }
-      final raf = await file.open(mode: FileMode.writeOnly);
+      // Use append mode to avoid truncating the file — setPosition still
+      // works for random-access writes, and existing unchanged blocks are
+      // preserved.
+      final raf = await file.open(mode: FileMode.append);
       try {
         for (final op in plan.operations) {
           if (op.type == BlockOperationType.download) {

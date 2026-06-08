@@ -627,6 +627,41 @@ void main() {
       expect(result.sublist(bs, 2 * bs), equals(_fill(bs, 0x33)));
     });
 
+    test('download: unchanged blocks are preserved in local file', () async {
+      // 3 blocks: only block 1 differs between local and remote
+      final local  = [..._fill(bs, 0xAA), ..._fill(bs, 0xBB), ..._fill(bs, 0xCC)];
+      final remote = [..._fill(bs, 0xAA), ..._fill(bs, 0xFF), ..._fill(bs, 0xCC)];
+
+      final localPath  = await _writeTempFile(local);
+      final remotePath = await _writeTempFile(remote);
+
+      final lm    = await svc.computeBlockMap(localPath, blockSize: bs);
+      final rm    = await svc.computeBlockMap(remotePath, blockSize: bs);
+      final delta = svc.compareBlockMaps(rm, lm);
+      final plan  = svc.createTransferPlan(delta, TransferDirection.download, rm);
+
+      final remoteData = await File(remotePath).readAsBytes();
+
+      await svc.applyDelta(
+        plan,
+        localPath,
+        remoteReadBlock: (idx, offset, size) async {
+          return remoteData.sublist(offset, offset + size);
+        },
+      );
+
+      final result = await File(localPath).readAsBytes();
+      // Block 0 preserved (unchanged)
+      expect(result.sublist(0, bs), equals(_fill(bs, 0xAA)),
+          reason: 'Block 0 should be preserved');
+      // Block 1 updated
+      expect(result.sublist(bs, 2 * bs), equals(_fill(bs, 0xFF)),
+          reason: 'Block 1 should be updated');
+      // Block 2 preserved (unchanged)
+      expect(result.sublist(2 * bs, 3 * bs), equals(_fill(bs, 0xCC)),
+          reason: 'Block 2 should be preserved');
+    });
+
     test('all-skip plan calls onProgress for every block', () async {
       final data = _fill(3 * bs, 0x42);
       final path = await _writeTempFile(data);

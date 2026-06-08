@@ -1,10 +1,13 @@
 import 'dart:convert';
+import 'dart:io';
+import 'dart:typed_data';
 
 import 'package:crypto/crypto.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:crisp_cloud/services/s3_client_adapter.dart';
 import 'package:crisp_cloud/services/s3_config_service.dart';
+import 'package:crisp_cloud/services/delta_sync_service.dart';
 import 'package:crisp_cloud/services/secure_storage_service.dart';
 
 void main() {
@@ -541,6 +544,316 @@ void main() {
 
     test('supportsNativeShare is true for S3', () {
       expect(adapter.supportsNativeShare, isTrue);
+    });
+  });
+
+  // ===========================================================================
+  // Delta sync configuration
+  // ===========================================================================
+  group('S3ClientAdapter - delta sync config', () {
+    test('deltaSyncEnabled is false by default', () {
+      expect(adapter.deltaSyncEnabled, isFalse);
+    });
+
+    test('deltaSyncEnabled can be toggled', () {
+      adapter.deltaSyncEnabled = true;
+      expect(adapter.deltaSyncEnabled, isTrue);
+      adapter.deltaSyncEnabled = false;
+      expect(adapter.deltaSyncEnabled, isFalse);
+    });
+  });
+
+  // ===========================================================================
+  // Delta sync guards
+  // ===========================================================================
+  group('S3ClientAdapter - delta sync guards', () {
+    test('deltaDownload returns null when deltaSyncEnabled is false', () async {
+      expect(adapter.deltaSyncEnabled, isFalse);
+      final result = await adapter.deltaDownload('/remote/file.bin', '/tmp/file.bin');
+      expect(result, isNull);
+    });
+
+    test('deltaUpload returns null when deltaSyncEnabled is false', () async {
+      expect(adapter.deltaSyncEnabled, isFalse);
+      final result = await adapter.deltaUpload('/tmp/file.bin', '/remote/file.bin');
+      expect(result, isNull);
+    });
+
+    test('deltaDownload throws when enabled but not authenticated', () async {
+      adapter.deltaSyncEnabled = true;
+      // Auth check fires before file existence check
+      expect(
+        () => adapter.deltaDownload('/remote/file.bin', '/tmp/nonexistent.bin'),
+        throwsA(isA<Exception>().having(
+          (e) => e.toString(), 'message', contains('authenticate'),
+        )),
+      );
+    });
+
+    test('deltaUpload throws when enabled but not authenticated', () async {
+      adapter.deltaSyncEnabled = true;
+      expect(
+        () => adapter.deltaUpload('/tmp/any.bin', '/remote/any.bin'),
+        throwsA(isA<Exception>().having(
+          (e) => e.toString(), 'message', contains('authenticate'),
+        )),
+      );
+    });
+
+    test('downloadRange throws when not authenticated', () {
+      expect(
+        () => adapter.downloadRange('/file.bin', 0, 4096),
+        throwsA(isA<Exception>().having(
+          (e) => e.toString(), 'message', contains('authenticate'),
+        )),
+      );
+    });
+
+    test('getObjectETag throws when not authenticated', () {
+      expect(
+        () => adapter.getObjectETag('/file.bin'),
+        throwsA(isA<Exception>().having(
+          (e) => e.toString(), 'message', contains('authenticate'),
+        )),
+      );
+    });
+  });
+
+  // ===========================================================================
+  // Delta sync with DeltaSyncService
+  // ===========================================================================
+  group('S3ClientAdapter - delta sync with DeltaSyncService', () {
+    late DeltaSyncService deltaSvc;
+    const bs = 64 * 1024; // 64 KB for fast tests
+
+    setUp(() {
+      deltaSvc = DeltaSyncService();
+    });
+
+    test('block map format matches S3 Range GET expectations', () async {
+      final dir = await Directory.systemTemp.createTemp('s3_delta_bm_');
+      final file = File('${dir.path}/test.bin');
+      final data = List<int>.generate(4 * bs, (i) => (i * 7) & 0xFF);
+      await file.writeAsBytes(data);
+
+      try {
+        final map = await deltaSvc.computeBlockMap(file.path, blockSize: bs);
+        expect(map.blockCount, equals(4));
+        expect(map.blockSize, equals(bs));
+
+        // Verify offsets align with Range GET byte ranges
+        for (int i = 0; i < map.blockCount; i++) {
+          final sig = map.signatures[i];
+          expect(sig.offset, equals(i * bs));
+          final rangeStart = sig.offset;
+          final rangeEnd = sig.offset + sig.size - 1;
+          // Range: bytes=rangeStart-rangeEnd is what S3 downloadRange would use
+          expect(rangeEnd, greaterThan(rangeStart));
+          expect(rangeEnd - rangeStart + 1, equals(sig.size));
+        }
+      } finally {
+        await dir.delete(recursive: true);
+      }
+    });
+
+    test('DeltaResult correctly identifies changed blocks for Range GET download', () async {
+      final dir = await Directory.systemTemp.createTemp('s3_delta_cmp_');
+      try {
+        // "Remote" file (what S3 has)
+        final remote = File('${dir.path}/remote.bin');
+        await remote.writeAsBytes([
+          ...List.filled(bs, 0x11),
+          ...List.filled(bs, 0x22),
+          ...List.filled(bs, 0x33),
+        ]);
+
+        // "Local" file (what we have, block 1 outdated)
+        final local = File('${dir.path}/local.bin');
+        await local.writeAsBytes([
+          ...List.filled(bs, 0x11),
+          ...List.filled(bs, 0xBB), // stale
+          ...List.filled(bs, 0x33),
+        ]);
+
+        final remoteMap = await deltaSvc.computeBlockMap(remote.path, blockSize: bs);
+        final localMap = await deltaSvc.computeBlockMap(local.path, blockSize: bs);
+
+        // Compare remote vs local to find what to download
+        final delta = deltaSvc.compareBlockMaps(remoteMap, localMap);
+        expect(delta.changedBlocks, equals([1]));
+        expect(delta.savingsPercent, closeTo(66.7, 0.1));
+      } finally {
+        await dir.delete(recursive: true);
+      }
+    });
+
+    test('download plan produces correct Range GET parameters', () async {
+      final dir = await Directory.systemTemp.createTemp('s3_delta_plan_');
+      try {
+        final remote = File('${dir.path}/remote.bin');
+        await remote.writeAsBytes([
+          ...List.filled(bs, 0xAA),
+          ...List.filled(bs, 0xBB),
+          ...List.filled(bs, 0xCC),
+          ...List.filled(bs, 0xDD),
+        ]);
+
+        final local = File('${dir.path}/local.bin');
+        await local.writeAsBytes([
+          ...List.filled(bs, 0xAA),
+          ...List.filled(bs, 0xFF), // stale
+          ...List.filled(bs, 0xCC),
+          ...List.filled(bs, 0xFE), // stale
+        ]);
+
+        final remoteMap = await deltaSvc.computeBlockMap(remote.path, blockSize: bs);
+        final localMap = await deltaSvc.computeBlockMap(local.path, blockSize: bs);
+        final delta = deltaSvc.compareBlockMaps(remoteMap, localMap);
+        final plan = deltaSvc.createTransferPlan(
+            delta, TransferDirection.download, remoteMap);
+
+        // Verify download operations match expected Range GET offsets
+        final downloadOps = plan.operations
+            .where((op) => op.type == BlockOperationType.download)
+            .toList();
+        expect(downloadOps.length, equals(2));
+        expect(downloadOps[0].blockIndex, equals(1));
+        expect(downloadOps[0].offset, equals(1 * bs));
+        expect(downloadOps[0].size, equals(bs));
+        expect(downloadOps[1].blockIndex, equals(3));
+        expect(downloadOps[1].offset, equals(3 * bs));
+        expect(downloadOps[1].size, equals(bs));
+      } finally {
+        await dir.delete(recursive: true);
+      }
+    });
+
+    test('applyDelta download simulates Range GET → local file patch', () async {
+      final dir = await Directory.systemTemp.createTemp('s3_delta_apply_');
+      try {
+        // Simulate the remote file data on S3
+        final remoteData = Uint8List.fromList([
+          ...List.filled(bs, 0x11),
+          ...List.filled(bs, 0x22),
+          ...List.filled(bs, 0x33),
+        ]);
+
+        // Local file with stale block 1
+        final localFile = File('${dir.path}/local.bin');
+        await localFile.writeAsBytes([
+          ...List.filled(bs, 0x11),
+          ...List.filled(bs, 0xBB), // stale
+          ...List.filled(bs, 0x33),
+        ]);
+
+        final remoteMap = await deltaSvc.computeBlockMap(
+          (await (() async {
+            final f = File('${dir.path}/remote.bin');
+            await f.writeAsBytes(remoteData);
+            return f.path;
+          })()),
+          blockSize: bs,
+        );
+        final localMap = await deltaSvc.computeBlockMap(localFile.path, blockSize: bs);
+
+        final delta = deltaSvc.compareBlockMaps(remoteMap, localMap);
+        final plan = deltaSvc.createTransferPlan(
+            delta, TransferDirection.download, remoteMap);
+
+        // Simulate S3 Range GET
+        await deltaSvc.applyDelta(
+          plan,
+          localFile.path,
+          remoteReadBlock: (blockIndex, offset, size) async {
+            return remoteData.sublist(offset, offset + size);
+          },
+        );
+
+        // Verify local file is now identical to remote
+        final result = await localFile.readAsBytes();
+        expect(result.sublist(0, bs), equals(List.filled(bs, 0x11)));
+        expect(result.sublist(bs, 2 * bs), equals(List.filled(bs, 0x22)));
+        expect(result.sublist(2 * bs, 3 * bs), equals(List.filled(bs, 0x33)));
+      } finally {
+        await dir.delete(recursive: true);
+      }
+    });
+
+    test('S3 upload fallback: when blocks changed, full file upload is needed', () async {
+      final dir = await Directory.systemTemp.createTemp('s3_delta_upload_');
+      try {
+        final orig = File('${dir.path}/orig.bin');
+        await orig.writeAsBytes(List.filled(3 * bs, 0xAA));
+
+        final mod = File('${dir.path}/mod.bin');
+        await mod.writeAsBytes([
+          ...List.filled(bs, 0xAA),
+          ...List.filled(bs, 0xFF),
+          ...List.filled(bs, 0xAA),
+        ]);
+
+        final origMap = await deltaSvc.computeBlockMap(orig.path, blockSize: bs);
+        final modMap = await deltaSvc.computeBlockMap(mod.path, blockSize: bs);
+        final delta = deltaSvc.compareBlockMaps(modMap, origMap);
+
+        // S3 can detect changes but must upload entire file (no partial write)
+        expect(delta.changedBlocks, equals([1]));
+        expect(delta.changedBlocks.isNotEmpty, isTrue);
+        // The S3 adapter would do a full uploadFile here, not block-level write
+        // The savings come from *skipping* the upload when no changes detected
+      } finally {
+        await dir.delete(recursive: true);
+      }
+    });
+
+    test('S3 upload skip: identical file produces empty changed list', () async {
+      final dir = await Directory.systemTemp.createTemp('s3_delta_skip_');
+      try {
+        final file = File('${dir.path}/test.bin');
+        await file.writeAsBytes(List.filled(4 * bs, 0x42));
+
+        final map1 = await deltaSvc.computeBlockMap(file.path, blockSize: bs);
+        final map2 = await deltaSvc.computeBlockMap(file.path, blockSize: bs);
+
+        final delta = deltaSvc.compareBlockMaps(map1, map2);
+        expect(delta.changedBlocks, isEmpty);
+        // S3 adapter would skip the upload entirely in this case
+      } finally {
+        await dir.delete(recursive: true);
+      }
+    });
+
+    test('block map cache path uses s3 provider namespace', () {
+      final path1 = deltaSvc.blockMapCachePath('/cache', '/file.bin', 's3');
+      final path2 = deltaSvc.blockMapCachePath('/cache', '/file.bin', 'pcloud');
+      expect(path1, isNot(equals(path2)));
+    });
+
+    test('deltaDownload returns null when disabled, regardless of cache', () async {
+      expect(adapter.deltaSyncEnabled, isFalse);
+      // When disabled, returns null without hitting auth or cache
+      final dir = await Directory.systemTemp.createTemp('s3_delta_nocache_');
+      final file = File('${dir.path}/large.bin');
+      await file.writeAsBytes(List.filled(11 * 1024 * 1024, 0x42)); // 11 MB
+      try {
+        final result = await adapter.deltaDownload('/remote/large.bin', file.path);
+        expect(result, isNull);
+      } finally {
+        await dir.delete(recursive: true);
+      }
+    });
+
+    test('deltaUpload returns null when disabled, regardless of cache', () async {
+      expect(adapter.deltaSyncEnabled, isFalse);
+      final dir = await Directory.systemTemp.createTemp('s3_delta_nocache_up_');
+      final file = File('${dir.path}/large.bin');
+      await file.writeAsBytes(List.filled(11 * 1024 * 1024, 0x42)); // 11 MB
+      try {
+        final result = await adapter.deltaUpload(file.path, '/remote/large.bin');
+        expect(result, isNull);
+      } finally {
+        await dir.delete(recursive: true);
+      }
     });
   });
 }

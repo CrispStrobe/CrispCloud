@@ -139,8 +139,9 @@ void main() {
       final before = (json.decode(bmBefore)['signatures'] as List)
           .map((s) => s['strongHash'] as String).toList();
 
-      // Write random data to block 1
-      final patch = List.generate(4 * 1024 * 1024, (i) => (i * 7 + 13) % 256);
+      // Write data seeded with current timestamp so it's always different
+      final seed = DateTime.now().microsecondsSinceEpoch;
+      final patch = List.generate(4 * 1024 * 1024, (i) => (i * 7 + seed) & 0xFF);
       final (wCode, wBody) = await _curl('POST',
         '$_ncAppBase/api/blocks/delta-live-wr.bin?offset=4194304&size=4194304',
         headers: {'Content-Type': 'application/octet-stream', 'OCS-APIREQUEST': 'true'},
@@ -183,6 +184,212 @@ void main() {
       );
       expect(bytes.length, equals(100));
       expect(bytes.every((b) => b == 0xFF), isTrue);
+    });
+  });
+
+  // ===========================================================================
+  // Error handling
+  // ===========================================================================
+  group('Error handling', () {
+    test('blockmap returns 404 for directory path', () async {
+      // Create a test directory via WebDAV
+      await _curl('MKCOL', '$_ncUrl/remote.php/dav/files/$_ncUser/delta-test-dir/');
+      final (code, body) = await _curl('GET', '$_ncAppBase/api/blockmap/delta-test-dir');
+      expect(code, equals(404));
+      final d = json.decode(body);
+      expect(d['error'], isNotEmpty);
+      // Cleanup
+      await _curl('DELETE', '$_ncUrl/remote.php/dav/files/$_ncUser/delta-test-dir/');
+    });
+
+    test('finalize returns error for non-existent file', () async {
+      final (code, body) = await _curl('POST',
+        '$_ncAppBase/api/finalize/no-such-file-xyz.bin',
+        headers: {'OCS-APIREQUEST': 'true'},
+      );
+      expect(code, equals(500));
+      final d = json.decode(body);
+      expect(d['error'], isNotEmpty);
+    });
+
+    test('block write returns error for empty body', () async {
+      final (code, body) = await _curl('POST',
+        '$_ncAppBase/api/blocks/delta-live-bm.bin?offset=0&size=4096',
+        headers: {'Content-Type': 'application/octet-stream', 'OCS-APIREQUEST': 'true'},
+      );
+      expect(code, equals(400));
+      final d = json.decode(body);
+      expect(d['error'], contains('Empty'));
+    });
+  });
+
+  // ===========================================================================
+  // Full delta sync round-trip
+  // ===========================================================================
+  group('Full delta sync round-trip', () {
+    test('upload → modify → upload cycle with block-level verification', () async {
+      // Step 1: Upload a fresh 12 MB test file via WebDAV
+      final testFile = 'delta-live-roundtrip.bin';
+      final originalData = List<int>.generate(
+          12 * 1024 * 1024, (i) => (i * 3 + 7) & 0xFF);
+      final (upCode, _) = await _curl('PUT',
+        '$_ncUrl/remote.php/dav/files/$_ncUser/$testFile',
+        headers: {'Content-Type': 'application/octet-stream'},
+        body: originalData,
+      );
+      expect(upCode, anyOf(equals(201), equals(204)));
+
+      // Step 2: Get initial block map
+      final (bmCode1, bmBody1) = await _curl('GET', '$_ncAppBase/api/blockmap/$testFile');
+      expect(bmCode1, equals(200));
+      final bm1 = json.decode(bmBody1);
+      expect(bm1['blockCount'], equals(3));
+      final sigs1 = bm1['signatures'] as List;
+
+      // Step 3: Verify hashes match Dart-computed hashes
+      final svc = DeltaSyncService();
+      final tmpFile = File('/tmp/_delta_roundtrip.bin');
+      await tmpFile.writeAsBytes(originalData);
+      final localMap = await svc.computeBlockMap(tmpFile.path);
+      for (int i = 0; i < 3; i++) {
+        expect(sigs1[i]['weakHash'], equals(localMap.signatures[i].weakHash),
+            reason: 'Block $i weak hash should match');
+        expect(sigs1[i]['strongHash'], equals(localMap.signatures[i].strongHash),
+            reason: 'Block $i strong hash should match');
+      }
+
+      // Step 4: Modify block 0 locally and compute new block map
+      final modifiedData = List<int>.from(originalData);
+      for (int i = 0; i < 4 * 1024 * 1024; i++) {
+        modifiedData[i] = 0xDE;
+      }
+      final modFile = File('/tmp/_delta_roundtrip_mod.bin');
+      await modFile.writeAsBytes(modifiedData);
+      final modMap = await svc.computeBlockMap(modFile.path);
+
+      // Step 5: Compare — only block 0 should differ
+      final serverMap = BlockMap.fromJson(bm1);
+      final delta = svc.compareBlockMaps(modMap, serverMap);
+      expect(delta.changedBlocks, equals([0]));
+      expect(delta.savingsPercent, closeTo(66.7, 0.1));
+
+      // Step 6: Upload only the changed block via API
+      final changedBlock = modifiedData.sublist(0, 4 * 1024 * 1024);
+      final (wCode, wBody) = await _curl('POST',
+        '$_ncAppBase/api/blocks/$testFile?offset=0&size=${4 * 1024 * 1024}',
+        headers: {'Content-Type': 'application/octet-stream', 'OCS-APIREQUEST': 'true'},
+        body: changedBlock,
+      );
+      expect(json.decode(wBody)['status'], equals('ok'));
+
+      // Step 7: Finalize
+      final (fCode, fBody) = await _curl('POST',
+        '$_ncAppBase/api/finalize/$testFile',
+        headers: {'OCS-APIREQUEST': 'true'},
+      );
+      expect(json.decode(fBody)['status'], equals('finalized'));
+
+      // Step 8: Verify updated block map
+      final (bmCode2, bmBody2) = await _curl('GET', '$_ncAppBase/api/blockmap/$testFile');
+      expect(bmCode2, equals(200));
+      final bm2 = json.decode(bmBody2);
+      final sigs2 = bm2['signatures'] as List;
+      // Block 0 should have new hash
+      expect(sigs2[0]['strongHash'], isNot(equals(sigs1[0]['strongHash'])),
+          reason: 'Block 0 hash should differ after update');
+      // Blocks 1 and 2 should be unchanged
+      expect(sigs2[1]['strongHash'], equals(sigs1[1]['strongHash']),
+          reason: 'Block 1 should be unchanged');
+      expect(sigs2[2]['strongHash'], equals(sigs1[2]['strongHash']),
+          reason: 'Block 2 should be unchanged');
+
+      // Step 9: Verify block 0 hash matches the modified data
+      expect(sigs2[0]['strongHash'], equals(modMap.signatures[0].strongHash),
+          reason: 'Block 0 server hash should match locally computed hash');
+
+      // Cleanup
+      await _curl('DELETE', '$_ncUrl/remote.php/dav/files/$_ncUser/$testFile');
+      await tmpFile.delete();
+      await modFile.delete();
+    });
+
+    test('ETag changes after block write and finalize', () async {
+      final (_, bmBefore) = await _curl('GET', '$_ncAppBase/api/blockmap/delta-live-bm.bin');
+      final etagBefore = json.decode(bmBefore)['etag'] as String;
+      expect(etagBefore, isNotEmpty);
+
+      // Write a block (will change file content)
+      final patch = List<int>.generate(4 * 1024 * 1024, (i) => (i * 11) & 0xFF);
+      await _curl('POST',
+        '$_ncAppBase/api/blocks/delta-live-bm.bin?offset=0&size=4194304',
+        headers: {'Content-Type': 'application/octet-stream', 'OCS-APIREQUEST': 'true'},
+        body: patch,
+      );
+      await _curl('POST',
+        '$_ncAppBase/api/finalize/delta-live-bm.bin',
+        headers: {'OCS-APIREQUEST': 'true'},
+      );
+
+      final (_, bmAfter) = await _curl('GET', '$_ncAppBase/api/blockmap/delta-live-bm.bin');
+      final etagAfter = json.decode(bmAfter)['etag'] as String;
+      expect(etagAfter, isNotEmpty);
+      expect(etagAfter, isNot(equals(etagBefore)),
+          reason: 'ETag should change after block write + finalize');
+    });
+
+    test('block write with size mismatch is rejected', () async {
+      // Send 100 bytes but claim size=200
+      final data = List<int>.filled(100, 0x42);
+      final (code, body) = await _curl('POST',
+        '$_ncAppBase/api/blocks/delta-live-bm.bin?offset=0&size=200',
+        headers: {'Content-Type': 'application/octet-stream', 'OCS-APIREQUEST': 'true'},
+        body: data,
+      );
+      expect(code, equals(400));
+      final d = json.decode(body);
+      expect(d['error'], contains('mismatch'));
+    });
+
+    test('block write at non-zero offset preserves preceding data', () async {
+      // Upload a fresh test file
+      final testFile = 'delta-live-offset-test.bin';
+      final data = [...List.filled(4 * 1024 * 1024, 0xAA), ...List.filled(4 * 1024 * 1024, 0xBB)];
+      await _curl('PUT',
+        '$_ncUrl/remote.php/dav/files/$_ncUser/$testFile',
+        headers: {'Content-Type': 'application/octet-stream'},
+        body: data,
+      );
+
+      // Write to block 1 only
+      final newBlock = List<int>.filled(4 * 1024 * 1024, 0xFF);
+      await _curl('POST',
+        '$_ncAppBase/api/blocks/$testFile?offset=4194304&size=4194304',
+        headers: {'Content-Type': 'application/octet-stream', 'OCS-APIREQUEST': 'true'},
+        body: newBlock,
+      );
+      await _curl('POST',
+        '$_ncAppBase/api/finalize/$testFile',
+        headers: {'OCS-APIREQUEST': 'true'},
+      );
+
+      // Download and verify block 0 is still 0xAA
+      final downloaded = await _curlGetBytes(
+        '$_ncUrl/remote.php/dav/files/$_ncUser/$testFile',
+        headers: {'Range': 'bytes=0-99'},
+      );
+      expect(downloaded.every((b) => b == 0xAA), isTrue,
+          reason: 'Block 0 should be preserved after writing block 1');
+
+      // Verify block 1 is now 0xFF
+      final block1 = await _curlGetBytes(
+        '$_ncUrl/remote.php/dav/files/$_ncUser/$testFile',
+        headers: {'Range': 'bytes=4194304-4194403'},
+      );
+      expect(block1.every((b) => b == 0xFF), isTrue,
+          reason: 'Block 1 should contain new data');
+
+      // Cleanup
+      await _curl('DELETE', '$_ncUrl/remote.php/dav/files/$_ncUser/$testFile');
     });
   });
 }

@@ -146,11 +146,11 @@ void main() {
       expect(adapter.supportsNativeShare, isTrue);
     });
 
-    test('S3ClientAdapter returns false (no share-link API)', () {
+    test('S3ClientAdapter returns true (presigned URLs)', () {
       final adapter = S3ClientAdapter(
         config: S3ConfigService(configPath: '/tmp/s3', secureStorage: InMemorySecureStorage()),
       );
-      expect(adapter.supportsNativeShare, isFalse);
+      expect(adapter.supportsNativeShare, isTrue);
     });
   });
 

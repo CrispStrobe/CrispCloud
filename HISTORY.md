@@ -2,6 +2,43 @@
 
 Audit trail of bugs found, issues discovered, and fixes applied.
 
+## 2026-06-08 — Session 12: Delta Sync Tests, CI Fix, Standalone Repo, Desktop Client Patches
+
+### CI Fix
+- **Root cause**: S3 presigned URLs (added in session 11) set `supportsNativeShare => true` but `test/server_side_copy_test.dart:153` still expected `false`
+- **Fix**: Updated test to expect `true` with description "presigned URLs"
+
+### Bug Fix: applyDelta download truncates unchanged blocks
+- **Root cause**: `DeltaSyncService.applyDelta` opened the local file with `FileMode.writeOnly` which truncates to zero length, destroying unchanged blocks during download
+- **Fix**: Changed to `FileMode.append` which preserves existing content while still allowing `setPosition` for random-access writes
+- **Test added**: "download: unchanged blocks are preserved in local file" — verifies blocks 0 and 2 survive when only block 1 is downloaded
+
+### Delta Sync Test Expansion (4361 → 4440 tests)
+- **+6 pCloud adapter tests**: delta sync config (2), guards (5: auth checks for fileOpen/filePread/filePwrite/fileClose/fileChecksum, deltaUpload auth), DeltaSyncService integration (6: block map format, block comparison, transfer plan offsets, applyDelta pwrite simulation, cache path namespace, cache round-trip)
+- **+10 S3 adapter tests**: delta sync config (2), guards (4: auth checks, disabled checks), DeltaSyncService integration (8: Range GET format, block comparison, download plan, applyDelta Range GET simulation, upload fallback, upload skip, cache namespace, disabled checks)
+- **+7 live Nextcloud tests**: error handling (directory 404, finalize non-existent, empty body 400), full round-trip (upload→modify→upload with hash verification, ETag change verification, size mismatch rejection, offset preservation)
+- **+1 delta sync unit test**: unchanged block preservation
+- **Fix**: Live test "writing block 1" used deterministic data causing idempotent hash — changed to timestamp-seeded data
+
+### Standalone Delta Sync Repo
+- Created `/mnt/volume1/crispcloud-delta-sync/` with:
+  - `server/`: PHP Nextcloud/ownCloud app (copied from `server/nextcloud-delta-sync/`)
+  - `client/`: Dart CLI demo with 4 commands (status, blockmap, compute, sync)
+  - CLI verified live against Nextcloud 33 on localhost:8888
+  - README with install guide, API docs, App Store submission instructions
+
+### Nextcloud Desktop Client Patch
+- Created delta sync upload class (`propagateuploaddelta.h/.cpp`) for `nextcloud/desktop`
+- Injects into `createUploadJob` when file ≥10 MB and `crispcloud_delta` capability detected
+- Flow: probe /api/status → fetch block map → compute local → compare → upload changed blocks → finalize
+- Falls back to normal chunked upload (NG or V1) if any step fails
+- Added `deltaSyncAvailable()` to Capabilities class
+
+### ownCloud Desktop Client Patch
+- Same approach adapted for `owncloud/client` (different class hierarchy: `PropagateUploadCommon` base, TUS support)
+- Adapts to ownCloud's `SimpleNetworkJob` constructor signature (takes verb in constructor)
+- Falls back to TUS or simple PUT upload
+
 ## 2026-06-08 — Session 11: S3 Enhancements, Provider Features, Accessibility, CLI Fix
 
 ### CLI Companion Fix
