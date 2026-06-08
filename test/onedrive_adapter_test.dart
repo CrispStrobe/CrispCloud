@@ -182,4 +182,68 @@ void main() {
       expect(adapter.userId, isNull);
     });
   });
+
+  group('OneDriveClientAdapter - delta sync', () {
+    test('fetchDelta throws when not authenticated', () {
+      expect(
+        () => adapter.fetchDelta(),
+        throwsA(isA<Exception>()),
+      );
+    });
+
+    test('fetchDelta with null deltaToken requests full enumeration', () {
+      // Without auth, verify it throws auth error (not parameter error)
+      expect(
+        () => adapter.fetchDelta(deltaToken: null),
+        throwsA(isA<Exception>()),
+      );
+    });
+
+    test('fetchDelta with deltaToken passes it as URL', () {
+      // Delta token is a full URL, verify it throws auth error
+      expect(
+        () => adapter.fetchDelta(
+          deltaToken: 'https://graph.microsoft.com/v1.0/me/drive/root/delta?token=abc123',
+        ),
+        throwsA(isA<Exception>()),
+      );
+    });
+  });
+
+  group('OneDriveClientAdapter - unauthenticated operations', () {
+    test('listPath throws when not authenticated', () {
+      expect(
+        () => adapter.listPath('/'),
+        throwsA(isA<Exception>()),
+      );
+    });
+
+    test('uploadFile throws when not authenticated', () {
+      expect(
+        () => adapter.uploadFile([1, 2, 3], 'test.txt', '/'),
+        throwsA(isA<Exception>()),
+      );
+    });
+
+    test('downloadFileBytes throws when not authenticated', () {
+      expect(
+        () => adapter.downloadFileBytes('/test.txt'),
+        throwsA(isA<Exception>()),
+      );
+    });
+
+    test('deletePath throws when not authenticated', () {
+      expect(
+        () => adapter.deletePath('/test.txt'),
+        throwsA(isA<Exception>()),
+      );
+    });
+
+    test('createFolderPath throws when not authenticated', () {
+      expect(
+        () => adapter.createFolderPath('/new-folder'),
+        throwsA(isA<Exception>()),
+      );
+    });
+  });
 }

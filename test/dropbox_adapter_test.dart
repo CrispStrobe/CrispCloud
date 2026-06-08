@@ -139,6 +139,66 @@ void main() {
     });
   });
 
+  group('DropboxClientAdapter - shared folders', () {
+    test('listSharedFolders throws when not authenticated', () {
+      expect(
+        () => adapter.listSharedFolders(),
+        throwsA(isA<Exception>()),
+      );
+    });
+
+    test('mountSharedFolder throws when not authenticated', () {
+      expect(
+        () => adapter.mountSharedFolder('sf-12345'),
+        throwsA(isA<Exception>()),
+      );
+    });
+
+    test('unmountSharedFolder throws when not authenticated', () {
+      expect(
+        () => adapter.unmountSharedFolder('sf-12345'),
+        throwsA(isA<Exception>()),
+      );
+    });
+  });
+
+  group('DropboxClientAdapter - unauthenticated operations', () {
+    test('listPath throws when not authenticated', () {
+      expect(
+        () => adapter.listPath('/'),
+        throwsA(isA<Exception>()),
+      );
+    });
+
+    test('uploadFile throws when not authenticated', () {
+      expect(
+        () => adapter.uploadFile([1, 2, 3], 'test.txt', '/'),
+        throwsA(isA<Exception>()),
+      );
+    });
+
+    test('downloadFileBytes throws when not authenticated', () {
+      expect(
+        () => adapter.downloadFileBytes('/test.txt'),
+        throwsA(isA<Exception>()),
+      );
+    });
+
+    test('deletePath throws when not authenticated', () {
+      expect(
+        () => adapter.deletePath('/test.txt'),
+        throwsA(isA<Exception>()),
+      );
+    });
+
+    test('createFolderPath throws when not authenticated', () {
+      expect(
+        () => adapter.createFolderPath('/new-folder'),
+        throwsA(isA<Exception>()),
+      );
+    });
+  });
+
   group('DropboxClientAdapter - content hash', () {
     test('computeContentHash returns correct hash for small data', () {
       // Known test vector: "Hello" (5 bytes, fits in one 4MB block)

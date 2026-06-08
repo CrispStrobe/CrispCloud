@@ -63,6 +63,7 @@ void main() {
     setUp(() async {
       server = MockS3Server();
       await server.start();
+      server.createBucket(_bucket);
       adapter = await _connect(server);
     });
 
@@ -110,6 +111,7 @@ void main() {
     setUp(() async {
       server = MockS3Server();
       await server.start();
+      server.createBucket(_bucket);
       adapter = await _connect(server);
     });
 
@@ -140,6 +142,7 @@ void main() {
     setUp(() async {
       server = MockS3Server();
       await server.start();
+      server.createBucket(_bucket);
       adapter = await _connect(server);
     });
 
@@ -231,6 +234,7 @@ void main() {
     setUp(() async {
       server = MockS3Server();
       await server.start();
+      server.createBucket(_bucket);
       adapter = await _connect(server);
     });
 
@@ -282,6 +286,7 @@ void main() {
     setUp(() async {
       server = MockS3Server();
       await server.start();
+      server.createBucket(_bucket);
       adapter = await _connect(server);
     });
 
@@ -345,6 +350,7 @@ void main() {
     setUp(() async {
       server = MockS3Server();
       await server.start();
+      server.createBucket(_bucket);
       adapter = await _connect(server);
     });
 
@@ -396,6 +402,7 @@ void main() {
     setUp(() async {
       server = MockS3Server();
       await server.start();
+      server.createBucket(_bucket);
       adapter = await _connect(server);
     });
 
@@ -453,6 +460,7 @@ void main() {
     setUp(() async {
       server = MockS3Server();
       await server.start();
+      server.createBucket(_bucket);
       adapter = await _connect(server);
     });
 
@@ -513,6 +521,7 @@ void main() {
     setUp(() async {
       server = MockS3Server();
       await server.start();
+      server.createBucket(_bucket);
       adapter = await _connect(server);
     });
 
@@ -551,6 +560,7 @@ void main() {
     setUp(() async {
       server = MockS3Server();
       await server.start();
+      server.createBucket(_bucket);
       adapter = await _connect(server);
     });
 
@@ -606,6 +616,7 @@ void main() {
     setUp(() async {
       server = MockS3Server();
       await server.start();
+      server.createBucket(_bucket);
       adapter = await _connect(server);
     });
 
@@ -636,6 +647,7 @@ void main() {
     setUp(() async {
       server = MockS3Server();
       await server.start();
+      server.createBucket(_bucket);
       adapter = await _connect(server);
     });
 
@@ -662,6 +674,213 @@ void main() {
     test('resolvePath for non-existent key returns null', () async {
       final result = await adapter.resolvePath('/does_not_exist.bin');
       expect(result, isNull);
+    });
+  });
+
+  // -------------------------------------------------------------------------
+
+  group('S3ClientAdapter integration – presigned URLs', () {
+    late MockS3Server server;
+    late S3ClientAdapter adapter;
+
+    setUp(() async {
+      server = MockS3Server();
+      await server.start();
+      server.createBucket(_bucket);
+      adapter = await _connect(server);
+    });
+
+    tearDown(() async {
+      await adapter.logout();
+      await server.stop();
+    });
+
+    test('generatePresignedUrl produces valid URL with correct path', () async {
+      await adapter.uploadFile(_testData(128), 'share-me.bin', '/');
+
+      final url = adapter.generatePresignedUrl('/share-me.bin');
+      final parsed = Uri.parse(url);
+
+      // URL should point to the mock server
+      expect(parsed.host, equals('127.0.0.1'));
+      expect(parsed.port, equals(server.port));
+      // Path should include bucket and key
+      expect(parsed.path, contains('test-bucket'));
+      expect(parsed.path, contains('share-me.bin'));
+      // Query should have SigV4 params
+      expect(parsed.queryParameters['X-Amz-Algorithm'], equals('AWS4-HMAC-SHA256'));
+      expect(parsed.queryParameters['X-Amz-Credential'], contains(_accessKey));
+      expect(parsed.queryParameters['X-Amz-Signature'], isNotNull);
+      expect(parsed.queryParameters['X-Amz-Signature']!.length, equals(64));
+    });
+
+    test('generatePresignedUrl with custom expiry sets correct X-Amz-Expires', () async {
+      await adapter.uploadFile(_testData(64), 'expire-test.txt', '/');
+
+      final url = adapter.generatePresignedUrl(
+        '/expire-test.txt',
+        expires: const Duration(minutes: 15),
+      );
+      final parsed = Uri.parse(url);
+      expect(parsed.queryParameters['X-Amz-Expires'], equals('900'));
+    });
+
+    test('generatePresignedUploadUrl produces different signature than GET', () async {
+      final getUrl = adapter.generatePresignedUrl('/test.txt');
+      final putUrl = adapter.generatePresignedUploadUrl('/test.txt');
+
+      final getSig = Uri.parse(getUrl).queryParameters['X-Amz-Signature'];
+      final putSig = Uri.parse(putUrl).queryParameters['X-Amz-Signature'];
+
+      expect(getSig, isNot(equals(putSig)),
+          reason: 'GET and PUT presigned URLs should have different signatures');
+    });
+
+    test('presigned URL for different paths produces different signatures', () async {
+      await adapter.uploadFile(_testData(32), 'a.txt', '/');
+      await adapter.uploadFile(_testData(32), 'b.txt', '/');
+
+      final urlA = adapter.generatePresignedUrl('/a.txt');
+      final urlB = adapter.generatePresignedUrl('/b.txt');
+
+      final sigA = Uri.parse(urlA).queryParameters['X-Amz-Signature'];
+      final sigB = Uri.parse(urlB).queryParameters['X-Amz-Signature'];
+
+      expect(sigA, isNot(equals(sigB)));
+    });
+
+    test('presigned URL for subfolder paths works correctly', () async {
+      await adapter.createFolderPath('/photos');
+      await adapter.uploadFile(_testData(64), 'cat.jpg', '/photos');
+
+      final url = adapter.generatePresignedUrl('/photos/cat.jpg');
+      final parsed = Uri.parse(url);
+
+      expect(parsed.path, contains('photos'));
+      expect(parsed.path, contains('cat.jpg'));
+      expect(parsed.queryParameters['X-Amz-Algorithm'], equals('AWS4-HMAC-SHA256'));
+    });
+  });
+
+  // -------------------------------------------------------------------------
+
+  group('S3ClientAdapter integration – server-side encryption', () {
+    late MockS3Server server;
+    late S3ClientAdapter adapter;
+
+    setUp(() async {
+      server = MockS3Server();
+      await server.start();
+      server.createBucket(_bucket);
+      adapter = await _connect(server);
+    });
+
+    tearDown(() async {
+      await adapter.logout();
+      await server.stop();
+    });
+
+    test('SSE-S3 encrypted upload still works (mock server ignores headers)', () async {
+      adapter.encryption = S3Encryption.sseS3;
+
+      final data = _testData(256);
+      await adapter.uploadFile(data, 'encrypted.bin', '/');
+
+      final downloaded = await adapter.downloadFileBytes('/encrypted.bin');
+      expect(downloaded, equals(data));
+    });
+
+    test('SSE-KMS encrypted upload still works', () async {
+      adapter.encryption = S3Encryption.sseKms;
+      adapter.kmsKeyId = 'arn:aws:kms:us-east-1:123456:key/test-key-id';
+
+      final data = _testData(512);
+      await adapter.uploadFile(data, 'kms-file.bin', '/');
+
+      final downloaded = await adapter.downloadFileBytes('/kms-file.bin');
+      expect(downloaded, equals(data));
+    });
+
+    test('encryption setting persists through credential save/restore', () async {
+      adapter.encryption = S3Encryption.sseKms;
+      adapter.kmsKeyId = 'arn:aws:kms:us-east-1:123:key/abc';
+      adapter.storageClass = S3StorageClass.standardIa;
+
+      // Re-save credentials with the updated encryption/storage class settings
+      await adapter.config.saveCredentials({
+        'accessKey': _accessKey,
+        'secretKey': _secretKey,
+        'endpoint': server.baseUrl,
+        'bucket': _bucket,
+        'region': _region,
+        'encryption': adapter.encryption.name,
+        'kmsKeyId': adapter.kmsKeyId!,
+        'storageClass': adapter.storageClass.headerValue,
+      });
+
+      // Create a new adapter sharing the same config service to restore
+      final adapter2 = S3ClientAdapter(config: adapter.config);
+      final restored = await adapter2.restoreCredentials();
+
+      expect(restored, isTrue);
+      expect(adapter2.encryption, equals(S3Encryption.sseKms));
+      expect(adapter2.kmsKeyId, equals('arn:aws:kms:us-east-1:123:key/abc'));
+      expect(adapter2.storageClass, equals(S3StorageClass.standardIa));
+    });
+  });
+
+  // -------------------------------------------------------------------------
+
+  group('S3ClientAdapter integration – storage classes', () {
+    late MockS3Server server;
+    late S3ClientAdapter adapter;
+
+    setUp(() async {
+      server = MockS3Server();
+      await server.start();
+      server.createBucket(_bucket);
+      adapter = await _connect(server);
+    });
+
+    tearDown(() async {
+      await adapter.logout();
+      await server.stop();
+    });
+
+    test('upload with non-default storage class works', () async {
+      adapter.storageClass = S3StorageClass.standardIa;
+
+      final data = _testData(128);
+      await adapter.uploadFile(data, 'ia-file.bin', '/');
+
+      final downloaded = await adapter.downloadFileBytes('/ia-file.bin');
+      expect(downloaded, equals(data));
+    });
+
+    test('upload with glacier storage class works', () async {
+      adapter.storageClass = S3StorageClass.glacier;
+
+      final data = _testData(64);
+      await adapter.uploadFile(data, 'glacier-file.bin', '/');
+
+      // File should be listed
+      final listing = await adapter.listPath('/');
+      final files = listing['files'] as List;
+      final names = files.map((f) => f['name']).toList();
+      expect(names, contains('glacier-file.bin'));
+    });
+
+    test('changing storage class between uploads applies to each file', () async {
+      adapter.storageClass = S3StorageClass.standard;
+      await adapter.uploadFile(_testData(32), 'standard.bin', '/');
+
+      adapter.storageClass = S3StorageClass.intelligentTiering;
+      await adapter.uploadFile(_testData(32), 'tiered.bin', '/');
+
+      // Both files should exist
+      final listing = await adapter.listPath('/');
+      final files = listing['files'] as List;
+      expect(files.length, equals(2));
     });
   });
 }

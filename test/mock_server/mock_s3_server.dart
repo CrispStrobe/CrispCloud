@@ -85,13 +85,17 @@ class MockS3Server {
 
   Future<void> _handleRequest(HttpRequest req) async {
     try {
-      final segments = req.uri.pathSegments; // may be empty for /
+      // Filter out empty segments (from trailing slashes like /bucket/)
+      final rawSegments = req.uri.pathSegments;
+      final segments = rawSegments.where((s) => s.isNotEmpty).toList();
       final method = req.method.toUpperCase();
       final queryParams = req.uri.queryParameters;
       final queryString = req.uri.query;
+      // Debug: uncomment to trace requests
+      // print('[MockS3] $method ${req.uri.path} segs=$segments q=${req.uri.query}');
 
       // --- GET / → list buckets ---
-      if (method == 'GET' && (segments.isEmpty || (segments.length == 1 && segments[0].isEmpty))) {
+      if (method == 'GET' && segments.isEmpty) {
         await _listBuckets(req);
         return;
       }
@@ -242,11 +246,12 @@ $bucketXml
       final m = _meta[bucket]?[k];
       final etag = m?['etag'] ?? _etag(data);
       final lm = m?['lastModified'] ?? HttpDate.format(DateTime.now().toUtc());
+      // Order: Key, LastModified, ETag, Size — matches adapter's XML regex
       return '''  <Contents>
     <Key>$k</Key>
-    <Size>${data.length}</Size>
-    <ETag>$etag</ETag>
     <LastModified>$lm</LastModified>
+    <ETag>$etag</ETag>
+    <Size>${data.length}</Size>
     <StorageClass>STANDARD</StorageClass>
   </Contents>''';
     }).join('\n');

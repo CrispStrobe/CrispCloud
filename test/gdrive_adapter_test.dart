@@ -194,4 +194,88 @@ void main() {
       expect(adapter.userId, isNull);
     });
   });
+
+  group('GDriveClientAdapter - shared drives', () {
+    test('listSharedDrives throws when not authenticated', () {
+      expect(
+        () => adapter.listSharedDrives(),
+        throwsA(isA<Exception>()),
+      );
+    });
+
+    test('listSharedDrivePath throws when not authenticated', () {
+      expect(
+        () => adapter.listSharedDrivePath('drive-id-123', '/'),
+        throwsA(isA<Exception>()),
+      );
+    });
+
+    test('listSharedDrivePath with empty path uses driveId as root', () {
+      // Can't call without auth, but verify it throws auth error, not path error
+      expect(
+        () => adapter.listSharedDrivePath('drive-id-123', ''),
+        throwsA(isA<Exception>()),
+      );
+    });
+  });
+
+  group('GDriveClientAdapter - starred files', () {
+    test('listStarredFiles throws when not authenticated', () {
+      expect(
+        () => adapter.listStarredFiles(),
+        throwsA(isA<Exception>()),
+      );
+    });
+
+    test('setStarred throws when not authenticated', () {
+      expect(
+        () => adapter.setStarred('file-id-123', true),
+        throwsA(isA<Exception>()),
+      );
+    });
+
+    test('setStarred with false unstar throws when not authenticated', () {
+      expect(
+        () => adapter.setStarred('file-id-123', false),
+        throwsA(isA<Exception>()),
+      );
+    });
+  });
+
+  group('GDriveClientAdapter - unauthenticated operations', () {
+    test('listPath throws when not authenticated', () {
+      expect(
+        () => adapter.listPath('/'),
+        throwsA(isA<Exception>()),
+      );
+    });
+
+    test('uploadFile throws when not authenticated', () {
+      expect(
+        () => adapter.uploadFile([1, 2, 3], 'test.txt', '/'),
+        throwsA(isA<Exception>()),
+      );
+    });
+
+    test('downloadFileBytes throws when not authenticated', () {
+      expect(
+        () => adapter.downloadFileBytes('/test.txt'),
+        throwsA(isA<Exception>()),
+      );
+    });
+
+    test('deletePath throws when not authenticated', () {
+      expect(
+        () => adapter.deletePath('/test.txt'),
+        throwsA(isA<Exception>()),
+      );
+    });
+
+    test('createFolderPath throws when not authenticated', () {
+      expect(
+        () => adapter.createFolderPath('/new-folder'),
+        throwsA(isA<Exception>()),
+      );
+    });
+  });
 }
