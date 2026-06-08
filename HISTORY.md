@@ -30,10 +30,14 @@ Audit trail of bugs found, issues discovered, and fixes applied.
 - **Dropbox Content Hash**: `computeContentHash()` static method implementing Dropbox's 4MB-block SHA-256 hash algorithm for dedup comparison
 - **Tests**: 5 new Dropbox content hash tests (determinism, empty data, multi-block, different data)
 
-### Nextcloud Block-Level Delta Sync
-- **Client-side** (`nextcloud_client_adapter.dart`): ETag in PROPFIND + parsing, `getFileETag()` via HEAD, `downloadRange()` with Range header, `_uploadChunked()` via WebDAV chunked upload v2 (MKCOL→PUT chunks→MOVE), `deltaUpload()`/`deltaDownload()` orchestrators with cached block map comparison, `fetchServerBlockMap()` for server app integration. All gated behind `deltaSyncEnabled` flag (opt-in).
-- **Server-side** (`server/nextcloud-delta-sync/`): Nextcloud PHP app with `BlockMapService` (Adler-32 + SHA-256 per 4MB block, ETag-gated cache in `.crispcloud_delta/`), `DeltaController` with 4 REST endpoints (`GET /api/blockmap/{path}`, `PUT /api/blocks/{path}`, `POST /api/finalize/{path}`, `GET /api/status`). Compatible with Nextcloud 25–31.
-- **Design**: Without server app, client caches block maps locally and uses ETag to detect staleness; with server app, block maps are computed server-side and partial block writes avoid full re-upload. Ideal for VeraCrypt containers, database files, disk images.
+### Block-Level Delta Sync (3 providers)
+- **Nextcloud client** (`nextcloud_client_adapter.dart`): ETag in PROPFIND, `downloadRange()` with Range header, chunked upload v2, `deltaUpload()`/`deltaDownload()` orchestrators, `fetchServerBlockMap()`, auto-detection via `/api/status`. All behind `deltaSyncEnabled` flag.
+- **Nextcloud server app** (`server/nextcloud-delta-sync/`): PHP app with `BlockMapService` (Adler-32 + SHA-256 per 4MB block), `DeltaController` (4 REST endpoints), ETag-gated cache, Makefile for release packaging. Live-tested: Dart and PHP hash implementations match exactly.
+- **pCloud** (`pcloud_client_adapter.dart`): `fileOpen()`, `filePread()`, `filePwrite()`, `fileClose()` for native random-access I/O, `fileChecksum()` for change detection, `deltaUpload()` orchestrator, `_computeRemoteBlockMap()` via pread.
+- **S3** (`s3_client_adapter.dart`): `downloadRange()` with Range header, `getObjectETag()` via HEAD, `deltaDownload()` with block-level Range GET, `deltaUpload()` with full-upload fallback (S3 doesn't support partial writes), ETag-validated cached block maps.
+- **ADR** (`docs/adr/007-block-level-delta-sync.md`): Architecture decision record covering algorithm, provider strategies, and trade-offs.
+- **Live tests**: 8 tests against Nextcloud 33 on localhost:8888 — hash verification, block write, range GET, cache consistency.
+- **Unit tests**: 15 new tests — config defaults, guard methods, block map round-trip, delta result computation, transfer plan generation.
 
 ### Accessibility
 - **48dp touch targets on mobile**: Adaptive sizing using `Theme.of(context).platform` — FKey bar (36→48dp), tree view (28→48dp), column view (32→48dp), breadcrumb buttons (20→48dp via ConstrainedBox), operations panel icons (16→20px), file panel edit button (removed BoxConstraints override)

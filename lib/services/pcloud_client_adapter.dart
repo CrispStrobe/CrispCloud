@@ -32,6 +32,7 @@ import 'package:path/path.dart' as p;
 import 'package:url_launcher/url_launcher.dart';
 
 import 'cloud_storage_interface.dart';
+import 'delta_sync_service.dart';
 import 'pcloud_config_service.dart';
 import 'log_service.dart';
 import 'secure_storage_service.dart';
@@ -665,6 +666,208 @@ class PCloudClientAdapter extends CloudStorageClient {
     if (locationId == 2) {
       _useEuApi = true;
       _log.info('pCloud account is on EU servers; switching to eapi.pcloud.com');
+    }
+  }
+
+  // ---------------------------------------------------------------------------
+  // Delta Sync — block-level file sync via pCloud's random-access API
+  // ---------------------------------------------------------------------------
+
+  /// Whether block-level delta sync is enabled for this connection.
+  bool deltaSyncEnabled = false;
+
+  final DeltaSyncService _deltaSyncService = DeltaSyncService();
+
+  /// Open a file descriptor on the pCloud server for random-access I/O.
+  /// Returns the file descriptor (fd) number.
+  Future<int> fileOpen(int fileId, {bool write = false}) async {
+    _ensureToken();
+    final flags = write ? 0x0042 : 0x0000; // O_CREAT|O_RDWR : O_RDONLY
+    final uri = Uri.parse('$_apiBase/file_open').replace(queryParameters: {
+      'access_token': _accessToken!,
+      'fileid': fileId.toString(),
+      'flags': flags.toString(),
+    });
+    final resp = await http.get(uri);
+    final data = _parseResponse(resp, 'file_open');
+    return data['fd'] as int;
+  }
+
+  /// Read bytes from a pCloud file descriptor at a specific offset.
+  Future<List<int>> filePread(int fd, int offset, int count) async {
+    _ensureToken();
+    final uri = Uri.parse('$_apiBase/file_pread').replace(queryParameters: {
+      'access_token': _accessToken!,
+      'fd': fd.toString(),
+      'count': count.toString(),
+      'offset': offset.toString(),
+    });
+    final resp = await http.get(uri);
+    if (resp.statusCode != 200) {
+      throw Exception('pCloud file_pread failed (HTTP ${resp.statusCode})');
+    }
+    return resp.bodyBytes;
+  }
+
+  /// Write bytes to a pCloud file descriptor at a specific offset.
+  Future<void> filePwrite(int fd, int offset, List<int> data) async {
+    _ensureToken();
+    final uri = Uri.parse('$_apiBase/file_pwrite').replace(queryParameters: {
+      'access_token': _accessToken!,
+      'fd': fd.toString(),
+      'offset': offset.toString(),
+    });
+    final req = http.Request('PUT', uri);
+    req.bodyBytes = data is Uint8List ? data : Uint8List.fromList(data);
+    req.headers['Content-Type'] = 'application/octet-stream';
+    final streamed = await req.send();
+    final resp = await http.Response.fromStream(streamed);
+    _parseResponse(resp, 'file_pwrite');
+  }
+
+  /// Close a pCloud file descriptor.
+  Future<void> fileClose(int fd) async {
+    _ensureToken();
+    final uri = Uri.parse('$_apiBase/file_close').replace(queryParameters: {
+      'access_token': _accessToken!,
+      'fd': fd.toString(),
+    });
+    final resp = await http.get(uri);
+    _parseResponse(resp, 'file_close');
+  }
+
+  /// Get the SHA-256 checksum of a remote file (server-computed).
+  Future<String?> fileChecksum(int fileId) async {
+    _ensureToken();
+    final uri = Uri.parse('$_apiBase/checksumfile').replace(queryParameters: {
+      'access_token': _accessToken!,
+      'fileid': fileId.toString(),
+    });
+    final resp = await http.get(uri);
+    final data = _parseResponse(resp, 'checksumfile');
+    return data['sha256'] as String?;
+  }
+
+  /// Orchestrate a delta upload for a single file.
+  ///
+  /// 1. Resolve remote file ID.
+  /// 2. Compute local block map.
+  /// 3. Compare with cached remote block map (or compute fresh via pread).
+  /// 4. Open file descriptor, pwrite changed blocks, close.
+  /// 5. Update cached block map.
+  Future<DeltaResult?> deltaUpload(
+    String localPath,
+    String remotePath, {
+    String? cacheDir,
+    void Function(int, int, int)? onProgress,
+  }) async {
+    if (!deltaSyncEnabled) return null;
+    _ensureToken();
+
+    final file = File(localPath);
+    final fileSize = await file.length();
+    if (!_deltaSyncService.shouldUseDeltaSync(fileSize)) return null;
+
+    // Get remote file ID
+    final fileId = await _resolveFileId(remotePath);
+
+    // Try to load cached remote block map
+    BlockMap? remoteMap;
+    if (cacheDir != null) {
+      final cachePath = _deltaSyncService.blockMapCachePath(cacheDir, remotePath, 'pcloud');
+      remoteMap = await _deltaSyncService.loadBlockMap(cachePath);
+    }
+
+    // If no cache, compute remote block map by reading blocks via pread
+    if (remoteMap == null) {
+      _log.info('Delta sync: computing remote block map via pread for $remotePath');
+      remoteMap = await _computeRemoteBlockMap(fileId, remotePath);
+    }
+
+    // Compute local block map
+    final localMap = await _deltaSyncService.computeBlockMap(localPath,
+        blockSize: remoteMap.blockSize, onProgress: onProgress);
+
+    // Compare
+    final delta = _deltaSyncService.compareBlockMaps(localMap, remoteMap);
+    if (delta.changedBlocks.isEmpty) {
+      _log.info('Delta sync: $remotePath is identical');
+      return delta;
+    }
+
+    _log.info('Delta sync: $remotePath — ${delta.changedBlocks.length}/${delta.totalBlocks} blocks changed, '
+        '${delta.savingsPercent.toStringAsFixed(1)}% savings');
+
+    // Open, write changed blocks, close
+    final fd = await fileOpen(fileId, write: true);
+    try {
+      final raf = await file.open();
+      try {
+        for (final blockIdx in delta.changedBlocks) {
+          final sig = localMap.signatures[blockIdx];
+          await raf.setPosition(sig.offset);
+          final buf = Uint8List(sig.size);
+          await raf.readInto(buf);
+          await filePwrite(fd, sig.offset, buf);
+        }
+      } finally {
+        await raf.close();
+      }
+    } finally {
+      await fileClose(fd);
+    }
+
+    // Cache new block map
+    if (cacheDir != null) {
+      final cachePath = _deltaSyncService.blockMapCachePath(cacheDir, remotePath, 'pcloud');
+      await _deltaSyncService.saveBlockMap(localMap, cachePath);
+    }
+
+    return delta;
+  }
+
+  /// Compute a block map for a remote file by reading blocks via file_pread.
+  Future<BlockMap> _computeRemoteBlockMap(int fileId, String remotePath) async {
+    // First, get file size via stat
+    final uri = Uri.parse('$_apiBase/stat').replace(queryParameters: {
+      'access_token': _accessToken!,
+      'fileid': fileId.toString(),
+    });
+    final resp = await http.get(uri);
+    final data = _parseResponse(resp, 'stat');
+    final metadata = data['metadata'] as Map<String, dynamic>;
+    final fileSize = (metadata['size'] as num).toInt();
+
+    const blockSize = 4 * 1024 * 1024;
+    final blockCount = fileSize == 0 ? 0 : ((fileSize + blockSize - 1) ~/ blockSize);
+
+    final fd = await fileOpen(fileId);
+    try {
+      final signatures = <BlockSignature>[];
+      for (int i = 0; i < blockCount; i++) {
+        final offset = i * blockSize;
+        final size = (offset + blockSize > fileSize) ? fileSize - offset : blockSize;
+        final bytes = await filePread(fd, offset, size);
+
+        signatures.add(BlockSignature(
+          blockIndex: i,
+          offset: offset,
+          size: bytes.length,
+          weakHash: _deltaSyncService.adler32(bytes),
+          strongHash: _deltaSyncService.sha256Hex(bytes),
+        ));
+      }
+
+      return BlockMap(
+        filePath: remotePath,
+        totalSize: fileSize,
+        blockSize: blockSize,
+        blockCount: blockCount,
+        signatures: signatures,
+        createdAt: DateTime.now(),
+      );
+    } finally {
+      await fileClose(fd);
     }
   }
 }

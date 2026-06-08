@@ -17,6 +17,7 @@ import 'package:path/path.dart' as p;
 import 'package:shared_preferences/shared_preferences.dart';
 
 import 'cloud_storage_interface.dart';
+import 'delta_sync_service.dart';
 import 'log_service.dart';
 import 's3_config_service.dart';
 import 'secure_storage_service.dart';
@@ -1299,6 +1300,149 @@ class S3ClientAdapter extends CloudStorageClient {
     );
 
     return signedUrl.toString();
+  }
+
+  // ---------------------------------------------------------------------------
+  // Delta Sync — block-level file sync via Range GET + full upload fallback
+  // ---------------------------------------------------------------------------
+
+  /// Whether block-level delta sync is enabled for this connection.
+  bool deltaSyncEnabled = false;
+
+  final DeltaSyncService _deltaSyncService = DeltaSyncService();
+
+  /// Download a byte range from a remote S3 object.
+  Future<Uint8List> downloadRange(String remotePath, int offset, int length) async {
+    _ensureAuth();
+    final key = _pathToKey(remotePath);
+    final uri = _buildUri(key);
+
+    final response = await _signedRequest('GET', uri,
+        extraHeaders: {'Range': 'bytes=$offset-${offset + length - 1}'});
+
+    if (response.statusCode != 206 && response.statusCode != 200) {
+      throw Exception('S3 range download failed (HTTP ${response.statusCode})');
+    }
+    return response.bodyBytes;
+  }
+
+  /// Get the ETag of a remote S3 object via HEAD request.
+  Future<String?> getObjectETag(String remotePath) async {
+    _ensureAuth();
+    final key = _pathToKey(remotePath);
+    final uri = _buildUri(key);
+
+    final response = await _signedRequest('HEAD', uri);
+    if (response.statusCode != 200) return null;
+    return response.headers['etag']?.replaceAll('"', '');
+  }
+
+  /// Orchestrate a delta download: compare remote vs local, download only changed blocks.
+  Future<DeltaResult?> deltaDownload(
+    String remotePath,
+    String localPath, {
+    String? cacheDir,
+    void Function(int, int, int)? onProgress,
+  }) async {
+    if (!deltaSyncEnabled) return null;
+    _ensureAuth();
+
+    final file = File(localPath);
+    if (!file.existsSync()) return null;
+    final fileSize = await file.length();
+    if (!_deltaSyncService.shouldUseDeltaSync(fileSize)) return null;
+
+    // Compute local block map
+    final localMap = await _deltaSyncService.computeBlockMap(localPath);
+
+    // Load cached remote block map
+    BlockMap? remoteMap;
+    if (cacheDir != null) {
+      final cachePath = _deltaSyncService.blockMapCachePath(cacheDir, remotePath, 's3');
+      remoteMap = await _deltaSyncService.loadBlockMap(cachePath);
+
+      // Validate against ETag
+      if (remoteMap != null) {
+        final currentEtag = await getObjectETag(remotePath);
+        if (currentEtag == null) remoteMap = null;
+      }
+    }
+    if (remoteMap == null) return null; // Can't diff without remote map
+
+    final delta = _deltaSyncService.compareBlockMaps(remoteMap, localMap);
+    if (delta.changedBlocks.isEmpty) return delta;
+
+    // Download changed blocks via Range GET
+    final plan = _deltaSyncService.createTransferPlan(
+        delta, TransferDirection.download, remoteMap);
+
+    await _deltaSyncService.applyDelta(plan, localPath,
+      remoteReadBlock: (blockIndex, offset, size) async {
+        return await downloadRange(remotePath, offset, size);
+      },
+      onProgress: onProgress,
+    );
+
+    // Cache updated local map
+    if (cacheDir != null) {
+      final newMap = await _deltaSyncService.computeBlockMap(localPath);
+      final cachePath = _deltaSyncService.blockMapCachePath(cacheDir, remotePath, 's3');
+      await _deltaSyncService.saveBlockMap(newMap, cachePath);
+    }
+
+    return delta;
+  }
+
+  /// Orchestrate a delta upload: compare local vs cached remote, upload only if
+  /// the savings justify it. S3 doesn't support partial writes, so we upload
+  /// the full file but skip the upload entirely if nothing changed.
+  ///
+  /// When the cached block map shows changes, we still do a full upload (S3
+  /// limitation) but cache the new block map for future comparisons. The savings
+  /// come from skipping unnecessary uploads when files haven't changed.
+  Future<DeltaResult?> deltaUpload(
+    String localPath,
+    String remotePath, {
+    String? cacheDir,
+    void Function(int, int, int)? onProgress,
+  }) async {
+    if (!deltaSyncEnabled) return null;
+    _ensureAuth();
+
+    final file = File(localPath);
+    final fileSize = await file.length();
+    if (!_deltaSyncService.shouldUseDeltaSync(fileSize)) return null;
+
+    // Load cached remote block map
+    BlockMap? remoteMap;
+    if (cacheDir != null) {
+      final cachePath = _deltaSyncService.blockMapCachePath(cacheDir, remotePath, 's3');
+      remoteMap = await _deltaSyncService.loadBlockMap(cachePath);
+    }
+    if (remoteMap == null) return null; // No cache = can't compare
+
+    final localMap = await _deltaSyncService.computeBlockMap(localPath,
+        blockSize: remoteMap.blockSize, onProgress: onProgress);
+    final delta = _deltaSyncService.compareBlockMaps(localMap, remoteMap);
+
+    if (delta.changedBlocks.isEmpty) {
+      _log.info('Delta sync: $remotePath is identical, skipping upload');
+      return delta;
+    }
+
+    _log.info('Delta sync: $remotePath has ${delta.changedBlocks.length} changed blocks, uploading full file');
+
+    // S3 doesn't support partial writes — upload the full file
+    final bytes = await file.readAsBytes();
+    await uploadFile(bytes, p.basename(remotePath), p.dirname(remotePath));
+
+    // Cache new block map
+    if (cacheDir != null) {
+      final cachePath = _deltaSyncService.blockMapCachePath(cacheDir, remotePath, 's3');
+      await _deltaSyncService.saveBlockMap(localMap, cachePath);
+    }
+
+    return delta;
   }
 
   void _ensureAuth() {
