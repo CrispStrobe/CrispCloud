@@ -40,8 +40,224 @@ class FileToolbar extends ConsumerWidget {
     final sortBy = panel.sortBy;
     final sortOrder = panel.sortOrder;
 
+    // Build the list of toolbar action buttons (scrollable section)
+    final actionButtons = <Widget>[
+      if (side == PanelSide.local)
+        IconButton(
+          icon: const Icon(Icons.folder_open),
+          tooltip: 'Browse...',
+          color: Theme.of(context).colorScheme.onPrimaryContainer,
+          onPressed: () => panel.pickLocalDirectory(),
+        ),
+
+      IconButton(
+        icon: const Icon(Icons.arrow_upward),
+        tooltip: 'Up (Backspace)',
+        color: Theme.of(context).colorScheme.onPrimaryContainer,
+        onPressed: () => panel.navigateUp(),
+      ),
+      IconButton(
+        icon: const Icon(Icons.refresh),
+        tooltip: 'Refresh (F5)',
+        color: Theme.of(context).colorScheme.onPrimaryContainer,
+        onPressed: () => panel.refresh(),
+      ),
+      IconButton(
+        icon: const Icon(Icons.create_new_folder),
+        tooltip: 'New Folder (Ctrl+N)',
+        color: Theme.of(context).colorScheme.onPrimaryContainer,
+        onPressed: () => _showCreateFolderDialog(context, panel),
+      ),
+
+      if (side == PanelSide.remote && auth.isConnected) ...[
+        IconButton(
+          icon: search.isSearching
+              ? const SizedBox(width: 20, height: 20, child: CircularProgressIndicator(strokeWidth: 2))
+              : const Icon(Icons.search),
+          tooltip: 'Fuzzy search all files',
+          color: Theme.of(context).colorScheme.onPrimaryContainer,
+          onPressed: search.isSearching ? null : () => showSearchDialog(context, ref),
+        ),
+        IconButton(
+          icon: search.isSearching
+              ? const SizedBox(width: 20, height: 20, child: CircularProgressIndicator(strokeWidth: 2))
+              : const Icon(Icons.find_in_page),
+          tooltip: 'Find files by pattern in this folder (e.g. *.pdf)',
+          color: Theme.of(context).colorScheme.onPrimaryContainer,
+          onPressed: search.isSearching ? null : () => showFindDialog(context, ref),
+        ),
+      ],
+
+      // Density toggle: compact (desktop) ↔ comfortable (touch/iPad)
+      Builder(builder: (context) {
+        final density = ref.watch(panelViewModeProvider(side));
+        final isCompact = density == PanelViewMode.full;
+        return IconButton(
+          icon: Icon(
+            isCompact ? Icons.density_large : Icons.density_small,
+            color: Theme.of(context).colorScheme.onPrimaryContainer,
+          ),
+          tooltip: isCompact ? 'Switch to touch-friendly view' : 'Switch to compact view',
+          onPressed: () {
+            ref.read(panelViewModeProvider(side).notifier).setMode(
+              isCompact ? PanelViewMode.brief : PanelViewMode.full,
+            );
+          },
+        );
+      }),
+
+      // View mode toggle (cycles: list -> grid -> column -> list)
+      Builder(builder: (context) {
+        final viewMode = side == PanelSide.local
+            ? ref.watch(localViewModeProvider)
+            : ref.watch(remoteViewModeProvider);
+        IconData icon;
+        String tooltip;
+        switch (viewMode) {
+          case ViewMode.list:
+            icon = Icons.grid_view;
+            tooltip = 'Grid View';
+            break;
+          case ViewMode.grid:
+            icon = Icons.view_column;
+            tooltip = 'Column View';
+            break;
+          case ViewMode.column:
+            icon = Icons.view_list;
+            tooltip = 'List View';
+            break;
+        }
+        return IconButton(
+          icon: Icon(icon, color: Theme.of(context).colorScheme.onPrimaryContainer),
+          tooltip: tooltip,
+          onPressed: () {
+            final notifier = side == PanelSide.local
+                ? ref.read(localViewModeProvider.notifier)
+                : ref.read(remoteViewModeProvider.notifier);
+            switch (viewMode) {
+              case ViewMode.list:
+                notifier.state = ViewMode.grid;
+                break;
+              case ViewMode.grid:
+                notifier.state = ViewMode.column;
+                break;
+              case ViewMode.column:
+                notifier.state = ViewMode.list;
+                break;
+            }
+          },
+        );
+      }),
+
+      // Incremental filter toggle
+      IconButton(
+        icon: Icon(
+          panel.filterQuery.isEmpty ? Icons.filter_list : Icons.filter_list_off,
+          color: panel.filterQuery.isNotEmpty
+              ? Theme.of(context).colorScheme.primary
+              : Theme.of(context).colorScheme.onPrimaryContainer,
+        ),
+        tooltip: panel.filterQuery.isEmpty ? 'Filter files (Ctrl+F)' : 'Clear filter',
+        onPressed: () {
+          if (panel.filterQuery.isNotEmpty) {
+            panel.clearFilter();
+          } else {
+            _showFilterBar(context, panel);
+          }
+        },
+      ),
+
+      // Flat view toggle (local panel only)
+      if (side == PanelSide.local)
+        IconButton(
+          icon: Icon(
+            Icons.layers,
+            color: panel.isFlatView
+                ? Theme.of(context).colorScheme.primary
+                : Theme.of(context).colorScheme.onPrimaryContainer,
+          ),
+          tooltip: panel.isFlatView ? 'Exit Flat View' : 'Flat View (all subdirectories)',
+          onPressed: () => panel.toggleFlatView(),
+        ),
+
+      // Hidden files toggle (local panel only) — Ctrl+.
+      if (side == PanelSide.local)
+        IconButton(
+          icon: Icon(
+            panel.showHiddenFiles ? Icons.visibility : Icons.visibility_off,
+            color: panel.showHiddenFiles
+                ? Theme.of(context).colorScheme.secondary
+                : Theme.of(context).colorScheme.onPrimaryContainer,
+          ),
+          tooltip: panel.showHiddenFiles ? 'Hide hidden files (Ctrl+.)' : 'Show hidden files (Ctrl+.)',
+          onPressed: () => panel.toggleShowHiddenFiles(),
+        ),
+
+      PopupMenuButton<String>(
+        icon: Icon(Icons.sort, color: Theme.of(context).colorScheme.onPrimaryContainer),
+        tooltip: 'Sort',
+        onSelected: (value) => _handleSortMenuAction(panel, value),
+        itemBuilder: (context) => <PopupMenuEntry<String>>[
+          PopupMenuItem(value: 'name', child: Row(children: [
+            Icon(sortBy == SortBy.name ? Icons.check : Icons.sort_by_alpha),
+            const SizedBox(width: 8), const Text('Sort by Name'),
+          ])),
+          PopupMenuItem(value: 'size', child: Row(children: [
+            Icon(sortBy == SortBy.size ? Icons.check : Icons.data_usage),
+            const SizedBox(width: 8), const Text('Sort by Size'),
+          ])),
+          PopupMenuItem(value: 'date', child: Row(children: [
+            Icon(sortBy == SortBy.date ? Icons.check : Icons.access_time),
+            const SizedBox(width: 8), const Text('Sort by Date'),
+          ])),
+          PopupMenuItem(value: 'extension', child: Row(children: [
+            Icon(sortBy == SortBy.extension ? Icons.check : Icons.category),
+            const SizedBox(width: 8), const Text('Sort by Extension'),
+          ])),
+          const PopupMenuDivider(),
+          PopupMenuItem(value: 'toggle_order', child: Row(children: [
+            Icon(sortOrder == SortOrder.ascending ? Icons.arrow_upward : Icons.arrow_downward),
+            const SizedBox(width: 8),
+            Text(sortOrder == SortOrder.ascending ? 'Ascending' : 'Descending'),
+          ])),
+          const PopupMenuDivider(),
+          // Secondary sort
+          PopupMenuItem(
+            enabled: false,
+            child: Text('Secondary Sort', style: TextStyle(
+              fontWeight: FontWeight.bold,
+              color: Theme.of(context).colorScheme.onSurface,
+            )),
+          ),
+          PopupMenuItem(value: 'secondary_none', child: Row(children: [
+            Icon(panel.secondarySortBy == null ? Icons.check : Icons.remove),
+            const SizedBox(width: 8), const Text('None'),
+          ])),
+          PopupMenuItem(value: 'secondary_name', child: Row(children: [
+            Icon(panel.secondarySortBy == SortBy.name ? Icons.check : Icons.sort_by_alpha),
+            const SizedBox(width: 8), const Text('by Name'),
+          ])),
+          PopupMenuItem(value: 'secondary_size', child: Row(children: [
+            Icon(panel.secondarySortBy == SortBy.size ? Icons.check : Icons.data_usage),
+            const SizedBox(width: 8), const Text('by Size'),
+          ])),
+          PopupMenuItem(value: 'secondary_date', child: Row(children: [
+            Icon(panel.secondarySortBy == SortBy.date ? Icons.check : Icons.access_time),
+            const SizedBox(width: 8), const Text('by Date'),
+          ])),
+          const PopupMenuDivider(),
+          const PopupMenuItem(value: 'select_all', child: Row(children: [
+            Icon(Icons.select_all), SizedBox(width: 8), Text('Select All'),
+          ])),
+          const PopupMenuItem(value: 'clear_selection', child: Row(children: [
+            Icon(Icons.clear), SizedBox(width: 8), Text('Clear Selection'),
+          ])),
+        ],
+      ),
+    ];
+
     return Container(
-      padding: const EdgeInsets.all(12),
+      padding: const EdgeInsets.symmetric(vertical: 4, horizontal: 8),
       color: Theme.of(context).colorScheme.primaryContainer,
       child: Row(
         children: [
@@ -60,218 +276,15 @@ class FileToolbar extends ConsumerWidget {
               overflow: TextOverflow.ellipsis,
             ),
           ),
-
-          if (side == PanelSide.local)
-            IconButton(
-              icon: const Icon(Icons.folder_open),
-              tooltip: 'Browse...',
-              color: Theme.of(context).colorScheme.onPrimaryContainer,
-              onPressed: () => panel.pickLocalDirectory(),
-            ),
-
-          IconButton(
-            icon: const Icon(Icons.arrow_upward),
-            tooltip: 'Up (Backspace)',
-            color: Theme.of(context).colorScheme.onPrimaryContainer,
-            onPressed: () => panel.navigateUp(),
-          ),
-          IconButton(
-            icon: const Icon(Icons.refresh),
-            tooltip: 'Refresh (F5)',
-            color: Theme.of(context).colorScheme.onPrimaryContainer,
-            onPressed: () => panel.refresh(),
-          ),
-          IconButton(
-            icon: const Icon(Icons.create_new_folder),
-            tooltip: 'New Folder (Ctrl+N)',
-            color: Theme.of(context).colorScheme.onPrimaryContainer,
-            onPressed: () => _showCreateFolderDialog(context, panel),
-          ),
-
-          if (side == PanelSide.remote && auth.isConnected) ...[
-            IconButton(
-              icon: search.isSearching
-                  ? const SizedBox(width: 20, height: 20, child: CircularProgressIndicator(strokeWidth: 2))
-                  : const Icon(Icons.search),
-              tooltip: 'Fuzzy search all files',
-              color: Theme.of(context).colorScheme.onPrimaryContainer,
-              onPressed: search.isSearching ? null : () => showSearchDialog(context, ref),
-            ),
-            IconButton(
-              icon: search.isSearching
-                  ? const SizedBox(width: 20, height: 20, child: CircularProgressIndicator(strokeWidth: 2))
-                  : const Icon(Icons.find_in_page),
-              tooltip: 'Find files by pattern in this folder (e.g. *.pdf)',
-              color: Theme.of(context).colorScheme.onPrimaryContainer,
-              onPressed: search.isSearching ? null : () => showFindDialog(context, ref),
-            ),
-          ],
-
-          // Density toggle: compact (desktop) ↔ comfortable (touch/iPad)
-          Builder(builder: (context) {
-            final density = ref.watch(panelViewModeProvider(side));
-            final isCompact = density == PanelViewMode.full;
-            return IconButton(
-              icon: Icon(
-                isCompact ? Icons.density_large : Icons.density_small,
-                color: Theme.of(context).colorScheme.onPrimaryContainer,
+          // Scrollable action buttons area
+          Flexible(
+            child: SingleChildScrollView(
+              scrollDirection: Axis.horizontal,
+              child: Row(
+                mainAxisSize: MainAxisSize.min,
+                children: actionButtons,
               ),
-              tooltip: isCompact ? 'Switch to touch-friendly view' : 'Switch to compact view',
-              onPressed: () {
-                ref.read(panelViewModeProvider(side).notifier).setMode(
-                  isCompact ? PanelViewMode.brief : PanelViewMode.full,
-                );
-              },
-            );
-          }),
-
-          // View mode toggle (cycles: list -> grid -> column -> list)
-          Builder(builder: (context) {
-            final viewMode = side == PanelSide.local
-                ? ref.watch(localViewModeProvider)
-                : ref.watch(remoteViewModeProvider);
-            IconData icon;
-            String tooltip;
-            switch (viewMode) {
-              case ViewMode.list:
-                icon = Icons.grid_view;
-                tooltip = 'Grid View';
-                break;
-              case ViewMode.grid:
-                icon = Icons.view_column;
-                tooltip = 'Column View';
-                break;
-              case ViewMode.column:
-                icon = Icons.view_list;
-                tooltip = 'List View';
-                break;
-            }
-            return IconButton(
-              icon: Icon(icon, color: Theme.of(context).colorScheme.onPrimaryContainer),
-              tooltip: tooltip,
-              onPressed: () {
-                final notifier = side == PanelSide.local
-                    ? ref.read(localViewModeProvider.notifier)
-                    : ref.read(remoteViewModeProvider.notifier);
-                switch (viewMode) {
-                  case ViewMode.list:
-                    notifier.state = ViewMode.grid;
-                    break;
-                  case ViewMode.grid:
-                    notifier.state = ViewMode.column;
-                    break;
-                  case ViewMode.column:
-                    notifier.state = ViewMode.list;
-                    break;
-                }
-              },
-            );
-          }),
-
-          // Incremental filter toggle
-          IconButton(
-            icon: Icon(
-              panel.filterQuery.isEmpty ? Icons.filter_list : Icons.filter_list_off,
-              color: panel.filterQuery.isNotEmpty
-                  ? Theme.of(context).colorScheme.primary
-                  : Theme.of(context).colorScheme.onPrimaryContainer,
             ),
-            tooltip: panel.filterQuery.isEmpty ? 'Filter files (Ctrl+F)' : 'Clear filter',
-            onPressed: () {
-              if (panel.filterQuery.isNotEmpty) {
-                panel.clearFilter();
-              } else {
-                _showFilterBar(context, panel);
-              }
-            },
-          ),
-
-          // Flat view toggle (local panel only)
-          if (side == PanelSide.local)
-            IconButton(
-              icon: Icon(
-                Icons.layers,
-                color: panel.isFlatView
-                    ? Theme.of(context).colorScheme.primary
-                    : Theme.of(context).colorScheme.onPrimaryContainer,
-              ),
-              tooltip: panel.isFlatView ? 'Exit Flat View' : 'Flat View (all subdirectories)',
-              onPressed: () => panel.toggleFlatView(),
-            ),
-
-          // Hidden files toggle (local panel only) — Ctrl+.
-          if (side == PanelSide.local)
-            IconButton(
-              icon: Icon(
-                panel.showHiddenFiles ? Icons.visibility : Icons.visibility_off,
-                color: panel.showHiddenFiles
-                    ? Theme.of(context).colorScheme.secondary
-                    : Theme.of(context).colorScheme.onPrimaryContainer,
-              ),
-              tooltip: panel.showHiddenFiles ? 'Hide hidden files (Ctrl+.)' : 'Show hidden files (Ctrl+.)',
-              onPressed: () => panel.toggleShowHiddenFiles(),
-            ),
-
-          PopupMenuButton<String>(
-            icon: Icon(Icons.sort, color: Theme.of(context).colorScheme.onPrimaryContainer),
-            tooltip: 'Sort',
-            onSelected: (value) => _handleSortMenuAction(panel, value),
-            itemBuilder: (context) => <PopupMenuEntry<String>>[
-              PopupMenuItem(value: 'name', child: Row(children: [
-                Icon(sortBy == SortBy.name ? Icons.check : Icons.sort_by_alpha),
-                const SizedBox(width: 8), const Text('Sort by Name'),
-              ])),
-              PopupMenuItem(value: 'size', child: Row(children: [
-                Icon(sortBy == SortBy.size ? Icons.check : Icons.data_usage),
-                const SizedBox(width: 8), const Text('Sort by Size'),
-              ])),
-              PopupMenuItem(value: 'date', child: Row(children: [
-                Icon(sortBy == SortBy.date ? Icons.check : Icons.access_time),
-                const SizedBox(width: 8), const Text('Sort by Date'),
-              ])),
-              PopupMenuItem(value: 'extension', child: Row(children: [
-                Icon(sortBy == SortBy.extension ? Icons.check : Icons.category),
-                const SizedBox(width: 8), const Text('Sort by Extension'),
-              ])),
-              const PopupMenuDivider(),
-              PopupMenuItem(value: 'toggle_order', child: Row(children: [
-                Icon(sortOrder == SortOrder.ascending ? Icons.arrow_upward : Icons.arrow_downward),
-                const SizedBox(width: 8),
-                Text(sortOrder == SortOrder.ascending ? 'Ascending' : 'Descending'),
-              ])),
-              const PopupMenuDivider(),
-              // Secondary sort
-              PopupMenuItem(
-                enabled: false,
-                child: Text('Secondary Sort', style: TextStyle(
-                  fontWeight: FontWeight.bold,
-                  color: Theme.of(context).colorScheme.onSurface,
-                )),
-              ),
-              PopupMenuItem(value: 'secondary_none', child: Row(children: [
-                Icon(panel.secondarySortBy == null ? Icons.check : Icons.remove),
-                const SizedBox(width: 8), const Text('None'),
-              ])),
-              PopupMenuItem(value: 'secondary_name', child: Row(children: [
-                Icon(panel.secondarySortBy == SortBy.name ? Icons.check : Icons.sort_by_alpha),
-                const SizedBox(width: 8), const Text('by Name'),
-              ])),
-              PopupMenuItem(value: 'secondary_size', child: Row(children: [
-                Icon(panel.secondarySortBy == SortBy.size ? Icons.check : Icons.data_usage),
-                const SizedBox(width: 8), const Text('by Size'),
-              ])),
-              PopupMenuItem(value: 'secondary_date', child: Row(children: [
-                Icon(panel.secondarySortBy == SortBy.date ? Icons.check : Icons.access_time),
-                const SizedBox(width: 8), const Text('by Date'),
-              ])),
-              const PopupMenuDivider(),
-              const PopupMenuItem(value: 'select_all', child: Row(children: [
-                Icon(Icons.select_all), SizedBox(width: 8), Text('Select All'),
-              ])),
-              const PopupMenuItem(value: 'clear_selection', child: Row(children: [
-                Icon(Icons.clear), SizedBox(width: 8), Text('Clear Selection'),
-              ])),
-            ],
           ),
         ],
       ),

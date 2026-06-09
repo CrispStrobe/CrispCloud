@@ -61,154 +61,21 @@ class _FileBrowserScreenState extends ConsumerState<FileBrowserScreen> {
     final showPreview = ref.watch(showPreviewProvider);
     final layoutPreset = ref.watch(layoutPresetProvider);
 
+    final screenWidth = MediaQuery.sizeOf(context).width;
+    final isNarrow = screenWidth <= 800;
+    // Platform checks for hiding irrelevant features
+    final bool isDesktopPlatform = !kIsWeb &&
+        (defaultTargetPlatform == TargetPlatform.macOS ||
+         defaultTargetPlatform == TargetPlatform.windows ||
+         defaultTargetPlatform == TargetPlatform.linux);
+
     final scaffold = Scaffold(
       appBar: AppBar(
-        title: const Text('Crisp Cloud'),
-        actions: [
-          // Panel swap (Ctrl+U): exchange left and right panel sources
-          IconButton(
-            icon: const Icon(Icons.swap_horiz, size: 20),
-            tooltip: 'Swap Panels (Ctrl+U)',
-            onPressed: () => _swapPanels(),
-          ),
-          // Terminal toggle
-          Consumer(
-            builder: (ctx, cref, _) {
-              final showTerminal = cref.watch(showTerminalProvider);
-              return IconButton(
-                icon: Icon(Icons.terminal, size: 20,
-                  color: showTerminal ? Theme.of(ctx).colorScheme.primary : null),
-                tooltip: showTerminal ? 'Hide Terminal' : 'Show Terminal',
-                onPressed: () => cref.read(showTerminalProvider.notifier).state = !showTerminal,
-              );
-            },
-          ),
-          // View density cycle: comfortable → compact → tree → comfortable
-          Consumer(
-            builder: (ctx, cref, _) {
-              final ap = cref.watch(activePanelProvider);
-              final mode = cref.watch(panelViewModeProvider(ap));
-              final (icon, tip) = switch (mode) {
-                PanelViewMode.brief => (Icons.density_small,  'Switch to compact view'),
-                PanelViewMode.full  => (Icons.account_tree,   'Switch to tree view'),
-                PanelViewMode.tree  => (Icons.density_large,  'Switch to touch-friendly view'),
-              };
-              return IconButton(
-                icon: Icon(icon, size: 20),
-                tooltip: tip,
-                onPressed: () =>
-                    cref.read(panelViewModeProvider(ap).notifier).cycleMode(),
-              );
-            },
-          ),
-          // Layout preset selector
-          PopupMenuButton<LayoutPreset>(
-            icon: Icon(_layoutPresetIcon(layoutPreset), size: 20),
-            tooltip: 'Layout Preset',
-            onSelected: (preset) =>
-                ref.read(layoutPresetProvider.notifier).setPreset(preset),
-            itemBuilder: (context) => [
-              const PopupMenuItem(
-                enabled: false,
-                child: Text('Layout Preset', style: TextStyle(fontSize: 12, fontWeight: FontWeight.bold)),
-              ),
-              _presetMenuItem(LayoutPreset.commander, 'Commander (Two Panels)', Icons.view_column, layoutPreset),
-              _presetMenuItem(LayoutPreset.explorer, 'Explorer (Tree + Panel)', Icons.account_tree, layoutPreset),
-              _presetMenuItem(LayoutPreset.gallery, 'Gallery (Grid View)', Icons.grid_view, layoutPreset),
-            ],
-          ),
-          IconButton(
-            icon: const Icon(Icons.cloud_sync, size: 20),
-            tooltip: 'Multi-Cloud',
-            onPressed: () => showMultiCloudDialog(context),
-          ),
-          IconButton(
-            icon: const Icon(Icons.sync, size: 20),
-            tooltip: 'Sync Manager',
-            onPressed: () => showSyncDialog(context),
-          ),
-          IconButton(
-            icon: const Icon(Icons.storage_rounded, size: 20),
-            tooltip: 'Mount as Drive',
-            onPressed: () => showMountDialog(context),
-          ),
-          IconButton(
-            icon: const Icon(Icons.find_replace, size: 20),
-            tooltip: 'Find Duplicates',
-            onPressed: () => showDuplicateFinderDialog(context, ref),
-          ),
-          IconButton(
-            icon: const Icon(Icons.history, size: 20),
-            tooltip: 'Audit Log',
-            onPressed: () => showAuditLogDialog(context),
-          ),
-          IconButton(
-            icon: const Icon(Icons.storage, size: 20),
-            tooltip: 'Cache Settings',
-            onPressed: () => showCacheSettingsDialog(context, ref),
-          ),
-          IconButton(
-            icon: Icon(
-              ref.watch(showTreeSidebarProvider) ? Icons.account_tree : Icons.account_tree_outlined,
-              size: 20,
-            ),
-            tooltip: 'Toggle Tree Sidebar',
-            onPressed: () => ref.read(showTreeSidebarProvider.notifier).state =
-                !ref.read(showTreeSidebarProvider),
-          ),
-          IconButton(
-            icon: Icon(
-              showPreview ? Icons.visibility : Icons.visibility_off,
-              size: 20,
-            ),
-            tooltip: showPreview ? 'Hide Preview' : 'Show Preview',
-            onPressed: () => ref.read(showPreviewProvider.notifier).state = !showPreview,
-          ),
-          if (auth.isEncryptionEnabled)
-            IconButton(
-              icon: const Icon(Icons.key, size: 20),
-              tooltip: 'Key Management',
-              onPressed: () => showKeyManagementDialog(context, ref),
-            ),
-          IconButton(
-            icon: const Icon(Icons.palette, size: 20),
-            tooltip: 'Theme',
-            onPressed: () {
-              final themeService = legacy.Provider.of<ThemeService>(context, listen: false);
-              showDialog(
-                context: context,
-                builder: (_) => legacy.ChangeNotifierProvider<ThemeService>.value(
-                  value: themeService,
-                  child: legacy.Consumer<ThemeService>(
-                    builder: (ctx, ts, _) => ThemePickerDialog(themeService: ts),
-                  ),
-                ),
-              );
-            },
-          ),
-          IconButton(
-            icon: const Icon(Icons.keyboard),
-            tooltip: 'Keyboard Shortcuts',
-            onPressed: () => showKeyboardShortcutsDialog(context),
-          ),
-          IconButton(
-            icon: const Icon(Icons.info_outline),
-            tooltip: 'About this app',
-            onPressed: () => showDialog(
-              context: context,
-              builder: (context) => const AboutAppDialog(),
-            ),
-          ),
-          const SizedBox(width: 8),
-          if (!auth.isConnected)
-            TextButton.icon(
-              icon: const Icon(Icons.login),
-              label: const Text('Connect'),
-              onPressed: () => showConnectionDialogScreen(context),
-            )
-          else
-            _buildUserMenu(context, auth),
-        ],
+        titleSpacing: 12,
+        title: isNarrow ? const Text('Crisp Cloud') : null,
+        actions: isNarrow
+            ? _buildNarrowActions(context, auth, layoutPreset)
+            : _buildWideActions(context, auth, showPreview, layoutPreset, isDesktopPlatform),
       ),
       body: Focus(
         autofocus: true,
@@ -638,6 +505,372 @@ class _FileBrowserScreenState extends ConsumerState<FileBrowserScreen> {
           ),
         ],
       ),
+    );
+  }
+
+  // --- Responsive AppBar action builders ---
+
+  /// Narrow screens (<=800px): essential buttons + overflow popup.
+  /// The drawer already provides full access to all features.
+  List<Widget> _buildNarrowActions(
+    BuildContext context,
+    AuthNotifier auth,
+    LayoutPreset layoutPreset,
+  ) {
+    return [
+      IconButton(
+        icon: const Icon(Icons.swap_horiz, size: 20),
+        tooltip: 'Swap Panels (Ctrl+U)',
+        onPressed: () => _swapPanels(),
+      ),
+      PopupMenuButton<LayoutPreset>(
+        icon: Icon(_layoutPresetIcon(layoutPreset), size: 20),
+        tooltip: 'Layout Preset',
+        onSelected: (preset) =>
+            ref.read(layoutPresetProvider.notifier).setPreset(preset),
+        itemBuilder: (context) => [
+          const PopupMenuItem(
+            enabled: false,
+            child: Text('Layout Preset', style: TextStyle(fontSize: 12, fontWeight: FontWeight.bold)),
+          ),
+          _presetMenuItem(LayoutPreset.commander, 'Commander (Two Panels)', Icons.view_column, layoutPreset),
+          _presetMenuItem(LayoutPreset.explorer, 'Explorer (Tree + Panel)', Icons.account_tree, layoutPreset),
+          _presetMenuItem(LayoutPreset.gallery, 'Gallery (Grid View)', Icons.grid_view, layoutPreset),
+        ],
+      ),
+      _buildOverflowMenu(context, auth),
+      const SizedBox(width: 4),
+      if (!auth.isConnected)
+        TextButton.icon(
+          icon: const Icon(Icons.login),
+          label: const Text('Connect'),
+          onPressed: () => showConnectionDialogScreen(context),
+        )
+      else
+        _buildUserMenu(context, auth),
+    ];
+  }
+
+  /// Wide screens (>800px): all buttons in a horizontally scrollable row.
+  List<Widget> _buildWideActions(
+    BuildContext context,
+    AuthNotifier auth,
+    bool showPreview,
+    LayoutPreset layoutPreset,
+    bool isDesktopPlatform,
+  ) {
+    final toolbarButtons = <Widget>[
+      const SizedBox(width: 12),
+      const Text('Crisp Cloud', style: TextStyle(fontSize: 20, fontWeight: FontWeight.w500)),
+      const SizedBox(width: 8),
+      // Panel swap
+      IconButton(
+        icon: const Icon(Icons.swap_horiz, size: 20),
+        tooltip: 'Swap Panels (Ctrl+U)',
+        onPressed: () => _swapPanels(),
+      ),
+      // Terminal toggle — only on native desktop
+      if (isDesktopPlatform)
+        Consumer(
+          builder: (ctx, cref, _) {
+            final showTerminal = cref.watch(showTerminalProvider);
+            return IconButton(
+              icon: Icon(Icons.terminal, size: 20,
+                color: showTerminal ? Theme.of(ctx).colorScheme.primary : null),
+              tooltip: showTerminal ? 'Hide Terminal' : 'Show Terminal',
+              onPressed: () => cref.read(showTerminalProvider.notifier).state = !showTerminal,
+            );
+          },
+        ),
+      // View density cycle
+      Consumer(
+        builder: (ctx, cref, _) {
+          final ap = cref.watch(activePanelProvider);
+          final mode = cref.watch(panelViewModeProvider(ap));
+          final (icon, tip) = switch (mode) {
+            PanelViewMode.brief => (Icons.density_small,  'Switch to compact view'),
+            PanelViewMode.full  => (Icons.account_tree,   'Switch to tree view'),
+            PanelViewMode.tree  => (Icons.density_large,  'Switch to touch-friendly view'),
+          };
+          return IconButton(
+            icon: Icon(icon, size: 20),
+            tooltip: tip,
+            onPressed: () =>
+                cref.read(panelViewModeProvider(ap).notifier).cycleMode(),
+          );
+        },
+      ),
+      // Layout preset selector
+      PopupMenuButton<LayoutPreset>(
+        icon: Icon(_layoutPresetIcon(layoutPreset), size: 20),
+        tooltip: 'Layout Preset',
+        onSelected: (preset) =>
+            ref.read(layoutPresetProvider.notifier).setPreset(preset),
+        itemBuilder: (context) => [
+          const PopupMenuItem(
+            enabled: false,
+            child: Text('Layout Preset', style: TextStyle(fontSize: 12, fontWeight: FontWeight.bold)),
+          ),
+          _presetMenuItem(LayoutPreset.commander, 'Commander (Two Panels)', Icons.view_column, layoutPreset),
+          _presetMenuItem(LayoutPreset.explorer, 'Explorer (Tree + Panel)', Icons.account_tree, layoutPreset),
+          _presetMenuItem(LayoutPreset.gallery, 'Gallery (Grid View)', Icons.grid_view, layoutPreset),
+        ],
+      ),
+      IconButton(
+        icon: const Icon(Icons.cloud_sync, size: 20),
+        tooltip: 'Multi-Cloud',
+        onPressed: () => showMultiCloudDialog(context),
+      ),
+      IconButton(
+        icon: const Icon(Icons.sync, size: 20),
+        tooltip: 'Sync Manager',
+        onPressed: () => showSyncDialog(context),
+      ),
+      // Mount as Drive — only on native desktop (FUSE)
+      if (isDesktopPlatform)
+        IconButton(
+          icon: const Icon(Icons.storage_rounded, size: 20),
+          tooltip: 'Mount as Drive',
+          onPressed: () => showMountDialog(context),
+        ),
+      IconButton(
+        icon: const Icon(Icons.find_replace, size: 20),
+        tooltip: 'Find Duplicates',
+        onPressed: () => showDuplicateFinderDialog(context, ref),
+      ),
+      IconButton(
+        icon: const Icon(Icons.history, size: 20),
+        tooltip: 'Audit Log',
+        onPressed: () => showAuditLogDialog(context),
+      ),
+      IconButton(
+        icon: const Icon(Icons.storage, size: 20),
+        tooltip: 'Cache Settings',
+        onPressed: () => showCacheSettingsDialog(context, ref),
+      ),
+      IconButton(
+        icon: Icon(
+          ref.watch(showTreeSidebarProvider) ? Icons.account_tree : Icons.account_tree_outlined,
+          size: 20,
+        ),
+        tooltip: 'Toggle Tree Sidebar',
+        onPressed: () => ref.read(showTreeSidebarProvider.notifier).state =
+            !ref.read(showTreeSidebarProvider),
+      ),
+      IconButton(
+        icon: Icon(
+          showPreview ? Icons.visibility : Icons.visibility_off,
+          size: 20,
+        ),
+        tooltip: showPreview ? 'Hide Preview' : 'Show Preview',
+        onPressed: () => ref.read(showPreviewProvider.notifier).state = !showPreview,
+      ),
+      if (auth.isEncryptionEnabled)
+        IconButton(
+          icon: const Icon(Icons.key, size: 20),
+          tooltip: 'Key Management',
+          onPressed: () => showKeyManagementDialog(context, ref),
+        ),
+      IconButton(
+        icon: const Icon(Icons.palette, size: 20),
+        tooltip: 'Theme',
+        onPressed: () {
+          final themeService = legacy.Provider.of<ThemeService>(context, listen: false);
+          showDialog(
+            context: context,
+            builder: (_) => legacy.ChangeNotifierProvider<ThemeService>.value(
+              value: themeService,
+              child: legacy.Consumer<ThemeService>(
+                builder: (ctx, ts, _) => ThemePickerDialog(themeService: ts),
+              ),
+            ),
+          );
+        },
+      ),
+      IconButton(
+        icon: const Icon(Icons.keyboard, size: 20),
+        tooltip: 'Keyboard Shortcuts',
+        onPressed: () => showKeyboardShortcutsDialog(context),
+      ),
+      IconButton(
+        icon: const Icon(Icons.info_outline, size: 20),
+        tooltip: 'About this app',
+        onPressed: () => showDialog(
+          context: context,
+          builder: (context) => const AboutAppDialog(),
+        ),
+      ),
+    ];
+
+    return [
+      Flexible(
+        child: SingleChildScrollView(
+          scrollDirection: Axis.horizontal,
+          child: Row(
+            mainAxisSize: MainAxisSize.min,
+            children: toolbarButtons,
+          ),
+        ),
+      ),
+      const SizedBox(width: 4),
+      if (!auth.isConnected)
+        TextButton.icon(
+          icon: const Icon(Icons.login),
+          label: const Text('Connect'),
+          onPressed: () => showConnectionDialogScreen(context),
+        )
+      else
+        _buildUserMenu(context, auth),
+      const SizedBox(width: 8),
+    ];
+  }
+
+  /// Overflow menu for narrow screens — groups secondary actions into a
+  /// single "more" button so they remain accessible without cluttering the bar.
+  Widget _buildOverflowMenu(BuildContext context, AuthNotifier auth) {
+    final bool isDesktopPlatform = !kIsWeb &&
+        (defaultTargetPlatform == TargetPlatform.macOS ||
+         defaultTargetPlatform == TargetPlatform.windows ||
+         defaultTargetPlatform == TargetPlatform.linux);
+
+    return PopupMenuButton<String>(
+      icon: const Icon(Icons.more_vert, size: 20),
+      tooltip: 'More actions',
+      onSelected: (value) {
+        switch (value) {
+          case 'terminal':
+            ref.read(showTerminalProvider.notifier).state =
+                !ref.read(showTerminalProvider);
+          case 'multi_cloud':
+            showMultiCloudDialog(context);
+          case 'sync':
+            showSyncDialog(context);
+          case 'mount':
+            showMountDialog(context);
+          case 'duplicates':
+            showDuplicateFinderDialog(context, ref);
+          case 'audit':
+            showAuditLogDialog(context);
+          case 'cache':
+            showCacheSettingsDialog(context, ref);
+          case 'tree':
+            ref.read(showTreeSidebarProvider.notifier).state =
+                !ref.read(showTreeSidebarProvider);
+          case 'preview':
+            ref.read(showPreviewProvider.notifier).state =
+                !ref.read(showPreviewProvider);
+          case 'keys':
+            showKeyManagementDialog(context, ref);
+          case 'theme':
+            final themeService = legacy.Provider.of<ThemeService>(context, listen: false);
+            showDialog(
+              context: context,
+              builder: (_) => legacy.ChangeNotifierProvider<ThemeService>.value(
+                value: themeService,
+                child: legacy.Consumer<ThemeService>(
+                  builder: (ctx, ts, _) => ThemePickerDialog(themeService: ts),
+                ),
+              ),
+            );
+          case 'shortcuts':
+            showKeyboardShortcutsDialog(context);
+          case 'about':
+            showDialog(
+              context: context,
+              builder: (context) => const AboutAppDialog(),
+            );
+        }
+      },
+      itemBuilder: (context) => <PopupMenuEntry<String>>[
+        if (isDesktopPlatform)
+          PopupMenuItem(
+            value: 'terminal',
+            child: Row(children: [
+              Icon(Icons.terminal, size: 20,
+                color: ref.read(showTerminalProvider) ? Theme.of(context).colorScheme.primary : null),
+              const SizedBox(width: 12),
+              Text(ref.read(showTerminalProvider) ? 'Hide Terminal' : 'Show Terminal'),
+            ]),
+          ),
+        const PopupMenuItem(
+          value: 'multi_cloud',
+          child: Row(children: [
+            Icon(Icons.cloud_sync, size: 20), SizedBox(width: 12), Text('Multi-Cloud'),
+          ]),
+        ),
+        const PopupMenuItem(
+          value: 'sync',
+          child: Row(children: [
+            Icon(Icons.sync, size: 20), SizedBox(width: 12), Text('Sync Manager'),
+          ]),
+        ),
+        if (isDesktopPlatform)
+          const PopupMenuItem(
+            value: 'mount',
+            child: Row(children: [
+              Icon(Icons.storage_rounded, size: 20), SizedBox(width: 12), Text('Mount as Drive'),
+            ]),
+          ),
+        const PopupMenuItem(
+          value: 'duplicates',
+          child: Row(children: [
+            Icon(Icons.find_replace, size: 20), SizedBox(width: 12), Text('Find Duplicates'),
+          ]),
+        ),
+        const PopupMenuItem(
+          value: 'audit',
+          child: Row(children: [
+            Icon(Icons.history, size: 20), SizedBox(width: 12), Text('Audit Log'),
+          ]),
+        ),
+        const PopupMenuItem(
+          value: 'cache',
+          child: Row(children: [
+            Icon(Icons.storage, size: 20), SizedBox(width: 12), Text('Cache Settings'),
+          ]),
+        ),
+        const PopupMenuDivider(),
+        const PopupMenuItem(
+          value: 'tree',
+          child: Row(children: [
+            Icon(Icons.account_tree, size: 20), SizedBox(width: 12), Text('Toggle Tree Sidebar'),
+          ]),
+        ),
+        PopupMenuItem(
+          value: 'preview',
+          child: Row(children: [
+            Icon(ref.read(showPreviewProvider) ? Icons.visibility : Icons.visibility_off, size: 20),
+            const SizedBox(width: 12),
+            Text(ref.read(showPreviewProvider) ? 'Hide Preview' : 'Show Preview'),
+          ]),
+        ),
+        if (auth.isEncryptionEnabled)
+          const PopupMenuItem(
+            value: 'keys',
+            child: Row(children: [
+              Icon(Icons.key, size: 20), SizedBox(width: 12), Text('Key Management'),
+            ]),
+          ),
+        const PopupMenuDivider(),
+        const PopupMenuItem(
+          value: 'theme',
+          child: Row(children: [
+            Icon(Icons.palette, size: 20), SizedBox(width: 12), Text('Theme'),
+          ]),
+        ),
+        const PopupMenuItem(
+          value: 'shortcuts',
+          child: Row(children: [
+            Icon(Icons.keyboard, size: 20), SizedBox(width: 12), Text('Keyboard Shortcuts'),
+          ]),
+        ),
+        const PopupMenuItem(
+          value: 'about',
+          child: Row(children: [
+            Icon(Icons.info_outline, size: 20), SizedBox(width: 12), Text('About'),
+          ]),
+        ),
+      ],
     );
   }
 
