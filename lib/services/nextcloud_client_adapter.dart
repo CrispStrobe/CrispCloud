@@ -840,8 +840,10 @@ class NextcloudClientAdapter extends CloudStorageClient {
         }
       }
 
-      // Finalize: tell the server we're done so it can update the file's mtime/etag
-      final finalizeUri = Uri.parse('$appBase/api/finalize/$encodedPath');
+      // Finalize: tell the server we're done so it can update the file's mtime/etag.
+      // Pass ?size=N so the server truncates if the file shrank.
+      final localSize = await dart_io.File(localPath).length();
+      final finalizeUri = Uri.parse('$appBase/api/finalize/$encodedPath?size=$localSize');
       await http.post(finalizeUri, headers: {'Authorization': authHeader});
     } finally {
       await raf.close();

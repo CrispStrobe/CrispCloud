@@ -1,139 +1,114 @@
-
 # CrispCloud
 
-**CrispCloud** is an (unofficial) cross-platform Flutter client for secure cloud storage services, supporting **Filen.io**, **Internxt**, **WebDAV**, and **SFTP** (Secure File Transfer Protocol).
+**Cross-platform dual-panel cloud file manager** built with Flutter. Open-source, privacy-first, running on macOS, Windows, Linux, Android, iOS, and Web/PWA.
 
-This client provides a **two-panel Commander-style interface** for managing your local files and your remote cloud drive side-by-side, focusing on speed, efficiency, privacy, and batch operations.
+14 cloud providers. 4468 tests. Block-level delta sync. End-to-end encryption. 9 languages.
 
-It runs natively on Desktop and Mobile, and as a **Progressive Web App (PWA)** directly in your browser.
+## Providers
 
-## ⚠️ Disclaimer
+| Provider | Features |
+|----------|----------|
+| **Filen.io** | E2E encrypted, WebCrypto on web |
+| **Internxt** | Decentralized encrypted storage |
+| **SFTP** | Native streaming, key auth |
+| **WebDAV** | Standard operations |
+| **S3** | Presigned URLs, SSE-S3/KMS/C, 8 storage classes, delta sync (Range GET) |
+| **FTP/FTPS** | Standard + TLS |
+| **Google Drive** | OAuth2, shared drives, starred files, file versions, Google Docs export (6 formats) |
+| **OneDrive / SharePoint** | Graph API, delta sync, shared libraries (SharePoint sites + drives) |
+| **Dropbox** | Shared folders, content hash, Paper docs (list + export) |
+| **Nextcloud** | Block-level delta sync (server app), chunked upload v2, ETag tracking |
+| **pCloud** | Random-access I/O (pread/pwrite), delta sync |
+| **Azure Blob** | SAS tokens, blob operations |
+| **Backblaze B2** | S3-compatible + native API |
+| **Hetzner Storage Box** | SFTP/WebDAV/FTP access |
 
-This is an unofficial, open-source project and is **not** affiliated with, endorsed by, or supported by Filen.io, Internxt, or any other storage provider. It is a personal project built for learning and to provide an alternative interface. It is a work in progress. Use it at your own risk.
+## Block-Level Delta Sync
 
-## Features
+For large files (VeraCrypt containers, disk images, databases), CrispCloud uploads only the 4 MB blocks that changed instead of the entire file.
 
-* **Provider Support:**
-    * **Filen.io:** End-to-end encrypted Upload, Download, and file management. (Web version uses WebCrypto API for higher performance).
-    * **Internxt:** Decentralized, encrypted cloud storage support.
-    * **WebDAV:** Standard operations (Requires CORS support on Web).
-    * **SFTP:** Support for standard SFTP connections (Requires WebSocket proxy on Web).
-* **Cross-Platform:** Runs on **Web (PWA)**, **macOS**, **Windows**, **Linux**, **Android**, and **iOS**.
-* **Two-Panel View:** Efficient "Commander" interface for moving files between Local and Remote.
-* **Web Virtual File System:**
-    * On the Web, the "Local" pane acts as a **Virtual Staging Area**.
-    * Supports picking entire folders (Chrome/Edge) via the File System Access API.
-    * In-memory processing for "Save As" downloads.
-* **MacOS Security Scoped Bookmarks:** Support for macOS App Sandbox permissions. The app remembers granted folder access across restarts.
-* **Resumable Operations:** Auto-login and state restoration for seamless sessions.
-* **Batch Operations:**
-    * **Recursive Upload/Download:** Transfer entire folder structures.
-    * **Queuing:** Manage multiple transfers with a progress panel.
-    * **Conflict Resolution:** Options to skip, overwrite, or rename files.
-* **File Management:** Create folders, Rename, Move, Copy, and Delete (Trash/Permanent).
-* **Search & Find:**
-    * **Deep Search:** Recursively find files within the cloud drive.
-    * **Pattern Matching:** Supports glob patterns (e.g., `*.pdf`).
-* **Keyboard Centric:** Fully navigable via keyboard shortcuts.
+- **Algorithm:** Adler-32 weak hash + SHA-256 strong hash per block
+- **Providers:** Nextcloud (via [server app](https://github.com/CrispStrobe/crispcloud-delta-sync)), pCloud (native pread/pwrite), S3 (Range GET download)
+- **Savings:** A 500 MB file with 8 MB changed = 98.4% bandwidth saved
 
-## 🌍 Important: How it works on Web
+### Desktop Client Forks
 
-The Web version (Demo available at [crisp-cloud.vercel.app](https://crisp-cloud.vercel.app/)) runs entirely in your browser sandbox, which introduces a unique workflow compared to desktop apps:
+We also maintain patched Nextcloud and ownCloud desktop clients with delta sync support, settings UI, activity display, and notifications:
 
-### 1. The "Local" Pane is Virtual
+- **[Nextcloud Desktop (delta sync)](https://github.com/CrispStrobe/nextcloud-desktop)** — [download binaries](https://github.com/CrispStrobe/nextcloud-desktop/releases/tag/delta-sync-latest) (Linux, Windows, macOS)
+- **[ownCloud Desktop (delta sync)](https://github.com/CrispStrobe/owncloud-client)** — [download binaries](https://github.com/CrispStrobe/owncloud-client/releases/tag/delta-sync-latest) (Linux, Windows, macOS)
+- **[Server App](https://github.com/CrispStrobe/crispcloud-delta-sync)** — PHP app for Nextcloud 25+ / ownCloud 10.11+, plus Dart CLI demo
 
-Browsers do not have direct access to your computer's file system (C:\ or /Home).
+## Key Features
 
-* To see files in the **Left (Local) Pane**, you must click **Open Local Folder**.
-* **Important:** Your browser might label this action as "Upload" or asking to "Upload" the directory. **This does not upload your files to the cloud.**
-* It simply grants the web app permission to *read* the file metadata (names, sizes) and "mount" that folder into the web app's memory.
-* Actual upload to the cloud only happens when you explicitly select files and click **Copy/Upload** to the Right (Remote) Pane.
-
-### 2. Browser Security Constraints
-
-* **Save/Download:** When downloading files *from* the cloud, some modern browsers (Chrome/Edge) allow saving directly to your mounted folder. Older browsers or Safari may default to your standard "Downloads" folder.
-* **WebDAV/SFTP:** Your servers must support **CORS** (Cross-Origin Resource Sharing) or use a WebSocket proxy (for SFTP) to allow connections from a browser.
+- **Two-panel Commander layout** with keyboard shortcuts, breadcrumbs, selection bar
+- **Encryption:** AES-256-GCM + Cryptomator vault support + VeraCrypt container detection
+- **Sync engine:** background sync, conflict resolution, selective sync
+- **Backup engine:** scheduled backups with versioning
+- **Preview pane:** images (zoom/pan), text/code (40+ types), markdown (rendered), PDF, video/audio
+- **Built-in editor:** edit remote files in-place (download, edit, Ctrl+S auto-upload)
+- **CLI companion** (`crisp`): headless S3/SFTP/WebDAV operations, 9 commands, shell completions
+- **Plugin system** with local REST API and automation rules
+- **FUSE mounts** for mounting remote storage as local drives
+- **9 languages:** EN, DE, FR, ES, PT, ZH, JA, KO, AR
+- **Accessibility:** 48dp touch targets on mobile, Semantics on file list items
 
 ## Getting Started
 
 ### Prerequisites
 
-* [Flutter SDK](https://flutter.dev/docs/get-started/install) (>=3.0.0)
-* A Filen.io or Internxt account, or credentials for an SFTP or WebDAV server.
+- [Flutter SDK](https://flutter.dev/docs/get-started/install) (3.44+)
 
-### Installation
+### Build and Run
 
-1. **Clone the repository:**
 ```bash
-git clone https://github.com/CrispStrobe/cloud-dart.git
-cd cloud-dart
-
-```
-
-
-2. **Get dependencies:**
-```bash
+git clone https://github.com/CrispStrobe/CrispCloud.git
+cd CrispCloud
 flutter pub get
-
+flutter run -d chrome    # Web
+flutter run -d macos     # macOS
+flutter run -d windows   # Windows
+flutter run -d linux     # Linux
 ```
 
+### Tests
 
-3. **Run the app:**
-Select your target device and run:
 ```bash
-# For Web (Chrome)
-flutter run -d chrome --release
-
-# For macOS
-flutter run -d macos
-
-# For Windows
-flutter run -d windows
-
+flutter test              # 4468 tests, 19 skipped
+flutter analyze           # 0 warnings, 0 errors
 ```
-
-
-
-## Keyboard Shortcuts
-
-The interface is designed for speed. Use these keys to navigate:
-
-| Key | Action |
-| --- | --- |
-| `Tab` | Switch between Local and Remote panels |
-| `Enter` | Open selected folder |
-| `Backspace` | Navigate to parent folder |
-| `Ctrl`/`Cmd` + `A` | Select all files in the active panel |
-| `Escape` | Clear selection in the active panel |
-| `Delete` | Delete selected items |
-| `F2` | Rename selected item |
-| `Ctrl`/`Cmd` + `N` | Create a new folder |
-| `Ctrl`/`Cmd` + `R` / `F5` | Refresh the active panel |
-| `Ctrl`/`Cmd` + `C` | Copy selected items (Local only) |
-| `Ctrl`/`Cmd` + `X` | Move selected items |
-| `Ctrl`/`Cmd` + `U` | Upload selected local items to remote |
-| `Ctrl`/`Cmd` + `D` | Download selected remote items to local |
 
 ## Architecture
 
-This project uses a modular Adapter pattern to abstract specific cloud provider APIs:
+Modular adapter pattern with provider-agnostic interfaces:
 
-* **`CloudStorageClient`**: The abstract interface defining common operations (login, list, upload, download).
-* **`FilenClientAdapter`**: Implementation using the Filen API (with WebCrypto optimization).
-* **`InternxtClientAdapter`**: Implementation for Internxt decentralized storage.
-* **`SFTPClientAdapter`**: Implementation using `dartssh2`. On Web, this uses a custom `WebSSHSocket` wrapper.
-* **`WebDAVClientAdapter`**: Implementation using `webdav_client` for generic WebDAV support.
-* **`LocalFileService`**: Abstracts file system access.
-* **Desktop/Mobile:** Uses `dart:io` and platform-specific bookmarks (macOS Security Scope).
-* **Web:** Uses a virtual in-memory file tree and `universal_html` / File System Access API.
+- **`CloudStorageClient`** — abstract interface for all 14 providers
+- **`DeltaSyncService`** — block-level diff engine (Adler-32 + SHA-256)
+- **`TransferQueue`** — concurrent transfers with exponential backoff retry
+- **`SyncEngine`** — background sync with conflict resolution
+- **`PanelProvider`** — dual-panel state management (Riverpod)
 
+See [PLAN.md](PLAN.md) for the full roadmap (365/393 items done).
 
-### Known Limitations
+## Keyboard Shortcuts
 
-* **Large Files (Web):** The current architecture reads files into memory (`Uint8List`) before uploading. This may cause crashes when uploading files larger than the available browser tab RAM (typically 2GB-4GB).
+| Key | Action |
+|-----|--------|
+| `Tab` | Switch panels |
+| `Enter` | Open folder / execute file |
+| `Backspace` | Parent folder |
+| `Ctrl+A` | Select all |
+| `Ctrl+C` / `F5` | Copy |
+| `Ctrl+X` / `F6` | Move |
+| `F2` | Rename |
+| `F7` | New folder |
+| `F8` / `Delete` | Delete |
+| `Ctrl+F` / `Alt+F7` | Search |
+| `Space` | Select + advance cursor |
+| `Ctrl+Q` | Swap panels |
 
-## 📄 License
+## License
 
-This project is licensed under the **GNU Affero General Public License v3.0**. See the `LICENSE` file for details.
+AGPL-3.0. See [LICENSE](LICENSE).
 
-This app is not affiliated with Filen.io, Internxt, or any other cloud/storage provider. All trademarks and brand names belong to their respective owners.
+Not affiliated with any cloud provider. All trademarks belong to their respective owners.
