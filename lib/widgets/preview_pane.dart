@@ -27,7 +27,7 @@ import 'package:flutter_highlight/themes/monokai-sublime.dart';
 import 'package:flutter_highlight/themes/github.dart';
 
 /// File types we can preview inline.
-enum PreviewType { image, svg, text, markdown, pdf, video, audio, office, none }
+enum PreviewType { image, svg, text, markdown, csv, pdf, video, audio, office, none }
 
 PreviewType _classifyFile(String name) {
   final ext = name.split('.').last.toLowerCase();
@@ -73,6 +73,8 @@ PreviewType _classifyFile(String name) {
     case 'yml':
     case 'xml':
     case 'csv':
+    case 'tsv':
+      return PreviewType.csv;
     case 'log':
     case 'ini':
     case 'cfg':
@@ -375,7 +377,7 @@ class _PreviewPaneState extends ConsumerState<PreviewPane> {
           _textContent = '(Could not extract text from this document)';
         }
         setState(() => _loading = false);
-      } else if (type == PreviewType.text || type == PreviewType.markdown) {
+      } else if (type == PreviewType.csv || type == PreviewType.text || type == PreviewType.markdown) {
         // Decode as text (UTF-8 with fallback)
         try {
           _textContent = String.fromCharCodes(bytes);
@@ -602,12 +604,63 @@ class _PreviewPaneState extends ConsumerState<PreviewPane> {
       );
     }
 
-    // PDF preview
+    // PDF preview with page controls
     if (_pdfController != null) {
-      return PdfView(
-        controller: _pdfController!,
-        scrollDirection: Axis.vertical,
-        pageSnapping: false,
+      return Column(
+        children: [
+          Expanded(
+            child: PdfView(
+              controller: _pdfController!,
+              scrollDirection: Axis.vertical,
+              pageSnapping: false,
+            ),
+          ),
+          Container(
+            padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+            decoration: BoxDecoration(
+              color: theme.colorScheme.surfaceContainerHighest,
+              border: Border(top: BorderSide(color: theme.dividerColor)),
+            ),
+            child: Row(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                IconButton(
+                  icon: const Icon(Icons.first_page, size: 20),
+                  tooltip: 'First page',
+                  onPressed: () => _pdfController!.jumpToPage(1),
+                ),
+                IconButton(
+                  icon: const Icon(Icons.chevron_left, size: 20),
+                  tooltip: 'Previous page',
+                  onPressed: () {
+                    final current = _pdfController!.page;
+                    if (current > 1) _pdfController!.jumpToPage(current - 1);
+                  },
+                ),
+                PdfPageNumber(
+                  controller: _pdfController!,
+                  builder: (_, page, total, __) => Text(
+                    '$page / $total',
+                    style: TextStyle(fontSize: 12, color: theme.colorScheme.onSurfaceVariant),
+                  ),
+                ),
+                IconButton(
+                  icon: const Icon(Icons.chevron_right, size: 20),
+                  tooltip: 'Next page',
+                  onPressed: () {
+                    final current = _pdfController!.page;
+                    _pdfController!.jumpToPage(current + 1);
+                  },
+                ),
+                IconButton(
+                  icon: const Icon(Icons.last_page, size: 20),
+                  tooltip: 'Last page',
+                  onPressed: () => _pdfController!.jumpToPage(_pdfController!.pagesCount ?? 1),
+                ),
+              ],
+            ),
+          ),
+        ],
       );
     }
 
@@ -623,6 +676,11 @@ class _PreviewPaneState extends ConsumerState<PreviewPane> {
         controller: _videoController!,
         isAudio: _classifyFile(file.name) == PreviewType.audio,
       );
+    }
+
+    // CSV/TSV table preview
+    if (_textContent != null && _classifyFile(file.name) == PreviewType.csv) {
+      return _CsvTableView(content: _textContent!, filename: file.name);
     }
 
     // Markdown preview
@@ -890,6 +948,70 @@ class _MediaPlayerState extends State<_MediaPlayer> {
           ),
         ),
       ],
+    );
+  }
+}
+
+/// Web-only media player — opens blob URL in browser tab for playback.
+/// CSV/TSV table preview widget.
+class _CsvTableView extends StatelessWidget {
+  final String content;
+  final String filename;
+
+  const _CsvTableView({required this.content, required this.filename});
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final isTsv = filename.toLowerCase().endsWith('.tsv');
+    final separator = isTsv ? '\t' : ',';
+
+    final lines = content.split('\n').where((l) => l.trim().isNotEmpty).toList();
+    if (lines.isEmpty) {
+      return const Center(child: Text('Empty file'));
+    }
+
+    // Parse rows — simple split (doesn't handle quoted commas, but works for most CSVs).
+    final rows = lines.map((line) => line.split(separator)).toList();
+    final headerRow = rows.first;
+    final dataRows = rows.length > 1 ? rows.sublist(1) : <List<String>>[];
+    final colCount = headerRow.length;
+
+    return Container(
+      color: theme.colorScheme.surfaceContainerLowest,
+      child: SingleChildScrollView(
+        scrollDirection: Axis.horizontal,
+        child: SingleChildScrollView(
+          child: DataTable(
+            headingRowHeight: 36,
+            dataRowMinHeight: 28,
+            dataRowMaxHeight: 40,
+            columnSpacing: 16,
+            horizontalMargin: 12,
+            headingTextStyle: TextStyle(
+              fontWeight: FontWeight.bold,
+              fontSize: 12,
+              color: theme.colorScheme.primary,
+            ),
+            dataTextStyle: const TextStyle(fontSize: 11),
+            columns: List.generate(
+              colCount,
+              (i) => DataColumn(label: Text(headerRow[i].trim())),
+            ),
+            rows: dataRows.take(500).map((row) {
+              return DataRow(
+                cells: List.generate(
+                  colCount,
+                  (i) => DataCell(Text(
+                    i < row.length ? row[i].trim() : '',
+                    overflow: TextOverflow.ellipsis,
+                  )),
+                ),
+              );
+            }).toList(),
+          ),
+        ),
+      ),
     );
   }
 }
