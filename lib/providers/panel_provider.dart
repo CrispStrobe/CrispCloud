@@ -446,6 +446,10 @@ class PanelNotifier extends ChangeNotifier {
     if (isInArchive) {
       return '${_archiveSource!.archiveName}:/${_archiveSource!.innerPath}';
     }
+    // Check the panel source — if it's local, use the local file service path
+    // regardless of which side this panel is on.
+    final source = _ref.read(panelSourceProvider(side));
+    if (source.isLocal) return _localFileService.currentPath;
     if (side == PanelSide.local) return _localFileService.currentPath;
     return _remotePath;
   }
