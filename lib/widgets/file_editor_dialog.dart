@@ -268,6 +268,7 @@ class _FileEditorPageState extends ConsumerState<_FileEditorPage> {
   }
 
   Future<void> _loadFile() async {
+    debugPrint('[Editor] loadFile: ${widget.file.name} side=${widget.side.name} web=$kIsWeb');
     try {
       final client = ref.read(authProvider).client;
       Uint8List bytes;

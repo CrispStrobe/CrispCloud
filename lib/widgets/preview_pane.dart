@@ -279,6 +279,7 @@ class _PreviewPaneState extends ConsumerState<PreviewPane> {
 
   void _loadPreview() {
     final file = widget.file;
+    debugPrint('[Preview] loadPreview: ${file?.name} side=${widget.side.name} type=${file != null ? _classifyFile(file.name).name : "null"}');
     _previewBytes = null;
     _textContent = null;
     _pdfController?.dispose();

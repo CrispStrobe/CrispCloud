@@ -26,6 +26,9 @@ class _PointerModifiers {
     shiftPressed = HardwareKeyboard.instance.isShiftPressed;
     ctrlOrMetaPressed = HardwareKeyboard.instance.isControlPressed ||
         HardwareKeyboard.instance.isMetaPressed;
+    if (shiftPressed || ctrlOrMetaPressed) {
+      debugPrint('[PointerModifiers] shift=$shiftPressed ctrl/meta=$ctrlOrMetaPressed');
+    }
   }
 }
 

@@ -300,6 +300,7 @@ void showCopyDialogFromSelection(BuildContext context, WidgetRef ref) {
 
   // On web: if the opposite panel has a local folder open, copy there.
   // Otherwise download via browser.
+  debugPrint('[Copy] showCopyDialogFromSelection: ${panel.selection.length} items, web=$kIsWeb, side=${activePanel.name}');
   if (kIsWeb && activePanel == PanelSide.local) {
     final opposite = activePanel == PanelSide.local ? PanelSide.remote : PanelSide.local;
     final oppositePanel = ref.read(panelProvider(opposite));

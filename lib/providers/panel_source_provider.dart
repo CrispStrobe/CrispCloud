@@ -7,6 +7,7 @@
 //   • availableSourcesProvider    — list of selectable sources for the dropdown
 //   • activeFKeyContextProvider   — FKeyContext for the currently active panel
 
+import 'package:flutter/foundation.dart' show debugPrint;
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
@@ -228,6 +229,11 @@ final activeFKeyContextProvider = Provider<FKeyContext?>((ref) {
   // Read selection from the panel notifier.
   final panel = ref.watch(panelProvider(activePanel));
   final selected = panel.selection.toList();
+
+  if (selected.isNotEmpty) {
+    debugPrint('[FKeyContext] rebuilt: ${selected.length} selected, '
+        'hasSingleFile=${selected.length == 1 && !selected.first.isFolder}');
+  }
 
   return FKeyContext(
     activePanel: activeSrc,

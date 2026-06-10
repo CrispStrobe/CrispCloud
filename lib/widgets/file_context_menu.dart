@@ -66,6 +66,7 @@ Future<void> openWithSystemEditor(BuildContext context, String path) async {
 }
 
 void showFileContextMenu(BuildContext context, WidgetRef ref, PanelSide side, FileItem file, Offset position) {
+  debugPrint('[ContextMenu] file=${file.name} side=${side.name} web=$kIsWeb');
   final panel = ref.read(panelProvider(side));
   final selection = panel.selection;
 

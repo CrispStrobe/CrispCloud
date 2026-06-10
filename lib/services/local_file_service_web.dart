@@ -263,6 +263,7 @@ class WebFileService implements LocalFileService {
 
   @override
   Future<Uint8List> readFile(String path, {FileItem? fileItem}) async {
+    debugPrint('[WebFS] readFile: $path (refs=${_fileRefs.containsKey(path)}, handles=${_dirHandles.length})');
     // Try direct lookup first.
     var fileRef = _fileRefs[path];
 
@@ -336,6 +337,7 @@ class WebFileService implements LocalFileService {
 
   @override
   Future<void> deleteEntry(String path, bool isFolder) async {
+    debugPrint('[WebFS] deleteEntry: $path isFolder=$isFolder');
     final dirPath = p.dirname(path);
     final name = p.basename(path);
 

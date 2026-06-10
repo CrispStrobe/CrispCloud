@@ -132,6 +132,7 @@ class PanelNotifier extends ChangeNotifier {
     // Listen for panel source changes (e.g. user switches provider in dropdown).
     _ref.listen<PanelSource>(panelSourceProvider(side), (prev, next) {
       if (prev == next) return;
+      _log.info('Source switched: ${prev?.displayName} → ${next.displayName} (path=${next.currentPath})');
       if (next.isLocal) {
         _localFileService.currentPath = next.currentPath;
         _loadLocalFiles();
@@ -303,6 +304,7 @@ class PanelNotifier extends ChangeNotifier {
     final parentSource = side == PanelSide.local
         ? LocalPanelSource(currentPath)
         : LocalPanelSource(currentPath);
+    _log.info('enterArchive: $archivePath');
     _archiveSource = const PanelSourceService().enterArchive(archivePath, parentSource);
 
     // On web, load archive bytes into memory for browsing.
@@ -518,6 +520,7 @@ class PanelNotifier extends ChangeNotifier {
   bool isSelected(FileItem item) => _selection.contains(item);
 
   void toggleSelection(FileItem item, {bool shiftKey = false, bool ctrlKey = false}) {
+    _log.debug('toggleSelection: ${item.name} shift=$shiftKey ctrl=$ctrlKey lastSelected=${_lastSelected?.name}');
     // Sync cursor to clicked item
     if (_files != null) {
       final idx = _files!.indexOf(item);
@@ -831,6 +834,7 @@ class PanelNotifier extends ChangeNotifier {
   }
 
   Future<void> navigateToPath(String path, {FileItem? selectItem}) async {
+    _log.info('navigateToPath: $path (side=$side, web=$kIsWeb)');
     _selection.clear();
     _lastSelected = null;
     if (_isTypeahead) { _filterQuery = ''; _isTypeahead = false; }
@@ -880,6 +884,7 @@ class PanelNotifier extends ChangeNotifier {
   }
 
   Future<void> navigateInto(FileItem item) async {
+    _log.info('navigateInto: ${item.name} isFolder=${item.isFolder} path=${item.path}');
     // If we're inside an archive, navigate within it
     if (isInArchive) {
       if (item.isFolder && item.path != null) {
@@ -926,6 +931,7 @@ class PanelNotifier extends ChangeNotifier {
 
   // --- File operations (local panel helpers) ---
   Future<void> deleteFiles(List<FileItem> files) async {
+    _log.info('deleteFiles: ${files.length} items (web=$kIsWeb, side=$side)');
     final errors = _ref.read(errorProvider);
     final audit = _ref.read(auditServiceProvider);
     final actionHistory = _ref.read(actionHistoryProvider.notifier);

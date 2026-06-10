@@ -630,9 +630,11 @@ class _FileBrowserScreenState extends ConsumerState<FileBrowserScreen> {
           case 'cache':
             showCacheSettingsDialog(context, ref);
           case 'dual_panel':
+            debugPrint('[Layout] dual_panel toggled → ${!ref.read(showDualPanelProvider)}');
             ref.read(showDualPanelProvider.notifier).state =
                 !ref.read(showDualPanelProvider);
           case 'tree':
+            debugPrint('[Layout] tree toggled → ${!ref.read(showTreeSidebarProvider)}');
             ref.read(showTreeSidebarProvider.notifier).state =
                 !ref.read(showTreeSidebarProvider);
           case 'grid_toggle':
@@ -786,6 +788,7 @@ class _FileBrowserScreenState extends ConsumerState<FileBrowserScreen> {
   }
 
   void _handleFKeyAction(BuildContext context, WidgetRef ref, FKeyAction action) {
+    debugPrint('[FKey] action=${action.name} panel=${ref.read(activePanelProvider).name}');
     switch (action) {
       case FKeyAction.view:
         viewSelectedFile(context, ref);
