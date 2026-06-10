@@ -7,6 +7,7 @@
 import 'dart:io';
 import 'dart:typed_data';
 import 'package:flutter/foundation.dart' show kIsWeb;
+import 'package:universal_html/html.dart' as html;
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:path_provider/path_provider.dart';
@@ -115,6 +116,25 @@ PreviewType _classifyFile(String name) {
   }
 }
 
+String _mimeTypeForExt(String ext) {
+  return switch (ext) {
+    'mp3' => 'audio/mpeg',
+    'wav' => 'audio/wav',
+    'aac' => 'audio/aac',
+    'flac' => 'audio/flac',
+    'ogg' => 'audio/ogg',
+    'm4a' => 'audio/mp4',
+    'wma' => 'audio/x-ms-wma',
+    'opus' => 'audio/opus',
+    'mp4' => 'video/mp4',
+    'webm' => 'video/webm',
+    'mov' => 'video/quicktime',
+    'avi' => 'video/x-msvideo',
+    'mkv' => 'video/x-matroska',
+    _ => 'application/octet-stream',
+  };
+}
+
 class PreviewPane extends ConsumerStatefulWidget {
   final FileItem? file;
   final PanelSide side;
@@ -134,6 +154,7 @@ class _PreviewPaneState extends ConsumerState<PreviewPane> {
   String? _textContent;
   PdfController? _pdfController;
   VideoPlayerController? _videoController;
+  String? _mediaBlobUrl; // Web: blob URL for HTML5 audio/video
   bool _loading = false;
   String? _error;
   FileItem? _loadedFile; // track which file we loaded
@@ -168,6 +189,7 @@ class _PreviewPaneState extends ConsumerState<PreviewPane> {
     _pdfController = null;
     _videoController?.dispose();
     _videoController = null;
+    _mediaBlobUrl = null;
     _error = null;
     _loadedFile = file;
 
@@ -316,9 +338,13 @@ class _PreviewPaneState extends ConsumerState<PreviewPane> {
       if (!mounted || _loadedFile != file) return;
 
       if (kIsWeb) {
-        // Web: can't write to temp file, show metadata instead
+        // Web: create blob URL for HTML5 audio/video element
+        final ext = file.name.split('.').last.toLowerCase();
+        final mimeType = _mimeTypeForExt(ext);
+        final blob = html.Blob([bytes], mimeType);
+        final blobUrl = html.Url.createObjectUrlFromBlob(blob);
         setState(() {
-          _error = 'Media preview not supported on web. Download to play.';
+          _mediaBlobUrl = blobUrl;
           _loading = false;
         });
         return;
@@ -489,7 +515,13 @@ class _PreviewPaneState extends ConsumerState<PreviewPane> {
       );
     }
 
-    // Video/Audio preview
+    // Web media preview via blob URL
+    if (_mediaBlobUrl != null) {
+      final isAudio = _classifyFile(file.name) == PreviewType.audio;
+      return _WebMediaPlayer(blobUrl: _mediaBlobUrl!, isAudio: isAudio);
+    }
+
+    // Video/Audio preview (native)
     if (_videoController != null) {
       return _MediaPlayer(
         controller: _videoController!,
@@ -745,6 +777,39 @@ class _MediaPlayerState extends State<_MediaPlayer> {
           ),
         ),
       ],
+    );
+  }
+}
+
+/// Web-only media player — opens blob URL in browser tab for playback.
+class _WebMediaPlayer extends StatelessWidget {
+  final String blobUrl;
+  final bool isAudio;
+
+  const _WebMediaPlayer({required this.blobUrl, this.isAudio = false});
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    return Center(
+      child: Column(
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          Icon(
+            isAudio ? Icons.music_note : Icons.videocam,
+            size: 64,
+            color: theme.colorScheme.primary,
+          ),
+          const SizedBox(height: 16),
+          ElevatedButton.icon(
+            icon: const Icon(Icons.play_arrow),
+            label: Text(isAudio ? 'Play Audio' : 'Play Video'),
+            onPressed: () {
+              html.window.open(blobUrl, '_blank');
+            },
+          ),
+        ],
+      ),
     );
   }
 }
