@@ -8,6 +8,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../models/panel_side.dart';
 import '../providers/providers.dart';
+import '../l10n/app_localizations.dart';
 import '../utils/formatters.dart';
 
 class StatusBar extends ConsumerStatefulWidget {
@@ -44,6 +45,7 @@ class _StatusBarState extends ConsumerState<StatusBar> {
 
   @override
   Widget build(BuildContext context) {
+    final l = AppLocalizations.of(context)!;
     final auth = ref.watch(authProvider);
     final activePanel = ref.watch(activePanelProvider);
     final transfers = ref.watch(transferProvider);
@@ -88,7 +90,7 @@ class _StatusBarState extends ConsumerState<StatusBar> {
           ),
           const SizedBox(width: 6),
           Text(
-            auth.isConnected ? auth.providerName : 'Disconnected',
+            auth.isConnected ? auth.providerName : l.disconnected,
             style: style.copyWith(fontWeight: FontWeight.w500),
           ),
 
@@ -127,8 +129,8 @@ class _StatusBarState extends ConsumerState<StatusBar> {
           // Item count + cursor position (DC-style "15 / 169")
           Text(
             panel.filterQuery.isNotEmpty
-                ? '$itemCount / $totalCount items'
-                : '$itemCount items',
+                ? '$itemCount / ${l.nItems(totalCount)}'
+                : l.nItems(itemCount),
             style: style,
           ),
           if (panel.cursorIndex >= 0 && itemCount > 0) ...[
@@ -146,7 +148,7 @@ class _StatusBarState extends ConsumerState<StatusBar> {
             Text('•', style: style),
             const SizedBox(width: 8),
             Text(
-              '$selectedCount selected${selectedSize > 0 ? ' (${formatBytes(selectedSize)})' : ''}',
+              '${l.nSelected(selectedCount)}${selectedSize > 0 ? ' (${formatBytes(selectedSize)})' : ''}',
               style: style.copyWith(color: theme.colorScheme.primary, fontWeight: FontWeight.w500),
             ),
           ],
@@ -163,7 +165,7 @@ class _StatusBarState extends ConsumerState<StatusBar> {
               ),
             ),
             const SizedBox(width: 6),
-            Text('$activeOps transfer${activeOps > 1 ? 's' : ''}', style: style),
+            Text(l.nTransfers(activeOps), style: style),
             if (totalSize > 0) ...[
               const SizedBox(width: 4),
               Text('${formatBytes(totalTransferred)} / ${formatBytes(totalSize)}', style: style),
@@ -180,7 +182,7 @@ class _StatusBarState extends ConsumerState<StatusBar> {
               child: CircularProgressIndicator(strokeWidth: 1.5, color: theme.colorScheme.tertiary),
             ),
             const SizedBox(width: 6),
-            Text('Syncing${sync.currentPairName != null ? ' ${sync.currentPairName}' : ''}...', style: style),
+            Text('${l.syncing}${sync.currentPairName != null ? ' ${sync.currentPairName}' : ''}...', style: style),
             const SizedBox(width: 16),
             Container(width: 1, height: 14, color: theme.dividerColor),
             const SizedBox(width: 16),
@@ -188,7 +190,7 @@ class _StatusBarState extends ConsumerState<StatusBar> {
             const Icon(Icons.sync_alt, size: 14, color: Colors.green),
             const SizedBox(width: 4),
             Text(
-              'Last sync: ${sync.lastResult!.uploaded + sync.lastResult!.downloaded} changes',
+              l.lastSyncChanges(sync.lastResult!.uploaded + sync.lastResult!.downloaded),
               style: style,
             ),
             const SizedBox(width: 16),
@@ -197,7 +199,7 @@ class _StatusBarState extends ConsumerState<StatusBar> {
           ] else if (sync.pairs.isNotEmpty) ...[
             Icon(Icons.sync, size: 14, color: color),
             const SizedBox(width: 4),
-            Text('${sync.pairs.length} pair${sync.pairs.length > 1 ? 's' : ''}', style: style),
+            Text(l.nPairs(sync.pairs.length), style: style),
             const SizedBox(width: 16),
             Container(width: 1, height: 14, color: theme.dividerColor),
             const SizedBox(width: 16),
@@ -223,7 +225,7 @@ class _StatusBarState extends ConsumerState<StatusBar> {
           if (isLocal && panel.showHiddenFiles) ...[
             Icon(Icons.visibility, size: 14, color: theme.colorScheme.secondary),
             const SizedBox(width: 4),
-            Text('Hidden', style: style.copyWith(
+            Text(l.hidden, style: style.copyWith(
                 color: theme.colorScheme.secondary, fontSize: 11)),
             const SizedBox(width: 8),
           ],
@@ -239,10 +241,10 @@ class _StatusBarState extends ConsumerState<StatusBar> {
 
           Icon(isLocal ? Icons.folder : Icons.cloud, size: 14, color: color),
           const SizedBox(width: 4),
-          Text(isLocal ? 'Local' : 'Remote', style: style),
+          Text(isLocal ? l.local : l.remote, style: style),
           if (isLocal && panel.freeBytes != null) ...[
             const SizedBox(width: 8),
-            Text('Free: ${formatBytes(panel.freeBytes!)}',
+            Text(l.free(formatBytes(panel.freeBytes!)),
                 style: style.copyWith(fontSize: 11)),
           ],
         ],

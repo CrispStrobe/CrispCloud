@@ -524,4 +524,358 @@ class AppLocalizationsDe extends AppLocalizations {
 
   @override
   String get compareProviders => 'Anbieter vergleichen';
+
+  @override
+  String get singlePanel => 'Einzelansicht';
+
+  @override
+  String get dualPanel => 'Doppelansicht';
+
+  @override
+  String get showTreeSidebar => 'Baumansicht anzeigen';
+
+  @override
+  String get hideTreeSidebar => 'Baumansicht ausblenden';
+
+  @override
+  String get detailsList => 'Detailliste';
+
+  @override
+  String get largeItems => 'Grosse Eintraege';
+
+  @override
+  String get compactItems => 'Kompakte Eintraege';
+
+  @override
+  String get showPreview => 'Vorschau anzeigen';
+
+  @override
+  String get hidePreview => 'Vorschau ausblenden';
+
+  @override
+  String get showTerminal => 'Terminal anzeigen';
+
+  @override
+  String get hideTerminal => 'Terminal ausblenden';
+
+  @override
+  String get moreActions => 'Weitere Aktionen';
+
+  @override
+  String get mountAsDrive => 'Als Laufwerk einbinden';
+
+  @override
+  String get auditLog => 'Protokoll';
+
+  @override
+  String get systemLog => 'Systemprotokoll';
+
+  @override
+  String get cacheSettings => 'Cache-Einstellungen';
+
+  @override
+  String get keyboardShortcuts => 'Tastaturkuerzel';
+
+  @override
+  String get swapPanels => 'Fenster tauschen';
+
+  @override
+  String get connectToCloud => 'Mit Cloud verbinden';
+
+  @override
+  String browseProvider(String provider) {
+    return '$provider durchsuchen';
+  }
+
+  @override
+  String get pleaseConnectRemote =>
+      'Bitte verbinden Sie sich, um auf Remote-Dateien zuzugreifen';
+
+  @override
+  String get notConnected => 'Nicht verbunden';
+
+  @override
+  String get connectToCloudShort => 'Mit Cloud verbinden';
+
+  @override
+  String get loggedIn => 'Angemeldet';
+
+  @override
+  String get localFiles => 'Lokale Dateien';
+
+  @override
+  String get remoteFiles => 'Remote-Dateien';
+
+  @override
+  String get bookmarkFolder => 'Aktuellen Ordner als Lesezeichen speichern';
+
+  @override
+  String get noFolders => 'Keine Ordner';
+
+  @override
+  String get selectFileToPreview => 'Datei zur Vorschau auswaehlen';
+
+  @override
+  String fileTooLarge(String size) {
+    return 'Datei zu gross fuer Vorschau ($size)';
+  }
+
+  @override
+  String previewFailed(String error) {
+    return 'Vorschau fehlgeschlagen: $error';
+  }
+
+  @override
+  String get firstPage => 'Erste Seite';
+
+  @override
+  String get previousPage => 'Vorherige Seite';
+
+  @override
+  String get nextPage => 'Naechste Seite';
+
+  @override
+  String get lastPage => 'Letzte Seite';
+
+  @override
+  String get playAudio => 'Audio abspielen';
+
+  @override
+  String get playVideo => 'Video abspielen';
+
+  @override
+  String get emptyFile => 'Leere Datei';
+
+  @override
+  String systemLogTitle(int count) {
+    return 'Systemprotokoll ($count Eintraege)';
+  }
+
+  @override
+  String get minimumLevel => 'Mindestlevel';
+
+  @override
+  String get pauseAutoScroll => 'Auto-Scroll pausieren';
+
+  @override
+  String get resumeAutoScroll => 'Auto-Scroll fortsetzen';
+
+  @override
+  String get copyVisible => 'Sichtbare kopieren';
+
+  @override
+  String get copyAll => 'Alle kopieren';
+
+  @override
+  String get filterLogs => 'Protokoll filtern...';
+
+  @override
+  String get visibleLinesCopied => 'Sichtbare Zeilen kopiert';
+
+  @override
+  String get allLogsCopied => 'Alle Protokolle kopiert';
+
+  @override
+  String get open => 'Oeffnen';
+
+  @override
+  String get editSystemEditor => 'Bearbeiten (Systemeditor)';
+
+  @override
+  String get editBuiltIn => 'Bearbeiten (integriert)';
+
+  @override
+  String get openWithSystemApp => 'Mit System-App oeffnen';
+
+  @override
+  String get verifyAgainstRemote => 'Mit Remote vergleichen';
+
+  @override
+  String get browseArchive => 'Archiv durchsuchen';
+
+  @override
+  String get archiveExtracted => 'Archiv erfolgreich entpackt';
+
+  @override
+  String get revealInFinder => 'Im Finder zeigen';
+
+  @override
+  String get showInExplorer => 'Im Explorer anzeigen';
+
+  @override
+  String get openContainingFolder => 'Enthaltenden Ordner oeffnen';
+
+  @override
+  String get properties => 'Eigenschaften';
+
+  @override
+  String get copyNames => 'Name(n) kopieren';
+
+  @override
+  String get copyPaths => 'Pfad(e) kopieren';
+
+  @override
+  String get createMd5 => '.md5-Datei erstellen';
+
+  @override
+  String get verifyChecksumFile => 'Pruefsummen-Datei ueberpruefen';
+
+  @override
+  String get splitFile => 'Datei aufteilen';
+
+  @override
+  String get combineParts => 'Teile zusammenfuegen';
+
+  @override
+  String get createLink => 'Verknuepfung erstellen...';
+
+  @override
+  String get secureWipe => 'Sicher loeschen';
+
+  @override
+  String confirmDeleteBody(int count) {
+    return 'Sind Sie sicher, dass Sie $count Element(e) loeschen moechten?';
+  }
+
+  @override
+  String totalSize(String size) {
+    return 'Gesamtgroesse: $size';
+  }
+
+  @override
+  String get cannotBeUndone =>
+      'Diese Aktion kann nicht rueckgaengig gemacht werden.';
+
+  @override
+  String nItems(int count) {
+    return '$count Eintraege';
+  }
+
+  @override
+  String nTransfers(int count) {
+    return '$count Transfer(s)';
+  }
+
+  @override
+  String get syncing => 'Synchronisiere';
+
+  @override
+  String lastSyncChanges(int count) {
+    return 'Letzte Sync: $count Aenderungen';
+  }
+
+  @override
+  String nPairs(int count) {
+    return '$count Paar(e)';
+  }
+
+  @override
+  String get hidden => 'Versteckt';
+
+  @override
+  String free(String size) {
+    return 'Frei: $size';
+  }
+
+  @override
+  String get aboutLegal => 'Info / Rechtliches';
+
+  @override
+  String get appDescription =>
+      'Ein inoffizieller, quelloffener Client fuer Filen.io, SFTP & WebDAV.';
+
+  @override
+  String get serviceProvider => 'Dienstanbieter';
+
+  @override
+  String get contact => 'Kontakt';
+
+  @override
+  String get disclaimer => 'Haftungsausschluss';
+
+  @override
+  String get disclaimerText =>
+      'Diese Software wird \"wie besehen\" bereitgestellt, ohne jegliche Garantie. Diese App ist nicht mit Filen.io oder einem anderen Cloud-Anbieter verbunden.';
+
+  @override
+  String get sourceCode => 'Quellcode (GitHub)';
+
+  @override
+  String get website => 'Webseite';
+
+  @override
+  String get viewLicenses => 'Open-Source-Lizenzen anzeigen';
+
+  @override
+  String get flatView => 'Flache Ansicht (alle Unterordner)';
+
+  @override
+  String get exitFlatView => 'Flache Ansicht beenden';
+
+  @override
+  String get showHiddenFiles => 'Versteckte Dateien anzeigen';
+
+  @override
+  String get hideHiddenFiles => 'Versteckte Dateien ausblenden';
+
+  @override
+  String get touchFriendlyView => 'Zur Touch-Ansicht wechseln';
+
+  @override
+  String get compactView => 'Zur kompakten Ansicht wechseln';
+
+  @override
+  String get sort => 'Sortieren';
+
+  @override
+  String get secondarySort => 'Sekundaere Sortierung';
+
+  @override
+  String get none => 'Keine';
+
+  @override
+  String get byName => 'nach Name';
+
+  @override
+  String get bySize => 'nach Groesse';
+
+  @override
+  String get byDate => 'nach Datum';
+
+  @override
+  String get enterPath => 'Pfad eingeben...';
+
+  @override
+  String get editPath => 'Pfad bearbeiten';
+
+  @override
+  String get searchResults => 'Suchergebnisse';
+
+  @override
+  String nFiles(int count) {
+    return '$count Datei(en)';
+  }
+
+  @override
+  String copyNItems(int count) {
+    return '$count Element(e) kopieren';
+  }
+
+  @override
+  String moveNItems(int count) {
+    return '$count Element(e) verschieben';
+  }
+
+  @override
+  String get targetPath => 'Zielpfad';
+
+  @override
+  String saved(String name) {
+    return '$name gespeichert';
+  }
+
+  @override
+  String saveFailed(String error) {
+    return 'Speichern fehlgeschlagen: $error';
+  }
 }

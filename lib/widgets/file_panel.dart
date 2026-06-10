@@ -20,6 +20,7 @@ import 'file_tree_view_stub.dart'
     if (dart.library.io) 'file_tree_view.dart';
 import 'drive_bar.dart';
 import 'panel_tab_bar.dart';
+import '../l10n/app_localizations.dart';
 import '../screens/screen_dialogs.dart' show showConnectionDialogScreen;
 
 class FilePanel extends ConsumerStatefulWidget {
@@ -88,25 +89,26 @@ class _FilePanelState extends ConsumerState<FilePanel> {
     // Web/empty state: show action buttons instead of spinner
     if (kIsWeb && (files == null || files.isEmpty) && !panel.isLoading) {
       final auth = ref.watch(authProvider);
+      final l = AppLocalizations.of(context)!;
       return Center(
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
             Icon(Icons.folder_open, size: 64, color: Theme.of(context).colorScheme.primary),
             const SizedBox(height: 16),
-            const Text('No folder selected'),
+            Text(l.noFolderSelected),
             const SizedBox(height: 12),
             ElevatedButton.icon(
               icon: const Icon(Icons.folder_open),
               onPressed: () => panel.pickLocalDirectory(),
-              label: const Text('Open Local Folder'),
+              label: Text(l.openLocalFolder),
             ),
             const SizedBox(height: 8),
             if (!auth.isConnected)
               OutlinedButton.icon(
                 icon: const Icon(Icons.cloud),
                 onPressed: () => showConnectionDialogScreen(context),
-                label: const Text('Connect to Cloud'),
+                label: Text(l.connectToCloud),
               )
             else
               OutlinedButton.icon(
@@ -121,7 +123,7 @@ class _FilePanelState extends ConsumerState<FilePanel> {
                     ),
                   );
                 },
-                label: Text('Browse ${auth.providerName}'),
+                label: Text(l.browseProvider(auth.providerName)),
               ),
           ],
         ),
@@ -387,7 +389,7 @@ class _FilePanelState extends ConsumerState<FilePanel> {
                                 children: [
                                   Icon(Icons.upload_file, size: 64, color: Theme.of(context).colorScheme.primary),
                                   const SizedBox(height: 16),
-                                  Text('Drop files here to upload', style: Theme.of(context).textTheme.titleMedium),
+                                  Text(AppLocalizations.of(context)!.dropFilesToUpload, style: Theme.of(context).textTheme.titleMedium),
                                 ],
                               )
                             : widget.side == PanelSide.remote && !ref.read(authProvider).isConnected
@@ -397,18 +399,18 @@ class _FilePanelState extends ConsumerState<FilePanel> {
                                       Icon(Icons.cloud_off, size: 56,
                                           color: Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.3)),
                                       const SizedBox(height: 12),
-                                      Text('Not connected',
+                                      Text(AppLocalizations.of(context)!.notConnected,
                                           style: Theme.of(context).textTheme.titleMedium?.copyWith(
                                               color: Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.5))),
                                       const SizedBox(height: 16),
                                       ElevatedButton.icon(
                                         icon: const Icon(Icons.login, size: 18),
-                                        label: const Text('Connect to cloud'),
+                                        label: Text(AppLocalizations.of(context)!.connectToCloudShort),
                                         onPressed: () => showConnectionDialogScreen(context),
                                       ),
                                     ],
                                   )
-                                : const Text('Empty folder'),
+                                : Text(AppLocalizations.of(context)!.emptyFolder),
                       )
                     // Pull-to-refresh on mobile, with type-ahead overlay
                     : Stack(

@@ -35,6 +35,7 @@ import '../widgets/multi_cloud_dialog.dart';
 import '../widgets/mount_dialog.dart';
 import '../widgets/sync_dialog.dart';
 import '../widgets/tree_sidebar.dart';
+import '../l10n/app_localizations.dart';
 import '../widgets/lock_screen.dart';
 import '../widgets/command_palette.dart';
 import '../widgets/terminal_panel.dart';
@@ -58,6 +59,7 @@ class _FileBrowserScreenState extends ConsumerState<FileBrowserScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final l = AppLocalizations.of(context)!;
     final auth = ref.watch(authProvider);
     final showPreview = ref.watch(showPreviewProvider);
     // layoutPresetProvider kept for persistence but no longer drives layout.
@@ -74,7 +76,7 @@ class _FileBrowserScreenState extends ConsumerState<FileBrowserScreen> {
     final scaffold = Scaffold(
       appBar: AppBar(
         titleSpacing: 12,
-        title: isNarrow ? const Text('Crisp Cloud') : null,
+        title: isNarrow ? Text(l.appTitle) : null,
         actions: isNarrow
             ? _buildNarrowActions(context, auth)
             : _buildWideActions(context, auth, showPreview, isDesktopPlatform),
@@ -448,10 +450,11 @@ class _FileBrowserScreenState extends ConsumerState<FileBrowserScreen> {
     BuildContext context,
     AuthNotifier auth,
   ) {
+    final l = AppLocalizations.of(context)!;
     return [
       IconButton(
         icon: const Icon(Icons.swap_horiz, size: 20),
-        tooltip: 'Swap Panels (Ctrl+U)',
+        tooltip: '${l.swapPanels} (Ctrl+U)',
         onPressed: () => _swapPanels(),
       ),
       _buildOverflowMenu(context, auth),
@@ -459,7 +462,7 @@ class _FileBrowserScreenState extends ConsumerState<FileBrowserScreen> {
       if (!auth.isConnected)
         TextButton.icon(
           icon: const Icon(Icons.login),
-          label: const Text('Connect'),
+          label: Text(l.connect),
           onPressed: () => showConnectionDialogScreen(context),
         )
       else
@@ -474,14 +477,15 @@ class _FileBrowserScreenState extends ConsumerState<FileBrowserScreen> {
     bool showPreview,
     bool isDesktopPlatform,
   ) {
+    final l = AppLocalizations.of(context)!;
     final toolbarButtons = <Widget>[
       const SizedBox(width: 12),
-      const Text('Crisp Cloud', style: TextStyle(fontSize: 20, fontWeight: FontWeight.w500)),
+      Text(l.appTitle, style: const TextStyle(fontSize: 20, fontWeight: FontWeight.w500)),
       const SizedBox(width: 8),
       // Panel swap
       IconButton(
         icon: const Icon(Icons.swap_horiz, size: 20),
-        tooltip: 'Swap Panels (Ctrl+U)',
+        tooltip: '${l.swapPanels} (Ctrl+U)',
         onPressed: () => _swapPanels(),
       ),
       // Terminal toggle — only on native desktop
@@ -492,7 +496,7 @@ class _FileBrowserScreenState extends ConsumerState<FileBrowserScreen> {
             return IconButton(
               icon: Icon(Icons.terminal, size: 20,
                 color: showTerminal ? Theme.of(ctx).colorScheme.primary : null),
-              tooltip: showTerminal ? 'Hide Terminal' : 'Show Terminal',
+              tooltip: showTerminal ? l.hideTerminal : l.showTerminal,
               onPressed: () => cref.read(showTerminalProvider.notifier).state = !showTerminal,
             );
           },
@@ -504,7 +508,7 @@ class _FileBrowserScreenState extends ConsumerState<FileBrowserScreen> {
           return IconButton(
             icon: Icon(dual ? Icons.view_column : Icons.web_asset, size: 20,
               color: dual ? Theme.of(ctx).colorScheme.primary : null),
-            tooltip: dual ? 'Single Panel' : 'Dual Panel',
+            tooltip: dual ? l.singlePanel : l.dualPanel,
             onPressed: () =>
                 cref.read(showDualPanelProvider.notifier).state = !dual,
           );
@@ -517,7 +521,7 @@ class _FileBrowserScreenState extends ConsumerState<FileBrowserScreen> {
           return IconButton(
             icon: Icon(Icons.account_tree, size: 20,
               color: showTree ? Theme.of(ctx).colorScheme.primary : null),
-            tooltip: showTree ? 'Hide Tree Sidebar' : 'Show Tree Sidebar',
+            tooltip: showTree ? l.hideTreeSidebar : l.showTreeSidebar,
             onPressed: () =>
                 cref.read(showTreeSidebarProvider.notifier).state = !showTree,
           );
@@ -533,7 +537,7 @@ class _FileBrowserScreenState extends ConsumerState<FileBrowserScreen> {
           final isGrid = viewMode == ViewMode.grid;
           return IconButton(
             icon: Icon(isGrid ? Icons.view_list : Icons.grid_view, size: 20),
-            tooltip: isGrid ? 'Details List' : 'Grid View',
+            tooltip: isGrid ? l.detailsList : l.gridView,
             onPressed: () {
               final notifier = ap == PanelSide.local
                   ? cref.read(localViewModeProvider.notifier)
@@ -551,7 +555,7 @@ class _FileBrowserScreenState extends ConsumerState<FileBrowserScreen> {
           final isCompact = mode == PanelViewMode.full;
           return IconButton(
             icon: Icon(isCompact ? Icons.density_large : Icons.density_small, size: 20),
-            tooltip: isCompact ? 'Large Items' : 'Compact Items',
+            tooltip: isCompact ? l.largeItems : l.compactItems,
             onPressed: () =>
                 cref.read(panelViewModeProvider(ap).notifier).setMode(
                   isCompact ? PanelViewMode.brief : PanelViewMode.full,
@@ -566,7 +570,7 @@ class _FileBrowserScreenState extends ConsumerState<FileBrowserScreen> {
           return IconButton(
             icon: Icon(preview ? Icons.visibility : Icons.visibility_off, size: 20,
               color: preview ? Theme.of(ctx).colorScheme.primary : null),
-            tooltip: preview ? 'Hide Preview' : 'Show Preview',
+            tooltip: preview ? l.hidePreview : l.showPreview,
             onPressed: () =>
                 cref.read(showPreviewProvider.notifier).state = !preview,
           );
@@ -590,7 +594,7 @@ class _FileBrowserScreenState extends ConsumerState<FileBrowserScreen> {
       if (!auth.isConnected)
         TextButton.icon(
           icon: const Icon(Icons.login),
-          label: const Text('Connect'),
+          label: Text(l.connect),
           onPressed: () => showConnectionDialogScreen(context),
         )
       else
@@ -607,9 +611,10 @@ class _FileBrowserScreenState extends ConsumerState<FileBrowserScreen> {
          defaultTargetPlatform == TargetPlatform.windows ||
          defaultTargetPlatform == TargetPlatform.linux);
 
+    final l = AppLocalizations.of(context)!;
     return PopupMenuButton<String>(
       icon: const Icon(Icons.more_vert, size: 20),
-      tooltip: 'More actions',
+      tooltip: l.moreActions,
       onSelected: (value) {
         switch (value) {
           case 'terminal':
@@ -683,24 +688,24 @@ class _FileBrowserScreenState extends ConsumerState<FileBrowserScreen> {
             value: 'terminal',
             child: _overflowItem(
               Icons.terminal,
-              ref.read(showTerminalProvider) ? 'Hide Terminal' : 'Show Terminal',
+              ref.read(showTerminalProvider) ? l.hideTerminal : l.showTerminal,
               iconColor: ref.read(showTerminalProvider) ? Theme.of(context).colorScheme.primary : null,
             ),
           ),
-        PopupMenuItem(value: 'multi_cloud', child: _overflowItem(Icons.cloud_sync, 'Multi-Cloud')),
-        PopupMenuItem(value: 'sync', child: _overflowItem(Icons.sync, 'Sync Manager')),
+        PopupMenuItem(value: 'multi_cloud', child: _overflowItem(Icons.cloud_sync, l.multiCloudManager)),
+        PopupMenuItem(value: 'sync', child: _overflowItem(Icons.sync, l.syncManager)),
         if (isDesktopPlatform)
-          PopupMenuItem(value: 'mount', child: _overflowItem(Icons.storage_rounded, 'Mount as Drive')),
-        PopupMenuItem(value: 'duplicates', child: _overflowItem(Icons.find_replace, 'Find Duplicates')),
-        PopupMenuItem(value: 'audit', child: _overflowItem(Icons.history, 'Audit Log')),
-        PopupMenuItem(value: 'syslog', child: _overflowItem(Icons.terminal, 'System Log')),
-        PopupMenuItem(value: 'cache', child: _overflowItem(Icons.storage, 'Cache Settings')),
+          PopupMenuItem(value: 'mount', child: _overflowItem(Icons.storage_rounded, l.mountAsDrive)),
+        PopupMenuItem(value: 'duplicates', child: _overflowItem(Icons.find_replace, l.findDuplicates)),
+        PopupMenuItem(value: 'audit', child: _overflowItem(Icons.history, l.auditLog)),
+        PopupMenuItem(value: 'syslog', child: _overflowItem(Icons.terminal, l.systemLog)),
+        PopupMenuItem(value: 'cache', child: _overflowItem(Icons.storage, l.cacheSettings)),
         const PopupMenuDivider(),
         PopupMenuItem(
           value: 'dual_panel',
           child: _overflowItem(
             ref.read(showDualPanelProvider) ? Icons.view_column : Icons.web_asset,
-            ref.read(showDualPanelProvider) ? 'Single Panel' : 'Dual Panel',
+            ref.read(showDualPanelProvider) ? l.singlePanel : l.dualPanel,
             iconColor: ref.read(showDualPanelProvider) ? Theme.of(context).colorScheme.primary : null,
           ),
         ),
@@ -708,7 +713,7 @@ class _FileBrowserScreenState extends ConsumerState<FileBrowserScreen> {
           value: 'tree',
           child: _overflowItem(
             Icons.account_tree,
-            ref.read(showTreeSidebarProvider) ? 'Hide Tree Sidebar' : 'Show Tree Sidebar',
+            ref.read(showTreeSidebarProvider) ? l.hideTreeSidebar : l.showTreeSidebar,
             iconColor: ref.read(showTreeSidebarProvider) ? Theme.of(context).colorScheme.primary : null,
           ),
         ),
@@ -722,7 +727,7 @@ class _FileBrowserScreenState extends ConsumerState<FileBrowserScreen> {
             final isGrid = vm == ViewMode.grid;
             return _overflowItem(
               isGrid ? Icons.view_list : Icons.grid_view,
-              isGrid ? 'Details List' : 'Grid View',
+              isGrid ? l.detailsList : l.gridView,
             );
           }),
         ),
@@ -734,7 +739,7 @@ class _FileBrowserScreenState extends ConsumerState<FileBrowserScreen> {
             final isCompact = mode == PanelViewMode.full;
             return _overflowItem(
               isCompact ? Icons.density_large : Icons.density_small,
-              isCompact ? 'Large Items' : 'Compact Items',
+              isCompact ? l.largeItems : l.compactItems,
             );
           }),
         ),
@@ -742,15 +747,15 @@ class _FileBrowserScreenState extends ConsumerState<FileBrowserScreen> {
           value: 'preview',
           child: _overflowItem(
             ref.read(showPreviewProvider) ? Icons.visibility : Icons.visibility_off,
-            ref.read(showPreviewProvider) ? 'Hide Preview' : 'Show Preview',
+            ref.read(showPreviewProvider) ? l.hidePreview : l.showPreview,
           ),
         ),
         if (auth.isEncryptionEnabled)
           PopupMenuItem(value: 'keys', child: _overflowItem(Icons.key, 'Key Management')),
         const PopupMenuDivider(),
-        PopupMenuItem(value: 'theme', child: _overflowItem(Icons.palette, 'Theme')),
-        PopupMenuItem(value: 'shortcuts', child: _overflowItem(Icons.keyboard, 'Keyboard Shortcuts')),
-        PopupMenuItem(value: 'about', child: _overflowItem(Icons.info_outline, 'About')),
+        PopupMenuItem(value: 'theme', child: _overflowItem(Icons.palette, l.theme)),
+        PopupMenuItem(value: 'shortcuts', child: _overflowItem(Icons.keyboard, l.keyboardShortcuts)),
+        PopupMenuItem(value: 'about', child: _overflowItem(Icons.info_outline, l.about)),
       ],
     );
   }
@@ -868,7 +873,7 @@ class _FileBrowserScreenState extends ConsumerState<FileBrowserScreen> {
                 Icon(Icons.cloud, size: 48, color: Theme.of(context).colorScheme.onPrimaryContainer),
                 const SizedBox(height: 8),
                 Text(
-                  'Crisp Cloud',
+                  AppLocalizations.of(context)!.appTitle,
                   style: Theme.of(context).textTheme.headlineSmall?.copyWith(
                     color: Theme.of(context).colorScheme.onPrimaryContainer,
                   ),

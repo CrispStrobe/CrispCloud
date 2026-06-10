@@ -214,5 +214,171 @@
   "multiCloudManager": "Multi-Cloud Manager",
   "addConnection": "Add Connection",
   "cloudToCloudTransfer": "Cloud-to-Cloud Transfer",
-  "compareProviders": "Compare Providers"
+  "compareProviders": "Compare Providers",
+
+  "singlePanel": "Single Panel",
+  "dualPanel": "Dual Panel",
+  "showTreeSidebar": "Show Tree Sidebar",
+  "hideTreeSidebar": "Hide Tree Sidebar",
+  "detailsList": "Details List",
+  "largeItems": "Large Items",
+  "compactItems": "Compact Items",
+  "showPreview": "Show Preview",
+  "hidePreview": "Hide Preview",
+  "showTerminal": "Show Terminal",
+  "hideTerminal": "Hide Terminal",
+  "moreActions": "More actions",
+  "mountAsDrive": "Mount as Drive",
+  "auditLog": "Audit Log",
+  "systemLog": "System Log",
+  "cacheSettings": "Cache Settings",
+  "keyboardShortcuts": "Keyboard Shortcuts",
+  "swapPanels": "Swap Panels",
+
+  "connectToCloud": "Connect to Cloud",
+  "browseProvider": "Browse {provider}",
+  "@browseProvider": {
+    "placeholders": { "provider": { "type": "String" } }
+  },
+  "pleaseConnectRemote": "Please connect to access remote files",
+  "notConnected": "Not connected",
+  "connectToCloudShort": "Connect to cloud",
+  "loggedIn": "Logged in",
+
+  "localFiles": "Local Files",
+  "remoteFiles": "Remote Files",
+  "bookmarkFolder": "Bookmark current folder",
+  "noFolders": "No folders",
+
+  "selectFileToPreview": "Select a file to preview",
+  "fileTooLarge": "File too large to preview ({size})",
+  "@fileTooLarge": {
+    "placeholders": { "size": { "type": "String" } }
+  },
+  "previewFailed": "Preview failed: {error}",
+  "@previewFailed": {
+    "placeholders": { "error": { "type": "String" } }
+  },
+  "firstPage": "First page",
+  "previousPage": "Previous page",
+  "nextPage": "Next page",
+  "lastPage": "Last page",
+  "playAudio": "Play Audio",
+  "playVideo": "Play Video",
+  "emptyFile": "Empty file",
+
+  "systemLogTitle": "System Log ({count} entries)",
+  "@systemLogTitle": {
+    "placeholders": { "count": { "type": "int" } }
+  },
+  "minimumLevel": "Minimum level",
+  "pauseAutoScroll": "Pause auto-scroll",
+  "resumeAutoScroll": "Resume auto-scroll",
+  "copyVisible": "Copy visible",
+  "copyAll": "Copy all",
+  "filterLogs": "Filter logs...",
+  "visibleLinesCopied": "Visible lines copied",
+  "allLogsCopied": "All logs copied",
+
+  "open": "Open",
+  "editSystemEditor": "Edit (System Editor)",
+  "editBuiltIn": "Edit (Built-in)",
+  "openWithSystemApp": "Open with System App",
+  "verifyAgainstRemote": "Verify against remote",
+  "browseArchive": "Browse Archive",
+  "archiveExtracted": "Archive extracted successfully",
+  "revealInFinder": "Reveal in Finder",
+  "showInExplorer": "Show in Explorer",
+  "openContainingFolder": "Open containing folder",
+  "properties": "Properties",
+  "copyNames": "Copy name(s)",
+  "copyPaths": "Copy path(s)",
+  "createMd5": "Create .md5 file",
+  "verifyChecksumFile": "Verify checksum file",
+  "splitFile": "Split File",
+  "combineParts": "Combine Parts",
+  "createLink": "Create Link...",
+  "secureWipe": "Secure Wipe",
+
+  "confirmDeleteBody": "Are you sure you want to delete {count} item(s)?",
+  "@confirmDeleteBody": {
+    "placeholders": { "count": { "type": "int" } }
+  },
+  "totalSize": "Total size: {size}",
+  "@totalSize": {
+    "placeholders": { "size": { "type": "String" } }
+  },
+  "cannotBeUndone": "This action cannot be undone.",
+
+  "nItems": "{count} items",
+  "@nItems": {
+    "placeholders": { "count": { "type": "int" } }
+  },
+  "nTransfers": "{count} transfer(s)",
+  "@nTransfers": {
+    "placeholders": { "count": { "type": "int" } }
+  },
+  "syncing": "Syncing",
+  "lastSyncChanges": "Last sync: {count} changes",
+  "@lastSyncChanges": {
+    "placeholders": { "count": { "type": "int" } }
+  },
+  "nPairs": "{count} pair(s)",
+  "@nPairs": {
+    "placeholders": { "count": { "type": "int" } }
+  },
+  "hidden": "Hidden",
+  "free": "Free: {size}",
+  "@free": {
+    "placeholders": { "size": { "type": "String" } }
+  },
+
+  "aboutLegal": "About / Legal",
+  "appDescription": "An unofficial, open-source client for Filen.io, SFTP & WebDAV.",
+  "serviceProvider": "Service Provider",
+  "contact": "Contact",
+  "disclaimer": "Disclaimer",
+  "disclaimerText": "This software is provided \"as is\", without warranty of any kind. This app is not affiliated with Filen.io, or any other cloud provider.",
+  "sourceCode": "Source Code (GitHub)",
+  "website": "Website",
+  "viewLicenses": "View Open Source Licenses",
+
+  "flatView": "Flat View (all subdirectories)",
+  "exitFlatView": "Exit Flat View",
+  "showHiddenFiles": "Show hidden files",
+  "hideHiddenFiles": "Hide hidden files",
+  "touchFriendlyView": "Switch to touch-friendly view",
+  "compactView": "Switch to compact view",
+  "sort": "Sort",
+  "secondarySort": "Secondary Sort",
+  "none": "None",
+  "byName": "by Name",
+  "bySize": "by Size",
+  "byDate": "by Date",
+  "enterPath": "Enter path...",
+  "editPath": "Edit path",
+
+  "searchResults": "Search results",
+  "nFiles": "{count} file(s)",
+  "@nFiles": {
+    "placeholders": { "count": { "type": "int" } }
+  },
+
+  "copyNItems": "Copy {count} item(s)",
+  "@copyNItems": {
+    "placeholders": { "count": { "type": "int" } }
+  },
+  "moveNItems": "Move {count} item(s)",
+  "@moveNItems": {
+    "placeholders": { "count": { "type": "int" } }
+  },
+  "targetPath": "Target path",
+  "saved": "Saved {name}",
+  "@saved": {
+    "placeholders": { "name": { "type": "String" } }
+  },
+  "saveFailed": "Save failed: {error}",
+  "@saveFailed": {
+    "placeholders": { "error": { "type": "String" } }
+  }
 }

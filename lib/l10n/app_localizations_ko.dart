@@ -521,4 +521,356 @@ class AppLocalizationsKo extends AppLocalizations {
 
   @override
   String get compareProviders => '공급자 비교';
+
+  @override
+  String get singlePanel => 'Single Panel';
+
+  @override
+  String get dualPanel => 'Dual Panel';
+
+  @override
+  String get showTreeSidebar => 'Show Tree Sidebar';
+
+  @override
+  String get hideTreeSidebar => 'Hide Tree Sidebar';
+
+  @override
+  String get detailsList => 'Details List';
+
+  @override
+  String get largeItems => 'Large Items';
+
+  @override
+  String get compactItems => 'Compact Items';
+
+  @override
+  String get showPreview => 'Show Preview';
+
+  @override
+  String get hidePreview => 'Hide Preview';
+
+  @override
+  String get showTerminal => 'Show Terminal';
+
+  @override
+  String get hideTerminal => 'Hide Terminal';
+
+  @override
+  String get moreActions => 'More actions';
+
+  @override
+  String get mountAsDrive => 'Mount as Drive';
+
+  @override
+  String get auditLog => 'Audit Log';
+
+  @override
+  String get systemLog => 'System Log';
+
+  @override
+  String get cacheSettings => 'Cache Settings';
+
+  @override
+  String get keyboardShortcuts => 'Keyboard Shortcuts';
+
+  @override
+  String get swapPanels => 'Swap Panels';
+
+  @override
+  String get connectToCloud => 'Connect to Cloud';
+
+  @override
+  String browseProvider(String provider) {
+    return 'Browse $provider';
+  }
+
+  @override
+  String get pleaseConnectRemote => 'Please connect to access remote files';
+
+  @override
+  String get notConnected => 'Not connected';
+
+  @override
+  String get connectToCloudShort => 'Connect to cloud';
+
+  @override
+  String get loggedIn => 'Logged in';
+
+  @override
+  String get localFiles => 'Local Files';
+
+  @override
+  String get remoteFiles => 'Remote Files';
+
+  @override
+  String get bookmarkFolder => 'Bookmark current folder';
+
+  @override
+  String get noFolders => 'No folders';
+
+  @override
+  String get selectFileToPreview => 'Select a file to preview';
+
+  @override
+  String fileTooLarge(String size) {
+    return 'File too large to preview ($size)';
+  }
+
+  @override
+  String previewFailed(String error) {
+    return 'Preview failed: $error';
+  }
+
+  @override
+  String get firstPage => 'First page';
+
+  @override
+  String get previousPage => 'Previous page';
+
+  @override
+  String get nextPage => 'Next page';
+
+  @override
+  String get lastPage => 'Last page';
+
+  @override
+  String get playAudio => 'Play Audio';
+
+  @override
+  String get playVideo => 'Play Video';
+
+  @override
+  String get emptyFile => 'Empty file';
+
+  @override
+  String systemLogTitle(int count) {
+    return 'System Log ($count entries)';
+  }
+
+  @override
+  String get minimumLevel => 'Minimum level';
+
+  @override
+  String get pauseAutoScroll => 'Pause auto-scroll';
+
+  @override
+  String get resumeAutoScroll => 'Resume auto-scroll';
+
+  @override
+  String get copyVisible => 'Copy visible';
+
+  @override
+  String get copyAll => 'Copy all';
+
+  @override
+  String get filterLogs => 'Filter logs...';
+
+  @override
+  String get visibleLinesCopied => 'Visible lines copied';
+
+  @override
+  String get allLogsCopied => 'All logs copied';
+
+  @override
+  String get open => 'Open';
+
+  @override
+  String get editSystemEditor => 'Edit (System Editor)';
+
+  @override
+  String get editBuiltIn => 'Edit (Built-in)';
+
+  @override
+  String get openWithSystemApp => 'Open with System App';
+
+  @override
+  String get verifyAgainstRemote => 'Verify against remote';
+
+  @override
+  String get browseArchive => 'Browse Archive';
+
+  @override
+  String get archiveExtracted => 'Archive extracted successfully';
+
+  @override
+  String get revealInFinder => 'Reveal in Finder';
+
+  @override
+  String get showInExplorer => 'Show in Explorer';
+
+  @override
+  String get openContainingFolder => 'Open containing folder';
+
+  @override
+  String get properties => 'Properties';
+
+  @override
+  String get copyNames => 'Copy name(s)';
+
+  @override
+  String get copyPaths => 'Copy path(s)';
+
+  @override
+  String get createMd5 => 'Create .md5 file';
+
+  @override
+  String get verifyChecksumFile => 'Verify checksum file';
+
+  @override
+  String get splitFile => 'Split File';
+
+  @override
+  String get combineParts => 'Combine Parts';
+
+  @override
+  String get createLink => 'Create Link...';
+
+  @override
+  String get secureWipe => 'Secure Wipe';
+
+  @override
+  String confirmDeleteBody(int count) {
+    return 'Are you sure you want to delete $count item(s)?';
+  }
+
+  @override
+  String totalSize(String size) {
+    return 'Total size: $size';
+  }
+
+  @override
+  String get cannotBeUndone => 'This action cannot be undone.';
+
+  @override
+  String nItems(int count) {
+    return '$count items';
+  }
+
+  @override
+  String nTransfers(int count) {
+    return '$count transfer(s)';
+  }
+
+  @override
+  String get syncing => 'Syncing';
+
+  @override
+  String lastSyncChanges(int count) {
+    return 'Last sync: $count changes';
+  }
+
+  @override
+  String nPairs(int count) {
+    return '$count pair(s)';
+  }
+
+  @override
+  String get hidden => 'Hidden';
+
+  @override
+  String free(String size) {
+    return 'Free: $size';
+  }
+
+  @override
+  String get aboutLegal => 'About / Legal';
+
+  @override
+  String get appDescription =>
+      'An unofficial, open-source client for Filen.io, SFTP & WebDAV.';
+
+  @override
+  String get serviceProvider => 'Service Provider';
+
+  @override
+  String get contact => 'Contact';
+
+  @override
+  String get disclaimer => 'Disclaimer';
+
+  @override
+  String get disclaimerText =>
+      'This software is provided \"as is\", without warranty of any kind. This app is not affiliated with Filen.io, or any other cloud provider.';
+
+  @override
+  String get sourceCode => 'Source Code (GitHub)';
+
+  @override
+  String get website => 'Website';
+
+  @override
+  String get viewLicenses => 'View Open Source Licenses';
+
+  @override
+  String get flatView => 'Flat View (all subdirectories)';
+
+  @override
+  String get exitFlatView => 'Exit Flat View';
+
+  @override
+  String get showHiddenFiles => 'Show hidden files';
+
+  @override
+  String get hideHiddenFiles => 'Hide hidden files';
+
+  @override
+  String get touchFriendlyView => 'Switch to touch-friendly view';
+
+  @override
+  String get compactView => 'Switch to compact view';
+
+  @override
+  String get sort => 'Sort';
+
+  @override
+  String get secondarySort => 'Secondary Sort';
+
+  @override
+  String get none => 'None';
+
+  @override
+  String get byName => 'by Name';
+
+  @override
+  String get bySize => 'by Size';
+
+  @override
+  String get byDate => 'by Date';
+
+  @override
+  String get enterPath => 'Enter path...';
+
+  @override
+  String get editPath => 'Edit path';
+
+  @override
+  String get searchResults => 'Search results';
+
+  @override
+  String nFiles(int count) {
+    return '$count file(s)';
+  }
+
+  @override
+  String copyNItems(int count) {
+    return 'Copy $count item(s)';
+  }
+
+  @override
+  String moveNItems(int count) {
+    return 'Move $count item(s)';
+  }
+
+  @override
+  String get targetPath => 'Target path';
+
+  @override
+  String saved(String name) {
+    return 'Saved $name';
+  }
+
+  @override
+  String saveFailed(String error) {
+    return 'Save failed: $error';
+  }
 }

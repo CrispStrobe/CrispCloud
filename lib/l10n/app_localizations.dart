@@ -1107,6 +1107,642 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Compare Providers'**
   String get compareProviders;
+
+  /// No description provided for @singlePanel.
+  ///
+  /// In en, this message translates to:
+  /// **'Single Panel'**
+  String get singlePanel;
+
+  /// No description provided for @dualPanel.
+  ///
+  /// In en, this message translates to:
+  /// **'Dual Panel'**
+  String get dualPanel;
+
+  /// No description provided for @showTreeSidebar.
+  ///
+  /// In en, this message translates to:
+  /// **'Show Tree Sidebar'**
+  String get showTreeSidebar;
+
+  /// No description provided for @hideTreeSidebar.
+  ///
+  /// In en, this message translates to:
+  /// **'Hide Tree Sidebar'**
+  String get hideTreeSidebar;
+
+  /// No description provided for @detailsList.
+  ///
+  /// In en, this message translates to:
+  /// **'Details List'**
+  String get detailsList;
+
+  /// No description provided for @largeItems.
+  ///
+  /// In en, this message translates to:
+  /// **'Large Items'**
+  String get largeItems;
+
+  /// No description provided for @compactItems.
+  ///
+  /// In en, this message translates to:
+  /// **'Compact Items'**
+  String get compactItems;
+
+  /// No description provided for @showPreview.
+  ///
+  /// In en, this message translates to:
+  /// **'Show Preview'**
+  String get showPreview;
+
+  /// No description provided for @hidePreview.
+  ///
+  /// In en, this message translates to:
+  /// **'Hide Preview'**
+  String get hidePreview;
+
+  /// No description provided for @showTerminal.
+  ///
+  /// In en, this message translates to:
+  /// **'Show Terminal'**
+  String get showTerminal;
+
+  /// No description provided for @hideTerminal.
+  ///
+  /// In en, this message translates to:
+  /// **'Hide Terminal'**
+  String get hideTerminal;
+
+  /// No description provided for @moreActions.
+  ///
+  /// In en, this message translates to:
+  /// **'More actions'**
+  String get moreActions;
+
+  /// No description provided for @mountAsDrive.
+  ///
+  /// In en, this message translates to:
+  /// **'Mount as Drive'**
+  String get mountAsDrive;
+
+  /// No description provided for @auditLog.
+  ///
+  /// In en, this message translates to:
+  /// **'Audit Log'**
+  String get auditLog;
+
+  /// No description provided for @systemLog.
+  ///
+  /// In en, this message translates to:
+  /// **'System Log'**
+  String get systemLog;
+
+  /// No description provided for @cacheSettings.
+  ///
+  /// In en, this message translates to:
+  /// **'Cache Settings'**
+  String get cacheSettings;
+
+  /// No description provided for @keyboardShortcuts.
+  ///
+  /// In en, this message translates to:
+  /// **'Keyboard Shortcuts'**
+  String get keyboardShortcuts;
+
+  /// No description provided for @swapPanels.
+  ///
+  /// In en, this message translates to:
+  /// **'Swap Panels'**
+  String get swapPanels;
+
+  /// No description provided for @connectToCloud.
+  ///
+  /// In en, this message translates to:
+  /// **'Connect to Cloud'**
+  String get connectToCloud;
+
+  /// No description provided for @browseProvider.
+  ///
+  /// In en, this message translates to:
+  /// **'Browse {provider}'**
+  String browseProvider(String provider);
+
+  /// No description provided for @pleaseConnectRemote.
+  ///
+  /// In en, this message translates to:
+  /// **'Please connect to access remote files'**
+  String get pleaseConnectRemote;
+
+  /// No description provided for @notConnected.
+  ///
+  /// In en, this message translates to:
+  /// **'Not connected'**
+  String get notConnected;
+
+  /// No description provided for @connectToCloudShort.
+  ///
+  /// In en, this message translates to:
+  /// **'Connect to cloud'**
+  String get connectToCloudShort;
+
+  /// No description provided for @loggedIn.
+  ///
+  /// In en, this message translates to:
+  /// **'Logged in'**
+  String get loggedIn;
+
+  /// No description provided for @localFiles.
+  ///
+  /// In en, this message translates to:
+  /// **'Local Files'**
+  String get localFiles;
+
+  /// No description provided for @remoteFiles.
+  ///
+  /// In en, this message translates to:
+  /// **'Remote Files'**
+  String get remoteFiles;
+
+  /// No description provided for @bookmarkFolder.
+  ///
+  /// In en, this message translates to:
+  /// **'Bookmark current folder'**
+  String get bookmarkFolder;
+
+  /// No description provided for @noFolders.
+  ///
+  /// In en, this message translates to:
+  /// **'No folders'**
+  String get noFolders;
+
+  /// No description provided for @selectFileToPreview.
+  ///
+  /// In en, this message translates to:
+  /// **'Select a file to preview'**
+  String get selectFileToPreview;
+
+  /// No description provided for @fileTooLarge.
+  ///
+  /// In en, this message translates to:
+  /// **'File too large to preview ({size})'**
+  String fileTooLarge(String size);
+
+  /// No description provided for @previewFailed.
+  ///
+  /// In en, this message translates to:
+  /// **'Preview failed: {error}'**
+  String previewFailed(String error);
+
+  /// No description provided for @firstPage.
+  ///
+  /// In en, this message translates to:
+  /// **'First page'**
+  String get firstPage;
+
+  /// No description provided for @previousPage.
+  ///
+  /// In en, this message translates to:
+  /// **'Previous page'**
+  String get previousPage;
+
+  /// No description provided for @nextPage.
+  ///
+  /// In en, this message translates to:
+  /// **'Next page'**
+  String get nextPage;
+
+  /// No description provided for @lastPage.
+  ///
+  /// In en, this message translates to:
+  /// **'Last page'**
+  String get lastPage;
+
+  /// No description provided for @playAudio.
+  ///
+  /// In en, this message translates to:
+  /// **'Play Audio'**
+  String get playAudio;
+
+  /// No description provided for @playVideo.
+  ///
+  /// In en, this message translates to:
+  /// **'Play Video'**
+  String get playVideo;
+
+  /// No description provided for @emptyFile.
+  ///
+  /// In en, this message translates to:
+  /// **'Empty file'**
+  String get emptyFile;
+
+  /// No description provided for @systemLogTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'System Log ({count} entries)'**
+  String systemLogTitle(int count);
+
+  /// No description provided for @minimumLevel.
+  ///
+  /// In en, this message translates to:
+  /// **'Minimum level'**
+  String get minimumLevel;
+
+  /// No description provided for @pauseAutoScroll.
+  ///
+  /// In en, this message translates to:
+  /// **'Pause auto-scroll'**
+  String get pauseAutoScroll;
+
+  /// No description provided for @resumeAutoScroll.
+  ///
+  /// In en, this message translates to:
+  /// **'Resume auto-scroll'**
+  String get resumeAutoScroll;
+
+  /// No description provided for @copyVisible.
+  ///
+  /// In en, this message translates to:
+  /// **'Copy visible'**
+  String get copyVisible;
+
+  /// No description provided for @copyAll.
+  ///
+  /// In en, this message translates to:
+  /// **'Copy all'**
+  String get copyAll;
+
+  /// No description provided for @filterLogs.
+  ///
+  /// In en, this message translates to:
+  /// **'Filter logs...'**
+  String get filterLogs;
+
+  /// No description provided for @visibleLinesCopied.
+  ///
+  /// In en, this message translates to:
+  /// **'Visible lines copied'**
+  String get visibleLinesCopied;
+
+  /// No description provided for @allLogsCopied.
+  ///
+  /// In en, this message translates to:
+  /// **'All logs copied'**
+  String get allLogsCopied;
+
+  /// No description provided for @open.
+  ///
+  /// In en, this message translates to:
+  /// **'Open'**
+  String get open;
+
+  /// No description provided for @editSystemEditor.
+  ///
+  /// In en, this message translates to:
+  /// **'Edit (System Editor)'**
+  String get editSystemEditor;
+
+  /// No description provided for @editBuiltIn.
+  ///
+  /// In en, this message translates to:
+  /// **'Edit (Built-in)'**
+  String get editBuiltIn;
+
+  /// No description provided for @openWithSystemApp.
+  ///
+  /// In en, this message translates to:
+  /// **'Open with System App'**
+  String get openWithSystemApp;
+
+  /// No description provided for @verifyAgainstRemote.
+  ///
+  /// In en, this message translates to:
+  /// **'Verify against remote'**
+  String get verifyAgainstRemote;
+
+  /// No description provided for @browseArchive.
+  ///
+  /// In en, this message translates to:
+  /// **'Browse Archive'**
+  String get browseArchive;
+
+  /// No description provided for @archiveExtracted.
+  ///
+  /// In en, this message translates to:
+  /// **'Archive extracted successfully'**
+  String get archiveExtracted;
+
+  /// No description provided for @revealInFinder.
+  ///
+  /// In en, this message translates to:
+  /// **'Reveal in Finder'**
+  String get revealInFinder;
+
+  /// No description provided for @showInExplorer.
+  ///
+  /// In en, this message translates to:
+  /// **'Show in Explorer'**
+  String get showInExplorer;
+
+  /// No description provided for @openContainingFolder.
+  ///
+  /// In en, this message translates to:
+  /// **'Open containing folder'**
+  String get openContainingFolder;
+
+  /// No description provided for @properties.
+  ///
+  /// In en, this message translates to:
+  /// **'Properties'**
+  String get properties;
+
+  /// No description provided for @copyNames.
+  ///
+  /// In en, this message translates to:
+  /// **'Copy name(s)'**
+  String get copyNames;
+
+  /// No description provided for @copyPaths.
+  ///
+  /// In en, this message translates to:
+  /// **'Copy path(s)'**
+  String get copyPaths;
+
+  /// No description provided for @createMd5.
+  ///
+  /// In en, this message translates to:
+  /// **'Create .md5 file'**
+  String get createMd5;
+
+  /// No description provided for @verifyChecksumFile.
+  ///
+  /// In en, this message translates to:
+  /// **'Verify checksum file'**
+  String get verifyChecksumFile;
+
+  /// No description provided for @splitFile.
+  ///
+  /// In en, this message translates to:
+  /// **'Split File'**
+  String get splitFile;
+
+  /// No description provided for @combineParts.
+  ///
+  /// In en, this message translates to:
+  /// **'Combine Parts'**
+  String get combineParts;
+
+  /// No description provided for @createLink.
+  ///
+  /// In en, this message translates to:
+  /// **'Create Link...'**
+  String get createLink;
+
+  /// No description provided for @secureWipe.
+  ///
+  /// In en, this message translates to:
+  /// **'Secure Wipe'**
+  String get secureWipe;
+
+  /// No description provided for @confirmDeleteBody.
+  ///
+  /// In en, this message translates to:
+  /// **'Are you sure you want to delete {count} item(s)?'**
+  String confirmDeleteBody(int count);
+
+  /// No description provided for @totalSize.
+  ///
+  /// In en, this message translates to:
+  /// **'Total size: {size}'**
+  String totalSize(String size);
+
+  /// No description provided for @cannotBeUndone.
+  ///
+  /// In en, this message translates to:
+  /// **'This action cannot be undone.'**
+  String get cannotBeUndone;
+
+  /// No description provided for @nItems.
+  ///
+  /// In en, this message translates to:
+  /// **'{count} items'**
+  String nItems(int count);
+
+  /// No description provided for @nTransfers.
+  ///
+  /// In en, this message translates to:
+  /// **'{count} transfer(s)'**
+  String nTransfers(int count);
+
+  /// No description provided for @syncing.
+  ///
+  /// In en, this message translates to:
+  /// **'Syncing'**
+  String get syncing;
+
+  /// No description provided for @lastSyncChanges.
+  ///
+  /// In en, this message translates to:
+  /// **'Last sync: {count} changes'**
+  String lastSyncChanges(int count);
+
+  /// No description provided for @nPairs.
+  ///
+  /// In en, this message translates to:
+  /// **'{count} pair(s)'**
+  String nPairs(int count);
+
+  /// No description provided for @hidden.
+  ///
+  /// In en, this message translates to:
+  /// **'Hidden'**
+  String get hidden;
+
+  /// No description provided for @free.
+  ///
+  /// In en, this message translates to:
+  /// **'Free: {size}'**
+  String free(String size);
+
+  /// No description provided for @aboutLegal.
+  ///
+  /// In en, this message translates to:
+  /// **'About / Legal'**
+  String get aboutLegal;
+
+  /// No description provided for @appDescription.
+  ///
+  /// In en, this message translates to:
+  /// **'An unofficial, open-source client for Filen.io, SFTP & WebDAV.'**
+  String get appDescription;
+
+  /// No description provided for @serviceProvider.
+  ///
+  /// In en, this message translates to:
+  /// **'Service Provider'**
+  String get serviceProvider;
+
+  /// No description provided for @contact.
+  ///
+  /// In en, this message translates to:
+  /// **'Contact'**
+  String get contact;
+
+  /// No description provided for @disclaimer.
+  ///
+  /// In en, this message translates to:
+  /// **'Disclaimer'**
+  String get disclaimer;
+
+  /// No description provided for @disclaimerText.
+  ///
+  /// In en, this message translates to:
+  /// **'This software is provided \"as is\", without warranty of any kind. This app is not affiliated with Filen.io, or any other cloud provider.'**
+  String get disclaimerText;
+
+  /// No description provided for @sourceCode.
+  ///
+  /// In en, this message translates to:
+  /// **'Source Code (GitHub)'**
+  String get sourceCode;
+
+  /// No description provided for @website.
+  ///
+  /// In en, this message translates to:
+  /// **'Website'**
+  String get website;
+
+  /// No description provided for @viewLicenses.
+  ///
+  /// In en, this message translates to:
+  /// **'View Open Source Licenses'**
+  String get viewLicenses;
+
+  /// No description provided for @flatView.
+  ///
+  /// In en, this message translates to:
+  /// **'Flat View (all subdirectories)'**
+  String get flatView;
+
+  /// No description provided for @exitFlatView.
+  ///
+  /// In en, this message translates to:
+  /// **'Exit Flat View'**
+  String get exitFlatView;
+
+  /// No description provided for @showHiddenFiles.
+  ///
+  /// In en, this message translates to:
+  /// **'Show hidden files'**
+  String get showHiddenFiles;
+
+  /// No description provided for @hideHiddenFiles.
+  ///
+  /// In en, this message translates to:
+  /// **'Hide hidden files'**
+  String get hideHiddenFiles;
+
+  /// No description provided for @touchFriendlyView.
+  ///
+  /// In en, this message translates to:
+  /// **'Switch to touch-friendly view'**
+  String get touchFriendlyView;
+
+  /// No description provided for @compactView.
+  ///
+  /// In en, this message translates to:
+  /// **'Switch to compact view'**
+  String get compactView;
+
+  /// No description provided for @sort.
+  ///
+  /// In en, this message translates to:
+  /// **'Sort'**
+  String get sort;
+
+  /// No description provided for @secondarySort.
+  ///
+  /// In en, this message translates to:
+  /// **'Secondary Sort'**
+  String get secondarySort;
+
+  /// No description provided for @none.
+  ///
+  /// In en, this message translates to:
+  /// **'None'**
+  String get none;
+
+  /// No description provided for @byName.
+  ///
+  /// In en, this message translates to:
+  /// **'by Name'**
+  String get byName;
+
+  /// No description provided for @bySize.
+  ///
+  /// In en, this message translates to:
+  /// **'by Size'**
+  String get bySize;
+
+  /// No description provided for @byDate.
+  ///
+  /// In en, this message translates to:
+  /// **'by Date'**
+  String get byDate;
+
+  /// No description provided for @enterPath.
+  ///
+  /// In en, this message translates to:
+  /// **'Enter path...'**
+  String get enterPath;
+
+  /// No description provided for @editPath.
+  ///
+  /// In en, this message translates to:
+  /// **'Edit path'**
+  String get editPath;
+
+  /// No description provided for @searchResults.
+  ///
+  /// In en, this message translates to:
+  /// **'Search results'**
+  String get searchResults;
+
+  /// No description provided for @nFiles.
+  ///
+  /// In en, this message translates to:
+  /// **'{count} file(s)'**
+  String nFiles(int count);
+
+  /// No description provided for @copyNItems.
+  ///
+  /// In en, this message translates to:
+  /// **'Copy {count} item(s)'**
+  String copyNItems(int count);
+
+  /// No description provided for @moveNItems.
+  ///
+  /// In en, this message translates to:
+  /// **'Move {count} item(s)'**
+  String moveNItems(int count);
+
+  /// No description provided for @targetPath.
+  ///
+  /// In en, this message translates to:
+  /// **'Target path'**
+  String get targetPath;
+
+  /// No description provided for @saved.
+  ///
+  /// In en, this message translates to:
+  /// **'Saved {name}'**
+  String saved(String name);
+
+  /// No description provided for @saveFailed.
+  ///
+  /// In en, this message translates to:
+  /// **'Save failed: {error}'**
+  String saveFailed(String error);
 }
 
 class _AppLocalizationsDelegate

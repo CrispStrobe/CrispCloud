@@ -12,6 +12,7 @@ import 'package:path/path.dart' as p;
 
 import '../models/file_item.dart';
 import '../models/panel_side.dart';
+import '../l10n/app_localizations.dart';
 import '../providers/providers.dart';
 
 class TreeSidebar extends ConsumerStatefulWidget {
@@ -28,6 +29,7 @@ class _TreeSidebarState extends ConsumerState<TreeSidebar> {
 
   @override
   Widget build(BuildContext context) {
+    final l = AppLocalizations.of(context)!;
     final activePanel = ref.watch(activePanelProvider);
     final panel = ref.watch(panelProvider(activePanel));
     final isLocal = activePanel == PanelSide.local;
@@ -64,7 +66,7 @@ class _TreeSidebarState extends ConsumerState<TreeSidebar> {
                 const SizedBox(width: 8),
                 Expanded(
                   child: Text(
-                    isLocal ? 'Local Files' : 'Remote Files',
+                    isLocal ? l.localFiles : l.remoteFiles,
                     style: TextStyle(
                       fontSize: 12,
                       fontWeight: FontWeight.w600,
@@ -81,7 +83,7 @@ class _TreeSidebarState extends ConsumerState<TreeSidebar> {
                   ),
                   padding: EdgeInsets.zero,
                   constraints: const BoxConstraints(),
-                  tooltip: 'Bookmark current folder',
+                  tooltip: l.bookmarkFolder,
                   onPressed: () {
                     final bm = ref.read(bookmarksProvider);
                     if (bm.isBookmarked(currentPath, activePanel)) {
@@ -96,7 +98,7 @@ class _TreeSidebarState extends ConsumerState<TreeSidebar> {
                   icon: const Icon(Icons.refresh, size: 14),
                   padding: EdgeInsets.zero,
                   constraints: const BoxConstraints(),
-                  tooltip: 'Refresh',
+                  tooltip: l.refresh,
                   onPressed: () {
                     _childCache.clear();
                     _expandedPaths.clear();
@@ -315,6 +317,7 @@ class _TreeSidebarState extends ConsumerState<TreeSidebar> {
   }
 
   Widget _buildBookmarks(BuildContext context, PanelSide activePanel) {
+    final l = AppLocalizations.of(context)!;
     final bm = ref.watch(bookmarksProvider);
     final filtered = bm.bookmarks.where((b) => b.side == activePanel).toList();
     if (filtered.isEmpty) return const SizedBox.shrink();
@@ -327,7 +330,7 @@ class _TreeSidebarState extends ConsumerState<TreeSidebar> {
       children: [
         Padding(
           padding: const EdgeInsets.only(left: 12, top: 8, bottom: 4),
-          child: Text('BOOKMARKS', style: TextStyle(
+          child: Text(l.bookmarks.toUpperCase(), style: TextStyle(
             fontSize: 10, fontWeight: FontWeight.w700, color: theme.colorScheme.onSurfaceVariant,
             letterSpacing: 0.5,
           )),
@@ -355,6 +358,7 @@ class _TreeSidebarState extends ConsumerState<TreeSidebar> {
   }
 
   Widget _buildRecent(BuildContext context, PanelSide activePanel) {
+    final l = AppLocalizations.of(context)!;
     final recent = ref.watch(recentLocationsProvider).forSide(activePanel);
     if (recent.isEmpty) return const SizedBox.shrink();
 
@@ -370,7 +374,7 @@ class _TreeSidebarState extends ConsumerState<TreeSidebar> {
           padding: const EdgeInsets.only(left: 12, top: 8, bottom: 4, right: 8),
           child: Row(
             children: [
-              Text('RECENT', style: TextStyle(
+              Text(l.recentLocations.toUpperCase(), style: TextStyle(
                 fontSize: 10, fontWeight: FontWeight.w700, color: theme.colorScheme.onSurfaceVariant,
                 letterSpacing: 0.5,
               )),

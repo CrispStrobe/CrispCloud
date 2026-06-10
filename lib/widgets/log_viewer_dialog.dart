@@ -8,6 +8,7 @@ import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart' show Clipboard, ClipboardData;
 
+import '../l10n/app_localizations.dart';
 import '../services/log_service.dart';
 
 void showLogViewerDialog(BuildContext context) {
@@ -82,6 +83,7 @@ class _LogViewerDialogState extends State<_LogViewerDialog> {
 
   @override
   Widget build(BuildContext context) {
+    final l = AppLocalizations.of(context)!;
     final items = _visible;
     final theme = Theme.of(context);
 
@@ -93,14 +95,14 @@ class _LogViewerDialogState extends State<_LogViewerDialog> {
         child: Scaffold(
           backgroundColor: Colors.transparent,
           appBar: AppBar(
-            title: Text('System Log (${items.length} entries)'),
+            title: Text(l.systemLogTitle(items.length)),
             leading: IconButton(
               icon: const Icon(Icons.close),
               onPressed: () => Navigator.pop(context),
             ),
             actions: [
               PopupMenuButton<LogLevel>(
-                tooltip: 'Minimum level',
+                tooltip: l.minimumLevel,
                 icon: const Icon(Icons.filter_list),
                 initialValue: _minDisplay,
                 onSelected: (v) => setState(() => _minDisplay = v),
@@ -118,17 +120,17 @@ class _LogViewerDialogState extends State<_LogViewerDialog> {
                     .toList(),
               ),
               IconButton(
-                tooltip: _autoScroll ? 'Pause auto-scroll' : 'Resume auto-scroll',
+                tooltip: _autoScroll ? l.pauseAutoScroll : l.resumeAutoScroll,
                 icon: Icon(_autoScroll ? Icons.pause : Icons.play_arrow),
                 onPressed: () => setState(() => _autoScroll = !_autoScroll),
               ),
               PopupMenuButton<String>(
                 onSelected: _action,
                 itemBuilder: (_) => [
-                  const PopupMenuItem(value: 'copy', child: Text('Copy visible')),
-                  const PopupMenuItem(value: 'copy_all', child: Text('Copy all')),
+                  PopupMenuItem(value: 'copy', child: Text(l.copyVisible)),
+                  PopupMenuItem(value: 'copy_all', child: Text(l.copyAll)),
                   const PopupMenuDivider(),
-                  const PopupMenuItem(value: 'clear', child: Text('Clear')),
+                  PopupMenuItem(value: 'clear', child: Text(l.clear)),
                 ],
               ),
             ],
@@ -139,12 +141,12 @@ class _LogViewerDialogState extends State<_LogViewerDialog> {
                 padding: const EdgeInsets.fromLTRB(12, 8, 12, 4),
                 child: TextField(
                   controller: _filter,
-                  decoration: const InputDecoration(
-                    prefixIcon: Icon(Icons.search, size: 18),
-                    hintText: 'Filter logs...',
+                  decoration: InputDecoration(
+                    prefixIcon: const Icon(Icons.search, size: 18),
+                    hintText: l.filterLogs,
                     isDense: true,
                     border: OutlineInputBorder(),
-                    contentPadding: EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                    contentPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
                   ),
                   style: const TextStyle(fontSize: 12),
                   onChanged: (_) => setState(() {}),
@@ -210,16 +212,17 @@ class _LogViewerDialogState extends State<_LogViewerDialog> {
   }
 
   Future<void> _action(String a) async {
+    final l = AppLocalizations.of(context)!;
     switch (a) {
       case 'copy':
         final text = _visible.map((e) =>
             '${e.timestamp.toIso8601String()} ${e.level.name.toUpperCase()} [${e.logger}] ${e.message}'
             '${e.error != null ? ' :: ${e.error}' : ''}').join('\n');
         await Clipboard.setData(ClipboardData(text: text));
-        _toast('Visible lines copied');
+        _toast(l.visibleLinesCopied);
       case 'copy_all':
         await Clipboard.setData(ClipboardData(text: LogConfig.export()));
-        _toast('All logs copied');
+        _toast(l.allLogsCopied);
       case 'clear':
         LogConfig.clear();
         setState(() => _entries = const []);
