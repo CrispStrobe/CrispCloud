@@ -21,12 +21,13 @@ import 'file_list_view.dart' show getFileIcon;
 
 import 'package:flutter_markdown/flutter_markdown.dart';
 import 'package:flutter_svg/flutter_svg.dart';
+import 'package:archive/archive.dart' show ZipDecoder;
 import 'package:flutter_highlight/flutter_highlight.dart';
 import 'package:flutter_highlight/themes/monokai-sublime.dart';
 import 'package:flutter_highlight/themes/github.dart';
 
 /// File types we can preview inline.
-enum PreviewType { image, svg, text, markdown, pdf, video, audio, none }
+enum PreviewType { image, svg, text, markdown, pdf, video, audio, office, none }
 
 PreviewType _classifyFile(String name) {
   final ext = name.split('.').last.toLowerCase();
@@ -114,6 +115,13 @@ PreviewType _classifyFile(String name) {
     case 'vim':
     case 'makefile':
       return PreviewType.text;
+    case 'docx':
+    case 'xlsx':
+    case 'pptx':
+    case 'odt':
+    case 'ods':
+    case 'odp':
+      return PreviewType.office;
     default:
       return PreviewType.none;
   }
@@ -154,6 +162,46 @@ String? _highlightLang(String filename) {
     'dockerfile' => 'dockerfile',
     _ => null,
   };
+}
+
+/// Extract readable text from Office documents (DOCX, XLSX, PPTX, ODT).
+/// These are ZIP files containing XML; we parse the XML for text content.
+String _extractOfficeText(Uint8List bytes, String filename) {
+  final ext = filename.split('.').last.toLowerCase();
+  final archive = ZipDecoder().decodeBytes(bytes);
+
+  // Determine which XML file contains the text.
+  final xmlPaths = switch (ext) {
+    'docx' => ['word/document.xml'],
+    'xlsx' => archive.files
+        .where((f) => f.name.startsWith('xl/worksheets/') && f.name.endsWith('.xml'))
+        .map((f) => f.name)
+        .toList(),
+    'pptx' => archive.files
+        .where((f) => f.name.startsWith('ppt/slides/') && f.name.endsWith('.xml'))
+        .map((f) => f.name)
+        .toList(),
+    'odt' || 'ods' || 'odp' => ['content.xml'],
+    _ => <String>[],
+  };
+
+  final buffer = StringBuffer();
+  for (final xmlPath in xmlPaths) {
+    final entry = archive.files.where((f) => f.name == xmlPath).firstOrNull;
+    if (entry == null || !entry.isFile) continue;
+    final xmlContent = String.fromCharCodes(entry.content as List<int>);
+    // Strip XML tags and extract text content.
+    final text = xmlContent
+        .replaceAll(RegExp(r'<[^>]+>'), ' ')
+        .replaceAll(RegExp(r'\s+'), ' ')
+        .trim();
+    if (text.isNotEmpty) {
+      if (buffer.isNotEmpty) buffer.writeln('\n---\n');
+      buffer.writeln(text);
+    }
+  }
+
+  return buffer.isEmpty ? '(No text content found)' : buffer.toString();
 }
 
 String _mimeTypeForExt(String ext) {
@@ -319,6 +367,14 @@ class _PreviewPaneState extends ConsumerState<PreviewPane> {
             _loading = false;
           });
         }
+      } else if (type == PreviewType.office) {
+        // Extract text from Office documents (DOCX/XLSX/PPTX/ODT).
+        try {
+          _textContent = _extractOfficeText(bytes, file.name);
+        } catch (_) {
+          _textContent = '(Could not extract text from this document)';
+        }
+        setState(() => _loading = false);
       } else if (type == PreviewType.text || type == PreviewType.markdown) {
         // Decode as text (UTF-8 with fallback)
         try {
