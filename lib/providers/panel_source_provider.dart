@@ -16,6 +16,7 @@ import '../services/panel_source_service.dart';
 import 'auth_provider.dart';
 import 'core_providers.dart';
 import 'multi_cloud_provider.dart';
+import 'panel_provider.dart';
 
 // ---------------------------------------------------------------------------
 // Helper: opposite panel
@@ -224,11 +225,13 @@ final activeFKeyContextProvider = Provider<FKeyContext?>((ref) {
   final activeSrc = ref.watch(panelSourceProvider(activePanel));
   final oppositeSrc = ref.watch(panelSourceProvider(opposite));
 
-  // Selection comes from panel_provider; import avoided to keep this provider
-  // lightweight.  The UI layer can override via FKeyBar.overrideContext.
+  // Read selection from the panel notifier.
+  final panel = ref.watch(panelProvider(activePanel));
+  final selected = panel.selection.toList();
+
   return FKeyContext(
     activePanel: activeSrc,
     oppositePanel: oppositeSrc,
-    selectedFiles: const [],
+    selectedFiles: selected,
   );
 });
