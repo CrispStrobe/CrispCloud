@@ -52,7 +52,7 @@ class AboutAppDialog extends StatelessWidget {
                         style: theme.textTheme.headlineSmall
                             ?.copyWith(fontWeight: FontWeight.bold),
                       ),
-                      Text(
+                      SelectableText(
                         'Version $_appVersion ($_gitHash)',
                         style: theme.textTheme.bodySmall,
                       ),

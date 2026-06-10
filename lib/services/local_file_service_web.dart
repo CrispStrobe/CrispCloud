@@ -57,8 +57,10 @@ class WebFileService implements LocalFileService {
     // Initialize Root in virtual tree so navigation to '/' works
     _virtualTree['/'] = [];
 
-    // 2. Try File System Access API (Chrome/Edge/Opera)
-    if (js_util.hasProperty(html.window, 'showDirectoryPicker')) {
+    // 2. Try File System Access API (Chrome/Edge/Opera — skip on Safari)
+    final userAgent = html.window.navigator.userAgent;
+    final isSafari = userAgent.contains('Safari') && !userAgent.contains('Chrome') && !userAgent.contains('Chromium');
+    if (!isSafari && js_util.hasProperty(html.window, 'showDirectoryPicker')) {
       try {
         debugPrint("[Web] Attempting 'showDirectoryPicker' (Write Access)...");
 
