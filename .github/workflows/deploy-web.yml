@@ -47,8 +47,14 @@ jobs:
       - run: flutter pub get
       - run: flutter build web --release
 
-      - name: Copy vercel.json into build output
-        run: cp vercel.json build/web/vercel.json
+      - name: Prepare build output for Vercel
+        env:
+          VERCEL_ORG_ID: ${{ secrets.VERCEL_ORG_ID }}
+          VERCEL_PROJECT_ID: ${{ secrets.VERCEL_PROJECT_ID }}
+        run: |
+          cp vercel.json build/web/vercel.json
+          mkdir -p build/web/.vercel
+          echo "{\"projectId\":\"$VERCEL_PROJECT_ID\",\"orgId\":\"$VERCEL_ORG_ID\"}" > build/web/.vercel/project.json
 
       - name: Install Vercel CLI
         run: npm install -g vercel
@@ -56,9 +62,9 @@ jobs:
       - name: Deploy to Vercel (production)
         env:
           VERCEL_TOKEN: ${{ secrets.VERCEL_TOKEN }}
-          VERCEL_ORG_ID: ${{ secrets.VERCEL_ORG_ID }}
-          VERCEL_PROJECT_ID: ${{ secrets.VERCEL_PROJECT_ID }}
-        run: vercel deploy build/web --prod --yes --token="$VERCEL_TOKEN"
+        run: |
+          cd build/web
+          vercel deploy --prod --yes --token="$VERCEL_TOKEN"
 
       - name: Verify deployment is live
         env:
