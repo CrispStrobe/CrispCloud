@@ -127,10 +127,19 @@ class ArchiveService {
     String archivePath,
     String innerPath,
   ) async {
-    if (kIsWeb) throw UnsupportedError('Archive browsing not supported on Web');
+    if (kIsWeb) throw UnsupportedError('Use listArchiveContentsFromBytes on Web');
 
     final bytes = await File(archivePath).readAsBytes();
-    final archive = _decodeArchive(archivePath, bytes);
+    return listArchiveContentsFromBytes(archivePath, bytes, innerPath);
+  }
+
+  /// List archive contents from bytes (works on web and native).
+  static List<FileItem> listArchiveContentsFromBytes(
+    String archiveName,
+    Uint8List archiveBytes,
+    String innerPath,
+  ) {
+    final archive = _decodeArchive(archiveName, archiveBytes);
     if (archive == null) return [];
 
     // Normalise innerPath to always end with '/' (or empty for root)
@@ -201,10 +210,19 @@ class ArchiveService {
     String archivePath,
     String entryPath,
   ) async {
-    if (kIsWeb) throw UnsupportedError('Archive extraction not supported on Web');
+    if (kIsWeb) throw UnsupportedError('Use extractArchiveEntryFromBytes on Web');
 
     final bytes = await File(archivePath).readAsBytes();
-    final archive = _decodeArchive(archivePath, bytes);
+    return extractArchiveEntryFromBytes(archivePath, bytes, entryPath);
+  }
+
+  /// Extract a single entry from archive bytes (works on web and native).
+  static Uint8List? extractArchiveEntryFromBytes(
+    String archiveName,
+    Uint8List archiveBytes,
+    String entryPath,
+  ) {
+    final archive = _decodeArchive(archiveName, archiveBytes);
     if (archive == null) return null;
 
     for (final entry in archive) {

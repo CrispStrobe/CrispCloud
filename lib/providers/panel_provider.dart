@@ -294,13 +294,26 @@ class PanelNotifier extends ChangeNotifier {
   // --- Archive navigation ---
 
   /// Enter a compressed archive for browsing.
+  /// Cached archive bytes for web browsing (native reads from disk each time).
+  Uint8List? _archiveBytes;
+
   Future<void> enterArchive(FileItem file) async {
     if (file.path == null && file.name.isEmpty) return;
     final archivePath = file.path ?? p.posix.join(_remotePath, file.name);
     final parentSource = side == PanelSide.local
         ? LocalPanelSource(currentPath)
-        : LocalPanelSource(currentPath); // Simplified — local archives only for now
+        : LocalPanelSource(currentPath);
     _archiveSource = const PanelSourceService().enterArchive(archivePath, parentSource);
+
+    // On web, load archive bytes into memory for browsing.
+    if (kIsWeb && file.path != null) {
+      try {
+        _archiveBytes = await _localFileService.readFile(file.path!, fileItem: file);
+      } catch (_) {
+        _archiveBytes = null;
+      }
+    }
+
     await _loadArchiveFiles();
     notifyListeners();
   }
@@ -333,13 +346,23 @@ class PanelNotifier extends ChangeNotifier {
   /// Exit the archive and restore the parent directory listing.
   void exitArchive() {
     _archiveSource = null;
+    _archiveBytes = null;
     refresh();
   }
 
   Future<void> _loadArchiveFiles() async {
     if (_archiveSource == null) return;
     try {
-      _files = await const PanelSourceService().listFiles(_archiveSource!);
+      if (kIsWeb && _archiveBytes != null) {
+        // Web: use in-memory bytes
+        _files = ArchiveService.listArchiveContentsFromBytes(
+          _archiveSource!.archivePath,
+          _archiveBytes!,
+          _archiveSource!.innerPath,
+        );
+      } else {
+        _files = await const PanelSourceService().listFiles(_archiveSource!);
+      }
       _sortFiles();
     } catch (e) {
       _files = [];
