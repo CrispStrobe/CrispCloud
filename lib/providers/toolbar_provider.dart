@@ -4,6 +4,7 @@
 
 import 'dart:io' show Platform;
 
+import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
@@ -99,7 +100,12 @@ class PanelViewModeNotifier extends StateNotifier<PanelViewMode> {
   }
 
   Future<void> cycleMode() async {
-    final next = await _service.cycleMode(_side);
+    var next = await _service.cycleMode(_side);
+    // Tree view is not available on web — skip to brief.
+    if (next == PanelViewMode.tree && kIsWeb) {
+      next = PanelViewMode.brief;
+      await _service.setMode(_side, next);
+    }
     state = next;
   }
 }

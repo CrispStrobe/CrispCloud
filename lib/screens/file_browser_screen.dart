@@ -275,12 +275,12 @@ class _FileBrowserScreenState extends ConsumerState<FileBrowserScreen> {
 
   // --- Layout helpers ---
 
-  IconData _layoutPresetIcon(LayoutPreset preset) {
+  static IconData _layoutPresetIcon(LayoutPreset preset) {
     switch (preset) {
       case LayoutPreset.commander:
         return Icons.view_column;
       case LayoutPreset.explorer:
-        return Icons.account_tree;
+        return Icons.folder_copy;
       case LayoutPreset.gallery:
         return Icons.grid_view;
     }
@@ -566,7 +566,7 @@ class _FileBrowserScreenState extends ConsumerState<FileBrowserScreen> {
             child: Text('Layout Preset', style: TextStyle(fontSize: 12, fontWeight: FontWeight.bold)),
           ),
           _presetMenuItem(LayoutPreset.commander, 'Commander (Two Panels)', Icons.view_column, layoutPreset),
-          _presetMenuItem(LayoutPreset.explorer, 'Explorer (Tree + Panel)', Icons.account_tree, layoutPreset),
+          _presetMenuItem(LayoutPreset.explorer, 'Explorer (Tree + Panel)', Icons.folder_copy, layoutPreset),
           _presetMenuItem(LayoutPreset.gallery, 'Gallery (Grid View)', Icons.grid_view, layoutPreset),
         ],
       ),
@@ -644,7 +644,7 @@ class _FileBrowserScreenState extends ConsumerState<FileBrowserScreen> {
             child: Text('Layout Preset', style: TextStyle(fontSize: 12, fontWeight: FontWeight.bold)),
           ),
           _presetMenuItem(LayoutPreset.commander, 'Commander (Two Panels)', Icons.view_column, layoutPreset),
-          _presetMenuItem(LayoutPreset.explorer, 'Explorer (Tree + Panel)', Icons.account_tree, layoutPreset),
+          _presetMenuItem(LayoutPreset.explorer, 'Explorer (Tree + Panel)', Icons.folder_copy, layoutPreset),
           _presetMenuItem(LayoutPreset.gallery, 'Gallery (Grid View)', Icons.grid_view, layoutPreset),
         ],
       ),
@@ -888,6 +888,15 @@ class _FileBrowserScreenState extends ConsumerState<FileBrowserScreen> {
     final (newLeft, newRight) = service.swap(leftSrc, rightSrc);
     ref.read(panelSourceProvider(PanelSide.local).notifier).setSource(newLeft);
     ref.read(panelSourceProvider(PanelSide.remote).notifier).setSource(newRight);
+    // Also toggle the active panel so the user sees the swap happen.
+    final active = ref.read(activePanelProvider);
+    final newActive = active == PanelSide.local ? PanelSide.remote : PanelSide.local;
+    ref.read(activePanelProvider.notifier).state = newActive;
+    // Update mobile tab if in single-panel mode.
+    setState(() => _activePanelMobile = newActive);
+    // Refresh both panels to reflect new sources.
+    ref.read(panelProvider(PanelSide.local)).refresh();
+    ref.read(panelProvider(PanelSide.remote)).refresh();
   }
 
   void _handleFKeyAction(BuildContext context, WidgetRef ref, FKeyAction action) {
