@@ -9,6 +9,7 @@
 //
 // Run:  flutter test test/nextcloud_adapter_delta_live_test.dart --run-skipped
 @Tags(['live'])
+@Timeout(Duration(minutes: 3))
 
 import 'dart:io';
 import 'dart:typed_data';
