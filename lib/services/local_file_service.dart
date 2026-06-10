@@ -39,6 +39,11 @@ abstract class LocalFileService {
   /// abstract interface.
   Object? getWebFileRef(String path) => null;
 
+  /// Delete a file or directory entry (web: uses FSA removeEntry).
+  Future<void> deleteEntry(String path, bool isFolder) async {
+    throw UnsupportedError('deleteEntry not implemented on this platform');
+  }
+
   /// Force a refresh of the file listing
   Future<void> refresh() async {}
 

@@ -930,18 +930,21 @@ class PanelNotifier extends ChangeNotifier {
     final audit = _ref.read(auditServiceProvider);
     final actionHistory = _ref.read(actionHistoryProvider.notifier);
     final providerName = side == PanelSide.local ? 'local' : _ref.read(authProvider).client.providerName;
-    if (kIsWeb && side == PanelSide.local) return;
     try {
-      final client = _ref.read(authProvider).client;
       for (final file in files) {
         final src = file.path ?? p.posix.join(_remotePath, file.name);
         if (side == PanelSide.local) {
-          if (file.isFolder) {
-            await Directory(file.path!).delete(recursive: true);
+          if (kIsWeb) {
+            await _localFileService.deleteEntry(file.path!, file.isFolder);
           } else {
-            await File(file.path!).delete();
+            if (file.isFolder) {
+              await Directory(file.path!).delete(recursive: true);
+            } else {
+              await File(file.path!).delete();
+            }
           }
         } else {
+          final client = _ref.read(authProvider).client;
           final deletePath = file.path ?? p.posix.join(_remotePath, file.name);
           await client.deletePath(deletePath);
         }
@@ -1095,7 +1098,6 @@ class PanelNotifier extends ChangeNotifier {
     final audit = _ref.read(auditServiceProvider);
     final actionHistory = _ref.read(actionHistoryProvider.notifier);
     final providerName = side == PanelSide.local ? 'local' : _ref.read(authProvider).client.providerName;
-    if (kIsWeb && side == PanelSide.local) return;
     try {
       for (final file in files) {
         final src = file.path ?? p.posix.join(_remotePath, file.name);
@@ -1150,13 +1152,19 @@ class PanelNotifier extends ChangeNotifier {
     final audit = _ref.read(auditServiceProvider);
     final actionHistory = _ref.read(actionHistoryProvider.notifier);
     final providerName = side == PanelSide.local ? 'local' : _ref.read(authProvider).client.providerName;
-    if (kIsWeb && side == PanelSide.local) return;
     try {
       for (final file in files) {
         final src = file.path ?? p.posix.join(_remotePath, file.name);
         // copyPath is the new file that was created — used for undo (delete the copy)
         final String copyPath;
-        if (side == PanelSide.local) {
+        if (side == PanelSide.local && kIsWeb) {
+          // Web: copy within virtual filesystem or download
+          copyPath = p.posix.join(targetPath, file.name);
+          if (file.path != null) {
+            final bytes = await _localFileService.readFile(file.path!, fileItem: file);
+            await _localFileService.saveFile(copyPath, bytes);
+          }
+        } else if (side == PanelSide.local) {
           copyPath = p.join(targetPath, file.name);
           if (file.isFolder) {
             await _copyDirectory(file.path!, copyPath);

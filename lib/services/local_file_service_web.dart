@@ -295,6 +295,32 @@ class WebFileService implements LocalFileService {
   }
 
   @override
+  Future<void> deleteEntry(String path, bool isFolder) async {
+    final dirPath = p.dirname(path);
+    final name = p.basename(path);
+
+    // Try FSA removeEntry on the parent directory handle.
+    final parentHandle = _dirHandles[dirPath];
+    if (parentHandle != null) {
+      try {
+        final opts = js_util.newObject();
+        if (isFolder) js_util.setProperty(opts, 'recursive', true);
+        final promise = js_util.callMethod(parentHandle, 'removeEntry', [name, opts]);
+        await js_util.promiseToFuture(promise);
+      } catch (e) {
+        debugPrint('[Web] FSA removeEntry failed: $e');
+        throw Exception('Delete failed: $e');
+      }
+    }
+
+    // Clean up virtual tree.
+    _fileRefs.remove(path);
+    _virtualTree[dirPath]?.removeWhere((e) => e.path == path);
+    _virtualTree.remove(path);
+    _dirHandles.remove(path);
+  }
+
+  @override
   Future<void> saveFile(String path, Uint8List data) async {
     if (_rootDirHandle != null) {
       try {
