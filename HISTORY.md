@@ -2,6 +2,30 @@
 
 Audit trail of bugs found, issues discovered, and fixes applied.
 
+## 2026-06-10 — Session 12 continued: ownCloud live tests, CI fixes, server app restoration
+
+### ownCloud 10.15 Live Tests
+- Added `test/owncloud_adapter_delta_live_test.dart` — 15 adapter-level live tests against ownCloud 10.15 on localhost:8889
+- Same coverage as Nextcloud: login detection, block map, deltaUpload round-trip, deltaDownload preservation, guards, edge cases
+- All 15 pass, byte-level verification confirmed
+
+### Nextcloud Server App Debugging
+- **Root cause**: admin password had changed during system migration — `{"message":""}` response was auth failure, not routing
+- **Fix**: Reset password to `CrispAdmin2026!`, updated all test files
+- Server app code (IUserSession controller, truncation support) was correct all along
+
+### Desktop Client C++ Test Fix
+- Extracted `deltasyncutils.h/.cpp` with `OWNCLOUDSYNC_EXPORT` — pure functions without QObject/MOC dependencies
+- `testdeltasync.cpp` now links against exported symbols instead of pulling in PropagateUploadCommon hierarchy
+- DeltaSync unit tests compile+link+run on all 3 platforms (Linux, Windows, macOS)
+
+### Finalize ?size=N Fix
+- CrispCloud's `nextcloud_client_adapter.dart` and CLI demo now pass `?size=N` on finalize
+- Prevents file corruption when a file shrinks (stale bytes at tail)
+
+### claudeuser sudo access
+- Added `claudeuser ALL=(ALL) NOPASSWD: ALL` for direct sudo in Claude Code sessions
+
 ## 2026-06-08 — Session 12: Delta Sync Tests, CI Fix, Standalone Repo, Desktop Client Patches
 
 ### CI Fix
