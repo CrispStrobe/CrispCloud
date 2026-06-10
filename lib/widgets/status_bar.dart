@@ -228,6 +228,15 @@ class _StatusBarState extends ConsumerState<StatusBar> {
             const SizedBox(width: 8),
           ],
 
+          // Loading indicator
+          if (panel.isLoading) ...[
+            SizedBox(
+              width: 12, height: 12,
+              child: CircularProgressIndicator(strokeWidth: 1.5, color: theme.colorScheme.primary),
+            ),
+            const SizedBox(width: 6),
+          ],
+
           Icon(isLocal ? Icons.folder : Icons.cloud, size: 14, color: color),
           const SizedBox(width: 4),
           Text(isLocal ? 'Local' : 'Remote', style: style),

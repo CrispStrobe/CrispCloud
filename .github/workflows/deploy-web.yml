@@ -14,6 +14,7 @@ concurrency:
 
 env:
   FLUTTER_CHANNEL: stable
+  FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: true
 
 jobs:
   deploy:
@@ -22,10 +23,10 @@ jobs:
     timeout-minutes: 35
 
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v5
 
       - name: Cache Flutter SDK + pub
-        uses: actions/cache@v4
+        uses: actions/cache@v5
         with:
           path: |
             /opt/hostedtoolcache/flutter
@@ -45,13 +46,23 @@ jobs:
           git config --global url."https://x-access-token:${TOKEN}@github.com/".insteadOf "https://github.com/"
 
       - run: flutter pub get
-      - name: Run flutter build web --release
+      - name: Build Flutter web
         run: |
           GIT_HASH=$(git rev-parse --short HEAD)
           APP_VERSION=$(grep '^version:' pubspec.yaml | cut -d' ' -f2)
           flutter build web --release \
             --dart-define=GIT_HASH=$GIT_HASH \
             --dart-define=APP_VERSION=$APP_VERSION
+
+      - name: Verify build output
+        run: |
+          test -f build/web/index.html || { echo "ERROR: index.html missing"; exit 1; }
+          BUILD_SIZE=$(du -sb build/web | cut -f1)
+          echo "Build size: $BUILD_SIZE bytes ($(du -sh build/web | cut -f1))"
+          if [ "$BUILD_SIZE" -lt 1000000 ]; then
+            echo "ERROR: Build output too small ($BUILD_SIZE bytes) — likely broken"
+            exit 1
+          fi
 
       - name: Prepare build output for Vercel
         env:

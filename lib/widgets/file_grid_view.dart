@@ -3,6 +3,7 @@
 // Grid/gallery view for file listing. Alternative to FileListView.
 // Shows files as icon cards with name and size underneath.
 
+import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -128,7 +129,14 @@ class _FileGridTileState extends ConsumerState<_FileGridTile> {
     if (widget.side == PanelSide.local && widget.file.path != null) {
       setState(() => _loadingThumb = true);
       try {
-        final bytes = await File(widget.file.path!).readAsBytes();
+        final Uint8List bytes;
+        if (kIsWeb) {
+          bytes = await ref.read(localFileServiceProvider).readFile(
+            widget.file.path!, fileItem: widget.file,
+          );
+        } else {
+          bytes = await File(widget.file.path!).readAsBytes();
+        }
         final thumb = await thumbService.generate(key, bytes);
         if (mounted) setState(() { _thumbnail = thumb; _loadingThumb = false; });
       } catch (_) {
@@ -152,7 +160,7 @@ class _FileGridTileState extends ConsumerState<_FileGridTile> {
       iconWidget = Icon(
         file.isFolder ? Icons.folder : getFileIcon(file.name),
         color: file.isFolder ? Colors.amber : theme.colorScheme.onSurfaceVariant,
-        size: 40,
+        size: 48,
       );
     }
 

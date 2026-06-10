@@ -23,6 +23,7 @@ concurrency:
 
 env:
   FLUTTER_CHANNEL: stable
+  FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: true
 
 jobs:
   # ---------- Analyze + Test with coverage ----------
@@ -32,11 +33,11 @@ jobs:
     timeout-minutes: 20
 
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v5
 
       # Cache Flutter SDK
       - name: Cache Flutter SDK
-        uses: actions/cache@v4
+        uses: actions/cache@v5
         with:
           path: |
             /opt/hostedtoolcache/flutter
@@ -115,10 +116,10 @@ jobs:
             artifact_path: crispcloud-android.apk
 
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v5
 
       - name: Cache Flutter SDK + pub
-        uses: actions/cache@v4
+        uses: actions/cache@v5
         with:
           path: |
             /opt/hostedtoolcache/flutter
@@ -208,10 +209,10 @@ jobs:
     needs: analyze
 
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v5
 
       - name: Cache Flutter SDK + pub
-        uses: actions/cache@v4
+        uses: actions/cache@v5
         with:
           path: |
             C:\hostedtoolcache\windows\flutter
@@ -253,10 +254,10 @@ jobs:
     needs: analyze
 
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v5
 
       - name: Cache Flutter SDK + pub
-        uses: actions/cache@v4
+        uses: actions/cache@v5
         with:
           path: |
             ~/hostedtoolcache/flutter
@@ -300,10 +301,10 @@ jobs:
     needs: analyze
 
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v5
 
       - name: Cache Flutter SDK + pub
-        uses: actions/cache@v4
+        uses: actions/cache@v5
         with:
           path: |
             ~/hostedtoolcache/flutter
