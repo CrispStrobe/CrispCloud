@@ -45,7 +45,13 @@ jobs:
           git config --global url."https://x-access-token:${TOKEN}@github.com/".insteadOf "https://github.com/"
 
       - run: flutter pub get
-      - run: flutter build web --release
+      - name: Run flutter build web --release
+        run: |
+          GIT_HASH=$(git rev-parse --short HEAD)
+          APP_VERSION=$(grep '^version:' pubspec.yaml | cut -d' ' -f2)
+          flutter build web --release \
+            --dart-define=GIT_HASH=$GIT_HASH \
+            --dart-define=APP_VERSION=$APP_VERSION
 
       - name: Prepare build output for Vercel
         env:

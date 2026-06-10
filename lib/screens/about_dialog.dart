@@ -9,6 +9,9 @@ import 'package:url_launcher/url_launcher.dart';
 class AboutAppDialog extends StatelessWidget {
   const AboutAppDialog({super.key});
 
+  static const _appVersion = String.fromEnvironment('APP_VERSION', defaultValue: '0.1.0');
+  static const _gitHash = String.fromEnvironment('GIT_HASH', defaultValue: 'dev');
+
   Future<void> _launchURL(String urlString) async {
     final Uri url = Uri.parse(urlString);
     if (await canLaunchUrl(url)) {
@@ -50,7 +53,7 @@ class AboutAppDialog extends StatelessWidget {
                             ?.copyWith(fontWeight: FontWeight.bold),
                       ),
                       Text(
-                        'Version 1.0.0',
+                        'Version $_appVersion ($_gitHash)',
                         style: theme.textTheme.bodySmall,
                       ),
                       const SizedBox(height: 16),
@@ -110,7 +113,7 @@ class AboutAppDialog extends StatelessWidget {
                       showLicensePage(
                         context: context,
                         applicationName: 'Crisp Cloud',
-                        applicationVersion: '1.0.0',
+                        applicationVersion: '$_appVersion ($_gitHash)',
                         applicationIcon:
                             const Icon(Icons.cloud, size: 48),
                         applicationLegalese: '© 2025 CrispStrobe',
