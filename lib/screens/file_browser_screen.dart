@@ -59,7 +59,8 @@ class _FileBrowserScreenState extends ConsumerState<FileBrowserScreen> {
   Widget build(BuildContext context) {
     final auth = ref.watch(authProvider);
     final showPreview = ref.watch(showPreviewProvider);
-    final layoutPreset = ref.watch(layoutPresetProvider);
+    // layoutPresetProvider kept for persistence but no longer drives layout.
+    // Layout is now controlled by showDualPanelProvider + showTreeSidebarProvider.
 
     final screenWidth = MediaQuery.sizeOf(context).width;
     final isNarrow = screenWidth <= 800;
@@ -74,8 +75,8 @@ class _FileBrowserScreenState extends ConsumerState<FileBrowserScreen> {
         titleSpacing: 12,
         title: isNarrow ? const Text('Crisp Cloud') : null,
         actions: isNarrow
-            ? _buildNarrowActions(context, auth, layoutPreset)
-            : _buildWideActions(context, auth, showPreview, layoutPreset, isDesktopPlatform),
+            ? _buildNarrowActions(context, auth)
+            : _buildWideActions(context, auth, showPreview, isDesktopPlatform),
       ),
       body: Focus(
         autofocus: true,
@@ -95,31 +96,20 @@ class _FileBrowserScreenState extends ConsumerState<FileBrowserScreen> {
               child: LayoutBuilder(
                 builder: (context, constraints) {
                   final isWide = constraints.maxWidth > 800;
+                  final dualPanel = ref.watch(showDualPanelProvider);
+                  final showTree = ref.watch(showTreeSidebarProvider);
                   final Widget layout;
 
                   if (!isWide) {
-                    // Narrow screen: always single-panel regardless of preset
                     layout = _buildSinglePanelLayout(context);
+                  } else if (dualPanel) {
+                    layout = _buildTwoPanelLayout(context);
                   } else {
-                    switch (layoutPreset) {
-                      case LayoutPreset.commander:
-                        layout = _buildTwoPanelLayout(context);
-                        break;
-                      case LayoutPreset.explorer:
-                        layout = _buildExplorerLayout(context);
-                        break;
-                      case LayoutPreset.gallery:
-                        layout = _buildGalleryLayout(context);
-                        break;
-                    }
+                    layout = _buildSingleWideLayout(context);
                   }
 
-                  // The tree sidebar toggle is independent of the layout preset
-                  // (only applies in commander and gallery modes when manually toggled)
-                  final showTree = ref.watch(showTreeSidebarProvider) &&
-                      isWide &&
-                      layoutPreset != LayoutPreset.explorer; // explorer already embeds tree
-                  if (showTree) {
+                  // Tree sidebar overlaid independently (wide only).
+                  if (showTree && isWide) {
                     return Row(
                       children: [
                         const TreeSidebar(),
@@ -275,105 +265,14 @@ class _FileBrowserScreenState extends ConsumerState<FileBrowserScreen> {
 
   // --- Layout helpers ---
 
-  static IconData _layoutPresetIcon(LayoutPreset preset) {
-    switch (preset) {
-      case LayoutPreset.commander:
-        return Icons.view_column;
-      case LayoutPreset.explorer:
-        return Icons.folder_copy;
-      case LayoutPreset.gallery:
-        return Icons.grid_view;
-    }
-  }
-
-  PopupMenuItem<LayoutPreset> _presetMenuItem(
-    LayoutPreset preset,
-    String label,
-    IconData icon,
-    LayoutPreset current,
-  ) {
-    return PopupMenuItem<LayoutPreset>(
-      value: preset,
-      child: Row(
-        children: [
-          Icon(icon, size: 18),
-          const SizedBox(width: 10),
-          Flexible(child: Text(label, overflow: TextOverflow.ellipsis)),
-          const SizedBox(width: 8),
-          if (preset == current) const Icon(Icons.check, size: 16),
-        ],
-      ),
-    );
-  }
-
-  /// Explorer preset: tree sidebar always visible, single panel.
-  Widget _buildExplorerLayout(BuildContext context) {
+  /// Single panel layout for wide screens (no dual panel).
+  Widget _buildSingleWideLayout(BuildContext context) {
     final activePanel = ref.watch(activePanelProvider);
     final showPreview = ref.watch(showPreviewProvider);
     final activePanelNotifier = ref.watch(panelProvider(activePanel));
     final previewFile = activePanelNotifier.selection.length == 1
         ? activePanelNotifier.selection.first
         : null;
-
-    return Row(
-      children: [
-        const TreeSidebar(),
-        Expanded(
-          child: Column(
-            children: [
-              PanelSourceSelector(side: activePanel),
-              Expanded(
-                child: showPreview && previewFile != null
-                    ? Row(
-                        children: [
-                          Expanded(
-                            child: FilePanel(
-                              side: activePanel,
-                              isActive: true,
-                              onTap: () {},
-                            ),
-                          ),
-                          SizedBox(
-                            width: 320,
-                            child: PreviewPane(file: previewFile, side: activePanel),
-                          ),
-                        ],
-                      )
-                    : FilePanel(
-                        side: activePanel,
-                        isActive: true,
-                        onTap: () {},
-                      ),
-              ),
-            ],
-          ),
-        ),
-      ],
-    );
-  }
-
-  /// Gallery preset: single active panel, grid view forced.
-  Widget _buildGalleryLayout(BuildContext context) {
-    final activePanel = ref.watch(activePanelProvider);
-    final showPreview = ref.watch(showPreviewProvider);
-    final activePanelNotifier = ref.watch(panelProvider(activePanel));
-    final previewFile = activePanelNotifier.selection.length == 1
-        ? activePanelNotifier.selection.first
-        : null;
-
-    // Force grid view for the active panel.
-    final viewMode = activePanel == PanelSide.local
-        ? ref.watch(localViewModeProvider)
-        : ref.watch(remoteViewModeProvider);
-    if (viewMode != ViewMode.grid) {
-      WidgetsBinding.instance.addPostFrameCallback((_) {
-        if (activePanel == PanelSide.local) {
-          ref.read(localViewModeProvider.notifier).state = ViewMode.grid;
-        } else {
-          ref.read(remoteViewModeProvider.notifier).state = ViewMode.grid;
-        }
-      });
-    }
 
     final panel = FilePanel(
       side: activePanel,
@@ -547,28 +446,12 @@ class _FileBrowserScreenState extends ConsumerState<FileBrowserScreen> {
   List<Widget> _buildNarrowActions(
     BuildContext context,
     AuthNotifier auth,
-    LayoutPreset layoutPreset,
   ) {
     return [
       IconButton(
         icon: const Icon(Icons.swap_horiz, size: 20),
         tooltip: 'Swap Panels (Ctrl+U)',
         onPressed: () => _swapPanels(),
-      ),
-      PopupMenuButton<LayoutPreset>(
-        icon: Icon(_layoutPresetIcon(layoutPreset), size: 20),
-        tooltip: 'Layout Preset',
-        onSelected: (preset) =>
-            ref.read(layoutPresetProvider.notifier).setPreset(preset),
-        itemBuilder: (context) => [
-          const PopupMenuItem(
-            enabled: false,
-            child: Text('Layout Preset', style: TextStyle(fontSize: 12, fontWeight: FontWeight.bold)),
-          ),
-          _presetMenuItem(LayoutPreset.commander, 'Commander (Two Panels)', Icons.view_column, layoutPreset),
-          _presetMenuItem(LayoutPreset.explorer, 'Explorer (Tree + Panel)', Icons.folder_copy, layoutPreset),
-          _presetMenuItem(LayoutPreset.gallery, 'Gallery (Grid View)', Icons.grid_view, layoutPreset),
-        ],
       ),
       _buildOverflowMenu(context, auth),
       const SizedBox(width: 4),
@@ -588,7 +471,6 @@ class _FileBrowserScreenState extends ConsumerState<FileBrowserScreen> {
     BuildContext context,
     AuthNotifier auth,
     bool showPreview,
-    LayoutPreset layoutPreset,
     bool isDesktopPlatform,
   ) {
     final toolbarButtons = <Widget>[
@@ -614,39 +496,67 @@ class _FileBrowserScreenState extends ConsumerState<FileBrowserScreen> {
             );
           },
         ),
-      // View density cycle
+      // Toggle: dual panel ↔ single panel
+      Consumer(
+        builder: (ctx, cref, _) {
+          final dual = cref.watch(showDualPanelProvider);
+          return IconButton(
+            icon: Icon(dual ? Icons.view_column : Icons.web_asset, size: 20,
+              color: dual ? Theme.of(ctx).colorScheme.primary : null),
+            tooltip: dual ? 'Single Panel' : 'Dual Panel',
+            onPressed: () =>
+                cref.read(showDualPanelProvider.notifier).state = !dual,
+          );
+        },
+      ),
+      // Toggle: tree sidebar
+      Consumer(
+        builder: (ctx, cref, _) {
+          final showTree = cref.watch(showTreeSidebarProvider);
+          return IconButton(
+            icon: Icon(Icons.account_tree, size: 20,
+              color: showTree ? Theme.of(ctx).colorScheme.primary : null),
+            tooltip: showTree ? 'Hide Tree Sidebar' : 'Show Tree Sidebar',
+            onPressed: () =>
+                cref.read(showTreeSidebarProvider.notifier).state = !showTree,
+          );
+        },
+      ),
+      // Toggle: grid ↔ list view
+      Consumer(
+        builder: (ctx, cref, _) {
+          final ap = cref.watch(activePanelProvider);
+          final viewMode = ap == PanelSide.local
+              ? cref.watch(localViewModeProvider)
+              : cref.watch(remoteViewModeProvider);
+          final isGrid = viewMode == ViewMode.grid;
+          return IconButton(
+            icon: Icon(isGrid ? Icons.view_list : Icons.grid_view, size: 20),
+            tooltip: isGrid ? 'Details List' : 'Grid View',
+            onPressed: () {
+              final notifier = ap == PanelSide.local
+                  ? cref.read(localViewModeProvider.notifier)
+                  : cref.read(remoteViewModeProvider.notifier);
+              notifier.state = isGrid ? ViewMode.list : ViewMode.grid;
+            },
+          );
+        },
+      ),
+      // View density: compact ↔ large
       Consumer(
         builder: (ctx, cref, _) {
           final ap = cref.watch(activePanelProvider);
           final mode = cref.watch(panelViewModeProvider(ap));
-          final (icon, tip) = switch (mode) {
-            PanelViewMode.brief => (Icons.density_small,  'Switch to compact view'),
-            PanelViewMode.full  => (Icons.account_tree,   'Switch to tree view'),
-            PanelViewMode.tree  => (Icons.density_large,  'Switch to touch-friendly view'),
-          };
+          final isCompact = mode == PanelViewMode.full;
           return IconButton(
-            icon: Icon(icon, size: 20),
-            tooltip: tip,
+            icon: Icon(isCompact ? Icons.density_large : Icons.density_small, size: 20),
+            tooltip: isCompact ? 'Large Items' : 'Compact Items',
             onPressed: () =>
-                cref.read(panelViewModeProvider(ap).notifier).cycleMode(),
+                cref.read(panelViewModeProvider(ap).notifier).setMode(
+                  isCompact ? PanelViewMode.brief : PanelViewMode.full,
+                ),
           );
         },
-      ),
-      // Layout preset selector
-      PopupMenuButton<LayoutPreset>(
-        icon: Icon(_layoutPresetIcon(layoutPreset), size: 20),
-        tooltip: 'Layout Preset',
-        onSelected: (preset) =>
-            ref.read(layoutPresetProvider.notifier).setPreset(preset),
-        itemBuilder: (context) => [
-          const PopupMenuItem(
-            enabled: false,
-            child: Text('Layout Preset', style: TextStyle(fontSize: 12, fontWeight: FontWeight.bold)),
-          ),
-          _presetMenuItem(LayoutPreset.commander, 'Commander (Two Panels)', Icons.view_column, layoutPreset),
-          _presetMenuItem(LayoutPreset.explorer, 'Explorer (Tree + Panel)', Icons.folder_copy, layoutPreset),
-          _presetMenuItem(LayoutPreset.gallery, 'Gallery (Grid View)', Icons.grid_view, layoutPreset),
-        ],
       ),
       IconButton(
         icon: const Icon(Icons.cloud_sync, size: 20),
@@ -785,9 +695,21 @@ class _FileBrowserScreenState extends ConsumerState<FileBrowserScreen> {
             showAuditLogDialog(context);
           case 'cache':
             showCacheSettingsDialog(context, ref);
+          case 'dual_panel':
+            ref.read(showDualPanelProvider.notifier).state =
+                !ref.read(showDualPanelProvider);
           case 'tree':
             ref.read(showTreeSidebarProvider.notifier).state =
                 !ref.read(showTreeSidebarProvider);
+          case 'grid_toggle':
+            final ap = ref.read(activePanelProvider);
+            final notifier = ap == PanelSide.local
+                ? ref.read(localViewModeProvider.notifier)
+                : ref.read(remoteViewModeProvider.notifier);
+            final current = ap == PanelSide.local
+                ? ref.read(localViewModeProvider)
+                : ref.read(remoteViewModeProvider);
+            notifier.state = current == ViewMode.grid ? ViewMode.list : ViewMode.grid;
           case 'preview':
             ref.read(showPreviewProvider.notifier).state =
                 !ref.read(showPreviewProvider);
@@ -837,13 +759,35 @@ class _FileBrowserScreenState extends ConsumerState<FileBrowserScreen> {
         PopupMenuItem(value: 'audit', child: _overflowItem(Icons.history, 'Audit Log')),
         PopupMenuItem(value: 'cache', child: _overflowItem(Icons.storage, 'Cache Settings')),
         const PopupMenuDivider(),
-        PopupMenuItem(value: 'tree', child: _overflowItem(Icons.account_tree, 'Toggle Tree Sidebar')),
         PopupMenuItem(
-          value: 'preview',
+          value: 'dual_panel',
           child: _overflowItem(
-            ref.read(showPreviewProvider) ? Icons.visibility : Icons.visibility_off,
-            ref.read(showPreviewProvider) ? 'Hide Preview' : 'Show Preview',
+            ref.read(showDualPanelProvider) ? Icons.view_column : Icons.web_asset,
+            ref.read(showDualPanelProvider) ? 'Single Panel' : 'Dual Panel',
+            iconColor: ref.read(showDualPanelProvider) ? Theme.of(context).colorScheme.primary : null,
           ),
+        ),
+        PopupMenuItem(
+          value: 'tree',
+          child: _overflowItem(
+            Icons.account_tree,
+            ref.read(showTreeSidebarProvider) ? 'Hide Tree Sidebar' : 'Show Tree Sidebar',
+            iconColor: ref.read(showTreeSidebarProvider) ? Theme.of(context).colorScheme.primary : null,
+          ),
+        ),
+        PopupMenuItem(
+          value: 'grid_toggle',
+          child: Builder(builder: (ctx) {
+            final ap = ref.read(activePanelProvider);
+            final vm = ap == PanelSide.local
+                ? ref.read(localViewModeProvider)
+                : ref.read(remoteViewModeProvider);
+            final isGrid = vm == ViewMode.grid;
+            return _overflowItem(
+              isGrid ? Icons.view_list : Icons.grid_view,
+              isGrid ? 'Details List' : 'Grid View',
+            );
+          }),
         ),
         PopupMenuItem(
           value: 'density',
@@ -856,6 +800,13 @@ class _FileBrowserScreenState extends ConsumerState<FileBrowserScreen> {
               isCompact ? 'Large Items' : 'Compact Items',
             );
           }),
+        ),
+        PopupMenuItem(
+          value: 'preview',
+          child: _overflowItem(
+            ref.read(showPreviewProvider) ? Icons.visibility : Icons.visibility_off,
+            ref.read(showPreviewProvider) ? 'Hide Preview' : 'Show Preview',
+          ),
         ),
         if (auth.isEncryptionEnabled)
           PopupMenuItem(value: 'keys', child: _overflowItem(Icons.key, 'Key Management')),

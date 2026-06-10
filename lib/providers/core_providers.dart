@@ -40,6 +40,9 @@ final activePanelProvider = StateProvider<PanelSide>((ref) => PanelSide.local);
 /// Whether the preview pane is visible.
 final showPreviewProvider = StateProvider<bool>((ref) => false);
 
+/// Whether to show dual panels (true) or single panel (false).
+final showDualPanelProvider = StateProvider<bool>((ref) => true);
+
 /// Whether the tree sidebar is visible.
 final showTreeSidebarProvider = StateProvider<bool>((ref) => false);
 
