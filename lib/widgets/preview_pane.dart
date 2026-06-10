@@ -21,6 +21,9 @@ import 'file_list_view.dart' show getFileIcon;
 
 import 'package:flutter_markdown/flutter_markdown.dart';
 import 'package:flutter_svg/flutter_svg.dart';
+import 'package:flutter_highlight/flutter_highlight.dart';
+import 'package:flutter_highlight/themes/monokai-sublime.dart';
+import 'package:flutter_highlight/themes/github.dart';
 
 /// File types we can preview inline.
 enum PreviewType { image, svg, text, markdown, pdf, video, audio, none }
@@ -114,6 +117,43 @@ PreviewType _classifyFile(String name) {
     default:
       return PreviewType.none;
   }
+}
+
+/// Map file extension to highlight.js language name.
+String? _highlightLang(String filename) {
+  final ext = filename.split('.').last.toLowerCase();
+  return switch (ext) {
+    'dart' => 'dart',
+    'js' || 'jsx' => 'javascript',
+    'ts' || 'tsx' => 'typescript',
+    'py' => 'python',
+    'rb' => 'ruby',
+    'go' => 'go',
+    'rs' => 'rust',
+    'java' => 'java',
+    'kt' => 'kotlin',
+    'swift' => 'swift',
+    'c' || 'h' => 'c',
+    'cpp' || 'hpp' || 'cc' => 'cpp',
+    'cs' => 'csharp',
+    'php' => 'php',
+    'html' || 'htm' => 'xml',
+    'css' => 'css',
+    'scss' => 'scss',
+    'less' => 'less',
+    'sql' => 'sql',
+    'sh' || 'bash' || 'zsh' => 'bash',
+    'ps1' => 'powershell',
+    'r' => 'r',
+    'lua' => 'lua',
+    'yaml' || 'yml' => 'yaml',
+    'json' => 'json',
+    'xml' => 'xml',
+    'toml' => 'ini',
+    'makefile' => 'makefile',
+    'dockerfile' => 'dockerfile',
+    _ => null,
+  };
 }
 
 String _mimeTypeForExt(String ext) {
@@ -547,8 +587,25 @@ class _PreviewPaneState extends ConsumerState<PreviewPane> {
       );
     }
 
-    // Text preview
+    // Text/code preview with syntax highlighting
     if (_textContent != null) {
+      final lang = _highlightLang(file.name);
+      final isDark = theme.brightness == Brightness.dark;
+      if (lang != null) {
+        return Container(
+          color: theme.colorScheme.surfaceContainerLowest,
+          child: SingleChildScrollView(
+            padding: const EdgeInsets.all(8),
+            child: HighlightView(
+              _textContent!,
+              language: lang,
+              theme: isDark ? monokaiSublimeTheme : githubTheme,
+              textStyle: const TextStyle(fontFamily: 'monospace', fontSize: 12, height: 1.4),
+              padding: const EdgeInsets.all(8),
+            ),
+          ),
+        );
+      }
       return Container(
         color: theme.colorScheme.surfaceContainerLowest,
         child: SingleChildScrollView(
