@@ -520,7 +520,11 @@ class PanelNotifier extends ChangeNotifier {
   bool isSelected(FileItem item) => _selection.contains(item);
 
   void toggleSelection(FileItem item, {bool shiftKey = false, bool ctrlKey = false}) {
-    _log.debug('toggleSelection: ${item.name} shift=$shiftKey ctrl=$ctrlKey lastSelected=${_lastSelected?.name}');
+    _log.debug('toggleSelection: ${item.name} shift=$shiftKey ctrl=$ctrlKey lastSelected=${_lastSelected?.name} side=$side');
+    // Ensure this panel is the active panel (drives F-key context).
+    if (_ref.read(activePanelProvider) != side) {
+      _ref.read(activePanelProvider.notifier).state = side;
+    }
     // Sync cursor to clicked item
     if (_files != null) {
       final idx = _files!.indexOf(item);
