@@ -1,0 +1,61 @@
+name: Deploy Web
+
+# Builds Flutter web and deploys to Vercel on every push to main.
+# Uses pre-built static deploy (Vercel can't build Flutter).
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+concurrency:
+  group: deploy-web
+  cancel-in-progress: true
+
+env:
+  FLUTTER_CHANNEL: stable
+
+jobs:
+  deploy:
+    name: Build & Deploy to Vercel
+    runs-on: ubuntu-latest
+    timeout-minutes: 25
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Cache Flutter SDK + pub
+        uses: actions/cache@v4
+        with:
+          path: |
+            /opt/hostedtoolcache/flutter
+            ~/.pub-cache
+          key: flutter-${{ env.FLUTTER_CHANNEL }}-${{ runner.os }}-${{ hashFiles('pubspec.yaml') }}
+          restore-keys: |
+            flutter-${{ env.FLUTTER_CHANNEL }}-${{ runner.os }}-
+
+      - uses: subosito/flutter-action@v2
+        with:
+          channel: ${{ env.FLUTTER_CHANNEL }}
+          cache: true
+
+      - name: Configure git auth for private deps
+        run: |
+          TOKEN="${{ secrets.GH_PAT || github.token }}"
+          git config --global url."https://x-access-token:${TOKEN}@github.com/".insteadOf "https://github.com/"
+
+      - run: flutter pub get
+      - run: flutter build web --release
+
+      - name: Copy vercel.json into build output
+        run: cp vercel.json build/web/vercel.json
+
+      - name: Install Vercel CLI
+        run: npm install -g vercel
+
+      - name: Deploy to Vercel (production)
+        env:
+          VERCEL_TOKEN: ${{ secrets.VERCEL_TOKEN }}
+          VERCEL_ORG_ID: ${{ secrets.VERCEL_ORG_ID }}
+          VERCEL_PROJECT_ID: ${{ secrets.VERCEL_PROJECT_ID }}
+        run: vercel deploy build/web --prod --yes --archive=tgz --token="$VERCEL_TOKEN"
