@@ -252,7 +252,7 @@ class WebFileService implements LocalFileService {
     if (lookup.length > 1 && lookup.endsWith('/')) {
       lookup = lookup.substring(0, lookup.length - 1);
     }
-    return _virtualTree.containsKey(lookup) || _fileRefs.containsKey(lookup);
+    return _virtualTree.containsKey(lookup) || _fileRefs.containsKey(lookup) || _dirHandles.containsKey(lookup);
   }
 
   @override
@@ -263,7 +263,47 @@ class WebFileService implements LocalFileService {
 
   @override
   Future<Uint8List> readFile(String path, {FileItem? fileItem}) async {
-    final fileRef = _fileRefs[path];
+    // Try direct lookup first.
+    var fileRef = _fileRefs[path];
+
+    // Try with/without leading slash variations.
+    if (fileRef == null && path.startsWith('/')) {
+      fileRef = _fileRefs[path.substring(1)];
+    }
+    if (fileRef == null && !path.startsWith('/')) {
+      fileRef = _fileRefs['/$path'];
+    }
+
+    // Try FSA handle: navigate to the file through parent directory handles.
+    if (fileRef == null && _rootDirHandle != null) {
+      try {
+        final parts = path.split('/').where((s) => s.isNotEmpty).toList();
+        if (parts.length >= 2) {
+          // Navigate through directory handles to reach the file.
+          dynamic current = _rootDirHandle;
+          // Skip the root folder name (first segment matches _rootDirHandle).
+          for (var i = 1; i < parts.length - 1; i++) {
+            final dirHandle = _dirHandles['/${parts.sublist(0, i + 1).join('/')}'];
+            if (dirHandle != null) {
+              current = dirHandle;
+            } else {
+              final opts = js_util.newObject();
+              final promise = js_util.callMethod(current, 'getDirectoryHandle', [parts[i], opts]);
+              current = await js_util.promiseToFuture(promise);
+            }
+          }
+          final fileName = parts.last;
+          final fhPromise = js_util.callMethod(current, 'getFileHandle', [fileName]);
+          final fh = await js_util.promiseToFuture(fhPromise);
+          final fPromise = js_util.callMethod(fh, 'getFile', []);
+          fileRef = await js_util.promiseToFuture(fPromise);
+          _fileRefs[path] = fileRef!;
+        }
+      } catch (e) {
+        debugPrint('[Web] FSA file lookup failed for $path: $e');
+      }
+    }
+
     if (fileRef == null) throw Exception('File ref not found: $path');
 
     final reader = html.FileReader();

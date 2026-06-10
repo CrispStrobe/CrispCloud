@@ -298,8 +298,19 @@ void showCopyDialogFromSelection(BuildContext context, WidgetRef ref) {
   final panel = ref.read(panelProvider(activePanel));
   if (panel.selection.isEmpty) return;
 
-  // On web with local files, download instead of copy.
+  // On web: if the opposite panel has a local folder open, copy there.
+  // Otherwise download via browser.
   if (kIsWeb && activePanel == PanelSide.local) {
+    final opposite = activePanel == PanelSide.local ? PanelSide.remote : PanelSide.local;
+    final oppositePanel = ref.read(panelProvider(opposite));
+    final oppPath = oppositePanel.currentPath;
+    if (oppPath.isNotEmpty && oppPath != '/') {
+      // Copy to opposite panel's folder.
+      panel.copyFiles(panel.selection.toList(), oppPath).then((_) {
+        oppositePanel.refresh();
+      });
+      return;
+    }
     _downloadFilesOnWeb(ref, panel.selection.toList());
     return;
   }

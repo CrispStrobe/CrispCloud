@@ -272,8 +272,14 @@ class _FileEditorPageState extends ConsumerState<_FileEditorPage> {
       final client = ref.read(authProvider).client;
       Uint8List bytes;
 
-      if (widget.side == PanelSide.local && widget.file.path != null && !kIsWeb) {
-        bytes = await File(widget.file.path!).readAsBytes();
+      if (widget.side == PanelSide.local && widget.file.path != null) {
+        if (kIsWeb) {
+          bytes = await ref.read(localFileServiceProvider).readFile(
+            widget.file.path!, fileItem: widget.file,
+          );
+        } else {
+          bytes = await File(widget.file.path!).readAsBytes();
+        }
       } else {
         final remotePath = widget.file.path ?? '/${widget.file.name}';
         bytes = await client.downloadFileBytes(remotePath);
@@ -328,8 +334,12 @@ class _FileEditorPageState extends ConsumerState<_FileEditorPage> {
       final client = ref.read(authProvider).client;
       final bytes = Uint8List.fromList(utf8.encode(_controller.text));
 
-      if (widget.side == PanelSide.local && widget.file.path != null && !kIsWeb) {
-        await File(widget.file.path!).writeAsBytes(bytes);
+      if (widget.side == PanelSide.local && widget.file.path != null) {
+        if (kIsWeb) {
+          await ref.read(localFileServiceProvider).saveFile(widget.file.path!, bytes);
+        } else {
+          await File(widget.file.path!).writeAsBytes(bytes);
+        }
       } else {
         final remotePath = widget.file.path ?? '/${widget.file.name}';
         final fileName = p.basename(remotePath);
