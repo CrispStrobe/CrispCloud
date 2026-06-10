@@ -227,7 +227,7 @@ void main() {
   // Full delta sync round-trip
   // ===========================================================================
   group('Full delta sync round-trip', () {
-    test('upload → modify → upload cycle with block-level verification', () async {
+    test('upload → modify → upload cycle with block-level verification', timeout: const Timeout(Duration(minutes: 2)), () async {
       // Step 1: Upload a fresh 12 MB test file via WebDAV
       final testFile = 'delta-live-roundtrip.bin';
       final originalData = List<int>.generate(
