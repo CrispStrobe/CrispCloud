@@ -13,21 +13,34 @@ void main() {
   late FilenConfigService configService;
   late InMemorySecureStorage secureStorage;
 
-  setUp(() {
+  /// Creates a fresh AppState. Call [_awaitInit] after if the test needs
+  /// state that's stable after async init (i.e., everything except "initial state" tests).
+  void createAppState() {
     SharedPreferences.setMockInitialValues({});
     secureStorage = InMemorySecureStorage();
     configService = FilenConfigService(configPath: '/tmp/app_state_test_config', secureStorage: secureStorage);
     appState = AppState(config: configService, secureStorage: secureStorage);
+  }
+
+  /// Waits for AppState's unawaited _initializeLocalPath() and
+  /// _attemptAutoLogin() to complete so they don't fire notifyListeners()
+  /// after the test completes.
+  Future<void> awaitInit() => Future.delayed(const Duration(seconds: 1));
+
+  setUp(() async {
+    createAppState();
+    // Wait for async init to settle so tests don't get
+    // "test failed after it had already completed" from stale notifyListeners().
+    await awaitInit();
   });
 
-  tearDown(() async {
-    // Wait for async init (_initializeLocalPath, _attemptAutoLogin) to settle
-    // before disposing, otherwise they call notifyListeners() on a disposed object.
-    await Future.delayed(const Duration(milliseconds: 100));
+  tearDown(() {
     appState.dispose();
   });
 
   group('AppState initial state', () {
+    // These test state after async init has settled (no credentials found,
+    // so connected=false, email=null, etc. remain at their defaults).
     test('is not connected initially', () {
       expect(appState.isConnected, isFalse);
     });
@@ -36,9 +49,7 @@ void main() {
       expect(appState.userEmail, isNull);
     });
 
-    test('localFileItems may be null before async init completes', () {
-      // localFileItems is loaded asynchronously, may be null right after construction
-      // We just verify it does not throw
+    test('localFileItems may be null or a list after init', () {
       final files = appState.localFileItems;
       expect(files == null || files is List<FileItem>, isTrue);
     });
@@ -259,32 +270,40 @@ void main() {
   group('AppState ChangeNotifier', () {
     test('notifies listeners on setActivePanel', () {
       var notified = false;
-      appState.addListener(() => notified = true);
+      void listener() => notified = true;
+      appState.addListener(listener);
       appState.setActivePanel(PanelSide.remote);
       expect(notified, isTrue);
+      appState.removeListener(listener);
     });
 
     test('notifies listeners on toggleSortOrder', () {
       var notified = false;
-      appState.addListener(() => notified = true);
+      void listener() => notified = true;
+      appState.addListener(listener);
       appState.toggleSortOrder(PanelSide.local);
       expect(notified, isTrue);
+      appState.removeListener(listener);
     });
 
     test('notifies listeners on setSortBy', () {
       var notified = false;
-      appState.addListener(() => notified = true);
+      void listener() => notified = true;
+      appState.addListener(listener);
       appState.setSortBy(PanelSide.local, SortBy.date);
       expect(notified, isTrue);
+      appState.removeListener(listener);
     });
 
     test('notifies listeners on clearSelection', () {
       var notified = false;
       final item = FileItem(name: 'x.txt', isFolder: false);
       appState.toggleSelection(PanelSide.local, item);
-      appState.addListener(() => notified = true);
+      void listener() => notified = true;
+      appState.addListener(listener);
       appState.clearSelection(PanelSide.local);
       expect(notified, isTrue);
+      appState.removeListener(listener);
     });
   });
 

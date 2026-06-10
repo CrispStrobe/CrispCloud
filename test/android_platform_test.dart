@@ -128,7 +128,8 @@ void main() {
       await svc.setTheme(AppThemeMode.materialYou);
 
       bool notified = false;
-      svc.addListener(() => notified = true);
+      void listener() => notified = true;
+      svc.addListener(listener);
 
       const dynamicLight = ColorScheme(
         brightness: Brightness.light,
@@ -168,6 +169,7 @@ void main() {
       // Light theme should use the dynamic scheme's primary
       final light = svc.lightTheme;
       expect(light.colorScheme.primary, const Color(0xFF6750A4));
+      svc.removeListener(listener);
     });
 
     test('setDynamicColorSchemes does not notify when schemes are unchanged', () async {
@@ -176,10 +178,12 @@ void main() {
 
       svc.setDynamicColorSchemes(null, null); // initial call
       bool notified = false;
-      svc.addListener(() => notified = true);
+      void listener() => notified = true;
+      svc.addListener(listener);
 
       svc.setDynamicColorSchemes(null, null); // same value — no change
       expect(notified, isFalse);
+      svc.removeListener(listener);
     });
 
     test('custom accent overrides dynamic primary in Material You mode', () async {

@@ -533,7 +533,9 @@ void main() {
   // -------------------------------------------------------------------------
 
   group('Packaging scripts', () {
-    const packagingDir = 'linux/packaging';
+    // Use an absolute path resolved relative to this test file so the
+    // tests work regardless of the CWD flutter test is invoked from.
+    final packagingDir = '${Directory.current.path}/linux/packaging';
 
     test('build_deb.sh exists', () {
       expect(File('$packagingDir/build_deb.sh').existsSync(), true);
