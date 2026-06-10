@@ -327,6 +327,7 @@ class _FileEditorPageState extends ConsumerState<_FileEditorPage> {
   }
 
   Future<void> _saveFile() async {
+    debugPrint('[Editor] saveFile: ${widget.file.name} side=${widget.side.name} web=$kIsWeb');
     setState(() => _saving = true);
     try {
       // Save a local snapshot before overwriting

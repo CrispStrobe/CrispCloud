@@ -43,18 +43,21 @@ class PanelSourceNotifier extends StateNotifier<PanelSource> {
 
   /// Replace the current source entirely.
   void setSource(PanelSource source) {
+    debugPrint('[PanelSource] setSource: ${source.displayName} path=${source.currentPath} side=$side');
     state = source;
     _persist();
   }
 
   /// Navigate inside the current source to a sub-path.
   void navigateTo(String path) {
+    debugPrint('[PanelSource] navigateTo: $path side=$side');
     state = state.withPath(path);
     _persist();
   }
 
   /// Enter an archive file.
   void enterArchive(String archivePath) {
+    debugPrint('[PanelSource] enterArchive: $archivePath');
     const service = PanelSourceService();
     state = service.enterArchive(archivePath, state);
     _persist();
@@ -62,6 +65,7 @@ class PanelSourceNotifier extends StateNotifier<PanelSource> {
 
   /// Unlock and enter an encrypted container.
   void enterContainer(String containerPath, String password) {
+    debugPrint('[PanelSource] enterContainer: $containerPath');
     const service = PanelSourceService();
     state = service.enterContainer(containerPath, password, state);
     _persist();
@@ -69,6 +73,7 @@ class PanelSourceNotifier extends StateNotifier<PanelSource> {
 
   /// Navigate to the parent source (exit archive/container).
   void exitToParent() {
+    debugPrint('[PanelSource] exitToParent from ${state.displayName}');
     const service = PanelSourceService();
     state = service.exitToParent(state);
     _persist();

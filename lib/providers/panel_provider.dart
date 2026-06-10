@@ -559,6 +559,7 @@ class PanelNotifier extends ChangeNotifier {
   }
 
   void selectAll() {
+    _log.debug('selectAll (${_files?.length ?? 0} files)');
     if (_files != null) {
       _selection.addAll(_files!.where((f) => f.name != '..'));
       notifyListeners();
@@ -566,6 +567,7 @@ class PanelNotifier extends ChangeNotifier {
   }
 
   void invertSelection() {
+    _log.debug('invertSelection (was ${_selection.length} selected)');
     if (_files == null) return;
     final newSel = _files!.where((f) => f.name != '..' && !_selection.contains(f)).toSet();
     _selection
@@ -576,6 +578,7 @@ class PanelNotifier extends ChangeNotifier {
   }
 
   void clearSelection() {
+    _log.debug('clearSelection (was ${_selection.length})');
     _selection.clear();
     _lastSelected = null;
     notifyListeners();
@@ -785,6 +788,7 @@ class PanelNotifier extends ChangeNotifier {
   /// Refresh the current directory listing. Debounced to avoid rapid re-fetches
   /// (e.g. from multiple filesystem events or repeated F5 presses).
   Future<void> refresh() async {
+    _log.debug('refresh: side=$side archive=$isInArchive flat=$_isFlatView');
     await _refreshLock.synchronized(() async {
       if (isInArchive) {
         await _loadArchiveFiles();
@@ -811,6 +815,7 @@ class PanelNotifier extends ChangeNotifier {
   void refreshFiles() => refresh();
 
   Future<void> navigateUp() async {
+    _log.info('navigateUp: currentPath=$currentPath archive=$isInArchive flat=$_isFlatView');
     // If inside an archive, navigate up within archive or exit
     if (isInArchive) {
       await navigateUpArchive();
@@ -908,6 +913,7 @@ class PanelNotifier extends ChangeNotifier {
   }
 
   Future<void> pickLocalDirectory() async {
+    _log.info('pickLocalDirectory (web=$kIsWeb)');
     try {
       final dir = await _localFileService.requestDirectoryAccess(
         initialDirectory: _localFileService.currentPath,
@@ -1018,6 +1024,7 @@ class PanelNotifier extends ChangeNotifier {
   }
 
   Future<void> renameFile(FileItem file, String newName) async {
+    _log.info('renameFile: ${file.name} → $newName');
     final audit = _ref.read(auditServiceProvider);
     final actionHistory = _ref.read(actionHistoryProvider.notifier);
     final providerName = side == PanelSide.local ? 'local' : _ref.read(authProvider).client.providerName;
@@ -1065,6 +1072,7 @@ class PanelNotifier extends ChangeNotifier {
   }
 
   Future<void> createFolder(String name) async {
+    _log.info('createFolder: $name in $currentPath');
     final audit = _ref.read(auditServiceProvider);
     final actionHistory = _ref.read(actionHistoryProvider.notifier);
     final providerName = side == PanelSide.local ? 'local' : _ref.read(authProvider).client.providerName;
@@ -1103,6 +1111,7 @@ class PanelNotifier extends ChangeNotifier {
   }
 
   Future<void> moveFiles(List<FileItem> files, String targetPath) async {
+    _log.info('moveFiles: ${files.length} items → $targetPath (web=$kIsWeb, side=$side)');
     final audit = _ref.read(auditServiceProvider);
     final actionHistory = _ref.read(actionHistoryProvider.notifier);
     final providerName = side == PanelSide.local ? 'local' : _ref.read(authProvider).client.providerName;
@@ -1157,6 +1166,7 @@ class PanelNotifier extends ChangeNotifier {
   }
 
   Future<void> copyFiles(List<FileItem> files, String targetPath) async {
+    _log.info('copyFiles: ${files.length} items → $targetPath (web=$kIsWeb, side=$side)');
     final audit = _ref.read(auditServiceProvider);
     final actionHistory = _ref.read(actionHistoryProvider.notifier);
     final providerName = side == PanelSide.local ? 'local' : _ref.read(authProvider).client.providerName;
@@ -1318,6 +1328,7 @@ class PanelNotifier extends ChangeNotifier {
   }
 
   void addTab({String? path}) {
+    _log.debug('addTab: path=${path ?? currentPath}');
     final id = _nextTabId();
     _tabs.add(PanelTab(id: id, path: path ?? currentPath));
     _activeTabId = id;
@@ -1326,6 +1337,7 @@ class PanelNotifier extends ChangeNotifier {
   }
 
   void closeTab(String tabId) {
+    _log.debug('closeTab: $tabId');
     if (_tabs.length <= 1) return;
     final tab = _tabs.firstWhere((t) => t.id == tabId, orElse: () => _tabs.first);
     if (tab.isPinned) return;
@@ -1340,6 +1352,7 @@ class PanelNotifier extends ChangeNotifier {
   }
 
   void selectTab(String tabId) {
+    _log.debug('selectTab: $tabId');
     _activeTabId = tabId;
     final tab = activeTab;
     if (tab != null) {
@@ -1423,6 +1436,7 @@ class PanelNotifier extends ChangeNotifier {
   }
 
   Future<void> _loadLocalFiles() async {
+    _log.debug('_loadLocalFiles: $currentPath (web=$kIsWeb)');
     _isLoading = true;
     notifyListeners();
     try {

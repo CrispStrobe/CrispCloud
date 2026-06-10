@@ -186,7 +186,7 @@ void downloadSelected(BuildContext context, WidgetRef ref) {
 void confirmDeleteSelected(BuildContext context, WidgetRef ref) {
   final activePanel = ref.read(activePanelProvider);
   final panel = ref.read(panelProvider(activePanel));
-
+  debugPrint('[Delete] confirmDeleteSelected: ${panel.selection.length} items, side=${activePanel.name}');
   if (panel.selection.isEmpty) return;
 
   showDialog(
@@ -338,6 +338,7 @@ void _downloadFilesOnWeb(WidgetRef ref, List<FileItem> files) {
 void showMoveDialogFromSelection(BuildContext context, WidgetRef ref) {
   final activePanel = ref.read(activePanelProvider);
   final panel = ref.read(panelProvider(activePanel));
+  debugPrint('[Move] showMoveDialogFromSelection: ${panel.selection.length} items, side=${activePanel.name}');
   if (panel.selection.isEmpty) return;
   _showPathDialog(context, ref, activePanel, panel, panel.selection.toList(), 'Move', panel.moveFiles);
 }

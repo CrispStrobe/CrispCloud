@@ -49,6 +49,7 @@ class WebFileService implements LocalFileService {
   /// Tries to use Modern API (Chrome), falls back to Legacy Input (Safari)
   @override
   Future<String?> requestDirectoryAccess({String? initialDirectory}) async {
+    debugPrint('[WebFS] requestDirectoryAccess: initial=$initialDirectory');
     // 1. Reset State completely so we can "Redo" selection
     _virtualTree.clear();
     _fileRefs.clear();
@@ -230,6 +231,7 @@ class WebFileService implements LocalFileService {
 
   @override
   Future<List<FileSystemEntity>?> listDirectory(String path) async {
+    debugPrint('[WebFS] listDirectory: $path (tree=${_virtualTree.containsKey(path)}, handle=${_dirHandles.containsKey(path)})');
     String lookup = path;
     if (lookup.length > 1 && lookup.endsWith('/')) {
       lookup = lookup.substring(0, lookup.length - 1);
@@ -364,6 +366,7 @@ class WebFileService implements LocalFileService {
 
   @override
   Future<void> saveFile(String path, Uint8List data) async {
+    debugPrint('[WebFS] saveFile: $path (${data.length} bytes)');
     if (_rootDirHandle != null) {
       try {
         debugPrint('[Web] Attempting direct write to folder handle...');

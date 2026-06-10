@@ -63,6 +63,7 @@ class MultiCloudNotifier extends ChangeNotifier {
   CloudConnection? getConnection(String id) => _service.getConnection(id);
 
   Future<void> removeConnection(String id) async {
+    _log.info('Removing connection: $id');
     await _service.removeConnection(id);
     notifyListeners();
   }

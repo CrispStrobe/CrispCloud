@@ -142,6 +142,7 @@ class AuthNotifier extends ChangeNotifier {
 
   // --- Login / Logout ---
   Future<void> login(String email, String password, String? tfaCode) async {
+    _log.info('login: $email provider=$providerName');
     await _cloudClient.login(email, password, twoFactorCode: tfaCode);
 
     // Save credentials per provider
@@ -154,6 +155,7 @@ class AuthNotifier extends ChangeNotifier {
   }
 
   Future<void> logout() async {
+    _log.info('logout: provider=$providerName');
     await _cloudClient.logout();
     await _clearCredentials();
     _isConnected = false;

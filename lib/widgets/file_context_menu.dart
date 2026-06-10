@@ -913,6 +913,7 @@ void showRenameDialog(BuildContext context, WidgetRef ref, PanelSide side, FileI
 
 /// Download local files on web via browser download.
 void _downloadFilesOnWeb(WidgetRef ref, List<FileItem> files) {
+  debugPrint('[ContextMenu] downloadFilesOnWeb: ${files.length} files');
   if (!kIsWeb) return;
   final localSvc = ref.read(localFileServiceProvider);
   for (final file in files) {
@@ -1040,6 +1041,7 @@ void _showPathDialog(
 }
 
 void confirmDelete(BuildContext context, WidgetRef ref, PanelSide side, List<FileItem> files) {
+  debugPrint('[Delete] confirmDelete: ${files.length} files, side=${side.name}');
   final totalSize = files.fold<int>(0, (sum, file) => sum + (file.size ?? 0));
 
   showDialog(
