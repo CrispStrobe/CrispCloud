@@ -16,8 +16,9 @@ CrispCloud becomes the **definitive open-source cloud file manager**: a single, 
 - **TransferQueue**: concurrent transfers (3 parallel), exponential backoff retry, pause/resume/cancel
 - **Streaming interface**: `uploadStream`/`downloadStream` on all providers, SFTP native streaming
 - **Secure credentials**: `flutter_secure_storage` (Keychain/Keystore/libsecret/DPAPI) + auto-migration
-- **Preview pane**: image (zoom/pan), text/code (40+ ext), **markdown** (rendered), **PDF** (pdfx), metadata
-- **Built-in editor**: edit remote files in-place (download → edit → Ctrl+S → auto-upload)
+- **Preview pane**: image (zoom/pan), **SVG**, text/code (**syntax highlighted**, 30+ languages), **markdown** (rendered), **PDF** (page nav), **CSV/TSV** (table view), **DOCX/XLSX/PPTX/ODT** (text extraction), **fonts** (TTF/OTF/WOFF2), **audio/video** (web: blob URLs, native: VideoPlayer)
+- **Archive browsing**: browse ZIP/TAR/TGZ files like folders (web + native)
+- **Built-in editor**: edit local + remote files in-place with syntax highlighting (Ctrl+S auto-save, works on web)
 - **Status bar**: connection status, item count, selection info, transfer progress
 - Structured logging (`Log` service) with ring buffer + export — **migrated across 33+ files**
 - Centralized formatters, decomposed screen files, search dialogs extracted

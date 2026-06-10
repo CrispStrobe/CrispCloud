@@ -41,12 +41,14 @@ We also maintain patched Nextcloud and ownCloud desktop clients with delta sync 
 
 ## Key Features
 
-- **Two-panel Commander layout** with keyboard shortcuts, breadcrumbs, selection bar
+- **Flexible layout:** dual/single panel toggle, tree sidebar toggle, grid/list toggle, density toggle — all independent and composable
 - **Encryption:** AES-256-GCM + Cryptomator vault support + VeraCrypt container detection
 - **Sync engine:** background sync, conflict resolution, selective sync
 - **Backup engine:** scheduled backups with versioning
-- **Preview pane:** images (zoom/pan), text/code (40+ types), markdown (rendered), PDF, video/audio
-- **Built-in editor:** edit remote files in-place (download, edit, Ctrl+S auto-upload)
+- **Preview pane:** images (zoom/pan), SVG, PDF (page navigation), syntax-highlighted code (30+ languages), markdown, CSV/TSV tables, DOCX/XLSX/PPTX/ODT text, fonts (TTF/OTF/WOFF2), audio/video
+- **Archive browsing:** browse ZIP/TAR/TGZ files like folders (including on web)
+- **Built-in editor:** edit remote and local files in-place with syntax highlighting (Ctrl+S auto-save)
+- **Web support:** full file operations (open folder, copy, move, delete, download) via File System Access API with Safari/Firefox fallback
 - **CLI companion** (`crisp`): headless S3/SFTP/WebDAV operations, 9 commands, shell completions
 - **Plugin system** with local REST API and automation rules
 - **FUSE mounts** for mounting remote storage as local drives

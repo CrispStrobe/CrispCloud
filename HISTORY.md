@@ -2,6 +2,45 @@
 
 Audit trail of bugs found, issues discovered, and fixes applied.
 
+## 2026-06-10 — Session 14: Web UX overhaul, preview engine, layout toggles, Vercel fix
+
+### Vercel Deploy Fix
+- **Root cause**: GitHub Actions was deploying to the wrong Vercel project (`web`/CrisperWeaver instead of `crisp-cloud`)
+- **Fix**: Updated `VERCEL_PROJECT_ID` secret, disconnected Vercel git auto-deploy, cleared stale build command
+- Deleted orphan `web` and `home` projects; renamed `web-deploy` → `flutter-tuner` and linked to GitHub
+
+### Layout System Rewrite
+- Removed Commander/Explorer/Gallery preset system
+- Replaced with 4 independent composable toggles: Dual Panel, Tree Sidebar, Grid/List, Density (Large/Compact)
+- All toggles appear in both wide toolbar and overflow menu
+
+### Preview Pane Overhaul
+- **Fixed**: local file preview was using cloud client (hanging); now reads via `dart:io` (native) or `LocalFileService` (web)
+- **Added**: SVG (flutter_svg), syntax highlighting (30+ languages, dark/light themes), CSV/TSV table view, PDF page navigation, DOCX/XLSX/PPTX/ODT text extraction, font preview (TTF/OTF/WOFF2 at multiple sizes), web audio/video via blob URLs
+
+### Web Platform Improvements
+- **Folder browsing**: lazy-load directories (was recursively loading entire tree, crashing browser)
+- **Safari**: skip `showDirectoryPicker` (broken gesture context), go straight to `<input webkitdirectory>`
+- **File operations**: copy, move, delete all work on web via FSA API (`removeEntry`, `getFileHandle`, `createWritable`)
+- **F5 Copy**: copies to opposite panel's folder when available, falls back to browser download
+- **File editor (F4)**: load/save local files via LocalFileService on web
+- **Context menu**: disabled browser native right-click menu; custom context menu shows "Download" for local files on web
+- **".." navigation**: fixed by checking `_dirHandles` in `hasAccessToPath`
+
+### Panel Source Selector
+- Wired `availableSourcesProvider` to `authProvider` + `multiCloudProvider` — dropdown shows all connected cloud providers
+- Panel now listens to source changes and reloads content when switching providers
+
+### Other Fixes
+- F-key buttons (F3-F8) now enable/disable based on actual selection (was always greyed out)
+- Swap panels toggles active panel + refreshes both sides
+- Tree sidebar: proper expandable hierarchy with lazy subdirectory loading
+- Progressive local file loading: shows filenames immediately, stats in batches of 100
+- Loading indicator (LinearProgressIndicator) during directory loads
+- Directory listing cache for instant source switching
+- Version + git hash shown in About dialog (selectable text)
+- Build injects `GIT_HASH` and `APP_VERSION` via `--dart-define`
+
 ## 2026-06-10 — Session 12 continued: ownCloud live tests, CI fixes, server app restoration
 
 ### ownCloud 10.15 Live Tests
