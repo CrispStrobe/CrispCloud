@@ -8,7 +8,9 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../models/file_item.dart';
 import '../models/panel_side.dart';
 import '../providers/providers.dart';
+import '../providers/panel_source_provider.dart' show panelSourceProvider;
 import '../providers/toolbar_provider.dart' show columnWidthsProvider, panelViewModeProvider;
+import '../services/panel_source_service.dart' show RemotePanelSource;
 import '../services/panel_view_mode_service.dart' show PanelViewMode;
 import 'file_column_view.dart';
 import 'file_grid_view.dart';
@@ -83,8 +85,9 @@ class _FilePanelState extends ConsumerState<FilePanel> {
     final currentPath = panel.currentPath;
     final selection = panel.selection;
 
-    // Web empty state
-    if (kIsWeb && widget.side == PanelSide.local && (files == null || files.isEmpty)) {
+    // Web/empty state: show action buttons instead of spinner
+    if (kIsWeb && (files == null || files.isEmpty) && !panel.isLoading) {
+      final auth = ref.watch(authProvider);
       return Center(
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
@@ -92,10 +95,34 @@ class _FilePanelState extends ConsumerState<FilePanel> {
             Icon(Icons.folder_open, size: 64, color: Theme.of(context).colorScheme.primary),
             const SizedBox(height: 16),
             const Text('No folder selected'),
-            ElevatedButton(
+            const SizedBox(height: 12),
+            ElevatedButton.icon(
+              icon: const Icon(Icons.folder_open),
               onPressed: () => panel.pickLocalDirectory(),
-              child: const Text('Open Local Folder'),
+              label: const Text('Open Local Folder'),
             ),
+            const SizedBox(height: 8),
+            if (!auth.isConnected)
+              OutlinedButton.icon(
+                icon: const Icon(Icons.cloud),
+                onPressed: () => showConnectionDialogScreen(context),
+                label: const Text('Connect to Cloud'),
+              )
+            else
+              OutlinedButton.icon(
+                icon: const Icon(Icons.cloud_done),
+                onPressed: () {
+                  // Switch this panel to the connected remote source.
+                  ref.read(panelSourceProvider(widget.side).notifier).setSource(
+                    RemotePanelSource(
+                      providerName: auth.providerName,
+                      client: auth.client,
+                      path: '/',
+                    ),
+                  );
+                },
+                label: Text('Browse ${auth.providerName}'),
+              ),
           ],
         ),
       );
