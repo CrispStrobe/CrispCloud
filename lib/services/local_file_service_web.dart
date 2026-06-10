@@ -52,6 +52,7 @@ class WebFileService implements LocalFileService {
     // 1. Reset State completely so we can "Redo" selection
     _virtualTree.clear();
     _fileRefs.clear();
+    _dirHandles.clear();
     _rootDirHandle = null;
 
     // Initialize Root in virtual tree so navigation to '/' works
@@ -76,8 +77,8 @@ class WebFileService implements LocalFileService {
         // Add the root folder itself to the top-level listing
         _virtualTree['/']!.add(Directory('/$rootName'));
 
-        // Recursively build the virtual tree from the handle
-        await _buildTreeFromHandle(_rootDirHandle, '/$rootName');
+        // Load only the immediate children (lazy — no deep recursion).
+        await _loadDirectChildren(_rootDirHandle, '/$rootName');
 
         currentPath = '/$rootName';
         return currentPath;
@@ -157,37 +158,47 @@ class WebFileService implements LocalFileService {
     return parts.last.isEmpty ? rel : parts.last;
   }
 
-  Future<void> _buildTreeFromHandle(dynamic dirHandle, String currentAbsPath) async {
-    if (!_virtualTree.containsKey(currentAbsPath)) {
-      _virtualTree[currentAbsPath] = [];
+  /// Stored directory handles for lazy loading subdirectories (FSA API).
+  static final Map<String, dynamic> _dirHandles = {};
+
+  /// Load only the immediate children of a directory handle (no recursion).
+  Future<void> _loadDirectChildren(dynamic dirHandle, String absPath) async {
+    if (_virtualTree.containsKey(absPath) && _virtualTree[absPath]!.isNotEmpty) {
+      return; // Already loaded.
     }
+    _virtualTree[absPath] = [];
+    _dirHandles[absPath] = dirHandle;
 
-    final valuesIterator = js_util.callMethod(dirHandle, 'values', []);
+    try {
+      final valuesIterator = js_util.callMethod(dirHandle, 'values', []);
 
-    while (true) {
-      final nextPromise = js_util.callMethod(valuesIterator, 'next', []);
-      final next = await js_util.promiseToFuture(nextPromise);
+      while (true) {
+        final nextPromise = js_util.callMethod(valuesIterator, 'next', []);
+        final next = await js_util.promiseToFuture(nextPromise);
 
-      if (js_util.getProperty(next, 'done') == true) break;
+        if (js_util.getProperty(next, 'done') == true) break;
 
-      final handle = js_util.getProperty(next, 'value');
-      final name = _sanitizeFsaName(js_util.getProperty(handle, 'name') as String);
-      final kind = js_util.getProperty(handle, 'kind');
+        final handle = js_util.getProperty(next, 'value');
+        final name = _sanitizeFsaName(js_util.getProperty(handle, 'name') as String);
+        final kind = js_util.getProperty(handle, 'kind');
 
-      if (name.startsWith('.') || name.startsWith('._')) continue;
+        if (name.startsWith('.') || name.startsWith('._')) continue;
 
-      final itemAbsPath = "$currentAbsPath/$name";
+        final itemAbsPath = "$absPath/$name";
 
-      if (kind == 'file') {
-        _virtualTree[currentAbsPath]!.add(File(itemAbsPath));
-
-        final filePromise = js_util.callMethod(handle, 'getFile', []);
-        final fileObj = await js_util.promiseToFuture(filePromise);
-        _fileRefs[itemAbsPath] = fileObj;
-      } else if (kind == 'directory') {
-        _virtualTree[currentAbsPath]!.add(Directory(itemAbsPath));
-        await _buildTreeFromHandle(handle, itemAbsPath);
+        if (kind == 'file') {
+          _virtualTree[absPath]!.add(File(itemAbsPath));
+          final filePromise = js_util.callMethod(handle, 'getFile', []);
+          final fileObj = await js_util.promiseToFuture(filePromise);
+          _fileRefs[itemAbsPath] = fileObj;
+        } else if (kind == 'directory') {
+          _virtualTree[absPath]!.add(Directory(itemAbsPath));
+          // Store handle for lazy loading when user navigates into it.
+          _dirHandles[itemAbsPath] = handle;
+        }
       }
+    } catch (e) {
+      debugPrint("[Web] Error loading children of $absPath: $e");
     }
   }
 
@@ -224,6 +235,12 @@ class WebFileService implements LocalFileService {
       lookup = lookup.substring(0, lookup.length - 1);
     }
 
+    // Lazy-load subdirectory contents from FSA handle if not yet loaded.
+    if ((!_virtualTree.containsKey(lookup) || _virtualTree[lookup]!.isEmpty) &&
+        _dirHandles.containsKey(lookup)) {
+      await _loadDirectChildren(_dirHandles[lookup], lookup);
+    }
+
     return _virtualTree[lookup] ?? [];
   }
 
@@ -258,15 +275,21 @@ class WebFileService implements LocalFileService {
   @override
   Future<void> refresh() async {
     if (_rootDirHandle != null) {
-      debugPrint('[Web] Refreshing file list from handle...');
-      final rootEntries = _virtualTree['/'] ?? [];
-      _virtualTree.clear();
-      _fileRefs.clear();
-
-      _virtualTree['/'] = rootEntries;
-
-      final rootName = _sanitizeFsaName(js_util.getProperty(_rootDirHandle, 'name') as String);
-      await _buildTreeFromHandle(_rootDirHandle, '/$rootName');
+      debugPrint('[Web] Refreshing current directory from handle...');
+      // Only reload the current path (not the entire tree).
+      final lookup = currentPath.endsWith('/') && currentPath.length > 1
+          ? currentPath.substring(0, currentPath.length - 1)
+          : currentPath;
+      // Clear cached children for current path so they reload.
+      _virtualTree.remove(lookup);
+      if (_dirHandles.containsKey(lookup)) {
+        await _loadDirectChildren(_dirHandles[lookup], lookup);
+      } else if (_rootDirHandle != null) {
+        final rootName = _sanitizeFsaName(js_util.getProperty(_rootDirHandle, 'name') as String);
+        if (lookup == '/$rootName') {
+          await _loadDirectChildren(_rootDirHandle, lookup);
+        }
+      }
       debugPrint('[Web] Refresh complete.');
     }
   }
