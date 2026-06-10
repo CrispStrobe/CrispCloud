@@ -4,6 +4,7 @@ import 'package:flutter_localizations/flutter_localizations.dart';
 import 'l10n/app_localizations.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter/foundation.dart' show kIsWeb;
+import 'package:flutter/services.dart' show BrowserContextMenu;
 import 'package:path_provider/path_provider.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:path/path.dart' as p;
@@ -46,6 +47,11 @@ const _log = Log('Main');
 Future<void> main() async {
   runZonedGuarded(() async {
     WidgetsFlutterBinding.ensureInitialized();
+
+    // Disable browser context menu on web so our custom context menu works.
+    if (kIsWeb) {
+      BrowserContextMenu.disableContextMenu();
+    }
 
     // Register the Workmanager background task callback (Android/iOS only).
     // Must be called before runApp() so the callback isolate can be spawned.
