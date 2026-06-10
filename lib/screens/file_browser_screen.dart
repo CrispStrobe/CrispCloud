@@ -791,6 +791,12 @@ class _FileBrowserScreenState extends ConsumerState<FileBrowserScreen> {
           case 'preview':
             ref.read(showPreviewProvider.notifier).state =
                 !ref.read(showPreviewProvider);
+          case 'density':
+            final ap = ref.read(activePanelProvider);
+            final mode = ref.read(panelViewModeProvider(ap));
+            ref.read(panelViewModeProvider(ap).notifier).setMode(
+              mode == PanelViewMode.full ? PanelViewMode.brief : PanelViewMode.full,
+            );
           case 'keys':
             showKeyManagementDialog(context, ref);
           case 'theme':
@@ -838,6 +844,18 @@ class _FileBrowserScreenState extends ConsumerState<FileBrowserScreen> {
             ref.read(showPreviewProvider) ? Icons.visibility : Icons.visibility_off,
             ref.read(showPreviewProvider) ? 'Hide Preview' : 'Show Preview',
           ),
+        ),
+        PopupMenuItem(
+          value: 'density',
+          child: Builder(builder: (ctx) {
+            final ap = ref.read(activePanelProvider);
+            final mode = ref.read(panelViewModeProvider(ap));
+            final isCompact = mode == PanelViewMode.full;
+            return _overflowItem(
+              isCompact ? Icons.density_large : Icons.density_small,
+              isCompact ? 'Large Items' : 'Compact Items',
+            );
+          }),
         ),
         if (auth.isEncryptionEnabled)
           PopupMenuItem(value: 'keys', child: _overflowItem(Icons.key, 'Key Management')),

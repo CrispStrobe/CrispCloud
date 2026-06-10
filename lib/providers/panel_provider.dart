@@ -87,6 +87,10 @@ class PanelNotifier extends ChangeNotifier {
   bool _isFlatView = false;
   bool get isFlatView => _isFlatView;
 
+  // Loading state — true while a directory listing is being fetched.
+  bool _isLoading = false;
+  bool get isLoading => _isLoading;
+
   // In-place rename state
   FileItem? _renamingItem;
   FileItem? get renamingItem => _renamingItem;
@@ -1367,10 +1371,13 @@ class PanelNotifier extends ChangeNotifier {
   }
 
   Future<void> _loadLocalFiles() async {
+    _isLoading = true;
+    notifyListeners();
     try {
       final entities = await _localFileService.listDirectory(currentPath);
       if (entities == null) {
         _files = [];
+        _isLoading = false;
         if (!kIsWeb) {
           _ref.read(errorProvider).addError('Local file access is not supported on this platform.');
         }
@@ -1380,13 +1387,19 @@ class PanelNotifier extends ChangeNotifier {
       }
       _log.debug('listDirectory("$currentPath") returned ${entities.length} entities');
 
+      // Prepend ".." parent-dir entry unless we're at root.
       final items = <FileItem>[];
-      for (final entity in entities) {
-        try {
-          final name = p.basename(entity.path);
-          if (!_showHiddenFiles && name.startsWith('.')) continue;
+      final parentPath = p.dirname(currentPath);
+      if (parentPath != currentPath && currentPath != '/') {
+        items.add(FileItem(name: '..', path: parentPath, isFolder: true));
+      }
 
-          if (kIsWeb) {
+      // On web, stat is synchronous — no need for progressive loading.
+      if (kIsWeb) {
+        for (final entity in entities) {
+          try {
+            final name = p.basename(entity.path);
+            if (!_showHiddenFiles && name.startsWith('.')) continue;
             final isFolder = entity is Directory;
             int size = 0;
             DateTime updated = DateTime.now();
@@ -1396,44 +1409,84 @@ class PanelNotifier extends ChangeNotifier {
               updated = meta['modified'] ?? DateTime.now();
             }
             items.add(FileItem(name: name, path: entity.path, isFolder: isFolder, size: size, updatedAt: updated));
+          } catch (_) {
             continue;
           }
+        }
+        final prev = cursorItem;
+        _files = items;
+        _sortFiles();
+        _resetCursor(preserveItem: prev);
+        _isLoading = false;
+        _ref.read(errorProvider).clearErrors();
+        notifyListeners();
+        return;
+      }
 
-          final stat = await entity.stat();
-          final linkType = await FileSystemEntity.type(entity.path, followLinks: false);
-          final isLink = linkType == FileSystemEntityType.link;
-          String? linkTarget;
-          if (isLink) {
-            try { linkTarget = await Link(entity.path).target(); } catch (_) {}
-          }
-          if (stat.type == FileSystemEntityType.directory) {
-            items.add(FileItem(name: name, path: entity.path, isFolder: true, updatedAt: stat.modified, isSymlink: isLink ? true : null, symlinkTarget: linkTarget));
-          } else if (stat.type == FileSystemEntityType.file) {
-            items.add(FileItem(name: name, path: entity.path, isFolder: false, size: stat.size, updatedAt: stat.modified, isSymlink: isLink ? true : null, symlinkTarget: linkTarget));
-          }
+      // Native: show names immediately, then stat in batches for size/date.
+      // First pass: add all entries with just names (no stat).
+      for (final entity in entities) {
+        try {
+          final name = p.basename(entity.path);
+          if (!_showHiddenFiles && name.startsWith('.')) continue;
+          // Guess folder vs file from entity type (no stat needed).
+          final isFolder = entity is Directory;
+          items.add(FileItem(name: name, path: entity.path, isFolder: isFolder));
         } catch (_) {
           continue;
         }
       }
-
-      // Prepend ".." parent-dir entry unless we're at root
-      final parentPath = p.dirname(currentPath);
-      if (parentPath != currentPath && currentPath != '/') {
-        items.insert(0, FileItem(
-          name: '..',
-          path: parentPath,
-          isFolder: true,
-        ));
-      }
-      final prev = cursorItem;
-      _files = items;
+      // Show items immediately (without size/date).
+      _files = List.of(items);
       _sortFiles();
-      _resetCursor(preserveItem: prev);
+      _isLoading = true; // still loading metadata
       _ref.read(errorProvider).clearErrors();
+      notifyListeners();
+
+      // Second pass: stat in batches to fill in size, date, symlink info.
+      const batchSize = 100;
+      for (var i = 0; i < items.length; i += batchSize) {
+        final end = (i + batchSize).clamp(0, items.length);
+        final batch = items.sublist(i, end);
+        await Future.wait(batch.map((item) async {
+          if (item.name == '..') return;
+          try {
+            final stat = await FileStat.stat(item.path!);
+            final linkType = await FileSystemEntity.type(item.path!, followLinks: false);
+            final isLink = linkType == FileSystemEntityType.link;
+            String? linkTarget;
+            if (isLink) {
+              try { linkTarget = await Link(item.path!).target(); } catch (_) {}
+            }
+            final isFolder = stat.type == FileSystemEntityType.directory;
+            final idx = items.indexOf(item);
+            if (idx >= 0) {
+              items[idx] = FileItem(
+                name: item.name,
+                path: item.path,
+                isFolder: isFolder,
+                size: isFolder ? null : stat.size,
+                updatedAt: stat.modified,
+                isSymlink: isLink ? true : null,
+                symlinkTarget: linkTarget,
+              );
+            }
+          } catch (_) {}
+        }));
+        // Update UI after each batch.
+        final prev = cursorItem;
+        _files = List.of(items);
+        _sortFiles();
+        _resetCursor(preserveItem: prev);
+        notifyListeners();
+      }
+
+      _isLoading = false;
       // Fire-and-forget free space fetch (result stored in _freeBytes, shown in status bar)
-      if (!kIsWeb && side == PanelSide.local) _updateFreeSpace(currentPath);
+      if (side == PanelSide.local) _updateFreeSpace(currentPath);
       notifyListeners();
     } catch (e) {
+      _isLoading = false;
       if (!kIsWeb && (e is PathAccessException || e.toString().contains('Operation not permitted'))) {
         _files = [];
         _ref.read(errorProvider).addError('Permission denied. Use the Browse button to grant access.');
@@ -1473,10 +1526,13 @@ class PanelNotifier extends ChangeNotifier {
       return;
     }
 
+    _isLoading = true;
+    notifyListeners();
     final auth = _ref.read(authProvider);
     try {
       if (!auth.client.isAuthenticated && !auth.isConnected) {
         _files = [];
+        _isLoading = false;
         notifyListeners();
         return;
       }
@@ -1559,9 +1615,11 @@ class PanelNotifier extends ChangeNotifier {
       // Update directory cache with fresh listing.
       dirCache.put(cacheKey, _files!);
 
+      _isLoading = false;
       notifyListeners();
     } catch (e) {
       _log.error('Refresh error', e);
+      _isLoading = false;
       // On error, keep cached files if available instead of clearing.
       if (_files == null || _files!.isEmpty) {
         _files = [];

@@ -335,6 +335,9 @@ class _FilePanelState extends ConsumerState<FilePanel> {
             ),
           if (ref.watch(panelViewModeProvider(widget.side)) == PanelViewMode.full)
             _CompactColumnHeader(side: widget.side, panel: panel),
+          // Loading indicator shown while directory listing is in progress
+          if (panel.isLoading)
+            const LinearProgressIndicator(minHeight: 2),
           Expanded(
             child: files == null
                 ? const Center(child: CircularProgressIndicator())
