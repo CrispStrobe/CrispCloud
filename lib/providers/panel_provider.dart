@@ -17,6 +17,7 @@ import '../models/panel_side.dart';
 import '../models/panel_tab.dart';
 import '../services/archive_service.dart';
 import '../services/audit_service.dart';
+import '../services/directory_cache_service.dart';
 import '../services/local_file_service.dart';
 import '../services/log_service.dart';
 import '../services/panel_source_service.dart';
@@ -1480,6 +1481,20 @@ class PanelNotifier extends ChangeNotifier {
         return;
       }
 
+      // Show cached listing immediately for smooth UX.
+      final dirCache = _ref.read(directoryCacheProvider);
+      final cacheKey = DirectoryCacheService.key(
+        'remote:${auth.providerName}',
+        _remotePath,
+      );
+      final cached = dirCache.get(cacheKey);
+      if (cached != null && _files == null) {
+        _files = List.of(cached);
+        _sortFiles();
+        notifyListeners();
+      }
+
+      // Fetch fresh listing from remote.
       final result = await auth.client.listPath(_remotePath);
 
       final folders = (result['folders'] as List<dynamic>?)?.map((item) {
@@ -1540,10 +1555,17 @@ class PanelNotifier extends ChangeNotifier {
       _sortFiles();
       _resetCursor(preserveItem: prev);
       _ref.read(errorProvider).clearErrors();
+
+      // Update directory cache with fresh listing.
+      dirCache.put(cacheKey, _files!);
+
       notifyListeners();
     } catch (e) {
       _log.error('Refresh error', e);
-      _files = [];
+      // On error, keep cached files if available instead of clearing.
+      if (_files == null || _files!.isEmpty) {
+        _files = [];
+      }
       _ref.read(errorProvider).addError(e.toString());
       notifyListeners();
     }

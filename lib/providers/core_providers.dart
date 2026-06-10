@@ -7,6 +7,7 @@ import 'package:shared_preferences/shared_preferences.dart';
 
 import '../models/panel_side.dart';
 import '../services/audit_service.dart';
+import '../services/directory_cache_service.dart';
 import '../services/file_cache_service.dart';
 import '../services/local_file_service.dart';
 import '../services/thumbnail_service.dart';
@@ -26,6 +27,11 @@ final configPathProvider = Provider<String>((ref) {
 /// Singleton local file service.
 final localFileServiceProvider = Provider<LocalFileService>((ref) {
   return LocalFileService();
+});
+
+/// In-memory directory listing cache for instant source switching.
+final directoryCacheProvider = Provider<DirectoryCacheService>((ref) {
+  return DirectoryCacheService();
 });
 
 /// Which panel is active (Local / Remote).

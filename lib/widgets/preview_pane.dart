@@ -204,15 +204,21 @@ class _PreviewPaneState extends ConsumerState<PreviewPane> {
   Future<void> _fetchPreview(FileItem file, PreviewType type) async {
     try {
       Uint8List bytes;
-      final client = ref.read(authProvider).client;
 
       if (widget.side == PanelSide.local && file.path != null) {
-        // Local files: read directly
-        bytes = await client.downloadFileBytes(file.path!).catchError((_) async {
-          // Fallback: try via local file service (not via cloud client)
-          throw Exception('Local preview requires file path access');
-        });
+        // Local files: read directly from filesystem (or via LocalFileService on web)
+        if (kIsWeb) {
+          final localSvc = ref.read(localFileServiceProvider);
+          bytes = await localSvc.readFile(file.path!, fileItem: file);
+        } else {
+          final localFile = File(file.path!);
+          if (!await localFile.exists()) {
+            throw Exception('File not found: ${file.path}');
+          }
+          bytes = await localFile.readAsBytes();
+        }
       } else if (widget.side == PanelSide.remote) {
+        final client = ref.read(authProvider).client;
         // Remote files: check cache first, then download
         final remotePath = file.path ?? '/${file.name}';
         final providerName = ref.read(authProvider).providerName;
@@ -269,7 +275,6 @@ class _PreviewPaneState extends ConsumerState<PreviewPane> {
   Future<void> _fetchMediaPreview(FileItem file, PreviewType type) async {
     try {
       Uint8List bytes;
-      final client = ref.read(authProvider).client;
 
       if (widget.side == PanelSide.local && file.path != null) {
         // Local file: play directly from file path
@@ -286,9 +291,12 @@ class _PreviewPaneState extends ConsumerState<PreviewPane> {
           });
           return;
         }
-        bytes = await client.downloadFileBytes(file.path!);
+        // Web fallback: read bytes via LocalFileService
+        final localSvc = ref.read(localFileServiceProvider);
+        bytes = await localSvc.readFile(file.path!, fileItem: file);
       } else {
         // Remote file: download to temp, then play
+        final client = ref.read(authProvider).client;
         final remotePath = file.path ?? '/${file.name}';
         final providerName = ref.read(authProvider).providerName;
         final cache = ref.read(fileCacheProvider);

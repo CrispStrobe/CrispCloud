@@ -319,27 +319,34 @@ class _FileBrowserScreenState extends ConsumerState<FileBrowserScreen> {
       children: [
         const TreeSidebar(),
         Expanded(
-          child: showPreview && previewFile != null
-              ? Row(
-                  children: [
-                    Expanded(
-                      child: FilePanel(
+          child: Column(
+            children: [
+              PanelSourceSelector(side: activePanel),
+              Expanded(
+                child: showPreview && previewFile != null
+                    ? Row(
+                        children: [
+                          Expanded(
+                            child: FilePanel(
+                              side: activePanel,
+                              isActive: true,
+                              onTap: () {},
+                            ),
+                          ),
+                          SizedBox(
+                            width: 320,
+                            child: PreviewPane(file: previewFile, side: activePanel),
+                          ),
+                        ],
+                      )
+                    : FilePanel(
                         side: activePanel,
                         isActive: true,
                         onTap: () {},
                       ),
-                    ),
-                    SizedBox(
-                      width: 320,
-                      child: PreviewPane(file: previewFile, side: activePanel),
-                    ),
-                  ],
-                )
-              : FilePanel(
-                  side: activePanel,
-                  isActive: true,
-                  onTap: () {},
-                ),
+              ),
+            ],
+          ),
         ),
       ],
     );
@@ -348,24 +355,49 @@ class _FileBrowserScreenState extends ConsumerState<FileBrowserScreen> {
   /// Gallery preset: single active panel, grid view forced.
   Widget _buildGalleryLayout(BuildContext context) {
     final activePanel = ref.watch(activePanelProvider);
+    final showPreview = ref.watch(showPreviewProvider);
+    final activePanelNotifier = ref.watch(panelProvider(activePanel));
+    final previewFile = activePanelNotifier.selection.length == 1
+        ? activePanelNotifier.selection.first
+        : null;
 
-    // Force grid view for the active panel
-    WidgetsBinding.instance.addPostFrameCallback((_) {
-      if (activePanel == PanelSide.local) {
-        if (ref.read(localViewModeProvider) != ViewMode.grid) {
+    // Force grid view for the active panel.
+    final viewMode = activePanel == PanelSide.local
+        ? ref.watch(localViewModeProvider)
+        : ref.watch(remoteViewModeProvider);
+    if (viewMode != ViewMode.grid) {
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        if (activePanel == PanelSide.local) {
           ref.read(localViewModeProvider.notifier).state = ViewMode.grid;
-        }
-      } else {
-        if (ref.read(remoteViewModeProvider) != ViewMode.grid) {
+        } else {
           ref.read(remoteViewModeProvider.notifier).state = ViewMode.grid;
         }
-      }
-    });
+      });
+    }
 
-    return FilePanel(
+    final panel = FilePanel(
       side: activePanel,
       isActive: true,
       onTap: () {},
+    );
+
+    return Column(
+      children: [
+        PanelSourceSelector(side: activePanel),
+        Expanded(
+          child: showPreview && previewFile != null
+              ? Row(
+                  children: [
+                    Expanded(child: panel),
+                    SizedBox(
+                      width: 320,
+                      child: PreviewPane(file: previewFile, side: activePanel),
+                    ),
+                  ],
+                )
+              : panel,
+        ),
+      ],
     );
   }
 

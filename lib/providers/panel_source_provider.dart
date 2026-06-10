@@ -13,7 +13,9 @@ import 'package:shared_preferences/shared_preferences.dart';
 import '../models/panel_side.dart';
 import '../services/fkey_action_service.dart';
 import '../services/panel_source_service.dart';
+import 'auth_provider.dart';
 import 'core_providers.dart';
+import 'multi_cloud_provider.dart';
 
 // ---------------------------------------------------------------------------
 // Helper: opposite panel
@@ -167,17 +169,47 @@ class AvailableSource {
 }
 
 /// Provides the list of sources the user can switch to in the dropdown.
-/// Always includes Local; expands with remote providers from multi_cloud etc.
+/// Always includes Local; expands with connected cloud providers.
 final availableSourcesProvider = Provider<List<AvailableSource>>((ref) {
-  return [
+  final sources = <AvailableSource>[
     const AvailableSource(
       key: 'local',
       label: 'Local',
       source: LocalPanelSource('/'),
     ),
-    // Additional remote / archive / container sources are added dynamically
-    // by auth_provider / multi_cloud_provider in the full implementation.
   ];
+
+  // Add the primary auth provider connection if connected.
+  final auth = ref.watch(authProvider);
+  if (auth.isConnected) {
+    sources.add(AvailableSource(
+      key: 'remote:${auth.providerName}',
+      label: auth.providerName,
+      source: RemotePanelSource(
+        providerName: auth.providerName,
+        client: auth.client,
+        path: '/',
+      ),
+    ));
+  }
+
+  // Add all multi-cloud connections (skip duplicates).
+  final multiCloud = ref.watch(multiCloudProvider);
+  for (final conn in multiCloud.connections) {
+    final key = 'remote:${conn.id}';
+    if (sources.any((s) => s.key == key)) continue;
+    sources.add(AvailableSource(
+      key: key,
+      label: conn.label,
+      source: RemotePanelSource(
+        providerName: conn.label,
+        client: conn.client,
+        path: '/',
+      ),
+    ));
+  }
+
+  return sources;
 });
 
 // ---------------------------------------------------------------------------
