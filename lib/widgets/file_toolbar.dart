@@ -5,6 +5,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../models/panel_side.dart';
 import '../providers/providers.dart';
+import '../providers/panel_source_provider.dart' show panelSourceProvider;
 import '../providers/toolbar_provider.dart' show panelViewModeProvider;
 import '../services/custom_toolbar_command_service.dart';
 import '../services/panel_view_mode_service.dart' show PanelViewMode;
@@ -40,9 +41,13 @@ class FileToolbar extends ConsumerWidget {
     final sortBy = panel.sortBy;
     final sortOrder = panel.sortOrder;
 
+    // Show Browse button when panel is in local mode (either side).
+    final panelSource = ref.watch(panelSourceProvider(side));
+    final isLocalSource = panelSource.isLocal;
+
     // Build the list of toolbar action buttons (scrollable section)
     final actionButtons = <Widget>[
-      if (side == PanelSide.local)
+      if (isLocalSource || (side == PanelSide.local))
         IconButton(
           icon: const Icon(Icons.folder_open),
           tooltip: 'Browse...',
