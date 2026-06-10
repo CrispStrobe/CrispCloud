@@ -5,8 +5,6 @@
 // Folders can be expanded/collapsed independently; clicking navigates the panel.
 // Subdirectories are loaded lazily on expand.
 
-import 'dart:io' if (dart.library.html) 'dart:html';
-
 import 'package:flutter/foundation.dart' show kIsWeb, defaultTargetPlatform, TargetPlatform;
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -245,21 +243,21 @@ class _TreeSidebarState extends ConsumerState<TreeSidebar> {
     try {
       List<FileItem> folders;
       if (side == PanelSide.local && !kIsWeb) {
-        // Load subdirectories directly from filesystem.
-        final dir = Directory(path);
-        if (!await dir.exists()) {
+        // Load subdirectories via LocalFileService (native).
+        final localSvc = ref.read(localFileServiceProvider);
+        final entities = await localSvc.listDirectory(path);
+        if (entities == null) {
           folders = [];
         } else {
-          final entities = await dir.list().toList();
           folders = <FileItem>[];
           for (final entity in entities) {
             try {
+              final name = p.basename(entity.path);
+              if (name.startsWith('.')) continue;
               final stat = await entity.stat();
-              if (stat.type == FileSystemEntityType.directory) {
-                final name = p.basename(entity.path);
-                if (!name.startsWith('.')) {
-                  folders.add(FileItem(name: name, path: entity.path, isFolder: true));
-                }
+              final isDir = stat.type.toString().contains('directory');
+              if (isDir) {
+                folders.add(FileItem(name: name, path: entity.path, isFolder: true));
               }
             } catch (_) {
               continue;
