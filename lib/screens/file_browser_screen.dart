@@ -298,8 +298,8 @@ class _FileBrowserScreenState extends ConsumerState<FileBrowserScreen> {
         children: [
           Icon(icon, size: 18),
           const SizedBox(width: 10),
-          Text(label),
-          const Spacer(),
+          Flexible(child: Text(label, overflow: TextOverflow.ellipsis)),
+          const SizedBox(width: 8),
           if (preset == current) const Icon(Icons.check, size: 16),
         ],
       ),
@@ -785,91 +785,45 @@ class _FileBrowserScreenState extends ConsumerState<FileBrowserScreen> {
         if (isDesktopPlatform)
           PopupMenuItem(
             value: 'terminal',
-            child: Row(children: [
-              Icon(Icons.terminal, size: 20,
-                color: ref.read(showTerminalProvider) ? Theme.of(context).colorScheme.primary : null),
-              const SizedBox(width: 12),
-              Text(ref.read(showTerminalProvider) ? 'Hide Terminal' : 'Show Terminal'),
-            ]),
+            child: _overflowItem(
+              Icons.terminal,
+              ref.read(showTerminalProvider) ? 'Hide Terminal' : 'Show Terminal',
+              iconColor: ref.read(showTerminalProvider) ? Theme.of(context).colorScheme.primary : null,
+            ),
           ),
-        const PopupMenuItem(
-          value: 'multi_cloud',
-          child: Row(children: [
-            Icon(Icons.cloud_sync, size: 20), SizedBox(width: 12), Text('Multi-Cloud'),
-          ]),
-        ),
-        const PopupMenuItem(
-          value: 'sync',
-          child: Row(children: [
-            Icon(Icons.sync, size: 20), SizedBox(width: 12), Text('Sync Manager'),
-          ]),
-        ),
+        PopupMenuItem(value: 'multi_cloud', child: _overflowItem(Icons.cloud_sync, 'Multi-Cloud')),
+        PopupMenuItem(value: 'sync', child: _overflowItem(Icons.sync, 'Sync Manager')),
         if (isDesktopPlatform)
-          const PopupMenuItem(
-            value: 'mount',
-            child: Row(children: [
-              Icon(Icons.storage_rounded, size: 20), SizedBox(width: 12), Text('Mount as Drive'),
-            ]),
-          ),
-        const PopupMenuItem(
-          value: 'duplicates',
-          child: Row(children: [
-            Icon(Icons.find_replace, size: 20), SizedBox(width: 12), Text('Find Duplicates'),
-          ]),
-        ),
-        const PopupMenuItem(
-          value: 'audit',
-          child: Row(children: [
-            Icon(Icons.history, size: 20), SizedBox(width: 12), Text('Audit Log'),
-          ]),
-        ),
-        const PopupMenuItem(
-          value: 'cache',
-          child: Row(children: [
-            Icon(Icons.storage, size: 20), SizedBox(width: 12), Text('Cache Settings'),
-          ]),
-        ),
+          PopupMenuItem(value: 'mount', child: _overflowItem(Icons.storage_rounded, 'Mount as Drive')),
+        PopupMenuItem(value: 'duplicates', child: _overflowItem(Icons.find_replace, 'Find Duplicates')),
+        PopupMenuItem(value: 'audit', child: _overflowItem(Icons.history, 'Audit Log')),
+        PopupMenuItem(value: 'cache', child: _overflowItem(Icons.storage, 'Cache Settings')),
         const PopupMenuDivider(),
-        const PopupMenuItem(
-          value: 'tree',
-          child: Row(children: [
-            Icon(Icons.account_tree, size: 20), SizedBox(width: 12), Text('Toggle Tree Sidebar'),
-          ]),
-        ),
+        PopupMenuItem(value: 'tree', child: _overflowItem(Icons.account_tree, 'Toggle Tree Sidebar')),
         PopupMenuItem(
           value: 'preview',
-          child: Row(children: [
-            Icon(ref.read(showPreviewProvider) ? Icons.visibility : Icons.visibility_off, size: 20),
-            const SizedBox(width: 12),
-            Text(ref.read(showPreviewProvider) ? 'Hide Preview' : 'Show Preview'),
-          ]),
+          child: _overflowItem(
+            ref.read(showPreviewProvider) ? Icons.visibility : Icons.visibility_off,
+            ref.read(showPreviewProvider) ? 'Hide Preview' : 'Show Preview',
+          ),
         ),
         if (auth.isEncryptionEnabled)
-          const PopupMenuItem(
-            value: 'keys',
-            child: Row(children: [
-              Icon(Icons.key, size: 20), SizedBox(width: 12), Text('Key Management'),
-            ]),
-          ),
+          PopupMenuItem(value: 'keys', child: _overflowItem(Icons.key, 'Key Management')),
         const PopupMenuDivider(),
-        const PopupMenuItem(
-          value: 'theme',
-          child: Row(children: [
-            Icon(Icons.palette, size: 20), SizedBox(width: 12), Text('Theme'),
-          ]),
-        ),
-        const PopupMenuItem(
-          value: 'shortcuts',
-          child: Row(children: [
-            Icon(Icons.keyboard, size: 20), SizedBox(width: 12), Text('Keyboard Shortcuts'),
-          ]),
-        ),
-        const PopupMenuItem(
-          value: 'about',
-          child: Row(children: [
-            Icon(Icons.info_outline, size: 20), SizedBox(width: 12), Text('About'),
-          ]),
-        ),
+        PopupMenuItem(value: 'theme', child: _overflowItem(Icons.palette, 'Theme')),
+        PopupMenuItem(value: 'shortcuts', child: _overflowItem(Icons.keyboard, 'Keyboard Shortcuts')),
+        PopupMenuItem(value: 'about', child: _overflowItem(Icons.info_outline, 'About')),
+      ],
+    );
+  }
+
+  /// Helper for overflow menu items — prevents Row overflow in narrow popups.
+  static Widget _overflowItem(IconData icon, String label, {Color? iconColor}) {
+    return Row(
+      children: [
+        Icon(icon, size: 20, color: iconColor),
+        const SizedBox(width: 12),
+        Flexible(child: Text(label, overflow: TextOverflow.ellipsis)),
       ],
     );
   }

@@ -7,3 +7,5 @@ tags:
     skip: "Golden tests require baseline images. Run with: flutter test --tags golden"
   connection_dialog:
     skip: "Connection dialog widget tests. Run with: flutter test --tags connection_dialog"
+  deploy:
+    skip: "Live deployment verification. Run with: flutter test --tags deploy"

@@ -59,3 +59,8 @@ jobs:
           VERCEL_ORG_ID: ${{ secrets.VERCEL_ORG_ID }}
           VERCEL_PROJECT_ID: ${{ secrets.VERCEL_PROJECT_ID }}
         run: vercel deploy build/web --prod --yes --archive=tgz --token="$VERCEL_TOKEN"
+
+      - name: Verify deployment is live
+        env:
+          DEPLOY_URL: https://web-nu-peach-46.vercel.app
+        run: flutter test test/integration/deploy_verify_test.dart --tags deploy
