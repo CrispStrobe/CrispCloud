@@ -7,6 +7,7 @@
 import 'dart:io';
 import 'dart:typed_data';
 import 'package:flutter/foundation.dart' show kIsWeb;
+import 'package:flutter/services.dart' show FontLoader;
 import 'package:universal_html/html.dart' as html;
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -27,7 +28,7 @@ import 'package:flutter_highlight/themes/monokai-sublime.dart';
 import 'package:flutter_highlight/themes/github.dart';
 
 /// File types we can preview inline.
-enum PreviewType { image, svg, text, markdown, csv, pdf, video, audio, office, none }
+enum PreviewType { image, svg, text, markdown, csv, pdf, video, audio, office, font, none }
 
 PreviewType _classifyFile(String name) {
   final ext = name.split('.').last.toLowerCase();
@@ -124,6 +125,11 @@ PreviewType _classifyFile(String name) {
     case 'ods':
     case 'odp':
       return PreviewType.office;
+    case 'ttf':
+    case 'otf':
+    case 'woff':
+    case 'woff2':
+      return PreviewType.font;
     default:
       return PreviewType.none;
   }
@@ -353,7 +359,12 @@ class _PreviewPaneState extends ConsumerState<PreviewPane> {
 
       if (!mounted || _loadedFile != file) return; // stale
 
-      if (type == PreviewType.image || type == PreviewType.svg) {
+      if (type == PreviewType.font) {
+        setState(() {
+          _previewBytes = bytes;
+          _loading = false;
+        });
+      } else if (type == PreviewType.image || type == PreviewType.svg) {
         setState(() {
           _previewBytes = bytes;
           _loading = false;
@@ -573,6 +584,11 @@ class _PreviewPaneState extends ConsumerState<PreviewPane> {
           ),
         ),
       );
+    }
+
+    // Font preview — show sample text at various sizes
+    if (_previewBytes != null && _classifyFile(file.name) == PreviewType.font) {
+      return _FontPreview(fontBytes: _previewBytes!, filename: file.name);
     }
 
     // SVG preview
@@ -953,6 +969,85 @@ class _MediaPlayerState extends State<_MediaPlayer> {
 }
 
 /// Web-only media player — opens blob URL in browser tab for playback.
+/// Font preview — loads font from bytes and displays sample text.
+class _FontPreview extends StatefulWidget {
+  final Uint8List fontBytes;
+  final String filename;
+
+  const _FontPreview({required this.fontBytes, required this.filename});
+
+  @override
+  State<_FontPreview> createState() => _FontPreviewState();
+}
+
+class _FontPreviewState extends State<_FontPreview> {
+  String? _fontFamily;
+  bool _loaded = false;
+
+  @override
+  void initState() {
+    super.initState();
+    _loadFont();
+  }
+
+  Future<void> _loadFont() async {
+    final family = 'preview_${widget.filename.hashCode}';
+    try {
+      final loader = FontLoader(family);
+      loader.addFont(Future.value(ByteData.sublistView(widget.fontBytes)));
+      await loader.load();
+      if (mounted) setState(() { _fontFamily = family; _loaded = true; });
+    } catch (_) {
+      if (mounted) setState(() => _loaded = true);
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    if (!_loaded) return const Center(child: CircularProgressIndicator());
+
+    final style = _fontFamily != null
+        ? TextStyle(fontFamily: _fontFamily)
+        : const TextStyle();
+
+    return SingleChildScrollView(
+      padding: const EdgeInsets.all(16),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(widget.filename, style: TextStyle(
+            fontSize: 12, fontWeight: FontWeight.bold,
+            color: theme.colorScheme.primary,
+          )),
+          const SizedBox(height: 16),
+          for (final size in [12.0, 16.0, 24.0, 32.0, 48.0, 72.0]) ...[
+            Text('${size.toInt()}px', style: TextStyle(
+              fontSize: 10, color: theme.colorScheme.onSurfaceVariant,
+            )),
+            const SizedBox(height: 4),
+            Text(
+              'The quick brown fox jumps over the lazy dog',
+              style: style.copyWith(fontSize: size),
+            ),
+            const SizedBox(height: 8),
+            Text(
+              'ABCDEFGHIJKLMNOPQRSTUVWXYZ',
+              style: style.copyWith(fontSize: size * 0.6),
+            ),
+            const SizedBox(height: 4),
+            Text(
+              'abcdefghijklmnopqrstuvwxyz 0123456789',
+              style: style.copyWith(fontSize: size * 0.6),
+            ),
+            const Divider(height: 24),
+          ],
+        ],
+      ),
+    );
+  }
+}
+
 /// CSV/TSV table preview widget.
 class _CsvTableView extends StatelessWidget {
   final String content;
