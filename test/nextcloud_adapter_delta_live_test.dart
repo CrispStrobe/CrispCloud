@@ -24,7 +24,7 @@ import 'package:crisp_cloud/services/secure_storage_service.dart';
 
 const _ncUrl = 'http://localhost:8888';
 const _ncUser = 'admin';
-const _ncPass = 'admin2026';
+const _ncPass = 'CrispAdmin2026!';
 
 // ---------------------------------------------------------------------------
 // Helpers

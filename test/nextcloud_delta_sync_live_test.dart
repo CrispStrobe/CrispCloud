@@ -4,10 +4,10 @@
 //
 // Prerequisites (run once before tests):
 //   dd if=/dev/urandom of=/tmp/delta_test_12m.bin bs=1M count=12
-//   curl -u admin:admin2026 -T /tmp/delta_test_12m.bin http://localhost:8888/remote.php/dav/files/admin/delta-live-bm.bin
-//   curl -u admin:admin2026 -T /tmp/delta_test_12m.bin http://localhost:8888/remote.php/dav/files/admin/delta-live-wr.bin
+//   curl -u admin:CrispAdmin2026! -T /tmp/delta_test_12m.bin http://localhost:8888/remote.php/dav/files/admin/delta-live-bm.bin
+//   curl -u admin:CrispAdmin2026! -T /tmp/delta_test_12m.bin http://localhost:8888/remote.php/dav/files/admin/delta-live-wr.bin
 //   python3 -c "import sys; sys.stdout.buffer.write(b'\x00'*4*1024*1024 + b'\xff'*4*1024*1024)" > /tmp/delta_test_range.bin
-//   curl -u admin:admin2026 -T /tmp/delta_test_range.bin http://localhost:8888/remote.php/dav/files/admin/delta-live-range.bin
+//   curl -u admin:CrispAdmin2026! -T /tmp/delta_test_range.bin http://localhost:8888/remote.php/dav/files/admin/delta-live-range.bin
 //
 // Run:  flutter test test/nextcloud_delta_sync_live_test.dart --run-skipped
 @Tags(['live'])
@@ -22,7 +22,7 @@ import 'package:crisp_cloud/services/delta_sync_service.dart';
 
 const _ncUrl = 'http://localhost:8888';
 const _ncUser = 'admin';
-const _ncPass = 'admin2026';
+const _ncPass = 'CrispAdmin2026!';
 const _ncAppBase = '$_ncUrl/index.php/apps/crispcloud_delta';
 
 // ---------------------------------------------------------------------------
