@@ -559,90 +559,21 @@ class _FileBrowserScreenState extends ConsumerState<FileBrowserScreen> {
           );
         },
       ),
-      IconButton(
-        icon: const Icon(Icons.cloud_sync, size: 20),
-        tooltip: 'Multi-Cloud',
-        onPressed: () => showMultiCloudDialog(context),
-      ),
-      IconButton(
-        icon: const Icon(Icons.sync, size: 20),
-        tooltip: 'Sync Manager',
-        onPressed: () => showSyncDialog(context),
-      ),
-      // Mount as Drive — only on native desktop (FUSE)
-      if (isDesktopPlatform)
-        IconButton(
-          icon: const Icon(Icons.storage_rounded, size: 20),
-          tooltip: 'Mount as Drive',
-          onPressed: () => showMountDialog(context),
-        ),
-      IconButton(
-        icon: const Icon(Icons.find_replace, size: 20),
-        tooltip: 'Find Duplicates',
-        onPressed: () => showDuplicateFinderDialog(context, ref),
-      ),
-      IconButton(
-        icon: const Icon(Icons.history, size: 20),
-        tooltip: 'Audit Log',
-        onPressed: () => showAuditLogDialog(context),
-      ),
-      IconButton(
-        icon: const Icon(Icons.storage, size: 20),
-        tooltip: 'Cache Settings',
-        onPressed: () => showCacheSettingsDialog(context, ref),
-      ),
-      IconButton(
-        icon: Icon(
-          ref.watch(showTreeSidebarProvider) ? Icons.account_tree : Icons.account_tree_outlined,
-          size: 20,
-        ),
-        tooltip: 'Toggle Tree Sidebar',
-        onPressed: () => ref.read(showTreeSidebarProvider.notifier).state =
-            !ref.read(showTreeSidebarProvider),
-      ),
-      IconButton(
-        icon: Icon(
-          showPreview ? Icons.visibility : Icons.visibility_off,
-          size: 20,
-        ),
-        tooltip: showPreview ? 'Hide Preview' : 'Show Preview',
-        onPressed: () => ref.read(showPreviewProvider.notifier).state = !showPreview,
-      ),
-      if (auth.isEncryptionEnabled)
-        IconButton(
-          icon: const Icon(Icons.key, size: 20),
-          tooltip: 'Key Management',
-          onPressed: () => showKeyManagementDialog(context, ref),
-        ),
-      IconButton(
-        icon: const Icon(Icons.palette, size: 20),
-        tooltip: 'Theme',
-        onPressed: () {
-          final themeService = legacy.Provider.of<ThemeService>(context, listen: false);
-          showDialog(
-            context: context,
-            builder: (_) => legacy.ChangeNotifierProvider<ThemeService>.value(
-              value: themeService,
-              child: legacy.Consumer<ThemeService>(
-                builder: (ctx, ts, _) => ThemePickerDialog(themeService: ts),
-              ),
-            ),
+      // Preview toggle
+      Consumer(
+        builder: (ctx, cref, _) {
+          final preview = cref.watch(showPreviewProvider);
+          return IconButton(
+            icon: Icon(preview ? Icons.visibility : Icons.visibility_off, size: 20,
+              color: preview ? Theme.of(ctx).colorScheme.primary : null),
+            tooltip: preview ? 'Hide Preview' : 'Show Preview',
+            onPressed: () =>
+                cref.read(showPreviewProvider.notifier).state = !preview,
           );
         },
       ),
-      IconButton(
-        icon: const Icon(Icons.keyboard, size: 20),
-        tooltip: 'Keyboard Shortcuts',
-        onPressed: () => showKeyboardShortcutsDialog(context),
-      ),
-      IconButton(
-        icon: const Icon(Icons.info_outline, size: 20),
-        tooltip: 'About this app',
-        onPressed: () => showDialog(
-          context: context,
-          builder: (context) => const AboutAppDialog(),
-        ),
-      ),
+      // Overflow menu (same as narrow)
+      _buildOverflowMenu(context, auth),
     ];
 
     return [

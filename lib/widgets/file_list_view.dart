@@ -15,6 +15,20 @@ import '../services/panel_view_mode_service.dart' show PanelViewMode;
 import '../utils/formatters.dart';
 import 'file_context_menu.dart';
 
+/// Tracks modifier keys from the most recent pointer-down event.
+/// Captured at pointer-down time (before GestureDetector.onTap fires),
+/// which is more reliable on web than checking HardwareKeyboard in onTap.
+class _PointerModifiers {
+  static bool shiftPressed = false;
+  static bool ctrlOrMetaPressed = false;
+
+  static void update(PointerDownEvent event) {
+    shiftPressed = HardwareKeyboard.instance.isShiftPressed;
+    ctrlOrMetaPressed = HardwareKeyboard.instance.isControlPressed ||
+        HardwareKeyboard.instance.isMetaPressed;
+  }
+}
+
 class FileListView extends ConsumerWidget {
   static const _log = Log('FileListView');
 
@@ -132,7 +146,9 @@ class FileListView extends ConsumerWidget {
       // autofocus = true when this is the active panel so compact tiles
       // (which have no inner Focus widget) still drive key events here.
       final isActivePanel = ref.read(activePanelProvider) == side;
-      return Focus(
+      return Listener(
+        onPointerDown: (event) => _PointerModifiers.update(event),
+        child: Focus(
         autofocus: isActivePanel,
         canRequestFocus: true,
         skipTraversal: true,
@@ -214,6 +230,7 @@ class FileListView extends ConsumerWidget {
           return KeyEventResult.ignored;
         },
         child: listView,
+      ),
       );
     } catch (e, stackTrace) {
       _log.error('Error building file list: $e', e, stackTrace);
@@ -373,10 +390,8 @@ class FileListTile extends ConsumerWidget {
               ? IconButton(icon: const Icon(Icons.chevron_right), onPressed: onDoubleTap)
               : null,
           onTap: () {
-            final keys = HardwareKeyboard.instance.logicalKeysPressed;
-            final shiftPressed = keys.contains(LogicalKeyboardKey.shiftLeft) || keys.contains(LogicalKeyboardKey.shiftRight);
-            final ctrlPressed = keys.contains(LogicalKeyboardKey.controlLeft) || keys.contains(LogicalKeyboardKey.controlRight) || keys.contains(LogicalKeyboardKey.metaLeft) || keys.contains(LogicalKeyboardKey.metaRight);
-            onTap(shiftPressed, ctrlPressed);
+            // Use _PointerModifiers captured at pointer-down time (more reliable on web).
+            onTap(_PointerModifiers.shiftPressed, _PointerModifiers.ctrlOrMetaPressed);
           },
           onLongPress: onDoubleTap,
         ),
