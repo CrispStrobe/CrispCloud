@@ -12,7 +12,7 @@ import '../models/panel_side.dart';
 import '../services/panel_view_mode_service.dart';
 import '../services/toolbar_customization_service.dart';
 
-bool get _isTest => Platform.environment.containsKey('FLUTTER_TEST');
+bool get _isTest => !kIsWeb && Platform.environment.containsKey('FLUTTER_TEST');
 
 // ---------------------------------------------------------------------------
 // Service singletons

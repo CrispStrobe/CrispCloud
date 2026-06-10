@@ -122,9 +122,7 @@ class PanelNotifier extends ChangeNotifier {
           refresh();
         } else if ((prev?.isConnected ?? false) && !next.isConnected) {
           // On disconnect, show local filesystem
-          if (!kIsWeb) {
-            _remotePath = Platform.environment['HOME'] ?? '/';
-          }
+          _remotePath = kIsWeb ? '/' : (Platform.environment['HOME'] ?? '/');
           refresh();
         }
       });
@@ -1257,7 +1255,7 @@ class PanelNotifier extends ChangeNotifier {
   /// Restore tabs from SharedPreferences. Falls back to single default tab.
   Future<void> _restoreTabs() async {
     // Skip persistence in test environments to avoid pending timer assertions
-    if (Platform.environment.containsKey('FLUTTER_TEST')) {
+    if (!kIsWeb && Platform.environment.containsKey('FLUTTER_TEST')) {
       _initFirstTab();
       return;
     }
@@ -1308,7 +1306,7 @@ class PanelNotifier extends ChangeNotifier {
 
   /// Persist current tabs to SharedPreferences.
   Future<void> _saveTabs() async {
-    if (Platform.environment.containsKey('FLUTTER_TEST')) return;
+    if (!kIsWeb && Platform.environment.containsKey('FLUTTER_TEST')) return;
     try {
       final prefs = await SharedPreferences.getInstance();
       final list = _tabs.map((t) => {'path': t.path, 'pinned': t.isPinned}).toList();
@@ -1556,6 +1554,7 @@ class PanelNotifier extends ChangeNotifier {
   void _updateFreeSpace(String path) {
     // Skip in test environments to avoid pending OS-process timers that
     // cause "test failed after it had already completed" assertions.
+    if (kIsWeb) return;
     if (Platform.environment.containsKey('FLUTTER_TEST')) return;
     // `df` is a Unix utility — skip on Windows to avoid a crash.
     if (Platform.isWindows) return;
