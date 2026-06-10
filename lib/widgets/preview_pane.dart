@@ -19,9 +19,10 @@ import '../utils/formatters.dart';
 import 'file_list_view.dart' show getFileIcon;
 
 import 'package:flutter_markdown/flutter_markdown.dart';
+import 'package:flutter_svg/flutter_svg.dart';
 
 /// File types we can preview inline.
-enum PreviewType { image, text, markdown, pdf, video, audio, none }
+enum PreviewType { image, svg, text, markdown, pdf, video, audio, none }
 
 PreviewType _classifyFile(String name) {
   final ext = name.split('.').last.toLowerCase();
@@ -34,6 +35,8 @@ PreviewType _classifyFile(String name) {
     case 'webp':
     case 'ico':
       return PreviewType.image;
+    case 'svg':
+      return PreviewType.svg;
     case 'md':
     case 'markdown':
       return PreviewType.markdown;
@@ -238,7 +241,7 @@ class _PreviewPaneState extends ConsumerState<PreviewPane> {
 
       if (!mounted || _loadedFile != file) return; // stale
 
-      if (type == PreviewType.image) {
+      if (type == PreviewType.image || type == PreviewType.svg) {
         setState(() {
           _previewBytes = bytes;
           _loading = false;
@@ -443,6 +446,20 @@ class _PreviewPaneState extends ConsumerState<PreviewPane> {
               Text(_error!, style: TextStyle(color: theme.disabledColor, fontSize: 12),
                   textAlign: TextAlign.center),
             ],
+          ),
+        ),
+      );
+    }
+
+    // SVG preview
+    if (_previewBytes != null && _classifyFile(file.name) == PreviewType.svg) {
+      return InteractiveViewer(
+        minScale: 0.5,
+        maxScale: 5.0,
+        child: Center(
+          child: SvgPicture.memory(
+            _previewBytes!,
+            fit: BoxFit.contain,
           ),
         ),
       );
