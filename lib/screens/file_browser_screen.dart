@@ -19,6 +19,7 @@ import '../services/panel_swap_service.dart';
 import '../services/panel_view_mode_service.dart' show PanelViewMode;
 import '../services/theme_service.dart';
 import '../widgets/audit_log_dialog.dart';
+import '../widgets/log_viewer_dialog.dart';
 import '../widgets/file_panel.dart';
 import '../widgets/fkey_bar.dart';
 import '../services/fkey_action_service.dart' show FKeyAction;
@@ -693,6 +694,8 @@ class _FileBrowserScreenState extends ConsumerState<FileBrowserScreen> {
             showDuplicateFinderDialog(context, ref);
           case 'audit':
             showAuditLogDialog(context);
+          case 'syslog':
+            showLogViewerDialog(context);
           case 'cache':
             showCacheSettingsDialog(context, ref);
           case 'dual_panel':
@@ -757,6 +760,7 @@ class _FileBrowserScreenState extends ConsumerState<FileBrowserScreen> {
           PopupMenuItem(value: 'mount', child: _overflowItem(Icons.storage_rounded, 'Mount as Drive')),
         PopupMenuItem(value: 'duplicates', child: _overflowItem(Icons.find_replace, 'Find Duplicates')),
         PopupMenuItem(value: 'audit', child: _overflowItem(Icons.history, 'Audit Log')),
+        PopupMenuItem(value: 'syslog', child: _overflowItem(Icons.terminal, 'System Log')),
         PopupMenuItem(value: 'cache', child: _overflowItem(Icons.storage, 'Cache Settings')),
         const PopupMenuDivider(),
         PopupMenuItem(

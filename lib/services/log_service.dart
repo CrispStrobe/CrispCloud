@@ -10,6 +10,7 @@
 // Log output is written via debugPrint (which routes to dart:developer on
 // Flutter) and optionally collected in-memory for export/bug-reports.
 
+import 'dart:async';
 import 'dart:collection';
 import 'package:flutter/foundation.dart';
 
@@ -76,9 +77,15 @@ class LogConfig {
   /// In-memory ring buffer of recent log entries (for export / bug reports).
   static final _buffer = Queue<LogEntry>();
 
+  /// Live stream of log entries for the log viewer.
+  static final _streamController = StreamController<LogEntry>.broadcast();
+  static Stream<LogEntry> get stream => _streamController.stream;
+
   static List<LogEntry> get entries => _buffer.toList();
 
-  static void clear() => _buffer.clear();
+  static void clear() {
+    _buffer.clear();
+  }
 
   static void _add(LogEntry entry) {
     if (maxBufferSize <= 0) return;
@@ -86,6 +93,7 @@ class LogConfig {
       _buffer.removeFirst();
     }
     _buffer.add(entry);
+    _streamController.add(entry);
   }
 
   /// Export all buffered entries as a plain-text string (for sharing).
