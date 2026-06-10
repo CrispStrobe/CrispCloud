@@ -2,8 +2,10 @@
 
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart' show Clipboard, ClipboardData;
+import 'dart:typed_data';
 import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:universal_html/html.dart' as html;
 import 'package:url_launcher/url_launcher.dart';
 import 'dart:io';
 import 'package:share_plus/share_plus.dart';
@@ -352,22 +354,39 @@ void showFileContextMenu(BuildContext context, WidgetRef ref, PanelSide side, Fi
     items.add(const PopupMenuDivider());
   }
 
-  // Copy to...
-  items.add(
-    PopupMenuItem(
-      child: Row(
-        children: [
-          const Icon(Icons.content_copy),
-          const SizedBox(width: 8),
-          Text('Copy to...${isMultiSelect ? ' (${files.length})' : ''}'),
-        ],
+  // Copy to... / Download (web local)
+  if (kIsWeb && side == PanelSide.local) {
+    items.add(
+      PopupMenuItem(
+        child: Row(
+          children: [
+            const Icon(Icons.download),
+            const SizedBox(width: 8),
+            Text('Download${isMultiSelect ? ' (${files.length})' : ''}'),
+          ],
+        ),
+        onTap: () => Future.delayed(Duration.zero, () {
+          _downloadFilesOnWeb(ref, files);
+        }),
       ),
-      onTap: () => Future.delayed(Duration.zero, () {
-        if (!context.mounted) return;
-        _showCopyDialog(context, ref, side, files);
-      }),
-    ),
-  );
+    );
+  } else {
+    items.add(
+      PopupMenuItem(
+        child: Row(
+          children: [
+            const Icon(Icons.content_copy),
+            const SizedBox(width: 8),
+            Text('Copy to...${isMultiSelect ? ' (${files.length})' : ''}'),
+          ],
+        ),
+        onTap: () => Future.delayed(Duration.zero, () {
+          if (!context.mounted) return;
+          _showCopyDialog(context, ref, side, files);
+        }),
+      ),
+    );
+  }
 
   // Move to...
   items.add(
@@ -889,6 +908,30 @@ void showRenameDialog(BuildContext context, WidgetRef ref, PanelSide side, FileI
       ],
     ),
   );
+}
+
+/// Download local files on web via browser download.
+void _downloadFilesOnWeb(WidgetRef ref, List<FileItem> files) {
+  if (!kIsWeb) return;
+  final localSvc = ref.read(localFileServiceProvider);
+  for (final file in files) {
+    if (file.isFolder || file.path == null) continue;
+    localSvc.readFile(file.path!, fileItem: file).then((bytes) {
+      _triggerBrowserDownload(bytes, file.name);
+    }).catchError((_) {});
+  }
+}
+
+/// Trigger a browser download for [bytes] with the given [filename].
+void _triggerBrowserDownload(Uint8List bytes, String filename) {
+  // Use universal_html for cross-platform web download.
+  final blob = html.Blob([bytes]);
+  final url = html.Url.createObjectUrlFromBlob(blob);
+  // ignore: unused_local_variable
+  final anchor = html.AnchorElement(href: url)
+    ..setAttribute('download', filename)
+    ..click();
+  html.Url.revokeObjectUrl(url);
 }
 
 void _showCopyDialog(BuildContext context, WidgetRef ref, PanelSide side, List<FileItem> files) {

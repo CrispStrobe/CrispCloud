@@ -3,8 +3,10 @@
 // Dialog helpers for the file browser screen.
 // All functions are top-level, taking BuildContext and WidgetRef as parameters.
 
+import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:universal_html/html.dart' as html;
 import 'package:path/path.dart' as p;
 
 import '../models/file_item.dart';
@@ -295,7 +297,30 @@ void showCopyDialogFromSelection(BuildContext context, WidgetRef ref) {
   final activePanel = ref.read(activePanelProvider);
   final panel = ref.read(panelProvider(activePanel));
   if (panel.selection.isEmpty) return;
+
+  // On web with local files, download instead of copy.
+  if (kIsWeb && activePanel == PanelSide.local) {
+    _downloadFilesOnWeb(ref, panel.selection.toList());
+    return;
+  }
+
   _showPathDialog(context, ref, activePanel, panel, panel.selection.toList(), 'Copy', panel.copyFiles);
+}
+
+/// Download local files via browser on web.
+void _downloadFilesOnWeb(WidgetRef ref, List<FileItem> files) {
+  final localSvc = ref.read(localFileServiceProvider);
+  for (final file in files) {
+    if (file.isFolder || file.path == null) continue;
+    localSvc.readFile(file.path!, fileItem: file).then((bytes) {
+      final blob = html.Blob([bytes]);
+      final url = html.Url.createObjectUrlFromBlob(blob);
+      html.AnchorElement(href: url)
+        ..setAttribute('download', file.name)
+        ..click();
+      html.Url.revokeObjectUrl(url);
+    }).catchError((_) {});
+  }
 }
 
 void showMoveDialogFromSelection(BuildContext context, WidgetRef ref) {
