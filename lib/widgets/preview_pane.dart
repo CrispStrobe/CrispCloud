@@ -124,6 +124,7 @@ PreviewType _classifyFile(String name) {
     case 'odt':
     case 'ods':
     case 'odp':
+    case 'epub':
       return PreviewType.office;
     case 'ttf':
     case 'otf':
@@ -190,6 +191,10 @@ String _extractOfficeText(Uint8List bytes, String filename) {
         .map((f) => f.name)
         .toList(),
     'odt' || 'ods' || 'odp' => ['content.xml'],
+    'epub' => archive.files
+        .where((f) => f.name.endsWith('.xhtml') || f.name.endsWith('.html') || f.name.endsWith('.htm'))
+        .map((f) => f.name)
+        .toList(),
     _ => <String>[],
   };
 

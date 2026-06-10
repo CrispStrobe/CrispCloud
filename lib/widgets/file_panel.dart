@@ -191,21 +191,32 @@ class _FilePanelState extends ConsumerState<FilePanel> {
 
     return GestureDetector(
       onTap: widget.onTap,
-      child: kIsWeb
-          ? content
-          : DropTarget(
+      child: DropTarget(
               onDragEntered: (_) => setState(() => _isDragging = true),
               onDragExited: (_) => setState(() => _isDragging = false),
               onDragDone: (details) async {
                 setState(() => _isDragging = false);
-                final auth = ref.read(authProvider);
-                if (widget.side == PanelSide.remote && auth.isConnected) {
-                  final items = details.files.map((xFile) => FileItem(
-                    name: xFile.name,
-                    path: xFile.path,
-                    isFolder: false,
-                  )).toList();
-                  await ref.read(transferProvider).uploadFiles(items);
+                if (kIsWeb) {
+                  // Web: save dropped files to the current local folder.
+                  final localSvc = ref.read(localFileServiceProvider);
+                  for (final xFile in details.files) {
+                    try {
+                      final bytes = await xFile.readAsBytes();
+                      final targetPath = '${panel.currentPath}/${xFile.name}';
+                      await localSvc.saveFile(targetPath, bytes);
+                    } catch (_) {}
+                  }
+                  panel.refresh();
+                } else {
+                  final auth = ref.read(authProvider);
+                  if (widget.side == PanelSide.remote && auth.isConnected) {
+                    final items = details.files.map((xFile) => FileItem(
+                      name: xFile.name,
+                      path: xFile.path,
+                      isFolder: false,
+                    )).toList();
+                    await ref.read(transferProvider).uploadFiles(items);
+                  }
                 }
               },
               child: content,
