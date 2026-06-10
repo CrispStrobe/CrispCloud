@@ -373,8 +373,9 @@ class FileListTile extends ConsumerWidget {
               ? IconButton(icon: const Icon(Icons.chevron_right), onPressed: onDoubleTap)
               : null,
           onTap: () {
-            final shiftPressed = HardwareKeyboard.instance.isShiftPressed;
-            final ctrlPressed = HardwareKeyboard.instance.isControlPressed || HardwareKeyboard.instance.isMetaPressed;
+            final keys = HardwareKeyboard.instance.logicalKeysPressed;
+            final shiftPressed = keys.contains(LogicalKeyboardKey.shiftLeft) || keys.contains(LogicalKeyboardKey.shiftRight);
+            final ctrlPressed = keys.contains(LogicalKeyboardKey.controlLeft) || keys.contains(LogicalKeyboardKey.controlRight) || keys.contains(LogicalKeyboardKey.metaLeft) || keys.contains(LogicalKeyboardKey.metaRight);
             onTap(shiftPressed, ctrlPressed);
           },
           onLongPress: onDoubleTap,

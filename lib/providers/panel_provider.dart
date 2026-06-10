@@ -26,6 +26,7 @@ import 'action_history_provider.dart';
 import 'auth_provider.dart';
 import 'core_providers.dart';
 import 'error_provider.dart';
+import 'panel_source_provider.dart';
 import 'recent_locations_provider.dart';
 
 enum SortBy { name, size, date, extension }
@@ -128,6 +129,18 @@ class PanelNotifier extends ChangeNotifier {
         }
       });
     }
+    // Listen for panel source changes (e.g. user switches provider in dropdown).
+    _ref.listen<PanelSource>(panelSourceProvider(side), (prev, next) {
+      if (prev == next) return;
+      if (next.isLocal) {
+        _localFileService.currentPath = next.currentPath;
+        _loadLocalFiles();
+      } else if (next.isRemote) {
+        _remotePath = next.currentPath;
+        _loadRemoteFiles();
+      }
+      notifyListeners();
+    });
   }
 
   // --- Getters ---
