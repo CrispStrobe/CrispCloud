@@ -27,6 +27,7 @@ import 'package:archive/archive.dart' show ZipDecoder;
 import 'package:flutter_highlight/flutter_highlight.dart';
 import 'package:flutter_highlight/themes/monokai-sublime.dart';
 import 'package:flutter_highlight/themes/github.dart';
+import '../services/log_service.dart';
 
 /// File types we can preview inline.
 enum PreviewType { image, svg, text, markdown, csv, pdf, video, audio, office, font, none }
@@ -238,6 +239,8 @@ String _mimeTypeForExt(String ext) {
 }
 
 class PreviewPane extends ConsumerStatefulWidget {
+  static const _log = Log('PreviewPane');
+
   final FileItem? file;
   final PanelSide side;
 
@@ -252,6 +255,7 @@ class PreviewPane extends ConsumerStatefulWidget {
 }
 
 class _PreviewPaneState extends ConsumerState<PreviewPane> {
+  static const _log = Log('PreviewPane');
   Uint8List? _previewBytes;
   String? _textContent;
   PdfController? _pdfController;
@@ -285,7 +289,7 @@ class _PreviewPaneState extends ConsumerState<PreviewPane> {
 
   void _loadPreview() {
     final file = widget.file;
-    debugPrint('[Preview] loadPreview: ${file?.name} side=${widget.side.name} type=${file != null ? _classifyFile(file.name).name : "null"}');
+    _log.debug('loadPreview: ${file?.name} side=${widget.side.name} type=${file != null ? _classifyFile(file.name).name : "null"}');
     _previewBytes = null;
     _textContent = null;
     _pdfController?.dispose();

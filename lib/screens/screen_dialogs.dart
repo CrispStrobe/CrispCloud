@@ -18,7 +18,9 @@ import '../widgets/connection_dialog.dart';
 import '../widgets/file_editor_dialog.dart' show showFileEditorDialog;
 import '../widgets/preview_pane.dart' show PreviewPane;
 import '../l10n/app_localizations.dart';
+import '../services/log_service.dart';
 
+const _log = Log('ScreenDialogs');
 void showConnectionDialogScreen(BuildContext context) {
   showDialog(
     context: context,
@@ -187,7 +189,7 @@ void downloadSelected(BuildContext context, WidgetRef ref) {
 void confirmDeleteSelected(BuildContext context, WidgetRef ref) {
   final activePanel = ref.read(activePanelProvider);
   final panel = ref.read(panelProvider(activePanel));
-  debugPrint('[Delete] confirmDeleteSelected: ${panel.selection.length} items, side=${activePanel.name}');
+  _log.debug('confirmDeleteSelected: ${panel.selection.length} items, side=${activePanel.name}');
   if (panel.selection.isEmpty) return;
 
   showDialog(
@@ -305,7 +307,7 @@ void showCopyDialogFromSelection(BuildContext context, WidgetRef ref) {
     final opposite = activePanel == PanelSide.local ? PanelSide.remote : PanelSide.local;
     final oppositePanel = ref.read(panelProvider(opposite));
     final oppPath = oppositePanel.currentPath;
-    debugPrint('[Copy] web copy: active=${activePanel.name} oppPath=$oppPath selection=${panel.selection.length}');
+    _log.debug('web copy: active=${activePanel.name} oppPath=$oppPath selection=${panel.selection.length}');
 
     // If the opposite panel has a local folder open (not just '/'), copy there.
     if (oppPath.length > 1) {
@@ -341,7 +343,7 @@ void _downloadFilesOnWeb(WidgetRef ref, List<FileItem> files) {
 void showMoveDialogFromSelection(BuildContext context, WidgetRef ref) {
   final activePanel = ref.read(activePanelProvider);
   final panel = ref.read(panelProvider(activePanel));
-  debugPrint('[Move] showMoveDialogFromSelection: ${panel.selection.length} items, side=${activePanel.name}');
+  _log.debug('showMoveDialogFromSelection: ${panel.selection.length} items, side=${activePanel.name}');
   if (panel.selection.isEmpty) return;
   _showPathDialog(context, ref, activePanel, panel, panel.selection.toList(), 'Move', panel.moveFiles);
 }

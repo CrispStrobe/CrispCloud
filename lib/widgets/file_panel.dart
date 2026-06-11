@@ -6,6 +6,7 @@ import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../models/file_item.dart';
+import '../services/log_service.dart';
 import '../models/panel_side.dart';
 import '../providers/providers.dart';
 import '../providers/panel_source_provider.dart' show panelSourceProvider;
@@ -40,6 +41,8 @@ class FilePanel extends ConsumerStatefulWidget {
 }
 
 class _FilePanelState extends ConsumerState<FilePanel> {
+  static const _log = Log('FilePanel');
+
   bool _isDragging = false;
   bool _isEditingPath = false;
   late final ScrollController _scrollController;

@@ -18,6 +18,7 @@ import '../models/file_item.dart';
 import '../models/panel_side.dart';
 import '../providers/providers.dart';
 import '../l10n/app_localizations.dart';
+import '../services/log_service.dart';
 
 /// Opens a full-screen editor dialog for the given file.
 void showFileEditorDialog(
@@ -29,6 +30,8 @@ void showFileEditorDialog(
 }
 
 class _FileEditorPage extends ConsumerStatefulWidget {
+  static const _log = Log('FileEditor');
+
   final FileItem file;
   final PanelSide side;
 
@@ -169,6 +172,7 @@ class _HighlightingController extends TextEditingController {
 }
 
 class _FileEditorPageState extends ConsumerState<_FileEditorPage> {
+  static const _log = Log('FileEditor');
   late final _HighlightingController _controller;
   final _scrollController = ScrollController();
   final _focusNode = FocusNode();
@@ -269,7 +273,7 @@ class _FileEditorPageState extends ConsumerState<_FileEditorPage> {
   }
 
   Future<void> _loadFile() async {
-    debugPrint('[Editor] loadFile: ${widget.file.name} side=${widget.side.name} web=$kIsWeb');
+    _log.debug('loadFile: ${widget.file.name} side=${widget.side.name} web=$kIsWeb');
     try {
       final client = ref.read(authProvider).client;
       Uint8List bytes;
@@ -328,7 +332,7 @@ class _FileEditorPageState extends ConsumerState<_FileEditorPage> {
   }
 
   Future<void> _saveFile() async {
-    debugPrint('[Editor] saveFile: ${widget.file.name} side=${widget.side.name} web=$kIsWeb');
+    _log.debug('saveFile: ${widget.file.name} side=${widget.side.name} web=$kIsWeb');
     setState(() => _saving = true);
     try {
       // Save a local snapshot before overwriting

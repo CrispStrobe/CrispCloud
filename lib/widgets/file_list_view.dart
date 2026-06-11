@@ -19,6 +19,7 @@ import 'file_context_menu.dart';
 /// Captured at pointer-down time (before GestureDetector.onTap fires),
 /// which is more reliable on web than checking HardwareKeyboard in onTap.
 class _PointerModifiers {
+  static const _log = Log('PointerMod');
   static bool shiftPressed = false;
   static bool ctrlOrMetaPressed = false;
 
@@ -27,7 +28,7 @@ class _PointerModifiers {
     ctrlOrMetaPressed = HardwareKeyboard.instance.isControlPressed ||
         HardwareKeyboard.instance.isMetaPressed;
     if (shiftPressed || ctrlOrMetaPressed) {
-      debugPrint('[PointerModifiers] shift=$shiftPressed ctrl/meta=$ctrlOrMetaPressed');
+      _log.debug('shift=$shiftPressed ctrl/meta=$ctrlOrMetaPressed');
     }
   }
 }

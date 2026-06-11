@@ -10,12 +10,15 @@ import 'filen_web_stub.dart' if (dart.library.js_util) 'dart:js_util' as js_util
 import 'package:path/path.dart' as p;
 import '../models/file_item.dart';
 import 'local_file_service.dart';
+import 'log_service.dart';
 
 LocalFileService createPlatformFileService() {
   return WebFileService.instance;
 }
 
 class WebFileService implements LocalFileService {
+  static const _log = Log('WebFS');
+
   // Singleton pattern to preserve state across reloads/instantiations
   static final WebFileService instance = WebFileService._internal();
   WebFileService._internal();
@@ -49,7 +52,7 @@ class WebFileService implements LocalFileService {
   /// Tries to use Modern API (Chrome), falls back to Legacy Input (Safari)
   @override
   Future<String?> requestDirectoryAccess({String? initialDirectory}) async {
-    debugPrint('[WebFS] requestDirectoryAccess: initial=$initialDirectory');
+    _log.debug('requestDirectoryAccess: initial=$initialDirectory');
     // 1. Reset State completely so we can "Redo" selection
     _virtualTree.clear();
     _fileRefs.clear();
@@ -231,7 +234,7 @@ class WebFileService implements LocalFileService {
 
   @override
   Future<List<FileSystemEntity>?> listDirectory(String path) async {
-    debugPrint('[WebFS] listDirectory: $path (tree=${_virtualTree.containsKey(path)}, handle=${_dirHandles.containsKey(path)})');
+    _log.debug('listDirectory: $path (tree=${_virtualTree.containsKey(path)}, handle=${_dirHandles.containsKey(path)})');
     String lookup = path;
     if (lookup.length > 1 && lookup.endsWith('/')) {
       lookup = lookup.substring(0, lookup.length - 1);
@@ -265,7 +268,7 @@ class WebFileService implements LocalFileService {
 
   @override
   Future<Uint8List> readFile(String path, {FileItem? fileItem}) async {
-    debugPrint('[WebFS] readFile: $path (refs=${_fileRefs.containsKey(path)}, handles=${_dirHandles.length})');
+    _log.debug('readFile: $path (refs=${_fileRefs.containsKey(path)}, handles=${_dirHandles.length})');
     // Try direct lookup first.
     var fileRef = _fileRefs[path];
 
@@ -303,7 +306,7 @@ class WebFileService implements LocalFileService {
           _fileRefs[path] = fileRef!;
         }
       } catch (e) {
-        debugPrint('[Web] FSA file lookup failed for $path: $e');
+        _log.debug('FSA file lookup failed for $path: $e');
       }
     }
 
@@ -318,7 +321,7 @@ class WebFileService implements LocalFileService {
   @override
   Future<void> refresh() async {
     if (_rootDirHandle != null) {
-      debugPrint('[Web] Refreshing current directory from handle...');
+      _log.debug('Refreshing current directory from handle...');
       // Only reload the current path (not the entire tree).
       final lookup = currentPath.endsWith('/') && currentPath.length > 1
           ? currentPath.substring(0, currentPath.length - 1)
@@ -333,13 +336,13 @@ class WebFileService implements LocalFileService {
           await _loadDirectChildren(_rootDirHandle, lookup);
         }
       }
-      debugPrint('[Web] Refresh complete.');
+      _log.debug('Refresh complete.');
     }
   }
 
   @override
   Future<void> deleteEntry(String path, bool isFolder) async {
-    debugPrint('[WebFS] deleteEntry: $path isFolder=$isFolder');
+    _log.debug('deleteEntry: $path isFolder=$isFolder');
     final dirPath = p.dirname(path);
     final name = p.basename(path);
 
@@ -352,7 +355,7 @@ class WebFileService implements LocalFileService {
         final promise = js_util.callMethod(parentHandle, 'removeEntry', [name, opts]);
         await js_util.promiseToFuture(promise);
       } catch (e) {
-        debugPrint('[Web] FSA removeEntry failed: $e');
+        _log.debug('FSA removeEntry failed: $e');
         throw Exception('Delete failed: $e');
       }
     }
@@ -366,14 +369,14 @@ class WebFileService implements LocalFileService {
 
   @override
   Future<void> saveFile(String path, Uint8List data) async {
-    debugPrint('[WebFS] saveFile: $path (${data.length} bytes)');
+    _log.debug('saveFile: $path (${data.length} bytes)');
     if (_rootDirHandle != null) {
       try {
-        debugPrint('[Web] Attempting direct write to folder handle...');
+        _log.debug('Attempting direct write to folder handle...');
 
         final permState = await _verifyPermission(_rootDirHandle, 'readwrite');
         if (!permState) {
-          debugPrint('[Web] Permission denied/dismissed. Falling back.');
+          _log.debug('Permission denied/dismissed. Falling back.');
         } else {
           final fileName = p.basename(path);
           final createOpts = js_util.newObject();
@@ -391,7 +394,7 @@ class WebFileService implements LocalFileService {
           final closePromise = js_util.callMethod(writable, 'close', []);
           await js_util.promiseToFuture(closePromise);
 
-          debugPrint('[Web] Successfully wrote to $fileName');
+          _log.debug('Successfully wrote to $fileName');
 
           final fileObjPromise = js_util.callMethod(fileHandle, 'getFile', []);
           final fileObj = await js_util.promiseToFuture(fileObjPromise);
@@ -412,7 +415,7 @@ class WebFileService implements LocalFileService {
           return;
         }
       } catch (e) {
-        debugPrint('[Web] Direct write failed ($e). Falling back.');
+        _log.debug('Direct write failed ($e). Falling back.');
       }
     }
 
@@ -431,19 +434,19 @@ class WebFileService implements LocalFileService {
         return true;
       }
 
-      debugPrint('[Web] Permission is "$state", querying user...');
+      _log.debug('Permission is "$state", querying user...');
       final reqPromise = js_util.callMethod(handle, 'requestPermission', [opts]);
       final newState = await js_util.promiseToFuture(reqPromise);
 
       return newState == 'granted';
     } catch (e) {
-      debugPrint('[Web] Permission verification error: $e');
+      _log.debug('Permission verification error: $e');
       return false;
     }
   }
 
   void _triggerBrowserDownload(String path, Uint8List data) {
-    debugPrint('[Web] Triggering browser download for $path');
+    _log.debug('Triggering browser download for $path');
     final fileName = p.basename(path);
     final blob = html.Blob([data]);
     final url = html.Url.createObjectUrlFromBlob(blob);

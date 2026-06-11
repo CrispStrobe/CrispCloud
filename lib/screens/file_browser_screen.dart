@@ -46,8 +46,11 @@ import '../services/windows_integration_service.dart';
 import 'about_dialog.dart';
 import 'keyboard_shortcuts.dart';
 import 'screen_dialogs.dart';
+import '../services/log_service.dart';
 
 class FileBrowserScreen extends ConsumerStatefulWidget {
+  static const _log = Log('FileBrowser');
+
   const FileBrowserScreen({super.key});
 
   @override
@@ -55,6 +58,7 @@ class FileBrowserScreen extends ConsumerStatefulWidget {
 }
 
 class _FileBrowserScreenState extends ConsumerState<FileBrowserScreen> {
+  static const _log = Log('FileBrowser');
   PanelSide _activePanelMobile = PanelSide.local;
 
   @override
@@ -635,11 +639,11 @@ class _FileBrowserScreenState extends ConsumerState<FileBrowserScreen> {
           case 'cache':
             showCacheSettingsDialog(context, ref);
           case 'dual_panel':
-            debugPrint('[Layout] dual_panel toggled → ${!ref.read(showDualPanelProvider)}');
+            _log.debug('dual_panel toggled → ${!ref.read(showDualPanelProvider)}');
             ref.read(showDualPanelProvider.notifier).state =
                 !ref.read(showDualPanelProvider);
           case 'tree':
-            debugPrint('[Layout] tree toggled → ${!ref.read(showTreeSidebarProvider)}');
+            _log.debug('tree toggled → ${!ref.read(showTreeSidebarProvider)}');
             ref.read(showTreeSidebarProvider.notifier).state =
                 !ref.read(showTreeSidebarProvider);
           case 'grid_toggle':
@@ -829,7 +833,7 @@ class _FileBrowserScreenState extends ConsumerState<FileBrowserScreen> {
   }
 
   void _handleFKeyAction(BuildContext context, WidgetRef ref, FKeyAction action) {
-    debugPrint('[FKey] action=${action.name} panel=${ref.read(activePanelProvider).name}');
+    _log.debug('action=${action.name} panel=${ref.read(activePanelProvider).name}');
     switch (action) {
       case FKeyAction.view:
         viewSelectedFile(context, ref);
