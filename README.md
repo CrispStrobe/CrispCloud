@@ -2,7 +2,7 @@
 
 **Cross-platform dual-panel cloud file manager** built with Flutter. Open-source, privacy-first, running on macOS, Windows, Linux, Android, iOS, and Web/PWA.
 
-14 cloud providers. 4468 tests. Block-level delta sync. End-to-end encryption. 9 languages.
+14 cloud providers. 4468 tests. Block-level delta sync. End-to-end encryption. 9 languages. Full i18n (EN/DE + 7 fallback).
 
 ## Providers
 
@@ -52,8 +52,8 @@ We also maintain patched Nextcloud and ownCloud desktop clients with delta sync 
 - **CLI companion** (`crisp`): headless S3/SFTP/WebDAV operations, 9 commands, shell completions
 - **Plugin system** with local REST API and automation rules
 - **FUSE mounts** for mounting remote storage as local drives
-- **9 languages:** EN, DE, FR, ES, PT, ZH, JA, KO, AR
-- **Accessibility:** 48dp touch targets on mobile, Semantics on file list items
+- **9 languages:** EN, DE, FR, ES, PT, ZH, JA, KO, AR — in-app language switcher, ~256 localized strings
+- **Accessibility:** 48dp touch targets on mobile, Semantics on file list items, tooltips on all buttons
 
 ## Getting Started
 

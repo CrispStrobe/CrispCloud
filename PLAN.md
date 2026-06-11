@@ -8,11 +8,12 @@ CrispCloud becomes the **definitive open-source cloud file manager**: a single, 
 
 ---
 
-## Current State (v0.0.2-dev)
+## Current State (v0.2.0)
 
 **What works:**
 - Adapter pattern with **11 providers**: Filen, Internxt, SFTP, WebDAV, **S3** (+ S3-compat), **FTP/FTPS**, **Google Drive**, **OneDrive**, **Dropbox**, **Nextcloud**, **pCloud**
-- Two-panel Commander layout with keyboard shortcuts + breadcrumbs + selection bar
+- **Composable layout**: dual/single panel toggle, tree sidebar toggle, grid/list toggle, density toggle — all independent
+- **Full i18n**: ~256 localized strings across 28 files (EN/DE complete, 7 more languages fallback to EN), in-app language switcher
 - **TransferQueue**: concurrent transfers (3 parallel), exponential backoff retry, pause/resume/cancel
 - **Streaming interface**: `uploadStream`/`downloadStream` on all providers, SFTP native streaming
 - **Secure credentials**: `flutter_secure_storage` (Keychain/Keystore/libsecret/DPAPI) + auto-migration
@@ -20,7 +21,8 @@ CrispCloud becomes the **definitive open-source cloud file manager**: a single, 
 - **Archive browsing**: browse ZIP/TAR/TGZ files like folders (web + native)
 - **Built-in editor**: edit local + remote files in-place with syntax highlighting (Ctrl+S auto-save, works on web)
 - **Status bar**: connection status, item count, selection info, transfer progress
-- Structured logging (`Log` service) with ring buffer + export — **migrated across 33+ files**
+- **System log viewer**: live-updating log viewer dialog with level/text filter, auto-scroll, copy/export
+- Structured logging (`Log` service) with ring buffer + stream + export — **40+ operations logged**
 - Centralized formatters, decomposed screen files, search dialogs extracted
 - Cross-platform: Web (PWA), macOS, Windows, Linux, Android, iOS
 - CI pipeline (analyze + test + build-web + build-macos)
