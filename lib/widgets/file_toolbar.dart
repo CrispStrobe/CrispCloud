@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../models/panel_side.dart';
+import '../l10n/app_localizations.dart';
 import '../providers/providers.dart';
 import '../providers/panel_source_provider.dart' show panelSourceProvider;
 import '../providers/toolbar_provider.dart' show panelViewModeProvider;
@@ -35,6 +36,7 @@ class FileToolbar extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
+    final l = AppLocalizations.of(context)!;
     final panel = ref.watch(panelProvider(side));
     final auth = ref.watch(authProvider);
     final search = ref.watch(searchProvider);
@@ -50,26 +52,26 @@ class FileToolbar extends ConsumerWidget {
       if (isLocalSource || (side == PanelSide.local))
         IconButton(
           icon: const Icon(Icons.folder_open),
-          tooltip: 'Browse...',
+          tooltip: l.browseTooltip,
           color: Theme.of(context).colorScheme.onPrimaryContainer,
           onPressed: () => panel.pickLocalDirectory(),
         ),
 
       IconButton(
         icon: const Icon(Icons.arrow_upward),
-        tooltip: 'Up (Backspace)',
+        tooltip: l.upTooltip,
         color: Theme.of(context).colorScheme.onPrimaryContainer,
         onPressed: () => panel.navigateUp(),
       ),
       IconButton(
         icon: const Icon(Icons.refresh),
-        tooltip: 'Refresh (F5)',
+        tooltip: l.refreshTooltip,
         color: Theme.of(context).colorScheme.onPrimaryContainer,
         onPressed: () => panel.refresh(),
       ),
       IconButton(
         icon: const Icon(Icons.create_new_folder),
-        tooltip: 'New Folder (Ctrl+N)',
+        tooltip: l.newFolderTooltip,
         color: Theme.of(context).colorScheme.onPrimaryContainer,
         onPressed: () => _showCreateFolderDialog(context, panel),
       ),
@@ -79,7 +81,7 @@ class FileToolbar extends ConsumerWidget {
           icon: search.isSearching
               ? const SizedBox(width: 20, height: 20, child: CircularProgressIndicator(strokeWidth: 2))
               : const Icon(Icons.search),
-          tooltip: 'Fuzzy search all files',
+          tooltip: l.searchAllFiles,
           color: Theme.of(context).colorScheme.onPrimaryContainer,
           onPressed: search.isSearching ? null : () => showSearchDialog(context, ref),
         ),
@@ -87,7 +89,7 @@ class FileToolbar extends ConsumerWidget {
           icon: search.isSearching
               ? const SizedBox(width: 20, height: 20, child: CircularProgressIndicator(strokeWidth: 2))
               : const Icon(Icons.find_in_page),
-          tooltip: 'Find files by pattern in this folder (e.g. *.pdf)',
+          tooltip: l.findByPattern,
           color: Theme.of(context).colorScheme.onPrimaryContainer,
           onPressed: search.isSearching ? null : () => showFindDialog(context, ref),
         ),
@@ -102,7 +104,7 @@ class FileToolbar extends ConsumerWidget {
             isCompact ? Icons.density_large : Icons.density_small,
             color: Theme.of(context).colorScheme.onPrimaryContainer,
           ),
-          tooltip: isCompact ? 'Switch to touch-friendly view' : 'Switch to compact view',
+          tooltip: isCompact ? l.touchFriendlyView : l.compactView,
           onPressed: () {
             ref.read(panelViewModeProvider(side).notifier).setMode(
               isCompact ? PanelViewMode.brief : PanelViewMode.full,
@@ -121,15 +123,15 @@ class FileToolbar extends ConsumerWidget {
         switch (viewMode) {
           case ViewMode.list:
             icon = Icons.grid_view;
-            tooltip = 'Grid View';
+            tooltip = l.gridView;
             break;
           case ViewMode.grid:
             icon = Icons.view_column;
-            tooltip = 'Column View';
+            tooltip = l.columnView;
             break;
           case ViewMode.column:
             icon = Icons.view_list;
-            tooltip = 'List View';
+            tooltip = l.listView;
             break;
         }
         return IconButton(
@@ -162,7 +164,7 @@ class FileToolbar extends ConsumerWidget {
               ? Theme.of(context).colorScheme.primary
               : Theme.of(context).colorScheme.onPrimaryContainer,
         ),
-        tooltip: panel.filterQuery.isEmpty ? 'Filter files (Ctrl+F)' : 'Clear filter',
+        tooltip: panel.filterQuery.isEmpty ? l.filterFilesShortcut : l.clearFilter,
         onPressed: () {
           if (panel.filterQuery.isNotEmpty) {
             panel.clearFilter();
@@ -181,7 +183,7 @@ class FileToolbar extends ConsumerWidget {
                 ? Theme.of(context).colorScheme.primary
                 : Theme.of(context).colorScheme.onPrimaryContainer,
           ),
-          tooltip: panel.isFlatView ? 'Exit Flat View' : 'Flat View (all subdirectories)',
+          tooltip: panel.isFlatView ? l.exitFlatView : l.flatView,
           onPressed: () => panel.toggleFlatView(),
         ),
 
@@ -194,68 +196,68 @@ class FileToolbar extends ConsumerWidget {
                 ? Theme.of(context).colorScheme.secondary
                 : Theme.of(context).colorScheme.onPrimaryContainer,
           ),
-          tooltip: panel.showHiddenFiles ? 'Hide hidden files (Ctrl+.)' : 'Show hidden files (Ctrl+.)',
+          tooltip: panel.showHiddenFiles ? '${l.hideHiddenFiles} (Ctrl+.)' : '${l.showHiddenFiles} (Ctrl+.)',
           onPressed: () => panel.toggleShowHiddenFiles(),
         ),
 
       PopupMenuButton<String>(
         icon: Icon(Icons.sort, color: Theme.of(context).colorScheme.onPrimaryContainer),
-        tooltip: 'Sort',
+        tooltip: l.sort,
         onSelected: (value) => _handleSortMenuAction(panel, value),
         itemBuilder: (context) => <PopupMenuEntry<String>>[
           PopupMenuItem(value: 'name', child: Row(children: [
             Icon(sortBy == SortBy.name ? Icons.check : Icons.sort_by_alpha),
-            const SizedBox(width: 8), const Text('Sort by Name'),
+            const SizedBox(width: 8), Text(l.sortByName),
           ])),
           PopupMenuItem(value: 'size', child: Row(children: [
             Icon(sortBy == SortBy.size ? Icons.check : Icons.data_usage),
-            const SizedBox(width: 8), const Text('Sort by Size'),
+            const SizedBox(width: 8), Text(l.sortBySize),
           ])),
           PopupMenuItem(value: 'date', child: Row(children: [
             Icon(sortBy == SortBy.date ? Icons.check : Icons.access_time),
-            const SizedBox(width: 8), const Text('Sort by Date'),
+            const SizedBox(width: 8), Text(l.sortByDate),
           ])),
           PopupMenuItem(value: 'extension', child: Row(children: [
             Icon(sortBy == SortBy.extension ? Icons.check : Icons.category),
-            const SizedBox(width: 8), const Text('Sort by Extension'),
+            const SizedBox(width: 8), Text(l.sortByExtension),
           ])),
           const PopupMenuDivider(),
           PopupMenuItem(value: 'toggle_order', child: Row(children: [
             Icon(sortOrder == SortOrder.ascending ? Icons.arrow_upward : Icons.arrow_downward),
             const SizedBox(width: 8),
-            Text(sortOrder == SortOrder.ascending ? 'Ascending' : 'Descending'),
+            Text(sortOrder == SortOrder.ascending ? l.ascending : l.descending),
           ])),
           const PopupMenuDivider(),
           // Secondary sort
           PopupMenuItem(
             enabled: false,
-            child: Text('Secondary Sort', style: TextStyle(
+            child: Text(l.secondarySort, style: TextStyle(
               fontWeight: FontWeight.bold,
               color: Theme.of(context).colorScheme.onSurface,
             )),
           ),
           PopupMenuItem(value: 'secondary_none', child: Row(children: [
             Icon(panel.secondarySortBy == null ? Icons.check : Icons.remove),
-            const SizedBox(width: 8), const Text('None'),
+            const SizedBox(width: 8), Text(l.none),
           ])),
           PopupMenuItem(value: 'secondary_name', child: Row(children: [
             Icon(panel.secondarySortBy == SortBy.name ? Icons.check : Icons.sort_by_alpha),
-            const SizedBox(width: 8), const Text('by Name'),
+            const SizedBox(width: 8), Text(l.byName),
           ])),
           PopupMenuItem(value: 'secondary_size', child: Row(children: [
             Icon(panel.secondarySortBy == SortBy.size ? Icons.check : Icons.data_usage),
-            const SizedBox(width: 8), const Text('by Size'),
+            const SizedBox(width: 8), Text(l.bySize),
           ])),
           PopupMenuItem(value: 'secondary_date', child: Row(children: [
             Icon(panel.secondarySortBy == SortBy.date ? Icons.check : Icons.access_time),
-            const SizedBox(width: 8), const Text('by Date'),
+            const SizedBox(width: 8), Text(l.byDate),
           ])),
           const PopupMenuDivider(),
-          const PopupMenuItem(value: 'select_all', child: Row(children: [
-            Icon(Icons.select_all), SizedBox(width: 8), Text('Select All'),
+          PopupMenuItem(value: 'select_all', child: Row(children: [
+            const Icon(Icons.select_all), const SizedBox(width: 8), Text(l.selectAll),
           ])),
-          const PopupMenuItem(value: 'clear_selection', child: Row(children: [
-            Icon(Icons.clear), SizedBox(width: 8), Text('Clear Selection'),
+          PopupMenuItem(value: 'clear_selection', child: Row(children: [
+            const Icon(Icons.clear), const SizedBox(width: 8), Text(l.clearSelection),
           ])),
         ],
       ),
@@ -320,11 +322,11 @@ class FileToolbar extends ConsumerWidget {
     showDialog(
       context: context,
       builder: (context) => AlertDialog(
-        title: const Text('New Folder'),
+        title: Text(AppLocalizations.of(context)!.newFolder),
         content: TextField(
           controller: controller,
-          decoration: const InputDecoration(
-            labelText: 'Folder name',
+          decoration: InputDecoration(
+            labelText: AppLocalizations.of(context)!.folderName,
             border: OutlineInputBorder(),
             prefixIcon: Icon(Icons.folder),
           ),
@@ -337,7 +339,7 @@ class FileToolbar extends ConsumerWidget {
           },
         ),
         actions: [
-          TextButton(onPressed: () => Navigator.pop(context), child: const Text('Cancel')),
+          TextButton(onPressed: () => Navigator.pop(context), child: Text(AppLocalizations.of(context)!.cancel)),
           ElevatedButton(
             onPressed: () async {
               if (controller.text.isNotEmpty) {
@@ -345,7 +347,7 @@ class FileToolbar extends ConsumerWidget {
                 if (context.mounted) Navigator.pop(context);
               }
             },
-            child: const Text('Create'),
+            child: Text(AppLocalizations.of(context)!.create),
           ),
         ],
       ),
@@ -359,11 +361,11 @@ void showPanelFilterDialog(BuildContext context, PanelNotifier panel) {
   showDialog(
     context: context,
     builder: (context) => AlertDialog(
-      title: const Text('Filter Files'),
+      title: Text(AppLocalizations.of(context)!.filterFiles),
       content: TextField(
         controller: controller,
-        decoration: const InputDecoration(
-          labelText: 'Type to filter...',
+        decoration: InputDecoration(
+          labelText: AppLocalizations.of(context)!.typeToFilter,
           border: OutlineInputBorder(),
           prefixIcon: Icon(Icons.filter_list),
         ),
@@ -377,11 +379,11 @@ void showPanelFilterDialog(BuildContext context, PanelNotifier panel) {
             panel.clearFilter();
             Navigator.pop(context);
           },
-          child: const Text('Clear'),
+          child: Text(AppLocalizations.of(context)!.clear),
         ),
         ElevatedButton(
           onPressed: () => Navigator.pop(context),
-          child: const Text('Done'),
+          child: Text(AppLocalizations.of(context)!.done),
         ),
       ],
     ),

@@ -22,6 +22,7 @@ import 'file_list_view.dart' show getFileIcon;
 
 import 'package:flutter_markdown/flutter_markdown.dart';
 import 'package:flutter_svg/flutter_svg.dart';
+import '../l10n/app_localizations.dart';
 import 'package:archive/archive.dart' show ZipDecoder;
 import 'package:flutter_highlight/flutter_highlight.dart';
 import 'package:flutter_highlight/themes/monokai-sublime.dart';
@@ -504,7 +505,7 @@ class _PreviewPaneState extends ConsumerState<PreviewPane> {
           children: [
             Icon(Icons.preview, size: 48, color: theme.disabledColor),
             const SizedBox(height: 8),
-            Text('Select a file to preview',
+            Text(AppLocalizations.of(context)!.selectFileToPreview,
                 style: TextStyle(color: theme.disabledColor)),
           ],
         ),
@@ -648,12 +649,12 @@ class _PreviewPaneState extends ConsumerState<PreviewPane> {
               children: [
                 IconButton(
                   icon: const Icon(Icons.first_page, size: 20),
-                  tooltip: 'First page',
+                  tooltip: AppLocalizations.of(context)!.firstPage,
                   onPressed: () => _pdfController!.jumpToPage(1),
                 ),
                 IconButton(
                   icon: const Icon(Icons.chevron_left, size: 20),
-                  tooltip: 'Previous page',
+                  tooltip: AppLocalizations.of(context)!.previousPage,
                   onPressed: () {
                     final current = _pdfController!.page;
                     if (current > 1) _pdfController!.jumpToPage(current - 1);
@@ -668,7 +669,7 @@ class _PreviewPaneState extends ConsumerState<PreviewPane> {
                 ),
                 IconButton(
                   icon: const Icon(Icons.chevron_right, size: 20),
-                  tooltip: 'Next page',
+                  tooltip: AppLocalizations.of(context)!.nextPage,
                   onPressed: () {
                     final current = _pdfController!.page;
                     _pdfController!.jumpToPage(current + 1);
@@ -676,7 +677,7 @@ class _PreviewPaneState extends ConsumerState<PreviewPane> {
                 ),
                 IconButton(
                   icon: const Icon(Icons.last_page, size: 20),
-                  tooltip: 'Last page',
+                  tooltip: AppLocalizations.of(context)!.lastPage,
                   onPressed: () => _pdfController!.jumpToPage(_pdfController!.pagesCount ?? 1),
                 ),
               ],
@@ -1069,7 +1070,7 @@ class _CsvTableView extends StatelessWidget {
 
     final lines = content.split('\n').where((l) => l.trim().isNotEmpty).toList();
     if (lines.isEmpty) {
-      return const Center(child: Text('Empty file'));
+      return Center(child: Text(AppLocalizations.of(context)!.emptyFile));
     }
 
     // Parse rows — simple split (doesn't handle quoted commas, but works for most CSVs).
@@ -1139,7 +1140,7 @@ class _WebMediaPlayer extends StatelessWidget {
           const SizedBox(height: 16),
           ElevatedButton.icon(
             icon: const Icon(Icons.play_arrow),
-            label: Text(isAudio ? 'Play Audio' : 'Play Video'),
+            label: Text(isAudio ? AppLocalizations.of(context)!.playAudio : AppLocalizations.of(context)!.playVideo),
             onPressed: () {
               html.window.open(blobUrl, '_blank');
             },

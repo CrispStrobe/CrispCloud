@@ -9,6 +9,7 @@ import 'package:universal_html/html.dart' as html;
 import 'package:url_launcher/url_launcher.dart';
 import 'dart:io';
 import 'package:share_plus/share_plus.dart';
+import '../l10n/app_localizations.dart';
 import '../models/file_item.dart';
 import '../models/panel_side.dart';
 import '../providers/providers.dart';
@@ -89,11 +90,11 @@ void showFileContextMenu(BuildContext context, WidgetRef ref, PanelSide side, Fi
   if (isSingleFolder) {
     items.add(
       PopupMenuItem(
-        child: const Row(
+        child: Row(
           children: [
             Icon(Icons.folder_open),
             SizedBox(width: 8),
-            Text('Open'),
+            Text(AppLocalizations.of(context)!.open),
           ],
         ),
         onTap: () => Future.delayed(
@@ -290,8 +291,8 @@ void showFileContextMenu(BuildContext context, WidgetRef ref, PanelSide side, Fi
     if (client.supportsNativeShare) {
       items.add(
         PopupMenuItem(
-          child: const Row(
-            children: [Icon(Icons.link), SizedBox(width: 8), Text('Share Link')],
+          child: Row(
+            children: [Icon(Icons.link), SizedBox(width: 8), Text(AppLocalizations.of(context)!.shareLink)],
           ),
           onTap: () => Future.delayed(Duration.zero, () async {
             if (!context.mounted) return;
@@ -312,8 +313,8 @@ void showFileContextMenu(BuildContext context, WidgetRef ref, PanelSide side, Fi
     // "Share File" — download to temp then share binary
     items.add(
       PopupMenuItem(
-        child: const Row(
-          children: [Icon(Icons.share), SizedBox(width: 8), Text('Share File')],
+        child: Row(
+          children: [Icon(Icons.share), SizedBox(width: 8), Text(AppLocalizations.of(context)!.shareLink)],
         ),
         onTap: () => Future.delayed(Duration.zero, () async {
           if (!context.mounted) return;
@@ -410,11 +411,11 @@ void showFileContextMenu(BuildContext context, WidgetRef ref, PanelSide side, Fi
   if (!isMultiSelect) {
     items.add(
       PopupMenuItem(
-        child: const Row(
+        child: Row(
           children: [
             Icon(Icons.edit),
             SizedBox(width: 8),
-            Text('Rename (F2)'),
+            Text('${AppLocalizations.of(context)!.rename} (F2)'),
           ],
         ),
         onTap: () => Future.delayed(Duration.zero, () {
@@ -451,8 +452,8 @@ void showFileContextMenu(BuildContext context, WidgetRef ref, PanelSide side, Fi
     if (!isMobileNative) {
       items.add(
         PopupMenuItem(
-          child: const Row(
-            children: [Icon(Icons.link), SizedBox(width: 8), Text('Share Link')],
+          child: Row(
+            children: [Icon(Icons.link), SizedBox(width: 8), Text(AppLocalizations.of(context)!.shareLink)],
           ),
           onTap: () => Future.delayed(Duration.zero, () {
             if (!context.mounted) return;
@@ -503,11 +504,11 @@ void showFileContextMenu(BuildContext context, WidgetRef ref, PanelSide side, Fi
     if (!isMultiSelect && ArchiveService.isArchive(file.name) && file.path != null) {
       items.add(
         PopupMenuItem(
-          child: const Row(
+          child: Row(
             children: [
               Icon(Icons.folder_zip),
               SizedBox(width: 8),
-              Text('Browse Archive'),
+              Text(AppLocalizations.of(context)!.browseArchive),
             ],
           ),
           onTap: () => Future.delayed(Duration.zero, () {
@@ -520,11 +521,11 @@ void showFileContextMenu(BuildContext context, WidgetRef ref, PanelSide side, Fi
     if (!isMultiSelect && ArchiveService.isArchive(file.name) && file.path != null) {
       items.add(
         PopupMenuItem(
-          child: const Row(
+          child: Row(
             children: [
               Icon(Icons.unarchive),
               SizedBox(width: 8),
-              Text('Extract Here'),
+              Text(AppLocalizations.of(context)!.extractHere),
             ],
           ),
           onTap: () => Future.delayed(Duration.zero, () async {
@@ -620,11 +621,11 @@ void showFileContextMenu(BuildContext context, WidgetRef ref, PanelSide side, Fi
   if (!isMultiSelect) {
     items.add(
       PopupMenuItem(
-        child: const Row(
+        child: Row(
           children: [
             Icon(Icons.info_outline),
             SizedBox(width: 8),
-            Text('Properties'),
+            Text(AppLocalizations.of(context)!.properties),
           ],
         ),
         onTap: () => Future.delayed(Duration.zero, () {
@@ -876,7 +877,7 @@ void showRenameDialog(BuildContext context, WidgetRef ref, PanelSide side, FileI
   showDialog(
     context: context,
     builder: (context) => AlertDialog(
-      title: const Text('Rename'),
+      title: Text(AppLocalizations.of(context)!.rename),
       content: TextField(
         controller: controller,
         decoration: InputDecoration(
@@ -895,7 +896,7 @@ void showRenameDialog(BuildContext context, WidgetRef ref, PanelSide side, FileI
       actions: [
         TextButton(
           onPressed: () => Navigator.pop(context),
-          child: const Text('Cancel'),
+          child: Text(AppLocalizations.of(context)!.cancel),
         ),
         ElevatedButton(
           onPressed: () async {
@@ -904,7 +905,7 @@ void showRenameDialog(BuildContext context, WidgetRef ref, PanelSide side, FileI
               if (context.mounted) Navigator.pop(context);
             }
           },
-          child: const Text('Rename'),
+          child: Text(AppLocalizations.of(context)!.rename),
         ),
       ],
     ),
@@ -1024,7 +1025,7 @@ void _showPathDialog(
       actions: [
         TextButton(
           onPressed: () => Navigator.pop(context),
-          child: const Text('Cancel'),
+          child: Text(AppLocalizations.of(context)!.cancel),
         ),
         ElevatedButton(
           onPressed: () async {
@@ -1052,7 +1053,7 @@ void confirmDelete(BuildContext context, WidgetRef ref, PanelSide side, List<Fil
         color: Theme.of(context).colorScheme.error,
         size: 48,
       ),
-      title: const Text('Confirm Delete'),
+      title: Text(AppLocalizations.of(context)!.confirmDeleteTitle),
       content: Column(
         mainAxisSize: MainAxisSize.min,
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -1099,7 +1100,7 @@ void confirmDelete(BuildContext context, WidgetRef ref, PanelSide side, List<Fil
       actions: [
         TextButton(
           onPressed: () => Navigator.pop(context),
-          child: const Text('Cancel'),
+          child: Text(AppLocalizations.of(context)!.cancel),
         ),
         ElevatedButton(
           onPressed: () async {
@@ -1110,7 +1111,7 @@ void confirmDelete(BuildContext context, WidgetRef ref, PanelSide side, List<Fil
             backgroundColor: Theme.of(context).colorScheme.error,
             foregroundColor: Theme.of(context).colorScheme.onError,
           ),
-          child: const Text('Delete'),
+          child: Text(AppLocalizations.of(context)!.delete),
         ),
       ],
     ),
@@ -1486,7 +1487,7 @@ void _showSplitDialog(BuildContext context, WidgetRef ref, PanelSide side, FileI
           ],
         ),
         actions: [
-          TextButton(onPressed: () => Navigator.pop(context), child: const Text('Cancel')),
+          TextButton(onPressed: () => Navigator.pop(context), child: Text(AppLocalizations.of(context)!.cancel)),
           ElevatedButton(
             onPressed: () async {
               Navigator.pop(context);
@@ -1534,7 +1535,7 @@ void _showCombineDialog(BuildContext context, WidgetRef ref, PanelSide side, Lis
         ],
       ),
       actions: [
-        TextButton(onPressed: () => Navigator.pop(context), child: const Text('Cancel')),
+        TextButton(onPressed: () => Navigator.pop(context), child: Text(AppLocalizations.of(context)!.cancel)),
         ElevatedButton(
           onPressed: () async {
             Navigator.pop(context);
@@ -1606,7 +1607,7 @@ void _showCreateLinkDialog(BuildContext context, WidgetRef ref, PanelSide side, 
           ],
         ),
         actions: [
-          TextButton(onPressed: () => Navigator.pop(context), child: const Text('Cancel')),
+          TextButton(onPressed: () => Navigator.pop(context), child: Text(AppLocalizations.of(context)!.cancel)),
           ElevatedButton(
             onPressed: () async {
               Navigator.pop(context);
@@ -1671,7 +1672,7 @@ void _showSecureWipeDialog(BuildContext context, WidgetRef ref, PanelSide side, 
           ],
         ),
         actions: [
-          TextButton(onPressed: () => Navigator.pop(context), child: const Text('Cancel')),
+          TextButton(onPressed: () => Navigator.pop(context), child: Text(AppLocalizations.of(context)!.cancel)),
           ElevatedButton(
             style: ElevatedButton.styleFrom(
               backgroundColor: Theme.of(context).colorScheme.error,
