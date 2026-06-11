@@ -251,6 +251,7 @@ class MyApp extends ConsumerWidget {
           GlobalWidgetsLocalizations.delegate,
           GlobalCupertinoLocalizations.delegate,
         ],
+        locale: ref.watch(localeProvider),
         supportedLocales: AppLocalizations.supportedLocales,
         home: kIsWeb ? const _MasterPasswordGate() : const _AppLockGate(),
       ),

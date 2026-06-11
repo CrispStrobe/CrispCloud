@@ -390,7 +390,7 @@ class FileListTile extends ConsumerWidget {
             ],
           ),
           trailing: file.isFolder
-              ? IconButton(icon: const Icon(Icons.chevron_right), onPressed: onDoubleTap)
+              ? IconButton(icon: const Icon(Icons.chevron_right), tooltip: 'Open', onPressed: onDoubleTap)
               : null,
           onTap: () {
             // Use _PointerModifiers captured at pointer-down time (more reliable on web).

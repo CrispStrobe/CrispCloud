@@ -888,8 +888,15 @@ void showRenameDialog(BuildContext context, WidgetRef ref, PanelSide side, FileI
         autofocus: true,
         onSubmitted: (value) async {
           if (value.isNotEmpty && value != file.name) {
-            await ref.read(panelProvider(side)).renameFile(file, value);
-            if (context.mounted) Navigator.pop(context);
+            try {
+              await ref.read(panelProvider(side)).renameFile(file, value);
+              if (context.mounted) Navigator.pop(context);
+            } catch (e) {
+              if (context.mounted) {
+                ScaffoldMessenger.of(context).showSnackBar(
+                  SnackBar(content: Text('${AppLocalizations.of(context)!.renameFailed}: $e')));
+              }
+            }
           }
         },
       ),
@@ -901,8 +908,15 @@ void showRenameDialog(BuildContext context, WidgetRef ref, PanelSide side, FileI
         ElevatedButton(
           onPressed: () async {
             if (controller.text.isNotEmpty && controller.text != file.name) {
-              await ref.read(panelProvider(side)).renameFile(file, controller.text);
-              if (context.mounted) Navigator.pop(context);
+              try {
+                await ref.read(panelProvider(side)).renameFile(file, controller.text);
+                if (context.mounted) Navigator.pop(context);
+              } catch (e) {
+                if (context.mounted) {
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    SnackBar(content: Text('${AppLocalizations.of(context)!.renameFailed}: $e')));
+                }
+              }
             }
           },
           child: Text(AppLocalizations.of(context)!.rename),
@@ -1104,8 +1118,15 @@ void confirmDelete(BuildContext context, WidgetRef ref, PanelSide side, List<Fil
         ),
         ElevatedButton(
           onPressed: () async {
-            await ref.read(panelProvider(side)).deleteFiles(files);
-            if (context.mounted) Navigator.pop(context);
+            try {
+              await ref.read(panelProvider(side)).deleteFiles(files);
+              if (context.mounted) Navigator.pop(context);
+            } catch (e) {
+              if (context.mounted) {
+                ScaffoldMessenger.of(context).showSnackBar(
+                  SnackBar(content: Text('${AppLocalizations.of(context)!.deleteFailed}: $e')));
+              }
+            }
           },
           style: ElevatedButton.styleFrom(
             backgroundColor: Theme.of(context).colorScheme.error,

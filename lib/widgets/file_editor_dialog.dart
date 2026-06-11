@@ -428,6 +428,7 @@ class _FileEditorPageState extends ConsumerState<_FileEditorPage> {
         appBar: AppBar(
           leading: IconButton(
             icon: const Icon(Icons.close),
+            tooltip: AppLocalizations.of(context)!.close,
             onPressed: () async {
               if (await _confirmDiscard()) {
                 if (!context.mounted) return;

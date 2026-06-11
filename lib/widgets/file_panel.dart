@@ -212,12 +212,19 @@ class _FilePanelState extends ConsumerState<FilePanel> {
                 } else {
                   final auth = ref.read(authProvider);
                   if (widget.side == PanelSide.remote && auth.isConnected) {
-                    final items = details.files.map((xFile) => FileItem(
-                      name: xFile.name,
-                      path: xFile.path,
-                      isFolder: false,
-                    )).toList();
-                    await ref.read(transferProvider).uploadFiles(items);
+                    try {
+                      final items = details.files.map((xFile) => FileItem(
+                        name: xFile.name,
+                        path: xFile.path,
+                        isFolder: false,
+                      )).toList();
+                      await ref.read(transferProvider).uploadFiles(items);
+                    } catch (e) {
+                      if (context.mounted) {
+                        ScaffoldMessenger.of(context).showSnackBar(
+                          SnackBar(content: Text('Upload failed: $e')));
+                      }
+                    }
                   }
                 }
               },

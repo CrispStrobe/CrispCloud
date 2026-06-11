@@ -660,6 +660,8 @@ class _FileBrowserScreenState extends ConsumerState<FileBrowserScreen> {
             ref.read(panelViewModeProvider(ap).notifier).setMode(
               mode == PanelViewMode.full ? PanelViewMode.brief : PanelViewMode.full,
             );
+          case 'language':
+            _showLanguageDialog(context);
           case 'keys':
             showKeyManagementDialog(context, ref);
           case 'theme':
@@ -754,6 +756,7 @@ class _FileBrowserScreenState extends ConsumerState<FileBrowserScreen> {
           PopupMenuItem(value: 'keys', child: _overflowItem(Icons.key, 'Key Management')),
         const PopupMenuDivider(),
         PopupMenuItem(value: 'theme', child: _overflowItem(Icons.palette, l.theme)),
+        PopupMenuItem(value: 'language', child: _overflowItem(Icons.language, 'Language')),
         PopupMenuItem(value: 'shortcuts', child: _overflowItem(Icons.keyboard, l.keyboardShortcuts)),
         PopupMenuItem(value: 'about', child: _overflowItem(Icons.info_outline, l.about)),
       ],
@@ -790,6 +793,39 @@ class _FileBrowserScreenState extends ConsumerState<FileBrowserScreen> {
     // Refresh both panels to reflect new sources.
     ref.read(panelProvider(PanelSide.local)).refresh();
     ref.read(panelProvider(PanelSide.remote)).refresh();
+  }
+
+  void _showLanguageDialog(BuildContext context) {
+    final languages = {
+      null: 'System',
+      const Locale('en'): 'English',
+      const Locale('de'): 'Deutsch',
+      const Locale('fr'): 'Français',
+      const Locale('es'): 'Español',
+      const Locale('pt'): 'Português',
+      const Locale('zh'): '中文',
+      const Locale('ja'): '日本語',
+      const Locale('ko'): '한국어',
+      const Locale('ar'): 'العربية',
+    };
+    final current = ref.read(localeProvider);
+    showDialog(
+      context: context,
+      builder: (ctx) => SimpleDialog(
+        title: const Row(children: [
+          Icon(Icons.language), SizedBox(width: 12), Text('Language'),
+        ]),
+        children: languages.entries.map((e) => RadioListTile<Locale?>(
+          value: e.key,
+          groupValue: current,
+          title: Text(e.value),
+          onChanged: (v) {
+            ref.read(localeProvider.notifier).state = v;
+            Navigator.pop(ctx);
+          },
+        )).toList(),
+      ),
+    );
   }
 
   void _handleFKeyAction(BuildContext context, WidgetRef ref, FKeyAction action) {

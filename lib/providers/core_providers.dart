@@ -2,6 +2,7 @@
 //
 // Base dependencies injected via ProviderScope overrides in main.dart.
 
+import 'dart:ui' show Locale;
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
@@ -33,6 +34,9 @@ final localFileServiceProvider = Provider<LocalFileService>((ref) {
 final directoryCacheProvider = Provider<DirectoryCacheService>((ref) {
   return DirectoryCacheService();
 });
+
+/// User-selected locale override (null = use system locale).
+final localeProvider = StateProvider<Locale?>((ref) => null);
 
 /// Which panel is active (Local / Remote).
 final activePanelProvider = StateProvider<PanelSide>((ref) => PanelSide.local);
