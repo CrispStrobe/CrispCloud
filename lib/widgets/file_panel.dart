@@ -209,7 +209,9 @@ class _FilePanelState extends ConsumerState<FilePanel> {
                       final bytes = await xFile.readAsBytes();
                       final targetPath = '${panel.currentPath}/${xFile.name}';
                       await localSvc.saveFile(targetPath, bytes);
-                    } catch (_) {}
+                    } catch (e) {
+                      _log.warn('operation failed', e);
+                      }
                   }
                   panel.refresh();
                 } else {
@@ -223,6 +225,7 @@ class _FilePanelState extends ConsumerState<FilePanel> {
                       )).toList();
                       await ref.read(transferProvider).uploadFiles(items);
                     } catch (e) {
+                      _log.warn('operation failed', e);
                       if (context.mounted) {
                         ScaffoldMessenger.of(context).showSnackBar(
                           SnackBar(content: Text('Upload failed: $e')));

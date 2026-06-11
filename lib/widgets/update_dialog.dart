@@ -20,6 +20,7 @@ import 'package:url_launcher/url_launcher.dart';
 
 import '../providers/update_provider.dart';
 import '../services/auto_update_service.dart';
+import '../l10n/app_localizations.dart';
 
 // ---------------------------------------------------------------------------
 // Public convenience function

@@ -11,6 +11,7 @@ import 'package:shared_preferences/shared_preferences.dart';
 import '../models/panel_side.dart';
 import '../services/panel_view_mode_service.dart';
 import '../services/toolbar_customization_service.dart';
+import '../services/log_service.dart';
 
 bool get _isTest => !kIsWeb && Platform.environment.containsKey('FLUTTER_TEST');
 
@@ -143,7 +144,9 @@ class _ColumnWidthsNotifier extends StateNotifier<Map<String, double>> {
       final date = prefs.getDouble('col_${_sideKey}_date') ?? 78.0;
       final ext = prefs.getDouble('col_${_sideKey}_ext') ?? 40.0;
       state = {'size': size, 'date': date, 'ext': ext};
-    } catch (_) {}
+    } catch (e) {
+      // Silently ignored
+    }
   }
 
   void setWidth(String col, double w) {

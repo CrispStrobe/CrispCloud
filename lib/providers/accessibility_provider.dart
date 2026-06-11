@@ -9,6 +9,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 import '../services/accessibility_service.dart';
+import '../services/log_service.dart';
 
 // ---------------------------------------------------------------------------
 // Service singleton
@@ -80,7 +81,9 @@ class _BoolPreferenceNotifier extends StateNotifier<bool> {
     try {
       final prefs = await SharedPreferences.getInstance();
       state = prefs.getBool(_key) ?? state;
-    } catch (_) {}
+    } catch (e) {
+      // Silently ignored
+    }
   }
 
   /// Toggle the current value.
@@ -92,6 +95,8 @@ class _BoolPreferenceNotifier extends StateNotifier<bool> {
     try {
       final prefs = await SharedPreferences.getInstance();
       await prefs.setBool(_key, value);
-    } catch (_) {}
+    } catch (e) {
+      // Silently ignored
+    }
   }
 }

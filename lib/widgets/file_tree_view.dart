@@ -13,6 +13,7 @@ import 'package:path/path.dart' as p;
 
 import '../models/panel_side.dart';
 import '../providers/providers.dart';
+import '../services/log_service.dart';
 
 class _TreeNode {
   final String path;
@@ -100,7 +101,8 @@ class _FileTreeViewState extends ConsumerState<FileTreeView> {
       }
       dirs.sort((a, b) => a.name.toLowerCase().compareTo(b.name.toLowerCase()));
       return dirs;
-    } catch (_) {
+    } catch (e) {
+      // TODO: add logging
       return [];
     }
   }

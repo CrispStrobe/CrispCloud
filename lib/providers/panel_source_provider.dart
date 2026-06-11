@@ -96,7 +96,7 @@ class PanelSourceNotifier extends StateNotifier<PanelSource> {
         final defaultPath = prefs.getString('${_prefKey}_path') ?? '/';
         state = LocalPanelSource(defaultPath);
       }
-    } catch (_) {
+    } catch (e) {
       // Silently ignore restore failures.
     }
   }
@@ -110,7 +110,9 @@ class PanelSourceNotifier extends StateNotifier<PanelSource> {
         await prefs.setString(_prefKey, 'local');
         await prefs.setString('${_prefKey}_path', json['path'] as String);
       }
-    } catch (_) {}
+    } catch (e) {
+      // Pref error (non-critical)
+      }
   }
 }
 
@@ -135,7 +137,9 @@ class _FKeyBarVisibilityNotifier extends StateNotifier<bool> {
     try {
       final prefs = await SharedPreferences.getInstance();
       state = prefs.getBool(_prefKey) ?? true;
-    } catch (_) {}
+    } catch (e) {
+      // Pref error (non-critical)
+      }
   }
 
   Future<void> toggle() async {
@@ -143,7 +147,9 @@ class _FKeyBarVisibilityNotifier extends StateNotifier<bool> {
     try {
       final prefs = await SharedPreferences.getInstance();
       await prefs.setBool(_prefKey, state);
-    } catch (_) {}
+    } catch (e) {
+      // Pref error (non-critical)
+      }
   }
 
   Future<void> setVisible(bool visible) async {
@@ -151,7 +157,9 @@ class _FKeyBarVisibilityNotifier extends StateNotifier<bool> {
     try {
       final prefs = await SharedPreferences.getInstance();
       await prefs.setBool(_prefKey, state);
-    } catch (_) {}
+    } catch (e) {
+      // Pref error (non-critical)
+      }
   }
 }
 

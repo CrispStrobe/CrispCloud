@@ -14,6 +14,7 @@ import '../services/local_file_service.dart';
 import '../services/thumbnail_service.dart';
 import '../services/proxy_service.dart';
 import '../services/secure_storage_service.dart';
+import '../services/log_service.dart';
 
 /// Platform secure storage — overridden in main.dart with the real instance.
 final secureStorageProvider = Provider<SecureStorage>((ref) {
@@ -114,14 +115,18 @@ class _FontSizeNotifier extends StateNotifier<double> {
       final prefs = await SharedPreferences.getInstance();
       final size = prefs.getDouble('font_size');
       if (size != null) state = size;
-    } catch (_) {}
+    } catch (e) {
+      // Silently ignored
+    }
   }
   Future<void> setSize(double size) async {
     state = size.clamp(10.0, 20.0);
     try {
       final prefs = await SharedPreferences.getInstance();
       await prefs.setDouble('font_size', state);
-    } catch (_) {}
+    } catch (e) {
+      // Silently ignored
+    }
   }
 }
 
@@ -136,14 +141,18 @@ class _FontFamilyNotifier extends StateNotifier<String> {
     try {
       final prefs = await SharedPreferences.getInstance();
       state = prefs.getString('font_family') ?? 'system';
-    } catch (_) {}
+    } catch (e) {
+      // Silently ignored
+    }
   }
   Future<void> setFamily(String family) async {
     state = family;
     try {
       final prefs = await SharedPreferences.getInstance();
       await prefs.setString('font_family', state);
-    } catch (_) {}
+    } catch (e) {
+      // Silently ignored
+    }
   }
 }
 
@@ -194,14 +203,18 @@ class _DisableScreenshotsNotifier extends StateNotifier<bool> {
     try {
       final prefs = await SharedPreferences.getInstance();
       state = prefs.getBool('disable_screenshots') ?? false;
-    } catch (_) {}
+    } catch (e) {
+      // Silently ignored
+    }
   }
   Future<void> toggle() async {
     state = !state;
     try {
       final prefs = await SharedPreferences.getInstance();
       await prefs.setBool('disable_screenshots', state);
-    } catch (_) {}
+    } catch (e) {
+      // Silently ignored
+    }
   }
 }
 
@@ -227,7 +240,9 @@ class PreferExternalEditorNotifier extends StateNotifier<bool> {
     try {
       final prefs = await SharedPreferences.getInstance();
       state = prefs.getBool(_preferExternalEditorKey) ?? false;
-    } catch (_) {}
+    } catch (e) {
+      // Silently ignored
+    }
   }
 
   Future<void> toggle() => setValue(!state);
@@ -237,7 +252,9 @@ class PreferExternalEditorNotifier extends StateNotifier<bool> {
     try {
       final prefs = await SharedPreferences.getInstance();
       await prefs.setBool(_preferExternalEditorKey, value);
-    } catch (_) {}
+    } catch (e) {
+      // Silently ignored
+    }
   }
 }
 
@@ -267,7 +284,9 @@ class LayoutPresetNotifier extends StateNotifier<LayoutPreset> {
         );
         state = preset;
       }
-    } catch (_) {}
+    } catch (e) {
+      // Silently ignored
+    }
   }
 
   Future<void> setPreset(LayoutPreset preset) async {
@@ -275,6 +294,8 @@ class LayoutPresetNotifier extends StateNotifier<LayoutPreset> {
     try {
       final prefs = await SharedPreferences.getInstance();
       await prefs.setString(_layoutPresetKey, preset.name);
-    } catch (_) {}
+    } catch (e) {
+      // Silently ignored
+    }
   }
 }

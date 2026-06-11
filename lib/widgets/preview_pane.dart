@@ -386,6 +386,7 @@ class _PreviewPaneState extends ConsumerState<PreviewPane> {
           _pdfController = PdfController(document: Future.value(doc));
           setState(() => _loading = false);
         } catch (e) {
+          _log.warn('operation failed', e);
           setState(() {
             _error = 'PDF render failed: $e';
             _loading = false;
@@ -395,7 +396,8 @@ class _PreviewPaneState extends ConsumerState<PreviewPane> {
         // Extract text from Office documents (DOCX/XLSX/PPTX/ODT).
         try {
           _textContent = _extractOfficeText(bytes, file.name);
-        } catch (_) {
+        } catch (e) {
+          _log.warn('operation failed', e);
           _textContent = '(Could not extract text from this document)';
         }
         setState(() => _loading = false);
@@ -403,12 +405,14 @@ class _PreviewPaneState extends ConsumerState<PreviewPane> {
         // Decode as text (UTF-8 with fallback)
         try {
           _textContent = String.fromCharCodes(bytes);
-        } catch (_) {
+        } catch (e) {
+          _log.warn('operation failed', e);
           _textContent = '(binary content — cannot display as text)';
         }
         setState(() => _loading = false);
       }
     } catch (e) {
+      _log.warn('operation failed', e);
       if (!mounted || _loadedFile != file) return;
       setState(() {
         _error = 'Preview failed: $e';
@@ -489,6 +493,7 @@ class _PreviewPaneState extends ConsumerState<PreviewPane> {
         _loading = false;
       });
     } catch (e) {
+      _log.warn('operation failed', e);
       if (!mounted || _loadedFile != file) return;
       setState(() {
         _error = 'Media preview failed: $e';
@@ -1008,7 +1013,8 @@ class _FontPreviewState extends State<_FontPreview> {
       loader.addFont(Future.value(ByteData.sublistView(widget.fontBytes)));
       await loader.load();
       if (mounted) setState(() { _fontFamily = family; _loaded = true; });
-    } catch (_) {
+    } catch (e) {
+      debugPrint('[FontPreview] Font load failed: $e');
       if (mounted) setState(() => _loaded = true);
     }
   }

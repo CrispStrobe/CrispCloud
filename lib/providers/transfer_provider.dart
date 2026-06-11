@@ -54,7 +54,9 @@ class TransferNotifier extends ChangeNotifier {
       final operation = _operations.firstWhere((op) => op.id == operationId);
       operation.pause();
       notifyListeners();
-    } catch (_) {}
+    } catch (e) {
+      _log.warn('removeOperation failed', e);
+      }
   }
 
   void resumeOperation(String operationId) {
@@ -62,7 +64,9 @@ class TransferNotifier extends ChangeNotifier {
       final operation = _operations.firstWhere((op) => op.id == operationId);
       operation.resume();
       notifyListeners();
-    } catch (_) {}
+    } catch (e) {
+      _log.warn('resumeOperation failed', e);
+      }
   }
 
   void cancelOperation(String operationId) {
@@ -70,7 +74,9 @@ class TransferNotifier extends ChangeNotifier {
       final operation = _operations.firstWhere((op) => op.id == operationId);
       operation.cancel();
       notifyListeners();
-    } catch (_) {}
+    } catch (e) {
+      _log.warn('cancelOperation failed', e);
+      }
   }
 
   Future<void> uploadFiles(List<FileItem> files, {String? targetPath}) async {
@@ -228,13 +234,16 @@ class TransferNotifier extends ChangeNotifier {
               sizeBytes: file.size,
             );
           } catch (e) {
+            _log.warn('operation failed', e);
             fileProgress.error = e.toString();
             // If an S3 multipart upload was interrupted, persist state
             // for future resume.
             if (client is S3ClientAdapter) {
               try {
                 await client.persistInterruptedUploads();
-              } catch (_) {}
+              } catch (e) {
+                _log.warn('operation failed', e);
+                }
             }
             await audit.logError(
               operation: AuditOperation.upload,
@@ -342,7 +351,9 @@ class TransferNotifier extends ChangeNotifier {
                 try {
                   final f = File(localFilePath);
                   if (await f.exists()) await f.setLastModified(file.updatedAt!);
-                } catch (_) {}
+                } catch (e) {
+                  _log.warn('operation failed', e);
+                  }
               }
             } else {
               // Web download path.
@@ -402,6 +413,7 @@ class TransferNotifier extends ChangeNotifier {
               sizeBytes: file.size,
             );
           } catch (e) {
+            _log.warn('operation failed', e);
             fileProgress.error = e.toString();
             await audit.logError(
               operation: AuditOperation.download,
@@ -454,13 +466,16 @@ class TransferNotifier extends ChangeNotifier {
         if (entity is File) {
           try {
             totalSize += (await entity.stat()).size;
-          } catch (_) {}
+          } catch (e) {
+            _log.warn('operation failed', e);
+            }
         } else if (entity is Directory) {
           totalSize += await _calculateFolderSize(entity.path, localFileService);
         }
       }
       return totalSize;
-    } catch (_) {
+    } catch (e) {
+      _log.warn('operation failed', e);
       return 0;
     }
   }
@@ -486,7 +501,9 @@ class TransferNotifier extends ChangeNotifier {
           await client.uploadFile(fileData, fileName, newRemotePath);
           operation.currentBytes += fileData.length as int;
           notifyListeners();
-        } catch (_) {}
+        } catch (e) {
+          _log.warn('operation failed', e);
+          }
       } else if (entity is Directory) {
         await _uploadFolder(entity.path, newRemotePath, operation, client, localFileService);
       }

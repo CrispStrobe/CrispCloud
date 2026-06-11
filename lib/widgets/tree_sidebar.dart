@@ -14,6 +14,7 @@ import '../models/file_item.dart';
 import '../models/panel_side.dart';
 import '../l10n/app_localizations.dart';
 import '../providers/providers.dart';
+import '../services/log_service.dart';
 
 class TreeSidebar extends ConsumerStatefulWidget {
   const TreeSidebar({super.key});
@@ -261,7 +262,8 @@ class _TreeSidebarState extends ConsumerState<TreeSidebar> {
               if (isDir) {
                 folders.add(FileItem(name: name, path: entity.path, isFolder: true));
               }
-            } catch (_) {
+            } catch (e) {
+              // TODO: add logging
               continue;
             }
           }
@@ -298,7 +300,8 @@ class _TreeSidebarState extends ConsumerState<TreeSidebar> {
             } else {
               folders = [];
             }
-          } catch (_) {
+          } catch (e) {
+            // TODO: add logging
             folders = [];
           }
         }
@@ -309,7 +312,8 @@ class _TreeSidebarState extends ConsumerState<TreeSidebar> {
           _loadingPaths.remove(path);
         });
       }
-    } catch (_) {
+    } catch (e) {
+      // TODO: add logging
       if (mounted) {
         setState(() => _loadingPaths.remove(path));
       }

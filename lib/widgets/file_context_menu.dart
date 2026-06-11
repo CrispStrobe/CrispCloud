@@ -299,6 +299,7 @@ void showFileContextMenu(BuildContext context, WidgetRef ref, PanelSide side, Fi
             try {
               showShareLinkDialog(context, ref, file);
             } catch (e) {
+              _log.warn('operation failed', e);
               if (context.mounted) {
                 ScaffoldMessenger.of(context).showSnackBar(
                   SnackBar(content: Text('Share link failed: $e')),
@@ -338,6 +339,7 @@ void showFileContextMenu(BuildContext context, WidgetRef ref, PanelSide side, Fi
             if (context.mounted) ScaffoldMessenger.of(context).hideCurrentSnackBar();
             await Share.shareXFiles([XFile(tempPath)], text: file.name);
           } catch (e) {
+            _log.warn('operation failed', e);
             if (context.mounted) {
               ScaffoldMessenger.of(context).hideCurrentSnackBar();
               ScaffoldMessenger.of(context).showSnackBar(
@@ -539,6 +541,7 @@ void showFileContextMenu(BuildContext context, WidgetRef ref, PanelSide side, Fi
                 );
               }
             } catch (e) {
+              _log.warn('operation failed', e);
               if (context.mounted) {
                 ScaffoldMessenger.of(context).showSnackBar(
                   SnackBar(content: Text('Extract failed: $e')),
@@ -577,6 +580,7 @@ void showFileContextMenu(BuildContext context, WidgetRef ref, PanelSide side, Fi
                 );
               }
             } catch (e) {
+              _log.warn('operation failed', e);
               if (context.mounted) {
                 ScaffoldMessenger.of(context).showSnackBar(
                   SnackBar(content: Text('Zip creation failed: $e')),
@@ -609,7 +613,9 @@ void showFileContextMenu(BuildContext context, WidgetRef ref, PanelSide side, Fi
               final dir = file.isFolder ? file.path! : p.dirname(file.path!);
               await Process.run('xdg-open', [dir]);
             }
-          } catch (_) {}
+          } catch (e) {
+            _log.warn('operation failed', e);
+            }
         },
       ),
     );
@@ -892,6 +898,7 @@ void showRenameDialog(BuildContext context, WidgetRef ref, PanelSide side, FileI
               await ref.read(panelProvider(side)).renameFile(file, value);
               if (context.mounted) Navigator.pop(context);
             } catch (e) {
+              _log.warn('operation failed', e);
               if (context.mounted) {
                 ScaffoldMessenger.of(context).showSnackBar(
                   SnackBar(content: Text('${AppLocalizations.of(context)!.renameFailed}: $e')));
@@ -912,6 +919,7 @@ void showRenameDialog(BuildContext context, WidgetRef ref, PanelSide side, FileI
                 await ref.read(panelProvider(side)).renameFile(file, controller.text);
                 if (context.mounted) Navigator.pop(context);
               } catch (e) {
+                _log.warn('operation failed', e);
                 if (context.mounted) {
                   ScaffoldMessenger.of(context).showSnackBar(
                     SnackBar(content: Text('${AppLocalizations.of(context)!.renameFailed}: $e')));
@@ -1122,6 +1130,7 @@ void confirmDelete(BuildContext context, WidgetRef ref, PanelSide side, List<Fil
               await ref.read(panelProvider(side)).deleteFiles(files);
               if (context.mounted) Navigator.pop(context);
             } catch (e) {
+              _log.warn('operation failed', e);
               if (context.mounted) {
                 ScaffoldMessenger.of(context).showSnackBar(
                   SnackBar(content: Text('${AppLocalizations.of(context)!.deleteFailed}: $e')));
@@ -1174,7 +1183,9 @@ class _PropertiesDialogState extends State<_PropertiesDialog> {
       try {
         final stat = await FileStat.stat(widget.file.path!);
         if (mounted) setState(() => _stat = stat);
-      } catch (_) {}
+      } catch (e) {
+        _log.warn('initState failed', e);
+        }
     }
   }
 
@@ -1197,6 +1208,7 @@ class _PropertiesDialogState extends State<_PropertiesDialog> {
       final hash = await ChecksumService.md5File(widget.file.path!);
       if (mounted) setState(() { _md5 = hash; _computingMd5 = false; });
     } catch (e) {
+      _log.warn('operation failed', e);
       if (mounted) setState(() { _md5 = 'Error: $e'; _computingMd5 = false; });
     }
   }
@@ -1300,7 +1312,7 @@ Future<int> _calculateFolderSize(String path) async {
     if (entity is File) {
       try {
         totalSize += await entity.length();
-      } catch (_) {
+      } catch (e) {
         // Skip files we can't read
       }
     }
@@ -1522,6 +1534,7 @@ void _showSplitDialog(BuildContext context, WidgetRef ref, PanelSide side, FileI
                   );
                 }
               } catch (e) {
+                _log.warn('operation failed', e);
                 if (context.mounted) {
                   ScaffoldMessenger.of(context).showSnackBar(
                     SnackBar(content: Text('Split failed: $e')),
@@ -1579,6 +1592,7 @@ void _showCombineDialog(BuildContext context, WidgetRef ref, PanelSide side, Lis
                 );
               }
             } catch (e) {
+              _log.warn('operation failed', e);
               if (context.mounted) {
                 ScaffoldMessenger.of(context).showSnackBar(
                   SnackBar(content: Text('Combine failed: $e')),
@@ -1645,6 +1659,7 @@ void _showCreateLinkDialog(BuildContext context, WidgetRef ref, PanelSide side, 
                   );
                 }
               } catch (e) {
+                _log.warn('operation failed', e);
                 if (context.mounted) {
                   ScaffoldMessenger.of(context).showSnackBar(
                     SnackBar(content: Text('Link creation failed: $e')),
@@ -1718,6 +1733,7 @@ void _showSecureWipeDialog(BuildContext context, WidgetRef ref, PanelSide side, 
                   );
                 }
               } catch (e) {
+                _log.warn('operation failed', e);
                 if (context.mounted) {
                   ScaffoldMessenger.of(context).showSnackBar(
                     SnackBar(content: Text('Secure wipe failed: $e')),

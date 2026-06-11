@@ -12,6 +12,7 @@ import '../models/file_item.dart';
 import '../models/panel_side.dart';
 import '../providers/providers.dart';
 import '../services/log_service.dart';
+import '../l10n/app_localizations.dart';
 
 /// Show a diff dialog comparing two raw text strings.
 /// Used for version diff where content is already loaded.

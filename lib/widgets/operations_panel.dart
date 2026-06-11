@@ -5,6 +5,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../models/operation_progress.dart';
 import '../providers/providers.dart';
 import '../utils/formatters.dart' show formatBytes, formatSpeed;
+import '../l10n/app_localizations.dart';
 
 class OperationsPanel extends ConsumerStatefulWidget {
   const OperationsPanel({super.key});

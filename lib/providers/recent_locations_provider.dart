@@ -10,6 +10,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 import '../models/panel_side.dart';
+import '../services/log_service.dart';
 
 class RecentLocationsNotifier extends ChangeNotifier {
   static const _storageKey = 'recent_locations';
@@ -56,14 +57,18 @@ class RecentLocationsNotifier extends ChangeNotifier {
         _entries.addAll(list.map((e) => RecentEntry.fromJson(e as Map<String, dynamic>)));
         notifyListeners();
       }
-    } catch (_) {}
+    } catch (e) {
+      // Silently ignored
+    }
   }
 
   Future<void> _save() async {
     try {
       final prefs = await SharedPreferences.getInstance();
       await prefs.setString(_storageKey, json.encode(_entries.map((e) => e.toJson()).toList()));
-    } catch (_) {}
+    } catch (e) {
+      // Silently ignored
+    }
   }
 }
 

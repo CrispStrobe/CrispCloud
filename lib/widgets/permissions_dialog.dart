@@ -10,6 +10,7 @@ import '../models/file_item.dart';
 import '../providers/providers.dart';
 import '../services/sftp_client_adapter.dart';
 import '../services/log_service.dart';
+import '../l10n/app_localizations.dart';
 
 void showPermissionsDialog(BuildContext context, WidgetRef ref, FileItem file) {
   showDialog(

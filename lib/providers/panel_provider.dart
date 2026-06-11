@@ -309,7 +309,8 @@ class PanelNotifier extends ChangeNotifier {
     if (kIsWeb && file.path != null) {
       try {
         _archiveBytes = await _localFileService.readFile(file.path!, fileItem: file);
-      } catch (_) {
+      } catch (e) {
+        _log.warn('operation failed', e);
         _archiveBytes = null;
       }
     }
@@ -365,6 +366,7 @@ class PanelNotifier extends ChangeNotifier {
       }
       _sortFiles();
     } catch (e) {
+      _log.warn('operation failed', e);
       _files = [];
       _ref.read(errorProvider).addError('Failed to read archive: $e');
     }
@@ -415,6 +417,7 @@ class PanelNotifier extends ChangeNotifier {
       _resetCursor(preserveItem: prev);
       notifyListeners();
     } catch (e) {
+      _log.warn('operation failed', e);
       _ref.read(errorProvider).addError('Flat view failed: $e');
       _isFlatView = false;
     }
@@ -655,7 +658,9 @@ class PanelNotifier extends ChangeNotifier {
           total += stat.size;
         }
       }
-    } catch (_) {}
+    } catch (e) {
+      _log.warn('operation failed', e);
+      }
     return total;
   }
 
@@ -885,7 +890,9 @@ class PanelNotifier extends ChangeNotifier {
         _selection.add(found);
         _lastSelected = found;
         _itemToScrollTo = found;
-      } catch (_) {}
+      } catch (e) {
+        _log.warn('operation failed', e);
+        }
     }
 
     _syncTabPath();
@@ -928,6 +935,7 @@ class PanelNotifier extends ChangeNotifier {
         notifyListeners();
       }
     } catch (e) {
+      _log.warn('operation failed', e);
       _ref.read(errorProvider).addError('Error picking directory: $e');
     }
   }
@@ -990,6 +998,7 @@ class PanelNotifier extends ChangeNotifier {
         notifyListeners();
       }
     } catch (e) {
+      _log.warn('operation failed', e);
       errors.addError('Delete failed: $e');
       for (final file in files) {
         final src = file.path ?? p.posix.join(_remotePath, file.name);
@@ -1064,6 +1073,7 @@ class PanelNotifier extends ChangeNotifier {
       );
       await refresh();
     } catch (e) {
+      _log.warn('operation failed', e);
       _ref.read(errorProvider).addError('Rename failed: $e');
       await audit.logError(
         operation: AuditOperation.rename,
@@ -1104,6 +1114,7 @@ class PanelNotifier extends ChangeNotifier {
       );
       await refresh();
     } catch (e) {
+      _log.warn('operation failed', e);
       _ref.read(errorProvider).addError('Create folder failed: $e');
       await audit.logError(
         operation: AuditOperation.createFolder,
@@ -1154,6 +1165,7 @@ class PanelNotifier extends ChangeNotifier {
       await refresh();
       clearSelection();
     } catch (e) {
+      _log.warn('operation failed', e);
       _ref.read(errorProvider).addError('Move failed: $e');
       for (final file in files) {
         final src = file.path ?? p.posix.join(_remotePath, file.name);
@@ -1227,6 +1239,7 @@ class PanelNotifier extends ChangeNotifier {
       }
       await refresh();
     } catch (e) {
+      _log.warn('operation failed', e);
       _ref.read(errorProvider).addError('Copy failed: $e');
       for (final file in files) {
         final src = file.path ?? p.posix.join(_remotePath, file.name);
@@ -1433,6 +1446,7 @@ class PanelNotifier extends ChangeNotifier {
       _pushHistory(currentPath);
       notifyListeners();
     } catch (e) {
+      _log.warn('operation failed', e);
       _localFileService.currentPath = await _localFileService.getSafeFallbackDirectory();
       _ref.read(errorProvider).addError(e.toString());
       notifyListeners();
@@ -1479,7 +1493,8 @@ class PanelNotifier extends ChangeNotifier {
               updated = meta['modified'] ?? DateTime.now();
             }
             items.add(FileItem(name: name, path: entity.path, isFolder: isFolder, size: size, updatedAt: updated));
-          } catch (_) {
+          } catch (e) {
+            _log.warn('operation failed', e);
             continue;
           }
         }
@@ -1502,7 +1517,8 @@ class PanelNotifier extends ChangeNotifier {
           // Guess folder vs file from entity type (no stat needed).
           final isFolder = entity is Directory;
           items.add(FileItem(name: name, path: entity.path, isFolder: isFolder));
-        } catch (_) {
+        } catch (e) {
+          _log.warn('operation failed', e);
           continue;
         }
       }
@@ -1541,7 +1557,9 @@ class PanelNotifier extends ChangeNotifier {
                 symlinkTarget: linkTarget,
               );
             }
-          } catch (_) {}
+          } catch (e) {
+            _log.warn('operation failed', e);
+            }
         }));
         // Update UI after each batch.
         final prev = cursorItem;
@@ -1556,6 +1574,7 @@ class PanelNotifier extends ChangeNotifier {
       if (side == PanelSide.local) _updateFreeSpace(currentPath);
       notifyListeners();
     } catch (e) {
+      _log.warn('operation failed', e);
       _isLoading = false;
       if (!kIsWeb && (e is PathAccessException || e.toString().contains('Operation not permitted'))) {
         _files = [];
@@ -1635,7 +1654,9 @@ class PanelNotifier extends ChangeNotifier {
             } else {
               folderDate = DateTime.parse(rawDate.toString());
             }
-          } catch (_) {}
+          } catch (e) {
+            _log.warn('operation failed', e);
+            }
         }
         final meta = Map<String, dynamic>.from(map)
           ..removeWhere((k, _) => const {'name', 'uuid', 'modificationTime', 'lastModified', 'timestamp'}.contains(k));
@@ -1660,7 +1681,9 @@ class PanelNotifier extends ChangeNotifier {
             } else {
               fileDate = DateTime.parse(rawDate.toString());
             }
-          } catch (_) {}
+          } catch (e) {
+            _log.warn('operation failed', e);
+            }
         }
         final meta = Map<String, dynamic>.from(map)
           ..removeWhere((k, _) => const {'name', 'uuid', 'size', 'modificationTime', 'lastModified', 'fileType', 'type', 'timestamp'}.contains(k));

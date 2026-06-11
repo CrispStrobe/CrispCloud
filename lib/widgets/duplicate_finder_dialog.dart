@@ -15,6 +15,7 @@ import '../models/panel_side.dart';
 import '../providers/providers.dart';
 import '../utils/formatters.dart';
 import '../l10n/app_localizations.dart';
+import '../services/log_service.dart';
 
 void showDuplicateFinderDialog(BuildContext context, WidgetRef ref) {
   showDialog(
@@ -71,7 +72,9 @@ class _DuplicateFinderDialogState extends ConsumerState<_DuplicateFinderDialog> 
             final bytes = await File(file.path!).readAsBytes();
             final hash = md5.convert(bytes).toString();
             hashGroups.putIfAbsent(hash, () => []).add(file);
-          } catch (_) {}
+          } catch (e) {
+      // Silently ignored
+    }
           _scannedCount++;
           if (mounted) setState(() {});
         }

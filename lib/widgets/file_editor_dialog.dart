@@ -258,7 +258,7 @@ class _FileEditorPageState extends ConsumerState<_FileEditorPage> {
       if (remoteModified != null && remoteModified.isAfter(_loadedAt!)) {
         return true; // File was modified on server since we loaded it
       }
-    } catch (_) {
+    } catch (e) {
       // Can't check — proceed without conflict detection
     }
     return false;
@@ -267,7 +267,8 @@ class _FileEditorPageState extends ConsumerState<_FileEditorPage> {
   String _tryDecode(Uint8List bytes) {
     try {
       return utf8.decode(bytes);
-    } catch (_) {
+    } catch (e) {
+      _log.warn('operation failed', e);
       return String.fromCharCodes(bytes);
     }
   }
@@ -306,6 +307,7 @@ class _FileEditorPageState extends ConsumerState<_FileEditorPage> {
 
       _focusNode.requestFocus();
     } catch (e) {
+      _log.warn('operation failed', e);
       if (!mounted) return;
       setState(() {
         _error = 'Failed to load file: $e';
@@ -326,7 +328,7 @@ class _FileEditorPageState extends ConsumerState<_FileEditorPage> {
       final name = widget.file.name;
       final snapshotPath = p.join(snapshotDir.path, '${timestamp}_$name');
       await File(snapshotPath).writeAsBytes(_originalBytes!);
-    } catch (_) {
+    } catch (e) {
       // Snapshot is best-effort, don't fail the save
     }
   }
@@ -369,6 +371,7 @@ class _FileEditorPageState extends ConsumerState<_FileEditorPage> {
         SnackBar(content: Text('Saved ${widget.file.name}')),
       );
     } catch (e) {
+      _log.warn('operation failed', e);
       if (!mounted) return;
       setState(() => _saving = false);
       ScaffoldMessenger.of(context).showSnackBar(

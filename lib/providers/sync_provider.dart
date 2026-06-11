@@ -129,7 +129,9 @@ class SyncNotifier extends ChangeNotifier {
       final prefs = await SharedPreferences.getInstance();
       _autoEvictDays = prefs.getInt(_autoEvictDaysKey) ?? 0;
       notifyListeners();
-    } catch (_) {}
+    } catch (e) {
+      _log.warn('operation failed', e);
+      }
   }
 
   Future<void> _loadBandwidthSchedule() async {
@@ -138,7 +140,9 @@ class SyncNotifier extends ChangeNotifier {
       _syncOnlyOnWifi = prefs.getBool(_syncOnlyOnWifiKey) ?? false;
       _syncStartHour = prefs.getInt(_syncStartHourKey) ?? 0;
       _syncEndHour = prefs.getInt(_syncEndHourKey) ?? 0;
-    } catch (_) {}
+    } catch (e) {
+      _log.warn('operation failed', e);
+      }
   }
 
   /// Set bandwidth scheduling: sync only on WiFi.
@@ -356,6 +360,7 @@ class SyncNotifier extends ChangeNotifier {
       _lastResult = result;
       return result;
     } catch (e) {
+      _log.warn('operation failed', e);
       _ref.read(errorProvider).addError('Sync failed: $e');
       return SyncResult(errors: 1, errorMessages: [e.toString()]);
     } finally {

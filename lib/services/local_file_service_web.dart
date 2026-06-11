@@ -87,6 +87,7 @@ class WebFileService implements LocalFileService {
         currentPath = '/$rootName';
         return currentPath;
       } catch (e) {
+        _log.warn('operation failed', e);
         if (e.toString().contains('AbortError') || e.toString().contains('user aborted')) {
           debugPrint("[Web] User cancelled directory picker.");
           return null;
@@ -145,7 +146,8 @@ class WebFileService implements LocalFileService {
     String decoded;
     try {
       decoded = Uri.decodeComponent(raw);
-    } catch (_) {
+    } catch (e) {
+      _log.warn('operation failed', e);
       decoded = raw;
     }
     decoded = decoded.replaceAll('\$2F', '/').replaceAll('\$3A', ':');

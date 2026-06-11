@@ -17,6 +17,7 @@ import '../services/thumbnail_service.dart';
 import '../utils/formatters.dart';
 import 'file_context_menu.dart';
 import 'file_list_view.dart' show getFileIcon;
+import '../services/log_service.dart';
 
 class FileGridView extends ConsumerWidget {
   final PanelSide side;
@@ -139,7 +140,8 @@ class _FileGridTileState extends ConsumerState<_FileGridTile> {
         }
         final thumb = await thumbService.generate(key, bytes);
         if (mounted) setState(() { _thumbnail = thumb; _loadingThumb = false; });
-      } catch (_) {
+      } catch (e) {
+        // Preference error (non-critical)
         if (mounted) setState(() => _loadingThumb = false);
       }
     }

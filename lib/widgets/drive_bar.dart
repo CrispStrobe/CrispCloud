@@ -12,6 +12,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../models/panel_side.dart';
 import '../providers/providers.dart';
+import '../services/log_service.dart';
 
 /// A volume/drive entry shown in the drive bar.
 class _DriveEntry {
@@ -50,7 +51,8 @@ Future<List<_DriveEntry>> _macVolumes() async {
       }
     }
     return entries;
-  } catch (_) {
+  } catch (e) {
+    // TODO: add logging
     return [];
   }
 }
@@ -86,7 +88,8 @@ Future<List<_DriveEntry>> _linuxMounts() async {
       }
     }
     return entries;
-  } catch (_) {
+  } catch (e) {
+    // TODO: add logging
     return [];
   }
 }
@@ -111,7 +114,8 @@ Future<List<_DriveEntry>> _windowsDrives() async {
       }
     }
     return entries;
-  } catch (_) {
+  } catch (e) {
+    // TODO: add logging
     return [];
   }
 }
