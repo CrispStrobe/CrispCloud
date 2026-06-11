@@ -16,6 +16,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../providers/mount_provider.dart';
 import '../services/fuse_mount_service.dart';
+import '../l10n/app_localizations.dart';
 
 void showMountDialog(BuildContext context) {
   showDialog(
@@ -90,7 +91,7 @@ class _MountManagerDialog extends ConsumerWidget {
       actions: [
         TextButton(
           onPressed: () => Navigator.pop(context),
-          child: const Text('Close'),
+          child: Text(AppLocalizations.of(context)!.close),
         ),
         if (mount.isSupported)
           ElevatedButton.icon(
@@ -215,7 +216,7 @@ class _AddMountDialogState extends ConsumerState<_AddMountDialog> {
       actions: [
         TextButton(
           onPressed: _mounting ? null : () => Navigator.pop(context),
-          child: const Text('Cancel'),
+          child: Text(AppLocalizations.of(context)!.cancel),
         ),
         ElevatedButton(
           onPressed: _mounting ? null : () => _doMount(context),

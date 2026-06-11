@@ -14,6 +14,7 @@ import '../models/file_item.dart';
 import '../models/panel_side.dart';
 import '../providers/providers.dart';
 import '../utils/formatters.dart';
+import '../l10n/app_localizations.dart';
 
 void showDuplicateFinderDialog(BuildContext context, WidgetRef ref) {
   showDialog(
@@ -210,7 +211,7 @@ class _DuplicateFinderDialogState extends ConsumerState<_DuplicateFinderDialog> 
         ),
       ),
       actions: [
-        TextButton(onPressed: () => Navigator.pop(context), child: const Text('Close')),
+        TextButton(onPressed: () => Navigator.pop(context), child: Text(AppLocalizations.of(context)!.close)),
         if (!_scanning)
           ElevatedButton.icon(
             icon: const Icon(Icons.search, size: 16),

@@ -8,6 +8,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../providers/providers.dart';
 import '../services/background_sync_service.dart';
 import '../services/sync_database.dart';
+import '../l10n/app_localizations.dart';
 
 // Auto-evict options: 0=disabled, then days
 const _kAutoEvictOptions = [0, 7, 14, 30, 60, 90];
@@ -121,7 +122,7 @@ class _SyncManagerDialog extends ConsumerWidget {
       actions: [
         TextButton(
           onPressed: () => Navigator.pop(context),
-          child: const Text('Close'),
+          child: Text(AppLocalizations.of(context)!.close),
         ),
         TextButton.icon(
           icon: const Icon(Icons.replay, size: 16),
@@ -266,7 +267,7 @@ class _SyncManagerDialog extends ConsumerWidget {
             ),
           ),
           actions: [
-            TextButton(onPressed: () => Navigator.pop(ctx), child: const Text('Cancel')),
+            TextButton(onPressed: () => Navigator.pop(ctx), child: Text(AppLocalizations.of(context)!.cancel)),
             ElevatedButton(
               onPressed: () async {
                 if (nameController.text.isEmpty || localController.text.isEmpty) return;

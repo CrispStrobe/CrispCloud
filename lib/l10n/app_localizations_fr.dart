@@ -877,4 +877,364 @@ class AppLocalizationsFr extends AppLocalizations {
   String saveFailed(String error) {
     return 'Save failed: $error';
   }
+
+  @override
+  String get unsavedChanges => 'Unsaved Changes';
+
+  @override
+  String get discardChanges => 'You have unsaved changes. Discard them?';
+
+  @override
+  String get discard => 'Discard';
+
+  @override
+  String get saveShortcut => 'Save (Ctrl+S)';
+
+  @override
+  String get fileModifiedOnServer =>
+      'This file was modified on the server since you opened it.';
+
+  @override
+  String get saveAnyway => 'Save Anyway';
+
+  @override
+  String get reload => 'Reload';
+
+  @override
+  String get saveProfile => 'Save Profile';
+
+  @override
+  String get profileName => 'Profile Name';
+
+  @override
+  String get profileNameHint => 'e.g., Work S3, Personal SFTP';
+
+  @override
+  String profileSaved(String name) {
+    return 'Profile \"$name\" saved';
+  }
+
+  @override
+  String get connectToCloudStorage => 'Connect to Cloud Storage';
+
+  @override
+  String get savedProfiles => 'Saved Profiles';
+
+  @override
+  String get loadProfile => 'Load a saved profile...';
+
+  @override
+  String get deleteProfile => 'Delete Profile';
+
+  @override
+  String get saveAsProfile => 'Save as Profile';
+
+  @override
+  String get enableEncryption => 'Enable Client-Side Encryption';
+
+  @override
+  String get encryptBeforeUpload => 'Encrypt files before upload (AES-256-GCM)';
+
+  @override
+  String get encryptionPassphrase => 'Encryption Passphrase';
+
+  @override
+  String get appLocked => 'CrispCloud is Locked';
+
+  @override
+  String get enterPinToContinue => 'Enter your PIN or password to continue';
+
+  @override
+  String get pinPassword => 'PIN / Password';
+
+  @override
+  String get incorrectPin => 'Incorrect PIN or password';
+
+  @override
+  String get tooManyAttempts =>
+      'Too many failed attempts. Restart the app to try again.';
+
+  @override
+  String attemptsRemaining(int count) {
+    return '$count attempts remaining';
+  }
+
+  @override
+  String get appLockSetup => 'Set Up App Lock';
+
+  @override
+  String get changeAppLockCode => 'Change App Lock';
+
+  @override
+  String get currentPin => 'Current PIN / Password';
+
+  @override
+  String get newPin => 'New PIN / Password';
+
+  @override
+  String get confirmPin => 'Confirm PIN / Password';
+
+  @override
+  String get minFourChars => 'Minimum 4 characters';
+
+  @override
+  String get codesDoNotMatch => 'Codes do not match';
+
+  @override
+  String get autoLockAfter => 'Auto-lock after';
+
+  @override
+  String get immediately => 'Immediately';
+
+  @override
+  String get oneMinute => '1 minute';
+
+  @override
+  String get fiveMinutes => '5 minutes';
+
+  @override
+  String get fifteenMinutes => '15 minutes';
+
+  @override
+  String get thirtyMinutes => '30 minutes';
+
+  @override
+  String get oneHour => '1 hour';
+
+  @override
+  String get connectToHetzner => 'Connect to Hetzner Storage Box';
+
+  @override
+  String get sftpPort23 => 'SFTP (port 23)';
+
+  @override
+  String get webdavHttps => 'WebDAV (HTTPS)';
+
+  @override
+  String get testConnection => 'Test Connection';
+
+  @override
+  String get connectionSuccessful => 'Connection successful';
+
+  @override
+  String testFailed(String error) {
+    return 'Test failed: $error';
+  }
+
+  @override
+  String get connectToAzure => 'Connect to Azure Blob Storage';
+
+  @override
+  String get authenticationMode => 'Authentication Mode';
+
+  @override
+  String get accountName => 'Account Name';
+
+  @override
+  String get container => 'Container';
+
+  @override
+  String get sasUrl => 'SAS URL';
+
+  @override
+  String get sasToken => 'SAS Token';
+
+  @override
+  String get connectToB2 => 'Connect to Backblaze B2';
+
+  @override
+  String get applicationKeyId => 'Application Key ID';
+
+  @override
+  String get applicationKey => 'Application Key';
+
+  @override
+  String get bucketNameOptional => 'Bucket Name (optional)';
+
+  @override
+  String get mount => 'Mount';
+
+  @override
+  String get unmount => 'Unmount';
+
+  @override
+  String get displayName => 'Display Name';
+
+  @override
+  String get localMountPoint => 'Local Mount Point';
+
+  @override
+  String get newMount => 'New Mount';
+
+  @override
+  String get noMountsConfigured => 'No mounts configured';
+
+  @override
+  String get fuseDesktopOnly =>
+      'FUSE mounts are only available on macOS, Linux, and Windows desktop.';
+
+  @override
+  String get multiCloud => 'Multi-Cloud';
+
+  @override
+  String get connections => 'Connections';
+
+  @override
+  String get transfer => 'Transfer';
+
+  @override
+  String get compareAndSearch => 'Compare & Search';
+
+  @override
+  String get noConnectionsYet => 'No connections registered yet.';
+
+  @override
+  String get startTransfer => 'Start Transfer';
+
+  @override
+  String get syncPairs => 'Sync Pairs';
+
+  @override
+  String get enableAutoSync => 'Enable Auto-Sync';
+
+  @override
+  String get disableAutoSync => 'Disable Auto-Sync';
+
+  @override
+  String get noSyncPairs => 'No sync pairs configured';
+
+  @override
+  String get replayOffline => 'Replay Offline';
+
+  @override
+  String get newSyncPair => 'New Sync Pair';
+
+  @override
+  String get cacheUsage => 'Cache Usage';
+
+  @override
+  String get maximumCacheSize => 'Maximum Cache Size';
+
+  @override
+  String get clearCacheConfirm =>
+      'Remove all cached files? They will be re-downloaded when needed.';
+
+  @override
+  String batchRenameTitle(int count) {
+    return 'Batch Rename ($count files)';
+  }
+
+  @override
+  String get findReplace => 'Find/Replace';
+
+  @override
+  String get number => 'Number';
+
+  @override
+  String get prefixSuffix => 'Prefix/Suffix';
+
+  @override
+  String get extension => 'Extension';
+
+  @override
+  String get duplicateFinder => 'Duplicate Finder';
+
+  @override
+  String get noDuplicatesFound => 'No duplicates found!';
+
+  @override
+  String get chooseTheme => 'Choose Theme';
+
+  @override
+  String get checkForUpdates => 'Check for Updates';
+
+  @override
+  String get youAreUpToDate => 'You\'re up to date';
+
+  @override
+  String get updateAvailable => 'Update available';
+
+  @override
+  String get releaseNotes => 'Release notes';
+
+  @override
+  String get checkNow => 'Check Now';
+
+  @override
+  String get general => 'General';
+
+  @override
+  String get accessibility => 'Accessibility';
+
+  @override
+  String get privacy => 'Privacy';
+
+  @override
+  String get advanced => 'Advanced';
+
+  @override
+  String get showFKeyButtons =>
+      'Show F3-F8 shortcut buttons at the bottom of the screen';
+
+  @override
+  String get exportKeys => 'Export/Import Encryption Keys';
+
+  @override
+  String get backupRecovery => 'BIP39 Mnemonic Backup and Recovery';
+
+  @override
+  String get noActiveOperations => 'No active operations';
+
+  @override
+  String get refreshAll => 'Refresh All';
+
+  @override
+  String get newName => 'New name';
+
+  @override
+  String get items => 'Items:';
+
+  @override
+  String andMore(int count) {
+    return '... and $count more';
+  }
+
+  @override
+  String get searchPattern => 'Search Pattern';
+
+  @override
+  String get findPattern => 'Find Pattern';
+
+  @override
+  String get searchHint => 'Search for files...';
+
+  @override
+  String get findHint => 'e.g., *.pdf, report*';
+
+  @override
+  String get noResultsFound => 'No results found';
+
+  @override
+  String get size => 'Size';
+
+  @override
+  String get date => 'Date';
+
+  @override
+  String get name => 'Name';
+
+  @override
+  String get type => 'Type';
+
+  @override
+  String get created => 'Created';
+
+  @override
+  String get accessed => 'Accessed';
+
+  @override
+  String get computeMd5 => 'Compute MD5';
+
+  @override
+  String get protocol => 'Protocol';
 }

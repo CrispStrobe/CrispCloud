@@ -9,6 +9,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../providers/providers.dart';
 import '../services/audit_service.dart';
 import '../utils/formatters.dart' as fmt;
+import '../l10n/app_localizations.dart';
 
 void showAuditLogDialog(BuildContext context) {
   showDialog(
@@ -69,7 +70,7 @@ class _AuditLogDialogState extends ConsumerState<_AuditLogDialog> {
           TextButton(
             onPressed: () => Navigator.pop(ctx, true),
             style: TextButton.styleFrom(foregroundColor: Theme.of(ctx).colorScheme.error),
-            child: const Text('Clear'),
+            child: Text(AppLocalizations.of(context)!.clear),
           ),
         ],
       ),
@@ -140,7 +141,7 @@ class _AuditLogDialogState extends ConsumerState<_AuditLogDialog> {
         ),
         TextButton(
           onPressed: () => Navigator.pop(context),
-          child: const Text('Close'),
+          child: Text(AppLocalizations.of(context)!.close),
         ),
       ],
     );

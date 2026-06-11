@@ -8,6 +8,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../providers/core_providers.dart';
 import '../services/b2_config_service.dart';
+import '../l10n/app_localizations.dart';
 
 // ---------------------------------------------------------------------------
 // Dialog widget
@@ -245,7 +246,7 @@ class _B2ConnectionDialogState extends ConsumerState<B2ConnectionDialog> {
           onPressed: (_isLoading || _isTesting)
               ? null
               : () => Navigator.pop(context, false),
-          child: const Text('Cancel'),
+          child: Text(AppLocalizations.of(context)!.cancel),
         ),
         TextButton(
           onPressed: (_isLoading || _isTesting) ? null : _testConnection,

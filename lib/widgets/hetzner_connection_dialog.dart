@@ -16,6 +16,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../providers/core_providers.dart';
 import '../services/hetzner_adapter.dart';
 import '../services/hetzner_config_service.dart';
+import '../l10n/app_localizations.dart';
 
 class HetznerConnectionDialog extends ConsumerStatefulWidget {
   const HetznerConnectionDialog({super.key});
@@ -362,7 +363,7 @@ class _HetznerConnectionDialogState
       actions: [
         TextButton(
           onPressed: busy ? null : () => Navigator.pop(context, false),
-          child: const Text('Cancel'),
+          child: Text(AppLocalizations.of(context)!.cancel),
         ),
         TextButton(
           onPressed: busy ? null : _testConnection,

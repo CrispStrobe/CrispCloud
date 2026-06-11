@@ -17,6 +17,7 @@ import 'package:path/path.dart' as p;
 import '../models/file_item.dart';
 import '../models/panel_side.dart';
 import '../providers/providers.dart';
+import '../l10n/app_localizations.dart';
 
 /// Opens a full-screen editor dialog for the given file.
 void showFileEditorDialog(
@@ -380,16 +381,16 @@ class _FileEditorPageState extends ConsumerState<_FileEditorPage> {
     final result = await showDialog<bool>(
       context: context,
       builder: (ctx) => AlertDialog(
-        title: const Text('Unsaved Changes'),
+        title: Text(AppLocalizations.of(context)!.unsavedChanges),
         content: const Text(
             'You have unsaved changes. Discard them?'),
         actions: [
           TextButton(
               onPressed: () => Navigator.pop(ctx, false),
-              child: const Text('Cancel')),
+              child: Text(AppLocalizations.of(context)!.cancel)),
           TextButton(
               onPressed: () => Navigator.pop(ctx, true),
-              child: const Text('Discard')),
+              child: Text(AppLocalizations.of(context)!.discard)),
         ],
       ),
     );
@@ -524,11 +525,11 @@ class _FileEditorPageState extends ConsumerState<_FileEditorPage> {
                     setState(() => _conflictDetected = false);
                     _loadFile();
                   },
-                  child: const Text('Reload'),
+                  child: Text(AppLocalizations.of(context)!.reload),
                 ),
                 TextButton(
                   onPressed: () => setState(() => _conflictDetected = false),
-                  child: const Text('Dismiss'),
+                  child: Text(AppLocalizations.of(context)!.cancel),
                 ),
               ],
             ),

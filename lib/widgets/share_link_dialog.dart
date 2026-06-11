@@ -17,6 +17,7 @@ import '../services/dropbox_client_adapter.dart';
 import '../services/onedrive_client_adapter.dart';
 import '../services/s3_client_adapter.dart';
 import '../services/log_service.dart';
+import '../l10n/app_localizations.dart';
 
 void showShareLinkDialog(BuildContext context, WidgetRef ref, FileItem file) {
   showDialog(
@@ -210,7 +211,7 @@ class _ShareLinkDialogState extends ConsumerState<_ShareLinkDialog> {
                     : _buildOptionsView(theme),
       ),
       actions: [
-        TextButton(onPressed: () => Navigator.pop(context), child: const Text('Close')),
+        TextButton(onPressed: () => Navigator.pop(context), child: Text(AppLocalizations.of(context)!.close)),
         if (!_generated && !_loading)
           ElevatedButton.icon(
             icon: const Icon(Icons.link, size: 16),

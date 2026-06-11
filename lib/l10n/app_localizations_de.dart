@@ -878,4 +878,367 @@ class AppLocalizationsDe extends AppLocalizations {
   String saveFailed(String error) {
     return 'Speichern fehlgeschlagen: $error';
   }
+
+  @override
+  String get unsavedChanges => 'Ungespeicherte Aenderungen';
+
+  @override
+  String get discardChanges =>
+      'Sie haben ungespeicherte Aenderungen. Verwerfen?';
+
+  @override
+  String get discard => 'Verwerfen';
+
+  @override
+  String get saveShortcut => 'Speichern (Strg+S)';
+
+  @override
+  String get fileModifiedOnServer =>
+      'Diese Datei wurde auf dem Server geaendert, seit Sie sie geoeffnet haben.';
+
+  @override
+  String get saveAnyway => 'Trotzdem speichern';
+
+  @override
+  String get reload => 'Neu laden';
+
+  @override
+  String get saveProfile => 'Profil speichern';
+
+  @override
+  String get profileName => 'Profilname';
+
+  @override
+  String get profileNameHint => 'z.B. Arbeit S3, Privat SFTP';
+
+  @override
+  String profileSaved(String name) {
+    return 'Profil \"$name\" gespeichert';
+  }
+
+  @override
+  String get connectToCloudStorage => 'Mit Cloud-Speicher verbinden';
+
+  @override
+  String get savedProfiles => 'Gespeicherte Profile';
+
+  @override
+  String get loadProfile => 'Gespeichertes Profil laden...';
+
+  @override
+  String get deleteProfile => 'Profil loeschen';
+
+  @override
+  String get saveAsProfile => 'Als Profil speichern';
+
+  @override
+  String get enableEncryption => 'Client-seitige Verschluesselung aktivieren';
+
+  @override
+  String get encryptBeforeUpload =>
+      'Dateien vor dem Hochladen verschluesseln (AES-256-GCM)';
+
+  @override
+  String get encryptionPassphrase => 'Verschluesselungs-Passphrase';
+
+  @override
+  String get appLocked => 'CrispCloud ist gesperrt';
+
+  @override
+  String get enterPinToContinue => 'Geben Sie Ihre PIN oder Ihr Passwort ein';
+
+  @override
+  String get pinPassword => 'PIN / Passwort';
+
+  @override
+  String get incorrectPin => 'Falsche PIN oder falsches Passwort';
+
+  @override
+  String get tooManyAttempts =>
+      'Zu viele Fehlversuche. Starten Sie die App neu.';
+
+  @override
+  String attemptsRemaining(int count) {
+    return '$count Versuche verbleibend';
+  }
+
+  @override
+  String get appLockSetup => 'App-Sperre einrichten';
+
+  @override
+  String get changeAppLockCode => 'App-Sperre aendern';
+
+  @override
+  String get currentPin => 'Aktuelle PIN / Passwort';
+
+  @override
+  String get newPin => 'Neue PIN / Passwort';
+
+  @override
+  String get confirmPin => 'PIN / Passwort bestaetigen';
+
+  @override
+  String get minFourChars => 'Mindestens 4 Zeichen';
+
+  @override
+  String get codesDoNotMatch => 'Codes stimmen nicht ueberein';
+
+  @override
+  String get autoLockAfter => 'Automatisch sperren nach';
+
+  @override
+  String get immediately => 'Sofort';
+
+  @override
+  String get oneMinute => '1 Minute';
+
+  @override
+  String get fiveMinutes => '5 Minuten';
+
+  @override
+  String get fifteenMinutes => '15 Minuten';
+
+  @override
+  String get thirtyMinutes => '30 Minuten';
+
+  @override
+  String get oneHour => '1 Stunde';
+
+  @override
+  String get connectToHetzner => 'Mit Hetzner Storage Box verbinden';
+
+  @override
+  String get sftpPort23 => 'SFTP (Port 23)';
+
+  @override
+  String get webdavHttps => 'WebDAV (HTTPS)';
+
+  @override
+  String get testConnection => 'Verbindung testen';
+
+  @override
+  String get connectionSuccessful => 'Verbindung erfolgreich';
+
+  @override
+  String testFailed(String error) {
+    return 'Test fehlgeschlagen: $error';
+  }
+
+  @override
+  String get connectToAzure => 'Mit Azure Blob Storage verbinden';
+
+  @override
+  String get authenticationMode => 'Authentifizierungsmodus';
+
+  @override
+  String get accountName => 'Kontoname';
+
+  @override
+  String get container => 'Container';
+
+  @override
+  String get sasUrl => 'SAS-URL';
+
+  @override
+  String get sasToken => 'SAS-Token';
+
+  @override
+  String get connectToB2 => 'Mit Backblaze B2 verbinden';
+
+  @override
+  String get applicationKeyId => 'Application Key ID';
+
+  @override
+  String get applicationKey => 'Application Key';
+
+  @override
+  String get bucketNameOptional => 'Bucket-Name (optional)';
+
+  @override
+  String get mount => 'Einbinden';
+
+  @override
+  String get unmount => 'Trennen';
+
+  @override
+  String get displayName => 'Anzeigename';
+
+  @override
+  String get localMountPoint => 'Lokaler Einhängepunkt';
+
+  @override
+  String get newMount => 'Neues Laufwerk';
+
+  @override
+  String get noMountsConfigured => 'Keine Laufwerke konfiguriert';
+
+  @override
+  String get fuseDesktopOnly =>
+      'FUSE-Laufwerke sind nur auf macOS, Linux und Windows verfuegbar.';
+
+  @override
+  String get multiCloud => 'Multi-Cloud';
+
+  @override
+  String get connections => 'Verbindungen';
+
+  @override
+  String get transfer => 'Transfer';
+
+  @override
+  String get compareAndSearch => 'Vergleichen & Suchen';
+
+  @override
+  String get noConnectionsYet => 'Noch keine Verbindungen registriert.';
+
+  @override
+  String get startTransfer => 'Transfer starten';
+
+  @override
+  String get syncPairs => 'Sync-Paare';
+
+  @override
+  String get enableAutoSync => 'Auto-Sync aktivieren';
+
+  @override
+  String get disableAutoSync => 'Auto-Sync deaktivieren';
+
+  @override
+  String get noSyncPairs => 'Keine Sync-Paare konfiguriert';
+
+  @override
+  String get replayOffline => 'Offline-Aenderungen anwenden';
+
+  @override
+  String get newSyncPair => 'Neues Sync-Paar';
+
+  @override
+  String get cacheUsage => 'Cache-Nutzung';
+
+  @override
+  String get maximumCacheSize => 'Maximale Cache-Groesse';
+
+  @override
+  String get clearCacheConfirm =>
+      'Alle gecachten Dateien entfernen? Sie werden bei Bedarf erneut heruntergeladen.';
+
+  @override
+  String batchRenameTitle(int count) {
+    return 'Stapelumbenennung ($count Dateien)';
+  }
+
+  @override
+  String get findReplace => 'Suchen/Ersetzen';
+
+  @override
+  String get number => 'Nummer';
+
+  @override
+  String get prefixSuffix => 'Praefix/Suffix';
+
+  @override
+  String get extension => 'Erweiterung';
+
+  @override
+  String get duplicateFinder => 'Duplikat-Finder';
+
+  @override
+  String get noDuplicatesFound => 'Keine Duplikate gefunden!';
+
+  @override
+  String get chooseTheme => 'Design waehlen';
+
+  @override
+  String get checkForUpdates => 'Nach Updates suchen';
+
+  @override
+  String get youAreUpToDate => 'Sie sind auf dem neuesten Stand';
+
+  @override
+  String get updateAvailable => 'Update verfuegbar';
+
+  @override
+  String get releaseNotes => 'Versionshinweise';
+
+  @override
+  String get checkNow => 'Jetzt pruefen';
+
+  @override
+  String get general => 'Allgemein';
+
+  @override
+  String get accessibility => 'Barrierefreiheit';
+
+  @override
+  String get privacy => 'Datenschutz';
+
+  @override
+  String get advanced => 'Erweitert';
+
+  @override
+  String get showFKeyButtons =>
+      'F3-F8 Tastenkuerzel am unteren Bildschirmrand anzeigen';
+
+  @override
+  String get exportKeys =>
+      'Verschluesselungsschluessel exportieren/importieren';
+
+  @override
+  String get backupRecovery => 'BIP39-Mnemonic Sicherung und Wiederherstellung';
+
+  @override
+  String get noActiveOperations => 'Keine aktiven Vorgaenge';
+
+  @override
+  String get refreshAll => 'Alle aktualisieren';
+
+  @override
+  String get newName => 'Neuer Name';
+
+  @override
+  String get items => 'Elemente:';
+
+  @override
+  String andMore(int count) {
+    return '... und $count weitere';
+  }
+
+  @override
+  String get searchPattern => 'Suchmuster';
+
+  @override
+  String get findPattern => 'Suchmuster';
+
+  @override
+  String get searchHint => 'Dateien suchen...';
+
+  @override
+  String get findHint => 'z.B. *.pdf, bericht*';
+
+  @override
+  String get noResultsFound => 'Keine Ergebnisse gefunden';
+
+  @override
+  String get size => 'Groesse';
+
+  @override
+  String get date => 'Datum';
+
+  @override
+  String get name => 'Name';
+
+  @override
+  String get type => 'Typ';
+
+  @override
+  String get created => 'Erstellt';
+
+  @override
+  String get accessed => 'Zugegriffen';
+
+  @override
+  String get computeMd5 => 'MD5 berechnen';
+
+  @override
+  String get protocol => 'Protokoll';
 }

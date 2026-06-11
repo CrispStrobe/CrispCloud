@@ -11,6 +11,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../providers/providers.dart';
 import '../services/encryption_service.dart';
 import '../utils/secure_clipboard.dart';
+import '../l10n/app_localizations.dart';
 
 void showKeyManagementDialog(BuildContext context, WidgetRef ref) {
   showDialog(
@@ -209,7 +210,7 @@ class _KeyManagementDialogState extends ConsumerState<_KeyManagementDialog>
       actions: [
         TextButton(
             onPressed: () => Navigator.pop(context),
-            child: const Text('Close')),
+            child: Text(AppLocalizations.of(context)!.close)),
       ],
     );
   }

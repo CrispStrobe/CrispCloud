@@ -9,6 +9,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../providers/search_provider.dart';
 import '../services/saved_search_service.dart';
 import 'search_dialogs.dart' show showSearchResultsDialog;
+import '../l10n/app_localizations.dart';
 
 // ---------------------------------------------------------------------------
 // Public helpers
@@ -138,7 +139,7 @@ class _SavedSearchesDialog extends ConsumerWidget {
       actions: [
         TextButton(
           onPressed: () => Navigator.pop(context),
-          child: const Text('Close'),
+          child: Text(AppLocalizations.of(context)!.close),
         ),
       ],
     );

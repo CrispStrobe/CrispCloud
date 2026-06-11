@@ -1743,6 +1743,696 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Save failed: {error}'**
   String saveFailed(String error);
+
+  /// No description provided for @unsavedChanges.
+  ///
+  /// In en, this message translates to:
+  /// **'Unsaved Changes'**
+  String get unsavedChanges;
+
+  /// No description provided for @discardChanges.
+  ///
+  /// In en, this message translates to:
+  /// **'You have unsaved changes. Discard them?'**
+  String get discardChanges;
+
+  /// No description provided for @discard.
+  ///
+  /// In en, this message translates to:
+  /// **'Discard'**
+  String get discard;
+
+  /// No description provided for @saveShortcut.
+  ///
+  /// In en, this message translates to:
+  /// **'Save (Ctrl+S)'**
+  String get saveShortcut;
+
+  /// No description provided for @fileModifiedOnServer.
+  ///
+  /// In en, this message translates to:
+  /// **'This file was modified on the server since you opened it.'**
+  String get fileModifiedOnServer;
+
+  /// No description provided for @saveAnyway.
+  ///
+  /// In en, this message translates to:
+  /// **'Save Anyway'**
+  String get saveAnyway;
+
+  /// No description provided for @reload.
+  ///
+  /// In en, this message translates to:
+  /// **'Reload'**
+  String get reload;
+
+  /// No description provided for @saveProfile.
+  ///
+  /// In en, this message translates to:
+  /// **'Save Profile'**
+  String get saveProfile;
+
+  /// No description provided for @profileName.
+  ///
+  /// In en, this message translates to:
+  /// **'Profile Name'**
+  String get profileName;
+
+  /// No description provided for @profileNameHint.
+  ///
+  /// In en, this message translates to:
+  /// **'e.g., Work S3, Personal SFTP'**
+  String get profileNameHint;
+
+  /// No description provided for @profileSaved.
+  ///
+  /// In en, this message translates to:
+  /// **'Profile \"{name}\" saved'**
+  String profileSaved(String name);
+
+  /// No description provided for @connectToCloudStorage.
+  ///
+  /// In en, this message translates to:
+  /// **'Connect to Cloud Storage'**
+  String get connectToCloudStorage;
+
+  /// No description provided for @savedProfiles.
+  ///
+  /// In en, this message translates to:
+  /// **'Saved Profiles'**
+  String get savedProfiles;
+
+  /// No description provided for @loadProfile.
+  ///
+  /// In en, this message translates to:
+  /// **'Load a saved profile...'**
+  String get loadProfile;
+
+  /// No description provided for @deleteProfile.
+  ///
+  /// In en, this message translates to:
+  /// **'Delete Profile'**
+  String get deleteProfile;
+
+  /// No description provided for @saveAsProfile.
+  ///
+  /// In en, this message translates to:
+  /// **'Save as Profile'**
+  String get saveAsProfile;
+
+  /// No description provided for @enableEncryption.
+  ///
+  /// In en, this message translates to:
+  /// **'Enable Client-Side Encryption'**
+  String get enableEncryption;
+
+  /// No description provided for @encryptBeforeUpload.
+  ///
+  /// In en, this message translates to:
+  /// **'Encrypt files before upload (AES-256-GCM)'**
+  String get encryptBeforeUpload;
+
+  /// No description provided for @encryptionPassphrase.
+  ///
+  /// In en, this message translates to:
+  /// **'Encryption Passphrase'**
+  String get encryptionPassphrase;
+
+  /// No description provided for @appLocked.
+  ///
+  /// In en, this message translates to:
+  /// **'CrispCloud is Locked'**
+  String get appLocked;
+
+  /// No description provided for @enterPinToContinue.
+  ///
+  /// In en, this message translates to:
+  /// **'Enter your PIN or password to continue'**
+  String get enterPinToContinue;
+
+  /// No description provided for @pinPassword.
+  ///
+  /// In en, this message translates to:
+  /// **'PIN / Password'**
+  String get pinPassword;
+
+  /// No description provided for @incorrectPin.
+  ///
+  /// In en, this message translates to:
+  /// **'Incorrect PIN or password'**
+  String get incorrectPin;
+
+  /// No description provided for @tooManyAttempts.
+  ///
+  /// In en, this message translates to:
+  /// **'Too many failed attempts. Restart the app to try again.'**
+  String get tooManyAttempts;
+
+  /// No description provided for @attemptsRemaining.
+  ///
+  /// In en, this message translates to:
+  /// **'{count} attempts remaining'**
+  String attemptsRemaining(int count);
+
+  /// No description provided for @appLockSetup.
+  ///
+  /// In en, this message translates to:
+  /// **'Set Up App Lock'**
+  String get appLockSetup;
+
+  /// No description provided for @changeAppLockCode.
+  ///
+  /// In en, this message translates to:
+  /// **'Change App Lock'**
+  String get changeAppLockCode;
+
+  /// No description provided for @currentPin.
+  ///
+  /// In en, this message translates to:
+  /// **'Current PIN / Password'**
+  String get currentPin;
+
+  /// No description provided for @newPin.
+  ///
+  /// In en, this message translates to:
+  /// **'New PIN / Password'**
+  String get newPin;
+
+  /// No description provided for @confirmPin.
+  ///
+  /// In en, this message translates to:
+  /// **'Confirm PIN / Password'**
+  String get confirmPin;
+
+  /// No description provided for @minFourChars.
+  ///
+  /// In en, this message translates to:
+  /// **'Minimum 4 characters'**
+  String get minFourChars;
+
+  /// No description provided for @codesDoNotMatch.
+  ///
+  /// In en, this message translates to:
+  /// **'Codes do not match'**
+  String get codesDoNotMatch;
+
+  /// No description provided for @autoLockAfter.
+  ///
+  /// In en, this message translates to:
+  /// **'Auto-lock after'**
+  String get autoLockAfter;
+
+  /// No description provided for @immediately.
+  ///
+  /// In en, this message translates to:
+  /// **'Immediately'**
+  String get immediately;
+
+  /// No description provided for @oneMinute.
+  ///
+  /// In en, this message translates to:
+  /// **'1 minute'**
+  String get oneMinute;
+
+  /// No description provided for @fiveMinutes.
+  ///
+  /// In en, this message translates to:
+  /// **'5 minutes'**
+  String get fiveMinutes;
+
+  /// No description provided for @fifteenMinutes.
+  ///
+  /// In en, this message translates to:
+  /// **'15 minutes'**
+  String get fifteenMinutes;
+
+  /// No description provided for @thirtyMinutes.
+  ///
+  /// In en, this message translates to:
+  /// **'30 minutes'**
+  String get thirtyMinutes;
+
+  /// No description provided for @oneHour.
+  ///
+  /// In en, this message translates to:
+  /// **'1 hour'**
+  String get oneHour;
+
+  /// No description provided for @connectToHetzner.
+  ///
+  /// In en, this message translates to:
+  /// **'Connect to Hetzner Storage Box'**
+  String get connectToHetzner;
+
+  /// No description provided for @sftpPort23.
+  ///
+  /// In en, this message translates to:
+  /// **'SFTP (port 23)'**
+  String get sftpPort23;
+
+  /// No description provided for @webdavHttps.
+  ///
+  /// In en, this message translates to:
+  /// **'WebDAV (HTTPS)'**
+  String get webdavHttps;
+
+  /// No description provided for @testConnection.
+  ///
+  /// In en, this message translates to:
+  /// **'Test Connection'**
+  String get testConnection;
+
+  /// No description provided for @connectionSuccessful.
+  ///
+  /// In en, this message translates to:
+  /// **'Connection successful'**
+  String get connectionSuccessful;
+
+  /// No description provided for @testFailed.
+  ///
+  /// In en, this message translates to:
+  /// **'Test failed: {error}'**
+  String testFailed(String error);
+
+  /// No description provided for @connectToAzure.
+  ///
+  /// In en, this message translates to:
+  /// **'Connect to Azure Blob Storage'**
+  String get connectToAzure;
+
+  /// No description provided for @authenticationMode.
+  ///
+  /// In en, this message translates to:
+  /// **'Authentication Mode'**
+  String get authenticationMode;
+
+  /// No description provided for @accountName.
+  ///
+  /// In en, this message translates to:
+  /// **'Account Name'**
+  String get accountName;
+
+  /// No description provided for @container.
+  ///
+  /// In en, this message translates to:
+  /// **'Container'**
+  String get container;
+
+  /// No description provided for @sasUrl.
+  ///
+  /// In en, this message translates to:
+  /// **'SAS URL'**
+  String get sasUrl;
+
+  /// No description provided for @sasToken.
+  ///
+  /// In en, this message translates to:
+  /// **'SAS Token'**
+  String get sasToken;
+
+  /// No description provided for @connectToB2.
+  ///
+  /// In en, this message translates to:
+  /// **'Connect to Backblaze B2'**
+  String get connectToB2;
+
+  /// No description provided for @applicationKeyId.
+  ///
+  /// In en, this message translates to:
+  /// **'Application Key ID'**
+  String get applicationKeyId;
+
+  /// No description provided for @applicationKey.
+  ///
+  /// In en, this message translates to:
+  /// **'Application Key'**
+  String get applicationKey;
+
+  /// No description provided for @bucketNameOptional.
+  ///
+  /// In en, this message translates to:
+  /// **'Bucket Name (optional)'**
+  String get bucketNameOptional;
+
+  /// No description provided for @mount.
+  ///
+  /// In en, this message translates to:
+  /// **'Mount'**
+  String get mount;
+
+  /// No description provided for @unmount.
+  ///
+  /// In en, this message translates to:
+  /// **'Unmount'**
+  String get unmount;
+
+  /// No description provided for @displayName.
+  ///
+  /// In en, this message translates to:
+  /// **'Display Name'**
+  String get displayName;
+
+  /// No description provided for @localMountPoint.
+  ///
+  /// In en, this message translates to:
+  /// **'Local Mount Point'**
+  String get localMountPoint;
+
+  /// No description provided for @newMount.
+  ///
+  /// In en, this message translates to:
+  /// **'New Mount'**
+  String get newMount;
+
+  /// No description provided for @noMountsConfigured.
+  ///
+  /// In en, this message translates to:
+  /// **'No mounts configured'**
+  String get noMountsConfigured;
+
+  /// No description provided for @fuseDesktopOnly.
+  ///
+  /// In en, this message translates to:
+  /// **'FUSE mounts are only available on macOS, Linux, and Windows desktop.'**
+  String get fuseDesktopOnly;
+
+  /// No description provided for @multiCloud.
+  ///
+  /// In en, this message translates to:
+  /// **'Multi-Cloud'**
+  String get multiCloud;
+
+  /// No description provided for @connections.
+  ///
+  /// In en, this message translates to:
+  /// **'Connections'**
+  String get connections;
+
+  /// No description provided for @transfer.
+  ///
+  /// In en, this message translates to:
+  /// **'Transfer'**
+  String get transfer;
+
+  /// No description provided for @compareAndSearch.
+  ///
+  /// In en, this message translates to:
+  /// **'Compare & Search'**
+  String get compareAndSearch;
+
+  /// No description provided for @noConnectionsYet.
+  ///
+  /// In en, this message translates to:
+  /// **'No connections registered yet.'**
+  String get noConnectionsYet;
+
+  /// No description provided for @startTransfer.
+  ///
+  /// In en, this message translates to:
+  /// **'Start Transfer'**
+  String get startTransfer;
+
+  /// No description provided for @syncPairs.
+  ///
+  /// In en, this message translates to:
+  /// **'Sync Pairs'**
+  String get syncPairs;
+
+  /// No description provided for @enableAutoSync.
+  ///
+  /// In en, this message translates to:
+  /// **'Enable Auto-Sync'**
+  String get enableAutoSync;
+
+  /// No description provided for @disableAutoSync.
+  ///
+  /// In en, this message translates to:
+  /// **'Disable Auto-Sync'**
+  String get disableAutoSync;
+
+  /// No description provided for @noSyncPairs.
+  ///
+  /// In en, this message translates to:
+  /// **'No sync pairs configured'**
+  String get noSyncPairs;
+
+  /// No description provided for @replayOffline.
+  ///
+  /// In en, this message translates to:
+  /// **'Replay Offline'**
+  String get replayOffline;
+
+  /// No description provided for @newSyncPair.
+  ///
+  /// In en, this message translates to:
+  /// **'New Sync Pair'**
+  String get newSyncPair;
+
+  /// No description provided for @cacheUsage.
+  ///
+  /// In en, this message translates to:
+  /// **'Cache Usage'**
+  String get cacheUsage;
+
+  /// No description provided for @maximumCacheSize.
+  ///
+  /// In en, this message translates to:
+  /// **'Maximum Cache Size'**
+  String get maximumCacheSize;
+
+  /// No description provided for @clearCacheConfirm.
+  ///
+  /// In en, this message translates to:
+  /// **'Remove all cached files? They will be re-downloaded when needed.'**
+  String get clearCacheConfirm;
+
+  /// No description provided for @batchRenameTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Batch Rename ({count} files)'**
+  String batchRenameTitle(int count);
+
+  /// No description provided for @findReplace.
+  ///
+  /// In en, this message translates to:
+  /// **'Find/Replace'**
+  String get findReplace;
+
+  /// No description provided for @number.
+  ///
+  /// In en, this message translates to:
+  /// **'Number'**
+  String get number;
+
+  /// No description provided for @prefixSuffix.
+  ///
+  /// In en, this message translates to:
+  /// **'Prefix/Suffix'**
+  String get prefixSuffix;
+
+  /// No description provided for @extension.
+  ///
+  /// In en, this message translates to:
+  /// **'Extension'**
+  String get extension;
+
+  /// No description provided for @duplicateFinder.
+  ///
+  /// In en, this message translates to:
+  /// **'Duplicate Finder'**
+  String get duplicateFinder;
+
+  /// No description provided for @noDuplicatesFound.
+  ///
+  /// In en, this message translates to:
+  /// **'No duplicates found!'**
+  String get noDuplicatesFound;
+
+  /// No description provided for @chooseTheme.
+  ///
+  /// In en, this message translates to:
+  /// **'Choose Theme'**
+  String get chooseTheme;
+
+  /// No description provided for @checkForUpdates.
+  ///
+  /// In en, this message translates to:
+  /// **'Check for Updates'**
+  String get checkForUpdates;
+
+  /// No description provided for @youAreUpToDate.
+  ///
+  /// In en, this message translates to:
+  /// **'You\'re up to date'**
+  String get youAreUpToDate;
+
+  /// No description provided for @updateAvailable.
+  ///
+  /// In en, this message translates to:
+  /// **'Update available'**
+  String get updateAvailable;
+
+  /// No description provided for @releaseNotes.
+  ///
+  /// In en, this message translates to:
+  /// **'Release notes'**
+  String get releaseNotes;
+
+  /// No description provided for @checkNow.
+  ///
+  /// In en, this message translates to:
+  /// **'Check Now'**
+  String get checkNow;
+
+  /// No description provided for @general.
+  ///
+  /// In en, this message translates to:
+  /// **'General'**
+  String get general;
+
+  /// No description provided for @accessibility.
+  ///
+  /// In en, this message translates to:
+  /// **'Accessibility'**
+  String get accessibility;
+
+  /// No description provided for @privacy.
+  ///
+  /// In en, this message translates to:
+  /// **'Privacy'**
+  String get privacy;
+
+  /// No description provided for @advanced.
+  ///
+  /// In en, this message translates to:
+  /// **'Advanced'**
+  String get advanced;
+
+  /// No description provided for @showFKeyButtons.
+  ///
+  /// In en, this message translates to:
+  /// **'Show F3-F8 shortcut buttons at the bottom of the screen'**
+  String get showFKeyButtons;
+
+  /// No description provided for @exportKeys.
+  ///
+  /// In en, this message translates to:
+  /// **'Export/Import Encryption Keys'**
+  String get exportKeys;
+
+  /// No description provided for @backupRecovery.
+  ///
+  /// In en, this message translates to:
+  /// **'BIP39 Mnemonic Backup and Recovery'**
+  String get backupRecovery;
+
+  /// No description provided for @noActiveOperations.
+  ///
+  /// In en, this message translates to:
+  /// **'No active operations'**
+  String get noActiveOperations;
+
+  /// No description provided for @refreshAll.
+  ///
+  /// In en, this message translates to:
+  /// **'Refresh All'**
+  String get refreshAll;
+
+  /// No description provided for @newName.
+  ///
+  /// In en, this message translates to:
+  /// **'New name'**
+  String get newName;
+
+  /// No description provided for @items.
+  ///
+  /// In en, this message translates to:
+  /// **'Items:'**
+  String get items;
+
+  /// No description provided for @andMore.
+  ///
+  /// In en, this message translates to:
+  /// **'... and {count} more'**
+  String andMore(int count);
+
+  /// No description provided for @searchPattern.
+  ///
+  /// In en, this message translates to:
+  /// **'Search Pattern'**
+  String get searchPattern;
+
+  /// No description provided for @findPattern.
+  ///
+  /// In en, this message translates to:
+  /// **'Find Pattern'**
+  String get findPattern;
+
+  /// No description provided for @searchHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Search for files...'**
+  String get searchHint;
+
+  /// No description provided for @findHint.
+  ///
+  /// In en, this message translates to:
+  /// **'e.g., *.pdf, report*'**
+  String get findHint;
+
+  /// No description provided for @noResultsFound.
+  ///
+  /// In en, this message translates to:
+  /// **'No results found'**
+  String get noResultsFound;
+
+  /// No description provided for @size.
+  ///
+  /// In en, this message translates to:
+  /// **'Size'**
+  String get size;
+
+  /// No description provided for @date.
+  ///
+  /// In en, this message translates to:
+  /// **'Date'**
+  String get date;
+
+  /// No description provided for @name.
+  ///
+  /// In en, this message translates to:
+  /// **'Name'**
+  String get name;
+
+  /// No description provided for @type.
+  ///
+  /// In en, this message translates to:
+  /// **'Type'**
+  String get type;
+
+  /// No description provided for @created.
+  ///
+  /// In en, this message translates to:
+  /// **'Created'**
+  String get created;
+
+  /// No description provided for @accessed.
+  ///
+  /// In en, this message translates to:
+  /// **'Accessed'**
+  String get accessed;
+
+  /// No description provided for @computeMd5.
+  ///
+  /// In en, this message translates to:
+  /// **'Compute MD5'**
+  String get computeMd5;
+
+  /// No description provided for @protocol.
+  ///
+  /// In en, this message translates to:
+  /// **'Protocol'**
+  String get protocol;
 }
 
 class _AppLocalizationsDelegate

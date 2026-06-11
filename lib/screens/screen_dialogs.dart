@@ -17,6 +17,7 @@ import '../widgets/b2_connection_dialog.dart';
 import '../widgets/connection_dialog.dart';
 import '../widgets/file_editor_dialog.dart' show showFileEditorDialog;
 import '../widgets/preview_pane.dart' show PreviewPane;
+import '../l10n/app_localizations.dart';
 
 void showConnectionDialogScreen(BuildContext context) {
   showDialog(
@@ -50,7 +51,7 @@ void confirmLogoutRiverpod(BuildContext context, WidgetRef ref) {
       actions: [
         TextButton(
           onPressed: () => Navigator.pop(context),
-          child: const Text('Cancel'),
+          child: Text(AppLocalizations.of(context)!.cancel),
         ),
         ElevatedButton(
           onPressed: () async {
@@ -195,7 +196,7 @@ void confirmDeleteSelected(BuildContext context, WidgetRef ref) {
       title: const Text('Confirm Delete'),
       content: Text('Delete ${panel.selection.length} item(s)?'),
       actions: [
-        TextButton(onPressed: () => Navigator.pop(context), child: const Text('Cancel')),
+        TextButton(onPressed: () => Navigator.pop(context), child: Text(AppLocalizations.of(context)!.cancel)),
         ElevatedButton(
           onPressed: () async {
             final files = panel.selection.toList();
@@ -250,7 +251,7 @@ void showRenameDialog(BuildContext context, WidgetRef ref) {
         onSubmitted: doRename,
       ),
       actions: [
-        TextButton(onPressed: () => Navigator.pop(context), child: const Text('Cancel')),
+        TextButton(onPressed: () => Navigator.pop(context), child: Text(AppLocalizations.of(context)!.cancel)),
         ElevatedButton(
           onPressed: () => doRename(controller.text),
           child: const Text('Rename'),
@@ -382,7 +383,7 @@ void _showPathDialog(
         onSubmitted: doAction,
       ),
       actions: [
-        TextButton(onPressed: () => Navigator.pop(context), child: const Text('Cancel')),
+        TextButton(onPressed: () => Navigator.pop(context), child: Text(AppLocalizations.of(context)!.cancel)),
         ElevatedButton(
           onPressed: () => doAction(controller.text),
           child: Text(operation),
@@ -417,7 +418,7 @@ void showCreateFolderDialog(BuildContext context, WidgetRef ref, PanelSide side)
         onSubmitted: doCreate,
       ),
       actions: [
-        TextButton(onPressed: () => Navigator.pop(context), child: const Text('Cancel')),
+        TextButton(onPressed: () => Navigator.pop(context), child: Text(AppLocalizations.of(context)!.cancel)),
         ElevatedButton(
           onPressed: () => doCreate(controller.text),
           child: const Text('Create'),
@@ -449,7 +450,7 @@ void showReceivedFilesDialog(BuildContext context, List<String> files) {
         ],
       ),
       actions: [
-        TextButton(onPressed: () => Navigator.pop(context), child: const Text('Cancel')),
+        TextButton(onPressed: () => Navigator.pop(context), child: Text(AppLocalizations.of(context)!.cancel)),
         ElevatedButton(
           onPressed: () {
             // Will be wired when receive service is connected to Riverpod
@@ -487,7 +488,7 @@ void showGoToDialog(BuildContext context, WidgetRef ref) {
         },
       ),
       actions: [
-        TextButton(onPressed: () => Navigator.pop(ctx), child: const Text('Cancel')),
+        TextButton(onPressed: () => Navigator.pop(ctx), child: Text(AppLocalizations.of(context)!.cancel)),
         ElevatedButton(
           onPressed: () {
             if (controller.text.isNotEmpty) {

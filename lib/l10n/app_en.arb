@@ -380,5 +380,156 @@
   "saveFailed": "Save failed: {error}",
   "@saveFailed": {
     "placeholders": { "error": { "type": "String" } }
-  }
+  },
+
+  "unsavedChanges": "Unsaved Changes",
+  "discardChanges": "You have unsaved changes. Discard them?",
+  "discard": "Discard",
+  "saveShortcut": "Save (Ctrl+S)",
+  "fileModifiedOnServer": "This file was modified on the server since you opened it.",
+  "saveAnyway": "Save Anyway",
+  "reload": "Reload",
+
+  "saveProfile": "Save Profile",
+  "profileName": "Profile Name",
+  "profileNameHint": "e.g., Work S3, Personal SFTP",
+  "profileSaved": "Profile \"{name}\" saved",
+  "@profileSaved": {
+    "placeholders": { "name": { "type": "String" } }
+  },
+  "connectToCloudStorage": "Connect to Cloud Storage",
+  "savedProfiles": "Saved Profiles",
+  "loadProfile": "Load a saved profile...",
+  "deleteProfile": "Delete Profile",
+  "saveAsProfile": "Save as Profile",
+  "enableEncryption": "Enable Client-Side Encryption",
+  "encryptBeforeUpload": "Encrypt files before upload (AES-256-GCM)",
+  "encryptionPassphrase": "Encryption Passphrase",
+
+  "appLocked": "CrispCloud is Locked",
+  "enterPinToContinue": "Enter your PIN or password to continue",
+  "pinPassword": "PIN / Password",
+  "incorrectPin": "Incorrect PIN or password",
+  "tooManyAttempts": "Too many failed attempts. Restart the app to try again.",
+  "attemptsRemaining": "{count} attempts remaining",
+  "@attemptsRemaining": {
+    "placeholders": { "count": { "type": "int" } }
+  },
+  "appLockSetup": "Set Up App Lock",
+  "changeAppLockCode": "Change App Lock",
+  "currentPin": "Current PIN / Password",
+  "newPin": "New PIN / Password",
+  "confirmPin": "Confirm PIN / Password",
+  "minFourChars": "Minimum 4 characters",
+  "codesDoNotMatch": "Codes do not match",
+  "autoLockAfter": "Auto-lock after",
+  "immediately": "Immediately",
+  "oneMinute": "1 minute",
+  "fiveMinutes": "5 minutes",
+  "fifteenMinutes": "15 minutes",
+  "thirtyMinutes": "30 minutes",
+  "oneHour": "1 hour",
+
+  "connectToHetzner": "Connect to Hetzner Storage Box",
+  "sftpPort23": "SFTP (port 23)",
+  "webdavHttps": "WebDAV (HTTPS)",
+  "testConnection": "Test Connection",
+  "connectionSuccessful": "Connection successful",
+  "testFailed": "Test failed: {error}",
+  "@testFailed": {
+    "placeholders": { "error": { "type": "String" } }
+  },
+
+  "connectToAzure": "Connect to Azure Blob Storage",
+  "authenticationMode": "Authentication Mode",
+  "accountName": "Account Name",
+  "container": "Container",
+  "sasUrl": "SAS URL",
+  "sasToken": "SAS Token",
+
+  "connectToB2": "Connect to Backblaze B2",
+  "applicationKeyId": "Application Key ID",
+  "applicationKey": "Application Key",
+  "bucketNameOptional": "Bucket Name (optional)",
+
+  "mount": "Mount",
+  "unmount": "Unmount",
+  "displayName": "Display Name",
+  "localMountPoint": "Local Mount Point",
+  "newMount": "New Mount",
+  "noMountsConfigured": "No mounts configured",
+  "fuseDesktopOnly": "FUSE mounts are only available on macOS, Linux, and Windows desktop.",
+
+  "multiCloud": "Multi-Cloud",
+  "connections": "Connections",
+  "transfer": "Transfer",
+  "compareAndSearch": "Compare & Search",
+  "noConnectionsYet": "No connections registered yet.",
+  "startTransfer": "Start Transfer",
+
+  "syncPairs": "Sync Pairs",
+  "enableAutoSync": "Enable Auto-Sync",
+  "disableAutoSync": "Disable Auto-Sync",
+  "noSyncPairs": "No sync pairs configured",
+  "replayOffline": "Replay Offline",
+  "newSyncPair": "New Sync Pair",
+
+  "cacheUsage": "Cache Usage",
+  "maximumCacheSize": "Maximum Cache Size",
+  "clearCacheConfirm": "Remove all cached files? They will be re-downloaded when needed.",
+
+  "batchRenameTitle": "Batch Rename ({count} files)",
+  "@batchRenameTitle": {
+    "placeholders": { "count": { "type": "int" } }
+  },
+  "findReplace": "Find/Replace",
+  "number": "Number",
+  "prefixSuffix": "Prefix/Suffix",
+  "extension": "Extension",
+
+  "duplicateFinder": "Duplicate Finder",
+  "noDuplicatesFound": "No duplicates found!",
+
+  "chooseTheme": "Choose Theme",
+
+  "checkForUpdates": "Check for Updates",
+  "youAreUpToDate": "You're up to date",
+  "updateAvailable": "Update available",
+  "releaseNotes": "Release notes",
+  "checkNow": "Check Now",
+
+  "general": "General",
+  "accessibility": "Accessibility",
+  "privacy": "Privacy",
+  "advanced": "Advanced",
+  "showFKeyButtons": "Show F3-F8 shortcut buttons at the bottom of the screen",
+
+  "exportKeys": "Export/Import Encryption Keys",
+  "backupRecovery": "BIP39 Mnemonic Backup and Recovery",
+
+  "noActiveOperations": "No active operations",
+  "refreshAll": "Refresh All",
+
+  "newName": "New name",
+  "items": "Items:",
+  "andMore": "... and {count} more",
+  "@andMore": {
+    "placeholders": { "count": { "type": "int" } }
+  },
+
+  "searchPattern": "Search Pattern",
+  "findPattern": "Find Pattern",
+  "searchHint": "Search for files...",
+  "findHint": "e.g., *.pdf, report*",
+  "noResultsFound": "No results found",
+
+  "size": "Size",
+  "date": "Date",
+  "name": "Name",
+  "type": "Type",
+  "created": "Created",
+  "accessed": "Accessed",
+  "computeMd5": "Compute MD5",
+
+  "protocol": "Protocol"
 }

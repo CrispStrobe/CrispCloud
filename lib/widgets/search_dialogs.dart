@@ -13,6 +13,7 @@ import '../providers/providers.dart';
 import 'file_list_view.dart' show getFileIcon;
 import 'saved_searches_dialog.dart'
     show showSavedSearchesDialog, showSaveSearchDialog;
+import '../l10n/app_localizations.dart';
 
 // ---------------------------------------------------------------------------
 // Public API
@@ -48,7 +49,7 @@ void showSearchDialog(BuildContext context, WidgetRef ref) {
       actions: [
         TextButton(
           onPressed: () => Navigator.pop(dialogContext),
-          child: const Text('Cancel'),
+          child: Text(AppLocalizations.of(context)!.cancel),
         ),
         ElevatedButton(
           onPressed: () async {
@@ -62,7 +63,7 @@ void showSearchDialog(BuildContext context, WidgetRef ref) {
               }
             }
           },
-          child: const Text('Search'),
+          child: Text(AppLocalizations.of(context)!.search),
         ),
       ],
     ),
@@ -150,7 +151,7 @@ void showSearchResultsDialog(BuildContext context, WidgetRef ref,
           ),
         TextButton(
           onPressed: () => Navigator.pop(ctx),
-          child: const Text('Close'),
+          child: Text(AppLocalizations.of(context)!.close),
         ),
       ],
     ),
@@ -514,7 +515,7 @@ class _FindDialogState extends State<_FindDialog> {
         ),
         TextButton(
           onPressed: () => Navigator.pop(context),
-          child: const Text('Cancel'),
+          child: Text(AppLocalizations.of(context)!.cancel),
         ),
         ElevatedButton(
           onPressed: _doFind,

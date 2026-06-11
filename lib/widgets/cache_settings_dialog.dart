@@ -8,6 +8,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../providers/providers.dart';
 import '../utils/formatters.dart' as fmt;
+import '../l10n/app_localizations.dart';
 
 void showCacheSettingsDialog(BuildContext context, WidgetRef ref) {
   showDialog(
@@ -49,11 +50,11 @@ class _CacheSettingsDialogState extends ConsumerState<_CacheSettingsDialog> {
         title: const Text('Clear Cache'),
         content: const Text('Remove all cached files? They will be re-downloaded when needed.'),
         actions: [
-          TextButton(onPressed: () => Navigator.pop(ctx, false), child: const Text('Cancel')),
+          TextButton(onPressed: () => Navigator.pop(ctx, false), child: Text(AppLocalizations.of(context)!.cancel)),
           TextButton(
             onPressed: () => Navigator.pop(ctx, true),
             style: TextButton.styleFrom(foregroundColor: Theme.of(ctx).colorScheme.error),
-            child: const Text('Clear'),
+            child: Text(AppLocalizations.of(context)!.clear),
           ),
         ],
       ),
@@ -151,7 +152,7 @@ class _CacheSettingsDialogState extends ConsumerState<_CacheSettingsDialog> {
         ),
         TextButton(
           onPressed: () => Navigator.pop(context),
-          child: const Text('Close'),
+          child: Text(AppLocalizations.of(context)!.close),
         ),
       ],
     );

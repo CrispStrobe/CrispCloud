@@ -11,6 +11,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../models/file_item.dart';
 import '../models/panel_side.dart';
 import '../providers/providers.dart';
+import '../l10n/app_localizations.dart';
 
 enum RenameMode { findReplace, numbering, prefixSuffix, extension }
 
@@ -194,7 +195,7 @@ class _BatchRenameDialogState extends ConsumerState<BatchRenameDialog> {
       actions: [
         TextButton(
           onPressed: () => Navigator.pop(context),
-          child: const Text('Cancel'),
+          child: Text(AppLocalizations.of(context)!.cancel),
         ),
         ElevatedButton(
           onPressed: _isProcessing ? null : _executeRename,

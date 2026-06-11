@@ -11,6 +11,7 @@ import '../services/s3_client_adapter.dart';
 import 'azure_connection_dialog.dart';
 import 'b2_connection_dialog.dart';
 import 'proxy_settings_dialog.dart';
+import '../l10n/app_localizations.dart';
 
 class ConnectionDialog extends ConsumerStatefulWidget {
   const ConnectionDialog({super.key});
@@ -191,7 +192,7 @@ class _ConnectionDialogState extends ConsumerState<ConnectionDialog> {
     final name = await showDialog<String>(
       context: context,
       builder: (ctx) => AlertDialog(
-        title: const Text('Save Profile'),
+        title: Text(AppLocalizations.of(context)!.saveProfile),
         content: TextField(
           controller: nameController,
           decoration: const InputDecoration(
@@ -203,10 +204,10 @@ class _ConnectionDialogState extends ConsumerState<ConnectionDialog> {
           onSubmitted: (v) => Navigator.pop(ctx, v),
         ),
         actions: [
-          TextButton(onPressed: () => Navigator.pop(ctx), child: const Text('Cancel')),
+          TextButton(onPressed: () => Navigator.pop(ctx), child: Text(AppLocalizations.of(context)!.cancel)),
           ElevatedButton(
             onPressed: () => Navigator.pop(ctx, nameController.text),
-            child: const Text('Save'),
+            child: Text(AppLocalizations.of(context)!.save),
           ),
         ],
       ),
@@ -393,7 +394,7 @@ class _ConnectionDialogState extends ConsumerState<ConnectionDialog> {
                               ),
                             )).toList(),
                           ),
-                          actions: [TextButton(onPressed: () => Navigator.pop(ctx), child: const Text('Cancel'))],
+                          actions: [TextButton(onPressed: () => Navigator.pop(ctx), child: Text(AppLocalizations.of(context)!.cancel))],
                         ),
                       );
                       if (name != null) {
@@ -1008,7 +1009,7 @@ class _ConnectionDialogState extends ConsumerState<ConnectionDialog> {
       actions: [
         TextButton(
           onPressed: _isLoading ? null : () => Navigator.pop(context),
-          child: const Text('Cancel'),
+          child: Text(AppLocalizations.of(context)!.cancel),
         ),
         ElevatedButton(
           onPressed: _isLoading ? null : _handleLogin,

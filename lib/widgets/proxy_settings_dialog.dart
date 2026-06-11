@@ -12,6 +12,7 @@ import '../main.dart' show certPinningProvider;
 import '../providers/core_providers.dart';
 import '../services/cert_pinning_service.dart';
 import '../services/proxy_service.dart';
+import '../l10n/app_localizations.dart';
 
 class ProxySettingsDialog extends ConsumerStatefulWidget {
   const ProxySettingsDialog({super.key});
@@ -49,7 +50,7 @@ class _ProxySettingsDialogState extends ConsumerState<ProxySettingsDialog> {
   @override
   Widget build(BuildContext context) {
     return AlertDialog(
-      title: const Text('Proxy Settings'),
+      title: Text(AppLocalizations.of(context)!.proxySettings),
       scrollable: true,
       content: SizedBox(
         width: 380,
@@ -267,15 +268,15 @@ class _ProxySettingsDialogState extends ConsumerState<ProxySettingsDialog> {
               if (!context.mounted) return;
               Navigator.pop(context, true);
             },
-            child: const Text('Reset'),
+            child: Text(AppLocalizations.of(context)!.refresh),
           ),
         TextButton(
           onPressed: () => Navigator.pop(context, false),
-          child: const Text('Cancel'),
+          child: Text(AppLocalizations.of(context)!.cancel),
         ),
         ElevatedButton(
           onPressed: _save,
-          child: const Text('Save'),
+          child: Text(AppLocalizations.of(context)!.save),
         ),
       ],
     );

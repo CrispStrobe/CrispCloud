@@ -18,6 +18,7 @@ import '../services/onedrive_client_adapter.dart';
 import '../services/log_service.dart';
 import '../utils/formatters.dart';
 import 'diff_viewer_dialog.dart';
+import '../l10n/app_localizations.dart';
 
 void showVersionHistoryDialog(BuildContext context, WidgetRef ref, FileItem file) {
   showDialog(
@@ -442,7 +443,7 @@ class _VersionHistoryDialogState extends ConsumerState<_VersionHistoryDialog> {
                       ),
       ),
       actions: [
-        TextButton(onPressed: () => Navigator.pop(context), child: const Text('Close')),
+        TextButton(onPressed: () => Navigator.pop(context), child: Text(AppLocalizations.of(context)!.close)),
       ],
     );
   }

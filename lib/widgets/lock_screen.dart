@@ -5,6 +5,7 @@
 import 'package:flutter/material.dart';
 
 import '../services/app_lock_service.dart';
+import '../l10n/app_localizations.dart';
 
 class LockScreen extends StatefulWidget {
   final AppLockService lockService;
@@ -382,11 +383,11 @@ class _AppLockSetupDialogState extends State<AppLockSetupDialog> {
       actions: [
         TextButton(
           onPressed: () => Navigator.pop(context, false),
-          child: const Text('Cancel'),
+          child: Text(AppLocalizations.of(context)!.cancel),
         ),
         ElevatedButton(
           onPressed: _save,
-          child: const Text('Save'),
+          child: Text(AppLocalizations.of(context)!.save),
         ),
       ],
     );
