@@ -2,6 +2,26 @@
 
 Audit trail of bugs found, issues discovered, and fixes applied.
 
+## 2026-06-11 — Session 14 continued: i18n, language selector, improvements
+
+### Full i18n (EN + DE)
+- Added ~256 localized strings across 28 widget/screen files
+- Covers all buttons (Cancel, Close, Save, Delete, Connect, Rename), dialog titles, tooltips, status bar, preview pane, context menu, toolbar, about dialog, log viewer, tree sidebar
+- 9 languages supported: EN, DE, FR, ES, PT, ZH, JA, KO, AR (DE fully translated, others fallback to EN)
+- Language selector added to overflow menu — switch language without restarting
+
+### Error Handling
+- Rename/delete/upload operations now show localized error snackbars on failure
+- Drag-drop upload wrapped in try/catch
+
+### Accessibility
+- Missing tooltips added to folder chevron and editor close button
+
+### CI
+- GitHub Actions upgraded to actions/checkout@v5 + actions/cache@v5
+- FORCE_JAVASCRIPT_ACTIONS_TO_NODE24 enabled
+- Build size guard: rejects deploys under 1MB
+
 ## 2026-06-10 — Session 14: Web UX overhaul, preview engine, layout toggles, Vercel fix
 
 ### Vercel Deploy Fix
