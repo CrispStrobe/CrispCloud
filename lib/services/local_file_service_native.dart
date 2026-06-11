@@ -159,6 +159,15 @@ class MacosFileService implements LocalFileService {
   }
 
   @override
+  Future<void> deleteEntry(String path, bool isFolder) async {
+    if (isFolder) {
+      await Directory(path).delete(recursive: true);
+    } else {
+      await File(path).delete();
+    }
+  }
+
+  @override
   Future<String> getSafeFallbackDirectory() async {
     return Platform.environment['HOME'] ?? '/';
   }
@@ -230,6 +239,15 @@ class DesktopFileService implements LocalFileService {
 
   @override
   Future<bool> hasAccessToPath(String path) async => true;
+
+  @override
+  Future<void> deleteEntry(String path, bool isFolder) async {
+    if (isFolder) {
+      await Directory(path).delete(recursive: true);
+    } else {
+      await File(path).delete();
+    }
+  }
 
   @override
   Future<String> getSafeFallbackDirectory() async {
@@ -396,6 +414,15 @@ class MobileFileService implements LocalFileService {
       return true;
     } catch (e) {
       return false;
+    }
+  }
+
+  @override
+  Future<void> deleteEntry(String path, bool isFolder) async {
+    if (isFolder) {
+      await Directory(path).delete(recursive: true);
+    } else {
+      await File(path).delete();
     }
   }
 
