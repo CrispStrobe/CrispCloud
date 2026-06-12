@@ -1063,9 +1063,9 @@ class PanelNotifier extends ChangeNotifier {
           await _localFileService.saveFile(computedNewPath, bytes);
           await _localFileService.deleteEntry(oldPath, false);
         } else {
-          // Folder rename: create new, can't easily move contents on web
-          await _localFileService.createDirectory(computedNewPath);
-          // Note: contents not moved — FSA has no native rename for directories
+          // Folder rename on web: recursive copy to new name, delete old
+          await _copyDirectoryWeb(oldPath, computedNewPath);
+          await _localFileService.deleteEntry(oldPath, true);
         }
       } else if (isLocalSource) {
         computedNewPath = p.join(p.dirname(file.path!), newName);
@@ -1167,8 +1167,8 @@ class PanelNotifier extends ChangeNotifier {
             await _localFileService.saveFile(movedToPath, bytes);
             await _localFileService.deleteEntry(file.path!, false);
           } else if (file.path != null && file.isFolder) {
-            // Folder move not yet supported on web — would need recursive copy+delete
-            throw UnsupportedError('Folder move not yet supported on web');
+            await _copyDirectoryWeb(file.path!, movedToPath);
+            await _localFileService.deleteEntry(file.path!, true);
           }
         } else if (isLocalSource) {
           movedToPath = p.join(targetPath, file.name);
@@ -1292,7 +1292,10 @@ class PanelNotifier extends ChangeNotifier {
   }
 
   Future<void> _copyDirectory(String source, String target) async {
-    if (kIsWeb) return;
+    if (kIsWeb) {
+      await _copyDirectoryWeb(source, target);
+      return;
+    }
     await Directory(target).create(recursive: true);
     final entities = await Directory(source).list().toList();
     for (final entity in entities) {
@@ -1300,6 +1303,22 @@ class PanelNotifier extends ChangeNotifier {
         await entity.copy(p.join(target, p.basename(entity.path)));
       } else if (entity is Directory) {
         await _copyDirectory(entity.path, p.join(target, p.basename(entity.path)));
+      }
+    }
+  }
+
+  /// Recursively copy a directory on web using the virtual filesystem.
+  Future<void> _copyDirectoryWeb(String source, String target) async {
+    await _localFileService.createDirectory(target);
+    final entities = await _localFileService.listDirectory(source);
+    if (entities == null) return;
+    for (final entity in entities) {
+      final name = p.posix.basename(entity.path);
+      if (entity is Directory) {
+        await _copyDirectoryWeb(entity.path, p.posix.join(target, name));
+      } else {
+        final bytes = await _localFileService.readFile(entity.path);
+        await _localFileService.saveFile(p.posix.join(target, name), bytes);
       }
     }
   }

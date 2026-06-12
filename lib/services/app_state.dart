@@ -72,6 +72,8 @@ class AppState extends ChangeNotifier {
   PanelSide _activePanel = PanelSide.local;
 
   String _remotePath = '/';
+  // Per-instance local path — avoids sharing _localPath
+  String _localPath = '/';
 
   List<FileItem>? _localFiles;
   List<FileItem>? _remoteFiles;
@@ -126,7 +128,7 @@ class AppState extends ChangeNotifier {
   void _initTabs() {
     if (_localTabs.isEmpty) {
       final id = _nextTabId();
-      _localTabs.add(PanelTab(id: id, path: _localFileService.currentPath));
+      _localTabs.add(PanelTab(id: id, path: _localPath));
       _activeLocalTabId = id;
     }
     if (_remoteTabs.isEmpty) {
@@ -174,7 +176,7 @@ class AppState extends ChangeNotifier {
       _activeLocalTabId = tabId;
       final tab = activeLocalTab;
       if (tab != null) {
-        _localFileService.currentPath = tab.path;
+        _localPath = tab.path;
       }
     } else {
       _activeRemoteTabId = tabId;
@@ -342,12 +344,12 @@ class AppState extends ChangeNotifier {
       debugPrint('📂 Opening directory picker...');
       
       final selectedDirectory = await _localFileService.requestDirectoryAccess(
-        initialDirectory: _localFileService.currentPath,
+        initialDirectory: _localPath,
       );
       
       if (selectedDirectory != null) {
         debugPrint('📁 User selected: $selectedDirectory');
-        _localFileService.currentPath = selectedDirectory;
+        _localPath = selectedDirectory;
         await _loadLocalFiles();
         notifyListeners();
       } else {
@@ -576,7 +578,7 @@ class AppState extends ChangeNotifier {
       }
     } catch (e) {
       debugPrint('❌ Error initializing local path: $e');
-      _localFileService.currentPath = await _localFileService.getSafeFallbackDirectory();
+      _localPath = await _localFileService.getSafeFallbackDirectory();
       _errors.add(AppError(e.toString()));
       notifyListeners();
     }
@@ -595,7 +597,7 @@ class AppState extends ChangeNotifier {
       await _loadLocalFiles();
       notifyListeners();
     } else {
-      _localFileService.currentPath = await _localFileService.getSafeFallbackDirectory();
+      _localPath = await _localFileService.getSafeFallbackDirectory();
       _errors.add(AppError('Access cancelled. Using fallback directory.'));
       await _loadLocalFiles(); 
       notifyListeners();
@@ -800,7 +802,7 @@ class AppState extends ChangeNotifier {
   bool get isConnected => _isConnected;
   String? get userEmail => _userEmail;
   PanelSide get activePanel => _activePanel;
-  String get localPath => _localFileService.currentPath;
+  String get localPath => _localPath;
   String get remotePath => _remotePath;
   List<FileItem>? get localFileItems => _localFiles;
   List<FileItem>? get remoteFiles => _remoteFiles;
@@ -1049,7 +1051,7 @@ class AppState extends ChangeNotifier {
          return;
       }
       
-      _localFileService.currentPath = path; 
+      _localPath = path; 
       await _loadLocalFiles();
       
       if (selectItem != null && _localFiles != null) {
@@ -1291,7 +1293,7 @@ class AppState extends ChangeNotifier {
     debugPrint('⬇️ DOWNLOAD: ${files.length} files via ${_cloudClient.providerName}');
 
     await _ensureAuthenticated();
-    final target = localPath ?? _localFileService.currentPath;
+    final target = localPath ?? _localPath;
 
     final fileProgresses = files
         .map((f) => FileProgress(name: f.name, path: f.uuid ?? f.name, size: f.size ?? 0))
