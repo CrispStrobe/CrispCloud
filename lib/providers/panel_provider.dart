@@ -109,6 +109,10 @@ class PanelNotifier extends ChangeNotifier {
   int? _freeBytes;
   int? get freeBytes => _freeBytes;
 
+  // Per-panel local path — avoids sharing the singleton _localFileService.currentPath
+  // between two panels on web.
+  String _localPath = '/';
+
   PanelNotifier(this._ref, this.side)
       : _localFileService = _ref.read(localFileServiceProvider) {
     _restoreTabs();
@@ -132,7 +136,7 @@ class PanelNotifier extends ChangeNotifier {
       if (prev == next) return;
       _log.info('Source switched: ${prev?.displayName} → ${next.displayName} (path=${next.currentPath})');
       if (next.isLocal) {
-        _localFileService.currentPath = next.currentPath;
+        _localPath = next.currentPath;
         _loadLocalFiles();
       } else if (next.isRemote) {
         _remotePath = next.currentPath;
@@ -256,13 +260,14 @@ class PanelNotifier extends ChangeNotifier {
     _lastSelected = null;
     if (_isTypeahead) { _filterQuery = ''; _isTypeahead = false; }
     if (side == PanelSide.local) {
-      _localFileService.currentPath = path;
+      _localPath = path;
       await _loadLocalFiles();
     } else {
       _remotePath = path;
       if (_ref.read(authProvider).isConnected) {
         await _loadRemoteFiles();
       } else {
+        _localPath = path;
         await _loadLocalFiles();
       }
     }
@@ -449,11 +454,11 @@ class PanelNotifier extends ChangeNotifier {
     if (isInArchive) {
       return '${_archiveSource!.archiveName}:/${_archiveSource!.innerPath}';
     }
-    // Check the panel source — if it's local, use the local file service path
-    // regardless of which side this panel is on.
+    // Check the panel source — if it's local, use the per-panel _localPath
+    // (not the shared singleton _localFileService.currentPath).
     final source = _ref.read(panelSourceProvider(side));
-    if (source.isLocal) return _localFileService.currentPath;
-    if (side == PanelSide.local) return _localFileService.currentPath;
+    if (source.isLocal) return _localPath;
+    if (side == PanelSide.local) return _localPath;
     return _remotePath;
   }
   String _remotePath = '/';
@@ -804,11 +809,14 @@ class PanelNotifier extends ChangeNotifier {
       } else if (_isFlatView) {
         await _loadFlatFiles();
       } else if (side == PanelSide.local) {
+        _localFileService.currentPath = _localPath;
         await _localFileService.refresh();
         await _loadLocalFiles();
       } else if (_ref.read(authProvider).isConnected) {
         await _loadRemoteFiles();
       } else {
+        _localFileService.currentPath = _localPath;
+        await _localFileService.refresh();
         await _loadLocalFiles();
       }
     });
@@ -868,13 +876,14 @@ class PanelNotifier extends ChangeNotifier {
       } else if (kIsWeb && !await _localFileService.hasAccessToPath(path)) {
         return;
       }
-      _localFileService.currentPath = path;
+      _localPath = path;
       await _loadLocalFiles();
     } else {
       _remotePath = path;
       if (_ref.read(authProvider).isConnected) {
         await _loadRemoteFiles();
       } else {
+        _localPath = path;
         await _loadLocalFiles();
       }
     }
@@ -927,10 +936,10 @@ class PanelNotifier extends ChangeNotifier {
     _log.info('pickLocalDirectory (web=$kIsWeb)');
     try {
       final dir = await _localFileService.requestDirectoryAccess(
-        initialDirectory: _localFileService.currentPath,
+        initialDirectory: _localPath,
       );
       if (dir != null) {
-        _localFileService.currentPath = dir;
+        _localPath = dir;
         await _loadLocalFiles();
         notifyListeners();
       }
@@ -1185,20 +1194,21 @@ class PanelNotifier extends ChangeNotifier {
     _log.info('copyFiles: ${files.length} items → $targetPath (web=$kIsWeb, side=$side)');
     final audit = _ref.read(auditServiceProvider);
     final actionHistory = _ref.read(actionHistoryProvider.notifier);
-    final providerName = side == PanelSide.local ? 'local' : _ref.read(authProvider).client.providerName;
+    final isLocalSource = _ref.read(panelSourceProvider(side)).isLocal || side == PanelSide.local;
+    final providerName = isLocalSource ? 'local' : _ref.read(authProvider).client.providerName;
     try {
       for (final file in files) {
         final src = file.path ?? p.posix.join(_remotePath, file.name);
         // copyPath is the new file that was created — used for undo (delete the copy)
         final String copyPath;
-        if (side == PanelSide.local && kIsWeb) {
-          // Web: copy within virtual filesystem or download
+        if (isLocalSource && kIsWeb) {
+          // Web: copy within virtual filesystem
           copyPath = p.posix.join(targetPath, file.name);
           if (file.path != null) {
             final bytes = await _localFileService.readFile(file.path!, fileItem: file);
             await _localFileService.saveFile(copyPath, bytes);
           }
-        } else if (side == PanelSide.local) {
+        } else if (isLocalSource) {
           copyPath = p.join(targetPath, file.name);
           if (file.isFolder) {
             await _copyDirectory(file.path!, copyPath);
@@ -1274,7 +1284,7 @@ class PanelNotifier extends ChangeNotifier {
 
   void _initFirstTab() {
     final id = _nextTabId();
-    final path = side == PanelSide.local ? _localFileService.currentPath : _remotePath;
+    final path = side == PanelSide.local ? _localPath : _remotePath;
     _tabs.add(PanelTab(id: id, path: path));
     _activeTabId = id;
   }
@@ -1304,10 +1314,10 @@ class PanelNotifier extends ChangeNotifier {
           final savedActiveIdx = prefs.getInt('${_tabStorageKey}_active') ?? 0;
           _activeTabId = _tabs[savedActiveIdx.clamp(0, _tabs.length - 1)].id;
 
-          // Sync local file service to restored path
+          // Sync local path to restored tab
           if (side == PanelSide.local) {
             final tab = activeTab;
-            if (tab != null) _localFileService.currentPath = tab.path;
+            if (tab != null) _localPath = tab.path;
           } else {
             final tab = activeTab;
             if (tab != null) _remotePath = tab.path;
@@ -1374,7 +1384,7 @@ class PanelNotifier extends ChangeNotifier {
     final tab = activeTab;
     if (tab != null) {
       if (side == PanelSide.local) {
-        _localFileService.currentPath = tab.path;
+        _localPath = tab.path;
       } else {
         _remotePath = tab.path;
       }
@@ -1435,9 +1445,10 @@ class PanelNotifier extends ChangeNotifier {
           initialDirectory: await _localFileService.getSafeFallbackDirectory(),
         );
         if (grantedPath != null) {
+          _localPath = grantedPath;
           _ref.read(errorProvider).clearErrors();
         } else {
-          _localFileService.currentPath = await _localFileService.getSafeFallbackDirectory();
+          _localPath = await _localFileService.getSafeFallbackDirectory();
           _ref.read(errorProvider).clearErrors();
           _ref.read(errorProvider).addError('Access cancelled. Using fallback directory.');
         }
@@ -1447,7 +1458,7 @@ class PanelNotifier extends ChangeNotifier {
       notifyListeners();
     } catch (e) {
       _log.warn('operation failed', e);
-      _localFileService.currentPath = await _localFileService.getSafeFallbackDirectory();
+      _localPath = await _localFileService.getSafeFallbackDirectory();
       _ref.read(errorProvider).addError(e.toString());
       notifyListeners();
     }

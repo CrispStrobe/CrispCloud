@@ -28,8 +28,8 @@ class WebFileService implements LocalFileService {
   // Stores actual file references: Key='/Photos/img.jpg', Value=FileObject
   static final Map<String, html.File> _fileRefs = {};
 
-  // File System Access API Handle (Chrome/Edge only)
-  static dynamic _rootDirHandle;
+  // File System Access API Handles (Chrome/Edge only) — one per opened root folder.
+  static final Map<String, dynamic> _rootHandles = {};
 
   @override
   String currentPath = '/';
@@ -53,14 +53,10 @@ class WebFileService implements LocalFileService {
   @override
   Future<String?> requestDirectoryAccess({String? initialDirectory}) async {
     _log.debug('requestDirectoryAccess: initial=$initialDirectory');
-    // 1. Reset State completely so we can "Redo" selection
-    _virtualTree.clear();
-    _fileRefs.clear();
-    _dirHandles.clear();
-    _rootDirHandle = null;
-
-    // Initialize Root in virtual tree so navigation to '/' works
-    _virtualTree['/'] = [];
+    // Ensure root listing exists (idempotent — don't clear other roots' data).
+    if (!_virtualTree.containsKey('/')) {
+      _virtualTree['/'] = [];
+    }
 
     // 2. Try File System Access API (Chrome/Edge/Opera — skip on Safari)
     final userAgent = html.window.navigator.userAgent;
@@ -73,16 +69,23 @@ class WebFileService implements LocalFileService {
         js_util.setProperty(opts, 'mode', 'readwrite');
 
         final promise = js_util.callMethod(html.window, 'showDirectoryPicker', [opts]);
-        _rootDirHandle = await js_util.promiseToFuture(promise);
+        final dirHandle = await js_util.promiseToFuture(promise);
 
-        final rootName = _sanitizeFsaName(js_util.getProperty(_rootDirHandle, 'name') as String);
+        final rootName = _sanitizeFsaName(js_util.getProperty(dirHandle, 'name') as String);
         debugPrint("[Web] Got handle for folder: $rootName");
 
-        // Add the root folder itself to the top-level listing
-        _virtualTree['/']!.add(Directory('/$rootName'));
+        // If this root was already opened, clear its stale children so they reload fresh.
+        _clearSubtree('/$rootName');
+
+        _rootHandles['/$rootName'] = dirHandle;
+
+        // Add the root folder to top-level listing (if not already there).
+        if (!_virtualTree['/']!.any((e) => e.path == '/$rootName')) {
+          _virtualTree['/']!.add(Directory('/$rootName'));
+        }
 
         // Load only the immediate children (lazy — no deep recursion).
-        await _loadDirectChildren(_rootDirHandle, '/$rootName');
+        await _loadDirectChildren(dirHandle, '/$rootName');
 
         currentPath = '/$rootName';
         return currentPath;
@@ -120,7 +123,9 @@ class WebFileService implements LocalFileService {
 
       debugPrint("[Web] Processing ${input.files!.length} files via legacy input (root: $rootName)...");
 
-      _virtualTree['/']!.add(Directory('/$rootName'));
+      if (!_virtualTree['/']!.any((e) => e.path == '/$rootName')) {
+        _virtualTree['/']!.add(Directory('/$rootName'));
+      }
 
       for (final file in input.files!) {
         if (file.name.startsWith('._')) continue;
@@ -166,6 +171,21 @@ class WebFileService implements LocalFileService {
 
   /// Stored directory handles for lazy loading subdirectories (FSA API).
   static final Map<String, dynamic> _dirHandles = {};
+
+  /// Given a path like '/FolderA/sub/file.txt', returns the root handle for '/FolderA'.
+  static dynamic _findRootHandle(String path) {
+    final parts = path.split('/').where((s) => s.isNotEmpty).toList();
+    if (parts.isEmpty) return null;
+    return _rootHandles['/${parts.first}'];
+  }
+
+  /// Remove cached state for a specific root and all its descendants.
+  void _clearSubtree(String rootPath) {
+    _virtualTree.removeWhere((k, _) => k == rootPath || k.startsWith('$rootPath/'));
+    _fileRefs.removeWhere((k, _) => k.startsWith('$rootPath/') || k == rootPath);
+    _dirHandles.removeWhere((k, _) => k == rootPath || k.startsWith('$rootPath/'));
+    _rootHandles.remove(rootPath);
+  }
 
   /// Load only the immediate children of a directory handle (no recursion).
   Future<void> _loadDirectChildren(dynamic dirHandle, String absPath) async {
@@ -283,13 +303,14 @@ class WebFileService implements LocalFileService {
     }
 
     // Try FSA handle: navigate to the file through parent directory handles.
-    if (fileRef == null && _rootDirHandle != null) {
+    final rootHandle = _findRootHandle(path);
+    if (fileRef == null && rootHandle != null) {
       try {
         final parts = path.split('/').where((s) => s.isNotEmpty).toList();
         if (parts.length >= 2) {
           // Navigate through directory handles to reach the file.
-          dynamic current = _rootDirHandle;
-          // Skip the root folder name (first segment matches _rootDirHandle).
+          dynamic current = rootHandle;
+          // Skip the root folder name (first segment matches the root handle).
           for (var i = 1; i < parts.length - 1; i++) {
             final dirHandle = _dirHandles['/${parts.sublist(0, i + 1).join('/')}'];
             if (dirHandle != null) {
@@ -322,7 +343,7 @@ class WebFileService implements LocalFileService {
 
   @override
   Future<void> refresh() async {
-    if (_rootDirHandle != null) {
+    if (_rootHandles.isNotEmpty) {
       _log.debug('Refreshing current directory from handle...');
       // Only reload the current path (not the entire tree).
       final lookup = currentPath.endsWith('/') && currentPath.length > 1
@@ -332,10 +353,10 @@ class WebFileService implements LocalFileService {
       _virtualTree.remove(lookup);
       if (_dirHandles.containsKey(lookup)) {
         await _loadDirectChildren(_dirHandles[lookup], lookup);
-      } else if (_rootDirHandle != null) {
-        final rootName = _sanitizeFsaName(js_util.getProperty(_rootDirHandle, 'name') as String);
-        if (lookup == '/$rootName') {
-          await _loadDirectChildren(_rootDirHandle, lookup);
+      } else {
+        final rootHandle = _findRootHandle(lookup);
+        if (rootHandle != null) {
+          await _loadDirectChildren(rootHandle, lookup);
         }
       }
       _log.debug('Refresh complete.');
@@ -372,19 +393,39 @@ class WebFileService implements LocalFileService {
   @override
   Future<void> saveFile(String path, Uint8List data) async {
     _log.debug('saveFile: $path (${data.length} bytes)');
-    if (_rootDirHandle != null) {
+    final rootHandle = _findRootHandle(path);
+    if (rootHandle != null) {
       try {
-        _log.debug('Attempting direct write to folder handle...');
+        _log.debug('Attempting write via directory handle navigation...');
 
-        final permState = await _verifyPermission(_rootDirHandle, 'readwrite');
+        final permState = await _verifyPermission(rootHandle, 'readwrite');
         if (!permState) {
           _log.debug('Permission denied/dismissed. Falling back.');
         } else {
-          final fileName = p.basename(path);
+          // Navigate to the parent directory of the target file.
+          final parts = path.split('/').where((s) => s.isNotEmpty).toList();
+          dynamic current = rootHandle;
+
+          // Walk from segment 1 (skip root folder name) to second-to-last (parent dir).
+          for (var i = 1; i < parts.length - 1; i++) {
+            final dirPath = '/${parts.sublist(0, i + 1).join('/')}';
+            final cachedHandle = _dirHandles[dirPath];
+            if (cachedHandle != null) {
+              current = cachedHandle;
+            } else {
+              final opts = js_util.newObject();
+              js_util.setProperty(opts, 'create', true);
+              final promise = js_util.callMethod(current, 'getDirectoryHandle', [parts[i], opts]);
+              current = await js_util.promiseToFuture(promise);
+              _dirHandles[dirPath] = current;
+            }
+          }
+
+          final fileName = parts.last;
           final createOpts = js_util.newObject();
           js_util.setProperty(createOpts, 'create', true);
 
-          final fileHandlePromise = js_util.callMethod(_rootDirHandle, 'getFileHandle', [fileName, createOpts]);
+          final fileHandlePromise = js_util.callMethod(current, 'getFileHandle', [fileName, createOpts]);
           final fileHandle = await js_util.promiseToFuture(fileHandlePromise);
 
           final writablePromise = js_util.callMethod(fileHandle, 'createWritable', []);
@@ -396,21 +437,18 @@ class WebFileService implements LocalFileService {
           final closePromise = js_util.callMethod(writable, 'close', []);
           await js_util.promiseToFuture(closePromise);
 
-          _log.debug('Successfully wrote to $fileName');
+          _log.debug('Successfully wrote to $path');
 
           final fileObjPromise = js_util.callMethod(fileHandle, 'getFile', []);
           final fileObj = await js_util.promiseToFuture(fileObjPromise);
 
           final dirPath = p.dirname(path);
-
           _fileRefs[path] = fileObj;
 
           if (!_virtualTree.containsKey(dirPath)) {
             _virtualTree[dirPath] = [];
           }
-
-          final existing = _virtualTree[dirPath]!.where((e) => e.path == path).isEmpty;
-          if (existing) {
+          if (_virtualTree[dirPath]!.where((e) => e.path == path).isEmpty) {
             _virtualTree[dirPath]!.add(File(path));
           }
 
