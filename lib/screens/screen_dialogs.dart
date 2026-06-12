@@ -345,6 +345,22 @@ void showMoveDialogFromSelection(BuildContext context, WidgetRef ref) {
   final panel = ref.read(panelProvider(activePanel));
   _log.debug('showMoveDialogFromSelection: ${panel.selection.length} items, side=${activePanel.name}');
   if (panel.selection.isEmpty) return;
+
+  // On web: move to opposite panel's directory automatically.
+  if (kIsWeb) {
+    final opposite = activePanel == PanelSide.local ? PanelSide.remote : PanelSide.local;
+    final oppositePanel = ref.read(panelProvider(opposite));
+    final oppPath = oppositePanel.currentPath;
+    _log.debug('web move: active=${activePanel.name} oppPath=$oppPath selection=${panel.selection.length}');
+
+    if (oppPath.length > 1) {
+      panel.moveFiles(panel.selection.toList(), oppPath).then((_) {
+        oppositePanel.refresh();
+      });
+      return;
+    }
+  }
+
   _showPathDialog(context, ref, activePanel, panel, panel.selection.toList(), 'Move', panel.moveFiles);
 }
 
@@ -362,6 +378,9 @@ void _showPathDialog(
   Future<void> doAction(String value) async {
     if (value.isNotEmpty) {
       await action(files, value);
+      // Refresh opposite panel in case the target path is there.
+      final opposite = activePanel == PanelSide.local ? PanelSide.remote : PanelSide.local;
+      ref.read(panelProvider(opposite)).refresh();
       if (context.mounted) {
         Navigator.pop(context);
         _showUndoSnackBar(

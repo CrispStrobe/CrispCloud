@@ -1049,12 +1049,25 @@ class PanelNotifier extends ChangeNotifier {
     _log.info('renameFile: ${file.name} → $newName');
     final audit = _ref.read(auditServiceProvider);
     final actionHistory = _ref.read(actionHistoryProvider.notifier);
-    final providerName = side == PanelSide.local ? 'local' : _ref.read(authProvider).client.providerName;
+    final isLocalSource = _ref.read(panelSourceProvider(side)).isLocal || side == PanelSide.local;
+    final providerName = isLocalSource ? 'local' : _ref.read(authProvider).client.providerName;
     final src = file.path ?? p.posix.join(_remotePath, file.name);
-    if (kIsWeb && side == PanelSide.local) return;
     try {
       String computedNewPath;
-      if (side == PanelSide.local) {
+      if (isLocalSource && kIsWeb) {
+        // Web rename: copy under new name, delete old entry
+        final oldPath = file.path!;
+        computedNewPath = p.posix.join(p.posix.dirname(oldPath), newName);
+        if (!file.isFolder) {
+          final bytes = await _localFileService.readFile(oldPath, fileItem: file);
+          await _localFileService.saveFile(computedNewPath, bytes);
+          await _localFileService.deleteEntry(oldPath, false);
+        } else {
+          // Folder rename: create new, can't easily move contents on web
+          await _localFileService.createDirectory(computedNewPath);
+          // Note: contents not moved — FSA has no native rename for directories
+        }
+      } else if (isLocalSource) {
         computedNewPath = p.join(p.dirname(file.path!), newName);
         if (file.isFolder) {
           await Directory(file.path!).rename(computedNewPath);
@@ -1098,13 +1111,15 @@ class PanelNotifier extends ChangeNotifier {
     _log.info('createFolder: $name in $currentPath');
     final audit = _ref.read(auditServiceProvider);
     final actionHistory = _ref.read(actionHistoryProvider.notifier);
-    final providerName = side == PanelSide.local ? 'local' : _ref.read(authProvider).client.providerName;
-    final folderPath = side == PanelSide.local
-        ? p.join(currentPath, name)
+    final isLocalSource = _ref.read(panelSourceProvider(side)).isLocal || side == PanelSide.local;
+    final providerName = isLocalSource ? 'local' : _ref.read(authProvider).client.providerName;
+    final folderPath = isLocalSource
+        ? p.posix.join(currentPath, name)
         : p.posix.join(_remotePath, name);
-    if (kIsWeb && side == PanelSide.local) return;
     try {
-      if (side == PanelSide.local) {
+      if (isLocalSource && kIsWeb) {
+        await _localFileService.createDirectory(folderPath);
+      } else if (isLocalSource) {
         await Directory(p.join(currentPath, name)).create();
       } else {
         final client = _ref.read(authProvider).client;
@@ -1138,12 +1153,24 @@ class PanelNotifier extends ChangeNotifier {
     _log.info('moveFiles: ${files.length} items → $targetPath (web=$kIsWeb, side=$side)');
     final audit = _ref.read(auditServiceProvider);
     final actionHistory = _ref.read(actionHistoryProvider.notifier);
-    final providerName = side == PanelSide.local ? 'local' : _ref.read(authProvider).client.providerName;
+    final isLocalSource = _ref.read(panelSourceProvider(side)).isLocal || side == PanelSide.local;
+    final providerName = isLocalSource ? 'local' : _ref.read(authProvider).client.providerName;
     try {
       for (final file in files) {
         final src = file.path ?? p.posix.join(_remotePath, file.name);
         final String movedToPath;
-        if (side == PanelSide.local) {
+        if (isLocalSource && kIsWeb) {
+          // Web: move = copy bytes to target + delete source
+          movedToPath = p.posix.join(targetPath, file.name);
+          if (file.path != null && !file.isFolder) {
+            final bytes = await _localFileService.readFile(file.path!, fileItem: file);
+            await _localFileService.saveFile(movedToPath, bytes);
+            await _localFileService.deleteEntry(file.path!, false);
+          } else if (file.path != null && file.isFolder) {
+            // Folder move not yet supported on web — would need recursive copy+delete
+            throw UnsupportedError('Folder move not yet supported on web');
+          }
+        } else if (isLocalSource) {
           movedToPath = p.join(targetPath, file.name);
           if (file.isFolder) {
             await Directory(file.path!).rename(movedToPath);

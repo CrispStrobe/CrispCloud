@@ -390,6 +390,44 @@ class WebFileService implements LocalFileService {
     _dirHandles.remove(path);
   }
 
+  /// Create a directory at [path] using FSA handles.
+  Future<void> createDirectory(String path) async {
+    _log.debug('createDirectory: $path');
+    final rootHandle = _findRootHandle(path);
+    if (rootHandle == null) throw Exception('No root handle for path: $path');
+
+    final permState = await _verifyPermission(rootHandle, 'readwrite');
+    if (!permState) throw Exception('Permission denied for directory creation');
+
+    final parts = path.split('/').where((s) => s.isNotEmpty).toList();
+    dynamic current = rootHandle;
+
+    // Navigate from segment 1 (skip root) to the final segment, creating as needed.
+    for (var i = 1; i < parts.length; i++) {
+      final dirPath = '/${parts.sublist(0, i + 1).join('/')}';
+      final cachedHandle = _dirHandles[dirPath];
+      if (cachedHandle != null) {
+        current = cachedHandle;
+      } else {
+        final opts = js_util.newObject();
+        js_util.setProperty(opts, 'create', true);
+        final promise = js_util.callMethod(current, 'getDirectoryHandle', [parts[i], opts]);
+        current = await js_util.promiseToFuture(promise);
+        _dirHandles[dirPath] = current;
+      }
+    }
+
+    // Update virtual tree.
+    final parentPath = p.dirname(path);
+    if (!_virtualTree.containsKey(parentPath)) {
+      _virtualTree[parentPath] = [];
+    }
+    if (_virtualTree[parentPath]!.where((e) => e.path == path).isEmpty) {
+      _virtualTree[parentPath]!.add(Directory(path));
+    }
+    _virtualTree[path] = [];
+  }
+
   @override
   Future<void> saveFile(String path, Uint8List data) async {
     _log.debug('saveFile: $path (${data.length} bytes)');

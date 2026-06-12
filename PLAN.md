@@ -153,6 +153,46 @@ CrispCloud becomes the **definitive open-source cloud file manager**: a single, 
 | Copy file names/paths to clipboard | ✅ Done | Ctrl+Shift+C/N + context menu |
 | Tab rename | ✅ Done | right-click tab → Rename Tab |
 
+---
+
+## Phase WEB-OPS: Fix Web File Operations (2026-06-12)
+
+*Root cause: `WebFileService` is a singleton shared by both panels. Many file operations use `dart:io` APIs (`File.rename`, `Directory.create`) that don't exist on web. Additionally, `_localFileService.currentPath` was shared — fixed by adding `_localPath` per `PanelNotifier`.*
+
+| Op | Key | Severity | Issue |
+|----|-----|----------|-------|
+| Copy | F5 | ✅ Fixed | Multi-root handles + per-panel `_localPath` + source-aware `copyFiles` |
+| Move | F6 | **CRASH** | Uses `File.rename()`/`Directory.rename()` — no web impl. Dialog missing opposite-panel auto-detect. |
+| Create folder | F7 | **CRASH** | Uses `Directory().create()` — no web impl. Need FSA `getDirectoryHandle(name, {create:true})`. |
+| Rename | F2 | **Disabled** | Guard returns early on web. Need FSA rename (copy+delete pattern). |
+| Delete | F8 | ✅ Works | Has `_localFileService.deleteEntry()` web impl. |
+| Opposite refresh | — | **UX gap** | Move/delete don't refresh opposite panel (copy does). |
+
+### WEB-1: Move (F6) on web
+- [ ] Add `isLocalSource && kIsWeb` branch in `moveFiles()` — read bytes, save to target, delete source
+- [ ] Add web opposite-panel auto-detect in `showMoveDialogFromSelection()` (mirror F5 logic)
+- [ ] Refresh opposite panel after move
+
+### WEB-2: Create folder (F7) on web
+- [ ] Add `kIsWeb` branch in `createFolder()` — use FSA `getDirectoryHandle(name, {create:true})`
+- [ ] Add `createDirectory(path)` method to `WebFileService`
+
+### WEB-3: Rename (F2) on web
+- [ ] Remove early-return guard in `renameFile()`
+- [ ] Implement web rename: copy file under new name via FSA, delete old entry
+- [ ] Also handle folder rename
+
+### WEB-4: Opposite panel refresh
+- [ ] `showMoveDialogFromSelection()`: add `oppositePanel.refresh()` in `.then()` callback
+- [ ] `confirmDeleteSelected()`: refresh opposite panel if deletion could affect it
+
+### WEB-5: Tests
+- [ ] Unit tests: `WebFileService` multi-root, `saveFile` subdirectory nav, `createDirectory`, rename
+- [ ] Unit tests: `PanelNotifier._localPath` isolation (two panels don't stomp each other)
+- [ ] Integration tests: F5/F6/F7/F2/F8 web operations end-to-end
+
+---
+
 ### DC Parity Roadmap (ordered by impact)
 
 #### DC-1: History Navigation — Alt+Left/Right (per-panel back/forward) ✅ DONE

@@ -159,6 +159,11 @@ class MacosFileService implements LocalFileService {
   }
 
   @override
+  Future<void> createDirectory(String path) async {
+    await Directory(path).create(recursive: true);
+  }
+
+  @override
   Future<void> deleteEntry(String path, bool isFolder) async {
     if (isFolder) {
       await Directory(path).delete(recursive: true);
@@ -239,6 +244,11 @@ class DesktopFileService implements LocalFileService {
 
   @override
   Future<bool> hasAccessToPath(String path) async => true;
+
+  @override
+  Future<void> createDirectory(String path) async {
+    await Directory(path).create(recursive: true);
+  }
 
   @override
   Future<void> deleteEntry(String path, bool isFolder) async {
@@ -415,6 +425,11 @@ class MobileFileService implements LocalFileService {
     } catch (e) {
       return false;
     }
+  }
+
+  @override
+  Future<void> createDirectory(String path) async {
+    await Directory(path).create(recursive: true);
   }
 
   @override

@@ -39,6 +39,11 @@ abstract class LocalFileService {
   /// abstract interface.
   Object? getWebFileRef(String path) => null;
 
+  /// Create a directory at [path] (web: uses FSA getDirectoryHandle with create).
+  Future<void> createDirectory(String path) async {
+    throw UnsupportedError('createDirectory not implemented on this platform');
+  }
+
   /// Delete a file or directory entry (web: uses FSA removeEntry).
   Future<void> deleteEntry(String path, bool isFolder) async {
     throw UnsupportedError('deleteEntry not implemented on this platform');
