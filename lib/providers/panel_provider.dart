@@ -15,6 +15,7 @@ import 'package:shared_preferences/shared_preferences.dart';
 import '../models/file_item.dart';
 import '../models/panel_side.dart';
 import '../models/panel_tab.dart';
+import '../models/sort.dart';
 import '../services/archive_service.dart';
 import '../services/audit_service.dart';
 import '../services/directory_cache_service.dart';
@@ -29,8 +30,8 @@ import 'error_provider.dart';
 import 'panel_source_provider.dart';
 import 'recent_locations_provider.dart';
 
-enum SortBy { name, size, date, extension }
-enum SortOrder { ascending, descending }
+// SortBy and SortOrder are defined in models/sort.dart
+export '../models/sort.dart';
 
 class PanelNotifier extends ChangeNotifier {
   static const _log = Log('PanelNotifier');

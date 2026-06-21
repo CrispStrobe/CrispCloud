@@ -9,6 +9,8 @@ import '../models/file_item.dart';
 import '../models/operation_progress.dart';
 import '../models/panel_side.dart';
 import '../models/panel_tab.dart';
+import '../models/sort.dart';
+export '../models/sort.dart';
 import '../utils/async_lock.dart';
 import '../utils/formatters.dart' as fmt;
 
@@ -46,9 +48,6 @@ class AppError {
   @override
   String toString() => message;
 }
-
-enum SortBy { name, size, date, extension }
-enum SortOrder { ascending, descending }
 
 class AppState extends ChangeNotifier {
   // Async locks — one per critical method to avoid deadlocks when locked

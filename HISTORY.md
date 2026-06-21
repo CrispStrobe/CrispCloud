@@ -2,6 +2,30 @@
 
 Audit trail of bugs found, issues discovered, and fixes applied.
 
+## 2026-06-21 — Session 15: CI fixes + performance optimizations
+
+### CI / Test Fixes (46 failing tests → 0)
+- **i18n tests**: Added 166 missing translation keys to 7 locale .arb files (ar, es, fr, ja, ko, pt, zh) — English placeholders for untranslated strings
+- **responsive_toolbar_widget_test**: Fixed 14 tests — added l10n delegates, ThemeService provider, secure storage override, corrected overflow menu assertions
+- **status_bar_widget_test**: Fixed 25 tests — added l10n delegates, fixed transfer text expectations, viewport sizing for transfer progress tests
+- **All 4510 tests passing**, 23 skipped (environment-gated)
+
+### Performance Optimizations
+- **O(n²) indexOf eliminated**: stat batch loop in `panel_provider.dart` used `items.indexOf(item)` per file — replaced with positional index tracking (O(1) per file)
+- **selection.toList() hoisted**: was allocating a full list copy per visible row in `ListView.builder` — now computed once above the builder
+- **Granular Riverpod selectors**: `FileListTile` watched entire `panelProvider(side)` (rebuilding ALL visible tiles on any state change) — now uses `.select((p) => p.renamingItem == file)` so only the affected tile rebuilds
+- **RepaintBoundary**: wrapped all `FilePanel` widgets to isolate repaint regions from toolbar/statusbar
+- **Free space debounce**: `_updateFreeSpace` was spawning `df` on every directory navigation — added 5-second TTL per path
+- **S3 XML parsing**: replaced 6 ad-hoc `RegExp` instances (fragile, re-allocated per page) with proper `xml` package parsing (already a dependency)
+
+### CI / Workflow Improvements
+- **Deploy gated on CI**: `deploy-web.yml` now uses `workflow_run` to wait for CI to pass before deploying to Vercel (previously could deploy broken builds)
+- **Gradle cache**: added `~/.gradle` caching to Android builds in both `ci.yml` and `nightly.yml`
+
+### Code Quality
+- **Duplicate enums removed**: `SortBy`/`SortOrder` extracted from both `app_state.dart` and `panel_provider.dart` into shared `models/sort.dart`
+- **Dependency hygiene**: pinned `intl: ^0.20.2`, `uuid: ^4.5.1`, `xml: ^6.5.0` (were `any`); moved `flutter_launcher_icons` to `dev_dependencies`
+
 ## 2026-06-11 — Session 14 continued: i18n, language selector, improvements
 
 ### Full i18n (EN + DE)

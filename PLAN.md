@@ -59,7 +59,7 @@ CrispCloud becomes the **definitive open-source cloud file manager**: a single, 
 - **Plugin system**: `CrispCloudPlugin` interface with sandboxed execution
 - **Opt-in analytics**: anonymous feature usage tracking
 - **Linux integration**: Nautilus/Dolphin/Thunar, D-Bus notifications, .deb/.rpm/AppImage packaging
-- **14 providers**, **9 languages**, **4361+ unit tests** (7/7 CI green) + gated live/integration tests
+- **14 providers**, **9 languages**, **4510 unit tests** (CI green) + gated live/integration tests
 - **Block-level delta sync**: DeltaSyncService + Nextcloud server app + pCloud pread/pwrite + S3 Range GET wiring
 - **SSH terminal**: embedded SSH for SFTP connections with session pool + idle timeout
 - **Hetzner Storage Box**: SFTP/WebDAV with Hetzner defaults
