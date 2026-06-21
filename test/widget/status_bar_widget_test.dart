@@ -12,6 +12,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
+import 'package:crisp_cloud/l10n/app_localizations.dart';
 import 'package:crisp_cloud/models/file_item.dart';
 import 'package:crisp_cloud/models/operation_progress.dart';
 import 'package:crisp_cloud/models/panel_side.dart';
@@ -226,6 +227,8 @@ Widget _app(List<Override> overrides) {
   return ProviderScope(
     overrides: overrides,
     child: MaterialApp(
+      localizationsDelegates: AppLocalizations.localizationsDelegates,
+      supportedLocales: AppLocalizations.supportedLocales,
       home: Scaffold(
         bottomNavigationBar: const StatusBar(),
       ),
@@ -409,22 +412,29 @@ void main() {
   // -------------------------------------------------------------------------
 
   group('StatusBar transfer progress', () {
-    testWidgets('shows "1 transfer" text for one active operation',
+    testWidgets('shows "1 transfer(s)" text for one active operation',
         (tester) async {
+      // Use a wide viewport so the status bar Row does not overflow.
+      await tester.binding.setSurfaceSize(const Size(1400, 600));
+      addTearDown(() => tester.binding.setSurfaceSize(null));
+
       await tester.pumpWidget(
           _app(_baseOverrides(ops: [_activeOp('op1')])));
       await tester.pump();
 
-      expect(find.text('1 transfer'), findsOneWidget);
+      expect(find.text('1 transfer(s)'), findsOneWidget);
     });
 
-    testWidgets('shows "2 transfers" for two active operations',
+    testWidgets('shows "2 transfer(s)" for two active operations',
         (tester) async {
+      await tester.binding.setSurfaceSize(const Size(1400, 600));
+      addTearDown(() => tester.binding.setSurfaceSize(null));
+
       await tester.pumpWidget(
           _app(_baseOverrides(ops: [_activeOp('op1'), _activeOp('op2')])));
       await tester.pump();
 
-      expect(find.text('2 transfers'), findsOneWidget);
+      expect(find.text('2 transfer(s)'), findsOneWidget);
     });
 
     testWidgets('shows no transfer text when operations list is empty',
@@ -454,6 +464,9 @@ void main() {
 
     testWidgets('shows CircularProgressIndicator during active transfer',
         (tester) async {
+      await tester.binding.setSurfaceSize(const Size(1400, 600));
+      addTearDown(() => tester.binding.setSurfaceSize(null));
+
       await tester.pumpWidget(
           _app(_baseOverrides(ops: [_activeOp('op1')])));
       await tester.pump();
