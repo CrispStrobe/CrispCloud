@@ -139,10 +139,74 @@ jobs:
 
       - run: flutter test --exclude-tags=mock_server,integration,connection_dialog
 
+  # ---------- Create Release (empty, assets added by each build) ----------
+  create-release:
+    name: Create Release
+    needs: test
+    runs-on: ubuntu-latest
+    outputs:
+      tag: ${{ steps.meta.outputs.tag }}
+    steps:
+      - uses: actions/checkout@v5
+        with:
+          fetch-depth: 0
+
+      - name: Determine tag and release flags
+        id: meta
+        run: |
+          if [[ "${{ github.ref }}" == refs/tags/* ]]; then
+            TAG="${GITHUB_REF#refs/tags/}"
+            IS_PRERELEASE="false"
+          elif [[ -n "${{ inputs.tag }}" ]]; then
+            TAG="${{ inputs.tag }}"
+            IS_PRERELEASE="${{ inputs.prerelease }}"
+          else
+            TAG="v$(grep 'version:' pubspec.yaml | head -1 | awk '{print $2}' | tr -d '+')"
+            IS_PRERELEASE="true"
+          fi
+          echo "tag=${TAG}" >> "$GITHUB_OUTPUT"
+          echo "is_prerelease=${IS_PRERELEASE}" >> "$GITHUB_OUTPUT"
+
+      - name: Generate changelog
+        run: |
+          TAG="${{ steps.meta.outputs.tag }}"
+          PREV_TAG=$(git tag --sort=-version:refname | grep '^v' | head -2 | tail -1 || true)
+          if [ -n "$PREV_TAG" ] && [ "$PREV_TAG" != "$TAG" ]; then
+            RANGE="${PREV_TAG}..HEAD"
+          else
+            RANGE="HEAD~20..HEAD"
+          fi
+          {
+            echo "## What's Changed"
+            echo ""
+            git log "$RANGE" --pretty=format:"- %s (%h)" --no-merges 2>/dev/null | head -50 || true
+            echo ""
+            echo ""
+            echo "**Full diff**: https://github.com/${{ github.repository }}/compare/${PREV_TAG}...${TAG}"
+          } > changelog.md
+
+      - name: Create GitHub Release
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          TAG="${{ steps.meta.outputs.tag }}"
+          IS_PRERELEASE="${{ steps.meta.outputs.is_prerelease }}"
+          if ! git rev-parse "$TAG" >/dev/null 2>&1; then
+            git tag "$TAG"
+            git push origin "$TAG"
+          fi
+          gh release delete "$TAG" --yes 2>/dev/null || true
+          PRERELEASE_FLAG=""
+          if [ "$IS_PRERELEASE" = "true" ]; then PRERELEASE_FLAG="--prerelease"; fi
+          gh release create "$TAG" \
+            --title "CrispCloud $TAG" \
+            --notes-file changelog.md \
+            $PRERELEASE_FLAG
+
   # ---------- Web ----------
   build-web:
     name: Build Web
-    needs: test
+    needs: [test, create-release]
     runs-on: ubuntu-latest
     timeout-minutes: 20
     steps:
@@ -179,10 +243,15 @@ jobs:
           name: crispcloud-web
           path: crispcloud-web.tar.gz
 
+      - name: Upload to Release
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: gh release upload "${{ needs.create-release.outputs.tag }}" crispcloud-web.tar.gz --clobber
+
   # ---------- Linux ----------
   build-linux:
     name: Build Linux
-    needs: test
+    needs: [test, create-release]
     runs-on: ubuntu-latest
     timeout-minutes: 20
     steps:
@@ -226,10 +295,15 @@ jobs:
           name: crispcloud-linux-x64
           path: crispcloud-linux-x64.tar.gz
 
+      - name: Upload to Release
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: gh release upload "${{ needs.create-release.outputs.tag }}" crispcloud-linux-x64.tar.gz --clobber
+
   # ---------- macOS ----------
   build-macos:
     name: Build macOS
-    needs: test
+    needs: [test, create-release]
     runs-on: macos-latest
     timeout-minutes: 40
     steps:
@@ -311,10 +385,15 @@ jobs:
           name: crispcloud-macos
           path: crispcloud-macos.zip
 
+      - name: Upload to Release
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: gh release upload "${{ needs.create-release.outputs.tag }}" crispcloud-macos.zip --clobber
+
   # ---------- Windows ----------
   build-windows:
     name: Build Windows
-    needs: test
+    needs: [test, create-release]
     runs-on: windows-latest
     timeout-minutes: 35
     continue-on-error: true  # pdfx pdfium CMake download broken on CI
@@ -374,10 +453,17 @@ jobs:
           name: crispcloud-windows-x64
           path: crispcloud-windows-x64.zip
 
+      - name: Upload to Release
+        if: success()
+        shell: bash
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: gh release upload "${{ needs.create-release.outputs.tag }}" crispcloud-windows-x64.zip --clobber
+
   # ---------- Android APK ----------
   build-android:
     name: Build Android APK
-    needs: test
+    needs: [test, create-release]
     runs-on: ubuntu-latest
     timeout-minutes: 25
     steps:
@@ -456,10 +542,15 @@ jobs:
           name: crispcloud-android
           path: crispcloud-android.apk
 
+      - name: Upload to Release
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: gh release upload "${{ needs.create-release.outputs.tag }}" crispcloud-android.apk --clobber
+
   # ---------- iOS (unsigned .app for later signing/export) ----------
   build-ios:
     name: Build iOS (no-codesign)
-    needs: test
+    needs: [test, create-release]
     runs-on: macos-latest
     timeout-minutes: 45
     steps:
@@ -547,102 +638,7 @@ jobs:
           name: crispcloud-ios-nosign
           path: crispcloud-ios-nosign.zip
 
-  # ---------- Create GitHub Release ----------
-  release:
-    name: Create Release
-    needs: [build-web, build-linux, build-macos, build-windows, build-android, build-ios]
-    if: always() && !cancelled() && needs.build-web.result == 'success'
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v5
-        with:
-          fetch-depth: 0  # full history for changelog
-
-      - uses: actions/download-artifact@v5
-        with:
-          path: artifacts
-
-      - name: Determine tag and release flags
-        id: meta
-        run: |
-          # Determine tag
-          if [[ "${{ github.ref }}" == refs/tags/* ]]; then
-            TAG="${GITHUB_REF#refs/tags/}"
-            IS_PRERELEASE="false"
-          elif [[ -n "${{ inputs.tag }}" ]]; then
-            TAG="${{ inputs.tag }}"
-            IS_PRERELEASE="${{ inputs.prerelease }}"
-          else
-            TAG="v$(grep 'version:' pubspec.yaml | head -1 | awk '{print $2}' | tr -d '+')"
-            IS_PRERELEASE="true"
-          fi
-          echo "tag=${TAG}" >> "$GITHUB_OUTPUT"
-          echo "is_prerelease=${IS_PRERELEASE}" >> "$GITHUB_OUTPUT"
-          echo "Tag: ${TAG}, pre-release: ${IS_PRERELEASE}"
-
-      - name: Generate changelog from git log
-        id: changelog
-        run: |
-          TAG="${{ steps.meta.outputs.tag }}"
-          # Find the previous tag to generate a diff-based changelog
-          PREV_TAG=$(git tag --sort=-version:refname | grep '^v' | head -2 | tail -1 || true)
-          if [ -n "$PREV_TAG" ] && [ "$PREV_TAG" != "$TAG" ]; then
-            RANGE="${PREV_TAG}..HEAD"
-            echo "Generating changelog from ${RANGE}"
-          else
-            RANGE="HEAD~20..HEAD"
-            echo "No previous tag found, using last 20 commits"
-          fi
-          {
-            echo "## What's Changed"
-            echo ""
-            git log "$RANGE" --pretty=format:"- %s (%h)" --no-merges 2>/dev/null | head -50 || true
-            echo ""
-            echo ""
-            echo "**Full diff**: https://github.com/${{ github.repository }}/compare/${PREV_TAG}...${TAG}"
-          } > changelog.md
-          cat changelog.md
-
-      - name: Create Release
+      - name: Upload to Release
         env:
           GH_TOKEN: ${{ github.token }}
-        run: |
-          TAG="${{ steps.meta.outputs.tag }}"
-          IS_PRERELEASE="${{ steps.meta.outputs.is_prerelease }}"
-
-          # Create tag if it doesn't exist (workflow_dispatch)
-          if ! git rev-parse "$TAG" >/dev/null 2>&1; then
-            git tag "$TAG"
-            git push origin "$TAG"
-          fi
-
-          # Delete existing release if re-running
-          gh release delete "$TAG" --yes 2>/dev/null || true
-
-          # Collect available artifacts (some platforms may have failed)
-          FILES=()
-          for f in \
-            artifacts/crispcloud-web/crispcloud-web.tar.gz \
-            artifacts/crispcloud-linux-x64/crispcloud-linux-x64.tar.gz \
-            artifacts/crispcloud-macos/crispcloud-macos.zip \
-            artifacts/crispcloud-windows-x64/crispcloud-windows-x64.zip \
-            artifacts/crispcloud-android/crispcloud-android.apk \
-            artifacts/crispcloud-ios-nosign/crispcloud-ios-nosign.zip; do
-            if [ -f "$f" ]; then
-              FILES+=("$f")
-              echo "Including: $f"
-            else
-              echo "Skipping (not found): $f"
-            fi
-          done
-
-          PRERELEASE_FLAG=""
-          if [ "$IS_PRERELEASE" = "true" ]; then
-            PRERELEASE_FLAG="--prerelease"
-          fi
-
-          gh release create "$TAG" \
-            --title "CrispCloud $TAG" \
-            --notes-file changelog.md \
-            $PRERELEASE_FLAG \
-            "${FILES[@]}"
+        run: gh release upload "${{ needs.create-release.outputs.tag }}" crispcloud-ios-nosign.zip --clobber
