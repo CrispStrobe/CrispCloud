@@ -13,6 +13,7 @@ import 'dart:typed_data';
 import 'package:crypto/crypto.dart';
 import 'package:flutter/foundation.dart';
 import 'package:http/http.dart' as http;
+import 'package:xml/xml.dart' as xml;
 import 'package:path/path.dart' as p;
 import 'package:shared_preferences/shared_preferences.dart';
 
@@ -642,12 +643,14 @@ class S3ClientAdapter extends CloudStorageClient {
       }
 
       final body = response.body;
+      final doc = xml.XmlDocument.parse(body);
+      final root = doc.rootElement;
 
       // Parse CommonPrefixes (folders)
-      final prefixMatches = RegExp(r'<CommonPrefixes>\s*<Prefix>([^<]+)</Prefix>\s*</CommonPrefixes>')
-          .allMatches(body);
-      for (final match in prefixMatches) {
-        final folderPrefix = match.group(1)!;
+      for (final cp in root.findAllElements('CommonPrefixes')) {
+        final prefixEl = cp.findElements('Prefix').firstOrNull;
+        if (prefixEl == null) continue;
+        final folderPrefix = prefixEl.innerText;
         // Remove the parent prefix to get relative name
         var folderName = folderPrefix;
         if (normalizedPrefix.isNotEmpty && folderName.startsWith(normalizedPrefix)) {
@@ -667,18 +670,15 @@ class S3ClientAdapter extends CloudStorageClient {
       }
 
       // Parse Contents (files)
-      final contentMatches = RegExp(
-        r'<Contents>\s*'
-        r'<Key>([^<]+)</Key>\s*'
-        r'<LastModified>([^<]+)</LastModified>\s*'
-        r'(?:<ETag>[^<]*</ETag>\s*)?'
-        r'<Size>([^<]+)</Size>',
-      ).allMatches(body);
+      for (final contents in root.findAllElements('Contents')) {
+        final keyEl = contents.findElements('Key').firstOrNull;
+        final lastModEl = contents.findElements('LastModified').firstOrNull;
+        final sizeEl = contents.findElements('Size').firstOrNull;
+        if (keyEl == null) continue;
 
-      for (final match in contentMatches) {
-        final key = match.group(1)!;
-        final lastModified = match.group(2)!;
-        final size = int.tryParse(match.group(3) ?? '0') ?? 0;
+        final key = keyEl.innerText;
+        final lastModified = lastModEl?.innerText ?? '';
+        final size = int.tryParse(sizeEl?.innerText ?? '0') ?? 0;
 
         // Skip the prefix itself (folder marker)
         if (key == normalizedPrefix) continue;
@@ -702,10 +702,11 @@ class S3ClientAdapter extends CloudStorageClient {
       }
 
       // Check for continuation
-      final isTruncated = RegExp(r'<IsTruncated>true</IsTruncated>').hasMatch(body);
+      final isTruncatedEl = root.findAllElements('IsTruncated').firstOrNull;
+      final isTruncated = isTruncatedEl?.innerText == 'true';
       if (isTruncated) {
-        final tokenMatch = RegExp(r'<NextContinuationToken>([^<]+)</NextContinuationToken>').firstMatch(body);
-        continuationToken = tokenMatch?.group(1);
+        final tokenEl = root.findAllElements('NextContinuationToken').firstOrNull;
+        continuationToken = tokenEl?.innerText;
         if (continuationToken == null) break;
       } else {
         continuationToken = null;

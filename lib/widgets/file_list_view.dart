@@ -96,6 +96,7 @@ class FileListView extends ConsumerWidget {
         return const Center(child: Text('Empty folder'));
       }
 
+      final selectedFiles = panel.selection.toList();
       final listView = ListView.builder(
         controller: scrollController,
         itemCount: files.length,
@@ -112,7 +113,7 @@ class FileListView extends ConsumerWidget {
                 side: side,
                 isSelected: isSelected,
                 isCursor: isCursor,
-                selectedFiles: panel.selection.toList(),
+                selectedFiles: selectedFiles,
                 showRelativePath: panel.isFlatView,
                 onTap: (shiftKey, ctrlKey) =>
                     panel.toggleSelection(file, shiftKey: shiftKey, ctrlKey: ctrlKey),
@@ -127,7 +128,7 @@ class FileListView extends ConsumerWidget {
               side: side,
               isSelected: isSelected,
               isCursor: isCursor,
-              selectedFiles: panel.selection.toList(),
+              selectedFiles: selectedFiles,
               showRelativePath: panel.isFlatView,
               onTap: (shiftKey, ctrlKey) {
                 panel.toggleSelection(file, shiftKey: shiftKey, ctrlKey: ctrlKey);
@@ -297,8 +298,7 @@ class FileListTile extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final panel = ref.watch(panelProvider(side));
-    final isRenaming = panel.renamingItem == file;
+    final isRenaming = ref.watch(panelProvider(side).select((p) => p.renamingItem == file));
     final colorService = ref.watch(fileTypeColorProvider);
     final fileColor = colorService.colorForFile(file);
 

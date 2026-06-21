@@ -108,6 +108,8 @@ class PanelNotifier extends ChangeNotifier {
   // Free space for the current local path (populated after _loadLocalFiles)
   int? _freeBytes;
   int? get freeBytes => _freeBytes;
+  String? _lastFreeSpacePath;
+  DateTime? _lastFreeSpaceTime;
 
   // Per-panel local path — avoids sharing the singleton _localFileService.currentPath
   // between two panels on web.
@@ -1588,10 +1590,11 @@ class PanelNotifier extends ChangeNotifier {
 
       // Second pass: stat in batches to fill in size, date, symlink info.
       const batchSize = 100;
-      for (var i = 0; i < items.length; i += batchSize) {
-        final end = (i + batchSize).clamp(0, items.length);
-        final batch = items.sublist(i, end);
-        await Future.wait(batch.map((item) async {
+      for (var batchStart = 0; batchStart < items.length; batchStart += batchSize) {
+        final end = (batchStart + batchSize).clamp(0, items.length);
+        final indices = List.generate(end - batchStart, (j) => batchStart + j);
+        await Future.wait(indices.map((idx) async {
+          final item = items[idx];
           if (item.name == '..') return;
           try {
             final stat = await FileStat.stat(item.path!);
@@ -1602,18 +1605,15 @@ class PanelNotifier extends ChangeNotifier {
               try { linkTarget = await Link(item.path!).target(); } catch (_) {}
             }
             final isFolder = stat.type == FileSystemEntityType.directory;
-            final idx = items.indexOf(item);
-            if (idx >= 0) {
-              items[idx] = FileItem(
-                name: item.name,
-                path: item.path,
-                isFolder: isFolder,
-                size: isFolder ? null : stat.size,
-                updatedAt: stat.modified,
-                isSymlink: isLink ? true : null,
-                symlinkTarget: linkTarget,
-              );
-            }
+            items[idx] = FileItem(
+              name: item.name,
+              path: item.path,
+              isFolder: isFolder,
+              size: isFolder ? null : stat.size,
+              updatedAt: stat.modified,
+              isSymlink: isLink ? true : null,
+              symlinkTarget: linkTarget,
+            );
           } catch (e) {
             _log.warn('operation failed', e);
             }
@@ -1652,6 +1652,14 @@ class PanelNotifier extends ChangeNotifier {
     if (Platform.environment.containsKey('FLUTTER_TEST')) return;
     // `df` is a Unix utility — skip on Windows to avoid a crash.
     if (Platform.isWindows) return;
+    // Debounce: skip if same path was checked within the last 5 seconds.
+    final now = DateTime.now();
+    if (_lastFreeSpacePath == path && _lastFreeSpaceTime != null &&
+        now.difference(_lastFreeSpaceTime!).inSeconds < 5) {
+      return;
+    }
+    _lastFreeSpacePath = path;
+    _lastFreeSpaceTime = now;
     Process.run('df', ['-k', path]).then((result) {
       final lines = result.stdout.toString().trim().split('\n');
       if (lines.length >= 2) {

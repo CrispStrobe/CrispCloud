@@ -281,10 +281,12 @@ class _FileBrowserScreenState extends ConsumerState<FileBrowserScreen> {
         ? activePanelNotifier.selection.first
         : null;
 
-    final panel = FilePanel(
-      side: activePanel,
-      isActive: true,
-      onTap: () {},
+    final panel = RepaintBoundary(
+      child: FilePanel(
+        side: activePanel,
+        isActive: true,
+        onTap: () {},
+      ),
     );
 
     return Column(
@@ -324,11 +326,13 @@ class _FileBrowserScreenState extends ConsumerState<FileBrowserScreen> {
         children: [
           const PanelSourceSelector(side: PanelSide.local),
           Expanded(
-            child: FilePanel(
-              side: PanelSide.local,
-              isActive: activePanel == PanelSide.local,
-              onTap: () =>
-                  ref.read(activePanelProvider.notifier).state = PanelSide.local,
+            child: RepaintBoundary(
+              child: FilePanel(
+                side: PanelSide.local,
+                isActive: activePanel == PanelSide.local,
+                onTap: () =>
+                    ref.read(activePanelProvider.notifier).state = PanelSide.local,
+              ),
             ),
           ),
         ],
@@ -337,11 +341,13 @@ class _FileBrowserScreenState extends ConsumerState<FileBrowserScreen> {
         children: [
           const PanelSourceSelector(side: PanelSide.remote),
           Expanded(
-            child: FilePanel(
-              side: PanelSide.remote,
-              isActive: activePanel == PanelSide.remote,
-              onTap: () =>
-                  ref.read(activePanelProvider.notifier).state = PanelSide.remote,
+            child: RepaintBoundary(
+              child: FilePanel(
+                side: PanelSide.remote,
+                isActive: activePanel == PanelSide.remote,
+                onTap: () =>
+                    ref.read(activePanelProvider.notifier).state = PanelSide.remote,
+              ),
             ),
           ),
         ],
@@ -435,10 +441,12 @@ class _FileBrowserScreenState extends ConsumerState<FileBrowserScreen> {
             ),
           ),
           Expanded(
-            child: FilePanel(
-              side: _activePanelMobile,
-              isActive: true,
-              onTap: () {},
+            child: RepaintBoundary(
+              child: FilePanel(
+                side: _activePanelMobile,
+                isActive: true,
+                onTap: () {},
+              ),
             ),
           ),
         ],
