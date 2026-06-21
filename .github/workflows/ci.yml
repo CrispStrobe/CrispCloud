@@ -213,14 +213,11 @@ jobs:
           retention-days: 14
 
   # ---------- Windows ----------
-  # continue-on-error: pdfx plugin's pdfium CMake download is broken on
-  # newer Windows CI runners. Does not block releases.
   build-windows:
     name: Build Windows
     runs-on: windows-latest
     timeout-minutes: 35
     needs: analyze
-    continue-on-error: true
 
     steps:
       - uses: actions/checkout@v5
@@ -248,6 +245,16 @@ jobs:
 
       - run: flutter config --enable-windows-desktop
       - run: flutter pub get
+
+      - name: Patch pdfx CMake (fix VERSION 2.8.12 rejected by CMake 3.30+)
+        shell: bash
+        run: |
+          TEMPLATE=$(find . -path "*/pdfx/windows/DownloadProject.CMakeLists.cmake.in" | head -1)
+          if [ -n "$TEMPLATE" ]; then
+            sed -i 's/cmake_minimum_required(VERSION 2.8.12)/cmake_minimum_required(VERSION 3.14)/' "$TEMPLATE"
+            echo "Patched: $TEMPLATE"
+          fi
+
       - run: flutter build windows --release
 
       - name: Package Windows build
