@@ -213,11 +213,14 @@ jobs:
           retention-days: 14
 
   # ---------- Windows ----------
+  # continue-on-error: pdfx plugin's pdfium CMake download is broken on
+  # newer Windows CI runners. Does not block releases.
   build-windows:
     name: Build Windows
     runs-on: windows-latest
     timeout-minutes: 35
     needs: analyze
+    continue-on-error: true
 
     steps:
       - uses: actions/checkout@v5

@@ -108,10 +108,10 @@ jobs:
     runs-on: ubuntu-latest
     timeout-minutes: 20
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v5
 
       - name: Cache Flutter SDK + pub
-        uses: actions/cache@v4
+        uses: actions/cache@v5
         with:
           path: |
             /opt/hostedtoolcache/flutter
@@ -146,10 +146,10 @@ jobs:
     runs-on: ubuntu-latest
     timeout-minutes: 20
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v5
 
       - name: Cache Flutter SDK + pub
-        uses: actions/cache@v4
+        uses: actions/cache@v5
         with:
           path: |
             /opt/hostedtoolcache/flutter
@@ -174,7 +174,7 @@ jobs:
       - name: Package
         run: tar czf crispcloud-web.tar.gz -C build/web .
 
-      - uses: actions/upload-artifact@v4
+      - uses: actions/upload-artifact@v5
         with:
           name: crispcloud-web
           path: crispcloud-web.tar.gz
@@ -186,10 +186,10 @@ jobs:
     runs-on: ubuntu-latest
     timeout-minutes: 20
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v5
 
       - name: Cache Flutter SDK + pub
-        uses: actions/cache@v4
+        uses: actions/cache@v5
         with:
           path: |
             /opt/hostedtoolcache/flutter
@@ -221,7 +221,7 @@ jobs:
       - name: Package
         run: tar czf crispcloud-linux-x64.tar.gz -C build/linux/x64/release/bundle .
 
-      - uses: actions/upload-artifact@v4
+      - uses: actions/upload-artifact@v5
         with:
           name: crispcloud-linux-x64
           path: crispcloud-linux-x64.tar.gz
@@ -233,10 +233,10 @@ jobs:
     runs-on: macos-latest
     timeout-minutes: 40
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v5
 
       - name: Cache Flutter SDK + pub
-        uses: actions/cache@v4
+        uses: actions/cache@v5
         with:
           path: |
             ~/hostedtoolcache/flutter
@@ -306,7 +306,7 @@ jobs:
       #     xcrun stapler staple crispcloud-macos.zip
       # ────────────────────────────────────────────────────────────────────
 
-      - uses: actions/upload-artifact@v4
+      - uses: actions/upload-artifact@v5
         with:
           name: crispcloud-macos
           path: crispcloud-macos.zip
@@ -317,11 +317,12 @@ jobs:
     needs: test
     runs-on: windows-latest
     timeout-minutes: 35
+    continue-on-error: true  # pdfx pdfium CMake download broken on CI
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v5
 
       - name: Cache Flutter SDK + pub
-        uses: actions/cache@v4
+        uses: actions/cache@v5
         with:
           path: |
             C:\hostedtoolcache\windows\flutter
@@ -368,7 +369,7 @@ jobs:
         shell: pwsh
         run: Compress-Archive -Path build\windows\x64\runner\Release\* -DestinationPath crispcloud-windows-x64.zip
 
-      - uses: actions/upload-artifact@v4
+      - uses: actions/upload-artifact@v5
         with:
           name: crispcloud-windows-x64
           path: crispcloud-windows-x64.zip
@@ -380,7 +381,7 @@ jobs:
     runs-on: ubuntu-latest
     timeout-minutes: 25
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v5
 
       - uses: actions/setup-java@v4
         with:
@@ -388,7 +389,7 @@ jobs:
           java-version: '17'
 
       - name: Cache Flutter SDK + pub
-        uses: actions/cache@v4
+        uses: actions/cache@v5
         with:
           path: |
             /opt/hostedtoolcache/flutter
@@ -450,7 +451,7 @@ jobs:
           echo "Found APK: $APK ($(stat -c%s "$APK") bytes)"
           cp "$APK" crispcloud-android.apk
 
-      - uses: actions/upload-artifact@v4
+      - uses: actions/upload-artifact@v5
         with:
           name: crispcloud-android
           path: crispcloud-android.apk
@@ -462,10 +463,10 @@ jobs:
     runs-on: macos-latest
     timeout-minutes: 45
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v5
 
       - name: Cache Flutter SDK + pub
-        uses: actions/cache@v4
+        uses: actions/cache@v5
         with:
           path: |
             ~/hostedtoolcache/flutter
@@ -541,7 +542,7 @@ jobs:
             zip -r -y crispcloud-ios-nosign.zip build/ios/iphoneos/
           fi
 
-      - uses: actions/upload-artifact@v4
+      - uses: actions/upload-artifact@v5
         with:
           name: crispcloud-ios-nosign
           path: crispcloud-ios-nosign.zip
@@ -553,11 +554,11 @@ jobs:
     if: always() && !cancelled() && needs.build-web.result == 'success'
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v5
         with:
           fetch-depth: 0  # full history for changelog
 
-      - uses: actions/download-artifact@v4
+      - uses: actions/download-artifact@v5
         with:
           path: artifacts
 
