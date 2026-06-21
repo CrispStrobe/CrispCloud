@@ -360,12 +360,18 @@ jobs:
       #       "build/macos/Build/Products/Release/CrispCloud.app"
       # ────────────────────────────────────────────────────────────────────
 
-      - name: Package macOS build
+      - name: Package macOS build (.zip + .dmg)
         run: |
           cd build/macos/Build/Products/Release
           APP_NAME=$(ls -d *.app 2>/dev/null | head -1)
           echo "Packaging: $APP_NAME"
           zip -r -y "$GITHUB_WORKSPACE/crispcloud-macos.zip" "$APP_NAME"
+          # Create .dmg with drag-to-Applications layout
+          mkdir -p dmg_contents
+          cp -R "$APP_NAME" dmg_contents/
+          ln -s /Applications dmg_contents/Applications
+          hdiutil create -volname "CrispCloud" -srcfolder dmg_contents \
+            -ov -format UDZO "$GITHUB_WORKSPACE/crispcloud-macos.dmg"
 
       # ── macOS Notarization Placeholder ───────────────────────────────────
       # - name: Notarize and staple
@@ -384,12 +390,14 @@ jobs:
       - uses: actions/upload-artifact@v5
         with:
           name: crispcloud-macos
-          path: crispcloud-macos.zip
+          path: |
+            crispcloud-macos.zip
+            crispcloud-macos.dmg
 
       - name: Upload to Release
         env:
           GH_TOKEN: ${{ github.token }}
-        run: gh release upload "${{ needs.create-release.outputs.tag }}" crispcloud-macos.zip --clobber
+        run: gh release upload "${{ needs.create-release.outputs.tag }}" crispcloud-macos.zip crispcloud-macos.dmg --clobber
 
   # ---------- Windows ----------
   build-windows:
