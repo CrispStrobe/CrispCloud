@@ -261,7 +261,11 @@ jobs:
             fi
           done
 
-      - run: flutter build windows --release
+      - name: Build Windows
+        run: flutter build windows --release
+        env:
+          # Suppress MSVC experimental coroutine deprecation in local_auth_windows
+          CL: /D_SILENCE_EXPERIMENTAL_COROUTINE_DEPRECATION_WARNINGS
 
       - name: Package Windows build
         shell: pwsh

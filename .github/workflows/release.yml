@@ -437,7 +437,10 @@ jobs:
             fi
           done
 
-      - run: flutter build windows --release
+      - name: Build Windows
+        run: flutter build windows --release
+        env:
+          CL: /D_SILENCE_EXPERIMENTAL_COROUTINE_DEPRECATION_WARNINGS
 
       # ── Windows Code Signing Placeholder ────────────────────────────────
       # Uncomment and configure to sign with Authenticode / signtool.

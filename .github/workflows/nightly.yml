@@ -220,7 +220,10 @@ jobs:
             fi
           done
 
-      - run: flutter build windows --release
+      - name: Build Windows
+        run: flutter build windows --release
+        env:
+          CL: /D_SILENCE_EXPERIMENTAL_COROUTINE_DEPRECATION_WARNINGS
 
       - name: Package
         shell: pwsh
