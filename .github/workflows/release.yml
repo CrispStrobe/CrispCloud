@@ -427,11 +427,15 @@ jobs:
       - name: Patch pdfx CMake (fix VERSION 2.8.12 rejected by CMake 3.30+)
         shell: bash
         run: |
-          TEMPLATE=$(find . -path "*/pdfx/windows/DownloadProject.CMakeLists.cmake.in" | head -1)
-          if [ -n "$TEMPLATE" ]; then
-            sed -i 's/cmake_minimum_required(VERSION 2.8.12)/cmake_minimum_required(VERSION 3.14)/' "$TEMPLATE"
-            echo "Patched: $TEMPLATE"
-          fi
+          for base in . "$PUB_CACHE" "$LOCALAPPDATA/Pub/Cache" "$HOME/.pub-cache"; do
+            [ -d "$base" ] || continue
+            TEMPLATE=$(find "$base" -path "*/pdfx*/DownloadProject.CMakeLists.cmake.in" 2>/dev/null | head -1)
+            if [ -n "$TEMPLATE" ]; then
+              sed -i 's/cmake_minimum_required(VERSION 2.8.12)/cmake_minimum_required(VERSION 3.14)/' "$TEMPLATE"
+              echo "Patched: $TEMPLATE"
+              break
+            fi
+          done
 
       - run: flutter build windows --release
 
