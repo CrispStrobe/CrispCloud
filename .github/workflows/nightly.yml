@@ -224,6 +224,7 @@ jobs:
     needs: test
     runs-on: macos-latest
     timeout-minutes: 40
+    continue-on-error: true  # macOS runners scarce on free tier
     steps:
       - uses: actions/checkout@v5
 
@@ -336,6 +337,7 @@ jobs:
     needs: test
     runs-on: macos-latest
     timeout-minutes: 45
+    continue-on-error: true  # macOS runners scarce on free tier
     steps:
       - uses: actions/checkout@v5
 
