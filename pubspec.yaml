@@ -139,13 +139,18 @@ flutter:
     - assets/images/app_icon.png # Add your new icon path
 
 flutter_launcher_icons:
-  image_path: "assets/images/app_icon.png"
-  
-  # Mobile Platforms (boolean 'true' is fine)
+  image_path: "assets/images/app_icon_rounded.png"
+
+  # Android: adaptive icon with foreground + background color
   android: true
+  adaptive_icon_foreground: "assets/images/app_icon_foreground.png"
+  adaptive_icon_background: "#0D2A4A"
+
+  # iOS: rounded corners applied automatically by the OS
   ios: true
-  
-  # Desktop Platforms (must be configured as a map to enable generation)
+  remove_alpha_ios: true
+
+  # Desktop Platforms
   macos:
     generate: true
   windows:
