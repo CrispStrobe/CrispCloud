@@ -334,15 +334,12 @@ jobs:
 
       - name: Build APK
         run: |
-          flutter build apk --release 2>&1 || true
+          flutter build apk --release
           find build -name "*.apk" -type f 2>/dev/null || true
-          if [ ! -f build/app/outputs/flutter-apk/app-release.apk ]; then
-            cd android && ./gradlew assembleRelease --no-daemon 2>&1 && cd ..
-          fi
 
       - name: Find and rename APK
         run: |
-          APK=$(find . -name "*.apk" -not -path "*/intermediates/*" -type f 2>/dev/null | head -1)
+          APK=$(find build -name "app-release.apk" -not -path "*/intermediates/*" -type f 2>/dev/null | head -1)
           if [ -z "$APK" ]; then
             echo "::error::No APK found"
             exit 1

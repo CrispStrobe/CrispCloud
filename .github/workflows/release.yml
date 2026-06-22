@@ -543,20 +543,15 @@ jobs:
 
       - name: Build APK
         run: |
-          flutter build apk --release 2>&1 || true
+          flutter build apk --release
           echo "=== Searching for APKs ==="
           find build -name "*.apk" -type f 2>/dev/null || true
-          if [ ! -f build/app/outputs/flutter-apk/app-release.apk ]; then
-            echo "Flutter APK not at expected path, trying Gradle directly..."
-            cd android && ./gradlew assembleRelease --no-daemon 2>&1 && cd ..
-            find . -name "*.apk" -type f 2>/dev/null || true
-          fi
 
       - name: Find and rename APK
         run: |
-          APK=$(find . -name "*.apk" -not -path "*/intermediates/*" -type f 2>/dev/null | head -1)
+          APK=$(find build -name "app-release.apk" -not -path "*/intermediates/*" -type f 2>/dev/null | head -1)
           if [ -z "$APK" ]; then
-            echo "::error::No APK found anywhere in the build tree"
+            echo "::error::No APK found in build tree"
             exit 1
           fi
           echo "Found APK: $APK ($(stat -c%s "$APK") bytes)"

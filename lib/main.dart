@@ -137,6 +137,21 @@ Future<void> main() async {
       ));
     } catch (e, stack) {
       _log.error('Critical error creating config service', e, stack);
+      // Show an error screen instead of a black screen
+      runApp(MaterialApp(
+        home: Scaffold(
+          body: Center(
+            child: Padding(
+              padding: const EdgeInsets.all(32),
+              child: Text(
+                'Failed to start CrispCloud:\n$e',
+                style: const TextStyle(color: Colors.red, fontSize: 16),
+                textAlign: TextAlign.center,
+              ),
+            ),
+          ),
+        ),
+      ));
     }
   }, (error, stack) {
     _log.error('Uncaught error', error, stack);
