@@ -543,18 +543,26 @@ jobs:
 
       - name: Build APK
         run: |
-          flutter build apk --release
+          # flutter build apk reports "failed to produce" when the APK path
+          # doesn't match its expectation, but Gradle does build it successfully.
+          # We allow the exit code and verify the APK exists ourselves.
+          flutter build apk --release || true
           echo "=== Searching for APKs ==="
-          find build -name "*.apk" -type f 2>/dev/null || true
+          find . -name "app-release.apk" -not -path "*/intermediates/*" -type f 2>/dev/null
 
       - name: Find and rename APK
         run: |
-          APK=$(find build -name "app-release.apk" -not -path "*/intermediates/*" -type f 2>/dev/null | head -1)
+          APK=$(find . -name "app-release.apk" -not -path "*/intermediates/*" -type f 2>/dev/null | head -1)
           if [ -z "$APK" ]; then
-            echo "::error::No APK found in build tree"
+            echo "::error::No app-release.apk found — build genuinely failed"
             exit 1
           fi
-          echo "Found APK: $APK ($(stat -c%s "$APK") bytes)"
+          SIZE=$(stat -c%s "$APK")
+          echo "Found APK: $APK ($SIZE bytes)"
+          if [ "$SIZE" -lt 5000000 ]; then
+            echo "::error::APK too small ($SIZE bytes) — likely incomplete"
+            exit 1
+          fi
           cp "$APK" crispcloud-android.apk
 
       - uses: actions/upload-artifact@v5

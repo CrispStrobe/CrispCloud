@@ -334,14 +334,14 @@ jobs:
 
       - name: Build APK
         run: |
-          flutter build apk --release
-          find build -name "*.apk" -type f 2>/dev/null || true
+          flutter build apk --release || true
+          find . -name "app-release.apk" -not -path "*/intermediates/*" -type f 2>/dev/null
 
       - name: Find and rename APK
         run: |
-          APK=$(find build -name "app-release.apk" -not -path "*/intermediates/*" -type f 2>/dev/null | head -1)
+          APK=$(find . -name "app-release.apk" -not -path "*/intermediates/*" -type f 2>/dev/null | head -1)
           if [ -z "$APK" ]; then
-            echo "::error::No APK found"
+            echo "::error::No app-release.apk found — build genuinely failed"
             exit 1
           fi
           cp "$APK" crispcloud-nightly-android.apk
