@@ -17,6 +17,10 @@ permissions:
 
 env:
   FLUTTER_CHANNEL: stable
+  # Pinned to match ci.yml: Flutter >= 3.44 writes an invalid
+  # package_graph.json ("dependencies for `dart_pg` missing") for hosted
+  # deps reached only through a git dependency (internxt_client -> dart_pg).
+  FLUTTER_VERSION: 3.38.5
 
 jobs:
   # ---------- Guard: skip if no new commits since last nightly ----------
@@ -65,13 +69,14 @@ jobs:
           path: |
             /opt/hostedtoolcache/flutter
             ~/.pub-cache
-          key: flutter-${{ env.FLUTTER_CHANNEL }}-${{ runner.os }}-${{ hashFiles('pubspec.yaml') }}
+          key: flutter-${{ env.FLUTTER_VERSION }}-${{ runner.os }}-${{ hashFiles('pubspec.yaml') }}
           restore-keys: |
-            flutter-${{ env.FLUTTER_CHANNEL }}-${{ runner.os }}-
+            flutter-${{ env.FLUTTER_VERSION }}-${{ runner.os }}-
 
       - uses: subosito/flutter-action@v2
         with:
           channel: ${{ env.FLUTTER_CHANNEL }}
+          flutter-version: ${{ env.FLUTTER_VERSION }}
           cache: true
 
       - name: Git auth
@@ -106,13 +111,14 @@ jobs:
           path: |
             /opt/hostedtoolcache/flutter
             ~/.pub-cache
-          key: flutter-${{ env.FLUTTER_CHANNEL }}-${{ runner.os }}-${{ hashFiles('pubspec.yaml') }}
+          key: flutter-${{ env.FLUTTER_VERSION }}-${{ runner.os }}-${{ hashFiles('pubspec.yaml') }}
           restore-keys: |
-            flutter-${{ env.FLUTTER_CHANNEL }}-${{ runner.os }}-
+            flutter-${{ env.FLUTTER_VERSION }}-${{ runner.os }}-
 
       - uses: subosito/flutter-action@v2
         with:
           channel: ${{ env.FLUTTER_CHANNEL }}
+          flutter-version: ${{ env.FLUTTER_VERSION }}
           cache: true
 
       - name: Git auth
@@ -144,13 +150,14 @@ jobs:
           path: |
             /opt/hostedtoolcache/flutter
             ~/.pub-cache
-          key: flutter-${{ env.FLUTTER_CHANNEL }}-${{ runner.os }}-${{ hashFiles('pubspec.yaml') }}
+          key: flutter-${{ env.FLUTTER_VERSION }}-${{ runner.os }}-${{ hashFiles('pubspec.yaml') }}
           restore-keys: |
-            flutter-${{ env.FLUTTER_CHANNEL }}-${{ runner.os }}-
+            flutter-${{ env.FLUTTER_VERSION }}-${{ runner.os }}-
 
       - uses: subosito/flutter-action@v2
         with:
           channel: ${{ env.FLUTTER_CHANNEL }}
+          flutter-version: ${{ env.FLUTTER_VERSION }}
           cache: true
 
       - name: Git auth
@@ -189,13 +196,14 @@ jobs:
           path: |
             C:\hostedtoolcache\windows\flutter
             ~\AppData\Local\Pub\Cache
-          key: flutter-${{ env.FLUTTER_CHANNEL }}-windows-${{ hashFiles('pubspec.yaml') }}
+          key: flutter-${{ env.FLUTTER_VERSION }}-windows-${{ hashFiles('pubspec.yaml') }}
           restore-keys: |
-            flutter-${{ env.FLUTTER_CHANNEL }}-windows-
+            flutter-${{ env.FLUTTER_VERSION }}-windows-
 
       - uses: subosito/flutter-action@v2
         with:
           channel: ${{ env.FLUTTER_CHANNEL }}
+          flutter-version: ${{ env.FLUTTER_VERSION }}
           cache: true
 
       - name: Git auth
@@ -250,13 +258,14 @@ jobs:
           path: |
             ~/hostedtoolcache/flutter
             ~/.pub-cache
-          key: flutter-${{ env.FLUTTER_CHANNEL }}-macos-${{ hashFiles('pubspec.yaml') }}
+          key: flutter-${{ env.FLUTTER_VERSION }}-macos-${{ hashFiles('pubspec.yaml') }}
           restore-keys: |
-            flutter-${{ env.FLUTTER_CHANNEL }}-macos-
+            flutter-${{ env.FLUTTER_VERSION }}-macos-
 
       - uses: subosito/flutter-action@v2
         with:
           channel: ${{ env.FLUTTER_CHANNEL }}
+          flutter-version: ${{ env.FLUTTER_VERSION }}
           cache: true
 
       - name: Git auth
@@ -316,13 +325,14 @@ jobs:
           path: |
             /opt/hostedtoolcache/flutter
             ~/.pub-cache
-          key: flutter-${{ env.FLUTTER_CHANNEL }}-${{ runner.os }}-${{ hashFiles('pubspec.yaml') }}
+          key: flutter-${{ env.FLUTTER_VERSION }}-${{ runner.os }}-${{ hashFiles('pubspec.yaml') }}
           restore-keys: |
-            flutter-${{ env.FLUTTER_CHANNEL }}-${{ runner.os }}-
+            flutter-${{ env.FLUTTER_VERSION }}-${{ runner.os }}-
 
       - uses: subosito/flutter-action@v2
         with:
           channel: ${{ env.FLUTTER_CHANNEL }}
+          flutter-version: ${{ env.FLUTTER_VERSION }}
           cache: true
 
       - name: Git auth
@@ -367,13 +377,14 @@ jobs:
           path: |
             ~/hostedtoolcache/flutter
             ~/.pub-cache
-          key: flutter-${{ env.FLUTTER_CHANNEL }}-macos-${{ hashFiles('pubspec.yaml') }}
+          key: flutter-${{ env.FLUTTER_VERSION }}-macos-${{ hashFiles('pubspec.yaml') }}
           restore-keys: |
-            flutter-${{ env.FLUTTER_CHANNEL }}-macos-
+            flutter-${{ env.FLUTTER_VERSION }}-macos-
 
       - uses: subosito/flutter-action@v2
         with:
           channel: ${{ env.FLUTTER_CHANNEL }}
+          flutter-version: ${{ env.FLUTTER_VERSION }}
           cache: true
 
       - name: Git auth
