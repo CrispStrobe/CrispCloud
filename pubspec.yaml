@@ -49,7 +49,10 @@ dependencies:
   
   # Sharing
   share_plus: ^7.2.2
-  receive_sharing_intent: ^1.5.3
+  # Cap < 1.8.0: 1.8.0+ dropped CocoaPods and is Swift-Package-Manager-only,
+  # which makes `flutter pub get` fail (exit 1) on a project without SPM
+  # enabled. Revisit once the app migrates to SPM.
+  receive_sharing_intent: '>=1.5.3 <1.8.0'
   
   # Networking & Crypto
   http: ^1.2.0
