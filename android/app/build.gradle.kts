@@ -11,6 +11,11 @@ if (keyPropertiesFile.exists()) {
 
 plugins {
     id("com.android.application")
+    // Apply the Kotlin Android plugin explicitly so the `kotlin { compilerOptions }`
+    // DSL below resolves against the version pinned in settings.gradle.kts (2.2.20).
+    // Without this, an older Kotlin gets applied implicitly and `compilerOptions`
+    // is unresolved, breaking the Android build.
+    id("org.jetbrains.kotlin.android")
     id("dev.flutter.flutter-gradle-plugin")
 }
 
