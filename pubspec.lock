@@ -382,10 +382,10 @@ packages:
     description:
       path: "."
       ref: main
-      resolved-ref: ba9449bbd753eb7f47f35fe24a0aa672f039be56
+      resolved-ref: "58d161df880b59081a40e1492bdcd2a5f1c09bc3"
       url: "https://github.com/CrispStrobe/filen-dart.git"
     source: git
-    version: "0.1.0"
+    version: "0.2.0"
   fixnum:
     dependency: transitive
     description:
@@ -635,10 +635,10 @@ packages:
     description:
       path: "."
       ref: main
-      resolved-ref: "61bbdeb243698b359a0f418d80c1f19c8069b7e2"
+      resolved-ref: fad17e36ac7af6000ef72aaf67eb29bd021b681f
       url: "https://github.com/CrispStrobe/internxt-dart.git"
     source: git
-    version: "0.1.0"
+    version: "0.2.0"
   intl:
     dependency: "direct main"
     description:
