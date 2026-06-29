@@ -55,6 +55,16 @@ android {
                 signingConfigs.getByName("debug")
         }
     }
+
+    packaging {
+        jniLibs {
+            // sqlite3_flutter_libs and the transitive sqlite3-native-library
+            // AAR both ship lib/<abi>/libsqlite3.so, which fails
+            // mergeReleaseNativeLibs with "2 files found". They are the same
+            // library — keep the first.
+            pickFirsts += "**/libsqlite3.so"
+        }
+    }
 }
 
 dependencies {
