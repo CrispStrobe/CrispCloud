@@ -23,6 +23,12 @@ concurrency:
 
 env:
   FLUTTER_CHANNEL: stable
+  # Pinned: Flutter >= 3.44 has a pub regression that writes an invalid
+  # .dart_tool/package_graph.json ("dependencies for `dart_pg` missing")
+  # for hosted packages reached only through a git dependency
+  # (internxt_client -> dart_pg). 3.38.5 writes a valid graph for this
+  # exact dep set. Revisit when the upstream pub bug is fixed.
+  FLUTTER_VERSION: 3.38.5
   FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: true
 
 jobs:
@@ -42,13 +48,14 @@ jobs:
           path: |
             /opt/hostedtoolcache/flutter
             ~/.pub-cache
-          key: flutter-${{ env.FLUTTER_CHANNEL }}-${{ runner.os }}-${{ hashFiles('pubspec.yaml') }}
+          key: flutter-${{ env.FLUTTER_VERSION }}-${{ runner.os }}-${{ hashFiles('pubspec.yaml') }}
           restore-keys: |
-            flutter-${{ env.FLUTTER_CHANNEL }}-${{ runner.os }}-
+            flutter-${{ env.FLUTTER_VERSION }}-${{ runner.os }}-
 
       - uses: subosito/flutter-action@v2
         with:
           channel: ${{ env.FLUTTER_CHANNEL }}
+          flutter-version: ${{ env.FLUTTER_VERSION }}
           cache: true
 
       - name: Configure git auth for private deps
@@ -124,13 +131,14 @@ jobs:
           path: |
             /opt/hostedtoolcache/flutter
             ~/.pub-cache
-          key: flutter-${{ env.FLUTTER_CHANNEL }}-${{ runner.os }}-${{ hashFiles('pubspec.yaml') }}
+          key: flutter-${{ env.FLUTTER_VERSION }}-${{ runner.os }}-${{ hashFiles('pubspec.yaml') }}
           restore-keys: |
-            flutter-${{ env.FLUTTER_CHANNEL }}-${{ runner.os }}-
+            flutter-${{ env.FLUTTER_VERSION }}-${{ runner.os }}-
 
       - uses: subosito/flutter-action@v2
         with:
           channel: ${{ env.FLUTTER_CHANNEL }}
+          flutter-version: ${{ env.FLUTTER_VERSION }}
           cache: true
 
       - name: Configure git auth for private deps

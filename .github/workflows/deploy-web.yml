@@ -16,6 +16,10 @@ concurrency:
 
 env:
   FLUTTER_CHANNEL: stable
+  # Pinned to match CI: Flutter >= 3.44 writes an invalid package_graph.json
+  # for hosted deps reached only through a git dependency (internxt_client
+  # -> dart_pg). See .github/workflows/ci.yml for details.
+  FLUTTER_VERSION: 3.38.5
   FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: true
 
 jobs:
@@ -34,13 +38,14 @@ jobs:
           path: |
             /opt/hostedtoolcache/flutter
             ~/.pub-cache
-          key: flutter-${{ env.FLUTTER_CHANNEL }}-${{ runner.os }}-${{ hashFiles('pubspec.yaml') }}
+          key: flutter-${{ env.FLUTTER_VERSION }}-${{ runner.os }}-${{ hashFiles('pubspec.yaml') }}
           restore-keys: |
-            flutter-${{ env.FLUTTER_CHANNEL }}-${{ runner.os }}-
+            flutter-${{ env.FLUTTER_VERSION }}-${{ runner.os }}-
 
       - uses: subosito/flutter-action@v2
         with:
           channel: ${{ env.FLUTTER_CHANNEL }}
+          flutter-version: ${{ env.FLUTTER_VERSION }}
           cache: true
 
       - name: Configure git auth for private deps
