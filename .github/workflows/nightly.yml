@@ -96,6 +96,39 @@ jobs:
 
       - run: flutter test
 
+  # ---------- Native hardware crypto (macOS) ----------
+  # The headless cross-path correctness tests run in `flutter test` above (Linux
+  # VM). This job additionally validates that file AES-GCM actually engages the
+  # platform's hardware crypto (Apple CryptoKit via cryptography_flutter) and
+  # stays byte-exact + interoperable with existing pointycastle files — which
+  # needs the Flutter engine, hence a macOS runner.
+  crypto-hardware-macos:
+    name: Hardware crypto (macOS)
+    needs: check-changes
+    if: needs.check-changes.outputs.has_changes == 'true'
+    runs-on: macos-latest
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v5
+
+      - uses: subosito/flutter-action@v2
+        with:
+          channel: ${{ env.FLUTTER_CHANNEL }}
+          flutter-version: ${{ env.FLUTTER_VERSION }}
+          cache: true
+
+      - name: Git auth
+        run: |
+          TOKEN="${{ secrets.GH_PAT || github.token }}"
+          git config --global url."https://x-access-token:${TOKEN}@github.com/".insteadOf "https://github.com/"
+
+      - run: flutter pub get
+
+      - name: Native hardware AES-GCM integration test
+        run: |
+          flutter config --enable-macos-desktop
+          flutter test integration_test/native_crypto_test.dart -d macos
+
   # ---------- Build Web ----------
   build-web:
     name: Build Web
