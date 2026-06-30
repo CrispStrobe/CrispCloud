@@ -28,6 +28,12 @@ abstract class WebCryptoProvider {
   /// Derive an opaque AES-256-GCM key from [password]/[salt]/[iterations].
   Future<Object> deriveKey(String password, Uint8List salt, int iterations);
 
+  /// Wrap a raw 32-byte AES-256 key into an opaque GCM key handle. Used by the
+  /// file-encryption path, where the key is already a raw [Uint8List] (it is
+  /// also backed up as a BIP39 mnemonic). On WebCrypto this imports it into a
+  /// non-extractable CryptoKey for hardware-accelerated bulk AES-GCM.
+  Future<Object> importKey(Uint8List rawKey);
+
   /// AES-256-GCM encrypt. Returns [nonce(12) | ciphertext | tag(16)].
   Future<Uint8List> encrypt(Object key, Uint8List plaintext);
 
@@ -45,6 +51,9 @@ class PointycastleCryptoProvider implements WebCryptoProvider {
   Future<Object> deriveKey(
           String password, Uint8List salt, int iterations) async =>
       EncryptionService.deriveKey(password, salt, iterations: iterations);
+
+  @override
+  Future<Object> importKey(Uint8List rawKey) async => rawKey;
 
   @override
   Future<Uint8List> encrypt(Object key, Uint8List plaintext) async =>

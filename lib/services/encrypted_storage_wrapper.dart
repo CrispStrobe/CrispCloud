@@ -6,6 +6,12 @@ import 'package:flutter/foundation.dart' show kIsWeb;
 
 import 'cloud_storage_interface.dart';
 import 'encryption_service.dart';
+import 'web_crypto_provider.dart';
+// On the web build, bulk AES-GCM runs on the browser's native crypto
+// (~1000 MB/s vs ~1 MB/s for pointycastle in dart2js); native/VM keeps
+// pointycastle.
+import 'web_crypto_factory_io.dart'
+    if (dart.library.js_interop) 'web_crypto_factory_web.dart';
 
 /// Wraps any [CloudStorageClient] to transparently encrypt data before upload
 /// and decrypt after download. All cryptography is performed client-side.
@@ -29,20 +35,30 @@ class EncryptedStorageWrapper implements CloudStorageClient {
   /// When true, filenames are also encrypted (base64url encoded).
   final bool encryptFilenames;
 
+  /// Crypto backend for BULK file data: native WebCrypto on the web build,
+  /// pointycastle on the Dart VM / native. Injectable for tests.
+  final WebCryptoProvider _crypto;
+
+  /// The raw [_key] wrapped into an opaque GCM key handle, imported once and
+  /// cached (cheap on pointycastle, a one-time importKey on WebCrypto).
+  Future<Object>? _gcmKeyFuture;
+  Future<Object> _gcmKey() => _gcmKeyFuture ??= _crypto.importKey(_key);
+
   EncryptedStorageWrapper({
     required CloudStorageClient inner,
     required Uint8List encryptionKey,
     this.encryptFilenames = false,
+    WebCryptoProvider? cryptoProvider,
   })  : _inner = inner,
-        _key = encryptionKey;
+        _key = encryptionKey,
+        _crypto = cryptoProvider ?? defaultWebCryptoProvider();
 
   // ---------------------------------------------------------------------------
   // Pass-through: authentication
   // ---------------------------------------------------------------------------
 
   @override
-  Future<void> login(String email, String password,
-          {String? twoFactorCode}) =>
+  Future<void> login(String email, String password, {String? twoFactorCode}) =>
       _inner.login(email, password, twoFactorCode: twoFactorCode);
 
   @override
@@ -104,8 +120,7 @@ class EncryptedStorageWrapper implements CloudStorageClient {
       _inner.resolvePath(path);
 
   @override
-  Future<Map<String, dynamic>> listPath(String path) =>
-      _inner.listPath(path);
+  Future<Map<String, dynamic>> listPath(String path) => _inner.listPath(path);
 
   @override
   Future<void> createFolderPath(String path) => _inner.createFolderPath(path);
@@ -133,7 +148,7 @@ class EncryptedStorageWrapper implements CloudStorageClient {
     Function(int, int)? onProgress,
   }) async {
     final encrypted =
-        EncryptionService.encrypt(Uint8List.fromList(fileData), _key);
+        await _crypto.encrypt(await _gcmKey(), Uint8List.fromList(fileData));
     final uploadName = encryptFilenames
         ? EncryptionService.encryptFilename(fileName, _key)
         : fileName;
@@ -150,7 +165,7 @@ class EncryptedStorageWrapper implements CloudStorageClient {
       {Function(int, int)? onProgress}) async {
     final encrypted =
         await _inner.downloadFileBytes(remotePath, onProgress: onProgress);
-    return EncryptionService.decrypt(encrypted, _key);
+    return _crypto.decrypt(await _gcmKey(), encrypted);
   }
 
   @override
@@ -162,11 +177,10 @@ class EncryptedStorageWrapper implements CloudStorageClient {
     // Download encrypted bytes, decrypt, then write to local path.
     final encrypted =
         await _inner.downloadFileBytes(remotePath, onProgress: onProgress);
-    final decrypted = EncryptionService.decrypt(encrypted, _key);
+    final decrypted = await _crypto.decrypt(await _gcmKey(), encrypted);
 
     if (kIsWeb) {
-      throw UnsupportedError(
-          'downloadFileByPath is not supported on web. '
+      throw UnsupportedError('downloadFileByPath is not supported on web. '
           'Use downloadFileBytes instead.');
     }
 
@@ -233,8 +247,11 @@ class EncryptedStorageWrapper implements CloudStorageClient {
   }
 
   @override
-  bool get supportsFullTextSearch => false; // encrypted content can't be searched server-side
+  bool get supportsFullTextSearch =>
+      false; // encrypted content can't be searched server-side
 
   @override
-  Future<List<Map<String, dynamic>>> fullTextSearch(String query, String remotePath) async => [];
+  Future<List<Map<String, dynamic>>> fullTextSearch(
+          String query, String remotePath) async =>
+      [];
 }

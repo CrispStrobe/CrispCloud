@@ -63,6 +63,20 @@ class WebCryptoSubtleProvider implements WebCryptoProvider {
   }
 
   @override
+  Future<Object> importKey(Uint8List rawKey) async {
+    final key = await _subtle
+        .importKey(
+          'raw',
+          rawKey.toJS,
+          'AES-GCM'.toJS,
+          false, // non-extractable
+          <JSString>['encrypt'.toJS, 'decrypt'.toJS].toJS,
+        )
+        .toDart;
+    return key;
+  }
+
+  @override
   Future<Uint8List> encrypt(Object key, Uint8List plaintext) async {
     final nonce = Uint8List(12);
     web.window.crypto.getRandomValues(nonce.toJS);
