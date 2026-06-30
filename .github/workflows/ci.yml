@@ -90,15 +90,23 @@ jobs:
           path: coverage/lcov.info
           retention-days: 14
 
-  # ---------- Windows native crypto (BCrypt/CNG FFI) ----------
-  # The dev machine + Linux CI can't exercise the Windows CNG binding, so run the
-  # crypto tests headlessly on a Windows runner. native_ffi_crypto_test ASSERTS
-  # BCryptAesGcm loads + is byte-exact + interoperable with pointycastle files
-  # (a broken FFI fails CI here instead of silently falling back). No app window.
-  windows-crypto:
-    name: Native crypto (Windows BCrypt)
-    runs-on: windows-latest
-    timeout-minutes: 20
+  # ---------- Crypto gate (headless, all three desktop OSes) ----------
+  # Standing per-PR gate for the file-crypto stack on Linux, Windows and macOS.
+  # native_ffi_crypto_test ASSERTS the OS's system-crypto binding loads + is
+  # byte-exact + interoperable with existing pointycastle files (Linux->OpenSSL,
+  # Windows->BCrypt; a broken FFI fails CI on that OS rather than silently
+  # falling back). crypto_paths_test runs the real-file + cross-path interop
+  # matrix. Pure-Dart VM tests — no app window, no device. (The native HARDWARE
+  # path on macOS/Android/iOS — CryptoKit/Keystore — needs the Flutter engine and
+  # stays in nightly's integration test.)
+  crypto-gate:
+    name: Crypto gate (${{ matrix.os }})
+    runs-on: ${{ matrix.os }}
+    timeout-minutes: 25
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest, windows-latest, macos-latest]
     steps:
       - uses: actions/checkout@v5
 
@@ -113,7 +121,7 @@ jobs:
 
       - run: flutter pub get
 
-      - name: Native FFI crypto tests (BCrypt + cross-path interop)
+      - name: Headless crypto tests (native FFI assertions + cross-path interop)
         run: flutter test test/native_ffi_crypto_test.dart test/crypto_paths_test.dart
 
   # ---------- Multi-platform builds (matrix) ----------
