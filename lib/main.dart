@@ -4,6 +4,7 @@ import 'package:flutter_localizations/flutter_localizations.dart';
 import 'l10n/app_localizations.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter/foundation.dart' show kIsWeb;
+import 'package:cryptography_flutter/cryptography_flutter.dart';
 import 'package:flutter/services.dart' show BrowserContextMenu;
 import 'package:path_provider/path_provider.dart';
 import 'package:shared_preferences/shared_preferences.dart';
@@ -48,6 +49,13 @@ Future<void> main() async {
   runZonedGuarded(() async {
     WidgetsFlutterBinding.ensureInitialized();
 
+    // Route AES-GCM to the platform's hardware-accelerated crypto on native
+    // (Android Keystore / Apple CryptoKit) — ~1000 MB/s vs ~1-9 MB/s pure-Dart
+    // for file encryption. No-op on web (which uses WebCrypto directly).
+    if (!kIsWeb) {
+      FlutterCryptography.enable();
+    }
+
     // Disable browser context menu on web so our custom context menu works.
     if (kIsWeb) {
       BrowserContextMenu.disableContextMenu();
@@ -81,7 +89,9 @@ Future<void> main() async {
       final dir = await getApplicationSupportDirectory();
       configPath = p.join(dir.path, '.cloud-storage-config');
     } else {
-      final home = Platform.environment['HOME'] ?? Platform.environment['USERPROFILE'] ?? '.';
+      final home = Platform.environment['HOME'] ??
+          Platform.environment['USERPROFILE'] ??
+          '.';
       configPath = p.join(home, '.cloud-storage-config');
     }
 
@@ -108,13 +118,16 @@ Future<void> main() async {
 
     CloudProvider defaultProvider = await _getDefaultProvider();
 
-    if (defaultProvider == CloudProvider.internxt && !CloudStorageFactory.isInternxtSupported) {
-      _log.warn('Internxt preference detected but provider is disabled. Forcing Filen.');
+    if (defaultProvider == CloudProvider.internxt &&
+        !CloudStorageFactory.isInternxtSupported) {
+      _log.warn(
+          'Internxt preference detected but provider is disabled. Forcing Filen.');
       defaultProvider = CloudProvider.filen;
     }
 
     try {
-      final configService = await _createConfigService(configPath, defaultProvider, secureStorage);
+      final configService = await _createConfigService(
+          configPath, defaultProvider, secureStorage);
 
       runApp(ProviderScope(
         overrides: [
@@ -126,12 +139,12 @@ Future<void> main() async {
           thumbnailServiceProvider.overrideWithValue(thumbnailService),
           auditServiceProvider.overrideWithValue(auditService),
           authProvider.overrideWith((ref) => AuthNotifier(
-            ref,
-            initialProvider: defaultProvider,
-            config: configService,
-            configPath: configPath,
-            secureStorage: secureStorage,
-          )),
+                ref,
+                initialProvider: defaultProvider,
+                config: configService,
+                configPath: configPath,
+                secureStorage: secureStorage,
+              )),
         ],
         child: const MyApp(),
       ));
@@ -166,18 +179,30 @@ Future<CloudProvider> _getDefaultProvider() async {
     if (providerName == null) return CloudProvider.filen;
 
     switch (providerName.toLowerCase()) {
-      case 'dropbox': return CloudProvider.dropbox;
-      case 'filen': return CloudProvider.filen;
-      case 'ftp': return CloudProvider.ftp;
-      case 'gdrive': return CloudProvider.gdrive;
-      case 'internxt': return CloudProvider.internxt;
-      case 'nextcloud': return CloudProvider.nextcloud;
-      case 'onedrive': return CloudProvider.onedrive;
-      case 'pcloud': return CloudProvider.pcloud;
-      case 's3': return CloudProvider.s3;
-      case 'sftp': return CloudProvider.sftp;
-      case 'webdav': return CloudProvider.webdav;
-      default: return CloudProvider.filen;
+      case 'dropbox':
+        return CloudProvider.dropbox;
+      case 'filen':
+        return CloudProvider.filen;
+      case 'ftp':
+        return CloudProvider.ftp;
+      case 'gdrive':
+        return CloudProvider.gdrive;
+      case 'internxt':
+        return CloudProvider.internxt;
+      case 'nextcloud':
+        return CloudProvider.nextcloud;
+      case 'onedrive':
+        return CloudProvider.onedrive;
+      case 'pcloud':
+        return CloudProvider.pcloud;
+      case 's3':
+        return CloudProvider.s3;
+      case 'sftp':
+        return CloudProvider.sftp;
+      case 'webdav':
+        return CloudProvider.webdav;
+      default:
+        return CloudProvider.filen;
     }
   } catch (e) {
     _log.warn('Error reading provider preference, defaulting to Filen', e);
@@ -193,25 +218,35 @@ Future<dynamic> _createConfigService(
   try {
     switch (provider) {
       case CloudProvider.dropbox:
-        return DropboxConfigService(configPath: configPath, secureStorage: secureStorage);
+        return DropboxConfigService(
+            configPath: configPath, secureStorage: secureStorage);
       case CloudProvider.filen:
-        return FilenConfigService(configPath: configPath, secureStorage: secureStorage);
+        return FilenConfigService(
+            configPath: configPath, secureStorage: secureStorage);
       case CloudProvider.ftp:
-        return FTPConfigService(configPath: configPath, secureStorage: secureStorage);
+        return FTPConfigService(
+            configPath: configPath, secureStorage: secureStorage);
       case CloudProvider.gdrive:
-        return GDriveConfigService(configPath: configPath, secureStorage: secureStorage);
+        return GDriveConfigService(
+            configPath: configPath, secureStorage: secureStorage);
       case CloudProvider.onedrive:
-        return OneDriveConfigService(configPath: configPath, secureStorage: secureStorage);
+        return OneDriveConfigService(
+            configPath: configPath, secureStorage: secureStorage);
       case CloudProvider.s3:
-        return S3ConfigService(configPath: configPath, secureStorage: secureStorage);
+        return S3ConfigService(
+            configPath: configPath, secureStorage: secureStorage);
       case CloudProvider.nextcloud:
-        return NextcloudConfigService(configPath: configPath, secureStorage: secureStorage);
+        return NextcloudConfigService(
+            configPath: configPath, secureStorage: secureStorage);
       case CloudProvider.pcloud:
-        return PCloudConfigService(configPath: configPath, secureStorage: secureStorage);
+        return PCloudConfigService(
+            configPath: configPath, secureStorage: secureStorage);
       case CloudProvider.sftp:
-        return SFTPConfigService(configPath: configPath, secureStorage: secureStorage);
+        return SFTPConfigService(
+            configPath: configPath, secureStorage: secureStorage);
       case CloudProvider.webdav:
-        return WebDavConfigService(configPath: configPath, secureStorage: secureStorage);
+        return WebDavConfigService(
+            configPath: configPath, secureStorage: secureStorage);
       case CloudProvider.internxt:
         if (CloudStorageFactory.isInternxtSupported) {
           return ConfigService(
@@ -219,7 +254,8 @@ Future<dynamic> _createConfigService(
             storage: kIsWeb ? _InMemoryConfigStorage() : null,
           );
         } else {
-          return FilenConfigService(configPath: configPath, secureStorage: secureStorage);
+          return FilenConfigService(
+              configPath: configPath, secureStorage: secureStorage);
         }
       case CloudProvider.azure:
         return AzureConfigService(secureStorage: secureStorage);
@@ -228,12 +264,14 @@ Future<dynamic> _createConfigService(
     }
   } catch (e) {
     _log.error('Critical error creating config service', e);
-    return FilenConfigService(configPath: configPath, secureStorage: secureStorage);
+    return FilenConfigService(
+        configPath: configPath, secureStorage: secureStorage);
   }
 }
 
 /// ThemeService exposed via Riverpod.
-final themeProvider = ChangeNotifierProvider<ThemeService>((ref) => ThemeService());
+final themeProvider =
+    ChangeNotifierProvider<ThemeService>((ref) => ThemeService());
 
 /// App lock service provider.
 final appLockServiceProvider = Provider<AppLockService>((ref) {
@@ -282,7 +320,8 @@ class _AppLockGate extends ConsumerStatefulWidget {
   ConsumerState<_AppLockGate> createState() => _AppLockGateState();
 }
 
-class _AppLockGateState extends ConsumerState<_AppLockGate> with WidgetsBindingObserver {
+class _AppLockGateState extends ConsumerState<_AppLockGate>
+    with WidgetsBindingObserver {
   bool _isLocked = false;
   bool _isChecking = true;
   DateTime? _lastPaused;
@@ -307,7 +346,8 @@ class _AppLockGateState extends ConsumerState<_AppLockGate> with WidgetsBindingO
 
   @override
   void didChangeAppLifecycleState(AppLifecycleState state) {
-    if (state == AppLifecycleState.paused || state == AppLifecycleState.hidden) {
+    if (state == AppLifecycleState.paused ||
+        state == AppLifecycleState.hidden) {
       _lastPaused = DateTime.now();
     } else if (state == AppLifecycleState.resumed && _lastPaused != null) {
       _checkAutoLock();
@@ -396,10 +436,12 @@ class _MasterPasswordGateState extends ConsumerState<_MasterPasswordGate> {
       // just the salt and verify token. If not, the user never
       // saved any credentials — clear the stale salt and skip.
       final allKeys = await backend.allKeys();
-      final credKeys = allKeys.where((k) =>
-          k.startsWith('crisp_enc_') &&
-          k != 'crisp_enc_salt' &&
-          k != 'crisp_enc_verify').toList();
+      final credKeys = allKeys
+          .where((k) =>
+              k.startsWith('crisp_enc_') &&
+              k != 'crisp_enc_salt' &&
+              k != 'crisp_enc_verify')
+          .toList();
       if (credKeys.isEmpty) {
         // Only salt/verify exist, no actual credentials — clean up and skip.
         await backend.removeItem('crisp_enc_salt');
