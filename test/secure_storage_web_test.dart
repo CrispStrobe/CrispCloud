@@ -8,7 +8,7 @@ void main() {
 
     setUp(() {
       backend = InMemoryWebStorageBackend();
-      storage = WebEncryptedStorage(backend);
+      storage = WebEncryptedStorage(backend, newVaultIterations: 1000);
     });
 
     test('isInitialized is false before initialize()', () {
@@ -94,7 +94,7 @@ void main() {
       await storage.write('secret', 'important-data');
 
       // Create a new storage instance with the same backend.
-      final storage2 = WebEncryptedStorage(backend);
+      final storage2 = WebEncryptedStorage(backend, newVaultIterations: 1000);
 
       // Attempt to initialize with wrong password — should throw.
       expect(
@@ -108,7 +108,7 @@ void main() {
       await storage.write('k', 'v');
 
       // Create new instance, re-initialize with same password.
-      final storage2 = WebEncryptedStorage(backend);
+      final storage2 = WebEncryptedStorage(backend, newVaultIterations: 1000);
       await storage2.initialize('my-pw');
       expect(await storage2.read('k'), 'v');
     });

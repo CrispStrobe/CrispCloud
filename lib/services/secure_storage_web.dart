@@ -21,6 +21,12 @@ import 'package:universal_html/html.dart' as html;
 import 'encryption_service.dart';
 import 'log_service.dart';
 import 'secure_storage_service.dart';
+import 'web_crypto_provider.dart';
+// Picks the native WebCrypto (crypto.subtle) provider on the web build and the
+// pure-Dart pointycastle provider on the Dart VM / native (so tests run without
+// a browser).
+import 'web_crypto_factory_io.dart'
+    if (dart.library.js_interop) 'web_crypto_factory_web.dart';
 
 const _log = Log('WebEncryptedStorage');
 
@@ -34,8 +40,21 @@ const _saltKey = '${_keyPrefix}salt';
 /// an incorrect master password without corrupting real data.
 const _verifyKey = '${_keyPrefix}verify';
 
+/// Key under which the PBKDF2 iteration count is stored (unencrypted), so the
+/// count can be raised over time without locking out existing data.
+const _iterationsKey = '${_keyPrefix}iterations';
+
 /// The plaintext we encrypt as a verification token.
 const _verifyPlaintext = 'CrispCloud-web-verify';
+
+/// PBKDF2 iterations for NEW vaults — OWASP 2023 for PBKDF2-HMAC-SHA256.
+/// Affordable because WebCrypto derives natively (~ms); the pointycastle
+/// fallback (tests/native) is only ever used at the lower legacy count.
+const _pbkdf2Iterations = 600000;
+
+/// Iteration count assumed for a pre-existing vault that has no stored count
+/// (the original hard-coded EncryptionService.deriveKey default).
+const _legacyIterations = 100000;
 
 /// Web-specific [SecureStorage] that encrypts values with AES-256-GCM
 /// using a key derived from a master password.
@@ -58,17 +77,33 @@ class WebEncryptedStorage extends SecureStorage {
   /// (e.g., to decide whether to show the master password gate).
   WebStorageBackend get backend => _backend;
 
-  /// Derived AES-256 key — held in memory only, never persisted.
-  Uint8List? _derivedKey;
+  /// Crypto backend: native WebCrypto (non-extractable key) on the web build,
+  /// pointycastle on the Dart VM / native (tests). Injectable for tests.
+  final WebCryptoProvider _crypto;
 
-  WebEncryptedStorage(this._backend);
+  /// Opaque derived AES-256-GCM key — a non-extractable CryptoKey under
+  /// WebCrypto (the raw bytes never enter JS memory), a Uint8List under
+  /// pointycastle. Held in memory only, never persisted.
+  Object? _cryptoKey;
+
+  /// PBKDF2 iteration count for a NEW vault. Defaults to the SOTA
+  /// [_pbkdf2Iterations]; tests override it low so the pure-Dart pointycastle
+  /// fallback (no WebCrypto in the VM) stays fast. Production web never lowers
+  /// it — WebCrypto derives 600k natively in ~ms.
+  final int _newVaultIterations;
+
+  WebEncryptedStorage(this._backend,
+      {WebCryptoProvider? cryptoProvider,
+      int newVaultIterations = _pbkdf2Iterations})
+      : _crypto = cryptoProvider ?? defaultWebCryptoProvider(),
+        _newVaultIterations = newVaultIterations;
 
   // ---------------------------------------------------------------------------
   // Initialization
   // ---------------------------------------------------------------------------
 
   /// Whether [initialize] has been called successfully.
-  bool get isInitialized => _derivedKey != null;
+  bool get isInitialized => _cryptoKey != null;
 
   /// Derive the encryption key from [masterPassword] and either create a new
   /// salt (first run) or load the existing one.
@@ -77,27 +112,32 @@ class WebEncryptedStorage extends SecureStorage {
   /// decrypt it. A mismatch throws [StateError] (wrong password).
   Future<void> initialize(String masterPassword) async {
     Uint8List salt;
+    int iterations;
     final existingSalt = await _backend.getItem(_saltKey);
 
     if (existingSalt != null) {
-      // Returning user — load existing salt.
+      // Returning user — load existing salt + its iteration count. A vault
+      // created before iteration-versioning has no stored count → it was
+      // derived at the legacy 100k, so we must derive at 100k to decrypt it.
       salt = base64.decode(existingSalt);
+      final storedIters = await _backend.getItem(_iterationsKey);
+      iterations = int.tryParse(storedIters ?? '') ?? _legacyIterations;
     } else {
-      // First run — generate and persist a new salt.
+      // First run — new salt + SOTA iteration count, both persisted.
       salt = EncryptionService.generateSalt();
+      iterations = _newVaultIterations;
       await _backend.setItem(_saltKey, base64.encode(salt));
+      await _backend.setItem(_iterationsKey, iterations.toString());
     }
 
-    final key = EncryptionService.deriveKey(masterPassword, salt);
+    final key = await _crypto.deriveKey(masterPassword, salt, iterations);
 
     // Verify against existing token (if any).
     final existingVerify = await _backend.getItem(_verifyKey);
     if (existingVerify != null) {
       try {
-        final decrypted = EncryptionService.decrypt(
-          base64.decode(existingVerify),
-          key,
-        );
+        final decrypted =
+            await _crypto.decrypt(key, base64.decode(existingVerify));
         if (utf8.decode(decrypted) != _verifyPlaintext) {
           throw StateError('Master password verification failed');
         }
@@ -107,14 +147,14 @@ class WebEncryptedStorage extends SecureStorage {
       }
     } else {
       // First run — store a verification token.
-      final encrypted = EncryptionService.encrypt(
-        Uint8List.fromList(utf8.encode(_verifyPlaintext)),
+      final encrypted = await _crypto.encrypt(
         key,
+        Uint8List.fromList(utf8.encode(_verifyPlaintext)),
       );
       await _backend.setItem(_verifyKey, base64.encode(encrypted));
     }
 
-    _derivedKey = key;
+    _cryptoKey = key;
     _log.info('Web encrypted storage initialized');
   }
 
@@ -140,10 +180,7 @@ class WebEncryptedStorage extends SecureStorage {
     final raw = await _backend.getItem(_storageKey(key));
     if (raw == null) return null;
     try {
-      final decrypted = EncryptionService.decrypt(
-        base64.decode(raw),
-        _derivedKey!,
-      );
+      final decrypted = await _crypto.decrypt(_cryptoKey!, base64.decode(raw));
       return utf8.decode(decrypted);
     } catch (e) {
       _log.warn('Failed to decrypt value for key "$key"', e);
@@ -159,9 +196,9 @@ class WebEncryptedStorage extends SecureStorage {
         'Go to Settings to configure encrypted storage.',
       );
     }
-    final encrypted = EncryptionService.encrypt(
+    final encrypted = await _crypto.encrypt(
+      _cryptoKey!,
       Uint8List.fromList(utf8.encode(value)),
-      _derivedKey!,
     );
     await _backend.setItem(_storageKey(key), base64.encode(encrypted));
   }
@@ -181,11 +218,14 @@ class WebEncryptedStorage extends SecureStorage {
   @override
   Future<void> deleteAll() async {
     _checkInit();
-    // Remove all keys with our prefix, except the salt and verify token,
-    // so the master password still works after clearing credentials.
+    // Remove all keys with our prefix, except the salt, iteration count and
+    // verify token, so the master password still works after clearing creds.
     final keys = await _backend.allKeys();
     for (final k in keys) {
-      if (k.startsWith(_keyPrefix) && k != _saltKey && k != _verifyKey) {
+      if (k.startsWith(_keyPrefix) &&
+          k != _saltKey &&
+          k != _verifyKey &&
+          k != _iterationsKey) {
         await _backend.removeItem(k);
       }
     }
