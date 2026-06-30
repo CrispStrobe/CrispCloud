@@ -16,6 +16,7 @@ import 'package:crisp_cloud/services/encryption_service.dart';
 import 'package:crisp_cloud/services/encrypted_storage_wrapper.dart';
 import 'package:crisp_cloud/services/web_crypto_provider.dart';
 import 'package:crisp_cloud/services/cryptography_crypto_provider.dart';
+import 'package:crisp_cloud/services/openssl_crypto_provider.dart';
 
 typedef EncFn = Future<Uint8List> Function(Uint8List);
 typedef DecFn = Future<Uint8List> Function(Uint8List);
@@ -95,6 +96,14 @@ void main() {
       _Path('cryptography', (d) => cgProvider.encrypt(cgKey, d),
           (d) => cgProvider.decrypt(cgKey, d)),
     ];
+    // OpenSSL libcrypto via FFI — present on CI Linux + dev machines with a
+    // system/Homebrew libcrypto. Skipped where unavailable.
+    final ossl = OpenSslCryptoProvider.tryCreate();
+    if (ossl != null) {
+      final osslKey = await ossl.importKey(rawKey);
+      paths.add(_Path('openssl-ffi', (d) => ossl.encrypt(osslKey, d),
+          (d) => ossl.decrypt(osslKey, d)));
+    }
   });
 
   group('per-path round-trip (real file + edge sizes)', () {

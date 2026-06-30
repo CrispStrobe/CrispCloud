@@ -118,6 +118,7 @@ dependencies:
   flutter_highlight: ^0.7.0
   cryptography: ^2.9.0
   cryptography_flutter: ^2.3.4
+  ffi: ^2.2.0
 dev_dependencies:
   flutter_test:
     sdk: flutter

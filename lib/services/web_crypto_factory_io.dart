@@ -7,9 +7,19 @@
 // to exercise the storage logic with real (pointycastle) crypto.
 
 import 'cryptography_crypto_provider.dart';
+import 'openssl_crypto_provider.dart';
 import 'web_crypto_provider.dart';
 
-// Native default: package:cryptography AES-GCM — pure-Dart ~8x faster than
-// pointycastle, and hardware-accelerated when FlutterCryptography.enable() is
-// called (see main). The web build uses WebCryptoSubtleProvider instead.
-WebCryptoProvider defaultWebCryptoProvider() => CryptographyCryptoProvider();
+// Native crypto backend, best-available first (all standardized AES-256-GCM, so
+// byte-interoperable with existing files):
+//   1. OS OpenSSL libcrypto via FFI (Linux always; desktop where present) —
+//      AES-NI hardware, ~1280 MB/s, no bundled native library.
+//   2. CryptographyCryptoProvider — package:cryptography, which is
+//      hardware-accelerated on Android/iOS/macOS when FlutterCryptography is
+//      enabled (Keystore/CryptoKit), and pure-Dart elsewhere.
+// The web build uses WebCryptoSubtleProvider instead (see *_web.dart).
+WebCryptoProvider defaultWebCryptoProvider() {
+  final openssl = OpenSslCryptoProvider.tryCreate();
+  if (openssl != null) return openssl;
+  return CryptographyCryptoProvider();
+}
