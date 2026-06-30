@@ -1,16 +1,27 @@
 // web/service-worker.js
 //
 // CrispCloud PWA Service Worker
-// Implements cache-first for app shell / static assets,
-// network-first for API / dynamic requests.
+// - network-first for the HTML shell + Flutter JS (always consistent with the
+//   latest deploy; cache is only an offline fallback)
+// - network-first for API / dynamic requests
+// - cache-first for immutable static assets (icons, manifest, fonts)
 //
-// Version bump triggers automatic cache invalidation.
+// Why the shell is network-first: the Flutter app code (`main.dart.js`,
+// `flutter_bootstrap.js`, deferred `*.part.js`) changes hash every build and
+// every Flutter upgrade. Caching it cache-first meant a returning user could be
+// served a STALE `main.dart.js` that no longer matched the freshly-deployed
+// `flutter_bootstrap.js`/`index.html` — a hard mismatch that renders a blank
+// white screen. Serving the shell network-first guarantees the bootstrap and
+// the app bundle always come from the same deploy.
+//
+// Bump CACHE_VERSION on any shell change to evict poisoned caches.
 
-const CACHE_VERSION = 'v3';
+const CACHE_VERSION = 'v4';
 const STATIC_CACHE  = `crisp-cloud-static-${CACHE_VERSION}`;
 const DYNAMIC_CACHE = `crisp-cloud-dynamic-${CACHE_VERSION}`;
 
-// App-shell resources to pre-cache on install.
+// App-shell resources to pre-cache on install (offline fallback only — these
+// are still fetched network-first at runtime so the live deploy always wins).
 const APP_SHELL = [
   '/',
   '/index.html',
@@ -25,12 +36,25 @@ const APP_SHELL = [
 ];
 
 // URL patterns treated as "API / network-first".
-// Everything else is handled cache-first.
 const NETWORK_FIRST_PATTERNS = [
   /\/api\//,
   /\/oauth/,
   /\/auth/,
 ];
+
+// The HTML shell and Flutter JS bundle: must always match the live deploy, so
+// these are served network-first (cache is only the offline fallback). Anything
+// else (icons, fonts, hash-named immutable assets) stays cache-first.
+function isAppShell(url) {
+  const path = url.pathname;
+  if (path === '/' || path === '/index.html') return true;
+  if (path.endsWith('flutter_bootstrap.js')) return true;
+  if (path.endsWith('flutter.js')) return true;
+  if (path.endsWith('flutter_service_worker.js')) return true;
+  if (path.endsWith('.dart.js')) return true;          // main.dart.js
+  if (/\.part\.js$/.test(path)) return true;           // deferred chunks
+  return false;
+}
 
 // --------------------------------------------------------------------------
 // Install — pre-cache the app shell
@@ -84,9 +108,12 @@ self.addEventListener('fetch', (event) => {
   if (skipExtensions.some(ext => url.pathname.endsWith(ext))) return;
   if (skipFiles.some(f => url.pathname.endsWith(f))) return;
 
-  const isNetworkFirst = NETWORK_FIRST_PATTERNS.some((re) => re.test(url.pathname));
+  // App shell + Flutter JS and API calls are network-first (always match the
+  // live deploy / latest data); immutable static assets are cache-first.
+  const useNetworkFirst =
+      isAppShell(url) || NETWORK_FIRST_PATTERNS.some((re) => re.test(url.pathname));
 
-  if (isNetworkFirst) {
+  if (useNetworkFirst) {
     event.respondWith(networkFirst(request));
   } else {
     event.respondWith(cacheFirst(request));
