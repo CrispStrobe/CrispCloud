@@ -17,6 +17,7 @@ import 'package:crisp_cloud/services/encrypted_storage_wrapper.dart';
 import 'package:crisp_cloud/services/web_crypto_provider.dart';
 import 'package:crisp_cloud/services/cryptography_crypto_provider.dart';
 import 'package:crisp_cloud/services/openssl_crypto_provider.dart';
+import 'package:crisp_cloud/services/bcrypt_crypto_provider.dart';
 
 typedef EncFn = Future<Uint8List> Function(Uint8List);
 typedef DecFn = Future<Uint8List> Function(Uint8List);
@@ -103,6 +104,13 @@ void main() {
       final osslKey = await ossl.importKey(rawKey);
       paths.add(_Path('openssl-ffi', (d) => ossl.encrypt(osslKey, d),
           (d) => ossl.decrypt(osslKey, d)));
+    }
+    // BCrypt/CNG via FFI — present on Windows (skipped elsewhere).
+    final bcrypt = BCryptCryptoProvider.tryCreate();
+    if (bcrypt != null) {
+      final bcryptKey = await bcrypt.importKey(rawKey);
+      paths.add(_Path('bcrypt-ffi', (d) => bcrypt.encrypt(bcryptKey, d),
+          (d) => bcrypt.decrypt(bcryptKey, d)));
     }
   });
 

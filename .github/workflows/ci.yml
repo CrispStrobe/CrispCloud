@@ -90,6 +90,32 @@ jobs:
           path: coverage/lcov.info
           retention-days: 14
 
+  # ---------- Windows native crypto (BCrypt/CNG FFI) ----------
+  # The dev machine + Linux CI can't exercise the Windows CNG binding, so run the
+  # crypto tests headlessly on a Windows runner. native_ffi_crypto_test ASSERTS
+  # BCryptAesGcm loads + is byte-exact + interoperable with pointycastle files
+  # (a broken FFI fails CI here instead of silently falling back). No app window.
+  windows-crypto:
+    name: Native crypto (Windows BCrypt)
+    runs-on: windows-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v5
+
+      - uses: subosito/flutter-action@v2
+        with:
+          channel: ${{ env.FLUTTER_CHANNEL }}
+          flutter-version: ${{ env.FLUTTER_VERSION }}
+          cache: true
+
+      - name: Configure git auth for private deps
+        run: git config --global url."https://x-access-token:${{ secrets.GH_PAT || github.token }}@github.com/".insteadOf "https://github.com/"
+
+      - run: flutter pub get
+
+      - name: Native FFI crypto tests (BCrypt + cross-path interop)
+        run: flutter test test/native_ffi_crypto_test.dart test/crypto_paths_test.dart
+
   # ---------- Multi-platform builds (matrix) ----------
   # Linux, Android, and Web build on ubuntu-latest.
   # Windows builds on windows-latest. macOS and iOS on macos-latest.
