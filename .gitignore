@@ -70,3 +70,7 @@ pubspec_overrides.yaml
 .env*.local
 handover-prompts/
 docs/internal/
+
+# App Store Connect API key
+.appstoreconnect/
+*.p8

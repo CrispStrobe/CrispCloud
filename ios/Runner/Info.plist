@@ -86,6 +86,12 @@
 		</dict>
 	</array>
 
+	<!-- Export compliance: encryption uses OS-provided APIs (OpenSSL/CNG/CommonCrypto)
+	     for optional client-side AES-256-GCM file encryption.
+	     Set to false if this qualifies for a BIS exemption; change to true if not. -->
+	<key>ITSAppUsesNonExemptEncryption</key>
+	<false/>
+
 	<!-- Stage Manager / Multi-Window (iPadOS 13+) -->
 	<key>UIApplicationSceneManifest</key>
 	<dict>
