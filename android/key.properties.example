@@ -1,0 +1,14 @@
+# android/key.properties.example
+#
+# Copy this file to key.properties and fill in your keystore details.
+# DO NOT commit key.properties — it is already in .gitignore.
+#
+# To generate a keystore:
+#   keytool -genkey -v -keystore ~/crisp-cloud-release.jks \
+#     -keyalg RSA -keysize 2048 -validity 10000 \
+#     -alias crispcloud
+#
+storePassword=
+keyPassword=
+keyAlias=crispcloud
+storeFile=../crisp-cloud-release.jks

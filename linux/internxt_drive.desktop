@@ -1,10 +1,10 @@
 # linux/internxt_drive.desktop
 [Desktop Entry]
-Name=Internxt Drive
+Name=CrispCloud
 Comment=Secure cloud storage
-Exec=internxt_drive %U
-Icon=internxt_drive
+Exec=crisp_cloud %U
+Icon=crisp_cloud
 Terminal=false
 Type=Application
 Categories=Network;FileTransfer;
-MimeType=x-scheme-handler/internxtdrive;
+MimeType=x-scheme-handler/crispcloud;

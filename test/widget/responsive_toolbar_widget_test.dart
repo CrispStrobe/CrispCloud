@@ -22,9 +22,6 @@ import 'package:crisp_cloud/models/operation_progress.dart';
 import 'package:crisp_cloud/models/panel_side.dart';
 import 'package:crisp_cloud/providers/auth_provider.dart';
 import 'package:crisp_cloud/providers/providers.dart';
-import 'package:crisp_cloud/providers/panel_source_provider.dart'
-    show fkeyBarVisibleProvider, panelSourceProvider;
-import 'package:crisp_cloud/providers/terminal_provider.dart';
 import 'package:crisp_cloud/services/cloud_storage_interface.dart';
 import 'package:crisp_cloud/services/filen_config_service.dart';
 import 'package:crisp_cloud/services/secure_storage_service.dart';

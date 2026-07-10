@@ -46,7 +46,7 @@ class CrispCloudWidget : AppWidgetProvider() {
         const val KEY_RECENT_FILE_3 = "flutter.widget_recent_3"
 
         /** Deep-link URI that opens MainActivity in quick-upload mode. */
-        private const val UPLOAD_URI = "internxtdrive://upload"
+        private const val UPLOAD_URI = "crispcloud://upload"
 
         fun updateAppWidget(
             context: Context,
