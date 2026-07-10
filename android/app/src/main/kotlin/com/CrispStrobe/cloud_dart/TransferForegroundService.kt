@@ -1,16 +1,16 @@
-// android/app/src/main/kotlin/com/example/internxt_flutter/TransferForegroundService.kt
+// android/app/src/main/kotlin/com/CrispStrobe/cloud_dart/TransferForegroundService.kt
 //
 // Minimal Android Service entry point declared in AndroidManifest so the OS
 // recognises the foreground-service type "dataSync".
 //
-// flutter_local_notifications (≥ 17.x) posts progress notifications that
+// flutter_local_notifications (>= 17.x) posts progress notifications that
 // Android classifies as foreground service notifications on API 34+ when the
 // channel importance is set correctly.  This service class exists solely so
 // the manifest declaration (android:foregroundServiceType="dataSync") is valid
 // and passes lint/aapt.  The notification lifecycle itself is controlled from
 // the Flutter layer via ForegroundTransferService.
 
-package com.example.internxt_flutter
+package com.CrispStrobe.cloud_dart
 
 import android.app.Service
 import android.content.Intent

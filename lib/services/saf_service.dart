@@ -59,7 +59,7 @@ class SAFFile {
 /// The Kotlin side must be registered in [MainActivity] (or a separate plugin).
 /// The channel is defined here so both sides agree on the name.
 class SAFService {
-  static const _channelName = 'com.example.crisp_cloud/saf';
+  static const _channelName = 'com.CrispStrobe.cloud_dart/saf';
   static const _channel = MethodChannel(_channelName);
 
   static const _log = Log('SAFService');

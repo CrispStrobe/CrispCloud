@@ -1,18 +1,18 @@
-// android/app/src/main/kotlin/com/example/internxt_flutter/CrispCloudWidget.kt
+// android/app/src/main/kotlin/com/CrispStrobe/cloud_dart/CrispCloudWidget.kt
 //
 // Home screen App Widget for CrispCloud.
 //
 // Displays:
-//   • Quick-upload button (opens MainActivity in upload mode via deep-link)
-//   • Sync status badge (Synced / Syncing / Offline)
-//   • Up to 3 recent files stored in SharedPreferences by the Flutter app
+//   - Quick-upload button (opens MainActivity in upload mode via deep-link)
+//   - Sync status badge (Synced / Syncing / Offline)
+//   - Up to 3 recent files stored in SharedPreferences by the Flutter app
 //
 // The Flutter side writes recent-file names and the sync status to
 // SharedPreferences under well-known keys (see companion object).  When a
 // sync completes, the Flutter app broadcasts ACTION_APPWIDGET_UPDATE so this
 // provider refreshes immediately.
 
-package com.example.internxt_flutter
+package com.CrispStrobe.cloud_dart
 
 import android.app.PendingIntent
 import android.appwidget.AppWidgetManager
@@ -22,7 +22,6 @@ import android.content.Intent
 import android.content.SharedPreferences
 import android.net.Uri
 import android.widget.RemoteViews
-import com.CrispStrobe.cloud_dart.R
 
 class CrispCloudWidget : AppWidgetProvider() {
 
@@ -98,7 +97,7 @@ class CrispCloudWidget : AppWidgetProvider() {
             fileName: String?,
         ) {
             if (fileName.isNullOrBlank()) {
-                views.setTextViewText(nameId, "—")
+                views.setTextViewText(nameId, "\u2014")
                 // Make the row non-clickable when empty
                 views.setOnClickPendingIntent(rowId, null)
                 return

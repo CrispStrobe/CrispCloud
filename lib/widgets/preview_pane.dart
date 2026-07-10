@@ -239,8 +239,6 @@ String _mimeTypeForExt(String ext) {
 }
 
 class PreviewPane extends ConsumerStatefulWidget {
-  static const _log = Log('PreviewPane');
-
   final FileItem? file;
   final PanelSide side;
 

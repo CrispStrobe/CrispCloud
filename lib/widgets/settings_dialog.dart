@@ -15,7 +15,6 @@ import '../providers/analytics_provider.dart';
 import '../providers/delta_sync_provider.dart';
 import '../providers/file_type_color_provider.dart';
 import '../providers/panel_source_provider.dart';
-import '../l10n/app_localizations.dart';
 
 // ---------------------------------------------------------------------------
 // Public entry point

@@ -15,7 +15,6 @@ import '../models/panel_side.dart';
 import '../providers/providers.dart';
 import '../utils/formatters.dart';
 import '../l10n/app_localizations.dart';
-import '../services/log_service.dart';
 
 void showDuplicateFinderDialog(BuildContext context, WidgetRef ref) {
   showDialog(

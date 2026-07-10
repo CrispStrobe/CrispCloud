@@ -17,7 +17,6 @@ import '../services/thumbnail_service.dart';
 import '../utils/formatters.dart';
 import 'file_context_menu.dart';
 import 'file_list_view.dart' show getFileIcon;
-import '../services/log_service.dart';
 
 class FileGridView extends ConsumerWidget {
   final PanelSide side;

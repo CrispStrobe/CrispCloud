@@ -12,7 +12,6 @@ import '../models/file_item.dart';
 import '../models/panel_side.dart';
 import '../providers/providers.dart';
 import '../l10n/app_localizations.dart';
-import '../services/log_service.dart';
 
 enum RenameMode { findReplace, numbering, prefixSuffix, extension }
 

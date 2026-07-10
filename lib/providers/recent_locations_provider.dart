@@ -10,7 +10,6 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 import '../models/panel_side.dart';
-import '../services/log_service.dart';
 
 class RecentLocationsNotifier extends ChangeNotifier {
   static const _storageKey = 'recent_locations';

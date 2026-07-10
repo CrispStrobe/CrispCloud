@@ -13,7 +13,6 @@ import 'package:path/path.dart' as p;
 
 import '../models/panel_side.dart';
 import '../providers/providers.dart';
-import '../services/log_service.dart';
 
 class _TreeNode {
   final String path;

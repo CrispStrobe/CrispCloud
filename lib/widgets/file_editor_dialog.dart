@@ -30,8 +30,6 @@ void showFileEditorDialog(
 }
 
 class _FileEditorPage extends ConsumerStatefulWidget {
-  static const _log = Log('FileEditor');
-
   final FileItem file;
   final PanelSide side;
 

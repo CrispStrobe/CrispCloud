@@ -12,7 +12,6 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../models/panel_side.dart';
 import '../providers/providers.dart';
-import '../services/log_service.dart';
 
 /// A volume/drive entry shown in the drive bar.
 class _DriveEntry {

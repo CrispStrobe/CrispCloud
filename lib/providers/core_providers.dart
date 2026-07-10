@@ -14,7 +14,6 @@ import '../services/local_file_service.dart';
 import '../services/thumbnail_service.dart';
 import '../services/proxy_service.dart';
 import '../services/secure_storage_service.dart';
-import '../services/log_service.dart';
 
 /// Platform secure storage — overridden in main.dart with the real instance.
 final secureStorageProvider = Provider<SecureStorage>((ref) {

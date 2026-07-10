@@ -49,8 +49,6 @@ import 'screen_dialogs.dart';
 import '../services/log_service.dart';
 
 class FileBrowserScreen extends ConsumerStatefulWidget {
-  static const _log = Log('FileBrowser');
-
   const FileBrowserScreen({super.key});
 
   @override

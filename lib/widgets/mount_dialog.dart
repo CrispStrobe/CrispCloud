@@ -17,7 +17,6 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../providers/mount_provider.dart';
 import '../services/fuse_mount_service.dart';
 import '../l10n/app_localizations.dart';
-import '../services/log_service.dart';
 
 void showMountDialog(BuildContext context) {
   showDialog(

@@ -17,7 +17,7 @@
 import 'dart:convert';
 import 'dart:io' show Platform;
 
-import 'package:flutter/foundation.dart' show kIsWeb, kDebugMode;
+import 'package:flutter/foundation.dart' show kIsWeb, kDebugMode, debugPrint;
 import 'package:http/http.dart' as http;
 import 'package:shared_preferences/shared_preferences.dart';
 
@@ -341,7 +341,7 @@ class AutoUpdateService {
 
     if (current == null || latest == null) {
       if (kDebugMode) {
-        print('AutoUpdateService: could not parse versions — '
+        debugPrint('AutoUpdateService: could not parse versions — '
             'current="$currentVersion", latest="${info.version}"');
       }
       return null;

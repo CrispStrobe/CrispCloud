@@ -21,8 +21,8 @@ plugins {
 
 android {
     namespace = "com.CrispStrobe.cloud_dart"
-    compileSdk = flutter.compileSdkVersion
-    ndkVersion = flutter.ndkVersion
+    compileSdk = 36
+    ndkVersion = "26.3.11579264"
 
     compileOptions {
         isCoreLibraryDesugaringEnabled = true

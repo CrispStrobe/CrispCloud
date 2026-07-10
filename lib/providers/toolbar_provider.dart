@@ -11,7 +11,6 @@ import 'package:shared_preferences/shared_preferences.dart';
 import '../models/panel_side.dart';
 import '../services/panel_view_mode_service.dart';
 import '../services/toolbar_customization_service.dart';
-import '../services/log_service.dart';
 
 bool get _isTest => !kIsWeb && Platform.environment.containsKey('FLUTTER_TEST');
 

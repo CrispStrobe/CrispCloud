@@ -1,4 +1,4 @@
-// android/app/src/main/kotlin/com/example/internxt_flutter/CrispCloudDocumentsProvider.kt
+// android/app/src/main/kotlin/com/CrispStrobe/cloud_dart/CrispCloudDocumentsProvider.kt
 //
 // CrispCloudDocumentsProvider — Android DocumentsProvider implementation.
 //
@@ -18,7 +18,7 @@
 //   FLAG_SUPPORTS_CREATE, FLAG_SUPPORTS_DELETE, FLAG_SUPPORTS_RENAME,
 //   FLAG_DIR_SUPPORTS_CREATE.
 
-package com.example.internxt_flutter
+package com.CrispStrobe.cloud_dart
 
 import android.content.Context
 import android.content.SharedPreferences
@@ -161,13 +161,13 @@ class CrispCloudDocumentsProvider : DocumentsProvider() {
                     DocumentsContract.Root.COLUMN_TITLE ->
                         row.add(entry.label.ifEmpty { entry.provider })
                     DocumentsContract.Root.COLUMN_SUMMARY ->
-                        row.add("CrispCloud – ${entry.provider}")
+                        row.add("CrispCloud \u2013 ${entry.provider}")
                     DocumentsContract.Root.COLUMN_FLAGS ->
                         row.add(flags)
                     DocumentsContract.Root.COLUMN_MIME_TYPES ->
                         row.add("*/*")
                     DocumentsContract.Root.COLUMN_ICON ->
-                        row.add(com.CrispStrobe.cloud_dart.R.mipmap.ic_launcher)
+                        row.add(R.mipmap.ic_launcher)
                     DocumentsContract.Root.COLUMN_AVAILABLE_BYTES ->
                         row.add(-1L)
                     else ->
@@ -197,7 +197,7 @@ class CrispCloudDocumentsProvider : DocumentsProvider() {
         val cursor = MatrixCursor(cols)
 
         val parsed = parseDocumentId(documentId)
-            ?: return cursor // malformed ID → empty result
+            ?: return cursor // malformed ID -> empty result
 
         val (provider, path) = parsed
         val isRoot = path == "/" || path.isEmpty()
