@@ -592,6 +592,8 @@ jobs:
     runs-on: macos-latest
     timeout-minutes: 45
     continue-on-error: true  # macOS runners scarce on free tier
+    env:
+      HAS_APPSTORE_KEY: ${{ secrets.APPSTORE_API_KEY_P8 != '' }}
     steps:
       - uses: actions/checkout@v5
 
@@ -623,7 +625,7 @@ jobs:
 
       # ── API-key-driven archive + export + upload ────────────────────────
       - name: Install App Store Connect API key
-        if: ${{ secrets.APPSTORE_API_KEY_P8 != '' }}
+        if: env.HAS_APPSTORE_KEY == 'true'
         run: |
           mkdir -p ~/.appstoreconnect/private_keys
           echo "${{ secrets.APPSTORE_API_KEY_P8 }}" | base64 -d \
@@ -631,7 +633,7 @@ jobs:
           chmod 600 ~/.appstoreconnect/private_keys/AuthKey_9RMU3C7422.p8
 
       - name: Archive (API-key signing)
-        if: ${{ secrets.APPSTORE_API_KEY_P8 != '' }}
+        if: env.HAS_APPSTORE_KEY == 'true'
         run: |
           PATH="/usr/bin:$PATH" xcodebuild \
             -workspace ios/Runner.xcworkspace \
@@ -644,9 +646,9 @@ jobs:
             archive
 
       - name: Export IPA (distribution signing)
-        if: ${{ secrets.APPSTORE_API_KEY_P8 != '' }}
+        if: env.HAS_APPSTORE_KEY == 'true'
         run: |
-          cat > /tmp/ExportOptions.plist << 'EOF'
+          cat > /tmp/ExportOptions.plist <<'EOF'
           <?xml version="1.0" encoding="UTF-8"?>
           <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
           <plist version="1.0">
@@ -668,7 +670,7 @@ jobs:
             -authenticationKeyIssuerID 5f618ba3-98ef-42ad-835c-fbbef6c76cf5
 
       - name: Validate IPA
-        if: ${{ secrets.APPSTORE_API_KEY_P8 != '' }}
+        if: env.HAS_APPSTORE_KEY == 'true'
         run: |
           xcrun altool --validate-app \
             -f build/ios/export/Runner.ipa \
@@ -677,7 +679,7 @@ jobs:
             --api-issuer 5f618ba3-98ef-42ad-835c-fbbef6c76cf5
 
       - name: Upload to App Store Connect
-        if: ${{ secrets.APPSTORE_API_KEY_P8 != '' }}
+        if: env.HAS_APPSTORE_KEY == 'true'
         run: |
           VERSION=$(grep '^version:' pubspec.yaml | cut -d' ' -f2 | cut -d'+' -f1)
           BUILD=$(grep '^version:' pubspec.yaml | cut -d'+' -f2)
@@ -692,7 +694,7 @@ jobs:
 
       # ── Fallback: unsigned .app zip if no API key ───────────────────────
       - name: Archive unsigned .app
-        if: ${{ secrets.APPSTORE_API_KEY_P8 == '' }}
+        if: env.HAS_APPSTORE_KEY != 'true'
         run: |
           APP_PATH=$(find build/ios/iphoneos -name "*.app" -maxdepth 1 2>/dev/null | head -1)
           if [ -n "$APP_PATH" ]; then
@@ -702,13 +704,13 @@ jobs:
           fi
 
       - uses: actions/upload-artifact@v5
-        if: ${{ secrets.APPSTORE_API_KEY_P8 == '' }}
+        if: env.HAS_APPSTORE_KEY != 'true'
         with:
           name: crispcloud-ios-nosign
           path: crispcloud-ios-nosign.zip
 
       - name: Upload to Release
-        if: ${{ secrets.APPSTORE_API_KEY_P8 == '' }}
+        if: env.HAS_APPSTORE_KEY != 'true'
         env:
           GH_TOKEN: ${{ github.token }}
         run: gh release upload "${{ needs.create-release.outputs.tag }}" crispcloud-ios-nosign.zip --clobber
