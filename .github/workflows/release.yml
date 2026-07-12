@@ -626,23 +626,36 @@ jobs:
       # ── API-key-driven archive + export + upload ────────────────────────
       - name: Install App Store Connect API key
         if: env.HAS_APPSTORE_KEY == 'true'
+        env:
+          API_KEY_P8: ${{ secrets.APPSTORE_API_KEY_P8 }}
         run: |
           mkdir -p ~/.appstoreconnect/private_keys
-          echo "${{ secrets.APPSTORE_API_KEY_P8 }}" | base64 -d \
-            > ~/.appstoreconnect/private_keys/AuthKey_9RMU3C7422.p8
+          echo "$API_KEY_P8" | base64 -d > ~/.appstoreconnect/private_keys/AuthKey_9RMU3C7422.p8
           chmod 600 ~/.appstoreconnect/private_keys/AuthKey_9RMU3C7422.p8
+          # Also install at the standard Apple tooling path
+          mkdir -p ~/private_keys
+          cp ~/.appstoreconnect/private_keys/AuthKey_9RMU3C7422.p8 ~/private_keys/
+          # Verify key file is valid PEM
+          head -1 ~/.appstoreconnect/private_keys/AuthKey_9RMU3C7422.p8
 
       - name: Archive (API-key signing)
         if: env.HAS_APPSTORE_KEY == 'true'
         run: |
+          KEY_PATH="$HOME/.appstoreconnect/private_keys/AuthKey_9RMU3C7422.p8"
+          AUTH_FLAGS="-allowProvisioningUpdates -authenticationKeyPath $KEY_PATH -authenticationKeyID 9RMU3C7422 -authenticationKeyIssuerID 5f618ba3-98ef-42ad-835c-fbbef6c76cf5"
+          # Pre-resolve provisioning profiles (build will fail at link but profiles get cached)
+          PATH="/usr/bin:$PATH" xcodebuild build \
+            -workspace ios/Runner.xcworkspace \
+            -scheme Runner -configuration Release \
+            -destination 'generic/platform=iOS' \
+            $AUTH_FLAGS \
+            DEVELOPMENT_TEAM=N9XSJ4M3GT CODE_SIGN_STYLE=Automatic || true
+          # Now archive (profiles are cached from above)
           PATH="/usr/bin:$PATH" xcodebuild \
             -workspace ios/Runner.xcworkspace \
             -scheme Runner -configuration Release \
             -archivePath build/ios/archive/Runner.xcarchive \
-            -allowProvisioningUpdates \
-            -authenticationKeyPath $HOME/.appstoreconnect/private_keys/AuthKey_9RMU3C7422.p8 \
-            -authenticationKeyID 9RMU3C7422 \
-            -authenticationKeyIssuerID 5f618ba3-98ef-42ad-835c-fbbef6c76cf5 \
+            $AUTH_FLAGS \
             archive
 
       - name: Export IPA (distribution signing)
