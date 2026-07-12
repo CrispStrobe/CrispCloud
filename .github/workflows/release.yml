@@ -624,30 +624,39 @@ jobs:
         run: flutter build ios --release --no-codesign
 
       # ── API-key-driven archive + export + upload ────────────────────────
-      - name: Install App Store Connect API key
+      - name: Install signing credentials
         if: env.HAS_APPSTORE_KEY == 'true'
         env:
           API_KEY_P8: ${{ secrets.APPSTORE_API_KEY_P8 }}
+          DIST_P12: ${{ secrets.IOS_DIST_P12 }}
+          DIST_P12_PASSWORD: ${{ secrets.IOS_DIST_P12_PASSWORD }}
         run: |
+          # API key for provisioning profile resolution
           mkdir -p ~/.appstoreconnect/private_keys
           printf '%s' "$API_KEY_P8" > ~/.appstoreconnect/private_keys/AuthKey_9RMU3C7422.p8
           chmod 600 ~/.appstoreconnect/private_keys/AuthKey_9RMU3C7422.p8
-          # Verify key file is valid PEM
-          head -1 ~/.appstoreconnect/private_keys/AuthKey_9RMU3C7422.p8
 
-      - name: Archive (API-key signing)
+          # Import Distribution cert + private key into a build keychain
+          KEYCHAIN="build.keychain-db"
+          security create-keychain -p "" "$KEYCHAIN"
+          security set-keychain-settings -lut 3600 "$KEYCHAIN"
+          security unlock-keychain -p "" "$KEYCHAIN"
+          if [ -n "$DIST_P12" ]; then
+            echo "$DIST_P12" | base64 -d > /tmp/dist.p12
+            security import /tmp/dist.p12 -k "$KEYCHAIN" -P "$DIST_P12_PASSWORD" \
+              -T /usr/bin/codesign -T /usr/bin/security
+            rm /tmp/dist.p12
+          fi
+          security set-key-partition-list -S apple-tool:,apple:,codesign: -s -k "" "$KEYCHAIN"
+          security list-keychains -d user -s "$KEYCHAIN" $(security list-keychains -d user | tr -d '"')
+          # Verify Distribution identity is available
+          security find-identity -v -p codesigning | grep -i "distribution" || echo "WARNING: No Distribution cert"
+
+      - name: Archive
         if: env.HAS_APPSTORE_KEY == 'true'
         run: |
           KEY_PATH="$HOME/.appstoreconnect/private_keys/AuthKey_9RMU3C7422.p8"
           AUTH_FLAGS="-allowProvisioningUpdates -authenticationKeyPath $KEY_PATH -authenticationKeyID 9RMU3C7422 -authenticationKeyIssuerID 5f618ba3-98ef-42ad-835c-fbbef6c76cf5"
-          # Pre-resolve provisioning profiles (build will fail at link but profiles get cached)
-          PATH="/usr/bin:$PATH" xcodebuild build \
-            -workspace ios/Runner.xcworkspace \
-            -scheme Runner -configuration Release \
-            -destination 'generic/platform=iOS' \
-            $AUTH_FLAGS \
-            DEVELOPMENT_TEAM=N9XSJ4M3GT CODE_SIGN_STYLE=Automatic || true
-          # Now archive (profiles are cached from above)
           PATH="/usr/bin:$PATH" xcodebuild \
             -workspace ios/Runner.xcworkspace \
             -scheme Runner -configuration Release \
