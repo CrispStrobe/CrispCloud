@@ -652,22 +652,14 @@ jobs:
           # Verify Distribution identity is available
           security find-identity -v -p codesigning | grep -i "distribution" || echo "WARNING: No Distribution cert"
 
-      - name: Archive
+      - name: Archive (flutter build ipa)
         if: env.HAS_APPSTORE_KEY == 'true'
         run: |
-          KEY_PATH="$HOME/.appstoreconnect/private_keys/AuthKey_9RMU3C7422.p8"
-          AUTH_FLAGS="-allowProvisioningUpdates -authenticationKeyPath $KEY_PATH -authenticationKeyID 9RMU3C7422 -authenticationKeyIssuerID 5f618ba3-98ef-42ad-835c-fbbef6c76cf5"
-          PATH="/usr/bin:$PATH" xcodebuild \
-            -workspace ios/Runner.xcworkspace \
-            -scheme Runner -configuration Release \
-            -archivePath build/ios/archive/Runner.xcarchive \
-            $AUTH_FLAGS \
-            archive
-
-      - name: Export IPA (distribution signing)
-        if: env.HAS_APPSTORE_KEY == 'true'
-        run: |
-          cat > /tmp/ExportOptions.plist <<'EOF'
+          # Use flutter build ipa to archive — it sets the correct framework
+          # search paths that raw xcodebuild misses in SPM/CocoaPods hybrid.
+          # This will FAIL at its own export step (no API key) — that's expected.
+          # The .xcarchive it produces is good.
+          cat > /tmp/ExportOptions.plist <<'PLIST'
           <?xml version="1.0" encoding="UTF-8"?>
           <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
           <plist version="1.0">
@@ -678,7 +670,16 @@ jobs:
               <key>destination</key><string>export</string>
           </dict>
           </plist>
-          EOF
+          PLIST
+          PATH="/usr/bin:$PATH" flutter build ipa --release \
+            --export-options-plist=/tmp/ExportOptions.plist || true
+          # Verify the archive was created
+          ls -la build/ios/archive/Runner.xcarchive/Products/Applications/Runner.app/ > /dev/null
+
+      - name: Export IPA (distribution signing)
+        if: env.HAS_APPSTORE_KEY == 'true'
+        run: |
+          KEY_PATH="$HOME/.appstoreconnect/private_keys/AuthKey_9RMU3C7422.p8"
           PATH="/usr/bin:$PATH" xcodebuild -exportArchive \
             -archivePath build/ios/archive/Runner.xcarchive \
             -exportPath build/ios/export \
