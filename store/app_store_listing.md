@@ -45,5 +45,4 @@ Utilities
 Productivity
 
 ## Privacy policy URL
-<!-- REQUIRED: Add your privacy policy URL before submission -->
-https://TODO-add-privacy-policy-url.example.com
+https://crisp-cloud.vercel.app/privacy.html
