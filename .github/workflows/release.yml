@@ -630,11 +630,8 @@ jobs:
           API_KEY_P8: ${{ secrets.APPSTORE_API_KEY_P8 }}
         run: |
           mkdir -p ~/.appstoreconnect/private_keys
-          echo "$API_KEY_P8" | base64 -d > ~/.appstoreconnect/private_keys/AuthKey_9RMU3C7422.p8
+          printf '%s' "$API_KEY_P8" > ~/.appstoreconnect/private_keys/AuthKey_9RMU3C7422.p8
           chmod 600 ~/.appstoreconnect/private_keys/AuthKey_9RMU3C7422.p8
-          # Also install at the standard Apple tooling path
-          mkdir -p ~/private_keys
-          cp ~/.appstoreconnect/private_keys/AuthKey_9RMU3C7422.p8 ~/private_keys/
           # Verify key file is valid PEM
           head -1 ~/.appstoreconnect/private_keys/AuthKey_9RMU3C7422.p8
 
