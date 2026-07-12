@@ -640,7 +640,7 @@ jobs:
             -scheme Runner -configuration Release \
             -archivePath build/ios/archive/Runner.xcarchive \
             -allowProvisioningUpdates \
-            -authenticationKeyPath ~/.appstoreconnect/private_keys/AuthKey_9RMU3C7422.p8 \
+            -authenticationKeyPath $HOME/.appstoreconnect/private_keys/AuthKey_9RMU3C7422.p8 \
             -authenticationKeyID 9RMU3C7422 \
             -authenticationKeyIssuerID 5f618ba3-98ef-42ad-835c-fbbef6c76cf5 \
             archive
@@ -665,7 +665,7 @@ jobs:
             -exportPath build/ios/export \
             -exportOptionsPlist /tmp/ExportOptions.plist \
             -allowProvisioningUpdates \
-            -authenticationKeyPath ~/.appstoreconnect/private_keys/AuthKey_9RMU3C7422.p8 \
+            -authenticationKeyPath $HOME/.appstoreconnect/private_keys/AuthKey_9RMU3C7422.p8 \
             -authenticationKeyID 9RMU3C7422 \
             -authenticationKeyIssuerID 5f618ba3-98ef-42ad-835c-fbbef6c76cf5
 
