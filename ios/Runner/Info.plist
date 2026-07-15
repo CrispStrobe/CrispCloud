@@ -52,6 +52,8 @@
 	<true/>
 	<key>NSDocumentsFolderUsageDescription</key>
 	<string>This app needs access to your Documents folder to upload and download files.</string>
+	<key>NSPhotoLibraryUsageDescription</key>
+	<string>CrispCloud needs access to your photo library so you can import and upload photos and videos to your cloud storage.</string>
 	<key>NSDownloadsFolderUsageDescription</key>
 	<string>This app needs access to your Downloads folder to upload and download files.</string>
 	<key>NSFaceIDUsageDescription</key>
