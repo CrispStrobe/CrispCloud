@@ -179,6 +179,45 @@ jobs:
           unzip -qo "$IPA" -d /tmp/ipa_check
           codesign --verify --deep --strict --verbose=2 /tmp/ipa_check/Payload/Runner.app 2>&1 | tail -2
 
+      - name: Re-sign with the App Group entitlement
+        run: |
+          set -euo pipefail
+          # WHY: the archive is built CODE_SIGNING_ALLOWED=NO, so
+          # CODE_SIGN_ENTITLEMENTS is never baked; -exportArchive then re-signs
+          # each binary from a DEFAULT entitlement set that omits
+          # com.apple.security.application-groups. The FileProvider's required
+          # Info.plist key NSExtensionFileProviderDocumentGroup then has no
+          # backing entitlement and Apple rejects the upload (ITMS-90362).
+          # Re-sign the .appex and the app with their CURRENT entitlements PLUS
+          # the app group (the installed profiles now authorize it).
+          IDENT=$(security find-identity -v -p codesigning \
+            | grep -oE 'Apple Distribution: [^"]+' | head -1)
+          echo "signing identity: $IDENT"
+          GROUP=group.com.crispcloud.shared
+          WORK="$RUNNER_TEMP/resign"; rm -rf "$WORK"; mkdir -p "$WORK"
+          unzip -q "$IPA" -d "$WORK"
+          APP="$WORK/Payload/Runner.app"
+          EXT="$APP/PlugIns/CrispCloudFileProvider.appex"
+          resign() {
+            local target="$1" ent="$RUNNER_TEMP/$(basename "$1").ent.plist"
+            codesign -d --entitlements - --xml "$target" 2>/dev/null > "$ent"
+            plutil -convert xml1 "$ent" 2>/dev/null || true
+            /usr/libexec/PlistBuddy -c "Delete :com.apple.security.application-groups" "$ent" 2>/dev/null || true
+            /usr/libexec/PlistBuddy -c "Add :com.apple.security.application-groups array" "$ent"
+            /usr/libexec/PlistBuddy -c "Add :com.apple.security.application-groups:0 string $GROUP" "$ent"
+            echo "--- $(basename "$target") entitlements ---"; cat "$ent"
+            codesign --force --sign "$IDENT" --entitlements "$ent" "$target"
+          }
+          resign "$EXT"          # nested first, then the containing app
+          resign "$APP"
+          # Fail loud if the group didn't make it into the signed .appex.
+          codesign -d --entitlements - --xml "$EXT" 2>/dev/null | grep -q "$GROUP" \
+            || { echo "::error::app group still missing from the .appex after re-sign"; exit 1; }
+          echo "✓ app group embedded in the .appex"
+          RESIGNED="$RUNNER_TEMP/CrispCloud-resigned.ipa"
+          ( cd "$WORK" && zip -qr "$RESIGNED" Payload )
+          echo "IPA=$RESIGNED" >> "$GITHUB_ENV"
+
       - name: Upload IPA artifact
         uses: actions/upload-artifact@v4
         with:
