@@ -2,6 +2,24 @@
 
 Audit trail of bugs found, issues discovered, and fixes applied.
 
+## 2026-07-16 — Session 16: central pub.dev dependencies (filen/internxt)
+
+### Dependency sourcing — git → pub.dev
+- **`filen_client` + `internxt_client` now from pub.dev**: both were git
+  dependencies pinned to `ref: v0.2.0`. Replaced with hosted version
+  constraints `^0.2.0` in `pubspec.yaml`. `pubspec.lock` now records both as
+  `source: hosted`, `url: https://pub.dev`.
+- **Package rename `filen_dart` → `filen_client`**: the git tag `filen-dart`
+  `v0.2.0` was the stale pre-rename, pre-relicense (AGPL) commit. CrispCloud
+  was silently pulling old code via git rather than the published
+  `filen_client 0.2.0` (MPL-2.0). Dependency name updated and both imports
+  fixed: `filen_client_adapter.dart` and `webdav_filesystem.dart` now import
+  `package:filen_client/filen_client.dart`.
+- **Verification**: `flutter pub get` resolves both purely from pub.dev (no
+  git clones, no `pubspec_overrides.yaml`); `flutter analyze` 0 errors; filen/
+  internxt/cloud-storage unit tests pass (35/35). No `filen_dart` references
+  remain in `lib/`/`test/`.
+
 ## 2026-06-21 — Session 15: CI fixes + performance optimizations
 
 ### CI / Test Fixes (46 failing tests → 0)
@@ -1738,9 +1756,12 @@ Audit trail of bugs found, issues discovered, and fixes applied.
 
 ### Filen Library Migration
 - **Embedded copy removed**: 4,497-line `lib/services/filen.dart` replaced
-  with `filen_dart` git dependency (same pattern as `internxt_client`).
+  with the `filen_dart` git dependency (same pattern as `internxt_client`).
+  (Later superseded — 2026-07-16: renamed to `filen_client` and moved to
+  pub.dev.)
 - **Adapter updated**: `filen_client_adapter.dart` and
   `webdav_filesystem.dart` now import `package:filen_dart/filen_client.dart`.
+  (Later updated to `package:filen_client/filen_client.dart`.)
 
 ### Testing
 - Added 8 test files:

@@ -9,7 +9,7 @@ import 'package:file/file.dart';
 import 'package:file/local.dart';
 import 'package:path/path.dart' as p;
 
-import 'package:filen_dart/filen_client.dart'; // exports FilenClient and all modules
+import 'package:filen_client/filen_client.dart'; // exports FilenClient and all modules
 
 import 'log_service.dart';
 

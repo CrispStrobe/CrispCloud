@@ -91,25 +91,16 @@ dependencies:
   file: ^7.0.0         # The virtual filesystem interface
   webdav_client: ^1.2.2
 
-  # Internxt protocol — sourced from the published library instead
-  # of the previous embedded copy in lib/services/internxt_client.dart
-  # (Phase 6.c). Git dep so Vercel + CI can fetch it without needing
-  # a sibling checkout dance. Local dev can pin to ../internxt-dart
-  # via a gitignored pubspec_overrides.yaml (faster iteration
-  # against in-flight library changes). Switch to a version
-  # constraint once internxt_client publishes to pub.dev.
-  internxt_client:
-    git:
-      url: https://github.com/CrispStrobe/internxt-dart.git
-      ref: v0.2.0
+  # Internxt protocol — the published pub.dev library (MPL-2.0), replacing
+  # the previous embedded copy in lib/services/internxt_client.dart
+  # (Phase 6.c). Local dev can still pin to ../internxt-dart via a
+  # gitignored pubspec_overrides.yaml for faster iteration.
+  internxt_client: ^0.2.0
 
-  # Filen protocol — sourced from the published library instead
-  # of the previous embedded copy in lib/services/filen.dart.
-  # Same pattern as internxt_client above.
-  filen_dart:
-    git:
-      url: https://github.com/CrispStrobe/filen-dart.git
-      ref: v0.2.0
+  # Filen protocol — the published pub.dev library (MPL-2.0), replacing
+  # the previous embedded copy in lib/services/filen.dart. Published as
+  # `filen_client` (renamed from the former `filen_dart`).
+  filen_client: ^0.2.0
 
   intl: ^0.20.2
   uuid: ^4.5.1

@@ -217,6 +217,14 @@ packages:
       url: "https://pub.dev"
     source: hosted
     version: "1.0.2"
+  dart_pg:
+    dependency: transitive
+    description:
+      name: dart_pg
+      sha256: "644741ad511448c1cb96c311108a944ae81060727fdf231a15fed6e0399cf25e"
+      url: "https://pub.dev"
+    source: hosted
+    version: "2.0.0"
   dart_style:
     dependency: transitive
     description:
@@ -393,13 +401,14 @@ packages:
       url: "https://pub.dev"
     source: hosted
     version: "0.9.3+5"
-  filen_dart:
+  filen_client:
     dependency: "direct main"
     description:
-      path: "/mnt/volume1/filen-dart-clone"
-      relative: false
-    source: path
-    version: "0.1.0"
+      name: filen_client
+      sha256: f504065f77f2675171ccbdd2c201877fb9385709701f6635e94202fa5aa8ece8
+      url: "https://pub.dev"
+    source: hosted
+    version: "0.2.0"
   fixnum:
     dependency: transitive
     description:
@@ -670,10 +679,11 @@ packages:
   internxt_client:
     dependency: "direct main"
     description:
-      path: "/mnt/volume1/internxt-dart-clone"
-      relative: false
-    source: path
-    version: "0.1.0"
+      name: internxt_client
+      sha256: a3281cf8f83a31cf2b8615993474fa78b4de4a2f7ea64877c6dff50b96ae69cc
+      url: "https://pub.dev"
+    source: hosted
+    version: "0.2.0"
   intl:
     dependency: "direct main"
     description:
@@ -747,12 +757,13 @@ packages:
     source: hosted
     version: "3.0.2"
   libdbm:
-    dependency: transitive
+    dependency: "direct overridden"
     description:
-      name: libdbm
-      sha256: f3e038d4138ff95839525094aefb72aa1dd34b18c14e9322b1135ebe6ae1f1ea
-      url: "https://pub.dev"
-    source: hosted
+      path: "."
+      ref: main
+      resolved-ref: "547b5bfce1d3cd663810a3ceae35336857956139"
+      url: "https://github.com/CrispStrobe/libdbm"
+    source: git
     version: "0.2.1"
   lints:
     dependency: transitive
@@ -1098,6 +1109,14 @@ packages:
       url: "https://pub.dev"
     source: hosted
     version: "2.6.1"
+  sha3:
+    dependency: transitive
+    description:
+      name: sha3
+      sha256: efa0ad944b950965e7014ab02f407f0a62a64626259983af0e2f98cd39a73a8a
+      url: "https://pub.dev"
+    source: hosted
+    version: "0.2.0"
   share_plus:
     dependency: "direct main"
     description:
@@ -1202,6 +1221,14 @@ packages:
       url: "https://pub.dev"
     source: hosted
     version: "3.0.0"
+  sign_dart:
+    dependency: transitive
+    description:
+      name: sign_dart
+      sha256: ac9303a03c7cca834568f6502b11031e2a5b92141d764c9314d7b4b455780721
+      url: "https://pub.dev"
+    source: hosted
+    version: "1.0.0"
   sky_engine:
     dependency: transitive
     description: flutter

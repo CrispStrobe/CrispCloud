@@ -1,6 +1,6 @@
 // lib/services/filen_client_adapter.dart
 import 'cloud_storage_interface.dart';
-import 'package:filen_dart/filen_client.dart';
+import 'package:filen_client/filen_client.dart';
 import 'filen_config_service.dart';
 import 'dart:io';
 import 'package:flutter/foundation.dart'; // for kIsWeb
