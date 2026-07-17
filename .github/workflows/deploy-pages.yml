@@ -1,0 +1,121 @@
+name: Deploy Pages
+
+# Builds Flutter web and deploys to GitHub Pages, in parallel with the Vercel
+# deploy (deploy-web.yml). GitHub Pages has no per-day deployment cap, so it is
+# a resilient mirror / fallback when Vercel's free-tier daily limit is hit.
+#
+# Served at https://<owner>.github.io/<repo>/ (a project page), so the web build
+# needs --base-href "/<repo>/". Requires Pages "Source: GitHub Actions" (enabled
+# once via: gh api -X POST repos/<owner>/<repo>/pages -f build_type=workflow).
+
+on:
+  workflow_run:
+    workflows: [CI]
+    types: [completed]
+    branches: [main]
+  workflow_dispatch:
+
+# Allow the deploy job to publish to Pages via OIDC.
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+# Never run two Pages deploys at once; let an in-flight one finish (Pages
+# rejects concurrent deploys) rather than cancelling it.
+concurrency:
+  group: deploy-pages
+  cancel-in-progress: false
+
+env:
+  FLUTTER_CHANNEL: stable
+  # Pinned to match CI / deploy-web (Flutter >= 3.44 writes an invalid
+  # package_graph.json for hosted deps reached only through a git dependency).
+  FLUTTER_VERSION: 3.38.5
+  FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: true
+
+jobs:
+  deploy:
+    name: Build & Deploy to GitHub Pages
+    if: ${{ github.event_name == 'workflow_dispatch' || github.event.workflow_run.conclusion == 'success' }}
+    runs-on: ubuntu-latest
+    timeout-minutes: 35
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+
+    steps:
+      - uses: actions/checkout@v5
+
+      - name: Cache Flutter SDK + pub
+        uses: actions/cache@v5
+        with:
+          path: |
+            /opt/hostedtoolcache/flutter
+            ~/.pub-cache
+          key: flutter-${{ env.FLUTTER_VERSION }}-${{ runner.os }}-${{ hashFiles('pubspec.yaml') }}
+          restore-keys: |
+            flutter-${{ env.FLUTTER_VERSION }}-${{ runner.os }}-
+
+      - uses: subosito/flutter-action@v2
+        with:
+          channel: ${{ env.FLUTTER_CHANNEL }}
+          flutter-version: ${{ env.FLUTTER_VERSION }}
+          cache: true
+
+      - name: Configure git auth for private deps
+        run: |
+          TOKEN="${{ secrets.GH_PAT || github.token }}"
+          git config --global url."https://x-access-token:${TOKEN}@github.com/".insteadOf "https://github.com/"
+
+      - run: flutter pub get
+
+      - name: Build Flutter web (base-href for project page)
+        run: |
+          GIT_HASH=$(git rev-parse --short HEAD)
+          APP_VERSION=$(grep '^version:' pubspec.yaml | cut -d' ' -f2)
+          REPO_NAME="${GITHUB_REPOSITORY#*/}"   # e.g. CrispCloud
+          flutter build web --release \
+            --base-href "/${REPO_NAME}/" \
+            --dart-define=GIT_HASH=$GIT_HASH \
+            --dart-define=APP_VERSION=$APP_VERSION
+
+      - name: Verify build output
+        run: |
+          test -f build/web/index.html || { echo "ERROR: index.html missing"; exit 1; }
+          BUILD_SIZE=$(du -sb build/web | cut -f1)
+          echo "Build size: $(du -sh build/web | cut -f1)"
+          if [ "$BUILD_SIZE" -lt 1000000 ]; then
+            echo "ERROR: Build output too small ($BUILD_SIZE bytes) — likely broken"
+            exit 1
+          fi
+
+      - name: Add Pages SPA fallback + disable Jekyll
+        run: |
+          # GitHub Pages has no SPA rewrite; a copy of index.html as 404.html
+          # makes deep-link refreshes work under Flutter's path URL strategy.
+          cp build/web/index.html build/web/404.html
+          # Stop Jekyll from stripping files/dirs that start with _ (Flutter emits none
+          # by default, but this is the standard safety net for static SPA output).
+          touch build/web/.nojekyll
+
+      - name: Upload Pages artifact
+        uses: actions/upload-pages-artifact@v3
+        with:
+          path: build/web
+
+      - name: Deploy to GitHub Pages
+        id: deployment
+        uses: actions/deploy-pages@v4
+
+      - name: Verify deployment is live
+        run: |
+          URL="${{ steps.deployment.outputs.page_url }}"
+          echo "Deployed to: $URL"
+          for i in $(seq 1 10); do
+            code=$(curl -s -o /dev/null -w '%{http_code}' "$URL" || true)
+            echo "attempt $i: HTTP $code"
+            [ "$code" = "200" ] && exit 0
+            sleep 10
+          done
+          echo "ERROR: Pages site did not return 200"; exit 1
