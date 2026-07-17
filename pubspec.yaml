@@ -99,8 +99,9 @@ dependencies:
 
   # Filen protocol — the published pub.dev library (MPL-2.0), replacing
   # the previous embedded copy in lib/services/filen.dart. Published as
-  # `filen_client` (renamed from the former `filen_dart`).
-  filen_client: ^0.2.0
+  # `filen_client` (renamed from the former `filen_dart`). 0.2.1 makes the
+  # FFI AES-GCM backends conditional so web (dart2js) builds compile.
+  filen_client: ^0.2.1
 
   intl: ^0.20.2
   uuid: ^4.5.1

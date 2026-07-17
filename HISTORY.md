@@ -20,6 +20,19 @@ Audit trail of bugs found, issues discovered, and fixes applied.
   internxt/cloud-storage unit tests pass (35/35). No `filen_dart` references
   remain in `lib/`/`test/`.
 
+### Web build fix — `filen_client` 0.2.0 → 0.2.1
+- **Regression caught by CI**: the first push pinned `filen_client: ^0.2.0`,
+  but that published version imported the OpenSSL/Windows-CNG **FFI** AES-GCM
+  backends unconditionally, so `flutter build web` (dart2js) failed with
+  *"Dart library 'dart:ffi' is not available on this platform"* — breaking the
+  Vercel deploy chain (all native builds passed; only Build web failed).
+- **Fixed upstream in filen_client 0.2.1**: the FFI backends are now selected
+  via a conditional import (`if (dart.library.ffi)`) with web stubs; on web the
+  chooser falls through to the WebCrypto-backed `CryptographyBackend`. Bumped
+  the CrispCloud constraint to `^0.2.1`.
+- **Verified**: `flutter build web` (dart2js) now compiles cleanly against
+  0.2.1 (`✓ Built build/web`, no `dart:ffi` errors).
+
 ## 2026-06-21 — Session 15: CI fixes + performance optimizations
 
 ### CI / Test Fixes (46 failing tests → 0)
