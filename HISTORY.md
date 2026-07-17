@@ -33,6 +33,20 @@ Audit trail of bugs found, issues discovered, and fixes applied.
 - **Verified**: `flutter build web` (dart2js) now compiles cleanly against
   0.2.1 (`✓ Built build/web`, no `dart:ffi` errors).
 
+### GitHub Pages as a second web deploy target
+- **Why**: Vercel's free tier caps deployments at 100/day; today's CI-triggered
+  deploys hit `api-deployments-free-per-day`, so a Vercel deploy failed (build
+  was fine, only the upload was blocked). GitHub Pages has no such cap.
+- **Added** `.github/workflows/deploy-pages.yml`: same trigger as the Vercel
+  deploy (after CI on `main` + manual dispatch), builds with
+  `--base-href "/CrispCloud/"`, adds a `404.html` SPA fallback + `.nojekyll`,
+  publishes via `actions/deploy-pages`. Enabled Pages with source = GitHub
+  Actions. Live at https://crispstrobe.github.io/CrispCloud/.
+- **Fixed** `web/index.html`: base href was hardcoded to `/`, so
+  `flutter build web --base-href` failed ("Couldn't find the placeholder for
+  base href"). Restored `<base href="$FLUTTER_BASE_HREF">` — defaults to `/`
+  when the flag is omitted, so Vercel's root deploy is unchanged.
+
 ## 2026-06-21 — Session 15: CI fixes + performance optimizations
 
 ### CI / Test Fixes (46 failing tests → 0)
