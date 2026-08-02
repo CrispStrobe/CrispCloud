@@ -680,10 +680,10 @@ packages:
     dependency: "direct main"
     description:
       name: internxt_client
-      sha256: "654e9c81ebf3b4df61bb883c1743b268dc75bf369b2fcf5c823657d49026a5b5"
+      sha256: c730aeb1779104bd42b27c6215bcf1b62b73c2979e9d570a5e61ed187b760469
       url: "https://pub.dev"
     source: hosted
-    version: "0.2.2"
+    version: "0.2.3"
   intl:
     dependency: "direct main"
     description:

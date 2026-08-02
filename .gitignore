@@ -74,3 +74,6 @@ docs/internal/
 # App Store Connect API key
 .appstoreconnect/
 *.p8
+
+# Claude local-only notes (credentials pointers, machine-specific)
+CLAUDE.local.md

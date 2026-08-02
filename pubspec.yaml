@@ -95,7 +95,9 @@ dependencies:
   # the previous embedded copy in lib/services/internxt_client.dart
   # (Phase 6.c). Local dev can still pin to ../internxt-dart via a
   # gitignored pubspec_overrides.yaml for faster iteration.
-  internxt_client: ^0.2.2
+  # 0.2.3 stops masking real API errors (e.g. 420 "Max space used") as a
+  # bogus 401 — see ApiException.
+  internxt_client: ^0.2.3
 
   # Filen protocol — the published pub.dev library (MPL-2.0), replacing
   # the previous embedded copy in lib/services/filen.dart. Published as
