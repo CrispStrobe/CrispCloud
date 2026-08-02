@@ -2,7 +2,8 @@
 //
 // Phase 6.c: the embedded ~4400-line protocol monolith here was
 // replaced with a dependency on the published internxt_client
-// package (path dep at ../internxt-dart in pubspec.yaml).
+// package (hosted dep on pub.dev, see pubspec.yaml). Local dev can
+// still pin to ../internxt-dart via a gitignored pubspec_overrides.yaml.
 //
 // What this file used to contain (now gone):
 //   - InternxtCLI class + handlers (~1700 LOC) — dead code in the

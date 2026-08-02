@@ -95,13 +95,15 @@ dependencies:
   # the previous embedded copy in lib/services/internxt_client.dart
   # (Phase 6.c). Local dev can still pin to ../internxt-dart via a
   # gitignored pubspec_overrides.yaml for faster iteration.
-  internxt_client: ^0.2.1
+  internxt_client: ^0.2.2
 
   # Filen protocol — the published pub.dev library (MPL-2.0), replacing
   # the previous embedded copy in lib/services/filen.dart. Published as
   # `filen_client` (renamed from the former `filen_dart`). 0.2.1 makes the
-  # FFI AES-GCM backends conditional so web (dart2js) builds compile.
-  filen_client: ^0.2.1
+  # FFI AES-GCM backends conditional so web (dart2js) builds compile;
+  # 0.2.2 fixes login for accounts without 2FA — FilenClientAdapter passes
+  # an empty twoFactorCode, which the Filen API rejects.
+  filen_client: ^0.2.2
 
   intl: ^0.20.2
   uuid: ^4.5.1

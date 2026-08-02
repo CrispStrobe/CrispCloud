@@ -405,10 +405,10 @@ packages:
     dependency: "direct main"
     description:
       name: filen_client
-      sha256: c4910702ffd9d63fda9c5f3469f7ce8f4903b30a7bbf98942d04836be923bef3
+      sha256: "89823f6add3a86aeafee8bc942de43544431ed21faa6cc851a4d6758a0473b05"
       url: "https://pub.dev"
     source: hosted
-    version: "0.2.1"
+    version: "0.2.2"
   fixnum:
     dependency: transitive
     description:
@@ -680,10 +680,10 @@ packages:
     dependency: "direct main"
     description:
       name: internxt_client
-      sha256: "6dfb9843f8b5512a5e9ffda4b6d413e9eb1cd1a72d4f99ae5383a434f97b27e3"
+      sha256: "654e9c81ebf3b4df61bb883c1743b268dc75bf369b2fcf5c823657d49026a5b5"
       url: "https://pub.dev"
     source: hosted
-    version: "0.2.1"
+    version: "0.2.2"
   intl:
     dependency: "direct main"
     description:
