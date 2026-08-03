@@ -58,9 +58,13 @@ jobs:
         run: flutter pub get
 
       - name: Import signing certificates into a temp keychain
+        # NOT DIST_CERT_P12_BASE64: that one holds only the Apple Distribution
+        # identity (verified — a dry run failed the installer guard with
+        # "1 identity imported"). Mac App Store needs a SECOND identity to sign
+        # the .pkg, so MAC_SIGNING_P12_BASE64 carries both.
         env:
-          P12_B64: ${{ secrets.DIST_CERT_P12_BASE64 }}
-          P12_PW: ${{ secrets.DIST_CERT_PASSWORD }}
+          P12_B64: ${{ secrets.MAC_SIGNING_P12_BASE64 }}
+          P12_PW: ${{ secrets.MAC_SIGNING_P12_PASSWORD }}
         run: |
           set -euo pipefail
           KC="$RUNNER_TEMP/cc-macos.keychain-db"
@@ -79,9 +83,9 @@ jobs:
           # Mac App Store needs BOTH identities. Fail loudly and early rather
           # than 40 minutes later at productbuild.
           security find-identity -v "$KC" | grep -q "Apple Distribution" \
-            || { echo "::error::Apple Distribution identity missing from DIST_CERT_P12_BASE64"; exit 1; }
+            || { echo "::error::Apple Distribution identity missing from MAC_SIGNING_P12_BASE64"; exit 1; }
           security find-identity -v "$KC" | grep -q "3rd Party Mac Developer Installer" \
-            || { echo "::error::3rd Party Mac Developer Installer identity missing from DIST_CERT_P12_BASE64 — the .p12 must contain both"; exit 1; }
+            || { echo "::error::3rd Party Mac Developer Installer identity missing from MAC_SIGNING_P12_BASE64 — MAC_SIGNING_P12_BASE64 must contain both"; exit 1; }
 
       - name: Install provisioning profiles (app + Finder extension)
         env:
