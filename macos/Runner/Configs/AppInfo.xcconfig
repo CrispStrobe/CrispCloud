@@ -7,8 +7,14 @@
 // The application's name. By default this is also the title of the Flutter window.
 PRODUCT_NAME = CrispCloud
 
-// The application's bundle identifier
-PRODUCT_BUNDLE_IDENTIFIER = com.crispcloud.app
+// The application's bundle identifier.
+//
+// Must match the iOS target's id: App Store Connect serves multiple platforms
+// from ONE app record only when the bundle id is identical across them, and
+// `com.CrispStrobe.cloud` is registered UNIVERSAL in the developer portal.
+// Sharing the existing record (app id 6789570314) also sidesteps app-record
+// creation, which is browser-only and cannot be done via the API.
+PRODUCT_BUNDLE_IDENTIFIER = com.CrispStrobe.cloud
 
 // The copyright displayed in application information
 PRODUCT_COPYRIGHT = Copyright © 2025 CrispCloud. All rights reserved.

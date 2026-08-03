@@ -588,7 +588,7 @@
 					"@executable_path/../../../../Frameworks",
 				);
 				MACOSX_DEPLOYMENT_TARGET = 10.15;
-				PRODUCT_BUNDLE_IDENTIFIER = com.crispcloud.app.FinderExtension;
+				PRODUCT_BUNDLE_IDENTIFIER = com.CrispStrobe.cloud.FinderExtension;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SKIP_INSTALL = YES;
 				SWIFT_VERSION = 5.0;
@@ -608,7 +608,7 @@
 					"@executable_path/../../../../Frameworks",
 				);
 				MACOSX_DEPLOYMENT_TARGET = 10.15;
-				PRODUCT_BUNDLE_IDENTIFIER = com.crispcloud.app.FinderExtension;
+				PRODUCT_BUNDLE_IDENTIFIER = com.CrispStrobe.cloud.FinderExtension;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SKIP_INSTALL = YES;
 				SWIFT_COMPILATION_MODE = wholemodule;
@@ -630,7 +630,7 @@
 					"@executable_path/../../../../Frameworks",
 				);
 				MACOSX_DEPLOYMENT_TARGET = 10.15;
-				PRODUCT_BUNDLE_IDENTIFIER = com.crispcloud.app.FinderExtension;
+				PRODUCT_BUNDLE_IDENTIFIER = com.CrispStrobe.cloud.FinderExtension;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SKIP_INSTALL = YES;
 				SWIFT_COMPILATION_MODE = wholemodule;
@@ -647,7 +647,7 @@
 				CURRENT_PROJECT_VERSION = 1;
 				GENERATE_INFOPLIST_FILE = YES;
 				MARKETING_VERSION = 1.0;
-				PRODUCT_BUNDLE_IDENTIFIER = com.crispcloud.app.RunnerTests;
+				PRODUCT_BUNDLE_IDENTIFIER = com.CrispStrobe.cloud.RunnerTests;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SWIFT_VERSION = 5.0;
 				TEST_HOST = "$(BUILT_PRODUCTS_DIR)/CrispCloud.app/$(BUNDLE_EXECUTABLE_FOLDER_PATH)/CrispCloud";
@@ -662,7 +662,7 @@
 				CURRENT_PROJECT_VERSION = 1;
 				GENERATE_INFOPLIST_FILE = YES;
 				MARKETING_VERSION = 1.0;
-				PRODUCT_BUNDLE_IDENTIFIER = com.crispcloud.app.RunnerTests;
+				PRODUCT_BUNDLE_IDENTIFIER = com.CrispStrobe.cloud.RunnerTests;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SWIFT_VERSION = 5.0;
 				TEST_HOST = "$(BUILT_PRODUCTS_DIR)/CrispCloud.app/$(BUNDLE_EXECUTABLE_FOLDER_PATH)/CrispCloud";
@@ -677,7 +677,7 @@
 				CURRENT_PROJECT_VERSION = 1;
 				GENERATE_INFOPLIST_FILE = YES;
 				MARKETING_VERSION = 1.0;
-				PRODUCT_BUNDLE_IDENTIFIER = com.crispcloud.app.RunnerTests;
+				PRODUCT_BUNDLE_IDENTIFIER = com.CrispStrobe.cloud.RunnerTests;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SWIFT_VERSION = 5.0;
 				TEST_HOST = "$(BUILT_PRODUCTS_DIR)/CrispCloud.app/$(BUNDLE_EXECUTABLE_FOLDER_PATH)/CrispCloud";

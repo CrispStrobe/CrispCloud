@@ -1,7 +1,7 @@
 name: crisp_cloud
 description: Flutter/Dart Cloud storage client
 publish_to: 'none'
-version: 1.0.0+3
+version: 1.0.0+4
 
 environment:
   sdk: '>=3.0.0 <4.0.0'
@@ -144,7 +144,13 @@ flutter:
     - assets/images/app_icon.png # Add your new icon path
 
 flutter_launcher_icons:
-  image_path: "assets/images/app_icon_rounded.png"
+  # app_icon_rounded.png must NOT be used here: it bakes in a thick navy frame
+  # plus rounded corners, so iOS/Android apply their own mask on top and the
+  # frame survives as a dark ring around the icon. Platform masks require
+  # FULL-BLEED artwork. app_icon_master.png is the same logo on an opaque white
+  # square, edge to edge, no alpha (Apple rejects alpha in the 1024 marketing
+  # icon).
+  image_path: "assets/images/app_icon_master.png"
 
   # Android: adaptive icon with foreground + background color
   android: true
@@ -156,8 +162,12 @@ flutter_launcher_icons:
   remove_alpha_ios: true
 
   # Desktop Platforms
+  # macOS does NOT mask the icon — the artwork itself must be the rounded
+  # squircle, sitting on a transparent margin per Apple's icon grid. Feeding it
+  # the full-bleed iOS master would ship a hard-edged square.
   macos:
     generate: true
+    image_path: "assets/images/app_icon_macos.png"
   windows:
     generate: true
   linux:
