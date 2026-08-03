@@ -146,17 +146,49 @@ jobs:
           else
             echo "::warning::FinderExtension.appex not present in the build output"
           fi
+          # `codesign --entitlements <file>` signs in EXACTLY what the file
+          # contains — nothing is inherited. The project's .entitlements files
+          # carry only sandbox/network keys, so the signed bundles came out with
+          # no `com.apple.application-identifier`, which altool rejects with:
+          #   90886 "the signature ... is missing an application identifier but
+          #   has an application identifier in the provisioning profile"
+          # Build augmented copies that add the App Store identity keys. Same
+          # class of bug as the iOS app group: entitlements must be COMPLETE at
+          # signing time, not merely authorized by the profile.
+          TEAM="${{ secrets.ASC_TEAM_ID }}"
+          mkents() {  # mkents <source .entitlements> <bundle id> -> path
+            local src="$1" bid="$2" out="$RUNNER_TEMP/$(basename "$1").signed.plist"
+            cp "$src" "$out"
+            /usr/libexec/PlistBuddy -c "Delete :com.apple.application-identifier" "$out" 2>/dev/null || true
+            /usr/libexec/PlistBuddy -c "Delete :com.apple.developer.team-identifier" "$out" 2>/dev/null || true
+            /usr/libexec/PlistBuddy -c "Add :com.apple.application-identifier string $TEAM.$bid" "$out"
+            /usr/libexec/PlistBuddy -c "Add :com.apple.developer.team-identifier string $TEAM" "$out"
+            echo "$out"
+          }
           # Sign nested-first: frameworks, then the extension, then the app.
           find "$APP/Contents/Frameworks" -name '*.framework' -maxdepth 1 -print0 2>/dev/null \
             | xargs -0 -I{} codesign --force --timestamp --options runtime --sign "$IDENT" {} || true
           find "$APP/Contents/Frameworks" -name '*.dylib' -print0 2>/dev/null \
             | xargs -0 -I{} codesign --force --timestamp --options runtime --sign "$IDENT" {} || true
           if [ -d "$EXT" ]; then
+            EXT_ENT=$(mkents macos/FinderExtension/FinderExtension.entitlements "${{ env.FINDEREXT_BUNDLE_ID }}")
+            echo "--- extension entitlements ---"; cat "$EXT_ENT"
             codesign --force --timestamp --options runtime --sign "$IDENT" \
-              --entitlements macos/FinderExtension/FinderExtension.entitlements "$EXT"
+              --entitlements "$EXT_ENT" "$EXT"
           fi
+          APP_ENT=$(mkents macos/Runner/Release.entitlements "${{ env.BUNDLE_ID }}")
+          echo "--- app entitlements ---"; cat "$APP_ENT"
           codesign --force --timestamp --options runtime --sign "$IDENT" \
-            --entitlements macos/Runner/Release.entitlements "$APP"
+            --entitlements "$APP_ENT" "$APP"
+          # Fail loud if the application-identifier didn't make it in (90886).
+          codesign -d --entitlements - --xml "$APP" 2>/dev/null \
+            | grep -q "com.apple.application-identifier" \
+            || { echo "::error::application-identifier missing from the signed .app"; exit 1; }
+          if [ -d "$EXT" ]; then
+            codesign -d --entitlements - --xml "$EXT" 2>/dev/null \
+              | grep -q "com.apple.application-identifier" \
+              || { echo "::error::application-identifier missing from the signed .appex"; exit 1; }
+          fi
           # The Mac App Store REQUIRES the sandbox entitlement. Verify it stuck
           # rather than discovering it in Apple's async processing.
           codesign -d --entitlements - --xml "$APP" 2>/dev/null \
