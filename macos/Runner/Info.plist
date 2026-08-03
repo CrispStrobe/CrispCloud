@@ -4,6 +4,13 @@
 <dict>
 	<!-- Mac App Store requires a category UTI. Matches the iOS
 	     primary category (UTILITIES) set on the app record. -->
+	<!-- Without this the upload lands as MISSING_EXPORT_COMPLIANCE and
+	     cannot be assigned to ANY TestFlight group — the assignment 404s
+	     with "no resource of type 'builds'", which reads like a bad build
+	     id and is not. ios/Runner/Info.plist has always carried it; the
+	     Flutter macOS template does not. -->
+	<key>ITSAppUsesNonExemptEncryption</key>
+	<false/>
 	<key>LSApplicationCategoryType</key>
 	<string>public.app-category.utilities</string>
 	<key>CFBundleDevelopmentRegion</key>
