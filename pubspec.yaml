@@ -1,10 +1,11 @@
 name: crisp_cloud
 description: Flutter/Dart Cloud storage client
 publish_to: 'none'
-version: 1.0.0+4
+version: 1.0.0+5
 
 environment:
-  sdk: '>=3.0.0 <4.0.0'
+  # share_plus 10.1.x requires Dart >=3.4.0 / Flutter >=3.22.0.
+  sdk: '>=3.4.0 <4.0.0'
 
 dependencies:
   flutter:
@@ -48,7 +49,14 @@ dependencies:
   path_provider: ^2.1.5
   
   # Sharing
-  share_plus: ^7.2.2
+  # Floor 10.1.0, NOT 8/9/10.0: Apple rejected build 4 with ITMS-91061 (missing
+  # privacy manifest) on BOTH the iOS and macOS binaries. 7.2.2 ships no
+  # PrivacyInfo.xcprivacy at all, and 8.0.x/9.x/10.0.x ship one for iOS ONLY —
+  # they would clear the iOS rejection and leave macOS failing. 10.1.0 is the
+  # first version with both. Cap <11: 11.0.0 removes the static `Share` class
+  # this app calls (Share.share / Share.shareXFiles). Still dual
+  # CocoaPods+SPM, so no SPM migration needed (cf. receive_sharing_intent below).
+  share_plus: '>=10.1.0 <11.0.0'
   # Cap < 1.8.0: 1.8.0+ dropped CocoaPods and is Swift-Package-Manager-only,
   # which makes `flutter pub get` fail (exit 1) on a project without SPM
   # enabled. Revisit once the app migrates to SPM.
