@@ -1,0 +1,20 @@
+// Base configuration for embedded app extensions (CrispCloudFileProvider).
+//
+// Exists so the extension can see FLUTTER_BUILD_NUMBER / FLUTTER_BUILD_NAME and
+// therefore version itself in lockstep with the host app. Without a base
+// configuration an extension target sees neither variable — they are defined in
+// Generated.xcconfig, which only the Runner target included — so its version had
+// to be hardcoded in the pbxproj. That drifted, and Apple rejected build 5 with:
+//
+//   ITMS-90473: CFBundleVersion Mismatch - The CFBundleVersion value '4' of
+//   extension 'Runner.app/PlugIns/CrispCloudFileProvider.appex' does not match
+//   the CFBundleVersion value '5' of its containing iOS application 'Runner.app'.
+//
+// Deliberately does NOT include Pods-Runner.*.xcconfig, unlike Flutter's own
+// Debug.xcconfig / Release.xcconfig. Those carry the HOST APP's CocoaPods link
+// flags and header paths; pulling them into an appex would link the app's pods
+// into the extension. Generated.xcconfig is the only thing needed here.
+//
+// Generated.xcconfig is written by `flutter build ... --config-only` from the
+// pubspec version, so bumping pubspec.yaml is all a release needs.
+#include "Generated.xcconfig"
