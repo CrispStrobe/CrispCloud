@@ -17,6 +17,14 @@ on:
         required: false
         default: alpha
         type: string
+      release_status:
+        description: Closed release status; completed requires a fully configured app
+        required: false
+        default: draft
+        type: choice
+        options:
+          - draft
+          - completed
 
 concurrency:
   group: google-play-api
@@ -47,4 +55,5 @@ jobs:
         run: |
           python3 tool/google_play_api.py "${{ inputs.command }}" \
             --credentials "$RUNNER_TEMP/google-play-service-account.json" \
-            --track "${{ inputs.track }}"
+            --track "${{ inputs.track }}" \
+            --status "${{ inputs.release_status }}"

@@ -160,7 +160,7 @@ def sync_listing(api: PlayApi) -> None:
             api.delete_edit(edit_id)
 
 
-def configure_closed(api: PlayApi, track: str, version_code: str) -> None:
+def configure_closed(api: PlayApi, track: str, version_code: str, status: str) -> None:
     edit_id = api.create_edit()
     committed = False
     try:
@@ -178,7 +178,7 @@ def configure_closed(api: PlayApi, track: str, version_code: str) -> None:
                         "name": "CrispCloud 1.0.0 closed beta",
                         "versionCodes": [version_code],
                         "releaseNotes": release_notes,
-                        "status": "completed",
+                        "status": status,
                     }
                 ],
             },
@@ -186,7 +186,7 @@ def configure_closed(api: PlayApi, track: str, version_code: str) -> None:
         api.validate_edit(edit_id)
         api.commit_edit(edit_id)
         committed = True
-        print(f"Published version {version_code} to closed track {track}.")
+        print(f"Configured version {version_code} on closed track {track} with status {status}.")
     finally:
         if not committed:
             api.delete_edit(edit_id)
@@ -198,6 +198,7 @@ def main() -> None:
     parser.add_argument("--credentials", required=True)
     parser.add_argument("--track", default="alpha")
     parser.add_argument("--version-code", default="7")
+    parser.add_argument("--status", choices=("draft", "completed"), default="draft")
     args = parser.parse_args()
 
     api = PlayApi(args.credentials)
@@ -206,7 +207,7 @@ def main() -> None:
     elif args.command == "sync-listing":
         sync_listing(api)
     else:
-        configure_closed(api, args.track, args.version_code)
+        configure_closed(api, args.track, args.version_code, args.status)
 
 
 if __name__ == "__main__":
