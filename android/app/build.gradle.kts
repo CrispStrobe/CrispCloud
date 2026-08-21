@@ -22,7 +22,9 @@ plugins {
 android {
     namespace = "com.crispstrobe.cloud"
     compileSdk = 36
-    ndkVersion = "26.3.11579264"
+    // The jni and integration_test plugins require NDK 28. Using the highest
+    // requested version remains backward-compatible with plugins built for 27.
+    ndkVersion = "28.2.13676358"
 
     compileOptions {
         isCoreLibraryDesugaringEnabled = true

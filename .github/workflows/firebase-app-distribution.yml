@@ -35,7 +35,9 @@ jobs:
 
       - uses: subosito/flutter-action@v2
         with:
-          flutter-version: '3.44.2'
+          # Keep beta builds on the same toolchain as the validated CI build.
+          # Flutter 3.44 can incorrectly report that Gradle produced no APK.
+          flutter-version: '3.38.5'
           channel: stable
           cache: true
 
@@ -64,11 +66,21 @@ jobs:
         run: |
           set -euo pipefail
           flutter pub get
+          set +e
           flutter build apk --release \
             --dart-define=APP_VERSION="$(sed -n 's/^version:[[:space:]]*//p' pubspec.yaml)" \
             --dart-define=GIT_HASH="$(git rev-parse --short HEAD)"
-          APK=build/app/outputs/flutter-apk/app-release.apk
-          test -s "$APK"
+          build_status=$?
+          set -e
+
+          # Some Flutter releases return non-zero after Gradle has successfully
+          # written the APK. Accept that case, but never upload a missing build.
+          APK="$(find build -type f -name app-release.apk -not -path '*/intermediates/*' -print -quit)"
+          if [ -z "$APK" ] || [ ! -s "$APK" ]; then
+            echo "Flutter exited with status $build_status and no release APK was produced." >&2
+            if [ "$build_status" -eq 0 ]; then exit 1; fi
+            exit "$build_status"
+          fi
           jarsigner -verify -strict -certs "$APK" >/dev/null
           echo "APK=$APK" >> "$GITHUB_ENV"
 
@@ -103,4 +115,3 @@ jobs:
           if [ -n "$TESTER_GROUPS" ]; then args+=(--groups "$TESTER_GROUPS"); fi
           if [ -n "$TESTER_EMAILS" ]; then args+=(--testers "$TESTER_EMAILS"); fi
           firebase appdistribution:distribute "${args[@]}"
-
