@@ -18,7 +18,7 @@
 //   FLAG_SUPPORTS_CREATE, FLAG_SUPPORTS_DELETE, FLAG_SUPPORTS_RENAME,
 //   FLAG_DIR_SUPPORTS_CREATE.
 
-package com.CrispStrobe.cloud_dart
+package com.crispstrobe.cloud
 
 import android.content.Context
 import android.content.SharedPreferences

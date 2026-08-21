@@ -10,7 +10,7 @@
 // and passes lint/aapt.  The notification lifecycle itself is controlled from
 // the Flutter layer via ForegroundTransferService.
 
-package com.CrispStrobe.cloud_dart
+package com.crispstrobe.cloud
 
 import android.app.Service
 import android.content.Intent

@@ -12,7 +12,7 @@
 // sync completes, the Flutter app broadcasts ACTION_APPWIDGET_UPDATE so this
 // provider refreshes immediately.
 
-package com.CrispStrobe.cloud_dart
+package com.crispstrobe.cloud
 
 import android.app.PendingIntent
 import android.appwidget.AppWidgetManager

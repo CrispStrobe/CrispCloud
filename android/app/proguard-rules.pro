@@ -8,7 +8,7 @@
 -dontwarn io.flutter.embedding.**
 
 # Keep our Kotlin platform-channel handlers
--keep class com.CrispStrobe.cloud_dart.** { *; }
+-keep class com.crispstrobe.cloud.** { *; }
 
 # Dart FFI (used by drift/sqlite3, cryptography_flutter, ffi package)
 -keep class **NativeFunction { *; }

@@ -20,7 +20,7 @@ plugins {
 }
 
 android {
-    namespace = "com.CrispStrobe.cloud_dart"
+    namespace = "com.crispstrobe.cloud"
     compileSdk = 36
     ndkVersion = "26.3.11579264"
 
@@ -40,7 +40,7 @@ android {
     }
 
     defaultConfig {
-        applicationId = "com.CrispStrobe.cloud_dart"
+        applicationId = "com.crispstrobe.cloud"
         minSdk = flutter.minSdkVersion
         targetSdk = flutter.targetSdkVersion
         versionCode = flutter.versionCode

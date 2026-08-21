@@ -1,4 +1,4 @@
-package com.CrispStrobe.cloud_dart
+package com.crispstrobe.cloud
 
 import io.flutter.embedding.android.FlutterFragmentActivity
 import io.flutter.embedding.engine.FlutterEngine
@@ -6,7 +6,7 @@ import io.flutter.plugin.common.MethodChannel
 
 class MainActivity : FlutterFragmentActivity() {
 
-    private val safChannel = "com.CrispStrobe.cloud_dart/saf"
+    private val safChannel = "com.crispstrobe.cloud/saf"
 
     override fun configureFlutterEngine(flutterEngine: FlutterEngine) {
         super.configureFlutterEngine(flutterEngine)

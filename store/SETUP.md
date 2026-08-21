@@ -61,7 +61,7 @@ xcrun altool --upload-package build/ios/export/Runner.ipa \
 
 ## Google Play (Android)
 
-Package: `com.CrispStrobe.cloud_dart`
+Package: `com.crispstrobe.cloud`
 
 ### Keystore setup
 

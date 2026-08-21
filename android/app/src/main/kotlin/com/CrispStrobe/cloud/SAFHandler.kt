@@ -1,9 +1,9 @@
 // android/app/src/main/kotlin/com/CrispStrobe/cloud_dart/SAFHandler.kt
 //
-// Handles the "com.CrispStrobe.cloud_dart/saf" MethodChannel on the Android side.
+// Handles the "com.crispstrobe.cloud/saf" MethodChannel on the Android side.
 // Registered by MainActivity.
 
-package com.CrispStrobe.cloud_dart
+package com.crispstrobe.cloud
 
 import android.app.Activity
 import android.content.Intent
@@ -16,7 +16,7 @@ import io.flutter.embedding.android.FlutterFragmentActivity
 import io.flutter.plugin.common.MethodCall
 import io.flutter.plugin.common.MethodChannel
 
-private const val CHANNEL = "com.CrispStrobe.cloud_dart/saf"
+private const val CHANNEL = "com.crispstrobe.cloud/saf"
 
 /**
  * Registers the SAF MethodChannel and manages the Android Activity Result API
