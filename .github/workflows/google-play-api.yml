@@ -1,0 +1,50 @@
+name: Google Play API
+
+on:
+  workflow_dispatch:
+    inputs:
+      command:
+        description: Operation to perform
+        required: true
+        default: probe
+        type: choice
+        options:
+          - probe
+          - sync-listing
+          - configure-closed
+      track:
+        description: Closed-track identifier (used by configure-closed)
+        required: false
+        default: alpha
+        type: string
+
+concurrency:
+  group: google-play-api
+  cancel-in-progress: false
+
+jobs:
+  play-api:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    permissions:
+      contents: read
+    steps:
+      - uses: actions/checkout@v5
+
+      - name: Configure Google Play credentials
+        env:
+          SERVICE_ACCOUNT_JSON: ${{ secrets.FIREBASE_SERVICE_ACCOUNT_JSON }}
+        run: |
+          set -euo pipefail
+          : "${SERVICE_ACCOUNT_JSON:?FIREBASE_SERVICE_ACCOUNT_JSON is required}"
+          printf '%s' "$SERVICE_ACCOUNT_JSON" > "$RUNNER_TEMP/google-play-service-account.json"
+          chmod 600 "$RUNNER_TEMP/google-play-service-account.json"
+
+      - name: Install Google authentication library
+        run: python3 -m pip install --disable-pip-version-check --quiet google-auth requests
+
+      - name: Run Google Play operation
+        run: |
+          python3 tool/google_play_api.py "${{ inputs.command }}" \
+            --credentials "$RUNNER_TEMP/google-play-service-account.json" \
+            --track "${{ inputs.track }}"
