@@ -1,0 +1,1 @@
+Erste Android-Betaversion. Cloud- und Serverspeicher verbinden, Dateien durchsuchen und übertragen, gängige Formate anzeigen und sichere Hintergrund-Synchronisierung einrichten.

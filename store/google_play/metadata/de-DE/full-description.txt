@@ -1,0 +1,23 @@
+CrispCloud vereint Cloudspeicher, Server und lokale Dateien in einem datenschutzfreundlichen Dateimanager.
+
+Verbinde die Speicher, die du bereits nutzt:
+• Verschlüsselte Cloudspeicher von Filen und Internxt
+• pCloud, Google Drive, Dropbox und OneDrive
+• Nextcloud, ownCloud und WebDAV
+• Amazon-S3-kompatible Speicher, Azure Blob und Backblaze B2
+• SFTP/SSH- und FTP/FTPS-Server
+• Lokalen Android-Speicher über die Systemdateiauswahl
+
+CLOUDÜBERGREIFEND ARBEITEN
+Durchsuche Dateien, ohne ständig zwischen Apps zu wechseln. Kopiere und verschiebe Daten zwischen kompatiblen Speicherorten, verfolge den Fortschritt und führe unterstützte Transfers im Hintergrund fort.
+
+LEISTUNGSSTARKE DATEIWERKZEUGE
+Zeige Bilder, PDFs, Videos, Texte und Quellcode direkt an. Benenne mehrere Dateien um, finde Duplikate, organisiere Ordner und nutze Listen-, Raster- oder Spaltenansichten.
+
+DATENSCHUTZ VON ANFANG AN
+CrispCloud enthält keine Werbung und keine externe Nutzungsanalyse. Zugangsdaten werden im sicheren Plattformspeicher abgelegt. Eine optionale clientseitige AES-256-GCM-Verschlüsselung kann Dateien vor dem Upload schützen. Absturzberichte bleiben zur eigenen Prüfung lokal auf deinem Gerät.
+
+FLEXIBEL SYNCHRONISIEREN
+Erstelle Synchronisierungspaare, vergleiche lokale und entfernte Inhalte und nutze effiziente Delta-Synchronisierung, wenn der verbundene Anbieter sie unterstützt.
+
+CrispCloud ist ein unabhängiger Client. Cloudkonten und Serverzugänge sind nicht enthalten; Bedingungen und mögliche Kosten der Anbieter gelten. Funktionen unterscheiden sich je nach Plattform und Anbieter.

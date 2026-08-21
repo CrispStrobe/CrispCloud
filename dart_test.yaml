@@ -7,6 +7,8 @@ tags:
     skip: "Integration tests use mock servers with I/O. Run with: flutter test --tags integration"
   golden:
     skip: "Golden tests require baseline images. Run with: flutter test --tags golden"
+  store-assets:
+    skip: "Store asset rendering is opt-in. Run with: flutter test --tags store-assets --run-skipped"
   connection_dialog:
     skip: "Connection dialog widget tests. Run with: flutter test --tags connection_dialog"
   deploy:

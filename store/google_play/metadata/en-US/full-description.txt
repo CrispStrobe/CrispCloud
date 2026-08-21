@@ -1,0 +1,23 @@
+CrispCloud brings your cloud storage, servers and local files together in one privacy-focused file manager.
+
+Connect the storage you already use:
+• Filen and Internxt encrypted cloud storage
+• pCloud, Google Drive, Dropbox and OneDrive
+• Nextcloud, ownCloud and WebDAV
+• Amazon S3-compatible storage, Azure Blob and Backblaze B2
+• SFTP/SSH and FTP/FTPS servers
+• Local Android storage through the system file picker
+
+WORK ACROSS CLOUDS
+Browse files without repeatedly switching apps. Copy and move data between compatible locations, keep an eye on transfer progress, and continue supported transfers in the background.
+
+POWERFUL FILE TOOLS
+Preview common images, PDFs, video, text and source files. Rename batches of files, search for duplicates, organize folders and use flexible list, grid and column views.
+
+PRIVATE BY DESIGN
+CrispCloud has no ads and no external analytics. Credentials are kept in platform secure storage. Optional AES-256-GCM client-side encryption can protect files before upload. Crash reports remain locally on your device for your review.
+
+SYNC YOUR WAY
+Create sync pairs, compare local and remote content, and use efficient delta synchronization where the connected provider supports it.
+
+CrispCloud is an independent client. Cloud accounts and server access are not included; provider terms and possible provider charges apply. Available features vary by platform and provider.

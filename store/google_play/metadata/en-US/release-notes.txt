@@ -1,0 +1,1 @@
+First Android beta release. Connect cloud and server storage, browse files, transfer data, preview common formats, and configure secure background sync.

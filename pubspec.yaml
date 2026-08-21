@@ -151,6 +151,18 @@ flutter:
   # App Icons
   assets:
     - assets/images/app_icon.png # Add your new icon path
+    - assets/images/app_icon_master.png
+    - assets/fonts/MaterialIcons-Regular.otf
+
+  fonts:
+    - family: StoreRoboto
+      fonts:
+        - asset: assets/fonts/Roboto-Regular.ttf
+          weight: 400
+        - asset: assets/fonts/Roboto-Medium.ttf
+          weight: 500
+        - asset: assets/fonts/Roboto-Bold.ttf
+          weight: 700
 
 flutter_launcher_icons:
   # app_icon_rounded.png must NOT be used here: it bakes in a thick navy frame
