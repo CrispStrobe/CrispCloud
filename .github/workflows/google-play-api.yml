@@ -12,6 +12,7 @@ on:
           - probe
           - sync-listing
           - configure-closed
+          - upload-and-stage
       track:
         description: Closed-track identifier (used by configure-closed)
         required: false
@@ -25,6 +26,10 @@ on:
         options:
           - draft
           - completed
+      bundle_run_id:
+        description: Google Play Bundle workflow run ID (used by upload-and-stage)
+        required: false
+        type: string
 
 concurrency:
   group: google-play-api
@@ -51,9 +56,25 @@ jobs:
       - name: Install Google authentication library
         run: python3 -m pip install --disable-pip-version-check --quiet google-auth requests
 
+      - name: Download signed bundle
+        if: inputs.command == 'upload-and-stage'
+        uses: actions/download-artifact@v4
+        with:
+          name: crispcloud-google-play-aab
+          github-token: ${{ github.token }}
+          repository: ${{ github.repository }}
+          run-id: ${{ inputs.bundle_run_id }}
+          path: ${{ runner.temp }}/play-bundle
+
       - name: Run Google Play operation
         run: |
-          python3 tool/google_play_api.py "${{ inputs.command }}" \
+          args=("${{ inputs.command }}" \
             --credentials "$RUNNER_TEMP/google-play-service-account.json" \
             --track "${{ inputs.track }}" \
-            --status "${{ inputs.release_status }}"
+            --status "${{ inputs.release_status }}")
+          if [ "${{ inputs.command }}" = upload-and-stage ]; then
+            bundle_path="$(find "$RUNNER_TEMP/play-bundle" -type f -name '*.aab' -print -quit)"
+            : "${bundle_path:?No AAB downloaded from the requested workflow run}"
+            args+=(--bundle-path "$bundle_path")
+          fi
+          python3 tool/google_play_api.py "${args[@]}"

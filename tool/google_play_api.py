@@ -54,6 +54,13 @@ class PlayApi:
     def validate_edit(self, edit_id: str) -> None:
         self.request("POST", self.edit_url(edit_id, ":validate"), json={})
 
+    def upload_bundle(self, edit_id: str, path: Path) -> dict[str, Any]:
+        url = f"{UPLOAD_API}/applications/{PACKAGE}/edits/{edit_id}/bundles?uploadType=media"
+        return self.request(
+            "POST", url, data=path.read_bytes(),
+            headers={"Content-Type": "application/octet-stream"},
+        )
+
 
 def read_text(relative: str) -> str:
     return (STORE / relative).read_text(encoding="utf-8").strip()
@@ -192,10 +199,43 @@ def configure_closed(api: PlayApi, track: str, version_code: str, status: str) -
             api.delete_edit(edit_id)
 
 
+def upload_and_stage(api: PlayApi, bundle_path: Path) -> None:
+    edit_id = api.create_edit()
+    committed = False
+    try:
+        bundle = api.upload_bundle(edit_id, bundle_path)
+        version_code = str(bundle["versionCode"])
+        release_notes = [
+            {"language": language, "text": read_text(f"metadata/{language}/release-notes.txt")}
+            for language in ("en-US", "de-DE")
+        ]
+        for track, status in (("internal", "completed"), ("alpha", "draft")):
+            api.request(
+                "PUT", api.edit_url(edit_id, f"/tracks/{track}"),
+                json={
+                    "track": track,
+                    "releases": [{
+                        "name": f"CrispCloud 1.0.0 build {version_code}",
+                        "versionCodes": [version_code],
+                        "releaseNotes": release_notes,
+                        "status": status,
+                    }],
+                },
+            )
+        api.validate_edit(edit_id)
+        api.commit_edit(edit_id)
+        committed = True
+        print(f"Uploaded version {version_code}; internal completed, alpha draft.")
+    finally:
+        if not committed:
+            api.delete_edit(edit_id)
+
+
 def main() -> None:
     parser = argparse.ArgumentParser()
-    parser.add_argument("command", choices=("probe", "sync-listing", "configure-closed"))
+    parser.add_argument("command", choices=("probe", "sync-listing", "configure-closed", "upload-and-stage"))
     parser.add_argument("--credentials", required=True)
+    parser.add_argument("--bundle-path")
     parser.add_argument("--track", default="alpha")
     parser.add_argument("--version-code", default="7")
     parser.add_argument("--status", choices=("draft", "completed"), default="draft")
@@ -206,6 +246,10 @@ def main() -> None:
         probe(api)
     elif args.command == "sync-listing":
         sync_listing(api)
+    elif args.command == "upload-and-stage":
+        if not args.bundle_path:
+            parser.error("upload-and-stage requires --bundle-path")
+        upload_and_stage(api, Path(args.bundle_path))
     else:
         configure_closed(api, args.track, args.version_code, args.status)
 
