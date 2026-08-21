@@ -67,7 +67,11 @@ jobs:
             echo "AAB is unexpectedly small: $AAB" >&2
             exit 1
           fi
-          jarsigner -verify -strict -certs "$AAB" >/dev/null
+          # `-strict` exits with code 4 for the expected self-signed upload
+          # certificate warning, even though the bundle is correctly signed.
+          # Play App Signing replaces this upload signature for users.
+          jarsigner -verify -certs "$AAB" > /tmp/jarsigner-verification.txt
+          grep -q "jar verified" /tmp/jarsigner-verification.txt
           app_version="$(sed -n 's/^version:[[:space:]]*//p' pubspec.yaml)"
           bundle_path="CrispCloud-${app_version/+/-build-}.aab"
           cp "$AAB" "$bundle_path"
