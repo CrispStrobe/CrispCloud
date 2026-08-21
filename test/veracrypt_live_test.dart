@@ -1,3 +1,4 @@
+@Tags(['live'])
 // test/veracrypt_live_test.dart
 //
 // Live integration test for VeraCrypt container support.

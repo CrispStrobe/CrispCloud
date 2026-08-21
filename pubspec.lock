@@ -404,10 +404,9 @@ packages:
   filen_client:
     dependency: "direct main"
     description:
-      name: filen_client
-      sha256: "89823f6add3a86aeafee8bc942de43544431ed21faa6cc851a4d6758a0473b05"
-      url: "https://pub.dev"
-    source: hosted
+      path: "packages/filen_client"
+      relative: true
+    source: path
     version: "0.2.2"
   fixnum:
     dependency: transitive
@@ -966,7 +965,7 @@ packages:
     source: hosted
     version: "2.2.2"
   path_provider_platform_interface:
-    dependency: transitive
+    dependency: "direct dev"
     description:
       name: path_provider_platform_interface
       sha256: "484838772624c3a4b94f1e44a3e19897fee738f2d5c4ce448443b0417f7c9dda"

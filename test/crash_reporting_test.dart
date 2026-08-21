@@ -8,6 +8,7 @@ import 'dart:io';
 
 import 'package:flutter_test/flutter_test.dart';
 import 'package:path/path.dart' as p;
+import 'package:shared_preferences/shared_preferences.dart';
 
 import 'package:crisp_cloud/services/crash_reporting_service.dart';
 import 'package:crisp_cloud/services/log_service.dart';
@@ -48,20 +49,43 @@ class _CapturingBackend extends CrashReportingBackend {
   }
 }
 
-/// Helper: build a CrashReportingService with the capturing backend,
-/// already enabled, without touching SharedPreferences.
-CrashReportingService _enabledService({_CapturingBackend? backend}) {
-  final b = backend ?? _CapturingBackend();
-  final service = CrashReportingService(backend: b);
-  // Directly set the enabled flag via method rather than SharedPreferences
-  return service;
-}
-
 // ---------------------------------------------------------------------------
 // Breadcrumb tests
 // ---------------------------------------------------------------------------
 
 void main() {
+  TestWidgetsFlutterBinding.ensureInitialized();
+
+  setUp(() {
+    SharedPreferences.setMockInitialValues({});
+  });
+
+  group('Privacy sanitization', () {
+    test('redacts credentials and local paths recursively', () {
+      final sanitized = sanitizeCrashData({
+        'accessToken': 'top-secret',
+        'filePath': '/Users/alice/private/report.pdf',
+        'nested': {
+          'password': 'hunter2',
+          'status': 'failed',
+        },
+      }) as Map<String, dynamic>;
+
+      expect(sanitized['accessToken'], '<redacted>');
+      expect(sanitized['filePath'], '<redacted-path>');
+      expect((sanitized['nested'] as Map)['password'], '<redacted>');
+      expect((sanitized['nested'] as Map)['status'], 'failed');
+    });
+
+    test('removes query-string secrets from messages', () {
+      final sanitized = sanitizeCrashData(
+        'GET https://example.test/a?token=abc123&mode=view',
+      ) as String;
+      expect(sanitized, contains('token=<redacted>'));
+      expect(sanitized, isNot(contains('abc123')));
+    });
+  });
+
   group('Breadcrumb', () {
     test('toJson includes required fields', () {
       final crumb = Breadcrumb(
@@ -331,9 +355,13 @@ void main() {
         'timestamp': '2026-01-01T00:00:00.000',
         'errorMessage': 'oops',
         'breadcrumbs': [
-          {'timestamp': '2026-01-01T00:00:00.000', 'message': 'ok', 'category': 'nav'},
-          'not a map',  // should be skipped
-          42,           // should be skipped
+          {
+            'timestamp': '2026-01-01T00:00:00.000',
+            'message': 'ok',
+            'category': 'nav'
+          },
+          'not a map', // should be skipped
+          42, // should be skipped
         ],
         'platformInfo': {},
       };
@@ -513,7 +541,8 @@ void main() {
         null,
         context: {'path': '/docs', 'provider': 'dropbox'},
       );
-      expect(backend.sent.first.context, {'path': '/docs', 'provider': 'dropbox'});
+      expect(backend.sent.first.context,
+          {'path': '<redacted-path>', 'provider': 'dropbox'});
     });
 
     test('report without context has null context', () async {
@@ -612,7 +641,8 @@ void main() {
     setUp(() {
       tempDir = Directory.systemTemp.createTempSync('crash_test_');
       backend = LocalBackend();
-      backend.setFilePathForTesting(p.join(tempDir.path, 'crash_reports.jsonl'));
+      backend
+          .setFilePathForTesting(p.join(tempDir.path, 'crash_reports.jsonl'));
     });
 
     tearDown(() {
@@ -648,7 +678,8 @@ void main() {
       await backend.send(_makeSimpleReport('report 2'));
       await backend.send(_makeSimpleReport('report 3'));
       final file = File(p.join(tempDir.path, 'crash_reports.jsonl'));
-      final lines = file.readAsLinesSync().where((l) => l.trim().isNotEmpty).toList();
+      final lines =
+          file.readAsLinesSync().where((l) => l.trim().isNotEmpty).toList();
       expect(lines.length, 3);
     });
 
@@ -804,12 +835,14 @@ void main() {
 
   group('SentryBackend placeholder', () {
     test('initialize does not throw', () async {
-      final sentry = SentryBackend(dsn: 'https://example@o123.ingest.sentry.io/456');
+      final sentry =
+          SentryBackend(dsn: 'https://example@o123.ingest.sentry.io/456');
       await expectLater(sentry.initialize(), completes);
     });
 
     test('send does not throw', () async {
-      final sentry = SentryBackend(dsn: 'https://example@o123.ingest.sentry.io/456');
+      final sentry =
+          SentryBackend(dsn: 'https://example@o123.ingest.sentry.io/456');
       final report = CrashReport(
         id: 'cr_sentry_test',
         timestamp: DateTime.now(),
@@ -855,7 +888,8 @@ void main() {
 
       try {
         final log = CrashLog('TestLogger');
-        log.error('Test error message', Exception('crash log test'), StackTrace.current);
+        log.error('Test error message', Exception('crash log test'),
+            StackTrace.current);
 
         expect(captured.length, 1);
         expect(captured.first.level, LogLevel.error);
@@ -905,7 +939,8 @@ void main() {
       expect(captured, isEmpty);
     });
 
-    test('CrashReportingService receives errors via CrashLog when enabled', () async {
+    test('CrashReportingService receives errors via CrashLog when enabled',
+        () async {
       final backend = _CapturingBackend();
       final service = CrashReportingService(backend: backend);
       // Enable the service — this registers the service's internal hook

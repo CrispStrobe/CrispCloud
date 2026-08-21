@@ -2,18 +2,57 @@
 //
 // Tests for the Riverpod providers that replaced the monolithic AppState.
 
+import 'dart:io';
+import 'dart:typed_data';
+
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 import 'package:crisp_cloud/models/file_item.dart';
+import 'package:crisp_cloud/models/operation_progress.dart';
 import 'package:crisp_cloud/models/panel_side.dart';
 import 'package:crisp_cloud/providers/providers.dart';
 import 'package:crisp_cloud/services/cloud_storage_interface.dart';
 import 'package:crisp_cloud/services/filen_config_service.dart';
+import 'package:crisp_cloud/services/local_file_service.dart';
 import 'package:crisp_cloud/services/secure_storage_service.dart';
 
+class _TestLocalFileService implements LocalFileService {
+  @override
+  String currentPath = Directory.systemTemp.path;
+  @override
+  String? get grantedBasePath => Directory.systemTemp.path;
+  @override
+  Future<String> getInitialPath() async => currentPath;
+  @override
+  Future<String> getSafeFallbackDirectory() async => currentPath;
+  @override
+  Future<bool> hasAccessToPath(String path) async => true;
+  @override
+  Future<List<FileSystemEntity>?> listDirectory(String path) async => [];
+  @override
+  Future<String?> requestDirectoryAccess({String? initialDirectory}) async =>
+      currentPath;
+  @override
+  Future<Uint8List> readFile(String path, {FileItem? fileItem}) async =>
+      Uint8List(0);
+  @override
+  Future<void> saveFile(String path, Uint8List data) async {}
+  @override
+  Future<void> createDirectory(String path) async {}
+  @override
+  Future<void> deleteEntry(String path, bool isFolder) async {}
+  @override
+  Future<void> refresh() async {}
+  @override
+  Map<String, dynamic> getWebMetadata(String path) => {};
+  @override
+  Object? getWebFileRef(String path) => null;
+}
+
 void main() {
+  TestWidgetsFlutterBinding.ensureInitialized();
   late ProviderContainer container;
   late InMemorySecureStorage secureStorage;
   late FilenConfigService configService;
@@ -29,20 +68,19 @@ void main() {
       overrides: [
         secureStorageProvider.overrideWithValue(secureStorage),
         configPathProvider.overrideWithValue('/tmp/providers_test_config'),
+        localFileServiceProvider.overrideWithValue(_TestLocalFileService()),
         authProvider.overrideWith((ref) => AuthNotifier(
-          ref,
-          initialProvider: CloudProvider.filen,
-          config: configService,
-          configPath: '/tmp/providers_test_config',
-          secureStorage: secureStorage,
-        )),
+              ref,
+              initialProvider: CloudProvider.filen,
+              config: configService,
+              configPath: '/tmp/providers_test_config',
+              secureStorage: secureStorage,
+            )),
       ],
     );
   });
 
-  tearDown(() async {
-    // Wait for async init in PanelNotifier/AuthNotifier to settle
-    await Future.delayed(const Duration(milliseconds: 200));
+  tearDown(() {
     container.dispose();
   });
 
@@ -453,6 +491,31 @@ void main() {
     test('clearCompletedOperations does not throw when empty', () {
       final transfers = container.read(transferProvider);
       transfers.clearCompletedOperations();
+      expect(transfers.operations, isEmpty);
+    });
+
+    test('clearCompletedOperations removes failed and cancelled transfers', () {
+      final transfers = container.read(transferProvider);
+      final failed = OperationProgress(
+        id: 'failed',
+        type: OperationType.upload,
+        sourcePath: '/source',
+        targetPath: '/target',
+        fileName: 'failed.txt',
+        status: OperationStatus.failed,
+        errorMessage: 'network error',
+      );
+      final cancelled = OperationProgress(
+        id: 'cancelled',
+        type: OperationType.download,
+        sourcePath: '/source',
+        targetPath: '/target',
+        fileName: 'cancelled.txt',
+      )..cancel();
+      transfers.operations.addAll([failed, cancelled]);
+
+      transfers.clearCompletedOperations();
+
       expect(transfers.operations, isEmpty);
     });
 

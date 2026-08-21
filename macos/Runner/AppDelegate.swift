@@ -49,8 +49,6 @@ class AppDelegate: FlutterAppDelegate {
   private var pendingUrl: URL?
 
   override func applicationDidFinishLaunching(_ notification: Notification) {
-    super.applicationDidFinishLaunching(notification)
-
     // If a URL arrived very early (before the engine finished), deliver it
     // once the engine reports it is ready.  We poll via a short delay;
     // a production app could use FlutterEngine callbacks instead.

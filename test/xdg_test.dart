@@ -12,8 +12,18 @@ import 'dart:io';
 
 import 'package:flutter_test/flutter_test.dart';
 import 'package:path/path.dart' as p;
+import 'package:path_provider_platform_interface/path_provider_platform_interface.dart';
 
 import 'package:crisp_cloud/services/xdg_service.dart';
+
+class _FakePathProvider extends PathProviderPlatform {
+  @override
+  Future<String?> getApplicationSupportPath() async =>
+      '/tmp/crispcloud-support';
+
+  @override
+  Future<String?> getTemporaryPath() async => '/tmp';
+}
 
 // ---------------------------------------------------------------------------
 // Convenience wrapper
@@ -45,6 +55,9 @@ Future<XdgService> _svc({
 // ---------------------------------------------------------------------------
 
 void main() {
+  TestWidgetsFlutterBinding.ensureInitialized();
+  PathProviderPlatform.instance = _FakePathProvider();
+
   tearDown(() => XdgService.reset());
 
   // -------------------------------------------------------------------------
@@ -71,7 +84,9 @@ void main() {
   // -------------------------------------------------------------------------
   group('Default XDG paths (no env vars)', () {
     late XdgService svc;
-    setUp(() async { svc = await _svc(home: '/home/alice'); });
+    setUp(() async {
+      svc = await _svc(home: '/home/alice');
+    });
 
     test('configHome defaults to ~/.config/crispcloud', () {
       expect(svc.configHome, '/home/alice/.config/crispcloud');
@@ -110,7 +125,7 @@ void main() {
 
     test('data / cache / state still use defaults', () async {
       final svc = await _svc(home: '/home/bob', config: '/custom/cfg');
-      expect(svc.dataHome,  '/home/bob/.local/share/crispcloud');
+      expect(svc.dataHome, '/home/bob/.local/share/crispcloud');
       expect(svc.cacheHome, '/home/bob/.cache/crispcloud');
       expect(svc.stateHome, '/home/bob/.local/state/crispcloud');
     });
@@ -194,7 +209,9 @@ void main() {
   // -------------------------------------------------------------------------
   group('getConfigPath', () {
     late XdgService svc;
-    setUp(() async { svc = await _svc(home: '/home/greta'); });
+    setUp(() async {
+      svc = await _svc(home: '/home/greta');
+    });
 
     test('appends filename to configHome', () {
       expect(svc.getConfigPath('settings.json'),
@@ -213,7 +230,9 @@ void main() {
 
   group('getDataPath', () {
     late XdgService svc;
-    setUp(() async { svc = await _svc(home: '/home/hank'); });
+    setUp(() async {
+      svc = await _svc(home: '/home/hank');
+    });
 
     test('appends filename to dataHome', () {
       expect(svc.getDataPath('bookmarks.db'),
@@ -227,7 +246,9 @@ void main() {
 
   group('getCachePath', () {
     late XdgService svc;
-    setUp(() async { svc = await _svc(home: '/home/iris'); });
+    setUp(() async {
+      svc = await _svc(home: '/home/iris');
+    });
 
     test('appends filename to cacheHome', () {
       expect(svc.getCachePath('thumbnail.png'),
@@ -241,7 +262,9 @@ void main() {
 
   group('getStatePath', () {
     late XdgService svc;
-    setUp(() async { svc = await _svc(home: '/home/jack'); });
+    setUp(() async {
+      svc = await _svc(home: '/home/jack');
+    });
 
     test('appends filename to stateHome', () {
       expect(svc.getStatePath('session.json'),
@@ -260,8 +283,7 @@ void main() {
     });
 
     test('appends filename when runtimeDir is set', () async {
-      final svc =
-          await _svc(home: '/home/kim', runtime: '/run/user/1234');
+      final svc = await _svc(home: '/home/kim', runtime: '/run/user/1234');
       expect(svc.getRuntimePath('crispcloud.lock'),
           '/run/user/1234/crispcloud.lock');
     });
@@ -269,7 +291,9 @@ void main() {
 
   group('getPath dispatch', () {
     late XdgService svc;
-    setUp(() async { svc = await _svc(home: '/home/leo'); });
+    setUp(() async {
+      svc = await _svc(home: '/home/leo');
+    });
 
     test('config', () {
       expect(svc.getPath(XdgDirectory.config, 'f.json'),
@@ -422,8 +446,7 @@ void main() {
         state: p.join(tmp.path, 'st4'),
       );
       await svc.ensureDirectories();
-      final subDir =
-          await svc.ensureSubdir(XdgDirectory.data, 'thumbnails');
+      final subDir = await svc.ensureSubdir(XdgDirectory.data, 'thumbnails');
       expect(subDir.existsSync(), isTrue);
     });
   });
@@ -455,7 +478,7 @@ void main() {
     });
 
     test('XdgMigrationResult toString includes key fields', () {
-      final r = XdgMigrationResult(
+      const r = XdgMigrationResult(
         needed: true,
         completed: false,
         message: 'test message',
@@ -469,7 +492,7 @@ void main() {
     });
 
     test('XdgMigrationResult default lists are empty', () {
-      final r = XdgMigrationResult(
+      const r = XdgMigrationResult(
         needed: false,
         completed: false,
         message: 'nothing',
@@ -479,7 +502,7 @@ void main() {
     });
 
     test('XdgMigrationResult fields are accessible', () {
-      final r = XdgMigrationResult(
+      const r = XdgMigrationResult(
         needed: true,
         completed: true,
         message: 'done',

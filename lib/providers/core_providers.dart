@@ -12,6 +12,7 @@ import '../services/directory_cache_service.dart';
 import '../services/file_cache_service.dart';
 import '../services/local_file_service.dart';
 import '../services/thumbnail_service.dart';
+import '../services/theme_service.dart';
 import '../services/proxy_service.dart';
 import '../services/secure_storage_service.dart';
 
@@ -38,6 +39,10 @@ final directoryCacheProvider = Provider<DirectoryCacheService>((ref) {
 /// User-selected locale override (null = use system locale).
 final localeProvider = StateProvider<Locale?>((ref) => null);
 
+/// Application theme state. Riverpod is the sole ownership boundary.
+final themeProvider =
+    ChangeNotifierProvider<ThemeService>((ref) => ThemeService());
+
 /// Which panel is active (Local / Remote).
 final activePanelProvider = StateProvider<PanelSide>((ref) => PanelSide.local);
 
@@ -59,6 +64,7 @@ final panelSplitRatioProvider = StateProvider<double>((ref) => 0.5);
 
 /// File view mode per panel.
 enum ViewMode { list, grid, column }
+
 final localViewModeProvider = StateProvider<ViewMode>((ref) => ViewMode.list);
 final remoteViewModeProvider = StateProvider<ViewMode>((ref) => ViewMode.list);
 
@@ -108,7 +114,9 @@ final fontSizeProvider = StateNotifierProvider<_FontSizeNotifier, double>(
 );
 
 class _FontSizeNotifier extends StateNotifier<double> {
-  _FontSizeNotifier() : super(13.0) { _load(); }
+  _FontSizeNotifier() : super(13.0) {
+    _load();
+  }
   Future<void> _load() async {
     try {
       final prefs = await SharedPreferences.getInstance();
@@ -118,6 +126,7 @@ class _FontSizeNotifier extends StateNotifier<double> {
       // Silently ignored
     }
   }
+
   Future<void> setSize(double size) async {
     state = size.clamp(10.0, 20.0);
     try {
@@ -135,7 +144,9 @@ final fontFamilyProvider = StateNotifierProvider<_FontFamilyNotifier, String>(
 );
 
 class _FontFamilyNotifier extends StateNotifier<String> {
-  _FontFamilyNotifier() : super('system') { _load(); }
+  _FontFamilyNotifier() : super('system') {
+    _load();
+  }
   Future<void> _load() async {
     try {
       final prefs = await SharedPreferences.getInstance();
@@ -144,6 +155,7 @@ class _FontFamilyNotifier extends StateNotifier<String> {
       // Silently ignored
     }
   }
+
   Future<void> setFamily(String family) async {
     state = family;
     try {
@@ -163,18 +175,31 @@ class _FontFamilyNotifier extends StateNotifier<String> {
 /// E2E encrypted = 100, encrypted-at-rest = 70, encrypted-in-transit = 40, unencrypted = 10
 int privacyScore(String providerName) {
   switch (providerName.toLowerCase()) {
-    case 'filen': return 100;   // E2E encrypted
-    case 'internxt': return 100; // E2E encrypted
-    case 's3': return 60;       // encrypted-at-rest (optional SSE)
-    case 'google drive': case 'gdrive': return 50; // encrypted-at-rest
-    case 'onedrive': return 50;  // encrypted-at-rest
-    case 'dropbox': return 50;   // encrypted-at-rest
-    case 'pcloud': return 55;    // crypto folder option
-    case 'nextcloud': return 65; // self-hosted, E2E optional
-    case 'sftp': return 70;      // encrypted-in-transit, user controls server
-    case 'webdav': return 40;    // depends on HTTPS config
-    case 'ftp': return 20;       // plain text unless FTPS
-    default: return 30;
+    case 'filen':
+      return 100; // E2E encrypted
+    case 'internxt':
+      return 100; // E2E encrypted
+    case 's3':
+      return 60; // encrypted-at-rest (optional SSE)
+    case 'google drive':
+    case 'gdrive':
+      return 50; // encrypted-at-rest
+    case 'onedrive':
+      return 50; // encrypted-at-rest
+    case 'dropbox':
+      return 50; // encrypted-at-rest
+    case 'pcloud':
+      return 55; // crypto folder option
+    case 'nextcloud':
+      return 65; // self-hosted, E2E optional
+    case 'sftp':
+      return 70; // encrypted-in-transit, user controls server
+    case 'webdav':
+      return 40; // depends on HTTPS config
+    case 'ftp':
+      return 20; // plain text unless FTPS
+    default:
+      return 30;
   }
 }
 
@@ -192,12 +217,15 @@ String privacyLabel(int score) {
 // ---------------------------------------------------------------------------
 
 /// Whether to disable screenshots on mobile (opt-in).
-final disableScreenshotsProvider = StateNotifierProvider<_DisableScreenshotsNotifier, bool>(
+final disableScreenshotsProvider =
+    StateNotifierProvider<_DisableScreenshotsNotifier, bool>(
   (ref) => _DisableScreenshotsNotifier(),
 );
 
 class _DisableScreenshotsNotifier extends StateNotifier<bool> {
-  _DisableScreenshotsNotifier() : super(false) { _load(); }
+  _DisableScreenshotsNotifier() : super(false) {
+    _load();
+  }
   Future<void> _load() async {
     try {
       final prefs = await SharedPreferences.getInstance();
@@ -206,6 +234,7 @@ class _DisableScreenshotsNotifier extends StateNotifier<bool> {
       // Silently ignored
     }
   }
+
   Future<void> toggle() async {
     state = !state;
     try {

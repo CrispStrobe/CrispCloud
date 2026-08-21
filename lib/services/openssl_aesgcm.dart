@@ -5,10 +5,12 @@
 // (Node's `crypto` is OpenSSL), and it gives hardware-accelerated (AES-NI) bulk
 // crypto on Linux/desktop where cryptography_flutter has no implementation.
 //
-// `libcrypto` ships with virtually every Linux distro; on macOS we look for a
-// Homebrew OpenSSL (used to validate this binding). Windows uses BCrypt/CNG via
-// a separate binding. If the library or a symbol can't be resolved, [tryLoad]
-// returns null and the caller falls back (webcrypto / pure-Dart).
+// `libcrypto` ships with virtually every Linux distro. It is deliberately not
+// loaded on macOS: App Store/TestFlight sandboxing terminates apps that load a
+// Homebrew library outside their signed bundle. Apple platforms use CryptoKit
+// through cryptography_flutter instead. Windows also has a BCrypt/CNG binding.
+// If a library or symbol can't be resolved, [tryLoad] returns null and the
+// caller falls back to another provider.
 
 import 'dart:ffi';
 import 'dart:io' show Platform;
@@ -100,11 +102,11 @@ class OpenSslAesGcm {
       return const ['libcrypto.so.3', 'libcrypto.so.1.1', 'libcrypto.so'];
     }
     if (Platform.isMacOS) {
-      return const [
-        '/opt/homebrew/opt/openssl@3/lib/libcrypto.dylib',
-        '/usr/local/opt/openssl@3/lib/libcrypto.dylib',
-        'libcrypto.dylib',
-      ];
+      // Sandboxed macOS apps (App Store / TestFlight) abort (SIGABRT) when
+      // DynamicLibrary.open() tries to load a library outside the bundle —
+      // the dyld enforcement fires before Dart can catch. Use CryptoKit via
+      // cryptography_flutter instead.
+      return const [];
     }
     if (Platform.isWindows) {
       return const [

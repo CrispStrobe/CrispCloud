@@ -3,6 +3,9 @@ include: package:flutter_lints/flutter.yaml
 analyzer:
   exclude:
     - cli/**
+    # Third-party source vendored for a macOS sandbox patch. It keeps its own
+    # upstream style; app analysis should not report that package's lint debt.
+    - packages/filen_client/**
   errors:
     missing_return: error
     dead_code: warning

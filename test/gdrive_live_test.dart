@@ -1,3 +1,4 @@
+@Tags(['live'])
 // test/gdrive_live_test.dart
 //
 // Live integration tests for Google Drive.

@@ -13,7 +13,6 @@ void main() {
 
   group('LocalFileService', () {
     test('factory constructor does not throw', () {
-      // On Linux (test runner), this should return a DesktopFileService
       expect(() => LocalFileService(), returnsNormally);
     });
 
@@ -45,8 +44,8 @@ void main() {
       await expectLater(service.refresh(), completes);
     });
 
-    test('hasAccessToPath returns true on desktop', () async {
-      final service = LocalFileService();
+    test('DesktopFileService has access to every path', () async {
+      final service = DesktopFileService();
       // DesktopFileService always returns true for hasAccessToPath
       final hasAccess = await service.hasAccessToPath('/tmp');
       expect(hasAccess, isTrue);
@@ -72,21 +71,27 @@ void main() {
       expect(entities, isA<List>());
     });
 
-    test('grantedBasePath is null on desktop', () {
-      final service = LocalFileService();
+    test('DesktopFileService has no granted base path', () {
+      final service = DesktopFileService();
       // DesktopFileService.grantedBasePath always returns null
       expect(service.grantedBasePath, isNull);
     });
   });
 
   group('DesktopFileService', () {
-    test('is returned by factory on Linux', () {
+    test('factory returns the implementation for the host platform', () {
       final service = LocalFileService();
-      expect(service, isA<DesktopFileService>());
+      if (Platform.isMacOS) {
+        expect(service, isA<MacosFileService>());
+      } else if (Platform.isLinux || Platform.isWindows) {
+        expect(service, isA<DesktopFileService>());
+      } else if (Platform.isAndroid || Platform.isIOS) {
+        expect(service, isA<MobileFileService>());
+      }
     });
 
     test('readFile throws for non-existent file', () async {
-      final service = LocalFileService();
+      final service = DesktopFileService();
       expect(
         () => service.readFile('/non/existent/path/file.txt'),
         throwsA(isA<Exception>().having(
@@ -98,8 +103,9 @@ void main() {
     });
 
     test('saveFile creates file at given path', () async {
-      final service = LocalFileService();
-      final testPath = '/tmp/crisp_cloud_test_${DateTime.now().millisecondsSinceEpoch}.txt';
+      final service = DesktopFileService();
+      final testPath =
+          '/tmp/crisp_cloud_test_${DateTime.now().millisecondsSinceEpoch}.txt';
       final data = [72, 101, 108, 108, 111]; // "Hello"
 
       await service.saveFile(testPath, Uint8List.fromList(data));

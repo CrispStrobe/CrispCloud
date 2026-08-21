@@ -1,14 +1,51 @@
+import 'dart:io';
+import 'dart:typed_data';
+
 import 'package:flutter_test/flutter_test.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:crisp_cloud/services/app_state.dart';
 import 'package:crisp_cloud/services/cloud_storage_interface.dart';
 import 'package:crisp_cloud/services/filen_config_service.dart';
+import 'package:crisp_cloud/services/local_file_service.dart';
 import 'package:crisp_cloud/services/secure_storage_service.dart';
 import 'package:crisp_cloud/models/panel_side.dart';
 import 'package:crisp_cloud/models/file_item.dart';
-import 'package:crisp_cloud/models/operation_progress.dart';
+
+class _TestLocalFileService implements LocalFileService {
+  @override
+  String currentPath = Directory.systemTemp.path;
+  @override
+  String? get grantedBasePath => currentPath;
+  @override
+  Future<String> getInitialPath() async => currentPath;
+  @override
+  Future<String> getSafeFallbackDirectory() async => currentPath;
+  @override
+  Future<bool> hasAccessToPath(String path) async => true;
+  @override
+  Future<List<FileSystemEntity>?> listDirectory(String path) async => [];
+  @override
+  Future<String?> requestDirectoryAccess({String? initialDirectory}) async =>
+      currentPath;
+  @override
+  Future<Uint8List> readFile(String path, {FileItem? fileItem}) async =>
+      Uint8List(0);
+  @override
+  Future<void> saveFile(String path, Uint8List data) async {}
+  @override
+  Future<void> createDirectory(String path) async {}
+  @override
+  Future<void> deleteEntry(String path, bool isFolder) async {}
+  @override
+  Future<void> refresh() async {}
+  @override
+  Map<String, dynamic> getWebMetadata(String path) => {};
+  @override
+  Object? getWebFileRef(String path) => null;
+}
 
 void main() {
+  TestWidgetsFlutterBinding.ensureInitialized();
   late AppState appState;
   late FilenConfigService configService;
   late InMemorySecureStorage secureStorage;
@@ -18,14 +55,19 @@ void main() {
   void createAppState() {
     SharedPreferences.setMockInitialValues({});
     secureStorage = InMemorySecureStorage();
-    configService = FilenConfigService(configPath: '/tmp/app_state_test_config', secureStorage: secureStorage);
-    appState = AppState(config: configService, secureStorage: secureStorage);
+    configService = FilenConfigService(
+        configPath: '/tmp/app_state_test_config', secureStorage: secureStorage);
+    appState = AppState(
+      config: configService,
+      secureStorage: secureStorage,
+      localFileService: _TestLocalFileService(),
+    );
   }
 
   /// Waits for AppState's unawaited _initializeLocalPath() and
   /// _attemptAutoLogin() to complete so they don't fire notifyListeners()
   /// after the test completes.
-  Future<void> awaitInit() => Future.delayed(const Duration(seconds: 1));
+  Future<void> awaitInit() => Future<void>.delayed(Duration.zero);
 
   setUp(() async {
     createAppState();
@@ -51,7 +93,7 @@ void main() {
 
     test('localFileItems may be null or a list after init', () {
       final files = appState.localFileItems;
-      expect(files == null || files is List<FileItem>, isTrue);
+      expect(files, anyOf(isNull, isA<List<FileItem>>()));
     });
 
     test('remoteFiles is null initially', () {
@@ -105,9 +147,10 @@ void main() {
         config: configService,
         initialProvider: CloudProvider.filen,
         secureStorage: secureStorage,
+        localFileService: _TestLocalFileService(),
       );
       expect(sftpState.currentProvider, equals(CloudProvider.filen));
-      await Future.delayed(const Duration(milliseconds: 100));
+      await Future<void>.delayed(Duration.zero);
       sftpState.dispose();
     });
   });
@@ -134,12 +177,14 @@ void main() {
   group('AppState sorting', () {
     test('default sort is by name ascending for local panel', () {
       expect(appState.getSort(PanelSide.local), equals(SortBy.name));
-      expect(appState.getSortOrder(PanelSide.local), equals(SortOrder.ascending));
+      expect(
+          appState.getSortOrder(PanelSide.local), equals(SortOrder.ascending));
     });
 
     test('default sort is by name ascending for remote panel', () {
       expect(appState.getSort(PanelSide.remote), equals(SortBy.name));
-      expect(appState.getSortOrder(PanelSide.remote), equals(SortOrder.ascending));
+      expect(
+          appState.getSortOrder(PanelSide.remote), equals(SortOrder.ascending));
     });
 
     test('setSortBy changes local sort', () {
@@ -158,21 +203,26 @@ void main() {
     });
 
     test('toggleSortOrder flips local ascending to descending', () {
-      expect(appState.getSortOrder(PanelSide.local), equals(SortOrder.ascending));
+      expect(
+          appState.getSortOrder(PanelSide.local), equals(SortOrder.ascending));
       appState.toggleSortOrder(PanelSide.local);
-      expect(appState.getSortOrder(PanelSide.local), equals(SortOrder.descending));
+      expect(
+          appState.getSortOrder(PanelSide.local), equals(SortOrder.descending));
     });
 
     test('toggleSortOrder flips remote ascending to descending', () {
-      expect(appState.getSortOrder(PanelSide.remote), equals(SortOrder.ascending));
+      expect(
+          appState.getSortOrder(PanelSide.remote), equals(SortOrder.ascending));
       appState.toggleSortOrder(PanelSide.remote);
-      expect(appState.getSortOrder(PanelSide.remote), equals(SortOrder.descending));
+      expect(appState.getSortOrder(PanelSide.remote),
+          equals(SortOrder.descending));
     });
 
     test('toggleSortOrder twice returns to ascending', () {
       appState.toggleSortOrder(PanelSide.local);
       appState.toggleSortOrder(PanelSide.local);
-      expect(appState.getSortOrder(PanelSide.local), equals(SortOrder.ascending));
+      expect(
+          appState.getSortOrder(PanelSide.local), equals(SortOrder.ascending));
     });
   });
 
@@ -184,7 +234,8 @@ void main() {
       expect(appState.localSelection.contains(item), isTrue);
     });
 
-    test('toggleSelection replaces previous selection without modifier keys', () {
+    test('toggleSelection replaces previous selection without modifier keys',
+        () {
       final item1 = FileItem(name: 'a.txt', isFolder: false, path: '/a.txt');
       final item2 = FileItem(name: 'b.txt', isFolder: false, path: '/b.txt');
       appState.toggleSelection(PanelSide.local, item1);

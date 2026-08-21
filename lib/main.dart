@@ -12,8 +12,6 @@ import 'package:path/path.dart' as p;
 import 'dart:io';
 import 'dart:async';
 
-import 'package:provider/provider.dart' as legacy_provider;
-
 import 'providers/providers.dart';
 import 'screens/file_browser_screen.dart';
 import 'services/cloud_storage_interface.dart';
@@ -34,20 +32,33 @@ import 'services/app_lock_service.dart';
 import 'services/audit_service.dart';
 import 'services/background_sync_service.dart';
 import 'services/cert_pinning_service.dart';
+import 'services/crash_reporting_service.dart';
 import 'services/file_cache_service.dart';
 import 'services/log_service.dart';
 import 'services/thumbnail_service.dart';
 import 'services/proxy_service.dart';
 import 'services/secure_storage_service.dart';
 import 'services/secure_storage_web.dart';
-import 'services/theme_service.dart';
 import 'widgets/lock_screen.dart';
 
 const _log = Log('Main');
+const _appVersion = String.fromEnvironment(
+  'APP_VERSION',
+  defaultValue: '1.0.0',
+);
 
 Future<void> main() async {
+  CrashReportingService? crashReporting;
   runZonedGuarded(() async {
     WidgetsFlutterBinding.ensureInitialized();
+
+    crashReporting = CrashReportingService(
+      backend: LocalBackend(),
+      appVersion: _appVersion,
+    );
+    await crashReporting!.initialize();
+    crashReporting!.installGlobalHandlers();
+    crashReporting!.reportBreadcrumb('Flutter binding ready', 'startup');
 
     // Route AES-GCM to the platform's hardware-accelerated crypto on native
     // (Android Keystore / Apple CryptoKit) — ~1000 MB/s vs ~1-9 MB/s pure-Dart
@@ -64,6 +75,7 @@ Future<void> main() async {
     // Register the Workmanager background task callback (Android/iOS only).
     // Must be called before runApp() so the callback isolate can be spawned.
     await BackgroundSyncService.initialize();
+    crashReporting!.reportBreadcrumb('Background services ready', 'startup');
 
     _log.info('App starting...');
 
@@ -80,6 +92,7 @@ Future<void> main() async {
       secureStorage = PlatformSecureStorage();
       await CredentialMigration.migrateIfNeeded(secureStorage);
     }
+    crashReporting!.reportBreadcrumb('Secure storage ready', 'startup');
 
     // Platform-specific config path
     String configPath;
@@ -96,6 +109,7 @@ Future<void> main() async {
     }
 
     _log.info('Config path: $configPath');
+    crashReporting!.reportBreadcrumb('Configuration path resolved', 'startup');
 
     // Load proxy and certificate pinning configuration
     final certPinning = CertPinningService();
@@ -105,6 +119,7 @@ Future<void> main() async {
     await proxyService.load();
     proxyService.setCertPinning(certPinning);
     proxyService.applyGlobally();
+    crashReporting!.reportBreadcrumb('Network policy ready', 'startup');
 
     // Initialize file cache, thumbnail service, and audit service
     final fileCache = FileCacheService();
@@ -115,6 +130,7 @@ Future<void> main() async {
 
     final auditService = AuditService();
     await auditService.init();
+    crashReporting!.reportBreadcrumb('Caches and audit log ready', 'startup');
 
     CloudProvider defaultProvider = await _getDefaultProvider();
 
@@ -138,6 +154,7 @@ Future<void> main() async {
           fileCacheProvider.overrideWithValue(fileCache),
           thumbnailServiceProvider.overrideWithValue(thumbnailService),
           auditServiceProvider.overrideWithValue(auditService),
+          crashReportingServiceProvider.overrideWithValue(crashReporting!),
           authProvider.overrideWith((ref) => AuthNotifier(
                 ref,
                 initialProvider: defaultProvider,
@@ -148,8 +165,14 @@ Future<void> main() async {
         ],
         child: const MyApp(),
       ));
+      crashReporting!.reportBreadcrumb('Application UI mounted', 'startup');
     } catch (e, stack) {
       _log.error('Critical error creating config service', e, stack);
+      await crashReporting!.reportError(
+        e,
+        stack,
+        context: const {'origin': 'startup_config'},
+      );
       // Show an error screen instead of a black screen
       runApp(MaterialApp(
         home: Scaffold(
@@ -168,6 +191,14 @@ Future<void> main() async {
     }
   }, (error, stack) {
     _log.error('Uncaught error', error, stack);
+    final reporter = crashReporting;
+    if (reporter != null) {
+      unawaited(reporter.reportError(
+        error,
+        stack,
+        context: const {'origin': 'root_zone'},
+      ));
+    }
   });
 }
 
@@ -269,10 +300,6 @@ Future<dynamic> _createConfigService(
   }
 }
 
-/// ThemeService exposed via Riverpod.
-final themeProvider =
-    ChangeNotifierProvider<ThemeService>((ref) => ThemeService());
-
 /// App lock service provider.
 final appLockServiceProvider = Provider<AppLockService>((ref) {
   return AppLockService(ref.watch(secureStorageProvider));
@@ -290,24 +317,20 @@ class MyApp extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final themeService = ref.watch(themeProvider);
 
-    // ThemeService also exposed via legacy Provider for widgets not yet migrated
-    return legacy_provider.ChangeNotifierProvider<ThemeService>.value(
-      value: themeService,
-      child: MaterialApp(
-        title: 'CrispCloud',
-        theme: themeService.lightTheme,
-        darkTheme: themeService.darkTheme,
-        themeMode: themeService.themeMode,
-        localizationsDelegates: const [
-          AppLocalizations.delegate,
-          GlobalMaterialLocalizations.delegate,
-          GlobalWidgetsLocalizations.delegate,
-          GlobalCupertinoLocalizations.delegate,
-        ],
-        locale: ref.watch(localeProvider),
-        supportedLocales: AppLocalizations.supportedLocales,
-        home: kIsWeb ? const _MasterPasswordGate() : const _AppLockGate(),
-      ),
+    return MaterialApp(
+      title: 'CrispCloud',
+      theme: themeService.lightTheme,
+      darkTheme: themeService.darkTheme,
+      themeMode: themeService.themeMode,
+      localizationsDelegates: const [
+        AppLocalizations.delegate,
+        GlobalMaterialLocalizations.delegate,
+        GlobalWidgetsLocalizations.delegate,
+        GlobalCupertinoLocalizations.delegate,
+      ],
+      locale: ref.watch(localeProvider),
+      supportedLocales: AppLocalizations.supportedLocales,
+      home: kIsWeb ? const _MasterPasswordGate() : const _AppLockGate(),
     );
   }
 }

@@ -1,7 +1,7 @@
 name: crisp_cloud
 description: Flutter/Dart Cloud storage client
 publish_to: 'none'
-version: 1.0.0+6
+version: 1.0.0+7
 
 environment:
   # share_plus 10.1.x requires Dart >=3.4.0 / Flutter >=3.22.0.
@@ -109,11 +109,11 @@ dependencies:
 
   # Filen protocol — the published pub.dev library (MPL-2.0), replacing
   # the previous embedded copy in lib/services/filen.dart. Published as
-  # `filen_client` (renamed from the former `filen_dart`). 0.2.1 makes the
-  # FFI AES-GCM backends conditional so web (dart2js) builds compile;
-  # 0.2.2 fixes login for accounts without 2FA — FilenClientAdapter passes
-  # an empty twoFactorCode, which the Filen API rejects.
-  filen_client: ^0.2.2
+  # `filen_client` (renamed from the former `filen_dart`). Vendored from 0.2.2
+  # with the macOS OpenSSL loader disabled: App Store sandboxing aborts the
+  # process before Dart can catch a DynamicLibrary.open failure.
+  filen_client:
+    path: packages/filen_client
 
   intl: ^0.20.2
   uuid: ^4.5.1
@@ -128,6 +128,7 @@ dev_dependencies:
     sdk: flutter
   integration_test:
     sdk: flutter
+  path_provider_platform_interface: ^2.1.2
   flutter_lints: ^3.0.0
   drift_dev: ^2.22.1
   build_runner: ^2.4.13

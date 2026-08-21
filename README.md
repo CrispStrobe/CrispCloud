@@ -2,7 +2,7 @@
 
 **Cross-platform dual-panel cloud file manager** built with Flutter. Open-source, privacy-first, running on macOS, Windows, Linux, Android, iOS, and Web/PWA.
 
-14 cloud providers. 4468 tests. Block-level delta sync. End-to-end encryption. 9 languages. Full i18n (EN/DE + 7 fallback).
+14 cloud providers. 4,000+ tests. Block-level delta sync. End-to-end encryption. 9 languages. Full i18n (EN/DE + 7 fallback).
 
 ## Providers
 
@@ -76,8 +76,10 @@ flutter run -d linux     # Linux
 ### Tests
 
 ```bash
-flutter test              # 4468 tests, 19 skipped
-flutter analyze           # 0 warnings, 0 errors
+flutter test              # deterministic unit/widget suite
+flutter test --tags live --run-skipped       # credentialed provider tests
+flutter test --tags benchmark --run-skipped  # load-sensitive benchmarks
+flutter analyze           # errors fail CI; warning debt is tracked separately
 ```
 
 ## Architecture
@@ -90,7 +92,9 @@ Modular adapter pattern with provider-agnostic interfaces:
 - **`SyncEngine`** — background sync with conflict resolution
 - **`PanelProvider`** — dual-panel state management (Riverpod)
 
-See [PLAN.md](PLAN.md) for the full roadmap (365/393 items done).
+See [the architecture guide](docs/ARCHITECTURE.md) for state and provider
+boundaries, [the security architecture](docs/SECURITY_ARCHITECTURE.md) for the
+threat model, and [PLAN.md](PLAN.md) for the feature roadmap.
 
 ## Keyboard Shortcuts
 

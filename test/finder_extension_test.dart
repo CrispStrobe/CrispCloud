@@ -21,9 +21,7 @@ import 'package:crisp_cloud/services/log_service.dart';
 // ---------------------------------------------------------------------------
 
 String _buildUrl(List<String> paths) {
-  final encoded = paths
-      .map((p) => Uri.encodeComponent(p))
-      .join(',');
+  final encoded = paths.map((p) => Uri.encodeComponent(p)).join(',');
   return 'crispcloud://upload?paths=$encoded';
 }
 
@@ -32,6 +30,8 @@ String _buildUrl(List<String> paths) {
 // ---------------------------------------------------------------------------
 
 void main() {
+  TestWidgetsFlutterBinding.ensureInitialized();
+
   setUp(() {
     LogConfig.clear();
     LogConfig.minLevel = LogLevel.trace;
@@ -42,7 +42,7 @@ void main() {
   // -----------------------------------------------------------------------
   group('FinderExtensionService.parseUploadUrl', () {
     test('parses single path', () {
-      final url = 'crispcloud://upload?paths=%2FUsers%2Falice%2Fdoc.pdf';
+      const url = 'crispcloud://upload?paths=%2FUsers%2Falice%2Fdoc.pdf';
       final paths = FinderExtensionService.parseUploadUrl(url);
       expect(paths, ['/Users/alice/doc.pdf']);
     });
@@ -279,14 +279,14 @@ void main() {
     });
 
     test('handles path with special characters', () {
-      final path = "/Users/user/file (copy) [1] {2} #3 @4 \$5.txt";
+      const path = "/Users/user/file (copy) [1] {2} #3 @4 \$5.txt";
       final url = _buildUrl([path]);
       final paths = FinderExtensionService.parseUploadUrl(url);
       expect(paths, [path]);
     });
 
     test('single-path URL round-trip is lossless', () {
-      final original = '/Volumes/Data/My Projects/CrispCloud/build/output.dmg';
+      const original = '/Volumes/Data/My Projects/CrispCloud/build/output.dmg';
       final url = _buildUrl([original]);
       final decoded = FinderExtensionService.parseUploadUrl(url);
       expect(decoded, [original]);
@@ -294,13 +294,13 @@ void main() {
 
     test('case-insensitive scheme accepted', () {
       // NSWorkspace always generates lowercase, but be defensive.
-      final url = 'CRISPCLOUD://upload?paths=%2Ftmp%2Ffile.txt';
+      const url = 'CRISPCLOUD://upload?paths=%2Ftmp%2Ffile.txt';
       final paths = FinderExtensionService.parseUploadUrl(url);
       expect(paths, ['/tmp/file.txt']);
     });
 
     test('case-insensitive host accepted', () {
-      final url = 'crispcloud://UPLOAD?paths=%2Ftmp%2Ffile.txt';
+      const url = 'crispcloud://UPLOAD?paths=%2Ftmp%2Ffile.txt';
       final paths = FinderExtensionService.parseUploadUrl(url);
       expect(paths, ['/tmp/file.txt']);
     });

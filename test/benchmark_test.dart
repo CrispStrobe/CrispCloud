@@ -1,3 +1,4 @@
+@Tags(['benchmark'])
 // test/benchmark_test.dart
 //
 // Tests for BenchmarkService — timing thresholds are deliberately generous

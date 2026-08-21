@@ -26,11 +26,11 @@ abstract class CloudStorageClient {
   bool get isAuthenticated;
   String? get userId;
   String? get bucketId;
-  
+
   // Path operations
   Future<Map<String, dynamic>?> resolvePath(String path);
   Future<Map<String, dynamic>> listPath(String path);
-  
+
   // File operations
   Future<void> uploadFile(
     List<int> fileData,
@@ -38,7 +38,7 @@ abstract class CloudStorageClient {
     String targetPath, {
     Function(int, int)? onProgress,
   });
-  
+
   Future<void> downloadFileByPath(
     String remotePath,
     String localPath, {
@@ -46,16 +46,17 @@ abstract class CloudStorageClient {
   });
 
   /// Download a file and return its bytes directly (Used for Web downloads)
-  Future<Uint8List> downloadFileBytes(String remotePath, {Function(int, int)? onProgress});
-  
+  Future<Uint8List> downloadFileBytes(String remotePath,
+      {Function(int, int)? onProgress});
+
   // Folder operations
   Future<void> createFolderPath(String path);
-  
+
   // Delete/Move/Rename operations
   Future<void> deletePath(String path);
   Future<void> movePath(String sourcePath, String targetPath);
   Future<void> renamePath(String path, String newName);
-  
+
   // Provider-specific info
   String get providerName;
   String get rootPath;
@@ -126,10 +127,41 @@ abstract class CloudStorageClient {
 
     const maxSize = 1024 * 1024; // 1 MB
     const textExtensions = {
-      'txt', 'md', 'csv', 'json', 'yaml', 'yml', 'xml', 'html', 'css',
-      'js', 'ts', 'dart', 'py', 'java', 'kt', 'swift', 'go', 'rs', 'c',
-      'cpp', 'h', 'hpp', 'cs', 'rb', 'php', 'sh', 'bash', 'sql', 'rtf',
-      'log', 'ini', 'cfg', 'conf', 'toml', 'properties',
+      'txt',
+      'md',
+      'csv',
+      'json',
+      'yaml',
+      'yml',
+      'xml',
+      'html',
+      'css',
+      'js',
+      'ts',
+      'dart',
+      'py',
+      'java',
+      'kt',
+      'swift',
+      'go',
+      'rs',
+      'c',
+      'cpp',
+      'h',
+      'hpp',
+      'cs',
+      'rb',
+      'php',
+      'sh',
+      'bash',
+      'sql',
+      'rtf',
+      'log',
+      'ini',
+      'cfg',
+      'conf',
+      'toml',
+      'properties',
     };
 
     final lowerQuery = query.toLowerCase();
@@ -145,9 +177,8 @@ abstract class CloudStorageClient {
       if (size > maxSize) continue;
 
       try {
-        final filePath = remotePath.endsWith('/')
-            ? '$remotePath$name'
-            : '$remotePath/$name';
+        final filePath =
+            remotePath.endsWith('/') ? '$remotePath$name' : '$remotePath/$name';
         final bytes = await downloadFileBytes(filePath);
         final content = String.fromCharCodes(bytes);
         final lowerContent = content.toLowerCase();
@@ -157,7 +188,8 @@ abstract class CloudStorageClient {
         // Extract snippet (up to 100 chars around match)
         final start = (idx - 50).clamp(0, content.length);
         final end = (idx + query.length + 50).clamp(0, content.length);
-        final snippet = '${start > 0 ? "..." : ""}${content.substring(start, end)}${end < content.length ? "..." : ""}';
+        final snippet =
+            '${start > 0 ? "..." : ""}${content.substring(start, end)}${end < content.length ? "..." : ""}';
 
         results.add({
           'name': name,
@@ -192,7 +224,8 @@ abstract class CloudStorageClient {
     await for (final chunk in dataStream) {
       builder.add(chunk);
     }
-    await uploadFile(builder.takeBytes(), fileName, targetPath, onProgress: onProgress);
+    await uploadFile(builder.takeBytes(), fileName, targetPath,
+        onProgress: onProgress);
   }
 
   /// Stream-based download. Returns a stream of chunks.
@@ -222,6 +255,129 @@ enum CloudProvider {
   webdav
 }
 
+/// Provider features that affect available actions and transfer strategy.
+class CloudCapabilities {
+  final bool streaming;
+  final bool multipart;
+  final bool versioning;
+  final bool sharing;
+  final bool search;
+  final bool thumbnails;
+  final bool trash;
+  final bool nativeShare;
+  final bool serverSideCopy;
+  final bool fullTextSearch;
+
+  const CloudCapabilities({
+    required this.streaming,
+    required this.multipart,
+    required this.versioning,
+    required this.sharing,
+    required this.search,
+    required this.thumbnails,
+    required this.trash,
+    required this.nativeShare,
+    required this.serverSideCopy,
+    required this.fullTextSearch,
+  });
+
+  List<String> get highlights => [
+        if (streaming) 'low-memory transfers',
+        if (multipart) 'resumable large uploads',
+        if (versioning) 'version history',
+        if (sharing) 'share links',
+        if (search) 'server search',
+        if (thumbnails) 'remote previews',
+        if (trash) 'recoverable deletion',
+        if (serverSideCopy) 'fast cloud copies',
+      ];
+}
+
+/// A source-compatible capability contract for clients and test doubles.
+///
+/// This intentionally remains an extension rather than an interface member:
+/// Dart's `implements` requires concrete members to be reimplemented too.
+extension CloudStorageClientCapabilities on CloudStorageClient {
+  CloudCapabilities get capabilities => CloudCapabilities(
+        streaming: supportsStreaming,
+        multipart: supportsMultipart,
+        versioning: supportsVersioning,
+        sharing: supportsSharing,
+        search: supportsSearch,
+        thumbnails: supportsThumbnails,
+        trash: supportsTrash,
+        nativeShare: supportsNativeShare,
+        serverSideCopy: supportsServerSideCopy,
+        fullTextSearch: supportsFullTextSearch,
+      );
+}
+
+/// Stable provider metadata used before a client has been authenticated.
+extension CloudProviderMetadata on CloudProvider {
+  String get displayName => switch (this) {
+        CloudProvider.azure => 'Azure Blob Storage',
+        CloudProvider.b2 => 'Backblaze B2',
+        CloudProvider.dropbox => 'Dropbox',
+        CloudProvider.filen => 'Filen',
+        CloudProvider.ftp => 'FTP / FTPS',
+        CloudProvider.gdrive => 'Google Drive',
+        CloudProvider.internxt => 'Internxt',
+        CloudProvider.nextcloud => 'Nextcloud',
+        CloudProvider.onedrive => 'OneDrive / SharePoint',
+        CloudProvider.pcloud => 'pCloud',
+        CloudProvider.s3 => 'S3 / S3-Compatible',
+        CloudProvider.sftp => 'SFTP / Storage Box',
+        CloudProvider.webdav => 'WebDAV',
+      };
+
+  String get onboardingDescription => switch (this) {
+        CloudProvider.azure =>
+          'For Azure containers and enterprise object storage.',
+        CloudProvider.b2 =>
+          'Cost-focused object storage with large-file support.',
+        CloudProvider.dropbox =>
+          'Personal cloud with OAuth, sharing, and previews.',
+        CloudProvider.filen => 'Privacy-focused personal cloud storage.',
+        CloudProvider.ftp =>
+          'Connect to a traditional FTP or encrypted FTPS server.',
+        CloudProvider.gdrive =>
+          'Personal or Workspace Drive with OAuth and search.',
+        CloudProvider.internxt =>
+          'Privacy-focused cloud with client-side encryption.',
+        CloudProvider.nextcloud =>
+          'Self-hosted cloud with files, sharing, and search.',
+        CloudProvider.onedrive =>
+          'Microsoft personal, business, or SharePoint storage.',
+        CloudProvider.pcloud =>
+          'Personal cloud storage authenticated with OAuth.',
+        CloudProvider.s3 => 'AWS S3 or a compatible object-storage endpoint.',
+        CloudProvider.sftp =>
+          'Secure file access, including Hetzner Storage Box.',
+        CloudProvider.webdav =>
+          'A standards-based server or compatible cloud drive.',
+      };
+
+  String get credentialHint => switch (this) {
+        CloudProvider.dropbox ||
+        CloudProvider.gdrive ||
+        CloudProvider.onedrive ||
+        CloudProvider.pcloud =>
+          'You will sign in in your provider\'s browser window.',
+        CloudProvider.azure =>
+          'Have the account name, container, and access key ready.',
+        CloudProvider.b2 =>
+          'Have the key ID, application key, and bucket ready.',
+        CloudProvider.s3 =>
+          'Have the endpoint, region, bucket, and access keys ready.',
+        CloudProvider.ftp ||
+        CloudProvider.sftp ||
+        CloudProvider.webdav ||
+        CloudProvider.nextcloud =>
+          'Have the server address and account credentials ready.',
+        _ => 'Your credentials are stored in the platform secure store.',
+      };
+}
+
 /// Factory for creating cloud storage clients
 class CloudStorageFactory {
   static const _log = Log('CloudStorageFactory');
@@ -229,13 +385,14 @@ class CloudStorageFactory {
   // --- TOGGLE: Set this to false to disable Internxt globally ---
   static const bool isInternxtSupported = true;
 
-  static CloudStorageClient create(CloudProvider provider, {required dynamic config}) {
+  static CloudStorageClient create(CloudProvider provider,
+      {required dynamic config}) {
     // Robust fallback: If Internxt is selected but disabled, force Filen or throw
     if (provider == CloudProvider.internxt && !isInternxtSupported) {
       _log.warn('Internxt is currently disabled. Defaulting to Filen.');
       // Fallback to Filen if config matches, otherwise throw safe error
       if (config.runtimeType.toString().contains('Filen')) {
-         return FilenClientAdapter(config: config);
+        return FilenClientAdapter(config: config);
       }
     }
 
@@ -259,9 +416,9 @@ class CloudStorageFactory {
           return WebDavClientAdapter(config: config);
         case CloudProvider.internxt:
           if (isInternxtSupported) {
-             return InternxtClientAdapter(config: config);
+            return InternxtClientAdapter(config: config);
           } else {
-             throw UnsupportedError('Internxt is disabled in this build.');
+            throw UnsupportedError('Internxt is disabled in this build.');
           }
         case CloudProvider.nextcloud:
           return NextcloudClientAdapter(config: config);

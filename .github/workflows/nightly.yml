@@ -94,7 +94,10 @@ jobs:
             exit 1
           fi
 
-      - run: flutter test
+      - name: Fast deterministic tests
+        run: >-
+          flutter test --concurrency=4
+          --exclude-tags=benchmark,live,deploy,mock_server,integration,connection_dialog,golden
 
   # ---------- Native hardware crypto (macOS) ----------
   # The headless cross-path correctness tests run in `flutter test` above (Linux

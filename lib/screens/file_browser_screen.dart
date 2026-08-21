@@ -3,21 +3,21 @@
 // Main scaffold and layout for the two-panel file browser.
 // Keyboard handling, dialogs, and about dialog are in separate files.
 
-import 'package:flutter/foundation.dart' show TargetPlatform, defaultTargetPlatform, kIsWeb;
+import 'package:flutter/foundation.dart'
+    show TargetPlatform, defaultTargetPlatform, kIsWeb;
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:provider/provider.dart' as legacy;
 
 import '../models/panel_side.dart';
 import '../providers/providers.dart';
 import '../providers/panel_source_provider.dart'
     show fkeyBarVisibleProvider, panelSourceProvider;
-import '../providers/toolbar_provider.dart'
-    show panelViewModeProvider;
+import '../providers/toolbar_provider.dart' show panelViewModeProvider;
 import '../services/panel_swap_service.dart';
+import '../services/platform_diagnostics_service.dart';
+import '../services/crash_reporting_service.dart' show CrashReport;
 import '../services/panel_view_mode_service.dart' show PanelViewMode;
-import '../services/theme_service.dart';
 import '../widgets/audit_log_dialog.dart';
 import '../widgets/log_viewer_dialog.dart';
 import '../widgets/file_panel.dart';
@@ -72,8 +72,8 @@ class _FileBrowserScreenState extends ConsumerState<FileBrowserScreen> {
     // Platform checks for hiding irrelevant features
     final bool isDesktopPlatform = !kIsWeb &&
         (defaultTargetPlatform == TargetPlatform.macOS ||
-         defaultTargetPlatform == TargetPlatform.windows ||
-         defaultTargetPlatform == TargetPlatform.linux);
+            defaultTargetPlatform == TargetPlatform.windows ||
+            defaultTargetPlatform == TargetPlatform.linux);
 
     final scaffold = Scaffold(
       appBar: AppBar(
@@ -133,7 +133,8 @@ class _FileBrowserScreenState extends ConsumerState<FileBrowserScreen> {
               if (!showTerminal) return const SizedBox.shrink();
               return const TerminalPanel();
             }),
-            FKeyBar(onAction: (action) => _handleFKeyAction(context, ref, action)),
+            FKeyBar(
+                onAction: (action) => _handleFKeyAction(context, ref, action)),
             const StatusBar(),
           ],
         ),
@@ -171,17 +172,13 @@ class _FileBrowserScreenState extends ConsumerState<FileBrowserScreen> {
           PlatformMenuItemGroup(members: [
             PlatformMenuItem(
               label: 'Preferences...',
-              shortcut: const SingleActivator(LogicalKeyboardKey.comma, meta: true),
+              shortcut:
+                  const SingleActivator(LogicalKeyboardKey.comma, meta: true),
               onSelected: () {
-                final themeService = legacy.Provider.of<ThemeService>(context, listen: false);
+                final themeService = ref.read(themeProvider);
                 showDialog(
                   context: context,
-                  builder: (_) => legacy.ChangeNotifierProvider<ThemeService>.value(
-                    value: themeService,
-                    child: legacy.Consumer<ThemeService>(
-                      builder: (ctx, ts, _) => ThemePickerDialog(themeService: ts),
-                    ),
-                  ),
+                  builder: (_) => ThemePickerDialog(themeService: themeService),
                 );
               },
             ),
@@ -196,7 +193,8 @@ class _FileBrowserScreenState extends ConsumerState<FileBrowserScreen> {
         menus: [
           PlatformMenuItem(
             label: 'New Tab',
-            shortcut: const SingleActivator(LogicalKeyboardKey.keyT, meta: true),
+            shortcut:
+                const SingleActivator(LogicalKeyboardKey.keyT, meta: true),
             onSelected: () {
               final side = ref.read(activePanelProvider);
               ref.read(panelProvider(side)).addTab();
@@ -204,7 +202,8 @@ class _FileBrowserScreenState extends ConsumerState<FileBrowserScreen> {
           ),
           PlatformMenuItem(
             label: 'Close Tab',
-            shortcut: const SingleActivator(LogicalKeyboardKey.keyW, meta: true),
+            shortcut:
+                const SingleActivator(LogicalKeyboardKey.keyW, meta: true),
             onSelected: () {
               final side = ref.read(activePanelProvider);
               final panel = ref.read(panelProvider(side));
@@ -215,14 +214,16 @@ class _FileBrowserScreenState extends ConsumerState<FileBrowserScreen> {
           PlatformMenuItemGroup(members: [
             PlatformMenuItem(
               label: 'Connect...',
-              shortcut: const SingleActivator(LogicalKeyboardKey.keyK, meta: true),
+              shortcut:
+                  const SingleActivator(LogicalKeyboardKey.keyK, meta: true),
               onSelected: () => showConnectionDialogScreen(context),
             ),
           ]),
           PlatformMenuItemGroup(members: [
             PlatformMenuItem(
               label: 'Go to Path...',
-              shortcut: const SingleActivator(LogicalKeyboardKey.keyG, meta: true),
+              shortcut:
+                  const SingleActivator(LogicalKeyboardKey.keyG, meta: true),
               onSelected: () => showGoToDialog(context, ref),
             ),
           ]),
@@ -259,7 +260,8 @@ class _FileBrowserScreenState extends ConsumerState<FileBrowserScreen> {
           PlatformMenuItemGroup(members: [
             PlatformMenuItem(
               label: 'Command Palette',
-              shortcut: const SingleActivator(LogicalKeyboardKey.keyP, meta: true, shift: true),
+              shortcut: const SingleActivator(LogicalKeyboardKey.keyP,
+                  meta: true, shift: true),
               onSelected: () => showCommandPalette(context, ref),
             ),
           ]),
@@ -319,7 +321,8 @@ class _FileBrowserScreenState extends ConsumerState<FileBrowserScreen> {
 
     return PanelSplitter(
       initialRatio: splitRatio,
-      onRatioChanged: (r) => ref.read(panelSplitRatioProvider.notifier).state = r,
+      onRatioChanged: (r) =>
+          ref.read(panelSplitRatioProvider.notifier).state = r,
       first: Column(
         children: [
           const PanelSourceSelector(side: PanelSide.local),
@@ -328,8 +331,8 @@ class _FileBrowserScreenState extends ConsumerState<FileBrowserScreen> {
               child: FilePanel(
                 side: PanelSide.local,
                 isActive: activePanel == PanelSide.local,
-                onTap: () =>
-                    ref.read(activePanelProvider.notifier).state = PanelSide.local,
+                onTap: () => ref.read(activePanelProvider.notifier).state =
+                    PanelSide.local,
               ),
             ),
           ),
@@ -343,8 +346,8 @@ class _FileBrowserScreenState extends ConsumerState<FileBrowserScreen> {
               child: FilePanel(
                 side: PanelSide.remote,
                 isActive: activePanel == PanelSide.remote,
-                onTap: () =>
-                    ref.read(activePanelProvider.notifier).state = PanelSide.remote,
+                onTap: () => ref.read(activePanelProvider.notifier).state =
+                    PanelSide.remote,
               ),
             ),
           ),
@@ -362,7 +365,9 @@ class _FileBrowserScreenState extends ConsumerState<FileBrowserScreen> {
     void switchTo(PanelSide side) {
       if (side == PanelSide.remote && !auth.isConnected) {
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Please connect to access remote files'), duration: Duration(seconds: 2)),
+          const SnackBar(
+              content: Text('Please connect to access remote files'),
+              duration: Duration(seconds: 2)),
         );
         return;
       }
@@ -389,7 +394,8 @@ class _FileBrowserScreenState extends ConsumerState<FileBrowserScreen> {
           Container(
             decoration: BoxDecoration(
               color: Theme.of(context).colorScheme.surfaceContainerHighest,
-              border: Border(bottom: BorderSide(color: Theme.of(context).dividerColor)),
+              border: Border(
+                  bottom: BorderSide(color: Theme.of(context).dividerColor)),
             ),
             child: Row(
               children: [
@@ -397,7 +403,8 @@ class _FileBrowserScreenState extends ConsumerState<FileBrowserScreen> {
                   child: InkWell(
                     onTap: () => switchTo(PanelSide.local),
                     child: Container(
-                      padding: const EdgeInsets.symmetric(vertical: 6, horizontal: 8),
+                      padding: const EdgeInsets.symmetric(
+                          vertical: 6, horizontal: 8),
                       decoration: BoxDecoration(
                         border: Border(
                           bottom: BorderSide(
@@ -412,12 +419,18 @@ class _FileBrowserScreenState extends ConsumerState<FileBrowserScreen> {
                     ),
                   ),
                 ),
-                Container(width: 1, height: 40, color: Theme.of(context).dividerColor),
+                Container(
+                    width: 1,
+                    height: 40,
+                    color: Theme.of(context).dividerColor),
                 Expanded(
                   child: InkWell(
-                    onTap: auth.isConnected ? () => switchTo(PanelSide.remote) : null,
+                    onTap: auth.isConnected
+                        ? () => switchTo(PanelSide.remote)
+                        : null,
                     child: Container(
-                      padding: const EdgeInsets.symmetric(vertical: 6, horizontal: 8),
+                      padding: const EdgeInsets.symmetric(
+                          vertical: 6, horizontal: 8),
                       decoration: BoxDecoration(
                         border: Border(
                           bottom: BorderSide(
@@ -430,7 +443,8 @@ class _FileBrowserScreenState extends ConsumerState<FileBrowserScreen> {
                       ),
                       child: Opacity(
                         opacity: auth.isConnected ? 1.0 : 0.4,
-                        child: const PanelSourceSelector(side: PanelSide.remote),
+                        child:
+                            const PanelSourceSelector(side: PanelSide.remote),
                       ),
                     ),
                   ),
@@ -490,7 +504,8 @@ class _FileBrowserScreenState extends ConsumerState<FileBrowserScreen> {
     final l = AppLocalizations.of(context)!;
     final toolbarButtons = <Widget>[
       const SizedBox(width: 12),
-      Text(l.appTitle, style: const TextStyle(fontSize: 20, fontWeight: FontWeight.w500)),
+      Text(l.appTitle,
+          style: const TextStyle(fontSize: 20, fontWeight: FontWeight.w500)),
       const SizedBox(width: 8),
       // Panel swap
       IconButton(
@@ -504,10 +519,13 @@ class _FileBrowserScreenState extends ConsumerState<FileBrowserScreen> {
           builder: (ctx, cref, _) {
             final showTerminal = cref.watch(showTerminalProvider);
             return IconButton(
-              icon: Icon(Icons.terminal, size: 20,
-                color: showTerminal ? Theme.of(ctx).colorScheme.primary : null),
+              icon: Icon(Icons.terminal,
+                  size: 20,
+                  color:
+                      showTerminal ? Theme.of(ctx).colorScheme.primary : null),
               tooltip: showTerminal ? l.hideTerminal : l.showTerminal,
-              onPressed: () => cref.read(showTerminalProvider.notifier).state = !showTerminal,
+              onPressed: () => cref.read(showTerminalProvider.notifier).state =
+                  !showTerminal,
             );
           },
         ),
@@ -516,8 +534,9 @@ class _FileBrowserScreenState extends ConsumerState<FileBrowserScreen> {
         builder: (ctx, cref, _) {
           final dual = cref.watch(showDualPanelProvider);
           return IconButton(
-            icon: Icon(dual ? Icons.view_column : Icons.web_asset, size: 20,
-              color: dual ? Theme.of(ctx).colorScheme.primary : null),
+            icon: Icon(dual ? Icons.view_column : Icons.web_asset,
+                size: 20,
+                color: dual ? Theme.of(ctx).colorScheme.primary : null),
             tooltip: dual ? l.singlePanel : l.dualPanel,
             onPressed: () =>
                 cref.read(showDualPanelProvider.notifier).state = !dual,
@@ -529,8 +548,9 @@ class _FileBrowserScreenState extends ConsumerState<FileBrowserScreen> {
         builder: (ctx, cref, _) {
           final showTree = cref.watch(showTreeSidebarProvider);
           return IconButton(
-            icon: Icon(Icons.account_tree, size: 20,
-              color: showTree ? Theme.of(ctx).colorScheme.primary : null),
+            icon: Icon(Icons.account_tree,
+                size: 20,
+                color: showTree ? Theme.of(ctx).colorScheme.primary : null),
             tooltip: showTree ? l.hideTreeSidebar : l.showTreeSidebar,
             onPressed: () =>
                 cref.read(showTreeSidebarProvider.notifier).state = !showTree,
@@ -564,12 +584,13 @@ class _FileBrowserScreenState extends ConsumerState<FileBrowserScreen> {
           final mode = cref.watch(panelViewModeProvider(ap));
           final isCompact = mode == PanelViewMode.full;
           return IconButton(
-            icon: Icon(isCompact ? Icons.density_large : Icons.density_small, size: 20),
+            icon: Icon(isCompact ? Icons.density_large : Icons.density_small,
+                size: 20),
             tooltip: isCompact ? l.largeItems : l.compactItems,
             onPressed: () =>
                 cref.read(panelViewModeProvider(ap).notifier).setMode(
-                  isCompact ? PanelViewMode.brief : PanelViewMode.full,
-                ),
+                      isCompact ? PanelViewMode.brief : PanelViewMode.full,
+                    ),
           );
         },
       ),
@@ -578,8 +599,9 @@ class _FileBrowserScreenState extends ConsumerState<FileBrowserScreen> {
         builder: (ctx, cref, _) {
           final preview = cref.watch(showPreviewProvider);
           return IconButton(
-            icon: Icon(preview ? Icons.visibility : Icons.visibility_off, size: 20,
-              color: preview ? Theme.of(ctx).colorScheme.primary : null),
+            icon: Icon(preview ? Icons.visibility : Icons.visibility_off,
+                size: 20,
+                color: preview ? Theme.of(ctx).colorScheme.primary : null),
             tooltip: preview ? l.hidePreview : l.showPreview,
             onPressed: () =>
                 cref.read(showPreviewProvider.notifier).state = !preview,
@@ -618,8 +640,8 @@ class _FileBrowserScreenState extends ConsumerState<FileBrowserScreen> {
   Widget _buildOverflowMenu(BuildContext context, AuthNotifier auth) {
     final bool isDesktopPlatform = !kIsWeb &&
         (defaultTargetPlatform == TargetPlatform.macOS ||
-         defaultTargetPlatform == TargetPlatform.windows ||
-         defaultTargetPlatform == TargetPlatform.linux);
+            defaultTargetPlatform == TargetPlatform.windows ||
+            defaultTargetPlatform == TargetPlatform.linux);
 
     final l = AppLocalizations.of(context)!;
     return PopupMenuButton<String>(
@@ -645,7 +667,8 @@ class _FileBrowserScreenState extends ConsumerState<FileBrowserScreen> {
           case 'cache':
             showCacheSettingsDialog(context, ref);
           case 'dual_panel':
-            _log.debug('dual_panel toggled → ${!ref.read(showDualPanelProvider)}');
+            _log.debug(
+                'dual_panel toggled → ${!ref.read(showDualPanelProvider)}');
             ref.read(showDualPanelProvider.notifier).state =
                 !ref.read(showDualPanelProvider);
           case 'tree':
@@ -660,7 +683,8 @@ class _FileBrowserScreenState extends ConsumerState<FileBrowserScreen> {
             final current = ap == PanelSide.local
                 ? ref.read(localViewModeProvider)
                 : ref.read(remoteViewModeProvider);
-            notifier.state = current == ViewMode.grid ? ViewMode.list : ViewMode.grid;
+            notifier.state =
+                current == ViewMode.grid ? ViewMode.list : ViewMode.grid;
           case 'preview':
             ref.read(showPreviewProvider.notifier).state =
                 !ref.read(showPreviewProvider);
@@ -668,22 +692,19 @@ class _FileBrowserScreenState extends ConsumerState<FileBrowserScreen> {
             final ap = ref.read(activePanelProvider);
             final mode = ref.read(panelViewModeProvider(ap));
             ref.read(panelViewModeProvider(ap).notifier).setMode(
-              mode == PanelViewMode.full ? PanelViewMode.brief : PanelViewMode.full,
-            );
+                  mode == PanelViewMode.full
+                      ? PanelViewMode.brief
+                      : PanelViewMode.full,
+                );
           case 'language':
             _showLanguageDialog(context);
           case 'keys':
             showKeyManagementDialog(context, ref);
           case 'theme':
-            final themeService = legacy.Provider.of<ThemeService>(context, listen: false);
+            final themeService = ref.read(themeProvider);
             showDialog(
               context: context,
-              builder: (_) => legacy.ChangeNotifierProvider<ThemeService>.value(
-                value: themeService,
-                child: legacy.Consumer<ThemeService>(
-                  builder: (ctx, ts, _) => ThemePickerDialog(themeService: ts),
-                ),
-              ),
+              builder: (_) => ThemePickerDialog(themeService: themeService),
             );
           case 'shortcuts':
             showKeyboardShortcutsDialog(context);
@@ -701,32 +722,53 @@ class _FileBrowserScreenState extends ConsumerState<FileBrowserScreen> {
             child: _overflowItem(
               Icons.terminal,
               ref.read(showTerminalProvider) ? l.hideTerminal : l.showTerminal,
-              iconColor: ref.read(showTerminalProvider) ? Theme.of(context).colorScheme.primary : null,
+              iconColor: ref.read(showTerminalProvider)
+                  ? Theme.of(context).colorScheme.primary
+                  : null,
             ),
           ),
-        PopupMenuItem(value: 'multi_cloud', child: _overflowItem(Icons.cloud_sync, l.multiCloudManager)),
-        PopupMenuItem(value: 'sync', child: _overflowItem(Icons.sync, l.syncManager)),
+        PopupMenuItem(
+            value: 'multi_cloud',
+            child: _overflowItem(Icons.cloud_sync, l.multiCloudManager)),
+        PopupMenuItem(
+            value: 'sync', child: _overflowItem(Icons.sync, l.syncManager)),
         if (isDesktopPlatform)
-          PopupMenuItem(value: 'mount', child: _overflowItem(Icons.storage_rounded, l.mountAsDrive)),
-        PopupMenuItem(value: 'duplicates', child: _overflowItem(Icons.find_replace, l.findDuplicates)),
-        PopupMenuItem(value: 'audit', child: _overflowItem(Icons.history, l.auditLog)),
-        PopupMenuItem(value: 'syslog', child: _overflowItem(Icons.terminal, l.systemLog)),
-        PopupMenuItem(value: 'cache', child: _overflowItem(Icons.storage, l.cacheSettings)),
+          PopupMenuItem(
+              value: 'mount',
+              child: _overflowItem(Icons.storage_rounded, l.mountAsDrive)),
+        PopupMenuItem(
+            value: 'duplicates',
+            child: _overflowItem(Icons.find_replace, l.findDuplicates)),
+        PopupMenuItem(
+            value: 'audit', child: _overflowItem(Icons.history, l.auditLog)),
+        PopupMenuItem(
+            value: 'syslog', child: _overflowItem(Icons.terminal, l.systemLog)),
+        PopupMenuItem(
+            value: 'cache',
+            child: _overflowItem(Icons.storage, l.cacheSettings)),
         const PopupMenuDivider(),
         PopupMenuItem(
           value: 'dual_panel',
           child: _overflowItem(
-            ref.read(showDualPanelProvider) ? Icons.view_column : Icons.web_asset,
+            ref.read(showDualPanelProvider)
+                ? Icons.view_column
+                : Icons.web_asset,
             ref.read(showDualPanelProvider) ? l.singlePanel : l.dualPanel,
-            iconColor: ref.read(showDualPanelProvider) ? Theme.of(context).colorScheme.primary : null,
+            iconColor: ref.read(showDualPanelProvider)
+                ? Theme.of(context).colorScheme.primary
+                : null,
           ),
         ),
         PopupMenuItem(
           value: 'tree',
           child: _overflowItem(
             Icons.account_tree,
-            ref.read(showTreeSidebarProvider) ? l.hideTreeSidebar : l.showTreeSidebar,
-            iconColor: ref.read(showTreeSidebarProvider) ? Theme.of(context).colorScheme.primary : null,
+            ref.read(showTreeSidebarProvider)
+                ? l.hideTreeSidebar
+                : l.showTreeSidebar,
+            iconColor: ref.read(showTreeSidebarProvider)
+                ? Theme.of(context).colorScheme.primary
+                : null,
           ),
         ),
         PopupMenuItem(
@@ -758,17 +800,26 @@ class _FileBrowserScreenState extends ConsumerState<FileBrowserScreen> {
         PopupMenuItem(
           value: 'preview',
           child: _overflowItem(
-            ref.read(showPreviewProvider) ? Icons.visibility : Icons.visibility_off,
+            ref.read(showPreviewProvider)
+                ? Icons.visibility
+                : Icons.visibility_off,
             ref.read(showPreviewProvider) ? l.hidePreview : l.showPreview,
           ),
         ),
         if (auth.isEncryptionEnabled)
-          PopupMenuItem(value: 'keys', child: _overflowItem(Icons.key, 'Key Management')),
+          PopupMenuItem(
+              value: 'keys', child: _overflowItem(Icons.key, 'Key Management')),
         const PopupMenuDivider(),
-        PopupMenuItem(value: 'theme', child: _overflowItem(Icons.palette, l.theme)),
-        PopupMenuItem(value: 'language', child: _overflowItem(Icons.language, 'Language')),
-        PopupMenuItem(value: 'shortcuts', child: _overflowItem(Icons.keyboard, l.keyboardShortcuts)),
-        PopupMenuItem(value: 'about', child: _overflowItem(Icons.info_outline, l.about)),
+        PopupMenuItem(
+            value: 'theme', child: _overflowItem(Icons.palette, l.theme)),
+        PopupMenuItem(
+            value: 'language',
+            child: _overflowItem(Icons.language, 'Language')),
+        PopupMenuItem(
+            value: 'shortcuts',
+            child: _overflowItem(Icons.keyboard, l.keyboardShortcuts)),
+        PopupMenuItem(
+            value: 'about', child: _overflowItem(Icons.info_outline, l.about)),
       ],
     );
   }
@@ -793,10 +844,13 @@ class _FileBrowserScreenState extends ConsumerState<FileBrowserScreen> {
     if (!service.canSwap(leftSrc, rightSrc)) return;
     final (newLeft, newRight) = service.swap(leftSrc, rightSrc);
     ref.read(panelSourceProvider(PanelSide.local).notifier).setSource(newLeft);
-    ref.read(panelSourceProvider(PanelSide.remote).notifier).setSource(newRight);
+    ref
+        .read(panelSourceProvider(PanelSide.remote).notifier)
+        .setSource(newRight);
     // Also toggle the active panel so the user sees the swap happen.
     final active = ref.read(activePanelProvider);
-    final newActive = active == PanelSide.local ? PanelSide.remote : PanelSide.local;
+    final newActive =
+        active == PanelSide.local ? PanelSide.remote : PanelSide.local;
     ref.read(activePanelProvider.notifier).state = newActive;
     // Update mobile tab if in single-panel mode.
     setState(() => _activePanelMobile = newActive);
@@ -823,23 +877,29 @@ class _FileBrowserScreenState extends ConsumerState<FileBrowserScreen> {
       context: context,
       builder: (ctx) => SimpleDialog(
         title: const Row(children: [
-          Icon(Icons.language), SizedBox(width: 12), Text('Language'),
+          Icon(Icons.language),
+          SizedBox(width: 12),
+          Text('Language'),
         ]),
-        children: languages.entries.map((e) => RadioListTile<Locale?>(
-          value: e.key,
-          groupValue: current,
-          title: Text(e.value),
-          onChanged: (v) {
-            ref.read(localeProvider.notifier).state = v;
-            Navigator.pop(ctx);
-          },
-        )).toList(),
+        children: languages.entries
+            .map((e) => RadioListTile<Locale?>(
+                  value: e.key,
+                  groupValue: current,
+                  title: Text(e.value),
+                  onChanged: (v) {
+                    ref.read(localeProvider.notifier).state = v;
+                    Navigator.pop(ctx);
+                  },
+                ))
+            .toList(),
       ),
     );
   }
 
-  void _handleFKeyAction(BuildContext context, WidgetRef ref, FKeyAction action) {
-    _log.debug('action=${action.name} panel=${ref.read(activePanelProvider).name}');
+  void _handleFKeyAction(
+      BuildContext context, WidgetRef ref, FKeyAction action) {
+    _log.debug(
+        'action=${action.name} panel=${ref.read(activePanelProvider).name}');
     switch (action) {
       case FKeyAction.view:
         viewSelectedFile(context, ref);
@@ -873,12 +933,15 @@ class _FileBrowserScreenState extends ConsumerState<FileBrowserScreen> {
               children: [
                 Text(
                   auth.userEmail ?? 'User',
-                  style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 14),
+                  style: const TextStyle(
+                      fontWeight: FontWeight.bold, fontSize: 14),
                 ),
                 const SizedBox(height: 4),
                 Text(
                   'Logged in',
-                  style: TextStyle(fontSize: 12, color: Theme.of(context).colorScheme.primary),
+                  style: TextStyle(
+                      fontSize: 12,
+                      color: Theme.of(context).colorScheme.primary),
                 ),
               ],
             ),
@@ -897,7 +960,8 @@ class _FileBrowserScreenState extends ConsumerState<FileBrowserScreen> {
         ],
         child: Chip(
           avatar: const Icon(Icons.account_circle, size: 20),
-          label: Text(auth.userEmail ?? 'Connected', style: const TextStyle(fontSize: 13)),
+          label: Text(auth.userEmail ?? 'Connected',
+              style: const TextStyle(fontSize: 13)),
         ),
       ),
     );
@@ -912,25 +976,29 @@ class _FileBrowserScreenState extends ConsumerState<FileBrowserScreen> {
         padding: EdgeInsets.zero,
         children: [
           DrawerHeader(
-            decoration: BoxDecoration(color: Theme.of(context).colorScheme.primaryContainer),
+            decoration: BoxDecoration(
+                color: Theme.of(context).colorScheme.primaryContainer),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Icon(Icons.cloud, size: 48, color: Theme.of(context).colorScheme.onPrimaryContainer),
+                Icon(Icons.cloud,
+                    size: 48,
+                    color: Theme.of(context).colorScheme.onPrimaryContainer),
                 const SizedBox(height: 8),
                 Text(
                   AppLocalizations.of(context)!.appTitle,
                   style: Theme.of(context).textTheme.headlineSmall?.copyWith(
-                    color: Theme.of(context).colorScheme.onPrimaryContainer,
-                  ),
+                        color: Theme.of(context).colorScheme.onPrimaryContainer,
+                      ),
                 ),
                 if (auth.isConnected) ...[
                   const SizedBox(height: 4),
                   Text(
                     auth.userEmail ?? 'Connected',
                     style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                      color: Theme.of(context).colorScheme.onPrimaryContainer,
-                    ),
+                          color:
+                              Theme.of(context).colorScheme.onPrimaryContainer,
+                        ),
                   ),
                 ],
               ],
@@ -1012,8 +1080,7 @@ class _FileBrowserScreenState extends ConsumerState<FileBrowserScreen> {
               },
             ),
             // Windows Explorer integration (Windows desktop only)
-            if (!kIsWeb &&
-                defaultTargetPlatform == TargetPlatform.windows)
+            if (!kIsWeb && defaultTargetPlatform == TargetPlatform.windows)
               _WindowsExplorerIntegrationTile(),
             const Divider(),
             // F-Key Bar visibility toggle
@@ -1140,7 +1207,8 @@ class _FileBrowserScreenState extends ConsumerState<FileBrowserScreen> {
                   if (!context.mounted) return;
                   showDialog(
                     context: context,
-                    builder: (_) => AppLockSetupDialog(lockService: lockService),
+                    builder: (_) =>
+                        AppLockSetupDialog(lockService: lockService),
                   );
                 }
               },
@@ -1150,19 +1218,148 @@ class _FileBrowserScreenState extends ConsumerState<FileBrowserScreen> {
               title: const Text('About'),
               onTap: () {
                 Navigator.pop(context);
-                showDialog(context: context, builder: (context) => const AboutAppDialog());
+                showDialog(
+                    context: context,
+                    builder: (context) => const AboutAppDialog());
               },
             ),
             const Divider(),
             ListTile(
-              leading: Icon(Icons.logout, color: Theme.of(context).colorScheme.error),
-              title: Text('Logout', style: TextStyle(color: Theme.of(context).colorScheme.error)),
+              leading: Icon(Icons.logout,
+                  color: Theme.of(context).colorScheme.error),
+              title: Text('Logout',
+                  style: TextStyle(color: Theme.of(context).colorScheme.error)),
               onTap: () {
                 Navigator.pop(context);
                 confirmLogoutRiverpod(context, ref);
               },
             ),
           ],
+          const Divider(),
+          Consumer(
+            builder: (ctx, cref, _) {
+              final enabled = cref.watch(crashReportingEnabledProvider);
+              return SwitchListTile(
+                secondary: const Icon(Icons.health_and_safety_outlined),
+                title: const Text('Local Crash Diagnostics'),
+                subtitle: Text(
+                  enabled
+                      ? 'Stores sanitized crash reports on this device'
+                      : 'Off — no crash reports are retained',
+                  style: const TextStyle(fontSize: 11),
+                ),
+                value: enabled,
+                onChanged: (value) => cref
+                    .read(crashReportingEnabledProvider.notifier)
+                    .setEnabled(value),
+              );
+            },
+          ),
+          ListTile(
+            leading: const Icon(Icons.monitor_heart_outlined),
+            title: const Text('Diagnostics'),
+            subtitle: const Text(
+              'Review, copy, or clear local crash reports',
+              style: TextStyle(fontSize: 11),
+            ),
+            onTap: () {
+              Navigator.pop(context);
+              _showDiagnosticsDialog(context);
+            },
+          ),
+        ],
+      ),
+    );
+  }
+
+  Future<void> _showDiagnosticsDialog(BuildContext context) async {
+    final service = ref.read(crashReportingServiceProvider);
+    final results = await Future.wait([
+      service.getRecentReports(20),
+      PlatformDiagnostics.collect(),
+    ]);
+    final reports = results[0] as List<CrashReport>;
+    final platformDiagnostics = results[1] as PlatformDiagnostics;
+    if (!context.mounted) return;
+
+    await showDialog<void>(
+      context: context,
+      builder: (dialogContext) => AlertDialog(
+        title: const Text('Local Diagnostics'),
+        content: SizedBox(
+          width: 560,
+          child: ListView(
+            shrinkWrap: true,
+            children: [
+              Text('Platform checks',
+                  style: Theme.of(dialogContext).textTheme.titleSmall),
+              const SizedBox(height: 6),
+              ...platformDiagnostics.displayValues.entries.map(
+                (entry) => Padding(
+                  padding: const EdgeInsets.symmetric(vertical: 2),
+                  child: Row(
+                    children: [
+                      SizedBox(width: 150, child: Text(entry.key)),
+                      Expanded(child: Text(entry.value)),
+                    ],
+                  ),
+                ),
+              ),
+              const Divider(height: 24),
+              Text('Crash reports',
+                  style: Theme.of(dialogContext).textTheme.titleSmall),
+              if (reports.isEmpty)
+                const Padding(
+                  padding: EdgeInsets.only(top: 8),
+                  child: Text('No crash reports are stored on this device.'),
+                )
+              else
+                ...reports.map(
+                  (report) => ListTile(
+                    dense: true,
+                    contentPadding: EdgeInsets.zero,
+                    leading: const Icon(Icons.error_outline),
+                    title: Text(
+                      report.errorMessage,
+                      maxLines: 2,
+                      overflow: TextOverflow.ellipsis,
+                    ),
+                    subtitle: Text(
+                      '${report.timestamp.toLocal()} · ${report.platformInfo.os}',
+                    ),
+                  ),
+                ),
+            ],
+          ),
+        ),
+        actions: [
+          if (reports.isNotEmpty)
+            TextButton.icon(
+              onPressed: () async {
+                final exported = await service.exportReports();
+                await Clipboard.setData(ClipboardData(text: exported));
+                if (dialogContext.mounted) {
+                  ScaffoldMessenger.of(dialogContext).showSnackBar(
+                    const SnackBar(content: Text('Diagnostics copied')),
+                  );
+                }
+              },
+              icon: const Icon(Icons.copy),
+              label: const Text('Copy'),
+            ),
+          if (reports.isNotEmpty)
+            TextButton.icon(
+              onPressed: () async {
+                await service.clearReports();
+                if (dialogContext.mounted) Navigator.pop(dialogContext);
+              },
+              icon: const Icon(Icons.delete_outline),
+              label: const Text('Clear'),
+            ),
+          TextButton(
+            onPressed: () => Navigator.pop(dialogContext),
+            child: const Text('Close'),
+          ),
         ],
       ),
     );

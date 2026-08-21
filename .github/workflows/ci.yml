@@ -69,6 +69,20 @@ jobs:
       - name: Install dependencies
         run: flutter pub get
 
+      - name: Export dependency inventory
+        run: |
+          dart pub deps --json > dependency-inventory.json
+          flutter pub outdated --no-dev-dependencies > dependency-status.txt || true
+
+      - name: Upload dependency inventory
+        uses: actions/upload-artifact@v4
+        with:
+          name: dependency-inventory
+          path: |
+            dependency-inventory.json
+            dependency-status.txt
+          retention-days: 30
+
       - name: flutter analyze (errors fail the build)
         run: |
           # Exclude cli/ — it's a separate Dart package with its own pubspec
@@ -79,8 +93,10 @@ jobs:
           fi
           echo "No errors found (warnings/info are OK)"
 
-      - name: flutter test with coverage
-        run: flutter test --coverage --exclude-tags=mock_server,integration,connection_dialog,golden
+      - name: Fast deterministic tests with coverage
+        run: >-
+          flutter test --coverage --concurrency=4
+          --exclude-tags=benchmark,live,deploy,mock_server,integration,connection_dialog,golden
 
       - name: Upload coverage report
         uses: actions/upload-artifact@v4
@@ -314,14 +330,11 @@ jobs:
           retention-days: 14
 
   # ---------- macOS + iOS (both on macos-latest) ----------
-  # continue-on-error: macOS runners are scarce on GH free tier and
-  # frequently queue for hours. Don't block CI green status.
   build-macos:
-    name: Build macOS
+    name: Build + launch macOS
     runs-on: macos-latest
-    timeout-minutes: 40
+    timeout-minutes: 50
     needs: analyze
-    continue-on-error: true
 
     steps:
       - uses: actions/checkout@v5
@@ -339,6 +352,7 @@ jobs:
       - uses: subosito/flutter-action@v2
         with:
           channel: ${{ env.FLUTTER_CHANNEL }}
+          flutter-version: ${{ env.FLUTTER_VERSION }}
           cache: true
 
       - name: Configure git auth for private deps
@@ -348,20 +362,30 @@ jobs:
 
       - run: flutter config --enable-macos-desktop
       - run: flutter pub get
-      - run: flutter build macos --debug
+      - name: macOS regression tests
+        run: >-
+          flutter test --concurrency=2
+          test/native_ffi_crypto_test.dart
+          test/finder_extension_test.dart
+          test/local_file_service_test.dart
+          test/xdg_test.dart
+      - run: flutter build macos --release
+
+      - name: Launch release bundle
+        run: tool/macos_startup_smoke.sh build/macos/Build/Products/Release/CrispCloud.app 12
 
       - name: Package macOS build
         run: |
-          cd build/macos/Build/Products/Debug
+          cd build/macos/Build/Products/Release
           APP_NAME=$(ls -d *.app 2>/dev/null | head -1)
           if [ -n "$APP_NAME" ]; then
-            zip -r -y "$GITHUB_WORKSPACE/crispcloud-macos-debug.zip" "$APP_NAME"
+            zip -r -y "$GITHUB_WORKSPACE/crispcloud-macos-release.zip" "$APP_NAME"
           fi
 
       - uses: actions/upload-artifact@v4
         with:
-          name: crispcloud-macos-debug
-          path: crispcloud-macos-debug.zip
+          name: crispcloud-macos-release
+          path: crispcloud-macos-release.zip
           retention-days: 14
 
   build-ios:

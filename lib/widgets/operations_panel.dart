@@ -45,7 +45,8 @@ class _OperationsPanelState extends ConsumerState<OperationsPanel> {
       }
     }
 
-    final overallProgress = totalBytes > 0 ? transferredBytes / totalBytes : 0.0;
+    final overallProgress =
+        totalBytes > 0 ? transferredBytes / totalBytes : 0.0;
 
     return Container(
       decoration: BoxDecoration(
@@ -53,16 +54,24 @@ class _OperationsPanelState extends ConsumerState<OperationsPanel> {
         border: Border(top: BorderSide(color: Theme.of(context).dividerColor)),
       ),
       child: ExpansionTile(
-        title: _buildPanelHeader(context, transfers, activeCount, completeCount, errorCount, overallProgress, transferredBytes, totalBytes),
+        title: _buildPanelHeader(context, transfers, activeCount, completeCount,
+            errorCount, overallProgress, transferredBytes, totalBytes),
         initiallyExpanded: true,
-        onExpansionChanged: (isExpanded) => setState(() => _isPanelExpanded = isExpanded),
+        onExpansionChanged: (isExpanded) =>
+            setState(() => _isPanelExpanded = isExpanded),
         trailing: Row(
           mainAxisSize: MainAxisSize.min,
           children: [
+            if (activeCount > 0)
+              IconButton(
+                icon: const Icon(Icons.stop_circle_outlined, size: 20),
+                tooltip: 'Cancel all active transfers',
+                onPressed: () => transfers.cancelAllOperations(),
+              ),
             if (completeCount > 0 || errorCount > 0)
               IconButton(
                 icon: const Icon(Icons.clear_all, size: 20),
-                tooltip: 'Clear completed',
+                tooltip: 'Clear finished transfers',
                 onPressed: () => transfers.clearCompletedOperations(),
               ),
             Icon(_isPanelExpanded ? Icons.expand_less : Icons.expand_more),
@@ -101,8 +110,12 @@ class _OperationsPanelState extends ConsumerState<OperationsPanel> {
   Widget _buildPanelHeader(
     BuildContext context,
     TransferNotifier transfers,
-    int activeCount, int completeCount, int errorCount,
-    double overallProgress, int transferredBytes, int totalBytes,
+    int activeCount,
+    int completeCount,
+    int errorCount,
+    double overallProgress,
+    int transferredBytes,
+    int totalBytes,
   ) {
     return Container(
       padding: const EdgeInsets.symmetric(vertical: 12),
@@ -127,13 +140,19 @@ class _OperationsPanelState extends ConsumerState<OperationsPanel> {
                   children: [
                     Text(
                       '${transfers.operations.length} operation(s)',
-                      style: Theme.of(context).textTheme.bodyMedium?.copyWith(fontWeight: FontWeight.bold),
+                      style: Theme.of(context)
+                          .textTheme
+                          .bodyMedium
+                          ?.copyWith(fontWeight: FontWeight.bold),
                     ),
                     if (activeCount > 0) ...[
                       const SizedBox(width: 8),
-                      Text('• ${(overallProgress * 100).toStringAsFixed(0)}%', style: Theme.of(context).textTheme.bodyMedium),
+                      Text('• ${(overallProgress * 100).toStringAsFixed(0)}%',
+                          style: Theme.of(context).textTheme.bodyMedium),
                       const SizedBox(width: 8),
-                      Text('${formatBytes(transferredBytes)} / ${formatBytes(totalBytes)}', style: Theme.of(context).textTheme.bodySmall),
+                      Text(
+                          '${formatBytes(transferredBytes)} / ${formatBytes(totalBytes)}',
+                          style: Theme.of(context).textTheme.bodySmall),
                       // Aggregate speed
                       Builder(builder: (_) {
                         final totalSpeed = transfers.operations
@@ -143,7 +162,10 @@ class _OperationsPanelState extends ConsumerState<OperationsPanel> {
                           return Padding(
                             padding: const EdgeInsets.only(left: 8),
                             child: Text(formatSpeed(totalSpeed),
-                                style: TextStyle(fontSize: 11, color: Theme.of(context).colorScheme.primary)),
+                                style: TextStyle(
+                                    fontSize: 11,
+                                    color:
+                                        Theme.of(context).colorScheme.primary)),
                           );
                         }
                         return const SizedBox.shrink();
@@ -151,11 +173,14 @@ class _OperationsPanelState extends ConsumerState<OperationsPanel> {
                     ],
                     if (completeCount > 0) ...[
                       const SizedBox(width: 8),
-                      Text('✓ $completeCount', style: TextStyle(color: Colors.green[700])),
+                      Text('✓ $completeCount',
+                          style: TextStyle(color: Colors.green[700])),
                     ],
                     if (errorCount > 0) ...[
                       const SizedBox(width: 8),
-                      Text('✗ $errorCount', style: TextStyle(color: Theme.of(context).colorScheme.error)),
+                      Text('✗ $errorCount',
+                          style: TextStyle(
+                              color: Theme.of(context).colorScheme.error)),
                     ],
                   ],
                 ),
@@ -176,20 +201,24 @@ class _OperationsPanelState extends ConsumerState<OperationsPanel> {
                             if (op.isCancelled) {
                               segmentColor = Colors.orange;
                             } else if (op.error != null) {
-                              segmentColor = Theme.of(context).colorScheme.error;
+                              segmentColor =
+                                  Theme.of(context).colorScheme.error;
                             } else if (op.isComplete) {
                               segmentColor = Colors.green;
                             } else {
-                              segmentColor = Theme.of(context).colorScheme.primary;
+                              segmentColor =
+                                  Theme.of(context).colorScheme.primary;
                             }
                             return Expanded(
                               flex: (segmentWidth * 1000).toInt(),
                               child: Container(
-                                margin: const EdgeInsets.symmetric(horizontal: 0.5),
+                                margin:
+                                    const EdgeInsets.symmetric(horizontal: 0.5),
                                 child: LinearProgressIndicator(
                                   value: op.progress,
                                   backgroundColor: Colors.grey[300],
-                                  valueColor: AlwaysStoppedAnimation<Color>(segmentColor),
+                                  valueColor: AlwaysStoppedAnimation<Color>(
+                                      segmentColor),
                                 ),
                               ),
                             );
@@ -234,15 +263,21 @@ class _OperationTile extends StatelessWidget {
     Color? color;
 
     if (operation.isCancelled) {
-      icon = Icons.cancel; color = Colors.orange;
+      icon = Icons.cancel;
+      color = Colors.orange;
     } else if (operation.isPaused) {
-      icon = Icons.pause_circle; color = Colors.blue;
+      icon = Icons.pause_circle;
+      color = Colors.blue;
     } else if (operation.isComplete) {
-      icon = Icons.check_circle; color = Colors.green;
+      icon = Icons.check_circle;
+      color = Colors.green;
     } else if (operation.error != null) {
-      icon = Icons.error; color = Colors.red;
+      icon = Icons.error;
+      color = Colors.red;
     } else {
-      icon = operation.type == OperationType.upload ? Icons.upload : Icons.download;
+      icon = operation.type == OperationType.upload
+          ? Icons.upload
+          : Icons.download;
       color = Theme.of(context).colorScheme.primary;
     }
 
@@ -253,18 +288,26 @@ class _OperationTile extends StatelessWidget {
           leading: Icon(icon, size: 20, color: color),
           title: Row(
             children: [
-              Expanded(child: Text(operation.fileName, maxLines: 1, overflow: TextOverflow.ellipsis, style: const TextStyle(fontSize: 13))),
+              Expanded(
+                  child: Text(operation.fileName,
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                      style: const TextStyle(fontSize: 13))),
               if (operation.isBatch) ...[
                 const SizedBox(width: 8),
                 Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                  padding:
+                      const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
                   decoration: BoxDecoration(
                     color: Theme.of(context).colorScheme.primaryContainer,
                     borderRadius: BorderRadius.circular(10),
                   ),
                   child: Text(
                     '${operation.completedFiles}/${operation.totalFiles} files',
-                    style: TextStyle(fontSize: 10, color: Theme.of(context).colorScheme.onPrimaryContainer),
+                    style: TextStyle(
+                        fontSize: 10,
+                        color:
+                            Theme.of(context).colorScheme.onPrimaryContainer),
                   ),
                 ),
               ],
@@ -273,20 +316,31 @@ class _OperationTile extends StatelessWidget {
           subtitle: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              if (!operation.isComplete && operation.error == null && !operation.isCancelled)
-                LinearProgressIndicator(value: operation.progress, backgroundColor: Colors.grey[300]),
+              if (!operation.isComplete &&
+                  operation.error == null &&
+                  !operation.isCancelled)
+                LinearProgressIndicator(
+                    value: operation.progress,
+                    backgroundColor: Colors.grey[300]),
               const SizedBox(height: 2),
               Text(
-                operation.isCancelled ? 'Cancelled'
-                    : operation.isPaused ? 'Paused'
-                    : operation.error ?? _getStatusText(operation),
+                operation.isCancelled
+                    ? 'Cancelled'
+                    : operation.isPaused
+                        ? 'Paused'
+                        : operation.error ?? _getStatusText(operation),
                 style: TextStyle(
                   fontSize: 11,
-                  color: operation.error != null ? Colors.red
-                      : operation.isCancelled ? Colors.orange
-                      : operation.isPaused ? Colors.blue : null,
+                  color: operation.error != null
+                      ? Colors.red
+                      : operation.isCancelled
+                          ? Colors.orange
+                          : operation.isPaused
+                              ? Colors.blue
+                              : null,
                 ),
-                maxLines: 1, overflow: TextOverflow.ellipsis,
+                maxLines: 1,
+                overflow: TextOverflow.ellipsis,
               ),
             ],
           ),
@@ -295,17 +349,33 @@ class _OperationTile extends StatelessWidget {
             children: [
               if (!operation.isComplete && !operation.isCancelled)
                 IconButton(
-                  icon: Icon(operation.isPaused ? Icons.play_arrow : Icons.pause, size: 20),
+                  icon: Icon(
+                      operation.isPaused ? Icons.play_arrow : Icons.pause,
+                      size: 20),
                   tooltip: operation.isPaused ? 'Resume' : 'Pause',
                   color: Colors.blue,
                   onPressed: operation.isPaused ? onResume : onPause,
                 ),
-              if (!operation.isComplete && !operation.isCancelled && onCancel != null)
-                IconButton(icon: const Icon(Icons.cancel, size: 20), tooltip: 'Cancel', color: Colors.red, onPressed: onCancel),
+              if (!operation.isComplete &&
+                  !operation.isCancelled &&
+                  onCancel != null)
+                IconButton(
+                    icon: const Icon(Icons.cancel, size: 20),
+                    tooltip: 'Cancel',
+                    color: Colors.red,
+                    onPressed: onCancel),
               if (operation.isBatch)
-                IconButton(icon: Icon(isExpanded ? Icons.expand_less : Icons.expand_more, size: 20), onPressed: onToggleExpanded),
-              if (operation.isComplete || operation.error != null || operation.isCancelled)
-                IconButton(icon: const Icon(Icons.close, size: 20), onPressed: onRemove),
+                IconButton(
+                    icon: Icon(
+                        isExpanded ? Icons.expand_less : Icons.expand_more,
+                        size: 20),
+                    onPressed: onToggleExpanded),
+              if (operation.isComplete ||
+                  operation.error != null ||
+                  operation.isCancelled)
+                IconButton(
+                    icon: const Icon(Icons.close, size: 20),
+                    onPressed: onRemove),
             ],
           ),
         ),
@@ -324,13 +394,27 @@ class _OperationTile extends StatelessWidget {
                   child: Row(
                     children: [
                       Icon(
-                        file.error != null ? Icons.error : file.isComplete ? Icons.check_circle : Icons.pending,
+                        file.error != null
+                            ? Icons.error
+                            : file.isComplete
+                                ? Icons.check_circle
+                                : Icons.pending,
                         size: 12,
-                        color: file.error != null ? Colors.red : file.isComplete ? Colors.green : Colors.grey,
+                        color: file.error != null
+                            ? Colors.red
+                            : file.isComplete
+                                ? Colors.green
+                                : Colors.grey,
                       ),
                       const SizedBox(width: 8),
-                      Expanded(child: Text(file.name, style: const TextStyle(fontSize: 11), maxLines: 1, overflow: TextOverflow.ellipsis)),
-                      Text(formatBytes(file.size), style: TextStyle(fontSize: 10, color: Colors.grey[600])),
+                      Expanded(
+                          child: Text(file.name,
+                              style: const TextStyle(fontSize: 11),
+                              maxLines: 1,
+                              overflow: TextOverflow.ellipsis)),
+                      Text(formatBytes(file.size),
+                          style:
+                              TextStyle(fontSize: 10, color: Colors.grey[600])),
                     ],
                   ),
                 );
@@ -345,7 +429,8 @@ class _OperationTile extends StatelessWidget {
     if (op.isComplete) return 'Complete';
     if (op.error != null) return 'Error: ${op.error}';
     final percent = (op.progress * 100).toStringAsFixed(0);
-    final speedStr = op.currentSpeed > 0 ? ' • ${formatSpeed(op.currentSpeed)}' : '';
+    final speedStr =
+        op.currentSpeed > 0 ? ' • ${formatSpeed(op.currentSpeed)}' : '';
     final etaStr = op.estimatedSecondsRemaining > 0
         ? ' • ${_formatEta(op.estimatedSecondsRemaining)}'
         : '';

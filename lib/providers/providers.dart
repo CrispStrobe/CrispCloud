@@ -7,6 +7,7 @@ export 'auth_provider.dart';
 export 'file_type_color_provider.dart';
 export 'bookmarks_provider.dart';
 export 'core_providers.dart';
+export 'crash_reporting_provider.dart';
 export 'error_provider.dart';
 export 'multi_cloud_provider.dart';
 export 'panel_provider.dart';

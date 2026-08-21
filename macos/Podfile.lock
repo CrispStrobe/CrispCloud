@@ -1,4 +1,6 @@
 PODS:
+  - cryptography_flutter (0.0.1):
+    - FlutterMacOS
   - desktop_drop (0.0.1):
     - FlutterMacOS
   - dynamic_color (0.0.2):
@@ -16,9 +18,6 @@ PODS:
     - Flutter
     - FlutterMacOS
   - macos_secure_bookmarks (0.0.3):
-    - FlutterMacOS
-  - path_provider_foundation (0.0.1):
-    - Flutter
     - FlutterMacOS
   - pdfx (1.0.0):
     - FlutterMacOS
@@ -61,6 +60,7 @@ PODS:
     - FlutterMacOS
 
 DEPENDENCIES:
+  - cryptography_flutter (from `Flutter/ephemeral/.symlinks/plugins/cryptography_flutter/macos`)
   - desktop_drop (from `Flutter/ephemeral/.symlinks/plugins/desktop_drop/macos`)
   - dynamic_color (from `Flutter/ephemeral/.symlinks/plugins/dynamic_color/macos`)
   - file_picker (from `Flutter/ephemeral/.symlinks/plugins/file_picker/macos`)
@@ -70,7 +70,6 @@ DEPENDENCIES:
   - FlutterMacOS (from `Flutter/ephemeral`)
   - local_auth_darwin (from `Flutter/ephemeral/.symlinks/plugins/local_auth_darwin/darwin`)
   - macos_secure_bookmarks (from `Flutter/ephemeral/.symlinks/plugins/macos_secure_bookmarks/macos`)
-  - path_provider_foundation (from `Flutter/ephemeral/.symlinks/plugins/path_provider_foundation/darwin`)
   - pdfx (from `Flutter/ephemeral/.symlinks/plugins/pdfx/macos`)
   - share_plus (from `Flutter/ephemeral/.symlinks/plugins/share_plus/macos`)
   - shared_preferences_foundation (from `Flutter/ephemeral/.symlinks/plugins/shared_preferences_foundation/darwin`)
@@ -84,6 +83,8 @@ SPEC REPOS:
     - sqlite3
 
 EXTERNAL SOURCES:
+  cryptography_flutter:
+    :path: Flutter/ephemeral/.symlinks/plugins/cryptography_flutter/macos
   desktop_drop:
     :path: Flutter/ephemeral/.symlinks/plugins/desktop_drop/macos
   dynamic_color:
@@ -102,8 +103,6 @@ EXTERNAL SOURCES:
     :path: Flutter/ephemeral/.symlinks/plugins/local_auth_darwin/darwin
   macos_secure_bookmarks:
     :path: Flutter/ephemeral/.symlinks/plugins/macos_secure_bookmarks/macos
-  path_provider_foundation:
-    :path: Flutter/ephemeral/.symlinks/plugins/path_provider_foundation/darwin
   pdfx:
     :path: Flutter/ephemeral/.symlinks/plugins/pdfx/macos
   share_plus:
@@ -120,6 +119,7 @@ EXTERNAL SOURCES:
     :path: Flutter/ephemeral/.symlinks/plugins/video_player_avfoundation/darwin
 
 SPEC CHECKSUMS:
+  cryptography_flutter: be2b3e0e31603521b6a1c2bea232a88a2488a91c
   desktop_drop: 10a3e6a7fa9dbe350541f2574092fecfa345a07b
   dynamic_color: cb7c2a300ee67ed3bd96c3e852df3af0300bf610
   file_picker: 7584aae6fa07a041af2b36a2655122d42f578c1a
@@ -129,16 +129,15 @@ SPEC CHECKSUMS:
   FlutterMacOS: d0db08ddef1a9af05a5ec4b724367152bb0500b1
   local_auth_darwin: c3ee6cce0a8d56be34c8ccb66ba31f7f180aaebb
   macos_secure_bookmarks: e096d8ec49de2d25ea47e1061b85e5f2f1520fef
-  path_provider_foundation: bb55f6dbba17d0dccd6737fe6f7f34fbd0376880
   pdfx: 1e79f57f7a6ce2f4a4c30f21fa54d3dc82441b51
-  share_plus: 3c787998077d6b31e839225a282e9e27edf99274
+  share_plus: 510bf0af1a42cd602274b4629920c9649c52f4cc
   shared_preferences_foundation: 7036424c3d8ec98dfe75ff1667cb0cd531ec82bb
   sqlite3: a51c07cf16e023d6c48abd5e5791a61a47354921
   sqlite3_flutter_libs: b3e120efe9a82017e5552a620f696589ed4f62ab
   system_tray: 53f0cdb020c3fbee711d3fe45ae7ce730e033d2b
   url_launcher_macos: f87a979182d112f911de6820aefddaf56ee9fbfd
-  video_player_avfoundation: dd410b52df6d2466a42d28550e33e4146928280a
+  video_player_avfoundation: 3453f792138786248960ca029747fcd9f318ef52
 
 PODFILE CHECKSUM: 54d867c82ac51cbd61b565781b9fada492027009
 
-COCOAPODS: 1.16.2
+COCOAPODS: 1.17.0

@@ -142,7 +142,9 @@ jobs:
           flutter analyze --no-fatal-warnings 2>&1 | grep -v "cli/" | tee analyze.log || true
           if grep -q "  error • " analyze.log; then exit 1; fi
 
-      - run: flutter test --exclude-tags=mock_server,integration,connection_dialog
+      - run: >-
+          flutter test --concurrency=4
+          --exclude-tags=benchmark,live,deploy,mock_server,integration,connection_dialog,golden
 
   # ---------- Create Release (empty, assets added by each build) ----------
   create-release:

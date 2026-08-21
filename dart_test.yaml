@@ -1,4 +1,6 @@
 tags:
+  benchmark:
+    skip: "Benchmarks are load-sensitive. Run with: flutter test --tags benchmark --run-skipped"
   live:
     skip: "Live tests require provider credentials. Run with: flutter test --tags live"
   integration:

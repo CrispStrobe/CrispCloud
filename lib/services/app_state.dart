@@ -50,6 +50,8 @@ class AppError {
 }
 
 class AppState extends ChangeNotifier {
+  bool _isDisposed = false;
+
   // Async locks — one per critical method to avoid deadlocks when locked
   // methods call each other (switchProvider -> _attemptAutoLogin -> refreshPanel).
   final _switchProviderLock = AsyncLock();
@@ -79,7 +81,7 @@ class AppState extends ChangeNotifier {
 
   final Set<FileItem> _localSelection = {};
   final Set<FileItem> _remoteSelection = {};
-  
+
   FileItem? _lastSelectedLocal;
   FileItem? _lastSelectedRemote;
 
@@ -110,17 +112,19 @@ class AppState extends ChangeNotifier {
   String get activeLocalTabId => _activeLocalTabId;
   String get activeRemoteTabId => _activeRemoteTabId;
 
-  PanelTab? get activeLocalTab =>
-      _localTabs.isEmpty ? null : _localTabs.firstWhere(
-        (t) => t.id == _activeLocalTabId,
-        orElse: () => _localTabs.first,
-      );
+  PanelTab? get activeLocalTab => _localTabs.isEmpty
+      ? null
+      : _localTabs.firstWhere(
+          (t) => t.id == _activeLocalTabId,
+          orElse: () => _localTabs.first,
+        );
 
-  PanelTab? get activeRemoteTab =>
-      _remoteTabs.isEmpty ? null : _remoteTabs.firstWhere(
-        (t) => t.id == _activeRemoteTabId,
-        orElse: () => _remoteTabs.first,
-      );
+  PanelTab? get activeRemoteTab => _remoteTabs.isEmpty
+      ? null
+      : _remoteTabs.firstWhere(
+          (t) => t.id == _activeRemoteTabId,
+          orElse: () => _remoteTabs.first,
+        );
 
   String _nextTabId() => 'tab_${_tabIdCounter++}';
 
@@ -158,7 +162,8 @@ class AppState extends ChangeNotifier {
     final idx = tabs.indexOf(tab);
     tabs.remove(tab);
     // If closing active tab, activate the nearest one
-    final activeId = side == PanelSide.local ? _activeLocalTabId : _activeRemoteTabId;
+    final activeId =
+        side == PanelSide.local ? _activeLocalTabId : _activeRemoteTabId;
     if (activeId == tabId) {
       final newIdx = idx.clamp(0, tabs.length - 1);
       if (side == PanelSide.local) {
@@ -214,7 +219,9 @@ class AppState extends ChangeNotifier {
 
   FileItem? _itemToScrollTo;
   FileItem? get itemToScrollTo => _itemToScrollTo;
-  void clearItemToScrollTo() { _itemToScrollTo = null; }
+  void clearItemToScrollTo() {
+    _itemToScrollTo = null;
+  }
 
   List<String> _receivedFiles = [];
   String? _receivedText;
@@ -224,7 +231,7 @@ class AppState extends ChangeNotifier {
 
   bool get hasLocalSelection => _selectedLocalFiles.isNotEmpty;
   bool get hasRemoteSelection => _selectedRemoteFiles.isNotEmpty;
-  
+
   List<FileItem> get selectedLocalFiles => _selectedLocalFiles.toList();
   List<FileItem> get selectedRemoteFiles => _selectedRemoteFiles.toList();
 
@@ -250,10 +257,10 @@ class AppState extends ChangeNotifier {
   SortBy _remoteSortBy = SortBy.name;
   SortOrder _remoteSortOrder = SortOrder.ascending;
 
-  SortBy getSort(PanelSide side) => 
+  SortBy getSort(PanelSide side) =>
       side == PanelSide.local ? _localSortBy : _remoteSortBy;
-  
-  SortOrder getSortOrder(PanelSide side) => 
+
+  SortOrder getSortOrder(PanelSide side) =>
       side == PanelSide.local ? _localSortOrder : _remoteSortOrder;
 
   void setSortBy(PanelSide side, SortBy sortBy) {
@@ -269,13 +276,13 @@ class AppState extends ChangeNotifier {
 
   void toggleSortOrder(PanelSide side) {
     if (side == PanelSide.local) {
-      _localSortOrder = _localSortOrder == SortOrder.ascending 
-          ? SortOrder.descending 
+      _localSortOrder = _localSortOrder == SortOrder.ascending
+          ? SortOrder.descending
           : SortOrder.ascending;
       _sortFiles(_localFiles, _localSortBy, _localSortOrder);
     } else {
-      _remoteSortOrder = _remoteSortOrder == SortOrder.ascending 
-          ? SortOrder.descending 
+      _remoteSortOrder = _remoteSortOrder == SortOrder.ascending
+          ? SortOrder.descending
           : SortOrder.ascending;
       _sortFiles(_remoteFiles, _remoteSortBy, _remoteSortOrder);
     }
@@ -290,14 +297,14 @@ class AppState extends ChangeNotifier {
 
     try {
       debugPrint('🔄 Sorting ${files.length} files by $sortBy ($order)');
-      
+
       files.sort((a, b) {
         try {
           if (a.isFolder && !b.isFolder) return -1;
           if (!a.isFolder && b.isFolder) return 1;
 
           int comparison = 0;
-          
+
           switch (sortBy) {
             case SortBy.name:
               comparison = a.name.toLowerCase().compareTo(b.name.toLowerCase());
@@ -318,8 +325,12 @@ class AppState extends ChangeNotifier {
               } else {
                 final nameA = a.name;
                 final nameB = b.name;
-                final extA = nameA.contains('.') ? nameA.split('.').last.toLowerCase() : '';
-                final extB = nameB.contains('.') ? nameB.split('.').last.toLowerCase() : '';
+                final extA = nameA.contains('.')
+                    ? nameA.split('.').last.toLowerCase()
+                    : '';
+                final extB = nameB.contains('.')
+                    ? nameB.split('.').last.toLowerCase()
+                    : '';
                 comparison = extA.compareTo(extB);
               }
               break;
@@ -330,7 +341,7 @@ class AppState extends ChangeNotifier {
           return 0;
         }
       });
-      
+
       debugPrint('✅ Sorting complete');
     } catch (e, stackTrace) {
       debugPrint('❌ Error in sorting function: $e');
@@ -341,11 +352,11 @@ class AppState extends ChangeNotifier {
   Future<void> pickLocalDirectory() async {
     try {
       debugPrint('📂 Opening directory picker...');
-      
+
       final selectedDirectory = await _localFileService.requestDirectoryAccess(
         initialDirectory: _localPath,
       );
-      
+
       if (selectedDirectory != null) {
         debugPrint('📁 User selected: $selectedDirectory');
         _localPath = selectedDirectory;
@@ -366,7 +377,7 @@ class AppState extends ChangeNotifier {
       debugPrint('⚠️ Receive sharing intent not supported on web.');
       return;
     }
-    
+
     try {
       if (Platform.isAndroid || Platform.isIOS) {
         ReceiveService.initialize(
@@ -388,12 +399,13 @@ class AppState extends ChangeNotifier {
 
   Future<void> shareFiles(List<FileItem> files) async {
     if (kIsWeb) {
-       debugPrint('⚠️ File sharing not supported on web.');
-       return;
+      debugPrint('⚠️ File sharing not supported on web.');
+      return;
     }
-    
+
     if (Platform.isAndroid || Platform.isIOS) {
-      final paths = files.map((f) => f.path!).where((p) => p.isNotEmpty).toList();
+      final paths =
+          files.map((f) => f.path!).where((p) => p.isNotEmpty).toList();
       if (paths.isNotEmpty) {
         await ShareService.shareFiles(paths);
       }
@@ -410,57 +422,69 @@ class AppState extends ChangeNotifier {
 
   @override
   void dispose() {
+    _isDisposed = true;
     if (!kIsWeb && (Platform.isAndroid || Platform.isIOS)) {
       ReceiveService.dispose();
     }
     super.dispose();
   }
 
-  AppState({required dynamic config, CloudProvider? initialProvider, required SecureStorage secureStorage})
+  @override
+  void notifyListeners() {
+    if (!_isDisposed) super.notifyListeners();
+  }
+
+  AppState(
+      {required dynamic config,
+      CloudProvider? initialProvider,
+      required SecureStorage secureStorage,
+      LocalFileService? localFileService})
       : _config = config,
         _currentProvider = initialProvider ?? CloudProvider.filen,
-        _localFileService = LocalFileService(),
+        _localFileService = localFileService ?? LocalFileService(),
         _secureStorage = secureStorage {
-
     // EXTRACT PATH: Attempt to extract, but handle failure robustly
     try {
-        if (config is FilenConfigService) {
-          _configPath = config.configPath;
-        } else if (config is FTPConfigService) {
-          _configPath = config.configPath;
-        } else if (config is SFTPConfigService) {
-          _configPath = config.configPath;
-        } else if (config is ConfigService) {
-          _configPath = config.configPath;
+      if (config is FilenConfigService) {
+        _configPath = config.configPath;
+      } else if (config is FTPConfigService) {
+        _configPath = config.configPath;
+      } else if (config is SFTPConfigService) {
+        _configPath = config.configPath;
+      } else if (config is ConfigService) {
+        _configPath = config.configPath;
+      }
+      // Fallback: try dynamic access if types didn't match due to import issues
+      else {
+        try {
+          _configPath = (config as dynamic).configPath;
+        } catch (e) {
+          debugPrint('AppState: Could not extract configPath: $e');
         }
-        // Fallback: try dynamic access if types didn't match due to import issues
-        else {
-            try {
-                _configPath = (config as dynamic).configPath;
-            } catch (e) {
-                debugPrint('AppState: Could not extract configPath: $e');
-            }
-        }
+      }
     } catch (e) {
-        debugPrint("⚠️ AppState: Error extracting config path: $e");
+      debugPrint("⚠️ AppState: Error extracting config path: $e");
     }
 
     // FALLBACK if extraction failed
     if (_configPath.isEmpty) {
-        debugPrint("⚠️ AppState: Config path is empty. Using fallback default.");
-        if (!kIsWeb && (Platform.isLinux || Platform.isMacOS || Platform.isWindows)) {
-             final home = Platform.environment['HOME'] ?? Platform.environment['USERPROFILE'] ?? '.';
-             _configPath = p.join(home, '.cloud-storage-config');
-        } else {
-             _configPath = '.cloud-storage-config';
-        }
+      debugPrint("⚠️ AppState: Config path is empty. Using fallback default.");
+      if (!kIsWeb &&
+          (Platform.isLinux || Platform.isMacOS || Platform.isWindows)) {
+        final home = Platform.environment['HOME'] ??
+            Platform.environment['USERPROFILE'] ??
+            '.';
+        _configPath = p.join(home, '.cloud-storage-config');
+      } else {
+        _configPath = '.cloud-storage-config';
+      }
     }
-    
+
     debugPrint("🔧 AppState initialized with config path: $_configPath");
-    
+
     // Initialize cloud client based on provider
     _cloudClient = CloudStorageFactory.create(_currentProvider, config: config);
-    
+
     _activePanel = PanelSide.local;
     _initTabs();
 
@@ -486,40 +510,74 @@ class AppState extends ChangeNotifier {
       final prefs = await SharedPreferences.getInstance();
       String providerKey;
       switch (provider) {
-        case CloudProvider.dropbox: providerKey = 'dropbox'; break;
-        case CloudProvider.filen: providerKey = 'filen'; break;
-        case CloudProvider.ftp: providerKey = 'ftp'; break;
-        case CloudProvider.gdrive: providerKey = 'gdrive'; break;
-        case CloudProvider.onedrive: providerKey = 'onedrive'; break;
-        case CloudProvider.s3: providerKey = 's3'; break;
-        case CloudProvider.sftp: providerKey = 'sftp'; break;
-        case CloudProvider.webdav: providerKey = 'webdav'; break;
-        case CloudProvider.internxt: providerKey = 'internxt'; break;
-        case CloudProvider.nextcloud: providerKey = 'nextcloud'; break;
-        case CloudProvider.pcloud: providerKey = 'pcloud'; break;
-        case CloudProvider.azure: providerKey = 'azure'; break;
-        case CloudProvider.b2: providerKey = 'b2'; break;
+        case CloudProvider.dropbox:
+          providerKey = 'dropbox';
+          break;
+        case CloudProvider.filen:
+          providerKey = 'filen';
+          break;
+        case CloudProvider.ftp:
+          providerKey = 'ftp';
+          break;
+        case CloudProvider.gdrive:
+          providerKey = 'gdrive';
+          break;
+        case CloudProvider.onedrive:
+          providerKey = 'onedrive';
+          break;
+        case CloudProvider.s3:
+          providerKey = 's3';
+          break;
+        case CloudProvider.sftp:
+          providerKey = 'sftp';
+          break;
+        case CloudProvider.webdav:
+          providerKey = 'webdav';
+          break;
+        case CloudProvider.internxt:
+          providerKey = 'internxt';
+          break;
+        case CloudProvider.nextcloud:
+          providerKey = 'nextcloud';
+          break;
+        case CloudProvider.pcloud:
+          providerKey = 'pcloud';
+          break;
+        case CloudProvider.azure:
+          providerKey = 'azure';
+          break;
+        case CloudProvider.b2:
+          providerKey = 'b2';
+          break;
       }
       await prefs.setString('cloud_provider', providerKey);
       debugPrint('💾 Saved provider preference: $providerKey');
 
       // 2. Instantiate correct config service
       if (provider == CloudProvider.dropbox) {
-        _config = DropboxConfigService(configPath: _configPath, secureStorage: _secureStorage);
+        _config = DropboxConfigService(
+            configPath: _configPath, secureStorage: _secureStorage);
       } else if (provider == CloudProvider.filen) {
-        _config = FilenConfigService(configPath: _configPath, secureStorage: _secureStorage);
+        _config = FilenConfigService(
+            configPath: _configPath, secureStorage: _secureStorage);
       } else if (provider == CloudProvider.ftp) {
-        _config = FTPConfigService(configPath: _configPath, secureStorage: _secureStorage);
+        _config = FTPConfigService(
+            configPath: _configPath, secureStorage: _secureStorage);
       } else if (provider == CloudProvider.gdrive) {
-        _config = GDriveConfigService(configPath: _configPath, secureStorage: _secureStorage);
+        _config = GDriveConfigService(
+            configPath: _configPath, secureStorage: _secureStorage);
       } else if (provider == CloudProvider.onedrive) {
-        _config = OneDriveConfigService(configPath: _configPath, secureStorage: _secureStorage);
+        _config = OneDriveConfigService(
+            configPath: _configPath, secureStorage: _secureStorage);
       } else if (provider == CloudProvider.s3) {
-        _config = S3ConfigService(configPath: _configPath, secureStorage: _secureStorage);
+        _config = S3ConfigService(
+            configPath: _configPath, secureStorage: _secureStorage);
       } else if (provider == CloudProvider.sftp) {
-        _config = SFTPConfigService(configPath: _configPath, secureStorage: _secureStorage);
+        _config = SFTPConfigService(
+            configPath: _configPath, secureStorage: _secureStorage);
       } else if (provider == CloudProvider.webdav) {
-        _config = WebDavConfigService(configPath: _configPath, secureStorage: _secureStorage);
+        _config = WebDavConfigService(
+            configPath: _configPath, secureStorage: _secureStorage);
       } else if (provider == CloudProvider.internxt) {
         _config = ConfigService(configPath: _configPath);
       }
@@ -566,30 +624,36 @@ class AppState extends ChangeNotifier {
 
   Future<void> _initializeLocalPath() async {
     try {
-      await _localFileService.getInitialPath(); 
-      
-      if (!kIsWeb && Platform.isMacOS && _localFileService.grantedBasePath == null) {
+      await _localFileService.getInitialPath();
+      if (_isDisposed) return;
+
+      if (!kIsWeb &&
+          Platform.isMacOS &&
+          _localFileService.grantedBasePath == null) {
         debugPrint('📂 No previous directory access, prompting user...');
         await _requestInitialDirectoryAccess();
       } else {
-        await _loadLocalFiles(); 
+        await _loadLocalFiles();
         notifyListeners();
       }
     } catch (e) {
       debugPrint('❌ Error initializing local path: $e');
       _localPath = await _localFileService.getSafeFallbackDirectory();
+      if (_isDisposed) return;
       _errors.add(AppError(e.toString()));
       notifyListeners();
     }
   }
 
   Future<void> _requestInitialDirectoryAccess() async {
-    _errors.add(AppError('Please select a base directory to grant access (e.g., your home folder)'));
+    _errors.add(AppError(
+        'Please select a base directory to grant access (e.g., your home folder)'));
     notifyListeners();
 
     final grantedPath = await _localFileService.requestDirectoryAccess(
       initialDirectory: await _localFileService.getSafeFallbackDirectory(),
     );
+    if (_isDisposed) return;
 
     if (grantedPath != null) {
       _errors.clear();
@@ -598,7 +662,7 @@ class AppState extends ChangeNotifier {
     } else {
       _localPath = await _localFileService.getSafeFallbackDirectory();
       _errors.add(AppError('Access cancelled. Using fallback directory.'));
-      await _loadLocalFiles(); 
+      await _loadLocalFiles();
       notifyListeners();
     }
   }
@@ -606,15 +670,18 @@ class AppState extends ChangeNotifier {
   Future<void> _loadLocalFiles() async {
     try {
       debugPrint('📁 Loading local files from: $localPath');
-      
+
       final entities = await _localFileService.listDirectory(localPath);
-      
+      if (_isDisposed) return;
+
       if (entities == null) {
-         _localFiles = [];
-         // On web, empty list might just mean no folder selected yet
-         if (!kIsWeb) _errors.add(AppError('Local file access is not supported on this platform.'));
-         notifyListeners();
-         return;
+        _localFiles = [];
+        // On web, empty list might just mean no folder selected yet
+        if (!kIsWeb)
+          _errors.add(
+              AppError('Local file access is not supported on this platform.'));
+        notifyListeners();
+        return;
       }
 
       final items = <FileItem>[];
@@ -645,11 +712,11 @@ class AppState extends ChangeNotifier {
               size: size,
               updatedAt: updated,
             ));
-            continue; 
+            continue;
           }
           // --- Web logic end ---
 
-          final stat = await entity.stat(); 
+          final stat = await entity.stat();
           if (stat.type == FileSystemEntityType.directory) {
             items.add(FileItem(
               name: name,
@@ -677,13 +744,17 @@ class AppState extends ChangeNotifier {
       _errors.clear();
       notifyListeners();
     } catch (e) {
-      if (!kIsWeb && (e is PathAccessException || e.toString().contains('Operation not permitted') || e.toString().contains('Permission denied'))) {
+      if (!kIsWeb &&
+          (e is PathAccessException ||
+              e.toString().contains('Operation not permitted') ||
+              e.toString().contains('Permission denied'))) {
         _localFiles = [];
-        _errors.add(AppError('Permission denied. Use the Browse button (folder icon) to grant access.'));
+        _errors.add(AppError(
+            'Permission denied. Use the Browse button (folder icon) to grant access.'));
         notifyListeners();
-        return; 
+        return;
       }
-      
+
       debugPrint('❌ Error loading local files: $e');
       _localFiles = [];
       _errors.add(AppError(e.toString()));
@@ -693,17 +764,20 @@ class AppState extends ChangeNotifier {
 
   Future<void> _attemptAutoLogin() async {
     await _autoLoginLock.synchronized(() async {
-      debugPrint('🔄 Attempting auto-login for provider: ${_cloudClient.providerName}');
+      debugPrint(
+          '🔄 Attempting auto-login for provider: ${_cloudClient.providerName}');
 
       try {
         if (_cloudClient is InternxtClientAdapter) {
           final adapter = _cloudClient as InternxtClientAdapter;
-          final rawCreds = await (_cloudClient as InternxtClientAdapter).config.readCredentials();
+          final rawCreds = await (_cloudClient as InternxtClientAdapter)
+              .config
+              .readCredentials();
           final Map<String, String>? creds = rawCreds?.cast<String, String>();
 
           if (creds == null || creds['token'] == null) {
-             debugPrint('⚠️ Internxt: No credentials found');
-             return;
+            debugPrint('⚠️ Internxt: No credentials found');
+            return;
           }
           adapter.setAuth(creds);
           _userEmail = creds['email'];
@@ -714,8 +788,8 @@ class AppState extends ChangeNotifier {
           final adapter = _cloudClient as FilenClientAdapter;
           final creds = await adapter.filenConfig.readCredentials();
           if (creds == null || creds['email'] == null) {
-             debugPrint('⚠️ Filen: No credentials found');
-             return;
+            debugPrint('⚠️ Filen: No credentials found');
+            return;
           }
           if (creds['apiKey'] != null && creds['apiKey']!.isNotEmpty) {
             adapter.client.setAuth(creds);
@@ -728,7 +802,9 @@ class AppState extends ChangeNotifier {
           final adapter = _cloudClient as FTPClientAdapter;
           final creds = await adapter.config.readCredentials();
 
-          if (creds != null && creds['host'] != null && creds['username'] != null) {
+          if (creds != null &&
+              creds['host'] != null &&
+              creds['username'] != null) {
             _userEmail = '${creds['username']}@${creds['host']}';
             _isConnected = true;
             debugPrint('FTP: Auto-login successful for $_userEmail');
@@ -741,7 +817,9 @@ class AppState extends ChangeNotifier {
           final adapter = _cloudClient as SFTPClientAdapter;
           final creds = await adapter.config.readCredentials();
 
-          if (creds != null && creds['host'] != null && creds['username'] != null) {
+          if (creds != null &&
+              creds['host'] != null &&
+              creds['username'] != null) {
             _userEmail = '${creds['username']}@${creds['host']}';
             _isConnected = true;
             debugPrint('✅ SFTP: Auto-login successful for $_userEmail');
@@ -768,7 +846,9 @@ class AppState extends ChangeNotifier {
           final adapter = _cloudClient as WebDavClientAdapter;
           final creds = await adapter.config.readCredentials();
 
-          if (creds != null && creds['host'] != null && creds['username'] != null) {
+          if (creds != null &&
+              creds['host'] != null &&
+              creds['username'] != null) {
             _userEmail = '${creds['username']}@${creds['host']}';
             _isConnected = true;
             debugPrint('✅ WebDAV: Auto-login successful for $_userEmail');
@@ -788,7 +868,7 @@ class AppState extends ChangeNotifier {
   }
 
   void clearCompletedOperations() {
-    _operations.removeWhere((op) => op.isComplete && op.error == null);
+    _operations.removeWhere((op) => op.isComplete || op.isCancelled);
     notifyListeners();
   }
 
@@ -812,11 +892,11 @@ class AppState extends ChangeNotifier {
 
   Future<void> login(String email, String password, String? tfaCode) async {
     await _cloudClient.login(email, password, twoFactorCode: tfaCode);
-    
+
     if (_cloudClient is InternxtClientAdapter) {
       final adapter = _cloudClient as InternxtClientAdapter;
       final response = adapter.lastLoginResponse;
-      
+
       if (response != null) {
         await adapter.config.saveCredentials({
           'email': email,
@@ -861,17 +941,17 @@ class AppState extends ChangeNotifier {
         debugPrint('⚠️ Warning: WebDAV credentials were not saved properly');
       }
     }
-    
+
     _userEmail = email;
     _isConnected = true;
-    _errors.clear(); 
+    _errors.clear();
     notifyListeners();
     await refreshPanel(PanelSide.remote);
   }
 
   Future<void> logout() async {
     await _cloudClient.logout();
-    
+
     if (_cloudClient is InternxtClientAdapter) {
       await (_cloudClient as InternxtClientAdapter).config.clearCredentials();
     } else if (_cloudClient is FilenClientAdapter) {
@@ -885,7 +965,7 @@ class AppState extends ChangeNotifier {
     } else if (_cloudClient is WebDavClientAdapter) {
       await (_cloudClient as WebDavClientAdapter).config.clearCredentials();
     }
-    
+
     _isConnected = false;
     _userEmail = null;
     _remoteFiles = null;
@@ -928,17 +1008,20 @@ class AppState extends ChangeNotifier {
                 DateTime? folderDate;
 
                 // Check keys used by different providers
-                final rawDate = map['modificationTime'] ?? map['lastModified'] ?? map['timestamp'];
+                final rawDate = map['modificationTime'] ??
+                    map['lastModified'] ??
+                    map['timestamp'];
 
                 if (rawDate != null) {
                   try {
-                     if (rawDate is int) {
-                       folderDate = DateTime.fromMillisecondsSinceEpoch(rawDate);
-                     } else {
-                       folderDate = DateTime.parse(rawDate.toString());
-                     }
+                    if (rawDate is int) {
+                      folderDate = DateTime.fromMillisecondsSinceEpoch(rawDate);
+                    } else {
+                      folderDate = DateTime.parse(rawDate.toString());
+                    }
                   } catch (e) {
-                    debugPrint('Failed to parse folder date from rawDate=$rawDate: $e');
+                    debugPrint(
+                        'Failed to parse folder date from rawDate=$rawDate: $e');
                   }
                 }
 
@@ -948,7 +1031,8 @@ class AppState extends ChangeNotifier {
                   uuid: map['uuid'],
                   updatedAt: folderDate,
                 );
-              }).toList() ?? [];
+              }).toList() ??
+              [];
 
           final files = (result['files'] as List<dynamic>?)?.map((item) {
                 final map = item as Map<String, dynamic>;
@@ -958,8 +1042,10 @@ class AppState extends ChangeNotifier {
                 final fileType = rawType.toString().toLowerCase();
 
                 String fullName = fileName;
-                if (fileType.isNotEmpty && fileType != 'file' && !fileName.toLowerCase().endsWith('.$fileType')) {
-                   fullName = '$fileName.$rawType';
+                if (fileType.isNotEmpty &&
+                    fileType != 'file' &&
+                    !fileName.toLowerCase().endsWith('.$fileType')) {
+                  fullName = '$fileName.$rawType';
                 }
 
                 DateTime? fileDate;
@@ -968,13 +1054,14 @@ class AppState extends ChangeNotifier {
 
                 if (rawDate != null) {
                   try {
-                     if (rawDate is int) {
-                       fileDate = DateTime.fromMillisecondsSinceEpoch(rawDate);
-                     } else {
-                       fileDate = DateTime.parse(rawDate.toString());
-                     }
+                    if (rawDate is int) {
+                      fileDate = DateTime.fromMillisecondsSinceEpoch(rawDate);
+                    } else {
+                      fileDate = DateTime.parse(rawDate.toString());
+                    }
                   } catch (e) {
-                    debugPrint('Failed to parse file date from rawDate=$rawDate: $e');
+                    debugPrint(
+                        'Failed to parse file date from rawDate=$rawDate: $e');
                   }
                 }
 
@@ -985,7 +1072,8 @@ class AppState extends ChangeNotifier {
                   uuid: map['uuid'],
                   updatedAt: fileDate,
                 );
-              }).toList() ?? [];
+              }).toList() ??
+              [];
 
           _remoteFiles = [...folders, ...files];
           _sortFiles(_remoteFiles, _remoteSortBy, _remoteSortOrder);
@@ -1005,7 +1093,6 @@ class AppState extends ChangeNotifier {
 
   Future<void> navigateUp(PanelSide side) async {
     if (side == PanelSide.local) {
-      
       final parent = p.dirname(localPath);
 
       // Ensure we don't navigate above our virtual root
@@ -1022,72 +1109,73 @@ class AppState extends ChangeNotifier {
     }
   }
 
-  Future<void> navigateToPath(PanelSide side, String path, {FileItem? selectItem}) async {
+  Future<void> navigateToPath(PanelSide side, String path,
+      {FileItem? selectItem}) async {
     if (side == PanelSide.local) {
-      
       // We allow web navigation per a Virtual File System.
       // On Web, we treat the virtual root '/' as accessible.
       // On Desktop/Mobile, we check strict permissions.
       if (!kIsWeb && !await _localFileService.hasAccessToPath(path)) {
         debugPrint('⚠️ Path $path is outside granted directory');
-        _errors.add(AppError('Cannot access paths outside the granted directory. Please grant access to a parent folder.'));
+        _errors.add(AppError(
+            'Cannot access paths outside the granted directory. Please grant access to a parent folder.'));
         notifyListeners();
-        
+
         // Attempt to request access to the new path
         final newGrant = await _localFileService.requestDirectoryAccess(
           initialDirectory: path,
         );
-        
+
         if (newGrant != null) {
-          path = newGrant; 
+          path = newGrant;
         } else {
-          return; 
+          return;
         }
       } else if (kIsWeb && !await _localFileService.hasAccessToPath(path)) {
-         // On Web, if we try to go somewhere our virtual tree doesn't know about
-         // (should only be possible via manual manipulation), block it.
-         debugPrint('⚠️ Virtual path not found: $path');
-         return;
+        // On Web, if we try to go somewhere our virtual tree doesn't know about
+        // (should only be possible via manual manipulation), block it.
+        debugPrint('⚠️ Virtual path not found: $path');
+        return;
       }
-      
-      _localPath = path; 
+
+      _localPath = path;
       await _loadLocalFiles();
-      
+
       if (selectItem != null && _localFiles != null) {
         try {
-          final itemToSelect = _localFiles!.firstWhere(
-            (file) => file.path == selectItem.path
-          );
+          final itemToSelect =
+              _localFiles!.firstWhere((file) => file.path == selectItem.path);
           _localSelection.clear();
           _localSelection.add(itemToSelect);
           _lastSelectedLocal = itemToSelect;
-          _itemToScrollTo = itemToSelect; 
+          _itemToScrollTo = itemToSelect;
         } catch (e) {
-          debugPrint('⚠️ Could not find item to select after navigation: ${selectItem.name}');
+          debugPrint(
+              '⚠️ Could not find item to select after navigation: ${selectItem.name}');
         }
       }
-      
+
       notifyListeners();
       debugPrint('📁 Navigated to: $localPath');
     } else {
       // Remote Navigation Logic
       _remotePath = path;
       await refreshPanel(PanelSide.remote);
-      
+
       if (selectItem != null && _remoteFiles != null) {
         try {
-          final itemToSelect = _remoteFiles!.firstWhere(
-            (file) => file.uuid == selectItem.uuid
-          );
+          final itemToSelect =
+              _remoteFiles!.firstWhere((file) => file.uuid == selectItem.uuid);
           _remoteSelection.clear();
           _remoteSelection.add(itemToSelect);
           _lastSelectedRemote = itemToSelect;
-          _itemToScrollTo = itemToSelect; 
+          _itemToScrollTo = itemToSelect;
         } catch (e) {
-          debugPrint('⚠️ Could not find item to select after navigation: ${selectItem.name}');
+          debugPrint(
+              '⚠️ Could not find item to select after navigation: ${selectItem.name}');
         }
       }
-      
+
       debugPrint('📁 Navigated to: $_remotePath');
     }
     _syncTabPath(side);
@@ -1103,13 +1191,14 @@ class AppState extends ChangeNotifier {
     } else {
       final newPath = p.posix.join(_remotePath, item.name);
       debugPrint('🔍 Attempting to navigate to: $newPath');
-      
+
       try {
         await navigateToPath(side, newPath);
       } catch (e) {
         debugPrint('⚠️ Navigation failed: $e');
-        
-        _errors.add(AppError('Cannot open folder: ${item.name}. Path may not exist.'));
+
+        _errors.add(
+            AppError('Cannot open folder: ${item.name}. Path may not exist.'));
         notifyListeners();
       }
     }
@@ -1121,10 +1210,13 @@ class AppState extends ChangeNotifier {
         : _remoteSelection.contains(item);
   }
 
-  void toggleSelection(PanelSide side, FileItem item, {bool shiftKey = false, bool ctrlKey = false}) {
-    final selection = side == PanelSide.local ? _localSelection : _remoteSelection;
-    final files = side == PanelSide.local ? _localFiles : _remoteFiles; 
-    final lastSelected = side == PanelSide.local ? _lastSelectedLocal : _lastSelectedRemote;
+  void toggleSelection(PanelSide side, FileItem item,
+      {bool shiftKey = false, bool ctrlKey = false}) {
+    final selection =
+        side == PanelSide.local ? _localSelection : _remoteSelection;
+    final files = side == PanelSide.local ? _localFiles : _remoteFiles;
+    final lastSelected =
+        side == PanelSide.local ? _lastSelectedLocal : _lastSelectedRemote;
 
     if (shiftKey && lastSelected != null && files != null) {
       final startIdx = files.indexOf(lastSelected);
@@ -1157,8 +1249,9 @@ class AppState extends ChangeNotifier {
   }
 
   void selectAll(PanelSide side) {
-    final selection = side == PanelSide.local ? _localSelection : _remoteSelection;
-    final files = side == PanelSide.local ? _localFiles : _remoteFiles; 
+    final selection =
+        side == PanelSide.local ? _localSelection : _remoteSelection;
+    final files = side == PanelSide.local ? _localFiles : _remoteFiles;
     if (files != null) {
       selection.addAll(files);
       notifyListeners();
@@ -1175,27 +1268,35 @@ class AppState extends ChangeNotifier {
     }
     notifyListeners();
   }
-  
+
   // --- Credential helper (shared by upload/download) ---
 
   Future<void> _ensureAuthenticated() async {
     if (_cloudClient is InternxtClientAdapter) {
-      final creds = await (_cloudClient as InternxtClientAdapter).config.readCredentials();
+      final creds = await (_cloudClient as InternxtClientAdapter)
+          .config
+          .readCredentials();
       if (creds == null) throw Exception('Not authenticated');
     } else if (_cloudClient is FilenClientAdapter) {
-      final creds = await (_cloudClient as FilenClientAdapter).filenConfig.readCredentials();
+      final creds = await (_cloudClient as FilenClientAdapter)
+          .filenConfig
+          .readCredentials();
       if (creds == null) throw Exception('Not authenticated');
     } else if (_cloudClient is FTPClientAdapter) {
-      final creds = await (_cloudClient as FTPClientAdapter).config.readCredentials();
+      final creds =
+          await (_cloudClient as FTPClientAdapter).config.readCredentials();
       if (creds == null) throw Exception('Not authenticated');
     } else if (_cloudClient is S3ClientAdapter) {
-      final creds = await (_cloudClient as S3ClientAdapter).config.readCredentials();
+      final creds =
+          await (_cloudClient as S3ClientAdapter).config.readCredentials();
       if (creds == null) throw Exception('Not authenticated');
     } else if (_cloudClient is SFTPClientAdapter) {
-      final creds = await (_cloudClient as SFTPClientAdapter).config.readCredentials();
+      final creds =
+          await (_cloudClient as SFTPClientAdapter).config.readCredentials();
       if (creds == null) throw Exception('Not authenticated');
     } else if (_cloudClient is WebDavClientAdapter) {
-      final creds = await (_cloudClient as WebDavClientAdapter).config.readCredentials();
+      final creds =
+          await (_cloudClient as WebDavClientAdapter).config.readCredentials();
       if (creds == null) throw Exception('Not authenticated');
     }
   }
@@ -1203,7 +1304,8 @@ class AppState extends ChangeNotifier {
   // --- File operations (queue-based) ---
 
   Future<void> uploadFiles(List<FileItem> files, {String? targetPath}) async {
-    debugPrint('📤 UPLOAD: ${files.length} files via ${_cloudClient.providerName}');
+    debugPrint(
+        '📤 UPLOAD: ${files.length} files via ${_cloudClient.providerName}');
 
     await _ensureAuthenticated();
     final target = targetPath ?? _remotePath;
@@ -1218,7 +1320,8 @@ class AppState extends ChangeNotifier {
       } else {
         fileSize = file.size ?? 0;
       }
-      fileProgresses.add(FileProgress(name: file.name, path: file.path!, size: fileSize));
+      fileProgresses
+          .add(FileProgress(name: file.name, path: file.path!, size: fileSize));
       totalBytes += fileSize;
     }
 
@@ -1227,7 +1330,8 @@ class AppState extends ChangeNotifier {
     final operation = OperationProgress(
       id: DateTime.now().millisecondsSinceEpoch.toString(),
       type: OperationType.upload,
-      sourcePath: files.length == 1 ? files.first.path! : '${files.length} files',
+      sourcePath:
+          files.length == 1 ? files.first.path! : '${files.length} files',
       targetPath: target,
       fileName: files.length == 1 ? files.first.name : '${files.length} files',
       totalBytes: totalBytes,
@@ -1261,7 +1365,8 @@ class AppState extends ChangeNotifier {
           if (file.isFolder) {
             await _uploadFolderViaClient(file.path!, target, operation);
           } else {
-            final fileData = await _localFileService.readFile(file.path!, fileItem: file);
+            final fileData =
+                await _localFileService.readFile(file.path!, fileItem: file);
             await _cloudClient.uploadFile(
               fileData,
               file.name,
@@ -1289,13 +1394,15 @@ class AppState extends ChangeNotifier {
   }
 
   Future<void> downloadFiles(List<FileItem> files, {String? localPath}) async {
-    debugPrint('⬇️ DOWNLOAD: ${files.length} files via ${_cloudClient.providerName}');
+    debugPrint(
+        '⬇️ DOWNLOAD: ${files.length} files via ${_cloudClient.providerName}');
 
     await _ensureAuthenticated();
     final target = localPath ?? _localPath;
 
     final fileProgresses = files
-        .map((f) => FileProgress(name: f.name, path: f.uuid ?? f.name, size: f.size ?? 0))
+        .map((f) => FileProgress(
+            name: f.name, path: f.uuid ?? f.name, size: f.size ?? 0))
         .toList();
     final totalBytes = files.fold(0, (sum, f) => sum + (f.size ?? 0));
 
@@ -1304,7 +1411,8 @@ class AppState extends ChangeNotifier {
     final operation = OperationProgress(
       id: DateTime.now().millisecondsSinceEpoch.toString(),
       type: OperationType.download,
-      sourcePath: files.length == 1 ? files.first.name : '${files.length} files',
+      sourcePath:
+          files.length == 1 ? files.first.name : '${files.length} files',
       targetPath: target,
       fileName: files.length == 1 ? files.first.name : '${files.length} files',
       totalBytes: totalBytes,
@@ -1377,7 +1485,8 @@ class AppState extends ChangeNotifier {
     }
   }
 
-  void _finalizeBatchOperation(OperationProgress operation, List<FileProgress> fileProgresses) {
+  void _finalizeBatchOperation(
+      OperationProgress operation, List<FileProgress> fileProgresses) {
     if (operation.isCancelled) {
       operation.fail('Cancelled by user');
     } else {
@@ -1395,12 +1504,12 @@ class AppState extends ChangeNotifier {
 
   Future<int> _calculateFolderSize(String folderPath) async {
     try {
-      // We use _localFileService to list directory. This handles macOS security scopes 
+      // We use _localFileService to list directory. This handles macOS security scopes
       // which prevents the "Operation not permitted" error.
       final entities = await _localFileService.listDirectory(folderPath);
-      
+
       if (entities == null) return 0;
-      
+
       int totalSize = 0;
       for (final entity in entities) {
         if (entity is File) {
@@ -1423,9 +1532,10 @@ class AppState extends ChangeNotifier {
   }
 
   // Helper methods for folder operations via cloud client
-  Future<void> _uploadFolderViaClient(String localPath, String remotePath, OperationProgress operation) async {
+  Future<void> _uploadFolderViaClient(
+      String localPath, String remotePath, OperationProgress operation) async {
     if (kIsWeb) return;
-    
+
     final folderName = p.basename(localPath);
     final newRemotePath = p.posix.join(remotePath, folderName);
 
@@ -1441,18 +1551,19 @@ class AppState extends ChangeNotifier {
 
     for (final entity in entities) {
       if (operation.isCancelled) break;
-      
+
       if (entity is File) {
         try {
           final fileName = p.basename(entity.path);
           // FIX: Use readFile to get bytes (handles reading permissions)
           final fileData = await _localFileService.readFile(entity.path);
-          
+
           await _cloudClient.uploadFile(fileData, fileName, newRemotePath);
           operation.currentBytes += fileData.length;
           notifyListeners();
         } catch (e) {
-          debugPrint('⚠️ Error reading/uploading file in folder ${entity.path}: $e');
+          debugPrint(
+              '⚠️ Error reading/uploading file in folder ${entity.path}: $e');
         }
       } else if (entity is Directory) {
         await _uploadFolderViaClient(entity.path, newRemotePath, operation);
@@ -1460,35 +1571,36 @@ class AppState extends ChangeNotifier {
     }
   }
 
-  Future<void> _downloadFolderViaClient(String remotePath, String localPath, OperationProgress operation) async {
+  Future<void> _downloadFolderViaClient(
+      String remotePath, String localPath, OperationProgress operation) async {
     if (kIsWeb) return;
-    
+
     final folderName = p.basename(remotePath);
     final newLocalPath = p.join(localPath, folderName);
 
     await Directory(newLocalPath).create(recursive: true);
 
     final contents = await _cloudClient.listPath(remotePath);
-    
+
     for (final file in contents['files']) {
       if (operation.isCancelled) break;
-      
+
       final fileName = file['name'];
       final fileSize = int.tryParse(file['size']?.toString() ?? '0') ?? 0;
       final localFilePath = p.join(newLocalPath, fileName);
-      
+
       await _cloudClient.downloadFileByPath(
         p.posix.join(remotePath, fileName),
         localFilePath,
       );
-      
+
       operation.currentBytes += fileSize;
       notifyListeners();
     }
 
     for (final folder in contents['folders']) {
       if (operation.isCancelled) break;
-      
+
       await _downloadFolderViaClient(
         p.posix.join(remotePath, folder['name']),
         newLocalPath,
@@ -1523,7 +1635,8 @@ class AppState extends ChangeNotifier {
     }
   }
 
-  Future<void> moveFiles(PanelSide side, List<FileItem> files, String targetPath) async {
+  Future<void> moveFiles(
+      PanelSide side, List<FileItem> files, String targetPath) async {
     if (kIsWeb && side == PanelSide.local) return;
     try {
       for (final file in files) {
@@ -1552,7 +1665,8 @@ class AppState extends ChangeNotifier {
     }
   }
 
-  Future<void> copyFiles(PanelSide side, List<FileItem> files, String targetPath) async {
+  Future<void> copyFiles(
+      PanelSide side, List<FileItem> files, String targetPath) async {
     if (kIsWeb && side == PanelSide.local) return;
     try {
       for (final file in files) {
@@ -1564,9 +1678,11 @@ class AppState extends ChangeNotifier {
             await File(file.path!).copy(newPath);
           }
         } else {
-          if (kIsWeb) throw UnsupportedError('Remote copy not supported on web');
+          if (kIsWeb)
+            throw UnsupportedError('Remote copy not supported on web');
           final tempPath = p.join(Directory.systemTemp.path, file.name);
-          await _cloudClient.downloadFileByPath(p.posix.join(_remotePath, file.name), tempPath);
+          await _cloudClient.downloadFileByPath(
+              p.posix.join(_remotePath, file.name), tempPath);
           final data = await File(tempPath).readAsBytes();
           await _cloudClient.uploadFile(data, file.name, targetPath);
           await File(tempPath).delete();
@@ -1586,12 +1702,13 @@ class AppState extends ChangeNotifier {
     await Directory(target).create(recursive: true);
     final dir = Directory(source);
     final entities = await dir.list().toList();
-    
+
     for (final entity in entities) {
       if (entity is File) {
         await entity.copy(p.join(target, p.basename(entity.path)));
       } else if (entity is Directory) {
-        await _copyDirectory(entity.path, p.join(target, p.basename(entity.path)));
+        await _copyDirectory(
+            entity.path, p.join(target, p.basename(entity.path)));
       }
     }
   }
@@ -1643,46 +1760,48 @@ class AppState extends ChangeNotifier {
     if (_isSearching) return {};
     _isSearching = true;
     notifyListeners();
-    
+
     try {
       // Check if cloud client supports search
       if (_cloudClient is InternxtClientAdapter) {
         final adapter = _cloudClient as InternxtClientAdapter;
         final results = await adapter.search(query, detailed: true);
-        
+
         final folders = (results['folders'] as List<dynamic>?)
-            ?.map((item) => FileItem(
-                  name: item['fullPath'] ?? item['name'], 
-                  isFolder: true,
-                  uuid: item['uuid'],
-                  path: item['fullPath'], 
-                ))
-            .toList() ?? [];
-            
-        final files = (results['files'] as List<dynamic>?)
-            ?.map((item) {
+                ?.map((item) => FileItem(
+                      name: item['fullPath'] ?? item['name'],
+                      isFolder: true,
+                      uuid: item['uuid'],
+                      path: item['fullPath'],
+                    ))
+                .toList() ??
+            [];
+
+        final files = (results['files'] as List<dynamic>?)?.map((item) {
               final plainName = item['name'] ?? 'Unknown';
               final fileType = item['type'] ?? '';
-              final fullName = (fileType.isNotEmpty && !plainName.endsWith(fileType)) 
-                  ? '$plainName.$fileType' 
-                  : plainName;
+              final fullName =
+                  (fileType.isNotEmpty && !plainName.endsWith(fileType))
+                      ? '$plainName.$fileType'
+                      : plainName;
               final displayName = item['fullPath'] ?? fullName;
-              
+
               return FileItem(
                 name: displayName,
                 isFolder: false,
                 uuid: item['uuid'],
-                path: item['fullPath'], 
+                path: item['fullPath'],
               );
-            })
-            .toList() ?? [];
+            }).toList() ??
+            [];
 
         _isSearching = false;
         notifyListeners();
         return {'folders': folders, 'files': files};
       } else {
         // Filen or other providers - implement as needed
-        throw UnsupportedError('Search not supported for ${_cloudClient.providerName}');
+        throw UnsupportedError(
+            'Search not supported for ${_cloudClient.providerName}');
       }
     } catch (e) {
       _errors.add(AppError("Search failed: $e"));
@@ -1696,38 +1815,39 @@ class AppState extends ChangeNotifier {
     if (_isSearching) return [];
     _isSearching = true;
     notifyListeners();
-    
+
     try {
       // Check if cloud client supports find
       if (_cloudClient is InternxtClientAdapter) {
         final adapter = _cloudClient as InternxtClientAdapter;
-        final results = await adapter.findFiles(_remotePath, pattern, maxDepth: -1);
-        
-        final files = results
-            .map((item) {
-              final plainName = item['name'] ?? 'Unknown';
-              final fileType = item['fileType'] ?? '';
-              final fullName = (fileType.isNotEmpty && !plainName.endsWith(fileType)) 
-                  ? '$plainName.$fileType' 
-                  : plainName;
-              final displayName = item['fullPath'] ?? fullName;
+        final results =
+            await adapter.findFiles(_remotePath, pattern, maxDepth: -1);
 
-              return FileItem(
-                name: displayName,
-                isFolder: false,
-                uuid: item['uuid'],
-                size: item['size'] as int?,
-                path: item['fullPath'], 
-                updatedAt: DateTime.tryParse(item['updatedAt'] ?? ''),
-              );
-            })
-            .toList();
+        final files = results.map((item) {
+          final plainName = item['name'] ?? 'Unknown';
+          final fileType = item['fileType'] ?? '';
+          final fullName =
+              (fileType.isNotEmpty && !plainName.endsWith(fileType))
+                  ? '$plainName.$fileType'
+                  : plainName;
+          final displayName = item['fullPath'] ?? fullName;
+
+          return FileItem(
+            name: displayName,
+            isFolder: false,
+            uuid: item['uuid'],
+            size: item['size'] as int?,
+            path: item['fullPath'],
+            updatedAt: DateTime.tryParse(item['updatedAt'] ?? ''),
+          );
+        }).toList();
 
         _isSearching = false;
         notifyListeners();
         return files;
       } else {
-        throw UnsupportedError('Find not supported for ${_cloudClient.providerName}');
+        throw UnsupportedError(
+            'Find not supported for ${_cloudClient.providerName}');
       }
     } catch (e) {
       _errors.add(AppError("Find failed: $e"));

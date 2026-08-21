@@ -3,8 +3,9 @@
 // loads and is byte-exact + interoperable with existing pointycastle files:
 //   - Windows  -> BCrypt / CNG (bcrypt.dll)   [validates the binding we can't run on the dev Mac]
 //   - Linux    -> OpenSSL libcrypto
-//   - macOS    -> OpenSSL if a (Homebrew) libcrypto is present, else skipped
-//                 (real macOS users get CryptoKit via cryptography_flutter)
+//   - macOS    -> OpenSSL must stay disabled; the app uses CryptoKit through
+//                 cryptography_flutter. Loading Homebrew libcrypto causes an
+//                 unrecoverable sandbox abort in App Store/TestFlight builds.
 //
 // Because each binding self-tests at load and returns null on failure, a broken
 // binding would otherwise silently fall back — this test makes that a CI failure
@@ -18,6 +19,7 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:crisp_cloud/services/openssl_aesgcm.dart';
 import 'package:crisp_cloud/services/bcrypt_aesgcm.dart';
 import 'package:crisp_cloud/services/encryption_service.dart';
+import 'package:filen_client/openssl_aesgcm.dart' as filen_openssl;
 
 void main() {
   test('platform native FFI AES-GCM loads + byte-exact + pointycastle interop',
@@ -35,6 +37,13 @@ void main() {
       name = 'OpenSSL';
       expect(provider, isNotNull,
           reason: 'OpenSSL libcrypto FFI must load on Linux');
+    } else if (Platform.isMacOS) {
+      provider = OpenSslAesGcm.tryLoad();
+      expect(provider, isNull,
+          reason: 'macOS must not attempt to load external libcrypto');
+      expect(filen_openssl.OpenSslAesGcm.tryLoad(), isNull,
+          reason: 'filen_client must not load external libcrypto on macOS');
+      return;
     } else {
       provider = OpenSslAesGcm.tryLoad();
       name = 'OpenSSL';

@@ -40,7 +40,15 @@ class TransferNotifier extends ChangeNotifier {
   bool get hasActiveOperations => _operations.any((op) => !op.isComplete);
 
   void clearCompletedOperations() {
-    _operations.removeWhere((op) => op.isComplete && op.error == null);
+    _operations.removeWhere((op) => op.isComplete || op.isCancelled);
+    notifyListeners();
+  }
+
+  void cancelAllOperations() {
+    _queue.cancelAll();
+    for (final operation in _operations.where((op) => !op.isComplete)) {
+      operation.cancel();
+    }
     notifyListeners();
   }
 
@@ -55,8 +63,8 @@ class TransferNotifier extends ChangeNotifier {
       operation.pause();
       notifyListeners();
     } catch (e) {
-      _log.warn('removeOperation failed', e);
-      }
+      _log.warn('pauseOperation failed', e);
+    }
   }
 
   void resumeOperation(String operationId) {
@@ -66,7 +74,7 @@ class TransferNotifier extends ChangeNotifier {
       notifyListeners();
     } catch (e) {
       _log.warn('resumeOperation failed', e);
-      }
+    }
   }
 
   void cancelOperation(String operationId) {
@@ -76,7 +84,7 @@ class TransferNotifier extends ChangeNotifier {
       notifyListeners();
     } catch (e) {
       _log.warn('cancelOperation failed', e);
-      }
+    }
   }
 
   Future<void> uploadFiles(List<FileItem> files, {String? targetPath}) async {
@@ -99,14 +107,16 @@ class TransferNotifier extends ChangeNotifier {
       } else {
         fileSize = file.size ?? 0;
       }
-      fileProgresses.add(FileProgress(name: file.name, path: file.path!, size: fileSize));
+      fileProgresses
+          .add(FileProgress(name: file.name, path: file.path!, size: fileSize));
       totalBytes += fileSize;
     }
 
     final operation = OperationProgress(
       id: DateTime.now().millisecondsSinceEpoch.toString(),
       type: OperationType.upload,
-      sourcePath: files.length == 1 ? files.first.path! : '${files.length} files',
+      sourcePath:
+          files.length == 1 ? files.first.path! : '${files.length} files',
       targetPath: target,
       fileName: files.length == 1 ? files.first.name : '${files.length} files',
       totalBytes: totalBytes,
@@ -140,7 +150,8 @@ class TransferNotifier extends ChangeNotifier {
           final audit = _ref.read(auditServiceProvider);
           try {
             if (file.isFolder) {
-              await _uploadFolder(file.path!, target, operation, client, localFileService);
+              await _uploadFolder(
+                  file.path!, target, operation, client, localFileService);
             } else if (!kIsWeb && file.path != null) {
               // Streaming upload on desktop/mobile — avoids buffering entire
               // file in memory.  A StreamTransformer caps buffered-ahead
@@ -186,9 +197,8 @@ class TransferNotifier extends ChangeNotifier {
               // grant), stream it in chunks rather than reading the whole file
               // into memory.
               final webStreaming = WebStreamingService();
-              final blobRef = kIsWeb
-                  ? localFileService.getWebFileRef(file.path!)
-                  : null;
+              final blobRef =
+                  kIsWeb ? localFileService.getWebFileRef(file.path!) : null;
 
               if (kIsWeb && webStreaming.isSupported && blobRef != null) {
                 int sent = 0;
@@ -214,7 +224,8 @@ class TransferNotifier extends ChangeNotifier {
               } else {
                 // Fallback for web: buffer-based upload (no Blob ref or older
                 // browser without streaming support).
-                final fileData = await localFileService.readFile(file.path!, fileItem: file);
+                final fileData =
+                    await localFileService.readFile(file.path!, fileItem: file);
                 await client.uploadFile(
                   fileData,
                   file.name,
@@ -243,7 +254,7 @@ class TransferNotifier extends ChangeNotifier {
                 await client.persistInterruptedUploads();
               } catch (e) {
                 _log.warn('operation failed', e);
-                }
+              }
             }
             await audit.logError(
               operation: AuditOperation.upload,
@@ -282,14 +293,16 @@ class TransferNotifier extends ChangeNotifier {
     final remotePath = _ref.read(panelProvider(PanelSide.remote)).currentPath;
 
     final fileProgresses = files
-        .map((f) => FileProgress(name: f.name, path: f.uuid ?? f.name, size: f.size ?? 0))
+        .map((f) => FileProgress(
+            name: f.name, path: f.uuid ?? f.name, size: f.size ?? 0))
         .toList();
     final totalBytes = files.fold(0, (sum, f) => sum + (f.size ?? 0));
 
     final operation = OperationProgress(
       id: DateTime.now().millisecondsSinceEpoch.toString(),
       type: OperationType.download,
-      sourcePath: files.length == 1 ? files.first.name : '${files.length} files',
+      sourcePath:
+          files.length == 1 ? files.first.name : '${files.length} files',
       targetPath: target,
       fileName: files.length == 1 ? files.first.name : '${files.length} files',
       totalBytes: totalBytes,
@@ -315,13 +328,15 @@ class TransferNotifier extends ChangeNotifier {
           if (operation.isPaused) await operation.pauseFuture;
           if (operation.isCancelled) return;
 
-          final fileRemotePath = file.path ?? p.posix.join(remotePath, file.name);
+          final fileRemotePath =
+              file.path ?? p.posix.join(remotePath, file.name);
           final audit = _ref.read(auditServiceProvider);
 
           try {
             if (file.isFolder) {
               if (!kIsWeb) {
-                await _downloadFolder(fileRemotePath, target, operation, client);
+                await _downloadFolder(
+                    fileRemotePath, target, operation, client);
               }
             } else if (!kIsWeb) {
               // Streaming download on desktop/mobile — pipe chunks to disk
@@ -350,10 +365,11 @@ class TransferNotifier extends ChangeNotifier {
               if (file.updatedAt != null) {
                 try {
                   final f = File(localFilePath);
-                  if (await f.exists()) await f.setLastModified(file.updatedAt!);
+                  if (await f.exists())
+                    await f.setLastModified(file.updatedAt!);
                 } catch (e) {
                   _log.warn('operation failed', e);
-                  }
+                }
               }
             } else {
               // Web download path.
@@ -441,7 +457,8 @@ class TransferNotifier extends ChangeNotifier {
   }
 
   // --- Helpers ---
-  void _finalizeBatch(OperationProgress operation, List<FileProgress> fileProgresses) {
+  void _finalizeBatch(
+      OperationProgress operation, List<FileProgress> fileProgresses) {
     if (operation.isCancelled) {
       operation.fail('Cancelled by user');
     } else {
@@ -457,7 +474,8 @@ class TransferNotifier extends ChangeNotifier {
     notifyListeners();
   }
 
-  Future<int> _calculateFolderSize(String folderPath, dynamic localFileService) async {
+  Future<int> _calculateFolderSize(
+      String folderPath, dynamic localFileService) async {
     try {
       final entities = await localFileService.listDirectory(folderPath);
       if (entities == null) return 0;
@@ -468,9 +486,10 @@ class TransferNotifier extends ChangeNotifier {
             totalSize += (await entity.stat()).size;
           } catch (e) {
             _log.warn('operation failed', e);
-            }
+          }
         } else if (entity is Directory) {
-          totalSize += await _calculateFolderSize(entity.path, localFileService);
+          totalSize +=
+              await _calculateFolderSize(entity.path, localFileService);
         }
       }
       return totalSize;
@@ -481,13 +500,18 @@ class TransferNotifier extends ChangeNotifier {
   }
 
   Future<void> _uploadFolder(
-    String localPath, String remotePath, OperationProgress operation,
-    dynamic client, dynamic localFileService,
+    String localPath,
+    String remotePath,
+    OperationProgress operation,
+    dynamic client,
+    dynamic localFileService,
   ) async {
     if (kIsWeb) return;
     final folderName = p.basename(localPath);
     final newRemotePath = p.posix.join(remotePath, folderName);
-    try { await client.createFolderPath(newRemotePath); } catch (_) {}
+    try {
+      await client.createFolderPath(newRemotePath);
+    } catch (_) {}
 
     final entities = await localFileService.listDirectory(localPath);
     if (entities == null) return;
@@ -503,15 +527,19 @@ class TransferNotifier extends ChangeNotifier {
           notifyListeners();
         } catch (e) {
           _log.warn('operation failed', e);
-          }
+        }
       } else if (entity is Directory) {
-        await _uploadFolder(entity.path, newRemotePath, operation, client, localFileService);
+        await _uploadFolder(
+            entity.path, newRemotePath, operation, client, localFileService);
       }
     }
   }
 
   Future<void> _downloadFolder(
-    String remotePath, String localPath, OperationProgress operation, dynamic client,
+    String remotePath,
+    String localPath,
+    OperationProgress operation,
+    dynamic client,
   ) async {
     if (kIsWeb) return;
     final folderName = p.basename(remotePath);
@@ -523,14 +551,16 @@ class TransferNotifier extends ChangeNotifier {
       if (operation.isCancelled) break;
       final fileName = file['name'];
       final fileSize = int.tryParse(file['size']?.toString() ?? '0') ?? 0;
-      await client.downloadFileByPath(p.posix.join(remotePath, fileName), p.join(newLocalPath, fileName));
+      await client.downloadFileByPath(
+          p.posix.join(remotePath, fileName), p.join(newLocalPath, fileName));
       operation.currentBytes += fileSize;
       notifyListeners();
     }
 
     for (final folder in contents['folders']) {
       if (operation.isCancelled) break;
-      await _downloadFolder(p.posix.join(remotePath, folder['name']), newLocalPath, operation, client);
+      await _downloadFolder(p.posix.join(remotePath, folder['name']),
+          newLocalPath, operation, client);
     }
   }
 }

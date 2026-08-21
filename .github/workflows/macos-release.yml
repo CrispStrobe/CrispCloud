@@ -196,6 +196,9 @@ jobs:
             || { echo "::error::app-sandbox entitlement missing from the signed .app"; exit 1; }
           codesign --verify --deep --strict --verbose=2 "$APP" 2>&1 | tail -3
 
+      - name: Launch signed sandboxed app
+        run: tool/macos_startup_smoke.sh "$APP" 12
+
       - name: Build the signed .pkg
         run: |
           set -euo pipefail

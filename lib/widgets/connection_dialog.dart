@@ -27,20 +27,23 @@ class _ConnectionDialogState extends ConsumerState<ConnectionDialog> {
   final _emailController = TextEditingController();
   final _passwordController = TextEditingController();
   final _tfaController = TextEditingController();
-  
+
   // SFTP Specific Controllers
   final _hostController = TextEditingController();
-  final _portController = TextEditingController(text: '22'); // Default SFTP port
+  final _portController =
+      TextEditingController(text: '22'); // Default SFTP port
   final _sftpUserController = TextEditingController();
 
   // FTP Specific Controllers
   final _ftpHostController = TextEditingController();
-  final _ftpPortController = TextEditingController(text: '21'); // Default FTP port
+  final _ftpPortController =
+      TextEditingController(text: '21'); // Default FTP port
   final _ftpUserController = TextEditingController();
   bool _ftpUseTLS = false;
 
   // S3 Specific Controllers
-  final _s3EndpointController = TextEditingController(text: 'https://s3.amazonaws.com');
+  final _s3EndpointController =
+      TextEditingController(text: 'https://s3.amazonaws.com');
   final _s3RegionController = TextEditingController(text: 'us-east-1');
   final _s3BucketController = TextEditingController();
   final _s3AccessKeyController = TextEditingController();
@@ -104,21 +107,54 @@ class _ConnectionDialogState extends ConsumerState<ConnectionDialog> {
       case CloudProvider.b2:
         return {'email': _emailController.text};
       case CloudProvider.sftp:
-        return {'host': _hostController.text, 'port': _portController.text, 'user': _sftpUserController.text};
+        return {
+          'host': _hostController.text,
+          'port': _portController.text,
+          'user': _sftpUserController.text
+        };
       case CloudProvider.ftp:
-        return {'host': _ftpHostController.text, 'port': _ftpPortController.text, 'user': _ftpUserController.text, 'tls': _ftpUseTLS.toString()};
+        return {
+          'host': _ftpHostController.text,
+          'port': _ftpPortController.text,
+          'user': _ftpUserController.text,
+          'tls': _ftpUseTLS.toString()
+        };
       case CloudProvider.s3:
-        return {'endpoint': _s3EndpointController.text, 'region': _s3RegionController.text, 'bucket': _s3BucketController.text, 'accessKey': _s3AccessKeyController.text, 'encryption': _s3Encryption.name, 'storageClass': _s3StorageClass.headerValue, if (_s3KmsKeyIdController.text.isNotEmpty) 'kmsKeyId': _s3KmsKeyIdController.text};
+        return {
+          'endpoint': _s3EndpointController.text,
+          'region': _s3RegionController.text,
+          'bucket': _s3BucketController.text,
+          'accessKey': _s3AccessKeyController.text,
+          'encryption': _s3Encryption.name,
+          'storageClass': _s3StorageClass.headerValue,
+          if (_s3KmsKeyIdController.text.isNotEmpty)
+            'kmsKeyId': _s3KmsKeyIdController.text
+        };
       case CloudProvider.gdrive:
-        return {'clientId': _gdriveClientIdController.text, 'clientSecret': _gdriveClientSecretController.text};
+        return {
+          'clientId': _gdriveClientIdController.text,
+          'clientSecret': _gdriveClientSecretController.text
+        };
       case CloudProvider.onedrive:
-        return {'clientId': _onedriveClientIdController.text, 'clientSecret': _onedriveClientSecretController.text};
+        return {
+          'clientId': _onedriveClientIdController.text,
+          'clientSecret': _onedriveClientSecretController.text
+        };
       case CloudProvider.dropbox:
-        return {'appKey': _dropboxAppKeyController.text, 'appSecret': _dropboxAppSecretController.text};
+        return {
+          'appKey': _dropboxAppKeyController.text,
+          'appSecret': _dropboxAppSecretController.text
+        };
       case CloudProvider.pcloud:
-        return {'appKey': _pcloudAppKeyController.text, 'eu': _pcloudUseEu.toString()};
+        return {
+          'appKey': _pcloudAppKeyController.text,
+          'eu': _pcloudUseEu.toString()
+        };
       case CloudProvider.nextcloud:
-        return {'serverUrl': _nextcloudServerUrlController.text, 'username': _nextcloudUsernameController.text};
+        return {
+          'serverUrl': _nextcloudServerUrlController.text,
+          'username': _nextcloudUsernameController.text
+        };
       case CloudProvider.webdav:
         return {'host': _hostController.text, 'user': _emailController.text};
       default:
@@ -142,14 +178,16 @@ class _ConnectionDialogState extends ConsumerState<ConnectionDialog> {
         _ftpUseTLS = f['tls'] == 'true';
         break;
       case CloudProvider.s3:
-        _s3EndpointController.text = f['endpoint'] ?? 'https://s3.amazonaws.com';
+        _s3EndpointController.text =
+            f['endpoint'] ?? 'https://s3.amazonaws.com';
         _s3RegionController.text = f['region'] ?? 'us-east-1';
         _s3BucketController.text = f['bucket'] ?? '';
         _s3AccessKeyController.text = f['accessKey'] ?? '';
         final encName = f['encryption'];
         if (encName != null) {
           _s3Encryption = S3Encryption.values.firstWhere(
-            (e) => e.name == encName, orElse: () => S3Encryption.none);
+              (e) => e.name == encName,
+              orElse: () => S3Encryption.none);
         }
         final scVal = f['storageClass'];
         if (scVal != null) {
@@ -204,7 +242,9 @@ class _ConnectionDialogState extends ConsumerState<ConnectionDialog> {
           onSubmitted: (v) => Navigator.pop(ctx, v),
         ),
         actions: [
-          TextButton(onPressed: () => Navigator.pop(ctx), child: Text(AppLocalizations.of(context)!.cancel)),
+          TextButton(
+              onPressed: () => Navigator.pop(ctx),
+              child: Text(AppLocalizations.of(context)!.cancel)),
           ElevatedButton(
             onPressed: () => Navigator.pop(ctx, nameController.text),
             child: Text(AppLocalizations.of(context)!.save),
@@ -258,95 +298,68 @@ class _ConnectionDialogState extends ConsumerState<ConnectionDialog> {
                 labelText: 'Provider',
                 border: OutlineInputBorder(),
               ),
-              items: [
-                // Azure Blob Storage
-                const DropdownMenuItem(
-                  value: CloudProvider.azure,
-                  child: Text('Azure Blob Storage'),
-                ),
-                // Backblaze B2
-                const DropdownMenuItem(
-                  value: CloudProvider.b2,
-                  child: Text('Backblaze B2'),
-                ),
-                // Dropbox
-                const DropdownMenuItem(
-                  value: CloudProvider.dropbox,
-                  child: Text('Dropbox'),
-                ),
-                const DropdownMenuItem(
-                  value: CloudProvider.filen,
-                  child: Text('Filen'),
-                ),
-                // FTP / FTPS
-                const DropdownMenuItem(
-                  value: CloudProvider.ftp,
-                  child: Text('FTP / FTPS'),
-                ),
-                // Google Drive
-                const DropdownMenuItem(
-                  value: CloudProvider.gdrive,
-                  child: Text('Google Drive'),
-                ),
-                // OneDrive
-                const DropdownMenuItem(
-                  value: CloudProvider.onedrive,
-                  child: Text('OneDrive / SharePoint'),
-                ),
-                // pCloud
-                const DropdownMenuItem(
-                  value: CloudProvider.pcloud,
-                  child: Text('pCloud'),
-                ),
-                // SFTP / Storage Box
-                const DropdownMenuItem(
-                  value: CloudProvider.sftp,
-                  child: Text('SFTP / Storage Box'),
-                ),
-                // S3
-                const DropdownMenuItem(
-                  value: CloudProvider.s3,
-                  child: Text('S3 / S3-Compatible'),
-                ),
-                // Nextcloud
-                const DropdownMenuItem(
-                  value: CloudProvider.nextcloud,
-                  child: Text('Nextcloud'),
-                ),
-                // WebDAV
-                const DropdownMenuItem(
-                  value: CloudProvider.webdav,
-                  child: Text('WebDAV'),
-                ),
-                // Internxt (Conditional)
-                DropdownMenuItem(
-                  value: CloudProvider.internxt,
-                  enabled: CloudStorageFactory.isInternxtSupported, 
+              items: CloudProvider.values.map((provider) {
+                final enabled = provider != CloudProvider.internxt ||
+                    CloudStorageFactory.isInternxtSupported;
+                return DropdownMenuItem(
+                  value: provider,
+                  enabled: enabled,
                   child: Text(
-                    CloudStorageFactory.isInternxtSupported 
-                      ? 'Internxt' 
-                      : 'Internxt (Disabled)',
+                    enabled
+                        ? provider.displayName
+                        : '${provider.displayName} (Disabled)',
                     style: TextStyle(
-                      color: CloudStorageFactory.isInternxtSupported 
-                          ? null 
-                          : Theme.of(context).disabledColor,
+                      color: enabled ? null : Theme.of(context).disabledColor,
                     ),
                   ),
+                );
+              }).toList(),
+              onChanged: _isLoading
+                  ? null
+                  : (value) {
+                      if (value != null) {
+                        if (value == CloudProvider.internxt &&
+                            !CloudStorageFactory.isInternxtSupported) {
+                          return;
+                        }
+                        setState(() {
+                          _selectedProvider = value;
+                          _error = null;
+                          _needs2fa = false;
+                        });
+                        _loadProfiles();
+                      }
+                    },
+            ),
+
+            const SizedBox(height: 8),
+            Semantics(
+              label: 'Provider setup guidance',
+              child: Container(
+                width: double.infinity,
+                padding: const EdgeInsets.all(12),
+                decoration: BoxDecoration(
+                  color: Theme.of(context).colorScheme.surfaceContainerHighest,
+                  borderRadius: BorderRadius.circular(8),
                 ),
-              ],
-              onChanged: _isLoading ? null : (value) {
-                if (value != null) {
-                  if (value == CloudProvider.internxt && !CloudStorageFactory.isInternxtSupported) {
-                    return; 
-                  }
-                  setState(() {
-                    _selectedProvider = value;
-                    _error = null;
-                    _needs2fa = false;
-                  });
-                  _loadProfiles();
-                }
-              },
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      _selectedProvider.onboardingDescription,
+                      style: Theme.of(context).textTheme.bodySmall,
+                    ),
+                    const SizedBox(height: 4),
+                    Text(
+                      _selectedProvider.credentialHint,
+                      style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                            color:
+                                Theme.of(context).colorScheme.onSurfaceVariant,
+                          ),
+                    ),
+                  ],
+                ),
+              ),
             ),
 
             // --- 1b. Connection Profiles ---
@@ -362,13 +375,16 @@ class _ConnectionDialogState extends ConsumerState<ConnectionDialog> {
                         isDense: true,
                       ),
                       hint: const Text('Load a saved profile...'),
-                      items: _profiles.map((p) => DropdownMenuItem(
-                        value: p.name,
-                        child: Text(p.name),
-                      )).toList(),
+                      items: _profiles
+                          .map((p) => DropdownMenuItem(
+                                value: p.name,
+                                child: Text(p.name),
+                              ))
+                          .toList(),
                       onChanged: (name) {
                         if (name == null) return;
-                        final profile = _profiles.firstWhere((p) => p.name == name);
+                        final profile =
+                            _profiles.firstWhere((p) => p.name == name);
                         _applyProfile(profile);
                       },
                     ),
@@ -386,19 +402,29 @@ class _ConnectionDialogState extends ConsumerState<ConnectionDialog> {
                           title: const Text('Delete Profile'),
                           content: Column(
                             mainAxisSize: MainAxisSize.min,
-                            children: _profiles.map((p) => ListTile(
-                              title: Text(p.name),
-                              trailing: IconButton(
-                                icon: const Icon(Icons.delete, color: Colors.red, size: 18),
-                                onPressed: () => Navigator.pop(ctx, p.name),
-                              ),
-                            )).toList(),
+                            children: _profiles
+                                .map((p) => ListTile(
+                                      title: Text(p.name),
+                                      trailing: IconButton(
+                                        icon: const Icon(Icons.delete,
+                                            color: Colors.red, size: 18),
+                                        onPressed: () =>
+                                            Navigator.pop(ctx, p.name),
+                                      ),
+                                    ))
+                                .toList(),
                           ),
-                          actions: [TextButton(onPressed: () => Navigator.pop(ctx), child: Text(AppLocalizations.of(context)!.cancel))],
+                          actions: [
+                            TextButton(
+                                onPressed: () => Navigator.pop(ctx),
+                                child:
+                                    Text(AppLocalizations.of(context)!.cancel))
+                          ],
                         ),
                       );
                       if (name != null) {
-                        await _profileService?.delete(name, _selectedProvider.name);
+                        await _profileService?.delete(
+                            name, _selectedProvider.name);
                         _loadProfiles();
                       }
                     },
@@ -411,7 +437,8 @@ class _ConnectionDialogState extends ConsumerState<ConnectionDialog> {
               alignment: Alignment.centerRight,
               child: TextButton.icon(
                 icon: const Icon(Icons.save, size: 14),
-                label: const Text('Save as Profile', style: TextStyle(fontSize: 12)),
+                label: const Text('Save as Profile',
+                    style: TextStyle(fontSize: 12)),
                 onPressed: _saveProfile,
               ),
             ),
@@ -425,9 +452,13 @@ class _ConnectionDialogState extends ConsumerState<ConnectionDialog> {
                 color: Colors.red.shade100,
                 child: Row(
                   children: [
-                    const Icon(Icons.error_outline, color: Colors.red, size: 20),
+                    const Icon(Icons.error_outline,
+                        color: Colors.red, size: 20),
                     const SizedBox(width: 8),
-                    Expanded(child: Text(_error!, style: const TextStyle(color: Colors.red, fontSize: 13))),
+                    Expanded(
+                        child: Text(_error!,
+                            style: const TextStyle(
+                                color: Colors.red, fontSize: 13))),
                   ],
                 ),
               ),
@@ -438,7 +469,10 @@ class _ConnectionDialogState extends ConsumerState<ConnectionDialog> {
               Container(
                 padding: const EdgeInsets.all(10),
                 decoration: BoxDecoration(
-                  color: Theme.of(context).colorScheme.primaryContainer.withValues(alpha: 0.3),
+                  color: Theme.of(context)
+                      .colorScheme
+                      .primaryContainer
+                      .withValues(alpha: 0.3),
                   borderRadius: BorderRadius.circular(8),
                 ),
                 child: const Row(
@@ -459,7 +493,10 @@ class _ConnectionDialogState extends ConsumerState<ConnectionDialog> {
               Container(
                 padding: const EdgeInsets.all(10),
                 decoration: BoxDecoration(
-                  color: Theme.of(context).colorScheme.primaryContainer.withValues(alpha: 0.3),
+                  color: Theme.of(context)
+                      .colorScheme
+                      .primaryContainer
+                      .withValues(alpha: 0.3),
                   borderRadius: BorderRadius.circular(8),
                 ),
                 child: const Row(
@@ -503,7 +540,10 @@ class _ConnectionDialogState extends ConsumerState<ConnectionDialog> {
               Container(
                 padding: const EdgeInsets.all(8),
                 decoration: BoxDecoration(
-                  color: Theme.of(context).colorScheme.primaryContainer.withValues(alpha: 0.3),
+                  color: Theme.of(context)
+                      .colorScheme
+                      .primaryContainer
+                      .withValues(alpha: 0.3),
                   borderRadius: BorderRadius.circular(8),
                 ),
                 child: const Row(
@@ -528,7 +568,8 @@ class _ConnectionDialogState extends ConsumerState<ConnectionDialog> {
                   hintText: '123456789.apps.googleusercontent.com',
                   border: OutlineInputBorder(),
                   prefixIcon: Icon(Icons.key),
-                  helperText: 'From Google Cloud Console → APIs & Services → Credentials',
+                  helperText:
+                      'From Google Cloud Console → APIs & Services → Credentials',
                 ),
                 enabled: !_isLoading,
               ),
@@ -547,7 +588,10 @@ class _ConnectionDialogState extends ConsumerState<ConnectionDialog> {
               Container(
                 padding: const EdgeInsets.all(8),
                 decoration: BoxDecoration(
-                  color: Theme.of(context).colorScheme.primaryContainer.withValues(alpha: 0.3),
+                  color: Theme.of(context)
+                      .colorScheme
+                      .primaryContainer
+                      .withValues(alpha: 0.3),
                   borderRadius: BorderRadius.circular(8),
                 ),
                 child: const Row(
@@ -591,7 +635,10 @@ class _ConnectionDialogState extends ConsumerState<ConnectionDialog> {
               Container(
                 padding: const EdgeInsets.all(8),
                 decoration: BoxDecoration(
-                  color: Theme.of(context).colorScheme.primaryContainer.withValues(alpha: 0.3),
+                  color: Theme.of(context)
+                      .colorScheme
+                      .primaryContainer
+                      .withValues(alpha: 0.3),
                   borderRadius: BorderRadius.circular(8),
                 ),
                 child: const Row(
@@ -623,9 +670,13 @@ class _ConnectionDialogState extends ConsumerState<ConnectionDialog> {
               const SizedBox(height: 12),
               CheckboxListTile(
                 title: const Text('Use EU servers (eapi.pcloud.com)'),
-                subtitle: const Text('Required if your account is registered in the EU', style: TextStyle(fontSize: 11)),
+                subtitle: const Text(
+                    'Required if your account is registered in the EU',
+                    style: TextStyle(fontSize: 11)),
                 value: _pcloudUseEu,
-                onChanged: _isLoading ? null : (v) => setState(() => _pcloudUseEu = v ?? false),
+                onChanged: _isLoading
+                    ? null
+                    : (v) => setState(() => _pcloudUseEu = v ?? false),
                 controlAffinity: ListTileControlAffinity.leading,
                 contentPadding: EdgeInsets.zero,
                 dense: true,
@@ -634,7 +685,10 @@ class _ConnectionDialogState extends ConsumerState<ConnectionDialog> {
               Container(
                 padding: const EdgeInsets.all(8),
                 decoration: BoxDecoration(
-                  color: Theme.of(context).colorScheme.primaryContainer.withValues(alpha: 0.3),
+                  color: Theme.of(context)
+                      .colorScheme
+                      .primaryContainer
+                      .withValues(alpha: 0.3),
                   borderRadius: BorderRadius.circular(8),
                 ),
                 child: const Row(
@@ -726,13 +780,19 @@ class _ConnectionDialogState extends ConsumerState<ConnectionDialog> {
                   prefixIcon: Icon(Icons.enhanced_encryption_outlined),
                 ),
                 items: const [
-                  DropdownMenuItem(value: S3Encryption.none, child: Text('None')),
-                  DropdownMenuItem(value: S3Encryption.sseS3, child: Text('SSE-S3 (AES-256)')),
-                  DropdownMenuItem(value: S3Encryption.sseKms, child: Text('SSE-KMS')),
+                  DropdownMenuItem(
+                      value: S3Encryption.none, child: Text('None')),
+                  DropdownMenuItem(
+                      value: S3Encryption.sseS3,
+                      child: Text('SSE-S3 (AES-256)')),
+                  DropdownMenuItem(
+                      value: S3Encryption.sseKms, child: Text('SSE-KMS')),
                 ],
-                onChanged: _isLoading ? null : (v) {
-                  if (v != null) setState(() => _s3Encryption = v);
-                },
+                onChanged: _isLoading
+                    ? null
+                    : (v) {
+                        if (v != null) setState(() => _s3Encryption = v);
+                      },
               ),
               if (_s3Encryption == S3Encryption.sseKms) ...[
                 const SizedBox(height: 12),
@@ -761,9 +821,11 @@ class _ConnectionDialogState extends ConsumerState<ConnectionDialog> {
                           child: Text(sc.displayName),
                         ))
                     .toList(),
-                onChanged: _isLoading ? null : (v) {
-                  if (v != null) setState(() => _s3StorageClass = v);
-                },
+                onChanged: _isLoading
+                    ? null
+                    : (v) {
+                        if (v != null) setState(() => _s3StorageClass = v);
+                      },
               ),
             ] else if (isFtp) ...[
               // FTP: Host & Port Row
@@ -815,11 +877,13 @@ class _ConnectionDialogState extends ConsumerState<ConnectionDialog> {
               CheckboxListTile(
                 title: const Text('Use TLS (FTPS)'),
                 value: _ftpUseTLS,
-                onChanged: _isLoading ? null : (value) {
-                  setState(() {
-                    _ftpUseTLS = value ?? false;
-                  });
-                },
+                onChanged: _isLoading
+                    ? null
+                    : (value) {
+                        setState(() {
+                          _ftpUseTLS = value ?? false;
+                        });
+                      },
                 controlAffinity: ListTileControlAffinity.leading,
                 contentPadding: EdgeInsets.zero,
               ),
@@ -869,12 +933,13 @@ class _ConnectionDialogState extends ConsumerState<ConnectionDialog> {
                 enabled: !_isLoading,
               ),
             ] else if (isWebDav) ...[
-               // WebDAV Fields
-               TextField(
+              // WebDAV Fields
+              TextField(
                 controller: _hostController,
                 decoration: const InputDecoration(
                   labelText: 'Server URL',
-                  hintText: 'https://cloud.example.com/remote.php/dav/files/user/',
+                  hintText:
+                      'https://cloud.example.com/remote.php/dav/files/user/',
                   border: OutlineInputBorder(),
                   prefixIcon: Icon(Icons.link),
                 ),
@@ -890,7 +955,6 @@ class _ConnectionDialogState extends ConsumerState<ConnectionDialog> {
                 ),
                 enabled: !_isLoading,
               ),
-
             ] else if (isNextcloud) ...[
               // Nextcloud: Server URL
               TextField(
@@ -965,7 +1029,8 @@ class _ConnectionDialogState extends ConsumerState<ConnectionDialog> {
               alignment: Alignment.centerLeft,
               child: TextButton.icon(
                 icon: const Icon(Icons.vpn_lock, size: 16),
-                label: const Text('Proxy Settings', style: TextStyle(fontSize: 12)),
+                label: const Text('Proxy Settings',
+                    style: TextStyle(fontSize: 12)),
                 onPressed: () {
                   showDialog(
                     context: context,
@@ -980,11 +1045,15 @@ class _ConnectionDialogState extends ConsumerState<ConnectionDialog> {
             CheckboxListTile(
               value: _enableEncryption,
               onChanged: (v) => setState(() => _enableEncryption = v ?? false),
-              title: const Text('Enable Client-Side Encryption', style: TextStyle(fontSize: 14)),
-              subtitle: const Text('Encrypt files before upload (AES-256-GCM)', style: TextStyle(fontSize: 12)),
+              title: const Text('Enable Client-Side Encryption',
+                  style: TextStyle(fontSize: 14)),
+              subtitle: const Text('Encrypt files before upload (AES-256-GCM)',
+                  style: TextStyle(fontSize: 12)),
               secondary: Icon(
                 _enableEncryption ? Icons.lock : Icons.lock_open,
-                color: _enableEncryption ? Theme.of(context).colorScheme.primary : null,
+                color: _enableEncryption
+                    ? Theme.of(context).colorScheme.primary
+                    : null,
               ),
               dense: true,
               contentPadding: EdgeInsets.zero,
@@ -998,7 +1067,8 @@ class _ConnectionDialogState extends ConsumerState<ConnectionDialog> {
                   labelText: 'Encryption Passphrase',
                   border: OutlineInputBorder(),
                   prefixIcon: Icon(Icons.key),
-                  helperText: 'Files will be encrypted/decrypted with this passphrase',
+                  helperText:
+                      'Files will be encrypted/decrypted with this passphrase',
                 ),
                 enabled: !_isLoading,
               ),
@@ -1079,7 +1149,8 @@ class _ConnectionDialogState extends ConsumerState<ConnectionDialog> {
         }
         final clientId = _gdriveClientIdController.text.trim();
         final clientSecret = _gdriveClientSecretController.text.trim();
-        identity = clientSecret.isNotEmpty ? '$clientId|$clientSecret' : clientId;
+        identity =
+            clientSecret.isNotEmpty ? '$clientId|$clientSecret' : clientId;
         password = '';
       } else if (_selectedProvider == CloudProvider.onedrive) {
         // OneDrive: OAuth2 browser flow
@@ -1088,7 +1159,8 @@ class _ConnectionDialogState extends ConsumerState<ConnectionDialog> {
         }
         final clientId = _onedriveClientIdController.text.trim();
         final clientSecret = _onedriveClientSecretController.text.trim();
-        identity = clientSecret.isNotEmpty ? '$clientId|$clientSecret' : clientId;
+        identity =
+            clientSecret.isNotEmpty ? '$clientId|$clientSecret' : clientId;
         password = '';
       } else if (_selectedProvider == CloudProvider.pcloud) {
         // pCloud: OAuth2 browser flow
@@ -1104,10 +1176,12 @@ class _ConnectionDialogState extends ConsumerState<ConnectionDialog> {
             _s3BucketController.text.isEmpty ||
             _s3AccessKeyController.text.isEmpty ||
             _s3SecretKeyController.text.isEmpty) {
-          throw Exception('Endpoint, Bucket, Access Key, and Secret Key are required');
+          throw Exception(
+              'Endpoint, Bucket, Access Key, and Secret Key are required');
         }
         final endpoint = _s3EndpointController.text.trim();
-        if (!endpoint.startsWith('http://') && !endpoint.startsWith('https://')) {
+        if (!endpoint.startsWith('http://') &&
+            !endpoint.startsWith('https://')) {
           throw Exception('Endpoint must start with http:// or https://');
         }
         final region = _s3RegionController.text.trim().isEmpty
@@ -1115,69 +1189,76 @@ class _ConnectionDialogState extends ConsumerState<ConnectionDialog> {
             : _s3RegionController.text.trim();
         final bucket = _s3BucketController.text.trim();
         // Pack as: accessKey@endpoint/bucket?region=us-east-1
-        identity = '${_s3AccessKeyController.text.trim()}@$endpoint/$bucket?region=$region';
+        identity =
+            '${_s3AccessKeyController.text.trim()}@$endpoint/$bucket?region=$region';
         password = _s3SecretKeyController.text;
       } else if (_selectedProvider == CloudProvider.ftp) {
         // FTP Validation
-        if (_ftpHostController.text.isEmpty || _ftpUserController.text.isEmpty) {
+        if (_ftpHostController.text.isEmpty ||
+            _ftpUserController.text.isEmpty) {
           throw Exception('Host and Username are required');
         }
 
         // Validate port
-        final portStr = _ftpPortController.text.isEmpty ? '21' : _ftpPortController.text;
+        final portStr =
+            _ftpPortController.text.isEmpty ? '21' : _ftpPortController.text;
         final portNum = int.tryParse(portStr);
         if (portNum == null || portNum < 1 || portNum > 65535) {
           throw Exception('Port must be a number between 1 and 65535');
         }
         // Construct composite identity for FTP Adapter: "username@host:port?tls=true"
         final tlsFlag = _ftpUseTLS ? '?tls=true' : '';
-        identity = '${_ftpUserController.text}@${_ftpHostController.text}:$portStr$tlsFlag';
+        identity =
+            '${_ftpUserController.text}@${_ftpHostController.text}:$portStr$tlsFlag';
         password = _passwordController.text;
       } else if (_selectedProvider == CloudProvider.sftp) {
         // SFTP Validation
         if (_hostController.text.isEmpty || _sftpUserController.text.isEmpty) {
           throw Exception('Host and Username are required');
         }
-        
+
         // Validate port
-        final portStr = _portController.text.isEmpty ? '22' : _portController.text;
+        final portStr =
+            _portController.text.isEmpty ? '22' : _portController.text;
         final portNum = int.tryParse(portStr);
         if (portNum == null || portNum < 1 || portNum > 65535) {
           throw Exception('Port must be a number between 1 and 65535');
         }
         // Construct composite identity for SFTP Adapter: "username@host:port"
-        identity = '${_sftpUserController.text}@${_hostController.text}:$portStr';
+        identity =
+            '${_sftpUserController.text}@${_hostController.text}:$portStr';
         password = _passwordController.text;
       } else if (_selectedProvider == CloudProvider.webdav) {
-         if (_hostController.text.isEmpty || _emailController.text.isEmpty) {
-            throw Exception('Server URL and Username are required');
-         }
-         final url = _hostController.text.trim();
-         if (!url.startsWith('http://') && !url.startsWith('https://')) {
-            throw Exception('Server URL must start with http:// or https://');
-         }
-         final parsed = Uri.tryParse(url);
-         if (parsed == null || !parsed.hasAuthority) {
-            throw Exception('Invalid server URL');
-         }
-         // Pack as: username@https://server.com/dav
-         identity = '${_emailController.text}@$url';
-         password = _passwordController.text;
+        if (_hostController.text.isEmpty || _emailController.text.isEmpty) {
+          throw Exception('Server URL and Username are required');
+        }
+        final url = _hostController.text.trim();
+        if (!url.startsWith('http://') && !url.startsWith('https://')) {
+          throw Exception('Server URL must start with http:// or https://');
+        }
+        final parsed = Uri.tryParse(url);
+        if (parsed == null || !parsed.hasAuthority) {
+          throw Exception('Invalid server URL');
+        }
+        // Pack as: username@https://server.com/dav
+        identity = '${_emailController.text}@$url';
+        password = _passwordController.text;
       } else if (_selectedProvider == CloudProvider.nextcloud) {
-         if (_nextcloudUsernameController.text.isEmpty || _nextcloudServerUrlController.text.isEmpty) {
-            throw Exception('Server URL and Username are required');
-         }
-         final url = _nextcloudServerUrlController.text.trim();
-         if (!url.startsWith('http://') && !url.startsWith('https://')) {
-            throw Exception('Server URL must start with http:// or https://');
-         }
-         final parsed = Uri.tryParse(url);
-         if (parsed == null || !parsed.hasAuthority) {
-            throw Exception('Invalid server URL');
-         }
-         // Pack as: username@https://nextcloud.example.com
-         identity = '${_nextcloudUsernameController.text.trim()}@$url';
-         password = _passwordController.text;
+        if (_nextcloudUsernameController.text.isEmpty ||
+            _nextcloudServerUrlController.text.isEmpty) {
+          throw Exception('Server URL and Username are required');
+        }
+        final url = _nextcloudServerUrlController.text.trim();
+        if (!url.startsWith('http://') && !url.startsWith('https://')) {
+          throw Exception('Server URL must start with http:// or https://');
+        }
+        final parsed = Uri.tryParse(url);
+        if (parsed == null || !parsed.hasAuthority) {
+          throw Exception('Invalid server URL');
+        }
+        // Pack as: username@https://nextcloud.example.com
+        identity = '${_nextcloudUsernameController.text.trim()}@$url';
+        password = _passwordController.text;
       } else {
         // Standard Email
         if (_emailController.text.isEmpty) {
@@ -1188,7 +1269,14 @@ class _ConnectionDialogState extends ConsumerState<ConnectionDialog> {
       }
 
       // 3. Check 2FA (Internxt/Filen only)
-      final skipTwoFa = _selectedProvider == CloudProvider.dropbox || _selectedProvider == CloudProvider.gdrive || _selectedProvider == CloudProvider.onedrive || _selectedProvider == CloudProvider.pcloud || _selectedProvider == CloudProvider.nextcloud || _selectedProvider == CloudProvider.ftp || _selectedProvider == CloudProvider.sftp || _selectedProvider == CloudProvider.s3;
+      final skipTwoFa = _selectedProvider == CloudProvider.dropbox ||
+          _selectedProvider == CloudProvider.gdrive ||
+          _selectedProvider == CloudProvider.onedrive ||
+          _selectedProvider == CloudProvider.pcloud ||
+          _selectedProvider == CloudProvider.nextcloud ||
+          _selectedProvider == CloudProvider.ftp ||
+          _selectedProvider == CloudProvider.sftp ||
+          _selectedProvider == CloudProvider.s3;
       if (!_needs2fa && !skipTwoFa && auth.client.isAuthenticated == false) {
         try {
           final needs2fa = await auth.client.is2faNeeded(identity);
@@ -1216,7 +1304,8 @@ class _ConnectionDialogState extends ConsumerState<ConnectionDialog> {
         final client = auth.client;
         if (client is S3ClientAdapter) {
           client.encryption = _s3Encryption;
-          if (_s3Encryption == S3Encryption.sseKms && _s3KmsKeyIdController.text.isNotEmpty) {
+          if (_s3Encryption == S3Encryption.sseKms &&
+              _s3KmsKeyIdController.text.isNotEmpty) {
             client.kmsKeyId = _s3KmsKeyIdController.text.trim();
           }
           client.storageClass = _s3StorageClass;

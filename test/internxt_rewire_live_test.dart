@@ -1,3 +1,4 @@
+@Tags(['live'])
 // Phase 6.c live verification — drives the rewired
 // InternxtClientAdapter against the real Internxt gateway.
 //

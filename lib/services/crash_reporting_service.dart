@@ -18,11 +18,14 @@
 //   service.reportBreadcrumb('User opened file browser', 'navigation');
 //   await service.reportError(error, stackTrace, context: {'path': '/docs'});
 
+import 'dart:async';
 import 'dart:collection';
 import 'dart:convert';
 import 'dart:io';
+import 'dart:ui' show PlatformDispatcher;
 
-import 'package:flutter/foundation.dart' show kIsWeb, kDebugMode;
+import 'package:flutter/foundation.dart'
+    show FlutterError, FlutterErrorDetails, kDebugMode, kIsWeb;
 import 'package:path/path.dart' as p;
 import 'package:path_provider/path_provider.dart';
 import 'package:shared_preferences/shared_preferences.dart';
@@ -175,6 +178,73 @@ Map<String, dynamic>? _toStringDynamicMap(dynamic value) {
   return null;
 }
 
+const _sensitiveKeyFragments = <String>{
+  'authorization',
+  'cookie',
+  'credential',
+  'email',
+  'password',
+  'passphrase',
+  'secret',
+  'token',
+};
+
+bool _isSensitiveKey(String key) {
+  final normalized = key.toLowerCase().replaceAll(RegExp(r'[^a-z0-9]'), '');
+  return _sensitiveKeyFragments.any(normalized.contains) ||
+      normalized == 'apikey' ||
+      normalized == 'accesskey' ||
+      normalized == 'privatekey' ||
+      normalized == 'encryptionkey';
+}
+
+bool _isPathKey(String key) {
+  final normalized = key.toLowerCase();
+  return normalized == 'path' ||
+      normalized.endsWith('path') ||
+      normalized.contains('directory');
+}
+
+String _sanitizeText(String value) {
+  var sanitized = value;
+  if (!kIsWeb) {
+    final home = Platform.environment['HOME'];
+    if (home != null && home.isNotEmpty) {
+      sanitized = sanitized.replaceAll(home, '<home>');
+    }
+  }
+  return sanitized.replaceAllMapped(
+    RegExp(
+      r'([?&](?:access_token|auth|key|password|secret|token)=)[^&\s]+',
+      caseSensitive: false,
+    ),
+    (match) => '${match.group(1)}<redacted>',
+  );
+}
+
+/// Removes credentials and local file-system details before diagnostics are
+/// persisted or copied. Unknown values are converted to safe strings.
+dynamic sanitizeCrashData(dynamic value, {String? key}) {
+  if (key != null && _isSensitiveKey(key)) return '<redacted>';
+  if (key != null && _isPathKey(key) && value != null) {
+    return '<redacted-path>';
+  }
+  if (value is Map) {
+    return value.map(
+      (mapKey, mapValue) => MapEntry(
+        mapKey.toString(),
+        sanitizeCrashData(mapValue, key: mapKey.toString()),
+      ),
+    );
+  }
+  if (value is Iterable) {
+    return value.map((item) => sanitizeCrashData(item)).toList();
+  }
+  if (value is String) return _sanitizeText(value);
+  if (value == null || value is num || value is bool) return value;
+  return _sanitizeText(value.toString());
+}
+
 // ---------------------------------------------------------------------------
 // CrashReport
 // ---------------------------------------------------------------------------
@@ -304,12 +374,23 @@ class LocalBackend extends CrashReportingBackend {
     }
     try {
       final file = File(_filePath!);
+      await file.parent.create(recursive: true);
       final line = '${jsonEncode(report.toJson())}\n';
       await file.writeAsString(line, mode: FileMode.append, flush: true);
+      final lines = await file.readAsLines();
+      if (lines.length > _kMaxStoredReports) {
+        await file.writeAsString(
+          '${lines.skip(lines.length - _kMaxStoredReports).join('\n')}\n',
+          flush: true,
+        );
+      }
     } catch (e) {
       _log.warn('LocalBackend: failed to write crash report', e);
       // Fallback: keep in memory
       _memoryStore.add(report);
+      while (_memoryStore.length > _kMaxStoredReports) {
+        _memoryStore.removeAt(0);
+      }
     }
   }
 
@@ -328,8 +409,8 @@ class LocalBackend extends CrashReportingBackend {
         final line = lines[i].trim();
         if (line.isEmpty) continue;
         try {
-          reports.add(CrashReport.fromJson(
-              jsonDecode(line) as Map<String, dynamic>));
+          reports.add(
+              CrashReport.fromJson(jsonDecode(line) as Map<String, dynamic>));
         } catch (_) {}
       }
       return reports;
@@ -461,6 +542,7 @@ class CrashReportingService {
 
   // Track whether initialize() has been called.
   bool _initialized = false;
+  bool _globalHandlersInstalled = false;
 
   CrashReportingService({
     CrashReportingBackend? backend,
@@ -505,8 +587,43 @@ class CrashReportingService {
       _log.info('CrashReportingService initialized (enabled)');
       _hookIntoLogService();
     } else {
-      _log.info('CrashReportingService initialized (disabled — user opt-in required)');
+      _log.info(
+          'CrashReportingService initialized (disabled — user opt-in required)');
     }
+  }
+
+  /// Captures framework and engine errors that would otherwise only reach the
+  /// console. Reports are still persisted only after explicit user opt-in.
+  void installGlobalHandlers() {
+    if (_globalHandlersInstalled) return;
+    _globalHandlersInstalled = true;
+
+    final previousFlutterHandler = FlutterError.onError;
+    FlutterError.onError = (FlutterErrorDetails details) {
+      if (previousFlutterHandler != null) {
+        previousFlutterHandler(details);
+      } else {
+        FlutterError.presentError(details);
+      }
+      unawaited(reportError(
+        details.exception,
+        details.stack,
+        context: {
+          'origin': 'flutter_framework',
+          if (details.library != null) 'library': details.library,
+        },
+      ));
+    };
+
+    final previousPlatformHandler = PlatformDispatcher.instance.onError;
+    PlatformDispatcher.instance.onError = (Object error, StackTrace stack) {
+      unawaited(reportError(
+        error,
+        stack,
+        context: const {'origin': 'platform_dispatcher'},
+      ));
+      return previousPlatformHandler?.call(error, stack) ?? true;
+    };
   }
 
   // ---------------------------------------------------------------------------
@@ -569,7 +686,7 @@ class CrashReportingService {
       timestamp: DateTime.now(),
       message: message,
       category: category,
-      data: data,
+      data: sanitizeCrashData(data) as Map<String, dynamic>?,
     );
     _breadcrumbs.add(crumb);
     while (_breadcrumbs.length > _kMaxBreadcrumbs) {
@@ -611,12 +728,13 @@ class CrashReportingService {
     return CrashReport(
       id: id,
       timestamp: DateTime.now(),
-      errorMessage: error.toString(),
+      errorMessage: _sanitizeText(error.toString()),
       errorType: error.runtimeType.toString(),
-      stackTrace: stackTrace?.toString(),
+      stackTrace:
+          stackTrace == null ? null : _sanitizeText(stackTrace.toString()),
       breadcrumbs: breadcrumbs,
       platformInfo: PlatformInfo.collect(appVersion: _appVersion),
-      context: context,
+      context: sanitizeCrashData(context) as Map<String, dynamic>?,
       userId: _userId,
     );
   }
