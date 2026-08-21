@@ -8,12 +8,6 @@
     <!-- WorkManager: allow task to restart after device reboot -->
     <uses-permission android:name="android.permission.RECEIVE_BOOT_COMPLETED"/>
 
-    <!-- WorkManager / long transfers: allow foreground service notifications -->
-    <uses-permission android:name="android.permission.FOREGROUND_SERVICE"/>
-
-    <!-- Android 14+: declare the type of foreground service used for transfers -->
-    <uses-permission android:name="android.permission.FOREGROUND_SERVICE_DATA_SYNC"/>
-
     <!-- flutter_local_notifications: required to post notifications on API 33+ -->
     <uses-permission android:name="android.permission.POST_NOTIFICATIONS"/>
 
@@ -83,12 +77,6 @@
                 android:name="android.appwidget.provider"
                 android:resource="@xml/crisp_cloud_widget_info" />
         </receiver>
-
-        <!-- Foreground service for long file transfers (dataSync type, Android 14+) -->
-        <service
-            android:name=".TransferForegroundService"
-            android:exported="false"
-            android:foregroundServiceType="dataSync" />
 
         <meta-data
             android:name="flutterEmbedding"
