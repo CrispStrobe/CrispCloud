@@ -39,7 +39,10 @@ class AppStoreConnect
       http.read_timeout = 60
       http.request(request)
     end
-    return response.body.empty? ? {} : JSON.parse(response.body) if response.code.to_i.between?(200, 299)
+    if response.code.to_i.between?(200, 299)
+      return {} if response.body.nil? || response.body.empty?
+      return JSON.parse(response.body)
+    end
 
     details = begin
       JSON.parse(response.body).fetch('errors', []).map do |error|
