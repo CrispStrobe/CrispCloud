@@ -75,7 +75,7 @@ jobs:
 
           # Some Flutter releases return non-zero after Gradle has successfully
           # written the APK. Accept that case, but never upload a missing build.
-          APK="$(find build -type f -name app-release.apk -not -path '*/intermediates/*' -print -quit)"
+          APK="$(find . -type f -name app-release.apk -not -path '*/intermediates/*' -print -quit)"
           if [ -z "$APK" ] || [ ! -s "$APK" ]; then
             echo "Flutter exited with status $build_status and no release APK was produced." >&2
             if [ "$build_status" -eq 0 ]; then exit 1; fi
