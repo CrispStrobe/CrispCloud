@@ -132,6 +132,13 @@ jobs:
           echo "APP=$APP" >> "$GITHUB_ENV"
           echo "built: $APP"
 
+      # Run before App Store distribution signing. A distribution-signed app
+      # is intentionally killed by taskgated when launched outside the Mac App
+      # Store/TestFlight receipt flow, which would make this a false failure.
+      # Entitlements and the final distribution signature are verified below.
+      - name: Launch release bundle before distribution signing
+        run: tool/macos_startup_smoke.sh "$APP" 12
+
       - name: Sign .app + extension with their real entitlements
         run: |
           set -euo pipefail
@@ -195,9 +202,6 @@ jobs:
             | grep -q "com.apple.security.app-sandbox" \
             || { echo "::error::app-sandbox entitlement missing from the signed .app"; exit 1; }
           codesign --verify --deep --strict --verbose=2 "$APP" 2>&1 | tail -3
-
-      - name: Launch signed sandboxed app
-        run: tool/macos_startup_smoke.sh "$APP" 12
 
       - name: Build the signed .pkg
         run: |
