@@ -1,6 +1,6 @@
 // test/provider_comparison_test.dart
 //
-// Tests for ProviderComparisonService: all 11 providers, privacy scores,
+// Tests for ProviderComparisonService: all providers, privacy scores,
 // pricing, feature counts, comparison results, recommendations, serialization,
 // and edge cases.
 
@@ -17,9 +17,9 @@ void main() {
   });
 
   // -------------------------------------------------------------------------
-  // 1. All 11 providers have info entries
+  // 1. All providers have info entries
   // -------------------------------------------------------------------------
-  group('All 11 providers have info entries', () {
+  group('All providers have info entries', () {
     const allProviders = CloudProvider.values;
 
     for (final p in allProviders) {
@@ -31,8 +31,8 @@ void main() {
       });
     }
 
-    test('getAllProviders() returns exactly 11 entries', () {
-      expect(svc.getAllProviders().length, equals(13));
+    test('getAllProviders() returns an entry for every provider', () {
+      expect(svc.getAllProviders().length, equals(CloudProvider.values.length));
     });
 
     test('getAllProviders() covers every CloudProvider value', () {
@@ -135,8 +135,8 @@ void main() {
   // 3. Price ranking
   // -------------------------------------------------------------------------
   group('Price ranking', () {
-    test('rankByPrice returns 11 providers', () {
-      expect(svc.rankByPrice().length, equals(13));
+    test('rankByPrice returns all providers', () {
+      expect(svc.rankByPrice().length, equals(CloudProvider.values.length));
     });
 
     test('Free / self-hosted providers appear first (cost == 0)', () {
@@ -227,8 +227,8 @@ void main() {
       expect(sftp.features.streaming, isTrue);
     });
 
-    test('rankByFeatures returns 11 providers', () {
-      expect(svc.rankByFeatures().length, equals(13));
+    test('rankByFeatures returns all providers', () {
+      expect(svc.rankByFeatures().length, equals(CloudProvider.values.length));
     });
 
     test('rankByFeatures is sorted descending', () {
@@ -325,13 +325,13 @@ void main() {
       expect(result.mostPrivate?.providerType, equals(CloudProvider.dropbox));
     });
 
-    test('compareProviders with all 11 providers succeeds', () {
+    test('compareProviders with all providers succeeds', () {
       expect(
         () => svc.compareProviders(CloudProvider.values.toList()),
         returnsNormally,
       );
       final result = svc.compareProviders(CloudProvider.values.toList());
-      expect(result.providers.length, equals(13));
+      expect(result.providers.length, equals(CloudProvider.values.length));
     });
 
     test('getProviderInfo with unknown type throws ArgumentError', () {
@@ -625,8 +625,8 @@ void main() {
   // 11. rankByPrivacy
   // -------------------------------------------------------------------------
   group('rankByPrivacy', () {
-    test('returns 11 providers', () {
-      expect(svc.rankByPrivacy().length, equals(13));
+    test('returns all providers', () {
+      expect(svc.rankByPrivacy().length, equals(CloudProvider.values.length));
     });
 
     test('is sorted descending by privacy score', () {

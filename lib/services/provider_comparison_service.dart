@@ -477,6 +477,46 @@ class ProviderComparisonService {
       ),
     ),
 
+    // SMB storage capacity and operating costs belong to the share owner.
+    CloudProvider.smb: const ProviderInfo(
+      name: 'SMB / NAS',
+      providerType: CloudProvider.smb,
+      pricing: ProviderPricing(
+        freeStorageGB: double.infinity,
+        costPerGBMonthly: 0.0,
+        currency: 'USD',
+        hasFreeplan: true,
+        paidPlanName: null,
+        paidPlanPriceMonthly: null,
+      ),
+      features: ProviderFeatures(
+        e2eEncryption: false,
+        versionHistory: false,
+        sharing: false,
+        search: false,
+        thumbnails: false,
+        trash: false,
+        streaming: true,
+        multipart: false,
+        serverSideCopy: false,
+        fullTextSearch: false,
+      ),
+      privacy: PrivacyInfo(
+        encryptionAtRest: false,
+        encryptionInTransit: true, // SMB3 encryption is required by default.
+        zeroKnowledge: false,
+        jurisdiction: 'SELF',
+        gdprCompliant: false,
+        openSource: true,
+      ),
+      limits: ProviderLimits(
+        maxFileSizeMB: null,
+        maxStorageGB: null,
+        rateLimitPerMinute: null,
+        bandwidthLimitMBps: null,
+      ),
+    ),
+
     // -----------------------------------------------------------------------
     // S3 (AWS) — ~$0.023/GB/mo (us-east-1 standard), no free storage tier
     // Free tier: 5 GB for 12 months, then pay-as-you-go

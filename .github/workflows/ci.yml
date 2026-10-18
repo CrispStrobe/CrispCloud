@@ -83,21 +83,23 @@ jobs:
           dart analyze
           dart test
 
-      - name: Compile CLI binary
+      - name: Build CLI bundle with native libraries
         working-directory: cli
-        run: dart compile exe bin/crisp.dart -o "$RUNNER_TEMP/crisp"
+        run: |
+          dart build cli -o build/cli
+          cp ../packages/crisp_storage/NOTICE-LIBSMB2.txt build/cli/bundle/
 
       - name: Upload Linux CLI
         uses: actions/upload-artifact@v4
         with:
           name: crisp-cli-linux
-          path: ${{ runner.temp }}/crisp
+          path: cli/build/cli/bundle
           if-no-files-found: error
 
       - name: Prepare isolated SSH fixture
         run: |
           python3 -m venv "$RUNNER_TEMP/storage-fixture"
-          "$RUNNER_TEMP/storage-fixture/bin/pip" install --quiet paramiko
+          "$RUNNER_TEMP/storage-fixture/bin/pip" install --quiet paramiko impacket
 
       - name: Export dependency inventory
         run: |
@@ -126,6 +128,7 @@ jobs:
       - name: Fast deterministic tests with coverage
         env:
           CRISPER_SFTP_PYTHON: ${{ runner.temp }}/storage-fixture/bin/python
+          CRISPER_SMB_PYTHON: ${{ runner.temp }}/storage-fixture/bin/python
         run: >-
           flutter test --coverage --concurrency=4
           --exclude-tags=benchmark,live,deploy,mock_server,integration,connection_dialog,golden

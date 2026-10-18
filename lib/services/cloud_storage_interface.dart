@@ -16,6 +16,9 @@ import 'pcloud_client_adapter.dart';
 import 's3_client_adapter.dart';
 import 'sftp_client_adapter.dart';
 import 'webdav_client_adapter.dart';
+import 'smb_client_adapter.dart';
+import 'smb_config_service.dart';
+import 'secure_storage_service.dart';
 
 /// Abstract interface for cloud storage providers
 abstract class CloudStorageClient {
@@ -252,7 +255,8 @@ enum CloudProvider {
   pcloud,
   s3,
   sftp,
-  webdav
+  webdav,
+  smb
 }
 
 /// Provider features that affect available actions and transfer strategy.
@@ -328,6 +332,7 @@ extension CloudProviderMetadata on CloudProvider {
         CloudProvider.s3 => 'S3 / S3-Compatible',
         CloudProvider.sftp => 'SFTP / Storage Box',
         CloudProvider.webdav => 'WebDAV',
+        CloudProvider.smb => 'SMB / NAS',
       };
 
   String get onboardingDescription => switch (this) {
@@ -355,6 +360,7 @@ extension CloudProviderMetadata on CloudProvider {
           'Secure file access, including Hetzner Storage Box.',
         CloudProvider.webdav =>
           'A standards-based server or compatible cloud drive.',
+        CloudProvider.smb => 'Windows, Samba and NAS file shares in the installed app.',
       };
 
   String get credentialHint => switch (this) {
@@ -371,6 +377,7 @@ extension CloudProviderMetadata on CloudProvider {
           'Have the endpoint, region, bucket, and access keys ready.',
         CloudProvider.ftp ||
         CloudProvider.sftp ||
+        CloudProvider.smb ||
         CloudProvider.webdav ||
         CloudProvider.nextcloud =>
           'Have the server address and account credentials ready.',
@@ -414,6 +421,8 @@ class CloudStorageFactory {
           return SFTPClientAdapter(config: config);
         case CloudProvider.webdav:
           return WebDavClientAdapter(config: config);
+        case CloudProvider.smb:
+          return SmbClientAdapter(config: config is SmbConfigService ? config : SmbConfigService(InMemorySecureStorage()));
         case CloudProvider.internxt:
           if (isInternxtSupported) {
             return InternxtClientAdapter(config: config);

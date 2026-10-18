@@ -1,6 +1,7 @@
 import 'package:collection/collection.dart';
 import 'dart:convert';
 import 'sftp_reader.dart';
+import 'smb_session.dart' if (dart.library.js_interop) 'smb_session_web.dart';
 import 'download_state.dart';
 import 'dart:io';
 import 'dart:typed_data';
@@ -9,7 +10,8 @@ import 'package:xml/xml.dart';
 class RemoteException implements Exception {
   final String message;
   final bool retryable;
-  const RemoteException(this.message, {this.retryable = false});
+  final Object? cause;
+  const RemoteException(this.message, {this.retryable = false, this.cause});
   @override
   String toString() => message;
 }
@@ -18,6 +20,7 @@ class RemoteConnection {
   final String id, name, kind, username, secret;
   final Uri url;
   final bool allowLocalHttp;
+  final bool requireEncryption;
   final String? hostKey;
   RemoteConnection({
     required this.id,
@@ -27,10 +30,16 @@ class RemoteConnection {
     this.username = '',
     required this.secret,
     this.allowLocalHttp = false,
+    this.requireEncryption = true,
     this.hostKey,
-  }) : url = validateUrl(url, allowLocalHttp, sftp: kind == 'sftp') {
-    if (!{'plex', 'webdav', 'sftp'}.contains(kind) ||
-        (kind == 'sftp' && username.trim().isEmpty) ||
+  }) : url = validateUrl(
+         url,
+         allowLocalHttp,
+         sftp: kind == 'sftp',
+         smb: kind == 'smb',
+       ) {
+    if (!{'plex', 'webdav', 'sftp', 'smb'}.contains(kind) ||
+        ({'sftp', 'smb'}.contains(kind) && username.trim().isEmpty) ||
         (hostKey != null &&
             !RegExp(r'^SHA256:[A-Za-z0-9+/]{43}$').hasMatch(hostKey!)) ||
         name.trim().isEmpty ||
@@ -44,27 +53,39 @@ class RemoteConnection {
       );
     }
   }
-  static Uri validateUrl(String text, bool localHttp, {bool sftp = false}) {
+  static Uri validateUrl(
+    String text,
+    bool localHttp, {
+    bool sftp = false,
+    bool smb = false,
+  }) {
     final uri = Uri.tryParse(text.trim());
     if (uri == null ||
         uri.host.isEmpty ||
         uri.userInfo.isNotEmpty ||
         uri.hasQuery ||
         uri.hasFragment ||
-        (sftp
-            ? uri.scheme != 'sftp'
+        (sftp || smb
+            ? uri.scheme != (smb ? 'smb' : 'sftp')
             : (uri.scheme != 'https' &&
-                !(uri.scheme == 'http' &&
-                    localHttp &&
-                    isLocalHost(uri.host))))) {
+                  !(uri.scheme == 'http' &&
+                      localHttp &&
+                      isLocalHost(uri.host))))) {
       throw const FormatException(
-        'Use the correct server URL: sftp:// for SFTP, HTTPS for Plex/WebDAV. Local HTTP requires explicit opt-in.',
+        'Use smb://host/share/ for SMB, sftp:// for SFTP, or HTTPS for Plex/WebDAV. Local HTTP requires explicit opt-in.',
       );
     }
     final result = uri.replace(
       path: '${uri.path.replaceFirst(RegExp(r'/+$'), '')}/',
     );
     _safePath(result);
+    if (smb &&
+        (result.pathSegments.firstOrNull?.isEmpty != false ||
+            result.pathSegments.any((s) => s.contains('/')) ||
+            (result.hasPort && result.port <= 0) ||
+            result.port > 65535)) {
+      throw const FormatException('Enter an SMB share: smb://host/share/.');
+    }
     return result;
   }
 
@@ -85,21 +106,23 @@ class RemoteConnection {
   static void _safePath(Uri uri) {
     final decoded = Uri.decodeComponent(uri.path);
     if (decoded.contains('\\') ||
+        decoded.contains('\u0000') ||
         decoded.split('/').any((s) => s == '..' || s == '.')) {
       throw const FormatException('Invalid server path.');
     }
   }
 
   Map<String, Object?> toJson({bool credentials = false}) => {
-        'id': id,
-        'name': name,
-        'kind': kind,
-        'url': url.toString(),
-        'username': username,
-        'allowLocalHttp': allowLocalHttp,
-        if (hostKey != null) 'hostKey': hostKey,
-        if (credentials) 'secret': secret,
-      };
+    'id': id,
+    'name': name,
+    'kind': kind,
+    'url': url.toString(),
+    'username': username,
+    'allowLocalHttp': allowLocalHttp,
+    if (kind == 'smb') 'requireEncryption': requireEncryption,
+    if (hostKey != null) 'hostKey': hostKey,
+    if (credentials) 'secret': secret,
+  };
   factory RemoteConnection.fromJson(Map<String, dynamic> json) =>
       RemoteConnection(
         id: json['id'] as String,
@@ -109,6 +132,7 @@ class RemoteConnection {
         username: json['username'] as String? ?? '',
         secret: json['secret'] as String,
         allowLocalHttp: json['allowLocalHttp'] == true,
+        requireEncryption: json['requireEncryption'] != false,
         hostKey: json['hostKey'] as String?,
       );
 }
@@ -124,12 +148,12 @@ class RemoteEntry {
     this.size,
   });
   Map<String, Object?> toJson() => {
-        'path': path,
-        'name': name,
-        'type': type,
-        'author': author,
-        'size': size,
-      };
+    'path': path,
+    'name': name,
+    'type': type,
+    'author': author,
+    'size': size,
+  };
 }
 
 /// Read-only Plex and WebDAV transport. Credentials never enter media URLs.
@@ -137,9 +161,10 @@ class RemoteClient {
   final RemoteConnection connection;
   final HttpClient _http;
   SftpReader? _sftp;
+  SmbSession? _smb;
   bool _closed = false;
   RemoteClient(this.connection, {HttpClient? httpClient})
-      : _http = httpClient ?? HttpClient() {
+    : _http = httpClient ?? HttpClient() {
     _http.autoUncompress = false;
     _http.connectionTimeout = const Duration(seconds: 10);
     _http.idleTimeout = const Duration(seconds: 15);
@@ -149,7 +174,7 @@ class RemoteClient {
     final reference = Uri.parse(path);
     RemoteConnection._safePath(reference);
     final result = base.resolve(path);
-    if ((result.hasQuery && connection.kind == 'sftp') ||
+    if ((result.hasQuery && {'sftp', 'smb'}.contains(connection.kind)) ||
         result.scheme != base.scheme ||
         result.host != base.host ||
         result.port != base.port ||
@@ -211,20 +236,18 @@ class RemoteClient {
         }
       }
       final response = await request.close().timeout(
-            const Duration(seconds: 15),
-          );
+        const Duration(seconds: 15),
+      );
       if ((response.statusCode < 200 || response.statusCode >= 300) &&
           !(allowRangeEnd && response.statusCode == 416)) {
         final status = response.statusCode;
         await response.drain<void>().timeout(const Duration(seconds: 5));
-        throw RemoteException(
-            switch (status) {
-              401 || 403 => 'Access denied. Check the connection credentials.',
-              >= 300 && < 400 =>
-                'Use the final server URL; redirects are not followed.',
-              _ => 'Server request failed (HTTP $status).',
-            },
-            retryable: status == 429 || status >= 500);
+        throw RemoteException(switch (status) {
+          401 || 403 => 'Access denied. Check the connection credentials.',
+          >= 300 && < 400 =>
+            'Use the final server URL; redirects are not followed.',
+          _ => 'Server request failed (HTTP $status).',
+        }, retryable: status == 429 || status >= 500);
       }
       return response;
     } on RemoteException {
@@ -263,8 +286,9 @@ class RemoteClient {
           'X-Plex-Container-Size': '200',
         },
       );
-      final root = (jsonDecode(await _text(paged.toString()))
-          as Map)['MediaContainer'] as Map;
+      final root =
+          (jsonDecode(await _text(paged.toString())) as Map)['MediaContainer']
+              as Map;
       final page = (root[key] as List? ?? []).cast<Map>();
       rows.addAll(page.map((r) => r.cast<String, dynamic>()));
       final total = (root['totalSize'] as num?)?.toInt();
@@ -280,6 +304,10 @@ class RemoteClient {
   }
 
   Future<List<RemoteEntry>> browse(String path) async {
+    if (_closed) throw const RemoteException('Connection closed.');
+    if (connection.kind == 'smb') {
+      return (_smb ??= SmbSession(connection)).browse(path);
+    }
     if (connection.kind == 'sftp') {
       return (_sftp ??= SftpReader(connection, uri)).browse(path);
     }
@@ -312,8 +340,8 @@ class RemoteClient {
     final document = XmlDocument.parse(await _text(target, listing: true));
     final entries = <RemoteEntry>[];
     for (final response in document.descendants.whereType<XmlElement>().where(
-          (e) => e.name.local == 'response',
-        )) {
+      (e) => e.name.local == 'response',
+    )) {
       final href = response.childElements
           .where((e) => e.name.local == 'href')
           .firstOrNull
@@ -369,8 +397,8 @@ class RemoteClient {
       (a, b) => a.type == b.type
           ? a.name.toLowerCase().compareTo(b.name.toLowerCase())
           : a.type == 'folder'
-              ? -1
-              : 1,
+          ? -1
+          : 1,
     );
     return entries;
   }
@@ -379,12 +407,9 @@ class RemoteClient {
     if (connection.kind != 'plex') {
       return (await browse(
         path,
-      ))
-          .where((e) => e.type == 'file' && isAudio(e.name))
-          .toList()
-        ..sort(
-          (a, b) => compareNatural(a.name.toLowerCase(), b.name.toLowerCase()),
-        );
+      )).where((e) => e.type == 'file' && isAudio(e.name)).toList()..sort(
+        (a, b) => compareNatural(a.name.toLowerCase(), b.name.toLowerCase()),
+      );
     }
     final rows = await _plexRows(path, 'Metadata');
     rows.sort((a, b) {
@@ -404,8 +429,9 @@ class RemoteClient {
       for (final part in (media?['Part'] as List? ?? []).whereType<Map>()) {
         final key = part['key'];
         if (key is! String) continue;
-        final filename =
-            (part['file'] as String? ?? '').split(RegExp(r'[/\\]')).last;
+        final filename = (part['file'] as String? ?? '')
+            .split(RegExp(r'[/\\]'))
+            .last;
         final container =
             '${part['container'] ?? media?['container'] ?? 'mp3'}';
         result.add(
@@ -422,28 +448,37 @@ class RemoteClient {
   }
 
   static bool isAudio(String name) => {
-        'm4b',
-        'm4a',
-        'mp3',
-        'flac',
-        'ogg',
-        'wav',
-        'aac',
-        'opus',
-        'wma',
-        'aiff',
-        'aif',
-        'mp2',
-        'mov',
-        'webm',
-        '3gp',
-        'mkv',
-        'mka',
-      }.contains(name.split('.').last.toLowerCase());
+    'm4b',
+    'm4a',
+    'mp3',
+    'flac',
+    'ogg',
+    'wav',
+    'aac',
+    'opus',
+    'wma',
+    'aiff',
+    'aif',
+    'mp2',
+    'mov',
+    'webm',
+    '3gp',
+    'mkv',
+    'mka',
+  }.contains(name.split('.').last.toLowerCase());
 
   /// A bounded native byte stream. Backpressure follows the consumer.
-  Stream<List<int>> downloadStream(String path,
-      {void Function(int, int)? onProgress}) async* {
+  Stream<List<int>> downloadStream(
+    String path, {
+    void Function(int, int)? onProgress,
+  }) async* {
+    if (_closed) throw const RemoteException('Connection closed.');
+    if (connection.kind == 'smb') {
+      yield* (_smb ??= SmbSession(
+        connection,
+      )).stream(path, onProgress: onProgress);
+      return;
+    }
     if (connection.kind == 'sftp') {
       throw UnsupportedError('Use SFTP offset download for this source');
     }
@@ -465,12 +500,17 @@ class RemoteClient {
     void Function(int)? onBytes,
     int limit = 64 * 1024 * 1024 * 1024,
   }) async {
+    if (_closed) throw const RemoteException('Connection closed.');
+    if (connection.kind == 'smb') {
+      return (_smb ??= SmbSession(
+        connection,
+      )).download(path, output, onBytes: onBytes, limit: limit);
+    }
     if (connection.kind == 'sftp') {
       return (_sftp ??= SftpReader(
         connection,
         uri,
-      ))
-          .download(path, output, onBytes: onBytes, limit: limit);
+      )).download(path, output, onBytes: onBytes, limit: limit);
     }
     final source = uri(path).toString();
     final saved = await DownloadState.read(output);
@@ -504,7 +544,8 @@ class RemoteClient {
       final size = RegExp(
         r'^bytes \*/(\d+)$',
       ).firstMatch(response.headers.value('content-range') ?? '');
-      final unchanged = size != null &&
+      final unchanged =
+          size != null &&
           int.parse(size[1]!) == offset &&
           validator(response) == saved!.validator;
       await response.drain<void>().timeout(const Duration(seconds: 5));
@@ -573,8 +614,10 @@ class RemoteClient {
       }
       await sink.flush();
       if (received == 0 || (total != null && received != total)) {
-        throw const RemoteException('Download was incomplete.',
-            retryable: true);
+        throw const RemoteException(
+          'Download was incomplete.',
+          retryable: true,
+        );
       }
     } finally {
       await sink.close();
@@ -585,5 +628,6 @@ class RemoteClient {
     _closed = true;
     _http.close(force: true);
     _sftp?.close();
+    _smb?.close();
   }
 }

@@ -2,8 +2,9 @@
 //
 // Entry point for the crisp CLI tool.
 //
-// Compile to a self-contained binary:
-//   cd cli && dart compile exe bin/crisp.dart -o crisp
+// Build a bundle with its native transport libraries:
+//   cd cli && dart build cli -o build/cli
+// Keep the bundle directory together when installing.
 //
 // Or run directly:
 //   dart run bin/crisp.dart <command> [args...]

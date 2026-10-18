@@ -1,4 +1,6 @@
 import '../services/sftp_client_adapter.dart';
+import '../services/smb_client_adapter.dart';
+import 'package:flutter/foundation.dart';
 // lib/widgets/connection_dialog.dart
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -41,6 +43,7 @@ class _ConnectionDialogState extends ConsumerState<ConnectionDialog> {
       TextEditingController(text: '21'); // Default FTP port
   final _ftpUserController = TextEditingController();
   bool _ftpUseTLS = false;
+  bool _smbRequireEncryption = true;
 
   // S3 Specific Controllers
   final _s3EndpointController =
@@ -158,6 +161,8 @@ class _ConnectionDialogState extends ConsumerState<ConnectionDialog> {
         };
       case CloudProvider.webdav:
         return {'host': _hostController.text, 'user': _emailController.text};
+      case CloudProvider.smb:
+        return {'host': _hostController.text, 'user': _emailController.text, 'requireEncryption': '$_smbRequireEncryption'};
       default:
         return {'email': _emailController.text};
     }
@@ -219,6 +224,11 @@ class _ConnectionDialogState extends ConsumerState<ConnectionDialog> {
       case CloudProvider.webdav:
         _hostController.text = f['host'] ?? '';
         _emailController.text = f['user'] ?? '';
+        break;
+      case CloudProvider.smb:
+        _hostController.text = f['host'] ?? '';
+        _emailController.text = f['user'] ?? '';
+        _smbRequireEncryption = f['requireEncryption'] != 'false';
         break;
       default:
         _emailController.text = f['email'] ?? '';
@@ -282,6 +292,7 @@ class _ConnectionDialogState extends ConsumerState<ConnectionDialog> {
     final isS3 = _selectedProvider == CloudProvider.s3;
     final isInternxt = _selectedProvider == CloudProvider.internxt;
     final isWebDav = _selectedProvider == CloudProvider.webdav;
+    final isSmb = _selectedProvider == CloudProvider.smb;
     final isOAuth = isGDrive || isOneDrive || isDropbox || isPCloud;
 
     return AlertDialog(
@@ -300,8 +311,8 @@ class _ConnectionDialogState extends ConsumerState<ConnectionDialog> {
                 border: OutlineInputBorder(),
               ),
               items: CloudProvider.values.map((provider) {
-                final enabled = provider != CloudProvider.internxt ||
-                    CloudStorageFactory.isInternxtSupported;
+                final enabled = (provider != CloudProvider.internxt ||
+                    CloudStorageFactory.isInternxtSupported) && !(kIsWeb && provider == CloudProvider.smb);
                 return DropdownMenuItem(
                   value: provider,
                   enabled: enabled,
@@ -933,16 +944,15 @@ class _ConnectionDialogState extends ConsumerState<ConnectionDialog> {
                 ),
                 enabled: !_isLoading,
               ),
-            ] else if (isWebDav) ...[
+            ] else if (isWebDav || isSmb) ...[
               // WebDAV Fields
               TextField(
                 controller: _hostController,
-                decoration: const InputDecoration(
+                decoration: InputDecoration(
                   labelText: 'Server URL',
-                  hintText:
-                      'https://cloud.example.com/remote.php/dav/files/user/',
-                  border: OutlineInputBorder(),
-                  prefixIcon: Icon(Icons.link),
+                  hintText: isSmb ? 'smb://nas.local/Share/' : 'https://cloud.example.com/remote.php/dav/files/user/',
+                  border: const OutlineInputBorder(),
+                  prefixIcon: const Icon(Icons.link),
                 ),
                 enabled: !_isLoading,
               ),
@@ -955,6 +965,13 @@ class _ConnectionDialogState extends ConsumerState<ConnectionDialog> {
                   prefixIcon: Icon(Icons.person),
                 ),
                 enabled: !_isLoading,
+              ),
+              if (isSmb) CheckboxListTile(
+                contentPadding: EdgeInsets.zero,
+                title: const Text('Require SMB3 encryption'),
+                subtitle: const Text('Turn off only for an older NAS on a trusted network. Signing is always required. Use DOMAIN\\user for a domain account.'),
+                value: _smbRequireEncryption,
+                onChanged: _isLoading ? null : (v) => setState(() => _smbRequireEncryption = v!),
               ),
             ] else if (isNextcloud) ...[
               // Nextcloud: Server URL
@@ -1229,6 +1246,12 @@ class _ConnectionDialogState extends ConsumerState<ConnectionDialog> {
         identity =
             '${_sftpUserController.text}@${_hostController.text}:$portStr';
         password = _passwordController.text;
+      } else if (_selectedProvider == CloudProvider.smb) {
+        if (_hostController.text.trim().isEmpty || _emailController.text.trim().isEmpty) {
+          throw const FormatException('Server URL and username are required.');
+        }
+        identity = '${_emailController.text.trim()}@${_hostController.text.trim()}';
+        password = _passwordController.text;
       } else if (_selectedProvider == CloudProvider.webdav) {
         if (_hostController.text.isEmpty || _emailController.text.isEmpty) {
           throw Exception('Server URL and Username are required');
@@ -1316,6 +1339,9 @@ class _ConnectionDialogState extends ConsumerState<ConnectionDialog> {
         };
       }
       // 4. Perform Login
+      if (auth.client is SmbClientAdapter) {
+        (auth.client as SmbClientAdapter).requireEncryption = _smbRequireEncryption;
+      }
       await auth.login(
         identity,
         password,

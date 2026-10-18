@@ -3,7 +3,8 @@ import 'package:flutter/material.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
 import 'l10n/app_localizations.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:flutter/foundation.dart' show kIsWeb;
+import 'package:flutter/foundation.dart' show kIsWeb, LicenseRegistry, LicenseEntryWithLineBreaks;
+import 'package:crisp_storage/crisp_storage.dart' show smbLicense;
 import 'package:cryptography_flutter/cryptography_flutter.dart';
 import 'package:flutter/services.dart' show BrowserContextMenu;
 import 'package:path_provider/path_provider.dart';
@@ -26,6 +27,7 @@ import 'services/nextcloud_config_service.dart';
 import 'services/pcloud_config_service.dart';
 import 'services/sftp_config_service.dart';
 import 'services/webdav_config_service.dart';
+import 'services/smb_config_service.dart';
 import 'services/azure_config_service.dart';
 import 'services/b2_config_service.dart';
 import 'services/app_lock_service.dart';
@@ -51,6 +53,7 @@ Future<void> main() async {
   CrashReportingService? crashReporting;
   runZonedGuarded(() async {
     WidgetsFlutterBinding.ensureInitialized();
+    LicenseRegistry.addLicense(() => Stream.value(const LicenseEntryWithLineBreaks(['libsmb2'], smbLicense)));
 
     crashReporting = CrashReportingService(
       backend: LocalBackend(),
@@ -232,6 +235,8 @@ Future<CloudProvider> _getDefaultProvider() async {
         return CloudProvider.sftp;
       case 'webdav':
         return CloudProvider.webdav;
+      case 'smb':
+        return CloudProvider.smb;
       default:
         return CloudProvider.filen;
     }
@@ -278,6 +283,8 @@ Future<dynamic> _createConfigService(
       case CloudProvider.webdav:
         return WebDavConfigService(
             configPath: configPath, secureStorage: secureStorage);
+      case CloudProvider.smb:
+        return SmbConfigService(secureStorage);
       case CloudProvider.internxt:
         if (CloudStorageFactory.isInternxtSupported) {
           return ConfigService(

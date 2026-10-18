@@ -41,6 +41,8 @@ import '../services/sftp_client_adapter.dart';
 import '../services/sftp_config_service.dart';
 import '../services/webdav_client_adapter.dart';
 import '../services/webdav_config_service.dart';
+import '../services/smb_config_service.dart';
+import '../services/smb_client_adapter.dart';
 import '../services/log_service.dart';
 import 'error_provider.dart';
 
@@ -126,6 +128,8 @@ class AuthNotifier extends ChangeNotifier {
         return PCloudConfigService(configPath: _configPath, secureStorage: _secureStorage);
       case CloudProvider.webdav:
         return WebDavConfigService(configPath: _configPath, secureStorage: _secureStorage);
+      case CloudProvider.smb:
+        return SmbConfigService(_secureStorage);
       case CloudProvider.internxt:
         // On web, ConfigService must receive a configPath to avoid
         // calling Platform.environment (which throws _Namespace on web).
@@ -233,6 +237,8 @@ class AuthNotifier extends ChangeNotifier {
     } else if (_cloudClient is SFTPClientAdapter) {
       final creds = await (_cloudClient as SFTPClientAdapter).config.readCredentials();
       if (creds == null) throw Exception('Not authenticated');
+    } else if (_cloudClient is SmbClientAdapter) {
+      if (await (_cloudClient as SmbClientAdapter).config.readCredentials() == null) throw StateError('Not authenticated');
     } else if (_cloudClient is WebDavClientAdapter) {
       final creds = await (_cloudClient as WebDavClientAdapter).config.readCredentials();
       if (creds == null) throw Exception('Not authenticated');
@@ -317,6 +323,13 @@ class AuthNotifier extends ChangeNotifier {
             _isConnected = true;
             notifyListeners();
           }
+        } else if (_cloudClient is SmbClientAdapter) {
+          final adapter = _cloudClient as SmbClientAdapter;
+          if (await adapter.restoreCredentials()) {
+            _userEmail = '${adapter.userId}@${adapter.bucketId}';
+            _isConnected = true;
+            notifyListeners();
+          }
         } else if (_cloudClient is WebDavClientAdapter) {
           final adapter = _cloudClient as WebDavClientAdapter;
           final creds = await adapter.config.readCredentials();
@@ -389,6 +402,8 @@ class AuthNotifier extends ChangeNotifier {
       await (_cloudClient as S3ClientAdapter).config.clearCredentials();
     } else if (_cloudClient is SFTPClientAdapter) {
       await (_cloudClient as SFTPClientAdapter).config.clearCredentials();
+    } else if (_cloudClient is SmbClientAdapter) {
+      await (_cloudClient as SmbClientAdapter).config.clearCredentials();
     } else if (_cloudClient is WebDavClientAdapter) {
       await (_cloudClient as WebDavClientAdapter).config.clearCredentials();
     } else if (_cloudClient is NextcloudClientAdapter) {

@@ -37,6 +37,8 @@ import 'share_service.dart';
 import 'transfer_queue.dart';
 import 'webdav_client_adapter.dart';
 import 'webdav_config_service.dart';
+import 'smb_config_service.dart';
+import 'smb_client_adapter.dart';
 
 class AppError {
   final String message;
@@ -534,6 +536,9 @@ class AppState extends ChangeNotifier {
         case CloudProvider.webdav:
           providerKey = 'webdav';
           break;
+        case CloudProvider.smb:
+          providerKey = 'smb';
+          break;
         case CloudProvider.internxt:
           providerKey = 'internxt';
           break;
@@ -578,6 +583,8 @@ class AppState extends ChangeNotifier {
       } else if (provider == CloudProvider.webdav) {
         _config = WebDavConfigService(
             configPath: _configPath, secureStorage: _secureStorage);
+      } else if (provider == CloudProvider.smb) {
+        _config = SmbConfigService(_secureStorage);
       } else if (provider == CloudProvider.internxt) {
         _config = ConfigService(configPath: _configPath);
       }
@@ -841,6 +848,14 @@ class AppState extends ChangeNotifier {
             notifyListeners();
           } else {
             debugPrint('⚠️ S3: No saved credentials found');
+          }
+        } else if (_cloudClient is SmbClientAdapter) {
+          final adapter = _cloudClient as SmbClientAdapter;
+          if (await adapter.restoreCredentials()) {
+            _userEmail = '${adapter.userId}@${adapter.bucketId}';
+            _isConnected = true;
+            await refreshPanel(PanelSide.remote);
+            notifyListeners();
           }
         } else if (_cloudClient is WebDavClientAdapter) {
           final adapter = _cloudClient as WebDavClientAdapter;

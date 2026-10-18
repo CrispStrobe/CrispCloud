@@ -12,6 +12,7 @@
 | **Internxt** | Decentralized encrypted storage |
 | **SFTP** | Native streaming, key auth |
 | **WebDAV** | Standard operations |
+| **SMB / NAS** | Native SMB2/3 browsing, streaming reads/writes, file operations, signed connections and required SMB3 encryption by default |
 | **S3** | Presigned URLs, SSE-S3/KMS/C, 8 storage classes, delta sync (Range GET) |
 | **FTP/FTPS** | Standard + TLS |
 | **Google Drive** | OAuth2, shared drives, starred files, file versions, Google Docs export (6 formats) |
@@ -118,3 +119,16 @@ threat model, and [PLAN.md](PLAN.md) for the feature roadmap.
 AGPL-3.0. See [LICENSE](LICENSE).
 
 Not affiliated with any cloud provider. All trademarks belong to their respective owners.
+
+### SMB / NAS
+
+In the installed app, choose **SMB / NAS** and enter `smb://host/share/`,
+a username (or `DOMAIN\user`) and password. SMB3 encryption is required by
+default. Turn it off only for an older NAS on a trusted network; signing remains
+required. SMB1 and browser connections are unsupported. Saved credentials use
+the existing secure store. The provider supports nested folders, uploads,
+resumable downloads, moves, renames and deletion (without a trash folder).
+
+The native transport is shared with CrisperPlayer in `packages/crisp_storage`.
+To run the isolated SMB file-manager test, install Python `impacket` and use
+`CRISPER_SMB_PYTHON=/path/to/python flutter test test/smb_client_adapter_test.dart`.
