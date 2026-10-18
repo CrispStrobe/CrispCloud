@@ -531,25 +531,35 @@ jobs:
           TOKEN="${{ secrets.GH_PAT || github.token }}"
           git config --global url."https://x-access-token:${TOKEN}@github.com/".insteadOf "https://github.com/"
 
-      # ── Android Keystore Signing Placeholder ────────────────────────────
-      # Uncomment and configure to sign with a production keystore.
-      # See the top-level comment block for full instructions.
-      #
-      # - name: Decode and configure keystore
-      #   env:
-      #     ANDROID_KEYSTORE_BASE64: ${{ secrets.ANDROID_KEYSTORE_BASE64 }}
-      #     ANDROID_KEY_ALIAS: ${{ secrets.ANDROID_KEY_ALIAS }}
-      #     ANDROID_KEY_PASSWORD: ${{ secrets.ANDROID_KEY_PASSWORD }}
-      #     ANDROID_STORE_PASSWORD: ${{ secrets.ANDROID_STORE_PASSWORD }}
-      #   run: |
-      #     echo "$ANDROID_KEYSTORE_BASE64" | base64 -d > android/app/keystore.jks
-      #     cat > android/key.properties <<EOF
-      #     storePassword=$ANDROID_STORE_PASSWORD
-      #     keyPassword=$ANDROID_KEY_PASSWORD
-      #     keyAlias=$ANDROID_KEY_ALIAS
-      #     storeFile=keystore.jks
-      #     EOF
-      # ────────────────────────────────────────────────────────────────────
+      # Sign the GitHub-release APK with the same upload key the Google Play
+      # and Firebase workflows use (secrets set 2026-08-21). Without
+      # key.properties, build.gradle.kts falls back to the debug config, and
+      # each runner makes a throwaway debug key, so no release APK could
+      # install as an update over the previous one (CrisperWeaver #36 found
+      # the same defect). Same layout as google-play-bundle.yml: build.gradle
+      # resolves storeFile with rootProject.file(), i.e. relative to android/
+      # (the old commented-out template put the .jks in android/app/, which
+      # rootProject.file() would never have found).
+      - name: Configure release signing
+        env:
+          KEYSTORE_B64: ${{ secrets.ANDROID_KEYSTORE_BASE64 }}
+          KEY_ALIAS: ${{ secrets.ANDROID_KEY_ALIAS }}
+          KEY_PASSWORD: ${{ secrets.ANDROID_KEY_PASSWORD }}
+          STORE_PASSWORD: ${{ secrets.ANDROID_STORE_PASSWORD }}
+        run: |
+          set -euo pipefail
+          : "${KEYSTORE_B64:?ANDROID_KEYSTORE_BASE64 is required - refusing a debug-signed release}"
+          : "${KEY_ALIAS:?ANDROID_KEY_ALIAS is required}"
+          : "${KEY_PASSWORD:?ANDROID_KEY_PASSWORD is required}"
+          : "${STORE_PASSWORD:?ANDROID_STORE_PASSWORD is required}"
+          echo "$KEYSTORE_B64" | base64 --decode > android/play-upload.jks
+          chmod 600 android/play-upload.jks
+          cat > android/key.properties <<EOF
+          storePassword=$STORE_PASSWORD
+          keyPassword=$KEY_PASSWORD
+          keyAlias=$KEY_ALIAS
+          storeFile=play-upload.jks
+          EOF
 
       - run: flutter pub get
 
@@ -577,6 +587,24 @@ jobs:
           fi
           cp "$APK" crispcloud-android.apk
 
+      # Never ship a debug-signed APK again: reject the "CN=Android Debug"
+      # certificate and publish the real one's SHA-256 beside the APK.
+      - name: Verify the APK is release-signed
+        run: |
+          set -euo pipefail
+          APKSIGNER=$(ls "$ANDROID_HOME"/build-tools/*/apksigner 2>/dev/null | sort -V | tail -1)
+          if [ -z "$APKSIGNER" ]; then
+            sdkmanager --install "build-tools;35.0.0" >/dev/null
+            APKSIGNER="$ANDROID_HOME/build-tools/35.0.0/apksigner"
+          fi
+          "$APKSIGNER" verify --print-certs crispcloud-android.apk | tee signing.txt
+          if grep -q "CN=Android Debug" signing.txt; then
+            echo "::error::APK is debug-signed - the release keystore was not used"
+            exit 1
+          fi
+          sed -n 's/.*certificate SHA-256 digest: //p' signing.txt | head -1 > crispcloud-android-signing-cert.sha256.txt
+          rm -f android/play-upload.jks android/key.properties
+
       - uses: actions/upload-artifact@v5
         with:
           name: crispcloud-android
@@ -585,7 +613,7 @@ jobs:
       - name: Upload to Release
         env:
           GH_TOKEN: ${{ github.token }}
-        run: gh release upload "${{ needs.create-release.outputs.tag }}" crispcloud-android.apk --clobber
+        run: gh release upload "${{ needs.create-release.outputs.tag }}" crispcloud-android.apk crispcloud-android-signing-cert.sha256.txt --clobber
 
   # ---------- iOS (unsigned .app for later signing/export) ----------
   build-ios:
