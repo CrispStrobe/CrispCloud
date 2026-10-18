@@ -1,7 +1,7 @@
 name: crisp_cloud
 description: Flutter/Dart Cloud storage client
 publish_to: 'none'
-version: 1.0.0+8
+version: 1.0.0+9
 
 environment:
   # share_plus 10.1.x requires Dart >=3.4.0 / Flutter >=3.22.0.
@@ -67,7 +67,7 @@ dependencies:
   args: ^2.4.2
   crypto: ^3.0.3
   web: ^1.1.1  # WebCrypto (crypto.subtle) for web secure storage
-  pointycastle: ^3.7.3
+  pointycastle: ^4.0.0
   bip39: ^1.0.6
   hex: ^0.2.0
   glob: ^2.1.2
@@ -89,7 +89,9 @@ dependencies:
   ftpconnect: ^2.0.5
 
   # SFTP
-  dartssh2: ^2.10.0
+  dartssh2: ^4.1.0
+  crisp_storage:
+    path: packages/crisp_storage
   web_socket_channel: ^3.0.0 # for sockified (needed for web builds)
 
   # WebDAV Dependencies
@@ -135,6 +137,10 @@ dev_dependencies:
   flutter_launcher_icons: ^0.14.4
 
 dependency_overrides:
+  # Internxt 0.2.3 and vendored Filen retain a 3.x constraint. Their crypto
+  # APIs are compatible with 4.x; encryption/vector regressions verify this.
+  # SSH 4.x needs the current crypto implementation and SHA256 host-key API.
+  pointycastle: ^4.0.0
   libdbm:
     git:
       url: https://github.com/CrispStrobe/libdbm

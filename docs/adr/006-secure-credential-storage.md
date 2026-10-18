@@ -99,3 +99,19 @@ The migration is idempotent: running it multiple times on the same installation 
 - Biometric unlock on Windows uses Windows Hello, which requires hardware TPM. Devices without TPM cannot use biometric unlock.
 - The `local_auth` package requires additional platform-specific configuration (entitlements on iOS, activity result handling on Android, Windows Hello SDK linkage) that adds build complexity.
 - Auto-login at startup retrieves the OAuth2 refresh token from the keychain and attempts a token refresh. If the OS keychain is locked (e.g., the user just booted and has not logged in to the keychain), the read fails and the user must reconnect manually. This is a known behavior on macOS with "first unlock" keychain policies.
+
+## SSH trust and CLI scope (2026-10-18)
+
+SSH server identity is now checked before authentication in SFTP, Storage Box,
+the terminal, and the standalone CLI. Native/browser app trust records use the
+injected SecureStorage under ssh_known_hosts_v1, separately from passwords.
+An unknown key needs explicit fingerprint acceptance; a changed key fails closed.
+Connection profiles use the shared serialized profile store with the existing
+secure backend and JSON schema.
+
+The standalone CLI differs from the Flutter app: its configuration still
+contains plaintext credentials in config.yaml. Unix writes now restrict that
+file to mode 0600 and interactive secret input disables echo. Accepted host keys
+are saved in that same profile. OS credential-store integration for the
+standalone CLI remains future work; earlier blanket Keychain claims do not
+apply to it. Non-interactive SFTP connection setup needs --host-key SHA256:… .

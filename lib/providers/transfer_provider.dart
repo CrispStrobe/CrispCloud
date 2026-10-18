@@ -1,3 +1,4 @@
+import 'package:crisp_storage/crisp_storage.dart' show TransferCancelled;
 // lib/providers/transfer_provider.dart
 //
 // Manages file transfers: upload/download via TransferQueue,
@@ -31,6 +32,12 @@ import 'panel_provider.dart';
 class TransferNotifier extends ChangeNotifier {
   static const _log = Log('TransferNotifier');
   final Ref _ref;
+  bool _disposed = false;
+  @override
+  void notifyListeners() {
+    if (!_disposed) super.notifyListeners();
+  }
+
   final TransferQueue _queue = TransferQueue();
   final List<OperationProgress> _operations = [];
 
@@ -153,36 +160,13 @@ class TransferNotifier extends ChangeNotifier {
               await _uploadFolder(
                   file.path!, target, operation, client, localFileService);
             } else if (!kIsWeb && file.path != null) {
-              // Streaming upload on desktop/mobile — avoids buffering entire
-              // file in memory.  A StreamTransformer caps buffered-ahead
-              // chunks at 2 to keep resident memory low.
               final localFile = File(file.path!);
               final length = await localFile.length();
-              final rawStream = localFile.openRead();
-
-              // Limit to 2 chunks buffered ahead via a back-pressure
-              // transformer (StreamController in paused mode).
-              final controller = StreamController<List<int>>();
-              int pending = 0;
-              const maxPending = 2;
-              late StreamSubscription<List<int>> sub;
-              sub = rawStream.listen(
-                (chunk) {
-                  controller.add(chunk);
-                  pending++;
-                  if (pending >= maxPending) sub.pause();
-                },
-                onDone: () => controller.close(),
-                onError: (e, st) => controller.addError(e, st),
-              );
-              controller.onCancel = () => sub.cancel();
-              controller.onResume = () {
-                pending = 0;
-                sub.resume();
-              };
-
               await client.uploadStream(
-                controller.stream,
+                localFile.openRead().asyncMap((chunk) async {
+                  await _checkpoint(operation);
+                  return chunk;
+                }),
                 length,
                 file.name,
                 target,
@@ -203,7 +187,8 @@ class TransferNotifier extends ChangeNotifier {
               if (kIsWeb && webStreaming.isSupported && blobRef != null) {
                 int sent = 0;
                 final blobStream = webStreaming.streamFromBlob(blobRef);
-                final trackedStream = blobStream.map((chunk) {
+                final trackedStream = blobStream.asyncMap((chunk) async {
+                  await _checkpoint(operation);
                   sent += chunk.length;
                   operation.currentBytes = completedBytes + sent;
                   notifyListeners();
@@ -269,12 +254,13 @@ class TransferNotifier extends ChangeNotifier {
           fileProgress.isComplete = true;
           completedBytes += fileProgress.size;
           operation.currentBytes = completedBytes;
-
+        },
+        onDone: (error) {
+          fileProgress.error = error?.toString();
           tasksFinished++;
           if (tasksFinished == files.length) {
             _finalizeBatch(operation, fileProgresses);
-            await _ref.read(panelProvider(PanelSide.remote)).refresh();
-            _ref.read(panelProvider(PanelSide.local)).clearSelection();
+            if (!_disposed) unawaited(_refreshAfterTransfer());
           }
         },
       ));
@@ -341,7 +327,7 @@ class TransferNotifier extends ChangeNotifier {
             } else if (!kIsWeb) {
               // Streaming download on desktop/mobile — pipe chunks to disk
               // without buffering the entire file in memory.
-              final localFilePath = p.join(target, file.name);
+              final localFilePath = _localTarget(target, file.name);
               final sink = File(localFilePath).openWrite();
               int received = 0;
 
@@ -353,7 +339,9 @@ class TransferNotifier extends ChangeNotifier {
                     // we also track via byte counting below.
                   },
                 )) {
+                  await _checkpoint(operation);
                   sink.add(chunk);
+                  await sink.flush();
                   received += chunk.length;
                   operation.currentBytes = completedBytes + received;
                   notifyListeners();
@@ -365,8 +353,9 @@ class TransferNotifier extends ChangeNotifier {
               if (file.updatedAt != null) {
                 try {
                   final f = File(localFilePath);
-                  if (await f.exists())
+                  if (await f.exists()) {
                     await f.setLastModified(file.updatedAt!);
+                  }
                 } catch (e) {
                   _log.warn('operation failed', e);
                 }
@@ -385,7 +374,8 @@ class TransferNotifier extends ChangeNotifier {
 
                 // Wrap the raw stream so we can track progress before piping
                 // to the writable stream.
-                final trackedStream = rawStream.map((chunk) {
+                final trackedStream = rawStream.asyncMap((chunk) async {
+                  await _checkpoint(operation);
                   received += chunk.length;
                   operation.currentBytes = completedBytes + received;
                   notifyListeners();
@@ -417,7 +407,8 @@ class TransferNotifier extends ChangeNotifier {
                   },
                 );
 
-                final localFilePath = p.join(target, file.name);
+                await _checkpoint(operation);
+                final localFilePath = _localTarget(target, file.name);
                 await localFileService.saveFile(localFilePath, bytes);
               }
             }
@@ -444,16 +435,33 @@ class TransferNotifier extends ChangeNotifier {
           fileProgress.isComplete = true;
           completedBytes += fileProgress.size;
           operation.currentBytes = completedBytes;
-
+        },
+        onDone: (error) {
+          fileProgress.error = error?.toString();
           tasksFinished++;
           if (tasksFinished == files.length) {
             _finalizeBatch(operation, fileProgresses);
-            await _ref.read(panelProvider(PanelSide.local)).refresh();
-            _ref.read(panelProvider(PanelSide.remote)).clearSelection();
+            if (!_disposed) unawaited(_refreshAfterTransfer());
           }
         },
       ));
     }
+  }
+
+  Future<void> _refreshAfterTransfer() async {
+    try {
+      await _ref.read(panelProvider(PanelSide.local)).refresh();
+      await _ref.read(panelProvider(PanelSide.remote)).refresh();
+    } catch (error) {
+      _log.warn('Refreshing panels after transfer failed', error);
+    }
+  }
+
+  @override
+  void dispose() {
+    _disposed = true;
+    _queue.dispose();
+    super.dispose();
   }
 
   // --- Helpers ---
@@ -468,7 +476,7 @@ class TransferNotifier extends ChangeNotifier {
       } else if (failedCount == fileProgresses.length) {
         operation.fail('All files failed');
       } else {
-        operation.complete();
+        operation.fail('$failedCount of ${fileProgresses.length} files failed');
       }
     }
     notifyListeners();
@@ -517,7 +525,7 @@ class TransferNotifier extends ChangeNotifier {
     if (entities == null) return;
 
     for (final entity in entities) {
-      if (operation.isCancelled) break;
+      await _checkpoint(operation);
       if (entity is File) {
         try {
           final fileName = p.basename(entity.path);
@@ -527,12 +535,30 @@ class TransferNotifier extends ChangeNotifier {
           notifyListeners();
         } catch (e) {
           _log.warn('operation failed', e);
+          rethrow;
         }
       } else if (entity is Directory) {
         await _uploadFolder(
             entity.path, newRemotePath, operation, client, localFileService);
       }
     }
+  }
+
+  String _localTarget(String directory, String name) {
+    if (name.isEmpty ||
+        name == '.' ||
+        name == '..' ||
+        name.contains('/') ||
+        name.contains('\\') ||
+        name.contains('\x00')) {
+      throw const FormatException('The server returned an invalid file name');
+    }
+    return p.join(directory, name);
+  }
+
+  Future<void> _checkpoint(OperationProgress operation) async {
+    if (operation.isPaused) await operation.pauseFuture;
+    if (operation.isCancelled) throw const TransferCancelled();
   }
 
   Future<void> _downloadFolder(
@@ -543,22 +569,31 @@ class TransferNotifier extends ChangeNotifier {
   ) async {
     if (kIsWeb) return;
     final folderName = p.basename(remotePath);
-    final newLocalPath = p.join(localPath, folderName);
+    final newLocalPath = _localTarget(localPath, folderName);
     await Directory(newLocalPath).create(recursive: true);
 
     final contents = await client.listPath(remotePath);
     for (final file in contents['files']) {
-      if (operation.isCancelled) break;
+      await _checkpoint(operation);
       final fileName = file['name'];
-      final fileSize = int.tryParse(file['size']?.toString() ?? '0') ?? 0;
-      await client.downloadFileByPath(
-          p.posix.join(remotePath, fileName), p.join(newLocalPath, fileName));
-      operation.currentBytes += fileSize;
+      final sink = File(_localTarget(newLocalPath, fileName)).openWrite();
+      try {
+        await for (final chunk
+            in client.downloadStream(p.posix.join(remotePath, fileName))) {
+          await _checkpoint(operation);
+          sink.add(chunk);
+          await sink.flush();
+          operation.currentBytes += (chunk as List<int>).length;
+          notifyListeners();
+        }
+      } finally {
+        await sink.close();
+      }
       notifyListeners();
     }
 
     for (final folder in contents['folders']) {
-      if (operation.isCancelled) break;
+      await _checkpoint(operation);
       await _downloadFolder(p.posix.join(remotePath, folder['name']),
           newLocalPath, operation, client);
     }

@@ -1,5 +1,13 @@
+import 'package:crisp_storage/crisp_storage.dart'
+    show
+        SshKnownHosts,
+        HostKeyPrompt,
+        openVerifiedSsh,
+        SftpHostKeyException,
+        RemoteException;
 // lib/services/sftp_client_adapter.dart
 import 'dart:async';
+import 'dart:convert';
 import 'dart:io';
 import 'dart:typed_data';
 import 'package:dartssh2/dartssh2.dart';
@@ -23,6 +31,7 @@ class SFTPClientAdapter extends CloudStorageClient {
   // SSH State
   SSHClient? _sshClient;
   SftpClient? _sftp;
+  HostKeyPrompt? confirmHostKey;
   String? _username;
   String? _host;
   int _port = 22;
@@ -30,7 +39,8 @@ class SFTPClientAdapter extends CloudStorageClient {
   SFTPClientAdapter({required dynamic config})
       : _config = (config is SFTPConfigService)
             ? config
-            : SFTPConfigService(configPath: '', secureStorage: InMemorySecureStorage());
+            : SFTPConfigService(
+                configPath: '', secureStorage: InMemorySecureStorage());
 
   @override
   String get providerName => 'SFTP';
@@ -39,20 +49,26 @@ class SFTPClientAdapter extends CloudStorageClient {
   String get rootPath => '/';
 
   @override
-  bool get isAuthenticated => _sftp != null;
+  bool get isAuthenticated =>
+      _sftp != null && _sshClient != null && !_sshClient!.isClosed;
 
   @override
   String? get userId => _username;
 
   @override
-  String? get bucketId => _host; 
+  String? get bucketId => _host;
 
   // --- Connection Management ---
 
-  Future<void> _ensureConnection() async {
-    if (_sshClient != null && !_sshClient!.isClosed && _sftp != null) return;
-
-    final creds = await _config.readCredentials();
+  Future<void> _ensureConnection({Map<String, String>? credentials}) async {
+    if (credentials == null &&
+        _sshClient != null &&
+        !_sshClient!.isClosed &&
+        _sftp != null) {
+      return;
+    }
+    if (credentials != null) await _closeConnection();
+    final creds = credentials ?? await _config.readCredentials();
     if (creds == null) throw Exception('Not logged in');
 
     _username = creds['username'];
@@ -84,78 +100,107 @@ class SFTPClientAdapter extends CloudStorageClient {
         // 3. Wrap in SSHSocket implementation (Fixes the type error)
         final sshSocket = WebSSHSocket(wsChannel);
 
-        _sshClient = SSHClient(
-          sshSocket,
-          username: _username!,
-          onPasswordRequest: () => password,
-        );
+        _sshClient = await openVerifiedSsh(sshSocket,
+            username: _username!,
+            password: password,
+            verify: (_, fingerprint) => _config.knownHosts.verify(
+                SshKnownHosts.endpoint(_host!, _port), utf8.decode(fingerprint),
+                prompt: confirmHostKey));
       } else {
         // Native TCP Connection
-        final socket = await SSHSocket.connect(_host!, _port);
-        
-        _sshClient = SSHClient(
-          socket,
-          username: _username!,
-          onPasswordRequest: () => password,
-        );
+        final socket = await SSHSocket.connect(_host!, _port,
+            timeout: const Duration(seconds: 15));
+
+        _sshClient = await openVerifiedSsh(socket,
+            username: _username!,
+            password: password,
+            verify: (_, fingerprint) => _config.knownHosts.verify(
+                SshKnownHosts.endpoint(_host!, _port), utf8.decode(fingerprint),
+                prompt: confirmHostKey));
       }
 
       await _sshClient!.authenticated;
       _sftp = await _sshClient!.sftp();
     } catch (e) {
-      _sshClient?.close();
+      await _closeConnection();
       _sshClient = null;
       _sftp = null;
       _log.error('Connection error', e);
-      throw Exception('Connection failed: $e');
+      if (e is SftpHostKeyException) rethrow;
+      throw const RemoteException(
+          'SFTP connection failed. Check server access and credentials.');
     }
   }
 
   // --- Interface Implementation ---
 
   @override
-  Future<void> login(String email, String password, {String? twoFactorCode}) async {
+  Future<void> login(String email, String password,
+      {String? twoFactorCode}) async {
     String user = email;
     String host = '';
     String port = '22';
-    
+
     if (email.contains('@')) {
-      final parts = email.split('@');
-      user = parts[0];
-      final hostPart = parts[1];
-      
-      if (hostPart.contains(':')) {
-        final hostParts = hostPart.split(':');
-        host = hostParts[0];
-        port = hostParts[1];
-      } else {
-        host = hostPart;
+      final at = email.lastIndexOf('@');
+      user = email.substring(0, at);
+      final hostPart = email.substring(at + 1);
+
+      final bridge = kIsWeb &&
+          (hostPart.startsWith('ws://') || hostPart.startsWith('wss://'));
+      final endpoint = Uri.parse(bridge ? hostPart : 'ssh://$hostPart');
+      host = bridge ? hostPart : endpoint.host;
+      port =
+          '${endpoint.hasPort ? endpoint.port : (bridge ? (endpoint.scheme == 'wss' ? 443 : 80) : 22)}';
+      if (user.isEmpty ||
+          endpoint.host.isEmpty ||
+          endpoint.userInfo.isNotEmpty ||
+          endpoint.hasQuery ||
+          endpoint.hasFragment ||
+          (!bridge && endpoint.path.isNotEmpty) ||
+          int.parse(port) < 1 ||
+          int.parse(port) > 65535) {
+        throw const FormatException('Invalid SFTP server address');
       }
     } else {
-      throw Exception('Format must be user@host (e.g. u12345@u123.your-storagebox.de)');
+      throw Exception(
+          'Format must be user@host (e.g. u12345@u123.your-storagebox.de)');
     }
 
-    await _config.saveCredentials({
+    final credentials = {
       'username': user,
       'password': password,
       'host': host,
-      'port': port,
-    });
-
+      'port': port
+    };
     try {
-      await _ensureConnection();
-    } catch (e) {
-      await _config.clearCredentials();
+      await _ensureConnection(credentials: credentials);
+      await _config.saveCredentials(credentials);
+    } catch (_) {
+      await _closeConnection();
       rethrow;
     }
   }
 
   @override
-  Future<bool> is2faNeeded(String email) async => false; 
+  Future<bool> is2faNeeded(String email) async => false;
+
+  Future<void> _closeConnection() async {
+    final sftp = _sftp;
+    final ssh = _sshClient;
+    _sftp = null;
+    _sshClient = null;
+    try {
+      await sftp?.close();
+    } catch (_) {/* May already be disconnected. */}
+    try {
+      await ssh?.close();
+    } catch (_) {/* Transport can already be closed. */}
+  }
 
   @override
   Future<void> logout() async {
-    _sshClient?.close();
+    await _closeConnection();
     _sshClient = null;
     _sftp = null;
     await _config.clearCredentials();
@@ -166,11 +211,12 @@ class SFTPClientAdapter extends CloudStorageClient {
     await _ensureConnection();
     try {
       final stat = await _sftp!.stat(path);
-      
+
       // FIX: Handle int timestamp safely
       String? updatedAt;
       if (stat.modifyTime != null) {
-        updatedAt = DateTime.fromMillisecondsSinceEpoch(stat.modifyTime! * 1000).toIso8601String();
+        updatedAt = DateTime.fromMillisecondsSinceEpoch(stat.modifyTime! * 1000)
+            .toIso8601String();
       }
 
       return {
@@ -179,7 +225,7 @@ class SFTPClientAdapter extends CloudStorageClient {
         'path': path,
         'size': stat.size,
         'updatedAt': updatedAt,
-        'uuid': path, 
+        'uuid': path,
       };
     } catch (e) {
       return null;
@@ -189,23 +235,25 @@ class SFTPClientAdapter extends CloudStorageClient {
   @override
   Future<Map<String, dynamic>> listPath(String path) async {
     await _ensureConnection();
-    
+
     final folders = <Map<String, dynamic>>[];
     final files = <Map<String, dynamic>>[];
 
     try {
       final items = await _sftp!.listdir(path);
-      
+
       for (final item in items) {
         if (item.filename == '.' || item.filename == '..') continue;
-        
+
         final fullPath = p.posix.join(path, item.filename);
         final isDir = item.attr.isDirectory;
         final isLink = item.attr.isSymbolicLink;
 
         // FIX: Handle int timestamp safely
         final modTimeInt = item.attr.modifyTime ?? 0;
-        final modTimeStr = DateTime.fromMillisecondsSinceEpoch(modTimeInt * 1000).toIso8601String();
+        final modTimeStr =
+            DateTime.fromMillisecondsSinceEpoch(modTimeInt * 1000)
+                .toIso8601String();
 
         final map = {
           'uuid': fullPath,
@@ -243,26 +291,28 @@ class SFTPClientAdapter extends CloudStorageClient {
   }) async {
     await _ensureConnection();
     final remoteFilePath = p.posix.join(targetPath, fileName);
-    
+
     final file = await _sftp!.open(
       remoteFilePath,
-      mode: SftpFileOpenMode.create | SftpFileOpenMode.write | SftpFileOpenMode.truncate,
+      mode: SftpFileOpenMode.create |
+          SftpFileOpenMode.write |
+          SftpFileOpenMode.truncate,
     );
-    
+
     try {
       final bytes = Uint8List.fromList(fileData);
-      
+
       int offset = 0;
-      const chunkSize = 32 * 1024; 
+      const chunkSize = 32 * 1024;
       final total = bytes.length;
-      
+
       while (offset < total) {
         var end = offset + chunkSize;
         if (end > total) end = total;
-        
+
         final chunk = bytes.sublist(offset, end);
-        await file.writeBytes(chunk); 
-        
+        await file.writeBytes(chunk);
+
         offset = end;
         if (onProgress != null) onProgress(offset, total);
       }
@@ -278,26 +328,26 @@ class SFTPClientAdapter extends CloudStorageClient {
     Function(int, int)? onProgress,
   }) async {
     await _ensureConnection();
-    
+
     final file = await _sftp!.open(remotePath, mode: SftpFileOpenMode.read);
     final fileSize = (await file.stat()).size ?? 0;
-    
+
     final localFile = File(localPath);
     final sink = localFile.openWrite();
-    
+
     try {
       int downloaded = 0;
       int offset = 0;
-      
-      while(true) {
-         final chunk = await file.readBytes(length: 32 * 1024, offset: offset);
-         if (chunk.isEmpty) break;
-         
-         sink.add(chunk);
-         offset += chunk.length;
-         downloaded += chunk.length;
-         
-         if (onProgress != null) onProgress(downloaded, fileSize);
+
+      while (true) {
+        final chunk = await file.readBytes(length: 32 * 1024, offset: offset);
+        if (chunk.isEmpty) break;
+
+        sink.add(chunk);
+        offset += chunk.length;
+        downloaded += chunk.length;
+
+        if (onProgress != null) onProgress(downloaded, fileSize);
       }
     } finally {
       await sink.close();
@@ -311,28 +361,28 @@ class SFTPClientAdapter extends CloudStorageClient {
     Function(int, int)? onProgress,
   }) async {
     await _ensureConnection();
-    
+
     final file = await _sftp!.open(remotePath, mode: SftpFileOpenMode.read);
     final fileSize = (await file.stat()).size ?? 0;
-    
+
     // Use a BytesBuilder to collect chunks efficiently
     final builder = BytesBuilder(copy: false);
-    
+
     try {
       int downloaded = 0;
       int offset = 0;
-      
-      while(true) {
-         final chunk = await file.readBytes(length: 32 * 1024, offset: offset);
-         if (chunk.isEmpty) break;
-         
-         builder.add(chunk);
-         offset += chunk.length;
-         downloaded += chunk.length;
-         
-         if (onProgress != null) onProgress(downloaded, fileSize);
+
+      while (true) {
+        final chunk = await file.readBytes(length: 32 * 1024, offset: offset);
+        if (chunk.isEmpty) break;
+
+        builder.add(chunk);
+        offset += chunk.length;
+        downloaded += chunk.length;
+
+        if (onProgress != null) onProgress(downloaded, fileSize);
       }
-      
+
       return builder.takeBytes();
     } finally {
       await file.close();
@@ -353,20 +403,20 @@ class SFTPClientAdapter extends CloudStorageClient {
   Future<void> deletePath(String path) async {
     await _ensureConnection();
     final stat = await _sftp!.stat(path);
-    
+
     if (stat.isDirectory) {
       await _deleteDirectoryRecursive(path);
     } else {
       await _sftp!.remove(path);
     }
   }
-  
+
   Future<void> _deleteDirectoryRecursive(String path) async {
     final items = await _sftp!.listdir(path);
     for (final item in items) {
       if (item.filename == '.' || item.filename == '..') continue;
       final fullPath = p.posix.join(path, item.filename);
-      
+
       if (item.attr.isDirectory) {
         await _deleteDirectoryRecursive(fullPath);
       } else {
@@ -402,7 +452,8 @@ class SFTPClientAdapter extends CloudStorageClient {
   Future<void> chmod(String path, String mode) async {
     await _ensureConnection();
     // run() returns stdout as Uint8List; use '&& echo OK' to verify success
-    final result = await _sshClient!.run('chmod $mode ${_shellEscape(path)} 2>&1');
+    final result =
+        await _sshClient!.run('chmod $mode ${_shellEscape(path)} 2>&1');
     final output = String.fromCharCodes(result).trim();
     if (output.isNotEmpty && !output.contains('OK')) {
       throw Exception('chmod failed: $output');
@@ -414,7 +465,8 @@ class SFTPClientAdapter extends CloudStorageClient {
   /// [owner] format: "user:group" or just "user".
   Future<void> chown(String path, String owner) async {
     await _ensureConnection();
-    final result = await _sshClient!.run('chown $owner ${_shellEscape(path)} 2>&1');
+    final result =
+        await _sshClient!.run('chown $owner ${_shellEscape(path)} 2>&1');
     final output = String.fromCharCodes(result).trim();
     if (output.isNotEmpty) {
       throw Exception('chown failed: $output');
@@ -425,7 +477,8 @@ class SFTPClientAdapter extends CloudStorageClient {
   /// Get file owner and group via stat command.
   Future<Map<String, String>> getOwnership(String path) async {
     await _ensureConnection();
-    final result = await _sshClient!.run('stat -c "%U:%G" ${_shellEscape(path)}');
+    final result =
+        await _sshClient!.run('stat -c "%U:%G" ${_shellEscape(path)}');
     final output = String.fromCharCodes(result).trim();
     if (output.contains(':')) {
       final parts = output.split(':');
@@ -457,7 +510,9 @@ class SFTPClientAdapter extends CloudStorageClient {
 
     final file = await _sftp!.open(
       remoteFilePath,
-      mode: SftpFileOpenMode.create | SftpFileOpenMode.write | SftpFileOpenMode.truncate,
+      mode: SftpFileOpenMode.create |
+          SftpFileOpenMode.write |
+          SftpFileOpenMode.truncate,
     );
 
     try {
@@ -514,7 +569,8 @@ class WebSSHSocket implements SSHSocket {
   Stream<Uint8List> get stream => _ws.stream.map((event) {
         if (event is Uint8List) return event;
         if (event is List<int>) return Uint8List.fromList(event);
-        throw FormatException('Invalid payload from WebSocket: ${event.runtimeType}');
+        throw FormatException(
+            'Invalid payload from WebSocket: ${event.runtimeType}');
       });
 
   @override
@@ -522,6 +578,9 @@ class WebSSHSocket implements SSHSocket {
 
   @override
   Future<void> close() => _ws.sink.close();
+
+  @override
+  Future<void> flush() async {/* WebSocket sends are enqueued immediately. */}
 
   @override
   Future<void> get done => _ws.sink.done;

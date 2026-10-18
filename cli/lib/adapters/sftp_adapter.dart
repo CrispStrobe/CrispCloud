@@ -1,3 +1,6 @@
+import 'dart:convert';
+import 'package:crisp_storage/crisp_storage.dart'
+    show HostKeyPrompt, SftpHostKeyException, openVerifiedSsh;
 // lib/adapters/sftp_adapter.dart
 //
 // Pure-Dart SFTP adapter for the crisp CLI, backed by dartssh2.
@@ -19,6 +22,9 @@ class SftpCliAdapter implements CliStorageClient {
   final String _host;
   final int _port;
 
+  String? _hostKey;
+  String? get trustedHostKey => _hostKey;
+  HostKeyPrompt? confirmHostKey;
   SSHClient? _ssh;
   SftpClient? _sftp;
 
@@ -27,10 +33,12 @@ class SftpCliAdapter implements CliStorageClient {
     required String password,
     required String host,
     int port = 22,
+    String? hostKey,
   })  : _username = username,
         _password = password,
         _host = host,
-        _port = port;
+        _port = port,
+        _hostKey = hostKey;
 
   factory SftpCliAdapter.fromConfig(Map<String, dynamic> cfg) {
     final username = cfg['username'] as String?;
@@ -48,13 +56,14 @@ class SftpCliAdapter implements CliStorageClient {
       password: password,
       host: host,
       port: port,
+      hostKey: cfg['hostKey'] as String?,
     );
   }
 
   /// Parse the identity string used with `crisp connect`:
   ///   user@host[:port]
   static Map<String, String> parseIdentity(String identity, String password) {
-    final atIdx = identity.indexOf('@');
+    final atIdx = identity.lastIndexOf('@');
     if (atIdx < 0) {
       throw CliConfigException(
         'Invalid SFTP identity format. Expected: username@host[:port]',
@@ -62,16 +71,19 @@ class SftpCliAdapter implements CliStorageClient {
     }
     final username = identity.substring(0, atIdx);
     final hostPort = identity.substring(atIdx + 1);
-    String host;
-    String port = '22';
-
-    if (hostPort.contains(':')) {
-      final parts = hostPort.split(':');
-      host = parts[0];
-      port = parts[1];
-    } else {
-      host = hostPort;
+    final address = Uri.tryParse('ssh://$hostPort');
+    if (username.isEmpty ||
+        address == null ||
+        address.host.isEmpty ||
+        address.userInfo.isNotEmpty ||
+        address.path.isNotEmpty ||
+        address.hasQuery ||
+        address.hasFragment ||
+        (address.hasPort && (address.port < 1 || address.port > 65535))) {
+      throw CliConfigException('Invalid SFTP server address');
     }
+    final host = address.host;
+    final port = '${address.hasPort ? address.port : 22}';
 
     return {
       'username': username,
@@ -89,11 +101,20 @@ class SftpCliAdapter implements CliStorageClient {
 
     final socket = await SSHSocket.connect(_host, _port,
         timeout: const Duration(seconds: 20));
-    _ssh = SSHClient(
-      socket,
-      username: _username,
-      onPasswordRequest: () => _password,
-    );
+    _ssh = await openVerifiedSsh(socket,
+        username: _username, password: _password, verify: (_, bytes) async {
+      final observed = utf8.decode(bytes);
+      if (_hostKey == observed) return true;
+      final endpoint = '$_host:$_port';
+      if (_hostKey != null ||
+          confirmHostKey == null ||
+          !await confirmHostKey!(endpoint, observed)) {
+        throw SftpHostKeyException(observed,
+            expected: _hostKey, endpoint: endpoint);
+      }
+      _hostKey = observed;
+      return true;
+    });
     await _ssh!.authenticated;
     _sftp = await _ssh!.sftp();
   }
@@ -108,7 +129,8 @@ class SftpCliAdapter implements CliStorageClient {
       final fullPath = p.posix.join(remotePath, item.filename);
       final modTime = item.attr.modifyTime;
       final modifiedAt = modTime != null
-          ? DateTime.fromMillisecondsSinceEpoch(modTime * 1000).toIso8601String()
+          ? DateTime.fromMillisecondsSinceEpoch(modTime * 1000)
+              .toIso8601String()
           : null;
       result.add(CliFileItem(
         name: item.filename,
@@ -257,7 +279,8 @@ class SftpCliAdapter implements CliStorageClient {
         isDirectory: s.isDirectory,
         size: s.size,
         modifiedAt: modTime != null
-            ? DateTime.fromMillisecondsSinceEpoch(modTime * 1000).toIso8601String()
+            ? DateTime.fromMillisecondsSinceEpoch(modTime * 1000)
+                .toIso8601String()
             : null,
       );
     } catch (_) {
@@ -272,7 +295,12 @@ class SftpCliAdapter implements CliStorageClient {
 
   @override
   Future<void> dispose() async {
-    _ssh?.close();
+    try {
+      await _sftp?.close();
+    } catch (_) {}
+    try {
+      await _ssh?.close();
+    } catch (_) {}
     _ssh = null;
     _sftp = null;
   }

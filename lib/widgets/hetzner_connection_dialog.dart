@@ -96,10 +96,9 @@ class _HetznerConnectionDialogState
     return hetznerHostname(username);
   }
 
-  String get _previewPort =>
-      _protocol == HetznerProtocol.sftp
-          ? '$kHetznerSftpPort'
-          : '$kHetznerWebDavPort';
+  String get _previewPort => _protocol == HetznerProtocol.sftp
+      ? '$kHetznerSftpPort'
+      : '$kHetznerWebDavPort';
 
   // ── Test Connection ───────────────────────────────────────────────────────
 
@@ -124,7 +123,30 @@ class _HetznerConnectionDialogState
       final password = _passwordController.text;
       final subAccount = _subAccountController.text.trim();
 
-      final adapter = HetznerStorageBoxAdapter.withMemoryStorage();
+      final hosts =
+          HetznerConfigService(secureStorage: ref.read(secureStorageProvider))
+              .knownHosts;
+      final adapter = HetznerStorageBoxAdapter.withMemoryStorage(
+          knownHosts: hosts,
+          confirmHostKey: (endpoint, fingerprint) async {
+            if (!mounted) return false;
+            return await showDialog<bool>(
+                    context: context,
+                    barrierDismissible: false,
+                    builder: (ctx) => AlertDialog(
+                            title: const Text('Verify SSH server'),
+                            content: SelectableText(
+                                '$endpoint\n\n$fingerprint\n\nCompare this host key with your server.'),
+                            actions: [
+                              TextButton(
+                                  onPressed: () => Navigator.pop(ctx, false),
+                                  child: const Text('Cancel')),
+                              FilledButton(
+                                  onPressed: () => Navigator.pop(ctx, true),
+                                  child: const Text('Trust server'))
+                            ])) ??
+                false;
+          });
       await adapter.login(
         username,
         password,
@@ -218,8 +240,7 @@ class _HetznerConnectionDialogState
                       style: TextStyle(fontWeight: FontWeight.bold),
                     ),
                     TextSpan(
-                      text:
-                          'connect via SFTP (port 23) or WebDAV (HTTPS). '
+                      text: 'connect via SFTP (port 23) or WebDAV (HTTPS). '
                           'Your username is shown in the Robot & Storage Box panel '
                           'in the Hetzner Cloud Console.',
                     ),
@@ -342,8 +363,7 @@ class _HetznerConnectionDialogState
                 hintText: 'sub1',
                 border: OutlineInputBorder(),
                 prefixIcon: Icon(Icons.manage_accounts_outlined),
-                helperText:
-                    'Leave blank to use the main account. '
+                helperText: 'Leave blank to use the main account. '
                     'Effective login: uNNNNNN-subN',
               ),
             ),
@@ -403,7 +423,10 @@ class _InfoBanner extends StatelessWidget {
     return Container(
       padding: const EdgeInsets.all(10),
       decoration: BoxDecoration(
-        color: Theme.of(context).colorScheme.primaryContainer.withValues(alpha: 0.3),
+        color: Theme.of(context)
+            .colorScheme
+            .primaryContainer
+            .withValues(alpha: 0.3),
         borderRadius: BorderRadius.circular(8),
       ),
       child: Row(
@@ -426,8 +449,7 @@ class _StatusBanner extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final color = isError ? Colors.red : Colors.green;
-    final icon =
-        isError ? Icons.error_outline : Icons.check_circle_outline;
+    final icon = isError ? Icons.error_outline : Icons.check_circle_outline;
     return Container(
       padding: const EdgeInsets.all(10),
       decoration: BoxDecoration(

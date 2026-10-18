@@ -69,6 +69,36 @@ jobs:
       - name: Install dependencies
         run: flutter pub get
 
+      - name: Shared storage contracts
+        working-directory: packages/crisp_storage
+        run: |
+          dart pub get
+          dart analyze
+          dart test
+
+      - name: CLI contracts
+        working-directory: cli
+        run: |
+          dart pub get
+          dart analyze
+          dart test
+
+      - name: Compile CLI binary
+        working-directory: cli
+        run: dart compile exe bin/crisp.dart -o "$RUNNER_TEMP/crisp"
+
+      - name: Upload Linux CLI
+        uses: actions/upload-artifact@v4
+        with:
+          name: crisp-cli-linux
+          path: ${{ runner.temp }}/crisp
+          if-no-files-found: error
+
+      - name: Prepare isolated SSH fixture
+        run: |
+          python3 -m venv "$RUNNER_TEMP/storage-fixture"
+          "$RUNNER_TEMP/storage-fixture/bin/pip" install --quiet paramiko
+
       - name: Export dependency inventory
         run: |
           dart pub deps --json > dependency-inventory.json
@@ -94,6 +124,8 @@ jobs:
           echo "No errors found (warnings/info are OK)"
 
       - name: Fast deterministic tests with coverage
+        env:
+          CRISPER_SFTP_PYTHON: ${{ runner.temp }}/storage-fixture/bin/python
         run: >-
           flutter test --coverage --concurrency=4
           --exclude-tags=benchmark,live,deploy,mock_server,integration,connection_dialog,golden

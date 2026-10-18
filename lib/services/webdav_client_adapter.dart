@@ -1,6 +1,6 @@
+import 'package:crisp_storage/crisp_storage.dart' as storage;
 // lib/services/webdav_client_adapter.dart
 import 'dart:async';
-import 'dart:typed_data';
 import 'package:flutter/foundation.dart';
 import 'package:webdav_client/webdav_client.dart' as webdav;
 import 'package:path/path.dart' as p;
@@ -18,13 +18,17 @@ class WebDavClientAdapter extends CloudStorageClient {
   WebDavConfigService get config => _config;
 
   webdav.Client? _client;
+  storage.RemoteClient? _streamClient;
+  @override
+  bool get supportsStreaming => !kIsWeb;
   String? _user;
   String? _host;
 
   WebDavClientAdapter({required dynamic config})
       : _config = (config is WebDavConfigService)
             ? config
-            : WebDavConfigService(configPath: '', secureStorage: InMemorySecureStorage());
+            : WebDavConfigService(
+                configPath: '', secureStorage: InMemorySecureStorage());
 
   @override
   String get providerName => 'WebDAV';
@@ -42,17 +46,29 @@ class WebDavClientAdapter extends CloudStorageClient {
   String? get bucketId => _host;
 
   void _initClient(String url, String user, String password) {
+    _streamClient?.close();
+    _streamClient = kIsWeb
+        ? null
+        : storage.RemoteClient(storage.RemoteConnection(
+            id: 'crispcloud-webdav',
+            name: 'WebDAV',
+            kind: 'webdav',
+            url: url,
+            username: user,
+            secret: password,
+            allowLocalHttp: true));
     _client = webdav.newClient(
       url,
       user: user,
       password: password,
-      debug: false, 
+      debug: false,
     );
     _client!.setHeaders({'Content-Type': 'application/octet-stream'});
   }
 
   @override
-  Future<void> login(String email, String password, {String? twoFactorCode}) async {
+  Future<void> login(String email, String password,
+      {String? twoFactorCode}) async {
     String user = email;
     String host = '';
 
@@ -66,7 +82,7 @@ class WebDavClientAdapter extends CloudStorageClient {
 
     try {
       final tempClient = webdav.newClient(host, user: user, password: password);
-      await tempClient.readDir('/'); 
+      await tempClient.readDir('/');
     } catch (e) {
       throw Exception('Connection failed: $e');
     }
@@ -88,30 +104,32 @@ class WebDavClientAdapter extends CloudStorageClient {
     Function(int, int)? onProgress,
   }) async {
     await _ensureClient();
-    
+
     // Note: webdav_client 1.2.2 returns a List<int>, but it loads fully into memory.
     // It does not expose a stream directly for progress updates easily without modifying the lib.
     final data = await _client!.read(remotePath);
-    
+
     if (onProgress != null) {
       onProgress(data.length, data.length);
     }
-    
+
     return Uint8List.fromList(data);
   }
 
   @override
   Future<void> logout() async {
+    _streamClient?.close();
+    _streamClient = null;
     _client = null;
     await _config.clearCredentials();
   }
-  
+
   Future<void> _ensureClient() async {
     if (_client != null) return;
-    
+
     final creds = await _config.readCredentials();
     if (creds == null) throw Exception('Not logged in');
-    
+
     _user = creds['username'];
     _host = creds['host'];
     _initClient(_host!, _user!, creds['password']!);
@@ -123,9 +141,9 @@ class WebDavClientAdapter extends CloudStorageClient {
     try {
       final list = await _client!.readDir(path);
       if (list.isEmpty) return null;
-      
+
       final item = list.first;
-      
+
       // FIX: Use isDir and mTime for webdav_client 1.2.2
       return {
         'type': (item.isDir ?? false) ? 'folder' : 'file',
@@ -143,20 +161,22 @@ class WebDavClientAdapter extends CloudStorageClient {
   @override
   Future<Map<String, dynamic>> listPath(String path) async {
     await _ensureClient();
-    
+
     final folders = <Map<String, dynamic>>[];
     final files = <Map<String, dynamic>>[];
 
     try {
       final contents = await _client!.readDir(path);
-      
+
       for (final item in contents) {
-        if (item.name == null || item.name == '.' || item.name == '..') continue;
-        
+        if (item.name == null || item.name == '.' || item.name == '..') {
+          continue;
+        }
+
         final fullPath = p.posix.join(path, item.name);
         // FIX: Use isDir
         final isDir = item.isDir ?? false;
-        
+
         final map = {
           'uuid': fullPath,
           'name': item.name,
@@ -193,9 +213,9 @@ class WebDavClientAdapter extends CloudStorageClient {
   }) async {
     await _ensureClient();
     final remotePath = p.posix.join(targetPath, fileName);
-    
+
     await _client!.write(remotePath, Uint8List.fromList(fileData));
-    
+
     if (onProgress != null) {
       onProgress(fileData.length, fileData.length);
     }
@@ -208,14 +228,34 @@ class WebDavClientAdapter extends CloudStorageClient {
     Function(int, int)? onProgress,
   }) async {
     await _ensureClient();
-    
-    final data = await _client!.read(remotePath);
-    
-    await dart_io.File(localPath).writeAsBytes(data);
-    
-    if (onProgress != null) {
-      onProgress(data.length, data.length);
+
+    if (kIsWeb) {
+      throw UnsupportedError('Use the browser download stream on web');
     }
+    final sink = dart_io.File(localPath).openWrite();
+    try {
+      await for (final chunk
+          in downloadStream(remotePath, onProgress: onProgress)) {
+        sink.add(chunk);
+        // Apply disk backpressure instead of accumulating the whole response.
+        await sink.flush();
+      }
+    } finally {
+      await sink.close();
+    }
+  }
+
+  @override
+  Stream<List<int>> downloadStream(String remotePath,
+      {Function(int, int)? onProgress}) async* {
+    await _ensureClient();
+    if (kIsWeb) {
+      yield await downloadFileBytes(remotePath, onProgress: onProgress);
+      return;
+    }
+    yield* _streamClient!.downloadStream(
+        Uri(path: remotePath.replaceFirst(RegExp(r'^/+'), '')).toString(),
+        onProgress: onProgress);
   }
 
   @override
@@ -227,14 +267,15 @@ class WebDavClientAdapter extends CloudStorageClient {
   @override
   Future<void> deletePath(String path) async {
     await _ensureClient();
-    await _client!.remove(path); // 'remove' instead of 'removeAll' in 1.2.2 usually, checking common usage
+    await _client!.remove(
+        path); // 'remove' instead of 'removeAll' in 1.2.2 usually, checking common usage
   }
 
   @override
   Future<void> movePath(String sourcePath, String targetPath) async {
     await _ensureClient();
     // FIX: Use rename() for moving, with overwrite=false (or true if preferred)
-    await _client!.rename(sourcePath, targetPath, false); 
+    await _client!.rename(sourcePath, targetPath, false);
   }
 
   @override
@@ -244,7 +285,7 @@ class WebDavClientAdapter extends CloudStorageClient {
     // FIX: Use rename()
     await _client!.rename(path, newPath, false);
   }
-  
+
   @override
-  Future<bool> is2faNeeded(String email) async => false; 
+  Future<bool> is2faNeeded(String email) async => false;
 }

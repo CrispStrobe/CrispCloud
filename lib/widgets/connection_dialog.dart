@@ -1,3 +1,4 @@
+import '../services/sftp_client_adapter.dart';
 // lib/widgets/connection_dialog.dart
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -1292,6 +1293,28 @@ class _ConnectionDialogState extends ConsumerState<ConnectionDialog> {
         }
       }
 
+      if (auth.client is SFTPClientAdapter) {
+        (auth.client as SFTPClientAdapter).confirmHostKey =
+            (endpoint, fingerprint) async {
+          if (!mounted) return false;
+          return await showDialog<bool>(
+                  context: context,
+                  barrierDismissible: false,
+                  builder: (ctx) => AlertDialog(
+                          title: const Text('Verify SSH server'),
+                          content: SelectableText(
+                              'Server: $endpoint\n\nSHA256 host key:\n$fingerprint\n\nCompare this fingerprint with your server before trusting it.'),
+                          actions: [
+                            TextButton(
+                                onPressed: () => Navigator.pop(ctx, false),
+                                child: const Text('Cancel')),
+                            FilledButton(
+                                onPressed: () => Navigator.pop(ctx, true),
+                                child: const Text('Trust server'))
+                          ])) ??
+              false;
+        };
+      }
       // 4. Perform Login
       await auth.login(
         identity,

@@ -5,6 +5,7 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../services/ssh_terminal_service.dart';
+import 'core_providers.dart';
 
 // ---------------------------------------------------------------------------
 // Singleton service
@@ -15,7 +16,7 @@ import '../services/ssh_terminal_service.dart';
 /// The service is created lazily and disposed when the provider is no longer
 /// listened to.
 final sshTerminalServiceProvider = Provider<SshTerminalService>((ref) {
-  final service = SshTerminalService();
+  final service = SshTerminalService(secureStorage:ref.read(secureStorageProvider));
   ref.onDispose(service.dispose);
   return service;
 });

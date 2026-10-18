@@ -1,3 +1,6 @@
+import 'package:crisp_storage/crisp_storage.dart'
+    show SshKnownHosts, HostKeyPrompt, openVerifiedSsh;
+import 'secure_storage_service.dart';
 // lib/services/ssh_terminal_service.dart
 //
 // Embedded SSH terminal service for SFTP connections.
@@ -10,6 +13,7 @@
 // throws [UnsupportedError].
 
 import 'dart:async';
+import 'dart:convert';
 import 'dart:io' show Platform;
 import 'dart:typed_data';
 
@@ -83,8 +87,7 @@ class SshSession {
       );
 
   @override
-  bool operator ==(Object other) =>
-      other is SshSession && other.id == id;
+  bool operator ==(Object other) => other is SshSession && other.id == id;
 
   @override
   int get hashCode => id.hashCode;
@@ -130,6 +133,11 @@ class SshTerminalService {
   static const Duration defaultIdleTimeout = Duration(minutes: 30);
 
   final Duration idleTimeout;
+  HostKeyPrompt? confirmHostKey;
+  late final SshKnownHosts _knownHosts = SshKnownHosts(
+      read: () => _secure.read('ssh_known_hosts_v1'),
+      write: (value) => _secure.write('ssh_known_hosts_v1', value));
+  final SecureStorage _secure;
 
   /// Internal session registry.
   final Map<String, _SessionState> _sessions = {};
@@ -137,8 +145,13 @@ class SshTerminalService {
   /// Periodic idle-check timer.
   Timer? _idleTimer;
 
-  SshTerminalService({this.idleTimeout = defaultIdleTimeout}) {
-    _idleTimer = Timer.periodic(const Duration(minutes: 1), (_) => _sweepIdle());
+  SshTerminalService(
+      {this.idleTimeout = defaultIdleTimeout,
+      SecureStorage? secureStorage,
+      this.confirmHostKey})
+      : _secure = secureStorage ?? PlatformSecureStorage() {
+    _idleTimer =
+        Timer.periodic(const Duration(minutes: 1), (_) => _sweepIdle());
   }
 
   // -------------------------------------------------------------------------
@@ -187,12 +200,14 @@ class SshTerminalService {
 
     SSHClient client;
     try {
-      final socket = await SSHSocket.connect(host, port);
-      client = SSHClient(
-        socket,
-        username: username,
-        onPasswordRequest: () => password,
-      );
+      final socket = await SSHSocket.connect(host, port,
+          timeout: const Duration(seconds: 15));
+      client = await openVerifiedSsh(socket,
+          username: username,
+          password: password,
+          verify: (_, fingerprint) => _knownHosts.verify(
+              SshKnownHosts.endpoint(host, port), utf8.decode(fingerprint),
+              prompt: confirmHostKey));
       await client.authenticated;
     } catch (e) {
       _log.error('SSH connect failed', e);
@@ -241,12 +256,17 @@ class SshTerminalService {
     SSHClient client;
     try {
       final keyPair = _parseKeyPair(privateKey);
-      final socket = await SSHSocket.connect(host, port);
-      client = SSHClient(
-        socket,
-        username: username,
-        identities: keyPair != null ? [keyPair] : [],
-      );
+      if (keyPair == null) {
+        throw const FormatException('Invalid SSH private key');
+      }
+      final socket = await SSHSocket.connect(host, port,
+          timeout: const Duration(seconds: 15));
+      client = await openVerifiedSsh(socket,
+          username: username,
+          identities: [keyPair],
+          verify: (_, fingerprint) => _knownHosts.verify(
+              SshKnownHosts.endpoint(host, port), utf8.decode(fingerprint),
+              prompt: confirmHostKey));
       await client.authenticated;
     } catch (e) {
       _log.error('SSH key-connect failed', e);
@@ -353,29 +373,25 @@ class SshTerminalService {
     state.shellOutput = controller;
 
     // Pipe stdout.
-    shell.stdout
-        .transform(const _BytesToStringTransformer())
-        .listen(
-          (data) {
-            _touch(sessionId);
-            controller.add(data);
-          },
-          onError: controller.addError,
-          onDone: controller.close,
-          cancelOnError: false,
-        );
+    shell.stdout.transform(const _BytesToStringTransformer()).listen(
+      (data) {
+        _touch(sessionId);
+        controller.add(data);
+      },
+      onError: controller.addError,
+      onDone: controller.close,
+      cancelOnError: false,
+    );
 
     // Pipe stderr (if distinct).
-    shell.stderr
-        .transform(const _BytesToStringTransformer())
-        .listen(
-          (data) {
-            _touch(sessionId);
-            controller.add(data);
-          },
-          onError: (e) {},
-          cancelOnError: false,
-        );
+    shell.stderr.transform(const _BytesToStringTransformer()).listen(
+      (data) {
+        _touch(sessionId);
+        controller.add(data);
+      },
+      onError: (e) {},
+      cancelOnError: false,
+    );
 
     return controller.stream;
   }
@@ -479,7 +495,7 @@ class SshTerminalService {
       await state.shellOutput?.close();
     } catch (_) {}
     try {
-      state.client?.close();
+      await state.client?.close();
     } catch (_) {}
   }
 
@@ -526,6 +542,5 @@ class _BytesToStringTransformer
       stream.map((bytes) => String.fromCharCodes(bytes));
 
   @override
-  StreamTransformer<RS, RT> cast<RS, RT>() =>
-      StreamTransformer.castFrom(this);
+  StreamTransformer<RS, RT> cast<RS, RT>() => StreamTransformer.castFrom(this);
 }

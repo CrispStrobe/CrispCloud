@@ -102,3 +102,15 @@ On the Web, the File System Access API's `FileSystemWritableFileStream` would be
 - The 2-chunk back-pressure limit assumes the consumer (disk write or network send) processes chunks faster than the producer (disk read). If not, the `await` on the StreamController pause signal adds latency. In practice this is unnoticeable.
 - On Web, `Uint8List` downloads hit the browser's memory limit for very large files. The fix (File System Access API `showSaveFilePicker` + writable stream) is tracked but not yet implemented.
 - Multipart S3 uploads leave behind in-progress uploads if the app crashes mid-transfer. The resume logic handles this, but orphaned multipart uploads on S3 accumulate storage charges until cleaned up. Users should configure an S3 bucket lifecycle rule to abort incomplete multipart uploads after 7 days.
+
+## Implementation update (2026-10-18)
+
+The native WebDAV adapter now streams through `packages/crisp_storage`, shared
+with CrisperPlayer. Downloads, including recursive folders, check pause and
+cancellation between chunks and flush writes to apply backpressure. Uploads
+use File.openRead directly with pause/cancel checkpoints; the previous custom
+read-ahead controller could stall after filling its buffer. Scheduler callbacks
+finalize failed and cancelled batches as well as successes. Browser downloads
+use the existing writable-stream path where supported, with a buffering fallback.
+The generic provider fallback can still buffer a whole file; streaming support
+must be assessed per adapter rather than inferred from the common method name.

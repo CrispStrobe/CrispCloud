@@ -12,7 +12,9 @@ dependencies:
   http: ^1.2.0
   crypto: ^3.0.3
   path: ^1.9.1
-  dartssh2: ^2.10.0
+  dartssh2: ^4.1.0
+  crisp_storage:
+    path: ../packages/crisp_storage
 
 dev_dependencies:
   lints: ^3.0.0

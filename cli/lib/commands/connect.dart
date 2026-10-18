@@ -40,6 +40,9 @@ class ConnectCommand extends Command<int> {
         abbr: 's',
         help: 'Credential secret: password (SFTP/WebDAV) or secret key (S3).',
       )
+      ..addOption('host-key',
+          help:
+              'Expected SFTP SHA256 host-key fingerprint (required for non-interactive first connections).')
       ..addOption(
         'name',
         abbr: 'n',
@@ -70,15 +73,28 @@ class ConnectCommand extends Command<int> {
     if (secret == null || secret.isEmpty) {
       // Read from stdin if not provided
       stderr.write('Enter secret (password/secret-key): ');
-      final input = stdin.readLineSync();
+      String? input;
+      final interactive = stdin.hasTerminal;
+      final oldEcho = interactive ? stdin.echoMode : true;
+      try {
+        if (interactive) stdin.echoMode = false;
+        input = stdin.readLineSync();
+      } finally {
+        if (interactive) {
+          stdin.echoMode = oldEcho;
+          stderr.writeln();
+        }
+      }
       if (input == null || input.isEmpty) {
         stderr.writeln('Error: secret is required.');
         return 1;
       }
-      return _doConnect(type, identity, input, args['name'] as String?, makeDefault);
+      return _doConnect(
+          type, identity, input, args['name'] as String?, makeDefault);
     }
 
-    return _doConnect(type, identity, secret, args['name'] as String?, makeDefault);
+    return _doConnect(
+        type, identity, secret, args['name'] as String?, makeDefault);
   }
 
   Future<int> _doConnect(
@@ -97,29 +113,74 @@ class ConnectCommand extends Command<int> {
         break;
       case 'sftp':
         final parsed = SftpCliAdapter.parseIdentity(identity, secret);
-        providerMap = {'type': 'sftp', ...parsed};
+        providerMap = {
+          'type': 'sftp',
+          ...parsed,
+          if (argResults?['host-key'] != null)
+            'hostKey': argResults!['host-key']
+        };
         break;
       case 'webdav':
         final parsed = WebDavCliAdapter.parseIdentity(identity, secret);
         providerMap = {'type': 'webdav', ...parsed};
         break;
       default:
-        stderr.writeln('Unknown provider type: $type. Supported: s3, sftp, webdav');
+        stderr.writeln(
+            'Unknown provider type: $type. Supported: s3, sftp, webdav');
         return 2;
     }
 
     // Derive a name
     final existingNames = config.providerNames();
-    final alias = aliasArg ??
-        _uniqueName(type, existingNames);
+    final alias = aliasArg ?? _uniqueName(type, existingNames);
+
+    if (type == 'sftp') {
+      // Trust belongs to the endpoint, including when adding another alias.
+      final host = (providerMap['host'] as String).toLowerCase();
+      final port = '${providerMap['port'] ?? 22}';
+      final pins = <String>{};
+      for (final name in config.providerNames()) {
+        final previous = config.providerConfig(name);
+        if (previous != null &&
+            previous['type'] == 'sftp' &&
+            (previous['host'] as String?)?.toLowerCase() == host &&
+            '${previous['port'] ?? 22}' == port &&
+            previous['hostKey'] is String) {
+          pins.add(previous['hostKey'] as String);
+        }
+      }
+      if (pins.length > 1 ||
+          (pins.isNotEmpty &&
+              providerMap['hostKey'] != null &&
+              !pins.contains(providerMap['hostKey']))) {
+        stderr.writeln(
+            'The saved SSH host key differs. Verify the server and explicitly remove the old profile before replacing its key.');
+        return 1;
+      }
+      if (pins.isNotEmpty) providerMap['hostKey'] = pins.single;
+    }
 
     // Validate the connection
     stdout.write('Testing connection to $type/$alias...');
     try {
       final adapter = createAdapter(alias, providerMap);
-      await adapter.list('/');
+      if (adapter is SftpCliAdapter && stdin.hasTerminal) {
+        adapter.confirmHostKey = (endpoint, fingerprint) async {
+          stderr.writeln(
+              'SSH server $endpoint\nHost key: $fingerprint\nVerify this fingerprint with your server.');
+          stderr.write('Trust this server? [yes/no] ');
+          return stdin.readLineSync()?.trim().toLowerCase() == 'yes';
+        };
+      }
+      try {
+        await adapter.list('/');
+        if (adapter is SftpCliAdapter) {
+          providerMap['hostKey'] = adapter.trustedHostKey;
+        }
+      } finally {
+        await adapter.dispose();
+      }
       stdout.writeln(' OK');
-      await adapter.dispose();
     } catch (e) {
       stdout.writeln(' FAILED');
       stderr.writeln('Connection test failed: $e');

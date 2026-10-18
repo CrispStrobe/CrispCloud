@@ -1,3 +1,4 @@
+import 'package:crisp_storage/crisp_storage.dart' show SshKnownHosts;
 // lib/services/hetzner_config_service.dart
 //
 // Persists Hetzner Storage Box credentials and protocol preference.
@@ -16,6 +17,9 @@ class HetznerConfigService {
   static const _storageKey = 'hetzner_credentials';
 
   final SecureStorage _secure;
+  late final SshKnownHosts knownHosts = SshKnownHosts(
+      read: () => _secure.read('ssh_known_hosts_v1'),
+      write: (value) => _secure.write('ssh_known_hosts_v1', value));
 
   HetznerConfigService({required SecureStorage secureStorage})
       : _secure = secureStorage;

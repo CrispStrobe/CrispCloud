@@ -1,3 +1,4 @@
+import 'package:crisp_storage/crisp_storage.dart';
 // lib/services/sftp_config_service.dart
 import 'log_service.dart';
 import 'secure_storage_service.dart';
@@ -7,9 +8,19 @@ class SFTPConfigService {
 
   final String configPath;
   final SecureStorage _secure;
+  final SshKnownHosts? _knownHostsOverride;
 
-  SFTPConfigService({required this.configPath, required SecureStorage secureStorage})
-      : _secure = secureStorage;
+  SFTPConfigService(
+      {required this.configPath,
+      required SecureStorage secureStorage,
+      SshKnownHosts? knownHosts})
+      : _secure = secureStorage,
+        _knownHostsOverride = knownHosts;
+
+  late final SshKnownHosts knownHosts = _knownHostsOverride ??
+      SshKnownHosts(
+          read: () => _secure.read('ssh_known_hosts_v1'),
+          write: (value) => _secure.write('ssh_known_hosts_v1', value));
 
   Future<Map<String, String>?> readCredentials() async {
     try {

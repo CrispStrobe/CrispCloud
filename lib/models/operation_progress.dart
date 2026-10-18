@@ -1,3 +1,4 @@
+import 'package:crisp_storage/crisp_storage.dart' show TransferOperation;
 // models/operation_progress.dart
 import 'dart:async';
 import '../services/log_service.dart';
@@ -11,13 +12,9 @@ enum OperationType {
   delete,
 }
 
-enum OperationStatus { 
-  inProgress, 
-  completed, 
-  failed 
-}
+enum OperationStatus { inProgress, completed, failed }
 
-class OperationProgress {
+class OperationProgress implements TransferOperation {
   static const _log = Log('OperationProgress');
 
   final String id;
@@ -29,11 +26,11 @@ class OperationProgress {
   int currentBytes;
   OperationStatus status;
   String? errorMessage;
-  
+
   // Batch support
   final String? batchId;
   final List<FileProgress>? files;
-  
+
   // Cancellation support
   final Completer<void> _cancellationCompleter = Completer<void>();
   bool _isCancelled = false;
@@ -41,7 +38,7 @@ class OperationProgress {
   // Pause/Resume support
   Completer<void>? _pauseCompleter;
   bool _isPaused = false;
-  
+
   // Speed tracking
   final DateTime? _transferStartTime;
   DateTime? _lastSpeedUpdate;
@@ -63,8 +60,9 @@ class OperationProgress {
   }) : _transferStartTime = DateTime.now();
 
   double get progress => totalBytes > 0 ? currentBytes / totalBytes : 0;
-  
-  bool get isComplete => status == OperationStatus.completed || status == OperationStatus.failed;
+
+  bool get isComplete =>
+      status == OperationStatus.completed || status == OperationStatus.failed;
 
   // Compatibility getters
   String? get error => errorMessage;
@@ -77,7 +75,7 @@ class OperationProgress {
   // Pause/Resume getters
   bool get isPaused => _isPaused;
   Future<void>? get pauseFuture => _pauseCompleter?.future;
-  
+
   void cancel() {
     if (!_isCancelled && !isComplete) {
       _isCancelled = true;
@@ -93,7 +91,7 @@ class OperationProgress {
       _log.debug('Operation cancelled: $fileName');
     }
   }
-  
+
   // Pause operation
   void pause() {
     if (!_isPaused && !isComplete && !_isCancelled) {
@@ -102,7 +100,7 @@ class OperationProgress {
       _log.debug('Operation paused: $fileName');
     }
   }
-  
+
   // Resume operation
   void resume() {
     if (_isPaused) {
@@ -117,17 +115,17 @@ class OperationProgress {
 
   // Batch operation helpers
   bool get isBatch => files != null && files!.isNotEmpty;
-  
+
   int get completedFiles {
     if (files == null) return 0;
     return files!.where((f) => f.isComplete).length;
   }
-  
+
   int get totalFiles {
     if (files == null) return 0;
     return files!.length;
   }
-  
+
   int get failedFiles {
     if (files == null) return 0;
     return files!.where((f) => f.error != null).length;
@@ -136,7 +134,7 @@ class OperationProgress {
   void complete() {
     status = OperationStatus.completed;
     currentBytes = totalBytes;
-    
+
     // Mark all files as complete if this is a batch
     if (files != null) {
       for (final file in files!) {
@@ -158,7 +156,8 @@ class OperationProgress {
   /// Average speed since transfer started.
   double get averageSpeed {
     if (_transferStartTime == null) return 0;
-    final elapsed = DateTime.now().difference(_transferStartTime!).inMilliseconds;
+    final elapsed =
+        DateTime.now().difference(_transferStartTime!).inMilliseconds;
     if (elapsed <= 0) return 0;
     return currentBytes / (elapsed / 1000);
   }
@@ -187,22 +186,22 @@ class OperationProgress {
     }
     currentBytes = bytes;
   }
-  
+
   // Update progress for a specific file in batch
   void updateFileProgress(String filePath, {bool? complete, String? error}) {
     if (files == null) return;
-    
+
     final fileIndex = files!.indexWhere((f) => f.path == filePath);
     if (fileIndex == -1) return;
-    
+
     if (complete != null) {
       files![fileIndex].isComplete = complete;
     }
-    
+
     if (error != null) {
       files![fileIndex].error = error;
     }
-    
+
     // Recalculate overall progress based on completed files
     if (files!.isNotEmpty) {
       final completedBytes = files!
@@ -226,19 +225,19 @@ class OperationProgress {
         return isBatch ? 'Delete: $totalFiles files' : 'Delete: $fileName';
     }
   }
-  
+
   // Get summary string for batch operations
   String get batchSummary {
     if (!isBatch) return displayName;
-    
+
     if (status == OperationStatus.failed) {
       return '$displayName - $failedFiles failed';
     }
-    
+
     if (status == OperationStatus.completed) {
       return '$displayName - All complete';
     }
-    
+
     return '$displayName - $completedFiles/$totalFiles complete';
   }
 }
@@ -250,7 +249,7 @@ class FileProgress {
   final int size;
   bool isComplete;
   String? error;
-  
+
   FileProgress({
     required this.name,
     required this.path,
@@ -258,17 +257,17 @@ class FileProgress {
     this.isComplete = false,
     this.error,
   });
-  
+
   // Helper to check if file has error
   bool get hasError => error != null;
-  
+
   // Helper to get status icon
   String get statusIcon {
     if (error != null) return '❌';
     if (isComplete) return '✅';
     return '⏳';
   }
-  
+
   @override
   String toString() {
     return '$statusIcon $name (${formatBytes(size)})${error != null ? ' - $error' : ''}';

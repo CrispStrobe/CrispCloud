@@ -1,3 +1,5 @@
+import 'package:crisp_storage/crisp_storage.dart'
+    show SshKnownHosts, HostKeyPrompt;
 // lib/services/hetzner_adapter.dart
 //
 // Hetzner Storage Box adapter — thin wrapper around SFTPClientAdapter or
@@ -32,8 +34,7 @@ const int kHetznerSftpPort = 23;
 const int kHetznerWebDavPort = 443;
 
 /// Constructs the Hetzner hostname from a username like "u123456".
-String hetznerHostname(String username) =>
-    '$username.your-storagebox.de';
+String hetznerHostname(String username) => '$username.your-storagebox.de';
 
 /// Constructs the full HTTPS WebDAV base URL.
 String hetznerWebDavUrl(String username) =>
@@ -56,20 +57,28 @@ class HetznerStorageBoxAdapter extends CloudStorageClient {
   static const _log = Log('HetznerAdapter');
 
   final HetznerConfigService _config;
+  HostKeyPrompt? confirmHostKey;
+  final SshKnownHosts? knownHosts;
 
   HetznerConfigService get config => _config;
 
   /// The inner adapter that performs the actual I/O.  Null until [login].
   CloudStorageClient? _inner;
 
-  HetznerStorageBoxAdapter({required HetznerConfigService config})
+  HetznerStorageBoxAdapter(
+      {required HetznerConfigService config,
+      this.knownHosts,
+      this.confirmHostKey})
       : _config = config;
 
   /// Factory that creates the adapter with a fresh in-memory config (useful
   /// in tests or one-shot scenarios).
-  factory HetznerStorageBoxAdapter.withMemoryStorage() {
+  factory HetznerStorageBoxAdapter.withMemoryStorage(
+      {SshKnownHosts? knownHosts, HostKeyPrompt? confirmHostKey}) {
     return HetznerStorageBoxAdapter(
       config: HetznerConfigService(secureStorage: InMemorySecureStorage()),
+      knownHosts: knownHosts,
+      confirmHostKey: confirmHostKey,
     );
   }
 
@@ -198,9 +207,11 @@ class HetznerStorageBoxAdapter extends CloudStorageClient {
       case HetznerProtocol.sftp:
         final sftpConfig = SFTPConfigService(
           configPath: '',
+          knownHosts: knownHosts ?? _config.knownHosts,
           secureStorage: InMemorySecureStorage(),
         );
-        final sftpAdapter = SFTPClientAdapter(config: sftpConfig);
+        final sftpAdapter = SFTPClientAdapter(config: sftpConfig)
+          ..confirmHostKey = confirmHostKey;
         // SFTP login uses the format "user@host:port"
         await sftpAdapter.login(
           '$effectiveUser@$host:$kHetznerSftpPort',

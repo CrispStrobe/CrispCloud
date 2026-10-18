@@ -1,3 +1,4 @@
+import 'package:crisp_storage/crisp_storage.dart' as storage;
 // lib/adapters/webdav_adapter.dart
 //
 // Pure-Dart WebDAV adapter for the crisp CLI.
@@ -26,7 +27,9 @@ class WebDavCliAdapter implements CliStorageClient {
     required String baseUrl,
     required String username,
     required String password,
-  })  : _baseUrl = baseUrl.endsWith('/') ? baseUrl.substring(0, baseUrl.length - 1) : baseUrl,
+  })  : _baseUrl = baseUrl.endsWith('/')
+            ? baseUrl.substring(0, baseUrl.length - 1)
+            : baseUrl,
         _username = username,
         _password = password {
     final encoded = base64Encode(utf8.encode('$_username:$_password'));
@@ -85,7 +88,8 @@ class WebDavCliAdapter implements CliStorageClient {
   // PROPFIND helper — parses a basic WebDAV multi-status response
   // ---------------------------------------------------------------------------
 
-  Future<List<Map<String, dynamic>>> _propfind(String remotePath, {int depth = 1}) async {
+  Future<List<Map<String, dynamic>>> _propfind(String remotePath,
+      {int depth = 1}) async {
     final response = await http.Client().send(
       http.Request('PROPFIND', Uri.parse(_url(remotePath)))
         ..headers.addAll({
@@ -117,12 +121,14 @@ class WebDavCliAdapter implements CliStorageClient {
   List<Map<String, dynamic>> _parseMultiStatus(String xml, String basePath) {
     final results = <Map<String, dynamic>>[];
     // Extract each <response> block
-    final responseRe = RegExp(r'<[Dd]:[Rr]esponse>(.*?)</[Dd]:[Rr]esponse>', dotAll: true);
+    final responseRe =
+        RegExp(r'<[Dd]:[Rr]esponse>(.*?)</[Dd]:[Rr]esponse>', dotAll: true);
     for (final rm in responseRe.allMatches(xml)) {
       final block = rm.group(1)!;
 
       // href — decode the path
-      final hrefM = RegExp(r'<[Dd]:[Hh]ref>(.*?)</[Dd]:[Hh]ref>').firstMatch(block);
+      final hrefM =
+          RegExp(r'<[Dd]:[Hh]ref>(.*?)</[Dd]:[Hh]ref>').firstMatch(block);
       if (hrefM == null) continue;
       final href = Uri.decodeComponent(hrefM.group(1)!.trim());
 
@@ -134,13 +140,15 @@ class WebDavCliAdapter implements CliStorageClient {
       final isDir = rtM != null && rtM.group(1)!.contains('collection');
 
       // size
-      final sizeM = RegExp(r'<[Dd]:[Gg]etcontentlength>(.*?)</[Dd]:[Gg]etcontentlength>')
-          .firstMatch(block);
+      final sizeM =
+          RegExp(r'<[Dd]:[Gg]etcontentlength>(.*?)</[Dd]:[Gg]etcontentlength>')
+              .firstMatch(block);
       final size = sizeM != null ? int.tryParse(sizeM.group(1)!.trim()) : null;
 
       // modified
-      final modM = RegExp(r'<[Dd]:[Gg]etlastmodified>(.*?)</[Dd]:[Gg]etlastmodified>')
-          .firstMatch(block);
+      final modM =
+          RegExp(r'<[Dd]:[Gg]etlastmodified>(.*?)</[Dd]:[Gg]etlastmodified>')
+              .firstMatch(block);
       final modified = modM?.group(1)?.trim();
 
       // name: last non-empty path segment of href
@@ -168,7 +176,8 @@ class WebDavCliAdapter implements CliStorageClient {
     final items = <CliFileItem>[];
 
     // Skip the first entry — it's the directory itself
-    final normalizedBase = remotePath.endsWith('/') ? remotePath : '$remotePath/';
+    final normalizedBase =
+        remotePath.endsWith('/') ? remotePath : '$remotePath/';
 
     for (final e in entries) {
       final href = e['href'] as String;
@@ -190,9 +199,9 @@ class WebDavCliAdapter implements CliStorageClient {
     // Strip host prefix from href if present
     final hrefPath = Uri.tryParse(href)?.path ?? href;
     final normalized = hrefPath.endsWith('/') ? hrefPath : '$hrefPath/';
-    final baseNorm =
-        basePath.endsWith('/') ? basePath : '$basePath/';
-    return normalized == baseNorm || hrefPath == basePath.replaceAll(RegExp(r'/$'), '');
+    final baseNorm = basePath.endsWith('/') ? basePath : '$basePath/';
+    return normalized == baseNorm ||
+        hrefPath == basePath.replaceAll(RegExp(r'/$'), '');
   }
 
   @override
@@ -243,9 +252,22 @@ class WebDavCliAdapter implements CliStorageClient {
     String localPath, {
     void Function(int received, int total)? onProgress,
   }) async {
-    final bytes = await downloadBytes(remotePath);
-    await File(localPath).writeAsBytes(bytes);
-    onProgress?.call(bytes.length, bytes.length);
+    final client = storage.RemoteClient(storage.RemoteConnection(
+        id: 'cli-webdav',
+        name: 'WebDAV',
+        kind: 'webdav',
+        url: _baseUrl,
+        username: _username,
+        secret: _password,
+        allowLocalHttp: true));
+    try {
+      await client.download(
+          Uri(path: remotePath.replaceFirst(RegExp(r'^/+'), '')).toString(),
+          File(localPath),
+          onBytes: (bytes) => onProgress?.call(bytes, 0));
+    } finally {
+      client.close();
+    }
   }
 
   @override

@@ -81,7 +81,17 @@ class CliConfig {
   void write(Map<String, dynamic> config) {
     final file = File(configPath);
     file.parent.createSync(recursive: true);
-    file.writeAsStringSync(_toYaml(config));
+    // Restrict a newly-created file before writing credentials. Existing
+    // configuration files are tightened as part of the same write.
+    if (!file.existsSync()) file.createSync();
+    if (!Platform.isWindows) {
+      final result = Process.runSync('chmod', ['600', file.path]);
+      if (result.exitCode != 0) {
+        throw FileSystemException(
+            'Cannot restrict credential file permissions', file.path);
+      }
+    }
+    file.writeAsStringSync(_toYaml(config), flush: true);
   }
 
   // ---------------------------------------------------------------------------
