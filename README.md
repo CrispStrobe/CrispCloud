@@ -132,3 +132,25 @@ resumable downloads, moves, renames and deletion (without a trash folder).
 The native transport is shared with CrisperPlayer in `packages/crisp_storage`.
 To run the isolated SMB file-manager test, install Python `impacket` and use
 `CRISPER_SMB_PYTHON=/path/to/python flutter test test/smb_client_adapter_test.dart`.
+
+## Internxt download regression checks
+
+The adapter stages SDK 0.2.3 downloads under their real remote filename before
+publishing the requested local name. This fixes previews and copies whose
+temporary filename differs, including the SDK’s extension-free path aliases.
+A private inbox avoids touching unrelated files with the remote basename. Normal
+folder access uses a same-volume rename; selected-file sandbox access falls back
+to a private temporary directory. Interrupted transfers preserve the destination.
+
+Run the isolated SDK and filesystem checks with
+`flutter test test/internxt_download_path_test.dart test/internxt_rewire_test.dart`.
+The local live check uses only `INTERNXT_LOGIN_TESTS` and `INTERNXT_PW_TESTS`:
+
+```sh
+python3 test/run_internxt_download.py --env-file /path/to/test.env
+```
+
+The launcher refuses CI execution. Its live test creates a UUID-named folder,
+checks renamed downloads and SDK path aliases, then moves only its owned folder
+to trash. Existing files and personal-account credentials are unused. On
+19 October 2026, all eleven isolated checks and the live account check passed.

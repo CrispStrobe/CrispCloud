@@ -13,7 +13,8 @@
 // etc.) come from the package's `paths.dart` extension methods —
 // no local extensions file needed anymore.
 
-
+import 'dart:io';
+import 'package:path/path.dart' as p;
 import 'package:flutter/foundation.dart';
 import 'package:internxt_client/internxt_client.dart';
 
@@ -36,6 +37,9 @@ class InternxtClientAdapter extends CloudStorageClient {
           networkUrl: InternxtUrls.networkUrl,
           driveApiUrl: InternxtUrls.driveApiUrl,
         );
+
+  @visibleForTesting
+  InternxtClientAdapter.withClient(InternxtClient client) : _client = client;
 
   /// Convenience constructor that builds the right ConfigService
   /// for the host platform. Use this when AppState doesn't already
@@ -76,7 +80,8 @@ class InternxtClientAdapter extends CloudStorageClient {
       {String? twoFactorCode}) async {
     _log.debug('Calling InternxtClient login...');
     try {
-      final response = await _client.login(email, password, tfaCode: twoFactorCode);
+      final response =
+          await _client.login(email, password, tfaCode: twoFactorCode);
       _lastLoginResponse = response;
       _log.debug('Login successful. Keys received: ${response.keys}');
       _client.setAuth(response);
@@ -134,8 +139,68 @@ class InternxtClientAdapter extends CloudStorageClient {
     String remotePath,
     String localPath, {
     Function(int p1, int p2)? onProgress,
-  }) {
-    return _client.downloadFileByPath(remotePath, localPath);
+  }) async {
+    if (kIsWeb) {
+      throw UnsupportedError('Use browser downloads on the web.');
+    }
+    if (!isAuthenticated ||
+        _client.bridgeUser == null ||
+        _client.userIdForAuth == null ||
+        _client.mnemonic == null) {
+      throw StateError('Sign in to Internxt before downloading.');
+    }
+    final resolved = await _client.resolvePath(remotePath);
+    if (resolved['type'] != 'file') {
+      throw StateError('The selected path is not a file.');
+    }
+    final metadata = (resolved['metadata'] as Map?) ?? resolved;
+    var name = metadata['name'] as String? ?? p.posix.basename(remotePath);
+    final extension = metadata['fileType'] as String? ?? '';
+    if (extension.isNotEmpty &&
+        extension != 'file' &&
+        !name.toLowerCase().endsWith('.${extension.toLowerCase()}')) {
+      name = '$name.$extension';
+    }
+    // Reject path separators and NUL in provider metadata.
+    if (name.isEmpty ||
+        name == '.' ||
+        name == '..' ||
+        name.contains('/') ||
+        name.codeUnits.contains(92) ||
+        name.codeUnits.contains(0) ||
+        p.basename(name) != name) {
+      throw const FormatException('Invalid remote filename.');
+    }
+    // SDK 0.2.3 saves the original name but its rename helper reads a missing
+    // top-level name. Stage privately under the actual remote filename first.
+    final destination = File(localPath);
+    await destination.parent.create(recursive: true);
+    late final Directory inbox;
+    var atomic = true;
+    try {
+      inbox = await destination.parent.createTemp('.crisp-internxt-download-');
+    } on FileSystemException catch (error) {
+      final code = error.osError?.errorCode;
+      final denied = Platform.isWindows ? code == 5 : code == 1 || code == 13;
+      if (!denied) rethrow;
+      // A sandbox save dialog may grant only the selected file, not its parent.
+      inbox = await Directory.systemTemp.createTemp('crisp-internxt-download-');
+      atomic = false;
+    }
+    try {
+      final received = File(p.join(inbox.path, name));
+      await _client.downloadFileByPath(remotePath, received.path,
+          onConflict: 'overwrite');
+      final size = await received.length();
+      if (atomic) {
+        await received.rename(destination.path);
+      } else {
+        await received.copy(destination.path);
+      }
+      onProgress?.call(size, size);
+    } finally {
+      await inbox.delete(recursive: true);
+    }
   }
 
   @override
