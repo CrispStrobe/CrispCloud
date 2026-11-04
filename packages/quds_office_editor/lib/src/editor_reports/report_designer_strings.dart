@@ -95,13 +95,15 @@ class ReportDesignerStrings {
       'ReportPackageException: ',
       'ReportFontException: ',
       'ReportShapeException: ',
+      'ReportDataException: ',
     ]) {
       if (message.startsWith(prefix)) {
         message = message.substring(prefix.length);
         assetError =
             prefix == 'ReportPackageException: ' ||
             prefix == 'ReportFontException: ' ||
-            prefix == 'ReportShapeException: ';
+            prefix == 'ReportShapeException: ' ||
+            prefix == 'ReportDataException: ';
         break;
       }
     }
@@ -271,6 +273,26 @@ class ReportDesignerStrings {
       return '$n ${p.few}';
     }
     return '$n ${p.many}';
+  }
+
+  /// Status for rows imported into a user-named table.
+  String importedRows(int rows, String table) {
+    const templates = <String, String>{
+      'en': 'Imported {rows} into {table}',
+      'de': '{rows} in {table} importiert',
+      'fr': 'Importation de {rows} dans {table}',
+      'es': 'Importación de {rows} en {table}',
+      'pt': 'Importação de {rows} em {table}',
+      'ar': 'تم استيراد {rows} إلى {table}',
+      'ja': '{rows}を {table} にインポートしました',
+      'ko': '{table}에 {rows}을(를) 가져왔습니다',
+      'zh': '已将 {rows}导入 {table}',
+    };
+    final values = {'rows': count(rows, 'row'), 'table': table};
+    return (templates[languageCode] ?? templates['en']!).replaceAllMapped(
+      RegExp(r'\{(rows|table)\}'),
+      (match) => values[match.group(1)]!,
+    );
   }
 
   /// Label of an enum option or keyword (`contain`, `rtl`, `qr`).

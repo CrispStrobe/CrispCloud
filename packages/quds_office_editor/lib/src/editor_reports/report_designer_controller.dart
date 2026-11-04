@@ -579,6 +579,9 @@ class ReportDesignerController extends ChangeNotifier {
   final Set<String> _embedding = <String>{};
   String? _notice;
   String? _fontNoticeOriginal;
+  String? _importNoticeOriginal;
+  int _importNoticeRows = 0;
+  String _importNoticeTable = '';
   List<String> _fontNoticeFamilies = const [];
   List<(String, String)> _fontNoticeErrors = const [];
   ReportFontRegistry? _merged;
@@ -7097,6 +7100,9 @@ class ReportDesignerController extends ChangeNotifier {
       _notice =
           'Imported ${rows.length} row${rows.length == 1 ? '' : 's'} '
           'into $table';
+      _importNoticeOriginal = _notice;
+      _importNoticeRows = rows.length;
+      _importNoticeTable = table;
       notifyListeners();
     }
     return done;
@@ -7617,8 +7623,12 @@ class ReportDesignerController extends ChangeNotifier {
   String? get localizedNotice {
     final notice = _notice;
     if (notice == null) return null;
-    if (!identical(notice, _fontNoticeOriginal))
+    if (identical(notice, _importNoticeOriginal)) {
+      return strings.importedRows(_importNoticeRows, _importNoticeTable);
+    }
+    if (!identical(notice, _fontNoticeOriginal)) {
       return strings.assetNotice(notice);
+    }
     return <String>[
       if (_fontNoticeFamilies.isNotEmpty)
         strings.assetNotice('Embedded ${_fontNoticeFamilies.join(', ')}'),

@@ -1,5 +1,6 @@
 import 'report_special_asset_strings.dart';
 import 'report_font_extra_strings.dart';
+import 'report_data_error_strings.dart';
 
 /// Recognizes report package and asset messages and preserves supplied details.
 String? localizeReportAssetMessage(
@@ -11,18 +12,29 @@ String? localizeReportAssetMessage(
     ...(_labels[language] ?? _labels['en']!),
     ...(reportSpecialAssetLabels[language] ?? reportSpecialAssetLabels['en']!),
     ...(reportFontExtraLabels[language] ?? reportFontExtraLabels['en']!),
+    ...(reportDataErrorLabels[language] ?? reportDataErrorLabels['en']!),
   };
-  const manifestPrefix = 'template.json: ';
-  if (!notice && message.startsWith(manifestPrefix)) {
-    final translated = localizeReportAssetMessage(
-      language,
-      message.substring(manifestPrefix.length),
-    );
-    if (translated != null) return '$manifestPrefix$translated';
+  for (final prefix in const ['template.json: ', 'data/sample.json: ']) {
+    if (!notice && message.startsWith(prefix)) {
+      final translated = localizeReportAssetMessage(
+        language,
+        message.substring(prefix.length),
+      );
+      if (translated != null) return '$prefix$translated';
+    }
+  }
+  if (!notice && message.startsWith('fonts/')) {
+    final fontEntry = RegExp(
+      r'^(fonts/.*): (Font is missing its .* table)$',
+    ).firstMatch(message);
+    if (fontEntry != null) {
+      final detail = localizeReportAssetMessage(language, fontEntry.group(2)!);
+      if (detail != null) return '${fontEntry.group(1)}: $detail';
+    }
   }
   final direct = _direct[message];
   if (direct != null) return labels[direct];
-  if (notice) {
+  if (notice || message.startsWith('fonts/')) {
     for (final entry in _direct.entries) {
       final suffix = ': ${entry.key}';
       if (message.endsWith(suffix)) {
@@ -40,6 +52,7 @@ String? localizeReportAssetMessage(
           'invalidGeo',
           'faceGlyf',
           'invalidFamily',
+          'invalidJson',
         }.contains(key)) {
       continue;
     }
@@ -60,6 +73,10 @@ String? localizeReportAssetMessage(
 }
 
 const _direct = <String, String>{
+  'JSON data must be an object': 'dataJsonObject',
+  'Empty data path': 'emptyPath',
+  'Unterminated quoted CSV cell': 'csvQuote',
+  'CSV has no header row': 'csvHeader',
   "Font collections (.ttc) are not supported; use a single .ttf": "collection",
   "CFF/OpenType outlines (.otf) cannot be embedded; use a TrueType .ttf": "otf",
   "Font has no TrueType outlines (glyf); use a TrueType .ttf": "outlines",
@@ -86,6 +103,7 @@ const _direct = <String, String>{
 };
 
 final _patterns = <(RegExp, String)>[
+  (RegExp(r'^Invalid JSON: (.*)$'), 'invalidJson'),
   (
     RegExp(r'^Font "(.*)" \((regular|bold|italic|boldItalic)\): (.*)$'),
     'fontWrapper',
