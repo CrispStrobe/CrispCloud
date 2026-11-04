@@ -24,7 +24,7 @@ import 'code_highlighting.dart';
 
 import 'package:flutter_markdown/flutter_markdown.dart';
 import 'package:flutter_svg/flutter_svg.dart';
-import '../l10n/app_localizations.dart';
+import '../l10n/preview_media_strings.dart';
 import 'package:flutter_highlight/flutter_highlight.dart';
 import 'package:flutter_highlight/themes/monokai-sublime.dart';
 import 'package:flutter_highlight/themes/github.dart';
@@ -148,8 +148,9 @@ String? _highlightLang(String filename) {
 
 /// Extract readable text from Office documents (DOCX, XLSX, PPTX, ODT, EPUB).
 /// Shared implementation lives in preview_media.dart.
-Future<String> _extractOfficeText(Uint8List bytes, String filename) =>
-    extractOfficeText(bytes, filename);
+Future<String> _extractOfficeText(Uint8List bytes, String filename,
+        PreviewMediaStrings strings) =>
+    extractOfficeText(bytes, filename, strings: strings);
 String _mimeTypeForExt(String ext) => mimeTypeForExt(ext);
 
 class PreviewPane extends ConsumerStatefulWidget {
@@ -175,6 +176,7 @@ class _PreviewPaneState extends ConsumerState<PreviewPane> {
   String? _mediaBlobUrl; // Web: blob URL for HTML5 audio/video
   bool _loading = false;
   String? _error;
+  Map<String, Object> _errorArgs = {};
   FileItem? _loadedFile; // track which file we loaded
 
   @override
@@ -210,6 +212,7 @@ class _PreviewPaneState extends ConsumerState<PreviewPane> {
     _videoController = null;
     _mediaBlobUrl = null;
     _error = null;
+    _errorArgs = {};
     _loadedFile = file;
 
     if (file == null || file.isFolder) {
@@ -230,7 +233,10 @@ class _PreviewPaneState extends ConsumerState<PreviewPane> {
             ? 100 * 1024 * 1024
             : 20 * 1024 * 1024;
     if (file.size != null && file.size! > maxSize) {
-      setState(() => _error = 'File too large to preview (${formatBytes(file.size!)})');
+      setState(() {
+        _error = 'fileTooLarge';
+        _errorArgs = {'size': formatBytes(file.size!)};
+      });
       return;
     }
 
@@ -278,17 +284,19 @@ class _PreviewPaneState extends ConsumerState<PreviewPane> {
         } catch (e) {
           _log.warn('operation failed', e);
           setState(() {
-            _error = 'PDF render failed: $e';
+            _error = 'pdfFailed';
+            _errorArgs = {'error': e};
             _loading = false;
           });
         }
       } else if (type == PreviewType.office) {
         // Extract text from Office documents (DOCX/XLSX/PPTX/ODT).
+        final strings = PreviewMediaStrings(context);
         try {
-          _textContent = await _extractOfficeText(bytes, file.name);
+          _textContent = await _extractOfficeText(bytes, file.name, strings);
         } catch (e) {
           _log.warn('operation failed', e);
-          _textContent = '(Could not extract text from this document)';
+          _textContent = strings.text('extractFailed');
         }
         setState(() => _loading = false);
       } else if (type == PreviewType.csv || type == PreviewType.text || type == PreviewType.markdown) {
@@ -297,7 +305,7 @@ class _PreviewPaneState extends ConsumerState<PreviewPane> {
           _textContent = InternalViewerService.decodeTextForView(bytes).text;
         } catch (e) {
           _log.warn('operation failed', e);
-          _textContent = '(binary content — cannot display as text)';
+          _textContent = PreviewMediaStrings(context).text('binary');
         }
         setState(() => _loading = false);
       }
@@ -305,7 +313,8 @@ class _PreviewPaneState extends ConsumerState<PreviewPane> {
       _log.warn('operation failed', e);
       if (!mounted || _loadedFile != file) return;
       setState(() {
-        _error = 'Preview failed: $e';
+        _error = 'previewFailed';
+            _errorArgs = {'error': e};
         _loading = false;
       });
     }
@@ -374,7 +383,8 @@ class _PreviewPaneState extends ConsumerState<PreviewPane> {
       _log.warn('operation failed', e);
       if (!mounted || _loadedFile != file) return;
       setState(() {
-        _error = 'Media preview failed: $e';
+        _error = 'mediaFailed';
+            _errorArgs = {'error': e};
         _loading = false;
       });
     }
@@ -392,7 +402,7 @@ class _PreviewPaneState extends ConsumerState<PreviewPane> {
           children: [
             Icon(Icons.preview, size: 48, color: theme.disabledColor),
             const SizedBox(height: 8),
-            Text(AppLocalizations.of(context)!.selectFileToPreview,
+            Text(PreviewMediaStrings(context).text('select'),
                 style: TextStyle(color: theme.disabledColor)),
           ],
         ),
@@ -472,7 +482,7 @@ class _PreviewPaneState extends ConsumerState<PreviewPane> {
             children: [
               Icon(Icons.error_outline, size: 36, color: theme.disabledColor),
               const SizedBox(height: 8),
-              Text(_error!, style: TextStyle(color: theme.disabledColor, fontSize: 12),
+              Text(PreviewMediaStrings(context).text(_error!, _errorArgs), style: TextStyle(color: theme.disabledColor, fontSize: 12),
                   textAlign: TextAlign.center),
             ],
           ),
@@ -536,12 +546,12 @@ class _PreviewPaneState extends ConsumerState<PreviewPane> {
               children: [
                 IconButton(
                   icon: const Icon(Icons.first_page, size: 20),
-                  tooltip: AppLocalizations.of(context)!.firstPage,
+                  tooltip: PreviewMediaStrings(context).text('firstPage'),
                   onPressed: () => _pdfController!.jumpToPage(1),
                 ),
                 IconButton(
                   icon: const Icon(Icons.chevron_left, size: 20),
-                  tooltip: AppLocalizations.of(context)!.previousPage,
+                  tooltip: PreviewMediaStrings(context).text('previousPage'),
                   onPressed: () {
                     final current = _pdfController!.page;
                     if (current > 1) _pdfController!.jumpToPage(current - 1);
@@ -556,7 +566,7 @@ class _PreviewPaneState extends ConsumerState<PreviewPane> {
                 ),
                 IconButton(
                   icon: const Icon(Icons.chevron_right, size: 20),
-                  tooltip: AppLocalizations.of(context)!.nextPage,
+                  tooltip: PreviewMediaStrings(context).text('nextPage'),
                   onPressed: () {
                     final current = _pdfController!.page;
                     _pdfController!.jumpToPage(current + 1);
@@ -564,7 +574,7 @@ class _PreviewPaneState extends ConsumerState<PreviewPane> {
                 ),
                 IconButton(
                   icon: const Icon(Icons.last_page, size: 20),
-                  tooltip: AppLocalizations.of(context)!.lastPage,
+                  tooltip: PreviewMediaStrings(context).text('lastPage'),
                   onPressed: () => _pdfController!.jumpToPage(_pdfController!.pagesCount ?? 1),
                 ),
               ],
@@ -680,11 +690,11 @@ class _PreviewPaneState extends ConsumerState<PreviewPane> {
             const SizedBox(height: 12),
           ],
           if (file.size != null)
-            _infoRow(context, 'Size', formatBytes(file.size!)),
+            _infoRow(context, PreviewMediaStrings(context).text('size'), formatBytes(file.size!)),
           if (file.updatedAt != null)
-            _infoRow(context, 'Modified', formatDateFull(file.updatedAt!)),
+            _infoRow(context, PreviewMediaStrings(context).text('modified'), formatDateFull(file.updatedAt!)),
           if (file.path != null)
-            _infoRow(context, 'Path', file.path!),
+            _infoRow(context, PreviewMediaStrings(context).text('path'), file.path!),
           if (file.uuid != null && file.uuid != file.path)
             _infoRow(context, 'UUID', file.uuid!),
         ],

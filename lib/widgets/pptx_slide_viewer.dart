@@ -9,6 +9,7 @@ import 'dart:math' as math;
 
 import 'package:flutter/material.dart';
 
+import '../l10n/slide_viewer_strings.dart';
 import '../services/office_document_service.dart';
 
 class PptxSlideViewer extends StatefulWidget {
@@ -39,7 +40,7 @@ class _PptxSlideViewerState extends State<PptxSlideViewer> {
   Widget build(BuildContext context) {
     final deck = widget.deck;
     if (deck.slides.isEmpty) {
-      return const Center(child: Text('This presentation has no slides.'));
+      return Center(child: Text(SlideViewerStrings(context).text('empty')));
     }
     final index = _index.clamp(0, deck.slides.length - 1);
     final slide = deck.slides[index];
@@ -104,13 +105,13 @@ class _PptxSlideViewerState extends State<PptxSlideViewer> {
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
               IconButton(
-                tooltip: 'First slide',
+                tooltip: SlideViewerStrings(context).text('first'),
                 icon: const Icon(Icons.first_page, size: 18),
                 onPressed:
                     index > 0 ? () => setState(() => _index = 0) : null,
               ),
               IconButton(
-                tooltip: 'Previous slide',
+                tooltip: SlideViewerStrings(context).text('previous'),
                 icon: const Icon(Icons.chevron_left, size: 18),
                 onPressed: index > 0
                     ? () => setState(() => _index = index - 1)
@@ -124,14 +125,14 @@ class _PptxSlideViewerState extends State<PptxSlideViewer> {
                 ),
               ),
               IconButton(
-                tooltip: 'Next slide',
+                tooltip: SlideViewerStrings(context).text('next'),
                 icon: const Icon(Icons.chevron_right, size: 18),
                 onPressed: index < deck.slides.length - 1
                     ? () => setState(() => _index = index + 1)
                     : null,
               ),
               IconButton(
-                tooltip: 'Last slide',
+                tooltip: SlideViewerStrings(context).text('last'),
                 icon: const Icon(Icons.last_page, size: 18),
                 onPressed: index < deck.slides.length - 1
                     ? () => setState(() => _index = deck.slides.length - 1)
