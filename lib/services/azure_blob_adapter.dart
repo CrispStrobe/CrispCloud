@@ -1,3 +1,4 @@
+import 'azure_hetzner_failure.dart';
 // lib/services/azure_blob_adapter.dart
 //
 // Azure Blob Storage provider adapter.
@@ -145,7 +146,8 @@ class AzureBlobAdapter extends CloudStorageClient {
     _log.info('login: loading saved Azure credentials');
     final creds = await _config.readCredentials();
     if (creds == null) {
-      throw Exception('No Azure credentials found. Call a loginWith* helper first.');
+      throw AzureHetznerException(AzureHetznerErrorCode.azureCredentials,
+          'No Azure credentials found. Call a loginWith* helper first.');
     }
     _applyCredentialMap(creds);
   }
@@ -193,7 +195,9 @@ class AzureBlobAdapter extends CloudStorageClient {
   }) async {
     final info = AzureConfigService.parseConnectionString(connectionString);
     if (info == null) {
-      throw ArgumentError('Invalid Azure connection string');
+      throw AzureHetznerArgumentError(
+          AzureHetznerErrorCode.azureConnectionString,
+          'Invalid Azure connection string');
     }
     final creds = <String, String>{
       'auth_mode': 'sharedKey',
@@ -251,7 +255,8 @@ class AzureBlobAdapter extends CloudStorageClient {
   String _effectiveContainer(String? pathContainer) {
     final c = pathContainer ?? _container;
     if (c == null || c.isEmpty) {
-      throw StateError('No container specified and no default container configured');
+      throw AzureHetznerStateError(AzureHetznerErrorCode.azureContainer,
+          'No container specified and no default container configured');
     }
     return c;
   }
@@ -293,7 +298,8 @@ class AzureBlobAdapter extends CloudStorageClient {
 
     final uri = Uri.parse(sb.toString());
     if (allParams.isNotEmpty) {
-      return uri.replace(queryParameters: {...uri.queryParameters, ...allParams});
+      return uri
+          .replace(queryParameters: {...uri.queryParameters, ...allParams});
     }
     return uri;
   }
@@ -321,8 +327,18 @@ class AzureBlobAdapter extends CloudStorageClient {
   static String _httpDate(DateTime dt) {
     const days = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'];
     const months = [
-      'Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun',
-      'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'
+      'Jan',
+      'Feb',
+      'Mar',
+      'Apr',
+      'May',
+      'Jun',
+      'Jul',
+      'Aug',
+      'Sep',
+      'Oct',
+      'Nov',
+      'Dec'
     ];
     return '${days[dt.weekday - 1]}, '
         '${dt.day.toString().padLeft(2, '0')} '
@@ -354,9 +370,8 @@ class AzureBlobAdapter extends CloudStorageClient {
         .where((e) => e.key.toLowerCase().startsWith('x-ms-'))
         .toList()
       ..sort((a, b) => a.key.toLowerCase().compareTo(b.key.toLowerCase()));
-    final canonicalizedHeaders = msHeaders
-        .map((e) => '${e.key.toLowerCase()}:${e.value}')
-        .join('\n');
+    final canonicalizedHeaders =
+        msHeaders.map((e) => '${e.key.toLowerCase()}:${e.value}').join('\n');
 
     // Canonicalized resource
     final account = _accountName!;
@@ -389,14 +404,16 @@ class AzureBlobAdapter extends CloudStorageClient {
 
     final keyBytes = base64.decode(_accountKey!);
     final hmac = Hmac(sha256, keyBytes);
-    final signature = base64.encode(hmac.convert(utf8.encode(stringToSign)).bytes);
+    final signature =
+        base64.encode(hmac.convert(utf8.encode(stringToSign)).bytes);
 
     headers['Authorization'] = 'SharedKey $account:$signature';
   }
 
   // ── HTTP helpers ─────────────────────────────────────────────────────────────
 
-  Future<http.Response> _get(Uri uri, {Map<String, String>? extraHeaders}) async {
+  Future<http.Response> _get(Uri uri,
+      {Map<String, String>? extraHeaders}) async {
     final headers = _baseHeaders(extra: extraHeaders);
     _addSharedKeyAuth(headers, 'GET', uri, const []);
     _log.debug('GET $uri');
@@ -443,8 +460,14 @@ class AzureBlobAdapter extends CloudStorageClient {
 
   void _checkStatus(http.Response resp) {
     if (resp.statusCode >= 400) {
-      throw Exception(
-          'Azure Blob error ${resp.statusCode}: ${resp.reasonPhrase}\n${resp.body}');
+      throw AzureHetznerException(
+          AzureHetznerErrorCode.azureHttp,
+          'Azure Blob error ${resp.statusCode}: ${resp.reasonPhrase}\n${resp.body}',
+          {
+            'status': resp.statusCode,
+            'reason': resp.reasonPhrase ?? '',
+            'body': resp.body
+          });
     }
   }
 
@@ -481,11 +504,11 @@ class AzureBlobAdapter extends CloudStorageClient {
       final block = match.group(1) ?? '';
       final name = _xmlValue(block, 'Name') ?? '';
       // Remove trailing '/' from virtual directory name
-      final cleanName = name.endsWith('/') ? name.substring(0, name.length - 1) : name;
+      final cleanName =
+          name.endsWith('/') ? name.substring(0, name.length - 1) : name;
       // Strip leading path to get the leaf segment
-      final leaf = cleanName.contains('/')
-          ? cleanName.split('/').last
-          : cleanName;
+      final leaf =
+          cleanName.contains('/') ? cleanName.split('/').last : cleanName;
       folders.add({
         'name': leaf,
         'path': name, // full prefix
@@ -679,7 +702,10 @@ class AzureBlobAdapter extends CloudStorageClient {
   }) async {
     final (:container, :blob) = _splitPath(remotePath);
     final c = _effectiveContainer(container);
-    if (blob.isEmpty) throw ArgumentError('Cannot download a container as a file');
+    if (blob.isEmpty)
+      throw AzureHetznerArgumentError(
+          AzureHetznerErrorCode.azureDownloadContainer,
+          'Cannot download a container as a file');
 
     final uri = _buildUri(c, blob: blob);
     final resp = await _get(uri);
@@ -771,7 +797,8 @@ class AzureBlobAdapter extends CloudStorageClient {
     final dc = _effectiveContainer(dstParts.container);
 
     if (sourceBlob.isEmpty || destBlob.isEmpty) {
-      throw ArgumentError('Source and target must be blob paths, not container roots');
+      throw AzureHetznerArgumentError(AzureHetznerErrorCode.azureCopyPaths,
+          'Source and target must be blob paths, not container roots');
     }
 
     // Build the copy-source URL (without auth — source must be accessible)
@@ -794,7 +821,9 @@ class AzureBlobAdapter extends CloudStorageClient {
   Future<void> setBlobTier(String blobPath, AzureBlobTier tier) async {
     final (:container, :blob) = _splitPath(blobPath);
     final c = _effectiveContainer(container);
-    if (blob.isEmpty) throw ArgumentError('blobPath must point to a blob');
+    if (blob.isEmpty)
+      throw AzureHetznerArgumentError(
+          AzureHetznerErrorCode.azureBlobPath, 'blobPath must point to a blob');
 
     final uri = _buildUri(c, blob: blob, queryParams: {'comp': 'tier'});
     final headers = _baseHeaders(extra: {
@@ -804,8 +833,10 @@ class AzureBlobAdapter extends CloudStorageClient {
 
     final response = await http.put(uri, headers: headers);
     if (response.statusCode != 200 && response.statusCode != 202) {
-      throw Exception(
-          'setBlobTier error ${response.statusCode}: ${response.body}');
+      throw AzureHetznerException(
+          AzureHetznerErrorCode.azureTier,
+          'setBlobTier error ${response.statusCode}: ${response.body}',
+          {'status': response.statusCode, 'body': response.body});
     }
   }
 
@@ -818,7 +849,10 @@ class AzureBlobAdapter extends CloudStorageClient {
   }) async* {
     final (:container, :blob) = _splitPath(remotePath);
     final c = _effectiveContainer(container);
-    if (blob.isEmpty) throw ArgumentError('Cannot stream a container');
+    if (blob.isEmpty)
+      throw AzureHetznerArgumentError(
+          AzureHetznerErrorCode.azureStreamContainer,
+          'Cannot stream a container');
 
     final uri = _buildUri(c, blob: blob);
     final headers = _baseHeaders();
@@ -827,7 +861,10 @@ class AzureBlobAdapter extends CloudStorageClient {
     final request = http.Request('GET', uri)..headers.addAll(headers);
     final streamed = await request.send();
     if (streamed.statusCode >= 400) {
-      throw Exception('Azure download stream error ${streamed.statusCode}');
+      throw AzureHetznerException(
+          AzureHetznerErrorCode.azureStream,
+          'Azure download stream error ${streamed.statusCode}',
+          {'status': streamed.statusCode});
     }
 
     int received = 0;
@@ -879,7 +916,8 @@ class AzureBlobAdapter extends CloudStorageClient {
     }
 
     if (_accountName == null || _accountName!.isEmpty) {
-      throw StateError('Azure credentials missing account_name');
+      throw AzureHetznerStateError(AzureHetznerErrorCode.azureAccount,
+          'Azure credentials missing account_name');
     }
     _authenticated = true;
     _log.info('Azure Blob authenticated [$mode] account=$_accountName');
