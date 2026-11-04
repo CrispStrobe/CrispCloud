@@ -13,7 +13,7 @@
    - annotations
    - forms
 -resolution: workspace
- 
+
  environment:
    sdk: ^3.5.0
 @@ -33,17 +33,16 @@
@@ -41,7 +41,7 @@
    # PdfViewer.onLaunchUrl. Web-safe, no dart:io.
 @@ -53,14 +52,9 @@
    web: ^1.1.2
- 
+
  dev_dependencies:
 -  pdf_test_fixtures: ^14.0.0
    flutter_lints: ^6.0.0
@@ -51,7 +51,7 @@
 -  # they exercise the default launcher without a real platform binding.
 -  plugin_platform_interface: ^2.1.8
 -  url_launcher_platform_interface: ^2.3.2
- 
+
  flutter:
    generate: true
 --- a/packages/dart_pdf_editor/README.md
@@ -67,11 +67,11 @@
 +> monorepo examples and documentation refer to the pinned upstream repository.
 +
  ![dart-pdf, an open-source Flutter PDF editor and pure-Dart renderer](https://raw.githubusercontent.com/ben-milanko/dart-pdf/main/doc/banner.png)
- 
+
  # Flutter PDF editor: dart_pdf_editor
 --- a/packages/dart_pdf_editor/CHANGELOG.md
 +++ b/packages/dart_pdf_editor/CHANGELOG.md
-@@ -1,4 +1,16 @@
+@@ -1,4 +1,19 @@
  # Changelog
 +
 +## CrispCloud compatibility patch on 14.0.0
@@ -83,11 +83,108 @@
 +  retain `flutter_secure_storage` 9 without an override of upstream's 11.
 +- Extract native overprint retry dispatch behind a conditional import. Browser
 +  callers receive `null` for this optional retry; ordinary rendering is unchanged.
++- Honor the host's redaction tool restriction across keyboard commands,
++  pre-armed sessions, desktop/touch text selection, saved search expansion,
++  custom group defaults, and Apply controls. The engine algorithm is unchanged.
 +- Resolve the package outside the upstream workspace, pin the PDF core packages
 +  to 14.0.0, and add focused compatibility tests with generated PDF fixtures.
- 
+
  ## 14.0.0
- 
+
+--- a/packages/dart_pdf_editor/lib/src/editing/editing_toolbar.dart
++++ b/packages/dart_pdf_editor/lib/src/editing/editing_toolbar.dart
+@@ -1,3 +1,4 @@
++// CrispCloud modification: honor host redaction restrictions. See UPSTREAM.md.
+ import 'dart:typed_data';
+
+ import 'package:flutter/gestures.dart' show PointerDeviceKind;
+@@ -1311,6 +1312,7 @@
+   }
+
+   Future<void> _applyRedactions(BuildContext context) async {
++    if (widget.tools?.contains(PdfEditTool.redact) == false) return;
+     final confirmed = await PdfEditorPresenter.of(context).confirm(
+       context,
+       PdfConfirmRequest(
+@@ -1323,6 +1325,7 @@
+       ),
+     );
+     if (!confirmed || !context.mounted) return;
++    if (widget.tools?.contains(PdfEditTool.redact) == false) return;
+     final burned = controller.applyRedactions();
+     _flattenToast(
+       context,
+@@ -2023,7 +2026,8 @@
+         ),
+       ];
+     }
+-    if (tool == PdfEditTool.redact) {
++    if (tool == PdfEditTool.redact &&
++        widget.tools?.contains(PdfEditTool.redact) != false) {
+       final findToRedact = widget.onFindToRedact;
+       return [
+         if (flatten != null) ...[flatten, _MiniDivider(axis: axis)],
+--- a/packages/dart_pdf_editor/lib/src/editing/editor_commands.dart
++++ b/packages/dart_pdf_editor/lib/src/editing/editor_commands.dart
+@@ -1,3 +1,4 @@
++// CrispCloud modification: honor host redaction restrictions. See UPSTREAM.md.
+ import 'dart:async';
+
+ import 'package:flutter/foundation.dart';
+@@ -258,7 +259,8 @@
+   /// lists the tools only.
+   PdfEditorFeatures? features;
+
+-  /// The editing tools [catalog] offers, null meaning all of them.
++  /// The editing tools commands may arm and [catalog] offers, null meaning all
++  /// of them. CrispCloud enforces this for direct calls as well as visible UI.
+   Set<PdfEditTool>? tools;
+
+   /// The tool key bindings [catalog] reports as each tool's shortcut.
+@@ -347,7 +349,10 @@
+     }
+     openGroupId = group.id;
+     if (groupForTool(_controller.tool)?.id == group.id) return;
+-    _controller.tool = group.defaultTool;
++    final defaultTool = group.defaultTool;
++    _controller.tool = defaultTool != null && tools?.contains(defaultTool) == false
++        ? null
++        : defaultTool;
+     if (_controller.tool != null) viewerController.clearSelection();
+     // markup arms no tool, so its style scope is set explicitly (after the
+     // tool reset above, which would otherwise clear it) - this is what lets
+@@ -388,6 +393,7 @@
+   /// is a no-op. Returns whether [tool] is armed afterwards - false when a
+   /// prompt was dismissed.
+   Future<bool> armTool(BuildContext context, PdfEditTool tool) async {
++    if (tools?.contains(tool) == false) return false;
+     if (_controller.tool == tool) return true;
+     await toggleTool(context, tool);
+     return _controller.tool == tool;
+@@ -397,6 +403,7 @@
+   /// when it is already armed, drops back to Select. Returns whether [tool]
+   /// is armed afterwards.
+   Future<bool> toggleTool(BuildContext context, PdfEditTool tool) async {
++    if (tools?.contains(tool) == false) return false;
+     switch (tool) {
+       case PdfEditTool.measureDistance:
+       case PdfEditTool.measurePerimeter:
+@@ -418,6 +425,7 @@
+   /// when it is already armed - never to no tool at all, so tapping the
+   /// active tool off leaves things selectable. Clears the text selection.
+   void toggleToolNow(PdfEditTool tool) {
++    if (tools?.contains(tool) == false) return;
+     // arming Redact over a text selection marks it, as a markup tool does
+     if (tool == PdfEditTool.redact &&
+         _controller.tool != tool &&
+@@ -516,6 +524,7 @@
+   /// mark per page over the selected glyphs). Nothing is removed until the
+   /// marks are applied.
+   void redactSelection() {
++    if (tools?.contains(PdfEditTool.redact) == false) return;
+     // capture before the edit: the document swap clears the selection
+     final quadsByPage = {
+       for (final page in viewerController.selectionPages)
 --- a/packages/dart_pdf_editor/lib/src/editing/form_secret_store.dart
 +++ b/packages/dart_pdf_editor/lib/src/editing/form_secret_store.dart
 @@ -1,7 +1,6 @@
@@ -97,7 +194,7 @@
  import 'dart:typed_data';
 -
 -import 'package:flutter_secure_storage/flutter_secure_storage.dart';
- 
+
  /// Where [PdfEditingController] keeps password-field values instead of the
  /// PDF (ISO 32000 §12.7.4.3: readers "shall never store the value" of a
 @@ -14,8 +13,8 @@
@@ -214,7 +311,7 @@
 +// CrispCloud modification: platform persistence is an optional companion.
 +// See UPSTREAM.md for provenance and patch details.
  import 'package:pdf_document/pdf_document.dart';
- 
+
  /// Persistence for one-tap [PdfSigningIdentity]s (see
  /// [PdfSigningIdentity.generate]). An identity is stored by a caller-chosen
  /// [id] as its PEM (`toPem()`), which carries the unprotected private key -
@@ -364,16 +461,142 @@
 +  double? maxImagePixelRatio,
 +}) async =>
 +    null;
+--- a/packages/dart_pdf_editor/lib/src/pdf_editor_view.dart
++++ b/packages/dart_pdf_editor/lib/src/pdf_editor_view.dart
+@@ -1,3 +1,4 @@
++// CrispCloud modification: honor host redaction restrictions. See UPSTREAM.md.
+ import 'dart:async' show unawaited;
+
+ import 'package:flutter/foundation.dart' show defaultTargetPlatform, mapEquals;
+@@ -925,6 +926,14 @@
+     session
+       ..providedCustomStamps = widget.customStamps
+       ..colorLocked = !widget.features.colorControls;
++    // CrispCloud: an external session may already have Redact armed. A
++    // restricted shell must not keep accepting redaction drags after binding.
++    if (session.tool == PdfEditTool.redact &&
++        widget.features.tools?.contains(PdfEditTool.redact) == false) {
++      session.tool = widget.features.tools!.contains(PdfEditTool.select)
++          ? PdfEditTool.select
++          : null;
++    }
+   }
+
+   /// Binds the Apple Pencil double-tap to the session's eraser toggle on
+@@ -1388,6 +1397,10 @@
+           };
+     final availableShortcuts =
+         Map<PdfEditTool, PdfToolShortcut>.of(_toolShortcuts);
++    // CrispCloud: a hidden tool must also lose its keyboard binding.
++    if (availableTools != null) {
++      availableShortcuts.removeWhere((tool, _) => !availableTools.contains(tool));
++    }
+     if (widget.onPlaceSignature == null) {
+       availableShortcuts.remove(PdfEditTool.signatureBox);
+     }
+@@ -1479,6 +1492,7 @@
+                 // it the content tool) is available; a read-only shell keeps
+                 // the panel a pure find panel
+                 editing: features.toolbar ? session : null,
++                showRedaction: availableTools?.contains(PdfEditTool.redact) ?? true,
+                 preferences: prefs,
+                 dock: prefs.searchPanelDock,
+                 bottomSheet: bottomSheet,
+@@ -1852,7 +1866,8 @@
+                             !prefs.showAnnotationLibraryPanel
+                         : null,
+                     onFindToRedact:
+-                        features.search && features.searchResultsPanel
++                        features.search && features.searchResultsPanel &&
++                            (availableTools?.contains(PdfEditTool.redact) ?? true)
+                             ? () => prefs
+                               ..searchRedactExpanded = true
+                               ..showSearchResultsPanel = true
+@@ -2088,6 +2103,8 @@
+                               (features.toolGroups == null ||
+                                   features.toolGroups!
+                                       .contains(PdfEditToolGroup.markup)),
++                          textSelectionRedaction:
++                              availableTools?.contains(PdfEditTool.redact) ?? true,
+                           // The desktop toolbar floats over the viewer. Leave a
+                           // scrollable tail tall enough for its dock and
+                           // contextual strip, so the last page can move fully
+--- a/packages/dart_pdf_editor/lib/src/pdf_viewer.dart
++++ b/packages/dart_pdf_editor/lib/src/pdf_viewer.dart
+@@ -1,3 +1,4 @@
++// CrispCloud modification: honor host redaction restrictions. See UPSTREAM.md.
+ import 'dart:async';
+ import 'design/viewer_tokens.dart';
+ import 'dart:math' as math;
+@@ -1458,6 +1459,7 @@
+     this.editingPalette = defaultStyledTextPalette,
+     this.textSelectionEditing = true,
+     this.textSelectionMarkup = true,
++    this.textSelectionRedaction = true,
+     this.annotationMenuBuilder,
+     this.onSaveAnnotationImage,
+     this.textMenuBuilder,
+@@ -1763,6 +1765,12 @@
+   /// Whether an editor-backed text selection exposes highlight, underline,
+   /// strikeout, and squiggly actions. Has no effect without [editing].
+   final bool textSelectionMarkup;
++
++  /// Whether text context menus, touch chips and tool actions offer redaction.
++  /// CrispCloud
++  /// disables this together with the tool and its keyboard shortcut because
++  /// partial image/Form XObject redaction is not supported by this engine.
++  final bool textSelectionRedaction;
+
+   /// Adds the app's own entries to the annotation context menu (the
+   /// right-click menu - z-order and delete come stock). Called when the
+@@ -7555,8 +7563,9 @@
+         _markupSubmenuEntry(globalPosition),
+         stock(
+             'link', l10n.linkDialogTitle, Icons.link, _addLinkToTextSelection),
+-        stock(
+-            'redact', l10n.tbToolRedact, Icons.gradient, _redactTextSelection),
++        if (widget.textSelectionRedaction)
++          stock(
++              'redact', l10n.tbToolRedact, Icons.gradient, _redactTextSelection),
+       ],
+       stock('select-all', l10n.viewerSelectAll, Icons.select_all,
+           () => _selectAllTextOn(page),
+@@ -7737,6 +7746,7 @@
+   /// page over the selected glyphs) and arms the Redact tool, whose strip
+   /// carries the Apply button that burns the marks.
+   void _redactTextSelection() {
++    if (!widget.textSelectionRedaction) return;
+     final editing = widget.editing;
+     if (editing == null || _selRange == null) return;
+     final quadsByPage = {
+@@ -8547,6 +8557,7 @@
+   /// first, exactly as the toolbar does: the measuring scale for a measure
+   /// tool, a signature for the signature tool.
+   void _armTool(PdfEditTool tool) {
++    if (tool == PdfEditTool.redact && !widget.textSelectionRedaction) return;
+     final editing = widget.editing;
+     if (editing == null) return;
+     final commands = context
+@@ -9311,7 +9322,8 @@
+       onAddLink: widget.editing != null && widget.textSelectionMarkup
+           ? _addLinkToTextSelection
+           : null,
+-      onRedact: widget.editing != null && widget.textSelectionMarkup
++      onRedact: widget.editing != null && widget.textSelectionMarkup &&
++              widget.textSelectionRedaction
+           ? _redactTextSelection
+           : null,
+     );
 --- a/packages/dart_pdf_editor/lib/src/retained_scene.dart
 +++ b/packages/dart_pdf_editor/lib/src/retained_scene.dart
 @@ -13,7 +13,6 @@
  /// runs after [record] returns.
  library;
- 
+
 -import 'dart:isolate';
  import 'dart:math' as math;
  import 'dart:ui' as ui;
- 
+
 @@ -26,6 +25,8 @@
  import 'canvas_device.dart';
  import 'canvas_path_cache.dart';
@@ -453,3 +676,60 @@
      if (encoded == null) {
        throw StateError('overprint retry command buffer is not transferable');
      }
+--- a/packages/dart_pdf_editor/lib/src/search_panel.dart
++++ b/packages/dart_pdf_editor/lib/src/search_panel.dart
+@@ -1,3 +1,4 @@
++// CrispCloud modification: honor host redaction restrictions. See UPSTREAM.md.
+ import 'dart:async';
+
+ import 'design/viewer_tokens.dart';
+@@ -235,6 +236,7 @@
+     this.maxWidth = 480,
+     this.bottomSheet = false,
+     this.showOptions = true,
++    this.showRedaction = true,
+     this.onClose,
+   });
+
+@@ -244,6 +246,10 @@
+   /// leaves the panel a pure find panel - which is what a read-only viewer
+   /// wants.
+   final PdfEditingController? editing;
++
++  /// Whether find-to-redact controls are available, independently of replace.
++  /// CrispCloud honors the host's redaction tool restriction here too.
++  final bool showRedaction;
+
+   /// Persists the user-dragged width when provided.
+   final PdfEditingPreferences? preferences;
+@@ -299,9 +305,11 @@
+   bool _redactExpandedLocal = false;
+
+   bool get _redactExpanded =>
+-      widget.preferences?.searchRedactExpanded ?? _redactExpandedLocal;
++      widget.showRedaction &&
++      (widget.preferences?.searchRedactExpanded ?? _redactExpandedLocal);
+
+   void _toggleRedact() {
++    if (!widget.showRedaction) return;
+     final next = !_redactExpanded;
+     final prefs = widget.preferences;
+     if (prefs != null) {
+@@ -550,7 +558,7 @@
+                         selected: _replaceExpanded,
+                         onPressed: _toggleReplace,
+                       ),
+-                    if (widget.editing != null)
++                    if (widget.editing != null && widget.showRedaction)
+                       PdfPanelToggleButton(
+                         key: const ValueKey('pdf-search-redact-toggle'),
+                         iconData: Icons.gradient,
+@@ -567,7 +575,7 @@
+                     field: _replaceField,
+                     geometry: geometry,
+                   ),
+-                if (widget.editing != null && _redactExpanded)
++                if (widget.editing != null && widget.showRedaction && _redactExpanded)
+                   _RedactBar(
+                     controller: controller,
+                     editing: widget.editing!,

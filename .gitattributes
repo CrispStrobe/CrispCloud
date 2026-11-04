@@ -1,0 +1,2 @@
+# Preserve PDF byte offsets and suppress text whitespace/diff handling.
+test/fixtures/pdf_editor/*.pdf binary

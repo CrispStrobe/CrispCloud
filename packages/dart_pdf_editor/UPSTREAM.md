@@ -34,8 +34,10 @@ platform storage plugin. The optional sibling package
 [`dart_pdf_editor_secure_storage`](../dart_pdf_editor_secure_storage/README.md)
 preserves the original secure-store classes and uses version 9.2.4 of the
 host plugin. CrispCloud's PDF screen only needs the core package and supplies
-`InMemoryFormSecretStore` explicitly. This keeps password form values out of
-saved PDF bytes while retaining them for the lifetime of the editor session.
+`InMemoryFormSecretStore` explicitly. This keeps newly entered password-field
+values out of saved PDF bytes while retaining them for the lifetime of the
+editor session. It does not sanitize password values already embedded in the
+input PDF: ordinary incremental saves preserve earlier file bytes and history.
 The upstream controller's optional-store default is unchanged; other hosts
 must also opt in to a store if they want values withheld from PDFs.
 
@@ -54,12 +56,26 @@ modified contain a local change notice or an entry here.
 | `lib/src/overprint_rerecord_worker.dart` | Select native dispatch only when `dart.library.io` is available. |
 | `lib/src/overprint_rerecord_worker_native.dart` | Preserve the upstream transferable-byte handoff, pure Dart rendering, populated-range handling, image decoding ratio, and result serialization. |
 | `lib/src/overprint_rerecord_worker_stub.dart` | Report unsupported and return `null` for optional retries on the browser. |
+| `lib/src/pdf_editor_view.dart` | Apply the tools filter to keyboard shortcuts, find-to-redact entry points, and text-selection redaction; disarm a pre-existing redaction tool when binding a restricted host. |
+| `lib/src/pdf_viewer.dart` | Add a default-on redaction gate for desktop text menus, touch chips, and tool actions, including the last-tool shortcut. |
+| `lib/src/search_panel.dart` | Add a default-on find-to-redact gate that also overrides an already-expanded saved preference. |
+| `lib/src/editing/editor_commands.dart` | Honor the host's tools filter for direct tool commands, group defaults, and selected-text redaction. |
+| `lib/src/editing/editing_toolbar.dart` | Hide redaction controls and reject Apply when the tools filter excludes redaction, including after a pending confirmation. |
 | `README.md`, `CHANGELOG.md` | Identify this copy and describe local changes above the retained upstream documentation. |
 
 The web change affects only the optional denser overprint re-recording path
 requested by a tile backend. Normal page rendering, annotation rendering, and
 the existing web render worker are unchanged. No synchronous replacement for
 an expensive native isolate task is introduced on the browser UI thread.
+
+CrispCloud excludes `PdfEditTool.redact` from its enabled tools. Upstream
+14.0.0 explicitly leaves partially covered image and Form XObjects in the
+file beneath the redaction fill. Its successful simple text-redaction path
+therefore does not establish safe redaction for arbitrary uploaded PDFs. The
+UI patch makes the host's tool restriction effective across alternate entry
+points; it does not change the core engine's redaction algorithm or direct
+document APIs. The standalone package retains upstream's default-on behavior
+unless a host applies these restrictions.
 
 New CrispCloud-maintained files outside the upstream patch are this provenance
 document and focused tests in `test/`. The tiny PDF fixtures are generated in
@@ -112,7 +128,10 @@ Do not commit package-local lockfiles or generated `.dart_tool`/build folders.
 
 The core tests cover session/document isolation, keeping password-field values
 out of saved PDFs, identity round trips without a platform plugin, the browser
-worker fallback, and native re-recording of a retained scene. The adapter tests
+worker fallback, native re-recording of a retained scene, and redaction feature
+gates for pre-armed sessions, saved search expansion, direct commands, keyboard
+shortcuts, Apply controls, desktop menus, and touch selection chips. The
+adapter tests
 exercise the plugin's official mock storage and verify that deletion preserves
 unrelated host credentials. They do not replace device-level Keychain/Keystore
 testing, whole-editor visual testing, or the upstream rendering corpus.

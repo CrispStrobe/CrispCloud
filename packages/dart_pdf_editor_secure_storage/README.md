@@ -27,8 +27,10 @@ final formSecrets = SecureFormSecretStore();
 
 Pass these stores to the matching editor/controller APIs explicitly. Use
 `InMemoryFormSecretStore` from the core package when secrets should last only
-for the editing session, including the web application. A saved PDF should
-never need to contain the clear-text value of a password form field.
+for the editing session, including the web application. Supplying a store
+withholds newly entered password-field values from saved PDF bytes. It does
+not remove values already embedded in the original PDF or its incremental
+history; that would require a separate sanitization workflow.
 
 See [UPSTREAM.md](UPSTREAM.md) for provenance and [LICENSE](LICENSE) for the
 unmodified upstream license. Run `flutter pub get`, `flutter analyze`, and

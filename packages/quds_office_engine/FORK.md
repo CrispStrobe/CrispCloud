@@ -16,3 +16,9 @@ Changes made in this fork:
   both pages when its paragraph crosses a page break.
 
 See `test/office_footnote_test.dart` and `test/fixtures/footnote.docx`.
+
+The three `example/pdf_widgets_{invoice,proposal,report}.dart` files are restored
+unchanged from the published `quds_office_engine` 1.5.0 archive. The existing
+`test/pdf_widgets_test.dart` imports them, so omitting them from the original
+vendor copy left package analysis incomplete. CI now resolves this package's
+development dependencies before analyzing the application checkout.

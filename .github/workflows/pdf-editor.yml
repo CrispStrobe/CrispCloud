@@ -19,6 +19,67 @@ env:
   FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: true
 
 jobs:
+  integration:
+    name: PDF integration and independent parser
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v5
+      - uses: subosito/flutter-action@v2
+        with:
+          channel: stable
+          flutter-version: ${{ env.FLUTTER_VERSION }}
+          cache: true
+      - run: flutter pub get
+      - name: Check formatting of new PDF code
+        id: format
+        continue-on-error: true
+        run: |
+          python3 tool/format_pdf_editor.py --write
+          git diff --quiet -- . ':!pubspec.lock'
+      - name: Independent PDF parser
+        run: python3 -m pip install pypdf==6.10.0 cryptography
+      - name: Validate generated inputs
+        run: python3 tool/verify_pdf_editor_outputs.py --fixtures-only
+      - name: Persistence, origin, editor and round-trip regressions
+        run: >-
+          flutter test --concurrency=2
+          test/pdf_edit_session_test.dart
+          test/pdf_file_store_test.dart
+          test/pdf_device_export_test.dart
+          test/panel_file_origin_test.dart
+          test/widget/pdf_editor_dialog_test.dart
+          test/pdf_editor_round_trip_test.dart
+          test/local_file_service_test.dart
+          test/file_bytes_loader_test.dart
+          test/web_file_ops_test.dart
+      - name: Verify exported PDFs independently
+        run: python3 tool/verify_pdf_editor_outputs.py
+      - name: Browser editor lifecycle
+        run: flutter test --platform chrome test/widget/pdf_editor_dialog_test.dart
+      - name: Record reviewable formatting and lockfile updates
+        if: always()
+        run: |
+          mkdir -p build/pdf_editor_verification
+          git diff --binary > build/pdf_editor_verification/ci-updates.patch
+          python3 - <<'PY'
+          import base64, gzip, pathlib
+          patch = pathlib.Path('build/pdf_editor_verification/ci-updates.patch').read_bytes()
+          if patch:
+              print('PDF_EDITOR_PATCH_BEGIN')
+              print(base64.b64encode(gzip.compress(patch, mtime=0)).decode())
+              print('PDF_EDITOR_PATCH_END')
+          PY
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: pdf-editor-verification
+          path: build/pdf_editor_verification
+          retention-days: 14
+      - name: Enforce formatting result
+        if: always() && steps.format.outcome == 'failure'
+        run: exit 1
+
   packages:
     name: PDF package (${{ matrix.package }})
     runs-on: ubuntu-latest

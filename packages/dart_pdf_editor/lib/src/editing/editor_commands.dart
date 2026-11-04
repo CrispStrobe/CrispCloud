@@ -1,3 +1,4 @@
+// CrispCloud modification: honor host redaction restrictions. See UPSTREAM.md.
 import 'dart:async';
 
 import 'package:flutter/foundation.dart';
@@ -258,7 +259,8 @@ class PdfEditorCommands extends ChangeNotifier {
   /// lists the tools only.
   PdfEditorFeatures? features;
 
-  /// The editing tools [catalog] offers, null meaning all of them.
+  /// The editing tools commands may arm and [catalog] offers, null meaning all
+  /// of them. CrispCloud enforces this for direct calls as well as visible UI.
   Set<PdfEditTool>? tools;
 
   /// The tool key bindings [catalog] reports as each tool's shortcut.
@@ -347,7 +349,10 @@ class PdfEditorCommands extends ChangeNotifier {
     }
     openGroupId = group.id;
     if (groupForTool(_controller.tool)?.id == group.id) return;
-    _controller.tool = group.defaultTool;
+    final defaultTool = group.defaultTool;
+    _controller.tool = defaultTool != null && tools?.contains(defaultTool) == false
+        ? null
+        : defaultTool;
     if (_controller.tool != null) viewerController.clearSelection();
     // markup arms no tool, so its style scope is set explicitly (after the
     // tool reset above, which would otherwise clear it) - this is what lets
@@ -388,6 +393,7 @@ class PdfEditorCommands extends ChangeNotifier {
   /// is a no-op. Returns whether [tool] is armed afterwards - false when a
   /// prompt was dismissed.
   Future<bool> armTool(BuildContext context, PdfEditTool tool) async {
+    if (tools?.contains(tool) == false) return false;
     if (_controller.tool == tool) return true;
     await toggleTool(context, tool);
     return _controller.tool == tool;
@@ -397,6 +403,7 @@ class PdfEditorCommands extends ChangeNotifier {
   /// when it is already armed, drops back to Select. Returns whether [tool]
   /// is armed afterwards.
   Future<bool> toggleTool(BuildContext context, PdfEditTool tool) async {
+    if (tools?.contains(tool) == false) return false;
     switch (tool) {
       case PdfEditTool.measureDistance:
       case PdfEditTool.measurePerimeter:
@@ -418,6 +425,7 @@ class PdfEditorCommands extends ChangeNotifier {
   /// when it is already armed - never to no tool at all, so tapping the
   /// active tool off leaves things selectable. Clears the text selection.
   void toggleToolNow(PdfEditTool tool) {
+    if (tools?.contains(tool) == false) return;
     // arming Redact over a text selection marks it, as a markup tool does
     if (tool == PdfEditTool.redact &&
         _controller.tool != tool &&
@@ -516,6 +524,7 @@ class PdfEditorCommands extends ChangeNotifier {
   /// mark per page over the selected glyphs). Nothing is removed until the
   /// marks are applied.
   void redactSelection() {
+    if (tools?.contains(PdfEditTool.redact) == false) return;
     // capture before the edit: the document swap clears the selection
     final quadsByPage = {
       for (final page in viewerController.selectionPages)

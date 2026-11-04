@@ -10,6 +10,7 @@ import 'package:url_launcher/url_launcher.dart';
 import 'dart:io';
 import 'package:share_plus/share_plus.dart';
 import '../l10n/app_localizations.dart';
+import '../l10n/pdf_editor_strings.dart';
 import '../models/file_item.dart';
 import '../models/panel_side.dart';
 import '../providers/providers.dart';
@@ -29,6 +30,7 @@ import 'package:path/path.dart' as p;
 import 'batch_rename_dialog.dart' show showBatchRenameDialog;
 import 'diff_viewer_dialog.dart' show showDiffViewerDialog;
 import 'file_editor_dialog.dart' show showFileEditorDialog;
+import 'pdf_editor_dialog.dart' show isPdfFileName;
 import 'share_link_dialog.dart' show showShareLinkDialog;
 import 'permissions_dialog.dart' show showPermissionsDialog;
 import 'version_history_dialog.dart' show showVersionHistoryDialog;
@@ -158,6 +160,20 @@ void showFileContextMenu(BuildContext context, WidgetRef ref, PanelSide side,
   if (!isMultiSelect && !isSingleFolder) {
     final ext = file.name.split('.').last.toLowerCase();
     final preferExternal = ref.read(preferExternalEditorProvider);
+    if (isPdfFileName(file.name)) {
+      items.add(PopupMenuItem(
+        child: Row(
+          children: [
+            const Icon(Icons.edit_document),
+            const SizedBox(width: 8),
+            Text(context.pdfTr('Edit PDF')),
+          ],
+        ),
+        onTap: () => Future.delayed(Duration.zero, () {
+          if (context.mounted) showFileEditorDialog(context, ref, file, side);
+        }),
+      ));
+    }
     if (_editableExts.contains(ext) || !file.name.contains('.')) {
       // Primary "Edit" action respects the user's editor preference
       items.add(

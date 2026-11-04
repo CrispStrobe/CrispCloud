@@ -20,10 +20,16 @@ import '../providers/providers.dart';
 import '../l10n/app_localizations.dart';
 import '../services/log_service.dart';
 import 'office_editor_dialog.dart';
+import 'pdf_editor_dialog.dart';
 
 /// Opens a full-screen editor dialog for the given file.
 void showFileEditorDialog(
     BuildContext context, WidgetRef ref, FileItem file, PanelSide side) {
+  if (file.isFolder) return;
+  if (isPdfFileName(file.name)) {
+    unawaited(showPdfEditorDialog(context, ref, file, side));
+    return;
+  }
   // Office documents get the rich Word/Sheet/Slides editor instead of the
   // plain-text editor.
   if (isOfficeFileName(file.name)) {

@@ -1,3 +1,4 @@
+// CrispCloud modification: honor host redaction restrictions. See UPSTREAM.md.
 import 'dart:async' show unawaited;
 
 import 'package:flutter/foundation.dart' show defaultTargetPlatform, mapEquals;
@@ -925,6 +926,14 @@ class _PdfEditorViewState extends State<PdfEditorView> {
     session
       ..providedCustomStamps = widget.customStamps
       ..colorLocked = !widget.features.colorControls;
+    // CrispCloud: an external session may already have Redact armed. A
+    // restricted shell must not keep accepting redaction drags after binding.
+    if (session.tool == PdfEditTool.redact &&
+        widget.features.tools?.contains(PdfEditTool.redact) == false) {
+      session.tool = widget.features.tools!.contains(PdfEditTool.select)
+          ? PdfEditTool.select
+          : null;
+    }
   }
 
   /// Binds the Apple Pencil double-tap to the session's eraser toggle on
@@ -1388,6 +1397,10 @@ class _PdfEditorViewState extends State<PdfEditorView> {
           };
     final availableShortcuts =
         Map<PdfEditTool, PdfToolShortcut>.of(_toolShortcuts);
+    // CrispCloud: a hidden tool must also lose its keyboard binding.
+    if (availableTools != null) {
+      availableShortcuts.removeWhere((tool, _) => !availableTools.contains(tool));
+    }
     if (widget.onPlaceSignature == null) {
       availableShortcuts.remove(PdfEditTool.signatureBox);
     }
@@ -1479,6 +1492,7 @@ class _PdfEditorViewState extends State<PdfEditorView> {
                 // it the content tool) is available; a read-only shell keeps
                 // the panel a pure find panel
                 editing: features.toolbar ? session : null,
+                showRedaction: availableTools?.contains(PdfEditTool.redact) ?? true,
                 preferences: prefs,
                 dock: prefs.searchPanelDock,
                 bottomSheet: bottomSheet,
@@ -1852,7 +1866,8 @@ class _PdfEditorViewState extends State<PdfEditorView> {
                             !prefs.showAnnotationLibraryPanel
                         : null,
                     onFindToRedact:
-                        features.search && features.searchResultsPanel
+                        features.search && features.searchResultsPanel &&
+                            (availableTools?.contains(PdfEditTool.redact) ?? true)
                             ? () => prefs
                               ..searchRedactExpanded = true
                               ..showSearchResultsPanel = true
@@ -2088,6 +2103,8 @@ class _PdfEditorViewState extends State<PdfEditorView> {
                               (features.toolGroups == null ||
                                   features.toolGroups!
                                       .contains(PdfEditToolGroup.markup)),
+                          textSelectionRedaction:
+                              availableTools?.contains(PdfEditTool.redact) ?? true,
                           // The desktop toolbar floats over the viewer. Leave a
                           // scrollable tail tall enough for its dock and
                           // contextual strip, so the last page can move fully

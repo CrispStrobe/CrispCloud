@@ -5,13 +5,16 @@ import 'package:pdf_document/pdf_document.dart';
 
 /// A small generated PDF keeps the compatibility tests independent of the
 /// upstream monorepo's fixture package and binary assets.
-Uint8List buildTestPdf({bool passwordField = false}) {
+Uint8List buildTestPdf({bool passwordField = false, bool withText = false}) {
   final builder = CosDocumentBuilder();
   final catalog = CosDictionary({'Type': const CosName('Catalog')});
   final catalogRef = builder.add(catalog);
   final pages = CosDictionary({'Type': const CosName('Pages')});
   final pagesRef = builder.add(pages);
-  final content = Uint8List.fromList('0.2 0.4 0.6 rg 20 30 60 70 re f'.codeUnits);
+  final content = Uint8List.fromList((withText
+          ? 'BT /Helv 24 Tf 72 720 Td (Restricted redaction) Tj ET'
+          : '0.2 0.4 0.6 rg 20 30 60 70 re f')
+      .codeUnits);
   final page = CosDictionary({
     'Type': const CosName('Page'),
     'Parent': pagesRef,
@@ -31,13 +34,17 @@ Uint8List buildTestPdf({bool passwordField = false}) {
   pages['Count'] = const CosInteger(1);
   catalog['Pages'] = pagesRef;
 
-  if (passwordField) {
+  if (passwordField || withText) {
     final fontRef = builder.add(CosDictionary({
       'Type': const CosName('Font'),
       'Subtype': const CosName('Type1'),
       'BaseFont': const CosName('Helvetica'),
       'Encoding': const CosName('WinAnsiEncoding'),
     }));
+    page['Resources'] = CosDictionary({
+      'Font': CosDictionary({'Helv': fontRef}),
+    });
+    if (!passwordField) return builder.build(root: catalogRef);
     final fieldRef = builder.add(CosDictionary({
       'Type': const CosName('Annot'),
       'Subtype': const CosName('Widget'),

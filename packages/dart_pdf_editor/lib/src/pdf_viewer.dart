@@ -1,3 +1,4 @@
+// CrispCloud modification: honor host redaction restrictions. See UPSTREAM.md.
 import 'dart:async';
 import 'design/viewer_tokens.dart';
 import 'dart:math' as math;
@@ -1458,6 +1459,7 @@ class PdfViewer extends StatefulWidget {
     this.editingPalette = defaultStyledTextPalette,
     this.textSelectionEditing = true,
     this.textSelectionMarkup = true,
+    this.textSelectionRedaction = true,
     this.annotationMenuBuilder,
     this.onSaveAnnotationImage,
     this.textMenuBuilder,
@@ -1763,6 +1765,12 @@ class PdfViewer extends StatefulWidget {
   /// Whether an editor-backed text selection exposes highlight, underline,
   /// strikeout, and squiggly actions. Has no effect without [editing].
   final bool textSelectionMarkup;
+
+  /// Whether text context menus, touch chips and tool actions offer redaction.
+  /// CrispCloud
+  /// disables this together with the tool and its keyboard shortcut because
+  /// partial image/Form XObject redaction is not supported by this engine.
+  final bool textSelectionRedaction;
 
   /// Adds the app's own entries to the annotation context menu (the
   /// right-click menu - z-order and delete come stock). Called when the
@@ -7555,8 +7563,9 @@ class _PdfViewerState extends State<PdfViewer>
         _markupSubmenuEntry(globalPosition),
         stock(
             'link', l10n.linkDialogTitle, Icons.link, _addLinkToTextSelection),
-        stock(
-            'redact', l10n.tbToolRedact, Icons.gradient, _redactTextSelection),
+        if (widget.textSelectionRedaction)
+          stock(
+              'redact', l10n.tbToolRedact, Icons.gradient, _redactTextSelection),
       ],
       stock('select-all', l10n.viewerSelectAll, Icons.select_all,
           () => _selectAllTextOn(page),
@@ -7737,6 +7746,7 @@ class _PdfViewerState extends State<PdfViewer>
   /// page over the selected glyphs) and arms the Redact tool, whose strip
   /// carries the Apply button that burns the marks.
   void _redactTextSelection() {
+    if (!widget.textSelectionRedaction) return;
     final editing = widget.editing;
     if (editing == null || _selRange == null) return;
     final quadsByPage = {
@@ -8547,6 +8557,7 @@ class _PdfViewerState extends State<PdfViewer>
   /// first, exactly as the toolbar does: the measuring scale for a measure
   /// tool, a signature for the signature tool.
   void _armTool(PdfEditTool tool) {
+    if (tool == PdfEditTool.redact && !widget.textSelectionRedaction) return;
     final editing = widget.editing;
     if (editing == null) return;
     final commands = context
@@ -9311,7 +9322,8 @@ class _PdfViewerState extends State<PdfViewer>
       onAddLink: widget.editing != null && widget.textSelectionMarkup
           ? _addLinkToTextSelection
           : null,
-      onRedact: widget.editing != null && widget.textSelectionMarkup
+      onRedact: widget.editing != null && widget.textSelectionMarkup &&
+              widget.textSelectionRedaction
           ? _redactTextSelection
           : null,
     );

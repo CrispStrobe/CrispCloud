@@ -1,3 +1,4 @@
+// CrispCloud modification: honor host redaction restrictions. See UPSTREAM.md.
 import 'dart:typed_data';
 
 import 'package:flutter/gestures.dart' show PointerDeviceKind;
@@ -1311,6 +1312,7 @@ class _PdfEditingToolbarState extends State<PdfEditingToolbar> {
   }
 
   Future<void> _applyRedactions(BuildContext context) async {
+    if (widget.tools?.contains(PdfEditTool.redact) == false) return;
     final confirmed = await PdfEditorPresenter.of(context).confirm(
       context,
       PdfConfirmRequest(
@@ -1323,6 +1325,7 @@ class _PdfEditingToolbarState extends State<PdfEditingToolbar> {
       ),
     );
     if (!confirmed || !context.mounted) return;
+    if (widget.tools?.contains(PdfEditTool.redact) == false) return;
     final burned = controller.applyRedactions();
     _flattenToast(
       context,
@@ -2023,7 +2026,8 @@ class _PdfEditingToolbarState extends State<PdfEditingToolbar> {
         ),
       ];
     }
-    if (tool == PdfEditTool.redact) {
+    if (tool == PdfEditTool.redact &&
+        widget.tools?.contains(PdfEditTool.redact) != false) {
       final findToRedact = widget.onFindToRedact;
       return [
         if (flatten != null) ...[flatten, _MiniDivider(axis: axis)],

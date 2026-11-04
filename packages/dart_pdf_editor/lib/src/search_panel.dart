@@ -1,3 +1,4 @@
+// CrispCloud modification: honor host redaction restrictions. See UPSTREAM.md.
 import 'dart:async';
 
 import 'design/viewer_tokens.dart';
@@ -235,6 +236,7 @@ class PdfSearchResultsPanel extends StatefulWidget {
     this.maxWidth = 480,
     this.bottomSheet = false,
     this.showOptions = true,
+    this.showRedaction = true,
     this.onClose,
   });
 
@@ -244,6 +246,10 @@ class PdfSearchResultsPanel extends StatefulWidget {
   /// leaves the panel a pure find panel - which is what a read-only viewer
   /// wants.
   final PdfEditingController? editing;
+
+  /// Whether find-to-redact controls are available, independently of replace.
+  /// CrispCloud honors the host's redaction tool restriction here too.
+  final bool showRedaction;
 
   /// Persists the user-dragged width when provided.
   final PdfEditingPreferences? preferences;
@@ -299,9 +305,11 @@ class _PdfSearchResultsPanelState extends State<PdfSearchResultsPanel> {
   bool _redactExpandedLocal = false;
 
   bool get _redactExpanded =>
-      widget.preferences?.searchRedactExpanded ?? _redactExpandedLocal;
+      widget.showRedaction &&
+      (widget.preferences?.searchRedactExpanded ?? _redactExpandedLocal);
 
   void _toggleRedact() {
+    if (!widget.showRedaction) return;
     final next = !_redactExpanded;
     final prefs = widget.preferences;
     if (prefs != null) {
@@ -550,7 +558,7 @@ class _PdfSearchResultsPanelState extends State<PdfSearchResultsPanel> {
                         selected: _replaceExpanded,
                         onPressed: _toggleReplace,
                       ),
-                    if (widget.editing != null)
+                    if (widget.editing != null && widget.showRedaction)
                       PdfPanelToggleButton(
                         key: const ValueKey('pdf-search-redact-toggle'),
                         iconData: Icons.gradient,
@@ -567,7 +575,7 @@ class _PdfSearchResultsPanelState extends State<PdfSearchResultsPanel> {
                     field: _replaceField,
                     geometry: geometry,
                   ),
-                if (widget.editing != null && _redactExpanded)
+                if (widget.editing != null && widget.showRedaction && _redactExpanded)
                   _RedactBar(
                     controller: controller,
                     editing: widget.editing!,

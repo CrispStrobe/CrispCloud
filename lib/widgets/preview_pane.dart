@@ -15,11 +15,13 @@ import 'package:pdfx/pdfx.dart';
 import 'package:video_player/video_player.dart';
 import '../models/file_item.dart';
 import '../models/panel_side.dart';
+import '../l10n/pdf_editor_strings.dart';
 import '../services/file_bytes_loader.dart';
 import '../services/internal_viewer_service.dart';
 import '../utils/formatters.dart';
 import 'file_list_view.dart' show getFileIcon;
 import 'preview_media.dart';
+import 'pdf_editor_dialog.dart';
 import 'code_highlighting.dart';
 
 import 'package:flutter_markdown/flutter_markdown.dart';
@@ -443,6 +445,15 @@ class _PreviewPaneState extends ConsumerState<PreviewPane> {
                   ],
                 ),
               ),
+              if (!file.isFolder && isPdfFileName(file.name))
+                IconButton(
+                  tooltip: context.pdfTr('Edit PDF'),
+                  icon: const Icon(Icons.edit_document),
+                  onPressed: () async {
+                    await showPdfEditorDialog(context, ref, file, widget.side);
+                    if (mounted && widget.file == file) _loadPreview();
+                  },
+                ),
             ],
           ),
         ),

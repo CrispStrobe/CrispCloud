@@ -9,6 +9,9 @@
   retain `flutter_secure_storage` 9 without an override of upstream's 11.
 - Extract native overprint retry dispatch behind a conditional import. Browser
   callers receive `null` for this optional retry; ordinary rendering is unchanged.
+- Honor the host's redaction tool restriction across keyboard commands,
+  pre-armed sessions, desktop/touch text selection, saved search expansion,
+  custom group defaults, and Apply controls. The engine algorithm is unchanged.
 - Resolve the package outside the upstream workspace, pin the PDF core packages
   to 14.0.0, and add focused compatibility tests with generated PDF fixtures.
 
