@@ -18,6 +18,7 @@ import '../models/file_item.dart';
 import '../models/panel_side.dart';
 import '../providers/providers.dart';
 import '../l10n/app_localizations.dart';
+import '../l10n/file_editor_strings.dart';
 import '../services/log_service.dart';
 import 'office_editor_dialog.dart';
 
@@ -293,9 +294,9 @@ class _FileEditorPageState extends ConsumerState<_FileEditorPage> {
           if (kIsWeb || e is! PathAccessException) rethrow;
           final granted = await service.ensureAccess(path);
           if (!granted) {
+            if (!mounted) return;
             throw FileSystemException(
-              'Access to "$path" was not granted. Grant access to its folder '
-              'and try again.',
+              FileEditorStrings(context).value('access', path),
               path,
             );
           }
@@ -324,7 +325,7 @@ class _FileEditorPageState extends ConsumerState<_FileEditorPage> {
       _log.warn('operation failed', e);
       if (!mounted) return;
       setState(() {
-        _error = 'Failed to load file: $e';
+        _error = FileEditorStrings(context).value('loadError', e);
         _loading = false;
       });
     }
@@ -382,7 +383,7 @@ class _FileEditorPageState extends ConsumerState<_FileEditorPage> {
       ref.read(panelProvider(widget.side)).refreshFiles();
 
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Saved ${widget.file.name}')),
+        SnackBar(content: Text(FileEditorStrings(context).value('saved', widget.file.name))),
       );
     } catch (e) {
       _log.warn('operation failed', e);
@@ -390,7 +391,7 @@ class _FileEditorPageState extends ConsumerState<_FileEditorPage> {
       setState(() => _saving = false);
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
-          content: Text('Save failed: $e'),
+          content: Text(FileEditorStrings(context).value('saveError', e)),
           backgroundColor: Theme.of(context).colorScheme.error,
         ),
       );
@@ -403,15 +404,14 @@ class _FileEditorPageState extends ConsumerState<_FileEditorPage> {
       context: context,
       builder: (ctx) => AlertDialog(
         title: Text(AppLocalizations.of(context)!.unsavedChanges),
-        content: const Text(
-            'You have unsaved changes. Discard them?'),
+        content: Text(FileEditorStrings(context).text('unsaved')),
         actions: [
           TextButton(
               onPressed: () => Navigator.pop(ctx, false),
               child: Text(AppLocalizations.of(context)!.cancel)),
           TextButton(
               onPressed: () => Navigator.pop(ctx, true),
-              child: Text(AppLocalizations.of(context)!.discard)),
+              child: Text(FileEditorStrings(context).text('discard'))),
         ],
       ),
     );
@@ -470,7 +470,7 @@ class _FileEditorPageState extends ConsumerState<_FileEditorPage> {
                     color: theme.colorScheme.primary,
                     borderRadius: BorderRadius.circular(4),
                   ),
-                  child: Text('Modified',
+                  child: Text(FileEditorStrings(context).text('modified'),
                       style: TextStyle(
                           fontSize: 10,
                           color: theme.colorScheme.onPrimary)),
@@ -486,7 +486,7 @@ class _FileEditorPageState extends ConsumerState<_FileEditorPage> {
                   _highlightEnabled ? Icons.code : Icons.code_off,
                   size: 20,
                 ),
-                tooltip: _highlightEnabled ? 'Disable Highlighting' : 'Enable Highlighting',
+                tooltip: FileEditorStrings(context).text(_highlightEnabled ? 'disable' : 'enable'),
                 onPressed: () {
                   setState(() {
                     _highlightEnabled = !_highlightEnabled;
@@ -499,7 +499,7 @@ class _FileEditorPageState extends ConsumerState<_FileEditorPage> {
               padding: const EdgeInsets.only(right: 8),
               child: Center(
                 child: Text(
-                  '${_language?.toUpperCase() ?? ext}  |  $_lineCount lines',
+                  '${_language?.toUpperCase() ?? ext}  |  ${FileEditorStrings(context).value('lines', _lineCount)}',
                   style: TextStyle(
                       fontSize: 12,
                       color: theme.colorScheme.onSurfaceVariant),
@@ -521,7 +521,7 @@ class _FileEditorPageState extends ConsumerState<_FileEditorPage> {
                         color: _modified
                             ? theme.colorScheme.primary
                             : null),
-                    tooltip: 'Save (Ctrl+S)',
+                    tooltip: FileEditorStrings(context).text('saveShortcut'),
                     onPressed: _modified ? _saveFile : null,
                   ),
           ],
@@ -529,10 +529,7 @@ class _FileEditorPageState extends ConsumerState<_FileEditorPage> {
         body: Column(children: [
           if (_conflictDetected)
             MaterialBanner(
-              content: const Text(
-                'This file was modified on the server since you opened it. '
-                'Saving will overwrite the remote version.',
-              ),
+              content: Text(FileEditorStrings(context).text('conflict')),
               leading: const Icon(Icons.warning, color: Colors.orange),
               actions: [
                 TextButton(
@@ -540,7 +537,7 @@ class _FileEditorPageState extends ConsumerState<_FileEditorPage> {
                     setState(() => _conflictDetected = false);
                     _saveFile();
                   },
-                  child: const Text('Save Anyway'),
+                  child: Text(FileEditorStrings(context).text('saveAnyway')),
                 ),
                 TextButton(
                   onPressed: () {

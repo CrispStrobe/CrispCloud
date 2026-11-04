@@ -6,6 +6,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import '../l10n/permissions_strings.dart';
 import '../models/file_item.dart';
 import '../providers/providers.dart';
 import '../services/sftp_client_adapter.dart';
@@ -36,6 +37,7 @@ class _PermissionsDialogState extends ConsumerState<_PermissionsDialog> {
   bool _loading = true;
   bool _saving = false;
   String? _error;
+  Object? _errorDetail;
 
   @override
   void initState() {
@@ -76,7 +78,8 @@ class _PermissionsDialogState extends ConsumerState<_PermissionsDialog> {
       _log.error('Failed to load permissions', e);
       if (mounted) {
         setState(() {
-          _error = 'Failed to load permissions: $e';
+          _error = 'Failed to load permissions: {error}';
+          _errorDetail = e;
           _loading = false;
         });
       }
@@ -115,13 +118,14 @@ class _PermissionsDialogState extends ConsumerState<_PermissionsDialog> {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
+    final strings = PermissionsStrings(context);
 
     return AlertDialog(
       title: Row(
         children: [
           const Icon(Icons.security, size: 20),
           const SizedBox(width: 8),
-          Expanded(child: Text('Permissions — ${widget.file.name}', overflow: TextOverflow.ellipsis)),
+          Expanded(child: Text(strings.format('Permissions — {name}', {'name': widget.file.name}), overflow: TextOverflow.ellipsis)),
         ],
       ),
       content: SizedBox(
@@ -129,7 +133,7 @@ class _PermissionsDialogState extends ConsumerState<_PermissionsDialog> {
         child: _loading
             ? const Center(child: CircularProgressIndicator())
             : _error != null
-                ? Center(child: Text(_error!, style: TextStyle(color: theme.colorScheme.error)))
+                ? Center(child: Text(strings.format(_error!, {'error': _errorDetail}), style: TextStyle(color: theme.colorScheme.error)))
                 : Column(
                     mainAxisSize: MainAxisSize.min,
                     crossAxisAlignment: CrossAxisAlignment.start,
@@ -153,9 +157,9 @@ class _PermissionsDialogState extends ConsumerState<_PermissionsDialog> {
                       const SizedBox(height: 16),
 
                       // Permission grid
-                      _buildPermissionRow('Owner', 0),
-                      _buildPermissionRow('Group', 3),
-                      _buildPermissionRow('Other', 6),
+                      _buildPermissionRow(strings.text('Owner'), 0),
+                      _buildPermissionRow(strings.text('Group'), 3),
+                      _buildPermissionRow(strings.text('Other'), 6),
                       const SizedBox(height: 16),
 
                       // Quick presets
@@ -179,9 +183,9 @@ class _PermissionsDialogState extends ConsumerState<_PermissionsDialog> {
                           Expanded(
                             child: TextField(
                               controller: _ownerController,
-                              decoration: const InputDecoration(
-                                labelText: 'Owner',
-                                border: OutlineInputBorder(),
+                              decoration: InputDecoration(
+                                labelText: strings.text('Owner'),
+                                border: const OutlineInputBorder(),
                                 isDense: true,
                               ),
                             ),
@@ -190,9 +194,9 @@ class _PermissionsDialogState extends ConsumerState<_PermissionsDialog> {
                           Expanded(
                             child: TextField(
                               controller: _groupController,
-                              decoration: const InputDecoration(
-                                labelText: 'Group',
-                                border: OutlineInputBorder(),
+                              decoration: InputDecoration(
+                                labelText: strings.text('Group'),
+                                border: const OutlineInputBorder(),
                                 isDense: true,
                               ),
                             ),
@@ -205,40 +209,44 @@ class _PermissionsDialogState extends ConsumerState<_PermissionsDialog> {
       actions: [
         TextButton(
           onPressed: () => Navigator.pop(context),
-          child: const Text('Cancel'),
+          child: Text(strings.text('Cancel')),
         ),
         ElevatedButton(
           onPressed: _saving ? null : _save,
           child: _saving
               ? const SizedBox(width: 20, height: 20, child: CircularProgressIndicator(strokeWidth: 2))
-              : const Text('Apply'),
+              : Text(strings.text('Apply')),
         ),
       ],
     );
   }
 
   Widget _buildPermissionRow(String label, int startIndex) {
+    final strings = PermissionsStrings(context);
     return Padding(
       padding: const EdgeInsets.symmetric(vertical: 4),
       child: Row(
         children: [
-          SizedBox(width: 60, child: Text(label, style: const TextStyle(fontWeight: FontWeight.w500))),
-          _permCheckbox('R', startIndex),
-          _permCheckbox('W', startIndex + 1),
-          _permCheckbox('X', startIndex + 2),
+          SizedBox(width: 90, child: Text(label, overflow: TextOverflow.ellipsis, style: const TextStyle(fontWeight: FontWeight.w500))),
+          _permCheckbox('R', strings.text('Read'), startIndex),
+          _permCheckbox('W', strings.text('Write'), startIndex + 1),
+          _permCheckbox('X', strings.text('Execute'), startIndex + 2),
         ],
       ),
     );
   }
 
-  Widget _permCheckbox(String label, int index) {
+  Widget _permCheckbox(String label, String description, int index) {
     return Row(
       mainAxisSize: MainAxisSize.min,
       children: [
-        Checkbox(
-          value: _perms[index],
-          onChanged: (v) => setState(() => _perms[index] = v ?? false),
-          visualDensity: VisualDensity.compact,
+        Tooltip(
+          message: description,
+          child: Checkbox(
+            value: _perms[index],
+            onChanged: (v) => setState(() => _perms[index] = v ?? false),
+            visualDensity: VisualDensity.compact,
+          ),
         ),
         Text(label, style: const TextStyle(fontSize: 12, fontFamily: 'monospace')),
         const SizedBox(width: 8),
@@ -258,6 +266,7 @@ class _PermissionsDialogState extends ConsumerState<_PermissionsDialog> {
   }
 
   Future<void> _save() async {
+    final strings = PermissionsStrings(context);
     setState(() => _saving = true);
 
     try {
@@ -281,7 +290,7 @@ class _PermissionsDialogState extends ConsumerState<_PermissionsDialog> {
       if (mounted) {
         Navigator.pop(context);
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Permissions set to ${_toOctal()} (${_toSymbolic()}) for ${widget.file.name}')),
+          SnackBar(content: Text(strings.format('Permissions set to {octal} ({symbolic}) for {name}', {'octal': _toOctal(), 'symbolic': _toSymbolic(), 'name': widget.file.name}))),
         );
       }
     } catch (e) {
@@ -289,7 +298,7 @@ class _PermissionsDialogState extends ConsumerState<_PermissionsDialog> {
       if (mounted) {
         setState(() => _saving = false);
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Failed to set permissions: $e')),
+          SnackBar(content: Text(strings.format('Failed to set permissions: {error}', {'error': e}))),
         );
       }
     }
