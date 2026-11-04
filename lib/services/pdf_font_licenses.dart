@@ -32,15 +32,18 @@ const _fontNotices = [
     '$_fontLicenseDirectory/FONT-COPYRIGHTS.txt',
     '$_fontLicenseDirectory/README.md',
   ]),
-  _FontNotice(['DejaVu Sans'], [
-    '$_fontLicenseDirectory/DejaVuSans-font-metadata-LICENSE.txt',
-  ]),
-  _FontNotice(['DejaVu Serif'], [
-    '$_fontLicenseDirectory/DejaVuSerif-font-metadata-LICENSE.txt',
-  ]),
-  _FontNotice(['DejaVu Sans Mono'], [
-    '$_fontLicenseDirectory/DejaVuSansMono-font-metadata-LICENSE.txt',
-  ]),
+  _FontNotice(
+    ['DejaVu Sans'],
+    ['$_fontLicenseDirectory/DejaVuSans-font-metadata-LICENSE.txt'],
+  ),
+  _FontNotice(
+    ['DejaVu Serif'],
+    ['$_fontLicenseDirectory/DejaVuSerif-font-metadata-LICENSE.txt'],
+  ),
+  _FontNotice(
+    ['DejaVu Sans Mono'],
+    ['$_fontLicenseDirectory/DejaVuSansMono-font-metadata-LICENSE.txt'],
+  ),
   _FontNotice(['Fira Sans'], ['$_fontLicenseDirectory/FiraSans-LICENSE.txt']),
   _FontNotice(['Spectral'], ['$_fontLicenseDirectory/Spectral-LICENSE.txt']),
   _FontNotice(['Lobster'], ['$_fontLicenseDirectory/Lobster-LICENSE.txt']),

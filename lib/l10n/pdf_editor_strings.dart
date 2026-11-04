@@ -33,8 +33,7 @@ abstract final class PdfEditorStrings {
         'Kopie heruntergeladen. Das Original wurde nicht aktualisiert.',
     'PDF exported to the selected destination.':
         'PDF am ausgewählten Ziel exportiert.',
-    'Download started. Keep the downloaded file before closing.':
-        'Download gestartet. Bewahren Sie die heruntergeladene Datei vor dem Schließen auf.',
+    'Download started. Keep the downloaded file before closing.': 'Download gestartet. Bewahren Sie die heruntergeladene Datei vor dem Schließen auf.',
     'Close after saving a copy?': 'Nach dem Speichern einer Kopie schließen?',
     'Make sure the saved or downloaded copy is available before closing.': 'Stellen Sie vor dem Schließen sicher, dass die gespeicherte oder heruntergeladene Kopie verfügbar ist.',
     'New changes were made while saving. Save them before closing.': 'Während des Speicherns wurden weitere Änderungen vorgenommen. Speichern Sie diese vor dem Schließen.',
