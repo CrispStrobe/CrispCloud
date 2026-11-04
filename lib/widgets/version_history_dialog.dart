@@ -18,13 +18,20 @@ import '../services/onedrive_client_adapter.dart';
 import '../services/log_service.dart';
 import '../utils/formatters.dart';
 import 'diff_viewer_dialog.dart';
-import '../l10n/app_localizations.dart';
+import '../l10n/version_history_strings.dart';
 
 void showVersionHistoryDialog(BuildContext context, WidgetRef ref, FileItem file) {
   showDialog(
     context: context,
     builder: (_) => _VersionHistoryDialog(file: file),
   );
+}
+
+class _VersionMessage implements Exception {
+  const _VersionMessage(this.template, [this.values = const {}]);
+  final String template;
+  final Map<String, Object?> values;
+  String localized(VersionHistoryStrings strings) => strings.format(template, values);
 }
 
 class _VersionHistoryDialog extends ConsumerStatefulWidget {
@@ -41,7 +48,7 @@ class _VersionHistoryDialogState extends ConsumerState<_VersionHistoryDialog> {
   List<Map<String, dynamic>> _versions = [];
   bool _loading = true;
   bool _restoring = false;
-  String? _error;
+  Object? _error;
 
   @override
   void initState() {
@@ -64,7 +71,7 @@ class _VersionHistoryDialogState extends ConsumerState<_VersionHistoryDialog> {
       } else if (client is OneDriveClientAdapter) {
         versions = await _loadOneDriveVersions(client, widget.file);
       } else {
-        throw UnsupportedError('${client.providerName} does not support version history');
+        throw _VersionMessage('{provider} does not support version history', {'provider': client.providerName});
       }
 
       if (mounted) {
@@ -77,7 +84,7 @@ class _VersionHistoryDialogState extends ConsumerState<_VersionHistoryDialog> {
       _log.error('Failed to load versions', e);
       if (mounted) {
         setState(() {
-          _error = e.toString();
+          _error = e;
           _loading = false;
         });
       }
@@ -86,7 +93,7 @@ class _VersionHistoryDialogState extends ConsumerState<_VersionHistoryDialog> {
 
   Future<List<Map<String, dynamic>>> _loadGDriveVersions(GDriveClientAdapter client, String fileId) async {
     final token = client.accessToken;
-    if (token == null) throw Exception('Not authenticated');
+    if (token == null) throw const _VersionMessage('Not authenticated');
     final resp = await http.get(
       Uri.parse('https://www.googleapis.com/drive/v3/files/$fileId/revisions?fields=revisions(id,modifiedTime,size,lastModifyingUser/displayName)'),
       headers: {'Authorization': 'Bearer $token'},
@@ -97,7 +104,7 @@ class _VersionHistoryDialogState extends ConsumerState<_VersionHistoryDialog> {
       'id': r['id'],
       'modified': r['modifiedTime'],
       'size': int.tryParse(r['size']?.toString() ?? '0') ?? 0,
-      'author': r['lastModifyingUser']?['displayName'] ?? 'Unknown',
+      'author': r['lastModifyingUser']?['displayName'],
       'provider': 'gdrive',
       'fileId': fileId,
     }).toList();
@@ -105,7 +112,7 @@ class _VersionHistoryDialogState extends ConsumerState<_VersionHistoryDialog> {
 
   Future<List<Map<String, dynamic>>> _loadDropboxVersions(DropboxClientAdapter client, FileItem file) async {
     final token = client.accessToken;
-    if (token == null) throw Exception('Not authenticated');
+    if (token == null) throw const _VersionMessage('Not authenticated');
     final path = file.path ?? '/${file.name}';
     final resp = await http.post(
       Uri.parse('https://api.dropboxapi.com/2/files/list_revisions'),
@@ -129,7 +136,7 @@ class _VersionHistoryDialogState extends ConsumerState<_VersionHistoryDialog> {
 
   Future<List<Map<String, dynamic>>> _loadOneDriveVersions(OneDriveClientAdapter client, FileItem file) async {
     final token = client.accessToken;
-    if (token == null) throw Exception('Not authenticated');
+    if (token == null) throw const _VersionMessage('Not authenticated');
     final fileId = file.uuid ?? file.name;
     final resp = await http.get(
       Uri.parse('https://graph.microsoft.com/v1.0/me/drive/items/$fileId/versions'),
@@ -150,19 +157,18 @@ class _VersionHistoryDialogState extends ConsumerState<_VersionHistoryDialog> {
   // --- Restore Methods ---
 
   Future<void> _restoreVersion(Map<String, dynamic> version) async {
+    final strings = VersionHistoryStrings(context);
     final provider = version['provider'] as String;
     final confirm = await showDialog<bool>(
       context: context,
       builder: (ctx) => AlertDialog(
-        title: const Text('Restore Version?'),
+        title: Text(strings.text('Restore Version?')),
         content: Text(
-          'This will replace the current file with the version from '
-          '${version['modified'] ?? 'unknown date'}. '
-          'The current version will be preserved in the version history.',
+          strings.format('This will replace the current file with the version from {date}. The current version will be preserved in the version history.', {'date': version['modified'] ?? strings.text('unknown date')}),
         ),
         actions: [
-          TextButton(onPressed: () => Navigator.pop(ctx, false), child: const Text('Cancel')),
-          ElevatedButton(onPressed: () => Navigator.pop(ctx, true), child: const Text('Restore')),
+          TextButton(onPressed: () => Navigator.pop(ctx, false), child: Text(strings.text('Cancel'))),
+          ElevatedButton(onPressed: () => Navigator.pop(ctx, true), child: Text(strings.text('Restore'))),
         ],
       ),
     );
@@ -193,7 +199,7 @@ class _VersionHistoryDialogState extends ConsumerState<_VersionHistoryDialog> {
 
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Restored ${widget.file.name} to version from ${version['modified']}')),
+          SnackBar(content: Text(strings.format('Restored {name} to version from {date}', {'name': widget.file.name, 'date': version['modified'] ?? strings.text('unknown date')}))),
         );
         // Reload versions to reflect the change
         setState(() {
@@ -207,7 +213,7 @@ class _VersionHistoryDialogState extends ConsumerState<_VersionHistoryDialog> {
       if (mounted) {
         setState(() => _restoring = false);
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Restore failed: $e')),
+          SnackBar(content: Text(strings.format('Restore failed: {error}', {'error': e is _VersionMessage ? e.localized(strings) : e}))),
         );
       }
     }
@@ -227,7 +233,7 @@ class _VersionHistoryDialogState extends ConsumerState<_VersionHistoryDialog> {
       headers: {'Authorization': 'Bearer $token'},
     );
     if (downloadResp.statusCode != 200) {
-      throw Exception('Failed to download revision: ${downloadResp.statusCode}');
+      throw _VersionMessage('Failed to download revision: {status}', {'status': downloadResp.statusCode});
     }
 
     // Re-upload the content to the same file (creates a new revision)
@@ -240,7 +246,7 @@ class _VersionHistoryDialogState extends ConsumerState<_VersionHistoryDialog> {
       body: downloadResp.bodyBytes,
     );
     if (uploadResp.statusCode != 200) {
-      throw Exception('Failed to upload restored content: ${uploadResp.statusCode}');
+      throw _VersionMessage('Failed to upload restored content: {status}', {'status': uploadResp.statusCode});
     }
   }
 
@@ -259,7 +265,7 @@ class _VersionHistoryDialogState extends ConsumerState<_VersionHistoryDialog> {
       body: json.encode({'path': path, 'rev': rev}),
     );
     if (resp.statusCode != 200) {
-      throw Exception('Dropbox restore failed: ${resp.statusCode} ${resp.body}');
+      throw _VersionMessage('{provider} restore failed: {status} {details}', {'provider': 'Dropbox', 'status': resp.statusCode, 'details': resp.body});
     }
   }
 
@@ -278,7 +284,7 @@ class _VersionHistoryDialogState extends ConsumerState<_VersionHistoryDialog> {
     );
     // 204 = success, 200 = success with body
     if (resp.statusCode != 204 && resp.statusCode != 200) {
-      throw Exception('OneDrive restore failed: ${resp.statusCode} ${resp.body}');
+      throw _VersionMessage('{provider} restore failed: {status} {details}', {'provider': 'OneDrive', 'status': resp.statusCode, 'details': resp.body});
     }
   }
 
@@ -325,12 +331,13 @@ class _VersionHistoryDialogState extends ConsumerState<_VersionHistoryDialog> {
 
   /// Compare a version with the current version using the diff viewer.
   Future<void> _compareVersion(Map<String, dynamic> version) async {
+    final strings = VersionHistoryStrings(context);
     setState(() => _restoring = true); // reuse loading overlay
 
     try {
       // Download the old version
       final oldContent = await _downloadVersionContent(version);
-      if (oldContent == null) throw Exception('Failed to download version');
+      if (oldContent == null) throw const _VersionMessage('Failed to download version');
 
       // Download the current version
       final auth = ref.read(authProvider);
@@ -342,21 +349,21 @@ class _VersionHistoryDialogState extends ConsumerState<_VersionHistoryDialog> {
       setState(() => _restoring = false);
 
       final modified = DateTime.tryParse(version['modified'] ?? '');
-      final versionLabel = modified != null ? formatDateFull(modified) : 'Version ${version['id']}';
+      final versionLabel = modified != null ? formatDateFull(modified) : strings.format('Version {id}', {'id': version['id']});
 
       showDiffViewerFromContent(
         context,
         leftContent: oldContent,
         rightContent: currentContent,
-        leftLabel: 'Version: $versionLabel',
-        rightLabel: 'Current',
+        leftLabel: strings.format('Version: {version}', {'version': versionLabel}),
+        rightLabel: strings.text('Current'),
       );
     } catch (e) {
       _log.error('Version diff failed', e);
       if (mounted) {
         setState(() => _restoring = false);
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Diff failed: $e')),
+          SnackBar(content: Text(strings.format('Diff failed: {error}', {'error': e is _VersionMessage ? e.localized(strings) : e}))),
         );
       }
     }
@@ -365,13 +372,14 @@ class _VersionHistoryDialogState extends ConsumerState<_VersionHistoryDialog> {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
+    final strings = VersionHistoryStrings(context);
 
     return AlertDialog(
       title: Row(
         children: [
           const Icon(Icons.history, size: 20),
           const SizedBox(width: 8),
-          Expanded(child: Text('Version History — ${widget.file.name}', overflow: TextOverflow.ellipsis)),
+          Expanded(child: Text(strings.format('Version History — {name}', {'name': widget.file.name}), overflow: TextOverflow.ellipsis)),
         ],
       ),
       content: SizedBox(
@@ -380,9 +388,9 @@ class _VersionHistoryDialogState extends ConsumerState<_VersionHistoryDialog> {
         child: _loading
             ? const Center(child: CircularProgressIndicator())
             : _error != null
-                ? Center(child: Text(_error!, style: TextStyle(color: theme.colorScheme.error)))
+                ? Center(child: Text(_error is _VersionMessage ? (_error as _VersionMessage).localized(strings) : _error.toString(), style: TextStyle(color: theme.colorScheme.error)))
                 : _versions.isEmpty
-                    ? const Center(child: Text('No version history available'))
+                    ? Center(child: Text(strings.text('No version history available')))
                     : Stack(
                         children: [
                           ListView.builder(
@@ -400,25 +408,25 @@ class _VersionHistoryDialogState extends ConsumerState<_VersionHistoryDialog> {
                                   )),
                                 ),
                                 title: Text(
-                                  modified != null ? formatDateFull(modified) : 'Version ${v['id']}',
+                                  modified != null ? formatDateFull(modified) : strings.format('Version {id}', {'id': v['id']}),
                                   style: const TextStyle(fontSize: 13),
                                 ),
                                 subtitle: Text(
-                                  '${formatBytes(v['size'] as int)}${v['author']?.isNotEmpty == true ? ' • ${v['author']}' : ''}',
+                                  '${formatBytes(v['size'] as int)}${v['author'] == null ? ' • ${strings.text('Unknown')}' : (v['author']?.isNotEmpty == true ? ' • ${v['author']}' : '')}',
                                   style: const TextStyle(fontSize: 11),
                                 ),
                                 trailing: index == 0
-                                    ? const Chip(label: Text('Current', style: TextStyle(fontSize: 10)), visualDensity: VisualDensity.compact)
+                                    ? Chip(label: Text(strings.text('Current'), style: const TextStyle(fontSize: 10)), visualDensity: VisualDensity.compact)
                                     : Row(
                                         mainAxisSize: MainAxisSize.min,
                                         children: [
                                           TextButton(
                                             onPressed: _restoring ? null : () => _compareVersion(v),
-                                            child: const Text('Diff', style: TextStyle(fontSize: 12)),
+                                            child: Text(strings.text('Diff'), style: const TextStyle(fontSize: 12)),
                                           ),
                                           TextButton(
                                             onPressed: _restoring ? null : () => _restoreVersion(v),
-                                            child: const Text('Restore', style: TextStyle(fontSize: 12)),
+                                            child: Text(strings.text('Restore'), style: const TextStyle(fontSize: 12)),
                                           ),
                                         ],
                                       ),
@@ -428,13 +436,13 @@ class _VersionHistoryDialogState extends ConsumerState<_VersionHistoryDialog> {
                           if (_restoring)
                             Container(
                               color: Colors.black26,
-                              child: const Center(
+                              child: Center(
                                 child: Column(
                                   mainAxisSize: MainAxisSize.min,
                                   children: [
-                                    CircularProgressIndicator(),
-                                    SizedBox(height: 12),
-                                    Text('Restoring...', style: TextStyle(color: Colors.white)),
+                                    const CircularProgressIndicator(),
+                                    const SizedBox(height: 12),
+                                    Text(strings.text('Restoring...'), style: const TextStyle(color: Colors.white)),
                                   ],
                                 ),
                               ),
@@ -443,7 +451,7 @@ class _VersionHistoryDialogState extends ConsumerState<_VersionHistoryDialog> {
                       ),
       ),
       actions: [
-        TextButton(onPressed: () => Navigator.pop(context), child: Text(AppLocalizations.of(context)!.close)),
+        TextButton(onPressed: () => Navigator.pop(context), child: Text(strings.text('Close'))),
       ],
     );
   }

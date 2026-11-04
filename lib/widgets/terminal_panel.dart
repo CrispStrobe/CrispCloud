@@ -8,6 +8,7 @@ import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import '../l10n/terminal_strings.dart';
 import '../models/panel_side.dart';
 import '../providers/providers.dart';
 import '../providers/terminal_provider.dart';
@@ -36,13 +37,16 @@ class _TerminalPanelState extends ConsumerState<TerminalPanel> {
   @override
   void initState() {
     super.initState();
-    _startShell();
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (mounted) _startShell();
+    });
   }
 
   Future<void> _startShell() async {
+    final strings = TerminalStrings(context);
     if (kIsWeb) {
-      _shellError = 'Terminal is not available on Web.';
-      _appendOutput('[Terminal not available on Web]\n');
+      _shellError = strings.text('web');
+      _appendOutput('[${strings.text('web')}]\n');
       return;
     }
 
@@ -51,37 +55,36 @@ class _TerminalPanelState extends ConsumerState<TerminalPanel> {
       final panel = ref.read(panelProvider(PanelSide.local));
       _shell = await proc.startShell(panel.currentPath);
       if (_shell == null) {
-        _shellError = 'Terminal is not available on this platform.';
-        _appendOutput('[Terminal not available on this platform]\n');
+        _shellError = strings.text('platform');
+        _appendOutput('[${strings.text('platform')}]\n');
         return;
       }
 
       _isRunning = true;
-      _appendOutput('Shell started\n\$ ');
+      _appendOutput('${strings.text('started')}\n\$ ');
 
       _shell!.outputStream.listen(
         (data) => _appendOutput(data),
         onDone: () {
           if (mounted) {
-            _appendOutput('\n[Shell exited]\n');
+            _appendOutput('\n[${strings.text('exited')}]\n');
             setState(() => _isRunning = false);
           }
         },
       );
     } catch (e) {
-      _shellError = _friendlyShellError(e);
-      _appendOutput('[Failed to start shell: $e]\n');
+      _shellError = _friendlyShellError(e, strings);
+      _appendOutput('[${strings.value('shellError', e)}]\n');
     }
   }
 
-  String _friendlyShellError(Object error) {
+  String _friendlyShellError(Object error, TerminalStrings strings) {
     final text = error.toString();
     if (text.contains('Operation not permitted') ||
         text.toLowerCase().contains('sandbox')) {
-      return 'The sandboxed macOS build cannot launch a local shell. '
-          'Use an unsandboxed build or an SSH session instead.';
+      return strings.text('sandbox');
     }
-    return 'Shell failed to start: $text';
+    return strings.value('shellError', text);
   }
 
   Future<void> _connectSsh() async {
@@ -101,20 +104,18 @@ class _TerminalPanelState extends ConsumerState<TerminalPanel> {
       return await showDialog<bool>(
             context: context,
             builder: (dialogContext) => AlertDialog(
-              title: const Text('Trust SSH host?'),
+              title: Text(TerminalStrings(dialogContext).text('trustTitle')),
               content: Text(
-                'Host: $endpoint\n\nFingerprint:\n$fingerprint\n\n'
-                'Only accept this if it matches the server administrator\'s '
-                'fingerprint.',
+                TerminalStrings(dialogContext).trust(endpoint, fingerprint),
               ),
               actions: [
                 TextButton(
                   onPressed: () => Navigator.pop(dialogContext, false),
-                  child: const Text('Cancel'),
+                  child: Text(TerminalStrings(context).text('cancel')),
                 ),
                 ElevatedButton(
                   onPressed: () => Navigator.pop(dialogContext, true),
-                  child: const Text('Trust & Connect'),
+                  child: Text(TerminalStrings(dialogContext).text('trust')),
                 ),
               ],
             ),
@@ -137,24 +138,24 @@ class _TerminalPanelState extends ConsumerState<TerminalPanel> {
       _sshSessionId = session.id;
       _sshLabel = '${config.username}@${config.host}';
       _isRunning = true;
-      _appendOutput('SSH connected to $_sshLabel\n');
+      _appendOutput('${TerminalStrings(context).value('connected', _sshLabel!)}\n');
       stream.listen(
         (data) => _appendOutput(_stripAnsi(data)),
         onDone: () {
           if (!mounted) return;
           setState(() => _isRunning = false);
-          _appendOutput('\n[SSH session closed]\n');
+          _appendOutput('\n[${TerminalStrings(context).text('closed')}]\n');
         },
         onError: (Object error) {
           if (!mounted) return;
-          _appendOutput('\n[SSH error: $error]\n');
+          _appendOutput('\n[${TerminalStrings(context).value('sshError', error)}]\n');
           setState(() => _isRunning = false);
         },
       );
     } catch (e) {
       if (mounted) {
         setState(() {
-          _shellError = 'SSH connection failed: $e';
+          _shellError = TerminalStrings(context).value('connectError', e);
           _isRunning = false;
         });
       }
@@ -180,8 +181,8 @@ class _TerminalPanelState extends ConsumerState<TerminalPanel> {
     if (!_isRunning) {
       _appendOutput(
         _shellError != null
-            ? '\n[Terminal unavailable: $_shellError]\n'
-            : '\n[Shell is not running]\n',
+            ? '\n[${TerminalStrings(context).text('unavailable')}: $_shellError]\n'
+            : '\n[${TerminalStrings(context).text('notRunning')}]\n',
       );
       return;
     }
@@ -245,7 +246,7 @@ class _TerminalPanelState extends ConsumerState<TerminalPanel> {
           child: Row(children: [
             const Icon(Icons.terminal, size: 16),
             const SizedBox(width: 8),
-            Text(_sshLabel ?? 'Terminal', style: theme.textTheme.labelMedium),
+            Text(_sshLabel ?? TerminalStrings(context).text('terminal'), style: theme.textTheme.labelMedium),
             const Spacer(),
             IconButton(
               icon: _sshConnecting
@@ -255,13 +256,13 @@ class _TerminalPanelState extends ConsumerState<TerminalPanel> {
                       child: CircularProgressIndicator(strokeWidth: 2),
                     )
                   : const Icon(Icons.dns_outlined, size: 16),
-              tooltip: 'Connect via SSH',
+              tooltip: TerminalStrings(context).text('connectSsh'),
               onPressed: _sshConnecting ? null : _connectSsh,
               constraints: const BoxConstraints(minWidth: 28, minHeight: 28),
               padding: EdgeInsets.zero,
             ),
             IconButton(
-              icon: const Icon(Icons.restart_alt, size: 16), tooltip: 'Restart',
+              icon: const Icon(Icons.restart_alt, size: 16), tooltip: TerminalStrings(context).text('restart'),
               onPressed: () {
                 _shell?.kill();
                 final sshId = _sshSessionId;
@@ -279,7 +280,7 @@ class _TerminalPanelState extends ConsumerState<TerminalPanel> {
               padding: EdgeInsets.zero,
             ),
             IconButton(
-              icon: const Icon(Icons.close, size: 16), tooltip: 'Close',
+              icon: const Icon(Icons.close, size: 16), tooltip: TerminalStrings(context).text('close'),
               onPressed: () => ref.read(showTerminalProvider.notifier).state = false,
               constraints: const BoxConstraints(minWidth: 28, minHeight: 28),
               padding: EdgeInsets.zero,
@@ -347,7 +348,7 @@ class _TerminalPanelState extends ConsumerState<TerminalPanel> {
                       isDense: true,
                       contentPadding: EdgeInsets.zero,
                       hintText:
-                          _isRunning ? null : 'Terminal unavailable',
+                          _isRunning ? null : TerminalStrings(context).text('unavailable'),
                     ),
                     onSubmitted: (cmd) {
                       _sendCommand(cmd);
@@ -419,7 +420,7 @@ class _SshConnectDialogState extends State<_SshConnectDialog> {
   @override
   Widget build(BuildContext context) {
     return AlertDialog(
-      title: const Text('Connect via SSH'),
+      title: Text(TerminalStrings(context).text('connectSsh')),
       content: SizedBox(
         width: 360,
         child: Column(
@@ -428,7 +429,7 @@ class _SshConnectDialogState extends State<_SshConnectDialog> {
             TextField(
               controller: _host,
               autofocus: true,
-              decoration: const InputDecoration(labelText: 'Host'),
+              decoration: InputDecoration(labelText: TerminalStrings(context).text('host')),
             ),
             const SizedBox(height: 8),
             Row(
@@ -436,7 +437,7 @@ class _SshConnectDialogState extends State<_SshConnectDialog> {
                 Expanded(
                   child: TextField(
                     controller: _username,
-                    decoration: const InputDecoration(labelText: 'Username'),
+                    decoration: InputDecoration(labelText: TerminalStrings(context).text('username')),
                   ),
                 ),
                 const SizedBox(width: 8),
@@ -445,7 +446,7 @@ class _SshConnectDialogState extends State<_SshConnectDialog> {
                   child: TextField(
                     controller: _port,
                     keyboardType: TextInputType.number,
-                    decoration: const InputDecoration(labelText: 'Port'),
+                    decoration: InputDecoration(labelText: TerminalStrings(context).text('port')),
                   ),
                 ),
               ],
@@ -454,7 +455,7 @@ class _SshConnectDialogState extends State<_SshConnectDialog> {
             TextField(
               controller: _password,
               obscureText: true,
-              decoration: const InputDecoration(labelText: 'Password'),
+              decoration: InputDecoration(labelText: TerminalStrings(context).text('password')),
               onSubmitted: (_) => _submit(),
             ),
           ],
@@ -463,9 +464,9 @@ class _SshConnectDialogState extends State<_SshConnectDialog> {
       actions: [
         TextButton(
           onPressed: () => Navigator.pop(context),
-          child: const Text('Cancel'),
+          child: Text(TerminalStrings(context).text('cancel')),
         ),
-        ElevatedButton(onPressed: _submit, child: const Text('Connect')),
+        ElevatedButton(onPressed: _submit, child: Text(TerminalStrings(context).text('connect'))),
       ],
     );
   }
