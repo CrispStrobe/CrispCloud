@@ -49,6 +49,7 @@ jobs:
         if: success() || failure()
         run: >-
           flutter test --concurrency=2
+          test/pdf_font_licenses_test.dart
           test/pdf_edit_session_test.dart
           test/pdf_file_store_test.dart
           test/pdf_device_export_test.dart

@@ -40,6 +40,7 @@ import 'services/file_cache_service.dart';
 import 'services/log_service.dart';
 import 'services/thumbnail_service.dart';
 import 'services/proxy_service.dart';
+import 'services/pdf_font_licenses.dart';
 import 'services/secure_storage_service.dart';
 import 'services/secure_storage_web.dart';
 import 'widgets/lock_screen.dart';
@@ -55,6 +56,7 @@ Future<void> main() async {
   runZonedGuarded(() async {
     WidgetsFlutterBinding.ensureInitialized();
     registerBundledEditorAssets();
+    registerPdfFontLicenses();
     LicenseRegistry.addLicense(() => Stream.value(const LicenseEntryWithLineBreaks(['libsmb2'], smbLicense)));
 
     crashReporting = CrashReportingService(

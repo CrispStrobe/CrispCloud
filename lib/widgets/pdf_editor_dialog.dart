@@ -451,8 +451,8 @@ class _PdfEditorDialogState extends ConsumerState<PdfEditorDialog> {
       _lastCopyRevision = revision;
       _notice(
         outcome == PdfSaveOutcome.downloadedCopy
-            ? 'Copy downloaded. The original has not been updated.'
-            : 'Copy saved. The original has not been updated.',
+            ? 'Download started. Keep the downloaded file before closing.'
+            : 'PDF exported to the selected destination.',
       );
       return outcome;
     } catch (error, stack) {
@@ -518,7 +518,7 @@ class _PdfEditorDialogState extends ConsumerState<PdfEditorDialog> {
         } else if (_lastCopyRevision == _controller!.revisionId) {
           final close = await _confirm(
             'Close after saving a copy?',
-            'Keep the saved copy before closing; the original file is unchanged.',
+            'Make sure the saved or downloaded copy is available before closing.',
             'Close editor',
           );
           if (close &&

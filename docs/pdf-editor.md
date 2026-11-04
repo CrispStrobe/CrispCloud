@@ -22,10 +22,13 @@ This does not sanitize secrets already embedded in the original document or
 its incremental revision history.
 The PDF editor does not migrate or otherwise change account credential storage.
 
-XFA forms are rejected with an explanatory message. Existing signed documents
-open in copy-only mode: editing a copy can invalidate its original signatures,
-so the original file is not overwritten. Certificate signing is not enabled;
-a drawn signature is an ordinary visual mark.
+XFA forms are rejected with an explanatory message. For existing signed
+documents, the editor's Save and Save copy actions require a separate file
+to preserve the signed original. Editing that copy can invalidate its signatures.
+Device exports follow the user-selected destination and overwrite confirmation,
+or the browser's download handling; choose a separate destination to preserve
+the original. Certificate signing is not enabled; a drawn signature is an
+ordinary visual mark.
 
 **Redaction is disabled.** Upstream can retain partially covered images and
 Form XObjects beneath the visible fill. Hiding sensitive content with a shape
@@ -70,13 +73,19 @@ capability change. Some providers mask lookup failures, so copy creation also
 requires a valid fresh parent listing that contains the original and no
 matching target name. If that cannot be established, export to the device.
 
-Native filesystem writes stage bytes beside the destination before replacing
-it, retain supported mode bits, reject symlink destinations, and honor macOS
-security scopes. Filesystem rename behavior and provider-specific ACL/ownership
-preservation still apply. A browser with File System Access support can write
-to a granted destination; a fallback download is reported as a downloaded copy.
-That means the download was initiated, not that the browser or user confirmed
-the file was retained. The original remains unsaved in that case.
+Native local overwrites and desktop device exports stage bytes beside the
+destination before replacement. They retain supported mode bits, reject symlink
+destinations, and honor macOS security scopes. Native Save copy reserves a new
+filename exclusively and writes directly to that file instead of using staged
+replacement. Android and iOS device exports let the native document provider
+save the bytes. Replacement behavior depends on the filesystem. On Linux,
+replacement can lose ownership, ACLs, and extended attributes even when mode
+bits are preserved.
+
+A browser with File System Access support can write to a granted destination;
+a fallback download is reported as a downloaded copy. That means the download
+was initiated, not that the browser or user confirmed the file was retained.
+The original remains unsaved in that case.
 
 ## Dependency and toolchain
 
@@ -91,6 +100,9 @@ that companion. The core `pdf_cos`, `pdf_document`, `pdf_graphics` and bundled
 editor-assets packages are pinned to 14.0.0, with the application resolution
 recorded in `pubspec.lock`. Bundled fonts and the web worker are registered
 during application startup.
+Their separate OFL, Bitstream/Arev, and GUST/LPPL font licenses and provenance
+are [bundled with the app](../assets/licenses/pdf_fonts/README.md) and available
+through About / Licenses; the Apache-2.0 code license does not relabel the fonts.
 
 ## Verification
 

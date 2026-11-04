@@ -341,7 +341,7 @@ void main() {
     expect(_save, findsNothing);
   });
 
-  testWidgets('a PDF with signatures can only save to a separate copy', (
+  testWidgets('the Save action requires a separate copy for a signed PDF', (
     tester,
   ) async {
     final store = _MemoryPdfStore(input: buildPdfEditorFixture(signed: true));
