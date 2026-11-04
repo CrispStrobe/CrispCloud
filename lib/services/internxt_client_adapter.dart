@@ -20,6 +20,7 @@ import 'package:internxt_client/internxt_client.dart';
 
 import 'cloud_storage_interface.dart';
 import 'internxt_client.dart' show InternxtUrls;
+import 'internxt_operation_failure.dart';
 import 'internxt_flutter/shared_prefs_storage.dart';
 import 'log_service.dart';
 
@@ -141,17 +142,20 @@ class InternxtClientAdapter extends CloudStorageClient {
     Function(int p1, int p2)? onProgress,
   }) async {
     if (kIsWeb) {
-      throw UnsupportedError('Use browser downloads on the web.');
+      throw InternxtUnsupportedFailure(InternxtOperationCode.webDownload,
+          'Use browser downloads on the web.');
     }
     if (!isAuthenticated ||
         _client.bridgeUser == null ||
         _client.userIdForAuth == null ||
         _client.mnemonic == null) {
-      throw StateError('Sign in to Internxt before downloading.');
+      throw InternxtStateFailure(InternxtOperationCode.notSignedIn,
+          'Sign in to Internxt before downloading.');
     }
     final resolved = await _client.resolvePath(remotePath);
     if (resolved['type'] != 'file') {
-      throw StateError('The selected path is not a file.');
+      throw InternxtStateFailure(
+          InternxtOperationCode.notFile, 'The selected path is not a file.');
     }
     final metadata = (resolved['metadata'] as Map?) ?? resolved;
     var name = metadata['name'] as String? ?? p.posix.basename(remotePath);
@@ -169,7 +173,8 @@ class InternxtClientAdapter extends CloudStorageClient {
         name.codeUnits.contains(92) ||
         name.codeUnits.contains(0) ||
         p.basename(name) != name) {
-      throw const FormatException('Invalid remote filename.');
+      throw const InternxtFormatFailure(
+          InternxtOperationCode.invalidName, 'Invalid remote filename.');
     }
     // SDK 0.2.3 saves the original name but its rename helper reads a missing
     // top-level name. Stage privately under the actual remote filename first.

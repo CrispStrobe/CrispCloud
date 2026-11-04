@@ -19,6 +19,7 @@ import 'connection_failure.dart';
 import 'log_service.dart';
 import 'secure_storage_service.dart';
 import 'sftp_config_service.dart';
+import 'sftp_operation_failure.dart';
 
 class SFTPClientAdapter extends CloudStorageClient {
   static const _log = Log('SFTPClient');
@@ -69,7 +70,7 @@ class SFTPClientAdapter extends CloudStorageClient {
     }
     if (credentials != null) await _closeConnection();
     final creds = credentials ?? await _config.readCredentials();
-    if (creds == null) throw Exception('Not logged in');
+    if (creds == null) throw SftpOperationException(SftpOperationCode.notLoggedIn, 'Not logged in');
 
     _username = creds['username'];
     _host = creds['host'];
@@ -77,7 +78,7 @@ class SFTPClientAdapter extends CloudStorageClient {
     _port = int.tryParse(creds['port'] ?? '22') ?? 22;
 
     if (_host == null || _username == null || password == null) {
-      throw Exception('Incomplete credentials');
+      throw SftpOperationException(SftpOperationCode.incompleteCredentials, 'Incomplete credentials');
     }
 
     try {
@@ -159,10 +160,10 @@ class SFTPClientAdapter extends CloudStorageClient {
           (!bridge && endpoint.path.isNotEmpty) ||
           int.parse(port) < 1 ||
           int.parse(port) > 65535) {
-        throw const FormatException('Invalid SFTP server address');
+        throw SftpOperationFormatException(SftpOperationCode.invalidAddress, 'Invalid SFTP server address');
       }
     } else {
-      throw Exception(
+      throw SftpOperationException(SftpOperationCode.invalidIdentity,
           'Format must be user@host (e.g. u12345@u123.your-storagebox.de)');
     }
 
@@ -272,7 +273,7 @@ class SFTPClientAdapter extends CloudStorageClient {
       }
     } catch (e) {
       _log.error('List error', e);
-      throw Exception('Failed to list path $path: $e');
+      throw SftpOperationException(SftpOperationCode.listFailed, 'Failed to list path $path: $e', {'path': path, 'error': e});
     }
 
     return {
@@ -455,7 +456,7 @@ class SFTPClientAdapter extends CloudStorageClient {
         await _sshClient!.run('chmod $mode ${_shellEscape(path)} 2>&1');
     final output = String.fromCharCodes(result).trim();
     if (output.isNotEmpty && !output.contains('OK')) {
-      throw Exception('chmod failed: $output');
+      throw SftpOperationException(SftpOperationCode.chmodFailed, 'chmod failed: $output', {'output': output});
     }
     _log.info('chmod $path to $mode');
   }
@@ -468,7 +469,7 @@ class SFTPClientAdapter extends CloudStorageClient {
         await _sshClient!.run('chown $owner ${_shellEscape(path)} 2>&1');
     final output = String.fromCharCodes(result).trim();
     if (output.isNotEmpty) {
-      throw Exception('chown failed: $output');
+      throw SftpOperationException(SftpOperationCode.chownFailed, 'chown failed: $output', {'output': output});
     }
     _log.info('chown $path to $owner');
   }
@@ -568,8 +569,8 @@ class WebSSHSocket implements SSHSocket {
   Stream<Uint8List> get stream => _ws.stream.map((event) {
         if (event is Uint8List) return event;
         if (event is List<int>) return Uint8List.fromList(event);
-        throw FormatException(
-            'Invalid payload from WebSocket: ${event.runtimeType}');
+        throw SftpOperationFormatException(SftpOperationCode.invalidPayload,
+            'Invalid payload from WebSocket: ${event.runtimeType}', {'type': event.runtimeType});
       });
 
   @override

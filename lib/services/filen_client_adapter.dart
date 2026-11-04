@@ -2,6 +2,7 @@
 import 'cloud_storage_interface.dart';
 import 'package:filen_client/filen_client.dart';
 import 'filen_config_service.dart';
+import 'filen_operation_failure.dart';
 import 'dart:io';
 import 'package:flutter/foundation.dart'; // for kIsWeb
 import 'log_service.dart';
@@ -76,7 +77,7 @@ class FilenClientAdapter extends CloudStorageClient {
     // 1. Resolve remote path to UUID
     final resolved = await _client.resolvePath(remotePath);
     if (resolved['type'] != 'file') {
-      throw Exception('Remote path is not a file');
+      throw FilenOperationFailure(FilenOperationCode.notFile, 'Remote path is not a file');
     }
     final uuid = resolved['uuid'];
 
@@ -118,7 +119,7 @@ class FilenClientAdapter extends CloudStorageClient {
       final resolved = await _client.resolvePath(path);
       
       if (resolved['type'] != 'folder') {
-        throw Exception('Path is not a folder');
+        throw FilenOperationFailure(FilenOperationCode.notFolder, 'Path is not a folder');
       }
 
       final uuid = resolved['uuid'];
@@ -152,7 +153,7 @@ class FilenClientAdapter extends CloudStorageClient {
     // 1. Resolve Target
     final resolvedFolder = await _client.resolvePath(targetPath);
     if (resolvedFolder['type'] != 'folder') {
-      throw Exception('Target path is not a folder');
+      throw FilenOperationFailure(FilenOperationCode.targetNotFolder, 'Target path is not a folder');
     }
     final parentUuid = resolvedFolder['uuid'];
 
@@ -202,7 +203,7 @@ class FilenClientAdapter extends CloudStorageClient {
     // 1. Resolve remote path to UUID
     final resolved = await _client.resolvePath(remotePath);
     if (resolved['type'] != 'file') {
-      throw Exception('Remote path is not a file');
+      throw FilenOperationFailure(FilenOperationCode.notFile, 'Remote path is not a file');
     }
     final uuid = resolved['uuid'];
 
@@ -233,7 +234,7 @@ class FilenClientAdapter extends CloudStorageClient {
       // 2. Call trashItem
       await _client.trashItem(uuid, type);
     } else {
-      throw Exception('Could not resolve path: $path');
+      throw FilenOperationFailure(FilenOperationCode.unresolvedPath, 'Could not resolve path: $path', {'path': path});
     }
   }
   
@@ -242,7 +243,7 @@ class FilenClientAdapter extends CloudStorageClient {
     // 1. Resolve Source
     final sourceResolved = await resolvePath(sourcePath);
     if (sourceResolved == null) {
-      throw Exception('Could not resolve source path: $sourcePath');
+      throw FilenOperationFailure(FilenOperationCode.unresolvedSource, 'Could not resolve source path: $sourcePath', {'path': sourcePath});
     }
 
     // 2. Resolve Target (Parent folder)
@@ -252,7 +253,7 @@ class FilenClientAdapter extends CloudStorageClient {
     
     final targetResolved = await resolvePath(targetPath);
     if (targetResolved == null || targetResolved['type'] != 'folder') {
-       throw Exception('Target path must be an existing folder: $targetPath');
+       throw FilenOperationFailure(FilenOperationCode.targetMissingFolder, 'Target path must be an existing folder: $targetPath', {'path': targetPath});
     }
     
     final sourceUuid = sourceResolved['uuid'] as String;
@@ -268,7 +269,7 @@ class FilenClientAdapter extends CloudStorageClient {
     final resolved = await resolvePath(path);
     
     if (resolved == null) {
-      throw Exception('Could not resolve path: $path');
+      throw FilenOperationFailure(FilenOperationCode.unresolvedPath, 'Could not resolve path: $path', {'path': path});
     }
     
     final uuid = resolved['uuid'] as String;
