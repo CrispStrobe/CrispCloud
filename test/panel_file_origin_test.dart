@@ -240,7 +240,10 @@ void main() {
             ),
           );
       await Future<void>.delayed(Duration.zero);
-      expect(panel.files!.where((file) => !file.isFolder).single.uuid, old.uuid);
+      expect(
+        panel.files!.where((file) => !file.isFolder).single.uuid,
+        old.uuid,
+      );
       expect(panel.selection, isEmpty);
       expect(panel.lastSelected, isNull);
       expect(panel.originForFile(old), isNull);

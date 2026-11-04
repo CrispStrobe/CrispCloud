@@ -8,6 +8,7 @@ import 'package:crisp_cloud/services/pdf_device_export.dart';
 import 'package:crisp_cloud/widgets/file_editor_dialog.dart';
 import 'package:crisp_cloud/widgets/pdf_editor_dialog.dart';
 import 'package:dart_pdf_editor/dart_pdf_editor.dart';
+import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -282,7 +283,10 @@ void main() {
       await tester.tap(_close);
       await tester.pumpAndSettle();
       await tester.tap(
-        find.descendant(of: _unsaved, matching: find.text('Export a copy')),
+        find.descendant(
+          of: _unsaved,
+          matching: find.text(kIsWeb ? 'Download a copy' : 'Export a copy'),
+        ),
       );
       await tester.pumpAndSettle();
       expect(store.writes, hasLength(1));
@@ -348,7 +352,13 @@ void main() {
     );
     await _rotate(tester);
     await tester.tap(_save);
-    await tester.pumpAndSettle();
+    // The host stays busy while choosing a name. Wait for the dialog's
+    // entrance animation without waiting for its progress indicator to stop.
+    await tester.pump();
+    await tester.pump(const Duration(milliseconds: 300));
+    expect(find.byKey(const ValueKey('pdf-copy-name')), findsOneWidget);
+    expect(find.widgetWithText(FilledButton, 'Save a copy'), findsOneWidget);
+    expect(tester.widget<IconButton>(_close).onPressed, isNull);
     await tester.enterText(
       find.byKey(const ValueKey('pdf-copy-name')),
       'copy.pdf',
