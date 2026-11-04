@@ -1,5 +1,6 @@
 // lib/main.dart
 import 'package:flutter/material.dart';
+import 'package:dart_pdf_editor_assets/dart_pdf_editor_assets.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
 import 'l10n/app_localizations.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -53,6 +54,7 @@ Future<void> main() async {
   CrashReportingService? crashReporting;
   runZonedGuarded(() async {
     WidgetsFlutterBinding.ensureInitialized();
+    registerBundledEditorAssets();
     LicenseRegistry.addLicense(() => Stream.value(const LicenseEntryWithLineBreaks(['libsmb2'], smbLicense)));
 
     crashReporting = CrashReportingService(

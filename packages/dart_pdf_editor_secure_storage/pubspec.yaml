@@ -1,0 +1,19 @@
+name: dart_pdf_editor_secure_storage
+description: Optional platform secret stores for CrispCloud's vendored PDF editor.
+version: 14.0.0
+publish_to: none
+
+environment:
+  sdk: ^3.5.0
+  flutter: '>=3.47.0'
+
+dependencies:
+  dart_pdf_editor:
+    path: ../dart_pdf_editor
+  flutter_secure_storage: ^9.2.4
+  pdf_document: 14.0.0
+
+dev_dependencies:
+  flutter_lints: ^6.0.0
+  flutter_test:
+    sdk: flutter

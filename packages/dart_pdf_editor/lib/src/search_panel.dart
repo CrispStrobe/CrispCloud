@@ -1,0 +1,1065 @@
+import 'dart:async';
+
+import 'design/viewer_tokens.dart';
+import 'package:material_ui/material_ui.dart';
+
+import 'design/material_host.dart';
+import 'editing/editing_controller.dart';
+import 'editing/editing_fonts.dart';
+import 'editing/editing_panel.dart';
+import 'editing/editing_preferences.dart';
+import 'l10n/pdf_l10n.dart';
+import 'pdf_viewer.dart';
+import 'search_field_style.dart';
+import 'theme.dart';
+import 'design/editor_presenter.dart';
+
+/// A compact document-search field: a slim text box with the match
+/// count, previous/next, and clear riding alongside - small enough for
+/// an app bar.
+///
+/// Searches as you type (debounced) and on enter; once a query is live,
+/// pressing enter again steps to the next match (browser-style). Pair it
+/// with a [PdfSearchResultsPanel] listing every hit.
+class PdfSearchField extends StatefulWidget {
+  const PdfSearchField({
+    super.key,
+    required this.controller,
+    this.width = 200,
+    this.searchController,
+    this.focusNode,
+    this.hintText = 'Search',
+    this.showOptions = true,
+    this.preferences,
+  });
+
+  final PdfViewerController controller;
+
+  /// The text box's width; the count and the stepper buttons sit
+  /// outside it, appearing only while a query is live.
+  final double width;
+
+  /// Whether to show the match-case / whole-word / regex toggle buttons
+  /// beside the field. They drive [PdfViewerController.searchOptions].
+  final bool showOptions;
+
+  /// When given, the match-case / whole-word / regex toggles persist to
+  /// (and seed from) these preferences, so they survive across sessions.
+  final PdfEditingPreferences? preferences;
+
+  /// Optional external text controller - pass one to clear or prefill
+  /// the field from the host (e.g. when a new document opens).
+  final TextEditingController? searchController;
+
+  /// Optional focus node, for a host-level ⌘F shortcut.
+  final FocusNode? focusNode;
+
+  /// The field's placeholder. The default, `'Search'`, shows the localized
+  /// word ([DartPdfEditorLocalizations.searchFieldHint]); any other value is
+  /// shown as given.
+  final String hintText;
+
+  @override
+  State<PdfSearchField> createState() => _PdfSearchFieldState();
+}
+
+class _PdfSearchFieldState extends State<PdfSearchField> {
+  TextEditingController? _ownField;
+  Timer? _debounce;
+
+  TextEditingController get _field =>
+      widget.searchController ?? (_ownField ??= TextEditingController());
+
+  @override
+  void dispose() {
+    _debounce?.cancel();
+    _ownField?.dispose();
+    super.dispose();
+  }
+
+  void _onChanged(String text) {
+    _debounce?.cancel();
+    // clearing is instant; typing searches after a quiet moment
+    if (text.isEmpty) {
+      widget.controller.clearSearch();
+      return;
+    }
+    _debounce = Timer(const Duration(milliseconds: 350), () {
+      if (mounted) unawaited(widget.controller.search(text));
+    });
+  }
+
+  void _onSubmitted(String text) {
+    _debounce?.cancel();
+    final controller = widget.controller;
+    // Browser-style: the first enter searches; once the query is live
+    // (already searched, with hits), each subsequent enter steps to the
+    // next match. A changed query searches afresh.
+    if (text == controller.query &&
+        !controller.isSearching &&
+        controller.matchCount > 0) {
+      controller.nextMatch();
+    } else {
+      unawaited(controller.search(text));
+    }
+  }
+
+  void _clear() {
+    _debounce?.cancel();
+    _field.clear();
+    widget.controller.clearSearch();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final controller = widget.controller;
+    return ListenableBuilder(
+      listenable: controller,
+      builder: (context, _) {
+        final hasQuery = controller.query.isNotEmpty;
+        return Row(mainAxisSize: MainAxisSize.min, children: [
+          SizedBox(
+            width: widget.width,
+            child: TextField(
+              key: const ValueKey('pdf-search-field'),
+              controller: _field,
+              focusNode: widget.focusNode,
+              decoration: InputDecoration(
+                hintText: widget.hintText == 'Search'
+                    ? pdfL10n(context).searchFieldHint
+                    : widget.hintText,
+                prefixIcon: const Icon(Icons.search, size: 18),
+                prefixIconConstraints:
+                    const BoxConstraints(minWidth: 32, minHeight: 32),
+                isDense: true,
+                contentPadding:
+                    const EdgeInsets.symmetric(horizontal: 8, vertical: 8),
+                border: const OutlineInputBorder(
+                    borderRadius: pdfSearchFieldBorderRadius),
+                suffixIcon: controller.isSearching
+                    ? const Padding(
+                        padding: EdgeInsets.all(8),
+                        child: SizedBox(
+                          width: 14,
+                          height: 14,
+                          child: CircularProgressIndicator(strokeWidth: 2),
+                        ),
+                      )
+                    : hasQuery
+                        ? IconButton(
+                            key: const ValueKey('pdf-search-clear'),
+                            icon: const Icon(Icons.close, size: 16),
+                            tooltip: pdfL10n(context).searchClearSearch,
+                            visualDensity: VisualDensity.compact,
+                            onPressed: _clear,
+                          )
+                        : null,
+                suffixIconConstraints:
+                    const BoxConstraints(minWidth: 32, minHeight: 32),
+              ),
+              textInputAction: TextInputAction.search,
+              // The search action unfocuses the field by default; keep
+              // focus so a second enter reaches onSubmitted and steps to
+              // the next match instead of dismissing the field.
+              onEditingComplete: () {},
+              onChanged: _onChanged,
+              onSubmitted: _onSubmitted, contextMenuBuilder: pdfTextContextMenu,
+            ),
+          ),
+          if (widget.showOptions)
+            Padding(
+              padding: const EdgeInsetsDirectional.only(start: 4),
+              child: _SearchOptionsBar(
+                  controller: controller, preferences: widget.preferences),
+            ),
+          if (hasQuery && !controller.isSearching) ...[
+            Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 6),
+              child: Text(
+                controller.matchCount == 0
+                    ? '0/0'
+                    : '${controller.currentMatch + 1}/'
+                        '${controller.matchCount}',
+                style: Theme.of(context).textTheme.bodySmall,
+              ),
+            ),
+            IconButton(
+              key: const ValueKey('pdf-search-prev'),
+              icon: const Icon(Icons.keyboard_arrow_up),
+              tooltip: pdfL10n(context).searchPreviousMatch,
+              visualDensity: VisualDensity.compact,
+              onPressed:
+                  controller.matchCount == 0 ? null : controller.previousMatch,
+            ),
+            IconButton(
+              key: const ValueKey('pdf-search-next'),
+              icon: const Icon(Icons.keyboard_arrow_down),
+              tooltip: pdfL10n(context).searchNextMatch,
+              visualDensity: VisualDensity.compact,
+              onPressed:
+                  controller.matchCount == 0 ? null : controller.nextMatch,
+            ),
+          ],
+        ]);
+      },
+    );
+  }
+}
+
+/// One list entry: a page header or an index into the results.
+typedef _Entry = ({int? header, int? result});
+
+/// A side panel listing every search hit with its surrounding text,
+/// grouped by page - tap one to jump there.
+///
+/// Reads [PdfViewerController.searchResults]; the current match is
+/// highlighted and taps go through [PdfViewerController.goToMatch].
+/// The inner edge is draggable ([resizable]); with [preferences] the
+/// chosen width persists ([PdfEditingPreferences.searchPanelWidth]).
+///
+/// Pass [editing] to turn the panel into find *and replace*: a replacement
+/// field appears under the options bar with "Replace" (the current match
+/// alone) and "Replace all" (every hit, one undo step). [editing] also
+/// enables find-to-redact: "Mark" / "Mark all" turn the hits into /Redact
+/// marks to review before [PdfEditingController.applyRedactions] burns them.
+class PdfSearchResultsPanel extends StatefulWidget {
+  const PdfSearchResultsPanel({
+    super.key,
+    required this.controller,
+    this.editing,
+    this.preferences,
+    this.width = 280,
+    this.dock = PdfPanelDock.left,
+    this.resizable = true,
+    this.minWidth = 200,
+    this.maxWidth = 480,
+    this.bottomSheet = false,
+    this.showOptions = true,
+    this.onClose,
+  });
+
+  final PdfViewerController controller;
+
+  /// The edit session that backs the replace controls. Null (the default)
+  /// leaves the panel a pure find panel - which is what a read-only viewer
+  /// wants.
+  final PdfEditingController? editing;
+
+  /// Persists the user-dragged width when provided.
+  final PdfEditingPreferences? preferences;
+
+  /// Whether the panel shows the match-case / whole-word / regex toggle
+  /// controls in its header. They drive [PdfViewerController.searchOptions].
+  final bool showOptions;
+
+  /// The default width - a persisted user-dragged width wins over it.
+  final double width;
+
+  /// Which edge of the viewer the panel docks on; the resize grip rides
+  /// the opposite (inner) edge.
+  final PdfPanelDock dock;
+
+  /// Whether the inner edge can be dragged to resize the panel.
+  final bool resizable;
+
+  /// Clamps for the dragged width.
+  final double minWidth;
+  final double maxWidth;
+
+  /// Lays the panel out to fill its parent (full width, no side resize
+  /// grip) for hosting inside a bottom sheet on a small screen, rather
+  /// than as a fixed-width docked column.
+  final bool bottomSheet;
+
+  /// Closes the docked panel - the host turns its visibility preference
+  /// off. When given (and not a [bottomSheet]) a close (×) button appears
+  /// in the panel's header. Null leaves the panel with no close button (a
+  /// bottom sheet supplies its own).
+  final VoidCallback? onClose;
+
+  @override
+  State<PdfSearchResultsPanel> createState() => _PdfSearchResultsPanelState();
+}
+
+class _PdfSearchResultsPanelState extends State<PdfSearchResultsPanel> {
+  final ScrollController _scroll = ScrollController();
+
+  /// The replacement text, owned here rather than by [_ReplaceBar] so that
+  /// collapsing the section does not throw away what the user typed.
+  final TextEditingController _replaceField = TextEditingController();
+
+  /// Expansion when no [PdfEditingPreferences] were supplied; with them the
+  /// preference is the source of truth so the choice survives the session.
+  bool _replaceExpandedLocal = false;
+
+  bool get _replaceExpanded =>
+      widget.preferences?.searchReplaceExpanded ?? _replaceExpandedLocal;
+
+  /// Same split for the find-to-redact section.
+  bool _redactExpandedLocal = false;
+
+  bool get _redactExpanded =>
+      widget.preferences?.searchRedactExpanded ?? _redactExpandedLocal;
+
+  void _toggleRedact() {
+    final next = !_redactExpanded;
+    final prefs = widget.preferences;
+    if (prefs != null) {
+      prefs.searchRedactExpanded = next; // rebuilds via _onPreferences
+    } else {
+      setState(() => _redactExpandedLocal = next);
+    }
+  }
+
+  void _toggleReplace() {
+    final next = !_replaceExpanded;
+    final prefs = widget.preferences;
+    if (prefs != null) {
+      prefs.searchReplaceExpanded = next; // rebuilds via _onPreferences
+    } else {
+      setState(() => _replaceExpandedLocal = next);
+    }
+  }
+
+  @override
+  void initState() {
+    super.initState();
+    widget.preferences?.addListener(_onPreferences);
+  }
+
+  @override
+  void didUpdateWidget(PdfSearchResultsPanel old) {
+    super.didUpdateWidget(old);
+    if (!identical(old.preferences, widget.preferences)) {
+      old.preferences?.removeListener(_onPreferences);
+      widget.preferences?.addListener(_onPreferences);
+    }
+  }
+
+  @override
+  void dispose() {
+    widget.preferences?.removeListener(_onPreferences);
+    _replaceField.dispose();
+    _scroll.dispose();
+    super.dispose();
+  }
+
+  void _onPreferences() {
+    if (mounted) setState(() {});
+  }
+
+  Widget _hint(String message) => Center(
+        child: Padding(
+          padding: const EdgeInsets.all(24),
+          child: Text(message, textAlign: TextAlign.center),
+        ),
+      );
+
+  Widget _resultTile(BuildContext context, int index, PdfSearchResult result) {
+    final scheme = Theme.of(context).colorScheme;
+    final highlight = PdfViewerTheme.of(context).searchMatch;
+    final style = Theme.of(context).textTheme.bodySmall;
+    final editing = widget.editing;
+    // a hit already under a /Redact mark says so, so a review pass can see
+    // what "Mark all" has covered and what it still would
+    final marked = editing != null &&
+        _redactExpanded &&
+        !result.isAnnotation &&
+        editing.isMarkedForRedaction(result.match);
+    return ListTile(
+      key: ValueKey('pdf-search-result-$index'),
+      dense: true,
+      selected: index == widget.controller.currentMatch,
+      selectedTileColor: scheme.secondaryContainer,
+      selectedColor: scheme.onSecondaryContainer,
+      // Annotation hits (note bodies, comments, free text) carry a small
+      // comment glyph so they read apart from page-text hits in the list.
+      leading: result.isAnnotation
+          ? Icon(Icons.comment_outlined,
+              size: 16, color: scheme.onSurfaceVariant)
+          : null,
+      horizontalTitleGap: result.isAnnotation ? 8 : null,
+      minLeadingWidth: result.isAnnotation ? 16 : null,
+      trailing: marked
+          ? Tooltip(
+              message: pdfL10n(context).tbToolRedact,
+              child: Icon(Icons.gradient,
+                  key: ValueKey('pdf-search-result-marked-$index'),
+                  size: 16,
+                  color: scheme.onSurfaceVariant),
+            )
+          : null,
+      title: Text.rich(
+        TextSpan(children: [
+          TextSpan(text: result.prefix),
+          TextSpan(
+            text: result.matchText,
+            style: TextStyle(
+                fontWeight: FontWeight.bold, backgroundColor: highlight),
+          ),
+          TextSpan(text: result.suffix),
+        ]),
+        style: style,
+        maxLines: 2,
+        overflow: TextOverflow.ellipsis,
+      ),
+      onTap: () => widget.controller.goToMatch(index),
+    );
+  }
+
+  /// The state-dependent body below the options bar: a hint, the spinner,
+  /// the "no matches" line, or the grouped results list with its scrollbar.
+  Widget _body(
+    BuildContext context, {
+    required PdfSidebarPanelGeometry geometry,
+  }) {
+    final controller = widget.controller;
+    if (controller.query.isEmpty) {
+      return _hint(pdfL10n(context).searchEmptyHint);
+    }
+    if (controller.isSearching) {
+      return const Center(child: CircularProgressIndicator());
+    }
+    final results = controller.searchResults;
+    if (results.isEmpty) {
+      return _hint(pdfL10n(context).searchNoMatches(controller.query));
+    }
+    final entries = <_Entry>[];
+    int? page;
+    for (var i = 0; i < results.length; i++) {
+      if (results[i].pageIndex != page) {
+        page = results[i].pageIndex;
+        entries.add((header: page, result: null));
+      }
+      entries.add((header: null, result: i));
+    }
+    final textTheme = Theme.of(context).textTheme;
+    return geometry.withScrollbar(
+      scroll: _scroll,
+      thumbKey: const ValueKey('pdf-search-scrollbar-thumb'),
+      child: Column(children: [
+        Padding(
+          padding: const EdgeInsets.fromLTRB(16, 12, 16, 4),
+          child: Row(children: [
+            Expanded(
+              child: Text(
+                pdfL10n(context).searchMatchCount(results.length),
+                style: textTheme.labelLarge,
+              ),
+            ),
+          ]),
+        ),
+        Expanded(
+          child: ScrollConfiguration(
+            behavior:
+                ScrollConfiguration.of(context).copyWith(scrollbars: false),
+            child: ListView.builder(
+              key: const ValueKey('pdf-search-results-list'),
+              controller: _scroll,
+              padding: EdgeInsets.only(
+                  right: geometry.scrollbarClearance, bottom: 8),
+              itemCount: entries.length,
+              itemBuilder: (context, index) {
+                final entry = entries[index];
+                if (entry.header != null) {
+                  return Padding(
+                    padding: const EdgeInsets.fromLTRB(16, 10, 16, 2),
+                    child: Text(
+                        pdfL10n(context).searchPageHeader(entry.header! + 1),
+                        style: textTheme.labelMedium?.copyWith(
+                            color: Theme.of(context).colorScheme.primary)),
+                  );
+                }
+                return _resultTile(
+                    context, entry.result!, results[entry.result!]);
+              },
+            ),
+          ),
+        ),
+      ]),
+    );
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final controller = widget.controller;
+    return PdfSidebarPanelFrame(
+      width: widget.width,
+      minWidth: widget.minWidth,
+      maxWidth: widget.maxWidth,
+      persistedWidth: widget.preferences?.searchPanelWidth,
+      onPersistWidth: widget.preferences == null
+          ? null
+          : (width) => widget.preferences!.searchPanelWidth = width,
+      dock: widget.dock,
+      panel: PdfDockablePanel.search,
+      resizable: widget.resizable,
+      bottomSheet: widget.bottomSheet,
+      gripKey: const ValueKey('pdf-search-resize-grip'),
+      onClose: widget.onClose,
+      builder: (context, geometry) {
+        final moveHandle = geometry.moveHandle(
+          key: const ValueKey('pdf-search-panel-move'),
+        );
+        final closeButton = geometry.closeButton(
+          key: const ValueKey('pdf-search-panel-close'),
+        );
+        return Material(
+          color: Theme.of(context).colorScheme.surfaceContainerLow,
+          child: ListenableBuilder(
+            listenable: controller,
+            builder: (context, _) => Column(children: [
+              // the drag-to-redock handle and the docked panel's close
+              // button; a bottom sheet supplies its own in its sheet chrome
+              if (moveHandle != null || closeButton != null)
+                Padding(
+                  // clear the right-edge resize grip when it rides this side
+                  padding: EdgeInsets.fromLTRB(
+                      16, 4, geometry.contentEndInset + 4, 0),
+                  child: Row(children: [
+                    Expanded(
+                      child: Text(pdfL10n(context).searchResultsTitle,
+                          style: Theme.of(context).textTheme.titleSmall),
+                    ),
+                    if (moveHandle != null) moveHandle,
+                    if (closeButton != null) closeButton,
+                  ]),
+                ),
+              if (widget.showOptions || widget.editing != null) ...[
+                Padding(
+                  // The toggles carry ~8pt of their own padding inside a 30pt
+                  // box, so 8 here lands their glyphs on the panel's 16pt
+                  // content edge - and both ends clear the resize grip.
+                  padding: EdgeInsetsDirectional.only(
+                    start: 8 + geometry.contentStartInset,
+                    end: 8 + geometry.contentEndInset,
+                    top: 6,
+                    bottom: 6,
+                  ),
+                  child: Row(children: [
+                    if (widget.showOptions)
+                      _SearchOptionsBar(
+                          controller: controller,
+                          preferences: widget.preferences),
+                    const Spacer(),
+                    if (widget.editing != null)
+                      PdfPanelToggleButton(
+                        key: const ValueKey('pdf-search-replace-toggle'),
+                        iconData: Icons.find_replace,
+                        tooltip: pdfL10n(context).searchReplace,
+                        selected: _replaceExpanded,
+                        onPressed: _toggleReplace,
+                      ),
+                    if (widget.editing != null)
+                      PdfPanelToggleButton(
+                        key: const ValueKey('pdf-search-redact-toggle'),
+                        iconData: Icons.gradient,
+                        tooltip: pdfL10n(context).searchRedact,
+                        selected: _redactExpanded,
+                        onPressed: _toggleRedact,
+                      ),
+                  ]),
+                ),
+                if (widget.editing != null && _replaceExpanded)
+                  _ReplaceBar(
+                    controller: controller,
+                    editing: widget.editing!,
+                    field: _replaceField,
+                    geometry: geometry,
+                  ),
+                if (widget.editing != null && _redactExpanded)
+                  _RedactBar(
+                    controller: controller,
+                    editing: widget.editing!,
+                    geometry: geometry,
+                  ),
+                Divider(
+                  key: const ValueKey('pdf-search-options-divider'),
+                  height: 1,
+                  indent: geometry.contentStartInset,
+                  endIndent: geometry.contentEndInset,
+                ),
+              ],
+              Expanded(child: _body(context, geometry: geometry)),
+            ]),
+          ),
+        );
+      },
+    );
+  }
+}
+
+/// The find-and-replace row under the search panel's options bar: a
+/// replacement field plus "Replace" (the current match alone) and "Replace
+/// all" (every hit).
+///
+/// "Replace" goes through [PdfEditingController.replaceMatchText], which
+/// pins the hit to exactly one content run or declines - so it can never
+/// silently rewrite the other place on the page that happens to read the
+/// same. "Replace all" is the page-wide form, because that is what the user
+/// asked for, and lands as a single undo step.
+class _ReplaceBar extends StatefulWidget {
+  const _ReplaceBar({
+    required this.controller,
+    required this.editing,
+    required this.field,
+    required this.geometry,
+  });
+
+  final PdfViewerController controller;
+  final PdfEditingController editing;
+
+  /// The replacement text, owned by the panel so collapsing the section does
+  /// not discard it.
+  final TextEditingController field;
+
+  /// The panel's layout, for insets that clear the resize grip.
+  final PdfSidebarPanelGeometry geometry;
+
+  @override
+  State<_ReplaceBar> createState() => _ReplaceBarState();
+}
+
+class _ReplaceBarState extends State<_ReplaceBar> {
+  bool _busy = false;
+
+  TextEditingController get _field => widget.field;
+
+  void _toast(String message) {
+    PdfEditorPresenter.of(context).notice(
+      context,
+      PdfEditorNotice(message,
+          onUndo: widget.editing.canUndo ? widget.editing.undo : null),
+    );
+  }
+
+  /// Re-runs the live query against the rewritten document: the hits the
+  /// panel is listing were measured against the previous revision, and their
+  /// offsets no longer mean anything once a run has been re-typed.
+  ///
+  /// Ordering matters. The viewer swaps in the new revision during the next
+  /// frame and clears the search as it does, so a re-search issued straight
+  /// after the edit is discarded a moment later and the panel goes blank.
+  /// Waiting for that frame lets the fresh results survive.
+  Future<void> _refresh(String query) async {
+    await WidgetsBinding.instance.endOfFrame;
+    if (!mounted) return;
+    await widget.controller
+        .search(query, options: widget.controller.searchOptions);
+  }
+
+  Future<void> _replaceOne() async {
+    final controller = widget.controller;
+    final results = controller.searchResults;
+    final index = controller.currentMatch;
+    if (index < 0 || index >= results.length) return;
+    final result = results[index];
+    final query = controller.query;
+    final l10n = pdfL10n(context);
+
+    setState(() => _busy = true);
+    try {
+      final fallbacks = await loadFallbackFonts();
+      final count = widget.editing.replaceMatchText(
+        result.pageIndex,
+        result.match.rects,
+        result.matchText,
+        _field.text,
+        fallbackFonts: fallbacks,
+      );
+      if (!mounted) return;
+      _toast(count == 0
+          ? l10n.searchReplaceNotTargetable
+          : l10n.searchReplaced(count));
+      if (count > 0) await _refresh(query);
+    } finally {
+      if (mounted) setState(() => _busy = false);
+    }
+  }
+
+  Future<void> _replaceAll() async {
+    final controller = widget.controller;
+    final query = controller.query;
+    final pages = {for (final r in controller.searchResults) r.pageIndex};
+    if (pages.isEmpty) return;
+    final l10n = pdfL10n(context);
+
+    setState(() => _busy = true);
+    try {
+      final fallbacks = await loadFallbackFonts();
+      final count = widget.editing.replaceTextOnPages(
+        pages,
+        query,
+        _field.text,
+        fallbackFonts: fallbacks,
+      );
+      if (!mounted) return;
+      _toast(l10n.searchReplaced(count));
+      if (count > 0) await _refresh(query);
+    } finally {
+      if (mounted) setState(() => _busy = false);
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final controller = widget.controller;
+    final l10n = pdfL10n(context);
+    final results = controller.searchResults;
+    final current =
+        controller.currentMatch >= 0 && controller.currentMatch < results.length
+            ? results[controller.currentMatch]
+            : null;
+    final ready = !_busy &&
+        !controller.isSearching &&
+        controller.query.isNotEmpty &&
+        results.isNotEmpty;
+
+    final geometry = widget.geometry;
+    return Padding(
+      // 16 to sit on the same content edge as the panel title and the result
+      // tiles; the toggle row above uses 8 because its buttons are inset.
+      padding: EdgeInsetsDirectional.only(
+        start: 16 + geometry.contentStartInset,
+        end: 16 + geometry.contentEndInset,
+        bottom: 10,
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          TextField(
+            key: const ValueKey('pdf-search-replace-field'),
+            controller: _field,
+            enabled: !_busy,
+            decoration: InputDecoration(
+              hintText: l10n.searchReplaceHint,
+              isDense: true,
+              border: const OutlineInputBorder(),
+              contentPadding:
+                  const EdgeInsets.symmetric(horizontal: 10, vertical: 10),
+            ),
+            style: Theme.of(context).textTheme.bodySmall,
+            onChanged: (_) => setState(() {}),
+            contextMenuBuilder: pdfTextContextMenu,
+          ),
+          const SizedBox(height: 6),
+          Row(children: [
+            Expanded(
+              child: OutlinedButton(
+                key: const ValueKey('pdf-search-replace-one'),
+                style: OutlinedButton.styleFrom(
+                    visualDensity: VisualDensity.compact),
+                // an annotation hit lives in a /Contents string, not the
+                // page's content stream, so there is nothing for the content
+                // editor to rewrite in place
+                onPressed: ready && current != null && !current.isAnnotation
+                    ? _replaceOne
+                    : null,
+                child: Text(l10n.searchReplace,
+                    maxLines: 1, overflow: TextOverflow.ellipsis),
+              ),
+            ),
+            const SizedBox(width: 8),
+            Expanded(
+              child: FilledButton.tonal(
+                key: const ValueKey('pdf-search-replace-all'),
+                style: FilledButton.styleFrom(
+                    visualDensity: VisualDensity.compact),
+                onPressed: ready ? _replaceAll : null,
+                child: Text(l10n.searchReplaceAll,
+                    maxLines: 1, overflow: TextOverflow.ellipsis),
+              ),
+            ),
+          ]),
+        ],
+      ),
+    );
+  }
+}
+
+/// The find-to-redact row under the search panel's options bar (#1160):
+/// "Mark" (the current match) and "Mark all" (every page-text hit) turn
+/// search hits into /Redact marks through
+/// [PdfEditingController.markMatchesForRedaction].
+///
+/// This is only the mark phase - each hit becomes its own mark, so a false
+/// positive can be deleted on the page before the redact tool's "Apply
+/// redactions" burns the rest. Hits inside annotations (note bodies,
+/// comments) have no page text under them to redact and are skipped, and a
+/// hit that is already marked is never marked twice.
+class _RedactBar extends StatefulWidget {
+  const _RedactBar({
+    required this.controller,
+    required this.editing,
+    required this.geometry,
+  });
+
+  final PdfViewerController controller;
+  final PdfEditingController editing;
+
+  /// The panel's layout, for insets that clear the resize grip.
+  final PdfSidebarPanelGeometry geometry;
+
+  @override
+  State<_RedactBar> createState() => _RedactBarState();
+}
+
+class _RedactBarState extends State<_RedactBar> {
+  bool _busy = false;
+
+  /// Marks [results], then re-runs the query - the new revision clears the
+  /// viewer's search as it lands (see [_ReplaceBarState._refresh]) - and
+  /// lands on match [landOn] of the fresh results, so "Mark" walks forward
+  /// through the hits the way a reviewer reads them.
+  Future<void> _mark(List<PdfSearchResult> results, {int? landOn}) async {
+    final controller = widget.controller;
+    final editing = widget.editing;
+    final query = controller.query;
+    final options = controller.searchOptions;
+    final l10n = pdfL10n(context);
+    final presenter = PdfEditorPresenter.of(context);
+
+    setState(() => _busy = true);
+    try {
+      final count = editing.markMatchesForRedaction([
+        for (final r in results)
+          if (!r.isAnnotation) r.match,
+      ]);
+      if (!mounted) return;
+      presenter.notice(
+        context,
+        PdfEditorNotice(l10n.searchRedactMarked(count),
+            onUndo: count > 0 && editing.canUndo ? editing.undo : null),
+      );
+      if (count == 0) {
+        if (landOn != null) controller.goToMatch(landOn);
+        return;
+      }
+      await WidgetsBinding.instance.endOfFrame;
+      if (!mounted) return;
+      await controller.search(query, options: options);
+      if (landOn != null) controller.goToMatch(landOn);
+    } finally {
+      if (mounted) setState(() => _busy = false);
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final controller = widget.controller;
+    final l10n = pdfL10n(context);
+    final results = controller.searchResults;
+    final index = controller.currentMatch;
+    final current =
+        index >= 0 && index < results.length ? results[index] : null;
+    final ready = !_busy &&
+        !controller.isSearching &&
+        controller.query.isNotEmpty &&
+        results.any((r) => !r.isAnnotation);
+
+    final geometry = widget.geometry;
+    return Padding(
+      padding: EdgeInsetsDirectional.only(
+        start: 16 + geometry.contentStartInset,
+        end: 16 + geometry.contentEndInset,
+        bottom: 10,
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          Row(children: [
+            Expanded(
+              child: OutlinedButton(
+                key: const ValueKey('pdf-search-redact-one'),
+                style: OutlinedButton.styleFrom(
+                    visualDensity: VisualDensity.compact),
+                onPressed: ready && current != null && !current.isAnnotation
+                    ? () => _mark([current],
+                        landOn: index + 1 < results.length ? index + 1 : index)
+                    : null,
+                child: Text(l10n.searchRedactMark,
+                    maxLines: 1, overflow: TextOverflow.ellipsis),
+              ),
+            ),
+            const SizedBox(width: 8),
+            Expanded(
+              child: FilledButton.tonal(
+                key: const ValueKey('pdf-search-redact-all'),
+                style: FilledButton.styleFrom(
+                    visualDensity: VisualDensity.compact),
+                onPressed: ready ? () => _mark(results) : null,
+                child: Text(l10n.searchRedactMarkAll,
+                    maxLines: 1, overflow: TextOverflow.ellipsis),
+              ),
+            ),
+          ]),
+          const SizedBox(height: 4),
+          Text(
+            l10n.searchRedactHint,
+            style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                color: Theme.of(context).colorScheme.onSurfaceVariant),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+/// A compact row of toggle buttons for the search match options - case
+/// sensitivity, whole word, and regular expression - driving
+/// [PdfViewerController.searchOptions]. Shared by [PdfSearchField] and
+/// [PdfSearchResultsPanel].
+///
+/// With [preferences] the toggles persist: the bar seeds the controller
+/// from the stored values once they load, and a toggle writes back.
+class _SearchOptionsBar extends StatefulWidget {
+  const _SearchOptionsBar({required this.controller, this.preferences});
+
+  final PdfViewerController controller;
+  final PdfEditingPreferences? preferences;
+
+  @override
+  State<_SearchOptionsBar> createState() => _SearchOptionsBarState();
+}
+
+class _SearchOptionsBarState extends State<_SearchOptionsBar> {
+  @override
+  void initState() {
+    super.initState();
+    // Seed the controller from the stored options once they have loaded.
+    // ready completes after the frame, so setSearchOptions runs outside any
+    // build; the prefs' own _modified guard means a programmatic change
+    // before load still wins.
+    final prefs = widget.preferences;
+    if (prefs != null) {
+      prefs.ready.then((_) {
+        if (!mounted) return;
+        final p = widget.preferences;
+        if (p == null) return;
+        widget.controller.setSearchOptions(PdfSearchOptions(
+          matchCase: p.searchMatchCase,
+          wholeWord: p.searchWholeWord,
+          regex: p.searchRegex,
+          searchAnnotations: p.searchAnnotations,
+        ));
+      });
+    }
+  }
+
+  void _apply(PdfSearchOptions next) {
+    widget.controller.setSearchOptions(next);
+    final prefs = widget.preferences;
+    if (prefs != null) {
+      prefs
+        ..searchMatchCase = next.matchCase
+        ..searchWholeWord = next.wholeWord
+        ..searchRegex = next.regex
+        ..searchAnnotations = next.searchAnnotations;
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final options = widget.controller.searchOptions;
+
+    Widget toggle({
+      required String keyName,
+      String? glyph,
+      IconData? iconData,
+      required String tooltip,
+      required bool selected,
+      required PdfSearchOptions next,
+    }) =>
+        PdfPanelToggleButton(
+          key: ValueKey(keyName),
+          glyph: glyph,
+          iconData: iconData,
+          tooltip: tooltip,
+          selected: selected,
+          onPressed: () => _apply(next),
+        );
+
+    return Row(mainAxisSize: MainAxisSize.min, children: [
+      toggle(
+        keyName: 'pdf-search-match-case',
+        glyph: 'Aa',
+        tooltip: pdfL10n(context).searchMatchCase,
+        selected: options.matchCase,
+        next: options.copyWith(matchCase: !options.matchCase),
+      ),
+      toggle(
+        keyName: 'pdf-search-whole-word',
+        glyph: 'W',
+        tooltip: pdfL10n(context).searchWholeWord,
+        selected: options.wholeWord,
+        next: options.copyWith(wholeWord: !options.wholeWord),
+      ),
+      toggle(
+        keyName: 'pdf-search-regex',
+        glyph: '.*',
+        tooltip: pdfL10n(context).searchRegex,
+        selected: options.regex,
+        next: options.copyWith(regex: !options.regex),
+      ),
+      toggle(
+        keyName: 'pdf-search-annotations',
+        iconData: Icons.comment_outlined,
+        tooltip: pdfL10n(context).searchAnnotations,
+        selected: options.searchAnnotations,
+        next: options.copyWith(searchAnnotations: !options.searchAnnotations),
+      ),
+    ]);
+  }
+}
+
+/// One square toggle in the search panel's control row: a compact icon or
+/// short glyph ("Aa", ".*") that lights up when selected.
+///
+/// Shared so the replace disclosure sits in the same row as the match
+/// options and is indistinguishable from them - a different button shape
+/// beside them reads as a different kind of control.
+class PdfPanelToggleButton extends StatelessWidget {
+  const PdfPanelToggleButton({
+    super.key,
+    this.glyph,
+    this.iconData,
+    required this.tooltip,
+    required this.selected,
+    required this.onPressed,
+  }) : assert(glyph != null || iconData != null);
+
+  /// A short text label ("Aa"), when the control reads better as letters.
+  final String? glyph;
+
+  /// An icon, used when [glyph] is null.
+  final IconData? iconData;
+
+  final String tooltip;
+  final bool selected;
+  final VoidCallback onPressed;
+
+  @override
+  Widget build(BuildContext context) {
+    final scheme = Theme.of(context).colorScheme;
+    return IconButton(
+      tooltip: tooltip,
+      isSelected: selected,
+      visualDensity: VisualDensity.compact,
+      padding: EdgeInsets.zero,
+      constraints: const BoxConstraints(minWidth: 30, minHeight: 30),
+      style: IconButton.styleFrom(
+        backgroundColor: selected ? scheme.secondaryContainer : null,
+        foregroundColor:
+            selected ? scheme.onSecondaryContainer : scheme.onSurfaceVariant,
+      ),
+      onPressed: onPressed,
+      icon: iconData != null
+          ? Icon(iconData, size: 16)
+          : Text(
+              glyph!,
+              style: const TextStyle(
+                  fontSize: 13, fontWeight: FontWeight.w600, height: 1),
+            ),
+    );
+  }
+}
