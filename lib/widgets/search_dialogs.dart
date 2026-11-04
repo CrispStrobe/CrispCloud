@@ -408,8 +408,8 @@ class _FindDialogState extends State<_FindDialog> {
                 Expanded(
                   child: TextField(
                     controller: _minSizeCtrl,
-                    decoration: const InputDecoration(
-                      labelText: 'Min',
+                    decoration: InputDecoration(
+                      labelText: SearchDialogStrings(context).text('min'),
                       border: OutlineInputBorder(),
                       isDense: true,
                     ),
@@ -430,8 +430,8 @@ class _FindDialogState extends State<_FindDialog> {
                 Expanded(
                   child: TextField(
                     controller: _maxSizeCtrl,
-                    decoration: const InputDecoration(
-                      labelText: 'Max',
+                    decoration: InputDecoration(
+                      labelText: SearchDialogStrings(context).text('max'),
                       border: OutlineInputBorder(),
                       isDense: true,
                     ),

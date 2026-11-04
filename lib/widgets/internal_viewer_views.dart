@@ -6,6 +6,8 @@
 
 
 import 'package:flutter/material.dart';
+
+import '../l10n/page_navigation_strings.dart';
 import 'package:pdfx/pdfx.dart';
 
 import '../l10n/app_localizations.dart';
@@ -408,10 +410,12 @@ class PdfPagePanel extends StatelessWidget {
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
               IconButton(
+                tooltip: PageNavigationStrings(context).text('first'),
                 icon: const Icon(Icons.first_page, size: 20),
                 onPressed: () => controller.jumpToPage(1),
               ),
               IconButton(
+                tooltip: PageNavigationStrings(context).text('previous'),
                 icon: const Icon(Icons.chevron_left, size: 20),
                 onPressed: () {
                   final current = controller.page;
@@ -428,6 +432,7 @@ class PdfPagePanel extends StatelessWidget {
                 ),
               ),
               IconButton(
+                tooltip: PageNavigationStrings(context).text('next'),
                 icon: const Icon(Icons.chevron_right, size: 20),
                 onPressed: () {
                   final current = controller.page;
@@ -438,6 +443,7 @@ class PdfPagePanel extends StatelessWidget {
                 },
               ),
               IconButton(
+                tooltip: PageNavigationStrings(context).text('last'),
                 icon: const Icon(Icons.last_page, size: 20),
                 onPressed: () {
                   final pages = controller.pagesCount;

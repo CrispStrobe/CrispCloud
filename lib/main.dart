@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
 import 'l10n/app_localizations.dart';
 import 'l10n/web_vault_strings.dart';
+import 'l10n/startup_failure_strings.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter/foundation.dart'
     show kIsWeb, LicenseRegistry, LicenseEntryWithLineBreaks;
@@ -44,6 +45,31 @@ import 'services/proxy_service.dart';
 import 'services/secure_storage_service.dart';
 import 'services/secure_storage_web.dart';
 import 'widgets/lock_screen.dart';
+
+/// Displays initialization failures without depending on app providers.
+class StartupFailureApp extends StatelessWidget {
+  const StartupFailureApp({super.key, required this.error, this.locale});
+
+  final Object error;
+  final Locale? locale;
+
+  @override
+  Widget build(BuildContext context) => MaterialApp(
+        locale: locale,
+        supportedLocales: AppLocalizations.supportedLocales,
+        localizationsDelegates: AppLocalizations.localizationsDelegates,
+        home: Builder(builder: (context) => Scaffold(
+          body: Center(child: Padding(
+            padding: const EdgeInsets.all(32),
+            child: Text(
+              '${StartupFailureStrings(context).title}\n$error',
+              style: const TextStyle(color: Colors.red, fontSize: 16),
+              textAlign: TextAlign.center,
+            ),
+          )),
+        )),
+      );
+}
 
 const _log = Log('Main');
 const _appVersion = String.fromEnvironment(
@@ -180,20 +206,7 @@ Future<void> main() async {
         context: const {'origin': 'startup_config'},
       );
       // Show an error screen instead of a black screen
-      runApp(MaterialApp(
-        home: Scaffold(
-          body: Center(
-            child: Padding(
-              padding: const EdgeInsets.all(32),
-              child: Text(
-                'Failed to start CrispCloud:\n$e',
-                style: const TextStyle(color: Colors.red, fontSize: 16),
-                textAlign: TextAlign.center,
-              ),
-            ),
-          ),
-        ),
-      ));
+      runApp(StartupFailureApp(error: e));
     }
   }, (error, stack) {
     _log.error('Uncaught error', error, stack);
