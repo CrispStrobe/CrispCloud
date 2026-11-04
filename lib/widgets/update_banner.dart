@@ -13,6 +13,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
+import '../l10n/theme_update_strings.dart';
 import '../providers/update_provider.dart';
 import '../services/auto_update_service.dart';
 import 'update_dialog.dart';
@@ -115,7 +116,7 @@ class _BannerStrip extends StatelessWidget {
               Expanded(
                 child: Text(
                   key: const Key('update_banner_label'),
-                  'CrispCloud ${info.version} available',
+                  ThemeUpdateStrings(context).value('available', info.version),
                   style: theme.textTheme.bodySmall?.copyWith(
                     color: theme.colorScheme.onPrimaryContainer,
                     fontWeight: FontWeight.w500,
@@ -132,7 +133,7 @@ class _BannerStrip extends StatelessWidget {
                   tapTargetSize: MaterialTapTargetSize.shrinkWrap,
                 ),
                 onPressed: () => showUpdateDialog(context),
-                child: const Text('Update'),
+                child: Text(ThemeUpdateStrings(context).text('update')),
               ),
               const SizedBox(width: 4),
               IconButton(
@@ -142,7 +143,7 @@ class _BannerStrip extends StatelessWidget {
                   size: 16,
                   color: theme.colorScheme.onPrimaryContainer,
                 ),
-                tooltip: 'Dismiss for this version',
+                tooltip: ThemeUpdateStrings(context).text('dismiss'),
                 padding: EdgeInsets.zero,
                 constraints: const BoxConstraints(minWidth: 28, minHeight: 28),
                 onPressed: onDismiss,

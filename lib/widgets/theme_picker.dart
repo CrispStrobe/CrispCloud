@@ -3,6 +3,7 @@
 // Theme selection dialog with preview swatches and accent color picker.
 
 import 'package:flutter/material.dart';
+import '../l10n/theme_update_strings.dart';
 import '../services/theme_service.dart';
 
 class ThemePickerDialog extends StatelessWidget {
@@ -13,7 +14,7 @@ class ThemePickerDialog extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return AlertDialog(
-      title: const Text('Choose Theme'),
+      title: Text(ThemeUpdateStrings(context).text('choose')),
       scrollable: true,
       content: SizedBox(
         width: 340,
@@ -23,9 +24,15 @@ class ThemePickerDialog extends StatelessWidget {
             // Theme options
             ...AppThemeMode.values.map((mode) {
               final isSelected = themeService.currentMode == mode;
-              final label = mode == AppThemeMode.system
-                  ? 'System'
-                  : builtInThemes[mode]?.name ?? mode.name;
+              final label = ThemeUpdateStrings(context).text(switch (mode) {
+                AppThemeMode.system => 'system',
+                AppThemeMode.light => 'light',
+                AppThemeMode.dark => 'dark',
+                AppThemeMode.oledBlack => 'oled',
+                AppThemeMode.nord => 'nord',
+                AppThemeMode.dracula => 'dracula',
+                AppThemeMode.materialYou => 'materialYou',
+              });
               final swatch = _swatchColor(mode);
 
               return ListTile(
@@ -55,24 +62,24 @@ class ThemePickerDialog extends StatelessWidget {
             const Divider(height: 24),
 
             // Accent color picker
-            Text('Accent Color',
+            Text(ThemeUpdateStrings(context).text('accent'),
                 style: Theme.of(context).textTheme.titleSmall),
             const SizedBox(height: 8),
             Wrap(
               spacing: 8,
               runSpacing: 8,
               children: [
-                _colorDot(context, null, 'Default'),
-                _colorDot(context, Colors.blue, 'Blue'),
-                _colorDot(context, Colors.indigo, 'Indigo'),
-                _colorDot(context, Colors.purple, 'Purple'),
-                _colorDot(context, Colors.pink, 'Pink'),
-                _colorDot(context, Colors.red, 'Red'),
-                _colorDot(context, Colors.orange, 'Orange'),
-                _colorDot(context, Colors.amber, 'Amber'),
-                _colorDot(context, Colors.green, 'Green'),
-                _colorDot(context, Colors.teal, 'Teal'),
-                _colorDot(context, Colors.cyan, 'Cyan'),
+                _colorDot(context, null, ThemeUpdateStrings(context).text('default')),
+                _colorDot(context, Colors.blue, ThemeUpdateStrings(context).text('blue')),
+                _colorDot(context, Colors.indigo, ThemeUpdateStrings(context).text('indigo')),
+                _colorDot(context, Colors.purple, ThemeUpdateStrings(context).text('purple')),
+                _colorDot(context, Colors.pink, ThemeUpdateStrings(context).text('pink')),
+                _colorDot(context, Colors.red, ThemeUpdateStrings(context).text('red')),
+                _colorDot(context, Colors.orange, ThemeUpdateStrings(context).text('orange')),
+                _colorDot(context, Colors.amber, ThemeUpdateStrings(context).text('amber')),
+                _colorDot(context, Colors.green, ThemeUpdateStrings(context).text('green')),
+                _colorDot(context, Colors.teal, ThemeUpdateStrings(context).text('teal')),
+                _colorDot(context, Colors.cyan, ThemeUpdateStrings(context).text('cyan')),
               ],
             ),
           ],
@@ -81,7 +88,7 @@ class ThemePickerDialog extends StatelessWidget {
       actions: [
         TextButton(
           onPressed: () => Navigator.pop(context),
-          child: const Text('Done'),
+          child: Text(ThemeUpdateStrings(context).text('done')),
         ),
       ],
     );
