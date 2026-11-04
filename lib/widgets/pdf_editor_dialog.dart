@@ -23,8 +23,9 @@ import '../services/pdf_file_store.dart';
 
 const _log = Log('PdfEditor');
 final _editingTools = Set<PdfEditTool>.unmodifiable(
-  PdfEditTool.values.where((tool) =>
-      tool != PdfEditTool.redact && tool != PdfEditTool.signatureBox),
+  PdfEditTool.values.where(
+    (tool) => tool != PdfEditTool.redact && tool != PdfEditTool.signatureBox,
+  ),
 );
 
 bool isPdfFileName(String name) => name.toLowerCase().endsWith('.pdf');
@@ -34,14 +35,13 @@ Future<void> showPdfEditorDialog(
   WidgetRef ref,
   FileItem file,
   PanelSide side,
-) =>
-    showDialog<void>(
-      context: context,
-      barrierDismissible: false,
-      builder: (_) => Dialog.fullscreen(
-        child: PdfEditorDialog(file: file, side: side),
-      ),
-    );
+) => showDialog<void>(
+  context: context,
+  barrierDismissible: false,
+  builder: (_) => Dialog.fullscreen(
+    child: PdfEditorDialog(file: file, side: side),
+  ),
+);
 
 /// PDF editing surface with a host-owned, asynchronous save lifecycle.
 ///
@@ -90,7 +90,8 @@ class _PdfEditorDialogState extends ConsumerState<PdfEditorDialog> {
   String? _error;
   String? _errorDetail;
 
-  bool get _busy => (_session?.isSaving ?? false) || _exporting || _choosingSave;
+  bool get _busy =>
+      (_session?.isSaving ?? false) || _exporting || _choosingSave;
   String get _deviceExportLabel => kIsWeb ? 'Download a copy' : 'Export a copy';
 
   @override
@@ -113,7 +114,9 @@ class _PdfEditorDialogState extends ConsumerState<PdfEditorDialog> {
     if (widget.storeOverride case final store?) return store;
     final panel = ref.read(panelProvider(widget.side));
     final selectedSource = ref.read(panelSourceProvider(widget.side));
-    if (panel.isInArchive || selectedSource.isArchive || selectedSource.isContainer) {
+    if (panel.isInArchive ||
+        selectedSource.isArchive ||
+        selectedSource.isContainer) {
       throw const _PdfOpenMessage(
         'Extract this file from its archive or container before editing.',
       );
@@ -142,7 +145,9 @@ class _PdfEditorDialogState extends ConsumerState<PdfEditorDialog> {
       providerName: source.providerName,
       cache: ref.read(fileCacheProvider),
       file: widget.file.path == null
-          ? widget.file.copyWith(path: p.posix.join(source.path, widget.file.name))
+          ? widget.file.copyWith(
+              path: p.posix.join(source.path, widget.file.name),
+            )
           : widget.file,
       isCurrentAccount: () => mounted && origin.isCurrent,
     );
@@ -215,7 +220,9 @@ class _PdfEditorDialogState extends ConsumerState<PdfEditorDialog> {
       if (!mounted) return;
       setState(() {
         _loading = false;
-        _error = error is _PdfOpenMessage ? error.message : 'Could not open PDF';
+        _error = error is _PdfOpenMessage
+            ? error.message
+            : 'Could not open PDF';
         _errorDetail = error is _PdfOpenMessage ? null : '$error';
       });
     }
@@ -232,9 +239,13 @@ class _PdfEditorDialogState extends ConsumerState<PdfEditorDialog> {
           mainAxisSize: MainAxisSize.min,
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Text(context.pdfTr(incorrect
-                ? 'Incorrect password. Try again.'
-                : 'This PDF needs a password to open.')),
+            Text(
+              context.pdfTr(
+                incorrect
+                    ? 'Incorrect password. Try again.'
+                    : 'This PDF needs a password to open.',
+              ),
+            ),
             const SizedBox(height: 12),
             TextField(
               controller: text,
@@ -340,70 +351,75 @@ class _PdfEditorDialogState extends ConsumerState<PdfEditorDialog> {
     if (widget.storeOverride != null) return;
     // A listing failure must not turn an already completed write into a
     // failed save, or cause the user to retry that write unknowingly.
-    unawaited(ref.read(panelProvider(widget.side)).refresh().catchError(
-      (Object error, StackTrace stack) {
+    unawaited(
+      ref.read(panelProvider(widget.side)).refresh().catchError((
+        Object error,
+        StackTrace stack,
+      ) {
         _log.warn('Could not refresh panel after PDF save', error, stack);
-      },
-    ));
+      }),
+    );
   }
 
   Future<String?> _askCopyName(String suffix) async {
     final text = TextEditingController(text: _suggestCopyName(suffix));
     final form = GlobalKey<FormState>();
     final route = DialogRoute<String>(
-        context: context,
-        builder: (dialogContext) {
-          void submit() {
-            if (!(form.currentState?.validate() ?? false)) return;
-            var value = text.text.trim();
-            if (!isPdfFileName(value)) value = '$value.pdf';
-            Navigator.pop(dialogContext, value);
-          }
+      context: context,
+      builder: (dialogContext) {
+        void submit() {
+          if (!(form.currentState?.validate() ?? false)) return;
+          var value = text.text.trim();
+          if (!isPdfFileName(value)) value = '$value.pdf';
+          Navigator.pop(dialogContext, value);
+        }
 
-          return AlertDialog(
-            title: Text(context.pdfTr('Save PDF copy')),
-            content: Form(
-              key: form,
-              child: TextFormField(
-                key: const ValueKey('pdf-copy-name'),
-                controller: text,
-                autofocus: true,
-                decoration: InputDecoration(labelText: context.pdfTr('File name')),
-                onFieldSubmitted: (_) => submit(),
-                validator: (value) {
-                  final name = value?.trim() ?? '';
-                  if (name.isEmpty ||
-                      name == '.' ||
-                      name == '..' ||
-                      name == '.pdf' ||
-                      RegExp(r'[<>:"/\\|?*\x00-\x1f]').hasMatch(name)) {
-                    return context.pdfTr(
-                      'Choose a new PDF file name without a folder path.',
-                    );
-                  }
-                  final pdfName = isPdfFileName(name) ? name : '$name.pdf';
-                  if (pdfName.toLowerCase() == widget.file.name.toLowerCase()) {
-                    return context.pdfTr(
-                      'Use a different file name to preserve the original.',
-                    );
-                  }
-                  return null;
-                },
+        return AlertDialog(
+          title: Text(context.pdfTr('Save PDF copy')),
+          content: Form(
+            key: form,
+            child: TextFormField(
+              key: const ValueKey('pdf-copy-name'),
+              controller: text,
+              autofocus: true,
+              decoration: InputDecoration(
+                labelText: context.pdfTr('File name'),
               ),
+              onFieldSubmitted: (_) => submit(),
+              validator: (value) {
+                final name = value?.trim() ?? '';
+                if (name.isEmpty ||
+                    name == '.' ||
+                    name == '..' ||
+                    name == '.pdf' ||
+                    RegExp(r'[<>:"/\\|?*\x00-\x1f]').hasMatch(name)) {
+                  return context.pdfTr(
+                    'Choose a new PDF file name without a folder path.',
+                  );
+                }
+                final pdfName = isPdfFileName(name) ? name : '$name.pdf';
+                if (pdfName.toLowerCase() == widget.file.name.toLowerCase()) {
+                  return context.pdfTr(
+                    'Use a different file name to preserve the original.',
+                  );
+                }
+                return null;
+              },
             ),
-            actions: [
-              TextButton(
-                onPressed: () => Navigator.pop(dialogContext),
-                child: Text(context.pdfTr('Cancel')),
-              ),
-              FilledButton(
-                onPressed: submit,
-                child: Text(context.pdfTr('Save a copy')),
-              ),
-            ],
-          );
-        },
-      );
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.pop(dialogContext),
+              child: Text(context.pdfTr('Cancel')),
+            ),
+            FilledButton(
+              onPressed: submit,
+              child: Text(context.pdfTr('Save a copy')),
+            ),
+          ],
+        );
+      },
+    );
     try {
       return await Navigator.of(context, rootNavigator: true).push(route);
     } finally {
@@ -414,7 +430,9 @@ class _PdfEditorDialogState extends ConsumerState<PdfEditorDialog> {
 
   String _suggestCopyName(String suffix) {
     final name = widget.file.name;
-    final stem = isPdfFileName(name) ? name.substring(0, name.length - 4) : name;
+    final stem = isPdfFileName(name)
+        ? name.substring(0, name.length - 4)
+        : name;
     return '$stem-$suffix-${DateTime.now().millisecondsSinceEpoch}.pdf';
   }
 
@@ -431,9 +449,11 @@ class _PdfEditorDialogState extends ConsumerState<PdfEditorDialog> {
       final outcome = await exporter(snapshot, _suggestCopyName('edited'));
       if (!mounted || outcome == null) return outcome;
       _lastCopyRevision = revision;
-      _notice(outcome == PdfSaveOutcome.downloadedCopy
-          ? 'Copy downloaded. The original has not been updated.'
-          : 'Copy saved. The original has not been updated.');
+      _notice(
+        outcome == PdfSaveOutcome.downloadedCopy
+            ? 'Copy downloaded. The original has not been updated.'
+            : 'Copy saved. The original has not been updated.',
+      );
       return outcome;
     } catch (error, stack) {
       _log.warn('Could not export PDF', error, stack);
@@ -483,13 +503,17 @@ class _PdfEditorDialogState extends ConsumerState<PdfEditorDialog> {
       if (action == 'discard') {
         await _leave();
       } else if (action == 'save' || action == 'export') {
-        final outcome = action == 'export' ? await _exportDevice() : await _save();
+        final outcome = action == 'export'
+            ? await _exportDevice()
+            : await _save();
         if (!mounted || outcome == null) return;
         if (outcome == PdfSaveOutcome.savedOriginal) {
           if (!_session!.isDirty) {
             await _leave();
           } else {
-            _notice('New changes were made while saving. Save them before closing.');
+            _notice(
+              'New changes were made while saving. Save them before closing.',
+            );
           }
         } else if (_lastCopyRevision == _controller!.revisionId) {
           final close = await _confirm(
@@ -497,11 +521,15 @@ class _PdfEditorDialogState extends ConsumerState<PdfEditorDialog> {
             'Keep the saved copy before closing; the original file is unchanged.',
             'Close editor',
           );
-          if (close && mounted && _lastCopyRevision == _controller!.revisionId) {
+          if (close &&
+              mounted &&
+              _lastCopyRevision == _controller!.revisionId) {
             await _leave();
           }
         } else {
-          _notice('New changes were made while saving. Save them before closing.');
+          _notice(
+            'New changes were made while saving. Save them before closing.',
+          );
         }
       }
     } finally {
@@ -550,7 +578,9 @@ class _PdfEditorDialogState extends ConsumerState<PdfEditorDialog> {
         return null;
       }
       if (file.bytes == null) {
-        _notice('The browser did not provide file contents. Please select the file again.');
+        _notice(
+          'The browser did not provide file contents. Please select the file again.',
+        );
       }
       return file.bytes;
     } catch (error) {
@@ -569,12 +599,15 @@ class _PdfEditorDialogState extends ConsumerState<PdfEditorDialog> {
         'Exported pages do not retain document-wide form fields or bookmarks, and some internal links may stop working. Review the new files before sharing.',
       );
       if (_copyOnly) {
-        message += '\n\n${context.pdfTr('Exported page copies do not retain digital signatures.')}';
+        message +=
+            '\n\n${context.pdfTr('Exported page copies do not retain digital signatures.')}';
       }
       if (document.cos.isEncrypted) {
-        message += '\n\n${context.pdfTr('The exported copies will not be password-protected.')}';
+        message +=
+            '\n\n${context.pdfTr('The exported copies will not be password-protected.')}';
       }
-      if (!await _confirm('Export page copies', message, 'Continue') || !mounted) {
+      if (!await _confirm('Export page copies', message, 'Continue') ||
+          !mounted) {
         return;
       }
       final name = await _askCopyName(documents.length == 1 ? 'pages' : 'part');
@@ -594,8 +627,10 @@ class _PdfEditorDialogState extends ConsumerState<PdfEditorDialog> {
     } catch (error, stack) {
       _log.warn('Could not export PDF pages', error, stack);
       if (mounted) {
-        _notice('Could not export pages',
-            detail: '$completed/${documents.length}\n$error');
+        _notice(
+          'Could not export pages',
+          detail: '$completed/${documents.length}\n$error',
+        );
       }
     } finally {
       if (mounted) setState(() => _exporting = false);
@@ -605,18 +640,22 @@ class _PdfEditorDialogState extends ConsumerState<PdfEditorDialog> {
   void _notice(String message, {String? detail}) {
     _messenger.currentState
       ?..hideCurrentSnackBar()
-      ..showSnackBar(SnackBar(
-        content: Text('${context.pdfTr(message)}${detail == null ? '' : '\n$detail'}'),
-        duration: Duration(seconds: detail == null ? 4 : 8),
-      ));
+      ..showSnackBar(
+        SnackBar(
+          content: Text(
+            '${context.pdfTr(message)}${detail == null ? '' : '\n$detail'}',
+          ),
+          duration: Duration(seconds: detail == null ? 4 : 8),
+        ),
+      );
   }
 
   Widget _banner(String message) => Container(
-        width: double.infinity,
-        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-        color: Theme.of(context).colorScheme.secondaryContainer,
-        child: Text(context.pdfTr(message)),
-      );
+    width: double.infinity,
+    padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+    color: Theme.of(context).colorScheme.secondaryContainer,
+    child: Text(context.pdfTr(message)),
+  );
 
   @override
   Widget build(BuildContext context) {
@@ -630,110 +669,127 @@ class _PdfEditorDialogState extends ConsumerState<PdfEditorDialog> {
       child: ScaffoldMessenger(
         key: _messenger,
         child: Scaffold(
-        appBar: AppBar(
-          automaticallyImplyLeading: false,
-          leading: IconButton(
-            key: const ValueKey('pdf-close'),
-            tooltip: context.pdfTr('Close'),
-            onPressed: _busy ? null : _requestClose,
-            icon: const Icon(Icons.close),
-          ),
-          title: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Text('${widget.file.name}${dirty ? ' *' : ''}',
-                  maxLines: 1, overflow: TextOverflow.ellipsis),
-              Text(
-                context.pdfTr(_busy
-                    ? 'Saving…'
-                    : dirty
-                        ? 'Unsaved changes'
-                        : 'PDF editor'),
-                style: Theme.of(context).textTheme.labelSmall,
-              ),
-            ],
-          ),
-          actions: [
-            if (controller != null) ...[
-              IconButton(
-                key: const ValueKey('pdf-save'),
-                tooltip: context.pdfTr(_copyOnly ? 'Save a copy' : 'Save'),
-                onPressed: !_busy && (dirty || _copyOnly)
-                    ? () => unawaited(_save())
-                    : null,
-                icon: const Icon(Icons.save_outlined),
-              ),
-              if (!_copyOnly)
-                IconButton(
-                  key: const ValueKey('pdf-save-copy'),
-                  tooltip: context.pdfTr('Save a copy'),
-                  onPressed: _busy ? null : () => unawaited(_save(copy: true)),
-                  icon: const Icon(Icons.save_as_outlined),
-                ),
-              IconButton(
-                key: const ValueKey('pdf-export-copy'),
-                tooltip: context.pdfTr(_deviceExportLabel),
-                onPressed: _busy ? null : () => unawaited(_exportDevice()),
-                icon: const Icon(Icons.download_outlined),
-              ),
-            ],
-          ],
-        ),
-        body: Column(
-          children: [
-            if (_busy) const LinearProgressIndicator(),
-            if (_copyOnly)
-              _banner('This PDF contains digital signatures. Save a copy to preserve the signed original.'),
-            if (_pendingRedactions)
-              _banner('Redaction is unavailable here. Existing redaction marks do not remove the underlying content.'),
-            Expanded(
-              child: _loading
-                  ? const Center(child: CircularProgressIndicator())
-                  : _error != null
-                      ? Center(
-                          child: Padding(
-                            padding: const EdgeInsets.all(24),
-                            child: Column(
-                              mainAxisSize: MainAxisSize.min,
-                              children: [
-                                const Icon(Icons.picture_as_pdf_outlined, size: 48),
-                                const SizedBox(height: 16),
-                                Text(context.pdfTr(_error!),
-                                    textAlign: TextAlign.center),
-                                if (_errorDetail != null) ...[
-                                  const SizedBox(height: 8),
-                                  SelectableText(_errorDetail!),
-                                ],
-                                const SizedBox(height: 16),
-                                TextButton(
-                                  onPressed: _load,
-                                  child: Text(context.pdfTr('Retry')),
-                                ),
-                              ],
-                            ),
-                          ),
-                        )
-                      : PdfEditorView(
-                          controller: controller!,
-                          documentId: _store!.documentId,
-                          autoRenderWorker: widget.autoRenderWorker,
-                          features: PdfEditorFeatures(tools: _editingTools),
-                          // The surface owns Ctrl/Cmd+S. Registering another
-                          // host binding would risk starting two writes.
-                          showSaveButton: false,
-                          alwaysAllowSave: true,
-                          onSave: (_) => unawaited(_save()),
-                          onSaveAs: (_) => unawaited(_save(copy: true)),
-                          onPickPdfToInsert: () => _pickFile(['pdf']),
-                          imagePicker: (_) => _pickFile(['png', 'jpg', 'jpeg']),
-                          onExportPages: (bytes) => unawaited(_exportPages([bytes])),
-                          onSplitPages: (bytes) => unawaited(_exportPages(bytes)),
-                          // No signing callback: the certificate-signing tool
-                          // stays hidden. Hand-drawn ink signatures remain.
-                        ),
+          appBar: AppBar(
+            automaticallyImplyLeading: false,
+            leading: IconButton(
+              key: const ValueKey('pdf-close'),
+              tooltip: context.pdfTr('Close'),
+              onPressed: _busy ? null : _requestClose,
+              icon: const Icon(Icons.close),
             ),
-          ],
-        ),
+            title: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  '${widget.file.name}${dirty ? ' *' : ''}',
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                ),
+                Text(
+                  context.pdfTr(
+                    _busy
+                        ? 'Saving…'
+                        : dirty
+                        ? 'Unsaved changes'
+                        : 'PDF editor',
+                  ),
+                  style: Theme.of(context).textTheme.labelSmall,
+                ),
+              ],
+            ),
+            actions: [
+              if (controller != null) ...[
+                IconButton(
+                  key: const ValueKey('pdf-save'),
+                  tooltip: context.pdfTr(_copyOnly ? 'Save a copy' : 'Save'),
+                  onPressed: !_busy && (dirty || _copyOnly)
+                      ? () => unawaited(_save())
+                      : null,
+                  icon: const Icon(Icons.save_outlined),
+                ),
+                if (!_copyOnly)
+                  IconButton(
+                    key: const ValueKey('pdf-save-copy'),
+                    tooltip: context.pdfTr('Save a copy'),
+                    onPressed: _busy
+                        ? null
+                        : () => unawaited(_save(copy: true)),
+                    icon: const Icon(Icons.save_as_outlined),
+                  ),
+                IconButton(
+                  key: const ValueKey('pdf-export-copy'),
+                  tooltip: context.pdfTr(_deviceExportLabel),
+                  onPressed: _busy ? null : () => unawaited(_exportDevice()),
+                  icon: const Icon(Icons.download_outlined),
+                ),
+              ],
+            ],
+          ),
+          body: Column(
+            children: [
+              if (_busy) const LinearProgressIndicator(),
+              if (_copyOnly)
+                _banner(
+                  'This PDF contains digital signatures. Save a copy to preserve the signed original.',
+                ),
+              if (_pendingRedactions)
+                _banner(
+                  'Redaction is unavailable here. Existing redaction marks do not remove the underlying content.',
+                ),
+              Expanded(
+                child: _loading
+                    ? const Center(child: CircularProgressIndicator())
+                    : _error != null
+                    ? Center(
+                        child: Padding(
+                          padding: const EdgeInsets.all(24),
+                          child: Column(
+                            mainAxisSize: MainAxisSize.min,
+                            children: [
+                              const Icon(
+                                Icons.picture_as_pdf_outlined,
+                                size: 48,
+                              ),
+                              const SizedBox(height: 16),
+                              Text(
+                                context.pdfTr(_error!),
+                                textAlign: TextAlign.center,
+                              ),
+                              if (_errorDetail != null) ...[
+                                const SizedBox(height: 8),
+                                SelectableText(_errorDetail!),
+                              ],
+                              const SizedBox(height: 16),
+                              TextButton(
+                                onPressed: _load,
+                                child: Text(context.pdfTr('Retry')),
+                              ),
+                            ],
+                          ),
+                        ),
+                      )
+                    : PdfEditorView(
+                        controller: controller!,
+                        documentId: _store!.documentId,
+                        autoRenderWorker: widget.autoRenderWorker,
+                        features: PdfEditorFeatures(tools: _editingTools),
+                        // The surface owns Ctrl/Cmd+S. Registering another
+                        // host binding would risk starting two writes.
+                        showSaveButton: false,
+                        alwaysAllowSave: true,
+                        onSave: (_) => unawaited(_save()),
+                        onSaveAs: (_) => unawaited(_save(copy: true)),
+                        onPickPdfToInsert: () => _pickFile(['pdf']),
+                        imagePicker: (_) => _pickFile(['png', 'jpg', 'jpeg']),
+                        onExportPages: (bytes) =>
+                            unawaited(_exportPages([bytes])),
+                        onSplitPages: (bytes) => unawaited(_exportPages(bytes)),
+                        // No signing callback: the certificate-signing tool
+                        // stays hidden. Hand-drawn ink signatures remain.
+                      ),
+              ),
+            ],
+          ),
         ),
       ),
     );

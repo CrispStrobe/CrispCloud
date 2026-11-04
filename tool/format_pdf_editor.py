@@ -16,7 +16,9 @@ from pathlib import Path
 ROOT = Path(__file__).resolve().parents[1]
 APP_PATTERNS = (
     "lib/l10n/pdf_editor_strings.dart",
-    "lib/services/pdf_*.dart",
+    "lib/services/pdf_device_export*.dart",
+    "lib/services/pdf_edit_session.dart",
+    "lib/services/pdf_file_store.dart",
     "lib/widgets/pdf_editor_dialog.dart",
     "test/pdf_*.dart",
     "test/panel_file_origin_test.dart",

@@ -27,9 +27,9 @@ typedef PdfSaveWriter = Future<PdfSaveOutcome> Function(Uint8List bytes);
 /// edits made while it is running stay dirty.
 class PdfEditSession extends ChangeNotifier {
   PdfEditSession({required Uint8List initialBytes})
-      : _bytes = _copy(initialBytes),
-        _currentDigest = _digest(initialBytes),
-        _savedDigest = _digest(initialBytes);
+    : _bytes = _copy(initialBytes),
+      _currentDigest = _digest(initialBytes),
+      _savedDigest = _digest(initialBytes);
 
   Uint8List _bytes;
   String _currentDigest;

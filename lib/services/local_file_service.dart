@@ -44,7 +44,7 @@ extension LocalFileEditorOperations on LocalFileService {
   }) async {
     final service = this;
     if (service is FreshLocalFileReader) {
-      return service.readFileFresh(
+      return (service as FreshLocalFileReader).readFileFresh(
         path,
         fileItem: fileItem,
         maxBytes: maxBytes,
@@ -70,7 +70,8 @@ extension LocalFileEditorOperations on LocalFileService {
   }) async {
     final service = this;
     if (service is LocalFileSaveReporter) {
-      return service.saveFileWithResult(path, bytes, overwrite: overwrite);
+      return (service as LocalFileSaveReporter)
+          .saveFileWithResult(path, bytes, overwrite: overwrite);
     }
     if (!overwrite) {
       throw UnsupportedError('This filesystem cannot create a protected copy.');

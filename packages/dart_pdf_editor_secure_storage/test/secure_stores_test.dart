@@ -16,8 +16,8 @@ void main() {
     await store.write('doc-a', 'pin', '1234');
     await store.write('doc-a', 'password', 'example');
     await store.write('doc-b', 'password', 'other');
-    expect(await store.readAll('doc-a'),
-        {'pin': '1234', 'password': 'example'});
+    expect(
+        await store.readAll('doc-a'), {'pin': '1234', 'password': 'example'});
     await store.remove('doc-a', 'pin');
     expect(await store.read('doc-a', 'pin'), isNull);
     await store.clearDocument('doc-a');

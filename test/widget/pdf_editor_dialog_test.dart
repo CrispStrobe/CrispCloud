@@ -18,7 +18,7 @@ import '../support/pdf_editor_fixture.dart';
 
 class _MemoryPdfStore implements PdfFileStore {
   _MemoryPdfStore({Uint8List? input})
-      : input = input ?? buildPdfEditorFixture();
+    : input = input ?? buildPdfEditorFixture();
 
   final Uint8List input;
   final List<Uint8List> writes = [];
@@ -50,7 +50,9 @@ class _MemoryPdfStore implements PdfFileStore {
   }
 }
 
-Future<void> _open(WidgetTester tester, _MemoryPdfStore store, {
+Future<void> _open(
+  WidgetTester tester,
+  _MemoryPdfStore store, {
   PdfDeviceExporter? exporter,
 }) async {
   tester.view.physicalSize = const Size(1200, 900);
@@ -59,32 +61,34 @@ Future<void> _open(WidgetTester tester, _MemoryPdfStore store, {
   final preferences = PdfEditingPreferences(store: PdfMemoryPreferencesStore());
   addTearDown(preferences.dispose);
   addTearDown(() => tester.pumpWidget(const SizedBox()));
-  await tester.pumpWidget(ProviderScope(
-    child: MaterialApp(
-      theme: ThemeData(platform: TargetPlatform.linux),
-      home: Builder(
-        builder: (context) => Scaffold(
-          body: ElevatedButton(
-            onPressed: () => showDialog<void>(
-              context: context,
-              barrierDismissible: false,
-              builder: (_) => Dialog.fullscreen(
-                child: PdfEditorDialog(
-                  file: FileItem(name: 'sample.pdf', isFolder: false),
-                  side: PanelSide.local,
-                  storeOverride: store,
-                  preferencesOverride: preferences,
-                  deviceExporterOverride: exporter,
-                  autoRenderWorker: false,
+  await tester.pumpWidget(
+    ProviderScope(
+      child: MaterialApp(
+        theme: ThemeData(platform: TargetPlatform.linux),
+        home: Builder(
+          builder: (context) => Scaffold(
+            body: ElevatedButton(
+              onPressed: () => showDialog<void>(
+                context: context,
+                barrierDismissible: false,
+                builder: (_) => Dialog.fullscreen(
+                  child: PdfEditorDialog(
+                    file: FileItem(name: 'sample.pdf', isFolder: false),
+                    side: PanelSide.local,
+                    storeOverride: store,
+                    preferencesOverride: preferences,
+                    deviceExporterOverride: exporter,
+                    autoRenderWorker: false,
+                  ),
                 ),
               ),
+              child: const Text('Open editor'),
             ),
-            child: const Text('Open editor'),
           ),
         ),
       ),
     ),
-  ));
+  );
   await tester.tap(find.text('Open editor'));
   await tester.pumpAndSettle();
 }
@@ -111,32 +115,44 @@ void main() {
     expect(isPdfFileName('report.pdf.'), isFalse);
   });
 
-  testWidgets('F4 routes a PDF to the PDF dialog before loading bytes',
-      (tester) async {
-    await tester.pumpWidget(ProviderScope(
-      child: MaterialApp(
-        home: Consumer(builder: (context, ref, _) => Scaffold(
-          body: TextButton(
-            onPressed: () => showFileEditorDialog(
-              context,
-              ref,
-              FileItem(name: 'large.PDF', isFolder: false, size: 65 * 1024 * 1024),
-              PanelSide.local,
+  testWidgets('F4 routes a PDF to the PDF dialog before loading bytes', (
+    tester,
+  ) async {
+    await tester.pumpWidget(
+      ProviderScope(
+        child: MaterialApp(
+          home: Consumer(
+            builder: (context, ref, _) => Scaffold(
+              body: TextButton(
+                onPressed: () => showFileEditorDialog(
+                  context,
+                  ref,
+                  FileItem(
+                    name: 'large.PDF',
+                    isFolder: false,
+                    size: 65 * 1024 * 1024,
+                  ),
+                  PanelSide.local,
+                ),
+                child: const Text('Edit'),
+              ),
             ),
-            child: const Text('Edit'),
           ),
-        )),
+        ),
       ),
-    ));
+    );
     await tester.tap(find.text('Edit'));
     await tester.pumpAndSettle();
     expect(find.byType(PdfEditorDialog), findsOneWidget);
-    expect(find.text('PDF editing is limited to files up to 64 MiB.'),
-        findsOneWidget);
+    expect(
+      find.text('PDF editing is limited to files up to 64 MiB.'),
+      findsOneWidget,
+    );
   });
 
-  testWidgets('undo back to the opened bytes clears host dirty state',
-      (tester) async {
+  testWidgets('undo back to the opened bytes clears host dirty state', (
+    tester,
+  ) async {
     await _open(tester, _MemoryPdfStore());
     expect(find.byType(PdfEditorView), findsOneWidget);
     expect(tester.widget<IconButton>(_save).onPressed, isNull);
@@ -149,8 +165,9 @@ void main() {
     expect(tester.widget<IconButton>(_save).onPressed, isNull);
   });
 
-  testWidgets('failed save keeps edits open and a later close can retry',
-      (tester) async {
+  testWidgets('failed save keeps edits open and a later close can retry', (
+    tester,
+  ) async {
     final store = _MemoryPdfStore();
     var fail = true;
     store.writer = (_) async {
@@ -166,14 +183,17 @@ void main() {
     fail = false;
     await tester.tap(_close);
     await tester.pumpAndSettle();
-    await tester.tap(find.descendant(of: _unsaved, matching: find.text('Save')));
+    await tester.tap(
+      find.descendant(of: _unsaved, matching: find.text('Save')),
+    );
     await tester.pumpAndSettle();
     expect(store.writes, hasLength(2));
     expect(find.byType(PdfEditorDialog), findsNothing);
   });
 
-  testWidgets('save before close waits for upload and preserves newer edits',
-      (tester) async {
+  testWidgets('save before close waits for upload and preserves newer edits', (
+    tester,
+  ) async {
     final upload = Completer<PdfSaveOutcome>();
     final store = _MemoryPdfStore()..writer = (_) => upload.future;
     await _open(tester, store);
@@ -181,7 +201,9 @@ void main() {
     final snapshot = Uint8List.fromList(_controller(tester).bytes);
     await tester.tap(_close);
     await tester.pumpAndSettle();
-    await tester.tap(find.descendant(of: _unsaved, matching: find.text('Save')));
+    await tester.tap(
+      find.descendant(of: _unsaved, matching: find.text('Save')),
+    );
     await tester.pump(const Duration(milliseconds: 300));
     expect(store.writes, hasLength(1));
     expect(store.writes.single, orderedEquals(snapshot));
@@ -193,31 +215,39 @@ void main() {
     await tester.pumpAndSettle();
     expect(find.byType(PdfEditorDialog), findsOneWidget);
     expect(find.text('sample.pdf *'), findsOneWidget);
-    expect(find.textContaining('New changes were made while saving.'),
-        findsOneWidget);
+    expect(
+      find.textContaining('New changes were made while saving.'),
+      findsOneWidget,
+    );
   });
 
-  testWidgets('a browser download stays dirty and close needs acknowledgement',
-      (tester) async {
-    final store = _MemoryPdfStore()
-      ..writer = (_) async => PdfSaveOutcome.downloadedCopy;
-    await _open(tester, store);
-    await _rotate(tester);
-    await tester.tap(_save);
-    await tester.pumpAndSettle();
-    expect(find.text('sample.pdf *'), findsOneWidget);
-    expect(find.text('Copy downloaded. The original has not been updated.'),
-        findsOneWidget);
-    await tester.tap(_close);
-    await tester.pumpAndSettle();
-    await tester.tap(find.descendant(of: _unsaved, matching: find.text('Save')));
-    await tester.pumpAndSettle();
-    expect(find.text('Close after saving a copy?'), findsOneWidget);
-    expect(find.byType(PdfEditorDialog), findsOneWidget);
-    await tester.tap(find.text('Close editor'));
-    await tester.pumpAndSettle();
-    expect(find.byType(PdfEditorDialog), findsNothing);
-  });
+  testWidgets(
+    'a browser download stays dirty and close needs acknowledgement',
+    (tester) async {
+      final store = _MemoryPdfStore()
+        ..writer = (_) async => PdfSaveOutcome.downloadedCopy;
+      await _open(tester, store);
+      await _rotate(tester);
+      await tester.tap(_save);
+      await tester.pumpAndSettle();
+      expect(find.text('sample.pdf *'), findsOneWidget);
+      expect(
+        find.text('Copy downloaded. The original has not been updated.'),
+        findsOneWidget,
+      );
+      await tester.tap(_close);
+      await tester.pumpAndSettle();
+      await tester.tap(
+        find.descendant(of: _unsaved, matching: find.text('Save')),
+      );
+      await tester.pumpAndSettle();
+      expect(find.text('Close after saving a copy?'), findsOneWidget);
+      expect(find.byType(PdfEditorDialog), findsOneWidget);
+      await tester.tap(find.text('Close editor'));
+      await tester.pumpAndSettle();
+      expect(find.byType(PdfEditorDialog), findsNothing);
+    },
+  );
 
   testWidgets('Ctrl+S starts one host save', (tester) async {
     final store = _MemoryPdfStore();
@@ -231,35 +261,43 @@ void main() {
     expect(find.text('sample.pdf'), findsOneWidget);
   });
 
-  testWidgets('failed source save can recover a copy through the close prompt',
-      (tester) async {
-    final store = _MemoryPdfStore()
-      ..writer = (_) async => throw StateError('account disconnected');
-    final recovered = <Uint8List>[];
-    await _open(tester, store, exporter: (bytes, name) async {
-      recovered.add(Uint8List.fromList(bytes));
-      return PdfSaveOutcome.savedCopy;
-    });
-    await _rotate(tester);
-    final snapshot = Uint8List.fromList(_controller(tester).bytes);
-    await tester.tap(_save);
-    await tester.pumpAndSettle();
-    await tester.tap(_close);
-    await tester.pumpAndSettle();
-    await tester.tap(find.descendant(of: _unsaved,
-        matching: find.text('Export a copy')));
-    await tester.pumpAndSettle();
-    expect(store.writes, hasLength(1));
-    expect(store.copyNames, isEmpty);
-    expect(recovered.single, orderedEquals(snapshot));
-    expect(find.text('Close after saving a copy?'), findsOneWidget);
-    await tester.tap(find.text('Cancel'));
-    await tester.pumpAndSettle();
-    expect(find.text('sample.pdf *'), findsOneWidget);
-  });
+  testWidgets(
+    'failed source save can recover a copy through the close prompt',
+    (tester) async {
+      final store = _MemoryPdfStore()
+        ..writer = (_) async => throw StateError('account disconnected');
+      final recovered = <Uint8List>[];
+      await _open(
+        tester,
+        store,
+        exporter: (bytes, name) async {
+          recovered.add(Uint8List.fromList(bytes));
+          return PdfSaveOutcome.savedCopy;
+        },
+      );
+      await _rotate(tester);
+      final snapshot = Uint8List.fromList(_controller(tester).bytes);
+      await tester.tap(_save);
+      await tester.pumpAndSettle();
+      await tester.tap(_close);
+      await tester.pumpAndSettle();
+      await tester.tap(
+        find.descendant(of: _unsaved, matching: find.text('Export a copy')),
+      );
+      await tester.pumpAndSettle();
+      expect(store.writes, hasLength(1));
+      expect(store.copyNames, isEmpty);
+      expect(recovered.single, orderedEquals(snapshot));
+      expect(find.text('Close after saving a copy?'), findsOneWidget);
+      await tester.tap(find.text('Cancel'));
+      await tester.pumpAndSettle();
+      expect(find.text('sample.pdf *'), findsOneWidget);
+    },
+  );
 
-  testWidgets('canceling device export leaves the edited document open',
-      (tester) async {
+  testWidgets('canceling device export leaves the edited document open', (
+    tester,
+  ) async {
     final store = _MemoryPdfStore();
     await _open(tester, store, exporter: (_, name) async => null);
     await _rotate(tester);
@@ -271,34 +309,50 @@ void main() {
     expect(find.text('Close after saving a copy?'), findsNothing);
   });
 
-  testWidgets('the redaction shortcut cannot arm a disabled redaction tool',
-      (tester) async {
+  testWidgets('the redaction shortcut cannot arm a disabled redaction tool', (
+    tester,
+  ) async {
     await _open(tester, _MemoryPdfStore());
-    expect(tester.widget<PdfEditorView>(find.byType(PdfEditorView))
-        .features.tools, isNot(contains(PdfEditTool.redact)));
+    expect(
+      tester.widget<PdfEditorView>(find.byType(PdfEditorView)).features.tools,
+      isNot(contains(PdfEditTool.redact)),
+    );
     await tester.sendKeyEvent(LogicalKeyboardKey.keyK);
     await tester.pumpAndSettle();
     expect(_controller(tester).tool, isNot(PdfEditTool.redact));
   });
 
-  testWidgets('XFA forms get an explanation without an editable surface',
-      (tester) async {
-    await _open(tester, _MemoryPdfStore(input: buildPdfEditorFixture(xfa: true)));
+  testWidgets('XFA forms get an explanation without an editable surface', (
+    tester,
+  ) async {
+    await _open(
+      tester,
+      _MemoryPdfStore(input: buildPdfEditorFixture(xfa: true)),
+    );
     expect(find.byType(PdfEditorView), findsNothing);
-    expect(find.textContaining('XFA forms cannot be edited here.'), findsOneWidget);
+    expect(
+      find.textContaining('XFA forms cannot be edited here.'),
+      findsOneWidget,
+    );
     expect(_save, findsNothing);
   });
 
-  testWidgets('a PDF with signatures can only save to a separate copy',
-      (tester) async {
+  testWidgets('a PDF with signatures can only save to a separate copy', (
+    tester,
+  ) async {
     final store = _MemoryPdfStore(input: buildPdfEditorFixture(signed: true));
     await _open(tester, store);
-    expect(find.textContaining('Save a copy to preserve the signed original.'),
-        findsOneWidget);
+    expect(
+      find.textContaining('Save a copy to preserve the signed original.'),
+      findsOneWidget,
+    );
     await _rotate(tester);
     await tester.tap(_save);
     await tester.pumpAndSettle();
-    await tester.enterText(find.byKey(const ValueKey('pdf-copy-name')), 'copy.pdf');
+    await tester.enterText(
+      find.byKey(const ValueKey('pdf-copy-name')),
+      'copy.pdf',
+    );
     await tester.tap(find.widgetWithText(FilledButton, 'Save a copy'));
     await tester.pumpAndSettle();
     expect(store.writes, isEmpty);

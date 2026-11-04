@@ -14,11 +14,8 @@ import 'package:path/path.dart' as p;
 
 Uint8List _bytes(int value) => Uint8List.fromList([37, 80, 68, 70, value]);
 
-FileItem _file(String path) => FileItem(
-      name: path.split('/').last,
-      path: path,
-      isFolder: false,
-    );
+FileItem _file(String path) =>
+    FileItem(name: path.split('/').last, path: path, isFolder: false);
 
 void main() {
   group('remote PDF saves', () {
@@ -37,33 +34,37 @@ void main() {
       );
     });
 
-    test('loads fresh bytes, saves through the captured client and invalidates',
-        () async {
-      expect(await store.load(), _bytes(1));
-      expect(cache.reads, 0);
-      expect(client.downloads, 1);
+    test(
+      'loads fresh bytes, saves through the captured client and invalidates',
+      () async {
+        expect(await store.load(), _bytes(1));
+        expect(cache.reads, 0);
+        expect(client.downloads, 1);
 
-      expect(await store.save(_bytes(2)), PdfSaveOutcome.savedOriginal);
-      expect(client.files['/docs/report.pdf'], _bytes(2));
-      expect(client.uploads, ['/docs/report.pdf']);
-      expect(cache.removed, ['test-cloud:/docs/report.pdf']);
+        expect(await store.save(_bytes(2)), PdfSaveOutcome.savedOriginal);
+        expect(client.files['/docs/report.pdf'], _bytes(2));
+        expect(client.uploads, ['/docs/report.pdf']);
+        expect(cache.removed, ['test-cloud:/docs/report.pdf']);
 
-      // Subsequent saves compare against the bytes just saved, not open-time.
-      expect(await store.save(_bytes(3)), PdfSaveOutcome.savedOriginal);
-      expect(client.files['/docs/report.pdf'], _bytes(3));
-    });
+        // Subsequent saves compare against the bytes just saved, not open-time.
+        expect(await store.save(_bytes(3)), PdfSaveOutcome.savedOriginal);
+        expect(client.files['/docs/report.pdf'], _bytes(3));
+      },
+    );
 
-    test('hash check catches same-size changes without metadata revisions',
-        () async {
-      await store.load();
-      client.files['/docs/report.pdf'] = _bytes(9);
-      await expectLater(
-        store.save(_bytes(2)),
-        throwsA(isA<PdfSaveConflictException>()),
-      );
-      expect(client.uploads, isEmpty);
-      expect(client.files['/docs/report.pdf'], _bytes(9));
-    });
+    test(
+      'hash check catches same-size changes without metadata revisions',
+      () async {
+        await store.load();
+        client.files['/docs/report.pdf'] = _bytes(9);
+        await expectLater(
+          store.save(_bytes(2)),
+          throwsA(isA<PdfSaveConflictException>()),
+        );
+        expect(client.uploads, isEmpty);
+        expect(client.files['/docs/report.pdf'], _bytes(9));
+      },
+    );
 
     test('checks provider revision even when bytes have not changed', () async {
       client.revision = 'v1';
@@ -73,7 +74,11 @@ void main() {
         store.save(_bytes(2)),
         throwsA(isA<PdfSaveConflictException>()),
       );
-      expect(client.downloads, 1, reason: 'A known revision conflict needs no GET');
+      expect(
+        client.downloads,
+        1,
+        reason: 'A known revision conflict needs no GET',
+      );
       expect(client.uploads, isEmpty);
     });
 
@@ -126,20 +131,25 @@ void main() {
       expect(client.uploads, isEmpty);
     });
 
-    test('Save copy rejects occupied targets and leaves the original baseline',
-        () async {
-      await store.load();
-      client.files['/docs/copy.pdf'] = _bytes(8);
-      await expectLater(
-        store.saveCopy(_bytes(2), 'copy.pdf'),
-        throwsA(isA<PdfSaveConflictException>()),
-      );
-      expect(client.files['/docs/copy.pdf'], _bytes(8));
-      expect(await store.saveCopy(_bytes(2), 'new-copy'), PdfSaveOutcome.savedCopy);
-      expect(client.files['/docs/new-copy.pdf'], _bytes(2));
-      expect(client.files['/docs/report.pdf'], _bytes(1));
-      expect(await store.save(_bytes(3)), PdfSaveOutcome.savedOriginal);
-    });
+    test(
+      'Save copy rejects occupied targets and leaves the original baseline',
+      () async {
+        await store.load();
+        client.files['/docs/copy.pdf'] = _bytes(8);
+        await expectLater(
+          store.saveCopy(_bytes(2), 'copy.pdf'),
+          throwsA(isA<PdfSaveConflictException>()),
+        );
+        expect(client.files['/docs/copy.pdf'], _bytes(8));
+        expect(
+          await store.saveCopy(_bytes(2), 'new-copy'),
+          PdfSaveOutcome.savedCopy,
+        );
+        expect(client.files['/docs/new-copy.pdf'], _bytes(2));
+        expect(client.files['/docs/report.pdf'], _bytes(1));
+        expect(await store.save(_bytes(3)), PdfSaveOutcome.savedOriginal);
+      },
+    );
 
     test('a masked lookup failure cannot overwrite an existing copy', () async {
       await store.load();
@@ -153,32 +163,34 @@ void main() {
       expect(client.uploads, isEmpty);
     });
 
-    test('copy creation fails closed on unavailable or masked folder listings',
-        () async {
-      await store.load();
-      client.failListing = true;
-      await expectLater(
-        store.saveCopy(_bytes(2), 'copy.pdf'),
-        throwsA(isA<PdfSaveConflictException>()),
-      );
-      client.failListing = false;
-      for (final listing in <Map<String, dynamic>>[
-        {'files': <dynamic>[], 'folders': <dynamic>[]},
-        {'folders': <dynamic>[]},
-        {
-          'files': [null],
-          'folders': <dynamic>[],
-        },
-      ]) {
-        client.listingOverride = listing;
+    test(
+      'copy creation fails closed on unavailable or masked folder listings',
+      () async {
+        await store.load();
+        client.failListing = true;
         await expectLater(
           store.saveCopy(_bytes(2), 'copy.pdf'),
           throwsA(isA<PdfSaveConflictException>()),
         );
-      }
-      expect(client.files['/docs/report.pdf'], _bytes(1));
-      expect(client.uploads, isEmpty);
-    });
+        client.failListing = false;
+        for (final listing in <Map<String, dynamic>>[
+          {'files': <dynamic>[], 'folders': <dynamic>[]},
+          {'folders': <dynamic>[]},
+          {
+            'files': [null],
+            'folders': <dynamic>[],
+          },
+        ]) {
+          client.listingOverride = listing;
+          await expectLater(
+            store.saveCopy(_bytes(2), 'copy.pdf'),
+            throwsA(isA<PdfSaveConflictException>()),
+          );
+        }
+        expect(client.files['/docs/report.pdf'], _bytes(1));
+        expect(client.uploads, isEmpty);
+      },
+    );
 
     test('copy creation rejects case aliases and folder collisions', () async {
       await store.load();
@@ -200,53 +212,74 @@ void main() {
     test('a changed original can be saved as a verified new copy', () async {
       await store.load();
       client.files['/docs/report.pdf'] = _bytes(9);
-      expect(await store.saveCopy(_bytes(2), 'copy.pdf'), PdfSaveOutcome.savedCopy);
+      expect(
+        await store.saveCopy(_bytes(2), 'copy.pdf'),
+        PdfSaveOutcome.savedCopy,
+      );
       expect(client.files['/docs/report.pdf'], _bytes(9));
       expect(client.files['/docs/copy.pdf'], _bytes(2));
     });
 
-    test('a removed original cannot authorize an unverifiable copy destination',
-        () async {
-      await store.load();
-      client.files.remove('/docs/report.pdf');
-      await expectLater(
-        store.saveCopy(_bytes(2), 'copy.pdf'),
-        throwsA(isA<PdfSaveConflictException>()),
-      );
-      expect(client.uploads, isEmpty);
-    });
+    test(
+      'a removed original cannot authorize an unverifiable copy destination',
+      () async {
+        await store.load();
+        client.files.remove('/docs/report.pdf');
+        await expectLater(
+          store.saveCopy(_bytes(2), 'copy.pdf'),
+          throwsA(isA<PdfSaveConflictException>()),
+        );
+        expect(client.uploads, isEmpty);
+      },
+    );
 
-    test('an account switch during copy verification blocks the write', () async {
-      await store.load();
-      client.afterListing = () => client.accountUserId = 'user-2';
-      await expectLater(
-        store.saveCopy(_bytes(2), 'copy.pdf'),
-        throwsA(isA<PdfAccountChangedException>()),
-      );
-      expect(client.uploads, isEmpty);
-    });
+    test(
+      'an account switch during copy verification blocks the write',
+      () async {
+        await store.load();
+        client.afterListing = () => client.accountUserId = 'user-2';
+        await expectLater(
+          store.saveCopy(_bytes(2), 'copy.pdf'),
+          throwsA(isA<PdfAccountChangedException>()),
+        );
+        expect(client.uploads, isEmpty);
+      },
+    );
 
-    test('copy names cannot traverse directories or name the original', () async {
-      await store.load();
-      for (final name in ['../report.pdf', '/report.pdf', r'..\report.pdf', '']) {
-        await expectLater(store.saveCopy(_bytes(2), name), throwsArgumentError);
-      }
-      await expectLater(
-        store.saveCopy(_bytes(2), 'report.pdf'),
-        throwsA(isA<PdfSaveConflictException>()),
-      );
-      expect(client.uploads, isEmpty);
-    });
+    test(
+      'copy names cannot traverse directories or name the original',
+      () async {
+        await store.load();
+        for (final name in [
+          '../report.pdf',
+          '/report.pdf',
+          r'..\report.pdf',
+          '',
+        ]) {
+          await expectLater(
+            store.saveCopy(_bytes(2), name),
+            throwsArgumentError,
+          );
+        }
+        await expectLater(
+          store.saveCopy(_bytes(2), 'report.pdf'),
+          throwsA(isA<PdfSaveConflictException>()),
+        );
+        expect(client.uploads, isEmpty);
+      },
+    );
 
-    test('post-write metadata/cache failures do not turn a success into failure',
-        () async {
-      await store.load();
-      client.failMetadataAfterUpload = true;
-      cache.failRemove = true;
-      expect(await store.save(_bytes(2)), PdfSaveOutcome.savedOriginal);
-      expect(client.files['/docs/report.pdf'], _bytes(2));
-      expect(cache.removed, ['test-cloud:/docs/report.pdf']);
-    });
+    test(
+      'post-write metadata/cache failures do not turn a success into failure',
+      () async {
+        await store.load();
+        client.failMetadataAfterUpload = true;
+        cache.failRemove = true;
+        expect(await store.save(_bytes(2)), PdfSaveOutcome.savedOriginal);
+        expect(client.files['/docs/report.pdf'], _bytes(2));
+        expect(cache.removed, ['test-cloud:/docs/report.pdf']);
+      },
+    );
 
     test('refuses an oversized source before downloading it', () async {
       client.reportedSize = kPdfEditorInputLimitBytes + 1;
@@ -279,15 +312,21 @@ void main() {
       expect(client.uploads, ['/docs/report.pdf']);
     });
 
-    test('a loading baseline cannot be replaced by another operation', () async {
-      client.downloadGate = Completer<void>();
-      final loading = store.load();
-      await expectLater(store.load(), throwsStateError);
-      await expectLater(store.saveCopy(_bytes(2), 'copy.pdf'), throwsStateError);
-      client.downloadGate!.complete();
-      expect(await loading, _bytes(1));
-      expect(client.uploads, isEmpty);
-    });
+    test(
+      'a loading baseline cannot be replaced by another operation',
+      () async {
+        client.downloadGate = Completer<void>();
+        final loading = store.load();
+        await expectLater(store.load(), throwsStateError);
+        await expectLater(
+          store.saveCopy(_bytes(2), 'copy.pdf'),
+          throwsStateError,
+        );
+        client.downloadGate!.complete();
+        expect(await loading, _bytes(1));
+        expect(client.uploads, isEmpty);
+      },
+    );
   });
 
   group('local PDF saves', () {
@@ -307,14 +346,16 @@ void main() {
 
     tearDown(() async => dir.delete(recursive: true));
 
-    test('writes through the platform service and removes staging files',
-        () async {
-      await store.load();
-      expect(await store.save(_bytes(2)), PdfSaveOutcome.savedOriginal);
-      expect(await original.readAsBytes(), _bytes(2));
-      expect(await dir.list().length, 1);
-      expect(await store.save(_bytes(3)), PdfSaveOutcome.savedOriginal);
-    });
+    test(
+      'writes through the platform service and removes staging files',
+      () async {
+        await store.load();
+        expect(await store.save(_bytes(2)), PdfSaveOutcome.savedOriginal);
+        expect(await original.readAsBytes(), _bytes(2));
+        expect(await dir.list().length, 1);
+        expect(await store.save(_bytes(3)), PdfSaveOutcome.savedOriginal);
+      },
+    );
 
     test('does not overwrite an external same-size edit', () async {
       await store.load();
@@ -335,7 +376,10 @@ void main() {
         throwsA(isA<PdfSaveConflictException>()),
       );
       expect(await copy.readAsBytes(), _bytes(8));
-      expect(await store.saveCopy(_bytes(2), 'new.pdf'), PdfSaveOutcome.savedCopy);
+      expect(
+        await store.saveCopy(_bytes(2), 'new.pdf'),
+        PdfSaveOutcome.savedCopy,
+      );
       expect(await original.readAsBytes(), _bytes(1));
       expect(await File('${dir.path}/new.pdf').readAsBytes(), _bytes(2));
     });
@@ -355,46 +399,56 @@ void main() {
       final chmod = await Process.run('chmod', ['400', original.path]);
       expect(chmod.exitCode, 0);
       await store.load();
-      await expectLater(store.save(_bytes(2)), throwsA(isA<FileSystemException>()));
+      await expectLater(
+        store.save(_bytes(2)),
+        throwsA(isA<FileSystemException>()),
+      );
       expect(await original.readAsBytes(), _bytes(1));
       expect((await original.stat()).mode & 0xfff, 0x100);
       expect(await dir.list().length, 1, reason: 'Failed staging is removed');
     });
 
-    test('symlink editing fails without replacing the link or its target',
-        () async {
-      if (Platform.isWindows) return;
-      final link = Link('${dir.path}/link.pdf');
-      await link.create(original.path);
-      store = PdfFileStore.local(
-        service: DesktopFileService(),
-        file: _file(link.path),
-      );
-      await store.load();
-      await expectLater(store.save(_bytes(2)), throwsA(isA<FileSystemException>()));
-      expect(await link.exists(), isTrue);
-      expect(await original.readAsBytes(), _bytes(1));
-    });
+    test(
+      'symlink editing fails without replacing the link or its target',
+      () async {
+        if (Platform.isWindows) return;
+        final link = Link('${dir.path}/link.pdf');
+        await link.create(original.path);
+        store = PdfFileStore.local(
+          service: DesktopFileService(),
+          file: _file(link.path),
+        );
+        await store.load();
+        await expectLater(
+          store.save(_bytes(2)),
+          throwsA(isA<FileSystemException>()),
+        );
+        expect(await link.exists(), isTrue);
+        expect(await original.readAsBytes(), _bytes(1));
+      },
+    );
   });
 
-  test('fresh browser read and download outcome remain distinct from overwrite',
-      () async {
-    final service = _BrowserFiles();
-    final store = PdfFileStore.local(
-      service: service,
-      file: _file('/picked/report.pdf'),
-    );
-    final session = PdfEditSession(initialBytes: await store.load());
-    addTearDown(session.dispose);
-    expect(service.freshReads, 1);
-    expect(service.legacyReads, 0);
-    session.updateBytes(_bytes(2));
-    expect(await session.save(store.save), PdfSaveOutcome.downloadedCopy);
-    expect(session.isDirty, isTrue);
-    expect(service.current, _bytes(1));
-    expect(service.freshReads, 2);
-    expect(service.downloaded, _bytes(2));
-  });
+  test(
+    'fresh browser read and download outcome remain distinct from overwrite',
+    () async {
+      final service = _BrowserFiles();
+      final store = PdfFileStore.local(
+        service: service,
+        file: _file('/picked/report.pdf'),
+      );
+      final session = PdfEditSession(initialBytes: await store.load());
+      addTearDown(session.dispose);
+      expect(service.freshReads, 1);
+      expect(service.legacyReads, 0);
+      session.updateBytes(_bytes(2));
+      expect(await session.save(store.save), PdfSaveOutcome.downloadedCopy);
+      expect(session.isDirty, isTrue);
+      expect(service.current, _bytes(1));
+      expect(service.freshReads, 2);
+      expect(service.downloaded, _bytes(2));
+    },
+  );
 }
 
 class _Cloud implements CloudStorageClient {
@@ -439,12 +493,16 @@ class _Cloud implements CloudStorageClient {
   @override
   Future<Map<String, dynamic>> listPath(String path) async {
     if (failListing) throw StateError('Listing is unavailable');
-    final listing = listingOverride ??
+    final listing =
+        listingOverride ??
         {
           'files': [
             for (final entry in files.entries)
               if (p.posix.dirname(entry.key) == path)
-                {'name': p.posix.basename(entry.key), 'size': entry.value.length},
+                {
+                  'name': p.posix.basename(entry.key),
+                  'size': entry.value.length,
+                },
           ],
           'folders': <Map<String, dynamic>>[],
         };

@@ -7564,8 +7564,8 @@ class _PdfViewerState extends State<PdfViewer>
         stock(
             'link', l10n.linkDialogTitle, Icons.link, _addLinkToTextSelection),
         if (widget.textSelectionRedaction)
-          stock(
-              'redact', l10n.tbToolRedact, Icons.gradient, _redactTextSelection),
+          stock('redact', l10n.tbToolRedact, Icons.gradient,
+              _redactTextSelection),
       ],
       stock('select-all', l10n.viewerSelectAll, Icons.select_all,
           () => _selectAllTextOn(page),
@@ -9322,7 +9322,8 @@ class _PdfViewerState extends State<PdfViewer>
       onAddLink: widget.editing != null && widget.textSelectionMarkup
           ? _addLinkToTextSelection
           : null,
-      onRedact: widget.editing != null && widget.textSelectionMarkup &&
+      onRedact: widget.editing != null &&
+              widget.textSelectionMarkup &&
               widget.textSelectionRedaction
           ? _redactTextSelection
           : null,

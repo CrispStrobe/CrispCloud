@@ -32,7 +32,8 @@ void main() {
     await tester.pump();
   }
 
-  testWidgets('excluded redaction cannot be armed by commands or group defaults',
+  testWidgets(
+      'excluded redaction cannot be armed by commands or group defaults',
       (tester) async {
     final editing = session();
     final commands = PdfEditorCommands(
@@ -81,14 +82,17 @@ void main() {
 
     await pumpHost(tester, panel(false));
     expect(preferences.searchRedactExpanded, isTrue);
-    expect(find.byKey(const ValueKey('pdf-search-redact-toggle')), findsNothing);
+    expect(
+        find.byKey(const ValueKey('pdf-search-redact-toggle')), findsNothing);
     expect(find.byKey(const ValueKey('pdf-search-redact-one')), findsNothing);
     expect(find.byKey(const ValueKey('pdf-search-redact-all')), findsNothing);
-    expect(find.byKey(const ValueKey('pdf-search-replace-toggle')), findsOneWidget);
+    expect(find.byKey(const ValueKey('pdf-search-replace-toggle')),
+        findsOneWidget);
 
     // Prove that the persisted expansion is present and only the gate hides it.
     await pumpHost(tester, panel(true));
-    expect(find.byKey(const ValueKey('pdf-search-redact-toggle')), findsOneWidget);
+    expect(
+        find.byKey(const ValueKey('pdf-search-redact-toggle')), findsOneWidget);
     expect(find.byKey(const ValueKey('pdf-search-redact-all')), findsOneWidget);
     await pumpHost(tester, panel(false));
     expect(find.byKey(const ValueKey('pdf-search-redact-all')), findsNothing);
@@ -196,7 +200,8 @@ void main() {
     await gesture.up();
     await tester.pump();
     expect(state.viewer.hasSelection, isTrue);
-    expect(find.byKey(const ValueKey('pdf-text-selection-chip')), findsOneWidget);
+    expect(
+        find.byKey(const ValueKey('pdf-text-selection-chip')), findsOneWidget);
     expect(find.byKey(const ValueKey('pdf-text-selection-chip-redact')),
         findsNothing);
     expect(find.byKey(const ValueKey('pdf-text-selection-chip-markup')),

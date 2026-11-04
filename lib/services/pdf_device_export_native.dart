@@ -21,11 +21,11 @@ class NativePdfDeviceExport {
     LocalFileService? files,
     bool? useNativeDocumentExport,
     bool? requestMacOSFolderAccess,
-  })  : _picker = picker ?? FilePicker.platform,
-        _files = files ?? LocalFileService(),
-        _useNativeDocumentExport =
-            useNativeDocumentExport ?? (Platform.isAndroid || Platform.isIOS),
-        _requestMacOSFolderAccess = requestMacOSFolderAccess ?? Platform.isMacOS;
+  }) : _picker = picker ?? FilePicker.platform,
+       _files = files ?? LocalFileService(),
+       _useNativeDocumentExport =
+           useNativeDocumentExport ?? (Platform.isAndroid || Platform.isIOS),
+       _requestMacOSFolderAccess = requestMacOSFolderAccess ?? Platform.isMacOS;
 
   final FilePicker _picker;
   final LocalFileService _files;
@@ -45,7 +45,8 @@ class NativePdfDeviceExport {
       lockParentWindow: true,
     );
     if (path == null) return null;
-    if (path.isEmpty) throw StateError('The save dialog returned no destination.');
+    if (path.isEmpty)
+      throw StateError('The save dialog returned no destination.');
     if (_useNativeDocumentExport) return PdfSaveOutcome.savedCopy;
 
     // Use exactly the path confirmed by the native save dialog, which owns

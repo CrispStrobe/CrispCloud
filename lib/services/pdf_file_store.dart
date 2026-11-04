@@ -132,7 +132,9 @@ abstract class _PdfFileStoreBase implements PdfFileStore {
         fileName == '.' ||
         fileName == '..' ||
         RegExp(r'[<>:"/\\|?*\x00-\x1f]').hasMatch(fileName)) {
-      throw ArgumentError('Enter a filename without directories or separators.');
+      throw ArgumentError(
+        'Enter a filename without directories or separators.',
+      );
     }
     if (!fileName.toLowerCase().endsWith('.pdf')) fileName = '$fileName.pdf';
     final context = isRemote || kIsWeb ? p.posix : p.context;
@@ -159,7 +161,7 @@ abstract class _PdfFileStoreBase implements PdfFileStore {
 
 class _LocalPdfFileStore extends _PdfFileStoreBase {
   _LocalPdfFileStore({required this.service, required FileItem file})
-      : super(file, file.path ?? file.xFile?.path ?? file.name);
+    : super(file, file.path ?? file.xFile?.path ?? file.name);
 
   final LocalFileService service;
 
@@ -186,37 +188,37 @@ class _LocalPdfFileStore extends _PdfFileStoreBase {
 
   @override
   Future<Uint8List> load() => guardLoad(() async {
-        // fileLength/readFileForEdit checks current size, including FSA handles.
-        final bytes = await _read(kPdfEditorInputLimitBytes);
-        _PdfFileStoreBase.assertSize(bytes.length, kPdfEditorInputLimitBytes);
-        baselineDigest = _PdfFileStoreBase.digest(bytes);
-        return Uint8List.fromList(bytes);
-      });
+    // fileLength/readFileForEdit checks current size, including FSA handles.
+    final bytes = await _read(kPdfEditorInputLimitBytes);
+    _PdfFileStoreBase.assertSize(bytes.length, kPdfEditorInputLimitBytes);
+    baselineDigest = _PdfFileStoreBase.digest(bytes);
+    return Uint8List.fromList(bytes);
+  });
 
   @override
   Future<PdfSaveOutcome> save(Uint8List bytes) => guardWrite(() async {
-        assertLoaded();
-        final snapshot = outputSnapshot(bytes);
-        Uint8List current;
-        try {
-          current = await _read(kPdfEditorOutputLimitBytes);
-        } catch (_) {
-          throw const PdfSaveConflictException(
-            'The original file could not be verified. Save a separate copy.',
-          );
-        }
-        if (_PdfFileStoreBase.digest(current) != baselineDigest) {
-          throw const PdfSaveConflictException(
-            'The original file changed outside this editor. Save a separate copy.',
-          );
-        }
-        final result = await service.saveFileReportingResult(path, snapshot);
-        if (result == LocalFileSaveResult.downloadedCopy) {
-          return PdfSaveOutcome.downloadedCopy;
-        }
-        baselineDigest = _PdfFileStoreBase.digest(snapshot);
-        return PdfSaveOutcome.savedOriginal;
-      });
+    assertLoaded();
+    final snapshot = outputSnapshot(bytes);
+    Uint8List current;
+    try {
+      current = await _read(kPdfEditorOutputLimitBytes);
+    } catch (_) {
+      throw const PdfSaveConflictException(
+        'The original file could not be verified. Save a separate copy.',
+      );
+    }
+    if (_PdfFileStoreBase.digest(current) != baselineDigest) {
+      throw const PdfSaveConflictException(
+        'The original file changed outside this editor. Save a separate copy.',
+      );
+    }
+    final result = await service.saveFileReportingResult(path, snapshot);
+    if (result == LocalFileSaveResult.downloadedCopy) {
+      return PdfSaveOutcome.downloadedCopy;
+    }
+    baselineDigest = _PdfFileStoreBase.digest(snapshot);
+    return PdfSaveOutcome.savedOriginal;
+  });
 
   @override
   Future<PdfSaveOutcome> saveCopy(Uint8List bytes, String fileName) =>
@@ -252,9 +254,9 @@ class _RemotePdfFileStore extends _PdfFileStoreBase {
     required this.cache,
     required FileItem file,
     this.isCurrentAccount,
-  })  : _userId = client.userId,
-        _bucketId = client.bucketId,
-        super(file, file.path ?? p.posix.join('/', file.name));
+  }) : _userId = client.userId,
+       _bucketId = client.bucketId,
+       super(file, file.path ?? p.posix.join('/', file.name));
 
   static const _log = Log('PdfFileStore');
   final CloudStorageClient client;
@@ -306,7 +308,9 @@ class _RemotePdfFileStore extends _PdfFileStoreBase {
   }
 
   static bool _changed(Map<String, String> before, Map<String, String> after) =>
-      before.keys.any((key) => after.containsKey(key) && before[key] != after[key]);
+      before.keys.any(
+        (key) => after.containsKey(key) && before[key] != after[key],
+      );
 
   Future<Uint8List> _download(int limit) async {
     final bytes = await client.downloadFileBytes(path);
@@ -316,60 +320,60 @@ class _RemotePdfFileStore extends _PdfFileStoreBase {
 
   @override
   Future<Uint8List> load() => guardLoad(() async {
-        _assertAccount();
-        final before = await _metadata(kPdfEditorInputLimitBytes);
-        final bytes = await _download(kPdfEditorInputLimitBytes);
-        final after = await _metadata(kPdfEditorInputLimitBytes);
-        _assertAccount();
-        if (_changed(before, after)) {
-          throw const PdfSaveConflictException(
-            'The PDF changed while it was opening. Reopen the current file.',
-          );
-        }
-        _revision = after.isEmpty ? before : after;
-        baselineDigest = _PdfFileStoreBase.digest(bytes);
-        return Uint8List.fromList(bytes);
-      });
+    _assertAccount();
+    final before = await _metadata(kPdfEditorInputLimitBytes);
+    final bytes = await _download(kPdfEditorInputLimitBytes);
+    final after = await _metadata(kPdfEditorInputLimitBytes);
+    _assertAccount();
+    if (_changed(before, after)) {
+      throw const PdfSaveConflictException(
+        'The PDF changed while it was opening. Reopen the current file.',
+      );
+    }
+    _revision = after.isEmpty ? before : after;
+    baselineDigest = _PdfFileStoreBase.digest(bytes);
+    return Uint8List.fromList(bytes);
+  });
 
   @override
   Future<PdfSaveOutcome> save(Uint8List bytes) => guardWrite(() async {
-        assertLoaded();
-        _assertAccount();
-        final snapshot = outputSnapshot(bytes);
-        final before = await _metadata(kPdfEditorOutputLimitBytes);
-        if (_changed(_revision, before)) _throwConflict();
-        Uint8List current;
-        try {
-          current = await _download(kPdfEditorOutputLimitBytes);
-        } catch (_) {
-          throw const PdfSaveConflictException(
-            'The original PDF could not be verified. Save a separate copy.',
-          );
-        }
-        if (_PdfFileStoreBase.digest(current) != baselineDigest) _throwConflict();
-        final after = await _metadata(kPdfEditorOutputLimitBytes);
-        if (_changed(before, after)) _throwConflict();
-        _assertAccount();
+    assertLoaded();
+    _assertAccount();
+    final snapshot = outputSnapshot(bytes);
+    final before = await _metadata(kPdfEditorOutputLimitBytes);
+    if (_changed(_revision, before)) _throwConflict();
+    Uint8List current;
+    try {
+      current = await _download(kPdfEditorOutputLimitBytes);
+    } catch (_) {
+      throw const PdfSaveConflictException(
+        'The original PDF could not be verified. Save a separate copy.',
+      );
+    }
+    if (_PdfFileStoreBase.digest(current) != baselineDigest) _throwConflict();
+    final after = await _metadata(kPdfEditorOutputLimitBytes);
+    if (_changed(before, after)) _throwConflict();
+    _assertAccount();
 
-        // The generic upload API has no If-Match/precondition. Do not claim
-        // that the above check makes this overwrite atomic.
-        await client.uploadFile(
-          snapshot,
-          p.posix.basename(path),
-          p.posix.dirname(path),
-        );
-        baselineDigest = _PdfFileStoreBase.digest(snapshot);
-        // Once upload succeeded, a cache/metadata failure must not turn it
-        // into a failed save and encourage a duplicate write.
-        _revision = const {};
-        try {
-          _revision = await _metadata(kPdfEditorOutputLimitBytes);
-        } catch (error, stack) {
-          _log.warn('Could not refresh PDF revision after upload', error, stack);
-        }
-        await _invalidate(path);
-        return PdfSaveOutcome.savedOriginal;
-      });
+    // The generic upload API has no If-Match/precondition. Do not claim
+    // that the above check makes this overwrite atomic.
+    await client.uploadFile(
+      snapshot,
+      p.posix.basename(path),
+      p.posix.dirname(path),
+    );
+    baselineDigest = _PdfFileStoreBase.digest(snapshot);
+    // Once upload succeeded, a cache/metadata failure must not turn it
+    // into a failed save and encourage a duplicate write.
+    _revision = const {};
+    try {
+      _revision = await _metadata(kPdfEditorOutputLimitBytes);
+    } catch (error, stack) {
+      _log.warn('Could not refresh PDF revision after upload', error, stack);
+    }
+    await _invalidate(path);
+    return PdfSaveOutcome.savedOriginal;
+  });
 
   @override
   Future<PdfSaveOutcome> saveCopy(Uint8List bytes, String fileName) =>
@@ -427,13 +431,13 @@ class _RemotePdfFileStore extends _PdfFileStoreBase {
   }
 
   Never _throwCopyExists() => throw const PdfSaveConflictException(
-        'A file already exists with that name. Choose another filename.',
-      );
+    'A file already exists with that name. Choose another filename.',
+  );
 
   Never _throwUnverifiedCopy() => throw const PdfSaveConflictException(
-        'The original PDF is missing from the destination listing. '
-        'Download a copy instead.',
-      );
+    'The original PDF is missing from the destination listing. '
+    'Download a copy instead.',
+  );
 
   Future<void> _invalidate(String remotePath) async {
     try {
@@ -447,6 +451,6 @@ class _RemotePdfFileStore extends _PdfFileStoreBase {
   }
 
   Never _throwConflict() => throw const PdfSaveConflictException(
-        'The remote PDF changed outside this editor. Save a separate copy.',
-      );
+    'The remote PDF changed outside this editor. Save a separate copy.',
+  );
 }

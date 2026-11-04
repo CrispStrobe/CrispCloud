@@ -40,8 +40,8 @@ void main() {
     await controller.formSecretsSettled;
     expect(controller.acroForm!.fieldNamed('password')!.value, isNull);
     expect(latin1.decode(controller.bytes).contains(secret), isFalse);
-    expect(await store.read(controller.formSecretDocumentId!, 'password'),
-        secret);
+    expect(
+        await store.read(controller.formSecretDocumentId!, 'password'), secret);
 
     final reopened = PdfEditingController(
       controller.bytes,
@@ -62,7 +62,8 @@ void main() {
     addTearDown(newSession.dispose);
     await newSession.formSecretsLoaded;
     expect(
-      newSession.formFieldTextValue(newSession.acroForm!.fieldNamed('password')!),
+      newSession
+          .formFieldTextValue(newSession.acroForm!.fieldNamed('password')!),
       isNull,
     );
   });

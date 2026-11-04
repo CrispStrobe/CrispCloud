@@ -41,7 +41,12 @@ jobs:
         run: python3 -m pip install pypdf==6.10.0 cryptography
       - name: Validate generated inputs
         run: python3 tool/verify_pdf_editor_outputs.py --fixtures-only
-      - name: Persistence, origin, editor and round-trip regressions
+      - name: PDF engine round trips
+        run: flutter test test/pdf_editor_round_trip_test.dart
+      - name: Verify exported PDFs independently
+        run: python3 tool/verify_pdf_editor_outputs.py
+      - name: Persistence, origin and editor regressions
+        if: success() || failure()
         run: >-
           flutter test --concurrency=2
           test/pdf_edit_session_test.dart
@@ -49,13 +54,11 @@ jobs:
           test/pdf_device_export_test.dart
           test/panel_file_origin_test.dart
           test/widget/pdf_editor_dialog_test.dart
-          test/pdf_editor_round_trip_test.dart
           test/local_file_service_test.dart
           test/file_bytes_loader_test.dart
           test/web_file_ops_test.dart
-      - name: Verify exported PDFs independently
-        run: python3 tool/verify_pdf_editor_outputs.py
       - name: Browser editor lifecycle
+        if: success() || failure()
         run: flutter test --platform chrome test/widget/pdf_editor_dialog_test.dart
       - name: Record reviewable formatting and lockfile updates
         if: always()

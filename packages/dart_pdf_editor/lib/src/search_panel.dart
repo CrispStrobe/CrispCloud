@@ -575,7 +575,9 @@ class _PdfSearchResultsPanelState extends State<PdfSearchResultsPanel> {
                     field: _replaceField,
                     geometry: geometry,
                   ),
-                if (widget.editing != null && widget.showRedaction && _redactExpanded)
+                if (widget.editing != null &&
+                    widget.showRedaction &&
+                    _redactExpanded)
                   _RedactBar(
                     controller: controller,
                     editing: widget.editing!,

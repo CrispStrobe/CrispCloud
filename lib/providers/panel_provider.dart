@@ -219,10 +219,55 @@ class PanelNotifier extends ChangeNotifier {
   }
 
   void _recordOrigins(Iterable<FileItem> files, PanelFileOrigin origin) {
+    final listed = files.toList(growable: false);
+    // The preview uses selection.first; keeping the old object here would
+    // leave it permanently outside the exact-identity origin gate after a
+    // refresh or the native metadata pass. Resolve references while their
+    // old origin is still available, before stamping the new publication.
+    FileItem? replacement(FileItem? previous) {
+      if (previous == null) return null;
+      final before = _fileOrigins[previous];
+      if (before == null || !before.isCurrent || !origin.isCurrent ||
+          !_sameFileSource(before.source, origin.source)) {
+        return null;
+      }
+      FileItem? match;
+      for (final candidate in listed) {
+        if (candidate.isFolder != previous.isFolder) continue;
+        final matches = previous.uuid != null
+            ? candidate.uuid == previous.uuid
+            : previous.path != null
+                ? candidate.path == previous.path
+                : candidate.name == previous.name;
+        if (!matches) continue;
+        // Duplicate identifiers are ambiguous; require a new user selection.
+        if (match != null) return null;
+        match = candidate;
+      }
+      return match;
+    }
+
+    final selected = _selection.map(replacement).whereType<FileItem>().toList();
+    final lastSelected = replacement(_lastSelected);
+    final scrollTarget = replacement(_itemToScrollTo);
     _verifiedListingGeneration = _listingGeneration;
-    for (final file in files) {
+    for (final file in listed) {
       _fileOrigins[file] = origin;
     }
+    _selection..clear()..addAll(selected);
+    _lastSelected = lastSelected;
+    _itemToScrollTo = scrollTarget;
+  }
+
+  static bool _sameFileSource(PanelSource before, PanelSource after) {
+    if (before is LocalPanelSource && after is LocalPanelSource) {
+      return before.path == after.path;
+    }
+    if (before is RemotePanelSource && after is RemotePanelSource) {
+      return identical(before.client, after.client) &&
+          before.providerName == after.providerName && before.path == after.path;
+    }
+    return false;
   }
 
   PanelFileOrigin _remoteOrigin(
@@ -1365,11 +1410,17 @@ class PanelNotifier extends ChangeNotifier {
   /// Update a file item's calculated size (for inline directory size display).
   void updateItemCalculatedSize(FileItem item, int size) {
     if (_files == null) return;
-    final idx = _files!.indexOf(item);
+    final idx = _indexOfIdentical(_files!, item);
     if (idx == -1) return;
     final replacement = item.copyWith(calculatedSize: size);
     _fileOrigins[replacement] = _fileOrigins[item];
     _files![idx] = replacement;
+    final selected = _selection.map(
+      (entry) => identical(entry, item) ? replacement : entry,
+    ).toList();
+    _selection..clear()..addAll(selected);
+    if (identical(_lastSelected, item)) _lastSelected = replacement;
+    if (identical(_itemToScrollTo, item)) _itemToScrollTo = replacement;
     notifyListeners();
   }
 

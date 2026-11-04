@@ -37,7 +37,9 @@ Uint8List buildPdfEditorFixture({bool xfa = false, bool signed = false}) {
   for (final offset in offsets.skip(1)) {
     output.writeln('${offset.toString().padLeft(10, '0')} 00000 n ');
   }
-  output.write('trailer\n<< /Size ${objects.length + 1} /Root 1 0 R >>\n'
-      'startxref\n$xref\n%%EOF\n');
+  output.write(
+    'trailer\n<< /Size ${objects.length + 1} /Root 1 0 R >>\n'
+    'startxref\n$xref\n%%EOF\n',
+  );
   return Uint8List.fromList(latin1.encode(output.toString()));
 }

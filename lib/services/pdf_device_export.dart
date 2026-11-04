@@ -1,9 +1,11 @@
 import 'dart:typed_data';
 
 import 'pdf_device_export_native.dart'
-    if (dart.library.html) 'pdf_device_export_web.dart' as platform;
+    if (dart.library.html) 'pdf_device_export_web.dart'
+    as platform;
 import 'pdf_edit_session.dart';
-import 'pdf_file_store.dart' show PdfFileTooLargeException, kPdfEditorOutputLimitBytes;
+import 'pdf_file_store.dart'
+    show PdfFileTooLargeException, kPdfEditorOutputLimitBytes;
 
 typedef PdfDeviceExporter = Future<PdfSaveOutcome?> Function(
   Uint8List bytes,
@@ -24,7 +26,7 @@ Future<PdfSaveOutcome?> exportPdfCopy(Uint8List bytes, String suggestedName) =>
 /// narrow seam for testing cancellation, errors and in-flight edits.
 class PdfDeviceExport {
   PdfDeviceExport({PdfDeviceExporter? exporter})
-      : _exporter = exporter ?? platform.exportPdfCopy;
+    : _exporter = exporter ?? platform.exportPdfCopy;
 
   final PdfDeviceExporter _exporter;
 

@@ -350,9 +350,10 @@ class PdfEditorCommands extends ChangeNotifier {
     openGroupId = group.id;
     if (groupForTool(_controller.tool)?.id == group.id) return;
     final defaultTool = group.defaultTool;
-    _controller.tool = defaultTool != null && tools?.contains(defaultTool) == false
-        ? null
-        : defaultTool;
+    _controller.tool =
+        defaultTool != null && tools?.contains(defaultTool) == false
+            ? null
+            : defaultTool;
     if (_controller.tool != null) viewerController.clearSelection();
     // markup arms no tool, so its style scope is set explicitly (after the
     // tool reset above, which would otherwise clear it) - this is what lets
