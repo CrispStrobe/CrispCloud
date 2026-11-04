@@ -92,7 +92,7 @@ void showKeyboardShortcutsHelp(BuildContext context) {
           children: [
             // F-keys (DC orthodox FM)
             _shortcutRow('F1', 'This help dialog'),
-            _shortcutRow('F2', 'Rename (in-place)'),
+            _shortcutRow('F2 / Shift+F6', 'Rename (in-place)'),
             _shortcutRow('F3', 'View file (full-screen)'),
             _shortcutRow('F4', 'Edit file (built-in)'),
             _shortcutRow('Shift+F4', 'Open with system editor'),
@@ -119,6 +119,7 @@ void showKeyboardShortcutsHelp(BuildContext context) {
             _shortcutRow('Numpad +', 'Select by pattern'),
             _shortcutRow('Numpad -', 'Deselect by pattern'),
             _shortcutRow('Space / Insert', 'Mark + advance'),
+            _shortcutRow('Numpad 5', 'Select all'),
             _shortcutRow('Shift+↑/↓', 'Extend selection'),
             _shortcutRow('Escape', 'Clear selection / type-ahead'),
             const Divider(),
@@ -134,9 +135,10 @@ void showKeyboardShortcutsHelp(BuildContext context) {
             _shortcutRow('Ctrl+F4', 'Sort by extension'),
             _shortcutRow('Ctrl+F5', 'Sort by date'),
             _shortcutRow('Ctrl+F6', 'Sort by size'),
-            _shortcutRow('Ctrl+.', 'Toggle hidden files'),
+            _shortcutRow('Ctrl+. / Ctrl+H', 'Toggle hidden files'),
             _shortcutRow('Ctrl+B', 'Toggle bookmark for current folder'),
             _shortcutRow('Ctrl+I / Alt+Enter', 'File properties'),
+            _shortcutRow('Shift+F10', 'Context menu'),
             const Divider(),
             // View / Tabs
             _shortcutRow('Ctrl+1', 'Brief view mode'),

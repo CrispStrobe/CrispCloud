@@ -17,7 +17,8 @@ import '../services/panel_swap_service.dart';
 import 'package:flutter/foundation.dart' show kIsWeb;
 
 import '../widgets/command_palette.dart';
-import '../widgets/file_context_menu.dart' show openWithSystemEditor, showPropertiesDialog;
+import '../widgets/file_context_menu.dart'
+    show openWithSystemEditor, showPropertiesDialog, showFileContextMenu;
 import '../widgets/file_toolbar.dart' show showPanelFilterDialog;
 import 'screen_dialogs.dart';
 
@@ -210,6 +211,12 @@ KeyEventResult handleKeyEvent(
     return KeyEventResult.handled;
   }
 
+  // Numpad 5 - Select all (DC convention; also handled inside the list view)
+  if (event.logicalKey == LogicalKeyboardKey.numpad5) {
+    panel.selectAll();
+    return KeyEventResult.handled;
+  }
+
   // Numpad * - Invert selection (DC orthodox FM convention)
   if (event.logicalKey == LogicalKeyboardKey.numpadMultiply) {
     panel.invertSelection();
@@ -252,9 +259,9 @@ KeyEventResult handleKeyEvent(
     return KeyEventResult.handled;
   }
 
-  // F2 or Shift+F6 - In-place rename of cursor item
+  // F2 or Shift+F6 - In-place rename of cursor item (TC/DC convention)
   if (event.logicalKey == LogicalKeyboardKey.f2 ||
-      (isShift && event.logicalKey == LogicalKeyboardKey.f6)) {
+      (!isCtrl && isShift && event.logicalKey == LogicalKeyboardKey.f6)) {
     final cursor = panel.cursorItem;
     if (cursor != null && cursor.name != '..') {
       panel.startRename(cursor);
@@ -402,9 +409,27 @@ KeyEventResult handleKeyEvent(
     return KeyEventResult.handled;
   }
 
-  // Ctrl+. - Toggle hidden (dot-prefixed) files
-  if (isCtrl && event.logicalKey == LogicalKeyboardKey.period) {
+  // Ctrl+. / Ctrl+H - Toggle hidden (dot-prefixed) files
+  if (isCtrl &&
+      (event.logicalKey == LogicalKeyboardKey.period ||
+          event.logicalKey == LogicalKeyboardKey.keyH)) {
     panel.toggleShowHiddenFiles();
+    return KeyEventResult.handled;
+  }
+
+  // Shift+F10 - Context menu for the cursor item (TC/DC convention)
+  if (isShift && !isCtrl && event.logicalKey == LogicalKeyboardKey.f10) {
+    final item = panel.cursorItem;
+    if (item != null && item.name != '..') {
+      final size = MediaQuery.sizeOf(context);
+      showFileContextMenu(
+        context,
+        ref,
+        activePanel,
+        item,
+        Offset(size.width / 2, size.height / 2),
+      );
+    }
     return KeyEventResult.handled;
   }
 
