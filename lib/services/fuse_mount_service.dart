@@ -1,3 +1,4 @@
+import 'terminal_mount_failure.dart';
 // lib/services/fuse_mount_service.dart
 //
 // FuseMountService manages the lifecycle of FUSE-based mounted drives.
@@ -77,7 +78,8 @@ class MountEntry {
         remotePath: m['remotePath']!,
       );
 
-  MountEntry copyWith({MountStatus? status, String? errorMessage, int? helperPid}) =>
+  MountEntry copyWith(
+          {MountStatus? status, String? errorMessage, int? helperPid}) =>
       MountEntry(
         mountPoint: mountPoint,
         label: label,
@@ -99,17 +101,18 @@ class FuseMountService {
   static const _log = Log('FuseMountService');
 
   // Stable app-authored messages used by the mount UI for localization.
-  static const linuxMissing = 'libfuse / fusermount3 not found. Install via: sudo apt install fuse3  '
+  static const linuxMissing =
+      'libfuse / fusermount3 not found. Install via: sudo apt install fuse3  '
       '(or equivalent for your distro).';
   static const macMissing = 'macFUSE or FUSE-T not found. Install macFUSE from '
       'https://osxfuse.github.io or FUSE-T from https://www.fuse-t.org/.';
   static const winMissing = 'WinFsp not found. Install from https://winfsp.dev';
   static const unsupportedPlatform = 'Unsupported platform';
-  static const bridgeMissing = 'This build does not include the native FUSE bridge '
+  static const bridgeMissing =
+      'This build does not include the native FUSE bridge '
       'required to mount drives.';
   static const availabilityFailedPrefix = 'Error checking FUSE availability: ';
   static const createFailedPrefix = 'Cannot create mount point: ';
-
 
   // Persisted config key prefix for SharedPreferences.
   static const _prefKey = 'fuse_mounts_v1';
@@ -174,7 +177,8 @@ class FuseMountService {
 
   Future<String?> _checkMacFuse() async {
     // macFUSE installs a kext; check for the filesystem bundle.
-    if (await Directory('/Library/Filesystems/macfuse.fs').exists()) return null;
+    if (await Directory('/Library/Filesystems/macfuse.fs').exists())
+      return null;
     // FUSE-T installs its libfuse-compatible runtime in /usr/local/lib.
     for (final path in [
       '/usr/local/lib/libfuse-t.dylib',
@@ -221,7 +225,8 @@ class FuseMountService {
     final canonical = _canonicalize(mountPoint);
     if (_mounts.containsKey(canonical) &&
         _mounts[canonical]!.status == MountStatus.mounted) {
-      throw ArgumentError('Mount point "$canonical" is already mounted');
+      throw TerminalMountArgumentError(TerminalMountCode.mountDuplicate,
+          'Mount point "$canonical" is already mounted', {'path': canonical});
     }
 
     final entry = MountEntry(
@@ -361,8 +366,8 @@ class FuseMountService {
     try {
       final prefs = await SharedPreferences.getInstance();
       final list = _mounts.values
-          .map((e) => [e.mountPoint, e.label, e.provider, e.remotePath]
-              .join('\x1F'))
+          .map((e) =>
+              [e.mountPoint, e.label, e.provider, e.remotePath].join('\x1F'))
           .toList();
       await prefs.setStringList(_prefKey, list);
     } catch (e) {
@@ -376,7 +381,7 @@ class FuseMountService {
 
   void _requireDesktop() {
     if (!isSupported) {
-      throw UnsupportedError(
+      throw TerminalMountUnsupportedError(TerminalMountCode.mountUnsupported,
           'FUSE mounts are only available on macOS, Linux, and Windows desktop.');
     }
   }
@@ -391,12 +396,14 @@ class FuseMountService {
   }
 
   void _setError(String canonical, String message) {
-    _mounts[canonical] = (_mounts[canonical] ?? MountEntry(
-      mountPoint: canonical,
-      label: canonical,
-      provider: '',
-      remotePath: '',
-    )).copyWith(status: MountStatus.error, errorMessage: message);
+    _mounts[canonical] = (_mounts[canonical] ??
+            MountEntry(
+              mountPoint: canonical,
+              label: canonical,
+              provider: '',
+              remotePath: '',
+            ))
+        .copyWith(status: MountStatus.error, errorMessage: message);
     _log.warn('Mount error at $canonical: $message');
     _notify();
   }
@@ -445,9 +452,11 @@ class FuseMountService {
           _log.warn('fusermount returned ${result.exitCode}: ${result.stderr}');
         }
       } else if (Platform.isMacOS) {
-        final result = await Process.run('diskutil', ['unmount', 'force', mountPoint]);
+        final result =
+            await Process.run('diskutil', ['unmount', 'force', mountPoint]);
         if (result.exitCode != 0) {
-          _log.warn('diskutil unmount returned ${result.exitCode}: ${result.stderr}');
+          _log.warn(
+              'diskutil unmount returned ${result.exitCode}: ${result.stderr}');
         }
       } else if (Platform.isWindows) {
         // WinFsp: net use /delete or the WinFsp net command.

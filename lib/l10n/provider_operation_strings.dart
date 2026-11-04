@@ -1,4 +1,6 @@
 import 'package:flutter/widgets.dart';
+import '../services/terminal_mount_failure.dart';
+import 'terminal_mount_error_strings.dart';
 import '../services/azure_hetzner_failure.dart';
 import 'azure_hetzner_strings.dart';
 import 'remote_transport_strings.dart';
@@ -32,6 +34,8 @@ import 's3_operation_strings.dart';
 
 /// Returns null for unknown errors so each caller can retain its fallback.
 String? localizedKnownProviderError(BuildContext context, Object error) {
+  if (error is TerminalMountFailure)
+    return localizedTerminalMountError(context, error);
   if (error is AzureHetznerFailure)
     return localizedAzureHetznerError(context, error);
   final transport = localizedRemoteTransportError(context, error);

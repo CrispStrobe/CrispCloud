@@ -1,3 +1,4 @@
+import 'terminal_mount_failure.dart';
 import 'package:crisp_storage/crisp_storage.dart'
     show SshKnownHosts, HostKeyPrompt, openVerifiedSsh;
 import 'secure_storage_service.dart';
@@ -176,9 +177,8 @@ class SshTerminalService {
 
   void _checkPlatform() {
     if (!isSupported) {
-      throw UnsupportedError(
-        'SSH terminal is not supported on web.',
-      );
+      throw TerminalMountUnsupportedError(TerminalMountCode.sshUnsupported,
+          'SSH terminal is not supported on web.');
     }
   }
 
@@ -217,7 +217,8 @@ class SshTerminalService {
       await client.authenticated;
     } catch (e) {
       _log.error('SSH connect failed', e);
-      throw Exception('SSH connection failed: $e');
+      throw TerminalMountException(TerminalMountCode.sshConnection,
+          'SSH connection failed: $e', {'error': e});
     }
 
     final session = SshSession(
@@ -263,7 +264,8 @@ class SshTerminalService {
     try {
       final keyPair = _parseKeyPair(privateKey);
       if (keyPair == null) {
-        throw const FormatException('Invalid SSH private key');
+        throw const TerminalMountFormatException(
+            TerminalMountCode.sshInvalidKey, 'Invalid SSH private key');
       }
       final socket = await SSHSocket.connect(host, port,
           timeout: const Duration(seconds: 15));
@@ -276,7 +278,8 @@ class SshTerminalService {
       await client.authenticated;
     } catch (e) {
       _log.error('SSH key-connect failed', e);
-      throw Exception('SSH key-based connection failed: $e');
+      throw TerminalMountException(TerminalMountCode.sshKeyConnection,
+          'SSH key-based connection failed: $e', {'error': e});
     }
 
     final session = SshSession(
@@ -338,7 +341,8 @@ class SshTerminalService {
       return output;
     } catch (e) {
       _log.error('execute error', e);
-      throw Exception('Command execution failed: $e');
+      throw TerminalMountException(TerminalMountCode.sshCommand,
+          'Command execution failed: $e', {'error': e});
     }
   }
 

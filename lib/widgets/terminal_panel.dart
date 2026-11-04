@@ -9,6 +9,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../l10n/terminal_strings.dart';
+import '../l10n/terminal_mount_error_strings.dart';
 import '../models/panel_side.dart';
 import '../providers/providers.dart';
 import '../providers/terminal_provider.dart';
@@ -138,7 +139,8 @@ class _TerminalPanelState extends ConsumerState<TerminalPanel> {
       _sshSessionId = session.id;
       _sshLabel = '${config.username}@${config.host}';
       _isRunning = true;
-      _appendOutput('${TerminalStrings(context).value('connected', _sshLabel!)}\n');
+      _appendOutput(
+          '${TerminalStrings(context).value('connected', _sshLabel!)}\n');
       stream.listen(
         (data) => _appendOutput(_stripAnsi(data)),
         onDone: () {
@@ -148,14 +150,16 @@ class _TerminalPanelState extends ConsumerState<TerminalPanel> {
         },
         onError: (Object error) {
           if (!mounted) return;
-          _appendOutput('\n[${TerminalStrings(context).value('sshError', error)}]\n');
+          _appendOutput(
+              '\n[${TerminalStrings(context).value('sshError', localizedTerminalMountError(context, error))}]\n');
           setState(() => _isRunning = false);
         },
       );
     } catch (e) {
       if (mounted) {
         setState(() {
-          _shellError = TerminalStrings(context).value('connectError', e);
+          _shellError = TerminalStrings(context)
+              .value('connectError', localizedTerminalMountError(context, e));
           _isRunning = false;
         });
       }
@@ -231,10 +235,13 @@ class _TerminalPanelState extends ConsumerState<TerminalPanel> {
           child: Container(
             height: 6,
             color: theme.dividerColor,
-            child: Center(child: Container(
-              width: 40, height: 3,
+            child: Center(
+                child: Container(
+              width: 40,
+              height: 3,
               decoration: BoxDecoration(
-                color: theme.colorScheme.onSurfaceVariant.withValues(alpha: 0.4),
+                color:
+                    theme.colorScheme.onSurfaceVariant.withValues(alpha: 0.4),
                 borderRadius: BorderRadius.circular(2),
               ),
             )),
@@ -246,7 +253,8 @@ class _TerminalPanelState extends ConsumerState<TerminalPanel> {
           child: Row(children: [
             const Icon(Icons.terminal, size: 16),
             const SizedBox(width: 8),
-            Text(_sshLabel ?? TerminalStrings(context).text('terminal'), style: theme.textTheme.labelMedium),
+            Text(_sshLabel ?? TerminalStrings(context).text('terminal'),
+                style: theme.textTheme.labelMedium),
             const Spacer(),
             IconButton(
               icon: _sshConnecting
@@ -262,7 +270,8 @@ class _TerminalPanelState extends ConsumerState<TerminalPanel> {
               padding: EdgeInsets.zero,
             ),
             IconButton(
-              icon: const Icon(Icons.restart_alt, size: 16), tooltip: TerminalStrings(context).text('restart'),
+              icon: const Icon(Icons.restart_alt, size: 16),
+              tooltip: TerminalStrings(context).text('restart'),
               onPressed: () {
                 _shell?.kill();
                 final sshId = _sshSessionId;
@@ -280,8 +289,10 @@ class _TerminalPanelState extends ConsumerState<TerminalPanel> {
               padding: EdgeInsets.zero,
             ),
             IconButton(
-              icon: const Icon(Icons.close, size: 16), tooltip: TerminalStrings(context).text('close'),
-              onPressed: () => ref.read(showTerminalProvider.notifier).state = false,
+              icon: const Icon(Icons.close, size: 16),
+              tooltip: TerminalStrings(context).text('close'),
+              onPressed: () =>
+                  ref.read(showTerminalProvider.notifier).state = false,
               constraints: const BoxConstraints(minWidth: 28, minHeight: 28),
               padding: EdgeInsets.zero,
             ),
@@ -290,7 +301,9 @@ class _TerminalPanelState extends ConsumerState<TerminalPanel> {
         SizedBox(
           height: height - 46,
           child: Container(
-            color: theme.brightness == Brightness.dark ? const Color(0xFF1E1E1E) : const Color(0xFFF5F5F5),
+            color: theme.brightness == Brightness.dark
+                ? const Color(0xFF1E1E1E)
+                : const Color(0xFFF5F5F5),
             child: Column(children: [
               if (_shellError != null)
                 Container(
@@ -313,14 +326,19 @@ class _TerminalPanelState extends ConsumerState<TerminalPanel> {
                     ),
                   ]),
                 ),
-              Expanded(child: SingleChildScrollView(
+              Expanded(
+                  child: SingleChildScrollView(
                 controller: _outputController,
                 padding: const EdgeInsets.all(8),
                 child: SelectableText(
                   _output.toString(),
                   style: TextStyle(
                     fontFamily: 'AppMono',
-                    fontFamilyFallback: const ['Menlo', 'Consolas', 'monospace'],
+                    fontFamilyFallback: const [
+                      'Menlo',
+                      'Consolas',
+                      'monospace'
+                    ],
                     fontSize: 12,
                     height: 1.4,
                     color: theme.brightness == Brightness.dark
@@ -332,8 +350,13 @@ class _TerminalPanelState extends ConsumerState<TerminalPanel> {
               Container(
                 padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
                 child: Row(children: [
-                  Text('\$ ', style: TextStyle(fontFamily: 'monospace', fontSize: 12, color: theme.colorScheme.primary)),
-                  Expanded(child: TextField(
+                  Text('\$ ',
+                      style: TextStyle(
+                          fontFamily: 'monospace',
+                          fontSize: 12,
+                          color: theme.colorScheme.primary)),
+                  Expanded(
+                      child: TextField(
                     controller: _inputController,
                     focusNode: _inputFocusNode,
                     enabled: _isRunning,
@@ -347,8 +370,9 @@ class _TerminalPanelState extends ConsumerState<TerminalPanel> {
                       border: InputBorder.none,
                       isDense: true,
                       contentPadding: EdgeInsets.zero,
-                      hintText:
-                          _isRunning ? null : TerminalStrings(context).text('unavailable'),
+                      hintText: _isRunning
+                          ? null
+                          : TerminalStrings(context).text('unavailable'),
                     ),
                     onSubmitted: (cmd) {
                       _sendCommand(cmd);
@@ -429,7 +453,8 @@ class _SshConnectDialogState extends State<_SshConnectDialog> {
             TextField(
               controller: _host,
               autofocus: true,
-              decoration: InputDecoration(labelText: TerminalStrings(context).text('host')),
+              decoration: InputDecoration(
+                  labelText: TerminalStrings(context).text('host')),
             ),
             const SizedBox(height: 8),
             Row(
@@ -437,7 +462,8 @@ class _SshConnectDialogState extends State<_SshConnectDialog> {
                 Expanded(
                   child: TextField(
                     controller: _username,
-                    decoration: InputDecoration(labelText: TerminalStrings(context).text('username')),
+                    decoration: InputDecoration(
+                        labelText: TerminalStrings(context).text('username')),
                   ),
                 ),
                 const SizedBox(width: 8),
@@ -446,7 +472,8 @@ class _SshConnectDialogState extends State<_SshConnectDialog> {
                   child: TextField(
                     controller: _port,
                     keyboardType: TextInputType.number,
-                    decoration: InputDecoration(labelText: TerminalStrings(context).text('port')),
+                    decoration: InputDecoration(
+                        labelText: TerminalStrings(context).text('port')),
                   ),
                 ),
               ],
@@ -455,7 +482,8 @@ class _SshConnectDialogState extends State<_SshConnectDialog> {
             TextField(
               controller: _password,
               obscureText: true,
-              decoration: InputDecoration(labelText: TerminalStrings(context).text('password')),
+              decoration: InputDecoration(
+                  labelText: TerminalStrings(context).text('password')),
               onSubmitted: (_) => _submit(),
             ),
           ],
@@ -466,7 +494,9 @@ class _SshConnectDialogState extends State<_SshConnectDialog> {
           onPressed: () => Navigator.pop(context),
           child: Text(TerminalStrings(context).text('cancel')),
         ),
-        ElevatedButton(onPressed: _submit, child: Text(TerminalStrings(context).text('connect'))),
+        ElevatedButton(
+            onPressed: _submit,
+            child: Text(TerminalStrings(context).text('connect'))),
       ],
     );
   }

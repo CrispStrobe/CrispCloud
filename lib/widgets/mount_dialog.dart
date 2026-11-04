@@ -19,6 +19,7 @@ import '../services/fuse_mount_service.dart';
 import '../l10n/app_localizations.dart';
 import '../l10n/mount_dialog_strings.dart';
 import '../l10n/mount_error_presentation.dart';
+import '../l10n/terminal_mount_error_strings.dart';
 
 void showMountDialog(BuildContext context) {
   showDialog(
@@ -56,7 +57,8 @@ class _MountManagerDialog extends ConsumerWidget {
               mount.availabilityError!.isNotEmpty)
             Tooltip(
               message: localizedMountError(context, mount.availabilityError!),
-              child: const Icon(Icons.warning_amber, color: Colors.orange, size: 20),
+              child: const Icon(Icons.warning_amber,
+                  color: Colors.orange, size: 20),
             ),
         ],
       ),
@@ -69,8 +71,11 @@ class _MountManagerDialog extends ConsumerWidget {
             // Platform warning banner
             if (!mount.isSupported)
               _PlatformUnsupportedBanner()
-            else if (mount.availabilityError != null && mount.availabilityError!.isNotEmpty)
-              _FuseUnavailableBanner(message: localizedMountError(context, mount.availabilityError!)),
+            else if (mount.availabilityError != null &&
+                mount.availabilityError!.isNotEmpty)
+              _FuseUnavailableBanner(
+                  message:
+                      localizedMountError(context, mount.availabilityError!)),
 
             const SizedBox(height: 8),
 
@@ -99,7 +104,8 @@ class _MountManagerDialog extends ConsumerWidget {
           ElevatedButton.icon(
             icon: const Icon(Icons.add, size: 18),
             label: Text(MountDialogStrings(context).text('newMount')),
-            onPressed: mount.availabilityError != null && mount.availabilityError!.isNotEmpty
+            onPressed: mount.availabilityError != null &&
+                    mount.availabilityError!.isNotEmpty
                 ? null
                 : () => _showAddMountDialog(context, ref),
           ),
@@ -177,7 +183,8 @@ class _AddMountDialogState extends ConsumerState<_AddMountDialog> {
                     child: TextField(
                       controller: _mountPointController,
                       decoration: InputDecoration(
-                        labelText: MountDialogStrings(context).text('mountPoint'),
+                        labelText:
+                            MountDialogStrings(context).text('mountPoint'),
                         hintText: '/mnt/mycloud',
                         border: const OutlineInputBorder(),
                         prefixIcon: const Icon(Icons.folder_outlined),
@@ -201,11 +208,13 @@ class _AddMountDialogState extends ConsumerState<_AddMountDialog> {
                   ),
                   child: Row(
                     children: [
-                      const Icon(Icons.error_outline, color: Colors.red, size: 16),
+                      const Icon(Icons.error_outline,
+                          color: Colors.red, size: 16),
                       const SizedBox(width: 6),
                       Expanded(
                         child: Text(_error!,
-                            style: const TextStyle(fontSize: 12, color: Colors.red)),
+                            style: const TextStyle(
+                                fontSize: 12, color: Colors.red)),
                       ),
                     ],
                   ),
@@ -260,14 +269,18 @@ class _AddMountDialogState extends ConsumerState<_AddMountDialog> {
           );
       if (!context.mounted) return;
       if (entry == null || entry.status == MountStatus.error) {
+        final failure = ref.read(mountProvider).lastMountFailure;
         setState(() => _error = entry?.errorMessage == null
-            ? MountDialogStrings(context).text('failed')
+            ? (failure == null
+                ? MountDialogStrings(context).text('failed')
+                : localizedTerminalMountError(context, failure))
             : localizedMountError(context, entry!.errorMessage!));
       } else {
         Navigator.pop(context);
       }
     } catch (e) {
-      if (mounted) setState(() => _error = e.toString());
+      if (mounted)
+        setState(() => _error = localizedTerminalMountError(context, e));
     } finally {
       if (mounted) setState(() => _mounting = false);
     }
@@ -305,7 +318,8 @@ class _MountTile extends ConsumerWidget {
               message: entry.errorMessage == null
                   ? MountDialogStrings(context).text('unknown')
                   : localizedMountError(context, entry.errorMessage!),
-              child: const Icon(Icons.info_outline, size: 16, color: Colors.red),
+              child:
+                  const Icon(Icons.info_outline, size: 16, color: Colors.red),
             ),
           if (isBusy)
             const SizedBox(
@@ -317,7 +331,8 @@ class _MountTile extends ConsumerWidget {
             IconButton(
               icon: const Icon(Icons.eject, size: 20),
               tooltip: MountDialogStrings(context).text('unmount'),
-              onPressed: () => ref.read(mountProvider).unmount(entry.mountPoint),
+              onPressed: () =>
+                  ref.read(mountProvider).unmount(entry.mountPoint),
             )
           else
             IconButton(

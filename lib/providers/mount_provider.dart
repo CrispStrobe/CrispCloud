@@ -31,6 +31,8 @@ class MountNotifier extends ChangeNotifier {
   /// Cached result of the last FUSE availability check.
   /// null = not yet checked, empty string = available, otherwise the error.
   String? _availabilityError;
+  Object? _lastMountFailure;
+  Object? get lastMountFailure => _lastMountFailure;
 
   MountNotifier(this._ref) : _service = FuseMountService() {
     _service.onChanged = notifyListeners;
@@ -103,8 +105,11 @@ class MountNotifier extends ChangeNotifier {
     required String mountPoint,
     String? label,
   }) async {
+    _lastMountFailure = null;
     if (!isSupported) {
-      _ref.read(errorProvider).addError('FUSE mounts are not supported on this platform.');
+      _ref
+          .read(errorProvider)
+          .addError('FUSE mounts are not supported on this platform.');
       return null;
     }
 
@@ -116,7 +121,9 @@ class MountNotifier extends ChangeNotifier {
     try {
       final auth = _ref.read(authProvider);
       if (!auth.isConnected) {
-        _ref.read(errorProvider).addError('Connect to a cloud provider before mounting.');
+        _ref
+            .read(errorProvider)
+            .addError('Connect to a cloud provider before mounting.');
         return null;
       }
       final entry = await _service.mount(
@@ -126,14 +133,16 @@ class MountNotifier extends ChangeNotifier {
         label: label,
       );
       if (entry.status == MountStatus.error) {
-        _ref.read(errorProvider).addError(
-            'Mount failed: ${entry.errorMessage ?? "unknown error"}');
+        _ref
+            .read(errorProvider)
+            .addError('Mount failed: ${entry.errorMessage ?? "unknown error"}');
       }
       notifyListeners();
       return entry;
     } catch (e) {
       _log.error('mount() failed', e);
-      _ref.read(errorProvider).addError('Mount failed: $e');
+      _lastMountFailure = e;
+      _ref.read(errorProvider).addError('Mount failed: $e', cause: e);
       return null;
     }
   }
@@ -146,7 +155,9 @@ class MountNotifier extends ChangeNotifier {
     String? label,
   }) async {
     if (!isSupported) {
-      _ref.read(errorProvider).addError('FUSE mounts are not supported on this platform.');
+      _ref
+          .read(errorProvider)
+          .addError('FUSE mounts are not supported on this platform.');
       return null;
     }
     try {
@@ -157,8 +168,9 @@ class MountNotifier extends ChangeNotifier {
         label: label,
       );
       if (entry.status == MountStatus.error) {
-        _ref.read(errorProvider).addError(
-            'Mount failed: ${entry.errorMessage ?? "unknown error"}');
+        _ref
+            .read(errorProvider)
+            .addError('Mount failed: ${entry.errorMessage ?? "unknown error"}');
       }
       notifyListeners();
       return entry;

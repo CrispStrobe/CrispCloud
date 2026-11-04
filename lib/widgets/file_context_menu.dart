@@ -11,6 +11,7 @@ import 'dart:io';
 import 'package:share_plus/share_plus.dart';
 import '../l10n/app_localizations.dart';
 import '../l10n/file_operations_strings.dart';
+import '../l10n/link_operation_strings.dart';
 import '../models/file_item.dart';
 import '../models/panel_side.dart';
 import '../providers/providers.dart';
@@ -1895,7 +1896,7 @@ void _showCreateLinkDialog(
                 _log.warn('operation failed', e);
                 if (context.mounted) {
                   ScaffoldMessenger.of(context).showSnackBar(
-                    SnackBar(content: Text(FileOperationsStrings(context).value('linkError', e))),
+                    SnackBar(content: Text(FileOperationsStrings(context).value('linkError', localizedLinkError(context, e)))),
                   );
                 }
               }
