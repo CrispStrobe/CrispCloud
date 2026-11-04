@@ -94,6 +94,12 @@ class _PanelHeaderState extends ConsumerState<PanelHeader> {
                   panel.canNavigateForward ? panel.navigateForward : null,
             ),
             _volumeButton(panel, isLocal),
+            if (panel.isInArchive)
+              _navButton(
+                icon: Icons.close,
+                tooltip: 'Exit archive',
+                onPressed: panel.exitArchive,
+              ),
             const SizedBox(width: 2),
             Expanded(
               child: _editingPath
@@ -224,6 +230,33 @@ class _PanelHeaderState extends ConsumerState<PanelHeader> {
             accumulated.isEmpty ? '/${parts[i]}' : '$accumulated/${parts[i]}';
         crumbs.add((label: parts[i], path: accumulated));
       }
+    }
+
+    if (panel.isInArchive) {
+      final archive = panel.archiveSource!;
+      final inner = archive.innerPath;
+      return Row(
+        children: <Widget>[
+          Icon(
+            Icons.archive_outlined,
+            size: 15,
+            color: theme.colorScheme.onPrimaryContainer,
+          ),
+          const SizedBox(width: 4),
+          Expanded(
+            child: Text(
+              '${archive.archiveName}:/${inner.isEmpty ? '' : inner}',
+              maxLines: 1,
+              overflow: TextOverflow.ellipsis,
+              style: TextStyle(
+                fontSize: 12.5,
+                color: theme.colorScheme.onPrimaryContainer,
+                fontWeight: FontWeight.w600,
+              ),
+            ),
+          ),
+        ],
+      );
     }
 
     if (crumbs.isEmpty) {

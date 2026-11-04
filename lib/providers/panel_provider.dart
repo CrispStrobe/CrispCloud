@@ -699,9 +699,31 @@ class PanelNotifier extends ChangeNotifier {
 
   /// Exit the archive and restore the parent directory listing.
   void exitArchive() {
+    final source = _archiveSource;
     _archiveSource = null;
     _archiveBytes = null;
+    if (source != null) {
+      if (side == PanelSide.local) {
+        _localPath = p.dirname(source.archivePath);
+      } else {
+        _remotePath = p.posix.dirname(source.archivePath);
+      }
+    }
+    _syncTabPath();
     refresh();
+  }
+
+  /// Leave an archive and go to the home directory. Used by the error banner
+  /// when a stale archive path cannot be listed.
+  Future<void> navigateHome() async {
+    if (isInArchive) {
+      exitArchive();
+      return;
+    }
+    final path = kIsWeb
+        ? '/'
+        : (Platform.environment['HOME'] ?? '/');
+    await navigateToPath(path);
   }
 
   Future<void> _loadArchiveFiles() async {
@@ -1286,7 +1308,17 @@ class PanelNotifier extends ChangeNotifier {
   /// persist the security-scoped bookmark, and reload on success.
   Future<bool> grantAccessToPath(String path) async {
     if (side != PanelSide.local && !kIsWeb) return false;
-    final String target = path.isEmpty ? currentPath : path;
+    if (isInArchive) {
+      _archiveSource = null;
+      _archiveBytes = null;
+    }
+    var target = path.isEmpty ? currentPath : path;
+    if (target.contains(':/')) {
+      final archive = target.split(':/').first;
+      target = archive.contains('/')
+          ? p.dirname(archive)
+          : (Platform.environment['HOME'] ?? '/');
+    }
     final String? granted = await _localFileService.requestDirectoryAccess(
       initialDirectory: target,
     );
@@ -1311,6 +1343,21 @@ class PanelNotifier extends ChangeNotifier {
 
   Future<void> navigateToPath(String path, {FileItem? selectItem}) async {
     _log.info('navigateToPath: $path (side=$side, web=$kIsWeb)');
+    // Any explicit path navigation leaves archive mode. Previously the stale
+    // ArchivePanelSource kept currentPath virtual and Home/breadcrumbs tried
+    // to list "archive.zip:/inner/".
+    if (isInArchive) {
+      _archiveSource = null;
+      _archiveBytes = null;
+    }
+    if (path.contains(':/')) {
+      final archive = path.split(':/').first;
+      path = side == PanelSide.local
+          ? (archive.contains('/')
+              ? p.dirname(archive)
+              : (Platform.environment['HOME'] ?? '/'))
+          : p.posix.dirname(archive);
+    }
     _selection.clear();
     _lastSelected = null;
     if (_isTypeahead) {
@@ -1996,7 +2043,16 @@ class PanelNotifier extends ChangeNotifier {
     if (tab != null) {
       // Never persist archive virtual paths (e.g. "file.zip:/"): they are not
       // real directories and would break restart/restore.
-      tab.path = side == PanelSide.local ? _localPath : _remotePath;
+      var titlePath = side == PanelSide.local ? _localPath : _remotePath;
+      if (titlePath.contains(':/')) {
+        final archive = titlePath.split(':/').first;
+        titlePath = side == PanelSide.local
+            ? (archive.contains('/')
+                ? p.dirname(archive)
+                : (Platform.environment['HOME'] ?? '/'))
+            : p.posix.dirname(archive);
+      }
+      tab.path = titlePath;
       tab.updateLabel();
     }
     _saveTabs();
@@ -2044,6 +2100,16 @@ class PanelNotifier extends ChangeNotifier {
 
   Future<void> _loadLocalFiles() async {
     final generation = ++_listingGeneration;
+    // This loader must never receive an archive's virtual path. If an archive
+    // failed to open or a stale tab restored one, leave archive mode first.
+    if (_archiveSource != null) {
+      final archivePath = _archiveSource!.archivePath;
+      _archiveSource = null;
+      _archiveBytes = null;
+      if (side == PanelSide.local && archivePath.contains('/')) {
+        _localPath = p.dirname(archivePath);
+      }
+    }
     if (!kIsWeb && _localPath.contains(':/')) {
       _localPath = await _localFileService.getSafeFallbackDirectory();
     }

@@ -76,17 +76,33 @@ class _FilePanelState extends ConsumerState<FilePanel> {
         if (!context.mounted) return;
         final messenger = ScaffoldMessenger.of(context);
         messenger.hideCurrentSnackBar();
+        final panel = ref.read(panelProvider(widget.side));
+        final missingPath = lastError.contains('PathNotFound') ||
+            lastError.contains('No such file') ||
+            lastError.contains('not found');
+        final actionLabel = panel.isInArchive
+            ? 'Exit archive'
+            : missingPath
+                ? 'Home'
+                : 'Grant access';
         messenger.showSnackBar(
           SnackBar(
             content: Text(lastError),
             showCloseIcon: true,
             behavior: SnackBarBehavior.floating,
             action: SnackBarAction(
-              label: 'Grant access',
-              onPressed: () => ref.read(panelProvider(widget.side))
-                  .grantAccessToCurrentPath(),
+              label: actionLabel,
+              onPressed: () {
+                if (panel.isInArchive) {
+                  panel.exitArchive();
+                } else if (missingPath) {
+                  panel.navigateHome();
+                } else {
+                  panel.grantAccessToCurrentPath();
+                }
+              },
             ),
-            duration: const Duration(seconds: 5),
+            duration: const Duration(seconds: 8),
           ),
         );
         // Consume it so it is not shown again on the next build.
