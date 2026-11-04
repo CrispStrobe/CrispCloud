@@ -38,7 +38,7 @@ env:
   # .appex without entitlements (ITMS-90166) and Apple rejects the upload.
   FILEPROVIDER_BUNDLE_ID: com.CrispStrobe.cloud.FileProvider
   FILEPROVIDER_PROFILE_NAME: CrispCloud FileProvider AppStore CI
-  FLUTTER_VERSION: '3.44.2'
+  FLUTTER_VERSION: '3.47.8'
 
 jobs:
   build-upload:

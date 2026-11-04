@@ -4,8 +4,9 @@ publish_to: 'none'
 version: 1.0.0+9
 
 environment:
-  # share_plus 10.1.x requires Dart >=3.4.0 / Flutter >=3.22.0.
-  sdk: '>=3.4.0 <4.0.0'
+  # Keep the application and CI toolchain compatible with dart_pdf_editor.
+  sdk: '>=3.13.0 <4.0.0'
+  flutter: '>=3.47.0'
 
 dependencies:
   flutter:

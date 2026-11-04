@@ -60,7 +60,7 @@ We also maintain patched Nextcloud and ownCloud desktop clients with delta sync 
 
 ### Prerequisites
 
-- [Flutter SDK](https://flutter.dev/docs/get-started/install) (3.44+)
+- [Flutter SDK](https://flutter.dev/docs/get-started/install) (3.47+; pinned to 3.47.8 in `.fvmrc`)
 
 ### Build and Run
 

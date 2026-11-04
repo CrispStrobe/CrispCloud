@@ -2,7 +2,7 @@
 
 ## Toolchain
 
-- **Flutter**: `/mnt/volume1/toolchain/flutter/bin/flutter` (v3.44.1, stable channel, Dart 3.12.1)
+- **Flutter**: `/mnt/volume1/toolchain/flutter/bin/flutter` (v3.47.8, stable channel, Dart 3.13.7; see `.fvmrc`)
 - **Pub cache**: `/mnt/volume1/pub-cache`
 
 ## Build commands
