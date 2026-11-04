@@ -9,6 +9,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../providers/core_providers.dart';
 import '../services/b2_config_service.dart';
 import '../l10n/app_localizations.dart';
+import '../l10n/cloud_setup_strings.dart';
 
 // ---------------------------------------------------------------------------
 // Dialog widget
@@ -51,14 +52,17 @@ class _B2ConnectionDialogState extends ConsumerState<B2ConnectionDialog> {
     });
   }
 
+  String _text(String key, [Map<String, Object> values = const {}]) =>
+      CloudSetupStrings(context).text(key, values);
+
   // ── Validation ────────────────────────────────────────────────────────────
 
   String? _validate() {
     if (_keyIdController.text.trim().isEmpty) {
-      return 'Application Key ID is required';
+      return _text('appKeyIdRequired');
     }
     if (_appKeyController.text.trim().isEmpty) {
-      return 'Application Key is required';
+      return _text('appKeyRequired');
     }
     return null;
   }
@@ -89,19 +93,20 @@ class _B2ConnectionDialogState extends ConsumerState<B2ConnectionDialog> {
       final keyId = _keyIdController.text.trim();
       if (keyId.length < 12) {
         throw Exception(
-          'Key ID appears too short. B2 Application Key IDs are typically 25+ characters.',
+          _text('keyShort'),
         );
       }
 
       final bucket = _bucketNameController.text.trim();
-      final suffix = bucket.isNotEmpty ? ' (bucket: $bucket)' : ' (all buckets)';
       setState(() {
-        _testResult = 'Credentials accepted$suffix';
+        _testResult = bucket.isNotEmpty
+            ? _text('credentialsBucket', {'bucket': bucket})
+            : _text('credentialsAll');
         _isTesting = false;
       });
     } catch (e) {
       setState(() {
-        _error = 'Test failed: ${e.toString().replaceAll("Exception:", "").trim()}';
+        _error = _text('testFailed', {'error': e.toString().replaceAll('Exception:', '').trim()});
         _isTesting = false;
       });
     }
@@ -148,7 +153,7 @@ class _B2ConnectionDialogState extends ConsumerState<B2ConnectionDialog> {
   @override
   Widget build(BuildContext context) {
     return AlertDialog(
-      title: const Text('Connect to Backblaze B2'),
+      title: Text(_text('b2')),
       scrollable: true,
       content: SizedBox(
         width: 400,
@@ -166,16 +171,14 @@ class _B2ConnectionDialogState extends ConsumerState<B2ConnectionDialog> {
                     .withValues(alpha: 0.3),
                 borderRadius: BorderRadius.circular(8),
               ),
-              child: const Row(
+              child: Row(
                 children: [
-                  Icon(Icons.info_outline, size: 16),
-                  SizedBox(width: 8),
+                  const Icon(Icons.info_outline, size: 16),
+                  const SizedBox(width: 8),
                   Expanded(
                     child: Text(
-                      'Create an Application Key in Backblaze B2 Console → '
-                      'App Keys. Use a key with read/write access to the '
-                      'desired bucket.',
-                      style: TextStyle(fontSize: 12),
+                      _text('b2Help'),
+                      style: const TextStyle(fontSize: 12),
                     ),
                   ),
                 ],
@@ -188,12 +191,12 @@ class _B2ConnectionDialogState extends ConsumerState<B2ConnectionDialog> {
               key: const Key('b2_key_id'),
               controller: _keyIdController,
               enabled: !_isLoading,
-              decoration: const InputDecoration(
-                labelText: 'Application Key ID',
+              decoration: InputDecoration(
+                labelText: _text('appKeyId'),
                 hintText: '0014abc123456789000000001',
-                border: OutlineInputBorder(),
-                prefixIcon: Icon(Icons.badge_outlined),
-                helperText: 'The "keyID" shown when you create a B2 Application Key',
+                border: const OutlineInputBorder(),
+                prefixIcon: const Icon(Icons.badge_outlined),
+                helperText: _text('keyIdHelp'),
               ),
             ),
             const SizedBox(height: 16),
@@ -204,12 +207,12 @@ class _B2ConnectionDialogState extends ConsumerState<B2ConnectionDialog> {
               controller: _appKeyController,
               enabled: !_isLoading,
               obscureText: true,
-              decoration: const InputDecoration(
-                labelText: 'Application Key',
-                border: OutlineInputBorder(),
-                prefixIcon: Icon(Icons.vpn_key_outlined),
+              decoration: InputDecoration(
+                labelText: _text('appKey'),
+                border: const OutlineInputBorder(),
+                prefixIcon: const Icon(Icons.vpn_key_outlined),
                 helperText:
-                    'The secret key shown once at creation time. Store it safely.',
+                    _text('appKeyHelp'),
               ),
             ),
             const SizedBox(height: 16),
@@ -219,13 +222,13 @@ class _B2ConnectionDialogState extends ConsumerState<B2ConnectionDialog> {
               key: const Key('b2_bucket_name'),
               controller: _bucketNameController,
               enabled: !_isLoading,
-              decoration: const InputDecoration(
-                labelText: 'Bucket Name (optional)',
+              decoration: InputDecoration(
+                labelText: _text('optionalBucket'),
                 hintText: 'my-b2-bucket',
-                border: OutlineInputBorder(),
-                prefixIcon: Icon(Icons.folder_outlined),
+                border: const OutlineInputBorder(),
+                prefixIcon: const Icon(Icons.folder_outlined),
                 helperText:
-                    'Leave blank to browse all buckets accessible to this key',
+                    _text('bucketHelp'),
               ),
             ),
 
@@ -256,7 +259,7 @@ class _B2ConnectionDialogState extends ConsumerState<B2ConnectionDialog> {
                   height: 16,
                   child: CircularProgressIndicator(strokeWidth: 2),
                 )
-              : const Text('Test Connection'),
+              : Text(_text('test')),
         ),
         ElevatedButton(
           onPressed: (_isLoading || _isTesting) ? null : _connect,
@@ -266,7 +269,7 @@ class _B2ConnectionDialogState extends ConsumerState<B2ConnectionDialog> {
                   height: 16,
                   child: CircularProgressIndicator(strokeWidth: 2),
                 )
-              : const Text('Connect'),
+              : Text(AppLocalizations.of(context)!.connect),
         ),
       ],
     );
