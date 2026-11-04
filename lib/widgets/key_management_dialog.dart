@@ -82,7 +82,9 @@ class _KeyManagementDialogState extends ConsumerState<_KeyManagementDialog>
       ref.read(authProvider).enableEncryptionWithKey(key, salt);
       setState(() => _importSuccess = _t('mnemonicSuccess'));
     } on FormatException catch (e) {
-      setState(() => _importError = e.message);
+      setState(() => _importError = e is EncryptionFormatException
+          ? _t(e.code.name, e.arguments)
+          : e.message);
     } catch (e) {
       setState(() => _importError = e.toString());
     }
@@ -100,7 +102,9 @@ class _KeyManagementDialogState extends ConsumerState<_KeyManagementDialog>
       ref.read(authProvider).enableEncryptionWithKey(key, salt);
       setState(() => _importSuccess = _t('hexSuccess'));
     } on FormatException catch (e) {
-      setState(() => _importError = e.message);
+      setState(() => _importError = e is EncryptionFormatException
+          ? _t(e.code.name, e.arguments)
+          : e.message);
     } catch (e) {
       setState(() => _importError = e.toString());
     }
@@ -121,7 +125,9 @@ class _KeyManagementDialogState extends ConsumerState<_KeyManagementDialog>
       setState(() =>
           _importSuccess = _t('bundleSuccess'));
     } on FormatException catch (e) {
-      setState(() => _importError = e.message);
+      setState(() => _importError = e is EncryptionFormatException
+          ? _t(e.code.name, e.arguments)
+          : e.message);
     } catch (e) {
       setState(() => _importError = e.toString());
     }

@@ -47,6 +47,14 @@ class KeyManagementStrings {
           "Key recovered from mnemonic. Note: a new salt was generated. Previously encrypted files will still decrypt correctly (salt is only for key derivation).",
       "hexSuccess": "Key imported successfully.",
       "bundleSuccess": "Key and salt restored from backup bundle.",
+      "dataTooShort": "Data too short for AES-GCM",
+      "keyLength": "Key must be 64 hex characters (32 bytes), got {count}",
+      "invalidHex": "Key contains invalid hex characters",
+      "invalidMnemonic": "Invalid BIP39 mnemonic phrase",
+      "verificationFailed": "Key verification failed",
+      "verificationMnemonic":
+          "Key verification failed — mnemonic may be incorrect",
+      "hexLength": "Hex string must have even length, got {count}",
     },
     'de': {
       "keyManagement": "Schlüsselverwaltung",
@@ -83,6 +91,16 @@ class KeyManagementStrings {
       "hexSuccess": "Schlüssel erfolgreich importiert.",
       "bundleSuccess":
           "Schlüssel und Salt aus Sicherungspaket wiederhergestellt.",
+      "dataTooShort": "Daten für AES-GCM zu kurz",
+      "keyLength":
+          "Der Schlüssel muss 64 Hexadezimalzeichen (32 Byte) haben, erhalten: {count}",
+      "invalidHex": "Der Schlüssel enthält ungültige Hexadezimalzeichen",
+      "invalidMnemonic": "Ungültige BIP39-Wiederherstellungsphrase",
+      "verificationFailed": "Schlüsselprüfung fehlgeschlagen",
+      "verificationMnemonic":
+          "Schlüsselprüfung fehlgeschlagen – Wiederherstellungsphrase möglicherweise falsch",
+      "hexLength":
+          "Die Hexadezimalzeichenfolge muss eine gerade Länge haben, erhalten: {count}",
     },
     'fr': {
       "keyManagement": "Gestion des clés",
@@ -116,6 +134,16 @@ class KeyManagementStrings {
           "Clé récupérée. Un nouveau sel a été généré. Les fichiers déjà chiffrés restent déchiffrables (le sel sert uniquement à dériver la clé).",
       "hexSuccess": "Clé importée avec succès.",
       "bundleSuccess": "Clé et sel restaurés depuis la sauvegarde.",
+      "dataTooShort": "Données trop courtes pour AES-GCM",
+      "keyLength":
+          "La clé doit comporter 64 caractères hexadécimaux (32 octets) ; reçu : {count}",
+      "invalidHex": "La clé contient des caractères hexadécimaux invalides",
+      "invalidMnemonic": "Phrase de récupération BIP39 invalide",
+      "verificationFailed": "Échec de la vérification de la clé",
+      "verificationMnemonic":
+          "Échec de la vérification — la phrase est peut-être incorrecte",
+      "hexLength":
+          "La chaîne hexadécimale doit avoir une longueur paire ; reçu : {count}",
     },
     'es': {
       "keyManagement": "Gestión de claves",
@@ -149,6 +177,16 @@ class KeyManagementStrings {
           "Clave recuperada. Se generó una nueva sal. Los archivos cifrados anteriormente se podrán descifrar (la sal solo deriva la clave).",
       "hexSuccess": "Clave importada correctamente.",
       "bundleSuccess": "Clave y sal restauradas desde la copia.",
+      "dataTooShort": "Datos demasiado cortos para AES-GCM",
+      "keyLength":
+          "La clave debe tener 64 caracteres hexadecimales (32 bytes); recibidos: {count}",
+      "invalidHex": "La clave contiene caracteres hexadecimales no válidos",
+      "invalidMnemonic": "Frase de recuperación BIP39 no válida",
+      "verificationFailed": "Error al verificar la clave",
+      "verificationMnemonic":
+          "Error al verificar la clave; la frase puede ser incorrecta",
+      "hexLength":
+          "La cadena hexadecimal debe tener longitud par; recibida: {count}",
     },
     'pt': {
       "keyManagement": "Gerenciamento de chaves",
@@ -183,6 +221,16 @@ class KeyManagementStrings {
           "Chave recuperada. Um novo salt foi gerado. Arquivos já criptografados continuam sendo descriptografados (o salt serve apenas para derivar a chave).",
       "hexSuccess": "Chave importada com sucesso.",
       "bundleSuccess": "Chave e salt restaurados do backup.",
+      "dataTooShort": "Dados curtos demais para AES-GCM",
+      "keyLength":
+          "A chave deve ter 64 caracteres hexadecimais (32 bytes); recebidos: {count}",
+      "invalidHex": "A chave contém caracteres hexadecimais inválidos",
+      "invalidMnemonic": "Frase de recuperação BIP39 inválida",
+      "verificationFailed": "Falha na verificação da chave",
+      "verificationMnemonic":
+          "Falha na verificação — a frase pode estar incorreta",
+      "hexLength":
+          "A sequência hexadecimal deve ter tamanho par; recebido: {count}",
     },
     'zh': {
       "keyManagement": "密钥管理",
@@ -212,6 +260,13 @@ class KeyManagementStrings {
       "mnemonicSuccess": "已从助记词恢复密钥。已生成新的盐；以前加密的文件仍可正常解密（盐仅用于密钥派生）。",
       "hexSuccess": "密钥导入成功。",
       "bundleSuccess": "已从备份包恢复密钥和盐。",
+      "dataTooShort": "数据过短，无法使用 AES-GCM",
+      "keyLength": "密钥必须为 64 个十六进制字符（32 字节），实际为 {count} 个",
+      "invalidHex": "密钥包含无效的十六进制字符",
+      "invalidMnemonic": "BIP39 助记词无效",
+      "verificationFailed": "密钥验证失败",
+      "verificationMnemonic": "密钥验证失败，助记词可能有误",
+      "hexLength": "十六进制字符串的长度必须为偶数，实际为 {count}",
     },
     'ja': {
       "keyManagement": "キー管理",
@@ -242,6 +297,13 @@ class KeyManagementStrings {
           "復元フレーズからキーを復元しました。新しいソルトが生成されましたが、以前のファイルは引き続き復号できます（ソルトはキー導出専用です）。",
       "hexSuccess": "キーをインポートしました。",
       "bundleSuccess": "バックアップバンドルからキーとソルトを復元しました。",
+      "dataTooShort": "AES-GCM のデータが短すぎます",
+      "keyLength": "キーは 16 進数 64 文字（32 バイト）である必要があります。入力: {count} 文字",
+      "invalidHex": "キーに無効な 16 進文字が含まれています",
+      "invalidMnemonic": "BIP39 復元フレーズが無効です",
+      "verificationFailed": "キーの検証に失敗しました",
+      "verificationMnemonic": "キーの検証に失敗しました。復元フレーズが間違っている可能性があります。",
+      "hexLength": "16 進文字列の長さは偶数である必要があります。入力: {count}",
     },
     'ko': {
       "keyManagement": "키 관리",
@@ -272,6 +334,13 @@ class KeyManagementStrings {
           "복구 문구로 키를 복구했습니다. 새 솔트가 생성되었지만 이전 파일은 계속 복호화할 수 있습니다 (솔트는 키 파생에만 사용).",
       "hexSuccess": "키를 가져왔습니다.",
       "bundleSuccess": "백업 번들에서 키와 솔트를 복원했습니다.",
+      "dataTooShort": "AES-GCM 데이터가 너무 짧습니다",
+      "keyLength": "키는 16진수 64자 (32바이트)여야 합니다. 입력: {count}자",
+      "invalidHex": "키에 잘못된 16진수 문자가 있습니다",
+      "invalidMnemonic": "BIP39 복구 문구가 올바르지 않습니다",
+      "verificationFailed": "키 확인 실패",
+      "verificationMnemonic": "키 확인 실패 — 복구 문구가 올바르지 않을 수 있습니다",
+      "hexLength": "16진수 문자열 길이는 짝수여야 합니다. 입력: {count}",
     },
     'ar': {
       "keyManagement": "إدارة المفاتيح",
@@ -305,6 +374,15 @@ class KeyManagementStrings {
           "تمت استعادة المفتاح من العبارة وإنشاء ملح جديد. سيظل فك تشفير الملفات السابقة ممكنًا (يُستخدم الملح لاشتقاق المفتاح فقط).",
       "hexSuccess": "تم استيراد المفتاح بنجاح.",
       "bundleSuccess": "تمت استعادة المفتاح والملح من حزمة النسخ الاحتياطي.",
+      "dataTooShort": "البيانات قصيرة جدًا لـ AES-GCM",
+      "keyLength":
+          "يجب أن يتكون المفتاح من 64 حرفًا سداسيًا عشريًا (32 بايت)، المدخل: {count}",
+      "invalidHex": "يحتوي المفتاح على أحرف سداسية عشرية غير صالحة",
+      "invalidMnemonic": "عبارة استعادة BIP39 غير صالحة",
+      "verificationFailed": "فشل التحقق من المفتاح",
+      "verificationMnemonic":
+          "فشل التحقق من المفتاح — قد تكون عبارة الاستعادة غير صحيحة",
+      "hexLength": "يجب أن يكون طول السلسلة السداسية زوجيًا، المدخل: {count}",
     },
   };
 }
