@@ -551,7 +551,8 @@ class _InternalViewerDialogState extends ConsumerState<InternalViewerDialog> {
           return;
         case ViewerMode.pdf:
           setState(() => _preparing = true);
-          final String? localPath = (!kIsWeb &&
+          final String? localPath = (widget.bytesOverride == null &&
+                  !kIsWeb &&
                   widget.side == PanelSide.local &&
                   widget.file.path != null)
               ? widget.file.path
