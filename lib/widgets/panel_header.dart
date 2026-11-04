@@ -126,6 +126,10 @@ class _PanelHeaderState extends ConsumerState<PanelHeader> {
               tooltip: 'Edit path',
               onPressed: () {
                 _pathController.text = panel.currentPath;
+                _pathController.selection = TextSelection(
+                  baseOffset: 0,
+                  extentOffset: _pathController.text.length,
+                );
                 setState(() => _editingPath = true);
               },
             ),

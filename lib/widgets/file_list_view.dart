@@ -175,6 +175,7 @@ class FileListView extends ConsumerWidget {
       return Listener(
         onPointerDown: (event) => _PointerModifiers.update(event),
         child: Focus(
+        focusNode: panel.listFocusNode,
         autofocus: isActivePanel,
         canRequestFocus: true,
         skipTraversal: true,

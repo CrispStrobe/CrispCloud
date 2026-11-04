@@ -3,6 +3,8 @@
 // Dialog helpers for the file browser screen.
 // All functions are top-level, taking BuildContext and WidgetRef as parameters.
 
+import 'dart:async';
+
 import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -104,11 +106,14 @@ void showKeyboardShortcutsHelp(BuildContext context) {
             const Divider(),
             // Navigation
             _shortcutRow('Alt+← / Alt+→', 'Back / Forward (history)'),
-            _shortcutRow('Backspace', 'Navigate up'),
+            _shortcutRow('Backspace', 'Navigate up / leave archive'),
+            _shortcutRow('Esc (in archive)', 'Exit archive'),
             _shortcutRow('Enter', 'Open folder / file'),
-            _shortcutRow('Ctrl+Enter', 'Open folder in opposite panel'),
+            _shortcutRow('Ctrl+Enter', 'Open item in the other panel'),
+            _shortcutRow('Ctrl+← / Ctrl+→', 'Open item in left / right panel'),
             _shortcutRow('Tab', 'Switch panels'),
-            _shortcutRow('Ctrl+G', 'Go to path'),
+            _shortcutRow('Ctrl+G / Ctrl+L', 'Go to path'),
+            _shortcutRow('Alt+F7', 'Search all files'),
             _shortcutRow('Ctrl+F', 'Filter files'),
             _shortcutRow('Type letters', 'Quick search / filter (see Settings)'),
             _shortcutRow('↑ / ↓ while searching', 'Previous / next match'),
@@ -277,7 +282,43 @@ void viewSelectedFile(BuildContext context, WidgetRef ref) {
   if (target == null || target.isFolder) return;
   // Full-screen DC-style viewer: text/ASCII/binary/hex/image/markdown/PDF/
   // media/font/CSV/office/archive with streaming hex for huge local files.
-  showInternalViewer(context, file: target, side: activePanel);
+  unawaited(_viewFile(context, ref, panel, activePanel, target));
+}
+
+Future<void> _viewFile(
+  BuildContext context,
+  WidgetRef ref,
+  PanelNotifier panel,
+  PanelSide side,
+  FileItem target,
+) async {
+  try {
+    if (panel.isInArchive) {
+      // Archive members have no host-file path; extract them first and hand
+      // the bytes to the viewer. This is what makes F3 work inside ZIPs.
+      final bytes = await panel.readArchiveMember(target);
+      if (!context.mounted) return;
+      await showInternalViewer(
+        context,
+        file: target,
+        side: side,
+        bytesOverride: bytes,
+        displayName: target.name,
+      );
+    } else {
+      await showInternalViewer(context, file: target, side: side);
+    }
+  } catch (e) {
+    if (context.mounted) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Cannot view ${target.name}: $e')),
+      );
+    }
+  } finally {
+    // Keep the file selected and the panel keyboard-focused after the viewer
+    // closes, so F3/F4 can be pressed again immediately.
+    panel.restoreCursorAndFocus(target);
+  }
 }
 
 /// F4: Open cursor item in the file editor.
@@ -287,7 +328,34 @@ void editSelectedFile(BuildContext context, WidgetRef ref) {
   final target = panel.cursorItem ??
       (panel.selection.isNotEmpty ? panel.selection.first : null);
   if (target == null || target.isFolder) return;
-  showFileEditorDialog(context, ref, target, activePanel);
+  unawaited(_editFile(context, ref, panel, activePanel, target));
+}
+
+Future<void> _editFile(
+  BuildContext context,
+  WidgetRef ref,
+  PanelNotifier panel,
+  PanelSide side,
+  FileItem target,
+) async {
+  try {
+    if (panel.isInArchive) {
+      if (context.mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text(
+              'Editing files inside an archive is not supported. '
+              'Extract the file first.',
+            ),
+          ),
+        );
+      }
+      return;
+    }
+    await showFileEditorDialog(context, ref, target, side);
+  } finally {
+    panel.restoreCursorAndFocus(target);
+  }
 }
 
 void showCopyDialogFromSelection(BuildContext context, WidgetRef ref) {
@@ -482,6 +550,12 @@ void showGoToDialog(BuildContext context, WidgetRef ref) {
   final activePanel = ref.read(activePanelProvider);
   final panel = ref.read(panelProvider(activePanel));
   final controller = TextEditingController(text: panel.currentPath);
+  // Select the current path so typing replaces it instead of appending
+  // (which produced paths like .../Downloads/Users/me/Downloads).
+  controller.selection = TextSelection(
+    baseOffset: 0,
+    extentOffset: controller.text.length,
+  );
 
   showDialog(
     context: context,

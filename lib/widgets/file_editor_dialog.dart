@@ -23,23 +23,34 @@ import 'office_editor_dialog.dart';
 import 'pdf_editor_dialog.dart';
 
 /// Opens a full-screen editor dialog for the given file.
-void showFileEditorDialog(
-    BuildContext context, WidgetRef ref, FileItem file, PanelSide side) {
+Future<void> showFileEditorDialog(
+    BuildContext context, WidgetRef ref, FileItem file, PanelSide side) async {
   if (file.isFolder) return;
-  if (isPdfFileName(file.name)) {
-    unawaited(showPdfEditorDialog(context, ref, file, side));
-    return;
+  try {
+    if (isPdfFileName(file.name)) {
+      await showPdfEditorDialog(context, ref, file, side);
+      return;
+    }
+    // Office documents get the rich Word/Sheet/Slides editor instead of the
+    // plain-text editor.
+    if (isOfficeFileName(file.name)) {
+      await showOfficeEditorDialog(context, ref, file, side);
+      return;
+    }
+    await Navigator.of(context).push(MaterialPageRoute(
+      fullscreenDialog: true,
+      builder: (_) => _FileEditorPage(file: file, side: side),
+    ));
+  } finally {
+    // Returning from any editor should land back on the same file with the
+    // panel ready for the next F3/F4, including when opened from a context
+    // menu rather than the F-key handler.
+    try {
+      ref.read(panelProvider(side)).restoreCursorAndFocus(file);
+    } catch (_) {
+      // The browser may already be disposed.
+    }
   }
-  // Office documents get the rich Word/Sheet/Slides editor instead of the
-  // plain-text editor.
-  if (isOfficeFileName(file.name)) {
-    unawaited(showOfficeEditorDialog(context, ref, file, side));
-    return;
-  }
-  Navigator.of(context).push(MaterialPageRoute(
-    fullscreenDialog: true,
-    builder: (_) => _FileEditorPage(file: file, side: side),
-  ));
 }
 
 class _FileEditorPage extends ConsumerStatefulWidget {

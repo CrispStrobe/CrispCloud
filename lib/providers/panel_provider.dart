@@ -8,6 +8,7 @@ import 'dart:convert';
 import 'dart:io';
 
 import 'package:flutter/foundation.dart';
+import 'package:flutter/widgets.dart' show FocusNode;
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:path/path.dart' as p;
 import 'package:shared_preferences/shared_preferences.dart';
@@ -91,6 +92,7 @@ class PanelNotifier extends ChangeNotifier {
 
   final _refreshLock = AsyncLock();
   Timer? _refreshDebounce;
+  late final FocusNode listFocusNode;
   bool _isDisposed = false;
 
   /// When true, [_files] holds search results instead of the real directory
@@ -142,6 +144,7 @@ class PanelNotifier extends ChangeNotifier {
 
   PanelNotifier(this._ref, this.side)
       : _localFileService = _ref.read(localFileServiceProvider) {
+    listFocusNode = FocusNode(debugLabel: 'panel-${side.name}');
     // ChangeNotifier listeners cannot compare prev/next objects: both can be
     // the same mutated notifier. Retain a value snapshot for account changes.
     final initialAuth = _ref.read(authProvider);
@@ -710,7 +713,9 @@ class PanelNotifier extends ChangeNotifier {
       }
     }
     _syncTabPath();
-    refresh();
+    unawaited(refresh().then((_) {
+      if (!_isDisposed) focusList();
+    }));
   }
 
   /// Leave an archive and go to the home directory. Used by the error banner
@@ -724,6 +729,7 @@ class PanelNotifier extends ChangeNotifier {
         ? '/'
         : (Platform.environment['HOME'] ?? '/');
     await navigateToPath(path);
+    if (!_isDisposed) focusList();
   }
 
   Future<void> _loadArchiveFiles() async {
@@ -1341,6 +1347,43 @@ class PanelNotifier extends ChangeNotifier {
   Future<bool> grantAccessToCurrentPath() =>
       grantAccessToPath(currentPath);
 
+  /// Normalise user-entered paths and repair the common macOS failure where
+  /// an absolute path was appended to the current directory by a non-selecting
+  /// text field.
+  String _normaliseLocalPath(String raw) {
+    var path = raw.trim();
+    if (path.isEmpty) return path;
+    if (path.startsWith('"') && path.endsWith('"') && path.length > 1) {
+      path = path.substring(1, path.length - 1);
+    }
+    if (path.startsWith('file://')) {
+      try {
+        path = Uri.parse(path).toFilePath();
+      } catch (_) {
+        // Keep the original value; the loader will report a friendly error.
+      }
+    }
+    final home = Platform.environment['HOME'];
+    if (home != null && home.isNotEmpty) {
+      if (path == '~') {
+        path = home;
+      } else if (path.startsWith('~/')) {
+        path = '$home/${path.substring(2)}';
+      }
+      // A path such as "/container/Data/Users/me/Downloads" contains HOME
+      // after a wrong prefix. Prefer the real absolute path.
+      final homeIndex = path.indexOf(home);
+      if (homeIndex > 0 && !path.startsWith(home)) {
+        path = path.substring(homeIndex);
+      }
+    }
+    if (!kIsWeb) {
+      if (!p.isAbsolute(path)) path = p.join(currentPath, path);
+      path = p.normalize(path);
+    }
+    return path;
+  }
+
   Future<void> navigateToPath(String path, {FileItem? selectItem}) async {
     _log.info('navigateToPath: $path (side=$side, web=$kIsWeb)');
     // Any explicit path navigation leaves archive mode. Previously the stale
@@ -1357,6 +1400,10 @@ class PanelNotifier extends ChangeNotifier {
               ? p.dirname(archive)
               : (Platform.environment['HOME'] ?? '/'))
           : p.posix.dirname(archive);
+    }
+    if (side == PanelSide.local) {
+      path = _normaliseLocalPath(path);
+      if (path.isEmpty) return;
     }
     _selection.clear();
     _lastSelected = null;
@@ -2098,7 +2145,7 @@ class PanelNotifier extends ChangeNotifier {
     }
   }
 
-  Future<void> _loadLocalFiles() async {
+  Future<void> _loadLocalFiles({bool fallbackOnMissing = true}) async {
     final generation = ++_listingGeneration;
     // This loader must never receive an archive's virtual path. If an archive
     // failed to open or a stale tab restored one, leave archive mode first.
@@ -2315,6 +2362,23 @@ class PanelNotifier extends ChangeNotifier {
       if (_isDisposed || generation != _listingGeneration) return;
       _log.warn('operation failed', e);
       _isLoading = false;
+      final missing = e is PathNotFoundException ||
+          e.toString().contains('No such file') ||
+          e.toString().contains('PathNotFoundException');
+      if (fallbackOnMissing && missing) {
+        final fallback = await _localFileService.getSafeFallbackDirectory();
+        if (_isDisposed || generation != _listingGeneration) return;
+        if (fallback != _localPath) {
+          _localPath = fallback;
+          await _loadLocalFiles(fallbackOnMissing: false);
+          if (_isDisposed) return;
+          _syncTabPath();
+          _ref
+              .read(errorProvider)
+              .addError('Folder not found. Returned to your Home folder.');
+          return;
+        }
+      }
       if (!kIsWeb &&
           (e is PathAccessException ||
               e.toString().contains('Operation not permitted'))) {
@@ -2331,6 +2395,65 @@ class PanelNotifier extends ChangeNotifier {
       _ref.read(errorProvider).addError(e.toString());
       notifyListeners();
     }
+  }
+
+  /// Read one member of the currently opened archive for the internal viewer.
+  /// The archive is reopened metadata-only, so F3 works for files inside ZIP,
+  /// TAR, 7z and RAR archives that the panel is browsing.
+  Future<Uint8List> readArchiveMember(FileItem file) async {
+    final source = _archiveSource;
+    final bytes = _archiveBytes;
+    if (source == null || bytes == null) {
+      throw const ArchiveViewException(
+        'This archive is no longer open. Return to the archive and try again.',
+      );
+    }
+
+    ViewerArchive? archive;
+    try {
+      archive = await openViewerArchive(bytes, name: source.archivePath);
+      final wanted = (file.path ?? file.name);
+      String normalise(String name) =>
+          name.startsWith('./') ? name.substring(2) : name;
+      ViewerArchiveMember? match;
+      for (final member in archive.members) {
+        final name = normalise(member.name);
+        if (name == wanted || name == file.name) {
+          match = member;
+          break;
+        }
+      }
+      if (match == null || !match.isFile) {
+        throw ArchiveViewException(
+          'Could not find "${file.name}" inside ${source.archiveName}.',
+        );
+      }
+      return await archive.readMember(match, maxBytes: kArchiveReadLimit);
+    } finally {
+      await archive?.close();
+    }
+  }
+
+  /// Return keyboard focus to this panel's file list.
+  void focusList() {
+    if (!_isDisposed) listFocusNode.requestFocus();
+  }
+
+  /// Re-select [item] by path/name after a viewer or editor closes, then return
+  /// keyboard focus to this panel.
+  void restoreCursorAndFocus(FileItem item) {
+    final files = _files;
+    if (files != null) {
+      final index = files.indexWhere((candidate) =>
+          (candidate.path != null && candidate.path == item.path) ||
+          candidate.name == item.name);
+      if (index != -1) {
+        _cursorIndex = index;
+        _itemToScrollTo = files[index];
+        notifyListeners();
+      }
+    }
+    if (!_isDisposed) listFocusNode.requestFocus();
   }
 
   void _updateFreeSpace(String path) {
@@ -2546,6 +2669,7 @@ class PanelNotifier extends ChangeNotifier {
     _isDisposed = true;
     _typeaheadResetTimer?.cancel();
     _refreshDebounce?.cancel();
+    listFocusNode.dispose();
     super.dispose();
   }
 }
