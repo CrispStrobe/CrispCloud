@@ -2313,22 +2313,10 @@ class RenderReportInspector extends RenderBox
     return s.isEmpty ? s : s[0].toUpperCase() + s.substring(1);
   }
 
-  static final RegExp _elementsTitle = RegExp(r'^(\d+) elements$');
-
-  String get _titleText {
-    final String raw = _controller.inspectorTitle;
-    final RegExpMatch? many = _elementsTitle.firstMatch(raw);
-    if (many != null) {
-      return _s.count(int.parse(many[1]!), 'element');
-    }
-    final int colon = raw.indexOf(': ');
-    if (colon > 0 && _controller.selectedElements.length != 1) {
-      final String head = raw.substring(0, colon);
-      final String tail = raw.substring(colon + 2);
-      return '${_s.t(head)}: ${head == 'Band' ? _s.t(_spaced(tail)) : tail}';
-    }
-    return _s.t(raw);
-  }
+  String get _titleText => _s.inspectorTitle(
+        _controller.inspectorTitle,
+        objectSelected: _controller.selectedElements.length == 1,
+      );
 
   (ReportToolbarIcon, String) get _titleBadge {
     switch (_controller.inspectorPage) {

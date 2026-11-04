@@ -131,6 +131,50 @@ void main() {
     }
   });
 
+  test('band captions localize interface labels without changing data paths',
+      () {
+    final band = ReportBand(
+        kind: ReportBandKind.detail,
+        dataSet: 'Data.items',
+        groupBy: 'Row.category');
+    expect(RenderReportDesigner.captionOf(band),
+        'Detail  ·  data: Data.items  ·  group: Row.category');
+    final label =
+        RenderReportDesigner.captionOf(band, strings: ReportDesignerStrings.de);
+    expect(label, contains('Daten: Data.items'));
+    expect(label, contains('Gruppe: Row.category'));
+  });
+
+  testWidgets('preview semantics update when the selected locale changes',
+      (tester) async {
+    final handle = tester.ensureSemantics();
+    Widget host(ReportDesignerStrings strings) => MaterialApp(
+          home: Scaffold(
+              body: ReportPreviewSurface(document: null, strings: strings)),
+        );
+    await tester.pumpWidget(host(ReportDesignerStrings.english));
+    expect(find.bySemanticsLabel('Report preview'), findsOneWidget);
+    await tester.pumpWidget(host(ReportDesignerStrings.de));
+    await tester.pump();
+    expect(find.bySemanticsLabel('Berichtsvorschau'), findsOneWidget);
+    handle.dispose();
+  });
+
+  test('inspector headings translate prefixes and preserve user names', () {
+    const strings = ReportDesignerStrings.de;
+    expect(strings.inspectorTitle('Report: My report', objectSelected: false),
+        'Bericht: My report');
+    expect(strings.inspectorTitle('Band: PageHeader', objectSelected: false),
+        'Band: Seitenkopf');
+    expect(strings.inspectorTitle('2 elements', objectSelected: false),
+        '2 Elemente');
+    expect(strings.inspectorTitle('Report: My object', objectSelected: true),
+        'Report: My object');
+    expect(strings.inspectorTitle('2 elements', objectSelected: true),
+        '2 elements');
+    expect(strings.inspectorTitle('Data', objectSelected: true), 'Data');
+  });
+
   test('report counts follow the selected language', () {
     const nouns = [
       'element',

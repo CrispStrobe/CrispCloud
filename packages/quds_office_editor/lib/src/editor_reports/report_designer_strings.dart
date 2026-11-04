@@ -142,6 +142,28 @@ class ReportDesignerStrings {
         return values.containsKey(name) ? '${values[name]}' : match.group(0)!;
       });
 
+  /// Localizes generated inspector headings while preserving user names.
+  String inspectorTitle(String raw, {required bool objectSelected}) {
+    if (objectSelected) return raw;
+    final many = RegExp(r'^(\d+) elements$').firstMatch(raw);
+    if (many != null) return count(int.parse(many[1]!), 'element');
+    final colon = raw.indexOf(': ');
+    if (colon <= 0) return t(raw);
+    final head = raw.substring(0, colon);
+    var tail = raw.substring(colon + 2);
+    if (head == 'Band') {
+      final spaced = tail.replaceAllMapped(
+        RegExp(r'([a-z])([A-Z])'),
+        (match) => '${match[1]} ${match[2]!.toLowerCase()}',
+      );
+      tail = spaced.isEmpty
+          ? spaced
+          : spaced[0].toUpperCase() + spaced.substring(1);
+      tail = t(tail);
+    }
+    return '${t(head)}: $tail';
+  }
+
   /// `3 elements`: [n] with the plural of [noun], an English singular noun
   /// with a known plural in this table (`element`, `variable`, …).
   String count(int n, String noun) {
@@ -197,6 +219,7 @@ class ReportDesignerStrings {
 
   static const Map<String, Map<String, (String, String)>> _localizedCounts = {
     "de": {
+      "page": ("Seite", "Seiten"),
       "element": ("Element", "Elemente"),
       "variable": ("Variable", "Variablen"),
       "image": ("Bild", "Bilder"),
@@ -212,6 +235,7 @@ class ReportDesignerStrings {
       "value": ("Wert", "Werte"),
     },
     "fr": {
+      "page": ("page", "pages"),
       "element": ("élément", "éléments"),
       "variable": ("variable", "variables"),
       "image": ("image", "images"),
@@ -227,6 +251,7 @@ class ReportDesignerStrings {
       "value": ("valeur", "valeurs"),
     },
     "es": {
+      "page": ("página", "páginas"),
       "element": ("elemento", "elementos"),
       "variable": ("variable", "variables"),
       "image": ("imagen", "imágenes"),
@@ -242,6 +267,7 @@ class ReportDesignerStrings {
       "value": ("valor", "valores"),
     },
     "pt": {
+      "page": ("página", "páginas"),
       "element": ("elemento", "elementos"),
       "variable": ("variável", "variáveis"),
       "image": ("imagem", "imagens"),
@@ -257,6 +283,7 @@ class ReportDesignerStrings {
       "value": ("valor", "valores"),
     },
     "zh": {
+      "page": ("页", "页"),
       "element": ("个元素", "个元素"),
       "variable": ("个变量", "个变量"),
       "image": ("张图片", "张图片"),
@@ -272,6 +299,7 @@ class ReportDesignerStrings {
       "value": ("个值", "个值"),
     },
     "ja": {
+      "page": ("ページ", "ページ"),
       "element": ("個の要素", "個の要素"),
       "variable": ("個の変数", "個の変数"),
       "image": ("個の画像", "個の画像"),
@@ -287,6 +315,7 @@ class ReportDesignerStrings {
       "value": ("個の値", "個の値"),
     },
     "ko": {
+      "page": ("페이지", "페이지"),
       "element": ("개 요소", "개 요소"),
       "variable": ("개 변수", "개 변수"),
       "image": ("개 이미지", "개 이미지"),
@@ -304,6 +333,7 @@ class ReportDesignerStrings {
   };
 
   static const Map<String, _Plural> _plurals = <String, _Plural>{
+    'page': _Plural('pages', 'صفحة', 'واحدة', 'صفحتان', 'صفحات', 'صفحة'),
     'element': _Plural('elements', 'عنصر', 'واحد', 'عنصران', 'عناصر', 'عنصر'),
     'variable': _Plural(
       'variables',
@@ -341,6 +371,11 @@ class ReportDesignerStrings {
   };
 
   static const Map<String, String> _de = <String, String>{
+    "Report designer canvas": "Berichtsentwurfsfläche",
+    "Group": "Gruppe",
+    "Sort": "Sortierung",
+    "Report preview": "Berichtsvorschau",
+    "Page {current} of {total}": "Seite {current} von {total}",
     "{count} selected": "{count} ausgewählt",
     "host data": "Hostdaten",
     "Rename column \"{name}\"": "Spalte „{name}“ umbenennen",
@@ -1003,6 +1038,11 @@ class ReportDesignerStrings {
   };
 
   static const Map<String, String> _fr = <String, String>{
+    "Report designer canvas": "Zone de conception du rapport",
+    "Group": "Groupe",
+    "Sort": "Tri",
+    "Report preview": "Aperçu du rapport",
+    "Page {current} of {total}": "Page {current} sur {total}",
     "{count} selected": "{count} sélectionné(s)",
     "host data": "données hôte",
     "Rename column \"{name}\"": "Renommer la colonne « {name} »",
@@ -1670,6 +1710,11 @@ class ReportDesignerStrings {
   };
 
   static const Map<String, String> _es = <String, String>{
+    "Report designer canvas": "Lienzo de diseño del informe",
+    "Group": "Grupo",
+    "Sort": "Orden",
+    "Report preview": "Vista previa del informe",
+    "Page {current} of {total}": "Página {current} de {total}",
     "{count} selected": "{count} seleccionado(s)",
     "host data": "datos del anfitrión",
     "Rename column \"{name}\"": "Renombrar columna «{name}»",
@@ -2334,6 +2379,11 @@ class ReportDesignerStrings {
   };
 
   static const Map<String, String> _pt = <String, String>{
+    "Report designer canvas": "Área de desenho do relatório",
+    "Group": "Grupo",
+    "Sort": "Ordenação",
+    "Report preview": "Pré-visualização do relatório",
+    "Page {current} of {total}": "Página {current} de {total}",
     "{count} selected": "{count} selecionado(s)",
     "host data": "dados do anfitrião",
     "Rename column \"{name}\"": "Mudar nome da coluna «{name}»",
@@ -2999,6 +3049,11 @@ class ReportDesignerStrings {
   };
 
   static const Map<String, String> _zh = <String, String>{
+    "Report designer canvas": "报告设计画布",
+    "Group": "分组",
+    "Sort": "排序",
+    "Report preview": "报告预览",
+    "Page {current} of {total}": "第 {current} 页，共 {total} 页",
     "{count} selected": "已选择 {count} 项",
     "host data": "宿主数据",
     "Rename column \"{name}\"": "重命名列“{name}”",
@@ -3615,6 +3670,11 @@ class ReportDesignerStrings {
   };
 
   static const Map<String, String> _ja = <String, String>{
+    "Report designer canvas": "レポートデザインキャンバス",
+    "Group": "グループ",
+    "Sort": "並べ替え",
+    "Report preview": "レポートプレビュー",
+    "Page {current} of {total}": "{current} / {total} ページ",
     "{count} selected": "{count} 件を選択",
     "host data": "ホストデータ",
     "Rename column \"{name}\"": "列「{name}」の名前を変更",
@@ -4242,6 +4302,11 @@ class ReportDesignerStrings {
   };
 
   static const Map<String, String> _ko = <String, String>{
+    "Report designer canvas": "보고서 디자인 캔버스",
+    "Group": "그룹",
+    "Sort": "정렬",
+    "Report preview": "보고서 미리보기",
+    "Page {current} of {total}": "{total}페이지 중 {current}페이지",
     "{count} selected": "{count}개 선택됨",
     "host data": "호스트 데이터",
     "Rename column \"{name}\"": "열 “{name}” 이름 바꾸기",
@@ -4875,6 +4940,11 @@ class ReportDesignerStrings {
   };
 
   static const Map<String, String> _arabic = <String, String>{
+    "Report designer canvas": "لوحة تصميم التقرير",
+    "Group": "المجموعة",
+    "Sort": "الفرز",
+    "Report preview": "معاينة التقرير",
+    "Page {current} of {total}": "الصفحة {current} من {total}",
     "{count} selected": "تم تحديد {count}",
     "host data": "بيانات المضيف",
     "Rename column \"{name}\"": "إعادة تسمية العمود \"{name}\"",

@@ -2110,6 +2110,7 @@ class _QudsReportDesignerState extends State<QudsReportDesigner> {
       ),
       ReportDesignMode.preview => ReportPreviewSurface(
         document: _c.previewLayout,
+        strings: _c.strings,
         error: _c.previewError?.toString(),
         zoom: _c.zoom,
         theme: theme,
