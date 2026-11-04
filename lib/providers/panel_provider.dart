@@ -1370,10 +1370,11 @@ class PanelNotifier extends ChangeNotifier {
       } else if (path.startsWith('~/')) {
         path = '$home/${path.substring(2)}';
       }
-      // A path such as "/container/Data/Users/me/Downloads" contains HOME
-      // after a wrong prefix. Prefer the real absolute path.
-      final homeIndex = path.indexOf(home);
-      if (homeIndex > 0 && !path.startsWith(home)) {
+      // A path such as "/container/Data/Users/me/Downloads" or
+      // "/Users/me/Downloads/Users/me/Downloads" contains HOME after a wrong
+      // prefix. Keep the last real absolute path.
+      final homeIndex = path.lastIndexOf(home);
+      if (homeIndex > 0) {
         path = path.substring(homeIndex);
       }
     }

@@ -150,6 +150,17 @@ void main() {
     expect(String.fromCharCodes(bytes), 'Hello');
   });
 
+
+  test('repairs a path with the home directory appended twice', () async {
+    final home = Platform.environment['HOME']!;
+    final panel = container.read(panelProvider(PanelSide.local));
+    await Future<void>.delayed(const Duration(milliseconds: 50));
+
+    await panel.navigateToPath('${tempDir.path}$home/Downloads');
+
+    expect(panel.currentPath, p.normalize('$home/Downloads'));
+  });
+
   test('opening a real directory leaves archive mode', () async {
     final panel = container.read(panelProvider(PanelSide.local));
     await Future<void>.delayed(const Duration(milliseconds: 50));
