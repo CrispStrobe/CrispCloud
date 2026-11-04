@@ -14,9 +14,10 @@ import 'package:http/http.dart' as http;
 import 'package:path/path.dart' as p;
 
 import '../config/cli_config.dart';
+import 'bounded_download.dart';
 import 'cli_storage_client.dart';
 
-class WebDavCliAdapter implements CliStorageClient {
+class WebDavCliAdapter implements CliStorageClient, CliBoundedDownload {
   final String _baseUrl; // e.g. https://dav.example.com (no trailing slash)
   final String _username;
   final String _password;
@@ -75,8 +76,16 @@ class WebDavCliAdapter implements CliStorageClient {
   String get providerName => 'WebDAV';
 
   String _url(String remotePath) {
-    final clean = remotePath.startsWith('/') ? remotePath : '/$remotePath';
-    return '$_baseUrl$clean';
+    final base = Uri.parse(_baseUrl);
+    final prefix = base.pathSegments.toList();
+    while (prefix.isNotEmpty && prefix.last.isEmpty) {
+      prefix.removeLast();
+    }
+    final relative = remotePath.replaceFirst(RegExp(r'^/+'), '');
+    // Inputs are decoded provider paths. Encode each segment exactly once so
+    // a filename containing #, ?, spaces or % remains a filename, not a URL.
+    return base.replace(pathSegments: [...prefix, ...relative.split('/')])
+        .removeFragment().toString();
   }
 
   Map<String, String> get _headers => {
@@ -245,6 +254,16 @@ class WebDavCliAdapter implements CliStorageClient {
     }
     return response.bodyBytes;
   }
+
+  @override
+  Future<Uint8List> downloadBytesBounded(
+    String remotePath, {
+    required int maxBytes,
+  }) => boundedHttpDownload(
+    Uri.parse(_url(remotePath)),
+    headers: _headers,
+    maxBytes: maxBytes,
+  );
 
   @override
   Future<void> download(

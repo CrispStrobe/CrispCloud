@@ -14,9 +14,10 @@ import 'package:dartssh2/dartssh2.dart';
 import 'package:path/path.dart' as p;
 
 import '../config/cli_config.dart';
+import 'bounded_download.dart';
 import 'cli_storage_client.dart';
 
-class SftpCliAdapter implements CliStorageClient {
+class SftpCliAdapter implements CliStorageClient, CliBoundedDownload {
   final String _username;
   final String _password;
   final String _host;
@@ -192,6 +193,36 @@ class SftpCliAdapter implements CliStorageClient {
         offset += chunk.length;
       }
       return builder.takeBytes();
+    } finally {
+      await file.close();
+    }
+  }
+
+  @override
+  Future<Uint8List> downloadBytesBounded(
+    String remotePath, {
+    required int maxBytes,
+  }) async {
+    if (maxBytes < 1) throw ArgumentError.value(maxBytes, 'maxBytes');
+    await _ensureConnected();
+    final file = await _sftp!.open(remotePath, mode: SftpFileOpenMode.read);
+    try {
+      if (((await file.stat()).size ?? 0) > maxBytes) {
+        throw CliDownloadLimitException(maxBytes);
+      }
+      final builder = BytesBuilder(copy: false);
+      while (true) {
+        final remaining = maxBytes - builder.length + 1;
+        final chunk = await file.readBytes(
+          length: remaining < 32 * 1024 ? remaining : 32 * 1024,
+          offset: builder.length,
+        );
+        if (chunk.isEmpty) return builder.takeBytes();
+        if (builder.length + chunk.length > maxBytes) {
+          throw CliDownloadLimitException(maxBytes);
+        }
+        builder.add(chunk);
+      }
     } finally {
       await file.close();
     }

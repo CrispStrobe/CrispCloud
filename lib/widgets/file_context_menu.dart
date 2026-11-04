@@ -11,6 +11,7 @@ import 'dart:io';
 import 'package:share_plus/share_plus.dart';
 import '../l10n/app_localizations.dart';
 import '../l10n/pdf_editor_strings.dart';
+import '../l10n/pdf_operations_strings.dart';
 import '../models/file_item.dart';
 import '../models/panel_side.dart';
 import '../providers/providers.dart';
@@ -31,6 +32,7 @@ import 'batch_rename_dialog.dart' show showBatchRenameDialog;
 import 'diff_viewer_dialog.dart' show showDiffViewerDialog;
 import 'file_editor_dialog.dart' show showFileEditorDialog;
 import 'pdf_editor_dialog.dart' show isPdfFileName;
+import 'pdf_operations_dialog.dart';
 import 'share_link_dialog.dart' show showShareLinkDialog;
 import 'permissions_dialog.dart' show showPermissionsDialog;
 import 'version_history_dialog.dart' show showVersionHistoryDialog;
@@ -136,6 +138,21 @@ void showFileContextMenu(BuildContext context, WidgetRef ref, PanelSide side,
 
   // Build items list dynamically
   final items = <PopupMenuEntry<dynamic>>[];
+
+  for (final action in pdfOperationsForSelection(files)) {
+    items.add(PopupMenuItem(
+      child: Row(children: [
+        Icon(action.icon),
+        const SizedBox(width: 8),
+        Text(context.pdfOpTr(action.label)),
+      ]),
+      onTap: () => Future.delayed(Duration.zero, () {
+        if (context.mounted) {
+          showPdfOperationsDialog(context, ref, files, side, action);
+        }
+      }),
+    ));
+  }
 
   // Open (folders only)
   if (isSingleFolder) {

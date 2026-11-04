@@ -1,0 +1,7138 @@
+part of 'editor.dart';
+
+/// The drawn width of an ink segment at normalized [pressure] (0–1) for a
+/// base [strokeWidth]: 0.4× when barely touching up to 1.6× at full
+/// pressure, the base width at 0.5. Shared by [PdfAnnotationEditing.addInk]
+/// appearances and live stroke previews so they look identical.
+double pdfInkStrokeWidth(double strokeWidth, double pressure) =>
+    strokeWidth * (0.4 + 1.2 * pressure.clamp(0.0, 1.0));
+
+/// Cubic Bézier control points that smooth a captured polyline into a
+/// Catmull-Rom spline through its points: `result[i]` is the `(c1, c2)`
+/// pair for the segment `points[i] → points[i+1]`. Pointer events sample
+/// a stroke once per frame, so a fast stroke leaves long straight
+/// segments with visible corners; the spline rounds them while still
+/// passing through every sample. Shared by [PdfAnnotationEditing.addInk]
+/// appearances and the live stroke previews so committed ink matches
+/// what was drawn.
+List<((double, double), (double, double))> pdfInkCurveControls(
+  List<(double, double)> points,
+) {
+  return [
+    for (var i = 0; i < points.length - 1; i++)
+      () {
+        // neighbors clamp to the endpoints, the standard open-spline rule
+        final (x0, y0) = points[i == 0 ? 0 : i - 1];
+        final (x1, y1) = points[i];
+        final (x2, y2) = points[i + 1];
+        final (x3, y3) = points[math.min(i + 2, points.length - 1)];
+        return (
+          (x1 + (x2 - x0) / 6, y1 + (y2 - y0) / 6),
+          (x2 - (x3 - x1) / 6, y2 - (y3 - y1) / 6),
+        );
+      }(),
+  ];
+}
+
+// PdfMeasurementKind lives in measure.dart (shared with the readers in
+// annotation.dart and the takeoff summary).
+
+/// Slack (in points) the word-wrappers allow before breaking a line.
+///
+/// A box auto-sized to its content sets its width to `lineWidth + 2*pad`,
+/// and the wrapper breaks at `width - 2*pad`. In exact arithmetic those
+/// cancel and the line fits, but `(w + 6) - 6` rounds to a hair *under* `w`
+/// in IEEE-754 doubles, so a strict `> maxWidth` test would wrap the last
+/// word onto a new line. This tolerance is far below a visible point yet
+/// orders of magnitude above the rounding noise.
+const double _wrapTolerance = 1e-6;
+
+/// The default line-height multiplier for free-text appearances: the
+/// baseline-to-baseline distance is `fontSize * lineSpacing`.
+const double _defaultLineSpacing = kPdfFreeTextDefaultLineSpacing;
+
+/// The default horizontal text scaling (per cent) for free-text: 100 is the
+/// font's natural glyph width.
+const double _defaultHorizontalScale = kPdfFreeTextDefaultHorizontalScale;
+
+/// One styled run inside a rich free-text annotation.
+///
+/// A normal FreeText annotation has one `/DA` default appearance. Runs let
+/// this package generate an appearance stream with several fonts, sizes, or
+/// text colors inside the same annotation while keeping `/Contents` as the
+/// plain concatenated text.
+class PdfFreeTextRun {
+  const PdfFreeTextRun(
+    this.text, {
+    this.font = PdfStandardFont.helvetica,
+    this.fontSize = 12,
+    this.color = 0x000000,
+    this.underline = false,
+  });
+
+  final String text;
+  final PdfTextFont font;
+  final double fontSize;
+  final int color;
+
+  /// Whether this run is drawn with an underline.
+  final bool underline;
+}
+
+class _RichTextPiece {
+  const _RichTextPiece(this.text, this.style);
+
+  final String text;
+  final PdfFreeTextRun style;
+
+  bool sameStyle(PdfFreeTextRun other) =>
+      style.font.resourceName == other.font.resourceName &&
+      style.fontSize == other.fontSize &&
+      style.color == other.color &&
+      style.underline == other.underline;
+}
+
+class _RichTextLine {
+  const _RichTextLine(this.runs, this.width);
+
+  final List<_RichTextPiece> runs;
+  final double width;
+}
+
+/// Line ending styles (§12.5.6.7, Table 176) drawn at a /Line or
+/// /PolyLine endpoint by [PdfEditor.addLine] / [PdfEditor.addPolyLine].
+///
+/// [pdfName] is the /LE name written to (and read back from) the
+/// dictionary. The geometry of each shape is produced by the appearance
+/// generator: closed shapes ([square], [circle], [diamond],
+/// [closedArrow], [rClosedArrow]) are filled, the rest stroked; the
+/// `r*` variants point the opposite way along the line.
+enum PdfLineEnding {
+  none('None'),
+  square('Square'),
+  circle('Circle'),
+  diamond('Diamond'),
+  openArrow('OpenArrow'),
+  closedArrow('ClosedArrow'),
+  butt('Butt'),
+  rOpenArrow('ROpenArrow'),
+  rClosedArrow('RClosedArrow'),
+  slash('Slash');
+
+  const PdfLineEnding(this.pdfName);
+
+  final String pdfName;
+
+  /// The matching ending for a /LE name, or [none] when unknown.
+  static PdfLineEnding fromName(String name) =>
+      values.firstWhere((ending) => ending.pdfName == name, orElse: () => none);
+}
+
+/// The start/end line endings recorded on [annotation]'s /LE entry, or
+/// null when it is not a /Line or /PolyLine. Each defaults to
+/// [PdfLineEnding.none] when absent or unrecognized. Lets UI read the
+/// current endings without an editor instance (mirrors
+/// [pdfCanRestyleAnnotation]).
+(PdfLineEnding, PdfLineEnding)? pdfLineEndings(PdfAnnotation annotation) {
+  if (annotation.subtype != 'Line' && annotation.subtype != 'PolyLine') {
+    return null;
+  }
+  final le = annotation.document.cos.resolve(annotation.dict['LE']);
+  PdfLineEnding read(int index) {
+    if (le is! CosArray || le.length <= index) return PdfLineEnding.none;
+    final name = annotation.document.cos.resolve(le[index]);
+    if (name is! CosName) return PdfLineEnding.none;
+    return PdfLineEnding.fromName(name.value);
+  }
+
+  return (read(0), read(1));
+}
+
+/// Slices ink [strokes] with one stamp of a circular eraser swept from
+/// [from] to [to] (a capsule of [radius]): every part of a stroke's
+/// centerline within [radius] of that segment is removed, splitting
+/// strokes where the eraser crosses them. [pressures] (the [PdfEditor]
+/// addInk convention - one optional list per stroke) travel with their
+/// points, interpolated at the cut boundaries. Returns the surviving
+/// strokes, or null when the eraser touched nothing. Shared by
+/// [PdfAnnotationEditing.sliceInk] and the editing overlay's live
+/// preview so the preview matches the commit exactly.
+({List<List<(double, double)>> strokes, List<List<double>?>? pressures})?
+    pdfSliceInkStrokes(
+  List<List<(double, double)>> strokes,
+  List<List<double>?>? pressures,
+  (double, double) from,
+  (double, double) to,
+  double radius,
+) {
+  // ends of a cut shorter than this are invisible crumbs - drop them
+  const minFragment = 0.05;
+  const epsT = 1e-6;
+  final boundsLeft = math.min(from.$1, to.$1) - radius;
+  final boundsRight = math.max(from.$1, to.$1) + radius;
+  final boundsBottom = math.min(from.$2, to.$2) - radius;
+  final boundsTop = math.max(from.$2, to.$2) + radius;
+
+  var changed = false;
+  final outStrokes = <List<(double, double)>>[];
+  final outPressures = <List<double>?>[];
+  void emit(List<(double, double)> stroke, List<double>? pressure) {
+    outStrokes.add(stroke);
+    outPressures.add(pressure);
+  }
+
+  for (var s = 0; s < strokes.length; s++) {
+    final stroke = strokes[s];
+    final pressure = pressures?[s];
+    if (stroke.length == 1) {
+      // a bare dot: gone if the eraser reaches it
+      final (x, y) = stroke.single;
+      if (_distanceToSegment(x, y, from, to) <= radius) {
+        changed = true;
+      } else {
+        emit(stroke, pressure);
+      }
+      continue;
+    }
+    // at most one erased t-interval per segment (a capsule is convex)
+    List<(double, double)?>? intervals;
+    for (var i = 0; i + 1 < stroke.length; i++) {
+      final interval = _capsuleInterval(
+        stroke[i],
+        stroke[i + 1],
+        from,
+        to,
+        radius,
+        boundsLeft: boundsLeft,
+        boundsRight: boundsRight,
+        boundsBottom: boundsBottom,
+        boundsTop: boundsTop,
+      );
+      if (interval == null) continue;
+      (intervals ??= List.filled(stroke.length - 1, null))[i] = interval;
+    }
+    if (intervals == null) {
+      emit(stroke, pressure);
+      continue;
+    }
+    changed = true;
+    var run = <(double, double)>[];
+    var runP = pressure == null ? null : <double>[];
+    void endRun() {
+      if (run.length >= 2) {
+        var length = 0.0;
+        for (var i = 0; i + 1 < run.length; i++) {
+          final dx = run[i + 1].$1 - run[i].$1;
+          final dy = run[i + 1].$2 - run[i].$2;
+          length += math.sqrt(dx * dx + dy * dy);
+        }
+        if (length > minFragment) emit(run, runP);
+      }
+      run = [];
+      runP = pressure == null ? null : <double>[];
+    }
+
+    (double, double) pointAt(int i, double t) => (
+          stroke[i].$1 + (stroke[i + 1].$1 - stroke[i].$1) * t,
+          stroke[i].$2 + (stroke[i + 1].$2 - stroke[i].$2) * t,
+        );
+    double pressureAt(int i, double t) =>
+        pressure![i] + (pressure[i + 1] - pressure[i]) * t;
+
+    final first = intervals[0];
+    if (first == null || first.$1 > epsT) {
+      run.add(stroke[0]);
+      runP?.add(pressure![0]);
+    }
+    for (var i = 0; i + 1 < stroke.length; i++) {
+      final interval = intervals[i];
+      if (interval == null) {
+        run.add(stroke[i + 1]);
+        runP?.add(pressure![i + 1]);
+        continue;
+      }
+      var (a, b) = interval;
+      if (a < epsT) a = 0;
+      if (b > 1 - epsT) b = 1;
+      if (a > 0) {
+        run.add(pointAt(i, a));
+        runP?.add(pressureAt(i, a));
+      }
+      endRun();
+      if (b < 1) {
+        run.add(pointAt(i, b));
+        runP?.add(pressureAt(i, b));
+        run.add(stroke[i + 1]);
+        runP?.add(pressure![i + 1]);
+      }
+    }
+    endRun();
+  }
+  if (!changed) return null;
+  return (
+    strokes: outStrokes,
+    pressures: pressures == null ? null : outPressures,
+  );
+}
+
+/// The t-interval of the segment [a]–[b] that lies within [radius] of
+/// the spine [c]–[d], or null when they don't overlap (or only touch
+/// tangentially). The capsule is convex, so the inside parameters form
+/// one interval; the distance along the segment is convex in t, found
+/// by ternary search and refined by bisection.
+(double, double)? _capsuleInterval(
+  (double, double) a,
+  (double, double) b,
+  (double, double) c,
+  (double, double) d,
+  double radius, {
+  required double boundsLeft,
+  required double boundsRight,
+  required double boundsBottom,
+  required double boundsTop,
+}) {
+  if (math.max(a.$1, b.$1) < boundsLeft ||
+      math.min(a.$1, b.$1) > boundsRight ||
+      math.max(a.$2, b.$2) < boundsBottom ||
+      math.min(a.$2, b.$2) > boundsTop) {
+    return null;
+  }
+  double f(double t) => _distanceToSegment(
+        a.$1 + (b.$1 - a.$1) * t,
+        a.$2 + (b.$2 - a.$2) * t,
+        c,
+        d,
+      );
+  final f0 = f(0), f1 = f(1);
+  var lo = 0.0, hi = 1.0;
+  for (var i = 0; i < 60; i++) {
+    final m1 = lo + (hi - lo) / 3;
+    final m2 = hi - (hi - lo) / 3;
+    if (f(m1) <= f(m2)) {
+      hi = m2;
+    } else {
+      lo = m1;
+    }
+  }
+  final tMin = (lo + hi) / 2;
+  if (math.min(f(tMin), math.min(f0, f1)) > radius) return null;
+  double crossing(double inside, double outside) {
+    for (var i = 0; i < 48; i++) {
+      final mid = (inside + outside) / 2;
+      if (f(mid) <= radius) {
+        inside = mid;
+      } else {
+        outside = mid;
+      }
+    }
+    return inside;
+  }
+
+  final t0 = f0 <= radius ? 0.0 : crossing(tMin, 0);
+  final t1 = f1 <= radius ? 1.0 : crossing(tMin, 1);
+  if (t1 - t0 < 1e-6) return null;
+  return (t0, t1);
+}
+
+/// Distance from ([x], [y]) to the segment [a]–[b].
+double _distanceToSegment(
+  double x,
+  double y,
+  (double, double) a,
+  (double, double) b,
+) {
+  final (ax, ay) = a;
+  final (bx, by) = b;
+  final dx = bx - ax, dy = by - ay;
+  final lengthSquared = dx * dx + dy * dy;
+  var px = ax, py = ay;
+  if (lengthSquared > 0) {
+    final t = (((x - ax) * dx + (y - ay) * dy) / lengthSquared).clamp(0.0, 1.0);
+    px = ax + t * dx;
+    py = ay + t * dy;
+  }
+  final ex = x - px, ey = y - py;
+  return math.sqrt(ex * ex + ey * ey);
+}
+
+/// Whether [PdfAnnotationEditing.restyleAnnotation] can faithfully
+/// regenerate [annotation]'s appearance - the gate UI style controls
+/// should check before offering to restyle a selection.
+///
+/// True for the subtypes the editor authors (shapes, ink, free text,
+/// line-family annotations, the four text markups, notes, stamps) when the dictionary carries
+/// enough style to rebuild the artwork: shapes must not be cloudy
+/// (/BE) or dashed (/BS /D), lines need /L or /Vertices, free text needs a standard-font /DA, ink
+/// needs a usable /InkList, markups need axis-aligned /QuadPoints,
+/// stamps need their caption in /Contents.
+bool pdfCanRestyleAnnotation(PdfAnnotation annotation) =>
+    annotation.behavior.canRestyle;
+
+/// A random version-4 UUID for an annotation's /NM. Random.secure() where
+/// the platform provides it, falling back to a time-seeded generator
+/// (identity needs uniqueness, not unpredictability).
+String _generateAnnotationName() {
+  math.Random random;
+  try {
+    random = math.Random.secure();
+  } on UnsupportedError {
+    random = math.Random(DateTime.now().microsecondsSinceEpoch);
+  }
+  final b = Uint8List(16);
+  for (var i = 0; i < 16; i++) {
+    b[i] = random.nextInt(256);
+  }
+  b[6] = (b[6] & 0x0F) | 0x40; // version 4
+  b[8] = (b[8] & 0x3F) | 0x80; // RFC 4122 variant
+  final hex = [
+    for (final byte in b) byte.toRadixString(16).padLeft(2, '0'),
+  ].join();
+  return '${hex.substring(0, 8)}-${hex.substring(8, 12)}-'
+      '${hex.substring(12, 16)}-${hex.substring(16, 20)}-${hex.substring(20)}';
+}
+
+/// Annotation authoring (§12.5): each method creates an annotation with a
+/// generated appearance stream (/AP → /N), so the result displays the same
+/// in this renderer and in other viewers.
+///
+/// Colors are `0xRRGGBB` ints; coordinates are PDF user space (origin at
+/// the page's bottom-left, y up). Annotations are staged on the editor and
+/// written by [PdfEditor.save].
+///
+/// Every creator takes an optional `name` - the /NM unique identifier
+/// (§12.5.2, see [PdfAnnotation.name]). Omitted, a UUID is generated;
+/// pass a name only to preserve identity through a rewrite or when
+/// replaying a synced annotation.
+extension PdfAnnotationEditing on PdfEditor {
+  /// Adds a text-markup highlight over [quads] (one rect per marked word,
+  /// line, or column slice).
+  ///
+  /// The appearance paints the quads in [color] with Multiply blending, the
+  /// conventional highlighter look that keeps text underneath readable.
+  void addHighlight(
+    int pageIndex,
+    List<PdfRect> quads, {
+    int color = 0xFFD100,
+    double opacity = 1,
+    String? contents,
+    String? author,
+    String? name,
+  }) =>
+      _addTextMarkup(
+        'Highlight',
+        pageIndex,
+        quads,
+        color,
+        opacity,
+        contents,
+        author,
+        name,
+      );
+
+  /// Adds an underline beneath each quad in [quads].
+  void addUnderline(
+    int pageIndex,
+    List<PdfRect> quads, {
+    int color = 0x10A010,
+    double opacity = 1,
+    String? contents,
+    String? author,
+    String? name,
+  }) =>
+      _addTextMarkup(
+        'Underline',
+        pageIndex,
+        quads,
+        color,
+        opacity,
+        contents,
+        author,
+        name,
+      );
+
+  /// Adds a strike-out through each quad in [quads].
+  void addStrikeOut(
+    int pageIndex,
+    List<PdfRect> quads, {
+    int color = 0xD02020,
+    double opacity = 1,
+    String? contents,
+    String? author,
+    String? name,
+  }) =>
+      _addTextMarkup(
+        'StrikeOut',
+        pageIndex,
+        quads,
+        color,
+        opacity,
+        contents,
+        author,
+        name,
+      );
+
+  /// Adds a squiggly (jagged) underline beneath each quad in [quads].
+  void addSquiggly(
+    int pageIndex,
+    List<PdfRect> quads, {
+    int color = 0xD02020,
+    double opacity = 1,
+    String? contents,
+    String? author,
+    String? name,
+  }) =>
+      _addTextMarkup(
+        'Squiggly',
+        pageIndex,
+        quads,
+        color,
+        opacity,
+        contents,
+        author,
+        name,
+      );
+
+  void _addTextMarkup(
+    String subtype,
+    int pageIndex,
+    List<PdfRect> quads,
+    int color,
+    double opacity,
+    String? contents,
+    String? author,
+    String? name,
+  ) {
+    final rect = _boundsOf(quads);
+    final (w, gs) = _markupContent(subtype, quads, color, opacity);
+    _addAnnotation(
+      pageIndex,
+      _markupDict(subtype, rect, color, contents, author)
+        ..['QuadPoints'] = _quadPoints(quads),
+      _form(rect, w, resources: _resources(extGState: gs)),
+      name: name,
+    );
+  }
+
+  /// The text-markup appearance for [quads]: the content and the alpha
+  /// ExtGState (always present for highlights, whose Multiply blending
+  /// rides the same GS0). Shared by the markup creators and
+  /// [restyleAnnotation] so a restyled markup re-renders exactly like a
+  /// fresh one.
+  (ContentWriter, CosDictionary?) _markupContent(
+    String subtype,
+    List<PdfRect> quads,
+    int color,
+    double opacity,
+  ) {
+    switch (subtype) {
+      case 'Highlight':
+        final w = ContentWriter()
+          ..extGState('GS0')
+          ..fillColor(color);
+        for (final q in quads) {
+          w.rect(q.left, q.bottom, q.width, q.height);
+        }
+        w.fill();
+        return (w, _alphaState(opacity, multiply: true));
+      case 'Squiggly':
+        final w = ContentWriter()..strokeColor(color);
+        final gs = _alphaState(opacity);
+        if (gs != null) w.extGState('GS0');
+        for (final q in quads) {
+          final amplitude = q.height * 0.1;
+          final period = q.height * 0.3;
+          w.lineWidth((q.height * 0.05).clamp(0.5, 2.0));
+          w.moveTo(q.left, q.bottom + amplitude);
+          var up = true;
+          for (var x = q.left + period / 2; x < q.right; x += period / 2) {
+            w.lineTo(x, q.bottom + (up ? amplitude * 2 : 0));
+            up = !up;
+          }
+          w.stroke();
+        }
+        return (w, gs);
+      default: // 'Underline' || 'StrikeOut'
+        final atHeight = subtype == 'Underline' ? 0.08 : 0.45;
+        final w = ContentWriter();
+        final gs = _alphaState(opacity);
+        if (gs != null) w.extGState('GS0');
+        w.strokeColor(color);
+        for (final q in quads) {
+          final y = q.bottom + q.height * atHeight;
+          w
+            ..lineWidth((q.height * 0.06).clamp(0.5, 3.0))
+            ..moveTo(q.left, y)
+            ..lineTo(q.right, y)
+            ..stroke();
+        }
+        return (w, gs);
+    }
+  }
+
+  /// Marks one or more regions for redaction (§12.5.6.23) by creating a
+  /// `/Redact` annotation over [quads] (one rect per region). This is the
+  /// MARK phase only - nothing is removed yet; call
+  /// [PdfRedactionApply.applyRedactions] to BURN the marks irreversibly.
+  ///
+  /// [fillColor] (default black) is the colour the redacted area is painted
+  /// on apply and is stored in /IC. [overlayText] is optional text drawn
+  /// over the filled area on apply (/OverlayText), in [overlayTextColor] at
+  /// [overlayFontSize].
+  ///
+  /// The marked-but-unapplied appearance is a translucent fill so the
+  /// content underneath stays visible while reviewing; the editor draws a
+  /// hatched preview on top.
+  void addRedaction(
+    int pageIndex,
+    List<PdfRect> quads, {
+    int fillColor = 0x000000,
+    String? overlayText,
+    int overlayTextColor = 0xFFFFFF,
+    double overlayFontSize = 12,
+    String? contents,
+    String? author,
+    String? name,
+  }) {
+    final rect = _boundsOf(quads);
+    final gs = _alphaState(0.4);
+    final w = ContentWriter();
+    if (gs != null) w.extGState('GS0');
+    w.fillColor(fillColor);
+    for (final q in quads) {
+      w.rect(q.left, q.bottom, q.width, q.height);
+    }
+    w.fill();
+
+    final dict = _markupDict('Redact', rect, fillColor, contents, author)
+      ..['QuadPoints'] = _quadPoints(quads)
+      ..['IC'] = CosArray([
+        for (final c in ContentWriter.rgbComponents(fillColor)) CosReal(c),
+      ]);
+    if (overlayText != null) {
+      dict['OverlayText'] = CosString.fromText(overlayText);
+      dict['Repeat'] = const CosBoolean(false);
+      final rgb = ContentWriter.rgbComponents(overlayTextColor);
+      dict['DA'] = CosString(
+        Uint8List.fromList(
+          latin1.encode(
+            '/Helv ${ContentWriter.fmt(overlayFontSize)} Tf '
+            '${ContentWriter.fmt(rgb[0])} ${ContentWriter.fmt(rgb[1])} '
+            '${ContentWriter.fmt(rgb[2])} rg',
+          ),
+        ),
+      );
+    }
+    _addAnnotation(
+      pageIndex,
+      dict,
+      _form(rect, w, resources: _resources(extGState: gs)),
+      name: name,
+    );
+  }
+
+  /// The default colour a visible link decoration (border or underline) is
+  /// drawn in - the conventional web-link blue.
+  static const int defaultLinkColor = 0x0563C1;
+
+  /// Adds a /Link annotation (§12.5.6.5) over [quads] that opens the external
+  /// [uri] when activated - a web address (`https://…`), a `mailto:`, or any
+  /// app-defined scheme the viewer dispatches (see [PdfUriAction]).
+  ///
+  /// [quads] is one rectangle per marked word, line, or column slice, exactly
+  /// like the text-markup creators - pass the quads of a text selection to
+  /// turn that run of text into a hyperlink. The annotation's /Rect is their
+  /// bounding box and each quad becomes an active region in /QuadPoints, so a
+  /// multi-line link is only clickable over the glyphs, not the ragged
+  /// rectangle around them.
+  ///
+  /// A link is invisible by default (a bare clickable region, the convention
+  /// for linking existing text). Pass [underlineColor] to draw a hyperlink
+  /// underline beneath each quad, or [borderColor] (with [borderWidth]) to
+  /// stroke a box around the region; either one generates an appearance
+  /// stream so the decoration shows in every viewer. [iconColor] adds a
+  /// small chain-link badge in the region's top-right corner, so a link
+  /// over a bare box reads as a link rather than an empty rectangle.
+  void addLinkToUri(
+    int pageIndex,
+    List<PdfRect> quads, {
+    required String uri,
+    int? underlineColor,
+    int? borderColor,
+    double borderWidth = 1,
+    int? iconColor,
+    String? contents,
+    String? name,
+  }) {
+    if (uri.isEmpty) {
+      throw ArgumentError.value(uri, 'uri', 'must not be empty');
+    }
+    _addLink(
+      pageIndex,
+      quads,
+      action: CosDictionary({
+        'Type': const CosName('Action'),
+        'S': const CosName('URI'),
+        'URI': CosString.fromText(uri),
+      }),
+      underlineColor: underlineColor,
+      borderColor: borderColor,
+      borderWidth: borderWidth,
+      iconColor: iconColor,
+      contents: contents,
+      name: name,
+    );
+  }
+
+  /// Adds a /Link annotation over [quads] that jumps to [destination]
+  /// elsewhere in *this same document* (§12.3.2.2) - the internal
+  /// cross-reference link. Build the destination with the
+  /// [PdfExplicitDestination] constructors (`.fit`, `.xyz`, `.fitR`, …);
+  /// [addLinkToPage] is the fit-the-whole-page shortcut.
+  ///
+  /// The quad and decoration semantics match [addLinkToUri].
+  void addLinkToDestination(
+    int pageIndex,
+    List<PdfRect> quads, {
+    required PdfExplicitDestination destination,
+    int? underlineColor,
+    int? borderColor,
+    double borderWidth = 1,
+    int? iconColor,
+    String? contents,
+    String? name,
+  }) {
+    _addLink(
+      pageIndex,
+      quads,
+      action: CosDictionary({
+        'Type': const CosName('Action'),
+        'S': const CosName('GoTo'),
+        'D': destination.toCosArray(_linkPageReference(destination.pageIndex)),
+      }),
+      underlineColor: underlineColor,
+      borderColor: borderColor,
+      borderWidth: borderWidth,
+      iconColor: iconColor,
+      contents: contents,
+      name: name,
+    );
+  }
+
+  /// Adds an internal /Link over [quads] that navigates to [targetPage]
+  /// (zero-based) fitted to the window - the common "jump to page N" link.
+  /// For a more specific view (a position, a zoom, a rectangle) use
+  /// [addLinkToDestination] with the matching [PdfExplicitDestination].
+  void addLinkToPage(
+    int pageIndex,
+    List<PdfRect> quads, {
+    required int targetPage,
+    int? underlineColor,
+    int? borderColor,
+    double borderWidth = 1,
+    int? iconColor,
+    String? contents,
+    String? name,
+  }) =>
+      addLinkToDestination(
+        pageIndex,
+        quads,
+        destination: PdfExplicitDestination.fit(targetPage),
+        underlineColor: underlineColor,
+        borderColor: borderColor,
+        borderWidth: borderWidth,
+        iconColor: iconColor,
+        contents: contents,
+        name: name,
+      );
+
+  /// Builds and links a /Link annotation carrying [action] (a /URI or /GoTo
+  /// action dictionary). Shared by the URI and destination creators.
+  ///
+  /// The /Border is `[0 0 0]` - no visible border - unless [borderColor] asks
+  /// for one, matching how conforming writers suppress the ugly default link
+  /// rectangle. A visible border or [underlineColor] underline is baked into
+  /// an /AP appearance stream so it renders identically everywhere.
+  void _addLink(
+    int pageIndex,
+    List<PdfRect> quads, {
+    required CosDictionary action,
+    int? underlineColor,
+    int? borderColor,
+    double borderWidth = 1,
+    int? iconColor,
+    String? contents,
+    String? name,
+  }) {
+    final rect = _boundsOf(quads);
+    final hasBorder = borderColor != null && borderWidth > 0;
+    final dict = CosDictionary({
+      'Type': const CosName('Annot'),
+      'Subtype': const CosName('Link'),
+      'Rect': _rectArray(rect),
+      'F': const CosInteger(4),
+      'A': action,
+      // suppress the default 1pt border unless a visible one is requested;
+      // the width lives in the appearance too, this keeps /Border in step.
+      'Border': CosArray([
+        const CosInteger(0),
+        const CosInteger(0),
+        CosReal(hasBorder ? borderWidth : 0),
+      ]),
+      'QuadPoints': _quadPoints(quads),
+    });
+    if (hasBorder) dict['C'] = _colorComponents(borderColor);
+    if (contents != null) dict['Contents'] = CosString.fromText(contents);
+    dict['NM'] = CosString.fromText(name ?? _generateAnnotationName());
+
+    if (underlineColor != null || hasBorder || iconColor != null) {
+      final w = ContentWriter();
+      if (underlineColor != null) {
+        w.strokeColor(underlineColor);
+        for (final q in quads) {
+          final y = q.bottom + q.height * 0.08;
+          w
+            ..lineWidth((q.height * 0.06).clamp(0.5, 3.0))
+            ..moveTo(q.left, y)
+            ..lineTo(q.right, y)
+            ..stroke();
+        }
+      }
+      if (hasBorder) {
+        w
+          ..strokeColor(borderColor)
+          ..lineWidth(borderWidth);
+        for (final q in quads) {
+          w
+            ..rect(q.left + borderWidth / 2, q.bottom + borderWidth / 2,
+                q.width - borderWidth, q.height - borderWidth)
+            ..stroke();
+        }
+      }
+      if (iconColor != null) {
+        _linkBadge(w, rect, iconColor, inset: hasBorder ? borderWidth : 0);
+      }
+      dict['AP'] = CosDictionary({'N': _updater.addObject(_form(rect, w))});
+    }
+
+    _linkAnnotation(pageIndex, _updater.addObject(dict));
+  }
+
+  /// Draws the chain-link badge [_addLink]'s `iconColor` asks for: two
+  /// interlocking rounded links at 45 degrees on a white rounded tile,
+  /// tucked into [rect]'s top-right corner (inside a border of width
+  /// [inset]). It scales with the region - up to 18pt, so it stays a badge
+  /// on a large box - and is left out of a region too small to fit one.
+  static void _linkBadge(
+    ContentWriter w,
+    PdfRect rect,
+    int color, {
+    double inset = 0,
+  }) {
+    final room = math.min(rect.width, rect.height) - 2 * inset;
+    final size = math.min(18.0, room * 0.6);
+    if (size < 7) return;
+    final pad = math.min(3.0, size * 0.2);
+    final left = rect.right - inset - pad - size;
+    final bottom = rect.top - inset - pad - size;
+    w
+      ..save()
+      ..fillColor(0xFFFFFF)
+      ..strokeColor(color)
+      ..lineWidth(size * 0.05)
+      ..roundedRect(left, bottom, size, size, size * 0.22)
+      ..fillAndStroke()
+      // a unit cell centred on the tile, turned 45 degrees
+      ..concatMatrix(
+          size * math.sqrt1_2,
+          size * math.sqrt1_2,
+          -size * math.sqrt1_2,
+          size * math.sqrt1_2,
+          left + size / 2,
+          bottom + size / 2)
+      ..roundLines()
+      ..lineWidth(0.085);
+    for (final dx in const [-0.17, 0.17]) {
+      w.roundedRect(dx - 0.22, -0.12, 0.44, 0.24, 0.12);
+    }
+    w
+      ..stroke()
+      ..restore();
+  }
+
+  /// The indirect reference to page [index], for a /GoTo destination array.
+  /// (A local twin of the outline editor's page-reference helper, kept here
+  /// so the link creators don't reach across extensions.)
+  CosReference _linkPageReference(int index) {
+    final ref = document.cos.referenceTo(document.page(index).dict);
+    if (ref == null) {
+      throw StateError('page $index has no object reference');
+    }
+    return ref;
+  }
+
+  /// Adds a freehand ink annotation. Each stroke is a polyline of
+  /// `(x, y)` points in page space.
+  ///
+  /// [pressures] optionally gives one normalized pressure (0–1) per point
+  /// of the corresponding stroke (a null entry leaves that stroke at the
+  /// uniform [strokeWidth]). Pressured strokes render with a varying
+  /// width - [pdfInkStrokeWidth] per segment - the natural look for
+  /// stylus (Apple Pencil) drawings. The /InkList always stores the
+  /// centerline points; the variable width lives in the appearance
+  /// stream, which conforming viewers prefer.
+  void addInk(
+    int pageIndex,
+    List<List<(double, double)>> strokes, {
+    int color = 0xD02020,
+    double strokeWidth = 2,
+    double opacity = 1,
+    List<List<double>?>? pressures,
+    String? contents,
+    String? author,
+    String? name,
+  }) {
+    if (strokes.isEmpty || strokes.any((s) => s.isEmpty)) {
+      throw ArgumentError.value(strokes, 'strokes', 'must be non-empty');
+    }
+    if (pressures != null &&
+        (pressures.length != strokes.length ||
+            [
+              for (var i = 0; i < strokes.length; i++)
+                if (pressures[i] != null &&
+                    pressures[i]!.length != strokes[i].length)
+                  i,
+            ].isNotEmpty)) {
+      throw ArgumentError.value(
+        pressures,
+        'pressures',
+        'must parallel strokes point for point',
+      );
+    }
+    final (rect, w, resources) = _inkAppearance(
+      strokes,
+      pressures,
+      color,
+      strokeWidth,
+      opacity,
+    );
+
+    _addAnnotation(
+      pageIndex,
+      _markupDict('Ink', rect, color, contents, author)
+        ..['BS'] = _borderStyle(strokeWidth)
+        ..['InkList'] = _inkListArray(strokes),
+      _form(rect, w, resources: resources),
+      name: name,
+    );
+  }
+
+  /// The generated Ink appearance for [strokes]: the padded rect (the
+  /// Bézier control hull plus half the widest pen width), the content,
+  /// and its /Resources (null at full [opacity]). Shared by [addInk] and
+  /// [sliceInk] so sliced ink re-renders exactly as it was drawn.
+  ///
+  /// At reduced opacity the strokes are drawn at full alpha into an
+  /// isolated transparency-group form that the returned content paints
+  /// once under a constant-alpha ExtGState. Stroking each pressure
+  /// segment (and each separate stroke) on its own means the round caps
+  /// overlap at every join; compositing them individually at partial
+  /// alpha double-paints those overlaps into visible dots - drawing them
+  /// opaquely inside the group and fading the group as a whole avoids it.
+  (PdfRect, ContentWriter, CosDictionary?) _inkAppearance(
+    List<List<(double, double)>> strokes,
+    List<List<double>?>? pressures,
+    int color,
+    double strokeWidth,
+    double opacity,
+  ) {
+    var maxWidth = strokeWidth;
+    if (pressures != null) {
+      for (final list in pressures) {
+        for (final p in list ?? const <double>[]) {
+          final width = pdfInkStrokeWidth(strokeWidth, p);
+          if (width > maxWidth) maxWidth = width;
+        }
+      }
+    }
+    final controls = [
+      for (final stroke in strokes) pdfInkCurveControls(stroke),
+    ];
+    var minX = double.infinity, minY = double.infinity;
+    var maxX = double.negativeInfinity, maxY = double.negativeInfinity;
+    // a Bézier stays inside its control points' hull, so including the
+    // controls makes the rect cover any spline overshoot past the samples
+    for (var s = 0; s < strokes.length; s++) {
+      for (final (x, y) in strokes[s].followedBy(
+        controls[s].expand((c) => [c.$1, c.$2]),
+      )) {
+        if (x < minX) minX = x;
+        if (x > maxX) maxX = x;
+        if (y < minY) minY = y;
+        if (y > maxY) maxY = y;
+      }
+    }
+    final pad = maxWidth / 2 + 1;
+    final rect = PdfRect(minX - pad, minY - pad, maxX + pad, maxY + pad);
+
+    final w = ContentWriter()
+      ..strokeColor(color)
+      ..lineWidth(strokeWidth)
+      ..roundLines();
+    for (var s = 0; s < strokes.length; s++) {
+      final stroke = strokes[s];
+      final pressure = pressures?[s];
+      final (x0, y0) = stroke.first;
+      if (pressure == null) {
+        w.moveTo(x0, y0);
+        if (stroke.length == 1) {
+          // a dot: zero-length segment with round caps paints a circle
+          w.lineTo(x0, y0);
+        }
+        for (var i = 0; i < stroke.length - 1; i++) {
+          final ((c1x, c1y), (c2x, c2y)) = controls[s][i];
+          final (x, y) = stroke[i + 1];
+          w.curveTo(c1x, c1y, c2x, c2y, x, y);
+        }
+        w.stroke();
+        continue;
+      }
+      if (stroke.length == 1) {
+        w
+          ..lineWidth(pdfInkStrokeWidth(strokeWidth, pressure.first))
+          ..moveTo(x0, y0)
+          ..lineTo(x0, y0)
+          ..stroke();
+        continue;
+      }
+      // one stroked spline segment per point pair, each at its own width;
+      // the round caps and joins hide the seams
+      for (var i = 0; i < stroke.length - 1; i++) {
+        final (xa, ya) = stroke[i];
+        final ((c1x, c1y), (c2x, c2y)) = controls[s][i];
+        final (xb, yb) = stroke[i + 1];
+        w
+          ..lineWidth(
+            pdfInkStrokeWidth(strokeWidth, (pressure[i] + pressure[i + 1]) / 2),
+          )
+          ..moveTo(xa, ya)
+          ..curveTo(c1x, c1y, c2x, c2y, xb, yb)
+          ..stroke();
+      }
+    }
+
+    final gs = _alphaState(opacity);
+    if (gs == null) return (rect, w, null);
+    // Fade the strokes as one object: wrap them in an isolated
+    // transparency group and apply the constant alpha to the group at its
+    // `Do`, so overlapping round caps composite opaquely inside instead of
+    // darkening every join into a dot.
+    final innerRef =
+        _updater.addObject(_form(rect, w, transparencyGroup: true));
+    return (
+      rect,
+      ContentWriter()
+        ..extGState('GS0')
+        ..drawXObject('Fm0'),
+      _resources(extGState: gs, xObject: CosDictionary({'Fm0': innerRef})),
+    );
+  }
+
+  CosArray _inkListArray(List<List<(double, double)>> strokes) => CosArray([
+        for (final stroke in strokes)
+          CosArray([
+            for (final (x, y) in stroke) ...[CosReal(x), CosReal(y)],
+          ]),
+      ]);
+
+  /// Erases the parts of an Ink [annotation] within [radius] page units
+  /// of the eraser's swept [path] - the PSPDFKit-style circle eraser.
+  /// Strokes split where the circle crosses them; /InkList, /Rect, and
+  /// the appearance are rewritten in place (same object numbers), so
+  /// the annotation keeps its identity, author, and contents. When the
+  /// appearance is one we generated with pressure-variable widths, the
+  /// pressures are recovered from its per-segment `w` operators and
+  /// survive the cut. An annotation whose strokes are erased entirely
+  /// is removed.
+  ///
+  /// Returns whether anything changed; false for non-Ink annotations
+  /// and ones without a usable /InkList (those can only be deleted
+  /// whole).
+  bool sliceInk(
+    int pageIndex,
+    PdfAnnotation annotation,
+    List<(double, double)> path,
+    double radius,
+  ) {
+    if (annotation.subtype != 'Ink' || path.isEmpty || radius <= 0) {
+      return false;
+    }
+    var strokes = annotation.inkList;
+    if (strokes == null || strokes.isEmpty) return false;
+    final form = annotation.normalAppearance;
+    final strokeWidth = annotation.borderWidth ?? 1;
+    var pressures =
+        form == null ? null : _recoverInkPressures(form, strokes, strokeWidth);
+    final capsules = path.length == 1
+        ? [(path[0], path[0])]
+        : [for (var i = 0; i + 1 < path.length; i++) (path[i], path[i + 1])];
+    var changed = false;
+    for (final (from, to) in capsules) {
+      final sliced = pdfSliceInkStrokes(strokes!, pressures, from, to, radius);
+      if (sliced == null) continue;
+      strokes = sliced.strokes;
+      pressures = sliced.pressures;
+      changed = true;
+      if (strokes.isEmpty) break;
+    }
+    if (!changed) return false;
+    if (strokes!.isEmpty) {
+      removeAnnotation(pageIndex, annotation);
+      return true;
+    }
+    final opacity = form == null ? 1.0 : _appearanceOpacity(form);
+    final color = annotation.color ?? 0x000000;
+    final (rect, w, resources) = _inkAppearance(
+      strokes,
+      pressures,
+      color,
+      strokeWidth,
+      opacity,
+    );
+    final dict = annotation.dict;
+    dict['Rect'] = _rectArray(rect);
+    dict['InkList'] = _inkListArray(strokes);
+    if (form != null) {
+      _replaceAppearance(
+        dict,
+        form,
+        rect,
+        w,
+        resources: resources,
+      );
+    } else {
+      dict['AP'] = CosDictionary({
+        'N': _updater.addObject(
+          _form(rect, w, resources: resources),
+        ),
+      });
+    }
+    _markAnnotationChanged(pageIndex, dict);
+    return true;
+  }
+
+  /// Per-point pressures recovered from an Ink appearance this editor
+  /// generated: pressured strokes carry one `w` per drawn segment (see
+  /// [_inkAppearance]), so inverting [pdfInkStrokeWidth] gives segment
+  /// pressures, averaged back onto the points. Returns null - uniform
+  /// width - whenever the stream doesn't match that exact shape
+  /// (foreign appearances, plain uniform ink).
+  List<List<double>?>? _recoverInkPressures(
+    CosStream form,
+    List<List<(double, double)>> strokes,
+    double strokeWidth,
+  ) {
+    if (strokeWidth <= 0) return null;
+    // Reduced-opacity ink strokes live inside an isolated transparency
+    // group the /N form paints with `/GS0 gs /Fm0 Do`; unwrap to that
+    // inner form so the per-segment `w` recovery sees the stroke ops.
+    final drawing = _inkDrawingStream(form) ?? form;
+    final List<ContentOperation> ops;
+    try {
+      ops = ContentStreamParser.parse(document.cos.decodeStreamData(drawing));
+    } catch (_) {
+      return null;
+    }
+    // anything beyond stroked paths and line state means the appearance
+    // isn't one of ours - don't guess
+    const allowed = {
+      'q', 'Q', 'gs', 'cm', 'w', 'J', 'j', 'M', 'd', //
+      'RG', 'rg', 'S', 's', 'n', 'm', 'l', 'c', 'v', 'y',
+    };
+    var width = 1.0;
+    final widths = <double>[];
+    for (final op in ops) {
+      if (!allowed.contains(op.operator)) return null;
+      switch (op.operator) {
+        case 'w':
+          if (op.operands.length != 1) return null;
+          final value = op.operands.single;
+          width = switch (value) {
+            CosInteger(:final value) => value.toDouble(),
+            CosReal(:final value) => value,
+            _ => double.nan,
+          };
+          if (width.isNaN) return null;
+        case 'l' || 'c' || 'v' || 'y':
+          widths.add(width);
+      }
+    }
+    var total = 0;
+    for (final stroke in strokes) {
+      total += math.max(1, stroke.length - 1);
+    }
+    if (widths.length != total) return null;
+    var k = 0;
+    var anyPressure = false;
+    final result = <List<double>?>[];
+    for (final stroke in strokes) {
+      final segments = math.max(1, stroke.length - 1);
+      final ws = widths.sublist(k, k + segments);
+      k += segments;
+      if (ws.every((w) => (w - strokeWidth).abs() < 1e-3)) {
+        result.add(null);
+        continue;
+      }
+      anyPressure = true;
+      final perSegment = [
+        for (final w in ws) ((w / strokeWidth - 0.4) / 1.2).clamp(0.0, 1.0),
+      ];
+      if (stroke.length == 1) {
+        result.add([perSegment.single]);
+        continue;
+      }
+      result.add([
+        perSegment.first,
+        for (var i = 1; i + 1 < stroke.length; i++)
+          (perSegment[i - 1] + perSegment[i]) / 2,
+        perSegment.last,
+      ]);
+    }
+    return anyPressure ? result : null;
+  }
+
+  /// If [form] is the wrapper this editor emits for reduced-opacity ink -
+  /// a single `Do` of an isolated transparency group carrying the strokes -
+  /// returns that inner group's stream; null when the form draws the
+  /// strokes directly (full opacity) or isn't one of ours.
+  CosStream? _inkDrawingStream(CosStream form) {
+    final cos = document.cos;
+    final List<ContentOperation> ops;
+    try {
+      ops = ContentStreamParser.parse(cos.decodeStreamData(form));
+    } catch (_) {
+      return null;
+    }
+    String? drawn;
+    for (final op in ops) {
+      if (op.operator == 'Do') {
+        if (op.operands.length != 1 || op.operands.single is! CosName) {
+          return null;
+        }
+        drawn = (op.operands.single as CosName).value;
+      }
+    }
+    if (drawn == null) return null;
+    final resources = cos.resolve(form.dictionary['Resources']);
+    if (resources is! CosDictionary) return null;
+    final xObjects = cos.resolve(resources['XObject']);
+    if (xObjects is! CosDictionary) return null;
+    final inner = cos.resolve(xObjects[drawn]);
+    return inner is CosStream ? inner : null;
+  }
+
+  /// Adds a rectangle annotation. At least one of [strokeColor] and
+  /// [fillColor] must be given. [cornerRadius] (page points, 0 for a plain
+  /// rectangle) rounds the corners - it is baked into the appearance and
+  /// recorded in the annotation's /Border array so it survives a resize.
+  void addSquare(
+    int pageIndex,
+    PdfRect rect, {
+    int? strokeColor = 0xD02020,
+    double strokeWidth = 2,
+    int? fillColor,
+    double opacity = 1,
+    List<double>? dashPattern,
+    double cornerRadius = 0,
+    String? contents,
+    String? author,
+    String? name,
+  }) =>
+      _addShape(
+        'Square',
+        pageIndex,
+        rect,
+        strokeColor,
+        strokeWidth,
+        fillColor,
+        opacity,
+        contents,
+        author,
+        name,
+        dashPattern,
+        cornerRadius: cornerRadius,
+      );
+
+  /// Adds an ellipse annotation inscribed in [rect]. At least one of
+  /// [strokeColor] and [fillColor] must be given.
+  void addCircle(
+    int pageIndex,
+    PdfRect rect, {
+    int? strokeColor = 0xD02020,
+    double strokeWidth = 2,
+    int? fillColor,
+    double opacity = 1,
+    List<double>? dashPattern,
+    String? contents,
+    String? author,
+    String? name,
+  }) =>
+      _addShape(
+        'Circle',
+        pageIndex,
+        rect,
+        strokeColor,
+        strokeWidth,
+        fillColor,
+        opacity,
+        contents,
+        author,
+        name,
+        dashPattern,
+      );
+
+  /// Adds a straight /Line annotation from [start] to [end]. Set
+  /// [endEnding] to [PdfLineEnding.closedArrow] for a standard arrow.
+  void addLine(
+    int pageIndex,
+    (double, double) start,
+    (double, double) end, {
+    int strokeColor = 0xD02020,
+    double strokeWidth = 2,
+    double opacity = 1,
+    List<double>? dashPattern,
+    PdfLineEnding startEnding = PdfLineEnding.none,
+    PdfLineEnding endEnding = PdfLineEnding.none,
+    String? contents,
+    String? author,
+    String? name,
+  }) {
+    if (start == end) {
+      throw ArgumentError.value(end, 'end', 'must differ from start');
+    }
+    final dashed = dashPattern != null && dashPattern.isNotEmpty;
+    final points = [start, end];
+    final endingPoints = <(double, double)>[
+      ..._endingExtent(startEnding, start, end, strokeWidth),
+      ..._endingExtent(endEnding, end, start, strokeWidth),
+    ];
+    final rect = _pointBounds([
+      ...points,
+      ...endingPoints,
+    ], strokeWidth + (dashed ? strokeWidth : 0));
+    final gs = _alphaState(opacity);
+    final w = _lineContent(
+      points,
+      strokeColor: strokeColor,
+      strokeWidth: strokeWidth,
+      dashPattern: dashPattern,
+      closed: false,
+      fillColor: null,
+      startEnding: startEnding,
+      endEnding: endEnding,
+      hasAlpha: gs != null,
+    );
+    final dict = _markupDict('Line', rect, strokeColor, contents, author)
+      ..['L'] = CosArray([
+        CosReal(start.$1),
+        CosReal(start.$2),
+        CosReal(end.$1),
+        CosReal(end.$2),
+      ])
+      ..['LE'] = CosArray([
+        CosName(startEnding.pdfName),
+        CosName(endEnding.pdfName),
+      ])
+      ..['BS'] = _borderStyle(strokeWidth, dashPattern: dashPattern);
+    _addAnnotation(
+      pageIndex,
+      dict,
+      _form(rect, w, resources: _resources(extGState: gs)),
+      name: name,
+    );
+  }
+
+  /// Adds a /PolyLine annotation through [vertices]. Per §12.5.6.7 a
+  /// /PolyLine may carry /LE endings on its first and last vertex -
+  /// [startEnding] is drawn at `vertices.first` (pointing back toward
+  /// `vertices[1]`), [endEnding] at `vertices.last`.
+  void addPolyLine(
+    int pageIndex,
+    List<(double, double)> vertices, {
+    int strokeColor = 0xD02020,
+    double strokeWidth = 2,
+    double opacity = 1,
+    List<double>? dashPattern,
+    PdfLineEnding startEnding = PdfLineEnding.none,
+    PdfLineEnding endEnding = PdfLineEnding.none,
+    String? contents,
+    String? author,
+    String? name,
+  }) {
+    if (vertices.length < 2) {
+      throw ArgumentError.value(vertices, 'vertices', 'must have 2+ points');
+    }
+    final endingPoints = <(double, double)>[
+      ..._endingExtent(startEnding, vertices.first, vertices[1], strokeWidth),
+      ..._endingExtent(
+        endEnding,
+        vertices.last,
+        vertices[vertices.length - 2],
+        strokeWidth,
+      ),
+    ];
+    final rect = _pointBounds([...vertices, ...endingPoints], strokeWidth);
+    final gs = _alphaState(opacity);
+    final w = _lineContent(
+      vertices,
+      strokeColor: strokeColor,
+      strokeWidth: strokeWidth,
+      dashPattern: dashPattern,
+      closed: false,
+      fillColor: null,
+      startEnding: startEnding,
+      endEnding: endEnding,
+      hasAlpha: gs != null,
+    );
+    final dict = _markupDict('PolyLine', rect, strokeColor, contents, author)
+      ..['Vertices'] = _pointArray(vertices)
+      ..['LE'] = CosArray([
+        CosName(startEnding.pdfName),
+        CosName(endEnding.pdfName),
+      ])
+      ..['BS'] = _borderStyle(strokeWidth, dashPattern: dashPattern);
+    _addAnnotation(
+      pageIndex,
+      dict,
+      _form(rect, w, resources: _resources(extGState: gs)),
+      name: name,
+    );
+  }
+
+  /// Adds a /Polygon annotation through [vertices].
+  void addPolygon(
+    int pageIndex,
+    List<(double, double)> vertices, {
+    int strokeColor = 0xD02020,
+    double strokeWidth = 2,
+    int? fillColor,
+    double opacity = 1,
+    List<double>? dashPattern,
+    bool cloudy = false,
+    double cloudScale = 1,
+    String? contents,
+    String? author,
+    String? name,
+  }) {
+    if (vertices.length < 3) {
+      throw ArgumentError.value(vertices, 'vertices', 'must have 3+ points');
+    }
+    final rect = _pointBounds(
+      vertices,
+      cloudy
+          ? _cloudPadding(strokeWidth, cloudScale)
+          : _linePadding(strokeWidth),
+    );
+    final gs = _alphaState(opacity);
+    final w = cloudy
+        ? _cloudPolygonContent(
+            vertices,
+            strokeColor: strokeColor,
+            strokeWidth: strokeWidth,
+            cloudScale: cloudScale,
+            dashPattern: dashPattern,
+            fillColor: fillColor,
+            hasAlpha: gs != null,
+          )
+        : _lineContent(
+            vertices,
+            strokeColor: strokeColor,
+            strokeWidth: strokeWidth,
+            dashPattern: dashPattern,
+            closed: true,
+            fillColor: fillColor,
+            hasAlpha: gs != null,
+          );
+    final dict = _markupDict('Polygon', rect, strokeColor, contents, author)
+      ..['Vertices'] = _pointArray(vertices)
+      ..['BS'] = _borderStyle(strokeWidth, dashPattern: dashPattern);
+    if (cloudy) {
+      dict['BE'] = CosDictionary({
+        'S': const CosName('C'),
+        'I': CosReal(cloudScale),
+      });
+    }
+    if (fillColor != null) dict['IC'] = _colorComponents(fillColor);
+    _addAnnotation(
+      pageIndex,
+      dict,
+      _form(rect, w, resources: _resources(extGState: gs)),
+      name: name,
+    );
+  }
+
+  /// The document-default measurement scale, or null until
+  /// [setMeasurementScale] is called.
+  PdfMeasure? get measurementScale => _defaultMeasure;
+
+  /// Sets the document-default measurement scale (§12.9) used by
+  /// [addMeasurement] when no per-annotation override is given.
+  ///
+  /// [pageUnitsPerPoint] converts a PDF point to a "page unit" (e.g. an
+  /// inch printed at 72 dpi is `1 / 72`), and [realUnitsPerPageUnit] is
+  /// the drawing's scale (`20` for `1 in = 20 ft`). Their product is the
+  /// real-world units per point baked into the /Measure /X array; values
+  /// display in [realUnitLabel] (and [areaUnitLabel] for areas, defaulting
+  /// to `realUnitLabel²`).
+  PdfMeasure setMeasurementScale(
+    double pageUnitsPerPoint,
+    String realUnitLabel,
+    double realUnitsPerPageUnit, {
+    String? areaUnitLabel,
+    int precision = 100,
+    String? ratioLabel,
+  }) {
+    final measure = PdfMeasure.scale(
+      unitsPerPoint: pageUnitsPerPoint * realUnitsPerPageUnit,
+      unitLabel: realUnitLabel,
+      areaUnitLabel: areaUnitLabel,
+      precision: precision,
+      ratioLabel: ratioLabel,
+    );
+    _defaultMeasure = measure;
+    return measure;
+  }
+
+  /// Writes [measure] into the page's /VP viewport array (§12.9) so the
+  /// drawing scale travels *with the document* - surviving a reopen and
+  /// portable across devices - rather than living only in an app-side
+  /// preference. A single viewport covering the page crop box carries the
+  /// /Measure; an existing measurement viewport is replaced. Also adopts
+  /// [measure] as the editor's default for subsequent [addMeasurement]
+  /// calls. Returns the page's resolved scale.
+  PdfMeasure setPageMeasurementScale(int pageIndex, PdfMeasure measure) {
+    final page = document.page(pageIndex);
+    final box = page.cropBox;
+    final viewport = CosDictionary({
+      'Type': const CosName('Viewport'),
+      'BBox': CosArray([
+        CosReal(box.left),
+        CosReal(box.bottom),
+        CosReal(box.right),
+        CosReal(box.top),
+      ]),
+      'Name': CosString.fromText('Measurement'),
+      'Measure': measure.toCosDictionary(),
+    });
+    final existing = document.cos.resolve(page.dict['VP']);
+    final kept = <CosObject>[];
+    if (existing is CosArray) {
+      for (final item in existing.items) {
+        final vp = document.cos.resolve(item);
+        // drop any prior measurement viewport; keep unrelated ones.
+        if (vp is CosDictionary && vp['Measure'] != null) continue;
+        kept.add(item);
+      }
+    }
+    page.dict['VP'] = CosArray([viewport, ...kept]);
+    _updater.markChanged(page.dict);
+    _markVisual([pageIndex]);
+    _defaultMeasure = measure;
+    return measure;
+  }
+
+  /// Adds a measurement annotation carrying a /Measure dictionary (§12.9)
+  /// and, for the takeoff kinds, a /Takeoff record (depth/holes/label).
+  ///
+  /// Geometry by kind:
+  ///  - distance/slope → /Line (two points)
+  ///  - perimeter → /PolyLine (2+ points); angle/arc → /PolyLine (3 points)
+  ///  - area/areaCutout/volume → /Polygon (3+ points, closed)
+  ///  - count → a small "×" marker (/Square) at the single point
+  ///
+  /// The measured value (distance = `|segment| × scaleFactor`, perimeter =
+  /// `Σ segments × scaleFactor`, area = `shoelace × scaleFactor²`, volume =
+  /// `area × depth`, angle/slope in degrees, arc length along the circle
+  /// through the three points, net area = outer − holes) is formatted
+  /// through [measure] (or the document default set by [setMeasurementScale]),
+  /// stamped into /Contents, and drawn as a caption at the geometry's
+  /// anchor. [depth] feeds a volume, [holes] cut a net-area polygon,
+  /// [label] buckets the running total. [valueText] is a value the user
+  /// wrote: it becomes the caption and /Contents in place of the computed
+  /// one, is kept in /Takeoff /Value, and survives later reshapes (see
+  /// [setMeasurementValue]). Throws a [StateError] when no scale is
+  /// available (count, and a measurement given a [valueText], need none).
+  void addMeasurement(
+    int pageIndex,
+    PdfMeasurementKind kind,
+    List<(double, double)> points, {
+    PdfMeasure? measure,
+    int strokeColor = 0xD02020,
+    double strokeWidth = 2,
+    int? fillColor,
+    double opacity = 1,
+    List<double>? dashPattern,
+    int? captionColor,
+    PdfStandardFont captionFont = PdfStandardFont.helvetica,
+    double captionSize = 10,
+    PdfLineEnding startEnding = PdfLineEnding.none,
+    PdfLineEnding endEnding = PdfLineEnding.none,
+    double? depth,
+    List<List<(double, double)>> holes = const [],
+    String? label,
+    String? valueText,
+    String? author,
+    String? name,
+  }) {
+    final m = measure ?? _defaultMeasure;
+    // a count marker has no caption to carry a written value
+    final written = valueText == null ||
+            valueText.trim().isEmpty ||
+            kind == PdfMeasurementKind.count
+        ? null
+        : valueText.trim();
+    if (m == null && written == null && kind != PdfMeasurementKind.count) {
+      throw StateError(
+        'no measurement scale set - call setMeasurementScale '
+        'or pass a measure',
+      );
+    }
+    final minPoints = switch (kind) {
+      PdfMeasurementKind.count => 1,
+      PdfMeasurementKind.distance ||
+      PdfMeasurementKind.slope ||
+      PdfMeasurementKind.perimeter =>
+        2,
+      PdfMeasurementKind.angle || PdfMeasurementKind.arc => 3,
+      PdfMeasurementKind.area ||
+      PdfMeasurementKind.areaCutout ||
+      PdfMeasurementKind.volume =>
+        3,
+    };
+    if (points.length < minPoints) {
+      throw ArgumentError.value(
+        points,
+        'points',
+        'needs $minPoints+ points for ${kind.name}',
+      );
+    }
+
+    final isPolygon = kind == PdfMeasurementKind.area ||
+        kind == PdfMeasurementKind.areaCutout ||
+        kind == PdfMeasurementKind.volume;
+    final isLine =
+        kind == PdfMeasurementKind.distance || kind == PdfMeasurementKind.slope;
+    final isCount = kind == PdfMeasurementKind.count;
+    // the classic three are recognised by subtype; the rest need /Takeoff.
+    final classic = kind == PdfMeasurementKind.distance ||
+        kind == PdfMeasurementKind.perimeter ||
+        kind == PdfMeasurementKind.area;
+
+    final gs = _alphaState(opacity);
+    final labelColor = captionColor ?? strokeColor;
+    final markerR = math.max(6.0, strokeWidth * 3);
+
+    final ContentWriter content;
+    if (isCount) {
+      content = _countMarker(
+        points.first,
+        radius: markerR,
+        strokeColor: strokeColor,
+        strokeWidth: strokeWidth,
+        hasAlpha: gs != null,
+      );
+    } else {
+      final drawPoints =
+          kind == PdfMeasurementKind.arc ? _arcPolyline(points) : points;
+      content = _lineContent(
+        drawPoints,
+        strokeColor: strokeColor,
+        strokeWidth: strokeWidth,
+        dashPattern: dashPattern,
+        closed: isPolygon,
+        fillColor: isPolygon ? fillColor : null,
+        startEnding: isPolygon ? PdfLineEnding.none : startEnding,
+        endEnding: isPolygon ? PdfLineEnding.none : endEnding,
+        hasAlpha: gs != null,
+      );
+      // a net-area cutout draws each hole as an inner outline.
+      for (final hole in holes) {
+        if (hole.length < 3) continue;
+        content
+          ..strokeColor(strokeColor)
+          ..lineWidth(strokeWidth)
+          ..moveTo(hole.first.$1, hole.first.$2);
+        for (final (x, y) in hole.skip(1)) {
+          content.lineTo(x, y);
+        }
+        content
+          ..closePath()
+          ..stroke();
+      }
+    }
+
+    final (caption, anchor) = _takeoffCaption(
+      kind,
+      points,
+      m,
+      depth: depth,
+      holes: holes,
+      valueText: written,
+    );
+    final PdfRect captionBox;
+    if (caption.isEmpty) {
+      captionBox = PdfRect(anchor.$1, anchor.$2, anchor.$1, anchor.$2);
+    } else {
+      captionBox = _drawMeasurementCaption(
+        content,
+        caption,
+        anchor,
+        font: captionFont,
+        size: captionSize,
+        color: labelColor,
+      );
+    }
+
+    // the rect covers geometry (+ holes / the marker) and the caption box.
+    final boundsPoints = isCount
+        ? [
+            (points.first.$1 - markerR, points.first.$2 - markerR),
+            (points.first.$1 + markerR, points.first.$2 + markerR),
+          ]
+        : [for (final h in holes) ...h, ...points];
+    final geomRect = _pointBounds(boundsPoints, strokeWidth);
+    final rect = PdfRect(
+      math.min(geomRect.left, captionBox.left),
+      math.min(geomRect.bottom, captionBox.bottom),
+      math.max(geomRect.right, captionBox.right),
+      math.max(geomRect.top, captionBox.top),
+    );
+
+    final subtype = isPolygon
+        ? 'Polygon'
+        : isLine
+            ? 'Line'
+            : isCount
+                ? 'Square'
+                : 'PolyLine';
+    final intent = switch (kind) {
+      PdfMeasurementKind.distance ||
+      PdfMeasurementKind.slope =>
+        'LineDimension',
+      PdfMeasurementKind.perimeter ||
+      PdfMeasurementKind.angle ||
+      PdfMeasurementKind.arc =>
+        'PolyLineDimension',
+      PdfMeasurementKind.area ||
+      PdfMeasurementKind.areaCutout ||
+      PdfMeasurementKind.volume =>
+        'PolygonDimension',
+      PdfMeasurementKind.count => 'Count',
+    };
+    String rgb(int c) =>
+        ContentWriter.rgbComponents(c).map(ContentWriter.fmt).join(' ');
+    final dict = _markupDict(subtype, rect, strokeColor, caption, author)
+      ..['BS'] = _borderStyle(strokeWidth, dashPattern: dashPattern)
+      ..['IT'] = CosName(intent)
+      // the caption's font/size/color, so a restyle can redraw it (§12.7.2)
+      ..['DA'] = CosString.fromText(
+        '${rgb(labelColor)} rg '
+        '/${captionFont.resourceName} ${ContentWriter.fmt(captionSize)} Tf',
+      );
+    if (m != null) dict['Measure'] = m.toCosDictionary();
+    if (!classic || label != null || written != null) {
+      dict['Takeoff'] = PdfTakeoffData(
+        kind: kind,
+        depth: depth,
+        holes: holes,
+        label: label,
+        valueText: written,
+      ).toCosDictionary();
+    }
+    final leArray = CosArray([
+      CosName(startEnding.pdfName),
+      CosName(endEnding.pdfName),
+    ]);
+    if (isLine) {
+      dict['L'] = CosArray([
+        CosReal(points.first.$1),
+        CosReal(points.first.$2),
+        CosReal(points.last.$1),
+        CosReal(points.last.$2),
+      ]);
+      dict['LE'] = leArray;
+    } else if (!isCount) {
+      dict['Vertices'] = _pointArray(points);
+      if (!isPolygon) dict['LE'] = leArray; // endings ride first/last vertex
+    }
+    if (isPolygon && fillColor != null) {
+      dict['IC'] = _colorComponents(fillColor);
+    }
+
+    _addAnnotation(
+      pageIndex,
+      dict,
+      _form(
+        rect,
+        content,
+        resources: _resources(extGState: gs, font: _standardFont(captionFont)),
+      ),
+      name: name,
+    );
+  }
+
+  /// A small "×" count marker centred on [point], a [radius]-half cross in
+  /// [strokeColor]. The count tool drops one per click; the running total
+  /// tallies them.
+  ContentWriter _countMarker(
+    (double, double) point, {
+    required double radius,
+    required int strokeColor,
+    required double strokeWidth,
+    required bool hasAlpha,
+  }) {
+    final (x, y) = point;
+    final w = ContentWriter();
+    if (hasAlpha) w.extGState('GS0');
+    w
+      ..strokeColor(strokeColor)
+      ..lineWidth(strokeWidth)
+      ..lineCap(1)
+      ..moveTo(x - radius, y - radius)
+      ..lineTo(x + radius, y + radius)
+      ..moveTo(x - radius, y + radius)
+      ..lineTo(x + radius, y - radius)
+      ..stroke();
+    return w;
+  }
+
+  /// Tessellates the circular arc through [points] (start, mid, end) into a
+  /// polyline for the drawn appearance, falling back to the raw points when
+  /// they're collinear.
+  List<(double, double)> _arcPolyline(List<(double, double)> points) {
+    if (points.length < 3) return points;
+    final start = points[0], mid = points[1], end = points[2];
+    final metrics = pdfArcMetrics(start, mid, end);
+    if (metrics == null) return points;
+    // recover the centre the same way pdfArcMetrics does.
+    final ax = start.$1, ay = start.$2;
+    final bx = mid.$1, by = mid.$2;
+    final cx = end.$1, cy = end.$2;
+    final d = 2 * (ax * (by - cy) + bx * (cy - ay) + cx * (ay - by));
+    final a2 = ax * ax + ay * ay,
+        b2 = bx * bx + by * by,
+        c2 = cx * cx + cy * cy;
+    final ux = (a2 * (by - cy) + b2 * (cy - ay) + c2 * (ay - by)) / d;
+    final uy = (a2 * (cx - bx) + b2 * (ax - cx) + c2 * (bx - ax)) / d;
+    double ang((double, double) p) => math.atan2(p.$2 - uy, p.$1 - ux);
+    double wrap(double v) {
+      while (v <= -math.pi) {
+        v += 2 * math.pi;
+      }
+      while (v > math.pi) {
+        v -= 2 * math.pi;
+      }
+      return v;
+    }
+
+    final a0 = ang(start);
+    final leg1 = wrap(ang(mid) - a0);
+    final leg2 = wrap(ang(end) - ang(mid));
+    // Sweep from start to end passing through mid; if the two legs disagree
+    // in winding the mid isn't between, so take the direct sweep.
+    final fullSweep = (leg1.sign == leg2.sign || leg2 == 0)
+        ? leg1 + leg2
+        : wrap(ang(end) - a0);
+    final segments = math.max(8, (metrics.sweep / 6).ceil());
+    final r = metrics.radius;
+    final out = <(double, double)>[];
+    for (var i = 0; i <= segments; i++) {
+      final t = a0 + fullSweep * (i / segments);
+      out.add((ux + r * math.cos(t), uy + r * math.sin(t)));
+    }
+    return out;
+  }
+
+  /// The caption string and its page-space anchor for any takeoff kind. The
+  /// anchor is the segment midpoint (distance/slope), the angle/arc vertex,
+  /// or the centroid (perimeter/area/volume/cutout). Count returns an empty
+  /// caption (the marker speaks for itself). A written [valueText] is the
+  /// caption as-is, at the same anchor, and needs no [m].
+  (String, (double, double)) _takeoffCaption(
+    PdfMeasurementKind kind,
+    List<(double, double)> points,
+    PdfMeasure? m, {
+    double? depth,
+    List<List<(double, double)>> holes = const [],
+    String? valueText,
+  }) {
+    if (valueText != null && kind != PdfMeasurementKind.count) {
+      final anchor = switch (kind) {
+        PdfMeasurementKind.distance || PdfMeasurementKind.slope => (
+            (points.first.$1 + points.last.$1) / 2,
+            (points.first.$2 + points.last.$2) / 2,
+          ),
+        PdfMeasurementKind.angle || PdfMeasurementKind.arc => points[1],
+        _ => _centroid(points),
+      };
+      return (valueText, anchor);
+    }
+    String angle(double deg) =>
+        m?.formatAngle(deg) ??
+        const PdfNumberFormat(unit: '°', precision: 10).format(deg);
+    switch (kind) {
+      case PdfMeasurementKind.count:
+        return ('', points.first);
+      case PdfMeasurementKind.distance:
+        final a = points.first, b = points.last;
+        final dx = b.$1 - a.$1, dy = b.$2 - a.$2;
+        return (
+          m!.formatDistance(math.sqrt(dx * dx + dy * dy)),
+          ((a.$1 + b.$1) / 2, (a.$2 + b.$2) / 2),
+        );
+      case PdfMeasurementKind.slope:
+        final a = points.first, b = points.last;
+        return (
+          angle(pdfSlopeDegrees(a, b)),
+          ((a.$1 + b.$1) / 2, (a.$2 + b.$2) / 2),
+        );
+      case PdfMeasurementKind.perimeter:
+        return (
+          m!.formatDistance(pdfPolylineLength(points)),
+          _centroid(points),
+        );
+      case PdfMeasurementKind.angle:
+        return (
+          angle(pdfAngleDegrees(points[1], points[0], points[2])),
+          points[1],
+        );
+      case PdfMeasurementKind.arc:
+        final metrics = pdfArcMetrics(points[0], points[1], points[2]);
+        final len = metrics?.length ?? pdfPolylineLength(points);
+        return (m!.formatDistance(len), points[1]);
+      case PdfMeasurementKind.area:
+        return (m!.formatArea(pdfShoelaceArea(points)), _centroid(points));
+      case PdfMeasurementKind.areaCutout:
+        return (
+          m!.formatArea(pdfNetPolygonArea(points, holes)),
+          _centroid(points),
+        );
+      case PdfMeasurementKind.volume:
+        return (
+          m!.formatVolume(pdfShoelaceArea(points), depth ?? 0),
+          _centroid(points),
+        );
+    }
+  }
+
+  /// Draws a measurement caption - a small white box and centered text at
+  /// [anchor] - into [content], returning the box's page-space bounds so
+  /// the caller can widen the annotation /Rect to include it. Shared by
+  /// [addMeasurement] and the restyle/resize regeneration so a width or
+  /// style change never drops the label.
+  PdfRect _drawMeasurementCaption(
+    ContentWriter content,
+    String caption,
+    (double, double) anchor, {
+    required PdfStandardFont font,
+    required double size,
+    required int color,
+  }) {
+    final textWidth = font.measure(caption, size);
+    const padX = 3.0, padY = 2.0;
+    final boxLeft = anchor.$1 - textWidth / 2 - padX;
+    final boxBottom = anchor.$2 - size / 2 - padY;
+    final boxWidth = textWidth + 2 * padX;
+    final boxHeight = size + 2 * padY;
+    content
+      ..fillColor(0xFFFFFF)
+      ..rect(boxLeft, boxBottom, boxWidth, boxHeight)
+      ..fill()
+      ..beginText()
+      ..font(font.resourceName, size)
+      ..fillColor(color)
+      ..textAt(
+        anchor.$1 - textWidth / 2,
+        anchor.$2 - size * 0.36,
+      ) // rough cap-height centering
+      ..showText(caption)
+      ..endText();
+    return PdfRect(
+      boxLeft,
+      boxBottom,
+      boxLeft + boxWidth,
+      boxBottom + boxHeight,
+    );
+  }
+
+  /// Recovers a measurement caption's font, size, and color from the
+  /// annotation's /DA (written by [addMeasurement]). Falls back to
+  /// Helvetica 10 pt in the stroke color for measurements authored before
+  /// /DA was stored.
+  (PdfStandardFont, double, int) _measurementCaptionStyle(
+    PdfAnnotation annotation,
+  ) {
+    final fallbackColor = annotation.color ?? 0x000000;
+    final da = annotation.defaultAppearance;
+    if (da == null) return (PdfStandardFont.helvetica, 10, fallbackColor);
+    final tf = RegExp(r'/(\S+)\s+([\d.]+)\s+Tf').firstMatch(da);
+    final size = double.tryParse(tf?.group(2) ?? '') ?? 10;
+    final font = tf == null
+        ? PdfStandardFont.helvetica
+        : (PdfStandardFont.tryFromName(tf.group(1)!) ??
+            PdfStandardFont.helvetica);
+    final rg = RegExp(
+      r'([\d.]+)\s+([\d.]+)\s+([\d.]+)\s+rg\b',
+    ).allMatches(da).lastOrNull;
+    var color = fallbackColor;
+    if (rg != null) {
+      int byte(String s) =>
+          ((double.tryParse(s) ?? 0).clamp(0.0, 1.0) * 255).round();
+      color = (byte(rg.group(1)!) << 16) |
+          (byte(rg.group(2)!) << 8) |
+          byte(rg.group(3)!);
+    }
+    return (font, size, color);
+  }
+
+  /// If [annotation] is a measurement, recomputes its caption from the
+  /// /Measure and draws it into [w] over [points]' anchor, widening /Rect
+  /// to include the label and returning the expanded BBox plus the caption
+  /// font resource. For a non-measurement line it draws nothing and
+  /// returns [rect] with no font. Shared by every appearance regeneration
+  /// (restyle, resize, reshape, ending change) so the label is never lost.
+  (PdfRect, CosDictionary?) _appendMeasurementCaption(
+    PdfAnnotation annotation,
+    PdfRect rect,
+    List<(double, double)> points,
+    ContentWriter w,
+  ) {
+    final kind = annotation.measurementKind;
+    if (kind == null) return (rect, null);
+    final measure = annotation.measure;
+    final takeoff = annotation.takeoff;
+    final written = takeoff?.valueText;
+    if (measure == null &&
+        written == null &&
+        kind != PdfMeasurementKind.count) {
+      return (rect, null);
+    }
+    final (caption, anchor) = _takeoffCaption(
+      kind,
+      points,
+      measure,
+      depth: takeoff?.depth,
+      holes: takeoff?.holes ?? const [],
+      valueText: written,
+    );
+    if (caption.isEmpty) return (rect, null); // count marker: no label
+    final (font, size, color) = _measurementCaptionStyle(annotation);
+    final box = _drawMeasurementCaption(
+      w,
+      caption,
+      anchor,
+      font: font,
+      size: size,
+      color: color,
+    );
+    final full = PdfRect(
+      math.min(rect.left, box.left),
+      math.min(rect.bottom, box.bottom),
+      math.max(rect.right, box.right),
+      math.max(rect.top, box.top),
+    );
+    annotation.dict['Rect'] = _rectArray(full);
+    return (full, _standardFont(font));
+  }
+
+  (double, double) _centroid(List<(double, double)> points) {
+    var sx = 0.0, sy = 0.0;
+    for (final (x, y) in points) {
+      sx += x;
+      sy += y;
+    }
+    return (sx / points.length, sy / points.length);
+  }
+
+  /// Adds a free-text annotation: [text] rendered directly on the page in
+  /// [font] (12pt Helvetica by default), wrapped to fit [rect] and
+  /// clipped to it.
+  ///
+  /// The style round-trips through the dictionary so the appearance can
+  /// be regenerated (resize, text edits): text color and [borderColor]
+  /// live in /DA (`rg` / `RG`), [fillColor] is /C (the free-text
+  /// background per §12.5.6.6), [borderWidth] is /BS /W, and [opacity]
+  /// is baked into the appearance's graphics state.
+  void addFreeText(
+    int pageIndex,
+    PdfRect rect,
+    String text, {
+    double fontSize = 12,
+    PdfTextFont font = PdfStandardFont.helvetica,
+    PdfTextDirection textDirection = PdfTextDirection.auto,
+    PdfTextAlign? align,
+    PdfTextVerticalAlign verticalAlign = PdfTextVerticalAlign.top,
+    int color = 0x000000,
+    int? fillColor,
+    int? borderColor,
+    double borderWidth = 1,
+    double opacity = 1,
+    double lineSpacing = _defaultLineSpacing,
+    double charSpacing = 0,
+    double horizontalScale = _defaultHorizontalScale,
+    bool underline = false,
+    int? pageRotation,
+    String? author,
+    String? name,
+  }) {
+    final effectivePageRotation = _appearancePageRotation(
+      pageIndex,
+      pageRotation,
+    );
+    // When the text contains non-Latin-1 characters and the font is a
+    // standard base-14 face (which only supports WinAnsi encoding), wrap it
+    // in a PdfUnicodeFont - a lightweight Type0 Identity-H font that encodes
+    // characters as 2-byte Unicode code points. The renderer substitutes a
+    // system font that covers the full Unicode range.
+    PdfUnicodeFont? unicodeFont;
+    if (font is PdfStandardFont && text.codeUnits.any((c) => c > 0xFF)) {
+      unicodeFont = PdfUnicodeFont(font);
+      unicodeFont.resetUsage();
+    }
+    final effectiveFont = unicodeFont ?? font;
+    // The font accumulates which glyphs the appearance shows (so an
+    // embedded font's /W and /ToUnicode cover exactly them); start fresh.
+    if (font is PdfEmbeddedFont) font.resetUsage();
+    final gs = _alphaState(opacity);
+    final w = _freeTextContent(
+      rect,
+      text,
+      fontSize: fontSize,
+      font: effectiveFont,
+      textDirection: textDirection,
+      align: align,
+      verticalAlign: verticalAlign,
+      color: color,
+      fillColor: fillColor,
+      borderColor: borderColor,
+      borderWidth: borderWidth,
+      hasAlpha: gs != null,
+      lineSpacing: lineSpacing,
+      charSpacing: charSpacing,
+      horizontalScale: horizontalScale,
+      underline: underline,
+      pageRotation: effectivePageRotation,
+    );
+
+    String rgb(int c) =>
+        ContentWriter.rgbComponents(c).map(ContentWriter.fmt).join(' ');
+    final da = '${rgb(color)} rg '
+        '${borderColor != null ? '${rgb(borderColor)} RG ' : ''}'
+        '/${effectiveFont.resourceName} ${ContentWriter.fmt(fontSize)} Tf';
+    final dict = _markupDict('FreeText', rect, fillColor ?? color, text, author)
+      ..['DA'] = CosString.fromText(da)
+      ..['Q'] = CosInteger(
+        align?.quadding ??
+            (textDirection.resolve(text) == PdfTextDirection.rtl ? 2 : 0),
+      );
+    _writeFreeTextSpacing(dict,
+        verticalAlign: verticalAlign,
+        lineSpacing: lineSpacing,
+        charSpacing: charSpacing,
+        horizontalScale: horizontalScale,
+        underline: underline);
+    if (borderColor != null && borderWidth > 0) {
+      dict['BS'] = _borderStyle(borderWidth);
+    }
+    final CosDictionary fontResource;
+    if (unicodeFont != null) {
+      fontResource = unicodeFont.buildResource(_updater.addObject);
+    } else if (font is PdfEmbeddedFont) {
+      fontResource = font.buildResource(_updater.addObject);
+    } else {
+      fontResource = _standardFont(font as PdfStandardFont);
+    }
+    _addAnnotation(
+      pageIndex,
+      dict,
+      _form(rect, w, resources: _resources(extGState: gs, font: fontResource)),
+      name: name,
+    );
+  }
+
+  /// Adds a callout annotation (§12.5.6.19): a /FreeText text box drawn at
+  /// [boxRect] joined to [target] on the page by a leader line that ends in
+  /// [ending] (an open arrow by default). Bluebeam's Callout tool.
+  ///
+  /// The annotation carries `/IT /FreeTextCallout`, the leader points in
+  /// `/CL` (arrow tip first, box attachment last), the arrow style in `/LE`,
+  /// and `/RD` (the inset from the enclosing /Rect to the text box). The
+  /// appearance draws both the leader with its arrowhead and the text box,
+  /// and /Rect encloses the two so the markup survives §12.5.5 fitting.
+  ///
+  /// [attach] pins where the first leader meets the box. [extraLeaders] adds
+  /// more arrows from the same box (kept under [kPdfCalloutLeadersKey], since
+  /// /CL holds only one); each shares the leader stroke and [ending].
+  /// [strokeColor], [strokeWidth], and [leaderDash] style the leaders;
+  /// [outlineColor], [outlineWidth], and [outlineDash] style the box separately.
+  /// Pass `outlineColor: (null,)` or an outline width of zero for no outline.
+  ///
+  /// A [region] makes a cloud callout (Bluebeam's Cloud+): the callout marks
+  /// that area - drawn as a revision cloud or a plain polygon in the leader's
+  /// colour and width - and the first leader runs from the box to the
+  /// region's outline, so [target] is unused. [reshapeCallout] moves or
+  /// reshapes the region and [restyleCalloutRegion] restyles it.
+  void addCallout(
+    int pageIndex,
+    PdfRect boxRect,
+    String text,
+    (double, double) target, {
+    (double, double)? attach,
+    List<PdfCalloutLeader> extraLeaders = const [],
+    double fontSize = 12,
+    PdfTextFont font = PdfStandardFont.helvetica,
+    PdfTextDirection textDirection = PdfTextDirection.auto,
+    PdfTextAlign? align,
+    PdfTextVerticalAlign verticalAlign = PdfTextVerticalAlign.top,
+    int color = 0x000000,
+    int? fillColor,
+    int strokeColor = 0xD02020,
+    double strokeWidth = 1,
+    List<double>? leaderDash,
+    (int?,)? outlineColor,
+    double? outlineWidth,
+    List<double>? outlineDash,
+    PdfCalloutRegion? region,
+    double opacity = 1,
+    PdfLineEnding ending = PdfLineEnding.openArrow,
+    double lineSpacing = _defaultLineSpacing,
+    double charSpacing = 0,
+    double horizontalScale = _defaultHorizontalScale,
+    bool underline = false,
+    int? pageRotation,
+    String? author,
+    String? name,
+  }) {
+    final effectivePageRotation = _appearancePageRotation(
+      pageIndex,
+      pageRotation,
+    );
+    // Match addFreeText's non-Latin-1 handling: wrap a base-14 face in a
+    // Type0 Identity-H font so the appearance can encode any code point.
+    PdfUnicodeFont? unicodeFont;
+    if (font is PdfStandardFont && text.codeUnits.any((c) => c > 0xFF)) {
+      unicodeFont = PdfUnicodeFont(font);
+      unicodeFont.resetUsage();
+    }
+    final effectiveFont = unicodeFont ?? font;
+    if (font is PdfEmbeddedFont) font.resetUsage();
+
+    final borderColor = outlineColor == null ? strokeColor : outlineColor.$1;
+    final borderWidth = borderColor == null ? 0.0 : outlineWidth ?? strokeWidth;
+    final geometry = _calloutGeometry(
+      boxRect,
+      [(target: target, attach: attach), ...extraLeaders],
+      ending,
+      strokeWidth,
+      pad: math.max(strokeWidth, borderWidth),
+      region: region,
+    );
+    final rect = geometry.rect;
+
+    final gs = _alphaState(opacity);
+    final w = _calloutContent(
+      boxRect,
+      geometry.lines,
+      text,
+      fontSize: fontSize,
+      font: effectiveFont,
+      textDirection: textDirection,
+      align: align,
+      verticalAlign: verticalAlign,
+      color: color,
+      fillColor: fillColor,
+      borderColor: borderColor,
+      borderWidth: borderWidth,
+      borderDash: outlineDash,
+      lineColor: strokeColor,
+      lineWidth: strokeWidth,
+      lineDash: leaderDash,
+      region: region,
+      ending: ending,
+      hasAlpha: gs != null,
+      lineSpacing: lineSpacing,
+      charSpacing: charSpacing,
+      horizontalScale: horizontalScale,
+      underline: underline,
+      pageRotation: effectivePageRotation,
+    );
+
+    String rgb(int c) =>
+        ContentWriter.rgbComponents(c).map(ContentWriter.fmt).join(' ');
+    final da =
+        '${rgb(color)} rg ${borderColor == null ? '' : '${rgb(borderColor)} RG '}'
+        '/${effectiveFont.resourceName} ${ContentWriter.fmt(fontSize)} Tf';
+    final dict = _markupDict('FreeText', rect, fillColor ?? color, text, author)
+      ..['DA'] = CosString.fromText(da)
+      ..['IT'] = const CosName('FreeTextCallout')
+      ..['LE'] = CosName(ending.pdfName)
+      ..['RD'] = _rdArray(rect, boxRect)
+      ..['BS'] = _borderStyle(borderWidth, dashPattern: outlineDash)
+      ..['Q'] = CosInteger(
+        align?.quadding ??
+            (textDirection.resolve(text) == PdfTextDirection.rtl ? 2 : 0),
+      );
+    _writeCalloutLeaders(dict, geometry.lines);
+    _writeCalloutLeaderStyle(dict, strokeColor, strokeWidth, leaderDash);
+    _writeCalloutRegion(dict, region);
+    _writeFreeTextSpacing(
+      dict,
+      verticalAlign: verticalAlign,
+      lineSpacing: lineSpacing,
+      charSpacing: charSpacing,
+      horizontalScale: horizontalScale,
+      underline: underline,
+    );
+    final CosDictionary fontResource;
+    if (unicodeFont != null) {
+      fontResource = unicodeFont.buildResource(_updater.addObject);
+    } else if (font is PdfEmbeddedFont) {
+      fontResource = font.buildResource(_updater.addObject);
+    } else {
+      fontResource = _standardFont(font as PdfStandardFont);
+    }
+    _addAnnotation(
+      pageIndex,
+      dict,
+      _form(rect, w, resources: _resources(extGState: gs, font: fontResource)),
+      name: name,
+    );
+  }
+
+  /// The leader polylines of a callout whose text box is [box], one per
+  /// entry of [leaders], and the /Rect enclosing the box, every leader, and
+  /// each arrowhead (so the markup survives §12.5.5 appearance fitting).
+  ///
+  /// With a [region] the first leader's target is its outline (see
+  /// [_calloutRegionTip]) and /Rect also encloses the region's outline.
+  ({List<List<(double, double)>> lines, PdfRect rect}) _calloutGeometry(
+    PdfRect box,
+    List<PdfCalloutLeader> leaders,
+    PdfLineEnding ending,
+    double strokeWidth, {
+    double? pad,
+    PdfCalloutRegion? region,
+  }) {
+    final lines = [
+      for (var i = 0; i < leaders.length; i++)
+        pdfCalloutLeaderLine(box, (
+          target: i == 0 && region != null
+              ? _calloutRegionTip(region, box, strokeWidth)
+              : leaders[i].target,
+          attach: leaders[i].attach,
+        )),
+    ];
+    return _calloutPolylineGeometry(box, lines, ending, strokeWidth,
+        pad: pad, region: region);
+  }
+
+  ({List<List<(double, double)>> lines, PdfRect rect}) _calloutPolylineGeometry(
+    PdfRect box,
+    List<List<(double, double)>> lines,
+    PdfLineEnding ending,
+    double strokeWidth, {
+    double? pad,
+    PdfCalloutRegion? region,
+  }) {
+    final rect = _pointBounds([
+      (box.left, box.bottom),
+      (box.right, box.top),
+      for (final line in lines) ...[
+        ...line,
+        ..._endingExtent(ending, line.first, line[1], strokeWidth),
+      ],
+      ...?region?.vertices,
+    ], math.max(pad ?? strokeWidth, _calloutRegionPad(region, strokeWidth)));
+    return (lines: lines, rect: rect);
+  }
+
+  /// The /Rect padding a callout's [region] outline needs: room for the
+  /// cloud's puffs (or the pen of a plain polygon); 0 without a region.
+  double _calloutRegionPad(PdfCalloutRegion? region, double strokeWidth) =>
+      switch (region?.shape) {
+        null => 0,
+        PdfCalloutRegionShape.cloud =>
+          _cloudPadding(strokeWidth, region!.cloudScale),
+        PdfCalloutRegionShape.polygon => _linePadding(strokeWidth),
+      };
+
+  /// Where a cloud callout's leader meets its [region]: the point of the
+  /// region's outline nearest the text [box]'s centre - on a cloud, out on
+  /// the scallop over that point (or in the cusp between two), so the leader
+  /// touches the drawn outline rather than the polygon under the puffs.
+  (double, double) _calloutRegionTip(
+    PdfCalloutRegion region,
+    PdfRect box,
+    double strokeWidth,
+  ) {
+    final points = region.vertices;
+    final cx = (box.left + box.right) / 2, cy = (box.bottom + box.top) / 2;
+    var best = points.first;
+    var bestDistance = double.infinity;
+    var bestEdge = 0;
+    var bestT = 0.0;
+    for (var i = 0; i < points.length; i++) {
+      final a = points[i];
+      final b = points[(i + 1) % points.length];
+      final dx = b.$1 - a.$1, dy = b.$2 - a.$2;
+      final len2 = dx * dx + dy * dy;
+      final t = len2 == 0
+          ? 0.0
+          : (((cx - a.$1) * dx + (cy - a.$2) * dy) / len2)
+              .clamp(0.0, 1.0)
+              .toDouble();
+      final p = (a.$1 + dx * t, a.$2 + dy * t);
+      final d = math.pow(p.$1 - cx, 2) + math.pow(p.$2 - cy, 2);
+      if (d < bestDistance) {
+        bestDistance = d.toDouble();
+        best = p;
+        bestEdge = i;
+        bestT = t;
+      }
+    }
+    if (region.shape != PdfCalloutRegionShape.cloud) return best;
+    final a = points[bestEdge];
+    final b = points[(bestEdge + 1) % points.length];
+    final dx = b.$1 - a.$1, dy = b.$2 - a.$2;
+    final length = math.sqrt(dx * dx + dy * dy);
+    if (length < 0.01) return best;
+    // the outward normal, as _appendCloudPath bulges it
+    final clockwise = _signedArea(points) < 0;
+    final ux = dx / length, uy = dy / length;
+    final nx = clockwise ? -uy : uy;
+    final ny = clockwise ? ux : -ux;
+    final h = _cloudOutlineHeight(
+        length, bestT * length, strokeWidth, region.cloudScale);
+    return (best.$1 + nx * h, best.$2 + ny * h);
+  }
+
+  /// How far the cloud outline [_appendCloudPath] draws along an edge of
+  /// [length] stands out past the edge at distance [s] along it: the scallop
+  /// over that point, approximated as a half-ellipse from foot to apex - the
+  /// apex height mid-puff, dipping to the inset cusp between two.
+  double _cloudOutlineHeight(
+    double length,
+    double s,
+    double strokeWidth,
+    double cloudScale,
+  ) {
+    final arc = _cloudArcRadius(strokeWidth, cloudScale);
+    final scallops = math.max(1, (length / (2 * arc)).round());
+    final chord = length / scallops;
+    final r = chord / 2;
+    final bulge = math.min(r, arc) * _cloudBulgeFactor;
+    final inset = bulge * _cloudNeckInset;
+    final j = (s / chord).floor().clamp(0, scallops - 1);
+    final u = ((s - (j + 0.5) * chord) / r).clamp(-1.0, 1.0);
+    return -inset + (bulge + inset) * math.sqrt(1 - u * u);
+  }
+
+  /// Persists a cloud callout's [region] ([kPdfCalloutRegionKey] and its
+  /// style), or removes it when null.
+  void _writeCalloutRegion(CosDictionary dict, PdfCalloutRegion? region) {
+    if (region == null) {
+      dict.entries
+        ..remove(kPdfCalloutRegionKey)
+        ..remove(kPdfCalloutRegionStyleKey);
+      return;
+    }
+    final dash = region.dash;
+    dict[kPdfCalloutRegionKey] = _pointArray(region.vertices);
+    dict[kPdfCalloutRegionStyleKey] = CosDictionary({
+      'S': CosName(
+          region.shape == PdfCalloutRegionShape.cloud ? 'Cloud' : 'Polygon'),
+      'I': CosReal(region.cloudScale),
+      if (dash != null && dash.isNotEmpty)
+        'D': CosArray([for (final n in dash) CosReal(n)]),
+    });
+  }
+
+  /// A cloud callout's region outline: its cloud or polygon, stroked with the
+  /// leader [color] and [width] (and the region's own dash), unfilled.
+  ContentWriter _calloutRegionContent(
+    PdfCalloutRegion region,
+    int color,
+    double width,
+  ) {
+    final w = ContentWriter()
+      ..strokeColor(color)
+      ..lineWidth(width)
+      ..lineCap(1)
+      ..lineJoin(1);
+    final dash = region.dash;
+    final dashed = dash != null && dash.isNotEmpty;
+    if (dashed) w.dash(dash);
+    final points = region.vertices;
+    if (region.shape == PdfCalloutRegionShape.cloud) {
+      _appendCloudPath(w, points, width, region.cloudScale);
+    } else {
+      w.moveTo(points.first.$1, points.first.$2);
+      for (final p in points.skip(1)) {
+        w.lineTo(p.$1, p.$2);
+      }
+      w.closePath();
+    }
+    w.stroke();
+    if (dashed) w.dash(const []);
+    return w;
+  }
+
+  /// Persists a callout's leader polylines: the first in the standard /CL,
+  /// the rest under [kPdfCalloutLeadersKey] (dropped when there are none).
+  void _writeCalloutLeaders(
+    CosDictionary dict,
+    List<List<(double, double)>> lines,
+  ) {
+    dict['CL'] = _pointArray(lines.first);
+    if (lines.length > 1) {
+      dict[kPdfCalloutLeadersKey] = CosArray([
+        for (final line in lines.skip(1)) _pointArray(line),
+      ]);
+    } else {
+      dict.entries.remove(kPdfCalloutLeadersKey);
+    }
+  }
+
+  /// Persists the free-text spacing/decoration that /DA and /Q cannot carry
+  /// (line height, character spacing, horizontal scaling, whole-box
+  /// underline) onto [dict], as the vendor keys [PdfFreeTextStyle] reads
+  /// back. Default values are omitted so a plain box's dictionary is
+  /// unchanged.
+  static void _writeFreeTextSpacing(
+    CosDictionary dict, {
+    PdfTextVerticalAlign verticalAlign = PdfTextVerticalAlign.top,
+    required double lineSpacing,
+    required double charSpacing,
+    required double horizontalScale,
+    required bool underline,
+  }) {
+    if (verticalAlign == PdfTextVerticalAlign.top) {
+      dict.entries.remove(kPdfFreeTextVerticalAlignKey);
+    } else {
+      dict[kPdfFreeTextVerticalAlignKey] = CosName(verticalAlign.name);
+    }
+    if (lineSpacing != _defaultLineSpacing) {
+      dict[kPdfFreeTextLineSpacingKey] = CosReal(lineSpacing);
+    } else {
+      dict.entries.remove(kPdfFreeTextLineSpacingKey);
+    }
+    if (charSpacing != 0) {
+      dict[kPdfFreeTextCharSpacingKey] = CosReal(charSpacing);
+    } else {
+      dict.entries.remove(kPdfFreeTextCharSpacingKey);
+    }
+    if (horizontalScale != _defaultHorizontalScale) {
+      dict[kPdfFreeTextHScaleKey] = CosReal(horizontalScale);
+    } else {
+      dict.entries.remove(kPdfFreeTextHScaleKey);
+    }
+    if (underline) {
+      dict[kPdfFreeTextUnderlineKey] = const CosBoolean(true);
+    } else {
+      dict.entries.remove(kPdfFreeTextUnderlineKey);
+    }
+  }
+
+  /// The /RD (rectangle differences, §12.5.6.19) insets from the annotation
+  /// [rect] to the text [box] within it, in the left, bottom, right, top
+  /// order Acrobat-family viewers (Bluebeam, PDFBox) read - the spec's prose
+  /// says left, top, right, bottom, but a box written that way opens in the
+  /// wrong place there. [PdfAnnotation.calloutBox] reads either order.
+  CosArray _rdArray(PdfRect rect, PdfRect box) => CosArray([
+        CosReal(box.left - rect.left),
+        CosReal(box.bottom - rect.bottom),
+        CosReal(rect.right - box.right),
+        CosReal(rect.top - box.top),
+      ]);
+
+  /// Builds a callout's appearance: each leader line with its arrowhead
+  /// (drawn first, in page space), a cloud callout's region outline, and the
+  /// text box on top.
+  ContentWriter _calloutContent(
+    PdfRect boxRect,
+    List<List<(double, double)>> leaders,
+    String text, {
+    required double fontSize,
+    required PdfTextFont font,
+    required PdfTextDirection textDirection,
+    PdfTextAlign? align,
+    PdfTextVerticalAlign verticalAlign = PdfTextVerticalAlign.top,
+    required int color,
+    required int? fillColor,
+    required int? borderColor,
+    required double borderWidth,
+    List<double>? borderDash,
+    required int lineColor,
+    required double lineWidth,
+    List<double>? lineDash,
+    PdfCalloutRegion? region,
+    required PdfLineEnding ending,
+    bool hasAlpha = false,
+    double lineSpacing = _defaultLineSpacing,
+    double charSpacing = 0,
+    double horizontalScale = _defaultHorizontalScale,
+    bool underline = false,
+    int pageRotation = 0,
+  }) {
+    final box = _freeTextContent(
+      boxRect,
+      text,
+      fontSize: fontSize,
+      font: font,
+      textDirection: textDirection,
+      align: align,
+      verticalAlign: verticalAlign,
+      color: color,
+      fillColor: fillColor,
+      borderColor: borderColor,
+      borderWidth: borderWidth,
+      borderDash: borderDash,
+      lineSpacing: lineSpacing,
+      charSpacing: charSpacing,
+      horizontalScale: horizontalScale,
+      underline: underline,
+      pageRotation: pageRotation,
+    );
+    final w = ContentWriter();
+    if (hasAlpha) w.extGState('GS0');
+    for (final leader in leaders) {
+      w.append(_lineContent(
+        leader,
+        strokeColor: lineColor,
+        strokeWidth: lineWidth,
+        dashPattern: lineDash,
+        closed: false,
+        fillColor: null,
+        startEnding: ending,
+        endEnding: PdfLineEnding.none,
+        hasAlpha: false,
+      ));
+    }
+    if (region != null) {
+      w.append(_calloutRegionContent(region, lineColor, lineWidth));
+    }
+    return w..append(box);
+  }
+
+  /// Reads a callout's leaders (/CL plus any [kPdfCalloutLeadersKey] extras)
+  /// and arrow (/LE) when [a] is a /FreeTextCallout, else null.
+  ({List<List<(double, double)>> leaders, PdfLineEnding ending})? _calloutInfo(
+    PdfAnnotation a,
+  ) {
+    final leaders = a.calloutLeaders;
+    if (leaders == null || leaders.first.length < 2) return null;
+    final le = document.cos.resolve(a.dict['LE']);
+    final ending = le is CosName
+        ? PdfLineEnding.fromName(le.value)
+        : PdfLineEnding.openArrow;
+    return (leaders: leaders, ending: ending);
+  }
+
+  /// The text-box sub-rect of callout [a] ([PdfAnnotation.calloutBox], which
+  /// settles the /RD order), or its whole /Rect without one.
+  PdfRect _boxFromRd(PdfAnnotation a) => a.calloutBox ?? a.rect;
+
+  /// Rebuilds a callout from a new text [box] and/or arrow [target] (page
+  /// space), keeping the other where it is - so the box and terminus move
+  /// independently (Bluebeam's model: dragging one stretches the leader).
+  /// [target] and [attach] act on leader number [leader] (0 is /CL's); every
+  /// other leader keeps its tip, and its base rides a [box] change at the
+  /// same relative spot on the box. Preserves the text, style, and arrow
+  /// ending; regenerates /CL, the extra leaders, /RD, /Rect, and the
+  /// appearance. Returns false when [annotation] is not a callout this
+  /// editor can reproduce, or has no leader [leader].
+  ///
+  /// [region] gives a cloud callout's marked area new corners (page space);
+  /// its leader follows. A cloud callout's first leader always runs from the
+  /// box's facing edge to the region, so its [target] and [attach] are not
+  /// pinned - they are recomputed from the box and region on every rebuild.
+  bool reshapeCallout(
+    int pageIndex,
+    PdfAnnotation annotation, {
+    PdfRect? box,
+    (double, double)? target,
+    (double, double)? attach,
+    int leader = 0,
+    List<(double, double)>? region,
+  }) {
+    final info = _calloutInfo(annotation);
+    if (info == null) return false;
+    if (leader < 0 || leader >= info.leaders.length) return false;
+    if (region != null && region.length < 3) return false;
+    final oldRegion = annotation.calloutRegion;
+    if (region != null && oldRegion == null) return false;
+    final oldBox = _boxFromRd(annotation);
+    final newBox = box ?? oldBox;
+    final leaders = <PdfCalloutLeader>[
+      for (var i = 0; i < info.leaders.length; i++)
+        if (i == 0 && oldRegion != null)
+          (target: info.leaders[0].first, attach: null)
+        else
+          (
+            target:
+                i == leader && target != null ? target : info.leaders[i].first,
+            attach: i == leader && attach != null
+                ? attach
+                : _carryCalloutAttach(info.leaders[i].last, oldBox, box),
+          ),
+    ];
+    return _rebuildCallout(pageIndex, annotation, newBox, leaders, info.ending,
+        region: region == null ? null : oldRegion!.copyWith(vertices: region));
+  }
+
+  /// Adds another leader to [annotation]'s callout box, pointing at [target]
+  /// (meeting the box at [attach], else the edge facing the target). The
+  /// existing leaders and the box stay put. Returns false when [annotation]
+  /// is not a callout this editor can reproduce.
+  bool addCalloutLeader(
+    int pageIndex,
+    PdfAnnotation annotation,
+    (double, double) target, {
+    (double, double)? attach,
+  }) {
+    final info = _calloutInfo(annotation);
+    if (info == null) return false;
+    return _rebuildCallout(
+      pageIndex,
+      annotation,
+      _boxFromRd(annotation),
+      [
+        for (final line in info.leaders)
+          (target: line.first, attach: line.last),
+        (target: target, attach: attach),
+      ],
+      info.ending,
+    );
+  }
+
+  /// Removes leader number [leader] from [annotation]'s callout; the box and
+  /// the other leaders stay put (removing leader 0 promotes the next one into
+  /// /CL). A callout keeps at least one leader, so this refuses - returning
+  /// false - for the last one, an out-of-range index, or a callout this
+  /// editor can't reproduce.
+  bool removeCalloutLeader(
+    int pageIndex,
+    PdfAnnotation annotation,
+    int leader,
+  ) {
+    final info = _calloutInfo(annotation);
+    if (info == null || info.leaders.length < 2) return false;
+    if (leader < 0 || leader >= info.leaders.length) return false;
+    return _rebuildCallout(
+      pageIndex,
+      annotation,
+      _boxFromRd(annotation),
+      [
+        for (var i = 0; i < info.leaders.length; i++)
+          if (i != leader)
+            (target: info.leaders[i].first, attach: info.leaders[i].last),
+      ],
+      info.ending,
+    );
+  }
+
+  /// Where a leader base at [current] on [oldBox] lands when the box becomes
+  /// [newBox]: the same relative spot (snapped back onto the perimeter by
+  /// [pdfCalloutLeaderLine]). Unchanged when the box isn't changing.
+  (double, double) _carryCalloutAttach(
+    (double, double) current,
+    PdfRect oldBox,
+    PdfRect? newBox,
+  ) {
+    if (newBox == null || oldBox.width <= 0 || oldBox.height <= 0) {
+      return current;
+    }
+    return (
+      newBox.left + (current.$1 - oldBox.left) * newBox.width / oldBox.width,
+      newBox.bottom +
+          (current.$2 - oldBox.bottom) * newBox.height / oldBox.height,
+    );
+  }
+
+  /// Regenerates [annotation]'s callout around text [box] with [leaders]:
+  /// /CL + extra leaders, /RD, /Rect, and the appearance, keeping its text,
+  /// font (standard or recovered embedded face), colors, spacing, opacity,
+  /// and [ending]. False when the style can't be reproduced.
+  bool _rebuildCallout(
+    int pageIndex,
+    PdfAnnotation annotation,
+    PdfRect box,
+    List<PdfCalloutLeader> leaders,
+    PdfLineEnding ending, {
+    List<List<(double, double)>>? preservedLines,
+    PdfMatrix? appearanceToPage,
+    PdfCalloutRegion? region,
+  }) {
+    if (leaders.isEmpty) return false;
+    // a cloud callout's region, in the same frame as [box] and [leaders]
+    // (callers rebuilding in a rotated appearance's local frame pass it)
+    region ??= annotation.calloutRegion;
+    final style = annotation.freeTextStyle;
+    if (style == null) return false;
+    final stdFont = PdfStandardFont.tryFromName(style.fontName);
+    final embedded =
+        stdFont == null ? PdfEmbeddedFont.fromFreeText(annotation) : null;
+    // A third-party callout often names a font only through its own
+    // resources (/DA "/F2 12 Tf", Arial in /DS). Refusing would leave the
+    // caller to move/stretch the whole thing - arrows included - so redraw it
+    // in Helvetica, the base-14 stand-in for Arial, instead.
+    final PdfTextFont baseFont =
+        embedded ?? stdFont ?? PdfStandardFont.helvetica;
+    final text = annotation.contents ?? '';
+
+    PdfUnicodeFont? unicodeFont;
+    if (baseFont is PdfStandardFont && text.codeUnits.any((c) => c > 0xFF)) {
+      unicodeFont = PdfUnicodeFont(baseFont)..resetUsage();
+    }
+    if (baseFont is PdfEmbeddedFont) baseFont.resetUsage();
+    final PdfTextFont effectiveFont = unicodeFont ?? baseFont;
+
+    final leaderStyle = annotation.calloutLeaderStyle!;
+    final leaderColor = leaderStyle.color;
+    final leaderWidth = leaderStyle.width;
+    // a cloud callout's leader is re-seated on its region whatever the
+    // restyle, since the tip follows the region outline
+    final geometry = preservedLines == null || region != null
+        ? _calloutGeometry(box, leaders, ending, leaderWidth,
+            pad: math.max(style.borderWidth, leaderWidth), region: region)
+        : _calloutPolylineGeometry(box, preservedLines, ending, leaderWidth,
+            pad: math.max(style.borderWidth, leaderWidth));
+    final rect = geometry.rect;
+
+    final pageRotation = _appearancePageRotation(pageIndex, null);
+    final gs = _alphaState(annotation.appearanceOpacity);
+    final w = _calloutContent(
+      box,
+      geometry.lines,
+      text,
+      fontSize: style.fontSize,
+      font: effectiveFont,
+      textDirection: PdfTextDirection.auto,
+      align: style.alignment,
+      verticalAlign: style.verticalAlignment,
+      color: style.color,
+      fillColor: style.fillColor,
+      borderColor: style.borderColor,
+      borderWidth: style.borderWidth,
+      borderDash: annotation.borderDash,
+      lineColor: leaderColor,
+      lineWidth: leaderWidth,
+      lineDash: leaderStyle.dash,
+      region: region,
+      ending: ending,
+      hasAlpha: gs != null,
+      lineSpacing: style.lineSpacing,
+      charSpacing: style.charSpacing,
+      horizontalScale: style.horizontalScale,
+      underline: style.underline,
+      pageRotation: pageRotation,
+    );
+
+    final dict = annotation.dict;
+    dict['Rect'] = _rectArray(rect);
+    _writeCalloutLeaders(dict, geometry.lines);
+    _writeCalloutRegion(dict, region);
+    dict['RD'] = _rdArray(rect, box);
+    dict.entries
+      ..remove(kPdfCalloutRDFrameKey)
+      ..remove(kPdfCalloutLocalRDKey);
+    final fontResource = unicodeFont != null
+        ? unicodeFont.buildResource(_updater.addObject)
+        : baseFont is PdfEmbeddedFont
+            ? baseFont.buildResource(_updater.addObject)
+            : _standardFont(baseFont as PdfStandardFont);
+    final form = annotation.normalAppearance;
+    if (form != null) {
+      _replaceAppearance(
+        dict,
+        form,
+        rect,
+        w,
+        resources: _resources(extGState: gs, font: fontResource),
+      );
+    } else {
+      dict['AP'] = CosDictionary({
+        'N': _updater.addObject(
+          _form(rect, w,
+              resources: _resources(extGState: gs, font: fontResource)),
+        ),
+      });
+    }
+    if (appearanceToPage != null) {
+      final freshForm =
+          PdfAnnotation.fromDict(document, dict).normalAppearance!;
+      freshForm.dictionary['Matrix'] = CosArray([
+        for (final v in appearanceToPage.toList()) CosReal(v),
+      ]);
+      final ref = document.cos.referenceTo(freshForm);
+      if (ref != null) _updater.replaceObject(ref.objectNumber, freshForm);
+      dict['Rect'] = _rectArray(boundsUnderMatrix(appearanceToPage, rect));
+      dict[kPdfCalloutRDFrameKey] = const CosBoolean(true);
+      dict[kPdfCalloutLocalRDKey] = _rdArray(rect, box);
+      dict['RD'] = _rdArray(boundsUnderMatrix(appearanceToPage, rect),
+          boundsUnderMatrix(appearanceToPage, box));
+      _writeCalloutLeaders(dict, [
+        for (final line in geometry.lines)
+          [for (final p in line) appearanceToPage.apply(p.$1, p.$2)],
+      ]);
+      if (region != null) {
+        _writeCalloutRegion(
+            dict,
+            region.copyWith(vertices: [
+              for (final p in region.vertices)
+                appearanceToPage.apply(p.$1, p.$2),
+            ]));
+      }
+    }
+    _markAnnotationChanged(pageIndex, dict);
+    return true;
+  }
+
+  void _writeCalloutLeaderStyle(
+      CosDictionary dict, int color, double width, List<double>? dash) {
+    dict['DartPdfCalloutLeaderStyle'] = CosDictionary({
+      'C': _colorComponents(color),
+      'W': CosReal(width),
+      if (dash != null && dash.isNotEmpty)
+        'D': CosArray([for (final n in dash) CosReal(n)]),
+    });
+  }
+
+  /// Restyles leaders without changing the text-box outline.
+  bool restyleCalloutLeader(
+    int pageIndex,
+    PdfAnnotation annotation, {
+    int? color,
+    double? width,
+    (List<double>?,)? dash,
+    PdfLineEnding? ending,
+  }) {
+    final old = annotation.calloutLeaderStyle;
+    final info = _calloutInfo(annotation);
+    if (old == null ||
+        info == null ||
+        annotation.freeTextStyle == null ||
+        (width != null && (!width.isFinite || width <= 0))) {
+      return false;
+    }
+    final frame = _calloutLocalFrame(annotation, info.leaders);
+    if (frame == null) return false;
+    _writeCalloutLeaderStyle(annotation.dict, color ?? old.color,
+        width ?? old.width, dash == null ? old.dash : dash.$1);
+    if (ending != null) annotation.dict['LE'] = CosName(ending.pdfName);
+    return _rebuildCallout(pageIndex, annotation, frame.box,
+        _framedLeaders(frame), ending ?? info.ending,
+        preservedLines: frame.lines,
+        appearanceToPage: frame.appearanceToPage,
+        region: frame.region);
+  }
+
+  /// Restyles a cloud callout's marked region: [shape] switches between a
+  /// revision cloud and the plain polygon (a rectangle as dragged out),
+  /// [cloudScale] resizes the cloud's scallops, and [dash] dashes the outline
+  /// (`(null,)` for solid). The text, box and leader style stay; the leader
+  /// re-seats on the new outline. False when [annotation] is not a cloud
+  /// callout this editor can reproduce.
+  bool restyleCalloutRegion(
+    int pageIndex,
+    PdfAnnotation annotation, {
+    PdfCalloutRegionShape? shape,
+    double? cloudScale,
+    (List<double>?,)? dash,
+  }) {
+    final info = _calloutInfo(annotation);
+    if (info == null ||
+        annotation.calloutRegion == null ||
+        annotation.freeTextStyle == null ||
+        annotation.calloutLeaderStyle == null ||
+        (cloudScale != null && (!cloudScale.isFinite || cloudScale <= 0))) {
+      return false;
+    }
+    final frame = _calloutLocalFrame(annotation, info.leaders);
+    if (frame == null) return false;
+    return _rebuildCallout(
+      pageIndex,
+      annotation,
+      frame.box,
+      _framedLeaders(frame),
+      info.ending,
+      appearanceToPage: frame.appearanceToPage,
+      region: frame.region!
+          .copyWith(shape: shape, cloudScale: cloudScale, dash: dash),
+    );
+  }
+
+  /// The leaders to rebuild a [frame] with: each keeps its tip and base,
+  /// except a cloud callout's first, which re-seats on the region.
+  List<PdfCalloutLeader> _framedLeaders(
+    ({
+      PdfRect box,
+      List<List<(double, double)>> lines,
+      PdfCalloutRegion? region,
+      PdfMatrix? appearanceToPage,
+    }) frame,
+  ) =>
+      [
+        for (var i = 0; i < frame.lines.length; i++)
+          (
+            target: frame.lines[i].first,
+            attach: i == 0 && frame.region != null ? null : frame.lines[i].last,
+          ),
+      ];
+
+  /// [annotation]'s callout box, [leaders] and region in the frame its
+  /// appearance is authored in: page space normally, or - for a rotated
+  /// callout whose form carries a baked matrix - the form's local frame, with
+  /// the matrix that maps it back to the page. Null when that frame can't be
+  /// recovered.
+  ({
+    PdfRect box,
+    List<List<(double, double)>> lines,
+    PdfCalloutRegion? region,
+    PdfMatrix? appearanceToPage,
+  })? _calloutLocalFrame(
+    PdfAnnotation annotation,
+    List<List<(double, double)>> leaders,
+  ) {
+    var box = annotation.calloutBox!;
+    var lines = leaders;
+    var region = annotation.calloutRegion;
+    final form = annotation.normalAppearance;
+    final appearanceToPage =
+        form == null ? null : _bakedFormMatrix(form, annotation.rect);
+    if (appearanceToPage == null || appearanceToPage == PdfMatrix.identity) {
+      return (box: box, lines: lines, region: region, appearanceToPage: null);
+    }
+    final bbox = pdfRectFrom(document.cos, form!.dictionary['BBox']);
+    final inverse = appearanceToPage.inverted();
+    if (bbox == null || inverse == null) return null;
+    lines = [
+      for (final line in leaders)
+        [for (final p in line) inverse.apply(p.$1, p.$2)],
+    ];
+    region = region?.copyWith(vertices: [
+      for (final p in region.vertices) inverse.apply(p.$1, p.$2),
+    ]);
+    // /RD belongs to the authored appearance frame. Rotated page-space
+    // leader points must return to that frame before redrawing, otherwise
+    // a style-only change scales and rotates the arrow a second time.
+    final local = CosDictionary({...annotation.dict.entries})
+      ..entries.remove(kPdfCalloutRDFrameKey)
+      ..['Rect'] = _rectArray(bbox)
+      ..['CL'] = _pointArray(lines.first);
+    if (annotation.dict[kPdfCalloutLocalRDKey] case final localRd?) {
+      local['RD'] = localRd;
+    }
+    box = PdfAnnotation.fromDict(document, local).calloutBox!;
+    return (
+      box: box,
+      lines: lines,
+      region: region,
+      appearanceToPage: appearanceToPage,
+    );
+  }
+
+  /// Adds a rich free-text annotation whose appearance can switch font,
+  /// size, and text color between [runs].
+  ///
+  /// `/Contents` remains the plain concatenation of the run text so comment
+  /// lists, sync payloads, and search-friendly metadata still see ordinary
+  /// text. `/DA` records the first run as the fallback style for other
+  /// viewers; the generated `/AP /N` appearance carries the per-run styling.
+  void addFreeTextRich(
+    int pageIndex,
+    PdfRect rect,
+    List<PdfFreeTextRun> runs, {
+    PdfTextDirection textDirection = PdfTextDirection.auto,
+    PdfTextAlign? align,
+    PdfTextVerticalAlign verticalAlign = PdfTextVerticalAlign.top,
+    int? fillColor,
+    int? borderColor,
+    double borderWidth = 1,
+    double opacity = 1,
+    double lineSpacing = _defaultLineSpacing,
+    double charSpacing = 0,
+    double horizontalScale = _defaultHorizontalScale,
+    int? pageRotation,
+    String? author,
+    String? name,
+  }) {
+    final effectivePageRotation = _appearancePageRotation(
+      pageIndex,
+      pageRotation,
+    );
+    final nonEmpty = [
+      for (final run in runs)
+        if (run.text.isNotEmpty) run,
+    ];
+    if (nonEmpty.isEmpty) return;
+    final text = nonEmpty.map((run) => run.text).join();
+    // Wrap standard fonts in PdfUnicodeFont for runs with non-Latin text.
+    final effective = [
+      for (final run in nonEmpty)
+        if (run.font is PdfStandardFont &&
+            run.text.codeUnits.any((c) => c > 0xFF))
+          PdfFreeTextRun(
+            run.text,
+            font: PdfUnicodeFont(run.font as PdfStandardFont)..resetUsage(),
+            fontSize: run.fontSize,
+            color: run.color,
+            underline: run.underline,
+          )
+        else
+          run,
+    ];
+    for (final font in _richFonts(effective)) {
+      if (font is PdfEmbeddedFont) font.resetUsage();
+    }
+    final gs = _alphaState(opacity);
+    final w = _freeTextRichContent(
+      rect,
+      effective,
+      textDirection: textDirection,
+      align: align,
+      verticalAlign: verticalAlign,
+      fillColor: fillColor,
+      borderColor: borderColor,
+      borderWidth: borderWidth,
+      hasAlpha: gs != null,
+      lineSpacing: lineSpacing,
+      charSpacing: charSpacing,
+      horizontalScale: horizontalScale,
+      pageRotation: effectivePageRotation,
+    );
+
+    final first = effective.first;
+    String rgb(int c) =>
+        ContentWriter.rgbComponents(c).map(ContentWriter.fmt).join(' ');
+    final da = '${rgb(first.color)} rg '
+        '${borderColor != null ? '${rgb(borderColor)} RG ' : ''}'
+        '/${first.font.resourceName} ${ContentWriter.fmt(first.fontSize)} Tf';
+    final dict =
+        _markupDict('FreeText', rect, fillColor ?? first.color, text, author)
+          ..['DA'] = CosString.fromText(da)
+          // /RC + /DS (§12.7.3.4) preserve the per-run styling the flat /DA
+          // can't, so a later edit rebuilds the mixed fonts/sizes/colors
+          // rather than collapsing the box to the first run's style. Built
+          // from the unwrapped runs so base-14 family names survive.
+          ..['RC'] = CosString.fromText(_richContentXhtml(nonEmpty))
+          ..['DS'] = CosString.fromText(_richSpanStyle(nonEmpty.first))
+          ..['Q'] = CosInteger(
+            align?.quadding ??
+                (textDirection.resolve(text) == PdfTextDirection.rtl ? 2 : 0),
+          );
+    // a whole-box underline (every run underlined) is also mirrored in the
+    // box-level flag so a flat re-read still shows it
+    _writeFreeTextSpacing(dict,
+        verticalAlign: verticalAlign,
+        lineSpacing: lineSpacing,
+        charSpacing: charSpacing,
+        horizontalScale: horizontalScale,
+        underline: nonEmpty.every((run) => run.underline));
+    if (borderColor != null && borderWidth > 0) {
+      dict['BS'] = _borderStyle(borderWidth);
+    }
+    _addAnnotation(
+      pageIndex,
+      dict,
+      _form(
+        rect,
+        w,
+        resources: _resources(
+          extGState: gs,
+          font: _richFontResources(effective),
+        ),
+      ),
+      name: name,
+    );
+  }
+
+  /// The §12.7.3.4 rich-content (`/RC`) string for [runs]: an XHTML
+  /// `<body>/<p>` whose `<span>`s carry each run's font, size and color.
+  /// The appearance stream alone can't be re-parsed into runs, so this is
+  /// what lets an edit rebuild mixed styling. Inverse of
+  /// [parseFreeTextRichContent].
+  static String _richContentXhtml(List<PdfFreeTextRun> runs) {
+    final b = StringBuffer(
+      '<?xml version="1.0"?><body xmlns="http://www.w3.org/1999/xhtml"><p>',
+    );
+    for (final run in runs) {
+      b
+        ..write('<span style="')
+        ..write(_richSpanStyle(run))
+        ..write('">')
+        ..write(_xmlEscape(run.text))
+        ..write('</span>');
+    }
+    b.write('</p></body>');
+    return b.toString();
+  }
+
+  /// The CSS-ish style declaration for one run, shared by /RC spans and
+  /// the paragraph default /DS: family (the base-14 PostScript name, or an
+  /// embedded font's resource tag), size in points, colour, and explicit
+  /// weight/slant so the styling reads even if a viewer ignores the family.
+  static String _richSpanStyle(PdfFreeTextRun run) {
+    final font = run.font;
+    final family = font is PdfStandardFont ? font.baseFont : font.resourceName;
+    final parts = [
+      'font-family:$family',
+      'font-size:${ContentWriter.fmt(run.fontSize)}pt',
+      'color:#${(run.color & 0xFFFFFF).toRadixString(16).padLeft(6, '0')}',
+    ];
+    if (font is PdfStandardFont) {
+      if (font.isBold) parts.add('font-weight:bold');
+      if (font.isItalic) parts.add('font-style:italic');
+    }
+    if (run.underline) parts.add('text-decoration:underline');
+    return parts.join(';');
+  }
+
+  /// Parses a free-text `/RC` string back into styled runs - the inverse
+  /// of what [addFreeTextRich] writes. Lenient: reads each `<span>`'s
+  /// `font-family` (mapped to a base-14 face), `font-size` and `color`,
+  /// refines bold/italic from `font-weight`/`font-style`, and falls back
+  /// to [fallbackFont]/[fallbackSize]/[fallbackColor] (typically the box's
+  /// flat /DA) for anything a span omits. Returns an empty list when no
+  /// spans are found, so callers can fall back to the plain text path.
+  static List<PdfFreeTextRun> parseFreeTextRichContent(
+    String rc, {
+    PdfStandardFont fallbackFont = PdfStandardFont.helvetica,
+    double fallbackSize = 12,
+    int fallbackColor = 0x000000,
+  }) {
+    final runs = <PdfFreeTextRun>[];
+    for (final span in RegExp(
+      r'<span\b([^>]*)>(.*?)</span>',
+      dotAll: true,
+    ).allMatches(rc)) {
+      final attrs = span.group(1) ?? '';
+      final style =
+          RegExp(r'style\s*=\s*"([^"]*)"').firstMatch(attrs)?.group(1) ?? '';
+      final text = _xmlUnescape(span.group(2) ?? '');
+      if (text.isEmpty) continue;
+      runs.add(
+        PdfFreeTextRun(
+          text,
+          font: _richSpanFont(style, fallbackFont),
+          fontSize: _richSpanSize(style) ?? fallbackSize,
+          color: _richSpanColor(style) ?? fallbackColor,
+          underline:
+              RegExp(r'text-decoration\s*:\s*[^;]*underline').hasMatch(style),
+        ),
+      );
+    }
+    return runs;
+  }
+
+  static PdfStandardFont _richSpanFont(String style, PdfStandardFont fallback) {
+    final family = RegExp(
+      r'font-family\s*:\s*([^;]+)',
+    ).firstMatch(style)?.group(1)?.trim();
+    var font = family == null ? null : PdfStandardFont.tryFromName(family);
+    if (RegExp(r'font-weight\s*:\s*(bold|[6-9]00)').hasMatch(style)) {
+      font = (font ?? fallback).withBold(true);
+    }
+    if (RegExp(r'font-style\s*:\s*(italic|oblique)').hasMatch(style)) {
+      font = (font ?? fallback).withItalic(true);
+    }
+    return font ?? fallback;
+  }
+
+  static double? _richSpanSize(String style) {
+    final m = RegExp(r'font-size\s*:\s*([\d.]+)').firstMatch(style);
+    return m == null ? null : double.tryParse(m.group(1)!);
+  }
+
+  static int? _richSpanColor(String style) {
+    final m = RegExp(r'color\s*:\s*#([0-9a-fA-F]{6})').firstMatch(style);
+    return m == null ? null : int.parse(m.group(1)!, radix: 16);
+  }
+
+  static String _xmlEscape(String s) => s
+      .replaceAll('&', '&amp;')
+      .replaceAll('<', '&lt;')
+      .replaceAll('>', '&gt;')
+      .replaceAll('"', '&quot;')
+      .replaceAll('\n', '&#10;');
+
+  static String _xmlUnescape(String s) => s
+      .replaceAll('&#10;', '\n')
+      .replaceAll('&#xA;', '\n')
+      .replaceAll('&quot;', '"')
+      .replaceAll('&lt;', '<')
+      .replaceAll('&gt;', '>')
+      .replaceAll('&amp;', '&');
+
+  /// The free-text appearance content: optional background fill and
+  /// border, then [text] wrapped into [rect] and clipped to it.
+  ContentWriter _freeTextContent(
+    PdfRect rect,
+    String text, {
+    required double fontSize,
+    required PdfTextFont font,
+    required PdfTextDirection textDirection,
+    PdfTextAlign? align,
+    PdfTextVerticalAlign verticalAlign = PdfTextVerticalAlign.top,
+    required int color,
+    required int? fillColor,
+    required int? borderColor,
+    required double borderWidth,
+    List<double>? borderDash,
+    bool hasAlpha = false,
+    double lineSpacing = _defaultLineSpacing,
+    double charSpacing = 0,
+    double horizontalScale = _defaultHorizontalScale,
+    bool underline = false,
+    int pageRotation = 0,
+  }) {
+    const pad = 3.0;
+    final w = ContentWriter();
+    if (hasAlpha) w.extGState('GS0');
+    final vr = _orientedVisualRect(rect, pageRotation);
+    if (pageRotation != 0) {
+      w.save();
+      _orientedCounterRotation(w, rect, pageRotation);
+    }
+    if (fillColor != null) {
+      w
+        ..fillColor(fillColor)
+        ..rect(vr.left, vr.bottom, vr.width, vr.height)
+        ..fill();
+    }
+    if (borderColor != null && borderWidth > 0) {
+      if (borderDash != null && borderDash.isNotEmpty) w.dash(borderDash);
+      w
+        ..strokeColor(borderColor)
+        ..lineWidth(borderWidth)
+        ..rect(
+          vr.left + borderWidth / 2,
+          vr.bottom + borderWidth / 2,
+          vr.width - borderWidth,
+          vr.height - borderWidth,
+        )
+        ..stroke();
+      if (borderDash != null && borderDash.isNotEmpty) w.dash(const []);
+    }
+    final lines = _wrap(text, fontSize, vr.width - 2 * pad,
+        font: font, charSpacing: charSpacing, horizontalScale: horizontalScale);
+    final resolvedDirection = textDirection.resolve(text);
+    final effectiveAlign = align ?? _alignForDirection(resolvedDirection);
+    w.save();
+    writePdfTextBox(
+      w,
+      vr,
+      lines,
+      font: font,
+      fontSize: fontSize,
+      align: effectiveAlign,
+      padding: pad,
+      lineHeight: fontSize * lineSpacing,
+      vAlign: switch (verticalAlign) {
+        PdfTextVerticalAlign.top => PdfTextBoxVAlign.top,
+        PdfTextVerticalAlign.center => PdfTextBoxVAlign.centerBlock,
+        PdfTextVerticalAlign.bottom => PdfTextBoxVAlign.bottomBlock,
+      },
+      clampVerticalAlign: true,
+      leading: true,
+      measureLine: (s) => _advanceWidth(font, s, fontSize,
+          charSpacing: charSpacing, horizontalScale: horizontalScale),
+      writeColor: (cw) {
+        cw.fillColor(color);
+        if (charSpacing != 0) cw.charSpacing(charSpacing);
+        if (horizontalScale != _defaultHorizontalScale) {
+          cw.horizontalScale(horizontalScale);
+        }
+      },
+      emitLine: (cw, line) {
+        if (font is PdfUnicodeFont) {
+          // Logical order: our renderer's TextPainter applies BiDi and shaping
+          // correctly; visual-order text would double-reverse and break Arabic
+          // contextual forms.
+          cw.showGlyphHex(font.encodeHex(line));
+        } else {
+          final visual = pdfVisualText(line, resolvedDirection);
+          if (font is PdfEmbeddedFont) {
+            cw.showGlyphHex(font.encodeHex(visual));
+          } else {
+            cw.showText(visual);
+          }
+        }
+      },
+      underlineColor: underline ? color : null,
+    );
+    w.restore();
+    if (pageRotation != 0) w.restore();
+    return w;
+  }
+
+  ContentWriter _freeTextRichContent(
+    PdfRect rect,
+    List<PdfFreeTextRun> runs, {
+    required PdfTextDirection textDirection,
+    PdfTextAlign? align,
+    PdfTextVerticalAlign verticalAlign = PdfTextVerticalAlign.top,
+    required int? fillColor,
+    required int? borderColor,
+    required double borderWidth,
+    bool hasAlpha = false,
+    double lineSpacing = _defaultLineSpacing,
+    double charSpacing = 0,
+    double horizontalScale = _defaultHorizontalScale,
+    int pageRotation = 0,
+  }) {
+    const pad = 3.0;
+    final w = ContentWriter();
+    if (hasAlpha) w.extGState('GS0');
+    final vr = _orientedVisualRect(rect, pageRotation);
+    if (pageRotation != 0) {
+      w.save();
+      _orientedCounterRotation(w, rect, pageRotation);
+    }
+    if (fillColor != null) {
+      w
+        ..fillColor(fillColor)
+        ..rect(vr.left, vr.bottom, vr.width, vr.height)
+        ..fill();
+    }
+    if (borderColor != null && borderWidth > 0) {
+      w
+        ..strokeColor(borderColor)
+        ..lineWidth(borderWidth)
+        ..rect(
+          vr.left + borderWidth / 2,
+          vr.bottom + borderWidth / 2,
+          vr.width - borderWidth,
+          vr.height - borderWidth,
+        )
+        ..stroke();
+    }
+    final plain = runs.map((run) => run.text).join();
+    final resolvedDirection = textDirection.resolve(plain);
+    final effectiveAlign = align ?? _alignForDirection(resolvedDirection);
+    final lines = _wrapRich(runs, vr.width - 2 * pad,
+        charSpacing: charSpacing, horizontalScale: horizontalScale);
+    // Count every wrapped line, including blank lines, using its largest
+    // run. Trailing leading is not part of the visible block.
+    double emHeight(_RichTextLine line) => line.runs.isEmpty
+        ? 12
+        : line.runs.fold<double>(
+            0, (height, run) => math.max(height, run.style.fontSize));
+    final blockHeight = verticalAlign == PdfTextVerticalAlign.top ||
+            lines.isEmpty
+        ? 0.0
+        : lines.take(lines.length - 1).fold<double>(
+                0, (height, line) => height + emHeight(line) * lineSpacing) +
+            emHeight(lines.last);
+    final spare = math.max(0.0, vr.height - 2 * pad - blockHeight);
+    var top = vr.top -
+        pad -
+        switch (verticalAlign) {
+          PdfTextVerticalAlign.top => 0.0,
+          PdfTextVerticalAlign.center => spare / 2,
+          PdfTextVerticalAlign.bottom => spare,
+        };
+    var prevX = 0.0;
+    var prevY = 0.0;
+    final underlines = <PdfTextUnderline>[];
+    w
+      ..save()
+      ..rect(vr.left, vr.bottom, vr.width, vr.height)
+      ..clip()
+      ..beginText();
+    if (charSpacing != 0) w.charSpacing(charSpacing);
+    if (horizontalScale != _defaultHorizontalScale) {
+      w.horizontalScale(horizontalScale);
+    }
+    for (final line in lines) {
+      if (line.runs.isEmpty) {
+        top -= 12 * lineSpacing;
+        continue;
+      }
+      final ascent = line.runs.fold<double>(
+        0,
+        (max, run) =>
+            math.max(max, run.style.fontSize * run.style.font.ascent / 1000),
+      );
+      final lineHeight = line.runs.fold<double>(
+        0,
+        (max, run) => math.max(max, run.style.fontSize * lineSpacing),
+      );
+      var x = pdfTextBoxLineX(effectiveAlign, vr, line.width, pad);
+      final y = top - ascent;
+      final drawRuns = resolvedDirection == PdfTextDirection.rtl
+          ? line.runs.reversed
+          : line.runs;
+      for (final run in drawRuns) {
+        final style = run.style;
+        final isUnicode = style.font is PdfUnicodeFont;
+        final visual =
+            isUnicode ? run.text : pdfVisualText(run.text, resolvedDirection);
+        final width = _advanceWidth(style.font, visual, style.fontSize,
+            charSpacing: charSpacing, horizontalScale: horizontalScale);
+        w
+          ..font(style.font.resourceName, style.fontSize)
+          ..fillColor(style.color)
+          ..textAt(x - prevX, y - prevY);
+        if (isUnicode) {
+          w.showGlyphHex((style.font as PdfUnicodeFont).encodeHex(run.text));
+        } else if (style.font is PdfEmbeddedFont) {
+          w.showGlyphHex((style.font as PdfEmbeddedFont).encodeHex(visual));
+        } else {
+          w.showText(visual);
+        }
+        if (style.underline && run.text.isNotEmpty) {
+          underlines
+              .add(PdfTextUnderline(x, y, width, style.fontSize, style.color));
+        }
+        prevX = x;
+        prevY = y;
+        x += width;
+      }
+      top -= lineHeight;
+    }
+    w.endText();
+    pdfDrawUnderlines(w, underlines);
+    w.restore();
+    if (pageRotation != 0) w.restore();
+    return w;
+  }
+
+  /// The default alignment when a free-text box gives none: right for an
+  /// RTL paragraph (so it hugs the right edge as before), left otherwise.
+  static PdfTextAlign _alignForDirection(PdfTextDirection direction) =>
+      direction == PdfTextDirection.rtl
+          ? PdfTextAlign.right
+          : PdfTextAlign.left;
+
+  int _appearancePageRotation(int pageIndex, int? pageRotation) =>
+      _normalizePageRotation(pageRotation ?? document.page(pageIndex).rotation);
+
+  static int _normalizePageRotation(int pageRotation) {
+    final r = pageRotation % 360;
+    return r < 0 ? r + 360 : r;
+  }
+
+  /// The rect in which oriented appearance artwork is laid out when
+  /// [pageRotation] is active. For 90/270 rotations the visual dimensions
+  /// (what the user sees on screen) are the page rect's height×width; for
+  /// 180 they stay the same. The visual rect is centered on the page rect.
+  static PdfRect _orientedVisualRect(PdfRect pageRect, int pageRotation) {
+    if (pageRotation == 0) return pageRect;
+    if (pageRotation == 180) return pageRect;
+    final cx = (pageRect.left + pageRect.right) / 2;
+    final cy = (pageRect.bottom + pageRect.top) / 2;
+    final vw = pageRect.height;
+    final vh = pageRect.width;
+    return PdfRect(cx - vw / 2, cy - vh / 2, cx + vw / 2, cy + vh / 2);
+  }
+
+  /// Writes a `cm` operator that counter-rotates content by [pageRotation]
+  /// about the center of [pageRect], so oriented artwork drawn in the
+  /// visual rect appears upright after the renderer applies the page's
+  /// display rotation.
+  static void _orientedCounterRotation(
+    ContentWriter w,
+    PdfRect pageRect,
+    int pageRotation,
+  ) =>
+      writePdfCounterRotation(
+        w,
+        (pageRect.left + pageRect.right) / 2,
+        (pageRect.bottom + pageRect.top) / 2,
+        pageRotation,
+      );
+
+  /// Rebuilds [runs] so any base-14 run carrying non-Latin-1 text is wrapped
+  /// in a fresh [PdfUnicodeFont] (Identity-H) - the standard faces only speak
+  /// WinAnsi. Preserves each run's size, colour, and underline. Shared by
+  /// [addFreeTextRich] and the resize regenerator.
+  List<PdfFreeTextRun> _wrapNonLatinRuns(List<PdfFreeTextRun> runs) => [
+        for (final run in runs)
+          if (run.font is PdfStandardFont &&
+              run.text.codeUnits.any((c) => c > 0xFF))
+            PdfFreeTextRun(
+              run.text,
+              font: PdfUnicodeFont(run.font as PdfStandardFont)..resetUsage(),
+              fontSize: run.fontSize,
+              color: run.color,
+              underline: run.underline,
+            )
+          else
+            run,
+      ];
+
+  Iterable<PdfTextFont> _richFonts(List<PdfFreeTextRun> runs) sync* {
+    final seen = <String>{};
+    for (final run in runs) {
+      if (seen.add(run.font.resourceName)) yield run.font;
+    }
+  }
+
+  CosDictionary _richFontResources(List<PdfFreeTextRun> runs) {
+    final dict = CosDictionary();
+    for (final font in _richFonts(runs)) {
+      final CosDictionary resource;
+      if (font is PdfEmbeddedFont) {
+        resource = font.buildResource(_updater.addObject);
+      } else if (font is PdfUnicodeFont) {
+        resource = font.buildResource(_updater.addObject);
+      } else {
+        resource = _standardFont(font as PdfStandardFont);
+      }
+      dict.entries.addAll(resource.entries);
+    }
+    return dict;
+  }
+
+  List<_RichTextLine> _wrapRich(
+    List<PdfFreeTextRun> runs,
+    double maxWidth, {
+    double charSpacing = 0,
+    double horizontalScale = _defaultHorizontalScale,
+  }) {
+    final lines = <_RichTextLine>[];
+    var current = <_RichTextPiece>[];
+    var width = 0.0;
+
+    void flushLine() {
+      lines.add(_RichTextLine(current, width));
+      current = <_RichTextPiece>[];
+      width = 0;
+    }
+
+    void addText(PdfFreeTextRun style, String text) {
+      if (text.isEmpty) return;
+      if (current.isNotEmpty && current.last.sameStyle(style)) {
+        current[current.length - 1] = _RichTextPiece(
+          current.last.text + text,
+          current.last.style,
+        );
+      } else {
+        current.add(_RichTextPiece(text, style));
+      }
+      width += _advanceWidth(style.font, text, style.fontSize,
+          charSpacing: charSpacing, horizontalScale: horizontalScale);
+    }
+
+    for (final run in runs) {
+      for (final rune in run.text.runes) {
+        if (rune == 0x0A) {
+          flushLine();
+          continue;
+        }
+        final text = String.fromCharCode(rune);
+        final w = _advanceWidth(run.font, text, run.fontSize,
+            charSpacing: charSpacing, horizontalScale: horizontalScale);
+        if (width > 0 && width + w > maxWidth + _wrapTolerance) flushLine();
+        addText(run, text);
+      }
+    }
+    if (current.isNotEmpty || lines.isEmpty) flushLine();
+    return lines;
+  }
+
+  /// Adds a sticky-note (/Text) annotation with its top-left corner at
+  /// ([x], [y]). Viewers show [contents] in a popup when it is opened.
+  void addNote(
+    int pageIndex,
+    double x,
+    double y,
+    String contents, {
+    int color = 0xFFD100,
+    int? pageRotation,
+    String? author,
+    String? name,
+  }) {
+    final effectivePageRotation = _appearancePageRotation(
+      pageIndex,
+      pageRotation,
+    );
+    const size = 20.0;
+    final rect = PdfRect(x, y - size, x + size, y);
+    _addAnnotation(
+      pageIndex,
+      _markupDict('Text', rect, color, contents, author)
+        ..['Name'] = const CosName('Comment'),
+      _form(
+        rect,
+        _noteContent(rect, color, pageRotation: effectivePageRotation),
+      ),
+      name: name,
+    );
+  }
+
+  /// The sticky-note sheet appearance, drawn inside [rect]. Shared by
+  /// [addNote] and [restyleAnnotation].
+  ContentWriter _noteContent(PdfRect rect, int color, {int pageRotation = 0}) {
+    final vr = _orientedVisualRect(rect, pageRotation);
+    final x = vr.left, y = vr.top;
+    final size = math.min(vr.width, vr.height);
+    final w = ContentWriter();
+    if (pageRotation != 0) {
+      w.save();
+      _orientedCounterRotation(w, rect, pageRotation);
+    }
+    w
+      // note sheet
+      ..fillColor(color)
+      ..strokeColor(0x404040)
+      ..lineWidth(1)
+      ..roundedRect(x + 1, y - size + 1, size - 2, size - 2, 2)
+      ..fillAndStroke()
+      // text lines on the sheet
+      ..strokeColor(0x606060)
+      ..lineWidth(1);
+    for (var i = 0; i < 3; i++) {
+      final lineY = y - 6 - i * 4;
+      w
+        ..moveTo(x + 4, lineY)
+        ..lineTo(x + size - 4, lineY)
+        ..stroke();
+    }
+    if (pageRotation != 0) w.restore();
+    return w;
+  }
+
+  /// Adds a rubber-stamp annotation: [text] centered in bold inside a
+  /// rounded border, sized to fit [rect].
+  void addStamp(
+    int pageIndex,
+    PdfRect rect,
+    String text, {
+    int color = 0xC03030,
+    double opacity = 1,
+    int? pageRotation,
+    String? author,
+    String? name,
+    String? stampType,
+    Iterable<String> stampTags = const [],
+  }) {
+    final effectivePageRotation = _appearancePageRotation(
+      pageIndex,
+      pageRotation,
+    );
+    final (w, gs) = _stampContent(
+      rect,
+      text,
+      color,
+      opacity,
+      pageRotation: effectivePageRotation,
+    );
+    final dict = _markupDict('Stamp', rect, color, text, author);
+    _applyStampMetadata(dict, type: stampType, tags: stampTags);
+    _addAnnotation(
+      pageIndex,
+      dict,
+      _form(
+        rect,
+        w,
+        resources: _resources(
+          extGState: gs,
+          font: _helvetica(bold: true, name: 'HelvB'),
+        ),
+      ),
+      name: name,
+    );
+  }
+
+  /// The rubber-stamp appearance: [text] centered in bold inside a
+  /// rounded border, sized to fit [rect]. Shared by [addStamp] and
+  /// [restyleAnnotation].
+  (ContentWriter, CosDictionary?) _stampContent(
+    PdfRect rect,
+    String text,
+    int color,
+    double opacity, {
+    int pageRotation = 0,
+  }) {
+    const borderWidth = 2.0;
+    const pad = 6.0;
+    final vr = _orientedVisualRect(rect, pageRotation);
+    var fontSize = (vr.height - 2 * pad) * 0.72;
+    final available = vr.width - 2 * pad;
+    final atUnit = measureHelvetica(text, 1, bold: true);
+    if (atUnit > 0 && atUnit * fontSize > available) {
+      fontSize = available / atUnit;
+    }
+    final textWidth = atUnit * fontSize;
+
+    final w = ContentWriter();
+    final gs = _alphaState(opacity);
+    if (gs != null) w.extGState('GS0');
+    if (pageRotation != 0) {
+      w.save();
+      _orientedCounterRotation(w, rect, pageRotation);
+    }
+    w
+      ..strokeColor(color)
+      ..lineWidth(borderWidth)
+      ..roundedRect(
+        vr.left + borderWidth / 2,
+        vr.bottom + borderWidth / 2,
+        vr.width - borderWidth,
+        vr.height - borderWidth,
+        4,
+      )
+      ..stroke()
+      ..beginText()
+      ..font('HelvB', fontSize)
+      ..fillColor(color)
+      ..textAt(
+        vr.left + (vr.width - textWidth) / 2,
+        vr.bottom + (vr.height - fontSize * 0.718) / 2,
+      )
+      ..showText(text)
+      ..endText();
+    if (pageRotation != 0) w.restore();
+    return (w, gs);
+  }
+
+  /// Adds a rubber-stamp annotation from an editable vector [template].
+  ///
+  /// The placed annotation is still one /Stamp: the template's parts are
+  /// compiled into its normal appearance. That keeps placed stamps simple to
+  /// move, resize, flatten, sync, and print, while the saved template remains
+  /// editable for future placements.
+  void addTemplateStamp(
+    int pageIndex,
+    PdfRect rect,
+    PdfStampTemplate template, {
+    String? contents,
+    int color = 0xC03030,
+    double opacity = 1,
+    int? pageRotation,
+    String? author,
+    String? name,
+    String? stampType,
+    Iterable<String> stampTags = const [],
+    Map<String, String> templateValues = const {},
+  }) {
+    if (!template.isValid) return;
+    final effectivePageRotation = _appearancePageRotation(
+      pageIndex,
+      pageRotation,
+    );
+    final appearance = _stampTemplateContent(
+      rect,
+      template,
+      opacity,
+      pageRotation: effectivePageRotation,
+      templateValues: templateValues,
+    );
+    final dict = _markupDict(
+      'Stamp',
+      rect,
+      color,
+      contents == null
+          ? null
+          : pdfResolveStampTemplateText(contents, templateValues),
+      author,
+    );
+    _applyStampMetadata(
+      dict,
+      type: stampType,
+      tags: stampTags,
+      template: template,
+    );
+    _addAnnotation(
+      pageIndex,
+      dict,
+      _form(
+        rect,
+        appearance.writer,
+        resources: _resources(
+          extGState: appearance.extGState,
+          font: appearance.font,
+          xObject: appearance.xObject,
+        ),
+      ),
+      name: name,
+    );
+  }
+
+  /// The largest stamp template, as encoded JSON, that [addTemplateStamp]
+  /// records on the annotation it places (see [PdfAnnotation.stampTemplate]).
+  ///
+  /// Designs made of text and shapes encode to a few hundred bytes, so the
+  /// cap only ever bites on a template carrying a picture - whose bytes are
+  /// already in the appearance stream, and would be paid for a second time
+  /// by every placement. Such a stamp still places and prints identically;
+  /// it just can't be recovered back into a stamp collection from the page.
+  static const int maxStampTemplateMetadataBytes = 64 * 1024;
+
+  void _applyStampMetadata(
+    CosDictionary dict, {
+    String? type,
+    Iterable<String> tags = const [],
+    PdfStampTemplate? template,
+  }) {
+    final normalizedType = type?.trim();
+    if (normalizedType != null && normalizedType.isNotEmpty) {
+      dict['DartPdfStampType'] = CosString.fromText(normalizedType);
+    }
+    final normalizedTags = [
+      for (final tag in tags)
+        if (tag.trim().isNotEmpty) tag.trim(),
+    ];
+    if (normalizedTags.isNotEmpty) {
+      dict['DartPdfStampTags'] = CosArray([
+        for (final tag in normalizedTags) CosString.fromText(tag),
+      ]);
+    }
+    if (template != null) {
+      // The *unresolved* design, so a placed stamp saved back into a
+      // collection keeps its live `{{date}}`-style fields.
+      final json = jsonEncode(template.toJson());
+      if (json.length <= maxStampTemplateMetadataBytes) {
+        dict['DartPdfStampTemplate'] = CosString.fromText(json);
+      }
+    }
+  }
+
+  ({
+    ContentWriter writer,
+    CosDictionary? extGState,
+    CosDictionary? font,
+    CosDictionary? xObject,
+  }) _stampTemplateContent(
+    PdfRect rect,
+    PdfStampTemplate template,
+    double opacity, {
+    int pageRotation = 0,
+    Map<String, String> templateValues = const {},
+  }) {
+    final resolvedTemplate = template.resolveText(templateValues);
+    final vr = _orientedVisualRect(rect, pageRotation);
+    final sx = vr.width / resolvedTemplate.width;
+    final sy = vr.height / resolvedTemplate.height;
+    final w = ContentWriter();
+    final gs = _alphaState(opacity);
+    final fonts = CosDictionary();
+    final xObjects = CosDictionary();
+    var imageIndex = 0;
+    if (gs != null) w.extGState('GS0');
+    if (pageRotation != 0) {
+      w.save();
+      _orientedCounterRotation(w, rect, pageRotation);
+    }
+
+    void ensureFont(PdfStandardFont font) {
+      if (fonts.containsKey(font.resourceName)) return;
+      fonts.entries.addAll(_standardFont(font).entries);
+    }
+
+    for (final c in resolvedTemplate.components) {
+      if (c.width <= 0 || c.height <= 0) continue;
+      final left = vr.left + c.x * sx;
+      final top = vr.top - c.y * sy;
+      final width = c.width * sx;
+      final height = c.height * sy;
+      final bottom = top - height;
+      switch (c.type) {
+        case PdfStampTemplateComponentType.rectangle:
+          _stampTemplateShape(
+            w,
+            c,
+            left: left,
+            bottom: bottom,
+            width: width,
+            height: height,
+            scale: math.min(sx, sy),
+            ellipse: false,
+          );
+        case PdfStampTemplateComponentType.ellipse:
+          _stampTemplateShape(
+            w,
+            c,
+            left: left,
+            bottom: bottom,
+            width: width,
+            height: height,
+            scale: math.min(sx, sy),
+            ellipse: true,
+          );
+        case PdfStampTemplateComponentType.text:
+          ensureFont(c.font);
+          _stampTemplateText(
+            w,
+            c,
+            left: left,
+            bottom: bottom,
+            width: width,
+            height: height,
+          );
+        case PdfStampTemplateComponentType.image:
+          final imageBytes = c.imageBytes;
+          if (imageBytes == null) continue;
+          final PdfEmbeddableImage image;
+          try {
+            image = PdfEmbeddableImage.decode(imageBytes);
+          } catch (_) {
+            continue;
+          }
+          final name = 'Img${imageIndex++}';
+          xObjects[name] = _updater.addObject(
+            image.toXObject((smask) => _updater.addObject(smask)),
+          );
+          _stampTemplateImage(
+            w,
+            name: name,
+            left: left,
+            bottom: bottom,
+            width: width,
+            height: height,
+          );
+        case PdfStampTemplateComponentType.signature:
+          _stampTemplateSignature(
+            w,
+            c,
+            left: left,
+            bottom: bottom,
+            width: width,
+            height: height,
+            scale: math.min(sx, sy),
+          );
+      }
+    }
+
+    if (pageRotation != 0) w.restore();
+    return (
+      writer: w,
+      extGState: gs,
+      font: fonts.entries.isEmpty ? null : fonts,
+      xObject: xObjects.entries.isEmpty ? null : xObjects,
+    );
+  }
+
+  void _stampTemplateShape(
+    ContentWriter w,
+    PdfStampTemplateComponent c, {
+    required double left,
+    required double bottom,
+    required double width,
+    required double height,
+    required double scale,
+    required bool ellipse,
+  }) {
+    final strokeWidth = math.max(0.1, c.strokeWidth * scale);
+    final inset = strokeWidth / 2;
+    final x = left + inset;
+    final y = bottom + inset;
+    final shapeWidth = math.max(0.0, width - strokeWidth);
+    final shapeHeight = math.max(0.0, height - strokeWidth);
+    if (shapeWidth <= 0 || shapeHeight <= 0) return;
+
+    if (c.fillColor != null) w.fillColor(c.fillColor!);
+    w
+      ..strokeColor(c.color)
+      ..lineWidth(strokeWidth);
+    if (ellipse) {
+      w.ellipse(
+        x + shapeWidth / 2,
+        y + shapeHeight / 2,
+        shapeWidth / 2,
+        shapeHeight / 2,
+      );
+    } else {
+      w.roundedRect(x, y, shapeWidth, shapeHeight, c.radius * scale);
+    }
+    if (c.fillColor != null) {
+      w.fillAndStroke();
+    } else {
+      w.stroke();
+    }
+  }
+
+  void _stampTemplateText(
+    ContentWriter w,
+    PdfStampTemplateComponent c, {
+    required double left,
+    required double bottom,
+    required double width,
+    required double height,
+  }) {
+    final text = c.text.trim();
+    if (text.isEmpty || width <= 0 || height <= 0) return;
+    final templateFontSize = c.fontSize ?? c.height * 0.72;
+    var fontSize = templateFontSize * (height / c.height);
+    fontSize = math.min(fontSize, height * 0.9);
+    if (fontSize <= 0) return;
+    final atUnit = c.font.measure(text, 1);
+    if (atUnit > 0 && atUnit * fontSize > width) {
+      fontSize = width / atUnit;
+    }
+    final textWidth = atUnit * fontSize;
+    w
+      ..beginText()
+      ..font(c.font.resourceName, fontSize)
+      ..fillColor(c.color)
+      ..textAt(
+        left + (width - textWidth) / 2,
+        bottom + (height - fontSize * c.font.ascent / 1000) / 2,
+      )
+      ..showText(text)
+      ..endText();
+  }
+
+  void _stampTemplateImage(
+    ContentWriter w, {
+    required String name,
+    required double left,
+    required double bottom,
+    required double width,
+    required double height,
+  }) {
+    if (width <= 0 || height <= 0) return;
+    w
+      ..save()
+      ..concatMatrix(width, 0, 0, height, left, bottom)
+      ..drawXObject(name)
+      ..restore();
+  }
+
+  void _stampTemplateSignature(
+    ContentWriter w,
+    PdfStampTemplateComponent c, {
+    required double left,
+    required double bottom,
+    required double width,
+    required double height,
+    required double scale,
+  }) {
+    if (width <= 0 || height <= 0 || c.strokes.isEmpty) return;
+    final strokeWidth = math.max(0.1, c.strokeWidth * scale);
+    final top = bottom + height;
+    final strokes = [
+      for (final stroke in c.strokes)
+        if (stroke.isNotEmpty)
+          [for (final (x, y) in stroke) (left + x * width, top - y * height)],
+    ];
+    if (strokes.isEmpty) return;
+    final List<List<double>?> pressures = c.pressures.length == c.strokes.length
+        ? c.pressures
+        : const <List<double>?>[];
+    final controls = [
+      for (final stroke in strokes) pdfInkCurveControls(stroke),
+    ];
+    w
+      ..strokeColor(c.color)
+      ..lineWidth(strokeWidth)
+      ..roundLines();
+    var mappedIndex = 0;
+    for (var i = 0; i < c.strokes.length; i++) {
+      if (c.strokes[i].isEmpty) continue;
+      final stroke = strokes[mappedIndex];
+      final control = controls[mappedIndex];
+      final rawPressure = i < pressures.length ? pressures[i] : null;
+      final pressure =
+          rawPressure != null && rawPressure.length == c.strokes[i].length
+              ? rawPressure
+              : null;
+      mappedIndex++;
+      final (x0, y0) = stroke.first;
+      if (pressure == null) {
+        w
+          ..lineWidth(strokeWidth)
+          ..moveTo(x0, y0);
+        if (stroke.length == 1) w.lineTo(x0, y0);
+        for (var j = 0; j < stroke.length - 1; j++) {
+          final ((c1x, c1y), (c2x, c2y)) = control[j];
+          final (x, y) = stroke[j + 1];
+          w.curveTo(c1x, c1y, c2x, c2y, x, y);
+        }
+        w.stroke();
+        continue;
+      }
+      if (stroke.length == 1) {
+        w
+          ..lineWidth(pdfInkStrokeWidth(strokeWidth, pressure.first))
+          ..moveTo(x0, y0)
+          ..lineTo(x0, y0)
+          ..stroke();
+        continue;
+      }
+      for (var j = 0; j < stroke.length - 1; j++) {
+        final (xa, ya) = stroke[j];
+        final ((c1x, c1y), (c2x, c2y)) = control[j];
+        final (xb, yb) = stroke[j + 1];
+        w
+          ..lineWidth(
+            pdfInkStrokeWidth(strokeWidth, (pressure[j] + pressure[j + 1]) / 2),
+          )
+          ..moveTo(xa, ya)
+          ..curveTo(c1x, c1y, c2x, c2y, xb, yb)
+          ..stroke();
+      }
+    }
+  }
+
+  /// Adds a count check-mark: a checkmark drawn inside [rect], modelled as
+  /// a /Stamp with /Name /Check so the editing UI can tally them
+  /// Bluebeam-style (see [PdfAnnotation.isCheckMark]). Being a stamp, it
+  /// inherits select/move/resize/rotate/delete from the annotation
+  /// machinery for free.
+  void addCheckMark(
+    int pageIndex,
+    PdfRect rect, {
+    int color = 0x2E7D32,
+    double opacity = 1,
+    int? pageRotation,
+    String? author,
+    String? name,
+  }) {
+    final effectivePageRotation = _appearancePageRotation(
+      pageIndex,
+      pageRotation,
+    );
+    final (w, gs) = _checkMarkContent(
+      rect,
+      color,
+      opacity,
+      pageRotation: effectivePageRotation,
+    );
+    _addAnnotation(
+      pageIndex,
+      _markupDict('Stamp', rect, color, null, author)
+        ..['Name'] = const CosName('Check'),
+      _form(rect, w, resources: gs == null ? null : _resources(extGState: gs)),
+      name: name,
+    );
+  }
+
+  /// The check-mark appearance: a tick stroked inside [rect], centered in
+  /// its largest square so it stays proportional whatever the rect aspect.
+  (ContentWriter, CosDictionary?) _checkMarkContent(
+    PdfRect rect,
+    int color,
+    double opacity, {
+    int pageRotation = 0,
+  }) {
+    final gs = _alphaState(opacity);
+    final w = ContentWriter();
+    if (gs != null) w.extGState('GS0');
+    final vr = _orientedVisualRect(rect, pageRotation);
+    if (pageRotation != 0) {
+      w.save();
+      _orientedCounterRotation(w, rect, pageRotation);
+    }
+    final s = math.min(vr.width, vr.height);
+    final ox = vr.left + (vr.width - s) / 2;
+    final oy = vr.bottom + (vr.height - s) / 2;
+    w
+      ..strokeColor(color)
+      ..lineWidth(s * 0.16)
+      ..roundLines()
+      ..moveTo(ox + s * 0.18, oy + s * 0.50)
+      ..lineTo(ox + s * 0.42, oy + s * 0.26)
+      ..lineTo(ox + s * 0.82, oy + s * 0.74)
+      ..stroke();
+    if (pageRotation != 0) w.restore();
+    return (w, gs);
+  }
+
+  /// Inserts [image] (a decoded PNG or JPEG) as a /Stamp annotation whose
+  /// appearance draws it scaled to fill [rect].
+  ///
+  /// Modelled as a stamp so it inherits select/move/resize/rotate/delete
+  /// from the annotation machinery for free. It carries no /Contents, so
+  /// [pdfCanRestyleAnnotation] returns false - the restyle path would
+  /// regenerate a /Stamp as a *text* stamp and destroy the picture.
+  /// Resize stretches the appearance (the §12.5.5 BBox→Rect fit scales the
+  /// form matrix, so the image scales with the box) and rotate bakes the
+  /// matrix, exactly like any other stamp.
+  void addImageStamp(
+    int pageIndex,
+    PdfRect rect,
+    PdfEmbeddableImage image, {
+    double opacity = 1,
+    int? pageRotation,
+    String? author,
+    String? name,
+    PdfRect? crop,
+  }) {
+    final effectivePageRotation = _appearancePageRotation(
+      pageIndex,
+      pageRotation,
+    );
+    final imageRef = _updater.addObject(
+      image.toXObject((smask) => _updater.addObject(smask)),
+    );
+    final effectiveCrop = _normalizeImageCrop(crop);
+    final (w, resources) = _imageStampContent(
+      rect,
+      imageRef,
+      opacity,
+      pageRotation: effectivePageRotation,
+      crop: effectiveCrop,
+    );
+    // Mark it a picture stamp so the restyle path re-bakes only its alpha
+    // over this image, and never mistakes it for a text/template stamp.
+    final dict = _markupDict('Stamp', rect, 0xC03030, null, author)
+      ..['DartPdfImageStamp'] = const CosBoolean(true);
+    _writeImageCropMarker(dict, effectiveCrop);
+    _addAnnotation(
+      pageIndex,
+      dict,
+      _form(rect, w, resources: resources),
+      name: name,
+    );
+  }
+
+  /// Clamps [crop] to the unit square and normalizes its corners; null or a
+  /// degenerate crop becomes the whole image `[0,0,1,1]`.
+  static PdfRect _normalizeImageCrop(PdfRect? crop) {
+    if (crop == null) return const PdfRect(0, 0, 1, 1);
+    double c(double v) => v < 0 ? 0 : (v > 1 ? 1 : v);
+    final r = PdfRect.normalized(
+      c(crop.left),
+      c(crop.bottom),
+      c(crop.right),
+      c(crop.top),
+    );
+    if (r.width <= 0 || r.height <= 0) return const PdfRect(0, 0, 1, 1);
+    return r;
+  }
+
+  /// Records (or clears) an image stamp's crop on its annotation dict as the
+  /// private `/DartPdfImageCrop` marker. A full-image crop drops the marker so
+  /// an uncropped picture carries none. Read back by [PdfAnnotation.imageStampCrop].
+  static void _writeImageCropMarker(CosDictionary dict, PdfRect crop) {
+    final full =
+        crop.left <= 0 && crop.bottom <= 0 && crop.right >= 1 && crop.top >= 1;
+    if (full) {
+      dict.entries.remove('DartPdfImageCrop');
+    } else {
+      dict['DartPdfImageCrop'] = CosArray([
+        CosReal(crop.left),
+        CosReal(crop.bottom),
+        CosReal(crop.right),
+        CosReal(crop.top),
+      ]);
+    }
+  }
+
+  /// Builds an image stamp's appearance: a unit image (1×1 at the origin)
+  /// mapped onto [rect]'s oriented visual box, gated by [opacity]'s alpha.
+  /// The form's BBox stays the page-space rect, so unrotated appearances fit
+  /// as an identity mapping. Shared by [addImageStamp] and the opacity
+  /// restyle path so a pasted picture keeps its image when its transparency
+  /// changes.
+  ///
+  /// [crop] is the normalized sub-region of the source picture to show
+  /// (origin bottom-left, `[0,0,1,1]` is the whole image). When it is less
+  /// than the full image, the visual box is clipped and the picture is scaled
+  /// so that sub-region fills the box - only the cropped part paints.
+  (ContentWriter, CosDictionary?) _imageStampContent(
+    PdfRect rect,
+    CosObject imageRef,
+    double opacity, {
+    int pageRotation = 0,
+    PdfRect crop = const PdfRect(0, 0, 1, 1),
+  }) {
+    final w = ContentWriter();
+    final gs = _alphaState(opacity);
+    if (gs != null) w.extGState('GS0');
+    final vr = _orientedVisualRect(rect, pageRotation);
+    if (pageRotation != 0) {
+      w.save();
+      _orientedCounterRotation(w, rect, pageRotation);
+    }
+    final cropped =
+        crop.width < 1 || crop.height < 1 || crop.left > 0 || crop.bottom > 0;
+    w.save();
+    if (cropped) {
+      // The scaled-up picture overflows the visual box; the box clips it so
+      // only the cropped sub-region shows. (The form BBox also clips, but an
+      // explicit clip keeps the appearance correct under a non-identity
+      // BBox->Rect fit and matches the counter-rotated frame.)
+      w
+        ..rect(vr.left, vr.bottom, vr.width, vr.height)
+        ..clip();
+      // Map the crop's sub-rect of the unit image onto the visual box:
+      // (crop.left, crop.bottom) lands at the box origin, the crop's span
+      // fills the box.
+      final sx = vr.width / crop.width;
+      final sy = vr.height / crop.height;
+      w.concatMatrix(
+        sx,
+        0,
+        0,
+        sy,
+        vr.left - crop.left * sx,
+        vr.bottom - crop.bottom * sy,
+      );
+    } else {
+      w.concatMatrix(vr.width, 0, 0, vr.height, vr.left, vr.bottom);
+    }
+    w
+      ..drawXObject('Img0')
+      ..restore();
+    if (pageRotation != 0) w.restore();
+    return (
+      w,
+      _resources(
+        extGState: gs,
+        xObject: CosDictionary({'Img0': imageRef}),
+      ),
+    );
+  }
+
+  /// The indirect image XObject an image stamp's appearance draws, or null
+  /// when [form] isn't a single-image stamp appearance. Reused verbatim so a
+  /// restyle re-references the existing picture rather than re-embedding it.
+  CosObject? _stampImageRef(CosStream form) {
+    final cos = document.cos;
+    final resources = cos.resolve(form.dictionary['Resources']);
+    if (resources is! CosDictionary) return null;
+    final xobjects = cos.resolve(resources['XObject']);
+    if (xobjects is! CosDictionary) return null;
+    for (final entry in xobjects.entries.values) {
+      final xobj = cos.resolve(entry);
+      if (xobj is! CosStream) continue;
+      final subtype = cos.resolve(xobj.dictionary['Subtype']);
+      if (subtype is CosName && subtype.value == 'Image') return entry;
+    }
+    return null;
+  }
+
+  /// Crops the image stamp [annotation] (one placed by [addImageStamp]) to
+  /// show only [crop] - the normalized sub-region of its source picture,
+  /// origin bottom-left, `[0,0,1,1]` being the whole image. The crop composes
+  /// against the *source* picture, so passing `[0,0,1,1]` restores the full
+  /// image regardless of any earlier crop.
+  ///
+  /// When [rect] is supplied it becomes the annotation's new page-space
+  /// /Rect. Size it to the visible sub-region (the on-page footprint of
+  /// [crop] within the current box) so the retained pixels keep their scale
+  /// instead of stretching to refill the old box - the standard "crop shrinks
+  /// the frame" behaviour. Omit [rect] to crop in place, stretching the
+  /// sub-region across the unchanged box.
+  ///
+  /// The picture is preserved (the same image XObject is re-referenced), as
+  /// are the current opacity and any baked-in rotation. Returns false when
+  /// [annotation] is not a restyleable image stamp. A [rect] argument is
+  /// ignored for a rotated image stamp (the crop still applies, in place),
+  /// because an axis-aligned page rect cannot express the rotated frame.
+  bool cropImageStamp(
+    int pageIndex,
+    PdfAnnotation annotation, {
+    required PdfRect crop,
+    PdfRect? rect,
+  }) {
+    if (!annotation.isImageStamp) return false;
+    final form = annotation.normalAppearance;
+    if (form == null) return false;
+    if (_stampImageRef(form) == null) return false;
+    final effectiveCrop = _normalizeImageCrop(crop);
+    final dict = annotation.dict;
+    // Record the crop first so the regeneration below (which reads it back
+    // off the dict via PdfAnnotation.imageStampCrop) bakes the new region.
+    _writeImageCropMarker(dict, effectiveCrop);
+    final quad = annotation.appearanceQuad;
+    final rotated = quad != null && _quadRotation(quad).abs() > 1e-9;
+    if (rect == null || rotated) {
+      // Crop in place at the current geometry, preserving rotation. Re-wrap
+      // so the just-written marker is visible to the regenerator.
+      return _restyleRegenerate(
+        pageIndex,
+        dict,
+        pageRotation: _appearancePageRotation(pageIndex, null),
+      );
+    }
+    // Shrink the box to the cropped sub-region (upright stamp only).
+    dict['Rect'] = _rectArray(rect);
+    if (!_regenerateStyledAppearance(
+      PdfAnnotation.fromDict(document, dict),
+      rect,
+      pageRotation: _appearancePageRotation(pageIndex, null),
+    )) {
+      return false;
+    }
+    _markAnnotationChanged(pageIndex, dict);
+    return true;
+  }
+
+  /// Removes [annotation] from the page, along with its popup, if any.
+  void removeAnnotation(int pageIndex, PdfAnnotation annotation) {
+    removeAnnotations(pageIndex, [annotation]);
+  }
+
+  /// Removes [annotations] from the page, along with their popups, if any.
+  ///
+  /// This is equivalent to calling [removeAnnotation] for every annotation,
+  /// but scans and rewrites the page's /Annots array once. Use it for
+  /// multi-select deletes so large annotation sets do not pay an O(n × m)
+  /// identity scan plus one staged replacement per removed item.
+  void removeAnnotations(int pageIndex, Iterable<PdfAnnotation> annotations) {
+    _removeAnnotations(pageIndex, annotations);
+  }
+
+  void _removeAnnotations(int pageIndex, Iterable<PdfAnnotation> annotations,
+      {bool repairGroups = true}) {
+    final cos = document.cos;
+    final targets = Set<CosDictionary>.identity();
+    for (final annotation in annotations) {
+      targets.add(annotation.dict);
+      final popup = cos.resolve(annotation.dict['Popup']);
+      if (popup is CosDictionary) targets.add(popup);
+    }
+    if (targets.isEmpty) return;
+    if (repairGroups) _repairAnnotationGroupsForRemoval(pageIndex, targets);
+    final changed = _PdfPageAnnotationList(this, pageIndex).removeWhere(
+      (_, resolved) => resolved is CosDictionary && targets.contains(resolved),
+    );
+    if (changed) _markAnnotations([pageIndex]);
+  }
+
+  /// Moves [annotations] to the end of the page's /Annots array,
+  /// preserving their relative order. Later entries paint on top
+  /// (§12.5.2's painter's model), so this brings them to the front.
+  void bringAnnotationsToFront(
+    int pageIndex,
+    Iterable<PdfAnnotation> annotations,
+  ) =>
+      _reorderAnnotations(pageIndex, annotations, toFront: true);
+
+  /// Moves [annotations] to the start of the page's /Annots array,
+  /// preserving their relative order - behind everything else.
+  void sendAnnotationsToBack(
+    int pageIndex,
+    Iterable<PdfAnnotation> annotations,
+  ) =>
+      _reorderAnnotations(pageIndex, annotations, toFront: false);
+
+  void _reorderAnnotations(
+    int pageIndex,
+    Iterable<PdfAnnotation> annotations, {
+    required bool toFront,
+  }) {
+    final targets = Set<CosDictionary>.identity()
+      ..addAll([for (final annotation in annotations) annotation.dict]);
+    final changed = _PdfPageAnnotationList(
+      this,
+      pageIndex,
+    ).reorderResolvedDictionaries(targets, toFront: toFront);
+    if (changed) _markAnnotations([pageIndex]);
+  }
+
+  /// Translates [annotation] by ([dx], [dy]) in page space.
+  ///
+  /// Shifts /Rect and the absolute-coordinate entries that travel with it
+  /// (/QuadPoints, /InkList, /L, /Vertices, /CL). The appearance stream
+  /// needs no rewrite: viewers map its BBox onto the new /Rect (§12.5.5).
+  void moveAnnotation(
+    int pageIndex,
+    PdfAnnotation annotation,
+    double dx,
+    double dy,
+  ) {
+    final dict = annotation.dict;
+    final rect = annotation.rect;
+    dict['Rect'] = _rectArray(
+      PdfRect(rect.left + dx, rect.bottom + dy, rect.right + dx, rect.top + dy),
+    );
+    for (final key in const [
+      'QuadPoints',
+      'L',
+      'Vertices',
+      'CL',
+      kPdfCalloutRegionKey
+    ]) {
+      final shifted = _shiftPoints(dict[key], dx, dy);
+      if (shifted != null) dict[key] = shifted;
+    }
+    for (final key in const ['InkList', kPdfCalloutLeadersKey]) {
+      final nested = document.cos.resolve(dict[key]);
+      if (nested is! CosArray) continue;
+      dict[key] = CosArray([
+        for (final stroke in nested.items)
+          _shiftPoints(stroke, dx, dy) ?? stroke,
+      ]);
+    }
+    _markAnnotationChanged(pageIndex, dict);
+  }
+
+  /// Replaces a Line, PolyLine, or Polygon annotation's defining points
+  /// and regenerates its appearance. Existing color, width, dash, fill,
+  /// opacity, and line-ending style are preserved.
+  void reshapeLineAnnotation(
+    int pageIndex,
+    PdfAnnotation annotation,
+    List<(double, double)> points,
+  ) {
+    final subtype = annotation.subtype;
+    if (subtype == 'Line' && points.length != 2) {
+      throw ArgumentError.value(points, 'points', 'Line needs 2 points');
+    }
+    if (subtype == 'PolyLine' && points.length < 2) {
+      throw ArgumentError.value(points, 'points', 'PolyLine needs 2+ points');
+    }
+    if (subtype == 'Polygon' && points.length < 3) {
+      throw ArgumentError.value(points, 'points', 'Polygon needs 3+ points');
+    }
+    if (subtype != 'Line' && subtype != 'PolyLine' && subtype != 'Polygon') {
+      throw ArgumentError.value(subtype, 'subtype', 'not a line annotation');
+    }
+    final stroke = annotation.color;
+    final width = annotation.borderWidth ?? 1;
+    if (stroke == null || width <= 0) return;
+    final dashed = annotation.borderDash != null;
+    final cloudy = subtype == 'Polygon' && annotation.hasCloudyBorder;
+    final cloudScale = annotation.cloudBorderScale;
+    final fill = subtype == 'Polygon' ? annotation.interiorColor : null;
+    final endings = _lineEndings(annotation);
+    final endingPoints = subtype == 'Polygon'
+        ? const <(double, double)>[]
+        : <(double, double)>[
+            ..._endingExtent(endings.$1, points.first, points[1], width),
+            ..._endingExtent(
+              endings.$2,
+              points.last,
+              points[points.length - 2],
+              width,
+            ),
+          ];
+    final rect = _pointBounds(
+        [
+          ...points,
+          ...endingPoints,
+        ],
+        cloudy
+            ? _cloudPadding(width, cloudScale)
+            : _linePadding(width, dashed: dashed));
+    final form = annotation.normalAppearance;
+    final gs = _alphaState(form == null ? 1 : _appearanceOpacity(form));
+    final w = cloudy
+        ? _cloudPolygonContent(
+            points,
+            strokeColor: stroke,
+            strokeWidth: width,
+            cloudScale: cloudScale,
+            dashPattern: annotation.borderDash,
+            fillColor: fill,
+            hasAlpha: gs != null,
+          )
+        : _lineContent(
+            points,
+            strokeColor: stroke,
+            strokeWidth: width,
+            dashPattern: annotation.borderDash,
+            closed: subtype == 'Polygon',
+            fillColor: fill,
+            startEnding: endings.$1,
+            endEnding: endings.$2,
+            hasAlpha: gs != null,
+          );
+    final dict = annotation.dict;
+    dict['Rect'] = _rectArray(rect);
+    if (subtype == 'Line') {
+      dict['L'] = CosArray([
+        CosReal(points[0].$1),
+        CosReal(points[0].$2),
+        CosReal(points[1].$1),
+        CosReal(points[1].$2),
+      ]);
+    } else {
+      dict['Vertices'] = _pointArray(points);
+    }
+    // a measurement's caption rides along, expanding /Rect to fit it
+    final (bbox, font) = _appendMeasurementCaption(annotation, rect, points, w);
+    if (form != null) {
+      _replaceAppearance(
+        dict,
+        form,
+        bbox,
+        w,
+        resources: _resources(extGState: gs, font: font),
+      );
+    } else {
+      dict['AP'] = CosDictionary({
+        'N': _updater.addObject(
+          _form(
+            bbox,
+            w,
+            resources: _resources(extGState: gs, font: font),
+          ),
+        ),
+      });
+    }
+    _markAnnotationChanged(pageIndex, dict);
+  }
+
+  /// Writes [valueText] as the value of a measurement annotation (a /Line,
+  /// /PolyLine, or /Polygon that [PdfAnnotation.measurementKind] reads as
+  /// one), in place: the caption and /Contents show it instead of the value
+  /// computed from the geometry, it is kept in /Takeoff /Value, and later
+  /// reshapes keep it. Null or blank clears it back to the computed value,
+  /// which needs the annotation's own /Measure - without one there is
+  /// nothing to fall back to, so the clear is refused. Returns false (and
+  /// changes nothing) for a non-measurement, a count marker, a refused
+  /// clear, or when the value is unchanged.
+  bool setMeasurementValue(
+    int pageIndex,
+    PdfAnnotation annotation,
+    String? valueText,
+  ) {
+    final subtype = annotation.subtype;
+    if (subtype != 'Line' && subtype != 'PolyLine' && subtype != 'Polygon') {
+      return false;
+    }
+    final kind = annotation.measurementKind;
+    if (kind == null || kind == PdfMeasurementKind.count) return false;
+    final written =
+        valueText == null || valueText.trim().isEmpty ? null : valueText.trim();
+    final current = annotation.takeoff;
+    if (written == current?.valueText) return false;
+    if (written == null && annotation.measure == null) return false;
+    final List<(double, double)> points;
+    if (subtype == 'Line') {
+      final line = annotation.line;
+      if (line == null) return false;
+      points = [line.$1, line.$2];
+    } else {
+      final vertices = annotation.vertices;
+      if (vertices == null || vertices.length < 2) return false;
+      points = vertices;
+    }
+    final takeoff = PdfTakeoffData(
+      kind: kind,
+      depth: current?.depth,
+      holes: current?.holes ?? const [],
+      label: current?.label,
+      valueText: written,
+    );
+    // the classic three are recognised by subtype + /Measure, so a cleared
+    // value with nothing else to record drops /Takeoff altogether
+    final classic = kind == PdfMeasurementKind.distance ||
+        kind == PdfMeasurementKind.perimeter ||
+        kind == PdfMeasurementKind.area;
+    final dict = annotation.dict;
+    if (classic &&
+        written == null &&
+        (current?.label == null || current!.label!.isEmpty)) {
+      dict.entries.remove('Takeoff');
+    } else {
+      dict['Takeoff'] = takeoff.toCosDictionary();
+    }
+    // re-wrap: the dict's /Takeoff just changed under the caller's instance,
+    // and reshape reads the caption back through a fresh parse
+    final fresh = PdfAnnotation.fromDict(document, dict);
+    reshapeLineAnnotation(pageIndex, fresh, points);
+    final caption = fresh.measurementText;
+    if (caption != null) dict['Contents'] = CosString.fromText(caption);
+    _markAnnotationChanged(pageIndex, dict);
+    return true;
+  }
+
+  /// Sets the /LE line endings of a /Line or /PolyLine in place, keeping
+  /// the annotation's object number and /Annots slot. The appearance,
+  /// /Rect, and BBox regenerate from the current geometry with the new
+  /// endings; pass null for an axis to leave it unchanged. A no-op (and
+  /// returns false) for any other subtype, or when nothing changes.
+  bool setLineEndings(
+    int pageIndex,
+    PdfAnnotation annotation, {
+    PdfLineEnding? startEnding,
+    PdfLineEnding? endEnding,
+  }) {
+    final subtype = annotation.subtype;
+    if (subtype != 'Line' && subtype != 'PolyLine') return false;
+    final current = _lineEndings(annotation);
+    final start = startEnding ?? current.$1;
+    final end = endEnding ?? current.$2;
+    if (start == current.$1 && end == current.$2) return false;
+    final List<(double, double)> points;
+    if (subtype == 'Line') {
+      final line = annotation.line;
+      if (line == null) return false;
+      points = [line.$1, line.$2];
+    } else {
+      final vertices = annotation.vertices;
+      if (vertices == null || vertices.length < 2) return false;
+      points = vertices;
+    }
+    annotation.dict['LE'] = CosArray([
+      CosName(start.pdfName),
+      CosName(end.pdfName),
+    ]);
+    // re-wrap: the dict's /LE just changed under the caller's instance, and
+    // reshape reads the endings back through a fresh parse
+    reshapeLineAnnotation(
+      pageIndex,
+      PdfAnnotation.fromDict(document, annotation.dict),
+      points,
+    );
+    return true;
+  }
+
+  /// Restyles a measurement's caption font and/or size in place, keeping
+  /// the annotation's object number, /Annots slot, and geometry. The new
+  /// face/size is recorded in /DA and the appearance regenerates from the
+  /// current points (so the label redraws in the new font; the caption's
+  /// color is preserved). Pass null for an axis to leave it unchanged. A
+  /// no-op (returns false) for a line annotation that carries no /Measure,
+  /// any other subtype, or when nothing changes.
+  bool setMeasurementCaptionStyle(
+    int pageIndex,
+    PdfAnnotation annotation, {
+    PdfStandardFont? font,
+    double? size,
+  }) {
+    final subtype = annotation.subtype;
+    if (subtype != 'Line' && subtype != 'PolyLine' && subtype != 'Polygon') {
+      return false;
+    }
+    if (annotation.measure == null && annotation.takeoff?.valueText == null) {
+      return false;
+    }
+    final (curFont, curSize, color) = _measurementCaptionStyle(annotation);
+    final newFont = font ?? curFont;
+    final newSize = size ?? curSize;
+    if (newFont == curFont && newSize == curSize) return false;
+    final List<(double, double)> points;
+    if (subtype == 'Line') {
+      final line = annotation.line;
+      if (line == null) return false;
+      points = [line.$1, line.$2];
+    } else {
+      final vertices = annotation.vertices;
+      if (vertices == null || vertices.length < 2) return false;
+      points = vertices;
+    }
+    final rgb = ContentWriter.rgbComponents(
+      color,
+    ).map(ContentWriter.fmt).join(' ');
+    annotation.dict['DA'] = CosString.fromText(
+      '$rgb rg '
+      '/${newFont.resourceName} ${ContentWriter.fmt(newSize)} Tf',
+    );
+    // re-wrap: the dict's /DA just changed under the caller's instance, and
+    // reshape recovers the caption style back through a fresh parse
+    reshapeLineAnnotation(
+      pageIndex,
+      PdfAnnotation.fromDict(document, annotation.dict),
+      points,
+    );
+    return true;
+  }
+
+  /// Sets [annotation]'s /Contents text in place.
+  ///
+  /// Metadata only: the appearance is untouched, so for subtypes whose
+  /// contents *are* the displayed text (free text, stamps, notes) this
+  /// changes the tooltip/comment without redrawing - rewriting what's
+  /// painted is the controller's text-edit path. An empty string removes
+  /// the entry.
+  void setAnnotationContents(
+    int pageIndex,
+    PdfAnnotation annotation,
+    String contents,
+  ) {
+    final dict = annotation.dict;
+    if (contents.isEmpty) {
+      dict.entries.remove('Contents');
+    } else {
+      dict['Contents'] = CosString.fromText(contents);
+    }
+    _markAnnotationChanged(pageIndex, dict, visual: false);
+  }
+
+  /// Points the existing /Link [annotation] at the external [uri] in
+  /// place - the edit counterpart of [addLinkToUri]. The link keeps its
+  /// region, decoration, and name; only its action changes. A /Dest the
+  /// link carried instead of an action is dropped (§12.5.6.5: /A and /Dest
+  /// are mutually exclusive).
+  void setLinkUri(int pageIndex, PdfAnnotation annotation, String uri) {
+    if (uri.isEmpty) {
+      throw ArgumentError.value(uri, 'uri', 'must not be empty');
+    }
+    _setLinkAction(
+      pageIndex,
+      annotation,
+      CosDictionary({
+        'Type': const CosName('Action'),
+        'S': const CosName('URI'),
+        'URI': CosString.fromText(uri),
+      }),
+    );
+  }
+
+  /// Points the existing /Link [annotation] at [destination] in this
+  /// document in place - the edit counterpart of [addLinkToDestination].
+  /// Semantics as [setLinkUri].
+  void setLinkDestination(
+    int pageIndex,
+    PdfAnnotation annotation,
+    PdfExplicitDestination destination,
+  ) {
+    _setLinkAction(
+      pageIndex,
+      annotation,
+      CosDictionary({
+        'Type': const CosName('Action'),
+        'S': const CosName('GoTo'),
+        'D': destination.toCosArray(_linkPageReference(destination.pageIndex)),
+      }),
+    );
+  }
+
+  void _setLinkAction(
+    int pageIndex,
+    PdfAnnotation annotation,
+    CosDictionary action,
+  ) {
+    if (annotation.subtype != 'Link') {
+      throw ArgumentError.value(
+          annotation.subtype, 'annotation', 'is not a /Link annotation');
+    }
+    final dict = annotation.dict;
+    dict.entries.remove('Dest');
+    dict['A'] = action;
+    _markAnnotationChanged(pageIndex, dict, visual: false);
+  }
+
+  /// Sets [annotation]'s author (/T, §12.5.6.2) in place; null or empty
+  /// removes it. Refused for form widgets, where /T is the field's
+  /// partial name, not an author.
+  void setAnnotationAuthor(
+    int pageIndex,
+    PdfAnnotation annotation,
+    String? author,
+  ) {
+    if (annotation.subtype == 'Widget') {
+      throw ArgumentError('on widgets /T is the field name, not an author');
+    }
+    final dict = annotation.dict;
+    if (author == null || author.isEmpty) {
+      dict.entries.remove('T');
+    } else {
+      dict['T'] = CosString.fromText(author);
+    }
+    _markAnnotationChanged(pageIndex, dict, visual: false);
+  }
+
+  /// Sets [annotation]'s /NM unique name in place; null or empty removes
+  /// it. The name is sync identity ([PdfAnnotation.name]) - rewrites that
+  /// remove + re-add an annotation use this to carry it across.
+  void setAnnotationName(
+    int pageIndex,
+    PdfAnnotation annotation,
+    String? name,
+  ) {
+    final dict = annotation.dict;
+    if (name == null || name.isEmpty) {
+      dict.entries.remove('NM');
+    } else {
+      dict['NM'] = CosString.fromText(name);
+    }
+    _markAnnotationChanged(pageIndex, dict, visual: false);
+  }
+
+  /// Sets [annotation]'s /F flag word (§12.5.3) in place - the way to
+  /// lock an annotation in the saved file: bit 8 (`flags | 128`,
+  /// [PdfAnnotation.isLocked]) refuses move/resize/delete, bit 7
+  /// (`flags | 64`, [PdfAnnotation.isReadOnly]) refuses all interaction.
+  /// Conforming viewers honor the same bits. The appearance is
+  /// untouched; remember that bit 1 (hidden) and bit 3 (print) change
+  /// what renders.
+  void setAnnotationFlags(int pageIndex, PdfAnnotation annotation, int flags) {
+    annotation.dict['F'] = CosInteger(flags);
+    _markAnnotationChanged(pageIndex, annotation.dict);
+  }
+
+  /// Stamps a generated /NM on every annotation in the document that
+  /// lacks one, so a pre-existing (or foreign) file can join name-keyed
+  /// sync - call once before listening to a change feed. Popups, links,
+  /// and form widgets are skipped: they can't be captured as
+  /// [PdfAnnotationSnapshot]s, so names would buy them nothing. Returns
+  /// how many annotations were named.
+  int nameAnnotations() {
+    var named = 0;
+    final pages = document.pages;
+    for (var pageIndex = 0; pageIndex < pages.length; pageIndex++) {
+      for (final annotation in pages[pageIndex].annotations) {
+        if (const {'Popup', 'Widget', 'Link'}.contains(annotation.subtype)) {
+          continue;
+        }
+        if (annotation.name != null) continue;
+        setAnnotationName(pageIndex, annotation, _generateAnnotationName());
+        named++;
+      }
+    }
+    return named;
+  }
+
+  /// Resizes [annotation] so its /Rect becomes [to].
+  ///
+  /// Squares, circles, and free text get their appearance *regenerated*
+  /// at the new size - stroke width and font size stay what they were,
+  /// the way desktop editors behave - whenever the dictionary carries
+  /// enough style to do it faithfully (see
+  /// [_regenerateResizedAppearance]). Everything else (ink, stamps,
+  /// foreign artwork) keeps the §12.5.5 stretch: viewers fit the
+  /// existing appearance's BBox onto the new /Rect.
+  ///
+  /// Either way, the absolute-coordinate entries that travel with the
+  /// rect (/QuadPoints, /InkList, /L, /Vertices, /CL) are mapped through
+  /// the old-rect → new-rect affine, so the annotation's geometry stays
+  /// consistent for viewers that regenerate appearances.
+  ///
+  /// [flipX]/[flipY] mirror the annotation horizontally/vertically - what
+  /// a drag that pulls a resize handle *past* the opposite edge produces.
+  /// For a §12.5.5-stretched appearance the mirror is baked into the form
+  /// /Matrix (about the BBox center, which leaves the BBox→/Rect fit
+  /// untouched) and the point arrays reflect about the /Rect center to
+  /// match; regenerated appearances (shapes, free text, lines) ignore the
+  /// flip - a mirrored rectangle or readable-text box looks the same.
+  void resizeAnnotation(
+    int pageIndex,
+    PdfAnnotation annotation,
+    PdfRect to, {
+    bool flipX = false,
+    bool flipY = false,
+    int? pageRotation,
+  }) {
+    final effectivePageRotation = _appearancePageRotation(
+      pageIndex,
+      pageRotation,
+    );
+    final from = annotation.rect;
+    if (from.width <= 0 ||
+        from.height <= 0 ||
+        to.width <= 0 ||
+        to.height <= 0) {
+      throw ArgumentError('resizeAnnotation needs non-degenerate rects');
+    }
+    final regenerated = _regenerateResizedAppearance(
+      annotation,
+      to,
+      pageRotation: effectivePageRotation,
+    );
+    if (!regenerated && (flipX || flipY)) {
+      final form = annotation.normalAppearance;
+      if (form != null) _flipFormArtwork(form, flipX: flipX, flipY: flipY);
+    }
+    final dict = annotation.dict;
+    dict['Rect'] = _rectArray(to);
+    final sx = to.width / from.width;
+    final sy = to.height / from.height;
+    double mapX(double x) {
+      final t = (x - from.left) * sx;
+      return flipX ? to.right - t : to.left + t;
+    }
+
+    double mapY(double y) {
+      final t = (y - from.bottom) * sy;
+      return flipY ? to.top - t : to.bottom + t;
+    }
+
+    for (final key in const [
+      'QuadPoints',
+      'L',
+      'Vertices',
+      'CL',
+      kPdfCalloutRegionKey
+    ]) {
+      final scaled = _mapPoints(dict[key], mapX, mapY);
+      if (scaled != null) dict[key] = scaled;
+    }
+    for (final key in const ['InkList', kPdfCalloutLeadersKey]) {
+      final nested = document.cos.resolve(dict[key]);
+      if (nested is! CosArray) continue;
+      dict[key] = CosArray([
+        for (final stroke in nested.items)
+          _mapPoints(stroke, mapX, mapY) ?? stroke,
+      ]);
+    }
+    _markAnnotationChanged(pageIndex, dict);
+  }
+
+  /// Mirrors [form]'s artwork in place by premultiplying a reflection
+  /// about the BBox center into its /Matrix. The reflection maps the BBox
+  /// onto itself, so a conforming viewer's §12.5.5 BBox→/Rect fit lands
+  /// exactly where it did - only the interior is flipped.
+  void _flipFormArtwork(
+    CosStream form, {
+    required bool flipX,
+    required bool flipY,
+  }) {
+    final bbox = pdfRectFrom(document.cos, form.dictionary['BBox']);
+    if (bbox == null) return;
+    final cx = (bbox.left + bbox.right) / 2;
+    final cy = (bbox.bottom + bbox.top) / 2;
+    final reflect = PdfMatrix(
+      flipX ? -1.0 : 1.0,
+      0.0,
+      0.0,
+      flipY ? -1.0 : 1.0,
+      flipX ? 2 * cx : 0.0,
+      flipY ? 2 * cy : 0.0,
+    );
+    final matrix = reflect.concat(_formMatrix(form));
+    form.dictionary['Matrix'] =
+        CosArray([for (final v in matrix.toList()) CosReal(v)]);
+    final formRef = document.cos.referenceTo(form);
+    if (formRef != null) _updater.replaceObject(formRef.objectNumber, form);
+  }
+
+  /// Rotates [annotation] by [degrees] counterclockwise about the center
+  /// of its /Rect.
+  ///
+  /// The rotation is folded into the appearance stream's /Matrix - with
+  /// the current BBox→Rect fit baked in first, so artwork whose BBox
+  /// aspect differs from /Rect rotates without shearing - and /Rect
+  /// becomes the bounding box of the rotated annotation, same center.
+  /// Every viewer that implements the §12.5.5 fit then renders the
+  /// artwork rotated. The absolute-coordinate entries that travel with
+  /// the rect (/QuadPoints, /InkList, /L, /Vertices, /CL) rotate too, so
+  /// viewers that regenerate appearances stay consistent.
+  void rotateAnnotation(
+    int pageIndex,
+    PdfAnnotation annotation,
+    double degrees,
+  ) {
+    final form = annotation.normalAppearance;
+    if (form == null) {
+      throw StateError('rotateAnnotation needs an appearance stream');
+    }
+    final rect = annotation.rect;
+    if (rect.width <= 0 || rect.height <= 0) {
+      throw ArgumentError('rotateAnnotation needs a non-degenerate rect');
+    }
+    if (!_foldRotationInto(annotation.dict, form, rect, degrees)) return;
+    final formRef = document.cos.referenceTo(form);
+    if (formRef != null) _updater.replaceObject(formRef.objectNumber, form);
+    _markAnnotationChanged(pageIndex, annotation.dict);
+  }
+
+  /// Folds a counterclockwise rotation of [degrees] about the centre of
+  /// [rect] into [form]'s /Matrix, resets [annotDict]'s /Rect to the
+  /// rotated artwork's bounds, and rotates the absolute-coordinate point
+  /// arrays (/QuadPoints, /L, /Vertices, /CL, /InkList) the same way -
+  /// the geometry mutation shared by [rotateAnnotation] and the
+  /// paste-onto-a-rotated-page re-orientation
+  /// ([PdfAnnotationClipboard.pasteAnnotation]).
+  ///
+  /// The BBox→Rect fit is baked in first, so artwork whose BBox aspect
+  /// differs from /Rect rotates without shearing. Returns false without
+  /// touching anything when [form] has no usable BBox (§12.5.5 has nothing
+  /// to map), leaving the caller to skip staging.
+  bool _foldRotationInto(
+    CosDictionary annotDict,
+    CosStream form,
+    PdfRect rect,
+    double degrees,
+  ) {
+    final cos = document.cos;
+    final bbox = pdfRectFrom(cos, form.dictionary['BBox']);
+    if (bbox == null) return false; // no BBox: §12.5.5 has nothing to map
+    // the current BBox→Rect fit (the same bounds walk as the renderer)
+    final baked = _bakedFormMatrix(form, rect);
+    if (baked == null) return false;
+
+    final theta = degrees * math.pi / 180;
+    final cosT = math.cos(theta), sinT = math.sin(theta);
+    final cx = (rect.left + rect.right) / 2;
+    final cy = (rect.bottom + rect.top) / 2;
+    final rotation = PdfMatrix(
+      cosT,
+      sinT,
+      -sinT,
+      cosT,
+      cx - (cx * cosT - cy * sinT),
+      cy - (cx * sinT + cy * cosT),
+    );
+    final matrix = baked.concat(rotation);
+    _transformGroupRotation(annotDict, rotation);
+    form.dictionary['Matrix'] =
+        CosArray([for (final v in matrix.toList()) CosReal(v)]);
+
+    // /Rect: the BBox corners' bounds under the new matrix. The matrix
+    // carries the whole rotation history, so this stays the tightest box
+    // around the rotated artwork - two 45° turns land exactly where one
+    // 90° turn does, instead of compounding loose bounding boxes.
+    annotDict['Rect'] = _rectArray(boundsUnderMatrix(matrix, bbox));
+
+    (double, double) rotate(double x, double y) => (
+          cx + (x - cx) * cosT - (y - cy) * sinT,
+          cy + (x - cx) * sinT + (y - cy) * cosT,
+        );
+    for (final key in const [
+      'QuadPoints',
+      'L',
+      'Vertices',
+      'CL',
+      kPdfCalloutRegionKey
+    ]) {
+      final rotated = _mapPointPairs(annotDict[key], rotate);
+      if (rotated != null) annotDict[key] = rotated;
+    }
+    for (final key in const ['InkList', kPdfCalloutLeadersKey]) {
+      final nested = cos.resolve(annotDict[key]);
+      if (nested is! CosArray) continue;
+      annotDict[key] = CosArray([
+        for (final stroke in nested.items)
+          _mapPointPairs(stroke, rotate) ?? stroke,
+      ]);
+    }
+    return true;
+  }
+
+  /// Resizes a possibly-rotated annotation in its own (unrotated) frame.
+  ///
+  /// [localTo] is the new axis-aligned box *before* the annotation's
+  /// resting rotation: the committed annotation occupies [localTo]
+  /// rotated about [localTo]'s center by the angle its appearance
+  /// already carries. A page-axis /Rect stretch would shear rotated
+  /// artwork; this never does. For an unrotated annotation it is
+  /// exactly [resizeAnnotation].
+  ///
+  /// Square/Circle/FreeText regenerate their appearance at [localTo]
+  /// (constant stroke width / font size) and re-rotate; every other
+  /// subtype scales along its local axes inside the appearance /Matrix.
+  ///
+  /// [flipX]/[flipY] mirror the artwork along the local axes - a handle
+  /// dragged past the opposite edge of the rotated box. For the stretch
+  /// path the mirror folds into the local scale (a negative factor), so
+  /// the /Rect and point arrays stay consistent with the appearance.
+  void resizeAnnotationLocal(
+    int pageIndex,
+    PdfAnnotation annotation,
+    PdfRect localTo, {
+    bool flipX = false,
+    bool flipY = false,
+    int? pageRotation,
+  }) {
+    final effectivePageRotation = _appearancePageRotation(
+      pageIndex,
+      pageRotation,
+    );
+    final quad = annotation.appearanceQuad;
+    final theta = quad == null ? 0.0 : _quadRotation(quad);
+    if (theta == 0) {
+      resizeAnnotation(
+        pageIndex,
+        annotation,
+        localTo,
+        flipX: flipX,
+        flipY: flipY,
+        pageRotation: effectivePageRotation,
+      );
+      return;
+    }
+    if (localTo.width <= 0 || localTo.height <= 0) {
+      throw ArgumentError('resizeAnnotationLocal needs a non-degenerate rect');
+    }
+    // the resting local box: the quad's edge lengths about its center
+    final (llx, lly) = quad![0];
+    final (lrx, lry) = quad[1];
+    final (urx, ury) = quad[2];
+    final (ulx, uly) = quad[3];
+    final cx = (llx + urx) / 2, cy = (lly + ury) / 2;
+    final fromW = math.sqrt(
+      (lrx - llx) * (lrx - llx) + (lry - lly) * (lry - lly),
+    );
+    final fromH = math.sqrt(
+      (ulx - llx) * (ulx - llx) + (uly - lly) * (uly - lly),
+    );
+    if (fromW < 1e-9 || fromH < 1e-9) {
+      resizeAnnotation(
+        pageIndex,
+        annotation,
+        localTo,
+        flipX: flipX,
+        flipY: flipY,
+        pageRotation: effectivePageRotation,
+      );
+      return;
+    }
+
+    if (_regenerateResizedAppearance(
+      annotation,
+      localTo,
+      pageRotation: effectivePageRotation,
+    )) {
+      // a fresh, unrotated appearance at the local box - re-applying the
+      // resting angle is then plain rotation (which also sets /Rect).
+      // PdfAnnotation parses /Rect once, so rotate a re-wrapped view of
+      // the dict instead of the stale [annotation]
+      annotation.dict['Rect'] = _rectArray(localTo);
+      rotateAnnotation(
+        pageIndex,
+        PdfAnnotation.fromDict(document, annotation.dict),
+        theta * 180 / math.pi,
+      );
+      return;
+    }
+
+    final form = annotation.normalAppearance;
+    final baked = form == null ? null : _bakedFormMatrix(form, annotation.rect);
+    if (form == null || baked == null) {
+      // nothing can be rotated without a matrix-carrying appearance;
+      // degrade to a page-space resize of the bounds
+      resizeAnnotation(
+        pageIndex,
+        annotation,
+        localTo,
+        flipX: flipX,
+        flipY: flipY,
+        pageRotation: effectivePageRotation,
+      );
+      return;
+    }
+    final dict = annotation.dict;
+    // a flip is a negative scale along the local axis - it commutes with
+    // the scale and folds straight in, mirroring both the appearance
+    // /Matrix and the mapped point arrays about the local center
+    final sx = (localTo.width / fromW) * (flipX ? -1 : 1);
+    final sy = (localTo.height / fromH) * (flipY ? -1 : 1);
+    final tcx = (localTo.left + localTo.right) / 2;
+    final tcy = (localTo.bottom + localTo.top) / 2;
+    final cosT = math.cos(theta), sinT = math.sin(theta);
+    // page-space affine: into the local frame about the old center,
+    // scale, back out, recenter - T(-c) · R(-θ) · S · R(θ) · T(c')
+    final local = PdfMatrix.translation(-cx, -cy)
+        .concat(PdfMatrix(cosT, -sinT, sinT, cosT, 0, 0))
+        .concat(PdfMatrix.scaled(sx, sy))
+        .concat(PdfMatrix(cosT, sinT, -sinT, cosT, 0, 0))
+        .concat(PdfMatrix.translation(tcx, tcy));
+    final matrix = baked.concat(local);
+    form.dictionary['Matrix'] =
+        CosArray([for (final v in matrix.toList()) CosReal(v)]);
+    final bbox = pdfRectFrom(document.cos, form.dictionary['BBox']);
+    if (bbox != null) {
+      dict['Rect'] = _rectArray(boundsUnderMatrix(matrix, bbox));
+    }
+
+    (double, double) map(double x, double y) => local.apply(x, y);
+    for (final key in const [
+      'QuadPoints',
+      'L',
+      'Vertices',
+      'CL',
+      kPdfCalloutRegionKey
+    ]) {
+      final mapped = _mapPointPairs(dict[key], map);
+      if (mapped != null) dict[key] = mapped;
+    }
+    for (final key in const ['InkList', kPdfCalloutLeadersKey]) {
+      final nested = document.cos.resolve(dict[key]);
+      if (nested is! CosArray) continue;
+      dict[key] = CosArray([
+        for (final stroke in nested.items)
+          _mapPointPairs(stroke, map) ?? stroke,
+      ]);
+    }
+    final formRef = document.cos.referenceTo(form);
+    if (formRef != null) _updater.replaceObject(formRef.objectNumber, form);
+    _markAnnotationChanged(pageIndex, dict);
+  }
+
+  /// The page-space rotation of [quad]'s bottom edge, radians CCW;
+  /// numeric noise within ~0.3° reads as unrotated.
+  static double _quadRotation(List<(double, double)> quad) {
+    final dx = quad[1].$1 - quad[0].$1;
+    final dy = quad[1].$2 - quad[0].$2;
+    if (dx == 0 && dy == 0) return 0;
+    final angle = math.atan2(dy, dx);
+    return angle.abs() < 1e-7 ? 0 : angle;
+  }
+
+  /// Regenerates the appearance of a Square, Circle, FreeText, Line,
+  /// PolyLine, or Polygon at
+  /// [to] from the style its dictionary carries, replacing the /AP /N
+  /// stream. Returns false - leaving the caller on the §12.5.5 stretch
+  /// path - for other subtypes and for styles it can't reproduce
+  /// faithfully: cloudy (/BE) shape borders, or free text whose /DA font
+  /// is neither a standard face nor recoverable from its appearance.
+  ///
+  /// [opacity], when given, replaces the alpha the old appearance
+  /// carried - [restyleAnnotation]'s opacity path.
+  bool _regenerateResizedAppearance(PdfAnnotation annotation, PdfRect to,
+      {double? opacity, int pageRotation = 0, bool preserveRich = true}) {
+    final behavior = annotation.behavior;
+    if (behavior.resizeBehavior == PdfAnnotationResizeBehavior.none ||
+        behavior.resizeBehavior == PdfAnnotationResizeBehavior.stretch) {
+      return false;
+    }
+    final form = annotation.normalAppearance;
+    if (form == null) return false;
+    if (behavior.resizeBehavior == PdfAnnotationResizeBehavior.reflowTable) {
+      return _regenerateTableAppearance(annotation, to, pageRotation);
+    }
+    final dict = annotation.dict;
+    switch (annotation.subtype) {
+      case 'Square' || 'Circle':
+        final style = behavior.style;
+        final width = style.strokeWidth ?? 1;
+        final stroke = width > 0 ? style.color : null;
+        final fill = style.fillColor;
+        final gs = _alphaState(opacity ?? _appearanceOpacity(form));
+        final w = _shapeContent(
+          annotation.subtype,
+          to,
+          stroke,
+          width,
+          fill,
+          dashPattern: annotation.borderDash,
+          cornerRadius: annotation.cornerRadius,
+          hasAlpha: gs != null,
+        );
+        _replaceAppearance(
+          dict,
+          form,
+          to,
+          w,
+          resources: _resources(extGState: gs),
+        );
+        return true;
+      case 'FreeText':
+        final style = behavior.style.freeText!;
+        final stdFont = behavior.standardTextFont;
+        // an embedded/bundled-font box re-wraps in its own recovered face
+        // rather than reverting to Helvetica or stretching its glyphs
+        final embedded =
+            stdFont == null ? PdfEmbeddedFont.fromFreeText(annotation) : null;
+        if (stdFont == null && embedded == null) return false;
+        final gs = _alphaState(opacity ?? _appearanceOpacity(form));
+        final text = annotation.contents ?? '';
+        final callout = _calloutInfo(annotation);
+        // A rich (/RC) box keeps its per-run styling across a resize and
+        // box-only restyles such as opacity/fill. A whole-text colour change
+        // deliberately flattens to the new uniform /DA instead.
+        final rc = preserveRich ? annotation.richContent : null;
+        final richRuns = (rc == null || callout != null)
+            ? null
+            : parseFreeTextRichContent(
+                rc,
+                fallbackFont: stdFont ?? PdfStandardFont.helvetica,
+                fallbackSize: style.fontSize,
+                fallbackColor: style.color,
+              );
+        final ContentWriter w;
+        final CosDictionary fontResource;
+        if (richRuns != null && richRuns.isNotEmpty) {
+          final runs = style.underline
+              ? [
+                  for (final r in richRuns)
+                    PdfFreeTextRun(r.text,
+                        font: r.font,
+                        fontSize: r.fontSize,
+                        color: r.color,
+                        underline: true)
+                ]
+              : richRuns;
+          final effective = _wrapNonLatinRuns(runs);
+          for (final font in _richFonts(effective)) {
+            if (font is PdfEmbeddedFont) font.resetUsage();
+          }
+          w = _freeTextRichContent(
+            to,
+            effective,
+            textDirection: PdfTextDirection.auto,
+            align: style.alignment,
+            verticalAlign: style.verticalAlignment,
+            fillColor: style.fillColor,
+            borderColor: style.borderColor,
+            borderWidth: style.borderWidth,
+            hasAlpha: gs != null,
+            lineSpacing: style.lineSpacing,
+            charSpacing: style.charSpacing,
+            horizontalScale: style.horizontalScale,
+            pageRotation: pageRotation,
+          );
+          fontResource = _richFontResources(effective);
+        } else {
+          final PdfTextFont baseFont = embedded ?? stdFont!;
+          PdfUnicodeFont? unicodeFont;
+          if (baseFont is PdfStandardFont &&
+              text.codeUnits.any((c) => c > 0xFF)) {
+            unicodeFont = PdfUnicodeFont(baseFont)..resetUsage();
+          }
+          if (baseFont is PdfEmbeddedFont) baseFont.resetUsage();
+          final PdfTextFont effectiveFont = unicodeFont ?? baseFont;
+          if (callout != null) {
+            // A callout draws its leader line and box together, and its text
+            // box is a sub-rect of /Rect, so map both through the resize and
+            // keep /RD and /CL in step rather than filling the whole rect.
+            final from = annotation.rect;
+            final sx = from.width == 0 ? 1.0 : to.width / from.width;
+            final sy = from.height == 0 ? 1.0 : to.height / from.height;
+            (double, double) map((double, double) p) => (
+                  to.left + (p.$1 - from.left) * sx,
+                  to.bottom + (p.$2 - from.bottom) * sy,
+                );
+            final leaders = [
+              for (final line in callout.leaders) [for (final p in line) map(p)]
+            ];
+            final region = annotation.calloutRegion;
+            final mappedRegion = region
+                ?.copyWith(vertices: [for (final p in region.vertices) map(p)]);
+            if (mappedRegion != null) {
+              _writeCalloutRegion(dict, mappedRegion);
+            }
+            final oldBox = _boxFromRd(annotation);
+            final box = PdfRect(
+              to.left + (oldBox.left - from.left) * sx,
+              to.bottom + (oldBox.bottom - from.bottom) * sy,
+              to.left + (oldBox.right - from.left) * sx,
+              to.bottom + (oldBox.top - from.bottom) * sy,
+            );
+            dict['RD'] = _rdArray(to, box);
+            dict.entries
+              ..remove(kPdfCalloutRDFrameKey)
+              ..remove(kPdfCalloutLocalRDKey);
+            w = _calloutContent(
+              box,
+              leaders,
+              text,
+              fontSize: style.fontSize,
+              font: effectiveFont,
+              textDirection: PdfTextDirection.auto,
+              align: style.alignment,
+              verticalAlign: style.verticalAlignment,
+              color: style.color,
+              fillColor: style.fillColor,
+              borderColor: style.borderColor,
+              borderWidth: style.borderWidth,
+              borderDash: annotation.borderDash,
+              lineColor: annotation.calloutLeaderStyle!.color,
+              lineWidth: annotation.calloutLeaderStyle!.width,
+              lineDash: annotation.calloutLeaderStyle!.dash,
+              region: mappedRegion,
+              ending: callout.ending,
+              hasAlpha: gs != null,
+              lineSpacing: style.lineSpacing,
+              charSpacing: style.charSpacing,
+              horizontalScale: style.horizontalScale,
+              underline: style.underline,
+              pageRotation: pageRotation,
+            );
+          } else {
+            w = _freeTextContent(
+              to,
+              text,
+              fontSize: style.fontSize,
+              font: effectiveFont,
+              // direction follows the text; /Q carries the explicit alignment
+              textDirection: PdfTextDirection.auto,
+              align: style.alignment,
+              verticalAlign: style.verticalAlignment,
+              color: style.color,
+              fillColor: style.fillColor,
+              borderColor: style.borderColor,
+              borderWidth: style.borderWidth,
+              hasAlpha: gs != null,
+              lineSpacing: style.lineSpacing,
+              charSpacing: style.charSpacing,
+              horizontalScale: style.horizontalScale,
+              underline: style.underline,
+              pageRotation: pageRotation,
+            );
+          }
+          fontResource = unicodeFont != null
+              ? unicodeFont.buildResource(_updater.addObject)
+              : baseFont is PdfEmbeddedFont
+                  ? baseFont.buildResource(_updater.addObject)
+                  : _standardFont(baseFont as PdfStandardFont);
+        }
+        _replaceAppearance(
+          dict,
+          form,
+          to,
+          w,
+          resources: _resources(extGState: gs, font: fontResource),
+        );
+        return true;
+      case 'Line':
+        final line = annotation.line;
+        if (line == null) return false;
+        final from = annotation.rect;
+        final sx = to.width / from.width;
+        final sy = to.height / from.height;
+        (double, double) map((double, double) p) => (
+              to.left + (p.$1 - from.left) * sx,
+              to.bottom + (p.$2 - from.bottom) * sy,
+            );
+        return _regenerateLineLikeAppearance(
+          annotation,
+          to,
+          points: [map(line.$1), map(line.$2)],
+          opacity: opacity,
+        );
+      case 'PolyLine' || 'Polygon':
+        final vertices = annotation.vertices;
+        if (vertices == null || vertices.isEmpty) return false;
+        final from = annotation.rect;
+        final sx = to.width / from.width;
+        final sy = to.height / from.height;
+        final mapped = [
+          for (final (x, y) in vertices)
+            (
+              to.left + (x - from.left) * sx,
+              to.bottom + (y - from.bottom) * sy,
+            ),
+        ];
+        return _regenerateLineLikeAppearance(
+          annotation,
+          to,
+          points: mapped,
+          opacity: opacity,
+        );
+      default:
+        return false;
+    }
+  }
+
+  bool _regenerateLineLikeAppearance(
+    PdfAnnotation annotation,
+    PdfRect rect, {
+    required List<(double, double)> points,
+    double? opacity,
+  }) {
+    final form = annotation.normalAppearance;
+    if (form == null) return false;
+    final width = annotation.borderWidth ?? 1;
+    final stroke = annotation.color;
+    if (stroke == null || width <= 0) return false;
+    final fill =
+        annotation.subtype == 'Polygon' ? annotation.interiorColor : null;
+    final endings = _lineEndings(annotation);
+    final gs = _alphaState(opacity ?? _appearanceOpacity(form));
+    final cloudy =
+        annotation.subtype == 'Polygon' && annotation.hasCloudyBorder;
+    final cloudScale = annotation.cloudBorderScale;
+    final w = cloudy
+        ? _cloudPolygonContent(
+            points,
+            strokeColor: stroke,
+            strokeWidth: width,
+            cloudScale: cloudScale,
+            dashPattern: annotation.borderDash,
+            fillColor: fill,
+            hasAlpha: gs != null,
+          )
+        : _lineContent(
+            points,
+            strokeColor: stroke,
+            strokeWidth: width,
+            dashPattern: annotation.borderDash,
+            closed: annotation.subtype == 'Polygon',
+            fillColor: fill,
+            startEnding: endings.$1,
+            endEnding: endings.$2,
+            hasAlpha: gs != null,
+          );
+    // The scallops' size (pen width and cloud scale both drive it) can widen
+    // past the stored /Rect, so re-derive the cloud's bounds from the padded
+    // footprint - otherwise the form BBox clips the outer half of each puff
+    // after a restyle.
+    final base =
+        cloudy ? _pointBounds(points, _cloudPadding(width, cloudScale)) : rect;
+    if (cloudy) annotation.dict['Rect'] = _rectArray(base);
+    // A measurement carries a caption drawn over the line; regenerate it
+    // too (recovering its font/size/color from /DA) so a width or style
+    // change never drops the label, widening the BBox/Rect to keep it
+    // unclipped.
+    final (bbox, font) = _appendMeasurementCaption(annotation, base, points, w);
+    _replaceAppearance(
+      annotation.dict,
+      form,
+      bbox,
+      w,
+      resources: _resources(extGState: gs, font: font),
+    );
+    return true;
+  }
+
+  /// The endings recorded on [annotation]'s /LE entry - both
+  /// [PdfLineEnding.none] for subtypes that carry no endings
+  /// (/Polygon is closed; /PolyLine endings apply to its first and last
+  /// vertex per §12.5.6.7).
+  (PdfLineEnding, PdfLineEnding) _lineEndings(PdfAnnotation annotation) =>
+      pdfLineEndings(annotation) ?? (PdfLineEnding.none, PdfLineEnding.none);
+
+  /// Restyles [annotation] in place: new colors, stroke width, or
+  /// opacity at its current geometry, with the appearance regenerated -
+  /// same object numbers and /Annots slot, so selection, z-order,
+  /// author, and contents all survive (unlike a remove + re-add).
+  ///
+  /// What each parameter means per subtype:
+  ///
+  /// * [color] - the stroke color of shapes and ink, the markup tint,
+  ///   the note/stamp color, and the *text* color of free text.
+  /// * [fillColor] - the interior of shapes (/IC) and the background of
+  ///   free text (/C); the single-field record distinguishes "set to
+  ///   this" - including `(null,)`, clearing the fill - from an omitted
+  ///   parameter. Ignored elsewhere.
+  /// * [strokeWidth] - shapes, the line family, and ink. Ignored elsewhere (markup line
+  ///   weights derive from the text size; free-text borders restyle
+  ///   through the text-style path).
+  /// * [opacity] - shapes, ink, markups, free text, and stamps. Notes stay
+  ///   opaque, as authored.
+  /// * [cornerRadius] - the rounded-corner radius (page points) of a
+  ///   /Square rectangle, rewritten into /Border and baked into the
+  ///   appearance; `0` restores square corners. Ignored by every other
+  ///   subtype (Circle and the rest have no corners to round).
+  ///
+  /// Rotation survives: a rotated appearance regenerates in its local
+  /// frame and re-rotates, exactly like [resizeAnnotationLocal].
+  /// Returns false when nothing applies - gate UI with
+  /// [pdfCanRestyleAnnotation].
+  bool restyleAnnotation(
+    int pageIndex,
+    PdfAnnotation annotation, {
+    int? color,
+    (int?,)? fillColor,
+    double? strokeWidth,
+    double? opacity,
+    (List<double>?,)? dashPattern,
+    double? cornerRadius,
+    double? cloudScale,
+    int? pageRotation,
+  }) {
+    final effectivePageRotation = _appearancePageRotation(
+      pageIndex,
+      pageRotation,
+    );
+    if (color == null &&
+        fillColor == null &&
+        strokeWidth == null &&
+        opacity == null &&
+        dashPattern == null &&
+        cornerRadius == null &&
+        cloudScale == null) {
+      return false;
+    }
+    final behavior = annotation.behavior;
+    if (!behavior.canRestyle) return false;
+    final currentStyle = behavior.style;
+    final dict = annotation.dict;
+    switch (annotation.subtype) {
+      case 'Ink':
+        final form = annotation.normalAppearance;
+        final strokes = annotation.inkList!;
+        final oldWidth = currentStyle.strokeWidth ?? 1;
+        final pressures =
+            form == null ? null : _recoverInkPressures(form, strokes, oldWidth);
+        final newColor = color ?? currentStyle.color ?? 0x000000;
+        final newWidth = strokeWidth ?? oldWidth;
+        final newOpacity = opacity ?? currentStyle.opacity;
+        final (rect, w, resources) =
+            _inkAppearance(strokes, pressures, newColor, newWidth, newOpacity);
+        dict['Rect'] = _rectArray(rect);
+        dict['C'] = _colorComponents(newColor);
+        dict['BS'] = _borderStyle(newWidth);
+        if (form != null) {
+          _replaceAppearance(
+            dict,
+            form,
+            rect,
+            w,
+            resources: resources,
+          );
+        } else {
+          dict['AP'] = CosDictionary({
+            'N': _updater.addObject(
+              _form(rect, w, resources: resources),
+            ),
+          });
+        }
+        _markAnnotationChanged(pageIndex, dict);
+        return true;
+      case 'Highlight' || 'Underline' || 'StrikeOut' || 'Squiggly':
+        final quads = behavior.markupQuads!;
+        final form = annotation.normalAppearance;
+        final newColor = color ?? currentStyle.color ?? 0xFFD100;
+        final newOpacity = opacity ?? currentStyle.opacity;
+        final rect = _boundsOf(quads);
+        final (w, gs) = _markupContent(
+          annotation.subtype,
+          quads,
+          newColor,
+          newOpacity,
+        );
+        dict['C'] = _colorComponents(newColor);
+        dict['Rect'] = _rectArray(rect);
+        if (form != null) {
+          _replaceAppearance(
+            dict,
+            form,
+            rect,
+            w,
+            resources: _resources(extGState: gs),
+          );
+        } else {
+          dict['AP'] = CosDictionary({
+            'N': _updater.addObject(
+              _form(rect, w, resources: _resources(extGState: gs)),
+            ),
+          });
+        }
+        _markAnnotationChanged(pageIndex, dict);
+        return true;
+      case 'Square' || 'Circle':
+        // cornerRadius is the only rectangle-specific knob; a circle has no
+        // corners, so a radius-only call there changes nothing (don't stage a
+        // pointless regeneration)
+        if (annotation.subtype == 'Circle' &&
+            color == null &&
+            fillColor == null &&
+            strokeWidth == null &&
+            opacity == null &&
+            dashPattern == null) {
+          return false;
+        }
+        final width = strokeWidth ?? currentStyle.strokeWidth ?? 1;
+        final stroke = color ?? currentStyle.color;
+        final fill = fillColor != null ? fillColor.$1 : currentStyle.fillColor;
+        if ((stroke == null || width <= 0) && fill == null) return false;
+        if (stroke != null) dict['C'] = _colorComponents(stroke);
+        final dash =
+            dashPattern != null ? dashPattern.$1 : annotation.borderDash;
+        final stroking = stroke != null && width > 0;
+        dict['BS'] = _borderStyle(width, dashPattern: dash);
+        if (fill != null) {
+          dict['IC'] = _colorComponents(fill);
+        } else {
+          dict.entries.remove('IC');
+        }
+        // Rounding only applies to rectangles; the regeneration below reads
+        // the radius back from /Border (§12.5.4 [hCornerRadius vCornerRadius
+        // width]) so writing it here rebakes the rounded /AP.
+        if (cornerRadius != null && annotation.subtype == 'Square') {
+          final radius = math.max(0.0, cornerRadius);
+          if (radius > 0) {
+            dict['Border'] = CosArray([
+              CosReal(radius),
+              CosReal(radius),
+              CosReal(stroking ? width : 0),
+            ]);
+          } else {
+            dict.entries.remove('Border');
+          }
+        }
+        return _restyleRegenerate(pageIndex, dict, opacity: opacity);
+      case 'Line' || 'PolyLine' || 'Polygon':
+        final width = strokeWidth ?? currentStyle.strokeWidth ?? 1;
+        final stroke = color ?? currentStyle.color;
+        if (stroke == null || width <= 0) return false;
+        final dash =
+            dashPattern != null ? dashPattern.$1 : annotation.borderDash;
+        dict['C'] = _colorComponents(stroke);
+        dict['BS'] = _borderStyle(width, dashPattern: dash);
+        if (annotation.subtype == 'Polygon') {
+          final fill =
+              fillColor != null ? fillColor.$1 : currentStyle.fillColor;
+          if (fill != null) {
+            dict['IC'] = _colorComponents(fill);
+          } else {
+            dict.entries.remove('IC');
+          }
+          // a new cloud scale rides on /BE /I; the regenerate below reads it
+          // back through PdfAnnotation.cloudBorderScale
+          if (cloudScale != null && annotation.hasCloudyBorder) {
+            final be = document.cos.resolve(dict['BE']);
+            if (be is CosDictionary) be['I'] = CosReal(cloudScale);
+          }
+        }
+        return _restyleRegenerate(pageIndex, dict, opacity: opacity);
+      case 'FreeText':
+        final style = currentStyle.freeText!;
+        // /DA only identifies base-14 faces directly. Recover an embedded
+        // face from the appearance resources just as the resize path does;
+        // otherwise changing the colour of text written in a custom font
+        // cannot rebuild its appearance.
+        final font = behavior.standardTextFont ??
+            PdfEmbeddedFont.fromFreeText(annotation);
+        if (font == null) return false;
+        final textColor = color ?? style.color;
+        final fill = fillColor != null ? fillColor.$1 : style.fillColor;
+        final border = style.borderColor != null && style.borderWidth > 0
+            ? style.borderColor
+            : null;
+        String rgb(int c) =>
+            ContentWriter.rgbComponents(c).map(ContentWriter.fmt).join(' ');
+        dict['DA'] = CosString.fromText(
+          '${rgb(textColor)} rg '
+          '${border != null ? '${rgb(border)} RG ' : ''}'
+          '/${font.resourceName} ${ContentWriter.fmt(style.fontSize)} Tf',
+        );
+        // /C is the background - or mirrors the text color when there is
+        // none, the legacy form freeTextStyle reads back as "no fill"
+        dict['C'] = _colorComponents(fill ?? textColor);
+        return _restyleRegenerate(
+          pageIndex,
+          dict,
+          opacity: opacity,
+          pageRotation: effectivePageRotation,
+          preserveRich: color == null,
+        );
+      case 'Text':
+        dict['C'] = _colorComponents(color ?? currentStyle.color ?? 0xFFD100);
+        return _restyleRegenerate(pageIndex, dict,
+            pageRotation: effectivePageRotation);
+      case 'Stamp':
+        dict['C'] = _colorComponents(color ?? currentStyle.color ?? 0xC03030);
+        return _restyleRegenerate(pageIndex, dict,
+            opacity: opacity, pageRotation: effectivePageRotation);
+    }
+    return false;
+  }
+
+  /// Regenerates an annotation's appearance after its dictionary style
+  /// changed, preserving any rotation the appearance matrix carries:
+  /// unrotated annotations regenerate at their /Rect; rotated ones
+  /// regenerate in their local frame and re-rotate (the
+  /// [resizeAnnotationLocal] shape, at the same size).
+  bool _restyleRegenerate(
+    int pageIndex,
+    CosDictionary dict, {
+    double? opacity,
+    int pageRotation = 0,
+    bool preserveRich = false,
+  }) {
+    // re-wrap: /Rect and style entries are parsed at construction or
+    // lazily, and the dict just changed under the caller's instance
+    final annotation = PdfAnnotation.fromDict(document, dict);
+    final frameFlag = document.cos.resolve(dict[kPdfAppearanceFrameKey]);
+    if (frameFlag is CosBoolean && frameFlag.value) {
+      final form = annotation.normalAppearance;
+      final bbox = form == null
+          ? null
+          : pdfRectFrom(document.cos, form.dictionary['BBox']);
+      final mapping =
+          form == null ? null : _bakedFormMatrix(form, annotation.rect);
+      final inverse = mapping?.inverted();
+      if (bbox == null || inverse == null) return false;
+      final local = CosDictionary({...dict.entries})
+        ..['Rect'] = _rectArray(bbox)
+        ..entries.remove(kPdfCalloutRDFrameKey);
+      if (dict[kPdfCalloutLocalRDKey] case final localRd?) {
+        local['RD'] = localRd;
+      }
+      void mapPoints(CosDictionary target, PdfMatrix transform) {
+        for (final key in const [
+          'QuadPoints',
+          'L',
+          'Vertices',
+          'CL',
+          kPdfCalloutRegionKey
+        ]) {
+          final points = _mapPointPairs(target[key], transform.apply);
+          if (points != null) target[key] = points;
+        }
+        for (final key in const ['InkList', kPdfCalloutLeadersKey]) {
+          final nested = document.cos.resolve(target[key]);
+          if (nested is CosArray) {
+            target[key] = CosArray([
+              for (final points in nested.items)
+                _mapPointPairs(points, transform.apply) ?? points
+            ]);
+          }
+        }
+      }
+
+      mapPoints(local, inverse);
+      if (!_regenerateStyledAppearance(
+          PdfAnnotation.fromDict(document, local), bbox,
+          opacity: opacity,
+          pageRotation: pageRotation,
+          preserveRich: preserveRich)) {
+        return false;
+      }
+      final localBox = annotation.isCallout
+          ? PdfAnnotation.fromDict(document, local).calloutBox
+          : null;
+      mapPoints(local, mapping!);
+      local['Rect'] = _rectArray(boundsUnderMatrix(mapping, bbox));
+      if (annotation.isCallout) {
+        local[kPdfCalloutRDFrameKey] = const CosBoolean(true);
+        if (localBox != null) {
+          local[kPdfCalloutLocalRDKey] = _rdArray(bbox, localBox);
+          local['RD'] = _rdArray(boundsUnderMatrix(mapping, bbox),
+              boundsUnderMatrix(mapping, localBox));
+        }
+      }
+      dict.entries
+        ..clear()
+        ..addAll(local.entries);
+      final rebuilt = PdfAnnotation.fromDict(document, dict).normalAppearance!;
+      rebuilt.dictionary['Matrix'] =
+          CosArray([for (final n in mapping.toList()) CosReal(n)]);
+      final ref = document.cos.referenceTo(rebuilt);
+      if (ref != null) _updater.replaceObject(ref.objectNumber, rebuilt);
+      _markAnnotationChanged(pageIndex, dict);
+      return true;
+    }
+    final quad = annotation.appearanceQuad;
+    final theta = quad == null ? 0.0 : _quadRotation(quad);
+    if (theta == 0) {
+      if (!_regenerateStyledAppearance(
+        annotation,
+        annotation.rect,
+        opacity: opacity,
+        pageRotation: pageRotation,
+        preserveRich: preserveRich,
+      )) {
+        return false;
+      }
+      _markAnnotationChanged(pageIndex, dict);
+      return true;
+    }
+    final (llx, lly) = quad![0];
+    final (lrx, lry) = quad[1];
+    final (urx, ury) = quad[2];
+    final (ulx, uly) = quad[3];
+    final cx = (llx + urx) / 2, cy = (lly + ury) / 2;
+    final w = math.sqrt((lrx - llx) * (lrx - llx) + (lry - lly) * (lry - lly));
+    final h = math.sqrt((ulx - llx) * (ulx - llx) + (uly - lly) * (uly - lly));
+    if (w < 1e-9 || h < 1e-9) return false;
+    final local = PdfRect(cx - w / 2, cy - h / 2, cx + w / 2, cy + h / 2);
+    if (!_regenerateStyledAppearance(
+      annotation,
+      local,
+      opacity: opacity,
+      pageRotation: pageRotation,
+      preserveRich: preserveRich,
+    )) {
+      return false;
+    }
+    dict['Rect'] = _rectArray(local);
+    rotateAnnotation(
+      pageIndex,
+      PdfAnnotation.fromDict(document, dict),
+      theta * 180 / math.pi,
+    );
+    return true;
+  }
+
+  /// [_regenerateResizedAppearance] widened to the restyle-only
+  /// subtypes (stamps, notes), which regenerate at their current size
+  /// but never resize this way.
+  bool _regenerateStyledAppearance(
+    PdfAnnotation annotation,
+    PdfRect to, {
+    double? opacity,
+    int pageRotation = 0,
+    bool preserveRich = false,
+  }) {
+    switch (annotation.subtype) {
+      case 'Square' ||
+            'Circle' ||
+            'FreeText' ||
+            'Line' ||
+            'PolyLine' ||
+            'Polygon':
+        return _regenerateResizedAppearance(
+          annotation,
+          to,
+          opacity: opacity,
+          pageRotation: pageRotation,
+          preserveRich: preserveRich,
+        );
+      case 'Stamp':
+        final form = annotation.normalAppearance;
+        if (form == null) return false;
+        // A picture stamp re-bakes its alpha over the same image; a text
+        // check-mark stamp redraws from its /Contents. Only a stamp the
+        // editor marked as an image stamp takes the image path, so a
+        // template stamp that merely contains an image is never flattened
+        // to a single picture.
+        if (annotation.isImageStamp) {
+          final imageRef = _stampImageRef(form);
+          if (imageRef != null) {
+            final (w, resources) = _imageStampContent(
+              to,
+              imageRef,
+              opacity ?? _appearanceOpacity(form),
+              pageRotation: pageRotation,
+              crop: annotation.imageStampCrop ?? const PdfRect(0, 0, 1, 1),
+            );
+            _replaceAppearance(
+              annotation.dict,
+              form,
+              to,
+              w,
+              resources: resources,
+            );
+            return true;
+          }
+        }
+        final color = annotation.color ?? 0xC03030;
+        final (w, gs) = _stampContent(
+          to,
+          annotation.contents ?? '',
+          color,
+          opacity ?? _appearanceOpacity(form),
+          pageRotation: pageRotation,
+        );
+        _replaceAppearance(
+          annotation.dict,
+          form,
+          to,
+          w,
+          resources: _resources(
+            extGState: gs,
+            font: _helvetica(bold: true, name: 'HelvB'),
+          ),
+        );
+        return true;
+      case 'Text':
+        final form = annotation.normalAppearance;
+        if (form == null) return false;
+        final color = annotation.color ?? 0xFFD100;
+        _replaceAppearance(
+          annotation.dict,
+          form,
+          to,
+          _noteContent(to, color, pageRotation: pageRotation),
+        );
+        return true;
+      default:
+        return false;
+    }
+  }
+
+  CosArray _colorComponents(int color) => CosArray([
+        for (final c in ContentWriter.rgbComponents(color)) CosReal(c),
+      ]);
+
+  /// The constant alpha an appearance we generated carries: the first
+  /// /ca found in its /Resources /ExtGState entries, else opaque. (The
+  /// dictionary deliberately has no /CA - viewers would apply it *on
+  /// top* of the alpha already baked into the appearance.)
+  double _appearanceOpacity(CosStream form) {
+    final cos = document.cos;
+    final resources = cos.resolve(form.dictionary['Resources']);
+    if (resources is! CosDictionary) return 1;
+    final ext = cos.resolve(resources['ExtGState']);
+    if (ext is! CosDictionary) return 1;
+    for (final entry in ext.entries.values) {
+      final gs = cos.resolve(entry);
+      if (gs is! CosDictionary) continue;
+      final ca = cos.resolve(gs['ca']);
+      if (ca is CosInteger) return ca.value.toDouble().clamp(0.0, 1.0);
+      if (ca is CosReal) return ca.value.clamp(0.0, 1.0);
+    }
+    return 1;
+  }
+
+  /// Replaces [oldForm] (the annotation's /AP /N) with a fresh form of
+  /// BBox [bbox] and content [w] - keeping the same object number when
+  /// the stream is indirect, so existing references stay valid, and
+  /// adopting the new object into the document cache so later edits in
+  /// the same apply resolve it.
+  void _replaceAppearance(
+    CosDictionary annot,
+    CosStream oldForm,
+    PdfRect bbox,
+    ContentWriter w, {
+    CosDictionary? resources,
+  }) {
+    final form = _form(bbox, w, resources: resources);
+    final cos = document.cos;
+    final ref = cos.referenceTo(oldForm);
+    if (ref != null) {
+      _updater.replaceObject(ref.objectNumber, form);
+      cos.adoptObject(ref, form);
+    } else {
+      final ap = cos.resolve(annot['AP']);
+      if (ap is CosDictionary) ap['N'] = _updater.addObject(form);
+    }
+  }
+
+  /// [form]'s /Matrix with the §12.5.5 BBox→Rect fit baked in: the
+  /// explicit affine mapping BBox space onto [rect] exactly as a
+  /// conforming viewer would. Null when the BBox is missing or its
+  /// transformed bounds are degenerate.
+  PdfMatrix? _bakedFormMatrix(CosStream form, PdfRect rect) {
+    final bbox = pdfRectFrom(document.cos, form.dictionary['BBox']);
+    if (bbox == null) return null;
+    final m = _formMatrix(form);
+    final bounds = boundsUnderMatrix(m, bbox);
+    if (bounds.width < 1e-9 || bounds.height < 1e-9) return null;
+    return m.concat(fitFormToRect(bbox, m, rect));
+  }
+
+  /// An x y x y ... array translated by (dx, dy), or null if [raw] is not
+  /// a numeric array.
+  CosArray? _shiftPoints(CosObject? raw, double dx, double dy) =>
+      _mapPoints(raw, (x) => x + dx, (y) => y + dy);
+
+  /// An x y x y ... array with each coordinate mapped, or null if [raw]
+  /// is not a numeric array.
+  CosArray? _mapPoints(
+    CosObject? raw,
+    double Function(double) mapX,
+    double Function(double) mapY,
+  ) =>
+      _mapPointPairs(raw, (x, y) => (mapX(x), mapY(y)));
+
+  /// An x y x y ... array with each point mapped jointly (rotation needs
+  /// both coordinates), or null if [raw] is not a numeric array.
+  CosArray? _mapPointPairs(
+    CosObject? raw,
+    (double, double) Function(double x, double y) map,
+  ) {
+    final cos = document.cos;
+    final array = cos.resolve(raw);
+    if (array is! CosArray) return null;
+    final values = <double>[];
+    for (var i = 0; i < array.length; i++) {
+      final n = cos.resolve(array[i]);
+      if (n is CosInteger) {
+        values.add(n.value.toDouble());
+      } else if (n is CosReal) {
+        values.add(n.value);
+      } else {
+        return null;
+      }
+    }
+    final mapped = <CosObject>[];
+    for (var i = 0; i + 1 < values.length; i += 2) {
+      final (x, y) = map(values[i], values[i + 1]);
+      mapped
+        ..add(CosReal(x))
+        ..add(CosReal(y));
+    }
+    return CosArray(mapped);
+  }
+
+  /// Stages whatever object owns [dict]'s bytes: the annotation itself
+  /// when indirect, otherwise its containing /Annots array or page.
+  void _markAnnotationChanged(
+    int pageIndex,
+    CosDictionary dict, {
+    bool visual = true,
+  }) {
+    _PdfPageAnnotationList(this, pageIndex).markOwnerChangedFor(dict);
+    _markAnnotations([pageIndex], visual: visual);
+  }
+
+  /// Bakes annotation appearances into the page's content streams and
+  /// removes those annotations, making them permanent, non-interactive page
+  /// graphics. When [annotations] is supplied, only those annotation objects
+  /// are flattened; by default every eligible annotation on the page is.
+  ///
+  /// Annotations without a paintable appearance - hidden or no-view ones,
+  /// popups, and any without /AP - are left in place untouched.
+  void flattenAnnotations(
+    int pageIndex, {
+    Iterable<PdfAnnotation>? annotations,
+  }) {
+    if (annotations == null) {
+      _flattenAnnotations(pageIndex, (_) => true);
+      return;
+    }
+    final selected = <CosDictionary>{}..addAll(
+        annotations.map((annotation) => annotation.dict),
+      );
+    if (selected.isEmpty) return;
+    _flattenAnnotations(
+        pageIndex, (annotation) => selected.contains(annotation.dict));
+  }
+
+  /// [flattenAnnotations] restricted to annotations matching [select]
+  /// (used by [PdfFormAdmin.flattenForm] to take widgets only).
+  void _flattenAnnotations(
+    int pageIndex,
+    bool Function(PdfAnnotation) select, {
+    bool syncAnnotations = true,
+  }) {
+    final cos = document.cos;
+    final page = document.page(pageIndex);
+
+    // copy-on-write resources: the page's dict may be shared between
+    // pages (inherited), so additions go into clones
+    final ownResources = cos.resolve(page.dict['Resources']);
+    final resources = CosDictionary({
+      ...(ownResources is CosDictionary ? ownResources : page.resources)
+          .entries,
+    });
+    final existingXObjects = cos.resolve(resources['XObject']);
+    final xObjects = CosDictionary({
+      if (existingXObjects is CosDictionary) ...existingXObjects.entries,
+    });
+
+    final w = ContentWriter()
+      // restore the state the prefix stream saved before the original
+      // content ran, so annotations paint over a clean slate
+      ..restore();
+    final flattened = <CosDictionary>{};
+    var index = 0;
+    for (final annot in page.annotations) {
+      if (!select(annot)) continue;
+      if (annot.isHidden || annot.isNoView || annot.subtype == 'Popup') {
+        continue;
+      }
+      final form = annot.normalAppearance;
+      if (form == null) continue;
+      final rect = annot.rect;
+      final bbox = pdfRectFrom(cos, form.dictionary['BBox']);
+      if (bbox == null || rect.width <= 0 || rect.height <= 0) continue;
+
+      // §12.5.5 algorithm: transform the BBox corners by the form /Matrix,
+      // then scale/translate the resulting bounds onto /Rect. The /Matrix
+      // itself is applied by the Do operator, so only the fit goes in cm.
+      final fit = fitFormToRect(bbox, _formMatrix(form), rect);
+
+      var name = 'FlatAnnot$index';
+      while (xObjects.containsKey(name)) {
+        name = 'FlatAnnot${++index}';
+      }
+      index++;
+      xObjects[name] = cos.referenceTo(form) ?? _updater.addObject(form);
+      w
+        ..save()
+        ..concatMatrix(fit.a, fit.b, fit.c, fit.d, fit.e, fit.f)
+        ..drawXObject(name)
+        ..restore();
+      flattened.add(annot.dict);
+    }
+    if (flattened.isEmpty) return;
+
+    _markContent([pageIndex]);
+    if (syncAnnotations) {
+      _markAnnotations([pageIndex], visual: false);
+    }
+
+    resources['XObject'] = xObjects;
+    page.dict['Resources'] = resources;
+
+    // sandwich the original content between q and Q so its leftover
+    // graphics state cannot leak into the appearance drawing
+    final rawContents = page.dict['Contents'];
+    final resolvedContents = cos.resolve(rawContents);
+    final items = <CosObject>[_updater.addObject(_rawStream('q\n'))];
+    if (resolvedContents is CosArray) {
+      items.addAll(resolvedContents.items);
+    } else if (resolvedContents is CosStream) {
+      items.add(
+        rawContents is CosReference
+            ? rawContents
+            : _updater.addObject(resolvedContents),
+      );
+    }
+    final suffix = w.takeBytes();
+    items.add(
+      _updater.addObject(
+        CosStream(CosDictionary({'Length': CosInteger(suffix.length)}), suffix),
+      ),
+    );
+    page.dict['Contents'] = CosArray(items);
+
+    _PdfPageAnnotationList(this, pageIndex).removeWhere(
+      (_, resolved) =>
+          resolved is CosDictionary && flattened.contains(resolved),
+      removeIfEmpty: true,
+    );
+    _updater.markChanged(page.dict);
+  }
+
+  // ---------------------------------------------------------------------
+  // shared machinery
+
+  PdfMatrix _formMatrix(CosStream form) {
+    final raw = document.cos.resolve(form.dictionary['Matrix']);
+    if (raw is CosArray && raw.length >= 6) {
+      final values = <double>[];
+      for (var i = 0; i < 6; i++) {
+        final n = document.cos.resolve(raw[i]);
+        values.add(
+          n is CosInteger
+              ? n.value.toDouble()
+              : n is CosReal
+                  ? n.value
+                  : (i == 0 || i == 3 ? 1.0 : 0.0),
+        );
+      }
+      return PdfMatrix.row(values);
+    }
+    return PdfMatrix.identity;
+  }
+
+  CosStream _rawStream(String text) {
+    final bytes = Uint8List.fromList(text.codeUnits);
+    return CosStream(
+      CosDictionary({'Length': CosInteger(bytes.length)}),
+      bytes,
+    );
+  }
+
+  void _addShape(
+    String subtype,
+    int pageIndex,
+    PdfRect rect,
+    int? strokeColor,
+    double strokeWidth,
+    int? fillColor,
+    double opacity,
+    String? contents,
+    String? author,
+    String? name,
+    List<double>? dashPattern, {
+    double cornerRadius = 0,
+  }) {
+    if (strokeColor == null && fillColor == null) {
+      throw ArgumentError('strokeColor and fillColor are both null');
+    }
+    final stroking = strokeColor != null && strokeWidth > 0;
+    final dash = stroking ? dashPattern : null;
+    final radius = subtype == 'Square' ? math.max(0.0, cornerRadius) : 0.0;
+    final gs = _alphaState(opacity);
+    final w = _shapeContent(
+      subtype,
+      rect,
+      strokeColor,
+      strokeWidth,
+      fillColor,
+      dashPattern: dash,
+      cornerRadius: radius,
+      hasAlpha: gs != null,
+    );
+
+    final dict = _markupDict(
+      subtype,
+      rect,
+      strokeColor ?? fillColor!,
+      contents,
+      author,
+    )..['BS'] = _borderStyle(stroking ? strokeWidth : 0, dashPattern: dash);
+    if (radius > 0) {
+      // §12.5.4 /Border = [hCornerRadius vCornerRadius width]. /BS above
+      // governs the actual border render (and hides /Border from conforming
+      // viewers), but our own resize path reads the radius back from here.
+      dict['Border'] = CosArray([
+        CosReal(radius),
+        CosReal(radius),
+        CosReal(stroking ? strokeWidth : 0),
+      ]);
+    }
+    if (fillColor != null) {
+      dict['IC'] = CosArray([
+        for (final c in ContentWriter.rgbComponents(fillColor)) CosReal(c),
+      ]);
+    }
+    _addAnnotation(
+      pageIndex,
+      dict,
+      _form(rect, w, resources: _resources(extGState: gs)),
+      name: name,
+    );
+  }
+
+  /// The shape appearance content: a rectangle or inscribed ellipse,
+  /// stroked inside [rect] so the line never spills past the /Rect.
+  ContentWriter _shapeContent(
+    String subtype,
+    PdfRect rect,
+    int? strokeColor,
+    double strokeWidth,
+    int? fillColor, {
+    List<double>? dashPattern,
+    double cornerRadius = 0,
+    required bool hasAlpha,
+  }) {
+    final stroking = strokeColor != null && strokeWidth > 0;
+    final inset = stroking ? strokeWidth / 2 : 0.0;
+    final w = ContentWriter();
+    if (hasAlpha) w.extGState('GS0');
+    if (fillColor != null) w.fillColor(fillColor);
+    if (stroking) {
+      w
+        ..strokeColor(strokeColor)
+        ..lineWidth(strokeWidth);
+      if (dashPattern != null && dashPattern.isNotEmpty) w.dash(dashPattern);
+    }
+    if (subtype == 'Square') {
+      final x = rect.left + inset;
+      final y = rect.bottom + inset;
+      final width = rect.width - 2 * inset;
+      final height = rect.height - 2 * inset;
+      if (cornerRadius > 0) {
+        // Pull the radius in with the stroke so the rounded outer edge stays
+        // inside /Rect; roundedRect clamps it to half the smaller side.
+        w.roundedRect(x, y, width, height, math.max(0.0, cornerRadius - inset));
+      } else {
+        w.rect(x, y, width, height);
+      }
+    } else {
+      w.ellipse(
+        (rect.left + rect.right) / 2,
+        (rect.bottom + rect.top) / 2,
+        rect.width / 2 - inset,
+        rect.height / 2 - inset,
+      );
+    }
+    if (fillColor != null && stroking) {
+      w.fillAndStroke();
+    } else if (fillColor != null) {
+      w.fill();
+    } else {
+      w.stroke();
+    }
+    return w;
+  }
+
+  ContentWriter _lineContent(
+    List<(double, double)> points, {
+    required int strokeColor,
+    required double strokeWidth,
+    required List<double>? dashPattern,
+    required bool closed,
+    required int? fillColor,
+    PdfLineEnding startEnding = PdfLineEnding.none,
+    PdfLineEnding endEnding = PdfLineEnding.none,
+    required bool hasAlpha,
+  }) {
+    final dashed = dashPattern != null && dashPattern.isNotEmpty;
+    final w = ContentWriter();
+    if (hasAlpha) w.extGState('GS0');
+    if (fillColor != null) w.fillColor(fillColor);
+    w
+      ..strokeColor(strokeColor)
+      ..lineWidth(strokeWidth)
+      ..lineCap(0)
+      ..lineJoin(1);
+    if (dashed) w.dash(dashPattern);
+    w.moveTo(points.first.$1, points.first.$2);
+    for (final (x, y) in points.skip(1)) {
+      w.lineTo(x, y);
+    }
+    if (closed) w.closePath();
+    if (closed && fillColor != null) {
+      w.fillAndStroke();
+    } else {
+      w.stroke();
+    }
+    if (dashed) w.dash(const []);
+    if (points.length >= 2) {
+      _drawEnding(
+        w,
+        startEnding,
+        points.first,
+        points[1],
+        strokeColor,
+        strokeWidth,
+      );
+      _drawEnding(
+        w,
+        endEnding,
+        points.last,
+        points[points.length - 2],
+        strokeColor,
+        strokeWidth,
+      );
+    }
+    return w;
+  }
+
+  double _linePadding(double strokeWidth, {bool dashed = false}) =>
+      strokeWidth + (dashed ? strokeWidth : 0);
+
+  /// Extra bulge past a semicircle so the scallops read as overlapping
+  /// puffs (with cusps between them) instead of flat half-circles.
+  static const double _cloudBulgeFactor = 1.15;
+
+  /// How far the shared foot between two puffs is pulled *inward* (toward the
+  /// interior), as a fraction of the puff's outward bulge. Deepens the pinched
+  /// cusp between neighbours. The apex still sits at the original edge midpoint,
+  /// so the outer extent - and `_cloudPadding` - is unaffected.
+  static const double _cloudNeckInset = 0.2;
+
+  /// Tangential lean of each puff's *trailing* (end) foot control handle,
+  /// forward along the edge (`+u`), as a fraction of the (perpendicular) foot
+  /// handle length. This is what actually *curls* the scallops: leaning the
+  /// handle along the edge makes each puff overshoot past vertical into a
+  /// rounder, rolled shape with a pinched neck - the hand-drawn revision-cloud
+  /// look - instead of a plain half-circle hump. Only the trailing foot leans
+  /// (the leading foot stays upright), so each scallop is asymmetric and the
+  /// puffs all roll the same way around the outline; leaning both feet gave a
+  /// symmetric puff instead. A perpendicular inset alone (no lean) only lowers
+  /// the cusp and leaves the humps looking flat. The lean is purely along the
+  /// edge, so the outward extent (apex height) - and `_cloudPadding` - is
+  /// unchanged; `0` reproduces plain humps exactly. Kept below ~1.0 so the
+  /// puffs round cleanly without the trailing foot crossing into a loop.
+  static const double _cloudNeckCurl = 0.75;
+
+  /// Target radius of one cloud scallop, in page points. Its size is driven
+  /// by [scale] (a multiplier, 1 = the default puff) *independently* of the
+  /// pen so the line thickness and the scallop size change separately; a
+  /// heavy stroke still raises a floor so the puffs never crowd narrower
+  /// than the pen can draw them. At `scale: 1` and the default 2pt pen this
+  /// matches the historical `max(12, strokeWidth * 4)`.
+  double _cloudArcRadius(double strokeWidth, double scale) =>
+      math.max(strokeWidth * 4.0, 12.0 * scale);
+
+  /// Padding for the cloud's `/Rect` and form BBox. A scallop's apex sits
+  /// `_cloudArcRadius * _cloudBulgeFactor` past the polygon edge (plus half
+  /// the stroke) - and on a rectangle every point of an edge is at the box's
+  /// extreme, so the puffs protrude by the full bulge. `_pointBounds` insets
+  /// by only `pad / 2 + 1`, so the padding is doubled here; otherwise the
+  /// form BBox clips the outer half of every puff (the scallops render as
+  /// flattened brackets at the edges).
+  double _cloudPadding(double strokeWidth, double scale) => math.max(
+        _linePadding(strokeWidth),
+        2 * _cloudArcRadius(strokeWidth, scale) * _cloudBulgeFactor +
+            strokeWidth,
+      );
+
+  ContentWriter _cloudPolygonContent(
+    List<(double, double)> points, {
+    required int strokeColor,
+    required double strokeWidth,
+    required double cloudScale,
+    required List<double>? dashPattern,
+    required int? fillColor,
+    required bool hasAlpha,
+  }) {
+    final dashed = dashPattern != null && dashPattern.isNotEmpty;
+    final w = ContentWriter();
+    if (hasAlpha) w.extGState('GS0');
+
+    // Fill the actual scalloped cloud outline (not just the straight-edged
+    // polygon footprint) so the interior colour reaches the puffed edges.
+    // The same path is stroked, so fill and stroke share one construction.
+    if (fillColor != null) w.fillColor(fillColor);
+    w
+      ..strokeColor(strokeColor)
+      ..lineWidth(strokeWidth)
+      ..lineCap(1)
+      ..lineJoin(1);
+    if (dashed) w.dash(dashPattern);
+    _appendCloudPath(w, points, strokeWidth, cloudScale);
+    if (fillColor != null) {
+      w.fillAndStroke();
+    } else {
+      w.stroke();
+    }
+    if (dashed) w.dash(const []);
+    return w;
+  }
+
+  void _appendCloudPath(
+    ContentWriter w,
+    List<(double, double)> points,
+    double strokeWidth,
+    double cloudScale,
+  ) {
+    if (points.length < 3) return;
+    final clockwise = _signedArea(points) < 0;
+    final arc = _cloudArcRadius(strokeWidth, cloudScale);
+    const k = 0.5522847498307936;
+    var first = true;
+    for (var i = 0; i < points.length; i++) {
+      final a = points[i];
+      final b = points[(i + 1) % points.length];
+      final dx = b.$1 - a.$1;
+      final dy = b.$2 - a.$2;
+      final length = math.sqrt(dx * dx + dy * dy);
+      if (length < 0.01) continue;
+      // Spread whole scallops evenly along the edge, ~one per arc diameter.
+      final scallops = math.max(1, (length / (2 * arc)).round());
+      final ux = dx / length;
+      final uy = dy / length;
+      // For clockwise polygons the interior is on the right side of each
+      // edge; for counterclockwise polygons it is on the left. Flip that
+      // normal to make the cloud bulge outward.
+      final nx = clockwise ? -uy : uy;
+      final ny = clockwise ? ux : -ux;
+      final chord = length / scallops;
+      final r = chord / 2; // half the foot-to-foot span
+      final bulge = math.min(r, arc) * _cloudBulgeFactor; // apex height
+      final ca = r * k; // apex control handle, along the edge
+      final cf = bulge * k; // foot control handle, perpendicular (outward)
+      final inset = bulge * _cloudNeckInset; // pull cusp inward
+      final curl = cf * _cloudNeckCurl; // tangential lean that rounds each puff
+      for (var j = 0; j < scallops; j++) {
+        final t0 = j / scallops;
+        final t1 = (j + 1) / scallops;
+        // Apex height is measured from the polygon edge, before the feet are
+        // pulled in, so the outward extent (and padding) stays the same.
+        final mx = a.$1 + dx * (t0 + t1) / 2;
+        final my = a.$2 + dy * (t0 + t1) / 2;
+        final sx = a.$1 + dx * t0 - nx * inset;
+        final sy = a.$2 + dy * t0 - ny * inset;
+        final ex = a.$1 + dx * t1 - nx * inset;
+        final ey = a.$2 + dy * t1 - ny * inset;
+        final apx = mx + nx * bulge;
+        final apy = my + ny * bulge;
+        if (first) {
+          w.moveTo(sx, sy);
+          first = false;
+        }
+        // Two arcs meeting at the apex. Both feet leave the edge perpendicular
+        // (+n); the trailing (end) foot additionally leans forward along the
+        // edge (+u) so each puff overshoots on its trailing side into an
+        // asymmetric, rolled scallop with a pinched neck (the hand-drawn
+        // revision-cloud look), while the leading foot stays upright. The apex
+        // runs parallel to the edge. The lean is purely tangential, so the
+        // outward extent (apex height) is unchanged.
+        w.curveTo(
+          sx + nx * cf,
+          sy + ny * cf,
+          apx - ux * ca,
+          apy - uy * ca,
+          apx,
+          apy,
+        );
+        w.curveTo(
+          apx + ux * ca,
+          apy + uy * ca,
+          ex + nx * cf + ux * curl,
+          ey + ny * cf + uy * curl,
+          ex,
+          ey,
+        );
+      }
+    }
+    w.closePath();
+  }
+
+  double _signedArea(List<(double, double)> points) {
+    var area = 0.0;
+    for (var i = 0; i < points.length; i++) {
+      final a = points[i];
+      final b = points[(i + 1) % points.length];
+      area += a.$1 * b.$2 - b.$1 * a.$2;
+    }
+    return area / 2;
+  }
+
+  /// One line-ending shape (§12.5.6.7, Table 176) at endpoint [tip], with
+  /// the line arriving from [from]. The shape is oriented along the
+  /// segment: `u` points from the tip back into the line body, `p` is the
+  /// left-hand perpendicular. Closed shapes are returned with
+  /// `filled: true`; [PdfLineEnding.circle] additionally sets `isCircle`
+  /// (the [vertices] are then its four cardinal extent points, used for
+  /// bounds, and [radius]/[center] drive the Bézier draw).
+  ///
+  /// `r*` variants reverse the arrow direction (apex points into the line
+  /// instead of out of it). Returns null for [PdfLineEnding.none].
+  ({
+    List<(double, double)> vertices,
+    bool closed,
+    bool filled,
+    bool isCircle,
+    (double, double) center,
+    double radius,
+  })? _endingPath(
+    PdfLineEnding kind,
+    (double, double) tip,
+    (double, double) from,
+    double strokeWidth,
+  ) {
+    if (kind == PdfLineEnding.none) return null;
+    final dx = from.$1 - tip.$1;
+    final dy = from.$2 - tip.$2;
+    final len = math.sqrt(dx * dx + dy * dy);
+    final ux = len < 1e-9 ? 1.0 : dx / len;
+    final uy = len < 1e-9 ? 0.0 : dy / len;
+    final px = -uy, py = ux;
+    final s = math.max(10.0, strokeWidth * 5);
+    (double, double) at(double along, double across) =>
+        (tip.$1 + ux * along + px * across, tip.$2 + uy * along + py * across);
+    switch (kind) {
+      case PdfLineEnding.closedArrow:
+      case PdfLineEnding.openArrow:
+        final hw = s * 0.38;
+        return (
+          // barb, apex (tip), barb - closed for the filled arrow
+          vertices: [at(s, hw), tip, at(s, -hw)],
+          closed: kind == PdfLineEnding.closedArrow,
+          filled: kind == PdfLineEnding.closedArrow,
+          isCircle: false,
+          center: tip,
+          radius: 0,
+        );
+      case PdfLineEnding.rClosedArrow:
+      case PdfLineEnding.rOpenArrow:
+        final hw = s * 0.38;
+        return (
+          // reversed: apex points into the line, barbs sit on the endpoint
+          vertices: [at(0, hw), at(s, 0), at(0, -hw)],
+          closed: kind == PdfLineEnding.rClosedArrow,
+          filled: kind == PdfLineEnding.rClosedArrow,
+          isCircle: false,
+          center: tip,
+          radius: 0,
+        );
+      case PdfLineEnding.diamond:
+        final r = s * 0.45;
+        return (
+          vertices: [at(r, 0), at(0, r), at(-r, 0), at(0, -r)],
+          closed: true,
+          filled: true,
+          isCircle: false,
+          center: tip,
+          radius: 0,
+        );
+      case PdfLineEnding.square:
+        final h = s * 0.35;
+        return (
+          vertices: [at(h, h), at(h, -h), at(-h, -h), at(-h, h)],
+          closed: true,
+          filled: true,
+          isCircle: false,
+          center: tip,
+          radius: 0,
+        );
+      case PdfLineEnding.circle:
+        final r = s * 0.4;
+        return (
+          vertices: [
+            (tip.$1 + r, tip.$2),
+            (tip.$1, tip.$2 + r),
+            (tip.$1 - r, tip.$2),
+            (tip.$1, tip.$2 - r),
+          ],
+          closed: true,
+          filled: true,
+          isCircle: true,
+          center: tip,
+          radius: r,
+        );
+      case PdfLineEnding.butt:
+        final h = s * 0.45;
+        return (
+          vertices: [at(0, h), at(0, -h)],
+          closed: false,
+          filled: false,
+          isCircle: false,
+          center: tip,
+          radius: 0,
+        );
+      case PdfLineEnding.slash:
+        // a short line ~30° clockwise from perpendicular (60° from the
+        // line itself): rotate the line direction u by 60° CCW
+        final h = s * 0.5;
+        const c = 0.5, sn = 0.8660254037844387; // cos 60°, sin 60°
+        final sx = ux * c - uy * sn, sy = ux * sn + uy * c;
+        return (
+          vertices: [
+            (tip.$1 + sx * h, tip.$2 + sy * h),
+            (tip.$1 - sx * h, tip.$2 - sy * h),
+          ],
+          closed: false,
+          filled: false,
+          isCircle: false,
+          center: tip,
+          radius: 0,
+        );
+      case PdfLineEnding.none:
+        return null;
+    }
+  }
+
+  void _drawEnding(
+    ContentWriter w,
+    PdfLineEnding kind,
+    (double, double) tip,
+    (double, double) from,
+    int color,
+    double strokeWidth,
+  ) {
+    final shape = _endingPath(kind, tip, from, strokeWidth);
+    if (shape == null) return;
+    if (shape.isCircle) {
+      _drawCircle(w, shape.center, shape.radius);
+      w
+        ..fillColor(color)
+        ..fill();
+      return;
+    }
+    w.moveTo(shape.vertices.first.$1, shape.vertices.first.$2);
+    for (final (x, y) in shape.vertices.skip(1)) {
+      w.lineTo(x, y);
+    }
+    if (shape.filled) {
+      w
+        ..closePath()
+        ..fillColor(color)
+        ..fill();
+    } else {
+      if (shape.closed) w.closePath();
+      w
+        ..strokeColor(color)
+        ..lineWidth(strokeWidth)
+        ..lineCap(0)
+        ..stroke();
+    }
+  }
+
+  /// Appends a circle of [radius] about [center] as four cubic Béziers.
+  void _drawCircle(ContentWriter w, (double, double) center, double radius) {
+    const k = 0.5522847498307936; // 4/3·(√2−1)
+    final cx = center.$1, cy = center.$2, r = radius, kr = k * radius;
+    w
+      ..moveTo(cx + r, cy)
+      ..curveTo(cx + r, cy + kr, cx + kr, cy + r, cx, cy + r)
+      ..curveTo(cx - kr, cy + r, cx - r, cy + kr, cx - r, cy)
+      ..curveTo(cx - r, cy - kr, cx - kr, cy - r, cx, cy - r)
+      ..curveTo(cx + kr, cy - r, cx + r, cy - kr, cx + r, cy);
+  }
+
+  /// The extreme points an ending [kind] reaches at [tip] (line arriving
+  /// from [from]) - fed into [_pointBounds] so the appearance /Rect and
+  /// BBox cover the ending, not just the line.
+  List<(double, double)> _endingExtent(
+    PdfLineEnding kind,
+    (double, double) tip,
+    (double, double) from,
+    double strokeWidth,
+  ) {
+    final shape = _endingPath(kind, tip, from, strokeWidth);
+    if (shape == null) return const [];
+    return [tip, ...shape.vertices];
+  }
+
+  PdfRect _pointBounds(List<(double, double)> points, double pad) {
+    if (points.isEmpty) {
+      throw ArgumentError.value(points, 'points', 'must be non-empty');
+    }
+    var left = points.first.$1;
+    var right = points.first.$1;
+    var bottom = points.first.$2;
+    var top = points.first.$2;
+    for (final (x, y) in points.skip(1)) {
+      if (x < left) left = x;
+      if (x > right) right = x;
+      if (y < bottom) bottom = y;
+      if (y > top) top = y;
+    }
+    final inset = math.max(1.0, pad / 2 + 1);
+    return PdfRect(left - inset, bottom - inset, right + inset, top + inset);
+  }
+
+  /// The common annotation dictionary: /C carries [color], /F sets Print
+  /// so the annotation survives printing and flattening.
+  CosDictionary _markupDict(
+    String subtype,
+    PdfRect rect,
+    int color,
+    String? contents,
+    String? author,
+  ) {
+    final dict = CosDictionary({
+      'Type': const CosName('Annot'),
+      'Subtype': CosName(subtype),
+      'Rect': _rectArray(rect),
+      'F': const CosInteger(4),
+      'C': CosArray([
+        for (final c in ContentWriter.rgbComponents(color)) CosReal(c),
+      ]),
+    });
+    if (contents != null) dict['Contents'] = CosString.fromText(contents);
+    if (author != null) dict['T'] = CosString.fromText(author);
+    return dict;
+  }
+
+  /// Wraps the annotation content in a Form XObject whose BBox is the
+  /// annotation rect in page coordinates - the §12.5.5 algorithm then maps
+  /// it onto /Rect as the identity.
+  CosStream _form(
+    PdfRect bbox,
+    ContentWriter content, {
+    CosDictionary? resources,
+    bool transparencyGroup = false,
+  }) {
+    final bytes = content.takeBytes();
+    final dict = CosDictionary({
+      'Type': const CosName('XObject'),
+      'Subtype': const CosName('Form'),
+      'BBox': _rectArray(bbox),
+      'Length': CosInteger(bytes.length),
+    });
+    if (transparencyGroup) {
+      // An isolated transparency group (§11.6.6): a constant alpha set
+      // before this form's `Do` composites the group's result as one
+      // object, instead of compounding wherever the content self-overlaps.
+      dict['Group'] = CosDictionary({
+        'S': const CosName('Transparency'),
+        'I': const CosBoolean(true),
+      });
+    }
+    if (resources != null) dict['Resources'] = resources;
+    return CosStream(dict, bytes);
+  }
+
+  /// Stages [annot] (with its appearance [form]) and links it into the
+  /// page's /Annots array.
+  ///
+  /// Every created annotation gets an /NM (§12.5.2): [name] when given,
+  /// else a generated UUID - the durable identity that survives slot
+  /// shifts and revisions (see [PdfAnnotation.name]).
+  void _addAnnotation(
+    int pageIndex,
+    CosDictionary annot,
+    CosStream form, {
+    String? name,
+  }) {
+    if (!annot.entries.containsKey('NM')) {
+      annot['NM'] = CosString.fromText(name ?? _generateAnnotationName());
+    }
+    annot['AP'] = CosDictionary({'N': _updater.addObject(form)});
+    _linkAnnotation(pageIndex, _updater.addObject(annot));
+  }
+
+  /// Appends [annotRef] to page [pageIndex]'s /Annots, creating the array
+  /// when absent and staging whichever object now owns it. Shared by the
+  /// appearance-bearing [_addAnnotation] and the appearance-less
+  /// [_addThreadAnnotation].
+  void _linkAnnotation(
+    int pageIndex,
+    CosReference annotRef, {
+    bool visual = true,
+  }) {
+    _PdfPageAnnotationList(this, pageIndex).append(annotRef);
+    _markAnnotations([pageIndex], visual: visual);
+  }
+
+  CosDictionary? _alphaState(double opacity, {bool multiply = false}) {
+    if (opacity >= 1 && !multiply) return null;
+    final dict = CosDictionary({
+      'Type': const CosName('ExtGState'),
+      'CA': CosReal(opacity),
+      'ca': CosReal(opacity),
+    });
+    if (multiply) dict['BM'] = const CosName('Multiply');
+    return dict;
+  }
+
+  CosDictionary? _resources({
+    CosDictionary? extGState,
+    CosDictionary? font,
+    CosDictionary? xObject,
+  }) {
+    if (extGState == null && font == null && xObject == null) return null;
+    final dict = CosDictionary();
+    if (extGState != null) {
+      dict['ExtGState'] = CosDictionary({'GS0': extGState});
+    }
+    if (font != null) dict['Font'] = font;
+    if (xObject != null) dict['XObject'] = xObject;
+    return dict;
+  }
+
+  /// A non-embedded base-14 Helvetica font with explicit /Widths, so both
+  /// this renderer's substitution and other viewers space text correctly.
+  CosDictionary _helvetica({bool bold = false, String name = 'Helv'}) =>
+      _fontResource(
+        name,
+        bold ? 'Helvetica-Bold' : 'Helvetica',
+        bold ? helveticaBoldWidths : helveticaWidths,
+      );
+
+  /// Same, for any of the standard text fonts.
+  CosDictionary _standardFont(PdfStandardFont font) =>
+      _fontResource(font.resourceName, font.baseFont, font.widths);
+
+  CosDictionary _fontResource(String name, String baseFont, List<int> widths) =>
+      CosDictionary({
+        name: CosDictionary({
+          'Type': const CosName('Font'),
+          'Subtype': const CosName('Type1'),
+          'BaseFont': CosName(baseFont),
+          'Encoding': const CosName('WinAnsiEncoding'),
+          'FirstChar': const CosInteger(32),
+          'LastChar': const CosInteger(255),
+          'Widths': CosArray([for (final w in widths) CosInteger(w)]),
+        }),
+      });
+
+  CosDictionary _borderStyle(double width, {List<double>? dashPattern}) {
+    final dashed = dashPattern != null && dashPattern.isNotEmpty;
+    final dict = CosDictionary({
+      'Type': const CosName('Border'),
+      'W': CosReal(width),
+      'S': CosName(dashed ? 'D' : 'S'),
+    });
+    if (dashed) {
+      dict['D'] = CosArray([for (final value in dashPattern) CosReal(value)]);
+    }
+    return dict;
+  }
+
+  CosArray _rectArray(PdfRect rect) => CosArray([
+        CosReal(rect.left),
+        CosReal(rect.bottom),
+        CosReal(rect.right),
+        CosReal(rect.top),
+      ]);
+
+  CosArray _pointArray(List<(double, double)> points) => CosArray([
+        for (final (x, y) in points) ...[CosReal(x), CosReal(y)],
+      ]);
+
+  /// QuadPoints in the order real-world writers use (upper-left,
+  /// upper-right, lower-left, lower-right per quad).
+  CosArray _quadPoints(List<PdfRect> quads) => CosArray([
+        for (final q in quads) ...[
+          CosReal(q.left), CosReal(q.top), //
+          CosReal(q.right), CosReal(q.top),
+          CosReal(q.left), CosReal(q.bottom),
+          CosReal(q.right), CosReal(q.bottom),
+        ],
+      ]);
+
+  PdfRect _boundsOf(List<PdfRect> quads) {
+    if (quads.isEmpty) {
+      throw ArgumentError.value(quads, 'quads', 'must be non-empty');
+    }
+    var rect = quads.first;
+    for (final q in quads.skip(1)) {
+      rect = PdfRect(
+        rect.left < q.left ? rect.left : q.left,
+        rect.bottom < q.bottom ? rect.bottom : q.bottom,
+        rect.right > q.right ? rect.right : q.right,
+        rect.top > q.top ? rect.top : q.top,
+      );
+    }
+    return rect;
+  }
+
+  /// Word wrap with [font]'s metrics, splitting overlong words at grapheme
+  /// boundaries so CJK paragraphs and long tokens remain visible.
+  List<String> _wrap(
+    String text,
+    double fontSize,
+    double maxWidth, {
+    PdfTextFont font = PdfStandardFont.helvetica,
+    double charSpacing = 0,
+    double horizontalScale = _defaultHorizontalScale,
+  }) =>
+      pdfWrapText(
+        text,
+        maxWidth,
+        (candidate) => _advanceWidth(font, candidate, fontSize,
+            charSpacing: charSpacing, horizontalScale: horizontalScale),
+        tolerance: _wrapTolerance,
+        breakLongWords: true,
+      );
+
+  /// The horizontal advance of [text] at [fontSize] in [font], including the
+  /// per-glyph [charSpacing] (Tc) and the [horizontalScale] per cent (Tz) -
+  /// so wrapping and alignment measure the same width the appearance draws.
+  static double _advanceWidth(
+    PdfTextFont font,
+    String text,
+    double fontSize, {
+    double charSpacing = 0,
+    double horizontalScale = _defaultHorizontalScale,
+  }) {
+    final natural = font.measure(text, fontSize);
+    final count = text.runes.length;
+    return (natural + charSpacing * count) * (horizontalScale / 100);
+  }
+}

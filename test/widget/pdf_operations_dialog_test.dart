@@ -1,0 +1,238 @@
+import 'dart:async';
+import 'dart:typed_data';
+
+import 'package:crisp_cloud/models/file_item.dart';
+import 'package:crisp_cloud/services/pdf_device_export.dart';
+import 'package:crisp_cloud/services/pdf_file_store.dart';
+import 'package:crisp_cloud/services/pdf_operations_host.dart';
+import 'package:crisp_cloud/widgets/pdf_operations_dialog.dart';
+import 'package:dart_pdf_editor/dart_pdf_editor.dart';
+import 'package:flutter/material.dart';
+import 'package:flutter_test/flutter_test.dart';
+import 'package:pdf_document/pdf_document.dart';
+import 'package:pdf_graphics/pdf_graphics.dart' show PdfTextExtractor;
+import 'package:pdf_operations/pdf_operations.dart';
+import 'package:shared_preferences/shared_preferences.dart';
+
+import '../support/pdf_operations_fixture.dart';
+
+class _Store implements PdfFileStore {
+  _Store(this.displayName, {Uint8List? input}) : input = input ?? buildPdfOperationsFixture();
+  final Uint8List input;
+  final copies = <(String, Uint8List)>[];
+  int overwrites = 0;
+  Future<PdfSaveOutcome> Function(Uint8List, String)? writer;
+  @override
+  final String displayName;
+  @override
+  String get documentId => 'test:$displayName';
+  @override
+  String get path => '/source/$displayName';
+  @override
+  bool get isRemote => false;
+  @override
+  Future<Uint8List> load() async => input;
+  @override
+  Future<PdfSaveOutcome> save(Uint8List bytes) async {
+    overwrites++;
+    return PdfSaveOutcome.savedOriginal;
+  }
+  @override
+  Future<PdfSaveOutcome> saveCopy(Uint8List bytes, String name) async {
+    copies.add((name, Uint8List.fromList(bytes)));
+    return writer == null ? PdfSaveOutcome.savedCopy : await writer!(bytes, name);
+  }
+}
+
+Future<void> _open(
+  WidgetTester tester,
+  PdfOperationAction action,
+  List<_Store> stores, {
+  PdfDeviceExporter? exporter,
+}) async {
+  tester.view.physicalSize = const Size(1200, 1000);
+  tester.view.devicePixelRatio = 1;
+  addTearDown(tester.view.reset);
+  addTearDown(() => tester.pumpWidget(const SizedBox()));
+  final host = PdfOperationsHost(stores: stores, deviceExporter: exporter, useWorker: false);
+  await tester.pumpWidget(MaterialApp(home: Builder(builder: (context) => Scaffold(
+    body: FilledButton(onPressed: () => showDialog<void>(
+      context: context,
+      barrierDismissible: false,
+      builder: (_) => Dialog.fullscreen(child: PdfOperationsDialog(host: host, action: action, autoRenderWorker: false)),
+    ), child: const Text('Open operation')),
+  ))));
+  await tester.tap(find.text('Open operation'));
+  await tester.pumpAndSettle();
+}
+
+Future<void> _preview(WidgetTester tester) async {
+  await tester.tap(find.byKey(const ValueKey('pdf-operation-preview')));
+  await tester.pumpAndSettle();
+}
+
+void main() {
+  setUp(() => SharedPreferences.setMockInitialValues({}));
+
+  test('menu and palette selection rules reject mixed files and folders', () {
+    final pdf = FileItem(name: 'REPORT.PDF', path: '/report.pdf', isFolder: false);
+    final other = FileItem(name: 'two.pdf', path: '/two.pdf', isFolder: false);
+    final text = FileItem(name: 'notes.txt', isFolder: false);
+    final folder = FileItem(name: 'folder.pdf', isFolder: true);
+    expect(pdfOperationsForSelection([]), isEmpty);
+    expect(pdfOperationsForSelection([pdf, text]), isEmpty);
+    expect(pdfOperationsForSelection([folder]), isEmpty);
+    expect(pdfOperationsForSelection([pdf, other]), [PdfOperationAction.merge]);
+    expect(pdfOperationsForSelection([pdf]), containsAll([
+      PdfOperationAction.extract, PdfOperationAction.rotate, PdfOperationAction.reorder,
+      PdfOperationAction.deletePages, PdfOperationAction.watermark,
+      PdfOperationAction.fillForm, PdfOperationAction.insertImage,
+    ]));
+  });
+
+  testWidgets('rotation previews before saving, rotates only requested page, and never overwrites', (tester) async {
+    final store = _Store('report.pdf');
+    await _open(tester, PdfOperationAction.rotate, [store]);
+    await tester.enterText(find.byKey(const ValueKey('pdf-operation-pages')), '2');
+    await _preview(tester);
+    expect(find.byType(PdfViewer), findsOneWidget);
+    expect(store.copies, isEmpty);
+    expect(store.overwrites, 0);
+    await tester.tap(find.byKey(const ValueKey('pdf-operation-save')));
+    await tester.pumpAndSettle();
+    expect(store.copies.single.$1, 'report-rotated.pdf');
+    final document = PdfDocument.open(store.copies.single.$2);
+    expect(document.pages[0].rotation, 0);
+    expect(document.pages[1].rotation, 90);
+    expect(store.overwrites, 0);
+    expect(find.text('PDF copy saved.'), findsOneWidget);
+  });
+
+  testWidgets('ordered merge uses per-file ranges and saves beside original first selection', (tester) async {
+    final first = _Store('one.pdf');
+    final second = _Store('two.pdf', input: buildPdfOperationsFixture(pageWidth: 600));
+    await _open(tester, PdfOperationAction.merge, [first, second]);
+    await tester.enterText(find.byKey(const ValueKey('pdf-merge-pages-0')), '1');
+    await tester.enterText(find.byKey(const ValueKey('pdf-merge-pages-1')), '2');
+    await tester.tap(find.byKey(const ValueKey('pdf-merge-up-1')));
+    await tester.pump();
+    await _preview(tester);
+    await tester.tap(find.byKey(const ValueKey('pdf-operation-save')));
+    await tester.pumpAndSettle();
+    expect(first.copies, hasLength(1));
+    expect(second.copies, isEmpty);
+    final inspection = PdfOperationsService().inspect(PdfInput(first.copies.single.$2));
+    expect(inspection.pageCount, 2);
+    expect(inspection.pages.map((page) => page.width), [600, 300]);
+    expect(first.overwrites + second.overwrites, 0);
+  });
+
+  testWidgets('invalid page range leaves options and source untouched', (tester) async {
+    final store = _Store('report.pdf');
+    await _open(tester, PdfOperationAction.extract, [store]);
+    await tester.enterText(find.byKey(const ValueKey('pdf-operation-pages')), '3');
+    await _preview(tester);
+    expect(find.byKey(const ValueKey('pdf-operation-error')), findsOneWidget);
+    expect(find.byType(PdfViewer), findsNothing);
+    expect(find.byKey(const ValueKey('pdf-operation-pages')), findsOneWidget);
+    expect(store.copies, isEmpty);
+    expect(store.overwrites, 0);
+  });
+
+  testWidgets('known-field JSON fills typed values and rejects unknown fields before writing', (tester) async {
+    final store = _Store('form.pdf');
+    await _open(tester, PdfOperationAction.fillForm, [store]);
+    await tester.tap(find.text('JSON'));
+    await tester.pump();
+    await tester.enterText(find.byKey(const ValueKey('pdf-form-json')), '{"missing":"value"}');
+    await _preview(tester);
+    expect(find.byKey(const ValueKey('pdf-operation-error')), findsOneWidget);
+    expect(store.copies, isEmpty);
+    await tester.enterText(find.byKey(const ValueKey('pdf-form-json')), '{"customer.name":"Zoë","consent":true,"country":"FR"}');
+    await _preview(tester);
+    expect(find.byType(PdfViewer), findsOneWidget);
+    await tester.tap(find.byKey(const ValueKey('pdf-operation-save')));
+    await tester.pumpAndSettle();
+    final form = PdfAcroForm.of(PdfDocument.open(store.copies.single.$2))!;
+    expect(form.fieldNamed('customer.name')!.value, 'Zoë');
+    expect(form.fieldNamed('country')!.value, 'FR');
+    final inspection = PdfOperationsService().inspect(PdfInput(store.copies.single.$2));
+    expect(inspection.fields.singleWhere((field) => field.name == 'consent').values, contains('Yes'));
+    expect(store.overwrites, 0);
+  });
+
+  testWidgets('failed sibling save retains preview and supports an independent export', (tester) async {
+    final store = _Store('report.pdf')..writer = (_, _) async => throw StateError('destination disconnected');
+    final exported = <Uint8List>[];
+    await _open(tester, PdfOperationAction.rotate, [store], exporter: (bytes, name) async {
+      exported.add(bytes);
+      return PdfSaveOutcome.savedCopy;
+    });
+    await _preview(tester);
+    await tester.tap(find.byKey(const ValueKey('pdf-operation-save')));
+    await tester.pumpAndSettle();
+    expect(find.textContaining('destination disconnected'), findsOneWidget);
+    expect(find.byType(PdfViewer), findsOneWidget);
+    await tester.tap(find.byKey(const ValueKey('pdf-operation-export')));
+    await tester.pumpAndSettle();
+    expect(exported.single, orderedEquals(store.copies.single.$2));
+    expect(store.overwrites, 0);
+  });
+
+  testWidgets('watermark preview applies chosen text only to requested pages and keeps fields', (tester) async {
+    final store = _Store('marked.pdf');
+    await _open(tester, PdfOperationAction.watermark, [store]);
+    await tester.enterText(find.byKey(const ValueKey('pdf-operation-pages')), '2');
+    await tester.enterText(find.byKey(const ValueKey('pdf-watermark-text')), 'CONFIDENTIAL');
+    await _preview(tester);
+    expect(find.byType(PdfViewer), findsOneWidget);
+    expect(store.copies, isEmpty);
+    await tester.tap(find.byKey(const ValueKey('pdf-operation-save')));
+    await tester.pumpAndSettle();
+    final document = PdfDocument.open(store.copies.single.$2);
+    expect(PdfTextExtractor.extract(document, 0).text, isNot(contains('CONFIDENTIAL')));
+    expect(PdfTextExtractor.extract(document, 1).text, contains('CONFIDENTIAL'));
+    expect(PdfAcroForm.of(document)!.fieldNamed('customer.name')!.value, 'Alice');
+    expect(store.overwrites, 0);
+  });
+
+  testWidgets('image insertion requires image data before any output can be saved', (tester) async {
+    final store = _Store('image.pdf');
+    await _open(tester, PdfOperationAction.insertImage, [store]);
+    await _preview(tester);
+    expect(find.byKey(const ValueKey('pdf-operation-error')), findsOneWidget);
+    expect(find.byType(PdfViewer), findsNothing);
+    expect(store.copies, isEmpty);
+    expect(store.overwrites, 0);
+  });
+
+  testWidgets('save waits for completion and an unsaved preview needs a close decision', (tester) async {
+    final pending = Completer<PdfSaveOutcome>();
+    final store = _Store('report.pdf')..writer = (_, _) => pending.future;
+    await _open(tester, PdfOperationAction.rotate, [store]);
+    await _preview(tester);
+    await tester.tap(find.byKey(const ValueKey('pdf-operation-close')));
+    await tester.pumpAndSettle();
+    expect(find.text('Close without saving?'), findsOneWidget);
+    await tester.tap(find.text('Return to preview'));
+    await tester.pumpAndSettle();
+    await tester.tap(find.byKey(const ValueKey('pdf-operation-save')));
+    await tester.pump(const Duration(milliseconds: 200));
+    expect(store.copies, hasLength(1));
+    expect(tester.widget<IconButton>(find.byKey(const ValueKey('pdf-operation-close'))).onPressed, isNull);
+    expect(find.byType(PdfOperationsDialog), findsOneWidget);
+    pending.complete(PdfSaveOutcome.savedCopy);
+    await tester.pumpAndSettle();
+    await tester.tap(find.byKey(const ValueKey('pdf-operation-close')));
+    await tester.pumpAndSettle();
+    expect(find.byType(PdfOperationsDialog), findsNothing);
+  });
+
+  testWidgets('password fields never show pre-existing contents or become editable controls', (tester) async {
+    await _open(tester, PdfOperationAction.fillForm, [_Store('form.pdf')]);
+    expect(find.text('pre-existing'), findsNothing);
+    final secret = find.byKey(const ValueKey('pdf-form-secret-0'));
+    expect(secret, findsOneWidget);
+    expect(find.descendant(of: secret, matching: find.byType(TextFormField)), findsNothing);
+  });
+}

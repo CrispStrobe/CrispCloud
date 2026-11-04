@@ -4,3 +4,7 @@ test/fixtures/pdf_editor/*.pdf binary
 # Preserve the exact upstream/font-metadata license text, including whitespace.
 assets/licenses/pdf_fonts/*-LICENSE.txt -whitespace
 assets/licenses/pdf_fonts/LPPL-1.3c.txt -whitespace
+
+# Keep font fixture notices byte-for-byte.
+packages/pdf_operations/test/fonts/*LICENSE.txt -whitespace
+packages/pdf_operations/test/fonts/*.ttf binary

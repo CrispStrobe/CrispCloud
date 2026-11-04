@@ -13,9 +13,10 @@ import 'package:http/http.dart' as http;
 import 'package:path/path.dart' as p;
 
 import '../config/cli_config.dart';
+import 'bounded_download.dart';
 import 'cli_storage_client.dart';
 
-class S3CliAdapter implements CliStorageClient {
+class S3CliAdapter implements CliStorageClient, CliBoundedDownload {
   final String _accessKey;
   final String _secretKey;
   final String _endpoint;
@@ -519,6 +520,19 @@ class S3CliAdapter implements CliStorageClient {
       throw Exception('S3 download failed (HTTP ${response.statusCode}): ${response.body}');
     }
     return response.bodyBytes;
+  }
+
+  @override
+  Future<Uint8List> downloadBytesBounded(
+    String remotePath, {
+    required int maxBytes,
+  }) {
+    final uri = _buildObjectUri(_pathToKey(remotePath));
+    return boundedHttpDownload(
+      uri,
+      headers: _sign(method: 'GET', uri: uri),
+      maxBytes: maxBytes,
+    );
   }
 
   @override
