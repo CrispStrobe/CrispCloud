@@ -9,6 +9,7 @@ import 'package:crisp_cloud/services/pdf_operations_host.dart';
 import 'package:crisp_cloud/widgets/pdf_operations_dialog.dart';
 import 'package:dart_pdf_editor/dart_pdf_editor.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:pdf_document/pdf_document.dart';
 import 'package:pdf_graphics/pdf_graphics.dart' show PdfTextExtractor;
@@ -16,6 +17,20 @@ import 'package:pdf_operations/pdf_operations.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 import '../support/pdf_operations_fixture.dart';
+
+const _defaultFontPath =
+    'packages/dart_pdf_editor_assets/assets/fonts/DejaVuSans.ttf';
+late _TestFontBundle _fontBundle;
+
+class _TestFontBundle extends CachingAssetBundle {
+  _TestFontBundle(this.font);
+
+  final ByteData font;
+
+  @override
+  Future<ByteData> load(String key) async =>
+      key == _defaultFontPath ? font : await rootBundle.load(key);
+}
 
 class _Store implements PdfFileStore {
   _Store(this.displayName, {Uint8List? input})
@@ -65,22 +80,25 @@ Future<void> _open(
     useWorker: false,
   );
   await tester.pumpWidget(
-    MaterialApp(
-      home: Builder(
-        builder: (context) => Scaffold(
-          body: FilledButton(
-            onPressed: () => showDialog<void>(
-              context: context,
-              barrierDismissible: false,
-              builder: (_) => Dialog.fullscreen(
-                child: PdfOperationsDialog(
-                  host: host,
-                  action: action,
-                  autoRenderWorker: false,
+    DefaultAssetBundle(
+      bundle: _fontBundle,
+      child: MaterialApp(
+        home: Builder(
+          builder: (context) => Scaffold(
+            body: FilledButton(
+              onPressed: () => showDialog<void>(
+                context: context,
+                barrierDismissible: false,
+                builder: (_) => Dialog.fullscreen(
+                  child: PdfOperationsDialog(
+                    host: host,
+                    action: action,
+                    autoRenderWorker: false,
+                  ),
                 ),
               ),
+              child: const Text('Open operation'),
             ),
-            child: const Text('Open operation'),
           ),
         ),
       ),
@@ -96,6 +114,12 @@ Future<void> _preview(WidgetTester tester) async {
 }
 
 void main() {
+  TestWidgetsFlutterBinding.ensureInitialized();
+  setUpAll(() async {
+    // Fetch actual font bytes outside widget fake time. Browser asset requests
+    // must finish before pumpAndSettle starts advancing the progress animation.
+    _fontBundle = _TestFontBundle(await rootBundle.load(_defaultFontPath));
+  });
   setUp(() => SharedPreferences.setMockInitialValues({}));
 
   test('menu and palette selection rules reject mixed files and folders', () {

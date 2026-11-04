@@ -1038,12 +1038,11 @@ class PdfOperationsService {
         .page(index)
         .annotations
         .singleWhere((item) => item.name == name);
-    if (angle % 360 != 0)
+    if (angle % 360 != 0) {
       editor.rotateAnnotation(index, annotation, -(angle % 360));
+    }
     if (flatten) {
-      // Re-read after rotation: PdfAnnotation caches its /Rect at construction.
-      final updated = PdfAnnotation.fromDict(editor.document, annotation.dict);
-      editor.flattenAnnotations(index, annotations: [updated]);
+      editor.flattenAnnotations(index, annotations: [annotation]);
     }
   }
 }

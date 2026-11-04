@@ -110,6 +110,9 @@ void main() {
     () async {
       for (final arguments in [
         ['extract', source.path, '--json'], // Missing required options.
+        ['extract', source.path, '-o', target('invalid.pdf'), '--json'],
+        ['fill', source.path, '-o', target('invalid.pdf'), '--json'],
+        ['insert-image', source.path, '-o', target('invalid.pdf'), '--json'],
         [
           'rotate',
           source.path,
@@ -123,7 +126,7 @@ void main() {
         ['not-an-operation', '--json'],
       ]) {
         final result = await run(arguments);
-        expect(result.code, 2);
+        expect(result.code, 2, reason: '${arguments.join(' ')}\n${result.errors}');
         expect(result.output, isEmpty);
         expect(result.errorJson['code'], 'usage');
         expect(File(target('invalid.pdf')).existsSync(), isFalse);

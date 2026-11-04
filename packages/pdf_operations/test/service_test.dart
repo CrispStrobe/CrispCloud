@@ -301,8 +301,14 @@ void main() {
           values: {'customer.name': 'B'},
           appearanceFont: PdfEmbeddedFont.parse(fontBytes));
       final document = PdfDocument.open(filled.bytes);
-      expect(PdfAcroForm.of(document)!.fieldNamed('customer.name')!.value, 'B');
-      final editor = PdfEditor(document)..flattenForm();
+      final field = PdfAcroForm.of(document)!.fieldNamed('customer.name')!;
+      expect(field.value, 'B');
+      // Other fields deliberately retain the remapped source font. Only the
+      // requested field's regenerated appearance should be judged here.
+      final editor = PdfEditor(document)
+        ..flattenAnnotations(0,
+            annotations: document.page(0).annotations.where(
+                (annotation) => field.widgets.contains(annotation.dict)));
       final appearance =
           PdfTextExtractor.extract(PdfDocument.open(editor.save()), 0).text;
       expect(appearance, contains('B'));

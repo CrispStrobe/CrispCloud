@@ -11,3 +11,4 @@ packages/pdf_operations/test/fonts/*.ttf binary
 
 # Unified patch context lines contain a required space prefix.
 packages/*/UPSTREAM.patch -whitespace
+packages/pdf_fork_transfer/fork.patch -whitespace

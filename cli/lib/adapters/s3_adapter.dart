@@ -460,8 +460,7 @@ class S3CliAdapter implements CliStorageClient, CliBoundedDownload {
             ? value(root, 'NextContinuationToken', required: true)
             : null;
         if (continuationToken != null &&
-            (continuationToken.isEmpty ||
-                !seenTokens.add(continuationToken))) {
+            (continuationToken.isEmpty || !seenTokens.add(continuationToken))) {
           throw const FormatException(
             'Missing or repeated continuation token.',
           );

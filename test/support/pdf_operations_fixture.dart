@@ -3,7 +3,10 @@ import 'dart:typed_data';
 
 /// Independent, compact two-page AcroForm fixture. The cross-reference table
 /// is generated from byte offsets; no PDF writer under test creates it.
-Uint8List buildPdfOperationsFixture({int pageWidth = 300, bool multiline = false}) {
+Uint8List buildPdfOperationsFixture({
+  int pageWidth = 300,
+  bool multiline = false,
+}) {
   final objects = <String>[
     '<< /Type /Catalog /Pages 2 0 R /AcroForm 7 0 R >>',
     '<< /Type /Pages /Kids [3 0 R 4 0 R] /Count 2 >>',

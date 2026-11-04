@@ -244,7 +244,7 @@ void main() {
         ..createSync(original.path);
       await expectLater(
         store.prepareOutput(link.path, overwrite: true),
-        throwsA(failure('sourceOutput')),
+        throwsA(failure('invalidOutput')),
       );
       final unrelated = File('${temporary.path}/unrelated.pdf')
         ..writeAsBytesSync([4]);
@@ -364,7 +364,10 @@ void main() {
       server.listen((request) async {
         await request.drain<void>();
         request.response.statusCode = status;
-        request.response.headers.contentType = ContentType('application', 'xml');
+        request.response.headers.contentType = ContentType(
+          'application',
+          'xml',
+        );
         // S3 XML is UTF-8 even when the HTTP media type has no charset.
         request.response.add(utf8.encode(body));
         await request.response.close();

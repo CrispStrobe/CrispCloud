@@ -343,7 +343,7 @@ class _PdfOperationsDialogState extends State<PdfOperationsDialog> {
 
   Future<PdfEmbeddedFont> _appearanceFont() async {
     if (_font != null) return _font!;
-    final bytes = await rootBundle.load(
+    final bytes = await DefaultAssetBundle.of(context).load(
       'packages/dart_pdf_editor_assets/assets/fonts/DejaVuSans.ttf',
     );
     return _font ??= PdfEmbeddedFont.parse(
@@ -1117,6 +1117,7 @@ class _PdfOperationsDialogState extends State<PdfOperationsDialog> {
             width: 200,
             child: DropdownButtonFormField<PdfPlacementAnchor>(
               initialValue: _anchor,
+              isExpanded: true,
               decoration: InputDecoration(
                 labelText: context.pdfOpTr('Position'),
                 border: const OutlineInputBorder(),
@@ -1125,7 +1126,11 @@ class _PdfOperationsDialogState extends State<PdfOperationsDialog> {
                 for (final anchor in PdfPlacementAnchor.values)
                   DropdownMenuItem(
                     value: anchor,
-                    child: Text(context.pdfOpTr(_anchorName(anchor))),
+                    child: Text(
+                      context.pdfOpTr(_anchorName(anchor)),
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                    ),
                   ),
               ],
               onChanged: (value) {
@@ -1380,8 +1385,12 @@ class _PdfOperationsDialogState extends State<PdfOperationsDialog> {
       key: key,
       initialValue: initial,
       maxLines: field.multiline ? 4 : 1,
-      keyboardType: field.multiline ? TextInputType.multiline : TextInputType.text,
-      textInputAction: field.multiline ? TextInputAction.newline : TextInputAction.next,
+      keyboardType: field.multiline
+          ? TextInputType.multiline
+          : TextInputType.text,
+      textInputAction: field.multiline
+          ? TextInputAction.newline
+          : TextInputAction.next,
       maxLength: field.maxLength,
       decoration: InputDecoration(
         labelText: label,

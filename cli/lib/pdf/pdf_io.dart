@@ -31,7 +31,11 @@ class PdfCliLocation {
 
   factory PdfCliLocation.parse(String value) {
     if (value.isEmpty || value == '-' || value.contains('\u0000')) {
-      throw const PdfCliException('invalidPath', 'A file path is required.', exitCode: 2);
+      throw const PdfCliException(
+        'invalidPath',
+        'A file path is required.',
+        exitCode: 2,
+      );
     }
     if (!value.startsWith('cloud://')) {
       return PdfCliLocation._(value, p.normalize(p.absolute(value)), null);
@@ -70,7 +74,11 @@ class PdfCliLocation {
     final slash = value.indexOf('/', 'cloud://'.length);
     final profile = value.substring('cloud://'.length, slash);
     if (!RegExp(r'^[A-Za-z0-9][A-Za-z0-9_.-]*$').hasMatch(profile)) {
-      throw const PdfCliException('invalidPath', 'Invalid cloud profile name.', exitCode: 2);
+      throw const PdfCliException(
+        'invalidPath',
+        'Invalid cloud profile name.',
+        exitCode: 2,
+      );
     }
     return PdfCliLocation._(value, '/${segments.join('/')}', profile);
   }
@@ -165,7 +173,7 @@ class PdfCliFileStore {
           throw const PdfCliException(
             'passwordLocation',
             'Password files must be local, or use - for stdin.',
-          exitCode: 2,
+            exitCode: 2,
           );
         }
         final stat = await File(location.path).stat();
@@ -181,7 +189,11 @@ class PdfCliFileStore {
     try {
       return utf8.decode(bytes);
     } on FormatException {
-      throw const PdfCliException('invalidEncoding', 'Expected UTF-8 input.', exitCode: 2);
+      throw const PdfCliException(
+        'invalidEncoding',
+        'Expected UTF-8 input.',
+        exitCode: 2,
+      );
     }
   }
 

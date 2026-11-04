@@ -1,3 +1,20 @@
+diff --git a/packages/pdf_document/lib/src/annotation_editor.dart b/packages/pdf_document/lib/src/annotation_editor.dart
+index e685b9b..9f21fa2 100644
+--- a/packages/pdf_document/lib/src/annotation_editor.dart
++++ b/packages/pdf_document/lib/src/annotation_editor.dart
+@@ -6271,7 +6271,11 @@ extension PdfAnnotationEditing on PdfEditor {
+       ..restore();
+     final flattened = <CosDictionary>{};
+     var index = 0;
+-    for (final annot in page.annotations) {
++    for (final cached in page.annotations) {
++      // Page annotation lists cache parsed wrappers, including /Rect and /F.
++      // An earlier edit may have changed those dictionary entries in place.
++      // Fit the current appearance against the current geometry and flags.
++      final annot = PdfAnnotation.fromDict(document, cached.dict);
+       if (!select(annot)) continue;
+       if (annot.isHidden || annot.isNoView || annot.subtype == 'Popup') {
+         continue;
 diff --git a/packages/pdf_document/lib/src/document_merge.dart b/packages/pdf_document/lib/src/document_merge.dart
 index b57f9e7..9abfba0 100644
 --- a/packages/pdf_document/lib/src/document_merge.dart

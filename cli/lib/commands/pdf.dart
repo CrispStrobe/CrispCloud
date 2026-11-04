@@ -387,6 +387,14 @@ class _PdfOperationCommand extends Command<int> {
       inputHasTerminal: host.inputHasTerminal,
     );
     try {
+      // args checks mandatory options only when their values are retrieved,
+      // using ArgumentError. Validate here to provide usage exit code 2 and
+      // avoid reading files before required command parameters are present.
+      for (final option in argParser.options.values) {
+        if (option.mandatory && !argResults!.wasParsed(option.name)) {
+          usageException('Missing required option: --${option.name}.');
+        }
+      }
       final rest = argResults!.rest;
       final expected = operation == _PdfOperation.search ? 2 : 1;
       if (operation == _PdfOperation.merge

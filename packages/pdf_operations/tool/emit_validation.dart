@@ -54,6 +54,7 @@ void main(List<String> arguments) {
             angleDegrees: 20)),
     'image.pdf': service.insertImage(PdfInput(geometryPdf()),
         imageBytes: redLogoPng(),
+        pages: 'all',
         placement: const PdfImagePlacement(x: .1, y: .2, width: .5)),
     'ocr.pdf': service
         .applyOcr(PdfInput(PdfBlankDocument.create()), font: font, pages: [

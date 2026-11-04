@@ -5,9 +5,44 @@ from __future__ import annotations
 
 import argparse
 import json
+import math
 from pathlib import Path
 
 from pypdf import PdfReader
+from pypdf.generic import ContentStream
+
+
+def image_transforms(pdf: PdfReader, page) -> list[tuple[float, ...]]:
+    """Interpret q/Q/cm/Do to check emitted image geometry independently."""
+    identity = (1., 0., 0., 1., 0., 0.)
+    images: list[tuple[float, ...]] = []
+
+    def multiply(left, right):
+        a, b, c, d, e, f = left
+        g, h, i, j, k, l = right
+        return (a*g+c*h, b*g+d*h, a*i+c*j, b*i+d*j,
+                a*k+c*l+e, b*k+d*l+f)
+
+    def walk(stream, resources, transform, depth=0):
+        assert depth < 20, 'unexpected recursive Form XObject'
+        stack = []
+        for operands, operation in ContentStream(stream, pdf).operations:
+            if operation == b'q':
+                stack.append(transform)
+            elif operation == b'Q':
+                transform = stack.pop()
+            elif operation == b'cm':
+                transform = multiply(transform, tuple(map(float, operands)))
+            elif operation == b'Do':
+                obj = resources['/XObject'][operands[0]].get_object()
+                if obj.get('/Subtype') == '/Image':
+                    images.append(transform)
+                elif obj.get('/Subtype') == '/Form':
+                    nested = multiply(transform, tuple(map(float, obj.get('/Matrix', identity))))
+                    walk(obj, obj.get('/Resources', resources), nested, depth + 1)
+
+    walk(page.get_contents(), page['/Resources'], identity)
+    return images
 
 
 def verify(directory: Path) -> dict:
@@ -82,8 +117,17 @@ def verify(directory: Path) -> dict:
     assert all('Жук Αθήνα' in text for text in texts(unicode_marked))
     assert [page.rotation for page in unicode_marked.pages] == [0, 90, 180, 270]
     for name in ['watermark-logo.pdf', 'image.pdf']:
-        assert all(page['/Resources'].get('/XObject') for page in reader(name).pages)
-    checks.append('Unicode watermark and image resources survive all four page rotations')
+        document = reader(name)
+        for page in document.pages:
+            transforms = image_transforms(document, page)
+            assert transforms, name
+            for a, b, c, d, _, _ in transforms:
+                width, height = math.hypot(a, b), math.hypot(c, d)
+                assert width > 0 and height > 0, name
+                # The fixture logo is 20x10, with no requested stretching.
+                assert abs((a*c+b*d)/(width*height)) < 1e-7, (name, 'sheared image')
+                assert abs(width/height - 2) < 1e-6, (name, 'changed aspect ratio')
+    checks.append('Unicode and image watermarks preserve geometry through all four rotations')
 
     ocr = reader('ocr.pdf')
     assert 'Жук Αθήνα' in texts(ocr)[0]

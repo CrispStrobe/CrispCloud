@@ -257,39 +257,36 @@ void main() {
     expect(document.pages[1].rotation, 0);
   });
 
-  test(
-    'worker receives an embedded font and returns a usable Unicode form appearance',
-    () async {
-      final host = PdfOperationsHost(
-        stores: [_Store('form.pdf', input: buildPdfOperationsFixture())],
-      );
-      addTearDown(host.dispose);
-      final data = await rootBundle.load(
-        'packages/dart_pdf_editor_assets/assets/fonts/DejaVuSans.ttf',
-      );
-      final font = PdfEmbeddedFont.parse(
-        data.buffer.asUint8List(data.offsetInBytes, data.lengthInBytes),
-      );
-      final input = (await host.load(requestPassword: (_, _) async => null))
-          .single
-          .input;
-      final result = await host.perform(
-        PdfOperationRequest(
-          action: PdfOperationAction.fillForm,
-          sources: [PdfMergeInput(input)],
-          fields: const {'customer.name': 'Жук'},
-          appearanceFont: font,
-        ),
-      );
-      final document = PdfDocument.open(result.bytes);
-      expect(PdfAcroForm.of(document)!.fieldNamed('customer.name')!.value, 'Жук');
-      final flattened = PdfEditor(document)..flattenForm();
-      expect(
-        PdfTextExtractor.extract(PdfDocument.open(flattened.save()), 0).text,
-        contains('Жук'),
-      );
-    },
-  );
+  test('worker receives an embedded font and returns a usable Unicode form appearance', () async {
+    final host = PdfOperationsHost(
+      stores: [_Store('form.pdf', input: buildPdfOperationsFixture())],
+    );
+    addTearDown(host.dispose);
+    final data = await rootBundle.load(
+      'packages/dart_pdf_editor_assets/assets/fonts/DejaVuSans.ttf',
+    );
+    final font = PdfEmbeddedFont.parse(
+      data.buffer.asUint8List(data.offsetInBytes, data.lengthInBytes),
+    );
+    final input = (await host.load(requestPassword: (_, _) async => null))
+        .single
+        .input;
+    final result = await host.perform(
+      PdfOperationRequest(
+        action: PdfOperationAction.fillForm,
+        sources: [PdfMergeInput(input)],
+        fields: const {'customer.name': 'Жук'},
+        appearanceFont: font,
+      ),
+    );
+    final document = PdfDocument.open(result.bytes);
+    expect(PdfAcroForm.of(document)!.fieldNamed('customer.name')!.value, 'Жук');
+    final flattened = PdfEditor(document)..flattenForm();
+    expect(
+      PdfTextExtractor.extract(PdfDocument.open(flattened.save()), 0).text,
+      contains('Жук'),
+    );
+  });
 
   test('ambiguous duplicate sources and empty selections are rejected', () {
     final store = _Store('sample.pdf');
