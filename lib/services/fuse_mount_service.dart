@@ -17,6 +17,8 @@ import 'terminal_mount_failure.dart';
 // UnsupportedError.
 
 import 'dart:io';
+import 'dart:async';
+import 'dart:convert';
 
 import 'package:flutter/foundation.dart';
 import 'package:path/path.dart' as p;
@@ -50,6 +52,10 @@ class MountEntry {
   /// Optional error message when [status] == [MountStatus.error].
   String? errorMessage;
 
+  /// Stable app-authored message key and values for the mount UI.
+  String? errorKey;
+  Map<String, Object> errorValues;
+
   /// PID of the helper process, if running.
   int? helperPid;
 
@@ -60,35 +66,54 @@ class MountEntry {
     required this.remotePath,
     this.status = MountStatus.unmounted,
     this.errorMessage,
+    this.errorKey,
+    this.errorValues = const {},
     this.helperPid,
   });
 
   /// Serialise to a SharedPreferences-compatible string map.
   Map<String, String> toMap() => {
-        'mountPoint': mountPoint,
-        'label': label,
-        'provider': provider,
-        'remotePath': remotePath,
-      };
+    'mountPoint': mountPoint,
+    'label': label,
+    'provider': provider,
+    'remotePath': remotePath,
+  };
 
   factory MountEntry.fromMap(Map<String, String> m) => MountEntry(
-        mountPoint: m['mountPoint']!,
-        label: m['label']!,
-        provider: m['provider']!,
-        remotePath: m['remotePath']!,
-      );
+    mountPoint: m['mountPoint']!,
+    label: m['label']!,
+    provider: m['provider']!,
+    remotePath: m['remotePath']!,
+  );
 
-  MountEntry copyWith(
-          {MountStatus? status, String? errorMessage, int? helperPid}) =>
-      MountEntry(
-        mountPoint: mountPoint,
-        label: label,
-        provider: provider,
-        remotePath: remotePath,
-        status: status ?? this.status,
-        errorMessage: errorMessage ?? this.errorMessage,
-        helperPid: helperPid ?? this.helperPid,
-      );
+  MountEntry copyWith({
+    MountStatus? status,
+    String? errorMessage,
+    String? errorKey,
+    Map<String, Object>? errorValues,
+    int? helperPid,
+  }) => MountEntry(
+    mountPoint: mountPoint,
+    label: label,
+    provider: provider,
+    remotePath: remotePath,
+    status: status ?? this.status,
+    errorMessage: errorMessage ?? this.errorMessage,
+    errorKey: errorKey ?? this.errorKey,
+    errorValues: errorValues ?? this.errorValues,
+    helperPid: helperPid ?? this.helperPid,
+  );
+}
+
+class _MountBridgeFailure implements Exception {
+  final String key;
+  final String message;
+  final Map<String, Object> values;
+
+  const _MountBridgeFailure(this.key, this.message, this.values);
+
+  @override
+  String toString() => message;
 }
 
 enum MountStatus { unmounted, mounting, mounted, unmounting, error }
@@ -104,7 +129,8 @@ class FuseMountService {
   static const linuxMissing =
       'libfuse / fusermount3 not found. Install via: sudo apt install fuse3  '
       '(or equivalent for your distro).';
-  static const macMissing = 'macFUSE or FUSE-T not found. Install macFUSE from '
+  static const macMissing =
+      'macFUSE or FUSE-T not found. Install macFUSE from '
       'https://osxfuse.github.io or FUSE-T from https://www.fuse-t.org/.';
   static const winMissing = 'WinFsp not found. Install from https://winfsp.dev';
   static const unsupportedPlatform = 'Unsupported platform';
@@ -176,18 +202,12 @@ class FuseMountService {
   }
 
   Future<String?> _checkMacFuse() async {
-    // macFUSE installs a kext; check for the filesystem bundle.
-    if (await Directory('/Library/Filesystems/macfuse.fs').exists())
+    if (!await File(_macBridgePath).exists()) return bridgeMissing;
+    if (await File('/usr/local/lib/libfuse-t.dylib').exists()) return null;
+    if (await File('/usr/local/lib/libfuse.2.dylib').exists() &&
+        await Directory('/Library/Filesystems/macfuse.fs').exists()) {
       return null;
-    // FUSE-T installs its libfuse-compatible runtime in /usr/local/lib.
-    for (final path in [
-      '/usr/local/lib/libfuse-t.dylib',
-      '/opt/homebrew/lib/libfuse-t.dylib',
-    ]) {
-      if (await File(path).exists()) return null;
     }
-    final result = await Process.run('which', ['mount_macfuse']);
-    if (result.exitCode == 0) return null;
     return macMissing;
   }
 
@@ -223,10 +243,16 @@ class FuseMountService {
     _requireDesktop();
 
     final canonical = _canonicalize(mountPoint);
-    if (_mounts.containsKey(canonical) &&
-        _mounts[canonical]!.status == MountStatus.mounted) {
-      throw TerminalMountArgumentError(TerminalMountCode.mountDuplicate,
-          'Mount point "$canonical" is already mounted', {'path': canonical});
+    if ({
+      MountStatus.mounting,
+      MountStatus.mounted,
+      MountStatus.unmounting,
+    }.contains(_mounts[canonical]?.status)) {
+      throw TerminalMountArgumentError(
+        TerminalMountCode.mountDuplicate,
+        'Mount point "$canonical" is already mounted',
+        {'path': canonical},
+      );
     }
 
     final entry = MountEntry(
@@ -238,6 +264,28 @@ class FuseMountService {
     );
     _mounts[canonical] = entry;
     _notify();
+
+    // A mount created by another process must never be replaced or unmounted.
+    // Probe before creating the directory or starting the native helper.
+    try {
+      if (await isPlatformMountPoint(canonical)) {
+        _setError(
+          canonical,
+          'Mount point "$canonical" is already in use',
+          errorKey: 'mountPointOccupied',
+          errorValues: {'path': canonical},
+        );
+        return _mounts[canonical]!;
+      }
+    } catch (e) {
+      _setError(
+        canonical,
+        'Cannot inspect mount point "$canonical": $e',
+        errorKey: 'mountProbeFailed',
+        errorValues: {'path': canonical, 'error': '$e'},
+      );
+      return _mounts[canonical]!;
+    }
 
     // Ensure mount point directory exists.
     try {
@@ -259,6 +307,9 @@ class FuseMountService {
       await _startBridge(entry, client);
       _mounts[canonical] = entry.copyWith(status: MountStatus.mounted);
       _log.info('Mounted ${entry.provider}:${entry.remotePath} → $canonical');
+    } on _MountBridgeFailure catch (e, st) {
+      _log.error('Mount failed for $canonical', e, st);
+      _setError(canonical, e.message, errorKey: e.key, errorValues: e.values);
     } catch (e, st) {
       _log.error('Mount failed for $canonical', e, st);
       _setError(canonical, e.toString());
@@ -278,13 +329,17 @@ class FuseMountService {
     final canonical = _canonicalize(mountPoint);
     final entry = _mounts[canonical];
     if (entry == null) return;
+    if (entry.status != MountStatus.mounted ||
+        !_processes.containsKey(canonical)) {
+      return;
+    }
 
     _mounts[canonical] = entry.copyWith(status: MountStatus.unmounting);
     _notify();
 
     try {
-      await _stopBridge(canonical);
       await _platformUnmount(canonical);
+      await _stopBridge(canonical);
       _mounts[canonical] = entry.copyWith(status: MountStatus.unmounted);
       _log.info('Unmounted $canonical');
     } catch (e, st) {
@@ -366,8 +421,10 @@ class FuseMountService {
     try {
       final prefs = await SharedPreferences.getInstance();
       final list = _mounts.values
-          .map((e) =>
-              [e.mountPoint, e.label, e.provider, e.remotePath].join('\x1F'))
+          .map(
+            (e) =>
+                [e.mountPoint, e.label, e.provider, e.remotePath].join('\x1F'),
+          )
           .toList();
       await prefs.setStringList(_prefKey, list);
     } catch (e) {
@@ -381,8 +438,10 @@ class FuseMountService {
 
   void _requireDesktop() {
     if (!isSupported) {
-      throw TerminalMountUnsupportedError(TerminalMountCode.mountUnsupported,
-          'FUSE mounts are only available on macOS, Linux, and Windows desktop.');
+      throw TerminalMountUnsupportedError(
+        TerminalMountCode.mountUnsupported,
+        'FUSE mounts are only available on macOS, Linux, and Windows desktop.',
+      );
     }
   }
 
@@ -395,15 +454,63 @@ class FuseMountService {
     return norm;
   }
 
-  void _setError(String canonical, String message) {
-    _mounts[canonical] = (_mounts[canonical] ??
-            MountEntry(
-              mountPoint: canonical,
-              label: canonical,
-              provider: '',
-              remotePath: '',
-            ))
-        .copyWith(status: MountStatus.error, errorMessage: message);
+  /// Checks the OS mount table before taking ownership of a mount point.
+  /// Overridable so state tests never need to mount a real filesystem.
+  Future<bool> isPlatformMountPoint(String mountPoint) async {
+    var physicalPath = p.normalize(p.absolute(mountPoint));
+    if (await Directory(mountPoint).exists()) {
+      physicalPath = await Directory(mountPoint).resolveSymbolicLinks();
+    }
+    if (Platform.isMacOS) {
+      final result = await Process.run('/sbin/mount', []);
+      if (result.exitCode != 0) {
+        throw StateError('mount returned ${result.exitCode}: ${result.stderr}');
+      }
+      return (result.stdout as String)
+          .split('\n')
+          .any((line) => line.contains(' on $physicalPath ('));
+    }
+    if (Platform.isLinux) {
+      final lines = await File('/proc/self/mountinfo').readAsLines();
+      for (final line in lines) {
+        final fields = line.split(' ');
+        if (fields.length < 5) continue;
+        final path = fields[4]
+            .replaceAll(r'\040', ' ')
+            .replaceAll(r'\011', '\t')
+            .replaceAll(r'\012', '\n')
+            .replaceAll(r'\134', r'\');
+        if (path == physicalPath) return true;
+      }
+    }
+    return false;
+  }
+
+  void _setError(
+    String canonical,
+    String message, {
+    String? errorKey,
+    Map<String, Object> errorValues = const {},
+  }) {
+    final previous =
+        _mounts[canonical] ??
+        MountEntry(
+          mountPoint: canonical,
+          label: canonical,
+          provider: '',
+          remotePath: '',
+        );
+    _mounts[canonical] = MountEntry(
+      mountPoint: previous.mountPoint,
+      label: previous.label,
+      provider: previous.provider,
+      remotePath: previous.remotePath,
+      status: MountStatus.error,
+      errorMessage: message,
+      errorKey: errorKey,
+      errorValues: errorValues,
+      helperPid: previous.helperPid,
+    );
     _log.warn('Mount error at $canonical: $message');
     _notify();
   }
@@ -415,15 +522,110 @@ class FuseMountService {
   // ---------------------------------------------------------------------------
 
   Future<void> _startBridge(MountEntry entry, CloudStorageClient client) async {
-    // No native bridge is bundled yet. The former helper merely slept in a
-    // stub loop, causing the UI to report a mount that never existed.
-    throw StateError(bridgeMissing);
+    if (!Platform.isMacOS || !await File(_macBridgePath).exists()) {
+      throw StateError(bridgeMissing);
+    }
+    final runtime = await File('/usr/local/lib/libfuse-t.dylib').exists()
+        ? 'fuse-t'
+        : 'macfuse';
+    final fs = FuseFilesystem(client: client, remotePath: entry.remotePath);
+    _filesystems[entry.mountPoint] = fs;
+    unawaited(fs.serveRequests());
+    Process? process;
+    try {
+      final socketPath = await fs.ready.timeout(const Duration(seconds: 5));
+      process = await Process.start(_macBridgePath, [
+        entry.mountPoint,
+        socketPath,
+        runtime,
+      ]);
+      final mounted = Completer<void>();
+      process.stdout
+          .transform(utf8.decoder)
+          .transform(const LineSplitter())
+          .listen(
+            (line) {
+              if (line == 'MOUNTED' && !mounted.isCompleted) mounted.complete();
+            },
+            onError: (Object e) {
+              if (!mounted.isCompleted) mounted.completeError(e);
+            },
+          );
+      final errors = StringBuffer();
+      process.stderr.transform(utf8.decoder).listen((chunk) {
+        if (errors.length < 4096) errors.write(chunk);
+      });
+      await Future.any<void>([
+        mounted.future,
+        process.exitCode.then(
+          (code) => throw _MountBridgeFailure(
+            'helperExited',
+            'FUSE bridge exited ($code): $errors',
+            {'code': code, 'error': '$errors'},
+          ),
+        ),
+      ]).timeout(const Duration(seconds: 20));
+      var visible = false;
+      for (var attempt = 0; attempt < 20; attempt++) {
+        if (await isPlatformMountPoint(entry.mountPoint)) {
+          visible = true;
+          break;
+        }
+        await Future<void>.delayed(const Duration(milliseconds: 100));
+      }
+      if (!visible) {
+        throw _MountBridgeFailure(
+          'mountNotVisible',
+          'FUSE bridge started, but no mount appeared at '
+              '${entry.mountPoint}: $errors',
+          {'path': entry.mountPoint, 'error': '$errors'},
+        );
+      }
+      _processes[entry.mountPoint] = process;
+      entry.helperPid = process.pid;
+      unawaited(
+        process.exitCode.then((code) {
+          if (_processes[entry.mountPoint] == process) {
+            _processes.remove(entry.mountPoint);
+            _setError(
+              entry.mountPoint,
+              'FUSE bridge exited ($code)',
+              errorKey: 'helperExited',
+              errorValues: {'code': code, 'error': ''},
+            );
+          }
+        }),
+      );
+    } catch (_) {
+      if (process != null && runtime == 'macfuse') {
+        // macFUSE can leave mount_macfuse waiting for an unavailable kext.
+        // Stop that child before the bridge exits and it is reparented.
+        try {
+          final children = await Process.run('/usr/bin/pgrep', [
+            '-P',
+            '${process.pid}',
+          ]);
+          for (final line in (children.stdout as String).split('\n')) {
+            final pid = int.tryParse(line.trim());
+            if (pid != null) Process.killPid(pid, ProcessSignal.sigterm);
+          }
+        } catch (_) {}
+      }
+      process?.kill(ProcessSignal.sigterm);
+      _filesystems.remove(entry.mountPoint);
+      await fs.dispose();
+      rethrow;
+    }
   }
 
-  Future<void> _stopBridge(String mountPoint) async {
-    final fs = _filesystems.remove(mountPoint);
-    await fs?.dispose();
+  String get _macBridgePath => p.normalize(
+    p.join(
+      p.dirname(Platform.resolvedExecutable),
+      '../Resources/crispcloud_fuse_bridge',
+    ),
+  );
 
+  Future<void> _stopBridge(String mountPoint) async {
     final process = _processes.remove(mountPoint);
     if (process != null) {
       try {
@@ -438,6 +640,8 @@ class FuseMountService {
         );
       } catch (_) {}
     }
+    final fs = _filesystems.remove(mountPoint);
+    await fs?.dispose();
   }
 
   Future<void> _platformUnmount(String mountPoint) async {
@@ -452,11 +656,15 @@ class FuseMountService {
           _log.warn('fusermount returned ${result.exitCode}: ${result.stderr}');
         }
       } else if (Platform.isMacOS) {
-        final result =
-            await Process.run('diskutil', ['unmount', 'force', mountPoint]);
+        final result = await Process.run('diskutil', [
+          'unmount',
+          'force',
+          mountPoint,
+        ]);
         if (result.exitCode != 0) {
           _log.warn(
-              'diskutil unmount returned ${result.exitCode}: ${result.stderr}');
+            'diskutil unmount returned ${result.exitCode}: ${result.stderr}',
+          );
         }
       } else if (Platform.isWindows) {
         // WinFsp: net use /delete or the WinFsp net command.

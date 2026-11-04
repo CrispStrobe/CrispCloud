@@ -22,10 +22,7 @@ import '../l10n/mount_error_presentation.dart';
 import '../l10n/terminal_mount_error_strings.dart';
 
 void showMountDialog(BuildContext context) {
-  showDialog(
-    context: context,
-    builder: (_) => const _MountManagerDialog(),
-  );
+  showDialog(context: context, builder: (_) => const _MountManagerDialog());
 }
 
 // ---------------------------------------------------------------------------
@@ -57,8 +54,11 @@ class _MountManagerDialog extends ConsumerWidget {
               mount.availabilityError!.isNotEmpty)
             Tooltip(
               message: localizedMountError(context, mount.availabilityError!),
-              child: const Icon(Icons.warning_amber,
-                  color: Colors.orange, size: 20),
+              child: const Icon(
+                Icons.warning_amber,
+                color: Colors.orange,
+                size: 20,
+              ),
             ),
         ],
       ),
@@ -74,14 +74,20 @@ class _MountManagerDialog extends ConsumerWidget {
             else if (mount.availabilityError != null &&
                 mount.availabilityError!.isNotEmpty)
               _FuseUnavailableBanner(
-                  message:
-                      localizedMountError(context, mount.availabilityError!)),
+                message: localizedMountError(context, mount.availabilityError!),
+              ),
 
             const SizedBox(height: 8),
 
             // Active / configured mounts
             if (mount.mounts.isEmpty)
-              const _EmptyMountList()
+              _EmptyMountList(
+                showExperimental:
+                    !kIsWeb &&
+                    defaultTargetPlatform == TargetPlatform.macOS &&
+                    !mount.isCheckingAvailability &&
+                    mount.availabilityError != FuseMountService.bridgeMissing,
+              )
             else
               ConstrainedBox(
                 constraints: const BoxConstraints(maxHeight: 280),
@@ -104,7 +110,8 @@ class _MountManagerDialog extends ConsumerWidget {
           ElevatedButton.icon(
             icon: const Icon(Icons.add, size: 18),
             label: Text(MountDialogStrings(context).text('newMount')),
-            onPressed: mount.availabilityError != null &&
+            onPressed:
+                mount.availabilityError != null &&
                     mount.availabilityError!.isNotEmpty
                 ? null
                 : () => _showAddMountDialog(context, ref),
@@ -114,10 +121,7 @@ class _MountManagerDialog extends ConsumerWidget {
   }
 
   void _showAddMountDialog(BuildContext context, WidgetRef ref) {
-    showDialog(
-      context: context,
-      builder: (_) => const _AddMountDialog(),
-    );
+    showDialog(context: context, builder: (_) => const _AddMountDialog());
   }
 }
 
@@ -157,6 +161,20 @@ class _AddMountDialogState extends ConsumerState<_AddMountDialog> {
           child: Column(
             mainAxisSize: MainAxisSize.min,
             children: [
+              if (!kIsWeb && defaultTargetPlatform == TargetPlatform.macOS) ...[
+                Row(
+                  children: [
+                    const Icon(Icons.info_outline, color: Colors.orange),
+                    const SizedBox(width: 8),
+                    Expanded(
+                      child: Text(
+                        MountDialogStrings(context).text('readOnlyWarning'),
+                      ),
+                    ),
+                  ],
+                ),
+                const SizedBox(height: 12),
+              ],
               TextField(
                 controller: _labelController,
                 decoration: InputDecoration(
@@ -183,8 +201,8 @@ class _AddMountDialogState extends ConsumerState<_AddMountDialog> {
                     child: TextField(
                       controller: _mountPointController,
                       decoration: InputDecoration(
-                        labelText:
-                            MountDialogStrings(context).text('mountPoint'),
+                        labelText: MountDialogStrings(context)
+                            .text('mountPoint'),
                         hintText: '/mnt/mycloud',
                         border: const OutlineInputBorder(),
                         prefixIcon: const Icon(Icons.folder_outlined),
@@ -192,9 +210,11 @@ class _AddMountDialogState extends ConsumerState<_AddMountDialog> {
                     ),
                   ),
                   const SizedBox(width: 8),
-                  _BrowseButton(onSelected: (path) {
-                    setState(() => _mountPointController.text = path);
-                  }),
+                  _BrowseButton(
+                    onSelected: (path) {
+                      setState(() => _mountPointController.text = path);
+                    },
+                  ),
                 ],
               ),
               if (_error != null) ...[
@@ -208,13 +228,20 @@ class _AddMountDialogState extends ConsumerState<_AddMountDialog> {
                   ),
                   child: Row(
                     children: [
-                      const Icon(Icons.error_outline,
-                          color: Colors.red, size: 16),
+                      const Icon(
+                        Icons.error_outline,
+                        color: Colors.red,
+                        size: 16,
+                      ),
                       const SizedBox(width: 6),
                       Expanded(
-                        child: Text(_error!,
-                            style: const TextStyle(
-                                fontSize: 12, color: Colors.red)),
+                        child: Text(
+                          _error!,
+                          style: const TextStyle(
+                            fontSize: 12,
+                            color: Colors.red,
+                          ),
+                        ),
                       ),
                     ],
                   ),
@@ -262,7 +289,9 @@ class _AddMountDialogState extends ConsumerState<_AddMountDialog> {
         : _labelController.text.trim();
 
     try {
-      final entry = await ref.read(mountProvider).mount(
+      final entry = await ref
+          .read(mountProvider)
+          .mount(
             remotePath: remote.isEmpty ? '/' : remote,
             mountPoint: mp,
             label: label,
@@ -270,19 +299,24 @@ class _AddMountDialogState extends ConsumerState<_AddMountDialog> {
       if (!context.mounted) return;
       if (entry == null || entry.status == MountStatus.error) {
         final failure = ref.read(mountProvider).lastMountFailure;
-        setState(() => _error = entry?.errorMessage == null
-            ? (failure == null
-                ? MountDialogStrings(context).text('failed')
-                : localizedTerminalMountError(context, failure))
-            : localizedMountError(context, entry!.errorMessage!));
+        setState(
+          () => _error = entry?.errorMessage == null
+              ? (failure == null
+                    ? MountDialogStrings(context).text('failed')
+                    : localizedTerminalMountError(context, failure))
+              : localizedMountEntryError(context, entry!),
+        );
       } else {
         Navigator.pop(context);
       }
     } catch (e) {
-      if (mounted)
+      if (mounted) {
         setState(() => _error = localizedTerminalMountError(context, e));
+      }
     } finally {
-      if (mounted) setState(() => _mounting = false);
+      if (mounted) {
+        setState(() => _mounting = false);
+      }
     }
   }
 }
@@ -297,7 +331,8 @@ class _MountTile extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final isBusy = entry.status == MountStatus.mounting ||
+    final isBusy =
+        entry.status == MountStatus.mounting ||
         entry.status == MountStatus.unmounting;
 
     return ListTile(
@@ -317,9 +352,12 @@ class _MountTile extends ConsumerWidget {
             Tooltip(
               message: entry.errorMessage == null
                   ? MountDialogStrings(context).text('unknown')
-                  : localizedMountError(context, entry.errorMessage!),
-              child:
-                  const Icon(Icons.info_outline, size: 16, color: Colors.red),
+                  : localizedMountEntryError(context, entry),
+              child: const Icon(
+                Icons.info_outline,
+                size: 16,
+                color: Colors.red,
+              ),
             ),
           if (isBusy)
             const SizedBox(
@@ -353,8 +391,13 @@ class _MountTile extends ConsumerWidget {
   }
 
   Future<void> _remount(
-      BuildContext context, WidgetRef ref, MountEntry entry) async {
-    await ref.read(mountProvider).mount(
+    BuildContext context,
+    WidgetRef ref,
+    MountEntry entry,
+  ) async {
+    await ref
+        .read(mountProvider)
+        .mount(
           remotePath: entry.remotePath,
           mountPoint: entry.mountPoint,
           label: entry.label,
@@ -455,7 +498,9 @@ class _FuseUnavailableBanner extends StatelessWidget {
 }
 
 class _EmptyMountList extends StatelessWidget {
-  const _EmptyMountList();
+  const _EmptyMountList({required this.showExperimental});
+
+  final bool showExperimental;
 
   @override
   Widget build(BuildContext context) {
@@ -468,7 +513,8 @@ class _EmptyMountList extends StatelessWidget {
           Text(MountDialogStrings(context).text('empty')),
           const SizedBox(height: 4),
           Text(
-            MountDialogStrings(context).text('bridgeMissing'),
+            MountDialogStrings(context)
+                .text(showExperimental ? 'readOnlyWarning' : 'bridgeMissing'),
             style: const TextStyle(fontSize: 12, color: Colors.grey),
             textAlign: TextAlign.center,
           ),
@@ -507,9 +553,7 @@ class _Banner extends StatelessWidget {
         children: [
           Icon(icon, color: iconColor, size: 18),
           const SizedBox(width: 8),
-          Expanded(
-            child: Text(message, style: const TextStyle(fontSize: 12)),
-          ),
+          Expanded(child: Text(message, style: const TextStyle(fontSize: 12))),
         ],
       ),
     );

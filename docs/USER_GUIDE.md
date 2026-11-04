@@ -508,9 +508,11 @@ Select files or folders → right-click → **Create ZIP**. CrispCloud compresse
 
 ## FUSE Mounted Drives
 
-Mounted drives are not available in this build. The native bridge needed to connect a cloud provider to a filesystem mount is not yet bundled. Installing a FUSE runtime alone does not enable this feature.
+macOS builds include an experimental native bridge for macFUSE and FUSE-T. It is read-only and has not yet been validated with a working live mount. The app reports an error unless the mount appears in macOS's mount table. Linux and Windows mounts remain unavailable.
 
-When implemented, mounted drives will also require a compatible runtime:
+The bridge currently downloads an entire cloud file into memory on first read, even if an app asks for only a few bytes. Files over 64 MiB are rejected. If a provider does not report the size in advance, the download may briefly exceed that memory limit before it is rejected.
+
+Mounted drives require a compatible runtime:
 - macOS: macFUSE or FUSE-T
 - Windows: WinFsp
 - Linux: FUSE (libfuse / fusermount3)

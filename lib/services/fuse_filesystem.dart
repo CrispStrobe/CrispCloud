@@ -30,6 +30,7 @@
 import 'dart:async';
 import 'dart:io';
 import 'dart:typed_data';
+import 'dart:convert';
 
 import 'package:path/path.dart' as p;
 
@@ -116,6 +117,7 @@ abstract class FuseOpcode {
   static const release = 10; // close / flush
   static const truncate = 11;
   static const statfs = 12;
+  static const open = 13;
 }
 
 // ---------------------------------------------------------------------------
@@ -124,8 +126,10 @@ abstract class FuseOpcode {
 
 class FuseFilesystem {
   static const _log = Log('FuseFilesystem');
+  static const maxReadFileBytes = 64 * 1024 * 1024;
 
   final CloudStorageClient client;
+  final bool readOnly;
 
   /// Root path on the cloud provider exposed through this mount.
   final String remotePath;
@@ -140,12 +144,17 @@ class FuseFilesystem {
   int _nextHandle = 1;
 
   ServerSocket? _server;
+  Directory? _socketDirectory;
+  final Completer<String> _ready = Completer<String>();
   bool _disposed = false;
 
   /// Unix socket / named-pipe path for IPC with the helper process.
-  late final String _socketPath;
+  String _socketPath = '';
 
-  FuseFilesystem({required this.client, required this.remotePath});
+  FuseFilesystem({required this.client, required this.remotePath,
+      this.readOnly = true});
+
+  Future<String> get ready => _ready.future;
 
   // ---------------------------------------------------------------------------
   // Lifecycle
@@ -155,18 +164,29 @@ class FuseFilesystem {
   ///
   /// This method runs until [dispose] is called.
   Future<void> serveRequests() async {
-    _socketPath = _buildSocketPath();
     try {
+      if (Platform.isWindows) {
+        _socketPath = r'\\.\pipe\crispcloud_fuse_' + _uniqueSuffix();
+      } else {
+        final tempRoot = Platform.isMacOS ? Directory('/tmp') : Directory.systemTemp;
+        _socketDirectory = await tempRoot.createTemp('crispcloud_fuse_');
+        _socketPath = p.join(_socketDirectory!.path, 'ipc.sock');
+        if (utf8.encode(_socketPath).length >= 104) {
+          throw StateError('FUSE IPC socket path exceeds the Unix socket limit');
+        }
+      }
       _server = await ServerSocket.bind(
         InternetAddress(_socketPath, type: InternetAddressType.unix),
         0,
       );
       _log.info('FuseFilesystem IPC socket: $_socketPath');
+      _ready.complete(_socketPath);
       await for (final socket in _server!) {
         if (_disposed) break;
         unawaited(_handleConnection(socket));
       }
     } catch (e, st) {
+      if (!_ready.isCompleted) _ready.completeError(e, st);
       if (!_disposed) {
         _log.error('FuseFilesystem IPC server error', e, st);
       }
@@ -185,6 +205,7 @@ class FuseFilesystem {
     try {
       final f = File(_socketPath);
       if (await f.exists()) await f.delete();
+      await _socketDirectory?.delete();
     } catch (_) {}
   }
 
@@ -224,6 +245,14 @@ class FuseFilesystem {
     Uint8List payload,
   ) async {
     try {
+      if (readOnly && const {
+        FuseOpcode.write, FuseOpcode.create, FuseOpcode.mkdir,
+        FuseOpcode.unlink, FuseOpcode.rmdir, FuseOpcode.rename,
+        FuseOpcode.truncate,
+      }.contains(opcode)) {
+        _sendError(socket, reqId, errno: 30); // EROFS
+        return;
+      }
       Uint8List responsePayload;
       switch (opcode) {
         case FuseOpcode.getattr:
@@ -262,11 +291,16 @@ class FuseFilesystem {
         case FuseOpcode.statfs:
           responsePayload = _opStatfs();
           break;
+        case FuseOpcode.open:
+          responsePayload = await _opOpen(payload);
+          break;
         default:
           _sendError(socket, reqId, errno: 38); // ENOSYS
           return;
       }
       _sendResponse(socket, reqId, payload: responsePayload);
+    } on _FuseError catch (e) {
+      _sendError(socket, reqId, errno: e.errno);
     } catch (e, st) {
       _log.error('FUSE op $opcode failed', e, st);
       _sendError(socket, reqId, errno: 5); // EIO
@@ -285,6 +319,12 @@ class FuseFilesystem {
     if (path == '/' || path.isEmpty) {
       // Root is always a directory.
       return _encodeAttr(isDir: true, size: 0);
+    }
+
+    for (final pending in _writeBuffers.values) {
+      if (pending.remotePath == remoteFull) {
+        return _encodeAttr(isDir: false, size: pending.fileSize);
+      }
     }
 
     // Look in the parent directory's cached listing.
@@ -325,6 +365,20 @@ class FuseFilesystem {
 
     final data = await _satisfyRead(buf, readOffset, readLen);
     return data;
+  }
+
+  Future<Uint8List> _opOpen(Uint8List payload) async {
+    final path = _decodeString(payload, 0);
+    final flags = _readUint32(payload, 4 + utf8.encode(path).length);
+    if (flags & 3 != 0) throw const _FuseError(30); // EROFS for existing files
+    final info = await client.resolvePath(_fullRemotePath(path));
+    if (info == null) throw const _FuseError(2);
+    if (info['size'] is num && (info['size'] as num) > maxReadFileBytes) {
+      throw const _FuseError(27); // EFBIG
+    }
+    final handleId = _nextHandle++;
+    _readBuffers[handleId] = _ReadBuffer(_fullRemotePath(path));
+    return _encodeUint32(handleId);
   }
 
   /// write → buffer locally.
@@ -387,7 +441,7 @@ class FuseFilesystem {
   /// rename → cloud rename/move.
   Future<Uint8List> _opRename(Uint8List payload) async {
     int off = 0;
-    final oldPath = _decodeString(payload, off); off += 4 + oldPath.length;
+    final oldPath = _decodeString(payload, off); off += 4 + utf8.encode(oldPath).length;
     final newPath = _decodeString(payload, off);
 
     final oldRemote = _fullRemotePath(oldPath);
@@ -474,6 +528,9 @@ class FuseFilesystem {
     // since the CloudStorageClient API does not expose range fetches).
     try {
       final rawBytes = await client.downloadFileBytes(buf.remotePath);
+      if (rawBytes.length > maxReadFileBytes) {
+        throw const _FuseError(27); // EFBIG
+      }
       // Cache the entire file in the read-ahead buffer.
       buf.bufferOffset = 0;
       buf.data = rawBytes;
@@ -482,6 +539,8 @@ class FuseFilesystem {
       final start = offset.clamp(0, rawBytes.length);
       final end = (offset + length).clamp(0, rawBytes.length);
       return Uint8List.fromList(rawBytes.sublist(start, end));
+    } on _FuseError {
+      rethrow;
     } catch (e) {
       _log.error('Read-ahead fetch failed at $offset+${_ReadBuffer.chunkSize}', e);
       throw const _FuseError(5); // EIO
@@ -494,7 +553,7 @@ class FuseFilesystem {
 
   Future<void> _flushHandle(int handleId) async {
     final wbuf = _writeBuffers[handleId];
-    if (wbuf == null || wbuf.chunks.isEmpty) return;
+    if (wbuf == null) return;
 
     try {
       final assembled = wbuf.assemble();
@@ -701,22 +760,12 @@ class FuseFilesystem {
   /// Decode a length-prefixed UTF-8 string: [4B length][bytes...].
   String _decodeString(List<int> buf, int offset) {
     final len = _readUint32(buf, offset);
-    return String.fromCharCodes(buf.sublist(offset + 4, offset + 4 + len));
+    return utf8.decode(buf.sublist(offset + 4, offset + 4 + len));
   }
 
   // ---------------------------------------------------------------------------
   // Socket path
   // ---------------------------------------------------------------------------
-
-  String _buildSocketPath() {
-    if (Platform.isWindows) {
-      // Windows named pipe
-      return r'\\.\pipe\crispcloud_fuse_' + _uniqueSuffix();
-    }
-    // Unix domain socket in a temp directory.
-    final tmp = Directory.systemTemp.path;
-    return p.join(tmp, 'crispcloud_fuse_${_uniqueSuffix()}.sock');
-  }
 
   String _uniqueSuffix() =>
       DateTime.now().millisecondsSinceEpoch.toRadixString(36);
