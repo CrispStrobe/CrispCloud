@@ -10,6 +10,7 @@ import threading
 import paramiko
 
 root = Path(sys.argv[1]).resolve()
+interactive = len(sys.argv) > 2 and sys.argv[2] == 'interactive'
 key = paramiko.RSAKey.generate(2048)
 listener = socket.socket()
 listener.bind(('127.0.0.1', 0))
@@ -25,7 +26,12 @@ class Auth(paramiko.ServerInterface):
             (root / 'auth-count').write_text(str(auth_requests))
         return paramiko.AUTH_SUCCESSFUL if username == 'reader' and password == 'fixture-password' else paramiko.AUTH_FAILED
     def get_allowed_auths(self, username):
-        return 'password'
+        return 'keyboard-interactive' if interactive else 'password'
+    def check_auth_interactive(self, username, submethods):
+        self.username = username
+        return paramiko.InteractiveQuery('', '', ('Password: ', False))
+    def check_auth_interactive_response(self, responses):
+        return self.check_auth_password(self.username, responses[0] if len(responses) == 1 else '')
     def check_channel_request(self, kind, channel_id):
         return paramiko.OPEN_SUCCEEDED if kind == 'session' else paramiko.OPEN_FAILED_ADMINISTRATIVELY_PROHIBITED
 

@@ -15,6 +15,8 @@ import 'azure_connection_dialog.dart';
 import 'b2_connection_dialog.dart';
 import 'proxy_settings_dialog.dart';
 import '../l10n/app_localizations.dart';
+import '../l10n/connection_strings.dart';
+import '../services/nextcloud_client_adapter.dart';
 
 class ConnectionDialog extends ConsumerStatefulWidget {
   const ConnectionDialog({super.key});
@@ -977,12 +979,12 @@ class _ConnectionDialogState extends ConsumerState<ConnectionDialog> {
               // Nextcloud: Server URL
               TextField(
                 controller: _nextcloudServerUrlController,
-                decoration: const InputDecoration(
-                  labelText: 'Server URL',
+                decoration: InputDecoration(
+                  labelText: AppLocalizations.of(context)!.serverUrl,
                   hintText: 'https://nextcloud.example.com',
-                  border: OutlineInputBorder(),
-                  prefixIcon: Icon(Icons.cloud_outlined),
-                  helperText: 'Your Nextcloud server address',
+                  border: const OutlineInputBorder(),
+                  prefixIcon: const Icon(Icons.cloud_outlined),
+                  helperText: ConnectionStrings.of(context).serverAddress,
                 ),
                 enabled: !_isLoading,
               ),
@@ -1016,10 +1018,16 @@ class _ConnectionDialogState extends ConsumerState<ConnectionDialog> {
             if (!isS3 && !isOAuth) ...[
               TextField(
                 controller: _passwordController,
-                decoration: const InputDecoration(
-                  labelText: 'Password',
-                  border: OutlineInputBorder(),
-                  prefixIcon: Icon(Icons.lock_outline),
+                decoration: InputDecoration(
+                  labelText: isNextcloud
+                      ? ConnectionStrings.of(context).passwordOrAppPassword
+                      : AppLocalizations.of(context)!.password,
+                  helperText: isNextcloud
+                      ? ConnectionStrings.of(context).appPasswordHelp
+                      : null,
+                  helperMaxLines: 2,
+                  border: const OutlineInputBorder(),
+                  prefixIcon: const Icon(Icons.lock_outline),
                 ),
                 obscureText: true,
                 enabled: !_isLoading,
@@ -1375,7 +1383,9 @@ class _ConnectionDialogState extends ConsumerState<ConnectionDialog> {
     } catch (e) {
       if (mounted) {
         setState(() {
-          _error = e.toString().replaceAll('Exception:', '').trim();
+          _error = e is NextcloudAuthenticationException
+              ? ConnectionStrings.of(context).authenticationFailed
+              : e.toString().replaceAll('Exception:', '').trim();
           _isLoading = false;
         });
       }

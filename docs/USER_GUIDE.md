@@ -37,8 +37,8 @@ CrispCloud is an open-source, cross-platform cloud file manager. It connects to 
 
 Download the latest release for your platform from the GitHub Releases page:
 
-- **macOS**: `.dmg` disk image (macFUSE optional for mounted drives)
-- **Windows**: `.exe` installer (WinFsp optional for mounted drives)
+- **macOS**: `.dmg` disk image
+- **Windows**: `.exe` installer
 - **Linux**: `.AppImage`, `.deb`, or `.rpm`
 - **Android**: `.apk` or Play Store
 - **iOS**: App Store
@@ -508,27 +508,12 @@ Select files or folders → right-click → **Create ZIP**. CrispCloud compresse
 
 ## FUSE Mounted Drives
 
-On desktop platforms, CrispCloud can mount a remote connection as a local drive letter (Windows) or mount point (macOS/Linux). Any application on your system can then read and write the cloud storage as if it were a local disk.
+Mounted drives are not available in this build. The native bridge needed to connect a cloud provider to a filesystem mount is not yet bundled. Installing a FUSE runtime alone does not enable this feature.
 
-**Requirements:**
+When implemented, mounted drives will also require a compatible runtime:
 - macOS: macFUSE or FUSE-T
 - Windows: WinFsp
 - Linux: FUSE (libfuse / fusermount3)
-
-### Mounting
-
-1. Connect to a remote provider.
-2. Go to **Tools → Mount Drive** or press **Ctrl+Shift+M**.
-3. Choose a mount point or drive letter.
-4. Click **Mount**. The drive appears in your OS file manager within seconds.
-
-### Performance
-
-Mounted drives use a directory listing cache (30-second TTL) and 256 KB read-ahead to minimize round-trips. Write-back is performed when a file handle is closed.
-
-### Unmount
-
-Right-click the mount in the sidebar → **Unmount**, or use your OS's eject controls. All mounts are unmounted automatically when CrispCloud closes.
 
 ---
 

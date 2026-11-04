@@ -17,11 +17,27 @@ import 'dart:typed_data';
 
 import 'package:flutter/foundation.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
+import 'package:crisp_cloud/services/cloud_storage_interface.dart';
 import 'package:crisp_cloud/services/fuse_mount_service.dart';
 import 'package:crisp_cloud/services/fuse_helper_script.dart';
 
+class _AvailableFuseMountService extends FuseMountService {
+  @override
+  Future<String?> checkFuseAvailability() async => null;
+}
+
+class _TestCloudClient implements CloudStorageClient {
+  @override
+  String get providerName => 'Test';
+
+  @override
+  dynamic noSuchMethod(Invocation invocation) => super.noSuchMethod(invocation);
+}
+
 void main() {
+  TestWidgetsFlutterBinding.ensureInitialized();
   // ---------------------------------------------------------------------------
   // Platform support guard
   // ---------------------------------------------------------------------------
@@ -151,6 +167,22 @@ void main() {
   // ---------------------------------------------------------------------------
 
   group('FuseMountService state', () {
+    test('does not report a mount when the native bridge is absent', () async {
+      if (!FuseMountService.isSupported) return;
+      SharedPreferences.setMockInitialValues({});
+      addTearDown(() => SharedPreferences.setMockInitialValues({}));
+      final directory = await Directory.systemTemp.createTemp('mount_test_');
+      addTearDown(() => directory.delete(recursive: true));
+      final service = _AvailableFuseMountService();
+      final mount = await service.mount(
+        client: _TestCloudClient(),
+        remotePath: '/',
+        mountPoint: directory.path,
+      );
+      expect(mount.status, MountStatus.error);
+      expect(mount.errorMessage, contains('native FUSE bridge'));
+      expect(service.isMounted(directory.path), isFalse);
+    });
     test('getMounts is empty initially', () {
       final svc = FuseMountService();
       expect(svc.getMounts(), isEmpty);

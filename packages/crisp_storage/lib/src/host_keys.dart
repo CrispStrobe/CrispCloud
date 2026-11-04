@@ -4,16 +4,18 @@ import 'dart:typed_data';
 import 'package:dartssh2/dartssh2.dart';
 import 'remote_client.dart';
 
-typedef HostKeyPrompt = Future<bool> Function(
-    String endpoint, String fingerprint);
+typedef HostKeyPrompt =
+    Future<bool> Function(String endpoint, String fingerprint);
 
 class SftpHostKeyException extends RemoteException {
   final String fingerprint;
   final String? expected, endpoint;
   SftpHostKeyException(this.fingerprint, {this.expected, this.endpoint})
-      : super(expected == null
+    : super(
+        expected == null
             ? 'Verify this server’s SSH host key before connecting: $fingerprint'
-            : 'SSH host key changed for ${endpoint ?? "this server"}. Expected $expected; received $fingerprint.');
+            : 'SSH host key changed for ${endpoint ?? "this server"}. Expected $expected; received $fingerprint.',
+      );
 }
 
 /// Endpoint-scoped SSH trust, independent of account passwords and Flutter.
@@ -30,16 +32,22 @@ class SshKnownHosts {
     return Map<String, String>.from(jsonDecode(raw) as Map);
   }
 
-  Future<bool> verify(String endpoint, String fingerprint,
-      {HostKeyPrompt? prompt}) async {
+  Future<bool> verify(
+    String endpoint,
+    String fingerprint, {
+    HostKeyPrompt? prompt,
+  }) async {
     if (!RegExp(r'^SHA256:[A-Za-z0-9+/]{43}$').hasMatch(fingerprint)) {
       throw const FormatException('Invalid SSH SHA256 fingerprint');
     }
     final known = (await _load())[endpoint];
     if (known == fingerprint) return true;
     if (known != null) {
-      throw SftpHostKeyException(fingerprint,
-          expected: known, endpoint: endpoint);
+      throw SftpHostKeyException(
+        fingerprint,
+        expected: known,
+        endpoint: endpoint,
+      );
     }
     if (prompt == null || !await prompt(endpoint, fingerprint)) {
       throw SftpHostKeyException(fingerprint, endpoint: endpoint);
@@ -48,8 +56,11 @@ class SshKnownHosts {
       final latest = await _load();
       final old = latest[endpoint];
       if (old != null && old != fingerprint) {
-        throw SftpHostKeyException(fingerprint,
-            expected: old, endpoint: endpoint);
+        throw SftpHostKeyException(
+          fingerprint,
+          expected: old,
+          endpoint: endpoint,
+        );
       }
       latest[endpoint] = fingerprint;
       await write(jsonEncode(latest));
@@ -70,20 +81,40 @@ Future<SSHClient> openVerifiedSsh(
   void Function(SSHClient)? onCreated,
 }) async {
   Object? verificationError;
-  final client = SSHClient(socket,
-      username: username,
-      identities: identities,
-      handshakeTimeout: const Duration(seconds: 15),
-      authTimeout: const Duration(seconds: 15),
-      onPasswordRequest: password == null ? null : () => password,
-      onVerifyHostKey: (type, key) async {
-    try {
-      return await verify(type, key);
-    } catch (error) {
-      verificationError = error;
-      return false;
-    }
-  });
+  final client = SSHClient(
+    socket,
+    username: username,
+    identities: identities,
+    handshakeTimeout: const Duration(seconds: 15),
+    authTimeout: const Duration(seconds: 15),
+    onPasswordRequest: password == null ? null : () => password,
+    // Some SSH servers expose password authentication only through PAM's
+    // keyboard-interactive method. Never answer arbitrary challenges (such as
+    // an OTP or password change) with the saved password.
+    onUserInfoRequest: password == null
+        ? null
+        : (request) {
+            if (request.prompts.isEmpty) return <String>[];
+            if (request.prompts.length != 1) return null;
+            final prompt = request.prompts.single;
+            if (prompt.echo ||
+                !RegExp(
+                  r'^\s*password\s*:\s*$',
+                  caseSensitive: false,
+                ).hasMatch(prompt.promptText)) {
+              return null;
+            }
+            return [password];
+          },
+    onVerifyHostKey: (type, key) async {
+      try {
+        return await verify(type, key);
+      } catch (error) {
+        verificationError = error;
+        return false;
+      }
+    },
+  );
   unawaited(client.done.catchError((Object _) {}));
   onCreated?.call(client);
   try {

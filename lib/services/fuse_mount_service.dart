@@ -15,7 +15,6 @@
 // Windows) only. Calling any mount operation on mobile/web returns an
 // UnsupportedError.
 
-import 'dart:async';
 import 'dart:io';
 
 import 'package:flutter/foundation.dart';
@@ -24,7 +23,6 @@ import 'package:shared_preferences/shared_preferences.dart';
 
 import 'cloud_storage_interface.dart';
 import 'fuse_filesystem.dart';
-import 'fuse_helper_script.dart';
 import 'log_service.dart';
 
 // ---------------------------------------------------------------------------
@@ -132,7 +130,7 @@ class FuseMountService {
   /// Detects whether the platform FUSE library is installed and runnable.
   ///
   /// On Linux this checks for `fusermount3` or `fusermount`.
-  /// On macOS it checks for `mount_macfuse` or `/Library/Filesystems/macfuse.fs`.
+  /// On macOS it checks for macFUSE or the FUSE-T runtime library.
   /// On Windows it checks for the WinFsp launcher (`winfsp-launcher`).
   ///
   /// Returns null if available, or a human-readable error string if not.
@@ -165,14 +163,17 @@ class FuseMountService {
   Future<String?> _checkMacFuse() async {
     // macFUSE installs a kext; check for the filesystem bundle.
     if (await Directory('/Library/Filesystems/macfuse.fs').exists()) return null;
-    // FUSE-T alternative.
-    if (await File('/Library/Filesystems/fuse-t.fs/Contents/MacOS/fuse-t').exists()) {
-      return null;
+    // FUSE-T installs its libfuse-compatible runtime in /usr/local/lib.
+    for (final path in [
+      '/usr/local/lib/libfuse-t.dylib',
+      '/opt/homebrew/lib/libfuse-t.dylib',
+    ]) {
+      if (await File(path).exists()) return null;
     }
     final result = await Process.run('which', ['mount_macfuse']);
     if (result.exitCode == 0) return null;
-    return 'macFUSE not found. Install from https://osxfuse.github.io '
-        'or via Homebrew: brew install macfuse';
+    return 'macFUSE or FUSE-T not found. Install macFUSE from '
+        'https://osxfuse.github.io or FUSE-T from https://www.fuse-t.org/.';
   }
 
   Future<String?> _checkWinFsp() async {
@@ -396,45 +397,10 @@ class FuseMountService {
   // ---------------------------------------------------------------------------
 
   Future<void> _startBridge(MountEntry entry, CloudStorageClient client) async {
-    // Create the in-process FUSE filesystem bridge.
-    final fs = FuseFilesystem(client: client, remotePath: entry.remotePath);
-    _filesystems[entry.mountPoint] = fs;
-
-    // Write the platform-specific helper script.
-    final scriptPath = await FuseHelperScript.writeScript(entry.mountPoint);
-    _log.debug('Helper script written to $scriptPath');
-
-    // Spawn the helper process that performs the actual FUSE mount.
-    final process = await _spawnHelper(scriptPath, entry.mountPoint);
-    _processes[entry.mountPoint] = process;
-
-    // Monitor the process in the background.
-    unawaited(process.exitCode.then((code) {
-      if (code != 0) {
-        _log.warn('FUSE helper exited with code $code for ${entry.mountPoint}');
-        if (_mounts[entry.mountPoint]?.status == MountStatus.mounted) {
-          _setError(entry.mountPoint,
-              'FUSE helper process exited unexpectedly (code $code).');
-        }
-      }
-    }));
-
-    // Give the helper a brief moment to establish the mount.
-    await Future.delayed(const Duration(milliseconds: 800));
-
-    // Start the filesystem event loop in a separate zone.
-    unawaited(fs.serveRequests());
-  }
-
-  Future<Process> _spawnHelper(String scriptPath, String mountPoint) async {
-    if (Platform.isWindows) {
-      return Process.start('cmd', ['/c', scriptPath, mountPoint],
-          mode: ProcessStartMode.detachedWithStdio);
-    } else {
-      await Process.run('chmod', ['+x', scriptPath]);
-      return Process.start('/bin/sh', [scriptPath, mountPoint],
-          mode: ProcessStartMode.detachedWithStdio);
-    }
+    // No native bridge is bundled yet. The former helper merely slept in a
+    // stub loop, causing the UI to report a mount that never existed.
+    throw StateError('This build does not include the native FUSE bridge '
+        'required to mount drives.');
   }
 
   Future<void> _stopBridge(String mountPoint) async {

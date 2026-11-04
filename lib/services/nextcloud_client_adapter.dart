@@ -25,6 +25,16 @@ import 'log_service.dart';
 import 'nextcloud_config_service.dart';
 import 'secure_storage_service.dart';
 
+/// Authentication was rejected by the Nextcloud server.
+class NextcloudAuthenticationException implements Exception {
+  const NextcloudAuthenticationException();
+
+  @override
+  String toString() => 'Authentication failed. Check your username and password. '
+      'If your account uses two-factor authentication, create an app password '
+      'in Nextcloud security settings.';
+}
+
 class NextcloudClientAdapter extends CloudStorageClient {
   static const _log = Log('NextcloudClient');
 
@@ -100,7 +110,7 @@ class NextcloudClientAdapter extends CloudStorageClient {
       final testUri = _davUri(serverUrl, username, '/');
       final resp = await _propfind(testUri, username, password, depth: '0');
       if (resp.statusCode == 401) {
-        throw Exception('Authentication failed: invalid username or password');
+        throw const NextcloudAuthenticationException();
       }
       if (resp.statusCode != 207) {
         throw Exception('Connection test failed (HTTP ${resp.statusCode})');
@@ -1050,10 +1060,18 @@ class NextcloudClientAdapter extends CloudStorageClient {
 
     if (username.isEmpty || serverUrl.isEmpty) return null;
 
+    final uri = Uri.tryParse(serverUrl);
+    if (uri == null ||
+        (uri.scheme != 'http' && uri.scheme != 'https') ||
+        uri.host.isEmpty ||
+        uri.userInfo.isNotEmpty ||
+        uri.hasQuery ||
+        uri.hasFragment) {
+      return null;
+    }
+
     // Normalise: strip trailing slash
-    final normUrl = serverUrl.endsWith('/')
-        ? serverUrl.substring(0, serverUrl.length - 1)
-        : serverUrl;
+    final normUrl = serverUrl.replaceFirst(RegExp(r'/+$'), '');
 
     return (username, normUrl);
   }
