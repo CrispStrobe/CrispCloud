@@ -10,6 +10,8 @@ import 'dart:io';
 
 import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:flutter/material.dart';
+
+import '../l10n/provider_operation_strings.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:path/path.dart' as p;
@@ -325,7 +327,7 @@ class _FileEditorPageState extends ConsumerState<_FileEditorPage> {
       _log.warn('operation failed', e);
       if (!mounted) return;
       setState(() {
-        _error = FileEditorStrings(context).value('loadError', e);
+        _error = FileEditorStrings(context).value('loadError', localizedProviderError(context, e));
         _loading = false;
       });
     }
@@ -391,7 +393,7 @@ class _FileEditorPageState extends ConsumerState<_FileEditorPage> {
       setState(() => _saving = false);
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
-          content: Text(FileEditorStrings(context).value('saveError', e)),
+          content: Text(FileEditorStrings(context).value('saveError', localizedProviderError(context, e))),
           backgroundColor: Theme.of(context).colorScheme.error,
         ),
       );

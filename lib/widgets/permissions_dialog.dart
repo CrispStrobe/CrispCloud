@@ -4,6 +4,8 @@
 // Allows changing chmod (rwxrwxrwx) and chown (user:group).
 
 import 'package:flutter/material.dart';
+
+import '../l10n/provider_operation_strings.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../l10n/permissions_strings.dart';
@@ -133,7 +135,7 @@ class _PermissionsDialogState extends ConsumerState<_PermissionsDialog> {
         child: _loading
             ? const Center(child: CircularProgressIndicator())
             : _error != null
-                ? Center(child: Text(strings.format(_error!, {'error': _errorDetail}), style: TextStyle(color: theme.colorScheme.error)))
+                ? Center(child: Text(strings.format(_error!, {'error': localizedProviderError(context, _errorDetail ?? '')}), style: TextStyle(color: theme.colorScheme.error)))
                 : Column(
                     mainAxisSize: MainAxisSize.min,
                     crossAxisAlignment: CrossAxisAlignment.start,
@@ -298,7 +300,7 @@ class _PermissionsDialogState extends ConsumerState<_PermissionsDialog> {
       if (mounted) {
         setState(() => _saving = false);
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text(strings.format('Failed to set permissions: {error}', {'error': e}))),
+          SnackBar(content: Text(strings.format('Failed to set permissions: {error}', {'error': localizedProviderError(context, e)}))),
         );
       }
     }

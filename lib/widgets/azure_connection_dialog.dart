@@ -7,6 +7,8 @@
 //   3. Connection String — paste the full Azure connection string
 
 import 'package:flutter/material.dart';
+
+import '../l10n/provider_operation_strings.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../providers/core_providers.dart';
@@ -231,7 +233,7 @@ class _AzureConnectionDialogState
       });
     } catch (e) {
       setState(() {
-        _error = _text('formatFailed', {'error': e.toString().replaceAll('Exception:', '').trim()});
+        _error = _text('formatFailed', {'error': localizedProviderError(context, e).replaceAll('Exception:', '').trim()});
         _isTesting = false;
       });
     }
@@ -261,7 +263,7 @@ class _AzureConnectionDialogState
     } catch (e) {
       if (mounted) {
         setState(() {
-          _error = e.toString().replaceAll('Exception:', '').trim();
+          _error = localizedProviderError(context, e).replaceAll('Exception:', '').trim();
           _isLoading = false;
         });
       }

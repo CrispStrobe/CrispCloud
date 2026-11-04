@@ -11,6 +11,8 @@
 // Buttons: Cancel | Test Connection | Connect
 
 import 'package:flutter/material.dart';
+
+import '../l10n/provider_operation_strings.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../providers/core_providers.dart';
@@ -174,7 +176,7 @@ class _HetznerConnectionDialogState
       if (!mounted) return;
       setState(() {
         _error =
-            CloudSetupStrings(context).text('testFailed', {'error': e.toString().replaceAll('Exception:', '').trim()});
+            CloudSetupStrings(context).text('testFailed', {'error': localizedProviderError(context, e).replaceAll('Exception:', '').trim()});
         _isTesting = false;
       });
     }
@@ -210,7 +212,7 @@ class _HetznerConnectionDialogState
     } catch (e) {
       if (mounted) {
         setState(() {
-          _error = e.toString().replaceAll('Exception:', '').trim();
+          _error = localizedProviderError(context, e).replaceAll('Exception:', '').trim();
           _isLoading = false;
         });
       }

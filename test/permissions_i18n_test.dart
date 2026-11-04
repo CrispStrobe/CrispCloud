@@ -7,11 +7,31 @@ import 'package:crisp_cloud/providers/providers.dart';
 import 'package:crisp_cloud/services/cloud_storage_interface.dart';
 import 'package:crisp_cloud/services/filen_config_service.dart';
 import 'package:crisp_cloud/services/secure_storage_service.dart';
+import 'package:crisp_cloud/services/sftp_client_adapter.dart';
+import 'package:crisp_cloud/services/sftp_operation_failure.dart';
+import 'package:dartssh2/dartssh2.dart';
 import 'package:crisp_cloud/widgets/permissions_dialog.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+
+class _FailingSftp extends SFTPClientAdapter {
+  _FailingSftp() : super(config: null);
+  @override
+  Future<SftpFileAttrs> getAttributes(String path) async =>
+      throw SftpOperationException(SftpOperationCode.chmodFailed,
+          'chmod failed: denied', {'output': 'denied'});
+}
+
+class _SftpAuth extends AuthNotifier {
+  _SftpAuth(Ref ref, FilenConfigService config, InMemorySecureStorage storage)
+      : super(ref, initialProvider: CloudProvider.filen, config: config,
+            configPath: Directory.systemTemp.path, secureStorage: storage);
+  final _sftp = _FailingSftp();
+  @override
+  CloudStorageClient get client => _sftp;
+}
 
 void main() {
   test('permissions translations preserve keys and placeholders', () {
@@ -32,6 +52,29 @@ void main() {
         PermissionsStrings.forLanguage('de').format('Permissions — {name}',
             {'name': '{error}.txt', 'error': 'not a replacement'}),
         'Berechtigungen — {error}.txt');
+  });
+
+  testWidgets('permissions error translates a typed SFTP cause', (tester) async {
+    SharedPreferences.setMockInitialValues({});
+    final storage = InMemorySecureStorage();
+    final config = FilenConfigService(
+        configPath: Directory.systemTemp.path, secureStorage: storage);
+    await tester.pumpWidget(ProviderScope(
+      overrides: [authProvider.overrideWith((ref) => _SftpAuth(ref, config, storage))],
+      child: MaterialApp(
+        locale: const Locale('de'),
+        supportedLocales: AppLocalizations.supportedLocales,
+        localizationsDelegates: AppLocalizations.localizationsDelegates,
+        home: Scaffold(body: Consumer(builder: (context, ref, child) => TextButton(
+          onPressed: () => showPermissionsDialog(context, ref,
+              FileItem(name: 'a.txt', isFolder: false)),
+          child: const Text('Open'),
+        ))),
+      ),
+    ));
+    await tester.tap(find.text('Open'));
+    await tester.pumpAndSettle();
+    expect(find.textContaining('chmod fehlgeschlagen: denied'), findsOneWidget);
   });
 
   testWidgets('unsupported-provider error is shown in the selected language',

@@ -6,6 +6,8 @@
 import 'dart:io';
 
 import 'package:flutter/material.dart';
+
+import '../l10n/provider_operation_strings.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../l10n/diff_viewer_strings.dart';
@@ -114,7 +116,7 @@ class _DiffViewerDialogState extends ConsumerState<_DiffViewerDialog> {
       _log.error('Failed to load files for diff', e);
       if (mounted) {
         setState(() {
-          _error = DiffViewerStrings(context).value('loadError', e);
+          _error = DiffViewerStrings(context).value('loadError', localizedProviderError(context, e));
           _loading = false;
         });
       }
