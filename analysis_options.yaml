@@ -10,6 +10,13 @@ analyzer:
     # Those suites run in the quds_office_suite fork, not in the app analysis.
     - packages/quds_office_engine/test/**
     - packages/quds_office_editor/test/**
+    - build/**
+    - android/**
+    - ios/**
+    - web/**
+    - windows/**
+    - macos/**
+    - linux/**
   errors:
     missing_return: error
     dead_code: warning

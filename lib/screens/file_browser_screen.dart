@@ -1783,7 +1783,7 @@ class _FileBrowserScreenState extends ConsumerState<FileBrowserScreen> {
                 Navigator.pop(context);
                 showDialog(
                   context: context,
-                  builder: (_) => AlertDialog(
+                  builder: (dialogContext) => AlertDialog(
                     title: const Text('Toolbar Customization'),
                     content: const Text(
                       'Toolbar button visibility and order can be configured '
@@ -1792,7 +1792,7 @@ class _FileBrowserScreenState extends ConsumerState<FileBrowserScreen> {
                     ),
                     actions: [
                       TextButton(
-                        onPressed: () => Navigator.pop(_),
+                        onPressed: () => Navigator.pop(dialogContext),
                         child: const Text('Close'),
                       ),
                     ],
