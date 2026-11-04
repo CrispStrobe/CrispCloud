@@ -207,7 +207,7 @@ class AppLocalizationsPt extends AppLocalizations {
   String get password => 'Senha';
 
   @override
-  String get host => 'Host';
+  String get host => 'Servidor';
 
   @override
   String get port => 'Porta';
@@ -237,7 +237,7 @@ class AppLocalizationsPt extends AppLocalizations {
   String get region => 'Região';
 
   @override
-  String get bucket => 'Bucket';
+  String get bucket => 'Depósito';
 
   @override
   String get twoFactorCode => 'Código 2FA';
@@ -432,7 +432,7 @@ class AppLocalizationsPt extends AppLocalizations {
   String get darkTheme => 'Escuro';
 
   @override
-  String get oledTheme => 'OLED Black';
+  String get oledTheme => 'Preto OLED';
 
   @override
   String get nordTheme => 'Nord';
@@ -527,65 +527,65 @@ class AppLocalizationsPt extends AppLocalizations {
   String get compareProviders => 'Comparar provedores';
 
   @override
-  String get singlePanel => 'Single Panel';
+  String get singlePanel => 'Um painel';
 
   @override
-  String get dualPanel => 'Dual Panel';
+  String get dualPanel => 'Dois painéis';
 
   @override
-  String get showTreeSidebar => 'Show Tree Sidebar';
+  String get showTreeSidebar => 'Mostrar árvore lateral';
 
   @override
-  String get hideTreeSidebar => 'Hide Tree Sidebar';
+  String get hideTreeSidebar => 'Ocultar árvore lateral';
 
   @override
-  String get detailsList => 'Details List';
+  String get detailsList => 'Lista detalhada';
 
   @override
-  String get largeItems => 'Large Items';
+  String get largeItems => 'Itens grandes';
 
   @override
-  String get compactItems => 'Compact Items';
+  String get compactItems => 'Itens compactos';
 
   @override
-  String get showPreview => 'Show Preview';
+  String get showPreview => 'Mostrar pré-visualização';
 
   @override
-  String get hidePreview => 'Hide Preview';
+  String get hidePreview => 'Ocultar pré-visualização';
 
   @override
-  String get showTerminal => 'Show Terminal';
+  String get showTerminal => 'Mostrar terminal';
 
   @override
-  String get hideTerminal => 'Hide Terminal';
+  String get hideTerminal => 'Ocultar terminal';
 
   @override
-  String get moreActions => 'More actions';
+  String get moreActions => 'Mais ações';
 
   @override
-  String get mountAsDrive => 'Mount as Drive';
+  String get mountAsDrive => 'Montar como unidade';
 
   @override
-  String get auditLog => 'Audit Log';
+  String get auditLog => 'Registo de auditoria';
 
   @override
-  String get systemLog => 'System Log';
+  String get systemLog => 'Registo do sistema';
 
   @override
-  String get cacheSettings => 'Cache Settings';
+  String get cacheSettings => 'Definições da cache';
 
   @override
-  String get keyboardShortcuts => 'Keyboard Shortcuts';
+  String get keyboardShortcuts => 'Atalhos de teclado';
 
   @override
-  String get swapPanels => 'Swap Panels';
+  String get swapPanels => 'Trocar painéis';
 
   @override
   String get connectToCloud => 'Ligar à nuvem';
 
   @override
   String browseProvider(String provider) {
-    return 'Browse $provider';
+    return 'Explorar $provider';
   }
 
   @override
@@ -593,88 +593,88 @@ class AppLocalizationsPt extends AppLocalizations {
       'Ligue-se para aceder aos ficheiros remotos';
 
   @override
-  String get notConnected => 'Not connected';
+  String get notConnected => 'Não ligado';
 
   @override
-  String get connectToCloudShort => 'Connect to cloud';
+  String get connectToCloudShort => 'Ligar à nuvem';
 
   @override
   String get loggedIn => 'Sessão iniciada';
 
   @override
-  String get localFiles => 'Local Files';
+  String get localFiles => 'Ficheiros locais';
 
   @override
-  String get remoteFiles => 'Remote Files';
+  String get remoteFiles => 'Ficheiros remotos';
 
   @override
-  String get bookmarkFolder => 'Bookmark current folder';
+  String get bookmarkFolder => 'Adicionar pasta atual aos marcadores';
 
   @override
-  String get noFolders => 'No folders';
+  String get noFolders => 'Nenhuma pasta';
 
   @override
-  String get selectFileToPreview => 'Select a file to preview';
+  String get selectFileToPreview => 'Selecione um ficheiro para pré-visualizar';
 
   @override
   String fileTooLarge(String size) {
-    return 'File too large to preview ($size)';
+    return 'Ficheiro demasiado grande para pré-visualização ($size)';
   }
 
   @override
   String previewFailed(String error) {
-    return 'Preview failed: $error';
+    return 'Falha na pré-visualização: $error';
   }
 
   @override
-  String get firstPage => 'First page';
+  String get firstPage => 'Primeira página';
 
   @override
-  String get previousPage => 'Previous page';
+  String get previousPage => 'Página anterior';
 
   @override
-  String get nextPage => 'Next page';
+  String get nextPage => 'Página seguinte';
 
   @override
-  String get lastPage => 'Last page';
+  String get lastPage => 'Última página';
 
   @override
-  String get playAudio => 'Play Audio';
+  String get playAudio => 'Reproduzir áudio';
 
   @override
-  String get playVideo => 'Play Video';
+  String get playVideo => 'Reproduzir vídeo';
 
   @override
   String get emptyFile => 'Arquivo vazio';
 
   @override
   String systemLogTitle(int count) {
-    return 'System Log ($count entries)';
+    return 'Registo do sistema ($count entradas)';
   }
 
   @override
-  String get minimumLevel => 'Minimum level';
+  String get minimumLevel => 'Nível mínimo';
 
   @override
-  String get pauseAutoScroll => 'Pause auto-scroll';
+  String get pauseAutoScroll => 'Pausar deslocação automática';
 
   @override
-  String get resumeAutoScroll => 'Resume auto-scroll';
+  String get resumeAutoScroll => 'Retomar deslocação automática';
 
   @override
-  String get copyVisible => 'Copy visible';
+  String get copyVisible => 'Copiar linhas visíveis';
 
   @override
-  String get copyAll => 'Copy all';
+  String get copyAll => 'Copiar tudo';
 
   @override
-  String get filterLogs => 'Filter logs...';
+  String get filterLogs => 'Filtrar registos...';
 
   @override
-  String get visibleLinesCopied => 'Visible lines copied';
+  String get visibleLinesCopied => 'Linhas visíveis copiadas';
 
   @override
-  String get allLogsCopied => 'All logs copied';
+  String get allLogsCopied => 'Todos os registos copiados';
 
   @override
   String get open => 'Abrir';
@@ -692,10 +692,10 @@ class AppLocalizationsPt extends AppLocalizations {
   String get verifyAgainstRemote => 'Verificar com o ficheiro remoto';
 
   @override
-  String get browseArchive => 'Browse Archive';
+  String get browseArchive => 'Explorar arquivo';
 
   @override
-  String get archiveExtracted => 'Archive extracted successfully';
+  String get archiveExtracted => 'Arquivo extraído com sucesso';
 
   @override
   String get revealInFinder => 'Mostrar no Finder';
@@ -778,78 +778,78 @@ class AppLocalizationsPt extends AppLocalizations {
   }
 
   @override
-  String get aboutLegal => 'About / Legal';
+  String get aboutLegal => 'Sobre / Aviso legal';
 
   @override
   String get appDescription =>
-      'An unofficial, open-source client for Filen.io, SFTP & WebDAV.';
+      'Um cliente não oficial e de código aberto para Filen.io, SFTP e WebDAV.';
 
   @override
-  String get serviceProvider => 'Service Provider';
+  String get serviceProvider => 'Prestador de serviços';
 
   @override
-  String get contact => 'Contact';
+  String get contact => 'Contacto';
 
   @override
-  String get disclaimer => 'Disclaimer';
+  String get disclaimer => 'Aviso legal';
 
   @override
   String get disclaimerText =>
-      'This software is provided \"as is\", without warranty of any kind. This app is not affiliated with Filen.io, or any other cloud provider.';
+      'Este software é fornecido tal como está, sem qualquer garantia. Esta aplicação não está associada à Filen.io nem a qualquer outro fornecedor de nuvem.';
 
   @override
-  String get sourceCode => 'Source Code (GitHub)';
+  String get sourceCode => 'Código-fonte (GitHub)';
 
   @override
-  String get website => 'Website';
+  String get website => 'Site';
 
   @override
-  String get viewLicenses => 'View Open Source Licenses';
+  String get viewLicenses => 'Ver licenças de código aberto';
 
   @override
-  String get flatView => 'Flat View (all subdirectories)';
+  String get flatView => 'Vista plana (todas as subpastas)';
 
   @override
-  String get exitFlatView => 'Exit Flat View';
+  String get exitFlatView => 'Sair da vista plana';
 
   @override
-  String get showHiddenFiles => 'Show hidden files';
+  String get showHiddenFiles => 'Mostrar ficheiros ocultos';
 
   @override
-  String get hideHiddenFiles => 'Hide hidden files';
+  String get hideHiddenFiles => 'Ocultar ficheiros ocultos';
 
   @override
-  String get touchFriendlyView => 'Switch to touch-friendly view';
+  String get touchFriendlyView => 'Mudar para vista tátil';
 
   @override
-  String get compactView => 'Switch to compact view';
+  String get compactView => 'Mudar para vista compacta';
 
   @override
-  String get sort => 'Sort';
+  String get sort => 'Ordenar';
 
   @override
-  String get secondarySort => 'Secondary Sort';
+  String get secondarySort => 'Ordenação secundária';
 
   @override
-  String get none => 'None';
+  String get none => 'Nenhum';
 
   @override
-  String get byName => 'by Name';
+  String get byName => 'por nome';
 
   @override
-  String get bySize => 'by Size';
+  String get bySize => 'por tamanho';
 
   @override
-  String get byDate => 'by Date';
+  String get byDate => 'por data';
 
   @override
-  String get enterPath => 'Enter path...';
+  String get enterPath => 'Introduzir caminho...';
 
   @override
-  String get editPath => 'Edit path';
+  String get editPath => 'Editar caminho';
 
   @override
-  String get searchResults => 'Search results';
+  String get searchResults => 'Resultados da pesquisa';
 
   @override
   String nFiles(int count) {
@@ -871,73 +871,75 @@ class AppLocalizationsPt extends AppLocalizations {
 
   @override
   String saved(String name) {
-    return 'Saved $name';
+    return 'Guardado: $name';
   }
 
   @override
   String saveFailed(String error) {
-    return 'Save failed: $error';
+    return 'Falha ao guardar: $error';
   }
 
   @override
-  String get unsavedChanges => 'Unsaved Changes';
+  String get unsavedChanges => 'Alterações por guardar';
 
   @override
-  String get discardChanges => 'You have unsaved changes. Discard them?';
+  String get discardChanges =>
+      'Tem alterações por guardar. Pretende descartá-las?';
 
   @override
-  String get discard => 'Discard';
+  String get discard => 'Descartar';
 
   @override
-  String get saveShortcut => 'Save (Ctrl+S)';
+  String get saveShortcut => 'Guardar (Ctrl+S)';
 
   @override
   String get fileModifiedOnServer =>
-      'This file was modified on the server since you opened it.';
+      'Este ficheiro foi alterado no servidor desde que o abriu.';
 
   @override
-  String get saveAnyway => 'Save Anyway';
+  String get saveAnyway => 'Guardar mesmo assim';
 
   @override
-  String get reload => 'Reload';
+  String get reload => 'Recarregar';
 
   @override
-  String get saveProfile => 'Save Profile';
+  String get saveProfile => 'Guardar perfil';
 
   @override
-  String get profileName => 'Profile Name';
+  String get profileName => 'Nome do perfil';
 
   @override
-  String get profileNameHint => 'e.g., Work S3, Personal SFTP';
+  String get profileNameHint => 'ex.: S3 de trabalho, SFTP pessoal';
 
   @override
   String profileSaved(String name) {
-    return 'Profile \"$name\" saved';
+    return 'Perfil «$name» guardado';
   }
 
   @override
-  String get connectToCloudStorage => 'Connect to Cloud Storage';
+  String get connectToCloudStorage => 'Ligar ao armazenamento na nuvem';
 
   @override
-  String get savedProfiles => 'Saved Profiles';
+  String get savedProfiles => 'Perfis guardados';
 
   @override
-  String get loadProfile => 'Load a saved profile...';
+  String get loadProfile => 'Carregar um perfil guardado...';
 
   @override
-  String get deleteProfile => 'Delete Profile';
+  String get deleteProfile => 'Eliminar perfil';
 
   @override
-  String get saveAsProfile => 'Save as Profile';
+  String get saveAsProfile => 'Guardar como perfil';
 
   @override
-  String get enableEncryption => 'Enable Client-Side Encryption';
+  String get enableEncryption => 'Ativar encriptação do lado do cliente';
 
   @override
-  String get encryptBeforeUpload => 'Encrypt files before upload (AES-256-GCM)';
+  String get encryptBeforeUpload =>
+      'Encriptar ficheiros antes do carregamento (AES-256-GCM)';
 
   @override
-  String get encryptionPassphrase => 'Encryption Passphrase';
+  String get encryptionPassphrase => 'Frase-passe de encriptação';
 
   @override
   String get appLocked => 'O CrispCloud está bloqueado';
@@ -1003,7 +1005,7 @@ class AppLocalizationsPt extends AppLocalizations {
   String get oneHour => '1 hora';
 
   @override
-  String get connectToHetzner => 'Connect to Hetzner Storage Box';
+  String get connectToHetzner => 'Ligar à Hetzner Storage Box';
 
   @override
   String get sftpPort23 => 'SFTP (port 23)';
@@ -1012,176 +1014,177 @@ class AppLocalizationsPt extends AppLocalizations {
   String get webdavHttps => 'WebDAV (HTTPS)';
 
   @override
-  String get testConnection => 'Test Connection';
+  String get testConnection => 'Testar ligação';
 
   @override
-  String get connectionSuccessful => 'Connection successful';
+  String get connectionSuccessful => 'Ligação bem-sucedida';
 
   @override
   String testFailed(String error) {
-    return 'Test failed: $error';
+    return 'Falha no teste: $error';
   }
 
   @override
-  String get connectToAzure => 'Connect to Azure Blob Storage';
+  String get connectToAzure => 'Ligar ao Azure Blob Storage';
 
   @override
-  String get authenticationMode => 'Authentication Mode';
+  String get authenticationMode => 'Modo de autenticação';
 
   @override
-  String get accountName => 'Account Name';
+  String get accountName => 'Nome da conta';
 
   @override
-  String get container => 'Container';
+  String get container => 'Contentor';
 
   @override
   String get sasUrl => 'SAS URL';
 
   @override
-  String get sasToken => 'SAS Token';
+  String get sasToken => 'Token SAS';
 
   @override
-  String get connectToB2 => 'Connect to Backblaze B2';
+  String get connectToB2 => 'Ligar ao Backblaze B2';
 
   @override
-  String get applicationKeyId => 'Application Key ID';
+  String get applicationKeyId => 'ID da chave da aplicação';
 
   @override
-  String get applicationKey => 'Application Key';
+  String get applicationKey => 'Chave da aplicação';
 
   @override
-  String get bucketNameOptional => 'Bucket Name (optional)';
+  String get bucketNameOptional => 'Nome do depósito (opcional)';
 
   @override
-  String get mount => 'Mount';
+  String get mount => 'Montar';
 
   @override
-  String get unmount => 'Unmount';
+  String get unmount => 'Desmontar';
 
   @override
-  String get displayName => 'Display Name';
+  String get displayName => 'Nome apresentado';
 
   @override
-  String get localMountPoint => 'Local Mount Point';
+  String get localMountPoint => 'Ponto de montagem local';
 
   @override
-  String get newMount => 'New Mount';
+  String get newMount => 'Nova montagem';
 
   @override
-  String get noMountsConfigured => 'No mounts configured';
+  String get noMountsConfigured => 'Nenhuma montagem configurada';
 
   @override
   String get fuseDesktopOnly =>
-      'FUSE mounts are only available on macOS, Linux, and Windows desktop.';
+      'As montagens FUSE só estão disponíveis no macOS, Linux e Windows de ambiente de trabalho.';
 
   @override
-  String get multiCloud => 'Multi-Cloud';
+  String get multiCloud => 'Multinuvem';
 
   @override
-  String get connections => 'Connections';
+  String get connections => 'Ligações';
 
   @override
-  String get transfer => 'Transfer';
+  String get transfer => 'Transferência';
 
   @override
-  String get compareAndSearch => 'Compare & Search';
+  String get compareAndSearch => 'Comparar e pesquisar';
 
   @override
-  String get noConnectionsYet => 'No connections registered yet.';
+  String get noConnectionsYet => 'Ainda não há ligações registadas.';
 
   @override
-  String get startTransfer => 'Start Transfer';
+  String get startTransfer => 'Iniciar transferência';
 
   @override
-  String get syncPairs => 'Sync Pairs';
+  String get syncPairs => 'Pares de sincronização';
 
   @override
-  String get enableAutoSync => 'Enable Auto-Sync';
+  String get enableAutoSync => 'Ativar sincronização automática';
 
   @override
-  String get disableAutoSync => 'Disable Auto-Sync';
+  String get disableAutoSync => 'Desativar sincronização automática';
 
   @override
-  String get noSyncPairs => 'No sync pairs configured';
+  String get noSyncPairs => 'Nenhum par de sincronização configurado';
 
   @override
-  String get replayOffline => 'Replay Offline';
+  String get replayOffline => 'Repetir operações offline';
 
   @override
-  String get newSyncPair => 'New Sync Pair';
+  String get newSyncPair => 'Novo par de sincronização';
 
   @override
-  String get cacheUsage => 'Cache Usage';
+  String get cacheUsage => 'Utilização da cache';
 
   @override
-  String get maximumCacheSize => 'Maximum Cache Size';
+  String get maximumCacheSize => 'Tamanho máximo da cache';
 
   @override
   String get clearCacheConfirm =>
-      'Remove all cached files? They will be re-downloaded when needed.';
+      'Remover todos os ficheiros em cache? Serão novamente transferidos quando necessário.';
 
   @override
   String batchRenameTitle(int count) {
-    return 'Batch Rename ($count files)';
+    return 'Renomeação em lote ($count ficheiros)';
   }
 
   @override
-  String get findReplace => 'Find/Replace';
+  String get findReplace => 'Procurar/Substituir';
 
   @override
-  String get number => 'Number';
+  String get number => 'Número';
 
   @override
-  String get prefixSuffix => 'Prefix/Suffix';
+  String get prefixSuffix => 'Prefixo/Sufixo';
 
   @override
-  String get extension => 'Extension';
+  String get extension => 'Extensão';
 
   @override
-  String get duplicateFinder => 'Duplicate Finder';
+  String get duplicateFinder => 'Localizador de duplicados';
 
   @override
-  String get noDuplicatesFound => 'No duplicates found!';
+  String get noDuplicatesFound => 'Não foram encontrados duplicados!';
 
   @override
-  String get chooseTheme => 'Choose Theme';
+  String get chooseTheme => 'Escolher tema';
 
   @override
-  String get checkForUpdates => 'Check for Updates';
+  String get checkForUpdates => 'Procurar atualizações';
 
   @override
-  String get youAreUpToDate => 'You\'re up to date';
+  String get youAreUpToDate => 'Está atualizado';
 
   @override
-  String get updateAvailable => 'Update available';
+  String get updateAvailable => 'Atualização disponível';
 
   @override
-  String get releaseNotes => 'Release notes';
+  String get releaseNotes => 'Notas de versão';
 
   @override
-  String get checkNow => 'Check Now';
+  String get checkNow => 'Verificar agora';
 
   @override
-  String get general => 'General';
+  String get general => 'Geral';
 
   @override
-  String get accessibility => 'Accessibility';
+  String get accessibility => 'Acessibilidade';
 
   @override
-  String get privacy => 'Privacy';
+  String get privacy => 'Privacidade';
 
   @override
-  String get advanced => 'Advanced';
+  String get advanced => 'Avançado';
 
   @override
   String get showFKeyButtons =>
-      'Show F3-F8 shortcut buttons at the bottom of the screen';
+      'Mostrar botões de atalho F3-F8 na parte inferior do ecrã';
 
   @override
-  String get exportKeys => 'Export/Import Encryption Keys';
+  String get exportKeys => 'Exportar/Importar chaves de encriptação';
 
   @override
-  String get backupRecovery => 'BIP39 Mnemonic Backup and Recovery';
+  String get backupRecovery =>
+      'Cópia de segurança e recuperação com frase mnemónica BIP39';
 
   @override
   String get noActiveOperations => 'Sem operações ativas';
@@ -1201,41 +1204,41 @@ class AppLocalizationsPt extends AppLocalizations {
   }
 
   @override
-  String get searchPattern => 'Search Pattern';
+  String get searchPattern => 'Padrão de pesquisa';
 
   @override
-  String get findPattern => 'Find Pattern';
+  String get findPattern => 'Padrão a procurar';
 
   @override
-  String get searchHint => 'Search for files...';
+  String get searchHint => 'Pesquisar ficheiros...';
 
   @override
-  String get findHint => 'e.g., *.pdf, report*';
+  String get findHint => 'ex.: *.pdf, relatório*';
 
   @override
-  String get noResultsFound => 'No results found';
+  String get noResultsFound => 'Nenhum resultado encontrado';
 
   @override
-  String get size => 'Size';
+  String get size => 'Tamanho';
 
   @override
-  String get date => 'Date';
+  String get date => 'Data';
 
   @override
-  String get name => 'Name';
+  String get name => 'Nome';
 
   @override
-  String get type => 'Type';
+  String get type => 'Tipo';
 
   @override
-  String get created => 'Created';
+  String get created => 'Criado';
 
   @override
-  String get accessed => 'Accessed';
+  String get accessed => 'Último acesso';
 
   @override
   String get computeMd5 => 'Calcular MD5';
 
   @override
-  String get protocol => 'Protocol';
+  String get protocol => 'Protocolo';
 }

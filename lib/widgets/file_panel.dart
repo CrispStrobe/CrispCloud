@@ -239,7 +239,7 @@ class _FilePanelState extends ConsumerState<FilePanel> {
                       _log.warn('operation failed', e);
                       if (context.mounted) {
                         ScaffoldMessenger.of(context).showSnackBar(
-                          SnackBar(content: Text('Upload failed: $e')));
+                          SnackBar(content: Text(AppLocalizations.of(context)!.operationFailed(e.toString()))));
                       }
                     }
                   }
