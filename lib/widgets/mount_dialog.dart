@@ -17,6 +17,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../providers/mount_provider.dart';
 import '../services/fuse_mount_service.dart';
 import '../l10n/app_localizations.dart';
+import '../l10n/mount_dialog_strings.dart';
 
 void showMountDialog(BuildContext context) {
   showDialog(
@@ -41,7 +42,7 @@ class _MountManagerDialog extends ConsumerWidget {
         children: [
           const Icon(Icons.storage_rounded),
           const SizedBox(width: 8),
-          const Text('Mount as Drive'),
+          Text(MountDialogStrings(context).text('mountDrive')),
           const Spacer(),
           if (mount.isCheckingAvailability)
             const SizedBox(
@@ -96,7 +97,7 @@ class _MountManagerDialog extends ConsumerWidget {
         if (mount.isSupported)
           ElevatedButton.icon(
             icon: const Icon(Icons.add, size: 18),
-            label: const Text('New Mount'),
+            label: Text(MountDialogStrings(context).text('newMount')),
             onPressed: mount.availabilityError != null && mount.availabilityError!.isNotEmpty
                 ? null
                 : () => _showAddMountDialog(context, ref),
@@ -142,7 +143,7 @@ class _AddMountDialogState extends ConsumerState<_AddMountDialog> {
   @override
   Widget build(BuildContext context) {
     return AlertDialog(
-      title: const Text('New Mount'),
+      title: Text(MountDialogStrings(context).text('newMount')),
       content: SizedBox(
         width: 400,
         child: SingleChildScrollView(
@@ -151,21 +152,21 @@ class _AddMountDialogState extends ConsumerState<_AddMountDialog> {
             children: [
               TextField(
                 controller: _labelController,
-                decoration: const InputDecoration(
-                  labelText: 'Display Name (optional)',
-                  hintText: 'e.g., My Dropbox Drive',
-                  border: OutlineInputBorder(),
+                decoration: InputDecoration(
+                  labelText: MountDialogStrings(context).text('displayName'),
+                  hintText: MountDialogStrings(context).text('nameHint'),
+                  border: const OutlineInputBorder(),
                 ),
                 autofocus: true,
               ),
               const SizedBox(height: 12),
               TextField(
                 controller: _remoteController,
-                decoration: const InputDecoration(
-                  labelText: 'Remote Path',
+                decoration: InputDecoration(
+                  labelText: MountDialogStrings(context).text('remotePath'),
                   hintText: '/ or /Documents',
-                  border: OutlineInputBorder(),
-                  prefixIcon: Icon(Icons.cloud),
+                  border: const OutlineInputBorder(),
+                  prefixIcon: const Icon(Icons.cloud),
                 ),
               ),
               const SizedBox(height: 12),
@@ -174,11 +175,11 @@ class _AddMountDialogState extends ConsumerState<_AddMountDialog> {
                   Expanded(
                     child: TextField(
                       controller: _mountPointController,
-                      decoration: const InputDecoration(
-                        labelText: 'Local Mount Point',
+                      decoration: InputDecoration(
+                        labelText: MountDialogStrings(context).text('mountPoint'),
                         hintText: '/mnt/mycloud',
-                        border: OutlineInputBorder(),
-                        prefixIcon: Icon(Icons.folder_outlined),
+                        border: const OutlineInputBorder(),
+                        prefixIcon: const Icon(Icons.folder_outlined),
                       ),
                     ),
                   ),
@@ -226,7 +227,7 @@ class _AddMountDialogState extends ConsumerState<_AddMountDialog> {
                   height: 18,
                   child: CircularProgressIndicator(strokeWidth: 2),
                 )
-              : const Text('Mount'),
+              : Text(MountDialogStrings(context).text('mount')),
         ),
       ],
     );
@@ -237,7 +238,7 @@ class _AddMountDialogState extends ConsumerState<_AddMountDialog> {
     final mp = _mountPointController.text.trim();
 
     if (mp.isEmpty) {
-      setState(() => _error = 'Please specify a local mount point directory.');
+      setState(() => _error = MountDialogStrings(context).text('required'));
       return;
     }
 
@@ -258,7 +259,7 @@ class _AddMountDialogState extends ConsumerState<_AddMountDialog> {
           );
       if (!context.mounted) return;
       if (entry == null || entry.status == MountStatus.error) {
-        setState(() => _error = entry?.errorMessage ?? 'Mount failed');
+        setState(() => _error = entry?.errorMessage ?? MountDialogStrings(context).text('failed'));
       } else {
         Navigator.pop(context);
       }
@@ -298,7 +299,7 @@ class _MountTile extends ConsumerWidget {
         children: [
           if (entry.status == MountStatus.error)
             Tooltip(
-              message: entry.errorMessage ?? 'Unknown error',
+              message: entry.errorMessage ?? MountDialogStrings(context).text('unknown'),
               child: const Icon(Icons.info_outline, size: 16, color: Colors.red),
             ),
           if (isBusy)
@@ -310,18 +311,18 @@ class _MountTile extends ConsumerWidget {
           else if (entry.status == MountStatus.mounted)
             IconButton(
               icon: const Icon(Icons.eject, size: 20),
-              tooltip: 'Unmount',
+              tooltip: MountDialogStrings(context).text('unmount'),
               onPressed: () => ref.read(mountProvider).unmount(entry.mountPoint),
             )
           else
             IconButton(
               icon: const Icon(Icons.play_arrow, size: 20),
-              tooltip: 'Mount',
+              tooltip: MountDialogStrings(context).text('mount'),
               onPressed: () => _remount(context, ref, entry),
             ),
           IconButton(
             icon: const Icon(Icons.delete_outline, size: 18),
-            tooltip: 'Remove',
+            tooltip: MountDialogStrings(context).text('remove'),
             onPressed: isBusy
                 ? null
                 : () => ref.read(mountProvider).removeMount(entry.mountPoint),
@@ -384,11 +385,11 @@ class _BrowseButton extends StatelessWidget {
 
     return OutlinedButton.icon(
       icon: const Icon(Icons.folder_open, size: 16),
-      label: const Text('Browse'),
+      label: Text(MountDialogStrings(context).text('browse')),
       onPressed: () async {
         try {
           final path = await getDirectoryPath(
-            confirmButtonText: 'Select Mount Point',
+            confirmButtonText: MountDialogStrings(context).text('selectPoint'),
           );
           if (path != null) onSelected(path);
         } catch (_) {
@@ -412,7 +413,7 @@ class _PlatformUnsupportedBanner extends StatelessWidget {
       borderColor: Colors.orange.shade300,
       icon: Icons.warning_amber,
       iconColor: Colors.orange,
-      message: 'FUSE mounts are only available on macOS, Linux, and Windows desktop.',
+      message: MountDialogStrings(context).text('unsupported'),
     );
   }
 }
@@ -438,17 +439,17 @@ class _EmptyMountList extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return const Padding(
-      padding: EdgeInsets.symmetric(vertical: 24),
+    return Padding(
+      padding: const EdgeInsets.symmetric(vertical: 24),
       child: Column(
         children: [
-          Icon(Icons.storage_outlined, size: 48, color: Colors.grey),
-          SizedBox(height: 8),
-          Text('No mounts configured'),
-          SizedBox(height: 4),
+          const Icon(Icons.storage_outlined, size: 48, color: Colors.grey),
+          const SizedBox(height: 8),
+          Text(MountDialogStrings(context).text('empty')),
+          const SizedBox(height: 4),
           Text(
-            'Add a mount to expose your cloud storage as a local drive.',
-            style: TextStyle(fontSize: 12, color: Colors.grey),
+            MountDialogStrings(context).text('bridgeMissing'),
+            style: const TextStyle(fontSize: 12, color: Colors.grey),
             textAlign: TextAlign.center,
           ),
         ],

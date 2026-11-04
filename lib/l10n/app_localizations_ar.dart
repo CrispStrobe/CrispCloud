@@ -746,33 +746,33 @@ class AppLocalizationsAr extends AppLocalizations {
 
   @override
   String nItems(int count) {
-    return '$count items';
+    return 'العناصر: $count';
   }
 
   @override
   String nTransfers(int count) {
-    return '$count transfer(s)';
+    return 'عمليات النقل: $count';
   }
 
   @override
-  String get syncing => 'Syncing';
+  String get syncing => 'جارٍ المزامنة';
 
   @override
   String lastSyncChanges(int count) {
-    return 'Last sync: $count changes';
+    return 'آخر مزامنة: $count تغييرات';
   }
 
   @override
   String nPairs(int count) {
-    return '$count pair(s)';
+    return 'الأزواج: $count';
   }
 
   @override
-  String get hidden => 'Hidden';
+  String get hidden => 'مخفية';
 
   @override
   String free(String size) {
-    return 'Free: $size';
+    return 'المتاح: $size';
   }
 
   @override
@@ -851,7 +851,7 @@ class AppLocalizationsAr extends AppLocalizations {
 
   @override
   String nFiles(int count) {
-    return '$count file(s)';
+    return 'الملفات: $count';
   }
 
   @override

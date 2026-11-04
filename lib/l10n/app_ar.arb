@@ -310,25 +310,25 @@
   },
   "cannotBeUndone": "لا يمكن التراجع عن هذا الإجراء.",
 
-  "nItems": "{count} items",
+  "nItems": "العناصر: {count}",
   "@nItems": {
     "placeholders": { "count": { "type": "int" } }
   },
-  "nTransfers": "{count} transfer(s)",
+  "nTransfers": "عمليات النقل: {count}",
   "@nTransfers": {
     "placeholders": { "count": { "type": "int" } }
   },
-  "syncing": "Syncing",
-  "lastSyncChanges": "Last sync: {count} changes",
+  "syncing": "جارٍ المزامنة",
+  "lastSyncChanges": "آخر مزامنة: {count} تغييرات",
   "@lastSyncChanges": {
     "placeholders": { "count": { "type": "int" } }
   },
-  "nPairs": "{count} pair(s)",
+  "nPairs": "الأزواج: {count}",
   "@nPairs": {
     "placeholders": { "count": { "type": "int" } }
   },
-  "hidden": "Hidden",
-  "free": "Free: {size}",
+  "hidden": "مخفية",
+  "free": "المتاح: {size}",
   "@free": {
     "placeholders": { "size": { "type": "String" } }
   },
@@ -359,7 +359,7 @@
   "editPath": "Edit path",
 
   "searchResults": "Search results",
-  "nFiles": "{count} file(s)",
+  "nFiles": "الملفات: {count}",
   "@nFiles": {
     "placeholders": { "count": { "type": "int" } }
   },

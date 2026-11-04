@@ -743,33 +743,33 @@ class AppLocalizationsKo extends AppLocalizations {
 
   @override
   String nItems(int count) {
-    return '$count items';
+    return '항목 $count개';
   }
 
   @override
   String nTransfers(int count) {
-    return '$count transfer(s)';
+    return '전송 $count개';
   }
 
   @override
-  String get syncing => 'Syncing';
+  String get syncing => '동기화 중';
 
   @override
   String lastSyncChanges(int count) {
-    return 'Last sync: $count changes';
+    return '마지막 동기화: 변경 $count건';
   }
 
   @override
   String nPairs(int count) {
-    return '$count pair(s)';
+    return '쌍 $count개';
   }
 
   @override
-  String get hidden => 'Hidden';
+  String get hidden => '숨김';
 
   @override
   String free(String size) {
-    return 'Free: $size';
+    return '여유 공간: $size';
   }
 
   @override
@@ -848,7 +848,7 @@ class AppLocalizationsKo extends AppLocalizations {
 
   @override
   String nFiles(int count) {
-    return '$count file(s)';
+    return '파일 $count개';
   }
 
   @override

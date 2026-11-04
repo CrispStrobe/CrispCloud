@@ -310,25 +310,25 @@
   },
   "cannotBeUndone": "이 작업은 취소할 수 없습니다.",
 
-  "nItems": "{count} items",
+  "nItems": "항목 {count}개",
   "@nItems": {
     "placeholders": { "count": { "type": "int" } }
   },
-  "nTransfers": "{count} transfer(s)",
+  "nTransfers": "전송 {count}개",
   "@nTransfers": {
     "placeholders": { "count": { "type": "int" } }
   },
-  "syncing": "Syncing",
-  "lastSyncChanges": "Last sync: {count} changes",
+  "syncing": "동기화 중",
+  "lastSyncChanges": "마지막 동기화: 변경 {count}건",
   "@lastSyncChanges": {
     "placeholders": { "count": { "type": "int" } }
   },
-  "nPairs": "{count} pair(s)",
+  "nPairs": "쌍 {count}개",
   "@nPairs": {
     "placeholders": { "count": { "type": "int" } }
   },
-  "hidden": "Hidden",
-  "free": "Free: {size}",
+  "hidden": "숨김",
+  "free": "여유 공간: {size}",
   "@free": {
     "placeholders": { "size": { "type": "String" } }
   },
@@ -359,7 +359,7 @@
   "editPath": "Edit path",
 
   "searchResults": "Search results",
-  "nFiles": "{count} file(s)",
+  "nFiles": "파일 {count}개",
   "@nFiles": {
     "placeholders": { "count": { "type": "int" } }
   },

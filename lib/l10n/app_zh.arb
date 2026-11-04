@@ -310,25 +310,25 @@
   },
   "cannotBeUndone": "此操作无法撤销。",
 
-  "nItems": "{count} items",
+  "nItems": "{count} 个项目",
   "@nItems": {
     "placeholders": { "count": { "type": "int" } }
   },
-  "nTransfers": "{count} transfer(s)",
+  "nTransfers": "{count} 个传输",
   "@nTransfers": {
     "placeholders": { "count": { "type": "int" } }
   },
-  "syncing": "Syncing",
-  "lastSyncChanges": "Last sync: {count} changes",
+  "syncing": "正在同步",
+  "lastSyncChanges": "上次同步：{count} 项更改",
   "@lastSyncChanges": {
     "placeholders": { "count": { "type": "int" } }
   },
-  "nPairs": "{count} pair(s)",
+  "nPairs": "{count} 对",
   "@nPairs": {
     "placeholders": { "count": { "type": "int" } }
   },
-  "hidden": "Hidden",
-  "free": "Free: {size}",
+  "hidden": "隐藏",
+  "free": "可用：{size}",
   "@free": {
     "placeholders": { "size": { "type": "String" } }
   },
@@ -359,7 +359,7 @@
   "editPath": "Edit path",
 
   "searchResults": "Search results",
-  "nFiles": "{count} file(s)",
+  "nFiles": "{count} 个文件",
   "@nFiles": {
     "placeholders": { "count": { "type": "int" } }
   },

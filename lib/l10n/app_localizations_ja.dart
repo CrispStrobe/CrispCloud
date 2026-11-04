@@ -743,33 +743,33 @@ class AppLocalizationsJa extends AppLocalizations {
 
   @override
   String nItems(int count) {
-    return '$count items';
+    return '$count 項目';
   }
 
   @override
   String nTransfers(int count) {
-    return '$count transfer(s)';
+    return '転送 $count 件';
   }
 
   @override
-  String get syncing => 'Syncing';
+  String get syncing => '同期中';
 
   @override
   String lastSyncChanges(int count) {
-    return 'Last sync: $count changes';
+    return '前回の同期: $count 件の変更';
   }
 
   @override
   String nPairs(int count) {
-    return '$count pair(s)';
+    return 'ペア $count 件';
   }
 
   @override
-  String get hidden => 'Hidden';
+  String get hidden => '非表示';
 
   @override
   String free(String size) {
-    return 'Free: $size';
+    return '空き: $size';
   }
 
   @override
@@ -848,7 +848,7 @@ class AppLocalizationsJa extends AppLocalizations {
 
   @override
   String nFiles(int count) {
-    return '$count file(s)';
+    return '$count ファイル';
   }
 
   @override

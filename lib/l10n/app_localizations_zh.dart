@@ -743,33 +743,33 @@ class AppLocalizationsZh extends AppLocalizations {
 
   @override
   String nItems(int count) {
-    return '$count items';
+    return '$count 个项目';
   }
 
   @override
   String nTransfers(int count) {
-    return '$count transfer(s)';
+    return '$count 个传输';
   }
 
   @override
-  String get syncing => 'Syncing';
+  String get syncing => '正在同步';
 
   @override
   String lastSyncChanges(int count) {
-    return 'Last sync: $count changes';
+    return '上次同步：$count 项更改';
   }
 
   @override
   String nPairs(int count) {
-    return '$count pair(s)';
+    return '$count 对';
   }
 
   @override
-  String get hidden => 'Hidden';
+  String get hidden => '隐藏';
 
   @override
   String free(String size) {
-    return 'Free: $size';
+    return '可用：$size';
   }
 
   @override
@@ -848,7 +848,7 @@ class AppLocalizationsZh extends AppLocalizations {
 
   @override
   String nFiles(int count) {
-    return '$count file(s)';
+    return '$count 个文件';
   }
 
   @override

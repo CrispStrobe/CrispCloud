@@ -310,25 +310,25 @@
   },
   "cannotBeUndone": "この操作は元に戻せません。",
 
-  "nItems": "{count} items",
+  "nItems": "{count} 項目",
   "@nItems": {
     "placeholders": { "count": { "type": "int" } }
   },
-  "nTransfers": "{count} transfer(s)",
+  "nTransfers": "転送 {count} 件",
   "@nTransfers": {
     "placeholders": { "count": { "type": "int" } }
   },
-  "syncing": "Syncing",
-  "lastSyncChanges": "Last sync: {count} changes",
+  "syncing": "同期中",
+  "lastSyncChanges": "前回の同期: {count} 件の変更",
   "@lastSyncChanges": {
     "placeholders": { "count": { "type": "int" } }
   },
-  "nPairs": "{count} pair(s)",
+  "nPairs": "ペア {count} 件",
   "@nPairs": {
     "placeholders": { "count": { "type": "int" } }
   },
-  "hidden": "Hidden",
-  "free": "Free: {size}",
+  "hidden": "非表示",
+  "free": "空き: {size}",
   "@free": {
     "placeholders": { "size": { "type": "String" } }
   },
@@ -359,7 +359,7 @@
   "editPath": "Edit path",
 
   "searchResults": "Search results",
-  "nFiles": "{count} file(s)",
+  "nFiles": "{count} ファイル",
   "@nFiles": {
     "placeholders": { "count": { "type": "int" } }
   },
