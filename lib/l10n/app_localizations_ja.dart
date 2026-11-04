@@ -1,6 +1,5 @@
 // ignore: unused_import
 import 'package:intl/intl.dart' as intl;
-
 import 'app_localizations.dart';
 
 // ignore_for_file: type=lint
@@ -578,7 +577,7 @@ class AppLocalizationsJa extends AppLocalizations {
   String get swapPanels => 'Swap Panels';
 
   @override
-  String get connectToCloud => 'Connect to Cloud';
+  String get connectToCloud => 'クラウドに接続';
 
   @override
   String browseProvider(String provider) {
@@ -586,7 +585,7 @@ class AppLocalizationsJa extends AppLocalizations {
   }
 
   @override
-  String get pleaseConnectRemote => 'Please connect to access remote files';
+  String get pleaseConnectRemote => 'リモートファイルにアクセスするには接続してください';
 
   @override
   String get notConnected => 'Not connected';
@@ -595,7 +594,7 @@ class AppLocalizationsJa extends AppLocalizations {
   String get connectToCloudShort => 'Connect to cloud';
 
   @override
-  String get loggedIn => 'Logged in';
+  String get loggedIn => 'ログイン済み';
 
   @override
   String get localFiles => 'Local Files';
@@ -673,19 +672,19 @@ class AppLocalizationsJa extends AppLocalizations {
   String get allLogsCopied => 'All logs copied';
 
   @override
-  String get open => 'Open';
+  String get open => '開く';
 
   @override
-  String get editSystemEditor => 'Edit (System Editor)';
+  String get editSystemEditor => '編集（システムエディター）';
 
   @override
-  String get editBuiltIn => 'Edit (Built-in)';
+  String get editBuiltIn => '編集（内蔵エディター）';
 
   @override
-  String get openWithSystemApp => 'Open with System App';
+  String get openWithSystemApp => 'システムアプリで開く';
 
   @override
-  String get verifyAgainstRemote => 'Verify against remote';
+  String get verifyAgainstRemote => 'リモートファイルと照合';
 
   @override
   String get browseArchive => 'Browse Archive';
@@ -694,53 +693,53 @@ class AppLocalizationsJa extends AppLocalizations {
   String get archiveExtracted => 'Archive extracted successfully';
 
   @override
-  String get revealInFinder => 'Reveal in Finder';
+  String get revealInFinder => 'Finder に表示';
 
   @override
-  String get showInExplorer => 'Show in Explorer';
+  String get showInExplorer => 'エクスプローラーに表示';
 
   @override
-  String get openContainingFolder => 'Open containing folder';
+  String get openContainingFolder => '保存先フォルダーを開く';
 
   @override
-  String get properties => 'Properties';
+  String get properties => 'プロパティ';
 
   @override
-  String get copyNames => 'Copy name(s)';
+  String get copyNames => '名前をコピー';
 
   @override
-  String get copyPaths => 'Copy path(s)';
+  String get copyPaths => 'パスをコピー';
 
   @override
-  String get createMd5 => 'Create .md5 file';
+  String get createMd5 => '.md5 ファイルを作成';
 
   @override
-  String get verifyChecksumFile => 'Verify checksum file';
+  String get verifyChecksumFile => 'チェックサムファイルを検証';
 
   @override
-  String get splitFile => 'Split File';
+  String get splitFile => 'ファイルを分割';
 
   @override
-  String get combineParts => 'Combine Parts';
+  String get combineParts => '分割ファイルを結合';
 
   @override
-  String get createLink => 'Create Link...';
+  String get createLink => 'リンクを作成...';
 
   @override
-  String get secureWipe => 'Secure Wipe';
+  String get secureWipe => '安全に消去';
 
   @override
   String confirmDeleteBody(int count) {
-    return 'Are you sure you want to delete $count item(s)?';
+    return '$count 件の項目を削除しますか？';
   }
 
   @override
   String totalSize(String size) {
-    return 'Total size: $size';
+    return '合計サイズ: $size';
   }
 
   @override
-  String get cannotBeUndone => 'This action cannot be undone.';
+  String get cannotBeUndone => 'この操作は元に戻せません。';
 
   @override
   String nItems(int count) {
@@ -854,16 +853,16 @@ class AppLocalizationsJa extends AppLocalizations {
 
   @override
   String copyNItems(int count) {
-    return 'Copy $count item(s)';
+    return '$count 件の項目をコピー';
   }
 
   @override
   String moveNItems(int count) {
-    return 'Move $count item(s)';
+    return '$count 件の項目を移動';
   }
 
   @override
-  String get targetPath => 'Target path';
+  String get targetPath => '移動先のパス';
 
   @override
   String saved(String name) {
@@ -936,67 +935,66 @@ class AppLocalizationsJa extends AppLocalizations {
   String get encryptionPassphrase => 'Encryption Passphrase';
 
   @override
-  String get appLocked => 'CrispCloud is Locked';
+  String get appLocked => 'CrispCloudはロックされています';
 
   @override
-  String get enterPinToContinue => 'Enter your PIN or password to continue';
+  String get enterPinToContinue => '続行するにはPINまたはパスワードを入力してください';
 
   @override
-  String get pinPassword => 'PIN / Password';
+  String get pinPassword => 'PIN / パスワード';
 
   @override
-  String get incorrectPin => 'Incorrect PIN or password';
+  String get incorrectPin => 'PINまたはパスワードが正しくありません';
 
   @override
-  String get tooManyAttempts =>
-      'Too many failed attempts. Restart the app to try again.';
+  String get tooManyAttempts => '失敗回数が多すぎます。アプリを再起動して再試行してください。';
 
   @override
   String attemptsRemaining(int count) {
-    return '$count attempts remaining';
+    return '残り試行回数: $count回';
   }
 
   @override
-  String get appLockSetup => 'Set Up App Lock';
+  String get appLockSetup => 'アプリロックを設定';
 
   @override
-  String get changeAppLockCode => 'Change App Lock';
+  String get changeAppLockCode => 'アプリロックを変更';
 
   @override
-  String get currentPin => 'Current PIN / Password';
+  String get currentPin => '現在のPIN / パスワード';
 
   @override
-  String get newPin => 'New PIN / Password';
+  String get newPin => '新しいPIN / パスワード';
 
   @override
-  String get confirmPin => 'Confirm PIN / Password';
+  String get confirmPin => 'PIN / パスワードを確認';
 
   @override
-  String get minFourChars => 'Minimum 4 characters';
+  String get minFourChars => '4文字以上';
 
   @override
-  String get codesDoNotMatch => 'Codes do not match';
+  String get codesDoNotMatch => 'コードが一致しません';
 
   @override
-  String get autoLockAfter => 'Auto-lock after';
+  String get autoLockAfter => '自動ロックまでの時間';
 
   @override
-  String get immediately => 'Immediately';
+  String get immediately => 'すぐに';
 
   @override
-  String get oneMinute => '1 minute';
+  String get oneMinute => '1分';
 
   @override
-  String get fiveMinutes => '5 minutes';
+  String get fiveMinutes => '5分';
 
   @override
-  String get fifteenMinutes => '15 minutes';
+  String get fifteenMinutes => '15分';
 
   @override
-  String get thirtyMinutes => '30 minutes';
+  String get thirtyMinutes => '30分';
 
   @override
-  String get oneHour => '1 hour';
+  String get oneHour => '1時間';
 
   @override
   String get connectToHetzner => 'Connect to Hetzner Storage Box';
@@ -1180,20 +1178,20 @@ class AppLocalizationsJa extends AppLocalizations {
   String get backupRecovery => 'BIP39 Mnemonic Backup and Recovery';
 
   @override
-  String get noActiveOperations => 'No active operations';
+  String get noActiveOperations => '実行中の操作はありません';
 
   @override
-  String get refreshAll => 'Refresh All';
+  String get refreshAll => 'すべて更新';
 
   @override
-  String get newName => 'New name';
+  String get newName => '新しい名前';
 
   @override
-  String get items => 'Items:';
+  String get items => '項目:';
 
   @override
   String andMore(int count) {
-    return '... and $count more';
+    return '...他 $count 件';
   }
 
   @override
@@ -1230,7 +1228,7 @@ class AppLocalizationsJa extends AppLocalizations {
   String get accessed => 'Accessed';
 
   @override
-  String get computeMd5 => 'Compute MD5';
+  String get computeMd5 => 'MD5 を計算';
 
   @override
   String get protocol => 'Protocol';

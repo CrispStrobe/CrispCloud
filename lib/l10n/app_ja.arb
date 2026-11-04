@@ -235,15 +235,15 @@
   "keyboardShortcuts": "Keyboard Shortcuts",
   "swapPanels": "Swap Panels",
 
-  "connectToCloud": "Connect to Cloud",
+  "connectToCloud": "クラウドに接続",
   "browseProvider": "Browse {provider}",
   "@browseProvider": {
     "placeholders": { "provider": { "type": "String" } }
   },
-  "pleaseConnectRemote": "Please connect to access remote files",
+  "pleaseConnectRemote": "リモートファイルにアクセスするには接続してください",
   "notConnected": "Not connected",
   "connectToCloudShort": "Connect to cloud",
-  "loggedIn": "Logged in",
+  "loggedIn": "ログイン済み",
 
   "localFiles": "Local Files",
   "remoteFiles": "Remote Files",
@@ -280,35 +280,35 @@
   "visibleLinesCopied": "Visible lines copied",
   "allLogsCopied": "All logs copied",
 
-  "open": "Open",
-  "editSystemEditor": "Edit (System Editor)",
-  "editBuiltIn": "Edit (Built-in)",
-  "openWithSystemApp": "Open with System App",
-  "verifyAgainstRemote": "Verify against remote",
+  "open": "開く",
+  "editSystemEditor": "編集（システムエディター）",
+  "editBuiltIn": "編集（内蔵エディター）",
+  "openWithSystemApp": "システムアプリで開く",
+  "verifyAgainstRemote": "リモートファイルと照合",
   "browseArchive": "Browse Archive",
   "archiveExtracted": "Archive extracted successfully",
-  "revealInFinder": "Reveal in Finder",
-  "showInExplorer": "Show in Explorer",
-  "openContainingFolder": "Open containing folder",
-  "properties": "Properties",
-  "copyNames": "Copy name(s)",
-  "copyPaths": "Copy path(s)",
-  "createMd5": "Create .md5 file",
-  "verifyChecksumFile": "Verify checksum file",
-  "splitFile": "Split File",
-  "combineParts": "Combine Parts",
-  "createLink": "Create Link...",
-  "secureWipe": "Secure Wipe",
+  "revealInFinder": "Finder に表示",
+  "showInExplorer": "エクスプローラーに表示",
+  "openContainingFolder": "保存先フォルダーを開く",
+  "properties": "プロパティ",
+  "copyNames": "名前をコピー",
+  "copyPaths": "パスをコピー",
+  "createMd5": ".md5 ファイルを作成",
+  "verifyChecksumFile": "チェックサムファイルを検証",
+  "splitFile": "ファイルを分割",
+  "combineParts": "分割ファイルを結合",
+  "createLink": "リンクを作成...",
+  "secureWipe": "安全に消去",
 
-  "confirmDeleteBody": "Are you sure you want to delete {count} item(s)?",
+  "confirmDeleteBody": "{count} 件の項目を削除しますか？",
   "@confirmDeleteBody": {
     "placeholders": { "count": { "type": "int" } }
   },
-  "totalSize": "Total size: {size}",
+  "totalSize": "合計サイズ: {size}",
   "@totalSize": {
     "placeholders": { "size": { "type": "String" } }
   },
-  "cannotBeUndone": "This action cannot be undone.",
+  "cannotBeUndone": "この操作は元に戻せません。",
 
   "nItems": "{count} items",
   "@nItems": {
@@ -364,15 +364,15 @@
     "placeholders": { "count": { "type": "int" } }
   },
 
-  "copyNItems": "Copy {count} item(s)",
+  "copyNItems": "{count} 件の項目をコピー",
   "@copyNItems": {
     "placeholders": { "count": { "type": "int" } }
   },
-  "moveNItems": "Move {count} item(s)",
+  "moveNItems": "{count} 件の項目を移動",
   "@moveNItems": {
     "placeholders": { "count": { "type": "int" } }
   },
-  "targetPath": "Target path",
+  "targetPath": "移動先のパス",
   "saved": "Saved {name}",
   "@saved": {
     "placeholders": { "name": { "type": "String" } }
@@ -406,29 +406,29 @@
   "encryptBeforeUpload": "Encrypt files before upload (AES-256-GCM)",
   "encryptionPassphrase": "Encryption Passphrase",
 
-  "appLocked": "CrispCloud is Locked",
-  "enterPinToContinue": "Enter your PIN or password to continue",
-  "pinPassword": "PIN / Password",
-  "incorrectPin": "Incorrect PIN or password",
-  "tooManyAttempts": "Too many failed attempts. Restart the app to try again.",
-  "attemptsRemaining": "{count} attempts remaining",
+  "appLocked": "CrispCloudはロックされています",
+  "enterPinToContinue": "続行するにはPINまたはパスワードを入力してください",
+  "pinPassword": "PIN / パスワード",
+  "incorrectPin": "PINまたはパスワードが正しくありません",
+  "tooManyAttempts": "失敗回数が多すぎます。アプリを再起動して再試行してください。",
+  "attemptsRemaining": "残り試行回数: {count}回",
   "@attemptsRemaining": {
     "placeholders": { "count": { "type": "int" } }
   },
-  "appLockSetup": "Set Up App Lock",
-  "changeAppLockCode": "Change App Lock",
-  "currentPin": "Current PIN / Password",
-  "newPin": "New PIN / Password",
-  "confirmPin": "Confirm PIN / Password",
-  "minFourChars": "Minimum 4 characters",
-  "codesDoNotMatch": "Codes do not match",
-  "autoLockAfter": "Auto-lock after",
-  "immediately": "Immediately",
-  "oneMinute": "1 minute",
-  "fiveMinutes": "5 minutes",
-  "fifteenMinutes": "15 minutes",
-  "thirtyMinutes": "30 minutes",
-  "oneHour": "1 hour",
+  "appLockSetup": "アプリロックを設定",
+  "changeAppLockCode": "アプリロックを変更",
+  "currentPin": "現在のPIN / パスワード",
+  "newPin": "新しいPIN / パスワード",
+  "confirmPin": "PIN / パスワードを確認",
+  "minFourChars": "4文字以上",
+  "codesDoNotMatch": "コードが一致しません",
+  "autoLockAfter": "自動ロックまでの時間",
+  "immediately": "すぐに",
+  "oneMinute": "1分",
+  "fiveMinutes": "5分",
+  "fifteenMinutes": "15分",
+  "thirtyMinutes": "30分",
+  "oneHour": "1時間",
 
   "connectToHetzner": "Connect to Hetzner Storage Box",
   "sftpPort23": "SFTP (port 23)",
@@ -507,12 +507,12 @@
   "exportKeys": "Export/Import Encryption Keys",
   "backupRecovery": "BIP39 Mnemonic Backup and Recovery",
 
-  "noActiveOperations": "No active operations",
-  "refreshAll": "Refresh All",
+  "noActiveOperations": "実行中の操作はありません",
+  "refreshAll": "すべて更新",
 
-  "newName": "New name",
-  "items": "Items:",
-  "andMore": "... and {count} more",
+  "newName": "新しい名前",
+  "items": "項目:",
+  "andMore": "...他 {count} 件",
   "@andMore": {
     "placeholders": { "count": { "type": "int" } }
   },
@@ -529,7 +529,7 @@
   "type": "Type",
   "created": "Created",
   "accessed": "Accessed",
-  "computeMd5": "Compute MD5",
+  "computeMd5": "MD5 を計算",
 
   "protocol": "Protocol"
 }

@@ -235,15 +235,15 @@
   "keyboardShortcuts": "Keyboard Shortcuts",
   "swapPanels": "Swap Panels",
 
-  "connectToCloud": "Connect to Cloud",
+  "connectToCloud": "Ligar à nuvem",
   "browseProvider": "Browse {provider}",
   "@browseProvider": {
     "placeholders": { "provider": { "type": "String" } }
   },
-  "pleaseConnectRemote": "Please connect to access remote files",
+  "pleaseConnectRemote": "Ligue-se para aceder aos ficheiros remotos",
   "notConnected": "Not connected",
   "connectToCloudShort": "Connect to cloud",
-  "loggedIn": "Logged in",
+  "loggedIn": "Sessão iniciada",
 
   "localFiles": "Local Files",
   "remoteFiles": "Remote Files",
@@ -280,35 +280,35 @@
   "visibleLinesCopied": "Visible lines copied",
   "allLogsCopied": "All logs copied",
 
-  "open": "Open",
-  "editSystemEditor": "Edit (System Editor)",
-  "editBuiltIn": "Edit (Built-in)",
-  "openWithSystemApp": "Open with System App",
-  "verifyAgainstRemote": "Verify against remote",
+  "open": "Abrir",
+  "editSystemEditor": "Editar (editor do sistema)",
+  "editBuiltIn": "Editar (editor integrado)",
+  "openWithSystemApp": "Abrir com a aplicação do sistema",
+  "verifyAgainstRemote": "Verificar com o ficheiro remoto",
   "browseArchive": "Browse Archive",
   "archiveExtracted": "Archive extracted successfully",
-  "revealInFinder": "Reveal in Finder",
-  "showInExplorer": "Show in Explorer",
-  "openContainingFolder": "Open containing folder",
-  "properties": "Properties",
-  "copyNames": "Copy name(s)",
-  "copyPaths": "Copy path(s)",
-  "createMd5": "Create .md5 file",
-  "verifyChecksumFile": "Verify checksum file",
-  "splitFile": "Split File",
-  "combineParts": "Combine Parts",
-  "createLink": "Create Link...",
-  "secureWipe": "Secure Wipe",
+  "revealInFinder": "Mostrar no Finder",
+  "showInExplorer": "Mostrar no Explorador",
+  "openContainingFolder": "Abrir pasta de origem",
+  "properties": "Propriedades",
+  "copyNames": "Copiar nomes",
+  "copyPaths": "Copiar caminhos",
+  "createMd5": "Criar ficheiro .md5",
+  "verifyChecksumFile": "Verificar ficheiro de somas de verificação",
+  "splitFile": "Dividir ficheiro",
+  "combineParts": "Combinar partes",
+  "createLink": "Criar ligação...",
+  "secureWipe": "Eliminação segura",
 
-  "confirmDeleteBody": "Are you sure you want to delete {count} item(s)?",
+  "confirmDeleteBody": "Tem a certeza de que pretende eliminar {count} item(ns)?",
   "@confirmDeleteBody": {
     "placeholders": { "count": { "type": "int" } }
   },
-  "totalSize": "Total size: {size}",
+  "totalSize": "Tamanho total: {size}",
   "@totalSize": {
     "placeholders": { "size": { "type": "String" } }
   },
-  "cannotBeUndone": "This action cannot be undone.",
+  "cannotBeUndone": "Esta ação não pode ser anulada.",
 
   "nItems": "{count} items",
   "@nItems": {
@@ -364,15 +364,15 @@
     "placeholders": { "count": { "type": "int" } }
   },
 
-  "copyNItems": "Copy {count} item(s)",
+  "copyNItems": "Copiar {count} item(ns)",
   "@copyNItems": {
     "placeholders": { "count": { "type": "int" } }
   },
-  "moveNItems": "Move {count} item(s)",
+  "moveNItems": "Mover {count} item(ns)",
   "@moveNItems": {
     "placeholders": { "count": { "type": "int" } }
   },
-  "targetPath": "Target path",
+  "targetPath": "Caminho de destino",
   "saved": "Saved {name}",
   "@saved": {
     "placeholders": { "name": { "type": "String" } }
@@ -406,29 +406,29 @@
   "encryptBeforeUpload": "Encrypt files before upload (AES-256-GCM)",
   "encryptionPassphrase": "Encryption Passphrase",
 
-  "appLocked": "CrispCloud is Locked",
-  "enterPinToContinue": "Enter your PIN or password to continue",
-  "pinPassword": "PIN / Password",
-  "incorrectPin": "Incorrect PIN or password",
-  "tooManyAttempts": "Too many failed attempts. Restart the app to try again.",
-  "attemptsRemaining": "{count} attempts remaining",
+  "appLocked": "O CrispCloud está bloqueado",
+  "enterPinToContinue": "Digite seu PIN ou senha para continuar",
+  "pinPassword": "PIN / Senha",
+  "incorrectPin": "PIN ou senha incorretos",
+  "tooManyAttempts": "Muitas tentativas malsucedidas. Reinicie o aplicativo para tentar novamente.",
+  "attemptsRemaining": "{count} tentativas restantes",
   "@attemptsRemaining": {
     "placeholders": { "count": { "type": "int" } }
   },
-  "appLockSetup": "Set Up App Lock",
-  "changeAppLockCode": "Change App Lock",
-  "currentPin": "Current PIN / Password",
-  "newPin": "New PIN / Password",
-  "confirmPin": "Confirm PIN / Password",
-  "minFourChars": "Minimum 4 characters",
-  "codesDoNotMatch": "Codes do not match",
-  "autoLockAfter": "Auto-lock after",
-  "immediately": "Immediately",
-  "oneMinute": "1 minute",
-  "fiveMinutes": "5 minutes",
-  "fifteenMinutes": "15 minutes",
-  "thirtyMinutes": "30 minutes",
-  "oneHour": "1 hour",
+  "appLockSetup": "Configurar bloqueio",
+  "changeAppLockCode": "Alterar bloqueio",
+  "currentPin": "PIN / Senha atual",
+  "newPin": "Novo PIN / Senha",
+  "confirmPin": "Confirmar PIN / Senha",
+  "minFourChars": "Mínimo de 4 caracteres",
+  "codesDoNotMatch": "Os códigos não coincidem",
+  "autoLockAfter": "Bloquear automaticamente após",
+  "immediately": "Imediatamente",
+  "oneMinute": "1 minuto",
+  "fiveMinutes": "5 minutos",
+  "fifteenMinutes": "15 minutos",
+  "thirtyMinutes": "30 minutos",
+  "oneHour": "1 hora",
 
   "connectToHetzner": "Connect to Hetzner Storage Box",
   "sftpPort23": "SFTP (port 23)",
@@ -507,12 +507,12 @@
   "exportKeys": "Export/Import Encryption Keys",
   "backupRecovery": "BIP39 Mnemonic Backup and Recovery",
 
-  "noActiveOperations": "No active operations",
-  "refreshAll": "Refresh All",
+  "noActiveOperations": "Sem operações ativas",
+  "refreshAll": "Atualizar tudo",
 
-  "newName": "New name",
-  "items": "Items:",
-  "andMore": "... and {count} more",
+  "newName": "Novo nome",
+  "items": "Itens:",
+  "andMore": "... e mais {count}",
   "@andMore": {
     "placeholders": { "count": { "type": "int" } }
   },
@@ -529,7 +529,7 @@
   "type": "Type",
   "created": "Created",
   "accessed": "Accessed",
-  "computeMd5": "Compute MD5",
+  "computeMd5": "Calcular MD5",
 
   "protocol": "Protocol"
 }

@@ -40,6 +40,7 @@ import 'package:pdfx/pdfx.dart';
 import 'package:universal_html/html.dart' as html;
 import 'package:video_player/video_player.dart';
 
+import '../l10n/internal_viewer_strings.dart';
 import '../models/file_item.dart';
 import '../models/panel_side.dart';
 import '../providers/providers.dart';
@@ -912,11 +913,11 @@ class _InternalViewerDialogState extends ConsumerState<InternalViewerDialog> {
     final result = await showDialog<String>(
       context: context,
       builder: (_) => _TextPromptDialog(
-        title: offsetMode ? 'Go to offset' : 'Go to line',
+        title: offsetMode ? InternalViewerStrings(context).text('goOffset') : InternalViewerStrings(context).text('goLine'),
         hintText: offsetMode
-            ? 'Offset — 0x… for hex, plain number for decimal'
-            : 'Line number',
-        confirmLabel: 'Go',
+            ? InternalViewerStrings(context).text('offsetHint')
+            : InternalViewerStrings(context).text('lineNumber'),
+        confirmLabel: InternalViewerStrings(context).text('go'),
       ),
     );
     final text = result?.trim() ?? '';
@@ -957,8 +958,8 @@ class _InternalViewerDialogState extends ConsumerState<InternalViewerDialog> {
     final result = await showDialog<String>(
       context: context,
       builder: (_) => _TextPromptDialog(
-        title: wrong ? 'Wrong password' : 'Password required',
-        label: 'Archive password',
+        title: wrong ? InternalViewerStrings(context).text('wrongPassword') : InternalViewerStrings(context).text('passwordRequired'),
+        label: InternalViewerStrings(context).text('archivePassword'),
         obscureText: true,
       ),
     );
@@ -1005,7 +1006,7 @@ class _InternalViewerDialogState extends ConsumerState<InternalViewerDialog> {
     if (_isStreamed) {
       setState(() {
         _searchNote =
-            value.trim().isEmpty ? null : 'press Enter to scan the file';
+            value.trim().isEmpty ? null : InternalViewerStrings(context).text('scan');
       });
       return;
     }
@@ -1444,23 +1445,23 @@ class _InternalViewerDialogState extends ConsumerState<InternalViewerDialog> {
             actions: [
               if (!_loading && _error == null) ...[
                 IconButton(
-                  tooltip: 'Search (Ctrl+F)',
+                  tooltip: InternalViewerStrings(context).text('search'),
                   icon: const Icon(Icons.search),
                   onPressed: _toggleSearch,
                 ),
                 IconButton(
-                  tooltip: 'Go to line / offset (Ctrl+G)',
+                  tooltip: InternalViewerStrings(context).text('goto'),
                   icon: const Icon(Icons.my_location),
                   onPressed: () => unawaited(_showGotoDialog()),
                 ),
                 if (_canChangeEncoding)
                   PopupMenuButton<String>(
-                    tooltip: 'Encoding',
+                    tooltip: InternalViewerStrings(context).text('encoding'),
                     icon: const Icon(Icons.text_fields),
                     onSelected: (value) =>
                         _setEncoding(value == 'auto' ? null : value),
-                    itemBuilder: (_) => const [
-                      PopupMenuItem(value: 'auto', child: Text('Auto-detect')),
+                    itemBuilder: (_) => [
+                      PopupMenuItem(value: 'auto', child: Text(InternalViewerStrings(context).text('auto'))),
                       PopupMenuItem(value: 'utf8', child: Text('UTF-8')),
                       PopupMenuItem(value: 'utf16le', child: Text('UTF-16 LE')),
                       PopupMenuItem(value: 'utf16be', child: Text('UTF-16 BE')),
@@ -1468,50 +1469,50 @@ class _InternalViewerDialogState extends ConsumerState<InternalViewerDialog> {
                     ],
                   ),
                 PopupMenuButton<String>(
-                  tooltip: 'More',
+                  tooltip: InternalViewerStrings(context).text('more'),
                   icon: const Icon(Icons.more_vert),
                   onSelected: _onMenuSelected,
                   itemBuilder: (_) => [
-                    const PopupMenuItem(
+                    PopupMenuItem(
                       value: 'goto',
-                      child: Text('Go to line / offset…'),
+                      child: Text(InternalViewerStrings(context).text('gotoMenu')),
                     ),
-                    const PopupMenuItem(
+                    PopupMenuItem(
                       value: 'zoom_in',
-                      child: Text('Zoom in'),
+                      child: Text(InternalViewerStrings(context).text('zoomIn')),
                     ),
-                    const PopupMenuItem(
+                    PopupMenuItem(
                       value: 'zoom_out',
-                      child: Text('Zoom out'),
+                      child: Text(InternalViewerStrings(context).text('zoomOut')),
                     ),
                     const PopupMenuDivider(),
-                    const PopupMenuItem(
+                    PopupMenuItem(
                       value: 'bpl8',
                       child: Text('Hex: 8 bytes per row'),
                     ),
-                    const PopupMenuItem(
+                    PopupMenuItem(
                       value: 'bpl16',
                       child: Text('Hex: 16 bytes per row'),
                     ),
-                    const PopupMenuItem(
+                    PopupMenuItem(
                       value: 'bpl32',
                       child: Text('Hex: 32 bytes per row'),
                     ),
                     const PopupMenuDivider(),
-                    const PopupMenuItem(
+                    PopupMenuItem(
                       value: 'copy_all',
-                      child: Text('Copy all text'),
+                      child: Text(InternalViewerStrings(context).text('copyAll')),
                     ),
                     const PopupMenuDivider(),
-                    const PopupMenuItem(
+                    PopupMenuItem(
                       value: 'reload',
-                      child: Text('Reload'),
+                      child: Text(InternalViewerStrings(context).text('reload')),
                     ),
                   ],
                 ),
               ],
               IconButton(
-                tooltip: 'Close (Esc)',
+                tooltip: InternalViewerStrings(context).text('close'),
                 icon: const Icon(Icons.close),
                 onPressed: () => Navigator.of(context).maybePop(),
               ),
@@ -1563,11 +1564,11 @@ class _InternalViewerDialogState extends ConsumerState<InternalViewerDialog> {
               child: Row(
                 children: [
                   _modeChip('Auto', null),
-                  _modeChip('Text', ViewerMode.text),
+                  _modeChip(InternalViewerStrings(context).text('text'), ViewerMode.text),
                   _modeChip('ASCII', ViewerMode.ascii),
-                  _modeChip('Binary', ViewerMode.binary),
+                  _modeChip(InternalViewerStrings(context).text('binary'), ViewerMode.binary),
                   _modeChip('Hex', ViewerMode.hex),
-                  _modeChip('Image', ViewerMode.image),
+                  _modeChip(InternalViewerStrings(context).text('image'), ViewerMode.image),
                   for (final mode in extraModes)
                     _modeChip(_modeLabelOf(mode), mode),
                   if (_mode == ViewerMode.pdf) _pdfViewToggle(),
@@ -1579,7 +1580,7 @@ class _InternalViewerDialogState extends ConsumerState<InternalViewerDialog> {
                     Padding(
                       padding: const EdgeInsets.symmetric(horizontal: 2),
                       child: IconButton(
-                        tooltip: 'Open in system preview (Quick Look)',
+                        tooltip: InternalViewerStrings(context).text('systemPreview'),
                         icon: const Icon(Icons.open_in_new, size: 18),
                         onPressed: () => unawaited(_openSystemPreview()),
                         visualDensity: VisualDensity.compact,
@@ -1628,9 +1629,9 @@ class _InternalViewerDialogState extends ConsumerState<InternalViewerDialog> {
       padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 6),
       child: SegmentedButton<bool>(
         style: _compactButtonStyle,
-        segments: const [
-          ButtonSegment(value: false, label: Text('Pages')),
-          ButtonSegment(value: true, label: Text('Text')),
+        segments: [
+          ButtonSegment(value: false, label: Text(InternalViewerStrings(context).text('pages'))),
+          ButtonSegment(value: true, label: Text(InternalViewerStrings(context).text('text'))),
         ],
         selected: {_pdfShowText},
         onSelectionChanged: (selection) {
@@ -1652,9 +1653,9 @@ class _InternalViewerDialogState extends ConsumerState<InternalViewerDialog> {
       padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 6),
       child: SegmentedButton<bool>(
         style: _compactButtonStyle,
-        segments: const [
-          ButtonSegment(value: true, label: Text('Rendered')),
-          ButtonSegment(value: false, label: Text('Source')),
+        segments: [
+          ButtonSegment(value: true, label: Text(InternalViewerStrings(context).text('rendered'))),
+          ButtonSegment(value: false, label: Text(InternalViewerStrings(context).text('source'))),
         ],
         selected: {_htmlRendered},
         onSelectionChanged: (selection) =>
@@ -1668,9 +1669,9 @@ class _InternalViewerDialogState extends ConsumerState<InternalViewerDialog> {
       padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 6),
       child: SegmentedButton<bool>(
         style: _compactButtonStyle,
-        segments: const [
-          ButtonSegment(value: true, label: Text('Tree')),
-          ButtonSegment(value: false, label: Text('Source')),
+        segments: [
+          ButtonSegment(value: true, label: Text(InternalViewerStrings(context).text('tree'))),
+          ButtonSegment(value: false, label: Text(InternalViewerStrings(context).text('source'))),
         ],
         selected: {_xmlTree},
         onSelectionChanged: (selection) =>
@@ -1751,7 +1752,7 @@ class _InternalViewerDialogState extends ConsumerState<InternalViewerDialog> {
               ),
             ),
             IconButton(
-              tooltip: 'Previous match (Shift+F3)',
+              tooltip: InternalViewerStrings(context).text('previous'),
               icon: const Icon(Icons.keyboard_arrow_up, size: 18),
               onPressed: total == 0 ? null : () => _gotoMatch(-1),
               visualDensity: VisualDensity.compact,
@@ -1759,7 +1760,7 @@ class _InternalViewerDialogState extends ConsumerState<InternalViewerDialog> {
               constraints: const BoxConstraints(minWidth: 30, minHeight: 30),
             ),
             IconButton(
-              tooltip: 'Next match (F3)',
+              tooltip: InternalViewerStrings(context).text('next'),
               icon: const Icon(Icons.keyboard_arrow_down, size: 18),
               onPressed: total == 0 ? null : () => _gotoMatch(1),
               visualDensity: VisualDensity.compact,
@@ -1767,7 +1768,7 @@ class _InternalViewerDialogState extends ConsumerState<InternalViewerDialog> {
               constraints: const BoxConstraints(minWidth: 30, minHeight: 30),
             ),
             IconButton(
-              tooltip: 'Close search (Esc)',
+              tooltip: InternalViewerStrings(context).text('closeSearch'),
               icon: const Icon(Icons.close, size: 18),
               onPressed: _toggleSearch,
               visualDensity: VisualDensity.compact,
@@ -1784,7 +1785,7 @@ class _InternalViewerDialogState extends ConsumerState<InternalViewerDialog> {
     if (_preparing) {
       return Center(
         child: Text(
-          'Preparing view…',
+          InternalViewerStrings(context).text('preparing'),
           style: TextStyle(color: theme.colorScheme.onSurfaceVariant),
         ),
       );
@@ -1792,7 +1793,7 @@ class _InternalViewerDialogState extends ConsumerState<InternalViewerDialog> {
     if (_richError != null) return _messagePane(_richError!, theme);
 
     final source = _source;
-    if (source == null) return _messagePane('No data available.', theme);
+    if (source == null) return _messagePane(InternalViewerStrings(context).text('noData'), theme);
 
     switch (_mode) {
       case ViewerMode.text:
@@ -2076,7 +2077,7 @@ class _InternalViewerDialogState extends ConsumerState<InternalViewerDialog> {
     if (document == null) {
       return Center(
         child: Text(
-          'Preparing document…',
+          InternalViewerStrings(context).text('preparingDoc'),
           style: TextStyle(color: theme.colorScheme.onSurfaceVariant),
         ),
       );
@@ -2105,7 +2106,7 @@ class _InternalViewerDialogState extends ConsumerState<InternalViewerDialog> {
         if (_officePdfLoading) {
           return Center(
             child: Text(
-              'Laying out pages…',
+              InternalViewerStrings(context).text('layoutPages'),
               style: TextStyle(color: theme.colorScheme.onSurfaceVariant),
             ),
           );
@@ -2137,7 +2138,7 @@ class _InternalViewerDialogState extends ConsumerState<InternalViewerDialog> {
         if (controller == null) {
           return Center(
             child: Text(
-              'Laying out pages…',
+              InternalViewerStrings(context).text('layoutPages'),
               style: TextStyle(color: theme.colorScheme.onSurfaceVariant),
             ),
           );
@@ -2221,13 +2222,13 @@ class _InternalViewerDialogState extends ConsumerState<InternalViewerDialog> {
   Widget _buildPdfTextView(ThemeData theme) {
     final style = TextStyle(color: theme.colorScheme.onSurfaceVariant);
     if (_pdfTextLoading) {
-      return Center(child: Text('Extracting text layer…', style: style));
+      return Center(child: Text(InternalViewerStrings(context).text('extracting'), style: style));
     }
     final error = _pdfTextError;
     if (error != null) return _messagePane(error, theme);
     final text = _pdfText;
     if (text == null) {
-      return Center(child: Text('Extracting text layer…', style: style));
+      return Center(child: Text(InternalViewerStrings(context).text('extracting'), style: style));
     }
     final capped = text.length > _kRichRenderCap
         ? text.substring(0, _kRichRenderCap)
@@ -2305,8 +2306,8 @@ class _InternalViewerDialogState extends ConsumerState<InternalViewerDialog> {
                 // image-decompression bombs while remaining crisp on HiDPI.
                 cacheWidth: 4096,
                 cacheHeight: 4096,
-                errorBuilder: (_, __, ___) => const Center(
-                  child: Text('Unable to decode this image.'),
+                errorBuilder: (_, __, ___) => Center(
+                  child: Text(InternalViewerStrings(context).text('decodeImage')),
                 ),
               ),
       ),
@@ -2353,13 +2354,13 @@ class _InternalViewerDialogState extends ConsumerState<InternalViewerDialog> {
     if (files == null) {
       return Center(
         child: Text(
-          'Opening archive…',
+          InternalViewerStrings(context).text('openingArchive'),
           style: TextStyle(color: theme.colorScheme.onSurfaceVariant),
         ),
       );
     }
     if (files.isEmpty) {
-      return _messagePane('This archive contains no entries.', theme);
+      return _messagePane(InternalViewerStrings(context).text('emptyArchive'), theme);
     }
     return ListView.builder(
       itemCount: files.length,
@@ -2672,7 +2673,7 @@ class _TextPromptDialogState extends State<_TextPromptDialog> {
       actions: [
         TextButton(
           onPressed: () => Navigator.of(context).pop(),
-          child: const Text('Cancel'),
+          child: Text(InternalViewerStrings(context).text('cancel')),
         ),
         TextButton(onPressed: _submit, child: Text(widget.confirmLabel)),
       ],

@@ -235,15 +235,15 @@
   "keyboardShortcuts": "Keyboard Shortcuts",
   "swapPanels": "Swap Panels",
 
-  "connectToCloud": "Connect to Cloud",
+  "connectToCloud": "连接到云端",
   "browseProvider": "Browse {provider}",
   "@browseProvider": {
     "placeholders": { "provider": { "type": "String" } }
   },
-  "pleaseConnectRemote": "Please connect to access remote files",
+  "pleaseConnectRemote": "请先连接以访问远程文件",
   "notConnected": "Not connected",
   "connectToCloudShort": "Connect to cloud",
-  "loggedIn": "Logged in",
+  "loggedIn": "已登录",
 
   "localFiles": "Local Files",
   "remoteFiles": "Remote Files",
@@ -280,35 +280,35 @@
   "visibleLinesCopied": "Visible lines copied",
   "allLogsCopied": "All logs copied",
 
-  "open": "Open",
-  "editSystemEditor": "Edit (System Editor)",
-  "editBuiltIn": "Edit (Built-in)",
-  "openWithSystemApp": "Open with System App",
-  "verifyAgainstRemote": "Verify against remote",
+  "open": "打开",
+  "editSystemEditor": "编辑（系统编辑器）",
+  "editBuiltIn": "编辑（内置编辑器）",
+  "openWithSystemApp": "使用系统应用打开",
+  "verifyAgainstRemote": "与远程文件校验",
   "browseArchive": "Browse Archive",
   "archiveExtracted": "Archive extracted successfully",
-  "revealInFinder": "Reveal in Finder",
-  "showInExplorer": "Show in Explorer",
-  "openContainingFolder": "Open containing folder",
-  "properties": "Properties",
-  "copyNames": "Copy name(s)",
-  "copyPaths": "Copy path(s)",
-  "createMd5": "Create .md5 file",
-  "verifyChecksumFile": "Verify checksum file",
-  "splitFile": "Split File",
-  "combineParts": "Combine Parts",
-  "createLink": "Create Link...",
-  "secureWipe": "Secure Wipe",
+  "revealInFinder": "在 Finder 中显示",
+  "showInExplorer": "在资源管理器中显示",
+  "openContainingFolder": "打开所在文件夹",
+  "properties": "属性",
+  "copyNames": "复制名称",
+  "copyPaths": "复制路径",
+  "createMd5": "创建 .md5 文件",
+  "verifyChecksumFile": "验证校验和文件",
+  "splitFile": "拆分文件",
+  "combineParts": "合并分卷",
+  "createLink": "创建链接...",
+  "secureWipe": "安全擦除",
 
-  "confirmDeleteBody": "Are you sure you want to delete {count} item(s)?",
+  "confirmDeleteBody": "确定要删除 {count} 个项目吗？",
   "@confirmDeleteBody": {
     "placeholders": { "count": { "type": "int" } }
   },
-  "totalSize": "Total size: {size}",
+  "totalSize": "总大小：{size}",
   "@totalSize": {
     "placeholders": { "size": { "type": "String" } }
   },
-  "cannotBeUndone": "This action cannot be undone.",
+  "cannotBeUndone": "此操作无法撤销。",
 
   "nItems": "{count} items",
   "@nItems": {
@@ -364,15 +364,15 @@
     "placeholders": { "count": { "type": "int" } }
   },
 
-  "copyNItems": "Copy {count} item(s)",
+  "copyNItems": "复制 {count} 个项目",
   "@copyNItems": {
     "placeholders": { "count": { "type": "int" } }
   },
-  "moveNItems": "Move {count} item(s)",
+  "moveNItems": "移动 {count} 个项目",
   "@moveNItems": {
     "placeholders": { "count": { "type": "int" } }
   },
-  "targetPath": "Target path",
+  "targetPath": "目标路径",
   "saved": "Saved {name}",
   "@saved": {
     "placeholders": { "name": { "type": "String" } }
@@ -406,29 +406,29 @@
   "encryptBeforeUpload": "Encrypt files before upload (AES-256-GCM)",
   "encryptionPassphrase": "Encryption Passphrase",
 
-  "appLocked": "CrispCloud is Locked",
-  "enterPinToContinue": "Enter your PIN or password to continue",
-  "pinPassword": "PIN / Password",
-  "incorrectPin": "Incorrect PIN or password",
-  "tooManyAttempts": "Too many failed attempts. Restart the app to try again.",
-  "attemptsRemaining": "{count} attempts remaining",
+  "appLocked": "CrispCloud 已锁定",
+  "enterPinToContinue": "请输入 PIN 或密码以继续",
+  "pinPassword": "PIN / 密码",
+  "incorrectPin": "PIN 或密码不正确",
+  "tooManyAttempts": "失败次数过多。请重启应用后重试。",
+  "attemptsRemaining": "剩余 {count} 次尝试",
   "@attemptsRemaining": {
     "placeholders": { "count": { "type": "int" } }
   },
-  "appLockSetup": "Set Up App Lock",
-  "changeAppLockCode": "Change App Lock",
-  "currentPin": "Current PIN / Password",
-  "newPin": "New PIN / Password",
-  "confirmPin": "Confirm PIN / Password",
-  "minFourChars": "Minimum 4 characters",
-  "codesDoNotMatch": "Codes do not match",
-  "autoLockAfter": "Auto-lock after",
-  "immediately": "Immediately",
-  "oneMinute": "1 minute",
-  "fiveMinutes": "5 minutes",
-  "fifteenMinutes": "15 minutes",
-  "thirtyMinutes": "30 minutes",
-  "oneHour": "1 hour",
+  "appLockSetup": "设置应用锁",
+  "changeAppLockCode": "更改应用锁",
+  "currentPin": "当前 PIN / 密码",
+  "newPin": "新 PIN / 密码",
+  "confirmPin": "确认 PIN / 密码",
+  "minFourChars": "至少 4 个字符",
+  "codesDoNotMatch": "输入的代码不一致",
+  "autoLockAfter": "自动锁定时间",
+  "immediately": "立即",
+  "oneMinute": "1 分钟",
+  "fiveMinutes": "5 分钟",
+  "fifteenMinutes": "15 分钟",
+  "thirtyMinutes": "30 分钟",
+  "oneHour": "1 小时",
 
   "connectToHetzner": "Connect to Hetzner Storage Box",
   "sftpPort23": "SFTP (port 23)",
@@ -507,12 +507,12 @@
   "exportKeys": "Export/Import Encryption Keys",
   "backupRecovery": "BIP39 Mnemonic Backup and Recovery",
 
-  "noActiveOperations": "No active operations",
-  "refreshAll": "Refresh All",
+  "noActiveOperations": "没有活动操作",
+  "refreshAll": "全部刷新",
 
-  "newName": "New name",
-  "items": "Items:",
-  "andMore": "... and {count} more",
+  "newName": "新名称",
+  "items": "项目：",
+  "andMore": "...以及另外 {count} 个",
   "@andMore": {
     "placeholders": { "count": { "type": "int" } }
   },
@@ -529,7 +529,7 @@
   "type": "Type",
   "created": "Created",
   "accessed": "Accessed",
-  "computeMd5": "Compute MD5",
+  "computeMd5": "计算 MD5",
 
   "protocol": "Protocol"
 }

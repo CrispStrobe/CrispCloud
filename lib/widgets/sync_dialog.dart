@@ -9,6 +9,7 @@ import '../providers/providers.dart';
 import '../services/background_sync_service.dart';
 import '../services/sync_database.dart';
 import '../l10n/app_localizations.dart';
+import '../l10n/sync_dialog_strings.dart';
 
 // Auto-evict options: 0=disabled, then days
 const _kAutoEvictOptions = [0, 7, 14, 30, 60, 90];
@@ -25,6 +26,7 @@ class _SyncManagerDialog extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
+    final t = SyncDialogStrings(context);
     final sync = ref.watch(syncProvider);
 
     return AlertDialog(
@@ -32,7 +34,7 @@ class _SyncManagerDialog extends ConsumerWidget {
         children: [
           const Icon(Icons.sync),
           const SizedBox(width: 8),
-          const Text('Sync Pairs'),
+          Text(t.text('pairs')),
           const Spacer(),
           // Watch toggle
           IconButton(
@@ -41,7 +43,9 @@ class _SyncManagerDialog extends ConsumerWidget {
               size: 18,
               color: sync.isWatchEnabled ? Colors.green : null,
             ),
-            tooltip: sync.isWatchEnabled ? 'Disable Auto-Sync' : 'Enable Auto-Sync (watch for changes)',
+            tooltip: sync.isWatchEnabled
+                ? t.text('disableWatch')
+                : t.text('enableWatch'),
             onPressed: () {
               if (sync.isWatchEnabled) {
                 ref.read(syncProvider).disableWatch();
@@ -51,12 +55,17 @@ class _SyncManagerDialog extends ConsumerWidget {
             },
           ),
           if (sync.isSyncing)
-            const SizedBox(width: 20, height: 20, child: CircularProgressIndicator(strokeWidth: 2))
+            const SizedBox(
+                width: 20,
+                height: 20,
+                child: CircularProgressIndicator(strokeWidth: 2))
           else
             IconButton(
               icon: const Icon(Icons.sync, size: 20),
-              tooltip: 'Sync All',
-              onPressed: sync.pairs.isEmpty ? null : () => ref.read(syncProvider).syncAll(),
+              tooltip: t.text('syncAll'),
+              onPressed: sync.pairs.isEmpty
+                  ? null
+                  : () => ref.read(syncProvider).syncAll(),
             ),
         ],
       ),
@@ -75,8 +84,12 @@ class _SyncManagerDialog extends ConsumerWidget {
                   borderRadius: BorderRadius.circular(8),
                 ),
                 child: Text(
-                  'Last sync: ${sync.lastResult!.uploaded} up, ${sync.lastResult!.downloaded} down, '
-                  '${sync.lastResult!.conflicts} conflicts, ${sync.lastResult!.errors} errors',
+                  t.text('lastResult', {
+                    'up': sync.lastResult!.uploaded,
+                    'down': sync.lastResult!.downloaded,
+                    'conflicts': sync.lastResult!.conflicts,
+                    'errors': sync.lastResult!.errors
+                  }),
                   style: const TextStyle(fontSize: 12),
                 ),
               ),
@@ -91,16 +104,18 @@ class _SyncManagerDialog extends ConsumerWidget {
             _AutoEvictTile(sync: sync),
             const Divider(height: 20),
             if (sync.pairs.isEmpty)
-              const Padding(
-                padding: EdgeInsets.symmetric(vertical: 24),
+              Padding(
+                padding: const EdgeInsets.symmetric(vertical: 24),
                 child: Column(
                   children: [
-                    Icon(Icons.sync_disabled, size: 48, color: Colors.grey),
-                    SizedBox(height: 8),
-                    Text('No sync pairs configured'),
-                    SizedBox(height: 4),
-                    Text('Add a pair to keep local and remote folders in sync.',
-                        style: TextStyle(fontSize: 12, color: Colors.grey)),
+                    const Icon(Icons.sync_disabled,
+                        size: 48, color: Colors.grey),
+                    const SizedBox(height: 8),
+                    Text(t.text('empty')),
+                    const SizedBox(height: 4),
+                    Text(t.text('emptyHelp'),
+                        style:
+                            const TextStyle(fontSize: 12, color: Colors.grey)),
                   ],
                 ),
               )
@@ -126,23 +141,30 @@ class _SyncManagerDialog extends ConsumerWidget {
         ),
         TextButton.icon(
           icon: const Icon(Icons.replay, size: 16),
-          label: const Text('Replay Offline'),
-          onPressed: sync.isSyncing ? null : () async {
-            final result = await ref.read(syncProvider).replayOfflineQueue();
-            if (context.mounted) {
-              ScaffoldMessenger.of(context).showSnackBar(
-                SnackBar(content: Text(
-                  result.hasChanges || result.errors > 0
-                      ? 'Replayed: ${result.uploaded + result.downloaded} ops, ${result.errors} errors'
-                      : 'No offline operations to replay',
-                )),
-              );
-            }
-          },
+          label: Text(t.text('replay')),
+          onPressed: sync.isSyncing
+              ? null
+              : () async {
+                  final result =
+                      await ref.read(syncProvider).replayOfflineQueue();
+                  if (context.mounted) {
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      SnackBar(
+                          content: Text(
+                        result.hasChanges || result.errors > 0
+                            ? t.text('replayed', {
+                                'count': result.uploaded + result.downloaded,
+                                'errors': result.errors
+                              })
+                            : t.text('noReplay'),
+                      )),
+                    );
+                  }
+                },
         ),
         ElevatedButton.icon(
           icon: const Icon(Icons.add, size: 18),
-          label: const Text('Add Pair'),
+          label: Text(t.text('add')),
           onPressed: () => _showAddPairDialog(context, ref),
         ),
       ],
@@ -150,6 +172,7 @@ class _SyncManagerDialog extends ConsumerWidget {
   }
 
   void _showAddPairDialog(BuildContext context, WidgetRef ref) {
+    final t = SyncDialogStrings(context);
     final nameController = TextEditingController();
     final localController = TextEditingController();
     final remoteController = TextEditingController(text: '/');
@@ -165,7 +188,7 @@ class _SyncManagerDialog extends ConsumerWidget {
       context: context,
       builder: (ctx) => StatefulBuilder(
         builder: (ctx, setState) => AlertDialog(
-          title: const Text('New Sync Pair'),
+          title: Text(t.text('new')),
           content: SizedBox(
             width: 400,
             child: SingleChildScrollView(
@@ -174,89 +197,95 @@ class _SyncManagerDialog extends ConsumerWidget {
                 children: [
                   TextField(
                     controller: nameController,
-                    decoration: const InputDecoration(
-                      labelText: 'Name',
-                      hintText: 'e.g., Documents Sync',
-                      border: OutlineInputBorder(),
+                    decoration: InputDecoration(
+                      labelText: t.text('name'),
+                      hintText: t.text('nameHint'),
+                      border: const OutlineInputBorder(),
                     ),
                     autofocus: true,
                   ),
                   const SizedBox(height: 12),
                   TextField(
                     controller: localController,
-                    decoration: const InputDecoration(
-                      labelText: 'Local Folder Path',
+                    decoration: InputDecoration(
+                      labelText: t.text('localPath'),
                       hintText: '/home/user/Documents',
-                      border: OutlineInputBorder(),
-                      prefixIcon: Icon(Icons.folder),
+                      border: const OutlineInputBorder(),
+                      prefixIcon: const Icon(Icons.folder),
                     ),
                   ),
                   const SizedBox(height: 12),
                   TextField(
                     controller: remoteController,
-                    decoration: const InputDecoration(
-                      labelText: 'Remote Folder Path',
+                    decoration: InputDecoration(
+                      labelText: t.text('remotePath'),
                       hintText: '/Documents',
-                      border: OutlineInputBorder(),
-                      prefixIcon: Icon(Icons.cloud),
+                      border: const OutlineInputBorder(),
+                      prefixIcon: const Icon(Icons.cloud),
                     ),
                   ),
                   const SizedBox(height: 12),
                   DropdownButtonFormField<ConflictPolicy>(
                     initialValue: policy,
-                    decoration: const InputDecoration(
-                      labelText: 'Conflict Policy',
-                      border: OutlineInputBorder(),
+                    decoration: InputDecoration(
+                      labelText: t.text('policy'),
+                      border: const OutlineInputBorder(),
                     ),
-                    items: ConflictPolicy.values.map((p) => DropdownMenuItem(
-                      value: p,
-                      child: Text(_policyLabel(p)),
-                    )).toList(),
+                    items: ConflictPolicy.values
+                        .map((p) => DropdownMenuItem(
+                              value: p,
+                              child: Text(_policyLabel(p, t)),
+                            ))
+                        .toList(),
                     onChanged: (v) => setState(() => policy = v ?? policy),
                   ),
                   const SizedBox(height: 12),
                   DropdownButtonFormField<SyncDirection>(
                     initialValue: direction,
-                    decoration: const InputDecoration(
-                      labelText: 'Direction',
-                      border: OutlineInputBorder(),
+                    decoration: InputDecoration(
+                      labelText: t.text('direction'),
+                      border: const OutlineInputBorder(),
                     ),
-                    items: const [
-                      DropdownMenuItem(value: SyncDirection.twoWay, child: Text('Two-Way')),
-                      DropdownMenuItem(value: SyncDirection.uploadOnly, child: Text('Upload Only')),
-                      DropdownMenuItem(value: SyncDirection.downloadOnly, child: Text('Download Only')),
+                    items: [
+                      DropdownMenuItem(
+                          value: SyncDirection.twoWay,
+                          child: Text(t.text('twoWay'))),
+                      DropdownMenuItem(
+                          value: SyncDirection.uploadOnly,
+                          child: Text(t.text('uploadOnly'))),
+                      DropdownMenuItem(
+                          value: SyncDirection.downloadOnly,
+                          child: Text(t.text('downloadOnly'))),
                     ],
-                    onChanged: (v) => setState(() => direction = v ?? direction),
+                    onChanged: (v) =>
+                        setState(() => direction = v ?? direction),
                   ),
                   const SizedBox(height: 12),
                   TextField(
                     controller: includeController,
-                    decoration: const InputDecoration(
-                      labelText: 'Include Patterns (optional)',
+                    decoration: InputDecoration(
+                      labelText: t.text('include'),
                       hintText: '*.dart, *.yaml, lib/**',
-                      helperText: 'Comma-separated globs. Empty = all files.',
-                      border: OutlineInputBorder(),
-                      prefixIcon: Icon(Icons.filter_alt),
+                      helperText: t.text('includeHelp'),
+                      border: const OutlineInputBorder(),
+                      prefixIcon: const Icon(Icons.filter_alt),
                     ),
                   ),
                   const SizedBox(height: 12),
                   TextField(
                     controller: excludeController,
-                    decoration: const InputDecoration(
-                      labelText: 'Exclude Patterns (optional)',
+                    decoration: InputDecoration(
+                      labelText: t.text('exclude'),
                       hintText: '.git/**, *.tmp, node_modules/**',
-                      helperText: 'Comma-separated globs to skip.',
-                      border: OutlineInputBorder(),
-                      prefixIcon: Icon(Icons.filter_alt_off),
+                      helperText: t.text('excludeHelp'),
+                      border: const OutlineInputBorder(),
+                      prefixIcon: const Icon(Icons.filter_alt_off),
                     ),
                   ),
                   const SizedBox(height: 12),
                   SwitchListTile(
-                    title: const Text('Cloud-only files'),
-                    subtitle: const Text(
-                      'New remote files appear as lightweight stubs. '
-                      'Download on demand to save disk space.',
-                    ),
+                    title: Text(t.text('cloud')),
+                    subtitle: Text(t.text('cloudHelp')),
                     secondary: const Icon(Icons.cloud_outlined),
                     value: usePlaceholders,
                     onChanged: (v) => setState(() => usePlaceholders = v),
@@ -267,24 +296,27 @@ class _SyncManagerDialog extends ConsumerWidget {
             ),
           ),
           actions: [
-            TextButton(onPressed: () => Navigator.pop(ctx), child: Text(AppLocalizations.of(context)!.cancel)),
+            TextButton(
+                onPressed: () => Navigator.pop(ctx),
+                child: Text(AppLocalizations.of(context)!.cancel)),
             ElevatedButton(
               onPressed: () async {
-                if (nameController.text.isEmpty || localController.text.isEmpty) return;
+                if (nameController.text.isEmpty || localController.text.isEmpty)
+                  return;
                 await ref.read(syncProvider).addPair(
-                  name: nameController.text,
-                  localPath: localController.text,
-                  remotePath: remoteController.text,
-                  provider: auth.currentProvider.name,
-                  conflictPolicy: policy,
-                  direction: direction,
-                  includePatterns: includeController.text,
-                  excludePatterns: excludeController.text,
-                  usePlaceholders: usePlaceholders,
-                );
+                      name: nameController.text,
+                      localPath: localController.text,
+                      remotePath: remoteController.text,
+                      provider: auth.currentProvider.name,
+                      conflictPolicy: policy,
+                      direction: direction,
+                      includePatterns: includeController.text,
+                      excludePatterns: excludeController.text,
+                      usePlaceholders: usePlaceholders,
+                    );
                 if (ctx.mounted) Navigator.pop(ctx);
               },
-              child: const Text('Create'),
+              child: Text(AppLocalizations.of(context)!.create),
             ),
           ],
         ),
@@ -292,13 +324,18 @@ class _SyncManagerDialog extends ConsumerWidget {
     );
   }
 
-  String _policyLabel(ConflictPolicy p) {
+  String _policyLabel(ConflictPolicy p, SyncDialogStrings t) {
     switch (p) {
-      case ConflictPolicy.newestWins: return 'Newest Wins';
-      case ConflictPolicy.localWins: return 'Local Wins';
-      case ConflictPolicy.remoteWins: return 'Remote Wins';
-      case ConflictPolicy.keepBoth: return 'Keep Both';
-      case ConflictPolicy.manual: return 'Ask Me';
+      case ConflictPolicy.newestWins:
+        return t.text('newest');
+      case ConflictPolicy.localWins:
+        return t.text('localWins');
+      case ConflictPolicy.remoteWins:
+        return t.text('remoteWins');
+      case ConflictPolicy.keepBoth:
+        return t.text('keepBoth');
+      case ConflictPolicy.manual:
+        return t.text('ask');
     }
   }
 }
@@ -312,7 +349,8 @@ class _BackgroundSyncTile extends ConsumerStatefulWidget {
   const _BackgroundSyncTile({required this.sync});
 
   @override
-  ConsumerState<_BackgroundSyncTile> createState() => _BackgroundSyncTileState();
+  ConsumerState<_BackgroundSyncTile> createState() =>
+      _BackgroundSyncTileState();
 }
 
 class _BackgroundSyncTileState extends ConsumerState<_BackgroundSyncTile> {
@@ -326,6 +364,7 @@ class _BackgroundSyncTileState extends ConsumerState<_BackgroundSyncTile> {
 
   @override
   Widget build(BuildContext context) {
+    final t = SyncDialogStrings(context);
     final sync = ref.watch(syncProvider);
     final enabled = sync.isBackgroundSyncEnabled;
 
@@ -334,11 +373,11 @@ class _BackgroundSyncTileState extends ConsumerState<_BackgroundSyncTile> {
       children: [
         SwitchListTile(
           secondary: const Icon(Icons.sync_lock),
-          title: const Text('Background Sync'),
+          title: Text(t.text('background')),
           subtitle: Text(
             enabled
-                ? 'Syncing every $_intervalMinutes min'
-                : 'Sync only when the app is open',
+                ? t.text('every', {'count': _intervalMinutes})
+                : t.text('openOnly'),
             style: const TextStyle(fontSize: 12),
           ),
           value: enabled,
@@ -358,16 +397,20 @@ class _BackgroundSyncTileState extends ConsumerState<_BackgroundSyncTile> {
             padding: const EdgeInsets.only(left: 4, bottom: 4),
             child: Row(
               children: [
-                const Text('Interval:', style: TextStyle(fontSize: 12)),
+                Text(t.text('interval'), style: const TextStyle(fontSize: 12)),
                 const SizedBox(width: 8),
                 DropdownButton<int>(
                   value: _intervalMinutes,
                   isDense: true,
-                  items: const [
-                    DropdownMenuItem(value: 15, child: Text('15 min')),
-                    DropdownMenuItem(value: 30, child: Text('30 min')),
-                    DropdownMenuItem(value: 60, child: Text('1 hour')),
-                    DropdownMenuItem(value: 120, child: Text('2 hours')),
+                  items: [
+                    DropdownMenuItem(
+                        value: 15,
+                        child: Text(t.text('minutes', {'count': 15}))),
+                    DropdownMenuItem(
+                        value: 30,
+                        child: Text(t.text('minutes', {'count': 30}))),
+                    DropdownMenuItem(value: 60, child: Text(t.text('hour1'))),
+                    DropdownMenuItem(value: 120, child: Text(t.text('hour2'))),
                   ],
                   onChanged: (v) async {
                     if (v == null) return;
@@ -395,6 +438,7 @@ class _SyncPairTile extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
+    final t = SyncDialogStrings(context);
     final sync = ref.watch(syncProvider);
     final isActive = sync.isSyncing && sync.currentPairName == pair.name;
 
@@ -409,16 +453,19 @@ class _SyncPairTile extends ConsumerWidget {
           if (pair.usePlaceholders) ...[
             const SizedBox(width: 6),
             Tooltip(
-              message: 'Cloud-only mode: files download on demand',
-              child: Icon(Icons.cloud_outlined, size: 14,
-                  color: Theme.of(context).colorScheme.primary),
+              message: t.text('cloudTooltip'),
+              child: Icon(Icons.cloud_outlined,
+                  size: 14, color: Theme.of(context).colorScheme.primary),
             ),
           ],
         ],
       ),
       subtitle: Text(
-        '${pair.localPath} ↔ ${pair.remotePath}\n'
-        'Last sync: ${pair.lastSyncAt != null ? _formatTime(pair.lastSyncAt!) : 'Never'}',
+        '${pair.localPath} ↔ ${pair.remotePath}\n${t.text('lastTime', {
+              'time': pair.lastSyncAt != null
+                  ? _formatTime(pair.lastSyncAt!, t)
+                  : t.text('never')
+            })}',
         style: const TextStyle(fontSize: 11),
       ),
       isThreeLine: true,
@@ -428,15 +475,21 @@ class _SyncPairTile extends ConsumerWidget {
           if (pair.usePlaceholders)
             IconButton(
               icon: const Icon(Icons.cloud_download, size: 18),
-              tooltip: 'Download All Cloud-Only Files',
-              onPressed: isActive ? null : () async {
-                final count = await ref.read(syncProvider).hydrateAllPlaceholders(pair.id);
-                if (context.mounted) {
-                  ScaffoldMessenger.of(context).showSnackBar(
-                    SnackBar(content: Text('Downloaded $count files')),
-                  );
-                }
-              },
+              tooltip: t.text('downloadAll'),
+              onPressed: isActive
+                  ? null
+                  : () async {
+                      final count = await ref
+                          .read(syncProvider)
+                          .hydrateAllPlaceholders(pair.id);
+                      if (context.mounted) {
+                        ScaffoldMessenger.of(context).showSnackBar(
+                          SnackBar(
+                              content:
+                                  Text(t.text('downloaded', {'count': count}))),
+                        );
+                      }
+                    },
             ),
           Switch(
             value: pair.enabled,
@@ -444,12 +497,13 @@ class _SyncPairTile extends ConsumerWidget {
           ),
           IconButton(
             icon: const Icon(Icons.sync, size: 18),
-            tooltip: 'Sync Now',
-            onPressed: isActive ? null : () => ref.read(syncProvider).syncOne(pair.id),
+            tooltip: t.text('now'),
+            onPressed:
+                isActive ? null : () => ref.read(syncProvider).syncOne(pair.id),
           ),
           IconButton(
             icon: const Icon(Icons.delete, size: 18),
-            tooltip: 'Remove',
+            tooltip: t.text('remove'),
             onPressed: () => ref.read(syncProvider).removePair(pair.id),
           ),
         ],
@@ -457,12 +511,13 @@ class _SyncPairTile extends ConsumerWidget {
     );
   }
 
-  String _formatTime(DateTime dt) {
+  String _formatTime(DateTime dt, SyncDialogStrings t) {
     final diff = DateTime.now().difference(dt);
-    if (diff.inMinutes < 1) return 'Just now';
-    if (diff.inHours < 1) return '${diff.inMinutes}m ago';
-    if (diff.inDays < 1) return '${diff.inHours}h ago';
-    return '${diff.inDays}d ago';
+    if (diff.inMinutes < 1) return t.text('justNow');
+    if (diff.inHours < 1)
+      return t.text('agoMinutes', {'count': diff.inMinutes});
+    if (diff.inDays < 1) return t.text('agoHours', {'count': diff.inHours});
+    return t.text('agoDays', {'count': diff.inDays});
   }
 }
 
@@ -476,6 +531,7 @@ class _AutoEvictTile extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
+    final t = SyncDialogStrings(context);
     final days = ref.watch(syncProvider).autoEvictDays;
 
     return Row(
@@ -486,12 +542,13 @@ class _AutoEvictTile extends ConsumerWidget {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              const Text('Auto-evict cloud-only files',
-                  style: TextStyle(fontSize: 13, fontWeight: FontWeight.w500)),
+              Text(t.text('evict'),
+                  style: const TextStyle(
+                      fontSize: 13, fontWeight: FontWeight.w500)),
               Text(
                 days == 0
-                    ? 'Disabled — synced files are kept locally'
-                    : 'Free up space after $days days without access',
+                    ? t.text('evictOff')
+                    : t.text('evictAfter', {'count': days}),
                 style: const TextStyle(fontSize: 11, color: Colors.grey),
               ),
             ],
@@ -500,10 +557,13 @@ class _AutoEvictTile extends ConsumerWidget {
         DropdownButton<int>(
           value: days,
           isDense: true,
-          items: _kAutoEvictOptions.map((d) => DropdownMenuItem(
-            value: d,
-            child: Text(d == 0 ? 'Off' : '${d}d'),
-          )).toList(),
+          items: _kAutoEvictOptions
+              .map((d) => DropdownMenuItem(
+                    value: d,
+                    child: Text(
+                        d == 0 ? t.text('off') : t.text('days', {'count': d})),
+                  ))
+              .toList(),
           onChanged: (v) {
             if (v != null) ref.read(syncProvider).setAutoEvictDays(v);
           },

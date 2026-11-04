@@ -166,7 +166,7 @@ void showFileContextMenu(BuildContext context, WidgetRef ref, PanelSide side,
             children: [
               const Icon(Icons.edit),
               const SizedBox(width: 8),
-              Text(preferExternal ? 'Edit (System Editor)' : 'Edit (Built-in)'),
+              Text(preferExternal ? AppLocalizations.of(context)!.editSystemEditor : AppLocalizations.of(context)!.editBuiltIn),
             ],
           ),
           onTap: () => Future.delayed(Duration.zero, () {
@@ -188,8 +188,8 @@ void showFileContextMenu(BuildContext context, WidgetRef ref, PanelSide side,
                   size: 20),
               const SizedBox(width: 8),
               Text(preferExternal
-                  ? 'Edit (Built-in)'
-                  : 'Open with System Editor'),
+                  ? AppLocalizations.of(context)!.editBuiltIn
+                  : AppLocalizations.of(context)!.editSystemEditor),
             ],
           ),
           onTap: () => Future.delayed(Duration.zero, () {
@@ -218,10 +218,10 @@ void showFileContextMenu(BuildContext context, WidgetRef ref, PanelSide side,
       !_editableExts.contains(file.extension)) {
     items.add(
       PopupMenuItem(
-        child: const Row(children: [
+        child: Row(children: [
           Icon(Icons.open_in_new, size: 20),
           SizedBox(width: 8),
-          Text('Open with System App'),
+          Text(AppLocalizations.of(context)!.openWithSystemApp),
         ]),
         onTap: () => Future.delayed(Duration.zero, () {
           if (!context.mounted) return;
@@ -246,10 +246,10 @@ void showFileContextMenu(BuildContext context, WidgetRef ref, PanelSide side,
     if (oppMatch.isNotEmpty) {
       items.add(
         PopupMenuItem(
-          child: const Row(children: [
+          child: Row(children: [
             Icon(Icons.verified, size: 20),
             SizedBox(width: 8),
-            Text('Verify against remote'),
+            Text(AppLocalizations.of(context)!.verifyAgainstRemote),
           ]),
           onTap: () => Future.delayed(Duration.zero, () {
             if (!context.mounted) return;
@@ -272,11 +272,11 @@ void showFileContextMenu(BuildContext context, WidgetRef ref, PanelSide side,
     if (matchingFile.isNotEmpty) {
       items.add(
         PopupMenuItem(
-          child: const Row(
+          child: Row(
             children: [
               Icon(Icons.compare_arrows),
               SizedBox(width: 8),
-              Text('Compare')
+              Text(AppLocalizations.of(context)!.compare)
             ],
           ),
           onTap: () => Future.delayed(Duration.zero, () {
@@ -302,7 +302,7 @@ void showFileContextMenu(BuildContext context, WidgetRef ref, PanelSide side,
           children: [
             const Icon(Icons.upload),
             const SizedBox(width: 8),
-            Text('Upload${isMultiSelect ? ' (${files.length})' : ''}'),
+            Text('${AppLocalizations.of(context)!.upload}${isMultiSelect ? ' (${files.length})' : ''}'),
           ],
         ),
         onTap: () => Future.delayed(
@@ -321,7 +321,7 @@ void showFileContextMenu(BuildContext context, WidgetRef ref, PanelSide side,
           children: [
             const Icon(Icons.download),
             const SizedBox(width: 8),
-            Text('Download${isMultiSelect ? ' (${files.length})' : ''}'),
+            Text('${AppLocalizations.of(context)!.download}${isMultiSelect ? ' (${files.length})' : ''}'),
           ],
         ),
         onTap: () => Future.delayed(
@@ -457,7 +457,7 @@ void showFileContextMenu(BuildContext context, WidgetRef ref, PanelSide side,
           children: [
             const Icon(Icons.download),
             const SizedBox(width: 8),
-            Text('Download${isMultiSelect ? ' (${files.length})' : ''}'),
+            Text('${AppLocalizations.of(context)!.download}${isMultiSelect ? ' (${files.length})' : ''}'),
           ],
         ),
         onTap: () => Future.delayed(Duration.zero, () {
@@ -472,7 +472,7 @@ void showFileContextMenu(BuildContext context, WidgetRef ref, PanelSide side,
           children: [
             const Icon(Icons.content_copy),
             const SizedBox(width: 8),
-            Text('Copy to...${isMultiSelect ? ' (${files.length})' : ''}'),
+            Text('${AppLocalizations.of(context)!.copyTo}${isMultiSelect ? ' (${files.length})' : ''}'),
           ],
         ),
         onTap: () => Future.delayed(Duration.zero, () {
@@ -490,7 +490,7 @@ void showFileContextMenu(BuildContext context, WidgetRef ref, PanelSide side,
         children: [
           const Icon(Icons.drive_file_move),
           const SizedBox(width: 8),
-          Text('Move to...${isMultiSelect ? ' (${files.length})' : ''}'),
+          Text('${AppLocalizations.of(context)!.moveTo}${isMultiSelect ? ' (${files.length})' : ''}'),
         ],
       ),
       onTap: () => Future.delayed(Duration.zero, () {
@@ -527,7 +527,7 @@ void showFileContextMenu(BuildContext context, WidgetRef ref, PanelSide side,
           children: [
             const Icon(Icons.drive_file_rename_outline),
             const SizedBox(width: 8),
-            Text('Batch Rename (${files.length})'),
+            Text('${AppLocalizations.of(context)!.batchRename} (${files.length})'),
           ],
         ),
         onTap: () => Future.delayed(Duration.zero, () {
@@ -573,11 +573,11 @@ void showFileContextMenu(BuildContext context, WidgetRef ref, PanelSide side,
     items.add(const PopupMenuDivider());
     items.add(
       PopupMenuItem(
-        child: const Row(
+        child: Row(
           children: [
             Icon(Icons.history),
             SizedBox(width: 8),
-            Text('Version History')
+            Text(AppLocalizations.of(context)!.versionHistory)
           ],
         ),
         onTap: () => Future.delayed(Duration.zero, () {
@@ -594,11 +594,11 @@ void showFileContextMenu(BuildContext context, WidgetRef ref, PanelSide side,
     if (auth.client is SFTPClientAdapter) {
       items.add(
         PopupMenuItem(
-          child: const Row(
+          child: Row(
             children: [
               Icon(Icons.security),
               SizedBox(width: 8),
-              Text('Permissions')
+              Text(AppLocalizations.of(context)!.permissions)
             ],
           ),
           onTap: () => Future.delayed(Duration.zero, () {
@@ -676,7 +676,7 @@ void showFileContextMenu(BuildContext context, WidgetRef ref, PanelSide side,
             children: [
               const Icon(Icons.archive),
               const SizedBox(width: 8),
-              Text('Create Zip${isMultiSelect ? ' (${files.length})' : ''}'),
+              Text('${AppLocalizations.of(context)!.createZip}${isMultiSelect ? ' (${files.length})' : ''}'),
             ],
           ),
           onTap: () => Future.delayed(Duration.zero, () async {
@@ -717,10 +717,10 @@ void showFileContextMenu(BuildContext context, WidgetRef ref, PanelSide side,
   // Reveal in Finder / Explorer (local files only)
   if (!kIsWeb && side == PanelSide.local && file.path != null) {
     final revealLabel = Platform.isMacOS
-        ? 'Reveal in Finder'
+        ? AppLocalizations.of(context)!.revealInFinder
         : Platform.isWindows
-            ? 'Show in Explorer'
-            : 'Open containing folder';
+            ? AppLocalizations.of(context)!.showInExplorer
+            : AppLocalizations.of(context)!.openContainingFolder;
     items.add(
       PopupMenuItem(
         child: Row(children: [
@@ -771,11 +771,11 @@ void showFileContextMenu(BuildContext context, WidgetRef ref, PanelSide side,
   if (isSingleFolder && !kIsWeb && side == PanelSide.local) {
     items.add(
       PopupMenuItem(
-        child: const Row(
+        child: Row(
           children: [
             Icon(Icons.data_usage),
             SizedBox(width: 8),
-            Text('Calculate Size'),
+            Text(AppLocalizations.of(context)!.calculateSize),
           ],
         ),
         onTap: () => Future.delayed(Duration.zero, () {
@@ -789,10 +789,10 @@ void showFileContextMenu(BuildContext context, WidgetRef ref, PanelSide side,
   // Copy names / paths to clipboard
   items.add(
     PopupMenuItem(
-      child: const Row(children: [
+      child: Row(children: [
         Icon(Icons.content_copy, size: 20),
         SizedBox(width: 8),
-        Text('Copy name(s)')
+        Text(AppLocalizations.of(context)!.copyNames)
       ]),
       onTap: () {
         final sel = panel.selection;
@@ -806,10 +806,10 @@ void showFileContextMenu(BuildContext context, WidgetRef ref, PanelSide side,
   );
   items.add(
     PopupMenuItem(
-      child: const Row(children: [
+      child: Row(children: [
         Icon(Icons.link, size: 20),
         SizedBox(width: 8),
-        Text('Copy path(s)')
+        Text(AppLocalizations.of(context)!.copyPaths)
       ]),
       onTap: () {
         final sel = panel.selection;
@@ -830,11 +830,11 @@ void showFileContextMenu(BuildContext context, WidgetRef ref, PanelSide side,
       file.path != null) {
     items.add(
       PopupMenuItem(
-        child: const Row(
+        child: Row(
           children: [
             Icon(Icons.fingerprint),
             SizedBox(width: 8),
-            Text('Checksum'),
+            Text(AppLocalizations.of(context)!.checksum),
           ],
         ),
         onTap: () => Future.delayed(Duration.zero, () {
@@ -855,10 +855,10 @@ void showFileContextMenu(BuildContext context, WidgetRef ref, PanelSide side,
     if (localFiles.isNotEmpty) {
       items.add(
         PopupMenuItem(
-          child: const Row(children: [
+          child: Row(children: [
             Icon(Icons.playlist_add_check, size: 20),
             SizedBox(width: 8),
-            Text('Create .md5 file'),
+            Text(AppLocalizations.of(context)!.createMd5),
           ]),
           onTap: () => Future.delayed(Duration.zero, () {
             if (!context.mounted) return;
@@ -873,10 +873,10 @@ void showFileContextMenu(BuildContext context, WidgetRef ref, PanelSide side,
       if (ext.endsWith('.md5') || ext.endsWith('.sha256')) {
         items.add(
           PopupMenuItem(
-            child: const Row(children: [
+            child: Row(children: [
               Icon(Icons.verified, size: 20),
               SizedBox(width: 8),
-              Text('Verify checksum file'),
+              Text(AppLocalizations.of(context)!.verifyChecksumFile),
             ]),
             onTap: () => Future.delayed(Duration.zero, () {
               if (!context.mounted) return;
@@ -897,11 +897,11 @@ void showFileContextMenu(BuildContext context, WidgetRef ref, PanelSide side,
       (file.size ?? 0) > 1024 * 1024) {
     items.add(
       PopupMenuItem(
-        child: const Row(
+        child: Row(
           children: [
             Icon(Icons.call_split, size: 20),
             SizedBox(width: 8),
-            Text('Split File')
+            Text(AppLocalizations.of(context)!.splitFile)
           ],
         ),
         onTap: () => Future.delayed(Duration.zero, () {
@@ -919,11 +919,11 @@ void showFileContextMenu(BuildContext context, WidgetRef ref, PanelSide side,
       files.any((f) => RegExp(r'\.part\d{3}$').hasMatch(f.name))) {
     items.add(
       PopupMenuItem(
-        child: const Row(
+        child: Row(
           children: [
             Icon(Icons.merge_type, size: 20),
             SizedBox(width: 8),
-            Text('Combine Parts')
+            Text(AppLocalizations.of(context)!.combineParts)
           ],
         ),
         onTap: () => Future.delayed(Duration.zero, () {
@@ -944,11 +944,11 @@ void showFileContextMenu(BuildContext context, WidgetRef ref, PanelSide side,
         (Platform.isMacOS || Platform.isLinux || Platform.isWindows)) {
       items.add(
         PopupMenuItem(
-          child: const Row(
+          child: Row(
             children: [
               Icon(Icons.link, size: 20),
               SizedBox(width: 8),
-              Text('Create Link...')
+              Text(AppLocalizations.of(context)!.createLink)
             ],
           ),
           onTap: () => Future.delayed(Duration.zero, () {
@@ -972,7 +972,7 @@ void showFileContextMenu(BuildContext context, WidgetRef ref, PanelSide side,
                 size: 20, color: Theme.of(context).colorScheme.error),
             const SizedBox(width: 8),
             Text(
-              'Secure Wipe${isMultiSelect ? ' (${files.length})' : ''}',
+              '${AppLocalizations.of(context)!.secureWipe}${isMultiSelect ? ' (${files.length})' : ''}',
               style: TextStyle(color: Theme.of(context).colorScheme.error),
             ),
           ],
@@ -995,7 +995,7 @@ void showFileContextMenu(BuildContext context, WidgetRef ref, PanelSide side,
           Icon(Icons.delete, color: Theme.of(context).colorScheme.error),
           const SizedBox(width: 8),
           Text(
-            'Delete${isMultiSelect ? ' (${files.length})' : ''}',
+            '${AppLocalizations.of(context)!.delete}${isMultiSelect ? ' (${files.length})' : ''}',
             style: TextStyle(color: Theme.of(context).colorScheme.error),
           ),
         ],
@@ -1062,7 +1062,7 @@ void showRenameDialog(
       content: TextField(
         controller: controller,
         decoration: InputDecoration(
-          labelText: 'New name',
+          labelText: AppLocalizations.of(context)!.newName,
           border: const OutlineInputBorder(),
           prefixIcon:
               Icon(file.isFolder ? Icons.folder : Icons.insert_drive_file),
@@ -1078,7 +1078,7 @@ void showRenameDialog(
               if (context.mounted) {
                 ScaffoldMessenger.of(context).showSnackBar(SnackBar(
                     content: Text(
-                        '${AppLocalizations.of(context)!.renameFailed}: $e')));
+                        AppLocalizations.of(context)!.renameFailed('$e'))));
               }
             }
           }
@@ -1102,7 +1102,7 @@ void showRenameDialog(
                 if (context.mounted) {
                   ScaffoldMessenger.of(context).showSnackBar(SnackBar(
                       content: Text(
-                          '${AppLocalizations.of(context)!.renameFailed}: $e')));
+                          AppLocalizations.of(context)!.renameFailed('$e'))));
                 }
               }
             }
@@ -1141,13 +1141,13 @@ void _triggerBrowserDownload(Uint8List bytes, String filename) {
 
 void _showCopyDialog(
     BuildContext context, WidgetRef ref, PanelSide side, List<FileItem> files) {
-  _showPathDialog(context, ref, side, files, 'Copy',
+  _showPathDialog(context, ref, side, files, true,
       (fs, path) => ref.read(panelProvider(side)).copyFiles(fs, path));
 }
 
 void _showMoveDialog(
     BuildContext context, WidgetRef ref, PanelSide side, List<FileItem> files) {
-  _showPathDialog(context, ref, side, files, 'Move',
+  _showPathDialog(context, ref, side, files, false,
       (fs, path) => ref.read(panelProvider(side)).moveFiles(fs, path));
 }
 
@@ -1166,7 +1166,7 @@ void _showPathDialog(
   WidgetRef ref,
   PanelSide side,
   List<FileItem> files,
-  String operation,
+  bool isCopy,
   Future<void> Function(List<FileItem>, String) action,
 ) {
   final controller = TextEditingController(
@@ -1176,13 +1176,15 @@ void _showPathDialog(
   showDialog(
     context: context,
     builder: (context) => AlertDialog(
-      title: Text('$operation ${files.length} item(s)'),
+      title: Text(isCopy
+          ? AppLocalizations.of(context)!.copyNItems(files.length)
+          : AppLocalizations.of(context)!.moveNItems(files.length)),
       content: Column(
         mainAxisSize: MainAxisSize.min,
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Text(
-            'Items:',
+            AppLocalizations.of(context)!.items,
             style: Theme.of(context).textTheme.labelLarge,
           ),
           const SizedBox(height: 8),
@@ -1207,14 +1209,14 @@ void _showPathDialog(
               )),
           if (files.length > 3)
             Text(
-              '... and ${files.length - 3} more',
+              AppLocalizations.of(context)!.andMore(files.length - 3),
               style: Theme.of(context).textTheme.bodySmall,
             ),
           const SizedBox(height: 16),
           TextField(
             controller: controller,
-            decoration: const InputDecoration(
-              labelText: 'Target path',
+            decoration: InputDecoration(
+              labelText: AppLocalizations.of(context)!.targetPath,
               border: OutlineInputBorder(),
               prefixIcon: Icon(Icons.folder_open),
             ),
@@ -1240,7 +1242,7 @@ void _showPathDialog(
               if (context.mounted) Navigator.pop(context);
             }
           },
-          child: Text(operation),
+          child: Text(isCopy ? AppLocalizations.of(context)!.copy : AppLocalizations.of(context)!.move),
         ),
       ],
     ),
@@ -1266,13 +1268,13 @@ void confirmDelete(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Text(
-            'Are you sure you want to delete ${files.length} item(s)?',
+            AppLocalizations.of(context)!.confirmDeleteBody(files.length),
             style: Theme.of(context).textTheme.bodyLarge,
           ),
           const SizedBox(height: 8),
           if (totalSize > 0)
             Text(
-              'Total size: ${formatBytes(totalSize)}',
+              AppLocalizations.of(context)!.totalSize(formatBytes(totalSize)),
               style: Theme.of(context).textTheme.bodyMedium,
             ),
           const SizedBox(height: 16),
@@ -1292,7 +1294,7 @@ void confirmDelete(
                 const SizedBox(width: 8),
                 Expanded(
                   child: Text(
-                    'This action cannot be undone.',
+                    AppLocalizations.of(context)!.cannotBeUndone,
                     style: TextStyle(
                       color: Theme.of(context).colorScheme.onErrorContainer,
                       fontWeight: FontWeight.bold,
@@ -1319,7 +1321,7 @@ void confirmDelete(
               if (context.mounted) {
                 ScaffoldMessenger.of(context).showSnackBar(SnackBar(
                     content: Text(
-                        '${AppLocalizations.of(context)!.deleteFailed}: $e')));
+                        AppLocalizations.of(context)!.deleteFailed('$e'))));
               }
             }
           },
@@ -1474,7 +1476,7 @@ class _PropertiesDialogState extends State<_PropertiesDialog> {
                           height: 16,
                           child: CircularProgressIndicator(strokeWidth: 2))
                       : const Icon(Icons.fingerprint, size: 16),
-                  label: const Text('Compute MD5'),
+                  label: Text(AppLocalizations.of(context)!.computeMd5),
                 ),
             ],
           ],
@@ -1483,7 +1485,7 @@ class _PropertiesDialogState extends State<_PropertiesDialog> {
       actions: [
         TextButton(
             onPressed: () => Navigator.pop(context),
-            child: const Text('Close')),
+            child: Text(AppLocalizations.of(context)!.close)),
       ],
     );
   }
@@ -1591,7 +1593,7 @@ void _showFolderSize(BuildContext context, FileItem file) {
             actions: [
               TextButton(
                 onPressed: () => Navigator.pop(ctx),
-                child: const Text('Close'),
+                child: Text(AppLocalizations.of(context)!.close),
               ),
             ],
           );
@@ -1647,7 +1649,7 @@ void _showChecksumDialog(BuildContext context, FileItem file) {
               actions: [
                 TextButton(
                   onPressed: () => Navigator.pop(ctx),
-                  child: const Text('Close'),
+                  child: Text(AppLocalizations.of(context)!.close),
                 ),
               ],
             );
@@ -1681,7 +1683,7 @@ void _showChecksumDialog(BuildContext context, FileItem file) {
             actions: [
               TextButton(
                 onPressed: () => Navigator.pop(ctx),
-                child: const Text('Close'),
+                child: Text(AppLocalizations.of(context)!.close),
               ),
             ],
           );
@@ -1700,7 +1702,7 @@ void _showSplitDialog(
     context: context,
     builder: (context) => StatefulBuilder(
       builder: (context, setState) => AlertDialog(
-        title: const Text('Split File'),
+        title: Text(AppLocalizations.of(context)!.splitFile),
         content: Column(
           mainAxisSize: MainAxisSize.min,
           crossAxisAlignment: CrossAxisAlignment.start,
@@ -1780,7 +1782,7 @@ void _showCombineDialog(
   showDialog(
     context: context,
     builder: (context) => AlertDialog(
-      title: const Text('Combine Parts'),
+      title: Text(AppLocalizations.of(context)!.combineParts),
       content: Column(
         mainAxisSize: MainAxisSize.min,
         children: [
@@ -1897,7 +1899,7 @@ void _showCreateLinkDialog(
                 }
               }
             },
-            child: const Text('Create'),
+            child: Text(AppLocalizations.of(context)!.create),
           ),
         ],
       ),
@@ -2095,7 +2097,7 @@ Future<void> _verifyChecksumFileDialog(
           actions: [
             TextButton(
                 onPressed: () => Navigator.pop(ctx),
-                child: const Text('Close')),
+                child: Text(AppLocalizations.of(context)!.close)),
           ],
         );
       },
@@ -2175,7 +2177,7 @@ void _verifyAgainstRemote(
           ),
           actions: [
             TextButton(
-                onPressed: () => Navigator.pop(ctx), child: const Text('Close'))
+                onPressed: () => Navigator.pop(ctx), child: Text(AppLocalizations.of(context)!.close))
           ],
         );
       },

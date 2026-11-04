@@ -235,15 +235,15 @@
   "keyboardShortcuts": "Keyboard Shortcuts",
   "swapPanels": "Swap Panels",
 
-  "connectToCloud": "Connect to Cloud",
+  "connectToCloud": "Conectar a la nube",
   "browseProvider": "Browse {provider}",
   "@browseProvider": {
     "placeholders": { "provider": { "type": "String" } }
   },
-  "pleaseConnectRemote": "Please connect to access remote files",
+  "pleaseConnectRemote": "Conéctese para acceder a los archivos remotos",
   "notConnected": "Not connected",
   "connectToCloudShort": "Connect to cloud",
-  "loggedIn": "Logged in",
+  "loggedIn": "Sesión iniciada",
 
   "localFiles": "Local Files",
   "remoteFiles": "Remote Files",
@@ -280,35 +280,35 @@
   "visibleLinesCopied": "Visible lines copied",
   "allLogsCopied": "All logs copied",
 
-  "open": "Open",
-  "editSystemEditor": "Edit (System Editor)",
-  "editBuiltIn": "Edit (Built-in)",
-  "openWithSystemApp": "Open with System App",
-  "verifyAgainstRemote": "Verify against remote",
+  "open": "Abrir",
+  "editSystemEditor": "Editar (editor del sistema)",
+  "editBuiltIn": "Editar (editor integrado)",
+  "openWithSystemApp": "Abrir con la aplicación del sistema",
+  "verifyAgainstRemote": "Verificar con el archivo remoto",
   "browseArchive": "Browse Archive",
   "archiveExtracted": "Archive extracted successfully",
-  "revealInFinder": "Reveal in Finder",
-  "showInExplorer": "Show in Explorer",
-  "openContainingFolder": "Open containing folder",
-  "properties": "Properties",
-  "copyNames": "Copy name(s)",
-  "copyPaths": "Copy path(s)",
-  "createMd5": "Create .md5 file",
-  "verifyChecksumFile": "Verify checksum file",
-  "splitFile": "Split File",
-  "combineParts": "Combine Parts",
-  "createLink": "Create Link...",
-  "secureWipe": "Secure Wipe",
+  "revealInFinder": "Mostrar en Finder",
+  "showInExplorer": "Mostrar en el Explorador",
+  "openContainingFolder": "Abrir carpeta contenedora",
+  "properties": "Propiedades",
+  "copyNames": "Copiar nombres",
+  "copyPaths": "Copiar rutas",
+  "createMd5": "Crear archivo .md5",
+  "verifyChecksumFile": "Verificar archivo de sumas de comprobación",
+  "splitFile": "Dividir archivo",
+  "combineParts": "Combinar partes",
+  "createLink": "Crear enlace...",
+  "secureWipe": "Borrado seguro",
 
-  "confirmDeleteBody": "Are you sure you want to delete {count} item(s)?",
+  "confirmDeleteBody": "¿Seguro que quieres eliminar {count} elemento(s)?",
   "@confirmDeleteBody": {
     "placeholders": { "count": { "type": "int" } }
   },
-  "totalSize": "Total size: {size}",
+  "totalSize": "Tamaño total: {size}",
   "@totalSize": {
     "placeholders": { "size": { "type": "String" } }
   },
-  "cannotBeUndone": "This action cannot be undone.",
+  "cannotBeUndone": "Esta acción no se puede deshacer.",
 
   "nItems": "{count} items",
   "@nItems": {
@@ -364,15 +364,15 @@
     "placeholders": { "count": { "type": "int" } }
   },
 
-  "copyNItems": "Copy {count} item(s)",
+  "copyNItems": "Copiar {count} elemento(s)",
   "@copyNItems": {
     "placeholders": { "count": { "type": "int" } }
   },
-  "moveNItems": "Move {count} item(s)",
+  "moveNItems": "Mover {count} elemento(s)",
   "@moveNItems": {
     "placeholders": { "count": { "type": "int" } }
   },
-  "targetPath": "Target path",
+  "targetPath": "Ruta de destino",
   "saved": "Saved {name}",
   "@saved": {
     "placeholders": { "name": { "type": "String" } }
@@ -406,29 +406,29 @@
   "encryptBeforeUpload": "Encrypt files before upload (AES-256-GCM)",
   "encryptionPassphrase": "Encryption Passphrase",
 
-  "appLocked": "CrispCloud is Locked",
-  "enterPinToContinue": "Enter your PIN or password to continue",
-  "pinPassword": "PIN / Password",
-  "incorrectPin": "Incorrect PIN or password",
-  "tooManyAttempts": "Too many failed attempts. Restart the app to try again.",
-  "attemptsRemaining": "{count} attempts remaining",
+  "appLocked": "CrispCloud está bloqueado",
+  "enterPinToContinue": "Introduce tu PIN o contraseña para continuar",
+  "pinPassword": "PIN / Contraseña",
+  "incorrectPin": "PIN o contraseña incorrectos",
+  "tooManyAttempts": "Demasiados intentos fallidos. Reinicia la aplicación para volver a intentarlo.",
+  "attemptsRemaining": "Quedan {count} intentos",
   "@attemptsRemaining": {
     "placeholders": { "count": { "type": "int" } }
   },
-  "appLockSetup": "Set Up App Lock",
-  "changeAppLockCode": "Change App Lock",
-  "currentPin": "Current PIN / Password",
-  "newPin": "New PIN / Password",
-  "confirmPin": "Confirm PIN / Password",
-  "minFourChars": "Minimum 4 characters",
-  "codesDoNotMatch": "Codes do not match",
-  "autoLockAfter": "Auto-lock after",
-  "immediately": "Immediately",
-  "oneMinute": "1 minute",
-  "fiveMinutes": "5 minutes",
-  "fifteenMinutes": "15 minutes",
-  "thirtyMinutes": "30 minutes",
-  "oneHour": "1 hour",
+  "appLockSetup": "Configurar bloqueo",
+  "changeAppLockCode": "Cambiar bloqueo",
+  "currentPin": "PIN / Contraseña actual",
+  "newPin": "Nuevo PIN / Contraseña",
+  "confirmPin": "Confirmar PIN / Contraseña",
+  "minFourChars": "Mínimo 4 caracteres",
+  "codesDoNotMatch": "Los códigos no coinciden",
+  "autoLockAfter": "Bloquear automáticamente después de",
+  "immediately": "Inmediatamente",
+  "oneMinute": "1 minuto",
+  "fiveMinutes": "5 minutos",
+  "fifteenMinutes": "15 minutos",
+  "thirtyMinutes": "30 minutos",
+  "oneHour": "1 hora",
 
   "connectToHetzner": "Connect to Hetzner Storage Box",
   "sftpPort23": "SFTP (port 23)",
@@ -507,12 +507,12 @@
   "exportKeys": "Export/Import Encryption Keys",
   "backupRecovery": "BIP39 Mnemonic Backup and Recovery",
 
-  "noActiveOperations": "No active operations",
-  "refreshAll": "Refresh All",
+  "noActiveOperations": "No hay operaciones activas",
+  "refreshAll": "Actualizar todo",
 
-  "newName": "New name",
-  "items": "Items:",
-  "andMore": "... and {count} more",
+  "newName": "Nombre nuevo",
+  "items": "Elementos:",
+  "andMore": "... y {count} más",
   "@andMore": {
     "placeholders": { "count": { "type": "int" } }
   },
@@ -529,7 +529,7 @@
   "type": "Type",
   "created": "Created",
   "accessed": "Accessed",
-  "computeMd5": "Compute MD5",
+  "computeMd5": "Calcular MD5",
 
   "protocol": "Protocol"
 }

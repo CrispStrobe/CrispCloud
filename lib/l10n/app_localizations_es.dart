@@ -1,6 +1,5 @@
 // ignore: unused_import
 import 'package:intl/intl.dart' as intl;
-
 import 'app_localizations.dart';
 
 // ignore_for_file: type=lint
@@ -582,7 +581,7 @@ class AppLocalizationsEs extends AppLocalizations {
   String get swapPanels => 'Swap Panels';
 
   @override
-  String get connectToCloud => 'Connect to Cloud';
+  String get connectToCloud => 'Conectar a la nube';
 
   @override
   String browseProvider(String provider) {
@@ -590,7 +589,8 @@ class AppLocalizationsEs extends AppLocalizations {
   }
 
   @override
-  String get pleaseConnectRemote => 'Please connect to access remote files';
+  String get pleaseConnectRemote =>
+      'Conéctese para acceder a los archivos remotos';
 
   @override
   String get notConnected => 'Not connected';
@@ -599,7 +599,7 @@ class AppLocalizationsEs extends AppLocalizations {
   String get connectToCloudShort => 'Connect to cloud';
 
   @override
-  String get loggedIn => 'Logged in';
+  String get loggedIn => 'Sesión iniciada';
 
   @override
   String get localFiles => 'Local Files';
@@ -677,19 +677,19 @@ class AppLocalizationsEs extends AppLocalizations {
   String get allLogsCopied => 'All logs copied';
 
   @override
-  String get open => 'Open';
+  String get open => 'Abrir';
 
   @override
-  String get editSystemEditor => 'Edit (System Editor)';
+  String get editSystemEditor => 'Editar (editor del sistema)';
 
   @override
-  String get editBuiltIn => 'Edit (Built-in)';
+  String get editBuiltIn => 'Editar (editor integrado)';
 
   @override
-  String get openWithSystemApp => 'Open with System App';
+  String get openWithSystemApp => 'Abrir con la aplicación del sistema';
 
   @override
-  String get verifyAgainstRemote => 'Verify against remote';
+  String get verifyAgainstRemote => 'Verificar con el archivo remoto';
 
   @override
   String get browseArchive => 'Browse Archive';
@@ -698,53 +698,53 @@ class AppLocalizationsEs extends AppLocalizations {
   String get archiveExtracted => 'Archive extracted successfully';
 
   @override
-  String get revealInFinder => 'Reveal in Finder';
+  String get revealInFinder => 'Mostrar en Finder';
 
   @override
-  String get showInExplorer => 'Show in Explorer';
+  String get showInExplorer => 'Mostrar en el Explorador';
 
   @override
-  String get openContainingFolder => 'Open containing folder';
+  String get openContainingFolder => 'Abrir carpeta contenedora';
 
   @override
-  String get properties => 'Properties';
+  String get properties => 'Propiedades';
 
   @override
-  String get copyNames => 'Copy name(s)';
+  String get copyNames => 'Copiar nombres';
 
   @override
-  String get copyPaths => 'Copy path(s)';
+  String get copyPaths => 'Copiar rutas';
 
   @override
-  String get createMd5 => 'Create .md5 file';
+  String get createMd5 => 'Crear archivo .md5';
 
   @override
-  String get verifyChecksumFile => 'Verify checksum file';
+  String get verifyChecksumFile => 'Verificar archivo de sumas de comprobación';
 
   @override
-  String get splitFile => 'Split File';
+  String get splitFile => 'Dividir archivo';
 
   @override
-  String get combineParts => 'Combine Parts';
+  String get combineParts => 'Combinar partes';
 
   @override
-  String get createLink => 'Create Link...';
+  String get createLink => 'Crear enlace...';
 
   @override
-  String get secureWipe => 'Secure Wipe';
+  String get secureWipe => 'Borrado seguro';
 
   @override
   String confirmDeleteBody(int count) {
-    return 'Are you sure you want to delete $count item(s)?';
+    return '¿Seguro que quieres eliminar $count elemento(s)?';
   }
 
   @override
   String totalSize(String size) {
-    return 'Total size: $size';
+    return 'Tamaño total: $size';
   }
 
   @override
-  String get cannotBeUndone => 'This action cannot be undone.';
+  String get cannotBeUndone => 'Esta acción no se puede deshacer.';
 
   @override
   String nItems(int count) {
@@ -858,16 +858,16 @@ class AppLocalizationsEs extends AppLocalizations {
 
   @override
   String copyNItems(int count) {
-    return 'Copy $count item(s)';
+    return 'Copiar $count elemento(s)';
   }
 
   @override
   String moveNItems(int count) {
-    return 'Move $count item(s)';
+    return 'Mover $count elemento(s)';
   }
 
   @override
-  String get targetPath => 'Target path';
+  String get targetPath => 'Ruta de destino';
 
   @override
   String saved(String name) {
@@ -940,67 +940,68 @@ class AppLocalizationsEs extends AppLocalizations {
   String get encryptionPassphrase => 'Encryption Passphrase';
 
   @override
-  String get appLocked => 'CrispCloud is Locked';
+  String get appLocked => 'CrispCloud está bloqueado';
 
   @override
-  String get enterPinToContinue => 'Enter your PIN or password to continue';
+  String get enterPinToContinue =>
+      'Introduce tu PIN o contraseña para continuar';
 
   @override
-  String get pinPassword => 'PIN / Password';
+  String get pinPassword => 'PIN / Contraseña';
 
   @override
-  String get incorrectPin => 'Incorrect PIN or password';
+  String get incorrectPin => 'PIN o contraseña incorrectos';
 
   @override
   String get tooManyAttempts =>
-      'Too many failed attempts. Restart the app to try again.';
+      'Demasiados intentos fallidos. Reinicia la aplicación para volver a intentarlo.';
 
   @override
   String attemptsRemaining(int count) {
-    return '$count attempts remaining';
+    return 'Quedan $count intentos';
   }
 
   @override
-  String get appLockSetup => 'Set Up App Lock';
+  String get appLockSetup => 'Configurar bloqueo';
 
   @override
-  String get changeAppLockCode => 'Change App Lock';
+  String get changeAppLockCode => 'Cambiar bloqueo';
 
   @override
-  String get currentPin => 'Current PIN / Password';
+  String get currentPin => 'PIN / Contraseña actual';
 
   @override
-  String get newPin => 'New PIN / Password';
+  String get newPin => 'Nuevo PIN / Contraseña';
 
   @override
-  String get confirmPin => 'Confirm PIN / Password';
+  String get confirmPin => 'Confirmar PIN / Contraseña';
 
   @override
-  String get minFourChars => 'Minimum 4 characters';
+  String get minFourChars => 'Mínimo 4 caracteres';
 
   @override
-  String get codesDoNotMatch => 'Codes do not match';
+  String get codesDoNotMatch => 'Los códigos no coinciden';
 
   @override
-  String get autoLockAfter => 'Auto-lock after';
+  String get autoLockAfter => 'Bloquear automáticamente después de';
 
   @override
-  String get immediately => 'Immediately';
+  String get immediately => 'Inmediatamente';
 
   @override
-  String get oneMinute => '1 minute';
+  String get oneMinute => '1 minuto';
 
   @override
-  String get fiveMinutes => '5 minutes';
+  String get fiveMinutes => '5 minutos';
 
   @override
-  String get fifteenMinutes => '15 minutes';
+  String get fifteenMinutes => '15 minutos';
 
   @override
-  String get thirtyMinutes => '30 minutes';
+  String get thirtyMinutes => '30 minutos';
 
   @override
-  String get oneHour => '1 hour';
+  String get oneHour => '1 hora';
 
   @override
   String get connectToHetzner => 'Connect to Hetzner Storage Box';
@@ -1184,20 +1185,20 @@ class AppLocalizationsEs extends AppLocalizations {
   String get backupRecovery => 'BIP39 Mnemonic Backup and Recovery';
 
   @override
-  String get noActiveOperations => 'No active operations';
+  String get noActiveOperations => 'No hay operaciones activas';
 
   @override
-  String get refreshAll => 'Refresh All';
+  String get refreshAll => 'Actualizar todo';
 
   @override
-  String get newName => 'New name';
+  String get newName => 'Nombre nuevo';
 
   @override
-  String get items => 'Items:';
+  String get items => 'Elementos:';
 
   @override
   String andMore(int count) {
-    return '... and $count more';
+    return '... y $count más';
   }
 
   @override
@@ -1234,7 +1235,7 @@ class AppLocalizationsEs extends AppLocalizations {
   String get accessed => 'Accessed';
 
   @override
-  String get computeMd5 => 'Compute MD5';
+  String get computeMd5 => 'Calcular MD5';
 
   @override
   String get protocol => 'Protocol';

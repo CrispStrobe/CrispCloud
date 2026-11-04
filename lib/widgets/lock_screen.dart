@@ -6,6 +6,8 @@ import 'package:flutter/material.dart';
 
 import '../services/app_lock_service.dart';
 import '../l10n/app_localizations.dart';
+import '../l10n/lock_extra_strings.dart';
+import '../l10n/web_vault_strings.dart';
 
 class LockScreen extends StatefulWidget {
   final AppLockService lockService;
@@ -73,6 +75,8 @@ class _LockScreenState extends State<LockScreen> {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
+    final l10n = AppLocalizations.of(context)!;
+    final extra = LockExtraStrings(context);
     final isLocked = _attempts >= 5;
 
     return Scaffold(
@@ -89,14 +93,14 @@ class _LockScreenState extends State<LockScreen> {
               ),
               const SizedBox(height: 24),
               Text(
-                'CrispCloud is Locked',
+                l10n.appLocked,
                 style: theme.textTheme.headlineSmall,
               ),
               const SizedBox(height: 8),
               Text(
                 _biometricAvailable
-                    ? 'Use $_biometricLabel or enter your PIN/password'
-                    : 'Enter your PIN or password to continue',
+                    ? extra.useOrPin(_biometricLabel)
+                    : l10n.enterPinToContinue,
                 style: theme.textTheme.bodyMedium?.copyWith(
                   color: theme.colorScheme.onSurfaceVariant,
                 ),
@@ -112,7 +116,7 @@ class _LockScreenState extends State<LockScreen> {
                         ? null
                         : _authenticateBiometric,
                     icon: Icon(_biometricIcon),
-                    label: Text('Unlock with $_biometricLabel'),
+                    label: Text(extra.unlockWith(_biometricLabel)),
                   ),
                 ),
                 const SizedBox(height: 16),
@@ -122,7 +126,7 @@ class _LockScreenState extends State<LockScreen> {
                     Padding(
                       padding: const EdgeInsets.symmetric(horizontal: 12),
                       child: Text(
-                        'or',
+                        extra.or,
                         style: TextStyle(
                           color: theme.colorScheme.onSurfaceVariant,
                           fontSize: 12,
@@ -163,7 +167,7 @@ class _LockScreenState extends State<LockScreen> {
                 obscureText: true,
                 enabled: !isLocked && !_isVerifying,
                 decoration: InputDecoration(
-                  labelText: 'PIN / Password',
+                  labelText: l10n.pinPassword,
                   border: const OutlineInputBorder(),
                   prefixIcon: const Icon(Icons.password),
                   suffixIcon: _isVerifying
@@ -184,14 +188,16 @@ class _LockScreenState extends State<LockScreen> {
                 width: double.infinity,
                 child: ElevatedButton(
                   onPressed: isLocked || _isVerifying ? null : _verify,
-                  child: Text(isLocked ? 'Too many attempts' : 'Unlock'),
+                  child: Text(isLocked
+                      ? extra.lockedButton
+                      : WebVaultStrings(context).unlock),
                 ),
               ),
               if (_attempts > 0 && !isLocked)
                 Padding(
                   padding: const EdgeInsets.only(top: 8),
                   child: Text(
-                    '${5 - _attempts} attempts remaining',
+                    l10n.attemptsRemaining(5 - _attempts),
                     style: TextStyle(
                       color: theme.colorScheme.error,
                       fontSize: 12,
@@ -206,7 +212,8 @@ class _LockScreenState extends State<LockScreen> {
   }
 
   IconData get _biometricIcon {
-    if (_biometricLabel == 'Windows Hello') return Icons.verified_user; // Windows Hello
+    if (_biometricLabel == 'Windows Hello')
+      return Icons.verified_user; // Windows Hello
     if (_biometricLabel == 'Face ID') return Icons.face;
     if (_biometricLabel == 'Fingerprint') return Icons.fingerprint;
     return Icons.security;
@@ -229,8 +236,8 @@ class _LockScreenState extends State<LockScreen> {
         _attempts++;
         _isVerifying = false;
         _error = _attempts >= 5
-            ? 'Too many failed attempts. Restart the app to try again.'
-            : 'Incorrect PIN or password';
+            ? AppLocalizations.of(context)!.tooManyAttempts
+            : AppLocalizations.of(context)!.incorrectPin;
         _codeController.clear();
         _focusNode.requestFocus();
       });
@@ -294,8 +301,11 @@ class _AppLockSetupDialogState extends State<AppLockSetupDialog> {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
+    final extra = LockExtraStrings(context);
     return AlertDialog(
-      title: Text(widget.isChanging ? 'Change App Lock' : 'Set Up App Lock'),
+      title:
+          Text(widget.isChanging ? l10n.changeAppLockCode : l10n.appLockSetup),
       scrollable: true,
       content: SizedBox(
         width: 350,
@@ -314,9 +324,9 @@ class _AppLockSetupDialogState extends State<AppLockSetupDialog> {
               TextField(
                 controller: _currentController,
                 obscureText: true,
-                decoration: const InputDecoration(
-                  labelText: 'Current PIN / Password',
-                  border: OutlineInputBorder(),
+                decoration: InputDecoration(
+                  labelText: l10n.currentPin,
+                  border: const OutlineInputBorder(),
                 ),
               ),
               const SizedBox(height: 16),
@@ -324,44 +334,44 @@ class _AppLockSetupDialogState extends State<AppLockSetupDialog> {
             TextField(
               controller: _newController,
               obscureText: true,
-              decoration: const InputDecoration(
-                labelText: 'New PIN / Password',
-                border: OutlineInputBorder(),
-                helperText: 'Minimum 4 characters',
+              decoration: InputDecoration(
+                labelText: l10n.newPin,
+                border: const OutlineInputBorder(),
+                helperText: l10n.minFourChars,
               ),
             ),
             const SizedBox(height: 16),
             TextField(
               controller: _confirmController,
               obscureText: true,
-              decoration: const InputDecoration(
-                labelText: 'Confirm PIN / Password',
-                border: OutlineInputBorder(),
+              decoration: InputDecoration(
+                labelText: l10n.confirmPin,
+                border: const OutlineInputBorder(),
               ),
             ),
             const SizedBox(height: 16),
             DropdownButtonFormField<int>(
               initialValue: _timeout,
-              decoration: const InputDecoration(
-                labelText: 'Auto-lock after',
-                border: OutlineInputBorder(),
+              decoration: InputDecoration(
+                labelText: l10n.autoLockAfter,
+                border: const OutlineInputBorder(),
               ),
-              items: const [
-                DropdownMenuItem(value: 0, child: Text('Immediately')),
-                DropdownMenuItem(value: 60, child: Text('1 minute')),
-                DropdownMenuItem(value: 300, child: Text('5 minutes')),
-                DropdownMenuItem(value: 900, child: Text('15 minutes')),
-                DropdownMenuItem(value: 1800, child: Text('30 minutes')),
-                DropdownMenuItem(value: 3600, child: Text('1 hour')),
+              items: [
+                DropdownMenuItem(value: 0, child: Text(l10n.immediately)),
+                DropdownMenuItem(value: 60, child: Text(l10n.oneMinute)),
+                DropdownMenuItem(value: 300, child: Text(l10n.fiveMinutes)),
+                DropdownMenuItem(value: 900, child: Text(l10n.fifteenMinutes)),
+                DropdownMenuItem(value: 1800, child: Text(l10n.thirtyMinutes)),
+                DropdownMenuItem(value: 3600, child: Text(l10n.oneHour)),
               ],
               onChanged: (v) => setState(() => _timeout = v ?? 300),
             ),
             if (_biometricAvailable) ...[
               const SizedBox(height: 16),
               SwitchListTile(
-                title: Text('Unlock with $_biometricLabel'),
+                title: Text(extra.unlockWith(_biometricLabel)),
                 subtitle: Text(
-                  'Use $_biometricLabel as an alternative to your PIN/password',
+                  extra.alternative(_biometricLabel),
                 ),
                 secondary: Icon(
                   _biometricLabel == 'Windows Hello'
@@ -398,11 +408,11 @@ class _AppLockSetupDialogState extends State<AppLockSetupDialog> {
     final confirm = _confirmController.text;
 
     if (newCode.length < 4) {
-      setState(() => _error = 'PIN/password must be at least 4 characters');
+      setState(() => _error = LockExtraStrings(context).minLengthError);
       return;
     }
     if (newCode != confirm) {
-      setState(() => _error = 'Codes do not match');
+      setState(() => _error = AppLocalizations.of(context)!.codesDoNotMatch);
       return;
     }
 
@@ -410,7 +420,7 @@ class _AppLockSetupDialogState extends State<AppLockSetupDialog> {
       final ok =
           await widget.lockService.changeCode(_currentController.text, newCode);
       if (!ok) {
-        setState(() => _error = 'Current PIN/password is incorrect');
+        setState(() => _error = LockExtraStrings(context).incorrectCurrent);
         return;
       }
     } else {

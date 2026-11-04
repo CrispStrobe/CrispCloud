@@ -1,6 +1,5 @@
 // ignore: unused_import
 import 'package:intl/intl.dart' as intl;
-
 import 'app_localizations.dart';
 
 // ignore_for_file: type=lint
@@ -578,7 +577,7 @@ class AppLocalizationsZh extends AppLocalizations {
   String get swapPanels => 'Swap Panels';
 
   @override
-  String get connectToCloud => 'Connect to Cloud';
+  String get connectToCloud => '连接到云端';
 
   @override
   String browseProvider(String provider) {
@@ -586,7 +585,7 @@ class AppLocalizationsZh extends AppLocalizations {
   }
 
   @override
-  String get pleaseConnectRemote => 'Please connect to access remote files';
+  String get pleaseConnectRemote => '请先连接以访问远程文件';
 
   @override
   String get notConnected => 'Not connected';
@@ -595,7 +594,7 @@ class AppLocalizationsZh extends AppLocalizations {
   String get connectToCloudShort => 'Connect to cloud';
 
   @override
-  String get loggedIn => 'Logged in';
+  String get loggedIn => '已登录';
 
   @override
   String get localFiles => 'Local Files';
@@ -673,19 +672,19 @@ class AppLocalizationsZh extends AppLocalizations {
   String get allLogsCopied => 'All logs copied';
 
   @override
-  String get open => 'Open';
+  String get open => '打开';
 
   @override
-  String get editSystemEditor => 'Edit (System Editor)';
+  String get editSystemEditor => '编辑（系统编辑器）';
 
   @override
-  String get editBuiltIn => 'Edit (Built-in)';
+  String get editBuiltIn => '编辑（内置编辑器）';
 
   @override
-  String get openWithSystemApp => 'Open with System App';
+  String get openWithSystemApp => '使用系统应用打开';
 
   @override
-  String get verifyAgainstRemote => 'Verify against remote';
+  String get verifyAgainstRemote => '与远程文件校验';
 
   @override
   String get browseArchive => 'Browse Archive';
@@ -694,53 +693,53 @@ class AppLocalizationsZh extends AppLocalizations {
   String get archiveExtracted => 'Archive extracted successfully';
 
   @override
-  String get revealInFinder => 'Reveal in Finder';
+  String get revealInFinder => '在 Finder 中显示';
 
   @override
-  String get showInExplorer => 'Show in Explorer';
+  String get showInExplorer => '在资源管理器中显示';
 
   @override
-  String get openContainingFolder => 'Open containing folder';
+  String get openContainingFolder => '打开所在文件夹';
 
   @override
-  String get properties => 'Properties';
+  String get properties => '属性';
 
   @override
-  String get copyNames => 'Copy name(s)';
+  String get copyNames => '复制名称';
 
   @override
-  String get copyPaths => 'Copy path(s)';
+  String get copyPaths => '复制路径';
 
   @override
-  String get createMd5 => 'Create .md5 file';
+  String get createMd5 => '创建 .md5 文件';
 
   @override
-  String get verifyChecksumFile => 'Verify checksum file';
+  String get verifyChecksumFile => '验证校验和文件';
 
   @override
-  String get splitFile => 'Split File';
+  String get splitFile => '拆分文件';
 
   @override
-  String get combineParts => 'Combine Parts';
+  String get combineParts => '合并分卷';
 
   @override
-  String get createLink => 'Create Link...';
+  String get createLink => '创建链接...';
 
   @override
-  String get secureWipe => 'Secure Wipe';
+  String get secureWipe => '安全擦除';
 
   @override
   String confirmDeleteBody(int count) {
-    return 'Are you sure you want to delete $count item(s)?';
+    return '确定要删除 $count 个项目吗？';
   }
 
   @override
   String totalSize(String size) {
-    return 'Total size: $size';
+    return '总大小：$size';
   }
 
   @override
-  String get cannotBeUndone => 'This action cannot be undone.';
+  String get cannotBeUndone => '此操作无法撤销。';
 
   @override
   String nItems(int count) {
@@ -854,16 +853,16 @@ class AppLocalizationsZh extends AppLocalizations {
 
   @override
   String copyNItems(int count) {
-    return 'Copy $count item(s)';
+    return '复制 $count 个项目';
   }
 
   @override
   String moveNItems(int count) {
-    return 'Move $count item(s)';
+    return '移动 $count 个项目';
   }
 
   @override
-  String get targetPath => 'Target path';
+  String get targetPath => '目标路径';
 
   @override
   String saved(String name) {
@@ -936,67 +935,66 @@ class AppLocalizationsZh extends AppLocalizations {
   String get encryptionPassphrase => 'Encryption Passphrase';
 
   @override
-  String get appLocked => 'CrispCloud is Locked';
+  String get appLocked => 'CrispCloud 已锁定';
 
   @override
-  String get enterPinToContinue => 'Enter your PIN or password to continue';
+  String get enterPinToContinue => '请输入 PIN 或密码以继续';
 
   @override
-  String get pinPassword => 'PIN / Password';
+  String get pinPassword => 'PIN / 密码';
 
   @override
-  String get incorrectPin => 'Incorrect PIN or password';
+  String get incorrectPin => 'PIN 或密码不正确';
 
   @override
-  String get tooManyAttempts =>
-      'Too many failed attempts. Restart the app to try again.';
+  String get tooManyAttempts => '失败次数过多。请重启应用后重试。';
 
   @override
   String attemptsRemaining(int count) {
-    return '$count attempts remaining';
+    return '剩余 $count 次尝试';
   }
 
   @override
-  String get appLockSetup => 'Set Up App Lock';
+  String get appLockSetup => '设置应用锁';
 
   @override
-  String get changeAppLockCode => 'Change App Lock';
+  String get changeAppLockCode => '更改应用锁';
 
   @override
-  String get currentPin => 'Current PIN / Password';
+  String get currentPin => '当前 PIN / 密码';
 
   @override
-  String get newPin => 'New PIN / Password';
+  String get newPin => '新 PIN / 密码';
 
   @override
-  String get confirmPin => 'Confirm PIN / Password';
+  String get confirmPin => '确认 PIN / 密码';
 
   @override
-  String get minFourChars => 'Minimum 4 characters';
+  String get minFourChars => '至少 4 个字符';
 
   @override
-  String get codesDoNotMatch => 'Codes do not match';
+  String get codesDoNotMatch => '输入的代码不一致';
 
   @override
-  String get autoLockAfter => 'Auto-lock after';
+  String get autoLockAfter => '自动锁定时间';
 
   @override
-  String get immediately => 'Immediately';
+  String get immediately => '立即';
 
   @override
-  String get oneMinute => '1 minute';
+  String get oneMinute => '1 分钟';
 
   @override
-  String get fiveMinutes => '5 minutes';
+  String get fiveMinutes => '5 分钟';
 
   @override
-  String get fifteenMinutes => '15 minutes';
+  String get fifteenMinutes => '15 分钟';
 
   @override
-  String get thirtyMinutes => '30 minutes';
+  String get thirtyMinutes => '30 分钟';
 
   @override
-  String get oneHour => '1 hour';
+  String get oneHour => '1 小时';
 
   @override
   String get connectToHetzner => 'Connect to Hetzner Storage Box';
@@ -1180,20 +1178,20 @@ class AppLocalizationsZh extends AppLocalizations {
   String get backupRecovery => 'BIP39 Mnemonic Backup and Recovery';
 
   @override
-  String get noActiveOperations => 'No active operations';
+  String get noActiveOperations => '没有活动操作';
 
   @override
-  String get refreshAll => 'Refresh All';
+  String get refreshAll => '全部刷新';
 
   @override
-  String get newName => 'New name';
+  String get newName => '新名称';
 
   @override
-  String get items => 'Items:';
+  String get items => '项目：';
 
   @override
   String andMore(int count) {
-    return '... and $count more';
+    return '...以及另外 $count 个';
   }
 
   @override
@@ -1230,7 +1228,7 @@ class AppLocalizationsZh extends AppLocalizations {
   String get accessed => 'Accessed';
 
   @override
-  String get computeMd5 => 'Compute MD5';
+  String get computeMd5 => '计算 MD5';
 
   @override
   String get protocol => 'Protocol';

@@ -235,15 +235,15 @@
   "keyboardShortcuts": "Keyboard Shortcuts",
   "swapPanels": "Swap Panels",
 
-  "connectToCloud": "Connect to Cloud",
+  "connectToCloud": "클라우드에 연결",
   "browseProvider": "Browse {provider}",
   "@browseProvider": {
     "placeholders": { "provider": { "type": "String" } }
   },
-  "pleaseConnectRemote": "Please connect to access remote files",
+  "pleaseConnectRemote": "원격 파일에 액세스하려면 연결하세요",
   "notConnected": "Not connected",
   "connectToCloudShort": "Connect to cloud",
-  "loggedIn": "Logged in",
+  "loggedIn": "로그인됨",
 
   "localFiles": "Local Files",
   "remoteFiles": "Remote Files",
@@ -280,35 +280,35 @@
   "visibleLinesCopied": "Visible lines copied",
   "allLogsCopied": "All logs copied",
 
-  "open": "Open",
-  "editSystemEditor": "Edit (System Editor)",
-  "editBuiltIn": "Edit (Built-in)",
-  "openWithSystemApp": "Open with System App",
-  "verifyAgainstRemote": "Verify against remote",
+  "open": "열기",
+  "editSystemEditor": "편집 (시스템 편집기)",
+  "editBuiltIn": "편집 (내장 편집기)",
+  "openWithSystemApp": "시스템 앱으로 열기",
+  "verifyAgainstRemote": "원격 파일과 비교",
   "browseArchive": "Browse Archive",
   "archiveExtracted": "Archive extracted successfully",
-  "revealInFinder": "Reveal in Finder",
-  "showInExplorer": "Show in Explorer",
-  "openContainingFolder": "Open containing folder",
-  "properties": "Properties",
-  "copyNames": "Copy name(s)",
-  "copyPaths": "Copy path(s)",
-  "createMd5": "Create .md5 file",
-  "verifyChecksumFile": "Verify checksum file",
-  "splitFile": "Split File",
-  "combineParts": "Combine Parts",
-  "createLink": "Create Link...",
-  "secureWipe": "Secure Wipe",
+  "revealInFinder": "Finder에서 보기",
+  "showInExplorer": "탐색기에서 보기",
+  "openContainingFolder": "포함된 폴더 열기",
+  "properties": "속성",
+  "copyNames": "이름 복사",
+  "copyPaths": "경로 복사",
+  "createMd5": ".md5 파일 만들기",
+  "verifyChecksumFile": "체크섬 파일 확인",
+  "splitFile": "파일 분할",
+  "combineParts": "분할 파일 합치기",
+  "createLink": "링크 만들기...",
+  "secureWipe": "안전하게 지우기",
 
-  "confirmDeleteBody": "Are you sure you want to delete {count} item(s)?",
+  "confirmDeleteBody": "항목 {count}개를 삭제하시겠습니까?",
   "@confirmDeleteBody": {
     "placeholders": { "count": { "type": "int" } }
   },
-  "totalSize": "Total size: {size}",
+  "totalSize": "전체 크기: {size}",
   "@totalSize": {
     "placeholders": { "size": { "type": "String" } }
   },
-  "cannotBeUndone": "This action cannot be undone.",
+  "cannotBeUndone": "이 작업은 취소할 수 없습니다.",
 
   "nItems": "{count} items",
   "@nItems": {
@@ -364,15 +364,15 @@
     "placeholders": { "count": { "type": "int" } }
   },
 
-  "copyNItems": "Copy {count} item(s)",
+  "copyNItems": "항목 {count}개 복사",
   "@copyNItems": {
     "placeholders": { "count": { "type": "int" } }
   },
-  "moveNItems": "Move {count} item(s)",
+  "moveNItems": "항목 {count}개 이동",
   "@moveNItems": {
     "placeholders": { "count": { "type": "int" } }
   },
-  "targetPath": "Target path",
+  "targetPath": "대상 경로",
   "saved": "Saved {name}",
   "@saved": {
     "placeholders": { "name": { "type": "String" } }
@@ -406,29 +406,29 @@
   "encryptBeforeUpload": "Encrypt files before upload (AES-256-GCM)",
   "encryptionPassphrase": "Encryption Passphrase",
 
-  "appLocked": "CrispCloud is Locked",
-  "enterPinToContinue": "Enter your PIN or password to continue",
-  "pinPassword": "PIN / Password",
-  "incorrectPin": "Incorrect PIN or password",
-  "tooManyAttempts": "Too many failed attempts. Restart the app to try again.",
-  "attemptsRemaining": "{count} attempts remaining",
+  "appLocked": "CrispCloud가 잠겨 있습니다",
+  "enterPinToContinue": "계속하려면 PIN 또는 비밀번호를 입력하세요",
+  "pinPassword": "PIN / 비밀번호",
+  "incorrectPin": "PIN 또는 비밀번호가 올바르지 않습니다",
+  "tooManyAttempts": "실패 횟수가 너무 많습니다. 다시 시도하려면 앱을 다시 시작하세요.",
+  "attemptsRemaining": "남은 시도 횟수: {count}회",
   "@attemptsRemaining": {
     "placeholders": { "count": { "type": "int" } }
   },
-  "appLockSetup": "Set Up App Lock",
-  "changeAppLockCode": "Change App Lock",
-  "currentPin": "Current PIN / Password",
-  "newPin": "New PIN / Password",
-  "confirmPin": "Confirm PIN / Password",
-  "minFourChars": "Minimum 4 characters",
-  "codesDoNotMatch": "Codes do not match",
-  "autoLockAfter": "Auto-lock after",
-  "immediately": "Immediately",
-  "oneMinute": "1 minute",
-  "fiveMinutes": "5 minutes",
-  "fifteenMinutes": "15 minutes",
-  "thirtyMinutes": "30 minutes",
-  "oneHour": "1 hour",
+  "appLockSetup": "앱 잠금 설정",
+  "changeAppLockCode": "앱 잠금 변경",
+  "currentPin": "현재 PIN / 비밀번호",
+  "newPin": "새 PIN / 비밀번호",
+  "confirmPin": "PIN / 비밀번호 확인",
+  "minFourChars": "최소 4자",
+  "codesDoNotMatch": "코드가 일치하지 않습니다",
+  "autoLockAfter": "자동 잠금 시간",
+  "immediately": "즉시",
+  "oneMinute": "1분",
+  "fiveMinutes": "5분",
+  "fifteenMinutes": "15분",
+  "thirtyMinutes": "30분",
+  "oneHour": "1시간",
 
   "connectToHetzner": "Connect to Hetzner Storage Box",
   "sftpPort23": "SFTP (port 23)",
@@ -507,12 +507,12 @@
   "exportKeys": "Export/Import Encryption Keys",
   "backupRecovery": "BIP39 Mnemonic Backup and Recovery",
 
-  "noActiveOperations": "No active operations",
-  "refreshAll": "Refresh All",
+  "noActiveOperations": "진행 중인 작업 없음",
+  "refreshAll": "모두 새로고침",
 
-  "newName": "New name",
-  "items": "Items:",
-  "andMore": "... and {count} more",
+  "newName": "새 이름",
+  "items": "항목:",
+  "andMore": "... 외 {count}개",
   "@andMore": {
     "placeholders": { "count": { "type": "int" } }
   },
@@ -529,7 +529,7 @@
   "type": "Type",
   "created": "Created",
   "accessed": "Accessed",
-  "computeMd5": "Compute MD5",
+  "computeMd5": "MD5 계산",
 
   "protocol": "Protocol"
 }

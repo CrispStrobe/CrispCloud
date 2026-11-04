@@ -235,15 +235,15 @@
   "keyboardShortcuts": "Keyboard Shortcuts",
   "swapPanels": "Swap Panels",
 
-  "connectToCloud": "Connect to Cloud",
+  "connectToCloud": "الاتصال بالسحابة",
   "browseProvider": "Browse {provider}",
   "@browseProvider": {
     "placeholders": { "provider": { "type": "String" } }
   },
-  "pleaseConnectRemote": "Please connect to access remote files",
+  "pleaseConnectRemote": "يرجى الاتصال للوصول إلى الملفات البعيدة",
   "notConnected": "Not connected",
   "connectToCloudShort": "Connect to cloud",
-  "loggedIn": "Logged in",
+  "loggedIn": "تم تسجيل الدخول",
 
   "localFiles": "Local Files",
   "remoteFiles": "Remote Files",
@@ -280,35 +280,35 @@
   "visibleLinesCopied": "Visible lines copied",
   "allLogsCopied": "All logs copied",
 
-  "open": "Open",
-  "editSystemEditor": "Edit (System Editor)",
-  "editBuiltIn": "Edit (Built-in)",
-  "openWithSystemApp": "Open with System App",
-  "verifyAgainstRemote": "Verify against remote",
+  "open": "فتح",
+  "editSystemEditor": "تحرير (محرر النظام)",
+  "editBuiltIn": "تحرير (المحرر المدمج)",
+  "openWithSystemApp": "فتح باستخدام تطبيق النظام",
+  "verifyAgainstRemote": "التحقق من الملف البعيد",
   "browseArchive": "Browse Archive",
   "archiveExtracted": "Archive extracted successfully",
-  "revealInFinder": "Reveal in Finder",
-  "showInExplorer": "Show in Explorer",
-  "openContainingFolder": "Open containing folder",
-  "properties": "Properties",
-  "copyNames": "Copy name(s)",
-  "copyPaths": "Copy path(s)",
-  "createMd5": "Create .md5 file",
-  "verifyChecksumFile": "Verify checksum file",
-  "splitFile": "Split File",
-  "combineParts": "Combine Parts",
-  "createLink": "Create Link...",
-  "secureWipe": "Secure Wipe",
+  "revealInFinder": "إظهار في Finder",
+  "showInExplorer": "إظهار في المستكشف",
+  "openContainingFolder": "فتح المجلد المحتوي",
+  "properties": "الخصائص",
+  "copyNames": "نسخ الأسماء",
+  "copyPaths": "نسخ المسارات",
+  "createMd5": "إنشاء ملف ‎.md5",
+  "verifyChecksumFile": "التحقق من ملف المجموع الاختباري",
+  "splitFile": "تقسيم الملف",
+  "combineParts": "دمج الأجزاء",
+  "createLink": "إنشاء رابط...",
+  "secureWipe": "مسح آمن",
 
-  "confirmDeleteBody": "Are you sure you want to delete {count} item(s)?",
+  "confirmDeleteBody": "هل تريد بالتأكيد حذف {count} من العناصر؟",
   "@confirmDeleteBody": {
     "placeholders": { "count": { "type": "int" } }
   },
-  "totalSize": "Total size: {size}",
+  "totalSize": "الحجم الإجمالي: {size}",
   "@totalSize": {
     "placeholders": { "size": { "type": "String" } }
   },
-  "cannotBeUndone": "This action cannot be undone.",
+  "cannotBeUndone": "لا يمكن التراجع عن هذا الإجراء.",
 
   "nItems": "{count} items",
   "@nItems": {
@@ -364,15 +364,15 @@
     "placeholders": { "count": { "type": "int" } }
   },
 
-  "copyNItems": "Copy {count} item(s)",
+  "copyNItems": "نسخ {count} من العناصر",
   "@copyNItems": {
     "placeholders": { "count": { "type": "int" } }
   },
-  "moveNItems": "Move {count} item(s)",
+  "moveNItems": "نقل {count} من العناصر",
   "@moveNItems": {
     "placeholders": { "count": { "type": "int" } }
   },
-  "targetPath": "Target path",
+  "targetPath": "مسار الوجهة",
   "saved": "Saved {name}",
   "@saved": {
     "placeholders": { "name": { "type": "String" } }
@@ -406,29 +406,29 @@
   "encryptBeforeUpload": "Encrypt files before upload (AES-256-GCM)",
   "encryptionPassphrase": "Encryption Passphrase",
 
-  "appLocked": "CrispCloud is Locked",
-  "enterPinToContinue": "Enter your PIN or password to continue",
-  "pinPassword": "PIN / Password",
-  "incorrectPin": "Incorrect PIN or password",
-  "tooManyAttempts": "Too many failed attempts. Restart the app to try again.",
-  "attemptsRemaining": "{count} attempts remaining",
+  "appLocked": "CrispCloud مقفل",
+  "enterPinToContinue": "أدخل رمز PIN أو كلمة المرور للمتابعة",
+  "pinPassword": "رمز PIN / كلمة المرور",
+  "incorrectPin": "رمز PIN أو كلمة المرور غير صحيحة",
+  "tooManyAttempts": "محاولات فاشلة كثيرة. أعد تشغيل التطبيق للمحاولة مجدداً.",
+  "attemptsRemaining": "المحاولات المتبقية: {count}",
   "@attemptsRemaining": {
     "placeholders": { "count": { "type": "int" } }
   },
-  "appLockSetup": "Set Up App Lock",
-  "changeAppLockCode": "Change App Lock",
-  "currentPin": "Current PIN / Password",
-  "newPin": "New PIN / Password",
-  "confirmPin": "Confirm PIN / Password",
-  "minFourChars": "Minimum 4 characters",
-  "codesDoNotMatch": "Codes do not match",
-  "autoLockAfter": "Auto-lock after",
-  "immediately": "Immediately",
-  "oneMinute": "1 minute",
-  "fiveMinutes": "5 minutes",
-  "fifteenMinutes": "15 minutes",
-  "thirtyMinutes": "30 minutes",
-  "oneHour": "1 hour",
+  "appLockSetup": "إعداد قفل التطبيق",
+  "changeAppLockCode": "تغيير قفل التطبيق",
+  "currentPin": "رمز PIN / كلمة المرور الحالية",
+  "newPin": "رمز PIN / كلمة المرور الجديدة",
+  "confirmPin": "تأكيد رمز PIN / كلمة المرور",
+  "minFourChars": "4 أحرف على الأقل",
+  "codesDoNotMatch": "الرمزان غير متطابقين",
+  "autoLockAfter": "القفل التلقائي بعد",
+  "immediately": "فوراً",
+  "oneMinute": "دقيقة واحدة",
+  "fiveMinutes": "5 دقائق",
+  "fifteenMinutes": "15 دقيقة",
+  "thirtyMinutes": "30 دقيقة",
+  "oneHour": "ساعة واحدة",
 
   "connectToHetzner": "Connect to Hetzner Storage Box",
   "sftpPort23": "SFTP (port 23)",
@@ -507,12 +507,12 @@
   "exportKeys": "Export/Import Encryption Keys",
   "backupRecovery": "BIP39 Mnemonic Backup and Recovery",
 
-  "noActiveOperations": "No active operations",
-  "refreshAll": "Refresh All",
+  "noActiveOperations": "لا توجد عمليات نشطة",
+  "refreshAll": "تحديث الكل",
 
-  "newName": "New name",
-  "items": "Items:",
-  "andMore": "... and {count} more",
+  "newName": "الاسم الجديد",
+  "items": "العناصر:",
+  "andMore": "... و{count} أخرى",
   "@andMore": {
     "placeholders": { "count": { "type": "int" } }
   },
@@ -529,7 +529,7 @@
   "type": "Type",
   "created": "Created",
   "accessed": "Accessed",
-  "computeMd5": "Compute MD5",
+  "computeMd5": "حساب MD5",
 
   "protocol": "Protocol"
 }
