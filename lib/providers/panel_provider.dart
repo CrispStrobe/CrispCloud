@@ -1363,7 +1363,7 @@ class PanelNotifier extends ChangeNotifier {
         // Keep the original value; the loader will report a friendly error.
       }
     }
-    final home = Platform.environment['HOME'];
+    final home = kIsWeb ? null : Platform.environment['HOME'];
     if (home != null && home.isNotEmpty) {
       if (path == '~') {
         path = home;
@@ -1398,7 +1398,7 @@ class PanelNotifier extends ChangeNotifier {
       path = side == PanelSide.local
           ? (archive.contains('/')
               ? p.dirname(archive)
-              : (Platform.environment['HOME'] ?? '/'))
+              : (kIsWeb ? '/' : (Platform.environment['HOME'] ?? '/')))
           : p.posix.dirname(archive);
     }
     if (side == PanelSide.local) {
@@ -2096,7 +2096,7 @@ class PanelNotifier extends ChangeNotifier {
         titlePath = side == PanelSide.local
             ? (archive.contains('/')
                 ? p.dirname(archive)
-                : (Platform.environment['HOME'] ?? '/'))
+                : (kIsWeb ? '/' : (Platform.environment['HOME'] ?? '/')))
             : p.posix.dirname(archive);
       }
       tab.path = titlePath;
