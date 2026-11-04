@@ -25,6 +25,7 @@ import 'code_highlighting.dart';
 import 'package:flutter_markdown/flutter_markdown.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import '../l10n/preview_media_strings.dart';
+import '../l10n/file_bytes_error_strings.dart';
 import 'package:flutter_highlight/flutter_highlight.dart';
 import 'package:flutter_highlight/themes/monokai-sublime.dart';
 import 'package:flutter_highlight/themes/github.dart';
@@ -285,7 +286,7 @@ class _PreviewPaneState extends ConsumerState<PreviewPane> {
           _log.warn('operation failed', e);
           setState(() {
             _error = 'pdfFailed';
-            _errorArgs = {'error': e};
+            _errorArgs = {'error': localizedFileBytesError(context, e)};
             _loading = false;
           });
         }
@@ -314,7 +315,7 @@ class _PreviewPaneState extends ConsumerState<PreviewPane> {
       if (!mounted || _loadedFile != file) return;
       setState(() {
         _error = 'previewFailed';
-            _errorArgs = {'error': e};
+            _errorArgs = {'error': localizedFileBytesError(context, e)};
         _loading = false;
       });
     }
@@ -384,7 +385,7 @@ class _PreviewPaneState extends ConsumerState<PreviewPane> {
       if (!mounted || _loadedFile != file) return;
       setState(() {
         _error = 'mediaFailed';
-            _errorArgs = {'error': e};
+            _errorArgs = {'error': localizedFileBytesError(context, e)};
         _loading = false;
       });
     }

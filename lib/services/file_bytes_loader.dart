@@ -17,10 +17,15 @@ import '../models/panel_side.dart';
 import '../providers/providers.dart';
 import './log_service.dart';
 
+/// App-authored byte-loading failures that can be localized at the UI boundary.
+enum FileBytesErrorCode { tooLarge, notFound, couldNotRead, accessDenied }
+
 /// Something went wrong loading bytes for preview.
 class FileBytesLoadException implements Exception {
   final String message;
-  const FileBytesLoadException(this.message);
+  final FileBytesErrorCode? code;
+  final Map<String, Object> arguments;
+  const FileBytesLoadException(this.message, {this.code, this.arguments = const {}});
 
   @override
   String toString() => message;
@@ -30,7 +35,9 @@ class FileBytesLoadException implements Exception {
 class FileBytesTooLargeException extends FileBytesLoadException {
   FileBytesTooLargeException(int size, int cap)
       : super(
-            'File is ${_fmt(size)} — larger than the ${_fmt(cap)} view limit.');
+            'File is ${_fmt(size)} — larger than the ${_fmt(cap)} view limit.',
+            code: FileBytesErrorCode.tooLarge,
+            arguments: {'size': _fmt(size), 'limit': _fmt(cap)});
 
   static String _fmt(int b) => b >= 1024 * 1024 * 1024
       ? '${(b / 1024 / 1024 / 1024).toStringAsFixed(1)} GB'
@@ -68,10 +75,13 @@ Future<Uint8List> loadFileBytes(
       _assertCap(bytes.length, capBytes);
       return bytes;
     } on PathNotFoundException {
-      throw FileBytesLoadException('File not found: $path');
+      throw FileBytesLoadException('File not found: $path',
+          code: FileBytesErrorCode.notFound, arguments: {'path': path});
     } on FileSystemException catch (e) {
       if (kIsWeb || !_isPermissionDenied(e)) {
-        throw FileBytesLoadException('Could not read "$path": ${e.message}');
+        throw FileBytesLoadException('Could not read "$path": ${e.message}',
+            code: FileBytesErrorCode.couldNotRead,
+            arguments: {'path': path, 'error': e.message});
       }
       // Sandbox denial: ask the user to grant the containing folder, save the
       // bookmark, then retry once.
@@ -80,6 +90,7 @@ Future<Uint8List> loadFileBytes(
         throw FileBytesLoadException(
           'Access to "$path" was not granted. Grant access to its folder '
           'and try again.',
+          code: FileBytesErrorCode.accessDenied, arguments: {'path': path},
         );
       }
       final bytes = await localSvc.readFile(path, fileItem: file);

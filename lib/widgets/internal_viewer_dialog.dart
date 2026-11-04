@@ -41,6 +41,7 @@ import 'package:universal_html/html.dart' as html;
 import 'package:video_player/video_player.dart';
 
 import '../l10n/internal_viewer_strings.dart';
+import '../l10n/file_bytes_error_strings.dart';
 import '../models/file_item.dart';
 import '../models/panel_side.dart';
 import '../providers/providers.dart';
@@ -415,10 +416,10 @@ class _InternalViewerDialogState extends ConsumerState<InternalViewerDialog> {
 
   String _describeError(Object error) {
     if (error is FileBytesTooLargeException) {
-      return '${error.message}\n\n' +
+      return '${localizedFileBytesError(context, error)}\n\n' +
           InternalViewerStrings(context).withNumber('remoteLimit', formatBytes(kViewerFullDataCap));
     }
-    return error.toString();
+    return localizedFileBytesError(context, error);
   }
 
   // ---------------------------------------------------------------------------
