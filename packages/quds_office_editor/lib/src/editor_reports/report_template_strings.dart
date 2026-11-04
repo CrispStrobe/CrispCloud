@@ -1,0 +1,212 @@
+import 'package:quds_office_engine/quds_reports.dart';
+
+/// Labels for built-in template metadata. Custom template names are untouched.
+class ReportTemplateStrings {
+  const ReportTemplateStrings(this.languageCode);
+  final String languageCode;
+
+  String _label(String key, String fallback) =>
+      (_labels[languageCode] ?? _labels['en']!)[key] ?? fallback;
+
+  String category(ReportTemplateCategory category) =>
+      _label(category.name, category.title);
+
+  String family(ReportTemplateInfo template, {required bool bundled}) {
+    if (!bundled) return template.familyTitle;
+    final key = template.family == 'inventory'
+        ? 'inventory_template'
+        : template.family;
+    return _label(key, template.familyTitle);
+  }
+
+  String language(ReportTemplateLanguage language) =>
+      _label(language.name, language.label);
+
+  String title(ReportTemplateInfo template, {required bool bundled}) {
+    if (!bundled) return template.title;
+    return '${family(template, bundled: true)} (${language(template.language)})';
+  }
+}
+
+const Map<String, Map<String, String>> _labels = {
+  'en': {
+    "sales": "Sales",
+    "finance": "Finance",
+    "inventory": "Inventory",
+    "analytics": "Analytics",
+    "hr": "Human resources",
+    "feature_showcase": "Sales order",
+    "sales_invoice": "VAT sales invoice",
+    "commercial_invoice": "Commercial invoice",
+    "product_catalog": "Product catalog",
+    "account_statement": "Customer account statement",
+    "receipt_voucher": "Receipt voucher",
+    "inventory_template": "Inventory status",
+    "sales_performance": "Sales performance dashboard",
+    "chart_gallery": "Chart gallery",
+    "certificate": "Certificate of appreciation",
+    "class_certificate": "Class certificates",
+    "english": "English",
+    "arabic": "Arabic",
+  },
+  'de': {
+    "sales": "Verkauf",
+    "finance": "Finanzen",
+    "inventory": "Inventar",
+    "analytics": "Analysen",
+    "hr": "Personal",
+    "feature_showcase": "Verkaufsauftrag",
+    "sales_invoice": "Verkaufsrechnung mit MwSt.",
+    "commercial_invoice": "Handelsrechnung",
+    "product_catalog": "Produktkatalog",
+    "account_statement": "Kundenkontoauszug",
+    "receipt_voucher": "Quittungsbeleg",
+    "inventory_template": "Bestandsübersicht",
+    "sales_performance": "Verkaufsanalyse",
+    "chart_gallery": "Diagrammgalerie",
+    "certificate": "Anerkennungsurkunde",
+    "class_certificate": "Kurszertifikate",
+    "english": "Englisch",
+    "arabic": "Arabisch",
+  },
+  'fr': {
+    "sales": "Ventes",
+    "finance": "Finances",
+    "inventory": "Stocks",
+    "analytics": "Analyses",
+    "hr": "Ressources humaines",
+    "feature_showcase": "Commande client",
+    "sales_invoice": "Facture de vente avec TVA",
+    "commercial_invoice": "Facture commerciale",
+    "product_catalog": "Catalogue de produits",
+    "account_statement": "Relevé de compte client",
+    "receipt_voucher": "Reçu de paiement",
+    "inventory_template": "État des stocks",
+    "sales_performance": "Tableau de bord des ventes",
+    "chart_gallery": "Galerie de graphiques",
+    "certificate": "Certificat de reconnaissance",
+    "class_certificate": "Certificats de cours",
+    "english": "Anglais",
+    "arabic": "Arabe",
+  },
+  'es': {
+    "sales": "Ventas",
+    "finance": "Finanzas",
+    "inventory": "Inventario",
+    "analytics": "Análisis",
+    "hr": "Recursos humanos",
+    "feature_showcase": "Pedido de venta",
+    "sales_invoice": "Factura de venta con IVA",
+    "commercial_invoice": "Factura comercial",
+    "product_catalog": "Catálogo de productos",
+    "account_statement": "Estado de cuenta del cliente",
+    "receipt_voucher": "Comprobante de recibo",
+    "inventory_template": "Estado del inventario",
+    "sales_performance": "Panel de ventas",
+    "chart_gallery": "Galería de gráficos",
+    "certificate": "Certificado de agradecimiento",
+    "class_certificate": "Certificados de clase",
+    "english": "Inglés",
+    "arabic": "Árabe",
+  },
+  'pt': {
+    "sales": "Vendas",
+    "finance": "Finanças",
+    "inventory": "Estoque",
+    "analytics": "Análises",
+    "hr": "Recursos humanos",
+    "feature_showcase": "Pedido de venda",
+    "sales_invoice": "Fatura de venda com IVA",
+    "commercial_invoice": "Fatura comercial",
+    "product_catalog": "Catálogo de produtos",
+    "account_statement": "Extrato da conta do cliente",
+    "receipt_voucher": "Comprovante de recebimento",
+    "inventory_template": "Situação do estoque",
+    "sales_performance": "Painel de desempenho de vendas",
+    "chart_gallery": "Galeria de gráficos",
+    "certificate": "Certificado de reconhecimento",
+    "class_certificate": "Certificados de curso",
+    "english": "Inglês",
+    "arabic": "Árabe",
+  },
+  'ar': {
+    "sales": "المبيعات",
+    "finance": "المالية",
+    "inventory": "المخزون",
+    "analytics": "التحليلات",
+    "hr": "الموارد البشرية",
+    "feature_showcase": "أمر بيع",
+    "sales_invoice": "فاتورة مبيعات ضريبية",
+    "commercial_invoice": "فاتورة تجارية",
+    "product_catalog": "كتالوج المنتجات",
+    "account_statement": "كشف حساب العميل",
+    "receipt_voucher": "سند قبض",
+    "inventory_template": "حالة المخزون",
+    "sales_performance": "لوحة أداء المبيعات",
+    "chart_gallery": "معرض الرسوم البيانية",
+    "certificate": "شهادة تقدير",
+    "class_certificate": "شهادات الصف",
+    "english": "الإنجليزية",
+    "arabic": "العربية",
+  },
+  'ja': {
+    "sales": "販売",
+    "finance": "財務",
+    "inventory": "在庫",
+    "analytics": "分析",
+    "hr": "人事",
+    "feature_showcase": "販売注文書",
+    "sales_invoice": "付加価値税込み販売請求書",
+    "commercial_invoice": "商業送り状",
+    "product_catalog": "商品カタログ",
+    "account_statement": "顧客勘定明細書",
+    "receipt_voucher": "領収書",
+    "inventory_template": "在庫状況",
+    "sales_performance": "販売実績ダッシュボード",
+    "chart_gallery": "グラフギャラリー",
+    "certificate": "感謝状",
+    "class_certificate": "クラス修了証",
+    "english": "英語",
+    "arabic": "アラビア語",
+  },
+  'ko': {
+    "sales": "판매",
+    "finance": "재무",
+    "inventory": "재고",
+    "analytics": "분석",
+    "hr": "인사",
+    "feature_showcase": "판매 주문서",
+    "sales_invoice": "부가세 판매 청구서",
+    "commercial_invoice": "상업 송장",
+    "product_catalog": "제품 카탈로그",
+    "account_statement": "고객 계정 명세서",
+    "receipt_voucher": "영수증",
+    "inventory_template": "재고 현황",
+    "sales_performance": "판매 실적 대시보드",
+    "chart_gallery": "차트 갤러리",
+    "certificate": "감사장",
+    "class_certificate": "수업 수료증",
+    "english": "영어",
+    "arabic": "아랍어",
+  },
+  'zh': {
+    "sales": "销售",
+    "finance": "财务",
+    "inventory": "库存",
+    "analytics": "分析",
+    "hr": "人力资源",
+    "feature_showcase": "销售订单",
+    "sales_invoice": "增值税销售发票",
+    "commercial_invoice": "商业发票",
+    "product_catalog": "产品目录",
+    "account_statement": "客户账户对账单",
+    "receipt_voucher": "收款凭证",
+    "inventory_template": "库存状况",
+    "sales_performance": "销售业绩仪表板",
+    "chart_gallery": "图表库",
+    "certificate": "感谢证书",
+    "class_certificate": "班级证书",
+    "english": "英语",
+    "arabic": "阿拉伯语",
+  },
+};

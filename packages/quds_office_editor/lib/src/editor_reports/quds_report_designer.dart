@@ -23,6 +23,7 @@ import 'report_bundled_fonts.dart';
 import 'report_designer_controller.dart';
 import 'report_designer_strings.dart';
 import 'report_template_library.dart';
+import 'report_template_strings.dart';
 
 /// Band report designer: toolbar, an insert panel, the design canvas or
 /// live preview, and the property inspector, all painted by custom
@@ -119,8 +120,7 @@ class QudsReportDesigner extends StatefulWidget {
   /// [ReportVariable.prompt] variables. Return false to stay put. The host
   /// writes the answers with [ReportDesignerController.setRuntimeValues].
   /// Design mode itself does not ask. Null skips the question.
-  final Future<bool> Function(List<ReportVariable> prompts)?
-  onPromptParameters;
+  final Future<bool> Function(List<ReportVariable> prompts)? onPromptParameters;
 
   /// Ready-made reports offered by the Templates button (hidden when empty).
   /// Picking one replaces the template and uses its sample data. Null offers
@@ -479,7 +479,12 @@ class _QudsReportDesignerState extends State<QudsReportDesigner> {
       return null;
     }
     if (ReportImageFormat.sniff(file.bytes) == null) {
-      setState(() => _message = _c.strings.format('"{name}" is not a PNG or JPEG image', {'name': file.name}));
+      setState(
+        () => _message = _c.strings.format(
+          '"{name}" is not a PNG or JPEG image',
+          {'name': file.name},
+        ),
+      );
       return null;
     }
     return file;
@@ -498,7 +503,11 @@ class _QudsReportDesignerState extends State<QudsReportDesigner> {
       },
       onError: (Object e) {
         if (mounted) {
-          setState(() => _message = _c.strings.format('Fonts unavailable: {error}', {'error': e}));
+          setState(
+            () => _message = _c.strings.format('Fonts unavailable: {error}', {
+              'error': e,
+            }),
+          );
         }
       },
     );
@@ -536,7 +545,12 @@ class _QudsReportDesignerState extends State<QudsReportDesigner> {
       unawaited(
         loader.load().catchError((Object e) {
           if (mounted) {
-            setState(() => _message = _c.strings.format('Could not load {name}: {error}', {'name': f.key, 'error': e}));
+            setState(
+              () => _message = _c.strings.format(
+                'Could not load {name}: {error}',
+                {'name': f.key, 'error': e},
+              ),
+            );
           }
         }),
       );
@@ -561,6 +575,7 @@ class _QudsReportDesignerState extends State<QudsReportDesigner> {
     List<OfficeContextAction> actions,
     ValueChanged<String> onSelect, {
     String? filterHint,
+    bool translateActions = true,
   }) {
     _dismissMenu();
     _menu = OfficeContextMenu.show(
@@ -570,12 +585,12 @@ class _QudsReportDesignerState extends State<QudsReportDesigner> {
         for (final OfficeContextAction a in actions)
           a.isCaption
               ? OfficeContextAction.caption(
-                  _t(a.label),
+                  (translateActions ? _t(a.label) : a.label),
                   separatorBefore: a.separatorBefore,
                 )
               : OfficeContextAction(
                   id: a.id,
-                  label: _t(a.label),
+                  label: translateActions ? _t(a.label) : a.label,
                   icon: a.icon,
                   shortcut: a.shortcut,
                   enabled: a.enabled,
@@ -835,6 +850,11 @@ class _QudsReportDesignerState extends State<QudsReportDesigner> {
 
   /// Families grouped under category captions; a family with several
   /// languages asks for one ([_languageMenu]).
+  ReportTemplateStrings get _templateStrings =>
+      ReportTemplateStrings(_c.strings.languageCode);
+
+  bool get _usesBundledTemplates => widget.templates == null;
+
   void _templatesMenu(Offset at) {
     final List<ReportTemplateInfo> list = _templates;
     final List<ReportTemplateInfo> heads = <ReportTemplateInfo>[];
@@ -855,19 +875,21 @@ class _QudsReportDesignerState extends State<QudsReportDesigner> {
           if (heads.any(
             (ReportTemplateInfo t) => t.category == c,
           )) ...<OfficeContextAction>[
-            OfficeContextAction.caption('${c.title}  ·  ${c.titleAr}'),
+            OfficeContextAction.caption(_templateStrings.category(c)),
             for (final ReportTemplateInfo t in heads)
               if (t.category == c)
                 OfficeContextAction(
                   id: 'fam.${t.family}',
-                  label: t.familyTitle,
+                  label: _templateStrings.family(
+                    t,
+                    bundled: _usesBundledTemplates,
+                  ),
                   icon: _categoryIcon(c),
-                  shortcut: t.familyTitleAr,
                 ),
           ],
-        const OfficeContextAction(
+        OfficeContextAction(
           id: 'blank',
-          label: 'Blank report',
+          label: _t('Blank report'),
           icon: Icons.note_add_outlined,
           separatorBefore: true,
         ),
@@ -889,6 +911,7 @@ class _QudsReportDesignerState extends State<QudsReportDesigner> {
           }
         }
       },
+      translateActions: false,
     );
   }
 
@@ -898,12 +921,12 @@ class _QudsReportDesignerState extends State<QudsReportDesigner> {
       at,
       <OfficeContextAction>[
         OfficeContextAction.caption(
-          '${first.familyTitle}  ·  ${first.familyTitleAr}',
+          _templateStrings.family(first, bundled: _usesBundledTemplates),
         ),
         for (final ReportTemplateInfo info in variants)
           OfficeContextAction(
             id: 'tpl.${info.id}',
-            label: info.language.label,
+            label: _templateStrings.language(info.language),
             icon: Icons.translate,
             shortcut: info.language.code.toUpperCase(),
           ),
@@ -915,13 +938,15 @@ class _QudsReportDesignerState extends State<QudsReportDesigner> {
           }
         }
       },
+      translateActions: false,
     );
   }
 
   void _loadTemplate(ReportTemplateInfo info) {
     _c.loadTemplate(info);
     _c.fitWidth();
-    setState(() => _message = '${_t('Loaded')} "${info.title}"');
+    final title = _templateStrings.title(info, bundled: _usesBundledTemplates);
+    setState(() => _message = '${_t('Loaded')} "$title"');
   }
 
   Future<void> _goPreview() async {
@@ -1425,7 +1450,9 @@ class _QudsReportDesignerState extends State<QudsReportDesigner> {
         '${ReportUnits.trimNumber(r.height / _mm, decimals: 1)} mm',
       );
     } else if (sel.length > 1) {
-      s.write('  ·  ${_c.strings.format('{count} selected', {'count': sel.length})}');
+      s.write(
+        '  ·  ${_c.strings.format('{count} selected', {'count': sel.length})}',
+      );
     }
     if (_c.hasHostData) {
       s.write('  ·  ${_t('host data')}');
@@ -1823,7 +1850,9 @@ class _QudsReportDesignerState extends State<QudsReportDesigner> {
       if (!fields && hit.column >= 0) ...<OfficeContextAction>[
         OfficeContextAction(
           id: 'colRename',
-          label: _c.strings.format('Rename column "{name}"', {'name': t.columns[hit.column].name}),
+          label: _c.strings.format('Rename column "{name}"', {
+            'name': t.columns[hit.column].name,
+          }),
           icon: Icons.drive_file_rename_outline,
           enabled: editable,
         ),
