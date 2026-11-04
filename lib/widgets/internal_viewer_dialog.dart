@@ -41,6 +41,7 @@ import 'package:universal_html/html.dart' as html;
 import 'package:video_player/video_player.dart';
 
 import '../l10n/internal_viewer_strings.dart';
+import '../l10n/office_preview_strings.dart';
 import '../l10n/file_bytes_error_strings.dart';
 import '../l10n/archive_viewer_error_strings.dart';
 import '../models/file_item.dart';
@@ -1301,7 +1302,9 @@ class _InternalViewerDialogState extends ConsumerState<InternalViewerDialog> {
         _mode == ViewerMode.xml ||
         _mode == ViewerMode.csv ||
         _mode == ViewerMode.office) {
-      text = _decodedText ?? _richText;
+      text = _mode == ViewerMode.office && _officeDoc != null
+          ? _localizedOfficeText(_officeDoc!)
+          : _decodedText ?? _richText;
       if (text == null) {
         try {
           final data = await _ensureFullData();
@@ -2102,6 +2105,12 @@ class _InternalViewerDialogState extends ConsumerState<InternalViewerDialog> {
         _OfficeView.raw => 'XML',
       };
 
+  String _localizedOfficeText(OfficeDocument document) {
+    final locale = Localizations.localeOf(context);
+    final strings = OfficePreviewStrings(locale);
+    return strings.headings(strings.text(document), document.textHeadings, locale);
+  }
+
   Widget _buildOfficeContent(OfficeDocument document, ThemeData theme) {
     switch (_officeView) {
       case _OfficeView.slides:
@@ -2155,11 +2164,16 @@ class _InternalViewerDialogState extends ConsumerState<InternalViewerDialog> {
       case _OfficeView.table:
         final csv = document.csv;
         if (csv != null && csv.isNotEmpty) {
-          return CsvTableView(content: csv, filename: _viewName);
+          final locale = Localizations.localeOf(context);
+          final localized = OfficePreviewStrings(locale).headings(csv, document.csvHeadings, locale);
+          return CsvTableView(content: localized, filename: _viewName);
         }
         return _buildOfficeText(document, theme);
       case _OfficeView.formatted:
-        final markdown = document.markdown.trim();
+        final locale = Localizations.localeOf(context);
+        final markdown = OfficePreviewStrings(locale)
+            .headings(document.markdown, document.markdownHeadings, locale)
+            .trim();
         if (markdown.isEmpty) {
           if (document.plainText.trim().isNotEmpty) {
             return _buildOfficeText(document, theme);
@@ -2186,7 +2200,7 @@ class _InternalViewerDialogState extends ConsumerState<InternalViewerDialog> {
   }
 
   Widget _buildOfficeText(OfficeDocument document, ThemeData theme) {
-    final full = document.plainText;
+    final full = _localizedOfficeText(document);
     if (full.trim().isEmpty) {
       return _messagePane(InternalViewerStrings(context).text('noText'), theme);
     }
@@ -2488,7 +2502,11 @@ class _InternalViewerDialogState extends ConsumerState<InternalViewerDialog> {
       if (_mode == ViewerMode.pdf && _pdfShowText && _pdfText != null)
         InternalViewerStrings(context).withNumber('characters', _pdfText!.length),
       if (_canChangeEncoding && _encoding != null) _encoding!,
-      if (_viewNote != null) _viewNote!,
+      if (_viewNote != null)
+        if (_mode == ViewerMode.office && _officeDoc != null)
+          OfficePreviewStrings(Localizations.localeOf(context)).note(_officeDoc!)!
+        else
+          _viewNote!,
       if (_mode == ViewerMode.hex && _selectedByte != null) _selectedByteText(),
       if (_searchStatusText != null) _searchStatusText!,
     ];
