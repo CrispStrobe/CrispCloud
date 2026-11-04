@@ -17,10 +17,8 @@ permissions:
 
 env:
   FLUTTER_CHANNEL: stable
-  # Pinned to match ci.yml: Flutter >= 3.44 writes an invalid
-  # package_graph.json ("dependencies for `dart_pg` missing") for hosted
-  # deps reached only through a git dependency (internxt_client -> dart_pg).
-  FLUTTER_VERSION: 3.44.4
+  # Match the tested Flutter toolchain in .fvmrc and ci.yml.
+  FLUTTER_VERSION: 3.47.8
 
 jobs:
   # ---------- Guard: skip if no new commits since last nightly ----------

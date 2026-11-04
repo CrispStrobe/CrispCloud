@@ -23,10 +23,8 @@ concurrency:
 
 env:
   FLUTTER_CHANNEL: stable
-  # Quds Office 1.5/1.6 requires Dart 3.12, first shipped with Flutter 3.44.
-  # Keep this aligned with the toolchain used to resolve the Internxt git
-  # dependency; revisit if the pub package graph regression returns.
-  FLUTTER_VERSION: 3.44.4
+  # Match .fvmrc and all release jobs; required by the PDF editor.
+  FLUTTER_VERSION: 3.47.8
   FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: true
 
 jobs:
@@ -320,6 +318,7 @@ jobs:
       - uses: subosito/flutter-action@v2
         with:
           channel: ${{ env.FLUTTER_CHANNEL }}
+          flutter-version: ${{ env.FLUTTER_VERSION }}
           cache: true
 
       - name: Configure git auth for private deps
@@ -444,6 +443,7 @@ jobs:
       - uses: subosito/flutter-action@v2
         with:
           channel: ${{ env.FLUTTER_CHANNEL }}
+          flutter-version: ${{ env.FLUTTER_VERSION }}
           cache: true
 
       - name: Configure git auth for private deps

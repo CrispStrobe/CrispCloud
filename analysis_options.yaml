@@ -6,6 +6,10 @@ analyzer:
     # Third-party source vendored for a macOS sandbox patch. It keeps its own
     # upstream style; app analysis should not report that package's lint debt.
     - packages/filen_client/**
+    # Vendored Quds packages keep their upstream tests and dev-only imports.
+    # Those suites run in the quds_office_suite fork, not in the app analysis.
+    - packages/quds_office_engine/test/**
+    - packages/quds_office_editor/test/**
   errors:
     missing_return: error
     dead_code: warning

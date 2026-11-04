@@ -36,7 +36,7 @@ env:
   PROFILE_NAME: CrispCloud macOS AppStore
   FINDEREXT_BUNDLE_ID: com.CrispStrobe.cloud.FinderExtension
   FINDEREXT_PROFILE_NAME: CrispCloud FinderExtension macOS AppStore
-  FLUTTER_VERSION: '3.44.2'
+  FLUTTER_VERSION: '3.47.8'
 
 jobs:
   build-upload:
