@@ -16,6 +16,19 @@ class _TestLocalFileService implements LocalFileService {
   String currentPath = Directory.systemTemp.path;
   @override
   String? get grantedBasePath => currentPath;
+
+  @override
+  Future<bool> ensureAccess(String path) async => true;
+
+  @override
+  Future<bool> beginStreamAccess(String path) async => true;
+
+  @override
+  Future<void> endStreamAccess() async {}
+
+  @override
+  Future<int?> fileLength(String path) async => 0;
+
   @override
   Future<String> getInitialPath() async => currentPath;
   @override
@@ -25,7 +38,8 @@ class _TestLocalFileService implements LocalFileService {
   @override
   Future<List<FileSystemEntity>?> listDirectory(String path) async => [];
   @override
-  Future<String?> requestDirectoryAccess({String? initialDirectory}) async =>
+  Future<String?> requestDirectoryAccess({String? initialDirectory})
+ async =>
       currentPath;
   @override
   Future<Uint8List> readFile(String path, {FileItem? fileItem}) async =>
@@ -42,6 +56,15 @@ class _TestLocalFileService implements LocalFileService {
   Map<String, dynamic> getWebMetadata(String path) => {};
   @override
   Object? getWebFileRef(String path) => null;
+
+  @override
+  Future<List<FileItem>> walkFiles(
+    String path, {
+    bool includeHidden = false,
+    int maxItems = 10000,
+  }) async =>
+      const <FileItem>[];
+
 }
 
 void main() {

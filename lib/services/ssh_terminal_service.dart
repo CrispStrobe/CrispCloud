@@ -162,7 +162,13 @@ class SshTerminalService {
   static bool get isSupported {
     if (kIsWeb) return false;
     try {
-      return Platform.isLinux || Platform.isMacOS || Platform.isWindows;
+      // dartssh2 works on mobile too; SSH is the only terminal option on
+      // sandboxed iOS/macOS builds.
+      return Platform.isLinux ||
+          Platform.isMacOS ||
+          Platform.isWindows ||
+          Platform.isAndroid ||
+          Platform.isIOS;
     } catch (_) {
       return false;
     }
@@ -171,7 +177,7 @@ class SshTerminalService {
   void _checkPlatform() {
     if (!isSupported) {
       throw UnsupportedError(
-        'SSH terminal is not supported on web or mobile platforms.',
+        'SSH terminal is not supported on web.',
       );
     }
   }

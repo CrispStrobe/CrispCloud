@@ -536,4 +536,24 @@ class WebFileService implements LocalFileService {
 
   @override
   Future<String> getInitialPath() async => '/';
+
+  @override
+  Future<bool> ensureAccess(String path) async => true;
+
+  @override
+  Future<bool> beginStreamAccess(String path) async => true;
+
+  @override
+  Future<void> endStreamAccess() async {}
+
+  @override
+  Future<int?> fileLength(String path) async => null;
+
+  @override
+  Future<List<FileItem>> walkFiles(
+    String path, {
+    bool includeHidden = false,
+    int maxItems = 10000,
+  }) async =>
+      const <FileItem>[];
 }

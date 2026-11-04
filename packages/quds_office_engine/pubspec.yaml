@@ -1,0 +1,55 @@
+name: quds_office_engine
+description: >-
+  Pure Dart Office, PDF, and report engine: DOCX/XLSX/PPTX, formulas, BiDi/RTL,
+  PdfFile, pdf_widgets, and .qrep band reports exported to PDF, XLSX, and DOCX.
+version: 1.5.0
+homepage: https://github.com/MohammedAsaadAsaad/quds_office_suite
+repository: https://github.com/MohammedAsaadAsaad/quds_office_suite/tree/main/packages/quds_office_engine
+issue_tracker: https://github.com/MohammedAsaadAsaad/quds_office_suite/issues
+
+topics:
+  - office
+  - docx
+  - xlsx
+  - pptx
+  - pdf
+
+screenshots:
+  - description: "Quds Report Studio: a desktop .qrep designer built on this engine (Windows and Linux installers)."
+    path: example/screenshots/report_studio_designer.png
+  - description: "A DOCX saved by LibreOffice Writer: its own PDF next to this engine's pure-Dart OfficePdfExport."
+    path: example/screenshots/office_fidelity_word.png
+  - description: "Band report: sales dashboard with KPI cards, vector charts, and grouped tables (PDF)."
+    path: example/screenshots/report_sales_performance.png
+  - description: "Band report: Arabic RTL VAT invoice with QR code and amount in words (PDF)."
+    path: example/screenshots/report_sales_invoice_ar.png
+  - description: "Band report: Arabic account statement with running balance and area chart (PDF)."
+    path: example/screenshots/report_account_statement_ar.png
+  - description: "Ready-made template: product catalog with photos saved inside the .qrep, open in Quds Report Studio."
+    path: example/screenshots/report_studio_templates.png
+  - description: "Ready-made template: Arabic certificate of appreciation with embedded seal and signature (PDF)."
+    path: example/screenshots/report_certificate_ar.png
+  - description: "The same report exported to XLSX with native Excel charts and typed cells."
+    path: example/screenshots/report_sales_performance_xlsx.png
+  - description: "Chart gallery: pie, waterfall, funnel, gauge, bullet, scatter, and bubble, drawn as vectors."
+    path: example/screenshots/report_chart_gallery.png
+  - description: "Shape map: countries colored from a table, with a legend and labels on wide regions."
+    path: example/screenshots/report_shape_map.png
+
+platforms:
+  android:
+  ios:
+  linux:
+  macos:
+  web:
+  windows:
+
+environment:
+  sdk: ^3.12.0
+
+dependencies:
+  crypto: ^3.0.7
+
+dev_dependencies:
+  lints: ^6.0.0
+  test: ^1.26.0

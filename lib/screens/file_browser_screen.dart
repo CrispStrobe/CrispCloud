@@ -3,6 +3,8 @@
 // Main scaffold and layout for the two-panel file browser.
 // Keyboard handling, dialogs, and about dialog are in separate files.
 
+import 'dart:io' show Platform;
+
 import 'package:flutter/foundation.dart'
     show TargetPlatform, defaultTargetPlatform, kIsWeb;
 import 'package:flutter/material.dart';
@@ -18,6 +20,7 @@ import '../services/panel_swap_service.dart';
 import '../services/platform_diagnostics_service.dart';
 import '../services/crash_reporting_service.dart' show CrashReport;
 import '../services/panel_view_mode_service.dart' show PanelViewMode;
+import '../services/office_editor_menu.dart';
 import '../widgets/audit_log_dialog.dart';
 import '../widgets/log_viewer_dialog.dart';
 import '../widgets/file_panel.dart';
@@ -27,6 +30,10 @@ import '../widgets/operations_panel.dart';
 import '../widgets/panel_source_selector.dart';
 import '../widgets/panel_splitter.dart';
 import '../widgets/preview_pane.dart';
+import '../widgets/settings_dialog.dart' show showSettingsDialog;
+import '../widgets/search_dialogs.dart' show showSearchDialog, showFindDialog;
+import '../widgets/file_toolbar.dart' show showPanelFilterDialog;
+import '../widgets/file_context_menu.dart' show showPropertiesDialog;
 import '../widgets/status_bar.dart';
 import '../widgets/cache_settings_dialog.dart';
 import '../widgets/duplicate_finder_dialog.dart';
@@ -36,6 +43,7 @@ import '../widgets/mount_dialog.dart';
 import '../widgets/sync_dialog.dart';
 import '../widgets/tree_sidebar.dart';
 import '../l10n/app_localizations.dart';
+import '../l10n/office_editor_strings.dart';
 import '../widgets/lock_screen.dart';
 import '../widgets/command_palette.dart';
 import '../widgets/terminal_panel.dart';
@@ -62,6 +70,8 @@ class _FileBrowserScreenState extends ConsumerState<FileBrowserScreen> {
   @override
   Widget build(BuildContext context) {
     final l = AppLocalizations.of(context)!;
+    final OfficeEditorMenuActions? officeEditor =
+        ref.watch(officeEditorMenuProvider);
     final auth = ref.watch(authProvider);
     final showPreview = ref.watch(showPreviewProvider);
     // layoutPresetProvider kept for persistence but no longer drives layout.
@@ -75,14 +85,19 @@ class _FileBrowserScreenState extends ConsumerState<FileBrowserScreen> {
             defaultTargetPlatform == TargetPlatform.windows ||
             defaultTargetPlatform == TargetPlatform.linux);
 
+    final bool showTopToolbar =
+        !isDesktopPlatform || ref.watch(topToolbarVisibleProvider);
     final scaffold = Scaffold(
-      appBar: AppBar(
-        titleSpacing: 12,
-        title: isNarrow ? Text(l.appTitle) : null,
-        actions: isNarrow
-            ? _buildNarrowActions(context, auth)
-            : _buildWideActions(context, auth, showPreview, isDesktopPlatform),
-      ),
+      appBar: showTopToolbar
+          ? AppBar(
+              titleSpacing: 12,
+              title: isNarrow ? Text(l.appTitle) : null,
+              actions: isNarrow
+                  ? _buildNarrowActions(context, auth)
+                  : _buildWideActions(
+                      context, auth, showPreview, isDesktopPlatform),
+            )
+          : null,
       body: Focus(
         autofocus: true,
         onKeyEvent: (node, event) => handleKeyEvent(
@@ -147,7 +162,7 @@ class _FileBrowserScreenState extends ConsumerState<FileBrowserScreen> {
     // macOS: wrap with native menu bar
     if (!kIsWeb && defaultTargetPlatform == TargetPlatform.macOS) {
       return PlatformMenuBar(
-        menus: _buildMacMenus(context, ref),
+        menus: _buildMacMenus(context, ref, officeEditor),
         child: scaffold,
       );
     }
@@ -155,12 +170,395 @@ class _FileBrowserScreenState extends ConsumerState<FileBrowserScreen> {
     return scaffold;
   }
 
-  List<PlatformMenuItem> _buildMacMenus(BuildContext context, WidgetRef ref) {
-    return [
+  PanelNotifier _activePanel(WidgetRef ref) =>
+      ref.read(panelProvider(ref.read(activePanelProvider)));
+
+  List<PlatformMenuItem> _buildMacMenus(
+    BuildContext context,
+    WidgetRef ref,
+    OfficeEditorMenuActions? editor,
+  ) {
+    final PanelSide activeSide = ref.read(activePanelProvider);
+    final bool localActive = activeSide == PanelSide.local;
+
+    final List<PlatformMenuItem> browserFileMenus = <PlatformMenuItem>[
+      PlatformMenuItem(
+        label: 'New Tab',
+        shortcut: const SingleActivator(LogicalKeyboardKey.keyT, meta: true),
+        onSelected: () {
+          final side = ref.read(activePanelProvider);
+          ref.read(panelProvider(side)).addTab();
+        },
+      ),
+      PlatformMenuItem(
+        label: 'Close Tab',
+        shortcut: const SingleActivator(LogicalKeyboardKey.keyW, meta: true),
+        onSelected: () {
+          final side = ref.read(activePanelProvider);
+          final panel = ref.read(panelProvider(side));
+          final tab = panel.activeTab;
+          if (tab != null) panel.closeTab(tab.id);
+        },
+      ),
+      PlatformMenuItem(
+        label: 'Open',
+        shortcut: const SingleActivator(LogicalKeyboardKey.enter),
+        onSelected: () => viewSelectedFile(context, ref),
+      ),
+      PlatformMenuItem(
+        label: 'Edit',
+        shortcut: const SingleActivator(LogicalKeyboardKey.f4),
+        onSelected: () => editSelectedFile(context, ref),
+      ),
+      PlatformMenuItemGroup(members: <PlatformMenuItem>[
+        PlatformMenuItem(
+          label: 'Copy...',
+          shortcut: const SingleActivator(LogicalKeyboardKey.f5),
+          onSelected: () => showCopyDialogFromSelection(context, ref),
+        ),
+        PlatformMenuItem(
+          label: 'Move...',
+          shortcut: const SingleActivator(LogicalKeyboardKey.f6),
+          onSelected: () => showMoveDialogFromSelection(context, ref),
+        ),
+        PlatformMenuItem(
+          label: 'Delete...',
+          shortcut: const SingleActivator(LogicalKeyboardKey.f8),
+          onSelected: () => confirmDeleteSelected(context, ref),
+        ),
+        PlatformMenuItem(
+          label: 'Rename...',
+          onSelected: () => showRenameDialog(context, ref),
+        ),
+      ]),
+      PlatformMenuItemGroup(members: <PlatformMenuItem>[
+        PlatformMenuItem(
+          label: 'New Folder...',
+          shortcut: const SingleActivator(LogicalKeyboardKey.f7),
+          onSelected: () =>
+              showCreateFolderDialog(context, ref, activeSide),
+        ),
+        PlatformMenuItem(
+          label: 'Properties',
+          onSelected: () {
+            final panel = _activePanel(ref);
+            final item = panel.selection.isNotEmpty
+                ? panel.selection.first
+                : panel.cursorItem;
+            if (item != null) showPropertiesDialog(context, item);
+          },
+        ),
+      ]),
+      PlatformMenuItemGroup(members: <PlatformMenuItem>[
+        PlatformMenuItem(
+          label: 'Go to Path...',
+          shortcut:
+              const SingleActivator(LogicalKeyboardKey.keyG, meta: true),
+          onSelected: () => showGoToDialog(context, ref),
+        ),
+        PlatformMenuItem(
+          label: 'Connect...',
+          shortcut:
+              const SingleActivator(LogicalKeyboardKey.keyK, meta: true),
+          onSelected: () => showConnectionDialogScreen(context),
+        ),
+      ]),
+    ];
+
+    final List<PlatformMenuItem> browserEditMenus = <PlatformMenuItem>[
+      PlatformMenuItem(
+        label: 'Select All',
+        shortcut: const SingleActivator(LogicalKeyboardKey.keyA, meta: true),
+        onSelected: () => _activePanel(ref).selectAll(),
+      ),
+      PlatformMenuItem(
+        label: 'Invert Selection',
+        onSelected: () => _activePanel(ref).invertSelection(),
+      ),
+      PlatformMenuItemGroup(members: <PlatformMenuItem>[
+        PlatformMenuItem(
+          label: 'Copy...',
+          onSelected: () => showCopyDialogFromSelection(context, ref),
+        ),
+        PlatformMenuItem(
+          label: 'Move...',
+          onSelected: () => showMoveDialogFromSelection(context, ref),
+        ),
+        PlatformMenuItem(
+          label: 'Delete...',
+          onSelected: () => confirmDeleteSelected(context, ref),
+        ),
+        PlatformMenuItem(
+          label: 'Rename...',
+          onSelected: () => showRenameDialog(context, ref),
+        ),
+      ]),
+      PlatformMenuItemGroup(members: <PlatformMenuItem>[
+        PlatformMenuItem(
+          label: 'Filter Files...',
+          shortcut:
+              const SingleActivator(LogicalKeyboardKey.keyF, control: true),
+          onSelected: () {
+            final panel = _activePanel(ref);
+            showPanelFilterDialog(context, panel);
+          },
+        ),
+        PlatformMenuItem(
+          label: 'Find by Pattern...',
+          onSelected: () => showFindDialog(context, ref),
+        ),
+        PlatformMenuItem(
+          label: 'Search All Files...',
+          onSelected: () => showSearchDialog(context, ref),
+        ),
+      ]),
+    ];
+
+    final List<PlatformMenuItem> viewMenus = <PlatformMenuItem>[
+      if (editor != null)
+        PlatformMenuItem(
+          label: 'Toggle Reading View',
+          onSelected: () => editor.perform(OfficeEditorAction.readingView),
+        ),
+      PlatformMenuItem(
+        label: 'Toggle Preview',
+        shortcut: const SingleActivator(LogicalKeyboardKey.space),
+        onSelected: () {
+          final current = ref.read(showPreviewProvider);
+          ref.read(showPreviewProvider.notifier).state = !current;
+        },
+      ),
+      PlatformMenuItem(
+        label: 'Toggle Tree Sidebar',
+        onSelected: () {
+          final current = ref.read(showTreeSidebarProvider);
+          ref.read(showTreeSidebarProvider.notifier).state = !current;
+        },
+      ),
+      PlatformMenuItem(
+        label: 'Toggle Dual Panel',
+        onSelected: () {
+          final current = ref.read(showDualPanelProvider);
+          ref.read(showDualPanelProvider.notifier).state = !current;
+        },
+      ),
+      PlatformMenuItem(
+        label: 'Toggle Terminal',
+        onSelected: () {
+          final current = ref.read(showTerminalProvider);
+          ref.read(showTerminalProvider.notifier).state = !current;
+        },
+      ),
+      if (editor == null)
+        PlatformMenuItemGroup(members: <PlatformMenuItem>[
+          PlatformMenuItem(
+            label: 'Brief Rows',
+            onSelected: () => ref
+                .read(panelViewModeProvider(activeSide).notifier)
+                .setMode(PanelViewMode.brief),
+          ),
+          PlatformMenuItem(
+            label: 'Full Rows',
+            onSelected: () => ref
+                .read(panelViewModeProvider(activeSide).notifier)
+                .setMode(PanelViewMode.full),
+          ),
+          PlatformMenuItem(
+            label: 'Tree View',
+            onSelected: () => ref
+                .read(panelViewModeProvider(activeSide).notifier)
+                .setMode(PanelViewMode.tree),
+          ),
+        ]),
+      if (editor == null)
+        PlatformMenuItemGroup(members: <PlatformMenuItem>[
+          PlatformMenuItem(
+            label: 'List View',
+            onSelected: () {
+              final notifier = localActive
+                  ? ref.read(localViewModeProvider.notifier)
+                  : ref.read(remoteViewModeProvider.notifier);
+              notifier.state = ViewMode.list;
+            },
+          ),
+          PlatformMenuItem(
+            label: 'Grid View',
+            onSelected: () {
+              final notifier = localActive
+                  ? ref.read(localViewModeProvider.notifier)
+                  : ref.read(remoteViewModeProvider.notifier);
+              notifier.state = ViewMode.grid;
+            },
+          ),
+          PlatformMenuItem(
+            label: 'Column View',
+            onSelected: () {
+              final notifier = localActive
+                  ? ref.read(localViewModeProvider.notifier)
+                  : ref.read(remoteViewModeProvider.notifier);
+              notifier.state = ViewMode.column;
+            },
+          ),
+        ]),
+      if (editor == null)
+        PlatformMenuItemGroup(members: <PlatformMenuItem>[
+          PlatformMenuItem(
+            label: 'Sort by Name',
+            onSelected: () => _activePanel(ref).setSortBy(SortBy.name),
+          ),
+          PlatformMenuItem(
+            label: 'Sort by Size',
+            onSelected: () => _activePanel(ref).setSortBy(SortBy.size),
+          ),
+          PlatformMenuItem(
+            label: 'Sort by Date',
+            onSelected: () => _activePanel(ref).setSortBy(SortBy.date),
+          ),
+          PlatformMenuItem(
+            label: 'Sort by Extension',
+            onSelected: () => _activePanel(ref).setSortBy(SortBy.extension),
+          ),
+          PlatformMenuItem(
+            label: 'Reverse Sort Order',
+            onSelected: () => _activePanel(ref).toggleSortOrder(),
+          ),
+        ]),
+      if (editor == null)
+        PlatformMenuItemGroup(members: <PlatformMenuItem>[
+          PlatformMenuItem(
+            label: 'Show Hidden Files',
+            onSelected: () => _activePanel(ref).toggleShowHiddenFiles(),
+          ),
+          PlatformMenuItem(
+            label: 'Flat View',
+            onSelected: () => _activePanel(ref).toggleFlatView(),
+          ),
+          PlatformMenuItem(
+            label: 'Refresh',
+            shortcut: const SingleActivator(LogicalKeyboardKey.f5, control: true),
+            onSelected: () => _activePanel(ref).refresh(),
+          ),
+          PlatformMenuItem(
+            label: 'Refresh All',
+            onSelected: () {
+              ref.read(panelProvider(PanelSide.local)).refresh();
+              ref.read(panelProvider(PanelSide.remote)).refresh();
+            },
+          ),
+        ]),
+      PlatformMenuItemGroup(members: <PlatformMenuItem>[
+        PlatformMenuItem(
+          label: 'Sync Manager',
+          onSelected: () => showSyncDialog(context),
+        ),
+        PlatformMenuItem(
+          label: 'Find Duplicates',
+          onSelected: () => showDuplicateFinderDialog(context, ref),
+        ),
+      ]),
+      PlatformMenuItemGroup(members: <PlatformMenuItem>[
+        PlatformMenuItem(
+          label: 'Command Palette',
+          shortcut: const SingleActivator(LogicalKeyboardKey.keyP,
+              meta: true, shift: true),
+          onSelected: () => showCommandPalette(context, ref),
+        ),
+      ]),
+    ];
+
+    final List<PlatformMenuItem> browserGoMenus = <PlatformMenuItem>[
+      PlatformMenuItem(
+        label: 'Back',
+        shortcut:
+            const SingleActivator(LogicalKeyboardKey.arrowLeft, alt: true),
+        onSelected: () => _activePanel(ref).navigateBack(),
+      ),
+      PlatformMenuItem(
+        label: 'Forward',
+        shortcut:
+            const SingleActivator(LogicalKeyboardKey.arrowRight, alt: true),
+        onSelected: () => _activePanel(ref).navigateForward(),
+      ),
+      PlatformMenuItem(
+        label: 'Up',
+        shortcut:
+            const SingleActivator(LogicalKeyboardKey.arrowUp, alt: true),
+        onSelected: () => _activePanel(ref).navigateUp(),
+      ),
+      PlatformMenuItemGroup(members: <PlatformMenuItem>[
+        PlatformMenuItem(
+          label: 'Home',
+          onSelected: () {
+            final panel = _activePanel(ref);
+            final String home = localActive
+                ? (Platform.environment['HOME'] ?? '/')
+                : '/';
+            panel.navigateToPath(home);
+          },
+        ),
+        PlatformMenuItem(
+          label: 'Root',
+          onSelected: () => _activePanel(ref).navigateToPath('/'),
+        ),
+        PlatformMenuItem(
+          label: 'Go to Path...',
+          shortcut:
+              const SingleActivator(LogicalKeyboardKey.keyG, meta: true),
+          onSelected: () => showGoToDialog(context, ref),
+        ),
+      ]),
+    ];
+
+    final List<PlatformMenuItem> browserToolsMenus = <PlatformMenuItem>[
+      PlatformMenuItem(
+        label: 'Search All Files...',
+        onSelected: () => showSearchDialog(context, ref),
+      ),
+      PlatformMenuItem(
+        label: 'Find by Pattern...',
+        onSelected: () => showFindDialog(context, ref),
+      ),
+      PlatformMenuItemGroup(members: <PlatformMenuItem>[
+        PlatformMenuItem(
+          label: 'Sync Manager',
+          onSelected: () => showSyncDialog(context),
+        ),
+        PlatformMenuItem(
+          label: 'Find Duplicates',
+          onSelected: () => showDuplicateFinderDialog(context, ref),
+        ),
+        PlatformMenuItem(
+          label: 'Multi-Cloud...',
+          onSelected: () => showMultiCloudDialog(context),
+        ),
+        PlatformMenuItem(
+          label: 'Mount...',
+          onSelected: () => showMountDialog(context),
+        ),
+      ]),
+      PlatformMenuItemGroup(members: <PlatformMenuItem>[
+        PlatformMenuItem(
+          label: 'Settings...',
+          shortcut:
+              const SingleActivator(LogicalKeyboardKey.comma, meta: true),
+          onSelected: () => showSettingsDialog(context),
+        ),
+        PlatformMenuItem(
+          label: 'Command Palette...',
+          onSelected: () => showCommandPalette(context, ref),
+        ),
+        PlatformMenuItem(
+          label: 'Keyboard Shortcuts...',
+          onSelected: () => showKeyboardShortcutsDialog(context),
+        ),
+      ]),
+    ];
+
+    return <PlatformMenuItem>[
       PlatformMenu(
         label: 'CrispCloud',
-        menus: [
-          PlatformMenuItemGroup(members: [
+        menus: <PlatformMenuItem>[
+          PlatformMenuItemGroup(members: <PlatformMenuItem>[
             PlatformMenuItem(
               label: 'About CrispCloud',
               onSelected: () => showDialog(
@@ -169,7 +567,7 @@ class _FileBrowserScreenState extends ConsumerState<FileBrowserScreen> {
               ),
             ),
           ]),
-          PlatformMenuItemGroup(members: [
+          PlatformMenuItemGroup(members: <PlatformMenuItem>[
             PlatformMenuItem(
               label: 'Preferences...',
               shortcut:
@@ -183,91 +581,351 @@ class _FileBrowserScreenState extends ConsumerState<FileBrowserScreen> {
               },
             ),
           ]),
-          const PlatformMenuItemGroup(members: [
+          const PlatformMenuItemGroup(members: <PlatformMenuItem>[
             PlatformProvidedMenuItem(type: PlatformProvidedMenuItemType.quit),
           ]),
         ],
       ),
       PlatformMenu(
-        label: 'File',
-        menus: [
-          PlatformMenuItem(
-            label: 'New Tab',
-            shortcut:
-                const SingleActivator(LogicalKeyboardKey.keyT, meta: true),
-            onSelected: () {
-              final side = ref.read(activePanelProvider);
-              ref.read(panelProvider(side)).addTab();
-            },
-          ),
-          PlatformMenuItem(
-            label: 'Close Tab',
-            shortcut:
-                const SingleActivator(LogicalKeyboardKey.keyW, meta: true),
-            onSelected: () {
-              final side = ref.read(activePanelProvider);
-              final panel = ref.read(panelProvider(side));
-              final tab = panel.activeTab;
-              if (tab != null) panel.closeTab(tab.id);
-            },
-          ),
-          PlatformMenuItemGroup(members: [
-            PlatformMenuItem(
-              label: 'Connect...',
-              shortcut:
-                  const SingleActivator(LogicalKeyboardKey.keyK, meta: true),
-              onSelected: () => showConnectionDialogScreen(context),
-            ),
-          ]),
-          PlatformMenuItemGroup(members: [
-            PlatformMenuItem(
-              label: 'Go to Path...',
-              shortcut:
-                  const SingleActivator(LogicalKeyboardKey.keyG, meta: true),
-              onSelected: () => showGoToDialog(context, ref),
-            ),
-          ]),
-        ],
+        label: context.tr('File'),
+        menus: editor != null
+            ? _editorFileMenus(context, editor)
+            : browserFileMenus,
       ),
+      if (editor != null)
+        PlatformMenu(
+          label: context.tr('Edit'),
+          menus: _editorEditMenus(context, editor),
+        )
+      else
+        PlatformMenu(label: 'Edit', menus: browserEditMenus),
+      PlatformMenu(label: context.tr('View'), menus: viewMenus),
+      if (editor == null)
+        PlatformMenu(label: 'Go', menus: browserGoMenus),
+      if (editor != null) ...<PlatformMenuItem>[
+        PlatformMenu(
+          label: context.tr('Insert'),
+          menus: _editorInsertMenus(context, editor),
+        ),
+        PlatformMenu(
+          label: context.tr('Format'),
+          menus: _editorFormatMenus(context, editor),
+        ),
+        PlatformMenu(
+          label: context.tr('Tools'),
+          menus: _editorToolsMenus(context, editor),
+        ),
+      ] else
+        PlatformMenu(label: 'Tools', menus: browserToolsMenus),
       PlatformMenu(
-        label: 'View',
-        menus: [
+        label: context.tr('Help'),
+        menus: <PlatformMenuItem>[
           PlatformMenuItem(
-            label: 'Toggle Preview',
-            shortcut: const SingleActivator(LogicalKeyboardKey.space),
-            onSelected: () {
-              final current = ref.read(showPreviewProvider);
-              ref.read(showPreviewProvider.notifier).state = !current;
-            },
+            label: 'Keyboard Shortcuts...',
+            onSelected: () => showKeyboardShortcutsDialog(context),
           ),
           PlatformMenuItem(
-            label: 'Toggle Tree Sidebar',
-            onSelected: () {
-              final current = ref.read(showTreeSidebarProvider);
-              ref.read(showTreeSidebarProvider.notifier).state = !current;
-            },
+            label: 'About CrispCloud',
+            onSelected: () => showDialog(
+              context: context,
+              builder: (_) => const AboutAppDialog(),
+            ),
           ),
-          PlatformMenuItemGroup(members: [
-            PlatformMenuItem(
-              label: 'Sync Manager',
-              onSelected: () => showSyncDialog(context),
-            ),
-            PlatformMenuItem(
-              label: 'Find Duplicates',
-              onSelected: () => showDuplicateFinderDialog(context, ref),
-            ),
-          ]),
-          PlatformMenuItemGroup(members: [
-            PlatformMenuItem(
-              label: 'Command Palette',
-              shortcut: const SingleActivator(LogicalKeyboardKey.keyP,
-                  meta: true, shift: true),
-              onSelected: () => showCommandPalette(context, ref),
-            ),
-          ]),
         ],
       ),
     ];
+  }
+
+  PlatformMenuItem _editorItem(
+    BuildContext context,
+    String label,
+    OfficeEditorAction action,
+    OfficeEditorMenuActions editor, {
+    SingleActivator? shortcut,
+  }) {
+    return PlatformMenuItem(
+      label: context.tr(label),
+      shortcut: shortcut,
+      onSelected: () => editor.perform(action),
+    );
+  }
+
+  List<PlatformMenuItem> _editorFileMenus(
+    BuildContext context,
+    OfficeEditorMenuActions editor,
+  ) {
+    return <PlatformMenuItem>[
+      _editorItem(
+        context,
+        'Save',
+        OfficeEditorAction.save,
+        editor,
+        shortcut: const SingleActivator(LogicalKeyboardKey.keyS, meta: true),
+      ),
+      _editorItem(
+        context,
+        'Close Editor',
+        OfficeEditorAction.close,
+        editor,
+        shortcut: const SingleActivator(LogicalKeyboardKey.keyW, meta: true),
+      ),
+    ];
+  }
+
+  List<PlatformMenuItem> _editorEditMenus(
+    BuildContext context,
+    OfficeEditorMenuActions editor,
+  ) {
+    return <PlatformMenuItem>[
+      PlatformMenuItemGroup(members: <PlatformMenuItem>[
+        _editorItem(
+          context,
+          'Undo',
+          OfficeEditorAction.undo,
+          editor,
+          shortcut: const SingleActivator(LogicalKeyboardKey.keyZ, meta: true),
+        ),
+        _editorItem(
+          context,
+          'Redo',
+          OfficeEditorAction.redo,
+          editor,
+          shortcut: const SingleActivator(LogicalKeyboardKey.keyZ,
+              meta: true, shift: true),
+        ),
+      ]),
+      PlatformMenuItemGroup(members: <PlatformMenuItem>[
+        _editorItem(
+          context,
+          'Cut',
+          OfficeEditorAction.cut,
+          editor,
+          shortcut: const SingleActivator(LogicalKeyboardKey.keyX, meta: true),
+        ),
+        _editorItem(
+          context,
+          'Copy',
+          OfficeEditorAction.copy,
+          editor,
+          shortcut: const SingleActivator(LogicalKeyboardKey.keyC, meta: true),
+        ),
+        _editorItem(
+          context,
+          'Paste',
+          OfficeEditorAction.paste,
+          editor,
+          shortcut: const SingleActivator(LogicalKeyboardKey.keyV, meta: true),
+        ),
+        _editorItem(
+          context,
+          'Select All',
+          OfficeEditorAction.selectAll,
+          editor,
+          shortcut: const SingleActivator(LogicalKeyboardKey.keyA, meta: true),
+        ),
+      ]),
+      PlatformMenuItemGroup(members: <PlatformMenuItem>[
+        _editorItem(
+          context,
+          'Find...',
+          OfficeEditorAction.find,
+          editor,
+          shortcut: const SingleActivator(LogicalKeyboardKey.keyF, meta: true),
+        ),
+        _editorItem(
+          context,
+          'Find and Replace...',
+          OfficeEditorAction.replace,
+          editor,
+          shortcut: const SingleActivator(LogicalKeyboardKey.keyF,
+              meta: true, alt: true),
+        ),
+      ]),
+    ];
+  }
+
+  List<PlatformMenuItem> _editorInsertMenus(
+    BuildContext context,
+    OfficeEditorMenuActions editor,
+  ) {
+    switch (editor.kind) {
+      case OfficeEditorKind.word:
+        return <PlatformMenuItem>[
+          _editorItem(context, 'Table...', OfficeEditorAction.insertTable, editor),
+          _editorItem(
+              context,
+              'Hyperlink...', OfficeEditorAction.insertHyperlink, editor),
+          _editorItem(context, 'Picture...', OfficeEditorAction.insertPicture, editor),
+          _editorItem(context, 'Comment...', OfficeEditorAction.insertComment, editor),
+          PlatformMenuItemGroup(members: <PlatformMenuItem>[
+            _editorItem(
+                context,
+                'Page Break', OfficeEditorAction.pageBreak, editor),
+            _editorItem(
+                context,
+                'Section Break', OfficeEditorAction.sectionBreak, editor),
+            _editorItem(context, 'Table of Contents',
+                OfficeEditorAction.tableOfContents, editor),
+          ]),
+          PlatformMenuItemGroup(members: <PlatformMenuItem>[
+            _editorItem(context, 'Header', OfficeEditorAction.header, editor),
+            _editorItem(context, 'Footer', OfficeEditorAction.footer, editor),
+            _editorItem(
+                context,
+                'Page Number', OfficeEditorAction.pageNumber, editor),
+          ]),
+          _editorItem(context, 'Watermark...', OfficeEditorAction.watermark, editor),
+        ];
+      case OfficeEditorKind.sheet:
+        return <PlatformMenuItem>[
+          PlatformMenuItemGroup(members: <PlatformMenuItem>[
+            _editorItem(
+                context,
+                'Rows Above', OfficeEditorAction.rowsAbove, editor),
+            _editorItem(
+                context,
+                'Rows Below', OfficeEditorAction.rowsBelow, editor),
+            _editorItem(
+                context,
+                'Columns Left', OfficeEditorAction.columnsLeft, editor),
+            _editorItem(
+                context,
+                'Columns Right', OfficeEditorAction.columnsRight, editor),
+          ]),
+          PlatformMenuItemGroup(members: <PlatformMenuItem>[
+            _editorItem(
+                context,
+                'Delete Rows', OfficeEditorAction.deleteRows, editor),
+            _editorItem(
+                context,
+                'Delete Columns', OfficeEditorAction.deleteColumns, editor),
+          ]),
+          _editorItem(context, 'Table', OfficeEditorAction.insertTable, editor),
+          _editorItem(context, 'Comment...', OfficeEditorAction.sheetComment, editor),
+        ];
+      case OfficeEditorKind.slides:
+        return <PlatformMenuItem>[
+          PlatformMenuItemGroup(members: <PlatformMenuItem>[
+            _editorItem(context, 'New Slide', OfficeEditorAction.newSlide, editor),
+            _editorItem(
+                context,
+                'Duplicate Slide', OfficeEditorAction.duplicateSlide, editor),
+            _editorItem(
+                context,
+                'Delete Slide', OfficeEditorAction.deleteSlide, editor),
+          ]),
+          PlatformMenuItemGroup(members: <PlatformMenuItem>[
+            _editorItem(context, 'Text Box', OfficeEditorAction.textBox, editor),
+            _editorItem(context, 'Rectangle', OfficeEditorAction.rectangle, editor),
+            _editorItem(context, 'Ellipse', OfficeEditorAction.ellipse, editor),
+            _editorItem(context, 'Line', OfficeEditorAction.line, editor),
+          ]),
+          _editorItem(context, 'Table...', OfficeEditorAction.slideTable, editor),
+          _editorItem(context, 'Picture...', OfficeEditorAction.slidePicture, editor),
+          _editorItem(context, 'Speaker Notes...', OfficeEditorAction.speakerNotes, editor),
+        ];
+      case OfficeEditorKind.unsupported:
+        return <PlatformMenuItem>[];
+    }
+  }
+
+  List<PlatformMenuItem> _editorFormatMenus(
+    BuildContext context,
+    OfficeEditorMenuActions editor,
+  ) {
+    switch (editor.kind) {
+      case OfficeEditorKind.word:
+        return <PlatformMenuItem>[
+          _editorItem(context, 'Font...', OfficeEditorAction.font, editor),
+          _editorItem(context, 'Paragraph...', OfficeEditorAction.paragraph, editor),
+          PlatformMenuItemGroup(members: <PlatformMenuItem>[
+            _editorItem(
+              context,
+              'Bold',
+              OfficeEditorAction.bold,
+              editor,
+              shortcut:
+                  const SingleActivator(LogicalKeyboardKey.keyB, meta: true),
+            ),
+            _editorItem(
+              context,
+              'Italic',
+              OfficeEditorAction.italic,
+              editor,
+              shortcut:
+                  const SingleActivator(LogicalKeyboardKey.keyI, meta: true),
+            ),
+            _editorItem(
+              context,
+              'Underline',
+              OfficeEditorAction.underline,
+              editor,
+              shortcut:
+                  const SingleActivator(LogicalKeyboardKey.keyU, meta: true),
+            ),
+          ]),
+          _editorItem(context, 'Clear Formatting', OfficeEditorAction.clearFormatting, editor),
+        ];
+      case OfficeEditorKind.sheet:
+        return <PlatformMenuItem>[
+          _editorItem(context, 'Fill Color...', OfficeEditorAction.fillColor, editor),
+          _editorItem(context, 'Font Color...', OfficeEditorAction.fontColor, editor),
+          _editorItem(
+              context,
+              'Clear Formatting', OfficeEditorAction.clearFormatting, editor),
+          PlatformMenuItemGroup(members: <PlatformMenuItem>[
+            _editorItem(
+                context,
+                'Merge and Center', OfficeEditorAction.mergeCells, editor),
+            _editorItem(context, 'Unmerge', OfficeEditorAction.unmergeCells, editor),
+          ]),
+        ];
+      case OfficeEditorKind.slides:
+        return <PlatformMenuItem>[
+          _editorItem(context, 'Text Color...', OfficeEditorAction.textColor, editor),
+          _editorItem(context, 'Shape Fill...', OfficeEditorAction.fillColor, editor),
+          _editorItem(context, 'Background...', OfficeEditorAction.background, editor),
+        ];
+      case OfficeEditorKind.unsupported:
+        return <PlatformMenuItem>[];
+    }
+  }
+
+  List<PlatformMenuItem> _editorToolsMenus(
+    BuildContext context,
+    OfficeEditorMenuActions editor,
+  ) {
+    switch (editor.kind) {
+      case OfficeEditorKind.word:
+        return <PlatformMenuItem>[
+          _editorItem(context, 'Word Count...', OfficeEditorAction.wordCount, editor),
+          _editorItem(
+              context,
+              'Track Changes', OfficeEditorAction.trackChanges, editor),
+          _editorItem(context, 'Protect Document', OfficeEditorAction.protect, editor),
+          _editorItem(context, 'Page Setup...', OfficeEditorAction.pageSetup, editor),
+        ];
+      case OfficeEditorKind.sheet:
+        return <PlatformMenuItem>[
+          _editorItem(context, 'Sort A to Z', OfficeEditorAction.sortAscending, editor),
+          _editorItem(context, 'Sort Z to A', OfficeEditorAction.sortDescending, editor),
+          _editorItem(context, 'Filter', OfficeEditorAction.filter, editor),
+          _editorItem(context, 'Clear Filter', OfficeEditorAction.clearFilter, editor),
+          PlatformMenuItemGroup(members: <PlatformMenuItem>[
+            _editorItem(context, 'Freeze Panes', OfficeEditorAction.freezePanes, editor),
+            _editorItem(context, 'Protect Sheet', OfficeEditorAction.protectSheet, editor),
+          ]),
+        ];
+      case OfficeEditorKind.slides:
+        return <PlatformMenuItem>[
+          _editorItem(context, 'Transitions', OfficeEditorAction.transitions, editor),
+          _editorItem(context, 'Animations', OfficeEditorAction.animations, editor),
+          _editorItem(context, 'Slide Show', OfficeEditorAction.slideShow, editor),
+          _editorItem(context, 'Speaker Notes...', OfficeEditorAction.speakerNotes, editor),
+        ];
+      case OfficeEditorKind.unsupported:
+        return <PlatformMenuItem>[];
+    }
   }
 
   // --- Layout helpers ---
@@ -289,24 +947,17 @@ class _FileBrowserScreenState extends ConsumerState<FileBrowserScreen> {
       ),
     );
 
-    return Column(
-      children: [
-        PanelSourceSelector(side: activePanel),
-        Expanded(
-          child: showPreview && previewFile != null
-              ? Row(
-                  children: [
-                    Expanded(child: panel),
-                    SizedBox(
-                      width: 320,
-                      child: PreviewPane(file: previewFile, side: activePanel),
-                    ),
-                  ],
-                )
-              : panel,
-        ),
-      ],
-    );
+    return showPreview && previewFile != null
+        ? Row(
+            children: [
+              Expanded(child: panel),
+              SizedBox(
+                width: 320,
+                child: PreviewPane(file: previewFile, side: activePanel),
+              ),
+            ],
+          )
+        : panel;
   }
 
   Widget _buildTwoPanelLayout(BuildContext context) {
@@ -323,35 +974,21 @@ class _FileBrowserScreenState extends ConsumerState<FileBrowserScreen> {
       initialRatio: splitRatio,
       onRatioChanged: (r) =>
           ref.read(panelSplitRatioProvider.notifier).state = r,
-      first: Column(
-        children: [
-          const PanelSourceSelector(side: PanelSide.local),
-          Expanded(
-            child: RepaintBoundary(
-              child: FilePanel(
-                side: PanelSide.local,
-                isActive: activePanel == PanelSide.local,
-                onTap: () => ref.read(activePanelProvider.notifier).state =
-                    PanelSide.local,
-              ),
-            ),
-          ),
-        ],
+      first: RepaintBoundary(
+        child: FilePanel(
+          side: PanelSide.local,
+          isActive: activePanel == PanelSide.local,
+          onTap: () =>
+              ref.read(activePanelProvider.notifier).state = PanelSide.local,
+        ),
       ),
-      second: Column(
-        children: [
-          const PanelSourceSelector(side: PanelSide.remote),
-          Expanded(
-            child: RepaintBoundary(
-              child: FilePanel(
-                side: PanelSide.remote,
-                isActive: activePanel == PanelSide.remote,
-                onTap: () => ref.read(activePanelProvider.notifier).state =
-                    PanelSide.remote,
-              ),
-            ),
-          ),
-        ],
+      second: RepaintBoundary(
+        child: FilePanel(
+          side: PanelSide.remote,
+          isActive: activePanel == PanelSide.remote,
+          onTap: () =>
+              ref.read(activePanelProvider.notifier).state = PanelSide.remote,
+        ),
       ),
       third: showPreview
           ? PreviewPane(file: previewFile, side: activePanel)
@@ -481,6 +1118,11 @@ class _FileBrowserScreenState extends ConsumerState<FileBrowserScreen> {
         tooltip: '${l.swapPanels} (Ctrl+U)',
         onPressed: () => _swapPanels(),
       ),
+      IconButton(
+        icon: const Icon(Icons.settings, size: 20),
+        tooltip: 'Settings',
+        onPressed: () => showSettingsDialog(context),
+      ),
       _buildOverflowMenu(context, auth),
       const SizedBox(width: 4),
       if (!auth.isConnected)
@@ -609,6 +1251,11 @@ class _FileBrowserScreenState extends ConsumerState<FileBrowserScreen> {
         },
       ),
       // Overflow menu (same as narrow)
+      IconButton(
+        icon: const Icon(Icons.settings, size: 20),
+        tooltip: 'Settings',
+        onPressed: () => showSettingsDialog(context),
+      ),
       _buildOverflowMenu(context, auth),
     ];
 
@@ -666,6 +1313,8 @@ class _FileBrowserScreenState extends ConsumerState<FileBrowserScreen> {
             showLogViewerDialog(context);
           case 'cache':
             showCacheSettingsDialog(context, ref);
+          case 'settings':
+            showSettingsDialog(context);
           case 'dual_panel':
             _log.debug(
                 'dual_panel toggled → ${!ref.read(showDualPanelProvider)}');
@@ -746,6 +1395,9 @@ class _FileBrowserScreenState extends ConsumerState<FileBrowserScreen> {
         PopupMenuItem(
             value: 'cache',
             child: _overflowItem(Icons.storage, l.cacheSettings)),
+        PopupMenuItem(
+            value: 'settings',
+            child: _overflowItem(Icons.settings, 'Settings')),
         const PopupMenuDivider(),
         PopupMenuItem(
           value: 'dual_panel',

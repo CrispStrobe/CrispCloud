@@ -13,6 +13,7 @@ import '../models/file_item.dart';
 import 'bookmark_service.dart';
 import 'local_file_service.dart';
 import 'macos_bookmark_service.dart';
+import '../utils/path_access.dart';
 
 LocalFileService createPlatformFileService() {
   if (Platform.isMacOS) return MacosFileService();
@@ -25,7 +26,8 @@ LocalFileService createPlatformFileService() {
 class MacosFileService implements LocalFileService {
   String? _grantedBasePath;
   final _bookmarks = SecureBookmarks();
-  FileSystemEntity? _resolvedBookmarkFile;
+  List<FileSystemEntity> _resolvedBookmarks = <FileSystemEntity>[];
+  FileSystemEntity? _streamScope;
 
   @override
   String currentPath = Platform.environment['HOME'] ?? '/';
@@ -42,20 +44,28 @@ class MacosFileService implements LocalFileService {
   @override
   Future<void> refresh() async {}
 
-  Future<bool> _loadAndResolveBookmark() async {
+  Future<bool> _loadAndResolveBookmarks() async {
     try {
-      _resolvedBookmarkFile = await MacOSBookmarkService.getResolvedBookmark();
-      if (_resolvedBookmarkFile != null) {
-        _grantedBasePath = _resolvedBookmarkFile!.path;
+      _resolvedBookmarks = await MacOSBookmarkService.getResolvedBookmarks();
+      if (_resolvedBookmarks.isNotEmpty) {
+        _grantedBasePath = _resolvedBookmarks.last.path;
         return true;
       }
+      _grantedBasePath = null;
       return false;
     } catch (e) {
-      debugPrint('Failed to load or resolve bookmark: $e');
-      _resolvedBookmarkFile = null;
+      debugPrint('Failed to load or resolve bookmarks: $e');
+      _resolvedBookmarks = <FileSystemEntity>[];
       _grantedBasePath = null;
       return false;
     }
+  }
+
+  FileSystemEntity? _scopeFor(String path) {
+    for (final FileSystemEntity scope in _resolvedBookmarks) {
+      if (isSameOrUnderPath(path, scope.path)) return scope;
+    }
+    return null;
   }
 
   @override
@@ -79,7 +89,7 @@ class MacosFileService implements LocalFileService {
     if (path != null) {
       _grantedBasePath = path;
       currentPath = path;
-      await _loadAndResolveBookmark();
+      await _loadAndResolveBookmarks();
     }
     return path;
   }
@@ -87,18 +97,19 @@ class MacosFileService implements LocalFileService {
   @override
   Future<List<FileSystemEntity>?> listDirectory(String path) async {
     currentPath = path;
-    if (_resolvedBookmarkFile == null) {
-      await _loadAndResolveBookmark();
+    if (_resolvedBookmarks.isEmpty) {
+      await _loadAndResolveBookmarks();
     }
 
-    if (_resolvedBookmarkFile != null && path.startsWith(_resolvedBookmarkFile!.path)) {
+    final FileSystemEntity? scope = _scopeFor(path);
+    if (scope != null) {
       try {
-        await _bookmarks.startAccessingSecurityScopedResource(_resolvedBookmarkFile!);
+        await _bookmarks.startAccessingSecurityScopedResource(scope);
         final entities = await Directory(path).list().toList();
-        await _bookmarks.stopAccessingSecurityScopedResource(_resolvedBookmarkFile!);
+        await _bookmarks.stopAccessingSecurityScopedResource(scope);
         return entities;
       } catch (e) {
-        try { await _bookmarks.stopAccessingSecurityScopedResource(_resolvedBookmarkFile!); } catch (_) {}
+        try { await _bookmarks.stopAccessingSecurityScopedResource(scope); } catch (_) {}
       }
     }
 
@@ -112,16 +123,17 @@ class MacosFileService implements LocalFileService {
 
   @override
   Future<Uint8List> readFile(String path, {FileItem? fileItem}) async {
-    if (_resolvedBookmarkFile == null) await _loadAndResolveBookmark();
+    if (_resolvedBookmarks.isEmpty) await _loadAndResolveBookmarks();
 
-    if (_resolvedBookmarkFile != null && path.startsWith(_resolvedBookmarkFile!.path)) {
+    final FileSystemEntity? readScope = _scopeFor(path);
+    if (readScope != null) {
       try {
-        await _bookmarks.startAccessingSecurityScopedResource(_resolvedBookmarkFile!);
+        await _bookmarks.startAccessingSecurityScopedResource(readScope);
         final data = await File(path).readAsBytes();
-        await _bookmarks.stopAccessingSecurityScopedResource(_resolvedBookmarkFile!);
+        await _bookmarks.stopAccessingSecurityScopedResource(readScope);
         return data;
       } catch (e) {
-        try { await _bookmarks.stopAccessingSecurityScopedResource(_resolvedBookmarkFile!); } catch (_) {}
+        try { await _bookmarks.stopAccessingSecurityScopedResource(readScope); } catch (_) {}
         rethrow;
       }
     }
@@ -130,18 +142,19 @@ class MacosFileService implements LocalFileService {
 
   @override
   Future<void> saveFile(String path, Uint8List data) async {
-    if (_resolvedBookmarkFile == null) await _loadAndResolveBookmark();
+    if (_resolvedBookmarks.isEmpty) await _loadAndResolveBookmarks();
 
-    if (_resolvedBookmarkFile != null && path.startsWith(_resolvedBookmarkFile!.path)) {
+    final FileSystemEntity? saveScope = _scopeFor(path);
+    if (saveScope != null) {
       try {
-        await _bookmarks.startAccessingSecurityScopedResource(_resolvedBookmarkFile!);
+        await _bookmarks.startAccessingSecurityScopedResource(saveScope);
         final file = File(path);
         if (!await file.parent.exists()) await file.parent.create(recursive: true);
         await file.writeAsBytes(data);
-        await _bookmarks.stopAccessingSecurityScopedResource(_resolvedBookmarkFile!);
+        await _bookmarks.stopAccessingSecurityScopedResource(saveScope);
         return;
       } catch (e) {
-        try { await _bookmarks.stopAccessingSecurityScopedResource(_resolvedBookmarkFile!); } catch (_) {}
+        try { await _bookmarks.stopAccessingSecurityScopedResource(saveScope); } catch (_) {}
         rethrow;
       }
     }
@@ -151,11 +164,106 @@ class MacosFileService implements LocalFileService {
     await file.writeAsBytes(data);
   }
 
+  Future<FileSystemEntity?> _beginScope(String path) async {
+    if (_resolvedBookmarks.isEmpty) await _loadAndResolveBookmarks();
+    final FileSystemEntity? scope = _scopeFor(path);
+    if (scope == null) return null;
+    try {
+      await _bookmarks.startAccessingSecurityScopedResource(scope);
+      return scope;
+    } catch (e) {
+      debugPrint('Failed to start security scope for $path: $e');
+      return null;
+    }
+  }
+
+  Future<void> _endScope(FileSystemEntity? scope) async {
+    if (scope == null) return;
+    try {
+      await _bookmarks.stopAccessingSecurityScopedResource(scope);
+    } catch (_) {
+      // Best effort.
+    }
+  }
+
   @override
   Future<bool> hasAccessToPath(String path) async {
-    _grantedBasePath ??= await MacOSBookmarkService.getLastGrantedDirectory();
-    if (_grantedBasePath != null && path.startsWith(_grantedBasePath!)) return true;
-    return path.startsWith(Platform.environment['HOME'] ?? '/');
+    if (_resolvedBookmarks.isEmpty) await _loadAndResolveBookmarks();
+    if (_scopeFor(path) != null) return true;
+    final base = _grantedBasePath;
+    if (base != null && isSameOrUnderPath(path, base)) return true;
+
+    // No bookmark covers this path. Probe actual access instead of assuming
+    // the home directory is readable: the sandbox denies most of it until the
+    // user grants the containing folder.
+    try {
+      final type = await FileSystemEntity.type(path);
+      if (type == FileSystemEntityType.directory) {
+        return await Directory(path).exists();
+      }
+      if (type == FileSystemEntityType.notFound) return false;
+      final handle = await File(path).open();
+      await handle.close();
+      return true;
+    } catch (_) {
+      return false;
+    }
+  }
+
+  @override
+  Future<bool> ensureAccess(String path) async {
+    if (await hasAccessToPath(path)) return true;
+    final granted = await requestDirectoryAccess(
+      initialDirectory: File(path).parent.path,
+    );
+    if (granted == null) return false;
+    return hasAccessToPath(path);
+  }
+
+  @override
+  Future<bool> beginStreamAccess(String path) async {
+    if (!await ensureAccess(path)) return false;
+    _streamScope = await _beginScope(path);
+    return true;
+  }
+
+  @override
+  Future<void> endStreamAccess() async {
+    final scope = _streamScope;
+    _streamScope = null;
+    await _endScope(scope);
+  }
+
+  @override
+  Future<int?> fileLength(String path) async {
+    if (!await hasAccessToPath(path) && !await ensureAccess(path)) return null;
+    final scope = await _beginScope(path);
+    try {
+      return await File(path).length();
+    } on FileSystemException {
+      return null;
+    } finally {
+      await _endScope(scope);
+    }
+  }
+
+  @override
+  Future<List<FileItem>> walkFiles(
+    String path, {
+    bool includeHidden = false,
+    int maxItems = 10000,
+  }) async {
+    if (!await ensureAccess(path)) return const <FileItem>[];
+    final scope = await _beginScope(path);
+    try {
+      return await walkLocalFiles(
+        path,
+        includeHidden: includeHidden,
+        maxItems: maxItems,
+      );
+    } finally {
+      await _endScope(scope);
+    }
   }
 
   @override
@@ -263,6 +371,37 @@ class DesktopFileService implements LocalFileService {
   Future<String> getSafeFallbackDirectory() async {
     return Platform.environment['HOME'] ?? Platform.environment['USERPROFILE'] ?? '/';
   }
+
+  @override
+  Future<List<FileItem>> walkFiles(
+    String path, {
+    bool includeHidden = false,
+    int maxItems = 10000,
+  }) =>
+      walkLocalFiles(
+        path,
+        includeHidden: includeHidden,
+        maxItems: maxItems,
+      );
+
+  @override
+  Future<bool> ensureAccess(String path) async => true;
+
+  @override
+  Future<bool> beginStreamAccess(String path) async => true;
+
+  @override
+  Future<void> endStreamAccess() async {}
+
+  @override
+  Future<int?> fileLength(String path) async {
+    try {
+      return await File(path).length();
+    } catch (_) {
+      return null;
+    }
+  }
+
 }
 
 // --- Mobile (Android/iOS) Implementation ---
@@ -445,4 +584,35 @@ class MobileFileService implements LocalFileService {
   Future<String> getSafeFallbackDirectory() async {
     return (await getApplicationDocumentsDirectory()).path;
   }
+
+  @override
+  Future<List<FileItem>> walkFiles(
+    String path, {
+    bool includeHidden = false,
+    int maxItems = 10000,
+  }) =>
+      walkLocalFiles(
+        path,
+        includeHidden: includeHidden,
+        maxItems: maxItems,
+      );
+
+  @override
+  Future<bool> ensureAccess(String path) async => true;
+
+  @override
+  Future<bool> beginStreamAccess(String path) async => true;
+
+  @override
+  Future<void> endStreamAccess() async {}
+
+  @override
+  Future<int?> fileLength(String path) async {
+    try {
+      return await File(path).length();
+    } catch (_) {
+      return null;
+    }
+  }
+
 }

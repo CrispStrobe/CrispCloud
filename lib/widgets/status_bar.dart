@@ -207,12 +207,22 @@ class _StatusBarState extends ConsumerState<StatusBar> {
 
           // Filter / type-ahead indicator
           if (panel.filterQuery.isNotEmpty) ...[
-            Icon(panel.isTypeahead ? Icons.search : Icons.filter_list,
-                size: 14, color: theme.colorScheme.primary),
+            Icon(
+                (!panel.isTypeahead || panel.isQuickFilterActive)
+                    ? Icons.filter_list
+                    : Icons.search,
+                size: 14,
+                color: theme.colorScheme.primary),
             const SizedBox(width: 4),
             Text(
               panel.isTypeahead
-                  ? '"${panel.filterQuery}"'
+                  ? (panel.isQuickFilterActive
+                          ? 'Filter: "${panel.filterQuery}"'
+                          : 'Find: "${panel.filterQuery}"') +
+                      (panel.typeaheadMatchCount > 0
+                          ? '  ${panel.typeaheadMatchPosition}/'
+                              '${panel.typeaheadMatchCount}'
+                          : '  no matches')
                   : 'Filter: "${panel.filterQuery}"',
               style: style.copyWith(color: theme.colorScheme.primary),
             ),

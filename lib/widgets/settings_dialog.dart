@@ -15,6 +15,7 @@ import '../providers/analytics_provider.dart';
 import '../providers/delta_sync_provider.dart';
 import '../providers/file_type_color_provider.dart';
 import '../providers/panel_source_provider.dart';
+import '../providers/quick_search_provider.dart';
 
 // ---------------------------------------------------------------------------
 // Public entry point
@@ -48,6 +49,8 @@ class SettingsDialog extends ConsumerWidget {
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             _GeneralSection(),
+            const Divider(height: 1),
+            _QuickSearchSection(),
             const Divider(height: 1),
             _AccessibilitySection(),
             const Divider(height: 1),
@@ -118,6 +121,124 @@ class _GeneralSection extends ConsumerWidget {
               ),
             );
           },
+        ),
+      ],
+    );
+  }
+}
+
+// ---------------------------------------------------------------------------
+// Section: Quick search (Total Commander / Double Commander behavior)
+// ---------------------------------------------------------------------------
+
+class _QuickSearchSection extends ConsumerWidget {
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final settings = ref.watch(quickSearchSettingsProvider);
+    final notifier = ref.read(quickSearchSettingsProvider.notifier);
+    final modeLabel = switch (settings.mode) {
+      QuickSearchMode.jump => 'Jump to the next matching file',
+      QuickSearchMode.filter => 'Filter the file list',
+      QuickSearchMode.off => 'Disabled',
+    };
+
+    return _Section(
+      title: 'Quick Search',
+      icon: Icons.search,
+      children: [
+        Padding(
+          padding: const EdgeInsets.fromLTRB(24, 4, 24, 8),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text('Typing in the file list',
+                  style: Theme.of(context).textTheme.bodyMedium),
+              const SizedBox(height: 8),
+              SegmentedButton<QuickSearchMode>(
+                key: const Key('settings_quick_search_mode'),
+                segments: const [
+                  ButtonSegment(
+                    value: QuickSearchMode.jump,
+                    label: Text('Jump'),
+                    icon: Icon(Icons.keyboard_tab, size: 18),
+                  ),
+                  ButtonSegment(
+                    value: QuickSearchMode.filter,
+                    label: Text('Filter'),
+                    icon: Icon(Icons.filter_list, size: 18),
+                  ),
+                  ButtonSegment(
+                    value: QuickSearchMode.off,
+                    label: Text('Off'),
+                    icon: Icon(Icons.block, size: 18),
+                  ),
+                ],
+                selected: {settings.mode},
+                onSelectionChanged: (selection) =>
+                    notifier.setMode(selection.first),
+              ),
+              const SizedBox(height: 6),
+              Text(
+                modeLabel,
+                style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                      color: Theme.of(context).colorScheme.onSurfaceVariant,
+                    ),
+              ),
+            ],
+          ),
+        ),
+        SwitchListTile(
+          key: const Key('settings_quick_search_prefix'),
+          value: settings.matchFromStart,
+          onChanged: notifier.setMatchFromStart,
+          title: const Text('Match from the beginning'),
+          subtitle: const Text('Off: match anywhere in the file name'),
+          contentPadding: const EdgeInsets.symmetric(horizontal: 24),
+          dense: true,
+        ),
+        SwitchListTile(
+          key: const Key('settings_quick_search_case'),
+          value: settings.caseSensitive,
+          onChanged: notifier.setCaseSensitive,
+          title: const Text('Case sensitive'),
+          contentPadding: const EdgeInsets.symmetric(horizontal: 24),
+          dense: true,
+        ),
+        SwitchListTile(
+          key: const Key('settings_quick_search_arrows'),
+          value: settings.arrowNavigation,
+          onChanged: notifier.setArrowNavigation,
+          title: const Text('Arrow keys cycle through matches'),
+          subtitle: const Text(
+              'Up/Down move to the previous/next match while searching'),
+          contentPadding: const EdgeInsets.symmetric(horizontal: 24),
+          dense: true,
+        ),
+        ListTile(
+          leading: const Icon(Icons.timer_outlined),
+          title: const Text('Reset search after'),
+          subtitle: Text(
+            settings.resetSeconds == 0
+                ? 'Never'
+                : '${settings.resetSeconds} second(s) of inactivity',
+          ),
+          trailing: DropdownButton<int>(
+            key: const Key('settings_quick_search_reset'),
+            value: settings.resetSeconds,
+            onChanged: (value) {
+              if (value != null) notifier.setResetSeconds(value);
+            },
+            items: const [
+              DropdownMenuItem(value: 0, child: Text('Never')),
+              DropdownMenuItem(value: 1, child: Text('1 s')),
+              DropdownMenuItem(value: 2, child: Text('2 s')),
+              DropdownMenuItem(value: 3, child: Text('3 s')),
+              DropdownMenuItem(value: 5, child: Text('5 s')),
+              DropdownMenuItem(value: 10, child: Text('10 s')),
+            ],
+          ),
+          contentPadding: const EdgeInsets.symmetric(horizontal: 24),
+          dense: true,
         ),
       ],
     );

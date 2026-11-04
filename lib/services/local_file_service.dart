@@ -26,6 +26,40 @@ abstract class LocalFileService {
   /// Read file bytes, maintaining security scope on macOS
   Future<Uint8List> readFile(String path, {FileItem? fileItem});
 
+  /// Ensure read access to [path]. On macOS, when the sandbox denies access,
+  /// asks the user to grant the containing folder (security-scoped bookmark)
+  /// and returns whether access was granted.
+  Future<bool> ensureAccess(String path) async => true;
+
+  /// Hold read access while streaming [path] (macOS security scope).
+  /// Returns false when the user refuses or the path stays inaccessible.
+  Future<bool> beginStreamAccess(String path) => ensureAccess(path);
+
+  /// Release access acquired by [beginStreamAccess].
+  Future<void> endStreamAccess() async {}
+
+  /// File size, using the granted security scope where needed. Null when the
+  /// file is missing or access was denied.
+  Future<int?> fileLength(String path) async {
+    try {
+      return await File(path).length();
+    } catch (_) {
+      return null;
+    }
+  }
+
+  /// Recursively collect files under [path] for the flat view.
+  Future<List<FileItem>> walkFiles(
+    String path, {
+    bool includeHidden = false,
+    int maxItems = 10000,
+  }) =>
+      walkLocalFiles(
+        path,
+        includeHidden: includeHidden,
+        maxItems: maxItems,
+      );
+
   /// Save data to a file, handling platform-specific permissions
   Future<void> saveFile(String path, Uint8List data);
 
@@ -55,4 +89,57 @@ abstract class LocalFileService {
   factory LocalFileService() {
     return platform.createPlatformFileService();
   }
+}
+
+
+/// Recursive local file walk used by the flat view. Callers on macOS wrap it in
+/// a security scope (see MacosFileService.walkFiles).
+Future<List<FileItem>> walkLocalFiles(
+  String path, {
+  bool includeHidden = false,
+  int maxItems = 10000,
+}) async {
+  final result = <FileItem>[];
+  final separator = Platform.pathSeparator;
+
+  Future<void> walk(String dir) async {
+    if (result.length >= maxItems) return;
+    List<FileSystemEntity> entries;
+    try {
+      entries = await Directory(dir).list().toList();
+    } catch (_) {
+      return;
+    }
+    for (final entity in entries) {
+      if (result.length >= maxItems) return;
+      final name = entity.path.split(separator).last;
+      if (!includeHidden && name.startsWith('.')) continue;
+      FileSystemEntityType type;
+      try {
+        type = await FileSystemEntity.type(entity.path, followLinks: false);
+      } catch (_) {
+        continue;
+      }
+      if (type == FileSystemEntityType.link) continue;
+      if (type == FileSystemEntityType.directory) {
+        await walk(entity.path);
+      } else if (type == FileSystemEntityType.file) {
+        try {
+          final stat = await entity.stat();
+          result.add(FileItem(
+            name: name,
+            path: entity.path,
+            isFolder: false,
+            size: stat.size,
+            updatedAt: stat.modified,
+          ));
+        } catch (_) {
+          // Skip entries that disappear mid-walk.
+        }
+      }
+    }
+  }
+
+  await walk(path);
+  return result;
 }

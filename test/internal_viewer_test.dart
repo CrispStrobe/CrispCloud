@@ -19,6 +19,7 @@ const _svc = InternalViewerService();
 Uint8List _bytes(List<int> values) => Uint8List.fromList(values);
 Uint8List _utf8(String s) => Uint8List.fromList(utf8.encode(s));
 Uint8List _latin1Bytes(List<int> values) => Uint8List.fromList(values);
+Uint8List _asciiBytes(String s) => Uint8List.fromList(s.codeUnits);
 
 // ---------------------------------------------------------------------------
 // Tests
@@ -56,8 +57,47 @@ void main() {
       expect(_svc.detectMode('install.sh'), ViewerMode.text);
     });
 
-    test('.html → text', () {
-      expect(_svc.detectMode('index.html'), ViewerMode.text);
+    test('.html → html', () {
+      expect(_svc.detectMode('index.html'), ViewerMode.html);
+      expect(_svc.detectMode('page.htm'), ViewerMode.html);
+      expect(_svc.detectMode('page.xhtml'), ViewerMode.html);
+    });
+
+    test('.xml → xml', () {
+      expect(_svc.detectMode('config.xml'), ViewerMode.xml);
+      expect(_svc.detectMode('style.xsl'), ViewerMode.xml);
+      expect(_svc.detectMode('Info.plist'), ViewerMode.xml);
+    });
+
+    test('markup sniffing without a useful extension', () {
+      expect(
+        _svc.detectMode(
+          'mystery',
+          header: Uint8List.fromList(
+            utf8.encode('<?xml version="1.0"?><root/>'),
+          ),
+        ),
+        ViewerMode.xml,
+      );
+      expect(
+        _svc.detectMode(
+          'mystery',
+          header: Uint8List.fromList(
+            utf8.encode('<!DOCTYPE html><html><body>x</body></html>'),
+          ),
+        ),
+        ViewerMode.html,
+      );
+      // SVG stays an image even though it is XML.
+      expect(
+        _svc.detectMode(
+          'icon.svg',
+          header: Uint8List.fromList(
+            utf8.encode('<?xml version="1.0"?><svg></svg>'),
+          ),
+        ),
+        ViewerMode.image,
+      );
     });
 
     test('.png → image', () {
@@ -112,12 +152,22 @@ void main() {
       expect(_svc.detectMode('libfoo.so'), ViewerMode.binary);
     });
 
-    test('unknown extension → binary', () {
+    test('unknown extension → binary (no header to sniff)', () {
       expect(_svc.detectMode('file.xyz'), ViewerMode.binary);
     });
 
-    test('no extension → binary', () {
-      expect(_svc.detectMode('Makefile'), ViewerMode.binary);
+    test('no extension → Makefile stays text via well-known baseline', () {
+      expect(_svc.detectMode('Makefile'), ViewerMode.text);
+    });
+
+    test('unknown extension with text header sniff → text', () {
+      final header = _asciiBytes('plain text content\n');
+      expect(_svc.detectMode('file.xyz', header: header), ViewerMode.text);
+    });
+
+    test('unknown extension with binary header sniff → binary', () {
+      final header = _bytes([0x00, 0x11, 0x22, 0x7F, 0x80, 0x00, 0x00, 0x00]);
+      expect(_svc.detectMode('file.xyz', header: header), ViewerMode.binary);
     });
 
     test('mixed-case extension is detected correctly', () {
@@ -171,7 +221,8 @@ void main() {
 
     test('magic bytes override extension (PNG bytes on .txt file)', () {
       final header = _bytes([0x89, 0x50, 0x4E, 0x47, 0x0D, 0x0A, 0x1A, 0x0A]);
-      expect(_svc.detectMode('disguised.txt', header: header), ViewerMode.image);
+      expect(
+          _svc.detectMode('disguised.txt', header: header), ViewerMode.image);
     });
   });
 
@@ -263,8 +314,8 @@ void main() {
     });
 
     test('HexLine equality is based on offset and asciiPart', () {
-      final a = HexLine(offset: 0, hexParts: ['41'], asciiPart: 'A');
-      final b = HexLine(offset: 0, hexParts: ['41'], asciiPart: 'A');
+      const a = HexLine(offset: 0, hexParts: ['41'], asciiPart: 'A');
+      const b = HexLine(offset: 0, hexParts: ['41'], asciiPart: 'A');
       expect(a, equals(b));
     });
   });
@@ -347,8 +398,22 @@ void main() {
 
     test('lineCount is null for image mode', () {
       final pngHeader = _bytes([
-        0x89, 0x50, 0x4E, 0x47, 0x0D, 0x0A, 0x1A, 0x0A,
-        0x00, 0x00, 0x00, 0x0D, 0x49, 0x48, 0x44, 0x52,
+        0x89,
+        0x50,
+        0x4E,
+        0x47,
+        0x0D,
+        0x0A,
+        0x1A,
+        0x0A,
+        0x00,
+        0x00,
+        0x00,
+        0x0D,
+        0x49,
+        0x48,
+        0x44,
+        0x52,
       ]);
       final content = _svc.loadContent(pngHeader, 'image.png');
       expect(content.lineCount, isNull);
@@ -406,8 +471,22 @@ void main() {
 
     test('toJson omits null fields', () {
       final pngHeader = _bytes([
-        0x89, 0x50, 0x4E, 0x47, 0x0D, 0x0A, 0x1A, 0x0A,
-        0x00, 0x00, 0x00, 0x0D, 0x49, 0x48, 0x44, 0x52,
+        0x89,
+        0x50,
+        0x4E,
+        0x47,
+        0x0D,
+        0x0A,
+        0x1A,
+        0x0A,
+        0x00,
+        0x00,
+        0x00,
+        0x0D,
+        0x49,
+        0x48,
+        0x44,
+        0x52,
       ]);
       final content = _svc.loadContent(pngHeader, 'img.png');
       final json = content.toJson();
@@ -490,23 +569,374 @@ void main() {
   // ---- ViewerMode enum completeness ----------------------------------------
 
   group('ViewerMode enum', () {
-    test('has 7 values', () {
-      expect(ViewerMode.values.length, 7);
+    test('has 13 values', () {
+      expect(ViewerMode.values.length, 15);
     });
 
-    test('contains expected modes', () {
+    test('contains the original 7 modes plus the new lister modes', () {
       expect(
         ViewerMode.values.map((m) => m.name),
         containsAll([
           'text',
+          'ascii',
           'hex',
           'image',
           'binary',
           'markdown',
           'pdf',
+          'media',
+          'font',
+          'csv',
+          'office',
+          'archive',
           'unsupported',
         ]),
       );
+    });
+  });
+
+  group('decodeTextForView', () {
+    test('UTF-8 BOM text decodes as utf8 without BOM', () {
+      final data = _bytes([0xEF, 0xBB, 0xBF, 0x68, 0x65, 0x6C, 0x6C, 0x6F]);
+      final r = InternalViewerService.decodeTextForView(data);
+      expect(r.text, 'hello');
+      expect(r.encoding, 'utf8');
+    });
+
+    test('plain UTF-8 decodes strictly', () {
+      final data = _asciiBytes('a..\n--\n');
+      final r = InternalViewerService.decodeTextForView(data);
+      expect(r.text, 'a..\n--\n');
+      expect(r.encoding, 'utf8');
+    });
+
+    test('non-UTF-8 bytes fall back to latin1', () {
+      // 0xC4 expects a continuation byte; 'A' (0x41) is not one.
+      final data = _bytes([0xC4, 0x41, 0x42]);
+      final r = InternalViewerService.decodeTextForView(data);
+      expect(r.encoding, 'latin1');
+    });
+
+    test('UTF-16 LE BOM decodes correctly', () {
+      final data = _bytes([0xFF, 0xFE, 0x68, 0x00, 0x69, 0x00]); // 'hi'
+      final r = InternalViewerService.decodeTextForView(data);
+      expect(r.text, 'hi');
+      expect(r.encoding, 'utf16le');
+    });
+
+    test('UTF-16 BE BOM decodes correctly', () {
+      final data = _bytes([0xFE, 0xFF, 0x00, 0x68, 0x00, 0x69]); // 'hi'
+      final r = InternalViewerService.decodeTextForView(data);
+      expect(r.text, 'hi');
+      expect(r.encoding, 'utf16be');
+    });
+
+    test('BOM-less UTF-16 LE (NUL-padded ascii) is sniffed', () {
+      final data = _bytes([
+        0x68,
+        0x00,
+        0x65,
+        0x00,
+        0x6C,
+        0x00,
+        0x6C,
+        0x00,
+        0x6F,
+        0x00,
+        0x21,
+        0x00,
+        0x0A,
+        0x00,
+        0x0A,
+        0x00
+      ]);
+      final r = InternalViewerService.decodeTextForView(data);
+      expect(r.encoding, 'utf16le');
+      expect(r.text, 'hello!\n\n');
+    });
+
+    test('explicit latin1 hint decodes high bytes as latin1 glyphs', () {
+      final data = _bytes([0xE9]); // é in latin1
+      final r =
+          InternalViewerService.decodeTextForView(data, encoding: 'latin1');
+      expect(r.text, 'é');
+    });
+  });
+
+  group('looksLikeText', () {
+    test('plain ASCII text with newlines → text', () {
+      expect(
+        InternalViewerService.looksLikeText(
+            _asciiBytes('line one\nline two\n')),
+        isTrue,
+      );
+    });
+
+    test('NUL-containing binary → not text', () {
+      expect(
+        InternalViewerService.looksLikeText(
+            _bytes([0x01, 0x02, 0x00, 0x03, 0x04])),
+        isFalse,
+      );
+    });
+
+    test('UTF-8 BOM header → text', () {
+      expect(
+        InternalViewerService.looksLikeText(_bytes([0xEF, 0xBB, 0xBF, 0x41])),
+        isTrue,
+      );
+    });
+
+    test('all-control-char header → not text', () {
+      expect(
+        InternalViewerService.looksLikeText(
+            _bytes([0x01, 0x02, 0x03, 0x04, 0x05])),
+        isFalse,
+      );
+    });
+
+    test('compressed-looking random high bytes → not text', () {
+      expect(
+        InternalViewerService.looksLikeText(_bytes([
+          0x1F,
+          0x8B,
+          0x80,
+          0x9A,
+          0xC1,
+          0xFF,
+          0xEE,
+          0x80,
+          0x7F,
+          0xF3,
+          0x9C,
+          0xAB,
+          0xDE,
+          0x80,
+          0x97,
+          0xFA,
+        ])),
+        isFalse,
+      );
+    });
+  });
+
+  group('renderSafeBytes', () {
+    test('printable range passes through', () {
+      expect(
+        InternalViewerService.renderSafeBytes(_asciiBytes('ABcd 123')),
+        'ABcd 123',
+      );
+    });
+
+    test('control bytes become · in ascii mode, . in binary mode', () {
+      final data = _bytes([0x41, 0x01, 0x03, 0x42]);
+      expect(InternalViewerService.renderSafeBytes(data), 'A··B');
+      expect(
+        InternalViewerService.renderSafeBytes(data, binaryMode: true),
+        'A..B',
+      );
+    });
+
+    test('LF breaks lines; CRLF collapses into one break', () {
+      final data = _asciiBytes('a\r\nB\nC');
+      expect(InternalViewerService.renderSafeBytes(data), 'a\nB\nC');
+    });
+
+    test('lone CR breaks lines', () {
+      final data = _asciiBytes('a\rB');
+      expect(InternalViewerService.renderSafeBytes(data), 'a\nB');
+    });
+
+    test('latin1 high bytes readable in ascii mode, dotted in binary mode', () {
+      final data = _bytes([0xE9, 0xFC]); // é ü
+      expect(InternalViewerService.renderSafeBytes(data), 'éü');
+      expect(
+        InternalViewerService.renderSafeBytes(data, binaryMode: true),
+        '..',
+      );
+    });
+
+    test('high latin1 bytes render as latin1 glyphs in ascii mode', () {
+      // UTF-8 'é' (C3 A9) viewed as raw bytes in ASCII mode appears as the
+      // Latin-1 rendering 'Ã©' — byte-faithful, exactly what DC shows with an
+      // ANSI charset. 0xA9 = © in Latin-1.
+      final data = _bytes([0x41, 0xC3, 0xA9, 0x42]);
+      expect(InternalViewerService.renderSafeBytes(data), 'AÃ©B');
+    });
+
+    test('C1 control range 0x80–0x9F handled, not treated as latin1 glyph', () {
+      final data = _bytes([0x81, 0xA0]); // 0x81 control, 0xA0 nbsp→' '
+      final out = InternalViewerService.renderSafeBytes(data);
+      expect(out.codeUnits[0], 0xB7); // ·
+      expect(out.length, 2);
+    });
+  });
+
+  group('parseHexPattern', () {
+    test('space separated bytes', () {
+      expect(
+        InternalViewerService.parseHexPattern('DE AD BE EF'),
+        _bytes([0xDE, 0xAD, 0xBE, 0xEF]),
+      );
+    });
+
+    test('compact pattern', () {
+      expect(
+        InternalViewerService.parseHexPattern('deadbeef'),
+        _bytes([0xDE, 0xAD, 0xBE, 0xEF]),
+      );
+    });
+
+    test('colons and commas', () {
+      expect(
+        InternalViewerService.parseHexPattern('de:ad,be;ef'),
+        _bytes([0xDE, 0xAD, 0xBE, 0xEF]),
+      );
+    });
+
+    test('odd digit count → null', () {
+      expect(InternalViewerService.parseHexPattern('abc'), isNull);
+    });
+
+    test('empty → null', () {
+      expect(InternalViewerService.parseHexPattern('   '), isNull);
+    });
+  });
+
+  group('findBytes', () {
+    test('finds pattern at start/middle/end', () {
+      final data = _asciiBytes('haystackneedlehaystack');
+      final pattern = _asciiBytes('needle');
+      expect(
+        InternalViewerService.findBytes(data, pattern),
+        [8],
+      );
+    });
+
+    test('multiple matches', () {
+      final data = _asciiBytes('ababab');
+      final result = InternalViewerService.findBytes(data, _asciiBytes('ab'));
+      expect(result, [0, 2, 4]);
+    });
+
+    test('start offset skips earlier matches', () {
+      final data = _asciiBytes('ababab');
+      final result =
+          InternalViewerService.findBytes(data, _asciiBytes('ab'), start: 1);
+      expect(result, [2, 4]);
+    });
+
+    test('maxMatches caps results', () {
+      final data = _asciiBytes('..........');
+      final result = InternalViewerService.findBytes(
+        data,
+        _asciiBytes('.'),
+        maxMatches: 3,
+      );
+      expect(result.length, 3);
+    });
+
+    test('no match → empty', () {
+      final result =
+          InternalViewerService.findBytes(_asciiBytes('abc'), _asciiBytes('z'));
+      expect(result, isEmpty);
+    });
+  });
+
+  group('new extension families', () {
+    test('zip → archive', () {
+      expect(_svc.detectMode('backup.zip'), ViewerMode.archive);
+    });
+
+    test('tar.gz → archive', () {
+      expect(_svc.detectMode('snapshot.tar.gz'), ViewerMode.archive);
+      expect(_svc.detectMode('snapshot.tgz'), ViewerMode.archive);
+    });
+
+    test('tar.bz2 family → archive', () {
+      expect(_svc.detectMode('snapshot.tar.bz2'), ViewerMode.archive);
+      expect(_svc.detectMode('snapshot.tbz2'), ViewerMode.archive);
+      expect(_svc.detectMode('snapshot.tbz'), ViewerMode.archive);
+    });
+
+    test('zip-based package formats → archive', () {
+      for (final name in <String>[
+        'addon.xpi',
+        'extension.crx',
+        'package.nupkg',
+        'extension.vsix',
+      ]) {
+        expect(_svc.detectMode(name), ViewerMode.archive, reason: name);
+      }
+    });
+
+    test('legacy PowerPoint → office (message view)', () {
+      expect(_svc.detectMode('old.ppt'), ViewerMode.office);
+      expect(_svc.detectMode('slides.pps'), ViewerMode.office);
+    });
+
+    test('7z / rar / comic archives → archive', () {
+      for (final name in <String>[
+        'archive.7z',
+        'archive.rar',
+        'comic.cbz',
+        'comic.cbt',
+        'comic.cb7',
+        'comic.cbr',
+      ]) {
+        expect(_svc.detectMode(name), ViewerMode.archive, reason: name);
+      }
+    });
+
+    test('xz / zstd families → archive', () {
+      for (final name in <String>[
+        'archive.tar.xz',
+        'archive.txz',
+        'archive.tar.zst',
+        'archive.tzst',
+        'archive.xz',
+        'archive.zst',
+      ]) {
+        expect(_svc.detectMode(name), ViewerMode.archive, reason: name);
+      }
+    });
+
+    test('mp4 → media', () {
+      expect(_svc.detectMode('video.mp4'), ViewerMode.media);
+      expect(_svc.detectMode('song.mp3'), ViewerMode.media);
+    });
+
+    test('ttf → font', () {
+      expect(_svc.detectMode('Comic.ttf'), ViewerMode.font);
+    });
+
+    test('csv/tsv → csv', () {
+      expect(_svc.detectMode('data.csv'), ViewerMode.csv);
+      expect(_svc.detectMode('data.tsv'), ViewerMode.csv);
+    });
+
+    test('docx/xlsx/pptx/odt → office', () {
+      expect(_svc.detectMode('report.docx'), ViewerMode.office);
+      expect(_svc.detectMode('sheet.xlsx'), ViewerMode.office);
+      expect(_svc.detectMode('slides.pptx'), ViewerMode.office);
+      expect(_svc.detectMode('book.epub'), ViewerMode.office);
+    });
+
+    test('LICENSE/README recognized as text by basename', () {
+      expect(_svc.detectMode('LICENSE'), ViewerMode.text);
+      expect(_svc.detectMode('README'), ViewerMode.text);
+      expect(_svc.detectMode('Dockerfile'), ViewerMode.text);
+      expect(_svc.detectMode('path/to/Makefile'), ViewerMode.text);
+    });
+
+    test('loadContent picks mime types for new modes', () {
+      expect(
+        _svc.loadContent(_bytes([0]), 'video.mp4').mimeType,
+        'video/mp4',
+      );
+      expect(_svc.loadContent(_bytes([0]), 'data.csv').mimeType, 'text/csv');
+      expect(_svc.loadContent(_bytes([0]), 'r.docx').mimeType,
+          'application/vnd.openxmlformats-officedocument.wordprocessingml.document');
     });
   });
 }

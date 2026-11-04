@@ -16,7 +16,7 @@ import '../widgets/azure_connection_dialog.dart';
 import '../widgets/b2_connection_dialog.dart';
 import '../widgets/connection_dialog.dart';
 import '../widgets/file_editor_dialog.dart' show showFileEditorDialog;
-import '../widgets/preview_pane.dart' show PreviewPane;
+import '../widgets/internal_viewer_dialog.dart' show showInternalViewer;
 import '../l10n/app_localizations.dart';
 import '../services/log_service.dart';
 
@@ -110,6 +110,8 @@ void showKeyboardShortcutsHelp(BuildContext context) {
             _shortcutRow('Tab', 'Switch panels'),
             _shortcutRow('Ctrl+G', 'Go to path'),
             _shortcutRow('Ctrl+F', 'Filter files'),
+            _shortcutRow('Type letters', 'Quick search / filter (see Settings)'),
+            _shortcutRow('↑ / ↓ while searching', 'Previous / next match'),
             const Divider(),
             // Selection
             _shortcutRow('Ctrl+A', 'Select all'),
@@ -267,31 +269,21 @@ void showRenameDialog(BuildContext context, WidgetRef ref) {
 void viewSelectedFile(BuildContext context, WidgetRef ref) {
   final activePanel = ref.read(activePanelProvider);
   final panel = ref.read(panelProvider(activePanel));
-  final target = panel.selection.isEmpty ? panel.cursorItem : panel.selection.first;
+  // TC/DC view the file under the cursor, not the selection set.
+  final target = panel.cursorItem ??
+      (panel.selection.isNotEmpty ? panel.selection.first : null);
   if (target == null || target.isFolder) return;
-  // Show as full-screen dialog (DC-style F3 viewer)
-  showDialog(
-    context: context,
-    builder: (ctx) => Dialog.fullscreen(
-      child: Scaffold(
-        appBar: AppBar(
-          title: Text(target.name),
-          leading: IconButton(
-            icon: const Icon(Icons.close),
-            onPressed: () => Navigator.pop(ctx),
-          ),
-        ),
-        body: PreviewPane(file: target, side: activePanel),
-      ),
-    ),
-  );
+  // Full-screen DC-style viewer: text/ASCII/binary/hex/image/markdown/PDF/
+  // media/font/CSV/office/archive with streaming hex for huge local files.
+  showInternalViewer(context, file: target, side: activePanel);
 }
 
 /// F4: Open cursor item in the file editor.
 void editSelectedFile(BuildContext context, WidgetRef ref) {
   final activePanel = ref.read(activePanelProvider);
   final panel = ref.read(panelProvider(activePanel));
-  final target = panel.selection.isEmpty ? panel.cursorItem : panel.selection.first;
+  final target = panel.cursorItem ??
+      (panel.selection.isNotEmpty ? panel.selection.first : null);
   if (target == null || target.isFolder) return;
   showFileEditorDialog(context, ref, target, activePanel);
 }

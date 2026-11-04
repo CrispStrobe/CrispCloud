@@ -1,0 +1,66 @@
+name: quds_office_editor
+description: >-
+  Flutter Office surfaces on custom RenderBox: Word, Excel, PowerPoint, PDF
+  viewer/editor, and a visual band-report designer with inspector and preview.
+version: 1.6.0
+homepage: https://github.com/MohammedAsaadAsaad/quds_office_suite
+repository: https://github.com/MohammedAsaadAsaad/quds_office_suite/tree/main/packages/quds_office_editor
+issue_tracker: https://github.com/MohammedAsaadAsaad/quds_office_suite/issues
+
+topics:
+  - flutter
+  - office
+  - editor
+  - pdf
+  - word
+
+platforms:
+  android:
+  ios:
+  linux:
+  macos:
+  web:
+  windows:
+
+screenshots:
+  - description: "Report designer: bands, rulers, chart element, and the professional inspector."
+    path: example/screenshots/report_designer.png
+  - description: "Report designer live preview: paginated output painted from the engine."
+    path: example/screenshots/report_preview.png
+  - description: "Arabic RTL invoice template in the report designer."
+    path: example/screenshots/report_designer_rtl.png
+  - description: "Ready-made product catalog template with its photos saved inside the .qrep."
+    path: example/screenshots/report_template_catalog.png
+  - description: "Data explorer: edit the report's tables, typed columns, and calculated columns."
+    path: example/screenshots/report_data_explorer.png
+  - description: "Shape map in the designer: import a shapefile or GeoJSON and bind it to the value table."
+    path: example/screenshots/report_shape_map.png
+  - description: "Word canvas: paginated pages, BiDi caret, outline, and custom chrome."
+    path: example/screenshots/word.png
+  - description: "Excel grid: virtualized sheet, formula bar, charts, and sheet tabs."
+    path: example/screenshots/excel.png
+  - description: "PowerPoint stage: slides, animations pane, and slide sorter."
+    path: example/screenshots/powerpoint.png
+  - description: "PDF viewer: fit page, thumbnails, and view options."
+    path: example/screenshots/pdf.png
+
+environment:
+  sdk: ^3.12.0
+  flutter: ">=3.44.0"
+
+dependencies:
+  flutter:
+    sdk: flutter
+  quds_office_engine: ^1.5.0
+  quds_reports: ^1.5.0
+
+dev_dependencies:
+  flutter_lints: ^6.0.0
+  flutter_test:
+    sdk: flutter
+
+flutter:
+  uses-material-design: false
+  assets:
+    - fonts/
+    - templates/

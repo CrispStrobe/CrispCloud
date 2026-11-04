@@ -4,15 +4,48 @@
 // Extracted from file_browser_screen.dart.
 
 import 'package:flutter/material.dart';
+import 'package:package_info_plus/package_info_plus.dart';
 import 'package:url_launcher/url_launcher.dart';
 
 import '../l10n/app_localizations.dart';
 
-class AboutAppDialog extends StatelessWidget {
+class AboutAppDialog extends StatefulWidget {
   const AboutAppDialog({super.key});
 
-  static const _appVersion = String.fromEnvironment('APP_VERSION', defaultValue: '0.1.0');
-  static const _gitHash = String.fromEnvironment('GIT_HASH', defaultValue: 'dev');
+  @override
+  State<AboutAppDialog> createState() => _AboutAppDialogState();
+}
+
+class _AboutAppDialogState extends State<AboutAppDialog> {
+  static const _fallbackVersion =
+      String.fromEnvironment('APP_VERSION', defaultValue: '1.0.0');
+  static const _gitHash = String.fromEnvironment('GIT_HASH', defaultValue: '');
+
+  PackageInfo? _packageInfo;
+
+  @override
+  void initState() {
+    super.initState();
+    _loadVersion();
+  }
+
+  Future<void> _loadVersion() async {
+    try {
+      final info = await PackageInfo.fromPlatform();
+      if (mounted) setState(() => _packageInfo = info);
+    } catch (_) {
+      // Fall back to the compile-time version.
+    }
+  }
+
+  String get _versionLabel {
+    final version = _packageInfo?.version ?? _fallbackVersion;
+    final build = _packageInfo?.buildNumber ?? '';
+    final suffix = _gitHash.isNotEmpty
+        ? _gitHash
+        : (build.isNotEmpty && build != '0' ? 'build $build' : '');
+    return suffix.isEmpty ? 'Version $version' : 'Version $version ($suffix)';
+  }
 
   Future<void> _launchURL(String urlString) async {
     final Uri url = Uri.parse(urlString);
@@ -56,7 +89,7 @@ class AboutAppDialog extends StatelessWidget {
                             ?.copyWith(fontWeight: FontWeight.bold),
                       ),
                       SelectableText(
-                        'Version $_appVersion ($_gitHash)',
+                        _versionLabel,
                         style: theme.textTheme.bodySmall,
                       ),
                       const SizedBox(height: 16),
@@ -115,7 +148,7 @@ class AboutAppDialog extends StatelessWidget {
                       showLicensePage(
                         context: context,
                         applicationName: l.appTitle,
-                        applicationVersion: '$_appVersion ($_gitHash)',
+                        applicationVersion: _versionLabel,
                         applicationIcon:
                             const Icon(Icons.cloud, size: 48),
                         applicationLegalese: '© 2025 CrispStrobe',

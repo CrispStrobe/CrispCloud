@@ -91,7 +91,7 @@ class ArchiveService {
     }
 
     final zipBytes = ZipEncoder().encode(archive);
-    return Uint8List.fromList(zipBytes!);
+    return Uint8List.fromList(zipBytes);
   }
 
   /// Create a .zip from a directory (recursive).

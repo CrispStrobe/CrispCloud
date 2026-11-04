@@ -23,6 +23,19 @@ class _TestLocalFileService implements LocalFileService {
   String currentPath = Directory.systemTemp.path;
   @override
   String? get grantedBasePath => Directory.systemTemp.path;
+
+  @override
+  Future<bool> ensureAccess(String path) async => true;
+
+  @override
+  Future<bool> beginStreamAccess(String path) async => true;
+
+  @override
+  Future<void> endStreamAccess() async {}
+
+  @override
+  Future<int?> fileLength(String path) async => 0;
+
   @override
   Future<String> getInitialPath() async => currentPath;
   @override
@@ -32,7 +45,8 @@ class _TestLocalFileService implements LocalFileService {
   @override
   Future<List<FileSystemEntity>?> listDirectory(String path) async => [];
   @override
-  Future<String?> requestDirectoryAccess({String? initialDirectory}) async =>
+  Future<String?> requestDirectoryAccess({String? initialDirectory})
+ async =>
       currentPath;
   @override
   Future<Uint8List> readFile(String path, {FileItem? fileItem}) async =>
@@ -49,6 +63,15 @@ class _TestLocalFileService implements LocalFileService {
   Map<String, dynamic> getWebMetadata(String path) => {};
   @override
   Object? getWebFileRef(String path) => null;
+
+  @override
+  Future<List<FileItem>> walkFiles(
+    String path, {
+    bool includeHidden = false,
+    int maxItems = 10000,
+  }) async =>
+      const <FileItem>[];
+
 }
 
 void main() {
@@ -470,6 +493,138 @@ void main() {
       panel.typeaheadAppend('ab');
       panel.clearTypeahead();
       expect(panel.filterQuery, '');
+      expect(panel.isTypeahead, isFalse);
+    });
+  });
+
+  // --- Quick search / quick filter modes ---
+  group('PanelNotifier quick search modes', () {
+    late PanelNotifier panel;
+
+    setUp(() async {
+      panel = container.read(panelProvider(PanelSide.local));
+      // Let the provider finish its initial directory load before replacing
+      // the listing with the fixed fixture.
+      await Future<void>.delayed(const Duration(milliseconds: 150));
+      panel.showSearchResults([
+        FileItem(name: 'alpha.txt', isFolder: false),
+        FileItem(name: 'alphabet.txt', isFolder: false),
+        FileItem(name: 'beta.txt', isFolder: false),
+        FileItem(name: 'gamma.txt', isFolder: false),
+      ]);
+      panel.moveCursorTo(0);
+      expect(panel.cursorItem?.name, 'alpha.txt');
+    });
+
+    test('jump mode moves the cursor without filtering', () {
+      container
+          .read(quickSearchSettingsProvider.notifier)
+          .setMode(QuickSearchMode.jump);
+      panel.typeaheadAppend('b');
+
+      expect(panel.isTypeahead, isTrue);
+      expect(panel.typeaheadMode, QuickSearchMode.jump);
+      expect(panel.filteredFiles!.length, 4);
+      expect(panel.cursorItem!.name, 'beta.txt');
+    });
+
+    test('jump mode keeps the current entry while refining', () {
+      container
+          .read(quickSearchSettingsProvider.notifier)
+          .setMode(QuickSearchMode.jump);
+      panel.typeaheadAppend('b');
+      panel.typeaheadAppend('e');
+      expect(panel.cursorItem!.name, 'beta.txt');
+    });
+
+    test('filter mode narrows the listing', () {
+      container
+          .read(quickSearchSettingsProvider.notifier)
+          .setMode(QuickSearchMode.filter);
+      panel.typeaheadAppend('a');
+
+      expect(panel.isQuickFilterActive, isTrue);
+      expect(
+        panel.filteredFiles!.map((f) => f.name).toList(),
+        ['alpha.txt', 'alphabet.txt'],
+      );
+      expect(panel.cursorItem!.name, 'alpha.txt');
+    });
+
+    test('arrow cycling visits all matches and wraps', () {
+      container
+          .read(quickSearchSettingsProvider.notifier)
+          .setMode(QuickSearchMode.jump);
+      panel.typeaheadAppend('a');
+      expect(panel.cursorItem!.name, 'alphabet.txt');
+
+      expect(panel.cycleTypeahead(1), isTrue);
+      expect(panel.cursorItem!.name, 'alpha.txt');
+      expect(panel.cycleTypeahead(-1), isTrue);
+      expect(panel.cursorItem!.name, 'alphabet.txt');
+    });
+
+    test('arrow movement stays inside the filtered list', () {
+      container
+          .read(quickSearchSettingsProvider.notifier)
+          .setMode(QuickSearchMode.filter);
+      panel.typeaheadAppend('a');
+      expect(panel.cursorItem!.name, 'alpha.txt');
+
+      panel.moveCursor(1);
+      expect(panel.cursorItem!.name, 'alphabet.txt');
+      panel.moveCursor(1);
+      expect(panel.cursorItem!.name, 'alphabet.txt');
+    });
+
+    test('substring matching is honoured', () {
+      final notifier = container.read(quickSearchSettingsProvider.notifier);
+      notifier.setMode(QuickSearchMode.filter);
+      notifier.setMatchFromStart(false);
+      panel.typeaheadAppend('ph');
+
+      expect(
+        panel.filteredFiles!.map((f) => f.name).toList(),
+        ['alpha.txt', 'alphabet.txt'],
+      );
+    });
+
+    test('case-sensitive matching is honoured', () {
+      final notifier = container.read(quickSearchSettingsProvider.notifier);
+      notifier.setMode(QuickSearchMode.filter);
+      notifier.setCaseSensitive(true);
+      panel.typeaheadAppend('A');
+      expect(panel.filteredFiles!, isEmpty);
+
+      panel.clearTypeahead();
+      notifier.setCaseSensitive(false);
+      panel.typeaheadAppend('A');
+      expect(panel.filteredFiles!.length, 2);
+    });
+
+    test('off mode ignores typed characters', () {
+      container
+          .read(quickSearchSettingsProvider.notifier)
+          .setMode(QuickSearchMode.off);
+      panel.typeaheadAppend('a');
+
+      expect(panel.isTypeahead, isFalse);
+      expect(panel.filterQuery, '');
+    });
+
+    test('plain click moves the cursor without selecting', () {
+      final second = panel.files![1];
+      panel.setCursorOnly(second);
+
+      expect(panel.cursorItem!.name, second.name);
+      expect(panel.selection, isEmpty);
+    });
+
+    test('setFilter moves the cursor to a visible entry', () {
+      panel.setFilter('beta');
+
+      expect(panel.filteredFiles!.map((f) => f.name), ['beta.txt']);
+      expect(panel.cursorItem!.name, 'beta.txt');
       expect(panel.isTypeahead, isFalse);
     });
   });

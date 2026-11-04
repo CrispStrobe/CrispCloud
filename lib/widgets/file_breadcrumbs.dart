@@ -22,22 +22,6 @@ class FileBreadcrumbs extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final panel = ref.watch(panelProvider(side));
 
-    if (!kIsWeb && !Platform.isAndroid && !Platform.isIOS && side == PanelSide.local && currentPath.contains('Containers')) {
-      return Padding(
-        padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-        child: Row(
-          children: [
-            Icon(Icons.warning_amber, size: 16, color: Theme.of(context).colorScheme.error),
-            const SizedBox(width: 8),
-            Text(
-              'Sandboxed path - Use Browse button to select a real folder',
-              style: TextStyle(fontSize: 12, color: Theme.of(context).colorScheme.error),
-            ),
-          ],
-        ),
-      );
-    }
-
     final List<Map<String, String>> breadcrumbs = [];
 
     if (side == PanelSide.local) {

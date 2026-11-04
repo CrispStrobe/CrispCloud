@@ -17,6 +17,7 @@ import '../models/panel_side.dart';
 import '../models/panel_tab.dart';
 import '../models/sort.dart';
 import '../services/archive_service.dart';
+import '../services/archive_viewer_service.dart';
 import '../services/audit_service.dart';
 import '../services/cloud_storage_interface.dart'
     show CloudStorageClientCapabilities;
@@ -30,6 +31,7 @@ import 'auth_provider.dart';
 import 'core_providers.dart';
 import 'error_provider.dart';
 import 'panel_source_provider.dart';
+import 'quick_search_provider.dart';
 import 'recent_locations_provider.dart';
 
 // SortBy and SortOrder are defined in models/sort.dart
@@ -58,6 +60,9 @@ class PanelNotifier extends ChangeNotifier {
   String _filterQuery = '';
   // true when filter was set via type-ahead (vs the Ctrl+F dialog)
   bool _isTypeahead = false;
+  // Behavior selected for the current type-ahead session.
+  QuickSearchMode _typeaheadMode = QuickSearchMode.jump;
+  Timer? _typeaheadResetTimer;
 
   // Per-panel navigation history (back/forward like a browser)
   final List<String> _navHistory = [];
@@ -163,6 +168,18 @@ class PanelNotifier extends ChangeNotifier {
   }
 
   int get cursorIndex => _cursorIndex;
+
+  /// Identity-based indexOf: FileItem equality is path/uuid based, which can
+  /// collapse distinct in-memory entries (e.g. items without a path).
+  static int _indexOfIdentical(List<FileItem> items, FileItem item) {
+    for (var i = 0; i < items.length; i++) {
+      if (identical(items[i], item)) return i;
+    }
+    return -1;
+  }
+
+  static bool _containsIdentical(List<FileItem> items, FileItem item) =>
+      _indexOfIdentical(items, item) >= 0;
   FileItem? get cursorItem =>
       (_files != null && _cursorIndex >= 0 && _cursorIndex < _files!.length)
           ? _files![_cursorIndex]
@@ -172,28 +189,101 @@ class PanelNotifier extends ChangeNotifier {
   SortOrder get sortOrder => _sortOrder;
   String get filterQuery => _filterQuery;
   bool get isTypeahead => _isTypeahead;
+  QuickSearchMode get typeaheadMode => _typeaheadMode;
+
+  /// True when the current type-ahead narrows the visible listing.
+  bool get isQuickFilterActive =>
+      _isTypeahead && _typeaheadMode == QuickSearchMode.filter;
+
+  /// The entries currently shown by the panel (filter applied when active).
+  List<FileItem>? get displayedFiles => filteredFiles;
+
+  /// Cursor index within [displayedFiles] (-1 when absent).
+  int get displayedCursorIndex {
+    final displayed = filteredFiles;
+    if (displayed == null) return -1;
+    final item = cursorItem;
+    if (item == null) return -1;
+    return _indexOfIdentical(displayed, item);
+  }
+
+  /// Number of quick-search matches (excludes the ".." entry).
+  int get typeaheadMatchCount => _typeaheadMatches().length;
+
+  /// 1-based position of the cursor within the quick-search matches, or 0.
+  int get typeaheadMatchPosition {
+    final matches = _typeaheadMatches();
+    final item = cursorItem;
+    if (item == null) return 0;
+    final index = _indexOfIdentical(matches, item);
+    return index < 0 ? 0 : index + 1;
+  }
+
+  /// Whether the filter query should narrow the listing right now.
+  bool get _isFiltering =>
+      _filterQuery.isNotEmpty &&
+      (!_isTypeahead || _typeaheadMode == QuickSearchMode.filter);
 
   /// Returns files filtered by the current filter query (client-side, no re-fetch).
   List<FileItem>? get filteredFiles {
     if (_files == null) return null;
-    if (_filterQuery.isEmpty) return _files;
-    final q = _filterQuery.toLowerCase();
-    // ".." always stays visible even when a filter is active
+    if (!_isFiltering) return _files;
+    final settings = _ref.read(quickSearchSettingsProvider);
+    final q = settings.caseSensitive
+        ? _filterQuery
+        : _filterQuery.toLowerCase();
     return [
       if (_files!.isNotEmpty && _files!.first.name == '..') _files!.first,
-      ..._files!
-          .where((f) => f.name != '..' && f.name.toLowerCase().contains(q)),
+      ..._files!.where((f) => _matchesQuickSearch(f, q, settings)),
     ];
+  }
+
+  bool _matchesQuickSearch(
+    FileItem file,
+    String query,
+    QuickSearchSettings settings,
+  ) {
+    if (file.name == '..') return false;
+    final name = settings.caseSensitive ? file.name : file.name.toLowerCase();
+    return settings.matchFromStart
+        ? name.startsWith(query)
+        : name.contains(query);
+  }
+
+  /// Entries matching the current query, in listing order, excluding "..".
+  List<FileItem> _typeaheadMatches() {
+    final files = _files;
+    if (files == null || _filterQuery.isEmpty) return const <FileItem>[];
+    final settings = _ref.read(quickSearchSettingsProvider);
+    final q = settings.caseSensitive
+        ? _filterQuery
+        : _filterQuery.toLowerCase();
+    return files.where((f) => _matchesQuickSearch(f, q, settings)).toList();
   }
 
   /// Set a client-side filter query. Filters without re-fetching from server.
   void setFilter(String query) {
     _filterQuery = query;
+    _isTypeahead = false;
+    if (_isFiltering) {
+      final current = cursorItem;
+      final displayed = filteredFiles;
+      if (displayed != null &&
+          displayed.isNotEmpty &&
+          (current == null || !_containsIdentical(displayed, current))) {
+        final first = displayed.firstWhere(
+          (f) => f.name != '..',
+          orElse: () => displayed.first,
+        );
+        _setCursorToItem(first);
+      }
+    }
     notifyListeners();
   }
 
   /// Clear the client-side filter.
   void clearFilter() {
+    _typeaheadResetTimer?.cancel();
     _filterQuery = '';
     _isTypeahead = false;
     notifyListeners();
@@ -201,23 +291,24 @@ class PanelNotifier extends ChangeNotifier {
 
   // --- Type-ahead incremental search (DC-style: type directly in file list) ---
 
-  /// Append [char] to the type-ahead search query and filter the file list.
+  /// Append [char] to the type-ahead query, then either filter the listing
+  /// (quick filter mode) or jump the cursor to the next matching entry
+  /// (quick search mode).
   void typeaheadAppend(String char) {
-    _filterQuery += char;
+    final settings = _ref.read(quickSearchSettingsProvider);
+    if (settings.mode == QuickSearchMode.off) return;
+
+    final wasActive = _isTypeahead;
     _isTypeahead = true;
-    // Jump cursor to first match
-    final displayed = filteredFiles;
-    if (displayed != null && displayed.isNotEmpty) {
-      final first = displayed.firstWhere(
-        (f) => f.name != '..',
-        orElse: () => displayed.first,
-      );
-      final rawIdx = _files?.indexOf(first) ?? -1;
-      if (rawIdx != -1) {
-        _cursorIndex = rawIdx;
-        _itemToScrollTo = first;
-      }
+    _typeaheadMode = settings.mode;
+    _filterQuery += char;
+
+    if (settings.mode == QuickSearchMode.filter) {
+      _selectFirstVisibleMatch();
+    } else {
+      _jumpToMatch(refine: wasActive);
     }
+    _scheduleTypeaheadReset(settings);
     notifyListeners();
   }
 
@@ -225,16 +316,103 @@ class PanelNotifier extends ChangeNotifier {
   void typeaheadBackspace() {
     if (_filterQuery.isEmpty) return;
     _filterQuery = _filterQuery.substring(0, _filterQuery.length - 1);
-    if (_filterQuery.isEmpty) _isTypeahead = false;
+    if (_filterQuery.isEmpty) {
+      clearTypeahead();
+      return;
+    }
+    if (_typeaheadMode == QuickSearchMode.filter) {
+      _selectFirstVisibleMatch();
+    } else {
+      _jumpToMatch(refine: true);
+    }
+    _scheduleTypeaheadReset(_ref.read(quickSearchSettingsProvider));
     notifyListeners();
   }
 
-  /// Clear type-ahead on navigation/escape.
+  /// Move to the previous/next quick-search match (Up/Down while searching).
+  ///
+  /// Returns true when the key was consumed.
+  bool cycleTypeahead(int direction) {
+    if (!_isTypeahead) return false;
+    final matches = _typeaheadMatches();
+    if (matches.isEmpty) return false;
+    final current = cursorItem;
+    var index = current == null ? -1 : _indexOfIdentical(matches, current);
+    if (index < 0) {
+      index = direction > 0 ? 0 : matches.length - 1;
+    } else {
+      index = (index + direction) % matches.length;
+      if (index < 0) index += matches.length;
+    }
+    _setCursorToItem(matches[index]);
+    _scheduleTypeaheadReset(_ref.read(quickSearchSettingsProvider));
+    notifyListeners();
+    return true;
+  }
+
+  /// Clear type-ahead on navigation/escape/timeout.
   void clearTypeahead() {
+    _typeaheadResetTimer?.cancel();
     if (!_isTypeahead) return;
     _filterQuery = '';
     _isTypeahead = false;
     notifyListeners();
+  }
+
+  void _scheduleTypeaheadReset(QuickSearchSettings settings) {
+    _typeaheadResetTimer?.cancel();
+    if (settings.resetSeconds <= 0) return;
+    _typeaheadResetTimer = Timer(Duration(seconds: settings.resetSeconds), () {
+      if (_isTypeahead) clearTypeahead();
+    });
+  }
+
+  /// Quick filter: keep the cursor on its entry when it still matches,
+  /// otherwise move to the first visible match.
+  void _selectFirstVisibleMatch() {
+    final displayed = filteredFiles;
+    if (displayed == null || displayed.isEmpty) return;
+    final current = cursorItem;
+    if (current != null && _containsIdentical(displayed, current)) {
+      _setCursorToItem(current);
+      return;
+    }
+    final first = displayed.firstWhere(
+      (f) => f.name != '..',
+      orElse: () => displayed.first,
+    );
+    _setCursorToItem(first);
+  }
+
+  /// Quick search: select the next match after the cursor. When refining an
+  /// existing search, keep the current entry if it still matches.
+  void _jumpToMatch({required bool refine}) {
+    final matches = _typeaheadMatches();
+    if (matches.isEmpty) return;
+    final current = cursorItem;
+    if (refine && current != null && _containsIdentical(matches, current)) {
+      return;
+    }
+    final files = _files;
+    if (files == null || files.isEmpty) return;
+    final currentIndex = current == null ? -1 : files.indexOf(current);
+    for (var step = 1; step <= files.length; step++) {
+      final rawIndex = (currentIndex + step) % files.length;
+      final candidate = files[rawIndex];
+      if (_containsIdentical(matches, candidate)) {
+        _setCursorToItem(candidate);
+        return;
+      }
+    }
+  }
+
+  void _setCursorToItem(FileItem item) {
+    final files = _files;
+    if (files == null) return;
+    final index = _indexOfIdentical(files, item);
+    if (index < 0) return;
+    _cursorIndex = index;
+    _itemToScrollTo = item;
   }
 
   // --- Navigation history (Alt+Left / Alt+Right) ---
@@ -324,15 +502,26 @@ class PanelNotifier extends ChangeNotifier {
     _archiveSource =
         const PanelSourceService().enterArchive(archivePath, parentSource);
 
-    // On web, load archive bytes into memory for browsing.
-    if (kIsWeb && file.path != null) {
-      try {
-        _archiveBytes =
-            await _localFileService.readFile(file.path!, fileItem: file);
-      } catch (e) {
-        _log.warn('operation failed', e);
-        _archiveBytes = null;
+    // Load the archive through the platform service so macOS security-scoped
+    // bookmarks are honoured; the listing is decoded from these bytes.
+    _archiveBytes = null;
+    try {
+      if (side == PanelSide.local) {
+        await _localFileService.ensureAccess(archivePath);
+        _archiveBytes = await _localFileService.readFile(
+          archivePath,
+          fileItem: file,
+        );
+      } else {
+        final client = _ref.read(authProvider).client;
+        _archiveBytes = await client.downloadFileBytes(archivePath);
       }
+    } catch (e) {
+      _log.warn('archive open failed', e);
+      _archiveSource = null;
+      _ref.read(errorProvider).addError('Cannot open archive: $e');
+      notifyListeners();
+      return;
     }
 
     await _loadArchiveFiles();
@@ -373,25 +562,71 @@ class PanelNotifier extends ChangeNotifier {
   }
 
   Future<void> _loadArchiveFiles() async {
-    if (_archiveSource == null) return;
-    try {
-      if (kIsWeb && _archiveBytes != null) {
-        // Web: use in-memory bytes
-        _files = ArchiveService.listArchiveContentsFromBytes(
-          _archiveSource!.archivePath,
-          _archiveBytes!,
-          _archiveSource!.innerPath,
-        );
-      } else {
-        _files = await const PanelSourceService().listFiles(_archiveSource!);
-      }
+    final source = _archiveSource;
+    if (source == null) return;
+    final bytes = _archiveBytes;
+    if (bytes == null) {
+      // Fallback for sources without cached bytes (legacy path).
+      _files = await const PanelSourceService().listFiles(source);
       _sortFiles();
+      return;
+    }
+
+    ViewerArchive? archive;
+    try {
+      archive = await openViewerArchive(bytes, name: source.archivePath);
+      final prefix = source.innerPath.isEmpty
+          ? ''
+          : (source.innerPath.endsWith('/')
+              ? source.innerPath
+              : '${source.innerPath}/');
+      final items = <FileItem>[];
+      final folders = <String>{};
+      for (final member in archive.members) {
+        var name = member.name;
+        if (name.startsWith('./')) name = name.substring(2);
+        if (prefix.isNotEmpty && !name.startsWith(prefix)) continue;
+        if (name == prefix || name == source.innerPath) continue;
+        final relative = prefix.isEmpty ? name : name.substring(prefix.length);
+        if (relative.isEmpty) continue;
+        final slash = relative.indexOf('/');
+        if (slash == -1) {
+          if (member.isFile) {
+            items.add(FileItem(
+              name: relative,
+              path: '$prefix$relative',
+              isFolder: false,
+              size: member.size,
+            ));
+          }
+        } else {
+          final folder = relative.substring(0, slash);
+          if (folders.add(folder)) {
+            items.add(FileItem(
+              name: folder,
+              path: '$prefix$folder/',
+              isFolder: true,
+            ));
+          }
+        }
+      }
+      _files = items;
+      _sortFiles();
+    } on ArchivePasswordRequiredException {
+      _files = [];
+      _ref.read(errorProvider).addError('This archive is password-protected.');
+    } on ArchiveViewException catch (e) {
+      _files = [];
+      _ref.read(errorProvider).addError('Failed to read archive: ${e.message}');
     } catch (e) {
-      _log.warn('operation failed', e);
+      _log.warn('archive listing failed', e);
       _files = [];
       _ref.read(errorProvider).addError('Failed to read archive: $e');
+    } finally {
+      await archive?.close();
     }
   }
+
 
   // --- Multi-key sort ---
 
@@ -431,9 +666,11 @@ class PanelNotifier extends ChangeNotifier {
       return;
     }
     try {
-      final items = <FileItem>[];
-      const maxItems = 10000;
-      await _walkDirectory(currentPath, items, maxItems);
+      final items = await _localFileService.walkFiles(
+        currentPath,
+        includeHidden: _showHiddenFiles,
+        maxItems: 10000,
+      );
       final prev = cursorItem;
       _files = items;
       _sortFiles();
@@ -446,28 +683,7 @@ class PanelNotifier extends ChangeNotifier {
     }
   }
 
-  Future<void> _walkDirectory(
-      String dirPath, List<FileItem> items, int maxItems) async {
-    if (items.length >= maxItems) return;
-    final entities = await Directory(dirPath).list().toList();
-    for (final entity in entities) {
-      if (items.length >= maxItems) return;
-      final name = p.basename(entity.path);
-      if (!_showHiddenFiles && name.startsWith('.')) continue;
-      final stat = await entity.stat();
-      if (stat.type == FileSystemEntityType.directory) {
-        await _walkDirectory(entity.path, items, maxItems);
-      } else if (stat.type == FileSystemEntityType.file) {
-        items.add(FileItem(
-          name: name,
-          path: entity.path,
-          isFolder: false,
-          size: stat.size,
-          updatedAt: stat.modified,
-        ));
-      }
-    }
-  }
+
 
   String get currentPath {
     if (isInArchive) {
@@ -564,7 +780,7 @@ class PanelNotifier extends ChangeNotifier {
     }
     // Sync cursor to clicked item
     if (_files != null) {
-      final idx = _files!.indexOf(item);
+      final idx = _indexOfIdentical(_files!, item);
       if (idx != -1) _cursorIndex = idx;
     }
     // ".." cannot be selection-marked — clicking it just moves cursor
@@ -626,10 +842,27 @@ class PanelNotifier extends ChangeNotifier {
 
   // --- Cursor (keyboard focus, separate from selection marks) ---
 
+  /// Plain click: move the cursor and clear selection marks without marking
+  /// the clicked item (Total Commander / Double Commander behavior).
+  /// Ctrl/Shift clicks still select.
+  void setCursorOnly(FileItem item) {
+    if (_files == null) return;
+    final index = _indexOfIdentical(_files!, item);
+    if (index < 0) return;
+    if (_ref.read(activePanelProvider) != side) {
+      _ref.read(activePanelProvider.notifier).state = side;
+    }
+    _selection.clear();
+    _lastSelected = null;
+    _cursorIndex = index;
+    _itemToScrollTo = item;
+    notifyListeners();
+  }
+
   /// Set cursor to a specific item by reference.
   void setCursorToItem(FileItem item) {
     if (_files == null) return;
-    final idx = _files!.indexOf(item);
+    final idx = _indexOfIdentical(_files!, item);
     if (idx != -1) {
       _cursorIndex = idx;
       _itemToScrollTo = item;
@@ -637,13 +870,20 @@ class PanelNotifier extends ChangeNotifier {
     }
   }
 
-  /// Move cursor by [delta] rows. Clamps at list bounds.
+  /// Move cursor by [delta] rows within the displayed (filtered) list.
   void moveCursor(int delta) {
-    if (_files == null || _files!.isEmpty) return;
-    final newIdx = (_cursorIndex + delta).clamp(0, _files!.length - 1);
-    if (newIdx == _cursorIndex) return;
-    _cursorIndex = newIdx;
-    _itemToScrollTo = _files![_cursorIndex];
+    final displayed = filteredFiles;
+    if (displayed == null || displayed.isEmpty) return;
+    final current = cursorItem;
+    var position = current == null ? -1 : _indexOfIdentical(displayed, current);
+    if (position < 0) {
+      position = delta >= 0 ? 0 : displayed.length - 1;
+    } else {
+      position = (position + delta).clamp(0, displayed.length - 1);
+    }
+    final item = displayed[position];
+    if (current != null && identical(item, current)) return;
+    _setCursorToItem(item);
     notifyListeners();
   }
 
@@ -651,10 +891,12 @@ class PanelNotifier extends ChangeNotifier {
   /// When pressed on a folder with no calculated size yet, also triggers async
   /// folder size computation (shown inline in the size column, like DC).
   void spaceSelectAndAdvance() {
-    if (_files == null || _files!.isEmpty) return;
-    final idx = _cursorIndex.clamp(0, _files!.length - 1);
-    _cursorIndex = idx;
-    final item = _files![idx];
+    final displayed = filteredFiles;
+    if (displayed == null || displayed.isEmpty) return;
+    final current = cursorItem;
+    var idx = current == null ? 0 : _indexOfIdentical(displayed, current);
+    if (idx < 0) idx = 0;
+    final item = displayed[idx];
     // ".." cannot be marked
     if (item.name != '..') {
       if (_selection.contains(item)) {
@@ -671,9 +913,8 @@ class PanelNotifier extends ChangeNotifier {
         _calculateFolderSizeInBackground(item);
       }
     }
-    final next = (idx + 1).clamp(0, _files!.length - 1);
-    _cursorIndex = next;
-    _itemToScrollTo = _files![next];
+    final next = (idx + 1).clamp(0, displayed.length - 1);
+    _setCursorToItem(displayed[next]);
     notifyListeners();
   }
 
@@ -702,29 +943,34 @@ class PanelNotifier extends ChangeNotifier {
 
   /// Shift+Arrow: move cursor AND extend/shrink selection range.
   void shiftMoveCursor(int delta) {
-    if (_files == null || _files!.isEmpty) return;
-    final cur = _cursorIndex.clamp(0, _files!.length - 1);
-    final next = (cur + delta).clamp(0, _files!.length - 1);
+    final displayed = filteredFiles;
+    if (displayed == null || displayed.isEmpty) return;
+    final current = cursorItem;
+    var cur = current == null ? 0 : _indexOfIdentical(displayed, current);
+    if (cur < 0) cur = 0;
+    final next = (cur + delta).clamp(0, displayed.length - 1);
     if (next == cur) return;
     // Add items swept over to selection
     final start = cur < next ? cur : next;
     final end = cur < next ? next : cur;
     for (var i = start; i <= end; i++) {
-      _selection.add(_files![i]);
+      _selection.add(displayed[i]);
     }
-    _lastSelected = _files![next];
-    _cursorIndex = next;
-    _itemToScrollTo = _files![next];
+    _lastSelected = displayed[next];
+    _setCursorToItem(displayed[next]);
     notifyListeners();
   }
 
-  /// Jump cursor to an absolute index (clamped). Used for Home/End/PgUp/PgDn.
+  /// Jump cursor to an absolute index in the displayed list.
+  /// Used for Home/End/PgUp/PgDn.
   void moveCursorTo(int index) {
-    if (_files == null || _files!.isEmpty) return;
-    final newIdx = index.clamp(0, _files!.length - 1);
-    if (newIdx == _cursorIndex) return;
-    _cursorIndex = newIdx;
-    _itemToScrollTo = _files![_cursorIndex];
+    final displayed = filteredFiles;
+    if (displayed == null || displayed.isEmpty) return;
+    final newIdx = index.clamp(0, displayed.length - 1);
+    final item = displayed[newIdx];
+    final current = cursorItem;
+    if (current != null && identical(item, current)) return;
+    _setCursorToItem(item);
     notifyListeners();
   }
 
@@ -795,7 +1041,7 @@ class PanelNotifier extends ChangeNotifier {
       if (f.name != '..' && f.name.toLowerCase().startsWith(q)) {
         // Map displayed index back to _files index for _cursorIndex
         if (_files != null) {
-          final rawIdx = _files!.indexOf(f);
+          final rawIdx = _indexOfIdentical(_files!, f);
           if (rawIdx != -1) _cursorIndex = rawIdx;
         } else {
           _cursorIndex = idx;
@@ -891,6 +1137,33 @@ class PanelNotifier extends ChangeNotifier {
     }
   }
 
+  /// Explicitly ask the OS for access to [path] (or the current directory),
+  /// persist the security-scoped bookmark, and reload on success.
+  Future<bool> grantAccessToPath(String path) async {
+    if (side != PanelSide.local && !kIsWeb) return false;
+    final String target = path.isEmpty ? currentPath : path;
+    final String? granted = await _localFileService.requestDirectoryAccess(
+      initialDirectory: target,
+    );
+    if (granted == null) return false;
+    if (!await _localFileService.hasAccessToPath(target)) {
+      _ref.read(errorProvider).addError(
+            'Access to "$target" was not granted. Choose the folder itself '
+            'or one of its parent folders.',
+          );
+      return false;
+    }
+    _localPath = target;
+    await _loadLocalFiles();
+    _syncTabPath();
+    _pushHistory(currentPath);
+    notifyListeners();
+    return true;
+  }
+
+  Future<bool> grantAccessToCurrentPath() =>
+      grantAccessToPath(currentPath);
+
   Future<void> navigateToPath(String path, {FileItem? selectItem}) async {
     _log.info('navigateToPath: $path (side=$side, web=$kIsWeb)');
     _selection.clear();
@@ -901,16 +1174,25 @@ class PanelNotifier extends ChangeNotifier {
     }
     if (side == PanelSide.local) {
       if (!kIsWeb && !await _localFileService.hasAccessToPath(path)) {
-        final newGrant = await _localFileService.requestDirectoryAccess(
-            initialDirectory: path);
-        if (newGrant != null) {
-          path = newGrant;
-        } else {
+        final target = path;
+        final granted = await _localFileService.requestDirectoryAccess(
+          initialDirectory: p.dirname(target),
+        );
+        if (granted == null) {
           _ref.read(errorProvider).addError(
-                'Cannot access paths outside the granted directory.',
+                'Access to "$target" was not granted.',
               );
           return;
         }
+        if (!await _localFileService.hasAccessToPath(target)) {
+          _ref.read(errorProvider).addError(
+                'Access to "$target" was not granted. '
+                'Choose the folder that contains it.',
+              );
+          return;
+        }
+        // Stay on the requested path: the user granted a parent folder.
+        path = target;
       } else if (kIsWeb && !await _localFileService.hasAccessToPath(path)) {
         return;
       }
@@ -973,12 +1255,19 @@ class PanelNotifier extends ChangeNotifier {
 
   Future<void> pickLocalDirectory() async {
     _log.info('pickLocalDirectory (web=$kIsWeb)');
+    final target = _localPath;
     try {
       final dir = await _localFileService.requestDirectoryAccess(
-        initialDirectory: _localPath,
+        initialDirectory: target,
       );
       if (dir != null) {
-        _localPath = dir;
+        // If the previously requested folder is now accessible, stay there;
+        // otherwise navigate to the folder the user selected.
+        if (target != dir && await _localFileService.hasAccessToPath(target)) {
+          _localPath = target;
+        } else {
+          _localPath = dir;
+        }
         await _loadLocalFiles();
         notifyListeners();
       }
@@ -1411,9 +1700,19 @@ class PanelNotifier extends ChangeNotifier {
           _tabs.clear();
           for (final item in list) {
             final id = _nextTabId();
+            var path = (item['path'] as String?) ?? '/';
+            if (path.contains(':/')) {
+              // Old tab saved while browsing an archive: fall back to the
+              // real parent path (or home) instead of a virtual path.
+              final archive = path.split(':/').first;
+              path = archive.contains('/')
+                  ? archive.substring(0, archive.lastIndexOf('/'))
+                  : (Platform.environment['HOME'] ?? '/');
+              if (path.isEmpty) path = '/';
+            }
             _tabs.add(PanelTab(
               id: id,
-              path: item['path'] ?? '/',
+              path: path,
               isPinned: item['pinned'] == true,
             ));
           }
@@ -1495,6 +1794,7 @@ class PanelNotifier extends ChangeNotifier {
     _activeTabId = tabId;
     final tab = activeTab;
     if (tab != null) {
+      if (tab.path.contains(':/')) return;
       if (side == PanelSide.local) {
         _localPath = tab.path;
       } else {
@@ -1541,7 +1841,9 @@ class PanelNotifier extends ChangeNotifier {
   void _syncTabPath() {
     final tab = activeTab;
     if (tab != null) {
-      tab.path = currentPath;
+      // Never persist archive virtual paths (e.g. "file.zip:/"): they are not
+      // real directories and would break restart/restore.
+      tab.path = side == PanelSide.local ? _localPath : _remotePath;
       tab.updateLabel();
     }
     _saveTabs();
@@ -1588,6 +1890,9 @@ class PanelNotifier extends ChangeNotifier {
   }
 
   Future<void> _loadLocalFiles() async {
+    if (!kIsWeb && _localPath.contains(':/')) {
+      _localPath = await _localFileService.getSafeFallbackDirectory();
+    }
     _log.debug('_loadLocalFiles: $currentPath (web=$kIsWeb)');
     _isLoading = true;
     notifyListeners();
@@ -1922,6 +2227,7 @@ class PanelNotifier extends ChangeNotifier {
   @override
   void dispose() {
     _isDisposed = true;
+    _typeaheadResetTimer?.cancel();
     _refreshDebounce?.cancel();
     super.dispose();
   }

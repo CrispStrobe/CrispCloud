@@ -3,6 +3,7 @@
 // Native (non-web) shell process using dart:io.
 
 import 'dart:async';
+import 'dart:convert';
 import 'dart:io';
 
 /// Shell process wrapper.
@@ -12,8 +13,10 @@ class ShellProcess {
 
   ShellProcess._(this._process) {
     final controller = StreamController<String>.broadcast();
-    _process.stdout.listen((data) => controller.add(String.fromCharCodes(data)));
-    _process.stderr.listen((data) => controller.add(String.fromCharCodes(data)));
+    _process.stdout
+        .listen((data) => controller.add(utf8.decode(data, allowMalformed: true)));
+    _process.stderr
+        .listen((data) => controller.add(utf8.decode(data, allowMalformed: true)));
     _process.exitCode.then((_) => controller.close());
     _outputStream = controller.stream;
   }

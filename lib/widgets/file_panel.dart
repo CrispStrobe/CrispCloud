@@ -15,12 +15,12 @@ import '../services/panel_source_service.dart' show RemotePanelSource;
 import '../services/panel_view_mode_service.dart' show PanelViewMode;
 import 'file_column_view.dart';
 import 'file_grid_view.dart';
-import 'file_toolbar.dart';
 import 'file_list_view.dart' show FileListView, PanelDragData;
+import 'file_selection_bar.dart';
 import 'file_tree_view_stub.dart'
     if (dart.library.io) 'file_tree_view.dart';
-import 'drive_bar.dart';
 import 'panel_tab_bar.dart';
+import 'panel_header.dart';
 import '../l10n/app_localizations.dart';
 import '../screens/screen_dialogs.dart' show showConnectionDialogScreen;
 
@@ -44,21 +44,18 @@ class _FilePanelState extends ConsumerState<FilePanel> {
   static const _log = Log('FilePanel');
 
   bool _isDragging = false;
-  bool _isEditingPath = false;
+  String? _lastShownError;
   late final ScrollController _scrollController;
-  late final TextEditingController _pathController;
 
   @override
   void initState() {
     super.initState();
     _scrollController = ScrollController();
-    _pathController = TextEditingController();
   }
 
   @override
   void dispose() {
     _scrollController.dispose();
-    _pathController.dispose();
     super.dispose();
   }
 
@@ -66,23 +63,37 @@ class _FilePanelState extends ConsumerState<FilePanel> {
   Widget build(BuildContext context) {
     final panel = ref.watch(panelProvider(widget.side));
     final errors = ref.watch(errorProvider);
+    final lastError = errors.lastError;
 
-    // Show error if present
-    if (errors.lastError != null && widget.side == PanelSide.local) {
+    // Show each error once. Without clearing it, every rebuild re-queued a
+    // snackbar and the message appeared to never go away.
+    if (lastError != null &&
+        lastError.isNotEmpty &&
+        widget.side == PanelSide.local &&
+        lastError != _lastShownError) {
+      _lastShownError = lastError;
       WidgetsBinding.instance.addPostFrameCallback((_) {
-        if (context.mounted) {
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(
-              content: Text(errors.lastError!),
-              action: SnackBarAction(
-                label: 'Browse',
-                onPressed: () => panel.pickLocalDirectory(),
-              ),
-              duration: const Duration(seconds: 5),
+        if (!context.mounted) return;
+        final messenger = ScaffoldMessenger.of(context);
+        messenger.hideCurrentSnackBar();
+        messenger.showSnackBar(
+          SnackBar(
+            content: Text(lastError),
+            showCloseIcon: true,
+            behavior: SnackBarBehavior.floating,
+            action: SnackBarAction(
+              label: 'Grant access',
+              onPressed: () => ref.read(panelProvider(widget.side))
+                  .grantAccessToCurrentPath(),
             ),
-          );
-        }
+            duration: const Duration(seconds: 5),
+          ),
+        );
+        // Consume it so it is not shown again on the next build.
+        ref.read(errorProvider).clearLastError();
       });
+    } else if (lastError == null) {
+      _lastShownError = null;
     }
 
     final files = panel.filteredFiles;
@@ -297,63 +308,11 @@ class _FilePanelState extends ConsumerState<FilePanel> {
             onTabPinToggle: (id) => panel.toggleTabPin(id),
             onTabRenamed: (id, name) => panel.renameTab(id, name),
           ),
-          FileToolbar(
+          PanelHeader(
             side: widget.side,
-            currentPath: currentPath,
+            isActive: widget.isActive,
+            showSource: MediaQuery.sizeOf(context).width > 800,
           ),
-          DriveBar(side: widget.side),
-          if (currentPath != '/' && currentPath != '')
-            _isEditingPath
-                ? Padding(
-                    padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-                    child: Row(
-                      children: [
-                        Expanded(
-                          child: TextField(
-                            controller: _pathController,
-                            autofocus: true,
-                            style: const TextStyle(fontSize: 13),
-                            decoration: const InputDecoration(
-                              isDense: true,
-                              contentPadding: EdgeInsets.symmetric(horizontal: 8, vertical: 8),
-                              border: OutlineInputBorder(),
-                              hintText: 'Enter path...',
-                              prefixIcon: Icon(Icons.folder_open, size: 18),
-                            ),
-                            onSubmitted: (value) {
-                              if (value.isNotEmpty) {
-                                panel.navigateToPath(value);
-                              }
-                              setState(() => _isEditingPath = false);
-                            },
-                          ),
-                        ),
-                        IconButton(
-                          icon: const Icon(Icons.close, size: 18),
-                          tooltip: 'Cancel',
-                          onPressed: () => setState(() => _isEditingPath = false),
-                        ),
-                      ],
-                    ),
-                  )
-                : Row(
-                    children: [
-                      Expanded(
-                        child: FileBreadcrumbs(
-                          side: widget.side,
-                          currentPath: currentPath,
-                        ),
-                      ),
-                      IconButton(
-                        icon: const Icon(Icons.edit, size: 18),
-                        tooltip: 'Edit path',
-                        onPressed: () {
-                          _pathController.text = currentPath;
-                          setState(() => _isEditingPath = true);
-                        },
-                      ),
-                    ],
-                  ),
           // Search results header: shows when panel is displaying search results
           if (panel.showingSearchResults)
             Container(
@@ -440,18 +399,45 @@ class _FilePanelState extends ConsumerState<FilePanel> {
                                 padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
                                 child: Row(
                                   children: [
-                                    Icon(Icons.search, size: 16,
-                                        color: Theme.of(context).colorScheme.onInverseSurface),
+                                    Icon(
+                                      panel.isQuickFilterActive
+                                          ? Icons.filter_list
+                                          : Icons.search,
+                                      size: 16,
+                                      color: Theme.of(context)
+                                          .colorScheme
+                                          .onInverseSurface,
+                                    ),
                                     const SizedBox(width: 8),
                                     Expanded(
                                       child: Text(
-                                        panel.filterQuery,
+                                        (panel.isQuickFilterActive
+                                                ? 'Filter: '
+                                                : 'Find: ') +
+                                            panel.filterQuery,
                                         style: TextStyle(
                                           fontSize: 13,
-                                          color: Theme.of(context).colorScheme.onInverseSurface,
+                                          color: Theme.of(context)
+                                              .colorScheme
+                                              .onInverseSurface,
                                         ),
                                       ),
                                     ),
+                                    if (panel.typeaheadMatchCount > 0)
+                                      Padding(
+                                        padding:
+                                            const EdgeInsets.only(right: 8),
+                                        child: Text(
+                                          '${panel.typeaheadMatchPosition}/'
+                                          '${panel.typeaheadMatchCount}',
+                                          style: TextStyle(
+                                            fontSize: 12,
+                                            color: Theme.of(context)
+                                                .colorScheme
+                                                .onInverseSurface,
+                                          ),
+                                        ),
+                                      ),
                                     GestureDetector(
                                       onTap: () => panel.clearTypeahead(),
                                       child: Icon(Icons.close, size: 16,

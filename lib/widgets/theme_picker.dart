@@ -4,7 +4,6 @@
 
 import 'package:flutter/material.dart';
 import '../services/theme_service.dart';
-import '../l10n/app_localizations.dart';
 
 class ThemePickerDialog extends StatelessWidget {
   final ThemeService themeService;
@@ -15,6 +14,7 @@ class ThemePickerDialog extends StatelessWidget {
   Widget build(BuildContext context) {
     return AlertDialog(
       title: const Text('Choose Theme'),
+      scrollable: true,
       content: SizedBox(
         width: 340,
         child: Column(

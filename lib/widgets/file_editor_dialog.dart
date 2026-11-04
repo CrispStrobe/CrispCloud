@@ -19,10 +19,17 @@ import '../models/panel_side.dart';
 import '../providers/providers.dart';
 import '../l10n/app_localizations.dart';
 import '../services/log_service.dart';
+import 'office_editor_dialog.dart';
 
 /// Opens a full-screen editor dialog for the given file.
 void showFileEditorDialog(
     BuildContext context, WidgetRef ref, FileItem file, PanelSide side) {
+  // Office documents get the rich Word/Sheet/Slides editor instead of the
+  // plain-text editor.
+  if (isOfficeFileName(file.name)) {
+    unawaited(showOfficeEditorDialog(context, ref, file, side));
+    return;
+  }
   Navigator.of(context).push(MaterialPageRoute(
     fullscreenDialog: true,
     builder: (_) => _FileEditorPage(file: file, side: side),
@@ -278,12 +285,21 @@ class _FileEditorPageState extends ConsumerState<_FileEditorPage> {
       Uint8List bytes;
 
       if (widget.side == PanelSide.local && widget.file.path != null) {
-        if (kIsWeb) {
-          bytes = await ref.read(localFileServiceProvider).readFile(
-            widget.file.path!, fileItem: widget.file,
-          );
-        } else {
-          bytes = await File(widget.file.path!).readAsBytes();
+        final service = ref.read(localFileServiceProvider);
+        final path = widget.file.path!;
+        try {
+          bytes = await service.readFile(path, fileItem: widget.file);
+        } on FileSystemException catch (e) {
+          if (kIsWeb || e is! PathAccessException) rethrow;
+          final granted = await service.ensureAccess(path);
+          if (!granted) {
+            throw FileSystemException(
+              'Access to "$path" was not granted. Grant access to its folder '
+              'and try again.',
+              path,
+            );
+          }
+          bytes = await service.readFile(path, fileItem: widget.file);
         }
       } else {
         final remotePath = widget.file.path ?? '/${widget.file.name}';
@@ -342,11 +358,11 @@ class _FileEditorPageState extends ConsumerState<_FileEditorPage> {
       final bytes = Uint8List.fromList(utf8.encode(_controller.text));
 
       if (widget.side == PanelSide.local && widget.file.path != null) {
-        if (kIsWeb) {
-          await ref.read(localFileServiceProvider).saveFile(widget.file.path!, bytes);
-        } else {
-          await File(widget.file.path!).writeAsBytes(bytes);
-        }
+        // Always go through the service: it maintains the macOS security
+        // scope for sandboxed paths (web uses the FSA bridge).
+        await ref
+            .read(localFileServiceProvider)
+            .saveFile(widget.file.path!, bytes);
       } else {
         final remotePath = widget.file.path ?? '/${widget.file.name}';
         final fileName = p.basename(remotePath);

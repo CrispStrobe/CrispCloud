@@ -51,9 +51,18 @@ class FileListView extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final panel = ref.watch(panelProvider(side));
     final viewMode = ref.watch(panelViewModeProvider(side));
+
+    void handleTap(FileItem file, bool shiftKey, bool ctrlKey) {
+      if (shiftKey || ctrlKey) {
+        panel.toggleSelection(file, shiftKey: shiftKey, ctrlKey: ctrlKey);
+      } else {
+        panel.setCursorOnly(file);
+      }
+    }
     final isCompact = viewMode == PanelViewMode.full;
     final itemHeight = isCompact ? 26.0 : 64.0;
-    final cursorIndex = panel.cursorIndex;
+    // Cursor position within the displayed (possibly filtered) list.
+    final cursorIndex = panel.displayedCursorIndex;
 
     // Auto-scroll to cursor when it changes
     final itemToScroll = panel.itemToScrollTo;
@@ -116,7 +125,7 @@ class FileListView extends ConsumerWidget {
                 selectedFiles: selectedFiles,
                 showRelativePath: panel.isFlatView,
                 onTap: (shiftKey, ctrlKey) =>
-                    panel.toggleSelection(file, shiftKey: shiftKey, ctrlKey: ctrlKey),
+                    handleTap(file, shiftKey, ctrlKey),
                 onDoubleTap: () => panel.navigateInto(file),
                 onSecondaryTap: (details) =>
                     showFileContextMenu(context, ref, side, file, details.globalPosition),
@@ -130,9 +139,7 @@ class FileListView extends ConsumerWidget {
               isCursor: isCursor,
               selectedFiles: selectedFiles,
               showRelativePath: panel.isFlatView,
-              onTap: (shiftKey, ctrlKey) {
-                panel.toggleSelection(file, shiftKey: shiftKey, ctrlKey: ctrlKey);
-              },
+              onTap: (shiftKey, ctrlKey) => handleTap(file, shiftKey, ctrlKey),
               onDoubleTap: () => panel.navigateInto(file),
               onSecondaryTap: (details) => showFileContextMenu(context, ref, side, file, details.globalPosition),
             );
@@ -167,21 +174,39 @@ class FileListView extends ConsumerWidget {
           final isShift = HardwareKeyboard.instance.isShiftPressed;
           final p = ref.read(panelProvider(side));
 
-          if (event.logicalKey == LogicalKeyboardKey.arrowDown) {
-            isShift ? p.shiftMoveCursor(1) : p.moveCursor(1);
-            return KeyEventResult.handled;
-          }
-          if (event.logicalKey == LogicalKeyboardKey.arrowUp) {
-            isShift ? p.shiftMoveCursor(-1) : p.moveCursor(-1);
+          if (event.logicalKey == LogicalKeyboardKey.arrowDown ||
+              event.logicalKey == LogicalKeyboardKey.arrowUp) {
+            final direction =
+                event.logicalKey == LogicalKeyboardKey.arrowDown ? 1 : -1;
+            if (isShift) {
+              p.shiftMoveCursor(direction);
+              return KeyEventResult.handled;
+            }
+            if (p.isTypeahead) {
+              final settings = ref.read(quickSearchSettingsProvider);
+              if (settings.arrowNavigation && p.cycleTypeahead(direction)) {
+                return KeyEventResult.handled;
+              }
+              // Arrows end the search when cycling is disabled.
+              if (!settings.arrowNavigation) p.clearTypeahead();
+            }
+            p.moveCursor(direction);
             return KeyEventResult.handled;
           }
           if (event.logicalKey == LogicalKeyboardKey.space ||
               event.logicalKey == LogicalKeyboardKey.insert) {
+            // While typing a quick search, Space belongs to the query.
+            if (event.logicalKey == LogicalKeyboardKey.space &&
+                p.isTypeahead) {
+              p.typeaheadAppend(' ');
+              return KeyEventResult.handled;
+            }
             p.spaceSelectAndAdvance();
             return KeyEventResult.handled;
           }
           if (event.logicalKey == LogicalKeyboardKey.enter) {
             final item = p.cursorItem;
+            if (p.isTypeahead) p.clearTypeahead();
             if (item != null) p.navigateInto(item);
             return KeyEventResult.handled;
           }
@@ -190,7 +215,7 @@ class FileListView extends ConsumerWidget {
             return KeyEventResult.handled;
           }
           if (event.logicalKey == LogicalKeyboardKey.end) {
-            p.moveCursorTo((p.files?.length ?? 1) - 1);
+            p.moveCursorTo((p.displayedFiles?.length ?? 1) - 1);
             return KeyEventResult.handled;
           }
           if (event.logicalKey == LogicalKeyboardKey.pageDown ||
@@ -225,11 +250,14 @@ class FileListView extends ConsumerWidget {
               p.typeaheadBackspace();
               return KeyEventResult.handled;
             }
-            // Printable char: enter type-ahead mode (accumulates + filters)
+            // Printable char: quick search / quick filter.
             final char = event.character;
-            if (char != null && char.isNotEmpty && char.codeUnitAt(0) >= 32) {
-              p.typeaheadAppend(char);
-              return KeyEventResult.handled;
+            if (char != null && char.isNotEmpty) {
+              final settings = ref.read(quickSearchSettingsProvider);
+              if (settings.mode != QuickSearchMode.off) {
+                p.typeaheadAppend(char);
+                return KeyEventResult.handled;
+              }
             }
           }
           return KeyEventResult.ignored;

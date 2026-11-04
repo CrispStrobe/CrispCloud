@@ -20,6 +20,8 @@
 import UIKit
 import Flutter
 import Intents
+import PDFKit
+import QuickLook
 
 @available(iOS 13.0, *)
 class SceneDelegate: UIResponder, UIWindowSceneDelegate {
@@ -30,6 +32,9 @@ class SceneDelegate: UIResponder, UIWindowSceneDelegate {
     private var multiWindowChannel: FlutterMethodChannel?
     private var siriChannel: FlutterMethodChannel?
     private var shareExtChannel: FlutterMethodChannel?
+    private var pdfTextChannel: FlutterMethodChannel?
+    private var systemPreviewChannel: FlutterMethodChannel?
+    private var quickLookController: UIDocumentInteractionController?
 
     // MARK: - Scene lifecycle
 
@@ -102,6 +107,60 @@ class SceneDelegate: UIResponder, UIWindowSceneDelegate {
         )
         siriChannel?.setMethodCallHandler { [weak self] call, result in
             self?.handleSiriCall(call, result: result)
+        }
+
+        // PDF text-layer extraction (PDFKit) for the F3 viewer.
+        pdfTextChannel = FlutterMethodChannel(
+            name: "crispcloud/pdf_text",
+            binaryMessenger: messenger
+        )
+        pdfTextChannel?.setMethodCallHandler { call, result in
+            guard call.method == "extractText",
+                  let args = call.arguments as? [String: Any],
+                  let path = args["path"] as? String else {
+                result(FlutterMethodNotImplemented)
+                return
+            }
+            guard let document = PDFDocument(url: URL(fileURLWithPath: path)) else {
+                result(FlutterError(code: "pdf_open_failed",
+                                    message: "Could not open the PDF document",
+                                    details: nil))
+                return
+            }
+            result(document.string ?? "")
+        }
+
+        // Quick Look system preview (Office files, especially legacy .ppt).
+        systemPreviewChannel = FlutterMethodChannel(
+            name: "crispcloud/system_preview",
+            binaryMessenger: messenger
+        )
+        systemPreviewChannel?.setMethodCallHandler { [weak self] call, result in
+            guard call.method == "show",
+                  let args = call.arguments as? [String: Any],
+                  let path = args["path"] as? String else {
+                result(FlutterMethodNotImplemented)
+                return
+            }
+            guard FileManager.default.fileExists(atPath: path) else {
+                result(FlutterError(code: "preview_missing",
+                                    message: "Preview file not found",
+                                    details: nil))
+                return
+            }
+            let controller = UIDocumentInteractionController(
+                url: URL(fileURLWithPath: path)
+            )
+            controller.name = args["title"] as? String ?? "Preview"
+            controller.delegate = self
+            self?.quickLookController = controller
+            if controller.presentPreview(animated: true) {
+                result(nil)
+            } else {
+                result(FlutterError(code: "preview_failed",
+                                    message: "Quick Look preview is unavailable",
+                                    details: nil))
+            }
         }
 
         // Share extension channel
@@ -345,5 +404,15 @@ class SceneDelegate: UIResponder, UIWindowSceneDelegate {
         let interaction = INInteraction(intent: inShortcut.intent ?? INIntent(),
                                         response: nil)
         interaction.donate(completion: nil)
+    }
+}
+
+
+@available(iOS 13.0, *)
+extension SceneDelegate: UIDocumentInteractionControllerDelegate {
+    func documentInteractionControllerViewControllerForPreview(
+        _ controller: UIDocumentInteractionController
+    ) -> UIViewController {
+        return window?.rootViewController ?? UIViewController()
     }
 }

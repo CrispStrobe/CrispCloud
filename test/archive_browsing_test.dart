@@ -3,7 +3,6 @@
 // Tests for archive-as-folder browsing (Phase 1.1).
 
 import 'dart:io';
-import 'dart:typed_data';
 import 'package:archive/archive.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:path/path.dart' as p;
@@ -54,7 +53,7 @@ void main() {
       archive.addFile(ArchiveFile('subdir/nested.txt', 20, List.filled(20, 66)));
       archive.addFile(ArchiveFile('subdir/deep/deep.txt', 5, List.filled(5, 67)));
 
-      final zipBytes = ZipEncoder().encode(archive)!;
+      final zipBytes = ZipEncoder().encode(archive);
       zipPath = p.join(tempDir, 'test.zip');
       await File(zipPath).writeAsBytes(zipBytes);
     });
@@ -102,7 +101,7 @@ void main() {
       tempDir = (await Directory.systemTemp.createTemp('extract_test_')).path;
       final archive = Archive();
       archive.addFile(ArchiveFile('hello.txt', 5, [72, 101, 108, 108, 111])); // "Hello"
-      final zipBytes = ZipEncoder().encode(archive)!;
+      final zipBytes = ZipEncoder().encode(archive);
       zipPath = p.join(tempDir, 'test.zip');
       await File(zipPath).writeAsBytes(zipBytes);
     });
@@ -139,8 +138,7 @@ void main() {
       const parent = LocalPanelSource('/home/user');
       final root = service.enterArchive('/tmp/test.zip', parent);
       final sub = root.withPath('subdir/');
-      expect(sub is ArchivePanelSource, isTrue);
-      expect((sub as ArchivePanelSource).innerPath, 'subdir/');
+      expect(sub.innerPath, 'subdir/');
       expect(sub.archivePath, '/tmp/test.zip');
     });
 

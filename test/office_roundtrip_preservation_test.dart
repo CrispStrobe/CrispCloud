@@ -1,0 +1,80 @@
+import 'dart:io';
+import 'dart:convert';
+import 'dart:typed_data';
+
+import 'package:archive/archive.dart';
+import 'package:flutter_test/flutter_test.dart';
+import 'package:quds_office_editor/quds_office_editor.dart';
+import 'package:xml/xml.dart' as xml;
+
+List<String> _footnoteTexts(Uint8List bytes) {
+  final Map<String, Uint8List> parts = _parts(bytes);
+  final String xmlText = utf8.decode(parts['word/footnotes.xml']!);
+  final xml.XmlDocument doc = xml.XmlDocument.parse(xmlText);
+  return doc.descendants
+      .whereType<xml.XmlElement>()
+      .where((xml.XmlElement e) => e.name.local == 'footnote')
+      .where((xml.XmlElement e) =>
+          !e.attributes.any((xml.XmlAttribute a) => a.name.local == 'type'))
+      .map((xml.XmlElement e) => e.descendants
+          .whereType<xml.XmlElement>()
+          .where((xml.XmlElement t) => t.name.local == 't')
+          .map((xml.XmlElement t) => t.innerText)
+          .join())
+      .where((String text) => text.isNotEmpty)
+      .toList();
+}
+
+Map<String, Uint8List> _parts(Uint8List bytes) {
+  final Archive archive = ZipDecoder().decodeBytes(bytes);
+  return <String, Uint8List>{
+    for (final ArchiveFile file in archive.files)
+      if (file.isFile) file.name: Uint8List.fromList(file.content),
+  };
+}
+
+void main() {
+  TestWidgetsFlutterBinding.ensureInitialized();
+
+  test('Quds preserves footnotes across an unedited save', () {
+    final Uint8List original =
+        File('test/fixtures/footnote.docx').readAsBytesSync();
+    final WordEditorController controller =
+        WordEditorController.fromBytes(original);
+    addTearDown(controller.dispose);
+
+    final Uint8List saved = controller.saveBytes();
+    final Map<String, Uint8List> after = _parts(saved);
+
+    expect(after.containsKey('word/footnotes.xml'), isTrue);
+    expect(_footnoteTexts(saved), <String>[
+      'First footnote text.',
+      'Second footnote text.',
+    ]);
+    expect(_footnoteTexts(original), _footnoteTexts(saved));
+
+    final WordEditorController reopened =
+        WordEditorController.fromBytes(saved);
+    addTearDown(reopened.dispose);
+    expect(reopened.document.footnotes.length, 2);
+    expect(reopened.document.footnotes.first.text, 'First footnote text.');
+  });
+
+  test('Quds preserves footnotes across a minimal edit', () {
+    final Uint8List original =
+        File('test/fixtures/footnote.docx').readAsBytesSync();
+    final WordEditorController controller =
+        WordEditorController.fromBytes(original);
+    addTearDown(controller.dispose);
+
+    controller.insertText('X');
+    final Uint8List saved = controller.saveBytes();
+    expect(_footnoteTexts(original), _footnoteTexts(saved));
+
+    final WordEditorController reopened =
+        WordEditorController.fromBytes(saved);
+    addTearDown(reopened.dispose);
+    expect(reopened.document.footnotes.length, 2);
+    expect(reopened.document.paragraphs.first.text, startsWith('X'));
+  });
+}
