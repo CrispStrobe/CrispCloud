@@ -125,6 +125,24 @@ void main() {
       expect(length, contains('12xx'), reason: language);
       expect(length, isNot(contains('ReportFormatException')),
           reason: language);
+      final nonNumber = strings.diagnostic('"12x" is not a number');
+      expect(nonNumber, contains('12x'), reason: language);
+      expect(nonNumber, isNot('"12x" is not a number'), reason: language);
+      final badValue = strings.diagnostic('"{1}" is not a valid date');
+      expect(badValue, contains('{1}'), reason: language);
+      expect(badValue, contains('date'), reason: language);
+      expect(badValue, isNot('"{1}" is not a valid date'), reason: language);
+      final duplicate =
+          strings.diagnostic('Element name "Revenue" is used more than once');
+      expect(duplicate, contains('Revenue'), reason: language);
+      expect(duplicate, isNot('Element name "Revenue" is used more than once'),
+          reason: language);
+      final mismatch =
+          strings.diagnostic('RowTemplate has 3 cells for 5 columns');
+      expect(mismatch, contains('3'), reason: language);
+      expect(mismatch, contains('5'), reason: language);
+      expect(mismatch, isNot('RowTemplate has 3 cells for 5 columns'),
+          reason: language);
       expect(strings.diagnostic('unrecognized host error'),
           'unrecognized host error');
     }

@@ -116,6 +116,19 @@ class ReportDesignerStrings {
   }
 
   static final List<(RegExp, String)> _dynamicPatterns = [
+    (RegExp(r'^"(.*)" is not a number$'), '"{0}" is not a number'),
+    (
+      RegExp(r'^"(.*)" is not a valid (boolean|date)$'),
+      '"{0}" is not a valid {1}',
+    ),
+    (
+      RegExp(r'^Element name "(.*)" is used more than once$'),
+      'Element name "{0}" is used more than once',
+    ),
+    (
+      RegExp(r'^RowTemplate has (\d+) cells for (\d+) columns$'),
+      'RowTemplate has {0} cells for {1} columns',
+    ),
     (RegExp(r'^Invalid length "(.*)"$'), 'Invalid length "{0}"'),
     (
       RegExp(r'^Unknown length unit "(.*)" in "(.*)"$'),
@@ -407,6 +420,12 @@ class ReportDesignerStrings {
   };
 
   static const Map<String, String> _de = <String, String>{
+    "\"{0}\" is not a number": "„{0}“ ist keine Zahl",
+    "\"{0}\" is not a valid {1}": "„{0}“ ist kein gültiger Wert vom Typ {1}",
+    "Element name \"{0}\" is used more than once":
+        "Der Elementname „{0}“ wird mehrfach verwendet",
+    "RowTemplate has {0} cells for {1} columns":
+        "RowTemplate hat {0} Zellen für {1} Spalten",
     "Invalid length \"{0}\"": "Ungültige Länge \"{0}\"",
     "Unknown length unit \"{0}\" in \"{1}\"":
         "Unbekannte Längeneinheit \"{0}\" in \"{1}\"",
@@ -1119,6 +1138,12 @@ class ReportDesignerStrings {
   };
 
   static const Map<String, String> _fr = <String, String>{
+    "\"{0}\" is not a number": "« {0} » n’est pas un nombre",
+    "\"{0}\" is not a valid {1}": "« {0} » n’est pas une valeur {1} valide",
+    "Element name \"{0}\" is used more than once":
+        "Le nom d’élément « {0} » est utilisé plusieurs fois",
+    "RowTemplate has {0} cells for {1} columns":
+        "RowTemplate comporte {0} cellules pour {1} colonnes",
     "Invalid length \"{0}\"": "Longueur invalide \"{0}\"",
     "Unknown length unit \"{0}\" in \"{1}\"":
         "Unité de longueur inconnue \"{0}\" dans \"{1}\"",
@@ -1835,6 +1860,12 @@ class ReportDesignerStrings {
   };
 
   static const Map<String, String> _es = <String, String>{
+    "\"{0}\" is not a number": "«{0}» no es un número",
+    "\"{0}\" is not a valid {1}": "«{0}» no es un valor {1} válido",
+    "Element name \"{0}\" is used more than once":
+        "El nombre de elemento «{0}» se usa más de una vez",
+    "RowTemplate has {0} cells for {1} columns":
+        "RowTemplate tiene {0} celdas para {1} columnas",
     "Invalid length \"{0}\"": "Longitud no válida \"{0}\"",
     "Unknown length unit \"{0}\" in \"{1}\"":
         "Unidad de longitud desconocida \"{0}\" en \"{1}\"",
@@ -2548,6 +2579,12 @@ class ReportDesignerStrings {
   };
 
   static const Map<String, String> _pt = <String, String>{
+    "\"{0}\" is not a number": "«{0}» não é um número",
+    "\"{0}\" is not a valid {1}": "«{0}» não é um valor {1} válido",
+    "Element name \"{0}\" is used more than once":
+        "O nome do elemento «{0}» é usado mais de uma vez",
+    "RowTemplate has {0} cells for {1} columns":
+        "RowTemplate tem {0} células para {1} colunas",
     "Invalid length \"{0}\"": "Comprimento inválido \"{0}\"",
     "Unknown length unit \"{0}\" in \"{1}\"":
         "Unidade de comprimento desconhecida \"{0}\" em \"{1}\"",
@@ -3262,6 +3299,11 @@ class ReportDesignerStrings {
   };
 
   static const Map<String, String> _zh = <String, String>{
+    "\"{0}\" is not a number": "“{0}”不是数字",
+    "\"{0}\" is not a valid {1}": "“{0}”不是有效的 {1} 值",
+    "Element name \"{0}\" is used more than once": "元素名称“{0}”被多次使用",
+    "RowTemplate has {0} cells for {1} columns":
+        "RowTemplate 有 {0} 个单元格，对应 {1} 列",
     "Invalid length \"{0}\"": "无效长度“{0}”",
     "Unknown length unit \"{0}\" in \"{1}\"": "“{1}”中存在未知长度单位“{0}”",
     "Subreport needs a template name": "子报告需要模板名称",
@@ -3920,6 +3962,11 @@ class ReportDesignerStrings {
   };
 
   static const Map<String, String> _ja = <String, String>{
+    "\"{0}\" is not a number": "「{0}」は数値ではありません",
+    "\"{0}\" is not a valid {1}": "「{0}」は有効な {1} 値ではありません",
+    "Element name \"{0}\" is used more than once": "要素名「{0}」が複数回使用されています",
+    "RowTemplate has {0} cells for {1} columns":
+        "RowTemplate には {1} 列に対して {0} 個のセルがあります",
     "Invalid length \"{0}\"": "無効な長さ「{0}」",
     "Unknown length unit \"{0}\" in \"{1}\"": "「{1}」の長さの単位「{0}」は不明です",
     "Subreport needs a template name": "サブレポートにはテンプレート名が必要です",
@@ -4591,6 +4638,12 @@ class ReportDesignerStrings {
   };
 
   static const Map<String, String> _ko = <String, String>{
+    "\"{0}\" is not a number": "“{0}”은(는) 숫자가 아닙니다",
+    "\"{0}\" is not a valid {1}": "“{0}”은(는) 유효한 {1} 값이 아닙니다",
+    "Element name \"{0}\" is used more than once":
+        "요소 이름 “{0}”이(가) 여러 번 사용되었습니다",
+    "RowTemplate has {0} cells for {1} columns":
+        "RowTemplate에 {1}개 열에 대한 셀이 {0}개 있습니다",
     "Invalid length \"{0}\"": "잘못된 길이 \"{0}\"",
     "Unknown length unit \"{0}\" in \"{1}\"":
         "\"{1}\"의 길이 단위 \"{0}\"을(를) 알 수 없습니다",
@@ -5270,6 +5323,12 @@ class ReportDesignerStrings {
   };
 
   static const Map<String, String> _arabic = <String, String>{
+    "\"{0}\" is not a number": "\"{0}\" ليس رقمًا",
+    "\"{0}\" is not a valid {1}": "\"{0}\" ليست قيمة {1} صالحة",
+    "Element name \"{0}\" is used more than once":
+        "اسم العنصر \"{0}\" مستخدم أكثر من مرة",
+    "RowTemplate has {0} cells for {1} columns":
+        "يحتوي RowTemplate على {0} خلية مقابل {1} عمود",
     "Invalid length \"{0}\"": "طول غير صالح \"{0}\"",
     "Unknown length unit \"{0}\" in \"{1}\"":
         "وحدة طول غير معروفة \"{0}\" في \"{1}\"",
