@@ -9,6 +9,7 @@ import '../models/file_item.dart';
 import '../services/log_service.dart';
 import '../models/panel_side.dart';
 import '../providers/providers.dart';
+import '../l10n/panel_error_strings.dart';
 import '../providers/panel_source_provider.dart' show panelSourceProvider;
 import '../providers/toolbar_provider.dart' show columnWidthsProvider, panelViewModeProvider;
 import '../services/panel_source_service.dart' show RemotePanelSource;
@@ -64,7 +65,8 @@ class _FilePanelState extends ConsumerState<FilePanel> {
   Widget build(BuildContext context) {
     final panel = ref.watch(panelProvider(widget.side));
     final errors = ref.watch(errorProvider);
-    final lastError = errors.lastError;
+    final lastAppError = errors.lastAppError;
+    final lastError = lastAppError?.message;
 
     // Show each error once. Without clearing it, every rebuild re-queued a
     // snackbar and the message appeared to never go away.
@@ -79,7 +81,7 @@ class _FilePanelState extends ConsumerState<FilePanel> {
         messenger.hideCurrentSnackBar();
         messenger.showSnackBar(
           SnackBar(
-            content: Text(lastError),
+            content: Text(localizedPanelError(context, lastAppError!)),
             showCloseIcon: true,
             behavior: SnackBarBehavior.floating,
             action: SnackBarAction(

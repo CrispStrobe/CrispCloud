@@ -519,7 +519,7 @@ class PanelNotifier extends ChangeNotifier {
     } catch (e) {
       _log.warn('archive open failed', e);
       _archiveSource = null;
-      _ref.read(errorProvider).addError('Cannot open archive: $e');
+      _ref.read(errorProvider).addError('Cannot open archive: $e', code: PanelErrorCode.archiveOpen, arguments: {'error': e.toString()});
       notifyListeners();
       return;
     }
@@ -614,14 +614,14 @@ class PanelNotifier extends ChangeNotifier {
       _sortFiles();
     } on ArchivePasswordRequiredException {
       _files = [];
-      _ref.read(errorProvider).addError('This archive is password-protected.');
+      _ref.read(errorProvider).addError('This archive is password-protected.', code: PanelErrorCode.archivePassword);
     } on ArchiveViewException catch (e) {
       _files = [];
-      _ref.read(errorProvider).addError('Failed to read archive: ${e.message}');
+      _ref.read(errorProvider).addError('Failed to read archive: ${e.message}', code: PanelErrorCode.archiveRead, arguments: {'error': e.message});
     } catch (e) {
       _log.warn('archive listing failed', e);
       _files = [];
-      _ref.read(errorProvider).addError('Failed to read archive: $e');
+      _ref.read(errorProvider).addError('Failed to read archive: $e', code: PanelErrorCode.archiveRead, arguments: {'error': e.toString()});
     } finally {
       await archive?.close();
     }
@@ -661,7 +661,7 @@ class PanelNotifier extends ChangeNotifier {
     if (kIsWeb || side != PanelSide.local) {
       _ref
           .read(errorProvider)
-          .addError('Flat view is only available for local directories');
+          .addError('Flat view is only available for local directories', code: PanelErrorCode.flatLocal);
       _isFlatView = false;
       return;
     }
@@ -678,7 +678,7 @@ class PanelNotifier extends ChangeNotifier {
       notifyListeners();
     } catch (e) {
       _log.warn('operation failed', e);
-      _ref.read(errorProvider).addError('Flat view failed: $e');
+      _ref.read(errorProvider).addError('Flat view failed: $e', code: PanelErrorCode.flatFailed, arguments: {'error': e.toString()});
       _isFlatView = false;
     }
   }
@@ -1150,6 +1150,7 @@ class PanelNotifier extends ChangeNotifier {
       _ref.read(errorProvider).addError(
             'Access to "$target" was not granted. Choose the folder itself '
             'or one of its parent folders.',
+            code: PanelErrorCode.accessParent, arguments: {'path': target},
           );
       return false;
     }
@@ -1181,6 +1182,7 @@ class PanelNotifier extends ChangeNotifier {
         if (granted == null) {
           _ref.read(errorProvider).addError(
                 'Access to "$target" was not granted.',
+                code: PanelErrorCode.accessDenied, arguments: {'path': target},
               );
           return;
         }
@@ -1188,6 +1190,7 @@ class PanelNotifier extends ChangeNotifier {
           _ref.read(errorProvider).addError(
                 'Access to "$target" was not granted. '
                 'Choose the folder that contains it.',
+                code: PanelErrorCode.accessContaining, arguments: {'path': target},
               );
           return;
         }
@@ -1273,7 +1276,7 @@ class PanelNotifier extends ChangeNotifier {
       }
     } catch (e) {
       _log.warn('operation failed', e);
-      _ref.read(errorProvider).addError('Error picking directory: $e');
+      _ref.read(errorProvider).addError('Error picking directory: $e', code: PanelErrorCode.pickFailed, arguments: {'error': e.toString()});
     }
   }
 
@@ -1338,7 +1341,7 @@ class PanelNotifier extends ChangeNotifier {
       }
     } catch (e) {
       _log.warn('operation failed', e);
-      errors.addError('Delete failed: $e');
+      errors.addError('Delete failed: $e', code: PanelErrorCode.deleteFailed, arguments: {'error': e.toString()});
       for (final file in files) {
         final src = file.path ?? p.posix.join(_remotePath, file.name);
         await audit.logError(
@@ -1429,7 +1432,7 @@ class PanelNotifier extends ChangeNotifier {
       await refresh();
     } catch (e) {
       _log.warn('operation failed', e);
-      _ref.read(errorProvider).addError('Rename failed: $e');
+      _ref.read(errorProvider).addError('Rename failed: $e', code: PanelErrorCode.renameFailed, arguments: {'error': e.toString()});
       await audit.logError(
         operation: AuditOperation.rename,
         sourcePath: src,
@@ -1474,7 +1477,7 @@ class PanelNotifier extends ChangeNotifier {
       await refresh();
     } catch (e) {
       _log.warn('operation failed', e);
-      _ref.read(errorProvider).addError('Create folder failed: $e');
+      _ref.read(errorProvider).addError('Create folder failed: $e', code: PanelErrorCode.createFailed, arguments: {'error': e.toString()});
       await audit.logError(
         operation: AuditOperation.createFolder,
         sourcePath: folderPath,
@@ -1541,7 +1544,7 @@ class PanelNotifier extends ChangeNotifier {
       clearSelection();
     } catch (e) {
       _log.warn('operation failed', e);
-      _ref.read(errorProvider).addError('Move failed: $e');
+      _ref.read(errorProvider).addError('Move failed: $e', code: PanelErrorCode.moveFailed, arguments: {'error': e.toString()});
       for (final file in files) {
         final src = file.path ?? p.posix.join(_remotePath, file.name);
         await audit.logError(
@@ -1625,7 +1628,7 @@ class PanelNotifier extends ChangeNotifier {
       await refresh();
     } catch (e) {
       _log.warn('operation failed', e);
-      _ref.read(errorProvider).addError('Copy failed: $e');
+      _ref.read(errorProvider).addError('Copy failed: $e', code: PanelErrorCode.copyFailed, arguments: {'error': e.toString()});
       for (final file in files) {
         final src = file.path ?? p.posix.join(_remotePath, file.name);
         await audit.logError(
@@ -1858,7 +1861,7 @@ class PanelNotifier extends ChangeNotifier {
           Platform.isMacOS &&
           _localFileService.grantedBasePath == null) {
         _ref.read(errorProvider).addError(
-              'Please select a base directory to grant access (e.g., your home folder)',
+              'Please select a base directory to grant access (e.g., your home folder)', code: PanelErrorCode.selectBase,
             );
         final grantedPath = await _localFileService.requestDirectoryAccess(
           initialDirectory: await _localFileService.getSafeFallbackDirectory(),
@@ -1872,7 +1875,7 @@ class PanelNotifier extends ChangeNotifier {
           _ref.read(errorProvider).clearErrors();
           _ref
               .read(errorProvider)
-              .addError('Access cancelled. Using fallback directory.');
+              .addError('Access cancelled. Using fallback directory.', code: PanelErrorCode.accessCancelled);
         }
       }
       await _loadLocalFiles();
@@ -1905,7 +1908,7 @@ class PanelNotifier extends ChangeNotifier {
         if (!kIsWeb) {
           _ref
               .read(errorProvider)
-              .addError('Local file access is not supported on this platform.');
+              .addError('Local file access is not supported on this platform.', code: PanelErrorCode.localUnsupported);
         }
         _log.warn('listDirectory returned null for "$currentPath"');
         notifyListeners();
@@ -2034,7 +2037,8 @@ class PanelNotifier extends ChangeNotifier {
               e.toString().contains('Operation not permitted'))) {
         _files = [];
         _ref.read(errorProvider).addError(
-            'Permission denied. Use the Browse button to grant access.');
+            'Permission denied. Use the Browse button to grant access.',
+            code: PanelErrorCode.permissionDenied);
         notifyListeners();
         return;
       }

@@ -5,12 +5,23 @@
 import 'package:flutter/foundation.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+/// App-authored panel failures with data for localized presentation.
+enum PanelErrorCode {
+  archiveOpen, archivePassword, archiveRead, flatLocal, flatFailed,
+  accessParent, accessDenied, accessContaining, pickFailed, deleteFailed,
+  renameFailed, createFailed, moveFailed, copyFailed, selectBase,
+  accessCancelled, localUnsupported, permissionDenied,
+}
+
 class AppError {
   final String message;
   final DateTime timestamp;
   final String? context;
+  final PanelErrorCode? code;
+  final Map<String, Object> arguments;
 
-  AppError(this.message, {this.context}) : timestamp = DateTime.now();
+  AppError(this.message, {this.context, this.code, Map<String, Object> arguments = const {}})
+      : arguments = Map.unmodifiable(arguments), timestamp = DateTime.now();
 
   @override
   String toString() => message;
@@ -21,10 +32,12 @@ class ErrorNotifier extends ChangeNotifier {
 
   List<AppError> get errors => List.unmodifiable(_errors);
   String? get lastError => _errors.isEmpty ? null : _errors.last.message;
+  AppError? get lastAppError => _errors.isEmpty ? null : _errors.last;
   bool get hasErrors => _errors.isNotEmpty;
 
-  void addError(String message, {String? context}) {
-    _errors.add(AppError(message, context: context));
+  void addError(String message, {String? context, PanelErrorCode? code,
+      Map<String, Object> arguments = const {}}) {
+    _errors.add(AppError(message, context: context, code: code, arguments: arguments));
     notifyListeners();
   }
 
