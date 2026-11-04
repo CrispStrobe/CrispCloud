@@ -27,6 +27,7 @@ import '../providers/providers.dart';
 import '../services/file_bytes_loader.dart';
 import '../services/log_service.dart';
 import '../l10n/office_editor_strings.dart';
+import '../l10n/office_fallback_strings.dart';
 import '../l10n/office_surface_strings.dart';
 import '../services/office_editor_menu.dart';
 import 'office_editor_find_bar.dart';
@@ -295,7 +296,10 @@ class _OfficeEditorDialogState extends ConsumerState<OfficeEditorDialog> {
       context: context,
       builder: (dialogContext) => AlertDialog(
         title: Text(context.tr('Unsaved changes')),
-        content: Text('${context.tr('Save changes to')} ${widget.file.name} ${context.tr('before closing?')}'),
+        content: Text(OfficeFallbackStrings.closeConfirmation(
+          Localizations.maybeLocaleOf(dialogContext)?.languageCode ?? 'en',
+          widget.file.name,
+        )),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(dialogContext, 'cancel'),

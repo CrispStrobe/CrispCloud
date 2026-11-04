@@ -84,11 +84,15 @@ class ReportDesignerStrings {
   /// Unknown provider or parser messages remain unchanged.
   String diagnostic(String summary) {
     if (languageCode == 'en') return summary;
-    final whole = _table[summary];
+    const formatPrefix = 'ReportFormatException: ';
+    final message = summary.startsWith(formatPrefix)
+        ? summary.substring(formatPrefix.length)
+        : summary;
+    final whole = _table[message] ?? _dynamicDiagnostic(message);
     if (whole != null) return whole;
 
-    final source = _sourceTail.firstMatch(summary);
-    final head = source?.group(1) ?? summary;
+    final source = _sourceTail.firstMatch(message);
+    final head = source?.group(1) ?? message;
     final translated = _table[head] ?? _dynamicDiagnostic(head);
     if (translated == null) return summary;
     if (source == null) return translated;
@@ -112,6 +116,38 @@ class ReportDesignerStrings {
   }
 
   static final List<(RegExp, String)> _dynamicPatterns = [
+    (RegExp(r'^Invalid length "(.*)"$'), 'Invalid length "{0}"'),
+    (
+      RegExp(r'^Unknown length unit "(.*)" in "(.*)"$'),
+      'Unknown length unit "{0}" in "{1}"',
+    ),
+    (
+      RegExp(r'^Invalid ([^=]+)="(.*)" \(expected (.*)\)$'),
+      'Invalid {0}="{1}" (expected {2})',
+    ),
+    (RegExp(r'^Unknown pageSize="(.*)"$'), 'Unknown pageSize="{0}"'),
+    (
+      RegExp(r'^Unknown color "(.*)" \(not a palette name or #hex\)$'),
+      'Unknown color "{0}" (not a palette name or #hex)',
+    ),
+    (RegExp(r'^Unexpected character "(.*)"$'), 'Unexpected character "{0}"'),
+    (RegExp(r'^Unexpected "(.*)"$'), 'Unexpected "{0}"'),
+    (
+      RegExp(r'^Expected "(.*)" but found "(.*)"$'),
+      'Expected "{0}" but found "{1}"',
+    ),
+    (RegExp(r'^(.+)\(\) needs an argument$'), '{0}() needs an argument'),
+    (RegExp(r'^(.+)\(\) takes one argument$'), '{0}() takes one argument'),
+    (
+      RegExp(r'^(.+)\(\) expects (.*) argument\(s\), got (.*)$'),
+      '{0}() expects {1} argument(s), got {2}',
+    ),
+    (
+      RegExp(
+        r'^"(.*)" and "(.*)" clash: a name cannot be both a variable and a folder$',
+      ),
+      '"{0}" and "{1}" clash: a name cannot be both a variable and a folder',
+    ),
     (RegExp(r'^Unknown function (.+)\(\)$'), 'Unknown function {0}()'),
     (RegExp(r'^Invalid boolean ([^=]+)="(.*)"$'), 'Invalid boolean {0}="{1}"'),
     (RegExp(r'^Invalid length ([^=]+)="(.*)"$'), 'Invalid length {0}="{1}"'),
@@ -371,6 +407,51 @@ class ReportDesignerStrings {
   };
 
   static const Map<String, String> _de = <String, String>{
+    "Invalid length \"{0}\"": "Ungültige Länge \"{0}\"",
+    "Unknown length unit \"{0}\" in \"{1}\"":
+        "Unbekannte Längeneinheit \"{0}\" in \"{1}\"",
+    "Subreport needs a template name":
+        "Unterbericht benötigt einen Vorlagennamen",
+    "Variable names are letters, digits and _, optionally grouped with dots (stats.sum)":
+        "Variablennamen enthalten Buchstaben, Ziffern und _, optional mit Punkten gruppiert (stats.sum)",
+    "band rows": "Bandzeilen",
+    "unnamed": "unbenannt",
+    "used as item.{name}": "verwendet als item.{name}",
+    "Invalid {0}=\"{1}\" (expected {2})":
+        "Ungültig: {0}=\"{1}\" (erwartet: {2})",
+    "Unknown pageSize=\"{0}\"": "Unbekannte pageSize=\"{0}\"",
+    "Unknown color \"{0}\" (not a palette name or #hex)":
+        "Unbekannte Farbe \"{0}\" (kein Palettenname oder #hex)",
+    "Unexpected character \"{0}\"": "Unerwartetes Zeichen \"{0}\"",
+    "Unexpected \"{0}\"": "Unerwartet: \"{0}\"",
+    "Expected \"{0}\" but found \"{1}\"":
+        "\"{0}\" erwartet, aber \"{1}\" gefunden",
+    "{0}() needs an argument": "{0}() benötigt ein Argument",
+    "{0}() takes one argument": "{0}() erwartet ein Argument",
+    "{0}() expects {1} argument(s), got {2}":
+        "{0}() erwartet {1} Argument(e), erhalten: {2}",
+    "\"{0}\" and \"{1}\" clash: a name cannot be both a variable and a folder":
+        "„{0}“ und „{1}“ kollidieren: Ein Name kann nicht zugleich Variable und Ordner sein",
+    "+ New table": "+ Neue Tabelle",
+    "Row field": "Zeilenfeld",
+    "Column field": "Spaltenfeld",
+    "Value field": "Wertefeld",
+    "Max columns": "Maximale Spalten",
+    "Template": "Vorlage",
+    "Section": "Abschnitt",
+    "Another detail table, with its own data set.":
+        "Eine weitere Detailtabelle mit eigenem Datensatz.",
+    "Crosstab": "Kreuztabelle",
+    "Rows by one field, columns by another, with a total.":
+        "Zeilen nach einem Feld, Spalten nach einem anderen, mit Summe.",
+    "Subreport": "Unterbericht",
+    "A child template stored in the same report file.":
+        "Eine untergeordnete Vorlage in derselben Berichtsdatei.",
+    "pageSize=\"Custom\" needs pageWidth and pageHeight":
+        "pageSize=\"Custom\" benötigt pageWidth und pageHeight",
+    "Ignored outside a data section":
+        "Außerhalb eines Datenabschnitts ignoriert",
+    "Section has no Detail band": "Abschnitt hat kein Detailband",
     "Report designer canvas": "Berichtsentwurfsfläche",
     "Group": "Gruppe",
     "Sort": "Sortierung",
@@ -1038,6 +1119,50 @@ class ReportDesignerStrings {
   };
 
   static const Map<String, String> _fr = <String, String>{
+    "Invalid length \"{0}\"": "Longueur invalide \"{0}\"",
+    "Unknown length unit \"{0}\" in \"{1}\"":
+        "Unité de longueur inconnue \"{0}\" dans \"{1}\"",
+    "Subreport needs a template name":
+        "Le sous-rapport nécessite un nom de modèle",
+    "Variable names are letters, digits and _, optionally grouped with dots (stats.sum)":
+        "Les noms de variables contiennent des lettres, chiffres et _, éventuellement groupés par des points (stats.sum)",
+    "band rows": "lignes de bande",
+    "unnamed": "sans nom",
+    "used as item.{name}": "utilisé comme item.{name}",
+    "Invalid {0}=\"{1}\" (expected {2})":
+        "Valeur invalide : {0}=\"{1}\" (attendu : {2})",
+    "Unknown pageSize=\"{0}\"": "pageSize inconnue=\"{0}\"",
+    "Unknown color \"{0}\" (not a palette name or #hex)":
+        "Couleur inconnue \"{0}\" (ni nom de palette ni #hex)",
+    "Unexpected character \"{0}\"": "Caractère inattendu \"{0}\"",
+    "Unexpected \"{0}\"": "Inattendu : \"{0}\"",
+    "Expected \"{0}\" but found \"{1}\"":
+        "\"{0}\" attendu, mais \"{1}\" trouvé",
+    "{0}() needs an argument": "{0}() nécessite un argument",
+    "{0}() takes one argument": "{0}() accepte un argument",
+    "{0}() expects {1} argument(s), got {2}":
+        "{0}() attend {1} argument(s), reçu : {2}",
+    "\"{0}\" and \"{1}\" clash: a name cannot be both a variable and a folder":
+        "« {0} » et « {1} » entrent en conflit : un nom ne peut pas être une variable et un dossier",
+    "+ New table": "+ Nouvelle table",
+    "Row field": "Champ de ligne",
+    "Column field": "Champ de colonne",
+    "Value field": "Champ de valeur",
+    "Max columns": "Nombre maximal de colonnes",
+    "Template": "Modèle",
+    "Section": "Section",
+    "Another detail table, with its own data set.":
+        "Une autre table de détails avec son propre jeu de données.",
+    "Crosstab": "Tableau croisé",
+    "Rows by one field, columns by another, with a total.":
+        "Lignes par un champ, colonnes par un autre, avec un total.",
+    "Subreport": "Sous-rapport",
+    "A child template stored in the same report file.":
+        "Un modèle enfant dans le même fichier de rapport.",
+    "pageSize=\"Custom\" needs pageWidth and pageHeight":
+        "pageSize=\"Custom\" nécessite pageWidth et pageHeight",
+    "Ignored outside a data section": "Ignoré hors d’une section de données",
+    "Section has no Detail band": "La section n’a pas de bande Détail",
     "Report designer canvas": "Zone de conception du rapport",
     "Group": "Groupe",
     "Sort": "Tri",
@@ -1710,6 +1835,50 @@ class ReportDesignerStrings {
   };
 
   static const Map<String, String> _es = <String, String>{
+    "Invalid length \"{0}\"": "Longitud no válida \"{0}\"",
+    "Unknown length unit \"{0}\" in \"{1}\"":
+        "Unidad de longitud desconocida \"{0}\" en \"{1}\"",
+    "Subreport needs a template name":
+        "El subinforme necesita un nombre de plantilla",
+    "Variable names are letters, digits and _, optionally grouped with dots (stats.sum)":
+        "Los nombres de variables usan letras, números y _, agrupados opcionalmente con puntos (stats.sum)",
+    "band rows": "filas de banda",
+    "unnamed": "sin nombre",
+    "used as item.{name}": "usado como item.{name}",
+    "Invalid {0}=\"{1}\" (expected {2})":
+        "Valor no válido: {0}=\"{1}\" (se esperaba {2})",
+    "Unknown pageSize=\"{0}\"": "pageSize desconocido=\"{0}\"",
+    "Unknown color \"{0}\" (not a palette name or #hex)":
+        "Color desconocido \"{0}\" (no es un nombre de paleta ni #hex)",
+    "Unexpected character \"{0}\"": "Carácter inesperado \"{0}\"",
+    "Unexpected \"{0}\"": "Inesperado: \"{0}\"",
+    "Expected \"{0}\" but found \"{1}\"":
+        "Se esperaba \"{0}\", pero se encontró \"{1}\"",
+    "{0}() needs an argument": "{0}() necesita un argumento",
+    "{0}() takes one argument": "{0}() admite un argumento",
+    "{0}() expects {1} argument(s), got {2}":
+        "{0}() espera {1} argumento(s), recibió {2}",
+    "\"{0}\" and \"{1}\" clash: a name cannot be both a variable and a folder":
+        "«{0}» y «{1}» entran en conflicto: un nombre no puede ser variable y carpeta",
+    "+ New table": "+ Nueva tabla",
+    "Row field": "Campo de fila",
+    "Column field": "Campo de columna",
+    "Value field": "Campo de valor",
+    "Max columns": "Máximo de columnas",
+    "Template": "Plantilla",
+    "Section": "Sección",
+    "Another detail table, with its own data set.":
+        "Otra tabla de detalle con su propio conjunto de datos.",
+    "Crosstab": "Tabla cruzada",
+    "Rows by one field, columns by another, with a total.":
+        "Filas por un campo y columnas por otro, con un total.",
+    "Subreport": "Subinforme",
+    "A child template stored in the same report file.":
+        "Una plantilla secundaria en el mismo archivo de informe.",
+    "pageSize=\"Custom\" needs pageWidth and pageHeight":
+        "pageSize=\"Custom\" necesita pageWidth y pageHeight",
+    "Ignored outside a data section": "Se omitió fuera de una sección de datos",
+    "Section has no Detail band": "La sección no tiene banda de detalle",
     "Report designer canvas": "Lienzo de diseño del informe",
     "Group": "Grupo",
     "Sort": "Orden",
@@ -2379,6 +2548,50 @@ class ReportDesignerStrings {
   };
 
   static const Map<String, String> _pt = <String, String>{
+    "Invalid length \"{0}\"": "Comprimento inválido \"{0}\"",
+    "Unknown length unit \"{0}\" in \"{1}\"":
+        "Unidade de comprimento desconhecida \"{0}\" em \"{1}\"",
+    "Subreport needs a template name":
+        "O sub-relatório precisa de um nome de modelo",
+    "Variable names are letters, digits and _, optionally grouped with dots (stats.sum)":
+        "Os nomes de variáveis usam letras, dígitos e _, opcionalmente agrupados por pontos (stats.sum)",
+    "band rows": "linhas da banda",
+    "unnamed": "sem nome",
+    "used as item.{name}": "usado como item.{name}",
+    "Invalid {0}=\"{1}\" (expected {2})":
+        "Valor inválido: {0}=\"{1}\" (esperado: {2})",
+    "Unknown pageSize=\"{0}\"": "pageSize desconhecido=\"{0}\"",
+    "Unknown color \"{0}\" (not a palette name or #hex)":
+        "Cor desconhecida \"{0}\" (não é nome de paleta nem #hex)",
+    "Unexpected character \"{0}\"": "Caráter inesperado \"{0}\"",
+    "Unexpected \"{0}\"": "Inesperado: \"{0}\"",
+    "Expected \"{0}\" but found \"{1}\"":
+        "Esperava-se \"{0}\", mas encontrou-se \"{1}\"",
+    "{0}() needs an argument": "{0}() precisa de um argumento",
+    "{0}() takes one argument": "{0}() aceita um argumento",
+    "{0}() expects {1} argument(s), got {2}":
+        "{0}() espera {1} argumento(s), recebeu {2}",
+    "\"{0}\" and \"{1}\" clash: a name cannot be both a variable and a folder":
+        "«{0}» e «{1}» entram em conflito: um nome não pode ser variável e pasta",
+    "+ New table": "+ Nova tabela",
+    "Row field": "Campo de linha",
+    "Column field": "Campo de coluna",
+    "Value field": "Campo de valor",
+    "Max columns": "Máximo de colunas",
+    "Template": "Modelo",
+    "Section": "Secção",
+    "Another detail table, with its own data set.":
+        "Outra tabela de detalhe com o seu próprio conjunto de dados.",
+    "Crosstab": "Tabela cruzada",
+    "Rows by one field, columns by another, with a total.":
+        "Linhas por um campo e colunas por outro, com um total.",
+    "Subreport": "Sub-relatório",
+    "A child template stored in the same report file.":
+        "Um modelo subordinado no mesmo ficheiro de relatório.",
+    "pageSize=\"Custom\" needs pageWidth and pageHeight":
+        "pageSize=\"Custom\" precisa de pageWidth e pageHeight",
+    "Ignored outside a data section": "Ignorado fora de uma secção de dados",
+    "Section has no Detail band": "A secção não tem banda de detalhe",
     "Report designer canvas": "Área de desenho do relatório",
     "Group": "Grupo",
     "Sort": "Ordenação",
@@ -3049,6 +3262,43 @@ class ReportDesignerStrings {
   };
 
   static const Map<String, String> _zh = <String, String>{
+    "Invalid length \"{0}\"": "无效长度“{0}”",
+    "Unknown length unit \"{0}\" in \"{1}\"": "“{1}”中存在未知长度单位“{0}”",
+    "Subreport needs a template name": "子报告需要模板名称",
+    "Variable names are letters, digits and _, optionally grouped with dots (stats.sum)":
+        "变量名称可包含字母、数字和 _，并可用点分组 (stats.sum)",
+    "band rows": "区段行",
+    "unnamed": "未命名",
+    "used as item.{name}": "用作 item.{name}",
+    "Invalid {0}=\"{1}\" (expected {2})": "无效值：{0}=\"{1}\"（应为 {2}）",
+    "Unknown pageSize=\"{0}\"": "未知 pageSize=\"{0}\"",
+    "Unknown color \"{0}\" (not a palette name or #hex)":
+        "未知颜色“{0}”（不是调色板名称或 #hex）",
+    "Unexpected character \"{0}\"": "意外字符“{0}”",
+    "Unexpected \"{0}\"": "意外的“{0}”",
+    "Expected \"{0}\" but found \"{1}\"": "应为“{0}”，但找到“{1}”",
+    "{0}() needs an argument": "{0}() 需要一个参数",
+    "{0}() takes one argument": "{0}() 接受一个参数",
+    "{0}() expects {1} argument(s), got {2}": "{0}() 需要 {1} 个参数，实际为 {2} 个",
+    "\"{0}\" and \"{1}\" clash: a name cannot be both a variable and a folder":
+        "“{0}”与“{1}”冲突：名称不能同时作为变量和文件夹",
+    "+ New table": "+ 新建表",
+    "Row field": "行字段",
+    "Column field": "列字段",
+    "Value field": "值字段",
+    "Max columns": "最大列数",
+    "Template": "模板",
+    "Section": "节",
+    "Another detail table, with its own data set.": "另一个具有独立数据集的明细表。",
+    "Crosstab": "交叉表",
+    "Rows by one field, columns by another, with a total.":
+        "按一个字段分行、另一个字段分列并计算总计。",
+    "Subreport": "子报告",
+    "A child template stored in the same report file.": "保存在同一报告文件中的子模板。",
+    "pageSize=\"Custom\" needs pageWidth and pageHeight":
+        "pageSize=\"Custom\" 需要 pageWidth 和 pageHeight",
+    "Ignored outside a data section": "已忽略数据部分以外的内容",
+    "Section has no Detail band": "节没有明细区段",
     "Report designer canvas": "报告设计画布",
     "Group": "分组",
     "Sort": "排序",
@@ -3670,6 +3920,45 @@ class ReportDesignerStrings {
   };
 
   static const Map<String, String> _ja = <String, String>{
+    "Invalid length \"{0}\"": "無効な長さ「{0}」",
+    "Unknown length unit \"{0}\" in \"{1}\"": "「{1}」の長さの単位「{0}」は不明です",
+    "Subreport needs a template name": "サブレポートにはテンプレート名が必要です",
+    "Variable names are letters, digits and _, optionally grouped with dots (stats.sum)":
+        "変数名には英字、数字、_ を使用し、必要に応じてドットでグループ化します (stats.sum)",
+    "band rows": "バンドの行",
+    "unnamed": "名前なし",
+    "used as item.{name}": "item.{name} として使用",
+    "Invalid {0}=\"{1}\" (expected {2})": "無効：{0}=\"{1}\"（期待値：{2}）",
+    "Unknown pageSize=\"{0}\"": "不明な pageSize=\"{0}\"",
+    "Unknown color \"{0}\" (not a palette name or #hex)":
+        "不明な色「{0}」（パレット名または #hex ではありません）",
+    "Unexpected character \"{0}\"": "予期しない文字「{0}」",
+    "Unexpected \"{0}\"": "予期しない「{0}」",
+    "Expected \"{0}\" but found \"{1}\"": "「{0}」が必要ですが「{1}」が見つかりました",
+    "{0}() needs an argument": "{0}() には引数が必要です",
+    "{0}() takes one argument": "{0}() は引数を1つ受け取ります",
+    "{0}() expects {1} argument(s), got {2}":
+        "{0}() は {1} 個の引数を想定していますが {2} 個でした",
+    "\"{0}\" and \"{1}\" clash: a name cannot be both a variable and a folder":
+        "「{0}」と「{1}」が競合しています。同じ名前を変数とフォルダーの両方には使えません",
+    "+ New table": "+ 新しい表",
+    "Row field": "行フィールド",
+    "Column field": "列フィールド",
+    "Value field": "値フィールド",
+    "Max columns": "最大列数",
+    "Template": "テンプレート",
+    "Section": "セクション",
+    "Another detail table, with its own data set.": "独自のデータセットを持つ別の詳細表です。",
+    "Crosstab": "クロス集計",
+    "Rows by one field, columns by another, with a total.":
+        "1つのフィールドで行、別のフィールドで列を作り、合計を表示します。",
+    "Subreport": "サブレポート",
+    "A child template stored in the same report file.":
+        "同じレポートファイルに保存される子テンプレートです。",
+    "pageSize=\"Custom\" needs pageWidth and pageHeight":
+        "pageSize=\"Custom\" には pageWidth と pageHeight が必要です",
+    "Ignored outside a data section": "データセクション外のため無視されました",
+    "Section has no Detail band": "セクションに詳細バンドがありません",
     "Report designer canvas": "レポートデザインキャンバス",
     "Group": "グループ",
     "Sort": "並べ替え",
@@ -4302,6 +4591,47 @@ class ReportDesignerStrings {
   };
 
   static const Map<String, String> _ko = <String, String>{
+    "Invalid length \"{0}\"": "잘못된 길이 \"{0}\"",
+    "Unknown length unit \"{0}\" in \"{1}\"":
+        "\"{1}\"의 길이 단위 \"{0}\"을(를) 알 수 없습니다",
+    "Subreport needs a template name": "하위 보고서에는 템플릿 이름이 필요합니다",
+    "Variable names are letters, digits and _, optionally grouped with dots (stats.sum)":
+        "변수 이름에는 문자, 숫자, _를 사용하며 점으로 그룹화할 수 있습니다 (stats.sum)",
+    "band rows": "밴드 행",
+    "unnamed": "이름 없음",
+    "used as item.{name}": "item.{name}으로 사용",
+    "Invalid {0}=\"{1}\" (expected {2})": "잘못된 값: {0}=\"{1}\" (필요한 값: {2})",
+    "Unknown pageSize=\"{0}\"": "알 수 없는 pageSize=\"{0}\"",
+    "Unknown color \"{0}\" (not a palette name or #hex)":
+        "알 수 없는 색 \"{0}\" (팔레트 이름 또는 #hex가 아님)",
+    "Unexpected character \"{0}\"": "예기치 않은 문자 \"{0}\"",
+    "Unexpected \"{0}\"": "예기치 않은 \"{0}\"",
+    "Expected \"{0}\" but found \"{1}\"": "\"{0}\"이(가) 필요하지만 \"{1}\"을(를) 찾았습니다",
+    "{0}() needs an argument": "{0}()에는 인수가 필요합니다",
+    "{0}() takes one argument": "{0}()는 인수 하나를 받습니다",
+    "{0}() expects {1} argument(s), got {2}":
+        "{0}()에는 인수 {1}개가 필요하지만 {2}개가 제공되었습니다",
+    "\"{0}\" and \"{1}\" clash: a name cannot be both a variable and a folder":
+        "“{0}”과(와) “{1}”이(가) 충돌합니다. 이름은 변수와 폴더에 동시에 사용할 수 없습니다",
+    "+ New table": "+ 새 표",
+    "Row field": "행 필드",
+    "Column field": "열 필드",
+    "Value field": "값 필드",
+    "Max columns": "최대 열 수",
+    "Template": "템플릿",
+    "Section": "섹션",
+    "Another detail table, with its own data set.":
+        "자체 데이터 집합을 가진 또 다른 세부 표입니다.",
+    "Crosstab": "교차표",
+    "Rows by one field, columns by another, with a total.":
+        "한 필드로 행을, 다른 필드로 열을 만들고 합계를 표시합니다.",
+    "Subreport": "하위 보고서",
+    "A child template stored in the same report file.":
+        "동일한 보고서 파일에 저장된 하위 템플릿입니다.",
+    "pageSize=\"Custom\" needs pageWidth and pageHeight":
+        "pageSize=\"Custom\"에는 pageWidth와 pageHeight가 필요합니다",
+    "Ignored outside a data section": "데이터 섹션 밖에서 무시됨",
+    "Section has no Detail band": "섹션에 세부 밴드가 없습니다",
     "Report designer canvas": "보고서 디자인 캔버스",
     "Group": "그룹",
     "Sort": "정렬",
@@ -4940,6 +5270,48 @@ class ReportDesignerStrings {
   };
 
   static const Map<String, String> _arabic = <String, String>{
+    "Invalid length \"{0}\"": "طول غير صالح \"{0}\"",
+    "Unknown length unit \"{0}\" in \"{1}\"":
+        "وحدة طول غير معروفة \"{0}\" في \"{1}\"",
+    "Subreport needs a template name": "يحتاج التقرير الفرعي إلى اسم قالب",
+    "Variable names are letters, digits and _, optionally grouped with dots (stats.sum)":
+        "تتكون أسماء المتغيرات من أحرف وأرقام و_، ويمكن تجميعها بنقاط (stats.sum)",
+    "band rows": "صفوف الشريط",
+    "unnamed": "بلا اسم",
+    "used as item.{name}": "يُستخدم كـ item.{name}",
+    "Invalid {0}=\"{1}\" (expected {2})":
+        "قيمة غير صالحة: {0}=\"{1}\" (المتوقع: {2})",
+    "Unknown pageSize=\"{0}\"": "pageSize غير معروف=\"{0}\"",
+    "Unknown color \"{0}\" (not a palette name or #hex)":
+        "لون غير معروف \"{0}\" (ليس اسم لوحة أو #hex)",
+    "Unexpected character \"{0}\"": "حرف غير متوقع \"{0}\"",
+    "Unexpected \"{0}\"": "غير متوقع: \"{0}\"",
+    "Expected \"{0}\" but found \"{1}\"": "المتوقع \"{0}\" ولكن وُجد \"{1}\"",
+    "{0}() needs an argument": "تحتاج {0}() إلى وسيطة",
+    "{0}() takes one argument": "تقبل {0}() وسيطة واحدة",
+    "{0}() expects {1} argument(s), got {2}":
+        "تتوقع {0}() عدد {1} من الوسائط، لكن وُجد {2}",
+    "\"{0}\" and \"{1}\" clash: a name cannot be both a variable and a folder":
+        "يتعارض \"{0}\" و\"{1}\": لا يمكن أن يكون الاسم متغيرًا ومجلدًا معًا",
+    "+ New table": "+ جدول جديد",
+    "Row field": "حقل الصف",
+    "Column field": "حقل العمود",
+    "Value field": "حقل القيمة",
+    "Max columns": "الحد الأقصى للأعمدة",
+    "Template": "قالب",
+    "Section": "قسم",
+    "Another detail table, with its own data set.":
+        "جدول تفاصيل آخر بمجموعة بيانات مستقلة.",
+    "Crosstab": "جدول تقاطعي",
+    "Rows by one field, columns by another, with a total.":
+        "صفوف حسب حقل وأعمدة حسب آخر مع إجمالي.",
+    "Subreport": "تقرير فرعي",
+    "A child template stored in the same report file.":
+        "قالب تابع محفوظ في ملف التقرير نفسه.",
+    "pageSize=\"Custom\" needs pageWidth and pageHeight":
+        "يتطلب pageSize=\"Custom\" وجود pageWidth وpageHeight",
+    "Ignored outside a data section": "تم التجاهل خارج قسم البيانات",
+    "Section has no Detail band": "لا يحتوي القسم على شريط التفاصيل",
     "Report designer canvas": "لوحة تصميم التقرير",
     "Group": "المجموعة",
     "Sort": "الفرز",

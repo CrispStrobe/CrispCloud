@@ -7378,7 +7378,7 @@ class ReportDesignerController extends ChangeNotifier {
             label: 'Name',
             kind: ReportPropertyKind.text,
             value: c.name,
-            hint: 'used as item.${c.name}',
+            hint: strings.format('used as item.{name}', {'name': c.name}),
             group: cg,
           ),
           ReportProperty(

@@ -80,7 +80,7 @@ void main() {
       () {
     final reference = ReportDesignerStrings.arabic.translatedKeys.toSet();
     final tokens = RegExp(
-        r'\{\{[^{}]*\}\}|\{\d+\}|\{[A-Za-z][A-Za-z0-9_]*\}|<\w+>|\bdataSet\b|\bRow\.(?:color|code|amount|total)\b|\bstats\.sum\b|\bEPSG:4326\b|\bQudsReport\b|\.qrep\b');
+        r'\{\{[^{}]*\}\}|\{\d+\}|\{[A-Za-z][A-Za-z0-9_]*\}|<\w+>|\bdataSet\b|\bRow\.(?:color|code|amount|total)\b|\bstats\.sum\b|\bEPSG:4326\b|\bQudsReport\b|\.qrep\b|#hex');
     for (final language in ['de', 'fr', 'es', 'pt', 'zh', 'ja', 'ko']) {
       final strings = ReportDesignerStrings.forLocale(Locale(language));
       expect(reference.difference(strings.translatedKeys.toSet()), isEmpty,
@@ -107,6 +107,24 @@ void main() {
       expect(invalid, contains('width'), reason: language);
       expect(invalid, contains('{0}'), reason: language);
       expect(invalid, isNot(startsWith('Invalid number')), reason: language);
+      final enumError = strings.diagnostic(
+          'Invalid orientation="sideways" (expected portrait, landscape)');
+      expect(enumError, contains('orientation'), reason: language);
+      expect(enumError, contains('sideways'), reason: language);
+      expect(enumError, contains('portrait, landscape'), reason: language);
+      final arguments =
+          strings.diagnostic('SUM() expects 1–3 argument(s), got 4');
+      expect(arguments, contains('SUM()'), reason: language);
+      expect(arguments, contains('1–3'), reason: language);
+      expect(arguments, contains('4'), reason: language);
+      expect(arguments, isNot('SUM() expects 1–3 argument(s), got 4'),
+          reason: language);
+      final length = strings.diagnostic(
+          'ReportFormatException: Unknown length unit "xx" in "12xx"');
+      expect(length, contains('xx'), reason: language);
+      expect(length, contains('12xx'), reason: language);
+      expect(length, isNot(contains('ReportFormatException')),
+          reason: language);
       expect(strings.diagnostic('unrecognized host error'),
           'unrecognized host error');
     }
