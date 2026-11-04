@@ -1,0 +1,6 @@
+# Preserve PDF byte offsets and suppress text whitespace/diff handling.
+test/fixtures/pdf_editor/*.pdf binary
+
+# Preserve the exact upstream/font-metadata license text, including whitespace.
+assets/licenses/pdf_fonts/*-LICENSE.txt -whitespace
+assets/licenses/pdf_fonts/LPPL-1.3c.txt -whitespace

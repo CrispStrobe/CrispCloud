@@ -20,7 +20,7 @@ import '../services/archive_service.dart';
 import '../services/archive_viewer_service.dart';
 import '../services/audit_service.dart';
 import '../services/cloud_storage_interface.dart'
-    show CloudStorageClientCapabilities;
+    show CloudStorageClient, CloudStorageClientCapabilities;
 import '../services/directory_cache_service.dart';
 import '../services/local_file_service.dart';
 import '../services/log_service.dart';
@@ -37,6 +37,18 @@ import 'recent_locations_provider.dart';
 // SortBy and SortOrder are defined in models/sort.dart
 export '../models/sort.dart';
 
+/// The storage source that actually produced a listed file, captured before
+/// the listing request. It is independent of the pane's label or dropdown.
+class PanelFileOrigin {
+  const PanelFileOrigin._(this.source, this._isCurrent);
+
+  final PanelSource source;
+  final bool Function() _isCurrent;
+
+  /// Remains false after the captured account disconnects or changes.
+  bool get isCurrent => _isCurrent();
+}
+
 class PanelNotifier extends ChangeNotifier {
   static const _log = Log('PanelNotifier');
 
@@ -46,6 +58,10 @@ class PanelNotifier extends ChangeNotifier {
   final LocalFileService _localFileService;
 
   List<FileItem>? _files;
+  final _fileOrigins = Expando<PanelFileOrigin>('listed file origin');
+  int _listingGeneration = 0;
+  int _verifiedListingGeneration = -1;
+  int _accountGeneration = 0;
   final Set<FileItem> _selection = {};
   FileItem? _lastSelected;
   FileItem? _itemToScrollTo;
@@ -76,9 +92,6 @@ class PanelNotifier extends ChangeNotifier {
   final _refreshLock = AsyncLock();
   Timer? _refreshDebounce;
   bool _isDisposed = false;
-  /// Guards against an older directory listing overwriting a newer one when
-  /// the user navigates quickly.
-  int _localLoadGeneration = 0;
 
   /// When true, [_files] holds search results instead of the real directory
   /// listing; normal refresh/navigation calls restore the real listing.
@@ -129,6 +142,29 @@ class PanelNotifier extends ChangeNotifier {
 
   PanelNotifier(this._ref, this.side)
       : _localFileService = _ref.read(localFileServiceProvider) {
+    // ChangeNotifier listeners cannot compare prev/next objects: both can be
+    // the same mutated notifier. Retain a value snapshot for account changes.
+    final initialAuth = _ref.read(authProvider);
+    var account = (
+      initialAuth.client,
+      initialAuth.userEmail,
+      initialAuth.isConnected,
+      initialAuth.client.userId,
+      initialAuth.client.bucketId,
+    );
+    _ref.listen<AuthNotifier>(authProvider, (_, next) {
+      final current = (
+        next.client,
+        next.userEmail,
+        next.isConnected,
+        next.client.userId,
+        next.client.bucketId,
+      );
+      if (current != account) {
+        _accountGeneration++;
+        account = current;
+      }
+    });
     _restoreTabs();
     if (side == PanelSide.local) {
       _initializeLocalPath();
@@ -148,6 +184,7 @@ class PanelNotifier extends ChangeNotifier {
     // Listen for panel source changes (e.g. user switches provider in dropdown).
     _ref.listen<PanelSource>(panelSourceProvider(side), (prev, next) {
       if (prev == next) return;
+      _listingGeneration++;
       _log.info(
           'Source switched: ${prev?.displayName} → ${next.displayName} (path=${next.currentPath})');
       if (next.isLocal) {
@@ -163,6 +200,93 @@ class PanelNotifier extends ChangeNotifier {
 
   // --- Getters ---
   List<FileItem>? get files => _files;
+
+  /// Returns an origin only for this exact object in the current verified
+  /// listing. A same-path object from search, an archive, an old listing, or
+  /// another account must never authorize an editor write.
+  PanelFileOrigin? originForFile(FileItem file) {
+    if (_isDisposed) return null;
+    final selectedSource = _ref.read(panelSourceProvider(side));
+    if (_isLoading || _showingSearchResults ||
+        _verifiedListingGeneration != _listingGeneration ||
+        selectedSource.isArchive || selectedSource.isContainer ||
+        isInArchive || _isFlatView ||
+        !(_files?.any((item) => identical(item, file)) ?? false)) {
+      return null;
+    }
+    final origin = _fileOrigins[file];
+    return origin != null && origin.isCurrent ? origin : null;
+  }
+
+  void _recordOrigins(Iterable<FileItem> files, PanelFileOrigin origin) {
+    final listed = files.toList(growable: false);
+    // The preview uses selection.first; keeping the old object here would
+    // leave it permanently outside the exact-identity origin gate after a
+    // refresh or the native metadata pass. Resolve references while their
+    // old origin is still available, before stamping the new publication.
+    FileItem? replacement(FileItem? previous) {
+      if (previous == null) return null;
+      final before = _fileOrigins[previous];
+      if (before == null || !before.isCurrent || !origin.isCurrent ||
+          !_sameFileSource(before.source, origin.source)) {
+        return null;
+      }
+      FileItem? match;
+      for (final candidate in listed) {
+        if (candidate.isFolder != previous.isFolder) continue;
+        final matches = previous.uuid != null
+            ? candidate.uuid == previous.uuid
+            : previous.path != null
+                ? candidate.path == previous.path
+                : candidate.name == previous.name;
+        if (!matches) continue;
+        // Duplicate identifiers are ambiguous; require a new user selection.
+        if (match != null) return null;
+        match = candidate;
+      }
+      return match;
+    }
+
+    final selected = _selection.map(replacement).whereType<FileItem>().toList();
+    final lastSelected = replacement(_lastSelected);
+    final scrollTarget = replacement(_itemToScrollTo);
+    _verifiedListingGeneration = _listingGeneration;
+    for (final file in listed) {
+      _fileOrigins[file] = origin;
+    }
+    _selection..clear()..addAll(selected);
+    _lastSelected = lastSelected;
+    _itemToScrollTo = scrollTarget;
+  }
+
+  static bool _sameFileSource(PanelSource before, PanelSource after) {
+    if (before is LocalPanelSource && after is LocalPanelSource) {
+      return before.path == after.path;
+    }
+    if (before is RemotePanelSource && after is RemotePanelSource) {
+      return identical(before.client, after.client) &&
+          before.providerName == after.providerName && before.path == after.path;
+    }
+    return false;
+  }
+
+  PanelFileOrigin _remoteOrigin(
+      CloudStorageClient client, String providerName, String path) {
+    final generation = _accountGeneration;
+    final email = _ref.read(authProvider).userEmail;
+    final userId = client.userId;
+    final bucketId = client.bucketId;
+    return PanelFileOrigin._(
+      RemotePanelSource(providerName: providerName, client: client, path: path),
+      () {
+        if (_isDisposed || generation != _accountGeneration) return false;
+        final auth = _ref.read(authProvider);
+        return auth.isConnected && identical(auth.client, client) &&
+            auth.userEmail == email && client.isAuthenticated &&
+            client.userId == userId && client.bucketId == bucketId;
+      },
+    );
+  }
   Set<FileItem> get selection => _selection;
   FileItem? get lastSelected => _lastSelected;
   FileItem? get itemToScrollTo => _itemToScrollTo;
@@ -491,6 +615,7 @@ class PanelNotifier extends ChangeNotifier {
   void showSearchResults(List<FileItem> results) {
     _log.info('Showing ${results.length} search results as virtual folder');
     _showingSearchResults = true;
+    _listingGeneration++;
     _files = List.of(results);
     _sortFiles();
     notifyListeners();
@@ -580,6 +705,7 @@ class PanelNotifier extends ChangeNotifier {
   }
 
   Future<void> _loadArchiveFiles() async {
+    _listingGeneration++;
     final source = _archiveSource;
     if (source == null) return;
     final bytes = _archiveBytes;
@@ -676,6 +802,7 @@ class PanelNotifier extends ChangeNotifier {
   }
 
   Future<void> _loadFlatFiles() async {
+    _listingGeneration++;
     if (kIsWeb || side != PanelSide.local) {
       _ref
           .read(errorProvider)
@@ -1298,9 +1425,17 @@ class PanelNotifier extends ChangeNotifier {
   /// Update a file item's calculated size (for inline directory size display).
   void updateItemCalculatedSize(FileItem item, int size) {
     if (_files == null) return;
-    final idx = _files!.indexOf(item);
+    final idx = _indexOfIdentical(_files!, item);
     if (idx == -1) return;
-    _files![idx] = item.copyWith(calculatedSize: size);
+    final replacement = item.copyWith(calculatedSize: size);
+    _fileOrigins[replacement] = _fileOrigins[item];
+    _files![idx] = replacement;
+    final selected = _selection.map(
+      (entry) => identical(entry, item) ? replacement : entry,
+    ).toList();
+    _selection..clear()..addAll(selected);
+    if (identical(_lastSelected, item)) _lastSelected = replacement;
+    if (identical(_itemToScrollTo, item)) _itemToScrollTo = replacement;
     notifyListeners();
   }
 
@@ -1908,19 +2043,27 @@ class PanelNotifier extends ChangeNotifier {
   }
 
   Future<void> _loadLocalFiles() async {
-    final int loadId = ++_localLoadGeneration;
+    final generation = ++_listingGeneration;
     if (!kIsWeb && _localPath.contains(':/')) {
       _localPath = await _localFileService.getSafeFallbackDirectory();
     }
+    if (_isDisposed || generation != _listingGeneration) return;
+    final listingPath = currentPath;
+    final origin = PanelFileOrigin._(
+      LocalPanelSource(listingPath),
+      () => !_isDisposed,
+    );
     _log.debug('_loadLocalFiles: $currentPath (web=$kIsWeb)');
     _isLoading = true;
     notifyListeners();
 
     final dirCache = _ref.read(directoryCacheProvider);
-    final cacheKey = DirectoryCacheService.key('local', currentPath);
+    final cacheKey = DirectoryCacheService.key('local', listingPath);
 
     // Show the last listing for this folder immediately. It is replaced by
     // the fresh listing below, but makes revisiting large folders instant.
+    // Do not stamp origins here: only the fresh directory listing may
+    // authorize editing.
     if (!_showingSearchResults) {
       final cached = dirCache.get(cacheKey);
       if (cached != null && cached.isNotEmpty) {
@@ -1933,8 +2076,8 @@ class PanelNotifier extends ChangeNotifier {
     }
 
     try {
-      final entities = await _localFileService.listDirectory(currentPath);
-      if (_isDisposed || loadId != _localLoadGeneration) return;
+      final entities = await _localFileService.listDirectory(listingPath);
+      if (_isDisposed || generation != _listingGeneration) return;
       if (entities == null) {
         _files = [];
         _isLoading = false;
@@ -1943,12 +2086,12 @@ class PanelNotifier extends ChangeNotifier {
               .read(errorProvider)
               .addError('Local file access is not supported on this platform.');
         }
-        _log.warn('listDirectory returned null for "$currentPath"');
+        _log.warn('listDirectory returned null for "$listingPath"');
         notifyListeners();
         return;
       }
       _log.debug(
-        'listDirectory("$currentPath") returned ${entities.length} entities',
+        'listDirectory("$listingPath") returned ${entities.length} entities',
       );
 
       // Reuse metadata from the cached listing while the fresh stat pass runs.
@@ -1963,8 +2106,8 @@ class PanelNotifier extends ChangeNotifier {
 
       // Prepend ".." parent-dir entry unless we're at root.
       final items = <FileItem>[];
-      final parentPath = p.dirname(currentPath);
-      if (parentPath != currentPath && currentPath != '/') {
+      final parentPath = p.dirname(listingPath);
+      if (parentPath != listingPath && listingPath != '/') {
         items.add(FileItem(name: '..', path: parentPath, isFolder: true));
       }
 
@@ -1998,6 +2141,7 @@ class PanelNotifier extends ChangeNotifier {
         }
         final prev = cursorItem;
         _files = items;
+        _recordOrigins(items, origin);
         _sortFiles();
         _resetCursor(preserveItem: prev);
         _isLoading = false;
@@ -2031,6 +2175,7 @@ class PanelNotifier extends ChangeNotifier {
       }
       // Show items immediately (possibly with cached size/date).
       _files = items;
+      _recordOrigins(items, origin);
       _sortFiles();
       _isLoading = true; // still loading metadata
       _ref.read(errorProvider).clearErrors();
@@ -2081,10 +2226,11 @@ class PanelNotifier extends ChangeNotifier {
             }
           }),
         );
-        if (_isDisposed || loadId != _localLoadGeneration) return;
-        // Update the visible rows after each batch. Do not copy the whole
-        // list: _files is the same mutable list, and notifyListeners() is
-        // enough for the ListView.builder to refresh visible rows.
+        if (_isDisposed || generation != _listingGeneration) return;
+        // _files is the same mutable list, so notifyListeners() is enough for
+        // the ListView.builder to refresh visible rows. Re-stamp origins
+        // because metadata replaced the FileItem instances.
+        _recordOrigins(items, origin);
         notifyListeners();
       }
 
@@ -2094,13 +2240,13 @@ class PanelNotifier extends ChangeNotifier {
         _resetCursor(preserveItem: prev);
       }
       _isLoading = false;
-      if (loadId != _localLoadGeneration) return;
+      if (_isDisposed || generation != _listingGeneration) return;
       dirCache.put(cacheKey, _files!);
       // Fire-and-forget free space fetch (result stored in _freeBytes, shown in status bar)
-      if (side == PanelSide.local) _updateFreeSpace(currentPath);
+      if (side == PanelSide.local) _updateFreeSpace(listingPath);
       notifyListeners();
     } catch (e) {
-      if (loadId != _localLoadGeneration) return;
+      if (_isDisposed || generation != _listingGeneration) return;
       _log.warn('operation failed', e);
       _isLoading = false;
       if (!kIsWeb &&
@@ -2160,11 +2306,19 @@ class PanelNotifier extends ChangeNotifier {
       return;
     }
 
+    final generation = ++_listingGeneration;
+    final auth = _ref.read(authProvider);
+    // This loader currently uses the primary auth adapter, even if the
+    // dropdown points elsewhere. Stamp the actual request, never the label.
+    final client = auth.client;
+    final providerName = auth.providerName;
+    final listingPath = _remotePath;
+    final origin = _remoteOrigin(client, providerName, listingPath);
+
     _isLoading = true;
     notifyListeners();
-    final auth = _ref.read(authProvider);
     try {
-      if (!auth.client.isAuthenticated && !auth.isConnected) {
+      if (!client.isAuthenticated && !auth.isConnected) {
         _files = [];
         _isLoading = false;
         notifyListeners();
@@ -2174,18 +2328,36 @@ class PanelNotifier extends ChangeNotifier {
       // Show cached listing immediately for smooth UX.
       final dirCache = _ref.read(directoryCacheProvider);
       final cacheKey = DirectoryCacheService.key(
-        'remote:${auth.providerName}',
-        _remotePath,
+        'remote:$providerName',
+        listingPath,
       );
       final cached = dirCache.get(cacheKey);
       if (cached != null && _files == null) {
         _files = List.of(cached);
+        // Cached objects retain an origin only if this panel previously saw
+        // that exact object under the same live account. Cache entries are
+        // not account-scoped, so unknown entries stay uneditable until fresh.
+        for (final file in _files!) {
+          final previous = _fileOrigins[file];
+          final source = previous?.source;
+          if (previous == null || !previous.isCurrent ||
+              source is! RemotePanelSource ||
+              !identical(source.client, client) || source.path != listingPath) {
+            _fileOrigins[file] = null;
+          }
+        }
         _sortFiles();
         notifyListeners();
       }
 
       // Fetch fresh listing from remote.
-      final result = await auth.client.listPath(_remotePath);
+      final result = await client.listPath(listingPath);
+      if (_isDisposed || generation != _listingGeneration) return;
+      if (!origin.isCurrent) {
+        _isLoading = false;
+        notifyListeners();
+        return;
+      }
 
       final folders = (result['folders'] as List<dynamic>?)?.map((item) {
             final map = item as Map<String, dynamic>;
@@ -2268,8 +2440,8 @@ class PanelNotifier extends ChangeNotifier {
 
       // Prepend ".." for cloud paths that aren't root
       final allItems = [...folders, ...files];
-      if (_remotePath != '/' && _remotePath.isNotEmpty) {
-        final parentRemote = p.posix.dirname(_remotePath);
+      if (listingPath != '/' && listingPath.isNotEmpty) {
+        final parentRemote = p.posix.dirname(listingPath);
         allItems.insert(
             0,
             FileItem(
@@ -2280,6 +2452,7 @@ class PanelNotifier extends ChangeNotifier {
       }
       final prev = cursorItem;
       _files = allItems;
+      _recordOrigins(allItems, origin);
       _sortFiles();
       _resetCursor(preserveItem: prev);
       _ref.read(errorProvider).clearErrors();
@@ -2290,6 +2463,7 @@ class PanelNotifier extends ChangeNotifier {
       _isLoading = false;
       notifyListeners();
     } catch (e) {
+      if (_isDisposed || generation != _listingGeneration) return;
       _log.error('Refresh error', e);
       _isLoading = false;
       // On error, keep cached files if available instead of clearing.

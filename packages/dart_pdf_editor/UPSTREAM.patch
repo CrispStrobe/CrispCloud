@@ -1,0 +1,753 @@
+--- a/packages/dart_pdf_editor/pubspec.yaml
++++ b/packages/dart_pdf_editor/pubspec.yaml
+@@ -3,6 +3,7 @@
+   Flutter PDF editor and viewer for Dart: native rendering, text selection,
+   search, annotations, forms, signatures, page editing, and document comparison.
+ version: 14.0.0
++publish_to: none
+ homepage: https://dart-pdf.com/flutter-pdf-editor
+ repository: https://github.com/ben-milanko/dart-pdf/tree/main/packages/dart_pdf_editor
+ issue_tracker: https://github.com/ben-milanko/dart-pdf/issues
+@@ -12,7 +13,6 @@
+   - pdf-editor
+   - annotations
+   - forms
+-resolution: workspace
+
+ environment:
+   sdk: ^3.5.0
+@@ -33,17 +33,16 @@
+   # The Material design library (the stock chrome). 7.0 moved off
+   # package:flutter/material.dart; see doc/MIGRATING-7.0.0.md.
+   material_ui: ^1.8.0
+-  # Keychain/Keystore-backed persistence for signing identities
+-  # (SecureIdentityStore); the private key never touches shared_preferences.
+-  flutter_secure_storage: ^11.2.0
++  # Persistent secret stores are provided by an optional local companion;
++  # the editor core imposes no secure-storage plugin version on its host.
+   # Cross-platform HTTP client (VM + web via fetch) for the progressive remote
+   # PDF byte source (PdfHttpByteSource); uses Range requests, no dart:io in our
+   # code. See src/http_byte_source.dart.
+   http: ^1.2.0
+   image: ^4.12.0
+-  pdf_cos: ^14.0.0
+-  pdf_document: ^14.0.0
+-  pdf_graphics: ^14.0.0
++  pdf_cos: 14.0.0
++  pdf_document: 14.0.0
++  pdf_graphics: 14.0.0
+   shared_preferences: ^2.5.6
+   # Opens hyperlink (/URI) actions the viewer follows itself; see
+   # PdfViewer.onLaunchUrl. Web-safe, no dart:io.
+@@ -53,14 +52,9 @@
+   web: ^1.1.2
+
+ dev_dependencies:
+-  pdf_test_fixtures: ^14.0.0
+   flutter_lints: ^6.0.0
+   flutter_test:
+     sdk: flutter
+-  # Stub the url_launcher platform channel in the hyperlink-launch tests so
+-  # they exercise the default launcher without a real platform binding.
+-  plugin_platform_interface: ^2.1.8
+-  url_launcher_platform_interface: ^2.3.2
+
+ flutter:
+   generate: true
+--- a/packages/dart_pdf_editor/README.md
++++ b/packages/dart_pdf_editor/README.md
+@@ -1,3 +1,12 @@
++> **CrispCloud vendored copy.** This directory contains Apache-2.0 upstream
++> `dart_pdf_editor` 14.0.0 with a small compatibility patch. Use the root app's
++> path dependency. See [UPSTREAM.md](UPSTREAM.md) for the pinned source,
++> modifications, upgrade instructions, and tests. Secure persistence is now
++> available from the optional sibling `dart_pdf_editor_secure_storage` package;
++> the editor core keeps its store interfaces and session-only memory stores.
++> The remaining documentation below is the upstream README; relative links to
++> monorepo examples and documentation refer to the pinned upstream repository.
++
+ ![dart-pdf, an open-source Flutter PDF editor and pure-Dart renderer](https://raw.githubusercontent.com/ben-milanko/dart-pdf/main/doc/banner.png)
+
+ # Flutter PDF editor: dart_pdf_editor
+--- a/packages/dart_pdf_editor/CHANGELOG.md
++++ b/packages/dart_pdf_editor/CHANGELOG.md
+@@ -1,4 +1,19 @@
+ # Changelog
++
++## CrispCloud compatibility patch on 14.0.0
++
++- Vendor the runtime package at upstream commit
++  `87adaa022c5ed6b22ca3232b6cae4a03e8389e98`; retain its Apache-2.0 license.
++- Move `SecureIdentityStore` and `SecureFormSecretStore` to the optional sibling
++  package, leaving memory stores and interfaces in the editor core. The app can
++  retain `flutter_secure_storage` 9 without an override of upstream's 11.
++- Extract native overprint retry dispatch behind a conditional import. Browser
++  callers receive `null` for this optional retry; ordinary rendering is unchanged.
++- Honor the host's redaction tool restriction across keyboard commands,
++  pre-armed sessions, desktop/touch text selection, saved search expansion,
++  custom group defaults, and Apply controls. The engine algorithm is unchanged.
++- Resolve the package outside the upstream workspace, pin the PDF core packages
++  to 14.0.0, and add focused compatibility tests with generated PDF fixtures.
+
+ ## 14.0.0
+
+--- a/packages/dart_pdf_editor/lib/src/editing/editing_toolbar.dart
++++ b/packages/dart_pdf_editor/lib/src/editing/editing_toolbar.dart
+@@ -1,3 +1,4 @@
++// CrispCloud modification: honor host redaction restrictions. See UPSTREAM.md.
+ import 'dart:typed_data';
+
+ import 'package:flutter/gestures.dart' show PointerDeviceKind;
+@@ -1311,6 +1312,7 @@
+   }
+
+   Future<void> _applyRedactions(BuildContext context) async {
++    if (widget.tools?.contains(PdfEditTool.redact) == false) return;
+     final confirmed = await PdfEditorPresenter.of(context).confirm(
+       context,
+       PdfConfirmRequest(
+@@ -1323,6 +1325,7 @@
+       ),
+     );
+     if (!confirmed || !context.mounted) return;
++    if (widget.tools?.contains(PdfEditTool.redact) == false) return;
+     final burned = controller.applyRedactions();
+     _flattenToast(
+       context,
+@@ -2023,7 +2026,8 @@
+         ),
+       ];
+     }
+-    if (tool == PdfEditTool.redact) {
++    if (tool == PdfEditTool.redact &&
++        widget.tools?.contains(PdfEditTool.redact) != false) {
+       final findToRedact = widget.onFindToRedact;
+       return [
+         if (flatten != null) ...[flatten, _MiniDivider(axis: axis)],
+--- a/packages/dart_pdf_editor/lib/src/editing/editor_commands.dart
++++ b/packages/dart_pdf_editor/lib/src/editing/editor_commands.dart
+@@ -1,3 +1,4 @@
++// CrispCloud modification: honor host redaction restrictions. See UPSTREAM.md.
+ import 'dart:async';
+
+ import 'package:flutter/foundation.dart';
+@@ -258,7 +259,8 @@
+   /// lists the tools only.
+   PdfEditorFeatures? features;
+
+-  /// The editing tools [catalog] offers, null meaning all of them.
++  /// The editing tools commands may arm and [catalog] offers, null meaning all
++  /// of them. CrispCloud enforces this for direct calls as well as visible UI.
+   Set<PdfEditTool>? tools;
+
+   /// The tool key bindings [catalog] reports as each tool's shortcut.
+@@ -347,7 +349,11 @@
+     }
+     openGroupId = group.id;
+     if (groupForTool(_controller.tool)?.id == group.id) return;
+-    _controller.tool = group.defaultTool;
++    final defaultTool = group.defaultTool;
++    _controller.tool =
++        defaultTool != null && tools?.contains(defaultTool) == false
++            ? null
++            : defaultTool;
+     if (_controller.tool != null) viewerController.clearSelection();
+     // markup arms no tool, so its style scope is set explicitly (after the
+     // tool reset above, which would otherwise clear it) - this is what lets
+@@ -388,6 +394,7 @@
+   /// is a no-op. Returns whether [tool] is armed afterwards - false when a
+   /// prompt was dismissed.
+   Future<bool> armTool(BuildContext context, PdfEditTool tool) async {
++    if (tools?.contains(tool) == false) return false;
+     if (_controller.tool == tool) return true;
+     await toggleTool(context, tool);
+     return _controller.tool == tool;
+@@ -397,6 +404,7 @@
+   /// when it is already armed, drops back to Select. Returns whether [tool]
+   /// is armed afterwards.
+   Future<bool> toggleTool(BuildContext context, PdfEditTool tool) async {
++    if (tools?.contains(tool) == false) return false;
+     switch (tool) {
+       case PdfEditTool.measureDistance:
+       case PdfEditTool.measurePerimeter:
+@@ -418,6 +426,7 @@
+   /// when it is already armed - never to no tool at all, so tapping the
+   /// active tool off leaves things selectable. Clears the text selection.
+   void toggleToolNow(PdfEditTool tool) {
++    if (tools?.contains(tool) == false) return;
+     // arming Redact over a text selection marks it, as a markup tool does
+     if (tool == PdfEditTool.redact &&
+         _controller.tool != tool &&
+@@ -516,6 +525,7 @@
+   /// mark per page over the selected glyphs). Nothing is removed until the
+   /// marks are applied.
+   void redactSelection() {
++    if (tools?.contains(PdfEditTool.redact) == false) return;
+     // capture before the edit: the document swap clears the selection
+     final quadsByPage = {
+       for (final page in viewerController.selectionPages)
+--- a/packages/dart_pdf_editor/lib/src/editing/form_secret_store.dart
++++ b/packages/dart_pdf_editor/lib/src/editing/form_secret_store.dart
+@@ -1,7 +1,6 @@
+-import 'dart:convert';
++// CrispCloud modification: platform persistence is an optional companion.
++// See UPSTREAM.md for provenance and patch details.
+ import 'dart:typed_data';
+-
+-import 'package:flutter_secure_storage/flutter_secure_storage.dart';
+
+ /// Where [PdfEditingController] keeps password-field values instead of the
+ /// PDF (ISO 32000 §12.7.4.3: readers "shall never store the value" of a
+@@ -14,8 +13,8 @@
+ /// back and a different document never sees them.
+ ///
+ /// Mirrors [PdfIdentityStore]: async and backend-agnostic, with an
+-/// [InMemoryFormSecretStore] for tests and session-only use, and a
+-/// [SecureFormSecretStore] on the platform Keychain/Keystore.
++/// [InMemoryFormSecretStore] for tests and session-only use. The optional
++/// `dart_pdf_editor_secure_storage` package supplies `SecureFormSecretStore`.
+ abstract interface class PdfFormSecretStore {
+   /// Every value stored for [documentId], keyed by field name.
+   Future<Map<String, String>> readAll(String documentId);
+@@ -72,93 +71,3 @@
+     _byDocument.remove(documentId);
+   }
+ }
+-
+-/// A [PdfFormSecretStore] backed by the platform Keychain/Keystore via
+-/// `flutter_secure_storage`. Each document's values are one JSON object
+-/// under `'$keyPrefix$documentId'`, and an index of document ids is kept
+-/// under a reserved key so [clearAll] can find them.
+-///
+-/// Not for the web: `flutter_secure_storage`'s web backend keeps its key
+-/// next to the data in browser storage, so it is not actually secret
+-/// there. Use [InMemoryFormSecretStore] on the web.
+-class SecureFormSecretStore implements PdfFormSecretStore {
+-  SecureFormSecretStore({
+-    FlutterSecureStorage? storage,
+-    this.keyPrefix = 'pdf_form_secret.',
+-  }) : _storage = storage ?? const FlutterSecureStorage();
+-
+-  final FlutterSecureStorage _storage;
+-
+-  /// The key namespace, so entries don't collide with the host's own
+-  /// secure-storage entries (or with [SecureIdentityStore]'s).
+-  final String keyPrefix;
+-
+-  String get _indexKey => '${keyPrefix}__index';
+-
+-  Future<List<String>> _index() async {
+-    final raw = await _storage.read(key: _indexKey);
+-    if (raw == null || raw.isEmpty) return [];
+-    final decoded = jsonDecode(raw);
+-    return decoded is List ? decoded.cast<String>() : <String>[];
+-  }
+-
+-  Future<void> _writeIndex(List<String> ids) =>
+-      _storage.write(key: _indexKey, value: jsonEncode(ids));
+-
+-  @override
+-  Future<Map<String, String>> readAll(String documentId) async {
+-    final raw = await _storage.read(key: '$keyPrefix$documentId');
+-    if (raw == null || raw.isEmpty) return {};
+-    final decoded = jsonDecode(raw);
+-    if (decoded is! Map) return {};
+-    return {
+-      for (final e in decoded.entries)
+-        if (e.key is String && e.value is String)
+-          e.key as String: e.value as String,
+-    };
+-  }
+-
+-  @override
+-  Future<String?> read(String documentId, String fieldName) async =>
+-      (await readAll(documentId))[fieldName];
+-
+-  Future<void> _writeAll(String documentId, Map<String, String> values) async {
+-    if (values.isEmpty) {
+-      await clearDocument(documentId);
+-      return;
+-    }
+-    await _storage.write(
+-        key: '$keyPrefix$documentId', value: jsonEncode(values));
+-    final ids = await _index();
+-    if (!ids.contains(documentId)) await _writeIndex([...ids, documentId]);
+-  }
+-
+-  @override
+-  Future<void> write(String documentId, String fieldName, String value) async {
+-    final values = await readAll(documentId);
+-    values[fieldName] = value;
+-    await _writeAll(documentId, values);
+-  }
+-
+-  @override
+-  Future<void> remove(String documentId, String fieldName) async {
+-    final values = await readAll(documentId);
+-    if (values.remove(fieldName) == null) return;
+-    await _writeAll(documentId, values);
+-  }
+-
+-  @override
+-  Future<void> clearDocument(String documentId) async {
+-    await _storage.delete(key: '$keyPrefix$documentId');
+-    final ids = await _index();
+-    if (ids.remove(documentId)) await _writeIndex(ids);
+-  }
+-
+-  /// Forgets every stored value for every document.
+-  Future<void> clearAll() async {
+-    for (final id in await _index()) {
+-      await _storage.delete(key: '$keyPrefix$id');
+-    }
+-    await _storage.delete(key: _indexKey);
+-  }
+-}
+--- a/packages/dart_pdf_editor/lib/src/editing/signing_identity_store.dart
++++ b/packages/dart_pdf_editor/lib/src/editing/signing_identity_store.dart
+@@ -1,13 +1,12 @@
+-import 'dart:convert';
+-
+-import 'package:flutter_secure_storage/flutter_secure_storage.dart';
++// CrispCloud modification: platform persistence is an optional companion.
++// See UPSTREAM.md for provenance and patch details.
+ import 'package:pdf_document/pdf_document.dart';
+
+ /// Persistence for one-tap [PdfSigningIdentity]s (see
+ /// [PdfSigningIdentity.generate]). An identity is stored by a caller-chosen
+ /// [id] as its PEM (`toPem()`), which carries the unprotected private key -
+-/// so the production backend, [SecureIdentityStore], keeps it in the platform
+-/// Keychain/Keystore rather than in preferences.
++/// so persistent implementations must use protected storage. The optional
++/// `dart_pdf_editor_secure_storage` package supplies `SecureIdentityStore`.
+ ///
+ /// Implementations are async and backend-agnostic; the "Create signing
+ /// identity" dialog takes one so the host chooses where keys live (or passes
+@@ -50,59 +49,3 @@
+     _pemById.remove(id);
+   }
+ }
+-
+-/// A [PdfIdentityStore] backed by the platform Keychain/Keystore via
+-/// `flutter_secure_storage`, so the private key never lands in plaintext
+-/// preferences. Each identity's PEM is stored under `'$keyPrefix$id'`, and an
+-/// index of ids is kept under a reserved key so [ids] can enumerate them.
+-class SecureIdentityStore implements PdfIdentityStore {
+-  SecureIdentityStore({
+-    FlutterSecureStorage? storage,
+-    this.keyPrefix = 'pdf_signing_identity.',
+-  }) : _storage = storage ?? const FlutterSecureStorage();
+-
+-  final FlutterSecureStorage _storage;
+-
+-  /// The key namespace, so identities don't collide with the host's own
+-  /// secure-storage entries.
+-  final String keyPrefix;
+-
+-  String get _indexKey => '${keyPrefix}__index';
+-
+-  Future<List<String>> _index() async {
+-    final raw = await _storage.read(key: _indexKey);
+-    if (raw == null || raw.isEmpty) return [];
+-    final decoded = jsonDecode(raw);
+-    return decoded is List ? decoded.cast<String>() : <String>[];
+-  }
+-
+-  Future<void> _writeIndex(List<String> ids) =>
+-      _storage.write(key: _indexKey, value: jsonEncode(ids));
+-
+-  @override
+-  Future<List<String>> ids() => _index();
+-
+-  @override
+-  Future<PdfSigningIdentity?> load(String id) async {
+-    final pem = await _storage.read(key: '$keyPrefix$id');
+-    return pem == null ? null : PdfSigningIdentity.fromPem(pem, name: id);
+-  }
+-
+-  @override
+-  Future<void> save(String id, PdfSigningIdentity identity) async {
+-    await _storage.write(key: '$keyPrefix$id', value: identity.toPem());
+-    final ids = await _index();
+-    if (!ids.contains(id)) {
+-      await _writeIndex([...ids, id]);
+-    }
+-  }
+-
+-  @override
+-  Future<void> delete(String id) async {
+-    await _storage.delete(key: '$keyPrefix$id');
+-    final ids = await _index();
+-    if (ids.remove(id)) {
+-      await _writeIndex(ids);
+-    }
+-  }
+-}
+--- /dev/null
++++ b/packages/dart_pdf_editor/lib/src/overprint_rerecord_worker.dart
+@@ -0,0 +1,4 @@
++// CrispCloud modification: keep native isolate imports out of web builds.
++// See UPSTREAM.md for provenance and patch details.
++export 'overprint_rerecord_worker_stub.dart'
++    if (dart.library.io) 'overprint_rerecord_worker_native.dart';
+--- /dev/null
++++ b/packages/dart_pdf_editor/lib/src/overprint_rerecord_worker_native.dart
+@@ -0,0 +1,50 @@
++// Extracted from retained_scene.dart in dart_pdf_editor 14.0.0.
++// See UPSTREAM.md for provenance and patch details.
++import 'dart:isolate';
++import 'dart:typed_data';
++
++import 'package:pdf_document/pdf_document.dart';
++import 'package:pdf_graphics/pdf_graphics.dart';
++
++const overprintRerecordSupported = true;
++
++Future<Uint8List?> rerecordOverprintCommands(
++  Uint8List bytes, {
++  required int pageIndex,
++  required int maxDimension,
++  required bool annotations,
++  required Set<String> hiddenAnnotationSubtypes,
++  List<int>? populatedRanges,
++  double? maxImagePixelRatio,
++}) {
++  // Keep the original bounded transfer and background interpretation. Only
++  // serializable inputs are captured; the retained scene stays on the UI
++  // isolate, and this library does not import dart:ui or any Flutter widgets.
++  final source = TransferableTypedData.fromList([bytes]);
++  return Isolate.run(() {
++    final document = PdfDocument.open(source.materialize().asUint8List(),
++        populatedRanges: populatedRanges);
++    if (pageIndex >= document.pageCount) return null;
++    final retryPage = document.page(pageIndex);
++    final recorder = RecordingPdfDevice();
++    final interpreter = PdfInterpreter(
++      cos: document.cos,
++      device: recorder,
++      overprintMaxDimension: maxDimension,
++    )..drawPageContent(retryPage, retryPage.contentBytes());
++    if (annotations) {
++      interpreter.drawAnnotations(retryPage,
++          skipSubtypes: hiddenAnnotationSubtypes);
++    }
++    return serializeCommands(
++      recorder.commands,
++      cos: document.cos,
++      decodeImages: true,
++      maxImagePixelRatio: maxImagePixelRatio,
++      pageRasterPixels: pdfPageRasterPixels(
++        retryPage.cropBox,
++        maxImagePixelRatio,
++      ),
++    );
++  });
++}
+--- /dev/null
++++ b/packages/dart_pdf_editor/lib/src/overprint_rerecord_worker_stub.dart
+@@ -0,0 +1,16 @@
++// CrispCloud modification: optional overprint retries need a native isolate.
++// Ordinary browser rendering continues to use the existing render backend.
++import 'dart:typed_data';
++
++const overprintRerecordSupported = false;
++
++Future<Uint8List?> rerecordOverprintCommands(
++  Uint8List bytes, {
++  required int pageIndex,
++  required int maxDimension,
++  required bool annotations,
++  required Set<String> hiddenAnnotationSubtypes,
++  List<int>? populatedRanges,
++  double? maxImagePixelRatio,
++}) async =>
++    null;
+--- a/packages/dart_pdf_editor/lib/src/pdf_editor_view.dart
++++ b/packages/dart_pdf_editor/lib/src/pdf_editor_view.dart
+@@ -1,3 +1,4 @@
++// CrispCloud modification: honor host redaction restrictions. See UPSTREAM.md.
+ import 'dart:async' show unawaited;
+
+ import 'package:flutter/foundation.dart' show defaultTargetPlatform, mapEquals;
+@@ -925,6 +926,14 @@
+     session
+       ..providedCustomStamps = widget.customStamps
+       ..colorLocked = !widget.features.colorControls;
++    // CrispCloud: an external session may already have Redact armed. A
++    // restricted shell must not keep accepting redaction drags after binding.
++    if (session.tool == PdfEditTool.redact &&
++        widget.features.tools?.contains(PdfEditTool.redact) == false) {
++      session.tool = widget.features.tools!.contains(PdfEditTool.select)
++          ? PdfEditTool.select
++          : null;
++    }
+   }
+
+   /// Binds the Apple Pencil double-tap to the session's eraser toggle on
+@@ -1388,6 +1397,11 @@
+           };
+     final availableShortcuts =
+         Map<PdfEditTool, PdfToolShortcut>.of(_toolShortcuts);
++    // CrispCloud: a hidden tool must also lose its keyboard binding.
++    if (availableTools != null) {
++      availableShortcuts
++          .removeWhere((tool, _) => !availableTools.contains(tool));
++    }
+     if (widget.onPlaceSignature == null) {
+       availableShortcuts.remove(PdfEditTool.signatureBox);
+     }
+@@ -1479,6 +1493,8 @@
+                 // it the content tool) is available; a read-only shell keeps
+                 // the panel a pure find panel
+                 editing: features.toolbar ? session : null,
++                showRedaction:
++                    availableTools?.contains(PdfEditTool.redact) ?? true,
+                 preferences: prefs,
+                 dock: prefs.searchPanelDock,
+                 bottomSheet: bottomSheet,
+@@ -1851,12 +1867,14 @@
+                         ? () => prefs.showAnnotationLibraryPanel =
+                             !prefs.showAnnotationLibraryPanel
+                         : null,
+-                    onFindToRedact:
+-                        features.search && features.searchResultsPanel
+-                            ? () => prefs
+-                              ..searchRedactExpanded = true
+-                              ..showSearchResultsPanel = true
+-                            : null,
++                    onFindToRedact: features.search &&
++                            features.searchResultsPanel &&
++                            (availableTools?.contains(PdfEditTool.redact) ??
++                                true)
++                        ? () => prefs
++                          ..searchRedactExpanded = true
++                          ..showSearchResultsPanel = true
++                        : null,
+                     palette: widget.palette,
+                     tools: availableTools,
+                     groups: features.toolGroups,
+@@ -2088,6 +2106,9 @@
+                               (features.toolGroups == null ||
+                                   features.toolGroups!
+                                       .contains(PdfEditToolGroup.markup)),
++                          textSelectionRedaction:
++                              availableTools?.contains(PdfEditTool.redact) ??
++                                  true,
+                           // The desktop toolbar floats over the viewer. Leave a
+                           // scrollable tail tall enough for its dock and
+                           // contextual strip, so the last page can move fully
+--- a/packages/dart_pdf_editor/lib/src/pdf_viewer.dart
++++ b/packages/dart_pdf_editor/lib/src/pdf_viewer.dart
+@@ -1,3 +1,4 @@
++// CrispCloud modification: honor host redaction restrictions. See UPSTREAM.md.
+ import 'dart:async';
+ import 'design/viewer_tokens.dart';
+ import 'dart:math' as math;
+@@ -1458,6 +1459,7 @@
+     this.editingPalette = defaultStyledTextPalette,
+     this.textSelectionEditing = true,
+     this.textSelectionMarkup = true,
++    this.textSelectionRedaction = true,
+     this.annotationMenuBuilder,
+     this.onSaveAnnotationImage,
+     this.textMenuBuilder,
+@@ -1763,6 +1765,12 @@
+   /// Whether an editor-backed text selection exposes highlight, underline,
+   /// strikeout, and squiggly actions. Has no effect without [editing].
+   final bool textSelectionMarkup;
++
++  /// Whether text context menus, touch chips and tool actions offer redaction.
++  /// CrispCloud
++  /// disables this together with the tool and its keyboard shortcut because
++  /// partial image/Form XObject redaction is not supported by this engine.
++  final bool textSelectionRedaction;
+
+   /// Adds the app's own entries to the annotation context menu (the
+   /// right-click menu - z-order and delete come stock). Called when the
+@@ -7555,8 +7563,9 @@
+         _markupSubmenuEntry(globalPosition),
+         stock(
+             'link', l10n.linkDialogTitle, Icons.link, _addLinkToTextSelection),
+-        stock(
+-            'redact', l10n.tbToolRedact, Icons.gradient, _redactTextSelection),
++        if (widget.textSelectionRedaction)
++          stock('redact', l10n.tbToolRedact, Icons.gradient,
++              _redactTextSelection),
+       ],
+       stock('select-all', l10n.viewerSelectAll, Icons.select_all,
+           () => _selectAllTextOn(page),
+@@ -7737,6 +7746,7 @@
+   /// page over the selected glyphs) and arms the Redact tool, whose strip
+   /// carries the Apply button that burns the marks.
+   void _redactTextSelection() {
++    if (!widget.textSelectionRedaction) return;
+     final editing = widget.editing;
+     if (editing == null || _selRange == null) return;
+     final quadsByPage = {
+@@ -8547,6 +8557,7 @@
+   /// first, exactly as the toolbar does: the measuring scale for a measure
+   /// tool, a signature for the signature tool.
+   void _armTool(PdfEditTool tool) {
++    if (tool == PdfEditTool.redact && !widget.textSelectionRedaction) return;
+     final editing = widget.editing;
+     if (editing == null) return;
+     final commands = context
+@@ -9311,7 +9322,9 @@
+       onAddLink: widget.editing != null && widget.textSelectionMarkup
+           ? _addLinkToTextSelection
+           : null,
+-      onRedact: widget.editing != null && widget.textSelectionMarkup
++      onRedact: widget.editing != null &&
++              widget.textSelectionMarkup &&
++              widget.textSelectionRedaction
+           ? _redactTextSelection
+           : null,
+     );
+--- a/packages/dart_pdf_editor/lib/src/retained_scene.dart
++++ b/packages/dart_pdf_editor/lib/src/retained_scene.dart
+@@ -13,7 +13,6 @@
+ /// runs after [record] returns.
+ library;
+
+-import 'dart:isolate';
+ import 'dart:math' as math;
+ import 'dart:ui' as ui;
+
+@@ -26,6 +25,8 @@
+ import 'canvas_device.dart';
+ import 'canvas_path_cache.dart';
+ import 'image_decoder.dart';
++// CrispCloud modification: isolate dispatch is conditional. See UPSTREAM.md.
++import 'overprint_rerecord_worker.dart' as overprint;
+ import 'perf_log.dart';
+ import 'renderer.dart';
+ import 'render_worker.dart';
+@@ -485,8 +486,9 @@
+   /// ordinary page walk never retries by itself; an optional tile backend can
+   /// use this only after conservatively rejecting the default transcript.
+   ///
+-  /// Returns null for partial/imported command buffers, encrypted sources (the
+-  /// parsed document does not retain its password), sources above 64 MiB (to
++  /// Returns null on platforms without native isolates, for partial/imported
++  /// command buffers, encrypted sources (the parsed document does not retain
++  /// its password), sources above 64 MiB (to
+   /// keep the isolate hand-off bounded), recordings that skipped annotations,
+   /// and pages no longer reachable from their document.
+   Future<PdfRetainedScene>? rerecordWithOverprintMaxDimension(
+@@ -494,7 +496,8 @@
+   ) {
+     final options = _recordingOptions;
+     final document = page.document;
+-    if (_disposed ||
++    if (!overprint.overprintRerecordSupported ||
++        _disposed ||
+         options == null ||
+         maxDimension <= 0 ||
+         document.cos.isEncrypted ||
+@@ -515,38 +518,18 @@
+     int maxDimension,
+     ({double? maxImagePixelRatio, double imageDecodeHeadroom}) options,
+   ) async {
+-    final source = TransferableTypedData.fromList([page.document.cos.bytes]);
+-    final populatedRanges = page.document.cos.populatedRanges;
+-    final annotations = plan.annotations;
+-    final hiddenSubtypes = plan.hiddenAnnotationSubtypes;
+     final decodeRatio = options.maxImagePixelRatio == null
+         ? null
+         : options.maxImagePixelRatio! * options.imageDecodeHeadroom;
+-    final encoded = await Isolate.run(() {
+-      final document = PdfDocument.open(source.materialize().asUint8List(),
+-          populatedRanges: populatedRanges);
+-      if (pageIndex >= document.pageCount) return null;
+-      final retryPage = document.page(pageIndex);
+-      final recorder = RecordingPdfDevice();
+-      final interpreter = PdfInterpreter(
+-        cos: document.cos,
+-        device: recorder,
+-        overprintMaxDimension: maxDimension,
+-      )..drawPageContent(retryPage, retryPage.contentBytes());
+-      if (annotations) {
+-        interpreter.drawAnnotations(retryPage, skipSubtypes: hiddenSubtypes);
+-      }
+-      return serializeCommands(
+-        recorder.commands,
+-        cos: document.cos,
+-        decodeImages: true,
+-        maxImagePixelRatio: decodeRatio,
+-        pageRasterPixels: pdfPageRasterPixels(
+-          retryPage.cropBox,
+-          decodeRatio,
+-        ),
+-      );
+-    });
++    final encoded = await overprint.rerecordOverprintCommands(
++      page.document.cos.bytes,
++      pageIndex: pageIndex,
++      maxDimension: maxDimension,
++      annotations: plan.annotations,
++      hiddenAnnotationSubtypes: plan.hiddenAnnotationSubtypes,
++      populatedRanges: page.document.cos.populatedRanges,
++      maxImagePixelRatio: decodeRatio,
++    );
+     if (encoded == null) {
+       throw StateError('overprint retry command buffer is not transferable');
+     }
+--- a/packages/dart_pdf_editor/lib/src/search_panel.dart
++++ b/packages/dart_pdf_editor/lib/src/search_panel.dart
+@@ -1,3 +1,4 @@
++// CrispCloud modification: honor host redaction restrictions. See UPSTREAM.md.
+ import 'dart:async';
+
+ import 'design/viewer_tokens.dart';
+@@ -235,6 +236,7 @@
+     this.maxWidth = 480,
+     this.bottomSheet = false,
+     this.showOptions = true,
++    this.showRedaction = true,
+     this.onClose,
+   });
+
+@@ -244,6 +246,10 @@
+   /// leaves the panel a pure find panel - which is what a read-only viewer
+   /// wants.
+   final PdfEditingController? editing;
++
++  /// Whether find-to-redact controls are available, independently of replace.
++  /// CrispCloud honors the host's redaction tool restriction here too.
++  final bool showRedaction;
+
+   /// Persists the user-dragged width when provided.
+   final PdfEditingPreferences? preferences;
+@@ -299,9 +305,11 @@
+   bool _redactExpandedLocal = false;
+
+   bool get _redactExpanded =>
+-      widget.preferences?.searchRedactExpanded ?? _redactExpandedLocal;
++      widget.showRedaction &&
++      (widget.preferences?.searchRedactExpanded ?? _redactExpandedLocal);
+
+   void _toggleRedact() {
++    if (!widget.showRedaction) return;
+     final next = !_redactExpanded;
+     final prefs = widget.preferences;
+     if (prefs != null) {
+@@ -550,7 +558,7 @@
+                         selected: _replaceExpanded,
+                         onPressed: _toggleReplace,
+                       ),
+-                    if (widget.editing != null)
++                    if (widget.editing != null && widget.showRedaction)
+                       PdfPanelToggleButton(
+                         key: const ValueKey('pdf-search-redact-toggle'),
+                         iconData: Icons.gradient,
+@@ -567,7 +575,9 @@
+                     field: _replaceField,
+                     geometry: geometry,
+                   ),
+-                if (widget.editing != null && _redactExpanded)
++                if (widget.editing != null &&
++                    widget.showRedaction &&
++                    _redactExpanded)
+                   _RedactBar(
+                     controller: controller,
+                     editing: widget.editing!,

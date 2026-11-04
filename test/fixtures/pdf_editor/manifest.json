@@ -1,0 +1,28 @@
+{
+  "schema": 1,
+  "plain_fixture": "form_rotated.pdf",
+  "encrypted_fixture": "form_rotated_encrypted.pdf",
+  "redaction_fixture": "redaction.pdf",
+  "partial_form_fixture": "partial_form.pdf",
+  "password": "crispcloud-pdf-fixture",
+  "owner_password": "crispcloud-pdf-fixture-owner",
+  "field_name": "reviewer",
+  "original_field_value": "Awaiting review",
+  "edited_field_value": "Reviewed in CrispCloud",
+  "annotation_text": "CrispCloud integration note",
+  "page_markers": [
+    "CRISPCLOUD_PAGE_ONE",
+    "CRISPCLOUD_PAGE_TWO"
+  ],
+  "preserved_text": "Embedded Roboto: Cafe, café, and résumé.",
+  "redaction_secret": "CRISPCLOUD_REDACT_ME_672a",
+  "redaction_public": "Public content must survive text redaction.",
+  "partial_form_secret": "CRISPCLOUD_FORM_SECRET_9841",
+  "partial_form_public": "Public content inside a partially covered form.",
+  "redaction_rect": [
+    70,
+    694,
+    520,
+    718
+  ]
+}

@@ -41,6 +41,10 @@ class Client extends CloudStorageClient {
   @override
   bool get isAuthenticated => true;
   @override
+  String? get userId => 'fixture-user';
+  @override
+  String? get bucketId => 'fixture-bucket';
+  @override
   Stream<List<int>> downloadStream(String path,
       {Function(int, int)? onProgress}) async* {
     if (fail && path.endsWith('bad.mp3')) {

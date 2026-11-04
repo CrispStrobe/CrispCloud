@@ -1,0 +1,100 @@
+Bundled font copyright notices
+==============================
+
+The following copyright strings are copied from name-table ID 0 in the
+unmodified font binaries. The corresponding license texts are included
+alongside this file and registered in the application license screen.
+
+dart_pdf_editor_assets 14.0.0: Carlito-Bold.ttf
+Copyright 2013 The Carlito Project Authors (https://github.com/googlefonts/carlito)
+
+dart_pdf_editor_assets 14.0.0: Carlito-BoldItalic.ttf
+Copyright 2013 The Carlito Project Authors (https://github.com/googlefonts/carlito)
+
+dart_pdf_editor_assets 14.0.0: Carlito-Italic.ttf
+Copyright 2013 The Carlito Project Authors (https://github.com/googlefonts/carlito)
+
+dart_pdf_editor_assets 14.0.0: Carlito-Regular.ttf
+Copyright 2013 The Carlito Project Authors (https://github.com/googlefonts/carlito)
+
+dart_pdf_editor_assets 14.0.0: DejaVuSans.ttf
+Copyright (c) 2003 by Bitstream, Inc. All Rights Reserved.
+Copyright (c) 2006 by Tavmjong Bah. All Rights Reserved.
+DejaVu changes are in public domain
+
+
+dart_pdf_editor_assets 14.0.0: DejaVuSansMono.ttf
+Copyright (c) 2003 by Bitstream, Inc. All Rights Reserved.
+DejaVu changes are in public domain
+
+
+dart_pdf_editor_assets 14.0.0: DejaVuSerif.ttf
+Copyright (c) 2003 by Bitstream, Inc. All Rights Reserved.
+DejaVu changes are in public domain
+
+
+dart_pdf_editor_assets 14.0.0: FiraSans-Regular.ttf
+Digitized data copyright 2012-2016, The Mozilla Foundation and Telefonica S.A.
+
+dart_pdf_editor_assets 14.0.0: Lobster-Regular.ttf
+Copyright 2010 The Lobster Project Authors (https://github.com/impallari/The-Lobster-Font), with Reserved Font Name "Lobster".
+
+dart_pdf_editor_assets 14.0.0: Spectral-Regular.ttf
+Copyright 2017 The Spectral Project Authors (https://github.com/productiontype/Spectral)
+
+dart_pdf_editor_assets 14.0.0: TeXGyreAdventor-Bold.otf
+Copyright 2007-2018 for TeX Gyre extensions by B. Jackowski, J.M. Nowacki, et al. (on behalf of TeX USERS GROUPS). Vietnamese characters were added by Han The Thanh.
+
+dart_pdf_editor_assets 14.0.0: TeXGyreAdventor-Regular.otf
+Copyright 2007-2018 for TeX Gyre extensions by B. Jackowski, J.M. Nowacki, et al. (on behalf of TeX USERS GROUPS). Vietnamese characters were added by Han The Thanh.
+
+dart_pdf_editor_assets 14.0.0: TeXGyreCursor-Bold.otf
+Copyright 2006, 2009 for TeX Gyre extensions by B. Jackowski and J.M. Nowacki (on behalf of TeX users groups). This work is released under the GUST Font License --  see http://tug.org/fonts/licenses/GUST-FONT-LICENSE.txt for details.
+
+dart_pdf_editor_assets 14.0.0: TeXGyreCursor-BoldItalic.otf
+Copyright 2006, 2009 for TeX Gyre extensions by B. Jackowski and J.M. Nowacki (on behalf of TeX users groups). This work is released under the GUST Font License --  see http://tug.org/fonts/licenses/GUST-FONT-LICENSE.txt for details.
+
+dart_pdf_editor_assets 14.0.0: TeXGyreCursor-Italic.otf
+Copyright 2006, 2009 for TeX Gyre extensions by B. Jackowski and J.M. Nowacki (on behalf of TeX users groups). This work is released under the GUST Font License --  see http://tug.org/fonts/licenses/GUST-FONT-LICENSE.txt for details.
+
+dart_pdf_editor_assets 14.0.0: TeXGyreCursor-Regular.otf
+Copyright 2006, 2009 for TeX Gyre extensions by B. Jackowski and J.M. Nowacki (on behalf of TeX users groups). This work is released under the GUST Font License --  see http://tug.org/fonts/licenses/GUST-FONT-LICENSE.txt for details.
+
+dart_pdf_editor_assets 14.0.0: TeXGyreHeros-Bold.otf
+Copyright 2006, 2009 for TeX Gyre extensions by B. Jackowski and J.M. Nowacki (on behalf of TeX users groups). This work is released under the GUST Font License --  see http://tug.org/fonts/licenses/GUST-FONT-LICENSE.txt for details.
+
+dart_pdf_editor_assets 14.0.0: TeXGyreHeros-BoldItalic.otf
+Copyright 2006, 2009 for TeX Gyre extensions by B. Jackowski and J.M. Nowacki (on behalf of TeX users groups). This work is released under the GUST Font License --  see http://tug.org/fonts/licenses/GUST-FONT-LICENSE.txt for details.
+
+dart_pdf_editor_assets 14.0.0: TeXGyreHeros-Italic.otf
+Copyright 2006, 2009 for TeX Gyre extensions by B. Jackowski and J.M. Nowacki (on behalf of TeX users groups). This work is released under the GUST Font License --  see http://tug.org/fonts/licenses/GUST-FONT-LICENSE.txt for details.
+
+dart_pdf_editor_assets 14.0.0: TeXGyreHeros-Regular.otf
+Copyright 2006, 2009 for TeX Gyre extensions by B. Jackowski and J.M. Nowacki (on behalf of TeX users groups). This work is released under the GUST Font License --  see http://tug.org/fonts/licenses/GUST-FONT-LICENSE.txt for details.
+
+dart_pdf_editor_assets 14.0.0: TeXGyreTermes-Bold.otf
+Copyright 2006, 2009 for TeX Gyre extensions by B. Jackowski and J.M. Nowacki (on behalf of TeX users groups). This work is released under the GUST Font License --  see http://tug.org/fonts/licenses/GUST-FONT-LICENSE.txt for details.
+
+dart_pdf_editor_assets 14.0.0: TeXGyreTermes-BoldItalic.otf
+Copyright 2006, 2009 for TeX Gyre extensions by B. Jackowski and J.M. Nowacki (on behalf of TeX users groups). This work is released under the GUST Font License --  see http://tug.org/fonts/licenses/GUST-FONT-LICENSE.txt for details.
+
+dart_pdf_editor_assets 14.0.0: TeXGyreTermes-Italic.otf
+Copyright 2006, 2009 for TeX Gyre extensions by B. Jackowski and J.M. Nowacki (on behalf of TeX users groups). This work is released under the GUST Font License --  see http://tug.org/fonts/licenses/GUST-FONT-LICENSE.txt for details.
+
+dart_pdf_editor_assets 14.0.0: TeXGyreTermes-Regular.otf
+Copyright 2006, 2009 for TeX Gyre extensions by B. Jackowski and J.M. Nowacki (on behalf of TeX users groups). This work is released under the GUST Font License --  see http://tug.org/fonts/licenses/GUST-FONT-LICENSE.txt for details.
+
+CrispCloud assets/fonts: MaterialIcons-Regular.otf
+Copyright 2019 Google LLC. All Rights Reserved.
+
+CrispCloud assets/fonts: Roboto-Bold.ttf
+Copyright 2011 Google Inc. All Rights Reserved.
+
+CrispCloud assets/fonts: Roboto-Medium.ttf
+Copyright 2011 Google Inc. All Rights Reserved.
+
+CrispCloud assets/fonts: Roboto-Regular.ttf
+Copyright 2011 Google Inc. All Rights Reserved.
+
+CrispCloud assets/fonts: RobotoMono-Regular.ttf
+Copyright 2015 Google Inc. All Rights Reserved.

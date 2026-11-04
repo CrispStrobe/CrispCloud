@@ -1,5 +1,6 @@
 // lib/main.dart
 import 'package:flutter/material.dart';
+import 'package:dart_pdf_editor_assets/dart_pdf_editor_assets.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
 import 'l10n/app_localizations.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -39,6 +40,7 @@ import 'services/file_cache_service.dart';
 import 'services/log_service.dart';
 import 'services/thumbnail_service.dart';
 import 'services/proxy_service.dart';
+import 'services/pdf_font_licenses.dart';
 import 'services/secure_storage_service.dart';
 import 'services/secure_storage_web.dart';
 import 'widgets/lock_screen.dart';
@@ -53,6 +55,8 @@ Future<void> main() async {
   CrashReportingService? crashReporting;
   runZonedGuarded(() async {
     WidgetsFlutterBinding.ensureInitialized();
+    registerBundledEditorAssets();
+    registerPdfFontLicenses();
     LicenseRegistry.addLicense(() => Stream.value(const LicenseEntryWithLineBreaks(['libsmb2'], smbLicense)));
 
     crashReporting = CrashReportingService(

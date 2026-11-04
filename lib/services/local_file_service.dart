@@ -13,6 +13,77 @@ import '../models/file_item.dart';
 
 import 'local_file_service_native.dart' if (dart.library.html) 'local_file_service_web.dart' as platform;
 
+/// Whether a local save wrote its destination or handed a copy to the browser.
+enum LocalFileSaveResult { written, downloadedCopy }
+
+/// Optional, explicit save semantics for document editors. Kept separate from
+/// [LocalFileService] so existing integrations implementing that interface do
+/// not silently acquire a stronger write contract.
+abstract interface class LocalFileSaveReporter {
+  Future<LocalFileSaveResult> saveFileWithResult(
+    String path,
+    Uint8List data, {
+    bool overwrite = true,
+  });
+}
+
+/// Reads current file contents instead of a browser's cached File snapshot.
+abstract interface class FreshLocalFileReader {
+  Future<Uint8List> readFileFresh(
+    String path, {
+    FileItem? fileItem,
+    int? maxBytes,
+  });
+}
+
+extension LocalFileEditorOperations on LocalFileService {
+  Future<Uint8List> readFileForEdit(
+    String path, {
+    FileItem? fileItem,
+    int? maxBytes,
+  }) async {
+    final service = this;
+    if (service is FreshLocalFileReader) {
+      return (service as FreshLocalFileReader).readFileFresh(
+        path,
+        fileItem: fileItem,
+        maxBytes: maxBytes,
+      );
+    }
+    if (maxBytes != null) {
+      final length = await fileLength(path);
+      if (length != null && length > maxBytes) {
+        throw FileSystemException('File is too large to edit.', path);
+      }
+    }
+    final bytes = await readFile(path, fileItem: fileItem);
+    if (maxBytes != null && bytes.length > maxBytes) {
+      throw FileSystemException('File is too large to edit.', path);
+    }
+    return bytes;
+  }
+
+  Future<LocalFileSaveResult> saveFileReportingResult(
+    String path,
+    Uint8List bytes, {
+    bool overwrite = true,
+  }) async {
+    final service = this;
+    if (service is LocalFileSaveReporter) {
+      return (service as LocalFileSaveReporter)
+          .saveFileWithResult(path, bytes, overwrite: overwrite);
+    }
+    if (!overwrite) {
+      throw UnsupportedError('This filesystem cannot create a protected copy.');
+    }
+    await saveFile(path, bytes);
+    // A legacy browser implementation cannot prove that it overwrote a file.
+    return kIsWeb
+        ? LocalFileSaveResult.downloadedCopy
+        : LocalFileSaveResult.written;
+  }
+}
+
 /// Abstract interface for handling local file system access.
 abstract class LocalFileService {
   late String currentPath;

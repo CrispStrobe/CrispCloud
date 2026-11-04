@@ -65,6 +65,13 @@ jobs:
       - name: Install dependencies
         run: flutter pub get
 
+      - name: Resolve vendored package development dependencies
+        run: |
+          (cd packages/quds_office_engine && dart pub get)
+          (cd packages/quds_office_editor && flutter pub get)
+          (cd packages/dart_pdf_editor && flutter pub get)
+          (cd packages/dart_pdf_editor_secure_storage && flutter pub get)
+
       - name: Shared storage contracts
         working-directory: packages/crisp_storage
         run: |
@@ -112,14 +119,9 @@ jobs:
           retention-days: 30
 
       - name: flutter analyze (errors fail the build)
-        run: |
-          # Exclude cli/ — it's a separate Dart package with its own pubspec
-          flutter analyze --no-fatal-warnings 2>&1 | grep -v "cli/" | tee analyze.log || true
-          if grep -q "  error • " analyze.log; then
-            echo "::error::flutter analyze surfaced errors"
-            exit 1
-          fi
-          echo "No errors found (warnings/info are OK)"
+        # CLI analysis runs above; analysis_options.yaml excludes it here.
+        # Preserve the errors-only policy while also failing on tool crashes.
+        run: flutter analyze --no-fatal-warnings --no-fatal-infos
 
       - name: Fast deterministic tests with coverage
         env:

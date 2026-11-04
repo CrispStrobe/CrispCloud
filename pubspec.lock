@@ -49,6 +49,14 @@ packages:
       url: "https://pub.dev"
     source: hosted
     version: "2.13.1"
+  bidi:
+    dependency: transitive
+    description:
+      name: bidi
+      sha256: "77f475165e94b261745cf1032c751e2032b8ed92ccb2bf5716036db79320637d"
+      url: "https://pub.dev"
+    source: hosted
+    version: "2.0.13"
   bip39:
     dependency: "direct main"
     description:
@@ -232,6 +240,29 @@ packages:
       url: "https://pub.dev"
     source: hosted
     version: "1.0.2"
+  cupertino_ui:
+    dependency: transitive
+    description:
+      name: cupertino_ui
+      sha256: "369e39a1c5c030a6212589c3da1809920b1c2cfade7b02aade7695bfa4b88c3a"
+      url: "https://pub.dev"
+    source: hosted
+    version: "1.1.6"
+  dart_pdf_editor:
+    dependency: "direct main"
+    description:
+      path: "packages/dart_pdf_editor"
+      relative: true
+    source: path
+    version: "14.0.0"
+  dart_pdf_editor_assets:
+    dependency: "direct main"
+    description:
+      name: dart_pdf_editor_assets
+      sha256: "5af6adc27615d1b2f19559b04ba110a07e91b973839c2dd8e66e8a4904745af9"
+      url: "https://pub.dev"
+    source: hosted
+    version: "14.0.0"
   dart_pg:
     dependency: transitive
     description:
@@ -955,6 +986,14 @@ packages:
       url: "https://pub.dev"
     source: hosted
     version: "0.13.0"
+  material_ui:
+    dependency: transitive
+    description:
+      name: material_ui
+      sha256: a30f5d0625b6b83770f53ca3f7aafd6fd9d147cb3853f54a70668541046fe5d6
+      url: "https://pub.dev"
+    source: hosted
+    version: "1.10.0"
   meta:
     dependency: "direct overridden"
     description:
@@ -1091,6 +1130,30 @@ packages:
       url: "https://pub.dev"
     source: hosted
     version: "2.3.0"
+  pdf_cos:
+    dependency: "direct main"
+    description:
+      name: pdf_cos
+      sha256: "1c096ac5ba46f504c772bf5927faf581211391ab73962baec32ed1dddd2165a7"
+      url: "https://pub.dev"
+    source: hosted
+    version: "14.0.0"
+  pdf_document:
+    dependency: "direct main"
+    description:
+      name: pdf_document
+      sha256: a285e8cef1ab82b45486929318356c9837ba511440cda1a7b963d5efa91ca943
+      url: "https://pub.dev"
+    source: hosted
+    version: "14.0.0"
+  pdf_graphics:
+    dependency: transitive
+    description:
+      name: pdf_graphics
+      sha256: "2d89b774b08a38d9fb614c9bc3ef2d5398264fad2b3c040142c3d297555c425a"
+      url: "https://pub.dev"
+    source: hosted
+    version: "14.0.0"
   pdfx:
     dependency: "direct main"
     description:
@@ -1277,10 +1340,10 @@ packages:
     dependency: "direct main"
     description:
       name: shared_preferences
-      sha256: c3025c5534b01739267eb7d76959bbc25a6d10f6988e1c2a3036940133dd10bf
+      sha256: "1e85e0dccf5b4a016077fea7dfbb4a7cb39c759ac1596fcf60c06deadb7da91f"
       url: "https://pub.dev"
     source: hosted
-    version: "2.5.5"
+    version: "2.5.6"
   shared_preferences_android:
     dependency: transitive
     description:
@@ -1546,10 +1609,10 @@ packages:
     dependency: "direct main"
     description:
       name: url_launcher
-      sha256: f6a7e5c4835bb4e3026a04793a4199ca2d14c739ec378fdfe23fc8075d0439f8
+      sha256: e8cc955c97e06df9879140a1fe301f3d493f01b7c62dec7f46834be31d7e9fda
       url: "https://pub.dev"
     source: hosted
-    version: "6.3.2"
+    version: "6.3.3"
   url_launcher_android:
     dependency: transitive
     description:
@@ -1706,10 +1769,10 @@ packages:
     dependency: "direct main"
     description:
       name: web
-      sha256: "868d88a33d8a87b18ffc05f9f030ba328ffefba92d6c127917a2ba740f9cfe4a"
+      sha256: e119e82ac4795c7925103b7cf3768191f33941b99e7ccffbd6c645201d9f606b
       url: "https://pub.dev"
     source: hosted
-    version: "1.1.1"
+    version: "1.1.2"
   web_socket:
     dependency: transitive
     description:

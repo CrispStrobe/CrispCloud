@@ -22,8 +22,108 @@ LocalFileService createPlatformFileService() {
   throw UnsupportedError('Unsupported platform');
 }
 
+/// Stage editor output beside the destination and replace it only after the
+/// bytes have been flushed. A failed write never truncates the original.
+///
+/// Existing file mode bits are inherited by staging from a copy. Symlinks
+/// are deliberately rejected: replacing their inode would replace the link
+/// rather than editing its target. Callers can save a separate copy instead.
+/// This is atomic replacement on filesystems supporting rename-over-file; it
+/// is not a compare-and-swap with the editor's earlier conflict check.
+Future<void> writeLocalEditorFile(
+  String path,
+  Uint8List data, {
+  bool overwrite = true,
+}) async {
+  final destination = File(path);
+  final type = await FileSystemEntity.type(path, followLinks: false);
+  if (type == FileSystemEntityType.link) {
+    throw FileSystemException(
+      'Save a separate copy when editing a symbolic link.',
+      path,
+    );
+  }
+  if (type == FileSystemEntityType.directory) {
+    throw FileSystemException('The destination is a directory.', path);
+  }
+  if (!overwrite && type != FileSystemEntityType.notFound) {
+    throw FileSystemException(
+      'A file already exists with that name.',
+      path,
+      const OSError('File exists', 17),
+    );
+  }
+  if (!await destination.parent.exists()) {
+    await destination.parent.create(recursive: true);
+  }
+
+  if (!overwrite) {
+    // Dart exposes exclusive file creation but no rename-without-replacement.
+    // Reserve an unused path before writing. This rejects known collisions;
+    // the API does not prevent another process replacing that reservation.
+    // The original document remains untouched even on failure.
+    await destination.create(exclusive: true);
+    try {
+      await destination.writeAsBytes(data, flush: true);
+    } catch (_) {
+      try {
+        await destination.delete();
+      } catch (_) {
+        // Preserve the write error; an incomplete copy is never a clean save.
+      }
+      rethrow;
+    }
+    return;
+  }
+
+  final staging = await destination.parent.createTemp('.crisp-pdf-save-');
+  final staged = File('${staging.path}${Platform.pathSeparator}document.pdf');
+  try {
+    int? originalMode;
+    if (type == FileSystemEntityType.file) {
+      if (!Platform.isWindows) {
+        originalMode = (await destination.stat()).mode & 0xfff;
+        // Rename permission on the parent can bypass a read-only file's mode.
+        // Do not silently turn that into permission to replace its contents.
+        if ((originalMode & 0x92) == 0) {
+          throw FileSystemException(
+            'The PDF is read-only. Save a separate copy.',
+            path,
+          );
+        }
+      }
+      await destination.copy(staged.path);
+      if (originalMode != null) {
+        final stagedMode = (await staged.stat()).mode & 0xfff;
+        if (originalMode != stagedMode) {
+          throw FileSystemException(
+            'Could not preserve file permissions. Save a separate copy.',
+            path,
+          );
+        }
+      }
+    }
+    await staged.writeAsBytes(data, flush: true);
+    if (originalMode != null &&
+        ((await staged.stat()).mode & 0xfff) != originalMode) {
+      throw FileSystemException(
+        'Could not preserve file permissions. Save a separate copy.',
+        path,
+      );
+    }
+    await staged.rename(path);
+  } finally {
+    try {
+      await staging.delete(recursive: true);
+    } catch (_) {
+      // The destination's completed write must not become a failed save just
+      // because removing an empty staging directory failed.
+    }
+  }
+}
+
 // --- macOS Implementation ---
-class MacosFileService implements LocalFileService {
+class MacosFileService implements LocalFileService, LocalFileSaveReporter {
   String? _grantedBasePath;
   final _bookmarks = SecureBookmarks();
   List<FileSystemEntity> _resolvedBookmarks = <FileSystemEntity>[];
@@ -164,6 +264,21 @@ class MacosFileService implements LocalFileService {
     await file.writeAsBytes(data);
   }
 
+  @override
+  Future<LocalFileSaveResult> saveFileWithResult(
+    String path,
+    Uint8List data, {
+    bool overwrite = true,
+  }) async {
+    final scope = await _beginScope(path);
+    try {
+      await writeLocalEditorFile(path, data, overwrite: overwrite);
+      return LocalFileSaveResult.written;
+    } finally {
+      await _endScope(scope);
+    }
+  }
+
   Future<FileSystemEntity?> _beginScope(String path) async {
     if (_resolvedBookmarks.isEmpty) await _loadAndResolveBookmarks();
     final FileSystemEntity? scope = _scopeFor(path);
@@ -287,7 +402,7 @@ class MacosFileService implements LocalFileService {
 }
 
 // --- Windows/Linux Implementation ---
-class DesktopFileService implements LocalFileService {
+class DesktopFileService implements LocalFileService, LocalFileSaveReporter {
   @override
   String currentPath = Platform.environment['HOME'] ?? Platform.environment['USERPROFILE'] ?? '/';
 
@@ -351,6 +466,16 @@ class DesktopFileService implements LocalFileService {
   }
 
   @override
+  Future<LocalFileSaveResult> saveFileWithResult(
+    String path,
+    Uint8List data, {
+    bool overwrite = true,
+  }) async {
+    await writeLocalEditorFile(path, data, overwrite: overwrite);
+    return LocalFileSaveResult.written;
+  }
+
+  @override
   Future<bool> hasAccessToPath(String path) async => true;
 
   @override
@@ -405,7 +530,7 @@ class DesktopFileService implements LocalFileService {
 }
 
 // --- Mobile (Android/iOS) Implementation ---
-class MobileFileService implements LocalFileService {
+class MobileFileService implements LocalFileService, LocalFileSaveReporter {
   String? _grantedBasePath;
   static const String _mobileBookmarkKey = 'mobile_bookmark_data';
   final _bookmarks = SecureBookmarks();
@@ -552,6 +677,33 @@ class MobileFileService implements LocalFileService {
     final file = File(path);
     if (!await file.parent.exists()) await file.parent.create(recursive: true);
     await file.writeAsBytes(data);
+  }
+
+  @override
+  Future<LocalFileSaveResult> saveFileWithResult(
+    String path,
+    Uint8List data, {
+    bool overwrite = true,
+  }) async {
+    if (_resolvedBookmarkFile == null) await _loadAndResolveBookmark();
+    final scope = _resolvedBookmarkFile;
+    final activeScope =
+        scope != null && isSameOrUnderPath(path, scope.path) ? scope : null;
+    if (activeScope != null) {
+      await _bookmarks.startAccessingSecurityScopedResource(activeScope);
+    }
+    try {
+      await writeLocalEditorFile(path, data, overwrite: overwrite);
+      return LocalFileSaveResult.written;
+    } finally {
+      if (activeScope != null) {
+        try {
+          await _bookmarks.stopAccessingSecurityScopedResource(activeScope);
+        } catch (_) {
+          // Releasing access must not change the result of a completed write.
+        }
+      }
+    }
   }
 
   @override

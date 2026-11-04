@@ -29,6 +29,11 @@ migrate_working_dir/
 .pub/
 /build/
 /coverage/
+# Standalone checks for vendored packages must not change the app lockfile.
+/packages/dart_pdf_editor/pubspec.lock
+/packages/dart_pdf_editor_secure_storage/pubspec.lock
+/packages/dart_pdf_editor/build/
+/packages/dart_pdf_editor_secure_storage/build/
 
 # Symbolication related
 app.*.symbols

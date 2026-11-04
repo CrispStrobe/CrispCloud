@@ -4,6 +4,7 @@
 
 import 'dart:async';
 import 'dart:io';
+import 'dart:typed_data' show ByteBuffer;
 import 'package:flutter/foundation.dart';
 import 'package:universal_html/html.dart' as html;
 import 'filen_web_stub.dart' if (dart.library.js_util) 'dart:js_util' as js_util;
@@ -16,7 +17,8 @@ LocalFileService createPlatformFileService() {
   return WebFileService.instance;
 }
 
-class WebFileService implements LocalFileService {
+class WebFileService
+    implements LocalFileService, LocalFileSaveReporter, FreshLocalFileReader {
   static const _log = Log('WebFS');
 
   // Singleton pattern to preserve state across reloads/instantiations
@@ -335,10 +337,94 @@ class WebFileService implements LocalFileService {
 
     if (fileRef == null) throw Exception('File ref not found: $path');
 
+    return _readBrowserFile(path, fileRef);
+  }
+
+  @override
+  Future<Uint8List> readFileFresh(
+    String path, {
+    FileItem? fileItem,
+    int? maxBytes,
+  }) async {
+    final rootHandle = _findRootHandle(path);
+    if (rootHandle == null) {
+      // Legacy file input provides an immutable File snapshot and cannot
+      // overwrite its source. Its save result is explicitly a download.
+      final size = getWebMetadata(path)['size'];
+      if (maxBytes != null && size is num && size > maxBytes) {
+        throw FileSystemException('File is too large to edit.', path);
+      }
+      final bytes = await readFile(path, fileItem: fileItem);
+      if (maxBytes != null && bytes.length > maxBytes) {
+        throw FileSystemException('File is too large to edit.', path);
+      }
+      return bytes;
+    }
+
+    // Never use _fileRefs or cached child handles here: File objects are
+    // snapshots, and an external edit/rename must be visible before overwrite.
+    final parts = path.split('/').where((s) => s.isNotEmpty).toList();
+    if (parts.length < 2) {
+      throw FileSystemException('The PDF path is not a file.', path);
+    }
+    dynamic parent = rootHandle;
+    for (var i = 1; i < parts.length - 1; i++) {
+      parent = await js_util.promiseToFuture(
+        js_util.callMethod(parent, 'getDirectoryHandle', [parts[i]]),
+      );
+    }
+    final handle = await js_util.promiseToFuture(
+      js_util.callMethod(parent, 'getFileHandle', [parts.last]),
+    );
+    final dynamic fresh = await js_util.promiseToFuture(
+      js_util.callMethod(handle, 'getFile', []),
+    );
+    final size = js_util.getProperty(fresh, 'size') as num;
+    if (maxBytes != null && size > maxBytes) {
+      throw FileSystemException('File is too large to edit.', path);
+    }
+    _fileRefs[path] = fresh as html.File;
+    return _readBrowserFile(path, fresh);
+  }
+
+  Future<Uint8List> _readBrowserFile(String path, html.File file) async {
     final reader = html.FileReader();
-    reader.readAsArrayBuffer(fileRef);
-    await reader.onLoad.first;
-    return reader.result as Uint8List;
+    final completer = Completer<Uint8List>();
+    final load = reader.onLoad.listen((_) {
+      if (completer.isCompleted) return;
+      final result = reader.result;
+      if (result is Uint8List) {
+        completer.complete(result);
+      } else if (result is ByteBuffer) {
+        completer.complete(Uint8List.view(result));
+      } else {
+        completer.completeError(
+          FileSystemException('Could not read the PDF bytes.', path),
+        );
+      }
+    });
+    final error = reader.onError.listen((_) {
+      if (!completer.isCompleted) {
+        completer.completeError(
+          FileSystemException('Could not read the current PDF.', path),
+        );
+      }
+    });
+    final abort = reader.onAbort.listen((_) {
+      if (!completer.isCompleted) {
+        completer.completeError(
+          FileSystemException('Reading the PDF was cancelled.', path),
+        );
+      }
+    });
+    try {
+      reader.readAsArrayBuffer(file);
+      return await completer.future;
+    } finally {
+      await load.cancel();
+      await error.cancel();
+      await abort.cancel();
+    }
   }
 
   @override
@@ -430,9 +516,19 @@ class WebFileService implements LocalFileService {
 
   @override
   Future<void> saveFile(String path, Uint8List data) async {
+    await saveFileWithResult(path, data);
+  }
+
+  @override
+  Future<LocalFileSaveResult> saveFileWithResult(
+    String path,
+    Uint8List data, {
+    bool overwrite = true,
+  }) async {
     _log.debug('saveFile: $path (${data.length} bytes)');
     final rootHandle = _findRootHandle(path);
     if (rootHandle != null) {
+      dynamic writable;
       try {
         _log.debug('Attempting write via directory handle navigation...');
 
@@ -447,19 +543,34 @@ class WebFileService implements LocalFileService {
           // Walk from segment 1 (skip root folder name) to second-to-last (parent dir).
           for (var i = 1; i < parts.length - 1; i++) {
             final dirPath = '/${parts.sublist(0, i + 1).join('/')}';
-            final cachedHandle = _dirHandles[dirPath];
-            if (cachedHandle != null) {
-              current = cachedHandle;
-            } else {
-              final opts = js_util.newObject();
-              js_util.setProperty(opts, 'create', true);
-              final promise = js_util.callMethod(current, 'getDirectoryHandle', [parts[i], opts]);
-              current = await js_util.promiseToFuture(promise);
-              _dirHandles[dirPath] = current;
-            }
+            final opts = js_util.newObject();
+            js_util.setProperty(opts, 'create', true);
+            final promise = js_util.callMethod(current, 'getDirectoryHandle', [parts[i], opts]);
+            current = await js_util.promiseToFuture(promise);
+            _dirHandles[dirPath] = current;
           }
 
           final fileName = parts.last;
+          if (!overwrite) {
+            dynamic existing;
+            try {
+              existing = await js_util.promiseToFuture(
+                js_util.callMethod(current, 'getFileHandle', [fileName]),
+              );
+            } catch (error) {
+              // FSA has no exclusive-create primitive. Only a definite
+              // NotFoundError permits the following create; other failures
+              // fall back to downloading without writing anything.
+              if (!error.toString().contains('NotFoundError')) rethrow;
+            }
+            if (existing != null) {
+              throw FileSystemException(
+                'A file already exists with that name.',
+                path,
+                const OSError('File exists', 17),
+              );
+            }
+          }
           final createOpts = js_util.newObject();
           js_util.setProperty(createOpts, 'create', true);
 
@@ -467,21 +578,27 @@ class WebFileService implements LocalFileService {
           final fileHandle = await js_util.promiseToFuture(fileHandlePromise);
 
           final writablePromise = js_util.callMethod(fileHandle, 'createWritable', []);
-          final writable = await js_util.promiseToFuture(writablePromise);
+          writable = await js_util.promiseToFuture(writablePromise);
 
           final writePromise = js_util.callMethod(writable, 'write', [data]);
           await js_util.promiseToFuture(writePromise);
 
           final closePromise = js_util.callMethod(writable, 'close', []);
           await js_util.promiseToFuture(closePromise);
+          writable = null;
 
           _log.debug('Successfully wrote to $path');
 
-          final fileObjPromise = js_util.callMethod(fileHandle, 'getFile', []);
-          final fileObj = await js_util.promiseToFuture(fileObjPromise);
-
           final dirPath = p.dirname(path);
-          _fileRefs[path] = fileObj;
+          try {
+            final fileObjPromise = js_util.callMethod(fileHandle, 'getFile', []);
+            _fileRefs[path] = await js_util.promiseToFuture(fileObjPromise);
+          } catch (error) {
+            // close() already committed the write. Do not report a download
+            // or a failed save merely because refreshing a snapshot failed.
+            _fileRefs.remove(path);
+            _log.debug('Saved file snapshot refresh failed: $error');
+          }
 
           if (!_virtualTree.containsKey(dirPath)) {
             _virtualTree[dirPath] = [];
@@ -490,14 +607,25 @@ class WebFileService implements LocalFileService {
             _virtualTree[dirPath]!.add(File(path));
           }
 
-          return;
+          return LocalFileSaveResult.written;
         }
       } catch (e) {
+        if (writable != null) {
+          try {
+            await js_util.promiseToFuture(
+              js_util.callMethod(writable, 'abort', []),
+            );
+          } catch (_) {
+            // Best effort; the original is committed only by close().
+          }
+        }
+        if (e is FileSystemException && e.osError?.errorCode == 17) rethrow;
         _log.debug('Direct write failed ($e). Falling back.');
       }
     }
 
     _triggerBrowserDownload(path, data);
+    return LocalFileSaveResult.downloadedCopy;
   }
 
   Future<bool> _verifyPermission(dynamic handle, String mode) async {
