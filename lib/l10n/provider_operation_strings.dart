@@ -1,4 +1,5 @@
 import 'package:flutter/widgets.dart';
+import 'remote_transport_strings.dart';
 
 import '../services/nextcloud_operation_failure.dart';
 import '../services/b2_operation_failure.dart';
@@ -29,6 +30,8 @@ import 's3_operation_strings.dart';
 
 /// Returns null for unknown errors so each caller can retain its fallback.
 String? localizedKnownProviderError(BuildContext context, Object error) {
+  final transport = localizedRemoteTransportError(context, error);
+  if (transport != null) return transport;
   if (error is SftpOperationFailure) {
     return localizedSftpOperationError(context, error);
   }

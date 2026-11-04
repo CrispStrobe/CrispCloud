@@ -38,7 +38,10 @@ class SshKnownHosts {
     HostKeyPrompt? prompt,
   }) async {
     if (!RegExp(r'^SHA256:[A-Za-z0-9+/]{43}$').hasMatch(fingerprint)) {
-      throw const FormatException('Invalid SSH SHA256 fingerprint');
+      throw const RemoteFormatException(
+        'Invalid SSH SHA256 fingerprint',
+        RemoteErrorCode.invalidFingerprint,
+      );
     }
     final known = (await _load())[endpoint];
     if (known == fingerprint) return true;

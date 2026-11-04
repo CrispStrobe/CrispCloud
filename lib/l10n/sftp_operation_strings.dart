@@ -1,4 +1,5 @@
 import 'package:flutter/widgets.dart';
+import 'remote_transport_strings.dart';
 import '../services/sftp_operation_failure.dart';
 
 /// Localize app-authored SFTP text and retain the server's error detail.
@@ -9,7 +10,7 @@ String localizedSftpOperationError(BuildContext context, Object error) {
   if (template == null) return error.toString();
   return template.replaceAllMapped(RegExp(r'\{([A-Za-z]+)\}'), (match) {
     final value = error.arguments[match.group(1)];
-    return value == null ? match.group(0)! : value.toString();
+    return value == null ? match.group(0)! : localizedRemoteTransportError(context, value) ?? value.toString();
   });
 }
 
