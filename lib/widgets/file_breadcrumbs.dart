@@ -5,6 +5,7 @@ import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'dart:io';
 
+import '../l10n/misc_ui_strings.dart';
 import '../models/panel_side.dart';
 import '../providers/providers.dart';
 
@@ -77,7 +78,7 @@ class FileBreadcrumbs extends ConsumerWidget {
         children: [
           // Back button (Alt+Left)
           Semantics(
-            label: 'Navigate back',
+            label: MiscUiStrings(context).text('back'),
             button: true,
             enabled: canBack,
             child: ConstrainedBox(
@@ -97,7 +98,9 @@ class FileBreadcrumbs extends ConsumerWidget {
           ),
           ),  // Semantics (back)
           // Forward button (Alt+Right)
-          ConstrainedBox(
+          Tooltip(
+            message: MiscUiStrings(context).text('forward'),
+            child: ConstrainedBox(
             constraints: BoxConstraints(minWidth: minTap, minHeight: minTap),
             child: InkWell(
               onTap: canForward ? () => panel.navigateForward() : null,
@@ -111,8 +114,10 @@ class FileBreadcrumbs extends ConsumerWidget {
                 ),
               ),
             ),
-          ),
-          ConstrainedBox(
+          )),
+          Tooltip(
+            message: MiscUiStrings(context).text('home'),
+            child: ConstrainedBox(
             constraints: BoxConstraints(minWidth: minTap, minHeight: minTap),
             child: InkWell(
               onTap: () {
@@ -128,7 +133,7 @@ class FileBreadcrumbs extends ConsumerWidget {
                 child: Icon(Icons.home, size: iconSize, color: Theme.of(context).colorScheme.onSurfaceVariant),
               ),
             ),
-          ),
+          )),
           // Bookmark star (Ctrl+B to toggle)
           ConstrainedBox(
             constraints: BoxConstraints(minWidth: minTap, minHeight: minTap),

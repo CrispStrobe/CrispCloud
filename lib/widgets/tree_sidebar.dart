@@ -7,6 +7,8 @@
 
 import 'package:flutter/foundation.dart' show kIsWeb, defaultTargetPlatform, TargetPlatform;
 import 'package:flutter/material.dart';
+
+import '../l10n/misc_ui_strings.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:path/path.dart' as p;
 
@@ -14,7 +16,6 @@ import '../models/file_item.dart';
 import '../models/panel_side.dart';
 import '../l10n/app_localizations.dart';
 import '../providers/providers.dart';
-import '../services/log_service.dart';
 
 class TreeSidebar extends ConsumerStatefulWidget {
   const TreeSidebar({super.key});
@@ -208,7 +209,9 @@ class _TreeSidebarState extends ConsumerState<TreeSidebar> {
       final isCurrent = folderPath == currentPath;
 
       widgets.add(_TreeNode(
-        name: folder.name,
+        name: folder.metadata?['missingRemoteName'] == true
+            ? MiscUiStrings(context).text('unknown')
+            : folder.name,
         path: folderPath,
         depth: depth,
         isExpanded: isExpanded,
@@ -293,6 +296,7 @@ class _TreeSidebarState extends ConsumerState<TreeSidebar> {
               folders = rawFolders
                   .map((m) => FileItem(
                         name: (m as Map<String, dynamic>)['name'] ?? 'Unknown',
+                        metadata: {'missingRemoteName': m['name'] == null},
                         isFolder: true,
                       ))
                   .toList()

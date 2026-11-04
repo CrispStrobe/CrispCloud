@@ -4,6 +4,8 @@
 // and paragraph dialogs, insert-table / hyperlink prompts and page setup.
 
 import 'package:flutter/material.dart';
+
+import '../l10n/misc_ui_strings.dart';
 import 'package:flutter/services.dart';
 import 'package:quds_office_editor/quds_office_editor.dart';
 
@@ -540,7 +542,7 @@ class _ColorField extends StatelessWidget {
             const SizedBox(width: 6),
             Expanded(
               child: Text(
-                color.isEmpty ? 'None' : '#$color',
+                color.isEmpty ? MiscUiStrings(context).text('none') : '#$color',
                 overflow: TextOverflow.ellipsis,
                 style: const TextStyle(fontSize: 11),
               ),
