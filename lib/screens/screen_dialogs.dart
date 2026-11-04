@@ -18,6 +18,7 @@ import '../widgets/connection_dialog.dart';
 import '../widgets/file_editor_dialog.dart' show showFileEditorDialog;
 import '../widgets/internal_viewer_dialog.dart' show showInternalViewer;
 import '../l10n/app_localizations.dart';
+import '../l10n/screen_dialog_strings.dart';
 import '../services/log_service.dart';
 
 const _log = Log('ScreenDialogs');
@@ -48,8 +49,8 @@ void confirmLogoutRiverpod(BuildContext context, WidgetRef ref) {
   showDialog(
     context: context,
     builder: (context) => AlertDialog(
-      title: const Text('Confirm Logout'),
-      content: const Text('Are you sure you want to logout from Cloud?'),
+      title: Text(ScreenDialogStrings(context).text('logoutTitle')),
+      content: Text(ScreenDialogStrings(context).text('logoutConfirm')),
       actions: [
         TextButton(
           onPressed: () => Navigator.pop(context),
@@ -69,7 +70,7 @@ void confirmLogoutRiverpod(BuildContext context, WidgetRef ref) {
             backgroundColor: Theme.of(context).colorScheme.error,
             foregroundColor: Theme.of(context).colorScheme.onError,
           ),
-          child: const Text('Logout'),
+          child: Text(AppLocalizations.of(context)!.logout),
         ),
       ],
     ),
@@ -84,7 +85,7 @@ void showKeyboardShortcutsHelp(BuildContext context) {
   showDialog(
     context: context,
     builder: (context) => AlertDialog(
-      title: const Text('Keyboard Shortcuts'),
+      title: Text(AppLocalizations.of(context)!.keyboardShortcuts),
       content: SingleChildScrollView(
         child: Column(
           mainAxisSize: MainAxisSize.min,
@@ -155,7 +156,7 @@ void showKeyboardShortcutsHelp(BuildContext context) {
         ),
       ),
       actions: [
-        TextButton(onPressed: () => Navigator.pop(context), child: const Text('Close')),
+        TextButton(onPressed: () => Navigator.pop(context), child: Text(AppLocalizations.of(context)!.close)),
       ],
     ),
   );
@@ -197,8 +198,8 @@ void confirmDeleteSelected(BuildContext context, WidgetRef ref) {
   showDialog(
     context: context,
     builder: (context) => AlertDialog(
-      title: const Text('Confirm Delete'),
-      content: Text('Delete ${panel.selection.length} item(s)?'),
+      title: Text(AppLocalizations.of(context)!.confirmDeleteTitle),
+      content: Text(AppLocalizations.of(context)!.confirmDeleteMessage(panel.selection.length)),
       actions: [
         TextButton(onPressed: () => Navigator.pop(context), child: Text(AppLocalizations.of(context)!.cancel)),
         ElevatedButton(
@@ -211,7 +212,7 @@ void confirmDeleteSelected(BuildContext context, WidgetRef ref) {
                 context,
                 ref,
                 activePanel,
-                'Deleted ${files.length} item(s)',
+                ScreenDialogStrings(context).value('deleted', files.length),
               );
             }
           },
@@ -219,7 +220,7 @@ void confirmDeleteSelected(BuildContext context, WidgetRef ref) {
             backgroundColor: Theme.of(context).colorScheme.error,
             foregroundColor: Theme.of(context).colorScheme.onError,
           ),
-          child: const Text('Delete'),
+          child: Text(AppLocalizations.of(context)!.delete),
         ),
       ],
     ),
@@ -239,7 +240,7 @@ void showRenameDialog(BuildContext context, WidgetRef ref) {
       await panel.renameFile(file, value);
       if (context.mounted) {
         Navigator.pop(context);
-        _showUndoSnackBar(context, ref, activePanel, 'Renamed "${file.name}" to "$value"');
+        _showUndoSnackBar(context, ref, activePanel, ScreenDialogStrings(context).value('renamed', '${file.name} → $value'));
       }
     }
   }
@@ -247,10 +248,10 @@ void showRenameDialog(BuildContext context, WidgetRef ref) {
   showDialog(
     context: context,
     builder: (context) => AlertDialog(
-      title: const Text('Rename'),
+      title: Text(AppLocalizations.of(context)!.rename),
       content: TextField(
         controller: controller,
-        decoration: const InputDecoration(labelText: 'New name', border: OutlineInputBorder()),
+        decoration: InputDecoration(labelText: AppLocalizations.of(context)!.newName, border: const OutlineInputBorder()),
         autofocus: true,
         onSubmitted: doRename,
       ),
@@ -258,7 +259,7 @@ void showRenameDialog(BuildContext context, WidgetRef ref) {
         TextButton(onPressed: () => Navigator.pop(context), child: Text(AppLocalizations.of(context)!.cancel)),
         ElevatedButton(
           onPressed: () => doRename(controller.text),
-          child: const Text('Rename'),
+          child: Text(AppLocalizations.of(context)!.rename),
         ),
       ],
     ),
@@ -313,7 +314,7 @@ void showCopyDialogFromSelection(BuildContext context, WidgetRef ref) {
     return;
   }
 
-  _showPathDialog(context, ref, activePanel, panel, panel.selection.toList(), 'Copy', panel.copyFiles);
+  _showPathDialog(context, ref, activePanel, panel, panel.selection.toList(), true, panel.copyFiles);
 }
 
 /// Download local files via browser on web.
@@ -353,7 +354,7 @@ void showMoveDialogFromSelection(BuildContext context, WidgetRef ref) {
     }
   }
 
-  _showPathDialog(context, ref, activePanel, panel, panel.selection.toList(), 'Move', panel.moveFiles);
+  _showPathDialog(context, ref, activePanel, panel, panel.selection.toList(), false, panel.moveFiles);
 }
 
 void _showPathDialog(
@@ -362,7 +363,7 @@ void _showPathDialog(
   PanelSide activePanel,
   PanelNotifier panel,
   List<FileItem> files,
-  String operation,
+  bool isCopy,
   Future<void> Function(List<FileItem>, String) action,
 ) {
   final controller = TextEditingController(text: panel.currentPath);
@@ -379,7 +380,7 @@ void _showPathDialog(
           context,
           ref,
           activePanel,
-          '${operation}d ${files.length} item(s) to $value',
+          ScreenDialogStrings(context).value(isCopy ? 'copied' : 'moved', '${files.length} → $value'),
         );
       }
     }
@@ -388,10 +389,10 @@ void _showPathDialog(
   showDialog(
     context: context,
     builder: (context) => AlertDialog(
-      title: Text('$operation ${files.length} item(s)'),
+      title: Text(isCopy ? AppLocalizations.of(context)!.copyNItems(files.length) : AppLocalizations.of(context)!.moveNItems(files.length)),
       content: TextField(
         controller: controller,
-        decoration: const InputDecoration(labelText: 'Target path', border: OutlineInputBorder()),
+        decoration: InputDecoration(labelText: AppLocalizations.of(context)!.targetPath, border: const OutlineInputBorder()),
         autofocus: true,
         onSubmitted: doAction,
       ),
@@ -399,7 +400,7 @@ void _showPathDialog(
         TextButton(onPressed: () => Navigator.pop(context), child: Text(AppLocalizations.of(context)!.cancel)),
         ElevatedButton(
           onPressed: () => doAction(controller.text),
-          child: Text(operation),
+          child: Text(isCopy ? AppLocalizations.of(context)!.copy : AppLocalizations.of(context)!.move),
         ),
       ],
     ),
@@ -415,7 +416,7 @@ void showCreateFolderDialog(BuildContext context, WidgetRef ref, PanelSide side)
       await panel.createFolder(value);
       if (context.mounted) {
         Navigator.pop(context);
-        _showUndoSnackBar(context, ref, side, 'Created folder "$value"');
+        _showUndoSnackBar(context, ref, side, ScreenDialogStrings(context).value('folderCreated', value));
       }
     }
   }
@@ -423,10 +424,10 @@ void showCreateFolderDialog(BuildContext context, WidgetRef ref, PanelSide side)
   showDialog(
     context: context,
     builder: (context) => AlertDialog(
-      title: const Text('New Folder'),
+      title: Text(AppLocalizations.of(context)!.newFolder),
       content: TextField(
         controller: controller,
-        decoration: const InputDecoration(labelText: 'Folder name', border: OutlineInputBorder()),
+        decoration: InputDecoration(labelText: AppLocalizations.of(context)!.folderName, border: const OutlineInputBorder()),
         autofocus: true,
         onSubmitted: doCreate,
       ),
@@ -434,7 +435,7 @@ void showCreateFolderDialog(BuildContext context, WidgetRef ref, PanelSide side)
         TextButton(onPressed: () => Navigator.pop(context), child: Text(AppLocalizations.of(context)!.cancel)),
         ElevatedButton(
           onPressed: () => doCreate(controller.text),
-          child: const Text('Create'),
+          child: Text(AppLocalizations.of(context)!.create),
         ),
       ],
     ),
@@ -447,19 +448,19 @@ void showReceivedFilesDialog(BuildContext context, List<String> files) {
   showDialog(
     context: context,
     builder: (context) => AlertDialog(
-      title: const Text('Received Files'),
+      title: Text(ScreenDialogStrings(context).text('received')),
       content: Column(
         mainAxisSize: MainAxisSize.min,
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Text('Upload ${files.length} file(s) to Cloud?'),
+          Text(ScreenDialogStrings(context).value('uploadConfirm', files.length)),
           const SizedBox(height: 8),
           ...files.take(5).map((path) => Padding(
                 padding: const EdgeInsets.symmetric(vertical: 2),
                 child: Text('• ${p.basename(path)}', style: const TextStyle(fontSize: 12)),
               )),
           if (files.length > 5)
-            Text('... and ${files.length - 5} more', style: const TextStyle(fontSize: 12)),
+            Text(AppLocalizations.of(context)!.andMore(files.length - 5), style: const TextStyle(fontSize: 12)),
         ],
       ),
       actions: [
@@ -469,7 +470,7 @@ void showReceivedFilesDialog(BuildContext context, List<String> files) {
             // Will be wired when receive service is connected to Riverpod
             Navigator.pop(context);
           },
-          child: const Text('Upload'),
+          child: Text(AppLocalizations.of(context)!.upload),
         ),
       ],
     ),
@@ -484,12 +485,12 @@ void showGoToDialog(BuildContext context, WidgetRef ref) {
   showDialog(
     context: context,
     builder: (ctx) => AlertDialog(
-      title: const Text('Go to Path'),
+      title: Text(ScreenDialogStrings(context).text('goPath')),
       content: TextField(
         controller: controller,
         autofocus: true,
-        decoration: const InputDecoration(
-          labelText: 'Path',
+        decoration: InputDecoration(
+          labelText: ScreenDialogStrings(context).text('path'),
           border: OutlineInputBorder(),
           prefixIcon: Icon(Icons.folder_open),
         ),
@@ -509,7 +510,7 @@ void showGoToDialog(BuildContext context, WidgetRef ref) {
               Navigator.pop(ctx);
             }
           },
-          child: const Text('Go'),
+          child: Text(ScreenDialogStrings(context).text('go')),
         ),
       ],
     ),
@@ -539,7 +540,7 @@ void _showUndoSnackBar(
       duration: const Duration(seconds: 4),
       action: canUndo
           ? SnackBarAction(
-              label: 'Undo',
+              label: ScreenDialogStrings(context).text('undo'),
               onPressed: () {
                 final undoCtx = _buildUndoCtx(ref, side);
                 historyNotifier.undo(last.id, undoCtx).then((result) {

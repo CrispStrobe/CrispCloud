@@ -6,6 +6,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import '../l10n/multi_cloud_strings.dart';
 import '../models/file_item.dart';
 import '../models/operation_progress.dart';
 import '../providers/providers.dart';
@@ -60,6 +61,9 @@ class _MultiCloudDialogState extends ConsumerState<_MultiCloudDialog>
     super.dispose();
   }
 
+  String _t(String key, [Map<String, Object> values = const {}]) =>
+      MultiCloudStrings(context).text(key, values);
+
   @override
   Widget build(BuildContext context) {
     final mc = ref.watch(multiCloudProvider);
@@ -70,10 +74,11 @@ class _MultiCloudDialogState extends ConsumerState<_MultiCloudDialog>
         children: [
           const Icon(Icons.cloud_sync),
           const SizedBox(width: 8),
-          const Text('Multi-Cloud'),
+          Text(_t('multi')),
           const Spacer(),
           IconButton(
             icon: const Icon(Icons.close, size: 18),
+            tooltip: MaterialLocalizations.of(context).closeButtonTooltip,
             onPressed: () => Navigator.of(context).pop(),
           ),
         ],
@@ -87,10 +92,10 @@ class _MultiCloudDialogState extends ConsumerState<_MultiCloudDialog>
             TabBar(
               controller: _tabs,
               labelColor: theme.colorScheme.primary,
-              tabs: const [
-                Tab(text: 'Connections', icon: Icon(Icons.hub, size: 16)),
-                Tab(text: 'Transfer', icon: Icon(Icons.swap_horiz, size: 16)),
-                Tab(text: 'Compare & Search', icon: Icon(Icons.compare_arrows, size: 16)),
+              tabs: [
+                Tab(text: _t('connections'), icon: const Icon(Icons.hub, size: 16)),
+                Tab(text: _t('transfer'), icon: const Icon(Icons.swap_horiz, size: 16)),
+                Tab(text: _t('compareSearch'), icon: const Icon(Icons.compare_arrows, size: 16)),
               ],
             ),
             const SizedBox(height: 8),
@@ -124,7 +129,7 @@ class _MultiCloudDialogState extends ConsumerState<_MultiCloudDialog>
         if (auth.isConnected)
           OutlinedButton.icon(
             icon: const Icon(Icons.add_circle_outline, size: 16),
-            label: Text('Add current: ${auth.providerName}'),
+            label: Text(_t('addCurrent', {'name': auth.providerName})),
             onPressed: () {
               final id = '${auth.currentProvider.name}_${DateTime.now().millisecondsSinceEpoch}';
               mc.addConnection(
@@ -134,21 +139,21 @@ class _MultiCloudDialogState extends ConsumerState<_MultiCloudDialog>
                 client: auth.client,
               );
               ScaffoldMessenger.of(context).showSnackBar(
-                SnackBar(content: Text('${auth.providerName} added')),
+                SnackBar(content: Text(_t('added', {'name': auth.providerName}))),
               );
             },
           )
         else
-          const Text(
-            'Connect to a provider first, then add it here.',
-            style: TextStyle(fontSize: 12),
+          Text(
+            _t('connectFirst'),
+            style: const TextStyle(fontSize: 12),
           ),
         const SizedBox(height: 12),
         if (connections.isEmpty)
-          const Center(
+          Center(
             child: Padding(
-              padding: EdgeInsets.all(24),
-              child: Text('No connections registered yet.'),
+              padding: const EdgeInsets.all(24),
+              child: Text(_t('empty')),
             ),
           )
         else
@@ -165,7 +170,7 @@ class _MultiCloudDialogState extends ConsumerState<_MultiCloudDialog>
                   subtitle: Text(conn.provider.name),
                   trailing: IconButton(
                     icon: const Icon(Icons.link_off, size: 16),
-                    tooltip: 'Disconnect',
+                    tooltip: _t('disconnect'),
                     onPressed: () async => mc.removeConnection(conn.id),
                   ),
                 );
@@ -188,15 +193,15 @@ class _MultiCloudDialogState extends ConsumerState<_MultiCloudDialog>
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
           if (connections.length < 2)
-            const Padding(
-              padding: EdgeInsets.symmetric(vertical: 16),
+            Padding(
+              padding: const EdgeInsets.symmetric(vertical: 16),
               child: Text(
-                'Register at least two connections in the Connections tab to enable transfers.',
+                _t('needTwo'),
                 textAlign: TextAlign.center,
               ),
             )
           else ...[
-            _sectionLabel('Source'),
+            _sectionLabel(_t('source')),
             _connectionDropdown(
               value: _sourceConnectionId,
               connections: connections,
@@ -205,14 +210,14 @@ class _MultiCloudDialogState extends ConsumerState<_MultiCloudDialog>
             const SizedBox(height: 6),
             TextField(
               controller: _sourcePathCtrl,
-              decoration: const InputDecoration(
-                labelText: 'Source path',
+              decoration: InputDecoration(
+                labelText: _t('sourcePath'),
                 isDense: true,
-                border: OutlineInputBorder(),
+                border: const OutlineInputBorder(),
               ),
             ),
             const SizedBox(height: 12),
-            _sectionLabel('Target'),
+            _sectionLabel(_t('target')),
             _connectionDropdown(
               value: _targetConnectionId,
               connections: connections,
@@ -221,10 +226,10 @@ class _MultiCloudDialogState extends ConsumerState<_MultiCloudDialog>
             const SizedBox(height: 6),
             TextField(
               controller: _targetPathCtrl,
-              decoration: const InputDecoration(
-                labelText: 'Target path',
+              decoration: InputDecoration(
+                labelText: _t('targetPath'),
                 isDense: true,
-                border: OutlineInputBorder(),
+                border: const OutlineInputBorder(),
               ),
             ),
             const SizedBox(height: 16),
@@ -233,7 +238,7 @@ class _MultiCloudDialogState extends ConsumerState<_MultiCloudDialog>
             else
               ElevatedButton.icon(
                 icon: const Icon(Icons.swap_horiz),
-                label: const Text('Start Transfer'),
+                label: Text(_t('start')),
                 onPressed: _canTransfer(mc) ? () => _startTransfer(mc) : null,
               ),
             if (mc.activeTransfer != null && !mc.isTransferring)
@@ -261,7 +266,7 @@ class _MultiCloudDialogState extends ConsumerState<_MultiCloudDialog>
     } catch (e) {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Could not list source: $e')),
+          SnackBar(content: Text(_t('listError', {'error': e}))),
         );
       }
       return;
@@ -275,7 +280,7 @@ class _MultiCloudDialogState extends ConsumerState<_MultiCloudDialog>
     if (files.isEmpty) {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('No files found at source path.')),
+          SnackBar(content: Text(_t('noFiles'))),
         );
       }
       return;
@@ -296,7 +301,7 @@ class _MultiCloudDialogState extends ConsumerState<_MultiCloudDialog>
       children: [
         const LinearProgressIndicator(),
         const SizedBox(height: 8),
-        Text(op != null ? op.batchSummary : 'Transferring...'),
+        Text(op != null ? _operationSummary(op) : _t('progress')),
       ],
     );
   }
@@ -311,7 +316,7 @@ class _MultiCloudDialogState extends ConsumerState<_MultiCloudDialog>
         borderRadius: BorderRadius.circular(6),
         border: Border.all(color: ok ? Colors.green : Colors.red),
       ),
-      child: Text(op.batchSummary, style: const TextStyle(fontSize: 12)),
+      child: Text(_operationSummary(op), style: const TextStyle(fontSize: 12)),
     );
   }
 
@@ -322,9 +327,9 @@ class _MultiCloudDialogState extends ConsumerState<_MultiCloudDialog>
   Widget _buildCompareSearchTab(MultiCloudNotifier mc) {
     return ListView(
       children: [
-        _sectionLabel('Compare Directories'),
+        _sectionLabel(_t('compareDirs')),
         if (mc.connections.length < 2)
-          const Text('Requires at least two connections.', style: TextStyle(fontSize: 12))
+          Text(_t('needsTwo'), style: const TextStyle(fontSize: 12))
         else ...[
           Row(
             children: [
@@ -332,7 +337,7 @@ class _MultiCloudDialogState extends ConsumerState<_MultiCloudDialog>
                 child: _connectionDropdown(
                   value: _compareIdA,
                   connections: mc.connections,
-                  hint: 'Provider A',
+                  hint: _t('providerA'),
                   onChanged: (v) => setState(() => _compareIdA = v),
                 ),
               ),
@@ -341,7 +346,7 @@ class _MultiCloudDialogState extends ConsumerState<_MultiCloudDialog>
                 child: _connectionDropdown(
                   value: _compareIdB,
                   connections: mc.connections,
-                  hint: 'Provider B',
+                  hint: _t('providerB'),
                   onChanged: (v) => setState(() => _compareIdB = v),
                 ),
               ),
@@ -353,10 +358,10 @@ class _MultiCloudDialogState extends ConsumerState<_MultiCloudDialog>
               Expanded(
                 child: TextField(
                   controller: _comparePathACtrl,
-                  decoration: const InputDecoration(
-                    labelText: 'Path A',
+                  decoration: InputDecoration(
+                    labelText: _t('pathA'),
                     isDense: true,
-                    border: OutlineInputBorder(),
+                    border: const OutlineInputBorder(),
                   ),
                 ),
               ),
@@ -364,10 +369,10 @@ class _MultiCloudDialogState extends ConsumerState<_MultiCloudDialog>
               Expanded(
                 child: TextField(
                   controller: _comparePathBCtrl,
-                  decoration: const InputDecoration(
-                    labelText: 'Path B',
+                  decoration: InputDecoration(
+                    labelText: _t('pathB'),
                     isDense: true,
-                    border: OutlineInputBorder(),
+                    border: const OutlineInputBorder(),
                   ),
                 ),
               ),
@@ -378,7 +383,7 @@ class _MultiCloudDialogState extends ConsumerState<_MultiCloudDialog>
               ? const Center(child: CircularProgressIndicator())
               : ElevatedButton.icon(
                   icon: const Icon(Icons.compare_arrows),
-                  label: const Text('Compare'),
+                  label: Text(_t('compare')),
                   onPressed: _compareIdA != null && _compareIdB != null
                       ? () => _runCompare(mc)
                       : null,
@@ -387,23 +392,23 @@ class _MultiCloudDialogState extends ConsumerState<_MultiCloudDialog>
             const SizedBox(height: 8),
             _buildDiffResults(mc.lastDiffs),
           ] else if (!mc.isComparing && _compareIdA != null)
-            const Padding(
-              padding: EdgeInsets.symmetric(vertical: 8),
-              child: Text('No differences found.', style: TextStyle(fontSize: 12)),
+            Padding(
+              padding: const EdgeInsets.symmetric(vertical: 8),
+              child: Text(_t('noDiffs'), style: const TextStyle(fontSize: 12)),
             ),
         ],
         const Divider(height: 24),
-        _sectionLabel('Search All Providers'),
+        _sectionLabel(_t('searchAll')),
         Row(
           children: [
             Expanded(
               child: TextField(
                 controller: _searchCtrl,
-                decoration: const InputDecoration(
-                  labelText: 'Search query',
+                decoration: InputDecoration(
+                  labelText: _t('query'),
                   isDense: true,
-                  border: OutlineInputBorder(),
-                  prefixIcon: Icon(Icons.search, size: 18),
+                  border: const OutlineInputBorder(),
+                  prefixIcon: const Icon(Icons.search, size: 18),
                 ),
                 onSubmitted: (_) => _runSearch(mc),
               ),
@@ -417,7 +422,7 @@ class _MultiCloudDialogState extends ConsumerState<_MultiCloudDialog>
                   )
                 : IconButton(
                     icon: const Icon(Icons.search),
-                    tooltip: 'Search',
+                    tooltip: _t('search'),
                     onPressed: () => _runSearch(mc),
                   ),
           ],
@@ -426,9 +431,9 @@ class _MultiCloudDialogState extends ConsumerState<_MultiCloudDialog>
           const SizedBox(height: 8),
           _buildSearchResults(mc.lastSearchResults),
         ] else if (!mc.isSearching && _searchCtrl.text.isNotEmpty)
-          const Padding(
-            padding: EdgeInsets.symmetric(vertical: 8),
-            child: Text('No results found.', style: TextStyle(fontSize: 12)),
+          Padding(
+            padding: const EdgeInsets.symmetric(vertical: 8),
+            child: Text(_t('noResults'), style: const TextStyle(fontSize: 12)),
           ),
       ],
     );
@@ -455,7 +460,7 @@ class _MultiCloudDialogState extends ConsumerState<_MultiCloudDialog>
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
-        Text('${diffs.length} difference(s):',
+        Text(_t('diffs', {'count': diffs.length}),
             style: const TextStyle(fontWeight: FontWeight.w600, fontSize: 12)),
         const SizedBox(height: 4),
         ...diffs.map(_buildDiffTile),
@@ -475,7 +480,7 @@ class _MultiCloudDialogState extends ConsumerState<_MultiCloudDialog>
       dense: true,
       leading: Icon(icon, color: color, size: 18),
       title: Text(diff.name, style: const TextStyle(fontSize: 13)),
-      subtitle: Text(diff.toString(), style: const TextStyle(fontSize: 11)),
+      subtitle: Text(_diffDescription(diff), style: const TextStyle(fontSize: 11)),
     );
   }
 
@@ -483,7 +488,7 @@ class _MultiCloudDialogState extends ConsumerState<_MultiCloudDialog>
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
-        Text('${results.length} result(s):',
+        Text(_t('results', {'count': results.length}),
             style: const TextStyle(fontWeight: FontWeight.w600, fontSize: 12)),
         const SizedBox(height: 4),
         ...results.map(
@@ -504,6 +509,35 @@ class _MultiCloudDialogState extends ConsumerState<_MultiCloudDialog>
     );
   }
 
+  String _operationSummary(OperationProgress op) {
+    final label = _t(op.type.name);
+    final name = op.isBatch
+        ? _t('batchName', {'operation': label, 'count': op.totalFiles})
+        : '$label: ${op.fileName}';
+    if (!op.isBatch) return name;
+    if (op.status == OperationStatus.failed) {
+      return _t('failed', {'operation': name, 'count': op.failedFiles});
+    }
+    if (op.status == OperationStatus.completed) {
+      return _t('complete', {'operation': name});
+    }
+    return _t('batchProgress', {
+      'operation': name, 'done': op.completedFiles, 'total': op.totalFiles,
+    });
+  }
+
+  String _diffDescription(FileDiff diff) => switch (diff.kind) {
+        FileDiffKind.onlyInA => _t('onlyA'),
+        FileDiffKind.onlyInB => _t('onlyB'),
+        FileDiffKind.sizeDiffers => _t('sizeDiff', {
+          'a': diff.itemA?.size ?? '—', 'b': diff.itemB?.size ?? '—',
+        }),
+        FileDiffKind.dateDiffers => _t('dateDiff', {
+          'a': diff.itemA?.updatedAt ?? '—', 'b': diff.itemB?.updatedAt ?? '—',
+        }),
+        FileDiffKind.bothDiffer => _t('bothDiff'),
+      };
+
   // ---------------------------------------------------------------------------
   // Helpers
   // ---------------------------------------------------------------------------
@@ -517,7 +551,7 @@ class _MultiCloudDialogState extends ConsumerState<_MultiCloudDialog>
   Widget _connectionDropdown({
     required String? value,
     required List<CloudConnection> connections,
-    String hint = 'Select connection',
+    String? hint,
     required ValueChanged<String?> onChanged,
   }) =>
       DropdownButtonFormField<String>(
@@ -526,7 +560,7 @@ class _MultiCloudDialogState extends ConsumerState<_MultiCloudDialog>
         decoration: InputDecoration(
           isDense: true,
           border: const OutlineInputBorder(),
-          hintText: hint,
+          hintText: hint ?? _t('select'),
         ),
         items: connections
             .map((c) => DropdownMenuItem(
