@@ -18,6 +18,7 @@ import '../providers/mount_provider.dart';
 import '../services/fuse_mount_service.dart';
 import '../l10n/app_localizations.dart';
 import '../l10n/mount_dialog_strings.dart';
+import '../l10n/mount_error_presentation.dart';
 
 void showMountDialog(BuildContext context) {
   showDialog(
@@ -54,7 +55,7 @@ class _MountManagerDialog extends ConsumerWidget {
               mount.availabilityError != null &&
               mount.availabilityError!.isNotEmpty)
             Tooltip(
-              message: mount.availabilityError!,
+              message: localizedMountError(context, mount.availabilityError!),
               child: const Icon(Icons.warning_amber, color: Colors.orange, size: 20),
             ),
         ],
@@ -69,7 +70,7 @@ class _MountManagerDialog extends ConsumerWidget {
             if (!mount.isSupported)
               _PlatformUnsupportedBanner()
             else if (mount.availabilityError != null && mount.availabilityError!.isNotEmpty)
-              _FuseUnavailableBanner(message: mount.availabilityError!),
+              _FuseUnavailableBanner(message: localizedMountError(context, mount.availabilityError!)),
 
             const SizedBox(height: 8),
 
@@ -259,7 +260,9 @@ class _AddMountDialogState extends ConsumerState<_AddMountDialog> {
           );
       if (!context.mounted) return;
       if (entry == null || entry.status == MountStatus.error) {
-        setState(() => _error = entry?.errorMessage ?? MountDialogStrings(context).text('failed'));
+        setState(() => _error = entry?.errorMessage == null
+            ? MountDialogStrings(context).text('failed')
+            : localizedMountError(context, entry!.errorMessage!));
       } else {
         Navigator.pop(context);
       }
@@ -299,7 +302,9 @@ class _MountTile extends ConsumerWidget {
         children: [
           if (entry.status == MountStatus.error)
             Tooltip(
-              message: entry.errorMessage ?? MountDialogStrings(context).text('unknown'),
+              message: entry.errorMessage == null
+                  ? MountDialogStrings(context).text('unknown')
+                  : localizedMountError(context, entry.errorMessage!),
               child: const Icon(Icons.info_outline, size: 16, color: Colors.red),
             ),
           if (isBusy)

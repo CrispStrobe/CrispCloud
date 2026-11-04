@@ -22,6 +22,7 @@ import 'file_tree_view_stub.dart'
 import 'panel_tab_bar.dart';
 import 'panel_header.dart';
 import '../l10n/app_localizations.dart';
+import '../l10n/file_panel_strings.dart';
 import '../screens/screen_dialogs.dart' show showConnectionDialogScreen;
 
 class FilePanel extends ConsumerStatefulWidget {
@@ -82,7 +83,7 @@ class _FilePanelState extends ConsumerState<FilePanel> {
             showCloseIcon: true,
             behavior: SnackBarBehavior.floating,
             action: SnackBarAction(
-              label: 'Grant access',
+              label: FilePanelStrings(context).text('access'),
               onPressed: () => ref.read(panelProvider(widget.side))
                   .grantAccessToCurrentPath(),
             ),
@@ -169,7 +170,7 @@ class _FilePanelState extends ConsumerState<FilePanel> {
         // Determine operation hint
         final sourceIsLocal = candidateData.first?.sourceSide == PanelSide.local;
         final opIcon = sourceIsLocal ? Icons.upload : Icons.download;
-        final opLabel = sourceIsLocal ? 'Upload' : 'Download';
+        final opLabel = FilePanelStrings(context).text(sourceIsLocal ? 'upload' : 'download');
         final fileCount = candidateData.first?.files.length ?? 0;
 
         return Stack(
@@ -188,7 +189,7 @@ class _FilePanelState extends ConsumerState<FilePanel> {
                       Icon(opIcon, size: 48, color: Theme.of(context).colorScheme.primary),
                       const SizedBox(height: 8),
                       Text(
-                        '$opLabel ${fileCount > 1 ? "$fileCount files" : "file"}',
+                        '$opLabel ${FilePanelStrings(context).value('files', fileCount)}',
                         style: TextStyle(
                           fontSize: 16,
                           fontWeight: FontWeight.bold,
@@ -325,7 +326,7 @@ class _FilePanelState extends ConsumerState<FilePanel> {
                   const SizedBox(width: 6),
                   Expanded(
                     child: Text(
-                      'Search results — ${files?.length ?? 0} file(s)',
+                      FilePanelStrings(context).value('results', files?.length ?? 0),
                       style: TextStyle(fontSize: 12,
                           color: Theme.of(context).colorScheme.onSecondaryContainer),
                     ),
@@ -412,8 +413,8 @@ class _FilePanelState extends ConsumerState<FilePanel> {
                                     Expanded(
                                       child: Text(
                                         (panel.isQuickFilterActive
-                                                ? 'Filter: '
-                                                : 'Find: ') +
+                                                ? '${FilePanelStrings(context).text('filter')}: '
+                                                : '${FilePanelStrings(context).text('find')}: ') +
                                             panel.filterQuery,
                                         style: TextStyle(
                                           fontSize: 13,
@@ -507,8 +508,8 @@ class _CompactColumnHeader extends ConsumerWidget {
             : panel.setSecondarySortBy(by),
         child: Tooltip(
           message: isSecondary
-              ? 'Secondary sort (right-click/long-press to clear)'
-              : 'Right-click/long-press to set as secondary sort',
+              ? FilePanelStrings(context).text('secondaryClear')
+              : FilePanelStrings(context).text('secondarySet'),
           child: width != null ? SizedBox(width: width, child: cell) : cell,
         ),
       );
@@ -548,11 +549,11 @@ class _CompactColumnHeader extends ConsumerWidget {
           const SizedBox(width: 18 + 2 + 14 + 4), // icon space matches CompactFileTile
           Expanded(child: GestureDetector(
             onSecondaryTap: () => _showColumnMenu(context, ref, side, colNotifier),
-            child: colLabel('Name', SortBy.name),
+            child: colLabel(FilePanelStrings(context).text('name'), SortBy.name),
           )),
-          if (showSize) ...[dragHandle('size'), colLabel('Size', SortBy.size, width: sizeW)],
-          if (showDate) ...[dragHandle('date'), colLabel('Date', SortBy.date, width: dateW)],
-          if (showExt) ...[dragHandle('ext'), colLabel('Ext', SortBy.extension, width: extW)],
+          if (showSize) ...[dragHandle('size'), colLabel(FilePanelStrings(context).text('size'), SortBy.size, width: sizeW)],
+          if (showDate) ...[dragHandle('date'), colLabel(FilePanelStrings(context).text('date'), SortBy.date, width: dateW)],
+          if (showExt) ...[dragHandle('ext'), colLabel(FilePanelStrings(context).text('extension'), SortBy.extension, width: extW)],
           const SizedBox(width: 4),
         ],
       ),

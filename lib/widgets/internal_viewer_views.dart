@@ -8,6 +8,7 @@
 import 'package:flutter/material.dart';
 
 import '../l10n/page_navigation_strings.dart';
+import '../l10n/streaming_view_strings.dart';
 import 'package:pdfx/pdfx.dart';
 
 import '../l10n/app_localizations.dart';
@@ -314,8 +315,8 @@ class _StreamingSafeViewState extends State<StreamingSafeView> {
       itemBuilder: (context, i) {
         if (i >= _lineOffsets.length) {
           final msg = widget.source.size > kMaxIndexedBytes
-              ? '(indexed to ${kMaxIndexedBytes ~/ (1024 * 1024)} MB — use Hex mode for deeper offsets)'
-              : '(loading…)';
+              ? StreamingViewStrings(context).indexed(kMaxIndexedBytes ~/ (1024 * 1024))
+              : StreamingViewStrings(context).text('loading');
           return Row(
             children: [
               Text('…', style: dimStyle),

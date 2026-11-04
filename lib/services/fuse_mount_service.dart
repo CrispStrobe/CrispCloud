@@ -98,6 +98,19 @@ enum MountStatus { unmounted, mounting, mounted, unmounting, error }
 class FuseMountService {
   static const _log = Log('FuseMountService');
 
+  // Stable app-authored messages used by the mount UI for localization.
+  static const linuxMissing = 'libfuse / fusermount3 not found. Install via: sudo apt install fuse3  '
+      '(or equivalent for your distro).';
+  static const macMissing = 'macFUSE or FUSE-T not found. Install macFUSE from '
+      'https://osxfuse.github.io or FUSE-T from https://www.fuse-t.org/.';
+  static const winMissing = 'WinFsp not found. Install from https://winfsp.dev';
+  static const unsupportedPlatform = 'Unsupported platform';
+  static const bridgeMissing = 'This build does not include the native FUSE bridge '
+      'required to mount drives.';
+  static const availabilityFailedPrefix = 'Error checking FUSE availability: ';
+  static const createFailedPrefix = 'Cannot create mount point: ';
+
+
   // Persisted config key prefix for SharedPreferences.
   static const _prefKey = 'fuse_mounts_v1';
 
@@ -145,9 +158,9 @@ class FuseMountService {
         return await _checkWinFsp();
       }
     } catch (e) {
-      return 'Error checking FUSE availability: $e';
+      return '$availabilityFailedPrefix$e';
     }
-    return 'Unsupported platform';
+    return unsupportedPlatform;
   }
 
   Future<String?> _checkLinuxFuse() async {
@@ -156,8 +169,7 @@ class FuseMountService {
       final result = await Process.run('which', [cmd]);
       if (result.exitCode == 0) return null; // found
     }
-    return 'libfuse / fusermount3 not found. Install via: sudo apt install fuse3  '
-        '(or equivalent for your distro).';
+    return linuxMissing;
   }
 
   Future<String?> _checkMacFuse() async {
@@ -172,8 +184,7 @@ class FuseMountService {
     }
     final result = await Process.run('which', ['mount_macfuse']);
     if (result.exitCode == 0) return null;
-    return 'macFUSE or FUSE-T not found. Install macFUSE from '
-        'https://osxfuse.github.io or FUSE-T from https://www.fuse-t.org/.';
+    return macMissing;
   }
 
   Future<String?> _checkWinFsp() async {
@@ -184,7 +195,7 @@ class FuseMountService {
     ]) {
       if (await File(path).exists()) return null;
     }
-    return 'WinFsp not found. Install from https://winfsp.dev';
+    return winMissing;
   }
 
   // ---------------------------------------------------------------------------
@@ -227,7 +238,7 @@ class FuseMountService {
     try {
       await Directory(canonical).create(recursive: true);
     } catch (e) {
-      _setError(canonical, 'Cannot create mount point: $e');
+      _setError(canonical, '$createFailedPrefix$e');
       return _mounts[canonical]!;
     }
 
@@ -399,8 +410,7 @@ class FuseMountService {
   Future<void> _startBridge(MountEntry entry, CloudStorageClient client) async {
     // No native bridge is bundled yet. The former helper merely slept in a
     // stub loop, causing the UI to report a mount that never existed.
-    throw StateError('This build does not include the native FUSE bridge '
-        'required to mount drives.');
+    throw StateError(bridgeMissing);
   }
 
   Future<void> _stopBridge(String mountPoint) async {

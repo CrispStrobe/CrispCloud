@@ -5,8 +5,15 @@ class MountDialogStrings {
   MountDialogStrings(BuildContext context)
       : language = Localizations.maybeLocaleOf(context)?.languageCode ?? 'en';
   final String language;
-  String text(String key) =>
-      (_strings[language] ?? _strings['en']!)[key] ?? _strings['en']![key]!;
+  String text(String key, [Map<String, Object> values = const {}]) {
+    var result =
+        (_strings[language] ?? _strings['en']!)[key] ?? _strings['en']![key]!;
+    for (final entry in values.entries) {
+      result = result.replaceAll('{${entry.key}}', '${entry.value}');
+    }
+    return result;
+  }
+
   static const Map<String, Map<String, String>> _strings = {
     'en': {
       "mountDrive": "Mount as Drive",
@@ -28,6 +35,14 @@ class MountDialogStrings {
       "empty": "No mounts configured",
       "bridgeMissing":
           "Mounting drives requires a native bridge that is not included in this build.",
+      "linuxMissing":
+          "libfuse / fusermount3 not found. Install via: sudo apt install fuse3 (or equivalent for your distro).",
+      "macMissing":
+          "macFUSE or FUSE-T not found. Install macFUSE from https://osxfuse.github.io or FUSE-T from https://www.fuse-t.org/.",
+      "winMissing": "WinFsp not found. Install from https://winfsp.dev",
+      "unsupportedPlatform": "Unsupported platform",
+      "availabilityFailed": "Error checking FUSE availability: {error}",
+      "createFailed": "Cannot create mount point: {error}",
     },
     'de': {
       "mountDrive": "Als Laufwerk einbinden",
@@ -50,6 +65,16 @@ class MountDialogStrings {
       "empty": "Keine Einbindungen konfiguriert",
       "bridgeMissing":
           "Zum Einbinden von Laufwerken ist eine native Brücke erforderlich, die in dieser Version nicht enthalten ist.",
+      "linuxMissing":
+          "libfuse / fusermount3 nicht gefunden. Installieren Sie es mit sudo apt install fuse3 (oder dem entsprechenden Befehl Ihrer Distribution).",
+      "macMissing":
+          "macFUSE oder FUSE-T nicht gefunden. Installieren Sie macFUSE von https://osxfuse.github.io oder FUSE-T von https://www.fuse-t.org/.",
+      "winMissing":
+          "WinFsp nicht gefunden. Installieren Sie es von https://winfsp.dev",
+      "unsupportedPlatform": "Nicht unterstützte Plattform",
+      "availabilityFailed":
+          "Fehler beim Prüfen der FUSE-Verfügbarkeit: {error}",
+      "createFailed": "Einhängepunkt konnte nicht erstellt werden: {error}",
     },
     'fr': {
       "mountDrive": "Monter comme lecteur",
@@ -71,6 +96,15 @@ class MountDialogStrings {
       "empty": "Aucun montage configuré",
       "bridgeMissing":
           "Le montage de lecteurs nécessite un composant natif absent de cette version.",
+      "linuxMissing":
+          "libfuse / fusermount3 introuvable. Installez-le avec sudo apt install fuse3 (ou l’équivalent pour votre distribution).",
+      "macMissing":
+          "macFUSE ou FUSE-T introuvable. Installez macFUSE depuis https://osxfuse.github.io ou FUSE-T depuis https://www.fuse-t.org/.",
+      "winMissing":
+          "WinFsp introuvable. Installez-le depuis https://winfsp.dev",
+      "unsupportedPlatform": "Plateforme non prise en charge",
+      "availabilityFailed": "Erreur de vérification de FUSE : {error}",
+      "createFailed": "Impossible de créer le point de montage : {error}",
     },
     'es': {
       "mountDrive": "Montar como unidad",
@@ -92,6 +126,14 @@ class MountDialogStrings {
       "empty": "No hay montajes configurados",
       "bridgeMissing":
           "Montar unidades requiere un componente nativo que no se incluye en esta versión.",
+      "linuxMissing":
+          "No se encontró libfuse / fusermount3. Instálalo con sudo apt install fuse3 (o el equivalente de tu distribución).",
+      "macMissing":
+          "No se encontró macFUSE ni FUSE-T. Instala macFUSE desde https://osxfuse.github.io o FUSE-T desde https://www.fuse-t.org/.",
+      "winMissing": "No se encontró WinFsp. Instálalo desde https://winfsp.dev",
+      "unsupportedPlatform": "Plataforma no compatible",
+      "availabilityFailed": "Error al comprobar FUSE: {error}",
+      "createFailed": "No se pudo crear el punto de montaje: {error}",
     },
     'pt': {
       "mountDrive": "Montar como unidade",
@@ -113,6 +155,14 @@ class MountDialogStrings {
       "empty": "Nenhuma montagem configurada",
       "bridgeMissing":
           "Montar unidades requer um componente nativo que não está incluído nesta versão.",
+      "linuxMissing":
+          "libfuse / fusermount3 não encontrado. Instale com sudo apt install fuse3 (ou equivalente da sua distribuição).",
+      "macMissing":
+          "macFUSE ou FUSE-T não encontrado. Instale macFUSE em https://osxfuse.github.io ou FUSE-T em https://www.fuse-t.org/.",
+      "winMissing": "WinFsp não encontrado. Instale em https://winfsp.dev",
+      "unsupportedPlatform": "Plataforma não suportada",
+      "availabilityFailed": "Erro ao verificar FUSE: {error}",
+      "createFailed": "Não foi possível criar o ponto de montagem: {error}",
     },
     'zh': {
       "mountDrive": "挂载为驱动器",
@@ -132,6 +182,14 @@ class MountDialogStrings {
       "unsupported": "FUSE 挂载仅适用于 macOS、Linux 和 Windows 桌面系统。",
       "empty": "尚未配置挂载",
       "bridgeMissing": "挂载驱动器需要本版本未包含的原生桥接组件。",
+      "linuxMissing":
+          "未找到 libfuse / fusermount3。请使用 sudo apt install fuse3 安装（或使用发行版的相应命令）。",
+      "macMissing":
+          "未找到 macFUSE 或 FUSE-T。请从 https://osxfuse.github.io 安装 macFUSE，或从 https://www.fuse-t.org/ 安装 FUSE-T。",
+      "winMissing": "未找到 WinFsp。请从 https://winfsp.dev 安装",
+      "unsupportedPlatform": "不支持的平台",
+      "availabilityFailed": "检查 FUSE 可用性时出错：{error}",
+      "createFailed": "无法创建挂载点：{error}",
     },
     'ja': {
       "mountDrive": "ドライブとしてマウント",
@@ -151,6 +209,14 @@ class MountDialogStrings {
       "unsupported": "FUSE マウントは macOS、Linux、Windows のデスクトップでのみ利用できます。",
       "empty": "マウントが設定されていません",
       "bridgeMissing": "ドライブをマウントするには、このビルドに含まれていないネイティブブリッジが必要です。",
+      "linuxMissing":
+          "libfuse / fusermount3 が見つかりません。sudo apt install fuse3（またはディストリビューションに応じたコマンド）でインストールしてください。",
+      "macMissing":
+          "macFUSE または FUSE-T が見つかりません。https://osxfuse.github.io から macFUSE、または https://www.fuse-t.org/ から FUSE-T をインストールしてください。",
+      "winMissing": "WinFsp が見つかりません。https://winfsp.dev からインストールしてください",
+      "unsupportedPlatform": "サポート対象外のプラットフォーム",
+      "availabilityFailed": "FUSE の利用可否を確認できません: {error}",
+      "createFailed": "マウントポイントを作成できません: {error}",
     },
     'ko': {
       "mountDrive": "드라이브로 마운트",
@@ -170,6 +236,14 @@ class MountDialogStrings {
       "unsupported": "FUSE 마운트는 macOS, Linux 및 Windows 데스크톱에서만 사용할 수 있습니다.",
       "empty": "설정된 마운트가 없습니다",
       "bridgeMissing": "드라이브를 마운트하려면 이 빌드에 포함되지 않은 네이티브 브리지가 필요합니다.",
+      "linuxMissing":
+          "libfuse / fusermount3을 찾을 수 없습니다. sudo apt install fuse3 또는 배포판에 맞는 명령으로 설치하세요.",
+      "macMissing":
+          "macFUSE 또는 FUSE-T를 찾을 수 없습니다. https://osxfuse.github.io에서 macFUSE를, https://www.fuse-t.org/에서 FUSE-T를 설치하세요.",
+      "winMissing": "WinFsp를 찾을 수 없습니다. https://winfsp.dev에서 설치하세요",
+      "unsupportedPlatform": "지원되지 않는 플랫폼",
+      "availabilityFailed": "FUSE 사용 가능 여부 확인 오류: {error}",
+      "createFailed": "마운트 지점을 만들 수 없습니다: {error}",
     },
     'ar': {
       "mountDrive": "التركيب كمحرك أقراص",
@@ -191,6 +265,14 @@ class MountDialogStrings {
       "empty": "لم تُضبط أي عمليات تركيب",
       "bridgeMissing":
           "يتطلب تركيب المحركات مكوّن ربط أصليًا غير مضمّن في هذا الإصدار.",
+      "linuxMissing":
+          "لم يُعثر على libfuse / fusermount3. ثبّته باستخدام sudo apt install fuse3 أو الأمر المكافئ لتوزيعتك.",
+      "macMissing":
+          "لم يُعثر على macFUSE أو FUSE-T. ثبّت macFUSE من https://osxfuse.github.io أو FUSE-T من https://www.fuse-t.org/.",
+      "winMissing": "لم يُعثر على WinFsp. ثبّته من https://winfsp.dev",
+      "unsupportedPlatform": "منصة غير مدعومة",
+      "availabilityFailed": "خطأ أثناء التحقق من توفر FUSE: {error}",
+      "createFailed": "تعذّر إنشاء نقطة التركيب: {error}",
     },
   };
 }
