@@ -3,8 +3,7 @@ import 'package:crisp_storage/crisp_storage.dart'
         SshKnownHosts,
         HostKeyPrompt,
         openVerifiedSsh,
-        SftpHostKeyException,
-        RemoteException;
+        SftpHostKeyException;
 // lib/services/sftp_client_adapter.dart
 import 'dart:async';
 import 'dart:convert';
@@ -16,6 +15,7 @@ import 'package:web_socket_channel/web_socket_channel.dart';
 import 'package:flutter/foundation.dart'; // for kIsWeb
 
 import 'cloud_storage_interface.dart';
+import 'connection_failure.dart';
 import 'log_service.dart';
 import 'secure_storage_service.dart';
 import 'sftp_config_service.dart';
@@ -127,8 +127,7 @@ class SFTPClientAdapter extends CloudStorageClient {
       _sftp = null;
       _log.error('Connection error', e);
       if (e is SftpHostKeyException) rethrow;
-      throw const RemoteException(
-          'SFTP connection failed. Check server access and credentials.');
+      throw const SftpConnectionFailure();
     }
   }
 

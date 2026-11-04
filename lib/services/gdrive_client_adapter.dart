@@ -16,6 +16,7 @@ import 'package:path/path.dart' as p;
 import 'package:url_launcher/url_launcher.dart';
 
 import 'cloud_storage_interface.dart';
+import 'connection_failure.dart';
 import 'gdrive_config_service.dart';
 import 'log_service.dart';
 import 'secure_storage_service.dart';
@@ -120,7 +121,7 @@ class GDriveClientAdapter extends CloudStorageClient {
 
     // Browser-based OAuth2 flow
     if (kIsWeb) {
-      throw Exception('Google Drive OAuth2 on web requires a different redirect flow. Use desktop or mobile.');
+      throw const ConnectionFailure(ConnectionFailureCode.oauthWebUnsupportedDesktopMobile, 'Google Drive OAuth2 on web requires a different redirect flow. Use desktop or mobile.', {'provider': 'Google Drive'});
     }
 
     await _browserOAuthFlow();
@@ -983,7 +984,7 @@ class GDriveClientAdapter extends CloudStorageClient {
       await launchUrl(authUri, mode: LaunchMode.externalApplication);
     } else {
       await server.close();
-      throw Exception('Could not open browser for Google Drive authorization');
+      throw const ConnectionFailure(ConnectionFailureCode.oauthBrowserUnavailable, 'Could not open browser for Google Drive authorization', {'provider': 'Google Drive'});
     }
 
     // Wait for redirect with auth code
@@ -1023,7 +1024,7 @@ class GDriveClientAdapter extends CloudStorageClient {
     }
 
     if (authCode == null) {
-      throw Exception('Google Drive authorization was cancelled or failed');
+      throw const ConnectionFailure(ConnectionFailureCode.oauthCancelled, 'Google Drive authorization was cancelled or failed', {'provider': 'Google Drive'});
     }
 
     // Exchange code for tokens

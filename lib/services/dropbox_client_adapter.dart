@@ -23,6 +23,7 @@ import 'package:path/path.dart' as p;
 import 'package:url_launcher/url_launcher.dart';
 
 import 'cloud_storage_interface.dart';
+import 'connection_failure.dart';
 import 'dropbox_config_service.dart';
 import 'log_service.dart';
 import 'secure_storage_service.dart';
@@ -117,7 +118,7 @@ class DropboxClientAdapter extends CloudStorageClient {
     }
 
     if (kIsWeb) {
-      throw Exception('Dropbox OAuth2 on web requires a different redirect flow.');
+      throw const ConnectionFailure(ConnectionFailureCode.oauthWebUnsupported, 'Dropbox OAuth2 on web requires a different redirect flow.', {'provider': 'Dropbox'});
     }
 
     await _browserOAuthFlow();
@@ -586,7 +587,7 @@ class DropboxClientAdapter extends CloudStorageClient {
       await launchUrl(authUri, mode: LaunchMode.externalApplication);
     } else {
       await server.close();
-      throw Exception('Could not open browser for Dropbox authorization');
+      throw const ConnectionFailure(ConnectionFailureCode.oauthBrowserUnavailable, 'Could not open browser for Dropbox authorization', {'provider': 'Dropbox'});
     }
 
     String? authCode;
@@ -624,7 +625,7 @@ class DropboxClientAdapter extends CloudStorageClient {
     }
 
     if (authCode == null) {
-      throw Exception('Dropbox authorization was cancelled or failed');
+      throw const ConnectionFailure(ConnectionFailureCode.oauthCancelled, 'Dropbox authorization was cancelled or failed', {'provider': 'Dropbox'});
     }
 
     final tokenBody = <String, String>{

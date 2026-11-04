@@ -17,6 +17,7 @@ import 'package:path/path.dart' as p;
 import 'package:url_launcher/url_launcher.dart';
 
 import 'cloud_storage_interface.dart';
+import 'connection_failure.dart';
 import 'log_service.dart';
 import 'onedrive_config_service.dart';
 import 'secure_storage_service.dart';
@@ -111,7 +112,7 @@ class OneDriveClientAdapter extends CloudStorageClient {
     }
 
     if (kIsWeb) {
-      throw Exception('OneDrive OAuth2 on web requires a different redirect flow.');
+      throw const ConnectionFailure(ConnectionFailureCode.oauthWebUnsupported, 'OneDrive OAuth2 on web requires a different redirect flow.', {'provider': 'OneDrive'});
     }
 
     await _browserOAuthFlow();
@@ -688,7 +689,7 @@ class OneDriveClientAdapter extends CloudStorageClient {
       await launchUrl(authUri, mode: LaunchMode.externalApplication);
     } else {
       await server.close();
-      throw Exception('Could not open browser for Microsoft authorization');
+      throw const ConnectionFailure(ConnectionFailureCode.oauthBrowserUnavailable, 'Could not open browser for Microsoft authorization', {'provider': 'Microsoft'});
     }
 
     String? authCode;
@@ -726,7 +727,7 @@ class OneDriveClientAdapter extends CloudStorageClient {
     }
 
     if (authCode == null) {
-      throw Exception('Microsoft authorization was cancelled or failed');
+      throw const ConnectionFailure(ConnectionFailureCode.oauthCancelled, 'Microsoft authorization was cancelled or failed', {'provider': 'Microsoft'});
     }
 
     // Exchange code for tokens

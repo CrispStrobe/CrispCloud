@@ -5,6 +5,7 @@
 
 import 'dart:async';
 import 'dart:io';
+import 'dart:ui' show Locale;
 
 import 'package:drift/drift.dart';
 import 'package:flutter/foundation.dart';
@@ -20,6 +21,7 @@ import '../services/sync_watcher.dart';
 import '../services/tray_service.dart';
 import '../services/log_service.dart';
 import 'auth_provider.dart';
+import 'core_providers.dart' show localeProvider;
 import 'error_provider.dart';
 
 class SyncNotifier extends ChangeNotifier {
@@ -117,9 +119,15 @@ class SyncNotifier extends ChangeNotifier {
       onSyncAll: () => syncAll(),
       onShowApp: onShowApp,
       onQuit: onQuit,
+      locale: _ref.read(localeProvider),
     );
     _trayInitialized = true;
     _updateTray();
+  }
+
+  /// Refresh tray text when the app's language override changes.
+  void setTrayLocale(Locale? locale) {
+    unawaited(_tray.setLocale(locale));
   }
 
   // --- Auto-eviction ---
@@ -625,5 +633,7 @@ class SyncNotifier extends ChangeNotifier {
 }
 
 final syncProvider = ChangeNotifierProvider<SyncNotifier>((ref) {
-  return SyncNotifier(ref);
+  final notifier = SyncNotifier(ref);
+  ref.listen(localeProvider, (_, next) => notifier.setTrayLocale(next));
+  return notifier;
 });

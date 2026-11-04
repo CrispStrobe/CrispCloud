@@ -32,6 +32,7 @@ import 'package:path/path.dart' as p;
 import 'package:url_launcher/url_launcher.dart';
 
 import 'cloud_storage_interface.dart';
+import 'connection_failure.dart';
 import 'delta_sync_service.dart';
 import 'pcloud_config_service.dart';
 import 'log_service.dart';
@@ -135,7 +136,7 @@ class PCloudClientAdapter extends CloudStorageClient {
     }
 
     if (kIsWeb) {
-      throw Exception('pCloud OAuth2 on web requires a different redirect flow.');
+      throw const ConnectionFailure(ConnectionFailureCode.oauthWebUnsupported, 'pCloud OAuth2 on web requires a different redirect flow.', {'provider': 'pCloud'});
     }
 
     await _browserOAuthFlow();
@@ -591,7 +592,7 @@ class PCloudClientAdapter extends CloudStorageClient {
       await launchUrl(authUri, mode: LaunchMode.externalApplication);
     } else {
       await server.close();
-      throw Exception('Could not open browser for pCloud authorization');
+      throw const ConnectionFailure(ConnectionFailureCode.oauthBrowserUnavailable, 'Could not open browser for pCloud authorization', {'provider': 'pCloud'});
     }
 
     String? authCode;
@@ -633,7 +634,7 @@ class PCloudClientAdapter extends CloudStorageClient {
     }
 
     if (authCode == null) {
-      throw Exception('pCloud authorization was cancelled or failed');
+      throw const ConnectionFailure(ConnectionFailureCode.oauthCancelled, 'pCloud authorization was cancelled or failed', {'provider': 'pCloud'});
     }
 
     // Exchange code for access token

@@ -20,6 +20,7 @@ import 'package:path/path.dart' as p;
 import 'package:xml/xml.dart' as xml;
 
 import 'cloud_storage_interface.dart';
+import 'connection_failure.dart';
 import 'delta_sync_service.dart';
 import 'log_service.dart';
 import 'nextcloud_config_service.dart';
@@ -113,7 +114,8 @@ class NextcloudClientAdapter extends CloudStorageClient {
         throw const NextcloudAuthenticationException();
       }
       if (resp.statusCode != 207) {
-        throw Exception('Connection test failed (HTTP ${resp.statusCode})');
+        throw ConnectionFailure(ConnectionFailureCode.nextcloudHttp,
+            'Connection test failed (HTTP ${resp.statusCode})', {'status': resp.statusCode});
       }
     } catch (e) {
       if (e is Exception) rethrow;
