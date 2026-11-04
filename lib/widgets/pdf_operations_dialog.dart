@@ -33,6 +33,7 @@ extension PdfOperationActionLabel on PdfOperationAction {
     PdfOperationAction.watermark => 'Add a watermark',
     PdfOperationAction.fillForm => 'Fill known form fields',
     PdfOperationAction.insertImage => 'Insert an image',
+    PdfOperationAction.importOcr => 'Import OCR text',
   };
 
   String get fileSuffix => switch (this) {
@@ -44,6 +45,7 @@ extension PdfOperationActionLabel on PdfOperationAction {
     PdfOperationAction.watermark => 'watermarked',
     PdfOperationAction.fillForm => 'filled',
     PdfOperationAction.insertImage => 'image',
+    PdfOperationAction.importOcr => 'searchable',
   };
 
   IconData get icon => switch (this) {
@@ -55,6 +57,7 @@ extension PdfOperationActionLabel on PdfOperationAction {
     PdfOperationAction.watermark => Icons.branding_watermark_outlined,
     PdfOperationAction.fillForm => Icons.edit_note,
     PdfOperationAction.insertImage => Icons.add_photo_alternate_outlined,
+    PdfOperationAction.importOcr => Icons.document_scanner_outlined,
   };
 }
 
@@ -152,6 +155,12 @@ class _PdfOperationsDialogState extends State<PdfOperationsDialog> {
   final _imageHeight = TextEditingController();
   final _imageAngle = TextEditingController(text: '0');
   final _json = TextEditingController(text: '{}');
+  final _ocrJson = TextEditingController(text: '[]');
+  final _ocrConfidence = TextEditingController(text: '0');
+  final _previewSearch = TextEditingController();
+  final _searchFocus = FocusNode();
+  final _viewer = PdfViewerController();
+  Timer? _searchDebounce;
   final _mergePages = <int, TextEditingController>{};
   final _formValues = <String, Object?>{};
   List<PdfOperationSource> _sources = const [];
@@ -166,7 +175,7 @@ class _PdfOperationsDialogState extends State<PdfOperationsDialog> {
   double _opacity = .2;
   int _rotation = 90;
   int _loadedCount = 0;
-  final int _formEpoch = 0;
+  int _formEpoch = 0;
   bool _loading = true;
   bool _working = false;
   bool _saving = false;
@@ -174,6 +183,7 @@ class _PdfOperationsDialogState extends State<PdfOperationsDialog> {
   bool _flatten = true;
   bool _allowDecryption = false;
   bool _jsonMode = false;
+  bool _ocrSkipExistingText = true;
   bool _allowPop = false;
   bool _closing = false;
   bool _saved = false;
@@ -199,9 +209,14 @@ class _PdfOperationsDialogState extends State<PdfOperationsDialog> {
   @override
   void dispose() {
     widget.host.dispose();
+    _searchDebounce?.cancel();
+    _viewer.clearSearch();
+    _viewer.dispose();
+    _searchFocus.dispose();
     for (final controller in [
       _pages, _name, _watermarkText, _fontSize, _angle, _margin, _width,
       _imageX, _imageY, _imageWidth, _imageHeight, _imageAngle, _json,
+      _ocrJson, _ocrConfidence, _previewSearch,
       ..._mergePages.values,
     ]) {
       controller.dispose();
@@ -307,6 +322,95 @@ class _PdfOperationsDialogState extends State<PdfOperationsDialog> {
     return Map<String, Object?>.from(value);
   }
 
+  void _switchFormMode(bool jsonMode) {
+    if (_busy || jsonMode == _jsonMode) return;
+    try {
+      if (jsonMode) {
+        _json.text = const JsonEncoder.withIndent('  ').convert(_formValues);
+      } else {
+        final values = _readFormValues();
+        final fields = _sources.first.inspection.fields;
+        final errors = <String, String>{};
+        final typedValues = <String, Object?>{};
+        for (final entry in values.entries) {
+          final matches = fields.where((field) => field.name == entry.key).toList();
+          if (matches.length != 1) {
+            errors[entry.key] = matches.isEmpty
+                ? 'Unknown field name.'
+                : 'The field name is ambiguous.';
+            continue;
+          }
+          final field = matches.single;
+          final type = field.type.toLowerCase();
+          final value = entry.value;
+          if (_fieldDisabled(field)) {
+            errors[entry.key] = 'This field cannot be filled from a value map.';
+          } else if (type.contains('checkbox')) {
+            if (value is bool) {
+              typedValues[entry.key] = value;
+            } else {
+              errors[entry.key] = 'A checkbox requires true or false.';
+            }
+          } else if (field.multiSelect) {
+            if (value is List && value.every((item) => item is String)) {
+              typedValues[entry.key] = [
+                for (final item in value) _optionValue(field, item as String),
+              ];
+            } else {
+              errors[entry.key] = 'A multi-select field requires an array of strings.';
+            }
+          } else if (value is String) {
+            typedValues[entry.key] = _optionValue(field, value);
+          } else {
+            errors[entry.key] = 'This field requires a string.';
+          }
+        }
+        if (errors.isNotEmpty) {
+          throw PdfOperationException(
+            'invalidForm',
+            'Correct the JSON field names and value types before switching to fields.',
+            fieldErrors: errors,
+          );
+        }
+        _formValues
+          ..clear()
+          ..addAll(typedValues);
+        // TextFormField.initialValue is read only when its state is created.
+        // A new epoch displays imported values instead of an earlier edit.
+        _formEpoch++;
+      }
+      setState(() { _jsonMode = jsonMode; _error = null; });
+    } catch (error) {
+      // Keep the JSON visible and intact when it cannot populate the controls.
+      _reportError(error);
+    }
+  }
+
+  String _optionValue(PdfFormFieldDescription field, String value) {
+    final byValue = field.options.where((option) => option.value == value);
+    if (byValue.isNotEmpty) return value;
+    final byLabel = field.options.where((option) => option.label == value).toList();
+    return byLabel.length == 1 ? byLabel.single.value : value;
+  }
+
+  bool _fieldDisabled(PdfFormFieldDescription field) {
+    final type = field.type.toLowerCase();
+    return field.readOnly || field.password ||
+        type.contains('signature') || type.contains('pushbutton') || type == 'unknown';
+  }
+
+  List<PdfOcrPage> _readOcrPages([String? source]) {
+    final text = source ?? _ocrJson.text;
+    if (utf8.encode(text).length > 16 * 1024 * 1024) {
+      throw ArgumentError(context.pdfOpTr('OCR data exceeds 16 MiB.'));
+    }
+    final value = jsonDecode(text);
+    if (value is! List || value.any((page) => page is! Map<String, dynamic>)) {
+      throw FormatException(context.pdfOpTr('OCR data must be a JSON array of pages with text spans.'));
+    }
+    return [for (final page in value) PdfOcrPage.fromJson(Map<String, Object?>.from(page as Map))];
+  }
+
   Future<void> _createPreview() async {
     if (_busy || _sources.isEmpty) return;
     setState(() { _working = true; _error = null; });
@@ -314,6 +418,7 @@ class _PdfOperationsDialogState extends State<PdfOperationsDialog> {
       await WidgetsBinding.instance.endOfFrame;
       PdfEmbeddedFont? font;
       if (widget.action == PdfOperationAction.fillForm ||
+          widget.action == PdfOperationAction.importOcr ||
           (widget.action == PdfOperationAction.watermark && !_watermarkImage)) {
         font = await _appearanceFont();
       }
@@ -329,6 +434,11 @@ class _PdfOperationsDialogState extends State<PdfOperationsDialog> {
         allowDecryption: _allowDecryption,
         fields: widget.action == PdfOperationAction.fillForm ? _readFormValues() : const {},
         appearanceFont: font,
+        ocrPages: widget.action == PdfOperationAction.importOcr ? _readOcrPages() : const [],
+        ocrMinConfidence: widget.action == PdfOperationAction.importOcr
+            ? _number(_ocrConfidence, 'Minimum confidence (0–1)', 0, 1)
+            : 0,
+        ocrSkipExistingText: _ocrSkipExistingText,
         watermark: widget.action == PdfOperationAction.watermark
             ? PdfWatermarkOptions(
                 text: _watermarkImage ? null : _watermarkText.text,
@@ -359,6 +469,7 @@ class _PdfOperationsDialogState extends State<PdfOperationsDialog> {
       final result = await widget.host.perform(request);
       if (!mounted) return;
       final preview = PdfDocument.open(result.bytes, password: _sources[_order.first].input.password);
+      _clearPreviewSearch();
       setState(() {
         _result = result;
         _preview = preview;
@@ -433,6 +544,26 @@ class _PdfOperationsDialogState extends State<PdfOperationsDialog> {
     } catch (error) { _reportError(error); }
   }
 
+  Future<void> _importOcrJson() async {
+    if (_busy) return;
+    try {
+      final picked = await FilePicker.platform.pickFiles(
+        type: FileType.custom,
+        allowedExtensions: const ['json'],
+        withData: true,
+      );
+      if (!mounted || picked == null) return;
+      final file = picked.files.single;
+      if (file.size > 16 * 1024 * 1024 || (file.bytes?.length ?? 0) > 16 * 1024 * 1024) {
+        throw ArgumentError(context.pdfOpTr('OCR data exceeds 16 MiB.'));
+      }
+      if (file.bytes == null) throw StateError(context.pdfOpTr('The selected file could not be read.'));
+      final text = utf8.decode(file.bytes!);
+      _readOcrPages(text);
+      setState(() { _ocrJson.text = text; _error = null; });
+    } catch (error) { _reportError(error); }
+  }
+
   Future<void> _save({required bool device}) async {
     if (_busy || _result == null) return;
     final name = _name.text.trim();
@@ -447,7 +578,7 @@ class _PdfOperationsDialogState extends State<PdfOperationsDialog> {
           : await widget.host.saveSibling(_result!.bytes, name);
       if (!mounted || outcome == null) return;
       setState(() {
-        _saved = outcome != PdfSaveOutcome.downloadedCopy;
+        _saved = _saved || outcome != PdfSaveOutcome.downloadedCopy;
         _downloadStarted = outcome == PdfSaveOutcome.downloadedCopy;
       });
       if (!device) {
@@ -470,6 +601,71 @@ class _PdfOperationsDialogState extends State<PdfOperationsDialog> {
         : '$error';
     setState(() => _error = detail);
   }
+
+  void _clearPreviewSearch() {
+    _searchDebounce?.cancel();
+    _previewSearch.clear();
+    _viewer.clearSearch();
+  }
+
+  Future<void> _searchPreview() async {
+    _searchDebounce?.cancel();
+    if (_result == null || !mounted) return;
+    try {
+      await _viewer.search(_previewSearch.text);
+    } catch (error) {
+      _reportError(error);
+    }
+  }
+
+  Widget _previewSearchBar() => Padding(
+    padding: const EdgeInsets.fromLTRB(16, 0, 16, 8),
+    child: Row(children: [
+      Expanded(child: TextField(
+        key: const ValueKey('pdf-operation-search'),
+        controller: _previewSearch,
+        focusNode: _searchFocus,
+        decoration: InputDecoration(
+          labelText: context.pdfOpTr('Search preview text'),
+          border: const OutlineInputBorder(),
+          isDense: true,
+          prefixIcon: const Icon(Icons.search),
+          suffixIcon: IconButton(
+            tooltip: context.pdfOpTr('Clear search'),
+            onPressed: _clearPreviewSearch,
+            icon: const Icon(Icons.close),
+          ),
+        ),
+        onChanged: (_) {
+          _searchDebounce?.cancel();
+          _searchDebounce = Timer(const Duration(milliseconds: 250), () {
+            unawaited(_searchPreview());
+          });
+        },
+        onSubmitted: (_) => unawaited(_searchPreview()),
+      )),
+      const SizedBox(width: 8),
+      AnimatedBuilder(animation: _viewer, builder: (context, _) => Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          if (_viewer.isSearching)
+            const SizedBox(width: 18, height: 18, child: CircularProgressIndicator(strokeWidth: 2))
+          else if (_viewer.query.isNotEmpty)
+            Text('${_viewer.currentMatch + 1} / ${_viewer.matchCount}'),
+          IconButton(
+            tooltip: context.pdfOpTr('Previous match'),
+            onPressed: _viewer.matchCount == 0 ? null : _viewer.previousMatch,
+            icon: const Icon(Icons.keyboard_arrow_up),
+          ),
+          IconButton(
+            tooltip: context.pdfOpTr('Next match'),
+            onPressed: _viewer.matchCount == 0 ? null : _viewer.nextMatch,
+            icon: const Icon(Icons.keyboard_arrow_down),
+          ),
+        ],
+      )),
+    ]),
+  );
 
   Future<void> _requestClose() async {
     if (_saving || _working || _closing) return;
@@ -692,10 +888,7 @@ class _PdfOperationsDialogState extends State<PdfOperationsDialog> {
         SegmentedButton<bool>(
           segments: [ButtonSegment(value: false, label: Text(context.pdfOpTr('Fields'))), const ButtonSegment(value: true, label: Text('JSON'))],
           selected: {_jsonMode},
-          onSelectionChanged: (values) => setState(() {
-            if (values.single) _json.text = const JsonEncoder.withIndent('  ').convert(_formValues);
-            _jsonMode = values.single;
-          }),
+          onSelectionChanged: (values) => _switchFormMode(values.single),
         ),
         OutlinedButton.icon(onPressed: _importJson, icon: const Icon(Icons.upload_file), label: Text(context.pdfOpTr('Import JSON'))),
       ]),
@@ -732,7 +925,7 @@ class _PdfOperationsDialogState extends State<PdfOperationsDialog> {
 
   Widget _formField(PdfFormFieldDescription field) {
     final type = field.type.toLowerCase();
-    final disabled = field.readOnly || field.password || type.contains('signature') || type.contains('pushbutton') || type == 'unknown';
+    final disabled = _fieldDisabled(field);
     final key = ValueKey('pdf-form-${field.name}-$_formEpoch');
     final current = _formValues.containsKey(field.name) ? _formValues[field.name] : null;
     final label = '${field.name}${field.required ? ' *' : ''}';
@@ -780,6 +973,48 @@ class _PdfOperationsDialogState extends State<PdfOperationsDialog> {
     );
   }
 
+  Widget _ocrControls() => Column(
+    crossAxisAlignment: CrossAxisAlignment.stretch,
+    children: [
+      Text(context.pdfOpTr('Import text already recognized by an OCR tool. This action does not recognize images or contact a recognition service.')),
+      const SizedBox(height: 12),
+      Text(context.pdfOpTr('Use one-based page numbers. Each span needs text and bounds [left, bottom, right, top] in PDF points, not image pixels. Confidence is optional and defaults to 1.')),
+      const SizedBox(height: 12),
+      Align(alignment: Alignment.centerLeft, child: OutlinedButton.icon(
+        onPressed: _importOcrJson,
+        icon: const Icon(Icons.upload_file),
+        label: Text(context.pdfOpTr('Import OCR JSON')),
+      )),
+      const SizedBox(height: 12),
+      TextField(
+        key: const ValueKey('pdf-ocr-json'),
+        controller: _ocrJson,
+        minLines: 6,
+        maxLines: 14,
+        style: const TextStyle(fontFamily: 'monospace'),
+        decoration: InputDecoration(
+          labelText: context.pdfOpTr('Recognized page spans (JSON)'),
+          helperText: '[{"page":1,"spans":[{"text":"Example","bounds":[72,700,130,718],"confidence":0.98}]}]',
+          helperMaxLines: 5,
+          border: const OutlineInputBorder(),
+        ),
+      ),
+      const SizedBox(height: 16),
+      _fontPicker(),
+      const SizedBox(height: 16),
+      _numberField(_ocrConfidence, 'Minimum confidence (0–1)'),
+      CheckboxListTile(
+        key: const ValueKey('pdf-ocr-skip-existing'),
+        contentPadding: EdgeInsets.zero,
+        value: _ocrSkipExistingText,
+        onChanged: (value) => setState(() => _ocrSkipExistingText = value ?? true),
+        title: Text(context.pdfOpTr('Skip pages that already contain text')),
+        subtitle: Text(context.pdfOpTr('Turning this off appends another text layer and can duplicate existing searchable text.')),
+      ),
+      Text(context.pdfOpTr('The added text is invisible. Select or search text in the generated preview to check the result.')),
+    ],
+  );
+
   Widget _options() => SingleChildScrollView(
     padding: const EdgeInsets.all(20),
     child: Center(child: ConstrainedBox(
@@ -792,7 +1027,8 @@ class _PdfOperationsDialogState extends State<PdfOperationsDialog> {
             Text(_sources.first.input.name, style: Theme.of(context).textTheme.titleMedium),
             Text('${_sources.first.inspection.pageCount} ${context.pdfOpTr('pages')}'),
             const SizedBox(height: 20),
-            if (widget.action != PdfOperationAction.fillForm) _pageSelection(),
+            if (widget.action != PdfOperationAction.fillForm &&
+                widget.action != PdfOperationAction.importOcr) _pageSelection(),
             const SizedBox(height: 20),
           ],
           if (widget.action == PdfOperationAction.rotate) DropdownButtonFormField<int>(
@@ -809,6 +1045,7 @@ class _PdfOperationsDialogState extends State<PdfOperationsDialog> {
           if (widget.action == PdfOperationAction.watermark) _watermarkControls(),
           if (widget.action == PdfOperationAction.insertImage) _imageControls(),
           if (widget.action == PdfOperationAction.fillForm) _formControls(),
+          if (widget.action == PdfOperationAction.importOcr) _ocrControls(),
           if (widget.action == PdfOperationAction.deletePages) Text(context.pdfOpTr('At least one page must remain. Deleting pages is a page organization action; it is not secure content removal.')),
           if (_hasEncryptedSource && (_isMerge || widget.action == PdfOperationAction.extract)) CheckboxListTile(
             key: const ValueKey('pdf-allow-decryption'),
@@ -855,9 +1092,11 @@ class _PdfOperationsDialogState extends State<PdfOperationsDialog> {
       padding: const EdgeInsets.fromLTRB(16, 0, 16, 8),
       child: Align(alignment: Alignment.centerLeft, child: Text('${context.pdfOpTr('New copy beside')}: ${widget.host.destinationPath}', maxLines: 2, overflow: TextOverflow.ellipsis)),
     ),
+    _previewSearchBar(),
     Expanded(child: PdfMaterialHost(child: PdfViewer(
       key: ValueKey(_result),
       document: _preview!,
+      controller: _viewer,
       autoRenderWorker: widget.autoRenderWorker,
       interactiveForms: false,
       textSelectionEditing: false,
@@ -872,7 +1111,10 @@ class _PdfOperationsDialogState extends State<PdfOperationsDialog> {
     padding: const EdgeInsets.all(12),
     child: Wrap(spacing: 12, runSpacing: 8, alignment: WrapAlignment.end, children: [
       if (_result != null) OutlinedButton(
-        onPressed: _busy ? null : () => setState(() { _result = null; _preview = null; _error = null; }),
+        onPressed: _busy ? null : () {
+          _clearPreviewSearch();
+          setState(() { _result = null; _preview = null; _error = null; });
+        },
         child: Text(context.pdfOpTr('Back to options')),
       ),
       if (_result == null) ...[
@@ -904,7 +1146,16 @@ class _PdfOperationsDialogState extends State<PdfOperationsDialog> {
   Widget build(BuildContext context) => PopScope(
     canPop: _allowPop,
     onPopInvokedWithResult: (didPop, _) { if (!didPop) unawaited(_requestClose()); },
-    child: ScaffoldMessenger(
+    child: CallbackShortcuts(
+      bindings: {
+        const SingleActivator(LogicalKeyboardKey.keyF, control: true): () {
+          if (_result != null) _searchFocus.requestFocus();
+        },
+        const SingleActivator(LogicalKeyboardKey.keyF, meta: true): () {
+          if (_result != null) _searchFocus.requestFocus();
+        },
+      },
+      child: ScaffoldMessenger(
       key: _messenger,
       child: Scaffold(
         appBar: AppBar(
@@ -930,6 +1181,7 @@ class _PdfOperationsDialogState extends State<PdfOperationsDialog> {
                   : _result == null ? _options() : _previewResult()),
           _footer(),
         ]),
+      ),
       ),
     ),
   );

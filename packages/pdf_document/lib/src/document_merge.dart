@@ -280,19 +280,34 @@ extension on PdfEditor {
     var node = cos.resolve(parent['First']);
     while (node is CosDictionary && seen.add(node)) {
       final dict = CosDictionary();
+      var omittedDestination = false;
       for (final key in ['Title', 'C', 'F', 'A', 'Dest']) {
         final value = node[key];
         if (value != null) {
-          dict[key] = key == 'Dest'
+          final copied = key == 'Dest'
               ? importer.copyDestination(value)
-              : importer.copyValue(value);
+              : key == 'A'
+                  ? importer.copyAction(value)
+                  : importer.copyValue(value);
+          if (importer.pruneUnselectedDestinations &&
+              (key == 'Dest' || key == 'A') && copied is CosNull) {
+            omittedDestination = true;
+          } else {
+            dict[key] = copied;
+          }
         }
+      }
+      final children = _importOutlineChildren(importer, node, seen);
+      // A parent whose own target disappeared can still group surviving
+      // child bookmarks. A leaf with only an omitted target has no use.
+      if (omittedDestination && children.isEmpty) {
+        node = cos.resolve(node['Next']);
+        continue;
       }
       final ref = _updater.addObject(dict);
       final count = cos.resolve(node['Count']);
       _outlineOpenOverride[ref.objectNumber] =
           count is! CosInteger || count.value >= 0;
-      final children = _importOutlineChildren(importer, node, seen);
       _relinkOutlineChildren(ref, children);
       out.add(ref);
       node = cos.resolve(node['Next']);

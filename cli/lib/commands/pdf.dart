@@ -9,6 +9,44 @@ import '../adapters/bounded_download.dart';
 import '../config/cli_config.dart';
 import '../pdf/pdf_io.dart';
 
+/// Preserves the PDF command family's JSON error contract even when argument
+/// parsing fails before a subcommand runs. Other CLI commands keep the normal
+/// [CommandRunner] usage behavior.
+class PdfAwareCommandRunner extends CommandRunner<int> {
+  PdfAwareCommandRunner(super.executableName, super.description,
+      {StringSink? errors})
+      : _errors = errors ?? stderr;
+
+  final StringSink _errors;
+
+  @override
+  Future<int?> run(Iterable<String> args) async {
+    final arguments = args.toList();
+    try {
+      return await super.run(arguments);
+    } on UsageException {
+      // Stop at -- so a search query or filename named --json remains data.
+      final options = arguments.takeWhile((argument) => argument != '--');
+      if (arguments.firstOrNull != 'pdf' ||
+          !options.any((argument) =>
+              argument == '--json' || argument == '-j' ||
+              argument == '--json=true')) {
+        rethrow;
+      }
+      _errors.writeln(jsonEncode({
+        'status': 'error',
+        'command': 'pdf',
+        'code': 'usage',
+        // Parser errors may quote argument values. Do not include their source
+        // in machine-readable logs (a mistaken argument could be a secret).
+        'message': 'Invalid PDF command arguments. Run crisp pdf --help or '
+            'crisp pdf <command> --help for usage.',
+      }));
+      return 2;
+    }
+  }
+}
+
 /// PDF commands use the same byte-oriented operations as the graphical app.
 /// The CLI owns file access, credentials, output consent and presentation.
 class PdfCommand extends Command<int> {
@@ -260,7 +298,11 @@ class _PdfOperationCommand extends Command<int> {
         }
       }
       return 0;
-    } on UsageException {
+    } on UsageException catch (error) {
+      if (_json) {
+        _report('usage', error.message);
+        return 2;
+      }
       rethrow;
     } on PdfOperationException catch (error) {
       _report(error.code, error.message, fields: error.fieldErrors);

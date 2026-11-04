@@ -20,6 +20,27 @@ class CliDownloadLimitException implements Exception {
   String toString() => 'The download exceeds the $maxBytes-byte limit.';
 }
 
+/// Bound a response before retaining its bytes, even without Content-Length.
+/// The caller owns and closes the HTTP client when consumption fails.
+Future<Uint8List> readBoundedResponseBytes(
+  http.StreamedResponse response, {
+  required int maxBytes,
+}) async {
+  if (maxBytes < 1) throw ArgumentError.value(maxBytes, 'maxBytes');
+  if ((response.contentLength ?? 0) > maxBytes) {
+    throw CliDownloadLimitException(maxBytes);
+  }
+  final builder = BytesBuilder(copy: false);
+  await for (final chunk
+      in response.stream.timeout(const Duration(seconds: 60))) {
+    if (builder.length + chunk.length > maxBytes) {
+      throw CliDownloadLimitException(maxBytes);
+    }
+    builder.add(chunk);
+  }
+  return builder.takeBytes();
+}
+
 /// Fetch without forwarding credentials through redirects or buffering an
 /// unbounded error body. Closing the client also cancels an oversized stream.
 Future<Uint8List> boundedHttpDownload(
@@ -40,18 +61,7 @@ Future<Uint8List> boundedHttpDownload(
     if (response.statusCode != 200) {
       throw StateError('Download failed (HTTP ${response.statusCode}).');
     }
-    if ((response.contentLength ?? 0) > maxBytes) {
-      throw CliDownloadLimitException(maxBytes);
-    }
-    final builder = BytesBuilder(copy: false);
-    await for (final chunk
-        in response.stream.timeout(const Duration(seconds: 60))) {
-      if (builder.length + chunk.length > maxBytes) {
-        throw CliDownloadLimitException(maxBytes);
-      }
-      builder.add(chunk);
-    }
-    return builder.takeBytes();
+    return await readBoundedResponseBytes(response, maxBytes: maxBytes);
   } finally {
     transport.close();
   }

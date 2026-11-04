@@ -15,10 +15,9 @@ class PdfOcrSpan {
     this.confidence = 1.0,
   });
 
-  /// The recognized characters. Code points outside Latin-1 are written as
-  /// `?` in the page content (the standard fonts the layer uses are
-  /// byte-encoded), but the run still occupies [bounds] so selection and
-  /// search highlighting line up with the word on the page.
+  /// The recognized characters. Non-Latin text requires a covering
+  /// [PdfEmbeddedFont] when injecting the layer. Unsupported characters are
+  /// rejected rather than silently replaced in the searchable text.
   final String text;
 
   /// Where the text sits, in PDF user space (origin bottom-left, the same
@@ -54,8 +53,16 @@ extension PdfOcrEditing on PdfEditor {
   ///
   /// Spans below [minConfidence] or with no printable text are skipped.
   /// [font] picks which base-14 font carries the layer (Helvetica by
-  /// default); it is embedded with explicit /Widths so this renderer and
-  /// other viewers measure the spacing identically.
+  /// default); it is written with explicit /Widths so this renderer and
+  /// other viewers measure the spacing identically. [embeddedFont], when
+  /// supplied, takes precedence and writes a Unicode Type0 font with an
+  /// embedded program and /ToUnicode map. The supplied font is reusable;
+  /// its recorded glyph usage is reset for each injected page.
+  ///
+  /// Every accepted span is checked before the document is modified.
+  /// Unsupported control characters, non-Latin-1 text without an embedded
+  /// font, or missing glyphs throw [ArgumentError]. Tabs and line endings
+  /// become spaces because a span represents one positioned text run.
   ///
   /// The whole layer is wrapped in `q`/`Q`, so the invisible render mode
   /// and horizontal scaling cannot leak into the page's own content.
@@ -63,10 +70,15 @@ extension PdfOcrEditing on PdfEditor {
     int pageIndex,
     Iterable<PdfOcrSpan> spans, {
     PdfStandardFont font = PdfStandardFont.helvetica,
+    PdfEmbeddedFont? embeddedFont,
     double minConfidence = 0,
     bool visible = false,
     int color = 0x000000,
   }) {
+    if (!minConfidence.isFinite || minConfidence < 0 || minConfidence > 1) {
+      throw ArgumentError.value(
+          minConfidence, 'minConfidence', 'must be between 0 and 1');
+    }
     final page = document.page(pageIndex);
     final accepted = [
       for (final span in spans)
@@ -78,17 +90,47 @@ extension PdfOcrEditing on PdfEditor {
     ];
     if (accepted.isEmpty) return 0;
 
-    final fontName = _ensureOcrFont(page, font);
+    final texts = <String>[];
+    for (final span in accepted) {
+      final box = span.bounds;
+      if (!span.confidence.isFinite || span.confidence > 1 ||
+          ![box.left, box.bottom, box.right, box.top].every((n) => n.isFinite)) {
+        throw ArgumentError('OCR spans require finite bounds and confidence');
+      }
+      final text = span.text.replaceAll(RegExp(r'[\r\n\t]'), ' ');
+      if (text.runes.any((r) => r < 32 || (r >= 127 && r < 160))) {
+        throw ArgumentError('OCR text contains unsupported control characters');
+      }
+      if (embeddedFont != null) {
+        if (!embeddedFont.canRender(text)) {
+          throw ArgumentError('The OCR font does not contain every glyph');
+        }
+      } else if (text.runes.any((r) => r > 255)) {
+        throw ArgumentError('Non-Latin OCR text requires an embedded font');
+      }
+      texts.add(text);
+    }
+
+    embeddedFont?.resetUsage();
+    final fonts = embeddedFont == null ? null : _ocrFonts(page);
+    final fontName = fonts == null
+        ? _ensureOcrFont(page, font)
+        : _newOcrFontName(fonts);
     final rotation = page.rotation;
     final writer = ContentWriter()..save();
-    for (final span in accepted) {
+    for (var i = 0; i < accepted.length; i++) {
+      final span = accepted[i];
+      final text = texts[i];
+      final rendered = pdfVisualText(text, PdfTextDirection.auto);
       final box = span.bounds;
       // The box's extent across and along the visual reading direction:
       // on a quarter-turned page a word's on-screen width is user-space y.
       final quarter = rotation == 90 || rotation == 270;
       final size = quarter ? box.width : box.height;
       final length = quarter ? box.height : box.width;
-      final natural = measureStandardText(span.text, size, font: font);
+      final natural = embeddedFont == null
+          ? measureStandardText(rendered, size, font: font)
+          : embeddedFont.measure(rendered, size);
       // Horizontal scaling that stretches the run's natural length onto the
       // box - so the invisible selection box tracks the word.
       final scale = natural > 0 ? length / natural * 100 : 100.0;
@@ -118,11 +160,26 @@ extension PdfOcrEditing on PdfEditor {
       } else {
         writer.op('Tm', matrix);
       }
-      writer
-        ..showText(span.text)
-        ..endText();
+      if (embeddedFont == null) {
+        writer.showText(rendered);
+      } else {
+        writer
+          ..beginActualText(text)
+          ..showGlyphHex(embeddedFont.encodeHex(rendered))
+          ..endMarkedContent();
+      }
+      writer.endText();
     }
     writer.restore();
+    if (embeddedFont != null) {
+      // Build after encoding so /W and /ToUnicode include all spans. Give
+      // every page/layer its own font resource; later usage must not replace
+      // mappings used by an earlier layer.
+      final type0 = embeddedFont.buildResource(_updater.addObject)
+          .entries.values.single;
+      fonts![fontName] = _updater.addObject(type0);
+      _updater.markChanged(page.dict);
+    }
     _appendContent(pageIndex, page, writer.takeBytes());
     return accepted.length;
   }
@@ -132,17 +189,7 @@ extension PdfOcrEditing on PdfEditor {
   /// this session already added.
   String _ensureOcrFont(PdfPage page, PdfStandardFont font) {
     final cos = document.cos;
-    final resources = _ownResources(page);
-    final existing = cos.resolve(resources['Font']);
-    final CosDictionary fonts;
-    if (existing is CosDictionary && resources['Font'] is! CosReference) {
-      fonts = existing;
-    } else {
-      fonts = CosDictionary({
-        if (existing is CosDictionary) ...existing.entries,
-      });
-      resources['Font'] = fonts;
-    }
+    final fonts = _ocrFonts(page);
 
     final baseFont = CosName(font.baseFont);
     for (final entry in fonts.entries.entries) {
@@ -161,11 +208,7 @@ extension PdfOcrEditing on PdfEditor {
       }
     }
 
-    var i = 1;
-    while (fonts.containsKey('OcrF$i')) {
-      i++;
-    }
-    final name = 'OcrF$i';
+    final name = _newOcrFontName(fonts);
     fonts[name] = CosDictionary({
       'Type': const CosName('Font'),
       'Subtype': const CosName('Type1'),
@@ -177,5 +220,30 @@ extension PdfOcrEditing on PdfEditor {
     });
     _updater.markChanged(page.dict);
     return name;
+  }
+
+  CosDictionary _ocrFonts(PdfPage page) {
+    final cos = document.cos;
+    final resources = _ownResources(page);
+    final existing = cos.resolve(resources['Font']);
+    final CosDictionary fonts;
+    if (existing is CosDictionary && resources['Font'] is! CosReference) {
+      fonts = existing;
+    } else {
+      fonts = CosDictionary({
+        if (existing is CosDictionary) ...existing.entries,
+      });
+      resources['Font'] = fonts;
+    }
+
+    return fonts;
+  }
+
+  String _newOcrFontName(CosDictionary fonts) {
+    var i = 1;
+    while (fonts.containsKey('OcrF$i')) {
+      i++;
+    }
+    return 'OcrF$i';
   }
 }

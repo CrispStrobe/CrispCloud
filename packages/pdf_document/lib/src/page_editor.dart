@@ -239,11 +239,16 @@ extension PdfPageOperations on PdfEditor {
 /// Building a new document from a subset of this one's pages.
 extension PdfPageExtraction on PdfDocument {
   /// Builds a brand-new PDF containing only the pages at [indices], in
-  /// that order, with everything they reference deep-copied across. The
-  /// document information dictionary comes along; document-level state
-  /// that lives outside the pages (outlines, the AcroForm field list,
-  /// named destinations) does not. Extracting from an encrypted document
-  /// produces unencrypted output.
+  /// that order, with their content, resources and annotations deep-copied.
+  /// AcroForm branches with widgets on the selected pages remain fillable;
+  /// their defaults and calculation order are retained. Named destinations
+  /// and bookmarks targeting selected pages are remapped; omitted targets
+  /// are removed, while bookmark parents with surviving children remain as
+  /// headings. Optional-content state, output intents and /Info are retained.
+  ///
+  /// Attachments, document JavaScript, XFA and source revision history are
+  /// not copied. Extracting from an encrypted document produces unencrypted
+  /// output; any source signature does not certify the new document.
   Uint8List extractPages(List<int> indices) {
     if (indices.isEmpty) {
       throw ArgumentError.value(indices, 'indices', 'select at least one page');
@@ -252,30 +257,41 @@ extension PdfPageExtraction on PdfDocument {
       RangeError.checkValidIndex(i, null, 'indices', pageCount);
     }
     final builder = CosDocumentBuilder();
-    final pagesDict = CosDictionary({'Type': const CosName('Pages')});
+    final pagesDict = CosDictionary({
+      'Type': const CosName('Pages'),
+      'Kids': CosArray([]),
+      'Count': const CosInteger(0),
+    });
     final pagesRef = builder.add(pagesDict);
-    final importer = _PageImporter(this, builder.add);
-    final leaves = importer.importPages(indices);
-    for (final leaf in leaves) {
-      leaf.dict['Parent'] = pagesRef;
-    }
-    pagesDict['Kids'] = CosArray([for (final leaf in leaves) leaf.ref]);
-    pagesDict['Count'] = CosInteger(leaves.length);
     final catalogRef = builder.add(
       CosDictionary({'Type': const CosName('Catalog'), 'Pages': pagesRef}),
     );
-    CosReference? infoRef;
-    final info = cos.resolve(cos.trailer['Info']);
-    if (info is CosDictionary) {
-      infoRef = builder.add(importer.copyValue(info));
-    }
     final headerVersion = version;
-    return builder.build(
+    // Start from an empty, unrelated file, then use the same importer that
+    // preserves forms/catalog data during a merge. Its incremental save is
+    // over this tiny empty seed, never over any bytes from the source PDF.
+    final output = PdfEditor(PdfDocument.open(builder.build(
       root: catalogRef,
-      info: infoRef,
       version:
           RegExp(r'^\d+\.\d+$').hasMatch(headerVersion) ? headerVersion : '1.7',
-    );
+    )));
+    final importer = _PageImporter(this, output._updater.addObject,
+        documentData: true, pruneUnselectedDestinations: true);
+    output._rebuildPageTree(importer.importPages(indices));
+    output._mergeImportedDocumentData(importer, intoEmpty: true);
+    for (final key in ['PageMode', 'PageLayout', 'Lang']) {
+      final value = catalog[key];
+      if (value != null) {
+        output.document.catalog[key] = importer.copyValue(value);
+      }
+    }
+    output._updater.markChanged(output.document.catalog);
+    final info = cos.resolve(cos.trailer['Info']);
+    if (info is CosDictionary) {
+      output._updater.setTrailerEntry(
+          'Info', output._updater.addObject(importer.copyValue(info)));
+    }
+    return output.save();
   }
 
   /// Builds a standalone PDF of pages [start] through [end] inclusive, in
@@ -312,12 +328,14 @@ class _Leaf {
 /// a /Pages node, or to a page that is not part of the import set, copies
 /// as null instead of dragging the rest of the document along.
 class _PageImporter {
-  _PageImporter(this.source, this._add, {this.documentData = false});
+  _PageImporter(this.source, this._add,
+      {this.documentData = false, this.pruneUnselectedDestinations = false});
 
   final PdfDocument source;
   final CosReference Function(CosObject) _add;
   final Map<CosReference, CosObject> _mapped = {};
   final bool documentData;
+  final bool pruneUnselectedDestinations;
   final Map<CosDictionary, CosDictionary> _dictionaries = Map.identity();
   final Map<int, CosReference> _pageRefs = {};
   final Set<CosDictionary> _formNodes = Set.identity();
@@ -427,7 +445,13 @@ class _PageImporter {
       if (documentData &&
           (key == 'Dest' ||
               (key == 'D' && action is CosName && action.value == 'GoTo'))) {
-        out[key] = copyDestination(value);
+        final destination = copyDestination(value);
+        if (!pruneUnselectedDestinations || destination is! CosNull) {
+          out[key] = destination;
+        }
+      } else if (pruneUnselectedDestinations && key == 'A') {
+        final copied = copyAction(value);
+        if (copied is! CosNull) out[key] = copied;
       } else if (documentData && key == 'Kids' && _formNodes.contains(dict)) {
         final kids = cos.resolve(value);
         if (kids is CosArray) {
@@ -495,11 +519,29 @@ class _PageImporter {
   CosObject copyDestination(CosObject value) {
     final dest = PdfDestination.parse(source, value);
     if (dest == null) return CosNull.instance;
+    if (pruneUnselectedDestinations && !_pageRefs.containsKey(dest.pageIndex)) {
+      return CosNull.instance;
+    }
     return CosArray([
       _pageRefs[dest.pageIndex] ?? CosNull.instance,
       CosName(dest.fit),
       for (final p in dest.params) p == null ? CosNull.instance : CosReal(p),
     ]);
+  }
+
+  /// A local GoTo action whose target is outside a subset must not keep a
+  /// broken /D or resolve its name against another document's namespace.
+  /// External actions retain their original semantics.
+  CosObject copyAction(CosObject value) {
+    final action = source.cos.resolve(value);
+    if (pruneUnselectedDestinations && action is CosDictionary &&
+        source.cos.resolve(action['S']) == const CosName('GoTo')) {
+      final target = action['D'];
+      if (target == null || copyDestination(target) is CosNull) {
+        return CosNull.instance;
+      }
+    }
+    return copyValue(value);
   }
 
   /// Copies a stream, registering its reference (when indirect) before

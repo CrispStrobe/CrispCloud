@@ -49,6 +49,8 @@ jobs:
         if: success() || failure()
         run: >-
           flutter test --concurrency=2
+          test/pdf_operations_host_test.dart
+          test/widget/pdf_operations_dialog_test.dart
           test/pdf_font_licenses_test.dart
           test/pdf_edit_session_test.dart
           test/pdf_file_store_test.dart
@@ -61,7 +63,7 @@ jobs:
           test/web_file_ops_test.dart
       - name: Browser editor lifecycle
         if: success() || failure()
-        run: flutter test --platform chrome test/widget/pdf_editor_dialog_test.dart
+        run: flutter test --platform chrome test/widget/pdf_editor_dialog_test.dart test/widget/pdf_operations_dialog_test.dart
       - name: Record reviewable formatting and lockfile updates
         if: always()
         run: |
@@ -145,3 +147,76 @@ jobs:
             pubspec.lock
             build/web
           retention-days: 14
+
+  operations:
+    name: Shared PDF operations and CLI
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v5
+      - uses: subosito/flutter-action@v2
+        with:
+          channel: stable
+          flutter-version: ${{ env.FLUTTER_VERSION }}
+          cache: true
+      - name: Resolve shared engine and CLI
+        run: |
+          (cd packages/pdf_document && dart pub get)
+          (cd packages/pdf_operations && dart pub get)
+          (cd cli && dart pub get)
+      - name: Format PDF operations and CLI changes
+        id: format
+        continue-on-error: true
+        run: |
+          python3 tool/format_pdf_editor.py --write
+          dart format cli/bin/crisp.dart cli/lib/cli_app.dart cli/lib/commands/pdf.dart cli/lib/pdf cli/lib/adapters/bounded_download.dart cli/lib/adapters/s3_adapter.dart cli/lib/adapters/webdav_adapter.dart cli/lib/adapters/sftp_adapter.dart cli/lib/config/cli_config.dart cli/test/pdf_command_test.dart cli/test/pdf_io_test.dart
+          git diff --quiet -- . ':!*pubspec.lock'
+      - name: Analyze maintained engine and service
+        run: |
+          (cd packages/pdf_document && dart analyze)
+          (cd packages/pdf_operations && dart analyze)
+      - name: Engine and shared operation regressions
+        if: success() || failure()
+        run: |
+          (cd packages/pdf_document && dart test)
+          (cd packages/pdf_operations && dart test)
+      - name: CLI commands and output safety
+        if: success() || failure()
+        working-directory: cli
+        run: |
+          dart analyze
+          dart test
+          dart run bin/crisp.dart pdf --help
+      - name: Emit independent validation PDFs and timing observations
+        if: success() || failure()
+        working-directory: packages/pdf_operations
+        run: |
+          dart run tool/emit_validation.dart ../../build/pdf_operations_verification
+          dart run tool/benchmark.dart > ../../build/pdf_operations_verification/benchmark.json
+      - name: Inspect output with independent parser
+        if: success() || failure()
+        run: |
+          python3 -m pip install pypdf==6.10.0 cryptography
+          python3 tool/verify_pdf_operations.py
+      - name: Preserve exact formatting and dependency updates
+        if: always()
+        run: |
+          mkdir -p build/pdf_operations_verification
+          git diff --binary > build/pdf_operations_verification/ci-updates.patch
+          python3 - <<'PYCODE'
+          import base64, gzip, pathlib
+          patch = pathlib.Path('build/pdf_operations_verification/ci-updates.patch').read_bytes()
+          if patch:
+              print('PDF_OPERATIONS_PATCH_BEGIN')
+              print(base64.b64encode(gzip.compress(patch, mtime=0)).decode())
+              print('PDF_OPERATIONS_PATCH_END')
+          PYCODE
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: pdf-operations-verification
+          path: build/pdf_operations_verification
+          retention-days: 14
+      - name: Enforce clean formatting
+        if: always() && steps.format.outcome == 'failure'
+        run: exit 1

@@ -27,6 +27,7 @@ enum PdfOperationAction {
   watermark,
   fillForm,
   insertImage,
+  importOcr,
 }
 
 /// Data-only request, suitable for a native worker isolate. Page expressions
@@ -43,6 +44,9 @@ class PdfOperationRequest {
     this.imageBytes,
     this.fields = const {},
     this.appearanceFont,
+    this.ocrPages = const [],
+    this.ocrMinConfidence = 0,
+    this.ocrSkipExistingText = true,
   });
 
   final PdfOperationAction action;
@@ -55,6 +59,9 @@ class PdfOperationRequest {
   final Uint8List? imageBytes;
   final Map<String, Object?> fields;
   final PdfEmbeddedFont? appearanceFont;
+  final List<PdfOcrPage> ocrPages;
+  final double ocrMinConfidence;
+  final bool ocrSkipExistingText;
 }
 
 class _PdfOperationWork {
@@ -118,6 +125,13 @@ PdfOperationResult _performPdfOperation(_PdfOperationWork work) {
       imageBytes: request.imageBytes!,
       placement: request.imagePlacement!,
       pages: request.pages,
+    ),
+    PdfOperationAction.importOcr => service.applyOcr(
+      input,
+      pages: request.ocrPages,
+      font: request.appearanceFont,
+      minConfidence: request.ocrMinConfidence,
+      skipExistingText: request.ocrSkipExistingText,
     ),
   };
 }

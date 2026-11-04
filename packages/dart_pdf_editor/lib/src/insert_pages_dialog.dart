@@ -11,12 +11,18 @@ import 'editing/editing_controller.dart';
 import 'l10n/pdf_l10n.dart';
 
 /// A PDF the host read for "Insert pages": its display [name] and [bytes].
+///
+/// The host obtains [password] before presenting the insertion dialog. It is
+/// used only to open this source; imported pages follow the destination's
+/// encryption policy. Hosts should disclose a change in protection before
+/// inserting protected pages into an unencrypted document.
 @immutable
 class PdfInsertFile {
-  const PdfInsertFile(this.name, this.bytes);
+  const PdfInsertFile(this.name, this.bytes, {this.password = ''});
 
   final String name;
   final Uint8List bytes;
+  final String password;
 }
 
 /// Asks the host for PDFs to insert (an empty list = cancelled). Needs the
@@ -218,7 +224,7 @@ class _InsertPagesDialogState extends State<_InsertPagesDialog> {
     _failed.clear();
     for (final file in files) {
       try {
-        final document = PdfDocument.open(file.bytes);
+        final document = PdfDocument.open(file.bytes, password: file.password);
         if (document.pageCount == 0) throw const FormatException('no pages');
         _entries.add(_Entry(file, document));
       } catch (_) {

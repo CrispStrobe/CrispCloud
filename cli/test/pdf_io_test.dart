@@ -5,6 +5,7 @@ import 'dart:typed_data';
 import 'package:args/command_runner.dart';
 import 'package:crisp/adapters/bounded_download.dart';
 import 'package:crisp/adapters/cli_storage_client.dart';
+import 'package:crisp/adapters/s3_adapter.dart';
 import 'package:crisp/adapters/webdav_adapter.dart';
 import 'package:crisp/commands/pdf.dart';
 import 'package:crisp/config/cli_config.dart';
@@ -111,6 +112,39 @@ void main() {
     expect(client.uploadCalls, 0);
   });
 
+  test('irrelevant profile keys cannot disguise the same S3 output', () async {
+    config.saveProvider('alias', {
+      'type': 's3', 'endpoint': 'https://example.test', 'bucket': 'pdfs',
+      'port': 1234, 'host': 'unused-setting',
+    });
+    client.files['/input.pdf'] = Uint8List.fromList([1, 2, 3]);
+    await store.readBytes('cloud://test/input.pdf');
+    await expectLater(store.prepareOutput('cloud://alias/input.pdf', overwrite: true),
+        throwsA(failure('sourceOutput')));
+  });
+
+  test('WebDAV aliases with nested base paths cannot replace a source', () async {
+    config.saveProvider('dav-root', {'type': 'webdav', 'host': 'https://dav.test/root'});
+    config.saveProvider('dav-nested', {'type': 'webdav', 'host': 'https://DAV.test:443/root/docs/'});
+    client.files['/docs/input.pdf'] = Uint8List.fromList([1, 2, 3]);
+    await store.readBytes('cloud://dav-root/docs/input.pdf');
+    await expectLater(store.prepareOutput('cloud://dav-nested/input.pdf', overwrite: true),
+        throwsA(failure('sourceOutput')));
+  });
+
+  test('malformed CLI configuration fails without printing credential source', () async {
+    const secret = 'private-config-parser-source';
+    File(config.configPath).writeAsStringSync('providers: ["$secret",');
+    final errors = StringBuffer();
+    final output = StringBuffer();
+    final runner = PdfAwareCommandRunner('crisp', 'PDF tests', errors: errors)
+      ..addCommand(PdfCommand(config, output: output, errors: errors));
+    expect(await runner.run(['pdf', 'info', 'cloud://test/input.pdf', '--json']), 1);
+    expect(output.toString(), isEmpty);
+    expect(jsonDecode(errors.toString())['code'], 'configuration');
+    expect(errors.toString(), isNot(contains(secret)));
+  });
+
   test('case-only remote destinations require exact spelling', () async {
     client.files['/Result.pdf'] = Uint8List.fromList([1]);
     await expectLater(store.prepareOutput('cloud://test/result.pdf', overwrite: false),
@@ -194,6 +228,119 @@ void main() {
     expect(inspection.pages.map((page) => page.rotation), [0, 180]);
     expect(client.files['/source.pdf'], sourceBytes);
     expect(client.disposed, isTrue);
+  });
+
+  group('complete XML directory listings', () {
+    Future<HttpServer> serverWithXml(String body, {int status = 200}) async {
+      final server = await HttpServer.bind(InternetAddress.loopbackIPv4, 0);
+      server.listen((request) async {
+        await request.drain<void>();
+        request.response.statusCode = status;
+        request.response.headers.contentType = ContentType('application', 'xml', charset: 'utf-8');
+        request.response.write(body);
+        await request.response.close();
+      });
+      return server;
+    }
+
+    S3CliAdapter s3(HttpServer server) => S3CliAdapter(
+        accessKey: 'fixture', secretKey: 'fixture', bucket: 'pdfs',
+        endpoint: 'http://127.0.0.1:${server.port}', region: 'us-east-1');
+
+    test('S3 parses escaped keys, namespaces and arbitrary property order', () async {
+      final server = await serverWithXml('''
+<S:ListBucketResult xmlns:S="http://s3.amazonaws.com/doc/2006-03-01/">
+  <S:KeyCount>2</S:KeyCount><S:IsTruncated>false</S:IsTruncated>
+  <S:Contents><S:Size>3</S:Size><S:Key>docs/a&amp;b.pdf</S:Key></S:Contents>
+  <S:CommonPrefixes><S:Prefix>docs/folder&amp;name/</S:Prefix></S:CommonPrefixes>
+</S:ListBucketResult>''');
+      final adapter = s3(server);
+      try {
+        final listing = await adapter.list('/docs');
+        expect(listing.map((entry) => entry.name), ['a&b.pdf', 'folder&name']);
+        expect(listing.map((entry) => entry.path), ['/docs/a&b.pdf', '/docs/folder&name/']);
+        config.saveProvider('s3-xml', {'type': 's3', 'endpoint': 'http://127.0.0.1:${server.port}', 'bucket': 'pdfs'});
+        final fileStore = PdfCliFileStore(config, adapterFactory: (_, _) => adapter);
+        try {
+          await expectLater(fileStore.prepareOutput('cloud://s3-xml/docs/a%26b.pdf', overwrite: false),
+              throwsA(failure('outputExists')));
+        } finally { await fileStore.dispose(); }
+      } finally { await server.close(force: true); }
+    });
+
+    test('S3 never accepts malformed or incomplete success responses as empty', () async {
+      for (final body in [
+        '<html>Sign in</html>',
+        '<ListBucketResult><IsTruncated>false</IsTruncated><Contents><Key>secret.pdf</Key></Contents></ListBucketResult>',
+        '<ListBucketResult><IsTruncated>true</IsTruncated></ListBucketResult>',
+        '<ListBucketResult><KeyCount>1</KeyCount><IsTruncated>false</IsTruncated></ListBucketResult>',
+      ]) {
+        final server = await serverWithXml(body);
+        final adapter = s3(server);
+        try {
+          await expectLater(adapter.list('/'), throwsA(isA<StateError>()));
+        } finally { await adapter.dispose(); await server.close(force: true); }
+      }
+    });
+
+    test('S3 refuses a repeated pagination token', () async {
+      final server = await serverWithXml('''<ListBucketResult>
+<IsTruncated>true</IsTruncated><NextContinuationToken>same&amp;token</NextContinuationToken>
+</ListBucketResult>''');
+      final adapter = s3(server);
+      try {
+        await expectLater(adapter.list('/'), throwsA(isA<StateError>()));
+      } finally { await adapter.dispose(); await server.close(force: true); }
+    });
+
+    String davXml({String prefix = '', bool denyChild = false}) {
+      final tag = prefix.isEmpty ? '' : '$prefix:';
+      String response(String path, {bool directory = false, bool denied = false}) => '''
+<${tag}response><${tag}href>$path</${tag}href><${tag}propstat>
+<${tag}prop><${tag}resourcetype>${directory ? '<${tag}collection/>' : ''}</${tag}resourcetype>
+<${tag}getcontentlength>${directory ? 0 : 3}</${tag}getcontentlength></${tag}prop>
+<${tag}status>HTTP/1.1 ${denied ? '403 Forbidden' : '200 OK'}</${tag}status>
+</${tag}propstat></${tag}response>''';
+      return '''<${tag}multistatus xmlns${prefix.isEmpty ? '' : ':$prefix'}="DAV:">
+${response('/dav/Account%20Name/docs/', directory: true)}
+${response('/dav/Account%20Name/docs/a%20%26%20b.pdf', denied: denyChild)}
+</${tag}multistatus>''';
+    }
+
+    test('WebDAV resolves names and logical paths with any namespace prefix', () async {
+      for (final prefix in ['', 'arbitrary']) {
+        final server = await serverWithXml(davXml(prefix: prefix), status: 207);
+        final adapter = WebDavCliAdapter(
+            baseUrl: 'http://127.0.0.1:${server.port}/dav/Account%20Name',
+            username: 'fixture', password: 'fixture');
+        try {
+          final listing = await adapter.list('/docs');
+          expect(listing, hasLength(1));
+          expect(listing.single.name, 'a & b.pdf');
+          expect(listing.single.path, '/docs/a & b.pdf');
+          expect(listing.single.size, 3);
+        } finally { await adapter.dispose(); await server.close(force: true); }
+      }
+    });
+
+    test('WebDAV failed or incomplete property responses block output checks', () async {
+      for (final body in [
+        '<html>Sign in</html>',
+        '<multistatus xmlns="DAV:"/>',
+        davXml(denyChild: true),
+      ]) {
+        final server = await serverWithXml(body, status: 207);
+        config.saveProvider('dav-xml', {'type': 'webdav', 'host': 'http://127.0.0.1:${server.port}/dav/Account%20Name'});
+        final adapter = WebDavCliAdapter(
+            baseUrl: 'http://127.0.0.1:${server.port}/dav/Account%20Name',
+            username: 'fixture', password: 'fixture');
+        final fileStore = PdfCliFileStore(config, adapterFactory: (_, _) => adapter);
+        try {
+          await expectLater(fileStore.prepareOutput('cloud://dav-xml/docs/new.pdf', overwrite: false),
+              throwsA(failure('listingFailed')));
+        } finally { await fileStore.dispose(); await server.close(force: true); }
+      }
+    });
   });
 
   group('bounded HTTP streams', () {

@@ -11,6 +11,7 @@ import 'dart:typed_data';
 import 'package:crypto/crypto.dart';
 import 'package:http/http.dart' as http;
 import 'package:path/path.dart' as p;
+import 'package:xml/xml.dart';
 
 import '../config/cli_config.dart';
 import 'bounded_download.dart';
@@ -292,6 +293,7 @@ class S3CliAdapter implements CliStorageClient, CliBoundedDownload {
     Uri uri, {
     Map<String, String>? extraHeaders,
     List<int>? body,
+    int? maxResponseBytes,
   }) async {
     final signed = _sign(
       method: method,
@@ -299,11 +301,23 @@ class S3CliAdapter implements CliStorageClient, CliBoundedDownload {
       extraHeaders: extraHeaders,
       body: body,
     );
-    final req = http.Request(method, uri);
+    final req = http.Request(method, uri)..followRedirects = false;
     req.headers.addAll(signed);
     if (body != null) req.bodyBytes = Uint8List.fromList(body);
-    final streamed = await http.Client().send(req);
-    return http.Response.fromStream(streamed);
+    final client = http.Client();
+    try {
+      final streamed = await client.send(req).timeout(const Duration(seconds: 60));
+      if (maxResponseBytes != null) {
+        return http.Response.bytes(
+          await readBoundedResponseBytes(streamed, maxBytes: maxResponseBytes),
+          streamed.statusCode,
+          headers: streamed.headers,
+        );
+      }
+      return await http.Response.fromStream(streamed);
+    } finally {
+      client.close();
+    }
   }
 
   // ---------------------------------------------------------------------------
@@ -317,92 +331,102 @@ class S3CliAdapter implements CliStorageClient, CliBoundedDownload {
         prefix.isEmpty ? '' : (prefix.endsWith('/') ? prefix : '$prefix/');
 
     final items = <CliFileItem>[];
+    final seenTokens = <String>{};
     String? continuationToken;
-
     do {
       final params = <String, String>{
         'list-type': '2',
         'delimiter': '/',
         'max-keys': '1000',
+        if (normalizedPrefix.isNotEmpty) 'prefix': normalizedPrefix,
+        if (continuationToken != null) 'continuation-token': continuationToken,
       };
-      if (normalizedPrefix.isNotEmpty) params['prefix'] = normalizedPrefix;
-      if (continuationToken != null) {
-        params['continuation-token'] = continuationToken;
-      }
-
-      final uri = _buildBucketUri(queryParams: params);
-      final response = await _request('GET', uri);
-
+      final response = await _request('GET', _buildBucketUri(queryParams: params),
+          maxResponseBytes: 16 * 1024 * 1024);
       if (response.statusCode != 200) {
-        throw Exception('S3 list failed (HTTP ${response.statusCode}): ${response.body}');
+        throw StateError('S3 list failed (HTTP ${response.statusCode}).');
       }
-
-      final body = response.body;
-
-      // Parse CommonPrefixes (virtual folders)
-      for (final m in RegExp(
-        r'<CommonPrefixes>\s*<Prefix>([^<]+)</Prefix>\s*</CommonPrefixes>',
-      ).allMatches(body)) {
-        final folderPrefix = m.group(1)!;
-        var folderName = folderPrefix;
-        if (normalizedPrefix.isNotEmpty &&
-            folderName.startsWith(normalizedPrefix)) {
-          folderName = folderName.substring(normalizedPrefix.length);
+      try {
+        // A regex can silently omit escaped names or reordered XML properties.
+        // Output preflight must see a complete, structurally valid listing.
+        final root = XmlDocument.parse(response.body).rootElement;
+        if (root.name.local != 'ListBucketResult') {
+          throw const FormatException('Expected ListBucketResult.');
         }
-        if (folderName.endsWith('/')) {
-          folderName = folderName.substring(0, folderName.length - 1);
+        String? value(XmlElement parent, String name, {bool required = false}) {
+          final children = parent.childElements
+              .where((child) => child.name.local == name).toList();
+          if (children.length > 1 || (required && children.isEmpty)) {
+            throw const FormatException('Missing or duplicate listing field.');
+          }
+          return children.isEmpty ? null : children.single.innerText;
         }
-        if (folderName.isEmpty) continue;
-        items.add(CliFileItem(
-          name: folderName,
-          path: '/$folderPrefix',
-          isDirectory: true,
-        ));
-      }
-
-      // Parse Contents (files)
-      for (final m in RegExp(
-        r'<Contents>\s*'
-        r'<Key>([^<]+)</Key>\s*'
-        r'<LastModified>([^<]+)</LastModified>\s*'
-        r'(?:<ETag>[^<]*</ETag>\s*)?'
-        r'<Size>([^<]+)</Size>',
-      ).allMatches(body)) {
-        final key = m.group(1)!;
-        final lastModified = m.group(2)!;
-        final size = int.tryParse(m.group(3) ?? '0') ?? 0;
-
-        if (key == normalizedPrefix) continue;
-        if (key.endsWith('/') && size == 0) continue;
-
-        var fileName = key;
-        if (normalizedPrefix.isNotEmpty && fileName.startsWith(normalizedPrefix)) {
-          fileName = fileName.substring(normalizedPrefix.length);
+        final encoding = value(root, 'EncodingType');
+        if (encoding != null && encoding != 'url') {
+          throw const FormatException('Unsupported listing encoding.');
         }
-        if (fileName.isEmpty) continue;
-
-        items.add(CliFileItem(
-          name: fileName,
-          path: '/$key',
-          isDirectory: false,
-          size: size,
-          modifiedAt: lastModified,
-        ));
-      }
-
-      final isTruncated =
-          RegExp(r'<IsTruncated>true</IsTruncated>').hasMatch(body);
-      if (isTruncated) {
-        final tokenM = RegExp(
-          r'<NextContinuationToken>([^<]+)</NextContinuationToken>',
-        ).firstMatch(body);
-        continuationToken = tokenM?.group(1);
-        if (continuationToken == null) break;
-      } else {
-        continuationToken = null;
+        String keyValue(XmlElement parent, String name) {
+          final raw = value(parent, name, required: true)!;
+          return encoding == 'url' ? Uri.decodeComponent(raw) : raw;
+        }
+        var listedCount = 0;
+        for (final entry in root.childElements) {
+          if (entry.name.local == 'CommonPrefixes') {
+            listedCount++;
+            final folderPrefix = keyValue(entry, 'Prefix');
+            if (!folderPrefix.startsWith(normalizedPrefix) ||
+                !folderPrefix.endsWith('/')) {
+              throw const FormatException('Unexpected listing prefix.');
+            }
+            final name = folderPrefix.substring(normalizedPrefix.length,
+                folderPrefix.length - 1);
+            if (name.isEmpty || name.contains('/')) {
+              throw const FormatException('Unexpected nested listing prefix.');
+            }
+            items.add(CliFileItem(name: name, path: '/$folderPrefix',
+                isDirectory: true));
+          } else if (entry.name.local == 'Contents') {
+            listedCount++;
+            final key = keyValue(entry, 'Key');
+            final size = int.tryParse(value(entry, 'Size', required: true)!.trim());
+            if (!key.startsWith(normalizedPrefix) || size == null || size < 0) {
+              throw const FormatException('Invalid object listing.');
+            }
+            if (key == normalizedPrefix || (key.endsWith('/') && size == 0)) {
+              continue;
+            }
+            final name = key.substring(normalizedPrefix.length);
+            if (name.isEmpty || name.contains('/')) {
+              throw const FormatException('Unexpected nested object listing.');
+            }
+            items.add(CliFileItem(
+              name: name, path: '/$key', isDirectory: false, size: size,
+              modifiedAt: value(entry, 'LastModified'),
+            ));
+          }
+        }
+        final keyCountText = value(root, 'KeyCount');
+        if (keyCountText != null &&
+            int.tryParse(keyCountText.trim()) != listedCount) {
+          throw const FormatException('Incomplete object listing.');
+        }
+        final truncated = value(root, 'IsTruncated', required: true)!.trim();
+        if (truncated != 'true' && truncated != 'false') {
+          throw const FormatException('Invalid truncation status.');
+        }
+        continuationToken = truncated == 'true'
+            ? value(root, 'NextContinuationToken', required: true)
+            : null;
+        if (continuationToken != null &&
+            (continuationToken!.isEmpty || !seenTokens.add(continuationToken!))) {
+          throw const FormatException('Missing or repeated continuation token.');
+        }
+      } catch (_) {
+        // Do not echo XML parser source, which may contain private filenames.
+        // Never turn an incomplete listing into permission to overwrite a file.
+        throw StateError('Invalid or incomplete S3 directory listing.');
       }
     } while (continuationToken != null);
-
     return items;
   }
 

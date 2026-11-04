@@ -34,7 +34,7 @@ void main() {
   Future<_Result> run(List<String> arguments, {String? stdinText}) async {
     final output = StringBuffer();
     final errors = StringBuffer();
-    final runner = CommandRunner<int>('crisp', 'PDF tests')
+    final runner = PdfAwareCommandRunner('crisp', 'PDF tests', errors: errors)
       ..addCommand(PdfCommand(config,
           output: output, errors: errors,
           input: stdinText == null ? null : Stream.value(utf8.encode(stdinText)),
@@ -78,6 +78,29 @@ void main() {
     expect(runner.commands['pdf']!.subcommands.keys,
         containsAll(['info', 'text', 'search', 'merge', 'extract', 'rotate',
           'reorder', 'delete-pages', 'watermark', 'fill', 'insert-image', 'ocr']));
+  });
+
+  test('JSON includes usage failures before or during command execution', () async {
+    for (final arguments in [
+      ['extract', source.path, '--json'], // Missing required options.
+      ['rotate', source.path, '-o', target('invalid.pdf'), '--degrees', '45', '--json'],
+      ['watermark', source.path, '-o', target('invalid.pdf'), '--json'],
+      ['not-an-operation', '--json'],
+    ]) {
+      final result = await run(arguments);
+      expect(result.code, 2);
+      expect(result.output, isEmpty);
+      expect(result.errorJson['code'], 'usage');
+      expect(File(target('invalid.pdf')).existsSync(), isFalse);
+    }
+  });
+
+  test('JSON parser errors omit unrecognized argument source', () async {
+    const secret = 'accidental-private-argument';
+    final result = await run(['info', source.path, '--$secret', '--json']);
+    expect(result.code, 2);
+    expect(result.errorJson['code'], 'usage');
+    expect(result.errors, isNot(contains(secret)));
   });
 
   test('info describes named fields and rotated page geometry as JSON', () async {

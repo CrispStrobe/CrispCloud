@@ -12,6 +12,7 @@ import 'dart:typed_data';
 
 import 'package:http/http.dart' as http;
 import 'package:path/path.dart' as p;
+import 'package:xml/xml.dart';
 
 import '../config/cli_config.dart';
 import 'bounded_download.dart';
@@ -99,14 +100,17 @@ class WebDavCliAdapter implements CliStorageClient, CliBoundedDownload {
 
   Future<List<Map<String, dynamic>>> _propfind(String remotePath,
       {int depth = 1}) async {
-    final response = await http.Client().send(
-      http.Request('PROPFIND', Uri.parse(_url(remotePath)))
-        ..headers.addAll({
-          ..._headers,
-          'Depth': depth.toString(),
-          'Content-Type': 'application/xml',
-        })
-        ..body = '''<?xml version="1.0" encoding="utf-8"?>
+    final client = http.Client();
+    try {
+      final response = await client.send(
+        http.Request('PROPFIND', Uri.parse(_url(remotePath)))
+          ..followRedirects = false
+          ..headers.addAll({
+            ..._headers,
+            'Depth': depth.toString(),
+            'Content-Type': 'application/xml',
+          })
+          ..body = '''<?xml version="1.0" encoding="utf-8"?>
 <propfind xmlns="DAV:">
   <prop>
     <displayname/>
@@ -115,64 +119,129 @@ class WebDavCliAdapter implements CliStorageClient, CliBoundedDownload {
     <resourcetype/>
   </prop>
 </propfind>''',
-    );
-
-    final body = await http.Response.fromStream(response);
-    if (body.statusCode != 207 && body.statusCode != 200) {
-      throw Exception(
-        'WebDAV PROPFIND failed (HTTP ${body.statusCode}): ${body.body}',
-      );
+      ).timeout(const Duration(seconds: 60));
+      if (response.statusCode != 207 && response.statusCode != 200) {
+        throw StateError('WebDAV PROPFIND failed (HTTP ${response.statusCode}).');
+      }
+      final bytes = await readBoundedResponseBytes(response,
+          maxBytes: 16 * 1024 * 1024);
+      return _parseMultiStatus(utf8.decode(bytes), remotePath, depth: depth);
+    } finally {
+      client.close();
     }
-
-    return _parseMultiStatus(body.body, remotePath);
   }
 
-  List<Map<String, dynamic>> _parseMultiStatus(String xml, String basePath) {
-    final results = <Map<String, dynamic>>[];
-    // Extract each <response> block
-    final responseRe =
-        RegExp(r'<[Dd]:[Rr]esponse>(.*?)</[Dd]:[Rr]esponse>', dotAll: true);
-    for (final rm in responseRe.allMatches(xml)) {
-      final block = rm.group(1)!;
+  List<Map<String, dynamic>> _parseMultiStatus(String xml, String remotePath,
+      {required int depth}) {
+    try {
+      final root = XmlDocument.parse(xml).rootElement;
+      if (root.name.local != 'multistatus') {
+        throw const FormatException('Expected DAV multistatus.');
+      }
+      XmlElement? child(XmlElement parent, String name, {bool required = false}) {
+        final found = parent.childElements
+            .where((element) => element.name.local == name).toList();
+        if (found.length > 1 || (required && found.isEmpty)) {
+          throw const FormatException('Missing or duplicate DAV property.');
+        }
+        return found.isEmpty ? null : found.single;
+      }
+      int status(XmlElement element) {
+        final match = RegExp(r'^HTTP/[^ ]+ +([0-9]{3})(?: |$)')
+            .firstMatch(element.innerText.trim());
+        if (match == null) throw const FormatException('Invalid DAV status.');
+        return int.parse(match.group(1)!);
+      }
+      List<String> segments(Uri uri) {
+        final result = uri.pathSegments.toList();
+        while (result.isNotEmpty && result.last.isEmpty) {
+          result.removeLast();
+        }
+        if (result.any((part) => part.isEmpty || part.contains('/') ||
+            part == '.' || part == '..' || part.contains('\u0000'))) {
+          throw const FormatException('Invalid DAV resource path.');
+        }
+        return result;
+      }
+      bool samePath(List<String> a, List<String> b) =>
+          a.length == b.length &&
+          List.generate(a.length, (index) => a[index] == b[index]).every((v) => v);
 
-      // href — decode the path
-      final hrefM =
-          RegExp(r'<[Dd]:[Hh]ref>(.*?)</[Dd]:[Hh]ref>').firstMatch(block);
-      if (hrefM == null) continue;
-      final href = Uri.decodeComponent(hrefM.group(1)!.trim());
-
-      // resourcetype — contains <collection/> if directory
-      final rtM = RegExp(
-        r'<[Dd]:[Rr]esourcetype>(.*?)</[Dd]:[Rr]esourcetype>',
-        dotAll: true,
-      ).firstMatch(block);
-      final isDir = rtM != null && rtM.group(1)!.contains('collection');
-
-      // size
-      final sizeM =
-          RegExp(r'<[Dd]:[Gg]etcontentlength>(.*?)</[Dd]:[Gg]etcontentlength>')
-              .firstMatch(block);
-      final size = sizeM != null ? int.tryParse(sizeM.group(1)!.trim()) : null;
-
-      // modified
-      final modM =
-          RegExp(r'<[Dd]:[Gg]etlastmodified>(.*?)</[Dd]:[Gg]etlastmodified>')
-              .firstMatch(block);
-      final modified = modM?.group(1)?.trim();
-
-      // name: last non-empty path segment of href
-      final segments = href.split('/').where((s) => s.isNotEmpty).toList();
-      final name = segments.isNotEmpty ? segments.last : '';
-
-      results.add({
-        'href': href,
-        'name': name,
-        'isDir': isDir,
-        'size': size,
-        'modified': modified,
-      });
+      final requested = Uri.parse(_url(remotePath));
+      final baseSegments = segments(requested);
+      final results = <Map<String, dynamic>>[];
+      final seenPaths = <String>{};
+      var sawSelf = false;
+      for (final response in root.childElements
+          .where((element) => element.name.local == 'response')) {
+        final href = Uri.parse(child(response, 'href', required: true)!.innerText.trim());
+        final resolved = requested.resolveUri(href);
+        if (resolved.scheme != requested.scheme || resolved.host != requested.host ||
+            resolved.port != requested.port || resolved.userInfo.isNotEmpty ||
+            resolved.hasQuery || resolved.hasFragment) {
+          throw const FormatException('Unexpected DAV resource origin.');
+        }
+        final parts = segments(resolved);
+        final isSelf = samePath(parts, baseSegments);
+        if (!isSelf && (depth != 1 || parts.length != baseSegments.length + 1 ||
+            !samePath(parts.sublist(0, baseSegments.length), baseSegments))) {
+          throw const FormatException('DAV response is outside the requested directory.');
+        }
+        if (!seenPaths.add(parts.join('/'))) {
+          throw const FormatException('Duplicate DAV resource.');
+        }
+        final responseStatus = child(response, 'status');
+        if (responseStatus != null &&
+            (status(responseStatus) < 200 || status(responseStatus) >= 300)) {
+          throw const FormatException('DAV resource access failed.');
+        }
+        final properties = <String, XmlElement>{};
+        for (final propstat in response.childElements
+            .where((element) => element.name.local == 'propstat')) {
+          final code = status(child(propstat, 'status', required: true)!);
+          if (code < 200 || code >= 300) continue;
+          final prop = child(propstat, 'prop', required: true)!;
+          for (final property in prop.childElements) {
+            if (properties.containsKey(property.name.local)) {
+              throw const FormatException('Duplicate DAV property.');
+            }
+            properties[property.name.local] = property;
+          }
+        }
+        final resourceType = properties['resourcetype'];
+        if (resourceType == null) {
+          throw const FormatException('DAV resource type was not returned successfully.');
+        }
+        final isDirectory = resourceType.childElements
+            .any((element) => element.name.local == 'collection');
+        if (isSelf && depth == 1 && !isDirectory) {
+          throw const FormatException('Requested DAV parent is not a directory.');
+        }
+        final sizeText = properties['getcontentlength']?.innerText.trim();
+        final size = sizeText == null || sizeText.isEmpty ? null : int.tryParse(sizeText);
+        if (sizeText != null && sizeText.isNotEmpty && (size == null || size < 0)) {
+          throw const FormatException('Invalid DAV content length.');
+        }
+        sawSelf |= isSelf;
+        final name = parts.isEmpty ? '' : parts.last;
+        results.add({
+          // Keep adapter-facing paths relative to its configured base URL.
+          // Returning the server's full href would apply that prefix twice.
+          'href': isSelf ? remotePath : p.posix.join(remotePath, name),
+          'name': name,
+          'isDir': isDirectory,
+          'isSelf': isSelf,
+          'size': size,
+          'modified': properties['getlastmodified']?.innerText,
+        });
+      }
+      if (!sawSelf) throw const FormatException('Missing requested DAV resource.');
+      return results;
+    } catch (_) {
+      // A successful HTTP response with unparseable/incomplete XML must never
+      // authorize overwriting an apparently absent PDF. Do not log XML source.
+      throw StateError('Invalid or incomplete WebDAV directory listing.');
     }
-    return results;
   }
 
   // ---------------------------------------------------------------------------
@@ -182,35 +251,17 @@ class WebDavCliAdapter implements CliStorageClient, CliBoundedDownload {
   @override
   Future<List<CliFileItem>> list(String remotePath) async {
     final entries = await _propfind(remotePath, depth: 1);
-    final items = <CliFileItem>[];
-
-    // Skip the first entry — it's the directory itself
-    final normalizedBase =
-        remotePath.endsWith('/') ? remotePath : '$remotePath/';
-
-    for (final e in entries) {
-      final href = e['href'] as String;
-      // Skip the base dir itself
-      if (_hrefMatchesBase(href, normalizedBase)) continue;
-
-      items.add(CliFileItem(
-        name: e['name'] as String,
-        path: href,
-        isDirectory: e['isDir'] as bool,
-        size: e['size'] as int?,
-        modifiedAt: e['modified'] as String?,
-      ));
-    }
-    return items;
-  }
-
-  bool _hrefMatchesBase(String href, String basePath) {
-    // Strip host prefix from href if present
-    final hrefPath = Uri.tryParse(href)?.path ?? href;
-    final normalized = hrefPath.endsWith('/') ? hrefPath : '$hrefPath/';
-    final baseNorm = basePath.endsWith('/') ? basePath : '$basePath/';
-    return normalized == baseNorm ||
-        hrefPath == basePath.replaceAll(RegExp(r'/$'), '');
+    return [
+      for (final entry in entries)
+        if (entry['isSelf'] != true)
+          CliFileItem(
+            name: entry['name'] as String,
+            path: entry['href'] as String,
+            isDirectory: entry['isDir'] as bool,
+            size: entry['size'] as int?,
+            modifiedAt: entry['modified'] as String?,
+          ),
+    ];
   }
 
   @override

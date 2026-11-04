@@ -25,7 +25,7 @@ import 'config/cli_config.dart';
 CommandRunner<int> buildRunner({String? configPath}) {
   final config = CliConfig(path: configPath);
 
-  final runner = CommandRunner<int>(
+  final runner = PdfAwareCommandRunner(
     'crisp',
     'CrispCloud CLI — manage cloud storage from the terminal.',
   );

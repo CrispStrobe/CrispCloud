@@ -106,7 +106,7 @@ class PdfCliFileStore {
   final Stream<List<int>> _input;
   final bool _inputHasTerminal;
   final _adapters = <String, CliStorageClient>{};
-  final _accountKeys = <String, String>{};
+  final _remoteRoots = <String, Uri>{};
   final _readLocations = <PdfCliLocation>[];
   final _localReadPaths = <String>{};
   bool _inputConsumed = false;
@@ -262,6 +262,11 @@ class PdfCliFileStore {
       return const [];
     }
     final staging = await target.parent.createTemp('.crisp-pdf-');
+    var committed = false;
+    final warnings = <String>[
+      'Replacing an existing local output preserves mode bits, but not necessarily '
+          'ownership, ACLs or extended attributes.',
+    ];
     try {
       final staged = File(p.join(staging.path, 'output.pdf'));
       await staged.create(exclusive: true);
@@ -271,13 +276,20 @@ class PdfCliFileStore {
       await _rejectSource(location);
       await _revalidate(output);
       await staged.rename(target.path);
+      committed = true;
     } finally {
-      await staging.delete(recursive: true);
+      try {
+        await staging.delete(recursive: true);
+      } catch (_) {
+        // A temporary-directory cleanup error must neither hide the original
+        // write failure nor reclassify an already committed PDF as failed.
+        if (committed) {
+          warnings.add('The PDF was saved, but its empty temporary directory '
+              'could not be removed.');
+        }
+      }
     }
-    return const [
-      'Replacing an existing local output preserves mode bits, but not necessarily '
-          'ownership, ACLs or extended attributes.',
-    ];
+    return warnings;
   }
 
   Future<void> _revalidate(PdfCliOutput output) async {
@@ -307,10 +319,9 @@ class PdfCliFileStore {
   Future<void> _rejectSource(PdfCliLocation output) async {
     if (output.isRemote) {
       _adapter(output);
-      final account = _accountKeys[output.profile];
+      final identity = _remoteIdentity(output);
       for (final source in _readLocations.where((source) => source.isRemote)) {
-        if (_accountKeys[source.profile] == account &&
-            source.path.toLowerCase() == output.path.toLowerCase()) {
+        if (_remoteIdentity(source) == identity) {
           _sourceOutput();
         }
       }
@@ -334,29 +345,58 @@ class PdfCliFileStore {
   CliStorageClient _adapter(PdfCliLocation location) {
     final profile = location.profile!;
     return _adapters.putIfAbsent(profile, () {
-      final settings = config.providerConfig(profile);
+      final settings = config.providerConfig(profile, strict: true);
       if (settings == null) {
         throw PdfCliException('unknownProfile', 'Unknown cloud profile: $profile');
       }
-      // Account aliases must not let a different profile overwrite an input.
-      // Deliberately ignore credentials; different keys may address one bucket.
-      _accountKeys[profile] = jsonEncode({
-        'type': (settings['type'] as String? ?? '').toLowerCase(),
-        'endpoint': _normalizedEndpoint(settings['endpoint']),
-        'bucket': settings['bucket'],
-        'host': _normalizedEndpoint(settings['host']),
-        'port': '${settings['port'] ?? 22}',
-      });
-      return _adapterFactory(profile, settings);
+      final adapter = _adapterFactory(profile, settings);
+      // Capture only the addressing fields actually used by the adapter.
+      // Credentials and irrelevant configuration keys cannot create aliases.
+      _remoteRoots[profile] = _remoteRoot(settings);
+      return adapter;
     });
   }
 
-  static String? _normalizedEndpoint(Object? raw) {
-    if (raw is! String) return null;
-    final uri = Uri.tryParse(raw);
-    if (uri == null || !uri.hasAuthority) return raw.trim().toLowerCase();
-    return '${uri.scheme.toLowerCase()}://${uri.host.toLowerCase()}:'
-        '${uri.port}${uri.path.replaceFirst(RegExp(r'/+$'), '')}';
+  String _remoteIdentity(PdfCliLocation location) {
+    final root = _remoteRoots[location.profile]!;
+    return root.replace(pathSegments: [
+      ...root.pathSegments,
+      ...location.path.substring(1).split('/'),
+    ]).toString().toLowerCase();
+  }
+
+  static Uri _remoteRoot(Map<String, dynamic> settings) {
+    final type = (settings['type'] as String? ?? '').toLowerCase();
+    if (type == 'sftp') {
+      return Uri(
+        scheme: 'sftp',
+        host: (settings['host'] as String? ?? '').toLowerCase(),
+        port: int.tryParse('${settings['port'] ?? 22}') ?? 22,
+      );
+    }
+    final raw = settings[type == 's3' ? 'endpoint' : 'host'] as String? ?? '';
+    final base = Uri.tryParse(raw);
+    if (base == null || !base.hasAuthority) {
+      throw const PdfCliException(
+          'invalidEndpoint', 'The cloud profile has an invalid endpoint.');
+    }
+    final prefix = base.pathSegments.toList();
+    while (prefix.isNotEmpty && prefix.last.isEmpty) {
+      prefix.removeLast();
+    }
+    final bucket = settings['bucket'] as String? ?? '';
+    // Match S3CliAdapter's virtual-hosted endpoint rule. WebDAV profiles with
+    // different base directories are compared by their complete resource URL.
+    final virtualHosted = type == 's3' && raw.contains('amazonaws.com');
+    return Uri(
+      scheme: base.scheme,
+      host: virtualHosted ? '$bucket.${base.host}' : base.host,
+      port: base.hasPort ? base.port : null,
+      pathSegments: virtualHosted ? const [] : [
+        ...prefix,
+        if (type == 's3') bucket,
+      ],
+    );
   }
 
   Future<CliFileItem?> _remoteEntry(

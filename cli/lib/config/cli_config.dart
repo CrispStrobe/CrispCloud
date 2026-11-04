@@ -61,8 +61,9 @@ class CliConfig {
   // ---------------------------------------------------------------------------
 
   /// Read and parse the config file. Returns an empty map if the file does not
-  /// exist or cannot be parsed.
-  Map<String, dynamic> read() {
+  /// exist. With [strict], an unreadable or malformed file throws a redacted
+  /// [CliConfigException] instead of printing a warning and returning no data.
+  Map<String, dynamic> read({bool strict = false}) {
     final file = File(configPath);
     if (!file.existsSync()) return {};
     try {
@@ -71,8 +72,15 @@ class CliConfig {
       final doc = loadYaml(content);
       if (doc == null) return {};
       return _yamlToMap(doc as YamlMap);
-    } catch (e) {
-      stderr.writeln('Warning: could not parse config at $configPath: $e');
+    } catch (_) {
+      // YAML parser exceptions include the source line, which can be a stored
+      // credential. PDF JSON commands also must not mix diagnostics into stderr.
+      if (strict) {
+        throw CliConfigException(
+          'Could not read the CLI configuration. Check its YAML syntax and file access.',
+        );
+      }
+      stderr.writeln('Warning: could not parse CLI configuration.');
       return {};
     }
   }
@@ -106,8 +114,8 @@ class CliConfig {
   }
 
   /// Return the config map for a named provider, or null if not found.
-  Map<String, dynamic>? providerConfig(String name) {
-    final config = read();
+  Map<String, dynamic>? providerConfig(String name, {bool strict = false}) {
+    final config = read(strict: strict);
     final providers = config['providers'] as Map<String, dynamic>? ?? {};
     final raw = providers[name];
     if (raw == null) return null;

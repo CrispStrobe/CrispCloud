@@ -1,4 +1,5 @@
 import 'dart:async';
+import 'dart:convert';
 import 'dart:typed_data';
 
 import 'package:crisp_cloud/models/file_item.dart';
@@ -87,6 +88,7 @@ void main() {
       PdfOperationAction.extract, PdfOperationAction.rotate, PdfOperationAction.reorder,
       PdfOperationAction.deletePages, PdfOperationAction.watermark,
       PdfOperationAction.fillForm, PdfOperationAction.insertImage,
+      PdfOperationAction.importOcr,
     ]));
   });
 
@@ -176,6 +178,81 @@ void main() {
     await tester.tap(find.byKey(const ValueKey('pdf-operation-export')));
     await tester.pumpAndSettle();
     expect(exported.single, orderedEquals(store.copies.single.$2));
+    expect(store.overwrites, 0);
+  });
+
+  testWidgets('switching JSON and typed fields preserves imported values and later edits', (tester) async {
+    final store = _Store('form.pdf');
+    await _open(tester, PdfOperationAction.fillForm, [store]);
+    await tester.tap(find.text('JSON'));
+    await tester.pump();
+    await tester.enterText(find.byKey(const ValueKey('pdf-form-json')), '{"customer.name":"Zoë","consent":true}');
+    await tester.tap(find.text('Fields'));
+    await tester.pump();
+    final name = find.byKey(const ValueKey('pdf-form-customer.name-1'));
+    expect(tester.widget<TextFormField>(name).initialValue, 'Zoë');
+    expect(tester.widget<CheckboxListTile>(find.byKey(const ValueKey('pdf-form-consent-1'))).value, isTrue);
+    await tester.enterText(name, 'Zoë Updated');
+    await tester.tap(find.text('JSON'));
+    await tester.pump();
+    final json = tester.widget<TextField>(find.byKey(const ValueKey('pdf-form-json'))).controller!.text;
+    expect(jsonDecode(json), {'customer.name': 'Zoë Updated', 'consent': true});
+    await _preview(tester);
+    await tester.tap(find.byKey(const ValueKey('pdf-operation-save')));
+    await tester.pumpAndSettle();
+    final form = PdfAcroForm.of(PdfDocument.open(store.copies.single.$2))!;
+    expect(form.fieldNamed('customer.name')!.value, 'Zoë Updated');
+    expect(form.fieldNamed('consent')!.isChecked, isTrue);
+  });
+
+  testWidgets('invalid typed JSON remains visible when switching to form controls', (tester) async {
+    final store = _Store('form.pdf');
+    await _open(tester, PdfOperationAction.fillForm, [store]);
+    await tester.tap(find.text('JSON'));
+    await tester.pump();
+    const input = '{"consent":"yes","unknown":"value"}';
+    await tester.enterText(find.byKey(const ValueKey('pdf-form-json')), input);
+    await tester.tap(find.text('Fields'));
+    await tester.pump();
+    expect(find.byKey(const ValueKey('pdf-operation-error')), findsOneWidget);
+    expect(tester.widget<TextField>(find.byKey(const ValueKey('pdf-form-json'))).controller!.text, input);
+    expect(store.copies, isEmpty);
+    expect(store.overwrites, 0);
+  });
+
+  testWidgets('OCR span import previews searchable text and saves a separate PDF', (tester) async {
+    final store = _Store('scan.pdf');
+    await _open(tester, PdfOperationAction.importOcr, [store]);
+    expect(find.textContaining('does not recognize images'), findsOneWidget);
+    expect(tester.widget<CheckboxListTile>(find.byKey(const ValueKey('pdf-ocr-skip-existing'))).value, isTrue);
+    await tester.enterText(find.byKey(const ValueKey('pdf-ocr-json')), '[{"page":2,"spans":[{"text":"Recognized sample","bounds":[20,300,200,320],"confidence":0.98}]}]');
+    await _preview(tester);
+    expect(find.byType(PdfViewer), findsOneWidget);
+    expect(store.copies, isEmpty);
+    await tester.enterText(find.byKey(const ValueKey('pdf-operation-search')), 'Recognized sample');
+    await tester.pump(const Duration(milliseconds: 300));
+    await tester.pumpAndSettle();
+    final viewer = tester.widget<PdfViewer>(find.byType(PdfViewer)).controller!;
+    expect(viewer.matchCount, 1);
+    expect(viewer.searchResults.single.pageIndex, 1);
+    await tester.tap(find.byKey(const ValueKey('pdf-operation-save')));
+    await tester.pumpAndSettle();
+    expect(store.copies.single.$1, 'scan-searchable.pdf');
+    final document = PdfDocument.open(store.copies.single.$2);
+    expect(PdfTextExtractor.extract(document, 0).text, isNot(contains('Recognized sample')));
+    expect(PdfTextExtractor.extract(document, 1).text, contains('Recognized sample'));
+    expect(store.overwrites, 0);
+  });
+
+  testWidgets('invalid OCR page data creates no output and remains editable', (tester) async {
+    final store = _Store('scan.pdf');
+    await _open(tester, PdfOperationAction.importOcr, [store]);
+    await tester.enterText(find.byKey(const ValueKey('pdf-ocr-json')), '[{"page":3,"spans":[{"text":"Outside PDF","bounds":[20,300,200,320]}]}]');
+    await _preview(tester);
+    expect(find.byKey(const ValueKey('pdf-operation-error')), findsOneWidget);
+    expect(find.byKey(const ValueKey('pdf-ocr-json')), findsOneWidget);
+    expect(find.byType(PdfViewer), findsNothing);
+    expect(store.copies, isEmpty);
     expect(store.overwrites, 0);
   });
 
