@@ -134,7 +134,8 @@ bundled/test fonts retain their separate notices.
 
 ## Validation status
 
-Hosted validation is in progress. The focused workflow runs maintained core and
+The PR links verification results tied to each pushed commit. The focused
+workflow runs maintained core and
 service analysis/tests, all CLI tests, native and Chrome host/widget tests,
 real PDF round trips, an independent pypdf parser/geometry check, and release
 web compilation. The full application workflow supplies the broader tests and

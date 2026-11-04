@@ -496,6 +496,7 @@ class _PdfOperationsDialogState extends State<PdfOperationsDialog> {
     });
     try {
       await WidgetsBinding.instance.endOfFrame;
+      if (!mounted) return;
       PdfEmbeddedFont? font;
       if (widget.action == PdfOperationAction.fillForm ||
           widget.action == PdfOperationAction.importOcr ||
