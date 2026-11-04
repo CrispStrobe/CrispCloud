@@ -17,8 +17,10 @@ localizations and their ARB sources), all three shaders, and `LICENSE`,
 `README.md`, `CHANGELOG.md`, `pubspec.yaml`, `l10n.yaml`, and
 `analysis_options.yaml`. The upstream examples, binary fixtures, performance
 corpora, and monorepo development tools are intentionally outside this copy.
-The core `pdf_cos`, `pdf_document`, and `pdf_graphics` packages resolve from
-pub.dev at exact version 14.0.0.
+The `pdf_cos` and `pdf_graphics` packages resolve from pub.dev at exact
+version 14.0.0. CrispCloud and its CLI override `pdf_document` with the
+maintained 14.0.0 source in `packages/pdf_document`; see its `FORK.md` and
+`UPSTREAM.patch`.
 
 ## Why this local patch exists
 
@@ -49,7 +51,7 @@ modified contain a local change notice or an entry here.
 
 | Path | Local change |
 | --- | --- |
-| `pubspec.yaml` | Remove workspace resolution; set `publish_to: none`; remove the mandatory secure-storage plugin; pin the three PDF core dependencies to 14.0.0; keep only the dev dependencies needed by local tests. |
+| `pubspec.yaml` | Remove workspace resolution; set `publish_to: none`; remove the mandatory secure-storage plugin; pin the three PDF core dependencies to 14.0.0; keep the dev dependencies needed by local tests, including the published PDF fixture builders. |
 | `lib/src/editing/signing_identity_store.dart` | Retain interface and memory implementation; move the concrete secure store and its imports to the sibling package. |
 | `lib/src/editing/form_secret_store.dart` | Retain interface, document-key helper, and memory implementation; move the concrete secure store and its imports to the sibling package. |
 | `lib/src/retained_scene.dart` | Replace direct `dart:isolate` use with conditional worker dispatch and decline optional retries on unsupported platforms. |
@@ -61,6 +63,7 @@ modified contain a local change notice or an entry here.
 | `lib/src/search_panel.dart` | Add a default-on find-to-redact gate that also overrides an already-expanded saved preference. |
 | `lib/src/editing/editor_commands.dart` | Honor the host's tools filter for direct tool commands, group defaults, and selected-text redaction. |
 | `lib/src/editing/editing_toolbar.dart` | Hide redaction controls and reject Apply when the tools filter excludes redaction, including after a pending confirmation. |
+| `lib/src/insert_pages_dialog.dart` | Carry an optional password for each protected PDF insertion source; leave destination encryption policy with the host. |
 | `README.md`, `CHANGELOG.md` | Identify this copy and describe local changes above the retained upstream documentation. |
 
 The web change affects only the optional denser overprint re-recording path

@@ -14,7 +14,8 @@ void main() {
     tester.view.physicalSize = const Size(1200, 1000);
     tester.view.devicePixelRatio = 1;
     addTearDown(tester.view.reset);
-    final preferences = PdfEditingPreferences(store: PdfMemoryPreferencesStore());
+    final preferences =
+        PdfEditingPreferences(store: PdfMemoryPreferencesStore());
     addTearDown(preferences.dispose);
     final controller = PdfEditingController(
       buildTestPdf(),
@@ -23,7 +24,8 @@ void main() {
     );
     addTearDown(controller.dispose);
     addTearDown(() => tester.pumpWidget(const SizedBox()));
-    await tester.pumpWidget(MaterialApp(home: Builder(
+    await tester.pumpWidget(MaterialApp(
+        home: Builder(
       builder: (context) => TextButton(
         onPressed: () => pdfInsertPagesInteractively(
           context,
@@ -39,8 +41,11 @@ void main() {
     return controller;
   }
 
-  testWidgets('host password opens protected insertion source without rewriting it', (tester) async {
-    final bytes = buildEncryptedPdf(revision: 6, userPassword: 'source-password');
+  testWidgets(
+      'host password opens protected insertion source without rewriting it',
+      (tester) async {
+    final bytes =
+        buildEncryptedPdf(revision: 6, userPassword: 'source-password');
     final controller = await openInsert(tester,
         PdfInsertFile('protected.pdf', bytes, password: 'source-password'));
     expect(find.byKey(const ValueKey('pdf-insert-pages-failed')), findsNothing);
@@ -56,15 +61,23 @@ void main() {
     expect(controller.document.pageCount, 1);
   });
 
-  testWidgets('incorrect insertion password reports only source name and leaves target unchanged', (tester) async {
-    final bytes = buildEncryptedPdf(revision: 6, userPassword: 'source-password');
+  testWidgets(
+      'incorrect insertion password reports only source name and leaves target unchanged',
+      (tester) async {
+    final bytes =
+        buildEncryptedPdf(revision: 6, userPassword: 'source-password');
     final controller = await openInsert(tester,
         PdfInsertFile('protected.pdf', bytes, password: 'incorrect-secret'));
-    expect(find.byKey(const ValueKey('pdf-insert-pages-failed')), findsOneWidget);
+    expect(
+        find.byKey(const ValueKey('pdf-insert-pages-failed')), findsOneWidget);
     expect(find.text('incorrect-secret'), findsNothing);
-    expect(tester.widget<FilledButton>(
-      find.byKey(const ValueKey('pdf-insert-pages-confirm')),
-    ).onPressed, isNull);
+    expect(
+        tester
+            .widget<FilledButton>(
+              find.byKey(const ValueKey('pdf-insert-pages-confirm')),
+            )
+            .onPressed,
+        isNull);
     expect(controller.document.pageCount, 1);
     expect(controller.canUndo, isFalse);
   });

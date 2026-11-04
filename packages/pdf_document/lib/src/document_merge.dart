@@ -290,7 +290,8 @@ extension on PdfEditor {
                   ? importer.copyAction(value)
                   : importer.copyValue(value);
           if (importer.pruneUnselectedDestinations &&
-              (key == 'Dest' || key == 'A') && copied is CosNull) {
+              (key == 'Dest' || key == 'A') &&
+              copied is CosNull) {
             omittedDestination = true;
           } else {
             dict[key] = copied;

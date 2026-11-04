@@ -76,16 +76,19 @@ class _PdfInspectionWork {
   final PdfInput input;
 }
 
-PdfInspection _inspectPdf(_PdfInspectionWork work) => work.operations.inspect(work.input);
+PdfInspection _inspectPdf(_PdfInspectionWork work) =>
+    work.operations.inspect(work.input);
 
 PdfOperationResult _performPdfOperation(_PdfOperationWork work) {
   final service = work.operations;
   final request = work.request;
   if (request.sources.isEmpty) throw ArgumentError('Select at least one PDF.');
-  if (request.action != PdfOperationAction.merge && request.sources.length != 1) {
+  if (request.action != PdfOperationAction.merge &&
+      request.sources.length != 1) {
     throw ArgumentError('Select one PDF for this operation.');
   }
-  if (request.action == PdfOperationAction.watermark && request.watermark == null) {
+  if (request.action == PdfOperationAction.watermark &&
+      request.watermark == null) {
     throw ArgumentError('Choose watermark options.');
   }
   if (request.action == PdfOperationAction.insertImage &&
@@ -109,7 +112,10 @@ PdfOperationResult _performPdfOperation(_PdfOperationWork work) {
       degrees: request.degrees,
     ),
     PdfOperationAction.reorder => service.reorder(input, pages: request.pages),
-    PdfOperationAction.deletePages => service.deletePages(input, pages: request.pages),
+    PdfOperationAction.deletePages => service.deletePages(
+      input,
+      pages: request.pages,
+    ),
     PdfOperationAction.watermark => service.watermark(
       input,
       pages: request.pages,
@@ -177,7 +183,8 @@ class PdfOperationsHost {
     if (stores.isEmpty) {
       throw ArgumentError('Select at least one PDF.');
     }
-    if (stores.map((store) => store.documentId).toSet().length != stores.length) {
+    if (stores.map((store) => store.documentId).toSet().length !=
+        stores.length) {
       throw ArgumentError('Select each PDF only once.');
     }
   }
@@ -251,6 +258,7 @@ class PdfOperationsHost {
 
   final List<PdfFileStore> stores;
   final PdfOperationsService operations;
+
   /// Native calls run in a worker isolate. Flutter's web compute adapter runs
   /// on the browser thread; the size limits still apply there.
   final bool useWorker;
@@ -272,7 +280,8 @@ class PdfOperationsHost {
     void Function(int completed, int total)? onProgress,
   }) async {
     _assertOpen();
-    if (_loading || _saving || _computing) throw StateError('A PDF operation is in progress.');
+    if (_loading || _saving || _computing)
+      throw StateError('A PDF operation is in progress.');
     _loading = true;
     _loaded = false;
     try {
@@ -291,18 +300,30 @@ class PdfOperationsHost {
         }
         var password = '';
         while (true) {
-          final input = PdfInput(bytes, name: store.displayName, password: password);
+          final input = PdfInput(
+            bytes,
+            name: store.displayName,
+            password: password,
+          );
           try {
             final inspection = useWorker
-                ? await compute(_inspectPdf, _PdfInspectionWork(operations, input))
+                ? await compute(
+                    _inspectPdf,
+                    _PdfInspectionWork(operations, input),
+                  )
                 : operations.inspect(input);
             _assertOpen();
             sources.add(
-              PdfOperationSource(store: store, input: input, inspection: inspection),
+              PdfOperationSource(
+                store: store,
+                input: input,
+                inspection: inspection,
+              ),
             );
             break;
           } on PdfOperationException catch (error) {
-            if (error.code != 'passwordRequired' && error.code != 'invalidPassword') {
+            if (error.code != 'passwordRequired' &&
+                error.code != 'invalidPassword') {
               rethrow;
             }
             final entered = await requestPassword(
@@ -360,7 +381,8 @@ class PdfOperationsHost {
 
   void _assertReadyToSave() {
     _assertOpen();
-    if (!_loaded || _loading) throw StateError('Wait for the PDFs to finish loading.');
+    if (!_loaded || _loading)
+      throw StateError('Wait for the PDFs to finish loading.');
     if (_computing) throw StateError('A PDF operation is in progress.');
     if (_saving) throw StateError('A PDF save is in progress.');
   }

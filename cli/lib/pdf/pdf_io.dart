@@ -10,16 +10,15 @@ import '../adapters/cli_adapter_factory.dart';
 import '../adapters/cli_storage_client.dart';
 import '../config/cli_config.dart';
 
-typedef PdfCliAdapterFactory = CliStorageClient Function(
-  String name,
-  Map<String, dynamic> configuration,
-);
+typedef PdfCliAdapterFactory =
+    CliStorageClient Function(String name, Map<String, dynamic> configuration);
 
 class PdfCliException implements Exception {
-  const PdfCliException(this.code, this.message);
+  const PdfCliException(this.code, this.message, {this.exitCode = 1});
 
   final String code;
   final String message;
+  final int exitCode;
 
   @override
   String toString() => message;
@@ -32,7 +31,7 @@ class PdfCliLocation {
 
   factory PdfCliLocation.parse(String value) {
     if (value.isEmpty || value == '-' || value.contains('\u0000')) {
-      throw const PdfCliException('invalidPath', 'A file path is required.');
+      throw const PdfCliException('invalidPath', 'A file path is required.', exitCode: 2);
     }
     if (!value.startsWith('cloud://')) {
       return PdfCliLocation._(value, p.normalize(p.absolute(value)), null);
@@ -47,27 +46,31 @@ class PdfCliLocation {
       throw const PdfCliException(
         'invalidPath',
         'Use cloud://profile/path with no credentials, port, query or fragment.',
+        exitCode: 2,
       );
     }
     final segments = uri.pathSegments;
     if (segments.isEmpty ||
-        segments.any((segment) =>
-            segment.isEmpty ||
-            segment == '.' ||
-            segment == '..' ||
-            segment.contains('/') ||
-            segment.contains('\\') ||
-            segment.contains('\u0000'))) {
+        segments.any(
+          (segment) =>
+              segment.isEmpty ||
+              segment == '.' ||
+              segment == '..' ||
+              segment.contains('/') ||
+              segment.contains('\\') ||
+              segment.contains('\u0000'),
+        )) {
       throw const PdfCliException(
         'invalidPath',
         'A cloud location must identify one file using an absolute path.',
+        exitCode: 2,
       );
     }
     // Retain case in profile names instead of using Uri.host's normalization.
     final slash = value.indexOf('/', 'cloud://'.length);
     final profile = value.substring('cloud://'.length, slash);
     if (!RegExp(r'^[A-Za-z0-9][A-Za-z0-9_.-]*$').hasMatch(profile)) {
-      throw const PdfCliException('invalidPath', 'Invalid cloud profile name.');
+      throw const PdfCliException('invalidPath', 'Invalid cloud profile name.', exitCode: 2);
     }
     return PdfCliLocation._(value, '/${segments.join('/')}', profile);
   }
@@ -143,12 +146,14 @@ class PdfCliFileStore {
         throw const PdfCliException(
           'stdinUsed',
           'Only one option may read stdin in a command.',
+          exitCode: 2,
         );
       }
       if (_inputHasTerminal) {
         throw const PdfCliException(
           'stdinTerminal',
           'Pipe the data into stdin or supply a file.',
+          exitCode: 2,
         );
       }
       _inputConsumed = true;
@@ -160,6 +165,7 @@ class PdfCliFileStore {
           throw const PdfCliException(
             'passwordLocation',
             'Password files must be local, or use - for stdin.',
+          exitCode: 2,
           );
         }
         final stat = await File(location.path).stat();
@@ -175,7 +181,7 @@ class PdfCliFileStore {
     try {
       return utf8.decode(bytes);
     } on FormatException {
-      throw const PdfCliException('invalidEncoding', 'Expected UTF-8 input.');
+      throw const PdfCliException('invalidEncoding', 'Expected UTF-8 input.', exitCode: 2);
     }
   }
 
@@ -219,10 +225,7 @@ class PdfCliFileStore {
 
   /// Commit only after the transformation and all validation have succeeded.
   /// Returns storage-specific warnings for the result JSON and stderr.
-  Future<List<String>> writeOutput(
-    PdfCliOutput output,
-    Uint8List bytes,
-  ) async {
+  Future<List<String>> writeOutput(PdfCliOutput output, Uint8List bytes) async {
     if (bytes.length > maxOutputBytes) {
       throw const PdfCliException('outputLimit', 'Output exceeds 128 MiB.');
     }
@@ -232,7 +235,11 @@ class PdfCliFileStore {
     if (location.isRemote) {
       final adapter = _adapter(location);
       try {
-        await adapter.upload(bytes, location.name, p.posix.dirname(location.path));
+        await adapter.upload(
+          bytes,
+          location.name,
+          p.posix.dirname(location.path),
+        );
       } catch (_) {
         throw const PdfCliException(
           'writeFailed',
@@ -240,7 +247,8 @@ class PdfCliFileStore {
         );
       }
       final verified = await _readRemote(location, maxBytes: maxOutputBytes);
-      if (sha256.convert(verified).toString() != sha256.convert(bytes).toString()) {
+      if (sha256.convert(verified).toString() !=
+          sha256.convert(bytes).toString()) {
         throw const PdfCliException(
           'verificationFailed',
           'Cloud output verification failed. Keep the source files and retry to a new name.',
@@ -284,8 +292,10 @@ class PdfCliFileStore {
         // A temporary-directory cleanup error must neither hide the original
         // write failure nor reclassify an already committed PDF as failed.
         if (committed) {
-          warnings.add('The PDF was saved, but its empty temporary directory '
-              'could not be removed.');
+          warnings.add(
+            'The PDF was saved, but its empty temporary directory '
+            'could not be removed.',
+          );
         }
       }
     }
@@ -301,7 +311,10 @@ class PdfCliFileStore {
           ? null
           : await _readRemote(location, maxBytes: maxOutputBytes);
     } else {
-      final type = await FileSystemEntity.type(location.path, followLinks: false);
+      final type = await FileSystemEntity.type(
+        location.path,
+        followLinks: false,
+      );
       _checkOutputType(type);
       now = type == FileSystemEntityType.file
           ? await _readLocal(File(location.path), maxOutputBytes)
@@ -327,12 +340,14 @@ class PdfCliFileStore {
       }
       return;
     }
-    final canonicalParent = await Directory(p.dirname(output.path))
-        .resolveSymbolicLinks();
+    final canonicalParent = await Directory(
+      p.dirname(output.path),
+    ).resolveSymbolicLinks();
     final canonical = p.join(canonicalParent, p.basename(output.path));
     for (final source in _localReadPaths) {
       if (p.equals(source, canonical) ||
-          (Platform.isWindows && source.toLowerCase() == canonical.toLowerCase())) {
+          (Platform.isWindows &&
+              source.toLowerCase() == canonical.toLowerCase())) {
         _sourceOutput();
       }
       if (await File(output.path).exists() &&
@@ -347,22 +362,31 @@ class PdfCliFileStore {
     return _adapters.putIfAbsent(profile, () {
       final settings = config.providerConfig(profile, strict: true);
       if (settings == null) {
-        throw PdfCliException('unknownProfile', 'Unknown cloud profile: $profile');
+        throw PdfCliException(
+          'unknownProfile',
+          'Unknown cloud profile: $profile',
+        );
       }
+      final root = _remoteRoot(settings);
       final adapter = _adapterFactory(profile, settings);
       // Capture only the addressing fields actually used by the adapter.
       // Credentials and irrelevant configuration keys cannot create aliases.
-      _remoteRoots[profile] = _remoteRoot(settings);
+      _remoteRoots[profile] = root;
       return adapter;
     });
   }
 
   String _remoteIdentity(PdfCliLocation location) {
     final root = _remoteRoots[location.profile]!;
-    return root.replace(pathSegments: [
-      ...root.pathSegments,
-      ...location.path.substring(1).split('/'),
-    ]).toString().toLowerCase();
+    return root
+        .replace(
+          pathSegments: [
+            ...root.pathSegments,
+            ...location.path.substring(1).split('/'),
+          ],
+        )
+        .toString()
+        .toLowerCase();
   }
 
   static Uri _remoteRoot(Map<String, dynamic> settings) {
@@ -378,7 +402,9 @@ class PdfCliFileStore {
     final base = Uri.tryParse(raw);
     if (base == null || !base.hasAuthority) {
       throw const PdfCliException(
-          'invalidEndpoint', 'The cloud profile has an invalid endpoint.');
+        'invalidEndpoint',
+        'The cloud profile has an invalid endpoint.',
+      );
     }
     final prefix = base.pathSegments.toList();
     while (prefix.isNotEmpty && prefix.last.isEmpty) {
@@ -392,10 +418,9 @@ class PdfCliFileStore {
       scheme: base.scheme,
       host: virtualHosted ? '$bucket.${base.host}' : base.host,
       port: base.hasPort ? base.port : null,
-      pathSegments: virtualHosted ? const [] : [
-        ...prefix,
-        if (type == 's3') bucket,
-      ],
+      pathSegments: virtualHosted
+          ? const []
+          : [...prefix, if (type == 's3') bucket],
     );
   }
 
@@ -415,8 +440,11 @@ class PdfCliFileStore {
         'Could not verify the cloud directory. Check its access and retry.',
       );
     }
-    final matches = listing.where((entry) =>
-        entry.name.toLowerCase() == location.name.toLowerCase()).toList();
+    final matches = listing
+        .where(
+          (entry) => entry.name.toLowerCase() == location.name.toLowerCase(),
+        )
+        .toList();
     if (matches.length > 1 ||
         (matches.isNotEmpty && matches.single.name != location.name)) {
       throw const PdfCliException(
@@ -429,7 +457,10 @@ class PdfCliFileStore {
       throw const PdfCliException('notFound', 'Cloud input was not found.');
     }
     if (matches.single.isDirectory) {
-      throw const PdfCliException('notAFile', 'The cloud path identifies a directory.');
+      throw const PdfCliException(
+        'notAFile',
+        'The cloud path identifies a directory.',
+      );
     }
     return matches.single;
   }
@@ -450,12 +481,17 @@ class PdfCliFileStore {
       );
     }
     try {
-      return await (adapter as CliBoundedDownload)
-          .downloadBytesBounded(location.path, maxBytes: maxBytes);
+      return await (adapter as CliBoundedDownload).downloadBytesBounded(
+        location.path,
+        maxBytes: maxBytes,
+      );
     } on CliDownloadLimitException {
       rethrow;
     } catch (_) {
-      throw const PdfCliException('readFailed', 'Could not read the cloud file.');
+      throw const PdfCliException(
+        'readFailed',
+        'Could not read the cloud file.',
+      );
     }
   }
 
@@ -487,12 +523,16 @@ class PdfCliFileStore {
     if (Platform.isWindows) return;
     final result = await Process.run('chmod', [mode.toRadixString(8), path]);
     if (result.exitCode != 0) {
-      throw const PdfCliException('permissions', 'Could not set output file permissions.');
+      throw const PdfCliException(
+        'permissions',
+        'Could not set output file permissions.',
+      );
     }
   }
 
   static void _checkOutputType(FileSystemEntityType type) {
-    if (type != FileSystemEntityType.notFound && type != FileSystemEntityType.file) {
+    if (type != FileSystemEntityType.notFound &&
+        type != FileSystemEntityType.file) {
       throw const PdfCliException(
         'invalidOutput',
         'Output must be a regular file; symbolic links and directories are refused.',

@@ -35,11 +35,11 @@ class SftpCliAdapter implements CliStorageClient, CliBoundedDownload {
     required String host,
     int port = 22,
     String? hostKey,
-  })  : _username = username,
-        _password = password,
-        _host = host,
-        _port = port,
-        _hostKey = hostKey;
+  }) : _username = username,
+       _password = password,
+       _host = host,
+       _port = port,
+       _hostKey = hostKey;
 
   factory SftpCliAdapter.fromConfig(Map<String, dynamic> cfg) {
     final username = cfg['username'] as String?;
@@ -100,22 +100,32 @@ class SftpCliAdapter implements CliStorageClient, CliBoundedDownload {
   Future<void> _ensureConnected() async {
     if (_ssh != null && !_ssh!.isClosed && _sftp != null) return;
 
-    final socket = await SSHSocket.connect(_host, _port,
-        timeout: const Duration(seconds: 20));
-    _ssh = await openVerifiedSsh(socket,
-        username: _username, password: _password, verify: (_, bytes) async {
-      final observed = utf8.decode(bytes);
-      if (_hostKey == observed) return true;
-      final endpoint = '$_host:$_port';
-      if (_hostKey != null ||
-          confirmHostKey == null ||
-          !await confirmHostKey!(endpoint, observed)) {
-        throw SftpHostKeyException(observed,
-            expected: _hostKey, endpoint: endpoint);
-      }
-      _hostKey = observed;
-      return true;
-    });
+    final socket = await SSHSocket.connect(
+      _host,
+      _port,
+      timeout: const Duration(seconds: 20),
+    );
+    _ssh = await openVerifiedSsh(
+      socket,
+      username: _username,
+      password: _password,
+      verify: (_, bytes) async {
+        final observed = utf8.decode(bytes);
+        if (_hostKey == observed) return true;
+        final endpoint = '$_host:$_port';
+        if (_hostKey != null ||
+            confirmHostKey == null ||
+            !await confirmHostKey!(endpoint, observed)) {
+          throw SftpHostKeyException(
+            observed,
+            expected: _hostKey,
+            endpoint: endpoint,
+          );
+        }
+        _hostKey = observed;
+        return true;
+      },
+    );
     await _ssh!.authenticated;
     _sftp = await _ssh!.sftp();
   }
@@ -130,16 +140,19 @@ class SftpCliAdapter implements CliStorageClient, CliBoundedDownload {
       final fullPath = p.posix.join(remotePath, item.filename);
       final modTime = item.attr.modifyTime;
       final modifiedAt = modTime != null
-          ? DateTime.fromMillisecondsSinceEpoch(modTime * 1000)
-              .toIso8601String()
+          ? DateTime.fromMillisecondsSinceEpoch(
+              modTime * 1000,
+            ).toIso8601String()
           : null;
-      result.add(CliFileItem(
-        name: item.filename,
-        path: fullPath,
-        isDirectory: item.attr.isDirectory,
-        size: item.attr.size,
-        modifiedAt: modifiedAt,
-      ));
+      result.add(
+        CliFileItem(
+          name: item.filename,
+          path: fullPath,
+          isDirectory: item.attr.isDirectory,
+          size: item.attr.size,
+          modifiedAt: modifiedAt,
+        ),
+      );
     }
     return result;
   }
@@ -155,7 +168,8 @@ class SftpCliAdapter implements CliStorageClient, CliBoundedDownload {
     final remoteFilePath = p.posix.join(remoteDir, fileName);
     final file = await _sftp!.open(
       remoteFilePath,
-      mode: SftpFileOpenMode.create |
+      mode:
+          SftpFileOpenMode.create |
           SftpFileOpenMode.write |
           SftpFileOpenMode.truncate,
     );
@@ -310,8 +324,9 @@ class SftpCliAdapter implements CliStorageClient, CliBoundedDownload {
         isDirectory: s.isDirectory,
         size: s.size,
         modifiedAt: modTime != null
-            ? DateTime.fromMillisecondsSinceEpoch(modTime * 1000)
-                .toIso8601String()
+            ? DateTime.fromMillisecondsSinceEpoch(
+                modTime * 1000,
+              ).toIso8601String()
             : null,
       );
     } catch (_) {

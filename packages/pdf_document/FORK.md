@@ -16,3 +16,20 @@ on unpublished registry releases.
 
 The extension adds selected-page preservation and Unicode OCR support. See
 `docs/pdf-operations.md` for the current integration and verification status.
+
+## Reproducible source patch
+
+`UPSTREAM.patch` contains every runtime and packaging change relative to the
+pin above. `tool/update_pdf_vendor_patches.py --upstream PATH --write` rebuilds
+both PDF runtime patches, applies them to isolated original snapshots and
+verifies every resulting byte. Core regression tests are in `test/crisp_*.dart`.
+
+Extraction retains selected AcroForm branches/defaults/calculation order,
+bookmarks, named destinations, layers and output intents where supported.
+Links to omitted pages are removed; unrelated document JavaScript, attachments
+and prior revision bytes are not copied. Shared resources may still contain
+unused data, so extraction is not a secure-erasure operation.
+
+`injectTextLayer(embeddedFont: ...)` writes a Unicode Type0 font with its
+program and ToUnicode mapping. Missing glyphs are rejected before changing the
+page. Existing embedded-font form styling is reused without changing its API.

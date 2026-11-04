@@ -18,11 +18,17 @@ Uint8List _selectionPdf() {
       CosDictionary({
         'Type': const CosName('Page'),
         'Parent': pagesRef,
-        'MediaBox': CosArray(const [CosInteger(0), CosInteger(0),
-          CosInteger(612), CosInteger(792)]),
+        'MediaBox': CosArray(const [
+          CosInteger(0),
+          CosInteger(0),
+          CosInteger(612),
+          CosInteger(792)
+        ]),
         'Resources': CosDictionary(),
-        'Contents': builder.add(CosStream(CosDictionary(),
-            Uint8List.fromList(latin1.encode('BT (source-page-${i + 1}) Tj ET')))),
+        'Contents': builder.add(CosStream(
+            CosDictionary(),
+            Uint8List.fromList(
+                latin1.encode('BT (source-page-${i + 1}) Tj ET')))),
       }),
   ];
   final pageRefs = [for (final page in leaves) builder.add(page)];
@@ -38,8 +44,12 @@ Uint8List _selectionPdf() {
   });
   final fieldRef = builder.add(field);
   root['Kids'] = builder.add(CosArray([fieldRef]));
-  CosArray rect(int y) => CosArray([const CosInteger(20), CosInteger(y),
-      const CosInteger(200), CosInteger(y + 30)]);
+  CosArray rect(int y) => CosArray([
+        const CosInteger(20),
+        CosInteger(y),
+        const CosInteger(200),
+        CosInteger(y + 30)
+      ]);
   final widgets = [
     for (final page in [0, 2])
       builder.add(CosDictionary({
@@ -61,46 +71,58 @@ Uint8List _selectionPdf() {
     'Rect': rect(100),
   }));
   CosReference link(String name) => builder.add(CosDictionary({
-    'Type': const CosName('Annot'), 'Subtype': const CosName('Link'),
-    'Rect': rect(60),
-    'A': builder.add(CosDictionary({
-      'S': const CosName('GoTo'), 'D': CosString.fromText(name),
-    })),
-  }));
+        'Type': const CosName('Annot'),
+        'Subtype': const CosName('Link'),
+        'Rect': rect(60),
+        'A': builder.add(CosDictionary({
+          'S': const CosName('GoTo'),
+          'D': CosString.fromText(name),
+        })),
+      }));
   leaves[0]['Annots'] = builder.add(CosArray([
-    widgets[0], link('keep'), link('drop'),
+    widgets[0],
+    link('keep'),
+    link('drop'),
   ]));
   leaves[2]['Annots'] = builder.add(CosArray([widgets[1], omittedField]));
   final outlines = CosDictionary({'Type': const CosName('Outlines')});
   final outlinesRef = builder.add(outlines);
   final heading = CosDictionary({
     'Title': CosString.fromText('Keep as heading'),
-    'Parent': outlinesRef, 'Dest': const CosName('drop'),
+    'Parent': outlinesRef,
+    'Dest': const CosName('drop'),
     'Count': const CosInteger(1),
   });
   final headingRef = builder.add(heading);
   final child = builder.add(CosDictionary({
     'Title': CosString.fromText('Selected child'),
-    'Parent': headingRef, 'Dest': const CosName('keep'),
+    'Parent': headingRef,
+    'Dest': const CosName('keep'),
   }));
   heading['First'] = child;
   heading['Last'] = child;
   final omittedOutline = builder.add(CosDictionary({
-    'Title': CosString.fromText('Drop leaf'), 'Parent': outlinesRef,
-    'Prev': headingRef, 'Dest': const CosName('drop'),
+    'Title': CosString.fromText('Drop leaf'),
+    'Parent': outlinesRef,
+    'Prev': headingRef,
+    'Dest': const CosName('drop'),
   }));
   heading['Next'] = omittedOutline;
   outlines['First'] = headingRef;
   outlines['Last'] = omittedOutline;
   outlines['Count'] = const CosInteger(3);
   final catalog = builder.add(CosDictionary({
-    'Type': const CosName('Catalog'), 'Pages': pagesRef,
-    'Outlines': outlinesRef, 'PageMode': const CosName('UseOutlines'),
+    'Type': const CosName('Catalog'),
+    'Pages': pagesRef,
+    'Outlines': outlinesRef,
+    'PageMode': const CosName('UseOutlines'),
     'Names': builder.add(CosDictionary({
       'Dests': builder.add(CosDictionary({
         'Names': builder.add(CosArray([
-          CosString.fromText('keep'), CosArray([pageRefs[1], const CosName('Fit')]),
-          CosString.fromText('drop'), CosArray([pageRefs[2], const CosName('Fit')]),
+          CosString.fromText('keep'),
+          CosArray([pageRefs[1], const CosName('Fit')]),
+          CosString.fromText('drop'),
+          CosArray([pageRefs[2], const CosName('Fit')]),
         ])),
       })),
       'EmbeddedFiles': CosDictionary({'Names': CosArray([])}),
@@ -114,7 +136,8 @@ Uint8List _selectionPdf() {
       'DR': builder.add(CosDictionary({
         'Font': CosDictionary({
           'F1': builder.add(CosDictionary({
-            'Type': const CosName('Font'), 'Subtype': const CosName('Type1'),
+            'Type': const CosName('Font'),
+            'Subtype': const CosName('Type1'),
             'BaseFont': const CosName('Courier'),
             'Encoding': const CosName('WinAnsiEncoding'),
           })),
@@ -122,8 +145,10 @@ Uint8List _selectionPdf() {
       })),
     })),
   }));
-  return builder.build(root: catalog,
-      info: builder.add(CosDictionary({'Title': CosString.fromText('Selection fixture')})));
+  return builder.build(
+      root: catalog,
+      info: builder.add(
+          CosDictionary({'Title': CosString.fromText('Selection fixture')})));
 }
 
 void main() {
@@ -132,8 +157,10 @@ void main() {
     final source = PdfDocument.open(original);
     final output = PdfDocument.open(source.extractPages([1, 0]));
     expect(output.pageCount, 2);
-    expect(latin1.decode(output.page(0).contentBytes()), contains('source-page-2'));
-    expect(latin1.decode(output.page(1).contentBytes()), contains('source-page-1'));
+    expect(latin1.decode(output.page(0).contentBytes()),
+        contains('source-page-2'));
+    expect(latin1.decode(output.page(1).contentBytes()),
+        contains('source-page-1'));
     final form = PdfAcroForm.of(output)!;
     expect(form.fields.map((field) => field.name), ['customer.name']);
     final field = form.fieldNamed('customer.name')!;
@@ -152,17 +179,21 @@ void main() {
     expect(reopened.info['Title'], 'Selection fixture');
 
     // Import does not modify the source field tree or its input buffer.
-    expect(PdfAcroForm.of(source)!.fieldNamed('customer.name')!.widgets, hasLength(2));
+    expect(PdfAcroForm.of(source)!.fieldNamed('customer.name')!.widgets,
+        hasLength(2));
     expect(source.pageCount, 3);
     expect(original, _selectionPdf());
   });
 
-  test('destinations remap, omitted links disappear, child headings survive', () {
-    final output = PdfDocument.open(PdfDocument.open(_selectionPdf()).extractPages([1, 0]));
+  test('destinations remap, omitted links disappear, child headings survive',
+      () {
+    final output = PdfDocument.open(
+        PdfDocument.open(_selectionPdf()).extractPages([1, 0]));
     final kept = PdfDestination.parse(output, const CosName('keep'))!;
     expect(kept.pageIndex, 0);
     expect(PdfDestination.parse(output, const CosName('drop')), isNull);
-    final links = output.page(1).annotations.whereType<PdfLinkAnnotation>().toList();
+    final links =
+        output.page(1).annotations.whereType<PdfLinkAnnotation>().toList();
     expect((links[0].action as PdfGoToAction).destination.pageIndex, 0);
     expect(links[1].action, isNull);
     expect(links[1].dict.containsKey('A'), isFalse);
@@ -190,33 +221,48 @@ void main() {
   });
 
   test('full reordered extraction retains every widget', () {
-    final output = PdfDocument.open(PdfDocument.open(_selectionPdf()).extractPages([2, 1, 0]));
+    final output = PdfDocument.open(
+        PdfDocument.open(_selectionPdf()).extractPages([2, 1, 0]));
     final form = PdfAcroForm.of(output)!;
-    expect(form.fields.map((field) => field.name), ['customer.name', 'omitted']);
+    expect(
+        form.fields.map((field) => field.name), ['customer.name', 'omitted']);
     final shared = form.fieldNamed('customer.name')!;
-    expect([for (var i = 0; i < shared.widgets.length; i++) shared.widgetPageIndex(i)].toSet(), {0, 2});
+    expect(
+        [
+          for (var i = 0; i < shared.widgets.length; i++)
+            shared.widgetPageIndex(i)
+        ].toSet(),
+        {0, 2});
     expect(form.fieldNamed('omitted')!.widgetPageIndex(0), 0);
   });
 
   test('source incremental history is not the extracted file base', () {
     var source = PdfDocument.open(_selectionPdf());
     var edit = PdfEditor(source)
-      ..setTextValue(PdfAcroForm.of(source)!.fieldNamed('customer.name')!, 'obsolete-secret-marker');
+      ..setTextValue(PdfAcroForm.of(source)!.fieldNamed('customer.name')!,
+          'obsolete-secret-marker');
     source = PdfDocument.open(edit.save());
     edit = PdfEditor(source)
-      ..setTextValue(PdfAcroForm.of(source)!.fieldNamed('customer.name')!, 'Current');
+      ..setTextValue(
+          PdfAcroForm.of(source)!.fieldNamed('customer.name')!, 'Current');
     final withHistory = edit.save();
     expect(latin1.decode(withHistory), contains('obsolete-secret-marker'));
     final bytes = PdfDocument.open(withHistory).extractPages([0]);
     expect(latin1.decode(bytes), isNot(contains('obsolete-secret-marker')));
-    expect(PdfAcroForm.of(PdfDocument.open(bytes))!.fieldNamed('customer.name')!.value, 'Current');
+    expect(
+        PdfAcroForm.of(PdfDocument.open(bytes))!
+            .fieldNamed('customer.name')!
+            .value,
+        'Current');
   });
 
   test('encrypted input extracts into a fresh unencrypted document', () {
-    final source = PdfDocument.open(buildEncryptedPdf(revision: 6, userPassword: 'test-password'),
+    final source = PdfDocument.open(
+        buildEncryptedPdf(revision: 6, userPassword: 'test-password'),
         password: 'test-password');
     final output = PdfDocument.open(source.extractPages([0]));
     expect(output.cos.isEncrypted, isFalse);
-    expect(latin1.decode(output.page(0).contentBytes()), contains('Hello, world!'));
+    expect(latin1.decode(output.page(0).contentBytes()),
+        contains('Hello, world!'));
   });
 }

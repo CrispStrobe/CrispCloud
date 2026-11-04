@@ -534,7 +534,8 @@ class _PageImporter {
   /// External actions retain their original semantics.
   CosObject copyAction(CosObject value) {
     final action = source.cos.resolve(value);
-    if (pruneUnselectedDestinations && action is CosDictionary &&
+    if (pruneUnselectedDestinations &&
+        action is CosDictionary &&
         source.cos.resolve(action['S']) == const CosName('GoTo')) {
       final target = action['D'];
       if (target == null || copyDestination(target) is CosNull) {

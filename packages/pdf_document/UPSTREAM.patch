@@ -1,0 +1,400 @@
+diff --git a/packages/pdf_document/lib/src/document_merge.dart b/packages/pdf_document/lib/src/document_merge.dart
+index b57f9e7..9abfba0 100644
+--- a/packages/pdf_document/lib/src/document_merge.dart
++++ b/packages/pdf_document/lib/src/document_merge.dart
+@@ -280,19 +280,35 @@ extension on PdfEditor {
+     var node = cos.resolve(parent['First']);
+     while (node is CosDictionary && seen.add(node)) {
+       final dict = CosDictionary();
++      var omittedDestination = false;
+       for (final key in ['Title', 'C', 'F', 'A', 'Dest']) {
+         final value = node[key];
+         if (value != null) {
+-          dict[key] = key == 'Dest'
++          final copied = key == 'Dest'
+               ? importer.copyDestination(value)
+-              : importer.copyValue(value);
++              : key == 'A'
++                  ? importer.copyAction(value)
++                  : importer.copyValue(value);
++          if (importer.pruneUnselectedDestinations &&
++              (key == 'Dest' || key == 'A') &&
++              copied is CosNull) {
++            omittedDestination = true;
++          } else {
++            dict[key] = copied;
++          }
+         }
+       }
++      final children = _importOutlineChildren(importer, node, seen);
++      // A parent whose own target disappeared can still group surviving
++      // child bookmarks. A leaf with only an omitted target has no use.
++      if (omittedDestination && children.isEmpty) {
++        node = cos.resolve(node['Next']);
++        continue;
++      }
+       final ref = _updater.addObject(dict);
+       final count = cos.resolve(node['Count']);
+       _outlineOpenOverride[ref.objectNumber] =
+           count is! CosInteger || count.value >= 0;
+-      final children = _importOutlineChildren(importer, node, seen);
+       _relinkOutlineChildren(ref, children);
+       out.add(ref);
+       node = cos.resolve(node['Next']);
+diff --git a/packages/pdf_document/lib/src/ocr_editor.dart b/packages/pdf_document/lib/src/ocr_editor.dart
+index 83c0c39..bae3747 100644
+--- a/packages/pdf_document/lib/src/ocr_editor.dart
++++ b/packages/pdf_document/lib/src/ocr_editor.dart
+@@ -15,10 +15,9 @@ class PdfOcrSpan {
+     this.confidence = 1.0,
+   });
+ 
+-  /// The recognized characters. Code points outside Latin-1 are written as
+-  /// `?` in the page content (the standard fonts the layer uses are
+-  /// byte-encoded), but the run still occupies [bounds] so selection and
+-  /// search highlighting line up with the word on the page.
++  /// The recognized characters. Non-Latin text requires a covering
++  /// [PdfEmbeddedFont] when injecting the layer. Unsupported characters are
++  /// rejected rather than silently replaced in the searchable text.
+   final String text;
+ 
+   /// Where the text sits, in PDF user space (origin bottom-left, the same
+@@ -54,8 +53,16 @@ extension PdfOcrEditing on PdfEditor {
+   ///
+   /// Spans below [minConfidence] or with no printable text are skipped.
+   /// [font] picks which base-14 font carries the layer (Helvetica by
+-  /// default); it is embedded with explicit /Widths so this renderer and
+-  /// other viewers measure the spacing identically.
++  /// default); it is written with explicit /Widths so this renderer and
++  /// other viewers measure the spacing identically. [embeddedFont], when
++  /// supplied, takes precedence and writes a Unicode Type0 font with an
++  /// embedded program and /ToUnicode map. The supplied font is reusable;
++  /// its recorded glyph usage is reset for each injected page.
++  ///
++  /// Every accepted span is checked before the document is modified.
++  /// Unsupported control characters, non-Latin-1 text without an embedded
++  /// font, or missing glyphs throw [ArgumentError]. Tabs and line endings
++  /// become spaces because a span represents one positioned text run.
+   ///
+   /// The whole layer is wrapped in `q`/`Q`, so the invisible render mode
+   /// and horizontal scaling cannot leak into the page's own content.
+@@ -63,10 +70,15 @@ extension PdfOcrEditing on PdfEditor {
+     int pageIndex,
+     Iterable<PdfOcrSpan> spans, {
+     PdfStandardFont font = PdfStandardFont.helvetica,
++    PdfEmbeddedFont? embeddedFont,
+     double minConfidence = 0,
+     bool visible = false,
+     int color = 0x000000,
+   }) {
++    if (!minConfidence.isFinite || minConfidence < 0 || minConfidence > 1) {
++      throw ArgumentError.value(
++          minConfidence, 'minConfidence', 'must be between 0 and 1');
++    }
+     final page = document.page(pageIndex);
+     final accepted = [
+       for (final span in spans)
+@@ -78,17 +90,48 @@ extension PdfOcrEditing on PdfEditor {
+     ];
+     if (accepted.isEmpty) return 0;
+ 
+-    final fontName = _ensureOcrFont(page, font);
++    final texts = <String>[];
++    for (final span in accepted) {
++      final box = span.bounds;
++      if (!span.confidence.isFinite ||
++          span.confidence > 1 ||
++          ![box.left, box.bottom, box.right, box.top]
++              .every((n) => n.isFinite)) {
++        throw ArgumentError('OCR spans require finite bounds and confidence');
++      }
++      final text = span.text.replaceAll(RegExp(r'[\r\n\t]'), ' ');
++      if (text.runes.any((r) => r < 32 || (r >= 127 && r < 160))) {
++        throw ArgumentError('OCR text contains unsupported control characters');
++      }
++      if (embeddedFont != null) {
++        if (!embeddedFont.canRender(text)) {
++          throw ArgumentError('The OCR font does not contain every glyph');
++        }
++      } else if (text.runes.any((r) => r > 255)) {
++        throw ArgumentError('Non-Latin OCR text requires an embedded font');
++      }
++      texts.add(text);
++    }
++
++    embeddedFont?.resetUsage();
++    final fonts = embeddedFont == null ? null : _ocrFonts(page);
++    final fontName =
++        fonts == null ? _ensureOcrFont(page, font) : _newOcrFontName(fonts);
+     final rotation = page.rotation;
+     final writer = ContentWriter()..save();
+-    for (final span in accepted) {
++    for (var i = 0; i < accepted.length; i++) {
++      final span = accepted[i];
++      final text = texts[i];
++      final rendered = pdfVisualText(text, PdfTextDirection.auto);
+       final box = span.bounds;
+       // The box's extent across and along the visual reading direction:
+       // on a quarter-turned page a word's on-screen width is user-space y.
+       final quarter = rotation == 90 || rotation == 270;
+       final size = quarter ? box.width : box.height;
+       final length = quarter ? box.height : box.width;
+-      final natural = measureStandardText(span.text, size, font: font);
++      final natural = embeddedFont == null
++          ? measureStandardText(rendered, size, font: font)
++          : embeddedFont.measure(rendered, size);
+       // Horizontal scaling that stretches the run's natural length onto the
+       // box - so the invisible selection box tracks the word.
+       final scale = natural > 0 ? length / natural * 100 : 100.0;
+@@ -118,11 +161,26 @@ extension PdfOcrEditing on PdfEditor {
+       } else {
+         writer.op('Tm', matrix);
+       }
+-      writer
+-        ..showText(span.text)
+-        ..endText();
++      if (embeddedFont == null) {
++        writer.showText(rendered);
++      } else {
++        writer
++          ..beginActualText(text)
++          ..showGlyphHex(embeddedFont.encodeHex(rendered))
++          ..endMarkedContent();
++      }
++      writer.endText();
+     }
+     writer.restore();
++    if (embeddedFont != null) {
++      // Build after encoding so /W and /ToUnicode include all spans. Give
++      // every page/layer its own font resource; later usage must not replace
++      // mappings used by an earlier layer.
++      final type0 =
++          embeddedFont.buildResource(_updater.addObject).entries.values.single;
++      fonts![fontName] = _updater.addObject(type0);
++      _updater.markChanged(page.dict);
++    }
+     _appendContent(pageIndex, page, writer.takeBytes());
+     return accepted.length;
+   }
+@@ -132,17 +190,7 @@ extension PdfOcrEditing on PdfEditor {
+   /// this session already added.
+   String _ensureOcrFont(PdfPage page, PdfStandardFont font) {
+     final cos = document.cos;
+-    final resources = _ownResources(page);
+-    final existing = cos.resolve(resources['Font']);
+-    final CosDictionary fonts;
+-    if (existing is CosDictionary && resources['Font'] is! CosReference) {
+-      fonts = existing;
+-    } else {
+-      fonts = CosDictionary({
+-        if (existing is CosDictionary) ...existing.entries,
+-      });
+-      resources['Font'] = fonts;
+-    }
++    final fonts = _ocrFonts(page);
+ 
+     final baseFont = CosName(font.baseFont);
+     for (final entry in fonts.entries.entries) {
+@@ -161,11 +209,7 @@ extension PdfOcrEditing on PdfEditor {
+       }
+     }
+ 
+-    var i = 1;
+-    while (fonts.containsKey('OcrF$i')) {
+-      i++;
+-    }
+-    final name = 'OcrF$i';
++    final name = _newOcrFontName(fonts);
+     fonts[name] = CosDictionary({
+       'Type': const CosName('Font'),
+       'Subtype': const CosName('Type1'),
+@@ -178,4 +222,29 @@ extension PdfOcrEditing on PdfEditor {
+     _updater.markChanged(page.dict);
+     return name;
+   }
++
++  CosDictionary _ocrFonts(PdfPage page) {
++    final cos = document.cos;
++    final resources = _ownResources(page);
++    final existing = cos.resolve(resources['Font']);
++    final CosDictionary fonts;
++    if (existing is CosDictionary && resources['Font'] is! CosReference) {
++      fonts = existing;
++    } else {
++      fonts = CosDictionary({
++        if (existing is CosDictionary) ...existing.entries,
++      });
++      resources['Font'] = fonts;
++    }
++
++    return fonts;
++  }
++
++  String _newOcrFontName(CosDictionary fonts) {
++    var i = 1;
++    while (fonts.containsKey('OcrF$i')) {
++      i++;
++    }
++    return 'OcrF$i';
++  }
+ }
+diff --git a/packages/pdf_document/lib/src/page_editor.dart b/packages/pdf_document/lib/src/page_editor.dart
+index bdc3384..3d3a73f 100644
+--- a/packages/pdf_document/lib/src/page_editor.dart
++++ b/packages/pdf_document/lib/src/page_editor.dart
+@@ -239,11 +239,16 @@ extension PdfPageOperations on PdfEditor {
+ /// Building a new document from a subset of this one's pages.
+ extension PdfPageExtraction on PdfDocument {
+   /// Builds a brand-new PDF containing only the pages at [indices], in
+-  /// that order, with everything they reference deep-copied across. The
+-  /// document information dictionary comes along; document-level state
+-  /// that lives outside the pages (outlines, the AcroForm field list,
+-  /// named destinations) does not. Extracting from an encrypted document
+-  /// produces unencrypted output.
++  /// that order, with their content, resources and annotations deep-copied.
++  /// AcroForm branches with widgets on the selected pages remain fillable;
++  /// their defaults and calculation order are retained. Named destinations
++  /// and bookmarks targeting selected pages are remapped; omitted targets
++  /// are removed, while bookmark parents with surviving children remain as
++  /// headings. Optional-content state, output intents and /Info are retained.
++  ///
++  /// Attachments, document JavaScript, XFA and source revision history are
++  /// not copied. Extracting from an encrypted document produces unencrypted
++  /// output; any source signature does not certify the new document.
+   Uint8List extractPages(List<int> indices) {
+     if (indices.isEmpty) {
+       throw ArgumentError.value(indices, 'indices', 'select at least one page');
+@@ -252,30 +257,41 @@ extension PdfPageExtraction on PdfDocument {
+       RangeError.checkValidIndex(i, null, 'indices', pageCount);
+     }
+     final builder = CosDocumentBuilder();
+-    final pagesDict = CosDictionary({'Type': const CosName('Pages')});
++    final pagesDict = CosDictionary({
++      'Type': const CosName('Pages'),
++      'Kids': CosArray([]),
++      'Count': const CosInteger(0),
++    });
+     final pagesRef = builder.add(pagesDict);
+-    final importer = _PageImporter(this, builder.add);
+-    final leaves = importer.importPages(indices);
+-    for (final leaf in leaves) {
+-      leaf.dict['Parent'] = pagesRef;
+-    }
+-    pagesDict['Kids'] = CosArray([for (final leaf in leaves) leaf.ref]);
+-    pagesDict['Count'] = CosInteger(leaves.length);
+     final catalogRef = builder.add(
+       CosDictionary({'Type': const CosName('Catalog'), 'Pages': pagesRef}),
+     );
+-    CosReference? infoRef;
+-    final info = cos.resolve(cos.trailer['Info']);
+-    if (info is CosDictionary) {
+-      infoRef = builder.add(importer.copyValue(info));
+-    }
+     final headerVersion = version;
+-    return builder.build(
++    // Start from an empty, unrelated file, then use the same importer that
++    // preserves forms/catalog data during a merge. Its incremental save is
++    // over this tiny empty seed, never over any bytes from the source PDF.
++    final output = PdfEditor(PdfDocument.open(builder.build(
+       root: catalogRef,
+-      info: infoRef,
+       version:
+           RegExp(r'^\d+\.\d+$').hasMatch(headerVersion) ? headerVersion : '1.7',
+-    );
++    )));
++    final importer = _PageImporter(this, output._updater.addObject,
++        documentData: true, pruneUnselectedDestinations: true);
++    output._rebuildPageTree(importer.importPages(indices));
++    output._mergeImportedDocumentData(importer, intoEmpty: true);
++    for (final key in ['PageMode', 'PageLayout', 'Lang']) {
++      final value = catalog[key];
++      if (value != null) {
++        output.document.catalog[key] = importer.copyValue(value);
++      }
++    }
++    output._updater.markChanged(output.document.catalog);
++    final info = cos.resolve(cos.trailer['Info']);
++    if (info is CosDictionary) {
++      output._updater.setTrailerEntry(
++          'Info', output._updater.addObject(importer.copyValue(info)));
++    }
++    return output.save();
+   }
+ 
+   /// Builds a standalone PDF of pages [start] through [end] inclusive, in
+@@ -312,12 +328,14 @@ class _Leaf {
+ /// a /Pages node, or to a page that is not part of the import set, copies
+ /// as null instead of dragging the rest of the document along.
+ class _PageImporter {
+-  _PageImporter(this.source, this._add, {this.documentData = false});
++  _PageImporter(this.source, this._add,
++      {this.documentData = false, this.pruneUnselectedDestinations = false});
+ 
+   final PdfDocument source;
+   final CosReference Function(CosObject) _add;
+   final Map<CosReference, CosObject> _mapped = {};
+   final bool documentData;
++  final bool pruneUnselectedDestinations;
+   final Map<CosDictionary, CosDictionary> _dictionaries = Map.identity();
+   final Map<int, CosReference> _pageRefs = {};
+   final Set<CosDictionary> _formNodes = Set.identity();
+@@ -427,7 +445,13 @@ class _PageImporter {
+       if (documentData &&
+           (key == 'Dest' ||
+               (key == 'D' && action is CosName && action.value == 'GoTo'))) {
+-        out[key] = copyDestination(value);
++        final destination = copyDestination(value);
++        if (!pruneUnselectedDestinations || destination is! CosNull) {
++          out[key] = destination;
++        }
++      } else if (pruneUnselectedDestinations && key == 'A') {
++        final copied = copyAction(value);
++        if (copied is! CosNull) out[key] = copied;
+       } else if (documentData && key == 'Kids' && _formNodes.contains(dict)) {
+         final kids = cos.resolve(value);
+         if (kids is CosArray) {
+@@ -495,6 +519,9 @@ class _PageImporter {
+   CosObject copyDestination(CosObject value) {
+     final dest = PdfDestination.parse(source, value);
+     if (dest == null) return CosNull.instance;
++    if (pruneUnselectedDestinations && !_pageRefs.containsKey(dest.pageIndex)) {
++      return CosNull.instance;
++    }
+     return CosArray([
+       _pageRefs[dest.pageIndex] ?? CosNull.instance,
+       CosName(dest.fit),
+@@ -502,6 +529,22 @@ class _PageImporter {
+     ]);
+   }
+ 
++  /// A local GoTo action whose target is outside a subset must not keep a
++  /// broken /D or resolve its name against another document's namespace.
++  /// External actions retain their original semantics.
++  CosObject copyAction(CosObject value) {
++    final action = source.cos.resolve(value);
++    if (pruneUnselectedDestinations &&
++        action is CosDictionary &&
++        source.cos.resolve(action['S']) == const CosName('GoTo')) {
++      final target = action['D'];
++      if (target == null || copyDestination(target) is CosNull) {
++        return CosNull.instance;
++      }
++    }
++    return copyValue(value);
++  }
++
+   /// Copies a stream, registering its reference (when indirect) before
+   /// the dictionary fills so self-referential entries remap instead of
+   /// recursing. For unencrypted sources the raw (still encoded) payload
+diff --git a/packages/pdf_document/pubspec.yaml b/packages/pdf_document/pubspec.yaml
+index 15e674a..53df862 100644
+--- a/packages/pdf_document/pubspec.yaml
++++ b/packages/pdf_document/pubspec.yaml
+@@ -10,7 +10,6 @@ topics:
+   - annotations
+   - forms
+   - digital-signatures
+-resolution: workspace
+ 
+ environment:
+   sdk: ^3.5.0

@@ -29,11 +29,11 @@ class WebDavCliAdapter implements CliStorageClient, CliBoundedDownload {
     required String baseUrl,
     required String username,
     required String password,
-  })  : _baseUrl = baseUrl.endsWith('/')
-            ? baseUrl.substring(0, baseUrl.length - 1)
-            : baseUrl,
-        _username = username,
-        _password = password {
+  }) : _baseUrl = baseUrl.endsWith('/')
+           ? baseUrl.substring(0, baseUrl.length - 1)
+           : baseUrl,
+       _username = username,
+       _password = password {
     final encoded = base64Encode(utf8.encode('$_username:$_password'));
     _authHeader = {'Authorization': 'Basic $encoded'};
   }
@@ -66,11 +66,7 @@ class WebDavCliAdapter implements CliStorageClient, CliBoundedDownload {
     }
     final username = identity.substring(0, splitIndex);
     final host = identity.substring(splitIndex + 1);
-    return {
-      'username': username,
-      'password': password,
-      'host': host,
-    };
+    return {'username': username, 'password': password, 'host': host};
   }
 
   @override
@@ -85,32 +81,34 @@ class WebDavCliAdapter implements CliStorageClient, CliBoundedDownload {
     final relative = remotePath.replaceFirst(RegExp(r'^/+'), '');
     // Inputs are decoded provider paths. Encode each segment exactly once so
     // a filename containing #, ?, spaces or % remains a filename, not a URL.
-    return base.replace(pathSegments: [...prefix, ...relative.split('/')])
-        .removeFragment().toString();
+    return base
+        .replace(pathSegments: [...prefix, ...relative.split('/')])
+        .removeFragment()
+        .toString();
   }
 
-  Map<String, String> get _headers => {
-        ..._authHeader,
-        'Accept': '*/*',
-      };
+  Map<String, String> get _headers => {..._authHeader, 'Accept': '*/*'};
 
   // ---------------------------------------------------------------------------
   // PROPFIND helper — parses a basic WebDAV multi-status response
   // ---------------------------------------------------------------------------
 
-  Future<List<Map<String, dynamic>>> _propfind(String remotePath,
-      {int depth = 1}) async {
+  Future<List<Map<String, dynamic>>> _propfind(
+    String remotePath, {
+    int depth = 1,
+  }) async {
     final client = http.Client();
     try {
-      final response = await client.send(
-        http.Request('PROPFIND', Uri.parse(_url(remotePath)))
-          ..followRedirects = false
-          ..headers.addAll({
-            ..._headers,
-            'Depth': depth.toString(),
-            'Content-Type': 'application/xml',
-          })
-          ..body = '''<?xml version="1.0" encoding="utf-8"?>
+      final response = await client
+          .send(
+            http.Request('PROPFIND', Uri.parse(_url(remotePath)))
+              ..followRedirects = false
+              ..headers.addAll({
+                ..._headers,
+                'Depth': depth.toString(),
+                'Content-Type': 'application/xml',
+              })
+              ..body = '''<?xml version="1.0" encoding="utf-8"?>
 <propfind xmlns="DAV:">
   <prop>
     <displayname/>
@@ -119,73 +117,112 @@ class WebDavCliAdapter implements CliStorageClient, CliBoundedDownload {
     <resourcetype/>
   </prop>
 </propfind>''',
-      ).timeout(const Duration(seconds: 60));
+          )
+          .timeout(const Duration(seconds: 60));
       if (response.statusCode != 207 && response.statusCode != 200) {
-        throw StateError('WebDAV PROPFIND failed (HTTP ${response.statusCode}).');
+        throw StateError(
+          'WebDAV PROPFIND failed (HTTP ${response.statusCode}).',
+        );
       }
-      final bytes = await readBoundedResponseBytes(response,
-          maxBytes: 16 * 1024 * 1024);
+      final bytes = await readBoundedResponseBytes(
+        response,
+        maxBytes: 16 * 1024 * 1024,
+      );
       return _parseMultiStatus(utf8.decode(bytes), remotePath, depth: depth);
     } finally {
       client.close();
     }
   }
 
-  List<Map<String, dynamic>> _parseMultiStatus(String xml, String remotePath,
-      {required int depth}) {
+  List<Map<String, dynamic>> _parseMultiStatus(
+    String xml,
+    String remotePath, {
+    required int depth,
+  }) {
     try {
       final root = XmlDocument.parse(xml).rootElement;
       if (root.name.local != 'multistatus') {
         throw const FormatException('Expected DAV multistatus.');
       }
-      XmlElement? child(XmlElement parent, String name, {bool required = false}) {
+      XmlElement? child(
+        XmlElement parent,
+        String name, {
+        bool required = false,
+      }) {
         final found = parent.childElements
-            .where((element) => element.name.local == name).toList();
+            .where((element) => element.name.local == name)
+            .toList();
         if (found.length > 1 || (required && found.isEmpty)) {
           throw const FormatException('Missing or duplicate DAV property.');
         }
         return found.isEmpty ? null : found.single;
       }
+
       int status(XmlElement element) {
-        final match = RegExp(r'^HTTP/[^ ]+ +([0-9]{3})(?: |$)')
-            .firstMatch(element.innerText.trim());
+        final match = RegExp(
+          r'^HTTP/[^ ]+ +([0-9]{3})(?: |$)',
+        ).firstMatch(element.innerText.trim());
         if (match == null) throw const FormatException('Invalid DAV status.');
         return int.parse(match.group(1)!);
       }
+
       List<String> segments(Uri uri) {
         final result = uri.pathSegments.toList();
         while (result.isNotEmpty && result.last.isEmpty) {
           result.removeLast();
         }
-        if (result.any((part) => part.isEmpty || part.contains('/') ||
-            part == '.' || part == '..' || part.contains('\u0000'))) {
+        if (result.any(
+          (part) =>
+              part.isEmpty ||
+              part.contains('/') ||
+              part == '.' ||
+              part == '..' ||
+              part.contains('\u0000'),
+        )) {
           throw const FormatException('Invalid DAV resource path.');
         }
         return result;
       }
+
       bool samePath(List<String> a, List<String> b) =>
           a.length == b.length &&
-          List.generate(a.length, (index) => a[index] == b[index]).every((v) => v);
+          List.generate(
+            a.length,
+            (index) => a[index] == b[index],
+          ).every((v) => v);
 
       final requested = Uri.parse(_url(remotePath));
       final baseSegments = segments(requested);
       final results = <Map<String, dynamic>>[];
       final seenPaths = <String>{};
       var sawSelf = false;
-      for (final response in root.childElements
-          .where((element) => element.name.local == 'response')) {
-        final href = Uri.parse(child(response, 'href', required: true)!.innerText.trim());
+      for (final response in root.childElements.where(
+        (element) => element.name.local == 'response',
+      )) {
+        final href = Uri.parse(
+          child(response, 'href', required: true)!.innerText.trim(),
+        );
         final resolved = requested.resolveUri(href);
-        if (resolved.scheme != requested.scheme || resolved.host != requested.host ||
-            resolved.port != requested.port || resolved.userInfo.isNotEmpty ||
-            resolved.hasQuery || resolved.hasFragment) {
+        if (resolved.scheme != requested.scheme ||
+            resolved.host != requested.host ||
+            resolved.port != requested.port ||
+            resolved.userInfo.isNotEmpty ||
+            resolved.hasQuery ||
+            resolved.hasFragment) {
           throw const FormatException('Unexpected DAV resource origin.');
         }
         final parts = segments(resolved);
         final isSelf = samePath(parts, baseSegments);
-        if (!isSelf && (depth != 1 || parts.length != baseSegments.length + 1 ||
-            !samePath(parts.sublist(0, baseSegments.length), baseSegments))) {
-          throw const FormatException('DAV response is outside the requested directory.');
+        if (!isSelf &&
+            (depth != 1 ||
+                parts.length != baseSegments.length + 1 ||
+                !samePath(
+                  parts.sublist(0, baseSegments.length),
+                  baseSegments,
+                ))) {
+          throw const FormatException(
+            'DAV response is outside the requested directory.',
+          );
         }
         if (!seenPaths.add(parts.join('/'))) {
           throw const FormatException('Duplicate DAV resource.');
@@ -196,8 +233,9 @@ class WebDavCliAdapter implements CliStorageClient, CliBoundedDownload {
           throw const FormatException('DAV resource access failed.');
         }
         final properties = <String, XmlElement>{};
-        for (final propstat in response.childElements
-            .where((element) => element.name.local == 'propstat')) {
+        for (final propstat in response.childElements.where(
+          (element) => element.name.local == 'propstat',
+        )) {
           final code = status(child(propstat, 'status', required: true)!);
           if (code < 200 || code >= 300) continue;
           final prop = child(propstat, 'prop', required: true)!;
@@ -210,16 +248,25 @@ class WebDavCliAdapter implements CliStorageClient, CliBoundedDownload {
         }
         final resourceType = properties['resourcetype'];
         if (resourceType == null) {
-          throw const FormatException('DAV resource type was not returned successfully.');
+          throw const FormatException(
+            'DAV resource type was not returned successfully.',
+          );
         }
-        final isDirectory = resourceType.childElements
-            .any((element) => element.name.local == 'collection');
+        final isDirectory = resourceType.childElements.any(
+          (element) => element.name.local == 'collection',
+        );
         if (isSelf && depth == 1 && !isDirectory) {
-          throw const FormatException('Requested DAV parent is not a directory.');
+          throw const FormatException(
+            'Requested DAV parent is not a directory.',
+          );
         }
         final sizeText = properties['getcontentlength']?.innerText.trim();
-        final size = sizeText == null || sizeText.isEmpty ? null : int.tryParse(sizeText);
-        if (sizeText != null && sizeText.isNotEmpty && (size == null || size < 0)) {
+        final size = sizeText == null || sizeText.isEmpty
+            ? null
+            : int.tryParse(sizeText);
+        if (sizeText != null &&
+            sizeText.isNotEmpty &&
+            (size == null || size < 0)) {
           throw const FormatException('Invalid DAV content length.');
         }
         sawSelf |= isSelf;
@@ -235,7 +282,8 @@ class WebDavCliAdapter implements CliStorageClient, CliBoundedDownload {
           'modified': properties['getlastmodified']?.innerText,
         });
       }
-      if (!sawSelf) throw const FormatException('Missing requested DAV resource.');
+      if (!sawSelf)
+        throw const FormatException('Missing requested DAV resource.');
       return results;
     } catch (_) {
       // A successful HTTP response with unparseable/incomplete XML must never
@@ -322,19 +370,23 @@ class WebDavCliAdapter implements CliStorageClient, CliBoundedDownload {
     String localPath, {
     void Function(int received, int total)? onProgress,
   }) async {
-    final client = storage.RemoteClient(storage.RemoteConnection(
+    final client = storage.RemoteClient(
+      storage.RemoteConnection(
         id: 'cli-webdav',
         name: 'WebDAV',
         kind: 'webdav',
         url: _baseUrl,
         username: _username,
         secret: _password,
-        allowLocalHttp: true));
+        allowLocalHttp: true,
+      ),
+    );
     try {
       await client.download(
-          Uri(path: remotePath.replaceFirst(RegExp(r'^/+'), '')).toString(),
-          File(localPath),
-          onBytes: (bytes) => onProgress?.call(bytes, 0));
+        Uri(path: remotePath.replaceFirst(RegExp(r'^/+'), '')).toString(),
+        File(localPath),
+        onBytes: (bytes) => onProgress?.call(bytes, 0),
+      );
     } finally {
       client.close();
     }
@@ -347,7 +399,7 @@ class WebDavCliAdapter implements CliStorageClient, CliBoundedDownload {
         ..headers.addAll(_headers),
     );
     final status = response.statusCode;
-    if (status != 201 && status != 405 /* already exists */) {
+    if (status != 201 && status != 405 /* already exists */ ) {
       throw Exception('WebDAV MKCOL failed (HTTP $status)');
     }
   }

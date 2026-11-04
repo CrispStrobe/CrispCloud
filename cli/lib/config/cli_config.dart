@@ -50,7 +50,8 @@ class CliConfig {
     if (xdg != null && xdg.isNotEmpty) {
       return p.join(xdg, 'crispcloud', 'config.yaml');
     }
-    final home = Platform.environment['HOME'] ??
+    final home =
+        Platform.environment['HOME'] ??
         Platform.environment['USERPROFILE'] ??
         '.';
     return p.join(home, '.config', 'crispcloud', 'config.yaml');
@@ -96,7 +97,9 @@ class CliConfig {
       final result = Process.runSync('chmod', ['600', file.path]);
       if (result.exitCode != 0) {
         throw FileSystemException(
-            'Cannot restrict credential file permissions', file.path);
+          'Cannot restrict credential file permissions',
+          file.path,
+        );
       }
     }
     file.writeAsStringSync(_toYaml(config), flush: true);
@@ -125,8 +128,9 @@ class CliConfig {
   /// Save or overwrite a provider config entry.
   void saveProvider(String name, Map<String, dynamic> providerData) {
     final config = read();
-    final providers =
-        Map<String, dynamic>.from(config['providers'] as Map? ?? {});
+    final providers = Map<String, dynamic>.from(
+      config['providers'] as Map? ?? {},
+    );
     providers[name] = providerData;
     config['providers'] = providers;
     write(config);
@@ -135,8 +139,9 @@ class CliConfig {
   /// Remove a provider entry.
   void removeProvider(String name) {
     final config = read();
-    final providers =
-        Map<String, dynamic>.from(config['providers'] as Map? ?? {});
+    final providers = Map<String, dynamic>.from(
+      config['providers'] as Map? ?? {},
+    );
     providers.remove(name);
     config['providers'] = providers;
     // If removed provider was the default, clear default

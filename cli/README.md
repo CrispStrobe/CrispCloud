@@ -39,8 +39,9 @@ output, even with `--overwrite`.
 | `pdf ocr` / `pdf import-ocr` | Import externally recognized text as an invisible searchable layer | required `--data`, optional `--font`, `--min-confidence` |
 
 Pass `--help` to any command for its complete options. `--json` writes structured
-result metadata to stdout and structured errors to stderr; successful results do
-not include PDF bytes or passwords. Exit code `0` indicates success, `1` a file,
+result metadata to stdout and structured errors to stderr, including argument
+validation errors; successful results do not include PDF bytes or passwords.
+Malformed configuration or data input is reported without quoting its contents. Exit code `0` indicates success, `1` a file,
 configuration or transport failure, and `2` command usage or PDF validation
 failure. A successful search with no matches returns `0` and `count: 0`.
 
@@ -66,8 +67,8 @@ CLI configuration; the default provider never changes the meaning of a PDF path.
 An output directory must already exist. Existing outputs are rejected unless
 `--overwrite` is explicit. Source aliases, hard links, symbolic-link output files,
 and destinations that differ only in case from an existing cloud entry are
-refused. A second profile pointing to the same recognized account cannot be used
-to replace an input under another name for that account.
+refused. A second profile pointing to the same recognized resource cannot be used
+to replace an input, including WebDAV profiles whose base directories differ.
 
 New local files reserve their name exclusively and are written with `0600`
 permissions on POSIX. Replacing a separate existing local output stages the
@@ -77,7 +78,10 @@ A failed write to a newly reserved file can leave an incomplete output; keep the
 inputs and retry to a new name.
 
 Cloud writes require fresh successful directory listings, reject a changed
-destination, and verify the uploaded bytes by reading them back. The shared
+destination, and verify the uploaded bytes by reading them back. S3 and WebDAV
+listings parse XML namespaces and escaped names, including Unicode filenames;
+malformed responses, incomplete pagination, and failed WebDAV resource
+properties block output creation. Listing responses are bounded to 16 MiB. The shared
 provider interface does not support an atomic conditional create/overwrite:
 another client can still change a destination between the last check and upload.
 Source files are not deliberately overwritten. Remote names that alias through

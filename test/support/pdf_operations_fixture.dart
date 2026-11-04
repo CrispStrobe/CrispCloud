@@ -3,7 +3,7 @@ import 'dart:typed_data';
 
 /// Independent, compact two-page AcroForm fixture. The cross-reference table
 /// is generated from byte offsets; no PDF writer under test creates it.
-Uint8List buildPdfOperationsFixture({int pageWidth = 300}) {
+Uint8List buildPdfOperationsFixture({int pageWidth = 300, bool multiline = false}) {
   final objects = <String>[
     '<< /Type /Catalog /Pages 2 0 R /AcroForm 7 0 R >>',
     '<< /Type /Pages /Kids [3 0 R 4 0 R] /Count 2 >>',
@@ -17,6 +17,7 @@ Uint8List buildPdfOperationsFixture({int pageWidth = 300}) {
     '<< /Fields [8 0 R 9 0 R 10 0 R 11 0 R 17 0 R 18 0 R] '
         '/DR << /Font << /Helv 12 0 R >> >> /DA (/Helv 12 Tf 0 g) >>',
     '<< /Type /Annot /Subtype /Widget /FT /Tx /T (customer.name) '
+        '${multiline ? '/Ff 4096 ' : ''}'
         '/V (Alice) /Rect [10 300 210 330] /P 3 0 R /F 4 /DA (/Helv 12 Tf 0 g) >>',
     '<< /Type /Annot /Subtype /Widget /FT /Btn /T (consent) '
         '/V /Off /AS /Off /Rect [10 260 30 280] /P 3 0 R /F 4 '
@@ -48,6 +49,8 @@ Uint8List buildPdfOperationsFixture({int pageWidth = 300}) {
   for (final offset in offsets.skip(1)) {
     output.writeln('${offset.toString().padLeft(10, '0')} 00000 n ');
   }
-  output.write('trailer\n<< /Size ${objects.length + 1} /Root 1 0 R >>\nstartxref\n$xref\n%%EOF\n');
+  output.write(
+    'trailer\n<< /Size ${objects.length + 1} /Root 1 0 R >>\nstartxref\n$xref\n%%EOF\n',
+  );
   return Uint8List.fromList(latin1.encode(output.toString()));
 }

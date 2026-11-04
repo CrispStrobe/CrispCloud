@@ -32,11 +32,11 @@ CommandRunner<int> buildRunner({String? configPath}) {
 
   // Top-level flags
   runner.argParser.addFlag(
-      'version',
-      abbr: 'V',
-      negatable: false,
-      help: 'Print the crisp version.',
-    );
+    'version',
+    abbr: 'V',
+    negatable: false,
+    help: 'Print the crisp version.',
+  );
 
   // Register commands
   runner

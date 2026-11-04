@@ -2,7 +2,7 @@ import 'dart:math' as math;
 import 'dart:typed_data';
 
 import 'package:pdf_cos/pdf_cos.dart';
-import 'package:pdf_document/pdf_document.dart';
+import 'package:pdf_document/pdf_document.dart' hide PdfPageRange;
 import 'package:pdf_graphics/pdf_graphics.dart';
 
 import 'models.dart';
@@ -53,6 +53,7 @@ class PdfOperationsService {
             password: field.isPassword,
             multiSelect: field.isMultiSelect,
             editableChoice: _editableChoice(field),
+            multiline: field.isMultiline,
             maxLength: field.maxLength,
             options: [
               for (final option in field.options)
@@ -62,7 +63,8 @@ class PdfOperationsService {
             pageIndices: {
               for (var i = 0; i < field.widgets.length; i++)
                 if (field.widgetPageIndex(i) >= 0) field.widgetPageIndex(i),
-            }.toList()..sort(),
+            }.toList()
+              ..sort(),
             values: field.isPassword ? const [] : field.values,
           ),
       ],
@@ -80,12 +82,15 @@ class PdfOperationsService {
     if (inputs.isEmpty) {
       throw PdfOperationException('invalidInputs', 'Select at least one PDF.');
     }
-    final total = inputs.fold<int>(0, (n, source) => n + source.input.bytes.length);
+    final total =
+        inputs.fold<int>(0, (n, source) => n + source.input.bytes.length);
     if (total > maxTotalInputBytes) {
       throw PdfOperationException('totalInputLimit',
           'The combined PDF inputs exceed the configured memory limit.');
     }
-    final documents = [for (final source in inputs) _open(source.input, edit: true)];
+    final documents = [
+      for (final source in inputs) _open(source.input, edit: true)
+    ];
     final selections = [
       for (var i = 0; i < inputs.length; i++)
         PdfPageRange.parse(inputs[i].pages, documents[i].pageCount),
@@ -107,8 +112,10 @@ class PdfOperationsService {
         'The first PDF supplies document metadata. Later attachments and '
             'document JavaScript are not merged; colliding form field names '
             'and named destinations are renamed.',
-      if (selections.asMap().entries.any(
-          (entry) => entry.value.length != documents[entry.key].pageCount))
+      if (selections
+          .asMap()
+          .entries
+          .any((entry) => entry.value.length != documents[entry.key].pageCount))
         'Links or bookmarks targeting pages outside the selection may be removed.',
     ];
     final PdfDocument base;
@@ -206,14 +213,15 @@ class PdfOperationsService {
       bool regex = false,
       bool wholeWord = false}) {
     if (query.isEmpty || query.length > 4096) {
-      throw PdfOperationException(
-          'invalidSearch', 'Search text must contain between 1 and 4096 characters.');
+      throw PdfOperationException('invalidSearch',
+          'Search text must contain between 1 and 4096 characters.');
     }
     if (regex) {
       try {
         RegExp(query, caseSensitive: caseSensitive, multiLine: true);
       } on FormatException {
-        throw PdfOperationException('invalidSearch', 'Invalid regular expression.');
+        throw PdfOperationException(
+            'invalidSearch', 'Invalid regular expression.');
       }
     }
     final document = _open(input);
@@ -257,7 +265,8 @@ class PdfOperationsService {
           'This PDF has no named AcroForm fields. Positioned text is a separate operation.');
     }
     if (values.isEmpty) {
-      throw PdfOperationException('invalidForm', 'Provide at least one field value.');
+      throw PdfOperationException(
+          'invalidForm', 'Provide at least one field value.');
     }
     final byName = <String, List<PdfFormField>>{};
     for (final field in form.fields) {
@@ -277,7 +286,8 @@ class PdfOperationsService {
       }
       final field = candidates.single;
       try {
-        normalized[entry.key] = _validateField(field, entry.value, appearanceFont);
+        normalized[entry.key] =
+            _validateField(field, entry.value, appearanceFont);
       } on PdfOperationException catch (error) {
         errors[entry.key] = error.message;
       }
@@ -357,7 +367,8 @@ class PdfOperationsService {
         _watermarkPlacement(document.page(index), index, watermark, image),
     ];
     final warnings = _sourceWarnings(document);
-    if (_needsComplexShaping(watermark.text ?? '')) warnings.add(_shapingWarning);
+    if (_needsComplexShaping(watermark.text ?? ''))
+      warnings.add(_shapingWarning);
     final editor = PdfEditor(document);
     final names = _annotationNames(document);
     for (final placement in placements) {
@@ -380,8 +391,8 @@ class PdfOperationsService {
           name: name,
         );
       }
-      _finishMark(editor, placement.pageIndex, name,
-          watermark.angleDegrees, watermark.flatten);
+      _finishMark(editor, placement.pageIndex, name, watermark.angleDegrees,
+          watermark.flatten);
     }
     return _finish(editor, warnings);
   }
@@ -421,7 +432,8 @@ class PdfOperationsService {
     }
     final warnings = [
       ..._sourceWarnings(document),
-      if (clipped) 'Part of the rotated image lies outside the visible page and is clipped.',
+      if (clipped)
+        'Part of the rotated image lies outside the visible page and is clipped.',
     ];
     final editor = PdfEditor(document);
     final names = _annotationNames(document);
@@ -429,8 +441,8 @@ class PdfOperationsService {
       final name = _nextAnnotationName(names, 'image');
       editor.addImageStamp(entry.key, entry.value, image,
           opacity: placement.opacity, name: name);
-      _finishMark(editor, entry.key, name,
-          placement.angleDegrees, placement.flatten);
+      _finishMark(
+          editor, entry.key, name, placement.angleDegrees, placement.flatten);
     }
     return _finish(editor, warnings);
   }
@@ -442,39 +454,53 @@ class PdfOperationsService {
       bool skipExistingText = true,
       double minConfidence = 0}) {
     if (!minConfidence.isFinite || minConfidence < 0 || minConfidence > 1) {
-      throw PdfOperationException('invalidOcr', 'Minimum confidence must be between 0 and 1.');
+      throw PdfOperationException(
+          'invalidOcr', 'Minimum confidence must be between 0 and 1.');
     }
     if (pages.isEmpty) {
-      throw PdfOperationException('invalidOcr', 'Provide recognition for at least one page.');
+      throw PdfOperationException(
+          'invalidOcr', 'Provide recognition for at least one page.');
     }
     final document = _open(input, edit: true);
     final seen = <int>{};
     for (final page in pages) {
-      if (page.pageIndex < 0 || page.pageIndex >= document.pageCount ||
+      if (page.pageIndex < 0 ||
+          page.pageIndex >= document.pageCount ||
           !seen.add(page.pageIndex)) {
-        throw PdfOperationException('invalidOcr', 'OCR page indices must be unique and in the document.');
+        throw PdfOperationException('invalidOcr',
+            'OCR page indices must be unique and in the document.');
       }
       for (final span in page.spans) {
-        if (!span.confidence.isFinite || span.confidence < 0 || span.confidence > 1 ||
+        if (!span.confidence.isFinite ||
+            span.confidence < 0 ||
+            span.confidence > 1 ||
             !rectToJson(span.bounds).every((number) => number.isFinite) ||
-            span.bounds.width <= 0 || span.bounds.height <= 0) {
-          throw PdfOperationException('invalidOcr', 'OCR spans require finite positive bounds and confidence 0–1.');
+            span.bounds.width <= 0 ||
+            span.bounds.height <= 0) {
+          throw PdfOperationException('invalidOcr',
+              'OCR spans require finite positive bounds and confidence 0–1.');
         }
-        if (span.confidence >= minConfidence) _checkAuthoredText(span.text, font);
+        if (span.confidence >= minConfidence)
+          _checkAuthoredText(span.text, font);
       }
     }
     final warnings = _sourceWarnings(document);
     final editor = PdfEditor(document);
     for (final page in pages) {
       if (skipExistingText &&
-          PdfTextExtractor.extract(document, page.pageIndex).text.trim().isNotEmpty) {
-        warnings.add('Page ${page.pageIndex + 1} already has text; OCR was skipped.');
+          PdfTextExtractor.extract(document, page.pageIndex)
+              .text
+              .trim()
+              .isNotEmpty) {
+        warnings.add(
+            'Page ${page.pageIndex + 1} already has text; OCR was skipped.');
         continue;
       }
       editor.injectTextLayer(page.pageIndex, page.spans,
           embeddedFont: font, minConfidence: minConfidence);
     }
-    warnings.add('The searchable text reflects the supplied recognition. Review OCR accuracy before relying on it.');
+    warnings.add(
+        'The searchable text reflects the supplied recognition. Review OCR accuracy before relying on it.');
     return _finish(editor, warnings);
   }
 
@@ -489,15 +515,20 @@ class PdfOperationsService {
     final indices = PdfPageRange.parse(pages, document.pageCount);
     final recognized = await backend.recognize(input, indices);
     if (recognized.any((page) => !indices.contains(page.pageIndex))) {
-      throw PdfOperationException('invalidOcr', 'The OCR backend returned an unrequested page.');
+      throw PdfOperationException(
+          'invalidOcr', 'The OCR backend returned an unrequested page.');
     }
-    return applyOcr(input, pages: recognized, font: font,
-        skipExistingText: skipExistingText, minConfidence: minConfidence);
+    return applyOcr(input,
+        pages: recognized,
+        font: font,
+        skipExistingText: skipExistingText,
+        minConfidence: minConfidence);
   }
 
   PdfDocument _open(PdfInput input, {bool edit = false}) {
     if (input.bytes.isEmpty || input.bytes.length > maxInputBytes) {
-      throw PdfOperationException('inputLimit', 'The PDF is empty or exceeds the configured input limit.');
+      throw PdfOperationException('inputLimit',
+          'The PDF is empty or exceeds the configured input limit.');
     }
     final PdfDocument document;
     try {
@@ -505,11 +536,15 @@ class PdfOperationsService {
     } on CosPasswordException {
       throw PdfOperationException(
           input.password.isEmpty ? 'passwordRequired' : 'invalidPassword',
-          input.password.isEmpty ? 'This PDF requires a password.' : 'The PDF password is incorrect.');
+          input.password.isEmpty
+              ? 'This PDF requires a password.'
+              : 'The PDF password is incorrect.');
     } on CosParseException {
-      throw PdfOperationException('invalidPdf', 'The file could not be read as a PDF.');
+      throw PdfOperationException(
+          'invalidPdf', 'The file could not be read as a PDF.');
     } on UnsupportedEncryptionException {
-      throw PdfOperationException('unsupportedEncryption', 'This PDF uses an unsupported encryption method.');
+      throw PdfOperationException('unsupportedEncryption',
+          'This PDF uses an unsupported encryption method.');
     }
     _checkPageCount(document.pageCount);
     if (edit && _hasXfa(document)) {
@@ -526,23 +561,27 @@ class PdfOperationsService {
 
   void _checkPageCount(int count) {
     if (count < 1 || count > maxPageCount) {
-      throw PdfOperationException('pageLimit', 'The PDF must contain between 1 and $maxPageCount pages.');
+      throw PdfOperationException('pageLimit',
+          'The PDF must contain between 1 and $maxPageCount pages.');
     }
   }
 
   void _checkOutputLength(int bytes) {
     if (bytes > maxOutputBytes) {
-      throw PdfOperationException('outputLimit', 'The PDF result exceeds the configured output limit.');
+      throw PdfOperationException(
+          'outputLimit', 'The PDF result exceeds the configured output limit.');
     }
   }
 
   void _checkTextLength(int length) {
     if (length > maxTextCharacters) {
-      throw PdfOperationException('textLimit', 'The extracted text exceeds the configured limit. Select fewer pages.');
+      throw PdfOperationException('textLimit',
+          'The extracted text exceeds the configured limit. Select fewer pages.');
     }
   }
 
-  Never _requireDecryption() => throw PdfOperationException('decryptionRequired',
+  Never _requireDecryption() => throw PdfOperationException(
+      'decryptionRequired',
       'This operation would create an unencrypted PDF. Explicitly allow unencrypted output to continue.');
 
   List<String> _sourceWarnings(PdfDocument document) => [
@@ -559,16 +598,21 @@ class PdfOperationsService {
       'supported layout. Verify the visible text in the output.';
 
   PdfOperationResult _finish(PdfEditor editor, List<String> warnings,
-      {List<String> filledFields = const []}) =>
+          {List<String> filledFields = const []}) =>
       _result(editor.hasChanges ? editor.save() : editor.document.cos.bytes,
-          editor.document.pageCount, warnings, filledFields: filledFields);
+          editor.document.pageCount, warnings,
+          filledFields: filledFields);
 
-  PdfOperationResult _result(Uint8List bytes, int pageCount, List<String> warnings,
+  PdfOperationResult _result(
+      Uint8List bytes, int pageCount, List<String> warnings,
       {List<String> filledFields = const []}) {
     _checkOutputLength(bytes.length);
     _checkPageCount(pageCount);
-    return PdfOperationResult(bytes: bytes, pageCount: pageCount,
-        warnings: warnings.toSet().toList(), filledFields: filledFields);
+    return PdfOperationResult(
+        bytes: bytes,
+        pageCount: pageCount,
+        warnings: warnings.toSet().toList(),
+        filledFields: filledFields);
   }
 
   bool _isNaturalOrder(List<int> pages) {
@@ -580,38 +624,55 @@ class PdfOperationsService {
 
   PdfPageDescription _describePage(PdfPage page, int index) {
     final geometry = _geometry(page);
-    return PdfPageDescription(pageIndex: index, width: geometry.width,
-        height: geometry.height, rotation: page.rotation, cropBox: page.cropBox);
+    return PdfPageDescription(
+        pageIndex: index,
+        width: geometry.width,
+        height: geometry.height,
+        rotation: page.rotation,
+        cropBox: page.cropBox);
   }
 
   ({double width, double height}) _geometry(PdfPage page) {
     final box = page.cropBox;
     if (!rectToJson(box).every((number) => number.isFinite) ||
-        box.width <= 0 || box.height <= 0) {
-      throw PdfOperationException('invalidGeometry', 'The PDF contains an invalid page crop box.');
+        box.width <= 0 ||
+        box.height <= 0) {
+      throw PdfOperationException(
+          'invalidGeometry', 'The PDF contains an invalid page crop box.');
     }
     final sideways = page.rotation == 90 || page.rotation == 270;
-    return (width: sideways ? box.height : box.width,
-        height: sideways ? box.width : box.height);
+    return (
+      width: sideways ? box.height : box.width,
+      height: sideways ? box.width : box.height
+    );
   }
 
-  bool _editableChoice(PdfFormField field) => field.type == PdfFieldType.comboBox &&
+  bool _editableChoice(PdfFormField field) =>
+      field.type == PdfFieldType.comboBox &&
       field.flags & PdfFormField.editFlag != 0;
 
-  Object _validateField(PdfFormField field, Object? value, PdfEmbeddedFont? font) {
-    Never fail(String message) => throw PdfOperationException('invalidForm', message);
+  Object _validateField(
+      PdfFormField field, Object? value, PdfEmbeddedFont? font) {
+    Never fail(String message) =>
+        throw PdfOperationException('invalidForm', message);
     if (field.isReadOnly) fail('The field is read-only.');
-    if (field.isPassword) fail('Password field values are not written by batch filling.');
-    if (field.scripts.hasUnsupported) fail('The field uses an unsupported form script.');
-    if (field.scripts.calculate != null) fail('The field is calculated; fill its source fields instead.');
+    if (field.isPassword)
+      fail('Password field values are not written by batch filling.');
+    if (field.scripts.hasUnsupported)
+      fail('The field uses an unsupported form script.');
+    if (field.scripts.calculate != null)
+      fail('The field is calculated; fill its source fields instead.');
     switch (field.type) {
       case PdfFieldType.text:
         if (value is! String) fail('A text field requires a string.');
         final check = field.checkInput(value);
-        if (!check.isValid) fail('The field’s validation rule rejected this value.');
+        if (!check.isValid)
+          fail('The field’s validation rule rejected this value.');
         final normalized = check.value;
-        if (field.isRequired && normalized.trim().isEmpty) fail('The field is required.');
-        if (field.maxLength != null && normalized.runes.length > field.maxLength!) {
+        if (field.isRequired && normalized.trim().isEmpty)
+          fail('The field is required.');
+        if (field.maxLength != null &&
+            normalized.runes.length > field.maxLength!) {
           fail('The value exceeds the field’s maximum length.');
         }
         if (!field.isMultiline && normalized.contains(RegExp(r'[\r\n]'))) {
@@ -621,13 +682,17 @@ class PdfOperationsService {
         return normalized;
       case PdfFieldType.checkBox:
         if (value is! bool) fail('A checkbox requires true or false.');
-        if (field.isRequired && !value) fail('This required checkbox must be checked.');
+        if (field.isRequired && !value)
+          fail('This required checkbox must be checked.');
         return value;
       case PdfFieldType.radioGroup:
-        if (value is! String || (value != 'Off' && !field.onStates.contains(value))) {
+        if (value is! String ||
+            (value != 'Off' && !field.onStates.contains(value))) {
           fail('Use one of the radio field’s on-state names, or Off.');
         }
-        if (value == 'Off' && (field.isRequired || field.flags & PdfFormField.noToggleToOffFlag != 0)) {
+        if (value == 'Off' &&
+            (field.isRequired ||
+                field.flags & PdfFormField.noToggleToOffFlag != 0)) {
           fail('This radio group cannot be cleared.');
         }
         return value;
@@ -642,18 +707,23 @@ class PdfOperationsService {
           if (value is! String) fail('This choice field requires a string.');
           requested = [value];
         }
-        if (field.isRequired && (requested.isEmpty || requested.every((item) => item.isEmpty))) {
+        if (field.isRequired &&
+            (requested.isEmpty || requested.every((item) => item.isEmpty))) {
           fail('The field is required.');
         }
         final labels = <String>[];
         final normalized = <String>[];
         for (final item in requested) {
-          final options = field.options.where((option) => option.$1 == item || option.$2 == item).toList();
+          final options = field.options
+              .where((option) => option.$1 == item || option.$2 == item)
+              .toList();
           if (options.isEmpty) {
-            if (!_editableChoice(field)) fail('A choice value is not one of the field’s options.');
+            if (!_editableChoice(field))
+              fail('A choice value is not one of the field’s options.');
             labels.add(item);
             normalized.add(item);
-          } else if (options.length > 1 && options.map((option) => option.$1).toSet().length > 1) {
+          } else if (options.length > 1 &&
+              options.map((option) => option.$1).toSet().length > 1) {
             fail('A choice label is ambiguous; use its export value.');
           } else {
             labels.add(options.first.$2);
@@ -666,7 +736,9 @@ class PdfOperationsService {
             ? field.options.map((option) => option.$2).join('\n')
             : labels.join('\n');
         _checkFieldAppearance(field, displayed, font);
-        return field.isMultiSelect ? normalized.toSet().toList() : normalized.single;
+        return field.isMultiSelect
+            ? normalized.toSet().toList()
+            : normalized.single;
       default:
         fail('This field type cannot be filled from a value map.');
     }
@@ -689,8 +761,10 @@ class PdfOperationsService {
     final fonts = cos.resolve(resources['Font']);
     if (fonts is! CosDictionary) return (name: name, dictionary: null);
     final dictionary = cos.resolve(fonts[name]);
-    return (name: name,
-        dictionary: dictionary is CosDictionary ? dictionary : null);
+    return (
+      name: name,
+      dictionary: dictionary is CosDictionary ? dictionary : null
+    );
   }
 
   void _checkFieldAppearance(PdfFormField field, String text,
@@ -702,7 +776,8 @@ class PdfOperationsService {
     final resource = _fieldFont(field);
     final dictionary = resource.dictionary;
     final cos = field.form.document.cos;
-    final embedded = dictionary == null ? null
+    final embedded = dictionary == null
+        ? null
         : PdfEmbeddedFont.fromFontDict(cos, dictionary, resource.name);
     _checkAuthoredText(text, embedded);
     if (embedded != null || dictionary == null) return;
@@ -718,26 +793,32 @@ class PdfOperationsService {
         cos.resolve(dictionary['Subtype']) != const CosName('Type1') ||
         encoding != const CosName('WinAnsiEncoding') ||
         dictionary.containsKey('ToUnicode')) {
-      throw PdfOperationException('unsupportedText',
+      throw PdfOperationException(
+          'unsupportedText',
           'The field uses a font encoding that cannot be safely regenerated. '
-          'Provide a covering TTF or OTF appearance font.');
+              'Provide a covering TTF or OTF appearance font.');
     }
   }
 
   void _checkAuthoredText(String text, PdfEmbeddedFont? font) {
     if (text.length > 100000) {
-      throw PdfOperationException('textLimit', 'An authored text value is too long.');
+      throw PdfOperationException(
+          'textLimit', 'An authored text value is too long.');
     }
     final printable = text.replaceAll(RegExp(r'[\r\n\t]'), ' ');
-    if (printable.runes.any((rune) => rune < 32 || (rune >= 127 && rune < 160))) {
-      throw PdfOperationException('unsupportedText', 'Text contains unsupported control characters.');
+    if (printable.runes
+        .any((rune) => rune < 32 || (rune >= 127 && rune < 160))) {
+      throw PdfOperationException(
+          'unsupportedText', 'Text contains unsupported control characters.');
     }
     if (font != null) {
       if (!font.canRender(printable)) {
-        throw PdfOperationException('unsupportedText', 'The selected font does not contain every required glyph. Choose a covering TTF or OTF font.');
+        throw PdfOperationException('unsupportedText',
+            'The selected font does not contain every required glyph. Choose a covering TTF or OTF font.');
       }
     } else if (printable.runes.any((rune) => rune > 255)) {
-      throw PdfOperationException('unsupportedText', 'This text requires an embedded TTF or OTF font.');
+      throw PdfOperationException(
+          'unsupportedText', 'This text requires an embedded TTF or OTF font.');
     }
   }
 
@@ -750,43 +831,64 @@ class PdfOperationsService {
   void _validateWatermark(PdfWatermarkOptions options) {
     if ((options.text == null) == (options.imageBytes == null) ||
         options.text?.trim().isEmpty == true) {
-      throw PdfOperationException('invalidWatermark', 'Choose either non-empty watermark text or one PNG/JPEG image.');
+      throw PdfOperationException('invalidWatermark',
+          'Choose either non-empty watermark text or one PNG/JPEG image.');
     }
-    if (!options.fontSize.isFinite || options.fontSize <= 0 || options.fontSize > 1000 ||
-        !options.widthFraction.isFinite || options.widthFraction <= 0 || options.widthFraction > 1 ||
-        !options.margin.isFinite || options.margin < 0 ||
-        options.color < 0 || options.color > 0xffffff) {
-      throw PdfOperationException('invalidWatermark', 'Invalid watermark size, color, width, or margin.');
+    if (!options.fontSize.isFinite ||
+        options.fontSize <= 0 ||
+        options.fontSize > 1000 ||
+        !options.widthFraction.isFinite ||
+        options.widthFraction <= 0 ||
+        options.widthFraction > 1 ||
+        !options.margin.isFinite ||
+        options.margin < 0 ||
+        options.color < 0 ||
+        options.color > 0xffffff) {
+      throw PdfOperationException('invalidWatermark',
+          'Invalid watermark size, color, width, or margin.');
     }
     _checkAppearanceNumbers(options.opacity, options.angleDegrees);
   }
 
   void _validateImagePlacement(PdfImagePlacement placement) {
-    if (![placement.x, placement.y, placement.width, if (placement.height != null) placement.height!]
-        .every((number) => number.isFinite) || placement.x < 0 || placement.y < 0 ||
-        placement.x >= 1 || placement.y >= 1 || placement.width <= 0 ||
+    if (![
+          placement.x,
+          placement.y,
+          placement.width,
+          if (placement.height != null) placement.height!
+        ].every((number) => number.isFinite) ||
+        placement.x < 0 ||
+        placement.y < 0 ||
+        placement.x >= 1 ||
+        placement.y >= 1 ||
+        placement.width <= 0 ||
         placement.x + placement.width > 1 ||
-        (placement.height != null && (placement.height! <= 0 || placement.y + placement.height! > 1))) {
-      throw PdfOperationException('invalidPlacement', 'Image coordinates are fractions of the visible page; the box must fit inside it.');
+        (placement.height != null &&
+            (placement.height! <= 0 || placement.y + placement.height! > 1))) {
+      throw PdfOperationException('invalidPlacement',
+          'Image coordinates are fractions of the visible page; the box must fit inside it.');
     }
     _checkAppearanceNumbers(placement.opacity, placement.angleDegrees);
   }
 
   void _checkAppearanceNumbers(double opacity, double angle) {
     if (!opacity.isFinite || opacity <= 0 || opacity > 1 || !angle.isFinite) {
-      throw PdfOperationException('invalidAppearance', 'Opacity must be greater than 0 and at most 1; rotation must be finite.');
+      throw PdfOperationException('invalidAppearance',
+          'Opacity must be greater than 0 and at most 1; rotation must be finite.');
     }
   }
 
   PdfEmbeddableImage _decodeImage(Uint8List bytes) {
     if (bytes.isEmpty || bytes.length > maxInputBytes) {
-      throw PdfOperationException('inputLimit', 'The image is empty or exceeds the configured input limit.');
+      throw PdfOperationException('inputLimit',
+          'The image is empty or exceeds the configured input limit.');
     }
     try {
       final int width;
       final int height;
       const png = [137, 80, 78, 71, 13, 10, 26, 10];
-      if (bytes.length >= 24 && List.generate(8, (i) => bytes[i] == png[i]).every((match) => match)) {
+      if (bytes.length >= 24 &&
+          List.generate(8, (i) => bytes[i] == png[i]).every((match) => match)) {
         final data = ByteData.sublistView(bytes);
         width = data.getUint32(16);
         height = data.getUint32(20);
@@ -796,13 +898,15 @@ class PdfOperationsService {
         height = info.height;
       }
       if (width <= 0 || height <= 0 || width * height > maxImagePixels) {
-        throw PdfOperationException('imageLimit', 'The image dimensions exceed the configured pixel limit.');
+        throw PdfOperationException('imageLimit',
+            'The image dimensions exceed the configured pixel limit.');
       }
       return PdfEmbeddableImage.decode(bytes);
     } on PdfOperationException {
       rethrow;
     } on Object {
-      throw PdfOperationException('invalidImage', 'The image could not be decoded as a supported PNG or JPEG.');
+      throw PdfOperationException('invalidImage',
+          'The image could not be decoded as a supported PNG or JPEG.');
     }
   }
 
@@ -812,9 +916,11 @@ class PdfOperationsService {
     final availableWidth = geometry.width - 2 * options.margin;
     final availableHeight = geometry.height - 2 * options.margin;
     if (availableWidth <= 6 || availableHeight <= 6) {
-      throw PdfOperationException('invalidWatermark', 'The watermark margin leaves no usable space on page ${index + 1}.');
+      throw PdfOperationException('invalidWatermark',
+          'The watermark margin leaves no usable space on page ${index + 1}.');
     }
-    var width = math.min(geometry.width * options.widthFraction, availableWidth);
+    var width =
+        math.min(geometry.width * options.widthFraction, availableWidth);
     if (width <= 6) {
       throw PdfOperationException('invalidWatermark',
           'The watermark is too narrow on page ${index + 1}. Increase its width.');
@@ -826,16 +932,26 @@ class PdfOperationsService {
     if (image != null) {
       height = width * image.height / image.width;
     } else {
-      final lines = options.text!.replaceAll('\r\n', '\n').replaceAll('\r', '\n').split('\n');
+      final lines = options.text!
+          .replaceAll('\r\n', '\n')
+          .replaceAll('\r', '\n')
+          .split('\n');
       final font = options.font ?? PdfStandardFont.helvetica;
       lineCount = lines.length;
-      unitTextWidth = lines.map((line) => font.measure(line, 1)).fold<double>(0, math.max);
-      final measured = lines.map((line) => font.measure(line, fontSize)).fold<double>(0, math.max);
+      unitTextWidth =
+          lines.map((line) => font.measure(line, 1)).fold<double>(0, math.max);
+      final measured = lines
+          .map((line) => font.measure(line, fontSize))
+          .fold<double>(0, math.max);
       if (measured > width - 6) fontSize *= (width - 6) / measured;
       height = lines.length * fontSize * 1.25 + 6;
     }
-    final (rotatedWidth, rotatedHeight) = _rotatedSize(width, height, options.angleDegrees);
-    final scale = math.min(1.0, math.min(availableWidth / rotatedWidth, availableHeight / rotatedHeight));
+    final (rotatedWidth, rotatedHeight) =
+        _rotatedSize(width, height, options.angleDegrees);
+    final scale = math.min(
+        1.0,
+        math.min(
+            availableWidth / rotatedWidth, availableHeight / rotatedHeight));
     width *= scale;
     height *= scale;
     fontSize *= scale;
@@ -848,7 +964,8 @@ class PdfOperationsService {
             'The watermark text does not fit page ${index + 1}.');
       }
       fontSize = math.min(fontSize, (height - 6) / (lineCount * 1.25));
-      if (unitTextWidth > 0) fontSize = math.min(fontSize, (width - 6) / unitTextWidth);
+      if (unitTextWidth > 0)
+        fontSize = math.min(fontSize, (width - 6) / unitTextWidth);
       if (fontSize < .5) {
         throw PdfOperationException('invalidWatermark',
             'The watermark would be too small to read on page ${index + 1}.');
@@ -868,8 +985,11 @@ class PdfOperationsService {
       2 => geometry.height - options.margin - boundingHeight / 2,
       _ => geometry.height / 2,
     };
-    return _MarkPlacement(index,
-        _visualRect(page, centerX - width / 2, centerY - height / 2, width, height), fontSize);
+    return _MarkPlacement(
+        index,
+        _visualRect(
+            page, centerX - width / 2, centerY - height / 2, width, height),
+        fontSize);
   }
 
   (double, double) _rotatedSize(double width, double height, double degrees) {
@@ -880,7 +1000,8 @@ class PdfOperationsService {
   }
 
   /// Mirrors the viewer's crop/rotation map, without importing dart:ui.
-  PdfRect _visualRect(PdfPage page, double x, double y, double width, double height) {
+  PdfRect _visualRect(
+      PdfPage page, double x, double y, double width, double height) {
     final crop = page.cropBox;
     (double, double) point(double vx, double vy) {
       final (ux, uy) = switch (page.rotation) {
@@ -891,6 +1012,7 @@ class PdfOperationsService {
       };
       return (crop.left + ux, crop.top - uy);
     }
+
     final a = point(x, y);
     final b = point(x + width, y + height);
     return PdfRect.normalized(a.$1, a.$2, b.$1, b.$2);
@@ -904,13 +1026,20 @@ class PdfOperationsService {
 
   String _nextAnnotationName(Set<String> used, String kind) {
     var i = used.length;
-    while (!used.add('crisp-pdf-$kind-$i')) { i++; }
+    while (!used.add('crisp-pdf-$kind-$i')) {
+      i++;
+    }
     return 'crisp-pdf-$kind-$i';
   }
 
-  void _finishMark(PdfEditor editor, int index, String name, double angle, bool flatten) {
-    final annotation = editor.document.page(index).annotations.singleWhere((item) => item.name == name);
-    if (angle % 360 != 0) editor.rotateAnnotation(index, annotation, -(angle % 360));
+  void _finishMark(
+      PdfEditor editor, int index, String name, double angle, bool flatten) {
+    final annotation = editor.document
+        .page(index)
+        .annotations
+        .singleWhere((item) => item.name == name);
+    if (angle % 360 != 0)
+      editor.rotateAnnotation(index, annotation, -(angle % 360));
     if (flatten) {
       // Re-read after rotation: PdfAnnotation caches its /Rect at construction.
       final updated = PdfAnnotation.fromDict(editor.document, annotation.dict);

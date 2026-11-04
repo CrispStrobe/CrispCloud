@@ -31,8 +31,9 @@ Future<Uint8List> readBoundedResponseBytes(
     throw CliDownloadLimitException(maxBytes);
   }
   final builder = BytesBuilder(copy: false);
-  await for (final chunk
-      in response.stream.timeout(const Duration(seconds: 60))) {
+  await for (final chunk in response.stream.timeout(
+    const Duration(seconds: 60),
+  )) {
     if (builder.length + chunk.length > maxBytes) {
       throw CliDownloadLimitException(maxBytes);
     }

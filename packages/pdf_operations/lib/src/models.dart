@@ -4,8 +4,7 @@ import 'package:pdf_document/pdf_document.dart';
 
 /// An owned, immutable PDF snapshot. Passwords are never included in metadata.
 class PdfInput {
-  PdfInput(Uint8List bytes,
-      {this.name = 'document.pdf', this.password = ''})
+  PdfInput(Uint8List bytes, {this.name = 'document.pdf', this.password = ''})
       : bytes = Uint8List.fromList(bytes).asUnmodifiableView();
 
   final Uint8List bytes;
@@ -143,6 +142,7 @@ class PdfFormFieldDescription {
     required this.password,
     required this.multiSelect,
     required this.editableChoice,
+    this.multiline = false,
     required List<PdfFormOption> options,
     required List<String> onStates,
     required List<int> pageIndices,
@@ -160,6 +160,7 @@ class PdfFormFieldDescription {
   final bool password;
   final bool multiSelect;
   final bool editableChoice;
+  final bool multiline;
   final int? maxLength;
   final List<PdfFormOption> options;
   final List<String> onStates;
@@ -176,6 +177,7 @@ class PdfFormFieldDescription {
         'password': password,
         'multiSelect': multiSelect,
         'editableChoice': editableChoice,
+        'multiline': multiline,
         if (maxLength != null) 'maxLength': maxLength,
         'options': [for (final option in options) option.toJson()],
         'onStates': onStates,
@@ -329,8 +331,8 @@ class PdfOcrPage {
             'OCR spans require text, four finite bounds, and confidence 0–1.');
       }
       final coordinates = [for (final value in box) (value as num).toDouble()];
-      final bounds = PdfRect(coordinates[0], coordinates[1],
-          coordinates[2], coordinates[3]);
+      final bounds = PdfRect(
+          coordinates[0], coordinates[1], coordinates[2], coordinates[3]);
       if (bounds.width <= 0 || bounds.height <= 0) {
         throw PdfOperationException('invalidOcr',
             'OCR span bounds must have positive width and height.');
@@ -359,8 +361,7 @@ class PdfOcrPage {
 /// Recognition coordinates must refer to the supplied document's PDF space.
 /// No model, network request, or image renderer is included in this package.
 abstract interface class PdfRecognitionBackend {
-  Future<List<PdfOcrPage>> recognize(
-      PdfInput input, List<int> pageIndices);
+  Future<List<PdfOcrPage>> recognize(PdfInput input, List<int> pageIndices);
 }
 
 List<double> rectToJson(PdfRect rect) =>

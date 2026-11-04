@@ -16,8 +16,8 @@ class PdfPageRange {
       return List<int>.unmodifiable(List.generate(pageCount, (i) => i));
     }
     if (text.isEmpty || text.length > 16384) {
-      throw PdfOperationException('invalidPages',
-          'Enter page numbers, ranges such as 1-3,7, or all.');
+      throw PdfOperationException(
+          'invalidPages', 'Enter page numbers, ranges such as 1-3,7, or all.');
     }
     final pages = <int>[];
     final seen = <int>{};
@@ -42,8 +42,12 @@ class PdfPageRange {
       }
       final first = int.tryParse(match.group(1)!);
       final last = int.tryParse(match.group(2) ?? match.group(1)!);
-      if (first == null || last == null ||
-          first < 1 || last < 1 || first > pageCount || last > pageCount) {
+      if (first == null ||
+          last == null ||
+          first < 1 ||
+          last < 1 ||
+          first > pageCount ||
+          last > pageCount) {
         throw PdfOperationException('invalidPages',
             'Every selected page must be between 1 and $pageCount.');
       }

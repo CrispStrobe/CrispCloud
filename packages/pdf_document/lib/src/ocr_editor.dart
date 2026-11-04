@@ -93,8 +93,10 @@ extension PdfOcrEditing on PdfEditor {
     final texts = <String>[];
     for (final span in accepted) {
       final box = span.bounds;
-      if (!span.confidence.isFinite || span.confidence > 1 ||
-          ![box.left, box.bottom, box.right, box.top].every((n) => n.isFinite)) {
+      if (!span.confidence.isFinite ||
+          span.confidence > 1 ||
+          ![box.left, box.bottom, box.right, box.top]
+              .every((n) => n.isFinite)) {
         throw ArgumentError('OCR spans require finite bounds and confidence');
       }
       final text = span.text.replaceAll(RegExp(r'[\r\n\t]'), ' ');
@@ -113,9 +115,8 @@ extension PdfOcrEditing on PdfEditor {
 
     embeddedFont?.resetUsage();
     final fonts = embeddedFont == null ? null : _ocrFonts(page);
-    final fontName = fonts == null
-        ? _ensureOcrFont(page, font)
-        : _newOcrFontName(fonts);
+    final fontName =
+        fonts == null ? _ensureOcrFont(page, font) : _newOcrFontName(fonts);
     final rotation = page.rotation;
     final writer = ContentWriter()..save();
     for (var i = 0; i < accepted.length; i++) {
@@ -175,8 +176,8 @@ extension PdfOcrEditing on PdfEditor {
       // Build after encoding so /W and /ToUnicode include all spans. Give
       // every page/layer its own font resource; later usage must not replace
       // mappings used by an earlier layer.
-      final type0 = embeddedFont.buildResource(_updater.addObject)
-          .entries.values.single;
+      final type0 =
+          embeddedFont.buildResource(_updater.addObject).entries.values.single;
       fonts![fontName] = _updater.addObject(type0);
       _updater.markChanged(page.dict);
     }

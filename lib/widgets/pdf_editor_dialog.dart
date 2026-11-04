@@ -229,7 +229,10 @@ class _PdfEditorDialogState extends ConsumerState<PdfEditorDialog> {
     }
   }
 
-  Future<String?> _askPassword({required bool incorrect, String? fileName}) async {
+  Future<String?> _askPassword({
+    required bool incorrect,
+    String? fileName,
+  }) async {
     final text = TextEditingController();
     final route = DialogRoute<String>(
       context: context,
@@ -619,7 +622,9 @@ class _PdfEditorDialogState extends ConsumerState<PdfEditorDialog> {
         }
         totalBytes += bytes.length;
         if (totalBytes > 256 * 1024 * 1024) {
-          throw _PdfOpenMessage(context.pdfOpTr('Selected PDFs exceed the 256 MiB input limit.'));
+          throw _PdfOpenMessage(
+            context.pdfOpTr('Selected PDFs exceed the 256 MiB input limit.'),
+          );
         }
         PdfDocument? document;
         var password = '';
@@ -647,10 +652,13 @@ class _PdfEditorDialogState extends ConsumerState<PdfEditorDialog> {
       }
       if (importsProtectedPages && !_controller!.document.cos.isEncrypted) {
         if (!await _confirm(
-          context.pdfOpTr('Insert protected pages?'),
-          context.pdfOpTr('The inserted pages will use this document’s protection. This document has no password protection.'),
-          'Continue',
-        ) || !mounted) {
+              context.pdfOpTr('Insert protected pages?'),
+              context.pdfOpTr(
+                'The inserted pages will use this document’s protection. This document has no password protection.',
+              ),
+              'Continue',
+            ) ||
+            !mounted) {
           return const [];
         }
       }

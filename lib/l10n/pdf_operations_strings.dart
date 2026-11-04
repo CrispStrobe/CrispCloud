@@ -4,8 +4,8 @@ import 'package:flutter/widgets.dart';
 abstract final class PdfOperationsStrings {
   static String translate(BuildContext context, String english) =>
       Localizations.localeOf(context).languageCode == 'de'
-          ? _de[english] ?? english
-          : english;
+      ? _de[english] ?? english
+      : english;
 
   static const _de = <String, String>{
     'Edit PDF': 'PDF bearbeiten',
@@ -18,7 +18,8 @@ abstract final class PdfOperationsStrings {
     'Fill known form fields': 'Benannte Formularfelder ausfüllen',
     'Insert an image': 'Bild einfügen',
     'Import OCR text': 'OCR-Text importieren',
-    'Could not start PDF operation': 'PDF-Vorgang konnte nicht gestartet werden',
+    'Could not start PDF operation':
+        'PDF-Vorgang konnte nicht gestartet werden',
     'Password required': 'Passwort erforderlich',
     'Password': 'Passwort',
     'Incorrect password. Try again.': 'Falsches Passwort. Erneut versuchen.',
@@ -34,8 +35,10 @@ abstract final class PdfOperationsStrings {
     'Left (%)': 'Links (%)',
     'Top (%)': 'Oben (%)',
     'Choose a PNG or JPEG image.': 'Wählen Sie ein PNG- oder JPEG-Bild.',
-    'The selected file could not be read.': 'Die ausgewählte Datei konnte nicht gelesen werden.',
-    'Choose a new PDF file name without a folder path.': 'Wählen Sie einen neuen PDF-Dateinamen ohne Ordnerpfad.',
+    'The selected file could not be read.':
+        'Die ausgewählte Datei konnte nicht gelesen werden.',
+    'Choose a new PDF file name without a folder path.':
+        'Wählen Sie einen neuen PDF-Dateinamen ohne Ordnerpfad.',
     'Download started. Keep the downloaded file before closing.': 'Download gestartet. Bewahren Sie die heruntergeladene Datei vor dem Schließen auf.',
     'PDF copy saved.': 'PDF-Kopie gespeichert.',
     'Close after downloading?': 'Nach dem Herunterladen schließen?',
@@ -46,8 +49,10 @@ abstract final class PdfOperationsStrings {
     'Pages': 'Seiten',
     'pages': 'Seiten',
     'New page order': 'Neue Seitenreihenfolge',
-    'List every page once, for example 3,1,2 or 5-1.': 'Geben Sie jede Seite genau einmal an, zum Beispiel 3,1,2 oder 5-1.',
-    'Use all, 1-3,7, or a descending range such as 5-1.': 'Verwenden Sie all, 1-3,7 oder einen absteigenden Bereich wie 5-1.',
+    'List every page once, for example 3,1,2 or 5-1.':
+        'Geben Sie jede Seite genau einmal an, zum Beispiel 3,1,2 oder 5-1.',
+    'Use all, 1-3,7, or a descending range such as 5-1.':
+        'Verwenden Sie all, 1-3,7 oder einen absteigenden Bereich wie 5-1.',
     'PDFs are merged in the order below. Choose pages from each source.': 'PDFs werden in der folgenden Reihenfolge zusammengeführt. Wählen Sie die Seiten jeder Quelldatei.',
     'Move up': 'Nach oben',
     'Move down': 'Nach unten',
@@ -55,7 +60,8 @@ abstract final class PdfOperationsStrings {
     'Font': 'Schrift',
     'Choose TTF / OTF': 'TTF / OTF auswählen',
     'Opacity': 'Deckkraft',
-    'Bake the new marks into page content': 'Neue Markierungen in den Seiteninhalt einbetten',
+    'Bake the new marks into page content':
+        'Neue Markierungen in den Seiteninhalt einbetten',
     'Turn off to keep the new marks as editable annotations. Existing annotations and form fields are preserved.': 'Deaktivieren Sie diese Option, um neue Markierungen als bearbeitbare Anmerkungen zu behalten. Bestehende Anmerkungen und Formularfelder bleiben erhalten.',
     'Text': 'Text',
     'Logo / image': 'Logo / Bild',
@@ -81,13 +87,15 @@ abstract final class PdfOperationsStrings {
     'Text: string; checkbox: true/false; radio/choice: option value; multiple choice: array of values.': 'Text: Zeichenfolge; Kontrollkästchen: true/false; Auswahl: Optionswert; Mehrfachauswahl: Werteliste.',
     'Known field names': 'Bekannte Feldnamen',
     'OCR data exceeds 16 MiB.': 'Die OCR-Daten überschreiten 16 MiB.',
-    'OCR data must be a JSON array of pages with text spans.': 'OCR-Daten müssen eine JSON-Liste von Seiten mit Textbereichen sein.',
+    'OCR data must be a JSON array of pages with text spans.':
+        'OCR-Daten müssen eine JSON-Liste von Seiten mit Textbereichen sein.',
     'Minimum confidence (0–1)': 'Mindestzuverlässigkeit (0–1)',
     'Import text already recognized by an OCR tool. This action does not recognize images or contact a recognition service.': 'Importieren Sie bereits von einem OCR-Werkzeug erkannten Text. Dieser Vorgang führt keine Bilderkennung aus und kontaktiert keinen Erkennungsdienst.',
     'Use one-based page numbers. Each span needs text and bounds [left, bottom, right, top] in PDF points, not image pixels. Confidence is optional and defaults to 1.': 'Seitennummern beginnen bei 1. Jeder Bereich benötigt Text und Grenzen [links, unten, rechts, oben] in PDF-Punkten, nicht in Bildpixeln. Die Zuverlässigkeit ist optional und beträgt standardmäßig 1.',
     'Import OCR JSON': 'OCR-JSON importieren',
     'Recognized page spans (JSON)': 'Erkannte Textbereiche je Seite (JSON)',
-    'Skip pages that already contain text': 'Seiten mit vorhandenem Text überspringen',
+    'Skip pages that already contain text':
+        'Seiten mit vorhandenem Text überspringen',
     'Turning this off appends another text layer and can duplicate existing searchable text.': 'Wenn Sie dies deaktivieren, wird eine weitere Textebene hinzugefügt. Dadurch kann vorhandener durchsuchbarer Text doppelt erscheinen.',
     'The added text is invisible. Select or search text in the generated preview to check the result.': 'Der hinzugefügte Text ist unsichtbar. Markieren oder suchen Sie Text in der erzeugten Vorschau, um das Ergebnis zu prüfen.',
     'Search preview text': 'Text in der Vorschau suchen',
@@ -101,7 +109,8 @@ abstract final class PdfOperationsStrings {
     '90° clockwise': '90° im Uhrzeigersinn',
     '90° counterclockwise': '90° gegen den Uhrzeigersinn',
     'At least one page must remain. Deleting pages is a page organization action; it is not secure content removal.': 'Mindestens eine Seite muss erhalten bleiben. Beim Löschen werden Seiten neu organisiert; Inhalte werden dadurch nicht sicher entfernt.',
-    'Allow an unprotected output when required': 'Ungeschützte Ausgabe zulassen, falls erforderlich',
+    'Allow an unprotected output when required':
+        'Ungeschützte Ausgabe zulassen, falls erforderlich',
     'Page extraction can remove password protection. Merge output follows the first PDF’s encryption. Only continue if that output is appropriate.': 'Beim Extrahieren kann der Passwortschutz entfallen. Zusammengeführte PDFs übernehmen die Verschlüsselung der ersten PDF. Fahren Sie nur fort, wenn diese Ausgabe geeignet ist.',
     'Review the generated PDF, then save a new copy or export it to your device.': 'Prüfen Sie die erzeugte PDF. Speichern Sie dann eine neue Kopie oder exportieren Sie sie auf Ihr Gerät.',
     'Review output notes': 'Hinweise zur Ausgabe prüfen',
@@ -113,12 +122,14 @@ abstract final class PdfOperationsStrings {
     'Export PDF': 'PDF exportieren',
     'Save new copy': 'Neue Kopie speichern',
     'Reading PDFs…': 'PDFs werden gelesen…',
-    'Selected PDFs exceed the 256 MiB input limit.': 'Die ausgewählten PDFs überschreiten die Eingabegrenze von 256 MiB.',
+    'Selected PDFs exceed the 256 MiB input limit.':
+        'Die ausgewählten PDFs überschreiten die Eingabegrenze von 256 MiB.',
     'Insert protected pages?': 'Geschützte Seiten einfügen?',
     'The inserted pages will use this document’s protection. This document has no password protection.': 'Eingefügte Seiten übernehmen den Schutz dieses Dokuments. Dieses Dokument hat keinen Passwortschutz.',
   };
 }
 
 extension PdfOperationsTranslation on BuildContext {
-  String pdfOpTr(String english) => PdfOperationsStrings.translate(this, english);
+  String pdfOpTr(String english) =>
+      PdfOperationsStrings.translate(this, english);
 }
