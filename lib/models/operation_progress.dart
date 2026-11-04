@@ -259,6 +259,8 @@ class FileProgress {
   final int size;
   bool isComplete;
   String? error;
+  /// Original failure, retained for localized presentation and diagnostics.
+  Object? errorCause;
 
   FileProgress({
     required this.name,
@@ -266,6 +268,7 @@ class FileProgress {
     required this.size,
     this.isComplete = false,
     this.error,
+    this.errorCause,
   });
 
   // Helper to check if file has error

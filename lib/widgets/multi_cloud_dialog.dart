@@ -317,7 +317,16 @@ class _MultiCloudDialogState extends ConsumerState<_MultiCloudDialog>
         borderRadius: BorderRadius.circular(6),
         border: Border.all(color: ok ? Colors.green : Colors.red),
       ),
-      child: Text(_operationSummary(op), style: const TextStyle(fontSize: 12)),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(_operationSummary(op), style: const TextStyle(fontSize: 12)),
+          for (final file in op.files ?? <FileProgress>[])
+            if (file.error != null)
+              Text('${file.name}: ${localizedProviderError(context, file.errorCause ?? file.error!)}',
+                  style: const TextStyle(fontSize: 12)),
+        ],
+      ),
     );
   }
 

@@ -4,6 +4,8 @@
 // Exposes connection management, cloud-to-cloud transfer, comparison,
 // and unified search to the UI layer.
 
+import 'dart:async';
+
 import 'package:flutter/foundation.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
@@ -26,6 +28,7 @@ class MultiCloudNotifier extends ChangeNotifier {
   bool _isComparing = false;
   bool _isSearching = false;
   bool _isTransferring = false;
+  bool _disposed = false;
 
   List<FileDiff> _lastDiffs = [];
   List<MultiCloudSearchResult> _lastSearchResults = [];
@@ -87,6 +90,7 @@ class MultiCloudNotifier extends ChangeNotifier {
     notifyListeners();
 
     try {
+      final settled = Completer<void>();
       final operation = await _service.transferBetweenClouds(
         sourceClient: sourceClient,
         sourcePath: sourcePath,
@@ -94,17 +98,20 @@ class MultiCloudNotifier extends ChangeNotifier {
         targetPath: targetPath,
         files: files,
         onFileProgress: (fileName, current, total) {
-          notifyListeners();
+          if (!_disposed) notifyListeners();
         },
+        onCompleted: (_) => settled.complete(),
       );
+      if (_disposed) return;
       _activeTransfer = operation;
       notifyListeners();
+      await settled.future;
     } catch (e, st) {
       _log.error('Cloud-to-cloud transfer failed', e, st);
-      _ref.read(errorProvider).addError('Transfer failed: $e', code: PanelErrorCode.cloudTransferFailed, arguments: {'error': e});
+      if (!_disposed) _ref.read(errorProvider).addError('Transfer failed: $e', code: PanelErrorCode.cloudTransferFailed, arguments: {'error': e});
     } finally {
       _isTransferring = false;
-      notifyListeners();
+      if (!_disposed) notifyListeners();
     }
   }
 
@@ -183,6 +190,7 @@ class MultiCloudNotifier extends ChangeNotifier {
 
   @override
   void dispose() {
+    _disposed = true;
     _service.dispose();
     super.dispose();
   }
