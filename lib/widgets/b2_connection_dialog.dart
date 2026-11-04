@@ -67,7 +67,7 @@ class _B2ConnectionDialogState extends ConsumerState<B2ConnectionDialog> {
     return null;
   }
 
-  // ── Test Connection ───────────────────────────────────────────────────────
+  // ── Check Format ───────────────────────────────────────────────────────
 
   Future<void> _testConnection() async {
     final validationError = _validate();
@@ -86,9 +86,7 @@ class _B2ConnectionDialogState extends ConsumerState<B2ConnectionDialog> {
     });
 
     try {
-      // A real implementation would call b2_authorize_account here.
-      // For now simulate latency and validate key format heuristically.
-      await Future.delayed(const Duration(milliseconds: 500));
+      // This checks key ID length only; it does not authenticate with B2.
 
       final keyId = _keyIdController.text.trim();
       if (keyId.length < 12) {
@@ -106,7 +104,7 @@ class _B2ConnectionDialogState extends ConsumerState<B2ConnectionDialog> {
       });
     } catch (e) {
       setState(() {
-        _error = _text('testFailed', {'error': e.toString().replaceAll('Exception:', '').trim()});
+        _error = _text('formatFailed', {'error': e.toString().replaceAll('Exception:', '').trim()});
         _isTesting = false;
       });
     }
@@ -259,7 +257,7 @@ class _B2ConnectionDialogState extends ConsumerState<B2ConnectionDialog> {
                   height: 16,
                   child: CircularProgressIndicator(strokeWidth: 2),
                 )
-              : Text(_text('test')),
+              : Text(_text('checkFormat')),
         ),
         ElevatedButton(
           onPressed: (_isLoading || _isTesting) ? null : _connect,

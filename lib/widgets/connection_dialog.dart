@@ -1263,7 +1263,7 @@ class _ConnectionDialogState extends ConsumerState<ConnectionDialog> {
         password = _passwordController.text;
       } else if (_selectedProvider == CloudProvider.smb) {
         if (_hostController.text.trim().isEmpty || _emailController.text.trim().isEmpty) {
-          throw FormatException(t.text('urlUserRequired'));
+          throw Exception(t.text('urlUserRequired'));
         }
         identity = '${_emailController.text.trim()}@${_hostController.text.trim()}';
         password = _passwordController.text;

@@ -33,7 +33,8 @@ class CloudSetupStrings {
       "connectionRequired": "Connection String is required",
       "connectionInvalid":
           "Connection string is not valid. Expected format: DefaultEndpointsProtocol=…;AccountName=…;AccountKey=…",
-      "connected": "Connected to {endpoint}",
+      "connected":
+          "Fields checked; connection not tested. Endpoint: {endpoint}",
       "testFailed": "Test failed: {error}",
       "test": "Test Connection",
       "accountHelp":
@@ -51,14 +52,18 @@ class CloudSetupStrings {
       "appKeyRequired": "Application Key is required",
       "keyShort":
           "Key ID appears too short. B2 Application Key IDs are typically 25+ characters.",
-      "credentialsBucket": "Credentials accepted (bucket: {bucket})",
-      "credentialsAll": "Credentials accepted (all buckets)",
+      "credentialsBucket":
+          "Key ID length checked; credentials not verified (bucket: {bucket})",
+      "credentialsAll":
+          "Key ID length checked; credentials not verified (all buckets)",
       "b2Help":
           "Create an Application Key in Backblaze B2 Console → App Keys. Use a key with read/write access to the desired bucket.",
       "keyIdHelp": "The \"keyID\" shown when you create a B2 Application Key",
       "appKeyHelp":
           "The secret key shown once at creation time. Store it safely.",
       "bucketHelp": "Leave blank to browse all buckets accessible to this key",
+      "checkFormat": "Check Format",
+      "formatFailed": "Format check failed: {error}",
     },
     'de': {
       "azure": "Mit Azure Blob Storage verbinden",
@@ -79,7 +84,8 @@ class CloudSetupStrings {
       "connectionRequired": "Verbindungszeichenfolge ist erforderlich",
       "connectionInvalid":
           "Ungültige Verbindungszeichenfolge. Erwartetes Format: DefaultEndpointsProtocol=…;AccountName=…;AccountKey=…",
-      "connected": "Verbunden mit {endpoint}",
+      "connected":
+          "Felder geprüft; Verbindung nicht getestet. Endpunkt: {endpoint}",
       "testFailed": "Test fehlgeschlagen: {error}",
       "test": "Verbindung testen",
       "accountHelp": "Der Speicherkontoname (ohne .blob.core.windows.net)",
@@ -97,8 +103,10 @@ class CloudSetupStrings {
       "appKeyRequired": "Anwendungsschlüssel ist erforderlich",
       "keyShort":
           "Die Schlüssel-ID ist zu kurz. B2-Anwendungsschlüssel-IDs haben normalerweise mindestens 25 Zeichen.",
-      "credentialsBucket": "Zugangsdaten akzeptiert (Bucket: {bucket})",
-      "credentialsAll": "Zugangsdaten akzeptiert (alle Buckets)",
+      "credentialsBucket":
+          "Länge der Schlüssel-ID geprüft; Zugangsdaten nicht überprüft (Bucket: {bucket})",
+      "credentialsAll":
+          "Länge der Schlüssel-ID geprüft; Zugangsdaten nicht überprüft (alle Buckets)",
       "b2Help":
           "Erstellen Sie einen Anwendungsschlüssel unter Backblaze B2 Console → App Keys. Verwenden Sie einen Schlüssel mit Lese- und Schreibzugriff auf den gewünschten Bucket.",
       "keyIdHelp":
@@ -107,6 +115,8 @@ class CloudSetupStrings {
           "Der geheime Schlüssel wird beim Erstellen einmal angezeigt. Bewahren Sie ihn sicher auf.",
       "bucketHelp":
           "Leer lassen, um alle für diesen Schlüssel zugänglichen Buckets anzuzeigen",
+      "checkFormat": "Format prüfen",
+      "formatFailed": "Formatprüfung fehlgeschlagen: {error}",
     },
     'fr': {
       "azure": "Se connecter à Azure Blob Storage",
@@ -127,7 +137,8 @@ class CloudSetupStrings {
       "connectionRequired": "La chaîne de connexion est requise",
       "connectionInvalid":
           "Chaîne de connexion invalide. Format attendu : DefaultEndpointsProtocol=…;AccountName=…;AccountKey=…",
-      "connected": "Connecté à {endpoint}",
+      "connected":
+          "Champs vérifiés ; connexion non testée. Point de terminaison : {endpoint}",
       "testFailed": "Échec du test : {error}",
       "test": "Tester la connexion",
       "accountHelp": "Nom du compte de stockage (sans .blob.core.windows.net)",
@@ -144,8 +155,10 @@ class CloudSetupStrings {
       "appKeyRequired": "La clé d’application est requise",
       "keyShort":
           "L’identifiant semble trop court. Les identifiants B2 comportent généralement au moins 25 caractères.",
-      "credentialsBucket": "Identifiants acceptés (compartiment : {bucket})",
-      "credentialsAll": "Identifiants acceptés (tous les compartiments)",
+      "credentialsBucket":
+          "Longueur de l’identifiant vérifiée ; identifiants non vérifiés (compartiment : {bucket})",
+      "credentialsAll":
+          "Longueur de l’identifiant vérifiée ; identifiants non vérifiés (tous les compartiments)",
       "b2Help":
           "Créez une clé dans Backblaze B2 Console → App Keys avec accès en lecture et écriture au compartiment souhaité.",
       "keyIdHelp": "Le « keyID » affiché lors de la création d’une clé B2",
@@ -153,6 +166,8 @@ class CloudSetupStrings {
           "La clé secrète n’est affichée qu’une fois à la création. Conservez-la en sécurité.",
       "bucketHelp":
           "Laissez vide pour parcourir tous les compartiments accessibles avec cette clé",
+      "checkFormat": "Vérifier le format",
+      "formatFailed": "Échec de la vérification du format : {error}",
     },
     'es': {
       "azure": "Conectar a Azure Blob Storage",
@@ -172,7 +187,8 @@ class CloudSetupStrings {
       "connectionRequired": "La cadena de conexión es obligatoria",
       "connectionInvalid":
           "Cadena de conexión no válida. Formato esperado: DefaultEndpointsProtocol=…;AccountName=…;AccountKey=…",
-      "connected": "Conectado a {endpoint}",
+      "connected":
+          "Campos comprobados; conexión no probada. Endpoint: {endpoint}",
       "testFailed": "Error en la prueba: {error}",
       "test": "Probar conexión",
       "accountHelp":
@@ -190,8 +206,10 @@ class CloudSetupStrings {
       "appKeyRequired": "La clave de aplicación es obligatoria",
       "keyShort":
           "El ID de clave parece demasiado corto. Los ID de B2 suelen tener 25 caracteres o más.",
-      "credentialsBucket": "Credenciales aceptadas (bucket: {bucket})",
-      "credentialsAll": "Credenciales aceptadas (todos los buckets)",
+      "credentialsBucket":
+          "Longitud del ID comprobada; credenciales sin verificar (bucket: {bucket})",
+      "credentialsAll":
+          "Longitud del ID comprobada; credenciales sin verificar (todos los buckets)",
       "b2Help":
           "Crea una clave en Backblaze B2 Console → App Keys con acceso de lectura y escritura al bucket deseado.",
       "keyIdHelp": "El «keyID» mostrado al crear una clave de B2",
@@ -199,6 +217,8 @@ class CloudSetupStrings {
           "La clave secreta se muestra una sola vez al crearla. Guárdala de forma segura.",
       "bucketHelp":
           "Déjalo vacío para ver todos los buckets accesibles con esta clave",
+      "checkFormat": "Comprobar formato",
+      "formatFailed": "Error al comprobar el formato: {error}",
     },
     'pt': {
       "azure": "Conectar ao Azure Blob Storage",
@@ -218,7 +238,8 @@ class CloudSetupStrings {
       "connectionRequired": "A cadeia de conexão é obrigatória",
       "connectionInvalid":
           "Cadeia de conexão inválida. Formato esperado: DefaultEndpointsProtocol=…;AccountName=…;AccountKey=…",
-      "connected": "Conectado a {endpoint}",
+      "connected":
+          "Campos verificados; conexão não testada. Endpoint: {endpoint}",
       "testFailed": "Falha no teste: {error}",
       "test": "Testar conexão",
       "accountHelp":
@@ -236,8 +257,10 @@ class CloudSetupStrings {
       "appKeyRequired": "A chave de aplicativo é obrigatória",
       "keyShort":
           "O ID da chave parece curto demais. IDs B2 geralmente têm 25 caracteres ou mais.",
-      "credentialsBucket": "Credenciais aceitas (bucket: {bucket})",
-      "credentialsAll": "Credenciais aceitas (todos os buckets)",
+      "credentialsBucket":
+          "Comprimento do ID verificado; credenciais não verificadas (bucket: {bucket})",
+      "credentialsAll":
+          "Comprimento do ID verificado; credenciais não verificadas (todos os buckets)",
       "b2Help":
           "Crie uma chave em Backblaze B2 Console → App Keys com acesso de leitura e gravação ao bucket desejado.",
       "keyIdHelp": "O “keyID” exibido ao criar uma chave B2",
@@ -245,6 +268,8 @@ class CloudSetupStrings {
           "A chave secreta é exibida uma vez na criação. Guarde-a em segurança.",
       "bucketHelp":
           "Deixe em branco para navegar por todos os buckets acessíveis por esta chave",
+      "checkFormat": "Verificar formato",
+      "formatFailed": "Falha na verificação do formato: {error}",
     },
     'zh': {
       "azure": "连接 Azure Blob Storage",
@@ -264,7 +289,7 @@ class CloudSetupStrings {
       "connectionRequired": "必须填写连接字符串",
       "connectionInvalid":
           "连接字符串无效。预期格式：DefaultEndpointsProtocol=…;AccountName=…;AccountKey=…",
-      "connected": "已连接到 {endpoint}",
+      "connected": "字段已检查；未测试连接。端点：{endpoint}",
       "testFailed": "测试失败：{error}",
       "test": "测试连接",
       "accountHelp": "存储账户名（不含 .blob.core.windows.net）",
@@ -279,12 +304,14 @@ class CloudSetupStrings {
       "appKeyIdRequired": "必须填写应用密钥 ID",
       "appKeyRequired": "必须填写应用密钥",
       "keyShort": "密钥 ID 似乎过短。B2 应用密钥 ID 通常至少有 25 个字符。",
-      "credentialsBucket": "凭据已接受（存储桶：{bucket}）",
-      "credentialsAll": "凭据已接受（所有存储桶）",
+      "credentialsBucket": "已检查密钥 ID 长度；凭据未验证（存储桶：{bucket}）",
+      "credentialsAll": "已检查密钥 ID 长度；凭据未验证（所有存储桶）",
       "b2Help": "在 Backblaze B2 Console → App Keys 中创建应用密钥，并授予目标存储桶的读写权限。",
       "keyIdHelp": "创建 B2 应用密钥时显示的“keyID”",
       "appKeyHelp": "私密密钥仅在创建时显示一次，请妥善保存。",
       "bucketHelp": "留空可浏览此密钥可访问的所有存储桶",
+      "checkFormat": "检查格式",
+      "formatFailed": "格式检查失败：{error}",
     },
     'ja': {
       "azure": "Azure Blob Storage に接続",
@@ -304,7 +331,7 @@ class CloudSetupStrings {
       "connectionRequired": "接続文字列は必須です",
       "connectionInvalid":
           "接続文字列が無効です。形式: DefaultEndpointsProtocol=…;AccountName=…;AccountKey=…",
-      "connected": "{endpoint} に接続しました",
+      "connected": "入力欄を確認しました。接続はテストされていません。エンドポイント: {endpoint}",
       "testFailed": "テスト失敗: {error}",
       "test": "接続テスト",
       "accountHelp": "ストレージアカウント名（.blob.core.windows.net を除く）",
@@ -320,12 +347,14 @@ class CloudSetupStrings {
       "appKeyIdRequired": "アプリケーションキー ID は必須です",
       "appKeyRequired": "アプリケーションキーは必須です",
       "keyShort": "キー ID が短すぎます。B2 のアプリケーションキー ID は通常 25 文字以上です。",
-      "credentialsBucket": "認証情報を受け付けました（バケット: {bucket}）",
-      "credentialsAll": "認証情報を受け付けました（すべてのバケット）",
+      "credentialsBucket": "キー ID の長さを確認しました。認証情報は未検証です（バケット: {bucket}）",
+      "credentialsAll": "キー ID の長さを確認しました。認証情報は未検証です（すべてのバケット）",
       "b2Help": "Backblaze B2 Console → App Keys で対象バケットへの読み書き権限を持つキーを作成します。",
       "keyIdHelp": "B2 アプリケーションキー作成時に表示される「keyID」",
       "appKeyHelp": "秘密キーは作成時に一度だけ表示されます。安全に保管してください。",
       "bucketHelp": "空欄にすると、このキーでアクセスできるすべてのバケットを参照できます",
+      "checkFormat": "形式を確認",
+      "formatFailed": "形式の確認に失敗しました: {error}",
     },
     'ko': {
       "azure": "Azure Blob Storage에 연결",
@@ -345,7 +374,7 @@ class CloudSetupStrings {
       "connectionRequired": "연결 문자열은 필수입니다",
       "connectionInvalid":
           "연결 문자열이 올바르지 않습니다. 형식: DefaultEndpointsProtocol=…;AccountName=…;AccountKey=…",
-      "connected": "{endpoint}에 연결됨",
+      "connected": "필드를 확인했습니다. 연결은 테스트하지 않았습니다. 엔드포인트: {endpoint}",
       "testFailed": "테스트 실패: {error}",
       "test": "연결 테스트",
       "accountHelp": "저장소 계정 이름 (.blob.core.windows.net 제외)",
@@ -361,13 +390,15 @@ class CloudSetupStrings {
       "appKeyIdRequired": "애플리케이션 키 ID는 필수입니다",
       "appKeyRequired": "애플리케이션 키는 필수입니다",
       "keyShort": "키 ID가 너무 짧습니다. B2 애플리케이션 키 ID는 보통 25자 이상입니다.",
-      "credentialsBucket": "자격 증명 승인됨 (버킷: {bucket})",
-      "credentialsAll": "자격 증명 승인됨 (모든 버킷)",
+      "credentialsBucket": "키 ID 길이를 확인했습니다. 자격 증명은 확인되지 않았습니다 (버킷: {bucket})",
+      "credentialsAll": "키 ID 길이를 확인했습니다. 자격 증명은 확인되지 않았습니다 (모든 버킷)",
       "b2Help":
           "Backblaze B2 Console → App Keys에서 원하는 버킷에 대한 읽기/쓰기 권한이 있는 키를 만드세요.",
       "keyIdHelp": "B2 애플리케이션 키를 만들 때 표시되는 \"keyID\"",
       "appKeyHelp": "비밀 키는 생성 시 한 번만 표시됩니다. 안전하게 보관하세요.",
       "bucketHelp": "비워 두면 이 키로 접근할 수 있는 모든 버킷을 탐색합니다",
+      "checkFormat": "형식 확인",
+      "formatFailed": "형식 확인 실패: {error}",
     },
     'ar': {
       "azure": "الاتصال بـ Azure Blob Storage",
@@ -387,7 +418,7 @@ class CloudSetupStrings {
       "connectionRequired": "سلسلة الاتصال مطلوبة",
       "connectionInvalid":
           "سلسلة الاتصال غير صالحة. التنسيق المتوقع: DefaultEndpointsProtocol=…;AccountName=…;AccountKey=…",
-      "connected": "متصل بـ {endpoint}",
+      "connected": "تم فحص الحقول؛ لم يُختبر الاتصال. نقطة النهاية: {endpoint}",
       "testFailed": "فشل الاختبار: {error}",
       "test": "اختبار الاتصال",
       "accountHelp": "اسم حساب التخزين (دون ‎.blob.core.windows.net)",
@@ -404,13 +435,17 @@ class CloudSetupStrings {
       "appKeyRequired": "مفتاح التطبيق مطلوب",
       "keyShort":
           "يبدو معرّف المفتاح قصيرًا جدًا. تتكون معرّفات B2 عادةً من 25 حرفًا أو أكثر.",
-      "credentialsBucket": "قُبلت بيانات الاعتماد (الحاوية: {bucket})",
-      "credentialsAll": "قُبلت بيانات الاعتماد (كل الحاويات)",
+      "credentialsBucket":
+          "تم فحص طول معرّف المفتاح؛ لم تُتحقق بيانات الاعتماد (الحاوية: {bucket})",
+      "credentialsAll":
+          "تم فحص طول معرّف المفتاح؛ لم تُتحقق بيانات الاعتماد (كل الحاويات)",
       "b2Help":
           "أنشئ مفتاح تطبيق في Backblaze B2 Console ← App Keys بصلاحية القراءة والكتابة للحاوية المطلوبة.",
       "keyIdHelp": "قيمة «keyID» المعروضة عند إنشاء مفتاح B2",
       "appKeyHelp": "يظهر المفتاح السري مرة واحدة عند إنشائه. احتفظ به بأمان.",
       "bucketHelp": "اتركه فارغًا لاستعراض كل الحاويات المتاحة لهذا المفتاح",
+      "checkFormat": "التحقق من التنسيق",
+      "formatFailed": "فشل التحقق من التنسيق: {error}",
     },
   };
 }

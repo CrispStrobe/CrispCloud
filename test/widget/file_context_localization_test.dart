@@ -14,7 +14,7 @@ void main() {
       localizationsDelegates: AppLocalizations.localizationsDelegates,
       home: Scaffold(body: Builder(builder: (context) => TextButton(
         onPressed: () => showPropertiesDialog(context,
-            FileItem(name: 'report.txt', isFolder: false, size: 12)),
+            FileItem(name: 'report.txt', isFolder: false, size: 12, isSymlink: true, symlinkTarget: '/target')),
         child: const Text('Show'),
       ))),
     ));
@@ -22,6 +22,7 @@ void main() {
     await tester.pumpAndSettle();
     expect(find.text('Archivo (TXT)'), findsOneWidget);
     expect(find.text('Tamaño'), findsOneWidget);
+    expect(find.text('→ Destino'), findsOneWidget);
   });
 
   testWidgets('delete confirmation uses the selected language and count',

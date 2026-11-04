@@ -623,7 +623,7 @@ void showFileContextMenu(BuildContext context, WidgetRef ref, PanelSide side,
             children: [
               Icon(Icons.folder_zip),
               SizedBox(width: 8),
-              Text(AppLocalizations.of(context)!.browseArchive),
+              Text(FileOperationsStrings(context).text('browseArchive')),
             ],
           ),
           onTap: () => Future.delayed(Duration.zero, () {
@@ -653,7 +653,7 @@ void showFileContextMenu(BuildContext context, WidgetRef ref, PanelSide side,
               if (context.mounted) {
                 ScaffoldMessenger.of(context).showSnackBar(
                   SnackBar(
-                      content: Text(AppLocalizations.of(context)!.archiveExtracted)),
+                      content: Text(FileOperationsStrings(context).text('archiveExtracted'))),
                 );
               }
             } catch (e) {
@@ -1404,7 +1404,7 @@ class _PropertiesDialogState extends State<_PropertiesDialog> {
       _log.warn('operation failed', e);
       if (mounted)
         setState(() {
-          _md5 = 'Error: $e';
+          _md5 = FileOperationsStrings(context).value('failed', e);
           _computingMd5 = false;
         });
     }
@@ -1439,11 +1439,11 @@ class _PropertiesDialogState extends State<_PropertiesDialog> {
           children: [
             _propertyRow(context, FileOperationsStrings(context).text('typeLabel'), mimeType),
             if (file.isSymlink == true && file.symlinkTarget != null)
-              _propertyRow(context, '→ Target', file.symlinkTarget!,
+              _propertyRow(context, '→ ${FileOperationsStrings(context).text('targetLabel')}', file.symlinkTarget!,
                   mono: true),
             if (file.size != null)
               _propertyRow(context, FileOperationsStrings(context).text('sizeLabel'),
-                  '${formatBytes(file.size!)} (${file.size} bytes)'),
+                  '${formatBytes(file.size!)} (${file.size} ${FileOperationsStrings(context).text('bytes')})'),
             if (file.path != null)
               _propertyRow(context, FileOperationsStrings(context).text('path'), file.path!, mono: true),
             if (file.uuid != null)
@@ -2161,7 +2161,7 @@ void _verifyAgainstRemote(
               Text('${AppLocalizations.of(context)!.local}: ${formatBytes(localSize)}',
                   style: const TextStyle(fontSize: 13)),
               if (remoteSize != null)
-                Text('${AppLocalizations.of(context)!.remote}: ${formatBytes(remoteSize)}',
+                Text('${FileOperationsStrings(context).text('remote')}: ${formatBytes(remoteSize)}',
                     style: TextStyle(
                         fontSize: 13, color: sizeMatch ? null : Colors.red)),
               const SizedBox(height: 8),
@@ -2169,7 +2169,7 @@ void _verifyAgainstRemote(
                   style:
                       const TextStyle(fontSize: 12, fontFamily: 'monospace')),
               if (remoteMd5 != null)
-                Text('Remote MD5: ${remoteMd5.substring(0, 12)}…',
+                Text('${FileOperationsStrings(context).text('remote')} MD5: ${remoteMd5.substring(0, 12)}…',
                     style: TextStyle(
                         fontSize: 12,
                         fontFamily: 'monospace',

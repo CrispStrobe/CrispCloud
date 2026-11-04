@@ -182,7 +182,7 @@ class _AzureConnectionDialogState
     }
   }
 
-  // ── Test Connection ───────────────────────────────────────────────────────
+  // ── Check Format ───────────────────────────────────────────────────────
 
   Future<void> _testConnection() async {
     final validationError = _validate();
@@ -201,10 +201,7 @@ class _AzureConnectionDialogState
     });
 
     try {
-      // Simulate a lightweight connectivity check: validate that the
-      // endpoint is reachable and the credentials are well-formed.
-      // A real implementation would call the Azure Blob REST API.
-      await Future.delayed(const Duration(milliseconds: 500));
+      // This checks local formatting only; it does not contact Azure.
 
       // Parse / derive endpoint for display.
       String endpoint;
@@ -234,7 +231,7 @@ class _AzureConnectionDialogState
       });
     } catch (e) {
       setState(() {
-        _error = _text('testFailed', {'error': e.toString().replaceAll('Exception:', '').trim()});
+        _error = _text('formatFailed', {'error': e.toString().replaceAll('Exception:', '').trim()});
         _isTesting = false;
       });
     }
@@ -360,7 +357,7 @@ class _AzureConnectionDialogState
                   height: 16,
                   child: CircularProgressIndicator(strokeWidth: 2),
                 )
-              : Text(_text('test')),
+              : Text(_text('checkFormat')),
         ),
         ElevatedButton(
           onPressed: (_isLoading || _isTesting) ? null : _connect,
