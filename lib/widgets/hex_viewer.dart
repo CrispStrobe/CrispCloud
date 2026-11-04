@@ -12,6 +12,7 @@ import 'dart:typed_data';
 
 import 'package:flutter/material.dart';
 
+import '../l10n/app_localizations.dart';
 import '../services/file_bytes_loader.dart';
 
 /// Base hex font size before zoom scaling.
@@ -173,7 +174,7 @@ class _HexViewerState extends State<HexViewer> {
     _measureChars(context);
 
     if (widget.source.size == 0) {
-      return const Center(child: Text('(empty file)'));
+      return Center(child: Text(AppLocalizations.of(context)?.emptyFile ?? 'Empty file'));
     }
 
     final theme = Theme.of(context);

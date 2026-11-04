@@ -43,6 +43,7 @@ import '../widgets/mount_dialog.dart';
 import '../widgets/sync_dialog.dart';
 import '../widgets/tree_sidebar.dart';
 import '../l10n/browser_menu_strings.dart';
+import '../l10n/browser_drawer_strings.dart';
 import '../l10n/app_localizations.dart';
 import '../l10n/office_editor_strings.dart';
 import '../widgets/lock_screen.dart';
@@ -1516,7 +1517,7 @@ class _FileBrowserScreenState extends ConsumerState<FileBrowserScreen> {
 
   void _showLanguageDialog(BuildContext context) {
     final languages = {
-      null: 'System',
+      null: AppLocalizations.of(context)!.systemTheme,
       const Locale('en'): 'English',
       const Locale('de'): 'Deutsch',
       const Locale('fr'): 'Français',
@@ -1628,6 +1629,7 @@ class _FileBrowserScreenState extends ConsumerState<FileBrowserScreen> {
     final auth = ref.watch(authProvider);
     final transfers = ref.watch(transferProvider);
     final l = AppLocalizations.of(context)!;
+    final d = BrowserDrawerStrings(context);
 
     return Drawer(
       child: ListView(
@@ -1674,10 +1676,10 @@ class _FileBrowserScreenState extends ConsumerState<FileBrowserScreen> {
           else ...[
             ListTile(
               leading: const Icon(Icons.sync_alt),
-              title: const Text('Operations'),
+              title: Text(d.text('Operations')),
               subtitle: transfers.operations.isEmpty
                   ? Text(l.noActiveOperations)
-                  : Text('${transfers.operations.length} operation(s)'),
+                  : Text(d.operations(transfers.operations.length)),
               onTap: () {
                 Navigator.pop(context);
               },
@@ -1694,7 +1696,7 @@ class _FileBrowserScreenState extends ConsumerState<FileBrowserScreen> {
             ),
             ListTile(
               leading: const Icon(Icons.clear_all),
-              title: const Text('Clear Selections'),
+              title: Text(d.text('Clear Selections')),
               onTap: () {
                 Navigator.pop(context);
                 ref.read(panelProvider(PanelSide.local)).clearSelection();
@@ -1724,11 +1726,11 @@ class _FileBrowserScreenState extends ConsumerState<FileBrowserScreen> {
                 final preferExternal = cref.watch(preferExternalEditorProvider);
                 return SwitchListTile(
                   secondary: const Icon(Icons.open_in_new),
-                  title: const Text('Prefer System Editor'),
+                  title: Text(d.text('Prefer System Editor')),
                   subtitle: Text(
                     preferExternal
-                        ? 'Edit opens with the OS default app'
-                        : 'Edit opens built-in editor',
+                        ? d.text('Edit opens with the OS default app')
+                        : d.text('Edit opens built-in editor'),
                     style: const TextStyle(fontSize: 11),
                   ),
                   value: preferExternal,
@@ -1747,9 +1749,9 @@ class _FileBrowserScreenState extends ConsumerState<FileBrowserScreen> {
                 final fkeyVisible = cref.watch(fkeyBarVisibleProvider);
                 return SwitchListTile(
                   secondary: const Icon(Icons.keyboard_alt_outlined),
-                  title: const Text('F-Key Bar'),
+                  title: Text(d.text('F-Key Bar')),
                   subtitle: Text(
-                    fkeyVisible ? 'F3–F8 bar is shown' : 'F3–F8 bar is hidden',
+                    fkeyVisible ? d.text('F3–F8 bar is shown') : d.text('F3–F8 bar is hidden'),
                     style: const TextStyle(fontSize: 11),
                   ),
                   value: fkeyVisible,
@@ -1764,11 +1766,11 @@ class _FileBrowserScreenState extends ConsumerState<FileBrowserScreen> {
                 final show = cref.watch(showSelectionBarProvider);
                 return SwitchListTile(
                   secondary: const Icon(Icons.checklist),
-                  title: const Text('Selection Bar'),
+                  title: Text(d.text('Selection Bar')),
                   subtitle: Text(
                     show
-                        ? 'Action bar shown when files are selected (touch mode)'
-                        : 'Hidden — use F-keys / keyboard (DC mode)',
+                        ? d.text('Action bar shown when files are selected (touch mode)')
+                        : d.text('Hidden — use F-keys / keyboard (DC mode)'),
                     style: const TextStyle(fontSize: 11),
                   ),
                   value: show,
@@ -1780,21 +1782,19 @@ class _FileBrowserScreenState extends ConsumerState<FileBrowserScreen> {
             // Toolbar customization
             ListTile(
               leading: const Icon(Icons.tune),
-              title: const Text('Toolbar Customization'),
-              subtitle: const Text(
-                'Show/hide and reorder toolbar buttons',
-                style: TextStyle(fontSize: 11),
+              title: Text(d.text('Toolbar Customization')),
+              subtitle: Text(
+                d.text('Show/hide and reorder toolbar buttons'),
+                style: const TextStyle(fontSize: 11),
               ),
               onTap: () {
                 Navigator.pop(context);
                 showDialog(
                   context: context,
                   builder: (dialogContext) => AlertDialog(
-                    title: const Text('Toolbar Customization'),
-                    content: const Text(
-                      'Toolbar button visibility and order can be configured '
-                      'via the toolbar customization service. '
-                      'Full drag-and-drop reorder dialog coming soon.',
+                    title: Text(d.text('Toolbar Customization')),
+                    content: Text(
+                      d.text('Toolbar button visibility and order can be configured via the toolbar customization service. Full drag-and-drop reorder dialog coming soon.'),
                     ),
                     actions: [
                       TextButton(
@@ -1828,15 +1828,15 @@ class _FileBrowserScreenState extends ConsumerState<FileBrowserScreen> {
                     context: context,
                     builder: (ctx) => AlertDialog(
                       title: Text(l.appLock),
-                      content: const Text('App lock is currently enabled.'),
+                      content: Text(d.text('App lock is currently enabled.')),
                       actions: [
                         TextButton(
                           onPressed: () => Navigator.pop(ctx, 'disable'),
-                          child: const Text('Disable'),
+                          child: Text(d.text('Disable')),
                         ),
                         TextButton(
                           onPressed: () => Navigator.pop(ctx, 'change'),
-                          child: const Text('Change Code'),
+                          child: Text(d.text('Change Code')),
                         ),
                         TextButton(
                           onPressed: () => Navigator.pop(ctx),
@@ -1849,7 +1849,7 @@ class _FileBrowserScreenState extends ConsumerState<FileBrowserScreen> {
                     await lockService.disable();
                     if (!context.mounted) return;
                     ScaffoldMessenger.of(context).showSnackBar(
-                      const SnackBar(content: Text('App lock disabled')),
+                      SnackBar(content: Text(d.text('App lock disabled'))),
                     );
                   } else if (action == 'change') {
                     if (!context.mounted) return;
@@ -1899,11 +1899,11 @@ class _FileBrowserScreenState extends ConsumerState<FileBrowserScreen> {
               final enabled = cref.watch(crashReportingEnabledProvider);
               return SwitchListTile(
                 secondary: const Icon(Icons.health_and_safety_outlined),
-                title: const Text('Local Crash Diagnostics'),
+                title: Text(d.text('Local Crash Diagnostics')),
                 subtitle: Text(
                   enabled
-                      ? 'Stores sanitized crash reports on this device'
-                      : 'Off — no crash reports are retained',
+                      ? d.text('Stores sanitized crash reports on this device')
+                      : d.text('Off — no crash reports are retained'),
                   style: const TextStyle(fontSize: 11),
                 ),
                 value: enabled,
@@ -1915,10 +1915,10 @@ class _FileBrowserScreenState extends ConsumerState<FileBrowserScreen> {
           ),
           ListTile(
             leading: const Icon(Icons.monitor_heart_outlined),
-            title: const Text('Diagnostics'),
-            subtitle: const Text(
-              'Review, copy, or clear local crash reports',
-              style: TextStyle(fontSize: 11),
+            title: Text(d.text('Diagnostics')),
+            subtitle: Text(
+              d.text('Review, copy, or clear local crash reports'),
+              style: const TextStyle(fontSize: 11),
             ),
             onTap: () {
               Navigator.pop(context);
@@ -1932,6 +1932,7 @@ class _FileBrowserScreenState extends ConsumerState<FileBrowserScreen> {
 
   Future<void> _showDiagnosticsDialog(BuildContext context) async {
     final l = AppLocalizations.of(context)!;
+    final d = BrowserDrawerStrings(context);
     final service = ref.read(crashReportingServiceProvider);
     final results = await Future.wait([
       service.getRecentReports(20),
@@ -1944,13 +1945,13 @@ class _FileBrowserScreenState extends ConsumerState<FileBrowserScreen> {
     await showDialog<void>(
       context: context,
       builder: (dialogContext) => AlertDialog(
-        title: const Text('Local Diagnostics'),
+        title: Text(d.text('Local Diagnostics')),
         content: SizedBox(
           width: 560,
           child: ListView(
             shrinkWrap: true,
             children: [
-              Text('Platform checks',
+              Text(d.text('Platform checks'),
                   style: Theme.of(dialogContext).textTheme.titleSmall),
               const SizedBox(height: 6),
               ...platformDiagnostics.displayValues.entries.map(
@@ -1958,19 +1959,19 @@ class _FileBrowserScreenState extends ConsumerState<FileBrowserScreen> {
                   padding: const EdgeInsets.symmetric(vertical: 2),
                   child: Row(
                     children: [
-                      SizedBox(width: 150, child: Text(entry.key)),
-                      Expanded(child: Text(entry.value)),
+                      SizedBox(width: 150, child: Text(d.text(entry.key))),
+                      Expanded(child: Text(d.text(entry.value))),
                     ],
                   ),
                 ),
               ),
               const Divider(height: 24),
-              Text('Crash reports',
+              Text(d.text('Crash reports'),
                   style: Theme.of(dialogContext).textTheme.titleSmall),
               if (reports.isEmpty)
-                const Padding(
-                  padding: EdgeInsets.only(top: 8),
-                  child: Text('No crash reports are stored on this device.'),
+                Padding(
+                  padding: const EdgeInsets.only(top: 8),
+                  child: Text(d.text('No crash reports are stored on this device.')),
                 )
               else
                 ...reports.map(
@@ -1999,12 +2000,12 @@ class _FileBrowserScreenState extends ConsumerState<FileBrowserScreen> {
                 await Clipboard.setData(ClipboardData(text: exported));
                 if (dialogContext.mounted) {
                   ScaffoldMessenger.of(dialogContext).showSnackBar(
-                    const SnackBar(content: Text('Diagnostics copied')),
+                    SnackBar(content: Text(d.text('Diagnostics copied'))),
                   );
                 }
               },
               icon: const Icon(Icons.copy),
-              label: const Text('Copy'),
+              label: Text(l.copy),
             ),
           if (reports.isNotEmpty)
             TextButton.icon(
@@ -2013,7 +2014,7 @@ class _FileBrowserScreenState extends ConsumerState<FileBrowserScreen> {
                 if (dialogContext.mounted) Navigator.pop(dialogContext);
               },
               icon: const Icon(Icons.delete_outline),
-              label: const Text('Clear'),
+              label: Text(l.clear),
             ),
           TextButton(
             onPressed: () => Navigator.pop(dialogContext),
@@ -2056,6 +2057,7 @@ class _WindowsExplorerIntegrationTileState
   }
 
   Future<void> _toggle(bool enable) async {
+    final d = BrowserDrawerStrings(context);
     setState(() => _loading = true);
     final success = enable
         ? await _service.registerContextMenu()
@@ -2072,8 +2074,8 @@ class _WindowsExplorerIntegrationTileState
           SnackBar(
             content: Text(
               enable
-                  ? 'Failed to register context menu. Check app permissions.'
-                  : 'Failed to unregister context menu.',
+                  ? d.text('Failed to register context menu. Check app permissions.')
+                  : d.text('Failed to unregister context menu.'),
             ),
           ),
         );
@@ -2083,6 +2085,7 @@ class _WindowsExplorerIntegrationTileState
 
   @override
   Widget build(BuildContext context) {
+    final d = BrowserDrawerStrings(context);
     return SwitchListTile(
       secondary: _loading
           ? const SizedBox(
@@ -2091,11 +2094,11 @@ class _WindowsExplorerIntegrationTileState
               child: CircularProgressIndicator(strokeWidth: 2),
             )
           : const Icon(Icons.folder_open),
-      title: const Text('Windows Explorer Integration'),
+      title: Text(d.text('Windows Explorer Integration')),
       subtitle: Text(
         _registered
-            ? 'Right-click files to upload to CrispCloud'
-            : 'Add "Upload to CrispCloud" to Explorer context menu',
+            ? d.text('Right-click files to upload to CrispCloud')
+            : d.text('Add "Upload to CrispCloud" to Explorer context menu'),
         style: const TextStyle(fontSize: 11),
       ),
       value: _registered,

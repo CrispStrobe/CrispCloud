@@ -8,6 +8,7 @@
 import 'package:flutter/material.dart';
 import 'package:pdfx/pdfx.dart';
 
+import '../l10n/app_localizations.dart';
 import '../services/file_bytes_loader.dart';
 import '../services/internal_viewer_service.dart';
 
@@ -59,7 +60,7 @@ class MonoLineListView extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     if (lines.isEmpty || (lines.length == 1 && lines.first.isEmpty)) {
-      return const Center(child: Text('(empty file)'));
+      return Center(child: Text(AppLocalizations.of(context)?.emptyFile ?? 'Empty file'));
     }
 
     final theme = Theme.of(context);

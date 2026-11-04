@@ -640,7 +640,7 @@ class AppLocalizationsJa extends AppLocalizations {
   String get playVideo => 'Play Video';
 
   @override
-  String get emptyFile => 'Empty file';
+  String get emptyFile => '空のファイル';
 
   @override
   String systemLogTitle(int count) {

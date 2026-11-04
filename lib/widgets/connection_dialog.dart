@@ -245,7 +245,7 @@ class _ConnectionDialogState extends ConsumerState<ConnectionDialog> {
     final name = await showDialog<String>(
       context: context,
       builder: (ctx) => AlertDialog(
-        title: Text(AppLocalizations.of(context)!.saveProfile),
+        title: Text(t.text('saveProfile')),
         content: TextField(
           controller: nameController,
           decoration: InputDecoration(
@@ -280,6 +280,17 @@ class _ConnectionDialogState extends ConsumerState<ConnectionDialog> {
       );
     }
   }
+
+  String _credentialHintKey(CloudProvider provider) => switch (provider) {
+        CloudProvider.dropbox || CloudProvider.gdrive ||
+        CloudProvider.onedrive || CloudProvider.pcloud => 'hintOauth',
+        CloudProvider.azure => 'hintAzure',
+        CloudProvider.b2 => 'hintB2',
+        CloudProvider.s3 => 'hintS3',
+        CloudProvider.ftp || CloudProvider.sftp || CloudProvider.smb ||
+        CloudProvider.webdav || CloudProvider.nextcloud => 'hintServer',
+        _ => 'hintSecure',
+      };
 
   @override
   Widget build(BuildContext context) {
@@ -363,12 +374,12 @@ class _ConnectionDialogState extends ConsumerState<ConnectionDialog> {
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Text(
-                      _selectedProvider.onboardingDescription,
+                      t.text('provider${_selectedProvider.name[0].toUpperCase()}${_selectedProvider.name.substring(1)}'),
                       style: Theme.of(context).textTheme.bodySmall,
                     ),
                     const SizedBox(height: 4),
                     Text(
-                      _selectedProvider.credentialHint,
+                      t.text(_credentialHintKey(_selectedProvider)),
                       style: Theme.of(context).textTheme.bodySmall?.copyWith(
                             color:
                                 Theme.of(context).colorScheme.onSurfaceVariant,
@@ -492,15 +503,14 @@ class _ConnectionDialogState extends ConsumerState<ConnectionDialog> {
                       .withValues(alpha: 0.3),
                   borderRadius: BorderRadius.circular(8),
                 ),
-                child: const Row(
+                child: Row(
                   children: [
-                    Icon(Icons.info_outline, size: 16),
-                    SizedBox(width: 8),
+                    const Icon(Icons.info_outline, size: 16),
+                    const SizedBox(width: 8),
                     Expanded(
                       child: Text(
-                        'Click Connect to open the Azure Blob Storage connection dialog '
-                        'where you can enter your Account Key, SAS Token, or Connection String.',
-                        style: TextStyle(fontSize: 12),
+                        t.text('azureHelp'),
+                        style: const TextStyle(fontSize: 12),
                       ),
                     ),
                   ],
@@ -516,15 +526,14 @@ class _ConnectionDialogState extends ConsumerState<ConnectionDialog> {
                       .withValues(alpha: 0.3),
                   borderRadius: BorderRadius.circular(8),
                 ),
-                child: const Row(
+                child: Row(
                   children: [
-                    Icon(Icons.info_outline, size: 16),
-                    SizedBox(width: 8),
+                    const Icon(Icons.info_outline, size: 16),
+                    const SizedBox(width: 8),
                     Expanded(
                       child: Text(
-                        'Click Connect to open the Backblaze B2 connection dialog '
-                        'where you can enter your Application Key ID and Application Key.',
-                        style: TextStyle(fontSize: 12),
+                        t.text('b2Help'),
+                        style: const TextStyle(fontSize: 12),
                       ),
                     ),
                   ],
@@ -538,7 +547,7 @@ class _ConnectionDialogState extends ConsumerState<ConnectionDialog> {
                   hintText: 'your_app_key',
                   border: const OutlineInputBorder(),
                   prefixIcon: const Icon(Icons.key),
-                  helperText: 'From Dropbox App Console → Settings',
+                  helperText: t.text('dropboxConsole'),
                 ),
                 enabled: !_isLoading,
               ),
@@ -546,7 +555,7 @@ class _ConnectionDialogState extends ConsumerState<ConnectionDialog> {
               TextField(
                 controller: _dropboxAppSecretController,
                 decoration: InputDecoration(
-                  labelText: 'App Secret (optional)',
+                  labelText: t.text('appSecretOptional'),
                   border: const OutlineInputBorder(),
                   prefixIcon: const Icon(Icons.lock_outline),
                 ),
@@ -563,15 +572,14 @@ class _ConnectionDialogState extends ConsumerState<ConnectionDialog> {
                       .withValues(alpha: 0.3),
                   borderRadius: BorderRadius.circular(8),
                 ),
-                child: const Row(
+                child: Row(
                   children: [
-                    Icon(Icons.info_outline, size: 16),
-                    SizedBox(width: 8),
+                    const Icon(Icons.info_outline, size: 16),
+                    const SizedBox(width: 8),
                     Expanded(
                       child: Text(
-                        'Click Connect to open Dropbox sign-in in your browser. '
-                        'Authorize CrispCloud, then return here.',
-                        style: TextStyle(fontSize: 12),
+                        t.text('oauthHelp', {'provider': 'Dropbox'}),
+                        style: const TextStyle(fontSize: 12),
                       ),
                     ),
                   ],
@@ -581,12 +589,12 @@ class _ConnectionDialogState extends ConsumerState<ConnectionDialog> {
               TextField(
                 controller: _gdriveClientIdController,
                 decoration: InputDecoration(
-                  labelText: 'OAuth2 Client ID',
+                  labelText: t.text('oauthId'),
                   hintText: '123456789.apps.googleusercontent.com',
                   border: const OutlineInputBorder(),
                   prefixIcon: const Icon(Icons.key),
                   helperText:
-                      'From Google Cloud Console → APIs & Services → Credentials',
+                      t.text('googleConsole'),
                 ),
                 enabled: !_isLoading,
               ),
@@ -594,7 +602,7 @@ class _ConnectionDialogState extends ConsumerState<ConnectionDialog> {
               TextField(
                 controller: _gdriveClientSecretController,
                 decoration: InputDecoration(
-                  labelText: 'Client Secret (optional for desktop)',
+                  labelText: t.text('clientSecretDesktop'),
                   border: const OutlineInputBorder(),
                   prefixIcon: const Icon(Icons.lock_outline),
                 ),
@@ -611,15 +619,14 @@ class _ConnectionDialogState extends ConsumerState<ConnectionDialog> {
                       .withValues(alpha: 0.3),
                   borderRadius: BorderRadius.circular(8),
                 ),
-                child: const Row(
+                child: Row(
                   children: [
-                    Icon(Icons.info_outline, size: 16),
-                    SizedBox(width: 8),
+                    const Icon(Icons.info_outline, size: 16),
+                    const SizedBox(width: 8),
                     Expanded(
                       child: Text(
-                        'Click Connect to open Google sign-in in your browser. '
-                        'Authorize CrispCloud, then return here.',
-                        style: TextStyle(fontSize: 12),
+                        t.text('oauthHelp', {'provider': 'Google'}),
+                        style: const TextStyle(fontSize: 12),
                       ),
                     ),
                   ],
@@ -629,11 +636,11 @@ class _ConnectionDialogState extends ConsumerState<ConnectionDialog> {
               TextField(
                 controller: _onedriveClientIdController,
                 decoration: InputDecoration(
-                  labelText: 'Application (Client) ID',
+                  labelText: t.text('appClientId'),
                   hintText: 'xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx',
                   border: const OutlineInputBorder(),
                   prefixIcon: const Icon(Icons.key),
-                  helperText: 'From Azure Portal → App Registrations',
+                  helperText: t.text('azureConsole'),
                 ),
                 enabled: !_isLoading,
               ),
@@ -641,7 +648,7 @@ class _ConnectionDialogState extends ConsumerState<ConnectionDialog> {
               TextField(
                 controller: _onedriveClientSecretController,
                 decoration: InputDecoration(
-                  labelText: 'Client Secret (optional for public apps)',
+                  labelText: t.text('clientSecretPublic'),
                   border: const OutlineInputBorder(),
                   prefixIcon: const Icon(Icons.lock_outline),
                 ),
@@ -658,15 +665,14 @@ class _ConnectionDialogState extends ConsumerState<ConnectionDialog> {
                       .withValues(alpha: 0.3),
                   borderRadius: BorderRadius.circular(8),
                 ),
-                child: const Row(
+                child: Row(
                   children: [
-                    Icon(Icons.info_outline, size: 16),
-                    SizedBox(width: 8),
+                    const Icon(Icons.info_outline, size: 16),
+                    const SizedBox(width: 8),
                     Expanded(
                       child: Text(
-                        'Click Connect to open Microsoft sign-in in your browser. '
-                        'Authorize CrispCloud, then return here.',
-                        style: TextStyle(fontSize: 12),
+                        t.text('oauthHelp', {'provider': 'Microsoft'}),
+                        style: const TextStyle(fontSize: 12),
                       ),
                     ),
                   ],
@@ -680,16 +686,15 @@ class _ConnectionDialogState extends ConsumerState<ConnectionDialog> {
                   hintText: 'your_pcloud_app_key',
                   border: const OutlineInputBorder(),
                   prefixIcon: const Icon(Icons.key),
-                  helperText: 'From pCloud Developer Console → My Applications',
+                  helperText: t.text('pcloudConsole'),
                 ),
                 enabled: !_isLoading,
               ),
               const SizedBox(height: 12),
               CheckboxListTile(
-                title: const Text('Use EU servers (eapi.pcloud.com)'),
-                subtitle: const Text(
-                    'Required if your account is registered in the EU',
-                    style: TextStyle(fontSize: 11)),
+                title: Text(t.text('useEu')),
+                subtitle: Text(t.text('euRequired'),
+                    style: const TextStyle(fontSize: 11)),
                 value: _pcloudUseEu,
                 onChanged: _isLoading
                     ? null
@@ -708,15 +713,14 @@ class _ConnectionDialogState extends ConsumerState<ConnectionDialog> {
                       .withValues(alpha: 0.3),
                   borderRadius: BorderRadius.circular(8),
                 ),
-                child: const Row(
+                child: Row(
                   children: [
-                    Icon(Icons.info_outline, size: 16),
-                    SizedBox(width: 8),
+                    const Icon(Icons.info_outline, size: 16),
+                    const SizedBox(width: 8),
                     Expanded(
                       child: Text(
-                        'Click Connect to open pCloud sign-in in your browser. '
-                        'Authorize CrispCloud, then return here.',
-                        style: TextStyle(fontSize: 12),
+                        t.text('oauthHelp', {'provider': 'pCloud'}),
+                        style: const TextStyle(fontSize: 12),
                       ),
                     ),
                   ],
@@ -792,13 +796,13 @@ class _ConnectionDialogState extends ConsumerState<ConnectionDialog> {
               DropdownButtonFormField<S3Encryption>(
                 value: _s3Encryption,
                 decoration: InputDecoration(
-                  labelText: 'Server-Side Encryption',
+                  labelText: t.text('serverEncryption'),
                   border: const OutlineInputBorder(),
                   prefixIcon: const Icon(Icons.enhanced_encryption_outlined),
                 ),
-                items: const [
+                items: [
                   DropdownMenuItem(
-                      value: S3Encryption.none, child: Text('None')),
+                      value: S3Encryption.none, child: Text(t.text('none'))),
                   DropdownMenuItem(
                       value: S3Encryption.sseS3,
                       child: Text('SSE-S3 (AES-256)')),
@@ -816,7 +820,7 @@ class _ConnectionDialogState extends ConsumerState<ConnectionDialog> {
                 TextField(
                   controller: _s3KmsKeyIdController,
                   decoration: InputDecoration(
-                    labelText: 'KMS Key ID (optional, uses default if empty)',
+                    labelText: t.text('kmsOptional'),
                     border: const OutlineInputBorder(),
                     hintText: 'arn:aws:kms:region:account:key/key-id',
                   ),
@@ -828,7 +832,7 @@ class _ConnectionDialogState extends ConsumerState<ConnectionDialog> {
               DropdownButtonFormField<S3StorageClass>(
                 value: _s3StorageClass,
                 decoration: InputDecoration(
-                  labelText: 'Storage Class',
+                  labelText: t.text('storageClass'),
                   border: const OutlineInputBorder(),
                   prefixIcon: const Icon(Icons.storage_outlined),
                 ),
@@ -892,7 +896,7 @@ class _ConnectionDialogState extends ConsumerState<ConnectionDialog> {
               const SizedBox(height: 16),
               // FTP: Use TLS checkbox
               CheckboxListTile(
-                title: const Text('Use TLS (FTPS)'),
+                title: Text(t.text('useTls')),
                 value: _ftpUseTLS,
                 onChanged: _isLoading
                     ? null

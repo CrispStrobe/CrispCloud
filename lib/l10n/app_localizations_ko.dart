@@ -640,7 +640,7 @@ class AppLocalizationsKo extends AppLocalizations {
   String get playVideo => 'Play Video';
 
   @override
-  String get emptyFile => 'Empty file';
+  String get emptyFile => '빈 파일';
 
   @override
   String systemLogTitle(int count) {

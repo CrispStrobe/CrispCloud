@@ -290,8 +290,7 @@ class _InternalViewerDialogState extends ConsumerState<InternalViewerDialog> {
             final granted = await localSvc.ensureAccess(path);
             if (!granted) {
               throw FileBytesLoadException(
-                'Access to "$path" was not granted. Grant access to its '
-                'folder and try again.',
+                InternalViewerStrings(context).withNumber('access', path),
               );
             }
             length = await localSvc.fileLength(path);
@@ -299,7 +298,7 @@ class _InternalViewerDialogState extends ConsumerState<InternalViewerDialog> {
         }
         if (length == null) {
           throw FileBytesLoadException(
-            'File not found or access denied: $path',
+            InternalViewerStrings(context).withNumber('notFound', path),
           );
         }
 
@@ -310,8 +309,7 @@ class _InternalViewerDialogState extends ConsumerState<InternalViewerDialog> {
               final ok = await localSvc.beginStreamAccess(path);
               if (!ok) {
                 throw FileBytesLoadException(
-                  'Access to "$path" was not granted. Grant access to its '
-                  'folder and try again.',
+                  InternalViewerStrings(context).withNumber('access', path),
                 );
               }
             },
@@ -417,9 +415,8 @@ class _InternalViewerDialogState extends ConsumerState<InternalViewerDialog> {
 
   String _describeError(Object error) {
     if (error is FileBytesTooLargeException) {
-      return '${error.message}\n\n'
-          'Hex, ASCII and Binary views need the file on the local disk; '
-          'remote files are limited to ${formatBytes(kViewerFullDataCap)}.';
+      return '${error.message}\n\n' +
+          InternalViewerStrings(context).withNumber('remoteLimit', formatBytes(kViewerFullDataCap));
     }
     return error.toString();
   }
@@ -501,7 +498,7 @@ class _InternalViewerDialogState extends ConsumerState<InternalViewerDialog> {
             var cut = text.lastIndexOf('\n', _kRichRenderCap);
             if (cut <= 0) cut = _kRichRenderCap;
             text = text.substring(0, cut);
-            note = 'Preview truncated to ${formatBytes(_kRichRenderCap)}';
+            note = InternalViewerStrings(context).withNumber('truncated', formatBytes(_kRichRenderCap));
           }
           _richText = text;
           setState(() {
@@ -536,8 +533,7 @@ class _InternalViewerDialogState extends ConsumerState<InternalViewerDialog> {
           if (mode == ViewerMode.font && data.length > _kFontPreviewCap) {
             setState(() {
               _preparing = false;
-              _richError = 'This font is too large to preview safely '
-                  '(${formatBytes(data.length)}).';
+              _richError = InternalViewerStrings(context).withNumber('largeFont', formatBytes(data.length));
             });
             return;
           }
@@ -655,11 +651,11 @@ class _InternalViewerDialogState extends ConsumerState<InternalViewerDialog> {
       } on ArchivePasswordRequiredException catch (e) {
         if (!mounted || token != _prepareToken) return;
         setState(() => _preparing = false);
-        if (e.wrongPassword) _showSnack('Incorrect password.');
+        if (e.wrongPassword) _showSnack(InternalViewerStrings(context).text('incorrectPassword'));
         final entered = await _promptArchivePassword(wrong: e.wrongPassword);
         if (!mounted || token != _prepareToken) return;
         if (entered == null) {
-          setState(() => _richError = 'This archive is password-protected.');
+          setState(() => _richError = InternalViewerStrings(context).text('protected'));
           return;
         }
         password = entered;
@@ -676,7 +672,7 @@ class _InternalViewerDialogState extends ConsumerState<InternalViewerDialog> {
     if (!mounted || token != _prepareToken) return;
     setState(() {
       _preparing = false;
-      _richError = 'Too many incorrect password attempts.';
+      _richError = InternalViewerStrings(context).text('tooMany');
     });
   }
 
@@ -713,7 +709,7 @@ class _InternalViewerDialogState extends ConsumerState<InternalViewerDialog> {
       await File(path).writeAsBytes(data, flush: true);
       if (!await File(path).exists()) {
         lastError = FileSystemException(
-          'Media file disappeared before playback',
+          InternalViewerStrings(context).text('mediaGone'),
           path,
         );
         continue;
@@ -755,7 +751,7 @@ class _InternalViewerDialogState extends ConsumerState<InternalViewerDialog> {
         // Best effort only.
       }
       throw lastError ??
-          StateError('Media playback is not available for this file.');
+          StateError(InternalViewerStrings(context).text('mediaUnavailable'));
     }
     _tempMediaPath = path;
     _videoController = controller;
@@ -1060,7 +1056,7 @@ class _InternalViewerDialogState extends ConsumerState<InternalViewerDialog> {
         _matches = found;
         _matchIndex = found.isEmpty ? -1 : 0;
         _searchNote = _isStreamed
-            ? 'searched first ${formatBytes(_kStreamSearchCap)}'
+            ? InternalViewerStrings(context).withNumber('searched', formatBytes(_kStreamSearchCap))
             : null;
         _cachedSafeMatchIndex = null;
         _cachedSafeMatchBinary = null;
@@ -1309,17 +1305,17 @@ class _InternalViewerDialogState extends ConsumerState<InternalViewerDialog> {
             encoding: _encodingOverride,
           ).text;
         } catch (e) {
-          _showSnack('Cannot copy this view: $e');
+          _showSnack(InternalViewerStrings(context).withNumber('copyError', e));
           return;
         }
       }
     }
     if (text == null || text.isEmpty) {
-      _showSnack('Nothing to copy in this view.');
+      _showSnack(InternalViewerStrings(context).text('nothingCopy'));
       return;
     }
     await Clipboard.setData(ClipboardData(text: text));
-    _showSnack('Copied ${text.length} characters.');
+    _showSnack(InternalViewerStrings(context).withNumber('copied', text.length));
   }
 
   Future<void> _openArchiveMember(ViewerArchiveMember member) async {
@@ -1356,11 +1352,11 @@ class _InternalViewerDialogState extends ConsumerState<InternalViewerDialog> {
         return;
       } catch (e, st) {
         _log.warn('archive member open failed', e, st);
-        _showSnack('Could not open member: $e');
+        _showSnack(InternalViewerStrings(context).withNumber('openError', e));
         return;
       }
     }
-    _showSnack('Could not open the encrypted entry.');
+    _showSnack(InternalViewerStrings(context).text('encryptedEntry'));
   }
 
   Future<ViewerArchiveMember?> _unlockArchiveEntry(
@@ -1369,7 +1365,7 @@ class _InternalViewerDialogState extends ConsumerState<InternalViewerDialog> {
   }) async {
     final data = _fullData;
     if (data == null) {
-      _showSnack('The archive data is no longer available.');
+      _showSnack(InternalViewerStrings(context).text('archiveGone'));
       return null;
     }
     final entered = await _promptArchivePassword(wrong: wrong);
@@ -1385,7 +1381,7 @@ class _InternalViewerDialogState extends ConsumerState<InternalViewerDialog> {
           .toList();
       if (matches.isEmpty) {
         await reopened.close();
-        _showSnack('This entry no longer exists in the archive.');
+        _showSnack(InternalViewerStrings(context).text('entryGone'));
         return null;
       }
       final previous = _archive;
@@ -1398,7 +1394,7 @@ class _InternalViewerDialogState extends ConsumerState<InternalViewerDialog> {
       return matches.first;
     } on ArchivePasswordRequiredException catch (e) {
       _showSnack(
-          e.wrongPassword ? 'Incorrect password.' : 'Password required.');
+          e.wrongPassword ? InternalViewerStrings(context).text('incorrectPassword') : 'Password required.');
       return null;
     } on ArchiveViewException catch (e) {
       _showSnack(e.message);
@@ -1488,15 +1484,15 @@ class _InternalViewerDialogState extends ConsumerState<InternalViewerDialog> {
                     const PopupMenuDivider(),
                     PopupMenuItem(
                       value: 'bpl8',
-                      child: Text('Hex: 8 bytes per row'),
+                      child: Text(InternalViewerStrings(context).withNumber('hexRows', 8)),
                     ),
                     PopupMenuItem(
                       value: 'bpl16',
-                      child: Text('Hex: 16 bytes per row'),
+                      child: Text(InternalViewerStrings(context).withNumber('hexRows', 16)),
                     ),
                     PopupMenuItem(
                       value: 'bpl32',
-                      child: Text('Hex: 32 bytes per row'),
+                      child: Text(InternalViewerStrings(context).withNumber('hexRows', 32)),
                     ),
                     const PopupMenuDivider(),
                     PopupMenuItem(
@@ -1733,8 +1729,8 @@ class _InternalViewerDialogState extends ConsumerState<InternalViewerDialog> {
                 decoration: InputDecoration(
                   isDense: true,
                   hintText: _mode == ViewerMode.hex
-                      ? 'Hex bytes (e.g. DE AD BE EF) or text'
-                      : 'Search text or 0x… bytes',
+                      ? InternalViewerStrings(context).text('hexHint')
+                      : InternalViewerStrings(context).text('textHint'),
                   border: const OutlineInputBorder(),
                   contentPadding:
                       const EdgeInsets.symmetric(horizontal: 8, vertical: 6),
@@ -1831,7 +1827,7 @@ class _InternalViewerDialogState extends ConsumerState<InternalViewerDialog> {
         return _buildMediaBody();
       case ViewerMode.font:
         final data = _fullData;
-        if (data == null) return _messagePane('Font data unavailable.', theme);
+        if (data == null) return _messagePane(InternalViewerStrings(context).text('fontUnavailable'), theme);
         return FontPreview(fontBytes: data, filename: _viewName);
       case ViewerMode.csv:
         return CsvTableView(content: _richText ?? '', filename: _viewName);
@@ -1841,8 +1837,7 @@ class _InternalViewerDialogState extends ConsumerState<InternalViewerDialog> {
         return _buildArchiveList(theme);
       case ViewerMode.unsupported:
         return _messagePane(
-          'No preview is available for this file type.\n'
-          'Use Hex, ASCII or Binary mode to inspect the raw bytes.',
+          InternalViewerStrings(context).text('previewUnavailable'),
           theme,
         );
     }
@@ -2031,13 +2026,13 @@ class _InternalViewerDialogState extends ConsumerState<InternalViewerDialog> {
   Future<void> _openSystemPreview() async {
     final data = _fullData;
     if (data == null) {
-      _showSnack('Document data is not available yet.');
+      _showSnack(InternalViewerStrings(context).text('docUnavailable'));
       return;
     }
     try {
       await _systemPreviewService.show(data, _viewName);
     } catch (e) {
-      _showSnack('System preview failed: $e');
+      _showSnack(InternalViewerStrings(context).withNumber('previewError', e));
     }
   }
 
@@ -2086,11 +2081,11 @@ class _InternalViewerDialogState extends ConsumerState<InternalViewerDialog> {
   }
 
   String _officeViewLabel(_OfficeView view) => switch (view) {
-        _OfficeView.slides => 'Slides',
-        _OfficeView.pdf => 'Pages',
-        _OfficeView.formatted => 'Formatted',
-        _OfficeView.table => 'Table',
-        _OfficeView.text => 'Text',
+        _OfficeView.slides => InternalViewerStrings(context).text('slides'),
+        _OfficeView.pdf => InternalViewerStrings(context).text('pages'),
+        _OfficeView.formatted => InternalViewerStrings(context).text('formatted'),
+        _OfficeView.table => InternalViewerStrings(context).text('table'),
+        _OfficeView.text => InternalViewerStrings(context).text('text'),
         _OfficeView.raw => 'XML',
       };
 
@@ -2127,7 +2122,7 @@ class _InternalViewerDialogState extends ConsumerState<InternalViewerDialog> {
                   const SizedBox(height: 12),
                   OutlinedButton(
                     onPressed: () => unawaited(_loadOfficePdf()),
-                    child: const Text('Retry'),
+                    child: Text(InternalViewerStrings(context).text('retry')),
                   ),
                 ],
               ),
@@ -2156,7 +2151,7 @@ class _InternalViewerDialogState extends ConsumerState<InternalViewerDialog> {
           if (document.plainText.trim().isNotEmpty) {
             return _buildOfficeText(document, theme);
           }
-          return _messagePane('No readable content found in this document.', theme);
+          return _messagePane(InternalViewerStrings(context).text('noContent'), theme);
         }
         return Markdown(
           data: markdown,
@@ -2169,7 +2164,7 @@ class _InternalViewerDialogState extends ConsumerState<InternalViewerDialog> {
         final raw = document.rawXml;
         if (raw == null || raw.isEmpty) {
           return _messagePane(
-            'Raw XML is not available for this document.',
+            InternalViewerStrings(context).text('noRaw'),
             theme,
           );
         }
@@ -2180,7 +2175,7 @@ class _InternalViewerDialogState extends ConsumerState<InternalViewerDialog> {
   Widget _buildOfficeText(OfficeDocument document, ThemeData theme) {
     final full = document.plainText;
     if (full.trim().isEmpty) {
-      return _messagePane('No readable text found in this document.', theme);
+      return _messagePane(InternalViewerStrings(context).text('noText'), theme);
     }
     final text = full.length > _kRichRenderCap
         ? full.substring(0, _kRichRenderCap)
@@ -2209,7 +2204,7 @@ class _InternalViewerDialogState extends ConsumerState<InternalViewerDialog> {
     if (controller == null) {
       return Center(
         child: Text(
-          'Rendering PDF…',
+          InternalViewerStrings(context).text('pdfRender'),
           style: TextStyle(color: theme.colorScheme.onSurfaceVariant),
         ),
       );
@@ -2262,10 +2257,10 @@ class _InternalViewerDialogState extends ConsumerState<InternalViewerDialog> {
         _pdfTextLoading = false;
         if (text == null) {
           _pdfTextError =
-              'PDF text extraction is not available on this platform.';
+              InternalViewerStrings(context).text('pdfUnsupported');
         } else if (text.trim().isEmpty) {
           _pdfTextError =
-              'This PDF has no text layer (it may be a scanned document).';
+              InternalViewerStrings(context).text('pdfNoText');
         } else {
           _pdfText = text;
         }
@@ -2274,7 +2269,7 @@ class _InternalViewerDialogState extends ConsumerState<InternalViewerDialog> {
       if (!mounted) return;
       setState(() {
         _pdfTextLoading = false;
-        _pdfTextError = 'Could not extract PDF text: $e';
+        _pdfTextError = InternalViewerStrings(context).withNumber('pdfError', e);
       });
     }
   }
@@ -2282,7 +2277,7 @@ class _InternalViewerDialogState extends ConsumerState<InternalViewerDialog> {
   Widget _buildImageBody() {
     final data = _fullData;
     if (data == null) {
-      return _messagePane('Image data unavailable.', Theme.of(context));
+      return _messagePane(InternalViewerStrings(context).text('imageUnavailable'), Theme.of(context));
     }
     final lower = _viewName.toLowerCase();
     final isSvg = lower.endsWith('.svg') || lower.endsWith('.svgz');
@@ -2392,7 +2387,7 @@ class _InternalViewerDialogState extends ConsumerState<InternalViewerDialog> {
                 Padding(
                   padding: const EdgeInsets.only(left: 4),
                   child: Tooltip(
-                    message: 'Path escaped the archive root (sanitized)',
+                    message: InternalViewerStrings(context).text('pathEscaped'),
                     child: Icon(
                       Icons.warning_amber_rounded,
                       size: 14,
@@ -2446,15 +2441,15 @@ class _InternalViewerDialogState extends ConsumerState<InternalViewerDialog> {
                 children: [
                   OutlinedButton(
                     onPressed: () => _selectMode(ViewerMode.hex),
-                    child: const Text('Hex view'),
+                    child: Text(InternalViewerStrings(context).text('hexView')),
                   ),
                   OutlinedButton(
                     onPressed: () => _selectMode(ViewerMode.ascii),
-                    child: const Text('ASCII view'),
+                    child: Text(InternalViewerStrings(context).text('asciiView')),
                   ),
                   OutlinedButton(
                     onPressed: () => _selectMode(ViewerMode.binary),
-                    child: const Text('Binary view'),
+                    child: Text(InternalViewerStrings(context).text('binaryView')),
                   ),
                 ],
               ),
@@ -2473,12 +2468,12 @@ class _InternalViewerDialogState extends ConsumerState<InternalViewerDialog> {
     final parts = <String>[
       _modeLabelOf(_mode),
       formatBytes(_dataSize),
-      if (_isStreamed) 'streamed',
-      if (_mode == ViewerMode.hex) '$_bytesPerLine bytes/row',
+      if (_isStreamed) InternalViewerStrings(context).text('streamed'),
+      if (_mode == ViewerMode.hex) InternalViewerStrings(context).withNumber('bytesRow', _bytesPerLine),
       if (_mode == ViewerMode.archive && _archive != null)
         _archive!.formatName.toUpperCase(),
       if (_mode == ViewerMode.pdf && _pdfShowText && _pdfText != null)
-        '${_pdfText!.length} characters',
+        InternalViewerStrings(context).withNumber('characters', _pdfText!.length),
       if (_canChangeEncoding && _encoding != null) _encoding!,
       if (_viewNote != null) _viewNote!,
       if (_mode == ViewerMode.hex && _selectedByte != null) _selectedByteText(),
@@ -2516,9 +2511,9 @@ class _InternalViewerDialogState extends ConsumerState<InternalViewerDialog> {
     final row = _topVisibleRow();
     if (_mode == ViewerMode.hex) {
       final offset = row * _bytesPerLine;
-      return 'offset 0x${offset.toRadixString(16).toUpperCase().padLeft(8, '0')}';
+      return InternalViewerStrings(context).withNumber('offset', '0x${offset.toRadixString(16).toUpperCase().padLeft(8, '0')}');
     }
-    return 'line ${row + 1}';
+    return InternalViewerStrings(context).withNumber('line', row + 1);
   }
 
   String _selectedByteText() {
@@ -2533,7 +2528,7 @@ class _InternalViewerDialogState extends ConsumerState<InternalViewerDialog> {
   String? get _searchStatusText {
     if (!_searchOpen && _matches.isEmpty) return null;
     final base = _matches.isEmpty
-        ? 'no matches'
+        ? InternalViewerStrings(context).text('noMatches')
         : '${_matchIndex + 1}/${_matches.length}';
     if (_searchNote == null) return base;
     return '$base (${_searchNote!})';
@@ -2580,18 +2575,18 @@ class _InternalViewerDialogState extends ConsumerState<InternalViewerDialog> {
     return (shebang == null || shebang == 'plaintext') ? null : shebang;
   }
 
-  static String _modeLabelOf(ViewerMode mode) {
+  String _modeLabelOf(ViewerMode mode) {
     switch (mode) {
       case ViewerMode.text:
-        return 'Text';
+        return InternalViewerStrings(context).text('text');
       case ViewerMode.ascii:
         return 'ASCII';
       case ViewerMode.binary:
-        return 'Binary';
+        return InternalViewerStrings(context).text('binary');
       case ViewerMode.hex:
         return 'Hex';
       case ViewerMode.image:
-        return 'Image';
+        return InternalViewerStrings(context).text('image');
       case ViewerMode.markdown:
         return 'Markdown';
       case ViewerMode.html:
@@ -2601,17 +2596,17 @@ class _InternalViewerDialogState extends ConsumerState<InternalViewerDialog> {
       case ViewerMode.pdf:
         return 'PDF';
       case ViewerMode.media:
-        return 'Media';
+        return InternalViewerStrings(context).text('media');
       case ViewerMode.font:
-        return 'Font';
+        return InternalViewerStrings(context).text('font');
       case ViewerMode.csv:
-        return 'Table';
+        return InternalViewerStrings(context).text('table');
       case ViewerMode.office:
         return 'Office';
       case ViewerMode.archive:
-        return 'Archive';
+        return InternalViewerStrings(context).text('archive');
       case ViewerMode.unsupported:
-        return 'Unsupported';
+        return InternalViewerStrings(context).text('unsupported');
     }
   }
 }

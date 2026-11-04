@@ -265,7 +265,7 @@
   "lastPage": "Last page",
   "playAudio": "Play Audio",
   "playVideo": "Play Video",
-  "emptyFile": "Empty file",
+  "emptyFile": "Fichier vide",
 
   "systemLogTitle": "System Log ({count} entries)",
   "@systemLogTitle": {

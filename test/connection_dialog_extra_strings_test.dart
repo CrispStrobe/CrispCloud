@@ -1,5 +1,6 @@
 import 'package:crisp_cloud/l10n/app_localizations.dart';
 import 'package:crisp_cloud/l10n/connection_dialog_extra_strings.dart';
+import 'package:crisp_cloud/services/cloud_storage_interface.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 
@@ -24,7 +25,9 @@ void main() {
         localizationsDelegates: AppLocalizations.localizationsDelegates,
         home: Builder(builder: (context) {
           final strings = ConnectionDialogExtraStrings(context);
-          return Scaffold(body: SingleChildScrollView(child: Column(children: [
+          return Scaffold(
+              body: SingleChildScrollView(
+                  child: Column(children: [
             Text(strings.text('verifySsh')),
             Text(strings.text('sshFingerprint', {
               'endpoint': 'example:22',
@@ -41,4 +44,25 @@ void main() {
       expect(instructions, isNot(contains('{')));
     });
   }
+  testWidgets('every provider has localized onboarding for every locale',
+      (tester) async {
+    for (final language in titles.keys) {
+      await tester.pumpWidget(MaterialApp(
+        locale: Locale(language),
+        supportedLocales: AppLocalizations.supportedLocales,
+        localizationsDelegates: AppLocalizations.localizationsDelegates,
+        home: Builder(builder: (context) {
+          final strings = ConnectionDialogExtraStrings(context);
+          return SingleChildScrollView(
+              child: Column(children: [
+            for (final provider in CloudProvider.values)
+              Text(strings.text(
+                  'provider${provider.name[0].toUpperCase()}${provider.name.substring(1)}')),
+          ]));
+        }),
+      ));
+      expect(find.byType(Text), findsNWidgets(CloudProvider.values.length));
+      expect(tester.takeException(), isNull);
+    }
+  });
 }

@@ -25,9 +25,15 @@ void main() {
     await tester.pumpAndSettle();
     expect(find.byTooltip('Suchen (Strg+F)'), findsOneWidget);
     expect(find.byTooltip('Schließen (Esc)'), findsOneWidget);
+    await tester.tap(find.byTooltip('Suchen (Strg+F)'));
+    await tester.pumpAndSettle();
+    expect(find.text('Text oder 0x…-Bytes suchen'), findsOneWidget);
+    await tester.tap(find.byTooltip('Suche schließen (Esc)'));
+    await tester.pumpAndSettle();
     await tester.tap(find.byTooltip('Mehr'));
     await tester.pumpAndSettle();
     expect(find.text('Vergrößern'), findsOneWidget);
+    expect(find.text('Hex: 8 Bytes pro Zeile'), findsOneWidget);
     expect(find.text('Gesamten Text kopieren'), findsOneWidget);
     await tester.tap(find.text('Zu Zeile / Position…'));
     await tester.pumpAndSettle();

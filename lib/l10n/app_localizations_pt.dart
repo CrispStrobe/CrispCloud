@@ -645,7 +645,7 @@ class AppLocalizationsPt extends AppLocalizations {
   String get playVideo => 'Play Video';
 
   @override
-  String get emptyFile => 'Empty file';
+  String get emptyFile => 'Arquivo vazio';
 
   @override
   String systemLogTitle(int count) {
