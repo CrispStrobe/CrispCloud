@@ -1,5 +1,7 @@
 import 'dart:ui';
 
+import 'report_asset_strings.dart';
+
 /// User-interface language of the report designer.
 ///
 /// Labels are authored in English; [t] looks up the translation and falls
@@ -86,17 +88,29 @@ class ReportDesignerStrings {
     if (languageCode == 'en') return summary;
     // Remove only known engine wrappers; unknown errors keep their full text.
     var message = summary;
+    var assetError = false;
     for (final prefix in const [
       'ReportFormatException: ',
       'ReportExpressionException: ',
       'ReportPackageException: ',
+      'ReportFontException: ',
+      'ReportShapeException: ',
     ]) {
       if (message.startsWith(prefix)) {
         message = message.substring(prefix.length);
+        assetError =
+            prefix == 'ReportPackageException: ' ||
+            prefix == 'ReportFontException: ' ||
+            prefix == 'ReportShapeException: ';
         break;
       }
     }
-    final whole = _table[message] ?? _dynamicDiagnostic(message);
+    final whole =
+        (assetError
+            ? localizeReportAssetMessage(languageCode, message)
+            : null) ??
+        _table[message] ??
+        _dynamicDiagnostic(message);
     if (whole != null) return whole;
 
     final source = _sourceTail.firstMatch(message);
@@ -107,6 +121,13 @@ class ReportDesignerStrings {
     final at = source.group(3);
     return '$translated ${t('in')} "${source.group(2)}"'
         '${at == null ? '' : ' ${t('at character')} $at'}';
+  }
+
+  /// Localizes recognized import and embedding notices, preserving names.
+  String assetNotice(String message) {
+    if (languageCode == 'en') return message;
+    return localizeReportAssetMessage(languageCode, message) ??
+        diagnostic(message);
   }
 
   String? _dynamicDiagnostic(String message) {

@@ -990,7 +990,10 @@ class _QudsReportDesignerState extends State<QudsReportDesigner> {
       }
     } on Object catch (e) {
       if (mounted) {
-        setState(() => _message = '${_t('Export failed')}: $e');
+        setState(
+          () => _message =
+              '${_t('Export failed')}: ${_c.strings.diagnostic('$e')}',
+        );
       }
     }
   }
@@ -1009,7 +1012,10 @@ class _QudsReportDesignerState extends State<QudsReportDesigner> {
       }
     } on Object catch (e) {
       if (mounted) {
-        setState(() => _message = '${_t('Print failed')}: $e');
+        setState(
+          () => _message =
+              '${_t('Print failed')}: ${_c.strings.diagnostic('$e')}',
+        );
       }
     }
   }
@@ -1412,9 +1418,9 @@ class _QudsReportDesignerState extends State<QudsReportDesigner> {
     if (_message.isNotEmpty) {
       return _message;
     }
-    final String? notice = _c.notice;
+    final String? notice = _c.localizedNotice;
     if (notice != null && notice.isNotEmpty) {
-      return _t(notice);
+      return notice;
     }
     if (_c.mode == ReportDesignMode.data) {
       final ReportDataTableView t = _c.dataTable;
