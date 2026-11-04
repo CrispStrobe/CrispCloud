@@ -53,6 +53,7 @@ jobs:
           test/pdf_file_store_test.dart
           test/pdf_device_export_test.dart
           test/panel_file_origin_test.dart
+          test/transfer_stream_control_test.dart
           test/widget/pdf_editor_dialog_test.dart
           test/local_file_service_test.dart
           test/file_bytes_loader_test.dart
