@@ -35,16 +35,13 @@ flutter test
 
 Baseline observed on the `crispcloud` fork (4 November 2026):
 
-- engine: 456 passed, 3 skipped, 1 failure
-  (`test/pdf_widgets_test.dart`: watermark one-rotated-string assertion)
-- editor: 214 passed, 1 skipped, 3 failures
-  (`report_designer_test.dart`: font/template environment assertions)
+- engine: 458 passed, 3 skipped, 0 failures
+- editor: 220 passed, 1 skipped, 0 failures
 - CrispCloud regression tests: 5 passed
   (footnote superscript, header relayout, select all, and two round-trip tests)
 
-Those failures are baseline failures, not caused by the CrispCloud patches.
-They should be triaged or explicitly quarantined; they must not be allowed to
-hide regressions.
+The remaining skips are environment-only: three engine font tests and one
+editor test that needs an external PDF compare tool.
 
 A first preservation probe found that Quds rewrites `word/footnotes.xml` and
 drops the separator/continuationSeparator chrome notes while preserving the

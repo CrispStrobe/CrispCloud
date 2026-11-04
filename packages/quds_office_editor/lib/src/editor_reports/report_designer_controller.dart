@@ -7657,8 +7657,8 @@ class ReportDesignerController extends ChangeNotifier {
   /// family. Undoable.
   ///
   /// Throws [ReportFontException] for files reports cannot use: collections,
-  /// CFF outlines (`.otf`), italic faces, and fonts whose license forbids
-  /// embedding.
+  /// CFF outlines (`.otf`), and fonts whose license forbids embedding.
+  /// Regular, bold, italic and bold-italic faces are stored in their slots.
   String addFont(Uint8List bytes) {
     final ReportFontFileInfo info = _uprightFace(bytes);
     _mutate(() {

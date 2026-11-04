@@ -3318,7 +3318,7 @@ const String _featureShowcase = r'''<?xml version="1.0" encoding="UTF-8"?>
             <Subreport name="deliveryNote" template="delivery" dataSet="deliveries" x="14mm" y="78mm" width="182mm" height="34mm"/>
         </ReportHeader>
         <Section dataSet="items">
-            <Detail height="8mm">
+            <Detail height="16mm">
                 <Table name="itemsTable" x="12mm" y="0mm" width="186mm" showGrid="false" headerBackground="primary" headerColor="#FFFFFF" stripeColor="light" fontSize="9" headerFontSize="8" rowHeight="7.2mm" headerHeight="8mm" padding="3pt">
                     <Columns>
                         <Column width="28mm" header="[[colSku]]" align="start"/>

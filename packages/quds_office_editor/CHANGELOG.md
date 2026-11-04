@@ -4,6 +4,7 @@ All notable changes to `quds_office_editor` are documented here.
 
 ## Unreleased
 
+- Fix the feature-showcase template detail band so its item table fits.
 - Selection highlighting is visible on white pages.
 - Header and footer edits force a full relayout so typed text lands in the
   correct band.

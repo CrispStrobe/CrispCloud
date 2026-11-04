@@ -4,6 +4,8 @@ All notable changes to `quds_office_engine` are documented here.
 
 ## Unreleased
 
+- Fix the feature-showcase template detail band so its item table fits.
+- Watermark text rotates as one marked line on every page.
 - Imported DOCX footnote and endnote reference marks render as superscript.
   Notes attach to the page containing the reference glyph.
 
