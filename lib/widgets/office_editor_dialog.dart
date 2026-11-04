@@ -116,6 +116,7 @@ class _OfficeEditorDialogState extends ConsumerState<OfficeEditorDialog> {
   final GlobalKey<OfficeEditorRibbonState> _ribbonKey =
       GlobalKey<OfficeEditorRibbonState>();
   OfficeEditorMenuActions? _menuActions;
+  ProviderContainer? _providerContainer;
 
   OfficeSurfaceConfig _config = const OfficeSurfaceConfig(
     mode: OfficeInteractionMode.editing,
@@ -130,16 +131,30 @@ class _OfficeEditorDialogState extends ConsumerState<OfficeEditorDialog> {
   }
 
   @override
-  void deactivate() {
-    if (_menuActions != null) {
-      ref.read(officeEditorMenuProvider.notifier).state = null;
-      _menuActions = null;
-    }
-    super.deactivate();
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    _providerContainer = ProviderScope.containerOf(context, listen: false);
   }
 
   @override
   void dispose() {
+    final ProviderContainer? container = _providerContainer;
+    final OfficeEditorMenuActions? actions = _menuActions;
+    _menuActions = null;
+    _providerContainer = null;
+    if (container != null && actions != null) {
+      // Clearing the native-menu bridge mutates a provider. Do it after the
+      // widget tree leaves its build/deactivate phases.
+      scheduleMicrotask(() {
+        try {
+          if (identical(container.read(officeEditorMenuProvider), actions)) {
+            container.read(officeEditorMenuProvider.notifier).state = null;
+          }
+        } catch (_) {
+          // The provider container may already be disposed.
+        }
+      });
+    }
     _controller?.removeListener(_onControllerChanged);
     _controller?.commands.removeListener(_onControllerChanged);
     _controller?.dispose();

@@ -15,6 +15,9 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 enum QuickSearchMode {
+  /// Select every matching entry; the cursor moves to the first match.
+  select,
+
   /// Move the cursor to matching entries; the listing stays complete.
   jump,
 

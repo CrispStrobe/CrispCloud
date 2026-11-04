@@ -228,6 +228,8 @@ class _FileBrowserScreenState extends ConsumerState<FileBrowserScreen> {
         ),
         PlatformMenuItem(
           label: 'Rename...',
+          shortcut:
+              const SingleActivator(LogicalKeyboardKey.f6, shift: true),
           onSelected: () => showRenameDialog(context, ref),
         ),
       ]),

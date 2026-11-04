@@ -35,13 +35,17 @@ BetterOffice proof-of-concept criteria.
 `packages/quds_office_engine`:
 
 - footnote/endnote reference marks are imported as superscript,
-- footnotes attach only to the page containing the reference glyph.
+- footnotes attach only to the page containing the reference glyph,
+- PDF watermarks rotate as one marked line and survive missing-script faces,
+- the feature-showcase template detail band fits its item table.
 
 `packages/quds_office_editor`:
 
 - selection uses the theme selection colour (previously white-on-white),
 - header/footer edits force a full relayout so typed text lands in the header
-  band instead of stale page chrome.
+  band instead of stale page chrome,
+- report font tests match the supported italic/bold-italic slots,
+- feature-showcase templates carry the corrected detail band.
 
 ## Upstream contribution rules
 

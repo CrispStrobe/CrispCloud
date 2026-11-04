@@ -23,23 +23,34 @@ import 'office_editor_dialog.dart';
 import 'pdf_editor_dialog.dart';
 
 /// Opens a full-screen editor dialog for the given file.
-void showFileEditorDialog(
-    BuildContext context, WidgetRef ref, FileItem file, PanelSide side) {
+Future<void> showFileEditorDialog(
+    BuildContext context, WidgetRef ref, FileItem file, PanelSide side) async {
   if (file.isFolder) return;
-  if (isPdfFileName(file.name)) {
-    unawaited(showPdfEditorDialog(context, ref, file, side));
-    return;
+  try {
+    if (isPdfFileName(file.name)) {
+      await showPdfEditorDialog(context, ref, file, side);
+      return;
+    }
+    // Office documents get the rich Word/Sheet/Slides editor instead of the
+    // plain-text editor.
+    if (isOfficeFileName(file.name)) {
+      await showOfficeEditorDialog(context, ref, file, side);
+      return;
+    }
+    await Navigator.of(context).push(MaterialPageRoute(
+      fullscreenDialog: true,
+      builder: (_) => _FileEditorPage(file: file, side: side),
+    ));
+  } finally {
+    // Returning from any editor should land back on the same file with the
+    // panel ready for the next F3/F4, including when opened from a context
+    // menu rather than the F-key handler.
+    try {
+      ref.read(panelProvider(side)).restoreCursorAndFocus(file);
+    } catch (_) {
+      // The browser may already be disposed.
+    }
   }
-  // Office documents get the rich Word/Sheet/Slides editor instead of the
-  // plain-text editor.
-  if (isOfficeFileName(file.name)) {
-    unawaited(showOfficeEditorDialog(context, ref, file, side));
-    return;
-  }
-  Navigator.of(context).push(MaterialPageRoute(
-    fullscreenDialog: true,
-    builder: (_) => _FileEditorPage(file: file, side: side),
-  ));
 }
 
 class _FileEditorPage extends ConsumerStatefulWidget {
@@ -185,8 +196,10 @@ class _HighlightingController extends TextEditingController {
 class _FileEditorPageState extends ConsumerState<_FileEditorPage> {
   static const _log = Log('FileEditor');
   late final _HighlightingController _controller;
-  final _scrollController = ScrollController();
+  final _gutterScrollController = ScrollController();
+  final _editorScrollController = ScrollController();
   final _focusNode = FocusNode();
+  bool _syncingScroll = false;
 
   bool _loading = true;
   bool _saving = false;
@@ -212,6 +225,46 @@ class _FileEditorPageState extends ConsumerState<_FileEditorPage> {
     );
     _loadFile();
     _controller.addListener(_onTextChanged);
+    _gutterScrollController.addListener(_syncEditorFromGutter);
+    _editorScrollController.addListener(_syncGutterFromEditor);
+  }
+
+  /// The gutter and the TextField each need their own ScrollController, so
+  /// mirror their offsets in both directions. Without this the line numbers
+  /// stay at the top when the text is scrolled (the F3 viewer does this by
+  /// sharing one scroll view; the F4 editor cannot).
+  void _syncGutterFromEditor() {
+    if (_syncingScroll ||
+        !_editorScrollController.hasClients ||
+        !_gutterScrollController.hasClients) {
+      return;
+    }
+    _syncingScroll = true;
+    final target = _editorScrollController.offset.clamp(
+      0.0,
+      _gutterScrollController.position.maxScrollExtent,
+    );
+    if ((_gutterScrollController.offset - target).abs() > 0.5) {
+      _gutterScrollController.jumpTo(target);
+    }
+    _syncingScroll = false;
+  }
+
+  void _syncEditorFromGutter() {
+    if (_syncingScroll ||
+        !_editorScrollController.hasClients ||
+        !_gutterScrollController.hasClients) {
+      return;
+    }
+    _syncingScroll = true;
+    final target = _gutterScrollController.offset.clamp(
+      0.0,
+      _editorScrollController.position.maxScrollExtent,
+    );
+    if ((_editorScrollController.offset - target).abs() > 0.5) {
+      _editorScrollController.jumpTo(target);
+    }
+    _syncingScroll = false;
   }
 
   void _onTextChanged() {
@@ -225,6 +278,9 @@ class _FileEditorPageState extends ConsumerState<_FileEditorPage> {
     final newLineCount = '\n'.allMatches(_controller.text).length + 1;
     if (newLineCount != _lineCount) {
       setState(() => _lineCount = newLineCount);
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        if (mounted) _syncGutterFromEditor();
+      });
     }
 
     // Reset auto-save timer on each change
@@ -430,7 +486,8 @@ class _FileEditorPageState extends ConsumerState<_FileEditorPage> {
     _autoSaveTimer?.cancel();
     _controller.removeListener(_onTextChanged);
     _controller.dispose();
-    _scrollController.dispose();
+    _gutterScrollController.dispose();
+    _editorScrollController.dispose();
     _focusNode.dispose();
     super.dispose();
   }
@@ -603,16 +660,18 @@ class _FileEditorPageState extends ConsumerState<_FileEditorPage> {
           width: 48,
           color: theme.colorScheme.surfaceContainerHighest,
           child: ListView.builder(
-            controller: _scrollController,
+            controller: _gutterScrollController,
+            padding: const EdgeInsets.only(top: 8),
             itemCount: _lineCount,
-            itemExtent: 20,
+            // Must match the TextField's line height exactly.
+            itemExtent: 16.8,
             itemBuilder: (_, i) => Padding(
               padding: const EdgeInsets.only(right: 8),
               child: Text(
                 '${i + 1}',
                 textAlign: TextAlign.right,
                 style: TextStyle(
-                  fontFamily: 'monospace',
+                  fontFamily: 'AppMono',
                   fontSize: 12,
                   height: 1.4,
                   color: theme.colorScheme.onSurfaceVariant,
@@ -626,15 +685,23 @@ class _FileEditorPageState extends ConsumerState<_FileEditorPage> {
         Expanded(
           child: TextField(
             controller: _controller,
+            scrollController: _editorScrollController,
             focusNode: _focusNode,
             maxLines: null,
             expands: true,
+            textAlignVertical: TextAlignVertical.top,
+            strutStyle: const StrutStyle(
+              fontFamily: 'AppMono',
+              fontSize: 12,
+              height: 1.4,
+              forceStrutHeight: true,
+            ),
             decoration: const InputDecoration(
               border: InputBorder.none,
               contentPadding: EdgeInsets.all(8),
             ),
             style: const TextStyle(
-              fontFamily: 'monospace',
+              fontFamily: 'AppMono',
               fontSize: 12,
               height: 1.4,
             ),

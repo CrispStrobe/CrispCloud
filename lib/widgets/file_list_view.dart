@@ -1,6 +1,7 @@
 // widgets/file_list_view.dart
 
 import 'dart:io' show Platform;
+import 'dart:math' as math;
 import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
@@ -51,6 +52,12 @@ class FileListView extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final panel = ref.watch(panelProvider(side));
     final viewMode = ref.watch(panelViewModeProvider(side));
+    final double fontSize = ref.watch(fontSizeProvider);
+    final String fontFamily = ref.watch(fontFamilyProvider);
+    final TextStyle listTextStyle = TextStyle(
+      fontFamily: fontFamily == 'system' ? null : fontFamily,
+      fontSize: fontSize,
+    );
 
     void handleTap(FileItem file, bool shiftKey, bool ctrlKey) {
       if (shiftKey || ctrlKey) {
@@ -60,7 +67,9 @@ class FileListView extends ConsumerWidget {
       }
     }
     final isCompact = viewMode == PanelViewMode.full;
-    final itemHeight = isCompact ? 26.0 : 64.0;
+    final itemHeight = isCompact
+        ? math.max(26.0, fontSize + 14.0)
+        : math.max(64.0, fontSize + 46.0);
     // Cursor position within the displayed (possibly filtered) list.
     final cursorIndex = panel.displayedCursorIndex;
 
@@ -106,7 +115,9 @@ class FileListView extends ConsumerWidget {
       }
 
       final selectedFiles = panel.selection.toList();
-      final listView = ListView.builder(
+      final listView = DefaultTextStyle.merge(
+        style: listTextStyle,
+        child: ListView.builder(
         controller: scrollController,
         itemCount: files.length,
         itemExtent: itemHeight,
@@ -123,6 +134,7 @@ class FileListView extends ConsumerWidget {
                 isSelected: isSelected,
                 isCursor: isCursor,
                 selectedFiles: selectedFiles,
+                textStyle: listTextStyle,
                 showRelativePath: panel.isFlatView,
                 onTap: (shiftKey, ctrlKey) =>
                     handleTap(file, shiftKey, ctrlKey),
@@ -138,6 +150,7 @@ class FileListView extends ConsumerWidget {
               isSelected: isSelected,
               isCursor: isCursor,
               selectedFiles: selectedFiles,
+              textStyle: listTextStyle,
               showRelativePath: panel.isFlatView,
               onTap: (shiftKey, ctrlKey) => handleTap(file, shiftKey, ctrlKey),
               onDoubleTap: () => panel.navigateInto(file),
@@ -151,6 +164,7 @@ class FileListView extends ConsumerWidget {
             );
           }
         },
+      ),
       );
 
       // Wrap with a Focus that intercepts arrow/space/enter BEFORE the
@@ -161,6 +175,7 @@ class FileListView extends ConsumerWidget {
       return Listener(
         onPointerDown: (event) => _PointerModifiers.update(event),
         child: Focus(
+        focusNode: panel.listFocusNode,
         autofocus: isActivePanel,
         canRequestFocus: true,
         skipTraversal: true,
@@ -304,6 +319,7 @@ class FileListTile extends ConsumerWidget {
   final Function(TapDownDetails)? onSecondaryTap;
   /// When true, show relative path in subtitle (used in flat view).
   final bool showRelativePath;
+  final TextStyle? textStyle;
   const FileListTile({
     super.key,
     required this.file,
@@ -315,6 +331,7 @@ class FileListTile extends ConsumerWidget {
     required this.onDoubleTap,
     this.onSecondaryTap,
     this.showRelativePath = false,
+    this.textStyle,
   });
 
   String _buildSemanticLabel(FileItem f, bool selected, bool cursor) {
@@ -377,6 +394,10 @@ class FileListTile extends ConsumerWidget {
           child: Container(
           decoration: isCursor
               ? BoxDecoration(
+                  color: Theme.of(context)
+                      .colorScheme
+                      .primary
+                      .withValues(alpha: 0.16),
                   border: Border(
                     left: BorderSide(
                       color: Theme.of(context).colorScheme.primary,
@@ -395,7 +416,7 @@ class FileListTile extends ConsumerWidget {
             file.name,
             maxLines: 1,
             overflow: TextOverflow.ellipsis,
-            style: TextStyle(
+            style: (textStyle ?? const TextStyle()).copyWith(
               color: isSelected ? Theme.of(context).colorScheme.onPrimaryContainer : fileColor,
               fontWeight: isSelected ? FontWeight.w600 : FontWeight.normal,
             ),
@@ -404,7 +425,14 @@ class FileListTile extends ConsumerWidget {
             children: [
               if (showRelativePath && file.path != null) ...[
                 Expanded(
-                  child: Text(file.path!, maxLines: 1, overflow: TextOverflow.ellipsis, style: const TextStyle(fontSize: 11)),
+                  child: Text(
+                    file.path!,
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                    style: (textStyle ?? const TextStyle()).copyWith(
+                      fontSize: math.max(9.0, (textStyle?.fontSize ?? 13) - 2),
+                    ),
+                  ),
                 ),
               ] else ...[
                 if (file.isFolder && file.calculatedSize != null) ...[
@@ -514,6 +542,7 @@ class CompactFileTile extends ConsumerWidget {
   final VoidCallback onDoubleTap;
   final Function(TapDownDetails)? onSecondaryTap;
   final bool showRelativePath;
+  final TextStyle? textStyle;
 
   const CompactFileTile({
     super.key,
@@ -526,6 +555,7 @@ class CompactFileTile extends ConsumerWidget {
     required this.onDoubleTap,
     this.onSecondaryTap,
     this.showRelativePath = false,
+    this.textStyle,
   });
 
   @override
@@ -541,18 +571,25 @@ class CompactFileTile extends ConsumerWidget {
     final showDate = dateColW > 0;
     final showExt = extColW > 0;
 
-    // Selected = fill; cursor = left border (can combine both)
+    // Selected = fill; cursor = blue current-row bar + left marker.
+    final double baseSize = textStyle?.fontSize ?? 12;
     final bgColor = isSelected
         ? theme.colorScheme.primaryContainer.withValues(alpha: 0.55)
-        : Colors.transparent;
+        : isCursor
+            ? theme.colorScheme.primary.withValues(alpha: 0.16)
+            : Colors.transparent;
 
-    final nameStyle = TextStyle(
-      fontSize: 12,
+    final nameStyle = (textStyle ?? const TextStyle()).copyWith(
+      fontSize: baseSize,
       color: isSelected ? theme.colorScheme.onPrimaryContainer : fileColor,
       fontWeight: isSelected ? FontWeight.w600 : FontWeight.normal,
       height: 1.0,
     );
-    final dimStyle = TextStyle(fontSize: 11, color: theme.colorScheme.onSurface.withValues(alpha: 0.55), height: 1.0);
+    final dimStyle = (textStyle ?? const TextStyle()).copyWith(
+      fontSize: math.max(9.0, baseSize - 1),
+      color: theme.colorScheme.onSurface.withValues(alpha: 0.55),
+      height: 1.0,
+    );
 
     final sizeStr = file.name == '..'
         ? ''

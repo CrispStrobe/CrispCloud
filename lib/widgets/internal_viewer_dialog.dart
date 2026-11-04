@@ -46,6 +46,7 @@ import '../providers/providers.dart';
 import '../services/archive_viewer_service.dart';
 import '../services/file_bytes_loader.dart';
 import '../services/internal_viewer_service.dart';
+import '../services/local_file_service.dart';
 import '../services/log_service.dart';
 import '../services/office_document_service.dart';
 import '../services/office_pdf_service.dart';
@@ -200,6 +201,8 @@ class _InternalViewerDialogState extends ConsumerState<InternalViewerDialog> {
   // ---- Rich-mode resources -------------------------------------------------
   PdfController? _pdfController;
   PdfDocument? _pdfDoc;
+  /// True while a macOS/iOS security scope is held for PdfDocument.openFile.
+  bool _pdfStreamAccess = false;
   VideoPlayerController? _videoController;
   String? _mediaBlobUrl;
   String? _tempMediaPath;
@@ -302,7 +305,11 @@ class _InternalViewerDialogState extends ConsumerState<InternalViewerDialog> {
           );
         }
 
-        if (length > kAutoFullLoadBytes) {
+        // PDFs are opened in place by the PDF engine below. Avoid reading the
+        // entire file into Dart memory first: for large PDFs this was the main
+        // source of the F3 opening delay.
+        final isPdfName = _viewName.toLowerCase().endsWith('.pdf');
+        if (length > kAutoFullLoadBytes || isPdfName) {
           final source = ViewBytesSource.file(
             path,
             acquireAccess: () async {
@@ -544,14 +551,48 @@ class _InternalViewerDialogState extends ConsumerState<InternalViewerDialog> {
           return;
         case ViewerMode.pdf:
           setState(() => _preparing = true);
-          final data = await _ensureFullData();
-          if (!mounted || token != _prepareToken) return;
-          final doc = await PdfDocument.openData(data);
+          final String? localPath = (widget.bytesOverride == null &&
+                  !kIsWeb &&
+                  widget.side == PanelSide.local &&
+                  widget.file.path != null)
+              ? widget.file.path
+              : null;
+          PdfDocument? doc;
+          bool streamAccess = false;
+          LocalFileService? localSvc;
+          if (localPath != null) {
+            localSvc = ref.read(localFileServiceProvider);
+            // Keep the security-scoped access open until the document is
+            // closed; PdfDocument reads from the path lazily.
+            final acquired = await localSvc!.beginStreamAccess(localPath);
+            if (!mounted || token != _prepareToken) {
+              if (acquired) await localSvc.endStreamAccess();
+              return;
+            }
+            if (acquired) {
+              try {
+                doc = await PdfDocument.openFile(localPath);
+                streamAccess = true;
+              } catch (e, st) {
+                _log.warn('PdfDocument.openFile failed; using bytes', e, st);
+                await localSvc.endStreamAccess();
+              }
+            }
+          }
+          if (doc == null) {
+            final data = await _ensureFullData();
+            if (!mounted || token != _prepareToken) return;
+            doc = await PdfDocument.openData(data);
+          }
           if (!mounted || token != _prepareToken) {
             unawaited(doc.close().catchError((Object _) {}));
+            if (streamAccess) {
+              unawaited(localSvc!.endStreamAccess().catchError((Object _) {}));
+            }
             return;
           }
           _pdfDoc = doc;
+          _pdfStreamAccess = streamAccess;
           _pdfController = PdfController(document: Future.value(doc));
           setState(() => _preparing = false);
           return;
@@ -585,6 +626,10 @@ class _InternalViewerDialogState extends ConsumerState<InternalViewerDialog> {
     _pdfController = null;
     final doc = _pdfDoc;
     _pdfDoc = null;
+    final releasePdfStream = _pdfStreamAccess;
+    _pdfStreamAccess = false;
+    final pdfLocalService =
+        releasePdfStream ? ref.read(localFileServiceProvider) : null;
     final video = _videoController;
     _videoController = null;
     final tempPath = _tempMediaPath;
@@ -605,7 +650,20 @@ class _InternalViewerDialogState extends ConsumerState<InternalViewerDialog> {
     // only delete the media file after the player has released it.
     WidgetsBinding.instance.addPostFrameCallback((_) async {
       pdf?.dispose();
-      if (doc != null) unawaited(doc.close().catchError((Object _) {}));
+      if (doc != null) {
+        try {
+          await doc.close();
+        } catch (_) {
+          // Best effort.
+        }
+      }
+      if (releasePdfStream) {
+        try {
+          await pdfLocalService?.endStreamAccess();
+        } catch (_) {
+          // Best effort.
+        }
+      }
       if (video != null) {
         try {
           await video.dispose();

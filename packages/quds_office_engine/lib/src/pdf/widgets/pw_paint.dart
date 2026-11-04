@@ -210,7 +210,24 @@ void pwEmitStampLine(
   context.useText(text);
   _recordShaped(context, text, resolved.bold);
   final List<BrokenLine> lines = pwWrapText(context, text, pageW * 0.9, style);
-  if (lines.isEmpty || lines.first.glyphs.isEmpty) {
+  final SfntFont? stampFace = context.faceFor(bold: resolved.bold);
+  if (stampFace == null || lines.isEmpty || lines.first.glyphs.isEmpty) {
+    // No face can shape this script (for example Arabic without an Arabic
+    // face). A watermark is still a single logical marked line; emit it so
+    // viewers can select and rotate the word instead of dropping it.
+    final double fallbackWidth = text.length * resolved.fontSize * 0.5;
+    canvas.save();
+    canvas.rotateAround(pageW / 2, pageH / 2, -45);
+    canvas.showMarkedLine(
+      x: (pageW - fallbackWidth) / 2,
+      y: pageH / 2,
+      fontSize: resolved.fontSize,
+      logical: text,
+      color: resolved.color,
+      fontName: 'F2',
+      visual: ' ',
+    );
+    canvas.restore();
     return;
   }
   final BrokenLine line = lines.first;
@@ -219,7 +236,7 @@ void pwEmitStampLine(
       : line.width;
   final double x = (pageW - width) / 2;
   final double y = pageH / 2;
-  final SfntFont? face = context.faceFor(bold: resolved.bold);
+  final SfntFont? face = stampFace;
   final ({FontSubset? subset, String fontName}) embed = context.embedFor(
     bold: resolved.bold,
   );
@@ -234,6 +251,11 @@ void pwEmitStampLine(
       );
     }
   }
+  // A watermark is diagonal. Rotate the CTM around the page centre so the
+  // whole marked line is one rotated text object, not a stack of letter
+  // operators.
+  canvas.save();
+  canvas.rotateAround(pageW / 2, pageH / 2, -45);
   canvas.showMarkedLine(
     x: x,
     y: y,
@@ -243,6 +265,7 @@ void pwEmitStampLine(
     fontName: face == null ? 'F2' : embed.fontName,
     glyphIds: glyphIds,
   );
+  canvas.restore();
 }
 
 /// Paints wrapped paragraphs; returns the height used.

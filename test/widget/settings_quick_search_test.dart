@@ -8,6 +8,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
+import 'package:crisp_cloud/providers/core_providers.dart';
 import 'package:crisp_cloud/providers/quick_search_provider.dart';
 import 'package:crisp_cloud/widgets/settings_dialog.dart';
 
@@ -50,6 +51,38 @@ void main() {
       container.read(quickSearchSettingsProvider).mode,
       QuickSearchMode.filter,
     );
+  });
+
+
+  testWidgets('typing mode can select matching files', (tester) async {
+    await pumpSettings(tester);
+    await tester.tap(find.text('Select'));
+    await tester.pumpAndSettle();
+
+    expect(
+      container.read(quickSearchSettingsProvider).mode,
+      QuickSearchMode.select,
+    );
+  });
+
+  testWidgets('file-list font family and size are configurable', (tester) async {
+    await pumpSettings(tester);
+
+    await tester.ensureVisible(find.byKey(const Key('settings_font_family')));
+    await tester.pumpAndSettle();
+    expect(container.read(fontFamilyProvider), 'system');
+    await tester.tap(find.text('System default'));
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('Monospaced (Roboto Mono)').last);
+    await tester.pumpAndSettle();
+    expect(container.read(fontFamilyProvider), 'AppMono');
+
+    await tester.ensureVisible(find.byKey(const Key('settings_font_size')));
+    await tester.pumpAndSettle();
+    final double before = container.read(fontSizeProvider);
+    await tester.drag(find.byType(Slider), const Offset(60, 0));
+    await tester.pumpAndSettle();
+    expect(container.read(fontSizeProvider), greaterThan(before));
   });
 
   testWidgets('prefix, case and arrow toggles persist to the provider', (

@@ -326,6 +326,7 @@ class PdfCanvas {
     required String color,
     required String fontName,
     List<int> glyphIds = const <int>[],
+    String? visual,
   }) {
     endText();
     _buf.writeln('/Span << /ActualText ${_utf16Hex(logical)} >> BDC');
@@ -334,7 +335,7 @@ class PdfCanvas {
     _setFont(fontName, fontSize);
     _buf.writeln('1 0 0 -1 ${_n(x)} ${_n(y)} Tm');
     if (glyphIds.isEmpty) {
-      _buf.writeln('(${_pdfEscape(logical)}) Tj');
+      _buf.writeln('(${_pdfEscape(visual ?? logical)}) Tj');
     } else {
       final String hex = glyphIds
           .map((int id) => id.toRadixString(16).padLeft(4, '0'))

@@ -3,6 +3,8 @@
 // Keyboard shortcut definitions for the file browser.
 // Extracted from file_browser_screen.dart for maintainability.
 
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -15,10 +17,15 @@ import '../providers/toolbar_provider.dart' show panelViewModeProvider;
 import '../services/panel_view_mode_service.dart' show PanelViewMode;
 import '../services/panel_swap_service.dart';
 import 'package:flutter/foundation.dart' show kIsWeb;
+import 'package:path/path.dart' as p;
+
+import '../services/archive_service.dart';
 
 import '../widgets/command_palette.dart';
-import '../widgets/file_context_menu.dart' show openWithSystemEditor, showPropertiesDialog;
+import '../widgets/file_context_menu.dart'
+    show openWithSystemEditor, showPropertiesDialog, showFileContextMenu;
 import '../widgets/file_toolbar.dart' show showPanelFilterDialog;
+import '../widgets/search_dialogs.dart' show showSearchDialog;
 import 'screen_dialogs.dart';
 
 /// Handles all keyboard events for the file browser screen.
@@ -132,9 +139,19 @@ KeyEventResult handleKeyEvent(
     return KeyEventResult.handled;
   }
 
-  // Ctrl+G - Go to path
-  if (isCtrl && event.logicalKey == LogicalKeyboardKey.keyG) {
+  // Ctrl+G / Ctrl+L - Go to path
+  if (isCtrl &&
+      (event.logicalKey == LogicalKeyboardKey.keyG ||
+          event.logicalKey == LogicalKeyboardKey.keyL)) {
     showGoToDialog(context, ref);
+    return KeyEventResult.handled;
+  }
+
+  // Alt+F7 - Search all files (TC/DC convention)
+  if (!isCtrl &&
+      HardwareKeyboard.instance.isAltPressed &&
+      event.logicalKey == LogicalKeyboardKey.f7) {
+    showSearchDialog(context, ref);
     return KeyEventResult.handled;
   }
 
@@ -193,19 +210,40 @@ KeyEventResult handleKeyEvent(
     return KeyEventResult.handled;
   }
 
-  // Ctrl+Enter — open cursor item in opposite panel (DC: navigate other panel to same path)
-  if (isCtrl && event.logicalKey == LogicalKeyboardKey.enter) {
-    final item = panel.cursorItem;
-    if (item != null && item.isFolder) {
-      final targetPath = item.path ?? '${panel.currentPath}/${item.name}';
-      final oppPanel = activePanel == PanelSide.local ? PanelSide.remote : PanelSide.local;
-      ref.read(panelProvider(oppPanel)).navigateToPath(targetPath);
+  // Ctrl+Enter — open the cursor item in the opposite panel.
+  // Ctrl+Left / Ctrl+Right — open it in the explicitly named panel.
+  if (isCtrl &&
+      (event.logicalKey == LogicalKeyboardKey.enter ||
+          event.logicalKey == LogicalKeyboardKey.arrowLeft ||
+          event.logicalKey == LogicalKeyboardKey.arrowRight)) {
+    final PanelSide targetSide;
+    if (event.logicalKey == LogicalKeyboardKey.enter) {
+      targetSide =
+          activePanel == PanelSide.local ? PanelSide.remote : PanelSide.local;
+    } else {
+      targetSide = event.logicalKey == LogicalKeyboardKey.arrowLeft
+          ? PanelSide.local
+          : PanelSide.remote;
     }
+    unawaited(_openCursorInPanel(
+      context,
+      ref,
+      panel,
+      activePanel,
+      targetSide,
+      onPanelSwitch: onPanelSwitch,
+    ));
     return KeyEventResult.handled;
   }
 
   // Ctrl+A - Select All
   if (isCtrl && event.logicalKey == LogicalKeyboardKey.keyA) {
+    panel.selectAll();
+    return KeyEventResult.handled;
+  }
+
+  // Numpad 5 - Select all (DC convention; also handled inside the list view)
+  if (event.logicalKey == LogicalKeyboardKey.numpad5) {
     panel.selectAll();
     return KeyEventResult.handled;
   }
@@ -234,6 +272,8 @@ KeyEventResult handleKeyEvent(
       panel.clearTypeahead();
     } else if (panel.renamingItem != null) {
       panel.cancelRename();
+    } else if (panel.isInArchive) {
+      panel.exitArchive();
     } else {
       panel.clearSelection();
     }
@@ -252,9 +292,9 @@ KeyEventResult handleKeyEvent(
     return KeyEventResult.handled;
   }
 
-  // F2 or Shift+F6 - In-place rename of cursor item
+  // F2 or Shift+F6 - In-place rename of cursor item (TC/DC convention)
   if (event.logicalKey == LogicalKeyboardKey.f2 ||
-      (isShift && event.logicalKey == LogicalKeyboardKey.f6)) {
+      (!isCtrl && isShift && event.logicalKey == LogicalKeyboardKey.f6)) {
     final cursor = panel.cursorItem;
     if (cursor != null && cursor.name != '..') {
       panel.startRename(cursor);
@@ -402,9 +442,27 @@ KeyEventResult handleKeyEvent(
     return KeyEventResult.handled;
   }
 
-  // Ctrl+. - Toggle hidden (dot-prefixed) files
-  if (isCtrl && event.logicalKey == LogicalKeyboardKey.period) {
+  // Ctrl+. / Ctrl+H - Toggle hidden (dot-prefixed) files
+  if (isCtrl &&
+      (event.logicalKey == LogicalKeyboardKey.period ||
+          event.logicalKey == LogicalKeyboardKey.keyH)) {
     panel.toggleShowHiddenFiles();
+    return KeyEventResult.handled;
+  }
+
+  // Shift+F10 - Context menu for the cursor item (TC/DC convention)
+  if (isShift && !isCtrl && event.logicalKey == LogicalKeyboardKey.f10) {
+    final item = panel.cursorItem;
+    if (item != null && item.name != '..') {
+      final size = MediaQuery.sizeOf(context);
+      showFileContextMenu(
+        context,
+        ref,
+        activePanel,
+        item,
+        Offset(size.width / 2, size.height / 2),
+      );
+    }
     return KeyEventResult.handled;
   }
 
@@ -457,6 +515,70 @@ KeyEventResult handleKeyEvent(
   }
 
   return KeyEventResult.ignored;
+}
+
+/// Open the cursor item (folder, archive, or file) in [targetSide]. Archives
+/// are entered on the target panel, and files are selected in their parent
+/// directory so the destination pane lands on the same item.
+Future<void> _openCursorInPanel(
+  BuildContext context,
+  WidgetRef ref,
+  PanelNotifier sourcePanel,
+  PanelSide sourceSide,
+  PanelSide targetSide, {
+  void Function(PanelSide)? onPanelSwitch,
+}) async {
+  final item = sourcePanel.cursorItem;
+  if (item == null || item.name == '..') return;
+  if (sourcePanel.isInArchive) {
+    if (context.mounted) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text(
+            'Extract the file first; items inside an archive cannot be '
+            'opened in another panel.',
+          ),
+        ),
+      );
+    }
+    return;
+  }
+
+  final sourceIsLocal =
+      ref.read(panelSourceProvider(sourceSide)).isLocal;
+  final targetIsLocal =
+      ref.read(panelSourceProvider(targetSide)).isLocal;
+  if (sourceIsLocal != targetIsLocal) {
+    if (context.mounted) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text(
+            'Cannot open a local file in a remote panel (or vice versa).',
+          ),
+        ),
+      );
+    }
+    return;
+  }
+
+  final path = item.path;
+  if (path == null || path.isEmpty) return;
+  final targetPanel = ref.read(panelProvider(targetSide));
+  final parent = targetIsLocal ? p.dirname(path) : p.posix.dirname(path);
+
+  if (item.isFolder) {
+    await targetPanel.navigateToPath(path);
+  } else if (ArchiveService.isArchive(item.name)) {
+    await targetPanel.navigateToPath(parent);
+    await targetPanel.enterArchive(item);
+  } else {
+    await targetPanel.navigateToPath(parent, selectItem: item);
+  }
+
+  if (!context.mounted) return;
+  ref.read(activePanelProvider.notifier).state = targetSide;
+  onPanelSwitch?.call(targetSide);
+  targetPanel.restoreCursorAndFocus(item);
 }
 
 // ---------------------------------------------------------------------------
