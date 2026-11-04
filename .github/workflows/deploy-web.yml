@@ -19,7 +19,7 @@ env:
   # Pinned to match CI: Flutter >= 3.44 writes an invalid package_graph.json
   # for hosted deps reached only through a git dependency (internxt_client
   # -> dart_pg). See .github/workflows/ci.yml for details.
-  FLUTTER_VERSION: 3.38.5
+  FLUTTER_VERSION: 3.44.4
   FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: true
 
 jobs:

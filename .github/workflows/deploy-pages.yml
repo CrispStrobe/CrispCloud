@@ -31,7 +31,7 @@ env:
   FLUTTER_CHANNEL: stable
   # Pinned to match CI / deploy-web (Flutter >= 3.44 writes an invalid
   # package_graph.json for hosted deps reached only through a git dependency).
-  FLUTTER_VERSION: 3.38.5
+  FLUTTER_VERSION: 3.44.4
   FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: true
 
 jobs:

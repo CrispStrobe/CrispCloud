@@ -23,12 +23,10 @@ concurrency:
 
 env:
   FLUTTER_CHANNEL: stable
-  # Pinned: Flutter >= 3.44 has a pub regression that writes an invalid
-  # .dart_tool/package_graph.json ("dependencies for `dart_pg` missing")
-  # for hosted packages reached only through a git dependency
-  # (internxt_client -> dart_pg). 3.38.5 writes a valid graph for this
-  # exact dep set. Revisit when the upstream pub bug is fixed.
-  FLUTTER_VERSION: 3.38.5
+  # Quds Office 1.5/1.6 requires Dart 3.12, first shipped with Flutter 3.44.
+  # Keep this aligned with the toolchain used to resolve the Internxt git
+  # dependency; revisit if the pub package graph regression returns.
+  FLUTTER_VERSION: 3.44.4
   FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: true
 
 jobs:

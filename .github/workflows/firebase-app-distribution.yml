@@ -37,7 +37,7 @@ jobs:
         with:
           # Keep beta builds on the same toolchain as the validated CI build.
           # Flutter 3.44 can incorrectly report that Gradle produced no APK.
-          flutter-version: '3.38.5'
+          flutter-version: '3.44.4'
           channel: stable
           cache: true
 
