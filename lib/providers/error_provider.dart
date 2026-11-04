@@ -19,9 +19,10 @@ class AppError {
   final DateTime timestamp;
   final String? context;
   final PanelErrorCode? code;
+  final Object? cause;
   final Map<String, Object> arguments;
 
-  AppError(this.message, {this.context, this.code, Map<String, Object> arguments = const {}})
+  AppError(this.message, {this.context, this.code, this.cause, Map<String, Object> arguments = const {}})
       : arguments = Map.unmodifiable(arguments), timestamp = DateTime.now();
 
   @override
@@ -36,9 +37,9 @@ class ErrorNotifier extends ChangeNotifier {
   AppError? get lastAppError => _errors.isEmpty ? null : _errors.last;
   bool get hasErrors => _errors.isNotEmpty;
 
-  void addError(String message, {String? context, PanelErrorCode? code,
+  void addError(String message, {String? context, PanelErrorCode? code, Object? cause,
       Map<String, Object> arguments = const {}}) {
-    _errors.add(AppError(message, context: context, code: code, arguments: arguments));
+    _errors.add(AppError(message, context: context, code: code, cause: cause, arguments: arguments));
     notifyListeners();
   }
 

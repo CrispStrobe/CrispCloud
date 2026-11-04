@@ -18,6 +18,8 @@ import '../l10n/app_localizations.dart';
 import '../l10n/connection_dialog_extra_strings.dart';
 import '../l10n/connection_strings.dart';
 import '../l10n/connection_failure_strings.dart';
+import '../l10n/nextcloud_operation_strings.dart';
+import '../services/nextcloud_operation_failure.dart';
 import '../services/nextcloud_client_adapter.dart';
 
 class ConnectionDialog extends ConsumerStatefulWidget {
@@ -1393,7 +1395,9 @@ class _ConnectionDialogState extends ConsumerState<ConnectionDialog> {
         setState(() {
           _error = e is NextcloudAuthenticationException
               ? ConnectionStrings.of(context).authenticationFailed
-              : localizedConnectionFailure(context, e) ??
+              : e is NextcloudOperationFailure
+                  ? localizedNextcloudError(context, e)
+                  : localizedConnectionFailure(context, e) ??
                   e.toString().replaceAll('Exception:', '').trim();
           _isLoading = false;
         });

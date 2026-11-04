@@ -7,6 +7,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../l10n/multi_cloud_strings.dart';
+import '../l10n/nextcloud_operation_strings.dart';
 import '../models/file_item.dart';
 import '../models/operation_progress.dart';
 import '../providers/providers.dart';
@@ -266,7 +267,7 @@ class _MultiCloudDialogState extends ConsumerState<_MultiCloudDialog>
     } catch (e) {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text(_t('listError', {'error': e}))),
+          SnackBar(content: Text(_t('listError', {'error': localizedNextcloudError(context, e)}))),
         );
       }
       return;

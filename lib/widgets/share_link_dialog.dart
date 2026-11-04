@@ -17,6 +17,7 @@ import '../services/dropbox_client_adapter.dart';
 import '../services/onedrive_client_adapter.dart';
 import '../services/s3_client_adapter.dart';
 import '../services/log_service.dart';
+import '../l10n/nextcloud_operation_strings.dart';
 import '../l10n/app_localizations.dart';
 import '../l10n/share_link_strings.dart';
 
@@ -192,7 +193,7 @@ class _ShareLinkDialogState extends ConsumerState<_ShareLinkDialog> {
       _log.error('Share link generation failed', e);
       if (mounted) {
         setState(() {
-          _error = e.toString();
+          _error = localizedNextcloudError(context, e);
           _loading = false;
         });
       }

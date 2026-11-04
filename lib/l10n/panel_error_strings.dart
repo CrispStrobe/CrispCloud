@@ -1,15 +1,16 @@
 import 'package:flutter/widgets.dart';
 import '../providers/error_provider.dart';
+import 'nextcloud_operation_strings.dart';
 
 /// Localize recognized panel errors; preserve unknown and external details.
 String localizedPanelError(BuildContext context, AppError error) {
   final code = error.code;
-  if (code == null) return error.message;
+  if (code == null) return localizedNextcloudError(context, error.cause ?? error.message);
   final language = Localizations.maybeLocaleOf(context)?.languageCode ?? 'en';
   var result =
       (_messages[language] ?? _messages['en']!)[code.name] ?? error.message;
   for (final entry in error.arguments.entries) {
-    result = result.replaceAll('{${entry.key}}', '${entry.value}');
+    result = result.replaceAll('{${entry.key}}', localizedNextcloudError(context, entry.value));
   }
   return result;
 }

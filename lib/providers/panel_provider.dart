@@ -519,7 +519,7 @@ class PanelNotifier extends ChangeNotifier {
     } catch (e) {
       _log.warn('archive open failed', e);
       _archiveSource = null;
-      _ref.read(errorProvider).addError('Cannot open archive: $e', code: PanelErrorCode.archiveOpen, arguments: {'error': e.toString()});
+      _ref.read(errorProvider).addError('Cannot open archive: $e', code: PanelErrorCode.archiveOpen, arguments: {'error': e});
       notifyListeners();
       return;
     }
@@ -621,7 +621,7 @@ class PanelNotifier extends ChangeNotifier {
     } catch (e) {
       _log.warn('archive listing failed', e);
       _files = [];
-      _ref.read(errorProvider).addError('Failed to read archive: $e', code: PanelErrorCode.archiveRead, arguments: {'error': e.toString()});
+      _ref.read(errorProvider).addError('Failed to read archive: $e', code: PanelErrorCode.archiveRead, arguments: {'error': e});
     } finally {
       await archive?.close();
     }
@@ -678,7 +678,7 @@ class PanelNotifier extends ChangeNotifier {
       notifyListeners();
     } catch (e) {
       _log.warn('operation failed', e);
-      _ref.read(errorProvider).addError('Flat view failed: $e', code: PanelErrorCode.flatFailed, arguments: {'error': e.toString()});
+      _ref.read(errorProvider).addError('Flat view failed: $e', code: PanelErrorCode.flatFailed, arguments: {'error': e});
       _isFlatView = false;
     }
   }
@@ -1276,7 +1276,7 @@ class PanelNotifier extends ChangeNotifier {
       }
     } catch (e) {
       _log.warn('operation failed', e);
-      _ref.read(errorProvider).addError('Error picking directory: $e', code: PanelErrorCode.pickFailed, arguments: {'error': e.toString()});
+      _ref.read(errorProvider).addError('Error picking directory: $e', code: PanelErrorCode.pickFailed, arguments: {'error': e});
     }
   }
 
@@ -1341,7 +1341,7 @@ class PanelNotifier extends ChangeNotifier {
       }
     } catch (e) {
       _log.warn('operation failed', e);
-      errors.addError('Delete failed: $e', code: PanelErrorCode.deleteFailed, arguments: {'error': e.toString()});
+      errors.addError('Delete failed: $e', code: PanelErrorCode.deleteFailed, arguments: {'error': e});
       for (final file in files) {
         final src = file.path ?? p.posix.join(_remotePath, file.name);
         await audit.logError(
@@ -1432,7 +1432,7 @@ class PanelNotifier extends ChangeNotifier {
       await refresh();
     } catch (e) {
       _log.warn('operation failed', e);
-      _ref.read(errorProvider).addError('Rename failed: $e', code: PanelErrorCode.renameFailed, arguments: {'error': e.toString()});
+      _ref.read(errorProvider).addError('Rename failed: $e', code: PanelErrorCode.renameFailed, arguments: {'error': e});
       await audit.logError(
         operation: AuditOperation.rename,
         sourcePath: src,
@@ -1477,7 +1477,7 @@ class PanelNotifier extends ChangeNotifier {
       await refresh();
     } catch (e) {
       _log.warn('operation failed', e);
-      _ref.read(errorProvider).addError('Create folder failed: $e', code: PanelErrorCode.createFailed, arguments: {'error': e.toString()});
+      _ref.read(errorProvider).addError('Create folder failed: $e', code: PanelErrorCode.createFailed, arguments: {'error': e});
       await audit.logError(
         operation: AuditOperation.createFolder,
         sourcePath: folderPath,
@@ -1544,7 +1544,7 @@ class PanelNotifier extends ChangeNotifier {
       clearSelection();
     } catch (e) {
       _log.warn('operation failed', e);
-      _ref.read(errorProvider).addError('Move failed: $e', code: PanelErrorCode.moveFailed, arguments: {'error': e.toString()});
+      _ref.read(errorProvider).addError('Move failed: $e', code: PanelErrorCode.moveFailed, arguments: {'error': e});
       for (final file in files) {
         final src = file.path ?? p.posix.join(_remotePath, file.name);
         await audit.logError(
@@ -1628,7 +1628,7 @@ class PanelNotifier extends ChangeNotifier {
       await refresh();
     } catch (e) {
       _log.warn('operation failed', e);
-      _ref.read(errorProvider).addError('Copy failed: $e', code: PanelErrorCode.copyFailed, arguments: {'error': e.toString()});
+      _ref.read(errorProvider).addError('Copy failed: $e', code: PanelErrorCode.copyFailed, arguments: {'error': e});
       for (final file in files) {
         final src = file.path ?? p.posix.join(_remotePath, file.name);
         await audit.logError(
@@ -1887,7 +1887,7 @@ class PanelNotifier extends ChangeNotifier {
       _log.warn('operation failed', e);
       _localPath = await _localFileService.getSafeFallbackDirectory();
       if (_isDisposed) return;
-      _ref.read(errorProvider).addError(e.toString());
+      _ref.read(errorProvider).addError(e.toString(), cause: e);
       notifyListeners();
     }
   }
@@ -2043,7 +2043,7 @@ class PanelNotifier extends ChangeNotifier {
         return;
       }
       _files = [];
-      _ref.read(errorProvider).addError(e.toString());
+      _ref.read(errorProvider).addError(e.toString(), cause: e);
       notifyListeners();
     }
   }
@@ -2223,7 +2223,7 @@ class PanelNotifier extends ChangeNotifier {
       if (_files == null || _files!.isEmpty) {
         _files = [];
       }
-      _ref.read(errorProvider).addError(e.toString());
+      _ref.read(errorProvider).addError(e.toString(), cause: e);
       notifyListeners();
     }
   }

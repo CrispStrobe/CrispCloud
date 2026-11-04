@@ -21,6 +21,7 @@ import 'package:xml/xml.dart' as xml;
 
 import 'cloud_storage_interface.dart';
 import 'connection_failure.dart';
+import 'nextcloud_operation_failure.dart';
 import 'delta_sync_service.dart';
 import 'log_service.dart';
 import 'nextcloud_config_service.dart';
@@ -101,7 +102,7 @@ class NextcloudClientAdapter extends CloudStorageClient {
   Future<void> login(String email, String password, {String? twoFactorCode}) async {
     final parsed = _parseIdentity(email);
     if (parsed == null) {
-      throw Exception('Format must be username@https://nextcloud.example.com');
+      throw NextcloudOperationFailure(NextcloudOperationCode.invalidIdentity, 'Format must be username@https://nextcloud.example.com');
     }
     final username = parsed.$1;
     final serverUrl = parsed.$2;
@@ -119,7 +120,7 @@ class NextcloudClientAdapter extends CloudStorageClient {
       }
     } catch (e) {
       if (e is Exception) rethrow;
-      throw Exception('Connection failed: $e');
+      throw NextcloudOperationFailure(NextcloudOperationCode.connectionFailed, 'Connection failed: $e', {'error': e});
     }
 
     _username = username;
@@ -245,7 +246,7 @@ class NextcloudClientAdapter extends CloudStorageClient {
 
     final resp = await _propfind(uri, _username!, _password!, depth: '1');
     if (resp.statusCode != 207) {
-      throw Exception('Failed to list path "$path" (HTTP ${resp.statusCode})');
+      throw NextcloudOperationFailure(NextcloudOperationCode.list, 'Failed to list path "$path" (HTTP ${resp.statusCode})', {'path': path, 'status': resp.statusCode});
     }
 
     final items = _parsePropfind(resp.body);
@@ -319,7 +320,7 @@ class NextcloudClientAdapter extends CloudStorageClient {
     final resp = await http.Response.fromStream(streamed);
 
     if (resp.statusCode != 200 && resp.statusCode != 201 && resp.statusCode != 204) {
-      throw Exception('Nextcloud upload failed (HTTP ${resp.statusCode}): ${resp.body}');
+      throw NextcloudOperationFailure(NextcloudOperationCode.upload, 'Nextcloud upload failed (HTTP ${resp.statusCode}): ${resp.body}', {'status': resp.statusCode, 'body': resp.body});
     }
 
     onProgress?.call(fileData.length, fileData.length);
@@ -343,7 +344,7 @@ class NextcloudClientAdapter extends CloudStorageClient {
     });
 
     if (resp.statusCode != 200) {
-      throw Exception('Nextcloud download failed (HTTP ${resp.statusCode}): ${resp.body}');
+      throw NextcloudOperationFailure(NextcloudOperationCode.download, 'Nextcloud download failed (HTTP ${resp.statusCode}): ${resp.body}', {'status': resp.statusCode, 'body': resp.body});
     }
 
     onProgress?.call(resp.bodyBytes.length, resp.bodyBytes.length);
@@ -387,7 +388,7 @@ class NextcloudClientAdapter extends CloudStorageClient {
 
       if (mkcolResp.statusCode != 201 && mkcolResp.statusCode != 405) {
         // 405 = already exists in some servers
-        throw Exception('Failed to create folder "$accumulated" (HTTP ${mkcolResp.statusCode})');
+        throw NextcloudOperationFailure(NextcloudOperationCode.createFolder, 'Failed to create folder "$accumulated" (HTTP ${mkcolResp.statusCode})', {'path': accumulated, 'status': mkcolResp.statusCode});
       }
     }
   }
@@ -408,7 +409,7 @@ class NextcloudClientAdapter extends CloudStorageClient {
     final resp = await http.Response.fromStream(streamed);
 
     if (resp.statusCode != 204 && resp.statusCode != 200) {
-      throw Exception('Nextcloud delete failed (HTTP ${resp.statusCode}): ${resp.body}');
+      throw NextcloudOperationFailure(NextcloudOperationCode.delete, 'Nextcloud delete failed (HTTP ${resp.statusCode}): ${resp.body}', {'status': resp.statusCode, 'body': resp.body});
     }
   }
 
@@ -428,7 +429,7 @@ class NextcloudClientAdapter extends CloudStorageClient {
     final resp = await http.Response.fromStream(streamed);
 
     if (resp.statusCode != 201 && resp.statusCode != 204) {
-      throw Exception('Nextcloud move failed (HTTP ${resp.statusCode}): ${resp.body}');
+      throw NextcloudOperationFailure(NextcloudOperationCode.move, 'Nextcloud move failed (HTTP ${resp.statusCode}): ${resp.body}', {'status': resp.statusCode, 'body': resp.body});
     }
   }
 
@@ -464,7 +465,7 @@ class NextcloudClientAdapter extends CloudStorageClient {
     );
 
     if (resp.statusCode != 200) {
-      throw Exception('OCS share creation failed (HTTP ${resp.statusCode}): ${resp.body}');
+      throw NextcloudOperationFailure(NextcloudOperationCode.share, 'OCS share creation failed (HTTP ${resp.statusCode}): ${resp.body}', {'status': resp.statusCode, 'body': resp.body});
     }
 
     // Parse the share URL from XML response
@@ -474,7 +475,7 @@ class NextcloudClientAdapter extends CloudStorageClient {
       if (urlNode != null) return urlNode.innerText;
     } catch (_) {}
 
-    throw Exception('Failed to parse share URL from OCS response');
+    throw NextcloudOperationFailure(NextcloudOperationCode.shareParse, 'Failed to parse share URL from OCS response');
   }
 
   // ---------------------------------------------------------------------------
@@ -491,7 +492,7 @@ class NextcloudClientAdapter extends CloudStorageClient {
     final resp = await _propfind(uri, _username!, _password!, depth: '1');
 
     if (resp.statusCode != 207) {
-      throw Exception('Failed to list versions (HTTP ${resp.statusCode})');
+      throw NextcloudOperationFailure(NextcloudOperationCode.listVersions, 'Failed to list versions (HTTP ${resp.statusCode})', {'status': resp.statusCode});
     }
 
     final items = _parsePropfind(resp.body);
@@ -516,7 +517,7 @@ class NextcloudClientAdapter extends CloudStorageClient {
     final resp = await http.Response.fromStream(streamed);
 
     if (resp.statusCode != 201 && resp.statusCode != 204) {
-      throw Exception('Restore version failed (HTTP ${resp.statusCode}): ${resp.body}');
+      throw NextcloudOperationFailure(NextcloudOperationCode.restoreVersion, 'Restore version failed (HTTP ${resp.statusCode}): ${resp.body}', {'status': resp.statusCode, 'body': resp.body});
     }
   }
 
@@ -533,7 +534,7 @@ class NextcloudClientAdapter extends CloudStorageClient {
         creds['username'] == null ||
         creds['password'] == null ||
         creds['serverUrl'] == null) {
-      throw Exception('Not authenticated. Please connect to Nextcloud first.');
+      throw NextcloudOperationFailure(NextcloudOperationCode.notAuthenticated, 'Not authenticated. Please connect to Nextcloud first.');
     }
 
     _username = creds['username'];
@@ -593,7 +594,7 @@ class NextcloudClientAdapter extends CloudStorageClient {
       final streamed = await req.send();
       return await http.Response.fromStream(streamed);
     } catch (e) {
-      throw Exception('PROPFIND failed for $uri: $e');
+      throw NextcloudOperationFailure(NextcloudOperationCode.propfind, 'PROPFIND failed for $uri: $e', {'uri': uri, 'error': e});
     }
   }
 
@@ -724,8 +725,8 @@ class NextcloudClientAdapter extends CloudStorageClient {
     });
 
     if (resp.statusCode != 206 && resp.statusCode != 200) {
-      throw Exception(
-          'Nextcloud range download failed (HTTP ${resp.statusCode})');
+      throw NextcloudOperationFailure(NextcloudOperationCode.rangeDownload,
+          'Nextcloud range download failed (HTTP ${resp.statusCode})', {'status': resp.statusCode});
     }
     return resp.bodyBytes;
   }
@@ -777,7 +778,7 @@ class NextcloudClientAdapter extends CloudStorageClient {
     mkcolReq.headers['Authorization'] = authHeader;
     final mkcolResp = await http.Response.fromStream(await mkcolReq.send());
     if (mkcolResp.statusCode != 201 && mkcolResp.statusCode != 405) {
-      throw Exception('Chunked MKCOL failed (${mkcolResp.statusCode})');
+      throw NextcloudOperationFailure(NextcloudOperationCode.chunkCreate, 'Chunked MKCOL failed (${mkcolResp.statusCode})', {'status': mkcolResp.statusCode});
     }
 
     // 2. PUT — upload chunks
@@ -796,7 +797,7 @@ class NextcloudClientAdapter extends CloudStorageClient {
         putReq.bodyBytes = buf;
         final putResp = await http.Response.fromStream(await putReq.send());
         if (putResp.statusCode != 201 && putResp.statusCode != 204) {
-          throw Exception('Chunked PUT failed at offset $offset (${putResp.statusCode})');
+          throw NextcloudOperationFailure(NextcloudOperationCode.chunkUpload, 'Chunked PUT failed at offset $offset (${putResp.statusCode})', {'offset': offset, 'status': putResp.statusCode});
         }
       }
     } finally {
@@ -811,7 +812,7 @@ class NextcloudClientAdapter extends CloudStorageClient {
     moveReq.headers['Overwrite'] = 'T';
     final moveResp = await http.Response.fromStream(await moveReq.send());
     if (moveResp.statusCode != 201 && moveResp.statusCode != 204) {
-      throw Exception('Chunked MOVE failed (${moveResp.statusCode})');
+      throw NextcloudOperationFailure(NextcloudOperationCode.chunkFinish, 'Chunked MOVE failed (${moveResp.statusCode})', {'status': moveResp.statusCode});
     }
 
     _log.info('Chunked upload complete: $remotePath ($fileSize bytes)');
@@ -847,8 +848,8 @@ class NextcloudClientAdapter extends CloudStorageClient {
         }, body: buf);
 
         if (resp.statusCode != 200 && resp.statusCode != 204) {
-          throw Exception(
-              'Delta block upload failed at offset ${op.offset} (${resp.statusCode})');
+          throw NextcloudOperationFailure(NextcloudOperationCode.deltaUpload,
+              'Delta block upload failed at offset ${op.offset} (${resp.statusCode})', {'offset': op.offset, 'status': resp.statusCode});
         }
       }
 
