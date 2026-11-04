@@ -2,17 +2,19 @@ import 'package:flutter/widgets.dart';
 import '../services/terminal_mount_failure.dart';
 import 'provider_operation_strings.dart';
 
-String localizedTerminalMountError(BuildContext context, Object error) {
+String localizedTerminalMountError(BuildContext context, Object error) =>
+    localizedTerminalMountErrorForLanguage(Localizations.maybeLocaleOf(context)?.languageCode ?? 'en', error);
+
+String localizedTerminalMountErrorForLanguage(String language, Object error) {
   if (error is! TerminalMountFailure)
-    return localizedProviderError(context, error);
-  final language = Localizations.maybeLocaleOf(context)?.languageCode ?? 'en';
+    return localizedProviderErrorForLanguage(language, error);
   final template = (_messages[language] ?? _messages['en']!)[error.code.name]!;
   return template.replaceAllMapped(RegExp(r'\{([A-Za-z]+)\}'), (match) {
     final value = error.arguments[match.group(1)];
     if (value == null) return match.group(0)!;
     return value is TerminalMountFailure
-        ? localizedTerminalMountError(context, value)
-        : localizedProviderError(context, value);
+        ? localizedTerminalMountErrorForLanguage(language, value)
+        : localizedProviderErrorForLanguage(language, value);
   });
 }
 

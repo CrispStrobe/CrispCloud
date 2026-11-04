@@ -5,9 +5,11 @@ import 'remote_transport_extra_strings.dart';
 import 'remote_validation_strings.dart';
 
 /// Localizes structured transport failures while retaining unknown details.
-String? localizedRemoteTransportError(BuildContext context, Object error) {
+String? localizedRemoteTransportError(BuildContext context, Object error) =>
+    localizedRemoteTransportErrorForLanguage(Localizations.maybeLocaleOf(context)?.languageCode ?? 'en', error);
+
+String? localizedRemoteTransportErrorForLanguage(String language, Object error) {
   if (error is! RemoteLocalizedFailure || error.code == null) return null;
-  final language = Localizations.maybeLocaleOf(context)?.languageCode ?? 'en';
   var message = (_messages[language] ?? _messages['en']!)[error.code!.name];
   if (message == null && language == 'en') {
     return error is RemoteException ? error.message : error.toString();

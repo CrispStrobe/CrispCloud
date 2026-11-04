@@ -3,14 +3,16 @@ import 'remote_transport_strings.dart';
 import '../services/webdav_operation_failure.dart';
 
 /// Localize app-owned WebDAV messages while preserving remote error detail.
-String localizedWebDavError(BuildContext context, Object error) {
+String localizedWebDavError(BuildContext context, Object error) =>
+    localizedWebDavErrorForLanguage(Localizations.maybeLocaleOf(context)?.languageCode ?? 'en', error);
+
+String localizedWebDavErrorForLanguage(String language, Object error) {
   if (error is! WebDavOperationFailure) return error.toString();
-  final language = Localizations.maybeLocaleOf(context)?.languageCode ?? 'en';
   final template = (_messages[language] ?? _messages['en']!)[error.code.name];
   if (template == null) return error.toString();
   return template.replaceAllMapped(RegExp(r'\{([A-Za-z]+)\}'), (match) {
     final value = error.arguments[match.group(1)];
-    return value == null ? match.group(0)! : localizedRemoteTransportError(context, value) ?? value.toString();
+    return value == null ? match.group(0)! : localizedRemoteTransportErrorForLanguage(language, value) ?? value.toString();
   });
 }
 

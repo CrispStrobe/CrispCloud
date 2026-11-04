@@ -2,14 +2,16 @@ import 'package:flutter/widgets.dart';
 import '../services/ftp_operation_failure.dart';
 
 /// Translates FTP-owned errors and retains external error details.
-String localizedFtpError(BuildContext context, Object error) {
+String localizedFtpError(BuildContext context, Object error) =>
+    localizedFtpErrorForLanguage(Localizations.maybeLocaleOf(context)?.languageCode ?? 'en', error);
+
+String localizedFtpErrorForLanguage(String language, Object error) {
   if (error is! FtpOperationFailure) return error.toString();
-  final language = Localizations.maybeLocaleOf(context)?.languageCode ?? 'en';
   final template = (_messages[language] ?? _messages['en']!)[error.code.name] ??
       error.message;
   return template.replaceAllMapped(RegExp(r'\{([A-Za-z]+)\}'), (match) {
     final value = error.arguments[match.group(1)];
-    if (value is FtpOperationFailure) return localizedFtpError(context, value);
+    if (value is FtpOperationFailure) return localizedFtpErrorForLanguage(language, value);
     return value == null ? match.group(0)! : value.toString();
   });
 }

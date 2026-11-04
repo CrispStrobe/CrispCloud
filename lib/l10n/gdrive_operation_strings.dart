@@ -2,9 +2,11 @@ import 'package:flutter/widgets.dart';
 import '../services/gdrive_operation_failure.dart';
 
 /// Localize app-owned Google Drive errors while retaining server detail.
-String localizedGDriveError(BuildContext context, Object error) {
+String localizedGDriveError(BuildContext context, Object error) =>
+    localizedGDriveErrorForLanguage(Localizations.maybeLocaleOf(context)?.languageCode ?? 'en', error);
+
+String localizedGDriveErrorForLanguage(String language, Object error) {
   if (error is! GDriveOperationFailure) return error.toString();
-  final language = Localizations.maybeLocaleOf(context)?.languageCode ?? 'en';
   final map = _messages[language] ?? _messages['en']!;
   final code = error.code.name;
   final args = <String, Object>{...error.arguments};

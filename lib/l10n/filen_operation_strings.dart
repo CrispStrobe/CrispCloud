@@ -1,9 +1,11 @@
 import 'package:flutter/widgets.dart';
 import '../services/filen_operation_failure.dart';
 
-String localizedFilenError(BuildContext context, Object error) {
+String localizedFilenError(BuildContext context, Object error) =>
+    localizedFilenErrorForLanguage(Localizations.maybeLocaleOf(context)?.languageCode ?? 'en', error);
+
+String localizedFilenErrorForLanguage(String language, Object error) {
   if (error is! FilenOperationFailure) return error.toString();
-  final language = Localizations.maybeLocaleOf(context)?.languageCode ?? 'en';
   final template = (_messages[language] ?? _messages['en']!)[error.code.name] ?? error.message;
   return template.replaceAllMapped(RegExp(r'\{([A-Za-z]+)\}'), (match) {
     final value = error.arguments[match.group(1)];

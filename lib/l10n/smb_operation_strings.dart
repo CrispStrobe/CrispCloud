@@ -2,9 +2,11 @@ import 'package:flutter/widgets.dart';
 import '../services/smb_operation_failure.dart';
 
 /// Localizes app-owned SMB messages; leaves other errors untouched.
-String localizedSmbError(BuildContext context, Object error) {
+String localizedSmbError(BuildContext context, Object error) =>
+    localizedSmbErrorForLanguage(Localizations.maybeLocaleOf(context)?.languageCode ?? 'en', error);
+
+String localizedSmbErrorForLanguage(String language, Object error) {
   if (error is! SmbOperationFailure) return error.toString();
-  final language = Localizations.maybeLocaleOf(context)?.languageCode ?? 'en';
   return (_messages[language] ?? _messages['en']!)[error.code.name] ??
       error.toString();
 }

@@ -1,9 +1,11 @@
 import 'package:flutter/widgets.dart';
 import '../services/b2_operation_failure.dart';
 
-String localizedB2Error(BuildContext context, Object error) {
+String localizedB2Error(BuildContext context, Object error) =>
+    localizedB2ErrorForLanguage(Localizations.maybeLocaleOf(context)?.languageCode ?? 'en', error);
+
+String localizedB2ErrorForLanguage(String language, Object error) {
   if (error is! B2OperationFailure) return error.toString();
-  final language = Localizations.maybeLocaleOf(context)?.languageCode ?? 'en';
   final template = (_messages[language] ?? _messages['en']!)[error.code.name];
   if (template == null) return error.toString();
   return template.replaceAllMapped(RegExp(r'\{([A-Za-z]+)\}'), (match) {

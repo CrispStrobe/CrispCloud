@@ -2,6 +2,7 @@ import 'dart:ui' show Locale, PlatformDispatcher;
 
 import '../services/locale_preference.dart';
 import '../services/sync_engine.dart';
+import 'provider_operation_strings.dart';
 
 /// Notification text independent of the widget tree and foreground isolate.
 class BackgroundNotificationStrings {
@@ -25,10 +26,12 @@ class BackgroundNotificationStrings {
   String text(String key) =>
       (_values[language] ?? _values['en']!)[key] ?? _values['en']![key]!;
   String failure(Object error) =>
-      text('failure').replaceAll('{error}', error.toString());
+      text('failure').replaceAll('{error}', localizedProviderErrorForLanguage(language, error));
   String failureDetail(SyncFailureDetail detail) {
-    if (!detail.providerUnavailable)
-      return '${detail.location}: ${detail.cause}';
+    if (!detail.providerUnavailable) {
+      final cause = detail.cause;
+      return '${detail.location}: ${cause == null ? '' : localizedProviderErrorForLanguage(language, cause)}';
+    }
     final values = {'pair': detail.location, 'provider': detail.provider ?? ''};
     return text('unavailable').replaceAllMapped(RegExp(r'\{([A-Za-z]+)\}'),
         (match) => values[match.group(1)] ?? match.group(0)!);

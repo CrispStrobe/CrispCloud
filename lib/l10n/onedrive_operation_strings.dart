@@ -2,9 +2,11 @@ import 'package:flutter/widgets.dart';
 import '../services/onedrive_operation_failure.dart';
 
 /// Translates app-owned OneDrive text while preserving remote details.
-String localizedOneDriveError(BuildContext context, Object error) {
+String localizedOneDriveError(BuildContext context, Object error) =>
+    localizedOneDriveErrorForLanguage(Localizations.maybeLocaleOf(context)?.languageCode ?? 'en', error);
+
+String localizedOneDriveErrorForLanguage(String language, Object error) {
   if (error is! OneDriveOperationFailure) return error.toString();
-  final language = Localizations.maybeLocaleOf(context)?.languageCode ?? 'en';
   final template = (_messages[language] ?? _messages['en']!)[error.code.name] ??
       error.message;
   return template.replaceAllMapped(RegExp(r'\{([A-Za-z]+)\}'), (match) {

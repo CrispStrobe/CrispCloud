@@ -2,9 +2,11 @@ import 'package:flutter/widgets.dart';
 import '../services/dropbox_operation_failure.dart';
 
 /// Localize app-owned Dropbox errors while retaining server detail.
-String localizedDropboxError(BuildContext context, Object error) {
+String localizedDropboxError(BuildContext context, Object error) =>
+    localizedDropboxErrorForLanguage(Localizations.maybeLocaleOf(context)?.languageCode ?? 'en', error);
+
+String localizedDropboxErrorForLanguage(String language, Object error) {
   if (error is! DropboxOperationFailure) return error.toString();
-  final language = Localizations.maybeLocaleOf(context)?.languageCode ?? 'en';
   final map = _messages[language] ?? _messages['en']!;
   final code = error.code.name;
   final args = <String, Object>{...error.arguments};

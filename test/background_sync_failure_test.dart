@@ -4,6 +4,8 @@ import 'package:crisp_cloud/services/background_sync_service.dart';
 import 'package:crisp_cloud/services/cloud_storage_interface.dart';
 import 'package:crisp_cloud/services/sync_database.dart';
 import 'package:crisp_cloud/services/sync_engine.dart';
+import 'package:crisp_cloud/services/webdav_operation_failure.dart';
+import 'package:crisp_storage/crisp_storage.dart';
 import 'package:flutter_test/flutter_test.dart';
 
 class _Client extends CloudStorageClient {
@@ -23,6 +25,22 @@ SyncPair _pair(int id, String provider) => SyncPair(
     createdAt: DateTime(2024));
 
 void main() {
+  test('background locale renders structured provider and nested transport causes without widgets', () {
+    const inner = RemoteException('Server request failed (HTTP 503).',
+        code: RemoteErrorCode.httpStatus, retryable: true, arguments: {'status': 503});
+    final cause = WebDavException(WebDavOperationCode.listFailed, 'legacy',
+        {'path': '/source', 'error': inner});
+    for (final language in ['en', 'de', 'fr', 'es', 'pt', 'zh', 'ja', 'ko', 'ar']) {
+      final strings = BackgroundNotificationStrings(Locale(language));
+      final detail = strings.failureDetail(SyncFailureDetail(location: 'file', cause: cause));
+      expect(detail, contains('/source'));
+      expect(detail, contains('503'));
+      expect(detail, isNot(contains('Exception: legacy')));
+      if (language != 'en') expect(detail, isNot(contains(inner.toString())));
+      expect(strings.failure(cause), contains('503'));
+    }
+  });
+
   test(
       'unavailable providers count as errors and do not prevent other pairs from syncing',
       () async {

@@ -1,9 +1,10 @@
 import 'package:flutter/widgets.dart';
 import '../services/azure_hetzner_failure.dart';
 
-String localizedAzureHetznerError(
-    BuildContext context, AzureHetznerFailure error) {
-  final language = Localizations.maybeLocaleOf(context)?.languageCode ?? 'en';
+String localizedAzureHetznerError(BuildContext context, AzureHetznerFailure error) =>
+    localizedAzureHetznerErrorForLanguage(Localizations.maybeLocaleOf(context)?.languageCode ?? 'en', error);
+
+String localizedAzureHetznerErrorForLanguage(String language, AzureHetznerFailure error) {
   final template = (_messages[language] ?? _messages['en']!)[error.code.name]!;
   return template.replaceAllMapped(RegExp(r'\{([A-Za-z]+)\}'), (match) {
     final value = error.arguments[match.group(1)];

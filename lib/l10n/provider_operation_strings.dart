@@ -33,49 +33,52 @@ import 'pcloud_operation_strings.dart';
 import 's3_operation_strings.dart';
 
 /// Returns null for unknown errors so each caller can retain its fallback.
-String? localizedKnownProviderError(BuildContext context, Object error) {
+String? localizedKnownProviderError(BuildContext context, Object error) =>
+    localizedKnownProviderErrorForLanguage(Localizations.maybeLocaleOf(context)?.languageCode ?? 'en', error);
+
+String? localizedKnownProviderErrorForLanguage(String language, Object error) {
   if (error is TerminalMountFailure)
-    return localizedTerminalMountError(context, error);
+    return localizedTerminalMountErrorForLanguage(language, error);
   if (error is AzureHetznerFailure)
-    return localizedAzureHetznerError(context, error);
-  final transport = localizedRemoteTransportError(context, error);
+    return localizedAzureHetznerErrorForLanguage(language, error);
+  final transport = localizedRemoteTransportErrorForLanguage(language, error);
   if (transport != null) return transport;
   if (error is SftpOperationFailure) {
-    return localizedSftpOperationError(context, error);
+    return localizedSftpOperationErrorForLanguage(language, error);
   }
   if (error is SmbOperationFailure) {
-    return localizedSmbError(context, error);
+    return localizedSmbErrorForLanguage(language, error);
   }
   if (error is FtpOperationFailure) {
-    return localizedFtpError(context, error);
+    return localizedFtpErrorForLanguage(language, error);
   }
   if (error is WebDavOperationFailure) {
-    return localizedWebDavError(context, error);
+    return localizedWebDavErrorForLanguage(language, error);
   }
   if (error is FilenOperationFailure) {
-    return localizedFilenError(context, error);
+    return localizedFilenErrorForLanguage(language, error);
   }
   if (error is InternxtOperationFailure) {
-    return localizedInternxtError(context, error);
+    return localizedInternxtErrorForLanguage(language, error);
   }
   if (error is B2OperationFailure) {
-    return localizedB2Error(context, error);
+    return localizedB2ErrorForLanguage(language, error);
   }
   if (error is NextcloudOperationFailure) {
-    return localizedNextcloudError(context, error);
+    return localizedNextcloudErrorForLanguage(language, error);
   }
   if (error is OneDriveOperationFailure) {
-    return localizedOneDriveError(context, error);
+    return localizedOneDriveErrorForLanguage(language, error);
   }
-  if (error is S3OperationFailure) return localizedS3Error(context, error);
+  if (error is S3OperationFailure) return localizedS3ErrorForLanguage(language, error);
   if (error is PCloudOperationFailure) {
-    return localizedPCloudError(context, error);
+    return localizedPCloudErrorForLanguage(language, error);
   }
   if (error is GDriveOperationFailure) {
-    return localizedGDriveError(context, error);
+    return localizedGDriveErrorForLanguage(language, error);
   }
   if (error is DropboxOperationFailure) {
-    return localizedDropboxError(context, error);
+    return localizedDropboxErrorForLanguage(language, error);
   }
   return null;
 }
@@ -83,3 +86,7 @@ String? localizedKnownProviderError(BuildContext context, Object error) {
 /// Localizes recognized provider errors and preserves all other details.
 String localizedProviderError(BuildContext context, Object error) =>
     localizedKnownProviderError(context, error) ?? error.toString();
+
+/// Localizes provider errors without requiring a widget tree.
+String localizedProviderErrorForLanguage(String language, Object error) =>
+    localizedKnownProviderErrorForLanguage(language, error) ?? error.toString();

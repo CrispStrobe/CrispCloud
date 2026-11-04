@@ -2,9 +2,11 @@ import 'package:flutter/widgets.dart';
 import '../services/internxt_operation_failure.dart';
 
 /// Localizes app-owned Internxt errors, leaving other errors unchanged.
-String localizedInternxtError(BuildContext context, Object error) {
+String localizedInternxtError(BuildContext context, Object error) =>
+    localizedInternxtErrorForLanguage(Localizations.maybeLocaleOf(context)?.languageCode ?? 'en', error);
+
+String localizedInternxtErrorForLanguage(String language, Object error) {
   if (error is! InternxtOperationFailure) return error.toString();
-  final language = Localizations.maybeLocaleOf(context)?.languageCode ?? 'en';
   return (_messages[language] ?? _messages['en']!)[error.code.name] ??
       error.toString();
 }

@@ -2,9 +2,11 @@ import 'package:flutter/widgets.dart';
 import '../services/nextcloud_operation_failure.dart';
 
 /// Localize recognized Nextcloud messages, leaving remote details intact.
-String localizedNextcloudError(BuildContext context, Object error) {
+String localizedNextcloudError(BuildContext context, Object error) =>
+    localizedNextcloudErrorForLanguage(Localizations.maybeLocaleOf(context)?.languageCode ?? 'en', error);
+
+String localizedNextcloudErrorForLanguage(String language, Object error) {
   if (error is! NextcloudOperationFailure) return error.toString();
-  final language = Localizations.maybeLocaleOf(context)?.languageCode ?? 'en';
   final template = (_messages[language] ?? _messages['en']!)[error.code.name] ??
       error.message;
   return template.replaceAllMapped(RegExp(r'\{([A-Za-z]+)\}'), (match) {

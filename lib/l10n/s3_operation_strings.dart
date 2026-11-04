@@ -2,8 +2,10 @@ import 'package:flutter/widgets.dart';
 import '../services/s3_operation_failure.dart';
 
 /// Localize S3 operation errors, preserving provider responses verbatim.
-String localizedS3Error(BuildContext context, S3OperationFailure error) {
-  final language = Localizations.maybeLocaleOf(context)?.languageCode ?? 'en';
+String localizedS3Error(BuildContext context, S3OperationFailure error) =>
+    localizedS3ErrorForLanguage(Localizations.maybeLocaleOf(context)?.languageCode ?? 'en', error);
+
+String localizedS3ErrorForLanguage(String language, S3OperationFailure error) {
   final messages = _messages[language] ?? _messages['en']!;
   final bodyCodes = {
     S3OperationCode.connection,

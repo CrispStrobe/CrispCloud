@@ -2,9 +2,11 @@ import 'package:flutter/widgets.dart';
 import '../services/pcloud_operation_failure.dart';
 
 /// Localizes app-owned text while preserving pCloud response details.
-String localizedPCloudError(BuildContext context, Object error) {
+String localizedPCloudError(BuildContext context, Object error) =>
+    localizedPCloudErrorForLanguage(Localizations.maybeLocaleOf(context)?.languageCode ?? 'en', error);
+
+String localizedPCloudErrorForLanguage(String language, Object error) {
   if (error is! PCloudOperationFailure) return error.toString();
-  final language = Localizations.maybeLocaleOf(context)?.languageCode ?? 'en';
   final template = (_messages[language] ?? _messages['en']!)[error.code.name] ??
       error.message;
   return template.replaceAllMapped(RegExp(r'\{([A-Za-z]+)\}'), (match) {
