@@ -42,6 +42,7 @@ import 'package:video_player/video_player.dart';
 
 import '../l10n/internal_viewer_strings.dart';
 import '../l10n/file_bytes_error_strings.dart';
+import '../l10n/archive_viewer_error_strings.dart';
 import '../models/file_item.dart';
 import '../models/panel_side.dart';
 import '../providers/providers.dart';
@@ -415,6 +416,9 @@ class _InternalViewerDialogState extends ConsumerState<InternalViewerDialog> {
   static bool _isSingleCompressed(String name) => isSingleCompressedFile(name);
 
   String _describeError(Object error) {
+    if (error is ArchiveViewException || error is ArchivePasswordRequiredException) {
+      return localizedArchiveViewerError(context, error);
+    }
     if (error is FileBytesTooLargeException) {
       return '${localizedFileBytesError(context, error)}\n\n' +
           InternalViewerStrings(context).withNumber('remoteLimit', formatBytes(kViewerFullDataCap));
@@ -665,7 +669,7 @@ class _InternalViewerDialogState extends ConsumerState<InternalViewerDialog> {
         if (!mounted || token != _prepareToken) return;
         setState(() {
           _preparing = false;
-          _richError = e.message;
+          _richError = localizedArchiveViewerError(context, e);
         });
         return;
       }
@@ -1349,7 +1353,8 @@ class _InternalViewerDialogState extends ConsumerState<InternalViewerDialog> {
         handle = reopened;
         target = unlocked;
       } on ArchiveViewException catch (e) {
-        _showSnack(e.message);
+        if (!mounted) return;
+        _showSnack(localizedArchiveViewerError(context, e));
         return;
       } catch (e, st) {
         _log.warn('archive member open failed', e, st);
@@ -1370,18 +1375,23 @@ class _InternalViewerDialogState extends ConsumerState<InternalViewerDialog> {
       return null;
     }
     final entered = await _promptArchivePassword(wrong: wrong);
-    if (entered == null) return null;
+    if (entered == null || !mounted) return null;
     try {
       final reopened = await openViewerArchive(
         data,
         name: _viewName,
         password: entered,
       );
+      if (!mounted) {
+        await reopened.close();
+        return null;
+      }
       final matches = reopened.members
           .where((m) => m.isFile && m.name == member.name)
           .toList();
       if (matches.isEmpty) {
         await reopened.close();
+        if (!mounted) return null;
         _showSnack(InternalViewerStrings(context).text('entryGone'));
         return null;
       }
@@ -1394,11 +1404,13 @@ class _InternalViewerDialogState extends ConsumerState<InternalViewerDialog> {
       if (previous != null) unawaited(previous.close());
       return matches.first;
     } on ArchivePasswordRequiredException catch (e) {
+      if (!mounted) return null;
       _showSnack(
-          e.wrongPassword ? InternalViewerStrings(context).text('incorrectPassword') : 'Password required.');
+          e.wrongPassword ? InternalViewerStrings(context).text('incorrectPassword') : InternalViewerStrings(context).text('passwordRequired'));
       return null;
     } on ArchiveViewException catch (e) {
-      _showSnack(e.message);
+      if (!mounted) return null;
+      _showSnack(localizedArchiveViewerError(context, e));
       return null;
     }
   }
