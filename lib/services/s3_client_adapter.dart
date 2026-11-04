@@ -18,6 +18,7 @@ import 'package:path/path.dart' as p;
 import 'package:shared_preferences/shared_preferences.dart';
 
 import 'cloud_storage_interface.dart';
+import 's3_operation_failure.dart';
 import 'delta_sync_service.dart';
 import 'log_service.dart';
 import 's3_config_service.dart';
@@ -446,7 +447,7 @@ class S3ClientAdapter extends CloudStorageClient {
     _secretKey = password;
 
     if (_accessKey == null || _endpoint == null || _bucket == null || _secretKey == null) {
-      throw Exception(
+      throw S3OperationFailure(S3OperationCode.invalidCredentials,
         'Invalid S3 credentials format. '
         'Use: accessKey@endpoint/bucket?region=us-east-1',
       );
@@ -474,9 +475,9 @@ class S3ClientAdapter extends CloudStorageClient {
 
       if (response.statusCode != 200) {
         await _config.clearCredentials();
-        throw Exception(
+        throw S3OperationFailure(S3OperationCode.connection,
           'S3 connection test failed (HTTP ${response.statusCode}): ${response.body}',
-        );
+          {'status': response.statusCode, 'body': response.body});
       }
 
       _authenticated = true;
@@ -639,7 +640,7 @@ class S3ClientAdapter extends CloudStorageClient {
       final response = await _signedRequest('GET', uri);
 
       if (response.statusCode != 200) {
-        throw Exception('S3 list failed (HTTP ${response.statusCode}): ${response.body}');
+        throw S3OperationFailure(S3OperationCode.list, 'S3 list failed (HTTP ${response.statusCode}): ${response.body}', {'status': response.statusCode, 'body': response.body});
       }
 
       final body = response.body;
@@ -744,7 +745,7 @@ class S3ClientAdapter extends CloudStorageClient {
     );
 
     if (response.statusCode != 200 && response.statusCode != 201) {
-      throw Exception('S3 upload failed (HTTP ${response.statusCode}): ${response.body}');
+      throw S3OperationFailure(S3OperationCode.upload, 'S3 upload failed (HTTP ${response.statusCode}): ${response.body}', {'status': response.statusCode, 'body': response.body});
     }
 
     onProgress?.call(fileData.length, fileData.length);
@@ -762,12 +763,12 @@ class S3ClientAdapter extends CloudStorageClient {
     );
 
     if (response.statusCode != 200) {
-      throw Exception('S3 initiate multipart failed (HTTP ${response.statusCode}): ${response.body}');
+      throw S3OperationFailure(S3OperationCode.multipartInitiate, 'S3 initiate multipart failed (HTTP ${response.statusCode}): ${response.body}', {'status': response.statusCode, 'body': response.body});
     }
 
     final match = RegExp(r'<UploadId>([^<]+)</UploadId>').firstMatch(response.body);
     if (match == null) {
-      throw Exception('S3 initiate multipart: no UploadId in response');
+      throw S3OperationFailure(S3OperationCode.missingUploadId, 'S3 initiate multipart: no UploadId in response');
     }
     return match.group(1)!;
   }
@@ -785,12 +786,12 @@ class S3ClientAdapter extends CloudStorageClient {
     );
 
     if (response.statusCode != 200) {
-      throw Exception('S3 upload part $partNumber failed (HTTP ${response.statusCode})');
+      throw S3OperationFailure(S3OperationCode.partUpload, 'S3 upload part $partNumber failed (HTTP ${response.statusCode})', {'part': partNumber, 'status': response.statusCode});
     }
 
     final etag = response.headers['etag'];
     if (etag == null) {
-      throw Exception('S3 upload part $partNumber: no ETag in response');
+      throw S3OperationFailure(S3OperationCode.missingEtag, 'S3 upload part $partNumber: no ETag in response', {'part': partNumber});
     }
     return etag;
   }
@@ -811,7 +812,7 @@ class S3ClientAdapter extends CloudStorageClient {
     );
 
     if (response.statusCode != 200) {
-      throw Exception('S3 complete multipart failed (HTTP ${response.statusCode}): ${response.body}');
+      throw S3OperationFailure(S3OperationCode.multipartComplete, 'S3 complete multipart failed (HTTP ${response.statusCode}): ${response.body}', {'status': response.statusCode, 'body': response.body});
     }
   }
 
@@ -934,9 +935,9 @@ class S3ClientAdapter extends CloudStorageClient {
       final response = await _signedRequest('GET', uri);
 
       if (response.statusCode != 200) {
-        throw Exception(
+        throw S3OperationFailure(S3OperationCode.listParts,
           'S3 ListParts failed (HTTP ${response.statusCode}): ${response.body}',
-        );
+          {'status': response.statusCode, 'body': response.body});
       }
 
       final body = response.body;
@@ -1009,7 +1010,7 @@ class S3ClientAdapter extends CloudStorageClient {
     final interrupted = await getInterruptedUploads();
     final tracked = interrupted.where((u) => u['key'] == key).toList();
     if (tracked.isEmpty) {
-      throw Exception('No interrupted upload found for $remotePath');
+      throw S3OperationFailure(S3OperationCode.missingInterruptedUpload, 'No interrupted upload found for $remotePath', {'path': remotePath});
     }
     final uploadId = tracked.last['uploadId'] as String;
     _log.info('Resuming multipart upload: $key (uploadId=$uploadId)');
@@ -1075,7 +1076,7 @@ class S3ClientAdapter extends CloudStorageClient {
     final response = await _signedRequest('GET', uri);
 
     if (response.statusCode != 200) {
-      throw Exception('S3 download failed (HTTP ${response.statusCode}): ${response.body}');
+      throw S3OperationFailure(S3OperationCode.download, 'S3 download failed (HTTP ${response.statusCode}): ${response.body}', {'status': response.statusCode, 'body': response.body});
     }
 
     final bytes = response.bodyBytes;
@@ -1109,7 +1110,7 @@ class S3ClientAdapter extends CloudStorageClient {
     );
 
     if (response.statusCode != 200 && response.statusCode != 201) {
-      throw Exception('S3 create folder failed (HTTP ${response.statusCode}): ${response.body}');
+      throw S3OperationFailure(S3OperationCode.createFolder, 'S3 create folder failed (HTTP ${response.statusCode}): ${response.body}', {'status': response.statusCode, 'body': response.body});
     }
   }
 
@@ -1122,7 +1123,7 @@ class S3ClientAdapter extends CloudStorageClient {
     final response = await _signedRequest('DELETE', uri);
 
     if (response.statusCode != 204 && response.statusCode != 200) {
-      throw Exception('S3 delete failed (HTTP ${response.statusCode}): ${response.body}');
+      throw S3OperationFailure(S3OperationCode.delete, 'S3 delete failed (HTTP ${response.statusCode}): ${response.body}', {'status': response.statusCode, 'body': response.body});
     }
   }
 
@@ -1171,7 +1172,7 @@ class S3ClientAdapter extends CloudStorageClient {
     );
 
     if (response.statusCode != 200 && response.statusCode != 201) {
-      throw Exception('S3 copy failed (HTTP ${response.statusCode}): ${response.body}');
+      throw S3OperationFailure(S3OperationCode.copy, 'S3 copy failed (HTTP ${response.statusCode}): ${response.body}', {'status': response.statusCode, 'body': response.body});
     }
   }
 
@@ -1322,7 +1323,7 @@ class S3ClientAdapter extends CloudStorageClient {
         extraHeaders: {'Range': 'bytes=$offset-${offset + length - 1}'});
 
     if (response.statusCode != 206 && response.statusCode != 200) {
-      throw Exception('S3 range download failed (HTTP ${response.statusCode})');
+      throw S3OperationFailure(S3OperationCode.rangeDownload, 'S3 range download failed (HTTP ${response.statusCode})', {'status': response.statusCode});
     }
     return response.bodyBytes;
   }
@@ -1448,7 +1449,7 @@ class S3ClientAdapter extends CloudStorageClient {
 
   void _ensureAuth() {
     if (!_authenticated || _accessKey == null || _secretKey == null) {
-      throw Exception('Not authenticated. Call login() first.');
+      throw S3OperationFailure(S3OperationCode.notAuthenticated, 'Not authenticated. Call login() first.');
     }
   }
 

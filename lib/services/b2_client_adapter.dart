@@ -25,6 +25,7 @@ import 'package:http/http.dart' as http;
 import 'package:path/path.dart' as p;
 
 import 'b2_config_service.dart';
+import 'b2_operation_failure.dart';
 import 'cloud_storage_interface.dart';
 import 'log_service.dart';
 import 'secure_storage_service.dart';
@@ -166,8 +167,8 @@ class B2ClientAdapter extends CloudStorageClient {
     final accountId = body['accountId'] as String?;
 
     if (apiUrl == null || downloadUrl == null || authToken == null) {
-      throw StateError(
-          'b2_authorize_account response missing required fields: $body');
+      throw B2StateFailure(B2OperationCode.authorizationResponse,
+          'b2_authorize_account response missing required fields: $body', {'body': body});
     }
 
     _config.cacheAuthResponse(
@@ -440,7 +441,7 @@ class B2ClientAdapter extends CloudStorageClient {
   Future<Uint8List> downloadFileBytes(String remotePath,
       {Function(int, int)? onProgress}) async {
     final downloadUrl = _config.getDownloadUrl();
-    if (downloadUrl == null) throw StateError('Not authenticated');
+    if (downloadUrl == null) throw B2StateFailure(B2OperationCode.unauthenticated, 'Not authenticated');
 
     final bucketName = await _resolveBucketName();
     final norm = _normalizePath(remotePath);
@@ -535,7 +536,7 @@ class B2ClientAdapter extends CloudStorageClient {
     );
     final files = result['files'] as List<dynamic>? ?? [];
     if (files.isEmpty) {
-      throw StateError('File not found for hard delete: $fileName');
+      throw B2StateFailure(B2OperationCode.fileNotFound, 'File not found for hard delete: $fileName', {'name': fileName});
     }
     final file = files.first as Map<String, dynamic>;
     final fileId = file['fileId'] as String;
@@ -581,7 +582,7 @@ class B2ClientAdapter extends CloudStorageClient {
       String endpoint, Map<String, dynamic> body,
       {bool authRefreshAllowed = true}) async {
     final apiUrl = _config.getApiUrl();
-    if (apiUrl == null) throw StateError('Not authenticated');
+    if (apiUrl == null) throw B2StateFailure(B2OperationCode.unauthenticated, 'Not authenticated');
 
     final uri = Uri.parse('$apiUrl/b2api/v3/$endpoint');
     final resp = await _retryablePost(
@@ -640,7 +641,7 @@ class B2ClientAdapter extends CloudStorageClient {
   Future<Map<String, dynamic>> _listBuckets() async {
     final accountId = _config.accountId;
     if (accountId == null || accountId.isEmpty) {
-      throw StateError('No accountId — call login first');
+      throw B2StateFailure(B2OperationCode.missingAccount, 'No accountId — call login first');
     }
 
     final resp = await _callApi('b2_list_buckets', {
@@ -676,8 +677,7 @@ class B2ClientAdapter extends CloudStorageClient {
       return _bucketId!;
     }
 
-    throw StateError(
-        'No bucketId configured. Set it via B2ConfigService.saveCredentials.');
+    throw B2StateFailure(B2OperationCode.missingBucketId, 'No bucketId configured. Set it via B2ConfigService.saveCredentials.');
   }
 
   Future<String> _resolveBucketName() async {
@@ -690,8 +690,7 @@ class B2ClientAdapter extends CloudStorageClient {
       return _bucketName!;
     }
 
-    throw StateError(
-        'No bucketName configured. Set it via B2ConfigService.saveCredentials.');
+    throw B2StateFailure(B2OperationCode.missingBucketName, 'No bucketName configured. Set it via B2ConfigService.saveCredentials.');
   }
 
   // ---------------------------------------------------------------------------
@@ -769,8 +768,8 @@ class B2ClientAdapter extends CloudStorageClient {
   void _ensureSuccess(http.Response resp, String operation) {
     if (resp.statusCode < 200 || resp.statusCode >= 300) {
       final body = resp.body.length > 500 ? resp.body.substring(0, 500) : resp.body;
-      throw StateError(
-          'B2 $operation failed with ${resp.statusCode}: $body');
+      throw B2StateFailure(B2OperationCode.api,
+          'B2 $operation failed with ${resp.statusCode}: $body', {'operation': operation, 'status': resp.statusCode, 'body': body});
     }
   }
 
@@ -778,7 +777,7 @@ class B2ClientAdapter extends CloudStorageClient {
     try {
       return json.decode(body) as Map<String, dynamic>;
     } catch (e) {
-      throw FormatException('B2 response is not valid JSON: $body');
+      throw B2FormatFailure(B2OperationCode.invalidJson, 'B2 response is not valid JSON: $body', {'body': body});
     }
   }
 

@@ -18,7 +18,7 @@ import '../services/onedrive_client_adapter.dart';
 import '../services/log_service.dart';
 import '../utils/formatters.dart';
 import 'diff_viewer_dialog.dart';
-import '../l10n/nextcloud_operation_strings.dart';
+import '../l10n/provider_operation_strings.dart';
 import '../l10n/version_history_strings.dart';
 
 void showVersionHistoryDialog(BuildContext context, WidgetRef ref, FileItem file) {
@@ -214,7 +214,7 @@ class _VersionHistoryDialogState extends ConsumerState<_VersionHistoryDialog> {
       if (mounted) {
         setState(() => _restoring = false);
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text(strings.format('Restore failed: {error}', {'error': e is _VersionMessage ? e.localized(strings) : localizedNextcloudError(context, e)}))),
+          SnackBar(content: Text(strings.format('Restore failed: {error}', {'error': e is _VersionMessage ? e.localized(strings) : localizedProviderError(context, e)}))),
         );
       }
     }
@@ -364,7 +364,7 @@ class _VersionHistoryDialogState extends ConsumerState<_VersionHistoryDialog> {
       if (mounted) {
         setState(() => _restoring = false);
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text(strings.format('Diff failed: {error}', {'error': e is _VersionMessage ? e.localized(strings) : localizedNextcloudError(context, e)}))),
+          SnackBar(content: Text(strings.format('Diff failed: {error}', {'error': e is _VersionMessage ? e.localized(strings) : localizedProviderError(context, e)}))),
         );
       }
     }
@@ -389,7 +389,7 @@ class _VersionHistoryDialogState extends ConsumerState<_VersionHistoryDialog> {
         child: _loading
             ? const Center(child: CircularProgressIndicator())
             : _error != null
-                ? Center(child: Text(_error is _VersionMessage ? (_error as _VersionMessage).localized(strings) : localizedNextcloudError(context, _error!), style: TextStyle(color: theme.colorScheme.error)))
+                ? Center(child: Text(_error is _VersionMessage ? (_error as _VersionMessage).localized(strings) : localizedProviderError(context, _error!), style: TextStyle(color: theme.colorScheme.error)))
                 : _versions.isEmpty
                     ? Center(child: Text(strings.text('No version history available')))
                     : Stack(

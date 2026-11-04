@@ -6,7 +6,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
-import '../l10n/nextcloud_operation_strings.dart';
+import '../l10n/provider_operation_strings.dart';
 import '../l10n/file_list_strings.dart';
 import '../models/file_item.dart';
 import '../models/panel_side.dart';
@@ -149,7 +149,7 @@ class FileListView extends ConsumerWidget {
           } catch (e) {
             _log.error('Error building file tile at index $index: $e');
             return ListTile(
-              title: Text(strings.format('Error loading item: {error}', {'error': localizedNextcloudError(context, e)})),
+              title: Text(strings.format('Error loading item: {error}', {'error': localizedProviderError(context, e)})),
               leading: const Icon(Icons.error, color: Colors.red),
             );
           }
@@ -276,7 +276,7 @@ class FileListView extends ConsumerWidget {
           children: [
             const Icon(Icons.error, size: 48, color: Colors.red),
             const SizedBox(height: 16),
-            Text(strings.format('Error loading files: {error}', {'error': localizedNextcloudError(context, e)})),
+            Text(strings.format('Error loading files: {error}', {'error': localizedProviderError(context, e)})),
             const SizedBox(height: 8),
             ElevatedButton(
               onPressed: () => panel.refresh(),

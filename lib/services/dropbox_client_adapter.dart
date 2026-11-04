@@ -25,6 +25,7 @@ import 'package:url_launcher/url_launcher.dart';
 import 'cloud_storage_interface.dart';
 import 'connection_failure.dart';
 import 'dropbox_config_service.dart';
+import 'dropbox_operation_failure.dart';
 import 'log_service.dart';
 import 'secure_storage_service.dart';
 
@@ -100,7 +101,7 @@ class DropboxClientAdapter extends CloudStorageClient {
     _appSecret = parts.length > 1 ? parts[1].trim() : null;
 
     if (_appKey == null || _appKey!.isEmpty) {
-      throw Exception('App Key is required');
+      throw DropboxOperationFailure(DropboxOperationCode.appKey, 'App Key is required');
     }
 
     // Try stored refresh token
@@ -365,7 +366,7 @@ class DropboxClientAdapter extends CloudStorageClient {
     );
 
     if (resp.statusCode != 200) {
-      throw Exception('Dropbox upload failed (${resp.statusCode}): ${resp.body}');
+      throw DropboxOperationFailure(DropboxOperationCode.upload, 'Dropbox upload failed (${resp.statusCode}): ${resp.body}', {'status': resp.statusCode, 'body': resp.body});
     }
 
     onProgress?.call(fileData.length, fileData.length);
@@ -389,7 +390,7 @@ class DropboxClientAdapter extends CloudStorageClient {
     );
 
     if (resp.statusCode != 200) {
-      throw Exception('Dropbox download failed (${resp.statusCode}): ${resp.body}');
+      throw DropboxOperationFailure(DropboxOperationCode.download, 'Dropbox download failed (${resp.statusCode}): ${resp.body}', {'status': resp.statusCode, 'body': resp.body});
     }
 
     onProgress?.call(resp.bodyBytes.length, resp.bodyBytes.length);
@@ -540,7 +541,7 @@ class DropboxClientAdapter extends CloudStorageClient {
   // --- Internal ---
 
   Future<void> _ensureToken() async {
-    if (_accessToken == null) throw Exception('Not authenticated');
+    if (_accessToken == null) throw DropboxOperationFailure(DropboxOperationCode.unauthenticated, 'Not authenticated');
     if (_tokenExpiry != null && DateTime.now().isAfter(_tokenExpiry!)) {
       await _refreshAccessToken();
     }
@@ -548,7 +549,7 @@ class DropboxClientAdapter extends CloudStorageClient {
 
   Future<void> _refreshAccessToken() async {
     if (_refreshToken == null || _appKey == null) {
-      throw Exception('Cannot refresh: missing refresh token or app key');
+      throw DropboxOperationFailure(DropboxOperationCode.missingRefresh, 'Cannot refresh: missing refresh token or app key');
     }
 
     final body = <String, String>{
@@ -562,7 +563,7 @@ class DropboxClientAdapter extends CloudStorageClient {
 
     final resp = await http.post(Uri.parse(_tokenUrl), body: body);
     if (resp.statusCode != 200) {
-      throw Exception('Token refresh failed (${resp.statusCode}): ${resp.body}');
+      throw DropboxOperationFailure(DropboxOperationCode.tokenRefresh, 'Token refresh failed (${resp.statusCode}): ${resp.body}', {'status': resp.statusCode, 'body': resp.body});
     }
 
     final data = json.decode(resp.body) as Map<String, dynamic>;
@@ -640,7 +641,7 @@ class DropboxClientAdapter extends CloudStorageClient {
 
     final tokenResp = await http.post(Uri.parse(_tokenUrl), body: tokenBody);
     if (tokenResp.statusCode != 200) {
-      throw Exception('Token exchange failed (${tokenResp.statusCode}): ${tokenResp.body}');
+      throw DropboxOperationFailure(DropboxOperationCode.tokenExchange, 'Token exchange failed (${tokenResp.statusCode}): ${tokenResp.body}', {'status': tokenResp.statusCode, 'body': tokenResp.body});
     }
 
     final tokenData = json.decode(tokenResp.body) as Map<String, dynamic>;
@@ -679,13 +680,13 @@ class DropboxClientAdapter extends CloudStorageClient {
         body: body != null ? json.encode(body) : null,
       );
       if (retryResp.statusCode != 200) {
-        throw Exception('Dropbox API error (${retryResp.statusCode}): ${retryResp.body}');
+        throw DropboxOperationFailure(DropboxOperationCode.api, 'Dropbox API error (${retryResp.statusCode}): ${retryResp.body}', {'status': retryResp.statusCode, 'body': retryResp.body});
       }
       return json.decode(retryResp.body) as Map<String, dynamic>;
     }
 
     if (resp.statusCode != 200) {
-      throw Exception('Dropbox API error (${resp.statusCode}): ${resp.body}');
+      throw DropboxOperationFailure(DropboxOperationCode.api, 'Dropbox API error (${resp.statusCode}): ${resp.body}', {'status': resp.statusCode, 'body': resp.body});
     }
 
     // Some endpoints (like delete) return empty body
@@ -747,7 +748,7 @@ class DropboxClientAdapter extends CloudStorageClient {
     final resp = await http.Response.fromStream(await req.send());
 
     if (resp.statusCode != 200) {
-      throw Exception('Paper export failed (${resp.statusCode}): ${resp.body}');
+      throw DropboxOperationFailure(DropboxOperationCode.paperExport, 'Paper export failed (${resp.statusCode}): ${resp.body}', {'status': resp.statusCode, 'body': resp.body});
     }
 
     return resp.body;

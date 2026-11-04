@@ -1,12 +1,12 @@
 import 'package:flutter/widgets.dart';
 
 import '../services/file_bytes_loader.dart';
-import 'nextcloud_operation_strings.dart';
+import 'provider_operation_strings.dart';
 
 /// Translate app-authored file loading errors while retaining external details.
 String localizedFileBytesError(BuildContext context, Object error) {
   if (error is! FileBytesLoadException || error.code == null) {
-    return localizedNextcloudError(context, error);
+    return localizedProviderError(context, error);
   }
   final language = Localizations.maybeLocaleOf(context)?.languageCode ?? 'en';
   var result = (_messages[language] ?? _messages['en']!)[error.code!.name] ??

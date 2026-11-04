@@ -20,6 +20,7 @@ import 'cloud_storage_interface.dart';
 import 'connection_failure.dart';
 import 'log_service.dart';
 import 'onedrive_config_service.dart';
+import 'onedrive_operation_failure.dart';
 import 'secure_storage_service.dart';
 
 class OneDriveClientAdapter extends CloudStorageClient {
@@ -38,15 +39,18 @@ class OneDriveClientAdapter extends CloudStorageClient {
   bool _authenticated = false;
 
   static const _graphBase = 'https://graph.microsoft.com/v1.0';
-  static const _authUrl = 'https://login.microsoftonline.com/common/oauth2/v2.0/authorize';
-  static const _tokenUrl = 'https://login.microsoftonline.com/common/oauth2/v2.0/token';
+  static const _authUrl =
+      'https://login.microsoftonline.com/common/oauth2/v2.0/authorize';
+  static const _tokenUrl =
+      'https://login.microsoftonline.com/common/oauth2/v2.0/token';
   static const _scopes = 'Files.ReadWrite.All User.Read offline_access';
   static const _redirectPort = 43824;
 
   OneDriveClientAdapter({required dynamic config})
       : _config = (config is OneDriveConfigService)
             ? config
-            : OneDriveConfigService(configPath: '', secureStorage: InMemorySecureStorage());
+            : OneDriveConfigService(
+                configPath: '', secureStorage: InMemorySecureStorage());
 
   @override
   String get providerName => 'OneDrive';
@@ -87,14 +91,16 @@ class OneDriveClientAdapter extends CloudStorageClient {
   // --- Auth ---
 
   @override
-  Future<void> login(String identity, String password, {String? twoFactorCode}) async {
+  Future<void> login(String identity, String password,
+      {String? twoFactorCode}) async {
     // identity format: "clientId" or "clientId|clientSecret"
     final parts = identity.split('|');
     _clientId = parts[0].trim();
     _clientSecret = parts.length > 1 ? parts[1].trim() : null;
 
     if (_clientId == null || _clientId!.isEmpty) {
-      throw Exception('Application (Client) ID is required');
+      throw OneDriveOperationFailure(OneDriveOperationCode.clientIdRequired,
+          'Application (Client) ID is required');
     }
 
     // Try stored refresh token first
@@ -112,7 +118,10 @@ class OneDriveClientAdapter extends CloudStorageClient {
     }
 
     if (kIsWeb) {
-      throw const ConnectionFailure(ConnectionFailureCode.oauthWebUnsupported, 'OneDrive OAuth2 on web requires a different redirect flow.', {'provider': 'OneDrive'});
+      throw const ConnectionFailure(
+          ConnectionFailureCode.oauthWebUnsupported,
+          'OneDrive OAuth2 on web requires a different redirect flow.',
+          {'provider': 'OneDrive'});
     }
 
     await _browserOAuthFlow();
@@ -142,9 +151,12 @@ class OneDriveClientAdapter extends CloudStorageClient {
   Future<Uint8List?> getThumbnail(String remotePath) async {
     await _ensureToken();
     try {
-      final encodedPath = Uri.encodeComponent(remotePath.startsWith('/') ? remotePath.substring(1) : remotePath);
-      final uri = Uri.parse('https://graph.microsoft.com/v1.0/me/drive/root:/$encodedPath:/thumbnails/0/medium/content');
-      final resp = await http.get(uri, headers: {'Authorization': 'Bearer $_accessToken'});
+      final encodedPath = Uri.encodeComponent(
+          remotePath.startsWith('/') ? remotePath.substring(1) : remotePath);
+      final uri = Uri.parse(
+          'https://graph.microsoft.com/v1.0/me/drive/root:/$encodedPath:/thumbnails/0/medium/content');
+      final resp = await http
+          .get(uri, headers: {'Authorization': 'Bearer $_accessToken'});
       if (resp.statusCode == 200) return resp.bodyBytes;
     } catch (_) {}
     return null;
@@ -152,7 +164,9 @@ class OneDriveClientAdapter extends CloudStorageClient {
 
   Future<bool> restoreCredentials() async {
     final creds = await _config.readCredentials();
-    if (creds == null || creds['refresh_token'] == null || creds['refresh_token']!.isEmpty) {
+    if (creds == null ||
+        creds['refresh_token'] == null ||
+        creds['refresh_token']!.isEmpty) {
       return false;
     }
     _clientId = creds['client_id'];
@@ -209,7 +223,8 @@ class OneDriveClientAdapter extends CloudStorageClient {
     final folders = <Map<String, dynamic>>[];
     final files = <Map<String, dynamic>>[];
     String? nextLink;
-    var url = '$_graphBase${_childrenPath(path)}?\$top=200&\$select=id,name,size,lastModifiedDateTime,folder,file';
+    var url =
+        '$_graphBase${_childrenPath(path)}?\$top=200&\$select=id,name,size,lastModifiedDateTime,folder,file';
 
     do {
       final resp = await http.get(
@@ -223,7 +238,10 @@ class OneDriveClientAdapter extends CloudStorageClient {
       }
 
       if (resp.statusCode != 200) {
-        throw Exception('OneDrive list failed (${resp.statusCode}): ${resp.body}');
+        throw OneDriveOperationFailure(
+            OneDriveOperationCode.list,
+            'OneDrive list failed (${resp.statusCode}): ${resp.body}',
+            {'status': resp.statusCode, 'body': resp.body});
       }
 
       final data = json.decode(resp.body) as Map<String, dynamic>;
@@ -238,7 +256,8 @@ class OneDriveClientAdapter extends CloudStorageClient {
         final entry = <String, dynamic>{
           'name': name,
           'uuid': id,
-          if (map['lastModifiedDateTime'] != null) 'lastModified': map['lastModifiedDateTime'],
+          if (map['lastModifiedDateTime'] != null)
+            'lastModified': map['lastModifiedDateTime'],
           if (map['size'] != null) 'size': map['size'] as int,
         };
 
@@ -284,7 +303,8 @@ class OneDriveClientAdapter extends CloudStorageClient {
     final deleted = <String>[];
     String? newDeltaToken;
 
-    var url = deltaToken ?? '$_graphBase/me/drive/root/delta?\$select=id,name,size,lastModifiedDateTime,folder,file,deleted,parentReference';
+    var url = deltaToken ??
+        '$_graphBase/me/drive/root/delta?\$select=id,name,size,lastModifiedDateTime,folder,file,deleted,parentReference';
 
     do {
       final resp = await http.get(
@@ -298,7 +318,10 @@ class OneDriveClientAdapter extends CloudStorageClient {
       }
 
       if (resp.statusCode != 200) {
-        throw Exception('OneDrive delta failed (${resp.statusCode}): ${resp.body}');
+        throw OneDriveOperationFailure(
+            OneDriveOperationCode.delta,
+            'OneDrive delta failed (${resp.statusCode}): ${resp.body}',
+            {'status': resp.statusCode, 'body': resp.body});
       }
 
       final data = json.decode(resp.body) as Map<String, dynamic>;
@@ -395,7 +418,10 @@ class OneDriveClientAdapter extends CloudStorageClient {
     );
 
     if (resp.statusCode != 200 && resp.statusCode != 201) {
-      throw Exception('OneDrive upload failed (${resp.statusCode}): ${resp.body}');
+      throw OneDriveOperationFailure(
+          OneDriveOperationCode.upload,
+          'OneDrive upload failed (${resp.statusCode}): ${resp.body}',
+          {'status': resp.statusCode, 'body': resp.body});
     }
 
     onProgress?.call(fileData.length, fileData.length);
@@ -404,20 +430,26 @@ class OneDriveClientAdapter extends CloudStorageClient {
   // --- Download ---
 
   @override
-  Future<Uint8List> downloadFileBytes(String remotePath, {Function(int, int)? onProgress}) async {
+  Future<Uint8List> downloadFileBytes(String remotePath,
+      {Function(int, int)? onProgress}) async {
     await _ensureToken();
 
     // Get download URL from item metadata
-    final meta = await _graphGet('${_drivePath(remotePath)}?\$select=@microsoft.graph.downloadUrl');
+    final meta = await _graphGet(
+        '${_drivePath(remotePath)}?\$select=@microsoft.graph.downloadUrl');
     final downloadUrl = meta['@microsoft.graph.downloadUrl'] as String?;
 
     if (downloadUrl == null) {
-      throw Exception('No download URL for: $remotePath');
+      throw OneDriveOperationFailure(OneDriveOperationCode.downloadUrl,
+          'No download URL for: $remotePath', {'path': remotePath});
     }
 
     final resp = await http.get(Uri.parse(downloadUrl));
     if (resp.statusCode != 200) {
-      throw Exception('OneDrive download failed (${resp.statusCode})');
+      throw OneDriveOperationFailure(
+          OneDriveOperationCode.download,
+          'OneDrive download failed (${resp.statusCode})',
+          {'status': resp.statusCode});
     }
 
     onProgress?.call(resp.bodyBytes.length, resp.bodyBytes.length);
@@ -425,7 +457,8 @@ class OneDriveClientAdapter extends CloudStorageClient {
   }
 
   @override
-  Future<void> downloadFileByPath(String remotePath, String localPath, {Function(int, int)? onProgress}) async {
+  Future<void> downloadFileByPath(String remotePath, String localPath,
+      {Function(int, int)? onProgress}) async {
     final bytes = await downloadFileBytes(remotePath, onProgress: onProgress);
     await File(localPath).writeAsBytes(bytes);
   }
@@ -460,8 +493,13 @@ class OneDriveClientAdapter extends CloudStorageClient {
       );
 
       // 409 Conflict = folder already exists, which is fine
-      if (resp.statusCode != 201 && resp.statusCode != 200 && resp.statusCode != 409) {
-        throw Exception('OneDrive createFolder failed (${resp.statusCode}): ${resp.body}');
+      if (resp.statusCode != 201 &&
+          resp.statusCode != 200 &&
+          resp.statusCode != 409) {
+        throw OneDriveOperationFailure(
+            OneDriveOperationCode.createFolder,
+            'OneDrive createFolder failed (${resp.statusCode}): ${resp.body}',
+            {'status': resp.statusCode, 'body': resp.body});
       }
 
       parentPath = '$parentPath/$segment';
@@ -474,9 +512,12 @@ class OneDriveClientAdapter extends CloudStorageClient {
   Future<void> copyPath(String sourcePath, String targetPath) async {
     await _ensureToken();
     // Resolve the target folder ID
-    final targetMeta = await _graphGet('${_drivePath(targetPath)}?\$select=id,parentReference');
+    final targetMeta = await _graphGet(
+        '${_drivePath(targetPath)}?\$select=id,parentReference');
     final targetId = targetMeta['id'] as String?;
-    if (targetId == null) throw Exception('Target folder not found: $targetPath');
+    if (targetId == null)
+      throw OneDriveOperationFailure(OneDriveOperationCode.targetFolder,
+          'Target folder not found: $targetPath', {'path': targetPath});
     final fileName = p.posix.basename(sourcePath);
     _log.info('Server-side copy (OneDrive): $sourcePath → $targetPath');
     final body = json.encode({
@@ -495,7 +536,10 @@ class OneDriveClientAdapter extends CloudStorageClient {
     );
     // Graph API returns 202 Accepted for async copy; treat 200/202 as success
     if (resp.statusCode != 200 && resp.statusCode != 202) {
-      throw Exception('OneDrive copy failed (${resp.statusCode}): ${resp.body}');
+      throw OneDriveOperationFailure(
+          OneDriveOperationCode.copy,
+          'OneDrive copy failed (${resp.statusCode}): ${resp.body}',
+          {'status': resp.statusCode, 'body': resp.body});
     }
   }
 
@@ -509,7 +553,10 @@ class OneDriveClientAdapter extends CloudStorageClient {
       headers: _authHeaders(),
     );
     if (resp.statusCode != 204 && resp.statusCode != 200) {
-      throw Exception('OneDrive delete failed (${resp.statusCode}): ${resp.body}');
+      throw OneDriveOperationFailure(
+          OneDriveOperationCode.delete,
+          'OneDrive delete failed (${resp.statusCode}): ${resp.body}',
+          {'status': resp.statusCode, 'body': resp.body});
     }
   }
 
@@ -518,9 +565,12 @@ class OneDriveClientAdapter extends CloudStorageClient {
     await _ensureToken();
 
     // Resolve target folder ID
-    final targetMeta = await _graphGet('${_drivePath(targetPath)}?\$select=id,parentReference');
+    final targetMeta = await _graphGet(
+        '${_drivePath(targetPath)}?\$select=id,parentReference');
     final targetId = targetMeta['id'] as String?;
-    if (targetId == null) throw Exception('Target folder not found: $targetPath');
+    if (targetId == null)
+      throw OneDriveOperationFailure(OneDriveOperationCode.targetFolder,
+          'Target folder not found: $targetPath', {'path': targetPath});
 
     final body = json.encode({
       'parentReference': {'id': targetId},
@@ -536,7 +586,10 @@ class OneDriveClientAdapter extends CloudStorageClient {
     );
 
     if (resp.statusCode != 200) {
-      throw Exception('OneDrive move failed (${resp.statusCode}): ${resp.body}');
+      throw OneDriveOperationFailure(
+          OneDriveOperationCode.move,
+          'OneDrive move failed (${resp.statusCode}): ${resp.body}',
+          {'status': resp.statusCode, 'body': resp.body});
     }
   }
 
@@ -555,7 +608,10 @@ class OneDriveClientAdapter extends CloudStorageClient {
     );
 
     if (resp.statusCode != 200) {
-      throw Exception('OneDrive rename failed (${resp.statusCode}): ${resp.body}');
+      throw OneDriveOperationFailure(
+          OneDriveOperationCode.rename,
+          'OneDrive rename failed (${resp.statusCode}): ${resp.body}',
+          {'status': resp.statusCode, 'body': resp.body});
     }
   }
 
@@ -614,7 +670,8 @@ class OneDriveClientAdapter extends CloudStorageClient {
           final webUrl = resource['webUrl'] as String? ?? '';
 
           // Extract summary/snippet from hit
-          final summary = hit['summary'] as String? ?? 'Content matches "$query"';
+          final summary =
+              hit['summary'] as String? ?? 'Content matches "$query"';
 
           results.add({
             'name': name,
@@ -634,10 +691,13 @@ class OneDriveClientAdapter extends CloudStorageClient {
 
   // --- Internal ---
 
-  Map<String, String> _authHeaders() => {'Authorization': 'Bearer $_accessToken'};
+  Map<String, String> _authHeaders() =>
+      {'Authorization': 'Bearer $_accessToken'};
 
   Future<void> _ensureToken() async {
-    if (_accessToken == null) throw Exception('Not authenticated');
+    if (_accessToken == null)
+      throw OneDriveOperationFailure(
+          OneDriveOperationCode.notAuthenticated, 'Not authenticated');
     if (_tokenExpiry != null && DateTime.now().isAfter(_tokenExpiry!)) {
       await _refreshAccessToken();
     }
@@ -645,7 +705,8 @@ class OneDriveClientAdapter extends CloudStorageClient {
 
   Future<void> _refreshAccessToken() async {
     if (_refreshToken == null || _clientId == null) {
-      throw Exception('Cannot refresh: missing refresh token or client ID');
+      throw OneDriveOperationFailure(OneDriveOperationCode.refreshCredentials,
+          'Cannot refresh: missing refresh token or client ID');
     }
 
     final body = <String, String>{
@@ -660,7 +721,10 @@ class OneDriveClientAdapter extends CloudStorageClient {
 
     final resp = await http.post(Uri.parse(_tokenUrl), body: body);
     if (resp.statusCode != 200) {
-      throw Exception('Token refresh failed (${resp.statusCode}): ${resp.body}');
+      throw OneDriveOperationFailure(
+          OneDriveOperationCode.refreshToken,
+          'Token refresh failed (${resp.statusCode}): ${resp.body}',
+          {'status': resp.statusCode, 'body': resp.body});
     }
 
     final data = json.decode(resp.body) as Map<String, dynamic>;
@@ -683,13 +747,17 @@ class OneDriveClientAdapter extends CloudStorageClient {
       'response_mode': 'query',
     });
 
-    final server = await HttpServer.bind(InternetAddress.loopbackIPv4, _redirectPort);
+    final server =
+        await HttpServer.bind(InternetAddress.loopbackIPv4, _redirectPort);
 
     if (await canLaunchUrl(authUri)) {
       await launchUrl(authUri, mode: LaunchMode.externalApplication);
     } else {
       await server.close();
-      throw const ConnectionFailure(ConnectionFailureCode.oauthBrowserUnavailable, 'Could not open browser for Microsoft authorization', {'provider': 'Microsoft'});
+      throw const ConnectionFailure(
+          ConnectionFailureCode.oauthBrowserUnavailable,
+          'Could not open browser for Microsoft authorization',
+          {'provider': 'Microsoft'});
     }
 
     String? authCode;
@@ -702,7 +770,8 @@ class OneDriveClientAdapter extends CloudStorageClient {
           request.response
             ..statusCode = 200
             ..headers.contentType = ContentType.html
-            ..write('<html><body><h2>Authorization denied: $error</h2><p>You can close this window.</p></body></html>');
+            ..write(
+                '<html><body><h2>Authorization denied: $error</h2><p>You can close this window.</p></body></html>');
           await request.response.close();
           break;
         }
@@ -712,7 +781,8 @@ class OneDriveClientAdapter extends CloudStorageClient {
           request.response
             ..statusCode = 200
             ..headers.contentType = ContentType.html
-            ..write('<html><body><h2>Authorization successful!</h2><p>You can close this window and return to CrispCloud.</p></body></html>');
+            ..write(
+                '<html><body><h2>Authorization successful!</h2><p>You can close this window and return to CrispCloud.</p></body></html>');
           await request.response.close();
           break;
         }
@@ -727,7 +797,10 @@ class OneDriveClientAdapter extends CloudStorageClient {
     }
 
     if (authCode == null) {
-      throw const ConnectionFailure(ConnectionFailureCode.oauthCancelled, 'Microsoft authorization was cancelled or failed', {'provider': 'Microsoft'});
+      throw const ConnectionFailure(
+          ConnectionFailureCode.oauthCancelled,
+          'Microsoft authorization was cancelled or failed',
+          {'provider': 'Microsoft'});
     }
 
     // Exchange code for tokens
@@ -744,7 +817,10 @@ class OneDriveClientAdapter extends CloudStorageClient {
 
     final tokenResp = await http.post(Uri.parse(_tokenUrl), body: tokenBody);
     if (tokenResp.statusCode != 200) {
-      throw Exception('Token exchange failed (${tokenResp.statusCode}): ${tokenResp.body}');
+      throw OneDriveOperationFailure(
+          OneDriveOperationCode.tokenExchange,
+          'Token exchange failed (${tokenResp.statusCode}): ${tokenResp.body}',
+          {'status': tokenResp.statusCode, 'body': tokenResp.body});
     }
 
     final tokenData = json.decode(tokenResp.body) as Map<String, dynamic>;
@@ -762,7 +838,8 @@ class OneDriveClientAdapter extends CloudStorageClient {
   Future<List<Map<String, dynamic>>> listSharedLibraries() async {
     await _ensureToken();
 
-    final resp = await _graphGet('/me/followedSites?\$select=id,displayName,webUrl');
+    final resp =
+        await _graphGet('/me/followedSites?\$select=id,displayName,webUrl');
     final sites = (resp['value'] as List?) ?? [];
 
     return sites.map((s) {
@@ -779,7 +856,8 @@ class OneDriveClientAdapter extends CloudStorageClient {
   Future<List<Map<String, dynamic>>> listSiteDrives(String siteId) async {
     await _ensureToken();
 
-    final resp = await _graphGet('/sites/$siteId/drives?\$select=id,name,driveType,webUrl');
+    final resp = await _graphGet(
+        '/sites/$siteId/drives?\$select=id,name,driveType,webUrl');
     final drives = (resp['value'] as List?) ?? [];
 
     return drives.map((d) {
@@ -821,7 +899,8 @@ class OneDriveClientAdapter extends CloudStorageClient {
         final entry = <String, dynamic>{
           'name': map['name'] as String? ?? 'Unknown',
           'uuid': map['id'] as String,
-          if (map['lastModifiedDateTime'] != null) 'lastModified': map['lastModifiedDateTime'],
+          if (map['lastModifiedDateTime'] != null)
+            'lastModified': map['lastModifiedDateTime'],
           if (map['size'] != null) 'size': (map['size'] as num).toInt(),
         };
 
@@ -855,7 +934,8 @@ class OneDriveClientAdapter extends CloudStorageClient {
       final hitsResult = (hitSet as Map)['hitsContainers'] as List? ?? [];
       for (final container in hitsResult) {
         for (final hit in ((container as Map)['hits'] as List? ?? [])) {
-          final resource = (hit as Map)['resource'] as Map<String, dynamic>? ?? {};
+          final resource =
+              (hit as Map)['resource'] as Map<String, dynamic>? ?? {};
           results.add({
             'name': resource['name'] ?? 'Unknown',
             'webUrl': resource['webUrl'],
@@ -883,13 +963,19 @@ class OneDriveClientAdapter extends CloudStorageClient {
       await _refreshAccessToken();
       final retryResp = await http.get(Uri.parse(url), headers: _authHeaders());
       if (retryResp.statusCode != 200) {
-        throw Exception('Graph API error (${retryResp.statusCode}): ${retryResp.body}');
+        throw OneDriveOperationFailure(
+            OneDriveOperationCode.graph,
+            'Graph API error (${retryResp.statusCode}): ${retryResp.body}',
+            {'status': retryResp.statusCode, 'body': retryResp.body});
       }
       return json.decode(retryResp.body) as Map<String, dynamic>;
     }
 
     if (resp.statusCode != 200) {
-      throw Exception('Graph API error (${resp.statusCode}): ${resp.body}');
+      throw OneDriveOperationFailure(
+          OneDriveOperationCode.graph,
+          'Graph API error (${resp.statusCode}): ${resp.body}',
+          {'status': resp.statusCode, 'body': resp.body});
     }
 
     return json.decode(resp.body) as Map<String, dynamic>;
