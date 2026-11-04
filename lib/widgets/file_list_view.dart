@@ -6,6 +6,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import '../l10n/file_list_strings.dart';
 import '../models/file_item.dart';
 import '../models/panel_side.dart';
 import '../providers/providers.dart';
@@ -49,6 +50,7 @@ class FileListView extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
+    final strings = FileListStrings(context);
     final panel = ref.watch(panelProvider(side));
     final viewMode = ref.watch(panelViewModeProvider(side));
 
@@ -102,7 +104,7 @@ class FileListView extends ConsumerWidget {
 
     try {
       if (files.isEmpty) {
-        return const Center(child: Text('Empty folder'));
+        return Center(child: Text(strings.text('Empty folder')));
       }
 
       final selectedFiles = panel.selection.toList();
@@ -146,7 +148,7 @@ class FileListView extends ConsumerWidget {
           } catch (e) {
             _log.error('Error building file tile at index $index: $e');
             return ListTile(
-              title: Text('Error loading item: $e'),
+              title: Text(strings.format('Error loading item: {error}', {'error': e})),
               leading: const Icon(Icons.error, color: Colors.red),
             );
           }
@@ -273,11 +275,11 @@ class FileListView extends ConsumerWidget {
           children: [
             const Icon(Icons.error, size: 48, color: Colors.red),
             const SizedBox(height: 16),
-            Text('Error loading files: $e'),
+            Text(strings.format('Error loading files: {error}', {'error': e})),
             const SizedBox(height: 8),
             ElevatedButton(
               onPressed: () => panel.refresh(),
-              child: const Text('Retry'),
+              child: Text(strings.text('Retry')),
             ),
           ],
         ),
@@ -317,15 +319,9 @@ class FileListTile extends ConsumerWidget {
     this.showRelativePath = false,
   });
 
-  String _buildSemanticLabel(FileItem f, bool selected, bool cursor) {
-    final type = f.isFolder ? 'Folder' : 'File';
-    final size = f.isFolder ? '' : ', ${formatBytes(f.size ?? 0)}';
-    final sel = selected ? ', selected' : '';
-    return '$type ${f.name}$size$sel';
-  }
-
   @override
   Widget build(BuildContext context, WidgetRef ref) {
+    final strings = FileListStrings(context);
     final isRenaming = ref.watch(panelProvider(side).select((p) => p.renamingItem == file));
     final colorService = ref.watch(fileTypeColorProvider);
     final fileColor = colorService.colorForFile(file);
@@ -370,7 +366,7 @@ class FileListTile extends ConsumerWidget {
           return KeyEventResult.ignored;
         },
         child: Semantics(
-          label: _buildSemanticLabel(file, isSelected, isCursor),
+          label: strings.semantic(folder: file.isFolder, name: file.name, size: file.size == null ? null : formatBytes(file.size!), selected: isSelected),
           selected: isSelected,
           focused: isCursor,
           button: true,
@@ -419,7 +415,7 @@ class FileListTile extends ConsumerWidget {
             ],
           ),
           trailing: file.isFolder
-              ? IconButton(icon: const Icon(Icons.chevron_right), tooltip: 'Open', onPressed: onDoubleTap)
+              ? IconButton(icon: const Icon(Icons.chevron_right), tooltip: strings.text('Open'), onPressed: onDoubleTap)
               : null,
           onTap: () {
             // Use _PointerModifiers captured at pointer-down time (more reliable on web).
@@ -530,6 +526,7 @@ class CompactFileTile extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
+    final strings = FileListStrings(context);
     final colorService = ref.watch(fileTypeColorProvider);
     final fileColor = colorService.colorForFile(file);
     final theme = Theme.of(context);
@@ -558,15 +555,17 @@ class CompactFileTile extends ConsumerWidget {
         ? ''
         : file.isFolder
             // Show calculated folder size if available (from Space key), else <DIR>
-            ? (file.calculatedSize != null ? formatBytes(file.calculatedSize!) : '<DIR>')
+            ? (file.calculatedSize != null ? formatBytes(file.calculatedSize!) : strings.text('<DIR>'))
             : (file.displaySize != null ? formatBytes(file.displaySize!) : '');
     final dateStr = file.updatedAt != null ? formatDate(file.updatedAt!) : '';
     final extStr = file.isFolder || file.name == '..' ? '' : file.extension.toUpperCase();
 
-    final semanticType = file.isFolder ? 'Folder' : 'File';
-    final semanticSize = file.isFolder ? '' : ', ${sizeStr.isNotEmpty ? sizeStr : 'unknown size'}';
-    final semanticSel = isSelected ? ', selected' : '';
-    final semanticLabel = '$semanticType ${file.name}$semanticSize$semanticSel';
+    final semanticLabel = strings.semantic(
+      folder: file.isFolder,
+      name: file.name,
+      size: sizeStr.isNotEmpty ? sizeStr : null,
+      selected: isSelected,
+    );
 
     return Semantics(
       label: semanticLabel,
@@ -615,7 +614,7 @@ class CompactFileTile extends ConsumerWidget {
               const SizedBox(width: 8),
               SizedBox(
                 width: sizeColW,
-                child: Text(sizeStr, style: dimStyle, textAlign: TextAlign.right, maxLines: 1),
+                child: Text(sizeStr, style: dimStyle, textAlign: TextAlign.right, maxLines: 1, overflow: TextOverflow.ellipsis),
               ),
             ],
             if (showDate && dateStr.isNotEmpty) ...[
