@@ -11,6 +11,7 @@
 import 'package:flutter/foundation.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
+import '../l10n/background_notification_strings.dart';
 import 'log_service.dart';
 import 'sync_database.dart';
 import 'sync_engine.dart';
@@ -173,17 +174,18 @@ class BackgroundSyncService {
 
       // 4. Send local notification if there is something worth reporting
       if (conflicts > 0 || errors > 0) {
-        final message = _buildNotificationBody(
+        final strings = await BackgroundNotificationStrings.fromPreferences();
+        final message = strings.body(
           conflicts: conflicts,
           errors: errors,
-          errorMessages: errorMessages,
+          details: errorMessages,
         );
         await mobile.showLocalNotification(
           id: 1001,
-          title: 'CrispCloud Sync',
+          title: strings.text('title'),
           body: message,
           channelId: 'crisp_cloud_sync',
-          channelName: 'Sync Notifications',
+          channelName: strings.text('channel'),
         );
       }
 
@@ -192,12 +194,13 @@ class BackgroundSyncService {
     } catch (e, st) {
       _log.error('Background sync task failed', e, st);
       try {
+        final strings = await BackgroundNotificationStrings.fromPreferences();
         await mobile.showLocalNotification(
           id: 1002,
-          title: 'CrispCloud Sync Error',
-          body: 'Background sync failed: $e',
+          title: strings.text('errorTitle'),
+          body: strings.failure(e),
           channelId: 'crisp_cloud_sync',
-          channelName: 'Sync Notifications',
+          channelName: strings.text('channel'),
         );
       } catch (_) {}
       return false;
@@ -206,17 +209,4 @@ class BackgroundSyncService {
     }
   }
 
-  static String _buildNotificationBody({
-    required int conflicts,
-    required int errors,
-    required List<String> errorMessages,
-  }) {
-    final parts = <String>[];
-    if (conflicts > 0) parts.add('$conflicts conflict${conflicts == 1 ? '' : 's'}');
-    if (errors > 0) parts.add('$errors error${errors == 1 ? '' : 's'}');
-    if (errorMessages.isNotEmpty) {
-      parts.add(errorMessages.first);
-    }
-    return parts.join(' — ');
-  }
 }

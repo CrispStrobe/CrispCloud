@@ -40,6 +40,7 @@ import 'services/cert_pinning_service.dart';
 import 'services/crash_reporting_service.dart';
 import 'services/file_cache_service.dart';
 import 'services/log_service.dart';
+import 'services/locale_preference.dart';
 import 'services/thumbnail_service.dart';
 import 'services/proxy_service.dart';
 import 'services/secure_storage_service.dart';
@@ -177,8 +178,10 @@ Future<void> main() async {
       final configService = await _createConfigService(
           configPath, defaultProvider, secureStorage);
 
+      final savedLocale = await LocalePreference.read();
       runApp(ProviderScope(
         overrides: [
+          localeProvider.overrideWith((ref) => savedLocale),
           secureStorageProvider.overrideWithValue(secureStorage),
           configPathProvider.overrideWithValue(configPath),
           proxyServiceProvider.overrideWithValue(proxyService),
@@ -339,6 +342,9 @@ class MyApp extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final themeService = ref.watch(themeProvider);
+    ref.listen<Locale?>(localeProvider, (_, locale) {
+      unawaited(LocalePreference.write(locale));
+    });
 
     return MaterialApp(
       title: 'CrispCloud',
