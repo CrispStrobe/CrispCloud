@@ -34,6 +34,7 @@ class Files implements LocalFileService {
 
 class Client extends CloudStorageClient {
   int produced = 0;
+  final uploaded = <String>[];
   bool fail = false;
   final closed = Completer<void>();
   @override
@@ -55,6 +56,13 @@ class Client extends CloudStorageClient {
     } finally {
       if (!closed.isCompleted) closed.complete();
     }
+  }
+
+  @override
+  Future<void> uploadStream(Stream<List<int>> dataStream, int length,
+      String fileName, String targetPath, {Function(int, int)? onProgress}) async {
+    await for (final _ in dataStream) {}
+    uploaded.add(fileName);
   }
 
   @override
@@ -159,4 +167,32 @@ void main() {
     expect(op.errorMessage, '1 of 2 files failed');
     expect(op.files!.where((f) => f.error != null), hasLength(1));
   });
+  test('missing-path upload fails rather than reporting success', () async {
+    final transfers = container.read(transferProvider);
+    final missing = FileItem(name: 'missing.txt', isFolder: false);
+    await transfers.uploadFiles([missing], targetPath: '/');
+    await until(() => transfers.operations.single.isComplete);
+    final op = transfers.operations.single;
+    expect(op.status, OperationStatus.failed);
+    expect(op.errorMessage, 'All files failed');
+    expect(op.files!.single.error, 'No path');
+    expect(client.uploaded, isEmpty);
+  });
+
+  test('mixed upload preserves missing-path error and successful transfer', () async {
+    final good = File('${root.path}/good.txt');
+    await good.writeAsString('hello');
+    final transfers = container.read(transferProvider);
+    await transfers.uploadFiles([
+      FileItem(name: 'good.txt', path: good.path, isFolder: false, size: 5),
+      FileItem(name: 'missing.txt', isFolder: false),
+    ], targetPath: '/');
+    await until(() => transfers.operations.single.isComplete);
+    final op = transfers.operations.single;
+    expect(op.status, OperationStatus.failed);
+    expect(op.errorMessage, '1 of 2 files failed');
+    expect(op.files!.last.error, 'No path');
+    expect(client.uploaded, ['good.txt']);
+  });
+
 }

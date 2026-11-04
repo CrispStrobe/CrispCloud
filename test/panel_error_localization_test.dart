@@ -54,6 +54,18 @@ void main() {
       expect(localizedPanelError(context, denied), contains('/example/folder'));
       expect(
           localizedPanelError(context, failed), contains('external-detail-42'));
+      for (final code in [
+        PanelErrorCode.cloudTransferFailed,
+        PanelErrorCode.cloudCompareFailed,
+        PanelErrorCode.cloudSearchFailed
+      ]) {
+        final cloudError = AppError('fallback',
+            code: code, arguments: {'error': 'external-detail-42'});
+        expect(localizedPanelError(context, cloudError),
+            contains('external-detail-42'));
+        expect(localizedPanelError(context, cloudError),
+            isNot(contains('fallback')));
+      }
       expect(tester.takeException(), isNull);
     }
   });

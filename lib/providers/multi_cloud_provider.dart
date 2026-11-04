@@ -101,7 +101,7 @@ class MultiCloudNotifier extends ChangeNotifier {
       notifyListeners();
     } catch (e, st) {
       _log.error('Cloud-to-cloud transfer failed', e, st);
-      _ref.read(errorProvider).addError('Transfer failed: $e');
+      _ref.read(errorProvider).addError('Transfer failed: $e', code: PanelErrorCode.cloudTransferFailed, arguments: {'error': e.toString()});
     } finally {
       _isTransferring = false;
       notifyListeners();
@@ -134,7 +134,7 @@ class MultiCloudNotifier extends ChangeNotifier {
       );
     } catch (e, st) {
       _log.error('Comparison failed', e, st);
-      _ref.read(errorProvider).addError('Comparison failed: $e');
+      _ref.read(errorProvider).addError('Comparison failed: $e', code: PanelErrorCode.cloudCompareFailed, arguments: {'error': e.toString()});
     } finally {
       _isComparing = false;
       notifyListeners();
@@ -165,7 +165,7 @@ class MultiCloudNotifier extends ChangeNotifier {
       );
     } catch (e, st) {
       _log.error('Unified search failed', e, st);
-      _ref.read(errorProvider).addError('Search failed: $e');
+      _ref.read(errorProvider).addError('Search failed: $e', code: PanelErrorCode.cloudSearchFailed, arguments: {'error': e.toString()});
     } finally {
       _isSearching = false;
       notifyListeners();

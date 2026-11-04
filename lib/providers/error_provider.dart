@@ -11,6 +11,7 @@ enum PanelErrorCode {
   accessParent, accessDenied, accessContaining, pickFailed, deleteFailed,
   renameFailed, createFailed, moveFailed, copyFailed, selectBase,
   accessCancelled, localUnsupported, permissionDenied,
+  cloudTransferFailed, cloudCompareFailed, cloudSearchFailed,
 }
 
 class AppError {

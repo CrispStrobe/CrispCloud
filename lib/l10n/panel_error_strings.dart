@@ -38,6 +38,9 @@ const Map<String, Map<String, String>> _messages = {
     "localUnsupported": "Local file access is not supported on this platform.",
     "permissionDenied":
         "Permission denied. Use the Browse button to grant access.",
+    "cloudTransferFailed": "Transfer failed: {error}",
+    "cloudCompareFailed": "Comparison failed: {error}",
+    "cloudSearchFailed": "Search failed: {error}",
   },
   'de': {
     "archiveOpen": "Archiv kann nicht geöffnet werden: {error}",
@@ -64,6 +67,9 @@ const Map<String, Map<String, String>> _messages = {
         "Lokaler Dateizugriff wird auf dieser Plattform nicht unterstützt.",
     "permissionDenied":
         "Zugriff verweigert. Verwenden Sie „Durchsuchen“, um Zugriff zu gewähren.",
+    "cloudTransferFailed": "Übertragung fehlgeschlagen: {error}",
+    "cloudCompareFailed": "Vergleich fehlgeschlagen: {error}",
+    "cloudSearchFailed": "Suche fehlgeschlagen: {error}",
   },
   'fr': {
     "archiveOpen": "Impossible d’ouvrir l’archive : {error}",
@@ -90,6 +96,9 @@ const Map<String, Map<String, String>> _messages = {
         "L’accès aux fichiers locaux n’est pas pris en charge sur cette plateforme.",
     "permissionDenied":
         "Accès refusé. Utilisez Parcourir pour autoriser l’accès.",
+    "cloudTransferFailed": "Échec du transfert : {error}",
+    "cloudCompareFailed": "Échec de la comparaison : {error}",
+    "cloudSearchFailed": "Échec de la recherche : {error}",
   },
   'es': {
     "archiveOpen": "No se puede abrir el archivo: {error}",
@@ -114,6 +123,9 @@ const Map<String, Map<String, String>> _messages = {
     "localUnsupported":
         "El acceso a archivos locales no es compatible con esta plataforma.",
     "permissionDenied": "Permiso denegado. Usa Examinar para conceder acceso.",
+    "cloudTransferFailed": "Error de transferencia: {error}",
+    "cloudCompareFailed": "Error de comparación: {error}",
+    "cloudSearchFailed": "Error de búsqueda: {error}",
   },
   'pt': {
     "archiveOpen": "Não foi possível abrir o arquivo compactado: {error}",
@@ -139,6 +151,9 @@ const Map<String, Map<String, String>> _messages = {
     "localUnsupported":
         "O acesso a arquivos locais não é suportado nesta plataforma.",
     "permissionDenied": "Permissão negada. Use Procurar para conceder acesso.",
+    "cloudTransferFailed": "Falha na transferência: {error}",
+    "cloudCompareFailed": "Falha na comparação: {error}",
+    "cloudSearchFailed": "Falha na pesquisa: {error}",
   },
   'zh': {
     "archiveOpen": "无法打开归档：{error}",
@@ -159,6 +174,9 @@ const Map<String, Map<String, String>> _messages = {
     "accessCancelled": "访问已取消。正在使用备用目录。",
     "localUnsupported": "此平台不支持本地文件访问。",
     "permissionDenied": "权限被拒绝。请使用“浏览”按钮授予访问权限。",
+    "cloudTransferFailed": "传输失败：{error}",
+    "cloudCompareFailed": "比较失败：{error}",
+    "cloudSearchFailed": "搜索失败：{error}",
   },
   'ja': {
     "archiveOpen": "アーカイブを開けません: {error}",
@@ -179,6 +197,9 @@ const Map<String, Map<String, String>> _messages = {
     "accessCancelled": "アクセスがキャンセルされました。代替フォルダーを使用します。",
     "localUnsupported": "このプラットフォームではローカルファイルにアクセスできません。",
     "permissionDenied": "アクセスが拒否されました。「参照」ボタンでアクセスを許可してください。",
+    "cloudTransferFailed": "転送に失敗しました: {error}",
+    "cloudCompareFailed": "比較に失敗しました: {error}",
+    "cloudSearchFailed": "検索に失敗しました: {error}",
   },
   'ko': {
     "archiveOpen": "압축 파일을 열 수 없습니다: {error}",
@@ -199,6 +220,9 @@ const Map<String, Map<String, String>> _messages = {
     "accessCancelled": "접근이 취소되었습니다. 대체 디렉터리를 사용합니다.",
     "localUnsupported": "이 플랫폼은 로컬 파일 접근을 지원하지 않습니다.",
     "permissionDenied": "권한이 거부되었습니다. 찾아보기 버튼으로 접근을 허용하세요.",
+    "cloudTransferFailed": "전송 실패: {error}",
+    "cloudCompareFailed": "비교 실패: {error}",
+    "cloudSearchFailed": "검색 실패: {error}",
   },
   'ar': {
     "archiveOpen": "تعذّر فتح الأرشيف: {error}",
@@ -221,5 +245,8 @@ const Map<String, Map<String, String>> _messages = {
     "accessCancelled": "أُلغي الوصول. سيُستخدم المجلد البديل.",
     "localUnsupported": "الوصول إلى الملفات المحلية غير مدعوم على هذه المنصة.",
     "permissionDenied": "تم رفض الإذن. استخدم زر الاستعراض لمنح الوصول.",
+    "cloudTransferFailed": "فشل النقل: {error}",
+    "cloudCompareFailed": "فشلت المقارنة: {error}",
+    "cloudSearchFailed": "فشل البحث: {error}",
   },
 };
