@@ -149,6 +149,7 @@ class _FileColumnViewState extends ConsumerState<FileColumnView> {
         itemBuilder: (context, index) {
           final file = files[index];
           final isSelected = panel.isSelected(file);
+          final isCursor = panel.cursorItem == file;
 
           return GestureDetector(
             onSecondaryTapDown: (details) => showFileContextMenu(
@@ -166,7 +167,9 @@ class _FileColumnViewState extends ConsumerState<FileColumnView> {
                 padding: const EdgeInsets.symmetric(horizontal: 8),
                 color: isSelected
                     ? theme.colorScheme.primaryContainer.withValues(alpha: 0.5)
-                    : null,
+                    : isCursor
+                        ? theme.colorScheme.primary.withValues(alpha: 0.16)
+                        : null,
                 child: Row(
                   children: [
                     Icon(

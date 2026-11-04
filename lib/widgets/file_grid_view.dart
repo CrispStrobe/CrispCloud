@@ -51,11 +51,13 @@ class FileGridView extends ConsumerWidget {
       itemBuilder: (context, index) {
         final file = files[index];
         final isSelected = panel.isSelected(file);
+        final isCursor = panel.cursorItem == file;
 
         return _FileGridTile(
           file: file,
           side: side,
           isSelected: isSelected,
+          isCursor: isCursor,
           onTap: () {
             final shiftPressed = HardwareKeyboard.instance.isShiftPressed;
             final ctrlPressed = HardwareKeyboard.instance.isControlPressed || HardwareKeyboard.instance.isMetaPressed;
@@ -73,6 +75,7 @@ class _FileGridTile extends ConsumerStatefulWidget {
   final FileItem file;
   final PanelSide side;
   final bool isSelected;
+  final bool isCursor;
   final VoidCallback onTap;
   final VoidCallback onDoubleTap;
   final Function(TapDownDetails) onSecondaryTap;
@@ -81,6 +84,7 @@ class _FileGridTile extends ConsumerStatefulWidget {
     required this.file,
     required this.side,
     required this.isSelected,
+    this.isCursor = false,
     required this.onTap,
     required this.onDoubleTap,
     required this.onSecondaryTap,
@@ -176,8 +180,10 @@ class _FileGridTileState extends ConsumerState<_FileGridTile> {
             borderRadius: BorderRadius.circular(8),
             color: widget.isSelected
                 ? theme.colorScheme.primaryContainer.withValues(alpha: 0.5)
-                : null,
-            border: widget.isSelected
+                : widget.isCursor
+                    ? theme.colorScheme.primary.withValues(alpha: 0.16)
+                    : null,
+            border: widget.isSelected || widget.isCursor
                 ? Border.all(color: theme.colorScheme.primary, width: 1.5)
                 : Border.all(color: Colors.transparent, width: 1.5),
           ),

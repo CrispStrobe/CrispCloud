@@ -76,6 +76,9 @@ class PanelNotifier extends ChangeNotifier {
   final _refreshLock = AsyncLock();
   Timer? _refreshDebounce;
   bool _isDisposed = false;
+  /// Guards against an older directory listing overwriting a newer one when
+  /// the user navigates quickly.
+  int _localLoadGeneration = 0;
 
   /// When true, [_files] holds search results instead of the real directory
   /// listing; normal refresh/navigation calls restore the real listing.
@@ -305,6 +308,8 @@ class PanelNotifier extends ChangeNotifier {
 
     if (settings.mode == QuickSearchMode.filter) {
       _selectFirstVisibleMatch();
+    } else if (settings.mode == QuickSearchMode.select) {
+      _selectTypeaheadMatches();
     } else {
       _jumpToMatch(refine: wasActive);
     }
@@ -322,6 +327,8 @@ class PanelNotifier extends ChangeNotifier {
     }
     if (_typeaheadMode == QuickSearchMode.filter) {
       _selectFirstVisibleMatch();
+    } else if (_typeaheadMode == QuickSearchMode.select) {
+      _selectTypeaheadMatches();
     } else {
       _jumpToMatch(refine: true);
     }
@@ -382,6 +389,17 @@ class PanelNotifier extends ChangeNotifier {
       orElse: () => displayed.first,
     );
     _setCursorToItem(first);
+  }
+
+  /// Quick-select: make every match the selection and put the cursor on the
+  /// first one. This is the Total Commander "select" flavor of type-ahead.
+  void _selectTypeaheadMatches() {
+    final matches = _typeaheadMatches();
+    if (matches.isEmpty) return;
+    _selection
+      ..clear()
+      ..addAll(matches);
+    _setCursorToItem(matches.first);
   }
 
   /// Quick search: select the next match after the cursor. When refining an
@@ -1890,15 +1908,33 @@ class PanelNotifier extends ChangeNotifier {
   }
 
   Future<void> _loadLocalFiles() async {
+    final int loadId = ++_localLoadGeneration;
     if (!kIsWeb && _localPath.contains(':/')) {
       _localPath = await _localFileService.getSafeFallbackDirectory();
     }
     _log.debug('_loadLocalFiles: $currentPath (web=$kIsWeb)');
     _isLoading = true;
     notifyListeners();
+
+    final dirCache = _ref.read(directoryCacheProvider);
+    final cacheKey = DirectoryCacheService.key('local', currentPath);
+
+    // Show the last listing for this folder immediately. It is replaced by
+    // the fresh listing below, but makes revisiting large folders instant.
+    if (!_showingSearchResults) {
+      final cached = dirCache.get(cacheKey);
+      if (cached != null && cached.isNotEmpty) {
+        final prev = cursorItem;
+        _files = List.of(cached);
+        _sortFiles();
+        _resetCursor(preserveItem: prev);
+        notifyListeners();
+      }
+    }
+
     try {
       final entities = await _localFileService.listDirectory(currentPath);
-      if (_isDisposed) return;
+      if (_isDisposed || loadId != _localLoadGeneration) return;
       if (entities == null) {
         _files = [];
         _isLoading = false;
@@ -1912,7 +1948,18 @@ class PanelNotifier extends ChangeNotifier {
         return;
       }
       _log.debug(
-          'listDirectory("$currentPath") returned ${entities.length} entities');
+        'listDirectory("$currentPath") returned ${entities.length} entities',
+      );
+
+      // Reuse metadata from the cached listing while the fresh stat pass runs.
+      final cachedByPath = <String, FileItem>{};
+      final cached = dirCache.get(cacheKey);
+      if (cached != null) {
+        for (final item in cached) {
+          final path = item.path;
+          if (path != null) cachedByPath[path] = item;
+        }
+      }
 
       // Prepend ".." parent-dir entry unless we're at root.
       final items = <FileItem>[];
@@ -1935,12 +1982,15 @@ class PanelNotifier extends ChangeNotifier {
               size = meta['size'] ?? 0;
               updated = meta['modified'] ?? DateTime.now();
             }
-            items.add(FileItem(
+            items.add(
+              FileItem(
                 name: name,
                 path: entity.path,
                 isFolder: isFolder,
                 size: size,
-                updatedAt: updated));
+                updatedAt: updated,
+              ),
+            );
           } catch (e) {
             _log.warn('operation failed', e);
             continue;
@@ -1952,89 +2002,116 @@ class PanelNotifier extends ChangeNotifier {
         _resetCursor(preserveItem: prev);
         _isLoading = false;
         _ref.read(errorProvider).clearErrors();
+        dirCache.put(cacheKey, _files!);
         notifyListeners();
         return;
       }
 
       // Native: show names immediately, then stat in batches for size/date.
-      // First pass: add all entries with just names (no stat).
+      // Reuse any cached metadata for the same paths so the first paint already
+      // has useful sizes/dates even before the stat pass catches up.
       for (final entity in entities) {
         try {
           final name = p.basename(entity.path);
           if (!_showHiddenFiles && name.startsWith('.')) continue;
-          // Guess folder vs file from entity type (no stat needed).
-          final isFolder = entity is Directory;
-          items
-              .add(FileItem(name: name, path: entity.path, isFolder: isFolder));
+          final cachedItem = cachedByPath[entity.path];
+          if (cachedItem != null) {
+            items.add(cachedItem);
+          } else {
+            // Guess folder vs file from entity type (no stat needed).
+            final isFolder = entity is Directory;
+            items.add(
+              FileItem(name: name, path: entity.path, isFolder: isFolder),
+            );
+          }
         } catch (e) {
           _log.warn('operation failed', e);
           continue;
         }
       }
-      // Show items immediately (without size/date).
-      _files = List.of(items);
+      // Show items immediately (possibly with cached size/date).
+      _files = items;
       _sortFiles();
       _isLoading = true; // still loading metadata
       _ref.read(errorProvider).clearErrors();
       notifyListeners();
 
       // Second pass: stat in batches to fill in size, date, symlink info.
-      const batchSize = 100;
-      for (var batchStart = 0;
-          batchStart < items.length;
-          batchStart += batchSize) {
+      // Only name/extension order is stable while metadata is filled in. For
+      // size/date sorts, defer the (expensive) re-sort to the very end.
+      final bool metadataSort =
+          _sortBy == SortBy.size || _sortBy == SortBy.date;
+      const batchSize = 256;
+      for (
+        var batchStart = 0;
+        batchStart < items.length;
+        batchStart += batchSize
+      ) {
         final end = (batchStart + batchSize).clamp(0, items.length);
         final indices = List.generate(end - batchStart, (j) => batchStart + j);
-        await Future.wait(indices.map((idx) async {
-          final item = items[idx];
-          if (item.name == '..') return;
-          try {
-            final stat = await FileStat.stat(item.path!);
-            final linkType =
-                await FileSystemEntity.type(item.path!, followLinks: false);
-            final isLink = linkType == FileSystemEntityType.link;
-            String? linkTarget;
-            if (isLink) {
-              try {
-                linkTarget = await Link(item.path!).target();
-              } catch (_) {}
+        await Future.wait(
+          indices.map((idx) async {
+            final item = items[idx];
+            if (item.name == '..') return;
+            try {
+              final stat = await FileStat.stat(item.path!);
+              final linkType = await FileSystemEntity.type(
+                item.path!,
+                followLinks: false,
+              );
+              final isLink = linkType == FileSystemEntityType.link;
+              String? linkTarget;
+              if (isLink) {
+                try {
+                  linkTarget = await Link(item.path!).target();
+                } catch (_) {}
+              }
+              final isFolder = stat.type == FileSystemEntityType.directory;
+              items[idx] = FileItem(
+                name: item.name,
+                path: item.path,
+                isFolder: isFolder,
+                size: isFolder ? null : stat.size,
+                updatedAt: stat.modified,
+                isSymlink: isLink ? true : null,
+                symlinkTarget: linkTarget,
+              );
+            } catch (e) {
+              _log.warn('operation failed', e);
             }
-            final isFolder = stat.type == FileSystemEntityType.directory;
-            items[idx] = FileItem(
-              name: item.name,
-              path: item.path,
-              isFolder: isFolder,
-              size: isFolder ? null : stat.size,
-              updatedAt: stat.modified,
-              isSymlink: isLink ? true : null,
-              symlinkTarget: linkTarget,
-            );
-          } catch (e) {
-            _log.warn('operation failed', e);
-          }
-        }));
-        if (_isDisposed) return;
-        // Update UI after each batch.
-        final prev = cursorItem;
-        _files = List.of(items);
-        _sortFiles();
-        _resetCursor(preserveItem: prev);
+          }),
+        );
+        if (_isDisposed || loadId != _localLoadGeneration) return;
+        // Update the visible rows after each batch. Do not copy the whole
+        // list: _files is the same mutable list, and notifyListeners() is
+        // enough for the ListView.builder to refresh visible rows.
         notifyListeners();
       }
 
+      if (metadataSort) {
+        final prev = cursorItem;
+        _sortFiles();
+        _resetCursor(preserveItem: prev);
+      }
       _isLoading = false;
+      if (loadId != _localLoadGeneration) return;
+      dirCache.put(cacheKey, _files!);
       // Fire-and-forget free space fetch (result stored in _freeBytes, shown in status bar)
       if (side == PanelSide.local) _updateFreeSpace(currentPath);
       notifyListeners();
     } catch (e) {
+      if (loadId != _localLoadGeneration) return;
       _log.warn('operation failed', e);
       _isLoading = false;
       if (!kIsWeb &&
           (e is PathAccessException ||
               e.toString().contains('Operation not permitted'))) {
         _files = [];
-        _ref.read(errorProvider).addError(
-            'Permission denied. Use the Browse button to grant access.');
+        _ref
+            .read(errorProvider)
+            .addError(
+              'Permission denied. Use the Browse button to grant access.',
+            );
         notifyListeners();
         return;
       }

@@ -537,6 +537,28 @@ void main() {
       expect(panel.cursorItem!.name, 'beta.txt');
     });
 
+    test('select mode marks every matching entry', () {
+      // Give the fixture unique paths so FileItem equality distinguishes them.
+      panel.showSearchResults([
+        FileItem(name: 'alpha.txt', path: '/alpha.txt', isFolder: false),
+        FileItem(name: 'alphabet.txt', path: '/alphabet.txt', isFolder: false),
+        FileItem(name: 'beta.txt', path: '/beta.txt', isFolder: false),
+        FileItem(name: 'gamma.txt', path: '/gamma.txt', isFolder: false),
+      ]);
+      panel.moveCursorTo(0);
+      container
+          .read(quickSearchSettingsProvider.notifier)
+          .setMode(QuickSearchMode.select);
+      panel.typeaheadAppend('al');
+
+      expect(panel.filteredFiles!.length, 4);
+      expect(panel.cursorItem!.name, 'alpha.txt');
+      expect(
+        panel.selection.map((f) => f.name).toSet(),
+        {'alpha.txt', 'alphabet.txt'},
+      );
+    });
+
     test('filter mode narrows the listing', () {
       container
           .read(quickSearchSettingsProvider.notifier)

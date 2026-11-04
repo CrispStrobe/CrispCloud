@@ -15,6 +15,7 @@ import '../providers/analytics_provider.dart';
 import '../providers/delta_sync_provider.dart';
 import '../providers/file_type_color_provider.dart';
 import '../providers/panel_source_provider.dart';
+import '../providers/core_providers.dart';
 import '../providers/quick_search_provider.dart';
 
 // ---------------------------------------------------------------------------
@@ -51,6 +52,8 @@ class SettingsDialog extends ConsumerWidget {
             _GeneralSection(),
             const Divider(height: 1),
             _QuickSearchSection(),
+            const Divider(height: 1),
+            _AppearanceSection(),
             const Divider(height: 1),
             _AccessibilitySection(),
             const Divider(height: 1),
@@ -128,6 +131,93 @@ class _GeneralSection extends ConsumerWidget {
 }
 
 // ---------------------------------------------------------------------------
+// Section: Appearance — file-list font
+// ---------------------------------------------------------------------------
+
+class _AppearanceSection extends ConsumerWidget {
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final double fontSize = ref.watch(fontSizeProvider);
+    final String family = ref.watch(fontFamilyProvider);
+    const Map<String, String> families = <String, String>{
+      'system': 'System default',
+      'AppMono': 'Monospaced (Roboto Mono)',
+      'StoreRoboto': 'Roboto',
+      'Arial': 'Arial',
+      'Helvetica': 'Helvetica',
+      'Verdana': 'Verdana',
+      'Georgia': 'Georgia',
+      'Times New Roman': 'Times New Roman',
+    };
+
+    return _Section(
+      title: 'Appearance',
+      icon: Icons.text_fields,
+      children: [
+        ListTile(
+          key: const Key('settings_font_family'),
+          leading: const Icon(Icons.font_download_outlined),
+          title: const Text('File list font'),
+          subtitle: const Text('Used for names, sizes and dates in the panels'),
+          trailing: SizedBox(
+            width: 190,
+            child: DropdownButton<String>(
+              value: families.containsKey(family) ? family : 'system',
+              isExpanded: true,
+              underline: const SizedBox.shrink(),
+              items: <DropdownMenuItem<String>>[
+                for (final MapEntry<String, String> entry in families.entries)
+                  DropdownMenuItem<String>(
+                    value: entry.key,
+                    child: Text(entry.value, overflow: TextOverflow.ellipsis),
+                  ),
+              ],
+              onChanged: (String? value) {
+                if (value != null) {
+                  ref.read(fontFamilyProvider.notifier).setFamily(value);
+                }
+              },
+            ),
+          ),
+          contentPadding: const EdgeInsets.symmetric(horizontal: 24),
+          dense: true,
+        ),
+        ListTile(
+          key: const Key('settings_font_size'),
+          leading: const Icon(Icons.format_size),
+          title: const Text('File list font size'),
+          subtitle: Text('${fontSize.toStringAsFixed(0)} pt'),
+          trailing: SizedBox(
+            width: 190,
+            child: Slider(
+              value: fontSize,
+              min: 10,
+              max: 20,
+              divisions: 10,
+              label: '${fontSize.toStringAsFixed(0)} pt',
+              onChanged: (double value) =>
+                  ref.read(fontSizeProvider.notifier).setSize(value),
+            ),
+          ),
+          contentPadding: const EdgeInsets.symmetric(horizontal: 24),
+          dense: true,
+        ),
+        Padding(
+          padding: const EdgeInsets.fromLTRB(24, 0, 24, 10),
+          child: Text(
+            'Example: Annual-Report-2026.pdf   ·   2.4 MB   ·   Today',
+            style: TextStyle(
+              fontFamily: family == 'system' ? null : family,
+              fontSize: fontSize,
+            ),
+          ),
+        ),
+      ],
+    );
+  }
+}
+
+// ---------------------------------------------------------------------------
 // Section: Quick search (Total Commander / Double Commander behavior)
 // ---------------------------------------------------------------------------
 
@@ -137,6 +227,7 @@ class _QuickSearchSection extends ConsumerWidget {
     final settings = ref.watch(quickSearchSettingsProvider);
     final notifier = ref.read(quickSearchSettingsProvider.notifier);
     final modeLabel = switch (settings.mode) {
+      QuickSearchMode.select => 'Select every matching file',
       QuickSearchMode.jump => 'Jump to the next matching file',
       QuickSearchMode.filter => 'Filter the file list',
       QuickSearchMode.off => 'Disabled',
@@ -156,21 +247,23 @@ class _QuickSearchSection extends ConsumerWidget {
               const SizedBox(height: 8),
               SegmentedButton<QuickSearchMode>(
                 key: const Key('settings_quick_search_mode'),
+                showSelectedIcon: false,
                 segments: const [
+                  ButtonSegment(
+                    value: QuickSearchMode.select,
+                    label: Text('Select'),
+                  ),
                   ButtonSegment(
                     value: QuickSearchMode.jump,
                     label: Text('Jump'),
-                    icon: Icon(Icons.keyboard_tab, size: 18),
                   ),
                   ButtonSegment(
                     value: QuickSearchMode.filter,
                     label: Text('Filter'),
-                    icon: Icon(Icons.filter_list, size: 18),
                   ),
                   ButtonSegment(
                     value: QuickSearchMode.off,
                     label: Text('Off'),
-                    icon: Icon(Icons.block, size: 18),
                   ),
                 ],
                 selected: {settings.mode},
