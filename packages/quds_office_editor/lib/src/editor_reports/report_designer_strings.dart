@@ -84,10 +84,18 @@ class ReportDesignerStrings {
   /// Unknown provider or parser messages remain unchanged.
   String diagnostic(String summary) {
     if (languageCode == 'en') return summary;
-    const formatPrefix = 'ReportFormatException: ';
-    final message = summary.startsWith(formatPrefix)
-        ? summary.substring(formatPrefix.length)
-        : summary;
+    // Remove only known engine wrappers; unknown errors keep their full text.
+    var message = summary;
+    for (final prefix in const [
+      'ReportFormatException: ',
+      'ReportExpressionException: ',
+      'ReportPackageException: ',
+    ]) {
+      if (message.startsWith(prefix)) {
+        message = message.substring(prefix.length);
+        break;
+      }
+    }
     final whole = _table[message] ?? _dynamicDiagnostic(message);
     if (whole != null) return whole;
 

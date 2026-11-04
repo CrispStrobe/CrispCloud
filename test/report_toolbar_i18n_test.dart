@@ -34,6 +34,26 @@ void main() {
         same(ReportDesignerStrings.english));
   });
 
+  test('wrapped preview diagnostics translate and preserve source details', () {
+    for (final language in ['de', 'fr', 'es', 'pt', 'zh', 'ja', 'ko', 'ar']) {
+      final strings = ReportDesignerStrings.forLocale(Locale(language));
+      for (final prefix in [
+        'ReportExpressionException: ',
+        'ReportPackageException: ',
+        'ReportFormatException: '
+      ]) {
+        final input = '${prefix}Unknown function MYFUNC() in "source {0}" at 9';
+        final translated = strings.diagnostic(input);
+        expect(translated, isNot(input), reason: language);
+        expect(translated, contains('MYFUNC()'));
+        expect(translated, contains('"source {0}"'));
+        expect(translated, contains('9'));
+      }
+      const unknown = 'ReportPackageException: unknown provider details';
+      expect(strings.diagnostic(unknown), unknown);
+    }
+  });
+
   test('report inspector labels use localized text', () {
     const labels = [
       'Report properties',
