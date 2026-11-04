@@ -2,6 +2,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import '../l10n/operations_strings.dart';
 import '../models/operation_progress.dart';
 import '../providers/providers.dart';
 import '../utils/formatters.dart' show formatBytes, formatSpeed;
@@ -20,6 +21,7 @@ class _OperationsPanelState extends ConsumerState<OperationsPanel> {
   @override
   Widget build(BuildContext context) {
     final transfers = ref.watch(transferProvider);
+    final strings = OperationsStrings(context);
 
     if (transfers.operations.isEmpty) {
       return const SizedBox.shrink();
@@ -53,7 +55,9 @@ class _OperationsPanelState extends ConsumerState<OperationsPanel> {
         color: Theme.of(context).colorScheme.surfaceContainerHighest,
         border: Border(top: BorderSide(color: Theme.of(context).dividerColor)),
       ),
-      child: ExpansionTile(
+      child: Material(
+        type: MaterialType.transparency,
+        child: ExpansionTile(
         title: _buildPanelHeader(context, transfers, activeCount, completeCount,
             errorCount, overallProgress, transferredBytes, totalBytes),
         initiallyExpanded: true,
@@ -65,13 +69,13 @@ class _OperationsPanelState extends ConsumerState<OperationsPanel> {
             if (activeCount > 0)
               IconButton(
                 icon: const Icon(Icons.stop_circle_outlined, size: 20),
-                tooltip: 'Cancel all active transfers',
+                tooltip: strings.text('Cancel all active transfers'),
                 onPressed: () => transfers.cancelAllOperations(),
               ),
             if (completeCount > 0 || errorCount > 0)
               IconButton(
                 icon: const Icon(Icons.clear_all, size: 20),
-                tooltip: 'Clear finished transfers',
+                tooltip: strings.text('Clear finished transfers'),
                 onPressed: () => transfers.clearCompletedOperations(),
               ),
             Icon(_isPanelExpanded ? Icons.expand_less : Icons.expand_more),
@@ -103,6 +107,7 @@ class _OperationsPanelState extends ConsumerState<OperationsPanel> {
             ),
           ),
         ],
+        ),
       ),
     );
   }
@@ -117,6 +122,7 @@ class _OperationsPanelState extends ConsumerState<OperationsPanel> {
     int transferredBytes,
     int totalBytes,
   ) {
+    final strings = OperationsStrings(context);
     return Container(
       padding: const EdgeInsets.symmetric(vertical: 12),
       child: Row(
@@ -136,10 +142,11 @@ class _OperationsPanelState extends ConsumerState<OperationsPanel> {
               mainAxisSize: MainAxisSize.min,
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Row(
+                Wrap(
+                  crossAxisAlignment: WrapCrossAlignment.center,
                   children: [
                     Text(
-                      '${transfers.operations.length} operation(s)',
+                      strings.format('Operations: {count}', {'count': transfers.operations.length}),
                       style: Theme.of(context)
                           .textTheme
                           .bodyMedium
@@ -259,6 +266,7 @@ class _OperationTile extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final strings = OperationsStrings(context);
     IconData icon;
     Color? color;
 
@@ -303,7 +311,7 @@ class _OperationTile extends StatelessWidget {
                     borderRadius: BorderRadius.circular(10),
                   ),
                   child: Text(
-                    '${operation.completedFiles}/${operation.totalFiles} files',
+                    strings.format('Files: {done}/{total}', {'done': operation.completedFiles, 'total': operation.totalFiles}),
                     style: TextStyle(
                         fontSize: 10,
                         color:
@@ -325,10 +333,10 @@ class _OperationTile extends StatelessWidget {
               const SizedBox(height: 2),
               Text(
                 operation.isCancelled
-                    ? 'Cancelled'
+                    ? strings.text('Cancelled')
                     : operation.isPaused
-                        ? 'Paused'
-                        : operation.error ?? _getStatusText(operation),
+                        ? strings.text('Paused')
+                        : operation.error ?? _getStatusText(operation, strings),
                 style: TextStyle(
                   fontSize: 11,
                   color: operation.error != null
@@ -352,7 +360,7 @@ class _OperationTile extends StatelessWidget {
                   icon: Icon(
                       operation.isPaused ? Icons.play_arrow : Icons.pause,
                       size: 20),
-                  tooltip: operation.isPaused ? 'Resume' : 'Pause',
+                  tooltip: operation.isPaused ? strings.text('Resume') : strings.text('Pause'),
                   color: Colors.blue,
                   onPressed: operation.isPaused ? onResume : onPause,
                 ),
@@ -361,7 +369,7 @@ class _OperationTile extends StatelessWidget {
                   onCancel != null)
                 IconButton(
                     icon: const Icon(Icons.cancel, size: 20),
-                    tooltip: 'Cancel',
+                    tooltip: strings.text('Cancel'),
                     color: Colors.red,
                     onPressed: onCancel),
               if (operation.isBatch)
@@ -369,12 +377,14 @@ class _OperationTile extends StatelessWidget {
                     icon: Icon(
                         isExpanded ? Icons.expand_less : Icons.expand_more,
                         size: 20),
+                    tooltip: strings.text(isExpanded ? 'Collapse file details' : 'Expand file details'),
                     onPressed: onToggleExpanded),
               if (operation.isComplete ||
                   operation.error != null ||
                   operation.isCancelled)
                 IconButton(
                     icon: const Icon(Icons.close, size: 20),
+                    tooltip: strings.text('Remove transfer'),
                     onPressed: onRemove),
             ],
           ),
@@ -425,22 +435,16 @@ class _OperationTile extends StatelessWidget {
     );
   }
 
-  String _getStatusText(OperationProgress op) {
-    if (op.isComplete) return 'Complete';
-    if (op.error != null) return 'Error: ${op.error}';
+  String _getStatusText(OperationProgress op, OperationsStrings strings) {
+    if (op.isComplete) return strings.text('Complete');
+    if (op.error != null) return strings.format('Error: {error}', {'error': op.error});
     final percent = (op.progress * 100).toStringAsFixed(0);
     final speedStr =
         op.currentSpeed > 0 ? ' • ${formatSpeed(op.currentSpeed)}' : '';
     final etaStr = op.estimatedSecondsRemaining > 0
-        ? ' • ${_formatEta(op.estimatedSecondsRemaining)}'
+        ? ' • ${strings.eta(op.estimatedSecondsRemaining)}'
         : '';
     return '$percent% • ${formatBytes(op.transferredBytes)} / ${formatBytes(op.totalBytes)}$speedStr$etaStr';
   }
 
-  String _formatEta(double seconds) {
-    final s = seconds.round();
-    if (s < 60) return '${s}s left';
-    if (s < 3600) return '${s ~/ 60}m ${s % 60}s left';
-    return '${s ~/ 3600}h ${(s % 3600) ~/ 60}m left';
-  }
 }
