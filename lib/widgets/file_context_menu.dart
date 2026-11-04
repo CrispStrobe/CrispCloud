@@ -2090,7 +2090,9 @@ Future<void> _verifyChecksumFileDialog(
                         subtitle: r.ok
                             ? null
                             : Text(
-                                '${FileOperationsStrings(context).value('expected', r.expected.substring(0, 8))}…\n${FileOperationsStrings(context).value('got', r.actual.substring(0, 8))}…',
+                                r.error != null
+                                    ? AppLocalizations.of(context)!.operationFailed(r.error.toString())
+                                    : '${FileOperationsStrings(context).value('expected', r.expected.substring(0, r.expected.length.clamp(0, 8)))}…\n${FileOperationsStrings(context).value('got', r.actual.substring(0, r.actual.length.clamp(0, 8)))}…',
                                 style: const TextStyle(fontSize: 11)),
                       ))
                   .toList(),
