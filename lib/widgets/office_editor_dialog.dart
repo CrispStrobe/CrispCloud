@@ -27,6 +27,7 @@ import '../providers/providers.dart';
 import '../services/file_bytes_loader.dart';
 import '../services/log_service.dart';
 import '../l10n/office_editor_strings.dart';
+import '../l10n/office_surface_strings.dart';
 import '../services/office_editor_menu.dart';
 import 'office_editor_find_bar.dart';
 import 'office_editor_ribbon.dart';
@@ -127,6 +128,13 @@ class _OfficeEditorDialogState extends ConsumerState<OfficeEditorDialog> {
   void initState() {
     super.initState();
     unawaited(_load());
+  }
+
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    _config = _config.copyWith(strings: OfficeSurfaceStrings.of(context));
+    _controller?.syncConfig(_config);
   }
 
   @override
