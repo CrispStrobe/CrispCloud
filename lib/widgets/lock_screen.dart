@@ -6,6 +6,7 @@ import 'package:flutter/material.dart';
 
 import '../services/app_lock_service.dart';
 import '../l10n/app_localizations.dart';
+import '../l10n/biometric_strings.dart';
 import '../l10n/lock_extra_strings.dart';
 import '../l10n/web_vault_strings.dart';
 
@@ -59,7 +60,9 @@ class _LockScreenState extends State<LockScreen> {
 
   Future<void> _authenticateBiometric() async {
     setState(() => _isVerifying = true);
-    final ok = await widget.lockService.authenticateWithBiometric();
+    final ok = await widget.lockService.authenticateWithBiometric(
+      localizedReason: BiometricStrings(context).text('reason'),
+    );
     if (ok) {
       widget.onUnlocked();
     } else {
@@ -99,7 +102,7 @@ class _LockScreenState extends State<LockScreen> {
               const SizedBox(height: 8),
               Text(
                 _biometricAvailable
-                    ? extra.useOrPin(_biometricLabel)
+                    ? extra.useOrPin(BiometricStrings(context).label(_biometricLabel))
                     : l10n.enterPinToContinue,
                 style: theme.textTheme.bodyMedium?.copyWith(
                   color: theme.colorScheme.onSurfaceVariant,
@@ -116,7 +119,7 @@ class _LockScreenState extends State<LockScreen> {
                         ? null
                         : _authenticateBiometric,
                     icon: Icon(_biometricIcon),
-                    label: Text(extra.unlockWith(_biometricLabel)),
+                    label: Text(extra.unlockWith(BiometricStrings(context).label(_biometricLabel))),
                   ),
                 ),
                 const SizedBox(height: 16),
@@ -369,9 +372,9 @@ class _AppLockSetupDialogState extends State<AppLockSetupDialog> {
             if (_biometricAvailable) ...[
               const SizedBox(height: 16),
               SwitchListTile(
-                title: Text(extra.unlockWith(_biometricLabel)),
+                title: Text(extra.unlockWith(BiometricStrings(context).label(_biometricLabel))),
                 subtitle: Text(
-                  extra.alternative(_biometricLabel),
+                  extra.alternative(BiometricStrings(context).label(_biometricLabel)),
                 ),
                 secondary: Icon(
                   _biometricLabel == 'Windows Hello'
