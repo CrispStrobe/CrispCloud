@@ -1958,7 +1958,7 @@ class OfficeEditorRibbonState extends State<OfficeEditorRibbon> {
           context,
           initial: currentColor,
           allowNone: allowNone,
-          noneLabel: 'No color',
+          noneLabel: context.tr('No color'),
         );
         if (picked != null) onChanged(picked);
       },
@@ -2573,7 +2573,7 @@ class OfficeEditorRibbonState extends State<OfficeEditorRibbon> {
       context,
       initial: '',
       allowNone: true,
-      noneLabel: 'No shading',
+      noneLabel: context.tr('No shading'),
     );
     if (picked == null) return;
     _word.setParagraphShading(picked.isEmpty ? null : picked);
@@ -2697,7 +2697,7 @@ class OfficeEditorRibbonState extends State<OfficeEditorRibbon> {
       context,
       initial: _cell.fillRgb,
       allowNone: true,
-      noneLabel: 'No fill',
+      noneLabel: context.tr('No fill'),
     );
     if (picked == null) return;
     _sheetFillValue(picked);
@@ -2951,7 +2951,7 @@ class OfficeEditorRibbonState extends State<OfficeEditorRibbon> {
       context,
       initial: shape.fillColor,
       allowNone: true,
-      noneLabel: 'No fill',
+      noneLabel: context.tr('No fill'),
     );
     if (picked == null) return;
     _slideFillValue(picked);
