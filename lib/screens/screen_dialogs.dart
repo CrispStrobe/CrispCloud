@@ -18,6 +18,8 @@ import '../widgets/connection_dialog.dart';
 import '../widgets/file_editor_dialog.dart' show showFileEditorDialog;
 import '../widgets/internal_viewer_dialog.dart' show showInternalViewer;
 import '../l10n/app_localizations.dart';
+import '../l10n/command_strings.dart';
+import '../l10n/undo_presentation.dart';
 import '../l10n/screen_dialog_strings.dart';
 import '../l10n/shortcut_strings.dart';
 import '../services/log_service.dart';
@@ -63,7 +65,7 @@ void confirmLogoutRiverpod(BuildContext context, WidgetRef ref) {
             if (context.mounted) {
               Navigator.pop(context);
               ScaffoldMessenger.of(context).showSnackBar(
-                const SnackBar(content: Text('Logged out successfully')),
+                SnackBar(content: Text(CommandStrings(context).text('loggedOut'))),
               );
             }
           },
@@ -548,7 +550,7 @@ void _showUndoSnackBar(
                   if (!context.mounted) return;
                   ScaffoldMessenger.of(context).showSnackBar(
                     SnackBar(
-                      content: Text(result.message),
+                      content: Text(UndoPresentation(context).result(result)),
                       duration: const Duration(seconds: 3),
                       backgroundColor: result.success
                           ? null
