@@ -479,7 +479,7 @@ class _QudsReportDesignerState extends State<QudsReportDesigner> {
       return null;
     }
     if (ReportImageFormat.sniff(file.bytes) == null) {
-      setState(() => _message = '"${file.name}" is not a PNG or JPEG image');
+      setState(() => _message = _c.strings.format('"{name}" is not a PNG or JPEG image', {'name': file.name}));
       return null;
     }
     return file;
@@ -498,7 +498,7 @@ class _QudsReportDesignerState extends State<QudsReportDesigner> {
       },
       onError: (Object e) {
         if (mounted) {
-          setState(() => _message = 'Fonts unavailable: $e');
+          setState(() => _message = _c.strings.format('Fonts unavailable: {error}', {'error': e}));
         }
       },
     );
@@ -536,7 +536,7 @@ class _QudsReportDesignerState extends State<QudsReportDesigner> {
       unawaited(
         loader.load().catchError((Object e) {
           if (mounted) {
-            setState(() => _message = 'Could not load ${f.key}: $e');
+            setState(() => _message = _c.strings.format('Could not load {name}: {error}', {'name': f.key, 'error': e}));
           }
         }),
       );
@@ -1425,10 +1425,10 @@ class _QudsReportDesignerState extends State<QudsReportDesigner> {
         '${ReportUnits.trimNumber(r.height / _mm, decimals: 1)} mm',
       );
     } else if (sel.length > 1) {
-      s.write('  ·  ${sel.length} selected');
+      s.write('  ·  ${_c.strings.format('{count} selected', {'count': sel.length})}');
     }
     if (_c.hasHostData) {
-      s.write('  ·  host data');
+      s.write('  ·  ${_t('host data')}');
     }
     return s.toString();
   }
@@ -1823,7 +1823,7 @@ class _QudsReportDesignerState extends State<QudsReportDesigner> {
       if (!fields && hit.column >= 0) ...<OfficeContextAction>[
         OfficeContextAction(
           id: 'colRename',
-          label: 'Rename column "${t.columns[hit.column].name}"',
+          label: _c.strings.format('Rename column "{name}"', {'name': t.columns[hit.column].name}),
           icon: Icons.drive_file_rename_outline,
           enabled: editable,
         ),

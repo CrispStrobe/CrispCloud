@@ -80,23 +80,67 @@ class ReportDesignerStrings {
 
   static final RegExp _sourceTail = RegExp(r'^(.*?) in "(.*)"(?: at (\d+))?$');
 
-  /// Translation of a diagnostic message ([ReportDiagnostic.summary]),
-  /// including parser messages that end with `in "source" at N`. Messages
-  /// with values in them (`Unknown function X()`) stay in English.
+  /// Translates known diagnostics, preserving names, values and source text.
+  /// Unknown provider or parser messages remain unchanged.
   String diagnostic(String summary) {
-    final String? whole = _table[summary];
-    if (whole != null) {
-      return whole;
-    }
-    final RegExpMatch? m = _sourceTail.firstMatch(summary);
-    final String? head = m == null ? null : _table[m.group(1)!];
-    if (m == null || head == null) {
-      return summary;
-    }
-    final String? at = m.group(3);
-    return '$head ${t('in')} "${m.group(2)}"'
+    if (languageCode == 'en') return summary;
+    final whole = _table[summary];
+    if (whole != null) return whole;
+
+    final source = _sourceTail.firstMatch(summary);
+    final head = source?.group(1) ?? summary;
+    final translated = _table[head] ?? _dynamicDiagnostic(head);
+    if (translated == null) return summary;
+    if (source == null) return translated;
+    final at = source.group(3);
+    return '$translated ${t('in')} "${source.group(2)}"'
         '${at == null ? '' : ' ${t('at character')} $at'}';
   }
+
+  String? _dynamicDiagnostic(String message) {
+    for (final (pattern, template) in _dynamicPatterns) {
+      final match = pattern.firstMatch(message);
+      if (match == null) continue;
+      return t(template).replaceAllMapped(RegExp(r'\{(\d+)\}'), (placeholder) {
+        final index = int.parse(placeholder.group(1)!);
+        return index < match.groupCount
+            ? (match.group(index + 1) ?? '')
+            : placeholder.group(0)!;
+      });
+    }
+    return null;
+  }
+
+  static final List<(RegExp, String)> _dynamicPatterns = [
+    (RegExp(r'^Unknown function (.+)\(\)$'), 'Unknown function {0}()'),
+    (RegExp(r'^Invalid boolean ([^=]+)="(.*)"$'), 'Invalid boolean {0}="{1}"'),
+    (RegExp(r'^Invalid length ([^=]+)="(.*)"$'), 'Invalid length {0}="{1}"'),
+    (RegExp(r'^Invalid number ([^=]+)="(.*)"$'), 'Invalid number {0}="{1}"'),
+    (RegExp(r'^Invalid color ([^=]+)="(.*)"$'), 'Invalid color {0}="{1}"'),
+    (
+      RegExp(r'^Unknown variable type "(.*)" \(using text\)$'),
+      'Unknown variable type "{0}" (using text)',
+    ),
+    (
+      RegExp(r'^Unknown data type "(.*)" \(using text\)$'),
+      'Unknown data type "{0}" (using text)',
+    ),
+    (RegExp(r'^Unknown element type "(.*)"$'), 'Unknown element type "{0}"'),
+    (RegExp(r'^Unknown element <(.*)>$'), 'Unknown element <{0}>'),
+    (
+      RegExp(r'^Unknown attribute "(.*)" kept as-is$'),
+      'Unknown attribute "{0}" kept as-is',
+    ),
+    (RegExp(r'^Duplicate (.+) band$'), 'Duplicate {0} band'),
+    (RegExp(r'^Malformed XML: (.*)$'), 'Malformed XML: {0}'),
+  ];
+
+  /// Formats a translated template without treating inserted text as a template.
+  String format(String template, Map<String, Object?> values) => t(template)
+      .replaceAllMapped(RegExp(r'\{([A-Za-z][A-Za-z0-9_]*)\}'), (match) {
+        final name = match.group(1)!;
+        return values.containsKey(name) ? '${values[name]}' : match.group(0)!;
+      });
 
   /// `3 elements`: [n] with the plural of [noun], an English singular noun
   /// with a known plural in this table (`element`, `variable`, …).
@@ -297,6 +341,29 @@ class ReportDesignerStrings {
   };
 
   static const Map<String, String> _de = <String, String>{
+    "{count} selected": "{count} ausgewählt",
+    "host data": "Hostdaten",
+    "Rename column \"{name}\"": "Spalte „{name}“ umbenennen",
+    "\"{name}\" is not a PNG or JPEG image":
+        "„{name}“ ist kein PNG- oder JPEG-Bild",
+    "Fonts unavailable: {error}": "Schriftarten nicht verfügbar: {error}",
+    "Could not load {name}: {error}":
+        "{name} konnte nicht geladen werden: {error}",
+    "Unknown function {0}()": "Unbekannte Funktion {0}()",
+    "Invalid boolean {0}=\"{1}\"": "Ungültiger boolescher Wert {0}=\"{1}\"",
+    "Invalid length {0}=\"{1}\"": "Ungültige Länge {0}=\"{1}\"",
+    "Invalid number {0}=\"{1}\"": "Ungültige Zahl {0}=\"{1}\"",
+    "Invalid color {0}=\"{1}\"": "Ungültige Farbe {0}=\"{1}\"",
+    "Unknown variable type \"{0}\" (using text)":
+        "Unbekannter Variablentyp \"{0}\" (Text wird verwendet)",
+    "Unknown data type \"{0}\" (using text)":
+        "Unbekannter Datentyp \"{0}\" (Text wird verwendet)",
+    "Unknown element type \"{0}\"": "Unbekannter Elementtyp \"{0}\"",
+    "Unknown element <{0}>": "Unbekanntes Element <{0}>",
+    "Unknown attribute \"{0}\" kept as-is":
+        "Unbekanntes Attribut \"{0}\" unverändert beibehalten",
+    "Duplicate {0} band": "Doppeltes Band {0}",
+    "Malformed XML: {0}": "Fehlerhaftes XML: {0}",
     "A map column, or a formula such as CONCAT(name, \"\\n\", code) or CONCAT(Row.name, \"\\n\", Row.code)":
         "Eine Kartenspalte oder eine Formel wie CONCAT(name, \"\\n\", code) or CONCAT(Row.name, \"\\n\", Row.code)",
     "GroupFooter": "Gruppenfuß",
@@ -936,6 +1003,28 @@ class ReportDesignerStrings {
   };
 
   static const Map<String, String> _fr = <String, String>{
+    "{count} selected": "{count} sélectionné(s)",
+    "host data": "données hôte",
+    "Rename column \"{name}\"": "Renommer la colonne « {name} »",
+    "\"{name}\" is not a PNG or JPEG image":
+        "« {name} » n’est pas une image PNG ou JPEG",
+    "Fonts unavailable: {error}": "Polices indisponibles : {error}",
+    "Could not load {name}: {error}": "Impossible de charger {name} : {error}",
+    "Unknown function {0}()": "Fonction inconnue {0}()",
+    "Invalid boolean {0}=\"{1}\"": "Booléen invalide {0}=\"{1}\"",
+    "Invalid length {0}=\"{1}\"": "Longueur invalide {0}=\"{1}\"",
+    "Invalid number {0}=\"{1}\"": "Nombre invalide {0}=\"{1}\"",
+    "Invalid color {0}=\"{1}\"": "Couleur invalide {0}=\"{1}\"",
+    "Unknown variable type \"{0}\" (using text)":
+        "Type de variable inconnu \"{0}\" (texte utilisé)",
+    "Unknown data type \"{0}\" (using text)":
+        "Type de données inconnu \"{0}\" (texte utilisé)",
+    "Unknown element type \"{0}\"": "Type d’élément inconnu \"{0}\"",
+    "Unknown element <{0}>": "Élément inconnu <{0}>",
+    "Unknown attribute \"{0}\" kept as-is":
+        "Attribut inconnu \"{0}\" conservé tel quel",
+    "Duplicate {0} band": "Bande {0} en double",
+    "Malformed XML: {0}": "XML mal formé : {0}",
     "A map column, or a formula such as CONCAT(name, \"\\n\", code) or CONCAT(Row.name, \"\\n\", Row.code)":
         "Une colonne de carte ou une formule telle que CONCAT(name, \"\\n\", code) or CONCAT(Row.name, \"\\n\", Row.code)",
     "GroupFooter": "Pied de groupe",
@@ -1581,6 +1670,28 @@ class ReportDesignerStrings {
   };
 
   static const Map<String, String> _es = <String, String>{
+    "{count} selected": "{count} seleccionado(s)",
+    "host data": "datos del anfitrión",
+    "Rename column \"{name}\"": "Renombrar columna «{name}»",
+    "\"{name}\" is not a PNG or JPEG image":
+        "«{name}» no es una imagen PNG o JPEG",
+    "Fonts unavailable: {error}": "Fuentes no disponibles: {error}",
+    "Could not load {name}: {error}": "No se pudo cargar {name}: {error}",
+    "Unknown function {0}()": "Función desconocida {0}()",
+    "Invalid boolean {0}=\"{1}\"": "Booleano no válido {0}=\"{1}\"",
+    "Invalid length {0}=\"{1}\"": "Longitud no válida {0}=\"{1}\"",
+    "Invalid number {0}=\"{1}\"": "Número no válido {0}=\"{1}\"",
+    "Invalid color {0}=\"{1}\"": "Color no válido {0}=\"{1}\"",
+    "Unknown variable type \"{0}\" (using text)":
+        "Tipo de variable desconocido \"{0}\" (se usa texto)",
+    "Unknown data type \"{0}\" (using text)":
+        "Tipo de datos desconocido \"{0}\" (se usa texto)",
+    "Unknown element type \"{0}\"": "Tipo de elemento desconocido \"{0}\"",
+    "Unknown element <{0}>": "Elemento desconocido <{0}>",
+    "Unknown attribute \"{0}\" kept as-is":
+        "Atributo desconocido \"{0}\" conservado sin cambios",
+    "Duplicate {0} band": "Banda {0} duplicada",
+    "Malformed XML: {0}": "XML mal formado: {0}",
     "A map column, or a formula such as CONCAT(name, \"\\n\", code) or CONCAT(Row.name, \"\\n\", Row.code)":
         "Una columna de mapa o una fórmula como CONCAT(name, \"\\n\", code) or CONCAT(Row.name, \"\\n\", Row.code)",
     "GroupFooter": "Pie de grupo",
@@ -2223,6 +2334,29 @@ class ReportDesignerStrings {
   };
 
   static const Map<String, String> _pt = <String, String>{
+    "{count} selected": "{count} selecionado(s)",
+    "host data": "dados do anfitrião",
+    "Rename column \"{name}\"": "Mudar nome da coluna «{name}»",
+    "\"{name}\" is not a PNG or JPEG image":
+        "«{name}» não é uma imagem PNG ou JPEG",
+    "Fonts unavailable: {error}": "Letras indisponíveis: {error}",
+    "Could not load {name}: {error}":
+        "Não foi possível carregar {name}: {error}",
+    "Unknown function {0}()": "Função desconhecida {0}()",
+    "Invalid boolean {0}=\"{1}\"": "Booleano inválido {0}=\"{1}\"",
+    "Invalid length {0}=\"{1}\"": "Comprimento inválido {0}=\"{1}\"",
+    "Invalid number {0}=\"{1}\"": "Número inválido {0}=\"{1}\"",
+    "Invalid color {0}=\"{1}\"": "Cor inválida {0}=\"{1}\"",
+    "Unknown variable type \"{0}\" (using text)":
+        "Tipo de variável desconhecido \"{0}\" (usa texto)",
+    "Unknown data type \"{0}\" (using text)":
+        "Tipo de dados desconhecido \"{0}\" (usa texto)",
+    "Unknown element type \"{0}\"": "Tipo de elemento desconhecido \"{0}\"",
+    "Unknown element <{0}>": "Elemento desconhecido <{0}>",
+    "Unknown attribute \"{0}\" kept as-is":
+        "Atributo desconhecido \"{0}\" mantido sem alterações",
+    "Duplicate {0} band": "Banda {0} duplicada",
+    "Malformed XML: {0}": "XML malformado: {0}",
     "A map column, or a formula such as CONCAT(name, \"\\n\", code) or CONCAT(Row.name, \"\\n\", Row.code)":
         "Uma coluna do mapa ou uma fórmula como CONCAT(name, \"\\n\", code) or CONCAT(Row.name, \"\\n\", Row.code)",
     "GroupFooter": "Rodapé de grupo",
@@ -2865,6 +2999,24 @@ class ReportDesignerStrings {
   };
 
   static const Map<String, String> _zh = <String, String>{
+    "{count} selected": "已选择 {count} 项",
+    "host data": "宿主数据",
+    "Rename column \"{name}\"": "重命名列“{name}”",
+    "\"{name}\" is not a PNG or JPEG image": "“{name}”不是 PNG 或 JPEG 图片",
+    "Fonts unavailable: {error}": "字体不可用：{error}",
+    "Could not load {name}: {error}": "无法加载 {name}：{error}",
+    "Unknown function {0}()": "未知函数 {0}()",
+    "Invalid boolean {0}=\"{1}\"": "无效布尔值 {0}=\"{1}\"",
+    "Invalid length {0}=\"{1}\"": "无效长度 {0}=\"{1}\"",
+    "Invalid number {0}=\"{1}\"": "无效数字 {0}=\"{1}\"",
+    "Invalid color {0}=\"{1}\"": "无效颜色 {0}=\"{1}\"",
+    "Unknown variable type \"{0}\" (using text)": "未知变量类型“{0}”（使用文本）",
+    "Unknown data type \"{0}\" (using text)": "未知数据类型“{0}”（使用文本）",
+    "Unknown element type \"{0}\"": "未知元素类型“{0}”",
+    "Unknown element <{0}>": "未知元素 <{0}>",
+    "Unknown attribute \"{0}\" kept as-is": "未知属性“{0}”已原样保留",
+    "Duplicate {0} band": "重复的 {0} 区段",
+    "Malformed XML: {0}": "XML 格式错误：{0}",
     "A map column, or a formula such as CONCAT(name, \"\\n\", code) or CONCAT(Row.name, \"\\n\", Row.code)":
         "地图列或公式，例如 CONCAT(name, \"\\n\", code) or CONCAT(Row.name, \"\\n\", Row.code)",
     "GroupFooter": "组页脚",
@@ -3463,6 +3615,24 @@ class ReportDesignerStrings {
   };
 
   static const Map<String, String> _ja = <String, String>{
+    "{count} selected": "{count} 件を選択",
+    "host data": "ホストデータ",
+    "Rename column \"{name}\"": "列「{name}」の名前を変更",
+    "\"{name}\" is not a PNG or JPEG image": "「{name}」は PNG または JPEG 画像ではありません",
+    "Fonts unavailable: {error}": "フォントを利用できません：{error}",
+    "Could not load {name}: {error}": "{name} を読み込めませんでした：{error}",
+    "Unknown function {0}()": "不明な関数 {0}()",
+    "Invalid boolean {0}=\"{1}\"": "無効な真偽値 {0}=\"{1}\"",
+    "Invalid length {0}=\"{1}\"": "無効な長さ {0}=\"{1}\"",
+    "Invalid number {0}=\"{1}\"": "無効な数値 {0}=\"{1}\"",
+    "Invalid color {0}=\"{1}\"": "無効な色 {0}=\"{1}\"",
+    "Unknown variable type \"{0}\" (using text)": "不明な変数型「{0}」（テキストを使用）",
+    "Unknown data type \"{0}\" (using text)": "不明なデータ型「{0}」（テキストを使用）",
+    "Unknown element type \"{0}\"": "不明な要素型「{0}」",
+    "Unknown element <{0}>": "不明な要素 <{0}>",
+    "Unknown attribute \"{0}\" kept as-is": "不明な属性「{0}」をそのまま保持",
+    "Duplicate {0} band": "重複した {0} バンド",
+    "Malformed XML: {0}": "不正な XML：{0}",
     "A map column, or a formula such as CONCAT(name, \"\\n\", code) or CONCAT(Row.name, \"\\n\", Row.code)":
         "マップ列、または次のような数式：CONCAT(name, \"\\n\", code) or CONCAT(Row.name, \"\\n\", Row.code)",
     "GroupFooter": "グループフッター",
@@ -4072,6 +4242,26 @@ class ReportDesignerStrings {
   };
 
   static const Map<String, String> _ko = <String, String>{
+    "{count} selected": "{count}개 선택됨",
+    "host data": "호스트 데이터",
+    "Rename column \"{name}\"": "열 “{name}” 이름 바꾸기",
+    "\"{name}\" is not a PNG or JPEG image":
+        "“{name}”은(는) PNG 또는 JPEG 이미지가 아닙니다",
+    "Fonts unavailable: {error}": "글꼴을 사용할 수 없음: {error}",
+    "Could not load {name}: {error}": "{name}을(를) 불러올 수 없습니다: {error}",
+    "Unknown function {0}()": "알 수 없는 함수 {0}()",
+    "Invalid boolean {0}=\"{1}\"": "잘못된 불리언 {0}=\"{1}\"",
+    "Invalid length {0}=\"{1}\"": "잘못된 길이 {0}=\"{1}\"",
+    "Invalid number {0}=\"{1}\"": "잘못된 숫자 {0}=\"{1}\"",
+    "Invalid color {0}=\"{1}\"": "잘못된 색 {0}=\"{1}\"",
+    "Unknown variable type \"{0}\" (using text)":
+        "알 수 없는 변수 유형 \"{0}\" (텍스트 사용)",
+    "Unknown data type \"{0}\" (using text)": "알 수 없는 데이터 유형 \"{0}\" (텍스트 사용)",
+    "Unknown element type \"{0}\"": "알 수 없는 요소 유형 \"{0}\"",
+    "Unknown element <{0}>": "알 수 없는 요소 <{0}>",
+    "Unknown attribute \"{0}\" kept as-is": "알 수 없는 속성 \"{0}\"을 그대로 유지",
+    "Duplicate {0} band": "중복된 {0} 밴드",
+    "Malformed XML: {0}": "잘못된 XML: {0}",
     "A map column, or a formula such as CONCAT(name, \"\\n\", code) or CONCAT(Row.name, \"\\n\", Row.code)":
         "지도 열 또는 다음과 같은 수식: CONCAT(name, \"\\n\", code) or CONCAT(Row.name, \"\\n\", Row.code)",
     "GroupFooter": "그룹 바닥글",
@@ -4685,6 +4875,27 @@ class ReportDesignerStrings {
   };
 
   static const Map<String, String> _arabic = <String, String>{
+    "{count} selected": "تم تحديد {count}",
+    "host data": "بيانات المضيف",
+    "Rename column \"{name}\"": "إعادة تسمية العمود \"{name}\"",
+    "\"{name}\" is not a PNG or JPEG image": "\"{name}\" ليست صورة PNG أو JPEG",
+    "Fonts unavailable: {error}": "الخطوط غير متاحة: {error}",
+    "Could not load {name}: {error}": "تعذّر تحميل {name}: {error}",
+    "Unknown function {0}()": "دالة غير معروفة {0}()",
+    "Invalid boolean {0}=\"{1}\"": "قيمة منطقية غير صالحة {0}=\"{1}\"",
+    "Invalid length {0}=\"{1}\"": "طول غير صالح {0}=\"{1}\"",
+    "Invalid number {0}=\"{1}\"": "رقم غير صالح {0}=\"{1}\"",
+    "Invalid color {0}=\"{1}\"": "لون غير صالح {0}=\"{1}\"",
+    "Unknown variable type \"{0}\" (using text)":
+        "نوع متغير غير معروف \"{0}\" (يُستخدم النص)",
+    "Unknown data type \"{0}\" (using text)":
+        "نوع بيانات غير معروف \"{0}\" (يُستخدم النص)",
+    "Unknown element type \"{0}\"": "نوع عنصر غير معروف \"{0}\"",
+    "Unknown element <{0}>": "عنصر غير معروف <{0}>",
+    "Unknown attribute \"{0}\" kept as-is":
+        "تم الاحتفاظ بالسمة غير المعروفة \"{0}\" كما هي",
+    "Duplicate {0} band": "شريط {0} مكرر",
+    "Malformed XML: {0}": "XML غير صالح: {0}",
     // Problems panel.
     'Problems': 'المشاكل',
     'Unreadable file': 'ملف غير قابل للقراءة',

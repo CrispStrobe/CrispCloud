@@ -80,7 +80,7 @@ void main() {
       () {
     final reference = ReportDesignerStrings.arabic.translatedKeys.toSet();
     final tokens = RegExp(
-        r'\{\{[^{}]*\}\}|<\w+>|\bdataSet\b|\bRow\.(?:color|code|amount|total)\b|\bstats\.sum\b|\bEPSG:4326\b|\bQudsReport\b|\.qrep\b');
+        r'\{\{[^{}]*\}\}|\{\d+\}|\{[A-Za-z][A-Za-z0-9_]*\}|<\w+>|\bdataSet\b|\bRow\.(?:color|code|amount|total)\b|\bstats\.sum\b|\bEPSG:4326\b|\bQudsReport\b|\.qrep\b');
     for (final language in ['de', 'fr', 'es', 'pt', 'zh', 'ja', 'ko']) {
       final strings = ReportDesignerStrings.forLocale(Locale(language));
       expect(reference.difference(strings.translatedKeys.toSet()), isEmpty,
@@ -91,6 +91,43 @@ void main() {
               reason: '$language: $source');
         }
       }
+    }
+  });
+
+  test('dynamic report diagnostics localize while retaining user data', () {
+    for (final language in ['de', 'fr', 'es', 'pt', 'zh', 'ja', 'ko', 'ar']) {
+      final strings = ReportDesignerStrings.forLocale(Locale(language));
+      final function =
+          strings.diagnostic('Unknown function MYFUNC() in "source" at 9');
+      expect(function, contains('MYFUNC()'), reason: language);
+      expect(function, contains('"source"'), reason: language);
+      expect(function, contains('9'), reason: language);
+      expect(function, isNot(startsWith('Unknown function')), reason: language);
+      final invalid = strings.diagnostic('Invalid number width="{0}"');
+      expect(invalid, contains('width'), reason: language);
+      expect(invalid, contains('{0}'), reason: language);
+      expect(invalid, isNot(startsWith('Invalid number')), reason: language);
+      expect(strings.diagnostic('unrecognized host error'),
+          'unrecognized host error');
+    }
+    expect(
+        ReportDesignerStrings.english.diagnostic('Unknown function MYFUNC()'),
+        'Unknown function MYFUNC()');
+  });
+
+  test('dynamic status translations do not reinterpret file names', () {
+    for (final language in ['de', 'fr', 'es', 'pt', 'zh', 'ja', 'ko', 'ar']) {
+      final strings = ReportDesignerStrings.forLocale(Locale(language));
+      final message = strings.format('Could not load {name}: {error}',
+          {'name': '{error}.ttf', 'error': 'denied'});
+      expect(message, contains('{error}.ttf'), reason: language);
+      expect(message, contains('denied'), reason: language);
+      expect(message, isNot(startsWith('Could not load')), reason: language);
+      final rename = strings.format('Rename column "{name}"', {'name': 'Q1'});
+      expect(rename, contains('Q1'), reason: language);
+      expect(rename, isNot('Rename column "Q1"'), reason: language);
+      expect(strings.format('{count} selected', {'count': 3}), contains('3'),
+          reason: language);
     }
   });
 
