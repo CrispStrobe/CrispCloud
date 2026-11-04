@@ -90,6 +90,38 @@ void main() {
     await tester.pumpWidget(const SizedBox());
   });
 
+  testWidgets('closing the editor clears the native-menu bridge safely',
+      (tester) async {
+    final deck = (PptxDeckBuilder()..addCoverSlide(title: 'Close me')).build();
+    final ProviderContainer container = ProviderContainer();
+    addTearDown(container.dispose);
+
+    await tester.pumpWidget(
+      UncontrolledProviderScope(
+        container: container,
+        child: MaterialApp(
+          home: OfficeEditorDialog(
+            file: FileItem(name: 'close.pptx', isFolder: false),
+            side: PanelSide.local,
+            bytesOverride: deck,
+          ),
+        ),
+      ),
+    );
+    await tester.pump();
+    await tester.pump(const Duration(milliseconds: 500));
+    expect(container.read(officeEditorMenuProvider), isNotNull);
+
+    await tester.pumpWidget(
+      UncontrolledProviderScope(
+        container: container,
+        child: const SizedBox(),
+      ),
+    );
+    await tester.pump();
+    expect(container.read(officeEditorMenuProvider), isNull);
+  });
+
   testWidgets('ODF/legacy files show a safe editing message', (tester) async {
     await tester.pumpWidget(
       ProviderScope(
