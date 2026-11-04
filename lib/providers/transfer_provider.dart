@@ -468,15 +468,17 @@ class TransferNotifier extends ChangeNotifier {
   void _finalizeBatch(
       OperationProgress operation, List<FileProgress> fileProgresses) {
     if (operation.isCancelled) {
-      operation.fail('Cancelled by user');
+      operation.fail('Cancelled by user', code: TransferErrorCode.cancelled);
     } else {
       final failedCount = fileProgresses.where((f) => f.error != null).length;
       if (failedCount == 0) {
         operation.complete();
       } else if (failedCount == fileProgresses.length) {
-        operation.fail('All files failed');
+        operation.fail('All files failed', code: TransferErrorCode.allFilesFailed);
       } else {
-        operation.fail('$failedCount of ${fileProgresses.length} files failed');
+        operation.fail('$failedCount of ${fileProgresses.length} files failed',
+            code: TransferErrorCode.someFilesFailed,
+            arguments: {'failed': failedCount, 'total': fileProgresses.length});
       }
     }
     notifyListeners();

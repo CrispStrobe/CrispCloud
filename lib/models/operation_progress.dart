@@ -14,6 +14,9 @@ enum OperationType {
 
 enum OperationStatus { inProgress, completed, failed }
 
+/// App-authored transfer failures that can be presented in the UI locale.
+enum TransferErrorCode { cancelled, allFilesFailed, someFilesFailed }
+
 class OperationProgress implements TransferOperation {
   static const _log = Log('OperationProgress');
 
@@ -26,6 +29,8 @@ class OperationProgress implements TransferOperation {
   int currentBytes;
   OperationStatus status;
   String? errorMessage;
+  TransferErrorCode? errorCode;
+  Map<String, Object> errorArguments = const {};
 
   // Batch support
   final String? batchId;
@@ -81,6 +86,8 @@ class OperationProgress implements TransferOperation {
       _isCancelled = true;
       status = OperationStatus.failed;
       errorMessage = 'Cancelled by user';
+      errorCode = TransferErrorCode.cancelled;
+      errorArguments = const {};
       if (!_cancellationCompleter.isCompleted) {
         _cancellationCompleter.complete();
       }
@@ -145,9 +152,12 @@ class OperationProgress implements TransferOperation {
     }
   }
 
-  void fail(String error) {
+  void fail(String error, {TransferErrorCode? code,
+      Map<String, Object> arguments = const {}}) {
     status = OperationStatus.failed;
     errorMessage = error;
+    errorCode = code;
+    errorArguments = Map.unmodifiable(arguments);
   }
 
   /// Current transfer speed in bytes per second.

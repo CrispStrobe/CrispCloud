@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../l10n/operations_strings.dart';
+import '../l10n/transfer_error_strings.dart';
 import '../models/operation_progress.dart';
 import '../providers/providers.dart';
 import '../utils/formatters.dart' show formatBytes, formatSpeed;
@@ -267,6 +268,7 @@ class _OperationTile extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final strings = OperationsStrings(context);
+    final transferStrings = TransferErrorStrings(context);
     IconData icon;
     Color? color;
 
@@ -297,7 +299,9 @@ class _OperationTile extends StatelessWidget {
           title: Row(
             children: [
               Expanded(
-                  child: Text(operation.fileName,
+                  child: Text(operation.totalFiles > 1
+                      ? transferStrings.text('batchFiles', {'count': operation.totalFiles})
+                      : operation.fileName,
                       maxLines: 1,
                       overflow: TextOverflow.ellipsis,
                       style: const TextStyle(fontSize: 13))),
@@ -336,7 +340,7 @@ class _OperationTile extends StatelessWidget {
                     ? strings.text('Cancelled')
                     : operation.isPaused
                         ? strings.text('Paused')
-                        : operation.error ?? _getStatusText(operation, strings),
+                        : transferStrings.error(operation) ?? _getStatusText(operation, strings),
                 style: TextStyle(
                   fontSize: 11,
                   color: operation.error != null
