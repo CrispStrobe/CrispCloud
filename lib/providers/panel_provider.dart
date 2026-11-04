@@ -2362,9 +2362,12 @@ class PanelNotifier extends ChangeNotifier {
       if (_isDisposed || generation != _listingGeneration) return;
       _log.warn('operation failed', e);
       _isLoading = false;
+      final description = e.toString();
       final missing = e is PathNotFoundException ||
-          e.toString().contains('No such file') ||
-          e.toString().contains('PathNotFoundException');
+          description.contains('No such file') ||
+          description.contains('PathNotFoundException') ||
+          description.contains('Not a directory') ||
+          description.contains('errno = 20');
       if (fallbackOnMissing && missing) {
         final fallback = await _localFileService.getSafeFallbackDirectory();
         if (_isDisposed || generation != _listingGeneration) return;
