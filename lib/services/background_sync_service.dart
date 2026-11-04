@@ -15,6 +15,7 @@ import '../l10n/background_notification_strings.dart';
 import 'log_service.dart';
 import 'sync_database.dart';
 import 'sync_engine.dart';
+import 'cloud_storage_interface.dart';
 
 // Workmanager and flutter_local_notifications are only used on Android/iOS.
 // Conditional imports prevent compilation errors on web/desktop.
@@ -36,6 +37,40 @@ const _kPrefInterval = 'background_sync_interval_minutes';
 /// Default sync interval.
 const _kDefaultInterval = 15;
 
+/// Runs all pairs, retaining failures even when a client cannot be created.
+Future<SyncResult> runBackgroundSyncPairs(
+  List<SyncPair> pairs, {
+  required Future<CloudStorageClient?> Function(String provider) buildClient,
+  required Future<SyncResult> Function(SyncPair pair, CloudStorageClient client)
+      syncPair,
+}) async {
+  var total = const SyncResult();
+  for (final pair in pairs) {
+    try {
+      final client = await buildClient(pair.provider);
+      if (client == null) {
+        total += SyncResult(errors: 1, errorMessages: [
+          '${pair.name}: Background connection unavailable for ${pair.provider}'
+        ], failureDetails: [
+          SyncFailureDetail(
+              location: pair.name,
+              provider: pair.provider,
+              providerUnavailable: true)
+        ]);
+        continue;
+      }
+      total += await syncPair(pair, client);
+    } catch (error) {
+      total += SyncResult(errors: 1, errorMessages: [
+        '${pair.name}: $error'
+      ], failureDetails: [
+        SyncFailureDetail(location: pair.name, cause: error)
+      ]);
+    }
+  }
+  return total;
+}
+
 /// Service that manages background sync scheduling on Android and iOS.
 ///
 /// All public methods are safe to call on any platform — they silently
@@ -44,8 +79,7 @@ class BackgroundSyncService {
   static const _log = Log('BackgroundSyncService');
 
   /// Whether this service can do anything on the current platform.
-  static bool get isSupported =>
-      !kIsWeb && mobile.isMobileSupported;
+  static bool get isSupported => !kIsWeb && mobile.isMobileSupported;
 
   // -------------------------------------------------------------------------
   // Initialization
@@ -149,36 +183,19 @@ class BackgroundSyncService {
       //    In background we don't have a live auth provider, so we try to
       //    reconstruct a client from stored credentials for each pair.
       final engine = SyncEngine(db);
-      int conflicts = 0;
-      int errors = 0;
-      final errorMessages = <String>[];
-
-      for (final pair in pairs) {
-        try {
-          final client = await mobile.buildClientForProvider(pair.provider);
-          if (client == null) {
-            _log.warn('Could not build client for provider "${pair.provider}" — skipping "${pair.name}"');
-            continue;
-          }
-          final result = await engine.syncPair(pair, client);
-          conflicts += result.conflicts;
-          errors += result.errors;
-          errorMessages.addAll(result.errorMessages);
-          _log.info('Pair "${pair.name}" synced — $result');
-        } catch (e, st) {
-          _log.error('Error syncing pair "${pair.name}"', e, st);
-          errors++;
-          errorMessages.add('${pair.name}: $e');
-        }
-      }
+      final result = await runBackgroundSyncPairs(pairs,
+          buildClient: mobile.buildClientForProvider,
+          syncPair: engine.syncPair);
 
       // 4. Send local notification if there is something worth reporting
-      if (conflicts > 0 || errors > 0) {
+      if (result.conflicts > 0 || result.errors > 0) {
         final strings = await BackgroundNotificationStrings.fromPreferences();
         final message = strings.body(
-          conflicts: conflicts,
-          errors: errors,
-          details: errorMessages,
+          conflicts: result.conflicts,
+          errors: result.errors,
+          details: result.failureDetails.isEmpty
+              ? result.errorMessages
+              : result.failureDetails.map(strings.failureDetail).toList(),
         );
         await mobile.showLocalNotification(
           id: 1001,
@@ -189,7 +206,8 @@ class BackgroundSyncService {
         );
       }
 
-      _log.info('Background sync task finished. conflicts=$conflicts errors=$errors');
+      _log.info(
+          'Background sync task finished. conflicts=${result.conflicts} errors=${result.errors}');
       return true;
     } catch (e, st) {
       _log.error('Background sync task failed', e, st);
@@ -208,5 +226,4 @@ class BackgroundSyncService {
       await db?.close();
     }
   }
-
 }

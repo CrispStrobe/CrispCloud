@@ -1,3 +1,4 @@
+import 'oauth_callback_page.dart';
 // lib/services/dropbox_client_adapter.dart
 //
 // Dropbox adapter using the Dropbox API v2 with pure HTTP.
@@ -594,14 +595,15 @@ class DropboxClientAdapter extends CloudStorageClient {
     String? authCode;
     try {
       await for (final request in server) {
+        final page = await OAuthCallbackPage.effective();
         final code = request.uri.queryParameters['code'];
         final error = request.uri.queryParameters['error'];
 
         if (error != null) {
           request.response
             ..statusCode = 200
-            ..headers.contentType = ContentType.html
-            ..write('<html><body><h2>Authorization denied: $error</h2><p>You can close this window.</p></body></html>');
+            ..headers.contentType = ContentType('text', 'html', charset: 'utf-8')
+            ..write(page.deniedHtml(error));
           await request.response.close();
           break;
         }
@@ -610,15 +612,15 @@ class DropboxClientAdapter extends CloudStorageClient {
           authCode = code;
           request.response
             ..statusCode = 200
-            ..headers.contentType = ContentType.html
-            ..write('<html><body><h2>Authorization successful!</h2><p>You can close this window and return to CrispCloud.</p></body></html>');
+            ..headers.contentType = ContentType('text', 'html', charset: 'utf-8')
+            ..write(page.successHtml());
           await request.response.close();
           break;
         }
 
         request.response
           ..statusCode = 404
-          ..write('Not found');
+          ..write(page.notFound);
         await request.response.close();
       }
     } finally {
