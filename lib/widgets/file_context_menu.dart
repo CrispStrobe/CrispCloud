@@ -10,6 +10,7 @@ import 'package:url_launcher/url_launcher.dart';
 import 'dart:io';
 import 'package:share_plus/share_plus.dart';
 import '../l10n/app_localizations.dart';
+import '../l10n/file_operations_strings.dart';
 import '../models/file_item.dart';
 import '../models/panel_side.dart';
 import '../providers/providers.dart';
@@ -99,8 +100,8 @@ Future<void> openWithSystemEditor(BuildContext context, String path) async {
       _log.warn('Cannot launch file URI: $uri');
       if (context.mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-              content: Text('No system editor found for this file type')),
+          SnackBar(
+              content: Text(FileOperationsStrings(context).text('noEditor'))),
         );
       }
     }
@@ -108,7 +109,7 @@ Future<void> openWithSystemEditor(BuildContext context, String path) async {
     _log.error('Failed to open with system editor: $e');
     if (context.mounted) {
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Failed to open file: $e')),
+        SnackBar(content: Text(FileOperationsStrings(context).value('openError', e))),
       );
     }
   }
@@ -200,7 +201,7 @@ void showFileContextMenu(BuildContext context, WidgetRef ref, PanelSide side,
               openWithSystemEditor(context, file.path!);
             } else {
               ScaffoldMessenger.of(context).showSnackBar(
-                const SnackBar(content: Text('System editor not available')),
+                SnackBar(content: Text(FileOperationsStrings(context).text('editorUnavailable'))),
               );
             }
           }),
@@ -342,7 +343,7 @@ void showFileContextMenu(BuildContext context, WidgetRef ref, PanelSide side,
           children: [
             const Icon(Icons.share),
             const SizedBox(width: 8),
-            Text('Share${isMultiSelect ? ' (${files.length})' : ''}'),
+            Text('${FileOperationsStrings(context).text('share')}${isMultiSelect ? ' (${files.length})' : ''}'),
           ],
         ),
         onTap: () => Future.delayed(
@@ -384,7 +385,7 @@ void showFileContextMenu(BuildContext context, WidgetRef ref, PanelSide side,
               _log.warn('operation failed', e);
               if (context.mounted) {
                 ScaffoldMessenger.of(context).showSnackBar(
-                  SnackBar(content: Text('Share link failed: $e')),
+                  SnackBar(content: Text(FileOperationsStrings(context).value('shareFailed', e))),
                 );
               }
             }
@@ -407,7 +408,7 @@ void showFileContextMenu(BuildContext context, WidgetRef ref, PanelSide side,
           if (!context.mounted) return;
           // Show loading snackbar
           ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(
+            SnackBar(
               content: Row(
                 children: [
                   SizedBox(
@@ -415,7 +416,7 @@ void showFileContextMenu(BuildContext context, WidgetRef ref, PanelSide side,
                       height: 20,
                       child: CircularProgressIndicator(strokeWidth: 2)),
                   SizedBox(width: 12),
-                  Text('Preparing file for sharing...'),
+                  Text(FileOperationsStrings(context).text('sharePrep')),
                 ],
               ),
               duration: Duration(seconds: 30),
@@ -434,7 +435,7 @@ void showFileContextMenu(BuildContext context, WidgetRef ref, PanelSide side,
             if (context.mounted) {
               ScaffoldMessenger.of(context).hideCurrentSnackBar();
               ScaffoldMessenger.of(context).showSnackBar(
-                SnackBar(content: Text('Share failed: $e')),
+                SnackBar(content: Text(FileOperationsStrings(context).value('shareFailed', e))),
               );
             }
           }
@@ -651,15 +652,15 @@ void showFileContextMenu(BuildContext context, WidgetRef ref, PanelSide side,
               ref.read(panelProvider(PanelSide.local)).refresh();
               if (context.mounted) {
                 ScaffoldMessenger.of(context).showSnackBar(
-                  const SnackBar(
-                      content: Text('Archive extracted successfully')),
+                  SnackBar(
+                      content: Text(AppLocalizations.of(context)!.archiveExtracted)),
                 );
               }
             } catch (e) {
               _log.warn('operation failed', e);
               if (context.mounted) {
                 ScaffoldMessenger.of(context).showSnackBar(
-                  SnackBar(content: Text('Extract failed: $e')),
+                  SnackBar(content: Text(FileOperationsStrings(context).value('extractError', e))),
                 );
               }
             }
@@ -697,14 +698,14 @@ void showFileContextMenu(BuildContext context, WidgetRef ref, PanelSide side,
               ref.read(panelProvider(PanelSide.local)).refresh();
               if (context.mounted) {
                 ScaffoldMessenger.of(context).showSnackBar(
-                  SnackBar(content: Text('Created $zipName')),
+                  SnackBar(content: Text(FileOperationsStrings(context).value('created', zipName))),
                 );
               }
             } catch (e) {
               _log.warn('operation failed', e);
               if (context.mounted) {
                 ScaffoldMessenger.of(context).showSnackBar(
-                  SnackBar(content: Text('Zip creation failed: $e')),
+                  SnackBar(content: Text(FileOperationsStrings(context).value('zipError', e))),
                 );
               }
             }
@@ -1414,10 +1415,10 @@ class _PropertiesDialogState extends State<_PropertiesDialog> {
     final file = widget.file;
     final isLocal = file.path != null && !kIsWeb;
     final mimeType = file.isFolder
-        ? 'Directory'
+        ? FileOperationsStrings(context).text('directory')
         : file.extension.isNotEmpty
-            ? 'File (${file.extension.toUpperCase()})'
-            : 'File';
+            ? FileOperationsStrings(context).value('fileType', file.extension.toUpperCase())
+            : FileOperationsStrings(context).text('plainFile');
 
     return AlertDialog(
       title: Row(
@@ -1436,26 +1437,26 @@ class _PropertiesDialogState extends State<_PropertiesDialog> {
           mainAxisSize: MainAxisSize.min,
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            _propertyRow(context, 'Type', mimeType),
+            _propertyRow(context, FileOperationsStrings(context).text('typeLabel'), mimeType),
             if (file.isSymlink == true && file.symlinkTarget != null)
               _propertyRow(context, '→ Target', file.symlinkTarget!,
                   mono: true),
             if (file.size != null)
-              _propertyRow(context, 'Size',
+              _propertyRow(context, FileOperationsStrings(context).text('sizeLabel'),
                   '${formatBytes(file.size!)} (${file.size} bytes)'),
             if (file.path != null)
-              _propertyRow(context, 'Path', file.path!, mono: true),
+              _propertyRow(context, FileOperationsStrings(context).text('path'), file.path!, mono: true),
             if (file.uuid != null)
               _propertyRow(context, 'UUID', file.uuid!, mono: true),
             if (file.updatedAt != null)
               _propertyRow(
-                  context, 'Modified', formatDateFull(file.updatedAt!)),
+                  context, FileOperationsStrings(context).text('modified'), formatDateFull(file.updatedAt!)),
             if (_stat != null) ...[
-              _propertyRow(context, 'Created', formatDateFull(_stat!.changed)),
+              _propertyRow(context, FileOperationsStrings(context).text('createdLabel'), formatDateFull(_stat!.changed)),
               _propertyRow(
-                  context, 'Accessed', formatDateFull(_stat!.accessed)),
+                  context, FileOperationsStrings(context).text('accessedLabel'), formatDateFull(_stat!.accessed)),
               if (!kIsWeb && !Platform.isWindows)
-                _propertyRow(context, 'Permissions', _modeString(_stat!.mode),
+                _propertyRow(context, FileOperationsStrings(context).text('permissionsLabel'), _modeString(_stat!.mode),
                     mono: true),
             ],
             if (file.metadata != null)
@@ -1557,12 +1558,12 @@ void _showFolderSize(BuildContext context, FileItem file) {
                   ),
                 ],
               ),
-              content: const Row(
+              content: Row(
                 mainAxisSize: MainAxisSize.min,
                 children: [
                   CircularProgressIndicator(),
                   SizedBox(width: 16),
-                  Text('Calculating folder size...'),
+                  Text(FileOperationsStrings(context).text('calcFolder')),
                 ],
               ),
             );
@@ -1586,8 +1587,8 @@ void _showFolderSize(BuildContext context, FileItem file) {
               mainAxisSize: MainAxisSize.min,
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                _propertyRow(context, 'Total Size', formatBytes(size)),
-                _propertyRow(context, 'Bytes', size.toString()),
+                _propertyRow(context, FileOperationsStrings(context).text('totalSize'), formatBytes(size)),
+                _propertyRow(context, FileOperationsStrings(context).text('bytes'), size.toString()),
               ],
             ),
             actions: [
@@ -1631,12 +1632,12 @@ void _showChecksumDialog(BuildContext context, FileItem file) {
                   ),
                 ],
               ),
-              content: const Row(
+              content: Row(
                 mainAxisSize: MainAxisSize.min,
                 children: [
                   CircularProgressIndicator(),
                   SizedBox(width: 16),
-                  Text('Calculating checksums...'),
+                  Text(FileOperationsStrings(context).text('calcChecksums')),
                 ],
               ),
             );
@@ -1644,8 +1645,8 @@ void _showChecksumDialog(BuildContext context, FileItem file) {
 
           if (snapshot.hasError) {
             return AlertDialog(
-              title: const Text('Checksum Error'),
-              content: Text('Failed to calculate checksum: ${snapshot.error}'),
+              title: Text(FileOperationsStrings(context).text('checksumError')),
+              content: Text(FileOperationsStrings(context).value('checksumFailed', snapshot.error)),
               actions: [
                 TextButton(
                   onPressed: () => Navigator.pop(ctx),
@@ -1707,13 +1708,13 @@ void _showSplitDialog(
           mainAxisSize: MainAxisSize.min,
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Text('File: ${file.name}'),
-            if (file.size != null) Text('Size: ${formatBytes(file.size!)}'),
+            Text(FileOperationsStrings(context).value('file', file.name)),
+            if (file.size != null) Text(FileOperationsStrings(context).value('size', formatBytes(file.size!))),
             const SizedBox(height: 16),
             DropdownButtonFormField<int>(
               initialValue: chunkSize,
-              decoration: const InputDecoration(
-                labelText: 'Chunk size',
+              decoration: InputDecoration(
+                labelText: FileOperationsStrings(context).text('chunk'),
                 border: OutlineInputBorder(),
               ),
               items: const [
@@ -1731,7 +1732,7 @@ void _showSplitDialog(
               Padding(
                 padding: const EdgeInsets.only(top: 8),
                 child: Text(
-                  'Will create ${((file.size! + chunkSize - 1) / chunkSize).ceil()} parts',
+                  FileOperationsStrings(context).value('parts', ((file.size! + chunkSize - 1) / chunkSize).ceil()),
                   style: Theme.of(context).textTheme.bodySmall,
                 ),
               ),
@@ -1751,19 +1752,19 @@ void _showSplitDialog(
                 ref.read(panelProvider(side)).refresh();
                 if (context.mounted) {
                   ScaffoldMessenger.of(context).showSnackBar(
-                    const SnackBar(content: Text('File split successfully')),
+                    SnackBar(content: Text(FileOperationsStrings(context).text('splitDone'))),
                   );
                 }
               } catch (e) {
                 _log.warn('operation failed', e);
                 if (context.mounted) {
                   ScaffoldMessenger.of(context).showSnackBar(
-                    SnackBar(content: Text('Split failed: $e')),
+                    SnackBar(content: Text(FileOperationsStrings(context).value('splitError', e))),
                   );
                 }
               }
             },
-            child: const Text('Split'),
+            child: Text(FileOperationsStrings(context).text('split')),
           ),
         ],
       ),
@@ -1786,9 +1787,9 @@ void _showCombineDialog(
       content: Column(
         mainAxisSize: MainAxisSize.min,
         children: [
-          Text('Base name: $baseName'),
+          Text(FileOperationsStrings(context).value('base', baseName)),
           const SizedBox(height: 8),
-          const Text('Will scan for all .partNNN files in the directory.'),
+          Text(FileOperationsStrings(context).text('scan')),
         ],
       ),
       actions: [
@@ -1803,7 +1804,7 @@ void _showCombineDialog(
               if (parts.isEmpty) {
                 if (context.mounted) {
                   ScaffoldMessenger.of(context).showSnackBar(
-                    const SnackBar(content: Text('No parts found')),
+                    SnackBar(content: Text(FileOperationsStrings(context).text('noParts'))),
                   );
                 }
                 return;
@@ -1815,19 +1816,19 @@ void _showCombineDialog(
                 ScaffoldMessenger.of(context).showSnackBar(
                   SnackBar(
                       content: Text(
-                          'Combined ${parts.length} parts into $baseName')),
+                          FileOperationsStrings(context).value('combined', '${parts.length} → $baseName'))),
                 );
               }
             } catch (e) {
               _log.warn('operation failed', e);
               if (context.mounted) {
                 ScaffoldMessenger.of(context).showSnackBar(
-                  SnackBar(content: Text('Combine failed: $e')),
+                  SnackBar(content: Text(FileOperationsStrings(context).value('combineError', e))),
                 );
               }
             }
           },
-          child: const Text('Combine'),
+          child: Text(FileOperationsStrings(context).text('combine')),
         ),
       ],
     ),
@@ -1845,16 +1846,16 @@ void _showCreateLinkDialog(
     context: context,
     builder: (context) => StatefulBuilder(
       builder: (context, setState) => AlertDialog(
-        title: const Text('Create Link'),
+        title: Text(AppLocalizations.of(context)!.createLink),
         content: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
-            Text('Target: ${file.name}'),
+            Text(FileOperationsStrings(context).value('target', file.name)),
             const SizedBox(height: 16),
             SegmentedButton<bool>(
-              segments: const [
-                ButtonSegment(value: true, label: Text('Symlink')),
-                ButtonSegment(value: false, label: Text('Hard Link')),
+              segments: [
+                ButtonSegment(value: true, label: Text(FileOperationsStrings(context).text('symlink'))),
+                ButtonSegment(value: false, label: Text(FileOperationsStrings(context).text('hardlink'))),
               ],
               selected: {isSymlink},
               onSelectionChanged: (v) => setState(() => isSymlink = v.first),
@@ -1862,8 +1863,8 @@ void _showCreateLinkDialog(
             const SizedBox(height: 16),
             TextField(
               controller: controller,
-              decoration: const InputDecoration(
-                labelText: 'Link path',
+              decoration: InputDecoration(
+                labelText: FileOperationsStrings(context).text('linkPath'),
                 border: OutlineInputBorder(),
               ),
             ),
@@ -1887,14 +1888,14 @@ void _showCreateLinkDialog(
                   ScaffoldMessenger.of(context).showSnackBar(
                     SnackBar(
                         content: Text(
-                            '${isSymlink ? "Symlink" : "Hard link"} created')),
+                            FileOperationsStrings(context).text('linkCreated'))),
                   );
                 }
               } catch (e) {
                 _log.warn('operation failed', e);
                 if (context.mounted) {
                   ScaffoldMessenger.of(context).showSnackBar(
-                    SnackBar(content: Text('Link creation failed: $e')),
+                    SnackBar(content: Text(FileOperationsStrings(context).value('linkError', e))),
                   );
                 }
               }
@@ -1917,27 +1918,27 @@ void _showSecureWipeDialog(
       builder: (context, setState) => AlertDialog(
         icon: Icon(Icons.warning,
             color: Theme.of(context).colorScheme.error, size: 48),
-        title: const Text('Secure Wipe'),
+        title: Text(AppLocalizations.of(context)!.secureWipe),
         content: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
             Text(
-              'This will overwrite ${files.length} item(s) with random data before deletion. This cannot be undone.',
+              FileOperationsStrings(context).value('wipeWarning', files.length),
               style: Theme.of(context).textTheme.bodyMedium,
             ),
             const SizedBox(height: 16),
             DropdownButtonFormField<int>(
               initialValue: passes,
-              decoration: const InputDecoration(
-                labelText: 'Overwrite passes',
+              decoration: InputDecoration(
+                labelText: FileOperationsStrings(context).text('passes'),
                 border: OutlineInputBorder(),
               ),
-              items: const [
-                DropdownMenuItem(value: 1, child: Text('1 pass (quick)')),
+              items: [
+                DropdownMenuItem(value: 1, child: Text(FileOperationsStrings(context).text('quick'))),
                 DropdownMenuItem(
-                    value: 3, child: Text('3 passes (DoD standard)')),
+                    value: 3, child: Text(FileOperationsStrings(context).text('dod'))),
                 DropdownMenuItem(
-                    value: 7, child: Text('7 passes (high security)')),
+                    value: 7, child: Text(FileOperationsStrings(context).text('high'))),
               ],
               onChanged: (v) => setState(() => passes = v!),
             ),
@@ -1969,19 +1970,19 @@ void _showSecureWipeDialog(
                 ref.read(panelProvider(side)).clearSelection();
                 if (context.mounted) {
                   ScaffoldMessenger.of(context).showSnackBar(
-                    const SnackBar(content: Text('Secure wipe completed')),
+                    SnackBar(content: Text(FileOperationsStrings(context).text('wipeDone'))),
                   );
                 }
               } catch (e) {
                 _log.warn('operation failed', e);
                 if (context.mounted) {
                   ScaffoldMessenger.of(context).showSnackBar(
-                    SnackBar(content: Text('Secure wipe failed: $e')),
+                    SnackBar(content: Text(FileOperationsStrings(context).value('wipeError', e))),
                   );
                 }
               }
             },
-            child: const Text('Wipe'),
+            child: Text(FileOperationsStrings(context).text('wipe')),
           ),
         ],
       ),
@@ -2012,22 +2013,22 @@ Future<void> _createChecksumFileDialog(
               outputName: defaultName),
       builder: (context, snap) {
         if (snap.connectionState != ConnectionState.done) {
-          return const AlertDialog(
+          return AlertDialog(
             content: Row(children: [
               CircularProgressIndicator(),
               SizedBox(width: 16),
-              Text('Generating checksums...'),
+              Text(FileOperationsStrings(context).text('generating')),
             ]),
           );
         }
         final error = snap.error;
         return AlertDialog(
           title: error != null
-              ? const Text('Error')
-              : const Text('Checksum file created'),
+              ? Text(FileOperationsStrings(context).text('error'))
+              : Text(FileOperationsStrings(context).text('checksumCreated')),
           content: error != null
-              ? Text('Failed: $error')
-              : Text('Created: ${snap.data}'),
+              ? Text(FileOperationsStrings(context).value('failed', error))
+              : Text(FileOperationsStrings(context).value('created', snap.data)),
           actions: [
             TextButton(
                 onPressed: () => Navigator.pop(ctx), child: const Text('OK')),
@@ -2047,17 +2048,17 @@ Future<void> _verifyChecksumFileDialog(
       future: ChecksumService.verifyChecksumFile(checksumPath),
       builder: (context, snap) {
         if (snap.connectionState != ConnectionState.done) {
-          return const AlertDialog(
+          return AlertDialog(
             content: Row(children: [
               CircularProgressIndicator(),
               SizedBox(width: 16),
-              Text('Verifying...'),
+              Text(FileOperationsStrings(context).text('verifying')),
             ]),
           );
         }
         if (snap.error != null) {
           return AlertDialog(
-            title: const Text('Verify failed'),
+            title: Text(FileOperationsStrings(context).text('verifyFailed')),
             content: Text('${snap.error}'),
             actions: [
               TextButton(
@@ -2072,7 +2073,7 @@ Future<void> _verifyChecksumFileDialog(
             Icon(failed.isEmpty ? Icons.check_circle : Icons.error,
                 color: failed.isEmpty ? Colors.green : Colors.red),
             const SizedBox(width: 8),
-            Text(failed.isEmpty ? 'All OK' : '${failed.length} mismatch(es)'),
+            Text(failed.isEmpty ? FileOperationsStrings(context).text('allOk') : FileOperationsStrings(context).value('mismatches', failed.length)),
           ]),
           content: SizedBox(
             width: 400,
@@ -2088,7 +2089,7 @@ Future<void> _verifyChecksumFileDialog(
                         subtitle: r.ok
                             ? null
                             : Text(
-                                'Expected: ${r.expected.substring(0, 8)}…\nGot: ${r.actual.substring(0, 8)}…',
+                                '${FileOperationsStrings(context).value('expected', r.expected.substring(0, 8))}…\n${FileOperationsStrings(context).value('got', r.actual.substring(0, 8))}…',
                                 style: const TextStyle(fontSize: 11)),
                       ))
                   .toList(),
@@ -2119,17 +2120,17 @@ void _verifyAgainstRemote(
       future: _computeVerification(localFile, remoteFile, ref),
       builder: (context, snap) {
         if (snap.connectionState != ConnectionState.done) {
-          return const AlertDialog(
+          return AlertDialog(
             content: Row(children: [
               CircularProgressIndicator(),
               SizedBox(width: 16),
-              Text('Computing checksum…'),
+              Text(FileOperationsStrings(context).text('calcChecksums')),
             ]),
           );
         }
         if (snap.error != null) {
           return AlertDialog(
-            title: const Text('Verify failed'),
+            title: Text(FileOperationsStrings(context).text('verifyFailed')),
             content: Text('${snap.error}'),
             actions: [
               TextButton(
@@ -2151,16 +2152,16 @@ void _verifyAgainstRemote(
             Icon(allOk ? Icons.check_circle : Icons.warning,
                 color: allOk ? Colors.green : Colors.orange),
             const SizedBox(width: 8),
-            Text(allOk ? 'Files match' : 'Possible mismatch'),
+            Text(FileOperationsStrings(context).text(allOk ? 'filesMatch' : 'possibleMismatch')),
           ]),
           content: Column(
             mainAxisSize: MainAxisSize.min,
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              Text('Local: ${formatBytes(localSize)}',
+              Text('${AppLocalizations.of(context)!.local}: ${formatBytes(localSize)}',
                   style: const TextStyle(fontSize: 13)),
               if (remoteSize != null)
-                Text('Remote: ${formatBytes(remoteSize)}',
+                Text('${AppLocalizations.of(context)!.remote}: ${formatBytes(remoteSize)}',
                     style: TextStyle(
                         fontSize: 13, color: sizeMatch ? null : Colors.red)),
               const SizedBox(height: 8),

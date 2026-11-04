@@ -7,6 +7,23 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 
 void main() {
+  testWidgets('file properties use localized field labels', (tester) async {
+    await tester.pumpWidget(MaterialApp(
+      locale: const Locale('es'),
+      supportedLocales: AppLocalizations.supportedLocales,
+      localizationsDelegates: AppLocalizations.localizationsDelegates,
+      home: Scaffold(body: Builder(builder: (context) => TextButton(
+        onPressed: () => showPropertiesDialog(context,
+            FileItem(name: 'report.txt', isFolder: false, size: 12)),
+        child: const Text('Show'),
+      ))),
+    ));
+    await tester.tap(find.text('Show'));
+    await tester.pumpAndSettle();
+    expect(find.text('Archivo (TXT)'), findsOneWidget);
+    expect(find.text('Tamaño'), findsOneWidget);
+  });
+
   testWidgets('delete confirmation uses the selected language and count',
       (tester) async {
     await tester.pumpWidget(ProviderScope(
