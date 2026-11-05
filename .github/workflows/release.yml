@@ -621,7 +621,10 @@ jobs:
     timeout-minutes: 45
     continue-on-error: true  # macOS runners scarce on free tier
     env:
-      HAS_APPSTORE_KEY: ${{ secrets.APPSTORE_API_KEY_P8 != '' }}
+      # Signed App Store/TestFlight uploads are owned by ios-release.yml.
+      # Keeping them out of the multi-platform release prevents two workflows
+      # from uploading the same CFBundleVersion concurrently.
+      HAS_APPSTORE_KEY: 'false'
     steps:
       - uses: actions/checkout@v5
 
