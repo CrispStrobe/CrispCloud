@@ -41,6 +41,121 @@ void main() {
     resolveConflict: resolveConflict,
   );
 
+  group('bounded preview', () {
+    test('entry budget disables a partial plan before any writes', () async {
+      for (var i = 0; i < 100; i++) {
+        source.file('/source/tree/$i.txt', 'payload');
+      }
+      final plan = await service.prepare(
+        files: [source.item('/source/tree')],
+        source: source,
+        destination: target,
+        targetDirectory: '/target',
+        maxEntries: 10,
+      );
+      expect(plan.canExecute, isFalse);
+      expect(plan.entries.length, lessThanOrEqualTo(10));
+      expect(plan.errors.join(), contains('preview budget'));
+      await expectLater(execute(plan), throwsStateError);
+      expect(target.writeAttempts, isEmpty);
+    });
+
+    test('depth budget stops traversal and never follows beyond it', () async {
+      source.file('/source/a/b/c/d/file.txt', 'contents');
+      final plan = await service.prepare(
+        files: [source.item('/source/a')],
+        source: source,
+        destination: target,
+        targetDirectory: '/target',
+        maxDepth: 1,
+      );
+      expect(plan.canExecute, isFalse);
+      expect(plan.errors.join(), contains('1 folder levels'));
+      expect(source.listedPaths, isNot(contains('/source/a/b/c')));
+    });
+
+    test(
+      'planning progress can cancel a large scan before it writes',
+      () async {
+        for (var i = 0; i < 200; i++) {
+          source.file('/source/tree/$i.txt', 'data');
+        }
+        final control = FileOperationControl();
+        final progress = <int>[];
+        await expectLater(
+          service.prepare(
+            files: [source.item('/source/tree')],
+            source: source,
+            destination: target,
+            targetDirectory: '/target',
+            control: control,
+            onPlanningProgress: (count, path) {
+              progress.add(count);
+              if (count == 3) control.cancel();
+            },
+          ),
+          throwsA(isA<FileOperationCancelled>()),
+        );
+        expect(progress, [1, 2, 3]);
+        expect(target.writeAttempts, isEmpty);
+      },
+    );
+
+    test(
+      'fresh child listings avoid a second metadata scan per source file',
+      () async {
+        for (var i = 0; i < 1000; i++) {
+          source.file('/source/tree/$i.txt', 'data');
+        }
+        final plan = await prepare(['/source/tree']);
+        expect(plan.entries, hasLength(1001));
+        expect(source.statCalls, 1);
+        expect(source.listedPaths, ['/source/tree']);
+      },
+    );
+
+    test(
+      'cloud-style selected files share each fresh preview directory',
+      () async {
+        source.listingBackedStat = target.listingBackedStat = true;
+        for (var i = 0; i < 300; i++) {
+          source.file('/source/$i.txt', 'data');
+        }
+        final plan = await prepare([
+          for (var i = 0; i < 300; i++) '/source/$i.txt',
+        ]);
+        expect(plan.canExecute, isTrue);
+        expect(source.statCalls, 1);
+        expect(target.statCalls, 1);
+        expect(source.listedPaths, ['/', '/source']);
+        expect(target.listedPaths, ['/', '/target']);
+        target.file('/target/0.txt', 'concurrent writer');
+        await execute(plan);
+        expect(plan.entries.first.outcome, FileOperationOutcome.needsDecision);
+        expect(target.text('/target/0.txt'), 'concurrent writer');
+        expect(target.statCalls, greaterThan(1));
+      },
+    );
+
+    test('oversized directory metadata is rejected before making an executable plan', () async {
+      source.file('/source/one.txt', 'data');
+      target.listingBackedStat = true;
+      for (var i = 0; i < 20; i++) {
+        target.file('/target/$i.txt', 'existing');
+      }
+      final plan = await service.prepare(
+        files: [source.item('/source/one.txt')],
+        source: source,
+        destination: target,
+        targetDirectory: '/target',
+        maxEntries: 10,
+      );
+      expect(plan.canExecute, isFalse);
+      expect(plan.errors.join(), contains('Directory metadata exceeds'));
+      expect(target.writeAttempts, isEmpty);
+    });
+  });
+
   group('selected sources on the destination account', () {
     for (final path in [
       '/target/report.txt',
@@ -1302,6 +1417,11 @@ class _MemoryBackend extends FileOperationBackend {
   @override
   p.Context get paths => p.posix;
   bool current = true;
+  bool listingBackedStat = false;
+  int statCalls = 0;
+  final listedPaths = <String>[];
+  @override
+  bool get statRequiresDirectoryListing => listingBackedStat;
   bool modifiedTimesSupported = true;
   @override
   bool get isCurrent => current;
@@ -1374,12 +1494,14 @@ class _MemoryBackend extends FileOperationBackend {
   @override
   Future<FileItem?> stat(String path) async {
     _check();
+    statCalls++;
     return nodes[path]?.item;
   }
 
   @override
   Future<List<FileItem>> list(String path) async {
     _check();
+    listedPaths.add(path);
     if (nodes[path]?.item.isFolder != true) {
       throw StateError('Not a directory: $path');
     }

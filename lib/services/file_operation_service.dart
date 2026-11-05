@@ -40,6 +40,11 @@ abstract class FileOperationBackend {
   bool get isCurrent;
   bool get supportsModifiedTime => false;
   bool get supportsSymbolicLinks => false;
+
+  /// Listing-backed metadata can share fresh directory snapshots during
+  /// preview. Execution always calls [stat] again without that cache.
+  bool get statRequiresDirectoryListing => false;
+  bool isRootPath(String path) => paths.dirname(path) == path;
   Future<FileItem?> stat(String path);
   Future<List<FileItem>> list(String path);
   Future<void> createDirectory(String path);
@@ -294,6 +299,9 @@ class FileOperationService {
     FileOperationOptions options = const FileOperationOptions(),
     FileOperationControl? control,
     List<String> protectedDestinationPaths = const [],
+    int maxEntries = 200000,
+    int maxDepth = 256,
+    void Function(int scanned, String path)? onPlanningProgress,
   }) async {
     final entries = <FileOperationEntry>[];
     final errors = <String>[];
@@ -308,6 +316,14 @@ class FileOperationService {
       protectedDestinationPaths: List.unmodifiable(protectedDestinationPaths),
     );
     _checkSources(source, destination);
+    if (maxEntries <= 0 || maxDepth < 0) {
+      errors.add(
+        'Planning limits must allow at least one item and a non-negative depth.',
+      );
+      return plan;
+    }
+    final sourceMetadata = _PlanningMetadata(source, maxEntries);
+    final targetMetadata = _PlanningMetadata(destination, maxEntries);
     options.validateSearchCriteria();
     final criteria = options.searchCriteria;
     final criteriaMatcher = criteria?.nameMatcher;
@@ -397,30 +413,63 @@ class FileOperationService {
         continue;
       }
       roots.putIfAbsent(source.paths.normalize(path), () => file);
+      if (roots.length > maxEntries) {
+        errors.add('Selection exceeds the preview limit of $maxEntries items.');
+        return plan;
+      }
     }
     // Selecting a folder and a child must process the child only once.
-    final unique = roots.entries
-        .where(
-          (candidate) => !roots.entries.any(
-            (parent) =>
-                options.recursive &&
-                parent.value.isFolder &&
-                parent.value.isSymlink != true &&
-                parent.key != candidate.key &&
-                source.isWithin(parent.key, candidate.key),
-          ),
-        )
-        .toList();
+    final selectedDirectories = {
+      if (options.recursive)
+        for (final entry in roots.entries)
+          if (entry.value.isFolder && entry.value.isSymlink != true)
+            source.pathKey(entry.key),
+    };
+    final unique = roots.entries.where((candidate) {
+      var parent = source.paths.dirname(candidate.key);
+      while (parent != candidate.key) {
+        if (selectedDirectories.contains(source.pathKey(parent))) return false;
+        final next = source.paths.dirname(parent);
+        if (next == parent) break;
+        parent = next;
+      }
+      return true;
+    }).toList();
     final destinations = <String, FileOperationEntry>{};
+    final reservedDestinations = <String>{};
+    final nextCopySuffix = <String, int>{};
     final visited = <String>{};
     var fileIndex = 0;
 
-    Future<void> walk(FileItem listed, String output) async {
+    Future<void> walk(
+      FileItem listed,
+      String output,
+      int depth, {
+      bool freshlyListed = false,
+    }) async {
       await control?.checkpoint();
       _checkSources(source, destination);
       final path = source.paths.normalize(listed.path!);
-      if (!visited.add(source.pathKey(path))) return;
-      final current = await source.stat(path);
+      if (visited.contains(source.pathKey(path))) return;
+      if (visited.length >= maxEntries) {
+        throw _PlanningLimitReached(
+          'Preview exceeds $maxEntries items. Select a smaller scope or raise the item limit.',
+        );
+      }
+      if (depth > maxDepth) {
+        throw _PlanningLimitReached(
+          'Preview exceeds $maxDepth folder levels at $path.',
+        );
+      }
+      visited.add(source.pathKey(path));
+      onPlanningProgress?.call(visited.length, path);
+      if (visited.length % 256 == 0) {
+        // Yield to UI input even when in-memory/cached metadata futures finish
+        // synchronously. Pause and cancellation remain responsive in big trees.
+        await Future<void>.delayed(Duration.zero);
+        await control?.checkpoint();
+      }
+      final current = freshlyListed ? listed : await sourceMetadata.stat(path);
       _checkSources(source, destination);
       if (current == null) {
         errors.add('Source no longer exists: $path');
@@ -442,7 +491,9 @@ class FileOperationService {
         output = await _availableName(
           output,
           destination,
-          reserved: destinations.keys.toSet(),
+          reserved: reservedDestinations,
+          stat: targetMetadata.stat,
+          nextSuffix: nextCopySuffix,
         );
       }
       if (source.identity == destination.identity &&
@@ -490,7 +541,9 @@ class FileOperationService {
           output = await _availableName(
             output,
             destination,
-            reserved: destinations.keys.toSet(),
+            reserved: reservedDestinations,
+            stat: targetMetadata.stat,
+            nextSuffix: nextCopySuffix,
           );
           entry.destination = output;
         } else {
@@ -499,7 +552,7 @@ class FileOperationService {
           );
         }
       }
-      entry.existing = await destination.stat(output);
+      entry.existing = await targetMetadata.stat(output);
       _checkSources(source, destination);
       final actualDestination = entry.existing?.path;
       if (actualDestination != null) {
@@ -533,7 +586,9 @@ class FileOperationService {
         output = await _availableName(
           output,
           destination,
-          reserved: destinations.keys.toSet(),
+          reserved: reservedDestinations,
+          stat: targetMetadata.stat,
+          nextSuffix: nextCopySuffix,
         );
         entry.destination = output;
         entry.existing = null;
@@ -546,8 +601,14 @@ class FileOperationService {
         return;
       }
       destinations[destination.destinationPathKey(output)] = entry;
+      reservedDestinations.add(destination.destinationPathKey(output));
       if (file.isFolder && file.isSymlink != true) {
         final children = await source.list(path);
+        if (children.length > maxEntries - visited.length) {
+          throw _PlanningLimitReached(
+            'Directory $path exceeds the remaining preview budget of ${maxEntries - visited.length} items.',
+          );
+        }
         children.sort((a, b) => a.name.compareTo(b.name));
         for (final child in children) {
           if (child.path == null ||
@@ -563,87 +624,111 @@ class FileOperationService {
             );
             continue;
           }
-          await walk(child, destination.paths.join(output, child.name));
-        }
-      }
-    }
-
-    for (final root in unique) {
-      String relative =
-          options.destinationName ?? source.paths.basename(root.key);
-      if (options.preserveRelativePaths) {
-        if (!source.isWithin(base!, root.key)) {
-          errors.add('Source is outside the relative base: ${root.key}');
-          continue;
-        }
-        relative = source.paths.relative(root.key, from: base);
-      }
-      final components = source.paths.split(relative);
-      if (options.destinationName != null) {
-        // Keep the source's relative parent folders while honoring its exact
-        // new root name. The two destination options compose independently.
-        components[components.length - 1] = options.destinationName!;
-      }
-      final output = destination.paths.joinAll([target, ...components]);
-      if (!destination.isWithin(target, output)) {
-        errors.add('Destination would escape the selected directory: $output');
-        continue;
-      }
-      await walk(root.value.copyWith(path: root.key), output);
-    }
-    if (options.excludeEmptyDirectories) {
-      for (final directory in entries.reversed.where(
-        (entry) =>
-            entry.source.isFolder &&
-            entry.outcome == FileOperationOutcome.pending,
-      )) {
-        final containsIncludedFile = entries.any(
-          (entry) =>
-              !entry.source.isFolder &&
-              entry.outcome == FileOperationOutcome.pending &&
-              source.isWithin(directory.source.path!, entry.source.path!),
-        );
-        if (!containsIncludedFile) {
-          directory.outcome = FileOperationOutcome.filtered;
-          directory.message = 'Empty after filtering; excluded.';
-        }
-      }
-    }
-    if (source.identity == destination.identity) {
-      final selectedPaths = entries
-          .map((entry) => source.pathKey(entry.source.path!))
-          .toSet();
-      for (final entry in entries.where(
-        (entry) => entry.outcome == FileOperationOutcome.pending,
-      )) {
-        // A transformed name must not overwrite a later selected source,
-        // including a source excluded by the file filter. Copying in sequence
-        // cannot safely implement cycles or overlapping source/target chains.
-        if (selectedPaths.contains(source.pathKey(entry.destination))) {
-          errors.add(
-            'Destination overlaps a selected source: ${entry.destination}. '
-            'Choose another name or directory.',
+          await walk(
+            child,
+            destination.paths.join(output, child.name),
+            depth + 1,
+            freshlyListed: true,
           );
         }
       }
     }
-    // Check destination ancestors, including links, before any writes.
-    final checked = <String>{};
-    for (final entry in entries.where(
-      (entry) => entry.outcome == FileOperationOutcome.pending,
-    )) {
-      var parent = destination.paths.dirname(entry.destination);
-      while (checked.add(parent)) {
-        final existing = await destination.stat(parent);
-        if (existing != null &&
-            (!existing.isFolder || existing.isSymlink == true)) {
-          errors.add('Destination parent is not a regular directory: $parent');
-          break;
+
+    try {
+      for (final root in unique) {
+        String relative =
+            options.destinationName ?? source.paths.basename(root.key);
+        if (options.preserveRelativePaths) {
+          if (!source.isWithin(base!, root.key)) {
+            errors.add('Source is outside the relative base: ${root.key}');
+            continue;
+          }
+          relative = source.paths.relative(root.key, from: base);
         }
-        final next = destination.paths.dirname(parent);
-        if (next == parent) break;
-        parent = next;
+        final components = source.paths.split(relative);
+        if (options.destinationName != null) {
+          // Keep the source's relative parent folders while honoring its exact
+          // new root name. The two destination options compose independently.
+          components[components.length - 1] = options.destinationName!;
+        }
+        final output = destination.paths.joinAll([target, ...components]);
+        if (!destination.isWithin(target, output)) {
+          errors.add(
+            'Destination would escape the selected directory: $output',
+          );
+          continue;
+        }
+        await walk(root.value.copyWith(path: root.key), output, 0);
       }
+      if (options.excludeEmptyDirectories) {
+        final includedAncestors = <String>{};
+        for (final entry in entries) {
+          if (entry.source.isFolder ||
+              entry.outcome != FileOperationOutcome.pending) {
+            continue;
+          }
+          var parent = source.paths.dirname(entry.source.path!);
+          while (includedAncestors.add(source.pathKey(parent))) {
+            final next = source.paths.dirname(parent);
+            if (next == parent) break;
+            parent = next;
+          }
+        }
+        for (final directory in entries.reversed.where(
+          (entry) =>
+              entry.source.isFolder &&
+              entry.outcome == FileOperationOutcome.pending,
+        )) {
+          final containsIncludedFile = includedAncestors.contains(
+            source.pathKey(directory.source.path!),
+          );
+          if (!containsIncludedFile) {
+            directory.outcome = FileOperationOutcome.filtered;
+            directory.message = 'Empty after filtering; excluded.';
+          }
+        }
+      }
+      if (source.identity == destination.identity) {
+        final selectedPaths = entries
+            .map((entry) => source.pathKey(entry.source.path!))
+            .toSet();
+        for (final entry in entries.where(
+          (entry) => entry.outcome == FileOperationOutcome.pending,
+        )) {
+          // A transformed name must not overwrite a later selected source,
+          // including a source excluded by the file filter. Copying in sequence
+          // cannot safely implement cycles or overlapping source/target chains.
+          if (selectedPaths.contains(source.pathKey(entry.destination))) {
+            errors.add(
+              'Destination overlaps a selected source: ${entry.destination}. '
+              'Choose another name or directory.',
+            );
+          }
+        }
+      }
+      // Check destination ancestors, including links, before any writes.
+      final checked = <String>{};
+      for (final entry in entries.where(
+        (entry) => entry.outcome == FileOperationOutcome.pending,
+      )) {
+        var parent = destination.paths.dirname(entry.destination);
+        while (checked.add(parent)) {
+          await control?.checkpoint();
+          final existing = await targetMetadata.stat(parent);
+          if (existing != null &&
+              (!existing.isFolder || existing.isSymlink == true)) {
+            errors.add(
+              'Destination parent is not a regular directory: $parent',
+            );
+            break;
+          }
+          final next = destination.paths.dirname(parent);
+          if (next == parent) break;
+          parent = next;
+        }
+      }
+    } on _PlanningLimitReached catch (error) {
+      errors.add(error.message);
     }
     _checkSources(source, destination);
     return plan;
@@ -1345,18 +1430,22 @@ class FileOperationService {
     String original,
     FileOperationBackend backend, {
     Set<String> reserved = const {},
+    Future<FileItem?> Function(String path)? stat,
+    Map<String, int>? nextSuffix,
   }) async {
     final name = backend.paths.basename(original);
     final dot = name.lastIndexOf('.');
     final stem = dot > 0 ? name.substring(0, dot) : name;
     final extension = dot > 0 ? name.substring(dot) : '';
-    for (var index = 1; index < 100000; index++) {
+    final key = backend.destinationPathKey(original);
+    for (var index = nextSuffix?[key] ?? 1; index < 1000000; index++) {
       final candidate = backend.paths.join(
         backend.paths.dirname(original),
         '$stem ($index)$extension',
       );
       if (!reserved.contains(backend.destinationPathKey(candidate)) &&
-          await backend.stat(candidate) == null) {
+          await (stat ?? backend.stat)(candidate) == null) {
+        nextSuffix?[key] = index + 1;
         return candidate;
       }
     }
@@ -1384,6 +1473,69 @@ class FileOperationService {
     await _ensureDirectory(backend, parent);
     if (!backend.isCurrent) throw StateError('The storage account changed.');
     await backend.createDirectory(path);
+  }
+}
+
+class _PlanningLimitReached implements Exception {
+  const _PlanningLimitReached(this.message);
+  final String message;
+}
+
+/// A bounded, read-only metadata snapshot for preview. No cached information
+/// can authorize a write; execute revalidates the reviewed entries separately.
+class _PlanningMetadata {
+  _PlanningMetadata(this.backend, this.maxEntries);
+  final FileOperationBackend backend;
+  final int maxEntries;
+  final Map<String, FileItem?> _items = {};
+  final Map<String, Map<String, FileItem>> _directories = {};
+  int _listedEntries = 0;
+
+  Future<FileItem?> stat(String path) async {
+    path = backend.paths.normalize(path);
+    final key = backend.destinationPathKey(path);
+    if (_items.containsKey(key)) return _items[key];
+    if (!backend.isCurrent) throw StateError('The storage account changed.');
+    if (!backend.statRequiresDirectoryListing || backend.isRootPath(path)) {
+      return _items[key] = await backend.stat(path);
+    }
+    final parent = await stat(backend.paths.dirname(path));
+    if (parent == null) return _items[key] = null;
+    if (!parent.isFolder || parent.isSymlink == true) {
+      throw StateError(
+        'Destination parent is not a regular directory: ${parent.path}',
+      );
+    }
+    final parentPath = parent.path!;
+    final parentKey = backend.destinationPathKey(parentPath);
+    var directory = _directories[parentKey];
+    if (directory == null) {
+      final listed = await backend.list(parentPath);
+      if (_listedEntries + listed.length > maxEntries) {
+        throw _PlanningLimitReached(
+          'Directory metadata exceeds the preview limit of $maxEntries items. Select a smaller scope or raise the item limit.',
+        );
+      }
+      _listedEntries += listed.length;
+      directory = <String, FileItem>{};
+      for (final item in listed) {
+        if (item.path == null ||
+            !backend.samePath(backend.paths.dirname(item.path!), parentPath)) {
+          throw StateError('Invalid child path returned by ${backend.label}.');
+        }
+        final nameKey = backend.destinationPathKey(item.name);
+        if (directory.containsKey(nameKey)) {
+          throw StateError(
+            'Several items have case-ambiguous paths: ${item.path}',
+          );
+        }
+        directory[nameKey] = item;
+      }
+      _directories[parentKey] = directory;
+    }
+    if (!backend.isCurrent) throw StateError('The storage account changed.');
+    return _items[key] =
+        directory[backend.destinationPathKey(backend.paths.basename(path))];
   }
 }
 

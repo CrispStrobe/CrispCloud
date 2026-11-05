@@ -612,6 +612,10 @@ class CloudOperationBackend extends FileOperationBackend {
   @override
   bool get supportsSymbolicLinks => capabilities.symbolicLinks;
   @override
+  bool get statRequiresDirectoryListing => true;
+  @override
+  bool isRootPath(String path) => path == '/' || path == client.rootPath;
+  @override
   String get label => client.providerName;
   @override
   p.Context get paths => p.posix;
