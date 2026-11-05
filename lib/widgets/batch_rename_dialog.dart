@@ -11,8 +11,12 @@ import '../l10n/app_localizations.dart';
 import '../models/file_item.dart';
 import '../models/panel_side.dart';
 import '../providers/panel_provider.dart';
+import '../services/cloud_storage_interface.dart';
 import '../services/log_service.dart';
 import '../services/multi_rename_service.dart';
+import '../services/panel_source_service.dart';
+import '../services/storage_transfer_contract.dart';
+import 'rename_names_dialog.dart';
 
 /// A single, reviewable plan combines masks, counters, replacement and case.
 /// The storage origin is captured when the dialog opens and never re-resolved
@@ -45,6 +49,21 @@ class _BatchRenameDialogState extends ConsumerState<BatchRenameDialog> {
   final _start = TextEditingController(text: '1');
   final _step = TextEditingController(text: '1');
   final _width = TextEditingController(text: '3');
+  final _dateOffset = TextEditingController(text: '0');
+  final _variables = TextEditingController();
+  final _referenceTime = DateTime.now();
+  final _targetNames = <String, String>{};
+  final _excludedPaths = <String>{};
+  final _steps = <MultiRenameOptions>[];
+  Set<String> _existingPaths = {};
+  bool _namesChecked = false;
+  bool _checkingNames = false;
+  bool _caseSensitivePaths = false;
+  RenameMaskDialect _dialect = RenameMaskDialect.crispCloud;
+  RenameDateSource _dateSource = RenameDateSource.modified;
+  RenameDateZone _dateZone = RenameDateZone.original;
+  bool _multiplePairs = false;
+  RenameCollisionPolicy _collisions = RenameCollisionPolicy.error;
   late final List<FileItem> _files;
   late final PanelNotifier _panel;
   late final String _directory;
@@ -82,6 +101,14 @@ class _BatchRenameDialogState extends ConsumerState<BatchRenameDialog> {
       } else if (_origin!.source.isLocal && !kIsWeb) {
         _paths = p.context;
       }
+      final source = _origin?.source;
+      _caseSensitivePaths = source is RemotePanelSource
+          ? source.client.transferCapabilities.caseSensitivity ==
+              StorageCaseSensitivity.sensitive
+          : source is LocalPanelSource &&
+              (kIsWeb ||
+                  defaultTargetPlatform == TargetPlatform.linux ||
+                  defaultTargetPlatform == TargetPlatform.android);
     } catch (error) {
       _originError = error.toString();
     }
@@ -98,15 +125,17 @@ class _BatchRenameDialogState extends ConsumerState<BatchRenameDialog> {
       _start,
       _step,
       _width,
+      _dateOffset,
+      _variables,
     ]) {
       controller.dispose();
     }
     super.dispose();
   }
 
-  bool get _editable => !_processing && _result == null;
+  bool get _editable => !_processing && !_checkingNames && _result == null;
 
-  MultiRenameOptions get _options => MultiRenameOptions(
+  MultiRenameOptions get _currentOptions => MultiRenameOptions(
     nameMask: _name.text,
     extensionMask: _extension.text,
     find: _find.text,
@@ -120,15 +149,68 @@ class _BatchRenameDialogState extends ConsumerState<BatchRenameDialog> {
     counterStart: int.tryParse(_start.text) ?? -1,
     counterStep: int.tryParse(_step.text) ?? 1000000000000,
     counterWidth: int.tryParse(_width.text) ?? 0,
+    dialect: _dialect,
+    dateSource: _dateSource,
+    dateZone: _dateZone,
+    dateOffsetMinutes: int.tryParse(_dateOffset.text) ?? 0,
+    variables: {
+      for (final line in const LineSplitter().convert(_variables.text))
+        if (line.contains('='))
+          line.substring(0, line.indexOf('=')).trim():
+              line.substring(line.indexOf('=') + 1),
+    },
+    multipleLiteralPairs: _multiplePairs,
+    collisionPolicy: _collisions,
   );
+
+  MultiRenameOptions get _options => _steps.isEmpty
+      ? _currentOptions
+      : _steps.first.copyWith(
+          additionalSteps: [..._steps.skip(1), _currentOptions],
+          collisionPolicy: _collisions,
+        );
+
+  String _filePath(FileItem file) =>
+      _paths.normalize(file.path ?? _paths.join(_directory, file.name));
+
+  List<FileItem> get _includedFiles => _files
+      .where((file) => !_excludedPaths.contains(_filePath(file)))
+      .toList(growable: false);
+
+  String? get _inputError {
+    if (_collisions == RenameCollisionPolicy.number && !_namesChecked) {
+      return 'Check existing names before using collision numbering.';
+    }
+    for (final field in {
+      'Counter start': _start,
+      'Counter step': _step,
+      'Counter digits': _width,
+      'Date offset': _dateOffset,
+    }.entries) {
+      if (int.tryParse(field.value.text) == null) {
+        return '${field.key} must be a whole number.';
+      }
+    }
+    for (final line in const LineSplitter().convert(_variables.text)) {
+      if (line.trim().isEmpty) continue;
+      if (!line.contains('=') || line.split('=').first.trim().isEmpty) {
+        return 'Enter each variable as a name=value pair on its own line.';
+      }
+    }
+    return null;
+  }
 
   MultiRenamePlan get _plan =>
       _executionPlan ??
       _service.preview(
-        _files,
+        _includedFiles,
         _options,
         directory: _directory,
         pathContext: _paths,
+        targetNames: _targetNames,
+        existingPaths: _existingPaths,
+        caseSensitivePaths: _caseSensitivePaths,
+        referenceTime: _referenceTime,
       );
 
   void _changed([String? _]) {
@@ -178,6 +260,26 @@ class _BatchRenameDialogState extends ConsumerState<BatchRenameDialog> {
                           crossAxisAlignment: CrossAxisAlignment.stretch,
                           children: [
                             _presetBar(),
+                            _advancedOptions(half),
+                            if (_steps.isNotEmpty) ...[
+                              Text(
+                                'Transformation ${_steps.length + 1} · earlier steps run first',
+                                style: theme.textTheme.titleSmall,
+                              ),
+                              Wrap(
+                                spacing: 8,
+                                children: [
+                                  for (var index = 0; index < _steps.length; index++)
+                                    InputChip(
+                                      label: Text('Step ${index + 1}: ${_steps[index].nameMask}'),
+                                      onDeleted: !_editable ? null : () {
+                                        _steps.removeAt(index);
+                                        _changed();
+                                      },
+                                    ),
+                                ],
+                              ),
+                            ],
                             const SizedBox(height: 12),
                             Wrap(
                               spacing: 12,
@@ -288,7 +390,18 @@ class _BatchRenameDialogState extends ConsumerState<BatchRenameDialog> {
                                 _chip(
                                   'Regex',
                                   _useRegex,
-                                  (value) => _useRegex = value,
+                                  (value) {
+                                    _useRegex = value;
+                                    if (value) _multiplePairs = false;
+                                  },
+                                ),
+                                _chip(
+                                  'Multiple literal pairs',
+                                  _multiplePairs,
+                                  (value) {
+                                    _multiplePairs = value;
+                                    if (value) _useRegex = false;
+                                  },
                                 ),
                                 _chip(
                                   'Match case',
@@ -342,6 +455,11 @@ class _BatchRenameDialogState extends ConsumerState<BatchRenameDialog> {
                                 ),
                               ],
                             ),
+                            if (_multiplePairs)
+                              Text(
+                                'Separate simultaneous search/replacement pairs with |, for example red|blue → blue|green.',
+                                style: theme.textTheme.bodySmall,
+                              ),
                             const ExpansionTile(
                               tilePadding: EdgeInsets.zero,
                               title: Text(
@@ -418,7 +536,23 @@ class _BatchRenameDialogState extends ConsumerState<BatchRenameDialog> {
                                 ),
                               ],
                             ),
+                            _previewTools(plan),
                             _preview(plan),
+                            if (_excludedPaths.isNotEmpty)
+                              Wrap(
+                                crossAxisAlignment: WrapCrossAlignment.center,
+                                spacing: 8,
+                                children: [
+                                  Text('${_excludedPaths.length} excluded from this batch'),
+                                  TextButton(
+                                    onPressed: !_editable ? null : () {
+                                      _excludedPaths.clear();
+                                      _changed();
+                                    },
+                                    child: const Text('Restore excluded rows'),
+                                  ),
+                                ],
+                              ),
                             const SizedBox(height: 8),
                             Text(
                               'Existing destinations, duplicate names and overlapping folder selections are checked before starting.',
@@ -437,6 +571,7 @@ class _BatchRenameDialogState extends ConsumerState<BatchRenameDialog> {
                   ),
                 ),
                 if (_originError != null) _error(_originError!),
+                if (_inputError != null) _error(_inputError!),
                 if (plan.errors.isNotEmpty) _error(plan.errors.join('\n')),
                 if (!plan.isValid && plan.errors.isEmpty)
                   _error('Resolve the marked preview errors before renaming.'),
@@ -492,7 +627,8 @@ class _BatchRenameDialogState extends ConsumerState<BatchRenameDialog> {
                       FilledButton.icon(
                         key: const ValueKey('rename-apply'),
                         onPressed:
-                            _editable && _originError == null && plan.canExecute
+                            _editable && _originError == null &&
+                                _inputError == null && plan.canExecute
                             ? () => _execute(plan)
                             : null,
                         icon: const Icon(
@@ -511,6 +647,213 @@ class _BatchRenameDialogState extends ConsumerState<BatchRenameDialog> {
     );
   }
 
+  Widget _advancedOptions(double width) => ExpansionTile(
+    key: const ValueKey('rename-advanced'),
+    tilePadding: EdgeInsets.zero,
+    title: const Text('Advanced rename rules', style: TextStyle(fontSize: 13)),
+    childrenPadding: const EdgeInsets.only(bottom: 12),
+    children: [
+      Wrap(
+        spacing: 12,
+        runSpacing: 12,
+        children: [
+          SizedBox(
+            width: width,
+            child: _optionPicker<RenameMaskDialect>(
+              'Mask dialect', _dialect,
+              const {
+                RenameMaskDialect.crispCloud: 'CrispCloud',
+                RenameMaskDialect.totalCommander: 'Total Commander',
+                RenameMaskDialect.doubleCommander: 'Double Commander',
+              },
+              (value) => _dialect = value,
+            ),
+          ),
+          SizedBox(
+            width: width,
+            child: _optionPicker<RenameDateSource>(
+              'Date source', _dateSource,
+              const {
+                RenameDateSource.modified: 'Modified time',
+                RenameDateSource.created: 'Created time (metadata)',
+                RenameDateSource.accessed: 'Accessed time (metadata)',
+                RenameDateSource.captured: 'Captured time (metadata)',
+                RenameDateSource.current: 'Time this dialog opened',
+              },
+              (value) => _dateSource = value,
+            ),
+          ),
+          SizedBox(
+            width: width,
+            child: _optionPicker<RenameDateZone>(
+              'Time zone', _dateZone,
+              const {
+                RenameDateZone.original: 'Original time zone',
+                RenameDateZone.local: 'Local time zone',
+                RenameDateZone.utc: 'UTC',
+              },
+              (value) => _dateZone = value,
+            ),
+          ),
+          SizedBox(
+            width: width,
+            child: _field(_dateOffset, 'Date offset (minutes)',
+                'rename-date-offset', number: true),
+          ),
+        ],
+      ),
+      const SizedBox(height: 12),
+      _field(_variables, 'Variables (one name=value per line)',
+          'rename-variables', helper: '[V:Project] uses Project=Holiday'),
+      const SizedBox(height: 8),
+      const Text(
+        'TC ranges: [N1-5]. DC ranges: [N1:5] or [N1,5]. '
+        '[meta:artist] uses metadata already supplied by the source; unavailable '
+        'fields block the preview. The dialect is stored with presets.',
+        style: TextStyle(fontSize: 12),
+      ),
+      const SizedBox(height: 8),
+      Align(
+        alignment: Alignment.centerLeft,
+        child: FilterChip(
+          label: const Text('Number colliding targets'),
+          selected: _collisions == RenameCollisionPolicy.number,
+          onSelected: !_editable ? null : (value) {
+            _collisions = value
+                ? RenameCollisionPolicy.number : RenameCollisionPolicy.error;
+            _changed();
+            if (value) _checkExistingNames();
+          },
+        ),
+      ),
+    ],
+  );
+
+  Widget _optionPicker<T>(
+    String label, T value, Map<T, String> labels, ValueChanged<T> changed,
+  ) => DropdownButtonFormField<T>(
+    key: ValueKey('rename-$label-$value'),
+    initialValue: value,
+    isExpanded: true,
+    decoration: InputDecoration(
+      labelText: label, border: const OutlineInputBorder(), isDense: true,
+    ),
+    items: [for (final entry in labels.entries)
+      DropdownMenuItem(value: entry.key, child: Text(entry.value,
+          maxLines: 1, overflow: TextOverflow.ellipsis)),
+    ],
+    onChanged: !_editable ? null : (next) {
+      if (next == null) return;
+      changed(next);
+      _changed();
+    },
+  );
+
+  Widget _previewTools(MultiRenamePlan plan) => Wrap(
+    spacing: 8,
+    children: [
+      TextButton.icon(
+        key: const ValueKey('rename-edit-names'),
+        onPressed: !_editable || plan.entries.isEmpty ? null : () => _editNames(plan),
+        icon: const Icon(Icons.edit_note, size: 18),
+        label: const Text('Edit / import names'),
+      ),
+      TextButton.icon(
+        key: const ValueKey('rename-add-step'),
+        onPressed: !_editable || !plan.isValid || _inputError != null ||
+            _steps.length >= 100 || _targetNames.isNotEmpty
+            ? null : () {
+              _steps.add(_currentOptions);
+              _assignOptions(const MultiRenameOptions());
+              _changed();
+            },
+        icon: const Icon(Icons.add, size: 18),
+        label: const Text('Add transformation'),
+      ),
+      TextButton.icon(
+        onPressed: !_editable || _originError != null ? null : _checkExistingNames,
+        icon: const Icon(Icons.fact_check_outlined, size: 18),
+        label: Text(_checkingNames ? 'Checking names…' : 'Check existing names'),
+      ),
+      if (_targetNames.isNotEmpty)
+        TextButton(
+          onPressed: !_editable ? null : () {
+            _targetNames.clear();
+            _changed();
+          },
+          child: const Text('Clear manual names'),
+        ),
+    ],
+  );
+
+  Future<void> _editNames(MultiRenamePlan plan) async {
+    final names = await showDialog<List<String>>(
+      context: context,
+      builder: (_) => RenameNamesDialog(
+        names: plan.entries.map((entry) => entry.newName).toList(),
+      ),
+    );
+    if (!mounted || names == null) return;
+    for (var index = 0; index < names.length; index++) {
+      _targetNames[plan.entries[index].sourcePath] = names[index];
+    }
+    _changed();
+  }
+
+  Future<void> _editRow(MultiRenameEntry entry) async {
+    final names = await showDialog<List<String>>(
+      context: context,
+      builder: (_) => RenameNamesDialog(names: [entry.newName]),
+    );
+    if (!mounted || names == null) return;
+    _targetNames[entry.sourcePath] = names.single;
+    _changed();
+  }
+
+  void _moveRow(MultiRenameEntry entry, int direction) {
+    final included = _includedFiles;
+    final index = included.indexWhere((file) => identical(file, entry.file));
+    final next = index + direction;
+    if (index < 0 || next < 0 || next >= included.length) return;
+    final oldIndex = _files.indexWhere((file) => identical(file, entry.file));
+    final nextIndex = _files.indexWhere((file) => identical(file, included[next]));
+    final previous = _files[oldIndex];
+    _files[oldIndex] = _files[nextIndex];
+    _files[nextIndex] = previous;
+    _changed();
+  }
+
+  Future<void> _checkExistingNames() async {
+    final origin = _origin;
+    if (origin == null) return;
+    setState(() {
+      _checkingNames = true;
+      _namesChecked = false;
+      _message = null;
+    });
+    try {
+      final paths = <String>{};
+      final parents = _files.map((file) => _paths.dirname(_filePath(file))).toSet();
+      for (final parent in parents) {
+        if (!mounted) return;
+        final siblings = await _panel.listOperationDirectory(parent, origin);
+        paths.addAll(siblings.map((file) =>
+            _paths.normalize(file.path ?? _paths.join(parent, file.name))));
+      }
+      if (mounted) {
+        setState(() {
+          _existingPaths = paths;
+          _namesChecked = true;
+          _executionErrors = {};
+        });
+      }
+    } catch (error) {
+      if (mounted) setState(() => _message = 'Could not check existing names: $error');
+    } finally {
+      if (mounted) setState(() => _checkingNames = false);
+    }
+  }
+
   Widget _field(
     TextEditingController controller,
     String label,
@@ -524,6 +867,8 @@ class _BatchRenameDialogState extends ConsumerState<BatchRenameDialog> {
     keyboardType: number
         ? const TextInputType.numberWithOptions(signed: true)
         : null,
+    minLines: key == 'rename-variables' ? 2 : 1,
+    maxLines: key == 'rename-variables' ? 4 : 1,
     decoration: InputDecoration(
       labelText: label,
       helperText: helper,
@@ -667,6 +1012,42 @@ class _BatchRenameDialogState extends ConsumerState<BatchRenameDialog> {
                   ),
                 ],
               ),
+              if (_editable)
+                Wrap(
+                  spacing: 4,
+                  children: [
+                    IconButton(
+                      key: ValueKey('rename-edit-${entry.sourcePath}'),
+                      tooltip: 'Edit this proposed name',
+                      visualDensity: VisualDensity.compact,
+                      onPressed: () => _editRow(entry),
+                      icon: const Icon(Icons.edit_outlined, size: 18),
+                    ),
+                    IconButton(
+                      tooltip: 'Move earlier in preview',
+                      visualDensity: VisualDensity.compact,
+                      onPressed: index == 0 ? null : () => _moveRow(entry, -1),
+                      icon: const Icon(Icons.arrow_upward, size: 18),
+                    ),
+                    IconButton(
+                      tooltip: 'Move later in preview',
+                      visualDensity: VisualDensity.compact,
+                      onPressed: index == plan.entries.length - 1
+                          ? null : () => _moveRow(entry, 1),
+                      icon: const Icon(Icons.arrow_downward, size: 18),
+                    ),
+                    IconButton(
+                      key: ValueKey('rename-exclude-${entry.sourcePath}'),
+                      tooltip: 'Exclude from this batch (keep file)',
+                      visualDensity: VisualDensity.compact,
+                      onPressed: () {
+                        _excludedPaths.add(entry.sourcePath);
+                        _changed();
+                      },
+                      icon: const Icon(Icons.remove_circle_outline, size: 18),
+                    ),
+                  ],
+                ),
               if (errors.isNotEmpty) _error(errors.join('\n')),
             ],
           ),
@@ -729,6 +1110,19 @@ class _BatchRenameDialogState extends ConsumerState<BatchRenameDialog> {
   );
 
   void _setOptions(MultiRenameOptions options) {
+    final all = [options, ...options.additionalSteps];
+    _steps
+      ..clear()
+      ..addAll(all.take(all.length - 1).map(
+          (step) => step.copyWith(additionalSteps: const [])));
+    _assignOptions(all.last);
+    _collisions = options.collisionPolicy;
+    _targetNames.clear();
+    _changed();
+    if (_collisions == RenameCollisionPolicy.number) _checkExistingNames();
+  }
+
+  void _assignOptions(MultiRenameOptions options) {
     _name.text = options.nameMask;
     _extension.text = options.extensionMask;
     _find.text = options.find;
@@ -742,7 +1136,13 @@ class _BatchRenameDialogState extends ConsumerState<BatchRenameDialog> {
     _scope = options.replaceScope;
     _nameCase = options.nameCase;
     _extensionCase = options.extensionCase;
-    _changed();
+    _dialect = options.dialect;
+    _dateSource = options.dateSource;
+    _dateZone = options.dateZone;
+    _dateOffset.text = options.dateOffsetMinutes.toString();
+    _variables.text = options.variables.entries
+        .map((entry) => '${entry.key}=${entry.value}').join('\n');
+    _multiplePairs = options.multipleLiteralPairs;
   }
 
   Future<void> _loadPresets() async {

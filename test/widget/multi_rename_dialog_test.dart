@@ -262,4 +262,101 @@ void main() {
     expect(find.text('→ first_001.txt'), findsOneWidget);
     expect(tester.takeException(), isNull);
   });
+
+  testWidgets('manual names stay attached to original paths after reordering', (
+    tester,
+  ) async {
+    await open(tester);
+    await tester.ensureVisible(find.byKey(const ValueKey('rename-edit-names')));
+    await tester.tap(find.byKey(const ValueKey('rename-edit-names')));
+    await tester.pumpAndSettle();
+    await tester.enterText(
+      find.byKey(const ValueKey('rename-names-input')),
+      'manual-first.txt\nmanual-second.txt',
+    );
+    await tester.tap(find.byKey(const ValueKey('rename-names-apply')));
+    await tester.pumpAndSettle();
+    await tester.ensureVisible(find.text('Reverse'));
+    await tester.tap(find.text('Reverse'));
+    await tester.pumpAndSettle();
+    expect(cloud.renames, isEmpty);
+    await tester.tap(find.byKey(const ValueKey('rename-apply')));
+    await tester.pumpAndSettle();
+    expect(cloud.renames, ['/second.txt', '/first.txt']);
+    expect(cloud.paths, {'/manual-first.txt', '/manual-second.txt'});
+  });
+
+  testWidgets('excluding a row keeps its file and reallocates the counter', (
+    tester,
+  ) async {
+    await open(tester);
+    await tester.enterText(
+      find.byKey(const ValueKey('rename-name-mask')), 'Trip_[C]',
+    );
+    await tester.pumpAndSettle();
+    final exclude = find.byKey(const ValueKey('rename-exclude-/first.txt'));
+    await tester.ensureVisible(exclude);
+    await tester.tap(exclude);
+    await tester.pumpAndSettle();
+    expect(find.text('1 excluded from this batch'), findsOneWidget);
+    await tester.tap(find.byKey(const ValueKey('rename-apply')));
+    await tester.pumpAndSettle();
+    expect(cloud.renames, ['/second.txt']);
+    expect(cloud.paths, {'/first.txt', '/Trip_001.txt'});
+  });
+
+  testWidgets('invalid imported name counts cannot change the preview', (
+    tester,
+  ) async {
+    await open(tester);
+    await tester.ensureVisible(find.byKey(const ValueKey('rename-edit-names')));
+    await tester.tap(find.byKey(const ValueKey('rename-edit-names')));
+    await tester.pumpAndSettle();
+    await tester.enterText(
+      find.byKey(const ValueKey('rename-names-input')), 'one.txt',
+    );
+    await tester.tap(find.byKey(const ValueKey('rename-names-apply')));
+    await tester.pumpAndSettle();
+    expect(find.text('Expected 2 names in preview order, but found 1.'), findsOneWidget);
+    expect(cloud.renames, isEmpty);
+  });
+
+  testWidgets('successive transformations operate on the previous proposed name', (
+    tester,
+  ) async {
+    await open(tester);
+    await tester.enterText(
+      find.byKey(const ValueKey('rename-name-mask')), '[N]_trip',
+    );
+    await tester.pumpAndSettle();
+    await tester.ensureVisible(find.byKey(const ValueKey('rename-add-step')));
+    await tester.tap(find.byKey(const ValueKey('rename-add-step')));
+    await tester.pumpAndSettle();
+    await tester.ensureVisible(find.byKey(const ValueKey('rename-name-mask')));
+    await tester.enterText(
+      find.byKey(const ValueKey('rename-name-mask')), '[N]_[C:2]',
+    );
+    await tester.pumpAndSettle();
+    await tester.tap(find.byKey(const ValueKey('rename-apply')));
+    await tester.pumpAndSettle();
+    expect(cloud.paths, {'/first_trip_01.txt', '/second_trip_02.txt'});
+    expect(cloud.renames.length, 2);
+  });
+
+  testWidgets('collision numbering checks siblings before showing final targets', (
+    tester,
+  ) async {
+    cloud.paths.add('/same.txt');
+    await open(tester);
+    await tester.enterText(find.byKey(const ValueKey('rename-name-mask')), 'same');
+    await tester.tap(find.text('Advanced rename rules'));
+    await tester.pumpAndSettle();
+    await tester.ensureVisible(find.text('Number colliding targets'));
+    await tester.tap(find.text('Number colliding targets'));
+    await tester.pumpAndSettle();
+    await tester.tap(find.byKey(const ValueKey('rename-apply')));
+    await tester.pumpAndSettle();
+    expect(cloud.paths, {'/same.txt', '/same (1).txt', '/same (2).txt'});
+    expect(cloud.renames, ['/first.txt', '/second.txt']);
+  });
 }
