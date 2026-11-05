@@ -78,8 +78,12 @@ Microsoft Word, then checks paragraph text, footnote count/text, `footnoteRef`
 markers, separator chrome and PDF text.
 
 The untouched and minimal-edit outputs both passed. Word rendered correctly
-formatted superscript note numbers. See `docs/office-engine-strategy.md` for the
-full verification stack, BetterOffice status and remaining work.
+formatted superscript note numbers. Excel round-trips use
+`tool/verify_excel_roundtrip.py` and passed for a Quds-generated workbook.
+PowerPoint’s AppleScript surface lacks equivalent save-as support; use
+python-pptx structural checks plus UI automation/LibreOffice for a native
+render check. See `docs/office-engine-strategy.md` for the full verification
+stack, BetterOffice status and remaining work.
 
 ## Upstream contribution rules
 

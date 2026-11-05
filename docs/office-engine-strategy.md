@@ -101,6 +101,19 @@ DOCX in Microsoft Word, exports a PDF, and checks:
 Both untouched and minimal-edit files passed. Word rendered small superscript
 note numbers with a space before the text.
 
+Excel has the same container-staged round-trip in
+`tool/verify_excel_roundtrip.py`:
+
+```bash
+~/miniconda3/bin/python tool/verify_excel_roundtrip.py   build/quds_roundtrip/sample-quds.xlsx
+```
+
+It opens/saves/exports through Microsoft Excel and checks sheet names, cell
+values/formulas and rendered PDF text. The Quds-generated sample passed. A Quds
+PPTX fixture can be checked structurally with `python-pptx`; PowerPoint’s
+AppleScript dictionary lacks the same save-as/open API as Word and Excel, so
+native PPTX save/export currently needs UI automation or LibreOffice.
+
 ## CLI verification stack
 
 Use layers, fastest first:
