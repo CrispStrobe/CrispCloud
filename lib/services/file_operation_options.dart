@@ -27,6 +27,7 @@ enum FileOperationOutcome {
   filtered,
   cancelled,
   failed,
+  metadataFailed,
   needsDecision,
 }
 
