@@ -16,6 +16,7 @@ import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:flutter/material.dart';
 
 import '../l10n/provider_operation_strings.dart';
+
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:path/path.dart' as p;
@@ -26,6 +27,7 @@ import '../models/file_item.dart';
 import '../models/panel_side.dart';
 import '../providers/providers.dart';
 import '../l10n/file_editor_strings.dart';
+import '../l10n/code_document_ui_strings.dart';
 import '../services/editor_document.dart';
 import '../services/editor_highlighting.dart';
 import '../services/log_service.dart';
@@ -276,7 +278,8 @@ class _FileEditorPageState extends ConsumerState<_FileEditorPage> {
       _log.warn('operation failed', e);
       if (!mounted) return;
       setState(() {
-        _error = FileEditorStrings(context).value('loadError', localizedProviderError(context, e));
+        _error = FileEditorStrings(context)
+            .value('loadError', localizedProviderError(context, e));
         _loading = false;
       });
     }
@@ -384,7 +387,7 @@ class _FileEditorPageState extends ConsumerState<_FileEditorPage> {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
             content: Text(
-              'Saved ${widget.file.name} — newer edits are still unsaved.',
+              CodeDocumentUiStrings(context).value('newer', widget.file.name),
             ),
           ),
         );
@@ -398,8 +401,13 @@ class _FileEditorPageState extends ConsumerState<_FileEditorPage> {
     });
     ref.read(panelProvider(widget.side)).refreshFiles();
     if (manual) {
-      ScaffoldMessenger.of(context)
-          .showSnackBar(SnackBar(content: Text(FileEditorStrings(context).value('saved', widget.file.name))));
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(
+            FileEditorStrings(context).value('saved', widget.file.name),
+          ),
+        ),
+      );
     }
   }
 
@@ -424,9 +432,12 @@ class _FileEditorPageState extends ConsumerState<_FileEditorPage> {
     if (error is EditorEncodingException) {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
-          content: Text(error.message),
+          content: Text(
+            CodeDocumentUiStrings(context)
+                .value('encodingError', error.encoding.label),
+          ),
           action: SnackBarAction(
-            label: 'Use UTF-8',
+            label: CodeDocumentUiStrings(context).text('utf8'),
             onPressed: () {
               _setEncoding(EditorEncoding.utf8);
               unawaited(_saveFile(force: true));
@@ -438,7 +449,9 @@ class _FileEditorPageState extends ConsumerState<_FileEditorPage> {
     }
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(
-        content: Text('Save failed: $error'),
+        content: Text(
+          FileEditorStrings(context).value('saveError', error ?? ''),
+        ),
         backgroundColor: Theme.of(context).colorScheme.error,
       ),
     );
@@ -488,7 +501,7 @@ class _FileEditorPageState extends ConsumerState<_FileEditorPage> {
     final line = await showDialog<int>(
       context: context,
       builder: (ctx) => AlertDialog(
-        title: const Text('Go to line'),
+        title: Text(CodeDocumentUiStrings(context).text('goLine')),
         content: TextField(
           autofocus: true,
           keyboardType: TextInputType.number,
@@ -509,7 +522,7 @@ class _FileEditorPageState extends ConsumerState<_FileEditorPage> {
           ),
           FilledButton(
             onPressed: () => Navigator.of(ctx).pop(int.tryParse(input)),
-            child: const Text('Go'),
+            child: Text(CodeDocumentUiStrings(context).text('go')),
           ),
         ],
       ),
@@ -658,7 +671,8 @@ class _FileEditorPageState extends ConsumerState<_FileEditorPage> {
                   _highlightEnabled ? Icons.code : Icons.code_off,
                   size: 20,
                 ),
-                tooltip: FileEditorStrings(context).text(_highlightEnabled ? 'disable' : 'enable'),
+                tooltip: FileEditorStrings(context)
+                    .text(_highlightEnabled ? 'disable' : 'enable'),
                 onPressed: _toggleHighlighting,
               ),
             _isSaving
@@ -681,34 +695,34 @@ class _FileEditorPageState extends ConsumerState<_FileEditorPage> {
                         : null,
                   ),
             PopupMenuButton<_EditorMenuAction>(
-              tooltip: 'Editor options',
+              tooltip: CodeDocumentUiStrings(context).text('options'),
               onSelected: _handleMenuAction,
-              itemBuilder: (context) => const [
+              itemBuilder: (context) => [
                 PopupMenuItem(
                   value: _EditorMenuAction.find,
-                  child: Text('Find…'),
+                  child: Text(CodeDocumentUiStrings(context).text('find')),
                 ),
                 PopupMenuItem(
                   value: _EditorMenuAction.replace,
-                  child: Text('Find and replace…'),
+                  child: Text(CodeDocumentUiStrings(context).text('replace')),
                 ),
                 PopupMenuItem(
                   value: _EditorMenuAction.goToLine,
-                  child: Text('Go to line…'),
+                  child: Text(CodeDocumentUiStrings(context).text('goMenu')),
                 ),
-                PopupMenuDivider(),
+                const PopupMenuDivider(),
                 PopupMenuItem(
                   value: _EditorMenuAction.wordWrap,
-                  child: Text('Toggle word wrap'),
+                  child: Text(CodeDocumentUiStrings(context).text('wrap')),
                 ),
                 PopupMenuItem(
                   value: _EditorMenuAction.highlight,
-                  child: Text('Toggle syntax highlighting'),
+                  child: Text(CodeDocumentUiStrings(context).text('highlight')),
                 ),
-                PopupMenuDivider(),
+                const PopupMenuDivider(),
                 PopupMenuItem(
                   value: _EditorMenuAction.reload,
-                  child: Text('Reload from disk'),
+                  child: Text(CodeDocumentUiStrings(context).text('reload')),
                 ),
               ],
             ),
@@ -718,10 +732,7 @@ class _FileEditorPageState extends ConsumerState<_FileEditorPage> {
           children: [
             if (_conflictDetected)
               MaterialBanner(
-                content: const Text(
-                  'This file was modified on the server since you opened it. '
-                  'Saving will overwrite the remote version.',
-                ),
+                content: Text(FileEditorStrings(context).text('conflict')),
                 leading: const Icon(Icons.warning, color: Colors.orange),
                 actions: [
                   TextButton(
@@ -729,7 +740,7 @@ class _FileEditorPageState extends ConsumerState<_FileEditorPage> {
                       setState(() => _conflictDetected = false);
                       unawaited(_saveFile(force: true));
                     },
-                    child: const Text('Save Anyway'),
+                    child: Text(FileEditorStrings(context).text('saveAnyway')),
                   ),
                   TextButton(
                     onPressed: () {

@@ -45,6 +45,17 @@ class _CloudClient implements CloudStorageClient {
   dynamic noSuchMethod(Invocation invocation) => super.noSuchMethod(invocation);
 }
 
+class _DelayedListingClient extends _CloudClient {
+  final listingStarted = Completer<void>();
+  final listingResult = Completer<Map<String, dynamic>>();
+
+  @override
+  Future<Map<String, dynamic>> listPath(String path) {
+    listingStarted.complete();
+    return listingResult.future;
+  }
+}
+
 class _RangeClient extends _CloudClient implements CloudStorageRangeReader {
   final calls = <(int, int)>[];
   _RangeClient() : super(fileSize: 1024 * 1024 * 1024 + 7);
@@ -101,6 +112,7 @@ class _UnicodeClient implements CloudStorageClient {
 class _ResponseReader {
   final Socket socket;
   final _bytes = <int>[];
+  final closed = Completer<void>();
   Completer<void>? _updated;
 
   _ResponseReader(this.socket) {
@@ -108,7 +120,7 @@ class _ResponseReader {
       _bytes.addAll(chunk);
       _updated?.complete();
       _updated = null;
-    });
+    }, onDone: () => closed.complete());
   }
 
   Future<Uint8List> take(int count) async {
@@ -148,6 +160,61 @@ Uint8List _path(String path, [int? flags]) {
 }
 
 void main() {
+  test('disposing the filesystem closes all accepted helper connections', () async {
+    final fs = FuseFilesystem(client: _CloudClient(), remotePath: '/remote');
+    final serving = fs.serveRequests();
+    final address = InternetAddress(await fs.ready, type: InternetAddressType.unix);
+    final sockets = <Socket>[];
+    final readers = <_ResponseReader>[];
+    addTearDown(() async {
+      for (final socket in sockets) {
+        socket.destroy();
+      }
+      await fs.dispose();
+    });
+    for (var i = 0; i < 2; i++) {
+      final socket = await Socket.connect(address, 0);
+      sockets.add(socket);
+      final reader = _ResponseReader(socket);
+      readers.add(reader);
+      // A response confirms the server accepted this connection.
+      expect((await reader.send(FuseOpcode.getattr, 1, _path('/'))).$1, 0);
+    }
+    await fs.dispose();
+    await Future.wait(readers.map((reader) => reader.closed.future))
+        .timeout(const Duration(seconds: 3));
+    await serving.timeout(const Duration(seconds: 3));
+  });
+
+  test('shutdown does not wait for a pending provider request or write its reply', () async {
+    final client = _DelayedListingClient();
+    final fs = FuseFilesystem(client: client, remotePath: '/remote');
+    final serving = fs.serveRequests();
+    final socket = await Socket.connect(
+        InternetAddress(await fs.ready, type: InternetAddressType.unix), 0);
+    final reader = _ResponseReader(socket);
+    addTearDown(() async {
+      socket.destroy();
+      await fs.dispose();
+    });
+    final payload = _path('/café.txt');
+    final header = ByteData(12)
+      ..setUint32(0, FuseOpcode.getattr, Endian.big)
+      ..setUint32(4, 9, Endian.big)
+      ..setUint32(8, payload.length, Endian.big);
+    socket.add([...header.buffer.asUint8List(), ...payload]);
+    await client.listingStarted.future.timeout(const Duration(seconds: 3));
+    await fs.dispose().timeout(const Duration(seconds: 3));
+    await reader.closed.future.timeout(const Duration(seconds: 3));
+    // The eventual provider completion must not write into a destroyed socket
+    // or surface an unhandled asynchronous error after unmount.
+    client.listingResult.complete({'items': [
+      {'name': 'café.txt', 'type': 'file', 'size': 5}
+    ]});
+    await pumpEventQueue();
+    await serving;
+  });
+
   test('IPC rejects oversized frames from the header alone', () async {
     final fs = FuseFilesystem(client: _CloudClient(), remotePath: '/remote');
     unawaited(fs.serveRequests());

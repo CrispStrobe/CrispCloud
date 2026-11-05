@@ -150,6 +150,7 @@ class FuseFilesystem {
   int _nextHandle = 1;
 
   ServerSocket? _server;
+  final _connections = <Socket>{};
   Directory? _socketDirectory;
   final Completer<String> _ready = Completer<String>();
   bool _disposed = false;
@@ -188,7 +189,11 @@ class FuseFilesystem {
       _log.info('FuseFilesystem IPC socket: $_socketPath');
       _ready.complete(_socketPath);
       await for (final socket in _server!) {
-        if (_disposed) break;
+        if (_disposed) {
+          socket.destroy();
+          break;
+        }
+        _connections.add(socket);
         unawaited(_handleConnection(socket));
       }
     } catch (e, st) {
@@ -202,8 +207,14 @@ class FuseFilesystem {
   /// Tear down the filesystem bridge, flush pending writes.
   Future<void> dispose() async {
     _disposed = true;
-    await _flushAllWrites();
+    // Closing the listener alone leaves already accepted helper connections
+    // alive. Close those too so a helper waiting on a request sees EOF.
+    for (final socket in _connections.toList()) {
+      socket.destroy();
+    }
+    _connections.clear();
     await _server?.close();
+    await _flushAllWrites();
     _readBuffers.clear();
     _writeBuffers.clear();
     _dirCache.clear();
@@ -223,31 +234,37 @@ class FuseFilesystem {
     _log.debug('FUSE helper connected from ${socket.remoteAddress.address}');
     final buf = <int>[];
 
-    await for (final chunk in socket) {
-      buf.addAll(chunk);
-      while (buf.length >= 12) {
-        // Minimum header size: 4+4+4 bytes
-        final opcode = _readUint32(buf, 0);
-        final reqId = _readUint32(buf, 4);
-        final payloadLen = _readUint32(buf, 8);
-        if (payloadLen > maxRequestPayloadBytes) {
-          _sendError(socket, reqId, errno: 22); // EINVAL
-          await socket.flush();
-          socket.destroy();
-          return; // Framing cannot be recovered without consuming the body.
+    try {
+      await for (final chunk in socket) {
+        buf.addAll(chunk);
+        while (buf.length >= 12) {
+          // Minimum header size: 4+4+4 bytes
+          final opcode = _readUint32(buf, 0);
+          final reqId = _readUint32(buf, 4);
+          final payloadLen = _readUint32(buf, 8);
+          if (payloadLen > maxRequestPayloadBytes) {
+            _sendError(socket, reqId, errno: 22); // EINVAL
+            await socket.flush();
+            socket.destroy();
+            return; // Framing cannot be recovered without consuming the body.
+          }
+          if (buf.length < 12 + payloadLen) break; // wait for more data
+
+          final payload = Uint8List.fromList(buf.sublist(12, 12 + payloadLen));
+          buf.removeRange(0, 12 + payloadLen);
+
+          unawaited(_dispatchRequest(socket, opcode, reqId, payload));
         }
-        if (buf.length < 12 + payloadLen) break; // wait for more data
-
-        final payload = Uint8List.fromList(buf.sublist(12, 12 + payloadLen));
-        buf.removeRange(0, 12 + payloadLen);
-
-        unawaited(_dispatchRequest(socket, opcode, reqId, payload));
       }
+    } on SocketException catch (e) {
+      if (!_disposed) _log.warn('FUSE helper connection failed', e);
+    } finally {
+      _connections.remove(socket);
+      socket.destroy();
+      // dispose owns the shutdown flush; do not upload a dirty buffer twice.
+      if (!_disposed) await _flushAllWrites();
+      _log.debug('FUSE helper disconnected');
     }
-
-    // Flush write buffers when the connection closes.
-    await _flushAllWrites();
-    _log.debug('FUSE helper disconnected');
   }
 
   Future<void> _dispatchRequest(
@@ -256,6 +273,7 @@ class FuseFilesystem {
     int reqId,
     Uint8List payload,
   ) async {
+    if (_disposed) return;
     try {
       if (readOnly && const {
         FuseOpcode.write, FuseOpcode.create, FuseOpcode.mkdir,
@@ -805,6 +823,7 @@ class FuseFilesystem {
   // ---------------------------------------------------------------------------
 
   void _sendResponse(Socket socket, int reqId, {Uint8List? payload}) {
+    if (_disposed || !_connections.contains(socket)) return;
     payload ??= Uint8List(0);
     final header = Uint8List(12);
     final view = ByteData.view(header.buffer);
@@ -816,6 +835,7 @@ class FuseFilesystem {
   }
 
   void _sendError(Socket socket, int reqId, {required int errno}) {
+    if (_disposed || !_connections.contains(socket)) return;
     final header = Uint8List(12);
     final view = ByteData.view(header.buffer);
     view.setUint32(0, reqId, Endian.big);

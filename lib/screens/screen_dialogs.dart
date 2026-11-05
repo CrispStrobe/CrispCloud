@@ -25,6 +25,7 @@ import '../l10n/command_strings.dart';
 import '../l10n/undo_presentation.dart';
 import '../l10n/screen_dialog_strings.dart';
 import '../l10n/shortcut_strings.dart';
+import '../l10n/viewer_action_strings.dart';
 import '../services/log_service.dart';
 
 const _log = Log('ScreenDialogs');
@@ -428,7 +429,11 @@ Future<void> _viewFile(
     if (context.mounted) {
       ScaffoldMessenger.of(
         context,
-      ).showSnackBar(SnackBar(content: Text('Cannot view ${target.name}: $e')));
+      ).showSnackBar(
+        SnackBar(
+          content: Text(ViewerActionStrings(context).cannotView(target.name, e)),
+        ),
+      );
     }
   } finally {
     // Keep the file selected and the panel keyboard-focused after the viewer
@@ -459,11 +464,8 @@ Future<void> _editFile(
     if (panel.isInArchive) {
       if (context.mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            content: Text(
-              'Editing files inside an archive is not supported. '
-              'Extract the file first.',
-            ),
+          SnackBar(
+            content: Text(ViewerActionStrings(context).archiveEditingUnsupported),
           ),
         );
       }

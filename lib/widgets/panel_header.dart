@@ -18,6 +18,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../l10n/app_localizations.dart';
 import '../l10n/browser_menu_strings.dart';
 import '../l10n/panel_header_strings.dart';
+import '../l10n/shortcut_strings.dart';
 import '../models/panel_side.dart';
 import '../models/file_item.dart';
 import '../providers/providers.dart';
@@ -101,7 +102,7 @@ class _PanelHeaderState extends ConsumerState<PanelHeader> {
             if (panel.isInArchive)
               _navButton(
                 icon: Icons.close,
-                tooltip: 'Exit archive',
+                tooltip: ShortcutStrings(context).extra('exitArchive'),
                 onPressed: panel.exitArchive,
               ),
             const SizedBox(width: 2),

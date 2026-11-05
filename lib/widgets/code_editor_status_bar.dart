@@ -8,6 +8,7 @@
 import 'package:flutter/material.dart';
 
 import '../services/editor_document.dart';
+import '../l10n/code_document_ui_strings.dart';
 
 class CodeEditorStatusBar extends StatelessWidget {
   const CodeEditorStatusBar({
@@ -40,11 +41,12 @@ class CodeEditorStatusBar extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
+    final strings = CodeDocumentUiStrings(context);
     final status = isSaving
-        ? 'Saving…'
+        ? strings.text('saving')
         : isModified
-        ? 'Unsaved changes'
-        : 'Saved';
+        ? strings.text('unsaved')
+        : strings.text('saved');
 
     return LayoutBuilder(
       builder: (context, constraints) {
@@ -69,7 +71,7 @@ class CodeEditorStatusBar extends StatelessWidget {
                   children: [
                     Flexible(
                       child: Text(
-                        'Ln $cursorLine, Col $cursorColumn',
+                        strings.cursor(cursorLine, cursorColumn),
                         overflow: TextOverflow.ellipsis,
                         style: TextStyle(
                           fontSize: 11,
@@ -80,7 +82,7 @@ class CodeEditorStatusBar extends StatelessWidget {
                     if (showDocumentInfo) ...[
                       const SizedBox(width: 12),
                       Text(
-                        '$lineCount lines',
+                        strings.value('lines', lineCount),
                         style: TextStyle(
                           fontSize: 11,
                           color: theme.colorScheme.onSurfaceVariant,
@@ -89,7 +91,7 @@ class CodeEditorStatusBar extends StatelessWidget {
                       const SizedBox(width: 12),
                       Flexible(
                         child: Text(
-                          language ?? 'Plain text',
+                          language ?? strings.text('plain'),
                           overflow: TextOverflow.ellipsis,
                           style: TextStyle(
                             fontSize: 11,
@@ -103,10 +105,7 @@ class CodeEditorStatusBar extends StatelessWidget {
               ),
               if (hadMixedLineEndings)
                 Tooltip(
-                  message:
-                      'Mixed line endings were normalized to '
-                      '${lineEnding.label}. Saving writes the whole file with '
-                      'that style.',
+                  message: strings.value('mixed', lineEnding.label),
                   child: Padding(
                     padding: const EdgeInsets.only(right: 6),
                     child: Icon(
@@ -117,7 +116,7 @@ class CodeEditorStatusBar extends StatelessWidget {
                   ),
                 ),
               _StatusMenuButton<EditorLineEnding>(
-                tooltip: 'Line endings',
+                tooltip: strings.text('endings'),
                 values: EditorLineEnding.values,
                 label: (value) =>
                     value == lineEnding ? '✓ ${value.label}' : value.label,
@@ -126,7 +125,7 @@ class CodeEditorStatusBar extends StatelessWidget {
               ),
               const SizedBox(width: 6),
               _StatusMenuButton<EditorEncoding>(
-                tooltip: 'File encoding',
+                tooltip: strings.text('encoding'),
                 values: EditorEncoding.values,
                 label: (value) =>
                     value == encoding ? '✓ ${value.label}' : value.label,

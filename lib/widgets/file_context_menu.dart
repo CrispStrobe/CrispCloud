@@ -128,7 +128,6 @@ void showFileContextMenu(BuildContext context, WidgetRef ref, PanelSide side,
 
   // Edit (single text/code file, not folder) — submenu: built-in vs system editor
   if (!isMultiSelect && !isSingleFolder) {
-    final ext = file.name.split('.').last.toLowerCase();
     final preferExternal = ref.read(preferExternalEditorProvider);
     if (isPdfFileName(file.name)) {
       items.add(PopupMenuItem(
