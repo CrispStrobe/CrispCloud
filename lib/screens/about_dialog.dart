@@ -9,6 +9,7 @@ import 'package:url_launcher/url_launcher.dart';
 
 import '../l10n/app_localizations.dart';
 import '../l10n/misc_ui_strings.dart';
+import '../utils/app_version.dart';
 
 class AboutAppDialog extends StatefulWidget {
   const AboutAppDialog({super.key});
@@ -39,14 +40,13 @@ class _AboutAppDialogState extends State<AboutAppDialog> {
     }
   }
 
-  String get _versionLabel {
-    final version = _packageInfo?.version ?? _fallbackVersion;
-    final build = _packageInfo?.buildNumber ?? '';
-    final suffix = _gitHash.isNotEmpty
-        ? _gitHash
-        : (build.isNotEmpty && build != '0' ? '${MiscUiStrings(context).text('build')} $build' : '');
-    return suffix.isEmpty ? '${MiscUiStrings(context).text('version')} $version' : '${MiscUiStrings(context).text('version')} $version ($suffix)';
-  }
+  String get _versionLabel => formatAppVersion(
+    version: _packageInfo?.version ?? _fallbackVersion,
+    buildNumber: _packageInfo?.buildNumber,
+    gitHash: _gitHash,
+    versionLabel: MiscUiStrings(context).text('version'),
+    buildLabel: MiscUiStrings(context).text('build'),
+  );
 
   Future<void> _launchURL(String urlString) async {
     final Uri url = Uri.parse(urlString);

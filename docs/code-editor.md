@@ -22,6 +22,9 @@ repository.
 - Undo/redo, multi-line selection, cut/copy/paste, and a selection toolbar.
 - Go to line (`Ctrl/Cmd+G`).
 - Word-wrap and highlighting toggles in the editor menu.
+- The macOS app menu mirrors the editor commands (File/Edit/View/Go), like
+  the Office and image editors, instead of limiting them to the editor's
+  local overflow button.
 - Status bar with cursor position, line count, language, line ending, encoding
   and save state. On narrow screens it drops optional document information
   first and collapses the save state to an icon, so it fits a phone without

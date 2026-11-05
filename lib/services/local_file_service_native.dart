@@ -6,6 +6,7 @@
 import 'dart:io';
 import 'package:flutter/foundation.dart';
 import 'package:file_picker/file_picker.dart';
+import 'package:path/path.dart' as p;
 import 'package:path_provider/path_provider.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:macos_secure_bookmarks/macos_secure_bookmarks.dart';
@@ -168,6 +169,80 @@ class MacosFileService implements LocalFileService, LocalFileSaveReporter {
     return null;
   }
 
+  /// Resolve symlinks before checking or acquiring access.
+  ///
+  /// A symlink under a granted folder can point into an ungranted volume. The
+  /// sandbox then denies the target even though the link's path looks covered.
+  Future<String> _accessPath(String path) async {
+    // realpath resolves links in every path component, but the sandbox can
+    // deny it when the target volume is not granted yet. Fall back to reading
+    // the final symlink itself, which only needs access to the granted parent.
+    try {
+      return await File(path).resolveSymbolicLinks();
+    } catch (_) {
+      var current = path;
+      for (var i = 0; i < 10; i++) {
+        try {
+          final type =
+              await FileSystemEntity.type(current, followLinks: false);
+          if (type != FileSystemEntityType.link) return current;
+          final target = await Link(current).target();
+          current = p.normalize(
+            p.isAbsolute(target)
+                ? target
+                : p.join(p.dirname(current), target),
+          );
+        } catch (_) {
+          break;
+        }
+      }
+      try {
+        return await Directory(path).resolveSymbolicLinks();
+      } catch (_) {
+        return current;
+      }
+    }
+  }
+
+  /// Probe the real operation under [scope]; a resolved bookmark alone does
+  /// not prove that its security scope is still usable after a rebuild.
+  Future<bool> _probeAccess(String path, FileSystemEntity? scope) async {
+    var started = false;
+    if (scope != null) {
+      try {
+        await _bookmarks.startAccessingSecurityScopedResource(scope);
+        started = true;
+      } catch (e) {
+        debugPrint('Could not start security scope for $path: $e');
+        return false;
+      }
+    }
+    try {
+      final type = await FileSystemEntity.type(path);
+      if (type == FileSystemEntityType.notFound) {
+        // A missing file is not a permission problem when a scope already
+        // covers its folder; saving a new file there is still allowed.
+        return scope != null;
+      }
+      if (type == FileSystemEntityType.directory) {
+        return await Directory(path).exists();
+      }
+      final handle = await File(path).open();
+      await handle.close();
+      return true;
+    } catch (_) {
+      return false;
+    } finally {
+      if (started) {
+        try {
+          await _bookmarks.stopAccessingSecurityScopedResource(scope!);
+        } catch (_) {
+          // Best effort.
+        }
+      }
+    }
+  }
+
   @override
   Future<String> getInitialPath() async {
     final grantedPath = await MacOSBookmarkService.getLastGrantedDirectory();
@@ -201,11 +276,12 @@ class MacosFileService implements LocalFileService, LocalFileSaveReporter {
       await _loadAndResolveBookmarks();
     }
 
-    final FileSystemEntity? scope = _scopeFor(path);
+    final String accessPath = await _accessPath(path);
+    final FileSystemEntity? scope = _scopeFor(accessPath);
     if (scope != null) {
       try {
         await _bookmarks.startAccessingSecurityScopedResource(scope);
-        final entities = await Directory(path).list().toList();
+        final entities = await Directory(accessPath).list().toList();
         await _bookmarks.stopAccessingSecurityScopedResource(scope);
         return entities;
       } catch (e) {
@@ -214,7 +290,7 @@ class MacosFileService implements LocalFileService, LocalFileSaveReporter {
     }
 
     try {
-      return await Directory(path).list().toList();
+      return await Directory(accessPath).list().toList();
     } catch (e) {
       debugPrint('Failed to list directory: $e');
       rethrow;
@@ -225,11 +301,12 @@ class MacosFileService implements LocalFileService, LocalFileSaveReporter {
   Future<Uint8List> readFile(String path, {FileItem? fileItem}) async {
     if (_resolvedBookmarks.isEmpty) await _loadAndResolveBookmarks();
 
-    final FileSystemEntity? readScope = _scopeFor(path);
+    final String accessPath = await _accessPath(path);
+    final FileSystemEntity? readScope = _scopeFor(accessPath);
     if (readScope != null) {
       try {
         await _bookmarks.startAccessingSecurityScopedResource(readScope);
-        final data = await File(path).readAsBytes();
+        final data = await File(accessPath).readAsBytes();
         await _bookmarks.stopAccessingSecurityScopedResource(readScope);
         return data;
       } catch (e) {
@@ -237,18 +314,19 @@ class MacosFileService implements LocalFileService, LocalFileSaveReporter {
         rethrow;
       }
     }
-    return File(path).readAsBytes();
+    return File(accessPath).readAsBytes();
   }
 
   @override
   Future<void> saveFile(String path, Uint8List data) async {
     if (_resolvedBookmarks.isEmpty) await _loadAndResolveBookmarks();
 
-    final FileSystemEntity? saveScope = _scopeFor(path);
+    final String accessPath = await _accessPath(path);
+    final FileSystemEntity? saveScope = _scopeFor(accessPath);
     if (saveScope != null) {
       try {
         await _bookmarks.startAccessingSecurityScopedResource(saveScope);
-        final file = File(path);
+        final file = File(accessPath);
         if (!await file.parent.exists()) await file.parent.create(recursive: true);
         await file.writeAsBytes(data);
         await _bookmarks.stopAccessingSecurityScopedResource(saveScope);
@@ -259,7 +337,7 @@ class MacosFileService implements LocalFileService, LocalFileSaveReporter {
       }
     }
 
-    final file = File(path);
+    final file = File(accessPath);
     if (!await file.parent.exists()) await file.parent.create(recursive: true);
     await file.writeAsBytes(data);
   }
@@ -281,7 +359,8 @@ class MacosFileService implements LocalFileService, LocalFileSaveReporter {
 
   Future<FileSystemEntity?> _beginScope(String path) async {
     if (_resolvedBookmarks.isEmpty) await _loadAndResolveBookmarks();
-    final FileSystemEntity? scope = _scopeFor(path);
+    final String accessPath = await _accessPath(path);
+    final FileSystemEntity? scope = _scopeFor(accessPath);
     if (scope == null) return null;
     try {
       await _bookmarks.startAccessingSecurityScopedResource(scope);
@@ -304,32 +383,30 @@ class MacosFileService implements LocalFileService, LocalFileSaveReporter {
   @override
   Future<bool> hasAccessToPath(String path) async {
     if (_resolvedBookmarks.isEmpty) await _loadAndResolveBookmarks();
-    if (_scopeFor(path) != null) return true;
-    final base = _grantedBasePath;
-    if (base != null && isSameOrUnderPath(path, base)) return true;
 
-    // No bookmark covers this path. Probe actual access instead of assuming
-    // the home directory is readable: the sandbox denies most of it until the
-    // user grants the containing folder.
-    try {
-      final type = await FileSystemEntity.type(path);
-      if (type == FileSystemEntityType.directory) {
-        return await Directory(path).exists();
-      }
-      if (type == FileSystemEntityType.notFound) return false;
-      final handle = await File(path).open();
-      await handle.close();
-      return true;
-    } catch (_) {
-      return false;
+    // Check the real target, not just the symlink's lexical path. A link may
+    // live under a granted folder while its target does not.
+    final String accessPath = await _accessPath(path);
+    final FileSystemEntity? scope = _scopeFor(accessPath);
+    if (scope != null) {
+      return _probeAccess(accessPath, scope);
     }
+
+    // No bookmark covers the resolved target. Probe actual access instead of
+    // assuming the home directory is readable: the sandbox denies most of it
+    // until the user grants the containing folder.
+    return _probeAccess(accessPath, null);
   }
 
   @override
   Future<bool> ensureAccess(String path) async {
     if (await hasAccessToPath(path)) return true;
+
+    // Ask for the real target's folder. Re-picking the symlink's parent would
+    // grant nothing when the link points into another volume.
+    final String accessPath = await _accessPath(path);
     final granted = await requestDirectoryAccess(
-      initialDirectory: File(path).parent.path,
+      initialDirectory: File(accessPath).parent.path,
     );
     if (granted == null) return false;
     return hasAccessToPath(path);
@@ -352,9 +429,10 @@ class MacosFileService implements LocalFileService, LocalFileSaveReporter {
   @override
   Future<int?> fileLength(String path) async {
     if (!await hasAccessToPath(path) && !await ensureAccess(path)) return null;
+    final String accessPath = await _accessPath(path);
     final scope = await _beginScope(path);
     try {
-      return await File(path).length();
+      return await File(accessPath).length();
     } on FileSystemException {
       return null;
     } finally {

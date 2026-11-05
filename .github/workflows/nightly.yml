@@ -161,7 +161,7 @@ jobs:
           git config --global url."https://x-access-token:${TOKEN}@github.com/".insteadOf "https://github.com/"
 
       - run: flutter pub get
-      - run: flutter build web --release
+      - run: flutter build web --release --dart-define=GIT_HASH="$(git rev-parse --short HEAD)"
       - run: tar czf crispcloud-nightly-web.tar.gz -C build/web .
 
       - uses: actions/upload-artifact@v5
@@ -207,7 +207,7 @@ jobs:
 
       - run: flutter config --enable-linux-desktop
       - run: flutter pub get
-      - run: flutter build linux --release
+      - run: flutter build linux --release --dart-define=GIT_HASH="$(git rev-parse --short HEAD)"
       - run: tar czf crispcloud-nightly-linux-x64.tar.gz -C build/linux/x64/release/bundle .
 
       - uses: actions/upload-artifact@v5
@@ -263,7 +263,7 @@ jobs:
           done
 
       - name: Build Windows
-        run: flutter build windows --release
+        run: flutter build windows --release --dart-define=GIT_HASH="$(git rev-parse --short HEAD)"
         env:
           CL: /D_SILENCE_EXPERIMENTAL_COROUTINE_DEPRECATION_WARNINGS
 
@@ -309,7 +309,7 @@ jobs:
 
       - run: flutter config --enable-macos-desktop
       - run: flutter pub get
-      - run: flutter build macos --release
+      - run: flutter build macos --release --dart-define=GIT_HASH="$(git rev-parse --short HEAD)"
 
       - name: Package (.zip + .dmg)
         run: |
@@ -378,7 +378,7 @@ jobs:
 
       - name: Build APK
         run: |
-          flutter build apk --release || true
+          flutter build apk --release --dart-define=GIT_HASH="$(git rev-parse --short HEAD)" || true
           find . -name "app-release.apk" -not -path "*/intermediates/*" -type f 2>/dev/null
 
       - name: Find and rename APK
@@ -427,7 +427,7 @@ jobs:
           git config --global url."https://x-access-token:${TOKEN}@github.com/".insteadOf "https://github.com/"
 
       - run: flutter pub get
-      - run: flutter build ios --release --no-codesign
+      - run: flutter build ios --release --no-codesign --dart-define=GIT_HASH="$(git rev-parse --short HEAD)"
 
       - name: Archive unsigned .app
         run: |

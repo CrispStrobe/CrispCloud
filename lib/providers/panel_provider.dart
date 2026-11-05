@@ -2327,7 +2327,18 @@ class PanelNotifier extends ChangeNotifier {
     }
 
     try {
-      final entities = await _localFileService.listDirectory(listingPath);
+      List<FileSystemEntity>? entities;
+      try {
+        entities = await _localFileService.listDirectory(listingPath);
+      } on FileSystemException catch (e) {
+        if (!_isPermissionDenied(e)) rethrow;
+        // A symlinked folder may point outside the granted root, or a saved
+        // bookmark may no longer resolve after a rebuild. Ask for the target
+        // folder and retry once.
+        final granted = await _localFileService.ensureAccess(listingPath);
+        if (!granted) rethrow;
+        entities = await _localFileService.listDirectory(listingPath);
+      }
       if (_isDisposed || generation != _listingGeneration) return;
       if (entities == null) {
         _files = [];
@@ -2845,3 +2856,9 @@ final panelProvider = ChangeNotifierProvider.family<PanelNotifier, PanelSide>((
 ) {
   return PanelNotifier(ref, side);
 });
+
+bool _isPermissionDenied(FileSystemException error) {
+  if (error is PathAccessException) return true;
+  final code = error.osError?.errorCode;
+  return code == 1 || code == 13;
+}

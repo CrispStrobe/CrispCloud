@@ -239,7 +239,7 @@ jobs:
           git config --global url."https://x-access-token:${TOKEN}@github.com/".insteadOf "https://github.com/"
 
       - run: flutter pub get
-      - run: flutter build web --release
+      - run: flutter build web --release --dart-define=GIT_HASH="$(git rev-parse --short HEAD)"
 
       - name: Package
         run: tar czf crispcloud-web.tar.gz -C build/web .
@@ -292,7 +292,7 @@ jobs:
 
       - run: flutter config --enable-linux-desktop
       - run: flutter pub get
-      - run: flutter build linux --release
+      - run: flutter build linux --release --dart-define=GIT_HASH="$(git rev-parse --short HEAD)"
 
       - name: Package
         run: tar czf crispcloud-linux-x64.tar.gz -C build/linux/x64/release/bundle .
@@ -340,7 +340,7 @@ jobs:
 
       - run: flutter config --enable-macos-desktop
       - run: flutter pub get
-      - run: flutter build macos --release
+      - run: flutter build macos --release --dart-define=GIT_HASH="$(git rev-parse --short HEAD)"
 
       # ── macOS Code Signing Placeholder ──────────────────────────────────
       # Uncomment and configure the steps below to enable Developer ID signing.
@@ -455,7 +455,7 @@ jobs:
           done
 
       - name: Build Windows
-        run: flutter build windows --release
+        run: flutter build windows --release --dart-define=GIT_HASH="$(git rev-parse --short HEAD)"
         env:
           CL: /D_SILENCE_EXPERIMENTAL_COROUTINE_DEPRECATION_WARNINGS
 
@@ -566,7 +566,7 @@ jobs:
           # flutter build apk reports "failed to produce" when the APK path
           # doesn't match its expectation, but Gradle does build it successfully.
           # We allow the exit code and verify the APK exists ourselves.
-          flutter build apk --release || true
+          flutter build apk --release --dart-define=GIT_HASH="$(git rev-parse --short HEAD)" || true
           echo "=== Searching for APKs ==="
           find . -name "app-release.apk" -not -path "*/intermediates/*" -type f 2>/dev/null
 
@@ -652,7 +652,7 @@ jobs:
       - run: flutter pub get
 
       - name: Build iOS (migrate plugins, no codesign)
-        run: flutter build ios --release --no-codesign
+        run: flutter build ios --release --no-codesign --dart-define=GIT_HASH="$(git rev-parse --short HEAD)"
 
       # ── API-key-driven archive + export + upload ────────────────────────
       - name: Install signing credentials
@@ -703,6 +703,7 @@ jobs:
           </plist>
           PLIST
           PATH="/usr/bin:$PATH" flutter build ipa --release \
+            --dart-define=GIT_HASH="$(git rev-parse --short HEAD)" \
             --export-options-plist=/tmp/ExportOptions.plist || true
           # Verify the archive was created
           ls -la build/ios/archive/Runner.xcarchive/Products/Applications/Runner.app/ > /dev/null

@@ -29,6 +29,7 @@ import '../providers/providers.dart';
 import '../l10n/file_editor_strings.dart';
 import '../l10n/code_document_ui_strings.dart';
 import '../l10n/image_editor_strings.dart';
+import '../services/code_editor_menu.dart';
 import '../services/editor_document.dart';
 import '../services/editor_highlighting.dart';
 import '../services/image_edit_session.dart' show isEditableImageFileName;
@@ -70,17 +71,21 @@ Future<void> showFileEditorDialog(
     if (!isTextEditableName(file.name)) {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
-          content: Text(context.imageTr(
-            'This file type cannot be edited here. Use F3 to view it.',
-          )),
+          content: Text(
+            context.imageTr(
+              'This file type cannot be edited here. Use F3 to view it.',
+            ),
+          ),
         ),
       );
       return;
     }
-    await Navigator.of(context).push(MaterialPageRoute(
-      fullscreenDialog: true,
-      builder: (_) => _FileEditorPage(file: file, side: side),
-    ));
+    await Navigator.of(context).push(
+      MaterialPageRoute(
+        fullscreenDialog: true,
+        builder: (_) => _FileEditorPage(file: file, side: side),
+      ),
+    );
   } finally {
     // Returning from any editor should land back on the same file with the
     // panel ready for the next F3/F4, including when opened from a context
@@ -133,6 +138,9 @@ class _FileEditorPageState extends ConsumerState<_FileEditorPage> {
 
   CodeHighlightTheme? _cachedHighlightTheme;
   String? _cachedHighlightKey;
+  CodeEditorMenuActions? _menuActions;
+  ProviderContainer? _providerContainer;
+  String? _menuSignature;
 
   @override
   void initState() {
@@ -148,7 +156,34 @@ class _FileEditorPageState extends ConsumerState<_FileEditorPage> {
   }
 
   @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    _providerContainer = ProviderScope.containerOf(context, listen: false);
+    _menuSignature = null;
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (mounted) _publishMenu();
+    });
+  }
+
+  @override
   void dispose() {
+    final container = _providerContainer;
+    final actions = _menuActions;
+    _menuActions = null;
+    _providerContainer = null;
+    if (container != null && actions != null) {
+      // The browser rebuilds from this provider. Clear it after the route has
+      // left the tree so native menu commands cannot target a disposed editor.
+      scheduleMicrotask(() {
+        try {
+          if (identical(container.read(codeEditorMenuProvider), actions)) {
+            container.read(codeEditorMenuProvider.notifier).state = null;
+          }
+        } catch (_) {
+          // The provider container may already be disposed.
+        }
+      });
+    }
     _autoSaveTimer?.cancel();
     _controller.removeListener(_onControllerChanged);
     _saveState.removeListener(_onSaveStateChanged);
@@ -163,9 +198,98 @@ class _FileEditorPageState extends ConsumerState<_FileEditorPage> {
   bool get _isModified => _saveState.isDirty;
   bool get _isSaving => _saveState.isSaving;
 
+  void _publishMenu() {
+    final container = _providerContainer;
+    if (container == null) return;
+    final hasSelection = !_controller.selection.isCollapsed;
+    final signature = <bool>[
+      _isModified,
+      _controller.canUndo,
+      _controller.canRedo,
+      hasSelection,
+      !_loading,
+      _language != null,
+    ].join('|');
+    if (signature == _menuSignature && _menuActions != null) return;
+    _menuSignature = signature;
+    final actions = CodeEditorMenuActions(
+      perform: _performMenuAction,
+      canSave: _isModified && !_loading,
+      canUndo: _controller.canUndo,
+      canRedo: _controller.canRedo,
+      hasSelection: hasSelection,
+      canReload: !_loading,
+      canHighlight: _language != null,
+      busy: _loading,
+    );
+    _menuActions = actions;
+    container.read(codeEditorMenuProvider.notifier).state = actions;
+  }
+
+  void _performMenuAction(CodeEditorMenuAction action) {
+    switch (action) {
+      case CodeEditorMenuAction.save:
+        unawaited(_saveFile());
+        break;
+      case CodeEditorMenuAction.close:
+        unawaited(_closeEditor());
+        break;
+      case CodeEditorMenuAction.reload:
+        unawaited(_reloadFromDisk());
+        break;
+      case CodeEditorMenuAction.undo:
+        _controller.undo();
+        break;
+      case CodeEditorMenuAction.redo:
+        _controller.redo();
+        break;
+      case CodeEditorMenuAction.cut:
+        _controller.cut();
+        break;
+      case CodeEditorMenuAction.copy:
+        _controller.copy();
+        break;
+      case CodeEditorMenuAction.paste:
+        _controller.paste();
+        break;
+      case CodeEditorMenuAction.selectAll:
+        _controller.selectAll();
+        break;
+      case CodeEditorMenuAction.find:
+        _openFind();
+        break;
+      case CodeEditorMenuAction.replace:
+        _openFind(replace: true);
+        break;
+      case CodeEditorMenuAction.goToLine:
+        unawaited(_goToLine());
+        break;
+      case CodeEditorMenuAction.toggleWordWrap:
+        _toggleWordWrap();
+        break;
+      case CodeEditorMenuAction.toggleHighlighting:
+        _toggleHighlighting();
+        break;
+    }
+  }
+
+  Future<void> _closeEditor() async {
+    if (await _confirmDiscard()) {
+      if (!mounted) return;
+      Navigator.of(context).pop();
+    }
+  }
+
+  Future<void> _reloadFromDisk() async {
+    if (await _confirmDiscard()) {
+      await _loadFile();
+    }
+  }
+
   void _onSaveStateChanged() {
     if (!mounted) return;
     setState(() {});
+    _publishMenu();
   }
 
   void _onControllerChanged() {
@@ -197,6 +321,7 @@ class _FileEditorPageState extends ConsumerState<_FileEditorPage> {
 
     if (textChanged || selectionChanged) {
       setState(() {});
+      _publishMenu();
     }
   }
 
@@ -265,7 +390,7 @@ class _FileEditorPageState extends ConsumerState<_FileEditorPage> {
         try {
           bytes = await service.readFile(path, fileItem: widget.file);
         } on FileSystemException catch (e) {
-          if (kIsWeb || e is! PathAccessException) rethrow;
+          if (kIsWeb || !_isPermissionDenied(e)) rethrow;
           final granted = await service.ensureAccess(path);
           if (!granted) {
             if (!mounted) return;
@@ -291,6 +416,7 @@ class _FileEditorPageState extends ConsumerState<_FileEditorPage> {
         _loadedAt = DateTime.now();
         _conflictDetected = false;
       });
+      _publishMenu();
       _focusNode.requestFocus();
     } catch (e) {
       _log.warn('operation failed', e);
@@ -300,6 +426,7 @@ class _FileEditorPageState extends ConsumerState<_FileEditorPage> {
             .value('loadError', localizedProviderError(context, e));
         _loading = false;
       });
+      _publishMenu();
     }
   }
 
@@ -433,9 +560,18 @@ class _FileEditorPageState extends ConsumerState<_FileEditorPage> {
     if (widget.side == PanelSide.local && widget.file.path != null) {
       // Always go through the service: it maintains the macOS security
       // scope for sandboxed paths (web uses the FSA bridge).
-      await ref
-          .read(localFileServiceProvider)
-          .saveFile(widget.file.path!, bytes);
+      final service = ref.read(localFileServiceProvider);
+      final path = widget.file.path!;
+      try {
+        await service.saveFile(path, bytes);
+      } on FileSystemException catch (e) {
+        if (!_isPermissionDenied(e)) rethrow;
+        // The grant may have failed to resolve after a rebuild, or a symlink
+        // may now point outside the granted folder. Ask again and retry once.
+        final granted = await service.ensureAccess(path);
+        if (!granted) rethrow;
+        await service.saveFile(path, bytes);
+      }
       return;
     }
     final client = ref.read(authProvider).client;
@@ -644,12 +780,7 @@ class _FileEditorPageState extends ConsumerState<_FileEditorPage> {
           leading: IconButton(
             icon: const Icon(Icons.close),
             tooltip: AppLocalizations.of(context)!.close,
-            onPressed: () async {
-              if (await _confirmDiscard()) {
-                if (!context.mounted) return;
-                Navigator.of(context).pop();
-              }
-            },
+            onPressed: () => unawaited(_closeEditor()),
           ),
           title: Row(
             children: [
@@ -800,9 +931,7 @@ class _FileEditorPageState extends ConsumerState<_FileEditorPage> {
         _toggleHighlighting();
         break;
       case _EditorMenuAction.reload:
-        if (await _confirmDiscard()) {
-          await _loadFile();
-        }
+        await _reloadFromDisk();
         break;
     }
   }
@@ -913,6 +1042,12 @@ class _FileEditorPageState extends ConsumerState<_FileEditorPage> {
       onEncodingSelected: _setEncoding,
     );
   }
+}
+
+bool _isPermissionDenied(FileSystemException error) {
+  if (error is PathAccessException) return true;
+  final code = error.osError?.errorCode;
+  return code == 1 || code == 13;
 }
 
 enum _EditorMenuAction { find, replace, goToLine, wordWrap, highlight, reload }
