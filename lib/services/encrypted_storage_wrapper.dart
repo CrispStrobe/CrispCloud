@@ -9,6 +9,8 @@ import 'package:flutter/foundation.dart' show kIsWeb;
 
 import 'cloud_storage_interface.dart';
 import 'encryption_service.dart';
+import 'gcm_transfer_stream.dart';
+import 'transfer_spool.dart';
 import 'web_crypto_provider.dart';
 // On the web build, bulk AES-GCM runs on the browser's native crypto
 // (~1000 MB/s vs ~1 MB/s for pointycastle in dart2js); native/VM keeps
@@ -29,6 +31,7 @@ import 'web_crypto_factory_io.dart'
 /// );
 /// ```
 class EncryptedStorageWrapper
+    with CloudTransferOperations
     implements
         CloudStorageClient,
         StorageNamespaceIdentity,
@@ -60,8 +63,10 @@ class EncryptedStorageWrapper
     required Uint8List encryptionKey,
     this.encryptFilenames = false,
     WebCryptoProvider? cryptoProvider,
+    // Preserve the public named argument while keeping the captured client private.
+    // ignore: prefer_initializing_formals
   }) : _inner = inner,
-       _key = encryptionKey,
+       _key = Uint8List.fromList(encryptionKey),
        _crypto = cryptoProvider ?? defaultWebCryptoProvider();
 
   // ---------------------------------------------------------------------------
@@ -223,27 +228,53 @@ class EncryptedStorageWrapper
     String localPath, {
     Function(int, int)? onProgress,
   }) async {
-    // Download encrypted bytes, decrypt, then write to local path.
-    final encrypted = await _inner.downloadFileBytes(
-      remotePath,
-      onProgress: onProgress,
-    );
-    final decrypted = await _crypto.decrypt(await _gcmKey(), encrypted);
-
     if (kIsWeb) {
-      throw UnsupportedError(
-        'downloadFileByPath is not supported on web. '
-        'Use downloadFileBytes instead.',
-      );
+      throw UnsupportedError('Use downloadStream on web.');
     }
-
-    final file = await File(localPath).create(recursive: true);
-    await file.writeAsBytes(decrypted);
+    final check = _captureTransfer();
+    final spool = await createAuthenticatedGcmSpool(
+      _inner.downloadStream(remotePath, onProgress: onProgress),
+      _key,
+      check,
+    );
+    try {
+      check();
+      final file = await File(localPath).create(recursive: true);
+      final sink = file.openWrite();
+      try {
+        await sink.addStream(spool.openRead());
+        await sink.flush();
+      } finally {
+        await sink.close();
+      }
+    } finally {
+      await spool.dispose();
+    }
   }
 
-  // ---------------------------------------------------------------------------
-  // Stream-based (buffers for GCM, which needs full plaintext)
-  // ---------------------------------------------------------------------------
+  // The existing wire format is one AES-GCM message. Decryption therefore
+  // authenticates a private disk/browser spool before releasing plaintext.
+  @override
+  StorageTransferCapabilities get transferCapabilities =>
+      StorageTransferCapabilities(
+        boundedUpload: _inner.transferCapabilities.boundedUpload,
+        boundedDownload: _inner.transferCapabilities.boundedDownload,
+      );
+
+  void Function() _captureTransfer() {
+    final storage = storageReferenceForClient(_inner);
+    void check() {
+      if (!_inner.isAuthenticated ||
+          storageReferenceForClient(_inner) != storage) {
+        throw StateError(
+          'The original encrypted-storage account is no longer available.',
+        );
+      }
+    }
+
+    check();
+    return check;
+  }
 
   @override
   Future<void> uploadStream(
@@ -253,29 +284,42 @@ class EncryptedStorageWrapper
     String targetPath, {
     Function(int, int)? onProgress,
   }) async {
-    // GCM requires the full plaintext, so buffer the stream first.
-    final builder = BytesBuilder(copy: false);
-    await for (final chunk in dataStream) {
-      builder.add(chunk);
-    }
-    await uploadFile(
-      builder.takeBytes(),
-      fileName,
-      targetPath,
-      onProgress: onProgress,
+    final check = _captureTransfer();
+    final encrypted = encryptGcmTransfer(dataStream, length, _key, check);
+    final spool = await createTransferSpool(
+      encrypted,
+      expectedLength: length + 28,
+      checkpoint: () async => check(),
     );
+    try {
+      check();
+      final uploadName = encryptFilenames
+          ? EncryptionService.encryptFilename(fileName, _key)
+          : fileName;
+      await _inner.uploadStream(
+        spool.openRead(),
+        spool.length,
+        uploadName,
+        targetPath,
+        onProgress: onProgress,
+      );
+      check();
+    } finally {
+      await spool.dispose();
+    }
   }
 
   @override
   Stream<List<int>> downloadStream(
     String remotePath, {
     Function(int, int)? onProgress,
-  }) async* {
-    final decrypted = await downloadFileBytes(
-      remotePath,
-      onProgress: onProgress,
+  }) {
+    final check = _captureTransfer();
+    return authenticatedGcmDownload(
+      _inner.downloadStream(remotePath, onProgress: onProgress),
+      _key,
+      check,
     );
-    yield decrypted;
   }
 
   // ---------------------------------------------------------------------------
@@ -299,10 +343,23 @@ class EncryptedStorageWrapper
 
   @override
   Future<void> copyPath(String sourcePath, String targetPath) async {
-    // Cannot use server-side copy because data is encrypted; download, re-encrypt, upload.
-    final bytes = await downloadFileBytes(sourcePath);
-    final fileName = sourcePath.split('/').last;
-    await uploadFile(bytes, fileName, targetPath);
+    final check = _captureTransfer();
+    final spool = await createTransferSpool(
+      downloadStream(sourcePath),
+      checkpoint: () async => check(),
+    );
+    try {
+      check();
+      await uploadStream(
+        spool.openRead(),
+        spool.length,
+        sourcePath.split('/').last,
+        targetPath,
+      );
+      check();
+    } finally {
+      await spool.dispose();
+    }
   }
 
   @override
