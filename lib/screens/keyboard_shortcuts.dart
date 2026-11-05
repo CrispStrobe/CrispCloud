@@ -28,7 +28,10 @@ import '../widgets/pattern_selection_dialog.dart';
 import '../widgets/file_list_dialog.dart';
 import '../widgets/file_clipboard_actions.dart';
 import '../widgets/file_context_menu.dart'
-    show openWithSystemEditor, showPropertiesDialog, showFileContextMenu;
+    show
+        openListedFileWithSystemEditor,
+        showPropertiesDialog,
+        showFileContextMenu;
 import '../widgets/file_toolbar.dart' show showPanelFilterDialog;
 import '../widgets/search_dialogs.dart' show showSearchDialog;
 import 'screen_dialogs.dart';
@@ -358,7 +361,7 @@ KeyEventResult handleKeyEvent(
           ? pnl.cursorItem
           : pnl.selection.first;
       if (target?.path != null && !kIsWeb) {
-        openWithSystemEditor(context, target!.path!);
+        openListedFileWithSystemEditor(context, ref, target!);
       }
     } else {
       editSelectedFile(context, ref);
