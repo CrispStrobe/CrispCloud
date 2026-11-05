@@ -15,7 +15,7 @@ void main() {
           .map((locale) => locale.languageCode)
           .toSet(),
     );
-    final parameters = RegExp(r'\{\d+\}');
+    final parameters = RegExp(r'\{(?:\d+|[A-Za-z][A-Za-z0-9_]*)\}');
     for (final entry in commanderTranslations.entries) {
       expect(entry.value, hasLength(8), reason: entry.key);
       final expected = parameters
