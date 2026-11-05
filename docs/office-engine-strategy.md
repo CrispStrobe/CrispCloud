@@ -1,170 +1,164 @@
 # Office engine strategy
 
-Status: CrispCloud keeps the patched Quds fork as the current engine.
-BetterOffice is the only migration candidate currently worth a bounded proof
-of concept.
+Status: CrispCloud ships the patched Quds engine. BetterOffice remains a
+time-boxed proof-of-concept candidate, not a migration decision.
 
 ## Decision summary
 
 | Option | Decision |
 |---|---|
-| Quds fork | Keep as the shipping editor engine while building regression and preservation coverage. |
-| BetterOffice | Time-boxed proof of concept before any migration. |
-| L’Office | Defer. Its documented Go-server ownership model does not fit the current local-first architecture. |
-| Folio Office | Exclude. One commit and an old Dart constraint are not a foundation for the product. |
-| Build a new engine | Reject. Targeted fixes to an existing engine are the rational investment. |
+| Quds fork | Shipping engine. Keep fixing preservation defects and expanding independent checks. |
+| BetterOffice | Bounded PoC only. Upstream is Apache-2.0, Rust/WASM, with npm and Python packages, but still has no Dart/Flutter package. |
+| L’Office | Deferred. Its documented Go-server ownership model does not fit a local-first app. |
+| Folio Office | Excluded. Too little maintenance history and an old Dart constraint. |
+| New in-house engine | Rejected. Targeted fixes plus independent verification are the rational investment. |
 
-## Quds baseline
+## What ships today
 
-The published packages exclude `test/` via `.pubignore`; the upstream repository
-does contain tests. We vendored those tests into the local package copies.
+- **Word/Excel/PowerPoint editing** through the patched Quds editor.
+- **PDF editing and operations** through the separately pinned, Apache-2.0
+  `dart_pdf_editor`/`pdf_operations` stack.
+- **F3 viewer → F4 editor** handoff for text/code, PDF, DOCX, XLSX and PPTX.
+- **Read-only fallbacks** for legacy Office formats and archive members.
 
-Run them from the `crispcloud` fork or the local package directories:
+The Office engine has no access to the network and does not own file identity,
+bookmarks, conflicts or saves. CrispCloud supplies those.
+
+## Quds baseline and test commands
+
+Tests are vendored because upstream excludes `test/` from published archives.
 
 ```bash
-# engine
+# Engine (pure Dart)
 cd packages/quds_office_engine
 dart pub get
 dart test
 
-# editor
+# Editor (Flutter). Force the patched local engine first.
 cd packages/quds_office_editor
+printf 'dependency_overrides:\n  quds_office_engine:\n    path: ../quds_office_engine\n' \
+  > pubspec_overrides.yaml
 flutter pub get
 flutter test
+rm pubspec_overrides.yaml
 ```
 
-Local verification on 5 November 2026:
+`pubspec_overrides.yaml` is gitignored. Without it, the editor tests resolve the
+published engine and can report false footnote regressions.
+
+Local baseline (5 November 2026):
 
 - engine: **454 passed, 6 skipped, 1 failure** — the failure is
-  `pdf_widgets_test.dart: RTL MultiPage short line starts on the right`, a PDF
-  layout assertion (`lastLeft` 90.9 vs expected >200). It is outside the DOCX
-  save path but should be investigated before any engine update.
-- editor: **220 passed, 1 skipped, 0 failures** when run against the patched
-  local engine. The editor's own `pubspec.lock` can otherwise resolve the
-  published engine and produce a false footnote regression; use a temporary
-  `pubspec_overrides.yaml` pointing `quds_office_engine` at
-  `../quds_office_engine` as documented in `packages/QUDS_FORKS.md`.
-- CrispCloud regression tests: green.
+  `pdf_widgets_test.dart: RTL MultiPage short line starts on the right`
+  (`lastLeft` 90.9 vs expected >200). It is outside the DOCX save path but is
+  the next Quds defect to investigate.
+- editor: **220 passed, 1 skipped, 0 failures** against the patched engine.
+- CrispCloud Office regressions: green.
 
-The earlier preservation probe found that Quds rewrote `word/footnotes.xml`
-and dropped the separator/continuationSeparator chrome notes while preserving
-the actual footnote text. The vendored serializer now recreates the standard
-Word chrome. Independent checks on 5 November 2026 re-opened untouched and
-minimal-edit outputs with Pandoc and python-docx:
+## Save preservation gate
 
-- paragraph text survived;
-- both real footnotes survived;
-- `w:type="separator"` (`id=-1`) and
-  `w:type="continuationSeparator"` (`id=0`) are present again;
-- each real footnote body has a `footnoteRef` mark and a separating space;
-- the minimal edit (`X` inserted at the start) survived.
-
-Microsoft Word **is installed** and has now reopened, saved and exported the
-untouched/minimal outputs. The automated check is
-`tool/verify_word_roundtrip.py`; it stages files in Word's own sandbox
-container (`~/Library/Containers/com.microsoft.Word/Data/tmp/...`) so macOS
-does not repeatedly prompt for folder access. Word reported two footnotes,
-preserved body/footnote text, regenerated the separator chrome, and rendered
-superscript note marks with a space before the note text. The generated PDF is
-checked with `pdftotext`.
-
-## Hard gate: save preservation
-
-Visual display is not enough. For every supported format, an edit must satisfy:
+For every supported format and every save path:
 
 1. **Display** — the document renders acceptably.
 2. **Edit** — input, selection, undo/redo, formatting and formulas behave.
-3. **Preserve** — the requested edit survives and unrelated content survives.
+3. **Preserve** — the requested edit and unrelated content survive.
 
-The third gate is mandatory. Quds regenerates important XML from its model, so
-retaining the original ZIP package is not proof that unsupported content inside
-rewritten XML survives.
+Quds regenerates XML from its model, so keeping the original ZIP is not proof
+that unsupported content survives. Compare semantic package parts, not whole
+file hashes. Check body text, styles, relationships, media, numbering,
+headers/footers, footnotes/endnotes, fields and formulas. Cover untouched save
+and minimal-edit save separately.
 
-Tests should:
+### Word footnote regression fixed
 
-- reopen outputs in an independent consumer (Microsoft Office or another
-  editor), not only in the engine that wrote them;
-- compare document semantics and package parts, not whole-file hashes;
-- cover untouched save and minimal-edit save separately;
-- compare text, styles, relationships, media, footnotes, headers and formulas.
+Quds previously rewrote `word/footnotes.xml` and dropped note chrome. The
+vendored serializer now:
+
+- recreates `separator` (`w:id=-1`) and `continuationSeparator` (`w:id=0`);
+- inserts a `footnoteRef`/`endnoteRef` mark in each note body;
+- applies direct superscript formatting to the automatic mark;
+- inserts the conventional space before the note text.
+
+Verified on 5 November 2026 with:
+
+```bash
+~/miniconda3/bin/python tool/verify_word_roundtrip.py \
+  build/quds_roundtrip/unedited.docx \
+  build/quds_roundtrip/minimal.docx
+```
+
+The verifier stages files in Word’s own sandbox container
+(`~/Library/Containers/com.microsoft.Word/Data/tmp/crispcloud-word-verify`), so
+Word does not prompt for folder access on every run. It opens and saves the
+DOCX in Microsoft Word, exports a PDF, and checks:
+
+- body paragraph text;
+- footnote text and count;
+- `footnoteRef` markers;
+- separator/continuation-separator chrome;
+- rendered PDF body and footnote text.
+
+Both untouched and minimal-edit files passed. Word rendered small superscript
+note numbers with a space before the text.
+
+## CLI verification stack
+
+Use layers, fastest first:
+
+| Layer | Tools | Purpose |
+|---|---|---|
+| Structural | `python-docx`, `openpyxl`, `python-pptx`, `lxml`, `zipfile` | Parts, rels, styles, numbering, notes, formulas |
+| Semantic | `pandoc`, `pdftotext` | Text and footnote semantics independent of Quds |
+| Native consumers | Word/Excel/PowerPoint AppleScript | Actual open/save/render acceptance |
+| Visual | `pdftoppm`, ImageMagick `compare`, SSIM | Page-level rendering regressions |
+| Package diff | canonical XML diff | Detect loss without false whole-ZIP hashes |
+| Cross-suite | LibreOffice headless (`soffice`) if installed | Extra independent converter/rendering check |
+
+Word/Excel 16.111 and PowerPoint 16.100 are installed on this machine. LibreOffice is
+not. `docx2pdf` is not installed and is unnecessary now that the AppleScript
+path works.
+
+### Precedents from other Crisp repos
+
+- **CrispSorter** (Tauri/Rust): `scripts/verify_docx_independent.py` is the
+  right pattern — author fixtures independently, run the real CLI, verify with
+  python-docx and raw ZIP/XML. Its `scripts/testflight_distribute.py` is also a
+  reusable TestFlight workflow.
+- **CrispTranslator** (Python): `debug_format.py` already has strong DOCX
+  diagnostics for footnotes, separators, `footnoteRef`, styles, rsid hygiene
+  and relationships. Reuse its assertions or port the useful checks.
+
+Neither is a Dart library. Reuse the fixtures, assertions and CLI design, not
+the runtime.
 
 ## BetterOffice proof of concept
 
-Status 5 November 2026: the upstream project is active and Apache-2.0, with
-Rust crates, npm packages (framework-free cores and React editors), Python
-wheels, and WASM builds. There is still **no Dart/Flutter package**. A real
-PoC therefore requires a host-owned WebView, an offline bundle of JS/WASM,
-workers, fonts and dynamic chunks, plus a byte/save bridge. No PoC was run in
-this environment because iOS hardware was unavailable and the browser runtime
-has not been packaged for the app.
+Status: upstream (`openooxml/betteroffice`) is active and Apache-2.0 with Rust
+crates, npm packages, Python wheels and WASM builds. There is no Dart/Flutter
+package. The framework-free `@betteroffice/docx` npm core is about 37 MB
+unpacked before the host’s WASM/worker/font bundle.
 
-### CLI verification recommendations
+A real PoC still requires:
 
-Use a layered harness rather than one parser:
+1. **Packaged offline runtime** — JS, WASM, workers, dynamic chunks, CSS and
+   fonts bundled with the app; open DOCX/XLSX/PPTX with networking disabled.
+2. **Native persistence** — CrispCloud owns file identity, bookmarks, access,
+   conflicts, recovery and confirmation; the editor only owns bytes and its
+   model.
+3. **Comparative quality** — untouched and minimal-edit saves compared with
+   patched Quds, reopened in Word/Excel/PowerPoint.
+4. **Product cost** — keyboard/touch/IME/clipboard, startup, memory, bundle
+   size, localization, accessibility and updates.
 
-1. **Fast structural checks** — `python-docx`, `openpyxl`, `python-pptx`,
-   `lxml` and `zipfile` for relationships, parts, styles and note structures.
-2. **Semantic/text checks** — `pandoc` for DOCX→plain/Markdown, plus
-   `pdftotext` for rendered text and `pdftoppm` + ImageMagick `compare` or an
-   SSIM tool for visual regression.
-3. **Native consumer checks** — Word/Excel/PowerPoint AppleScript, using each
-   app's sandbox container for staging. This is the highest-value check for
-   actual Word compatibility; LibreOffice headless (`soffice --convert-to`) is
-   a useful cross-suite fallback if installed, but is not currently present.
-4. **Package/part diffing** — compare semantic XML parts, not whole-ZIP
-   hashes: content types, relationships, styles, numbering, footnotes,
-   headers/footers, media and formulas.
+Gate 1 should be tested on macOS and physical iOS hardware. It has not been run
+yet because the runtime is not packaged and no iOS device is available to this
+session. Do not start a migration until the first two gates pass.
 
-CrispSorter's `scripts/verify_docx_independent.py` is the right *pattern*:
-author fixtures independently, run the real CLI, then verify with
-python-docx/zipfile. CrispTranslator's `debug_format.py` is directly reusable
-for DOCX XML checks (`footnotes`, separators, `footnoteRef`, styles, rsid
-hygiene, relationship integrity). CrispSorter is Tauri/Rust and
-CrispTranslator is Python, so neither supplies a Dart library; reuse their
-fixtures, assertions and CLI workflow rather than their runtime.
+## Next engineering work
 
-The experiment must prove the integration, not just the demo.
-
-### Gate 1 — packaged offline runtime
-
-- Bundle JavaScript, WASM, workers, dynamic chunks, CSS and fonts.
-- Launch on macOS and physical iOS hardware.
-- Open DOCX, XLSX and PPTX with networking disabled and no warmed cache.
-- Verify worker, `OffscreenCanvas`, `createImageBitmap` and dynamic chunk
-  loading on the actual targets.
-
-### Gate 2 — native persistence
-
-- CrispCloud host owns file identity, bookmarks, authorized access, reads,
-  writes, conflicts, recovery and save confirmation.
-- Editor owns bytes, rendering, editing, commands and exported bytes.
-- A save is successful only after the native host has persisted the revision.
-- Failed saves leave the original intact and the document marked unsaved.
-
-### Gate 3 — comparative quality
-
-- Use CrispCloud’s problem documents plus representative DOCX/XLSX/PPTX files.
-- Compare against the patched Quds build.
-- Run untouched save and minimal-edit save through both.
-- Reopen outputs in Microsoft Office or another independent consumer.
-- Require material improvement in relevant defects with no unexplained loss of
-  content, formatting, formulas or relationships.
-
-### Gate 4 — product usability and cost
-
-- Keyboard, focus, touch, clipboard, undo/redo, mixed RTL/LTR, background and
-  resume.
-- Startup, memory, bundle size, font packaging and update size.
-- Native menus, file manager workflow, localization and accessibility.
-
-### Decision
-
-Proceed to broader qualification only if BetterOffice materially improves the
-important document cases, preserves saved content, works offline on both
-targets, and integrates acceptably with CrispCloud.
-
-If only one format shows a compelling advantage, consider format-specific
-adoption only if maintaining two engines is justified. If rendering is better
-but saving or input is worse, stop the migration.
-
-Collaboration is out of scope for the first experiment.
+1. Fix the Quds RTL PDF layout failure.
+2. Extend `tool/verify_word_roundtrip.py` to XLSX and PPTX with
+   Excel/PowerPoint AppleScript plus openpyxl/python-pptx checks.
+3. Add representative real-world DOCX/XLSX/PPTX fixtures and keep the Word /
+   Excel / PowerPoint round-trip outputs as CI artifacts.
+4. Package and test a BetterOffice DOCX-only WebView PoC on macOS/iOS.
