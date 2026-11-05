@@ -343,9 +343,8 @@ class _PdfOperationsDialogState extends State<PdfOperationsDialog> {
 
   Future<PdfEmbeddedFont> _appearanceFont() async {
     if (_font != null) return _font!;
-    final bytes = await DefaultAssetBundle.of(context).load(
-      'packages/dart_pdf_editor_assets/assets/fonts/DejaVuSans.ttf',
-    );
+    final bytes = await DefaultAssetBundle.of(context)
+        .load('packages/dart_pdf_editor_assets/assets/fonts/DejaVuSans.ttf');
     return _font ??= PdfEmbeddedFont.parse(
       bytes.buffer.asUint8List(bytes.offsetInBytes, bytes.lengthInBytes),
     );

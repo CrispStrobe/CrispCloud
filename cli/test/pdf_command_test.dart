@@ -126,7 +126,11 @@ void main() {
         ['not-an-operation', '--json'],
       ]) {
         final result = await run(arguments);
-        expect(result.code, 2, reason: '${arguments.join(' ')}\n${result.errors}');
+        expect(
+          result.code,
+          2,
+          reason: '${arguments.join(' ')}\n${result.errors}',
+        );
         expect(result.output, isEmpty);
         expect(result.errorJson['code'], 'usage');
         expect(File(target('invalid.pdf')).existsSync(), isFalse);
