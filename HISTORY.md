@@ -19,13 +19,50 @@ Audit trail of bugs found, issues discovered, and fixes applied.
   incomplete background-operation status.
 - Used native no-replace rename for panel renames. Protected asynchronous undo
   from concurrent history clearing/trimming and duplicate undo requests.
+- Connected persistent rename history/recovery and saved collection screens.
+  Preserved undo for partial and disposed batches; limited replacement approval
+  to reviewed rows; kept collection edits coherent across panes and saved tabs.
 - Added focused service, real-filesystem, and widget regressions. Pushed work in
-  reviewable increments. The final pass uses
-  `feature/commander-workflow-polish`, preserving concurrent work from
-  `feature/commander-file-operations` through `cb58160`.
+  reviewable increments. The fixed review uses
+  `feature/commander-review-20261105`; parallel integration work remains preserved
+  on `feature/commander-workflow-polish` and `feature/commander-file-operations`.
 - Local Flutter execution is unavailable in this managed host because the Dart
   VM cannot obtain process/stack metadata. Executable validation is delegated to
   GitHub CI with the pinned Flutter 3.47.8 / Dart 3.13.7 toolchain.
+
+## 2026-11-05 — Image gallery, tiles, viewer and batch image exports
+
+- Added persistent per-panel Icons, Tiles and image-only Gallery layouts with
+  adjustable preview size/fit, natural filename sorting, format/date/rating/label/
+  favorite filters, and name/tag search. Folders remain navigable.
+- Gallery selection, range selection, keyboard movement and Select all operate
+  on the visible order; hidden selections are removed before batch actions.
+- Added a device-local, source-scoped annotation catalog (0–5 stars, color
+  labels, favorites and tags), batch annotation and JSON export.
+- Added fullscreen image sequence viewing, filmstrip, fit/actual size, pan/zoom,
+  display rotation/flips, configurable slideshow, linked 2–4-image comparison,
+  metadata and safe handoff to the existing image editor.
+- Added non-destructive JPEG/PNG conversion ZIPs with resize/rotate/flip/color
+  controls, captioned PNG contact sheets, cancellation and per-file results.
+- Reworked thumbnail decoding/caching: correct aspect ratio, codec disposal,
+  cache budgets, request deduplication, bounded reads, provider thumbnails,
+  source/account/revision-aware keys, and actual listed-source routing on
+  either panel. Unsupported inputs keep visible placeholders.
+- Scoped browser previews to individual folder grants and encrypted previews
+  to their connection sessions. Account/source expiration clears an open
+  viewer, metadata and slideshow. Checked embedded SVG raster dimensions and
+  remote size/progress bounds, including buffering streaming adapters.
+- Unified layout commands so saved tree mode cannot hide a selected gallery,
+  and captured catalog export scope before asynchronous catalog initialization.
+- Retained existing file commands only where legacy routing matches verified
+  origins. Archive/search/flat/swapped-source contexts remain view/export-only
+  in the gallery, with no new side-based mutation path.
+- Added model, catalog, media, export, viewer, device-export and browser
+  regression tests. Local Flutter execution is blocked by the workspace's
+  Dart startup error (`Failed to retrieve stack bounds`); exact-SDK CI is the
+  runtime validation gate. Do not interpret syntax checks as Flutter tests.
+- Full feature coverage, bounds and deliberate XnView differences are in
+  `docs/image-gallery.md`. No new dependency constraints or release version.
 
 ## 2026-07-16 — Session 16: central pub.dev dependencies (filen/internxt)
 

@@ -82,6 +82,8 @@ class PanelViewModeService {
   Future<PanelViewMode> _load(PanelSide side) async {
     if (_cache.containsKey(side)) return _cache[side]!;
     final prefs = await SharedPreferences.getInstance();
+    // A user choice made while storage was opening wins over the old value.
+    if (_cache.containsKey(side)) return _cache[side]!;
     final raw = prefs.getString(_prefsKey(side));
     if (raw == null) {
       _cache[side] = _defaultMode;

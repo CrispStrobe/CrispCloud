@@ -32,6 +32,8 @@ import '../widgets/pdf_editor_menus.dart';
 import '../widgets/audit_log_dialog.dart';
 import '../widgets/log_viewer_dialog.dart';
 import '../widgets/file_panel.dart';
+import '../widgets/file_view_selector.dart';
+import '../l10n/gallery_strings.dart';
 import '../widgets/fkey_bar.dart';
 import '../services/fkey_action_service.dart' show FKeyAction;
 import '../widgets/operations_panel.dart';
@@ -574,30 +576,23 @@ class _FileBrowserScreenState extends ConsumerState<FileBrowserScreen> {
           members: <PlatformMenuItem>[
             PlatformMenuItem(
               label: 'List View',
-              onSelected: () {
-                final notifier = localActive
-                    ? ref.read(localViewModeProvider.notifier)
-                    : ref.read(remoteViewModeProvider.notifier);
-                notifier.state = ViewMode.list;
-              },
+              onSelected: () => setFileView(ref, activeSide, ViewMode.list),
             ),
             PlatformMenuItem(
               label: 'Grid View',
-              onSelected: () {
-                final notifier = localActive
-                    ? ref.read(localViewModeProvider.notifier)
-                    : ref.read(remoteViewModeProvider.notifier);
-                notifier.state = ViewMode.grid;
-              },
+              onSelected: () => setFileView(ref, activeSide, ViewMode.grid),
+            ),
+            PlatformMenuItem(
+              label: context.galleryTr('Tiles'),
+              onSelected: () => setFileView(ref, activeSide, ViewMode.tiles),
+            ),
+            PlatformMenuItem(
+              label: context.galleryTr('Image gallery'),
+              onSelected: () => setFileView(ref, activeSide, ViewMode.gallery),
             ),
             PlatformMenuItem(
               label: 'Column View',
-              onSelected: () {
-                final notifier = localActive
-                    ? ref.read(localViewModeProvider.notifier)
-                    : ref.read(remoteViewModeProvider.notifier);
-                notifier.state = ViewMode.column;
-              },
+              onSelected: () => setFileView(ref, activeSide, ViewMode.column),
             ),
           ],
         ),
@@ -1667,25 +1662,9 @@ class _FileBrowserScreenState extends ConsumerState<FileBrowserScreen> {
           );
         },
       ),
-      // Toggle: grid ↔ list view
       Consumer(
-        builder: (ctx, cref, _) {
-          final ap = cref.watch(activePanelProvider);
-          final viewMode = ap == PanelSide.local
-              ? cref.watch(localViewModeProvider)
-              : cref.watch(remoteViewModeProvider);
-          final isGrid = viewMode == ViewMode.grid;
-          return IconButton(
-            icon: Icon(isGrid ? Icons.view_list : Icons.grid_view, size: 20),
-            tooltip: isGrid ? l.detailsList : l.gridView,
-            onPressed: () {
-              final notifier = ap == PanelSide.local
-                  ? cref.read(localViewModeProvider.notifier)
-                  : cref.read(remoteViewModeProvider.notifier);
-              notifier.state = isGrid ? ViewMode.list : ViewMode.grid;
-            },
-          );
-        },
+        builder: (ctx, cref, _) =>
+            FileViewSelector(side: cref.watch(activePanelProvider)),
       ),
       // View density: compact ↔ large
       Consumer(
@@ -1830,17 +1809,20 @@ class _FileBrowserScreenState extends ConsumerState<FileBrowserScreen> {
             ref.read(showTreeSidebarProvider.notifier).state = !ref.read(
               showTreeSidebarProvider,
             );
+          case 'gallery':
+            setFileView(ref, ref.read(activePanelProvider), ViewMode.gallery);
+          case 'tiles':
+            setFileView(ref, ref.read(activePanelProvider), ViewMode.tiles);
           case 'grid_toggle':
             final ap = ref.read(activePanelProvider);
-            final notifier = ap == PanelSide.local
-                ? ref.read(localViewModeProvider.notifier)
-                : ref.read(remoteViewModeProvider.notifier);
             final current = ap == PanelSide.local
                 ? ref.read(localViewModeProvider)
                 : ref.read(remoteViewModeProvider);
-            notifier.state = current == ViewMode.grid
-                ? ViewMode.list
-                : ViewMode.grid;
+            setFileView(
+              ref,
+              ap,
+              current == ViewMode.grid ? ViewMode.list : ViewMode.grid,
+            );
           case 'preview':
             ref.read(showPreviewProvider.notifier).state = !ref.read(
               showPreviewProvider,
@@ -1974,6 +1956,20 @@ class _FileBrowserScreenState extends ConsumerState<FileBrowserScreen> {
             iconColor: ref.read(showTreeSidebarProvider)
                 ? Theme.of(context).colorScheme.primary
                 : null,
+          ),
+        ),
+        PopupMenuItem(
+          value: 'gallery',
+          child: _overflowItem(
+            Icons.photo_library_outlined,
+            context.galleryTr('Image gallery'),
+          ),
+        ),
+        PopupMenuItem(
+          value: 'tiles',
+          child: _overflowItem(
+            Icons.view_module_outlined,
+            context.galleryTr('Tiles'),
           ),
         ),
         PopupMenuItem(
