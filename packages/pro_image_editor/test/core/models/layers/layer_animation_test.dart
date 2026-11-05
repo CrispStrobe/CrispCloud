@@ -1,0 +1,681 @@
+import 'package:flutter_test/flutter_test.dart';
+import 'package:pro_image_editor/core/models/layers/layer_animation.dart';
+
+void main() {
+  group('LayerAnimation', () {
+    group('constructor', () {
+      test('creates fade animation with defaults', () {
+        const anim = LayerAnimation(
+          type: LayerAnimationType.fade,
+          phase: AnimationPhase.animateIn,
+          duration: Duration(milliseconds: 500),
+        );
+
+        expect(anim.type, LayerAnimationType.fade);
+        expect(anim.phase, AnimationPhase.animateIn);
+        expect(anim.duration, const Duration(milliseconds: 500));
+        expect(anim.curve, AnimationCurve.linear);
+        expect(anim.slideDirection, isNull);
+        expect(anim.scaleFrom, isNull);
+      });
+
+      test('creates slide animation with direction', () {
+        const anim = LayerAnimation(
+          type: LayerAnimationType.slide,
+          phase: AnimationPhase.animateOut,
+          duration: Duration(milliseconds: 300),
+          slideDirection: SlideDirection.left,
+          curve: AnimationCurve.easeOut,
+        );
+
+        expect(anim.type, LayerAnimationType.slide);
+        expect(anim.slideDirection, SlideDirection.left);
+        expect(anim.curve, AnimationCurve.easeOut);
+      });
+
+      test('creates slide animation with a custom start point only', () {
+        const anim = LayerAnimation(
+          type: LayerAnimationType.slide,
+          phase: AnimationPhase.animateIn,
+          duration: Duration(milliseconds: 600),
+          slideFrom: Offset(-400, -400),
+        );
+
+        expect(anim.slideFrom, const Offset(-400, -400));
+        expect(anim.slideDirection, isNull);
+      });
+
+      test('creates scale animation with scaleFrom', () {
+        const anim = LayerAnimation(
+          type: LayerAnimationType.scale,
+          phase: AnimationPhase.animateInOut,
+          duration: Duration(milliseconds: 400),
+          scaleFrom: 0.5,
+        );
+
+        expect(anim.type, LayerAnimationType.scale);
+        expect(anim.phase, AnimationPhase.animateInOut);
+        expect(anim.scaleFrom, 0.5);
+      });
+    });
+
+    group('toMap', () {
+      test('serializes fade animation', () {
+        const anim = LayerAnimation(
+          type: LayerAnimationType.fade,
+          phase: AnimationPhase.animateIn,
+          duration: Duration(milliseconds: 500),
+        );
+        final map = anim.toMap();
+
+        expect(map['type'], 'fade');
+        expect(map['phase'], 'animateIn');
+        expect(map['durationUs'], 500000);
+        expect(map['curve'], 'linear');
+        expect(map['slideDirection'], isNull);
+        expect(map['scaleFrom'], isNull);
+      });
+
+      test('serializes slide animation with all fields', () {
+        const anim = LayerAnimation(
+          type: LayerAnimationType.slide,
+          phase: AnimationPhase.animateOut,
+          duration: Duration(seconds: 1),
+          curve: AnimationCurve.easeInOut,
+          slideDirection: SlideDirection.bottom,
+        );
+        final map = anim.toMap();
+
+        expect(map['type'], 'slide');
+        expect(map['phase'], 'animateOut');
+        expect(map['durationUs'], 1000000);
+        expect(map['curve'], 'easeInOut');
+        expect(map['slideDirection'], 'bottom');
+      });
+
+      test('serializes slideFrom as dx/dy', () {
+        const anim = LayerAnimation(
+          type: LayerAnimationType.slide,
+          phase: AnimationPhase.animateIn,
+          duration: Duration(milliseconds: 600),
+          slideFrom: Offset(-120.5, 40),
+        );
+        final map = anim.toMap();
+
+        expect(map['slideFrom'], {'dx': -120.5, 'dy': 40.0});
+        expect(map['slideDirection'], isNull);
+      });
+
+      test('serializes scale animation with scaleFrom', () {
+        const anim = LayerAnimation(
+          type: LayerAnimationType.scale,
+          phase: AnimationPhase.animateInOut,
+          duration: Duration(milliseconds: 250),
+          scaleFrom: 0.3,
+        );
+        final map = anim.toMap();
+
+        expect(map['scaleFrom'], 0.3);
+      });
+    });
+
+    group('fromMap', () {
+      test('deserializes fade animation', () {
+        final map = <String, dynamic>{
+          'type': 'fade',
+          'phase': 'animateIn',
+          'durationUs': 500000,
+          'curve': 'linear',
+          'slideDirection': null,
+          'scaleFrom': null,
+        };
+        final anim = LayerAnimation.fromMap(map);
+
+        expect(anim.type, LayerAnimationType.fade);
+        expect(anim.phase, AnimationPhase.animateIn);
+        expect(anim.duration, const Duration(milliseconds: 500));
+        expect(anim.curve, AnimationCurve.linear);
+        expect(anim.slideDirection, isNull);
+        expect(anim.scaleFrom, isNull);
+      });
+
+      test('deserializes slide animation', () {
+        final map = <String, dynamic>{
+          'type': 'slide',
+          'phase': 'animateOut',
+          'durationUs': 300000,
+          'curve': 'easeOut',
+          'slideDirection': 'right',
+          'scaleFrom': null,
+        };
+        final anim = LayerAnimation.fromMap(map);
+
+        expect(anim.type, LayerAnimationType.slide);
+        expect(anim.slideDirection, SlideDirection.right);
+        expect(anim.curve, AnimationCurve.easeOut);
+      });
+
+      test('deserializes slideFrom', () {
+        final map = <String, dynamic>{
+          'type': 'slide',
+          'phase': 'animateIn',
+          'durationUs': 600000,
+          'slideFrom': {'dx': -400, 'dy': -400},
+        };
+        final anim = LayerAnimation.fromMap(map);
+
+        expect(anim.slideFrom, const Offset(-400, -400));
+      });
+
+      test('ignores a slideFrom that is not a map', () {
+        // Hand-edited JSON or data from a newer version must degrade
+        // gracefully instead of throwing.
+        final map = <String, dynamic>{
+          'type': 'fade',
+          'phase': 'animateIn',
+          'durationUs': 100000,
+          'slideFrom': 'top-left',
+        };
+        final anim = LayerAnimation.fromMap(map);
+
+        expect(anim.slideFrom, isNull);
+      });
+
+      test('defaults curve to linear when missing', () {
+        final map = <String, dynamic>{
+          'type': 'fade',
+          'phase': 'animateIn',
+          'durationUs': 100000,
+        };
+        final anim = LayerAnimation.fromMap(map);
+
+        expect(anim.curve, AnimationCurve.linear);
+      });
+
+      test('deserializes animateInOut phase', () {
+        final map = <String, dynamic>{
+          'type': 'scale',
+          'phase': 'animateInOut',
+          'durationUs': 400000,
+          'scaleFrom': 0.5,
+        };
+        final anim = LayerAnimation.fromMap(map);
+
+        expect(anim.phase, AnimationPhase.animateInOut);
+        expect(anim.scaleFrom, 0.5);
+      });
+
+      test('falls back to defaults for unknown enum names', () {
+        // Simulates data from a newer version with an unknown type/curve, or
+        // hand-edited JSON: parsing must degrade gracefully instead of
+        // throwing.
+        final map = <String, dynamic>{
+          'type': 'rotate',
+          'phase': 'animateLater',
+          'durationUs': 100000,
+          'curve': 'easeInQuart',
+          'slideDirection': 'diagonal',
+        };
+        final anim = LayerAnimation.fromMap(map);
+
+        expect(anim.type, LayerAnimationType.fade);
+        expect(anim.phase, AnimationPhase.animateIn);
+        expect(anim.curve, AnimationCurve.linear);
+        expect(anim.slideDirection, isNull);
+      });
+
+      test('defaults duration to zero when durationUs is missing', () {
+        final map = <String, dynamic>{'type': 'fade', 'phase': 'animateIn'};
+        final anim = LayerAnimation.fromMap(map);
+
+        expect(anim.duration, Duration.zero);
+      });
+    });
+
+    group('roundtrip toMap/fromMap', () {
+      test('fade roundtrip preserves data', () {
+        const original = LayerAnimation(
+          type: LayerAnimationType.fade,
+          phase: AnimationPhase.animateIn,
+          duration: Duration(milliseconds: 500),
+          curve: AnimationCurve.easeIn,
+        );
+        final restored = LayerAnimation.fromMap(original.toMap());
+        expect(restored, original);
+      });
+
+      test('slide roundtrip preserves data', () {
+        const original = LayerAnimation(
+          type: LayerAnimationType.slide,
+          phase: AnimationPhase.animateOut,
+          duration: Duration(milliseconds: 300),
+          curve: AnimationCurve.easeOut,
+          slideDirection: SlideDirection.top,
+        );
+        final restored = LayerAnimation.fromMap(original.toMap());
+        expect(restored, original);
+      });
+
+      test('slideFrom roundtrip preserves data', () {
+        const original = LayerAnimation(
+          type: LayerAnimationType.slide,
+          phase: AnimationPhase.animateInOut,
+          duration: Duration(milliseconds: 600),
+          curve: AnimationCurve.easeOutCubic,
+          slideFrom: Offset(-400.5, 250),
+        );
+        final restored = LayerAnimation.fromMap(original.toMap());
+        expect(restored, original);
+      });
+
+      test('scale roundtrip preserves data', () {
+        const original = LayerAnimation(
+          type: LayerAnimationType.scale,
+          phase: AnimationPhase.animateInOut,
+          duration: Duration(milliseconds: 250),
+          scaleFrom: 0.2,
+        );
+        final restored = LayerAnimation.fromMap(original.toMap());
+        expect(restored, original);
+      });
+
+      test('wiggle loop roundtrip preserves its angle', () {
+        const original = LayerAnimation(
+          type: LayerAnimationType.wiggle,
+          phase: AnimationPhase.loop,
+          duration: Duration(milliseconds: 600),
+          curve: AnimationCurve.easeIn,
+          wiggleAngle: 0.3,
+        );
+        final restored = LayerAnimation.fromMap(original.toMap());
+        expect(restored, original);
+        expect(restored.wiggleAngle, 0.3);
+      });
+
+      test('bounce roundtrip preserves its height', () {
+        const original = LayerAnimation(
+          type: LayerAnimationType.bounce,
+          phase: AnimationPhase.animateIn,
+          duration: Duration(milliseconds: 800),
+          curve: AnimationCurve.bounceOut,
+          bounceHeight: 1.25,
+        );
+        final restored = LayerAnimation.fromMap(original.toMap());
+        expect(restored, original);
+        expect(restored.bounceHeight, 1.25);
+      });
+
+      test('text reveals round-trip', () {
+        for (final type in [
+          LayerAnimationType.typewriter,
+          LayerAnimationType.wordByWord,
+        ]) {
+          final original = LayerAnimation(
+            type: type,
+            phase: AnimationPhase.animateOut,
+            duration: const Duration(seconds: 1),
+          );
+          expect(LayerAnimation.fromMap(original.toMap()), original);
+        }
+      });
+    });
+
+    group('wiggle, bounce and text reveals', () {
+      test('leave angle and height unset by default', () {
+        const animation = LayerAnimation(
+          type: LayerAnimationType.wiggle,
+          phase: AnimationPhase.loop,
+          duration: Duration(milliseconds: 500),
+        );
+        expect(animation.wiggleAngle, isNull);
+        expect(animation.bounceHeight, isNull);
+      });
+
+      test('copyWith replaces angle and height', () {
+        const original = LayerAnimation(
+          type: LayerAnimationType.wiggle,
+          phase: AnimationPhase.loop,
+          duration: Duration(milliseconds: 500),
+        );
+        final updated = original.copyWith(wiggleAngle: 0.2, bounceHeight: 2);
+        expect(updated.wiggleAngle, 0.2);
+        expect(updated.bounceHeight, 2);
+      });
+
+      test('differ by angle and height', () {
+        const a = LayerAnimation(
+          type: LayerAnimationType.wiggle,
+          phase: AnimationPhase.loop,
+          duration: Duration(milliseconds: 500),
+          wiggleAngle: 0.1,
+        );
+        expect(a, isNot(a.copyWith(wiggleAngle: 0.2)));
+        expect(a, isNot(a.copyWith(bounceHeight: 1)));
+      });
+
+      test('only typewriter and word by word reveal text', () {
+        for (final type in LayerAnimationType.values) {
+          final animation = LayerAnimation(
+            type: type,
+            phase: AnimationPhase.animateIn,
+            duration: const Duration(seconds: 1),
+            slideDirection: SlideDirection.left,
+          );
+          expect(
+            animation.isTextReveal,
+            type == LayerAnimationType.typewriter ||
+                type == LayerAnimationType.wordByWord,
+            reason: type.name,
+          );
+        }
+      });
+
+      test('falls back to a fade for a type this version does not know', () {
+        final restored = LayerAnimation.fromMap(const {
+          'type': 'confetti',
+          'phase': 'loop',
+          'durationUs': 1000,
+        });
+        expect(restored.type, LayerAnimationType.fade);
+        expect(restored.phase, AnimationPhase.loop);
+      });
+    });
+
+    group('spin and flip', () {
+      test('leave turns and axis unset by default', () {
+        const animation = LayerAnimation(
+          type: LayerAnimationType.flip,
+          phase: AnimationPhase.animateIn,
+          duration: Duration(milliseconds: 500),
+        );
+        expect(animation.turns, isNull);
+        expect(animation.flipAxis, isNull);
+        expect(animation.toMap()['turns'], isNull);
+        expect(animation.toMap()['flipAxis'], isNull);
+      });
+
+      test('round-trip their turns and axis', () {
+        const flip = LayerAnimation(
+          type: LayerAnimationType.flip,
+          phase: AnimationPhase.animateOut,
+          duration: Duration(milliseconds: 600),
+          turns: 0.25,
+          flipAxis: FlipAxis.horizontal,
+        );
+        expect(LayerAnimation.fromMap(flip.toMap()), flip);
+
+        const spin = LayerAnimation(
+          type: LayerAnimationType.spin,
+          phase: AnimationPhase.loop,
+          duration: Duration(seconds: 2),
+          turns: -3,
+        );
+        expect(LayerAnimation.fromMap(spin.toMap()), spin);
+      });
+
+      test('read whole turns and drop an axis they do not know', () {
+        final restored = LayerAnimation.fromMap(const {
+          'type': 'flip',
+          'phase': 'animateIn',
+          'durationUs': 1000,
+          'turns': 2,
+          'flipAxis': 'diagonal',
+        });
+        expect(restored.turns, 2.0);
+        expect(restored.flipAxis, isNull);
+      });
+
+      test('copyWith replaces turns and axis', () {
+        const original = LayerAnimation(
+          type: LayerAnimationType.flip,
+          phase: AnimationPhase.animateIn,
+          duration: Duration(milliseconds: 500),
+        );
+        final updated = original.copyWith(
+          turns: 0.5,
+          flipAxis: FlipAxis.horizontal,
+        );
+        expect(updated.turns, 0.5);
+        expect(updated.flipAxis, FlipAxis.horizontal);
+      });
+
+      test('differ by turns and axis', () {
+        const a = LayerAnimation(
+          type: LayerAnimationType.flip,
+          phase: AnimationPhase.animateIn,
+          duration: Duration(milliseconds: 500),
+          turns: 1,
+          flipAxis: FlipAxis.vertical,
+        );
+        expect(a, isNot(a.copyWith(turns: 2)));
+        expect(a, isNot(a.copyWith(flipAxis: FlipAxis.horizontal)));
+      });
+    });
+
+    group('copyWith', () {
+      test('returns an equal copy when no fields are provided', () {
+        const original = LayerAnimation(
+          type: LayerAnimationType.slide,
+          phase: AnimationPhase.animateIn,
+          duration: Duration(milliseconds: 400),
+          curve: AnimationCurve.easeOut,
+          slideDirection: SlideDirection.left,
+        );
+
+        expect(original.copyWith(), original);
+      });
+
+      test('adds a slideFrom point to an edge slide', () {
+        const original = LayerAnimation(
+          type: LayerAnimationType.slide,
+          phase: AnimationPhase.animateIn,
+          duration: Duration(milliseconds: 400),
+          slideDirection: SlideDirection.left,
+        );
+
+        final updated = original.copyWith(slideFrom: const Offset(-300, -80));
+
+        expect(updated.slideFrom, const Offset(-300, -80));
+        expect(updated.slideDirection, SlideDirection.left);
+      });
+
+      test('overrides only the provided fields', () {
+        const original = LayerAnimation(
+          type: LayerAnimationType.fade,
+          phase: AnimationPhase.animateIn,
+          duration: Duration(milliseconds: 500),
+        );
+
+        final updated = original.copyWith(
+          phase: AnimationPhase.animateOut,
+          duration: const Duration(milliseconds: 300),
+          curve: AnimationCurve.easeInOut,
+        );
+
+        expect(updated.type, LayerAnimationType.fade);
+        expect(updated.phase, AnimationPhase.animateOut);
+        expect(updated.duration, const Duration(milliseconds: 300));
+        expect(updated.curve, AnimationCurve.easeInOut);
+      });
+    });
+
+    group('equality', () {
+      test('identical animations are equal', () {
+        const a = LayerAnimation(
+          type: LayerAnimationType.fade,
+          phase: AnimationPhase.animateIn,
+          duration: Duration(milliseconds: 500),
+        );
+        const b = LayerAnimation(
+          type: LayerAnimationType.fade,
+          phase: AnimationPhase.animateIn,
+          duration: Duration(milliseconds: 500),
+        );
+        expect(a, b);
+        expect(a.hashCode, b.hashCode);
+      });
+
+      test('different type makes unequal', () {
+        const a = LayerAnimation(
+          type: LayerAnimationType.fade,
+          phase: AnimationPhase.animateIn,
+          duration: Duration(milliseconds: 500),
+        );
+        const b = LayerAnimation(
+          type: LayerAnimationType.scale,
+          phase: AnimationPhase.animateIn,
+          duration: Duration(milliseconds: 500),
+        );
+        expect(a, isNot(b));
+      });
+
+      test('different slideDirection makes unequal', () {
+        const a = LayerAnimation(
+          type: LayerAnimationType.slide,
+          phase: AnimationPhase.animateIn,
+          duration: Duration(milliseconds: 500),
+          slideDirection: SlideDirection.left,
+        );
+        const b = LayerAnimation(
+          type: LayerAnimationType.slide,
+          phase: AnimationPhase.animateIn,
+          duration: Duration(milliseconds: 500),
+          slideDirection: SlideDirection.right,
+        );
+        expect(a, isNot(b));
+      });
+
+      test('different slideFrom makes unequal', () {
+        const a = LayerAnimation(
+          type: LayerAnimationType.slide,
+          phase: AnimationPhase.animateIn,
+          duration: Duration(milliseconds: 500),
+          slideFrom: Offset(-100, 0),
+        );
+        const b = LayerAnimation(
+          type: LayerAnimationType.slide,
+          phase: AnimationPhase.animateIn,
+          duration: Duration(milliseconds: 500),
+          slideFrom: Offset(100, 0),
+        );
+        expect(a, isNot(b));
+      });
+
+      test('different scaleFrom makes unequal', () {
+        const a = LayerAnimation(
+          type: LayerAnimationType.scale,
+          phase: AnimationPhase.animateIn,
+          duration: Duration(milliseconds: 500),
+          scaleFrom: 0.0,
+        );
+        const b = LayerAnimation(
+          type: LayerAnimationType.scale,
+          phase: AnimationPhase.animateIn,
+          duration: Duration(milliseconds: 500),
+          scaleFrom: 0.5,
+        );
+        expect(a, isNot(b));
+      });
+    });
+
+    group('toString', () {
+      test('contains class name and fields', () {
+        const anim = LayerAnimation(
+          type: LayerAnimationType.fade,
+          phase: AnimationPhase.animateIn,
+          duration: Duration(milliseconds: 500),
+        );
+        final str = anim.toString();
+
+        expect(str, contains('LayerAnimation'));
+        expect(str, contains('fade'));
+        expect(str, contains('animateIn'));
+      });
+
+      test('includes slideDirection when present', () {
+        const anim = LayerAnimation(
+          type: LayerAnimationType.slide,
+          phase: AnimationPhase.animateIn,
+          duration: Duration(milliseconds: 500),
+          slideDirection: SlideDirection.left,
+        );
+        expect(anim.toString(), contains('slideDirection'));
+      });
+
+      test('includes slideFrom when present', () {
+        const anim = LayerAnimation(
+          type: LayerAnimationType.slide,
+          phase: AnimationPhase.animateIn,
+          duration: Duration(milliseconds: 500),
+          slideFrom: Offset(-400, 0),
+        );
+        expect(anim.toString(), contains('slideFrom'));
+      });
+
+      test('excludes scaleFrom when null', () {
+        const anim = LayerAnimation(
+          type: LayerAnimationType.fade,
+          phase: AnimationPhase.animateIn,
+          duration: Duration(milliseconds: 500),
+        );
+        expect(anim.toString(), isNot(contains('scaleFrom')));
+      });
+    });
+  });
+
+  group('Enum values', () {
+    test('LayerAnimationType has expected values', () {
+      expect(LayerAnimationType.values, [
+        LayerAnimationType.fade,
+        LayerAnimationType.slide,
+        LayerAnimationType.scale,
+        LayerAnimationType.wiggle,
+        LayerAnimationType.bounce,
+        LayerAnimationType.typewriter,
+        LayerAnimationType.wordByWord,
+        LayerAnimationType.spin,
+        LayerAnimationType.flip,
+      ]);
+    });
+
+    test('FlipAxis has expected values', () {
+      expect(FlipAxis.values, [FlipAxis.vertical, FlipAxis.horizontal]);
+    });
+
+    test('SlideDirection has expected values', () {
+      expect(SlideDirection.values, [
+        SlideDirection.left,
+        SlideDirection.right,
+        SlideDirection.top,
+        SlideDirection.bottom,
+      ]);
+    });
+
+    test('AnimationCurve has expected values', () {
+      expect(AnimationCurve.values, [
+        AnimationCurve.linear,
+        AnimationCurve.easeIn,
+        AnimationCurve.easeOut,
+        AnimationCurve.easeInOut,
+        AnimationCurve.easeInCubic,
+        AnimationCurve.easeOutCubic,
+        AnimationCurve.easeInOutCubic,
+        AnimationCurve.bounceIn,
+        AnimationCurve.bounceOut,
+        AnimationCurve.bounceInOut,
+        AnimationCurve.elasticIn,
+        AnimationCurve.elasticOut,
+        AnimationCurve.elasticInOut,
+      ]);
+    });
+
+    test('AnimationPhase has expected values', () {
+      expect(AnimationPhase.values, [
+        AnimationPhase.animateIn,
+        AnimationPhase.animateOut,
+        AnimationPhase.animateInOut,
+        AnimationPhase.loop,
+      ]);
+    });
+  });
+}

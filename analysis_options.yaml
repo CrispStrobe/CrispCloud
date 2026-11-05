@@ -6,6 +6,8 @@ analyzer:
     # Third-party source vendored for a macOS sandbox patch. It keeps its own
     # upstream style; app analysis should not report that package's lint debt.
     - packages/filen_client/**
+    # The maintained image editor fork has its own analysis/test workflow.
+    - packages/pro_image_editor/**
     # Vendored Quds packages keep their upstream tests and dev-only imports.
     # Those suites run in the quds_office_suite fork, not in the app analysis.
     - packages/quds_office_engine/test/**

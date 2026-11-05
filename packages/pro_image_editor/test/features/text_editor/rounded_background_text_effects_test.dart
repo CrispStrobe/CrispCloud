@@ -1,0 +1,564 @@
+import 'package:flutter/rendering.dart';
+import 'package:flutter_test/flutter_test.dart';
+import 'package:material_ui/material_ui.dart';
+import 'package:pro_image_editor/core/models/editor_configs/text_editor_configs.dart';
+import 'package:pro_image_editor/features/text_editor/utils/rounded_background_painter.dart';
+import 'package:pro_image_editor/features/text_editor/widgets/rounded_background_text/rounded_background_text.dart';
+import 'package:pro_image_editor/features/text_editor/widgets/rounded_background_text/rounded_background_text_field.dart';
+
+void main() {
+  const style = TextStyle(fontSize: 40, color: Color(0xFFFFFFFF));
+  const shadow = Shadow(
+    color: Color(0x80000000),
+    blurRadius: 0,
+    offset: Offset(2, 4),
+  );
+
+  Future<void> pumpText(WidgetTester tester, RoundedBackgroundText text) {
+    return tester.pumpWidget(
+      MaterialApp(
+        home: Scaffold(body: Center(child: text)),
+      ),
+    );
+  }
+
+  RenderObject textRenderObject(WidgetTester tester) {
+    return tester.renderObject(
+      find.descendant(
+        of: find.byType(RoundedBackgroundText),
+        matching: find.byType(CustomPaint),
+      ),
+    );
+  }
+
+  Size textSize(WidgetTester tester) {
+    return tester.getSize(find.byType(RoundedBackgroundText));
+  }
+
+  group('RoundedBackgroundText', () {
+    group('without an outline', () {
+      testWidgets('paints the text in a single pass', (tester) async {
+        await pumpText(
+          tester,
+          RoundedBackgroundText(
+            'Hello',
+            style: style.copyWith(shadows: const [shadow]),
+            maxTextWidth: 400,
+          ),
+        );
+
+        expect(
+          textRenderObject(tester),
+          paintsExactlyCountTimes(#drawParagraph, 1),
+        );
+        expect(
+          textRenderObject(tester),
+          paintsExactlyCountTimes(#saveLayer, 0),
+        );
+      });
+    });
+
+    group('with an outline', () {
+      testWidgets('paints the outline pass under the text', (tester) async {
+        await pumpText(
+          tester,
+          RoundedBackgroundText(
+            'Hello',
+            style: style,
+            maxTextWidth: 400,
+            outlineWidth: 3,
+          ),
+        );
+
+        expect(
+          textRenderObject(tester),
+          paintsExactlyCountTimes(#drawParagraph, 2),
+        );
+      });
+
+      testWidgets('casts its shadows from the outlined glyphs', (tester) async {
+        await pumpText(
+          tester,
+          RoundedBackgroundText(
+            'Hello',
+            style: style.copyWith(shadows: const [shadow]),
+            maxTextWidth: 400,
+            outlineWidth: 3,
+          ),
+        );
+
+        expect(
+          textRenderObject(tester),
+          paints
+            ..something((method, arguments) => method == #saveLayer)
+            ..paragraph()
+            ..paragraph()
+            ..restore()
+            ..paragraph()
+            ..paragraph(),
+        );
+      });
+
+      testWidgets('keeps the shadow of glyphs that paint beyond their line', (
+        tester,
+      ) async {
+        final boundaryKey = GlobalKey();
+        await tester.pumpWidget(
+          MaterialApp(
+            home: Scaffold(
+              body: Center(
+                child: RepaintBoundary(
+                  key: boundaryKey,
+                  child: Padding(
+                    padding: const EdgeInsets.all(60),
+                    child: RoundedBackgroundText(
+                      'H',
+                      // A line height of 20 for a glyph that is 40 tall, so
+                      // the glyph reaches 15 above its line.
+                      style: style.copyWith(
+                        height: 0.5,
+                        shadows: const [
+                          Shadow(
+                            color: Color(0xFFFF0000),
+                            offset: Offset(50, 0),
+                          ),
+                        ],
+                      ),
+                      maxTextWidth: 400,
+                      outlineWidth: 2,
+                    ),
+                  ),
+                ),
+              ),
+            ),
+          ),
+        );
+
+        final boundary =
+            boundaryKey.currentContext!.findRenderObject()!
+                as RenderRepaintBoundary;
+        final pixels = (await tester.runAsync(() async {
+          final image = await boundary.toImage();
+          final bytes = await image.toByteData();
+          image.dispose();
+          return bytes;
+        }))!;
+
+        // A point of the shadow 10 above the line, beside the glyph.
+        const x = 60 + 70;
+        const y = 60 - 10;
+        final index = (y * boundary.size.width.round() + x) * 4;
+        expect(pixels.getUint8(index), 0xFF, reason: 'red');
+        expect(pixels.getUint8(index + 3), 0xFF, reason: 'alpha');
+      });
+
+      testWidgets('draws nothing extra for a transparent outline color', (
+        tester,
+      ) async {
+        await pumpText(
+          tester,
+          RoundedBackgroundText(
+            'Hello',
+            style: style,
+            maxTextWidth: 400,
+            outlineWidth: 3,
+            outlineColor: const Color(0x00000000),
+          ),
+        );
+
+        expect(
+          textRenderObject(tester),
+          paintsExactlyCountTimes(#drawParagraph, 1),
+        );
+      });
+    });
+
+    group('reserveEffectSpace', () {
+      testWidgets('grows by the outline and shadow reach on both sides', (
+        tester,
+      ) async {
+        await pumpText(
+          tester,
+          RoundedBackgroundText('Hello', style: style, maxTextWidth: 400),
+        );
+        final plainSize = textSize(tester);
+
+        await pumpText(
+          tester,
+          RoundedBackgroundText(
+            'Hello',
+            style: style.copyWith(shadows: const [shadow]),
+            maxTextWidth: 400,
+            outlineWidth: 3,
+            reserveEffectSpace: true,
+          ),
+        );
+
+        // Outline 3 plus the shadow offset on each axis, on both sides.
+        expect(textSize(tester), plainSize + const Offset(10, 14));
+      });
+
+      testWidgets('keeps the size of text without effects', (tester) async {
+        await pumpText(
+          tester,
+          RoundedBackgroundText('Hello', style: style, maxTextWidth: 400),
+        );
+        final plainSize = textSize(tester);
+
+        await pumpText(
+          tester,
+          RoundedBackgroundText(
+            'Hello',
+            style: style,
+            maxTextWidth: 400,
+            reserveEffectSpace: true,
+          ),
+        );
+
+        expect(textSize(tester), plainSize);
+      });
+
+      testWidgets('is not reserved unless requested', (tester) async {
+        await pumpText(
+          tester,
+          RoundedBackgroundText('Hello', style: style, maxTextWidth: 400),
+        );
+        final plainSize = textSize(tester);
+
+        await pumpText(
+          tester,
+          RoundedBackgroundText(
+            'Hello',
+            style: style.copyWith(shadows: const [shadow]),
+            maxTextWidth: 400,
+            outlineWidth: 3,
+          ),
+        );
+
+        expect(textSize(tester), plainSize);
+      });
+    });
+
+    group('maxWidth', () {
+      RoundedBackgroundTextPainter textPainter(WidgetTester tester) {
+        final renderObject = textRenderObject(tester) as RenderCustomPaint;
+        return renderObject.painter! as RoundedBackgroundTextPainter;
+      }
+
+      /// The width of [text] in [style] on a single line.
+      double lineWidth(String text, TextStyle style) {
+        final painter = TextPainter(
+          text: TextSpan(text: text, style: style),
+          textDirection: TextDirection.ltr,
+        )..layout();
+        addTearDown(painter.dispose);
+        return painter.width;
+      }
+
+      testWidgets('wraps the lines to fit the background', (tester) async {
+        await pumpText(
+          tester,
+          RoundedBackgroundText(
+            'Hello wide world',
+            style: style.copyWith(shadows: const [shadow]),
+            backgroundColor: const Color(0xFF0000FF),
+            enableHitBoxCorrection: true,
+            outlineWidth: 3,
+            reserveEffectSpace: true,
+            maxTextWidth: double.infinity,
+            maxWidth: 300,
+          ),
+        );
+
+        final painter = textPainter(tester).painter;
+        // The background reaches 0.3 lines past the glyphs on each side.
+        final backgroundWidth =
+            painter.width + painter.preferredLineHeight * 0.3 * 2;
+        expect(backgroundWidth, lessThanOrEqualTo(300));
+        expect(painter.computeLineMetrics(), hasLength(greaterThan(1)));
+      });
+
+      testWidgets('lets the transparent padding and the shadows of text '
+          'without a background reach past it', (tester) async {
+        const text = 'Hello wide world';
+        final maxWidth = lineWidth(text, style).ceilToDouble() + 1;
+        await pumpText(
+          tester,
+          RoundedBackgroundText(
+            text,
+            style: style.copyWith(shadows: const [shadow]),
+            enableHitBoxCorrection: true,
+            reserveEffectSpace: true,
+            maxTextWidth: double.infinity,
+            maxWidth: maxWidth,
+          ),
+        );
+
+        expect(textPainter(tester).painter.computeLineMetrics(), hasLength(1));
+        expect(textSize(tester).width, greaterThan(maxWidth));
+      });
+
+      testWidgets('keeps the outline of text without a background within it', (
+        tester,
+      ) async {
+        const text = 'Hello wide world';
+        await pumpText(
+          tester,
+          RoundedBackgroundText(
+            text,
+            style: style,
+            enableHitBoxCorrection: true,
+            outlineWidth: 3,
+            maxTextWidth: double.infinity,
+            maxWidth: lineWidth(text, style).ceilToDouble() + 1,
+          ),
+        );
+
+        expect(
+          textPainter(tester).painter.computeLineMetrics(),
+          hasLength(greaterThan(1)),
+        );
+      });
+
+      testWidgets('wrapsAtMaxWidth reports a width that wraps the text', (
+        tester,
+      ) async {
+        const text = 'Hello wide world';
+        final narrow = RoundedBackgroundText(
+          text,
+          style: style,
+          maxTextWidth: double.infinity,
+          maxWidth: lineWidth(text, style) / 2,
+        );
+        await pumpText(tester, narrow);
+
+        final context = tester.element(find.byType(RoundedBackgroundText));
+        expect(narrow.wrapsAtMaxWidth(context), isTrue);
+      });
+
+      testWidgets('wrapsAtMaxWidth ignores a width the text fits in', (
+        tester,
+      ) async {
+        const text = 'Hello wide world';
+        final wide = RoundedBackgroundText(
+          text,
+          style: style,
+          maxTextWidth: double.infinity,
+          maxWidth: lineWidth(text, style).ceilToDouble() + 1,
+        );
+        await pumpText(tester, wide);
+
+        final context = tester.element(find.byType(RoundedBackgroundText));
+        expect(wide.wrapsAtMaxWidth(context), isFalse);
+      });
+
+      testWidgets('sets no limit by default', (tester) async {
+        await pumpText(
+          tester,
+          RoundedBackgroundText(
+            'Hello wide world',
+            style: style,
+            enableHitBoxCorrection: true,
+            maxTextWidth: double.infinity,
+          ),
+        );
+
+        expect(textSize(tester).width, greaterThan(300));
+        expect(textPainter(tester).painter.computeLineMetrics(), hasLength(1));
+      });
+    });
+
+    group('softMaxWidth', () {
+      RoundedBackgroundTextPainter textPainter(WidgetTester tester) {
+        final renderObject = textRenderObject(tester) as RenderCustomPaint;
+        return renderObject.painter! as RoundedBackgroundTextPainter;
+      }
+
+      List<String> lines(WidgetTester tester) {
+        final painter = textPainter(tester).painter;
+        final text = painter.plainText;
+        final lines = <String>[];
+        for (final line in painter.computeLineMetrics()) {
+          final position = painter.getPositionForOffset(
+            Offset(0, line.baseline),
+          );
+          final boundary = painter.getLineBoundary(position);
+          lines.add(text.substring(boundary.start, boundary.end).trim());
+        }
+        return lines;
+      }
+
+      testWidgets('wraps the lines between words', (tester) async {
+        await pumpText(
+          tester,
+          RoundedBackgroundText(
+            'ab cd ef',
+            style: style,
+            maxTextWidth: double.infinity,
+            softMaxWidth: 200,
+          ),
+        );
+
+        expect(textSize(tester).width, lessThanOrEqualTo(200));
+        expect(lines(tester), ['ab cd', 'ef']);
+      });
+
+      testWidgets('keeps its longest word whole', (tester) async {
+        await pumpText(
+          tester,
+          RoundedBackgroundText(
+            'Hello world',
+            style: style,
+            maxTextWidth: double.infinity,
+            softMaxWidth: 50,
+          ),
+        );
+
+        expect(lines(tester), ['Hello', 'world']);
+      });
+
+      testWidgets('still breaks a word wider than maxWidth', (tester) async {
+        await pumpText(
+          tester,
+          RoundedBackgroundText(
+            'Hello world',
+            style: style,
+            maxTextWidth: double.infinity,
+            maxWidth: 120,
+            softMaxWidth: 50,
+          ),
+        );
+
+        expect(textSize(tester).width, lessThanOrEqualTo(120));
+        expect(lines(tester), hasLength(greaterThan(2)));
+      });
+    });
+  });
+
+  group('RoundedBackgroundTextField', () {
+    testWidgets('lines the outline up with the editable glyphs', (
+      tester,
+    ) async {
+      final controller = TextEditingController(text: 'Hello\nWorld');
+      final focusNode = FocusNode();
+      addTearDown(controller.dispose);
+      addTearDown(focusNode.dispose);
+
+      await tester.pumpWidget(
+        MaterialApp(
+          home: Scaffold(
+            body: Center(
+              child: IntrinsicWidth(
+                child: RoundedBackgroundTextField(
+                  controller: controller,
+                  focusNode: focusNode,
+                  configs: const TextEditorConfigs(),
+                  style: style,
+                  maxTextWidth: 400,
+                  textAlign: TextAlign.center,
+                  backgroundColor: const Color(0xFF000000),
+                  outlineWidth: 3,
+                ),
+              ),
+            ),
+          ),
+        ),
+      );
+
+      // The first glyph of the second line, where a different line height
+      // adds up.
+      const selection = TextSelection(baseOffset: 6, extentOffset: 7);
+      final editable = tester
+          .state<EditableTextState>(find.byType(EditableText))
+          .renderEditable;
+      final editableBox = editable.getBoxesForSelection(selection).first;
+      final editableGlyph = editable.localToGlobal(
+        Offset(editableBox.left, editableBox.top),
+      );
+
+      final background = textRenderObject(tester) as RenderCustomPaint;
+      final painter = background.painter! as RoundedBackgroundTextPainter;
+      final outlineBox = painter.outlinePainter!
+          .getBoxesForSelection(selection)
+          .first;
+      final outlineGlyph = background.localToGlobal(
+        painter.hitBoxCorrectionOffset +
+            Offset(outlineBox.left, outlineBox.top),
+      );
+
+      expect(outlineGlyph.dx, moreOrLessEquals(editableGlyph.dx, epsilon: 1));
+      expect(outlineGlyph.dy, moreOrLessEquals(editableGlyph.dy, epsilon: 1));
+    });
+
+    testWidgets('keeps the style letter spacing, not the text theme', (
+      tester,
+    ) async {
+      final controller = TextEditingController(text: 'Name');
+      final focusNode = FocusNode();
+      addTearDown(controller.dispose);
+      addTearDown(focusNode.dispose);
+
+      await tester.pumpWidget(
+        MaterialApp(
+          theme: ThemeData(
+            textTheme: const TextTheme(
+              bodyLarge: TextStyle(letterSpacing: 8, fontSize: 16),
+            ),
+          ),
+          home: Scaffold(
+            body: Center(
+              child: RoundedBackgroundTextField(
+                controller: controller,
+                focusNode: focusNode,
+                configs: const TextEditorConfigs(),
+                style: const TextStyle(fontSize: 24, color: Color(0xFF000000)),
+                textAlign: TextAlign.left,
+                backgroundColor: const Color(0x00000000),
+              ),
+            ),
+          ),
+        ),
+      );
+
+      final editable = tester.widget<EditableText>(find.byType(EditableText));
+      expect(editable.style.letterSpacing, 0);
+    });
+
+    testWidgets('keeps a letter spacing set on the style', (tester) async {
+      final controller = TextEditingController(text: 'Name');
+      final focusNode = FocusNode();
+      addTearDown(controller.dispose);
+      addTearDown(focusNode.dispose);
+
+      await tester.pumpWidget(
+        MaterialApp(
+          theme: ThemeData(
+            textTheme: const TextTheme(
+              bodyLarge: TextStyle(letterSpacing: 8, fontSize: 16, height: 2),
+            ),
+          ),
+          home: Scaffold(
+            body: Center(
+              child: RoundedBackgroundTextField(
+                controller: controller,
+                focusNode: focusNode,
+                configs: const TextEditorConfigs(),
+                style: const TextStyle(
+                  fontSize: 24,
+                  height: 1.4,
+                  letterSpacing: 1.25,
+                  color: Color(0xFF000000),
+                ),
+                textAlign: TextAlign.left,
+                backgroundColor: const Color(0x00000000),
+              ),
+            ),
+          ),
+        ),
+      );
+
+      final editable = tester.widget<EditableText>(find.byType(EditableText));
+      expect(editable.style.letterSpacing, 1.25);
+    });
+  });
+}
