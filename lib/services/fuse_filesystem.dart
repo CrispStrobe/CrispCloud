@@ -327,17 +327,7 @@ class FuseFilesystem {
       }
     }
 
-    // Look in the parent directory's cached listing.
-    final parentRemote = _fullRemotePath(p.dirname(path));
-    final cached = _cachedDir(parentRemote);
-    if (cached.isNotEmpty) {
-      final name = p.basename(path);
-      final item = cached.firstWhereOrNull((e) => e['name'] == name);
-      if (item != null) return _attrFromItem(item);
-    }
-
-    // Cache miss — try resolving via the provider.
-    final info = await client.resolvePath(remoteFull);
+    final info = await _itemForPath(path);
     if (info == null) {
       throw const _FuseError(2); // ENOENT
     }
@@ -371,8 +361,12 @@ class FuseFilesystem {
     final path = _decodeString(payload, 0);
     final flags = _readUint32(payload, 4 + utf8.encode(path).length);
     if (flags & 3 != 0) throw const _FuseError(30); // EROFS for existing files
-    final info = await client.resolvePath(_fullRemotePath(path));
+    final info = await _itemForPath(path);
     if (info == null) throw const _FuseError(2);
+    if (info['type'] == 'folder' || info['type'] == 'directory' ||
+        info['isDirectory'] == true) {
+      throw const _FuseError(21); // EISDIR
+    }
     if (info['size'] is num && (info['size'] as num) > maxReadFileBytes) {
       throw const _FuseError(27); // EFBIG
     }
@@ -597,10 +591,12 @@ class FuseFilesystem {
     }
   }
 
-  List<Map<String, dynamic>> _cachedDir(String remoteFull) {
-    final cached = _dirCache[remoteFull];
-    if (cached != null && !cached.isExpired) return cached.entries;
-    return const [];
+  Future<Map<String, dynamic>?> _itemForPath(String path) async {
+    // Some providers resolve folders only, or do not have objects for
+    // implicit directories. Their parent listings contain the actual metadata.
+    final entries = await _listCached(_fullRemotePath(p.dirname(path)));
+    final item = entries.firstWhereOrNull((e) => e['name'] == p.basename(path));
+    return item ?? await client.resolvePath(_fullRemotePath(path));
   }
 
   void _invalidateDirCache(String remoteFull) {

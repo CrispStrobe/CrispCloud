@@ -10,22 +10,23 @@ import 'package:flutter_test/flutter_test.dart';
 class _CloudClient implements CloudStorageClient {
   final int fileSize;
   final Map<String, dynamic>? listing;
+  final bool resolveFiles;
   int downloadCount = 0;
-  _CloudClient({this.fileSize = 5, this.listing});
+  _CloudClient({this.fileSize = 5, this.listing, this.resolveFiles = true});
 
   @override
   String get providerName => 'Test';
 
   @override
   Future<Map<String, dynamic>?> resolvePath(String path) async =>
-      path == '/remote/café.txt'
+      resolveFiles && path == '/remote/café.txt'
           ? {'name': 'café.txt', 'type': 'file', 'size': fileSize}
           : null;
 
   @override
   Future<Map<String, dynamic>> listPath(String path) async => listing ?? {
         'items': [
-          {'name': 'café.txt', 'type': 'file', 'size': 5}
+          {'name': 'café.txt', 'type': 'file', 'size': fileSize}
         ]
       };
 
@@ -90,6 +91,39 @@ Uint8List _path(String path, [int? flags]) {
 }
 
 void main() {
+  test('IPC gets metadata and opens files from provider listings', () async {
+    final fs = FuseFilesystem(
+      client: _CloudClient(resolveFiles: false, listing: {
+        'folders': [{'name': 'folder'}],
+        'files': [{'name': 'café.txt', 'size': 5}],
+      }),
+      remotePath: '/remote',
+    );
+    unawaited(fs.serveRequests());
+    final socketPath = await fs.ready;
+    final socket = await Socket.connect(
+        InternetAddress(socketPath, type: InternetAddressType.unix), 0);
+    final reader = _ResponseReader(socket);
+    addTearDown(() async {
+      await socket.close();
+      await fs.dispose();
+    });
+    final (error, attr) = await reader.send(1, 1, _path('/café.txt'));
+    expect(error, 0);
+    expect(ByteData.sublistView(attr).getUint64(4, Endian.big), 5);
+    final (openError, opened) = await reader.send(13, 2, _path('/café.txt', 0));
+    expect(openError, 0);
+    final request = Uint8List(16);
+    ByteData.sublistView(request)
+      ..setUint32(0, ByteData.sublistView(opened).getUint32(0, Endian.big), Endian.big)
+      ..setUint64(4, 0, Endian.big)
+      ..setUint32(12, 5, Endian.big);
+    final (readError, data) = await reader.send(3, 4, request);
+    expect(readError, 0);
+    expect(utf8.decode(data), 'hello');
+    expect((await reader.send(13, 3, _path('/folder', 0))).$1, 21);
+  });
+
   test('IPC repeated reads across EOF reuse the cached file', () async {
     final client = _CloudClient();
     final fs = FuseFilesystem(client: client, remotePath: '/remote');
