@@ -413,26 +413,26 @@ class MultiRenameService {
       final manualName = targetNames[source];
       if (errors.isEmpty) {
         try {
-          if (targetNames.containsKey(source)) {
-            newName = targetNames[source]!;
-          } else {
-            for (var stepIndex = 0; stepIndex < steps.length; stepIndex++) {
-              final current = file.copyWith(
-                name: newName,
-                path: paths.join(paths.dirname(source), newName),
-              );
-              newName = _transform(
-                current,
-                index,
-                steps[stepIndex],
-                patterns[stepIndex],
-                current.path!,
-                paths,
-                capturedTime,
-                optionsChangedAt: capturedOptionsTime,
-              );
-            }
+          for (var stepIndex = 0; stepIndex < steps.length; stepIndex++) {
+            final current = file.copyWith(
+              name: newName,
+              path: paths.join(paths.dirname(source), newName),
+            );
+            // Manual names can replace missing per-file metadata, but they
+            // must not hide invalid masks, variables or later pipeline steps.
+            newName = _transform(
+              current,
+              index,
+              steps[stepIndex],
+              patterns[stepIndex],
+              current.path!,
+              paths,
+              capturedTime,
+              optionsChangedAt: capturedOptionsTime,
+              allowUnavailableValues: manualName != null,
+            );
           }
+          newName = manualName ?? newName;
           if (newName != file.name) {
             final invalid = validateName(newName);
             if (invalid != null) problems.add(invalid);
