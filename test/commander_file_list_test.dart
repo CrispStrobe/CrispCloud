@@ -3,6 +3,7 @@ import 'dart:io';
 
 import 'package:archive/archive.dart';
 
+import 'package:crisp_cloud/l10n/app_localizations.dart';
 import 'package:crisp_cloud/models/file_item.dart';
 import 'package:crisp_cloud/models/panel_side.dart';
 import 'package:crisp_cloud/providers/panel_source_provider.dart';
@@ -908,6 +909,75 @@ void main() {
     await tester.pumpWidget(const SizedBox.shrink());
     await tester.pumpAndSettle();
   });
+
+  for (final language in ['de', 'ar']) {
+    testWidgets(
+      'pattern selection is keyboard usable at large text in $language',
+      (tester) async {
+        tester.view.physicalSize = const Size(320, 740);
+        tester.view.devicePixelRatio = 1;
+        addTearDown(tester.view.resetPhysicalSize);
+        addTearDown(tester.view.resetDevicePixelRatio);
+        final panel = await remote();
+        await tester.pumpWidget(
+          UncontrolledProviderScope(
+            container: container,
+            child: MaterialApp(
+              locale: Locale(language),
+              localizationsDelegates: AppLocalizations.localizationsDelegates,
+              supportedLocales: AppLocalizations.supportedLocales,
+              builder: (context, child) => MediaQuery(
+                data: MediaQuery.of(context)
+                    .copyWith(textScaler: const TextScaler.linear(1.8)),
+                child: child!,
+              ),
+              home: Scaffold(
+                body: Consumer(
+                  builder: (context, ref, _) => TextButton(
+                    onPressed: () => showPatternSelectionDialog(
+                      context,
+                      ref,
+                      PanelSide.remote,
+                    ),
+                    child: const Text('Open'),
+                  ),
+                ),
+              ),
+            ),
+          ),
+        );
+        await tester.tap(find.text('Open'));
+        await tester.pumpAndSettle();
+        expect(tester.takeException(), isNull);
+        expect(
+          find.text(
+            language == 'de' ? 'Nach Muster auswählen' : 'تحديد حسب النمط',
+          ),
+          findsOneWidget,
+        );
+        expect(
+          tester
+              .widget<SegmentedButton<FilePatternMode>>(
+                find.byType(SegmentedButton<FilePatternMode>),
+              )
+              .direction,
+          Axis.vertical,
+        );
+        final field = find.byKey(const ValueKey('selection-pattern'));
+        await tester.ensureVisible(field);
+        await tester.enterText(field, 'a.*');
+        await tester.testTextInput.receiveAction(TextInputAction.done);
+        await tester.pumpAndSettle();
+        expect(panel.selection.map((file) => file.path), ['/a.txt']);
+        expect(
+          find.byKey(const ValueKey('apply-pattern-selection')),
+          findsNothing,
+        );
+        expect(tester.takeException(), isNull);
+        await tester.pumpWidget(const SizedBox.shrink());
+      },
+    );
+  }
 
   test(
     'remote archives in a left-pane result list use captured cloud storage',

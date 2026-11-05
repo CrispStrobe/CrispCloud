@@ -57,6 +57,8 @@ void main() {
       excludeEmptyDirectories: true,
       preservePermissions: true,
       verifyContents: true,
+      copyMethod: FileCopyMethod.stream,
+      preallocate: true,
     );
     expect(
       FileOperationOptions.fromJson(options.toJson()).toJson(),

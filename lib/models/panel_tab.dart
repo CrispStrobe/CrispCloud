@@ -4,6 +4,7 @@
 // Each tab has its own path, file listing, selection state, and scroll position.
 
 import 'file_item.dart';
+import 'file_view_configuration.dart';
 import 'storage_reference.dart';
 
 enum TabLockMode { none, locked, resetOnLeave, newTab }
@@ -32,6 +33,8 @@ class PanelTab {
   String? lockedPath;
   StorageReference? lockedStorage;
   String? lockedCollectionId;
+  FileViewConfiguration? view;
+  String? viewProfileId;
 
   PanelTab({
     required this.id,
@@ -46,6 +49,8 @@ class PanelTab {
     this.lockedPath,
     this.lockedStorage,
     this.lockedCollectionId,
+    this.view,
+    this.viewProfileId,
   }) : label = customLabel ?? label ?? _labelFromPath(path);
 
   bool get isLocked => lockMode != TabLockMode.none;
@@ -110,6 +115,8 @@ class PanelTab {
     if (lockedPath != null) 'lockedPath': lockedPath,
     if (lockedStorage != null) 'lockedStorage': lockedStorage!.toJson(),
     if (lockedCollectionId != null) 'lockedCollectionId': lockedCollectionId,
+    if (view != null) 'view': view!.toJson(),
+    if (viewProfileId != null) 'viewProfileId': viewProfileId,
   };
 
   factory PanelTab.fromJson(String id, Map<String, dynamic> json) {
@@ -146,6 +153,12 @@ class PanelTab {
               Map<String, dynamic>.from(json['lockedStorage'] as Map),
             ),
       lockedCollectionId: json['lockedCollectionId'] as String?,
+      view: json['view'] == null
+          ? null
+          : FileViewConfiguration.fromJson(
+              Map<String, dynamic>.from(json['view'] as Map),
+            ),
+      viewProfileId: json['viewProfileId'] as String?,
     );
     if (tab.isLocked && tab.lockedPath == null) {
       tab.lockedPath = tab.path;
@@ -170,6 +183,8 @@ class PanelTab {
       lockedPath: lockedPath,
       lockedStorage: lockedStorage,
       lockedCollectionId: lockedCollectionId,
+      view: view,
+      viewProfileId: viewProfileId,
     );
   }
 }

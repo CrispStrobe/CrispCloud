@@ -5,6 +5,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import '../l10n/commander_strings.dart';
 import '../models/panel_side.dart';
 import '../providers/panel_provider.dart';
 import '../services/file_list_export.dart';
@@ -34,9 +35,9 @@ Future<void> copyFileListPaths(
         .exportFileListPaths(selectedOnly: selectedOnly);
     await Clipboard.setData(ClipboardData(text: text));
     if (context.mounted) {
-      ScaffoldMessenger.of(
-        context,
-      ).showSnackBar(const SnackBar(content: Text('Original paths copied.')));
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text(context.commanderTr("Original paths copied."))),
+      );
     }
   } catch (error) {
     if (context.mounted) {
@@ -167,7 +168,7 @@ class _FileListDialogState extends ConsumerState<_FileListDialog> {
     return PopScope(
       canPop: !_busy,
       child: AlertDialog(
-        title: const Text('File list'),
+        title: Text(context.commanderTr("File list")),
         content: SizedBox(
           width: 620,
           child: SingleChildScrollView(
@@ -176,16 +177,16 @@ class _FileListDialogState extends ConsumerState<_FileListDialog> {
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 SegmentedButton<bool>(
-                  segments: const [
+                  segments: [
                     ButtonSegment(
                       value: false,
-                      label: Text('Export paths'),
-                      icon: Icon(Icons.output),
+                      label: Text(context.commanderTr("Export paths")),
+                      icon: const Icon(Icons.output),
                     ),
                     ButtonSegment(
                       value: true,
-                      label: Text('Import paths'),
-                      icon: Icon(Icons.input),
+                      label: Text(context.commanderTr("Import paths")),
+                      icon: const Icon(Icons.input),
                     ),
                   ],
                   selected: {_importMode},
@@ -201,8 +202,12 @@ class _FileListDialogState extends ConsumerState<_FileListDialog> {
                 const SizedBox(height: 12),
                 Text(
                   _importMode
-                      ? 'One path per line. Relative paths resolve against the current folder. Each entry is checked in this panel’s source before loading.'
-                      : 'Original full paths, one per line. The list can be loaded again into the same storage source.',
+                      ? context.commanderTr(
+                          "One path per line. Relative paths resolve against the current folder. Each entry is checked in this panel’s source before loading.",
+                        )
+                      : context.commanderTr(
+                          "Original full paths, one per line. The list can be loaded again into the same storage source.",
+                        ),
                 ),
                 if (!_importMode)
                   CheckboxListTile(
@@ -215,7 +220,9 @@ class _FileListDialogState extends ConsumerState<_FileListDialog> {
                             _refreshExport();
                           }),
                     title: Text(
-                      'Selected items only (${panel.selection.length})',
+                      context.commanderTr("Selected items only ({0})", [
+                        panel.selection.length,
+                      ]),
                     ),
                     controlAffinity: ListTileControlAffinity.leading,
                   ),
@@ -229,9 +236,9 @@ class _FileListDialogState extends ConsumerState<_FileListDialog> {
                   minLines: 8,
                   maxLines: 12,
                   style: const TextStyle(fontFamily: 'AppMono', fontSize: 12),
-                  decoration: const InputDecoration(
-                    border: OutlineInputBorder(),
-                    labelText: 'Paths',
+                  decoration: InputDecoration(
+                    border: const OutlineInputBorder(),
+                    labelText: context.commanderTr("Paths"),
                   ),
                 ),
                 const SizedBox(height: 8),
@@ -242,7 +249,9 @@ class _FileListDialogState extends ConsumerState<_FileListDialog> {
                           TextButton.icon(
                             onPressed: _busy ? null : _pickList,
                             icon: const Icon(Icons.text_snippet_outlined),
-                            label: const Text('Open .txt / .lst'),
+                            label: Text(
+                              context.commanderTr("Open .txt / .lst"),
+                            ),
                           ),
                           TextButton.icon(
                             onPressed: _busy
@@ -259,7 +268,7 @@ class _FileListDialogState extends ConsumerState<_FileListDialog> {
                                     }
                                   },
                             icon: const Icon(Icons.content_paste),
-                            label: const Text('Paste paths'),
+                            label: Text(context.commanderTr("Paste paths")),
                           ),
                         ]
                       : [
@@ -278,14 +287,14 @@ class _FileListDialogState extends ConsumerState<_FileListDialog> {
                                     }
                                   },
                             icon: const Icon(Icons.copy),
-                            label: const Text('Copy paths'),
+                            label: Text(context.commanderTr("Copy paths")),
                           ),
                           TextButton.icon(
                             onPressed: _busy || _output.text.isEmpty
                                 ? null
                                 : _saveList,
                             icon: const Icon(Icons.save_alt),
-                            label: const Text('Save list…'),
+                            label: Text(context.commanderTr("Save list…")),
                           ),
                         ],
                 ),
@@ -294,8 +303,8 @@ class _FileListDialogState extends ConsumerState<_FileListDialog> {
                   const SizedBox(height: 4),
                   Text(
                     _importMode
-                        ? 'Checking original paths…'
-                        : 'Saving file list…',
+                        ? context.commanderTr("Checking original paths…")
+                        : context.commanderTr("Saving file list…"),
                   ),
                 ],
                 if (_error != null)
@@ -308,7 +317,11 @@ class _FileListDialogState extends ConsumerState<_FileListDialog> {
                 if (_message != null) Text(_message!),
                 if (_result?.failures.isNotEmpty == true) ...[
                   const SizedBox(height: 8),
-                  Text('${_result!.failures.length} item(s) were not loaded:'),
+                  Text(
+                    context.commanderTr("{0} item(s) were not loaded:", [
+                      _result!.failures.length,
+                    ]),
+                  ),
                   SizedBox(
                     height: 120,
                     child: ListView(
@@ -332,12 +345,16 @@ class _FileListDialogState extends ConsumerState<_FileListDialog> {
             onPressed: _busy
                 ? (_importMode ? () => setState(() => _cancelled = true) : null)
                 : () => Navigator.pop(context),
-            child: Text(_busy ? 'Cancel import' : 'Close'),
+            child: Text(
+              _busy
+                  ? context.commanderTr("Cancel import")
+                  : context.commanderTr("Close"),
+            ),
           ),
           if (_importMode)
             FilledButton(
               onPressed: _busy ? null : _loadList,
-              child: const Text('Load into panel'),
+              child: Text(context.commanderTr("Load into panel")),
             ),
         ],
       ),

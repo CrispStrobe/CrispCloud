@@ -7,6 +7,7 @@ import 'package:crisp_cloud/services/cloud_storage_interface.dart';
 import 'package:crisp_cloud/services/file_operation_backend.dart';
 import 'package:crisp_cloud/services/file_operation_service.dart';
 import 'package:crisp_cloud/services/local_file_service.dart';
+import 'package:crisp_cloud/services/native_file_primitives.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:path/path.dart' as p;
 
@@ -138,6 +139,164 @@ void main() {
           expect(await file.readAsString(), 'original');
           expect(phases, contains('staging'));
           expect(phases, isNot(contains('committed')));
+          await expectNoStages();
+        },
+      );
+
+      test(
+        'allocation requires a size before consuming or staging the source',
+        () async {
+          final file = await existingFile();
+          var consumed = false;
+          Stream<List<int>> stream() async* {
+            consumed = true;
+            yield [1];
+          }
+
+          await expectLater(
+            backend.writeConfiguredFile(
+              file.path,
+              stream(),
+              null,
+              replace: true,
+              preallocate: true,
+            ),
+            throwsUnsupportedError,
+          );
+          expect(consumed, isFalse);
+          expect(await file.readAsString(), 'original');
+          await expectNoStages();
+        },
+      );
+
+      test(
+        'short allocated streams never commit their pre-sized zero tail',
+        () async {
+          final file = await existingFile();
+          await expectLater(
+            backend.writeConfiguredFile(
+              file.path,
+              Stream.value(utf8.encode('short')),
+              1024,
+              replace: true,
+              preallocate: true,
+            ),
+            throwsA(anyOf(isA<StateError>(), isA<UnsupportedError>())),
+          );
+          expect(await file.readAsString(), 'original');
+          await expectNoStages();
+        },
+      );
+
+      test(
+        'allocation happens before streaming and retains exact final bytes',
+        () async {
+          final file = await existingFile();
+          String? stage;
+          var read = false;
+          Stream<List<int>> stream() async* {
+            read = true;
+            expect(await File(stage!).length(), 3);
+            yield utf8.encode('new');
+          }
+
+          try {
+            await backend.writeConfiguredFile(
+              file.path,
+              stream(),
+              3,
+              replace: true,
+              preallocate: true,
+              checkpoint: (state) async {
+                if (state['phase'] == 'allocating') {
+                  stage = state['stagedPath'] as String;
+                }
+              },
+            );
+          } on UnsupportedError {
+            expect(read, isFalse);
+            expect(await file.readAsString(), 'original');
+            return;
+          }
+          expect(read, isTrue);
+          expect(await file.readAsString(), 'new');
+          await expectNoStages();
+        },
+      );
+
+      test(
+        'native ranges seek directly to the requested byte offset',
+        () async {
+          final file = await existingFile();
+          final item = (await backend.stat(file.path))!;
+          int? openedAt;
+          final outer = Zone.current;
+          await IOOverrides.runZoned(
+            () async {
+              final bytes = await backend
+                  .readRange(item, 5)
+                  .expand((chunk) => chunk)
+                  .toList();
+              expect(utf8.decode(bytes), 'nal');
+            },
+            createFile: (path) => path == file.path
+                ? _ObservedRangeFile(file, (start) => openedAt = start)
+                : outer.run(() => File(path)),
+          );
+          expect(openedAt, 5);
+          await expectLater(
+            backend.readRange(item, 100).toList(),
+            throwsStateError,
+          );
+        },
+      );
+
+      test('native replacement preserves mode without copying old contents into the stage', () async {
+        if (!supportsNativePermissions) return;
+        final file = await existingFile();
+        await setNativeFileMode(file.path, 0x1a0); // 0640
+        await backend.writeFile(
+          file.path,
+          Stream.value(utf8.encode('new')),
+          3,
+          replace: true,
+        );
+        expect((await file.stat()).mode & 0x1ff, 0x1a0);
+        final metadata = await backend.readMetadata(file.path);
+        expect(metadata.mode, 0x1a0);
+        await backend.writeMetadata(
+          file.path,
+          const TransferMetadata(mode: 0x1e0),
+        ); // 0740
+        expect((await file.stat()).mode & 0x1ff, 0x1e0);
+      });
+
+      test(
+        'a rejected clone verifier retains the original destination',
+        () async {
+          final target = await existingFile();
+          final source = await File(p.join(root.path, 'clone-source'))
+              .writeAsString('replacement');
+          var verified = false;
+          try {
+            final cloned = await backend.clonePreparedFile(
+              (await backend.stat(source.path))!,
+              target.path,
+              replace: true,
+              verifyStaged: (stage) async {
+                verified = true;
+                expect(await File(stage.path!).readAsString(), 'replacement');
+                throw StateError('Verification refused');
+              },
+            );
+            expect(cloned, isFalse);
+            expect(verified, isFalse);
+          } on StateError catch (error) {
+            expect(error.message, 'Verification refused');
+            expect(verified, isTrue);
+          }
+          expect(await target.readAsString(), 'original');
+          expect(await source.readAsString(), 'replacement');
           await expectNoStages();
         },
       );
@@ -1128,4 +1287,20 @@ class _DeniedResolutionFile extends Fake implements File {
     path,
     const OSError('Permission denied', 13),
   );
+}
+
+class _ObservedRangeFile extends Fake implements File {
+  _ObservedRangeFile(this.file, this.opened);
+  final File file;
+  final void Function(int?) opened;
+  @override
+  String get path => file.path;
+  @override
+  Future<RandomAccessFile> open({FileMode mode = FileMode.read}) =>
+      file.open(mode: mode);
+  @override
+  Stream<List<int>> openRead([int? start, int? end]) {
+    opened(start);
+    return file.openRead(start, end);
+  }
 }

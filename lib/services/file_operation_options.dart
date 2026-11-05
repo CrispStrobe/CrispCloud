@@ -4,6 +4,8 @@ import 'file_selection_pattern.dart';
 
 enum FileOperationKind { copy, move }
 
+enum FileCopyMethod { automatic, stream, copyOnWrite }
+
 enum FileConflictPolicy {
   ask,
   skip,
@@ -61,6 +63,8 @@ class FileOperationOptions {
     this.excludeEmptyDirectories = false,
     this.includeHidden = true,
     this.preferNative = true,
+    this.copyMethod = FileCopyMethod.automatic,
+    this.preallocate = false,
   });
 
   final FileOperationKind kind;
@@ -116,6 +120,8 @@ class FileOperationOptions {
   final bool excludeEmptyDirectories;
   final bool includeHidden;
   final bool preferNative;
+  final FileCopyMethod copyMethod;
+  final bool preallocate;
 
   FileSearchQuery get searchFilter => FileSearchQuery(
     namePattern: pattern?.expression ?? '*',
@@ -163,6 +169,8 @@ class FileOperationOptions {
     'excludeEmptyDirectories': excludeEmptyDirectories,
     'includeHidden': includeHidden,
     'preferNative': preferNative,
+    'copyMethod': copyMethod.name,
+    'preallocate': preallocate,
   };
 
   factory FileOperationOptions.fromJson(Map<String, dynamic> json) {
@@ -204,6 +212,10 @@ class FileOperationOptions {
       excludeEmptyDirectories: json['excludeEmptyDirectories'] == true,
       includeHidden: json['includeHidden'] != false,
       preferNative: json['preferNative'] != false,
+      copyMethod: FileCopyMethod.values.byName(
+        json['copyMethod'] as String? ?? 'automatic',
+      ),
+      preallocate: json['preallocate'] == true,
     );
   }
 

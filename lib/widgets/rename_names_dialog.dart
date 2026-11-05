@@ -4,6 +4,7 @@ import 'package:file_picker/file_picker.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 
+import '../l10n/commander_strings.dart';
 import '../services/rename_name_list.dart';
 
 /// Edit or import a complete ordered set of names before applying it to the
@@ -81,7 +82,7 @@ class _RenameNamesDialogState extends State<RenameNamesDialog> {
 
   @override
   Widget build(BuildContext context) => AlertDialog(
-    title: const Text('Edit proposed names'),
+    title: Text(context.commanderTr("Edit proposed names")),
     content: SizedBox(
       width: 600,
       child: SingleChildScrollView(
@@ -90,8 +91,10 @@ class _RenameNamesDialogState extends State<RenameNamesDialog> {
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
             Text(
-              'Enter ${widget.names.length} names, one per line, in preview order. '
-              'Include extensions. Excluded rows are not included.',
+              context.commanderTr(
+                "Enter {0} names, one per line, in preview order. Include extensions. Excluded rows are not included.",
+                [widget.names.length],
+              ),
             ),
             const SizedBox(height: 12),
             TextField(
@@ -101,9 +104,9 @@ class _RenameNamesDialogState extends State<RenameNamesDialog> {
               minLines: 5,
               maxLines: 12,
               autocorrect: false,
-              decoration: const InputDecoration(
-                labelText: 'Proposed names',
-                border: OutlineInputBorder(),
+              decoration: InputDecoration(
+                labelText: context.commanderTr("Proposed names"),
+                border: const OutlineInputBorder(),
               ),
               onChanged: (_) => setState(() => _error = null),
             ),
@@ -114,12 +117,12 @@ class _RenameNamesDialogState extends State<RenameNamesDialog> {
                 TextButton.icon(
                   onPressed: _busy ? null : () => _load(false),
                   icon: const Icon(Icons.content_paste, size: 18),
-                  label: const Text('Paste names'),
+                  label: Text(context.commanderTr("Paste names")),
                 ),
                 TextButton.icon(
                   onPressed: _busy ? null : () => _load(true),
                   icon: const Icon(Icons.file_open_outlined, size: 18),
-                  label: const Text('Open .txt / .lst'),
+                  label: Text(context.commanderTr("Open .txt / .lst")),
                 ),
               ],
             ),
@@ -136,12 +139,12 @@ class _RenameNamesDialogState extends State<RenameNamesDialog> {
     actions: [
       TextButton(
         onPressed: () => Navigator.pop(context),
-        child: const Text('Cancel'),
+        child: Text(context.commanderTr("Cancel")),
       ),
       FilledButton(
         key: const ValueKey('rename-names-apply'),
         onPressed: _busy ? null : _apply,
-        child: const Text('Update preview'),
+        child: Text(context.commanderTr("Update preview")),
       ),
     ],
   );

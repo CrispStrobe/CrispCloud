@@ -33,6 +33,8 @@ class StorageTransferCapabilities {
     this.deleteEmptyDirectory = false,
     this.boundedUpload = false,
     this.boundedDownload = false,
+    this.preallocate = false,
+    this.copyOnWrite = false,
   });
 
   final StorageCaseSensitivity caseSensitivity;
@@ -59,6 +61,13 @@ class StorageTransferCapabilities {
   final bool deleteEmptyDirectory;
   final bool boundedUpload;
   final bool boundedDownload;
+
+  /// A physical disk-space reservation, not merely a sparse length change.
+  final bool preallocate;
+
+  /// The platform can request filesystem block cloning. A particular volume
+  /// may refuse it; explicit clone requests must not silently stream instead.
+  final bool copyOnWrite;
 }
 
 /// Returned only after the provider confirms completion, including any

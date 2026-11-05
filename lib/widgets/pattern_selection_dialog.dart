@@ -3,6 +3,7 @@ import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import '../l10n/commander_strings.dart';
 import '../models/panel_side.dart';
 import '../models/file_search_query.dart';
 import '../services/saved_search_service.dart';
@@ -191,12 +192,14 @@ class _PatternSelectionDialogState
     final value = await showDialog<String>(
       context: context,
       builder: (context) => AlertDialog(
-        title: const Text('Save shared criteria'),
+        title: Text(context.commanderTr("Save shared criteria")),
         content: TextField(
           controller: name,
           autofocus: true,
           maxLength: 100,
-          decoration: const InputDecoration(labelText: 'Preset name'),
+          decoration: InputDecoration(
+            labelText: context.commanderTr("Preset name"),
+          ),
           onSubmitted: (value) {
             if (value.trim().isNotEmpty) Navigator.pop(context, value.trim());
           },
@@ -204,7 +207,7 @@ class _PatternSelectionDialogState
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(context),
-            child: const Text('Cancel'),
+            child: Text(context.commanderTr("Cancel")),
           ),
           FilledButton(
             onPressed: () {
@@ -212,7 +215,7 @@ class _PatternSelectionDialogState
                 Navigator.pop(context, name.text.trim());
               }
             },
-            child: const Text('Save'),
+            child: Text(context.commanderTr("Save")),
           ),
         ],
       ),
@@ -287,7 +290,7 @@ class _PatternSelectionDialogState
     final restorable = panel.restorableSelectionCount;
 
     return AlertDialog(
-      title: const Text('Select by pattern'),
+      title: Text(context.commanderTr("Select by pattern")),
       content: SizedBox(
         width: 520,
         child: SingleChildScrollView(
@@ -296,14 +299,19 @@ class _PatternSelectionDialogState
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               SegmentedButton<FilePatternMode>(
-                segments: const [
+                direction:
+                    MediaQuery.sizeOf(context).width < 640 ||
+                        MediaQuery.textScalerOf(context).scale(1) > 1.3
+                    ? Axis.vertical
+                    : Axis.horizontal,
+                segments: [
                   ButtonSegment(
                     value: FilePatternMode.wildcard,
-                    label: Text('Wildcards'),
+                    label: Text(context.commanderTr("Wildcards")),
                   ),
                   ButtonSegment(
                     value: FilePatternMode.regex,
-                    label: Text('Regular expression'),
+                    label: Text(context.commanderTr("Regular expression")),
                   ),
                 ],
                 selected: {_mode},
@@ -321,12 +329,12 @@ class _PatternSelectionDialogState
                 },
                 decoration: InputDecoration(
                   labelText: _mode == FilePatternMode.wildcard
-                      ? 'Masks'
-                      : 'Expression',
+                      ? context.commanderTr("Masks")
+                      : context.commanderTr("Expression"),
                   border: const OutlineInputBorder(),
                   suffixIcon: PopupMenuButton<FileSelectionPattern>(
                     key: const ValueKey('selection-pattern-history'),
-                    tooltip: 'Recent patterns',
+                    tooltip: context.commanderTr("Recent patterns"),
                     enabled: _recentPatterns.isNotEmpty,
                     icon: const Icon(Icons.history),
                     onSelected: _recall,
@@ -345,9 +353,12 @@ class _PatternSelectionDialogState
                   errorText: error,
                   errorMaxLines: 3,
                   helperText: _mode == FilePatternMode.wildcard
-                      ? '* any characters · ? one character\nSeparate masks with ; and exclusions with |\nExample: *.jpg;*.png|thumb*'
-                      : r'Regex searches within names. Use ^ and $ for a full match.'
-                            '\nExample: ^report-\\d+\\.pdf\$',
+                      ? context.commanderTr(
+                          "* any characters · ? one character\nSeparate masks with ; and exclusions with |\nExample: *.jpg;*.png|thumb*",
+                        )
+                      : context.commanderTr(
+                          "Regex searches within names. Use ^ and \$ for a full match.\nExample: ^report-\\d+\\.pdf\$",
+                        ),
                   helperMaxLines: 4,
                 ),
               ),
@@ -355,15 +366,15 @@ class _PatternSelectionDialogState
               DropdownButtonFormField<SelectionAction>(
                 isExpanded: true,
                 initialValue: _action,
-                decoration: const InputDecoration(
-                  labelText: 'Action',
-                  border: OutlineInputBorder(),
+                decoration: InputDecoration(
+                  labelText: context.commanderTr("Action"),
+                  border: const OutlineInputBorder(),
                 ),
-                items: const [
+                items: [
                   DropdownMenuItem(
                     value: SelectionAction.select,
                     child: Text(
-                      'Add matches to selection',
+                      context.commanderTr("Add matches to selection"),
                       maxLines: 1,
                       overflow: TextOverflow.ellipsis,
                     ),
@@ -371,7 +382,7 @@ class _PatternSelectionDialogState
                   DropdownMenuItem(
                     value: SelectionAction.deselect,
                     child: Text(
-                      'Remove matches from selection',
+                      context.commanderTr("Remove matches from selection"),
                       maxLines: 1,
                       overflow: TextOverflow.ellipsis,
                     ),
@@ -379,7 +390,7 @@ class _PatternSelectionDialogState
                   DropdownMenuItem(
                     value: SelectionAction.invert,
                     child: Text(
-                      'Invert matching marks',
+                      context.commanderTr("Invert matching marks"),
                       maxLines: 1,
                       overflow: TextOverflow.ellipsis,
                     ),
@@ -387,7 +398,7 @@ class _PatternSelectionDialogState
                   DropdownMenuItem(
                     value: SelectionAction.replace,
                     child: Text(
-                      'Replace selection with matches',
+                      context.commanderTr("Replace selection with matches"),
                       maxLines: 1,
                       overflow: TextOverflow.ellipsis,
                     ),
@@ -400,15 +411,15 @@ class _PatternSelectionDialogState
                 key: ValueKey('selection-kind-$_kind'),
                 isExpanded: true,
                 initialValue: _kind,
-                decoration: const InputDecoration(
-                  labelText: 'Include',
-                  border: OutlineInputBorder(),
+                decoration: InputDecoration(
+                  labelText: context.commanderTr("Include"),
+                  border: const OutlineInputBorder(),
                 ),
-                items: const [
+                items: [
                   DropdownMenuItem(
                     value: 'all',
                     child: Text(
-                      'Files and folders',
+                      context.commanderTr("Files and folders"),
                       maxLines: 1,
                       overflow: TextOverflow.ellipsis,
                     ),
@@ -416,7 +427,7 @@ class _PatternSelectionDialogState
                   DropdownMenuItem(
                     value: 'files',
                     child: Text(
-                      'Files only',
+                      context.commanderTr("Files only"),
                       maxLines: 1,
                       overflow: TextOverflow.ellipsis,
                     ),
@@ -424,7 +435,7 @@ class _PatternSelectionDialogState
                   DropdownMenuItem(
                     value: 'folders',
                     child: Text(
-                      'Folders only',
+                      context.commanderTr("Folders only"),
                       maxLines: 1,
                       overflow: TextOverflow.ellipsis,
                     ),
@@ -434,21 +445,21 @@ class _PatternSelectionDialogState
               ),
               CheckboxListTile(
                 contentPadding: EdgeInsets.zero,
-                title: const Text('Case sensitive'),
+                title: Text(context.commanderTr("Case sensitive")),
                 value: _caseSensitive,
                 onChanged: (value) => setState(() => _caseSensitive = value!),
                 controlAffinity: ListTileControlAffinity.leading,
               ),
               CheckboxListTile(
                 contentPadding: EdgeInsets.zero,
-                title: const Text('Match full original paths'),
+                title: Text(context.commanderTr("Match full original paths")),
                 value: _matchFullPath,
                 onChanged: (value) => setState(() => _matchFullPath = value!),
                 controlAffinity: ListTileControlAffinity.leading,
               ),
               ExpansionTile(
                 tilePadding: EdgeInsets.zero,
-                title: const Text('Shared criteria and presets'),
+                title: Text(context.commanderTr("Shared criteria and presets")),
                 children: [
                   Wrap(
                     spacing: 8,
@@ -456,34 +467,34 @@ class _PatternSelectionDialogState
                     children: [
                       _criterionField(
                         _minimum,
-                        'Minimum size (bytes)',
+                        context.commanderTr("Minimum size (bytes)"),
                         'selection-minimum',
                       ),
                       _criterionField(
                         _maximum,
-                        'Maximum size (bytes)',
+                        context.commanderTr("Maximum size (bytes)"),
                         'selection-maximum',
                       ),
                       _criterionField(
                         _after,
-                        'Modified on or after (ISO)',
+                        context.commanderTr("Modified on or after (ISO)"),
                         'selection-after',
                       ),
                       _criterionField(
                         _before,
-                        'Modified on or before (ISO)',
+                        context.commanderTr("Modified on or before (ISO)"),
                         'selection-before',
                       ),
                       _criterionField(
                         _extensions,
-                        'Extensions (; separated)',
+                        context.commanderTr("Extensions (; separated)"),
                         'selection-extensions',
                       ),
                     ],
                   ),
                   CheckboxListTile(
                     contentPadding: EdgeInsets.zero,
-                    title: const Text('Include hidden names'),
+                    title: Text(context.commanderTr("Include hidden names")),
                     value: _includeHidden,
                     onChanged: (value) =>
                         setState(() => _includeHidden = value!),
@@ -492,7 +503,9 @@ class _PatternSelectionDialogState
                     spacing: 8,
                     children: [
                       PopupMenuButton<SavedSearch>(
-                        tooltip: 'Load saved search criteria',
+                        tooltip: context.commanderTr(
+                          "Load saved search criteria",
+                        ),
                         enabled: _presets.isNotEmpty,
                         onSelected: _loadPreset,
                         itemBuilder: (_) => _presets
@@ -503,21 +516,28 @@ class _PatternSelectionDialogState
                               ),
                             )
                             .toList(),
-                        child: const Padding(
-                          padding: EdgeInsets.all(12),
-                          child: Text('Load shared criteria'),
+                        child: Padding(
+                          padding: const EdgeInsets.all(12),
+                          child: Text(
+                            context.commanderTr("Load shared criteria"),
+                          ),
                         ),
                       ),
                       TextButton(
                         onPressed: criteria == null ? null : _savePreset,
-                        child: const Text('Save shared criteria'),
+                        child: Text(
+                          context.commanderTr("Save shared criteria"),
+                        ),
                       ),
                     ],
                   ),
                 ],
               ),
               Text(
-                '$matches matching item(s) in the visible list',
+                context.commanderTr(
+                  "{0} matching item(s) in the visible list",
+                  [matches],
+                ),
                 style: Theme.of(context).textTheme.bodySmall,
               ),
               const Divider(height: 24),
@@ -538,7 +558,7 @@ class _PatternSelectionDialogState
                             });
                           },
                     icon: const Icon(Icons.bookmark_add_outlined),
-                    label: const Text('Remember selection'),
+                    label: Text(context.commanderTr("Remember selection")),
                   ),
                   TextButton.icon(
                     key: const ValueKey('restore-panel-selection'),
@@ -552,14 +572,19 @@ class _PatternSelectionDialogState
                             });
                           },
                     icon: const Icon(Icons.restore),
-                    label: Text('Restore selection ($restorable)'),
+                    label: Text(
+                      context.commanderTr("Restore selection ({0})", [
+                        restorable,
+                      ]),
+                    ),
                   ),
                 ],
               ),
               Text(
                 _memoryMessage ??
-                    'Remembered marks stay in this tab for the current session. '
-                        'Restore includes only visible, verified original paths.',
+                    context.commanderTr(
+                      "Remembered marks stay in this tab for the current session. Restore includes only visible, verified original paths.",
+                    ),
                 style: Theme.of(context).textTheme.bodySmall,
               ),
             ],
@@ -569,12 +594,12 @@ class _PatternSelectionDialogState
       actions: [
         TextButton(
           onPressed: () => Navigator.pop(context),
-          child: const Text('Cancel'),
+          child: Text(context.commanderTr("Cancel")),
         ),
         FilledButton(
           key: const ValueKey('apply-pattern-selection'),
           onPressed: pattern == null ? null : () => _apply(pattern!),
-          child: const Text('Apply'),
+          child: Text(context.commanderTr("Apply")),
         ),
       ],
     );

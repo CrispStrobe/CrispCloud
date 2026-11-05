@@ -15,6 +15,7 @@ import 'package:shared_preferences/shared_preferences.dart';
 import 'package:uuid/uuid.dart';
 
 import '../models/file_item.dart';
+import '../models/file_view_configuration.dart';
 import '../models/panel_side.dart';
 import '../models/panel_tab.dart';
 import '../models/sort.dart';
@@ -43,6 +44,7 @@ import '../services/file_list_paths.dart';
 import '../services/local_file_service.dart';
 import '../services/log_service.dart';
 import '../services/panel_source_service.dart';
+import '../services/panel_view_mode_service.dart';
 import '../utils/async_lock.dart';
 import 'action_history_provider.dart';
 import 'auth_provider.dart';
@@ -54,6 +56,7 @@ import 'recent_locations_provider.dart';
 import 'native_file_operations_provider.dart';
 import 'multi_cloud_provider.dart';
 import 'file_collection_provider.dart';
+import 'toolbar_provider.dart';
 
 // SortBy and SortOrder are defined in models/sort.dart
 export '../models/sort.dart';
@@ -162,6 +165,12 @@ class PanelNotifier extends ChangeNotifier {
   /// Secondary sort key for multi-key sorting (Phase 1.2).
   SortBy? _secondarySortBy;
   SortOrder _secondarySortOrder = SortOrder.ascending;
+  String? _sortColumnId;
+  String? _secondarySortColumnId;
+  bool _applyingTabView = false;
+  Timer? _viewSaveDebounce;
+  String? get sortColumnId => _sortColumnId;
+  String? get secondarySortColumnId => _secondarySortColumnId;
   SortBy? get secondarySortBy => _secondarySortBy;
   SortOrder get secondarySortOrder => _secondarySortOrder;
 
@@ -183,6 +192,7 @@ class PanelNotifier extends ChangeNotifier {
 
   void toggleShowHiddenFiles() {
     _showHiddenFiles = !_showHiddenFiles;
+    _rememberTabView();
     refresh();
   }
 
@@ -296,6 +306,13 @@ class PanelNotifier extends ChangeNotifier {
       }
       notifyListeners();
     });
+    _ref.listen(columnWidthsProvider(side), (_, _) => _rememberTabView());
+    _ref.listen(fileColumnsProvider(side), (_, _) => _rememberTabView());
+    _ref.listen(panelViewModeProvider(side), (_, _) => _rememberTabView());
+    _ref.listen(
+      side == PanelSide.local ? localViewModeProvider : remoteViewModeProvider,
+      (_, _) => _rememberTabView(),
+    );
   }
 
   // --- Getters ---
@@ -610,6 +627,7 @@ class PanelNotifier extends ChangeNotifier {
   void setFilter(String query) {
     _filterQuery = query;
     _isTypeahead = false;
+    _rememberTabView();
     if (_isFiltering) {
       final current = cursorItem;
       final displayed = filteredFiles;
@@ -631,6 +649,7 @@ class PanelNotifier extends ChangeNotifier {
     _typeaheadResetTimer?.cancel();
     _filterQuery = '';
     _isTypeahead = false;
+    _rememberTabView();
     notifyListeners();
   }
 
@@ -2007,6 +2026,8 @@ class PanelNotifier extends ChangeNotifier {
 
   void setSecondarySortBy(SortBy? sortBy) {
     _secondarySortBy = sortBy;
+    _secondarySortColumnId = null;
+    _rememberTabView();
     _sortFiles();
     notifyListeners();
   }
@@ -2015,6 +2036,7 @@ class PanelNotifier extends ChangeNotifier {
     _secondarySortOrder = _secondarySortOrder == SortOrder.ascending
         ? SortOrder.descending
         : SortOrder.ascending;
+    _rememberTabView();
     _sortFiles();
     notifyListeners();
   }
@@ -2130,6 +2152,8 @@ class PanelNotifier extends ChangeNotifier {
   // --- Sort ---
   void setSortBy(SortBy sortBy) {
     _sortBy = sortBy;
+    _sortColumnId = null;
+    _rememberTabView();
     _sortFiles();
     notifyListeners();
   }
@@ -2138,6 +2162,7 @@ class PanelNotifier extends ChangeNotifier {
     _sortOrder = _sortOrder == SortOrder.ascending
         ? SortOrder.descending
         : SortOrder.ascending;
+    _rememberTabView();
     _sortFiles();
     notifyListeners();
   }
@@ -2167,6 +2192,16 @@ class PanelNotifier extends ChangeNotifier {
 
   void _sortFiles() {
     if (_files == null || _files!.isEmpty) return;
+    final columns = _ref.read(fileColumnsProvider(side));
+    FileColumnDefinition? column(String? id) {
+      for (final value in columns) {
+        if (value.id == id) return value;
+      }
+      return null;
+    }
+
+    final primaryColumn = column(_sortColumnId);
+    final secondaryColumn = column(_secondarySortColumnId);
     _files!.sort((a, b) {
       // ".." always stays at the top
       if (a.name == '..') return -1;
@@ -2175,12 +2210,16 @@ class PanelNotifier extends ChangeNotifier {
       if (a.isFolder && !b.isFolder) return -1;
       if (!a.isFolder && b.isFolder) return 1;
 
-      int comparison = compareSortKey(a, b, _sortBy);
+      int comparison =
+          primaryColumn?.compare(a, b) ?? compareSortKey(a, b, _sortBy);
       comparison = _sortOrder == SortOrder.ascending ? comparison : -comparison;
 
       // Secondary sort key when primary ties
-      if (comparison == 0 && _secondarySortBy != null) {
-        final int secondary = compareSortKey(a, b, _secondarySortBy!);
+      if (comparison == 0 &&
+          (_secondarySortBy != null || secondaryColumn != null)) {
+        final int secondary =
+            secondaryColumn?.compare(a, b) ??
+            compareSortKey(a, b, _secondarySortBy!);
         comparison = _secondarySortOrder == SortOrder.ascending
             ? secondary
             : -secondary;
@@ -3832,6 +3871,133 @@ class PanelNotifier extends ChangeNotifier {
   ).hasMatch(path);
 
   // --- Tabs ---
+  FileViewConfiguration captureViewConfiguration() {
+    final mode = _ref.read(
+      side == PanelSide.local ? localViewModeProvider : remoteViewModeProvider,
+    );
+    final density = _ref.read(panelViewModeProvider(side));
+    final columns = _ref.read(fileColumnsProvider(side));
+    if (!columns.any((column) => column.id == _sortColumnId)) {
+      _sortColumnId = null;
+    }
+    if (!columns.any((column) => column.id == _secondarySortColumnId)) {
+      _secondarySortColumnId = null;
+    }
+    return FileViewConfiguration(
+      display: mode == ViewMode.grid
+          ? FileViewDisplay.grid
+          : mode == ViewMode.column
+          ? FileViewDisplay.column
+          : density == PanelViewMode.tree
+          ? FileViewDisplay.tree
+          : density == PanelViewMode.brief
+          ? FileViewDisplay.brief
+          : FileViewDisplay.full,
+      columns: columns,
+      widths: _ref.read(columnWidthsProvider(side)),
+      sortBy: _sortBy,
+      sortOrder: _sortOrder,
+      secondarySortBy: _secondarySortBy,
+      secondarySortOrder: _secondarySortOrder,
+      sortColumnId: _sortColumnId,
+      secondarySortColumnId: _secondarySortColumnId,
+      showHidden: _showHiddenFiles,
+      filter: _isTypeahead ? '' : _filterQuery,
+    );
+  }
+
+  void _captureTabView() {
+    if (_isDisposed || _applyingTabView) return;
+    final index = _tabs.indexWhere((tab) => tab.id == _activeTabId);
+    if (index >= 0) _tabs[index].view = captureViewConfiguration();
+  }
+
+  void _rememberTabView() {
+    if (_isDisposed || _applyingTabView) return;
+    _captureTabView();
+    _viewSaveDebounce?.cancel();
+    if (!kIsWeb && Platform.environment.containsKey('FLUTTER_TEST')) return;
+    _viewSaveDebounce = Timer(
+      const Duration(milliseconds: 250),
+      () => _saveTabs(),
+    );
+  }
+
+  void _applyTabView(FileViewConfiguration? view) {
+    if (view == null || _isDisposed) return;
+    _applyingTabView = true;
+    try {
+      _sortBy = view.sortBy;
+      _sortOrder = view.sortOrder;
+      _secondarySortBy = view.secondarySortBy;
+      _secondarySortOrder = view.secondarySortOrder;
+      _sortColumnId = view.sortColumnId;
+      _secondarySortColumnId = view.secondarySortColumnId;
+      _showHiddenFiles = view.showHidden;
+      _filterQuery = view.filter;
+      _isTypeahead = false;
+      _typeaheadResetTimer?.cancel();
+      _ref.read(columnWidthsProvider(side).notifier).applyWidths(view.widths);
+      _ref.read(fileColumnsProvider(side).notifier).applyColumns(view.columns);
+      _ref
+          .read(panelViewModeProvider(side).notifier)
+          .applyMode(
+            view.display == FileViewDisplay.tree
+                ? PanelViewMode.tree
+                : view.display == FileViewDisplay.brief
+                ? PanelViewMode.brief
+                : PanelViewMode.full,
+          );
+      _ref
+          .read(
+            (side == PanelSide.local
+                    ? localViewModeProvider
+                    : remoteViewModeProvider)
+                .notifier,
+          )
+          .state = view.display == FileViewDisplay.grid
+          ? ViewMode.grid
+          : view.display == FileViewDisplay.column
+          ? ViewMode.column
+          : ViewMode.list;
+    } finally {
+      _applyingTabView = false;
+    }
+  }
+
+  Future<void> applyViewConfiguration(
+    FileViewConfiguration view, {
+    String? profileId,
+  }) async {
+    final reload = _showHiddenFiles != view.showHidden;
+    _applyTabView(view);
+    activeTab?.viewProfileId = profileId;
+    _captureTabView();
+    _sortFiles();
+    notifyListeners();
+    if (reload) await refresh();
+    await _saveTabs();
+  }
+
+  void setColumnSort(String id, {bool secondary = false}) {
+    final columns = _ref.read(fileColumnsProvider(side));
+    if (!columns.any((column) => column.id == id)) return;
+    if (secondary) {
+      _secondarySortColumnId = _secondarySortColumnId == id ? null : id;
+      _secondarySortBy = null;
+    } else if (_sortColumnId == id) {
+      _sortOrder = _sortOrder == SortOrder.ascending
+          ? SortOrder.descending
+          : SortOrder.ascending;
+    } else {
+      _sortColumnId = id;
+      _sortOrder = SortOrder.ascending;
+    }
+    _sortFiles();
+    _rememberTabView();
+    notifyListeners();
+  }
+
   String _nextTabId() => 'tab_${_tabIdCounter++}';
 
   String get _tabStorageKey => 'panel_tabs_${side.name}';
@@ -3849,6 +4015,10 @@ class PanelNotifier extends ChangeNotifier {
   }
 
   void _departTab() {
+    // Closing or replacing the active tab can remove it before selection.
+    // Never capture its old view into activeTab's fallback (the first tab).
+    if (!_tabs.any((tab) => tab.id == _activeTabId)) return;
+    _captureTabView();
     _rememberFileListTab();
     final tab = activeTab;
     if (tab != null && tab.resetToLockedLocation()) {
@@ -3863,7 +4033,13 @@ class PanelNotifier extends ChangeNotifier {
   }) {
     _departTab();
     _leaveFileList(forget: false);
-    final tab = PanelTab(id: _nextTabId(), path: path, storage: storage);
+    final tab = PanelTab(
+      id: _nextTabId(),
+      path: path,
+      storage: storage,
+      view: activeTab?.view,
+      viewProfileId: activeTab?.viewProfileId,
+    );
     final index = _tabs.indexWhere((value) => value.id == _activeTabId);
     _tabs.insert(index < 0 ? _tabs.length : index + 1, tab);
     _activeTabId = tab.id;
@@ -3976,6 +4152,8 @@ class PanelNotifier extends ChangeNotifier {
     bool force = false,
     bool rethrowErrors = false,
   }) async {
+    _captureTabView();
+    _viewSaveDebounce?.cancel();
     if (!force && !kIsWeb && Platform.environment.containsKey('FLUTTER_TEST')) {
       return;
     }
@@ -4039,6 +4217,7 @@ class PanelNotifier extends ChangeNotifier {
   Future<void> _restoreSelectedTab() async {
     final tab = activeTab;
     if (tab == null || _isDisposed) return;
+    _applyTabView(tab.view);
     try {
       if (tab.collectionId != null) {
         await openCollection(tab.collectionId!);
@@ -4134,6 +4313,7 @@ class PanelNotifier extends ChangeNotifier {
     _activeTabId = tabId;
     _pendingTabStorage = null;
     final tab = activeTab;
+    _applyTabView(tab?.view);
     if (tab != null) {
       if (_isArchiveVirtualPath(tab.path)) return;
       if (side == PanelSide.local) {
@@ -4150,6 +4330,7 @@ class PanelNotifier extends ChangeNotifier {
       _collectionId = list.collectionId;
       _collectionSearch = list.search;
       _files = List.of(list.files);
+      _sortFiles();
       _selection
         ..clear()
         ..addAll(list.selection);
@@ -4237,6 +4418,7 @@ class PanelNotifier extends ChangeNotifier {
   void duplicateTab(String tabId) {
     final index = _tabs.indexWhere((tab) => tab.id == tabId);
     if (index < 0) return;
+    _captureTabView();
     _rememberFileListTab();
     final original = _tabs[index];
     final snapshot = _fileListTabs[tabId];
@@ -4247,6 +4429,8 @@ class PanelNotifier extends ChangeNotifier {
       customLabel: original.customLabel,
       storage: original.storage,
       collectionId: original.collectionId,
+      view: original.view,
+      viewProfileId: original.viewProfileId,
     );
     _tabs.insert(index + 1, duplicate);
     if (snapshot != null) _fileListTabs[duplicate.id] = snapshot;
@@ -4292,6 +4476,47 @@ class PanelNotifier extends ChangeNotifier {
     return _tabs.map((tab) => tab.toJson()).toList(growable: false);
   }
 
+  /// Opens a bookmark against its original account. Locked tabs remain intact;
+  /// opening a bookmark beside them does not alter their saved lock anchors.
+  Future<void> openSavedLocation(
+    Map<String, dynamic> saved, {
+    bool newTab = false,
+  }) async {
+    final target = PanelTab.fromJson('bookmark', saved);
+    if (target.collectionId != null) {
+      final store = _ref.read(fileCollectionStoreProvider);
+      await store.ready;
+      if (store.get(target.collectionId!) == null) {
+        throw StateError('The bookmarked collection is unavailable.');
+      }
+    } else if (target.storage == null ||
+        resolveStorageReference(target.storage!, target.path) == null) {
+      throw StateError('Reconnect the original account for this bookmark.');
+    }
+    final locked = activeTab?.lockMode;
+    if (newTab ||
+        locked == TabLockMode.locked ||
+        locked == TabLockMode.newTab) {
+      await restoreTabs([saved]);
+      return;
+    }
+    if (target.collectionId != null) {
+      await openCollection(target.collectionId!);
+    } else {
+      final origin = resolveStorageReference(target.storage!, target.path);
+      if (origin == null || !origin.isCurrent) {
+        throw StateError('The bookmarked storage account disconnected.');
+      }
+      await navigateToPath(target.path, origin: origin);
+    }
+    if (target.view != null) {
+      await applyViewConfiguration(
+        target.view!,
+        profileId: target.viewProfileId,
+      );
+    }
+  }
+
   Future<void> restoreTabs(
     List<Map<String, dynamic>> saved, {
     int activeIndex = 0,
@@ -4310,8 +4535,9 @@ class PanelNotifier extends ChangeNotifier {
           'Saved tabs must identify their storage account.',
         );
       }
-      final paths = tab.storage?.isLocal == true && !kIsWeb
-          ? p.context
+      final paths =
+          tab.storage?.isLocal == true && tab.storage?.provider == 'windows'
+          ? p.windows
           : p.posix;
       if (!paths.isAbsolute(tab.path) || _isArchiveVirtualPath(tab.path)) {
         throw const FormatException(
@@ -4964,6 +5190,7 @@ class PanelNotifier extends ChangeNotifier {
     _isDisposed = true;
     _typeaheadResetTimer?.cancel();
     _refreshDebounce?.cancel();
+    _viewSaveDebounce?.cancel();
     listFocusNode.dispose();
     super.dispose();
   }

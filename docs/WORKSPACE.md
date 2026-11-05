@@ -20,3 +20,13 @@ Feeding search results into a locked folder opens a separate tab. When a result 
 Saved tab configurations retain full storage references and collection IDs. Unavailable accounts remain visibly unavailable; they are never replaced by whichever account happens to be active. Imported locations are validated before existing tabs are removed, and protected tabs are retained during replacement unless explicitly included.
 
 The lock modes follow the behaviors described in the [Double Commander tab documentation](https://doublecmd.github.io/doc/en/help.html). CrispCloud binds each location to its storage account as well as its path.
+
+## Saved views and workspace storage
+
+Each tab retains its display mode, visible column order and widths, primary and secondary sort, hidden-file setting and manual name filter. Temporary type-ahead text is not saved. Switching or closing tabs restores the destination tab's settings. Compact file rows and their headers share the same responsive column calculation: narrower panes keep the name readable and show the remaining columns when space is available.
+
+Views support size, modification date, extension, original path, storage source, collection status and supplied metadata fields. Metadata columns can address a direct key or a dotted nested key and sort numeric values numerically. They do not execute an external metadata plugin or download file contents merely to display a column.
+
+Named groups capture both panes and their layout; paired bookmarks capture the two active locations. Both locations in a pair are checked against their original accounts before navigation begins. If a provider disconnects between opening the two panes, the error identifies that interruption; navigation is not a filesystem transaction.
+
+The versioned workspace settings document is written only after complete validation and a successful persistence acknowledgment. Import merges entries by stable saved IDs, validates the entire document first, and is limited to 2 MiB. Credentials, client objects and file contents are excluded. Foreign local installations remain foreign; an imported local path does not grant access on another machine. File-list tabs refer to separately persisted collections, which must also be available when transferring settings between installations.

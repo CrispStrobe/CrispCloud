@@ -3,6 +3,8 @@ import 'dart:io';
 
 import 'package:ffi/ffi.dart';
 
+export 'native_copy_primitives_io.dart';
+
 typedef _RenameAt2Native = Int32 Function(
   Int32,
   Pointer<Utf8>,
