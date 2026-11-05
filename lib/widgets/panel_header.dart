@@ -16,6 +16,8 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../l10n/app_localizations.dart';
+import '../l10n/gallery_strings.dart';
+import 'file_view_selector.dart';
 import '../models/panel_side.dart';
 import '../models/file_item.dart';
 import '../providers/providers.dart';
@@ -457,7 +459,9 @@ class _PanelHeaderState extends ConsumerState<PanelHeader> {
         _menuItem('sort_order', Icons.swap_vert, 'Reverse sort order'),
         const PopupMenuDivider(),
         _menuItem('density', Icons.density_medium, 'Toggle row density'),
-        _menuItem('view_mode', Icons.view_list, 'Cycle list/grid/columns'),
+        _menuItem('view_mode', Icons.view_list, 'Cycle list/icons/tiles/gallery/columns'),
+        _menuItem('gallery', Icons.photo_library_outlined, context.galleryTr('Image gallery')),
+        _menuItem('tiles', Icons.view_module_outlined, context.galleryTr('Tiles')),
         _menuItem('filter', Icons.filter_list, 'Filter files…'),
         _menuItem('hidden', Icons.visibility, 'Toggle hidden files'),
         if (isLocal)
@@ -556,16 +560,11 @@ class _PanelHeaderState extends ConsumerState<PanelHeader> {
         final ViewMode mode = local
             ? ref.read(localViewModeProvider)
             : ref.read(remoteViewModeProvider);
-        final ViewMode next = mode == ViewMode.list
-            ? ViewMode.grid
-            : mode == ViewMode.grid
-                ? ViewMode.column
-                : ViewMode.list;
-        if (local) {
-          ref.read(localViewModeProvider.notifier).state = next;
-        } else {
-          ref.read(remoteViewModeProvider.notifier).state = next;
-        }
+        setFileView(ref, widget.side, mode.next);
+      case 'gallery':
+        setFileView(ref, widget.side, ViewMode.gallery);
+      case 'tiles':
+        setFileView(ref, widget.side, ViewMode.tiles);
       case 'filter':
         showPanelFilterDialog(context, panel);
       case 'hidden':

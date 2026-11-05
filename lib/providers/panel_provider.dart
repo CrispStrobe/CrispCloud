@@ -640,29 +640,52 @@ class PanelNotifier extends ChangeNotifier {
 
   Future<void> enterArchive(FileItem file) async {
     if (file.path == null && file.name.isEmpty) return;
-    final archivePath = file.path ?? p.posix.join(_remotePath, file.name);
-    final parentSource = side == PanelSide.local
-        ? LocalPanelSource(currentPath)
-        : LocalPanelSource(currentPath);
+    final origin = originForFile(file);
+    final selected = _ref.read(panelSourceProvider(side));
+    // A recursive local result is read-only but still has an unambiguous
+    // filesystem source. Never infer an archive's source from pane position.
+    final parentSource = origin?.source ??
+        (_isFlatView && selected is LocalPanelSource && !_isLoading &&
+                (_files?.any((item) => identical(item, file)) ?? false)
+            ? selected : null);
+    if (parentSource == null ||
+        (parentSource is! LocalPanelSource && parentSource is! RemotePanelSource)) {
+      _ref.read(errorProvider).addError(
+          'Refresh this folder before opening the archive. Its source could not be verified.');
+      return;
+    }
+    final archivePath = file.path ??
+        (parentSource is LocalPanelSource && !kIsWeb ? p.context : p.posix)
+            .join(parentSource.currentPath, file.name);
     _log.info('enterArchive: $archivePath');
-    _archiveSource =
+    final openedSource =
         const PanelSourceService().enterArchive(archivePath, parentSource);
+    _archiveSource = openedSource;
 
     // Load the archive through the platform service so macOS security-scoped
     // bookmarks are honoured; the listing is decoded from these bytes.
     _archiveBytes = null;
     try {
-      if (side == PanelSide.local) {
-        await _localFileService.ensureAccess(archivePath);
-        _archiveBytes = await _localFileService.readFile(
+      final Uint8List bytes;
+      if (parentSource is LocalPanelSource) {
+        if (!await _localFileService.ensureAccess(archivePath)) {
+          throw const ArchiveViewException('Access to the archive was not granted.');
+        }
+        bytes = await _localFileService.readFile(
           archivePath,
           fileItem: file,
         );
       } else {
-        final client = _ref.read(authProvider).client;
-        _archiveBytes = await client.downloadFileBytes(archivePath);
+        bytes = await (parentSource as RemotePanelSource).client
+            .downloadFileBytes(archivePath);
       }
+      if (_isDisposed || !identical(_archiveSource, openedSource)) return;
+      if (origin != null && !origin.isCurrent) {
+        throw const ArchiveViewException('The storage account changed while opening the archive.');
+      }
+      _archiveBytes = bytes;
     } catch (e) {
+      if (_isDisposed || !identical(_archiveSource, openedSource)) return;
       _log.warn('archive open failed', e);
       _archiveSource = null;
       _ref.read(errorProvider).addError('Cannot open archive: $e');
@@ -671,7 +694,7 @@ class PanelNotifier extends ChangeNotifier {
     }
 
     await _loadArchiveFiles();
-    notifyListeners();
+    if (!_isDisposed) notifyListeners();
   }
 
   /// Navigate deeper into a folder within the archive.
@@ -706,14 +729,20 @@ class PanelNotifier extends ChangeNotifier {
     _archiveSource = null;
     _archiveBytes = null;
     if (source != null) {
-      if (side == PanelSide.local) {
+      if (source.parent is LocalPanelSource) {
         _localPath = p.dirname(source.archivePath);
-      } else {
+      } else if (source.parent is RemotePanelSource) {
         _remotePath = p.posix.dirname(source.archivePath);
       }
     }
     _syncTabPath();
-    unawaited(refresh().then((_) {
+    // Restore the captured storage source, including a local directory in
+    // the right pane or cloud storage in the left pane.
+    final reload = source?.parent is LocalPanelSource
+        ? _loadLocalFiles()
+        : source?.parent is RemotePanelSource
+            ? _loadRemoteFiles() : refresh();
+    unawaited(reload.then((_) {
       if (!_isDisposed) focusList();
     }));
   }
@@ -866,6 +895,7 @@ class PanelNotifier extends ChangeNotifier {
     // (not the shared singleton _localFileService.currentPath).
     final source = _ref.read(panelSourceProvider(side));
     if (source.isLocal) return _localPath;
+    if (source.isRemote) return _remotePath;
     if (side == PanelSide.local) return _localPath;
     return _remotePath;
   }
@@ -1010,6 +1040,30 @@ class PanelNotifier extends ChangeNotifier {
     _log.debug('clearSelection (was ${_selection.length})');
     _selection.clear();
     _lastSelected = null;
+    notifyListeners();
+  }
+
+  /// Select an explicit projection of the current listing (gallery filters,
+  /// visual sort/ranges). Hidden entries must never be added by a range or
+  /// Select all action. Only the exact listed objects are accepted.
+  void selectVisibleItems(
+    Iterable<FileItem> items, {
+    FileItem? cursor,
+    FileItem? anchor,
+  }) {
+    final listed = _files;
+    if (listed == null) return;
+    final valid = Set<FileItem>.identity()..addAll(listed);
+    final selected = items.where((item) => item.name != '..' && valid.contains(item)).toList();
+    _selection..clear()..addAll(selected);
+    if (cursor != null && valid.contains(cursor)) {
+      _cursorIndex = _indexOfIdentical(listed, cursor);
+      _itemToScrollTo = cursor;
+    }
+    _lastSelected = anchor != null && valid.contains(anchor) ? anchor : cursor;
+    if (_ref.read(activePanelProvider) != side) {
+      _ref.read(activePanelProvider.notifier).state = side;
+    }
     notifyListeners();
   }
 
@@ -2415,7 +2469,7 @@ class PanelNotifier extends ChangeNotifier {
   /// Read one member of the currently opened archive for the internal viewer.
   /// The archive is reopened metadata-only, so F3 works for files inside ZIP,
   /// TAR, 7z and RAR archives that the panel is browsing.
-  Future<Uint8List> readArchiveMember(FileItem file) async {
+  Future<Uint8List> readArchiveMember(FileItem file, {int maxBytes = kArchiveReadLimit}) async {
     final source = _archiveSource;
     final bytes = _archiveBytes;
     if (source == null || bytes == null) {
@@ -2443,7 +2497,7 @@ class PanelNotifier extends ChangeNotifier {
           'Could not find "${file.name}" inside ${source.archiveName}.',
         );
       }
-      return await archive.readMember(match, maxBytes: kArchiveReadLimit);
+      return await archive.readMember(match, maxBytes: maxBytes);
     } finally {
       await archive?.close();
     }
