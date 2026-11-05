@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import '../l10n/commander_strings.dart';
 import '../models/panel_side.dart';
 import '../models/storage_reference.dart';
 import '../providers/bookmarks_provider.dart';
@@ -52,9 +53,12 @@ Future<void> togglePanelBookmark(
     if (panel.showingSearchResults && location == panel.currentPath) {
       storage = bookmarkStorage(panel) ?? capturedTab?.storage;
       await panel.exportTabs();
+      if (!context.mounted) return;
       collectionId = capturedTab?.collectionId;
       if (collectionId == null) {
-        throw StateError('Save this file list before bookmarking it.');
+        throw StateError(
+          context.commanderTr('Save this file list before bookmarking it.'),
+        );
       }
     } else {
       storage = panel.captureCurrentOrigin().storageReference;
@@ -97,7 +101,9 @@ Future<void> openBookmark(
   try {
     if (!bookmark.isBound) {
       throw StateError(
-        'This older bookmark has no saved account. Bind it to its original source in Commander workspaces before opening it.',
+        context.commanderTr(
+          'This older bookmark has no saved account. Bind it to its original source in Commander workspaces before opening it.',
+        ),
       );
     }
     await ref
@@ -141,18 +147,25 @@ Future<void> bindLegacyBookmark(
       context: context,
       builder: (context) => AlertDialog(
         scrollable: true,
-        title: const Text('Bind older bookmark'),
+        title: Text(context.commanderTr("Bind older bookmark")),
         content: Text(
-          'Use ${panel.storageDisplayName(origin.storageReference)} as the original source for this bookmark?\n\n${bookmark.name}\n${bookmark.path}',
+          context.commanderTr(
+            "Use {0} as the original source for this bookmark?\n\n{1}\n{2}",
+            [
+              panel.storageDisplayName(origin.storageReference),
+              bookmark.name,
+              bookmark.path,
+            ],
+          ),
         ),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(context, false),
-            child: const Text('Cancel'),
+            child: Text(context.commanderTr("Cancel")),
           ),
           FilledButton(
             onPressed: () => Navigator.pop(context, true),
-            child: const Text('Bind to this source'),
+            child: Text(context.commanderTr("Bind to this source")),
           ),
         ],
       ),

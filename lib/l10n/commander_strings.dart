@@ -3,6 +3,7 @@ import 'package:flutter/widgets.dart';
 import 'app_localizations.dart';
 import 'commander_translations.dart';
 import 'image_editor_translations.dart';
+import 'workspace_translations.dart';
 
 /// Locale-aware chrome for Commander workflows. Stored paths, masks, provider
 /// identifiers and names are passed as arguments, never used as translation keys.
@@ -19,7 +20,10 @@ abstract final class CommanderStrings {
     'ar',
   ];
   static final _custom = {
-    for (final entry in commanderTranslations.entries)
+    for (final entry in {
+      ...commanderTranslations,
+      ...workspaceTranslations,
+    }.entries)
       _normalize(entry.key): entry.value,
   };
   static final _imageKeys = {

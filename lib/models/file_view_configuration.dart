@@ -20,23 +20,34 @@ class FileColumnDefinition {
     required this.label,
     required this.kind,
     this.metadataKey,
+    this.localizeLabel = false,
   });
   final String id;
   final String label;
   final FileColumnKind kind;
   final String? metadataKey;
 
+  /// Built-in labels follow the app locale; user-entered titles stay literal.
+  final bool localizeLabel;
+
   static const defaults = [
-    FileColumnDefinition(id: 'size', label: 'Size', kind: FileColumnKind.size),
+    FileColumnDefinition(
+      id: 'size',
+      label: 'Size',
+      kind: FileColumnKind.size,
+      localizeLabel: true,
+    ),
     FileColumnDefinition(
       id: 'date',
       label: 'Date',
       kind: FileColumnKind.modified,
+      localizeLabel: true,
     ),
     FileColumnDefinition(
       id: 'ext',
       label: 'Ext',
       kind: FileColumnKind.extension,
+      localizeLabel: true,
     ),
   ];
 
@@ -136,6 +147,7 @@ class FileColumnDefinition {
     'id': id,
     'label': label,
     'kind': kind.name,
+    'localizeLabel': localizeLabel,
     if (metadataKey != null) 'metadataKey': metadataKey,
   };
 
@@ -145,6 +157,14 @@ class FileColumnDefinition {
       label: value['label'] as String,
       kind: FileColumnKind.values.byName(value['kind'] as String),
       metadataKey: value['metadataKey'] as String?,
+      localizeLabel:
+          value['localizeLabel'] as bool? ??
+          defaults.any(
+            (column) =>
+                column.id == value['id'] &&
+                column.label == value['label'] &&
+                column.kind.name == value['kind'],
+          ),
     );
     column.validate();
     return column;

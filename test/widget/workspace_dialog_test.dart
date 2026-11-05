@@ -1,4 +1,6 @@
 import 'package:crisp_cloud/models/file_view_configuration.dart';
+import 'package:crisp_cloud/l10n/app_localizations.dart';
+import 'package:crisp_cloud/l10n/commander_strings.dart';
 import 'package:crisp_cloud/models/panel_side.dart';
 import 'package:crisp_cloud/providers/panel_provider.dart';
 import 'package:crisp_cloud/providers/bookmarks_provider.dart';
@@ -22,11 +24,15 @@ void main() {
     WidgetTester tester,
     Widget child, {
     double scale = 1,
+    String language = 'en',
   }) async {
     await tester.pumpWidget(
       UncontrolledProviderScope(
         container: harness.container,
         child: MaterialApp(
+          locale: Locale(language),
+          supportedLocales: AppLocalizations.supportedLocales,
+          localizationsDelegates: AppLocalizations.localizationsDelegates,
           builder: (context, child) => MediaQuery(
             data: MediaQuery.of(context)
                 .copyWith(textScaler: TextScaler.linear(scale)),
@@ -132,7 +138,7 @@ void main() {
       expect(catalog.groups.single.right.tabs.single.path, '/one');
       expect(find.text('Project work'), findsOneWidget);
       await remote.navigateToPath('/');
-      await tester.ensureVisible(find.text('Append tabs'));
+      await reveal(tester, find.text('Append tabs'));
       await tester.tap(find.text('Append tabs'));
       await tester.pumpAndSettle();
       expect(remote.currentPath, '/one');
@@ -291,4 +297,33 @@ void main() {
       expect(tester.takeException(), isNull);
     },
   );
+  for (final language in ['de', 'ar']) {
+    testWidgets('workspace editor supports narrow large-text $language', (
+      tester,
+    ) async {
+      await tester.binding.setSurfaceSize(const Size(320, 740));
+      addTearDown(() => tester.binding.setSurfaceSize(null));
+      await mount(
+        tester,
+        const WorkspaceDialog(side: PanelSide.remote, initialSection: 2),
+        scale: 1.8,
+        language: language,
+      );
+      expect(tester.takeException(), isNull);
+      final create = find.text(
+        CommanderStrings.forLanguage(language, 'Create view profile'),
+      );
+      await reveal(tester, create);
+      await tester.tap(create);
+      await tester.pumpAndSettle();
+      expect(tester.takeException(), isNull);
+      final width = find.byKey(const ValueKey('column-width-size'));
+      await tester.ensureVisible(width);
+      await tester.enterText(width, '80');
+      await tester.tap(find.byKey(const ValueKey('apply-view')));
+      await tester.pumpAndSettle();
+      expect(find.byKey(const ValueKey('workspace-name')), findsOneWidget);
+      expect(tester.takeException(), isNull);
+    });
+  }
 }

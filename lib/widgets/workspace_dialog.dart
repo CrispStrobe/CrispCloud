@@ -2,6 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:uuid/uuid.dart';
 
+import '../l10n/commander_strings.dart';
+import '../l10n/workspace_strings.dart';
 import '../models/panel_side.dart';
 import '../models/workspace_configuration.dart';
 import '../providers/panel_provider.dart';
@@ -78,7 +80,9 @@ class _WorkspaceDialogState extends ConsumerState<WorkspaceDialog> {
       );
 
   Future<void> _saveGroup({SavedWorkspace? existing}) async {
-    final name = existing?.name ?? await _name('Name this tab group');
+    final name =
+        existing?.name ??
+        await _name(context.commanderTr('Name this tab group'));
     if (name == null || !mounted) return;
     await _run(
       () async => _store.saveGroup(
@@ -88,7 +92,9 @@ class _WorkspaceDialogState extends ConsumerState<WorkspaceDialog> {
   }
 
   Future<void> _savePair({PairedBookmark? existing}) async {
-    final name = existing?.name ?? await _name('Name this paired bookmark');
+    final name =
+        existing?.name ??
+        await _name(context.commanderTr('Name this paired bookmark'));
     if (name == null || !mounted) return;
     await _run(
       () async => _store.savePair(
@@ -107,7 +113,9 @@ class _WorkspaceDialogState extends ConsumerState<WorkspaceDialog> {
       ),
     );
     if (value == null || !mounted) return;
-    final name = existing?.name ?? await _name('Name this view profile');
+    final name =
+        existing?.name ??
+        await _name(context.commanderTr('Name this view profile'));
     if (name == null || !mounted) return;
     await _run(() async {
       final profile = SavedViewProfile(
@@ -124,7 +132,7 @@ class _WorkspaceDialogState extends ConsumerState<WorkspaceDialog> {
   }
 
   Future<void> _rename(NamedWorkspaceItem item) async {
-    final name = await _name('Rename', initial: item.name);
+    final name = await _name(context.commanderTr('Rename'), initial: item.name);
     if (name == null || !mounted) return;
     await _run(() async {
       switch (item) {
@@ -161,13 +169,19 @@ class _WorkspaceDialogState extends ConsumerState<WorkspaceDialog> {
         context: context,
         builder: (_) => RenameTextDialog(
           title: importing
-              ? 'Import workspace settings'
-              : 'Export workspace settings',
+              ? context.commanderTr("Import workspace settings")
+              : context.commanderTr("Export workspace settings"),
           instructions: importing
-              ? 'Merge named tab groups, paired bookmarks and views by their saved IDs. Original accounts remain required. Referenced file collections must be imported separately.'
-              : 'This JSON contains locations and view settings. It includes no credentials or file contents. Referenced file collections are exported separately.',
+              ? context.commanderTr(
+                  "Merge named tab groups, paired bookmarks and views by their saved IDs. Original accounts remain required. Referenced file collections must be imported separately.",
+                )
+              : context.commanderTr(
+                  "This JSON contains locations and view settings. It includes no credentials or file contents. Referenced file collections are exported separately.",
+                ),
           initialText: text,
-          submitLabel: importing ? 'Import settings' : 'Done',
+          submitLabel: importing
+              ? context.commanderTr("Import settings")
+              : context.commanderTr("Done"),
           fileExtensions: const ['json'],
           filename: 'crispcloud-workspaces.json',
           validate: (text) {
@@ -203,10 +217,16 @@ class _WorkspaceDialogState extends ConsumerState<WorkspaceDialog> {
       final result = await showDialog<String>(
         context: context,
         builder: (_) => RenameTextDialog(
-          title: importing ? 'Import bookmarks' : 'Export bookmarks',
-          instructions: 'Bookmarks keep their original storage account or collection. Older unbound bookmarks require explicit source binding before they can open.',
+          title: importing
+              ? context.commanderTr("Import bookmarks")
+              : context.commanderTr("Export bookmarks"),
+          instructions: context.commanderTr(
+            "Bookmarks keep their original storage account or collection. Older unbound bookmarks require explicit source binding before they can open.",
+          ),
           initialText: text,
-          submitLabel: importing ? 'Import bookmarks' : 'Done',
+          submitLabel: importing
+              ? context.commanderTr("Import bookmarks")
+              : context.commanderTr("Done"),
           filename: 'crispcloud-bookmarks.json',
           fileExtensions: const ['json'],
           validate: (text) {
@@ -228,7 +248,10 @@ class _WorkspaceDialogState extends ConsumerState<WorkspaceDialog> {
   }
 
   Future<void> _renameBookmark(Bookmark bookmark) async {
-    final name = await _name('Rename bookmark', initial: bookmark.name);
+    final name = await _name(
+      context.commanderTr('Rename bookmark'),
+      initial: bookmark.name,
+    );
     if (name == null || !mounted) return;
     await _run(
       () => ref
@@ -251,19 +274,23 @@ class _WorkspaceDialogState extends ConsumerState<WorkspaceDialog> {
     length: 3,
     initialIndex: widget.initialSection.clamp(0, 2),
     child: AlertDialog(
-      title: const Text('Commander workspaces'),
+      title: Text(
+        context.commanderTr("Commander workspaces"),
+        maxLines: 2,
+        overflow: TextOverflow.ellipsis,
+      ),
       content: SizedBox(
         width: 760,
-        height: (MediaQuery.sizeOf(context).height * 0.68).clamp(240, 600),
+        height: (MediaQuery.sizeOf(context).height * 0.48).clamp(160, 520),
         child: Column(
           children: [
-            const TabBar(
+            TabBar(
               isScrollable: true,
               tabAlignment: TabAlignment.start,
               tabs: [
-                Tab(text: 'Tab groups'),
-                Tab(text: 'Paired bookmarks'),
-                Tab(text: 'View profiles'),
+                Tab(text: context.commanderTr('Tab groups')),
+                Tab(text: context.commanderTr('Paired bookmarks')),
+                Tab(text: context.commanderTr('View profiles')),
               ],
             ),
             if (_busy) const LinearProgressIndicator(),
@@ -282,7 +309,7 @@ class _WorkspaceDialogState extends ConsumerState<WorkspaceDialog> {
                           ? const CircularProgressIndicator()
                           : TextButton(
                               onPressed: _load,
-                              child: const Text('Retry'),
+                              child: Text(context.commanderTr("Retry")),
                             ),
                     )
                   : TabBarView(children: [_groups(), _pairs(), _profiles()]),
@@ -293,17 +320,17 @@ class _WorkspaceDialogState extends ConsumerState<WorkspaceDialog> {
       actions: [
         TextButton(
           onPressed: _busy ? null : () => _exchange(importing: true),
-          child: const Text('Import'),
+          child: Text(context.commanderTr("Import")),
         ),
         TextButton(
           onPressed: _busy || _catalog == null
               ? null
               : () => _exchange(importing: false),
-          child: const Text('Export'),
+          child: Text(context.commanderTr("Export")),
         ),
         TextButton(
           onPressed: _busy ? null : () => Navigator.pop(context),
-          child: const Text('Close'),
+          child: Text(context.commanderTr("Close")),
         ),
       ],
     ),
@@ -312,21 +339,23 @@ class _WorkspaceDialogState extends ConsumerState<WorkspaceDialog> {
   Widget _groups() => ListView(
     padding: const EdgeInsets.only(top: 12),
     children: [
-      const Text(
-        'Save both panes, their tab order, accounts, locks, views and layout. Unavailable accounts stay unavailable when a group opens.',
+      Text(
+        context.commanderTr(
+          "Save both panes, their tab order, accounts, locks, views and layout. Unavailable accounts stay unavailable when a group opens.",
+        ),
       ),
       Align(
-        alignment: Alignment.centerLeft,
+        alignment: AlignmentDirectional.centerStart,
         child: FilledButton.icon(
           onPressed: _busy ? null : _saveGroup,
           icon: const Icon(Icons.save_outlined),
-          label: const Text('Save current tab group'),
+          label: Text(context.commanderTr("Save current tab group")),
         ),
       ),
       if (_catalog!.groups.isEmpty)
-        const Padding(
-          padding: EdgeInsets.all(16),
-          child: Text('No saved tab groups yet.'),
+        Padding(
+          padding: const EdgeInsets.all(16),
+          child: Text(context.commanderTr("No saved tab groups yet.")),
         ),
       for (var i = 0; i < _catalog!.groups.length; i++)
         _groupCard(_catalog!.groups[i], i),
@@ -338,28 +367,30 @@ class _WorkspaceDialogState extends ConsumerState<WorkspaceDialog> {
     return ListView(
       padding: const EdgeInsets.only(top: 12),
       children: [
-        const Text(
-          'Open two saved locations together. Both original accounts are checked before either pane changes. Locked tabs are preserved.',
+        Text(
+          context.commanderTr(
+            "Open two saved locations together. Both original accounts are checked before either pane changes. Locked tabs are preserved.",
+          ),
         ),
         Align(
-          alignment: Alignment.centerLeft,
+          alignment: AlignmentDirectional.centerStart,
           child: FilledButton.icon(
             onPressed: _busy ? null : _savePair,
             icon: const Icon(Icons.bookmarks_outlined),
-            label: const Text('Save current pair'),
+            label: Text(context.commanderTr("Save current pair")),
           ),
         ),
         if (_catalog!.pairs.isEmpty)
-          const Padding(
-            padding: EdgeInsets.all(16),
-            child: Text('No paired bookmarks yet.'),
+          Padding(
+            padding: const EdgeInsets.all(16),
+            child: Text(context.commanderTr("No paired bookmarks yet.")),
           ),
         for (var i = 0; i < _catalog!.pairs.length; i++)
           _pairCard(_catalog!.pairs[i], i),
         const Divider(),
-        const Text(
-          'Single locations',
-          style: TextStyle(fontWeight: FontWeight.bold),
+        Text(
+          context.commanderTr("Single locations"),
+          style: const TextStyle(fontWeight: FontWeight.bold),
         ),
         Wrap(
           spacing: 8,
@@ -369,19 +400,19 @@ class _WorkspaceDialogState extends ConsumerState<WorkspaceDialog> {
                   ? null
                   : () => togglePanelBookmark(context, ref, widget.side),
               icon: const Icon(Icons.bookmark_add_outlined),
-              label: const Text('Toggle current bookmark'),
+              label: Text(context.commanderTr("Toggle current bookmark")),
             ),
             TextButton(
               onPressed: _busy
                   ? null
                   : () => _exchangeBookmarks(importing: true),
-              child: const Text('Import bookmarks'),
+              child: Text(context.commanderTr("Import bookmarks")),
             ),
             TextButton(
               onPressed: _busy
                   ? null
                   : () => _exchangeBookmarks(importing: false),
-              child: const Text('Export bookmarks'),
+              child: Text(context.commanderTr("Export bookmarks")),
             ),
           ],
         ),
@@ -403,9 +434,9 @@ class _WorkspaceDialogState extends ConsumerState<WorkspaceDialog> {
                   ),
                   Text(
                     '${bookmark.collectionId != null
-                        ? 'Saved collection'
+                        ? context.commanderTr('Saved collection')
                         : bookmark.storage == null
-                        ? 'Original source not yet bound'
+                        ? context.commanderTr('Original source not yet bound')
                         : ref.read(panelProvider(widget.side)).storageDisplayName(bookmark.storage!)} · ${bookmark.path}',
                   ),
                   Wrap(
@@ -421,7 +452,7 @@ class _WorkspaceDialogState extends ConsumerState<WorkspaceDialog> {
                                   bookmark,
                                   side: widget.side,
                                 ),
-                          child: const Text('Open in this pane'),
+                          child: Text(context.commanderTr("Open in this pane")),
                         )
                       else
                         TextButton(
@@ -433,19 +464,21 @@ class _WorkspaceDialogState extends ConsumerState<WorkspaceDialog> {
                                   bookmark,
                                   widget.side,
                                 ),
-                          child: const Text('Bind original source…'),
+                          child: Text(
+                            context.commanderTr("Bind original source…"),
+                          ),
                         ),
                       TextButton(
                         onPressed: _busy
                             ? null
                             : () => _renameBookmark(bookmark),
-                        child: const Text('Rename'),
+                        child: Text(context.commanderTr("Rename")),
                       ),
                       TextButton(
                         onPressed: _busy
                             ? null
                             : () => removeBookmark(context, ref, bookmark),
-                        child: const Text('Remove'),
+                        child: Text(context.commanderTr("Remove")),
                       ),
                     ],
                   ),
@@ -460,21 +493,23 @@ class _WorkspaceDialogState extends ConsumerState<WorkspaceDialog> {
   Widget _profiles() => ListView(
     padding: const EdgeInsets.only(top: 12),
     children: [
-      const Text(
-        'Save display mode, ordered columns, widths, metadata fields, sorting and a manual filter. Each tab keeps its own view.',
+      Text(
+        context.commanderTr(
+          "Save display mode, ordered columns, widths, metadata fields, sorting and a manual filter. Each tab keeps its own view.",
+        ),
       ),
       Align(
-        alignment: Alignment.centerLeft,
+        alignment: AlignmentDirectional.centerStart,
         child: FilledButton.icon(
           onPressed: _busy ? null : _saveProfile,
           icon: const Icon(Icons.view_column_outlined),
-          label: const Text('Create view profile'),
+          label: Text(context.commanderTr("Create view profile")),
         ),
       ),
       if (_catalog!.profiles.isEmpty)
-        const Padding(
-          padding: EdgeInsets.all(16),
-          child: Text('No saved view profiles yet.'),
+        Padding(
+          padding: const EdgeInsets.all(16),
+          child: Text(context.commanderTr("No saved view profiles yet.")),
         ),
       for (var i = 0; i < _catalog!.profiles.length; i++)
         _profileCard(_catalog!.profiles[i], i),
@@ -507,7 +542,7 @@ class _WorkspaceDialogState extends ConsumerState<WorkspaceDialog> {
               ),
               PopupMenuButton<String>(
                 enabled: !_busy,
-                tooltip: 'Manage ${item.name}',
+                tooltip: context.commanderTr("Manage {0}", [item.name]),
                 onSelected: (value) {
                   switch (value) {
                     case 'rename':
@@ -523,18 +558,27 @@ class _WorkspaceDialogState extends ConsumerState<WorkspaceDialog> {
                   }
                 },
                 itemBuilder: (_) => [
-                  const PopupMenuItem(value: 'rename', child: Text('Rename')),
-                  PopupMenuItem(value: 'update', child: Text(updateLabel)),
+                  PopupMenuItem(
+                    value: 'rename',
+                    child: Text(context.commanderTr("Rename")),
+                  ),
+                  PopupMenuItem(
+                    value: 'update',
+                    child: Text(context.commanderTr(updateLabel)),
+                  ),
                   if (index > 0)
-                    const PopupMenuItem(value: 'up', child: Text('Move up')),
-                  if (index + 1 < count)
-                    const PopupMenuItem(
-                      value: 'down',
-                      child: Text('Move down'),
+                    PopupMenuItem(
+                      value: 'up',
+                      child: Text(context.commanderTr("Move up")),
                     ),
-                  const PopupMenuItem(
+                  if (index + 1 < count)
+                    PopupMenuItem(
+                      value: 'down',
+                      child: Text(context.commanderTr("Move down")),
+                    ),
+                  PopupMenuItem(
                     value: 'remove',
-                    child: Text('Delete saved item'),
+                    child: Text(context.commanderTr("Delete saved item")),
                   ),
                 ],
               ),
@@ -553,8 +597,15 @@ class _WorkspaceDialogState extends ConsumerState<WorkspaceDialog> {
     section: 'groups',
     index: index,
     count: _catalog!.groups.length,
-    details:
-        'Left: ${group.left.tabs.length} tabs · ${_location(group.left.tabs[group.left.activeIndex])}\nRight: ${group.right.tabs.length} tabs · ${_location(group.right.tabs[group.right.activeIndex])}',
+    details: context.commanderTr(
+      'Left: {0} tabs · {1}\nRight: {2} tabs · {3}',
+      [
+        group.left.tabs.length,
+        _location(group.left.tabs[group.left.activeIndex]),
+        group.right.tabs.length,
+        _location(group.right.tabs[group.right.activeIndex]),
+      ],
+    ),
     update: () => _saveGroup(existing: group),
     remove: () => _store.removeGroup(group.id),
     actions: [
@@ -562,11 +613,11 @@ class _WorkspaceDialogState extends ConsumerState<WorkspaceDialog> {
         onPressed: _busy
             ? null
             : () => _run(() => _controller.openGroup(group)),
-        child: const Text('Append tabs'),
+        child: Text(context.commanderTr("Append tabs")),
       ),
       TextButton(
         onPressed: _busy ? null : () => _replaceGroup(group),
-        child: const Text('Replace tabs…'),
+        child: Text(context.commanderTr("Replace tabs…")),
       ),
     ],
   );
@@ -576,19 +627,22 @@ class _WorkspaceDialogState extends ConsumerState<WorkspaceDialog> {
     section: 'pairs',
     index: index,
     count: _catalog!.pairs.length,
-    details: 'Left: ${_location(pair.left)}\nRight: ${_location(pair.right)}',
+    details: context.commanderTr('Left: {0}\nRight: {1}', [
+      _location(pair.left),
+      _location(pair.right),
+    ]),
     update: () => _savePair(existing: pair),
     remove: () => _store.removePair(pair.id),
     actions: [
       TextButton(
         onPressed: _busy ? null : () => _run(() => _controller.openPair(pair)),
-        child: const Text('Open pair'),
+        child: Text(context.commanderTr("Open pair")),
       ),
       TextButton(
         onPressed: _busy
             ? null
             : () => _run(() => _controller.openPair(pair, newTabs: true)),
-        child: const Text('Open in new tabs'),
+        child: Text(context.commanderTr("Open in new tabs")),
       ),
     ],
   );
@@ -599,7 +653,7 @@ class _WorkspaceDialogState extends ConsumerState<WorkspaceDialog> {
     index: index,
     count: _catalog!.profiles.length,
     details:
-        '${profile.configuration.display.name} · ${profile.configuration.columns.map((column) => column.label).join(', ')}',
+        '${profile.configuration.display.localizedLabel(context)} · ${profile.configuration.columns.map((column) => column.localizedLabel(context)).join(', ')}',
     update: () => _saveProfile(existing: profile),
     updateLabel: 'Edit view',
     remove: () => _store.removeProfile(profile.id),
@@ -615,7 +669,7 @@ class _WorkspaceDialogState extends ConsumerState<WorkspaceDialog> {
                       profileId: profile.id,
                     ),
               ),
-        child: const Text('Apply to this pane'),
+        child: Text(context.commanderTr("Apply to this pane")),
       ),
       TextButton(
         onPressed: _busy
@@ -630,7 +684,7 @@ class _WorkspaceDialogState extends ConsumerState<WorkspaceDialog> {
                       );
                 }
               }),
-        child: const Text('Apply to both panes'),
+        child: Text(context.commanderTr("Apply to both panes")),
       ),
     ],
   );
@@ -656,7 +710,10 @@ class _WorkspaceNameDialogState extends State<_WorkspaceNameDialog> {
   void _submit() {
     final value = _text.text.trim();
     if (value.isEmpty || value.length > 160 || value.contains('\u0000')) {
-      setState(() => _error = 'Enter a name with 1–160 characters.');
+      setState(
+        () =>
+            _error = context.commanderTr('Enter a name with 1–160 characters.'),
+      );
       return;
     }
     Navigator.pop(context, value);
@@ -669,15 +726,21 @@ class _WorkspaceNameDialogState extends State<_WorkspaceNameDialog> {
       key: const ValueKey('workspace-name'),
       controller: _text,
       autofocus: true,
-      decoration: InputDecoration(labelText: 'Name', errorText: _error),
+      decoration: InputDecoration(
+        labelText: context.commanderTr("Name"),
+        errorText: _error,
+      ),
       onSubmitted: (_) => _submit(),
     ),
     actions: [
       TextButton(
         onPressed: () => Navigator.pop(context),
-        child: const Text('Cancel'),
+        child: Text(context.commanderTr("Cancel")),
       ),
-      FilledButton(onPressed: _submit, child: const Text('Save')),
+      FilledButton(
+        onPressed: _submit,
+        child: Text(context.commanderTr("Save")),
+      ),
     ],
   );
 }
@@ -694,21 +757,21 @@ class _ReplaceWorkspaceDialogState extends State<_ReplaceWorkspaceDialog> {
   @override
   Widget build(BuildContext context) => AlertDialog(
     scrollable: true,
-    title: const Text('Replace current tabs'),
+    title: Text(context.commanderTr("Replace current tabs")),
     content: CheckboxListTile(
       contentPadding: EdgeInsets.zero,
       value: _keepProtected,
       onChanged: (value) => setState(() => _keepProtected = value ?? true),
-      title: const Text('Keep pinned and locked tabs'),
+      title: Text(context.commanderTr("Keep pinned and locked tabs")),
     ),
     actions: [
       TextButton(
         onPressed: () => Navigator.pop(context),
-        child: const Text('Cancel'),
+        child: Text(context.commanderTr("Cancel")),
       ),
       FilledButton(
         onPressed: () => Navigator.pop(context, _keepProtected),
-        child: const Text('Replace tabs'),
+        child: Text(context.commanderTr("Replace tabs")),
       ),
     ],
   );

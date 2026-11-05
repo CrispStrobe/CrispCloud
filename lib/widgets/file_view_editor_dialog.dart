@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import '../l10n/commander_strings.dart';
+import '../l10n/workspace_strings.dart';
 import '../models/file_item.dart';
 import '../models/file_view_configuration.dart';
 import '../models/panel_side.dart';
@@ -120,14 +122,20 @@ class _FileViewEditorDialogState extends State<FileViewEditorDialog> {
           decoration: InputDecoration(labelText: label),
           items: [
             if (optional)
-              const DropdownMenuItem(value: 'none', child: Text('None')),
+              DropdownMenuItem(
+                value: 'none',
+                child: Text(context.commanderTr("None")),
+              ),
             for (final value in SortBy.values)
-              DropdownMenuItem(value: value.name, child: Text(value.name)),
+              DropdownMenuItem(
+                value: value.name,
+                child: Text(value.localizedLabel(context)),
+              ),
             for (final column in _columns)
               DropdownMenuItem(
                 value: 'column:${column.id}',
                 child: Text(
-                  column.label,
+                  column.localizedLabel(context),
                   maxLines: 1,
                   overflow: TextOverflow.ellipsis,
                 ),
@@ -144,10 +152,15 @@ class _FileViewEditorDialogState extends State<FileViewEditorDialog> {
           key: ValueKey('$label:${order.name}'),
           initialValue: order,
           isExpanded: true,
-          decoration: const InputDecoration(labelText: 'Direction'),
+          decoration: InputDecoration(
+            labelText: context.commanderTr("Direction"),
+          ),
           items: [
             for (final value in SortOrder.values)
-              DropdownMenuItem(value: value, child: Text(value.name)),
+              DropdownMenuItem(
+                value: value,
+                child: Text(value.localizedLabel(context)),
+              ),
           ],
           onChanged: (value) {
             if (value != null) setState(() => changeOrder(value));
@@ -160,7 +173,7 @@ class _FileViewEditorDialogState extends State<FileViewEditorDialog> {
   @override
   Widget build(BuildContext context) => AlertDialog(
     scrollable: true,
-    title: const Text('Columns and view'),
+    title: Text(context.commanderTr("Columns and view")),
     content: Form(
       key: _form,
       child: SizedBox(
@@ -171,10 +184,15 @@ class _FileViewEditorDialogState extends State<FileViewEditorDialog> {
             DropdownButtonFormField<FileViewDisplay>(
               initialValue: _display,
               isExpanded: true,
-              decoration: const InputDecoration(labelText: 'Display'),
+              decoration: InputDecoration(
+                labelText: context.commanderTr("Display"),
+              ),
               items: [
                 for (final mode in FileViewDisplay.values)
-                  DropdownMenuItem(value: mode, child: Text(mode.name)),
+                  DropdownMenuItem(
+                    value: mode,
+                    child: Text(mode.localizedLabel(context)),
+                  ),
               ],
               onChanged: (value) {
                 if (value != null) setState(() => _display = value);
@@ -182,7 +200,7 @@ class _FileViewEditorDialogState extends State<FileViewEditorDialog> {
             ),
             const SizedBox(height: 12),
             _sort(
-              'Primary sort',
+              context.commanderTr('Primary sort'),
               _primary,
               (value) => _primary = value,
               _primaryOrder,
@@ -190,7 +208,7 @@ class _FileViewEditorDialogState extends State<FileViewEditorDialog> {
             ),
             const SizedBox(height: 12),
             _sort(
-              'Secondary sort',
+              context.commanderTr('Secondary sort'),
               _secondary,
               (value) => _secondary = value,
               _secondaryOrder,
@@ -200,34 +218,39 @@ class _FileViewEditorDialogState extends State<FileViewEditorDialog> {
             const SizedBox(height: 12),
             TextField(
               controller: _filter,
-              decoration: const InputDecoration(
-                labelText: 'Saved name filter',
-                helperText: 'A manual filter is saved with this view. Temporary type-ahead is not.',
+              decoration: InputDecoration(
+                labelText: context.commanderTr("Saved name filter"),
+                helperText: context.commanderTr(
+                  "A manual filter is saved with this view. Temporary type-ahead is not.",
+                ),
+                helperMaxLines: 5,
               ),
             ),
             CheckboxListTile(
               contentPadding: EdgeInsets.zero,
-              title: const Text('Show hidden files'),
+              title: Text(context.commanderTr("Show hidden files")),
               value: _hidden,
               onChanged: (value) => setState(() => _hidden = value ?? false),
             ),
             const Divider(),
-            const Text(
-              'Columns in Full view',
-              style: TextStyle(fontWeight: FontWeight.bold),
+            Text(
+              context.commanderTr("Columns in Full view"),
+              style: const TextStyle(fontWeight: FontWeight.bold),
             ),
             const SizedBox(height: 6),
-            const Text(
-              'The name column stays visible. Narrow panes reveal fewer columns; resize the pane to show the rest.',
+            Text(
+              context.commanderTr(
+                "The name column stays visible. Narrow panes reveal fewer columns; resize the pane to show the rest.",
+              ),
             ),
             for (var index = 0; index < _columns.length; index++)
               _columnCard(index),
             Align(
-              alignment: Alignment.centerLeft,
+              alignment: AlignmentDirectional.centerStart,
               child: TextButton.icon(
                 onPressed: _columns.length >= 24 ? null : _addColumn,
                 icon: const Icon(Icons.add),
-                label: const Text('Add column'),
+                label: Text(context.commanderTr("Add column")),
               ),
             ),
             if (_error != null)
@@ -242,7 +265,7 @@ class _FileViewEditorDialogState extends State<FileViewEditorDialog> {
     actions: [
       TextButton(
         onPressed: () => Navigator.pop(context),
-        child: const Text('Cancel'),
+        child: Text(context.commanderTr("Cancel")),
       ),
       FilledButton(
         key: const ValueKey('apply-view'),
@@ -254,7 +277,7 @@ class _FileViewEditorDialogState extends State<FileViewEditorDialog> {
             setState(() => _error = error.toString());
           }
         },
-        child: const Text('Apply view'),
+        child: Text(context.commanderTr("Apply view")),
       ),
     ],
   );
@@ -281,24 +304,30 @@ class _FileViewEditorDialogState extends State<FileViewEditorDialog> {
                 ),
                 Expanded(
                   child: Text(
-                    column.label,
+                    column.localizedLabel(context),
                     style: const TextStyle(fontWeight: FontWeight.w600),
                   ),
                 ),
                 IconButton(
-                  tooltip: 'Move ${column.label} up',
+                  tooltip: context.commanderTr("Move {0} up", [
+                    column.localizedLabel(context),
+                  ]),
                   onPressed: index == 0 ? null : () => _move(index, -1),
                   icon: const Icon(Icons.arrow_upward, size: 18),
                 ),
                 IconButton(
-                  tooltip: 'Move ${column.label} down',
+                  tooltip: context.commanderTr("Move {0} down", [
+                    column.localizedLabel(context),
+                  ]),
                   onPressed: index == _columns.length - 1
                       ? null
                       : () => _move(index, 1),
                   icon: const Icon(Icons.arrow_downward, size: 18),
                 ),
                 IconButton(
-                  tooltip: 'Remove ${column.label}',
+                  tooltip: context.commanderTr("Remove {0}", [
+                    column.localizedLabel(context),
+                  ]),
                   onPressed: () => setState(() {
                     _columns.removeAt(index);
                     _widths.remove(column.id);
@@ -319,7 +348,9 @@ class _FileViewEditorDialogState extends State<FileViewEditorDialog> {
                     key: ValueKey('column-width-${column.id}'),
                     initialValue: '${width.abs().round()}',
                     keyboardType: TextInputType.number,
-                    decoration: const InputDecoration(labelText: 'Width (px)'),
+                    decoration: InputDecoration(
+                      labelText: context.commanderTr("Width (px)"),
+                    ),
                     autovalidateMode: AutovalidateMode.onUserInteraction,
                     validator: (text) {
                       final value = double.tryParse(text ?? '');
@@ -342,7 +373,10 @@ class _FileViewEditorDialogState extends State<FileViewEditorDialog> {
                 Expanded(
                   child: Text(
                     column.kind == FileColumnKind.metadata
-                        ? 'Field: ${column.metadataKey}\n${sample == null ? '' : column.displayValue(sample)}'
+                        ? context.commanderTr("Field: {0}\n{1}", [
+                            column.metadataKey,
+                            sample == null ? '' : column.displayValue(sample),
+                          ])
                         : sample == null
                         ? ''
                         : column.displayValue(sample),
@@ -381,7 +415,7 @@ class _AddColumnDialogState extends State<_AddColumnDialog> {
   @override
   Widget build(BuildContext context) => AlertDialog(
     scrollable: true,
-    title: const Text('Add column'),
+    title: Text(context.commanderTr("Add column")),
     content: SizedBox(
       width: 440,
       child: Column(
@@ -390,10 +424,15 @@ class _AddColumnDialogState extends State<_AddColumnDialog> {
           DropdownButtonFormField<FileColumnKind>(
             initialValue: _kind,
             isExpanded: true,
-            decoration: const InputDecoration(labelText: 'Value'),
+            decoration: InputDecoration(
+              labelText: context.commanderTr("Value"),
+            ),
             items: [
               for (final kind in FileColumnKind.values)
-                DropdownMenuItem(value: kind, child: Text(kind.name)),
+                DropdownMenuItem(
+                  value: kind,
+                  child: Text(kind.localizedLabel(context)),
+                ),
             ],
             onChanged: (value) {
               if (value != null) setState(() => _kind = value);
@@ -401,14 +440,19 @@ class _AddColumnDialogState extends State<_AddColumnDialog> {
           ),
           TextField(
             controller: _label,
-            decoration: const InputDecoration(labelText: 'Column title'),
+            decoration: InputDecoration(
+              labelText: context.commanderTr("Column title"),
+            ),
           ),
           if (_kind == FileColumnKind.metadata)
             TextField(
               controller: _field,
-              decoration: const InputDecoration(
-                labelText: 'Metadata field',
-                helperText: 'A supplied key such as mimeType or image.width. No file downloads or external programs are run.',
+              decoration: InputDecoration(
+                labelText: context.commanderTr("Metadata field"),
+                helperText: context.commanderTr(
+                  "A supplied key such as mimeType or image.width. No file downloads or external programs are run.",
+                ),
+                helperMaxLines: 6,
               ),
             ),
           if (_error != null)
@@ -422,7 +466,7 @@ class _AddColumnDialogState extends State<_AddColumnDialog> {
     actions: [
       TextButton(
         onPressed: () => Navigator.pop(context),
-        child: const Text('Cancel'),
+        child: Text(context.commanderTr("Cancel")),
       ),
       FilledButton(
         onPressed: () {
@@ -433,7 +477,10 @@ class _AddColumnDialogState extends State<_AddColumnDialog> {
           }
           final value = FileColumnDefinition(
             id: id,
-            label: _label.text.trim().isEmpty ? _kind.name : _label.text.trim(),
+            label: _label.text.trim().isEmpty
+                ? _kind.englishLabel
+                : _label.text.trim(),
+            localizeLabel: _label.text.trim().isEmpty,
             kind: _kind,
             metadataKey: _kind == FileColumnKind.metadata
                 ? _field.text.trim()
@@ -446,7 +493,7 @@ class _AddColumnDialogState extends State<_AddColumnDialog> {
             setState(() => _error = error.toString());
           }
         },
-        child: const Text('Add'),
+        child: Text(context.commanderTr("Add")),
       ),
     ],
   );
