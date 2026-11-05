@@ -27,25 +27,43 @@ Uint8List encodeImageExport(
   ImageExportOptions options,
 ) {
   validateImageEditorOutput(source, sourceFormat);
-  final width = options.width;
-  final height = options.height;
-  if ((width == null) != (height == null) ||
-      (width != null &&
-          (width < 1 ||
-              height! < 1 ||
-              width > kImageEditorMaxDimension ||
-              height > kImageEditorMaxDimension ||
-              width * height > kImageEditorMaxPixels)) ||
+  final requestedWidth = options.width;
+  final requestedHeight = options.height;
+  if ((requestedWidth != null &&
+          (requestedWidth < 1 || requestedWidth > kImageEditorMaxDimension)) ||
+      (requestedHeight != null &&
+          (requestedHeight < 1 ||
+              requestedHeight > kImageEditorMaxDimension)) ||
       options.jpegQuality < 1 ||
       options.jpegQuality > 100) {
     throw ArgumentError('Invalid image export options');
   }
   var pixels = image.decodeImage(source);
-  if (pixels == null)
+  if (pixels == null) {
     throw const ImageEditException(ImageEditFailure.invalidImage);
-  if (width != null &&
-      height != null &&
-      (width != pixels.width || height != pixels.height)) {
+  }
+  final width =
+      requestedWidth ??
+      (requestedHeight == null
+          ? pixels.width
+          : (pixels.width * requestedHeight / pixels.height).round().clamp(
+              1,
+              kImageEditorMaxDimension + 1,
+            ));
+  final height =
+      requestedHeight ??
+      (requestedWidth == null
+          ? pixels.height
+          : (pixels.height * requestedWidth / pixels.width).round().clamp(
+              1,
+              kImageEditorMaxDimension + 1,
+            ));
+  if (width > kImageEditorMaxDimension ||
+      height > kImageEditorMaxDimension ||
+      width * height > kImageEditorMaxPixels) {
+    throw ArgumentError('Invalid image export dimensions');
+  }
+  if (width != pixels.width || height != pixels.height) {
     pixels = image.copyResize(
       pixels,
       width: width,

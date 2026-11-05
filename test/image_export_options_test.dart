@@ -35,10 +35,19 @@ void main() {
     expect(pixel.b, greaterThan(245));
   });
 
+  test('one dimension preserves the edited aspect ratio', () {
+    final bytes = encodeImageExport(
+      buildImageEditorFixture(),
+      ImageFileFormat.png,
+      const ImageExportOptions(format: ImageFileFormat.png, width: 12),
+    );
+    final result = image.decodePng(bytes)!;
+    expect((result.width, result.height), (12, 8));
+  });
+
   test('rejects invalid dimensions and quality', () {
     final source = buildImageEditorFixture();
     for (final options in [
-      const ImageExportOptions(format: ImageFileFormat.png, width: 5),
       const ImageExportOptions(
         format: ImageFileFormat.png,
         width: 0,

@@ -65,8 +65,7 @@ const imageEditorTranslations = <String, Map<String, String>>{
         'Projects retain editable layers. Exported images are flattened.',
     'Export image copy': 'Export image copy',
     'Format': 'Format',
-    'Leave dimensions empty to keep the edited size.':
-        'Leave dimensions empty to keep the edited size.',
+    'Leave both dimensions empty to keep the size, or enter one to preserve proportions.': 'Leave both dimensions empty to keep the size, or enter one to preserve proportions.',
     'Width in pixels': 'Width in pixels',
     'Height in pixels': 'Height in pixels',
     'JPEG quality (1–100)': 'JPEG quality (1–100)',
@@ -240,8 +239,7 @@ const imageEditorTranslations = <String, Map<String, String>>{
     'Projects retain editable layers. Exported images are flattened.': 'Projekte behalten bearbeitbare Ebenen. Exportierte Bilder werden zusammengeführt.',
     'Export image copy': 'Bildkopie exportieren',
     'Format': 'Format',
-    'Leave dimensions empty to keep the edited size.':
-        'Maße leer lassen, um die bearbeitete Größe beizubehalten.',
+    'Leave both dimensions empty to keep the size, or enter one to preserve proportions.': 'Beide Maße leer lassen, um die Größe beizubehalten, oder eines eingeben, um die Proportionen zu wahren.',
     'Width in pixels': 'Breite in Pixeln',
     'Height in pixels': 'Höhe in Pixeln',
     'JPEG quality (1–100)': 'JPEG-Qualität (1–100)',
@@ -409,8 +407,7 @@ const imageEditorTranslations = <String, Map<String, String>>{
     'Projects retain editable layers. Exported images are flattened.': 'Les projets conservent les calques modifiables. Les images exportées sont aplaties.',
     'Export image copy': 'Exporter une copie de l’image',
     'Format': 'Format',
-    'Leave dimensions empty to keep the edited size.':
-        'Laissez les dimensions vides pour conserver la taille modifiée.',
+    'Leave both dimensions empty to keep the size, or enter one to preserve proportions.': 'Laissez les deux dimensions vides pour conserver la taille, ou renseignez-en une pour garder les proportions.',
     'Width in pixels': 'Largeur en pixels',
     'Height in pixels': 'Hauteur en pixels',
     'JPEG quality (1–100)': 'Qualité JPEG (1–100)',
@@ -580,8 +577,7 @@ const imageEditorTranslations = <String, Map<String, String>>{
     'Projects retain editable layers. Exported images are flattened.': 'Los proyectos conservan las capas editables. Las imágenes exportadas se acoplan.',
     'Export image copy': 'Exportar copia de imagen',
     'Format': 'Formato',
-    'Leave dimensions empty to keep the edited size.':
-        'Deja las dimensiones vacías para conservar el tamaño editado.',
+    'Leave both dimensions empty to keep the size, or enter one to preserve proportions.': 'Deja ambas dimensiones vacías para conservar el tamaño o introduce una para mantener las proporciones.',
     'Width in pixels': 'Ancho en píxeles',
     'Height in pixels': 'Alto en píxeles',
     'JPEG quality (1–100)': 'Calidad JPEG (1–100)',
@@ -751,8 +747,7 @@ const imageEditorTranslations = <String, Map<String, String>>{
         'Projetos mantêm camadas editáveis. Imagens exportadas são mescladas.',
     'Export image copy': 'Exportar cópia da imagem',
     'Format': 'Formato',
-    'Leave dimensions empty to keep the edited size.':
-        'Deixe as dimensões vazias para manter o tamanho editado.',
+    'Leave both dimensions empty to keep the size, or enter one to preserve proportions.': 'Deixe ambas as dimensões vazias para manter o tamanho ou informe uma para preservar as proporções.',
     'Width in pixels': 'Largura em pixels',
     'Height in pixels': 'Altura em pixels',
     'JPEG quality (1–100)': 'Qualidade JPEG (1–100)',
@@ -922,7 +917,8 @@ const imageEditorTranslations = <String, Map<String, String>>{
         '项目保留可编辑图层。导出的图像会被合并。',
     'Export image copy': '导出图像副本',
     'Format': '格式',
-    'Leave dimensions empty to keep the edited size.': '留空尺寸以保留编辑后的大小。',
+    'Leave both dimensions empty to keep the size, or enter one to preserve proportions.':
+        '两个尺寸都留空可保持大小，只输入一个可保持比例。',
     'Width in pixels': '宽度（像素）',
     'Height in pixels': '高度（像素）',
     'JPEG quality (1–100)': 'JPEG 质量（1–100）',
@@ -1089,8 +1085,8 @@ const imageEditorTranslations = <String, Map<String, String>>{
         'プロジェクトは編集可能なレイヤーを保持します。書き出した画像は統合されます。',
     'Export image copy': '画像のコピーを書き出す',
     'Format': '形式',
-    'Leave dimensions empty to keep the edited size.':
-        '編集後のサイズを維持するには寸法を空欄にします。',
+    'Leave both dimensions empty to keep the size, or enter one to preserve proportions.':
+        '両方を空欄にするとサイズを維持し、片方だけ入力すると縦横比を維持します。',
     'Width in pixels': '幅（ピクセル）',
     'Height in pixels': '高さ（ピクセル）',
     'JPEG quality (1–100)': 'JPEG 品質（1–100）',
@@ -1261,8 +1257,8 @@ const imageEditorTranslations = <String, Map<String, String>>{
         '프로젝트는 편집 가능한 레이어를 유지합니다. 내보낸 이미지는 병합됩니다.',
     'Export image copy': '이미지 사본 내보내기',
     'Format': '형식',
-    'Leave dimensions empty to keep the edited size.':
-        '편집한 크기를 유지하려면 크기를 비워 두세요.',
+    'Leave both dimensions empty to keep the size, or enter one to preserve proportions.':
+        '두 크기를 모두 비워 두면 크기가 유지되고, 하나만 입력하면 비율이 유지됩니다.',
     'Width in pixels': '너비(픽셀)',
     'Height in pixels': '높이(픽셀)',
     'JPEG quality (1–100)': 'JPEG 품질(1–100)',
@@ -1434,8 +1430,8 @@ const imageEditorTranslations = <String, Map<String, String>>{
         'تحتفظ المشاريع بالطبقات القابلة للتحرير. تُدمج طبقات الصور المصدّرة.',
     'Export image copy': 'تصدير نسخة من الصورة',
     'Format': 'التنسيق',
-    'Leave dimensions empty to keep the edited size.':
-        'اترك الأبعاد فارغة للاحتفاظ بالحجم المعدل.',
+    'Leave both dimensions empty to keep the size, or enter one to preserve proportions.':
+        'اترك البعدين فارغين للاحتفاظ بالحجم، أو أدخل أحدهما للحفاظ على النسب.',
     'Width in pixels': 'العرض بالبكسل',
     'Height in pixels': 'الارتفاع بالبكسل',
     'JPEG quality (1–100)': 'جودة JPEG ‏(1–100)',

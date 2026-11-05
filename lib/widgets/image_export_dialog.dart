@@ -32,15 +32,11 @@ class _ImageExportDialogState extends State<ImageExportDialog> {
     final w = int.tryParse(width.text.trim());
     final h = int.tryParse(height.text.trim());
     final q = int.tryParse(quality.text.trim());
-    final original = width.text.trim().isEmpty && height.text.trim().isEmpty;
-    if ((!original &&
-            (w == null ||
-                h == null ||
-                w < 1 ||
-                h < 1 ||
-                w > kImageEditorMaxDimension ||
-                h > kImageEditorMaxDimension ||
-                w * h > kImageEditorMaxPixels)) ||
+    if ((width.text.trim().isNotEmpty &&
+            (w == null || w < 1 || w > kImageEditorMaxDimension)) ||
+        (height.text.trim().isNotEmpty &&
+            (h == null || h < 1 || h > kImageEditorMaxDimension)) ||
+        (w != null && h != null && w * h > kImageEditorMaxPixels) ||
         q == null ||
         q < 1 ||
         q > 100) {
@@ -75,7 +71,9 @@ class _ImageExportDialogState extends State<ImageExportDialog> {
             },
           ),
           Text(
-            context.imageTr('Leave dimensions empty to keep the edited size.'),
+            context.imageTr(
+              'Leave both dimensions empty to keep the size, or enter one to preserve proportions.',
+            ),
           ),
           TextField(
             controller: width,
