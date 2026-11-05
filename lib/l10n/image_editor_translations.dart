@@ -38,6 +38,9 @@ const imageEditorInvariantFilterNames = <String, String>{
 const imageEditorTranslations = <String, Map<String, String>>{
   'en': <String, String>{
     ...imageEditorInvariantFilterNames,
+    'Save project copy': 'Save project copy',
+    'Project copy saved.': 'Project copy saved.',
+    'Could not save project copy': 'Could not save project copy',
     'Projects retain editable layers. Exported images are flattened.':
         'Projects retain editable layers. Exported images are flattened.',
     'Export image copy': 'Export image copy',
@@ -189,6 +192,10 @@ const imageEditorTranslations = <String, Map<String, String>>{
   },
   'de': <String, String>{
     ...imageEditorInvariantFilterNames,
+    'Save project copy': 'Projektkopie speichern',
+    'Project copy saved.': 'Projektkopie gespeichert.',
+    'Could not save project copy':
+        'Projektkopie konnte nicht gespeichert werden',
     'Projects retain editable layers. Exported images are flattened.': 'Projekte behalten bearbeitbare Ebenen. Exportierte Bilder werden zusammengeführt.',
     'Export image copy': 'Bildkopie exportieren',
     'Format': 'Format',
@@ -334,6 +341,10 @@ const imageEditorTranslations = <String, Map<String, String>>{
   },
   'fr': <String, String>{
     ...imageEditorInvariantFilterNames,
+    'Save project copy': 'Enregistrer une copie du projet',
+    'Project copy saved.': 'Copie du projet enregistrée.',
+    'Could not save project copy':
+        'Impossible d’enregistrer la copie du projet',
     'Projects retain editable layers. Exported images are flattened.': 'Les projets conservent les calques modifiables. Les images exportées sont aplaties.',
     'Export image copy': 'Exporter une copie de l’image',
     'Format': 'Format',
@@ -482,6 +493,9 @@ const imageEditorTranslations = <String, Map<String, String>>{
   },
   'es': <String, String>{
     ...imageEditorInvariantFilterNames,
+    'Save project copy': 'Guardar copia del proyecto',
+    'Project copy saved.': 'Copia del proyecto guardada.',
+    'Could not save project copy': 'No se pudo guardar la copia del proyecto',
     'Projects retain editable layers. Exported images are flattened.': 'Los proyectos conservan las capas editables. Las imágenes exportadas se acoplan.',
     'Export image copy': 'Exportar copia de imagen',
     'Format': 'Formato',
@@ -628,6 +642,9 @@ const imageEditorTranslations = <String, Map<String, String>>{
   },
   'pt': <String, String>{
     ...imageEditorInvariantFilterNames,
+    'Save project copy': 'Salvar cópia do projeto',
+    'Project copy saved.': 'Cópia do projeto salva.',
+    'Could not save project copy': 'Não foi possível salvar a cópia do projeto',
     'Projects retain editable layers. Exported images are flattened.':
         'Projetos mantêm camadas editáveis. Imagens exportadas são mescladas.',
     'Export image copy': 'Exportar cópia da imagem',
@@ -776,6 +793,9 @@ const imageEditorTranslations = <String, Map<String, String>>{
   },
   'zh': <String, String>{
     ...imageEditorInvariantFilterNames,
+    'Save project copy': '保存项目副本',
+    'Project copy saved.': '项目副本已保存。',
+    'Could not save project copy': '无法保存项目副本',
     'Projects retain editable layers. Exported images are flattened.':
         '项目保留可编辑图层。导出的图像会被合并。',
     'Export image copy': '导出图像副本',
@@ -920,6 +940,9 @@ const imageEditorTranslations = <String, Map<String, String>>{
   },
   'ja': <String, String>{
     ...imageEditorInvariantFilterNames,
+    'Save project copy': 'プロジェクトのコピーを保存',
+    'Project copy saved.': 'プロジェクトのコピーを保存しました。',
+    'Could not save project copy': 'プロジェクトのコピーを保存できませんでした',
     'Projects retain editable layers. Exported images are flattened.':
         'プロジェクトは編集可能なレイヤーを保持します。書き出した画像は統合されます。',
     'Export image copy': '画像のコピーを書き出す',
@@ -1069,6 +1092,9 @@ const imageEditorTranslations = <String, Map<String, String>>{
   },
   'ko': <String, String>{
     ...imageEditorInvariantFilterNames,
+    'Save project copy': '프로젝트 사본 저장',
+    'Project copy saved.': '프로젝트 사본을 저장했습니다.',
+    'Could not save project copy': '프로젝트 사본을 저장하지 못했습니다',
     'Projects retain editable layers. Exported images are flattened.':
         '프로젝트는 편집 가능한 레이어를 유지합니다. 내보낸 이미지는 병합됩니다.',
     'Export image copy': '이미지 사본 내보내기',
@@ -1219,6 +1245,9 @@ const imageEditorTranslations = <String, Map<String, String>>{
   },
   'ar': <String, String>{
     ...imageEditorInvariantFilterNames,
+    'Save project copy': 'حفظ نسخة من المشروع',
+    'Project copy saved.': 'تم حفظ نسخة المشروع.',
+    'Could not save project copy': 'تعذر حفظ نسخة المشروع',
     'Projects retain editable layers. Exported images are flattened.':
         'تحتفظ المشاريع بالطبقات القابلة للتحرير. تُدمج طبقات الصور المصدّرة.',
     'Export image copy': 'تصدير نسخة من الصورة',

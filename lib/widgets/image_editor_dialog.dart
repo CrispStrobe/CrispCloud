@@ -52,6 +52,7 @@ class ImageEditorDialog extends ConsumerStatefulWidget {
     this.enableIsolateGeneration = true,
     this.deviceExporterOverride,
     this.projectStoreOverride,
+    this.projectExporterOverride,
   });
 
   final FileItem file;
@@ -63,6 +64,7 @@ class ImageEditorDialog extends ConsumerStatefulWidget {
   final bool enableIsolateGeneration;
   final ImageDeviceExporter? deviceExporterOverride;
   final ImageProjectStore? projectStoreOverride;
+  final ImageProjectExporter? projectExporterOverride;
 
   @override
   ConsumerState<ImageEditorDialog> createState() => _ImageEditorDialogState();
@@ -398,6 +400,8 @@ class _ImageEditorDialogState extends ConsumerState<ImageEditorDialog> {
     switch (action) {
       case ImageEditorAction.save:
         unawaited(_save());
+      case ImageEditorAction.saveProjectCopy:
+        unawaited(_saveProjectCopy());
       case ImageEditorAction.exportCopy:
         unawaited(_exportCopy());
       case ImageEditorAction.close:
@@ -490,6 +494,48 @@ class _ImageEditorDialogState extends ConsumerState<ImageEditorDialog> {
       }
       return false;
     } finally {
+      _scheduleRefresh();
+    }
+  }
+
+  Future<void> _saveProjectCopy() async {
+    final session = _session;
+    final editor = _editorKey.currentState;
+    if (session == null || editor == null || !_canEdit) return;
+    final revision = session.currentRevision;
+    setState(() => _exporting = true);
+    _scheduleRefresh();
+    try {
+      await WidgetsBinding.instance.endOfFrame;
+      final history = await (await editor.exportStateHistory()).toMap();
+      if (!mounted || session.currentRevision != revision) {
+        throw const ImageEditException(ImageEditFailure.staleExport);
+      }
+      final project = ImageEditProject(
+        sourceName: _project?.sourceName ?? widget.file.name,
+        sourceBytes: _initialBytes!,
+        history: history,
+      );
+      final name = '${p.basenameWithoutExtension(widget.file.name)}.ccimage';
+      final title = context.imageTr('Save project copy');
+      final exporter = widget.projectExporterOverride ?? exportImageProjectCopy;
+      final outcome = await exporter(project.encode(), name, title);
+      if (mounted && outcome != null) {
+        _showMessage(
+          outcome == ImageSaveOutcome.downloadedCopy
+              ? 'A copy was downloaded. The original image has not been updated.'
+              : 'Project copy saved.',
+        );
+      }
+    } catch (error, stack) {
+      _log.warn('Could not save project copy', error, stack);
+      if (mounted)
+        _showMessage(
+          _messageFor(error, 'Could not save project copy'),
+          error: true,
+        );
+    } finally {
+      if (mounted) setState(() => _exporting = false);
       _scheduleRefresh();
     }
   }
@@ -921,6 +967,11 @@ class _ImageEditorDialogState extends ConsumerState<ImageEditorDialog> {
   }
 
   static const _toolActions = <(ImageEditorAction, String, IconData)>[
+    (
+      ImageEditorAction.saveProjectCopy,
+      'Save project copy',
+      Icons.layers_outlined,
+    ),
     (ImageEditorAction.exportCopy, 'Export image copy', Icons.ios_share),
     (ImageEditorAction.undo, 'Undo', Icons.undo),
     (ImageEditorAction.redo, 'Redo', Icons.redo),

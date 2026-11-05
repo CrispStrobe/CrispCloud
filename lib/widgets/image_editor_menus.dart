@@ -33,6 +33,7 @@ List<PlatformMenuItem> buildImageEditorPlatformMenus(
           shortcut: const SingleActivator(LogicalKeyboardKey.keyS, meta: true),
         ),
         item('Export image copy', ImageEditorAction.exportCopy),
+        item('Save project copy', ImageEditorAction.saveProjectCopy),
         item(
           'Close editor',
           ImageEditorAction.close,

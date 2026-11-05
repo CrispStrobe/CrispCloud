@@ -13,14 +13,36 @@ Future<ImageSaveOutcome?> exportImageCopy(
   String dialogTitle,
   ImageFileFormat format,
 ) async {
+  return _exportCopy(
+    bytes,
+    suggestedName,
+    dialogTitle,
+    format == ImageFileFormat.png ? ['png'] : ['jpg', 'jpeg'],
+    (path) => imageFileFormatForName(path) == format,
+  );
+}
+
+Future<ImageSaveOutcome?> exportProjectCopy(
+  Uint8List bytes,
+  String suggestedName,
+  String dialogTitle,
+) => _exportCopy(bytes, suggestedName, dialogTitle, [
+  'ccimage',
+], (path) => path.toLowerCase().endsWith('.ccimage'));
+
+Future<ImageSaveOutcome?> _exportCopy(
+  Uint8List bytes,
+  String suggestedName,
+  String dialogTitle,
+  List<String> extensions,
+  bool Function(String) validPath,
+) async {
   final mobile = Platform.isAndroid || Platform.isIOS;
   final path = await FilePicker.platform.saveFile(
     dialogTitle: dialogTitle,
     fileName: suggestedName,
     type: FileType.custom,
-    allowedExtensions: format == ImageFileFormat.png
-        ? ['png']
-        : ['jpg', 'jpeg'],
+    allowedExtensions: extensions,
     bytes: mobile ? bytes : null,
     lockParentWindow: true,
   );
@@ -28,7 +50,7 @@ Future<ImageSaveOutcome?> exportImageCopy(
   if (path.isEmpty) throw StateError('Empty export destination');
   if (mobile) return ImageSaveOutcome.savedCopy;
   // Do not alter the approved path or silently write mismatched image bytes.
-  if (imageFileFormatForName(path) != format) {
+  if (!validPath(path)) {
     throw const ImageEditException(ImageEditFailure.formatMismatch);
   }
   final files = LocalFileService();

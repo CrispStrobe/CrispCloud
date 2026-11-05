@@ -159,6 +159,8 @@ class _Harness {
     )?
     exporter,
     ImageProjectStore? projectStore,
+    Future<ImageSaveOutcome?> Function(Uint8List, String, String)?
+    projectExporter,
   }) async {
     tester.view.physicalSize = const Size(1280, 900);
     tester.view.devicePixelRatio = 1;
@@ -189,6 +191,7 @@ class _Harness {
                       enableIsolateGeneration: enableIsolateGeneration,
                       deviceExporterOverride: exporter,
                       projectStoreOverride: projectStore,
+                      projectExporterOverride: projectExporter,
                     ),
                   ),
                 ),
@@ -382,17 +385,24 @@ void main() {
   ) async {
     final raster = _MemoryImageStore();
     final first = _Harness(tester, raster);
-    await first.open();
+    Uint8List? savedProject;
+    await first.open(
+      projectExporter: (bytes, name, title) async {
+        expect(name, 'sample.ccimage');
+        savedProject = bytes;
+        return ImageSaveOutcome.savedCopy;
+      },
+    );
     await first.addText('Stored layer');
-    final history = await tester.runAsync(
-      () async => (await first.editor.exportStateHistory()).toMap(),
+    await tester.ensureVisible(_command(ImageEditorAction.saveProjectCopy));
+    await tester.tap(_command(ImageEditorAction.saveProjectCopy));
+    await _until(
+      tester,
+      () => savedProject != null && !first.actions.busy,
+      reason: 'project copy',
     );
-    final project = ImageEditProject(
-      sourceName: raster.displayName,
-      sourceBytes: raster.bytes,
-      history: history!,
-    );
-    final backing = _MemoryProjectStore(project.encode());
+    expect(_saveEnabled(tester), isTrue);
+    final backing = _MemoryProjectStore(savedProject!);
     await tester.pumpWidget(const SizedBox.shrink());
     final second = _Harness(tester, raster);
     await second.open(projectStore: ImageProjectStore(backing));

@@ -4,6 +4,13 @@ import 'image_device_export_native.dart'
     if (dart.library.html) 'image_device_export_web.dart'
     as platform;
 import 'image_edit_session.dart';
+import 'image_edit_project.dart';
+
+typedef ImageProjectExporter = Future<ImageSaveOutcome?> Function(
+  Uint8List bytes,
+  String suggestedName,
+  String dialogTitle,
+);
 
 typedef ImageDeviceExporter = Future<ImageSaveOutcome?> Function(
   Uint8List bytes,
@@ -40,4 +47,18 @@ class ImageDeviceExport {
       format,
     );
   }
+}
+
+/// Saves a validated self-contained project without changing the source image.
+Future<ImageSaveOutcome?> exportImageProjectCopy(
+  Uint8List bytes,
+  String suggestedName,
+  String dialogTitle,
+) async {
+  ImageEditProject.decode(bytes);
+  return platform.exportProjectCopy(
+    Uint8List.fromList(bytes).asUnmodifiableView(),
+    suggestedName,
+    dialogTitle,
+  );
 }

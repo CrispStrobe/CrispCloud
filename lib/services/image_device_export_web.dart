@@ -11,9 +11,25 @@ Future<ImageSaveOutcome?> exportImageCopy(
   String dialogTitle,
   ImageFileFormat format,
 ) async {
-  final blob = html.Blob([
+  return _exportCopy(
     bytes,
-  ], format == ImageFileFormat.png ? 'image/png' : 'image/jpeg');
+    suggestedName,
+    format == ImageFileFormat.png ? 'image/png' : 'image/jpeg',
+  );
+}
+
+Future<ImageSaveOutcome?> exportProjectCopy(
+  Uint8List bytes,
+  String suggestedName,
+  String dialogTitle,
+) => _exportCopy(bytes, suggestedName, 'application/json');
+
+Future<ImageSaveOutcome?> _exportCopy(
+  Uint8List bytes,
+  String suggestedName,
+  String mimeType,
+) async {
+  final blob = html.Blob([bytes], mimeType);
   final url = html.Url.createObjectUrlFromBlob(blob);
   final anchor = html.AnchorElement(href: url)
     ..setAttribute('download', suggestedName)

@@ -4,6 +4,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 enum ImageEditorAction {
   save,
   exportCopy,
+  saveProjectCopy,
   close,
   undo,
   redo,
