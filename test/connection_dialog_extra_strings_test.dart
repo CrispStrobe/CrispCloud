@@ -5,6 +5,26 @@ import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 
 void main() {
+  test('connection setup catalogs contain every key and placeholder', () {
+    final catalogs = ConnectionDialogExtraStrings.translations;
+    final reference = catalogs['en']!;
+    expect(catalogs.keys.toSet(),
+        AppLocalizations.supportedLocales.map((locale) => locale.languageCode).toSet());
+    final placeholder = RegExp(r'\{[a-zA-Z][a-zA-Z0-9_]*\}');
+    for (final entry in catalogs.entries) {
+      expect(entry.value.keys.toSet(), reference.keys.toSet(), reason: entry.key);
+      for (final message in reference.entries) {
+        final translated = entry.value[message.key]!;
+        expect(translated, isNotEmpty, reason: '${entry.key}: ${message.key}');
+        expect(
+          placeholder.allMatches(translated).map((m) => m.group(0)).toSet(),
+          placeholder.allMatches(message.value).map((m) => m.group(0)).toSet(),
+          reason: '${entry.key}: ${message.key}',
+        );
+      }
+    }
+  });
+
   const titles = {
     'en': 'Verify SSH server',
     'de': 'SSH-Server überprüfen',

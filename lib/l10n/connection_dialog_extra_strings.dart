@@ -7,6 +7,9 @@ class ConnectionDialogExtraStrings {
 
   final String language;
 
+  @visibleForTesting
+  static Map<String, Map<String, String>> get translations => _strings;
+
   String text(String key, [Map<String, Object> values = const {}]) {
     var result =
         (_strings[language] ?? _strings['en']!)[key] ?? _strings['en']![key]!;
