@@ -9,6 +9,7 @@ import '../models/storage_reference.dart';
 import 'dart:async';
 import 'dart:convert';
 import 'dart:io';
+import 'dart:typed_data';
 
 import 'package:crypto/crypto.dart';
 import 'package:flutter/foundation.dart';
@@ -23,7 +24,12 @@ import 'log_service.dart';
 import 's3_config_service.dart';
 import 'secure_storage_service.dart';
 import 'bounded_transfer_stream.dart';
+import 'bounded_http_transfer.dart';
+import 'spooled_http_upload.dart';
 import 'storage_identity.dart';
+import 'transfer_part_reader.dart';
+import 'transfer_spool.dart';
+import 'transfer_stream_request.dart';
 
 /// S3 server-side encryption modes.
 enum S3Encryption {
@@ -432,12 +438,14 @@ class S3ClientAdapter extends CloudStorageClient
     String fileName,
     String targetPath, {
     Function(int, int)? onProgress,
+    int? multipartPartSize,
   }) => _uploadBoundedStream(
     dataStream,
     length,
     fileName,
     targetPath,
     onProgress: onProgress,
+    requestedPartSize: multipartPartSize,
   );
 
   @override
@@ -456,12 +464,9 @@ class S3ClientAdapter extends CloudStorageClient
               (record['uploadId'] as String).isNotEmpty &&
               record['length'] is int &&
               (record['length'] as int) > 0 &&
+              (record['length'] as int) <= maximumPartSize * maximumPartCount &&
               (length == null || record['length'] == length) &&
-              record['partSize'] ==
-                  ((record['length'] as int) / 10000).ceil().clamp(
-                    defaultPartSize,
-                    64 * 1024 * 1024,
-                  ),
+              record['partSize'] == _multipartPartSize(record['length'] as int),
         )
         .toList();
     if (!_authenticated ||
@@ -511,17 +516,10 @@ class S3ClientAdapter extends CloudStorageClient
       checkCurrent();
       return;
     }
-    final partSize =
-        requestedPartSize ??
-        (length / 10000).ceil().clamp(defaultPartSize, 64 * 1024 * 1024);
-    if (partSize < 5 * 1024 * 1024 || partSize > 64 * 1024 * 1024) {
-      throw ArgumentError('Multipart parts must be between 5 and 64 MiB.');
-    }
-    if (length > partSize * 10000) {
-      throw UnsupportedError(
-        'This object exceeds the bounded multipart upload limit.',
-      );
-    }
+    final partSize = _multipartPartSize(
+      length,
+      requestedPartSize: requestedPartSize,
+    );
     final interrupted = (await getInterruptedUploads())
         .where(
           (record) =>
@@ -551,11 +549,20 @@ class S3ClientAdapter extends CloudStorageClient
         ? <PartETag>[]
         : await listParts(key, uploadId);
     checkCurrent();
+    final savedByNumber = {
+      for (final part in savedParts) part['partNumber']: part,
+    };
+    final remoteByNumber = {
+      for (final part in remoteParts) part.partNumber: part,
+    };
+    if (savedByNumber.length != savedParts.length ||
+        remoteByNumber.length != remoteParts.length) {
+      throw StateError('Multipart resume contains duplicate part numbers.');
+    }
     final completed = <PartETag>[];
     final records = List<Map<String, dynamic>>.from(savedParts);
     final prefs = await SharedPreferences.getInstance();
     var uploaded = 0;
-    var number = 0;
     Future<void> persist() async {
       checkCurrent();
       if (!await prefs.setString(
@@ -576,51 +583,64 @@ class S3ClientAdapter extends CloudStorageClient
     }
 
     if (previous == null) await persist();
-    await for (final part in validatedTransferParts(
-      dataStream,
-      length,
-      partSize,
-    )) {
-      checkCurrent();
-      number++;
-      final digest = sha256.convert(part).toString();
-      final saved = savedParts
-          .where((value) => value['partNumber'] == number)
-          .firstOrNull;
-      final remote = remoteParts
-          .where((value) => value.partNumber == number)
-          .firstOrNull;
-      String etag;
-      if (saved != null && remote != null) {
-        if (saved['sha256'] != digest ||
-            saved['size'] != part.length ||
-            saved['etag'] != remote.etag) {
-          throw StateError(
-            'Multipart resume rejected: source prefix or remote part changed.',
-          );
-        }
-        etag = remote.etag;
-      } else {
-        etag = await _uploadPart(key, uploadId, number, part);
+    final reader = TransferPartReader(dataStream, length);
+    try {
+      final count = (length + partSize - 1) ~/ partSize;
+      for (var number = 1; number <= count; number++) {
         checkCurrent();
+        final saved = savedByNumber[number];
+        final remote = remoteByNumber[number];
+        final canReuse = saved != null && remote != null;
+        final part = await _prepareMultipartPart(
+          reader,
+          (length - uploaded).clamp(0, partSize),
+          finalPart: number == count,
+          discard: canReuse,
+          checkCurrent: checkCurrent,
+        );
+        try {
+          if (saved != null &&
+              (saved['sha256'] != part.sha256 ||
+                  saved['size'] != part.length)) {
+            throw StateError(
+              'Multipart resume rejected: source prefix or remote part changed.',
+            );
+          }
+          final String etag;
+          if (canReuse) {
+            if (saved['etag'] != remote.etag) {
+              throw StateError(
+                'Multipart resume rejected: remote part changed.',
+              );
+            }
+            etag = remote.etag;
+          } else {
+            etag = await _uploadPart(
+              key,
+              uploadId,
+              number,
+              part,
+              checkCurrent: checkCurrent,
+            );
+          }
+          checkCurrent();
+          completed.add(PartETag(number, etag));
+          records.removeWhere((record) => record['partNumber'] == number);
+          records.add({
+            'partNumber': number,
+            'etag': etag,
+            'size': part.length,
+            'sha256': part.sha256,
+          });
+          uploaded += part.length;
+          await persist();
+          onProgress?.call(uploaded, length);
+        } finally {
+          await part.dispose();
+        }
       }
-      completed.add(PartETag(number, etag));
-      records.removeWhere((record) => record['partNumber'] == number);
-      records.add({
-        'partNumber': number,
-        'etag': etag,
-        'size': part.length,
-        'sha256': digest,
-      });
-      uploaded += part.length;
-      if (uploaded > length) {
-        throw StateError('Source length changed during upload.');
-      }
-      await persist();
-      onProgress?.call(uploaded, length);
-    }
-    if (uploaded != length) {
-      throw StateError('Source length changed during upload.');
+    } finally {
+      await reader.cancel();
     }
     checkCurrent();
     await _completeMultipartUpload(key, uploadId, completed);
@@ -636,6 +656,76 @@ class S3ClientAdapter extends CloudStorageClient
 
   /// Default part size for multipart upload (8MB)
   static const int defaultPartSize = 8 * 1024 * 1024;
+
+  /// S3 permits 10,000 parts of up to 5 GiB. Larger adaptive parts use private
+  /// disk/OPFS storage, so the object limit does not depend on available RAM.
+  static const int maximumPartSize = 5 * 1024 * 1024 * 1024;
+  static const int maximumPartCount = 10000;
+  static const int _maximumMemoryPartSize = 64 * 1024 * 1024;
+
+  static int _multipartPartSize(int length, {int? requestedPartSize}) {
+    if (length < 0) throw ArgumentError.value(length, 'length');
+    final minimumForPartCount =
+        (length + maximumPartCount - 1) ~/ maximumPartCount;
+    final size =
+        requestedPartSize ??
+        (minimumForPartCount > defaultPartSize
+            ? minimumForPartCount
+            : defaultPartSize);
+    if (size < multipartThreshold || size > maximumPartSize) {
+      if (requestedPartSize != null) {
+        throw ArgumentError('Multipart parts must be between 5 MiB and 5 GiB.');
+      }
+      throw UnsupportedError('S3 supports at most 10,000 parts of 5 GiB each.');
+    }
+    if (length > size * maximumPartCount) {
+      throw UnsupportedError(
+        'The selected part size requires more than 10,000 parts.',
+      );
+    }
+    return size;
+  }
+
+  Future<_S3PreparedPart> _prepareMultipartPart(
+    TransferPartReader reader,
+    int length, {
+    required bool finalPart,
+    required bool discard,
+    required void Function() checkCurrent,
+  }) async {
+    final digest = _S3DigestSink();
+    final hash = sha256.startChunkedConversion(digest);
+    final stream = reader.takeBytes(length).map((chunk) {
+      checkCurrent();
+      hash.add(chunk);
+      return chunk;
+    });
+    TransferSpool? spool;
+    Uint8List? bytes;
+    try {
+      if (!discard && length > _maximumMemoryPartSize) {
+        spool = await createTransferSpool(
+          stream,
+          expectedLength: length,
+          checkpoint: () async => checkCurrent(),
+        );
+      } else {
+        final buffer = discard ? null : BytesBuilder(copy: false);
+        await for (final chunk in stream) {
+          buffer?.add(chunk);
+        }
+        bytes = buffer?.takeBytes();
+      }
+      // Verify EOF before releasing the final body to an HTTP transport.
+      if (finalPart) await reader.verifyEnd();
+      checkCurrent();
+      hash.close();
+      return _S3PreparedPart(length, digest.value!.toString(), bytes, spool);
+    } catch (_) {
+      await spool?.dispose();
+      rethrow;
+    }
+  }
 
   S3ConfigService get config => _config;
 
@@ -941,6 +1031,7 @@ class S3ClientAdapter extends CloudStorageClient
     Uri uri, {
     Map<String, String>? extraHeaders,
     List<int>? body,
+    bool boundedResponse = false,
   }) async {
     final now = DateTime.now().toUtc();
     final payloadHash = sha256.convert(body ?? <int>[]).toString();
@@ -959,9 +1050,21 @@ class S3ClientAdapter extends CloudStorageClient
     final request = http.Request(method, uri);
     request.headers.addAll(signed);
     if (body != null) request.bodyBytes = body;
-
-    final streamed = await http.Client().send(request);
-    return http.Response.fromStream(streamed);
+    if (boundedResponse) request.followRedirects = false;
+    final client = http.Client();
+    try {
+      if (boundedResponse) {
+        return await sendTransferRequest(
+          client,
+          request,
+          operation: 'S3 multipart request',
+        );
+      }
+      final streamed = await client.send(request);
+      return await http.Response.fromStream(streamed);
+    } finally {
+      client.close();
+    }
   }
 
   // --- Interface Implementation ---
@@ -1303,6 +1406,7 @@ class S3ClientAdapter extends CloudStorageClient
       uri,
       extraHeaders: _uploadHeaders(),
       body: fileData,
+      boundedResponse: true,
     );
 
     if (response.statusCode != 200 && response.statusCode != 201) {
@@ -1323,6 +1427,7 @@ class S3ClientAdapter extends CloudStorageClient
       'POST',
       uri,
       extraHeaders: _uploadHeaders(),
+      boundedResponse: true,
     );
 
     if (response.statusCode != 200) {
@@ -1331,12 +1436,14 @@ class S3ClientAdapter extends CloudStorageClient
       );
     }
 
-    final match = RegExp(r'<UploadId>([^<]+)</UploadId>')
-        .firstMatch(response.body);
-    if (match == null) {
+    final root = xml.XmlDocument.parse(response.body).rootElement;
+    final uploadId = root.findElements('UploadId').firstOrNull?.innerText;
+    if (root.name.local != 'InitiateMultipartUploadResult' ||
+        uploadId == null ||
+        uploadId.isEmpty) {
       throw Exception('S3 initiate multipart: no UploadId in response');
     }
-    return match.group(1)!;
+    return uploadId;
   }
 
   /// Upload a single part and return its ETag.
@@ -1344,13 +1451,62 @@ class S3ClientAdapter extends CloudStorageClient
     String key,
     String uploadId,
     int partNumber,
-    List<int> partData,
-  ) async {
+    _S3PreparedPart part, {
+    required void Function() checkCurrent,
+  }) async {
     final uri = _buildUri(
       key,
       queryParams: {'partNumber': partNumber.toString(), 'uploadId': uploadId},
     );
-    final response = await _signedRequest('PUT', uri, body: partData);
+    checkCurrent();
+    final headers = signRequest(
+      method: 'PUT',
+      uri: uri,
+      headers: {
+        'content-length': '${part.length}',
+        // SSE-C requires the identical key on every part. SSE-S3/KMS and the
+        // storage class belong only on the multipart initiation request.
+        for (final header in _uploadHeaders().entries)
+          if (header.key.toLowerCase().startsWith(
+            'x-amz-server-side-encryption-customer-',
+          ))
+            header.key: header.value,
+      },
+      payloadHash: part.sha256,
+      now: DateTime.now().toUtc(),
+    );
+    final http.Response response;
+    if (kIsWeb && part.spool != null) {
+      response = await uploadSpooledHttpBody(
+        uri,
+        part.spool!,
+        operation: 'S3 upload part $partNumber',
+        checkCurrent: checkCurrent,
+        headers: headers,
+        allowHttp: Uri.parse(_endpoint!).scheme == 'http',
+      );
+    } else {
+      final client = http.Client();
+      try {
+        final request = TransferStreamRequest(
+          'PUT',
+          uri,
+          transferParts(part.openRead(), 64 * 1024).map((chunk) {
+            checkCurrent();
+            return chunk;
+          }),
+          part.length,
+        )..headers.addAll(headers);
+        response = await sendTransferRequest(
+          client,
+          request,
+          operation: 'S3 upload part $partNumber',
+        );
+      } finally {
+        client.close();
+      }
+    }
+    checkCurrent();
 
     if (response.statusCode != 200) {
       throw Exception(
@@ -1359,7 +1515,7 @@ class S3ClientAdapter extends CloudStorageClient
     }
 
     final etag = response.headers['etag'];
-    if (etag == null) {
+    if (etag == null || etag.trim().isEmpty) {
       throw Exception('S3 upload part $partNumber: no ETag in response');
     }
     return etag;
@@ -1375,7 +1531,8 @@ class S3ClientAdapter extends CloudStorageClient
     final xmlParts = parts
         .map(
           (p) =>
-              '<Part><PartNumber>${p.partNumber}</PartNumber><ETag>${p.etag}</ETag></Part>',
+              '<Part><PartNumber>${p.partNumber}</PartNumber>'
+              '<ETag>${xml.XmlText(p.etag).toXmlString()}</ETag></Part>',
         )
         .join();
     final body = '<CompleteMultipartUpload>$xmlParts</CompleteMultipartUpload>';
@@ -1386,6 +1543,7 @@ class S3ClientAdapter extends CloudStorageClient
       uri,
       extraHeaders: {'content-type': 'application/xml', ...headers},
       body: utf8.encode(body),
+      boundedResponse: true,
     );
 
     if (response.statusCode != 200 ||
@@ -1439,16 +1597,18 @@ class S3ClientAdapter extends CloudStorageClient
   Future<List<PartETag>> listParts(String key, String uploadId) async {
     _ensureAuth();
     final parts = <PartETag>[];
+    final seenPartNumbers = <int>{};
+    final seenMarkers = <String>{};
     String? partMarker;
 
     do {
-      final params = <String, String>{'uploadId': uploadId};
+      final params = <String, String>{'uploadId': uploadId, 'max-parts': '250'};
       if (partMarker != null) {
         params['part-number-marker'] = partMarker;
       }
 
       final uri = _buildUri(key, queryParams: params);
-      final response = await _signedRequest('GET', uri);
+      final response = await _signedRequest('GET', uri, boundedResponse: true);
 
       if (response.statusCode != 200) {
         throw Exception(
@@ -1456,33 +1616,39 @@ class S3ClientAdapter extends CloudStorageClient
         );
       }
 
-      final body = response.body;
-
-      // Parse <Part> elements
-      final partMatches = RegExp(
-        r'<Part>\s*'
-        r'<PartNumber>(\d+)</PartNumber>\s*'
-        r'(?:<LastModified>[^<]*</LastModified>\s*)?'
-        r'<ETag>([^<]+)</ETag>\s*'
-        r'(?:<Size>[^<]*</Size>\s*)?'
-        r'</Part>',
-      ).allMatches(body);
-
-      for (final match in partMatches) {
-        final partNumber = int.parse(match.group(1)!);
-        final etag = match.group(2)!;
+      final root = xml.XmlDocument.parse(response.body).rootElement;
+      if (root.name.local != 'ListPartsResult') {
+        throw StateError('S3 did not identify the requested multipart parts.');
+      }
+      for (final part in root.findElements('Part')) {
+        final partNumber = int.tryParse(
+          part.findElements('PartNumber').firstOrNull?.innerText ?? '',
+        );
+        final etag = part.findElements('ETag').firstOrNull?.innerText;
+        if (partNumber == null ||
+            partNumber < 1 ||
+            partNumber > maximumPartCount ||
+            etag == null ||
+            etag.trim().isEmpty ||
+            !seenPartNumbers.add(partNumber)) {
+          throw StateError('S3 returned invalid or repeated multipart parts.');
+        }
         parts.add(PartETag(partNumber, etag));
       }
 
-      // Check for truncation
-      final isTruncated = RegExp(r'<IsTruncated>true</IsTruncated>')
-          .hasMatch(body);
-      if (isTruncated) {
-        final markerMatch = RegExp(
-          r'<NextPartNumberMarker>(\d+)</NextPartNumberMarker>',
-        ).firstMatch(body);
-        partMarker = markerMatch?.group(1);
-        if (partMarker == null) break;
+      if (root.findElements('IsTruncated').firstOrNull?.innerText == 'true') {
+        partMarker = root
+            .findElements('NextPartNumberMarker')
+            .firstOrNull
+            ?.innerText;
+        final markerNumber = int.tryParse(partMarker ?? '');
+        if (partMarker == null ||
+            markerNumber == null ||
+            markerNumber < 1 ||
+            markerNumber > maximumPartCount ||
+            !seenMarkers.add(partMarker)) {
+          throw StateError('S3 multipart pagination did not advance.');
+        }
       } else {
         partMarker = null;
       }
@@ -2034,4 +2200,26 @@ class PartETag {
   PartETag(this.partNumber, this.etag);
 }
 
-/// In-memory tracking state for an active multipart upload.
+class _S3DigestSink implements Sink<Digest> {
+  Digest? value;
+  @override
+  void add(Digest data) => value = data;
+  @override
+  void close() {}
+}
+
+class _S3PreparedPart {
+  _S3PreparedPart(this.length, this.sha256, this.bytes, this.spool);
+  final int length;
+  final String sha256;
+  final Uint8List? bytes;
+  final TransferSpool? spool;
+
+  Stream<List<int>> openRead() {
+    if (spool != null) return spool!.openRead();
+    if (bytes != null) return Stream.value(bytes!);
+    throw StateError('A verified remote part has no local upload body.');
+  }
+
+  Future<void> dispose() async => spool?.dispose();
+}
