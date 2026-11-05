@@ -88,6 +88,49 @@ void main() {
   }
 
   test(
+    'real WebP save and conflict check preserve the source contract',
+    () async {
+      final original = File('${directory.path}/picture.webp');
+      final pixels = image.decodePng(buildImageEditorFixture())!;
+      await original.writeAsBytes(image.encodeWebP(pixels));
+      final store = ImageFileStore.local(
+        service: DesktopFileService(),
+        file: FileItem(
+          name: 'picture.webp',
+          path: original.path,
+          isFolder: false,
+        ),
+      );
+      final source = await store.load();
+      final session = ImageEditSession(
+        initialBytes: source,
+        format: ImageFileFormat.png,
+      );
+      addTearDown(session.dispose);
+      final rotated = image.encodePng(
+        image.copyRotate(image.decodePng(source)!, angle: 90),
+      );
+      session.updateRevision(1);
+      expect(
+        await session.save(export: () async => rotated, write: store.save),
+        ImageSaveOutcome.savedOriginal,
+      );
+      expect(await _engineDimensions(await original.readAsBytes()), (16, 24));
+      final external = image.encodeWebP(
+        image.decodePng(buildImageEditorFixture(seed: 9))!,
+      );
+      await original.writeAsBytes(external);
+      session.updateRevision(2);
+      await expectLater(
+        session.save(export: () async => rotated, write: store.save),
+        throwsA(isA<ImageSaveConflictException>()),
+      );
+      expect(await original.readAsBytes(), orderedEquals(external));
+      expect(session.isDirty, isTrue);
+    },
+  );
+
+  test(
     'an external file change blocks overwrite and keeps edits recoverable',
     () async {
       final original = File('${directory.path}/picture.png');
