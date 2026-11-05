@@ -41,6 +41,16 @@ class _FixtureClient implements CloudStorageClient {
   dynamic noSuchMethod(Invocation invocation) => super.noSuchMethod(invocation);
 }
 
+class _RetryUnmountService extends FuseMountService {
+  bool failUnmount = true;
+
+  @override
+  Future<void> performPlatformUnmount(String path) async {
+    if (failUnmount) throw const FileSystemException('fixture unmount failure');
+    await super.performPlatformUnmount(path);
+  }
+}
+
 void main() {
   TestWidgetsFlutterBinding.ensureInitialized();
   SharedPreferences.setMockInitialValues({});
@@ -54,7 +64,7 @@ void main() {
       final target = Directory('${dir.path}/mount');
       await source.create();
       await File('${source.path}/hello.txt').writeAsString('hello');
-      final service = FuseMountService();
+      final service = _RetryUnmountService();
       try {
         final entry = await service.mount(
           client: null,
@@ -69,9 +79,18 @@ void main() {
           throwsA(isA<FileSystemException>()),
         );
         await service.unmount(target.path);
+        expect(service.getMounts().single.status, MountStatus.error);
+        expect(await service.isPlatformMountPoint(target.path), isTrue);
+        await expectLater(service.removeMount(target.path), throwsStateError);
+        service.failUnmount = false;
+        await service.unmount(target.path);
         expect(await service.isPlatformMountPoint(target.path), isFalse);
       } finally {
+        service.failUnmount = false;
         await service.unmount(target.path);
+        if (await service.isPlatformMountPoint(target.path)) {
+          throw StateError('Fixture mount is still active: ${target.path}');
+        }
         await dir.delete(recursive: true);
       }
     },

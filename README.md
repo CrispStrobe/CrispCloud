@@ -52,8 +52,8 @@ We also maintain patched Nextcloud and ownCloud desktop clients with delta sync 
 - **Web support:** full file operations (open folder, copy, move, delete, download) via File System Access API with Safari/Firefox fallback
 - **CLI companion** (`crisp`): headless S3/SFTP/WebDAV operations, 9 commands, shell completions
 - **Plugin system** with local REST API and automation rules
-- macOS builds include an experimental, read-only FUSE bridge for macFUSE and FUSE-T. A working mount has not yet been validated; Linux and Windows mounts remain unavailable.
-- **9 languages:** EN, DE, FR, ES, PT, ZH, JA, KO, AR — in-app language switcher, ~256 localized strings
+- **Experimental macOS mounts:** read-only macFUSE FSKit, explicitly selected FUSE-T, or a separately configured rclone NFS remote. Runtime installation, limitations and current test status are described in the [mount guide](docs/USER_GUIDE.md#fuse-mounted-drives). Linux and Windows mounting is not yet implemented.
+- **9 languages:** EN, DE, FR, ES, PT, ZH, JA, KO, AR — in-app language switcher
 - **Accessibility:** 48dp touch targets on mobile, Semantics on file list items, tooltips on all buttons
 
 ## Getting Started

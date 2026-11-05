@@ -383,8 +383,8 @@ class FuseMountService {
     final canonical = _canonicalize(mountPoint);
     final entry = _mounts[canonical];
     if (entry == null) return;
-    if (entry.status != MountStatus.mounted ||
-        !_processes.containsKey(canonical)) {
+    if (!_processes.containsKey(canonical) ||
+        (entry.status != MountStatus.mounted && entry.status != MountStatus.error)) {
       return;
     }
 
@@ -392,13 +392,14 @@ class FuseMountService {
     _notify();
 
     try {
-      await _platformUnmount(canonical);
+      await performPlatformUnmount(canonical);
       await _stopBridge(canonical);
       _mounts[canonical] = entry.copyWith(status: MountStatus.unmounted);
       _log.info('Unmounted $canonical');
     } catch (e, st) {
       _log.error('Unmount failed for $canonical', e, st);
-      _setError(canonical, e.toString());
+      _setError(canonical, e.toString(),
+          errorKey: 'unmountFailed', errorValues: {'error': '$e'});
     }
 
     await _persistMounts();
@@ -410,7 +411,7 @@ class FuseMountService {
     if (!isSupported) return;
     final keys = List<String>.from(_mounts.keys);
     for (final key in keys) {
-      if (_mounts[key]?.status == MountStatus.mounted) {
+      if (_processes.containsKey(key)) {
         await unmount(key);
       }
     }
@@ -436,8 +437,11 @@ class FuseMountService {
   /// Remove a mount entry entirely (must be unmounted first).
   Future<void> removeMount(String mountPoint) async {
     final canonical = _canonicalize(mountPoint);
-    if (_mounts[canonical]?.status == MountStatus.mounted) {
+    if (_processes.containsKey(canonical)) {
       await unmount(canonical);
+      if (_processes.containsKey(canonical)) {
+        throw StateError('Cannot remove a mount that is still active');
+      }
     }
     _mounts.remove(canonical);
     await _persistMounts();
@@ -565,7 +569,7 @@ class FuseMountService {
       errorMessage: message,
       errorKey: errorKey,
       errorValues: errorValues,
-      helperPid: previous.helperPid,
+      helperPid: _processes.containsKey(canonical) ? previous.helperPid : null,
     );
     _log.warn('Mount error at $canonical: $message');
     _notify();
@@ -641,6 +645,8 @@ class FuseMountService {
         process.exitCode.then((code) {
           if (_processes[entry.mountPoint] == process) {
             _processes.remove(entry.mountPoint);
+            final stoppedFilesystem = _filesystems.remove(entry.mountPoint);
+            if (stoppedFilesystem != null) unawaited(stoppedFilesystem.dispose());
             _setError(
               entry.mountPoint,
               'FUSE bridge exited ($code)',
@@ -745,34 +751,31 @@ class FuseMountService {
     await fs?.dispose();
   }
 
-  Future<void> _platformUnmount(String mountPoint) async {
-    try {
+  @visibleForTesting
+  Future<void> performPlatformUnmount(String mountPoint) async {
+    ProcessResult? result;
       if (Platform.isLinux) {
         // Try fusermount3 first, fall back to fusermount.
-        var result = await Process.run('fusermount3', ['-u', mountPoint]);
+        result = await Process.run('fusermount3', ['-u', mountPoint]);
         if (result.exitCode != 0) {
           result = await Process.run('fusermount', ['-u', mountPoint]);
         }
-        if (result.exitCode != 0) {
-          _log.warn('fusermount returned ${result.exitCode}: ${result.stderr}');
-        }
       } else if (Platform.isMacOS) {
-        final result = await Process.run('diskutil', [
+        result = await Process.run('diskutil', [
           'unmount',
           'force',
           mountPoint,
         ]);
-        if (result.exitCode != 0) {
-          _log.warn(
-            'diskutil unmount returned ${result.exitCode}: ${result.stderr}',
-          );
-        }
       } else if (Platform.isWindows) {
         // WinFsp: net use /delete or the WinFsp net command.
-        await Process.run('net', ['use', mountPoint, '/delete', '/y']);
+        result = await Process.run('net', ['use', mountPoint, '/delete', '/y']);
       }
-    } catch (e) {
-      _log.warn('Platform unmount command failed: $e');
+    if (result != null && result.exitCode != 0 &&
+        await isPlatformMountPoint(mountPoint)) {
+      throw FileSystemException('Unmount failed: ${result.stderr}', mountPoint);
+    }
+    if (await isPlatformMountPoint(mountPoint)) {
+      throw FileSystemException('Mount is still active', mountPoint);
     }
   }
 }

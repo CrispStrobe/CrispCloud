@@ -1,7 +1,8 @@
 # macOS mount testing
 
-The macOS mount is experimental and read-only. It currently downloads whole
-files into memory and refuses files larger than 64 MiB. Run the native tests
+The macOS mount options are experimental and read-only. The macFUSE/FUSE-T
+bridge downloads whole files into memory and refuses files larger than 64 MiB;
+this limit does not apply to the independent rclone NFS option. Run native tests
 only with disposable mount points; they use a local fixture and do not need
 cloud credentials.
 

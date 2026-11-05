@@ -423,7 +423,8 @@ class _MountTile extends ConsumerWidget {
               height: 20,
               child: CircularProgressIndicator(strokeWidth: 2),
             )
-          else if (entry.status == MountStatus.mounted)
+          else if (entry.status == MountStatus.mounted ||
+              (entry.status == MountStatus.error && entry.helperPid != null))
             IconButton(
               icon: const Icon(Icons.eject, size: 20),
               tooltip: MountDialogStrings(context).text('unmount'),
