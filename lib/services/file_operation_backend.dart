@@ -4,6 +4,7 @@ import 'dart:typed_data';
 
 import 'package:flutter/foundation.dart';
 import 'package:path/path.dart' as p;
+import 'package:uuid/uuid.dart';
 
 import '../models/file_item.dart';
 import 'cloud_storage_interface.dart';
@@ -37,6 +38,14 @@ class LocalOperationBackend extends FileOperationBackend {
   String get label => 'Local';
   @override
   p.Context get paths => kIsWeb ? p.posix : p.context;
+  @override
+  String pathKey(String path) {
+    final normalized = paths.normalize(path);
+    // Conservatively reject case aliases on platforms commonly backed by a
+    // case-insensitive volume, rather than risk moving an item onto itself.
+    return !kIsWeb && (Platform.isWindows || Platform.isMacOS)
+        ? normalized.toLowerCase() : normalized;
+  }
   @override
   bool get isCurrent => _isCurrent();
   @override
@@ -484,16 +493,116 @@ class CloudOperationBackend extends FileOperationBackend {
     required bool replace,
   }) async {
     _check();
-    if (!replace && await stat(path) != null)
+    if (!replace && await stat(path) != null) {
       throw StateError('Destination already exists: $path');
-    _check();
-    await client.uploadStream(
-      data,
-      length ?? 0,
-      paths.basename(path),
-      paths.dirname(path),
-    );
-    _check();
+    }
+    final parent = paths.dirname(path);
+    final name = paths.basename(path);
+    final token = const Uuid().v4();
+    final stagedName = '.crisp-transfer-$token.tmp';
+    final stagedPath = paths.join(parent, stagedName);
+    final backupName = '.crisp-replaced-$token.bak';
+    final backupPath = paths.join(parent, backupName);
+    var originalBackedUp = false;
+    var committed = false;
+    var received = 0;
+    try {
+      if (length == null) {
+        // Cloud upload contracts require a real content length. Unknown-size
+        // sources are buffered rather than falsely advertised as empty files.
+        final buffered = BytesBuilder(copy: false);
+        await for (final chunk in data) {
+          _check();
+          buffered.add(chunk);
+        }
+        final bytes = buffered.takeBytes();
+        length = bytes.length;
+        data = Stream.value(bytes);
+      }
+      // Never stream into an existing destination: FTP/SFTP and some web APIs
+      // truncate as soon as upload begins. Stage alongside it first.
+      await client.uploadStream(
+        data.map((chunk) {
+          _check();
+          received += chunk.length;
+          return chunk;
+        }),
+        length,
+        stagedName,
+        parent,
+      );
+      _check();
+      if (length != null && received != length)
+        throw StateError('Source length changed.');
+      final staged = await stat(stagedPath);
+      if (staged == null ||
+          staged.isFolder ||
+          (staged.size != null && staged.size != received)) {
+        throw StateError('The staged cloud copy could not be verified.');
+      }
+      final existing = await stat(path);
+      if (existing != null) {
+        if (!replace || existing.isFolder || existing.isSymlink == true) {
+          throw StateError(
+            'Destination already exists or has an incompatible type: $path',
+          );
+        }
+        _check();
+        await client.renamePath(path, backupName);
+        originalBackedUp = true;
+      }
+      _check();
+      if (await stat(path) != null)
+        throw StateError('Destination changed while committing: $path');
+      await client.renamePath(stagedPath, name);
+      _check();
+      final written = await stat(path);
+      if (written == null ||
+          written.isFolder ||
+          (written.size != null && written.size != received)) {
+        throw StateError('The committed cloud copy could not be verified.');
+      }
+      committed = true;
+      if (originalBackedUp) {
+        // Failure to remove the backup does not undo a verified transfer.
+        try {
+          _check();
+          await client.deletePath(backupPath);
+        } catch (_) {
+          /* Preserve the old file as a recovery copy. */
+        }
+      }
+    } catch (error) {
+      if (originalBackedUp && !committed && isCurrent) {
+        try {
+          if (await stat(path) == null) {
+            _check();
+            await client.renamePath(backupPath, name);
+            originalBackedUp = false;
+          }
+        } catch (_) {
+          /* Report the preserved recovery location below. */
+        }
+      }
+      if (originalBackedUp && !committed) {
+        throw StateError(
+          '$error. The original destination is preserved at $backupPath',
+        );
+      }
+      rethrow;
+    } finally {
+      // Account changes prohibit even cleanup against the replacement account.
+      if (isCurrent && !committed) {
+        try {
+          if (await stat(stagedPath) != null) {
+            _check();
+            await client.deletePath(stagedPath);
+          }
+        } catch (_) {
+          /* Preserve the original failure and any recoverable stage. */
+        }
+      }
+    }
   }
 
   @override

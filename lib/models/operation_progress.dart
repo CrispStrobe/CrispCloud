@@ -1,16 +1,12 @@
 import 'package:crisp_storage/crisp_storage.dart' show TransferOperation;
+
 // models/operation_progress.dart
 import 'dart:async';
+
 import '../services/log_service.dart';
 import '../utils/formatters.dart' show formatBytes;
 
-enum OperationType {
-  upload,
-  download,
-  copy,
-  move,
-  delete,
-}
+enum OperationType { upload, download, copy, move, delete }
 
 enum OperationStatus { inProgress, completed, failed }
 
@@ -156,8 +152,9 @@ class OperationProgress implements TransferOperation {
   /// Average speed since transfer started.
   double get averageSpeed {
     if (_transferStartTime == null) return 0;
-    final elapsed =
-        DateTime.now().difference(_transferStartTime!).inMilliseconds;
+    final elapsed = DateTime.now()
+        .difference(_transferStartTime!)
+        .inMilliseconds;
     if (elapsed <= 0) return 0;
     return currentBytes / (elapsed / 1000);
   }
@@ -250,12 +247,16 @@ class FileProgress {
   bool isComplete;
   String? error;
 
+  /// Human-readable terminal state for filtered, skipped, or cancelled rows.
+  String? statusLabel;
+
   FileProgress({
     required this.name,
     required this.path,
     required this.size,
     this.isComplete = false,
     this.error,
+    this.statusLabel,
   });
 
   // Helper to check if file has error

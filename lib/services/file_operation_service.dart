@@ -59,6 +59,10 @@ abstract class FileOperationBackend {
   Object get identity;
   String get label;
   p.Context get paths;
+  String pathKey(String path) => paths.normalize(path);
+  bool samePath(String first, String second) => pathKey(first) == pathKey(second);
+  bool isWithin(String parent, String child) =>
+      paths.isWithin(pathKey(parent), pathKey(child));
   bool get isCurrent;
   bool get supportsModifiedTime => false;
   bool get supportsSymbolicLinks => false;
@@ -239,10 +243,11 @@ class FileOperationService {
         .where(
           (candidate) => !roots.entries.any(
             (parent) =>
+                options.recursive &&
                 parent.value.isFolder &&
                 parent.value.isSymlink != true &&
                 parent.key != candidate.key &&
-                source.paths.isWithin(parent.key, candidate.key),
+                source.isWithin(parent.key, candidate.key),
           ),
         )
         .toList();
@@ -253,7 +258,7 @@ class FileOperationService {
       await control?.checkpoint();
       _checkSources(source, destination);
       final path = source.paths.normalize(listed.path!);
-      if (!visited.add(path)) return;
+      if (!visited.add(source.pathKey(path))) return;
       final current = await source.stat(path);
       _checkSources(source, destination);
       if (current == null) {
@@ -262,8 +267,16 @@ class FileOperationService {
       }
       final file = current.copyWith(path: path);
       if (identical(source.identity, destination.identity) &&
-          (source.paths.equals(path, output) ||
-              (file.isFolder && source.paths.isWithin(path, output)))) {
+          source.samePath(path, output) &&
+          !file.isFolder &&
+          options.kind == FileOperationKind.copy &&
+          options.fileConflict == FileConflictPolicy.keepBoth) {
+        output = await _availableName(output, destination,
+            reserved: destinations.keys.toSet());
+      }
+      if (identical(source.identity, destination.identity) &&
+          (source.samePath(path, output) ||
+              (file.isFolder && source.isWithin(path, output)))) {
         errors.add('Cannot copy or move an item into itself: $path');
         return;
       }
@@ -284,7 +297,7 @@ class FileOperationService {
         entry.message = 'Excluded by the file filter.';
         return;
       }
-      final previous = destinations[output];
+      final previous = destinations[destination.pathKey(output)];
       if (previous != null && !(previous.source.isFolder && file.isFolder)) {
         if (options.fileConflict == FileConflictPolicy.keepBoth &&
             !file.isFolder) {
@@ -300,7 +313,7 @@ class FileOperationService {
           );
         }
       }
-      destinations[output] = entry;
+      destinations[destination.pathKey(output)] = entry;
       entry.existing = await destination.stat(output);
       _checkSources(source, destination);
       if (entry.existing != null &&
@@ -335,7 +348,7 @@ class FileOperationService {
     for (final root in unique) {
       String relative = source.paths.basename(root.key);
       if (options.preserveRelativePaths) {
-        if (!source.paths.isWithin(base!, root.key)) {
+        if (!source.isWithin(base!, root.key)) {
           errors.add('Source is outside the relative base: ${root.key}');
           continue;
         }
@@ -343,7 +356,7 @@ class FileOperationService {
       }
       final components = source.paths.split(relative);
       final output = destination.paths.joinAll([target, ...components]);
-      if (!destination.paths.isWithin(target, output)) {
+      if (!destination.isWithin(target, output)) {
         errors.add('Destination would escape the selected directory: $output');
         continue;
       }
@@ -384,7 +397,7 @@ class FileOperationService {
     final target = plan.destination;
     final options = plan.options;
     final skippedDirectories = <String>[];
-    final reserved = plan.entries.map((entry) => entry.destination).toSet();
+    final reserved = plan.entries.map((entry) => target.pathKey(entry.destination)).toSet();
     var stopped = false;
     for (final entry in plan.entries) {
       if (entry.outcome != FileOperationOutcome.pending) continue;
@@ -397,7 +410,7 @@ class FileOperationService {
         continue;
       }
       if (skippedDirectories.any(
-        (path) => target.paths.isWithin(path, entry.destination),
+        (path) => target.isWithin(path, entry.destination),
       )) {
         entry.outcome = FileOperationOutcome.skipped;
         entry.message = 'Parent directory was skipped.';
@@ -450,7 +463,7 @@ class FileOperationService {
               target,
               reserved: reserved,
             );
-            reserved.add(entry.destination);
+            reserved.add(target.pathKey(entry.destination));
             existing = null;
           } else if (!entry.source.isFolder) {
             replace = true;
@@ -576,6 +589,7 @@ class FileOperationService {
   bool _sameVersion(FileItem before, FileItem after) =>
       before.isFolder == after.isFolder &&
       before.isSymlink == after.isSymlink &&
+      before.symlinkTarget == after.symlinkTarget &&
       (before.uuid == null || before.uuid == after.uuid) &&
       (before.isFolder ||
           ((before.size == null || before.size == after.size) &&
@@ -653,7 +667,7 @@ class FileOperationService {
         backend.paths.dirname(original),
         '$stem ($index)$extension',
       );
-      if (!reserved.contains(candidate) &&
+      if (!reserved.contains(backend.pathKey(candidate)) &&
           await backend.stat(candidate) == null)
         return candidate;
     }

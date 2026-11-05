@@ -6,11 +6,20 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+
 import '../l10n/pdf_operations_strings.dart';
 import '../models/file_item.dart';
 import '../models/panel_side.dart';
 import '../providers/providers.dart';
-import '../screens/screen_dialogs.dart' show showGoToDialog;
+import '../screens/screen_dialogs.dart'
+    show
+        showGoToDialog,
+        showMultiRenameFromSelection,
+        showCopyDialogFromSelection,
+        showMoveDialogFromSelection, uploadSelected, downloadSelected;
+import 'pattern_selection_dialog.dart';
+import 'file_list_dialog.dart';
+import '../services/file_selection_pattern.dart';
 import 'pdf_editor_dialog.dart';
 import 'pdf_operations_dialog.dart';
 
@@ -31,10 +40,7 @@ class _Command {
 class CommandPalette extends ConsumerStatefulWidget {
   final BuildContext parentContext;
 
-  const CommandPalette({
-    super.key,
-    required this.parentContext,
-  });
+  const CommandPalette({super.key, required this.parentContext});
 
   @override
   ConsumerState<CommandPalette> createState() => _CommandPaletteState();
@@ -73,73 +79,234 @@ class _CommandPaletteState extends ConsumerState<CommandPalette> {
 
     return [
       // Navigation
-      _Command(name: 'Navigate Up', shortcut: 'Backspace', icon: Icons.arrow_upward, action: () => panel.navigateUp()),
-      _Command(name: 'Refresh Panel', shortcut: 'F5', icon: Icons.refresh, action: () => panel.refresh()),
-      _Command(name: 'Switch Panel', shortcut: 'Tab', icon: Icons.swap_horiz, action: () {
-        ref.read(activePanelProvider.notifier).state =
-            side == PanelSide.local ? PanelSide.remote : PanelSide.local;
-      }),
-      _Command(name: 'Open Local Folder', icon: Icons.folder_open, action: () => ref.read(panelProvider(PanelSide.local)).pickLocalDirectory()),
+      _Command(
+        name: 'Navigate Up',
+        shortcut: 'Backspace',
+        icon: Icons.arrow_upward,
+        action: () => panel.navigateUp(),
+      ),
+      _Command(
+        name: 'Refresh Panel',
+        shortcut: 'Ctrl+R',
+        icon: Icons.refresh,
+        action: () => panel.refresh(),
+      ),
+      _Command(
+        name: 'Switch Panel',
+        shortcut: 'Tab',
+        icon: Icons.swap_horiz,
+        action: () {
+          ref.read(activePanelProvider.notifier).state = side == PanelSide.local
+              ? PanelSide.remote
+              : PanelSide.local;
+        },
+      ),
+      _Command(
+        name: 'Open Local Folder',
+        icon: Icons.folder_open,
+        action: () =>
+            ref.read(panelProvider(PanelSide.local)).pickLocalDirectory(),
+      ),
 
       // Go to path
-      _Command(name: 'Go to Path', shortcut: 'Ctrl+G', icon: Icons.folder_open, action: () {
-        showGoToDialog(widget.parentContext, ref);
-      }),
+      _Command(
+        name: 'Go to Path',
+        shortcut: 'Ctrl+G',
+        icon: Icons.folder_open,
+        action: () {
+          showGoToDialog(widget.parentContext, ref);
+        },
+      ),
 
       // Selection
-      _Command(name: 'Select All', shortcut: 'Ctrl+A', icon: Icons.select_all, action: () => panel.selectAll()),
-      _Command(name: 'Clear Selection', shortcut: 'Esc', icon: Icons.deselect, action: () => panel.clearSelection()),
+      _Command(
+        name: 'Select by Wildcard or Regex',
+        shortcut: 'Num +',
+        icon: Icons.rule,
+        action: () =>
+            showPatternSelectionDialog(widget.parentContext, ref, side),
+      ),
+      _Command(
+        name: 'Deselect by Wildcard or Regex',
+        shortcut: 'Num -',
+        icon: Icons.deselect,
+        action: () => showPatternSelectionDialog(
+          widget.parentContext,
+          ref,
+          side,
+          initialAction: SelectionAction.deselect,
+        ),
+      ),
+      _Command(
+        name: 'Multi-Rename',
+        shortcut: 'Ctrl+M',
+        icon: Icons.drive_file_rename_outline,
+        action: () => showMultiRenameFromSelection(widget.parentContext, ref),
+      ),
+      _Command(
+        name: 'Copy with Options',
+        shortcut: 'F5',
+        icon: Icons.copy,
+        action: () => showCopyDialogFromSelection(widget.parentContext, ref),
+      ),
+      _Command(
+        name: 'Move with Options',
+        shortcut: 'F6',
+        icon: Icons.drive_file_move,
+        action: () => showMoveDialogFromSelection(widget.parentContext, ref),
+      ),
+      _Command(
+        name: 'Import File List',
+        shortcut: 'Ctrl+Shift+L',
+        icon: Icons.playlist_add,
+        action: () => showFileListDialog(
+          widget.parentContext,
+          ref,
+          side,
+          importMode: true,
+        ),
+      ),
+      _Command(
+        name: 'Export File List',
+        icon: Icons.playlist_play,
+        action: () => showFileListDialog(widget.parentContext, ref, side),
+      ),
+      _Command(
+        name: 'Select All',
+        shortcut: 'Ctrl+A',
+        icon: Icons.select_all,
+        action: () => panel.selectAll(),
+      ),
+      _Command(
+        name: 'Clear Selection',
+        shortcut: 'Esc',
+        icon: Icons.deselect,
+        action: () => panel.clearSelection(),
+      ),
 
       // Tabs
-      _Command(name: 'New Tab', shortcut: 'Ctrl+T', icon: Icons.add, action: () => panel.addTab()),
-      _Command(name: 'Close Tab', shortcut: 'Ctrl+W', icon: Icons.close, action: () {
-        panel.closeTab(panel.activeTabId);
-      }),
+      _Command(
+        name: 'New Tab',
+        shortcut: 'Ctrl+T',
+        icon: Icons.add,
+        action: () => panel.addTab(),
+      ),
+      _Command(
+        name: 'Close Tab',
+        shortcut: 'Ctrl+W',
+        icon: Icons.close,
+        action: () {
+          panel.closeTab(panel.activeTabId);
+        },
+      ),
 
       // Transfers
-      if (auth.isConnected && ref.read(panelProvider(PanelSide.local)).selection.isNotEmpty)
-        _Command(name: 'Upload Selected', shortcut: 'Ctrl+U', icon: Icons.upload, action: () =>
-            ref.read(transferProvider).uploadFiles(ref.read(panelProvider(PanelSide.local)).selection.toList())),
-      if (auth.isConnected && ref.read(panelProvider(PanelSide.remote)).selection.isNotEmpty)
-        _Command(name: 'Download Selected', shortcut: 'Ctrl+D', icon: Icons.download, action: () =>
-            ref.read(transferProvider).downloadFiles(ref.read(panelProvider(PanelSide.remote)).selection.toList())),
+      if (auth.isConnected &&
+          ref.read(panelProvider(PanelSide.local)).selection.isNotEmpty)
+        _Command(
+          name: 'Upload Selected',
+          shortcut: 'Ctrl+U',
+          icon: Icons.upload,
+          action: () => uploadSelected(widget.parentContext, ref),
+        ),
+      if (auth.isConnected &&
+          ref.read(panelProvider(PanelSide.remote)).selection.isNotEmpty)
+        _Command(
+          name: 'Download Selected',
+          shortcut: 'Ctrl+D',
+          icon: Icons.download,
+          action: () => downloadSelected(widget.parentContext, ref),
+        ),
 
       // View
-      _Command(name: 'Toggle Preview', shortcut: 'Space', icon: Icons.visibility, action: () {
-        ref.read(showPreviewProvider.notifier).state = !ref.read(showPreviewProvider);
-      }),
+      _Command(
+        name: 'Toggle Preview',
+        shortcut: 'Space',
+        icon: Icons.visibility,
+        action: () {
+          ref.read(showPreviewProvider.notifier).state = !ref.read(
+            showPreviewProvider,
+          );
+        },
+      ),
 
       // Operations
-      if (pdfFiles.length == 1 && !pdfFiles.single.isFolder && isPdfFileName(pdfFiles.single.name))
-        _Command(name: widget.parentContext.pdfOpTr('Edit PDF'), icon: Icons.edit_document, action: () {
-          if (widget.parentContext.mounted) showPdfEditorDialog(widget.parentContext, ref, pdfFiles.single, side);
-        }),
+      if (pdfFiles.length == 1 &&
+          !pdfFiles.single.isFolder &&
+          isPdfFileName(pdfFiles.single.name))
+        _Command(
+          name: widget.parentContext.pdfOpTr('Edit PDF'),
+          icon: Icons.edit_document,
+          action: () {
+            if (widget.parentContext.mounted)
+              showPdfEditorDialog(
+                widget.parentContext,
+                ref,
+                pdfFiles.single,
+                side,
+              );
+          },
+        ),
       for (final action in pdfOperationsForSelection(pdfFiles))
-        _Command(name: widget.parentContext.pdfOpTr(action.label), icon: action.icon, action: () {
-          if (widget.parentContext.mounted) showPdfOperationsDialog(widget.parentContext, ref, pdfFiles, side, action);
-        }),
-      _Command(name: 'Clear Completed Operations', icon: Icons.cleaning_services, action: () =>
-          ref.read(transferProvider).clearCompletedOperations()),
+        _Command(
+          name: widget.parentContext.pdfOpTr(action.label),
+          icon: action.icon,
+          action: () {
+            if (widget.parentContext.mounted)
+              showPdfOperationsDialog(
+                widget.parentContext,
+                ref,
+                pdfFiles,
+                side,
+                action,
+              );
+          },
+        ),
+      _Command(
+        name: 'Clear Completed Operations',
+        icon: Icons.cleaning_services,
+        action: () => ref.read(transferProvider).clearCompletedOperations(),
+      ),
 
       // Connection
       if (!auth.isConnected)
-        _Command(name: 'Connect to Cloud', icon: Icons.cloud, action: () {}), // handled by caller
+        _Command(
+          name: 'Connect to Cloud',
+          icon: Icons.cloud,
+          action: () {},
+        ), // handled by caller
       if (auth.isConnected)
-        _Command(name: 'Disconnect', icon: Icons.cloud_off, action: () => ref.read(authProvider).logout()),
+        _Command(
+          name: 'Disconnect',
+          icon: Icons.cloud_off,
+          action: () => ref.read(authProvider).logout(),
+        ),
 
       // Sorting
-      ...[SortBy.name, SortBy.size, SortBy.date, SortBy.extension].map((sort) =>
-        _Command(
+      ...[SortBy.name, SortBy.size, SortBy.date, SortBy.extension].map(
+        (sort) => _Command(
           name: 'Sort by ${sort.name}',
           icon: Icons.sort,
           action: () => panel.setSortBy(sort),
         ),
       ),
-      _Command(name: 'Toggle Sort Order', icon: Icons.swap_vert, action: () => panel.toggleSortOrder()),
+      _Command(
+        name: 'Toggle Sort Order',
+        icon: Icons.swap_vert,
+        action: () => panel.toggleSortOrder(),
+      ),
 
       // Panel actions
-      _Command(name: 'Refresh Local Panel', icon: Icons.refresh, action: () => ref.read(panelProvider(PanelSide.local)).refresh()),
-      _Command(name: 'Refresh Remote Panel', icon: Icons.refresh, action: () => ref.read(panelProvider(PanelSide.remote)).refresh()),
+      _Command(
+        name: 'Refresh Local Panel',
+        icon: Icons.refresh,
+        action: () => ref.read(panelProvider(PanelSide.local)).refresh(),
+      ),
+      _Command(
+        name: 'Refresh Remote Panel',
+        icon: Icons.refresh,
+        action: () => ref.read(panelProvider(PanelSide.remote)).refresh(),
+      ),
     ];
   }
 
@@ -184,13 +351,19 @@ class _CommandPaletteState extends ConsumerState<CommandPalette> {
                   if (event is! KeyDownEvent) return KeyEventResult.ignored;
                   if (event.logicalKey == LogicalKeyboardKey.arrowDown) {
                     setState(() {
-                      _selectedIndex = (_selectedIndex + 1).clamp(0, _filtered.length - 1);
+                      _selectedIndex = (_selectedIndex + 1).clamp(
+                        0,
+                        _filtered.length - 1,
+                      );
                     });
                     return KeyEventResult.handled;
                   }
                   if (event.logicalKey == LogicalKeyboardKey.arrowUp) {
                     setState(() {
-                      _selectedIndex = (_selectedIndex - 1).clamp(0, _filtered.length - 1);
+                      _selectedIndex = (_selectedIndex - 1).clamp(
+                        0,
+                        _filtered.length - 1,
+                      );
                     });
                     return KeyEventResult.handled;
                   }
@@ -214,7 +387,10 @@ class _CommandPaletteState extends ConsumerState<CommandPalette> {
                       borderRadius: BorderRadius.circular(8),
                     ),
                     isDense: true,
-                    contentPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+                    contentPadding: const EdgeInsets.symmetric(
+                      horizontal: 12,
+                      vertical: 10,
+                    ),
                   ),
                   onChanged: _onQueryChanged,
                 ),
@@ -225,8 +401,10 @@ class _CommandPaletteState extends ConsumerState<CommandPalette> {
               child: _filtered.isEmpty
                   ? Padding(
                       padding: const EdgeInsets.all(16),
-                      child: Text('No matching commands',
-                          style: TextStyle(color: theme.disabledColor)),
+                      child: Text(
+                        'No matching commands',
+                        style: TextStyle(color: theme.disabledColor),
+                      ),
                     )
                   : ListView.builder(
                       itemCount: _filtered.length,
@@ -242,25 +420,38 @@ class _CommandPaletteState extends ConsumerState<CommandPalette> {
                           },
                           child: Container(
                             color: isSelected
-                                ? theme.colorScheme.primaryContainer.withValues(alpha: 0.5)
+                                ? theme.colorScheme.primaryContainer.withValues(
+                                    alpha: 0.5,
+                                  )
                                 : null,
                             padding: const EdgeInsets.symmetric(
-                                horizontal: 12, vertical: 8),
+                              horizontal: 12,
+                              vertical: 8,
+                            ),
                             child: Row(
                               children: [
-                                Icon(cmd.icon, size: 18,
-                                    color: theme.colorScheme.onSurfaceVariant),
+                                Icon(
+                                  cmd.icon,
+                                  size: 18,
+                                  color: theme.colorScheme.onSurfaceVariant,
+                                ),
                                 const SizedBox(width: 12),
                                 Expanded(
-                                  child: Text(cmd.name,
-                                      style: const TextStyle(fontSize: 13)),
+                                  child: Text(
+                                    cmd.name,
+                                    style: const TextStyle(fontSize: 13),
+                                  ),
                                 ),
                                 if (cmd.shortcut != null)
                                   Container(
                                     padding: const EdgeInsets.symmetric(
-                                        horizontal: 6, vertical: 2),
+                                      horizontal: 6,
+                                      vertical: 2,
+                                    ),
                                     decoration: BoxDecoration(
-                                      color: theme.colorScheme.surfaceContainerHighest,
+                                      color: theme
+                                          .colorScheme
+                                          .surfaceContainerHighest,
                                       borderRadius: BorderRadius.circular(4),
                                     ),
                                     child: Text(
@@ -268,7 +459,8 @@ class _CommandPaletteState extends ConsumerState<CommandPalette> {
                                       style: TextStyle(
                                         fontSize: 11,
                                         fontFamily: 'monospace',
-                                        color: theme.colorScheme.onSurfaceVariant,
+                                        color:
+                                            theme.colorScheme.onSurfaceVariant,
                                       ),
                                     ),
                                   ),
@@ -290,8 +482,6 @@ class _CommandPaletteState extends ConsumerState<CommandPalette> {
 void showCommandPalette(BuildContext context, WidgetRef ref) {
   showDialog(
     context: context,
-    builder: (_) => CommandPalette(
-      parentContext: context,
-    ),
+    builder: (_) => CommandPalette(parentContext: context),
   );
 }

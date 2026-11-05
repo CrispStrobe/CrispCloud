@@ -1,0 +1,863 @@
+import 'dart:async';
+import 'dart:convert';
+
+import 'package:crisp_cloud/models/file_item.dart';
+import 'package:crisp_cloud/services/file_operation_service.dart';
+import 'package:crisp_cloud/services/file_selection_pattern.dart';
+import 'package:flutter_test/flutter_test.dart';
+import 'package:path/path.dart' as p;
+
+void main() {
+  const service = FileOperationService();
+  late _MemoryBackend source;
+  late _MemoryBackend target;
+
+  setUp(() {
+    source = _MemoryBackend('source');
+    target = _MemoryBackend('target')..directory('/target');
+  });
+
+  Future<FileOperationPlan> prepare(
+    List<String> paths, {
+    FileOperationOptions options = const FileOperationOptions(),
+    String destination = '/target',
+    _MemoryBackend? targetBackend,
+  }) => service.prepare(
+    files: paths.map(source.item).toList(),
+    source: source,
+    destination: targetBackend ?? target,
+    targetDirectory: destination,
+    options: options,
+  );
+
+  Future<void> execute(
+    FileOperationPlan plan, {
+    FileOperationControl? control,
+    FileConflictResolver? resolveConflict,
+  }) => service.execute(
+    plan,
+    control: control ?? FileOperationControl(),
+    resolveConflict: resolveConflict,
+  );
+
+  group('selection and destination planning', () {
+    test(
+      'copies a list spanning source directories without changing sources',
+      () async {
+        source.file('/one/a.txt', 'alpha');
+        source.file('/two/b.txt', 'beta');
+        final plan = await prepare(['/one/a.txt', '/two/b.txt']);
+
+        expect(plan.canExecute, isTrue);
+        expect(plan.fileCount, 2);
+        expect(plan.totalBytes, 9);
+        await execute(plan);
+
+        expect(target.text('/target/a.txt'), 'alpha');
+        expect(target.text('/target/b.txt'), 'beta');
+        expect(source.text('/one/a.txt'), 'alpha');
+        expect(source.text('/two/b.txt'), 'beta');
+        expect(
+          plan.entries.map((e) => e.outcome),
+          everyElement(FileOperationOutcome.copied),
+        );
+      },
+    );
+
+    test('rejects duplicate destination names before writing', () async {
+      source.file('/one/same.txt', 'one');
+      source.file('/two/same.txt', 'two');
+      final plan = await prepare(['/one/same.txt', '/two/same.txt']);
+
+      expect(plan.canExecute, isFalse);
+      expect(plan.errors.join(), contains('Several source items'));
+      await expectLater(execute(plan), throwsStateError);
+      expect(target.writeAttempts, isEmpty);
+    });
+
+    test(
+      'keep both reserves unique names across the selection and existing files',
+      () async {
+        source.file('/one/same.txt', 'one');
+        source.file('/two/same.txt', 'two');
+        target.file('/target/same.txt', 'original');
+        target.file('/target/same (1).txt', 'earlier copy');
+        final plan = await prepare(
+          ['/one/same.txt', '/two/same.txt'],
+          options: const FileOperationOptions(
+            fileConflict: FileConflictPolicy.keepBoth,
+          ),
+        );
+        await execute(plan);
+
+        expect(target.text('/target/same.txt'), 'original');
+        expect(target.text('/target/same (1).txt'), 'earlier copy');
+        expect(plan.entries.map((e) => e.destination).toSet(), hasLength(2));
+        expect(plan.entries.map((e) => target.text(e.destination)).toSet(), {
+          'one',
+          'two',
+        });
+        expect(
+          plan.entries.map((e) => e.outcome),
+          everyElement(FileOperationOutcome.copied),
+        );
+      },
+    );
+
+    test(
+      'a selected parent and repeated selected descendants are processed once',
+      () async {
+        source.file('/tree/nested/a.txt', 'alpha');
+        final plan = await prepare([
+          '/tree',
+          '/tree/nested',
+          '/tree/nested/a.txt',
+          '/tree/nested/a.txt',
+        ]);
+        await execute(plan);
+
+        expect(
+          plan.entries.where((e) => e.source.path == '/tree/nested/a.txt'),
+          hasLength(1),
+        );
+        expect(target.writeAttempts['/target/tree/nested/a.txt'], 1);
+      },
+    );
+
+    test(
+      'preserves relative paths for equal names in separate source directories',
+      () async {
+        source.file('/root/one/same.txt', 'one');
+        source.file('/root/two/same.txt', 'two');
+        final plan = await prepare(
+          ['/root/one/same.txt', '/root/two/same.txt'],
+          options: const FileOperationOptions(
+            preserveRelativePaths: true,
+            relativeBase: '/root',
+          ),
+        );
+        await execute(plan);
+
+        expect(target.text('/target/one/same.txt'), 'one');
+        expect(target.text('/target/two/same.txt'), 'two');
+      },
+    );
+
+    test('refuses an item outside the relative base', () async {
+      source.file('/outside/a.txt', 'a');
+      final plan = await prepare(
+        ['/outside/a.txt'],
+        options: const FileOperationOptions(
+          preserveRelativePaths: true,
+          relativeBase: '/root',
+        ),
+      );
+      expect(plan.canExecute, isFalse);
+      expect(plan.errors.join(), contains('outside the relative base'));
+      expect(target.writeAttempts, isEmpty);
+    });
+
+    test(
+      'refuses copy and move into the source itself or its descendants',
+      () async {
+        source.file('/tree/a.txt', 'a');
+        for (final kind in FileOperationKind.values) {
+          final folderPlan = await prepare(
+            ['/tree'],
+            options: FileOperationOptions(kind: kind),
+            destination: '/tree/archive',
+            targetBackend: source,
+          );
+          final filePlan = await prepare(
+            ['/tree/a.txt'],
+            options: FileOperationOptions(kind: kind),
+            destination: '/tree',
+            targetBackend: source,
+          );
+          expect(folderPlan.canExecute, isFalse);
+          expect(filePlan.canExecute, isFalse);
+        }
+        expect(source.text('/tree/a.txt'), 'a');
+      },
+    );
+
+    test('refuses file/folder conflicts in either direction', () async {
+      source.file('/source/file', 'a');
+      source.directory('/source/folder');
+      target.directory('/target/file');
+      target.file('/target/folder', 'keep');
+      for (final path in ['/source/file', '/source/folder']) {
+        final plan = await prepare(
+          [path],
+          options: const FileOperationOptions(
+            fileConflict: FileConflictPolicy.replace,
+          ),
+        );
+        expect(plan.canExecute, isFalse);
+        expect(plan.errors.join(), contains('incompatible type'));
+      }
+      expect(target.text('/target/folder'), 'keep');
+    });
+
+    test('rejects a symbolic-link destination ancestor', () async {
+      source.file('/source/a.txt', 'a');
+      target.link('/target/link', '/elsewhere');
+      final plan = await prepare([
+        '/source/a.txt',
+      ], destination: '/target/link');
+      expect(plan.canExecute, isFalse);
+      expect(plan.errors.join(), contains('not a regular directory'));
+      expect(target.writeAttempts, isEmpty);
+    });
+  });
+
+  group('conflicts, recursion, and filtering', () {
+    final older = DateTime.utc(2025, 1, 1);
+    final newer = DateTime.utc(2025, 2, 1);
+    final cases =
+        <
+          ({
+            String name,
+            DateTime? sourceDate,
+            DateTime? targetDate,
+            bool replace,
+          })
+        >[
+          (
+            name: 'newer source',
+            sourceDate: newer,
+            targetDate: older,
+            replace: true,
+          ),
+          (
+            name: 'older source',
+            sourceDate: older,
+            targetDate: newer,
+            replace: false,
+          ),
+          (
+            name: 'equal timestamps',
+            sourceDate: newer,
+            targetDate: newer,
+            replace: false,
+          ),
+          (
+            name: 'unknown source timestamp',
+            sourceDate: null,
+            targetDate: older,
+            replace: false,
+          ),
+          (
+            name: 'unknown destination timestamp',
+            sourceDate: newer,
+            targetDate: null,
+            replace: false,
+          ),
+        ];
+    for (final example in cases) {
+      test('replace if newer handles ${example.name}', () async {
+        source.file('/source/a.txt', 'new', modified: example.sourceDate);
+        target.file('/target/a.txt', 'old', modified: example.targetDate);
+        final plan = await prepare(
+          ['/source/a.txt'],
+          options: const FileOperationOptions(
+            fileConflict: FileConflictPolicy.replaceIfNewer,
+          ),
+        );
+        await execute(plan);
+        expect(target.text('/target/a.txt'), example.replace ? 'new' : 'old');
+        expect(
+          plan.entries.single.outcome,
+          example.replace
+              ? FileOperationOutcome.copied
+              : FileOperationOutcome.skipped,
+        );
+      });
+    }
+
+    test('ask honors per-item skip and replacement decisions', () async {
+      source.file('/source/a.txt', 'new a');
+      source.file('/source/b.txt', 'new b');
+      target.file('/target/a.txt', 'old a');
+      target.file('/target/b.txt', 'old b');
+      final plan = await prepare(['/source/a.txt', '/source/b.txt']);
+      final asked = <String>[];
+      await execute(
+        plan,
+        resolveConflict: (entry, existing) async {
+          asked.add(entry.source.path!);
+          return entry.source.name == 'a.txt'
+              ? FileConflictDecision.skip
+              : FileConflictDecision.replace;
+        },
+      );
+      expect(asked, ['/source/a.txt', '/source/b.txt']);
+      expect(target.text('/target/a.txt'), 'old a');
+      expect(target.text('/target/b.txt'), 'new b');
+    });
+
+    test(
+      'skipping an existing directory skips all descendants during move',
+      () async {
+        source.file('/tree/nested/a.txt', 'source');
+        target.file('/target/tree/keep.txt', 'target');
+        final plan = await prepare(
+          ['/tree'],
+          options: const FileOperationOptions(
+            kind: FileOperationKind.move,
+            directoryConflict: DirectoryConflictPolicy.skip,
+          ),
+        );
+        await execute(plan);
+        expect(source.text('/tree/nested/a.txt'), 'source');
+        expect(target.text('/target/tree/keep.txt'), 'target');
+        expect(target.contains('/target/tree/nested/a.txt'), isFalse);
+        expect(
+          plan.entries.map((e) => e.outcome),
+          everyElement(FileOperationOutcome.skipped),
+        );
+      },
+    );
+
+    test(
+      'filtered recursive move retains excluded files and their source folders',
+      () async {
+        source.file('/tree/nested/keep.txt', 'move');
+        source.file('/tree/nested/stay.bin', 'retain');
+        final plan = await prepare(
+          ['/tree'],
+          options: FileOperationOptions(
+            kind: FileOperationKind.move,
+            pattern: FileSelectionPattern('*.txt'),
+          ),
+        );
+        await execute(plan);
+        expect(target.text('/target/tree/nested/keep.txt'), 'move');
+        expect(source.contains('/tree/nested/keep.txt'), isFalse);
+        expect(source.text('/tree/nested/stay.bin'), 'retain');
+        expect(source.contains('/tree/nested'), isTrue);
+        expect(source.contains('/tree'), isTrue);
+        expect(target.contains('/target/tree/nested/stay.bin'), isFalse);
+        expect(
+          plan.entries.singleWhere((e) => e.source.name == 'stay.bin').outcome,
+          FileOperationOutcome.filtered,
+        );
+      },
+    );
+
+    test('turning recursion off leaves directories untouched', () async {
+      source.file('/tree/keep.txt', 'retain');
+      source.file('/loose.txt', 'copy');
+      final plan = await prepare([
+        '/tree',
+        '/loose.txt',
+      ], options: const FileOperationOptions(recursive: false));
+      await execute(plan);
+      expect(source.text('/tree/keep.txt'), 'retain');
+      expect(target.contains('/target/tree'), isFalse);
+      expect(target.text('/target/loose.txt'), 'copy');
+    });
+
+    test(
+      'an explicitly selected child still copies when recursion is off',
+      () async {
+        source.file('/tree/keep.txt', 'copy');
+        final plan = await prepare([
+          '/tree',
+          '/tree/keep.txt',
+        ], options: const FileOperationOptions(recursive: false));
+        expect(plan.canExecute, isTrue);
+        await execute(plan);
+        expect(target.text('/target/keep.txt'), 'copy');
+        expect(target.contains('/target/tree'), isFalse);
+      },
+    );
+
+    test('modification times are preserved only when supported', () async {
+      final modified = DateTime.utc(2024, 2, 3, 4, 5, 6);
+      source.file('/source/a.txt', 'a', modified: modified);
+      final plan = await prepare([
+        '/source/a.txt',
+      ], options: const FileOperationOptions(preserveModified: true));
+      await execute(plan);
+      expect(target.item('/target/a.txt').updatedAt, modified);
+
+      target.modifiedTimesSupported = false;
+      final unsupported = await prepare([
+        '/source/a.txt',
+      ], options: const FileOperationOptions(preserveModified: true));
+      expect(unsupported.canExecute, isFalse);
+      expect(
+        unsupported.errors.join(),
+        contains('cannot preserve modification times'),
+      );
+    });
+  });
+
+  group('failure, cancellation, and authentication safety', () {
+    for (final stopOnError in [true, false]) {
+      test(
+        'partial move retains failed files (stop on error: $stopOnError)',
+        () async {
+          source.file('/tree/a.txt', 'a');
+          source.file('/tree/b.txt', 'b');
+          source.file('/tree/c.txt', 'c');
+          target.failingWrites.add('/target/tree/b.txt');
+          final plan = await prepare(
+            ['/tree'],
+            options: FileOperationOptions(
+              kind: FileOperationKind.move,
+              stopOnError: stopOnError,
+            ),
+          );
+          await execute(plan);
+
+          expect(source.contains('/tree/a.txt'), isFalse);
+          expect(target.text('/target/tree/a.txt'), 'a');
+          expect(source.text('/tree/b.txt'), 'b');
+          expect(source.contains('/tree'), isTrue);
+          expect(source.contains('/tree/c.txt'), stopOnError);
+          expect(target.contains('/target/tree/c.txt'), !stopOnError);
+          expect(
+            plan.entries.singleWhere((e) => e.source.name == 'b.txt').outcome,
+            FileOperationOutcome.failed,
+          );
+          expect(
+            plan.entries.singleWhere((e) => e.source.name == 'c.txt').outcome,
+            stopOnError
+                ? FileOperationOutcome.cancelled
+                : FileOperationOutcome.moved,
+          );
+        },
+      );
+    }
+
+    test(
+      'failed replacement does not delete source or alter existing destination',
+      () async {
+        source.file('/source/a.txt', 'new contents');
+        target.file('/target/a.txt', 'original');
+        target.failingWrites.add('/target/a.txt');
+        final plan = await prepare(
+          ['/source/a.txt'],
+          options: const FileOperationOptions(
+            kind: FileOperationKind.move,
+            fileConflict: FileConflictPolicy.replace,
+          ),
+        );
+        await execute(plan);
+        expect(plan.entries.single.outcome, FileOperationOutcome.failed);
+        expect(source.text('/source/a.txt'), 'new contents');
+        expect(target.text('/target/a.txt'), 'original');
+      },
+    );
+
+    test(
+      'cancellation while streaming retains source and previous destination',
+      () async {
+        source.file('/source/a.txt', 'several chunks');
+        target.file('/target/a.txt', 'original');
+        final control = FileOperationControl();
+        target.onWriteChunk = (_, __) => control.cancel();
+        final plan = await prepare(
+          ['/source/a.txt'],
+          options: const FileOperationOptions(
+            kind: FileOperationKind.move,
+            fileConflict: FileConflictPolicy.replace,
+          ),
+        );
+        await execute(plan, control: control);
+        expect(plan.entries.single.outcome, FileOperationOutcome.cancelled);
+        expect(source.text('/source/a.txt'), 'several chunks');
+        expect(target.text('/target/a.txt'), 'original');
+      },
+    );
+
+    test(
+      'cancellation after destination commit still retains the source',
+      () async {
+        source.file('/source/a.txt', 'contents');
+        final control = FileOperationControl();
+        target.onWriteCommitted = (_) => control.cancel();
+        final plan = await prepare([
+          '/source/a.txt',
+        ], options: const FileOperationOptions(kind: FileOperationKind.move));
+        await execute(plan, control: control);
+        expect(plan.entries.single.outcome, FileOperationOutcome.cancelled);
+        expect(source.text('/source/a.txt'), 'contents');
+        expect(target.text('/target/a.txt'), 'contents');
+        expect(source.deleted, isEmpty);
+      },
+    );
+
+    test(
+      'pausing does not write and cancelling a paused operation unblocks it',
+      () async {
+        source.file('/source/a.txt', 'contents');
+        final plan = await prepare(['/source/a.txt']);
+        final control = FileOperationControl()..pause();
+        final running = execute(plan, control: control);
+        await Future<void>.delayed(Duration.zero);
+        expect(target.writeAttempts, isEmpty);
+        control.cancel();
+        await running;
+        expect(plan.entries.single.outcome, FileOperationOutcome.cancelled);
+        expect(source.text('/source/a.txt'), 'contents');
+      },
+    );
+
+    test('authentication changes before execution prevent writes', () async {
+      source.file('/source/a.txt', 'contents');
+      final plan = await prepare(['/source/a.txt']);
+      target.current = false;
+      await execute(plan);
+      expect(plan.entries.single.outcome, FileOperationOutcome.failed);
+      expect(plan.entries.single.message, contains('account changed'));
+      expect(target.writeAttempts, isEmpty);
+      expect(source.contains('/source/a.txt'), isTrue);
+    });
+
+    test(
+      'authentication changes after upload never authorize source deletion',
+      () async {
+        source.file('/source/a.txt', 'contents');
+        final plan = await prepare([
+          '/source/a.txt',
+        ], options: const FileOperationOptions(kind: FileOperationKind.move));
+        target.onWriteCommitted = (_) => source.current = false;
+        await execute(plan);
+        expect(plan.entries.single.outcome, FileOperationOutcome.failed);
+        expect(source.contains('/source/a.txt'), isTrue);
+        expect(source.deleted, isEmpty);
+      },
+    );
+
+    test('source changed after preview is retained without writing', () async {
+      source.file('/source/a.txt', 'old', modified: DateTime.utc(2025));
+      final plan = await prepare([
+        '/source/a.txt',
+      ], options: const FileOperationOptions(kind: FileOperationKind.move));
+      source.file('/source/a.txt', 'new', modified: DateTime.utc(2026));
+      await execute(plan);
+      expect(plan.entries.single.outcome, FileOperationOutcome.failed);
+      expect(target.writeAttempts, isEmpty);
+      expect(source.text('/source/a.txt'), 'new');
+    });
+
+    test(
+      'source changed during upload is retained despite successful copy',
+      () async {
+        source.file('/source/a.txt', 'old', modified: DateTime.utc(2025));
+        final plan = await prepare([
+          '/source/a.txt',
+        ], options: const FileOperationOptions(kind: FileOperationKind.move));
+        target.onWriteCommitted = (_) =>
+            source.file('/source/a.txt', 'new', modified: DateTime.utc(2026));
+        await execute(plan);
+        expect(plan.entries.single.outcome, FileOperationOutcome.failed);
+        expect(source.text('/source/a.txt'), 'new');
+        expect(target.text('/target/a.txt'), 'old');
+        expect(source.deleted, isEmpty);
+      },
+    );
+
+    test(
+      'content verification detects same-length corruption and keeps source',
+      () async {
+        source.file('/source/a.txt', 'original');
+        target.corruptWrites.add('/target/a.txt');
+        final plan = await prepare(
+          ['/source/a.txt'],
+          options: const FileOperationOptions(
+            kind: FileOperationKind.move,
+            verifyContents: true,
+          ),
+        );
+        await execute(plan);
+        expect(plan.entries.single.outcome, FileOperationOutcome.failed);
+        expect(
+          plan.entries.single.message,
+          contains('SHA-256 verification failed'),
+        );
+        expect(source.text('/source/a.txt'), 'original');
+        expect(source.deleted, isEmpty);
+      },
+    );
+
+    test(
+      'verified successful move deletes source only after a complete copy',
+      () async {
+        source.file('/tree/nested/a.txt', 'original');
+        final plan = await prepare(
+          ['/tree'],
+          options: const FileOperationOptions(
+            kind: FileOperationKind.move,
+            verifyContents: true,
+          ),
+        );
+        await execute(plan);
+        expect(target.text('/target/tree/nested/a.txt'), 'original');
+        expect(source.contains('/tree'), isFalse);
+        expect(
+          plan.entries.map((e) => e.outcome),
+          everyElement(FileOperationOutcome.moved),
+        );
+      },
+    );
+  });
+
+  group('symbolic links', () {
+    test(
+      'links are skipped by default and their targets are never traversed',
+      () async {
+        source.file('/secret/keep.txt', 'secret');
+        source.link('/tree/link', '/secret');
+        final plan = await prepare(['/tree']);
+        await execute(plan);
+        expect(
+          plan.entries.singleWhere((e) => e.source.name == 'link').outcome,
+          FileOperationOutcome.skipped,
+        );
+        expect(target.contains('/target/tree/link'), isFalse);
+        expect(source.reads, isEmpty);
+      },
+    );
+
+    test(
+      'explicit link copying copies the link rather than target content',
+      () async {
+        source.link('/tree/link', '../outside');
+        final plan = await prepare([
+          '/tree/link',
+        ], options: const FileOperationOptions(copySymbolicLinks: true));
+        await execute(plan);
+        expect(target.item('/target/link').isSymlink, isTrue);
+        expect(target.item('/target/link').symlinkTarget, '../outside');
+        expect(source.reads, isEmpty);
+      },
+    );
+
+    test('a link retargeted after preview is retained instead of moving stale data', () async {
+      source.link('/tree/link', '../old-target');
+      final plan = await prepare(
+        ['/tree/link'],
+        options: const FileOperationOptions(
+          kind: FileOperationKind.move,
+          copySymbolicLinks: true,
+        ),
+      );
+      source.link('/tree/link', '../new-target');
+      await execute(plan);
+      expect(plan.entries.single.outcome, FileOperationOutcome.failed);
+      expect(source.item('/tree/link').symlinkTarget, '../new-target');
+      expect(source.deleted, isEmpty);
+      expect(target.contains('/target/link'), isFalse);
+    });
+  });
+}
+
+class _MemoryNode {
+  _MemoryNode(this.item, [this.bytes = const []]);
+  FileItem item;
+  final List<int> bytes;
+}
+
+/// Models the backend's staged-write contract and records externally visible
+/// effects. Failure hooks let tests exercise races without wall-clock timing.
+class _MemoryBackend extends FileOperationBackend {
+  _MemoryBackend(this.label) {
+    directory('/');
+  }
+
+  @override
+  final String label;
+  @override
+  final Object identity = Object();
+  @override
+  p.Context get paths => p.posix;
+  bool current = true;
+  bool modifiedTimesSupported = true;
+  @override
+  bool get isCurrent => current;
+  @override
+  bool get supportsModifiedTime => modifiedTimesSupported;
+  @override
+  bool get supportsSymbolicLinks => true;
+
+  final nodes = <String, _MemoryNode>{};
+  final writeAttempts = <String, int>{};
+  final failingWrites = <String>{};
+  final corruptWrites = <String>{};
+  final deleted = <String>[];
+  final reads = <String>[];
+  FutureOr<void> Function(String path, List<int> chunk)? onWriteChunk;
+  FutureOr<void> Function(String path)? onWriteCommitted;
+
+  bool contains(String path) => nodes.containsKey(path);
+  FileItem item(String path) => nodes[path]!.item;
+  String text(String path) => utf8.decode(nodes[path]!.bytes);
+
+  void directory(String path) {
+    final parent = paths.dirname(path);
+    if (path != parent && !nodes.containsKey(parent)) directory(parent);
+    nodes[path] = _MemoryNode(
+      FileItem(
+        name: paths.basename(path),
+        path: path,
+        isFolder: true,
+        isSymlink: false,
+      ),
+    );
+  }
+
+  void file(String path, String contents, {DateTime? modified}) {
+    final parent = paths.dirname(path);
+    if (!nodes.containsKey(parent)) directory(parent);
+    final bytes = utf8.encode(contents);
+    nodes[path] = _MemoryNode(
+      FileItem(
+        name: paths.basename(path),
+        path: path,
+        isFolder: false,
+        isSymlink: false,
+        size: bytes.length,
+        updatedAt: modified,
+      ),
+      bytes,
+    );
+  }
+
+  void link(String path, String target) {
+    final parent = paths.dirname(path);
+    if (!nodes.containsKey(parent)) directory(parent);
+    nodes[path] = _MemoryNode(
+      FileItem(
+        name: paths.basename(path),
+        path: path,
+        isFolder: false,
+        isSymlink: true,
+        symlinkTarget: target,
+      ),
+    );
+  }
+
+  void _check() {
+    if (!current) throw StateError('Backend account changed');
+  }
+
+  @override
+  Future<FileItem?> stat(String path) async {
+    _check();
+    return nodes[path]?.item;
+  }
+
+  @override
+  Future<List<FileItem>> list(String path) async {
+    _check();
+    if (nodes[path]?.item.isFolder != true) {
+      throw StateError('Not a directory: $path');
+    }
+    return nodes.entries
+        .where((entry) => entry.key != path && paths.dirname(entry.key) == path)
+        .map((entry) => entry.value.item)
+        .toList();
+  }
+
+  @override
+  Future<void> createDirectory(String path) async {
+    _check();
+    if (nodes.containsKey(path)) throw StateError('Destination exists: $path');
+    if (nodes[paths.dirname(path)]?.item.isFolder != true) {
+      throw StateError('Missing parent: $path');
+    }
+    directory(path);
+  }
+
+  @override
+  Stream<List<int>> readFile(FileItem file) async* {
+    _check();
+    reads.add(file.path!);
+    if (file.isSymlink == true) {
+      throw StateError('Cannot follow symbolic links');
+    }
+    final bytes = List<int>.of(nodes[file.path!]!.bytes);
+    for (var start = 0; start < bytes.length; start += 2) {
+      _check();
+      yield bytes.sublist(start, (start + 2).clamp(0, bytes.length));
+    }
+  }
+
+  @override
+  Future<void> writeFile(
+    String path,
+    Stream<List<int>> data,
+    int? length, {
+    required bool replace,
+  }) async {
+    _check();
+    writeAttempts.update(path, (count) => count + 1, ifAbsent: () => 1);
+    if (nodes.containsKey(path) && !replace) {
+      throw StateError('Destination exists');
+    }
+    final staged = <int>[];
+    await for (final chunk in data) {
+      _check();
+      staged.addAll(chunk);
+      await onWriteChunk?.call(path, chunk);
+      if (failingWrites.contains(path)) {
+        throw StateError('Simulated write failure');
+      }
+    }
+    _check();
+    if (length != null && staged.length != length) {
+      throw StateError('Wrong source length');
+    }
+    if (corruptWrites.contains(path) && staged.isNotEmpty) staged[0] ^= 1;
+    nodes[path] = _MemoryNode(
+      FileItem(
+        name: paths.basename(path),
+        path: path,
+        isFolder: false,
+        isSymlink: false,
+        size: staged.length,
+      ),
+      staged,
+    );
+    await onWriteCommitted?.call(path);
+  }
+
+  @override
+  Future<void> deleteFile(FileItem file) async {
+    _check();
+    if (nodes[file.path!]?.item.isFolder == true) {
+      throw StateError('Refusing recursive deletion');
+    }
+    nodes.remove(file.path!);
+    deleted.add(file.path!);
+  }
+
+  @override
+  Future<void> deleteEmptyDirectory(String path) async {
+    _check();
+    if ((await list(path)).isNotEmpty) throw StateError('Directory not empty');
+    nodes.remove(path);
+    deleted.add(path);
+  }
+
+  @override
+  Future<void> setModified(String path, DateTime modified) async {
+    _check();
+    nodes[path]!.item = nodes[path]!.item.copyWith(updatedAt: modified);
+  }
+
+  @override
+  Future<void> copySymbolicLink(
+    FileItem source,
+    String destination, {
+    required bool replace,
+  }) async {
+    _check();
+    if (nodes.containsKey(destination)) throw StateError('Destination exists');
+    link(destination, source.symlinkTarget!);
+  }
+}
