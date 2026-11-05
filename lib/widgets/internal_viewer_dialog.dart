@@ -41,6 +41,7 @@ import 'package:universal_html/html.dart' as html;
 import 'package:video_player/video_player.dart';
 
 import '../l10n/internal_viewer_strings.dart';
+import '../l10n/app_localizations.dart';
 import '../l10n/office_preview_strings.dart';
 import '../l10n/office_pdf_error_strings.dart';
 import '../l10n/native_preview_error_strings.dart';

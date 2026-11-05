@@ -7,11 +7,28 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 /// App-authored panel failures with data for localized presentation.
 enum PanelErrorCode {
-  archiveOpen, archivePassword, archiveRead, flatLocal, flatFailed,
-  accessParent, accessDenied, accessContaining, pickFailed, deleteFailed,
-  renameFailed, createFailed, moveFailed, copyFailed, selectBase,
-  accessCancelled, localUnsupported, permissionDenied,
-  cloudTransferFailed, cloudCompareFailed, cloudSearchFailed,
+  archiveOpen,
+  archivePassword,
+  archiveRead,
+  flatLocal,
+  flatFailed,
+  accessParent,
+  accessDenied,
+  accessContaining,
+  pickFailed,
+  deleteFailed,
+  renameFailed,
+  createFailed,
+  moveFailed,
+  copyFailed,
+  selectBase,
+  accessCancelled,
+  localUnsupported,
+  permissionDenied,
+  homeFallback,
+  cloudTransferFailed,
+  cloudCompareFailed,
+  cloudSearchFailed,
 }
 
 class AppError {
@@ -22,8 +39,14 @@ class AppError {
   final Object? cause;
   final Map<String, Object> arguments;
 
-  AppError(this.message, {this.context, this.code, this.cause, Map<String, Object> arguments = const {}})
-      : arguments = Map.unmodifiable(arguments), timestamp = DateTime.now();
+  AppError(
+    this.message, {
+    this.context,
+    this.code,
+    this.cause,
+    Map<String, Object> arguments = const {},
+  }) : arguments = Map.unmodifiable(arguments),
+       timestamp = DateTime.now();
 
   @override
   String toString() => message;
@@ -37,9 +60,22 @@ class ErrorNotifier extends ChangeNotifier {
   AppError? get lastAppError => _errors.isEmpty ? null : _errors.last;
   bool get hasErrors => _errors.isNotEmpty;
 
-  void addError(String message, {String? context, PanelErrorCode? code, Object? cause,
-      Map<String, Object> arguments = const {}}) {
-    _errors.add(AppError(message, context: context, code: code, cause: cause, arguments: arguments));
+  void addError(
+    String message, {
+    String? context,
+    PanelErrorCode? code,
+    Object? cause,
+    Map<String, Object> arguments = const {},
+  }) {
+    _errors.add(
+      AppError(
+        message,
+        context: context,
+        code: code,
+        cause: cause,
+        arguments: arguments,
+      ),
+    );
     notifyListeners();
   }
 

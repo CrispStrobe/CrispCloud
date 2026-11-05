@@ -12,6 +12,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../l10n/app_localizations.dart';
 import '../l10n/command_strings.dart';
 import '../l10n/undo_presentation.dart';
+import '../l10n/viewer_action_strings.dart';
 import '../models/file_item.dart';
 import '../models/panel_side.dart';
 import '../providers/providers.dart';
@@ -536,11 +537,8 @@ Future<void> _openCursorInPanel(
   if (sourcePanel.isInArchive) {
     if (context.mounted) {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text(
-            'Extract the file first; items inside an archive cannot be '
-            'opened in another panel.',
-          ),
+        SnackBar(
+          content: Text(ViewerActionStrings(context).archiveOtherPanelUnsupported),
         ),
       );
     }
@@ -554,10 +552,8 @@ Future<void> _openCursorInPanel(
   if (sourceIsLocal != targetIsLocal) {
     if (context.mounted) {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text(
-            'Cannot open a local file in a remote panel (or vice versa).',
-          ),
+        SnackBar(
+          content: Text(ViewerActionStrings(context).incompatiblePanelSources),
         ),
       );
     }

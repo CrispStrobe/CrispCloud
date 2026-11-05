@@ -1,10 +1,29 @@
 import 'package:crisp_cloud/l10n/app_localizations.dart';
 import 'package:crisp_cloud/l10n/pdf_operations_strings.dart';
 import 'package:crisp_cloud/l10n/pdf_workflow_translations.dart';
+import 'package:crisp_cloud/l10n/pdf_operations_romance.dart';
+import 'package:crisp_cloud/l10n/pdf_operations_cjk.dart';
+import 'package:crisp_cloud/l10n/pdf_operations_ko_ar.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 
 void main() {
+  test('every PDF operation key is covered by all translated locales', () {
+    for (final locale in ['fr', 'es', 'pt', 'zh', 'ja', 'ko', 'ar']) {
+      final messages = {
+        ...?pdfWorkflowTranslations[locale],
+        ...?pdfOperationsRomance[locale],
+        ...?pdfOperationsCjk[locale],
+        ...?pdfOperationsKoAr[locale],
+      };
+      expect(
+        messages.keys.toSet(),
+        PdfOperationsStrings.sourceKeys,
+        reason: 'PDF messages for $locale',
+      );
+      expect(messages.values, everyElement(isNot(isEmpty)));
+    }
+  });
   test('PDF workflow tables cover the same preview and output messages', () {
     final keys = pdfWorkflowTranslations['fr']!.keys.toSet();
     expect(keys, hasLength(31));
@@ -53,8 +72,13 @@ void main() {
       // Output filenames and external diagnostics pass through unchanged.
       expect(context.pdfOpTr('report-{name}.pdf'), 'report-{name}.pdf');
       if (locale.languageCode != 'en' && locale.languageCode != 'de') {
-        for (final entry
-            in pdfWorkflowTranslations[locale.languageCode]!.entries) {
+        final translations = {
+          ...?pdfOperationsKoAr[locale.languageCode],
+          ...?pdfOperationsCjk[locale.languageCode],
+          ...?pdfOperationsRomance[locale.languageCode],
+          ...?pdfWorkflowTranslations[locale.languageCode],
+        };
+        for (final entry in translations.entries) {
           expect(context.pdfOpTr(entry.key), entry.value);
         }
       }

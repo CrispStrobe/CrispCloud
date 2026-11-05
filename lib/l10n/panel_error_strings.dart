@@ -1,40 +1,44 @@
 import 'package:flutter/widgets.dart';
+
 import '../providers/error_provider.dart';
 import 'provider_operation_strings.dart';
 
 /// Localize recognized panel errors; preserve unknown and external details.
 String localizedPanelError(BuildContext context, AppError error) {
   final code = error.code;
-  if (code == null) return localizedProviderError(context, error.cause ?? error.message);
+  if (code == null) {
+    return localizedProviderError(context, error.cause ?? error.message);
+  }
   final language = Localizations.maybeLocaleOf(context)?.languageCode ?? 'en';
   var result =
       (_messages[language] ?? _messages['en']!)[code.name] ?? error.message;
   for (final entry in error.arguments.entries) {
-    result = result.replaceAll('{${entry.key}}', localizedProviderError(context, entry.value));
+    result = result.replaceAll(
+      '{${entry.key}}',
+      localizedProviderError(context, entry.value),
+    );
   }
   return result;
 }
 
 const Map<String, Map<String, String>> _messages = {
   'en': {
+    "homeFallback": "Folder not found. Returned to your Home folder.",
     "archiveOpen": "Cannot open archive: {error}",
     "archivePassword": "This archive is password-protected.",
     "archiveRead": "Failed to read archive: {error}",
     "flatLocal": "Flat view is only available for local directories",
     "flatFailed": "Flat view failed: {error}",
-    "accessParent":
-        "Access to \"{path}\" was not granted. Choose the folder itself or one of its parent folders.",
+    "accessParent": "Access to \"{path}\" was not granted. Choose the folder itself or one of its parent folders.",
     "accessDenied": "Access to \"{path}\" was not granted.",
-    "accessContaining":
-        "Access to \"{path}\" was not granted. Choose the folder that contains it.",
+    "accessContaining": "Access to \"{path}\" was not granted. Choose the folder that contains it.",
     "pickFailed": "Error picking directory: {error}",
     "deleteFailed": "Delete failed: {error}",
     "renameFailed": "Rename failed: {error}",
     "createFailed": "Create folder failed: {error}",
     "moveFailed": "Move failed: {error}",
     "copyFailed": "Copy failed: {error}",
-    "selectBase":
-        "Please select a base directory to grant access (e.g., your home folder)",
+    "selectBase": "Please select a base directory to grant access (e.g., your home folder)",
     "accessCancelled": "Access cancelled. Using fallback directory.",
     "localUnsupported": "Local file access is not supported on this platform.",
     "permissionDenied":
@@ -44,57 +48,51 @@ const Map<String, Map<String, String>> _messages = {
     "cloudSearchFailed": "Search failed: {error}",
   },
   'de': {
+    "homeFallback": "Ordner nicht gefunden. Sie wurden zu Ihrem persönlichen Ordner zurückgeführt.",
     "archiveOpen": "Archiv kann nicht geöffnet werden: {error}",
     "archivePassword": "Dieses Archiv ist passwortgeschützt.",
     "archiveRead": "Archiv konnte nicht gelesen werden: {error}",
     "flatLocal": "Die flache Ansicht ist nur für lokale Ordner verfügbar",
     "flatFailed": "Flache Ansicht fehlgeschlagen: {error}",
-    "accessParent":
-        "Zugriff auf „{path}“ wurde nicht gewährt. Wählen Sie den Ordner selbst oder einen übergeordneten Ordner.",
+    "accessParent": "Zugriff auf „{path}“ wurde nicht gewährt. Wählen Sie den Ordner selbst oder einen übergeordneten Ordner.",
     "accessDenied": "Zugriff auf „{path}“ wurde nicht gewährt.",
-    "accessContaining":
-        "Zugriff auf „{path}“ wurde nicht gewährt. Wählen Sie den übergeordneten Ordner.",
+    "accessContaining": "Zugriff auf „{path}“ wurde nicht gewährt. Wählen Sie den übergeordneten Ordner.",
     "pickFailed": "Fehler bei der Ordnerauswahl: {error}",
     "deleteFailed": "Löschen fehlgeschlagen: {error}",
     "renameFailed": "Umbenennen fehlgeschlagen: {error}",
     "createFailed": "Ordner konnte nicht erstellt werden: {error}",
     "moveFailed": "Verschieben fehlgeschlagen: {error}",
     "copyFailed": "Kopieren fehlgeschlagen: {error}",
-    "selectBase":
-        "Bitte wählen Sie ein Basisverzeichnis für den Zugriff aus (z. B. Ihren persönlichen Ordner)",
+    "selectBase": "Bitte wählen Sie ein Basisverzeichnis für den Zugriff aus (z. B. Ihren persönlichen Ordner)",
     "accessCancelled":
         "Zugriff abgebrochen. Ausweichverzeichnis wird verwendet.",
     "localUnsupported":
         "Lokaler Dateizugriff wird auf dieser Plattform nicht unterstützt.",
-    "permissionDenied":
-        "Zugriff verweigert. Verwenden Sie „Durchsuchen“, um Zugriff zu gewähren.",
+    "permissionDenied": "Zugriff verweigert. Verwenden Sie „Durchsuchen“, um Zugriff zu gewähren.",
     "cloudTransferFailed": "Übertragung fehlgeschlagen: {error}",
     "cloudCompareFailed": "Vergleich fehlgeschlagen: {error}",
     "cloudSearchFailed": "Suche fehlgeschlagen: {error}",
   },
   'fr': {
+    "homeFallback": "Dossier introuvable. Retour à votre dossier personnel.",
     "archiveOpen": "Impossible d’ouvrir l’archive : {error}",
     "archivePassword": "Cette archive est protégée par mot de passe.",
     "archiveRead": "Échec de lecture de l’archive : {error}",
     "flatLocal":
         "La vue à plat est disponible uniquement pour les dossiers locaux",
     "flatFailed": "Échec de la vue à plat : {error}",
-    "accessParent":
-        "Accès à « {path} » refusé. Choisissez le dossier lui-même ou un dossier parent.",
+    "accessParent": "Accès à « {path} » refusé. Choisissez le dossier lui-même ou un dossier parent.",
     "accessDenied": "L’accès à « {path} » n’a pas été accordé.",
-    "accessContaining":
-        "L’accès à « {path} » n’a pas été accordé. Choisissez le dossier qui le contient.",
+    "accessContaining": "L’accès à « {path} » n’a pas été accordé. Choisissez le dossier qui le contient.",
     "pickFailed": "Erreur lors du choix du dossier : {error}",
     "deleteFailed": "Échec de la suppression : {error}",
     "renameFailed": "Échec du renommage : {error}",
     "createFailed": "Échec de création du dossier : {error}",
     "moveFailed": "Échec du déplacement : {error}",
     "copyFailed": "Échec de la copie : {error}",
-    "selectBase":
-        "Choisissez un dossier de base pour autoriser l’accès (par exemple votre dossier personnel)",
+    "selectBase": "Choisissez un dossier de base pour autoriser l’accès (par exemple votre dossier personnel)",
     "accessCancelled": "Accès annulé. Utilisation du dossier de secours.",
-    "localUnsupported":
-        "L’accès aux fichiers locaux n’est pas pris en charge sur cette plateforme.",
+    "localUnsupported": "L’accès aux fichiers locaux n’est pas pris en charge sur cette plateforme.",
     "permissionDenied":
         "Accès refusé. Utilisez Parcourir pour autoriser l’accès.",
     "cloudTransferFailed": "Échec du transfert : {error}",
@@ -102,13 +100,14 @@ const Map<String, Map<String, String>> _messages = {
     "cloudSearchFailed": "Échec de la recherche : {error}",
   },
   'es': {
+    "homeFallback":
+        "No se encontró la carpeta. Se ha vuelto a tu carpeta personal.",
     "archiveOpen": "No se puede abrir el archivo: {error}",
     "archivePassword": "Este archivo está protegido con contraseña.",
     "archiveRead": "No se pudo leer el archivo: {error}",
     "flatLocal": "La vista plana solo está disponible para carpetas locales",
     "flatFailed": "Error en la vista plana: {error}",
-    "accessParent":
-        "No se concedió acceso a «{path}». Elige esa carpeta o una carpeta superior.",
+    "accessParent": "No se concedió acceso a «{path}». Elige esa carpeta o una carpeta superior.",
     "accessDenied": "No se concedió acceso a «{path}».",
     "accessContaining":
         "No se concedió acceso a «{path}». Elige la carpeta que lo contiene.",
@@ -118,8 +117,7 @@ const Map<String, Map<String, String>> _messages = {
     "createFailed": "Error al crear la carpeta: {error}",
     "moveFailed": "Error al mover: {error}",
     "copyFailed": "Error al copiar: {error}",
-    "selectBase":
-        "Selecciona una carpeta base para conceder acceso (por ejemplo, tu carpeta personal)",
+    "selectBase": "Selecciona una carpeta base para conceder acceso (por ejemplo, tu carpeta personal)",
     "accessCancelled": "Acceso cancelado. Se usa una carpeta alternativa.",
     "localUnsupported":
         "El acceso a archivos locales no es compatible con esta plataforma.",
@@ -129,14 +127,14 @@ const Map<String, Map<String, String>> _messages = {
     "cloudSearchFailed": "Error de búsqueda: {error}",
   },
   'pt': {
+    "homeFallback": "Pasta não encontrada. Regressou à sua pasta pessoal.",
     "archiveOpen": "Não foi possível abrir o arquivo compactado: {error}",
     "archivePassword": "Este arquivo compactado é protegido por senha.",
     "archiveRead": "Falha ao ler o arquivo compactado: {error}",
     "flatLocal":
         "A visualização plana está disponível apenas para pastas locais",
     "flatFailed": "Falha na visualização plana: {error}",
-    "accessParent":
-        "O acesso a “{path}” não foi concedido. Escolha a própria pasta ou uma pasta superior.",
+    "accessParent": "O acesso a “{path}” não foi concedido. Escolha a própria pasta ou uma pasta superior.",
     "accessDenied": "O acesso a “{path}” não foi concedido.",
     "accessContaining":
         "O acesso a “{path}” não foi concedido. Escolha a pasta que o contém.",
@@ -146,8 +144,7 @@ const Map<String, Map<String, String>> _messages = {
     "createFailed": "Falha ao criar a pasta: {error}",
     "moveFailed": "Falha ao mover: {error}",
     "copyFailed": "Falha ao copiar: {error}",
-    "selectBase":
-        "Selecione uma pasta base para conceder acesso (por exemplo, sua pasta pessoal)",
+    "selectBase": "Selecione uma pasta base para conceder acesso (por exemplo, sua pasta pessoal)",
     "accessCancelled": "Acesso cancelado. Usando pasta alternativa.",
     "localUnsupported":
         "O acesso a arquivos locais não é suportado nesta plataforma.",
@@ -157,6 +154,7 @@ const Map<String, Map<String, String>> _messages = {
     "cloudSearchFailed": "Falha na pesquisa: {error}",
   },
   'zh': {
+    "homeFallback": "找不到文件夹。已返回主文件夹。",
     "archiveOpen": "无法打开归档：{error}",
     "archivePassword": "此归档受密码保护。",
     "archiveRead": "读取归档失败：{error}",
@@ -180,6 +178,7 @@ const Map<String, Map<String, String>> _messages = {
     "cloudSearchFailed": "搜索失败：{error}",
   },
   'ja': {
+    "homeFallback": "フォルダーが見つかりません。ホームフォルダーに戻りました。",
     "archiveOpen": "アーカイブを開けません: {error}",
     "archivePassword": "このアーカイブはパスワードで保護されています。",
     "archiveRead": "アーカイブを読み取れません: {error}",
@@ -203,6 +202,7 @@ const Map<String, Map<String, String>> _messages = {
     "cloudSearchFailed": "検索に失敗しました: {error}",
   },
   'ko': {
+    "homeFallback": "폴더를 찾을 수 없습니다. 홈 폴더로 돌아왔습니다.",
     "archiveOpen": "압축 파일을 열 수 없습니다: {error}",
     "archivePassword": "이 압축 파일은 비밀번호로 보호됩니다.",
     "archiveRead": "압축 파일 읽기 실패: {error}",
@@ -226,13 +226,13 @@ const Map<String, Map<String, String>> _messages = {
     "cloudSearchFailed": "검색 실패: {error}",
   },
   'ar': {
+    "homeFallback": "لم يُعثر على المجلد. تمت العودة إلى مجلدك الشخصي.",
     "archiveOpen": "تعذّر فتح الأرشيف: {error}",
     "archivePassword": "هذا الأرشيف محمي بكلمة مرور.",
     "archiveRead": "فشلت قراءة الأرشيف: {error}",
     "flatLocal": "العرض المسطح متاح للمجلدات المحلية فقط",
     "flatFailed": "فشل العرض المسطح: {error}",
-    "accessParent":
-        "لم يُمنح الوصول إلى «{path}». اختر المجلد نفسه أو أحد مجلداته الأصلية.",
+    "accessParent": "لم يُمنح الوصول إلى «{path}». اختر المجلد نفسه أو أحد مجلداته الأصلية.",
     "accessDenied": "لم يُمنح الوصول إلى «{path}».",
     "accessContaining":
         "لم يُمنح الوصول إلى «{path}». اختر المجلد الذي يحتوي عليه.",

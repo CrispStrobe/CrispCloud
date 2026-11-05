@@ -10,6 +10,8 @@ void main() {
   ) async {
     final errors = <String>{};
     final restrictions = <String>{};
+    final archiveNavigation = <String>{};
+    final incompatibleSources = <String>{};
     for (final locale in AppLocalizations.supportedLocales) {
       late ViewerActionStrings strings;
       await tester.pumpWidget(
@@ -33,9 +35,13 @@ void main() {
       expect(message, contains('OS detail {name}'));
       errors.add(message);
       restrictions.add(strings.archiveEditingUnsupported);
+      archiveNavigation.add(strings.archiveOtherPanelUnsupported);
+      incompatibleSources.add(strings.incompatiblePanelSources);
     }
     expect(errors, hasLength(9));
     expect(restrictions, hasLength(9));
+    expect(archiveNavigation, hasLength(9));
+    expect(incompatibleSources, hasLength(9));
   });
 
   testWidgets('archive viewer failures retain localized causes', (
@@ -64,5 +70,7 @@ void main() {
       'test.zip kann nicht angezeigt werden: Dieses Archiv wurde geschlossen.',
     );
     expect(strings.archiveEditingUnsupported, contains('Entpacken'));
+    expect(strings.archiveOtherPanelUnsupported, contains('anderen Bereich'));
+    expect(strings.incompatiblePanelSources, contains('lokale Datei'));
   });
 }
