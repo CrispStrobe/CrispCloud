@@ -137,9 +137,8 @@ void main() {
     () async {
       final directory = await Directory.systemTemp.createTemp('pdf-origin-');
       addTearDown(() => directory.delete(recursive: true));
-      final file = await File(
-        '${directory.path}/sample.pdf',
-      ).writeAsString('pdf');
+      final file = await File('${directory.path}/sample.pdf')
+          .writeAsString('pdf');
       local.entries = [file];
       final panel = container.read(panelProvider(PanelSide.local));
       await panel.refresh();
@@ -513,51 +512,45 @@ void main() {
     expect(fallbackDeletes, isEmpty);
   });
 
-  test(
-    'secondary sessions work without primary login and old origins stay invalid after reconnect',
-    () async {
-      final other = _Cloud('Secondary', accountId: 'account-b');
-      final registry = container.read(multiCloudProvider);
-      registry.addConnection(
-        id: 'second',
-        label: 'Second',
-        provider: CloudProvider.s3,
-        client: other,
-      );
-      final panel = container.read(panelProvider(PanelSide.remote));
-      await panel.refresh();
-      auth.connection(false);
-      container
-          .read(panelSourceProvider(PanelSide.remote).notifier)
-          .setSource(
-            RemotePanelSource(
-              providerName: other.providerName,
-              client: other,
-              path: '/',
-            ),
-          );
-      await Future<void>.delayed(Duration.zero);
-      await panel.refresh();
-      final origin = panel.captureCurrentOrigin();
-      expect(origin.isCurrent, isTrue);
-      await registry.removeConnection('second');
-      expect(origin.isCurrent, isFalse);
-      expect(
-        panel.resolveStorageReference(origin.storageReference, '/'),
-        isNull,
-      );
-      other.authenticated = true;
-      registry.addConnection(
-        id: 'second',
-        label: 'Second',
-        provider: CloudProvider.s3,
-        client: other,
-      );
-      expect(origin.isCurrent, isFalse);
-      expect(
-        panel.resolveStorageReference(origin.storageReference, '/')!.isCurrent,
-        isTrue,
-      );
-    },
-  );
+  test('secondary sessions work without primary login and old origins stay invalid after reconnect', () async {
+    final other = _Cloud('Secondary', accountId: 'account-b');
+    final registry = container.read(multiCloudProvider);
+    registry.addConnection(
+      id: 'second',
+      label: 'Second',
+      provider: CloudProvider.s3,
+      client: other,
+    );
+    final panel = container.read(panelProvider(PanelSide.remote));
+    await panel.refresh();
+    auth.connection(false);
+    container
+        .read(panelSourceProvider(PanelSide.remote).notifier)
+        .setSource(
+          RemotePanelSource(
+            providerName: other.providerName,
+            client: other,
+            path: '/',
+          ),
+        );
+    await Future<void>.delayed(Duration.zero);
+    await panel.refresh();
+    final origin = panel.captureCurrentOrigin();
+    expect(origin.isCurrent, isTrue);
+    await registry.removeConnection('second');
+    expect(origin.isCurrent, isFalse);
+    expect(panel.resolveStorageReference(origin.storageReference, '/'), isNull);
+    other.authenticated = true;
+    registry.addConnection(
+      id: 'second',
+      label: 'Second',
+      provider: CloudProvider.s3,
+      client: other,
+    );
+    expect(origin.isCurrent, isFalse);
+    expect(
+      panel.resolveStorageReference(origin.storageReference, '/')!.isCurrent,
+      isTrue,
+    );
+  });
 }

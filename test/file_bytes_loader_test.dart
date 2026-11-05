@@ -14,8 +14,8 @@ import 'package:crisp_cloud/services/secure_storage_service.dart';
 
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:shared_preferences/shared_preferences.dart';
 
+import 'package:crisp_cloud/models/file_item.dart';
 import 'package:crisp_cloud/models/panel_side.dart';
 import 'package:crisp_cloud/providers/providers.dart';
 import 'package:crisp_cloud/services/file_bytes_loader.dart';
@@ -147,6 +147,23 @@ void main() {
       source.dispose();
     });
   });
+}
+
+class _LocalTestAuth extends ChangeNotifier implements AuthNotifier {
+  @override
+  final WorkflowFakeClient client = WorkflowFakeClient()..current = false;
+
+  @override
+  bool get isConnected => false;
+
+  @override
+  String? get userEmail => null;
+
+  @override
+  String get providerName => client.providerName;
+
+  @override
+  dynamic noSuchMethod(Invocation invocation) => super.noSuchMethod(invocation);
 }
 
 class _RetryLocalService

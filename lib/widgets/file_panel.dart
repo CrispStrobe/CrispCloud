@@ -364,6 +364,10 @@ class _FilePanelState extends ConsumerState<FilePanel> {
     final viewMode = side == PanelSide.local
         ? ref.watch(localViewModeProvider)
         : ref.watch(remoteViewModeProvider);
+    final visualLayout =
+        viewMode == ViewMode.grid ||
+        viewMode == ViewMode.tiles ||
+        viewMode == ViewMode.gallery;
 
     if (viewMode == ViewMode.grid) {
       return FileGridView(

@@ -2207,6 +2207,30 @@ class PanelNotifier extends ChangeNotifier {
     }
   }
 
+  /// Replace the selection with the visible rows chosen by a visual layout.
+  /// The caller supplies identity-stable rows from the current projection.
+  void selectVisibleItems(
+    Iterable<FileItem> items, {
+    FileItem? cursor,
+    FileItem? anchor,
+  }) {
+    _selection
+      ..clear()
+      ..addAll(items.where((item) => item.name != '..' && item.name != '.'));
+    if (anchor != null) _lastSelected = anchor;
+    if (cursor != null) {
+      final idx = _indexOfIdentical(
+        displayedFiles ?? const <FileItem>[],
+        cursor,
+      );
+      if (idx != -1) {
+        _cursorIndex = idx;
+        _itemToScrollTo = cursor;
+      }
+    }
+    notifyListeners();
+  }
+
   void invertSelection() {
     _log.debug('invertSelection (was ${_selection.length} selected)');
     final displayed = displayedFiles;
