@@ -15,6 +15,7 @@ void main() {
     expect(isEditableInBuiltInEditor('photo.JPEG'), isTrue);
     expect(isEditableInBuiltInEditor('drawing.PNG'), isTrue);
     expect(isEditableInBuiltInEditor('photo.webp'), isTrue);
+    expect(isEditableInBuiltInEditor('image.gif'), isTrue);
     expect(isEditableInBuiltInEditor('report.pdf'), isTrue);
     expect(isEditableInBuiltInEditor('letter.docx'), isTrue);
     expect(isEditableInBuiltInEditor('book.xlsx'), isTrue);
@@ -23,7 +24,6 @@ void main() {
 
   test('view-only and binary formats are not offered as editable', () {
     for (final name in <String>[
-      'animation.gif',
       'photo.heic',
       'diagram.svg',
       'movie.avi',

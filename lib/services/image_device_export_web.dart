@@ -19,7 +19,9 @@ Future<ImageSaveOutcome?> exportImageCopy(
         ? 'image/png'
         : format == ImageExportFormat.jpeg
         ? 'image/jpeg'
-        : 'image/webp',
+        : format == ImageExportFormat.webp
+        ? 'image/webp'
+        : 'image/gif',
   );
 }
 

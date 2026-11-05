@@ -7,12 +7,24 @@ import 'package:flutter/widgets.dart';
 import 'package:pro_image_editor/pro_image_editor.dart';
 
 import 'image_edit_session.dart';
+import 'image_export_options.dart';
+import 'image_gif_codec.dart';
 import 'local_file_service.dart';
 
 class ImageOverlay {
   ImageOverlay({required this.name, required Uint8List bytes})
     : bytes = Uint8List.fromList(bytes).asUnmodifiableView() {
-    inspectEditableImage(this.bytes, fileName: name);
+    if (this.bytes.length > kImageEditorInputLimitBytes) {
+      throw const ImageEditException(ImageEditFailure.inputTooLarge);
+    }
+    final lower = name.toLowerCase();
+    if (lower.endsWith('.webp')) {
+      validateImageExport(this.bytes, ImageExportFormat.webp);
+    } else if (lower.endsWith('.gif')) {
+      decodeStaticGif(this.bytes);
+    } else {
+      inspectEditableImage(this.bytes, fileName: name);
+    }
   }
   final String name;
   final Uint8List bytes;
@@ -24,7 +36,7 @@ Future<ImageOverlay?> pickImageOverlay(String dialogTitle) async {
   final result = await FilePicker.platform.pickFiles(
     dialogTitle: dialogTitle,
     type: FileType.custom,
-    allowedExtensions: const ['png', 'jpg', 'jpeg'],
+    allowedExtensions: const ['png', 'jpg', 'jpeg', 'webp', 'gif'],
     withData: kIsWeb,
   );
   if (result == null || result.files.isEmpty) return null;

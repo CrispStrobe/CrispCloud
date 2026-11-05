@@ -65,7 +65,7 @@ jobs:
           test/image_export_options_test.dart test/image_device_export_test.dart
           test/image_edit_project_test.dart test/image_project_store_test.dart
           test/image_webp_file_store_test.dart test/image_gif_codec_test.dart
-          test/image_gif_file_store_test.dart
+          test/image_gif_file_store_test.dart test/image_overlay_test.dart
           test/image_editor_live_test.dart test/image_editor_menu_test.dart
           test/widget/image_editor_menus_test.dart
           test/widget/image_editor_routing_test.dart
@@ -82,7 +82,7 @@ jobs:
           test/image_export_options_test.dart test/image_device_export_test.dart
           test/image_edit_project_test.dart test/image_project_store_test.dart
           test/image_webp_file_store_test.dart test/image_gif_codec_test.dart
-          test/image_gif_file_store_test.dart
+          test/image_gif_file_store_test.dart test/image_overlay_test.dart
           test/image_editor_live_test.dart test/image_editor_menu_test.dart
           test/file_editability_test.dart test/pdf_file_store_test.dart
           test/widget/image_editor_menus_test.dart

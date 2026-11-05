@@ -13,6 +13,7 @@ import 'package:crisp_cloud/services/image_edit_project.dart';
 import 'package:crisp_cloud/services/image_project_store.dart';
 import 'package:crisp_cloud/services/pdf_file_store.dart';
 import 'package:crisp_cloud/services/image_file_store.dart';
+import 'package:crisp_cloud/services/image_gif_codec.dart';
 import 'package:crisp_cloud/services/local_file_service_native.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:image/image.dart' as image;
@@ -134,6 +135,43 @@ void main() {
         throwsA(isA<PdfSaveConflictException>()),
       );
       expect(await file.readAsBytes(), orderedEquals(external));
+    },
+  );
+
+  test(
+    'real static GIF saves exact pixels and rejects unrepresentable edits',
+    () async {
+      final file = File('${directory.path}/picture.gif');
+      final pixels = image.Image(width: 4, height: 3, numChannels: 4);
+      image.fill(pixels, color: image.ColorRgba8(10, 20, 30, 255));
+      pixels.setPixelRgba(0, 0, 0, 0, 0, 0);
+      await file.writeAsBytes(encodeExactGif(pixels));
+      final store = ImageFileStore.local(
+        service: DesktopFileService(),
+        file: FileItem(name: 'picture.gif', path: file.path, isFolder: false),
+      );
+      final initial = await store.load();
+      final edited = image.decodePng(initial)!.convert(numChannels: 4);
+      edited.setPixelRgba(1, 1, 200, 30, 40, 255);
+      expect(
+        await store.save(image.encodePng(edited)),
+        ImageSaveOutcome.savedOriginal,
+      );
+      final written = await file.readAsBytes();
+      expect(await _engineDimensions(written), (4, 3));
+      expect(decodeStaticGif(written).getPixel(1, 1).r, 200);
+      edited.setPixelRgba(1, 1, 200, 30, 40, 128);
+      await expectLater(
+        store.save(image.encodePng(edited)),
+        throwsA(
+          isA<ImageEditException>().having(
+            (e) => e.reason,
+            'reason',
+            ImageEditFailure.gifColorLimit,
+          ),
+        ),
+      );
+      expect(await file.readAsBytes(), orderedEquals(written));
     },
   );
 

@@ -3,8 +3,9 @@ import 'dart:typed_data';
 import 'package:image/image.dart' as image;
 
 import 'image_edit_session.dart';
+import 'image_gif_codec.dart';
 
-enum ImageExportFormat { png, jpeg, webp }
+enum ImageExportFormat { png, jpeg, webp, gif }
 
 ImageExportFormat imageExportFormatForSource(ImageFileFormat format) =>
     format == ImageFileFormat.png
@@ -15,6 +16,7 @@ String imageExportExtension(ImageExportFormat format) => switch (format) {
   ImageExportFormat.png => 'png',
   ImageExportFormat.jpeg => 'jpg',
   ImageExportFormat.webp => 'webp',
+  ImageExportFormat.gif => 'gif',
 };
 
 /// Options for an independent raster copy. The source save format is unchanged.
@@ -96,6 +98,8 @@ Uint8List encodeImageExport(
     output = image.encodeJpg(opaque, quality: options.jpegQuality);
   } else if (options.format == ImageExportFormat.webp) {
     output = image.encodeWebP(pixels);
+  } else if (options.format == ImageExportFormat.gif) {
+    output = encodeExactGif(pixels);
   } else {
     output = image.encodePng(pixels);
   }
@@ -106,6 +110,10 @@ Uint8List encodeImageExport(
 /// Validate exported WebP independently, including the RIFF length and frame
 /// count. Other export formats use the existing strict raster validator.
 void validateImageExport(Uint8List bytes, ImageExportFormat format) {
+  if (format == ImageExportFormat.gif) {
+    decodeStaticGif(bytes, maxBytes: kImageEditorOutputLimitBytes);
+    return;
+  }
   if (format != ImageExportFormat.webp) {
     validateImageEditorOutput(
       bytes,

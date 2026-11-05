@@ -55,10 +55,19 @@ void main() {
     await tester.pumpWidget(const SizedBox());
   });
 
+  testWidgets('F4 dispatches GIF before reading bytes', (tester) async {
+    await _openFile(
+      tester,
+      FileItem(name: 'large.gif', isFolder: false, size: 1024 * 1024 * 1024),
+    );
+    expect(find.byType(ImageEditorDialog), findsOneWidget);
+    await tester.pumpWidget(const SizedBox());
+  });
+
   testWidgets('F4 rejects unsupported image formats instead of editing bytes', (
     tester,
   ) async {
-    await _openFile(tester, FileItem(name: 'animation.gif', isFolder: false));
+    await _openFile(tester, FileItem(name: 'drawing.svg', isFolder: false));
 
     expect(find.byType(ImageEditorDialog), findsNothing);
     expect(find.byType(TextField), findsNothing);

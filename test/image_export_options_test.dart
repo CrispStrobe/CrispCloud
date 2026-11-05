@@ -55,6 +55,21 @@ void main() {
     );
   });
 
+  test('GIF copy export preserves representable colors and transparency', () {
+    final pixels = image.Image(width: 3, height: 2, numChannels: 4);
+    image.fill(pixels, color: image.ColorRgba8(10, 20, 30, 255));
+    pixels.setPixelRgba(0, 0, 0, 0, 0, 0);
+    final result = encodeImageExport(
+      image.encodePng(pixels),
+      ImageFileFormat.png,
+      const ImageExportOptions(format: ImageExportFormat.gif),
+    );
+    final decoded = image.decodeGif(result)!;
+    expect(decoded.getPixel(0, 0).a, 0);
+    expect(decoded.getPixel(1, 1).r, 10);
+    expect(imageExportExtension(ImageExportFormat.gif), 'gif');
+  });
+
   test('one dimension preserves the edited aspect ratio', () {
     final bytes = encodeImageExport(
       buildImageEditorFixture(),

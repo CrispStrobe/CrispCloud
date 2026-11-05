@@ -311,7 +311,8 @@ class _ImageEditorDialogState extends ConsumerState<ImageEditorDialog> {
       if (!mounted) return;
       final sourceName =
           _project?.sourceName ??
-          (widget.file.name.toLowerCase().endsWith('.webp')
+          ((widget.file.name.toLowerCase().endsWith('.webp') ||
+                  widget.file.name.toLowerCase().endsWith('.gif'))
               ? 'source.png'
               : widget.file.name);
       final info = inspectEditableImage(bytes, fileName: sourceName);
@@ -612,7 +613,8 @@ class _ImageEditorDialogState extends ConsumerState<ImageEditorDialog> {
       final project = ImageEditProject(
         sourceName:
             _project?.sourceName ??
-            (widget.file.name.toLowerCase().endsWith('.webp')
+            ((widget.file.name.toLowerCase().endsWith('.webp') ||
+                    widget.file.name.toLowerCase().endsWith('.gif'))
                 ? '${p.basenameWithoutExtension(widget.file.name)}.png'
                 : widget.file.name),
         sourceBytes: _initialBytes!,
@@ -648,7 +650,14 @@ class _ImageEditorDialogState extends ConsumerState<ImageEditorDialog> {
     if (session == null || editor == null || !_canEdit) return;
     final options = await showDialog<ImageExportOptions>(
       context: context,
-      builder: (_) => ImageExportDialog(initialFormat: session.format),
+      builder: (_) => ImageExportDialog(
+        initialFormat: session.format,
+        initialExportFormat: widget.file.name.toLowerCase().endsWith('.webp')
+            ? ImageExportFormat.webp
+            : widget.file.name.toLowerCase().endsWith('.gif')
+            ? ImageExportFormat.gif
+            : null,
+      ),
     );
     if (!mounted || options == null || !_canEdit) return;
     final revision = session.currentRevision;
@@ -802,7 +811,7 @@ class _ImageEditorDialogState extends ConsumerState<ImageEditorDialog> {
     ImageSaveConflictException() || PdfSaveConflictException() => 'The original image changed or could not be verified. Reopen it before saving.',
     ImageEditException(:final reason) => switch (reason) {
       ImageEditFailure.unsupportedFormat =>
-        'Only PNG, JPEG, and WebP images can be edited.',
+        'Only PNG, JPEG, WebP, and GIF images can be edited.',
       ImageEditFailure.formatMismatch =>
         'The image contents do not match the filename extension.',
       ImageEditFailure.invalidImage =>
@@ -1140,6 +1149,16 @@ class _ImageEditorDialogState extends ConsumerState<ImageEditorDialog> {
             ),
           ),
         ),
+        if (widget.file.name.toLowerCase().endsWith('.gif'))
+          Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 5),
+            child: Text(
+              context.imageTr(
+                'GIF saves require at most 256 colors and fully opaque or transparent pixels.',
+              ),
+              style: Theme.of(context).textTheme.bodySmall,
+            ),
+          ),
         Padding(
           padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 5),
           child: Text(

@@ -38,6 +38,7 @@ const imageEditorInvariantFilterNames = <String, String>{
 const imageEditorTranslations = <String, Map<String, String>>{
   'en': <String, String>{
     ...imageEditorInvariantFilterNames,
+    'GIF saves require at most 256 colors and fully opaque or transparent pixels.': 'GIF saves require at most 256 colors and fully opaque or transparent pixels.',
     'GIF cannot preserve these colors or transparency. Export as PNG or WebP.': 'GIF cannot preserve these colors or transparency. Export as PNG or WebP.',
     'Could not add emoji': 'Could not add emoji',
     'Emoji': 'Emoji',
@@ -116,8 +117,8 @@ const imageEditorTranslations = <String, Map<String, String>>{
     'Could not open image': 'Could not open image',
     'Could not save image': 'Could not save image',
     'Could not apply changes': 'Could not apply changes',
-    'Only PNG, JPEG, and WebP images can be edited.':
-        'Only PNG, JPEG, and WebP images can be edited.',
+    'Only PNG, JPEG, WebP, and GIF images can be edited.':
+        'Only PNG, JPEG, WebP, and GIF images can be edited.',
     'The image contents do not match the filename extension.':
         'The image contents do not match the filename extension.',
     'This image is invalid or could not be decoded.':
@@ -212,6 +213,7 @@ const imageEditorTranslations = <String, Map<String, String>>{
   },
   'de': <String, String>{
     ...imageEditorInvariantFilterNames,
+    'GIF saves require at most 256 colors and fully opaque or transparent pixels.': 'GIF-Dateien unterstützen höchstens 256 Farben und nur vollständig deckende oder transparente Pixel.',
     'GIF cannot preserve these colors or transparency. Export as PNG or WebP.': 'GIF kann diese Farben oder Transparenz nicht erhalten. Als PNG oder WebP exportieren.',
     'Could not add emoji': 'Emoji konnte nicht hinzugefügt werden',
     'Emoji': 'Emoji',
@@ -290,8 +292,8 @@ const imageEditorTranslations = <String, Map<String, String>>{
     'Could not open image': 'Bild konnte nicht geöffnet werden',
     'Could not save image': 'Bild konnte nicht gespeichert werden',
     'Could not apply changes': 'Änderungen konnten nicht angewendet werden',
-    'Only PNG, JPEG, and WebP images can be edited.':
-        'Nur PNG-, JPEG- und WebP-Bilder können bearbeitet werden.',
+    'Only PNG, JPEG, WebP, and GIF images can be edited.':
+        'Nur PNG-, JPEG-, WebP- und GIF-Bilder können bearbeitet werden.',
     'The image contents do not match the filename extension.':
         'Der Bildinhalt stimmt nicht mit der Dateiendung überein.',
     'This image is invalid or could not be decoded.':
@@ -382,6 +384,7 @@ const imageEditorTranslations = <String, Map<String, String>>{
   },
   'fr': <String, String>{
     ...imageEditorInvariantFilterNames,
+    'GIF saves require at most 256 colors and fully opaque or transparent pixels.': 'Les GIF prennent en charge au maximum 256 couleurs et des pixels opaques ou transparents.',
     'GIF cannot preserve these colors or transparency. Export as PNG or WebP.': 'GIF ne peut pas préserver ces couleurs ou cette transparence. Exportez en PNG ou WebP.',
     'Could not add emoji': 'Impossible d’ajouter l’emoji',
     'Emoji': 'Emoji',
@@ -460,8 +463,8 @@ const imageEditorTranslations = <String, Map<String, String>>{
     'Could not open image': 'Impossible d’ouvrir l’image',
     'Could not save image': 'Impossible d’enregistrer l’image',
     'Could not apply changes': 'Impossible d’appliquer les modifications',
-    'Only PNG, JPEG, and WebP images can be edited.':
-        'Seules les images PNG, JPEG et WebP peuvent être modifiées.',
+    'Only PNG, JPEG, WebP, and GIF images can be edited.':
+        'Seules les images PNG, JPEG, WebP et GIF peuvent être modifiées.',
     'The image contents do not match the filename extension.':
         'Le contenu de l’image ne correspond pas à l’extension du fichier.',
     'This image is invalid or could not be decoded.':
@@ -554,6 +557,7 @@ const imageEditorTranslations = <String, Map<String, String>>{
   },
   'es': <String, String>{
     ...imageEditorInvariantFilterNames,
+    'GIF saves require at most 256 colors and fully opaque or transparent pixels.': 'Los GIF admiten hasta 256 colores y píxeles totalmente opacos o transparentes.',
     'GIF cannot preserve these colors or transparency. Export as PNG or WebP.': 'GIF no puede conservar estos colores o la transparencia. Exporta como PNG o WebP.',
     'Could not add emoji': 'No se pudo añadir el emoji',
     'Emoji': 'Emoji',
@@ -631,8 +635,8 @@ const imageEditorTranslations = <String, Map<String, String>>{
     'Could not open image': 'No se pudo abrir la imagen',
     'Could not save image': 'No se pudo guardar la imagen',
     'Could not apply changes': 'No se pudieron aplicar los cambios',
-    'Only PNG, JPEG, and WebP images can be edited.':
-        'Solo se pueden editar imágenes PNG, JPEG y WebP.',
+    'Only PNG, JPEG, WebP, and GIF images can be edited.':
+        'Solo se pueden editar imágenes PNG, JPEG, WebP y GIF.',
     'The image contents do not match the filename extension.':
         'El contenido de la imagen no coincide con la extensión del archivo.',
     'This image is invalid or could not be decoded.':
@@ -723,6 +727,7 @@ const imageEditorTranslations = <String, Map<String, String>>{
   },
   'pt': <String, String>{
     ...imageEditorInvariantFilterNames,
+    'GIF saves require at most 256 colors and fully opaque or transparent pixels.': 'GIFs aceitam até 256 cores e pixels totalmente opacos ou transparentes.',
     'GIF cannot preserve these colors or transparency. Export as PNG or WebP.': 'GIF não consegue preservar essas cores ou transparência. Exporte como PNG ou WebP.',
     'Could not add emoji': 'Não foi possível adicionar o emoji',
     'Emoji': 'Emoji',
@@ -802,8 +807,8 @@ const imageEditorTranslations = <String, Map<String, String>>{
     'Could not open image': 'Não foi possível abrir a imagem',
     'Could not save image': 'Não foi possível salvar a imagem',
     'Could not apply changes': 'Não foi possível aplicar as alterações',
-    'Only PNG, JPEG, and WebP images can be edited.':
-        'Somente imagens PNG, JPEG e WebP podem ser editadas.',
+    'Only PNG, JPEG, WebP, and GIF images can be edited.':
+        'Somente imagens PNG, JPEG, WebP e GIF podem ser editadas.',
     'The image contents do not match the filename extension.':
         'O conteúdo da imagem não corresponde à extensão do arquivo.',
     'This image is invalid or could not be decoded.':
@@ -895,6 +900,8 @@ const imageEditorTranslations = <String, Map<String, String>>{
   },
   'zh': <String, String>{
     ...imageEditorInvariantFilterNames,
+    'GIF saves require at most 256 colors and fully opaque or transparent pixels.':
+        'GIF 最多支持 256 种颜色，像素必须完全不透明或完全透明。',
     'GIF cannot preserve these colors or transparency. Export as PNG or WebP.':
         'GIF 无法保留这些颜色或透明度。请导出为 PNG 或 WebP。',
     'Could not add emoji': '无法添加表情符号',
@@ -973,8 +980,8 @@ const imageEditorTranslations = <String, Map<String, String>>{
     'Could not open image': '无法打开图像',
     'Could not save image': '无法保存图像',
     'Could not apply changes': '无法应用更改',
-    'Only PNG, JPEG, and WebP images can be edited.':
-        '只能编辑 PNG、JPEG 和 WebP 图像。',
+    'Only PNG, JPEG, WebP, and GIF images can be edited.':
+        '只能编辑 PNG、JPEG、WebP 和 GIF 图像。',
     'The image contents do not match the filename extension.': '图像内容与文件扩展名不匹配。',
     'This image is invalid or could not be decoded.': '此图像无效或无法解码。',
     'Animated images cannot be overwritten by this editor.': '此编辑器无法覆盖动画图像。',
@@ -1066,6 +1073,8 @@ const imageEditorTranslations = <String, Map<String, String>>{
   },
   'ja': <String, String>{
     ...imageEditorInvariantFilterNames,
+    'GIF saves require at most 256 colors and fully opaque or transparent pixels.':
+        'GIF は最大 256 色で、ピクセルは完全に不透明か透明である必要があります。',
     'GIF cannot preserve these colors or transparency. Export as PNG or WebP.':
         'GIF ではこの色や透明度を保持できません。PNG または WebP として書き出してください。',
     'Could not add emoji': '絵文字を追加できませんでした',
@@ -1144,8 +1153,8 @@ const imageEditorTranslations = <String, Map<String, String>>{
     'Could not open image': '画像を開けませんでした',
     'Could not save image': '画像を保存できませんでした',
     'Could not apply changes': '変更を適用できませんでした',
-    'Only PNG, JPEG, and WebP images can be edited.':
-        '編集できるのは PNG、JPEG、WebP 画像のみです。',
+    'Only PNG, JPEG, WebP, and GIF images can be edited.':
+        '編集できるのは PNG、JPEG、WebP、GIF 画像のみです。',
     'The image contents do not match the filename extension.':
         '画像の内容とファイルの拡張子が一致しません。',
     'This image is invalid or could not be decoded.': 'この画像は無効か、デコードできませんでした。',
@@ -1241,6 +1250,8 @@ const imageEditorTranslations = <String, Map<String, String>>{
   },
   'ko': <String, String>{
     ...imageEditorInvariantFilterNames,
+    'GIF saves require at most 256 colors and fully opaque or transparent pixels.':
+        'GIF는 최대 256색과 완전 불투명 또는 완전 투명 픽셀을 지원합니다.',
     'GIF cannot preserve these colors or transparency. Export as PNG or WebP.':
         'GIF는 이 색상이나 투명도를 보존할 수 없습니다. PNG 또는 WebP로 내보내세요.',
     'Could not add emoji': '이모지를 추가하지 못했습니다',
@@ -1319,8 +1330,8 @@ const imageEditorTranslations = <String, Map<String, String>>{
     'Could not open image': '이미지를 열 수 없습니다',
     'Could not save image': '이미지를 저장할 수 없습니다',
     'Could not apply changes': '변경 사항을 적용할 수 없습니다',
-    'Only PNG, JPEG, and WebP images can be edited.':
-        'PNG, JPEG 및 WebP 이미지만 편집할 수 있습니다.',
+    'Only PNG, JPEG, WebP, and GIF images can be edited.':
+        'PNG, JPEG, WebP 및 GIF 이미지만 편집할 수 있습니다.',
     'The image contents do not match the filename extension.':
         '이미지 내용이 파일 확장자와 일치하지 않습니다.',
     'This image is invalid or could not be decoded.':
@@ -1417,6 +1428,8 @@ const imageEditorTranslations = <String, Map<String, String>>{
   },
   'ar': <String, String>{
     ...imageEditorInvariantFilterNames,
+    'GIF saves require at most 256 colors and fully opaque or transparent pixels.':
+        'تدعم ملفات GIF حتى 256 لونًا وبكسلات معتمة أو شفافة بالكامل.',
     'GIF cannot preserve these colors or transparency. Export as PNG or WebP.': 'لا يمكن لـ GIF الحفاظ على هذه الألوان أو الشفافية. صدّر بصيغة PNG أو WebP.',
     'Could not add emoji': 'تعذرت إضافة الرمز التعبيري',
     'Emoji': 'رموز تعبيرية',
@@ -1495,8 +1508,8 @@ const imageEditorTranslations = <String, Map<String, String>>{
     'Could not open image': 'تعذّر فتح الصورة',
     'Could not save image': 'تعذّر حفظ الصورة',
     'Could not apply changes': 'تعذّر تطبيق التغييرات',
-    'Only PNG, JPEG, and WebP images can be edited.':
-        'يمكن تحرير صور PNG وJPEG وWebP فقط.',
+    'Only PNG, JPEG, WebP, and GIF images can be edited.':
+        'يمكن تحرير صور PNG وJPEG وWebP وGIF فقط.',
     'The image contents do not match the filename extension.':
         'محتوى الصورة لا يطابق امتداد اسم الملف.',
     'This image is invalid or could not be decoded.':

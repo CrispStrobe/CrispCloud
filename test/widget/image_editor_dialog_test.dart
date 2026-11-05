@@ -9,6 +9,7 @@ import 'package:crisp_cloud/services/image_export_options.dart';
 import 'package:crisp_cloud/services/image_edit_project.dart';
 import 'package:crisp_cloud/services/image_editor_menu.dart';
 import 'package:crisp_cloud/services/image_file_store.dart';
+import 'package:crisp_cloud/services/image_gif_codec.dart';
 import 'package:crisp_cloud/services/image_project_store.dart';
 import 'package:crisp_cloud/services/image_overlay.dart';
 import 'package:crisp_cloud/services/pdf_file_store.dart';
@@ -489,8 +490,10 @@ void main() {
       final first = _Harness(tester, raster);
       Uint8List? saved;
       final overlay = ImageOverlay(
-        name: 'overlay.png',
-        bytes: buildImageEditorFixture(seed: 7),
+        name: 'overlay.webp',
+        bytes: image.encodeWebP(
+          image.decodePng(buildImageEditorFixture(seed: 7))!,
+        ),
       );
       await first.open(
         overlayPicker: (_) async => overlay,
@@ -542,7 +545,7 @@ void main() {
           .whereType<WidgetLayer>()
           .single;
       expect(layer.exportConfigs.id, 'crispcloud.image-overlay.v1');
-      expect(layer.exportConfigs.meta!['name'], 'overlay.png');
+      expect(layer.exportConfigs.meta!['name'], 'overlay.webp');
       expect(_saveEnabled(tester), isFalse);
       await tester.ensureVisible(_command(ImageEditorAction.exportCopy));
       await tester.tap(_command(ImageEditorAction.exportCopy));
@@ -696,6 +699,52 @@ void main() {
       final saved = image.decodeWebP(backing.bytes)!;
       expect((saved.width, saved.height), (24, 16));
       expect(saved.getPixel(0, 0).a, 0);
+    },
+  );
+
+  _desktopTestWidgets(
+    'static GIF opens and exports a PNG copy without changing the source',
+    (tester) async {
+      final pixels = image.Image(width: 24, height: 16, numChannels: 4);
+      image.fill(pixels, color: image.ColorRgba8(10, 20, 30, 255));
+      pixels.setPixelRgba(0, 0, 0, 0, 0, 0);
+      final original = encodeExactGif(pixels);
+      final backing = _MemoryProjectStore(original);
+      final harness = _Harness(tester, _MemoryImageStore());
+      Uint8List? copied;
+      await harness.open(
+        imageStore: GifImageFileStore(backing),
+        fileName: 'photo.gif',
+        exporter: (bytes, name, title, format) async {
+          expect(name, 'photo-edited.png');
+          expect(format, ImageExportFormat.png);
+          copied = bytes;
+          return ImageSaveOutcome.savedCopy;
+        },
+      );
+      expect(
+        find.text(
+          'GIF saves require at most 256 colors and fully opaque or transparent pixels.',
+        ),
+        findsOneWidget,
+      );
+      await tester.ensureVisible(_command(ImageEditorAction.exportCopy));
+      await tester.tap(_command(ImageEditorAction.exportCopy));
+      await tester.pumpAndSettle();
+      await tester.tap(find.byType(DropdownButtonFormField<ImageExportFormat>));
+      await tester.pumpAndSettle();
+      await tester.tap(find.text('PNG').last);
+      await tester.pumpAndSettle();
+      await tester.tap(find.widgetWithText(FilledButton, 'Export'));
+      await _until(
+        tester,
+        () => copied != null && !harness.actions.busy,
+        reason: 'GIF PNG export',
+      );
+      expect(image.decodePng(copied!), isNotNull);
+      expect(backing.writes, 0);
+      expect(backing.bytes, orderedEquals(original));
+      expect(_saveEnabled(tester), isFalse);
     },
   );
 

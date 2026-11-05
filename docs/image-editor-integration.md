@@ -12,7 +12,7 @@ are recorded in the package's `UPSTREAM.md`.
 
 ## Save contract
 
-- Overwrite support is limited to static PNG, JPEG, and WebP.
+- Overwrite support is limited to static PNG, JPEG, WebP, and GIF.
   Validate the bytes against the filename before opening; do not interpret
   unsupported binary files as text.
 - Preserve the input encoding and image resolution. Do not inherit the
@@ -54,8 +54,8 @@ results and any environment limitations are recorded here before completion.
 
 ## Implemented integration
 
-`showFileEditorDialog` dispatches `.png`, `.jpg`, `.jpeg`, `.webp`, and
-`.ccimage` projects to
+`showFileEditorDialog` dispatches `.png`, `.jpg`, `.jpeg`, `.webp`, `.gif`,
+and `.ccimage` projects to
 `ImageEditorDialog`. The same capability predicate enables the viewer's Edit
 button and the context-menu action. Unknown binary formats cannot fall through
 to the text editor. PNG animation chunks and JPEG multi-picture/trailing data
@@ -90,9 +90,11 @@ input and 64 MiB output limits. The image parser also enforces a maximum of
 origin before loading; changing the active pane/account cannot redirect an
 existing editor's save. Failed source verification blocks overwriting.
 
-Overwrite explicitly selects the original PNG/JPEG/WebP encoding. WebP is
+Overwrite explicitly selects the original PNG/JPEG/WebP/GIF encoding. WebP is
 decoded to a PNG editing surface and saved as lossless WebP; its converted PNG
-must also fit the 32 MiB input limit. Animated WebP is rejected. A square bound
+must also fit the 32 MiB input limit. Animated WebP and GIF are rejected. GIF is saved only if every edited pixel is
+exactly representable with 256 colors and binary transparency; otherwise the
+original stays unchanged and the user can export a PNG or WebP. A square bound
 based on the original longest side preserves full resolution after a quarter
 turn. PNG uses straight RGBA capture to preserve transparency. Edited output
 is a flattened raster; metadata, color-profile information, and high-bit-depth
@@ -123,14 +125,15 @@ Korean and Arabic use localized category browsing without English search.
 Image overlays are selected from the device, validated as static PNG/JPEG, and
 stored as self-contained layer data in projects.
 
-Export Image Copy offers PNG/JPEG/WebP conversion, optional proportional or
+Export Image Copy offers PNG/JPEG/WebP/GIF conversion, optional proportional or
 exact dimensions, and JPEG quality. WebP export is lossless. JPEG composites transparent pixels on white. Exports are independent
 copies: they do not mark the source saved. Browser downloads report initiation,
 not successful persistence.
 
 Save Project Copy writes a `.ccimage` file containing the source raster and
-serialized editing history. For WebP sources the embedded raster is the
-decoded, orientation-normalized PNG used by the editor. F4 reopens the project and restores editable layers;
+serialized editing history. For WebP and GIF sources the embedded raster is the
+decoded PNG used by the editor; WebP orientation is normalized. F4 reopens the
+project and restores editable layers;
 subsequent Save writes the project through the existing origin-bound conflict
 checks. Project content is limited to 64 MiB and its source bytes have a SHA-256
 integrity check. External file, network, and asset layer references are rejected;

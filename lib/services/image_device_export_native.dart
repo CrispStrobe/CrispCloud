@@ -22,8 +22,12 @@ Future<ImageSaveOutcome?> exportImageCopy(
         ? ['png']
         : format == ImageExportFormat.jpeg
         ? ['jpg', 'jpeg']
-        : ['webp'],
-    (path) => format == ImageExportFormat.webp
+        : format == ImageExportFormat.webp
+        ? ['webp']
+        : ['gif'],
+    (path) => format == ImageExportFormat.gif
+        ? path.toLowerCase().endsWith('.gif')
+        : format == ImageExportFormat.webp
         ? path.toLowerCase().endsWith('.webp')
         : imageFileFormatForName(path) ==
               (format == ImageExportFormat.png

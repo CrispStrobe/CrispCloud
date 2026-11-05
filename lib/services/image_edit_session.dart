@@ -71,6 +71,7 @@ bool isEditableImageFileName(String name) =>
 bool isImageEditorFileName(String name) =>
     isEditableImageFileName(name) ||
     name.toLowerCase().endsWith('.webp') ||
+    name.toLowerCase().endsWith('.gif') ||
     name.toLowerCase().endsWith('.ccimage');
 
 /// Inspect structure and dimensions without allocating a full pixel buffer.

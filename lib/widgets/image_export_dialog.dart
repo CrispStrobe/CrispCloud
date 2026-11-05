@@ -6,17 +6,22 @@ import '../services/image_export_options.dart';
 
 /// Selects an independent copy format and optional exact output dimensions.
 class ImageExportDialog extends StatefulWidget {
-  const ImageExportDialog({super.key, required this.initialFormat});
+  const ImageExportDialog({
+    super.key,
+    required this.initialFormat,
+    this.initialExportFormat,
+  });
   final ImageFileFormat initialFormat;
+  final ImageExportFormat? initialExportFormat;
 
   @override
   State<ImageExportDialog> createState() => _ImageExportDialogState();
 }
 
 class _ImageExportDialogState extends State<ImageExportDialog> {
-  late ImageExportFormat format = imageExportFormatForSource(
-    widget.initialFormat,
-  );
+  late ImageExportFormat format =
+      widget.initialExportFormat ??
+      imageExportFormatForSource(widget.initialFormat);
   final width = TextEditingController();
   final height = TextEditingController();
   final quality = TextEditingController(text: '90');
@@ -74,6 +79,10 @@ class _ImageExportDialogState extends State<ImageExportDialog> {
                 value: ImageExportFormat.webp,
                 child: Text('WebP'),
               ),
+              DropdownMenuItem(
+                value: ImageExportFormat.gif,
+                child: Text('GIF'),
+              ),
             ],
             onChanged: (value) {
               if (value != null) setState(() => format = value);
@@ -113,6 +122,12 @@ class _ImageExportDialogState extends State<ImageExportDialog> {
             ),
           if (format == ImageExportFormat.jpeg)
             Text(context.imageTr('Transparent areas become white in JPEG.')),
+          if (format == ImageExportFormat.gif)
+            Text(
+              context.imageTr(
+                'GIF saves require at most 256 colors and fully opaque or transparent pixels.',
+              ),
+            ),
         ],
       ),
     ),
