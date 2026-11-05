@@ -260,7 +260,7 @@ class _FileEditorPageState extends ConsumerState<_FileEditorPage> {
         try {
           bytes = await service.readFile(path, fileItem: widget.file);
         } on FileSystemException catch (e) {
-          if (kIsWeb || e is! PathAccessException) rethrow;
+          if (kIsWeb || !_isPermissionDenied(e)) rethrow;
           final granted = await service.ensureAccess(path);
           if (!granted) {
             throw FileSystemException(
@@ -422,9 +422,18 @@ class _FileEditorPageState extends ConsumerState<_FileEditorPage> {
     if (widget.side == PanelSide.local && widget.file.path != null) {
       // Always go through the service: it maintains the macOS security
       // scope for sandboxed paths (web uses the FSA bridge).
-      await ref
-          .read(localFileServiceProvider)
-          .saveFile(widget.file.path!, bytes);
+      final service = ref.read(localFileServiceProvider);
+      final path = widget.file.path!;
+      try {
+        await service.saveFile(path, bytes);
+      } on FileSystemException catch (e) {
+        if (!_isPermissionDenied(e)) rethrow;
+        // The grant may have failed to resolve after a rebuild, or a symlink
+        // may now point outside the granted folder. Ask again and retry once.
+        final granted = await service.ensureAccess(path);
+        if (!granted) rethrow;
+        await service.saveFile(path, bytes);
+      }
       return;
     }
     final client = ref.read(authProvider).client;
@@ -901,6 +910,12 @@ class _FileEditorPageState extends ConsumerState<_FileEditorPage> {
       onEncodingSelected: _setEncoding,
     );
   }
+}
+
+bool _isPermissionDenied(FileSystemException error) {
+  if (error is PathAccessException) return true;
+  final code = error.osError?.errorCode;
+  return code == 1 || code == 13;
 }
 
 enum _EditorMenuAction { find, replace, goToLine, wordWrap, highlight, reload }

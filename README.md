@@ -77,6 +77,13 @@ flutter run -d windows   # Windows
 flutter run -d linux     # Linux
 ```
 
+For a macOS release build that records its version and git commit for the
+About dialog, use:
+
+```bash
+tool/build_macos_release.sh
+```
+
 ### Tests
 
 ```bash
