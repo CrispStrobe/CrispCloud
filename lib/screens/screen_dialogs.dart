@@ -1,3 +1,4 @@
+import '../widgets/file_delete_dialog.dart';
 // lib/screens/screen_dialogs.dart
 //
 // Dialog helpers for the file browser screen.
@@ -24,9 +25,7 @@ import '../widgets/internal_viewer_dialog.dart'
 import '../l10n/app_localizations.dart';
 import '../l10n/image_editor_strings.dart';
 import '../services/image_edit_session.dart' show isEditableImageFileName;
-import '../services/log_service.dart';
 
-const _log = Log('ScreenDialogs');
 
 /// Explicit selection, or the cursor item when nothing is marked. This mirrors
 /// Total Commander: F5/F6/F8 operate on the item under the cursor when there
@@ -242,49 +241,9 @@ void downloadSelected(BuildContext context, WidgetRef ref) {
 }
 
 void confirmDeleteSelected(BuildContext context, WidgetRef ref) {
-  final activePanel = ref.read(activePanelProvider);
-  final panel = ref.read(panelProvider(activePanel));
-  final targets = _selectedOrCursor(panel);
-  _log.debug(
-    'confirmDeleteSelected: ${targets.length} items, side=${activePanel.name}',
-  );
-  if (targets.isEmpty) return;
-
-  showDialog(
-    context: context,
-    builder: (context) => AlertDialog(
-      title: const Text('Confirm Delete'),
-      content: Text('Delete ${targets.length} item(s)?'),
-      actions: [
-        TextButton(
-          onPressed: () => Navigator.pop(context),
-          child: Text(AppLocalizations.of(context)!.cancel),
-        ),
-        ElevatedButton(
-          onPressed: () async {
-            final files = targets;
-            final deleted = await panel.deleteFiles(files);
-            if (context.mounted) {
-              Navigator.pop(context);
-              final message =
-                  'Deleted $deleted of ${files.length} selected item(s)';
-              if (deleted > 0) {
-                _showUndoSnackBar(context, ref, activePanel, message);
-              } else {
-                ScaffoldMessenger.of(context)
-                    .showSnackBar(SnackBar(content: Text(message)));
-              }
-            }
-          },
-          style: ElevatedButton.styleFrom(
-            backgroundColor: Theme.of(context).colorScheme.error,
-            foregroundColor: Theme.of(context).colorScheme.onError,
-          ),
-          child: const Text('Delete'),
-        ),
-      ],
-    ),
-  );
+  final side = ref.read(activePanelProvider);
+  final panel = ref.read(panelProvider(side));
+  showFileDeleteDialog(context, ref, side, _selectedOrCursor(panel));
 }
 
 void showRenameDialog(BuildContext context, WidgetRef ref) {

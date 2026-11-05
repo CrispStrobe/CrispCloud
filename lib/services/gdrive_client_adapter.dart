@@ -19,8 +19,9 @@ import 'cloud_storage_interface.dart';
 import 'gdrive_config_service.dart';
 import 'log_service.dart';
 import 'secure_storage_service.dart';
+import 'storage_trash.dart';
 
-class GDriveClientAdapter extends CloudStorageClient {
+class GDriveClientAdapter extends CloudStorageClient implements StorageTrashOperations {
   static const _log = Log('GDriveClient');
 
   final GDriveConfigService _config;
@@ -818,8 +819,63 @@ class GDriveClientAdapter extends CloudStorageClient {
 
   @override
   Future<void> deletePath(String path) async {
+    await trashPath(path);
+  }
+
+  @override
+  Future<TrashReceipt> trashPath(String path) async {
     await _ensureToken();
-    final fileId = await _resolveFileId(path);
+    final fileId = await _resolveTrashFileId(path);
+    if (fileId == null) throw StateError('Not found: $path');
+    await _setTrashed(fileId, true);
+    _pathToId.removeWhere((key, _) => key == path || key.startsWith('$path/'));
+    return TrashReceipt(originalPath: path, trashId: fileId);
+  }
+
+  @override
+  Future<void> restoreTrash(TrashReceipt receipt) async {
+    await _ensureToken();
+    if (await _resolveTrashFileId(receipt.originalPath) != null) {
+      throw StateError('The original path is occupied. Choose another location before restoring.');
+    }
+    await _setTrashed(receipt.trashId, false);
+    _pathToId[receipt.originalPath] = receipt.trashId;
+  }
+
+  Future<String?> _resolveTrashFileId(String path) async {
+    if (!path.startsWith('/') || path == '/' || path.contains('\u0000')) {
+      throw ArgumentError('Select a file or folder below the storage root.');
+    }
+    final parent = await _resolvePathToId(p.posix.dirname(path));
+    if (parent == null) throw StateError('The original parent folder is unavailable.');
+    final name = _escapeQuery(p.posix.basename(path));
+    final result = await _apiGet('/files', queryParams: {
+      'q': "name='$name' and '$parent' in parents and trashed=false",
+      'fields': 'files(id,name),nextPageToken',
+      'pageSize': '2',
+    });
+    final files = result['files'] as List? ?? [];
+    if (files.length > 1 || result['nextPageToken'] != null) {
+      throw StateError('This path identifies multiple Google Drive items. Rename them before deleting.');
+    }
+    return files.isEmpty ? null : (files.single as Map)['id'] as String;
+  }
+
+  Future<void> _setTrashed(String fileId, bool trashed) async {
+    final response = await http.patch(
+      Uri.parse('$_apiBase/files/$fileId?supportsAllDrives=true'),
+      headers: {'Authorization': 'Bearer $_accessToken', 'Content-Type': 'application/json'},
+      body: jsonEncode({'trashed': trashed}),
+    );
+    if (response.statusCode != 200) {
+      throw StateError('Google Drive ${trashed ? 'trash' : 'restore'} failed (${response.statusCode}).');
+    }
+  }
+
+  @override
+  Future<void> deletePermanently(String path) async {
+    await _ensureToken();
+    final fileId = await _resolveTrashFileId(path);
     if (fileId == null) throw Exception('Not found: $path');
 
     final uri = Uri.parse('$_apiBase/files/$fileId');

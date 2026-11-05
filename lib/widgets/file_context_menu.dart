@@ -1,3 +1,4 @@
+import 'file_delete_dialog.dart';
 // widgets/file_context_menu.dart
 
 import 'dart:async';
@@ -1387,99 +1388,8 @@ void showMoveDialog(
   _showMoveDialog(context, ref, side, files);
 }
 
-void confirmDelete(
-  BuildContext context,
-  WidgetRef ref,
-  PanelSide side,
-  List<FileItem> files,
-) {
-  _log.debug('confirmDelete: ${files.length} files, side=${side.name}');
-  final totalSize = files.fold<int>(0, (sum, file) => sum + (file.size ?? 0));
-
-  showDialog(
-    context: context,
-    builder: (context) => AlertDialog(
-      icon: Icon(
-        Icons.warning,
-        color: Theme.of(context).colorScheme.error,
-        size: 48,
-      ),
-      title: Text(AppLocalizations.of(context)!.confirmDeleteTitle),
-      content: Column(
-        mainAxisSize: MainAxisSize.min,
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Text(
-            'Are you sure you want to delete ${files.length} item(s)?',
-            style: Theme.of(context).textTheme.bodyLarge,
-          ),
-          const SizedBox(height: 8),
-          if (totalSize > 0)
-            Text(
-              'Total size: ${formatBytes(totalSize)}',
-              style: Theme.of(context).textTheme.bodyMedium,
-            ),
-          const SizedBox(height: 16),
-          Container(
-            padding: const EdgeInsets.all(12),
-            decoration: BoxDecoration(
-              color: Theme.of(context).colorScheme.errorContainer,
-              borderRadius: BorderRadius.circular(8),
-            ),
-            child: Row(
-              children: [
-                Icon(
-                  Icons.info_outline,
-                  color: Theme.of(context).colorScheme.onErrorContainer,
-                  size: 20,
-                ),
-                const SizedBox(width: 8),
-                Expanded(
-                  child: Text(
-                    'This action cannot be undone.',
-                    style: TextStyle(
-                      color: Theme.of(context).colorScheme.onErrorContainer,
-                      fontWeight: FontWeight.bold,
-                    ),
-                  ),
-                ),
-              ],
-            ),
-          ),
-        ],
-      ),
-      actions: [
-        TextButton(
-          onPressed: () => Navigator.pop(context),
-          child: Text(AppLocalizations.of(context)!.cancel),
-        ),
-        ElevatedButton(
-          onPressed: () async {
-            try {
-              await ref.read(panelProvider(side)).deleteFiles(files);
-              if (context.mounted) Navigator.pop(context);
-            } catch (e) {
-              _log.warn('operation failed', e);
-              if (context.mounted) {
-                ScaffoldMessenger.of(context).showSnackBar(
-                  SnackBar(
-                    content: Text(
-                      '${AppLocalizations.of(context)!.deleteFailed}: $e',
-                    ),
-                  ),
-                );
-              }
-            }
-          },
-          style: ElevatedButton.styleFrom(
-            backgroundColor: Theme.of(context).colorScheme.error,
-            foregroundColor: Theme.of(context).colorScheme.onError,
-          ),
-          child: Text(AppLocalizations.of(context)!.delete),
-        ),
-      ],
-    ),
-  );
+void confirmDelete(BuildContext context, WidgetRef ref, PanelSide side, List<FileItem> files) {
+  showFileDeleteDialog(context, ref, side, files);
 }
 
 void _showPropertiesDialog(BuildContext context, FileItem file) =>

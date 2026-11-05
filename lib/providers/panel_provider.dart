@@ -20,6 +20,8 @@ import '../models/sort.dart';
 import '../models/storage_reference.dart';
 import '../services/captured_file_target.dart';
 import '../services/storage_identity.dart';
+import '../services/storage_trash.dart';
+import '../services/native_file_operations.dart';
 import '../services/archive_service.dart';
 import '../services/archive_viewer_service.dart';
 import '../services/audit_service.dart';
@@ -40,6 +42,7 @@ import 'error_provider.dart';
 import 'panel_source_provider.dart';
 import 'quick_search_provider.dart';
 import 'recent_locations_provider.dart';
+import 'native_file_operations_provider.dart';
 
 // SortBy and SortOrder are defined in models/sort.dart
 export '../models/sort.dart';
@@ -2270,7 +2273,22 @@ class PanelNotifier extends ChangeNotifier {
   }
 
   // --- File operations (local panel helpers) ---
-  Future<int> deleteFiles(List<FileItem> files) async {
+  bool canTrashFiles(List<FileItem> files) {
+    try {
+      final source = captureOperationOrigin(files).source;
+      return source is LocalPanelSource
+          ? NativeFileOperations.supported
+          : source is RemotePanelSource &&
+                source.client is StorageTrashOperations;
+    } catch (_) {
+      return false;
+    }
+  }
+
+  Future<int> deleteFiles(
+    List<FileItem> files, {
+    bool permanently = false,
+  }) async {
     final audit = _ref.read(auditServiceProvider);
     final history = _ref.read(actionHistoryProvider.notifier);
     var providerName = 'unknown';
@@ -2279,6 +2297,11 @@ class PanelNotifier extends ChangeNotifier {
     var deletedCount = 0;
     try {
       final origin = captureOperationOrigin(files);
+      if (!permanently && !canTrashFiles(files)) {
+        throw UnsupportedError(
+          'Trash is unavailable for this source. Choose Delete without restore explicitly.',
+        );
+      }
       operationOrigin = origin;
       final source = origin.source;
       final paths = source.isLocal && !kIsWeb ? p.context : p.posix;
@@ -2302,7 +2325,28 @@ class PanelNotifier extends ChangeNotifier {
         if (!origin.isCurrent) throw StateError('The storage account changed.');
         final path = file.path;
         if (path == null) throw StateError('The original path is unavailable.');
-        if (source is LocalPanelSource) {
+        TrashReceipt? receipt;
+        Future<void> Function()? restore;
+        if (!permanently) {
+          if (source is LocalPanelSource) {
+            final native = _ref.read(nativeFileOperationsProvider);
+            receipt = await _localFileService.withFileOperationAccess(
+              path,
+              () => native.trash(path),
+            );
+            final capturedReceipt = receipt!;
+            restore = () => _localFileService.withFileOperationAccess(
+              path,
+              () => native.restore(capturedReceipt),
+            );
+          } else if (source is RemotePanelSource &&
+              source.client is StorageTrashOperations) {
+            final trash = source.client as StorageTrashOperations;
+            receipt = await trash.trashPath(path);
+            final capturedReceipt = receipt;
+            restore = () => trash.restoreTrash(capturedReceipt);
+          }
+        } else if (source is LocalPanelSource) {
           if (kIsWeb) {
             await _localFileService.deleteEntry(path, file.isFolder);
           } else {
@@ -2320,7 +2364,12 @@ class PanelNotifier extends ChangeNotifier {
             });
           }
         } else if (source is RemotePanelSource) {
-          await source.client.deletePath(path);
+          final client = source.client;
+          if (client is StorageTrashOperations) {
+            await (client as StorageTrashOperations).deletePermanently(path);
+          } else {
+            await client.deletePath(path);
+          }
         } else {
           throw UnsupportedError('This source cannot be deleted from here.');
         }
@@ -2343,7 +2392,28 @@ class PanelNotifier extends ChangeNotifier {
           type: ActionType.delete,
           originalPath: path,
           provider: providerName,
-          metadata: {'name': file.name, 'isFolder': file.isFolder},
+          metadata: {
+            'name': file.name,
+            'isFolder': file.isFolder,
+            'permanent': permanently,
+            'storage': origin.storageReference.toJson(),
+            if (receipt != null) 'trash': receipt.toJson(),
+          },
+          isCurrent: () => origin.isCurrent,
+          undoAction: restore == null
+              ? null
+              : () async {
+                  if (!origin.isCurrent) {
+                    return const UndoResult.failure(
+                      'Reconnect the original storage before restoring.',
+                    );
+                  }
+                  await restore!();
+                  await refresh();
+                  return UndoResult.success(
+                    'Restored ${file.name} from trash.',
+                  );
+                },
         );
       }
     } catch (error) {

@@ -172,9 +172,9 @@ class ActionHistoryService {
     if (kIsWeb && action.provider == 'local') return false;
     switch (action.type) {
       case ActionType.delete:
-        // Delete undo is only possible for remote providers (trash restore).
-        // For local we cannot restore without a trash directory — report false.
-        return action.provider != 'local';
+        // A provider label is not evidence of a restorable deletion. New trash
+        // actions supply a receipt-bound undoAction above.
+        return false;
       case ActionType.rename:
       case ActionType.move:
       case ActionType.createFolder:

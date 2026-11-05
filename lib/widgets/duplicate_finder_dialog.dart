@@ -4,6 +4,7 @@
 // For local files, computes MD5 hashes to confirm true duplicates.
 
 import 'package:flutter/material.dart';
+import 'file_delete_dialog.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../models/file_item.dart';
@@ -133,7 +134,8 @@ class _DuplicateFinderDialogState
       );
       return;
     }
-    await ref.read(panelProvider(_sourceSide!)).deleteFiles([file]);
+    if (!mounted) return;
+    await showFileDeleteDialog(context, ref, _sourceSide!, [file]);
     if (mounted) await _scan();
   }
 
