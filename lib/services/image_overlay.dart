@@ -25,9 +25,11 @@ class ImageOverlay {
     } else {
       inspectEditableImage(this.bytes, fileName: name);
     }
+    displayBytes = Uint8List.fromList(this.bytes);
   }
   final String name;
   final Uint8List bytes;
+  late final Uint8List displayBytes;
 }
 
 typedef ImageOverlayPicker = Future<ImageOverlay?> Function(String dialogTitle);
@@ -57,7 +59,7 @@ Future<ImageOverlay?> pickImageOverlay(String dialogTitle) async {
 }
 
 WidgetLayer imageOverlayLayer(ImageOverlay overlay) => WidgetLayer(
-  widget: Image.memory(overlay.bytes),
+  widget: Image.memory(overlay.displayBytes),
   exportConfigs: WidgetLayerExportConfigs(
     id: 'crispcloud.image-overlay.v1',
     meta: {'name': overlay.name, 'bytes': base64Encode(overlay.bytes)},
@@ -89,7 +91,7 @@ class ImageProjectOverlayCache {
   }
 
   Widget load(String id, {Map<String, dynamic>? meta}) =>
-      Image.memory(_overlay(id, meta).bytes);
+      Image.memory(_overlay(id, meta).displayBytes);
 
   Future<void> precache(BuildContext context, Object? value) async {
     final found = <ImageOverlay>[];
@@ -115,7 +117,7 @@ class ImageProjectOverlayCache {
     for (final overlay in found.toSet()) {
       Object? imageError;
       await precacheImage(
-        MemoryImage(overlay.bytes),
+        MemoryImage(overlay.displayBytes),
         context,
         onError: (error, _) => imageError = error,
       );

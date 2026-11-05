@@ -564,7 +564,7 @@ class _ImageEditorDialogState extends ConsumerState<ImageEditorDialog> {
         title,
       );
       if (!mounted || overlay == null) return;
-      final codec = await ui.instantiateImageCodec(overlay.bytes);
+      final codec = await ui.instantiateImageCodec(overlay.displayBytes);
       try {
         if (codec.frameCount != 1)
           throw const ImageEditException(ImageEditFailure.animatedImage);
@@ -576,7 +576,7 @@ class _ImageEditorDialogState extends ConsumerState<ImageEditorDialog> {
       if (!mounted) return;
       Object? imageError;
       await precacheImage(
-        MemoryImage(overlay.bytes),
+        MemoryImage(overlay.displayBytes),
         editor.context,
         onError: (error, _) => imageError = error,
       );
