@@ -17,6 +17,7 @@ import '../models/panel_side.dart';
 import '../providers/providers.dart';
 import 'file_operation_backend.dart';
 import 'file_operation_service.dart';
+import 'local_file_service.dart';
 import 'panel_source_service.dart';
 import './log_service.dart';
 
@@ -105,7 +106,9 @@ Future<Uint8List> loadFileBytes(
         return Uint8List.fromList(cached);
       }
     }
-    final bytes = await readFileBytesBounded(backend, current, maxBytes: limit);
+    final bytes = source is LocalPanelSource
+        ? await local.readFileForEdit(path, fileItem: current, maxBytes: limit)
+        : await readFileBytesBounded(backend, current, maxBytes: limit);
     if (source is RemotePanelSource && version != null) {
       unawaited(() async {
         try {

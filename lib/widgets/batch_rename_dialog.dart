@@ -1450,6 +1450,7 @@ class _BatchRenameDialogState extends ConsumerState<BatchRenameDialog> {
       );
       return;
     }
+    final history = ref.read(actionHistoryProvider.notifier);
     setState(() {
       _processing = true;
       _executionPlan = plan;
@@ -1477,7 +1478,9 @@ class _BatchRenameDialogState extends ConsumerState<BatchRenameDialog> {
         continueOnError: !_stopOnError,
         onProgress: progress,
       );
-      if (record.isComplete) _recordBatchUndo(record, origin, storage);
+      if (record.completedSteps > 0) {
+        _recordBatchUndo(record, origin, storage, history);
+      }
       if (record.message != null && mounted) {
         setState(() => _message = record.message);
       }
@@ -1542,57 +1545,54 @@ class _BatchRenameDialogState extends ConsumerState<BatchRenameDialog> {
     RenameBatchRecord record,
     PanelFileOrigin origin,
     SourceRenameBatchStorage storage,
+    ActionHistoryNotifier history,
   ) {
     final panel = _panel;
     final service = _batchService;
-    ref
-        .read(actionHistoryProvider.notifier)
-        .record(
-          type: ActionType.rename,
-          originalPath: record.items.first.sourcePath,
-          newPath: record.items.first.targetPath,
-          provider: record.storage.provider,
-          metadata: {
-            'renameBatchId': record.id,
-            'renameBatchCount': record.changedCount,
-          },
-          isCurrent: () => origin.isCurrent,
-          undoAction: () async {
-            final latest = await service.store.read(record.id);
-            if (latest == null) {
-              return const UndoResult.failure(
-                'The rename recovery record is missing.',
-              );
-            }
-            final before = {
+    history.record(
+      type: ActionType.rename,
+      originalPath: record.items.first.sourcePath,
+      newPath: record.items.first.targetPath,
+      provider: record.storage.provider,
+      metadata: {
+        'renameBatchId': record.id,
+        'renameBatchCount': record.completedSteps,
+      },
+      isCurrent: () => origin.isCurrent,
+      undoAction: () async {
+        final latest = await service.store.read(record.id);
+        if (latest == null) {
+          return const UndoResult.failure(
+            'The rename recovery record is missing.',
+          );
+        }
+        final before = {
+          for (final item in latest.items) item.sourcePath: item.currentPath,
+        };
+        try {
+          await service.restore(latest, storage);
+          return latest.isRestored
+              ? UndoResult.success(
+                  'Restored ${latest.changedCount} original names.',
+                )
+              : UndoResult.failure(
+                  latest.message ?? 'Restore stopped. Review rename history.',
+                );
+        } finally {
+          if (origin.isCurrent) {
+            panel.applyFileListChanges({
               for (final item in latest.items)
-                item.sourcePath: item.currentPath,
-            };
-            try {
-              await service.restore(latest, storage);
-              return latest.isRestored
-                  ? UndoResult.success(
-                      'Restored ${latest.changedCount} original names.',
-                    )
-                  : UndoResult.failure(
-                      latest.message ??
-                          'Restore stopped. Review rename history.',
-                    );
-            } finally {
-              if (origin.isCurrent) {
-                panel.applyFileListChanges({
-                  for (final item in latest.items)
-                    if (before[item.sourcePath] != item.currentPath)
-                      before[item.sourcePath]!: item.asFile(
-                        storage.paths.basename(item.currentPath),
-                        storageId: latest.storage.id,
-                      ),
-                }, origin: origin);
-                await panel.refresh();
-              }
-            }
-          },
-        );
+                if (before[item.sourcePath] != item.currentPath)
+                  before[item.sourcePath]!: item.asFile(
+                    storage.paths.basename(item.currentPath),
+                    storageId: latest.storage.id,
+                  ),
+            }, origin: origin);
+            await panel.refresh();
+          }
+        }
+      },
+    );
   }
 
   Future<void> _restoreBatch() async {

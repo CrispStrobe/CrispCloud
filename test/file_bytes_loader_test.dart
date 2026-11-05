@@ -31,21 +31,21 @@ void main() {
       expect(source.readSync(200, 10), isEmpty);
 
       source.dispose();
-      expect(
-        () => source.readSync(0, 1),
-        throwsA(isA<StateError>()),
-      );
+      expect(() => source.readSync(0, 1), throwsA(isA<StateError>()));
     });
   });
 
-  testWidgets('local read retries once after access is granted', (tester) async {
+  testWidgets('local read retries once after access is granted', (
+    tester,
+  ) async {
     late WidgetRef captured;
     final fake = _RetryLocalService();
+    final dir = Directory.systemTemp.createTempSync('retry_bytes_');
+    addTearDown(() => dir.deleteSync(recursive: true));
+    final file = File('${dir.path}/x.zip')..writeAsBytesSync(<int>[1, 2, 3]);
     await tester.pumpWidget(
       ProviderScope(
-        overrides: [
-          localFileServiceProvider.overrideWithValue(fake),
-        ],
+        overrides: [localFileServiceProvider.overrideWithValue(fake)],
         child: Consumer(
           builder: (context, ref, _) {
             captured = ref;
@@ -55,11 +55,15 @@ void main() {
       ),
     );
 
+    final origin = captured
+        .read(panelProvider(PanelSide.local))
+        .captureLocalClipboardOrigin(dir.path);
     final bytes = await tester.runAsync(
       () => loadFileBytes(
         captured,
-        FileItem(name: 'x.zip', path: '/denied/x.zip', isFolder: false),
+        FileItem(name: 'x.zip', path: file.path, isFolder: false, size: 3),
         PanelSide.local,
+        origin: origin,
       ),
     );
 
@@ -148,6 +152,8 @@ class _RetryLocalService implements LocalFileService {
   }
 
   @override
+  Future<int?> fileLength(String path) async => 3;
+
+  @override
   dynamic noSuchMethod(Invocation invocation) => super.noSuchMethod(invocation);
 }
-
