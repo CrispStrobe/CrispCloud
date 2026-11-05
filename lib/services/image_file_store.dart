@@ -8,6 +8,7 @@ import 'cloud_storage_interface.dart';
 import 'file_cache_service.dart';
 import 'image_edit_session.dart';
 import 'image_export_options.dart';
+import 'image_gif_codec.dart';
 import 'local_file_service.dart';
 import 'pdf_edit_session.dart' show PdfSaveInProgressException, PdfSaveOutcome;
 import 'pdf_file_store.dart';
@@ -77,15 +78,26 @@ abstract class ImageFileStore {
   Future<ImageSaveOutcome> save(Uint8List bytes);
 }
 
-ImageFileStore _imageStoreForName(String name, PdfFileStore delegate) =>
-    name.toLowerCase().endsWith('.webp')
-    ? WebPImageFileStore(delegate)
-    : _ImageFileStore(delegate);
+ImageFileStore _imageStoreForName(String name, PdfFileStore delegate) {
+  final lower = name.toLowerCase();
+  if (lower.endsWith('.webp')) return WebPImageFileStore(delegate);
+  if (lower.endsWith('.gif')) return GifImageFileStore(delegate);
+  return _ImageFileStore(delegate);
+}
 
-/// Converts a static WebP to a lossless PNG editing surface and writes a
-/// validated lossless WebP back through the source-bound storage delegate.
-class WebPImageFileStore implements ImageFileStore {
-  WebPImageFileStore(this._delegate);
+/// Static WebP uses a lossless PNG editing surface and lossless WebP output.
+class WebPImageFileStore extends _TranscodedImageFileStore {
+  WebPImageFileStore(PdfFileStore delegate) : super(delegate, gif: false);
+}
+
+/// Static GIF saves only when every edited pixel is representable exactly.
+class GifImageFileStore extends _TranscodedImageFileStore {
+  GifImageFileStore(PdfFileStore delegate) : super(delegate, gif: true);
+}
+
+class _TranscodedImageFileStore implements ImageFileStore {
+  _TranscodedImageFileStore(this._delegate, {required this.gif});
+  final bool gif;
   final PdfFileStore _delegate;
   bool _loaded = false;
   bool _busy = false;
@@ -99,7 +111,7 @@ class WebPImageFileStore implements ImageFileStore {
   bool get isRemote => _delegate.isRemote;
 
   @override
-  Future<Uint8List> load() => _translateWebP(() async {
+  Future<Uint8List> load() => _translateConverted(() async {
     if (_busy) throw const ImageSaveInProgressException();
     _busy = true;
     _loaded = false;
@@ -107,7 +119,7 @@ class WebPImageFileStore implements ImageFileStore {
       final bytes = await _delegate.load();
       if (bytes.length > kImageEditorInputLimitBytes)
         throw const ImageEditException(ImageEditFailure.inputTooLarge);
-      final png = await compute(_webpToPng, bytes);
+      final png = await compute(gif ? _gifToPng : _webpToPng, bytes);
       _loaded = true;
       return png;
     } finally {
@@ -116,24 +128,25 @@ class WebPImageFileStore implements ImageFileStore {
   });
 
   @override
-  Future<ImageSaveOutcome> save(Uint8List bytes) => _translateWebP(() async {
-    if (_busy) throw const ImageSaveInProgressException();
-    if (!_loaded) throw StateError('Load the image before saving it.');
-    _busy = true;
-    try {
-      final snapshot = Uint8List.fromList(bytes).asUnmodifiableView();
-      final output = await compute(_pngToWebp, snapshot);
-      return switch (await _delegate.save(output)) {
-        PdfSaveOutcome.savedOriginal => ImageSaveOutcome.savedOriginal,
-        PdfSaveOutcome.savedCopy => ImageSaveOutcome.savedCopy,
-        PdfSaveOutcome.downloadedCopy => ImageSaveOutcome.downloadedCopy,
-      };
-    } finally {
-      _busy = false;
-    }
-  });
+  Future<ImageSaveOutcome> save(Uint8List bytes) =>
+      _translateConverted(() async {
+        if (_busy) throw const ImageSaveInProgressException();
+        if (!_loaded) throw StateError('Load the image before saving it.');
+        _busy = true;
+        try {
+          final snapshot = Uint8List.fromList(bytes).asUnmodifiableView();
+          final output = await compute(gif ? _pngToGif : _pngToWebp, snapshot);
+          return switch (await _delegate.save(output)) {
+            PdfSaveOutcome.savedOriginal => ImageSaveOutcome.savedOriginal,
+            PdfSaveOutcome.savedCopy => ImageSaveOutcome.savedCopy,
+            PdfSaveOutcome.downloadedCopy => ImageSaveOutcome.downloadedCopy,
+          };
+        } finally {
+          _busy = false;
+        }
+      });
 
-  Future<T> _translateWebP<T>(Future<T> Function() operation) async {
+  Future<T> _translateConverted<T>(Future<T> Function() operation) async {
     try {
       return await operation();
     } on PdfSaveConflictException {
@@ -172,6 +185,21 @@ Uint8List _pngToWebp(Uint8List bytes) {
   final output = image.encodeWebP(pixels);
   validateImageExport(output, ImageExportFormat.webp);
   return output;
+}
+
+Uint8List _gifToPng(Uint8List bytes) {
+  final png = image.encodePng(decodeStaticGif(bytes));
+  inspectEditableImage(png, fileName: 'source.png');
+  return png;
+}
+
+Uint8List _pngToGif(Uint8List bytes) {
+  validateImageEditorOutput(bytes, ImageFileFormat.png);
+  final pixels = image.PngDecoder(maxPixels: kImageEditorMaxPixels)
+      .decode(bytes);
+  if (pixels == null)
+    throw const ImageEditException(ImageEditFailure.invalidImage);
+  return encodeExactGif(pixels);
 }
 
 class _ImageFileStore implements ImageFileStore {
