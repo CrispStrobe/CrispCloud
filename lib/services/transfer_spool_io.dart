@@ -61,6 +61,8 @@ class _NativeTransferSpool implements TransferSpool {
   @override
   String get localPath => file.path;
   @override
+  Object? get webUploadBody => null;
+  @override
   Stream<List<int>> openRead() {
     if (_closed) throw StateError('This transfer spool was closed.');
     return file.openRead();

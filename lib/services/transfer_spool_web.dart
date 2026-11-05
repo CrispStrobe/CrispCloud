@@ -48,7 +48,8 @@ Future<TransferSpool> createTransferSpool(
     }
     await js.promiseToFuture(js.callMethod(writable, 'close', []));
     writable = null;
-    return _WebTransferSpool(root, file, name, length);
+    final blob = await js.promiseToFuture(js.callMethod(file, 'getFile', []));
+    return _WebTransferSpool(root, file, name, length, blob as Object);
   } catch (_) {
     if (writable != null) {
       try {
@@ -72,12 +73,20 @@ Future<void> _remove(dynamic root, String name) async {
 }
 
 class _WebTransferSpool implements TransferSpool {
-  _WebTransferSpool(this.root, this.file, this.name, this.length);
+  _WebTransferSpool(
+    this.root,
+    this.file,
+    this.name,
+    this.length,
+    this.webUploadBody,
+  );
   final dynamic root;
   final dynamic file;
   final String name;
   @override
   final int length;
+  @override
+  final Object webUploadBody;
   bool _closed = false;
   @override
   String? get localPath => null;
