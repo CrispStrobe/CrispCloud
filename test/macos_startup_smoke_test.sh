@@ -33,3 +33,25 @@ if CRISPCLOUD_TEST_STARTUP_OUTPUT='WARNING: loading libcrypto in an unsafe way' 
   echo 'error: an unsafe crypto load was accepted' >&2
   exit 1
 fi
+
+# A kernel-style SIGKILL before logging must remain a failure and expose the
+# diagnostic path. This disposable shell fixture never launches CrispCloud.
+cat > "$app/Contents/MacOS/CrispCloud" <<'EOF_KILLED'
+#!/usr/bin/env bash
+kill -KILL $$
+EOF_KILLED
+if "$root/tool/macos_startup_smoke.sh" "$app" 1 "$fixture/killed.log" \
+    > "$fixture/killed-diagnostics.log" 2>&1; then
+  echo 'error: a startup killed before logging was accepted' >&2
+  exit 1
+fi
+grep -q 'status 137' "$fixture/killed-diagnostics.log"
+grep -q 'macOS startup diagnostics (read-only)' "$fixture/killed-diagnostics.log"
+grep -q 'not a macOS Mach-O binary' "$fixture/killed-diagnostics.log"
+
+if bash "$root/tool/macos_startup_diagnostics.sh" "$app" invalid \
+    '2026-01-01 00:00:00' > "$fixture/invalid-pid.log" 2>&1; then
+  echo 'error: diagnostic query accepted an invalid process id' >&2
+  exit 1
+fi
+grep -q 'refusing an unbounded system log query' "$fixture/invalid-pid.log"
