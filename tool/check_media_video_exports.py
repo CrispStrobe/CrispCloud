@@ -19,8 +19,10 @@ import math
 from pathlib import Path
 import re
 import shutil
+import struct
 import subprocess
 import sys
+import zlib
 
 
 EXPECTED = {
@@ -39,25 +41,17 @@ def run(command: list[str]) -> bytes:
     return result.stdout
 
 
-def exports_from_log(log: Path) -> dict[str, Path]:
+def paths_from_log(log: Path, marker: str) -> dict[str, Path]:
     text = log.read_text(encoding="utf-8", errors="replace")
     # Flutter can repeat a progress line. Decode and de-duplicate JSON paths;
     # never interpolate an application log line into a shell command.
-    matches = re.findall(r'MEDIA_VIDEO_EXPORT\s+("(?:\\.|[^"\\])*")', text)
+    matches = re.findall(re.escape(marker) + r'\s+("(?:\\.|[^"\\])*")', text)
     paths: dict[str, Path] = {}
     for match in matches:
         path = Path(json.loads(match))
         if path.name in paths and paths[path.name] != path:
             raise AssertionError(f"More than one output was reported for {path.name}")
         paths[path.name] = path
-    if set(paths) != set(EXPECTED):
-        raise AssertionError(
-            f"Expected all four native exports; missing={set(EXPECTED) - set(paths)}, "
-            f"unexpected={set(paths) - set(EXPECTED)}"
-        )
-    for path in paths.values():
-        if not path.is_absolute() or not path.is_file() or path.stat().st_size < 32:
-            raise AssertionError(f"Native test did not retain a usable output: {path}")
     return paths
 
 
@@ -74,40 +68,108 @@ def frame(ffmpeg: str, path: Path, seconds: float, width: int, height: int) -> b
     return data
 
 
-def color(data: bytes, width: int, x: int, y: int, expected: tuple[int, int, int]) -> None:
+def color(data: bytes, width: int, x: int, y: int, expected: tuple[int, int, int], context: str = "") -> None:
     offset = (y * width + x) * 3
     actual = tuple(data[offset : offset + 3])
     if any(abs(a - b) > 45 for a, b in zip(actual, expected)):
-        raise AssertionError(f"Wrong frame color at ({x},{y}): {actual}, expected {expected}")
+        raise AssertionError(f"Wrong frame color in {context} at ({x},{y}): {actual}, expected {expected}")
 
 
-def check_pixels(ffmpeg: str, path: Path, width: int, height: int) -> None:
+def sample_plan(name: str) -> list[tuple[float, list[tuple[int, int, tuple[int, int, int]]]]]:
     blue = (0, 0, 255)
     green = (0, 255, 0)
     yellow = (255, 255, 0)
     red = (255, 0, 0)
-    if path.name == "trim_crop_rotate_mute.mp4":
-        first = frame(ffmpeg, path, 0.25, width, height)
-        second = frame(ffmpeg, path, 1.25, width, height)
-        color(first, width, 20, 40, blue)
-        color(first, width, 70, 40, green)
-        color(second, width, 20, 40, blue)
-        color(second, width, 70, 40, yellow)
-    elif path.name == "trim_resize_audio.mp4":
-        first = frame(ffmpeg, path, 0.25, width, height)
-        second = frame(ffmpeg, path, 0.75, width, height)
-        color(first, width, 40, 20, red)
-        color(second, width, 40, 20, green)
-        color(second, width, 40, 70, blue)
-    elif path.name == "reopened_trim.mp4":
-        first = frame(ffmpeg, path, 0.25, width, height)
-        second = frame(ffmpeg, path, 1.0, width, height)
-        color(first, width, 70, 40, green)
-        color(second, width, 70, 40, yellow)
-    elif path.name == "after_cancel.mp4":
-        first = frame(ffmpeg, path, 0.25, width, height)
-        color(first, width, 80, 45, green)
-        color(first, width, 80, 135, blue)
+    return {
+        "trim_crop_rotate_mute.mp4": [
+            (0.25, [(20, 40, blue), (70, 40, green)]),
+            (1.25, [(20, 40, blue), (70, 40, yellow)]),
+        ],
+        "trim_resize_audio.mp4": [
+            (0.25, [(40, 20, red)]),
+            (0.75, [(40, 20, green), (40, 70, blue)]),
+        ],
+        "reopened_trim.mp4": [
+            (0.25, [(70, 40, green)]), (1.0, [(70, 40, yellow)]),
+        ],
+        "after_cancel.mp4": [(0.25, [(80, 45, green), (80, 135, blue)])],
+        "source.mp4": [
+            (0.25, [(80, 45, red)]),
+            (1.25, [(80, 45, green), (80, 135, blue)]),
+            (2.25, [(80, 45, yellow)]),
+        ],
+    }.get(name, [])
+
+
+def check_pixels(ffmpeg: str, path: Path, width: int, height: int) -> None:
+    for seconds, points in sample_plan(path.name):
+        data = frame(ffmpeg, path, seconds, width, height)
+        for x, y, expected in points:
+            color(data, width, x, y, expected, f"{path.name} at {seconds}s")
+
+
+def probe(ffprobe: str, path: Path) -> dict[str, object]:
+    return json.loads(run([
+        ffprobe, "-v", "error", "-count_frames", "-show_streams",
+        "-show_format", "-of", "json", str(path),
+    ]))
+
+
+def display_size(video: dict[str, object]) -> tuple[int, int]:
+    width, height = int(video["width"]), int(video["height"])
+    rotations = [entry["rotation"] for entry in video.get("side_data_list", []) if "rotation" in entry]
+    rotation = rotations[0] if rotations else float(video.get("tags", {}).get("rotate", 0))
+    if round(rotation) % 180:
+        width, height = height, width
+    return width, height
+
+
+def inspect_video(ffprobe: str, ffmpeg: str, path: Path) -> dict[str, object]:
+    """Record evidence without asserting color, so the failing values survive."""
+    metadata = probe(ffprobe, path)
+    video = next(stream for stream in metadata["streams"] if stream["codec_type"] == "video")
+    width, height = display_size(video)
+    samples = []
+    for seconds, points in sample_plan(path.name):
+        data = frame(ffmpeg, path, seconds, width, height)
+        for x, y, expected in points:
+            offset = (y * width + x) * 3
+            samples.append({
+                "seconds": seconds, "x": x, "y": y,
+                "rgb": list(data[offset:offset + 3]), "expected_rgb": list(expected),
+            })
+    return {"ffprobe": metadata, "decoded_rgb_samples": samples}
+
+
+def png_color_metadata(path: Path) -> dict[str, object]:
+    """Expose embedded PNG color metadata using only the standard library."""
+    data = path.read_bytes()
+    if not data.startswith(b"\x89PNG\r\n\x1a\n"):
+        raise ValueError(f"Not a PNG thumbnail: {path.name}")
+    result: dict[str, object] = {"chunks": []}
+    offset = 8
+    while offset + 12 <= len(data):
+        size = int.from_bytes(data[offset:offset + 4], "big")
+        kind = data[offset + 4:offset + 8].decode("ascii")
+        value = data[offset + 8:offset + 8 + size]
+        result["chunks"].append(kind)
+        if kind == "gAMA" and size == 4:
+            result["gamma"] = int.from_bytes(value, "big") / 100000
+        elif kind == "cHRM" and size == 32:
+            result["chromaticities"] = [component / 100000 for component in struct.unpack(">8I", value)]
+        elif kind == "sRGB" and size == 1:
+            result["srgb_rendering_intent"] = value[0]
+        elif kind == "iCCP":
+            profile_name, compressed = value.split(b"\0", 1)
+            result["icc_profile_name"] = profile_name.decode("latin1")
+            profile = zlib.decompress(compressed[1:])
+            result["icc_profile_bytes"] = len(profile)
+            result["icc_color_space"] = profile[16:20].decode("ascii", errors="replace")
+            result["icc_connection_space"] = profile[20:24].decode("ascii", errors="replace")
+        offset += 12 + size
+        if kind == "IEND":
+            break
+    return result
 
 
 def audio_tone(ffmpeg: str, path: Path) -> dict[str, float]:
@@ -143,25 +205,14 @@ def audio_tone(ffmpeg: str, path: Path) -> dict[str, float]:
 
 def validate(ffprobe: str, ffmpeg: str, path: Path) -> dict[str, object]:
     expected_width, expected_height, duration, has_audio = EXPECTED[path.name]
-    metadata = json.loads(
-        run(
-            [
-                ffprobe, "-v", "error", "-count_frames", "-show_streams",
-                "-show_format", "-of", "json", str(path),
-            ]
-        )
-    )
+    metadata = probe(ffprobe, path)
     streams = metadata["streams"]
     videos = [stream for stream in streams if stream["codec_type"] == "video"]
     audios = [stream for stream in streams if stream["codec_type"] == "audio"]
     if len(videos) != 1 or len(audios) != int(has_audio):
         raise AssertionError(f"Unexpected stream count in {path.name}: {len(videos)} video, {len(audios)} audio")
     video = videos[0]
-    width, height = int(video["width"]), int(video["height"])
-    rotations = [entry["rotation"] for entry in video.get("side_data_list", []) if "rotation" in entry]
-    rotation = rotations[0] if rotations else float(video.get("tags", {}).get("rotate", 0))
-    if round(rotation) % 180:
-        width, height = height, width
+    width, height = display_size(video)
     if (width, height) != (expected_width, expected_height):
         raise AssertionError(f"Wrong display size for {path.name}: {width}x{height}")
     actual_duration = float(video.get("duration", metadata["format"]["duration"]))
@@ -198,21 +249,65 @@ def main() -> int:
     args = parser.parse_args()
     if not args.ffprobe or not args.ffmpeg:
         parser.error("FFmpeg and ffprobe are required on the test host")
+    errors: list[str] = []
+    verified: list[dict[str, object]] = []
+    diagnostics: dict[str, object] = {}
+    failure_types = (AssertionError, KeyError, OSError, ValueError, StopIteration, subprocess.TimeoutExpired, struct.error, zlib.error)
     try:
-        paths = exports_from_log(args.log)
-        report = [validate(args.ffprobe, args.ffmpeg, paths[name]) for name in EXPECTED]
+        paths = paths_from_log(args.log, "MEDIA_VIDEO_EXPORT")
+        artifacts = paths_from_log(args.log, "MEDIA_VIDEO_ARTIFACT")
         if args.output_dir:
             args.output_dir.mkdir(parents=True, exist_ok=True)
-            for path in paths.values():
-                shutil.copy2(path, args.output_dir / path.name)
-            (args.output_dir / "report.json").write_text(
-                json.dumps(report, indent=2) + "\n", encoding="utf-8"
+        evidence: dict[str, Path] = {}
+        for name, path in {**paths, **artifacts}.items():
+            try:
+                allowed = name in EXPECTED or name == "source.mp4" or (
+                    re.fullmatch(r'(?:source|trim_crop_rotate_mute)\.mp4\.thumb-\d+\.png', name) is not None
+                )
+                if not allowed:
+                    raise AssertionError(f"Unexpected native diagnostic filename: {name}")
+                if not path.is_absolute() or not path.is_file() or not 32 <= path.stat().st_size <= 16 * 1024 * 1024:
+                    raise AssertionError(f"Native test did not retain a usable fixture/output: {path}")
+                evidence[name] = path
+                if args.output_dir:
+                    target = args.output_dir / name
+                    if path.resolve() != target.resolve():
+                        shutil.copy2(path, target)
+            except failure_types as error:
+                errors.append(str(error))
+
+        # Copy every available file before completeness, probe or pixel checks.
+        # A failed integration test must still produce downloadable evidence.
+        if set(paths) != set(EXPECTED):
+            errors.append(
+                f"Expected all four native exports; missing={sorted(set(EXPECTED) - set(paths))}, "
+                f"unexpected={sorted(set(paths) - set(EXPECTED))}"
             )
-        print(json.dumps({"verified_native_exports": report}, indent=2))
-        return 0
-    except (AssertionError, KeyError, OSError, ValueError, subprocess.TimeoutExpired) as error:
+        for name, path in evidence.items():
+            try:
+                diagnostics[name] = inspect_video(args.ffprobe, args.ffmpeg, path) if path.suffix == ".mp4" else png_color_metadata(path)
+            except failure_types as error:
+                diagnostics[name] = {"inspection_error": str(error)}
+                errors.append(f"Diagnostic inspection failed for {name}: {error}")
+
+        for name in EXPECTED:
+            if name not in evidence or name not in paths:
+                continue
+            try:
+                verified.append(validate(args.ffprobe, args.ffmpeg, evidence[name]))
+            except failure_types as error:
+                errors.append(f"{name}: {error}")
+    except failure_types as error:
+        errors.append(str(error))
+
+    report = {"verified_native_exports": verified, "errors": errors, "diagnostics": diagnostics}
+    if args.output_dir:
+        args.output_dir.mkdir(parents=True, exist_ok=True)
+        (args.output_dir / "report.json").write_text(json.dumps(report, indent=2) + "\n", encoding="utf-8")
+    print(json.dumps(report, indent=2))
+    for error in errors:
         print(f"Media video verification failed: {error}", file=sys.stderr)
-        return 1
+    return int(bool(errors))
 
 
 if __name__ == "__main__":

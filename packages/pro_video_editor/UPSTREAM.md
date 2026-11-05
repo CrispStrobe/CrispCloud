@@ -129,17 +129,29 @@ test executable. It changes the upper-left quadrant's color every second. The
 test renders actual trim/crop/rotation/resize/mute edits, decodes exported frame
 thumbnails to inspect their pixels, checks audio retention/removal, reopens and
 edits an output, cancels and retries, and confirms the source bytes are unchanged.
-Retained outputs are printed as `MEDIA_VIDEO_EXPORT` JSON path lines. The CI
+Each completed output is immediately printed as a `MEDIA_VIDEO_EXPORT` JSON
+path line, before later assertions. Source and native-thumbnail evidence use
+`MEDIA_VIDEO_ARTIFACT`; the test also logs sampled RGB values and timestamps.
+The CI
 host additionally runs `tool/check_media_video_exports.py` against that log to
 inspect all streams and decode video/audio with an independent FFmpeg build.
 FFmpeg is used for fixtures and validation only, never by the app.
 
 The fixture's SHA-256 is
-`47ee6f0553c7eb7dcdaf884066c139df702b0c8d91cff2a2f8b5f02392feed87`.
+`4aa1ba5985e7efe493769ffc74bba3035e33caca3e25b1b1386284734a179739`.
 `test/support/media_video_fixture.dart` documents its dimensions, timing and
-colors. The encoded clip was generated with FFmpeg 6.1.1: a 320×180, 20 fps,
-four-second color source; four filled quadrant boxes; a green upper-left box
-enabled from 1–2 seconds, yellow from 2–3, cyan from 3–4; and a 48 kHz, 440 Hz
-sine track. Encoding used libx264 (`yuv420p`, CRF 18, `veryfast`, GOP 20), AAC
-32 kbit/s, and MP4 `+faststart`. Test pixels allow codec/color-conversion error
-while distinguishing the source positions and trim times.
+colors. Regenerate it with `python3 tool/generate_media_video_fixture.py`.
+The checked-in clip was generated with FFmpeg 6.1.1. The script supplies exact
+RGB quadrants at 320×180, 20 fps, four seconds, and a
+48 kHz, 440 Hz sine track. It converts those RGB samples to **BT.709
+limited-range YUV420p** and sets matching primaries, transfer, matrix and range
+metadata. Encoding uses libx264 (CRF 18, `medium`, one thread, GOP 20), AAC
+32 kbit/s, and MP4 `+faststart`.
+
+Explicit, matching color metadata matters: Apple can interpret an untagged SD
+clip as SMPTE-C and legitimately convert nominal green to approximately
+sRGB (63,251,0). That differs from a test's original RGB triplet without any
+crop/render defect. The fixture makes its intended color space unambiguous;
+both native and independent decoding still enforce the original strict pixel
+thresholds while distinguishing source positions and trim times. Diagnostic
+files are copied before validation so failures retain their evidence.

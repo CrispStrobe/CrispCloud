@@ -10,15 +10,27 @@ import 'ftp_config_service.dart';
 import 'log_service.dart';
 import 'secure_storage_service.dart';
 
+typedef FTPClientFactory = FTPConnect Function(
+  String host, {
+  required int port,
+  required String user,
+  required String pass,
+  required SecurityType securityType,
+  required int timeout,
+});
+
 class FTPClientAdapter extends CloudStorageClient {
   static const _log = Log('FTPClient');
 
   final FTPConfigService _config;
+  final FTPClientFactory _createClient;
 
   // Expose config for AppState to read credentials
   FTPConfigService get config => _config;
 
-  // FTP State
+  // FTP State. ftpconnect has one control socket without a command queue.
+  // Absolute data paths avoid CWD-dependent routing; callers must still avoid
+  // overlapping commands on this connection. Directory operations retain CWD.
   FTPConnect? _ftpClient;
   String? _username;
   String? _host;
@@ -26,10 +38,11 @@ class FTPClientAdapter extends CloudStorageClient {
   bool _useTLS = false;
   bool _authenticated = false;
 
-  FTPClientAdapter({required dynamic config})
+  FTPClientAdapter({required dynamic config, FTPClientFactory? clientFactory})
       : _config = (config is FTPConfigService)
             ? config
-            : FTPConfigService(configPath: '', secureStorage: InMemorySecureStorage());
+            : FTPConfigService(configPath: '', secureStorage: InMemorySecureStorage()),
+        _createClient = clientFactory ?? FTPConnect.new;
 
   @override
   String get providerName => 'FTP';
@@ -71,7 +84,7 @@ class FTPClientAdapter extends CloudStorageClient {
     }
 
     try {
-      _ftpClient = FTPConnect(
+      _ftpClient = _createClient(
         _host!,
         port: _port,
         user: _username!,
@@ -248,11 +261,14 @@ class FTPClientAdapter extends CloudStorageClient {
     Function(int, int)? onProgress,
   }) async {
     await _ensureConnection();
+    final client = _ftpClient!;
+    final remotePath = p.posix.normalize(p.posix.join('/', targetPath, fileName));
 
     // A separate directory also isolates concurrent uploads with the same name.
     await withTemporaryUploadFile(fileName, fileData, (tempFile) async {
-      await _ftpClient!.changeDirectory(targetPath);
-      final success = await _ftpClient!.uploadFile(tempFile, sRemoteName: fileName);
+      // ftpconnect forwards sRemoteName unchanged in STOR. Do not depend on the
+      // current directory, which navigation or another transfer can change.
+      final success = await client.uploadFile(tempFile, sRemoteName: remotePath);
       if (!success) {
         throw Exception('FTP upload failed for $fileName');
       }
@@ -267,14 +283,11 @@ class FTPClientAdapter extends CloudStorageClient {
     Function(int, int)? onProgress,
   }) async {
     await _ensureConnection();
-
-    final dir = p.posix.dirname(remotePath);
-    final fileName = p.posix.basename(remotePath);
-
-    await _ftpClient!.changeDirectory(dir);
-
+    final client = _ftpClient!;
+    final source = p.posix.normalize(p.posix.join('/', remotePath));
     final localFile = File(localPath);
-    final success = await _ftpClient!.downloadFile(fileName, localFile);
+    // The library sends this complete path in both SIZE and RETR.
+    final success = await client.downloadFile(source, localFile);
     if (!success) {
       throw Exception('FTP download failed for $remotePath');
     }
@@ -289,17 +302,12 @@ class FTPClientAdapter extends CloudStorageClient {
     Function(int, int)? onProgress,
   }) async {
     await _ensureConnection();
-
-    final tempDir = Directory.systemTemp;
-    final tempFile = File(p.join(tempDir.path, 'ftp_dl_${p.basename(remotePath)}'));
-
+    final client = _ftpClient!;
+    final source = p.posix.normalize(p.posix.join('/', remotePath));
+    final tempDir = await Directory.systemTemp.createTemp('crisp-ftp-download-');
+    final tempFile = File(p.join(tempDir.path, 'payload'));
     try {
-      final dir = p.posix.dirname(remotePath);
-      final fileName = p.posix.basename(remotePath);
-
-      await _ftpClient!.changeDirectory(dir);
-
-      final success = await _ftpClient!.downloadFile(fileName, tempFile);
+      final success = await client.downloadFile(source, tempFile);
       if (!success) {
         throw Exception('FTP download failed for $remotePath');
       }
@@ -308,8 +316,10 @@ class FTPClientAdapter extends CloudStorageClient {
       onProgress?.call(bytes.length, bytes.length);
       return bytes;
     } finally {
-      if (await tempFile.exists()) {
-        await tempFile.delete();
+      try {
+        if (await tempDir.exists()) await tempDir.delete(recursive: true);
+      } catch (error, stack) {
+        _log.warn('Could not remove temporary FTP download files', error, stack);
       }
     }
   }

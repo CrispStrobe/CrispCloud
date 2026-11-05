@@ -18,12 +18,15 @@ void main() {
     final release = Completer<void>();
     final paths = <String>[];
     Future<List<int>> upload(int value) => withTemporaryUploadFile(
-      'copy.wav', [value, value, value], (file) async {
+      'copy.wav',
+      [value, value, value],
+      (file) async {
         paths.add(file.path);
         if (paths.length == 2) bothReady.complete();
         await release.future;
         return file.readAsBytes();
-      }, temporaryDirectory: temporary.path,
+      },
+      temporaryDirectory: temporary.path,
     );
     final first = upload(1);
     final second = upload(2);
@@ -36,31 +39,51 @@ void main() {
     expect(await temporary.list().toList(), isEmpty);
   });
 
-  test('an upload failure removes its temporary bytes without changing the error', () async {
-    final failure = StateError('Network interrupted');
-    await expectLater(withTemporaryUploadFile<void>(
-      'copy.wav', [1, 2, 3], (file) async {
-        expect(await file.readAsBytes(), [1, 2, 3]);
-        throw failure;
-      }, temporaryDirectory: temporary.path,
-    ), throwsA(same(failure)));
-    expect(await temporary.list().toList(), isEmpty);
-  });
+  test(
+    'an upload failure removes its temporary bytes without changing the error',
+    () async {
+      final failure = StateError('Network interrupted');
+      await expectLater(
+        withTemporaryUploadFile<void>('copy.wav', [1, 2, 3], (file) async {
+          expect(await file.readAsBytes(), [1, 2, 3]);
+          throw failure;
+        }, temporaryDirectory: temporary.path),
+        throwsA(same(failure)),
+      );
+      expect(await temporary.list().toList(), isEmpty);
+    },
+  );
 
-  test('a failed temporary write is cleaned before any upload starts', () async {
-    var uploads = 0;
-    await expectLater(withTemporaryUploadFile<void>(
-      '${List.filled(512, 'x').join()}.wav', [1, 2, 3], (_) async { uploads++; },
-      temporaryDirectory: temporary.path,
-    ), throwsA(isA<FileSystemException>()));
-    expect(uploads, 0);
-    expect(await temporary.list().toList(), isEmpty);
-  });
+  test(
+    'a failed temporary write is cleaned before any upload starts',
+    () async {
+      var uploads = 0;
+      await expectLater(
+        withTemporaryUploadFile<void>(
+          '${List.filled(512, 'x').join()}.wav',
+          [1, 2, 3],
+          (_) async {
+            uploads++;
+          },
+          temporaryDirectory: temporary.path,
+        ),
+        throwsA(isA<FileSystemException>()),
+      );
+      expect(uploads, 0);
+      expect(await temporary.list().toList(), isEmpty);
+    },
+  );
 
   test('a filename cannot escape its private upload directory', () async {
-    await expectLater(withTemporaryUploadFile<void>(
-      '../escape.wav', [1], (_) async {}, temporaryDirectory: temporary.path,
-    ), throwsArgumentError);
+    await expectLater(
+      withTemporaryUploadFile<void>(
+        '../escape.wav',
+        [1],
+        (_) async {},
+        temporaryDirectory: temporary.path,
+      ),
+      throwsArgumentError,
+    );
     expect(await temporary.list().toList(), isEmpty);
   });
 }

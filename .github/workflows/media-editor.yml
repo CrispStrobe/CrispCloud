@@ -129,8 +129,10 @@ jobs:
           flutter test integration_test/media_export_test.dart -d macos \
             --dart-define=MEDIA_TEST_KEEP_OUTPUT=true 2>&1 | tee build/media-review/native-video.log
       - name: Inspect native exports independently
+        if: success() || failure()
         run: python3 tool/check_media_video_exports.py build/media-review/native-video.log --output-dir build/media-review/video-exports
       - name: Verify iOS plugin linking without signing
+        if: success() || failure()
         run: flutter build ios --debug --no-codesign
       - uses: actions/upload-artifact@v4
         if: always()

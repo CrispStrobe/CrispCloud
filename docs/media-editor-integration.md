@@ -108,6 +108,14 @@ changes while an upload is already in flight, a copy may have reached the old
 account; the editor reports failure instead of claiming it saved to the new one.
 Only the new copy's cache entry is invalidated, and the host refreshes the panel.
 
+FTP uploads and downloads pass absolute remote paths and use private temporary
+files, so file routing does not depend on the server's current directory and
+independent sessions cannot share temporary bytes. The current `ftpconnect`
+transport still uses one control socket without a command queue. Overlapping
+operations on the same FTP connection remain unsupported; directory operations
+also retain their existing current-directory behavior. This adapter change does
+not provide connection-wide serialization.
+
 ## Verification
 
 The dedicated `Media editor` PR workflow runs:

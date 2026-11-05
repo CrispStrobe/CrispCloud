@@ -14,11 +14,17 @@ Future<T> withTemporaryUploadFile<T>(
   Future<T> Function(File file) upload, {
   String? temporaryDirectory,
 }) async {
-  if (fileName.isEmpty || fileName == '.' || fileName == '..' ||
-      fileName.contains('/') || fileName.contains(r'\') || fileName.contains('\u0000')) {
+  if (fileName.isEmpty ||
+      fileName == '.' ||
+      fileName == '..' ||
+      fileName.contains('/') ||
+      fileName.contains(r'\') ||
+      fileName.contains('\u0000')) {
     throw ArgumentError.value(fileName, 'fileName', 'Expected one file name.');
   }
-  final root = temporaryDirectory == null ? Directory.systemTemp : Directory(temporaryDirectory);
+  final root = temporaryDirectory == null
+      ? Directory.systemTemp
+      : Directory(temporaryDirectory);
   await root.create(recursive: true);
   final directory = await root.createTemp('crisp-upload-');
   try {

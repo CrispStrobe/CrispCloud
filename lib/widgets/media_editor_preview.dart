@@ -56,7 +56,9 @@ class _MediaEditorPreviewState extends State<MediaEditorPreview> {
       // A failed seek/volume update must not leave audible playback behind an
       // unavailable-preview message. A failed pause is already handled here.
       if (_owns(controller)) {
-        try { await controller.pause(); } catch (_) {}
+        try {
+          await controller.pause();
+        } catch (_) {}
       }
     }
   }
@@ -72,7 +74,9 @@ class _MediaEditorPreviewState extends State<MediaEditorPreview> {
   }
 
   Future<void> _release(VideoPlayerController controller) async {
-    try { await controller.dispose(); } catch (_) {
+    try {
+      await controller.dispose();
+    } catch (_) {
       // The native player may already have been reclaimed. Its disposed UI
       // cannot report an error, and this must not interrupt workspace cleanup.
     }
@@ -105,12 +109,24 @@ class _MediaEditorPreviewState extends State<MediaEditorPreview> {
     super.didUpdateWidget(oldWidget);
     final controller = _controller;
     if (controller == null || !controller.value.isInitialized) return;
-    if (!widget.enabled && controller.value.isPlaying) unawaited(_stop(controller));
+    if (!widget.enabled && controller.value.isPlaying)
+      unawaited(_stop(controller));
     if (oldWidget.edit.muted != widget.edit.muted) {
-      unawaited(_runPlayerOperation(controller, () => controller.setVolume(widget.edit.muted ? 0 : 1)));
+      unawaited(
+        _runPlayerOperation(
+          controller,
+          () => controller.setVolume(widget.edit.muted ? 0 : 1),
+        ),
+      );
     }
-    if (controller.value.position < widget.edit.start || controller.value.position >= widget.edit.end) {
-      unawaited(_runPlayerOperation(controller, () => controller.seekTo(widget.edit.start)));
+    if (controller.value.position < widget.edit.start ||
+        controller.value.position >= widget.edit.end) {
+      unawaited(
+        _runPlayerOperation(
+          controller,
+          () => controller.seekTo(widget.edit.start),
+        ),
+      );
     }
   }
 
@@ -147,7 +163,8 @@ class _MediaEditorPreviewState extends State<MediaEditorPreview> {
       if (controller.value.isPlaying) {
         await controller.pause();
       } else {
-        if (controller.value.position >= widget.edit.end || controller.value.position < widget.edit.start) {
+        if (controller.value.position >= widget.edit.end ||
+            controller.value.position < widget.edit.start) {
           await controller.seekTo(widget.edit.start);
         }
         // A seek can still be pending when an export disables the preview or
@@ -161,52 +178,112 @@ class _MediaEditorPreviewState extends State<MediaEditorPreview> {
   void _seek(Duration position) {
     final controller = _controller;
     if (controller == null || !widget.enabled) return;
-    unawaited(_runPlayerOperation(controller, () => controller.seekTo(position)));
+    unawaited(
+      _runPlayerOperation(controller, () => controller.seekTo(position)),
+    );
   }
 
   @override
   Widget build(BuildContext context) {
-    if (!widget.playbackAvailable || _failed || (_controller?.value.hasError ?? false)) {
-      return Padding(padding: const EdgeInsets.all(24), child: Text(context.mediaTr('Playback is unavailable. You can still edit and export.')));
+    if (!widget.playbackAvailable ||
+        _failed ||
+        (_controller?.value.hasError ?? false)) {
+      return Padding(
+        padding: const EdgeInsets.all(24),
+        child: Text(
+          context.mediaTr(
+            'Playback is unavailable. You can still edit and export.',
+          ),
+        ),
+      );
     }
     final controller = _controller;
     if (controller == null || !controller.value.isInitialized) {
-      return const SizedBox(height: 120, child: Center(child: CircularProgressIndicator()));
+      return const SizedBox(
+        height: 120,
+        child: Center(child: CircularProgressIndicator()),
+      );
     }
-    final position = controller.value.position.inMicroseconds.clamp(widget.edit.start.inMicroseconds, widget.edit.end.inMicroseconds).toDouble();
-    return Column(children: [
-      if (widget.info.kind == MediaKind.video)
-        Container(height: 260, color: Colors.black, child: Center(child: _video(controller)))
-      else const Padding(padding: EdgeInsets.all(20), child: Icon(Icons.graphic_eq, size: 56)),
-      Row(children: [
-        IconButton(tooltip: context.mediaTr(controller.value.isPlaying ? 'Pause' : 'Play'),
-          onPressed: widget.enabled ? _toggle : null,
-          icon: Icon(controller.value.isPlaying ? Icons.pause : Icons.play_arrow)),
-        Expanded(child: Directionality(textDirection: TextDirection.ltr, child: Slider(
-          value: position,
-          min: widget.edit.start.inMicroseconds.toDouble(),
-          max: widget.edit.end.inMicroseconds.toDouble(),
-          semanticFormatterCallback: (value) => formatMediaTime(Duration(microseconds: value.round())),
-          onChanged: widget.enabled ? (value) => _seek(Duration(microseconds: value.round())) : null,
-        ))),
-        Text(formatMediaTime(Duration(microseconds: position.round()))),
-      ]),
-    ]);
+    final position = controller.value.position.inMicroseconds
+        .clamp(widget.edit.start.inMicroseconds, widget.edit.end.inMicroseconds)
+        .toDouble();
+    return Column(
+      children: [
+        if (widget.info.kind == MediaKind.video)
+          Container(
+            height: 260,
+            color: Colors.black,
+            child: Center(child: _video(controller)),
+          )
+        else
+          const Padding(
+            padding: EdgeInsets.all(20),
+            child: Icon(Icons.graphic_eq, size: 56),
+          ),
+        Row(
+          children: [
+            IconButton(
+              tooltip: context.mediaTr(
+                controller.value.isPlaying ? 'Pause' : 'Play',
+              ),
+              onPressed: widget.enabled ? _toggle : null,
+              icon: Icon(
+                controller.value.isPlaying ? Icons.pause : Icons.play_arrow,
+              ),
+            ),
+            Expanded(
+              child: Directionality(
+                textDirection: TextDirection.ltr,
+                child: Slider(
+                  value: position,
+                  min: widget.edit.start.inMicroseconds.toDouble(),
+                  max: widget.edit.end.inMicroseconds.toDouble(),
+                  semanticFormatterCallback: (value) =>
+                      formatMediaTime(Duration(microseconds: value.round())),
+                  onChanged: widget.enabled
+                      ? (value) => _seek(Duration(microseconds: value.round()))
+                      : null,
+                ),
+              ),
+            ),
+            Text(formatMediaTime(Duration(microseconds: position.round()))),
+          ],
+        ),
+      ],
+    );
   }
 
   Widget _video(VideoPlayerController controller) {
     final width = widget.info.width!.toDouble();
     final height = widget.info.height!.toDouble();
-    final crop = widget.edit.crop ?? const MediaCrop(x: 0, y: 0, width: 1, height: 1);
-    return FittedBox(fit: BoxFit.contain, child: RotatedBox(
-      quarterTurns: widget.edit.quarterTurns,
-      child: ClipRect(child: SizedBox(width: width * crop.width, height: height * crop.height,
-        child: OverflowBox(alignment: Alignment.topLeft, minWidth: width, maxWidth: width, minHeight: height, maxHeight: height,
-          child: Transform.translate(offset: Offset(-width * crop.x, -height * crop.y),
-            child: SizedBox(width: width, height: height, child: VideoPlayer(controller)),
+    final crop =
+        widget.edit.crop ?? const MediaCrop(x: 0, y: 0, width: 1, height: 1);
+    return FittedBox(
+      fit: BoxFit.contain,
+      child: RotatedBox(
+        quarterTurns: widget.edit.quarterTurns,
+        child: ClipRect(
+          child: SizedBox(
+            width: width * crop.width,
+            height: height * crop.height,
+            child: OverflowBox(
+              alignment: Alignment.topLeft,
+              minWidth: width,
+              maxWidth: width,
+              minHeight: height,
+              maxHeight: height,
+              child: Transform.translate(
+                offset: Offset(-width * crop.x, -height * crop.y),
+                child: SizedBox(
+                  width: width,
+                  height: height,
+                  child: VideoPlayer(controller),
+                ),
+              ),
+            ),
           ),
         ),
-      )),
-    ));
+      ),
+    );
   }
 }

@@ -27,11 +27,14 @@ class _PlayerPlatform extends VideoPlayerPlatform {
   @override
   Future<int?> createWithOptions(VideoCreationOptions options) async {
     final id = nextId++;
-    streams[id] = StreamController<VideoEvent>()..add(VideoEvent(
-      eventType: VideoEventType.initialized,
-      duration: const Duration(seconds: 10),
-      size: const Size(320, 180),
-    ));
+    streams[id] = StreamController<VideoEvent>()
+      ..add(
+        VideoEvent(
+          eventType: VideoEventType.initialized,
+          duration: const Duration(seconds: 10),
+          size: const Size(320, 180),
+        ),
+      );
     return id;
   }
 
@@ -44,7 +47,9 @@ class _PlayerPlatform extends VideoPlayerPlatform {
   }
 
   @override
-  Future<void> play(int playerId) async { plays++; }
+  Future<void> play(int playerId) async {
+    plays++;
+  }
 
   @override
   Future<void> pause(int playerId) async {
@@ -61,7 +66,8 @@ class _PlayerPlatform extends VideoPlayerPlatform {
   }
 
   @override
-  Future<Duration> getPosition(int playerId) async => positions[playerId] ?? Duration.zero;
+  Future<Duration> getPosition(int playerId) async =>
+      positions[playerId] ?? Duration.zero;
 
   @override
   Future<void> setVolume(int playerId, double volume) async {
@@ -78,17 +84,34 @@ class _PlayerPlatform extends VideoPlayerPlatform {
   Widget buildView(int playerId) => const SizedBox.expand();
 }
 
-const _info = MediaInfo(kind: MediaKind.video, duration: Duration(seconds: 10), width: 320, height: 180);
+const _info = MediaInfo(
+  kind: MediaKind.video,
+  duration: Duration(seconds: 10),
+  width: 320,
+  height: 180,
+);
 const _edit = MediaEdit(start: Duration(seconds: 2), end: Duration(seconds: 8));
 const _unavailable = 'Playback is unavailable. You can still edit and export.';
 
-Widget _app({bool enabled = true, MediaEdit edit = _edit, TextDirection direction = TextDirection.ltr}) => MaterialApp(
+Widget _app({
+  bool enabled = true,
+  MediaEdit edit = _edit,
+  TextDirection direction = TextDirection.ltr,
+}) => MaterialApp(
   localizationsDelegates: AppLocalizations.localizationsDelegates,
   supportedLocales: AppLocalizations.supportedLocales,
-  home: Scaffold(body: Directionality(textDirection: direction, child: MediaEditorPreview(
-    path: '/__crisp_media_preview_test__/source.mp4', info: _info, edit: edit,
-    enabled: enabled, playbackAvailable: true,
-  ))),
+  home: Scaffold(
+    body: Directionality(
+      textDirection: direction,
+      child: MediaEditorPreview(
+        path: '/__crisp_media_preview_test__/source.mp4',
+        info: _info,
+        edit: edit,
+        enabled: enabled,
+        playbackAvailable: true,
+      ),
+    ),
+  ),
 );
 
 Future<void> _ready(WidgetTester tester) async {
@@ -110,56 +133,67 @@ void main() {
   });
   tearDown(() => VideoPlayerPlatform.instance = previous);
 
-  testWidgets('a seek finishing after preview is disabled cannot start playback', (tester) async {
-    await tester.pumpWidget(_app(direction: TextDirection.rtl));
-    await _ready(tester);
-    expect(Directionality.of(tester.element(find.byType(Slider))), TextDirection.ltr);
-    final controller = tester.widget<VideoPlayer>(find.byType(VideoPlayer)).controller;
-    controller.value = controller.value.copyWith(position: _edit.end);
-    await tester.pump();
-    platform.seekGate = Completer<void>();
-    final before = platform.seeks;
-    await tester.tap(find.byTooltip('Play'));
-    await tester.pump();
-    expect(platform.seeks, greaterThan(before));
-    expect(platform.plays, 0);
-
-    await tester.pumpWidget(_app(enabled: false));
-    platform.seekGate!.complete();
-    await tester.pump();
-    await tester.pump();
-    expect(platform.plays, 0);
-    expect(controller.value.isPlaying, isFalse);
-    expect(tester.takeException(), isNull);
-    await tester.pumpWidget(const SizedBox.shrink());
-    await tester.pump();
-  });
-
-  for (final operation in ['seek', 'mute', 'pause']) {
-    testWidgets('failed preview $operation stays contained and leaves editing available', (tester) async {
-      await tester.pumpWidget(_app());
+  testWidgets(
+    'a seek finishing after preview is disabled cannot start playback',
+    (tester) async {
+      await tester.pumpWidget(_app(direction: TextDirection.rtl));
       await _ready(tester);
-      switch (operation) {
-        case 'seek':
-          platform.failSeek = true;
-          tester.widget<Slider>(find.byType(Slider)).onChanged!(3000000);
-        case 'mute':
-          platform.failVolume = true;
-          await tester.pumpWidget(_app(edit: _edit.copyWith(muted: true)));
-        case 'pause':
-          await tester.tap(find.byTooltip('Play'));
-          await tester.pump();
-          expect(platform.plays, 1);
-          platform.failPause = true;
-          await tester.pumpWidget(_app(enabled: false));
-      }
+      expect(
+        Directionality.of(tester.element(find.byType(Slider))),
+        TextDirection.ltr,
+      );
+      final controller = tester
+          .widget<VideoPlayer>(find.byType(VideoPlayer))
+          .controller;
+      controller.value = controller.value.copyWith(position: _edit.end);
+      await tester.pump();
+      platform.seekGate = Completer<void>();
+      final before = platform.seeks;
+      await tester.tap(find.byTooltip('Play'));
+      await tester.pump();
+      expect(platform.seeks, greaterThan(before));
+      expect(platform.plays, 0);
+
+      await tester.pumpWidget(_app(enabled: false));
+      platform.seekGate!.complete();
       await tester.pump();
       await tester.pump();
-      expect(find.text(_unavailable), findsOneWidget);
-      expect(find.byType(CircularProgressIndicator), findsNothing);
+      expect(platform.plays, 0);
+      expect(controller.value.isPlaying, isFalse);
       expect(tester.takeException(), isNull);
       await tester.pumpWidget(const SizedBox.shrink());
       await tester.pump();
-    });
+    },
+  );
+
+  for (final operation in ['seek', 'mute', 'pause']) {
+    testWidgets(
+      'failed preview $operation stays contained and leaves editing available',
+      (tester) async {
+        await tester.pumpWidget(_app());
+        await _ready(tester);
+        switch (operation) {
+          case 'seek':
+            platform.failSeek = true;
+            tester.widget<Slider>(find.byType(Slider)).onChanged!(3000000);
+          case 'mute':
+            platform.failVolume = true;
+            await tester.pumpWidget(_app(edit: _edit.copyWith(muted: true)));
+          case 'pause':
+            await tester.tap(find.byTooltip('Play'));
+            await tester.pump();
+            expect(platform.plays, 1);
+            platform.failPause = true;
+            await tester.pumpWidget(_app(enabled: false));
+        }
+        await tester.pump();
+        await tester.pump();
+        expect(find.text(_unavailable), findsOneWidget);
+        expect(find.byType(CircularProgressIndicator), findsNothing);
+        expect(tester.takeException(), isNull);
+        await tester.pumpWidget(const SizedBox.shrink());
+        await tester.pump();
+      },
+    );
   }
 }

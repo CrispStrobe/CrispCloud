@@ -182,7 +182,8 @@ abstract class _MediaFileStoreBase extends MediaFileStore {
     if (_snapshot case final snapshot?) return snapshot;
     final directory = await workspace();
     var extension = p.extension(file.name).toLowerCase();
-    if (!RegExp(r'^\.[a-z0-9]{1,12}$').hasMatch(extension)) extension = '.media';
+    if (!RegExp(r'^\.[a-z0-9]{1,12}$').hasMatch(extension))
+      extension = '.media';
     final destination = File(p.join(directory.path, 'source$extension'));
     try {
       await readSnapshot(destination);
@@ -360,7 +361,9 @@ class _LocalMediaFileStore extends _MediaFileStoreBase {
       }
       // Legacy integrations still acquire their stream access. Native services
       // use the per-operation interface above, including mobile bookmarks.
-      if (!await local.beginStreamAccess(forWrite ? p.dirname(target) : target)) {
+      if (!await local.beginStreamAccess(
+        forWrite ? p.dirname(target) : target,
+      )) {
         throw const MediaStoreException(MediaStoreFailure.accessDenied);
       }
       try {
@@ -370,7 +373,10 @@ class _LocalMediaFileStore extends _MediaFileStoreBase {
       }
     } on FileSystemException catch (error) {
       final code = error.osError?.errorCode;
-      if (error is PathAccessException || code == 1 || code == 5 || code == 13) {
+      if (error is PathAccessException ||
+          code == 1 ||
+          code == 5 ||
+          code == 13) {
         throw const MediaStoreException(MediaStoreFailure.accessDenied);
       }
       rethrow;
@@ -378,26 +384,27 @@ class _LocalMediaFileStore extends _MediaFileStoreBase {
   }
 
   @override
-  Future<void> readSnapshot(File destination) => _withAccess(path, (sourcePath) async {
-    final source = File(sourcePath);
-    final before = await source.stat();
-    if (before.type != FileSystemEntityType.file) {
-      throw const MediaStoreException(MediaStoreFailure.sourceUnavailable);
-    }
-    _MediaFileStoreBase.assertSize(before.size, inputLimitBytes);
-    await writeNewFile(
-      source.openRead(),
-      destination,
-      limitBytes: inputLimitBytes,
-      expectedBytes: before.size,
-    );
-    final after = await source.stat();
-    if (after.type != FileSystemEntityType.file ||
-        before.size != after.size ||
-        before.modified != after.modified) {
-      throw const MediaStoreException(MediaStoreFailure.sourceChanged);
-    }
-  });
+  Future<void> readSnapshot(File destination) =>
+      _withAccess(path, (sourcePath) async {
+        final source = File(sourcePath);
+        final before = await source.stat();
+        if (before.type != FileSystemEntityType.file) {
+          throw const MediaStoreException(MediaStoreFailure.sourceUnavailable);
+        }
+        _MediaFileStoreBase.assertSize(before.size, inputLimitBytes);
+        await writeNewFile(
+          source.openRead(),
+          destination,
+          limitBytes: inputLimitBytes,
+          expectedBytes: before.size,
+        );
+        final after = await source.stat();
+        if (after.type != FileSystemEntityType.file ||
+            before.size != after.size ||
+            before.modified != after.modified) {
+          throw const MediaStoreException(MediaStoreFailure.sourceChanged);
+        }
+      });
 
   @override
   Future<MediaSaveOutcome> saveCopy(String renderedPath, String fileName) =>
@@ -472,7 +479,9 @@ class _RemoteMediaFileStore extends _MediaFileStoreBase {
     }
   }
 
-  Future<_MediaRemoteDirectory> _parentDirectory(MediaStoreFailure failure) async {
+  Future<_MediaRemoteDirectory> _parentDirectory(
+    MediaStoreFailure failure,
+  ) async {
     assertOrigin();
     try {
       final listing = await client.listPathForEdit(p.posix.dirname(path));
@@ -489,25 +498,43 @@ class _RemoteMediaFileStore extends _MediaFileStoreBase {
     // adapters consume all pages internally. Never interpret an unfinished
     // listing as evidence that an export name is unused.
     for (final key in const [
-      'nextStartFileName', 'nextFileName', 'nextMarker', 'NextMarker',
-      'nextPageToken', 'nextContinuationToken', 'continuationToken',
-      'nextCursor', 'nextLink', '@odata.nextLink',
+      'nextStartFileName',
+      'nextFileName',
+      'nextMarker',
+      'NextMarker',
+      'nextPageToken',
+      'nextContinuationToken',
+      'continuationToken',
+      'nextCursor',
+      'nextLink',
+      '@odata.nextLink',
     ]) {
       final value = listing[key];
       if (value != null && '$value'.trim().isNotEmpty) {
-        throw const MediaStoreException(MediaStoreFailure.unverifiedDestination);
+        throw const MediaStoreException(
+          MediaStoreFailure.unverifiedDestination,
+        );
       }
     }
-    for (final key in const ['hasMore', 'has_more', 'isTruncated', 'IsTruncated', 'hasNextPage']) {
+    for (final key in const [
+      'hasMore',
+      'has_more',
+      'isTruncated',
+      'IsTruncated',
+      'hasNextPage',
+    ]) {
       if (listing[key] == true || listing[key] == 'true') {
-        throw const MediaStoreException(MediaStoreFailure.unverifiedDestination);
+        throw const MediaStoreException(
+          MediaStoreFailure.unverifiedDestination,
+        );
       }
     }
     final rawFiles = listing['files'];
     final rawFolders = listing['folders'];
     if (rawFiles is! List ||
         (listing.containsKey('folders') && rawFolders is! List) ||
-        (!listing.containsKey('folders') && !listing.containsKey('nextStartFileName'))) {
+        (!listing.containsKey('folders') &&
+            !listing.containsKey('nextStartFileName'))) {
       throw const MediaStoreException(MediaStoreFailure.unverifiedDestination);
     }
     final files = <Map<String, dynamic>>[];
@@ -515,7 +542,9 @@ class _RemoteMediaFileStore extends _MediaFileStoreBase {
     void addEntries(List entries, bool? defaultFolder) {
       for (final entry in entries) {
         if (entry is! Map) {
-          throw const MediaStoreException(MediaStoreFailure.unverifiedDestination);
+          throw const MediaStoreException(
+            MediaStoreFailure.unverifiedDestination,
+          );
         }
         final nested = entry['metadata'];
         final info = <String, dynamic>{
@@ -527,42 +556,63 @@ class _RemoteMediaFileStore extends _MediaFileStoreBase {
               value.key as String: value.value,
         };
         final name = info['name'];
-        if (name is! String || name.isEmpty || name == '.' || name == '..' || name.contains('/')) {
-          throw const MediaStoreException(MediaStoreFailure.unverifiedDestination);
+        if (name is! String ||
+            name.isEmpty ||
+            name == '.' ||
+            name == '..' ||
+            name.contains('/')) {
+          throw const MediaStoreException(
+            MediaStoreFailure.unverifiedDestination,
+          );
         }
         final bool? explicitFolder = info['isFolder'] is bool
             ? info['isFolder'] as bool
-            : info['type'] == 'folder' ? true : info['type'] == 'file' ? false : null;
+            : info['type'] == 'folder'
+            ? true
+            : info['type'] == 'file'
+            ? false
+            : null;
         final isFolder = explicitFolder ?? defaultFolder;
         // B2 combines files and folders into one list. Its entries all carry
         // isFolder; missing classification must not silently hide directories.
         if (isFolder == null) {
-          throw const MediaStoreException(MediaStoreFailure.unverifiedDestination);
+          throw const MediaStoreException(
+            MediaStoreFailure.unverifiedDestination,
+          );
         }
         (isFolder ? folders : files).add(info);
       }
     }
+
     addEntries(rawFiles, rawFolders is List ? false : null);
     if (rawFolders is List) addEntries(rawFolders, true);
     return (files: files, folders: folders);
   }
 
-  Map<String, dynamic> _originalEntry(_MediaRemoteDirectory directory, MediaStoreFailure failure) {
+  Map<String, dynamic> _originalEntry(
+    _MediaRemoteDirectory directory,
+    MediaStoreFailure failure,
+  ) {
     final originalName = p.posix.basename(path).toLowerCase();
-    final matches = directory.files.where(
-      (entry) => (entry['name'] as String).toLowerCase() == originalName,
-    ).toList();
-    if (matches.length != 1 || directory.folders.any(
-      (entry) => (entry['name'] as String).toLowerCase() == originalName,
-    )) {
+    final matches = directory.files
+        .where(
+          (entry) => (entry['name'] as String).toLowerCase() == originalName,
+        )
+        .toList();
+    if (matches.length != 1 ||
+        directory.folders.any(
+          (entry) => (entry['name'] as String).toLowerCase() == originalName,
+        )) {
       // Duplicate Google Drive names cannot be addressed safely by the
       // generic path-based download API, even when one UUID is familiar.
       throw MediaStoreException(failure);
     }
     final info = matches.single;
     final identity = info['uuid'] ?? info['id'] ?? info['fileId'];
-    if ((file.uuid?.isNotEmpty ?? false) && identity != null &&
-        '$identity'.isNotEmpty && file.uuid != '$identity') {
+    if ((file.uuid?.isNotEmpty ?? false) &&
+        identity != null &&
+        '$identity'.isNotEmpty &&
+        file.uuid != '$identity') {
       throw MediaStoreException(failure);
     }
     return info;
@@ -572,7 +622,9 @@ class _RemoteMediaFileStore extends _MediaFileStoreBase {
     // resolvePath is not a common file-stat contract: Google Drive/pCloud only
     // resolve folders, and FTP guesses that any failed directory lookup is a
     // file. Use a fresh, complete parent listing for every provider instead.
-    final directory = await _parentDirectory(MediaStoreFailure.sourceUnavailable);
+    final directory = await _parentDirectory(
+      MediaStoreFailure.sourceUnavailable,
+    );
     final info = _originalEntry(directory, MediaStoreFailure.sourceUnavailable);
     // The captured FileItem's size may be stale. Require the fresh listing's
     // size before allowing an adapter to invoke a buffering download fallback.
@@ -632,7 +684,9 @@ class _RemoteMediaFileStore extends _MediaFileStoreBase {
   }
 
   Future<void> _verifyDestination(String target) async {
-    final directory = await _parentDirectory(MediaStoreFailure.unverifiedDestination);
+    final directory = await _parentDirectory(
+      MediaStoreFailure.unverifiedDestination,
+    );
     _originalEntry(directory, MediaStoreFailure.unverifiedDestination);
     final targetName = p.posix.basename(target).toLowerCase();
     for (final entry in [...directory.files, ...directory.folders]) {
