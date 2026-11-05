@@ -193,6 +193,24 @@ void main() {
   // ---------------------------------------------------------------------------
 
   group('FuseMountService state', () {
+    test('automatic selection never chooses FUSE-T', () {
+      expect(FuseMountService.macFuseRuntime(MacFuseBackend.automatic), 'macfuse-fskit');
+      expect(FuseMountService.macFuseRuntime(MacFuseBackend.fuseT), 'fuse-t');
+    });
+    test('FUSE-T cannot start without the non-commercial acknowledgement', () async {
+      if (!FuseMountService.isSupported) return;
+      final service = FuseMountService();
+      await expectLater(
+        service.mount(
+          client: _TestCloudClient(),
+          remotePath: '/',
+          mountPoint: '/tmp/crispcloud-fuse-no-consent',
+          macBackend: MacFuseBackend.fuseT,
+        ),
+        throwsArgumentError,
+      );
+      expect(service.getMounts(), isEmpty);
+    });
     test('rejects a second request while a mount is still mounting', () async {
       if (!FuseMountService.isSupported) return;
       SharedPreferences.setMockInitialValues({});

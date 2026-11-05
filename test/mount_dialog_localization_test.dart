@@ -57,6 +57,12 @@ void main() {
                   Text(strings.text('bridgeMissing')),
                   Text(backends.title),
                   Text(backends.kernelWarning),
+                  Text(backends.fuseTTitle),
+                  Text(backends.fuseTMessage),
+                  Text(backends.fuseTAccept),
+                  Text(backends.rcloneHint),
+                  Text(backends.rcloneMissing),
+                  Text(backends.rcloneFailed),
                   for (final backend in MacFuseBackend.values)
                     Text(backends.label(backend)),
                 ],
@@ -65,7 +71,7 @@ void main() {
           ),
         ),
       );
-      expect(find.byType(Text), findsNWidgets(8));
+      expect(find.byType(Text), findsNWidgets(15));
       expect(tester.takeException(), isNull);
     }
   });
@@ -92,6 +98,8 @@ void main() {
         'Bad state: ${FuseMountService.bridgeMissing}',
       );
       expect(bridge, MountDialogStrings(context).text('bridgeMissing'));
+      expect(localizedMountError(context, FuseMountService.rcloneMissing),
+          MountBackendStrings(context).rcloneMissing);
       expect(
         localizedMountError(context, FuseMountService.linuxMissing),
         contains('sudo apt install fuse3'),

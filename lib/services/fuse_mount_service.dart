@@ -33,7 +33,7 @@ import 'log_service.dart';
 // ---------------------------------------------------------------------------
 
 /// Runtime used for a mount on macOS.
-enum MacFuseBackend { automatic, fuseT, macFuseFsKit, macFuseKernel }
+enum MacFuseBackend { automatic, fuseT, macFuseFsKit, macFuseKernel, rcloneNfs }
 
 /// Describes a single active or configured FUSE mount.
 class MountEntry {
@@ -133,6 +133,15 @@ enum MountStatus { unmounted, mounting, mounted, unmounting, error }
 class FuseMountService {
   static const _log = Log('FuseMountService');
 
+  @visibleForTesting
+  static String macFuseRuntime(MacFuseBackend backend) => switch (backend) {
+    MacFuseBackend.automatic => 'macfuse-fskit',
+    MacFuseBackend.fuseT => 'fuse-t',
+    MacFuseBackend.macFuseFsKit => 'macfuse-fskit',
+    MacFuseBackend.macFuseKernel => 'macfuse-kernel',
+    MacFuseBackend.rcloneNfs => throw ArgumentError('rclone does not use the FUSE bridge'),
+  };
+
   // Stable app-authored messages used by the mount UI for localization.
   static const linuxMissing =
       'libfuse / fusermount3 not found. Install via: sudo apt install fuse3  '
@@ -147,6 +156,7 @@ class FuseMountService {
       'required to mount drives.';
   static const availabilityFailedPrefix = 'Error checking FUSE availability: ';
   static const createFailedPrefix = 'Cannot create mount point: ';
+  static const rcloneMissing = 'rclone not found';
 
   // Persisted config key prefix for SharedPreferences.
   static const _prefKey = 'fuse_mounts_v1';
@@ -210,6 +220,7 @@ class FuseMountService {
   }
 
   Future<String?> _checkMacFuse() async {
+    if (await _rclonePath() != null) return null;
     if (!await File(_macBridgePath).exists()) return bridgeMissing;
     if (await File('/usr/local/lib/libfuse-t.dylib').exists()) return null;
     if (await File('/usr/local/lib/libfuse.2.dylib').exists() &&
@@ -217,6 +228,13 @@ class FuseMountService {
       return null;
     }
     return macMissing;
+  }
+
+  Future<String?> _rclonePath() async {
+    for (final path in ['/opt/homebrew/bin/rclone', '/usr/local/bin/rclone']) {
+      if (await File(path).exists()) return path;
+    }
+    return null;
   }
 
   Future<String?> _checkWinFsp() async {
@@ -243,13 +261,27 @@ class FuseMountService {
   /// Throws [UnsupportedError] on web/mobile, [ArgumentError] if the
   /// mount point is already in use.
   Future<MountEntry> mount({
-    required CloudStorageClient client,
+    required CloudStorageClient? client,
     required String remotePath,
     required String mountPoint,
     String? label,
     MacFuseBackend macBackend = MacFuseBackend.automatic,
+    bool fuseTNonCommercialAcknowledged = false,
   }) async {
     _requireDesktop();
+    if (macBackend == MacFuseBackend.fuseT && !fuseTNonCommercialAcknowledged) {
+      throw ArgumentError('FUSE-T requires non-commercial-use acknowledgement');
+    }
+    if (macBackend != MacFuseBackend.rcloneNfs && client == null) {
+      throw ArgumentError('Cloud client required');
+    }
+    if (macBackend == MacFuseBackend.rcloneNfs && !Platform.isMacOS) {
+      throw UnsupportedError('rclone NFS is currently available on macOS only');
+    }
+    if (macBackend == MacFuseBackend.rcloneNfs &&
+        (!remotePath.contains(':') || remotePath.startsWith('-'))) {
+      throw ArgumentError('An rclone remote such as work:documents is required');
+    }
 
     final canonical = _canonicalize(mountPoint);
     if ({
@@ -266,8 +298,8 @@ class FuseMountService {
 
     final entry = MountEntry(
       mountPoint: canonical,
-      label: label ?? '${client.providerName}:$remotePath',
-      provider: client.providerName,
+      label: label ?? '${client?.providerName ?? 'rclone'}:$remotePath',
+      provider: client?.providerName ?? 'rclone',
       remotePath: remotePath,
       macBackend: macBackend,
       status: MountStatus.mounting,
@@ -306,7 +338,9 @@ class FuseMountService {
     }
 
     // Check FUSE availability before proceeding.
-    final fuseError = await checkFuseAvailability();
+    final fuseError = macBackend == MacFuseBackend.rcloneNfs
+        ? (await _rclonePath() == null ? rcloneMissing : null)
+        : await checkFuseAvailability();
     if (fuseError != null) {
       _setError(canonical, fuseError);
       return _mounts[canonical]!;
@@ -314,7 +348,11 @@ class FuseMountService {
 
     // Build and start the FUSE bridge.
     try {
-      await _startBridge(entry, client);
+      if (macBackend == MacFuseBackend.rcloneNfs) {
+        await _startRclone(entry);
+      } else {
+        await _startBridge(entry, client!);
+      }
       _mounts[canonical] = entry.copyWith(status: MountStatus.mounted);
       _log.info('Mounted ${entry.provider}:${entry.remotePath} → $canonical');
     } on _MountBridgeFailure catch (e, st) {
@@ -537,13 +575,7 @@ class FuseMountService {
     if (!Platform.isMacOS || !await File(_macBridgePath).exists()) {
       throw StateError(bridgeMissing);
     }
-    final runtime = switch (entry.macBackend) {
-      MacFuseBackend.automatic => await File('/usr/local/lib/libfuse-t.dylib').exists()
-          ? 'fuse-t' : 'macfuse-fskit',
-      MacFuseBackend.fuseT => 'fuse-t',
-      MacFuseBackend.macFuseFsKit => 'macfuse-fskit',
-      MacFuseBackend.macFuseKernel => 'macfuse-kernel',
-    };
+    final runtime = macFuseRuntime(entry.macBackend);
     final fs = FuseFilesystem(client: client, remotePath: entry.remotePath);
     _filesystems[entry.mountPoint] = fs;
     unawaited(fs.serveRequests());
@@ -630,6 +662,53 @@ class FuseMountService {
       process?.kill(ProcessSignal.sigterm);
       _filesystems.remove(entry.mountPoint);
       await fs.dispose();
+      rethrow;
+    }
+  }
+
+  Future<void> _startRclone(MountEntry entry) async {
+    final executable = await _rclonePath();
+    if (executable == null) throw StateError(rcloneMissing);
+    final process = await Process.start(executable, [
+      'nfsmount', entry.remotePath, entry.mountPoint, '--read-only',
+      '--addr', '127.0.0.1:0',
+    ]);
+    final errors = StringBuffer();
+    process.stdout.drain<void>();
+    process.stderr.transform(utf8.decoder).listen((text) {
+      if (errors.length < 4096) errors.write(text);
+    });
+    var exited = false;
+    unawaited(process.exitCode.then((_) => exited = true));
+    try {
+      var mounted = false;
+      for (var attempt = 0; attempt < 100 && !exited; attempt++) {
+        if (await isPlatformMountPoint(entry.mountPoint)) {
+          mounted = true;
+          break;
+        }
+        await Future<void>.delayed(const Duration(milliseconds: 100));
+      }
+      if (!mounted) {
+        throw _MountBridgeFailure(
+          'rcloneFailed', 'rclone NFS mount failed: $errors', {'error': '$errors'},
+        );
+      }
+      _processes[entry.mountPoint] = process;
+      entry.helperPid = process.pid;
+      unawaited(process.exitCode.then((code) {
+        if (_processes[entry.mountPoint] == process) {
+          _processes.remove(entry.mountPoint);
+          _setError(entry.mountPoint, 'rclone exited ($code)',
+              errorKey: 'helperExited', errorValues: {'code': code, 'error': ''});
+        }
+      }));
+    } catch (_) {
+      process.kill();
+      await process.exitCode.timeout(const Duration(seconds: 3), onTimeout: () {
+        process.kill(ProcessSignal.sigkill);
+        return -1;
+      });
       rethrow;
     }
   }

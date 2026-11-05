@@ -11,6 +11,19 @@ extension under System Settings → General → Login Items & Extensions →
 not work on some macOS versions; see [macFUSE issue 1194](https://github.com/macfuse/macfuse/issues/1194).
 The macFUSE kernel backend is an explicit option and requires the platform's
 kernel-extension approval and, on Apple silicon, Reduced Security.
+FUSE-T is selected explicitly and the user confirms non-commercial use at
+each mount. Automatic selection uses macFUSE FSKit; it does not select FUSE-T.
+
+The experimental rclone NFS option uses a separately installed `rclone` and
+its own configured remote (for example, `work:documents`). It does not reuse
+CrispCloud credentials. The mount is read-only, uses a loopback NFS server,
+and can be accessed by local processes. A signed sandboxed app's ability to
+launch the external binary and mount it remains to be verified. To run its
+fixture test with rclone installed at a standard Homebrew path:
+
+```sh
+CRISPCLOUD_RCLONE_TEST=1 flutter test --no-pub test/fuse_live_macos_test.dart
+```
 
 Build the universal helper and run the opt-in test from the repository root:
 

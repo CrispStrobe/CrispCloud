@@ -28,6 +28,28 @@ void showMountDialog(BuildContext context) {
   showDialog(context: context, builder: (_) => const _MountManagerDialog());
 }
 
+Future<bool> _confirmFuseT(BuildContext context) async {
+  final strings = MountBackendStrings(context);
+  return await showDialog<bool>(
+        context: context,
+        builder: (dialogContext) => AlertDialog(
+          title: Text(strings.fuseTTitle),
+          content: SelectableText(strings.fuseTMessage),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.pop(dialogContext, false),
+              child: Text(AppLocalizations.of(dialogContext)!.cancel),
+            ),
+            TextButton(
+              onPressed: () => Navigator.pop(dialogContext, true),
+              child: Text(strings.fuseTAccept),
+            ),
+          ],
+        ),
+      ) ??
+      false;
+}
+
 // ---------------------------------------------------------------------------
 // Main dialog
 // ---------------------------------------------------------------------------
@@ -166,7 +188,7 @@ class _AddMountDialogState extends ConsumerState<_AddMountDialog> {
             mainAxisSize: MainAxisSize.min,
             children: [
               if (!kIsWeb && defaultTargetPlatform == TargetPlatform.macOS) ...[
-                Row(
+                if (_backend != MacFuseBackend.rcloneNfs) Row(
                   children: [
                     const Icon(Icons.info_outline, color: Colors.orange),
                     const SizedBox(width: 8),
@@ -195,6 +217,10 @@ class _AddMountDialogState extends ConsumerState<_AddMountDialog> {
                 if (_backend == MacFuseBackend.macFuseKernel) ...[
                   const SizedBox(height: 8),
                   Text(MountBackendStrings(context).kernelWarning),
+                ],
+                if (_backend == MacFuseBackend.rcloneNfs) ...[
+                  const SizedBox(height: 8),
+                  Text(MountBackendStrings(context).rcloneHint),
                 ],
                 const SizedBox(height: 12),
               ],
@@ -301,7 +327,14 @@ class _AddMountDialogState extends ConsumerState<_AddMountDialog> {
       setState(() => _error = MountDialogStrings(context).text('required'));
       return;
     }
+    if (_backend == MacFuseBackend.rcloneNfs &&
+        (!remote.contains(':') || remote.startsWith('-'))) {
+      setState(() => _error = MountBackendStrings(context).rcloneHint);
+      return;
+    }
 
+    if (_backend == MacFuseBackend.fuseT && !await _confirmFuseT(context)) return;
+    if (!context.mounted) return;
     setState(() {
       _mounting = true;
       _error = null;
@@ -319,6 +352,7 @@ class _AddMountDialogState extends ConsumerState<_AddMountDialog> {
             mountPoint: mp,
             label: label,
             macBackend: _backend,
+            fuseTNonCommercialAcknowledged: _backend == MacFuseBackend.fuseT,
           );
       if (!context.mounted) return;
       if (entry == null || entry.status == MountStatus.error) {
@@ -419,6 +453,8 @@ class _MountTile extends ConsumerWidget {
     WidgetRef ref,
     MountEntry entry,
   ) async {
+    if (entry.macBackend == MacFuseBackend.fuseT && !await _confirmFuseT(context)) return;
+    if (!context.mounted) return;
     await ref
         .read(mountProvider)
         .mount(
@@ -426,6 +462,7 @@ class _MountTile extends ConsumerWidget {
           mountPoint: entry.mountPoint,
           label: entry.label,
           macBackend: entry.macBackend,
+          fuseTNonCommercialAcknowledged: entry.macBackend == MacFuseBackend.fuseT,
         );
   }
 }

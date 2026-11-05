@@ -105,6 +105,7 @@ class MountNotifier extends ChangeNotifier {
     required String mountPoint,
     String? label,
     MacFuseBackend macBackend = MacFuseBackend.automatic,
+    bool fuseTNonCommercialAcknowledged = false,
   }) async {
     _lastMountFailure = null;
     if (!isSupported) {
@@ -120,6 +121,17 @@ class MountNotifier extends ChangeNotifier {
     }
 
     try {
+      if (macBackend == MacFuseBackend.rcloneNfs) {
+        final entry = await _service.mount(
+          client: null,
+          remotePath: remotePath,
+          mountPoint: mountPoint,
+          label: label,
+          macBackend: macBackend,
+        );
+        notifyListeners();
+        return entry;
+      }
       final auth = _ref.read(authProvider);
       if (!auth.isConnected) {
         _ref
@@ -133,6 +145,7 @@ class MountNotifier extends ChangeNotifier {
         mountPoint: mountPoint,
         label: label,
         macBackend: macBackend,
+        fuseTNonCommercialAcknowledged: fuseTNonCommercialAcknowledged,
       );
       if (entry.status == MountStatus.error) {
         _ref
@@ -156,6 +169,7 @@ class MountNotifier extends ChangeNotifier {
     required String mountPoint,
     String? label,
     MacFuseBackend macBackend = MacFuseBackend.automatic,
+    bool fuseTNonCommercialAcknowledged = false,
   }) async {
     if (!isSupported) {
       _ref
@@ -170,6 +184,7 @@ class MountNotifier extends ChangeNotifier {
         mountPoint: mountPoint,
         label: label,
         macBackend: macBackend,
+        fuseTNonCommercialAcknowledged: fuseTNonCommercialAcknowledged,
       );
       if (entry.status == MountStatus.error) {
         _ref

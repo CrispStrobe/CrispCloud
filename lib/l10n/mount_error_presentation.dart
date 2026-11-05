@@ -2,12 +2,14 @@ import 'package:flutter/widgets.dart';
 
 import '../services/fuse_mount_service.dart';
 import 'mount_dialog_strings.dart';
+import 'mount_backend_strings.dart';
 
 /// Localizes app-owned failures and leaves paths and OS output untouched.
 String localizedMountEntryError(BuildContext context, MountEntry entry) {
   if (entry.errorKey != null) {
-    final text = MountDialogStrings(context)
-        .text(entry.errorKey!, entry.errorValues);
+    final text = entry.errorKey == 'rcloneFailed'
+        ? MountBackendStrings(context).rcloneFailed
+        : MountDialogStrings(context).text(entry.errorKey!, entry.errorValues);
     final externalDetail = entry.errorValues['error']?.toString() ?? '';
     return externalDetail.isEmpty ? text : '$text\n$externalDetail';
   }
@@ -17,6 +19,9 @@ String localizedMountEntryError(BuildContext context, MountEntry entry) {
 /// Localizes known service messages while preserving unrecognized OS details.
 String localizedMountError(BuildContext context, String message) {
   final strings = MountDialogStrings(context);
+  if (message == FuseMountService.rcloneMissing) {
+    return MountBackendStrings(context).rcloneMissing;
+  }
   if (message == FuseMountService.linuxMissing) {
     return strings.text('linuxMissing');
   }

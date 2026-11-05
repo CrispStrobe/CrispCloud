@@ -9,6 +9,7 @@ import 'package:crisp_cloud/services/cloud_storage_interface.dart';
 import 'package:crisp_cloud/services/fuse_filesystem.dart';
 import 'package:crisp_cloud/services/fuse_mount_service.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 class _FixtureClient implements CloudStorageClient {
   @override
@@ -41,8 +42,45 @@ class _FixtureClient implements CloudStorageClient {
 }
 
 void main() {
+  TestWidgetsFlutterBinding.ensureInitialized();
+  SharedPreferences.setMockInitialValues({});
   final backend = Platform.environment['CRISPCLOUD_FUSE_TEST_BACKEND'];
   final helper = Platform.environment['CRISPCLOUD_FUSE_TEST_HELPER'];
+  test(
+    'rclone NFS mounts a local fixture and unmounts',
+    () async {
+      final dir = await Directory.systemTemp.createTemp('cc_rclone_live_');
+      final source = Directory('${dir.path}/source');
+      final target = Directory('${dir.path}/mount');
+      await source.create();
+      await File('${source.path}/hello.txt').writeAsString('hello');
+      final service = FuseMountService();
+      try {
+        final entry = await service.mount(
+          client: null,
+          remotePath: ':local:${source.path}',
+          mountPoint: target.path,
+          macBackend: MacFuseBackend.rcloneNfs,
+        );
+        expect(entry.status, MountStatus.mounted, reason: entry.errorMessage);
+        expect(await File('${target.path}/hello.txt').readAsString(), 'hello');
+        await expectLater(
+          File('${target.path}/new.txt').writeAsString('blocked'),
+          throwsA(isA<FileSystemException>()),
+        );
+        await service.unmount(target.path);
+        expect(await service.isPlatformMountPoint(target.path), isFalse);
+      } finally {
+        await service.unmount(target.path);
+        await dir.delete(recursive: true);
+      }
+    },
+    skip:
+        !Platform.isMacOS ||
+            Platform.environment['CRISPCLOUD_RCLONE_TEST'] != '1'
+        ? 'Set CRISPCLOUD_RCLONE_TEST=1 on macOS with rclone installed.'
+        : false,
+  );
   test(
     'native mount lists, reads, rejects writes and unmounts',
     () async {
