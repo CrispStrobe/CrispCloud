@@ -564,6 +564,15 @@ class _CommandRunDialogState extends State<CommandRunDialog> {
                 ),
                 for (final argument in widget.prepared.arguments)
                   SelectableText(argument, textDirection: TextDirection.ltr),
+                const SizedBox(height: 12),
+                Text(_t(context, 'Working directory')),
+                SelectableText(
+                  widget.prepared.workingDirectory,
+                  textDirection: TextDirection.ltr,
+                ),
+                Text(
+                  '${_t(context, 'Timeout (seconds)')}: ${widget.command.timeoutSeconds}',
+                ),
                 const Divider(),
                 SelectableText(
                   _run?.output ?? '',

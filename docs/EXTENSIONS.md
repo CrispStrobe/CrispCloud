@@ -6,6 +6,22 @@ plugins are compiled into the application and use the lifecycle registry.
 
 ## Command extension manifests
 
+Open **Settings → Extensions → Import manifest**, paste or load a JSON file,
+then choose **Review extension**. The review displays every executable,
+argument, working-directory rule, timeout and requested menu/toolbar capability.
+**Install disabled** saves the manifest; enable it separately in the manager.
+Updating an existing ID requires **Replace disabled**, which clears previous
+command overrides and disables the replacement until it is enabled again.
+
+The actual panel command bar displays configured custom commands and enabled
+toolbar extension actions. It is hidden when there are no applicable actions.
+Context menu actions use the exact clicked rows, independently of a different
+marked selection. Both hosts require verified local sources; cloud and unresolved
+collection paths are not passed to native processes or path-only plugin hooks.
+Each command opens an argument review and requires **Run**. **Command settings**
+edits the actual executable, arguments, working directory and timeout used by
+later actions. The manager also exports, resets and removes installed manifests.
+
 A manifest contains metadata, explicit `toolbar` and/or `contextMenu`
 capabilities, and 1–32 commands. Each command has an executable and an argument
 array. Filenames expand into individual arguments through the custom-command
@@ -78,3 +94,13 @@ The native context owns an actual unique temporary directory that is removed
 on disposal; web uses a virtual memory namespace. Disposed context methods reject
 later use. The context is a scoped convenience API, **not an OS sandbox**:
 first-party Dart code compiled into CrispCloud has the application's privileges.
+
+Compiled plugins expose an optional `PluginToolbarButton.onPressed` callback and
+`PluginMenuItem.onSelected` callback. The legacy `onPressedKey` is kept for data
+compatibility but is not an executable action. Toolbar and context-menu callbacks
+receive immutable, verified local path lists. A captured callback is invalidated
+when its plugin is disabled, unloaded or restarted after a settings change.
+The manager shows initialization errors, retry, enable/disable, JSON settings
+(for plugins declaring `settings`) and session unload. Unload removes the
+registered object for the current session; the application controls which trusted
+first-party plugins are registered at its next startup.

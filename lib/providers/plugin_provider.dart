@@ -143,7 +143,7 @@ class PluginRegistryNotifier extends ChangeNotifier {
 // Providers
 // ---------------------------------------------------------------------------
 
-/// Singleton [PluginRegistryNotifier].
+/// One registry per provider scope; unrelated app/test containers never share it.
 final pluginRegistryProvider = ChangeNotifierProvider<PluginRegistryNotifier>((
   ref,
 ) {

@@ -96,15 +96,20 @@ class PluginToolbarButton {
   final String tooltip;
   final String icon;
 
-  /// Key used by the UI to look up the onPressed handler.
+  /// Legacy serialization key. A key alone is not executable.
   final String onPressedKey;
+
+  /// Trusted first-party callback. The host supplies verified local paths only.
+  /// No callback is reconstructed from JSON.
+  final void Function(List<String> filePaths)? onPressed;
 
   const PluginToolbarButton({
     required this.id,
     required this.label,
     required this.tooltip,
     required this.icon,
-    required this.onPressedKey,
+    this.onPressedKey = '',
+    this.onPressed,
   });
 
   Map<String, dynamic> toJson() => {
@@ -121,7 +126,7 @@ class PluginToolbarButton {
         label: json['label'] as String,
         tooltip: json['tooltip'] as String,
         icon: json['icon'] as String,
-        onPressedKey: json['onPressedKey'] as String,
+        onPressedKey: json['onPressedKey'] as String? ?? '',
       );
 
   @override
@@ -395,12 +400,20 @@ class PluginRegistry {
     if (!await prefs.setString(_prefsSettingsKey(id), jsonEncode(saved))) {
       throw StateError('Extension settings could not be saved.');
     }
+    if (isCurrent?.call() == false || !identical(getPlugin(id), plugin)) {
+      throw StateError('This extension context has been disposed.');
+    }
     _settings[id] = _settings[id]!.copyWith(settings: merged);
   });
 
   Future<void> _stop(CrispCloudPlugin plugin) async {
     final id = plugin.id;
     _status[id] = PluginRuntimeStatus.disabled;
+    final context = _contexts.remove(id);
+    // Revoke old settings/callback access before awaiting plugin code. Otherwise
+    // a dispose hook could overwrite settings that the user just saved.
+    if (context != null) context.active = false;
+    await _settingsLock.synchronized(() async {});
     if (_started.remove(id)) {
       try {
         await plugin.dispose();
@@ -409,7 +422,6 @@ class PluginRegistry {
         _log.error('Error disposing extension "$id"', error);
       }
     }
-    final context = _contexts.remove(id);
     if (context != null) {
       try {
         await context.close();
@@ -581,7 +593,25 @@ class PluginRegistry {
     for (final plugin in getEnabledPlugins()) {
       if (!plugin.capabilities.contains(PluginCapability.contextMenu)) continue;
       try {
-        items.addAll(plugin.getContextMenuItems(List.unmodifiable(paths)));
+        final lease = _contexts[plugin.id];
+        for (final item in plugin.getContextMenuItems(
+          List.unmodifiable(paths),
+        )) {
+          items.add(
+            PluginMenuItem(
+              id: item.id,
+              label: item.label,
+              icon: item.icon,
+              enabled: item.enabled,
+              onSelected: item.onSelected == null
+                  ? null
+                  : (files) {
+                      _checkContribution(plugin.id, lease);
+                      item.onSelected!(List.unmodifiable(files));
+                    },
+            ),
+          );
+        }
       } catch (error) {
         _errors[plugin.id] = 'Context menu failed: $error';
       }
@@ -594,12 +624,37 @@ class PluginRegistry {
     for (final plugin in getEnabledPlugins()) {
       if (!plugin.capabilities.contains(PluginCapability.toolbar)) continue;
       try {
-        items.addAll(plugin.getToolbarButtons());
+        final lease = _contexts[plugin.id];
+        for (final button in plugin.getToolbarButtons()) {
+          items.add(
+            PluginToolbarButton(
+              id: button.id,
+              label: button.label,
+              tooltip: button.tooltip,
+              icon: button.icon,
+              onPressedKey: button.onPressedKey,
+              onPressed: button.onPressed == null
+                  ? null
+                  : (files) {
+                      _checkContribution(plugin.id, lease);
+                      button.onPressed!(List.unmodifiable(files));
+                    },
+            ),
+          );
+        }
       } catch (error) {
         _errors[plugin.id] = 'Toolbar contribution failed: $error';
       }
     }
     return items;
+  }
+
+  void _checkContribution(String id, _PluginContextImpl? lease) {
+    if (!isReady(id) || lease == null || !identical(_contexts[id], lease)) {
+      throw StateError(
+        'This extension action is no longer active. Open it again.',
+      );
+    }
   }
 
   PluginSettings? getPluginSettings(String id) {

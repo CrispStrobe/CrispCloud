@@ -11,6 +11,8 @@ import '../providers/toolbar_provider.dart' show panelViewModeProvider;
 import '../providers/custom_command_provider.dart';
 import '../l10n/commander_strings.dart';
 import 'custom_command_dialog.dart';
+import '../l10n/extension_translations.dart';
+import 'extensions_dialog.dart';
 import '../services/panel_view_mode_service.dart' show PanelViewMode;
 import 'file_view_selector.dart';
 import 'search_dialogs.dart' show showSearchDialog, showFindDialog;
@@ -54,6 +56,9 @@ class FileToolbar extends ConsumerWidget {
       IconButton(icon: const Icon(Icons.code),
         tooltip: CommanderStrings.translate(context, 'Custom commands'),
         onPressed: () => showCustomCommandsDialog(context, ref, side)),
+      IconButton(icon: const Icon(Icons.extension),
+        tooltip: context.extensionTr('Extensions'),
+        onPressed: () => showExtensionsDialog(context, ref, side)),
       if (isLocalSource || (side == PanelSide.local))
         IconButton(
           icon: const Icon(Icons.folder_open),

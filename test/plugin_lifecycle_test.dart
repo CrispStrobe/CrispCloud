@@ -28,7 +28,10 @@ class _Plugin extends CrispCloudPlugin {
     PluginCapability.fileAction,
   ];
   int initializes = 0, disposes = 0, actions = 0;
+  int menuClicks = 0, toolbarClicks = 0;
   bool fail = false;
+  bool saveOnDispose = false;
+  Object? disposeWriteError;
   Completer<void>? waitForInitialize;
   PluginContext? context;
   Map<String, dynamic>? settingsAtInitialize;
@@ -44,6 +47,13 @@ class _Plugin extends CrispCloudPlugin {
   @override
   Future<void> dispose() async {
     disposes++;
+    if (saveOnDispose) {
+      try {
+        await context!.saveSettings({'value': -1});
+      } catch (error) {
+        disposeWriteError = error;
+      }
+    }
   }
 
   @override
@@ -53,16 +63,22 @@ class _Plugin extends CrispCloudPlugin {
 
   @override
   List<PluginMenuItem> getContextMenuItems(List<String> paths) => [
-    const PluginMenuItem(id: 'menu', label: 'Menu', icon: 'extension'),
+    PluginMenuItem(
+      id: 'menu',
+      label: 'Menu',
+      icon: 'extension',
+      onSelected: (_) => menuClicks++,
+    ),
   ];
   @override
   List<PluginToolbarButton> getToolbarButtons() => [
-    const PluginToolbarButton(
+    PluginToolbarButton(
       id: 'button',
       label: 'Button',
       tooltip: 'Button',
       icon: 'extension',
       onPressedKey: 'test',
+      onPressed: (_) => toolbarClicks++,
     ),
   ];
   @override
@@ -138,6 +154,51 @@ void main() {
     expect(identical(previous, plugin.context), isFalse);
     expect(created, 2);
   });
+
+  test(
+    'captured plugin callbacks expire across disable and settings restart',
+    () async {
+      final plugin = _Plugin('com.example.actions');
+      registry.registerPlugin(plugin);
+      await registry.initializeAll();
+      final menu = registry.getContextMenuItems(['/file']).single;
+      final toolbar = registry.getToolbarButtons().single;
+      menu.onSelected!(['/file']);
+      toolbar.onPressed!(['/file']);
+      expect(plugin.menuClicks, 1);
+      expect(plugin.toolbarClicks, 1);
+      await registry.setEnabled(plugin.id, false);
+      expect(() => menu.onSelected!(['/file']), throwsStateError);
+      expect(() => toolbar.onPressed!(['/file']), throwsStateError);
+      await registry.setEnabled(plugin.id, true);
+      expect(() => menu.onSelected!(['/file']), throwsStateError);
+      final current = registry.getToolbarButtons().single;
+      await registry.savePluginSettings(plugin.id, {'value': 2});
+      expect(() => current.onPressed!(['/file']), throwsStateError);
+      registry.getToolbarButtons().single.onPressed!(['/file']);
+      expect(plugin.toolbarClicks, 2);
+    },
+  );
+
+  test(
+    'a disposed instance cannot overwrite newly saved user settings',
+    () async {
+      final plugin = _Plugin('com.example.settings-lease')
+        ..saveOnDispose = true;
+      registry.registerPlugin(plugin);
+      await registry.initializeAll();
+      await registry.savePluginSettings(plugin.id, {'value': 2});
+      expect(plugin.disposeWriteError, isA<StateError>());
+      expect(plugin.settingsAtInitialize!['value'], 2);
+      expect(registry.getPluginSettings(plugin.id)!.settings['value'], 2);
+      expect(
+        (await SharedPreferences.getInstance()).getString(
+          'plugin_settings_${plugin.id}',
+        ),
+        contains('"value":2'),
+      );
+    },
+  );
 
   test('failed initialization releases partial resources and stays excluded until explicit retry', () async {
     final plugin = _Plugin('com.example.failed')..fail = true;

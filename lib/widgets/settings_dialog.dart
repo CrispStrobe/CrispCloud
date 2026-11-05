@@ -28,6 +28,8 @@ import 'proxy_settings_dialog.dart';
 import 'theme_picker.dart';
 import '../l10n/commander_strings.dart';
 import 'custom_command_dialog.dart';
+import '../l10n/extension_translations.dart';
+import 'extensions_dialog.dart';
 
 // ---------------------------------------------------------------------------
 // Public entry point
@@ -109,6 +111,12 @@ class _GeneralSection extends ConsumerWidget {
           title: Text(CommanderStrings.translate(context, 'Custom commands')),
           onTap: () => showCustomCommandsDialog(context, ref,
             ref.read(activePanelProvider))),
+        ListTile(
+          key: const ValueKey('settings-extensions'),
+          leading: const Icon(Icons.extension),
+          title: Text(context.extensionTr('Extensions')),
+          onTap: () => showExtensionsDialog(context, ref, ref.read(activePanelProvider)),
+        ),
         SwitchListTile(
           key: const Key('settings_fkey_bar_toggle'),
           value: fkeyVisible,
