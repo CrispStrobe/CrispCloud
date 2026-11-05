@@ -38,7 +38,8 @@ import 'log_service.dart';
 import 'secure_storage_service.dart';
 
 class PCloudClientAdapter extends CloudStorageClient
-    with CloudTransferOperations {
+    with CloudTransferOperations
+    implements FreshCloudDirectoryReader {
   @override
   StorageTransferCapabilities get transferCapabilities =>
       const StorageTransferCapabilities(deleteEmptyDirectory: true);
@@ -291,6 +292,14 @@ class PCloudClientAdapter extends CloudStorageClient
   }
 
   // --- List ---
+
+  @override
+  Future<Map<String, dynamic>> readDirectoryForEdit(String path) {
+    _pathToFolderId
+      ..clear()
+      ..['/'] = 0;
+    return listPath(path);
+  }
 
   @override
   Future<Map<String, dynamic>> listPath(String path) async {

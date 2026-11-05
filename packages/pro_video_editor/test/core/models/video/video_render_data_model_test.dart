@@ -1,0 +1,877 @@
+import 'dart:io';
+import 'dart:typed_data';
+import 'dart:ui';
+
+import 'package:flutter/foundation.dart'
+    show TargetPlatform, debugDefaultTargetPlatformOverride;
+import 'package:flutter/services.dart' show MethodCall, MethodChannel;
+import 'package:flutter_test/flutter_test.dart';
+import 'package:pro_video_editor/core/models/audio/audio_equalizer_model.dart';
+import 'package:pro_video_editor/core/models/audio/audio_track_model.dart';
+import 'package:pro_video_editor/core/models/image/editor_layer_image_model.dart';
+import 'package:pro_video_editor/core/models/image/image_layer_frame_model.dart';
+import 'package:pro_video_editor/core/models/image/image_layer_model.dart';
+import 'package:pro_video_editor/core/models/image/keyframe_clock_point_model.dart';
+import 'package:pro_video_editor/core/models/image/layer_blend_mode_model.dart';
+import 'package:pro_video_editor/core/models/image/timeline_keyframe_model.dart';
+import 'package:pro_video_editor/core/models/video/chroma_key_model.dart';
+import 'package:pro_video_editor/core/models/video/custom_video_effect_model.dart';
+import 'package:pro_video_editor/core/models/video/editor_video_model.dart';
+import 'package:pro_video_editor/core/models/video/video_composition_model.dart';
+import 'package:pro_video_editor/core/models/video/video_effect_frame_model.dart';
+import 'package:pro_video_editor/core/models/video/video_effect_model.dart';
+import 'package:pro_video_editor/core/models/video/video_layer_model.dart';
+import 'package:pro_video_editor/core/models/video/video_quality_config.dart';
+import 'package:pro_video_editor/core/models/video/video_quality_preset.dart';
+import 'package:pro_video_editor/core/models/video/video_render_data_model.dart';
+import 'package:pro_video_editor/core/models/video/video_segment_model.dart';
+import 'package:pro_video_editor/core/models/video/video_speed_ramp_model.dart';
+import 'package:pro_video_editor/core/utils/video_effect_frames.dart';
+
+void main() {
+  test(
+    'source frame timing survives the render channel and saved edits',
+    () async {
+      final data = VideoRenderData(
+        id: 'source-clock',
+        videoSegments: [VideoSegment(video: EditorVideo.file('test.mp4'))],
+        preserveSourceFrameTiming: true,
+      );
+      expect((await data.toAsyncMap())['preserveSourceFrameTiming'], isTrue);
+      final restored = VideoRenderData.fromMap(data.toMap());
+      expect(restored.preserveSourceFrameTiming, isTrue);
+      expect(restored.copyWith().preserveSourceFrameTiming, isTrue);
+      expect(
+        restored.copyWith(preserveSourceFrameTiming: false),
+        isNot(restored),
+      );
+      expect(
+        VideoRenderData.withQualityPreset(
+          videoSegments: data.videoSegments,
+          qualityPreset: VideoQualityPreset.p720,
+          preserveSourceFrameTiming: true,
+        ).preserveSourceFrameTiming,
+        isTrue,
+      );
+    },
+  );
+
+  group('VideoRenderData maxFrameRate', () {
+    VideoRenderData buildData({int? maxFrameRate}) {
+      return VideoRenderData(
+        id: 'test',
+        videoSegments: [VideoSegment(video: EditorVideo.file('test.mp4'))],
+        maxFrameRate: maxFrameRate,
+      );
+    }
+
+    test('defaults to null', () {
+      expect(buildData().maxFrameRate, isNull);
+    });
+
+    test('asserts a positive value', () {
+      expect(() => buildData(maxFrameRate: 0), throwsA(isA<AssertionError>()));
+      expect(() => buildData(maxFrameRate: -5), throwsA(isA<AssertionError>()));
+    });
+
+    test('toMap serializes the value', () {
+      expect(buildData(maxFrameRate: 30).toMap()['maxFrameRate'], 30);
+      expect(buildData().toMap()['maxFrameRate'], isNull);
+    });
+
+    test('toMap / fromMap roundtrip preserves the value', () {
+      final restored = VideoRenderData.fromMap(
+        buildData(maxFrameRate: 24).toMap(),
+      );
+      expect(restored.maxFrameRate, 24);
+
+      final restoredNull = VideoRenderData.fromMap(buildData().toMap());
+      expect(restoredNull.maxFrameRate, isNull);
+    });
+
+    test('fromMap parses numeric strings safely', () {
+      final map = buildData().toMap()..['maxFrameRate'] = '60';
+      expect(VideoRenderData.fromMap(map).maxFrameRate, 60);
+    });
+
+    test('copyWith overrides and otherwise keeps the value', () {
+      final overridden = buildData(maxFrameRate: 30).copyWith(maxFrameRate: 60);
+      expect(overridden.maxFrameRate, 60);
+      expect(buildData(maxFrameRate: 30).copyWith().maxFrameRate, 30);
+    });
+
+    test('withQualityPreset forwards the value', () {
+      final data = VideoRenderData.withQualityPreset(
+        videoSegments: [VideoSegment(video: EditorVideo.file('test.mp4'))],
+        qualityPreset: VideoQualityPreset.p720,
+        maxFrameRate: 30,
+      );
+      expect(data.maxFrameRate, 30);
+    });
+  });
+
+  group('VideoRenderData qualityConfig output resolution', () {
+    VideoRenderData buildData(VideoQualityConfig qualityConfig) {
+      return VideoRenderData(
+        id: 'test',
+        videoSegments: [VideoSegment(video: EditorVideo.file('test.mp4'))],
+        qualityConfig: qualityConfig,
+      );
+    }
+
+    test(
+      'custom resolution maps to an exact output canvas (no scale)',
+      () async {
+        final map = await buildData(
+          VideoQualityConfig.custom(
+            bitrate: 8000000,
+            resolution: const Size(1080, 1920),
+          ),
+        ).toAsyncMap();
+
+        // Exact output canvas → letterboxed natively, not a uniform scale.
+        expect(map['outputWidth'], 1080);
+        expect(map['outputHeight'], 1920);
+        expect(map['scaleX'], isNull);
+        expect(map['scaleY'], isNull);
+      },
+    );
+
+    test('falls back to the quality config bitrate when none is set', () async {
+      final map = await buildData(
+        VideoQualityConfig.custom(
+          bitrate: 8000000,
+          resolution: const Size(1080, 1920),
+        ),
+      ).toAsyncMap();
+
+      expect(map['bitrate'], 8000000);
+    });
+  });
+
+  group('VideoRenderData trimToCommonTrackEnd', () {
+    VideoRenderData buildData({bool? trimToCommonTrackEnd}) {
+      return VideoRenderData(
+        id: 'test',
+        videoSegments: [VideoSegment(video: EditorVideo.file('test.mp4'))],
+        trimToCommonTrackEnd: trimToCommonTrackEnd ?? false,
+      );
+    }
+
+    test('defaults to off so exports keep their full length', () {
+      expect(buildData().trimToCommonTrackEnd, isFalse);
+    });
+
+    test('toMap serializes the value', () {
+      expect(
+        buildData(trimToCommonTrackEnd: true).toMap()['trimToCommonTrackEnd'],
+        isTrue,
+      );
+      expect(buildData().toMap()['trimToCommonTrackEnd'], isFalse);
+    });
+
+    test('toAsyncMap sends the value over the platform channel', () async {
+      // toMap() is the Dart-side JSON form; toAsyncMap() is what actually
+      // reaches RenderConfig.fromArgs, so the native key is asserted here.
+      expect(
+        (await buildData(
+          trimToCommonTrackEnd: true,
+        ).toAsyncMap())['trimToCommonTrackEnd'],
+        isTrue,
+      );
+      expect((await buildData().toAsyncMap())['trimToCommonTrackEnd'], isFalse);
+    });
+
+    test('toMap / fromMap roundtrip preserves the value', () {
+      final restored = VideoRenderData.fromMap(
+        buildData(trimToCommonTrackEnd: true).toMap(),
+      );
+      expect(restored.trimToCommonTrackEnd, isTrue);
+    });
+
+    test('fromMap defaults to off for payloads without the key', () {
+      final map = buildData(trimToCommonTrackEnd: true).toMap()
+        ..remove('trimToCommonTrackEnd');
+
+      expect(VideoRenderData.fromMap(map).trimToCommonTrackEnd, isFalse);
+    });
+
+    test('copyWith overrides the value', () {
+      expect(
+        buildData().copyWith(trimToCommonTrackEnd: true).trimToCommonTrackEnd,
+        isTrue,
+      );
+      expect(
+        buildData(trimToCommonTrackEnd: true).copyWith().trimToCommonTrackEnd,
+        isTrue,
+      );
+    });
+  });
+
+  group('VideoRenderData audioTracks', () {
+    test('sends each audio speed to the native renderer', () async {
+      final data = VideoRenderData(
+        videoSegments: [VideoSegment(video: EditorVideo.file('/video.mp4'))],
+        audioTracks: const [
+          VideoAudioTrack(path: '/audio.wav', playbackSpeed: 0.5),
+          VideoAudioTrack(path: '/normal.wav'),
+        ],
+      );
+      final tracks = (await data.toAsyncMap())['audioTracks'] as List;
+      expect(tracks[0]['playbackSpeed'], 0.5);
+      expect(tracks[1]['playbackSpeed'], 1.0);
+    });
+
+    test('sends a speed ramp as the steps the renderer plays', () async {
+      const ramp = VideoSpeedRamp([
+        VideoSpeedRampPoint(position: 0, speed: 2),
+        VideoSpeedRampPoint(position: 0.5, speed: 2),
+        VideoSpeedRampPoint(position: 0.5001, speed: 0.5),
+        VideoSpeedRampPoint(position: 1, speed: 0.5),
+      ]);
+      final data = VideoRenderData(
+        videoSegments: [VideoSegment(video: EditorVideo.file('/video.mp4'))],
+        audioTracks: const [
+          VideoAudioTrack(path: '/audio.wav', speedRamp: ramp),
+          VideoAudioTrack(path: '/normal.wav'),
+        ],
+      );
+      final tracks = (await data.toAsyncMap())['audioTracks'] as List;
+      expect(tracks[0]['speedRamp'], ramp.toChannelSteps());
+      expect(tracks[0]['playbackSpeed'], 1.0);
+      expect(tracks[1]['speedRamp'], isNull);
+    });
+
+    test(
+      'toAsyncMap sends each track\'s fade over the platform channel',
+      () async {
+        final data = VideoRenderData(
+          id: 'test',
+          videoSegments: [VideoSegment(video: EditorVideo.file('test.mp4'))],
+          audioTracks: const [
+            VideoAudioTrack(
+              path: '/audio/faded.m4a',
+              fadeInDuration: Duration(milliseconds: 250),
+              fadeOutDuration: Duration(seconds: 2),
+            ),
+            VideoAudioTrack(path: '/audio/plain.m4a'),
+          ],
+        );
+
+        final tracks = (await data.toAsyncMap())['audioTracks'] as List;
+
+        expect(tracks[0]['fadeInUs'], 250000);
+        expect(tracks[0]['fadeOutUs'], 2000000);
+        expect(tracks[1]['fadeInUs'], 0);
+        expect(tracks[1]['fadeOutUs'], 0);
+      },
+    );
+
+    test(
+      'toAsyncMap sends each track\'s equalizer over the platform channel',
+      () async {
+        const equalizer = AudioEqualizer(
+          bands: [
+            AudioEqualizerBand(
+              type: AudioEqualizerBandType.lowShelf,
+              frequency: 200,
+              gain: 6,
+            ),
+          ],
+        );
+        final data = VideoRenderData(
+          id: 'test',
+          videoSegments: [VideoSegment(video: EditorVideo.file('test.mp4'))],
+          audioTracks: const [
+            VideoAudioTrack(path: '/audio/eq.m4a', equalizer: equalizer),
+            VideoAudioTrack(path: '/audio/plain.m4a'),
+          ],
+        );
+
+        final tracks = (await data.toAsyncMap())['audioTracks'] as List;
+
+        expect(tracks[0]['equalizer'], equalizer.toMap());
+        expect(tracks[1]['equalizer'], isNull);
+      },
+    );
+
+    group('from the photo library', () {
+      const url = 'ph:///ED7AC36B-A150-4C38-BB8C-B6D696F4F2ED/L0/001';
+      const resolvedPath = '/var/mobile/Media/DCIM/100APPLE/IMG_0042.MOV';
+      late List<MethodCall> calls;
+
+      VideoRenderData buildData() => VideoRenderData(
+        videoSegments: [VideoSegment(video: EditorVideo.file('/video.mp4'))],
+        audioTracks: const [
+          VideoAudioTrack(path: url),
+          VideoAudioTrack(path: '/audio/plain.m4a'),
+        ],
+      );
+
+      setUp(() {
+        TestWidgetsFlutterBinding.ensureInitialized();
+        calls = [];
+        TestDefaultBinaryMessengerBinding.instance.defaultBinaryMessenger
+            .setMockMethodCallHandler(const MethodChannel('pro_video_editor'), (
+              call,
+            ) async {
+              calls.add(call);
+              return resolvedPath;
+            });
+      });
+
+      tearDown(() {
+        debugDefaultTargetPlatformOverride = null;
+        TestDefaultBinaryMessengerBinding.instance.defaultBinaryMessenger
+            .setMockMethodCallHandler(
+              const MethodChannel('pro_video_editor'),
+              null,
+            );
+      });
+
+      for (final platform in [TargetPlatform.iOS, TargetPlatform.macOS]) {
+        test(
+          'sends the file a track resolves to on ${platform.name}',
+          () async {
+            debugDefaultTargetPlatformOverride = platform;
+
+            final tracks =
+                (await buildData().toAsyncMap())['audioTracks'] as List;
+
+            expect(tracks[0]['path'], resolvedPath);
+            expect(tracks[1]['path'], '/audio/plain.m4a');
+            expect(calls.single.method, 'resolvePhotoLibraryVideo');
+            expect(calls.single.arguments, {'inputPath': url});
+          },
+        );
+      }
+
+      test('throws a clear error on other platforms', () async {
+        debugDefaultTargetPlatformOverride = TargetPlatform.android;
+
+        await expectLater(buildData().toAsyncMap(), throwsUnsupportedError);
+        expect(calls, isEmpty);
+      });
+    });
+  });
+
+  group('VideoRenderData chromaKey', () {
+    const key = ChromaKey(backgroundColor: Color(0xFFFF0000));
+
+    VideoRenderData buildData({ChromaKey? chromaKey}) {
+      return VideoRenderData(
+        id: 'test',
+        videoSegments: [VideoSegment(video: EditorVideo.file('test.mp4'))],
+        chromaKey: chromaKey,
+      );
+    }
+
+    test('defaults to null', () {
+      expect(buildData().chromaKey, isNull);
+    });
+
+    test('rejects a transparent key on the single-track path', () {
+      // videoSegments has nothing underneath and the codec carries no alpha,
+      // so a background-less key would silently flatten to black.
+      expect(
+        () => buildData(chromaKey: const ChromaKey()),
+        throwsA(isA<AssertionError>()),
+      );
+    });
+
+    test('rejects a transparent key set on a single segment', () {
+      // Keys resolve segment → global, so a transparent per-segment key is
+      // flattened to black exactly like a transparent global one. The guard
+      // used to look only at the global key and let this through silently.
+      expect(
+        () => VideoRenderData(
+          id: 'test',
+          videoSegments: [
+            VideoSegment(video: EditorVideo.file('a.mp4')),
+            VideoSegment(
+              video: EditorVideo.file('b.mp4'),
+              chromaKey: const ChromaKey(),
+            ),
+          ],
+        ),
+        throwsA(isA<AssertionError>()),
+      );
+    });
+
+    test('allows a backed key on a segment', () {
+      expect(
+        VideoRenderData(
+          id: 'test',
+          videoSegments: [
+            VideoSegment(
+              video: EditorVideo.file('a.mp4'),
+              chromaKey: const ChromaKey(backgroundColor: Color(0xFF000000)),
+            ),
+          ],
+        ).videoSegments!.first.chromaKey,
+        isNotNull,
+      );
+    });
+
+    test('allows a transparent segment key inside a composition', () {
+      expect(
+        VideoRenderData(
+          id: 'test',
+          composition: VideoComposition(
+            layers: [
+              VideoLayer(
+                clips: [
+                  VideoSegment(
+                    video: EditorVideo.file('test.mp4'),
+                    chromaKey: const ChromaKey(),
+                  ),
+                ],
+              ),
+            ],
+          ),
+        ).composition,
+        isNotNull,
+      );
+    });
+
+    test('allows a transparent key inside a composition', () {
+      expect(
+        VideoRenderData(
+          id: 'test',
+          composition: VideoComposition(
+            layers: [
+              VideoLayer(
+                clips: [VideoSegment(video: EditorVideo.file('test.mp4'))],
+              ),
+            ],
+          ),
+          chromaKey: const ChromaKey(),
+        ).chromaKey,
+        const ChromaKey(),
+      );
+    });
+
+    test('toAsyncMap sends the key over the platform channel', () async {
+      // toMap() is the Dart-side JSON form; toAsyncMap() is what actually
+      // reaches the native RenderConfig, so the wire keys are asserted here.
+      final map = (await buildData(chromaKey: key).toAsyncMap())['chromaKey'];
+
+      expect(map, isA<Map<String, dynamic>>());
+      expect((map as Map)['keyColor'], 0xFF00B140);
+      expect(map['bgColor'], 0xFFFF0000);
+    });
+
+    test('toAsyncMap omits the key when unset', () async {
+      expect((await buildData().toAsyncMap())['chromaKey'], isNull);
+    });
+
+    test('toMap / fromMap roundtrip preserves the key', () {
+      final restored = VideoRenderData.fromMap(
+        buildData(chromaKey: key).toMap(),
+      );
+
+      expect(restored.chromaKey, key);
+      expect(VideoRenderData.fromMap(buildData().toMap()).chromaKey, isNull);
+    });
+
+    test('copyWith overrides and otherwise keeps the key', () {
+      const other = ChromaKey(backgroundColor: Color(0xFF0000FF));
+
+      expect(
+        buildData(chromaKey: key).copyWith(chromaKey: other).chromaKey,
+        other,
+      );
+      expect(buildData(chromaKey: key).copyWith().chromaKey, key);
+    });
+
+    test('withQualityPreset forwards the key', () {
+      final data = VideoRenderData.withQualityPreset(
+        videoSegments: [VideoSegment(video: EditorVideo.file('test.mp4'))],
+        qualityPreset: VideoQualityPreset.p720,
+        chromaKey: key,
+      );
+
+      expect(data.chromaKey, key);
+    });
+  });
+
+  group('VideoRenderData imageLayers', () {
+    late Directory tempDir;
+
+    setUp(() {
+      tempDir = Directory.systemTemp.createTempSync('image_layer_test');
+    });
+
+    tearDown(() {
+      if (tempDir.existsSync()) tempDir.deleteSync(recursive: true);
+    });
+
+    Future<List<Map<String, dynamic>>> layerMaps(
+      List<ImageLayer> layers,
+    ) async {
+      final map = await VideoRenderData(
+        id: 'test',
+        videoSegments: [VideoSegment(video: EditorVideo.file('test.mp4'))],
+        imageLayers: layers,
+      ).toAsyncMap();
+      return (map['imageLayers'] as List).cast<Map<String, dynamic>>();
+    }
+
+    test('sends each layer\'s blend mode over the platform channel', () async {
+      final image = EditorLayerImage.memory(Uint8List.fromList([1, 2, 3]));
+
+      final maps = await layerMaps([
+        ImageLayer(image: image),
+        ImageLayer(image: image, blendMode: LayerBlendMode.softLight),
+      ]);
+
+      expect(maps.map((m) => m['blendMode']), ['normal', 'softLight']);
+    });
+
+    test('sends a file-backed layer as a path, not bytes', () async {
+      final file = File('${tempDir.path}/overlay.png')
+        ..writeAsBytesSync([1, 2, 3, 4]);
+
+      final maps = await layerMaps([
+        ImageLayer(image: EditorLayerImage.file(file.path)),
+      ]);
+
+      expect(maps.single['imagePath'], file.path);
+      expect(maps.single.containsKey('imageData'), isFalse);
+    });
+
+    test('still sends an in-memory layer as bytes', () async {
+      final bytes = Uint8List.fromList([7, 7, 7]);
+
+      final maps = await layerMaps([
+        ImageLayer(image: EditorLayerImage.memory(bytes)),
+      ]);
+
+      expect(maps.single['imageData'], bytes);
+      expect(maps.single.containsKey('imagePath'), isFalse);
+    });
+
+    test('sends a frame sequence with each frame\'s duration', () async {
+      final file = File('${tempDir.path}/frame.png')
+        ..writeAsBytesSync([1, 2, 3, 4]);
+      final bytes = Uint8List.fromList([7, 7, 7]);
+
+      final maps = await layerMaps([
+        ImageLayer.sequence(
+          frames: [
+            ImageLayerFrame(
+              image: EditorLayerImage.memory(bytes),
+              duration: const Duration(milliseconds: 40),
+            ),
+            ImageLayerFrame(
+              image: EditorLayerImage.file(file.path),
+              duration: const Duration(milliseconds: 60),
+            ),
+          ],
+        ),
+        ImageLayer(image: EditorLayerImage.memory(bytes)),
+      ]);
+
+      final frames = (maps[0]['frames'] as List).cast<Map<String, dynamic>>();
+      expect(frames.map((f) => f['durationUs']), [40000, 60000]);
+      expect(frames[0]['imageData'], bytes);
+      // A file-backed frame travels as a path, like a layer image does.
+      expect(frames[1]['imagePath'], file.path);
+      expect(frames[1].containsKey('imageData'), isFalse);
+      expect(maps[1]['frames'], isEmpty);
+    });
+
+    test('sends animationOffset in microseconds', () async {
+      final maps = await layerMaps([
+        ImageLayer(
+          image: EditorLayerImage.memory(Uint8List.fromList([1])),
+          animationOffset: const Duration(milliseconds: 400),
+        ),
+        ImageLayer(image: EditorLayerImage.memory(Uint8List.fromList([1]))),
+      ]);
+
+      expect(maps[0]['animationOffsetUs'], 400000);
+      expect(maps[1]['animationOffsetUs'], 0);
+    });
+
+    test('sends the animation range in microseconds', () async {
+      final maps = await layerMaps([
+        ImageLayer(
+          image: EditorLayerImage.memory(Uint8List.fromList([1])),
+          startTime: const Duration(milliseconds: 500),
+          endTime: const Duration(milliseconds: 700),
+          animationStartTime: Duration.zero,
+          animationEndTime: const Duration(seconds: 2),
+        ),
+        ImageLayer(image: EditorLayerImage.memory(Uint8List.fromList([1]))),
+      ]);
+
+      expect(maps[0]['animationStartUs'], 0);
+      expect(maps[0]['animationEndUs'], 2000000);
+      expect(maps[1]['animationStartUs'], isNull);
+      expect(maps[1]['animationEndUs'], isNull);
+    });
+
+    test('sends the keyframes sorted by time', () async {
+      final maps = await layerMaps([
+        ImageLayer(
+          image: EditorLayerImage.memory(Uint8List.fromList([1])),
+          offset: Offset.zero,
+          keyframes: const [
+            TimelineKeyframe(
+              time: Duration(seconds: 2),
+              offset: Offset(10, 20),
+              scale: 2,
+            ),
+            TimelineKeyframe(time: Duration.zero, offset: Offset(30, 40)),
+          ],
+        ),
+        ImageLayer(image: EditorLayerImage.memory(Uint8List.fromList([1]))),
+      ]);
+
+      final keyframes = (maps[0]['keyframes'] as List)
+          .cast<Map<String, dynamic>>();
+      expect(keyframes.map((k) => k['timeUs']), [0, 2000000]);
+      expect(keyframes.last['x'], 10);
+      expect(keyframes.last['scale'], 2);
+      expect(maps[1]['keyframes'], isEmpty);
+    });
+
+    test('sends the keyframe clock', () async {
+      final maps = await layerMaps([
+        ImageLayer(
+          image: EditorLayerImage.memory(Uint8List.fromList([1])),
+          offset: Offset.zero,
+          keyframes: const [
+            TimelineKeyframe(time: Duration.zero, offset: Offset.zero),
+          ],
+          keyframeClock: const [
+            KeyframeClockPoint(
+              output: Duration(seconds: 1),
+              keyframe: Duration(seconds: 2),
+            ),
+          ],
+        ),
+        ImageLayer(image: EditorLayerImage.memory(Uint8List.fromList([1]))),
+      ]);
+
+      expect(maps[0]['keyframeClock'], [
+        {'outputUs': 1000000, 'keyframeUs': 2000000},
+      ]);
+      expect(maps[1]['keyframeClock'], isEmpty);
+    });
+
+    test('throws naming the path when a layer image is gone', () async {
+      final missing = '${tempDir.path}/gone.png';
+
+      await expectLater(
+        layerMaps([ImageLayer(image: EditorLayerImage.file(missing))]),
+        throwsA(
+          isA<FileSystemException>().having((e) => e.path, 'path', missing),
+        ),
+      );
+    });
+  });
+
+  group('VideoRenderData customEffects', () {
+    test('defaults to none', () async {
+      final data = VideoRenderData(
+        id: 'test',
+        videoSegments: [VideoSegment(video: EditorVideo.file('test.mp4'))],
+      );
+      expect(data.customEffects, isEmpty);
+      expect((await data.toAsyncMap())['customEffects'], isEmpty);
+    });
+
+    test('toAsyncMap sends each custom effect in order', () async {
+      final data = VideoRenderData(
+        id: 'test',
+        videoSegments: [VideoSegment(video: EditorVideo.file('test.mp4'))],
+        customEffects: const [
+          CustomVideoEffect(id: 'a', params: {'x': 1}),
+          CustomVideoEffect(id: 'b', startTime: Duration(milliseconds: 500)),
+        ],
+      );
+      final maps = (await data.toAsyncMap())['customEffects'] as List;
+      expect(maps, [
+        {
+          'id': 'a',
+          'params': {'x': 1},
+          'startUs': null,
+          'endUs': null,
+        },
+        {
+          'id': 'b',
+          'params': <String, Object?>{},
+          'startUs': 500000,
+          'endUs': null,
+        },
+      ]);
+    });
+
+    test('survives toMap and fromMap', () {
+      final data = VideoRenderData(
+        id: 'test',
+        videoSegments: [VideoSegment(video: EditorVideo.file('test.mp4'))],
+        customEffects: const [
+          CustomVideoEffect(id: 'a', params: {'x': 1}),
+        ],
+      );
+      expect(
+        VideoRenderData.fromMap(data.toMap()).customEffects,
+        data.customEffects,
+      );
+    });
+  });
+
+  group('VideoRenderData effects', () {
+    VideoRenderData buildData(List<VideoEffect> effects) {
+      return VideoRenderData(
+        id: 'test',
+        videoSegments: [VideoSegment(video: EditorVideo.file('test.mp4'))],
+        effects: effects,
+      );
+    }
+
+    test('defaults to none', () async {
+      final data = VideoRenderData(
+        id: 'test',
+        videoSegments: [VideoSegment(video: EditorVideo.file('test.mp4'))],
+      );
+      expect(data.effects, isEmpty);
+      expect((await data.toAsyncMap())['effects'], isEmpty);
+    });
+
+    test('toAsyncMap sends each effect as a table of frames', () async {
+      final map = await buildData(const [
+        VideoEffect.glitch(
+          intensity: 0.8,
+          startTime: Duration(seconds: 1),
+          endTime: Duration(seconds: 2),
+        ),
+        VideoEffect.pixelate(),
+      ]).toAsyncMap();
+      final effects = map['effects'] as List<Map<String, dynamic>>;
+      expect(effects, hasLength(2));
+
+      final glitch = effects.first;
+      expect(glitch['startUs'], 1000000);
+      expect(glitch['endUs'], 2000000);
+      expect(glitch['frameRate'], 24);
+      expect(glitch['stride'], VideoEffectFrame.stride);
+      final frames = glitch['frames'] as Float64List;
+      // 20 seconds at 24 frames per second.
+      expect(frames, hasLength(480 * VideoEffectFrame.stride));
+      // The table holds exactly what the preview shows at the same time.
+      const effect = VideoEffect.glitch(intensity: 0.8);
+      const bucket = 5;
+      expect(
+        VideoEffectFrame.fromList(frames, bucket * VideoEffectFrame.stride),
+        effect.frameAt(const Duration(microseconds: bucket * 41667)),
+      );
+
+      // A still effect needs one frame, a one-second pulse 24.
+      expect(
+        (await buildData(const [
+          VideoEffect.pixelPulse(),
+        ]).toAsyncMap())['effects'][0]['frames'],
+        hasLength(24 * VideoEffectFrame.stride),
+      );
+      expect(
+        effects.last['frames'] as Float64List,
+        hasLength(VideoEffectFrame.stride),
+      );
+    });
+
+    test('toAsyncMap sends a triggered effect at the trigger rate, until its '
+        'last hit has played', () async {
+      const effect = VideoEffect.zoomPulse(
+        startTime: Duration(seconds: 1),
+        triggers: [Duration(milliseconds: 1250), Duration(seconds: 2)],
+      );
+      final map = await buildData(const [effect]).toAsyncMap();
+      final sent = (map['effects'] as List<Map<String, dynamic>>).single;
+
+      expect(sent['startUs'], 1000000);
+      expect(sent['frameRate'], videoEffectTriggerFrameRate);
+      // The last trigger is 120 steps in, and one zoom punch is half a second.
+      expect(sent['endUs'], 2500000);
+      final frames = sent['frames'] as Float64List;
+      expect(frames, hasLength(180 * VideoEffectFrame.stride));
+      // The table holds exactly what the preview shows at the same time.
+      for (final step in [0, 30, 35, 119, 120, 179]) {
+        expect(
+          VideoEffectFrame.fromList(frames, step * VideoEffectFrame.stride),
+          effect.frameAt(
+            // The first microsecond of the step.
+            Duration(microseconds: 1000000 + (step * 1000000 + 119) ~/ 120),
+          ),
+          reason: 'step $step',
+        );
+      }
+    });
+
+    test('toAsyncMap ends a triggered effect at its own end when that comes '
+        'first, and leaves it out when no trigger fires', () async {
+      final map = await buildData(const [
+        VideoEffect.zoomPulse(
+          endTime: Duration(milliseconds: 1300),
+          triggers: [Duration(seconds: 1)],
+        ),
+        VideoEffect.strobe(
+          startTime: Duration(seconds: 1),
+          triggers: [Duration(milliseconds: 500)],
+        ),
+      ]).toAsyncMap();
+      final sent = map['effects'] as List<Map<String, dynamic>>;
+
+      expect(sent, hasLength(1));
+      expect(sent.single['endUs'], 1300000);
+    });
+
+    test('toAsyncMap rounds a triggered effect\'s end up to the microsecond '
+        'after its last step', () async {
+      // One step in, plus a strobe flash of 15 steps: the table ends 16/120 s
+      // = 133333.3 µs in, and the microsecond 133333 still falls in its last
+      // step.
+      final map = await buildData(const [
+        VideoEffect.strobe(triggers: [Duration(microseconds: 8333)]),
+      ]).toAsyncMap();
+      final sent = (map['effects'] as List<Map<String, dynamic>>).single;
+
+      expect(sent['endUs'], 133334);
+      expect(
+        (sent['frames'] as Float64List).length,
+        16 * VideoEffectFrame.stride,
+      );
+    });
+
+    test('toAsyncMap leaves out effects at zero intensity', () async {
+      final map = await buildData(const [
+        VideoEffect.vhs(intensity: 0),
+      ]).toAsyncMap();
+      expect(map['effects'], isEmpty);
+    });
+
+    test('toMap and fromMap round-trip the effects', () {
+      final data = buildData(const [
+        VideoEffect.vhs(intensity: 0.3, startTime: Duration(seconds: 1)),
+      ]);
+      expect(VideoRenderData.fromMap(data.toMap()).effects, data.effects);
+    });
+
+    test('fromMap reads a map written before effects existed', () {
+      final legacy = buildData(const []).toMap()..remove('effects');
+      expect(VideoRenderData.fromMap(legacy).effects, isEmpty);
+    });
+
+    test('copyWith replaces the effects', () {
+      final data = buildData(const [VideoEffect.vhs()]);
+      expect(
+        data.copyWith(effects: const [VideoEffect.pixelate()]).effects,
+        const [VideoEffect.pixelate()],
+      );
+      expect(data.copyWith().effects, data.effects);
+    });
+  });
+}

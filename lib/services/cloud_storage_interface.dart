@@ -23,6 +23,26 @@ import 'storage_transfer_contract.dart';
 
 export 'storage_transfer_contract.dart';
 
+/// Optional fresh-directory contract for editors that must verify source size
+/// and copy destinations. Cached providers invalidate relevant listing/path
+/// caches before implementing this operation. Pagination tokens must remain in
+/// the result if the adapter has not fetched every page.
+/// A file's `size` describes stored bytes. A transforming wrapper can also
+/// expose `downloadSize`, the exact byte count returned by downloadStream.
+abstract interface class FreshCloudDirectoryReader {
+  Future<Map<String, dynamic>> readDirectoryForEdit(String path);
+}
+
+extension CloudEditorDirectoryOperations on CloudStorageClient {
+  Future<Map<String, dynamic>> listPathForEdit(String path) {
+    final client = this;
+    if (client is FreshCloudDirectoryReader) {
+      return (client as FreshCloudDirectoryReader).readDirectoryForEdit(path);
+    }
+    return client.listPath(path);
+  }
+}
+
 /// Abstract interface for cloud storage providers
 abstract class CloudStorageClient {
   // Authentication

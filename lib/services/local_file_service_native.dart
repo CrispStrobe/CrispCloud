@@ -4,12 +4,14 @@
 // MacosFileService, DesktopFileService, MobileFileService
 
 import 'dart:io';
+
 import 'package:flutter/foundation.dart';
 import 'package:file_picker/file_picker.dart';
 import 'package:path/path.dart' as p;
 import 'package:path_provider/path_provider.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:macos_secure_bookmarks/macos_secure_bookmarks.dart';
+
 import '../models/file_item.dart';
 import 'bookmark_service.dart';
 import 'local_file_service.dart';
@@ -124,7 +126,12 @@ Future<void> writeLocalEditorFile(
 }
 
 // --- macOS Implementation ---
-class MacosFileService implements LocalFileService, LocalFileSaveReporter, ScopedLocalFileOperations {
+class MacosFileService
+    implements
+        LocalFileService,
+        LocalFileSaveReporter,
+        ScopedLocalFileOperations,
+        LocalMediaFileAccess {
   String? _grantedBasePath;
   final _bookmarks = SecureBookmarks();
   List<FileSystemEntity> _resolvedBookmarks = <FileSystemEntity>[];
@@ -183,14 +190,11 @@ class MacosFileService implements LocalFileService, LocalFileSaveReporter, Scope
       var current = path;
       for (var i = 0; i < 10; i++) {
         try {
-          final type =
-              await FileSystemEntity.type(current, followLinks: false);
+          final type = await FileSystemEntity.type(current, followLinks: false);
           if (type != FileSystemEntityType.link) return current;
           final target = await Link(current).target();
           current = p.normalize(
-            p.isAbsolute(target)
-                ? target
-                : p.join(p.dirname(current), target),
+            p.isAbsolute(target) ? target : p.join(p.dirname(current), target),
           );
         } catch (_) {
           break;
@@ -285,7 +289,9 @@ class MacosFileService implements LocalFileService, LocalFileSaveReporter, Scope
         await _bookmarks.stopAccessingSecurityScopedResource(scope);
         return entities;
       } catch (e) {
-        try { await _bookmarks.stopAccessingSecurityScopedResource(scope); } catch (_) {}
+        try {
+          await _bookmarks.stopAccessingSecurityScopedResource(scope);
+        } catch (_) {}
       }
     }
 
@@ -310,7 +316,9 @@ class MacosFileService implements LocalFileService, LocalFileSaveReporter, Scope
         await _bookmarks.stopAccessingSecurityScopedResource(readScope);
         return data;
       } catch (e) {
-        try { await _bookmarks.stopAccessingSecurityScopedResource(readScope); } catch (_) {}
+        try {
+          await _bookmarks.stopAccessingSecurityScopedResource(readScope);
+        } catch (_) {}
         rethrow;
       }
     }
@@ -327,12 +335,15 @@ class MacosFileService implements LocalFileService, LocalFileSaveReporter, Scope
       try {
         await _bookmarks.startAccessingSecurityScopedResource(saveScope);
         final file = File(accessPath);
-        if (!await file.parent.exists()) await file.parent.create(recursive: true);
+        if (!await file.parent.exists())
+          await file.parent.create(recursive: true);
         await file.writeAsBytes(data);
         await _bookmarks.stopAccessingSecurityScopedResource(saveScope);
         return;
       } catch (e) {
-        try { await _bookmarks.stopAccessingSecurityScopedResource(saveScope); } catch (_) {}
+        try {
+          await _bookmarks.stopAccessingSecurityScopedResource(saveScope);
+        } catch (_) {}
         rethrow;
       }
     }
@@ -352,6 +363,32 @@ class MacosFileService implements LocalFileService, LocalFileSaveReporter, Scope
     try {
       await writeLocalEditorFile(path, data, overwrite: overwrite);
       return LocalFileSaveResult.written;
+    } finally {
+      await _endScope(scope);
+    }
+  }
+
+  @override
+  Future<T> withMediaFileAccess<T>(
+    String path,
+    Future<T> Function(String accessiblePath) operation, {
+    bool forWrite = false,
+  }) async {
+    final accessRoot = forWrite ? p.dirname(path) : path;
+    if (!await ensureAccess(accessRoot)) {
+      throw FileSystemException(
+        'Access to the media file was denied.',
+        path,
+        const OSError('Access denied', 13),
+      );
+    }
+    final accessibleRoot = await _accessPath(accessRoot);
+    final accessiblePath = forWrite
+        ? p.join(accessibleRoot, p.basename(path))
+        : accessibleRoot;
+    final scope = await _beginScope(accessRoot);
+    try {
+      return await operation(accessiblePath);
     } finally {
       await _endScope(scope);
     }
@@ -428,7 +465,9 @@ class MacosFileService implements LocalFileService, LocalFileSaveReporter, Scope
 
   @override
   Future<T> withFileOperationAccess<T>(
-      String path, Future<T> Function() action) async {
+    String path,
+    Future<T> Function() action,
+  ) async {
     if (!await ensureAccess(path)) {
       throw FileSystemException('Access to this path was not granted.', path);
     }
@@ -494,9 +533,13 @@ class MacosFileService implements LocalFileService, LocalFileSaveReporter, Scope
 }
 
 // --- Windows/Linux Implementation ---
-class DesktopFileService implements LocalFileService, LocalFileSaveReporter {
+class DesktopFileService
+    implements LocalFileService, LocalFileSaveReporter, LocalMediaFileAccess {
   @override
-  String currentPath = Platform.environment['HOME'] ?? Platform.environment['USERPROFILE'] ?? '/';
+  String currentPath =
+      Platform.environment['HOME'] ??
+      Platform.environment['USERPROFILE'] ??
+      '/';
 
   @override
   String? get grantedBasePath => null;
@@ -568,6 +611,13 @@ class DesktopFileService implements LocalFileService, LocalFileSaveReporter {
   }
 
   @override
+  Future<T> withMediaFileAccess<T>(
+    String path,
+    Future<T> Function(String accessiblePath) operation, {
+    bool forWrite = false,
+  }) => operation(path);
+
+  @override
   Future<bool> hasAccessToPath(String path) async => true;
 
   @override
@@ -586,7 +636,9 @@ class DesktopFileService implements LocalFileService, LocalFileSaveReporter {
 
   @override
   Future<String> getSafeFallbackDirectory() async {
-    return Platform.environment['HOME'] ?? Platform.environment['USERPROFILE'] ?? '/';
+    return Platform.environment['HOME'] ??
+        Platform.environment['USERPROFILE'] ??
+        '/';
   }
 
   @override
@@ -594,12 +646,7 @@ class DesktopFileService implements LocalFileService, LocalFileSaveReporter {
     String path, {
     bool includeHidden = false,
     int maxItems = 10000,
-  }) =>
-      walkLocalFiles(
-        path,
-        includeHidden: includeHidden,
-        maxItems: maxItems,
-      );
+  }) => walkLocalFiles(path, includeHidden: includeHidden, maxItems: maxItems);
 
   @override
   Future<bool> ensureAccess(String path) async => true;
@@ -618,11 +665,11 @@ class DesktopFileService implements LocalFileService, LocalFileSaveReporter {
       return null;
     }
   }
-
 }
 
 // --- Mobile (Android/iOS) Implementation ---
-class MobileFileService implements LocalFileService, LocalFileSaveReporter {
+class MobileFileService
+    implements LocalFileService, LocalFileSaveReporter, LocalMediaFileAccess {
   String? _grantedBasePath;
   static const String _mobileBookmarkKey = 'mobile_bookmark_data';
   final _bookmarks = SecureBookmarks();
@@ -668,10 +715,14 @@ class MobileFileService implements LocalFileService, LocalFileSaveReporter {
           currentPath = _resolvedBookmarkFile!.path;
           return currentPath;
         } else {
-          await SharedPreferences.getInstance().then((p) => p.remove(_mobileBookmarkKey));
+          await SharedPreferences.getInstance().then(
+            (p) => p.remove(_mobileBookmarkKey),
+          );
         }
       } catch (e) {
-        await SharedPreferences.getInstance().then((p) => p.remove(_mobileBookmarkKey));
+        await SharedPreferences.getInstance().then(
+          (p) => p.remove(_mobileBookmarkKey),
+        );
       }
     }
 
@@ -710,21 +761,30 @@ class MobileFileService implements LocalFileService, LocalFileSaveReporter {
     if (_resolvedBookmarkFile == null) await _loadAndResolveBookmark();
 
     try {
-      if (_resolvedBookmarkFile != null && path.startsWith(_resolvedBookmarkFile!.path)) {
-        await _bookmarks.startAccessingSecurityScopedResource(_resolvedBookmarkFile!);
+      if (_resolvedBookmarkFile != null &&
+          path.startsWith(_resolvedBookmarkFile!.path)) {
+        await _bookmarks.startAccessingSecurityScopedResource(
+          _resolvedBookmarkFile!,
+        );
       }
 
       final entities = await Directory(path).list().toList();
 
-      if (_resolvedBookmarkFile != null && path.startsWith(_resolvedBookmarkFile!.path)) {
-        await _bookmarks.stopAccessingSecurityScopedResource(_resolvedBookmarkFile!);
+      if (_resolvedBookmarkFile != null &&
+          path.startsWith(_resolvedBookmarkFile!.path)) {
+        await _bookmarks.stopAccessingSecurityScopedResource(
+          _resolvedBookmarkFile!,
+        );
       }
 
       return entities;
     } catch (e) {
       debugPrint('Failed to list mobile directory: $e');
-      if (_resolvedBookmarkFile != null && path.startsWith(_resolvedBookmarkFile!.path)) {
-        await _bookmarks.stopAccessingSecurityScopedResource(_resolvedBookmarkFile!);
+      if (_resolvedBookmarkFile != null &&
+          path.startsWith(_resolvedBookmarkFile!.path)) {
+        await _bookmarks.stopAccessingSecurityScopedResource(
+          _resolvedBookmarkFile!,
+        );
       }
       rethrow;
     }
@@ -734,14 +794,23 @@ class MobileFileService implements LocalFileService, LocalFileSaveReporter {
   Future<Uint8List> readFile(String path, {FileItem? fileItem}) async {
     if (_resolvedBookmarkFile == null) await _loadAndResolveBookmark();
 
-    if (_resolvedBookmarkFile != null && path.startsWith(_resolvedBookmarkFile!.path)) {
+    if (_resolvedBookmarkFile != null &&
+        path.startsWith(_resolvedBookmarkFile!.path)) {
       try {
-        await _bookmarks.startAccessingSecurityScopedResource(_resolvedBookmarkFile!);
+        await _bookmarks.startAccessingSecurityScopedResource(
+          _resolvedBookmarkFile!,
+        );
         final data = await File(path).readAsBytes();
-        await _bookmarks.stopAccessingSecurityScopedResource(_resolvedBookmarkFile!);
+        await _bookmarks.stopAccessingSecurityScopedResource(
+          _resolvedBookmarkFile!,
+        );
         return data;
       } catch (e) {
-        try { await _bookmarks.stopAccessingSecurityScopedResource(_resolvedBookmarkFile!); } catch (_) {}
+        try {
+          await _bookmarks.stopAccessingSecurityScopedResource(
+            _resolvedBookmarkFile!,
+          );
+        } catch (_) {}
         rethrow;
       }
     }
@@ -753,16 +822,26 @@ class MobileFileService implements LocalFileService, LocalFileSaveReporter {
   Future<void> saveFile(String path, Uint8List data) async {
     if (_resolvedBookmarkFile == null) await _loadAndResolveBookmark();
 
-    if (_resolvedBookmarkFile != null && path.startsWith(_resolvedBookmarkFile!.path)) {
+    if (_resolvedBookmarkFile != null &&
+        path.startsWith(_resolvedBookmarkFile!.path)) {
       try {
-        await _bookmarks.startAccessingSecurityScopedResource(_resolvedBookmarkFile!);
+        await _bookmarks.startAccessingSecurityScopedResource(
+          _resolvedBookmarkFile!,
+        );
         final file = File(path);
-        if (!await file.parent.exists()) await file.parent.create(recursive: true);
+        if (!await file.parent.exists())
+          await file.parent.create(recursive: true);
         await file.writeAsBytes(data);
-        await _bookmarks.stopAccessingSecurityScopedResource(_resolvedBookmarkFile!);
+        await _bookmarks.stopAccessingSecurityScopedResource(
+          _resolvedBookmarkFile!,
+        );
         return;
       } catch (e) {
-        try { await _bookmarks.stopAccessingSecurityScopedResource(_resolvedBookmarkFile!); } catch (_) {}
+        try {
+          await _bookmarks.stopAccessingSecurityScopedResource(
+            _resolvedBookmarkFile!,
+          );
+        } catch (_) {}
         rethrow;
       }
     }
@@ -779,8 +858,9 @@ class MobileFileService implements LocalFileService, LocalFileSaveReporter {
   }) async {
     if (_resolvedBookmarkFile == null) await _loadAndResolveBookmark();
     final scope = _resolvedBookmarkFile;
-    final activeScope =
-        scope != null && isSameOrUnderPath(path, scope.path) ? scope : null;
+    final activeScope = scope != null && isSameOrUnderPath(path, scope.path)
+        ? scope
+        : null;
     if (activeScope != null) {
       await _bookmarks.startAccessingSecurityScopedResource(activeScope);
     }
@@ -799,9 +879,40 @@ class MobileFileService implements LocalFileService, LocalFileSaveReporter {
   }
 
   @override
+  Future<T> withMediaFileAccess<T>(
+    String path,
+    Future<T> Function(String accessiblePath) operation, {
+    bool forWrite = false,
+  }) async {
+    if (_resolvedBookmarkFile == null) await _loadAndResolveBookmark();
+    final scope = _resolvedBookmarkFile;
+    final accessRoot = forWrite ? p.dirname(path) : path;
+    final activeScope =
+        scope != null && isSameOrUnderPath(accessRoot, scope.path)
+        ? scope
+        : null;
+    if (activeScope != null) {
+      await _bookmarks.startAccessingSecurityScopedResource(activeScope);
+    }
+    try {
+      return await operation(path);
+    } finally {
+      if (activeScope != null) {
+        try {
+          await _bookmarks.stopAccessingSecurityScopedResource(activeScope);
+        } catch (_) {
+          // A scope-release failure must not turn a completed copy into a
+          // failed save and encourage the editor to upload it again.
+        }
+      }
+    }
+  }
+
+  @override
   Future<bool> hasAccessToPath(String path) async {
     if (path.startsWith(currentPath)) return true;
-    if (_grantedBasePath != null && path.startsWith(_grantedBasePath!)) return true;
+    if (_grantedBasePath != null && path.startsWith(_grantedBasePath!))
+      return true;
     try {
       await Directory(path).stat();
       return true;
@@ -834,12 +945,7 @@ class MobileFileService implements LocalFileService, LocalFileSaveReporter {
     String path, {
     bool includeHidden = false,
     int maxItems = 10000,
-  }) =>
-      walkLocalFiles(
-        path,
-        includeHidden: includeHidden,
-        maxItems: maxItems,
-      );
+  }) => walkLocalFiles(path, includeHidden: includeHidden, maxItems: maxItems);
 
   @override
   Future<bool> ensureAccess(String path) async => true;
@@ -858,5 +964,4 @@ class MobileFileService implements LocalFileService, LocalFileSaveReporter {
       return null;
     }
   }
-
 }

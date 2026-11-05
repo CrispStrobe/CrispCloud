@@ -1,0 +1,1401 @@
+import AVFoundation
+import CoreImage
+import Foundation
+
+#if os(macOS)
+  import AppKit
+#endif
+
+/// Service for rendering video with applied effects and transformations.
+///
+/// This class handles the complete video rendering pipeline using AVFoundation:
+/// - Supports multiple video clips concatenation
+/// - Applies visual effects (rotation, flip, crop, scale, color matrix, blur)
+/// - Manages audio mixing (original audio volume + custom audio track)
+/// - Supports playback speed adjustment
+/// - Provides progress tracking during rendering
+/// - Supports cancellation of active render jobs
+///
+/// All rendering operations are performed asynchronously on a dedicated queue.
+class RenderVideo {
+  static let queue = DispatchQueue(label: "RenderVideoQueue")
+
+  /// Stall bound for a render encode. A gated encode that makes no forward
+  /// progress for this long (a wedged VideoToolbox session sitting at
+  /// `progress == 0`) is force-cancelled so it releases its ``ExportGate`` slot
+  /// instead of holding it forever and deadlocking every later export. Renders
+  /// have no fixed upper length, so only the stall bound applies (no hard
+  /// timeout) — a slow-but-progressing long render is never killed.
+  static let renderStallTimeout: TimeInterval = 20
+
+  // MARK: - Public Methods
+
+  /// Starts an asynchronous video render job using RenderConfig.
+  ///
+  /// On iOS the job survives the app leaving the foreground: see
+  /// ``BackgroundSafeJob``.
+  @discardableResult
+  static func render(
+    config: RenderConfig,
+    onProgress: @escaping (Double) -> Void,
+    onComplete: @escaping (Data?) -> Void,
+    onError: @escaping (Error) -> Void
+  ) -> RenderJobHandle {
+    let handle = RenderJobHandle()
+    BackgroundSafeJob.run(
+      label: "Render", handle: handle,
+      attempt: { attemptHandle, complete, fail in
+        renderAttempt(
+          config: config, handle: attemptHandle, onProgress: onProgress,
+          onComplete: complete, onError: fail)
+      },
+      onComplete: onComplete, onError: onError)
+    return handle
+  }
+
+  /// Runs the whole pipeline once, from the pre-transcode to the encode.
+  private static func renderAttempt(
+    config: RenderConfig,
+    handle: RenderJobHandle,
+    onProgress: @escaping (Double) -> Void,
+    onComplete: @escaping (Data?) -> Void,
+    onError: @escaping (Error) -> Void
+  ) {
+    queue.async {
+      let renderTask = Task {
+        guard !config.videoClips.isEmpty || config.composition != nil else {
+          onError(
+            NSError(
+              domain: "RenderVideo",
+              code: 1,
+              userInfo: [NSLocalizedDescriptionKey: "Video clips cannot be empty"]
+            ))
+          return
+        }
+
+        // Source timing is an identity-preserving effects mode. Transitions
+        // and reverse preprocess on their own clocks; speed edits deliberately
+        // change the source timestamps. Reject them before touching media. The
+        // HEVC pre-transcode needs nothing extra: a filter composition built
+        // from a one-video-track asset already runs on that track's timing.
+        if config.preserveSourceFrameTiming {
+          let changesTiming = config.videoClips.contains {
+            $0.reverseVideo || $0.transition != nil || $0.changesSpeed
+          }
+          if config.composition != nil || config.videoClips.count != 1
+            || config.maxFrameRate != nil || changesTiming || (config.playbackSpeed ?? 1) != 1
+          {
+            onError(
+              NSError(
+                domain: "SourceFrameTiming", code: 1,
+                userInfo: [
+                  NSLocalizedDescriptionKey:
+                    "Source frame timing requires one forward video segment at original speed, "
+                    + "without transitions, a layered composition or a frame-rate cap"
+                ]))
+            return
+          }
+        }
+
+        // Bitrate-cap fast path: a no-edit export whose source already fits
+        // the cap (× tolerance) is remuxed losslessly (passthrough) instead
+        // of re-encoded — the Darwin equivalent of Android's transmux fast
+        // path. Over-cap or unprobeable sources fall through to the full
+        // pipeline, where the cap is enforced by the AVAssetWriter path.
+        // HEVC 10-bit/HDR sources are excluded so they keep their usual
+        // H.264 8-bit SDR pre-transcode instead of being copied verbatim.
+        if config.bitrate != nil, BitrateCapPolicy.isPassthroughEligible(config),
+          await !MediaInfoExtractor.getVideoFormatInfo(config.videoClips[0].inputPath)
+            .needsTranscodingForEffects()
+        {
+          let sourceBitrate = await MediaInfoExtractor.getVideoBitrate(
+            config.videoClips[0].inputPath)
+          if !BitrateCapPolicy.shouldForceEncode(
+            requestedBitrate: config.bitrate, sourceBitrates: [sourceBitrate])
+          {
+            PluginLog.print(
+              "🚀 Bitrate cap: source (\((sourceBitrate ?? 0) / 1000) kbps) within cap — "
+                + "lossless passthrough export")
+            do {
+              let data = try await passthroughExport(
+                config: config, handle: handle, onProgress: onProgress)
+              onComplete(data)
+              return
+            } catch {
+              if Task.isCancelled || error is CancellationError {
+                onError(error)
+                return
+              }
+              PluginLog.print(
+                "⚠️ Passthrough export failed (\(error.localizedDescription)) — "
+                  + "falling back to full render")
+            }
+          } else {
+            PluginLog.print(
+              "📊 Bitrate cap: source (\((sourceBitrate ?? 0) / 1000) kbps) exceeds cap — "
+                + "video will be re-encoded")
+          }
+        }
+
+        var workingConfig = config
+
+        // HEVC 10-bit HDR videos cause issues with AVFoundation's compositor
+        // They must be pre-transcoded to H.264 8-bit SDR for ANY effect processing
+        PluginLog.print("🔍 Checking for HEVC 10-bit videos that need transcoding...")
+
+        // Pre-transcode HEVC 10-bit HDR videos to H.264 8-bit SDR. A clip that
+        // plays only part of its source comes back reading a shorter file from
+        // its start, so every later stage sees the trimmed window.
+        let preTranscode: VideoTranscoder.PreTranscode
+        do {
+          preTranscode = try await VideoTranscoder.transcodeClipsIfNeeded(config.videoClips)
+        } catch {
+          // Only a cancelled or stalled job throws here; it cleaned up after
+          // itself, and nothing else exists yet to finalize.
+          onError(error)
+          return
+        }
+
+        // Track transcoded files for cleanup
+        let transcodedFiles = preTranscode.producedFiles
+
+        if !transcodedFiles.isEmpty {
+          PluginLog.print(
+            "✅ Pre-transcoded \(transcodedFiles.count) HEVC 10-bit sources or windows to H.264")
+          workingConfig = config.copyWith(videoClips: preTranscode.clips)
+        }
+
+        var outputURL: URL!
+        var temporaryAudioURLs: [URL] = []
+        var transitionURLs: [URL] = []
+
+        let finalize: () -> Void = {
+          // Read as an optional on purpose: the pre-render stages below can
+          // unwind before `outputURL` is resolved, and taking it as a plain
+          // `URL` here would trade the crash this change prevents for a Swift
+          // one.
+          let renderedFile: URL? = outputURL
+          if config.outputPath == nil, let renderedFile {
+            try? cleanup([renderedFile])
+          }
+          // Clean up transcoded files
+          VideoTranscoder.cleanupTranscodedFiles(transcodedFiles)
+          // Clean up pre-rendered audio temp files
+          for url in temporaryAudioURLs {
+            try? FileManager.default.removeItem(at: url)
+            PluginLog.print("🧹 Removed pre-rendered audio: \(url.lastPathComponent)")
+          }
+          // Clean up pre-rendered overlap transition clips
+          for url in transitionURLs {
+            try? FileManager.default.removeItem(at: url)
+            PluginLog.print("🧹 Removed transition clip: \(url.lastPathComponent)")
+          }
+        }
+
+        // Cleans up before reporting, so an attempt started over after an
+        // interruption never runs alongside the cleanup of the one before.
+        let handleCompletion: (Result<Data?, Error>) -> Void = { result in
+          finalize()
+          switch result {
+          case .success(let data): onComplete(data)
+          case .failure(let error): onError(error)
+          }
+        }
+
+        do {
+          // Pre-render overlap clip transitions (dissolve/slide/push/wipe) into
+          // short blended clips spliced between the neighbours, so the main
+          // composition still sees plain forward clips. An overlap transition on
+          // the last/only clip wraps into the first clip for a seamless loop and
+          // is baked the same way, so a single clip can also need this stage.
+          //
+          // Inside the `do` so a cancellation unwinds through `handleCompletion`
+          // and `finalize` removes the blends already written.
+          if workingConfig.videoClips.contains(where: { $0.transition?.isOverlap == true }) {
+            let preRender = await preRenderTransitions(
+              clips: workingConfig.videoClips,
+              enableAudio: workingConfig.enableAudio,
+              outputFormat: workingConfig.outputFormat,
+              globalChromaKey: workingConfig.chromaKey,
+              trimToCommonTrackEnd: workingConfig.trimToCommonTrackEnd,
+              endUs: ClipTransitionGeometry.clipTimelineEndUs(
+                globalEndUs: workingConfig.endUs, globalSpeed: workingConfig.playbackSpeed))
+            workingConfig = workingConfig.copyWith(videoClips: preRender.clips)
+            transitionURLs = preRender.urls
+            // `preRenderTransitions` stops early when the job is cancelled or a
+            // blend stalls and hands back what it managed to render; unwind
+            // here rather than build the whole composition out of a
+            // half-rewritten clip list. The blends are registered above first,
+            // so `finalize` removes them either way.
+            if let stall = preRender.stall { throw stall }
+            try Task.checkCancellation()
+          }
+
+          outputURL = resolveOutputURL(
+            outputPath: workingConfig.outputPath, format: workingConfig.outputFormat)
+
+          PluginLog.print("")
+          PluginLog.print("🎬 ===== RENDER CONFIG =====")
+          PluginLog.print("   Video clips: \(workingConfig.videoClips.count)")
+          PluginLog.print("   📁 Output format: \(workingConfig.outputFormat)")
+          PluginLog.print("   📹 Output path: \(outputURL.path)")
+          PluginLog.print("   🔊 Enable Audio: \(workingConfig.enableAudio)")
+          PluginLog.print("   🎵 Audio tracks: \(workingConfig.audioTracks.count)")
+          PluginLog.print("   🎨 Color filters: \(workingConfig.colorFilters.count)")
+          PluginLog.print("   ✨ Video effects: \(workingConfig.effects.count)")
+          PluginLog.print("===========================")
+          PluginLog.print("")
+
+          // Create configuration for video effects
+          var effectsConfig = VideoCompositorConfig()
+
+          // Build the composition: layered (multi-track) when a composition is
+          // provided, otherwise the single-track concatenation path.
+          let buildResult:
+            (
+              AVMutableComposition, VideoCompositionData, CGSize, AVAudioMix?, CMPersistentTrackID,
+              [URL], [FadeWindow], [ChromaKeyWindow]
+            )
+          if let compositionConfig = workingConfig.composition {
+            buildResult = try await LayeredCompositionBuilder(composition: compositionConfig)
+              .setEnableAudio(workingConfig.enableAudio)
+              .setChromaKey(workingConfig.chromaKey)
+              .build()
+          } else {
+            buildResult = try await applyComposition(
+              videoClips: workingConfig.videoClips,
+              videoEffects: effectsConfig,
+              enableAudio: workingConfig.enableAudio,
+              trimToCommonTrackEnd: workingConfig.trimToCommonTrackEnd,
+              chromaKey: workingConfig.chromaKey
+            )
+          }
+          let (
+            composition, videoCompData, renderSize, clipAudioMix, sourceTrackID, audioTempURLs,
+            fadeWindows, chromaKeyWindows
+          ) = buildResult
+          temporaryAudioURLs = audioTempURLs
+          var videoCompConfig = videoCompData
+
+          // Set source track ID for fallback on older platform variations
+          effectsConfig.sourceTrackID = sourceTrackID
+
+          // Dip-to-color (fade-to-black / fade-to-white) clip transitions.
+          effectsConfig.fadeWindows = fadeWindows
+
+          // Stabilization keys each frame by its source time, which a
+          // render-wide speed change no longer maps one to one.
+          if !videoCompData.stabilizationWindows.isEmpty {
+            if let speed = workingConfig.playbackSpeed, speed > 0, speed != 1 {
+              PluginLog.print(
+                "⚠️ Stabilization is not supported with a render-wide playback speed yet; skipped")
+            } else {
+              effectsConfig.stabilizationWindows = videoCompData.stabilizationWindows
+            }
+          }
+
+          // The keyframed motion keys each frame by its source time too; a
+          // render-wide speed scales the whole composition from 0, so the
+          // compositor maps its time back before looking the frame up.
+          effectsConfig.motionWindows = videoCompData.motionWindows
+          if let speed = workingConfig.playbackSpeed, speed > 0 {
+            effectsConfig.motionTimeScale = Double(speed)
+          }
+
+          // Apply playback speed to the entire composition
+          videoCompConfig.instructions = applyPlaybackSpeed(
+            composition: composition, instructions: videoCompConfig.instructions,
+            speed: workingConfig.playbackSpeed)
+
+          // Custom effects get one renderer each for this render, and the ones
+          // that read earlier frames get delayed copies of the video track.
+          // After the speed change, so their offsets are on the rendered video.
+          if !workingConfig.customEffects.isEmpty {
+            let stages = try makeCustomVideoEffectStages(workingConfig.customEffects)
+            if workingConfig.composition != nil {
+              PluginLog.print(
+                "⚠️ Custom video effects are not supported on the layered path yet; "
+                  + "skipped \(stages.count)")
+            } else {
+              videoCompConfig.instructions = try await applyCustomVideoEffectHistory(
+                stages: stages,
+                composition: composition,
+                videoTrackID: sourceTrackID,
+                instructions: videoCompConfig.instructions)
+              effectsConfig.customEffects = stages
+            }
+          }
+
+          // Resolved once, so the export keeps exactly the window the custom
+          // audio tracks are laid over below.
+          let trimRange = try await resolveTrimTimeRange(
+            composition: composition,
+            startUs: workingConfig.startUs,
+            endUs: workingConfig.endUs)
+
+          // Custom audio tracks sit on the output timeline, as on Android: they
+          // start where the global trim starts and keep their own tempo, so they
+          // are added only now, over the window the export keeps.
+          let customAudio = try await applyAudioTracks(
+            composition: composition,
+            audioTracks: workingConfig.audioTracks,
+            window: trimRange ?? CMTimeRange(start: .zero, duration: composition.duration),
+            audioMix: clipAudioMix)
+          temporaryAudioURLs += customAudio.temporaryURLs
+          let audioMix = customAudio.audioMix
+
+          // Get the first video track for orientation info. The layered path
+          // handles each layer's orientation itself, so global orientation
+          // correction is only needed for the single-track path.
+          if workingConfig.composition == nil {
+            let firstClipURL = URL(fileURLWithPath: workingConfig.videoClips[0].inputPath)
+            let firstAsset = AVURLAsset(url: firstClipURL)
+            let videoTrack = try await loadVideoTrack(from: firstAsset)
+
+            let preferredTransform: CGAffineTransform
+            if #available(iOS 15.0, macOS 13.0, *) {
+              preferredTransform = try await videoTrack.load(.preferredTransform)
+            } else {
+              preferredTransform = videoTrack.preferredTransform
+            }
+
+            let videoRotationDegrees = extractRotationFromTransform(preferredTransform)
+            effectsConfig.videoRotationDegrees = videoRotationDegrees
+            effectsConfig.shouldApplyOrientationCorrection = abs(videoRotationDegrees) > 1.0
+            effectsConfig.originalNaturalSize = videoTrack.naturalSize
+          }
+
+          let croppedSize = applyCrop(
+            config: &effectsConfig,
+            naturalSize: renderSize,
+            rotateTurns: workingConfig.rotateTurns,
+            cropX: workingConfig.cropX,
+            cropY: workingConfig.cropY,
+            cropWidth: workingConfig.cropWidth,
+            cropHeight: workingConfig.cropHeight
+          )
+
+          applyRotation(config: &effectsConfig, rotateTurns: workingConfig.rotateTurns)
+          applyFlip(
+            config: &effectsConfig, flipX: workingConfig.flipX,
+            flipY: workingConfig.flipY)
+          applyScale(
+            config: &effectsConfig, scaleX: workingConfig.scaleX,
+            scaleY: workingConfig.scaleY)
+          // Before applyColorMatrix, because the key must run on the original
+          // colors — the compositor folds both into one color cube, since a
+          // second CIColorCube would take its alpha from its own cube and
+          // silently un-key the frame.
+          applyChromaKey(config: &effectsConfig, windows: chromaKeyWindows)
+          applyVideoEffects(config: &effectsConfig, effects: workingConfig.effects)
+          applyColorMatrix(
+            config: &effectsConfig,
+            filters: workingConfig.colorFilters)
+          applyBlur(config: &effectsConfig, sigma: workingConfig.blur)
+          // Total composition length, so layers that run "until the end"
+          // (endUs == -1) with an out-phase animation get a concrete end to
+          // animate toward instead of popping off at the last frame.
+          let compositionTotalUs = Int64(CMTimeGetSeconds(composition.duration) * 1_000_000)
+          applyImageLayer(
+            config: &effectsConfig,
+            imageLayers: workingConfig.imageLayers,
+            withCropping: workingConfig.imageBytesWithCropping,
+            totalDurationUs: compositionTotalUs)
+
+          var finalRenderSize = videoCompConfig.renderSize
+
+          // Only update renderSize if cropping was actually applied
+          if workingConfig.cropWidth != nil || workingConfig.cropHeight != nil {
+            finalRenderSize = croppedSize
+          } else {
+            if let rotateTurns = workingConfig.rotateTurns {
+              let normalizedRotation = (rotateTurns % 4 + 4) % 4
+              if normalizedRotation == 1 || normalizedRotation == 3 {
+                finalRenderSize = CGSize(
+                  width: finalRenderSize.height,
+                  height: finalRenderSize.width
+                )
+              }
+            }
+          }
+
+          let effectiveScaleX = workingConfig.scaleX ?? 1.0
+          let effectiveScaleY = workingConfig.scaleY ?? 1.0
+
+          if effectiveScaleX != 1.0 || effectiveScaleY != 1.0 {
+            finalRenderSize = CGSize(
+              width: finalRenderSize.width * CGFloat(effectiveScaleX),
+              height: finalRenderSize.height * CGFloat(effectiveScaleY)
+            )
+          } else if effectsConfig.scaleX != 1.0 || effectsConfig.scaleY != 1.0 {
+            finalRenderSize = CGSize(
+              width: finalRenderSize.width * effectsConfig.scaleX,
+              height: finalRenderSize.height * effectsConfig.scaleY
+            )
+          }
+
+          // A custom output resolution is the exact output canvas: the composed
+          // frame is letterboxed into it (scaled to fit + centered + black
+          // padding) by the compositor as its final step.
+          if let target = workingConfig.outputResolution {
+            finalRenderSize = target
+            effectsConfig.outputResolution = target
+          }
+
+          // Cap the output frame rate when a maximum was requested. The
+          // builders derive frameDuration from the source fps; lower the rate
+          // only when it exceeds the cap, so a slower source is left untouched.
+          var outputFrameDuration = videoCompConfig.frameDuration
+          if let maxFps = workingConfig.maxFrameRate, maxFps > 0 {
+            let current = outputFrameDuration
+            let currentFps =
+              current.value > 0 && current.timescale > 0
+              ? Double(current.timescale) / Double(current.value)
+              : Double(maxFps)
+            if Double(maxFps) < currentFps {
+              outputFrameDuration = CMTime(value: 1, timescale: CMTimeScale(maxFps))
+            }
+          }
+
+          // Build the final AVMutableVideoComposition
+          let videoComposition = AVMutableVideoComposition()
+          videoComposition.frameDuration = outputFrameDuration
+          if workingConfig.preserveSourceFrameTiming {
+            // A fixed clock can repeat/drop source pictures even at nearly
+            // equal nominal rates. Schedule requests on the source track's PTS.
+            videoComposition.sourceTrackIDForFrameTiming = sourceTrackID
+          }
+          videoComposition.renderSize = finalRenderSize
+          // The compositor reads its configuration off the instruction it is
+          // serving, so every concurrent render keeps its own — a type-level
+          // slot would be shared by all of them.
+          for instruction in videoCompConfig.instructions {
+            (instruction as? CustomVideoCompositionInstruction)?.compositorConfig = effectsConfig
+          }
+          videoComposition.instructions = videoCompConfig.instructions
+          videoComposition.customVideoCompositorClass = VideoCompositor.self
+
+          if let cap = workingConfig.bitrate {
+            // A bitrate cap can only be honored by writing the video track
+            // ourselves: AVAssetExportSession presets pick their own bitrate
+            // and overshoot the request (a 1080p preset encodes 10-16 Mbit/s).
+            PluginLog.print(
+              "📊 Bitrate cap \(cap / 1000) kbps: rendering via AVAssetWriter "
+                + "(AVVideoAverageBitRateKey)")
+            let hasAudioTracks = !composition.tracks(withMediaType: .audio).isEmpty
+            // Serialize against other encodes (concurrent renders/splits) so
+            // they don't starve each other on the hardware encoder, and guard
+            // the encode with a stall watchdog so a wedged session releases the
+            // gate slot instead of deadlocking every later export.
+            try await withExportSlot {
+              try await ExportWatchdog.run(
+                diagnostics: RenderExportDiagnostics(mode: "bitrate-capped", bitrate: cap),
+                exportTimeout: 0,
+                stallTimeout: renderStallTimeout,
+                onProgress: onProgress,
+                cancel: {},  // BitrateCappedExporter unwinds via task cancellation
+                body: { progress in
+                  try await BitrateCappedExporter.export(
+                    asset: composition,
+                    videoComposition: videoComposition,
+                    audioMix: hasAudioTracks ? audioMix : nil,
+                    outputURL: outputURL,
+                    fileType: mapFormatToMimeType(format: workingConfig.outputFormat),
+                    videoBitrate: cap,
+                    timeRange: trimRange,
+                    optimizeForNetworkUse: workingConfig.shouldOptimizeForNetworkUse,
+                    onProgress: progress)
+                })
+            }
+          } else {
+            let preset = applyBitrate(requestedBitrate: workingConfig.bitrate)
+
+            let export = try await prepareExportSession(
+              composition: composition,
+              videoComposition: videoComposition,
+              audioMix: audioMix,
+              outputURL: outputURL,
+              outputFormat: workingConfig.outputFormat,
+              preset: preset,
+              timeRange: trimRange,
+              shouldOptimizeForNetworkUse: workingConfig.shouldOptimizeForNetworkUse
+            )
+
+            // Attached before the gate wait below so a cancel arriving while
+            // the job is still queued is honoured; it can only refuse the start
+            // from there, never force-cancel a session that has yet to run.
+            handle.attach(export: export)
+
+            // Serialize against other encodes (concurrent renders/splits) so
+            // they don't starve each other on the hardware encoder, and guard
+            // the encode with a stall watchdog so a wedged session releases the
+            // gate slot instead of deadlocking every later export.
+            try await withExportSlot {
+              try await ExportWatchdog.run(
+                diagnostics: RenderExportDiagnostics(mode: preset, bitrate: nil),
+                exportTimeout: 0,
+                stallTimeout: renderStallTimeout,
+                onProgress: onProgress,
+                // A stall detected while the session is still queued must not
+                // cancel it — see `ExportSessionGuard.forceCancel`.
+                cancel: { ExportSessionGuard.forceCancel(export) },
+                body: { progress in
+                  try await ExportSessionDriver.run(
+                    export, handle: handle, label: "Render",
+                    failureDomain: "RenderVideo", onProgress: progress)
+                })
+            }
+          }
+
+          if workingConfig.outputPath != nil {
+            handleCompletion(.success(nil))
+          } else {
+            let data = try Data(contentsOf: outputURL)
+            handleCompletion(.success(data))
+          }
+        } catch {
+          handleCompletion(.failure(error))
+        }
+      }
+      handle.attach(task: renderTask)
+    }
+  }
+
+  // MARK: - Helper Methods
+
+  private static func uniqueFilename(prefix: String, extension ext: String) -> String {
+    let formatter = DateFormatter()
+    formatter.dateFormat = "yyyyMMdd_HHmmss_SSS"
+    let timestamp = formatter.string(from: Date())
+    // A random suffix keeps concurrent renders from colliding on the same
+    // millisecond timestamp.
+    let random = UInt32.random(in: 0...UInt32.max)
+    return "\(prefix)_\(timestamp)_\(random).\(ext)"
+  }
+
+  private static func temporaryURL(for format: String) -> URL {
+    let filename = uniqueFilename(prefix: "output", extension: format)
+    return FileManager.default.temporaryDirectory.appendingPathComponent(filename)
+  }
+
+  /// Resolves the destination URL, correcting a mismatched file extension, or
+  /// creates a temporary URL when no output path was requested.
+  private static func resolveOutputURL(outputPath: String?, format: String) -> URL {
+    guard let outputPath = outputPath else {
+      return temporaryURL(for: format)
+    }
+    let url = URL(fileURLWithPath: outputPath)
+    let pathExtension = url.pathExtension.lowercased()
+    let requestedFormat = format.lowercased()
+
+    if pathExtension != requestedFormat {
+      PluginLog.print(
+        "⚠️ WARNING: Output path extension '.\(pathExtension)' doesn't match requested format '.\(requestedFormat)'"
+      )
+      PluginLog.print("⚠️ Correcting file extension to match format...")
+      return url.deletingPathExtension().appendingPathExtension(requestedFormat)
+    }
+    return url
+  }
+
+  // MARK: - Bitrate-cap passthrough export
+
+  /// Losslessly remuxes a single no-edit clip with
+  /// `AVAssetExportPresetPassthrough` (no re-encode), preserving
+  /// `shouldOptimizeForNetworkUse`. Throws when the source cannot be written
+  /// into the requested container — the caller falls back to the full render
+  /// pipeline in that case.
+  private static func passthroughExport(
+    config: RenderConfig,
+    handle: RenderJobHandle,
+    onProgress: @escaping (Double) -> Void
+  ) async throws -> Data? {
+    let outputURL = resolveOutputURL(
+      outputPath: config.outputPath, format: config.outputFormat)
+    let asset = AVURLAsset(url: URL(fileURLWithPath: config.videoClips[0].inputPath))
+    guard
+      let export = AVAssetExportSession(
+        asset: asset, presetName: AVAssetExportPresetPassthrough)
+    else {
+      throw NSError(
+        domain: "RenderVideo", code: 5,
+        userInfo: [NSLocalizedDescriptionKey: "Passthrough session creation failed"])
+    }
+
+    try? FileManager.default.removeItem(at: outputURL)
+    export.outputURL = outputURL
+    export.outputFileType = mapFormatToMimeType(format: config.outputFormat)
+    export.shouldOptimizeForNetworkUse = config.shouldOptimizeForNetworkUse
+    // Attached before the track loads below so a cancel arriving during them
+    // is still honoured; the start is claimed inside the driver, and a cancel
+    // that wins that race keeps the export from ever starting.
+    handle.attach(export: export)
+
+    // This fast path skips the composition entirely, so it has to apply the
+    // common-track-end trim itself — otherwise the flag would be a silent
+    // no-op for exactly the single untrimmed clip it targets. Passthrough
+    // honours `timeRange` frame-accurately (same as the split fast path), so
+    // the export stays lossless.
+    if config.trimToCommonTrackEnd, config.enableAudio,
+      let trimmed = await TrackEndTrimmer.trimmedAssetRange(of: asset, label: "Passthrough")
+    {
+      export.timeRange = trimmed
+      PluginLog.print(
+        "   ✂️ Passthrough trimmed to common track end: "
+          + "\(String(format: "%.3f", trimmed.duration.seconds))s")
+    }
+
+    do {
+      try await ExportSessionDriver.run(
+        export, handle: handle, label: "Render", failureDomain: "RenderVideo",
+        onProgress: onProgress)
+    } catch {
+      // Never leave a partial file behind; the fallback re-creates it.
+      try? FileManager.default.removeItem(at: outputURL)
+      throw error
+    }
+
+    if config.outputPath != nil {
+      return nil
+    }
+    let data = try Data(contentsOf: outputURL)
+    try? FileManager.default.removeItem(at: outputURL)
+    return data
+  }
+
+  /// Resolves the global trim (startUs/endUs) into a clamped time range, or
+  /// nil when no trim was requested or the range is empty.
+  private static func resolveTrimTimeRange(
+    composition: AVAsset,
+    startUs: Int64?,
+    endUs: Int64?
+  ) async throws -> CMTimeRange? {
+    guard startUs != nil || endUs != nil else { return nil }
+
+    let compositionDuration: CMTime
+    if #available(iOS 16.0, macOS 13.0, *) {
+      compositionDuration = try await composition.load(.duration)
+    } else {
+      compositionDuration = composition.duration
+    }
+    let startTime = startUs.map { CMTime(value: $0, timescale: 1_000_000) } ?? .zero
+    let endTime =
+      endUs.map { CMTime(value: $0, timescale: 1_000_000) } ?? compositionDuration
+    let duration = CMTimeSubtract(endTime, startTime)
+
+    // Ensure we don't exceed composition bounds
+    let clampedDuration = CMTimeMinimum(
+      duration, CMTimeSubtract(compositionDuration, startTime))
+
+    guard CMTimeGetSeconds(clampedDuration) > 0 else { return nil }
+    return CMTimeRange(start: startTime, duration: clampedDuration)
+  }
+
+  // MARK: - Overlap transition pre-render
+
+  /// Pre-renders overlap transitions (dissolve/slide/push/wipe) into short
+  /// blended clips and rewrites the clip list, mirroring the Android pipeline.
+  ///
+  /// For a transition between clip *i* and *i+1*, `ClipTransitionGeometry`
+  /// resolves the blend in OUTPUT (post-speed) time: clip *i* is shortened by
+  /// `output * speed_i` of source, the blended clip (output duration) is
+  /// inserted, and clip *i+1*'s head is trimmed by `output * speed_{i+1}` of
+  /// source. The blend itself is rendered at the requested speed for each side,
+  /// so footage inside the transition plays at the same speed as the rest of
+  /// the clip. Falls back to a hard cut when a transition cannot be rendered
+  /// (e.g. a neighbour is reversed or has too little content) — those cases are
+  /// handled live by the main pipeline.
+  ///
+  /// A blend that would start at or after `endUs` (the render's end on the
+  /// clips' timeline) never reaches the output, so it is not rendered: the
+  /// outgoing tail stands in for it at the same length, which keeps every later
+  /// clip where the blend would have put it.
+  ///
+  /// A cancelled job stops the pass where it stands and returns the clip list
+  /// as far as it got, together with every blend written so far — the caller
+  /// checks for cancellation immediately afterwards and lets `finalize` remove
+  /// them. Returning them rather than throwing is what keeps them from leaking.
+  /// A blend whose encode stalls stops the pass the same way and comes back as
+  /// `stall`, for the caller to throw once the blends are registered.
+  private static func preRenderTransitions(
+    clips: [VideoClip], enableAudio: Bool, outputFormat: String,
+    globalChromaKey: ChromaKeyConfig?, trimToCommonTrackEnd: Bool, endUs: Int64?
+  ) async -> TransitionPreRender {
+    // An overlap transition on the last/only clip loops back into the first clip
+    // (seamless loop). Captured before the between-clip pass clears it.
+    let wrapTransition: ClipTransitionConfig? = {
+      guard let t = clips.last?.transition, t.isOverlap,
+        !(clips.last?.reverseVideo ?? false), !(clips.first?.reverseVideo ?? false)
+      else { return nil }
+      return t
+    }()
+
+    // The planning below and the pass after it both need every source's
+    // length; load each one once.
+    var sourceDurations: [String: Int64] = [:]
+    func sourceEndUs(_ clip: VideoClip) async -> Int64 {
+      if let end = clip.endUs { return end }
+      if let known = sourceDurations[clip.inputPath] { return known }
+      let duration = await clipDurationUs(clip.inputPath)
+      sourceDurations[clip.inputPath] = duration
+      return duration
+    }
+
+    // The planning lays a clip out by what the composition plays of it, which
+    // can be less than `sourceEndUs` reads: the composition clamps a clip to
+    // its video track, which the container can outlast, and with
+    // `trimToCommonTrackEnd` to its audio. A clip that plays to its end would
+    // otherwise push every later blend back past an end it starts before. A
+    // clip a blend cuts short only places that blend a little early, which
+    // renders it.
+    var plannedSources: [String: (asset: AVURLAsset, videoTrack: AVAssetTrack)] = [:]
+    func plannedSource(_ clip: VideoClip) async -> (asset: AVURLAsset, videoTrack: AVAssetTrack)? {
+      if let known = plannedSources[clip.inputPath] { return known }
+      let asset = AVURLAsset(url: URL(fileURLWithPath: clip.inputPath))
+      guard let videoTrack = try? await loadVideoTrack(from: asset) else { return nil }
+      plannedSources[clip.inputPath] = (asset, videoTrack)
+      return (asset, videoTrack)
+    }
+    func plannedSourceUs(_ clip: VideoClip) async -> Int64 {
+      guard let source = await plannedSource(clip) else {
+        return await sourceEndUs(clip) - (clip.startUs ?? 0)
+      }
+      let played = await VideoSequenceBuilder.playedTimeRange(
+        for: clip, from: source.asset, videoTrack: source.videoTrack,
+        trimToCommonTrackEnd: trimToCommonTrackEnd && enableAudio,
+        label: "Transition planning")
+      return CMTimeConvertScale(
+        played.duration, timescale: 1_000_000, method: .roundTowardZero
+      ).value
+    }
+    func plannedOutputUs(_ clip: VideoClip) async -> Int64 {
+      ClipTransitionGeometry.outputDurationUs(
+        sourceDurationUs: await plannedSourceUs(clip), speed: clip.averageSpeed())
+    }
+
+    // Where the composition starts playing a clip: its first frame, which a
+    // short delay can hold back past `startUs` (see
+    // `TrackEndTrimmer.mediaTimeRange`). A blend takes the incoming head from
+    // there; carved from inside the delay, the head held fewer frames than
+    // the blend and was stretched over it, slowing the picture against its
+    // sound.
+    var playedStarts: [String: Int64] = [:]
+    func playedStartUs(_ clip: VideoClip) async -> Int64 {
+      let startUs = clip.startUs ?? 0
+      if let known = playedStarts[clip.inputPath] { return max(startUs, known) }
+      guard let source = await plannedSource(clip) else { return startUs }
+      let mediaStart = await TrackEndTrimmer.mediaTimeRange(of: source.videoTrack).start
+      let mediaStartUs = CMTimeConvertScale(
+        mediaStart, timescale: 1_000_000, method: .roundAwayFromZero
+      ).value
+      playedStarts[clip.inputPath] = mediaStartUs
+      return max(startUs, mediaStartUs)
+    }
+
+    // Each blend is a full export, so on a long timeline cut short by the
+    // render's end most of the pass would go into blends nobody sees.
+    var pastEnd = Array(repeating: false, count: clips.count)
+    if let endUs {
+      var timeline: [ClipTransitionGeometry.TimelineClip] = []
+      for (index, clip) in clips.enumerated() {
+        let next: VideoClip? = index + 1 < clips.count ? clips[index + 1] : nil
+        let blends =
+          clip.transition?.isOverlap == true && next != nil
+          && !clip.reverseVideo && !(next?.reverseVideo ?? false)
+        timeline.append(
+          ClipTransitionGeometry.TimelineClip(
+            sourceDurationUs: await plannedSourceUs(clip),
+            // A speed ramp lays out at its average speed: good enough to tell
+            // which blends start past the end, which only a few milliseconds
+            // could change.
+            speed: clip.averageSpeed(),
+            blendDurationUs: blends ? clip.transition?.durationUs : nil))
+      }
+      pastEnd = ClipTransitionGeometry.blendsPastEnd(
+        clips: timeline, endUs: endUs, startOffsetUs: -(wrapTransition?.durationUs ?? 0))
+      let skippedCount = pastEnd.filter { $0 }.count
+      if skippedCount > 0 {
+        PluginLog.print("✂️ Transition: \(skippedCount) blend(s) start after the render end")
+      }
+    }
+
+    var work = clips
+    var result: [VideoClip] = []
+    var urls: [URL] = []
+    var i = 0
+
+    // Append an original clip only if it still has positive duration. A blend
+    // can consume a neighbouring clip entirely (two adjacent transitions sharing
+    // a clip), leaving a zero-length body — drop it and let the blend clip take
+    // its place rather than feed a zero-length clip to the composer.
+    func appendClip(_ clip: VideoClip) {
+      let start = clip.startUs ?? 0
+      if let end = clip.endUs, end <= start { return }
+      result.append(clip)
+    }
+
+    while i < work.count {
+      // Each blend is a full export; a cancelled job must not queue the next
+      // one (`ClipTransitionRenderer` reports a refused start as "hard cut",
+      // which would otherwise silently rewrite the whole clip list).
+      if Task.isCancelled { break }
+      let current = work[i]
+      let next: VideoClip? = (i + 1 < work.count) ? work[i + 1] : nil
+      let t = current.transition
+
+      let canOverlap =
+        next != nil && (t?.isOverlap ?? false)
+        && !current.reverseVideo && !(next!.reverseVideo)
+
+      if !canOverlap {
+        appendClip(clearedOverlap(current))
+        i += 1
+        continue
+      }
+
+      let curStart = await playedStartUs(current)
+      let curEnd = await sourceEndUs(current)
+      let nextStart = await playedStartUs(next!)
+      let nextEnd = await sourceEndUs(next!)
+      let curDur = curEnd - curStart
+      let nextDur = nextEnd - nextStart
+
+      // Resolve the overlap geometry in OUTPUT (post-speed) time so the
+      // requested transition duration matches the non-transition timeline and
+      // each side consumes `output * speed` of its own source. A ramp's side is
+      // averaged over the blend as it will play, which a shorter clip cuts
+      // below the requested duration.
+      let blendUs = min(
+        t!.durationUs, current.outputDurationUs(sourceDurationUs: curDur),
+        next!.outputDurationUs(sourceDurationUs: nextDur))
+      guard
+        let plan = ClipTransitionGeometry.planOverlap(
+          outgoingSourceDurationUs: curDur,
+          incomingSourceDurationUs: nextDur,
+          transitionDurationUs: t!.durationUs,
+          outgoingSpeed: current.tailSpeed(outputUs: blendUs, sourceDurationUs: curDur),
+          incomingSpeed: next!.headSpeed(outputUs: blendUs, sourceDurationUs: nextDur))
+      else {
+        PluginLog.print("⚠️ Transition: not enough content at boundary \(i); hard cut")
+        appendClip(clearedOverlap(current))
+        i += 1
+        continue
+      }
+
+      let tailSrc = plan.outgoingTailSourceUs
+      let headSrc = plan.incomingHeadSourceUs
+
+      if pastEnd[i] {
+        // The outgoing tail stands in for the blend nobody sees. It is split
+        // off so the first and last clips, which a loop wrap reads, end up as
+        // they would beside a blend.
+        let outgoing = clearedOverlap(current)
+        appendClip(
+          outgoing.reading(
+            current.inputPath, startUs: curStart, endUs: curEnd - tailSrc,
+            frameRateOverride: current.frameRateOverride,
+            speedRamp: current.croppedSpeedRamp(
+              fromUs: 0, toUs: curDur - tailSrc, ofSourceUs: curDur)))
+        appendClip(
+          outgoing.reading(
+            current.inputPath, startUs: curEnd - tailSrc, endUs: curEnd,
+            frameRateOverride: current.frameRateOverride,
+            speedRamp: current.croppedSpeedRamp(
+              fromUs: curDur - tailSrc, toUs: curDur, ofSourceUs: curDur)))
+        work[i + 1] = next!.reading(
+          next!.inputPath, startUs: nextStart + headSrc, endUs: nextEnd,
+          frameRateOverride: next!.frameRateOverride,
+          speedRamp: next!.croppedSpeedRamp(fromUs: headSrc, toUs: nextDur, ofSourceUs: nextDur))
+        i += 1
+        continue
+      }
+
+      // A muted side still lets the other fade in or out.
+      let includeAudio =
+        enableAudio && ((current.volume ?? 1.0) > 0 || (next!.volume ?? 1.0) > 0)
+      let rendered: ClipTransitionRenderer.RenderResult?
+      do {
+        rendered = try await ClipTransitionRenderer.render(
+          outgoingPath: current.inputPath,
+          outTailStartUs: curEnd - tailSrc, outTailEndUs: curEnd,
+          incomingPath: next!.inputPath,
+          inHeadStartUs: nextStart, inHeadEndUs: nextStart + headSrc,
+          outputDurationUs: plan.outputDurationUs,
+          type: t!.type, direction: t!.direction, curve: t!.curve,
+          includeAudio: includeAudio, outputFormat: outputFormat,
+          outgoingFrameRate: current.frameRateOverride,
+          incomingFrameRate: next!.frameRateOverride,
+          outgoingAudio: .init(volume: current.volume, equalizer: current.equalizer),
+          incomingAudio: .init(volume: next!.volume, equalizer: next!.equalizer),
+          outgoingKeyframes: current.keyframes, incomingKeyframes: next!.keyframes)
+      } catch {
+        return TransitionPreRender(clips: result, urls: urls, stall: error)
+      }
+
+      if let rendered = rendered {
+        urls.append(rendered.outputURL)
+        // Keep the outgoing clip's speed; it now ends `tailSrc` of source
+        // earlier (those frames moved into the speed-adjusted blend).
+        appendClip(
+          VideoClip(
+            inputPath: current.inputPath, startUs: curStart, endUs: curEnd - tailSrc,
+            volume: current.volume, equalizer: current.equalizer,
+            playbackSpeed: current.playbackSpeed,
+            speedRamp: current.croppedSpeedRamp(
+              fromUs: 0, toUs: curDur - tailSrc, ofSourceUs: curDur),
+            reverseVideo: false, transition: nil, chromaKey: current.chromaKey,
+            frameRateOverride: current.frameRateOverride,
+            stabilization: current.stabilization,
+            keyframes: current.keyframes))
+        let blend = blendChromaKey(
+          current, next!, global: globalChromaKey, boundary: "\(i)")
+        result.append(
+          VideoClip(
+            inputPath: rendered.outputURL.path, startUs: 0, endUs: rendered.durationUs,
+            chromaKey: blend.config, suppressChromaKey: blend.suppressed))
+        // Trim the incoming head in place; it keeps its own speed/transition.
+        work[i + 1] = VideoClip(
+          inputPath: next!.inputPath, startUs: nextStart + headSrc, endUs: nextEnd,
+          volume: next!.volume, equalizer: next!.equalizer,
+          playbackSpeed: next!.playbackSpeed,
+          speedRamp: next!.croppedSpeedRamp(fromUs: headSrc, toUs: nextDur, ofSourceUs: nextDur),
+          reverseVideo: next!.reverseVideo, transition: next!.transition,
+          chromaKey: next!.chromaKey, frameRateOverride: next!.frameRateOverride,
+          stabilization: next!.stabilization,
+          keyframes: next!.keyframes)
+      } else {
+        PluginLog.print("⚠️ Transition render failed at boundary \(i); hard cut")
+        appendClip(clearedOverlap(current))
+      }
+      i += 1
+    }
+
+    // Wrap pass: render the last clip's tail dissolving into the first clip's
+    // head and append it, so any looping player restarts seamlessly. The
+    // between-clip pass only inserts blends *between* clips, so result's first
+    // and last entries are still the original first/last clips.
+    if let wrap = wrapTransition, !result.isEmpty, !Task.isCancelled {
+      let lastIdx = result.count - 1
+      let first = result[0]
+      let last = result[lastIdx]
+      let singleClip = lastIdx == 0
+
+      let firstStart = await playedStartUs(first)
+      let firstDur = await sourceEndUs(first) - firstStart
+      let lastStart = await playedStartUs(last)
+      let lastEnd = await sourceEndUs(last)
+      let lastDur = lastEnd - lastStart
+
+      // Single-clip loops carve head and tail from the same source, so they need
+      // the stricter head+tail<L guard; multi-clip loops keep two independent
+      // sources and reuse the ordinary overlap geometry.
+      let plan: ClipTransitionGeometry.OverlapPlan?
+      var headSpeed = first.playbackSpeed
+      var tailSpeed = last.playbackSpeed
+      if singleClip, let ramp = last.speedRamp {
+        // A ramp plays its head and its tail at different speeds; the blend
+        // takes at most half of the clip's output, like `planWrap`.
+        let blendUs = min(wrap.durationUs, ramp.outputDurationUs(sourceDurationUs: lastDur) / 2)
+        headSpeed = last.headSpeed(outputUs: blendUs, sourceDurationUs: lastDur)
+        tailSpeed = last.tailSpeed(outputUs: blendUs, sourceDurationUs: lastDur)
+        plan = ClipTransitionGeometry.planWrap(
+          sourceDurationUs: lastDur, transitionDurationUs: blendUs,
+          tailSpeed: tailSpeed, headSpeed: headSpeed)
+      } else if singleClip {
+        plan = ClipTransitionGeometry.planWrap(
+          sourceDurationUs: lastDur,
+          transitionDurationUs: wrap.durationUs,
+          speed: last.playbackSpeed)
+      } else {
+        let blendUs = min(
+          wrap.durationUs, first.outputDurationUs(sourceDurationUs: firstDur),
+          last.outputDurationUs(sourceDurationUs: lastDur))
+        headSpeed = first.headSpeed(outputUs: blendUs, sourceDurationUs: firstDur)
+        tailSpeed = last.tailSpeed(outputUs: blendUs, sourceDurationUs: lastDur)
+        plan = ClipTransitionGeometry.planOverlap(
+          outgoingSourceDurationUs: lastDur,
+          incomingSourceDurationUs: firstDur,
+          transitionDurationUs: wrap.durationUs,
+          outgoingSpeed: tailSpeed,
+          incomingSpeed: headSpeed)
+      }
+
+      // Where the wrap blend would start: after every clip, less the head it
+      // moves from the first clip and the tail it takes from the last.
+      var wrapPastEnd = false
+      if let plan, let endUs {
+        var timelineUs: Int64 = 0
+        for clip in result { timelineUs += await plannedOutputUs(clip) }
+        let wrapStartUs =
+          timelineUs
+          - ClipTransitionGeometry.outputDurationUs(
+            sourceDurationUs: plan.incomingHeadSourceUs, speed: headSpeed)
+          - ClipTransitionGeometry.outputDurationUs(
+            sourceDurationUs: plan.outgoingTailSourceUs, speed: tailSpeed)
+        wrapPastEnd = wrapStartUs >= endUs
+      }
+
+      if let plan, wrapPastEnd {
+        // The render ends before the wrap blend would start. The first clip
+        // still gives up its head, so everything inside the render stays where
+        // the wrap puts it; the last keeps its tail in place of the blend.
+        PluginLog.print("✂️ Loop wrap: starts after the render end, not rendered")
+        result[0] = first.reading(
+          first.inputPath, startUs: firstStart + plan.incomingHeadSourceUs,
+          endUs: first.endUs, frameRateOverride: first.frameRateOverride,
+          speedRamp: first.croppedSpeedRamp(
+            fromUs: plan.incomingHeadSourceUs, toUs: firstDur, ofSourceUs: firstDur))
+      } else if let plan = plan {
+        let tailSrc = plan.outgoingTailSourceUs
+        let headSrc = plan.incomingHeadSourceUs
+        let includeAudio =
+          enableAudio && ((last.volume ?? 1.0) > 0 || (first.volume ?? 1.0) > 0)
+        let rendered: ClipTransitionRenderer.RenderResult?
+        do {
+          rendered = try await ClipTransitionRenderer.render(
+            outgoingPath: last.inputPath,
+            outTailStartUs: lastEnd - tailSrc, outTailEndUs: lastEnd,
+            incomingPath: first.inputPath,
+            inHeadStartUs: firstStart, inHeadEndUs: firstStart + headSrc,
+            outputDurationUs: plan.outputDurationUs,
+            type: wrap.type, direction: wrap.direction, curve: wrap.curve,
+            includeAudio: includeAudio, outputFormat: outputFormat,
+            outgoingFrameRate: last.frameRateOverride,
+            incomingFrameRate: first.frameRateOverride,
+            outgoingAudio: .init(volume: last.volume, equalizer: last.equalizer),
+            incomingAudio: .init(volume: first.volume, equalizer: first.equalizer),
+            outgoingKeyframes: last.keyframes, incomingKeyframes: first.keyframes)
+        } catch {
+          return TransitionPreRender(clips: result, urls: urls, stall: error)
+        }
+
+        if let rendered = rendered {
+          urls.append(rendered.outputURL)
+          if singleClip {
+            // Trim both ends of the one clip; the carved head/tail moved into
+            // the appended blend.
+            result[0] = VideoClip(
+              inputPath: first.inputPath, startUs: firstStart + headSrc,
+              endUs: lastEnd - tailSrc, volume: first.volume, equalizer: first.equalizer,
+              playbackSpeed: first.playbackSpeed,
+              speedRamp: first.croppedSpeedRamp(
+                fromUs: headSrc, toUs: lastDur - tailSrc, ofSourceUs: lastDur),
+              reverseVideo: false, transition: nil,
+              chromaKey: first.chromaKey, frameRateOverride: first.frameRateOverride,
+              stabilization: first.stabilization,
+              keyframes: first.keyframes)
+          } else {
+            result[0] = VideoClip(
+              inputPath: first.inputPath, startUs: firstStart + headSrc,
+              endUs: first.endUs, volume: first.volume, equalizer: first.equalizer,
+              playbackSpeed: first.playbackSpeed,
+              speedRamp: first.croppedSpeedRamp(
+                fromUs: headSrc, toUs: firstDur, ofSourceUs: firstDur),
+              reverseVideo: false,
+              transition: first.transition, chromaKey: first.chromaKey,
+              frameRateOverride: first.frameRateOverride, stabilization: first.stabilization,
+              keyframes: first.keyframes)
+            result[lastIdx] = VideoClip(
+              inputPath: last.inputPath, startUs: last.startUs, endUs: lastEnd - tailSrc,
+              volume: last.volume, equalizer: last.equalizer,
+              playbackSpeed: last.playbackSpeed,
+              speedRamp: last.croppedSpeedRamp(
+                fromUs: 0, toUs: lastDur - tailSrc, ofSourceUs: lastDur),
+              reverseVideo: false, transition: nil, chromaKey: last.chromaKey,
+              frameRateOverride: last.frameRateOverride, stabilization: last.stabilization,
+              keyframes: last.keyframes)
+          }
+          let wrapBlend = blendChromaKey(
+            last, first, global: globalChromaKey, boundary: "loop wrap")
+          result.append(
+            VideoClip(
+              inputPath: rendered.outputURL.path, startUs: 0, endUs: rendered.durationUs,
+              chromaKey: wrapBlend.config, suppressChromaKey: wrapBlend.suppressed))
+        } else {
+          PluginLog.print("⚠️ Loop wrap render failed; seamless loop skipped")
+        }
+      } else {
+        PluginLog.print("⚠️ Loop wrap: not enough content; seamless loop skipped")
+      }
+    }
+
+    return TransitionPreRender(clips: result, urls: urls, stall: nil)
+  }
+
+  /// What the overlap pre-render pass produced: the rewritten clip list, the
+  /// blend files it wrote (the caller owns their cleanup), and the watchdog
+  /// error that stopped the pass, if a blend stalled.
+  struct TransitionPreRender {
+    let clips: [VideoClip]
+    let urls: [URL]
+    let stall: Error?
+  }
+
+  /// Clears an overlap transition (already consumed / unsupported) so it is not
+  /// reinterpreted downstream; dip transitions are left untouched.
+  private static func clearedOverlap(_ clip: VideoClip) -> VideoClip {
+    guard clip.transition?.isOverlap == true else { return clip }
+    return VideoClip(
+      inputPath: clip.inputPath, startUs: clip.startUs, endUs: clip.endUs,
+      volume: clip.volume, equalizer: clip.equalizer, playbackSpeed: clip.playbackSpeed,
+      speedRamp: clip.speedRamp,
+      reverseVideo: clip.reverseVideo, transition: nil, chromaKey: clip.chromaKey,
+      frameRateOverride: clip.frameRateOverride, stabilization: clip.stabilization,
+      keyframes: clip.keyframes)
+  }
+
+  /// The chroma key to apply to a pre-rendered overlap blend.
+  ///
+  /// The blend is composed from the raw sources by `ClipTransitionRenderer`,
+  /// which knows nothing about keying, so the key has to be re-applied to its
+  /// output. That only has a defined meaning when both sides key the same way:
+  /// blending a keyed clip with an unkeyed one produces mixed colors that no
+  /// single key can undo. Mismatched sides are therefore left unkeyed and
+  /// reported, rather than silently keyed with one side's settings.
+  private static func blendChromaKey(
+    _ outgoing: VideoClip, _ incoming: VideoClip, global: ChromaKeyConfig?,
+    boundary: String
+  ) -> BlendChromaKey {
+    // Compare the *effective* keys. A clip that leaves its own key nil still
+    // inherits the global one, so comparing the raw per-clip fields reported a
+    // mismatch for two clips that in fact key identically.
+    let outgoingKey = outgoing.chromaKey ?? global
+    let incomingKey = incoming.chromaKey ?? global
+    if outgoingKey == incomingKey { return BlendChromaKey(outgoingKey, false) }
+
+    PluginLog.print(
+      "⚠️ Chroma key: the two clips at boundary \(boundary) use different keys; "
+        + "the pre-rendered transition blend is emitted unkeyed")
+    // A nil key alone would mean "inherit", and `computeChromaKeyWindows` would
+    // then fall back to the global key — applying to the blend the very thing
+    // this warning promises it will not. The suppress flag is what makes
+    // "unkeyed" actually mean unkeyed.
+    return BlendChromaKey(nil, true)
+  }
+
+  /// The key for a pre-rendered blend, and whether it opts out of the global one.
+  private struct BlendChromaKey {
+    let config: ChromaKeyConfig?
+    let suppressed: Bool
+
+    init(_ config: ChromaKeyConfig?, _ suppressed: Bool) {
+      self.config = config
+      self.suppressed = suppressed
+    }
+  }
+
+  /// Loads a clip's total duration in microseconds.
+  private static func clipDurationUs(_ path: String) async -> Int64 {
+    let asset = AVURLAsset(url: URL(fileURLWithPath: path))
+    let dur: CMTime
+    if #available(iOS 15.0, macOS 13.0, *) {
+      dur = (try? await asset.load(.duration)) ?? .zero
+    } else {
+      dur = asset.duration
+    }
+    return Int64(CMTimeGetSeconds(dur) * 1_000_000)
+  }
+
+  private static func loadVideoTrack(from asset: AVAsset) async throws -> AVAssetTrack {
+    if #available(iOS 15.0, macOS 13.0, *) {
+      let tracks = try await asset.loadTracks(withMediaType: .video)
+      guard let track = tracks.first else {
+        throw NSError(
+          domain: "RenderVideo", code: 1,
+          userInfo: [NSLocalizedDescriptionKey: "No video track found"])
+      }
+      return track
+    } else {
+      guard let track = asset.tracks(withMediaType: .video).first else {
+        throw NSError(
+          domain: "RenderVideo", code: 1,
+          userInfo: [NSLocalizedDescriptionKey: "No video track found"])
+      }
+      return track
+    }
+  }
+
+  private static func extractRotationFromTransform(_ transform: CGAffineTransform) -> Double {
+    let rotationAngle = atan2(transform.b, transform.a)
+    return rotationAngle * 180 / Double.pi
+  }
+
+  private static func prepareExportSession(
+    composition: AVAsset,
+    videoComposition: AVVideoComposition,
+    audioMix: AVAudioMix?,
+    outputURL: URL,
+    outputFormat: String,
+    preset: String,
+    timeRange: CMTimeRange?,
+    shouldOptimizeForNetworkUse: Bool
+  ) async throws -> AVAssetExportSession {
+    guard let export = AVAssetExportSession(asset: composition, presetName: preset) else {
+      throw NSError(
+        domain: "RenderVideo", code: 3,
+        userInfo: [NSLocalizedDescriptionKey: "Export session creation failed"])
+    }
+
+    // The session refuses to overwrite a file, such as the partial one an
+    // interrupted attempt left behind.
+    try? FileManager.default.removeItem(at: outputURL)
+
+    let fileType = mapFormatToMimeType(format: outputFormat)
+    PluginLog.print("📹 Export session setup:")
+    PluginLog.print("   - Requested format: \(outputFormat)")
+    PluginLog.print("   - AVFileType: \(fileType.rawValue)")
+    PluginLog.print("   - Output URL: \(outputURL.path)")
+
+    export.outputURL = outputURL
+    export.outputFileType = fileType
+    export.videoComposition = videoComposition
+
+    // Apply the global trim, if any
+    if let timeRange {
+      export.timeRange = timeRange
+      PluginLog.print(
+        "   - TimeRange applied: \(String(format: "%.2f", CMTimeGetSeconds(timeRange.start)))s - \(String(format: "%.2f", CMTimeGetSeconds(CMTimeRangeGetEnd(timeRange))))s"
+      )
+    }
+
+    // Check if composition has audio tracks
+    let hasAudioTracks =
+      (composition as? AVMutableComposition)?.tracks(withMediaType: .audio).isEmpty == false
+
+    // Apply audio mix if available
+    if let audioMix = audioMix, hasAudioTracks {
+      export.audioMix = audioMix
+      PluginLog.print("🔊 Audio mix applied to export session")
+    } else if !hasAudioTracks {
+      PluginLog.print("ℹ️ No audio tracks in composition - exporting video only")
+    }
+
+    // Apply fast start optimization (moves moov atom to beginning for streaming)
+    export.shouldOptimizeForNetworkUse = shouldOptimizeForNetworkUse
+    if shouldOptimizeForNetworkUse {
+      PluginLog.print("🚀 Fast start enabled - optimizing for network streaming")
+    }
+
+    return export
+  }
+
+  private static func cleanup(_ urls: [URL]) throws {
+    for url in urls {
+      try? FileManager.default.removeItem(at: url)
+    }
+  }
+}
+
+/// Cancellation handle for one render/split job. Safe to use from any thread:
+/// every field is read and written under `lock`.
+final class RenderJobHandle: @unchecked Sendable {
+  private let lock = NSLock()
+  private var exportSession: AVAssetExportSession?
+  private var renderTask: Task<Void, Never>?
+  private var child: RenderJobHandle?
+  private var canceled = false
+  private var exportClaimed = false
+
+  /// Registers the session that carries this job so a later ``cancel()`` can
+  /// stop it.
+  ///
+  /// A session that is already cancelled is deliberately *not* force-cancelled
+  /// here: `cancelExport()` on a session that never ran still moves it to
+  /// `.cancelled`, and the queued `export(to:as:)` would then raise an
+  /// uncatchable Objective-C exception once the export gate lets it through.
+  /// ``beginExport()`` refuses the start instead.
+  ///
+  /// A job can attach more than one session over its life — the two halves of a
+  /// split, or a passthrough attempt and the full render it falls back to — and
+  /// each of them starts out unclaimed.
+  func attach(export: AVAssetExportSession) {
+    lock.lock()
+    defer { lock.unlock() }
+    exportSession = export
+    exportClaimed = false
+  }
+
+  func attach(task: Task<Void, Never>) {
+    lock.lock()
+    defer { lock.unlock() }
+    renderTask = task
+    if canceled {
+      task.cancel()
+    }
+  }
+
+  /// Registers the handle of the job's current attempt, so a ``cancel()`` of
+  /// the job reaches the attempt too. Each attempt replaces the one before.
+  func attach(child: RenderJobHandle) {
+    lock.lock()
+    let cancelNow = canceled
+    if !cancelNow { self.child = child }
+    lock.unlock()
+    if cancelNow { child.cancel() }
+  }
+
+  /// Whether ``cancel()`` was called.
+  var isCanceled: Bool {
+    lock.lock()
+    defer { lock.unlock() }
+    return canceled
+  }
+
+  /// Claims the start of the attached export, returning `false` when the job
+  /// was cancelled while the export was still queued — the caller must then not
+  /// start it at all. Only a claimed session is ever force-cancelled.
+  ///
+  /// Called through ``ExportSessionGuard/claimStart(_:handle:label:)``.
+  func beginExport() -> Bool {
+    lock.lock()
+    defer { lock.unlock() }
+    guard !canceled else { return false }
+    exportClaimed = true
+    return true
+  }
+
+  func cancel() {
+    lock.lock()
+    canceled = true
+    let session = exportClaimed ? exportSession : nil
+    let task = renderTask
+    let child = self.child
+    lock.unlock()
+
+    task?.cancel()
+    child?.cancel()
+    // A claimed session may still be a few instructions short of the assignment
+    // `export(to:as:)` makes before it starts, and cancelling it in that sliver
+    // would trip the same uncatchable exception — `forceCancel` skips it. Such
+    // a session is stopped instead by the task cancellation above unwinding
+    // ``ExportSessionDriver``, which force-cancels it once the start is through.
+    if let session {
+      ExportSessionGuard.forceCancel(session)
+    }
+  }
+}
+
+/// Diagnostic context for a render encode, mirroring ``SplitExportDiagnostics``
+/// so a stall/timeout surfaces the same shape of message on the render path.
+struct RenderExportDiagnostics: ExportDiagnostics {
+  /// What is being encoded — `"bitrate-capped"` for the AVAssetWriter path or
+  /// the export-session preset name.
+  let mode: String
+  /// Requested video bitrate in bits/s, or nil for a preset export.
+  let bitrate: Int?
+
+  /// e.g. `[progress=0.00 mode=bitrate-capped bitrate=4000kbps]`
+  func context(progress: Double) -> String {
+    let bitrateText = bitrate.map { "\($0 / 1000)kbps" } ?? "preset"
+    return String(
+      format: "[progress=%.2f mode=%@ bitrate=%@]", progress, mode, bitrateText)
+  }
+
+  func timeoutMessage(seconds: Int, progress: Double) -> String {
+    "Render export timed out after \(seconds)s \(context(progress: progress))"
+  }
+
+  func stallMessage(seconds: Int, progress: Double) -> String {
+    "Render export stalled after \(seconds)s with no progress \(context(progress: progress))"
+  }
+}

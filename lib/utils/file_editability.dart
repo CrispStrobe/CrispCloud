@@ -3,6 +3,7 @@
 // Shared rules for deciding whether the built-in F4 editor can open a file.
 
 import '../services/image_edit_session.dart' show isEditableImageFileName;
+import '../services/media_capabilities.dart';
 
 /// Text/code extensions handled by the built-in text editor.
 const Set<String> textEditableExtensions = <String>{
@@ -83,6 +84,8 @@ bool isEditableInBuiltInEditor(String name) {
   final lower = name.toLowerCase();
   if (lower.endsWith('.pdf')) return true;
   if (isEditableImageFileName(lower)) return true;
+  final mediaKind = mediaKindForFileName(lower);
+  if (mediaKind != null) return MediaCapabilities.canEdit(mediaKind);
   final ext = _extensionOf(lower);
   return editableOfficeExtensions.contains(ext) || isTextEditableName(lower);
 }
