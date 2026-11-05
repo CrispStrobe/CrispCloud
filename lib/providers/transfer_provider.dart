@@ -19,6 +19,7 @@ import 'package:path/path.dart' as p;
 
 import '../models/file_item.dart';
 import '../models/operation_progress.dart';
+import '../services/provider_workflow_failure.dart';
 import '../models/panel_side.dart';
 import '../services/audit_service.dart';
 import '../services/s3_client_adapter.dart';
@@ -151,6 +152,8 @@ class TransferNotifier extends ChangeNotifier {
 
           if (file.path == null) {
             fileProgress.error = 'No path';
+            fileProgress.errorCause = const TransferFileException(
+                TransferFileCode.noPath, 'No path');
             return;
           }
 
@@ -232,6 +235,7 @@ class TransferNotifier extends ChangeNotifier {
           } catch (e) {
             _log.warn('operation failed', e);
             fileProgress.error = e.toString();
+            fileProgress.errorCause = e;
             // If an S3 multipart upload was interrupted, persist state
             // for future resume.
             if (client is S3ClientAdapter) {
@@ -258,7 +262,10 @@ class TransferNotifier extends ChangeNotifier {
         onDone: (error) {
           // A task can report an app-authored failure without throwing (for
           // example, a file without a local path). Do not erase it on success.
-          if (error != null) fileProgress.error = error.toString();
+          if (error != null) {
+            fileProgress.error = error.toString();
+            fileProgress.errorCause = error;
+          }
           tasksFinished++;
           if (tasksFinished == files.length) {
             _finalizeBatch(operation, fileProgresses);
@@ -424,6 +431,7 @@ class TransferNotifier extends ChangeNotifier {
           } catch (e) {
             _log.warn('operation failed', e);
             fileProgress.error = e.toString();
+            fileProgress.errorCause = e;
             await audit.logError(
               operation: AuditOperation.download,
               sourcePath: fileRemotePath,
@@ -440,6 +448,7 @@ class TransferNotifier extends ChangeNotifier {
         },
         onDone: (error) {
           fileProgress.error = error?.toString();
+          fileProgress.errorCause = error;
           tasksFinished++;
           if (tasksFinished == files.length) {
             _finalizeBatch(operation, fileProgresses);
@@ -555,7 +564,8 @@ class TransferNotifier extends ChangeNotifier {
         name.contains('/') ||
         name.contains('\\') ||
         name.contains('\x00')) {
-      throw const FormatException('The server returned an invalid file name');
+      throw const TransferFileFormatException(TransferFileCode.invalidName,
+          'The server returned an invalid file name');
     }
     return p.join(directory, name);
   }

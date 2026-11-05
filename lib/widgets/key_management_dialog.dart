@@ -248,8 +248,7 @@ class _KeyManagementDialogState extends ConsumerState<_KeyManagementDialog>
             theme,
             icon: Icons.article,
             title: _t('phrase'),
-            subtitle:
-                'Write down these 24 words in order. They can recover your key.',
+            subtitle: _t('phraseHelp'),
             content: _mnemonic ?? '',
             copyLabel: _t('mnemonic'),
             sensitive: true,
@@ -271,8 +270,7 @@ class _KeyManagementDialogState extends ConsumerState<_KeyManagementDialog>
             theme,
             icon: Icons.backup,
             title: _t('bundle'),
-            subtitle:
-                'JSON with mnemonic, salt, and verification. Best for full recovery.',
+            subtitle: _t('bundleHelp'),
             content: _backupBundle ?? '',
             copyLabel: _t('bundleLabel'),
             sensitive: true,

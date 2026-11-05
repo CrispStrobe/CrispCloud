@@ -45,6 +45,7 @@ import '../services/smb_config_service.dart';
 import '../services/smb_client_adapter.dart';
 import '../services/log_service.dart';
 import 'error_provider.dart';
+import '../services/auth_sync_notice.dart';
 
 class AuthNotifier extends ChangeNotifier {
   static const _log = Log('AuthNotifier');
@@ -371,7 +372,8 @@ class AuthNotifier extends ChangeNotifier {
         }
       } catch (e) {
         _log.warn('Auto-login exception', e);
-        _ref.read(errorProvider).addError('Session expired. Please log in again.');
+        _ref.read(errorProvider).addError('Session expired. Please log in again.',
+            cause: const AuthSyncNotice(AuthSyncNoticeCode.sessionExpired));
         _isConnected = false;
         notifyListeners();
       }

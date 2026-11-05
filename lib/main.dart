@@ -5,6 +5,7 @@ import 'package:flutter_localizations/flutter_localizations.dart';
 import 'l10n/app_localizations.dart';
 import 'l10n/web_vault_strings.dart';
 import 'l10n/startup_failure_strings.dart';
+import 'l10n/provider_operation_strings.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter/foundation.dart'
     show kIsWeb, LicenseRegistry, LicenseEntryWithLineBreaks;
@@ -65,7 +66,7 @@ class StartupFailureApp extends StatelessWidget {
           body: Center(child: Padding(
             padding: const EdgeInsets.all(32),
             child: Text(
-              '${StartupFailureStrings(context).title}\n$error',
+              '${StartupFailureStrings(context).title}\n${localizedProviderError(context, error)}',
               style: const TextStyle(color: Colors.red, fontSize: 16),
               textAlign: TextAlign.center,
             ),

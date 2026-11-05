@@ -4,6 +4,8 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../l10n/operations_strings.dart';
 import '../l10n/transfer_error_strings.dart';
+import '../l10n/provider_workflow_strings.dart';
+import '../l10n/provider_operation_strings.dart';
 import '../models/operation_progress.dart';
 import '../providers/providers.dart';
 import '../utils/formatters.dart' show formatBytes, formatSpeed;
@@ -422,10 +424,19 @@ class _OperationTile extends StatelessWidget {
                       ),
                       const SizedBox(width: 8),
                       Expanded(
+                        child: Tooltip(
+                          message: file.error == null
+                              ? file.name
+                              : localizedProviderWorkflowError(context,
+                                      file.errorCause ?? file.error!) ??
+                                  localizedProviderError(context,
+                                      file.errorCause ?? file.error!),
                           child: Text(file.name,
                               style: const TextStyle(fontSize: 11),
                               maxLines: 1,
-                              overflow: TextOverflow.ellipsis)),
+                              overflow: TextOverflow.ellipsis),
+                        ),
+                      ),
                       Text(formatBytes(file.size),
                           style:
                               TextStyle(fontSize: 10, color: Colors.grey[600])),

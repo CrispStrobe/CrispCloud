@@ -23,6 +23,11 @@ String localizedPanelError(BuildContext context, AppError error) {
 
 const Map<String, Map<String, String>> _messages = {
   'en': {
+    "fullTextSearchFailed": "Full-text search failed: {error}",
+    "findFailed": "Find failed: {error}",
+    "searchUnsupported": "Search is not supported by {provider}.",
+    "findUnsupported": "Find is not supported by {provider}.",
+
     "homeFallback": "Folder not found. Returned to your Home folder.",
     "archiveOpen": "Cannot open archive: {error}",
     "archivePassword": "This archive is password-protected.",
@@ -48,6 +53,11 @@ const Map<String, Map<String, String>> _messages = {
     "cloudSearchFailed": "Search failed: {error}",
   },
   'de': {
+    "fullTextSearchFailed": "Volltextsuche fehlgeschlagen: {error}",
+    "findFailed": "Dateisuche fehlgeschlagen: {error}",
+    "searchUnsupported": "Die Suche wird von {provider} nicht unterstützt.",
+    "findUnsupported": "Die Dateisuche wird von {provider} nicht unterstützt.",
+
     "homeFallback": "Ordner nicht gefunden. Sie wurden zu Ihrem persönlichen Ordner zurückgeführt.",
     "archiveOpen": "Archiv kann nicht geöffnet werden: {error}",
     "archivePassword": "Dieses Archiv ist passwortgeschützt.",
@@ -74,6 +84,13 @@ const Map<String, Map<String, String>> _messages = {
     "cloudSearchFailed": "Suche fehlgeschlagen: {error}",
   },
   'fr': {
+    "fullTextSearchFailed": "Échec de la recherche en texte intégral : {error}",
+    "findFailed": "Échec de la recherche de fichiers : {error}",
+    "searchUnsupported":
+        "La recherche n’est pas prise en charge par {provider}.",
+    "findUnsupported":
+        "La recherche de fichiers n’est pas prise en charge par {provider}.",
+
     "homeFallback": "Dossier introuvable. Retour à votre dossier personnel.",
     "archiveOpen": "Impossible d’ouvrir l’archive : {error}",
     "archivePassword": "Cette archive est protégée par mot de passe.",
@@ -100,6 +117,11 @@ const Map<String, Map<String, String>> _messages = {
     "cloudSearchFailed": "Échec de la recherche : {error}",
   },
   'es': {
+    "fullTextSearchFailed": "Error en la búsqueda de texto completo: {error}",
+    "findFailed": "Error al buscar archivos: {error}",
+    "searchUnsupported": "{provider} no admite búsquedas.",
+    "findUnsupported": "{provider} no admite la búsqueda de archivos.",
+
     "homeFallback":
         "No se encontró la carpeta. Se ha vuelto a tu carpeta personal.",
     "archiveOpen": "No se puede abrir el archivo: {error}",
@@ -127,6 +149,11 @@ const Map<String, Map<String, String>> _messages = {
     "cloudSearchFailed": "Error de búsqueda: {error}",
   },
   'pt': {
+    "fullTextSearchFailed": "Falha na pesquisa de texto integral: {error}",
+    "findFailed": "Falha ao procurar ficheiros: {error}",
+    "searchUnsupported": "{provider} não suporta pesquisas.",
+    "findUnsupported": "{provider} não suporta a procura de ficheiros.",
+
     "homeFallback": "Pasta não encontrada. Regressou à sua pasta pessoal.",
     "archiveOpen": "Não foi possível abrir o arquivo compactado: {error}",
     "archivePassword": "Este arquivo compactado é protegido por senha.",
@@ -154,6 +181,11 @@ const Map<String, Map<String, String>> _messages = {
     "cloudSearchFailed": "Falha na pesquisa: {error}",
   },
   'zh': {
+    "fullTextSearchFailed": "全文搜索失败：{error}",
+    "findFailed": "查找文件失败：{error}",
+    "searchUnsupported": "{provider} 不支持搜索。",
+    "findUnsupported": "{provider} 不支持查找文件。",
+
     "homeFallback": "找不到文件夹。已返回主文件夹。",
     "archiveOpen": "无法打开归档：{error}",
     "archivePassword": "此归档受密码保护。",
@@ -178,6 +210,11 @@ const Map<String, Map<String, String>> _messages = {
     "cloudSearchFailed": "搜索失败：{error}",
   },
   'ja': {
+    "fullTextSearchFailed": "全文検索に失敗しました: {error}",
+    "findFailed": "ファイル検索に失敗しました: {error}",
+    "searchUnsupported": "{provider} は検索に対応していません。",
+    "findUnsupported": "{provider} はファイル検索に対応していません。",
+
     "homeFallback": "フォルダーが見つかりません。ホームフォルダーに戻りました。",
     "archiveOpen": "アーカイブを開けません: {error}",
     "archivePassword": "このアーカイブはパスワードで保護されています。",
@@ -202,6 +239,11 @@ const Map<String, Map<String, String>> _messages = {
     "cloudSearchFailed": "検索に失敗しました: {error}",
   },
   'ko': {
+    "fullTextSearchFailed": "전체 텍스트 검색 실패: {error}",
+    "findFailed": "파일 찾기 실패: {error}",
+    "searchUnsupported": "{provider}에서 검색을 지원하지 않습니다.",
+    "findUnsupported": "{provider}에서 파일 찾기를 지원하지 않습니다.",
+
     "homeFallback": "폴더를 찾을 수 없습니다. 홈 폴더로 돌아왔습니다.",
     "archiveOpen": "압축 파일을 열 수 없습니다: {error}",
     "archivePassword": "이 압축 파일은 비밀번호로 보호됩니다.",
@@ -226,6 +268,11 @@ const Map<String, Map<String, String>> _messages = {
     "cloudSearchFailed": "검색 실패: {error}",
   },
   'ar': {
+    "fullTextSearchFailed": "فشل البحث النصي الكامل: {error}",
+    "findFailed": "فشل العثور على الملفات: {error}",
+    "searchUnsupported": "لا يدعم {provider} البحث.",
+    "findUnsupported": "لا يدعم {provider} العثور على الملفات.",
+
     "homeFallback": "لم يُعثر على المجلد. تمت العودة إلى مجلدك الشخصي.",
     "archiveOpen": "تعذّر فتح الأرشيف: {error}",
     "archivePassword": "هذا الأرشيف محمي بكلمة مرور.",

@@ -29,6 +29,10 @@ enum PanelErrorCode {
   cloudTransferFailed,
   cloudCompareFailed,
   cloudSearchFailed,
+  fullTextSearchFailed,
+  findFailed,
+  searchUnsupported,
+  findUnsupported,
 }
 
 class AppError {

@@ -1,3 +1,6 @@
+import '../services/auth_sync_notice.dart';
+import 'auth_sync_notice_strings.dart';
+import 'provider_workflow_strings.dart';
 import 'package:flutter/widgets.dart';
 import '../services/web_file_failure.dart';
 import 'web_file_error_strings.dart';
@@ -36,9 +39,13 @@ import 's3_operation_strings.dart';
 
 /// Returns null for unknown errors so each caller can retain its fallback.
 String? localizedKnownProviderError(BuildContext context, Object error) =>
+    localizedProviderWorkflowError(context, error) ??
     localizedKnownProviderErrorForLanguage(Localizations.maybeLocaleOf(context)?.languageCode ?? 'en', error);
 
 String? localizedKnownProviderErrorForLanguage(String language, Object error) {
+  final workflow = localizedProviderWorkflowErrorForLanguage(language, error);
+  if (workflow != null) return workflow;
+  if (error is AuthSyncNotice) return localizedAuthSyncNotice(language, error);
   if (error is WebFileFailure) return localizedWebFileErrorForLanguage(language, error);
   if (error is TerminalMountFailure)
     return localizedTerminalMountErrorForLanguage(language, error);

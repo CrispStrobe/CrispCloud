@@ -1,5 +1,8 @@
+import 'package:crisp_cloud/services/provider_workflow_failure.dart';
+
 import 'dart:async';
 import 'dart:io';
+
 import 'package:crisp_cloud/models/file_item.dart';
 import 'package:crisp_cloud/models/operation_progress.dart';
 import 'package:crisp_cloud/providers/providers.dart';
@@ -46,8 +49,10 @@ class Client extends CloudStorageClient {
   @override
   String? get bucketId => 'fixture-bucket';
   @override
-  Stream<List<int>> downloadStream(String path,
-      {Function(int, int)? onProgress}) async* {
+  Stream<List<int>> downloadStream(
+    String path, {
+    Function(int, int)? onProgress,
+  }) async* {
     if (fail && path.endsWith('bad.mp3')) {
       throw const RemoteException('Access denied');
     }
@@ -63,8 +68,13 @@ class Client extends CloudStorageClient {
   }
 
   @override
-  Future<void> uploadStream(Stream<List<int>> dataStream, int length,
-      String fileName, String targetPath, {Function(int, int)? onProgress}) async {
+  Future<void> uploadStream(
+    Stream<List<int>> dataStream,
+    int length,
+    String fileName,
+    String targetPath, {
+    Function(int, int)? onProgress,
+  }) async {
     await for (final _ in dataStream) {}
     uploaded.add(fileName);
   }
@@ -76,12 +86,15 @@ class Client extends CloudStorageClient {
 class Auth extends AuthNotifier {
   final Client fixture;
   Auth(super.ref, this.fixture)
-      : super(
-            initialProvider: CloudProvider.filen,
-            config: FilenConfigService(
-                configPath: '', secureStorage: InMemorySecureStorage()),
-            configPath: '',
-            secureStorage: InMemorySecureStorage());
+    : super(
+        initialProvider: CloudProvider.filen,
+        config: FilenConfigService(
+          configPath: '',
+          secureStorage: InMemorySecureStorage(),
+        ),
+        configPath: '',
+        secureStorage: InMemorySecureStorage(),
+      );
   @override
   CloudStorageClient get client => fixture;
   @override
@@ -97,12 +110,14 @@ void main() {
     SharedPreferences.setMockInitialValues({});
     root = await Directory.systemTemp.createTemp('crisp_transfer_');
     client = Client();
-    container = ProviderContainer(overrides: [
-      localFileServiceProvider.overrideWithValue(Files(root.path)),
-      secureStorageProvider.overrideWithValue(InMemorySecureStorage()),
-      configPathProvider.overrideWithValue(root.path),
-      authProvider.overrideWith((ref) => Auth(ref, client)),
-    ]);
+    container = ProviderContainer(
+      overrides: [
+        localFileServiceProvider.overrideWithValue(Files(root.path)),
+        secureStorageProvider.overrideWithValue(InMemorySecureStorage()),
+        configPathProvider.overrideWithValue(root.path),
+        authProvider.overrideWith((ref) => Auth(ref, client)),
+      ],
+    );
   });
   tearDown(() async {
     container.dispose();
@@ -118,30 +133,32 @@ void main() {
 
   FileItem file(String name) =>
       FileItem(name: name, path: '/$name', isFolder: false, size: 327680);
-  test('pause applies backpressure to the download and resume completes it',
-      () async {
-    final transfers = container.read(transferProvider);
-    var paused = false;
-    transfers.addListener(() {
-      if (transfers.operations.isNotEmpty &&
-          transfers.operations.single.currentBytes > 0 &&
-          !paused) {
-        paused = true;
-        transfers.pauseOperation(transfers.operations.single.id);
-      }
-    });
-    await transfers.downloadFiles([file('book.mp3')], localPath: root.path);
-    await until(() => paused);
-    final op = transfers.operations.single;
-    final before = op.currentBytes;
-    await Future<void>.delayed(const Duration(milliseconds: 50));
-    expect(op.currentBytes, before);
-    expect(client.produced, lessThanOrEqualTo(2));
-    transfers.resumeOperation(op.id);
-    await until(() => op.isComplete);
-    expect(op.status, OperationStatus.completed);
-    expect(await File('${root.path}/book.mp3').length(), 327680);
-  });
+  test(
+    'pause applies backpressure to the download and resume completes it',
+    () async {
+      final transfers = container.read(transferProvider);
+      var paused = false;
+      transfers.addListener(() {
+        if (transfers.operations.isNotEmpty &&
+            transfers.operations.single.currentBytes > 0 &&
+            !paused) {
+          paused = true;
+          transfers.pauseOperation(transfers.operations.single.id);
+        }
+      });
+      await transfers.downloadFiles([file('book.mp3')], localPath: root.path);
+      await until(() => paused);
+      final op = transfers.operations.single;
+      final before = op.currentBytes;
+      await Future<void>.delayed(const Duration(milliseconds: 50));
+      expect(op.currentBytes, before);
+      expect(client.produced, lessThanOrEqualTo(2));
+      transfers.resumeOperation(op.id);
+      await until(() => op.isComplete);
+      expect(op.status, OperationStatus.completed);
+      expect(await File('${root.path}/book.mp3').length(), 327680);
+    },
+  );
   test('cancel stops the stream before remaining chunks are written', () async {
     final transfers = container.read(transferProvider);
     var cancelled = false;
@@ -163,8 +180,10 @@ void main() {
   test('one failed file finishes a mixed batch with a visible error', () async {
     client.fail = true;
     final transfers = container.read(transferProvider);
-    await transfers.downloadFiles([file('good.mp3'), file('bad.mp3')],
-        localPath: root.path);
+    await transfers.downloadFiles([
+      file('good.mp3'),
+      file('bad.mp3'),
+    ], localPath: root.path);
     await until(() => transfers.operations.single.isComplete);
     final op = transfers.operations.single;
     expect(op.status, OperationStatus.failed);
@@ -180,23 +199,34 @@ void main() {
     expect(op.status, OperationStatus.failed);
     expect(op.errorMessage, 'All files failed');
     expect(op.files!.single.error, 'No path');
+    expect(
+      op.files!.single.errorCause,
+      isA<TransferFileException>().having(
+        (error) => error.code,
+        'localized code',
+        TransferFileCode.noPath,
+      ),
+    );
     expect(client.uploaded, isEmpty);
   });
 
-  test('mixed upload preserves missing-path error and successful transfer', () async {
-    final good = File('${root.path}/good.txt');
-    await good.writeAsString('hello');
-    final transfers = container.read(transferProvider);
-    await transfers.uploadFiles([
-      FileItem(name: 'good.txt', path: good.path, isFolder: false, size: 5),
-      FileItem(name: 'missing.txt', isFolder: false),
-    ], targetPath: '/');
-    await until(() => transfers.operations.single.isComplete);
-    final op = transfers.operations.single;
-    expect(op.status, OperationStatus.failed);
-    expect(op.errorMessage, '1 of 2 files failed');
-    expect(op.files!.last.error, 'No path');
-    expect(client.uploaded, ['good.txt']);
-  });
-
+  test(
+    'mixed upload preserves missing-path error and successful transfer',
+    () async {
+      final good = File('${root.path}/good.txt');
+      await good.writeAsString('hello');
+      final transfers = container.read(transferProvider);
+      await transfers.uploadFiles([
+        FileItem(name: 'good.txt', path: good.path, isFolder: false, size: 5),
+        FileItem(name: 'missing.txt', isFolder: false),
+      ], targetPath: '/');
+      await until(() => transfers.operations.single.isComplete);
+      final op = transfers.operations.single;
+      expect(op.status, OperationStatus.failed);
+      expect(op.errorMessage, '1 of 2 files failed');
+      expect(op.files!.last.error, 'No path');
+      expect(op.files!.last.errorCause, isA<TransferFileException>());
+      expect(client.uploaded, ['good.txt']);
+    },
+  );
 }

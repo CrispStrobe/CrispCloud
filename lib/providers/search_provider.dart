@@ -24,12 +24,97 @@ enum FileTypeCategory { documents, images, videos, audio, archives, code }
 
 /// Extensions belonging to each category.
 const Map<FileTypeCategory, List<String>> _categoryExtensions = {
-  FileTypeCategory.documents: ['pdf', 'doc', 'docx', 'xls', 'xlsx', 'ppt', 'pptx', 'odt', 'ods', 'odp', 'txt', 'rtf', 'md', 'csv'],
-  FileTypeCategory.images: ['jpg', 'jpeg', 'png', 'gif', 'bmp', 'svg', 'webp', 'tiff', 'ico', 'heic', 'heif'],
-  FileTypeCategory.videos: ['mp4', 'mkv', 'avi', 'mov', 'wmv', 'flv', 'webm', 'm4v', 'mpg', 'mpeg', '3gp'],
-  FileTypeCategory.audio: ['mp3', 'aac', 'wav', 'flac', 'ogg', 'm4a', 'wma', 'aiff', 'opus'],
-  FileTypeCategory.archives: ['zip', 'tar', 'gz', 'bz2', 'xz', '7z', 'rar', 'tgz', 'zst'],
-  FileTypeCategory.code: ['dart', 'js', 'ts', 'py', 'java', 'kt', 'swift', 'go', 'rs', 'c', 'cpp', 'h', 'hpp', 'cs', 'rb', 'php', 'html', 'css', 'json', 'yaml', 'yml', 'xml', 'sh', 'bash', 'sql'],
+  FileTypeCategory.documents: [
+    'pdf',
+    'doc',
+    'docx',
+    'xls',
+    'xlsx',
+    'ppt',
+    'pptx',
+    'odt',
+    'ods',
+    'odp',
+    'txt',
+    'rtf',
+    'md',
+    'csv',
+  ],
+  FileTypeCategory.images: [
+    'jpg',
+    'jpeg',
+    'png',
+    'gif',
+    'bmp',
+    'svg',
+    'webp',
+    'tiff',
+    'ico',
+    'heic',
+    'heif',
+  ],
+  FileTypeCategory.videos: [
+    'mp4',
+    'mkv',
+    'avi',
+    'mov',
+    'wmv',
+    'flv',
+    'webm',
+    'm4v',
+    'mpg',
+    'mpeg',
+    '3gp',
+  ],
+  FileTypeCategory.audio: [
+    'mp3',
+    'aac',
+    'wav',
+    'flac',
+    'ogg',
+    'm4a',
+    'wma',
+    'aiff',
+    'opus',
+  ],
+  FileTypeCategory.archives: [
+    'zip',
+    'tar',
+    'gz',
+    'bz2',
+    'xz',
+    '7z',
+    'rar',
+    'tgz',
+    'zst',
+  ],
+  FileTypeCategory.code: [
+    'dart',
+    'js',
+    'ts',
+    'py',
+    'java',
+    'kt',
+    'swift',
+    'go',
+    'rs',
+    'c',
+    'cpp',
+    'h',
+    'hpp',
+    'cs',
+    'rb',
+    'php',
+    'html',
+    'css',
+    'json',
+    'yaml',
+    'yml',
+    'xml',
+    'sh',
+    'bash',
+    'sql',
+  ],
 };
 
 /// Returns every extension that belongs to the given categories.
@@ -219,7 +304,10 @@ class SearchNotifier extends ChangeNotifier {
   void setSearchResults(List<FileItem> results, {bool asFolder = false}) {
     _searchResults = List.of(results);
     _showResultsAsFolder = asFolder;
-    _log.info('Search results stored', {'count': results.length, 'asFolder': asFolder});
+    _log.info('Search results stored', {
+      'count': results.length,
+      'asFolder': asFolder,
+    });
     if (asFolder) {
       final panel = _ref.read(panelProvider(PanelSide.remote));
       panel.showSearchResults(results);
@@ -251,20 +339,25 @@ class SearchNotifier extends ChangeNotifier {
       if (client is InternxtClientAdapter) {
         final results = await client.search(query, detailed: true);
 
-        final folders = (results['folders'] as List<dynamic>?)
-            ?.map((item) => FileItem(
-                  name: item['fullPath'] ?? item['name'],
-                  isFolder: true,
-                  uuid: item['uuid'],
-                  path: item['fullPath'],
-                ))
-            .toList() ?? [];
+        final folders =
+            (results['folders'] as List<dynamic>?)
+                ?.map(
+                  (item) => FileItem(
+                    name: item['fullPath'] ?? item['name'],
+                    isFolder: true,
+                    uuid: item['uuid'],
+                    path: item['fullPath'],
+                  ),
+                )
+                .toList() ??
+            [];
 
-        final files = (results['files'] as List<dynamic>?)
-            ?.map((item) {
+        final files =
+            (results['files'] as List<dynamic>?)?.map((item) {
               final plainName = item['name'] ?? 'Unknown';
               final fileType = item['type'] ?? '';
-              final fullName = (fileType.isNotEmpty && !plainName.endsWith(fileType))
+              final fullName =
+                  (fileType.isNotEmpty && !plainName.endsWith(fileType))
                   ? '$plainName.$fileType'
                   : plainName;
               return FileItem(
@@ -273,8 +366,8 @@ class SearchNotifier extends ChangeNotifier {
                 uuid: item['uuid'],
                 path: item['fullPath'],
               );
-            })
-            .toList() ?? [];
+            }).toList() ??
+            [];
 
         // Apply client-side filters
         final filteredFolders = applyFilters(folders);
@@ -284,10 +377,22 @@ class SearchNotifier extends ChangeNotifier {
         notifyListeners();
         return {'folders': filteredFolders, 'files': filteredFiles};
       } else {
-        throw UnsupportedError('Search not supported for ${client.providerName}');
+        throw UnsupportedError(
+          'Search not supported for ${client.providerName}',
+        );
       }
     } catch (e) {
-      _ref.read(errorProvider).addError('Search failed: $e');
+      _ref
+          .read(errorProvider)
+          .addError(
+            'Search failed: $e',
+            code: e is UnsupportedError
+                ? PanelErrorCode.searchUnsupported
+                : PanelErrorCode.cloudSearchFailed,
+            arguments: e is UnsupportedError
+                ? {'provider': _ref.read(authProvider).client.providerName}
+                : {'error': e},
+          );
       _isSearching = false;
       notifyListeners();
       return {};
@@ -306,14 +411,18 @@ class SearchNotifier extends ChangeNotifier {
       final remotePath = _ref.read(panelProvider(PanelSide.remote)).currentPath;
 
       final results = await client.fullTextSearch(query, remotePath);
-      final files = results.map((map) => FileItem(
-        name: map['name'] as String? ?? 'Unknown',
-        isFolder: false,
-        uuid: map['uuid'] as String?,
-        size: map['size'] as int?,
-        path: map['path'] as String?,
-        updatedAt: DateTime.tryParse(map['lastModified'] ?? ''),
-      )).toList();
+      final files = results
+          .map(
+            (map) => FileItem(
+              name: map['name'] as String? ?? 'Unknown',
+              isFolder: false,
+              uuid: map['uuid'] as String?,
+              size: map['size'] as int?,
+              path: map['path'] as String?,
+              updatedAt: DateTime.tryParse(map['lastModified'] ?? ''),
+            ),
+          )
+          .toList();
 
       // Apply client-side filters
       final filtered = applyFilters(files);
@@ -321,14 +430,21 @@ class SearchNotifier extends ChangeNotifier {
       // Store snippets for UI display (keyed by file path or name)
       _lastSnippets = {
         for (final map in results)
-          (map['path'] ?? map['name']) as String: (map['snippet'] ?? '') as String,
+          (map['path'] ?? map['name']) as String:
+              (map['snippet'] ?? '') as String,
       };
 
       _isSearching = false;
       notifyListeners();
       return filtered;
     } catch (e) {
-      _ref.read(errorProvider).addError('Full-text search failed: $e');
+      _ref
+          .read(errorProvider)
+          .addError(
+            'Full-text search failed: $e',
+            code: PanelErrorCode.fullTextSearchFailed,
+            arguments: {'error': e},
+          );
       _isSearching = false;
       notifyListeners();
       return [];
@@ -349,11 +465,16 @@ class SearchNotifier extends ChangeNotifier {
       final remotePath = _ref.read(panelProvider(PanelSide.remote)).currentPath;
 
       if (client is InternxtClientAdapter) {
-        final results = await client.findFiles(remotePath, pattern, maxDepth: -1);
+        final results = await client.findFiles(
+          remotePath,
+          pattern,
+          maxDepth: -1,
+        );
         final files = results.map((item) {
           final plainName = item['name'] ?? 'Unknown';
           final fileType = item['fileType'] ?? '';
-          final fullName = (fileType.isNotEmpty && !plainName.endsWith(fileType))
+          final fullName =
+              (fileType.isNotEmpty && !plainName.endsWith(fileType))
               ? '$plainName.$fileType'
               : plainName;
           return FileItem(
@@ -376,7 +497,17 @@ class SearchNotifier extends ChangeNotifier {
         throw UnsupportedError('Find not supported for ${client.providerName}');
       }
     } catch (e) {
-      _ref.read(errorProvider).addError('Find failed: $e');
+      _ref
+          .read(errorProvider)
+          .addError(
+            'Find failed: $e',
+            code: e is UnsupportedError
+                ? PanelErrorCode.findUnsupported
+                : PanelErrorCode.findFailed,
+            arguments: e is UnsupportedError
+                ? {'provider': _ref.read(authProvider).client.providerName}
+                : {'error': e},
+          );
       _isSearching = false;
       notifyListeners();
       return [];
