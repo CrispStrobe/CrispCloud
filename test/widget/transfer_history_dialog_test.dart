@@ -9,6 +9,7 @@ import 'package:crisp_cloud/services/cloud_storage_interface.dart';
 import 'package:crisp_cloud/services/filen_config_service.dart';
 import 'package:crisp_cloud/services/file_operation_service.dart';
 import 'package:crisp_cloud/services/local_file_service.dart';
+import 'package:crisp_cloud/services/installation_identity.dart';
 import 'package:crisp_cloud/services/secure_storage_service.dart';
 import 'package:crisp_cloud/services/transfer_journal.dart';
 import 'package:crisp_cloud/services/transfer_journal_storage.dart';
@@ -30,6 +31,7 @@ void main() {
 
   setUp(() async {
     SharedPreferences.setMockInitialValues({});
+    await InstallationIdentityService.instance.initialize();
     root = await Directory.systemTemp.createTemp('crisp_recovery_widget_');
     source = File(p.join(root.path, 'source', 'a.txt'));
     destination = File(p.join(root.path, 'destination', 'a.txt'));

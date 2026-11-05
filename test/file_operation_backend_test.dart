@@ -13,6 +13,15 @@ import 'package:path/path.dart' as p;
 void main() {
   TestWidgetsFlutterBinding.ensureInitialized();
 
+  test('operation listings bypass cached provider directory IDs', () async {
+    final client = _FreshCloudClient()..put('/current.txt', 'fresh contents');
+    final backend = CloudOperationBackend(client, isCurrent: () => true);
+    final file = await backend.stat('/current.txt');
+    expect(file?.size, 14);
+    expect(client.freshReads, isNotEmpty);
+    expect(client.cachedReads, isEmpty);
+  });
+
   group(
     'native transfer storage',
     () {
@@ -48,6 +57,60 @@ void main() {
           isEmpty,
         );
       }
+
+      test('stat is unaffected by unrelated siblings disappearing during enumeration', () async {
+        final requested = await existingFile();
+        final outer = Zone.current;
+        await IOOverrides.runZoned(
+          () async {
+            final result = await backend.stat(requested.path);
+            expect(result?.size, 8);
+            final files = await backend.list(root.path);
+            expect(files.map((item) => item.name), ['a.txt']);
+          },
+          createDirectory: (path) => path == root.path
+              ? _DirectoryWithDisappearedChild(root)
+              : outer.run(() => Directory(path)),
+        );
+        expect(await backend.stat(p.join(root.path, 'missing.txt')), isNull);
+      });
+
+      test(
+        'native stat propagates access errors suppressed by the type lookup',
+        () async {
+          final denied = p.join(root.path, 'denied.txt');
+          final outer = Zone.current;
+          await IOOverrides.runZoned(
+            () async {
+              await expectLater(
+                backend.stat(denied),
+                throwsA(
+                  isA<FileSystemException>().having(
+                    (error) => error.osError?.errorCode,
+                    'permission error',
+                    13,
+                  ),
+                ),
+              );
+            },
+            createFile: (path) => path == denied
+                ? _DeniedResolutionFile(path)
+                : outer.run(() => File(path)),
+          );
+        },
+      );
+
+      test(
+        'native stat retains dangling link identity without reading its target',
+        () async {
+          final link = Link(p.join(root.path, 'dangling'));
+          await link.create(p.join(root.path, 'missing-target'));
+          final item = await backend.stat(link.path);
+          expect(item?.isSymlink, isTrue);
+          expect(item?.symlinkTarget, p.join(root.path, 'missing-target'));
+          expect(item?.size, isNull);
+        },
+      );
 
       test(
         'staged verification rejects corruption before replacing the original',
@@ -763,4 +826,48 @@ class _CloudClient extends CloudStorageClient {
     files.remove(path);
     directories.remove(path);
   }
+}
+
+class _FreshCloudClient extends _CloudClient
+    implements FreshCloudDirectoryReader {
+  final List<String> freshReads = [];
+  final List<String> cachedReads = [];
+  @override
+  Future<Map<String, dynamic>> listPath(String path) async {
+    cachedReads.add(path);
+    throw StateError('Stale listing path was used');
+  }
+
+  @override
+  Future<Map<String, dynamic>> readDirectoryForEdit(String path) {
+    freshReads.add(path);
+    return super.listPath(path);
+  }
+}
+
+class _DirectoryWithDisappearedChild extends Fake implements Directory {
+  _DirectoryWithDisappearedChild(this.directory);
+  final Directory directory;
+  @override
+  String get path => directory.path;
+  @override
+  Stream<FileSystemEntity> list({
+    bool recursive = false,
+    bool followLinks = true,
+  }) async* {
+    yield File(p.join(path, 'disappeared-sibling'));
+    yield* directory.list(recursive: recursive, followLinks: followLinks);
+  }
+}
+
+class _DeniedResolutionFile extends Fake implements File {
+  _DeniedResolutionFile(this.path);
+  @override
+  final String path;
+  @override
+  Future<String> resolveSymbolicLinks() async => throw FileSystemException(
+    'Permission denied',
+    path,
+    const OSError('Permission denied', 13),
+  );
 }

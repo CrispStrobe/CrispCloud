@@ -1,4 +1,5 @@
 import 'package:crisp_cloud/services/destination_name_mask.dart';
+import 'package:crisp_cloud/models/file_search_query.dart';
 import 'package:crisp_cloud/services/file_operation_options.dart';
 import 'package:crisp_cloud/services/file_operation_profiles.dart';
 import 'package:crisp_cloud/services/file_selection_pattern.dart';
@@ -44,6 +45,13 @@ void main() {
         mode: FilePatternMode.regex,
         caseSensitive: true,
         matchFullPath: true,
+      ),
+      searchCriteria: const FileSearchQuery(
+        includeFolders: false,
+        includeHidden: false,
+        extensions: ['txt', 'md'],
+        namePattern: '*.txt;*.md',
+        minSize: 2,
       ),
       excludedDirectories: FileSelectionPattern('cache;tmp'),
       excludeEmptyDirectories: true,

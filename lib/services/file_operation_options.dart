@@ -50,6 +50,7 @@ class FileOperationOptions {
     this.stopOnError = true,
     this.copySymbolicLinks = false,
     this.pattern,
+    this.searchCriteria,
     this.destinationName,
     this.destinationMask = '*.*',
     this.minimumSize,
@@ -78,6 +79,30 @@ class FileOperationOptions {
   final bool copySymbolicLinks;
   final FileSelectionPattern? pattern;
 
+  /// Reusable item criteria from Search and Selection. Selected transfer roots
+  /// and [recursive] define traversal; saved search roots are never substituted.
+  /// Content and archive matching require a search result collection first.
+  final FileSearchQuery? searchCriteria;
+
+  void validateSearchCriteria() {
+    final criteria = searchCriteria;
+    if (criteria == null) return;
+    criteria.validate();
+    if (criteria.contentPattern.isNotEmpty || criteria.searchArchives) {
+      throw const FormatException(
+        'Run this content or archive search first, then transfer its result rows.',
+      );
+    }
+  }
+
+  bool matchesSharedCriteria(FileItem item, {FileSelectionPattern? matcher}) {
+    final criteria = searchCriteria;
+    return criteria == null ||
+        ((criteria.includeHidden || !item.name.startsWith('.')) &&
+            (matcher ?? criteria.nameMatcher).matches(item) &&
+            criteria.matchesMetadata(item));
+  }
+
   /// An exact new name for a single selected root (including directories).
   final String? destinationName;
 
@@ -104,10 +129,11 @@ class FileOperationOptions {
     modifiedBefore: modifiedBefore,
   );
 
-  bool matchesFile(FileItem item) =>
+  bool matchesFile(FileItem item, {FileSelectionPattern? criteriaMatcher}) =>
       (pattern?.matches(item) ?? true) &&
       (includeHidden || !item.name.startsWith('.')) &&
-      searchFilter.matchesMetadata(item);
+      searchFilter.matchesMetadata(item) &&
+      matchesSharedCriteria(item, matcher: criteriaMatcher);
 
   Map<String, dynamic> toJson() => {
     'version': 1,
@@ -126,6 +152,7 @@ class FileOperationOptions {
     'stopOnError': stopOnError,
     'copySymbolicLinks': copySymbolicLinks,
     'pattern': _patternJson(pattern),
+    'searchCriteria': searchCriteria?.toJson(),
     'destinationName': destinationName,
     'destinationMask': destinationMask,
     'minimumSize': minimumSize,
@@ -162,6 +189,11 @@ class FileOperationOptions {
       stopOnError: json['stopOnError'] != false,
       copySymbolicLinks: json['copySymbolicLinks'] == true,
       pattern: _readPattern(json['pattern']),
+      searchCriteria: json['searchCriteria'] == null
+          ? null
+          : FileSearchQuery.fromJson(
+              Map<String, dynamic>.from(json['searchCriteria'] as Map),
+            ),
       destinationName: json['destinationName'] as String?,
       destinationMask: json['destinationMask'] as String? ?? '*.*',
       minimumSize: json['minimumSize'] as int?,

@@ -31,10 +31,11 @@ FileOperationBackend fileOperationBackend({
 
 class LocalOperationBackend extends FileOperationBackend {
   LocalOperationBackend(this.service, {required bool Function() isCurrent})
+    // Keep the public named callback while storing it privately.
+    // ignore: prefer_initializing_formals
     : _isCurrent = isCurrent;
-  static StorageReference get _reference => storageReferenceForSource(
-    const LocalPanelSource('/'),
-  );
+  static StorageReference get _reference =>
+      storageReferenceForSource(const LocalPanelSource('/'));
   final LocalFileService service;
   final bool Function() _isCurrent;
   @override
@@ -115,30 +116,90 @@ class LocalOperationBackend extends FileOperationBackend {
     return service.withFileOperationAccess(path, () async {
       final items = <FileItem>[];
       await for (final entity in Directory(path).list(followLinks: false)) {
-        items.add(await _nativeItem(entity.path));
+        final item = await _nativeItemOrNull(entity.path);
+        if (item != null) items.add(item);
       }
       _check();
       return items;
     });
   }
 
-  Future<FileItem> _nativeItem(String path) async {
-    final type = await FileSystemEntity.type(path, followLinks: false);
+  bool _isMissing(FileSystemException error) =>
+      error.osError?.errorCode == 2 ||
+      (Platform.isWindows && error.osError?.errorCode == 3);
+
+  /// Dart type/stat suppress permission errors as notFound. Resolve only on
+  /// that error path to recover the real OS failure; absence alone returns null.
+  Future<bool> _confirmMissing(String path) async {
+    try {
+      await File(path).resolveSymbolicLinks();
+    } on FileSystemException catch (error) {
+      if (_isMissing(error)) return true;
+      rethrow;
+    }
+    return false;
+  }
+
+  Future<FileItem?> _nativeItemOrNull(String path) async {
+    var type = await FileSystemEntity.type(path, followLinks: false);
     if (type == FileSystemEntityType.notFound) {
-      throw FileSystemException('Item disappeared while listing.', path);
+      if (await _confirmMissing(path)) return null;
+      type = await FileSystemEntity.type(path, followLinks: false);
+      if (type == FileSystemEntityType.notFound) {
+        throw FileSystemException('Cannot inspect the requested item.', path);
+      }
+    }
+    if (type == FileSystemEntityType.link) {
+      String target;
+      try {
+        target = await Link(path).target();
+      } on FileSystemException catch (error) {
+        if (_isMissing(error)) return null;
+        rethrow;
+      }
+      return FileItem(
+        name: paths.basename(path),
+        path: path,
+        isFolder: false,
+        isSymlink: true,
+        symlinkTarget: target,
+      );
     }
     final info = await FileStat.stat(path);
+    if (info.type == FileSystemEntityType.notFound) {
+      if (await _confirmMissing(path)) return null;
+      throw FileSystemException(
+        'Cannot read the requested item metadata.',
+        path,
+      );
+    }
+    if (info.type != type ||
+        await FileSystemEntity.type(path, followLinks: false) != type) {
+      throw FileSystemException(
+        'Item changed while it was being inspected.',
+        path,
+      );
+    }
     return FileItem(
       name: paths.basename(path),
       path: path,
       isFolder: type == FileSystemEntityType.directory,
-      isSymlink: type == FileSystemEntityType.link,
-      symlinkTarget: type == FileSystemEntityType.link
-          ? await Link(path).target()
-          : null,
+      isSymlink: false,
       size: type == FileSystemEntityType.file ? info.size : null,
-      updatedAt: type == FileSystemEntityType.link ? null : info.modified,
+      updatedAt: info.modified,
     );
+  }
+
+  Future<FileItem> _nativeItem(String path) async {
+    final item = await _nativeItemOrNull(path);
+    if (item == null) {
+      throw FileSystemException(
+        'The requested item no longer exists.',
+        path,
+        const OSError('No such file or directory', 2),
+      );
+    }
+    return item;
   }
 
   @override
@@ -146,40 +207,38 @@ class LocalOperationBackend extends FileOperationBackend {
     _check();
     path = paths.normalize(path);
     final parent = paths.dirname(path);
-    if (parent == path) {
-      if (kIsWeb) return FileItem(name: path, path: path, isFolder: true);
-      return service.withFileOperationAccess(path, () => _nativeItem(path));
-    }
-    // Listing propagates permission errors; absence alone means missing.
-    // Resolve missing intermediate directories recursively.
-    final parentExists = kIsWeb
-        ? await service.hasAccessToPath(parent)
-        : await service.withFileOperationAccess(
+    if (!kIsWeb) {
+      return service.withFileOperationAccess(path, () async {
+        _check();
+        if (parent != path) {
+          final parentType = await FileSystemEntity.type(
             parent,
-            () => FileSystemEntity.type(parent, followLinks: false),
+            followLinks: false,
           );
-    if (parentExists == false ||
-        parentExists == FileSystemEntityType.notFound) {
+          if (parentType == FileSystemEntityType.link) {
+            throw FileSystemException(
+              'Destination parent is a symbolic link.',
+              parent,
+            );
+          }
+          if (parentType != FileSystemEntityType.directory &&
+              parentType != FileSystemEntityType.notFound) {
+            throw FileSystemException('The parent is not a directory.', parent);
+          }
+        }
+        final item = await _nativeItemOrNull(path);
+        _check();
+        return item;
+      });
+    }
+    if (parent == path) return FileItem(name: path, path: path, isFolder: true);
+    if (!await service.hasAccessToPath(parent)) {
       final ancestor = await stat(parent);
       if (ancestor == null) return null;
     }
-    if (parentExists == FileSystemEntityType.link) {
-      throw FileSystemException(
-        'Destination parent is a symbolic link.',
-        parent,
-      );
-    }
     final entries = await list(parent);
     final name = paths.basename(path);
-    final matches = entries
-        .where(
-          (item) =>
-              item.name == name ||
-              (!kIsWeb &&
-                  (Platform.isWindows || Platform.isMacOS) &&
-                  item.name.toLowerCase() == name.toLowerCase()),
-        )
-        .toList();
+    final matches = entries.where((item) => item.name == name).toList();
     if (matches.length > 1) throw StateError('Ambiguous filename: $path');
     return matches.isEmpty ? null : matches.single;
   }
@@ -531,6 +590,8 @@ class LocalOperationBackend extends FileOperationBackend {
 
 class CloudOperationBackend extends FileOperationBackend {
   CloudOperationBackend(this.client, {required bool Function() isCurrent})
+    // Keep the public named callback while storing it privately.
+    // ignore: prefer_initializing_formals
     : _isCurrent = isCurrent;
   final CloudStorageClient client;
   final bool Function() _isCurrent;
@@ -570,7 +631,9 @@ class CloudOperationBackend extends FileOperationBackend {
   @override
   Future<List<FileItem>> list(String path) async {
     _check();
-    final result = await client.listPath(path);
+    final result = client is FreshCloudDirectoryReader
+        ? await (client as FreshCloudDirectoryReader).readDirectoryForEdit(path)
+        : await client.listPath(path);
     _check();
     final entries = <FileItem>[];
     for (final group in ['folders', 'files']) {
