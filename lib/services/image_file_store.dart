@@ -9,6 +9,7 @@ import 'file_cache_service.dart';
 import 'image_edit_session.dart';
 import 'image_export_options.dart';
 import 'image_gif_codec.dart';
+import 'image_raster_codec.dart';
 import 'local_file_service.dart';
 import 'pdf_edit_session.dart' show PdfSaveInProgressException, PdfSaveOutcome;
 import 'pdf_file_store.dart';
@@ -82,22 +83,39 @@ ImageFileStore _imageStoreForName(String name, PdfFileStore delegate) {
   final lower = name.toLowerCase();
   if (lower.endsWith('.webp')) return WebPImageFileStore(delegate);
   if (lower.endsWith('.gif')) return GifImageFileStore(delegate);
+  if (lower.endsWith('.bmp')) return BmpImageFileStore(delegate);
+  if (lower.endsWith('.tif') || lower.endsWith('.tiff'))
+    return TiffImageFileStore(delegate);
   return _ImageFileStore(delegate);
 }
 
 /// Static WebP uses a lossless PNG editing surface and lossless WebP output.
 class WebPImageFileStore extends _TranscodedImageFileStore {
-  WebPImageFileStore(PdfFileStore delegate) : super(delegate, gif: false);
+  WebPImageFileStore(PdfFileStore delegate)
+    : super(delegate, _TranscodedKind.webp);
 }
 
 /// Static GIF saves only when every edited pixel is representable exactly.
 class GifImageFileStore extends _TranscodedImageFileStore {
-  GifImageFileStore(PdfFileStore delegate) : super(delegate, gif: true);
+  GifImageFileStore(PdfFileStore delegate)
+    : super(delegate, _TranscodedKind.gif);
 }
 
+class BmpImageFileStore extends _TranscodedImageFileStore {
+  BmpImageFileStore(PdfFileStore delegate)
+    : super(delegate, _TranscodedKind.bmp);
+}
+
+class TiffImageFileStore extends _TranscodedImageFileStore {
+  TiffImageFileStore(PdfFileStore delegate)
+    : super(delegate, _TranscodedKind.tiff);
+}
+
+enum _TranscodedKind { webp, gif, bmp, tiff }
+
 class _TranscodedImageFileStore implements ImageFileStore {
-  _TranscodedImageFileStore(this._delegate, {required this.gif});
-  final bool gif;
+  _TranscodedImageFileStore(this._delegate, this.kind);
+  final _TranscodedKind kind;
   final PdfFileStore _delegate;
   bool _loaded = false;
   bool _busy = false;
@@ -119,7 +137,13 @@ class _TranscodedImageFileStore implements ImageFileStore {
       final bytes = await _delegate.load();
       if (bytes.length > kImageEditorInputLimitBytes)
         throw const ImageEditException(ImageEditFailure.inputTooLarge);
-      final png = await compute(gif ? _gifToPng : _webpToPng, bytes);
+      final convert = switch (kind) {
+        _TranscodedKind.webp => _webpToPng,
+        _TranscodedKind.gif => _gifToPng,
+        _TranscodedKind.bmp => _bmpToPng,
+        _TranscodedKind.tiff => _tiffToPng,
+      };
+      final png = await compute(convert, bytes);
       _loaded = true;
       return png;
     } finally {
@@ -135,7 +159,13 @@ class _TranscodedImageFileStore implements ImageFileStore {
         _busy = true;
         try {
           final snapshot = Uint8List.fromList(bytes).asUnmodifiableView();
-          final output = await compute(gif ? _pngToGif : _pngToWebp, snapshot);
+          final convert = switch (kind) {
+            _TranscodedKind.webp => _pngToWebp,
+            _TranscodedKind.gif => _pngToGif,
+            _TranscodedKind.bmp => _pngToBmp,
+            _TranscodedKind.tiff => _pngToTiff,
+          };
+          final output = await compute(convert, snapshot);
           return switch (await _delegate.save(output)) {
             PdfSaveOutcome.savedOriginal => ImageSaveOutcome.savedOriginal,
             PdfSaveOutcome.savedCopy => ImageSaveOutcome.savedCopy,
@@ -200,6 +230,30 @@ Uint8List _pngToGif(Uint8List bytes) {
   if (pixels == null)
     throw const ImageEditException(ImageEditFailure.invalidImage);
   return encodeExactGif(pixels);
+}
+
+Uint8List _bmpToPng(Uint8List bytes) =>
+    _additionalToPng(bytes, AdditionalRasterFormat.bmp);
+Uint8List _tiffToPng(Uint8List bytes) =>
+    _additionalToPng(bytes, AdditionalRasterFormat.tiff);
+Uint8List _additionalToPng(Uint8List bytes, AdditionalRasterFormat format) {
+  final pixels = decodeAdditionalRaster(bytes, format);
+  final png = image.encodePng(image.bakeOrientation(pixels));
+  inspectEditableImage(png, fileName: 'source.png');
+  return png;
+}
+
+Uint8List _pngToBmp(Uint8List bytes) =>
+    _pngToAdditional(bytes, AdditionalRasterFormat.bmp);
+Uint8List _pngToTiff(Uint8List bytes) =>
+    _pngToAdditional(bytes, AdditionalRasterFormat.tiff);
+Uint8List _pngToAdditional(Uint8List bytes, AdditionalRasterFormat format) {
+  validateImageEditorOutput(bytes, ImageFileFormat.png);
+  final pixels = image.PngDecoder(maxPixels: kImageEditorMaxPixels)
+      .decode(bytes);
+  if (pixels == null)
+    throw const ImageEditException(ImageEditFailure.invalidImage);
+  return encodeAdditionalRaster(pixels, format);
 }
 
 class _ImageFileStore implements ImageFileStore {
