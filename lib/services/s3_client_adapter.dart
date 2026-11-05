@@ -440,6 +440,43 @@ class S3ClientAdapter extends CloudStorageClient
     onProgress: onProgress,
   );
 
+  @override
+  Future<bool> hasPendingUpload(String path, {int? length}) async {
+    _ensureAuth();
+    final epoch = _authEpoch;
+    final identity = storageReferenceForClient(this).id;
+    final key = _pathToKey(path);
+    final saved = (await getInterruptedUploads())
+        .where(
+          (record) =>
+              record['schema'] == 2 &&
+              record['storageId'] == identity &&
+              record['key'] == key &&
+              record['uploadId'] is String &&
+              (record['uploadId'] as String).isNotEmpty &&
+              record['length'] is int &&
+              (record['length'] as int) > 0 &&
+              (length == null || record['length'] == length) &&
+              record['partSize'] ==
+                  ((record['length'] as int) / 10000).ceil().clamp(
+                    defaultPartSize,
+                    64 * 1024 * 1024,
+                  ),
+        )
+        .toList();
+    if (!_authenticated ||
+        epoch != _authEpoch ||
+        storageReferenceForClient(this).id != identity) {
+      throw StateError('The original S3 account is no longer connected.');
+    }
+    if (saved.length > 1) {
+      throw StateError(
+        'Several saved multipart sessions require review for this target.',
+      );
+    }
+    return saved.isNotEmpty;
+  }
+
   Future<void> _uploadBoundedStream(
     Stream<List<int>> dataStream,
     int length,
@@ -449,15 +486,29 @@ class S3ClientAdapter extends CloudStorageClient
     int? requestedPartSize,
   }) async {
     _ensureAuth();
+    final epoch = _authEpoch;
+    final identity = storageReferenceForClient(this).id;
+    final bucket = _bucket;
+    void checkCurrent() {
+      if (!_authenticated ||
+          epoch != _authEpoch ||
+          storageReferenceForClient(this).id != identity) {
+        throw StateError('The original S3 account is no longer connected.');
+      }
+    }
+
     if (length < 0) throw ArgumentError.value(length, 'length');
     final key = _pathToKey(p.posix.join(targetPath, fileName));
     if (length == 0) {
       await for (final chunk in dataStream) {
+        checkCurrent();
         if (chunk.isNotEmpty) {
           throw StateError('Source length changed during upload.');
         }
       }
+      checkCurrent();
       await uploadFile(const [], fileName, targetPath, onProgress: onProgress);
+      checkCurrent();
       return;
     }
     final partSize =
@@ -471,7 +522,6 @@ class S3ClientAdapter extends CloudStorageClient
         'This object exceeds the bounded multipart upload limit.',
       );
     }
-    final identity = storageReferenceForClient(this).id;
     final interrupted = (await getInterruptedUploads())
         .where(
           (record) =>
@@ -482,6 +532,7 @@ class S3ClientAdapter extends CloudStorageClient
               record['partSize'] == partSize,
         )
         .toList();
+    checkCurrent();
     if (interrupted.length > 1) {
       throw StateError(
         'Several multipart sessions require review for this target.',
@@ -490,6 +541,7 @@ class S3ClientAdapter extends CloudStorageClient
     final previous = interrupted.isEmpty ? null : interrupted.single;
     final uploadId =
         previous?['uploadId'] as String? ?? await _initiateMultipartUpload(key);
+    checkCurrent();
     final savedParts = List<Map<String, dynamic>>.from(
       ((previous?['parts'] as List?) ?? []).map(
         (part) => Map<String, dynamic>.from(part as Map),
@@ -498,19 +550,21 @@ class S3ClientAdapter extends CloudStorageClient
     final remoteParts = previous == null
         ? <PartETag>[]
         : await listParts(key, uploadId);
+    checkCurrent();
     final completed = <PartETag>[];
     final records = List<Map<String, dynamic>>.from(savedParts);
     final prefs = await SharedPreferences.getInstance();
     var uploaded = 0;
     var number = 0;
     Future<void> persist() async {
+      checkCurrent();
       if (!await prefs.setString(
         '$_multipartTrackingPrefix$uploadId',
         jsonEncode({
           'schema': 2,
           'storageId': identity,
           'uploadId': uploadId,
-          'bucket': _bucket,
+          'bucket': bucket,
           'key': key,
           'length': length,
           'partSize': partSize,
@@ -522,7 +576,12 @@ class S3ClientAdapter extends CloudStorageClient
     }
 
     if (previous == null) await persist();
-    await for (final part in transferParts(dataStream, partSize)) {
+    await for (final part in validatedTransferParts(
+      dataStream,
+      length,
+      partSize,
+    )) {
+      checkCurrent();
       number++;
       final digest = sha256.convert(part).toString();
       final saved = savedParts
@@ -543,6 +602,7 @@ class S3ClientAdapter extends CloudStorageClient
         etag = remote.etag;
       } else {
         etag = await _uploadPart(key, uploadId, number, part);
+        checkCurrent();
       }
       completed.add(PartETag(number, etag));
       records.removeWhere((record) => record['partNumber'] == number);
@@ -562,7 +622,9 @@ class S3ClientAdapter extends CloudStorageClient
     if (uploaded != length) {
       throw StateError('Source length changed during upload.');
     }
+    checkCurrent();
     await _completeMultipartUpload(key, uploadId, completed);
+    checkCurrent();
     await _clearUploadTracking(uploadId);
   }
 
@@ -583,6 +645,7 @@ class S3ClientAdapter extends CloudStorageClient
   String? _accessKey;
   String? _secretKey;
   bool _authenticated = false;
+  int _authEpoch = 0;
 
   /// Server-side encryption mode for uploads.
   S3Encryption encryption = S3Encryption.none;
@@ -909,6 +972,8 @@ class S3ClientAdapter extends CloudStorageClient
     String password, {
     String? twoFactorCode,
   }) async {
+    _authEpoch++;
+    _authenticated = false;
     // Parse login format: accessKey@endpoint/bucket?region=us-east-1
     // Password is the secretKey.
     final parsed = _parseLoginIdentity(email);
@@ -1064,6 +1129,7 @@ class S3ClientAdapter extends CloudStorageClient
 
   @override
   Future<void> logout() async {
+    _authEpoch++;
     _authenticated = false;
     _accessKey = null;
     _secretKey = null;
@@ -1923,8 +1989,10 @@ class S3ClientAdapter extends CloudStorageClient
 
   /// Attempt to restore credentials from secure storage (for auto-login).
   Future<bool> restoreCredentials() async {
+    final epoch = ++_authEpoch;
+    _authenticated = false;
     final creds = await _config.readCredentials();
-    if (creds == null) return false;
+    if (epoch != _authEpoch || creds == null) return false;
 
     _accessKey = creds['accessKey'];
     _secretKey = creds['secretKey'];

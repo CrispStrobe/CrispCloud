@@ -355,7 +355,8 @@ class TransferRecoveryService {
             ..message = saved.message
             ..recovery = (Map<String, dynamic>.of(saved.recovery)
               ..remove('resumeAfterCommit')
-              ..remove('resumeStagePath'));
+              ..remove('resumeStagePath')
+              ..remove('resumeUploadPath'));
       rows.add(entry);
       onProgress?.call(rows.length, job.entries.length);
       if (const [
@@ -480,6 +481,7 @@ class TransferRecoveryService {
               'The saved staging path is outside the reviewed destination.',
             );
           }
+          protected.assertDestinationUnprotected(stagePath);
           final staged = await destination.stat(stagePath);
           if (staged != null) {
             if (staged.isFolder ||
@@ -501,6 +503,20 @@ class TransferRecoveryService {
             entry.recovery = {...?entry.recovery, 'resumeStagePath': stagePath};
             actions[saved.index] =
                 'Resume from ${staged.size} verified staged bytes';
+          } else if (destination.capabilities.resumableUpload &&
+              (saved.recovery['multipartUploadPending'] == true ||
+                  (saved.recovery['multipartUploadPending'] == null &&
+                      saved.recovery['lastMutationPhase'] == 'writing')) &&
+              await destination.hasPendingUpload(
+                stagePath,
+                length: current.size,
+              )) {
+            entry.recovery = {
+              ...?entry.recovery,
+              'resumeUploadPath': stagePath,
+            };
+            actions[saved.index] =
+                'Resume saved multipart upload; verify completed parts';
           } else {
             actions[saved.index] = 'Retry remaining item';
           }

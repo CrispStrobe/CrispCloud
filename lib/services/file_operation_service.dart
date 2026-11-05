@@ -71,6 +71,7 @@ abstract class FileOperationBackend {
   }
 
   Future<bool> moveNoReplace(FileItem file, String destination) async => false;
+  Future<bool> hasPendingUpload(String path, {int? length}) async => false;
   Future<bool> copyNative(
     FileItem file,
     String destination, {
@@ -84,11 +85,15 @@ abstract class FileOperationBackend {
     int? length, {
     required bool replace,
     bool preallocate = false,
+    String? resumeUploadPath,
     Future<void> Function(FileItem staged)? verifyStaged,
     Future<void> Function(Map<String, dynamic> state)? checkpoint,
   }) async {
     if (preallocate) {
       throw UnsupportedError('This storage cannot reserve disk space.');
+    }
+    if (resumeUploadPath != null) {
+      throw UnsupportedError('This storage cannot resume a saved upload.');
     }
     await writePreparedFile(
       path,
@@ -1053,8 +1058,21 @@ class FileOperationService {
         plan.assertDestinationUnprotected(entry.destination);
         final recoveredStagePath =
             entry.recovery?['resumeStagePath'] as String?;
+        final recoveredUploadPath =
+            entry.recovery?['resumeUploadPath'] as String?;
+        if (recoveredUploadPath != null) {
+          plan.assertDestinationUnprotected(recoveredUploadPath);
+          if (append || resumeOffset > 0 || recoveredStagePath != null) {
+            throw StateError(
+              'A saved multipart upload requires the complete original source. Restart this item to append or use a different partial copy.',
+            );
+          }
+        }
         if (options.copyMethod == FileCopyMethod.copyOnWrite &&
-            (append || resumeOffset > 0 || recoveredStagePath != null)) {
+            (append ||
+                resumeOffset > 0 ||
+                recoveredStagePath != null ||
+                recoveredUploadPath != null)) {
           throw UnsupportedError(
             'A required copy-on-write clone cannot append or resume partial bytes.',
           );
@@ -1099,6 +1117,7 @@ class FileOperationService {
               !options.preallocate &&
               !replace &&
               recoveredStagePath == null &&
+              recoveredUploadPath == null &&
               !options.verifyContents &&
               source.identity == target.identity &&
               options.kind == FileOperationKind.move) {
@@ -1114,6 +1133,7 @@ class FileOperationService {
               !options.preallocate &&
               !append &&
               recoveredStagePath == null &&
+              recoveredUploadPath == null &&
               resumeOffset == 0 &&
               entry.source.isSymlink != true &&
               source.identity == target.identity) {
@@ -1224,6 +1244,7 @@ class FileOperationService {
                 expectedLength,
                 replace: replace,
                 preallocate: options.preallocate,
+                resumeUploadPath: recoveredUploadPath,
                 checkpoint: (state) async {
                   for (final key in [
                     'stagingPath',

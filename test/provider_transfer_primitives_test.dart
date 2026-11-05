@@ -310,6 +310,18 @@ void main() {
       return http.Response('<CompleteMultipartUploadResult/>', 200);
     });
     await http.runWithClient(() async {
+      expect(
+        await adapter.hasPendingUpload('/target', length: prefix.length + 3),
+        isTrue,
+      );
+      expect(
+        await adapter.hasPendingUpload('/target', length: prefix.length + 4),
+        isFalse,
+      );
+      expect(
+        await adapter.hasPendingUpload('/different', length: prefix.length + 3),
+        isFalse,
+      );
       await adapter.uploadStream(
         Stream.fromIterable([
           prefix,
@@ -323,6 +335,68 @@ void main() {
     expect(uploaded, [2]);
     expect(completed, isTrue);
     expect(await adapter.getInterruptedUploads(), isEmpty);
+    expect(
+      await adapter.hasPendingUpload('/target', length: prefix.length + 3),
+      isFalse,
+    );
+  });
+
+  test('S3 pending discovery excludes other accounts and blocks duplicate saved sessions', () async {
+    final adapter = await s3();
+    final prefs = await SharedPreferences.getInstance();
+    final record = {
+      'schema': 2,
+      'storageId': storageReferenceForClient(adapter).id,
+      'uploadId': 'one',
+      'key': 'target',
+      'length': 3,
+      'partSize': S3ClientAdapter.defaultPartSize,
+      'parts': [],
+    };
+    await prefs.setString(
+      'crisp_s3_multipart_one',
+      jsonEncode({...record, 'storageId': 'other-account'}),
+    );
+    expect(await adapter.hasPendingUpload('/target', length: 3), isFalse);
+    await prefs.setString('crisp_s3_multipart_one', jsonEncode(record));
+    expect(await adapter.hasPendingUpload('/target', length: 3), isTrue);
+    await prefs.setString(
+      'crisp_s3_multipart_two',
+      jsonEncode({...record, 'uploadId': 'two'}),
+    );
+    await expectLater(
+      adapter.hasPendingUpload('/target', length: 3),
+      throwsStateError,
+    );
+  });
+
+  test('S3 account changes after a part reply cannot complete the upload under a new session', () async {
+    final adapter = await s3();
+    var completed = false;
+    await http.runWithClient(
+      () async {
+        await expectLater(
+          adapter.uploadStream(Stream.value([1, 2, 3]), 3, 'target', '/'),
+          throwsStateError,
+        );
+      },
+      () => MockClient((request) async {
+        if (request.url.queryParameters.containsKey('uploads')) {
+          return http.Response(
+            '<InitiateMultipartUploadResult><UploadId>one</UploadId></InitiateMultipartUploadResult>',
+            200,
+          );
+        }
+        if (request.method == 'PUT') {
+          await adapter.logout();
+          return http.Response('', 200, headers: {'etag': '"part"'});
+        }
+        completed = true;
+        return http.Response('<CompleteMultipartUploadResult/>', 200);
+      }),
+    );
+    expect(completed, isFalse);
+    expect((await adapter.getInterruptedUploads()).single['parts'], isEmpty);
   });
 
   test('S3 resume rejects changed prefix and unverifiable legacy session before mutation', () async {
