@@ -1081,7 +1081,7 @@ void showRenameDialog(
               if (context.mounted) {
                 ScaffoldMessenger.of(context).showSnackBar(SnackBar(
                     content: Text(
-                        AppLocalizations.of(context)!.renameFailed('$e'))));
+                        AppLocalizations.of(context)!.renameFailed(localizedProviderError(context, e)))));
               }
             }
           }
@@ -1105,7 +1105,7 @@ void showRenameDialog(
                 if (context.mounted) {
                   ScaffoldMessenger.of(context).showSnackBar(SnackBar(
                       content: Text(
-                          AppLocalizations.of(context)!.renameFailed('$e'))));
+                          AppLocalizations.of(context)!.renameFailed(localizedProviderError(context, e)))));
                 }
               }
             }
@@ -1324,7 +1324,7 @@ void confirmDelete(
               if (context.mounted) {
                 ScaffoldMessenger.of(context).showSnackBar(SnackBar(
                     content: Text(
-                        AppLocalizations.of(context)!.deleteFailed('$e'))));
+                        AppLocalizations.of(context)!.deleteFailed(localizedProviderError(context, e)))));
               }
             }
           },

@@ -42,6 +42,7 @@ import 'package:video_player/video_player.dart';
 
 import '../l10n/internal_viewer_strings.dart';
 import '../l10n/office_preview_strings.dart';
+import '../l10n/office_pdf_error_strings.dart';
 import '../l10n/file_bytes_error_strings.dart';
 import '../l10n/archive_viewer_error_strings.dart';
 import '../models/file_item.dart';
@@ -2078,7 +2079,7 @@ class _InternalViewerDialogState extends ConsumerState<InternalViewerDialog> {
       if (!mounted) return;
       setState(() {
         _officePdfLoading = false;
-        _officePdfError = '$e';
+        _officePdfError = localizedOfficePdfError(context, e);
       });
     }
   }

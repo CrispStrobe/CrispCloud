@@ -2840,7 +2840,7 @@ class OfficeEditorRibbonState extends State<OfficeEditorRibbon> {
       title: context.tr('Insert text box'),
       label: context.tr('Text'),
       multiline: true,
-      confirmLabel: 'Insert',
+      confirmLabel: context.tr('Insert'),
     );
     if (text == null) return;
     _slideAddShape(

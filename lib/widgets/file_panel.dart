@@ -10,6 +10,7 @@ import '../services/log_service.dart';
 import '../models/panel_side.dart';
 import '../providers/providers.dart';
 import '../l10n/panel_error_strings.dart';
+import '../l10n/provider_operation_strings.dart';
 import '../providers/panel_source_provider.dart' show panelSourceProvider;
 import '../providers/toolbar_provider.dart' show columnWidthsProvider, panelViewModeProvider;
 import '../services/panel_source_service.dart' show RemotePanelSource;
@@ -242,7 +243,7 @@ class _FilePanelState extends ConsumerState<FilePanel> {
                       _log.warn('operation failed', e);
                       if (context.mounted) {
                         ScaffoldMessenger.of(context).showSnackBar(
-                          SnackBar(content: Text(AppLocalizations.of(context)!.operationFailed(e.toString()))));
+                          SnackBar(content: Text(AppLocalizations.of(context)!.operationFailed(localizedProviderError(context, e)))));
                       }
                     }
                   }
