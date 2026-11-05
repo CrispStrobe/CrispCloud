@@ -17,6 +17,7 @@ analyzer:
     - packages/pdf_document/test/**
     - packages/pdf_operations/test/**
     - packages/pdf_operations/tool/**
+    - packages/crisp_storage/test/**
     - build/**
     - android/**
     - ios/**
