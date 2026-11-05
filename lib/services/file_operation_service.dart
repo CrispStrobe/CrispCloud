@@ -8,6 +8,7 @@ import '../models/file_item.dart';
 import '../models/storage_reference.dart';
 import 'file_operation_options.dart';
 import 'destination_name_mask.dart';
+import 'file_selection_pattern.dart';
 import 'storage_transfer_contract.dart';
 
 export 'file_operation_options.dart';
@@ -307,6 +308,17 @@ class FileOperationService {
       protectedDestinationPaths: List.unmodifiable(protectedDestinationPaths),
     );
     _checkSources(source, destination);
+    options.validateSearchCriteria();
+    final criteria = options.searchCriteria;
+    final criteriaMatcher = criteria?.nameMatcher;
+    final criteriaExcluded =
+        criteria == null || criteria.excludeDirectories.isEmpty
+        ? null
+        : FileSelectionPattern(
+            criteria.excludeDirectories,
+            caseSensitive: criteria.caseSensitive,
+            matchFullPath: criteria.excludeDirectories.contains('/'),
+          );
     if (targetDirectory.trim().isEmpty ||
         !destination.paths.isAbsolute(target)) {
       errors.add('Choose an absolute destination directory.');
@@ -453,15 +465,23 @@ class FileOperationService {
       }
       if (file.isFolder &&
           ((options.excludedDirectories?.matches(file) ?? false) ||
-              (!options.includeHidden && file.name.startsWith('.')))) {
+              (criteriaExcluded?.matches(file) ?? false) ||
+              ((!options.includeHidden || criteria?.includeHidden == false) &&
+                  file.name.startsWith('.')))) {
         entry.outcome = FileOperationOutcome.filtered;
         entry.message = 'Excluded directory; descendants were not scanned.';
         return;
       }
-      if (!file.isFolder && !options.matchesFile(file)) {
+      if (!file.isFolder &&
+          !options.matchesFile(file, criteriaMatcher: criteriaMatcher)) {
         entry.outcome = FileOperationOutcome.filtered;
         entry.message = 'Excluded by the file filter.';
         return;
+      }
+      if (file.isFolder &&
+          !options.matchesSharedCriteria(file, matcher: criteriaMatcher)) {
+        entry.outcome = FileOperationOutcome.filtered;
+        entry.message = 'Folder excluded by shared criteria; matching descendants remain eligible.';
       }
       final previous = destinations[destination.destinationPathKey(output)];
       if (previous != null && !(previous.source.isFolder && file.isFolder)) {
@@ -640,6 +660,7 @@ class FileOperationService {
     void Function(FileOperationEntry entry)? onEntryComplete,
   }) async {
     if (!plan.canExecute) throw StateError(plan.errors.join('\n'));
+    plan.options.validateSearchCriteria();
     final source = plan.source;
     final target = plan.destination;
     final options = plan.options;

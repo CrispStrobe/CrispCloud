@@ -2,6 +2,7 @@ import 'dart:async';
 import 'dart:convert';
 
 import 'package:crisp_cloud/models/file_item.dart';
+import 'package:crisp_cloud/models/file_search_query.dart';
 import 'package:crisp_cloud/services/file_operation_service.dart';
 import 'package:crisp_cloud/services/file_selection_pattern.dart';
 import 'package:flutter_test/flutter_test.dart';
@@ -140,6 +141,108 @@ void main() {
       expect(guarded.contains('/target/report.txt'), isFalse);
       expect(source.text('/source/report.txt'), 'new contents');
     });
+  });
+
+  group('shared search criteria', () {
+    test(
+      'extension, name, size, date, hidden and folder criteria all apply',
+      () async {
+        final date = DateTime.utc(2026, 2, 1);
+        source.file('/tree/keep/report.txt', '12345', modified: date);
+        source.file('/tree/keep/image.jpg', '12345', modified: date);
+        source.file('/tree/keep/small.txt', '1', modified: date);
+        source.file(
+          '/tree/keep/old.txt',
+          '12345',
+          modified: DateTime.utc(2020),
+        );
+        source.file('/tree/.hidden/secret.txt', '12345', modified: date);
+        source.file('/tree/cache/cached.txt', '12345', modified: date);
+        source.directory('/tree/empty');
+        final prepared = await prepare(
+          ['/tree'],
+          options: FileOperationOptions(
+            searchCriteria: FileSearchQuery(
+              namePattern: '*.txt',
+              includeFolders: false,
+              includeHidden: false,
+              extensions: const ['txt'],
+              minSize: 3,
+              modifiedAfter: DateTime.utc(2026),
+              excludeDirectories: 'cache',
+            ),
+          ),
+        );
+        expect(prepared.canExecute, isTrue);
+        expect(
+          prepared.entries
+              .where((entry) => entry.outcome == FileOperationOutcome.pending)
+              .map((entry) => entry.source.path),
+          ['/tree/keep/report.txt'],
+        );
+        await execute(prepared);
+        expect(target.text('/target/tree/keep/report.txt'), '12345');
+        expect(target.contains('/target/tree/empty'), isFalse);
+        expect(target.contains('/target/tree/cache'), isFalse);
+        expect(target.contains('/target/tree/.hidden'), isFalse);
+      },
+    );
+
+    test('folders-only criteria retain source directories containing excluded files', () async {
+      source.file('/tree/keep.txt', 'retained');
+      source.directory('/tree/empty');
+      final prepared = await prepare(
+        ['/tree'],
+        options: const FileOperationOptions(
+          kind: FileOperationKind.move,
+          searchCriteria: FileSearchQuery(includeFiles: false),
+        ),
+      );
+      await execute(prepared);
+      expect(target.contains('/target/tree/empty'), isTrue);
+      expect(target.contains('/target/tree/keep.txt'), isFalse);
+      expect(source.text('/tree/keep.txt'), 'retained');
+      expect(source.contains('/tree'), isTrue);
+      expect(source.contains('/tree/empty'), isFalse);
+    });
+
+    test(
+      'shared regular expressions can match complete source paths',
+      () async {
+        source.file('/tree/one/a.txt', 'selected');
+        source.file('/tree/two/a.txt', 'excluded');
+        final prepared = await prepare(
+          ['/tree'],
+          options: const FileOperationOptions(
+            searchCriteria: FileSearchQuery(
+              namePattern: r'^/tree/one/.*\.txt$',
+              nameMode: FilePatternMode.regex,
+              matchFullPath: true,
+              includeFolders: false,
+            ),
+          ),
+        );
+        await execute(prepared);
+        expect(target.text('/target/tree/one/a.txt'), 'selected');
+        expect(target.contains('/target/tree/two'), isFalse);
+      },
+    );
+
+    for (final criteria in [
+      const FileSearchQuery(contentPattern: 'secret'),
+      const FileSearchQuery(searchArchives: true),
+    ]) {
+      test('content/archive queries require Search before transfer', () async {
+        source.file('/a', 'data');
+        await expectLater(
+          prepare([
+            '/a',
+          ], options: FileOperationOptions(searchCriteria: criteria)),
+          throwsFormatException,
+        );
+        expect(target.writeAttempts, isEmpty);
+      });
+    }
   });
 
   group('advanced transfer options', () {
