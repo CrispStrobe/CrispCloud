@@ -4,6 +4,7 @@ import 'package:crypto/crypto.dart';
 import 'package:path/path.dart' as p;
 
 import '../models/file_item.dart';
+import '../models/storage_reference.dart';
 import 'file_operation_options.dart';
 import 'destination_name_mask.dart';
 import 'storage_transfer_contract.dart';
@@ -16,7 +17,11 @@ export 'file_operation_options.dart';
 abstract class FileOperationBackend {
   Object get identity;
   String? get persistentStorageId => null;
+  StorageReference? get storageReference => null;
   bool get canRecover => false;
+
+  /// The verifier runs against a complete temporary file before replacement.
+  bool get supportsStagedVerification => false;
   StorageTransferCapabilities get capabilities =>
       const StorageTransferCapabilities();
   String get label;
@@ -651,8 +656,11 @@ class FileOperationService {
                   decision != FileConflictDecision.merge &&
                   decision != FileConflictDecision.skip &&
                   decision != FileConflictDecision.cancel) ||
-              (!entry.source.isFolder && decision == FileConflictDecision.merge)) {
-            throw StateError('The conflict decision is not valid for this item.');
+              (!entry.source.isFolder &&
+                  decision == FileConflictDecision.merge)) {
+            throw StateError(
+              'The conflict decision is not valid for this item.',
+            );
           }
           if (resolution.applyToAll && resolution.name == null) {
             if (entry.source.isFolder) {
@@ -688,7 +696,9 @@ class FileOperationService {
           }
           if (checkedDestination == null ||
               !_sameVersion(existing, checkedDestination)) {
-            throw StateError('Destination changed while resolving the conflict.');
+            throw StateError(
+              'Destination changed while resolving the conflict.',
+            );
           }
           if (decision == FileConflictDecision.keepBoth) {
             entry.destination = await _availableName(

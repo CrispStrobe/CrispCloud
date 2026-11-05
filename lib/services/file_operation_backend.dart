@@ -7,6 +7,7 @@ import 'package:path/path.dart' as p;
 import 'package:uuid/uuid.dart';
 
 import '../models/file_item.dart';
+import '../models/storage_reference.dart';
 import 'cloud_storage_interface.dart';
 import 'file_operation_service.dart';
 import 'local_file_service.dart';
@@ -41,7 +42,12 @@ class LocalOperationBackend extends FileOperationBackend {
   @override
   String get persistentStorageId => _reference.id;
   @override
+  StorageReference get storageReference => _reference;
+  @override
   bool get canRecover => !kIsWeb;
+  @override
+  bool get supportsStagedVerification =>
+      !kIsWeb || service is LocalTransferFileOperations;
   @override
   StorageTransferCapabilities get capabilities => StorageTransferCapabilities(
     caseSensitivity: !kIsWeb && (Platform.isWindows || Platform.isMacOS)
@@ -533,7 +539,11 @@ class CloudOperationBackend extends FileOperationBackend {
   @override
   String get persistentStorageId => storageReferenceForClient(client).id;
   @override
+  StorageReference get storageReference => storageReferenceForClient(client);
+  @override
   bool get canRecover => storageReferenceForClient(client).persistent;
+  @override
+  bool get supportsStagedVerification => true;
   @override
   StorageTransferCapabilities get capabilities => client.transferCapabilities;
   @override
