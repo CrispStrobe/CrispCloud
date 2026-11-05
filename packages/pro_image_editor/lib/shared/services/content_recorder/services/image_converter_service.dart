@@ -65,7 +65,11 @@ class ImageConverterService {
     bool? cropToDrawingBounds,
   }) async {
     format ??= configs.outputFormat;
-    final crop = cropToDrawingBounds ?? configs.cropToDrawingBounds;
+    // The rasterizer already clipped the requested image/crop rectangle.
+    // Its transparent border is image content, not unused drawing canvas.
+    // Keep explicit per-capture overrides for standalone layer exports.
+    final crop = cropToDrawingBounds ??
+        (configs.cropToDrawingBounds && !configs.cropToImageBounds);
 
     if (configs.enableIsolateGeneration) {
       try {

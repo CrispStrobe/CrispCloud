@@ -16,7 +16,11 @@ void main() {
       final translations = ImageEditorStrings.catalog[language]!;
       expect(translations.keys.toSet(), englishKeys, reason: language);
       for (final entry in translations.entries) {
-        expect(entry.value.trim(), isNotEmpty, reason: '$language: ${entry.key}');
+        expect(
+          entry.value.trim(),
+          isNotEmpty,
+          reason: '$language: ${entry.key}',
+        );
         expect(
           ImageEditorStrings.forLanguage(language, entry.key),
           entry.value,
@@ -29,7 +33,8 @@ void main() {
   test('package tools and host chrome use the same locale catalog', () {
     for (final language in ImageEditorStrings.supportedLanguageCodes) {
       final i18n = ImageEditorStrings.editorI18nForLocale(Locale(language));
-      String expected(String key) => ImageEditorStrings.forLanguage(language, key);
+      String expected(String key) =>
+          ImageEditorStrings.forLanguage(language, key);
 
       expect(i18n.cancel, expected('Cancel'));
       expect(i18n.undo, expected('Undo'));
@@ -43,7 +48,10 @@ void main() {
       expect(i18n.textEditor.cancel, expected('Cancel'));
       expect(i18n.textEditor.reset, expected('Reset'));
       expect(i18n.textEditor.fontFamilyExampleText, expected('Aa'));
-      expect(i18n.cropRotateEditor.bottomNavigationBarText, expected('Crop and rotate'));
+      expect(
+        i18n.cropRotateEditor.bottomNavigationBarText,
+        expected('Crop and rotate'),
+      );
       expect(i18n.cropRotateEditor.ratio, expected('Ratio'));
       expect(i18n.tuneEditor.tint, expected('Tint'));
       expect(i18n.filterEditor.bottomNavigationBarText, expected('Filters'));
@@ -53,14 +61,23 @@ void main() {
     }
   });
 
-  test('regional locales use their language and unsupported locales use English', () {
-    final german = ImageEditorStrings.editorI18nForLocale(const Locale('de', 'CH'));
-    expect(german.cancel, 'Abbrechen');
-    final portuguese = ImageEditorStrings.editorI18nForLocale(const Locale('pt', 'BR'));
-    expect(portuguese.textEditor.inputHintText, 'Digite o texto');
-    final unknown = ImageEditorStrings.editorI18nForLocale(const Locale('xx'));
-    expect(unknown.cancel, 'Cancel');
-  });
+  test(
+    'regional locales use their language and unsupported locales use English',
+    () {
+      final german = ImageEditorStrings.editorI18nForLocale(
+        const Locale('de', 'CH'),
+      );
+      expect(german.cancel, 'Abbrechen');
+      final portuguese = ImageEditorStrings.editorI18nForLocale(
+        const Locale('pt', 'BR'),
+      );
+      expect(portuguese.textEditor.inputHintText, 'Digite o texto');
+      final unknown = ImageEditorStrings.editorI18nForLocale(
+        const Locale('xx'),
+      );
+      expect(unknown.cancel, 'Cancel');
+    },
+  );
 
   test('missing keys fail explicitly instead of leaking English defaults', () {
     expect(
@@ -72,17 +89,20 @@ void main() {
   test('font examples use the script of the selected language', () {
     expect(
       ImageEditorStrings.editorI18nForLocale(const Locale('ar'))
-          .textEditor.fontFamilyExampleText,
+          .textEditor
+          .fontFamilyExampleText,
       'أب',
     );
     expect(
       ImageEditorStrings.editorI18nForLocale(const Locale('zh'))
-          .textEditor.fontFamilyExampleText,
+          .textEditor
+          .fontFamilyExampleText,
       '文字',
     );
     expect(
       ImageEditorStrings.editorI18nForLocale(const Locale('ko'))
-          .textEditor.fontFamilyExampleText,
+          .textEditor
+          .fontFamilyExampleText,
       '가나',
     );
   });

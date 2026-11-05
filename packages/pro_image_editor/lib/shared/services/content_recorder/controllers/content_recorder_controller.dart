@@ -381,7 +381,9 @@ class ContentRecorderController {
 
     /// Check if the output size is too large.
     double outputRatio = imageInfos.pixelRatio;
-    if (!_configs.cropToDrawingBounds && context != null && context.mounted) {
+    if (!_configs.cropToImageBounds &&
+        !_configs.cropToDrawingBounds &&
+        context != null && context.mounted) {
       outputRatio = max(
         imageInfos.pixelRatio,
         MediaQuery.devicePixelRatioOf(context),

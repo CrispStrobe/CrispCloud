@@ -6,9 +6,19 @@
   editor's nested navigator, preserving the host dialog and its close callback.
 - Include blur in the host's `closeSubEditor` action and ignore repeat closes
   during transitions.
+- Let an embedding host own navigation and render layer context menus.
+- Preserve scoped localizations around paint-property popup route chrome.
+- Make paint/filter/blur/tune completion awaitable, ignore duplicate Apply,
+  and restore retry and loading state after capture or write failure.
+- Record effective mouse-wheel layer edits without corrupting saved history;
+  retain clean history for no-op and canvas-zoom events.
+- Preserve transparent image borders when image-bound export is enabled;
+  retain intentional drawing-only crops and apply the same flag before worker
+  dispatch without changing the bundled worker.
 - Recognize left and right Command keys for desktop editing shortcuts.
 - Localize Cupertino overflow cancellation and expose text font-style samples
-  for the current script.
+  for the current script, font-size Reset, and localized numeric slider labels
+  and spoken values.
 - Retain upstream tests and add focused embedded-editor regressions in
   `test/crispcloud/`. See `UPSTREAM.md` for the pinned source and patch inventory.
 

@@ -12,7 +12,15 @@ import 'image_editor_translations.dart';
 abstract final class ImageEditorStrings {
   static const catalog = imageEditorTranslations;
   static const supportedLanguageCodes = <String>{
-    'en', 'de', 'fr', 'es', 'pt', 'zh', 'ja', 'ko', 'ar',
+    'en',
+    'de',
+    'fr',
+    'es',
+    'pt',
+    'zh',
+    'ja',
+    'ko',
+    'ar',
   };
 
   static String translate(BuildContext context, String english) =>
@@ -22,7 +30,9 @@ abstract final class ImageEditorStrings {
     final table = catalog[languageCode] ?? catalog['en']!;
     final value = table[english];
     if (value == null) {
-      throw StateError('Missing image editor translation: $languageCode / $english');
+      throw StateError(
+        'Missing image editor translation: $languageCode / $english',
+      );
     }
     return value;
   }
@@ -227,7 +237,6 @@ abstract final class ImageEditorStrings {
       done: t('Apply'),
     );
   }
-
 }
 
 extension ImageEditorTranslation on BuildContext {

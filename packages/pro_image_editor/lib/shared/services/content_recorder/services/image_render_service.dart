@@ -68,7 +68,9 @@ class ImageRenderService {
 
       // Determine pixel ratio
       double outputRatio = imageInfos.pixelRatio;
-      if (!configs.cropToDrawingBounds && context != null && context.mounted) {
+      if (!configs.cropToImageBounds &&
+          !configs.cropToDrawingBounds &&
+          context != null && context.mounted) {
         outputRatio = max(
           imageInfos.pixelRatio,
           MediaQuery.devicePixelRatioOf(context),

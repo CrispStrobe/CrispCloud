@@ -23,6 +23,7 @@ void main() {
   Future<ProImageEditorState> pushEditor(
     WidgetTester tester, {
     void Function(EditorMode)? onCloseEditor,
+    void Function()? onBlurDone,
   }) async {
     final key = GlobalKey<ProImageEditorState>();
     await tester.pumpWidget(
@@ -38,6 +39,7 @@ void main() {
                     configs: configs,
                     callbacks: ProImageEditorCallbacks(
                       onCloseEditor: onCloseEditor,
+                      blurEditorCallbacks: BlurEditorCallbacks(onDone: onBlurDone),
                     ),
                   ),
                 ),
@@ -146,6 +148,21 @@ void main() {
 
     expect(layers, isEmpty);
     expectHostOpen(editor);
+    expect(tester.takeException(), isNull);
+  });
+
+  testWidgets('repeated embedded Apply completes only once and preserves host', (tester) async {
+    var doneCalls = 0;
+    final editor = await pushEditor(tester, onBlurDone: () => doneCalls++);
+    editor.openBlurEditor();
+    await tester.pumpAndSettle();
+    final blur = editor.blurEditor.currentState!..setBlurFactor(5);
+    await Future.wait([blur.done(), blur.done()]);
+    await tester.pumpAndSettle();
+    expectHostOpen(editor);
+    expect(doneCalls, 1);
+    expect(editor.stateManager.historyPointer, 1);
+    expect(editor.stateManager.activeBlur, 5);
     expect(tester.takeException(), isNull);
   });
 

@@ -87,7 +87,12 @@ class _ImageEditorDialogState extends ConsumerState<ImageEditorDialog> {
   bool get _routeIsCurrent => ModalRoute.of(context)?.isCurrent ?? true;
   bool get _toolOpen =>
       _tool != null || (_editorKey.currentState?.isSubEditorOpen ?? false);
-  bool get _canEdit => _routeIsCurrent && _ready && !_loading && !_busy && !_toolOpen &&
+  bool get _canEdit =>
+      _routeIsCurrent &&
+      _ready &&
+      !_loading &&
+      !_busy &&
+      !_toolOpen &&
       !(_editorKey.currentState?.isLayerBeingTransformed ?? false);
 
   @override
@@ -127,7 +132,9 @@ class _ImageEditorDialogState extends ConsumerState<ImageEditorDialog> {
     if (widget.storeOverride case final store?) return store;
     final panel = ref.read(panelProvider(widget.side));
     final selectedSource = ref.read(panelSourceProvider(widget.side));
-    if (panel.isInArchive || selectedSource.isArchive || selectedSource.isContainer) {
+    if (panel.isInArchive ||
+        selectedSource.isArchive ||
+        selectedSource.isContainer) {
       throw const _ImageOpenMessage(
         'Extract this file from its archive or container before editing.',
       );
@@ -155,7 +162,9 @@ class _ImageEditorDialogState extends ConsumerState<ImageEditorDialog> {
       providerName: source.providerName,
       cache: ref.read(fileCacheProvider),
       file: widget.file.path == null
-          ? widget.file.copyWith(path: p.posix.join(source.path, widget.file.name))
+          ? widget.file.copyWith(
+              path: p.posix.join(source.path, widget.file.name),
+            )
           : widget.file,
       isCurrentAccount: () => mounted && origin.isCurrent,
     );
@@ -253,15 +262,17 @@ class _ImageEditorDialogState extends ConsumerState<ImageEditorDialog> {
     // the original object is clean at open; weak tokens do not retain all
     // pruned histories and their potentially large image/layer graphs.
     _originalHistory ??= history.stateHistory.first;
-    final token = _historyTokens[active] ??=
-        identical(active, _originalHistory) ? 0 : _nextToken++;
+    final token = _historyTokens[active] ??= identical(active, _originalHistory)
+        ? 0
+        : _nextToken++;
     _session?.updateRevision(token);
     _scheduleRefresh();
   }
 
   void _onGestureEnd(List<Layer> layers) {
     final editor = _editorKey.currentState;
-    if (editor == null || layers.isEmpty || !editor.isLayerBeingTransformed) return;
+    if (editor == null || layers.isEmpty || !editor.isLayerBeingTransformed)
+      return;
     final history = editor.stateManager;
     final active = history.stateHistory[history.historyPointer];
     // Gesture history is created before the drag, then mutated in place.
@@ -302,8 +313,11 @@ class _ImageEditorDialogState extends ConsumerState<ImageEditorDialog> {
     final session = _session;
     final store = _store;
     final editor = _editorKey.currentState;
-    if (session == null || store == null || editor == null ||
-        !_canEdit || !session.isDirty) {
+    if (session == null ||
+        store == null ||
+        editor == null ||
+        !_canEdit ||
+        !session.isDirty) {
       return false;
     }
     try {
@@ -318,10 +332,14 @@ class _ImageEditorDialogState extends ConsumerState<ImageEditorDialog> {
       );
       if (!mounted) return false;
       if (outcome != ImageSaveOutcome.savedOriginal) {
-        _showMessage('A copy was downloaded. The original image has not been updated.');
+        _showMessage(
+          'A copy was downloaded. The original image has not been updated.',
+        );
         return false;
       }
-      _showMessage(session.isDirty ? 'New changes remain unsaved.' : 'Image saved');
+      _showMessage(
+        session.isDirty ? 'New changes remain unsaved.' : 'Image saved',
+      );
       // Refresh failures must not turn a completed write into a failed save.
       if (widget.storeOverride == null) {
         ref.read(panelProvider(widget.side)).refreshFiles();
@@ -427,27 +445,36 @@ class _ImageEditorDialogState extends ConsumerState<ImageEditorDialog> {
   }
 
   void _showMessage(String key, {bool error = false}) {
-    _messenger.currentState?.showSnackBar(SnackBar(
-      content: Text(context.imageTr(key)),
-      backgroundColor: error ? Theme.of(context).colorScheme.error : null,
-    ));
+    _messenger.currentState?.showSnackBar(
+      SnackBar(
+        content: Text(context.imageTr(key)),
+        backgroundColor: error ? Theme.of(context).colorScheme.error : null,
+      ),
+    );
   }
 
   String _messageFor(Object error, String fallback) => switch (error) {
     _ImageOpenMessage(:final key) => key,
     ImageAccountChangedException() =>
       'The storage account changed. Reopen the image before saving.',
-    ImageSaveConflictException() =>
-      'The original image changed or could not be verified. Reopen it before saving.',
+    ImageSaveConflictException() => 'The original image changed or could not be verified. Reopen it before saving.',
     ImageEditException(:final reason) => switch (reason) {
-      ImageEditFailure.unsupportedFormat => 'Only PNG and JPEG images can be edited.',
-      ImageEditFailure.formatMismatch => 'The image contents do not match the filename extension.',
-      ImageEditFailure.invalidImage => 'This image is invalid or could not be decoded.',
-      ImageEditFailure.animatedImage => 'Animated images cannot be overwritten by this editor.',
-      ImageEditFailure.inputTooLarge => 'Image editing is limited to files up to 32 MiB.',
-      ImageEditFailure.outputTooLarge => 'The edited image exceeds the 64 MiB save limit.',
-      ImageEditFailure.dimensionsTooLarge => 'This image exceeds the 40 megapixel or 16384 pixel dimension limit.',
-      ImageEditFailure.staleExport => 'The image changed during export. Please save again.',
+      ImageEditFailure.unsupportedFormat =>
+        'Only PNG and JPEG images can be edited.',
+      ImageEditFailure.formatMismatch =>
+        'The image contents do not match the filename extension.',
+      ImageEditFailure.invalidImage =>
+        'This image is invalid or could not be decoded.',
+      ImageEditFailure.animatedImage =>
+        'Animated images cannot be overwritten by this editor.',
+      ImageEditFailure.inputTooLarge =>
+        'Image editing is limited to files up to 32 MiB.',
+      ImageEditFailure.outputTooLarge =>
+        'The edited image exceeds the 64 MiB save limit.',
+      ImageEditFailure.dimensionsTooLarge =>
+        'This image exceeds the 40 megapixel or 16384 pixel dimension limit.',
+      ImageEditFailure.staleExport =>
+        'The image changed during export. Please save again.',
     },
     _ => fallback,
   };
@@ -457,18 +484,36 @@ class _ImageEditorDialogState extends ConsumerState<ImageEditorDialog> {
     final actions = _actions();
     final bindings = <ShortcutActivator, VoidCallback>{
       for (final meta in [false, true]) ...{
-        SingleActivator(LogicalKeyboardKey.keyS, control: !meta, meta: meta):
-            () => _perform(ImageEditorAction.save),
-        SingleActivator(LogicalKeyboardKey.keyW, control: !meta, meta: meta):
-            () => _perform(ImageEditorAction.close),
-        SingleActivator(LogicalKeyboardKey.keyZ, control: !meta, meta: meta):
-            () => _perform(ImageEditorAction.undo),
-        SingleActivator(LogicalKeyboardKey.keyZ, control: !meta, meta: meta, shift: true):
-            () => _perform(ImageEditorAction.redo),
+        SingleActivator(
+          LogicalKeyboardKey.keyS,
+          control: !meta,
+          meta: meta,
+        ): () =>
+            _perform(ImageEditorAction.save),
+        SingleActivator(
+          LogicalKeyboardKey.keyW,
+          control: !meta,
+          meta: meta,
+        ): () =>
+            _perform(ImageEditorAction.close),
+        SingleActivator(
+          LogicalKeyboardKey.keyZ,
+          control: !meta,
+          meta: meta,
+        ): () =>
+            _perform(ImageEditorAction.undo),
+        SingleActivator(
+          LogicalKeyboardKey.keyZ,
+          control: !meta,
+          meta: meta,
+          shift: true,
+        ): () =>
+            _perform(ImageEditorAction.redo),
       },
-      const SingleActivator(LogicalKeyboardKey.keyY, control: true):
-          () => _perform(ImageEditorAction.redo),
-      const SingleActivator(LogicalKeyboardKey.escape): () => unawaited(_close()),
+      const SingleActivator(LogicalKeyboardKey.keyY, control: true): () =>
+          _perform(ImageEditorAction.redo),
+      const SingleActivator(LogicalKeyboardKey.escape): () =>
+          unawaited(_close()),
     };
     return PopScope(
       canPop: _allowPop,
@@ -510,64 +555,82 @@ class _ImageEditorDialogState extends ConsumerState<ImageEditorDialog> {
         children: [
           Padding(
             padding: const EdgeInsetsDirectional.fromSTEB(8, 4, 12, 4),
-            child: Row(children: [
-              IconButton(
-                key: const ValueKey('image-close'),
-                tooltip: context.imageTr('Close editor'),
-                onPressed: actions.isEnabled(ImageEditorAction.close)
-                    ? () => _perform(ImageEditorAction.close) : null,
-                icon: const Icon(Icons.close),
-              ),
-              const SizedBox(width: 6),
-              Expanded(child: Text(widget.file.name, overflow: TextOverflow.ellipsis)),
-              if (_dirty) Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 8),
-                child: Tooltip(
-                  message: context.imageTr('Unsaved changes'),
-                  child: Icon(Icons.circle, size: 9,
-                    semanticLabel: context.imageTr('Unsaved changes'),
-                    color: colors.primary),
+            child: Row(
+              children: [
+                IconButton(
+                  key: const ValueKey('image-close'),
+                  tooltip: context.imageTr('Close editor'),
+                  onPressed: actions.isEnabled(ImageEditorAction.close)
+                      ? () => _perform(ImageEditorAction.close)
+                      : null,
+                  icon: const Icon(Icons.close),
                 ),
-              ),
-              FilledButton.icon(
-                key: const ValueKey('image-save'),
-                onPressed: actions.isEnabled(ImageEditorAction.save)
-                    ? () => _perform(ImageEditorAction.save) : null,
-                icon: const Icon(Icons.save_outlined, size: 18),
-                label: Text(context.imageTr(_saving ? 'Saving…' : 'Save')),
-              ),
-            ]),
+                const SizedBox(width: 6),
+                Expanded(
+                  child: Text(
+                    widget.file.name,
+                    overflow: TextOverflow.ellipsis,
+                  ),
+                ),
+                if (_dirty)
+                  Padding(
+                    padding: const EdgeInsets.symmetric(horizontal: 8),
+                    child: Tooltip(
+                      message: context.imageTr('Unsaved changes'),
+                      child: Icon(
+                        Icons.circle,
+                        size: 9,
+                        semanticLabel: context.imageTr('Unsaved changes'),
+                        color: colors.primary,
+                      ),
+                    ),
+                  ),
+                FilledButton.icon(
+                  key: const ValueKey('image-save'),
+                  onPressed: actions.isEnabled(ImageEditorAction.save)
+                      ? () => _perform(ImageEditorAction.save)
+                      : null,
+                  icon: const Icon(Icons.save_outlined, size: 18),
+                  label: Text(context.imageTr(_saving ? 'Saving…' : 'Save')),
+                ),
+              ],
+            ),
           ),
           SingleChildScrollView(
             scrollDirection: Axis.horizontal,
             padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
-            child: Row(children: [
-              if (!_toolOpen) ...[
-              for (final action in _toolActions)
-                Padding(
-                  padding: const EdgeInsetsDirectional.only(end: 4),
-                  child: TextButton.icon(
-                    key: ValueKey('image-${action.$1.name}'),
-                    onPressed: actions.isEnabled(action.$1)
-                        ? () => _perform(action.$1) : null,
-                    icon: Icon(action.$3, size: 18),
-                    label: Text(context.imageTr(action.$2)),
+            child: Row(
+              children: [
+                if (!_toolOpen) ...[
+                  for (final action in _toolActions)
+                    Padding(
+                      padding: const EdgeInsetsDirectional.only(end: 4),
+                      child: TextButton.icon(
+                        key: ValueKey('image-${action.$1.name}'),
+                        onPressed: actions.isEnabled(action.$1)
+                            ? () => _perform(action.$1)
+                            : null,
+                        icon: Icon(action.$3, size: 18),
+                        label: Text(context.imageTr(action.$2)),
+                      ),
+                    ),
+                ],
+                if (_toolOpen) ...[
+                  TextButton(
+                    key: const ValueKey('image-cancel-tool'),
+                    onPressed: _busy
+                        ? null
+                        : () => _editorKey.currentState?.closeSubEditor(),
+                    child: Text(context.imageTr('Cancel tool')),
                   ),
-                ),
+                  FilledButton(
+                    key: const ValueKey('image-apply-tool'),
+                    onPressed: _busy ? null : () => unawaited(_applyTool()),
+                    child: Text(context.imageTr('Apply')),
+                  ),
+                ],
               ],
-              if (_toolOpen) ...[
-                TextButton(
-                  key: const ValueKey('image-cancel-tool'),
-                  onPressed: _busy ? null : () => _editorKey.currentState?.closeSubEditor(),
-                  child: Text(context.imageTr('Cancel tool')),
-                ),
-                FilledButton(
-                  key: const ValueKey('image-apply-tool'),
-                  onPressed: _busy ? null : () => unawaited(_applyTool()),
-                  child: Text(context.imageTr('Apply')),
-                ),
-              ],
-            ]),
+            ),
           ),
         ],
       ),
@@ -576,67 +639,86 @@ class _ImageEditorDialogState extends ConsumerState<ImageEditorDialog> {
 
   Widget _body() {
     if (_loading) {
-      return Center(child: Column(mainAxisSize: MainAxisSize.min, children: [
-        const CircularProgressIndicator(),
-        const SizedBox(height: 12),
-        Text(context.imageTr('Loading image…')),
-      ]));
+      return Center(
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            const CircularProgressIndicator(),
+            const SizedBox(height: 12),
+            Text(context.imageTr('Loading image…')),
+          ],
+        ),
+      );
     }
     if (_errorKey case final error?) {
-      return Center(child: SingleChildScrollView(
-        padding: const EdgeInsets.all(24),
-        child: Column(mainAxisSize: MainAxisSize.min, children: [
-          const Icon(Icons.broken_image_outlined, size: 40),
-          const SizedBox(height: 12),
-          Text(context.imageTr(error), textAlign: TextAlign.center),
-          const SizedBox(height: 16),
-          OutlinedButton(onPressed: () => unawaited(_load()),
-            child: Text(context.imageTr('Retry'))),
-        ]),
-      ));
+      return Center(
+        child: SingleChildScrollView(
+          padding: const EdgeInsets.all(24),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              const Icon(Icons.broken_image_outlined, size: 40),
+              const SizedBox(height: 12),
+              Text(context.imageTr(error), textAlign: TextAlign.center),
+              const SizedBox(height: 16),
+              OutlinedButton(
+                onPressed: () => unawaited(_load()),
+                child: Text(context.imageTr('Retry')),
+              ),
+            ],
+          ),
+        ),
+      );
     }
-    return Column(crossAxisAlignment: CrossAxisAlignment.stretch, children: [
-      Expanded(
-        child: AbsorbPointer(
-          absorbing: _saving || _closing || _applying,
-          child: ImageEditorSurface(
-            bytes: _initialBytes!,
-            info: _info!,
-            editorKey: _editorKey,
-            enableIsolateGeneration: widget.enableIsolateGeneration,
-            callbacks: ProImageEditorCallbacks(
-              onCloseEditor: (_) => unawaited(_close()),
-              mainEditorCallbacks: MainEditorCallbacks(
-                onStateHistoryChange: _onHistory,
-                onLayerInteractionEnd: _onGestureEnd,
-                onScaleStart: (_) => _scheduleRefresh(),
-                onScaleEnd: (_) => _scheduleRefresh(),
-                onImageDecoded: () {
-                  _ready = true;
-                  final editor = _editorKey.currentState;
-                  if (editor != null) _onHistory(editor.stateManager, editor);
-                  _scheduleRefresh();
-                },
-                onOpenSubEditor: (tool) {
-                  _tool = tool;
-                  _scheduleRefresh();
-                },
-                onEndCloseSubEditor: (_) {
-                  _tool = null;
-                  _applying = false;
-                  _scheduleRefresh();
-                },
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: [
+        Expanded(
+          child: AbsorbPointer(
+            absorbing: _saving || _closing || _applying,
+            child: ImageEditorSurface(
+              bytes: _initialBytes!,
+              info: _info!,
+              editorKey: _editorKey,
+              enableIsolateGeneration: widget.enableIsolateGeneration,
+              callbacks: ProImageEditorCallbacks(
+                onCloseEditor: (_) => unawaited(_close()),
+                mainEditorCallbacks: MainEditorCallbacks(
+                  onStateHistoryChange: _onHistory,
+                  onLayerInteractionEnd: _onGestureEnd,
+                  onScaleStart: (_) => _scheduleRefresh(),
+                  onScaleEnd: (_) => _scheduleRefresh(),
+                  onImageDecoded: () {
+                    _ready = true;
+                    final editor = _editorKey.currentState;
+                    if (editor != null) _onHistory(editor.stateManager, editor);
+                    _scheduleRefresh();
+                  },
+                  onOpenSubEditor: (tool) {
+                    _tool = tool;
+                    _scheduleRefresh();
+                  },
+                  onEndCloseSubEditor: (_) {
+                    _tool = null;
+                    _applying = false;
+                    _scheduleRefresh();
+                  },
+                ),
               ),
             ),
           ),
         ),
-      ),
-      Padding(
-        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 5),
-        child: Text(context.imageTr('Edited images are flattened. Metadata may be removed.'),
-          style: Theme.of(context).textTheme.bodySmall),
-      ),
-    ]);
+        Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 5),
+          child: Text(
+            context.imageTr(
+              'Edited images are flattened. Metadata may be removed.',
+            ),
+            style: Theme.of(context).textTheme.bodySmall,
+          ),
+        ),
+      ],
+    );
   }
 
   static const _toolActions = <(ImageEditorAction, String, IconData)>[

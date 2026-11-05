@@ -32,6 +32,7 @@ import '/shared/utils/transparent_image_generator_utils.dart';
 import '/shared/widgets/adaptive_dialog.dart';
 import '/shared/widgets/extended/interactive_viewer/extended_interactive_viewer.dart';
 import '/shared/widgets/layer/widgets/layer_widget_text_item.dart';
+import '/shared/widgets/overlays/editor_bottom_sheet.dart';
 import '/shared/widgets/screen_resize_detector.dart';
 import '../audio_editor/audio_editor_page.dart';
 import '../audio_editor/models/audio_editor_response.dart';
@@ -2211,7 +2212,7 @@ class ProImageEditorState extends State<ProImageEditor>
 
     PaintLayer? result =
         await (callbacks.paintEditorCallbacks?.onEditLayer?.call(layer) ??
-            showModalBottomSheet<PaintLayer>(
+            showEditorModalBottomSheet<PaintLayer>(
               context: context,
               backgroundColor:
                   paintEditorConfigs.style.editSheetBackgroundColor,
@@ -3998,8 +3999,11 @@ class ProImageEditorState extends State<ProImageEditor>
                   });
                 },
                 onPointerCancel: (_) => _releaseInlineGesture(),
-                onPointerSignal: isDesktop && hasSelectedLayers
+                onPointerSignal: isDesktop
                     ? (event) {
+                        // Selection can change without rebuilding this body
+                        // (for example when a layer is reselected after undo).
+                        if (!hasSelectedLayers) return;
                         final hasMultiSelection = selectedLayers.length > 1;
 
                         final zoomEnabled = mainEditorConfigs.enableZoom;

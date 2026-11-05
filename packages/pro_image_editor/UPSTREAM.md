@@ -34,22 +34,36 @@ upstream tests comprise 822 files before local changes.
 
 | File | Change |
 | --- | --- |
-| `pubspec.yaml` | Set `publish_to: none` and remove metadata for omitted showcase images. |
-| `lib/features/main_editor/main_editor.dart` | Route capture and Escape through the nested navigator; prevent repeated close calls from popping the host; include blur in `closeSubEditor`. |
-| `lib/core/mixins/standalone_editor.dart` | Close embedded sub-editor routes without invoking the main host's close callback. |
+| `pubspec.yaml` | Set `publish_to: none`, remove metadata for omitted showcase images, and declare `intl` for visible and spoken numeric formatting. |
+| `lib/features/main_editor/main_editor.dart` | Keep capture, Escape, and repeated closes inside the nested navigator; include blur in `closeSubEditor`; delegate host navigation; record effective wheel edits on copied layers; localize paint-property popup routes. |
+| `lib/core/models/editor_configs/main_editor_configs.dart`, `lib/shared/widgets/extended/extended_pop_scope.dart` | Add opt-in `hostOwnsNavigation` without registering an engine pop handler on the host route. |
+| `lib/core/mixins/standalone_editor.dart`, paint/filter/blur/tune editor entrypoints | Return awaitable completion futures, reject overlapping Apply calls, propagate capture/write errors, restore retry after failure, and keep embedded Cancel inside its own route. |
+| `lib/features/main_editor/services/desktop_interaction_manager.dart` | Report effective wheel transforms without mutating prior history; ignore no-op and canvas-zoom events. |
+| `lib/core/models/custom_widgets/layer_interaction_widgets.dart`, layer widget/context-menu service | Expose an optional typed host context-menu builder; preserve enabled actions, dismiss/error cleanup, and the upstream fallback. |
+| `lib/shared/widgets/overlays/editor_bottom_sheet.dart` | Preserve the scoped editor localizations around the complete popup route, including its sheet chrome, while retaining host navigator ownership. |
+| Image converter/render service and recorder controller | Preserve transparent image borders and source resolution when capturing image bounds; retain explicit drawing/layer crop overrides. The worker receives the corrected flag before conversion, so its bundled JavaScript needs no changes. |
 | `lib/core/services/keyboard_service.dart` | Recognize both physical Command keys with Flutter's `isMetaPressed` modifier state. |
-| `lib/core/models/i18n/i18n_text_editor.dart` | Expose the overflow Cancel label and the font-style sample text. |
-| `lib/shared/widgets/platform/platform_popup_menu.dart` | Accept a translated Cancel label, with a localized Cupertino fallback. |
-| `lib/features/paint_editor/widgets/paint_editor_appbar.dart` | Supply the configured paint-editor Cancel label. |
-| `lib/features/text_editor/widgets/text_editor_appbar.dart` | Supply the configured text-editor Cancel label. |
-| `lib/features/text_editor/widgets/text_editor_bottom_bar.dart` | Use the configured script sample in font-style buttons. |
-| `README.md`, `CHANGELOG.md` | Identify the maintained copy and document the changes above. |
+| `lib/core/models/i18n/i18n_text_editor.dart` | Expose overflow Cancel, font-style sample, and font-size Reset labels. |
+| `lib/shared/widgets/platform/platform_popup_menu.dart` and paint/text appbars | Supply translated overflow Cancel labels, with a localized Cupertino fallback. |
+| Text bottom bar and text editor | Use the configured script sample and Reset label. |
+| `lib/shared/utils/format_editor_number.dart`, slider sheet, bottom-sheet header, paint-property editor, and tune bottom bar | Format decimal/scale values and slider semantics for the active locale; localize Reset and Close tooltips. |
+| `README.md`, `CHANGELOG.md` | Identify this maintained copy and document the changes above. |
 
-`UPSTREAM.patch` records changes to the imported files. New tests in
-`test/crispcloud/` cover nested cancellation, Escape, capture without losing the
-host route, apply/undo/redo, Command-key recognition, and translated overflow
-and font-style controls. The application owns its editor menus, save workflow,
-file-format checks, and translations; they do not belong in upstream defaults.
+`UPSTREAM.patch` records changes to imported files and the two new runtime
+helpers required by them. New tests in `test/crispcloud/` cover nested
+cancellation, Escape, capture without losing the host route, repeated Apply,
+awaited completion failure and retry, apply/undo/redo, wheel history and
+branching, host navigation and menu contracts, scoped popup localization,
+Command-key recognition, translated overflow/font controls, and localized
+visible and spoken numbers, transparent image-border preservation, intentional
+drawing-only trimming, and the request passed to a worker.
+
+The application owns its editor menus, save workflow, file-format checks,
+and translations; they do not belong in upstream defaults. Its real-renderer
+widget suite additionally captures PNG/JPEG edits, preserves PNG alpha and
+resolution beyond the upstream 2000-pixel default, saves twice, reopens saved
+bytes, exercises keyboard commands and nested tools, and checks failed and
+pending writes. A browser-only case uses the production worker path.
 
 Capture retains upstream's behavior of discarding a pending sub-editor's
 unapplied changes. A host should finish applying the active tool, or disable
@@ -86,5 +100,6 @@ git apply --directory=packages/pro_image_editor \
 ```
 
 The new provenance document and local tests are maintained separately from
-that patch. No browser-worker code is changed, so the shipped workers remain
+that patch. The new runtime helpers are included, so the patch applies to the
+pristine package without relying on files outside the patch. No browser-worker code is changed, so the shipped workers remain
 byte-identical to the verified archive.

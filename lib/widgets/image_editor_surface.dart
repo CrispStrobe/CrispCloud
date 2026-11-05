@@ -55,6 +55,8 @@ class ImageEditorSurface extends StatelessWidget {
               outputFormat: info.format == ImageFileFormat.png
                   ? OutputFormat.png
                   : OutputFormat.jpg,
+              cropToImageBounds: true,
+              cropToDrawingBounds: false,
               // A square bound preserves portrait/landscape resolution after
               // rotation; the default 2000x2000 bound would shrink photographs.
               maxOutputSize: Size(longestSide, longestSide),

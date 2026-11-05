@@ -1,7 +1,7 @@
 diff --git a/CHANGELOG.md b/CHANGELOG.md
 --- a/CHANGELOG.md
 +++ b/CHANGELOG.md
-@@ -1,4 +1,16 @@
+@@ -1,4 +1,26 @@
  # Changelog
 +
 +## Unreleased (CrispCloud)
@@ -10,39 +10,277 @@ diff --git a/CHANGELOG.md b/CHANGELOG.md
 +  editor's nested navigator, preserving the host dialog and its close callback.
 +- Include blur in the host's `closeSubEditor` action and ignore repeat closes
 +  during transitions.
++- Let an embedding host own navigation and render layer context menus.
++- Preserve scoped localizations around paint-property popup route chrome.
++- Make paint/filter/blur/tune completion awaitable, ignore duplicate Apply,
++  and restore retry and loading state after capture or write failure.
++- Record effective mouse-wheel layer edits without corrupting saved history;
++  retain clean history for no-op and canvas-zoom events.
++- Preserve transparent image borders when image-bound export is enabled;
++  retain intentional drawing-only crops and apply the same flag before worker
++  dispatch without changing the bundled worker.
 +- Recognize left and right Command keys for desktop editing shortcuts.
 +- Localize Cupertino overflow cancellation and expose text font-style samples
-+  for the current script.
++  for the current script, font-size Reset, and localized numeric slider labels
++  and spoken values.
 +- Retain upstream tests and add focused embedded-editor regressions in
 +  `test/crispcloud/`. See `UPSTREAM.md` for the pinned source and patch inventory.
  
  ## 14.24.0
  - **FEAT**(paint-editor): Add `PaintEditorConfigs.freeStyleCustomModes` so a custom paint mode records the whole stroke, like `PaintMode.freeStyle`, and its custom path builder can draw a brush.
-@@ -1761,4 +1773,4 @@
+@@ -1761,4 +1783,4 @@
  - **FEAT**: TextEditor
  - **FEAT**: CropRotateEditor
  - **FEAT**: FilterEditor
--- **FEAT**: EmojiEditor+- **FEAT**: EmojiEditor
+-- **FEAT**: EmojiEditor
+\ No newline at end of file
++- **FEAT**: EmojiEditor
 diff --git a/README.md b/README.md
 --- a/README.md
 +++ b/README.md
-@@ -1,3 +1,7 @@
+@@ -1,3 +1,8 @@
 +> **CrispCloud maintained copy:** Pinned to pro_image_editor 14.24.0 with
-+> focused embedded navigation, keyboard, and localization fixes. See
++> host UI/navigation bridges, reliable history/completion, and full
++> localization hooks. See
 +> [UPSTREAM.md](UPSTREAM.md) for provenance, patch inventory, and tests.
 +
  <img src="https://github.com/hm21/pro_image_editor/blob/stable/assets/logo.jpg?raw=true" alt="Logo" />
  
  <p>
-@@ -330,4 +334,4 @@
+@@ -330,4 +335,4 @@
    <img src="https://contrib.rocks/image?repo=hm21/pro_image_editor" />
  </a>
  
--Made with [contrib.rocks](https://contrib.rocks).+Made with [contrib.rocks](https://contrib.rocks).
+-Made with [contrib.rocks](https://contrib.rocks).
+\ No newline at end of file
++Made with [contrib.rocks](https://contrib.rocks).
 diff --git a/lib/core/mixins/standalone_editor.dart b/lib/core/mixins/standalone_editor.dart
 --- a/lib/core/mixins/standalone_editor.dart
 +++ b/lib/core/mixins/standalone_editor.dart
-@@ -251,7 +251,11 @@
+@@ -104,6 +104,10 @@
+   /// Indicates it create a screenshot or not.
+   bool isGenerationActive = false;
+ 
++  // Keep an embedded completion locked until its route has been disposed.
++  // A second Apply during the reverse animation must not pop the host route.
++  bool _isCompleting = false;
++
+   /// Indicates if the video editor is used
+   bool get isVideoEditor => videoController != null;
+ 
+@@ -139,7 +143,7 @@
+   /// This function is for internal use only and is marked as protected.
+   /// Please use the `done()` method instead.
+   @protected
+-  void doneEditing({
++  Future<bool> doneEditing({
+     dynamic returnValue,
+     EditorImage? editorImage,
+     Function? onCloseWithValue,
+@@ -149,109 +153,120 @@
+     required List<List<double>> matrixTuneAdjustmentsList,
+     required TransformConfigs? transform,
+   }) async {
+-    if (isGenerationActive) return;
+-
+-    if (initConfigs.convertToUint8List) {
+-      initConfigs.callbacks.onImageEditingStarted?.call();
+-
+-      isGenerationActive = true;
+-      LoadingDialog.instance.show(
+-        context,
+-        configs: configs,
+-        theme: theme,
+-        message: i18n.doneLoadingMsg,
+-      );
+-
+-      /// Ensure the image infos are read
+-      if (imageInfos == null) await setImageInfos();
+-      if (!mounted) {
++    if (!mounted || isGenerationActive || _isCompleting) return false;
++    _isCompleting = true;
++    var completed = false;
++    var loadingShown = false;
++    try {
++      if (initConfigs.convertToUint8List) {
++        initConfigs.callbacks.onImageEditingStarted?.call();
++
++        isGenerationActive = true;
++        loadingShown = true;
++        LoadingDialog.instance.show(
++          context,
++          configs: configs,
++          theme: theme,
++          message: i18n.doneLoadingMsg,
++        );
++
++        /// Ensure the image infos are read
++        if (imageInfos == null) await setImageInfos();
++        if (!mounted) return false;
++
++        /// Capture the final screenshot
++        bool screenshotIsCaptured =
++            screenshotHistoryPosition > 0 &&
++            screenshotHistoryPosition <= screenshotHistory.length;
++        Uint8List? bytes = await screenshotCtrl.captureFinalScreenshot(
++          imageInfos: imageInfos!,
++          backgroundScreenshot: screenshotIsCaptured
++              ? screenshotHistory[screenshotHistoryPosition - 1]
++              : null,
++          originalImageBytes: screenshotHistoryPosition > 0
++              ? null
++              : await editorImage!.safeByteArray(context),
++        );
++
++        var imageBytes = bytes ?? Uint8List.fromList([]);
++
++        /// Return final image that the user can handle it but still with the
++        /// active loading dialog
++        await initConfigs.callbacks.onImageEditingComplete?.call(imageBytes);
++
++        /// Return complete parameters if requested
++        if (initConfigs.callbacks.onCompleteWithParameters != null) {
++          final isTransformed = transform?.isNotEmpty ?? false;
++
++          var decodedImage = await decodeImageFromList(imageBytes);
++          Size originalImageSize = Size(
++            decodedImage.width.toDouble(),
++            decodedImage.height.toDouble(),
++          );
++          Size? outputSize = transform?.getCropSize(originalImageSize);
++          Offset? outputOffset = transform?.getCropStartOffset(originalImageSize);
++
++          await initConfigs.callbacks.onCompleteWithParameters?.call(
++            CompleteParameters(
++              blur: blur,
++              matrixFilterList: matrixFilterList,
++              matrixTuneAdjustmentsList: matrixTuneAdjustmentsList,
++              cropWidth: isTransformed ? outputSize!.width.round() : null,
++              cropHeight: isTransformed ? outputSize!.height.round() : null,
++              cropX: isTransformed ? outputOffset!.dx.round() : null,
++              cropY: isTransformed ? outputOffset!.dy.round() : null,
++              flipX: transform?.flipX ?? false,
++              flipY: transform?.flipY ?? false,
++              rotateTurns: transform?.angleToTurns() ?? 0,
++              startTime: null,
++              endTime: null,
++              image: imageBytes,
++              isTransformed: isTransformed,
++              layers: layers ?? [],
++              originalImageSize: null,
++              temporaryDecodedImageSize: null,
++              bodySize: null,
++              editorSize: null,
++            ),
++          );
++        }
++
++        /// Precache the image for the case the user require the hero animation
++        if (onSetFakeHero != null) {
++          if (bytes != null && mounted) {
++            await precacheImage(MemoryImage(bytes), context);
++          }
++          onSetFakeHero.call(bytes);
++        }
++
++        /// Hide the loading dialog
+         LoadingDialog.instance.hide();
+-        return;
++        loadingShown = false;
++
++        initConfigs.callbacks.onCloseEditor?.call(editorMode);
++      } else {
++        if (onCloseWithValue == null) {
++          Navigator.pop(context, returnValue);
++        } else {
++          await onCloseWithValue.call();
++        }
+       }
+-
+-      /// Capture the final screenshot
+-      bool screenshotIsCaptured =
+-          screenshotHistoryPosition > 0 &&
+-          screenshotHistoryPosition <= screenshotHistory.length;
+-      Uint8List? bytes = await screenshotCtrl.captureFinalScreenshot(
+-        imageInfos: imageInfos!,
+-        backgroundScreenshot: screenshotIsCaptured
+-            ? screenshotHistory[screenshotHistoryPosition - 1]
+-            : null,
+-        originalImageBytes: screenshotHistoryPosition > 0
+-            ? null
+-            : await editorImage!.safeByteArray(context),
+-      );
+-
++      completed = true;
++      return true;
++    } finally {
+       isGenerationActive = false;
+-
+-      var imageBytes = bytes ?? Uint8List.fromList([]);
+-
+-      /// Return final image that the user can handle it but still with the
+-      /// active loading dialog
+-      await initConfigs.callbacks.onImageEditingComplete?.call(imageBytes);
+-
+-      /// Return complete parameters if requested
+-      if (initConfigs.callbacks.onCompleteWithParameters != null) {
+-        final isTransformed = transform?.isNotEmpty ?? false;
+-
+-        var decodedImage = await decodeImageFromList(imageBytes);
+-        Size originalImageSize = Size(
+-          decodedImage.width.toDouble(),
+-          decodedImage.height.toDouble(),
+-        );
+-        Size? outputSize = transform?.getCropSize(originalImageSize);
+-        Offset? outputOffset = transform?.getCropStartOffset(originalImageSize);
+-
+-        await initConfigs.callbacks.onCompleteWithParameters?.call(
+-          CompleteParameters(
+-            blur: blur,
+-            matrixFilterList: matrixFilterList,
+-            matrixTuneAdjustmentsList: matrixTuneAdjustmentsList,
+-            cropWidth: isTransformed ? outputSize!.width.round() : null,
+-            cropHeight: isTransformed ? outputSize!.height.round() : null,
+-            cropX: isTransformed ? outputOffset!.dx.round() : null,
+-            cropY: isTransformed ? outputOffset!.dy.round() : null,
+-            flipX: transform?.flipX ?? false,
+-            flipY: transform?.flipY ?? false,
+-            rotateTurns: transform?.angleToTurns() ?? 0,
+-            startTime: null,
+-            endTime: null,
+-            image: imageBytes,
+-            isTransformed: isTransformed,
+-            layers: layers ?? [],
+-            originalImageSize: null,
+-            temporaryDecodedImageSize: null,
+-            bodySize: null,
+-            editorSize: null,
+-          ),
+-        );
+-      }
+-
+-      /// Precache the image for the case the user require the hero animation
+-      if (onSetFakeHero != null) {
+-        if (bytes != null && mounted) {
+-          await precacheImage(MemoryImage(bytes), context);
+-        }
+-        onSetFakeHero.call(bytes);
+-      }
+-
+-      /// Hide the loading dialog
+-      LoadingDialog.instance.hide();
+-
+-      initConfigs.callbacks.onCloseEditor?.call(editorMode);
+-    } else {
+-      if (onCloseWithValue == null) {
+-        Navigator.pop(context, returnValue);
+-      } else {
+-        onCloseWithValue.call();
+-      }
++      if (loadingShown) LoadingDialog.instance.hide();
++      if (initConfigs.convertToUint8List || !completed) _isCompleting = false;
+     }
+   }
  
    /// Closes the editor without applying changes.
    void close() {
@@ -55,10 +293,123 @@ diff --git a/lib/core/mixins/standalone_editor.dart b/lib/core/mixins/standalone
        Navigator.pop(context);
      } else {
        initConfigs.callbacks.onCloseEditor?.call(editorMode);
+diff --git a/lib/core/models/custom_widgets/layer_interaction_widgets.dart b/lib/core/models/custom_widgets/layer_interaction_widgets.dart
+--- a/lib/core/models/custom_widgets/layer_interaction_widgets.dart
++++ b/lib/core/models/custom_widgets/layer_interaction_widgets.dart
+@@ -1,7 +1,30 @@
++import 'package:flutter/widgets.dart';
++
+ import 'utils/custom_widgets_typedef.dart';
+ 
+ export '/shared/widgets/layer/interaction_helper/text_layer_box_handles.dart';
+ export '/shared/widgets/layer/models/layer_item_interaction.dart';
++
++/// An action returned by a host-rendered layer context menu.
++enum LayerContextMenuAction {
++  /// Edit the selected layer.
++  edit,
++
++  /// Remove the selected layer.
++  remove,
++}
++
++/// Opens a context menu using the embedding application's UI and navigator.
++///
++/// [globalPosition] is in screen coordinates. Return null when dismissed.
++/// The host should only offer actions enabled by [canEdit] and [canRemove].
++typedef LayerContextMenuBuilder =
++    Future<LayerContextMenuAction?> Function(
++      BuildContext context,
++      Offset globalPosition, {
++      required bool canEdit,
++      required bool canRemove,
++    });
+ 
+ /// A class that defines a layer of interaction for custom widgets,
+ /// allowing editing, removing, and rotating/scaling actions.
+@@ -34,6 +57,7 @@
+   /// layer.
+   const LayerInteractionWidgets({
+     this.overlayChildBuilder,
++    this.contextMenuBuilder,
+     this.editButton,
+     this.removeButton,
+     this.rotateScaleButton,
+@@ -43,6 +67,12 @@
+ 
+   /// This will completely replace the existing overlay when editing a layer.
+   final LayerOverlayBuilder? overlayChildBuilder;
++
++  /// Replaces the default layer context menu with the host's own menu.
++  ///
++  /// Useful when the editor is localized and themed inside a larger app:
++  /// popup routes on the host navigator must use that app's UI components.
++  final LayerContextMenuBuilder? contextMenuBuilder;
+ 
+   /// The button for the edit interaction, represented by
+   /// [LayerInteractionTapButton].
+@@ -172,6 +202,7 @@
+   /// * [border]: Updates the border of the interaction layer.
+   LayerInteractionWidgets copyWith({
+     LayerOverlayBuilder? overlayChildBuilder,
++    LayerContextMenuBuilder? contextMenuBuilder,
+     LayerInteractionTapButton? editButton,
+     LayerInteractionTapButton? removeButton,
+     LayerInteractionScaleRotateButton? rotateScaleButton,
+@@ -180,6 +211,7 @@
+   }) {
+     return LayerInteractionWidgets(
+       overlayChildBuilder: overlayChildBuilder ?? this.overlayChildBuilder,
++      contextMenuBuilder: contextMenuBuilder ?? this.contextMenuBuilder,
+       editButton: editButton ?? this.editButton,
+       removeButton: removeButton ?? this.removeButton,
+       rotateScaleButton: rotateScaleButton ?? this.rotateScaleButton,
+diff --git a/lib/core/models/editor_configs/main_editor_configs.dart b/lib/core/models/editor_configs/main_editor_configs.dart
+--- a/lib/core/models/editor_configs/main_editor_configs.dart
++++ b/lib/core/models/editor_configs/main_editor_configs.dart
+@@ -44,6 +44,7 @@
+       // SubEditorMode.sticker,
+     ],
+     this.enableSubEditorPage = false,
++    this.hostOwnsNavigation = false,
+     this.captureImageOnDone = true,
+     this.captureLayersOnDone = false,
+     this.enablePaintLayerRasterCache = false,
+@@ -153,6 +154,14 @@
+ 
+   /// Whether to use the sub-editor page without pushing a new route.
+   final bool enableSubEditorPage;
++
++  /// Lets an embedding host own route pops and its unsaved-changes prompt.
++  ///
++  /// When true, the main editor does not register a pop scope on the host
++  /// route. Main close requests are sent to `onCloseEditor`; the host should
++  /// close an active tool with `closeSubEditor()` before closing itself.
++  /// This does not disable the sub-editors' own route handling.
++  final bool hostOwnsNavigation;
+ 
+   /// Defines which sub-editors are available in the bottom-bar of the editor.
+   ///
+@@ -204,6 +213,7 @@
+     EditorSafeArea? safeArea,
+     List<SubEditorMode>? tools,
+     bool? enableSubEditorPage,
++    bool? hostOwnsNavigation,
+     bool? captureImageOnDone,
+     bool? captureLayersOnDone,
+     bool? enablePaintLayerRasterCache,
+@@ -211,6 +221,7 @@
+   }) {
+     return MainEditorConfigs(
+       enableSubEditorPage: enableSubEditorPage ?? this.enableSubEditorPage,
++      hostOwnsNavigation: hostOwnsNavigation ?? this.hostOwnsNavigation,
+       captureImageOnDone: captureImageOnDone ?? this.captureImageOnDone,
+       captureLayersOnDone: captureLayersOnDone ?? this.captureLayersOnDone,
+       enablePaintLayerRasterCache:
 diff --git a/lib/core/models/i18n/i18n_text_editor.dart b/lib/core/models/i18n/i18n_text_editor.dart
 --- a/lib/core/models/i18n/i18n_text_editor.dart
 +++ b/lib/core/models/i18n/i18n_text_editor.dart
-@@ -21,8 +21,10 @@
+@@ -21,8 +21,11 @@
    /// ```
    const I18nTextEditor({
      this.inputHintText = 'Enter text',
@@ -66,10 +417,11 @@ diff --git a/lib/core/models/i18n/i18n_text_editor.dart b/lib/core/models/i18n/i
      this.bottomNavigationBarText = 'Text',
      this.back = 'Back',
 +    this.cancel = 'Cancel',
++    this.reset = 'Reset',
      this.done = 'Done',
      this.textAlign = 'Align text',
      this.fontScale = 'Font scale',
-@@ -33,6 +35,9 @@
+@@ -33,6 +36,9 @@
    /// Placeholder text displayed in the text input field.
    final String inputHintText;
  
@@ -79,13 +431,16 @@ diff --git a/lib/core/models/i18n/i18n_text_editor.dart b/lib/core/models/i18n/i
    /// Text for the bottom navigation bar item that opens the Text Editor.
    final String bottomNavigationBarText;
  
-@@ -41,6 +46,9 @@
+@@ -41,6 +47,12 @@
  
    /// Text for the "Back" button.
    final String back;
 +
 +  /// Text for dismissing the text editor's overflow action sheet.
 +  final String cancel;
++
++  /// Tooltip and accessibility label for resetting the font scale.
++  final String reset;
  
    /// Text for the "Align text" setting.
    final String textAlign;
@@ -103,10 +458,64 @@ diff --git a/lib/core/services/keyboard_service.dart b/lib/core/services/keyboar
  
    /// Returns `true` if either Shift key is currently pressed.
    ///
+diff --git a/lib/features/blur_editor/blur_editor.dart b/lib/features/blur_editor/blur_editor.dart
+--- a/lib/features/blur_editor/blur_editor.dart
++++ b/lib/features/blur_editor/blur_editor.dart
+@@ -210,8 +210,8 @@
+ 
+   /// Handles the "Done" action, either by applying changes or closing the
+   /// editor.
+-  void done() async {
+-    doneEditing(
++  Future<void> done() async {
++    final completed = await doneEditing(
+       returnValue: blurFactor,
+       editorImage: widget.editorImage,
+       blur: blurFactor,
+@@ -221,7 +221,7 @@
+           .toList(),
+       transform: initialTransformConfigs,
+     );
+-    blurEditorCallbacks?.handleDone();
++    if (completed) blurEditorCallbacks?.handleDone();
+   }
+ 
+   /// Set the blur factor and update the UI.
+diff --git a/lib/features/filter_editor/filter_editor.dart b/lib/features/filter_editor/filter_editor.dart
+--- a/lib/features/filter_editor/filter_editor.dart
++++ b/lib/features/filter_editor/filter_editor.dart
+@@ -216,8 +216,8 @@
+ 
+   /// Handles the "Done" action, either by applying changes or closing the
+   /// editor.
+-  void done() async {
+-    doneEditing(
++  Future<void> done() async {
++    final completed = await doneEditing(
+       editorImage: widget.editorImage,
+       returnValue: FilterState(
+         name: selectedFilter.name,
+@@ -230,7 +230,7 @@
+           .toList(),
+       transform: initialTransformConfigs,
+     );
+-    filterEditorCallbacks?.handleDone();
++    if (completed) filterEditorCallbacks?.handleDone();
+   }
+ 
+   FilterMatrix _getActiveFilters() {
 diff --git a/lib/features/main_editor/main_editor.dart b/lib/features/main_editor/main_editor.dart
 --- a/lib/features/main_editor/main_editor.dart
 +++ b/lib/features/main_editor/main_editor.dart
-@@ -747,7 +747,7 @@
+@@ -32,6 +32,7 @@
+ import '/shared/widgets/adaptive_dialog.dart';
+ import '/shared/widgets/extended/interactive_viewer/extended_interactive_viewer.dart';
+ import '/shared/widgets/layer/widgets/layer_widget_text_item.dart';
++import '/shared/widgets/overlays/editor_bottom_sheet.dart';
+ import '/shared/widgets/screen_resize_detector.dart';
+ import '../audio_editor/audio_editor_page.dart';
+ import '../audio_editor/models/audio_editor_response.dart';
+@@ -747,7 +748,7 @@
                  // set the fake hero first
                  cropRotateEditor.currentState!.close();
                } else {
@@ -115,7 +524,16 @@ diff --git a/lib/features/main_editor/main_editor.dart b/lib/features/main_edito
                }
              }
            } else {
-@@ -3342,7 +3342,7 @@
+@@ -2211,7 +2212,7 @@
+ 
+     PaintLayer? result =
+         await (callbacks.paintEditorCallbacks?.onEditLayer?.call(layer) ??
+-            showModalBottomSheet<PaintLayer>(
++            showEditorModalBottomSheet<PaintLayer>(
+               context: context,
+               backgroundColor:
+                   paintEditorConfigs.style.editSheetBackgroundColor,
+@@ -3342,7 +3343,7 @@
      }
  
      if (isSubEditorOpen) {
@@ -124,7 +542,7 @@ diff --git a/lib/features/main_editor/main_editor.dart b/lib/features/main_edito
        if (!_pageOpenCompleter.isCompleted) await _pageOpenCompleter.future;
        if (!mounted) return Uint8List.fromList([]);
      }
-@@ -3413,7 +3413,7 @@
+@@ -3413,7 +3414,7 @@
      }
  
      if (isSubEditorOpen) {
@@ -133,7 +551,7 @@ diff --git a/lib/features/main_editor/main_editor.dart b/lib/features/main_edito
        if (!_pageOpenCompleter.isCompleted) await _pageOpenCompleter.future;
        if (!mounted) return <ExportedLayer>[];
      }
-@@ -3435,17 +3435,40 @@
+@@ -3435,17 +3436,40 @@
      );
    }
  
@@ -184,6 +602,180 @@ diff --git a/lib/features/main_editor/main_editor.dart b/lib/features/main_edito
    }
  
    /// Close the image editor.
+@@ -3454,6 +3478,10 @@
+   /// any changes or edits.
+   /// It navigates back to the previous screen or closes the modal editor.
+   void closeEditor() {
++    if (mainEditorConfigs.hostOwnsNavigation) {
++      onCloseEditor?.call(EditorMode.main);
++      return;
++    }
+     if (!stateManager.canUndo) {
+       if (onCloseEditor == null) {
+         Navigator.pop(context);
+@@ -3467,6 +3495,10 @@
+ 
+   /// Displays a warning dialog before closing the image editor.
+   void closeWarning() async {
++    if (mainEditorConfigs.hostOwnsNavigation) {
++      onCloseEditor?.call(EditorMode.main);
++      return;
++    }
+     if (isPopScopeDisabled) {
+       Navigator.pop(context);
+       return;
+@@ -3751,6 +3783,7 @@
+     return RecordInvisibleWidget(
+       controller: _controllers.screenshot,
+       child: ExtendedPopScope(
++        enabled: !mainEditorConfigs.hostOwnsNavigation,
+         canPop:
+             (isPopScopeDisabled ||
+                 !stateManager.canUndo ||
+@@ -3966,8 +3999,11 @@
+                   });
+                 },
+                 onPointerCancel: (_) => _releaseInlineGesture(),
+-                onPointerSignal: isDesktop && hasSelectedLayers
++                onPointerSignal: isDesktop
+                     ? (event) {
++                        // Selection can change without rebuilding this body
++                        // (for example when a layer is reselected after undo).
++                        if (!hasSelectedLayers) return;
+                         final hasMultiSelection = selectedLayers.length > 1;
+ 
+                         final zoomEnabled = mainEditorConfigs.enableZoom;
+@@ -3982,13 +4018,22 @@
+                           return;
+                         }
+ 
+-                        /// Otherwise, handle scroll as a layer scaling
+-                        /// interaction.
+-                        _desktopInteractionManager.mouseScroll(
++                        // Transform copies so a wheel gesture cannot mutate
++                        // the saved revision or its previous undo entry.
++                        final layers = _layerCopyManager.copyLayerList(
++                          activeLayers,
++                        );
++                        final selectedIds = selectedLayers
++                            .map((layer) => layer.id)
++                            .toSet();
++                        final changed = _desktopInteractionManager.mouseScroll(
+                           event,
+-                          selectedLayers: selectedLayers,
++                          selectedLayers: layers
++                              .where((layer) => selectedIds.contains(layer.id))
++                              .toList(),
+                           interactiveViewer: interactiveViewer.currentState,
+                         );
++                        if (changed) addHistory(layers: layers);
+                       }
+                     : null,
+                 child: GestureDetector(
+diff --git a/lib/features/main_editor/services/desktop_interaction_manager.dart b/lib/features/main_editor/services/desktop_interaction_manager.dart
+--- a/lib/features/main_editor/services/desktop_interaction_manager.dart
++++ b/lib/features/main_editor/services/desktop_interaction_manager.dart
+@@ -87,23 +87,25 @@
+   /// is written back to the keyframe there, so the change shows on screen.
+   /// A [change] that leaves the layer where it was, such as a scroll while
+   /// zooming is off, adds no keyframe.
+-  void _transformLayer(Layer layer, void Function() change) {
++  bool _transformLayer(Layer layer, void Function() change) {
+     final laidOutScale = layer.scale;
+     final time = keyframeTime?.call();
+     if (time == null || !layer.hasKeyframes) {
++      final before = layer.restPlacement;
+       change();
+       applyLayerLimits?.call(layer, laidOutScale);
+-      return;
++      return layer.restPlacement != before;
+     }
+     layer.applyKeyframePlacement(time);
+     final before = layer.restPlacement;
+     change();
+     applyLayerLimits?.call(layer, laidOutScale);
+-    if (layer.restPlacement == before) return;
++    if (layer.restPlacement == before) return false;
+     layer.setKeyframeAt(
+       time,
+       tolerance: configs.videoEditor.layerTimeline.keyframeTolerance,
+     );
++    return true;
+   }
+ 
+   final _keyboard = KeyboardService();
+@@ -214,17 +216,29 @@
+     onUpdateUI?.call();
+   }
+ 
+-  /// Handles mouse scroll events.
+-  void mouseScroll(
++  /// Handles mouse scroll events and reports whether a layer changed.
++  ///
++  /// The caller supplies copies of the active layers and commits a history
++  /// entry only when this returns `true`, preserving the previous undo state.
++  bool mouseScroll(
+     PointerSignalEvent event, {
+     required List<Layer> selectedLayers,
+     required ExtendedInteractiveViewerState? interactiveViewer,
+   }) {
+-    if (event is! PointerScrollEvent || selectedLayers.isEmpty) return;
+-
++    if (event is! PointerScrollEvent ||
++        selectedLayers.isEmpty ||
++        event.scrollDelta.dy == 0) {
++      return false;
++    }
++    final rotate = _keyboard.isShiftPressed;
++    if (!rotate && interactiveViewer?.isInteractionEnabled != true) {
++      return false;
++    }
++
++    var changed = false;
+     for (Layer layer in selectedLayers) {
+-      _transformLayer(layer, () {
+-        if (_keyboard.isShiftPressed) {
++      final layerChanged = _transformLayer(layer, () {
++        if (rotate) {
+           if (event.scrollDelta.dy > 0) {
+             layer.rotation -= 0.087266;
+           } else if (event.scrollDelta.dy < 0) {
+@@ -245,8 +259,11 @@
+           }
+         }
+       });
+-    }
++      changed = changed || layerChanged;
++    }
++    if (!changed) return false;
+     setState(() {});
+     onUpdateUI?.call();
++    return true;
+   }
+ }
+diff --git a/lib/features/paint_editor/paint_editor.dart b/lib/features/paint_editor/paint_editor.dart
+--- a/lib/features/paint_editor/paint_editor.dart
++++ b/lib/features/paint_editor/paint_editor.dart
+@@ -743,8 +743,8 @@
+   /// a result.
+   /// If no changes have been made, it closes the editor without returning any
+   /// changes.
+-  void done() async {
+-    doneEditing(
++  Future<void> done() async {
++    final completed = await doneEditing(
+       editorImage: widget.editorImage,
+       onSetFakeHero: (bytes) {
+         if (initConfigs.enableFakeHero) {
+@@ -799,7 +799,7 @@
+           .toList(),
+       transform: initialTransformConfigs,
+     );
+-    paintEditorCallbacks?.handleDone();
++    if (completed) paintEditorCallbacks?.handleDone();
+   }
+ 
+   /// Adds a painted model as a new layer to the editor.
 diff --git a/lib/features/paint_editor/widgets/paint_editor_appbar.dart b/lib/features/paint_editor/widgets/paint_editor_appbar.dart
 --- a/lib/features/paint_editor/widgets/paint_editor_appbar.dart
 +++ b/lib/features/paint_editor/widgets/paint_editor_appbar.dart
@@ -195,6 +787,50 @@ diff --git a/lib/features/paint_editor/widgets/paint_editor_appbar.dart b/lib/fe
          options: [
            if (paintEditorConfigs.showLineWidthAdjustmentButton)
              PopupMenuOption(
+diff --git a/lib/features/paint_editor/widgets/paint_editor_layer_editor.dart b/lib/features/paint_editor/widgets/paint_editor_layer_editor.dart
+--- a/lib/features/paint_editor/widgets/paint_editor_layer_editor.dart
++++ b/lib/features/paint_editor/widgets/paint_editor_layer_editor.dart
+@@ -2,6 +2,7 @@
+ import 'package:material_ui/material_ui.dart';
+ 
+ import '/pro_image_editor.dart';
++import '/shared/utils/format_editor_number.dart';
+ import '/shared/widgets/layer/widgets/layer_widget_paint_item.dart';
+ 
+ /// A widget that allows editing a [PaintLayer]'s properties such as
+@@ -168,7 +169,9 @@
+             min: _configs.paintEditor.minOpacity,
+             divisions: _configs.paintEditor.divisionsOpacity,
+             padding: const EdgeInsets.only(top: 12, bottom: 20),
+-            label: _layer.opacity.toStringAsFixed(2),
++            label: formatEditorNumber(context, _layer.opacity, fractionDigits: 2),
++            semanticFormatterCallback: (value) =>
++                formatEditorNumber(context, value, fractionDigits: 2),
+             onChanged: _setOpacity,
+           ),
+         ],
+@@ -192,7 +195,9 @@
+             min: _configs.paintEditor.minStrokeWidth,
+             divisions: _configs.paintEditor.divisionsStrokeWidth,
+             padding: const EdgeInsets.only(top: 12, bottom: 20),
+-            label: _paintItem.strokeWidth.toStringAsFixed(1),
++            label: formatEditorNumber(context, _paintItem.strokeWidth, fractionDigits: 1),
++            semanticFormatterCallback: (value) =>
++                formatEditorNumber(context, value, fractionDigits: 1),
+             onChanged: _paintItem.fill && _paintItem.canBeFilled
+                 ? null
+                 : _setStrokeWidth,
+diff --git a/lib/features/text_editor/text_editor.dart b/lib/features/text_editor/text_editor.dart
+--- a/lib/features/text_editor/text_editor.dart
++++ b/lib/features/text_editor/text_editor.dart
+@@ -368,6 +368,7 @@
+         title: i18n.textEditor.fontScale,
+         headerTextStyle: textEditorConfigs.style.fontSizeBottomSheetTitle,
+         resetIcon: textEditorConfigs.icons.resetFontScale,
++        resetLabel: i18n.textEditor.reset,
+         max: textEditorConfigs.maxFontScale,
+         min: textEditorConfigs.minFontScale,
+         divisions:
 diff --git a/lib/features/text_editor/widgets/text_editor_appbar.dart b/lib/features/text_editor/widgets/text_editor_appbar.dart
 --- a/lib/features/text_editor/widgets/text_editor_appbar.dart
 +++ b/lib/features/text_editor/widgets/text_editor_appbar.dart
@@ -218,6 +854,303 @@ diff --git a/lib/features/text_editor/widgets/text_editor_bottom_bar.dart b/lib/
              style: items[index].copyWith(
                color: isSelected ? Colors.black : Colors.white,
              ),
+diff --git a/lib/features/tune_editor/tune_editor.dart b/lib/features/tune_editor/tune_editor.dart
+--- a/lib/features/tune_editor/tune_editor.dart
++++ b/lib/features/tune_editor/tune_editor.dart
+@@ -257,12 +257,12 @@
+ 
+   /// Handles the "Done" action, either by applying changes or closing the
+   /// editor.
+-  void done() async {
++  Future<void> done() async {
+     final adjustments = mergeTuneAdjustments(
+       applied: appliedTuneAdjustments,
+       sliders: tuneAdjustmentMatrix,
+     );
+-    doneEditing(
++    final completed = await doneEditing(
+       editorImage: editorImage,
+       returnValue: adjustments,
+       blur: appliedBlurFactor,
+@@ -272,7 +272,7 @@
+           .toList(),
+       transform: initialTransformConfigs,
+     );
+-    tuneEditorCallbacks?.handleDone();
++    if (completed) tuneEditorCallbacks?.handleDone();
+   }
+ 
+   /// Resets the tune editor state, clearing undo and redo stacks.
+diff --git a/lib/features/tune_editor/widgets/tune_editor_bottombar.dart b/lib/features/tune_editor/widgets/tune_editor_bottombar.dart
+--- a/lib/features/tune_editor/widgets/tune_editor_bottombar.dart
++++ b/lib/features/tune_editor/widgets/tune_editor_bottombar.dart
+@@ -3,6 +3,7 @@
+ import 'package:material_ui/material_ui.dart';
+ 
+ import '/core/models/editor_configs/tune_editor_configs.dart';
++import '/shared/utils/format_editor_number.dart';
+ import '/shared/widgets/editor_scrollbar.dart';
+ import '/shared/widgets/flat_icon_text_button.dart';
+ import '../models/tune_adjustment_matrix.dart';
+@@ -134,9 +135,14 @@
+                     min: activeOption.min,
+                     max: activeOption.max,
+                     divisions: activeOption.divisions,
+-                    label: (value * activeOption.labelMultiplier)
+-                        .round()
+-                        .toString(),
++                    label: formatEditorNumber(
++                      context,
++                      (value * activeOption.labelMultiplier).round(),
++                    ),
++                    semanticFormatterCallback: (value) => formatEditorNumber(
++                      context,
++                      (value * activeOption.labelMultiplier).round(),
++                    ),
+                     value: value,
+                     onChangeStart: (val) {
+                       _sliderValue.value = val;
+diff --git a/lib/shared/services/content_recorder/controllers/content_recorder_controller.dart b/lib/shared/services/content_recorder/controllers/content_recorder_controller.dart
+--- a/lib/shared/services/content_recorder/controllers/content_recorder_controller.dart
++++ b/lib/shared/services/content_recorder/controllers/content_recorder_controller.dart
+@@ -381,7 +381,9 @@
+ 
+     /// Check if the output size is too large.
+     double outputRatio = imageInfos.pixelRatio;
+-    if (!_configs.cropToDrawingBounds && context != null && context.mounted) {
++    if (!_configs.cropToImageBounds &&
++        !_configs.cropToDrawingBounds &&
++        context != null && context.mounted) {
+       outputRatio = max(
+         imageInfos.pixelRatio,
+         MediaQuery.devicePixelRatioOf(context),
+diff --git a/lib/shared/services/content_recorder/services/image_converter_service.dart b/lib/shared/services/content_recorder/services/image_converter_service.dart
+--- a/lib/shared/services/content_recorder/services/image_converter_service.dart
++++ b/lib/shared/services/content_recorder/services/image_converter_service.dart
+@@ -65,7 +65,11 @@
+     bool? cropToDrawingBounds,
+   }) async {
+     format ??= configs.outputFormat;
+-    final crop = cropToDrawingBounds ?? configs.cropToDrawingBounds;
++    // The rasterizer already clipped the requested image/crop rectangle.
++    // Its transparent border is image content, not unused drawing canvas.
++    // Keep explicit per-capture overrides for standalone layer exports.
++    final crop = cropToDrawingBounds ??
++        (configs.cropToDrawingBounds && !configs.cropToImageBounds);
+ 
+     if (configs.enableIsolateGeneration) {
+       try {
+diff --git a/lib/shared/services/content_recorder/services/image_render_service.dart b/lib/shared/services/content_recorder/services/image_render_service.dart
+--- a/lib/shared/services/content_recorder/services/image_render_service.dart
++++ b/lib/shared/services/content_recorder/services/image_render_service.dart
+@@ -68,7 +68,9 @@
+ 
+       // Determine pixel ratio
+       double outputRatio = imageInfos.pixelRatio;
+-      if (!configs.cropToDrawingBounds && context != null && context.mounted) {
++      if (!configs.cropToImageBounds &&
++          !configs.cropToDrawingBounds &&
++          context != null && context.mounted) {
+         outputRatio = max(
+           imageInfos.pixelRatio,
+           MediaQuery.devicePixelRatioOf(context),
+diff --git a/lib/shared/widgets/bottom_sheets_header_row.dart b/lib/shared/widgets/bottom_sheets_header_row.dart
+--- a/lib/shared/widgets/bottom_sheets_header_row.dart
++++ b/lib/shared/widgets/bottom_sheets_header_row.dart
+@@ -60,6 +60,7 @@
+               ),
+               widget.closeButton?.call(() => Navigator.pop(context)) ??
+                   IconButton(
++                    tooltip: MaterialLocalizations.of(context).closeButtonTooltip,
+                     icon: Container(
+                       padding: const EdgeInsets.all(3),
+                       decoration: BoxDecoration(
+diff --git a/lib/shared/widgets/extended/extended_pop_scope.dart b/lib/shared/widgets/extended/extended_pop_scope.dart
+--- a/lib/shared/widgets/extended/extended_pop_scope.dart
++++ b/lib/shared/widgets/extended/extended_pop_scope.dart
+@@ -13,6 +13,7 @@
+     super.key,
+     required this.child,
+     this.canPop = true,
++    this.enabled = true,
+     this.onPopInvokedWithResult,
+   });
+ 
+@@ -57,8 +58,15 @@
+   /// {@endtemplate}
+   final bool canPop;
+ 
++  /// Whether to register this scope on the containing route.
++  ///
++  /// Embedding hosts can own navigation without another scope vetoing or
++  /// responding to the same pop, including while a loading overlay is active.
++  final bool enabled;
++
+   @override
+   Widget build(BuildContext context) {
++    if (!enabled) return child;
+     return ListenableBuilder(
+       listenable: LoadingDialog.instance,
+       builder: (_, _) {
+diff --git a/lib/shared/widgets/layer/layer_widget.dart b/lib/shared/widgets/layer/layer_widget.dart
+--- a/lib/shared/widgets/layer/layer_widget.dart
++++ b/lib/shared/widgets/layer/layer_widget.dart
+@@ -139,6 +139,7 @@
+     i18nLayerInteraction: i18n.layerInteraction,
+     layerInteractionIcons: layerInteraction.icons,
+     onContextMenuToggled: widget.onContextMenuToggled,
++    contextMenuBuilder: layerInteraction.widgets.contextMenuBuilder,
+     onEditTap: () => _layersService?.handleEditTap(_layer),
+     onRemoveTap: () => _layersService?.handleRemoveLayer(_layer),
+   );
+diff --git a/lib/shared/widgets/layer/services/layer_widget_context_menu.dart b/lib/shared/widgets/layer/services/layer_widget_context_menu.dart
+--- a/lib/shared/widgets/layer/services/layer_widget_context_menu.dart
++++ b/lib/shared/widgets/layer/services/layer_widget_context_menu.dart
+@@ -1,5 +1,6 @@
+ import 'package:material_ui/material_ui.dart';
+ 
++import '/core/models/custom_widgets/layer_interaction_widgets.dart';
+ import '/core/models/i18n/i18n_layer_interaction.dart';
+ import '/core/models/icons/layer_interaction_icons.dart';
+ 
+@@ -13,6 +14,7 @@
+     required this.onContextMenuToggled,
+     required this.i18nLayerInteraction,
+     required this.layerInteractionIcons,
++    this.contextMenuBuilder,
+   });
+ 
+   /// Callback triggered when the layer is removed.
+@@ -30,67 +32,81 @@
+   /// Provides icons for layer interaction actions.
+   final LayerInteractionIcons layerInteractionIcons;
+ 
++  /// Optional host-rendered menu, using the host's own theme and localizations.
++  final LayerContextMenuBuilder? contextMenuBuilder;
++
++  bool _isOpen = false;
++
+   /// Opens the context menu at the specified position.
+   ///
+   /// The menu allows users to edit or remove a layer based on the provided
+   /// permissions.
+-  void open({
++  Future<void> open({
+     required BuildContext context,
+     required TapUpDetails details,
+     required bool enableEditButton,
+     required bool enableRemoveButton,
+-  }) {
+-    final Offset clickPosition = details.globalPosition;
+-    double spacing = 14.0;
+-
+-    onContextMenuToggled?.call(true);
+-
+-    // Show a popup menu at the click position.
+-    showMenu(
+-      context: context,
+-      useRootNavigator: true,
+-      position: RelativeRect.fromLTRB(
+-        clickPosition.dx,
+-        clickPosition.dy,
+-        clickPosition.dx + 1.0, // Adding a small value to avoid zero width
+-        clickPosition.dy + 1.0, // Adding a small value to avoid zero height
+-      ),
+-      items: <PopupMenuEntry<String>>[
+-        if (enableEditButton)
+-          PopupMenuItem<String>(
+-            value: 'edit',
+-            child: Row(
+-              spacing: spacing,
+-              children: [
+-                Icon(layerInteractionIcons.edit),
+-                Text(i18nLayerInteraction.edit),
++  }) async {
++    if (_isOpen || (!enableEditButton && !enableRemoveButton)) return;
++    _isOpen = true;
++    final clickPosition = details.globalPosition;
++    const spacing = 14.0;
++    try {
++      onContextMenuToggled?.call(true);
++      final builder = contextMenuBuilder;
++      final selectedValue = builder != null
++          ? await builder(
++              context,
++              clickPosition,
++              canEdit: enableEditButton,
++              canRemove: enableRemoveButton,
++            )
++          : await showMenu<LayerContextMenuAction>(
++              context: context,
++              useRootNavigator: true,
++              position: RelativeRect.fromLTRB(
++                clickPosition.dx,
++                clickPosition.dy,
++                clickPosition.dx + 1.0,
++                clickPosition.dy + 1.0,
++              ),
++              items: <PopupMenuEntry<LayerContextMenuAction>>[
++                if (enableEditButton)
++                  PopupMenuItem<LayerContextMenuAction>(
++                    value: LayerContextMenuAction.edit,
++                    child: Row(
++                      spacing: spacing,
++                      children: [
++                        Icon(layerInteractionIcons.edit),
++                        Text(i18nLayerInteraction.edit),
++                      ],
++                    ),
++                  ),
++                if (enableRemoveButton)
++                  PopupMenuItem<LayerContextMenuAction>(
++                    value: LayerContextMenuAction.remove,
++                    child: Row(
++                      spacing: spacing,
++                      children: [
++                        Icon(layerInteractionIcons.remove),
++                        Text(i18nLayerInteraction.remove),
++                      ],
++                    ),
++                  ),
+               ],
+-            ),
+-          ),
+-        if (enableRemoveButton)
+-          PopupMenuItem<String>(
+-            value: 'remove',
+-            child: Row(
+-              spacing: spacing,
+-              children: [
+-                Icon(layerInteractionIcons.remove),
+-                Text(i18nLayerInteraction.remove),
+-              ],
+-            ),
+-          ),
+-      ],
+-    ).then((String? selectedValue) {
++            );
++      if (!context.mounted) return;
+       switch (selectedValue) {
+-        case 'edit':
++        case LayerContextMenuAction.edit when enableEditButton:
+           onEditTap?.call();
++        case LayerContextMenuAction.remove when enableRemoveButton:
++          onRemoveTap?.call();
++        default:
+           break;
+-        case 'remove':
+-          onRemoveTap?.call();
+-          break;
+-        default:
+       }
+-
++    } finally {
++      _isOpen = false;
+       onContextMenuToggled?.call(false);
+-    });
++    }
+   }
+ }
 diff --git a/lib/shared/widgets/platform/platform_popup_menu.dart b/lib/shared/widgets/platform/platform_popup_menu.dart
 --- a/lib/shared/widgets/platform/platform_popup_menu.dart
 +++ b/lib/shared/widgets/platform/platform_popup_menu.dart
@@ -253,6 +1186,74 @@ diff --git a/lib/shared/widgets/platform/platform_popup_menu.dart b/lib/shared/w
        ),
      );
    }
+diff --git a/lib/shared/widgets/slider_bottom_sheet.dart b/lib/shared/widgets/slider_bottom_sheet.dart
+--- a/lib/shared/widgets/slider_bottom_sheet.dart
++++ b/lib/shared/widgets/slider_bottom_sheet.dart
+@@ -4,6 +4,7 @@
+ 
+ import '/core/enums/design_mode.dart';
+ import '/shared/styles/platform_text_styles.dart';
++import '/shared/utils/format_editor_number.dart';
+ import '/shared/widgets/bottom_sheets_header_row.dart';
+ import 'reactive_widgets/reactive_custom_widget.dart';
+ 
+@@ -44,6 +45,7 @@
+     required this.rebuildController,
+     required this.onValueChanged,
+     this.resetIcon,
++    this.resetLabel,
+     this.showFactorInTitle = false,
+   });
+ 
+@@ -55,6 +57,9 @@
+ 
+   /// An optional icon for resetting the slider's value.
+   final IconData? resetIcon;
++
++  /// Localized tooltip and accessibility label for the reset control.
++  final String? resetLabel;
+ 
+   /// A builder function for a custom close button.
+   final Widget Function(T, dynamic Function())? closeButton;
+@@ -136,7 +141,7 @@
+ 
+   Widget _buildHeader() {
+     String factorText = widget.showFactorInTitle
+-        ? ' ${_value.toStringAsFixed(1)}x'
++        ? ' ${formatEditorNumber(context, _value, fractionDigits: 1)}×'
+         : '';
+ 
+     return BottomSheetHeaderRow(
+@@ -166,6 +171,14 @@
+                 min: widget.min,
+                 divisions: widget.divisions,
+                 value: _value,
++                semanticFormatterCallback: (value) {
++                  final number = formatEditorNumber(
++                    context,
++                    value,
++                    fractionDigits: widget.showFactorInTitle ? 1 : null,
++                  );
++                  return widget.showFactorInTitle ? '$number×' : number;
++                },
+                 onChanged: updateValue,
+               ),
+             ),
+@@ -185,12 +198,14 @@
+         duration: const Duration(milliseconds: 150),
+         child: _value != _presetValue
+             ? IconButton(
++                tooltip: widget.resetLabel,
+                 onPressed: () {
+                   updateValue(_presetValue);
+                 },
+                 icon: Icon(widget.resetIcon),
+               )
+             : IconButton(
++                tooltip: widget.resetLabel,
+                 color: Colors.transparent,
+                 onPressed: null,
+                 icon: Icon(widget.resetIcon),
 diff --git a/pubspec.yaml b/pubspec.yaml
 --- a/pubspec.yaml
 +++ b/pubspec.yaml
@@ -277,8 +1278,116 @@ diff --git a/pubspec.yaml b/pubspec.yaml
  
  platforms:
    android:
-@@ -79,4 +72,4 @@
+@@ -40,6 +33,7 @@
+ 
+   cupertino_ui: ^1.0.2
+   http: ^1.6.0
++  intl: ^0.20.2
+   material_ui: ^1.1.1
+   plugin_platform_interface: ^2.1.8
+   shared_preferences: ^2.5.4
+@@ -79,4 +73,4 @@
    fonts:
     - family: ProImageEditorIcons
       fonts:
--      - asset: assets/fonts/ProImageEditorIcons.ttf+      - asset: assets/fonts/ProImageEditorIcons.ttf
+-      - asset: assets/fonts/ProImageEditorIcons.ttf
+\ No newline at end of file
++      - asset: assets/fonts/ProImageEditorIcons.ttf
+diff --git a/lib/shared/utils/format_editor_number.dart b/lib/shared/utils/format_editor_number.dart
+new file mode 100644
+--- /dev/null
++++ b/lib/shared/utils/format_editor_number.dart
+@@ -0,0 +1,20 @@
++import 'package:flutter/widgets.dart';
++import 'package:intl/intl.dart';
++
++/// Formats visible editor values using the current locale's digits and
++/// separators. Pixel math and serialized values must remain locale-independent.
++String formatEditorNumber(
++  BuildContext context,
++  num value, {
++  int? fractionDigits,
++}) {
++  final format = NumberFormat.decimalPattern(
++    Localizations.localeOf(context).toString(),
++  );
++  if (fractionDigits != null) {
++    format
++      ..minimumFractionDigits = fractionDigits
++      ..maximumFractionDigits = fractionDigits;
++  }
++  return format.format(value);
++}
+diff --git a/lib/shared/widgets/overlays/editor_bottom_sheet.dart b/lib/shared/widgets/overlays/editor_bottom_sheet.dart
+new file mode 100644
+--- /dev/null
++++ b/lib/shared/widgets/overlays/editor_bottom_sheet.dart
+@@ -0,0 +1,68 @@
++import 'package:material_ui/material_ui.dart';
++
++/// Opens an editor sheet on the containing navigator while retaining the
++/// editor's localization scope. The route's sheet chrome also needs that scope,
++/// so wrapping only the caller's content builder is insufficient.
++Future<T?> showEditorModalBottomSheet<T>({
++  required BuildContext context,
++  required WidgetBuilder builder,
++  Color? backgroundColor,
++  bool? showDragHandle,
++  bool isScrollControlled = false,
++  bool useSafeArea = false,
++}) {
++  final navigator = Navigator.of(context);
++  final localizations = MaterialLocalizations.of(context);
++  return navigator.push<T>(
++    _EditorBottomSheetRoute<T>(
++      localizationContext: context,
++      builder: builder,
++      capturedThemes: InheritedTheme.capture(
++        from: context,
++        to: navigator.context,
++      ),
++      backgroundColor: backgroundColor,
++      showDragHandle: showDragHandle,
++      isScrollControlled: isScrollControlled,
++      useSafeArea: useSafeArea,
++      barrierLabel: localizations.scrimLabel,
++      barrierOnTapHint: localizations.scrimOnTapHint(
++        localizations.bottomSheetLabel,
++      ),
++      modalBarrierColor: Theme.of(context).bottomSheetTheme.modalBarrierColor,
++    ),
++  );
++}
++
++class _EditorBottomSheetRoute<T> extends ModalBottomSheetRoute<T> {
++  _EditorBottomSheetRoute({
++    required this.localizationContext,
++    required super.builder,
++    required super.isScrollControlled,
++    super.capturedThemes,
++    super.backgroundColor,
++    super.showDragHandle,
++    super.useSafeArea,
++    super.barrierLabel,
++    super.barrierOnTapHint,
++    super.modalBarrierColor,
++  });
++
++  final BuildContext localizationContext;
++
++  @override
++  Widget buildPage(
++    BuildContext context,
++    Animation<double> animation,
++    Animation<double> secondaryAnimation,
++  ) => Localizations.override(
++    context: localizationContext,
++    child: Builder(
++      builder: (localizedContext) => super.buildPage(
++        localizedContext,
++        animation,
++        secondaryAnimation,
++      ),
++    ),
++  );
++}

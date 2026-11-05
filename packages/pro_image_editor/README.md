@@ -1,5 +1,6 @@
 > **CrispCloud maintained copy:** Pinned to pro_image_editor 14.24.0 with
-> focused embedded navigation, keyboard, and localization fixes. See
+> host UI/navigation bridges, reliable history/completion, and full
+> localization hooks. See
 > [UPSTREAM.md](UPSTREAM.md) for provenance, patch inventory, and tests.
 
 <img src="https://github.com/hm21/pro_image_editor/blob/stable/assets/logo.jpg?raw=true" alt="Logo" />

@@ -54,7 +54,8 @@ const imageEditorTranslations = <String, Map<String, String>>{
     'Adjust': 'Adjust',
     'About CrispCloud': 'About CrispCloud',
     'Settings...': 'Settings...',
-    'This file type cannot be edited here. Use F3 to view it.': 'This file type cannot be edited here. Use F3 to view it.',
+    'This file type cannot be edited here. Use F3 to view it.':
+        'This file type cannot be edited here. Use F3 to view it.',
     'Image editor': 'Image editor',
     'Loading image…': 'Loading image…',
     'Saving…': 'Saving…',
@@ -73,20 +74,32 @@ const imageEditorTranslations = <String, Map<String, String>>{
     'Could not open image': 'Could not open image',
     'Could not save image': 'Could not save image',
     'Could not apply changes': 'Could not apply changes',
-    'Only PNG and JPEG images can be edited.': 'Only PNG and JPEG images can be edited.',
-    'The image contents do not match the filename extension.': 'The image contents do not match the filename extension.',
-    'This image is invalid or could not be decoded.': 'This image is invalid or could not be decoded.',
-    'Animated images cannot be overwritten by this editor.': 'Animated images cannot be overwritten by this editor.',
-    'Image editing is limited to files up to 32 MiB.': 'Image editing is limited to files up to 32 MiB.',
-    'The edited image exceeds the 64 MiB save limit.': 'The edited image exceeds the 64 MiB save limit.',
-    'This image exceeds the 40 megapixel or 16384 pixel dimension limit.': 'This image exceeds the 40 megapixel or 16384 pixel dimension limit.',
-    'The image changed during export. Please save again.': 'The image changed during export. Please save again.',
+    'Only PNG and JPEG images can be edited.':
+        'Only PNG and JPEG images can be edited.',
+    'The image contents do not match the filename extension.':
+        'The image contents do not match the filename extension.',
+    'This image is invalid or could not be decoded.':
+        'This image is invalid or could not be decoded.',
+    'Animated images cannot be overwritten by this editor.':
+        'Animated images cannot be overwritten by this editor.',
+    'Image editing is limited to files up to 32 MiB.':
+        'Image editing is limited to files up to 32 MiB.',
+    'The edited image exceeds the 64 MiB save limit.':
+        'The edited image exceeds the 64 MiB save limit.',
+    'This image exceeds the 40 megapixel or 16384 pixel dimension limit.':
+        'This image exceeds the 40 megapixel or 16384 pixel dimension limit.',
+    'The image changed during export. Please save again.':
+        'The image changed during export. Please save again.',
     'The original image changed or could not be verified. Reopen it before saving.': 'The original image changed or could not be verified. Reopen it before saving.',
-    'The storage account changed. Reopen the image before saving.': 'The storage account changed. Reopen the image before saving.',
-    'Extract this file from its archive or container before editing.': 'Extract this file from its archive or container before editing.',
+    'The storage account changed. Reopen the image before saving.':
+        'The storage account changed. Reopen the image before saving.',
+    'Extract this file from its archive or container before editing.':
+        'Extract this file from its archive or container before editing.',
     'Refresh this folder before editing. The file’s source could not be verified.': 'Refresh this folder before editing. The file’s source could not be verified.',
-    'A copy was downloaded. The original image has not been updated.': 'A copy was downloaded. The original image has not been updated.',
-    'Edited images are flattened. Metadata may be removed.': 'Edited images are flattened. Metadata may be removed.',
+    'A copy was downloaded. The original image has not been updated.':
+        'A copy was downloaded. The original image has not been updated.',
+    'Edited images are flattened. Metadata may be removed.':
+        'Edited images are flattened. Metadata may be removed.',
     'New changes remain unsaved.': 'New changes remain unsaved.',
     'Image saved': 'Image saved',
     'Remove': 'Remove',
@@ -192,12 +205,18 @@ const imageEditorTranslations = <String, Map<String, String>>{
     'Could not open image': 'Bild konnte nicht geöffnet werden',
     'Could not save image': 'Bild konnte nicht gespeichert werden',
     'Could not apply changes': 'Änderungen konnten nicht angewendet werden',
-    'Only PNG and JPEG images can be edited.': 'Nur PNG- und JPEG-Bilder können bearbeitet werden.',
-    'The image contents do not match the filename extension.': 'Der Bildinhalt stimmt nicht mit der Dateiendung überein.',
-    'This image is invalid or could not be decoded.': 'Dieses Bild ist ungültig oder konnte nicht dekodiert werden.',
-    'Animated images cannot be overwritten by this editor.': 'Animierte Bilder können mit diesem Editor nicht überschrieben werden.',
-    'Image editing is limited to files up to 32 MiB.': 'Bilddateien bis zu 32 MiB können bearbeitet werden.',
-    'The edited image exceeds the 64 MiB save limit.': 'Das bearbeitete Bild überschreitet das Speicherlimit von 64 MiB.',
+    'Only PNG and JPEG images can be edited.':
+        'Nur PNG- und JPEG-Bilder können bearbeitet werden.',
+    'The image contents do not match the filename extension.':
+        'Der Bildinhalt stimmt nicht mit der Dateiendung überein.',
+    'This image is invalid or could not be decoded.':
+        'Dieses Bild ist ungültig oder konnte nicht dekodiert werden.',
+    'Animated images cannot be overwritten by this editor.':
+        'Animierte Bilder können mit diesem Editor nicht überschrieben werden.',
+    'Image editing is limited to files up to 32 MiB.':
+        'Bilddateien bis zu 32 MiB können bearbeitet werden.',
+    'The edited image exceeds the 64 MiB save limit.':
+        'Das bearbeitete Bild überschreitet das Speicherlimit von 64 MiB.',
     'This image exceeds the 40 megapixel or 16384 pixel dimension limit.': 'Dieses Bild überschreitet 40 Megapixel oder eine Kantenlänge von 16384 Pixeln.',
     'The image changed during export. Please save again.': 'Das Bild wurde während des Exports geändert. Bitte speichern Sie erneut.',
     'The original image changed or could not be verified. Reopen it before saving.': 'Das Originalbild wurde geändert oder konnte nicht überprüft werden. Öffnen Sie es vor dem Speichern erneut.',
@@ -206,12 +225,14 @@ const imageEditorTranslations = <String, Map<String, String>>{
     'Refresh this folder before editing. The file’s source could not be verified.': 'Aktualisieren Sie diesen Ordner vor dem Bearbeiten. Die Quelle der Datei konnte nicht verifiziert werden.',
     'A copy was downloaded. The original image has not been updated.': 'Eine Kopie wurde heruntergeladen. Das Originalbild wurde nicht aktualisiert.',
     'Edited images are flattened. Metadata may be removed.': 'Bearbeitete Bilder werden auf eine Ebene reduziert. Metadaten können entfernt werden.',
-    'New changes remain unsaved.': 'Neue Änderungen sind noch nicht gespeichert.',
+    'New changes remain unsaved.':
+        'Neue Änderungen sind noch nicht gespeichert.',
     'Image saved': 'Bild gespeichert',
     'Remove': 'Entfernen',
     'Applying changes…': 'Änderungen werden angewendet…',
     'Close image editor?': 'Bildeditor schließen?',
-    'Unsaved changes will be lost.': 'Ungespeicherte Änderungen gehen verloren.',
+    'Unsaved changes will be lost.':
+        'Ungespeicherte Änderungen gehen verloren.',
     'Rotate and scale': 'Drehen und skalieren',
     'Zoom': 'Zoomen',
     'Freestyle': 'Freihand',
@@ -298,7 +319,8 @@ const imageEditorTranslations = <String, Map<String, String>>{
     'Saving…': 'Enregistrement…',
     'Saved': 'Enregistré',
     'Unsaved changes': 'Modifications non enregistrées',
-    'Save changes before closing?': 'Enregistrer les modifications avant de fermer ?',
+    'Save changes before closing?':
+        'Enregistrer les modifications avant de fermer ?',
     'Cancel': 'Annuler',
     'Discard': 'Ignorer',
     'Close': 'Fermer',
@@ -311,26 +333,36 @@ const imageEditorTranslations = <String, Map<String, String>>{
     'Could not open image': 'Impossible d’ouvrir l’image',
     'Could not save image': 'Impossible d’enregistrer l’image',
     'Could not apply changes': 'Impossible d’appliquer les modifications',
-    'Only PNG and JPEG images can be edited.': 'Seules les images PNG et JPEG peuvent être modifiées.',
-    'The image contents do not match the filename extension.': 'Le contenu de l’image ne correspond pas à l’extension du fichier.',
-    'This image is invalid or could not be decoded.': 'Cette image est invalide ou n’a pas pu être décodée.',
-    'Animated images cannot be overwritten by this editor.': 'Cet éditeur ne peut pas écraser les images animées.',
-    'Image editing is limited to files up to 32 MiB.': 'La modification est limitée aux images de 32 Mio maximum.',
-    'The edited image exceeds the 64 MiB save limit.': 'L’image modifiée dépasse la limite d’enregistrement de 64 Mio.',
-    'This image exceeds the 40 megapixel or 16384 pixel dimension limit.': 'Cette image dépasse 40 mégapixels ou 16384 pixels sur un côté.',
+    'Only PNG and JPEG images can be edited.':
+        'Seules les images PNG et JPEG peuvent être modifiées.',
+    'The image contents do not match the filename extension.':
+        'Le contenu de l’image ne correspond pas à l’extension du fichier.',
+    'This image is invalid or could not be decoded.':
+        'Cette image est invalide ou n’a pas pu être décodée.',
+    'Animated images cannot be overwritten by this editor.':
+        'Cet éditeur ne peut pas écraser les images animées.',
+    'Image editing is limited to files up to 32 MiB.':
+        'La modification est limitée aux images de 32 Mio maximum.',
+    'The edited image exceeds the 64 MiB save limit.':
+        'L’image modifiée dépasse la limite d’enregistrement de 64 Mio.',
+    'This image exceeds the 40 megapixel or 16384 pixel dimension limit.':
+        'Cette image dépasse 40 mégapixels ou 16384 pixels sur un côté.',
     'The image changed during export. Please save again.': 'L’image a changé pendant l’exportation. Veuillez l’enregistrer à nouveau.',
     'The original image changed or could not be verified. Reopen it before saving.': 'L’image d’origine a changé ou n’a pas pu être vérifiée. Rouvrez-la avant d’enregistrer.',
-    'The storage account changed. Reopen the image before saving.': 'Le compte de stockage a changé. Rouvrez l’image avant d’enregistrer.',
+    'The storage account changed. Reopen the image before saving.':
+        'Le compte de stockage a changé. Rouvrez l’image avant d’enregistrer.',
     'Extract this file from its archive or container before editing.': 'Extrayez ce fichier de son archive ou de son conteneur avant de le modifier.',
     'Refresh this folder before editing. The file’s source could not be verified.': 'Actualisez ce dossier avant de modifier le fichier. Sa source n’a pas pu être vérifiée.',
     'A copy was downloaded. The original image has not been updated.': 'Une copie a été téléchargée. L’image d’origine n’a pas été mise à jour.',
     'Edited images are flattened. Metadata may be removed.': 'Les images modifiées sont aplaties. Les métadonnées peuvent être supprimées.',
-    'New changes remain unsaved.': 'De nouvelles modifications restent non enregistrées.',
+    'New changes remain unsaved.':
+        'De nouvelles modifications restent non enregistrées.',
     'Image saved': 'Image enregistrée',
     'Remove': 'Supprimer',
     'Applying changes…': 'Application des modifications…',
     'Close image editor?': 'Fermer l’éditeur d’images ?',
-    'Unsaved changes will be lost.': 'Les modifications non enregistrées seront perdues.',
+    'Unsaved changes will be lost.':
+        'Les modifications non enregistrées seront perdues.',
     'Rotate and scale': 'Pivoter et redimensionner',
     'Zoom': 'Zoomer',
     'Freestyle': 'Dessin libre',
@@ -411,7 +443,8 @@ const imageEditorTranslations = <String, Map<String, String>>{
     'Adjust': 'Ajustar',
     'About CrispCloud': 'Acerca de CrispCloud',
     'Settings...': 'Ajustes…',
-    'This file type cannot be edited here. Use F3 to view it.': 'Este tipo de archivo no se puede editar aquí. Usa F3 para verlo.',
+    'This file type cannot be edited here. Use F3 to view it.':
+        'Este tipo de archivo no se puede editar aquí. Usa F3 para verlo.',
     'Image editor': 'Editor de imágenes',
     'Loading image…': 'Cargando imagen…',
     'Saving…': 'Guardando…',
@@ -430,19 +463,27 @@ const imageEditorTranslations = <String, Map<String, String>>{
     'Could not open image': 'No se pudo abrir la imagen',
     'Could not save image': 'No se pudo guardar la imagen',
     'Could not apply changes': 'No se pudieron aplicar los cambios',
-    'Only PNG and JPEG images can be edited.': 'Solo se pueden editar imágenes PNG y JPEG.',
-    'The image contents do not match the filename extension.': 'El contenido de la imagen no coincide con la extensión del archivo.',
-    'This image is invalid or could not be decoded.': 'Esta imagen no es válida o no se pudo decodificar.',
-    'Animated images cannot be overwritten by this editor.': 'Este editor no puede sobrescribir imágenes animadas.',
-    'Image editing is limited to files up to 32 MiB.': 'La edición de imágenes está limitada a archivos de hasta 32 MiB.',
-    'The edited image exceeds the 64 MiB save limit.': 'La imagen editada supera el límite de guardado de 64 MiB.',
+    'Only PNG and JPEG images can be edited.':
+        'Solo se pueden editar imágenes PNG y JPEG.',
+    'The image contents do not match the filename extension.':
+        'El contenido de la imagen no coincide con la extensión del archivo.',
+    'This image is invalid or could not be decoded.':
+        'Esta imagen no es válida o no se pudo decodificar.',
+    'Animated images cannot be overwritten by this editor.':
+        'Este editor no puede sobrescribir imágenes animadas.',
+    'Image editing is limited to files up to 32 MiB.':
+        'La edición de imágenes está limitada a archivos de hasta 32 MiB.',
+    'The edited image exceeds the 64 MiB save limit.':
+        'La imagen editada supera el límite de guardado de 64 MiB.',
     'This image exceeds the 40 megapixel or 16384 pixel dimension limit.': 'Esta imagen supera los 40 megapíxeles o los 16384 píxeles en una dimensión.',
-    'The image changed during export. Please save again.': 'La imagen cambió durante la exportación. Vuelve a guardarla.',
+    'The image changed during export. Please save again.':
+        'La imagen cambió durante la exportación. Vuelve a guardarla.',
     'The original image changed or could not be verified. Reopen it before saving.': 'La imagen original cambió o no se pudo verificar. Vuelve a abrirla antes de guardar.',
     'The storage account changed. Reopen the image before saving.': 'La cuenta de almacenamiento cambió. Vuelve a abrir la imagen antes de guardar.',
     'Extract this file from its archive or container before editing.': 'Extrae este archivo de su archivo comprimido o contenedor antes de editarlo.',
     'Refresh this folder before editing. The file’s source could not be verified.': 'Actualiza esta carpeta antes de editar. No se pudo verificar el origen del archivo.',
-    'A copy was downloaded. The original image has not been updated.': 'Se descargó una copia. La imagen original no se ha actualizado.',
+    'A copy was downloaded. The original image has not been updated.':
+        'Se descargó una copia. La imagen original no se ha actualizado.',
     'Edited images are flattened. Metadata may be removed.': 'Las imágenes editadas se acoplan. Es posible que se eliminen los metadatos.',
     'New changes remain unsaved.': 'Quedan cambios nuevos sin guardar.',
     'Image saved': 'Imagen guardada',
@@ -549,19 +590,28 @@ const imageEditorTranslations = <String, Map<String, String>>{
     'Could not open image': 'Não foi possível abrir a imagem',
     'Could not save image': 'Não foi possível salvar a imagem',
     'Could not apply changes': 'Não foi possível aplicar as alterações',
-    'Only PNG and JPEG images can be edited.': 'Somente imagens PNG e JPEG podem ser editadas.',
-    'The image contents do not match the filename extension.': 'O conteúdo da imagem não corresponde à extensão do arquivo.',
-    'This image is invalid or could not be decoded.': 'Esta imagem é inválida ou não pôde ser decodificada.',
-    'Animated images cannot be overwritten by this editor.': 'Este editor não pode sobrescrever imagens animadas.',
-    'Image editing is limited to files up to 32 MiB.': 'A edição de imagens é limitada a arquivos de até 32 MiB.',
-    'The edited image exceeds the 64 MiB save limit.': 'A imagem editada excede o limite de 64 MiB para salvar.',
-    'This image exceeds the 40 megapixel or 16384 pixel dimension limit.': 'Esta imagem excede 40 megapixels ou 16384 pixels em uma dimensão.',
-    'The image changed during export. Please save again.': 'A imagem foi alterada durante a exportação. Salve novamente.',
+    'Only PNG and JPEG images can be edited.':
+        'Somente imagens PNG e JPEG podem ser editadas.',
+    'The image contents do not match the filename extension.':
+        'O conteúdo da imagem não corresponde à extensão do arquivo.',
+    'This image is invalid or could not be decoded.':
+        'Esta imagem é inválida ou não pôde ser decodificada.',
+    'Animated images cannot be overwritten by this editor.':
+        'Este editor não pode sobrescrever imagens animadas.',
+    'Image editing is limited to files up to 32 MiB.':
+        'A edição de imagens é limitada a arquivos de até 32 MiB.',
+    'The edited image exceeds the 64 MiB save limit.':
+        'A imagem editada excede o limite de 64 MiB para salvar.',
+    'This image exceeds the 40 megapixel or 16384 pixel dimension limit.':
+        'Esta imagem excede 40 megapixels ou 16384 pixels em uma dimensão.',
+    'The image changed during export. Please save again.':
+        'A imagem foi alterada durante a exportação. Salve novamente.',
     'The original image changed or could not be verified. Reopen it before saving.': 'A imagem original foi alterada ou não pôde ser verificada. Abra-a novamente antes de salvar.',
     'The storage account changed. Reopen the image before saving.': 'A conta de armazenamento foi alterada. Abra a imagem novamente antes de salvar.',
     'Extract this file from its archive or container before editing.': 'Extraia este arquivo de seu arquivo compactado ou contêiner antes de editá-lo.',
     'Refresh this folder before editing. The file’s source could not be verified.': 'Atualize esta pasta antes de editar. Não foi possível verificar a origem do arquivo.',
-    'A copy was downloaded. The original image has not been updated.': 'Uma cópia foi baixada. A imagem original não foi atualizada.',
+    'A copy was downloaded. The original image has not been updated.':
+        'Uma cópia foi baixada. A imagem original não foi atualizada.',
     'Edited images are flattened. Metadata may be removed.': 'As imagens editadas são achatadas em uma única camada. Os metadados podem ser removidos.',
     'New changes remain unsaved.': 'Novas alterações ainda não foram salvas.',
     'Image saved': 'Imagem salva',
@@ -649,7 +699,8 @@ const imageEditorTranslations = <String, Map<String, String>>{
     'Adjust': '调整',
     'About CrispCloud': '关于 CrispCloud',
     'Settings...': '设置…',
-    'This file type cannot be edited here. Use F3 to view it.': '无法在此编辑这种文件类型。请按 F3 查看。',
+    'This file type cannot be edited here. Use F3 to view it.':
+        '无法在此编辑这种文件类型。请按 F3 查看。',
     'Image editor': '图像编辑器',
     'Loading image…': '正在加载图像…',
     'Saving…': '正在保存…',
@@ -674,14 +725,22 @@ const imageEditorTranslations = <String, Map<String, String>>{
     'Animated images cannot be overwritten by this editor.': '此编辑器无法覆盖动画图像。',
     'Image editing is limited to files up to 32 MiB.': '只能编辑不超过 32 MiB 的图像文件。',
     'The edited image exceeds the 64 MiB save limit.': '编辑后的图像超过 64 MiB 的保存上限。',
-    'This image exceeds the 40 megapixel or 16384 pixel dimension limit.': '此图像超过 4000 万像素或单边 16384 像素的限制。',
-    'The image changed during export. Please save again.': '图像在导出期间发生了更改。请重新保存。',
-    'The original image changed or could not be verified. Reopen it before saving.': '原始图像已更改或无法验证。请重新打开后再保存。',
-    'The storage account changed. Reopen the image before saving.': '存储账户已更改。请重新打开图像后再保存。',
-    'Extract this file from its archive or container before editing.': '编辑前请先从压缩包或容器中提取此文件。',
-    'Refresh this folder before editing. The file’s source could not be verified.': '编辑前请刷新此文件夹。无法验证文件来源。',
-    'A copy was downloaded. The original image has not been updated.': '已下载副本。原始图像尚未更新。',
-    'Edited images are flattened. Metadata may be removed.': '编辑后的图像会合并图层。元数据可能被移除。',
+    'This image exceeds the 40 megapixel or 16384 pixel dimension limit.':
+        '此图像超过 4000 万像素或单边 16384 像素的限制。',
+    'The image changed during export. Please save again.':
+        '图像在导出期间发生了更改。请重新保存。',
+    'The original image changed or could not be verified. Reopen it before saving.':
+        '原始图像已更改或无法验证。请重新打开后再保存。',
+    'The storage account changed. Reopen the image before saving.':
+        '存储账户已更改。请重新打开图像后再保存。',
+    'Extract this file from its archive or container before editing.':
+        '编辑前请先从压缩包或容器中提取此文件。',
+    'Refresh this folder before editing. The file’s source could not be verified.':
+        '编辑前请刷新此文件夹。无法验证文件来源。',
+    'A copy was downloaded. The original image has not been updated.':
+        '已下载副本。原始图像尚未更新。',
+    'Edited images are flattened. Metadata may be removed.':
+        '编辑后的图像会合并图层。元数据可能被移除。',
     'New changes remain unsaved.': '新更改尚未保存。',
     'Image saved': '图像已保存',
     'Remove': '移除',
@@ -768,7 +827,8 @@ const imageEditorTranslations = <String, Map<String, String>>{
     'Adjust': '調整',
     'About CrispCloud': 'CrispCloudについて',
     'Settings...': '設定…',
-    'This file type cannot be edited here. Use F3 to view it.': 'この種類のファイルはここでは編集できません。F3キーで表示してください。',
+    'This file type cannot be edited here. Use F3 to view it.':
+        'この種類のファイルはここでは編集できません。F3キーで表示してください。',
     'Image editor': '画像エディター',
     'Loading image…': '画像を読み込み中…',
     'Saving…': '保存中…',
@@ -788,19 +848,31 @@ const imageEditorTranslations = <String, Map<String, String>>{
     'Could not save image': '画像を保存できませんでした',
     'Could not apply changes': '変更を適用できませんでした',
     'Only PNG and JPEG images can be edited.': '編集できるのはPNG画像とJPEG画像のみです。',
-    'The image contents do not match the filename extension.': '画像の内容とファイルの拡張子が一致しません。',
+    'The image contents do not match the filename extension.':
+        '画像の内容とファイルの拡張子が一致しません。',
     'This image is invalid or could not be decoded.': 'この画像は無効か、デコードできませんでした。',
-    'Animated images cannot be overwritten by this editor.': 'このエディターではアニメーション画像を上書きできません。',
-    'Image editing is limited to files up to 32 MiB.': '編集できる画像ファイルの上限は32 MiBです。',
-    'The edited image exceeds the 64 MiB save limit.': '編集した画像が保存サイズの上限である64 MiBを超えています。',
-    'This image exceeds the 40 megapixel or 16384 pixel dimension limit.': 'この画像は4000万画素、または一辺16384ピクセルの上限を超えています。',
-    'The image changed during export. Please save again.': '書き出し中に画像が変更されました。もう一度保存してください。',
-    'The original image changed or could not be verified. Reopen it before saving.': '元の画像が変更されたか、確認できませんでした。保存する前に開き直してください。',
-    'The storage account changed. Reopen the image before saving.': 'ストレージのアカウントが変更されました。保存する前に画像を開き直してください。',
-    'Extract this file from its archive or container before editing.': '編集する前に、アーカイブまたはコンテナーからこのファイルを取り出してください。',
-    'Refresh this folder before editing. The file’s source could not be verified.': '編集する前にこのフォルダーを更新してください。ファイルの保存元を確認できませんでした。',
-    'A copy was downloaded. The original image has not been updated.': 'コピーをダウンロードしました。元の画像は更新されていません。',
-    'Edited images are flattened. Metadata may be removed.': '編集した画像は単一のレイヤーに統合されます。メタデータは削除される場合があります。',
+    'Animated images cannot be overwritten by this editor.':
+        'このエディターではアニメーション画像を上書きできません。',
+    'Image editing is limited to files up to 32 MiB.':
+        '編集できる画像ファイルの上限は32 MiBです。',
+    'The edited image exceeds the 64 MiB save limit.':
+        '編集した画像が保存サイズの上限である64 MiBを超えています。',
+    'This image exceeds the 40 megapixel or 16384 pixel dimension limit.':
+        'この画像は4000万画素、または一辺16384ピクセルの上限を超えています。',
+    'The image changed during export. Please save again.':
+        '書き出し中に画像が変更されました。もう一度保存してください。',
+    'The original image changed or could not be verified. Reopen it before saving.':
+        '元の画像が変更されたか、確認できませんでした。保存する前に開き直してください。',
+    'The storage account changed. Reopen the image before saving.':
+        'ストレージのアカウントが変更されました。保存する前に画像を開き直してください。',
+    'Extract this file from its archive or container before editing.':
+        '編集する前に、アーカイブまたはコンテナーからこのファイルを取り出してください。',
+    'Refresh this folder before editing. The file’s source could not be verified.':
+        '編集する前にこのフォルダーを更新してください。ファイルの保存元を確認できませんでした。',
+    'A copy was downloaded. The original image has not been updated.':
+        'コピーをダウンロードしました。元の画像は更新されていません。',
+    'Edited images are flattened. Metadata may be removed.':
+        '編集した画像は単一のレイヤーに統合されます。メタデータは削除される場合があります。',
     'New changes remain unsaved.': '新しい変更が未保存のままです。',
     'Image saved': '画像を保存しました',
     'Remove': '削除',
@@ -887,7 +959,8 @@ const imageEditorTranslations = <String, Map<String, String>>{
     'Adjust': '조정',
     'About CrispCloud': 'CrispCloud 정보',
     'Settings...': '설정…',
-    'This file type cannot be edited here. Use F3 to view it.': '이 파일 형식은 여기서 편집할 수 없습니다. F3 키를 눌러 확인하세요.',
+    'This file type cannot be edited here. Use F3 to view it.':
+        '이 파일 형식은 여기서 편집할 수 없습니다. F3 키를 눌러 확인하세요.',
     'Image editor': '이미지 편집기',
     'Loading image…': '이미지 불러오는 중…',
     'Saving…': '저장 중…',
@@ -907,19 +980,32 @@ const imageEditorTranslations = <String, Map<String, String>>{
     'Could not save image': '이미지를 저장할 수 없습니다',
     'Could not apply changes': '변경 사항을 적용할 수 없습니다',
     'Only PNG and JPEG images can be edited.': 'PNG 및 JPEG 이미지만 편집할 수 있습니다.',
-    'The image contents do not match the filename extension.': '이미지 내용이 파일 확장자와 일치하지 않습니다.',
-    'This image is invalid or could not be decoded.': '이미지가 유효하지 않거나 디코딩할 수 없습니다.',
-    'Animated images cannot be overwritten by this editor.': '이 편집기로는 애니메이션 이미지를 덮어쓸 수 없습니다.',
-    'Image editing is limited to files up to 32 MiB.': '32 MiB 이하의 이미지 파일만 편집할 수 있습니다.',
-    'The edited image exceeds the 64 MiB save limit.': '편집한 이미지가 저장 한도인 64 MiB를 초과합니다.',
-    'This image exceeds the 40 megapixel or 16384 pixel dimension limit.': '이미지가 4000만 화소 또는 한 변 16384픽셀 제한을 초과합니다.',
-    'The image changed during export. Please save again.': '내보내기 중에 이미지가 변경되었습니다. 다시 저장하세요.',
-    'The original image changed or could not be verified. Reopen it before saving.': '원본 이미지가 변경되었거나 확인할 수 없습니다. 저장하기 전에 다시 여세요.',
-    'The storage account changed. Reopen the image before saving.': '저장소 계정이 변경되었습니다. 저장하기 전에 이미지를 다시 여세요.',
-    'Extract this file from its archive or container before editing.': '편집하기 전에 압축 파일이나 컨테이너에서 이 파일을 추출하세요.',
-    'Refresh this folder before editing. The file’s source could not be verified.': '편집하기 전에 이 폴더를 새로 고치세요. 파일의 원본 위치를 확인할 수 없습니다.',
-    'A copy was downloaded. The original image has not been updated.': '사본을 다운로드했습니다. 원본 이미지는 업데이트되지 않았습니다.',
-    'Edited images are flattened. Metadata may be removed.': '편집한 이미지는 하나의 레이어로 합쳐집니다. 메타데이터가 제거될 수 있습니다.',
+    'The image contents do not match the filename extension.':
+        '이미지 내용이 파일 확장자와 일치하지 않습니다.',
+    'This image is invalid or could not be decoded.':
+        '이미지가 유효하지 않거나 디코딩할 수 없습니다.',
+    'Animated images cannot be overwritten by this editor.':
+        '이 편집기로는 애니메이션 이미지를 덮어쓸 수 없습니다.',
+    'Image editing is limited to files up to 32 MiB.':
+        '32 MiB 이하의 이미지 파일만 편집할 수 있습니다.',
+    'The edited image exceeds the 64 MiB save limit.':
+        '편집한 이미지가 저장 한도인 64 MiB를 초과합니다.',
+    'This image exceeds the 40 megapixel or 16384 pixel dimension limit.':
+        '이미지가 4000만 화소 또는 한 변 16384픽셀 제한을 초과합니다.',
+    'The image changed during export. Please save again.':
+        '내보내기 중에 이미지가 변경되었습니다. 다시 저장하세요.',
+    'The original image changed or could not be verified. Reopen it before saving.':
+        '원본 이미지가 변경되었거나 확인할 수 없습니다. 저장하기 전에 다시 여세요.',
+    'The storage account changed. Reopen the image before saving.':
+        '저장소 계정이 변경되었습니다. 저장하기 전에 이미지를 다시 여세요.',
+    'Extract this file from its archive or container before editing.':
+        '편집하기 전에 압축 파일이나 컨테이너에서 이 파일을 추출하세요.',
+    'Refresh this folder before editing. The file’s source could not be verified.':
+        '편집하기 전에 이 폴더를 새로 고치세요. 파일의 원본 위치를 확인할 수 없습니다.',
+    'A copy was downloaded. The original image has not been updated.':
+        '사본을 다운로드했습니다. 원본 이미지는 업데이트되지 않았습니다.',
+    'Edited images are flattened. Metadata may be removed.':
+        '편집한 이미지는 하나의 레이어로 합쳐집니다. 메타데이터가 제거될 수 있습니다.',
     'New changes remain unsaved.': '새 변경 사항이 아직 저장되지 않았습니다.',
     'Image saved': '이미지가 저장되었습니다',
     'Remove': '제거',
@@ -1006,7 +1092,8 @@ const imageEditorTranslations = <String, Map<String, String>>{
     'Adjust': 'ضبط',
     'About CrispCloud': 'حول CrispCloud',
     'Settings...': 'الإعدادات…',
-    'This file type cannot be edited here. Use F3 to view it.': 'لا يمكن تحرير هذا النوع من الملفات هنا. استخدم F3 لعرضه.',
+    'This file type cannot be edited here. Use F3 to view it.':
+        'لا يمكن تحرير هذا النوع من الملفات هنا. استخدم F3 لعرضه.',
     'Image editor': 'محرر الصور',
     'Loading image…': 'جارٍ تحميل الصورة…',
     'Saving…': 'جارٍ الحفظ…',
@@ -1026,19 +1113,32 @@ const imageEditorTranslations = <String, Map<String, String>>{
     'Could not save image': 'تعذّر حفظ الصورة',
     'Could not apply changes': 'تعذّر تطبيق التغييرات',
     'Only PNG and JPEG images can be edited.': 'يمكن تحرير صور PNG وJPEG فقط.',
-    'The image contents do not match the filename extension.': 'محتوى الصورة لا يطابق امتداد اسم الملف.',
-    'This image is invalid or could not be decoded.': 'هذه الصورة غير صالحة أو تعذّر فك ترميزها.',
-    'Animated images cannot be overwritten by this editor.': 'لا يمكن لهذا المحرر الكتابة فوق الصور المتحركة.',
-    'Image editing is limited to files up to 32 MiB.': 'يقتصر تحرير الصور على ملفات لا تتجاوز 32 MiB.',
-    'The edited image exceeds the 64 MiB save limit.': 'تتجاوز الصورة المعدّلة حد الحفظ البالغ 64 MiB.',
-    'This image exceeds the 40 megapixel or 16384 pixel dimension limit.': 'تتجاوز هذه الصورة حد 40 ميغابكسل أو 16384 بكسل في أحد الأبعاد.',
-    'The image changed during export. Please save again.': 'تغيّرت الصورة أثناء التصدير. يُرجى حفظها مرة أخرى.',
-    'The original image changed or could not be verified. Reopen it before saving.': 'تغيّرت الصورة الأصلية أو تعذّر التحقق منها. أعد فتحها قبل الحفظ.',
-    'The storage account changed. Reopen the image before saving.': 'تغيّر حساب التخزين. أعد فتح الصورة قبل الحفظ.',
-    'Extract this file from its archive or container before editing.': 'استخرج هذا الملف من الأرشيف أو الحاوية قبل تحريره.',
-    'Refresh this folder before editing. The file’s source could not be verified.': 'حدّث هذا المجلد قبل التحرير. تعذّر التحقق من مصدر الملف.',
-    'A copy was downloaded. The original image has not been updated.': 'تم تنزيل نسخة. لم يتم تحديث الصورة الأصلية.',
-    'Edited images are flattened. Metadata may be removed.': 'تُدمج طبقات الصور المعدّلة في طبقة واحدة. قد تُحذف البيانات الوصفية.',
+    'The image contents do not match the filename extension.':
+        'محتوى الصورة لا يطابق امتداد اسم الملف.',
+    'This image is invalid or could not be decoded.':
+        'هذه الصورة غير صالحة أو تعذّر فك ترميزها.',
+    'Animated images cannot be overwritten by this editor.':
+        'لا يمكن لهذا المحرر الكتابة فوق الصور المتحركة.',
+    'Image editing is limited to files up to 32 MiB.':
+        'يقتصر تحرير الصور على ملفات لا تتجاوز 32 MiB.',
+    'The edited image exceeds the 64 MiB save limit.':
+        'تتجاوز الصورة المعدّلة حد الحفظ البالغ 64 MiB.',
+    'This image exceeds the 40 megapixel or 16384 pixel dimension limit.':
+        'تتجاوز هذه الصورة حد 40 ميغابكسل أو 16384 بكسل في أحد الأبعاد.',
+    'The image changed during export. Please save again.':
+        'تغيّرت الصورة أثناء التصدير. يُرجى حفظها مرة أخرى.',
+    'The original image changed or could not be verified. Reopen it before saving.':
+        'تغيّرت الصورة الأصلية أو تعذّر التحقق منها. أعد فتحها قبل الحفظ.',
+    'The storage account changed. Reopen the image before saving.':
+        'تغيّر حساب التخزين. أعد فتح الصورة قبل الحفظ.',
+    'Extract this file from its archive or container before editing.':
+        'استخرج هذا الملف من الأرشيف أو الحاوية قبل تحريره.',
+    'Refresh this folder before editing. The file’s source could not be verified.':
+        'حدّث هذا المجلد قبل التحرير. تعذّر التحقق من مصدر الملف.',
+    'A copy was downloaded. The original image has not been updated.':
+        'تم تنزيل نسخة. لم يتم تحديث الصورة الأصلية.',
+    'Edited images are flattened. Metadata may be removed.':
+        'تُدمج طبقات الصور المعدّلة في طبقة واحدة. قد تُحذف البيانات الوصفية.',
     'New changes remain unsaved.': 'ما زالت هناك تغييرات جديدة غير محفوظة.',
     'Image saved': 'تم حفظ الصورة',
     'Remove': 'إزالة',

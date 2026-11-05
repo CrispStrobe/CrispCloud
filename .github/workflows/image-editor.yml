@@ -57,12 +57,14 @@ jobs:
           test/image_editor_live_test.dart test/image_editor_menu_test.dart
           test/widget/image_editor_menus_test.dart
           test/widget/image_editor_routing_test.dart
+          test/widget/image_editor_dialog_test.dart
+          test/image_editor_strings_test.dart
       - name: Check every exposed localization field
         run: python3 tool/check_image_editor_i18n.py
       - name: Session, source, disk, routing, and menu regressions
         if: success() || failure()
         run: >-
-          flutter test --concurrency=2
+          flutter test --reporter expanded --concurrency=2
           test/image_edit_session_test.dart test/image_file_store_test.dart
           test/image_editor_live_test.dart test/image_editor_menu_test.dart
           test/file_editability_test.dart test/pdf_file_store_test.dart
@@ -70,10 +72,10 @@ jobs:
           test/widget/image_editor_routing_test.dart
       - name: Localization coverage
         if: success() || failure()
-        run: flutter test test/image_editor_strings_test.dart
+        run: flutter test --reporter expanded test/image_editor_strings_test.dart
       - name: Real image editor lifecycle
-        if: (success() || failure()) && hashFiles('test/widget/image_editor_dialog_test.dart') != ''
-        run: flutter test --concurrency=1 test/widget/image_editor_dialog_test.dart
+        if: success() || failure()
+        run: flutter test --reporter expanded --concurrency=1 test/widget/image_editor_dialog_test.dart
       - name: Record formatting and dependency changes for review
         if: always()
         run: |
@@ -107,12 +109,12 @@ jobs:
       - run: flutter pub get
       - name: Browser routing and native-menu bridge
         run: >-
-          flutter test --platform chrome --concurrency=1
+          flutter test --reporter expanded --platform chrome --concurrency=1
           test/widget/image_editor_menus_test.dart
           test/widget/image_editor_routing_test.dart
       - name: Real browser edits and export
-        if: (success() || failure()) && hashFiles('test/widget/image_editor_dialog_test.dart') != ''
-        run: flutter test --platform chrome --concurrency=1 test/widget/image_editor_dialog_test.dart
+        if: success() || failure()
+        run: flutter test --reporter expanded --platform chrome --concurrency=1 test/widget/image_editor_dialog_test.dart
 
   fork:
     name: Maintained image engine regression tests
@@ -129,4 +131,4 @@ jobs:
           flutter-version: ${{ env.FLUTTER_VERSION }}
           cache: true
       - run: flutter pub get
-      - run: flutter test test/crispcloud
+      - run: flutter test --reporter expanded test/crispcloud

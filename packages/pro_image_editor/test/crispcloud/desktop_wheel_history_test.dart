@@ -131,8 +131,16 @@ void main() {
     final branchPointer = state.stateManager.historyPointer;
     state.undoAction();
     await tester.pumpAndSettle();
-    state.layerInteractionManager.addSelectedLayer(id);
+    expect(state.selectedLayers, isEmpty);
+    // Undo deselects layers. Reselect through the rendered layer as a user
+    // would; selecting a layer need not rebuild the main body's wheel listener.
+    await tester.tap(
+      find.byKey(liveLayer(state, id).keyInternalSize),
+      kind: PointerDeviceKind.mouse,
+    );
     await tester.pumpAndSettle();
+    expect(state.selectedLayers.single.id, id);
+    expect(state.stateManager.historyPointer, branchPointer - 1);
 
     await scroll(tester, delta: const Offset(0, 20), shift: true);
 

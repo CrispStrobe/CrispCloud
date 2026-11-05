@@ -1,5 +1,6 @@
 import 'dart:async';
 import 'dart:typed_data';
+import 'dart:ui' show PointerDeviceKind;
 
 import 'package:crisp_cloud/models/file_item.dart';
 import 'package:crisp_cloud/models/panel_side.dart';
@@ -8,6 +9,7 @@ import 'package:crisp_cloud/services/image_editor_menu.dart';
 import 'package:crisp_cloud/services/image_file_store.dart';
 import 'package:crisp_cloud/widgets/image_editor_dialog.dart';
 import 'package:flutter/foundation.dart' show kIsWeb;
+import 'package:flutter/gestures.dart' show kSecondaryMouseButton;
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -389,6 +391,27 @@ void main() {
     await tester.pumpAndSettle();
     expect(_saveEnabled(tester), isTrue);
     expect(harness.editor.activeLayers, hasLength(1));
+  });
+
+  testWidgets('secondary-click layer menu uses host UI and blocks background commands', (tester) async {
+    final harness = _Harness(tester, _MemoryImageStore());
+    await harness.open();
+    await harness.addText('Context menu target');
+    await tester.tap(
+      find.text('Context menu target'),
+      buttons: kSecondaryMouseButton,
+      kind: PointerDeviceKind.mouse,
+    );
+    await tester.pumpAndSettle();
+    expect(find.widgetWithText(PopupMenuItem<LayerContextMenuAction>, 'Remove'), findsOneWidget);
+    expect(harness.actions.isEnabled(ImageEditorAction.save), isFalse);
+    harness.actions.dispatch(ImageEditorAction.close);
+    await tester.pump();
+    expect(find.widgetWithText(PopupMenuItem<LayerContextMenuAction>, 'Remove'), findsOneWidget);
+    expect(find.byType(ImageEditorDialog), findsOneWidget);
+    await tester.tap(find.widgetWithText(PopupMenuItem<LayerContextMenuAction>, 'Remove'));
+    await _until(tester, () => harness.editor.activeLayers.isEmpty, reason: 'host menu removes layer');
+    expect(find.byType(ImageEditorDialog), findsOneWidget);
   });
 
   testWidgets('pending source write locks commands and duplicate saves', (tester) async {
