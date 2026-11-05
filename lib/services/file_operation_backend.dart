@@ -11,6 +11,8 @@ import 'cloud_storage_interface.dart';
 import 'file_operation_service.dart';
 import 'local_file_service.dart';
 import 'panel_source_service.dart';
+import 'native_file_primitives.dart';
+import 'storage_identity.dart';
 
 FileOperationBackend fileOperationBackend({
   required PanelSource source,
@@ -28,11 +30,32 @@ FileOperationBackend fileOperationBackend({
 
 class LocalOperationBackend extends FileOperationBackend {
   LocalOperationBackend(this.service, {required this._isCurrent});
-  static final Object _localIdentity = Object();
+  static final _reference = storageReferenceForSource(
+    const LocalPanelSource('/'),
+  );
   final LocalFileService service;
   final bool Function() _isCurrent;
   @override
-  Object get identity => _localIdentity;
+  Object get identity => _reference.id;
+  @override
+  String get persistentStorageId => _reference.id;
+  @override
+  bool get canRecover => !kIsWeb;
+  @override
+  StorageTransferCapabilities get capabilities => StorageTransferCapabilities(
+    caseSensitivity: !kIsWeb && (Platform.isWindows || Platform.isMacOS)
+        ? StorageCaseSensitivity.insensitive
+        : StorageCaseSensitivity.sensitive,
+    nativeMove: !kIsWeb,
+    atomicMove: !kIsWeb,
+    noReplaceMove: !kIsWeb && supportsNativeExclusiveRename,
+    readRanges: !kIsWeb,
+    setModifiedTime: !kIsWeb,
+    symbolicLinks: !kIsWeb,
+    deleteEmptyDirectory: !kIsWeb || service is LocalTransferFileOperations,
+    boundedUpload: !kIsWeb || service is LocalTransferFileOperations,
+    boundedDownload: !kIsWeb || service is LocalTransferFileOperations,
+  );
   @override
   String get label => 'Local';
   @override
@@ -169,6 +192,11 @@ class LocalOperationBackend extends FileOperationBackend {
 
   @override
   Stream<List<int>> readFile(FileItem file) {
+    if (kIsWeb && service is LocalTransferFileOperations) {
+      return (service as LocalTransferFileOperations).readTransferStream(
+        file.path!,
+      );
+    }
     if (kIsWeb) {
       return Stream.fromFuture(
         service.readFileForEdit(file.path!, fileItem: file),
@@ -215,8 +243,27 @@ class LocalOperationBackend extends FileOperationBackend {
     Stream<List<int>> data,
     int? length, {
     required bool replace,
+  }) => writePreparedFile(path, data, length, replace: replace);
+
+  @override
+  Future<void> writePreparedFile(
+    String path,
+    Stream<List<int>> data,
+    int? length, {
+    required bool replace,
+    Future<void> Function(FileItem staged)? verifyStaged,
+    Future<void> Function(Map<String, dynamic> state)? checkpoint,
   }) async {
     _check();
+    if (kIsWeb && service is LocalTransferFileOperations) {
+      await (service as LocalTransferFileOperations).writeTransferStream(
+        path,
+        data,
+        length,
+        replace: replace,
+      );
+      return;
+    }
     if (kIsWeb) {
       final bytes = BytesBuilder(copy: false);
       await for (final chunk in data) {
@@ -265,7 +312,12 @@ class LocalOperationBackend extends FileOperationBackend {
       final staging = await Directory(paths.dirname(path))
           .createTemp('.crisp-transfer-');
       final staged = File(paths.join(staging.path, 'payload'));
-      var reserved = false;
+      await checkpoint?.call({
+        'phase': 'staging',
+        'destination': path,
+        'stagedPath': staged.path,
+        'stagingDirectory': staging.path,
+      });
       try {
         // A copy keeps existing mode bits when replacing a local file.
         if (initialType == FileSystemEntityType.file) {
@@ -296,6 +348,13 @@ class LocalOperationBackend extends FileOperationBackend {
           );
         }
         _check();
+        await verifyStaged?.call(await _nativeItem(staged.path));
+        await checkpoint?.call({
+          'phase': 'committing',
+          'destination': path,
+          'stagedPath': staged.path,
+          'stagingDirectory': staging.path,
+        });
         final type = await FileSystemEntity.type(path, followLinks: false);
         if (type == FileSystemEntityType.link ||
             type == FileSystemEntityType.directory) {
@@ -305,19 +364,17 @@ class LocalOperationBackend extends FileOperationBackend {
           );
         }
         if (!replace) {
-          await destination.create(exclusive: true);
-          reserved = true;
+          if (await moveNativeNoReplace(staged.path, path)) {
+            await checkpoint?.call({'phase': 'committed', 'destination': path});
+            return;
+          }
+          throw UnsupportedError(
+            'This volume cannot commit an exclusive copy safely.',
+          );
         }
         await staged.rename(path);
-        reserved = false;
+        await checkpoint?.call({'phase': 'committed', 'destination': path});
       } finally {
-        if (reserved) {
-          try {
-            await destination.delete();
-          } catch (_) {
-            /* Preserve write failure. */
-          }
-        }
         try {
           await staging.delete(recursive: true);
         } catch (_) {
@@ -325,6 +382,29 @@ class LocalOperationBackend extends FileOperationBackend {
         }
       }
     });
+  }
+
+  @override
+  Future<bool> moveNoReplace(FileItem file, String destination) async {
+    _check();
+    if (kIsWeb) return false;
+    return service.withFileOperationAccess(file.path!, () async {
+      return service.withFileOperationAccess(
+        paths.dirname(destination),
+        () async {
+          _check();
+          return moveNativeNoReplace(file.path!, destination);
+        },
+      );
+    });
+  }
+
+  @override
+  Stream<List<int>> readRange(FileItem file, int offset) {
+    if (kIsWeb) return super.readRange(file, offset);
+    // Reuse the scoped, backpressure-aware stream; native bytes are skipped
+    // without buffering. Provider-specific ranged streams override this below.
+    return super.readRange(file, offset);
   }
 
   @override
@@ -348,11 +428,16 @@ class LocalOperationBackend extends FileOperationBackend {
   Future<void> deleteEmptyDirectory(String path) async {
     _check();
     if (kIsWeb) {
-      // The browser abstraction only offers recursive delete; never use it for
-      // move cleanup, because a new file could appear after the emptiness check.
-      throw UnsupportedError(
-        'Empty source folders are retained in the browser.',
+      final transfer = service;
+      if (transfer is! LocalTransferFileOperations) {
+        throw UnsupportedError(
+          'This browser cannot delete an empty directory safely.',
+        );
+      }
+      await (transfer as LocalTransferFileOperations).deleteDirectoryIfEmpty(
+        path,
       );
+      return;
     }
     await service.withFileOperationAccess(path, () async {
       _check();
@@ -400,13 +485,26 @@ class CloudOperationBackend extends FileOperationBackend {
   final CloudStorageClient client;
   final bool Function() _isCurrent;
   @override
-  Object get identity => client;
+  Object get identity => storageReferenceForClient(client).id;
+  @override
+  String get persistentStorageId => storageReferenceForClient(client).id;
+  @override
+  bool get canRecover => storageReferenceForClient(client).persistent;
+  @override
+  StorageTransferCapabilities get capabilities => client.transferCapabilities;
+  @override
+  bool get supportsModifiedTime => capabilities.setModifiedTime;
+  @override
+  bool get supportsSymbolicLinks => capabilities.symbolicLinks;
   @override
   String get label => client.providerName;
   @override
   p.Context get paths => p.posix;
   @override
-  String destinationPathKey(String path) => paths.normalize(path).toLowerCase();
+  String destinationPathKey(String path) =>
+      capabilities.caseSensitivity == StorageCaseSensitivity.sensitive
+      ? paths.normalize(path)
+      : paths.normalize(path).toLowerCase();
   @override
   bool get isCurrent => _isCurrent() && client.isAuthenticated;
   void _check() {
@@ -485,9 +583,9 @@ class CloudOperationBackend extends FileOperationBackend {
       }
       parent = existingParent.path ?? parent;
     }
-    final requestedName = paths.basename(path).toLowerCase();
+    final requestedName = destinationPathKey(paths.basename(path));
     final matches = (await list(parent))
-        .where((file) => file.name.toLowerCase() == requestedName)
+        .where((file) => destinationPathKey(file.name) == requestedName)
         .toList();
     if (matches.length > 1) {
       throw StateError('Several cloud items have case-ambiguous paths: $path');
@@ -516,6 +614,16 @@ class CloudOperationBackend extends FileOperationBackend {
     Stream<List<int>> data,
     int? length, {
     required bool replace,
+  }) => writePreparedFile(path, data, length, replace: replace);
+
+  @override
+  Future<void> writePreparedFile(
+    String path,
+    Stream<List<int>> data,
+    int? length, {
+    required bool replace,
+    Future<void> Function(FileItem staged)? verifyStaged,
+    Future<void> Function(Map<String, dynamic> state)? checkpoint,
   }) async {
     _check();
     if (!replace && await stat(path) != null) {
@@ -532,6 +640,12 @@ class CloudOperationBackend extends FileOperationBackend {
     var originalBackedUp = false;
     var committed = false;
     var received = 0;
+    await checkpoint?.call({
+      'phase': 'uploading',
+      'destination': path,
+      'stagedPath': stagedPath,
+      'backupPath': backupPath,
+    });
     try {
       if (length == null) {
         // Cloud upload contracts require a real content length. Unknown-size
@@ -567,6 +681,13 @@ class CloudOperationBackend extends FileOperationBackend {
           (staged.size != null && staged.size != received)) {
         throw StateError('The staged cloud copy could not be verified.');
       }
+      await verifyStaged?.call(staged);
+      await checkpoint?.call({
+        'phase': 'staged',
+        'destination': path,
+        'stagedPath': stagedPath,
+        'backupPath': backupPath,
+      });
       final existing = await stat(path);
       if (existing != null) {
         if (!replace || existing.isFolder || existing.isSymlink == true) {
@@ -576,13 +697,31 @@ class CloudOperationBackend extends FileOperationBackend {
         }
         _check();
         backupRenameAttempted = true;
+        await checkpoint?.call({
+          'phase': 'backingUp',
+          'destination': path,
+          'stagedPath': stagedPath,
+          'backupPath': backupPath,
+        });
         await client.renamePath(path, backupName);
         originalBackedUp = true;
+        await checkpoint?.call({
+          'phase': 'backedUp',
+          'destination': path,
+          'stagedPath': stagedPath,
+          'backupPath': backupPath,
+        });
       }
       _check();
       if (await stat(path) != null) {
         throw StateError('Destination changed while committing: $path');
       }
+      await checkpoint?.call({
+        'phase': 'committing',
+        'destination': path,
+        'stagedPath': stagedPath,
+        'backupPath': backupPath,
+      });
       await client.renamePath(stagedPath, name);
       _check();
       final written = await stat(path);
@@ -592,6 +731,12 @@ class CloudOperationBackend extends FileOperationBackend {
         throw StateError('The committed cloud copy could not be verified.');
       }
       committed = true;
+      await checkpoint?.call({
+        'phase': 'committed',
+        'destination': path,
+        'stagedPath': stagedPath,
+        'backupPath': originalBackedUp ? backupPath : null,
+      });
       if (originalBackedUp) {
         // Failure to remove the backup does not undo a verified transfer.
         try {
@@ -656,15 +801,120 @@ class CloudOperationBackend extends FileOperationBackend {
   @override
   Future<void> deleteFile(FileItem file) async {
     _check();
-    await client.deletePath(file.path!);
+    if (capabilities.conditionalDelete && client is CloudTransferOperations) {
+      await (client as CloudTransferOperations).deleteTransferFile(
+        file.path!,
+        expectedVersion: _fileVersion(file),
+      );
+    } else {
+      await client.deletePath(file.path!);
+    }
   }
 
   @override
   Future<void> deleteEmptyDirectory(String path) async {
-    // CloudStorageClient.deletePath is recursive for several providers and
-    // has no conditional-empty delete contract. Keep source folders safely.
-    throw UnsupportedError(
-      'Empty source folders are retained by this cloud provider.',
+    _check();
+    if (!capabilities.deleteEmptyDirectory ||
+        client is! CloudTransferOperations) {
+      throw UnsupportedError(
+        'This provider cannot delete an empty directory safely.',
+      );
+    }
+    await (client as CloudTransferOperations).deleteDirectoryIfEmpty(path);
+  }
+
+  @override
+  Future<bool> moveNoReplace(FileItem file, String destination) async {
+    _check();
+    if (!capabilities.nativeMove ||
+        !capabilities.noReplaceMove ||
+        !capabilities.atomicMove ||
+        client is! CloudTransferOperations) {
+      return false;
+    }
+    final result = await (client as CloudTransferOperations).moveToExact(
+      file.path!,
+      destination,
+      expectedSourceVersion: _fileVersion(file),
     );
+    _check();
+    if (destinationPathKey(result.path) != destinationPathKey(destination)) {
+      throw StateError(
+        'Provider moved the item to an unexpected path: ${result.path}',
+      );
+    }
+    return true;
+  }
+
+  @override
+  Future<bool> copyNative(
+    FileItem file,
+    String destination, {
+    required bool replace,
+    TransferCheckpoint? checkpoint,
+  }) async {
+    _check();
+    if (!capabilities.nativeCopy || client is! CloudTransferOperations) {
+      return false;
+    }
+    // A replacement still uses staging/backup in writeFile. Native adapters
+    // must guarantee exact-name, no-clobber semantics for this direct fast path.
+    if (replace) return false;
+    final result = await (client as CloudTransferOperations).copyToExact(
+      file.path!,
+      destination,
+      expectedSourceVersion: _fileVersion(file),
+      checkpoint: checkpoint,
+    );
+    _check();
+    if (destinationPathKey(result.path) != destinationPathKey(destination)) {
+      throw StateError(
+        'Provider copied the item to an unexpected path: ${result.path}',
+      );
+    }
+    return true;
+  }
+
+  @override
+  Future<TransferMetadata> readMetadata(String path) async {
+    _check();
+    if (client is! CloudTransferOperations) return super.readMetadata(path);
+    return (client as CloudTransferOperations).readTransferMetadata(path);
+  }
+
+  @override
+  Future<void> writeMetadata(String path, TransferMetadata metadata) async {
+    _check();
+    if (client is! CloudTransferOperations) {
+      return super.writeMetadata(path, metadata);
+    }
+    await (client as CloudTransferOperations).setTransferMetadata(
+      path,
+      metadata,
+    );
+  }
+
+  @override
+  Future<void> setModified(String path, DateTime modified) =>
+      writeMetadata(path, TransferMetadata(modified: modified));
+
+  @override
+  Stream<List<int>> readRange(FileItem file, int offset) {
+    _check();
+    if (!capabilities.readRanges || client is! CloudTransferOperations) {
+      return super.readRange(file, offset);
+    }
+    return (client as CloudTransferOperations).readTransferRange(
+      file.path!,
+      offset,
+      expectedVersion: _fileVersion(file),
+    );
+  }
+
+  String? _fileVersion(FileItem file) {
+    for (final key in ['version', 'versionId', 'eTag', 'etag', 'rev', 'cTag']) {
+      if (file.metadata?[key] != null) return file.metadata![key].toString();
+    }
+    return null;
   }
 }

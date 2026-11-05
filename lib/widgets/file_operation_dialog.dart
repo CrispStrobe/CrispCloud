@@ -11,6 +11,8 @@ import '../providers/transfer_provider.dart';
 import '../services/file_operation_backend.dart';
 import '../services/file_operation_service.dart';
 import '../services/file_selection_pattern.dart';
+import '../services/file_operation_profiles.dart';
+import 'file_operation_conflict_dialog.dart';
 
 Future<void> showFileOperationDialog(
   BuildContext context,
@@ -18,6 +20,9 @@ Future<void> showFileOperationDialog(
   PanelSide side,
   List<FileItem> files, {
   required FileOperationKind kind,
+  PanelFileOrigin? sourceOrigin,
+  PanelFileOrigin? destinationOrigin,
+  String? destinationPath,
 }) async {
   if (files.isEmpty) return;
   await showDialog<void>(
@@ -27,6 +32,9 @@ Future<void> showFileOperationDialog(
       side: side,
       files: List.unmodifiable(files),
       kind: kind,
+      sourceOrigin: sourceOrigin,
+      destinationOrigin: destinationOrigin,
+      destinationPath: destinationPath,
     ),
   );
   if (context.mounted) ref.read(panelProvider(side)).focusList();
@@ -38,10 +46,16 @@ class FileOperationDialog extends ConsumerStatefulWidget {
     required this.side,
     required this.files,
     required this.kind,
+    this.sourceOrigin,
+    this.destinationOrigin,
+    this.destinationPath,
   });
   final PanelSide side;
   final List<FileItem> files;
   final FileOperationKind kind;
+  final PanelFileOrigin? sourceOrigin;
+  final PanelFileOrigin? destinationOrigin;
+  final String? destinationPath;
   @override
   ConsumerState<FileOperationDialog> createState() =>
       _FileOperationDialogState();
@@ -51,6 +65,22 @@ class _FileOperationDialogState extends ConsumerState<FileOperationDialog> {
   final _destination = TextEditingController();
   final _relativeBase = TextEditingController();
   final _mask = TextEditingController(text: '*');
+  final _nameMask = TextEditingController(text: '*.*');
+  final _targetName = TextEditingController();
+  final _minimumSize = TextEditingController();
+  final _maximumSize = TextEditingController();
+  final _modifiedAfter = TextEditingController();
+  final _modifiedBefore = TextEditingController();
+  final _excludedDirectories = TextEditingController();
+  Map<String, FileOperationOptions> _profiles = {};
+  bool _edited = false;
+  bool _excludeEmpty = false;
+  bool _includeHidden = true;
+  bool _native = true;
+  bool _preservePermissions = false;
+  bool _preserveOwnership = false;
+  bool _preserveXattrs = false;
+  bool _preserveAcl = false;
   FileOperationControl _control = FileOperationControl();
   final _origins = <PanelSide, PanelFileOrigin>{};
   late final PanelNotifier _panel;
@@ -84,22 +114,25 @@ class _FileOperationDialogState extends ConsumerState<FileOperationDialog> {
     super.initState();
     _panel = ref.read(panelProvider(widget.side));
     try {
-      _sourceOrigin = _panel.captureOperationOrigin(widget.files);
+      _sourceOrigin =
+          widget.sourceOrigin ?? _panel.captureOperationOrigin(widget.files);
       _origins[widget.side] = _sourceOrigin!;
       final opposite = widget.side == PanelSide.local
           ? PanelSide.remote
           : PanelSide.local;
       try {
-        _origins[opposite] = ref
-            .read(panelProvider(opposite))
-            .captureCurrentOrigin();
+        _origins[opposite] =
+            widget.destinationOrigin ??
+            ref.read(panelProvider(opposite)).captureCurrentOrigin();
       } catch (_) {
         /* A disconnected opposite panel is not a destination. */
       }
       _destinationSide = _origins.containsKey(opposite)
           ? opposite
           : widget.side;
-      _destination.text = _origins[_destinationSide]!.source.currentPath;
+      _destination.text =
+          widget.destinationPath ??
+          _origins[_destinationSide]!.source.currentPath;
       final backend = _backend(_sourceOrigin!);
       var base = backend.paths.dirname(widget.files.first.path!);
       while (widget.files.any(
@@ -110,6 +143,7 @@ class _FileOperationDialogState extends ConsumerState<FileOperationDialog> {
         base = parent;
       }
       _relativeBase.text = base;
+      _loadProfiles();
     } catch (error) {
       _error = error.toString();
     }
@@ -126,12 +160,24 @@ class _FileOperationDialogState extends ConsumerState<FileOperationDialog> {
     _destination.dispose();
     _relativeBase.dispose();
     _mask.dispose();
+    for (final controller in [
+      _nameMask,
+      _targetName,
+      _minimumSize,
+      _maximumSize,
+      _modifiedAfter,
+      _modifiedBefore,
+      _excludedDirectories,
+    ]) {
+      controller.dispose();
+    }
     super.dispose();
   }
 
   void _change(VoidCallback change) {
     if (_busy) return;
     setState(() {
+      _edited = true;
       change();
       _plan = null;
       _finished = false;
@@ -157,24 +203,7 @@ class _FileOperationDialogState extends ConsumerState<FileOperationDialog> {
         destination: _backend(destinationOrigin),
         targetDirectory: _destination.text,
         control: _control,
-        options: FileOperationOptions(
-          kind: widget.kind,
-          fileConflict: _fileConflict,
-          directoryConflict: _directoryConflict,
-          recursive: _recursive,
-          preserveRelativePaths: _relative,
-          relativeBase: _relativeBase.text,
-          preserveModified: _preserveTime,
-          verifyContents: _verify,
-          stopOnError: _stopOnError,
-          copySymbolicLinks: _copyLinks,
-          pattern: FileSelectionPattern(
-            _mask.text,
-            mode: _regex ? FilePatternMode.regex : FilePatternMode.wildcard,
-            caseSensitive: _caseSensitive,
-            matchFullPath: _matchPath,
-          ),
-        ),
+        options: _options(),
       );
       if (mounted) setState(() => _plan = plan);
     } catch (error) {
@@ -184,60 +213,158 @@ class _FileOperationDialogState extends ConsumerState<FileOperationDialog> {
     }
   }
 
-  Future<FileConflictDecision> _resolve(
-    FileOperationEntry entry,
-    FileItem existing,
-  ) async {
-    if (!mounted) return FileConflictDecision.cancel;
-    return await showDialog<FileConflictDecision>(
+  FileOperationOptions _options() => FileOperationOptions(
+    kind: widget.kind,
+    fileConflict: _fileConflict,
+    directoryConflict: _directoryConflict,
+    recursive: _recursive,
+    preserveRelativePaths: _relative,
+    relativeBase: _relativeBase.text,
+    preserveModified: _preserveTime,
+    verifyContents: _verify,
+    stopOnError: _stopOnError,
+    copySymbolicLinks: _copyLinks,
+    preservePermissions: _preservePermissions,
+    preserveOwnership: _preserveOwnership,
+    preserveExtendedAttributes: _preserveXattrs,
+    preserveAcl: _preserveAcl,
+    destinationName: _targetName.text.trim().isEmpty
+        ? null
+        : _targetName.text.trim(),
+    destinationMask: _nameMask.text,
+    minimumSize: _minimumSize.text.trim().isEmpty
+        ? null
+        : int.parse(_minimumSize.text.trim()),
+    maximumSize: _maximumSize.text.trim().isEmpty
+        ? null
+        : int.parse(_maximumSize.text.trim()),
+    modifiedAfter: _modifiedAfter.text.trim().isEmpty
+        ? null
+        : DateTime.parse(_modifiedAfter.text.trim()),
+    modifiedBefore: _modifiedBefore.text.trim().isEmpty
+        ? null
+        : DateTime.parse(_modifiedBefore.text.trim()),
+    excludedDirectories: _excludedDirectories.text.trim().isEmpty
+        ? null
+        : FileSelectionPattern(
+            _excludedDirectories.text,
+            matchFullPath: _matchPath,
+          ),
+    excludeEmptyDirectories: _excludeEmpty,
+    includeHidden: _includeHidden,
+    preferNative: _native,
+    pattern: FileSelectionPattern(
+      _mask.text,
+      mode: _regex ? FilePatternMode.regex : FilePatternMode.wildcard,
+      caseSensitive: _caseSensitive,
+      matchFullPath: _matchPath,
+    ),
+  );
+
+  void _applyProfile(FileOperationOptions options) {
+    _fileConflict = options.fileConflict;
+    _directoryConflict = options.directoryConflict;
+    _recursive = options.recursive;
+    _relative = options.preserveRelativePaths;
+    _preserveTime = options.preserveModified;
+    _preservePermissions = options.preservePermissions;
+    _preserveOwnership = options.preserveOwnership;
+    _preserveXattrs = options.preserveExtendedAttributes;
+    _preserveAcl = options.preserveAcl;
+    _verify = options.verifyContents;
+    _stopOnError = options.stopOnError;
+    _copyLinks = options.copySymbolicLinks;
+    _mask.text = options.pattern?.expression ?? '*';
+    _regex = options.pattern?.mode == FilePatternMode.regex;
+    _caseSensitive = options.pattern?.caseSensitive ?? false;
+    _matchPath = options.pattern?.matchFullPath ?? false;
+    _nameMask.text = options.destinationMask;
+    _minimumSize.text = options.minimumSize?.toString() ?? '';
+    _maximumSize.text = options.maximumSize?.toString() ?? '';
+    _modifiedAfter.text = options.modifiedAfter?.toIso8601String() ?? '';
+    _modifiedBefore.text = options.modifiedBefore?.toIso8601String() ?? '';
+    _excludedDirectories.text = options.excludedDirectories?.expression ?? '';
+    _excludeEmpty = options.excludeEmptyDirectories;
+    _includeHidden = options.includeHidden;
+    _native = options.preferNative;
+  }
+
+  Future<void> _loadProfiles() async {
+    try {
+      final profiles = await FileOperationProfiles().load();
+      if (!mounted) return;
+      setState(() {
+        _profiles = profiles;
+        final defaults = profiles['@default:${widget.kind.name}'];
+        if (!_edited && !_busy && defaults != null) _applyProfile(defaults);
+      });
+    } catch (error) {
+      if (mounted) {
+        setState(
+          () => _error = 'Transfer defaults could not be loaded: $error',
+        );
+      }
+    }
+  }
+
+  Future<void> _saveProfile({bool defaults = false}) async {
+    try {
+      final options = _options();
+      String? name = '@default:${widget.kind.name}';
+      if (!defaults) {
+        final controller = TextEditingController();
+        name = await showDialog<String>(
           context: context,
-          barrierDismissible: false,
           builder: (context) => AlertDialog(
-            title: Text(
-              entry.source.isFolder
-                  ? 'Folder already exists'
-                  : 'File already exists',
-            ),
-            content: SizedBox(
-              width: 560,
-              child: SelectableText(
-                'Source: ${entry.source.path}\nDestination: ${entry.destination}\n\n'
-                'Source: ${entry.source.size ?? 'unknown'} bytes · ${entry.source.updatedAt ?? 'time unknown'}\n'
-                'Destination: ${existing.size ?? 'unknown'} bytes · ${existing.updatedAt ?? 'time unknown'}',
-              ),
+            title: const Text('Save transfer profile'),
+            content: TextField(
+              controller: controller,
+              autofocus: true,
+              decoration: const InputDecoration(labelText: 'Profile name'),
             ),
             actions: [
               TextButton(
-                onPressed: () =>
-                    Navigator.pop(context, FileConflictDecision.cancel),
-                child: const Text('Cancel operation'),
+                onPressed: () => Navigator.pop(context),
+                child: const Text('Cancel'),
               ),
-              TextButton(
-                onPressed: () =>
-                    Navigator.pop(context, FileConflictDecision.skip),
-                child: const Text('Skip'),
-              ),
-              if (!entry.source.isFolder)
-                TextButton(
-                  onPressed: () =>
-                      Navigator.pop(context, FileConflictDecision.keepBoth),
-                  child: const Text('Keep both'),
-                ),
               FilledButton(
-                onPressed: () => Navigator.pop(
-                  context,
-                  entry.source.isFolder
-                      ? FileConflictDecision.merge
-                      : FileConflictDecision.replace,
-                ),
-                child: Text(
-                  entry.source.isFolder ? 'Merge folder' : 'Replace file',
-                ),
+                onPressed: () => Navigator.pop(context, controller.text),
+                child: const Text('Save'),
               ),
             ],
           ),
-        ) ??
-        FileConflictDecision.cancel;
+        );
+        // The route may still be animating; dispose after its widgets detach.
+        Future<void>.delayed(
+          const Duration(milliseconds: 500),
+          controller.dispose,
+        );
+      }
+      if (name == null) return;
+      await FileOperationProfiles().save(name, options);
+      final profiles = await FileOperationProfiles().load();
+      if (mounted) setState(() => _profiles = profiles);
+    } catch (error) {
+      if (mounted) setState(() => _error = error.toString());
+    }
+  }
+
+  Future<FileConflictResolution> _resolve(
+    FileOperationEntry entry,
+    FileItem existing,
+  ) {
+    if (!mounted) {
+      return Future.value(
+        const FileConflictResolution(FileConflictDecision.cancel),
+      );
+    }
+    return showFileOperationConflict(
+      context,
+      entry: entry,
+      existing: existing,
+      source: _plan!.source,
+      destination: _plan!.destination,
+    );
   }
 
   Future<void> _start({bool background = false}) async {
@@ -253,7 +380,7 @@ class _FileOperationDialogState extends ConsumerState<FileOperationDialog> {
     final future = notifier.runFileOperation(
       plan,
       control: _control,
-      resolveConflict: background ? null : _resolve,
+      resolveDetailedConflict: background ? null : _resolve,
       onProgress: (entry, bytes, total) {
         if (mounted) {
           setState(() {
@@ -381,6 +508,67 @@ class _FileOperationDialogState extends ConsumerState<FileOperationDialog> {
                 ),
                 const SizedBox(height: 12),
                 Wrap(
+                  spacing: 8,
+                  runSpacing: 8,
+                  children: [
+                    if (_profiles.keys.any(
+                      (name) => !name.startsWith('@default:'),
+                    ))
+                      PopupMenuButton<String>(
+                        tooltip: 'Load transfer profile',
+                        onSelected: (name) =>
+                            _change(() => _applyProfile(_profiles[name]!)),
+                        itemBuilder: (_) => _profiles.keys
+                            .where((name) => !name.startsWith('@default:'))
+                            .map(
+                              (name) =>
+                                  PopupMenuItem(value: name, child: Text(name)),
+                            )
+                            .toList(),
+                        child: const Padding(
+                          padding: EdgeInsets.all(8),
+                          child: Text('Load profile'),
+                        ),
+                      ),
+                    TextButton(
+                      onPressed: _busy ? null : () => _saveProfile(),
+                      child: const Text('Save profile'),
+                    ),
+                    TextButton(
+                      onPressed: _busy
+                          ? null
+                          : () => _saveProfile(defaults: true),
+                      child: const Text('Save as defaults'),
+                    ),
+                  ],
+                ),
+                if (widget.files.length == 1)
+                  TextField(
+                    controller: _targetName,
+                    enabled: !_busy,
+                    decoration: const InputDecoration(
+                      labelText: 'Destination item name (optional)',
+                      helperText: 'A new name for the selected file or folder.',
+                      border: OutlineInputBorder(),
+                      isDense: true,
+                    ),
+                    onChanged: (_) => _change(() {}),
+                  ),
+                const SizedBox(height: 10),
+                TextField(
+                  controller: _nameMask,
+                  enabled: !_busy,
+                  decoration: const InputDecoration(
+                    labelText: 'Destination filename mask',
+                    helperText: '*.* keeps names · *.bak changes extension · *.*.bak appends · [N]_[C:000].[E]',
+                    helperMaxLines: 2,
+                    border: OutlineInputBorder(),
+                    isDense: true,
+                  ),
+                  onChanged: (_) => _change(() {}),
+                ),
+                const SizedBox(height: 12),
+                Wrap(
                   spacing: 12,
                   runSpacing: 12,
                   children: [
@@ -424,6 +612,34 @@ class _FileOperationDialogState extends ConsumerState<FileOperationDialog> {
                             child: Text(
                               'Replace only if source is newer',
                               maxLines: 1,
+                              overflow: TextOverflow.ellipsis,
+                            ),
+                          ),
+                          DropdownMenuItem(
+                            value: FileConflictPolicy.replaceIfLarger,
+                            child: Text(
+                              'Replace if source is larger',
+                              overflow: TextOverflow.ellipsis,
+                            ),
+                          ),
+                          DropdownMenuItem(
+                            value: FileConflictPolicy.replaceIfSmaller,
+                            child: Text(
+                              'Replace if source is smaller',
+                              overflow: TextOverflow.ellipsis,
+                            ),
+                          ),
+                          DropdownMenuItem(
+                            value: FileConflictPolicy.resumeVerified,
+                            child: Text(
+                              'Resume after prefix verification',
+                              overflow: TextOverflow.ellipsis,
+                            ),
+                          ),
+                          DropdownMenuItem(
+                            value: FileConflictPolicy.append,
+                            child: Text(
+                              'Append source to destination',
                               overflow: TextOverflow.ellipsis,
                             ),
                           ),
@@ -499,6 +715,51 @@ class _FileOperationDialogState extends ConsumerState<FileOperationDialog> {
                   ),
                   onChanged: (_) => _change(() {}),
                 ),
+                const SizedBox(height: 10),
+                Wrap(
+                  spacing: 12,
+                  runSpacing: 10,
+                  children: [
+                    _field(_minimumSize, 'Minimum size (bytes)', width: 190),
+                    _field(_maximumSize, 'Maximum size (bytes)', width: 190),
+                    _field(
+                      _modifiedAfter,
+                      'Modified on/after (ISO date)',
+                      width: 250,
+                    ),
+                    _field(
+                      _modifiedBefore,
+                      'Modified on/before (ISO date)',
+                      width: 250,
+                    ),
+                  ],
+                ),
+                const SizedBox(height: 10),
+                _field(
+                  _excludedDirectories,
+                  'Exclude directories (wildcards; optional)',
+                  width: 800,
+                ),
+                Wrap(
+                  spacing: 8,
+                  children: [
+                    _toggle(
+                      'Exclude empty folders after filtering',
+                      _excludeEmpty,
+                      (v) => _excludeEmpty = v,
+                    ),
+                    _toggle(
+                      'Include hidden names',
+                      _includeHidden,
+                      (v) => _includeHidden = v,
+                    ),
+                    _toggle(
+                      'Use native/server operations when supported',
+                      _native,
+                      (v) => _native = v,
+                    ),
+                  ],
+                ),
                 Wrap(
                   spacing: 8,
                   children: [
@@ -571,6 +832,52 @@ class _FileOperationDialogState extends ConsumerState<FileOperationDialog> {
                       _copyLinks,
                       (value) => _copyLinks = value,
                       enabled: supportsLinks,
+                    ),
+                  ],
+                ),
+                Wrap(
+                  spacing: 8,
+                  children: [
+                    _toggle(
+                      'Preserve permissions',
+                      _preservePermissions,
+                      (v) => _preservePermissions = v,
+                      enabled:
+                          (sourceBackend?.capabilities.permissions ?? false) &&
+                          (destinationBackend?.capabilities.permissions ??
+                              false),
+                    ),
+                    _toggle(
+                      'Preserve owner/group',
+                      _preserveOwnership,
+                      (v) => _preserveOwnership = v,
+                      enabled:
+                          (sourceBackend?.capabilities.ownership ?? false) &&
+                          (destinationBackend?.capabilities.ownership ?? false),
+                    ),
+                    _toggle(
+                      'Preserve extended attributes',
+                      _preserveXattrs,
+                      (v) => _preserveXattrs = v,
+                      enabled:
+                          (sourceBackend?.capabilities.extendedAttributes ??
+                              false) &&
+                          (destinationBackend
+                                  ?.capabilities
+                                  .extendedAttributes ??
+                              false),
+                    ),
+                    _toggle(
+                      'Preserve ACL',
+                      _preserveAcl,
+                      (v) => _preserveAcl = v,
+                      enabled:
+                          (sourceBackend?.capabilities.accessControlLists ??
+                              false) &&
+                          (destinationBackend
+                                  ?.capabilities
+                                  .accessControlLists ??
+                              false),
                     ),
                   ],
                 ),
@@ -718,6 +1025,24 @@ class _FileOperationDialogState extends ConsumerState<FileOperationDialog> {
       ),
     );
   }
+
+  Widget _field(
+    TextEditingController controller,
+    String label, {
+    required double width,
+  }) => SizedBox(
+    width: width,
+    child: TextField(
+      controller: controller,
+      enabled: !_busy,
+      decoration: InputDecoration(
+        labelText: label,
+        border: const OutlineInputBorder(),
+        isDense: true,
+      ),
+      onChanged: (_) => _change(() {}),
+    ),
+  );
 
   Widget _toggle(
     String text,

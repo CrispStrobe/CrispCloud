@@ -109,6 +109,7 @@ class TransferNotifier extends ChangeNotifier {
     FileOperationPlan plan, {
     required FileOperationControl control,
     FileConflictResolver? resolveConflict,
+    DetailedFileConflictResolver? resolveDetailedConflict,
     void Function(FileOperationEntry, int, int?)? onProgress,
     void Function(FileOperationEntry)? onEntryComplete,
   }) async {
@@ -156,6 +157,7 @@ class TransferNotifier extends ChangeNotifier {
               plan,
               control: control,
               resolveConflict: resolveConflict,
+              resolveDetailedConflict: resolveDetailedConflict,
               onProgress: (entry, bytes, total) {
                 operation.updateProgress(completedBytes + bytes);
                 onProgress?.call(entry, bytes, total);

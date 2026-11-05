@@ -4,59 +4,21 @@ import 'package:crypto/crypto.dart';
 import 'package:path/path.dart' as p;
 
 import '../models/file_item.dart';
-import 'file_selection_pattern.dart';
+import 'file_operation_options.dart';
+import 'destination_name_mask.dart';
+import 'storage_transfer_contract.dart';
 
-enum FileOperationKind { copy, move }
-
-enum FileConflictPolicy { ask, skip, replace, replaceIfNewer, keepBoth }
-
-enum DirectoryConflictPolicy { ask, merge, skip }
-
-enum FileOperationOutcome {
-  pending,
-  copied,
-  moved,
-  directoryCreated,
-  skipped,
-  filtered,
-  cancelled,
-  failed,
-}
-
-/// Options are immutable so changing the dialog cannot change a running job.
-class FileOperationOptions {
-  const FileOperationOptions({
-    this.kind = FileOperationKind.copy,
-    this.fileConflict = FileConflictPolicy.ask,
-    this.directoryConflict = DirectoryConflictPolicy.merge,
-    this.recursive = true,
-    this.preserveRelativePaths = false,
-    this.relativeBase,
-    this.preserveModified = false,
-    this.verifyContents = false,
-    this.stopOnError = true,
-    this.copySymbolicLinks = false,
-    this.pattern,
-  });
-
-  final FileOperationKind kind;
-  final FileConflictPolicy fileConflict;
-  final DirectoryConflictPolicy directoryConflict;
-  final bool recursive;
-  final bool preserveRelativePaths;
-  final String? relativeBase;
-  final bool preserveModified;
-  final bool verifyContents;
-  final bool stopOnError;
-  final bool copySymbolicLinks;
-  final FileSelectionPattern? pattern;
-}
+export 'file_operation_options.dart';
 
 /// Storage adapter whose identity and authentication are captured before work.
 /// [stat] and [list] must propagate access/network errors, never report them as
 /// missing files. writeFile must not delete an existing destination on failure.
 abstract class FileOperationBackend {
   Object get identity;
+  String? get persistentStorageId => null;
+  bool get canRecover => false;
+  StorageTransferCapabilities get capabilities =>
+      const StorageTransferCapabilities();
   String get label;
   p.Context get paths;
   String pathKey(String path) => paths.normalize(path);
@@ -81,6 +43,57 @@ abstract class FileOperationBackend {
     int? length, {
     required bool replace,
   });
+  Future<void> writePreparedFile(
+    String path,
+    Stream<List<int>> data,
+    int? length, {
+    required bool replace,
+    Future<void> Function(FileItem staged)? verifyStaged,
+    Future<void> Function(Map<String, dynamic> state)? checkpoint,
+  }) async {
+    await checkpoint?.call({'phase': 'writing', 'destination': path});
+    await writeFile(path, data, length, replace: replace);
+    final result = await stat(path);
+    if (verifyStaged != null && result != null) await verifyStaged(result);
+    await checkpoint?.call({'phase': 'committed', 'destination': path});
+  }
+
+  Future<bool> moveNoReplace(FileItem file, String destination) async => false;
+  Future<bool> copyNative(
+    FileItem file,
+    String destination, {
+    required bool replace,
+    TransferCheckpoint? checkpoint,
+  }) async => false;
+  Future<void> renameExisting(FileItem file, String destination) async {
+    if (!await moveNoReplace(file, destination)) {
+      throw UnsupportedError(
+        'This storage cannot safely rename an occupied target.',
+      );
+    }
+  }
+
+  Future<TransferMetadata> readMetadata(String path) async =>
+      const TransferMetadata();
+  Future<void> writeMetadata(String path, TransferMetadata metadata) async =>
+      throw UnsupportedError(
+        'This storage cannot preserve the requested metadata.',
+      );
+  Stream<List<int>> readRange(FileItem file, int offset) async* {
+    var remaining = offset;
+    await for (final chunk in readFile(file)) {
+      if (remaining >= chunk.length) {
+        remaining -= chunk.length;
+      } else {
+        yield remaining == 0 ? chunk : chunk.sublist(remaining);
+        remaining = 0;
+      }
+    }
+    if (remaining != 0) {
+      throw StateError('Source is shorter than the resume offset.');
+    }
+  }
+
   Future<void> deleteFile(FileItem file);
   Future<void> deleteEmptyDirectory(String path);
   Future<void> setModified(String path, DateTime modified) async =>
@@ -102,6 +115,7 @@ class FileOperationEntry {
   FileItem? existing;
   FileOperationOutcome outcome = FileOperationOutcome.pending;
   String? message;
+  Map<String, dynamic>? recovery;
   bool get failed => outcome == FileOperationOutcome.failed;
   bool get completed =>
       outcome == FileOperationOutcome.copied ||
@@ -177,7 +191,39 @@ class FileOperationCancelled implements Exception {
 }
 
 /// Decisions returned by the conflict UI. Cancel stops the entire job.
-enum FileConflictDecision { skip, replace, keepBoth, merge, cancel }
+enum FileConflictDecision {
+  skip,
+  replace,
+  keepBoth,
+  merge,
+  cancel,
+  renameSource,
+  renameDestination,
+  resumeVerified,
+  append,
+}
+
+class FileConflictResolution {
+  const FileConflictResolution(
+    this.decision, {
+    this.name,
+    this.applyToAll = false,
+  });
+  final FileConflictDecision decision;
+  final String? name;
+  final bool applyToAll;
+}
+
+typedef DetailedFileConflictResolver = Future<FileConflictResolution> Function(
+  FileOperationEntry entry,
+  FileItem existing,
+);
+
+class FileOperationNeedsDecision implements Exception {
+  const FileOperationNeedsDecision();
+  @override
+  String toString() => 'Waiting for a conflict decision.';
+}
 
 typedef FileConflictResolver = Future<FileConflictDecision> Function(
   FileOperationEntry entry,
@@ -227,6 +273,51 @@ class FileOperationService {
         (!source.supportsSymbolicLinks || !destination.supportsSymbolicLinks)) {
       errors.add('Copying symbolic links requires two local filesystems.');
     }
+    if ((options.minimumSize != null && options.minimumSize! < 0) ||
+        (options.maximumSize != null && options.maximumSize! < 0) ||
+        (options.minimumSize != null &&
+            options.maximumSize != null &&
+            options.minimumSize! > options.maximumSize!) ||
+        (options.modifiedAfter != null &&
+            options.modifiedBefore != null &&
+            options.modifiedAfter!.isAfter(options.modifiedBefore!))) {
+      errors.add('The size or date filter range is invalid.');
+    }
+    final nameMask = DestinationNameMask(options.destinationMask);
+    if (options.destinationName != null) {
+      DestinationNameMask.validateName(options.destinationName!);
+      if (files.where((file) => file.name != '..').length != 1) {
+        errors.add('An exact destination name requires one selected item.');
+      }
+    }
+    for (final requirement in [
+      (
+        options.preservePermissions,
+        source.capabilities.permissions && destination.capabilities.permissions,
+        'permissions',
+      ),
+      (
+        options.preserveOwnership,
+        source.capabilities.ownership && destination.capabilities.ownership,
+        'ownership',
+      ),
+      (
+        options.preserveExtendedAttributes,
+        source.capabilities.extendedAttributes &&
+            destination.capabilities.extendedAttributes,
+        'extended attributes',
+      ),
+      (
+        options.preserveAcl,
+        source.capabilities.accessControlLists &&
+            destination.capabilities.accessControlLists,
+        'access control lists',
+      ),
+    ]) {
+      if (requirement.$1 && !requirement.$2) {
+        errors.add('Both storages must support preserving ${requirement.$3}.');
+      }
+    }
     final base = options.relativeBase;
     if (options.preserveRelativePaths &&
         (base == null || !source.paths.isAbsolute(base))) {
@@ -258,6 +349,7 @@ class FileOperationService {
         .toList();
     final destinations = <String, FileOperationEntry>{};
     final visited = <String>{};
+    var fileIndex = 0;
 
     Future<void> walk(FileItem listed, String output) async {
       await control?.checkpoint();
@@ -271,7 +363,14 @@ class FileOperationService {
         return;
       }
       final file = current.copyWith(path: path);
-      if (identical(source.identity, destination.identity) &&
+      if (!file.isFolder &&
+          !(options.destinationName != null && roots.containsKey(path))) {
+        output = destination.paths.join(
+          destination.paths.dirname(output),
+          nameMask.apply(file.name, index: ++fileIndex),
+        );
+      }
+      if (source.identity == destination.identity &&
           source.samePath(path, output) &&
           !file.isFolder &&
           options.kind == FileOperationKind.copy &&
@@ -282,7 +381,7 @@ class FileOperationService {
           reserved: destinations.keys.toSet(),
         );
       }
-      if (identical(source.identity, destination.identity) &&
+      if (source.identity == destination.identity &&
           (source.samePath(path, output) ||
               (file.isFolder && source.isWithin(path, output)))) {
         errors.add('Cannot copy or move an item into itself: $path');
@@ -300,7 +399,14 @@ class FileOperationService {
         entry.message = 'Folder skipped: recursion is off.';
         return;
       }
-      if (!file.isFolder && !(options.pattern?.matches(file) ?? true)) {
+      if (file.isFolder &&
+          ((options.excludedDirectories?.matches(file) ?? false) ||
+              (!options.includeHidden && file.name.startsWith('.')))) {
+        entry.outcome = FileOperationOutcome.filtered;
+        entry.message = 'Excluded directory; descendants were not scanned.';
+        return;
+      }
+      if (!file.isFolder && !options.matchesFile(file)) {
         entry.outcome = FileOperationOutcome.filtered;
         entry.message = 'Excluded by the file filter.';
         return;
@@ -328,7 +434,7 @@ class FileOperationService {
         // Providers may resolve a differently-cased request to the source
         // itself. Use the actual listed path before authorizing any move.
         final isSource =
-            identical(source.identity, destination.identity) &&
+            source.identity == destination.identity &&
             source.samePath(path, actualDestination);
         final canDuplicateSource =
             !file.isFolder &&
@@ -384,7 +490,8 @@ class FileOperationService {
     }
 
     for (final root in unique) {
-      String relative = source.paths.basename(root.key);
+      String relative =
+          options.destinationName ?? source.paths.basename(root.key);
       if (options.preserveRelativePaths) {
         if (!source.isWithin(base!, root.key)) {
           errors.add('Source is outside the relative base: ${root.key}');
@@ -399,6 +506,24 @@ class FileOperationService {
         continue;
       }
       await walk(root.value.copyWith(path: root.key), output);
+    }
+    if (options.excludeEmptyDirectories) {
+      for (final directory in entries.reversed.where(
+        (entry) =>
+            entry.source.isFolder &&
+            entry.outcome == FileOperationOutcome.pending,
+      )) {
+        final containsIncludedFile = entries.any(
+          (entry) =>
+              !entry.source.isFolder &&
+              entry.outcome == FileOperationOutcome.pending &&
+              source.isWithin(directory.source.path!, entry.source.path!),
+        );
+        if (!containsIncludedFile) {
+          directory.outcome = FileOperationOutcome.filtered;
+          directory.message = 'Empty after filtering; excluded.';
+        }
+      }
     }
     // Check destination ancestors, including links, before any writes.
     final checked = <String>{};
@@ -426,6 +551,8 @@ class FileOperationService {
     FileOperationPlan plan, {
     required FileOperationControl control,
     FileConflictResolver? resolveConflict,
+    DetailedFileConflictResolver? resolveDetailedConflict,
+    Future<void> Function(FileOperationEntry entry, String phase)? checkpoint,
     void Function(FileOperationEntry entry, int transferred, int? total)?
     onProgress,
     void Function(FileOperationEntry entry)? onEntryComplete,
@@ -439,6 +566,8 @@ class FileOperationService {
         .map((entry) => target.destinationPathKey(entry.destination))
         .toSet();
     var stopped = false;
+    FileConflictResolution? allFiles;
+    FileConflictResolution? allFolders;
     for (final entry in plan.entries) {
       if (entry.outcome != FileOperationOutcome.pending) continue;
       if (stopped || control.isCancelled) {
@@ -470,6 +599,9 @@ class FileOperationService {
         var existing = await target.stat(entry.destination);
         _checkSources(source, target);
         var replace = false;
+        var resumeOffset = 0;
+        var append = false;
+        FileItem? originalDestination;
         if (existing != null) {
           if (existing.isFolder != entry.source.isFolder ||
               existing.isSymlink == true) {
@@ -477,12 +609,23 @@ class FileOperationService {
               'Destination has an incompatible type or is a symbolic link.',
             );
           }
-          final decision = await _decision(
-            entry,
-            existing,
-            options,
-            resolveConflict,
-          );
+          final resolution =
+              (entry.source.isFolder ? allFolders : allFiles) ??
+              await _decision(
+                entry,
+                existing,
+                options,
+                resolveConflict,
+                resolveDetailedConflict,
+              );
+          final decision = resolution.decision;
+          if (resolution.applyToAll && resolution.name == null) {
+            if (entry.source.isFolder) {
+              allFolders = resolution;
+            } else {
+              allFiles = resolution;
+            }
+          }
           await control.checkpoint();
           _checkSources(source, target);
           if (decision == FileConflictDecision.cancel) {
@@ -506,8 +649,57 @@ class FileOperationService {
             );
             reserved.add(target.destinationPathKey(entry.destination));
             existing = null;
+          } else if (decision == FileConflictDecision.renameSource ||
+              decision == FileConflictDecision.renameDestination) {
+            final name = resolution.name;
+            if (name == null) throw StateError('Enter a new filename.');
+            DestinationNameMask.validateName(name);
+            final renamed = target.paths.join(
+              target.paths.dirname(entry.destination),
+              name,
+            );
+            if (reserved.contains(target.destinationPathKey(renamed)) ||
+                await target.stat(renamed) != null) {
+              throw StateError(
+                'The chosen filename is already occupied: $name',
+              );
+            }
+            if (decision == FileConflictDecision.renameSource) {
+              entry.destination = renamed;
+            } else {
+              await checkpoint?.call(entry, 'renamingExisting');
+              await target.renameExisting(existing, renamed);
+              entry.message = 'Previous destination preserved as $renamed';
+            }
+            reserved.add(target.destinationPathKey(renamed));
+            existing = null;
           } else if (!entry.source.isFolder) {
             replace = true;
+            if (decision == FileConflictDecision.resumeVerified ||
+                decision == FileConflictDecision.append) {
+              originalDestination = existing;
+              if (existing.size == null || entry.source.size == null) {
+                throw StateError('Resume and append require known file sizes.');
+              }
+              if (decision == FileConflictDecision.resumeVerified) {
+                resumeOffset = existing.size!;
+                if (resumeOffset > entry.source.size!) {
+                  throw StateError(
+                    'The destination is larger than the source.',
+                  );
+                }
+                await _verifyPrefix(
+                  source,
+                  entry.source,
+                  target,
+                  existing,
+                  resumeOffset,
+                  control,
+                );
+              } else {
+                append = true;
+              }
+            }
           }
         }
         await control.checkpoint();
@@ -520,6 +712,38 @@ class FileOperationService {
               ? 'Directory created.'
               : 'Merged into existing directory.';
         } else {
+          await checkpoint?.call(entry, 'writing');
+          var nativeMoved = false;
+          var nativeCopied = false;
+          if (options.preferNative &&
+              !replace &&
+              !options.verifyContents &&
+              source.identity == target.identity &&
+              options.kind == FileOperationKind.move) {
+            nativeMoved = await source.moveNoReplace(
+              entry.source,
+              entry.destination,
+            );
+          }
+          if (!nativeMoved &&
+              options.preferNative &&
+              !append &&
+              resumeOffset == 0 &&
+              entry.source.isSymlink != true &&
+              source.identity == target.identity) {
+            nativeCopied = await source.copyNative(
+              entry.source,
+              entry.destination,
+              replace: replace,
+              checkpoint: control.checkpoint,
+            );
+          }
+          if (nativeMoved) {
+            entry.outcome = FileOperationOutcome.moved;
+            await checkpoint?.call(entry, 'complete');
+            onEntryComplete?.call(entry);
+            continue;
+          }
           if (entry.source.isSymlink == true) {
             await target.copySymbolicLink(
               entry.source,
@@ -528,43 +752,90 @@ class FileOperationService {
             );
           } else {
             var sent = 0;
-            final stream = source.readFile(entry.source).asyncMap((
-              chunk,
-            ) async {
-              await control.checkpoint();
-              _checkSources(source, target);
-              sent += chunk.length;
-              onProgress?.call(entry, sent, entry.source.size);
-              return chunk;
-            });
-            await target.writeFile(
-              entry.destination,
-              stream,
-              entry.source.size,
-              replace: replace,
-            );
-            if (entry.source.size != null && sent != entry.source.size) {
-              throw StateError(
-                'Source length changed while copying; source retained.',
+            final expectedLength = append
+                ? entry.source.size! + originalDestination!.size!
+                : entry.source.size;
+            Stream<List<int>> contents() async* {
+              if (originalDestination != null) {
+                yield* target.readFile(originalDestination);
+              }
+              yield* resumeOffset > 0
+                  ? source.readRange(entry.source, resumeOffset)
+                  : source.readFile(entry.source);
+            }
+
+            final inputDigest = _DigestCollector();
+            final hashSink = sha256.startChunkedConversion(inputDigest);
+            if (!nativeCopied) {
+              Stream<List<int>> tracked() async* {
+                try {
+                  await for (final chunk in contents()) {
+                    await control.checkpoint();
+                    _checkSources(source, target);
+                    sent += chunk.length;
+                    hashSink.add(chunk);
+                    onProgress?.call(entry, sent, expectedLength);
+                    yield chunk;
+                  }
+                } finally {
+                  hashSink.close();
+                }
+              }
+
+              await target.writePreparedFile(
+                entry.destination,
+                tracked(),
+                expectedLength,
+                replace: replace,
+                checkpoint: (state) async {
+                  entry.recovery = {...?entry.recovery, ...state};
+                  await checkpoint?.call(entry, state['phase'] as String);
+                },
+                verifyStaged:
+                    options.verifyContents || append || resumeOffset > 0
+                    ? (staged) async {
+                        await control.checkpoint();
+                        _checkSources(source, target);
+                        final actual = await _digest(
+                          target,
+                          staged,
+                          control,
+                          source,
+                        );
+                        if (actual != inputDigest.value?.toString()) {
+                          throw StateError(
+                            'SHA-256 verification failed before commit; existing destination retained.',
+                          );
+                        }
+                      }
+                    : null,
               );
+              if (expectedLength != null && sent != expectedLength) {
+                throw StateError(
+                  'Source length changed while copying; source retained.',
+                );
+              }
+            } else {
+              sent = expectedLength ?? 0;
+              hashSink.close();
+              onProgress?.call(entry, sent, expectedLength);
             }
             await control.checkpoint();
             _checkSources(source, target);
             final written = await target.stat(entry.destination);
             if (written == null ||
                 written.isFolder ||
-                (written.size != null && written.size != sent)) {
+                (written.size != null &&
+                    expectedLength != null &&
+                    written.size != expectedLength)) {
               throw StateError(
                 'Destination could not be verified; source retained.',
               );
             }
-            if (options.verifyContents) {
-              final before = await _digest(
-                source,
-                entry.source,
-                control,
-                target,
-              );
+            if (options.verifyContents || append || resumeOffset > 0) {
+              final before = nativeCopied
+                  ? await _digest(source, entry.source, control, target)
+                  : inputDigest.value!.toString();
               final after = await _digest(target, written, control, source);
               if (before != after) {
                 throw StateError(
@@ -572,12 +843,31 @@ class FileOperationService {
                 );
               }
             }
+            await checkpoint?.call(entry, 'verified');
             if (options.preserveModified && entry.source.updatedAt != null) {
               await target.setModified(
                 entry.destination,
                 entry.source.updatedAt!,
               );
             }
+          }
+          if (options.preservePermissions ||
+              options.preserveOwnership ||
+              options.preserveExtendedAttributes ||
+              options.preserveAcl) {
+            final metadata = await source.readMetadata(entry.source.path!);
+            await target.writeMetadata(
+              entry.destination,
+              TransferMetadata(
+                mode: options.preservePermissions ? metadata.mode : null,
+                owner: options.preserveOwnership ? metadata.owner : null,
+                group: options.preserveOwnership ? metadata.group : null,
+                extendedAttributes: options.preserveExtendedAttributes
+                    ? metadata.extendedAttributes
+                    : const {},
+                acl: options.preserveAcl ? metadata.acl : null,
+              ),
+            );
           }
           if (options.kind == FileOperationKind.move) {
             await control.checkpoint();
@@ -586,12 +876,20 @@ class FileOperationService {
             if (latest == null || !_sameVersion(entry.source, latest)) {
               throw StateError('Source changed during copy; source retained.');
             }
+            await checkpoint?.call(entry, 'deletingSource');
             await source.deleteFile(entry.source);
             entry.outcome = FileOperationOutcome.moved;
           } else {
             entry.outcome = FileOperationOutcome.copied;
           }
         }
+        await checkpoint?.call(entry, 'complete');
+      } on FileOperationNeedsDecision {
+        entry.outcome = FileOperationOutcome.needsDecision;
+        entry.message = 'Waiting for a conflict decision.';
+        await checkpoint?.call(entry, 'needsDecision');
+        onEntryComplete?.call(entry);
+        break;
       } on FileOperationCancelled {
         entry.outcome = FileOperationOutcome.cancelled;
         entry.message = 'Cancelled; source retained.';
@@ -601,6 +899,24 @@ class FileOperationService {
         stopped = options.stopOnError;
       }
       onEntryComplete?.call(entry);
+    }
+    if (options.preserveModified && !control.isCancelled) {
+      for (final entry in plan.entries.reversed.where(
+        (entry) =>
+            entry.source.isFolder &&
+            entry.completed &&
+            entry.source.updatedAt != null,
+      )) {
+        try {
+          await control.checkpoint();
+          _checkSources(source, target);
+          await target.setModified(entry.destination, entry.source.updatedAt!);
+        } catch (error) {
+          entry.message =
+              'Contents copied; directory timestamp could not be preserved: $error';
+          onEntryComplete?.call(entry);
+        }
+      }
     }
     if (options.kind == FileOperationKind.move && !control.isCancelled) {
       for (final entry in plan.entries.reversed.where(
@@ -632,6 +948,7 @@ class FileOperationService {
       before.isFolder == after.isFolder &&
       before.isSymlink == after.isSymlink &&
       before.symlinkTarget == after.symlinkTarget &&
+      _version(before) == _version(after) &&
       (before.uuid == null || before.uuid == after.uuid) &&
       (before.isFolder ||
           ((before.size == null || before.size == after.size) &&
@@ -656,42 +973,101 @@ class FileOperationService {
     return hash.toString();
   }
 
-  Future<FileConflictDecision> _decision(
+  Future<FileConflictResolution> _decision(
     FileOperationEntry entry,
     FileItem existing,
     FileOperationOptions options,
     FileConflictResolver? resolver,
+    DetailedFileConflictResolver? detailedResolver,
   ) async {
+    FileConflictDecision? decision;
     if (entry.source.isFolder) {
-      switch (options.directoryConflict) {
-        case DirectoryConflictPolicy.merge:
-          return FileConflictDecision.merge;
-        case DirectoryConflictPolicy.skip:
-          return FileConflictDecision.skip;
-        case DirectoryConflictPolicy.ask:
-          return resolver == null
-              ? FileConflictDecision.skip
-              : await resolver(entry, existing);
+      decision = switch (options.directoryConflict) {
+        DirectoryConflictPolicy.merge => FileConflictDecision.merge,
+        DirectoryConflictPolicy.skip => FileConflictDecision.skip,
+        DirectoryConflictPolicy.ask => null,
+      };
+    } else {
+      decision = switch (options.fileConflict) {
+        FileConflictPolicy.skip => FileConflictDecision.skip,
+        FileConflictPolicy.replace => FileConflictDecision.replace,
+        FileConflictPolicy.keepBoth => FileConflictDecision.keepBoth,
+        FileConflictPolicy.replaceIfNewer =>
+          entry.source.updatedAt != null &&
+                  existing.updatedAt != null &&
+                  entry.source.updatedAt!.isAfter(existing.updatedAt!)
+              ? FileConflictDecision.replace
+              : FileConflictDecision.skip,
+        FileConflictPolicy.replaceIfLarger =>
+          entry.source.size != null &&
+                  existing.size != null &&
+                  entry.source.size! > existing.size!
+              ? FileConflictDecision.replace
+              : FileConflictDecision.skip,
+        FileConflictPolicy.replaceIfSmaller =>
+          entry.source.size != null &&
+                  existing.size != null &&
+                  entry.source.size! < existing.size!
+              ? FileConflictDecision.replace
+              : FileConflictDecision.skip,
+        FileConflictPolicy.resumeVerified =>
+          FileConflictDecision.resumeVerified,
+        FileConflictPolicy.append => FileConflictDecision.append,
+        FileConflictPolicy.ask => null,
+      };
+    }
+    if (decision != null) return FileConflictResolution(decision);
+    if (detailedResolver != null) return detailedResolver(entry, existing);
+    if (resolver != null) {
+      return FileConflictResolution(await resolver(entry, existing));
+    }
+    throw const FileOperationNeedsDecision();
+  }
+
+  String? _version(FileItem file) {
+    final metadata = file.metadata;
+    for (final key in ['version', 'versionId', 'eTag', 'etag', 'rev', 'cTag']) {
+      if (metadata?[key] != null) return metadata![key].toString();
+    }
+    return null;
+  }
+
+  Future<void> _verifyPrefix(
+    FileOperationBackend source,
+    FileItem original,
+    FileOperationBackend target,
+    FileItem partial,
+    int length,
+    FileOperationControl control,
+  ) async {
+    Stream<List<int>> prefix() async* {
+      var remaining = length;
+      if (remaining == 0) return;
+      await for (final chunk in source.readFile(original)) {
+        await control.checkpoint();
+        _checkSources(source, target);
+        final part = chunk.length <= remaining
+            ? chunk
+            : chunk.sublist(0, remaining);
+        yield part;
+        remaining -= part.length;
+        if (remaining == 0) break;
+      }
+      if (remaining != 0) {
+        throw StateError('Source is shorter than its resume prefix.');
       }
     }
-    switch (options.fileConflict) {
-      case FileConflictPolicy.skip:
-        return FileConflictDecision.skip;
-      case FileConflictPolicy.replace:
-        return FileConflictDecision.replace;
-      case FileConflictPolicy.keepBoth:
-        return FileConflictDecision.keepBoth;
-      case FileConflictPolicy.replaceIfNewer:
-        // Unknown timestamps never authorize an overwrite.
-        return entry.source.updatedAt != null &&
-                existing.updatedAt != null &&
-                entry.source.updatedAt!.isAfter(existing.updatedAt!)
-            ? FileConflictDecision.replace
-            : FileConflictDecision.skip;
-      case FileConflictPolicy.ask:
-        return resolver == null
-            ? FileConflictDecision.skip
-            : await resolver(entry, existing);
+
+    final sourceHash = await sha256.bind(prefix()).first;
+    final targetHash = await _digest(target, partial, control, source);
+    if (sourceHash.toString() != targetHash) {
+      throw StateError(
+        'Resume rejected: destination is not an exact source prefix.',
+      );
+    }
+    final current = await target.stat(partial.path!);
+    if (current == null || !_sameVersion(partial, current)) {
+      throw StateError('Resume destination changed during validation.');
     }
   }
 
@@ -739,4 +1115,12 @@ class FileOperationService {
     if (!backend.isCurrent) throw StateError('The storage account changed.');
     await backend.createDirectory(path);
   }
+}
+
+class _DigestCollector implements Sink<Digest> {
+  Digest? value;
+  @override
+  void add(Digest data) => value = data;
+  @override
+  void close() {}
 }

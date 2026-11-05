@@ -82,7 +82,11 @@ Future<bool> moveNativeNoReplace(String source, String destination) async {
       final rename = libc.lookupFunction<_RenameAt2Native, _RenameAt2>(
         'renameat2',
       );
-      errno = libc.lookupFunction<_ErrnoNative, _Errno>('__errno_location');
+      final errnoSymbol = libc.providesSymbol('__errno_location')
+          ? '__errno_location'
+          : '__errno';
+      if (!libc.providesSymbol(errnoSymbol)) return false;
+      errno = libc.lookupFunction<_ErrnoNative, _Errno>(errnoSymbol);
       // AT_FDCWD = -100; RENAME_NOREPLACE = 1.
       result = rename(-100, from, -100, to, 1);
     } else {

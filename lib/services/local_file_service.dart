@@ -90,6 +90,14 @@ extension LocalFileEditorOperations on LocalFileService {
   }
 }
 
+/// Optional bounded transfer operations. Folder cleanup must be nonrecursive.
+abstract interface class LocalTransferFileOperations {
+  Stream<List<int>> readTransferStream(String path);
+  Future<void> writeTransferStream(String path, Stream<List<int>> data, int? length,
+      {required bool replace});
+  Future<void> deleteDirectoryIfEmpty(String path);
+}
+
 /// Optional per-invocation scope used by concurrent file operations.
 abstract interface class ScopedLocalFileOperations {
   Future<T> withFileOperationAccess<T>(

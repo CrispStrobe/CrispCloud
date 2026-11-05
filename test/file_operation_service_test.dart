@@ -40,6 +40,154 @@ void main() {
     resolveConflict: resolveConflict,
   );
 
+  group('advanced transfer options', () {
+    test(
+      'destination masks are planned recursively and collisions are rejected',
+      () async {
+        source.file('/tree/alpha.txt', 'one');
+        source.file('/tree/deep/beta.jpg', 'two');
+        final plan = await prepare(
+          ['/tree'],
+          options: const FileOperationOptions(
+            destinationMask: '[N]_[C:000].[E]',
+          ),
+        );
+        expect(plan.errors, isEmpty);
+        expect(
+          plan.entries
+              .where((entry) => !entry.source.isFolder)
+              .map((entry) => entry.destination),
+          ['/target/tree/alpha_001.txt', '/target/tree/deep/beta_002.jpg'],
+        );
+        await execute(plan);
+        expect(target.text('/target/tree/alpha_001.txt'), 'one');
+        await expectLater(
+          prepare([
+            '/tree',
+          ], options: const FileOperationOptions(destinationName: '../escape')),
+          throwsFormatException,
+        );
+      },
+    );
+
+    test(
+      'filters prune directories and exclude directories empty after filtering',
+      () async {
+        source.file('/tree/keep/a.txt', '12345');
+        source.file('/tree/small/b.txt', '1');
+        source.file('/tree/cache/c.txt', '123456');
+        final plan = await prepare(
+          ['/tree'],
+          options: FileOperationOptions(
+            minimumSize: 3,
+            maximumSize: 5,
+            excludedDirectories: FileSelectionPattern('cache'),
+            excludeEmptyDirectories: true,
+          ),
+        );
+        await execute(plan);
+        expect(target.text('/target/tree/keep/a.txt'), '12345');
+        expect(target.nodes.containsKey('/target/tree/small'), isFalse);
+        expect(target.nodes.containsKey('/target/tree/cache'), isFalse);
+        expect(
+          plan.entries.any((entry) => entry.source.name == 'c.txt'),
+          isFalse,
+        );
+      },
+    );
+
+    test('a verified resume validates the entire old prefix and preserves source on mismatch', () async {
+      source.file('/source/a.txt', 'abcdefgh');
+      target.file('/target/a.txt', 'abcd');
+      final plan = await prepare(
+        ['/source/a.txt'],
+        options: const FileOperationOptions(
+          fileConflict: FileConflictPolicy.resumeVerified,
+        ),
+      );
+      await execute(plan);
+      expect(target.text('/target/a.txt'), 'abcdefgh');
+      expect(plan.entries.single.outcome, FileOperationOutcome.copied);
+      target.file('/target/a.txt', 'wrong');
+      final mismatch = await prepare(
+        ['/source/a.txt'],
+        options: const FileOperationOptions(
+          kind: FileOperationKind.move,
+          fileConflict: FileConflictPolicy.resumeVerified,
+        ),
+      );
+      await execute(mismatch);
+      expect(mismatch.entries.single.failed, isTrue);
+      expect(target.text('/target/a.txt'), 'wrong');
+      expect(source.text('/source/a.txt'), 'abcdefgh');
+    });
+
+    test('append stages complete combined content before replacing', () async {
+      source.file('/source/a.txt', 'new');
+      target.file('/target/a.txt', 'old');
+      final plan = await prepare(
+        ['/source/a.txt'],
+        options: const FileOperationOptions(
+          fileConflict: FileConflictPolicy.append,
+        ),
+      );
+      await execute(plan);
+      expect(target.text('/target/a.txt'), 'oldnew');
+      expect(plan.entries.single.outcome, FileOperationOutcome.copied);
+    });
+
+    test('apply-to-all asks once and manual incoming names are confined to the directory', () async {
+      source.file('/source/a.txt', 'new a');
+      source.file('/source/b.txt', 'new b');
+      target.file('/target/a.txt', 'old a');
+      target.file('/target/b.txt', 'old b');
+      final plan = await prepare(['/source/a.txt', '/source/b.txt']);
+      var asked = 0;
+      await service.execute(
+        plan,
+        control: FileOperationControl(),
+        resolveDetailedConflict: (entry, existing) async {
+          asked++;
+          return const FileConflictResolution(
+            FileConflictDecision.skip,
+            applyToAll: true,
+          );
+        },
+      );
+      expect(asked, 1);
+      expect(
+        plan.entries.every(
+          (entry) => entry.outcome == FileOperationOutcome.skipped,
+        ),
+        isTrue,
+      );
+      final renamed = await prepare(['/source/a.txt']);
+      await service.execute(
+        renamed,
+        control: FileOperationControl(),
+        resolveDetailedConflict: (entry, existing) async =>
+            const FileConflictResolution(
+              FileConflictDecision.renameSource,
+              name: 'renamed.txt',
+            ),
+      );
+      expect(target.text('/target/renamed.txt'), 'new a');
+      expect(target.text('/target/a.txt'), 'old a');
+    });
+
+    test('background ask enters needs-decision without silently skipping remaining work', () async {
+      source.file('/source/a.txt', 'new a');
+      source.file('/source/b.txt', 'new b');
+      target.file('/target/a.txt', 'old a');
+      final plan = await prepare(['/source/a.txt', '/source/b.txt']);
+      await execute(plan);
+      expect(plan.entries.first.outcome, FileOperationOutcome.needsDecision);
+      expect(plan.entries.last.outcome, FileOperationOutcome.pending);
+      expect(target.text('/target/a.txt'), 'old a');
+      expect(target.nodes.containsKey('/target/b.txt'), isFalse);
+    });
+  });
+
   group('selection and destination planning', () {
     test('same-directory Keep both creates a distinct copy and preserves the source', () async {
       source.file('/tree/a.txt', 'original');

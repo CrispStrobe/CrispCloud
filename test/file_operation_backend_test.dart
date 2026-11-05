@@ -49,6 +49,36 @@ void main() {
         );
       }
 
+      test(
+        'staged verification rejects corruption before replacing the original',
+        () async {
+          final file = await existingFile();
+          final phases = <String>[];
+          await expectLater(
+            backend.writePreparedFile(
+              file.path,
+              Stream.value(utf8.encode('new')),
+              3,
+              replace: true,
+              checkpoint: (state) async {
+                phases.add(state['phase'] as String);
+              },
+              verifyStaged: (staged) async {
+                expect(staged.path, isNot(file.path));
+                expect(await File(staged.path!).readAsString(), 'new');
+                expect(await file.readAsString(), 'original');
+                throw StateError('Digest mismatch');
+              },
+            ),
+            throwsStateError,
+          );
+          expect(await file.readAsString(), 'original');
+          expect(phases, contains('staging'));
+          expect(phases, isNot(contains('committed')));
+          await expectNoStages();
+        },
+      );
+
       test('a stream error never truncates an existing destination', () async {
         final file = await existingFile();
         Stream<List<int>> failingStream() async* {
@@ -235,6 +265,29 @@ void main() {
       client = _CloudClient();
       backend = CloudOperationBackend(client, isCurrent: () => true);
     });
+
+    test(
+      'cloud verification runs before the old destination is backed up',
+      () async {
+        client.put('/target/a.txt', 'original');
+        await expectLater(
+          backend.writePreparedFile(
+            '/target/a.txt',
+            Stream.value(utf8.encode('new')),
+            3,
+            replace: true,
+            verifyStaged: (staged) async {
+              expect(staged.path, contains('.crisp-transfer-'));
+              expect(client.text('/target/a.txt'), 'original');
+              throw StateError('Digest mismatch');
+            },
+          ),
+          throwsStateError,
+        );
+        expect(client.text('/target/a.txt'), 'original');
+        expect(client.renames, isEmpty);
+      },
+    );
 
     test('case aliases cannot bypass cloud no-overwrite checks', () async {
       client.put('/target/Photo.txt', 'original');
