@@ -115,7 +115,8 @@ Future<GlobalKey<ProImageEditorState>> _openCrop(WidgetTester tester) async {
   await tester.tap(find.text('Open image'));
   await _until(
     tester,
-    () => cropCommand.evaluate().isNotEmpty &&
+    () =>
+        cropCommand.evaluate().isNotEmpty &&
         tester.widget<TextButton>(cropCommand).onPressed != null,
     reason: 'decoded image and host commands',
   );
@@ -128,7 +129,9 @@ Future<GlobalKey<ProImageEditorState>> _openCrop(WidgetTester tester) async {
   await tester.pump(const Duration(milliseconds: 400));
   await _until(
     tester,
-    () => _cropMotionComplete(editorKey.currentState!.cropRotateEditor.currentState!),
+    () => _cropMotionComplete(
+      editorKey.currentState!.cropRotateEditor.currentState!,
+    ),
     reason: 'crop entrance fade and fit complete',
   );
   return editorKey;
@@ -186,7 +189,8 @@ void main() {
 
       await _until(
         tester,
-        () => !editorKey.currentState!.isSubEditorOpen && !_actions(tester).busy,
+        () =>
+            !editorKey.currentState!.isSubEditorOpen && !_actions(tester).busy,
         reason: 'completed crop route transition',
       );
       expect(find.byType(ImageEditorDialog), findsOneWidget);
@@ -194,47 +198,49 @@ void main() {
     },
   );
 
-  _desktopTestWidgets('a host modal blocks crop keyboard edits until it is dismissed', (
-    tester,
-  ) async {
-    final editorKey = await _openCrop(tester);
-    final crop = editorKey.currentState!.cropRotateEditor.currentState!;
-    final initialRotation = crop.rotationCount;
-    final overlay = showDialog<void>(
-      context: tester.element(find.byType(ImageEditorDialog)),
-      useRootNavigator: true,
-      builder: (context) => AlertDialog(
-        title: const Text('Host settings'),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.of(context).pop(),
-            child: const Text('Close overlay'),
-          ),
-        ],
-      ),
-    );
-    await _until(
-      tester,
-      () => _actions(tester).busy,
-      reason: 'host overlay takes command focus',
-    );
-    await tester.sendKeyEvent(LogicalKeyboardKey.keyR);
-    await tester.pump(const Duration(milliseconds: 400));
-    expect(crop.rotationCount, initialRotation);
-    expect(crop.canUndo, isFalse);
+  _desktopTestWidgets(
+    'a host modal blocks crop keyboard edits until it is dismissed',
+    (tester) async {
+      final editorKey = await _openCrop(tester);
+      final crop = editorKey.currentState!.cropRotateEditor.currentState!;
+      final initialRotation = crop.rotationCount;
+      final overlay = showDialog<void>(
+        context: tester.element(find.byType(ImageEditorDialog)),
+        useRootNavigator: true,
+        builder: (context) => AlertDialog(
+          title: const Text('Host settings'),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.of(context).pop(),
+              child: const Text('Close overlay'),
+            ),
+          ],
+        ),
+      );
+      await _until(
+        tester,
+        () => _actions(tester).busy,
+        reason: 'host overlay takes command focus',
+      );
+      await tester.sendKeyEvent(LogicalKeyboardKey.keyR);
+      await tester.pump(const Duration(milliseconds: 400));
+      expect(crop.rotationCount, initialRotation);
+      expect(crop.canUndo, isFalse);
 
-    await tester.tap(find.text('Close overlay'));
-    await overlay;
-    await tester.pump(const Duration(milliseconds: 400));
-    await tester.sendKeyEvent(LogicalKeyboardKey.keyR);
-    await _until(
-      tester,
-      () => crop.rotationCount != initialRotation &&
-          crop.canUndo &&
-          _cropMotionComplete(crop),
-      reason: 'crop shortcut resumes on the visible route',
-    );
-    expect(crop.canUndo, isTrue);
-    expect(find.byType(ImageEditorDialog), findsOneWidget);
-  });
+      await tester.tap(find.text('Close overlay'));
+      await overlay;
+      await tester.pump(const Duration(milliseconds: 400));
+      await tester.sendKeyEvent(LogicalKeyboardKey.keyR);
+      await _until(
+        tester,
+        () =>
+            crop.rotationCount != initialRotation &&
+            crop.canUndo &&
+            _cropMotionComplete(crop),
+        reason: 'crop shortcut resumes on the visible route',
+      );
+      expect(crop.canUndo, isTrue);
+      expect(find.byType(ImageEditorDialog), findsOneWidget);
+    },
+  );
 }

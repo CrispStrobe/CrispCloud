@@ -263,46 +263,51 @@ void main() {
   installImageEditorBrowserDiagnostics();
   setUp(() => SharedPreferences.setMockInitialValues({}));
 
-  _desktopTestWidgets('initial clean state and undo branches use real editor history', (
-    tester,
-  ) async {
-    final harness = _Harness(tester, _MemoryImageStore());
-    await harness.open();
-    expect(_saveEnabled(tester), isFalse);
-    expect(harness.actions.isEnabled(ImageEditorAction.save), isFalse);
-    expect(harness.actions.isEnabled(ImageEditorAction.undo), isFalse);
+  _desktopTestWidgets(
+    'initial clean state and undo branches use real editor history',
+    (tester) async {
+      final harness = _Harness(tester, _MemoryImageStore());
+      await harness.open();
+      expect(_saveEnabled(tester), isFalse);
+      expect(harness.actions.isEnabled(ImageEditorAction.save), isFalse);
+      expect(harness.actions.isEnabled(ImageEditorAction.undo), isFalse);
 
-    await harness.addText('First');
-    expect(harness.actions.isEnabled(ImageEditorAction.undo), isTrue);
-    await tester.tap(_command(ImageEditorAction.undo));
-    await _until(
-      tester,
-      () => !_saveEnabled(tester),
-      reason: 'undo to opened image',
-    );
-    expect(harness.editor.activeLayers, isEmpty);
-    expect(harness.actions.isEnabled(ImageEditorAction.redo), isTrue);
+      await harness.addText('First');
+      expect(harness.actions.isEnabled(ImageEditorAction.undo), isTrue);
+      await tester.tap(_command(ImageEditorAction.undo));
+      await _until(
+        tester,
+        () => !_saveEnabled(tester),
+        reason: 'undo to opened image',
+      );
+      expect(harness.editor.activeLayers, isEmpty);
+      expect(harness.actions.isEnabled(ImageEditorAction.redo), isTrue);
 
-    await tester.tap(_command(ImageEditorAction.redo));
-    await _until(tester, () => _saveEnabled(tester), reason: 'redo text edit');
-    expect(
-      harness.editor.activeLayers.whereType<TextLayer>().single.text,
-      'First',
-    );
-    await tester.tap(_command(ImageEditorAction.undo));
-    await _until(
-      tester,
-      () => !_saveEnabled(tester),
-      reason: 'undo before branch',
-    );
-    await harness.addText('Different branch');
-    expect(harness.actions.isEnabled(ImageEditorAction.redo), isFalse);
-    expect(
-      harness.editor.activeLayers.whereType<TextLayer>().single.text,
-      'Different branch',
-    );
-    expect(harness.store.writes, isEmpty);
-  });
+      await tester.tap(_command(ImageEditorAction.redo));
+      await _until(
+        tester,
+        () => _saveEnabled(tester),
+        reason: 'redo text edit',
+      );
+      expect(
+        harness.editor.activeLayers.whereType<TextLayer>().single.text,
+        'First',
+      );
+      await tester.tap(_command(ImageEditorAction.undo));
+      await _until(
+        tester,
+        () => !_saveEnabled(tester),
+        reason: 'undo before branch',
+      );
+      await harness.addText('Different branch');
+      expect(harness.actions.isEnabled(ImageEditorAction.redo), isFalse);
+      expect(
+        harness.editor.activeLayers.whereType<TextLayer>().single.text,
+        'Different branch',
+      );
+      expect(harness.store.writes, isEmpty);
+    },
+  );
 
   _desktopTestWidgets(
     'PNG rotate, repeated save, undo and reopen preserve alpha and dimensions',
@@ -555,36 +560,37 @@ void main() {
     },
   );
 
-  _desktopTestWidgets('pending source write locks commands and duplicate saves', (
-    tester,
-  ) async {
-    final upload = Completer<ImageSaveOutcome>();
-    final store = _MemoryImageStore()..writer = (_) => upload.future;
-    final harness = _Harness(tester, store);
-    await harness.open();
-    await harness.addText('One write');
-    await tester.tap(_save);
-    await _until(
-      tester,
-      () => store.writes.length == 1,
-      reason: 'capture before pending upload',
-    );
-    expect(tester.widget<IconButton>(_close).onPressed, isNull);
-    expect(harness.actions.isEnabled(ImageEditorAction.save), isFalse);
-    expect(harness.actions.isEnabled(ImageEditorAction.undo), isFalse);
-    harness.actions.dispatch(ImageEditorAction.save);
-    harness.actions.dispatch(ImageEditorAction.close);
-    await tester.pump();
-    expect(store.writes, hasLength(1));
-    expect(find.byType(ImageEditorDialog), findsOneWidget);
-    upload.complete(ImageSaveOutcome.savedOriginal);
-    await _until(
-      tester,
-      () => !harness.actions.busy && !_saveEnabled(tester),
-      reason: 'successful upload unlock',
-    );
-    expect(store.writes, hasLength(1));
-  });
+  _desktopTestWidgets(
+    'pending source write locks commands and duplicate saves',
+    (tester) async {
+      final upload = Completer<ImageSaveOutcome>();
+      final store = _MemoryImageStore()..writer = (_) => upload.future;
+      final harness = _Harness(tester, store);
+      await harness.open();
+      await harness.addText('One write');
+      await tester.tap(_save);
+      await _until(
+        tester,
+        () => store.writes.length == 1,
+        reason: 'capture before pending upload',
+      );
+      expect(tester.widget<IconButton>(_close).onPressed, isNull);
+      expect(harness.actions.isEnabled(ImageEditorAction.save), isFalse);
+      expect(harness.actions.isEnabled(ImageEditorAction.undo), isFalse);
+      harness.actions.dispatch(ImageEditorAction.save);
+      harness.actions.dispatch(ImageEditorAction.close);
+      await tester.pump();
+      expect(store.writes, hasLength(1));
+      expect(find.byType(ImageEditorDialog), findsOneWidget);
+      upload.complete(ImageSaveOutcome.savedOriginal);
+      await _until(
+        tester,
+        () => !harness.actions.busy && !_saveEnabled(tester),
+        reason: 'successful upload unlock',
+      );
+      expect(store.writes, hasLength(1));
+    },
+  );
 
   _desktopTestWidgets(
     'browser production worker captures an edited image and reopens it',

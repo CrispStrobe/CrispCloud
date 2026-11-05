@@ -42,7 +42,7 @@ jobs:
       - run: flutter pub get
       - name: Format image integration
         run: >-
-          dart format
+          dart format --set-exit-if-changed
           lib/l10n/image_editor*.dart lib/services/image_*.dart
           lib/widgets/image_editor*.dart test/image_*.dart
           test/widget/image_editor*.dart test/support/image_editor*.dart
@@ -115,7 +115,7 @@ jobs:
           cache: true
       - run: flutter pub get
       - name: Build the worker from the locked application dependencies
-        run: python3 tool/build_image_editor_worker.py
+        run: python3 tool/build_image_editor_worker.py --check
       - name: Serve the production image worker in the Flutter test harness
         run: python3 tool/prepare_image_editor_browser_test.py
       - name: Browser routing and native-menu bridge
@@ -149,7 +149,7 @@ jobs:
         run: flutter pub get
       - name: Build the shipped worker and preserve reviewable output
         working-directory: .
-        run: python3 tool/build_image_editor_worker.py --emit-review
+        run: python3 tool/build_image_editor_worker.py --check --emit-review
       - run: flutter pub get
       - name: Analyze maintained engine
         run: flutter analyze --no-fatal-infos --no-fatal-warnings lib test/crispcloud

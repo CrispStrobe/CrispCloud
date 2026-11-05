@@ -117,6 +117,7 @@ Use the SDK pinned by `.fvmrc` (Flutter 3.47.8):
 ```bash
 flutter pub get
 python3 tool/check_image_editor_i18n.py
+python3 tool/build_image_editor_worker.py --check
 flutter test --concurrency=2 \
   test/image_edit_session_test.dart test/image_file_store_test.dart \
   test/image_editor_live_test.dart test/image_editor_menu_test.dart \
@@ -160,3 +161,32 @@ The `Image editor` workflow runs these gates on this feature branch, relevant
 main pushes, and pull requests. It records the exact formatting/dependency
 patch produced by the pinned toolchain as a review artifact; those changes
 must be incorporated before completing the branch.
+
+## Verified source checkpoint — 5 November 2026
+
+The [image workflow](https://github.com/CrispStrobe/CrispCloud/actions/runs/41995740547)
+passed on source commit `159229b4ea1bab4d6ded65729d4a484a639e568f` using
+Flutter 3.47.8 / Dart 3.13.7. That workflow rebuilt the production worker from
+the application lockfile before testing it. The exact generated outputs are
+committed with their SHA-256 values in `packages/pro_image_editor/UPSTREAM.md`.
+CI now checks that these committed assets reproduce from source and fails if
+the formatter would change the integration files.
+
+| Gate | Result |
+| --- | --- |
+| Session, origin/account/conflict, real disk, routing, menus, and shared PDF store | 82 passed |
+| Translation catalog tests | 5 passed |
+| Real editor lifecycle on the Flutter test runtime | 12 passed; browser-only worker case intentionally skipped |
+| Chrome routing and native menu bridge | 7 passed |
+| Chrome real editor lifecycle and production worker save/reopen | 13 passed |
+| Maintained engine regressions | 42 passed |
+| Browser byte transfer, successful PNG/JPEG worker encoding, and worker error recovery | 6 passed |
+| Localization source gate | 9 complete locales, 146 keys each, 136 mapped engine strings |
+
+The [broader application CI](https://github.com/CrispStrobe/CrispCloud/actions/runs/41995740532)
+also passed its analysis policy, 4,765 application tests (5 intentional skips),
+12 shared storage tests, 104 CLI tests, and the Linux/macOS/Windows crypto gates.
+Native application build results remain visible separately on the pull request.
+These are CI execution results; the local editing environment could not start
+the Dart VM. No credential-dependent cloud provider test is implied by the
+real-file and rendered-editor results above.
