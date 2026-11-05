@@ -12,6 +12,7 @@ import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../models/panel_side.dart';
+import '../models/file_item.dart';
 import '../providers/providers.dart';
 import '../providers/panel_source_provider.dart'
     show fkeyBarVisibleProvider, panelSourceProvider;
@@ -46,6 +47,7 @@ import '../widgets/file_collections_dialog.dart';
 import '../widgets/rename_history_dialog.dart';
 import '../widgets/trash_history_dialog.dart';
 import '../widgets/transfer_history_dialog.dart';
+import '../widgets/integrity_dialogs.dart';
 import '../widgets/directory_comparison_dialog.dart';
 import '../widgets/file_clipboard_actions.dart';
 import '../widgets/file_toolbar.dart' show showPanelFilterDialog;
@@ -212,6 +214,13 @@ class _FileBrowserScreenState extends ConsumerState<FileBrowserScreen> {
 
   PanelNotifier _activePanel(WidgetRef ref) =>
       ref.read(panelProvider(ref.read(activePanelProvider)));
+
+  List<FileItem> _integritySelection(WidgetRef ref) {
+    final panel = _activePanel(ref);
+    return panel.selection.isNotEmpty
+        ? panel.selection.toList()
+        : [if (panel.cursorItem case final file?) file];
+  }
 
   List<PlatformMenuItem> _buildMacMenus(
     BuildContext context,
@@ -415,6 +424,35 @@ class _FileBrowserScreenState extends ConsumerState<FileBrowserScreen> {
       PlatformMenuItem(
         label: 'Transfer Queue and Recovery...',
         onSelected: () => showTransferHistoryDialog(context, ref),
+      ),
+      PlatformMenuItem(
+        label: 'Create or Verify Checksums...',
+        onSelected: () => showChecksumToolsDialog(
+          context,
+          ref,
+          ref.read(activePanelProvider),
+          _integritySelection(ref),
+        ),
+      ),
+      PlatformMenuItem(
+        label: 'Split File...',
+        onSelected: _integritySelection(ref).length == 1
+            ? () => showSplitFileDialog(
+                context,
+                ref,
+                ref.read(activePanelProvider),
+                _integritySelection(ref).single,
+              )
+            : null,
+      ),
+      PlatformMenuItem(
+        label: 'Combine Parts...',
+        onSelected: () => showCombinePartsDialog(
+          context,
+          ref,
+          ref.read(activePanelProvider),
+          _integritySelection(ref),
+        ),
       ),
       PlatformMenuItem(
         label: 'Import File List...',
@@ -1796,6 +1834,30 @@ class _FileBrowserScreenState extends ConsumerState<FileBrowserScreen> {
             showTrashHistoryDialog(context, ref, ref.read(activePanelProvider));
           case 'transfer_history':
             showTransferHistoryDialog(context, ref);
+          case 'checksums':
+            showChecksumToolsDialog(
+              context,
+              ref,
+              ref.read(activePanelProvider),
+              _integritySelection(ref),
+            );
+          case 'split_file':
+            final files = _integritySelection(ref);
+            if (files.length == 1) {
+              showSplitFileDialog(
+                context,
+                ref,
+                ref.read(activePanelProvider),
+                files.single,
+              );
+            }
+          case 'combine_parts':
+            showCombinePartsDialog(
+              context,
+              ref,
+              ref.read(activePanelProvider),
+              _integritySelection(ref),
+            );
           case 'rename_history':
             showRenameHistoryDialog(
               context,
@@ -1905,6 +1967,22 @@ class _FileBrowserScreenState extends ConsumerState<FileBrowserScreen> {
             Icons.pending_actions,
             'Transfer queue and recovery…',
           ),
+        ),
+        PopupMenuItem(
+          value: 'checksums',
+          child: _overflowItem(
+            Icons.verified_outlined,
+            'Create or verify checksums…',
+          ),
+        ),
+        PopupMenuItem(
+          value: 'split_file',
+          enabled: _integritySelection(ref).length == 1,
+          child: _overflowItem(Icons.splitscreen, 'Split file…'),
+        ),
+        PopupMenuItem(
+          value: 'combine_parts',
+          child: _overflowItem(Icons.join_inner, 'Combine parts…'),
         ),
         PopupMenuItem(
           value: 'pattern_selection',

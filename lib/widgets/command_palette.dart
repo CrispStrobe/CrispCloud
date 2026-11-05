@@ -25,6 +25,7 @@ import 'file_collections_dialog.dart';
 import 'rename_history_dialog.dart';
 import 'trash_history_dialog.dart';
 import 'transfer_history_dialog.dart';
+import 'integrity_dialogs.dart';
 import 'directory_comparison_dialog.dart';
 import 'file_clipboard_actions.dart';
 import 'pdf_editor_dialog.dart';
@@ -212,6 +213,30 @@ class _CommandPaletteState extends ConsumerState<CommandPalette> {
         icon: Icons.pending_actions,
         action: () => showTransferHistoryDialog(widget.parentContext, ref),
       ),
+      _Command(
+        name: 'Create or Verify Checksums',
+        icon: Icons.verified_outlined,
+        action: () =>
+            showChecksumToolsDialog(widget.parentContext, ref, side, pdfFiles),
+      ),
+      if (pdfFiles.length == 1 && !pdfFiles.single.isFolder)
+        _Command(
+          name: 'Split File into Verified Parts',
+          icon: Icons.splitscreen,
+          action: () => showSplitFileDialog(
+            widget.parentContext,
+            ref,
+            side,
+            pdfFiles.single,
+          ),
+        ),
+      if (pdfFiles.isNotEmpty && pdfFiles.every((file) => !file.isFolder))
+        _Command(
+          name: 'Combine Parts or Split Manifest',
+          icon: Icons.join_inner,
+          action: () =>
+              showCombinePartsDialog(widget.parentContext, ref, side, pdfFiles),
+        ),
       _Command(
         name: 'Save or Manage File Collections',
         icon: Icons.collections_bookmark_outlined,
