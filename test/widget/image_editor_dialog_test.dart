@@ -5,6 +5,7 @@ import 'dart:ui' show PointerDeviceKind;
 import 'package:crisp_cloud/models/file_item.dart';
 import 'package:crisp_cloud/models/panel_side.dart';
 import 'package:crisp_cloud/services/image_edit_session.dart';
+import 'package:crisp_cloud/services/image_edit_project.dart';
 import 'package:crisp_cloud/services/image_editor_menu.dart';
 import 'package:crisp_cloud/services/image_file_store.dart';
 import 'package:crisp_cloud/widgets/image_editor_dialog.dart';
@@ -299,6 +300,45 @@ void main() {
       await harness.save();
       final result = image.decodePng(harness.store.writes.single)!;
       expect((result.width, result.height), (24, 16));
+    },
+  );
+
+  _desktopTestWidgets(
+    'project history restores editable text on the original image',
+    (tester) async {
+      final store = _MemoryImageStore();
+      final first = _Harness(tester, store);
+      await first.open();
+      await first.addText('Editable project');
+      final history = await tester.runAsync(
+        () async => (await first.editor.exportStateHistory()).toMap(),
+      );
+      expect(history, isNotNull);
+      final project = ImageEditProject.decode(
+        ImageEditProject(
+          sourceName: store.displayName,
+          sourceBytes: store.bytes,
+          history: history!,
+        ).encode(),
+      );
+      await tester.pumpWidget(const SizedBox.shrink());
+      final second = _Harness(
+        tester,
+        _MemoryImageStore(input: project.sourceBytes),
+      );
+      await second.open();
+      var imported = false;
+      unawaited(
+        second.editor
+            .importStateHistory(ImportStateHistory.fromMap(project.history))
+            .then((_) => imported = true),
+      );
+      await _until(tester, () => imported, reason: 'project history import');
+      expect(
+        second.editor.activeLayers.whereType<TextLayer>().single.text,
+        'Editable project',
+      );
+      expect(_saveEnabled(tester), isTrue);
     },
   );
 
