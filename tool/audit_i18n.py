@@ -11,7 +11,8 @@ import re
 ROOT = Path(__file__).resolve().parent.parent
 PATTERN = re.compile(
     r"\b(?:Text|Tooltip)\s*\(\s*(?:const\s+)?[rR]?['\"]"
-    r"|\b(?:labelText|hintText|helperText|errorText|semanticLabel|tooltip)"
+    r"|\b(?:labelText|hintText|helperText|errorText|semanticLabel|tooltip|"
+    r"label|title|subtitle|message|description|confirmLabel|cancelLabel)"
     r"\s*:\s*[rR]?['\"]"
 )
 
