@@ -142,18 +142,29 @@ void main() {
     await tester.pumpWidget(UncontrolledProviderScope(container: container,
       child: Consumer(builder: (_, value, __) { ref = value; return const SizedBox(); })));
     final panel = container.read(panelProvider(PanelSide.remote));
+    // Finish the source notifier's initial preference restoration before
+    // explicitly choosing a folder.
+    await tester.pump();
     await tester.runAsync(() async {
-      await Future<void>.delayed(const Duration(milliseconds: 10));
       container.read(panelSourceProvider(PanelSide.remote).notifier)
           .setSource(LocalPanelSource(dir.path));
-      await Future<void>.delayed(const Duration(milliseconds: 10));
+      // Native listings publish names before their asynchronous metadata
+      // pass replaces FileItem instances and verifies the complete listing.
+      // Wait for that work, rather than assuming it finishes within 10 ms.
+      await panel.refresh();
     });
+    expect(panel.isLoading, isFalse);
     final listed = panel.files!.firstWhere((file) => !file.isFolder);
+    expect(listed.size, 3);
+    expect(panel.originForFile(listed)?.source,
+        isA<LocalPanelSource>().having((source) => source.path, 'path', dir.path));
     final before = captureGalleryMediaRequest(ref, PanelSide.remote, listed);
     expect(before.isRemote, isFalse);
+    expect(before.isCurrent, isTrue);
     local.rootToken = Object();
     final after = captureGalleryMediaRequest(ref, PanelSide.remote, listed);
     expect(before.isCurrent, isFalse);
+    expect(after.isCurrent, isTrue);
     expect(after.namespaceId, isNot(before.namespaceId));
     expect(after.assetId, isNot(before.assetId));
     await tester.pumpWidget(const SizedBox());

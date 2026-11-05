@@ -135,7 +135,17 @@ void main() {
     final second = image.Image(width: 2, height: 2, numChannels: 3)
       ..clear(image.ColorRgb8(0, 0, 255));
     first.addFrame(second);
-    final bytes = image.encodeGif(first);
+    // image 4.12's default sampling factor of 10 samples no pixels from a
+    // 2x2 frame, leaving a grayscale palette. Preserve the fixture's colors.
+    final bytes = image.encodeGif(first, samplingFactor: 1);
+    final fixture = image.GifDecoder();
+    expect(fixture.startDecode(bytes)?.numFrames, 2);
+    final firstFrame = fixture.decodeFrame(0)!;
+    final secondFrame = fixture.decodeFrame(1)!;
+    expect(firstFrame.getPixel(0, 0).r, greaterThan(245));
+    expect(firstFrame.getPixel(0, 0).b, lessThan(10));
+    expect(secondFrame.getPixel(0, 0).b, greaterThan(245));
+    expect(secondFrame.getPixel(0, 0).r, lessThan(10));
     final service = GalleryExportService(loadImage: (_) async =>
       _data(bytes, width: 2, height: 2, frameCount: 2));
     final report = await service.convert([_request('animated.gif')],

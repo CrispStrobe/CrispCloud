@@ -6,6 +6,7 @@ import 'package:crisp_cloud/models/file_item.dart';
 import 'package:crisp_cloud/services/gallery_device_export.dart';
 import 'package:crisp_cloud/services/gallery_media_service.dart';
 import 'package:crisp_cloud/widgets/gallery_viewer_dialog.dart';
+import 'package:flutter/gestures.dart' show kDoubleTapTimeout;
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_test/flutter_test.dart';
@@ -256,7 +257,9 @@ void main() {
     await tester.tap(find.byTooltip('Unlink zoom and pan'));
     await tester.pump();
     await tester.tap(find.byKey(const ValueKey('gallery-canvas-1')));
-    await tester.pump();
+    // Finish the canvas's single-tap recognition window. Zero-duration pumps
+    // leave Flutter's minimum double-tap countdown pending at test teardown.
+    await tester.pump(kDoubleTapTimeout);
     await tester.tap(find.byTooltip('Zoom in'));
     await tester.pump();
     expect(scales()[0], closeTo(1.25, 0.00001));
