@@ -5,6 +5,7 @@ import 'package:crisp_cloud/models/file_item.dart';
 import 'package:crisp_cloud/models/file_search_query.dart';
 import 'package:crisp_cloud/services/file_operation_service.dart';
 import 'package:crisp_cloud/services/file_selection_pattern.dart';
+import 'package:crisp_cloud/services/storage_transfer_contract.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:path/path.dart' as p;
 
@@ -154,6 +155,60 @@ void main() {
       expect(plan.errors.join(), contains('Directory metadata exceeds'));
       expect(target.writeAttempts, isEmpty);
     });
+  });
+
+  group('copy method contracts', () {
+    for (final method in FileCopyMethod.values) {
+      test('${method.name} honors a filesystem that refuses cloning', () async {
+        final native = _DecliningCloneBackend()
+          ..file('/source/a.txt', 'copy contents')
+          ..directory('/target');
+        final plan = await service.prepare(
+          files: [native.item('/source/a.txt')],
+          source: native,
+          destination: native,
+          targetDirectory: '/target',
+          options: FileOperationOptions(copyMethod: method),
+        );
+        expect(plan.canExecute, isTrue);
+        await execute(plan);
+        if (method == FileCopyMethod.copyOnWrite) {
+          expect(plan.entries.single.outcome, FileOperationOutcome.failed);
+          expect(native.contains('/target/a.txt'), isFalse);
+          expect(native.writeAttempts, isEmpty);
+        } else {
+          expect(plan.entries.single.outcome, FileOperationOutcome.copied);
+          expect(native.text('/target/a.txt'), 'copy contents');
+        }
+        expect(native.cloneAttempts, method == FileCopyMethod.stream ? 0 : 1);
+        expect(native.text('/source/a.txt'), 'copy contents');
+      });
+    }
+
+    test(
+      'incompatible allocation and required clone settings fail in preview',
+      () async {
+        final native = _DecliningCloneBackend()
+          ..file('/source/a.txt', 'contents')
+          ..directory('/target');
+        final plan = await service.prepare(
+          files: [native.item('/source/a.txt')],
+          source: native,
+          destination: native,
+          targetDirectory: '/target',
+          options: const FileOperationOptions(
+            copyMethod: FileCopyMethod.copyOnWrite,
+            preallocate: true,
+          ),
+        );
+        expect(plan.canExecute, isFalse);
+        expect(
+          plan.errors.join(),
+          contains('Full allocation cannot be combined'),
+        );
+        expect(native.writeAttempts, isEmpty);
+      },
+    );
   });
 
   group('selected sources on the destination account', () {
@@ -1379,6 +1434,25 @@ void main() {
       expect(target.contains('/target/link'), isFalse);
     });
   });
+}
+
+class _DecliningCloneBackend extends _MemoryBackend {
+  _DecliningCloneBackend() : super('clone');
+  int cloneAttempts = 0;
+  @override
+  StorageTransferCapabilities get capabilities =>
+      const StorageTransferCapabilities(copyOnWrite: true, preallocate: true);
+  @override
+  Future<bool> clonePreparedFile(
+    FileItem source,
+    String destination, {
+    required bool replace,
+    Future<void> Function(FileItem)? verifyStaged,
+    Future<void> Function(Map<String, dynamic>)? checkpoint,
+  }) async {
+    cloneAttempts++;
+    return false;
+  }
 }
 
 class _MemoryNode {

@@ -77,6 +77,36 @@ abstract class FileOperationBackend {
     required bool replace,
     TransferCheckpoint? checkpoint,
   }) async => false;
+
+  Future<void> writeConfiguredFile(
+    String path,
+    Stream<List<int>> data,
+    int? length, {
+    required bool replace,
+    bool preallocate = false,
+    Future<void> Function(FileItem staged)? verifyStaged,
+    Future<void> Function(Map<String, dynamic> state)? checkpoint,
+  }) async {
+    if (preallocate) {
+      throw UnsupportedError('This storage cannot reserve disk space.');
+    }
+    await writePreparedFile(
+      path,
+      data,
+      length,
+      replace: replace,
+      verifyStaged: verifyStaged,
+      checkpoint: checkpoint,
+    );
+  }
+
+  Future<bool> clonePreparedFile(
+    FileItem source,
+    String destination, {
+    required bool replace,
+    Future<void> Function(FileItem staged)? verifyStaged,
+    Future<void> Function(Map<String, dynamic> state)? checkpoint,
+  }) async => false;
   Future<void> renameExisting(FileItem file, String destination) async {
     if (!await moveNoReplace(file, destination)) {
       throw UnsupportedError(
@@ -349,6 +379,28 @@ class FileOperationService {
     if (options.preserveModified && !destination.supportsModifiedTime) {
       errors.add('The destination cannot preserve modification times.');
     }
+    if (options.preallocate && !destination.capabilities.preallocate) {
+      errors.add('The destination cannot reserve physical disk space.');
+    }
+    if (options.copyMethod == FileCopyMethod.copyOnWrite) {
+      if (source.identity != destination.identity ||
+          !destination.capabilities.copyOnWrite) {
+        errors.add(
+          'Copy-on-write requires the same native filesystem backend.',
+        );
+      }
+      if (options.preallocate) {
+        errors.add(
+          'Full allocation cannot be combined with a required copy-on-write clone.',
+        );
+      }
+      if (options.fileConflict == FileConflictPolicy.append ||
+          options.fileConflict == FileConflictPolicy.resumeVerified) {
+        errors.add(
+          'Append and partial-file resume cannot require copy-on-write.',
+        );
+      }
+    }
     if (options.copySymbolicLinks &&
         (!source.supportsSymbolicLinks || !destination.supportsSymbolicLinks)) {
       errors.add('Copying symbolic links requires two local filesystems.');
@@ -528,6 +580,12 @@ class FileOperationService {
         entry.outcome = FileOperationOutcome.filtered;
         entry.message = 'Excluded by the file filter.';
         return;
+      }
+      if (!file.isFolder &&
+          file.isSymlink != true &&
+          options.preallocate &&
+          file.size == null) {
+        errors.add('Space reservation requires a known source size: $path');
       }
       if (file.isFolder &&
           !options.matchesSharedCriteria(file, matcher: criteriaMatcher)) {
@@ -943,6 +1001,12 @@ class FileOperationService {
         plan.assertDestinationUnprotected(entry.destination);
         final recoveredStagePath =
             entry.recovery?['resumeStagePath'] as String?;
+        if (options.copyMethod == FileCopyMethod.copyOnWrite &&
+            (append || resumeOffset > 0 || recoveredStagePath != null)) {
+          throw UnsupportedError(
+            'A required copy-on-write clone cannot append or resume partial bytes.',
+          );
+        }
         if (recoveredStagePath != null && !append && resumeOffset == 0) {
           plan.assertDestinationUnprotected(recoveredStagePath);
           final staged = await target.stat(recoveredStagePath);
@@ -979,6 +1043,8 @@ class FileOperationService {
           var nativeMoved = false;
           var nativeCopied = false;
           if (options.preferNative &&
+              options.copyMethod == FileCopyMethod.automatic &&
+              !options.preallocate &&
               !replace &&
               recoveredStagePath == null &&
               !options.verifyContents &&
@@ -990,18 +1056,71 @@ class FileOperationService {
             );
           }
           if (!nativeMoved &&
-              options.preferNative &&
+              (options.preferNative ||
+                  options.copyMethod == FileCopyMethod.copyOnWrite) &&
+              options.copyMethod != FileCopyMethod.stream &&
+              !options.preallocate &&
               !append &&
               recoveredStagePath == null &&
               resumeOffset == 0 &&
               entry.source.isSymlink != true &&
               source.identity == target.identity) {
-            nativeCopied = await source.copyNative(
-              entry.source,
-              entry.destination,
-              replace: replace,
-              checkpoint: control.checkpoint,
-            );
+            if (target.capabilities.copyOnWrite) {
+              nativeCopied = await target.clonePreparedFile(
+                entry.source,
+                entry.destination,
+                replace: replace,
+                checkpoint: (state) async {
+                  await control.checkpoint();
+                  _checkSources(source, target);
+                  for (final key in ['stagedPath', 'destination']) {
+                    if (state[key] is String) {
+                      plan.assertDestinationUnprotected(state[key] as String);
+                    }
+                  }
+                  entry.recovery = {...?entry.recovery, ...state};
+                  await checkpoint?.call(entry, state['phase'] as String);
+                },
+                verifyStaged: (staged) async {
+                  await control.checkpoint();
+                  _checkSources(source, target);
+                  final current = await source.stat(entry.source.path!);
+                  if (current == null || !_sameVersion(entry.source, current)) {
+                    throw StateError('The source changed during cloning.');
+                  }
+                  final expected =
+                      entry.recovery?['sourceSha256'] as String? ??
+                      (options.verifyContents
+                          ? await _digest(source, entry.source, control, target)
+                          : null);
+                  if (expected != null) {
+                    if (await _digest(target, staged, control, source) !=
+                        expected) {
+                      throw StateError(
+                        'Clone contents changed before commit; original destination retained.',
+                      );
+                    }
+                    entry.recovery = {
+                      ...?entry.recovery,
+                      'contentSha256': expected,
+                    };
+                  }
+                },
+              );
+            }
+            if (!nativeCopied) {
+              if (options.copyMethod == FileCopyMethod.copyOnWrite) {
+                throw UnsupportedError(
+                  'This volume cannot create a copy-on-write clone. Choose automatic or streaming copy.',
+                );
+              }
+              nativeCopied = await source.copyNative(
+                entry.source,
+                entry.destination,
+                replace: replace,
+                checkpoint: control.checkpoint,
+              );
+            }
           }
           if (nativeMoved) {
             entry.outcome = FileOperationOutcome.moved;
@@ -1047,11 +1166,12 @@ class FileOperationService {
                 }
               }
 
-              await target.writePreparedFile(
+              await target.writeConfiguredFile(
                 entry.destination,
                 tracked(),
                 expectedLength,
                 replace: replace,
+                preallocate: options.preallocate,
                 checkpoint: (state) async {
                   for (final key in [
                     'stagingPath',

@@ -29,6 +29,10 @@ FileOperationBackend fileOperationBackend({
   throw UnsupportedError('Extract items from archives or containers first.');
 }
 
+class _NativeCloneUnavailable implements Exception {
+  const _NativeCloneUnavailable();
+}
+
 class LocalOperationBackend extends FileOperationBackend {
   LocalOperationBackend(this.service, {required bool Function() isCurrent})
     // Keep the public named callback while storing it privately.
@@ -63,6 +67,9 @@ class LocalOperationBackend extends FileOperationBackend {
     deleteEmptyDirectory: !kIsWeb || service is LocalTransferFileOperations,
     boundedUpload: !kIsWeb || service is LocalTransferFileOperations,
     boundedDownload: !kIsWeb || service is LocalTransferFileOperations,
+    preallocate: !kIsWeb && supportsNativePreallocation,
+    copyOnWrite: !kIsWeb && supportsNativeCopyOnWrite,
+    permissions: !kIsWeb && supportsNativePermissions,
   );
   @override
   String get label => 'Local';
@@ -268,6 +275,11 @@ class LocalOperationBackend extends FileOperationBackend {
         service.readFileForEdit(file.path!, fileItem: file),
       );
     }
+    return _readNativeRange(file, 0);
+  }
+
+  Stream<List<int>> _readNativeRange(FileItem file, int offset) {
+    if (offset < 0) throw ArgumentError.value(offset, 'offset');
     // Keep the scoped callback alive until the stream finishes or is cancelled.
     late StreamController<List<int>> controller;
     StreamSubscription<List<int>>? subscription;
@@ -277,14 +289,41 @@ class LocalOperationBackend extends FileOperationBackend {
         try {
           await service.withFileOperationAccess(file.path!, () async {
             _check();
-            subscription = File(file.path!).openRead().listen(
-              controller.add,
-              onError: (Object error, StackTrace stack) =>
-                  controller.addError(error, stack),
-              onDone: () {
-                if (!finished.isCompleted) finished.complete();
-              },
-            );
+            final current = await stat(file.path!);
+            if (current == null ||
+                current.isFolder ||
+                current.isSymlink == true ||
+                await FileSystemEntity.type(file.path!, followLinks: false) !=
+                    FileSystemEntityType.file) {
+              throw FileSystemException(
+                'Only regular files can be streamed.',
+                file.path,
+              );
+            }
+            if (offset > (current.size ?? 0)) {
+              throw StateError('Source is shorter than the resume offset.');
+            }
+            if (finished.isCompleted) return;
+            subscription = File(file.path!)
+                .openRead(offset)
+                .listen(
+                  (chunk) {
+                    try {
+                      _check();
+                      controller.add(chunk);
+                    } catch (error, stack) {
+                      controller.addError(error, stack);
+                      subscription?.cancel();
+                      if (!finished.isCompleted) finished.complete();
+                    }
+                  },
+                  onError: (Object error, StackTrace stack) =>
+                      controller.addError(error, stack),
+                  onDone: () {
+                    if (!finished.isCompleted) finished.complete();
+                  },
+                );
+            if (controller.isPaused) subscription!.pause();
             await finished.future;
           });
         } catch (error, stack) {
@@ -319,8 +358,77 @@ class LocalOperationBackend extends FileOperationBackend {
     required bool replace,
     Future<void> Function(FileItem staged)? verifyStaged,
     Future<void> Function(Map<String, dynamic> state)? checkpoint,
+  }) => _writePreparedFile(
+    path,
+    data,
+    length,
+    replace: replace,
+    verifyStaged: verifyStaged,
+    checkpoint: checkpoint,
+  );
+
+  @override
+  Future<void> writeConfiguredFile(
+    String path,
+    Stream<List<int>> data,
+    int? length, {
+    required bool replace,
+    bool preallocate = false,
+    Future<void> Function(FileItem staged)? verifyStaged,
+    Future<void> Function(Map<String, dynamic> state)? checkpoint,
+  }) => _writePreparedFile(
+    path,
+    data,
+    length,
+    replace: replace,
+    preallocate: preallocate,
+    verifyStaged: verifyStaged,
+    checkpoint: checkpoint,
+  );
+
+  @override
+  Future<bool> clonePreparedFile(
+    FileItem source,
+    String destination, {
+    required bool replace,
+    Future<void> Function(FileItem staged)? verifyStaged,
+    Future<void> Function(Map<String, dynamic> state)? checkpoint,
+  }) async {
+    if (!capabilities.copyOnWrite) return false;
+    return service.withFileOperationAccess(source.path!, () async {
+      try {
+        await _writePreparedFile(
+          destination,
+          const Stream.empty(),
+          source.size,
+          replace: replace,
+          cloneSource: source,
+          verifyStaged: verifyStaged,
+          checkpoint: checkpoint,
+        );
+        return true;
+      } on _NativeCloneUnavailable {
+        return false;
+      }
+    });
+  }
+
+  Future<void> _writePreparedFile(
+    String path,
+    Stream<List<int>> data,
+    int? length, {
+    required bool replace,
+    bool preallocate = false,
+    FileItem? cloneSource,
+    Future<void> Function(FileItem staged)? verifyStaged,
+    Future<void> Function(Map<String, dynamic> state)? checkpoint,
   }) async {
     _check();
+    if (preallocate && (!capabilities.preallocate || length == null)) {
+      throw UnsupportedError(
+        'Physical space reservation requires a known size and a supported native destination.',
+      );
+    }
     if (kIsWeb && service is LocalTransferFileOperations) {
       final transfer = service as LocalTransferFileOperations;
       final stagedPath = paths.join(
@@ -427,33 +535,90 @@ class LocalOperationBackend extends FileOperationBackend {
         'stagingDirectory': staging.path,
       });
       try {
-        // A copy keeps existing mode bits when replacing a local file.
+        int? originalMode;
         if (initialType == FileSystemEntityType.file) {
           final mode = (await destination.stat()).mode;
           if (!Platform.isWindows && (mode & 0x92) == 0) {
             throw FileSystemException('Destination is read-only.', path);
           }
-          await destination.copy(staged.path);
-        }
-        final sink = staged.openWrite();
-        try {
-          await sink.addStream(data);
-          await sink.flush();
-        } catch (_) {
-          // addStream may already close the file after a read/write failure.
-          // Closing it again must not hide the original transfer error.
-          try {
-            await sink.close();
-          } catch (_) {
-            /* Preserve the first read or write failure. */
+          originalMode = mode;
+          if (!capabilities.permissions && cloneSource == null) {
+            // Retain platform-specific existing attributes when no separate
+            // metadata primitive is available (notably Windows).
+            await destination.copy(staged.path);
           }
-          rethrow;
         }
-        await sink.close();
-        if (length != null && await staged.length() != length) {
+        var received = 0;
+        if (cloneSource != null) {
+          final before = await stat(cloneSource.path!);
+          if (!_matchesNativeSource(cloneSource, before)) {
+            throw StateError('Source changed before cloning.');
+          }
+          if (!await cloneNativeFile(cloneSource.path!, staged.path)) {
+            throw const _NativeCloneUnavailable();
+          }
+          if (!_matchesNativeSource(
+                cloneSource,
+                await stat(cloneSource.path!),
+              ) ||
+              await FileSystemEntity.type(staged.path, followLinks: false) !=
+                  FileSystemEntityType.file) {
+            throw StateError('Source changed during cloning.');
+          }
+          received = await staged.length();
+        } else if (preallocate) {
+          final writer = await staged.open(mode: FileMode.write);
+          try {
+            await checkpoint?.call({
+              'phase': 'allocating',
+              'destination': path,
+              'stagedPath': staged.path,
+              'stagingDirectory': staging.path,
+            });
+            if (!await preallocateNativeFile(staged.path, length!)) {
+              throw UnsupportedError(
+                'This volume cannot reserve physical disk space.',
+              );
+            }
+            await for (final chunk in data) {
+              _check();
+              received += chunk.length;
+              if (received > length) throw StateError('Source length changed.');
+              await writer.writeFrom(chunk);
+            }
+            await writer.flush();
+          } finally {
+            await writer.close();
+          }
+        } else {
+          final sink = staged.openWrite();
+          try {
+            await sink.addStream(
+              data.map((chunk) {
+                _check();
+                received += chunk.length;
+                return chunk;
+              }),
+            );
+            await sink.flush();
+          } catch (_) {
+            try {
+              await sink.close();
+            } catch (_) {
+              /* Retain the initial failure. */
+            }
+            rethrow;
+          }
+          await sink.close();
+        }
+        if (length != null &&
+            (received != length || await staged.length() != length)) {
           throw StateError(
             'Source length changed; destination was not replaced.',
           );
+        }
+        if (originalMode != null && capabilities.permissions) {
+          await setNativeFileMode(staged.path, originalMode);
         }
         _check();
         await verifyStaged?.call(await _nativeItem(staged.path));
@@ -510,9 +675,56 @@ class LocalOperationBackend extends FileOperationBackend {
   @override
   Stream<List<int>> readRange(FileItem file, int offset) {
     if (kIsWeb) return super.readRange(file, offset);
-    // Reuse the scoped, backpressure-aware stream; native bytes are skipped
-    // without buffering. Provider-specific ranged streams override this below.
-    return super.readRange(file, offset);
+    return _readNativeRange(file, offset);
+  }
+
+  bool _matchesNativeSource(FileItem before, FileItem? after) =>
+      after != null &&
+      !after.isFolder &&
+      after.isSymlink != true &&
+      before.size == after.size &&
+      (before.updatedAt == null ||
+          (after.updatedAt != null &&
+              before.updatedAt!.isAtSameMomentAs(after.updatedAt!)));
+
+  @override
+  Future<TransferMetadata> readMetadata(String path) async {
+    if (kIsWeb) return super.readMetadata(path);
+    return service.withFileOperationAccess(path, () async {
+      _check();
+      if (await FileSystemEntity.type(path, followLinks: false) ==
+          FileSystemEntityType.link) {
+        throw UnsupportedError(
+          'Link permissions cannot be read through their target.',
+        );
+      }
+      final info = await FileStat.stat(path);
+      return TransferMetadata(
+        modified: info.modified,
+        accessed: info.accessed,
+        mode: capabilities.permissions ? info.mode & 0xfff : null,
+      );
+    });
+  }
+
+  @override
+  Future<void> writeMetadata(String path, TransferMetadata metadata) async {
+    if (kIsWeb) return super.writeMetadata(path, metadata);
+    if (metadata.owner != null ||
+        metadata.group != null ||
+        metadata.extendedAttributes.isNotEmpty ||
+        metadata.acl != null) {
+      throw UnsupportedError(
+        'This native backend does not implement the requested ownership, attributes, or ACL.',
+      );
+    }
+    await service.withFileOperationAccess(path, () async {
+      _check();
+      if (metadata.mode != null) await setNativeFileMode(path, metadata.mode!);
+      if (metadata.modified != null) {
+        await setModified(path, metadata.modified!);
+      }
+    });
   }
 
   @override
