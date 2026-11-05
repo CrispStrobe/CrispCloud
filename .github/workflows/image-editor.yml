@@ -53,7 +53,7 @@ jobs:
           lib/services/image_edit_session.dart lib/services/image_file_store.dart
           lib/services/pdf_file_store.dart
           lib/services/image_editor_menu.dart lib/services/image_export_options.dart
-          lib/services/image_edit_project.dart
+          lib/services/image_edit_project.dart lib/services/image_project_store.dart
           lib/services/image_device_export.dart lib/services/image_device_export_native.dart
           lib/services/image_device_export_web.dart lib/widgets/image_export_dialog.dart
           lib/widgets/image_editor_dialog.dart
@@ -62,7 +62,7 @@ jobs:
           lib/screens/screen_dialogs.dart
           test/image_edit_session_test.dart test/image_file_store_test.dart
           test/image_export_options_test.dart test/image_device_export_test.dart
-          test/image_edit_project_test.dart
+          test/image_edit_project_test.dart test/image_project_store_test.dart
           test/image_editor_live_test.dart test/image_editor_menu_test.dart
           test/widget/image_editor_menus_test.dart
           test/widget/image_editor_routing_test.dart
@@ -77,7 +77,7 @@ jobs:
           flutter test --reporter expanded --concurrency=2
           test/image_edit_session_test.dart test/image_file_store_test.dart
           test/image_export_options_test.dart test/image_device_export_test.dart
-          test/image_edit_project_test.dart
+          test/image_edit_project_test.dart test/image_project_store_test.dart
           test/image_editor_live_test.dart test/image_editor_menu_test.dart
           test/file_editability_test.dart test/pdf_file_store_test.dart
           test/widget/image_editor_menus_test.dart
