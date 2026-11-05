@@ -9,15 +9,13 @@ import '../providers/providers.dart';
 import '../services/background_sync_service.dart';
 import '../services/sync_database.dart';
 import '../l10n/app_localizations.dart';
+import 'sync_plan_dialog.dart';
 
 // Auto-evict options: 0=disabled, then days
 const _kAutoEvictOptions = [0, 7, 14, 30, 60, 90];
 
 void showSyncDialog(BuildContext context) {
-  showDialog(
-    context: context,
-    builder: (_) => const _SyncManagerDialog(),
-  );
+  showDialog(context: context, builder: (_) => const _SyncManagerDialog());
 }
 
 class _SyncManagerDialog extends ConsumerWidget {
@@ -41,7 +39,9 @@ class _SyncManagerDialog extends ConsumerWidget {
               size: 18,
               color: sync.isWatchEnabled ? Colors.green : null,
             ),
-            tooltip: sync.isWatchEnabled ? 'Disable Auto-Sync' : 'Enable Auto-Sync (watch for changes)',
+            tooltip: sync.isWatchEnabled
+                ? 'Disable Auto-Sync'
+                : 'Enable Auto-Sync (watch for changes)',
             onPressed: () {
               if (sync.isWatchEnabled) {
                 ref.read(syncProvider).disableWatch();
@@ -51,12 +51,18 @@ class _SyncManagerDialog extends ConsumerWidget {
             },
           ),
           if (sync.isSyncing)
-            const SizedBox(width: 20, height: 20, child: CircularProgressIndicator(strokeWidth: 2))
+            const SizedBox(
+              width: 20,
+              height: 20,
+              child: CircularProgressIndicator(strokeWidth: 2),
+            )
           else
             IconButton(
               icon: const Icon(Icons.sync, size: 20),
               tooltip: 'Sync All',
-              onPressed: sync.pairs.isEmpty ? null : () => ref.read(syncProvider).syncAll(),
+              onPressed: sync.pairs.isEmpty
+                  ? null
+                  : () => ref.read(syncProvider).syncAll(),
             ),
         ],
       ),
@@ -99,8 +105,10 @@ class _SyncManagerDialog extends ConsumerWidget {
                     SizedBox(height: 8),
                     Text('No sync pairs configured'),
                     SizedBox(height: 4),
-                    Text('Add a pair to keep local and remote folders in sync.',
-                        style: TextStyle(fontSize: 12, color: Colors.grey)),
+                    Text(
+                      'Add a pair to keep local and remote folders in sync.',
+                      style: TextStyle(fontSize: 12, color: Colors.grey),
+                    ),
                   ],
                 ),
               )
@@ -127,18 +135,24 @@ class _SyncManagerDialog extends ConsumerWidget {
         TextButton.icon(
           icon: const Icon(Icons.replay, size: 16),
           label: const Text('Replay Offline'),
-          onPressed: sync.isSyncing ? null : () async {
-            final result = await ref.read(syncProvider).replayOfflineQueue();
-            if (context.mounted) {
-              ScaffoldMessenger.of(context).showSnackBar(
-                SnackBar(content: Text(
-                  result.hasChanges || result.errors > 0
-                      ? 'Replayed: ${result.uploaded + result.downloaded} ops, ${result.errors} errors'
-                      : 'No offline operations to replay',
-                )),
-              );
-            }
-          },
+          onPressed: sync.isSyncing
+              ? null
+              : () async {
+                  final result = await ref
+                      .read(syncProvider)
+                      .replayOfflineQueue();
+                  if (context.mounted) {
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      SnackBar(
+                        content: Text(
+                          result.hasChanges || result.errors > 0
+                              ? 'Replayed: ${result.uploaded + result.downloaded} ops, ${result.errors} errors'
+                              : 'No offline operations to replay',
+                        ),
+                      ),
+                    );
+                  }
+                },
         ),
         ElevatedButton.icon(
           icon: const Icon(Icons.add, size: 18),
@@ -208,10 +222,14 @@ class _SyncManagerDialog extends ConsumerWidget {
                       labelText: 'Conflict Policy',
                       border: OutlineInputBorder(),
                     ),
-                    items: ConflictPolicy.values.map((p) => DropdownMenuItem(
-                      value: p,
-                      child: Text(_policyLabel(p)),
-                    )).toList(),
+                    items: ConflictPolicy.values
+                        .map(
+                          (p) => DropdownMenuItem(
+                            value: p,
+                            child: Text(_policyLabel(p)),
+                          ),
+                        )
+                        .toList(),
                     onChanged: (v) => setState(() => policy = v ?? policy),
                   ),
                   const SizedBox(height: 12),
@@ -222,11 +240,21 @@ class _SyncManagerDialog extends ConsumerWidget {
                       border: OutlineInputBorder(),
                     ),
                     items: const [
-                      DropdownMenuItem(value: SyncDirection.twoWay, child: Text('Two-Way')),
-                      DropdownMenuItem(value: SyncDirection.uploadOnly, child: Text('Upload Only')),
-                      DropdownMenuItem(value: SyncDirection.downloadOnly, child: Text('Download Only')),
+                      DropdownMenuItem(
+                        value: SyncDirection.twoWay,
+                        child: Text('Two-Way'),
+                      ),
+                      DropdownMenuItem(
+                        value: SyncDirection.uploadOnly,
+                        child: Text('Upload Only'),
+                      ),
+                      DropdownMenuItem(
+                        value: SyncDirection.downloadOnly,
+                        child: Text('Download Only'),
+                      ),
                     ],
-                    onChanged: (v) => setState(() => direction = v ?? direction),
+                    onChanged: (v) =>
+                        setState(() => direction = v ?? direction),
                   ),
                   const SizedBox(height: 12),
                   TextField(
@@ -267,21 +295,27 @@ class _SyncManagerDialog extends ConsumerWidget {
             ),
           ),
           actions: [
-            TextButton(onPressed: () => Navigator.pop(ctx), child: Text(AppLocalizations.of(context)!.cancel)),
+            TextButton(
+              onPressed: () => Navigator.pop(ctx),
+              child: Text(AppLocalizations.of(context)!.cancel),
+            ),
             ElevatedButton(
               onPressed: () async {
-                if (nameController.text.isEmpty || localController.text.isEmpty) return;
-                await ref.read(syncProvider).addPair(
-                  name: nameController.text,
-                  localPath: localController.text,
-                  remotePath: remoteController.text,
-                  provider: auth.currentProvider.name,
-                  conflictPolicy: policy,
-                  direction: direction,
-                  includePatterns: includeController.text,
-                  excludePatterns: excludeController.text,
-                  usePlaceholders: usePlaceholders,
-                );
+                if (nameController.text.isEmpty || localController.text.isEmpty)
+                  return;
+                await ref
+                    .read(syncProvider)
+                    .addPair(
+                      name: nameController.text,
+                      localPath: localController.text,
+                      remotePath: remoteController.text,
+                      provider: auth.currentProvider.name,
+                      conflictPolicy: policy,
+                      direction: direction,
+                      includePatterns: includeController.text,
+                      excludePatterns: excludeController.text,
+                      usePlaceholders: usePlaceholders,
+                    );
                 if (ctx.mounted) Navigator.pop(ctx);
               },
               child: const Text('Create'),
@@ -294,11 +328,16 @@ class _SyncManagerDialog extends ConsumerWidget {
 
   String _policyLabel(ConflictPolicy p) {
     switch (p) {
-      case ConflictPolicy.newestWins: return 'Newest Wins';
-      case ConflictPolicy.localWins: return 'Local Wins';
-      case ConflictPolicy.remoteWins: return 'Remote Wins';
-      case ConflictPolicy.keepBoth: return 'Keep Both';
-      case ConflictPolicy.manual: return 'Ask Me';
+      case ConflictPolicy.newestWins:
+        return 'Newest Wins';
+      case ConflictPolicy.localWins:
+        return 'Local Wins';
+      case ConflictPolicy.remoteWins:
+        return 'Remote Wins';
+      case ConflictPolicy.keepBoth:
+        return 'Keep Both';
+      case ConflictPolicy.manual:
+        return 'Ask Me';
     }
   }
 }
@@ -312,7 +351,8 @@ class _BackgroundSyncTile extends ConsumerStatefulWidget {
   const _BackgroundSyncTile({required this.sync});
 
   @override
-  ConsumerState<_BackgroundSyncTile> createState() => _BackgroundSyncTileState();
+  ConsumerState<_BackgroundSyncTile> createState() =>
+      _BackgroundSyncTileState();
 }
 
 class _BackgroundSyncTileState extends ConsumerState<_BackgroundSyncTile> {
@@ -345,9 +385,9 @@ class _BackgroundSyncTileState extends ConsumerState<_BackgroundSyncTile> {
           contentPadding: EdgeInsets.zero,
           onChanged: (v) async {
             if (v) {
-              await ref.read(syncProvider).enableBackgroundSync(
-                    intervalMinutes: _intervalMinutes,
-                  );
+              await ref
+                  .read(syncProvider)
+                  .enableBackgroundSync(intervalMinutes: _intervalMinutes);
             } else {
               await ref.read(syncProvider).disableBackgroundSync();
             }
@@ -372,9 +412,9 @@ class _BackgroundSyncTileState extends ConsumerState<_BackgroundSyncTile> {
                   onChanged: (v) async {
                     if (v == null) return;
                     setState(() => _intervalMinutes = v);
-                    await ref.read(syncProvider).enableBackgroundSync(
-                          intervalMinutes: v,
-                        );
+                    await ref
+                        .read(syncProvider)
+                        .enableBackgroundSync(intervalMinutes: v);
                   },
                 ),
               ],
@@ -410,8 +450,11 @@ class _SyncPairTile extends ConsumerWidget {
             const SizedBox(width: 6),
             Tooltip(
               message: 'Cloud-only mode: files download on demand',
-              child: Icon(Icons.cloud_outlined, size: 14,
-                  color: Theme.of(context).colorScheme.primary),
+              child: Icon(
+                Icons.cloud_outlined,
+                size: 14,
+                color: Theme.of(context).colorScheme.primary,
+              ),
             ),
           ],
         ],
@@ -429,14 +472,18 @@ class _SyncPairTile extends ConsumerWidget {
             IconButton(
               icon: const Icon(Icons.cloud_download, size: 18),
               tooltip: 'Download All Cloud-Only Files',
-              onPressed: isActive ? null : () async {
-                final count = await ref.read(syncProvider).hydrateAllPlaceholders(pair.id);
-                if (context.mounted) {
-                  ScaffoldMessenger.of(context).showSnackBar(
-                    SnackBar(content: Text('Downloaded $count files')),
-                  );
-                }
-              },
+              onPressed: isActive
+                  ? null
+                  : () async {
+                      final count = await ref
+                          .read(syncProvider)
+                          .hydrateAllPlaceholders(pair.id);
+                      if (context.mounted) {
+                        ScaffoldMessenger.of(context).showSnackBar(
+                          SnackBar(content: Text('Downloaded $count files')),
+                        );
+                      }
+                    },
             ),
           Switch(
             value: pair.enabled,
@@ -444,8 +491,10 @@ class _SyncPairTile extends ConsumerWidget {
           ),
           IconButton(
             icon: const Icon(Icons.sync, size: 18),
-            tooltip: 'Sync Now',
-            onPressed: isActive ? null : () => ref.read(syncProvider).syncOne(pair.id),
+            tooltip: 'Compare and Review',
+            onPressed: isActive
+                ? null
+                : () => showSyncPlanDialog(context, pair.id),
           ),
           IconButton(
             icon: const Icon(Icons.delete, size: 18),
@@ -486,8 +535,10 @@ class _AutoEvictTile extends ConsumerWidget {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              const Text('Auto-evict cloud-only files',
-                  style: TextStyle(fontSize: 13, fontWeight: FontWeight.w500)),
+              const Text(
+                'Auto-evict cloud-only files',
+                style: TextStyle(fontSize: 13, fontWeight: FontWeight.w500),
+              ),
               Text(
                 days == 0
                     ? 'Disabled — synced files are kept locally'
@@ -500,10 +551,14 @@ class _AutoEvictTile extends ConsumerWidget {
         DropdownButton<int>(
           value: days,
           isDense: true,
-          items: _kAutoEvictOptions.map((d) => DropdownMenuItem(
-            value: d,
-            child: Text(d == 0 ? 'Off' : '${d}d'),
-          )).toList(),
+          items: _kAutoEvictOptions
+              .map(
+                (d) => DropdownMenuItem(
+                  value: d,
+                  child: Text(d == 0 ? 'Off' : '${d}d'),
+                ),
+              )
+              .toList(),
           onChanged: (v) {
             if (v != null) ref.read(syncProvider).setAutoEvictDays(v);
           },
