@@ -55,8 +55,8 @@ abstract class PdfFileStore {
   factory PdfFileStore.local({
     required LocalFileService service,
     required FileItem file,
-    int inputLimitBytes = kPdfEditorInputLimitBytes,
-    int outputLimitBytes = kPdfEditorOutputLimitBytes,
+    int inputLimitBytes,
+    int outputLimitBytes,
   }) = _LocalPdfFileStore;
 
   factory PdfFileStore.remote({
@@ -65,8 +65,8 @@ abstract class PdfFileStore {
     required FileCacheService cache,
     required FileItem file,
     bool Function()? isCurrentAccount,
-    int inputLimitBytes = kPdfEditorInputLimitBytes,
-    int outputLimitBytes = kPdfEditorOutputLimitBytes,
+    int inputLimitBytes,
+    int outputLimitBytes,
   }) = _RemotePdfFileStore;
 
   String get documentId;

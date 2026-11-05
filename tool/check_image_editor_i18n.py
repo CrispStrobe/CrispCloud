@@ -151,7 +151,7 @@ def check() -> tuple[int, int]:
             lookups.update(literal_arguments(source, "_showMessage|_messageFor|_ImageOpenMessage"))
             for match in re.finditer(rf"\(ImageEditorAction\.\w+,\s*({DART_STRING})", source):
                 lookups.add(unquote(match[1]))
-            error_switch = re.search(r"String _messageFor\([^)]*\)\s*=>\s*switch[^{{]*\{", source)
+            error_switch = re.search(r"String _messageFor\([^)]*\)\s*=>\s*switch[^{]*\{", source)
             if error_switch is not None:
                 body = block(source, error_switch.end() - 1)
                 lookups.update(unquote(value[0]) for value in re.finditer(DART_STRING, body))

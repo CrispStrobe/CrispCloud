@@ -49,6 +49,7 @@ jobs:
           flutter analyze --no-fatal-infos --no-fatal-warnings
           lib/l10n/image_editor_strings.dart lib/l10n/image_editor_translations.dart
           lib/services/image_edit_session.dart lib/services/image_file_store.dart
+          lib/services/pdf_file_store.dart
           lib/services/image_editor_menu.dart lib/widgets/image_editor_dialog.dart
           lib/widgets/image_editor_surface.dart lib/widgets/image_editor_menus.dart
           lib/widgets/file_editor_dialog.dart lib/utils/file_editability.dart
