@@ -11,6 +11,7 @@ enum ImageEditorAction {
   zoomIn,
   zoomOut,
   zoomReset,
+  layers,
   cropRotate,
   paint,
   text,

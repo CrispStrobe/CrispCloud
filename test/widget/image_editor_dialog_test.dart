@@ -424,6 +424,53 @@ void main() {
     expect(saved.history, isNotEmpty);
   });
 
+  _desktopTestWidgets('layer panel reorders and removes layers with undo', (
+    tester,
+  ) async {
+    final harness = _Harness(tester, _MemoryImageStore());
+    await harness.open();
+    await harness.addText('Bottom layer');
+    await harness.addText('Top layer');
+    final bottomId = harness.editor.activeLayers.first.id;
+    final topId = harness.editor.activeLayers.last.id;
+    await tester.ensureVisible(_command(ImageEditorAction.layers));
+    await tester.tap(_command(ImageEditorAction.layers));
+    await tester.pump();
+    final bottom = find.byKey(ValueKey('image-layer-$bottomId'));
+    expect(bottom, findsOneWidget);
+    await tester.tap(
+      find.descendant(
+        of: bottom,
+        matching: find.byTooltip('Move layer forward'),
+      ),
+    );
+    await _until(
+      tester,
+      () => harness.editor.activeLayers.last.id == bottomId,
+      reason: 'layer reorder',
+    );
+    harness.actions.dispatch(ImageEditorAction.undo);
+    await _until(
+      tester,
+      () => harness.editor.activeLayers.last.id == topId,
+      reason: 'undo layer reorder',
+    );
+    await tester.tap(
+      find.descendant(of: bottom, matching: find.byTooltip('Remove')),
+    );
+    await _until(
+      tester,
+      () => harness.editor.activeLayers.length == 1,
+      reason: 'remove layer',
+    );
+    harness.actions.dispatch(ImageEditorAction.undo);
+    await _until(
+      tester,
+      () => harness.editor.activeLayers.length == 2,
+      reason: 'undo layer removal',
+    );
+  });
+
   _desktopTestWidgets('exporting a copy keeps the original dirty', (
     tester,
   ) async {

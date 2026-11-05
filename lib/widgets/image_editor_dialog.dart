@@ -90,6 +90,7 @@ class _ImageEditorDialogState extends ConsumerState<ImageEditorDialog> {
   bool _loadInProgress = false;
   bool _ready = false;
   bool _restoringProject = false;
+  bool _showLayers = false;
   bool _closing = false;
   bool _applying = false;
   bool _exporting = false;
@@ -410,6 +411,8 @@ class _ImageEditorDialogState extends ConsumerState<ImageEditorDialog> {
         editor?.undoAction();
       case ImageEditorAction.redo:
         editor?.redoAction();
+      case ImageEditorAction.layers:
+        setState(() => _showLayers = !_showLayers);
       case ImageEditorAction.zoomIn:
         if (editor != null) {
           editor.zoomTo(
@@ -774,6 +777,7 @@ class _ImageEditorDialogState extends ConsumerState<ImageEditorDialog> {
                   children: [
                     _header(actions),
                     const Divider(height: 1),
+                    if (_showLayers && !_toolOpen && _ready) _layerPanel(),
                     Expanded(child: _body()),
                     if (_saving) const LinearProgressIndicator(),
                   ],
@@ -877,6 +881,91 @@ class _ImageEditorDialogState extends ConsumerState<ImageEditorDialog> {
     );
   }
 
+  Widget _layerPanel() {
+    final editor = _editorKey.currentState;
+    final layers = editor?.activeLayers ?? <Layer>[];
+    final canEdit = _canEdit;
+    return Material(
+      color: Theme.of(context).colorScheme.surfaceContainerLow,
+      child: ConstrainedBox(
+        constraints: const BoxConstraints(maxHeight: 180),
+        child: layers.isEmpty
+            ? Padding(
+                padding: const EdgeInsets.all(12),
+                child: Text(context.imageTr('No layers yet')),
+              )
+            : ListView.builder(
+                shrinkWrap: true,
+                itemCount: layers.length,
+                itemBuilder: (context, displayIndex) {
+                  final index = layers.length - displayIndex - 1;
+                  final layer = layers[index];
+                  final selected = editor!.selectedLayers.any(
+                    (item) => item.id == layer.id,
+                  );
+                  final label =
+                      layer is TextLayer && layer.text.trim().isNotEmpty
+                      ? layer.text
+                      : context.imageTr(
+                          layer is PaintLayer ? 'Drawing' : 'Layer',
+                        );
+                  return ListTile(
+                    key: ValueKey('image-layer-${layer.id}'),
+                    dense: true,
+                    selected: selected,
+                    title: Text(
+                      label,
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                    ),
+                    onTap: canEdit && layer.interaction.enableSelection
+                        ? () {
+                            editor.selectLayerById(layer.id);
+                            _scheduleRefresh();
+                          }
+                        : null,
+                    trailing: Row(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        IconButton(
+                          tooltip: context.imageTr('Move layer forward'),
+                          onPressed: canEdit && index < layers.length - 1
+                              ? () {
+                                  editor.moveLayerForward(layer);
+                                  _scheduleRefresh();
+                                }
+                              : null,
+                          icon: const Icon(Icons.arrow_upward),
+                        ),
+                        IconButton(
+                          tooltip: context.imageTr('Move layer backward'),
+                          onPressed: canEdit && index > 0
+                              ? () {
+                                  editor.moveLayerBackward(layer);
+                                  _scheduleRefresh();
+                                }
+                              : null,
+                          icon: const Icon(Icons.arrow_downward),
+                        ),
+                        IconButton(
+                          tooltip: context.imageTr('Remove'),
+                          onPressed: canEdit
+                              ? () {
+                                  editor.removeLayer(layer);
+                                  _scheduleRefresh();
+                                }
+                              : null,
+                          icon: const Icon(Icons.delete_outline),
+                        ),
+                      ],
+                    ),
+                  );
+                },
+              ),
+      ),
+    );
+  }
+
   Widget _body() {
     if (_loading) {
       return Center(
@@ -975,6 +1064,7 @@ class _ImageEditorDialogState extends ConsumerState<ImageEditorDialog> {
     (ImageEditorAction.exportCopy, 'Export image copy', Icons.ios_share),
     (ImageEditorAction.undo, 'Undo', Icons.undo),
     (ImageEditorAction.redo, 'Redo', Icons.redo),
+    (ImageEditorAction.layers, 'Layers', Icons.layers_outlined),
     (ImageEditorAction.zoomIn, 'Zoom in', Icons.zoom_in),
     (ImageEditorAction.zoomOut, 'Zoom out', Icons.zoom_out),
     (ImageEditorAction.zoomReset, 'Fit image', Icons.fit_screen),

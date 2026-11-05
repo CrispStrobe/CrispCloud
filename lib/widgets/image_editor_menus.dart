@@ -63,6 +63,7 @@ List<PlatformMenuItem> buildImageEditorPlatformMenus(
     PlatformMenu(
       label: context.imageTr('Image'),
       menus: <PlatformMenuItem>[
+        item('Layers', ImageEditorAction.layers),
         item('Zoom in', ImageEditorAction.zoomIn),
         item('Zoom out', ImageEditorAction.zoomOut),
         item('Fit image', ImageEditorAction.zoomReset),
