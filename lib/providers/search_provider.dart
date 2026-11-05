@@ -8,11 +8,14 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:path/path.dart' as p;
 
 import '../models/file_item.dart';
+import '../models/file_search_query.dart';
+import '../services/file_selection_pattern.dart';
+import '../services/file_operation_backend.dart';
+import '../services/recursive_search_service.dart';
+import 'core_providers.dart';
 import '../models/panel_side.dart';
-import '../services/internxt_client_adapter.dart';
 import '../services/log_service.dart';
 import '../services/saved_search_service.dart';
-import '../services/panel_source_service.dart';
 import 'error_provider.dart';
 import 'panel_provider.dart';
 
@@ -136,6 +139,33 @@ class SearchNotifier extends ChangeNotifier {
   final Ref _ref;
   final _resultOrigins = Expando<PanelFileOrigin>('search account origin');
   PanelSide _resultsSide = PanelSide.remote;
+  PanelSide get resultsSide => _resultsSide;
+  bool _disposed = false;
+  bool _cancelRequested = false;
+  bool _wasCancelled = false;
+  bool get wasCancelled => _wasCancelled;
+  int _scannedCount = 0;
+  int get scannedCount => _scannedCount;
+  List<String> _searchErrors = [];
+  List<String> get searchErrors => List.unmodifiable(_searchErrors);
+  FileSearchQuery? _lastQuery;
+  FileSearchQuery? get lastQuery => _lastQuery;
+
+  void configureQuery(FileSearchQuery query) {
+    query.validate();
+    _lastQuery = query;
+  }
+
+  void cancelSearch() {
+    _cancelRequested = true;
+  }
+
+  @override
+  void dispose() {
+    _disposed = true;
+    _cancelRequested = true;
+    super.dispose();
+  }
 
   PanelFileOrigin? originForResult(FileItem item) {
     final origin = _resultOrigins[item];
@@ -149,7 +179,8 @@ class SearchNotifier extends ChangeNotifier {
       );
     }
     for (final item in items) {
-      if (item.path != null && p.posix.isAbsolute(item.path!)) {
+      if (item.path != null &&
+          (p.posix.isAbsolute(item.path!) || p.isAbsolute(item.path!))) {
         _resultOrigins[item] = origin;
       }
     }
@@ -206,7 +237,7 @@ class SearchNotifier extends ChangeNotifier {
 
   Future<void> loadSavedSearches() async {
     _savedSearches = await _savedSearchService.getAll();
-    notifyListeners();
+    if (!_disposed) notifyListeners();
   }
 
   /// Persist the current query and active filters as a saved search.
@@ -223,6 +254,7 @@ class SearchNotifier extends ChangeNotifier {
       filterByDateAfter: _filterByDateAfter,
       filterByDateBefore: _filterByDateBefore,
       createdAt: DateTime.now(),
+      settings: _lastQuery,
     );
     await _savedSearchService.save(search);
     await loadSavedSearches();
@@ -361,184 +393,128 @@ class SearchNotifier extends ChangeNotifier {
   // Search operations
   // ---------------------------------------------------------------------------
 
-  Future<Map<String, List<FileItem>>> searchFiles(String query) async {
-    if (_isSearching) return {};
-    _isSearching = true;
-    notifyListeners();
+  FileSearchQuery queryWithFilters({
+    String namePattern = '*',
+    FilePatternMode nameMode = FilePatternMode.wildcard,
+    String contentPattern = '',
+  }) => FileSearchQuery(
+    namePattern: namePattern,
+    nameMode: nameMode,
+    contentPattern: contentPattern,
+    extensions: _filterByType,
+    minSize: _filterByMinSize,
+    maxSize: _filterByMaxSize,
+    modifiedAfter: _filterByDateAfter,
+    modifiedBefore: _filterByDateBefore,
+  );
 
-    try {
-      final origin = _ref
-          .read(panelProvider(PanelSide.remote))
-          .captureRemoteSearchOrigin();
-      final client = (origin.source as RemotePanelSource).client;
-      if (client is InternxtClientAdapter) {
-        final results = await client.search(query, detailed: true);
-
-        final folders =
-            (results['folders'] as List<dynamic>?)
-                ?.map(
-                  (item) => FileItem(
-                    name: p.posix.basename(
-                      item['fullPath'] ?? item['name'] ?? 'Unknown',
-                    ),
-                    isFolder: true,
-                    uuid: item['uuid'],
-                    path: item['fullPath'],
-                  ),
-                )
-                .toList() ??
-            [];
-
-        final files =
-            (results['files'] as List<dynamic>?)?.map((item) {
-              final plainName = item['name'] ?? 'Unknown';
-              final fileType = item['type'] ?? '';
-              final fullName =
-                  (fileType.isNotEmpty &&
-                      !plainName.toLowerCase().endsWith(
-                        '.${fileType.toLowerCase()}',
-                      ))
-                  ? '$plainName.$fileType'
-                  : plainName;
-              return FileItem(
-                name: p.posix.basename(item['fullPath'] ?? fullName),
-                isFolder: false,
-                uuid: item['uuid'],
-                path: item['fullPath'],
-              );
-            }).toList() ??
-            [];
-
-        // Apply client-side filters
-        final filteredFolders = applyFilters(folders);
-        final filteredFiles = applyFilters(files);
-        _recordResultOrigins([...filteredFolders, ...filteredFiles], origin);
-
-        _isSearching = false;
-        notifyListeners();
-        return {'folders': filteredFolders, 'files': filteredFiles};
-      } else {
-        throw UnsupportedError(
-          'Search not supported for ${client.providerName}',
-        );
-      }
-    } catch (e) {
-      _ref.read(errorProvider).addError('Search failed: $e');
-      _isSearching = false;
-      notifyListeners();
-      return {};
-    }
+  /// All entry points now use the same recursive source-bound search engine.
+  Future<Map<String, List<FileItem>>> searchFiles(String text) async {
+    final files = await runQuery(
+      queryWithFilters(
+        namePattern: RegExp.escape(text),
+        nameMode: FilePatternMode.regex,
+      ),
+    );
+    return {
+      'folders': files.where((file) => file.isFolder).toList(),
+      'files': files.where((file) => !file.isFolder).toList(),
+    };
   }
 
-  /// Perform a full-text (content) search using the active provider.
-  /// Returns matching files with context snippets.
-  Future<List<FileItem>> fullTextSearch(String query) async {
-    if (_isSearching) return [];
-    _isSearching = true;
-    notifyListeners();
+  Future<List<FileItem>> findFiles(String pattern) =>
+      runQuery(queryWithFilters(namePattern: pattern));
 
-    try {
-      final origin = _ref
-          .read(panelProvider(PanelSide.remote))
-          .captureRemoteSearchOrigin();
-      final client = (origin.source as RemotePanelSource).client;
-      final remotePath = _ref.read(panelProvider(PanelSide.remote)).currentPath;
+  Future<List<FileItem>> fullTextSearch(String text) =>
+      runQuery(queryWithFilters(contentPattern: text));
 
-      final results = await client.fullTextSearch(query, remotePath);
-      final files = results
-          .map(
-            (map) => FileItem(
-              name: p.posix.basename(
-                map['path'] as String? ?? map['name'] as String? ?? 'Unknown',
-              ),
-              isFolder: false,
-              uuid: map['uuid'] as String?,
-              size: map['size'] as int?,
-              path: map['path'] as String?,
-              updatedAt: DateTime.tryParse(map['lastModified'] ?? ''),
-            ),
-          )
-          .toList();
-
-      // Apply client-side filters
-      final filtered = applyFilters(files);
-      _recordResultOrigins(filtered, origin);
-
-      // Store snippets for UI display (keyed by file path or name)
-      _lastSnippets = {
-        for (final map in results)
-          (map['path'] ?? map['name']) as String:
-              (map['snippet'] ?? '') as String,
-      };
-
-      _isSearching = false;
-      notifyListeners();
-      return filtered;
-    } catch (e) {
-      _ref.read(errorProvider).addError('Full-text search failed: $e');
-      _isSearching = false;
-      notifyListeners();
-      return [];
-    }
-  }
-
-  /// Snippets from the last full-text search, keyed by file path.
   Map<String, String> _lastSnippets = {};
   Map<String, String> get lastSnippets => Map.unmodifiable(_lastSnippets);
 
-  Future<List<FileItem>> findFiles(String pattern) async {
-    if (_isSearching) return [];
+  Future<List<FileItem>> runQuery(
+    FileSearchQuery query, {
+    PanelSide? side,
+  }) async {
+    if (_isSearching || _disposed) return [];
+    query.validate();
+    _lastQuery = query;
     _isSearching = true;
+    _cancelRequested = false;
+    _wasCancelled = false;
+    _searchResults = [];
+    _lastSnippets = {};
+    _searchErrors = [];
+    _scannedCount = 0;
+    _resultsSide = side ?? _ref.read(activePanelProvider);
     notifyListeners();
-
     try {
-      final origin = _ref
-          .read(panelProvider(PanelSide.remote))
-          .captureRemoteSearchOrigin();
-      final client = (origin.source as RemotePanelSource).client;
-      final remotePath = _ref.read(panelProvider(PanelSide.remote)).currentPath;
-
-      if (client is InternxtClientAdapter) {
-        final results = await client.findFiles(
-          remotePath,
-          pattern,
-          maxDepth: -1,
-        );
-        final files = results.map((item) {
-          final plainName = item['name'] ?? 'Unknown';
-          final fileType = item['fileType'] ?? '';
-          final fullName =
-              (fileType.isNotEmpty &&
-                  !plainName.toLowerCase().endsWith(
-                    '.${fileType.toLowerCase()}',
-                  ))
-              ? '$plainName.$fileType'
-              : plainName;
-          return FileItem(
-            name: p.posix.basename(item['fullPath'] ?? fullName),
-            isFolder: false,
-            uuid: item['uuid'],
-            size: item['size'] as int?,
-            path: item['fullPath'],
-            updatedAt: DateTime.tryParse(item['updatedAt'] ?? ''),
+      final panel = _ref.read(panelProvider(_resultsSide));
+      final origin = panel.captureCurrentOrigin();
+      final source = fileOperationBackend(
+        source: origin.source,
+        local: _ref.read(localFileServiceProvider),
+        isCurrent: () => !_disposed && origin.isCurrent,
+      );
+      final result = await RecursiveSearchService().search(
+        source,
+        query,
+        currentDirectory: panel.currentPath,
+        isCancelled: () => _cancelRequested || _disposed,
+        onMatch: (match) {
+          if (_disposed || !origin.isCurrent) return;
+          final index = _searchResults.indexWhere(
+            (item) => item.path == match.file.path,
           );
-        }).toList();
-
-        // Apply client-side filters
-        final filtered = applyFilters(files);
-        _recordResultOrigins(filtered, origin);
-
-        _isSearching = false;
-        notifyListeners();
-        return filtered;
-      } else {
-        throw UnsupportedError('Find not supported for ${client.providerName}');
+          var file = match.file;
+          var snippet = match.snippet;
+          if (match.archiveMember != null) {
+            snippet = '${match.archiveMember}: $snippet';
+            final previous = index < 0 ? null : _searchResults[index];
+            file = file.copyWith(
+              metadata: {
+                ...?file.metadata,
+                'matchingArchiveMembers': [
+                  ...?(previous?.metadata?['matchingArchiveMembers'] as List?),
+                  match.archiveMember,
+                ],
+              },
+            );
+          }
+          if (index < 0) {
+            _searchResults.add(file);
+          } else {
+            _searchResults[index] = file;
+          }
+          _recordResultOrigins([file], origin);
+          if (snippet.isNotEmpty) _lastSnippets[file.path!] = snippet;
+          notifyListeners();
+        },
+        onProgress: (count, path) {
+          _scannedCount = count;
+          if (!_disposed && count % 32 == 0) notifyListeners();
+        },
+      );
+      if (_disposed) return [];
+      _searchErrors = result.errors;
+      _wasCancelled = result.cancelled;
+      _scannedCount = result.scanned;
+      if (!origin.isCurrent) {
+        _searchResults = [];
+        _lastSnippets = {};
+        _searchErrors.add(
+          'The storage connection changed. Run the search again.',
+        );
       }
-    } catch (e) {
-      _ref.read(errorProvider).addError('Find failed: $e');
-      _isSearching = false;
-      notifyListeners();
+      return List.of(_searchResults);
+    } catch (error) {
+      if (!_disposed) {
+        _searchErrors.add(error.toString());
+        _ref.read(errorProvider).addError('Search failed: $error');
+      }
       return [];
+    } finally {
+      _isSearching = false;
+      if (!_disposed) notifyListeners();
     }
   }
 

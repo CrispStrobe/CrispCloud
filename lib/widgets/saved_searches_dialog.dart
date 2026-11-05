@@ -59,10 +59,9 @@ Future<void> showSaveSearchDialog(
   );
 
   if (confirmed == true && controller.text.trim().isNotEmpty) {
-    await ref.read(searchProvider).saveCurrentSearch(
-          name: controller.text.trim(),
-          query: query,
-        );
+    await ref
+        .read(searchProvider)
+        .saveCurrentSearch(name: controller.text.trim(), query: query);
     if (context.mounted) {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(content: Text('Search "${controller.text.trim()}" saved')),
@@ -79,10 +78,7 @@ class _SavedSearchesDialog extends ConsumerWidget {
   final BuildContext panelContext;
   final WidgetRef ref;
 
-  const _SavedSearchesDialog({
-    required this.panelContext,
-    required this.ref,
-  });
+  const _SavedSearchesDialog({required this.panelContext, required this.ref});
 
   @override
   Widget build(BuildContext context, WidgetRef widgetRef) {
@@ -129,8 +125,9 @@ class _SavedSearchesDialog extends ConsumerWidget {
                       search: search,
                       panelContext: panelContext,
                       onRun: () => _runSearch(context, widgetRef, search),
-                      onDelete: () =>
-                          widgetRef.read(searchProvider).deleteSavedSearch(search.name),
+                      onDelete: () => widgetRef
+                          .read(searchProvider)
+                          .deleteSavedSearch(search.name),
                     );
                   },
                 ),
@@ -146,11 +143,23 @@ class _SavedSearchesDialog extends ConsumerWidget {
   }
 
   Future<void> _runSearch(
-      BuildContext context, WidgetRef widgetRef, SavedSearch search) async {
+    BuildContext context,
+    WidgetRef widgetRef,
+    SavedSearch search,
+  ) async {
     Navigator.pop(context);
     final results = await widgetRef.read(searchProvider).runSavedSearch(search);
     if (panelContext.mounted) {
-      showSearchResultsDialog(panelContext, widgetRef, search.query, [], results);
+      showSearchResultsDialog(
+        panelContext,
+        widgetRef,
+        search.query,
+        [],
+        results,
+        side: widgetRef.read(searchProvider).resultsSide,
+        snippets: widgetRef.read(searchProvider).lastSnippets,
+        messages: widgetRef.read(searchProvider).searchErrors,
+      );
     }
   }
 }
@@ -176,7 +185,10 @@ class _SavedSearchTile extends StatelessWidget {
   Widget build(BuildContext context) {
     return ListTile(
       leading: const Icon(Icons.saved_search_outlined),
-      title: Text(search.name, style: const TextStyle(fontWeight: FontWeight.w500)),
+      title: Text(
+        search.name,
+        style: const TextStyle(fontWeight: FontWeight.w500),
+      ),
       subtitle: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
@@ -188,8 +200,9 @@ class _SavedSearchTile extends StatelessWidget {
           Text(
             search.filterSummary,
             style: TextStyle(
-                fontSize: 11,
-                color: Theme.of(context).colorScheme.onSurfaceVariant),
+              fontSize: 11,
+              color: Theme.of(context).colorScheme.onSurfaceVariant,
+            ),
             overflow: TextOverflow.ellipsis,
           ),
         ],
