@@ -292,6 +292,13 @@ void main() {
       await tester.pump();
       expect(harness.editor.editorScaleFactor, closeTo(1, 0.001));
       expect(_saveEnabled(tester), isFalse);
+      await harness.addText('Zoom');
+      await tester.ensureVisible(_command(ImageEditorAction.zoomIn));
+      await tester.tap(_command(ImageEditorAction.zoomIn));
+      await tester.pump();
+      await harness.save();
+      final result = image.decodePng(harness.store.writes.single)!;
+      expect((result.width, result.height), (24, 16));
     },
   );
 
