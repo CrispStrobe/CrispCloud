@@ -23,8 +23,10 @@ import '../services/panel_view_mode_service.dart' show PanelViewMode;
 import '../services/code_editor_menu.dart';
 import '../services/office_editor_menu.dart';
 import '../services/image_editor_menu.dart';
+import '../services/pdf_editor_menu.dart';
 import '../widgets/code_editor_menus.dart';
 import '../widgets/image_editor_menus.dart';
+import '../widgets/pdf_editor_menus.dart';
 import '../widgets/audit_log_dialog.dart';
 import '../widgets/log_viewer_dialog.dart';
 import '../widgets/file_panel.dart';
@@ -79,6 +81,7 @@ class _FileBrowserScreenState extends ConsumerState<FileBrowserScreen> {
         ref.watch(imageEditorMenuProvider);
     final CodeEditorMenuActions? codeEditor =
         ref.watch(codeEditorMenuProvider);
+    final PdfEditorMenuActions? pdfEditor = ref.watch(pdfEditorMenuProvider);
     final auth = ref.watch(authProvider);
     final showPreview = ref.watch(showPreviewProvider);
     // layoutPresetProvider kept for persistence but no longer drives layout.
@@ -174,6 +177,7 @@ class _FileBrowserScreenState extends ConsumerState<FileBrowserScreen> {
           ref,
           officeEditor,
           imageEditor,
+          pdfEditor,
           codeEditor,
         ),
         child: scaffold,
@@ -191,6 +195,7 @@ class _FileBrowserScreenState extends ConsumerState<FileBrowserScreen> {
     WidgetRef ref,
     OfficeEditorMenuActions? editor,
     ImageEditorMenuActions? imageEditor,
+    PdfEditorMenuActions? pdfEditor,
     CodeEditorMenuActions? codeEditor,
   ) {
     final appMenu = PlatformMenu(
@@ -227,6 +232,13 @@ class _FileBrowserScreenState extends ConsumerState<FileBrowserScreen> {
       return <PlatformMenuItem>[
         appMenu,
         ...buildImageEditorPlatformMenus(context, imageEditor),
+      ];
+    }
+
+    if (pdfEditor != null) {
+      return <PlatformMenuItem>[
+        appMenu,
+        ...buildPdfEditorPlatformMenus(pdfEditor),
       ];
     }
 
