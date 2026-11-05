@@ -579,6 +579,10 @@ class ReportDesignerController extends ChangeNotifier {
   final Set<String> _embedding = <String>{};
   String? _notice;
   String? _fontNoticeOriginal;
+  String? _deviceFontNoticeOriginal;
+  String _deviceFontNoticeFamily = '';
+  List<String> _deviceFontNoticeFaces = const [];
+  String _deviceFontNoticeSize = '';
   String? _importNoticeOriginal;
   int _importNoticeRows = 0;
   String _importNoticeTable = '';
@@ -7623,6 +7627,13 @@ class ReportDesignerController extends ChangeNotifier {
   String? get localizedNotice {
     final notice = _notice;
     if (notice == null) return null;
+    if (identical(notice, _deviceFontNoticeOriginal)) {
+      return strings.embeddedFontNotice(
+        _deviceFontNoticeFamily,
+        _deviceFontNoticeFaces,
+        _deviceFontNoticeSize,
+      );
+    }
     if (identical(notice, _importNoticeOriginal)) {
       return strings.importedRows(_importNoticeRows, _importNoticeTable);
     }
@@ -7796,6 +7807,15 @@ class ReportDesignerController extends ChangeNotifier {
         message =
             'Embedded $family (${_faceNames(files)}, '
             '${_byteSize(files.byteLength)})';
+        _deviceFontNoticeOriginal = message;
+        _deviceFontNoticeFamily = family;
+        _deviceFontNoticeFaces = [
+          if (files.regular != null) 'Regular',
+          if (files.bold != null) 'Bold',
+          if (files.italic != null) 'Italic',
+          if (files.boldItalic != null) 'Bold Italic',
+        ];
+        _deviceFontNoticeSize = _byteSize(files.byteLength);
       }
     } on Object catch (e) {
       if (_disposed) {

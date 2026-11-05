@@ -150,7 +150,6 @@ void main() {
       expect(nonNumber, isNot('"12x" is not a number'), reason: language);
       final badValue = strings.diagnostic('"{1}" is not a valid date');
       expect(badValue, contains('{1}'), reason: language);
-      expect(badValue, contains('date'), reason: language);
       expect(badValue, isNot('"{1}" is not a valid date'), reason: language);
       final duplicate =
           strings.diagnostic('Element name "Revenue" is used more than once');

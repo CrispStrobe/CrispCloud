@@ -1,6 +1,7 @@
 import 'dart:ui';
 
 import 'report_asset_strings.dart';
+import 'report_notice_strings.dart';
 
 /// User-interface language of the report designer.
 ///
@@ -112,12 +113,16 @@ class ReportDesignerStrings {
             ? localizeReportAssetMessage(languageCode, message)
             : null) ??
         _table[message] ??
+        localizedReportNotice(languageCode, message) ??
         _dynamicDiagnostic(message);
     if (whole != null) return whole;
 
     final source = _sourceTail.firstMatch(message);
     final head = source?.group(1) ?? message;
-    final translated = _table[head] ?? _dynamicDiagnostic(head);
+    final translated =
+        _table[head] ??
+        localizedReportNotice(languageCode, head) ??
+        _dynamicDiagnostic(head);
     if (translated == null) return summary;
     if (source == null) return translated;
     final at = source.group(3);
@@ -128,7 +133,8 @@ class ReportDesignerStrings {
   /// Localizes recognized import and embedding notices, preserving names.
   String assetNotice(String message) {
     if (languageCode == 'en') return message;
-    return localizeReportAssetMessage(languageCode, message) ??
+    return localizedReportNotice(languageCode, message) ??
+        localizeReportAssetMessage(languageCode, message, notice: true) ??
         diagnostic(message);
   }
 
@@ -273,6 +279,30 @@ class ReportDesignerStrings {
       return '$n ${p.few}';
     }
     return '$n ${p.many}';
+  }
+
+  /// Status after embedding a font; family and size are user/provider data.
+  String embeddedFontNotice(String family, List<String> faces, String size) {
+    const labels = <String, List<String>>{
+      'en': ['Embedded', 'Regular', 'Bold', 'Italic', 'Bold Italic'],
+      'de': ['Eingebettet', 'Normal', 'Fett', 'Kursiv', 'Fett kursiv'],
+      'fr': ['Incorporé', 'Normal', 'Gras', 'Italique', 'Gras italique'],
+      'es': ['Incrustada', 'Normal', 'Negrita', 'Cursiva', 'Negrita cursiva'],
+      'pt': ['Incorporada', 'Normal', 'Negrito', 'Itálico', 'Negrito itálico'],
+      'ar': ['تم تضمين', 'عادي', 'عريض', 'مائل', 'عريض مائل'],
+      'ja': ['埋め込み済み', '標準', '太字', '斜体', '太字斜体'],
+      'ko': ['포함됨', '일반', '굵게', '기울임', '굵은 기울임'],
+      'zh': ['已嵌入', '常规', '粗体', '斜体', '粗斜体'],
+    };
+    const keys = ['Regular', 'Bold', 'Italic', 'Bold Italic'];
+    final words = labels[languageCode] ?? labels['en']!;
+    final translatedFaces = faces
+        .map((face) {
+          final index = keys.indexOf(face);
+          return index < 0 ? face : words[index + 1];
+        })
+        .join(' + ');
+    return '${words[0]} $family ($translatedFaces, $size)';
   }
 
   /// Status for rows imported into a user-named table.
