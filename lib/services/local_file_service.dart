@@ -109,6 +109,17 @@ abstract class LocalFileService {
   /// Release access acquired by [beginStreamAccess].
   Future<void> endStreamAccess() async {}
 
+  /// Hold a security scope for an entire file operation, including nested
+  /// streaming reads and writes. Implementations must keep the scope local to
+  /// this invocation rather than sharing one mutable stream-scope slot.
+  Future<T> withFileOperationAccess<T>(
+      String path, Future<T> Function() action) async {
+    if (!await ensureAccess(path)) {
+      throw FileSystemException('Access to this path was not granted.', path);
+    }
+    return action();
+  }
+
   /// File size, using the granted security scope where needed. Null when the
   /// file is missing or access was denied.
   Future<int?> fileLength(String path) async {

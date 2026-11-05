@@ -427,6 +427,20 @@ class MacosFileService implements LocalFileService, LocalFileSaveReporter {
   }
 
   @override
+  Future<T> withFileOperationAccess<T>(
+      String path, Future<T> Function() action) async {
+    if (!await ensureAccess(path)) {
+      throw FileSystemException('Access to this path was not granted.', path);
+    }
+    final scope = await _beginScope(path);
+    try {
+      return await action();
+    } finally {
+      await _endScope(scope);
+    }
+  }
+
+  @override
   Future<int?> fileLength(String path) async {
     if (!await hasAccessToPath(path) && !await ensureAccess(path)) return null;
     final String accessPath = await _accessPath(path);
