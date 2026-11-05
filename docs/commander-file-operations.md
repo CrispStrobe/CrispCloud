@@ -105,11 +105,14 @@ Cancel and stop/continue-on-error report completed, failed, untouched, and
 intermediate recovery paths separately; dependent batches stop on their first error.
 
 Successful renames update file lists at their original paths. After closing the
-tool, **Edit → Undo** restores completed work as one history action, including
-batches larger than the history menu's 50-action limit. **Undo batch** uses the
-same checked restoration. Closing an active dialog retains undo for its completed
-work. The action menu is session-bound; **History / recovery** keeps batch records
-across restarts and can resume or restore work after reconnecting the same account.
+tool, **Ctrl+Z** (**Meta/Command+Z** on macOS) restores completed work as one
+history action, including batches larger than the session history's 50-action
+limit. **Undo batch** uses the same checked restoration. Closing an active dialog
+retains undo for its completed work. Normal Undo is session-bound. Persistent
+**Rename History and Recovery** is available from the macOS **Edit** menu,
+**More actions**, or the command palette, and as **History / recovery** inside
+the rename dialog. It keeps batch records across restarts and can resume or
+restore work after reconnecting the same account.
 Occupied originals, changed file fingerprints, missing paths, or disconnected
 sources block unsafe reversal. The batch is not an atomic transaction: cancellation
 or a later failure can leave completed work and intermediate paths to restore.

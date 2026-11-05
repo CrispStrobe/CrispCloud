@@ -126,9 +126,10 @@ class _FilePanelState extends ConsumerState<FilePanel> {
         ? ref.watch(localViewModeProvider)
         : ref.watch(remoteViewModeProvider);
     final visualLayout =
-        layout == ViewMode.grid ||
-        layout == ViewMode.tiles ||
-        layout == ViewMode.gallery;
+        !panel.showingSearchResults &&
+        (layout == ViewMode.grid ||
+            layout == ViewMode.tiles ||
+            layout == ViewMode.gallery);
     // Visual layouts keep their search/view controls usable in empty folders.
     if (kIsWeb &&
         !visualLayout &&
@@ -562,9 +563,10 @@ class _FilePanelState extends ConsumerState<FilePanel> {
         ? ref.watch(localViewModeProvider)
         : ref.watch(remoteViewModeProvider);
     final visualLayout =
-        layout == ViewMode.grid ||
-        layout == ViewMode.tiles ||
-        layout == ViewMode.gallery;
+        !panel.showingSearchResults &&
+        (layout == ViewMode.grid ||
+            layout == ViewMode.tiles ||
+            layout == ViewMode.gallery);
     return Container(
       decoration: BoxDecoration(
         color: widget.isActive ? null : Colors.black.withValues(alpha: 0.02),
@@ -596,7 +598,7 @@ class _FilePanelState extends ConsumerState<FilePanel> {
             FileSelectionBar(side: widget.side, selection: selection),
           if (ref.watch(panelViewModeProvider(widget.side)) ==
                   PanelViewMode.full &&
-              layout == ViewMode.list)
+              (panel.showingSearchResults || layout == ViewMode.list))
             _CompactColumnHeader(side: widget.side, panel: panel),
           // Loading indicator shown while directory listing is in progress
           if (panel.isLoading) const LinearProgressIndicator(minHeight: 2),

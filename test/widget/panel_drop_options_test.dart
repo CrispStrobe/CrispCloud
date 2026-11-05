@@ -197,4 +197,35 @@ void main() {
     await tester.pumpWidget(const SizedBox.shrink());
     await tester.pumpAndSettle();
   });
+
+  testWidgets('a collection keeps list headers and empty state with Gallery selected', (
+    tester,
+  ) async {
+    container.read(remoteViewModeProvider.notifier).state = ViewMode.gallery;
+    destination.showSearchResults(
+      [file],
+      origin: source.captureOperationOrigin([file]),
+      title: 'Gallery collection',
+    );
+    await host(tester);
+
+    expect(container.read(remoteViewModeProvider), ViewMode.gallery);
+    expect(find.byType(FileListView), findsOneWidget);
+    expect(find.text('Original path'), findsOneWidget);
+    expect(find.byTooltip('File list actions'), findsOneWidget);
+
+    await tester.tap(find.byTooltip('Remove from list (keep files)'));
+    await tester.pumpAndSettle();
+
+    expect(destination.files, isEmpty);
+    expect(destination.showingSearchResults, isTrue);
+    expect(find.text('Original path'), findsOneWidget);
+    expect(find.text('This file list is empty.'), findsOneWidget);
+    expect(find.byTooltip('File list actions'), findsOneWidget);
+    expect(find.byTooltip('Return to folder'), findsOneWidget);
+    expect(container.read(remoteViewModeProvider), ViewMode.gallery);
+    expect(tester.takeException(), isNull);
+    await tester.pumpWidget(const SizedBox.shrink());
+    await tester.pumpAndSettle();
+  });
 }
