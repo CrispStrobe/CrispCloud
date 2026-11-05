@@ -116,6 +116,7 @@ class PanelNotifier extends ChangeNotifier {
   int _tabIdCounter = 0;
   final List<PanelTab> _tabs = [];
   String _activeTabId = '';
+  final _tabsPublished = Completer<void>();
 
   final _refreshLock = AsyncLock();
   final _tabSaveLock = AsyncLock();
@@ -2799,20 +2800,39 @@ class PanelNotifier extends ChangeNotifier {
           await _loadRemoteFiles();
         } else {
           final tabId = _activeTabId;
-          final generation = _listingGeneration;
+          final generation = ++_listingGeneration;
           final path = _localPath;
           _localFileService.currentPath = path;
           await _localFileService.refresh();
+          if (!_isDisposed && tabId.isEmpty && _activeTabId.isEmpty) {
+            await _tabsPublished.future;
+          }
+          final tab = activeTab;
+          final sameTab = tabId.isNotEmpty
+              ? tabId == _activeTabId
+              : tab != null &&
+                    _tabs.length == 1 &&
+                    tab.path == path &&
+                    tab.storage == null &&
+                    tab.collectionId == null;
           // Preparing a local refresh must not start a new listing after a
           // newer tab, source, or navigation has already taken over.
           if (_isDisposed ||
-              tabId != _activeTabId ||
+              !sameTab ||
               generation != _listingGeneration ||
               path != _localPath ||
               selectedSource != _ref.read(panelSourceProvider(side))) {
             return;
           }
+          final acceptedTabId = _activeTabId;
           await _loadLocalFiles();
+          if (!_isDisposed &&
+              acceptedTabId == _activeTabId &&
+              _navHistory.isEmpty &&
+              _verifiedListingGeneration == _listingGeneration &&
+              _currentDirectoryOrigin?.source.isLocal == true) {
+            _pushHistory(currentPath);
+          }
         }
       }
     });
@@ -3816,6 +3836,7 @@ class PanelNotifier extends ChangeNotifier {
     final path = side == PanelSide.local ? _localPath : _remotePath;
     _tabs.add(PanelTab(id: id, path: path));
     _activeTabId = id;
+    if (!_tabsPublished.isCompleted) _tabsPublished.complete();
   }
 
   /// Restore tabs from SharedPreferences. Falls back to single default tab.
@@ -3868,6 +3889,7 @@ class PanelNotifier extends ChangeNotifier {
             final tab = activeTab;
             if (tab != null) _remotePath = tab.path;
           }
+          if (!_tabsPublished.isCompleted) _tabsPublished.complete();
           notifyListeners();
           await _restoreSelectedTab();
           return;
@@ -4213,9 +4235,11 @@ class PanelNotifier extends ChangeNotifier {
 
   // --- Internal loading ---
   Future<void> _initializeLocalPath() async {
+    var generation = _listingGeneration;
+    bool isCurrent() => !_isDisposed && generation == _listingGeneration;
     try {
       await _localFileService.getInitialPath();
-      if (_isDisposed) return;
+      if (!isCurrent()) return;
       if (!kIsWeb &&
           Platform.isMacOS &&
           _localFileService.grantedBasePath == null) {
@@ -4224,30 +4248,44 @@ class PanelNotifier extends ChangeNotifier {
             .addError(
               'Please select a base directory to grant access (e.g., your home folder)',
             );
+        final initialDirectory =
+            await _localFileService.getSafeFallbackDirectory();
+        if (!isCurrent()) return;
         final grantedPath = await _localFileService.requestDirectoryAccess(
-          initialDirectory: await _localFileService.getSafeFallbackDirectory(),
+          initialDirectory: initialDirectory,
         );
-        if (_isDisposed) return;
+        if (!isCurrent()) return;
         if (grantedPath != null) {
           _localPath = grantedPath;
           _ref.read(errorProvider).clearErrors();
         } else {
-          _localPath = await _localFileService.getSafeFallbackDirectory();
+          final fallback = await _localFileService.getSafeFallbackDirectory();
+          if (!isCurrent()) return;
+          _localPath = fallback;
           _ref.read(errorProvider).clearErrors();
           _ref
               .read(errorProvider)
               .addError('Access cancelled. Using fallback directory.');
         }
       }
-      await _loadLocalFiles();
-      if (_isDisposed) return;
+      final loading = _loadLocalFiles();
+      generation = _listingGeneration;
+      await loading;
+      if (!isCurrent()) return;
       _pushHistory(currentPath);
       notifyListeners();
     } catch (e) {
-      if (_isDisposed) return;
+      if (!isCurrent()) return;
       _log.warn('operation failed', e);
-      _localPath = await _localFileService.getSafeFallbackDirectory();
-      if (_isDisposed) return;
+      final String fallback;
+      try {
+        fallback = await _localFileService.getSafeFallbackDirectory();
+      } catch (_) {
+        if (!isCurrent()) return;
+        rethrow;
+      }
+      if (!isCurrent()) return;
+      _localPath = fallback;
       _ref.read(errorProvider).addError(e.toString());
       notifyListeners();
     }
@@ -4813,6 +4851,7 @@ class PanelNotifier extends ChangeNotifier {
   @override
   void dispose() {
     _isDisposed = true;
+    if (!_tabsPublished.isCompleted) _tabsPublished.complete();
     _typeaheadResetTimer?.cancel();
     _refreshDebounce?.cancel();
     listFocusNode.dispose();

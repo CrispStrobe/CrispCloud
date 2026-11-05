@@ -110,10 +110,12 @@ class _Local extends Fake
   @override
   String currentPath = '/';
   String? directory;
+  Completer<String>? initialPath;
   @override
   String? get grantedBasePath => directory ?? '/';
   @override
-  Future<String> getInitialPath() async => directory ?? '/';
+  Future<String> getInitialPath() =>
+      initialPath?.future ?? Future.value(directory ?? '/');
   @override
   Future<String> getSafeFallbackDirectory() async => directory ?? '/';
   @override
@@ -696,6 +698,63 @@ void main() {
       expect(panel.captureCurrentOrigin().storageReference, original.storageReference);
     },
   );
+
+  test('the first awaited local refresh supersedes startup and seeds Back history', () async {
+    container.dispose();
+    auth = _Auth(cloud);
+    container = ProviderContainer(
+      overrides: [
+        authProvider.overrideWith((_) => auth),
+        localFileServiceProvider.overrideWithValue(local),
+        panelProvider(PanelSide.local).overrideWith(
+          (ref) => PanelNotifier(ref, PanelSide.local, persistTabs: true),
+        ),
+      ],
+    );
+    final initialPath = Completer<String>();
+    local.initialPath = initialPath;
+    addTearDown(() {
+      if (!initialPath.isCompleted) initialPath.complete('/');
+    });
+    final panel = container.read(panelProvider(PanelSide.local));
+
+    await panel.refresh();
+
+    expect(panel.files, isNotNull);
+    expect(panel.isLoading, isFalse);
+    final original = panel.captureCurrentOrigin();
+    expect(original.source, isA<LocalPanelSource>());
+    final localReads = local.paths.length;
+    initialPath.complete('/');
+    await initialPath.future;
+    expect(local.paths.length, localReads);
+
+    await panel.navigateToPath('/next', origin: original);
+    expect(panel.canNavigateBack, isTrue);
+    await panel.navigateBack();
+    expect(panel.currentPath, original.source.currentPath);
+  });
+
+  test('delayed local startup cannot replace a later cloud navigation', () async {
+    final initialPath = Completer<String>();
+    local.initialPath = initialPath;
+    addTearDown(() {
+      if (!initialPath.isCompleted) initialPath.complete('/');
+    });
+    final panel = container.read(panelProvider(PanelSide.local));
+    final cloudPanel = await remote();
+    final origin = cloudPanel.captureCurrentOrigin();
+    await panel.navigateToPath('/two', origin: origin);
+    final localReads = local.paths.length;
+
+    initialPath.complete('/');
+    await initialPath.future;
+
+    expect(local.paths.length, localReads);
+    expect(panel.currentPath, '/two');
+    expect(panel.files!.any((file) => file.path == '/two/same.txt'), isTrue);
+    expect(panel.captureCurrentOrigin().storageReference, origin.storageReference);
+  });
 
   test('opening a collection in a new tab skips its interim directory load', () async {
     final panel = await remote();
