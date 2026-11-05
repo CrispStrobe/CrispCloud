@@ -34,8 +34,6 @@ class SFTPClientAdapter extends CloudStorageClient
   StorageTransferCapabilities get transferCapabilities =>
       const StorageTransferCapabilities(
         caseSensitivity: StorageCaseSensitivity.unknown,
-        nativeMove: true,
-        atomicMove: true,
         // dartssh2 prefers the replacing OpenSSH POSIX rename extension.
         noReplaceMove: false,
         readRanges: true,

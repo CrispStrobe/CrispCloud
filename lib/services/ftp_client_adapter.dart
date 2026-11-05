@@ -21,8 +21,7 @@ class FTPClientAdapter extends CloudStorageClient
   @override
   StorageTransferCapabilities get transferCapabilities =>
       const StorageTransferCapabilities(
-        nativeMove: true,
-        atomicMove: true,
+        // FTP RNTO cannot enforce the optional exact no-replace contract.
         deleteEmptyDirectory: true,
       );
 
