@@ -19,6 +19,7 @@ import 'file_column_view.dart';
 import 'file_column_header.dart';
 import 'file_view_editor_dialog.dart';
 import 'workspace_dialog.dart';
+import 'file_command_toolbar.dart';
 import 'file_grid_view.dart';
 import 'file_list_view.dart' show FileListView, PanelDragData;
 import 'file_selection_bar.dart';
@@ -613,6 +614,7 @@ class _FilePanelState extends ConsumerState<FilePanel> {
             isActive: widget.isActive,
             showSource: MediaQuery.sizeOf(context).width > 800,
           ),
+          FileCommandToolbar(side: widget.side),
           if (panel.showingSearchResults) _buildFileListHeader(context, panel),
           if (panel.collectionBusy && !panel.showingSearchResults)
             Row(

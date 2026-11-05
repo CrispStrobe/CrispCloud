@@ -1,6 +1,8 @@
 import 'dart:async';
 import 'dart:io';
 
+import 'support/workflow_fake_client.dart';
+
 import 'package:crisp_cloud/models/file_item.dart';
 import 'package:crisp_cloud/models/panel_side.dart';
 import 'package:crisp_cloud/providers/panel_source_provider.dart';
@@ -53,7 +55,11 @@ class _Cloud extends Fake implements CloudStorageClient {
   Completer<Map<String, dynamic>>? pending;
   Completer<void>? pendingCreate;
   final paths = <String>[];
-  final createdPaths = <String>[];
+  final created = <String>[];
+  List<String> get createdPaths => created;
+
+  @override
+  Future<void> createFolderPath(String path) async => created.add(path);
 
   static Map<String, dynamic> get listing => {
     'folders': <Map<String, dynamic>>[],
@@ -70,7 +76,7 @@ class _Cloud extends Fake implements CloudStorageClient {
 
   @override
   Future<void> createFolderPath(String path) async {
-    createdPaths.add(path);
+    created.add(path);
     await pendingCreate?.future;
   }
 }
@@ -92,7 +98,7 @@ class _WritableCloud extends _Cloud with CloudTransferOperations {
 class _Auth extends ChangeNotifier implements AuthNotifier {
   _Auth(this.client);
   @override
-  final _Cloud client;
+  final CloudStorageClient client;
   @override
   bool isConnected = true;
   @override
@@ -102,7 +108,7 @@ class _Auth extends ChangeNotifier implements AuthNotifier {
 
   void connection(bool connected) {
     isConnected = connected;
-    client.authenticated = connected;
+    if (client is _Cloud) (client as _Cloud).authenticated = connected;
     notifyListeners();
   }
 
@@ -131,6 +137,120 @@ void main() {
   });
 
   tearDown(() => container.dispose());
+
+  test(
+    'legacy copy and move use staged queue operations on their captured cloud',
+    () async {
+      final memory = WorkflowFakeClient()..put('/source.txt', [1, 2, 3]);
+      memory.directories.addAll(['/copied', '/moved']);
+      final scoped = ProviderContainer(
+        overrides: [
+          authProvider.overrideWith((_) => _Auth(memory)),
+          localFileServiceProvider.overrideWithValue(local),
+        ],
+      );
+      addTearDown(scoped.dispose);
+      final panel = scoped.read(panelProvider(PanelSide.remote));
+      await panel.refresh();
+      await panel.copyFiles([
+        panel.files!.firstWhere((file) => file.name == 'source.txt'),
+      ], '/copied');
+      expect(memory.files['/copied/source.txt'], [1, 2, 3]);
+      expect(memory.files['/source.txt'], [1, 2, 3]);
+      expect(scoped.read(transferProvider).savedJobs, hasLength(1));
+      await panel.moveFiles([
+        panel.files!.firstWhere((file) => file.name == 'source.txt'),
+      ], '/moved');
+      expect(memory.files['/moved/source.txt'], [1, 2, 3]);
+      expect(memory.files.containsKey('/source.txt'), isFalse);
+      expect(scoped.read(transferProvider).savedJobs, hasLength(2));
+    },
+  );
+
+  test(
+    'create folder uses the verified remote listing despite a local label',
+    () async {
+      final panel = container.read(panelProvider(PanelSide.remote));
+      await panel.refresh();
+      await panel.createFolder(' new folder ');
+      expect(actual.created, ['/ new folder ']);
+    },
+  );
+
+  test(
+    'create folder in the left pane targets its registered account',
+    () async {
+      final panel = container.read(panelProvider(PanelSide.local));
+      await Future<void>.delayed(Duration.zero);
+      final other = _Cloud('Secondary provider', accountId: 'other-account');
+      final registry = container.read(multiCloudProvider);
+      registry.addConnection(
+        id: 'secondary',
+        label: 'Second',
+        provider: CloudProvider.s3,
+        client: other,
+      );
+      container
+          .read(panelSourceProvider(PanelSide.local).notifier)
+          .setSource(
+            RemotePanelSource(
+              providerName: other.providerName,
+              client: other,
+              path: '/documents',
+            ),
+          );
+      await Future<void>.delayed(Duration.zero);
+      await panel.refresh();
+      await panel.createFolder('created');
+      expect(other.created, ['/documents/created']);
+      expect(actual.created, isEmpty);
+    },
+  );
+
+  test(
+    'disconnect during new-folder lookup cannot mutate the new account',
+    () async {
+      final panel = container.read(panelProvider(PanelSide.remote));
+      await panel.refresh();
+      actual.pending = Completer<Map<String, dynamic>>();
+      final operation = panel.createFolder('created');
+      await Future<void>.delayed(Duration.zero);
+      auth.connection(false);
+      auth.connection(true);
+      actual.pending!.complete(_Cloud.listing);
+      await operation;
+      expect(actual.created, isEmpty);
+    },
+  );
+
+  test('new-folder names cannot escape the captured parent', () async {
+    final panel = container.read(panelProvider(PanelSide.remote));
+    await panel.refresh();
+    for (final name in [
+      '',
+      '.',
+      '..',
+      '../outside',
+      'nested/name',
+      r'nested\name',
+    ]) {
+      await panel.createFolder(name);
+    }
+    expect(actual.created, isEmpty);
+  });
+
+  test(
+    'legacy copy and move reject replacement objects before any operation',
+    () async {
+      final panel = container.read(panelProvider(PanelSide.remote));
+      await panel.refresh();
+      final unverified = panel.files!.single.copyWith();
+      await panel.copyFiles([unverified], '/target');
+      await panel.moveFiles([unverified], '/target');
+      expect(actual.created, isEmpty);
+      expect(container.read(transferProvider).operations, isEmpty);
+    },
+  );
 
   test(
     'native metadata publication records the exact local file origin',

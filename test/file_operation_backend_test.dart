@@ -8,6 +8,10 @@ import 'package:crisp_cloud/services/file_operation_backend.dart';
 import 'package:crisp_cloud/services/file_operation_service.dart';
 import 'package:crisp_cloud/services/local_file_service.dart';
 import 'package:crisp_cloud/services/native_file_primitives.dart';
+import 'package:crisp_cloud/services/transfer_journal.dart';
+import 'package:crisp_cloud/services/transfer_journal_storage.dart';
+import 'package:crisp_cloud/services/transfer_recovery_service.dart';
+import 'package:crisp_cloud/models/transfer_job.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:path/path.dart' as p;
 
@@ -21,6 +25,186 @@ void main() {
     expect(file?.size, 14);
     expect(client.freshReads, isNotEmpty);
     expect(client.cachedReads, isEmpty);
+  });
+
+  for (final nested in [false, true]) {
+    test(
+      'transformed download length drives copy planning (nested: $nested)',
+      () async {
+        const contents = 'decrypted plaintext';
+        final client = _TransformedCloudClient(nested: nested)
+          ..put('/plain.txt', contents);
+        final source = CloudOperationBackend(client, isCurrent: () => true);
+        final targetClient = _CloudClient();
+        final destination = CloudOperationBackend(
+          targetClient,
+          isCurrent: () => true,
+        );
+        final file = (await source.stat('/plain.txt'))!;
+        expect(file.size, utf8.encode(contents).length);
+        expect(file.metadata!['size'], utf8.encode(contents).length + 28);
+        // Real stream overrides remain usable even when older adapters have not
+        // yet advertised their bounded-transfer capability flags.
+        expect(source.capabilities.boundedDownload, isFalse);
+        final plan = await const FileOperationService().prepare(
+          source: source,
+          destination: destination,
+          files: [file],
+          targetDirectory: '/target',
+        );
+        expect(plan.errors, isEmpty);
+        await const FileOperationService().execute(
+          plan,
+          control: FileOperationControl(),
+        );
+        expect(plan.entries.single.outcome, FileOperationOutcome.copied);
+        expect(targetClient.lastUploadLength, utf8.encode(contents).length);
+        expect(targetClient.text('/target/plain.txt'), contents);
+      },
+    );
+  }
+
+  test(
+    'invalid exact download lengths stop before transfer planning',
+    () async {
+      for (final length in [-1, 1.5, '19', double.nan]) {
+        final client = _TransformedCloudClient(lengthOverride: length)
+          ..put('/plain.txt', 'decrypted plaintext');
+        final backend = CloudOperationBackend(client, isCurrent: () => true);
+        await expectLater(backend.stat('/plain.txt'), throwsStateError);
+        expect(client.uploads, isEmpty);
+      }
+    },
+  );
+
+  test(
+    'a restored job reuses its exact opaque multipart staging target',
+    () async {
+      final original = _ResumableCloudClient('source')
+        ..put('/source', 'complete original');
+      final cloud = _ResumableCloudClient('destination')..interruptNext = true;
+      final source = CloudOperationBackend(original, isCurrent: () => true);
+      final target = CloudOperationBackend(cloud, isCurrent: () => true);
+      final prepared = await const FileOperationService().prepare(
+        source: source,
+        destination: target,
+        files: [(await source.stat('/source'))!],
+        targetDirectory: '/target',
+        options: const FileOperationOptions(),
+      );
+      final store = MemoryTransferJournalStorage();
+      final journal = TransferJournal(store);
+      await journal.create('multipart', prepared);
+      await JournaledTransferRunner(journal)
+          .execute('multipart', prepared, control: FileOperationControl());
+      final initial = journal.job('multipart')!;
+      final stage = initial.entries.single.recovery['stagedPath'] as String;
+      expect(initial.entries.single.recovery['multipartUploadPending'], isTrue);
+      expect(await target.stat(stage), isNull);
+      expect(cloud.pending.keys, [stage]);
+      final restored = TransferJournal(store);
+      await restored.initialize();
+      final preview = await const TransferRecoveryService().prepare(
+        restored.job('multipart')!,
+        source: source,
+        destination: target,
+        control: FileOperationControl(),
+      );
+      expect(preview.issues, isEmpty);
+      expect(preview.actions[0], contains('multipart'));
+      expect(preview.plan.entries.single.recovery?['resumeUploadPath'], stage);
+      await JournaledTransferRunner(restored)
+          .execute('multipart', preview.plan, control: FileOperationControl());
+      expect(cloud.uploads, [stage, stage]);
+      expect(cloud.resumed, [stage]);
+      expect(cloud.text('/target/source'), 'complete original');
+      expect(restored.job('multipart')!.status, TransferJobStatus.completed);
+      expect(cloud.pending, isEmpty);
+    },
+  );
+
+  test(
+    'restart does not silently reattach a previous multipart session',
+    () async {
+      final original = _ResumableCloudClient('source')
+        ..put('/source', 'original');
+      final cloud = _ResumableCloudClient('destination')..interruptNext = true;
+      final source = CloudOperationBackend(original, isCurrent: () => true);
+      final target = CloudOperationBackend(cloud, isCurrent: () => true);
+      final prepared = await const FileOperationService().prepare(
+        source: source,
+        destination: target,
+        files: [(await source.stat('/source'))!],
+        targetDirectory: '/target',
+        options: const FileOperationOptions(),
+      );
+      final journal = TransferJournal(MemoryTransferJournalStorage());
+      await journal.create('multipart', prepared);
+      await JournaledTransferRunner(journal)
+          .execute('multipart', prepared, control: FileOperationControl());
+      final preview = await const TransferRecoveryService().prepare(
+        journal.job('multipart')!,
+        source: source,
+        destination: target,
+        control: FileOperationControl(),
+        mode: TransferRecoveryMode.restartIncomplete,
+      );
+      expect(preview.issues, isEmpty);
+      expect(preview.plan.entries.single.recovery?['resumeUploadPath'], isNull);
+      await JournaledTransferRunner(journal)
+          .execute('multipart', preview.plan, control: FileOperationControl());
+      expect(cloud.uploads.last, isNot(cloud.uploads.first));
+      expect(cloud.resumed, isEmpty);
+    },
+  );
+
+  test('expired, outside, occupied and malformed saved upload targets are rejected before reading source', () async {
+    const name = '.crisp-transfer-01234567-89ab-4cde-8f01-23456789abcd.tmp';
+    for (final path in [
+      '/other/$name',
+      '/target/../$name',
+      '/target/plain.tmp',
+      '/target/$name/child',
+      '/target/$name',
+    ]) {
+      final cloud = _ResumableCloudClient('destination');
+      final target = CloudOperationBackend(cloud, isCurrent: () => true);
+      var read = false;
+      Stream<List<int>> input() async* {
+        read = true;
+        yield [1];
+      }
+
+      if (path != '/target/$name') cloud.pending[path] = 1;
+      await expectLater(
+        target.writeConfiguredFile(
+          '/target/final',
+          input(),
+          1,
+          replace: false,
+          resumeUploadPath: path,
+        ),
+        throwsStateError,
+      );
+      expect(read, isFalse);
+      expect(cloud.uploads, isEmpty);
+    }
+    final cloud = _ResumableCloudClient('destination')
+      ..pending['/target/$name'] = 1;
+    cloud.put('/target/$name', 'external');
+    final target = CloudOperationBackend(cloud, isCurrent: () => true);
+    await expectLater(
+      target.writeConfiguredFile(
+        '/target/final',
+        Stream.value([1]),
+        1,
+        replace: false,
+        resumeUploadPath: '/target/$name',
+      ),
+      throwsStateError,
+    );
+    expect(cloud.text('/target/$name'), 'external');
+    expect(cloud.uploads, isEmpty);
   });
 
   group(
@@ -1203,6 +1387,14 @@ class _CloudClient extends CloudStorageClient {
   }) async => Uint8List.fromList(files[remotePath]!);
 
   @override
+  Stream<List<int>> downloadStream(
+    String remotePath, {
+    Function(int, int)? onProgress,
+  }) async* {
+    yield Uint8List.fromList(files[remotePath]!);
+  }
+
+  @override
   Future<void> downloadFileByPath(
     String remotePath,
     String localPath, {
@@ -1262,6 +1454,34 @@ class _FreshCloudClient extends _CloudClient
   }
 }
 
+class _TransformedCloudClient extends _FreshCloudClient {
+  _TransformedCloudClient({this.nested = false, this.lengthOverride});
+  final bool nested;
+  final Object? lengthOverride;
+
+  @override
+  Future<Map<String, dynamic>> readDirectoryForEdit(String path) async {
+    final result = await super.readDirectoryForEdit(path);
+    for (final file in result['files'] as List) {
+      final downloadSize = lengthOverride ?? file['size'];
+      file['size'] = (file['size'] as int) + 28;
+      if (nested) {
+        file['metadata'] = {'downloadSize': downloadSize};
+      } else {
+        file['downloadSize'] = downloadSize;
+        file['metadata'] = {'downloadSize': 999};
+      }
+    }
+    return result;
+  }
+
+  @override
+  Future<Uint8List> downloadFileBytes(
+    String remotePath, {
+    Function(int, int)? onProgress,
+  }) => throw UnsupportedError('Only the bounded stream is available.');
+}
+
 class _DirectoryWithDisappearedChild extends Fake implements Directory {
   _DirectoryWithDisappearedChild(this.directory);
   final Directory directory;
@@ -1302,5 +1522,52 @@ class _ObservedRangeFile extends Fake implements File {
   Stream<List<int>> openRead([int? start, int? end]) {
     opened(start);
     return file.openRead(start, end);
+  }
+}
+
+class _ResumableCloudClient extends _CloudClient with CloudTransferOperations {
+  _ResumableCloudClient(this.account);
+  final String account;
+  final pending = <String, int>{};
+  final resumed = <String>[];
+  bool interruptNext = false;
+  @override
+  String get userId => account;
+  @override
+  StorageTransferCapabilities get transferCapabilities =>
+      const StorageTransferCapabilities(
+        resumableUpload: true,
+        boundedUpload: true,
+        boundedDownload: true,
+      );
+  @override
+  Future<bool> hasPendingUpload(String path, {int? length}) async =>
+      pending.containsKey(path) && (length == null || pending[path] == length);
+  @override
+  Future<void> uploadStream(
+    Stream<List<int>> dataStream,
+    int length,
+    String fileName,
+    String targetPath, {
+    Function(int, int)? onProgress,
+  }) async {
+    final path = p.posix.join(targetPath, fileName);
+    if (interruptNext) {
+      interruptNext = false;
+      uploads.add(path);
+      pending[path] = length;
+      await dataStream.first;
+      throw StateError(
+        'Multipart upload was interrupted before becoming an object.',
+      );
+    }
+    if (pending.remove(path) != null) resumed.add(path);
+    await super.uploadStream(
+      dataStream,
+      length,
+      fileName,
+      targetPath,
+      onProgress: onProgress,
+    );
   }
 }

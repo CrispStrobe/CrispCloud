@@ -154,6 +154,34 @@ running slots; cancelled queued jobs do not start. Foreground conflicts wait for
 a decision. Background queuing requires choices that can finish without an
 abandoned dialog. Clearing visible outcomes retains durable recovery records.
 
+## Large files and resource limits
+
+Commander transfers use bounded streams or private disk-backed spools. Native
+spools use owned temporary directories; browser uploads use OPFS-backed files
+and fetch bodies instead of assembling entire request bodies in memory. Provider
+metadata responses are bounded separately. Browser storage quotas and missing
+OPFS support produce explicit errors, and cancelled/failed spools are removed.
+
+- S3 multipart recovery attaches to the saved job's exact private staging key,
+  account and upload session. Recovered parts are verified against the original
+  source; restarting explicitly discards that attachment. Large parts are spooled
+  without making the part size the RAM requirement.
+- B2 uses adaptive, verified private parts and checks the completed object's
+  identity. A lost finish response is reconciled against the new file ID.
+- Filen processes its encrypted chunks sequentially and verifies plaintext size
+  and hash. FTP/FTPS transfers own separate sessions so cancelling one transfer
+  does not close a browsing connection.
+- CrispCloud's optional AES-GCM wrapper keeps the existing encrypted format.
+  Decrypted content remains in a private spool until its authentication tag
+  verifies. This requires temporary disk space before plaintext can be read.
+  The format supports at most 68,719,476,704 plaintext bytes per encrypted file.
+  Cancellation interrupts an unfinished authenticated download.
+
+Large-tree preview reports incremental progress and supports pause/cancel, with
+limits of 200,000 planned entries and 256 directory levels. Split a larger job
+into narrower roots. These limits bound planning work without hiding skipped
+rows or silently changing the requested selection.
+
 ## Comparison, archives, viewers and integrity
 
 Folder comparison produces a reviewed plan with per-item decisions and fresh
@@ -202,6 +230,13 @@ literal argument templates, working directories and timeouts. It supports
 reviewed import/export, editing and reordering. Running a command requires a
 reviewed captured local context and provides bounded output and cancellation.
 Existing shell-string definitions remain visible but need conversion before use.
+
+The live panel command bar hosts custom commands and enabled extension actions.
+The [extension manager](EXTENSIONS.md) imports reviewed declarative manifests,
+installs replacements disabled, persists effective command settings, and supports
+export, removal, initialization retry and first-party plugin lifecycle management.
+Disabling or changing an extension invalidates already-open command reviews.
+Native process and path-only plugin actions require verified local rows.
 
 Capabilities remain platform/provider-specific. Browser storage can be evicted
 and directory permission revoked. Metadata, links, clipboard actions, exclusive

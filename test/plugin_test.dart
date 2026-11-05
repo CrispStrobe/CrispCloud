@@ -1,7 +1,7 @@
 // test/plugin_test.dart
 //
 // Unit tests for the CrispCloud plugin system:
-//   PluginRegistry, CrispCloudPlugin interface, PluginContext sandbox,
+//   PluginRegistry, CrispCloudPlugin interface, PluginContext scoped API,
 //   PluginSettings, PluginMenuItem, PluginToolbarButton, and providers.
 
 import 'package:flutter_test/flutter_test.dart';
@@ -36,9 +36,9 @@ class _FakePlugin implements CrispCloudPlugin {
     String name = 'Fake Plugin',
     List<PluginCapability> capabilities = const [],
     Map<String, dynamic> defaultSettings = const {},
-  })  : _name = name,
-        _capabilities = capabilities,
-        _defaultSettings = defaultSettings;
+  }) : _name = name,
+       _capabilities = capabilities,
+       _defaultSettings = defaultSettings;
 
   @override
   String get id => _id;
@@ -79,7 +79,11 @@ class _FakePlugin implements CrispCloudPlugin {
     if (throwOnContextMenu) throw StateError('contextMenu error');
     contextMenuPaths.addAll(filePaths);
     return [
-      PluginMenuItem(id: '${_id}_menu', label: 'Action', icon: 'Icons.play_arrow'),
+      PluginMenuItem(
+        id: '${_id}_menu',
+        label: 'Action',
+        icon: 'Icons.play_arrow',
+      ),
     ];
   }
 
@@ -109,21 +113,23 @@ class _NoCapPlugin extends _FakePlugin {
 /// Plugin that only declares contextMenu.
 class _ContextMenuPlugin extends _FakePlugin {
   _ContextMenuPlugin(String id)
-      : super(id,
-            capabilities: [PluginCapability.contextMenu],
-            defaultSettings: {'showIcons': true, 'maxItems': 5});
+    : super(
+        id,
+        capabilities: [PluginCapability.contextMenu],
+        defaultSettings: {'showIcons': true, 'maxItems': 5},
+      );
 }
 
 /// Plugin that only declares toolbar.
 class _ToolbarPlugin extends _FakePlugin {
   _ToolbarPlugin(String id)
-      : super(id, capabilities: [PluginCapability.toolbar]);
+    : super(id, capabilities: [PluginCapability.toolbar]);
 }
 
 /// Plugin that only declares fileAction.
 class _FileActionPlugin extends _FakePlugin {
   _FileActionPlugin(String id)
-      : super(id, capabilities: [PluginCapability.fileAction]);
+    : super(id, capabilities: [PluginCapability.fileAction]);
 }
 
 /// A fake PluginContext that records all log calls and allows settings round-trip.
@@ -153,7 +159,9 @@ class _FakeContext implements PluginContext {
 // Helpers
 // ---------------------------------------------------------------------------
 
-PluginRegistry _freshRegistry() => PluginRegistry();
+PluginRegistry _freshRegistry() => PluginRegistry(
+  workspaceFactory: (id) async => PluginWorkspace('memory:/$id', () async {}),
+);
 
 // ---------------------------------------------------------------------------
 // Tests
@@ -172,21 +180,31 @@ void main() {
   group('PluginMenuItem', () {
     test('toJson / fromJson round-trip', () {
       const item = PluginMenuItem(
-          id: 'menu_1', label: 'Open', icon: 'Icons.open_in_new');
+        id: 'menu_1',
+        label: 'Open',
+        icon: 'Icons.open_in_new',
+      );
       final json = item.toJson();
       final restored = PluginMenuItem.fromJson(json);
       expect(restored, equals(item));
     });
 
     test('fromJson defaults enabled to true when absent', () {
-      final item = PluginMenuItem.fromJson(
-          {'id': 'x', 'label': 'X', 'icon': 'Icons.star'});
+      final item = PluginMenuItem.fromJson({
+        'id': 'x',
+        'label': 'X',
+        'icon': 'Icons.star',
+      });
       expect(item.enabled, isTrue);
     });
 
     test('disabled item preserved through round-trip', () {
       const item = PluginMenuItem(
-          id: 'x', label: 'X', icon: 'Icons.star', enabled: false);
+        id: 'x',
+        label: 'X',
+        icon: 'Icons.star',
+        enabled: false,
+      );
       expect(PluginMenuItem.fromJson(item.toJson()).enabled, isFalse);
     });
 
@@ -225,34 +243,38 @@ void main() {
 
     test('equality compares all fields', () {
       const a = PluginToolbarButton(
-          id: 'a',
-          label: 'A',
-          tooltip: 'T',
-          icon: 'Icons.a',
-          onPressedKey: 'k');
+        id: 'a',
+        label: 'A',
+        tooltip: 'T',
+        icon: 'Icons.a',
+        onPressedKey: 'k',
+      );
       const b = PluginToolbarButton(
-          id: 'a',
-          label: 'A',
-          tooltip: 'T',
-          icon: 'Icons.a',
-          onPressedKey: 'k');
+        id: 'a',
+        label: 'A',
+        tooltip: 'T',
+        icon: 'Icons.a',
+        onPressedKey: 'k',
+      );
       const c = PluginToolbarButton(
-          id: 'b',
-          label: 'A',
-          tooltip: 'T',
-          icon: 'Icons.a',
-          onPressedKey: 'k');
+        id: 'b',
+        label: 'A',
+        tooltip: 'T',
+        icon: 'Icons.a',
+        onPressedKey: 'k',
+      );
       expect(a, equals(b));
       expect(a, isNot(equals(c)));
     });
 
     test('toString contains id', () {
       const btn = PluginToolbarButton(
-          id: 'mybtn',
-          label: 'L',
-          tooltip: 'T',
-          icon: 'x',
-          onPressedKey: 'k');
+        id: 'mybtn',
+        label: 'L',
+        tooltip: 'T',
+        icon: 'x',
+        onPressedKey: 'k',
+      );
       expect(btn.toString(), contains('mybtn'));
     });
   });
@@ -285,7 +307,10 @@ void main() {
 
     test('copyWith changes settings map', () {
       const ps = PluginSettings(
-          pluginId: 'x', enabled: true, settings: {'a': 1});
+        pluginId: 'x',
+        enabled: true,
+        settings: {'a': 1},
+      );
       final updated = ps.copyWith(settings: {'b': 2});
       expect(updated.settings['b'], 2);
       expect(updated.settings.containsKey('a'), isFalse);
@@ -306,10 +331,10 @@ void main() {
   });
 
   // =========================================================================
-  // PluginContext sandbox
+  // PluginContext scoped API
   // =========================================================================
 
-  group('PluginContext sandbox', () {
+  group('PluginContext scoped API', () {
     test('fake context tempDir is available', () {
       final ctx = _FakeContext();
       expect(ctx.tempDir, isNotEmpty);
@@ -391,6 +416,7 @@ void main() {
       final registry = _freshRegistry();
       final plugin = _FakePlugin('com.test.a');
       registry.registerPlugin(plugin);
+      await registry.initializeAll();
       await registry.unregisterPlugin('com.test.a');
       expect(plugin.disposeCount, 1);
     });
@@ -410,10 +436,7 @@ void main() {
 
     test('plugin with no capabilities registers successfully', () {
       final registry = _freshRegistry();
-      expect(
-        () => registry.registerPlugin(_NoCapPlugin()),
-        returnsNormally,
-      );
+      expect(() => registry.registerPlugin(_NoCapPlugin()), returnsNormally);
     });
   });
 
@@ -422,11 +445,15 @@ void main() {
   // =========================================================================
 
   group('PluginRegistry enable/disable', () {
-    test('plugin is enabled by default', () {
-      final registry = _freshRegistry();
-      registry.registerPlugin(_FakePlugin('com.test.a'));
-      expect(registry.getEnabledPlugins().length, 1);
-    });
+    test(
+      'plugin becomes active after settings and initialization complete',
+      () async {
+        final registry = _freshRegistry();
+        registry.registerPlugin(_FakePlugin('com.test.a'));
+        await registry.initializeAll();
+        expect(registry.getEnabledPlugins().length, 1);
+      },
+    );
 
     test('setEnabled(false) removes plugin from enabledPlugins', () async {
       final registry = _freshRegistry();
@@ -440,6 +467,7 @@ void main() {
       registry.registerPlugin(_FakePlugin('com.test.a'));
       await registry.setEnabled('com.test.a', false);
       await registry.setEnabled('com.test.a', true);
+      await registry.initializeAll();
       expect(registry.getEnabledPlugins().length, 1);
     });
 
@@ -486,15 +514,17 @@ void main() {
       expect(plugin.lastContext, isNotNull);
     });
 
-    test('initializeAll does NOT call initialize on disabled plugins',
-        () async {
-      final registry = _freshRegistry();
-      final plugin = _FakePlugin('com.test.a');
-      registry.registerPlugin(plugin);
-      await registry.setEnabled('com.test.a', false);
-      await registry.initializeAll();
-      expect(plugin.initCount, 0);
-    });
+    test(
+      'initializeAll does NOT call initialize on disabled plugins',
+      () async {
+        final registry = _freshRegistry();
+        final plugin = _FakePlugin('com.test.a');
+        registry.registerPlugin(plugin);
+        await registry.setEnabled('com.test.a', false);
+        await registry.initializeAll();
+        expect(plugin.initCount, 0);
+      },
+    );
 
     test('initializeAll survives plugin that throws', () async {
       final registry = _freshRegistry();
@@ -513,6 +543,7 @@ void main() {
       final b = _FakePlugin('com.test.b');
       registry.registerPlugin(a);
       registry.registerPlugin(b);
+      await registry.initializeAll();
       await registry.disposeAll();
       expect(a.disposeCount, 1);
       expect(b.disposeCount, 1);
@@ -531,6 +562,7 @@ void main() {
       final good = _FakePlugin('com.test.good');
       registry.registerPlugin(bad);
       registry.registerPlugin(good);
+      await registry.initializeAll();
       await expectLater(registry.disposeAll(), completes);
       expect(good.disposeCount, 1);
     });
@@ -539,6 +571,7 @@ void main() {
       final registry = _freshRegistry();
       final plugin = _FakePlugin('com.test.a');
       registry.registerPlugin(plugin);
+      await registry.initializeAll();
       await registry.unregisterPlugin('com.test.a');
       expect(plugin.disposeCount, 1);
     });
@@ -568,14 +601,16 @@ void main() {
       expect(plugin.receivedActions, isEmpty);
     });
 
-    test('plugin without fileAction capability does NOT receive event',
-        () async {
-      final registry = _freshRegistry();
-      final plugin = _ContextMenuPlugin('com.test.menu');
-      registry.registerPlugin(plugin);
-      await registry.notifyFileAction(FileAction.upload, ['/c.txt']);
-      expect(plugin.receivedActions, isEmpty);
-    });
+    test(
+      'plugin without fileAction capability does NOT receive event',
+      () async {
+        final registry = _freshRegistry();
+        final plugin = _ContextMenuPlugin('com.test.menu');
+        registry.registerPlugin(plugin);
+        await registry.notifyFileAction(FileAction.upload, ['/c.txt']);
+        expect(plugin.receivedActions, isEmpty);
+      },
+    );
 
     test('notifyFileAction survives plugin that throws', () async {
       final registry = _freshRegistry();
@@ -584,7 +619,9 @@ void main() {
       registry.registerPlugin(bad);
       registry.registerPlugin(good);
       await expectLater(
-          registry.notifyFileAction(FileAction.copy, ['/d.txt']), completes);
+        registry.notifyFileAction(FileAction.copy, ['/d.txt']),
+        completes,
+      );
       expect(good.receivedActions.length, 1);
     });
 
@@ -604,19 +641,21 @@ void main() {
   // =========================================================================
 
   group('PluginRegistry getContextMenuItems', () {
-    test('returns items from all enabled context-menu plugins', () {
+    test('returns items from all enabled context-menu plugins', () async {
       final registry = _freshRegistry();
       registry.registerPlugin(_ContextMenuPlugin('com.test.cm1'));
       registry.registerPlugin(_ContextMenuPlugin('com.test.cm2'));
+      await registry.initializeAll();
       final items = registry.getContextMenuItems(['/x.txt']);
       // Each plugin returns 1 item.
       expect(items.length, 2);
     });
 
-    test('items ordered by plugin registration order', () {
+    test('items ordered by plugin registration order', () async {
       final registry = _freshRegistry();
       registry.registerPlugin(_ContextMenuPlugin('com.test.first'));
       registry.registerPlugin(_ContextMenuPlugin('com.test.second'));
+      await registry.initializeAll();
       final items = registry.getContextMenuItems(['/x.txt']);
       expect(items.first.id, 'com.test.first_menu');
       expect(items.last.id, 'com.test.second_menu');
@@ -626,25 +665,27 @@ void main() {
       final registry = _freshRegistry();
       registry.registerPlugin(_ContextMenuPlugin('com.test.cm'));
       await registry.setEnabled('com.test.cm', false);
+      await registry.initializeAll();
       final items = registry.getContextMenuItems(['/x.txt']);
       expect(items, isEmpty);
     });
 
-    test('plugin without contextMenu capability not included', () {
+    test('plugin without contextMenu capability not included', () async {
       final registry = _freshRegistry();
       registry.registerPlugin(_FileActionPlugin('com.test.fa'));
+      await registry.initializeAll();
       final items = registry.getContextMenuItems(['/x.txt']);
       expect(items, isEmpty);
     });
 
-    test('getContextMenuItems survives plugin that throws', () {
+    test('getContextMenuItems survives plugin that throws', () async {
       final registry = _freshRegistry();
-      final bad = _ContextMenuPlugin('com.test.bad')
-        ..throwOnContextMenu = true;
+      final bad = _ContextMenuPlugin('com.test.bad')..throwOnContextMenu = true;
       final good = _ContextMenuPlugin('com.test.good');
       registry.registerPlugin(bad);
       registry.registerPlugin(good);
       expect(() => registry.getContextMenuItems(['/x.txt']), returnsNormally);
+      await registry.initializeAll();
       final items = registry.getContextMenuItems(['/x.txt']);
       // bad throws, good returns 1 item per call; we called twice so good returns 2 items.
       expect(items.length, 1);
@@ -656,10 +697,11 @@ void main() {
   // =========================================================================
 
   group('PluginRegistry getToolbarButtons', () {
-    test('returns buttons from all enabled toolbar plugins', () {
+    test('returns buttons from all enabled toolbar plugins', () async {
       final registry = _freshRegistry();
       registry.registerPlugin(_ToolbarPlugin('com.test.tb1'));
       registry.registerPlugin(_ToolbarPlugin('com.test.tb2'));
+      await registry.initializeAll();
       final buttons = registry.getToolbarButtons();
       expect(buttons.length, 2);
     });
@@ -668,24 +710,27 @@ void main() {
       final registry = _freshRegistry();
       registry.registerPlugin(_ToolbarPlugin('com.test.tb'));
       await registry.setEnabled('com.test.tb', false);
+      await registry.initializeAll();
       final buttons = registry.getToolbarButtons();
       expect(buttons, isEmpty);
     });
 
-    test('plugin without toolbar capability not included', () {
+    test('plugin without toolbar capability not included', () async {
       final registry = _freshRegistry();
       registry.registerPlugin(_FileActionPlugin('com.test.fa'));
+      await registry.initializeAll();
       final buttons = registry.getToolbarButtons();
       expect(buttons, isEmpty);
     });
 
-    test('getToolbarButtons survives plugin that throws', () {
+    test('getToolbarButtons survives plugin that throws', () async {
       final registry = _freshRegistry();
       final bad = _ToolbarPlugin('com.test.bad')..throwOnToolbar = true;
       final good = _ToolbarPlugin('com.test.good');
       registry.registerPlugin(bad);
       registry.registerPlugin(good);
       expect(() => registry.getToolbarButtons(), returnsNormally);
+      await registry.initializeAll();
       final buttons = registry.getToolbarButtons();
       expect(buttons.length, 1);
     });
@@ -721,8 +766,10 @@ void main() {
     test('savePluginSettings persists to SharedPreferences', () async {
       final registry = _freshRegistry();
       registry.registerPlugin(_ContextMenuPlugin('com.test.cm'));
-      await registry.savePluginSettings(
-          'com.test.cm', {'showIcons': false, 'maxItems': 10});
+      await registry.savePluginSettings('com.test.cm', {
+        'showIcons': false,
+        'maxItems': 10,
+      });
 
       final prefs = await SharedPreferences.getInstance();
       final raw = prefs.getString('plugin_settings_com.test.cm');

@@ -35,16 +35,25 @@ Stream<List<int>> streamHttpDownload(
   required String operation,
   Map<String, String> headers = const {},
   int? expectedLength,
+  bool followRedirects = true,
+  bool allowHttp = false,
+  void Function()? checkCurrent,
   int? Function(Map<String, String>)? responseLength,
   void Function(int, int)? onProgress,
 }) async* {
-  if (uri.scheme != 'https' || uri.host.isEmpty || uri.userInfo.isNotEmpty) {
+  if ((uri.scheme != 'https' && !(allowHttp && uri.scheme == 'http')) ||
+      uri.host.isEmpty ||
+      uri.userInfo.isNotEmpty) {
     throw StateError('$operation returned an invalid download address.');
   }
   final client = http.Client();
   try {
-    final request = http.Request('GET', uri)..headers.addAll(headers);
+    checkCurrent?.call();
+    final request = http.Request('GET', uri)
+      ..headers.addAll(headers)
+      ..followRedirects = followRedirects;
     final response = await client.send(request);
+    checkCurrent?.call();
     if (response.statusCode != 200) {
       throw StateError('$operation failed (${response.statusCode}).');
     }
@@ -54,6 +63,7 @@ Stream<List<int>> streamHttpDownload(
         response.contentLength;
     var received = 0;
     await for (final chunk in response.stream) {
+      checkCurrent?.call();
       received += chunk.length;
       if (length != null && received > length) {
         throw StateError('$operation exceeded its expected length.');
@@ -61,6 +71,7 @@ Stream<List<int>> streamHttpDownload(
       onProgress?.call(received, length ?? received);
       yield chunk;
     }
+    checkCurrent?.call();
     if (length != null && received != length) {
       throw StateError('$operation ended before its expected length.');
     }

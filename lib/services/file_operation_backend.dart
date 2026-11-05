@@ -375,17 +375,23 @@ class LocalOperationBackend extends FileOperationBackend {
     int? length, {
     required bool replace,
     bool preallocate = false,
+    String? resumeUploadPath,
     Future<void> Function(FileItem staged)? verifyStaged,
     Future<void> Function(Map<String, dynamic> state)? checkpoint,
-  }) => _writePreparedFile(
-    path,
-    data,
-    length,
-    replace: replace,
-    preallocate: preallocate,
-    verifyStaged: verifyStaged,
-    checkpoint: checkpoint,
-  );
+  }) async {
+    if (resumeUploadPath != null) {
+      throw UnsupportedError('Native storage cannot resume a provider upload.');
+    }
+    return _writePreparedFile(
+      path,
+      data,
+      length,
+      replace: replace,
+      preallocate: preallocate,
+      verifyStaged: verifyStaged,
+      checkpoint: checkpoint,
+    );
+  }
 
   @override
   Future<bool> clonePreparedFile(
@@ -883,13 +889,30 @@ class CloudOperationBackend extends FileOperationBackend {
         } else if (rawDate != null) {
           modified = DateTime.tryParse(rawDate.toString());
         }
+        final metadata = item['metadata'];
+        final declaredDownloadSize =
+            item['downloadSize'] ??
+            (metadata is Map ? metadata['downloadSize'] : null);
+        int? downloadSize;
+        if (declaredDownloadSize != null) {
+          if (declaredDownloadSize is! num ||
+              !declaredDownloadSize.isFinite ||
+              declaredDownloadSize < 0 ||
+              declaredDownloadSize != declaredDownloadSize.toInt()) {
+            throw StateError('$label returned an invalid download length.');
+          }
+          downloadSize = declaredDownloadSize.toInt();
+        }
         entries.add(
           FileItem(
             name: name,
             path: paths.join(path, name),
             isFolder: group == 'folders',
             uuid: item['uuid']?.toString(),
-            size: (item['size'] as num?)?.toInt(),
+            // Transformed/encrypted adapters expose the byte count yielded by
+            // their stream separately from their stored object size. Retain
+            // that original stored size in metadata for provider operations.
+            size: downloadSize ?? (item['size'] as num?)?.toInt(),
             updatedAt: modified,
             isSymlink: item['isSymlink'] == true,
             metadata: item,
@@ -951,11 +974,67 @@ class CloudOperationBackend extends FileOperationBackend {
   }) => writePreparedFile(path, data, length, replace: replace);
 
   @override
+  Future<bool> hasPendingUpload(String path, {int? length}) async {
+    _check();
+    final operations = client;
+    if (!capabilities.resumableUpload ||
+        operations is! CloudTransferOperations) {
+      return false;
+    }
+    final pending = await (operations as CloudTransferOperations)
+        .hasPendingUpload(path, length: length);
+    _check();
+    return pending;
+  }
+
+  @override
+  Future<void> writeConfiguredFile(
+    String path,
+    Stream<List<int>> data,
+    int? length, {
+    required bool replace,
+    bool preallocate = false,
+    String? resumeUploadPath,
+    Future<void> Function(FileItem staged)? verifyStaged,
+    Future<void> Function(Map<String, dynamic> state)? checkpoint,
+  }) async {
+    if (preallocate) {
+      throw UnsupportedError('Cloud storage cannot reserve local disk space.');
+    }
+    return _writePreparedFile(
+      path,
+      data,
+      length,
+      replace: replace,
+      resumeUploadPath: resumeUploadPath,
+      verifyStaged: verifyStaged,
+      checkpoint: checkpoint,
+    );
+  }
+
+  @override
   Future<void> writePreparedFile(
     String path,
     Stream<List<int>> data,
     int? length, {
     required bool replace,
+    Future<void> Function(FileItem staged)? verifyStaged,
+    Future<void> Function(Map<String, dynamic> state)? checkpoint,
+  }) => _writePreparedFile(
+    path,
+    data,
+    length,
+    replace: replace,
+    verifyStaged: verifyStaged,
+    checkpoint: checkpoint,
+  );
+
+  Future<void> _writePreparedFile(
+    String path,
+    Stream<List<int>> data,
+    int? length, {
+    required bool replace,
+    String? resumeUploadPath,
     Future<void> Function(FileItem staged)? verifyStaged,
     Future<void> Function(Map<String, dynamic> state)? checkpoint,
   }) async {
@@ -972,8 +1051,25 @@ class CloudOperationBackend extends FileOperationBackend {
     }
     final parent = paths.dirname(path);
     final token = const Uuid().v4();
-    final stagedName = '.crisp-transfer-$token.tmp';
-    final stagedPath = paths.join(parent, stagedName);
+    if (resumeUploadPath != null) {
+      final name = paths.basename(resumeUploadPath);
+      if (!paths.isAbsolute(resumeUploadPath) ||
+          paths.normalize(resumeUploadPath) != resumeUploadPath ||
+          paths.dirname(resumeUploadPath) != parent ||
+          !RegExp(
+            r'^\.crisp-transfer-[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}\.tmp$',
+          ).hasMatch(name) ||
+          !await hasPendingUpload(resumeUploadPath, length: length) ||
+          await stat(resumeUploadPath) != null) {
+        throw StateError(
+          'The saved multipart upload is no longer usable. Review and restart this item.',
+        );
+      }
+    }
+    final stagedName = resumeUploadPath == null
+        ? '.crisp-transfer-$token.tmp'
+        : paths.basename(resumeUploadPath);
+    final stagedPath = resumeUploadPath ?? paths.join(parent, stagedName);
     final backupName = '.crisp-replaced-$token.bak';
     final backupPath = paths.join(parent, backupName);
     var backupRenameAttempted = false;
@@ -987,6 +1083,8 @@ class CloudOperationBackend extends FileOperationBackend {
     TransferSpool? spool;
     await checkpoint?.call({
       'phase': 'uploading',
+      'multipartUploadPending':
+          capabilities.resumableUpload && length != null && length > 0,
       'destination': path,
       'stagedPath': stagedPath,
       'backupPath': backupPath,
@@ -999,6 +1097,15 @@ class CloudOperationBackend extends FileOperationBackend {
         );
         length = spool.length;
         data = spool.openRead();
+        if (capabilities.resumableUpload && length > 0) {
+          await checkpoint?.call({
+            'phase': 'uploading',
+            'multipartUploadPending': true,
+            'destination': path,
+            'stagedPath': stagedPath,
+            'backupPath': backupPath,
+          });
+        }
       }
       // Never stream into an existing destination: FTP/SFTP and some web APIs
       // truncate as soon as upload begins. Stage alongside it first.
@@ -1026,6 +1133,7 @@ class CloudOperationBackend extends FileOperationBackend {
       await verifyStaged?.call(staged);
       await checkpoint?.call({
         'phase': 'staged',
+        'multipartUploadPending': false,
         'destination': path,
         'stagedPath': stagedPath,
         'backupPath': backupPath,

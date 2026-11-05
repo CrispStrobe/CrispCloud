@@ -20,6 +20,7 @@
 // fully, thanks to ViewBytesSource streaming on native platforms.
 
 import 'dart:async';
+import 'dart:math' as math;
 import 'dart:convert';
 import 'dart:io';
 import 'dart:typed_data';
@@ -40,6 +41,7 @@ import 'package:pdfx/pdfx.dart';
 import 'package:universal_html/html.dart' as html;
 import 'package:video_player/video_player.dart';
 
+import '../l10n/commander_strings.dart';
 import '../models/file_item.dart';
 import '../models/panel_side.dart';
 import '../providers/providers.dart';
@@ -1206,8 +1208,10 @@ class _InternalViewerDialogState extends ConsumerState<InternalViewerDialog> {
       builder: (_) => _TextPromptDialog(
         title: offsetMode ? 'Go to offset' : 'Go to line',
         hintText: offsetMode
-            ? 'Offset — 0x… for hex, plain number for decimal'
-            : 'Line number',
+            ? context.commanderTr(
+                "Offset — 0x… for hex, plain number for decimal",
+              )
+            : context.commanderTr("Line number"),
         confirmLabel: 'Go',
       ),
     );
@@ -1298,7 +1302,7 @@ class _InternalViewerDialogState extends ConsumerState<InternalViewerDialog> {
       setState(() {
         _searchNote = value.trim().isEmpty
             ? null
-            : 'press Enter to scan the file';
+            : 'Press Enter to scan the file';
       });
       return;
     }
@@ -1352,7 +1356,9 @@ class _InternalViewerDialogState extends ConsumerState<InternalViewerDialog> {
         _matches = found;
         _matchIndex = found.isEmpty ? -1 : 0;
         _searchNote = _isStreamed
-            ? 'searched first ${formatBytes(_kStreamSearchCap)}'
+            ? context.commanderTr("Searched first {0}", [
+                formatBytes(_kStreamSearchCap),
+              ])
             : null;
         _cachedSafeMatchIndex = null;
         _cachedSafeMatchBinary = null;
@@ -1607,9 +1613,14 @@ class _InternalViewerDialogState extends ConsumerState<InternalViewerDialog> {
         _loading = false;
         _mode = ViewerMode.text;
         _richError = null;
-        _viewNote =
-            'Following bytes ${sample.offset}–${sample.totalBytes}'
-            '${sample.replacedOrTruncated ? ' · file replaced or truncated' : ''}';
+        _viewNote = context.commanderTr("Following bytes {0}–{1}", [
+          sample.offset,
+          sample.totalBytes,
+        ]);
+        if (sample.replacedOrTruncated) {
+          _viewNote =
+              '$_viewNote · ${context.commanderTr("File replaced or truncated")}';
+        }
       });
       WidgetsBinding.instance.addPostFrameCallback((_) {
         if (mounted && _tailEnabled && _vScroll.hasClients) {
@@ -1835,110 +1846,158 @@ class _InternalViewerDialogState extends ConsumerState<InternalViewerDialog> {
             title: Text(_title, overflow: TextOverflow.ellipsis),
             titleTextStyle: theme.textTheme.titleMedium,
             actions: [
-              if (widget.positionLabel != null) ...[
-                IconButton(
-                  tooltip: 'Previous file (Alt+Left)',
-                  onPressed: widget.onPrevious,
-                  icon: const Icon(Icons.chevron_left),
-                ),
-                Center(child: Text(widget.positionLabel!)),
-                IconButton(
-                  tooltip: 'Next file (Alt+Right)',
-                  onPressed: widget.onNext,
-                  icon: const Icon(Icons.chevron_right),
-                ),
-              ],
-              IconButton(
-                tooltip: 'Reload (F5)',
-                onPressed: _loading ? null : _reload,
-                icon: const Icon(Icons.refresh),
-              ),
-              if (!_loading && _error == null) ...[
-                if (widget.bytesOverride == null && _origin?.isCurrent == true)
-                  IconButton(
-                    tooltip: _tailEnabled
-                        ? 'Stop following'
-                        : 'Follow end of file',
-                    onPressed: _toggleTail,
-                    icon: Icon(
-                      _tailEnabled
-                          ? Icons.pause_circle_outline
-                          : Icons.vertical_align_bottom,
-                    ),
+              ConstrainedBox(
+                constraints: BoxConstraints(
+                  maxWidth: math.max(
+                    64,
+                    MediaQuery.sizeOf(context).width - 220,
                   ),
-                if (_canEdit)
-                  IconButton(
-                    tooltip: 'Edit (F4)',
-                    icon: const Icon(Icons.edit_outlined),
-                    onPressed: () =>
-                        Navigator.of(context).pop(InternalViewerAction.edit),
-                  ),
-                IconButton(
-                  tooltip: 'Search (Ctrl+F)',
-                  icon: const Icon(Icons.search),
-                  onPressed: _toggleSearch,
                 ),
-                IconButton(
-                  tooltip: 'Go to line / offset (Ctrl+G)',
-                  icon: const Icon(Icons.my_location),
-                  onPressed: () => unawaited(_showGotoDialog()),
-                ),
-                if (_canChangeEncoding)
-                  PopupMenuButton<String>(
-                    tooltip: 'Encoding',
-                    icon: const Icon(Icons.text_fields),
-                    onSelected: (value) =>
-                        _setEncoding(value == 'auto' ? null : value),
-                    itemBuilder: (_) => const [
-                      PopupMenuItem(value: 'auto', child: Text('Auto-detect')),
-                      PopupMenuItem(value: 'utf8', child: Text('UTF-8')),
-                      PopupMenuItem(value: 'utf16le', child: Text('UTF-16 LE')),
-                      PopupMenuItem(value: 'utf16be', child: Text('UTF-16 BE')),
-                      PopupMenuItem(value: 'latin1', child: Text('Latin-1')),
+                child: SingleChildScrollView(
+                  scrollDirection: Axis.horizontal,
+                  child: Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      if (widget.positionLabel != null) ...[
+                        IconButton(
+                          tooltip: context.commanderTr(
+                            "Previous file (Alt+Left)",
+                          ),
+                          onPressed: widget.onPrevious,
+                          icon: const Icon(Icons.chevron_left),
+                        ),
+                        Center(child: Text(widget.positionLabel!)),
+                        IconButton(
+                          tooltip: context.commanderTr("Next file (Alt+Right)"),
+                          onPressed: widget.onNext,
+                          icon: const Icon(Icons.chevron_right),
+                        ),
+                      ],
+                      IconButton(
+                        tooltip: context.commanderTr("Reload (F5)"),
+                        onPressed: _loading ? null : _reload,
+                        icon: const Icon(Icons.refresh),
+                      ),
+                      if (!_loading && _error == null) ...[
+                        if (widget.bytesOverride == null &&
+                            _origin?.isCurrent == true)
+                          IconButton(
+                            tooltip: _tailEnabled
+                                ? context.commanderTr("Stop following")
+                                : context.commanderTr("Follow end of file"),
+                            onPressed: _toggleTail,
+                            icon: Icon(
+                              _tailEnabled
+                                  ? Icons.pause_circle_outline
+                                  : Icons.vertical_align_bottom,
+                            ),
+                          ),
+                        if (_canEdit)
+                          IconButton(
+                            tooltip: context.commanderTr("Edit (F4)"),
+                            icon: const Icon(Icons.edit_outlined),
+                            onPressed: () =>
+                                Navigator.of(context)
+                                    .pop(InternalViewerAction.edit),
+                          ),
+                        IconButton(
+                          tooltip: context.commanderTr("Search (Ctrl+F)"),
+                          icon: const Icon(Icons.search),
+                          onPressed: _toggleSearch,
+                        ),
+                        IconButton(
+                          tooltip: context.commanderTr(
+                            "Go to line / offset (Ctrl+G)",
+                          ),
+                          icon: const Icon(Icons.my_location),
+                          onPressed: () => unawaited(_showGotoDialog()),
+                        ),
+                        if (_canChangeEncoding)
+                          PopupMenuButton<String>(
+                            tooltip: context.commanderTr("Encoding"),
+                            icon: const Icon(Icons.text_fields),
+                            onSelected: (value) =>
+                                _setEncoding(value == 'auto' ? null : value),
+                            itemBuilder: (_) => [
+                              PopupMenuItem(
+                                value: 'auto',
+                                child: Text(context.commanderTr("Auto-detect")),
+                              ),
+                              PopupMenuItem(
+                                value: 'utf8',
+                                child: Text(context.commanderTr("UTF-8")),
+                              ),
+                              PopupMenuItem(
+                                value: 'utf16le',
+                                child: Text(context.commanderTr("UTF-16 LE")),
+                              ),
+                              PopupMenuItem(
+                                value: 'utf16be',
+                                child: Text(context.commanderTr("UTF-16 BE")),
+                              ),
+                              PopupMenuItem(
+                                value: 'latin1',
+                                child: Text(context.commanderTr("Latin-1")),
+                              ),
+                            ],
+                          ),
+                        PopupMenuButton<String>(
+                          tooltip: context.commanderTr("More"),
+                          icon: const Icon(Icons.more_vert),
+                          onSelected: _onMenuSelected,
+                          itemBuilder: (_) => [
+                            PopupMenuItem(
+                              value: 'goto',
+                              child: Text(
+                                context.commanderTr("Go to line / offset…"),
+                              ),
+                            ),
+                            PopupMenuItem(
+                              value: 'zoom_in',
+                              child: Text(context.commanderTr("Zoom in")),
+                            ),
+                            PopupMenuItem(
+                              value: 'zoom_out',
+                              child: Text(context.commanderTr("Zoom out")),
+                            ),
+                            const PopupMenuDivider(),
+                            PopupMenuItem(
+                              value: 'bpl8',
+                              child: Text(
+                                context.commanderTr("Hex: 8 bytes per row"),
+                              ),
+                            ),
+                            PopupMenuItem(
+                              value: 'bpl16',
+                              child: Text(
+                                context.commanderTr("Hex: 16 bytes per row"),
+                              ),
+                            ),
+                            PopupMenuItem(
+                              value: 'bpl32',
+                              child: Text(
+                                context.commanderTr("Hex: 32 bytes per row"),
+                              ),
+                            ),
+                            const PopupMenuDivider(),
+                            PopupMenuItem(
+                              value: 'copy_all',
+                              child: Text(context.commanderTr("Copy all text")),
+                            ),
+                            const PopupMenuDivider(),
+                            PopupMenuItem(
+                              value: 'reload',
+                              child: Text(context.commanderTr("Reload")),
+                            ),
+                          ],
+                        ),
+                      ],
                     ],
                   ),
-                PopupMenuButton<String>(
-                  tooltip: 'More',
-                  icon: const Icon(Icons.more_vert),
-                  onSelected: _onMenuSelected,
-                  itemBuilder: (_) => [
-                    const PopupMenuItem(
-                      value: 'goto',
-                      child: Text('Go to line / offset…'),
-                    ),
-                    const PopupMenuItem(
-                      value: 'zoom_in',
-                      child: Text('Zoom in'),
-                    ),
-                    const PopupMenuItem(
-                      value: 'zoom_out',
-                      child: Text('Zoom out'),
-                    ),
-                    const PopupMenuDivider(),
-                    const PopupMenuItem(
-                      value: 'bpl8',
-                      child: Text('Hex: 8 bytes per row'),
-                    ),
-                    const PopupMenuItem(
-                      value: 'bpl16',
-                      child: Text('Hex: 16 bytes per row'),
-                    ),
-                    const PopupMenuItem(
-                      value: 'bpl32',
-                      child: Text('Hex: 32 bytes per row'),
-                    ),
-                    const PopupMenuDivider(),
-                    const PopupMenuItem(
-                      value: 'copy_all',
-                      child: Text('Copy all text'),
-                    ),
-                    const PopupMenuDivider(),
-                    const PopupMenuItem(value: 'reload', child: Text('Reload')),
-                  ],
                 ),
-              ],
+              ),
               IconButton(
-                tooltip: 'Close (Esc)',
+                tooltip: context.commanderTr("Close (Esc)"),
                 icon: const Icon(Icons.close),
                 onPressed: () => Navigator.of(context).maybePop(),
               ),
@@ -1958,12 +2017,21 @@ class _InternalViewerDialogState extends ConsumerState<InternalViewerDialog> {
                               Padding(
                                 padding: const EdgeInsets.all(16),
                                 child: Text(
-                                  'Preparing temporary copy: ${formatBytes(_downloadedBytes)}'
-                                  '${_downloadTotal == null ? '' : ' / ${formatBytes(_downloadTotal!)}'}',
+                                  context.commanderTr(
+                                    "Preparing temporary copy: {0}{1}",
+                                    [
+                                      formatBytes(_downloadedBytes),
+                                      _downloadTotal == null
+                                          ? ''
+                                          : ' / ${formatBytes(_downloadTotal!)}',
+                                    ],
+                                  ),
                                 ),
                               ),
-                            const Text(
-                              'Close or select another file to cancel.',
+                            Text(
+                              context.commanderTr(
+                                "Close or select another file to cancel.",
+                              ),
                             ),
                           ],
                         ),
@@ -1994,7 +2062,7 @@ class _InternalViewerDialogState extends ConsumerState<InternalViewerDialog> {
     ].where((mode) => mode == _autoMode);
 
     return Container(
-      height: 48,
+      height: math.max(48, MediaQuery.textScalerOf(context).scale(16) + 40),
       decoration: BoxDecoration(
         color: theme.colorScheme.surfaceContainerLow,
         border: Border(bottom: BorderSide(color: theme.dividerColor)),
@@ -2024,7 +2092,9 @@ class _InternalViewerDialogState extends ConsumerState<InternalViewerDialog> {
                     Padding(
                       padding: const EdgeInsets.symmetric(horizontal: 2),
                       child: IconButton(
-                        tooltip: 'Open in system preview (Quick Look)',
+                        tooltip: context.commanderTr(
+                          "Open in system preview (Quick Look)",
+                        ),
                         icon: const Icon(Icons.open_in_new, size: 18),
                         onPressed: () => unawaited(_openSystemPreview()),
                         visualDensity: VisualDensity.compact,
@@ -2050,7 +2120,10 @@ class _InternalViewerDialogState extends ConsumerState<InternalViewerDialog> {
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 3, vertical: 8),
       child: ChoiceChip(
-        label: Text(label, style: const TextStyle(fontSize: 12)),
+        label: Text(
+          context.commanderTr(label),
+          style: const TextStyle(fontSize: 12),
+        ),
         selected: selected,
         visualDensity: VisualDensity.compact,
         materialTapTargetSize: MaterialTapTargetSize.shrinkWrap,
@@ -2071,9 +2144,12 @@ class _InternalViewerDialogState extends ConsumerState<InternalViewerDialog> {
       padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 6),
       child: SegmentedButton<bool>(
         style: _compactButtonStyle,
-        segments: const [
-          ButtonSegment(value: false, label: Text('Pages')),
-          ButtonSegment(value: true, label: Text('Text')),
+        segments: [
+          ButtonSegment(
+            value: false,
+            label: Text(context.commanderTr("Pages")),
+          ),
+          ButtonSegment(value: true, label: Text(context.commanderTr("Text"))),
         ],
         selected: {_pdfShowText},
         onSelectionChanged: (selection) {
@@ -2095,9 +2171,15 @@ class _InternalViewerDialogState extends ConsumerState<InternalViewerDialog> {
       padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 6),
       child: SegmentedButton<bool>(
         style: _compactButtonStyle,
-        segments: const [
-          ButtonSegment(value: true, label: Text('Rendered')),
-          ButtonSegment(value: false, label: Text('Source')),
+        segments: [
+          ButtonSegment(
+            value: true,
+            label: Text(context.commanderTr("Rendered")),
+          ),
+          ButtonSegment(
+            value: false,
+            label: Text(context.commanderTr("Source")),
+          ),
         ],
         selected: {_htmlRendered},
         onSelectionChanged: (selection) =>
@@ -2111,9 +2193,12 @@ class _InternalViewerDialogState extends ConsumerState<InternalViewerDialog> {
       padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 6),
       child: SegmentedButton<bool>(
         style: _compactButtonStyle,
-        segments: const [
-          ButtonSegment(value: true, label: Text('Tree')),
-          ButtonSegment(value: false, label: Text('Source')),
+        segments: [
+          ButtonSegment(value: true, label: Text(context.commanderTr("Tree"))),
+          ButtonSegment(
+            value: false,
+            label: Text(context.commanderTr("Source")),
+          ),
         ],
         selected: {_xmlTree},
         onSelectionChanged: (selection) =>
@@ -2143,7 +2228,10 @@ class _InternalViewerDialogState extends ConsumerState<InternalViewerDialog> {
         style: _compactButtonStyle,
         segments: [
           for (final option in options)
-            ButtonSegment(value: option, label: Text(_officeViewLabel(option))),
+            ButtonSegment(
+              value: option,
+              label: Text(context.commanderTr(_officeViewLabel(option))),
+            ),
         ],
         selected: {_officeView},
         onSelectionChanged: (selection) {
@@ -2159,7 +2247,7 @@ class _InternalViewerDialogState extends ConsumerState<InternalViewerDialog> {
     final total = _matches.length;
     final position = _matchIndex >= 0 ? '${_matchIndex + 1}' : '0';
     return SizedBox(
-      width: 340,
+      width: math.min(340, MediaQuery.sizeOf(context).width),
       child: Padding(
         padding: const EdgeInsets.symmetric(horizontal: 4),
         child: Row(
@@ -2172,8 +2260,10 @@ class _InternalViewerDialogState extends ConsumerState<InternalViewerDialog> {
                 decoration: InputDecoration(
                   isDense: true,
                   hintText: _mode == ViewerMode.hex
-                      ? 'Hex bytes (e.g. DE AD BE EF) or text'
-                      : 'Search text or 0x… bytes',
+                      ? context.commanderTr(
+                          "Hex bytes (e.g. DE AD BE EF) or text",
+                        )
+                      : context.commanderTr("Search text or 0x… bytes"),
                   border: const OutlineInputBorder(),
                   contentPadding: const EdgeInsets.symmetric(
                     horizontal: 8,
@@ -2193,7 +2283,7 @@ class _InternalViewerDialogState extends ConsumerState<InternalViewerDialog> {
               ),
             ),
             IconButton(
-              tooltip: 'Previous match (Shift+F3)',
+              tooltip: context.commanderTr("Previous match (Shift+F3)"),
               icon: const Icon(Icons.keyboard_arrow_up, size: 18),
               onPressed: total == 0 ? null : () => _gotoMatch(-1),
               visualDensity: VisualDensity.compact,
@@ -2201,7 +2291,7 @@ class _InternalViewerDialogState extends ConsumerState<InternalViewerDialog> {
               constraints: const BoxConstraints(minWidth: 30, minHeight: 30),
             ),
             IconButton(
-              tooltip: 'Next match (F3)',
+              tooltip: context.commanderTr("Next match (F3)"),
               icon: const Icon(Icons.keyboard_arrow_down, size: 18),
               onPressed: total == 0 ? null : () => _gotoMatch(1),
               visualDensity: VisualDensity.compact,
@@ -2209,7 +2299,7 @@ class _InternalViewerDialogState extends ConsumerState<InternalViewerDialog> {
               constraints: const BoxConstraints(minWidth: 30, minHeight: 30),
             ),
             IconButton(
-              tooltip: 'Close search (Esc)',
+              tooltip: context.commanderTr("Close search (Esc)"),
               icon: const Icon(Icons.close, size: 18),
               onPressed: _toggleSearch,
               visualDensity: VisualDensity.compact,
@@ -2226,7 +2316,7 @@ class _InternalViewerDialogState extends ConsumerState<InternalViewerDialog> {
     if (_preparing) {
       return Center(
         child: Text(
-          'Preparing view…',
+          context.commanderTr("Preparing view…"),
           style: TextStyle(color: theme.colorScheme.onSurfaceVariant),
         ),
       );
@@ -2518,7 +2608,7 @@ class _InternalViewerDialogState extends ConsumerState<InternalViewerDialog> {
     if (document == null) {
       return Center(
         child: Text(
-          'Preparing document…',
+          context.commanderTr("Preparing document…"),
           style: TextStyle(color: theme.colorScheme.onSurfaceVariant),
         ),
       );
@@ -2547,7 +2637,7 @@ class _InternalViewerDialogState extends ConsumerState<InternalViewerDialog> {
         if (_officePdfLoading) {
           return Center(
             child: Text(
-              'Laying out pages…',
+              context.commanderTr("Laying out pages…"),
               style: TextStyle(color: theme.colorScheme.onSurfaceVariant),
             ),
           );
@@ -2568,7 +2658,7 @@ class _InternalViewerDialogState extends ConsumerState<InternalViewerDialog> {
                   const SizedBox(height: 12),
                   OutlinedButton(
                     onPressed: () => unawaited(_loadOfficePdf()),
-                    child: const Text('Retry'),
+                    child: Text(context.commanderTr("Retry")),
                   ),
                 ],
               ),
@@ -2579,7 +2669,7 @@ class _InternalViewerDialogState extends ConsumerState<InternalViewerDialog> {
         if (controller == null) {
           return Center(
             child: Text(
-              'Laying out pages…',
+              context.commanderTr("Laying out pages…"),
               style: TextStyle(color: theme.colorScheme.onSurfaceVariant),
             ),
           );
@@ -2653,7 +2743,7 @@ class _InternalViewerDialogState extends ConsumerState<InternalViewerDialog> {
     if (controller == null) {
       return Center(
         child: Text(
-          'Rendering PDF…',
+          context.commanderTr("Rendering PDF…"),
           style: TextStyle(color: theme.colorScheme.onSurfaceVariant),
         ),
       );
@@ -2666,13 +2756,23 @@ class _InternalViewerDialogState extends ConsumerState<InternalViewerDialog> {
   Widget _buildPdfTextView(ThemeData theme) {
     final style = TextStyle(color: theme.colorScheme.onSurfaceVariant);
     if (_pdfTextLoading) {
-      return Center(child: Text('Extracting text layer…', style: style));
+      return Center(
+        child: Text(
+          context.commanderTr("Extracting text layer…"),
+          style: style,
+        ),
+      );
     }
     final error = _pdfTextError;
     if (error != null) return _messagePane(error, theme);
     final text = _pdfText;
     if (text == null) {
-      return Center(child: Text('Extracting text layer…', style: style));
+      return Center(
+        child: Text(
+          context.commanderTr("Extracting text layer…"),
+          style: style,
+        ),
+      );
     }
     final capped = text.length > _kRichRenderCap
         ? text.substring(0, _kRichRenderCap)
@@ -2750,8 +2850,11 @@ class _InternalViewerDialogState extends ConsumerState<InternalViewerDialog> {
                 // image-decompression bombs while remaining crisp on HiDPI.
                 cacheWidth: 4096,
                 cacheHeight: 4096,
-                errorBuilder: (_, __, ___) =>
-                    const Center(child: Text('Unable to decode this image.')),
+                errorBuilder: (_, __, ___) => Center(
+                  child: Text(
+                    context.commanderTr("Unable to decode this image."),
+                  ),
+                ),
               ),
       ),
     );
@@ -2797,7 +2900,7 @@ class _InternalViewerDialogState extends ConsumerState<InternalViewerDialog> {
     if (files == null) {
       return Center(
         child: Text(
-          'Opening archive…',
+          context.commanderTr("Opening archive…"),
           style: TextStyle(color: theme.colorScheme.onSurfaceVariant),
         ),
       );
@@ -2835,7 +2938,9 @@ class _InternalViewerDialogState extends ConsumerState<InternalViewerDialog> {
                 Padding(
                   padding: const EdgeInsets.only(left: 4),
                   child: Tooltip(
-                    message: 'Path escaped the archive root (sanitized)',
+                    message: context.commanderTr(
+                      "Path escaped the archive root (sanitized)",
+                    ),
                     child: Icon(
                       Icons.warning_amber_rounded,
                       size: 14,
@@ -2889,15 +2994,15 @@ class _InternalViewerDialogState extends ConsumerState<InternalViewerDialog> {
                 children: [
                   OutlinedButton(
                     onPressed: () => _selectMode(ViewerMode.hex),
-                    child: const Text('Hex view'),
+                    child: Text(context.commanderTr("Hex view")),
                   ),
                   OutlinedButton(
                     onPressed: () => _selectMode(ViewerMode.ascii),
-                    child: const Text('ASCII view'),
+                    child: Text(context.commanderTr("ASCII view")),
                   ),
                   OutlinedButton(
                     onPressed: () => _selectMode(ViewerMode.binary),
-                    child: const Text('Binary view'),
+                    child: Text(context.commanderTr("Binary view")),
                   ),
                 ],
               ),
@@ -2914,14 +3019,15 @@ class _InternalViewerDialogState extends ConsumerState<InternalViewerDialog> {
       color: theme.colorScheme.onSurfaceVariant,
     );
     final parts = <String>[
-      _modeLabelOf(_mode),
+      context.commanderTr(_modeLabelOf(_mode)),
       formatBytes(_dataSize),
-      if (_isStreamed) 'streamed',
-      if (_mode == ViewerMode.hex) '$_bytesPerLine bytes/row',
+      if (_isStreamed) context.commanderTr("Streamed"),
+      if (_mode == ViewerMode.hex)
+        context.commanderTr("{0} bytes/row", [_bytesPerLine]),
       if (_mode == ViewerMode.archive && _archive != null)
         _archive!.formatName.toUpperCase(),
       if (_mode == ViewerMode.pdf && _pdfShowText && _pdfText != null)
-        '${_pdfText!.length} characters',
+        context.commanderTr("{0} characters", [_pdfText!.length]),
       if (_canChangeEncoding && _encoding != null) _encoding!,
       if (_viewNote != null) _viewNote!,
       if (_mode == ViewerMode.hex && _selectedByte != null) _selectedByteText(),
@@ -2959,9 +3065,11 @@ class _InternalViewerDialogState extends ConsumerState<InternalViewerDialog> {
     final row = _topVisibleRow();
     if (_mode == ViewerMode.hex) {
       final offset = row * _bytesPerLine;
-      return 'offset 0x${offset.toRadixString(16).toUpperCase().padLeft(8, '0')}';
+      return context.commanderTr("Offset {0}", [
+        '0x${offset.toRadixString(16).toUpperCase().padLeft(8, '0')}',
+      ]);
     }
-    return 'line ${row + 1}';
+    return context.commanderTr("Line {0}", [row + 1]);
   }
 
   String _selectedByteText() {
@@ -2976,10 +3084,10 @@ class _InternalViewerDialogState extends ConsumerState<InternalViewerDialog> {
   String? get _searchStatusText {
     if (!_searchOpen && _matches.isEmpty) return null;
     final base = _matches.isEmpty
-        ? 'no matches'
+        ? context.commanderTr("No matches")
         : '${_matchIndex + 1}/${_matches.length}';
     if (_searchNote == null) return base;
-    return '$base (${_searchNote!})';
+    return '$base (${context.commanderTr(_searchNote!)})';
   }
 
   // ---------------------------------------------------------------------------
@@ -3102,23 +3210,30 @@ class _TextPromptDialogState extends State<_TextPromptDialog> {
   @override
   Widget build(BuildContext context) {
     return AlertDialog(
-      title: Text(widget.title),
+      title: Text(context.commanderTr(widget.title)),
       content: TextField(
         controller: _controller,
         autofocus: true,
         obscureText: widget.obscureText,
         decoration: InputDecoration(
-          labelText: widget.label,
-          hintText: widget.hintText,
+          labelText: widget.label == null
+              ? null
+              : context.commanderTr(widget.label!),
+          hintText: widget.hintText == null
+              ? null
+              : context.commanderTr(widget.hintText!),
         ),
         onSubmitted: (_) => _submit(),
       ),
       actions: [
         TextButton(
           onPressed: () => Navigator.of(context).pop(),
-          child: const Text('Cancel'),
+          child: Text(context.commanderTr("Cancel")),
         ),
-        TextButton(onPressed: _submit, child: Text(widget.confirmLabel)),
+        TextButton(
+          onPressed: _submit,
+          child: Text(context.commanderTr(widget.confirmLabel)),
+        ),
       ],
     );
   }

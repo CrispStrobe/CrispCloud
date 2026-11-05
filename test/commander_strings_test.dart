@@ -7,6 +7,7 @@ import 'package:crisp_cloud/l10n/commander_translations.dart';
 import 'package:crisp_cloud/models/rename_batch.dart';
 import 'package:crisp_cloud/models/transfer_job.dart';
 import 'package:crisp_cloud/services/file_operation_options.dart';
+import 'package:crisp_cloud/services/directory_comparison_service.dart';
 import 'package:flutter/widgets.dart';
 import 'package:flutter_test/flutter_test.dart';
 
@@ -18,6 +19,7 @@ void main() {
         ...FileOperationKind.values,
         ...FileOperationOutcome.values,
         ...RenameBatchState.values,
+        ...DirectoryComparisonStatus.values,
       ]) {
         expect(
           CommanderStrings.contains(CommanderStrings.labelForEnum(value)),
@@ -110,36 +112,86 @@ void main() {
     },
   );
 
-  test(
-    'rename, selection and file-list captions have explicit translations',
-    () {
-      final calls = RegExp(r'\.commanderTr\(\s*("(?:\\.|[^"\\])*\")');
-      for (final name in [
-        'batch_rename_dialog',
-        'rename_names_dialog',
-        'rename_text_dialog',
-        'pattern_selection_dialog',
-        'file_list_dialog',
-        'file_operation_dialog',
-        'file_operation_conflict_dialog',
-        'transfer_history_dialog',
-        'rename_history_dialog',
-        'trash_history_dialog',
-        'file_collections_dialog',
-      ]) {
-        final source = File('lib/widgets/$name.dart').readAsStringSync();
-        final matches = calls.allMatches(source).toList();
-        expect(matches, isNotEmpty, reason: name);
-        for (final match in matches) {
-          final english =
-              jsonDecode(match[1]!.replaceAll(r'\$', r'$')) as String;
-          expect(
-            CommanderStrings.contains(english),
-            isTrue,
-            reason: '$name / $english',
-          );
-        }
+  test('Commander workflow captions have explicit translations', () {
+    final calls = RegExp(r'\.commanderTr\(\s*("(?:\\.|[^"\\])*\")');
+    for (final name in [
+      'batch_rename_dialog',
+      'rename_names_dialog',
+      'rename_text_dialog',
+      'pattern_selection_dialog',
+      'file_list_dialog',
+      'file_operation_dialog',
+      'file_operation_conflict_dialog',
+      'transfer_history_dialog',
+      'rename_history_dialog',
+      'trash_history_dialog',
+      'file_collections_dialog',
+      'archive_workspace_dialog',
+      'integrity_dialogs',
+      'internal_viewer_dialog',
+      'diff_viewer_dialog',
+      'directory_comparison_dialog',
+      'sync_dialog',
+      'sync_plan_dialog',
+    ]) {
+      final source = File('lib/widgets/$name.dart').readAsStringSync();
+      final matches = calls.allMatches(source).toList();
+      expect(matches, isNotEmpty, reason: name);
+      for (final match in matches) {
+        final english = jsonDecode(match[1]!.replaceAll(r'\$', r'$')) as String;
+        expect(
+          CommanderStrings.contains(english),
+          isTrue,
+          reason: '$name / $english',
+        );
       }
-    },
-  );
+    }
+  });
+  test('viewer modes and sync choices have explicit translations', () {
+    for (final label in [
+      'Auto',
+      'Text',
+      'ASCII',
+      'Binary',
+      'Hex',
+      'Image',
+      'Markdown',
+      'HTML',
+      'XML',
+      'PDF',
+      'Media',
+      'Font',
+      'Table',
+      'Office',
+      'Archive',
+      'Unsupported',
+      'Slides',
+      'Pages',
+      'Formatted',
+      'Go to offset',
+      'Go to line',
+      'Go',
+      'Wrong password',
+      'Password required',
+      'Archive password',
+      'Incorrect password. Try again',
+      'Rename member',
+      'Local → Cloud',
+      'Cloud → Local',
+      'Keep both versions',
+      'Skip',
+      'Delete local',
+      'Delete cloud',
+      'Create local folder',
+      'Create cloud folder',
+      'Unresolved conflict',
+      'Newest Wins',
+      'Local Wins',
+      'Remote Wins',
+      'Keep Both',
+      'Ask Me',
+    ]) {
+      expect(CommanderStrings.contains(label), isTrue, reason: label);
+    }
+  });
 }

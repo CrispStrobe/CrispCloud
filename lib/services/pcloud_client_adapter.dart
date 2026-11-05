@@ -25,6 +25,7 @@
 import 'dart:async';
 import 'dart:convert';
 import 'dart:io';
+import 'dart:typed_data';
 
 import 'package:flutter/foundation.dart';
 import 'package:http/http.dart' as http;
@@ -32,6 +33,10 @@ import 'package:path/path.dart' as p;
 import 'package:url_launcher/url_launcher.dart';
 
 import 'cloud_storage_interface.dart';
+import 'bounded_http_transfer.dart';
+import 'bounded_transfer_stream.dart';
+import 'transfer_spool.dart';
+import 'spooled_http_upload.dart';
 import 'delta_sync_service.dart';
 import 'pcloud_config_service.dart';
 import 'log_service.dart';
@@ -42,7 +47,11 @@ class PCloudClientAdapter extends CloudStorageClient
     implements FreshCloudDirectoryReader {
   @override
   StorageTransferCapabilities get transferCapabilities =>
-      const StorageTransferCapabilities(deleteEmptyDirectory: true);
+      const StorageTransferCapabilities(
+        deleteEmptyDirectory: true,
+        boundedUpload: true,
+        boundedDownload: true,
+      );
 
   @override
   Future<void> deleteDirectoryIfEmpty(String path) async {
@@ -69,6 +78,7 @@ class PCloudClientAdapter extends CloudStorageClient
   String? _appKey;
   bool _useEuApi;
   bool _authenticated = false;
+  int _authEpoch = 0;
 
   // pCloud folder IDs are integers; we keep a path → folderID cache.
   final Map<String, int> _pathToFolderId = {'/': 0};
@@ -86,6 +96,8 @@ class PCloudClientAdapter extends CloudStorageClient
               configPath: '',
               secureStorage: InMemorySecureStorage(),
             ),
+      // Keep the public named argument compatible with the minimum Dart SDK.
+      // ignore: prefer_initializing_formals
       _useEuApi = useEuApi;
 
   String get _apiBase =>
@@ -112,6 +124,8 @@ class PCloudClientAdapter extends CloudStorageClient
 
   // Capability flags
   @override
+  bool get supportsStreaming => true;
+  @override
   bool get supportsVersioning => false;
   @override
   bool get supportsSharing => true;
@@ -130,12 +144,15 @@ class PCloudClientAdapter extends CloudStorageClient
     String password, {
     String? twoFactorCode,
   }) async {
+    final epoch = ++_authEpoch;
+    _authenticated = false;
+    _pathToFolderId
+      ..clear()
+      ..['/'] = 0;
     // identity format: "appKey" or "appKey|eu" to select EU endpoint
     final parts = identity.split('|');
     _appKey = parts[0].trim();
-    if (parts.length > 1 && parts[1].trim().toLowerCase() == 'eu') {
-      _useEuApi = true;
-    }
+    _useEuApi = parts.length > 1 && parts[1].trim().toLowerCase() == 'eu';
 
     if (_appKey == null || _appKey!.isEmpty) {
       throw Exception('App Key is required');
@@ -143,6 +160,9 @@ class PCloudClientAdapter extends CloudStorageClient
 
     // Try stored access token (pCloud long-lived tokens don't expire)
     final creds = await _config.readCredentials();
+    if (epoch != _authEpoch) {
+      throw StateError('pCloud authentication was superseded.');
+    }
     if (creds != null &&
         creds['access_token'] != null &&
         creds['access_token']!.isNotEmpty &&
@@ -157,6 +177,7 @@ class PCloudClientAdapter extends CloudStorageClient
         _authenticated = true;
         return;
       } catch (_) {
+        if (epoch != _authEpoch) rethrow;
         // Stored token invalid; proceed to browser flow
         _accessToken = null;
       }
@@ -185,6 +206,7 @@ class PCloudClientAdapter extends CloudStorageClient
 
   @override
   Future<void> logout() async {
+    _authEpoch++;
     // pCloud has no token-revocation endpoint for OAuth2 implicit tokens
     _accessToken = null;
     _email = null;
@@ -195,12 +217,18 @@ class PCloudClientAdapter extends CloudStorageClient
   }
 
   Future<bool> restoreCredentials() async {
+    final epoch = ++_authEpoch;
+    _authenticated = false;
+    _pathToFolderId
+      ..clear()
+      ..['/'] = 0;
     final creds = await _config.readCredentials();
     if (creds == null ||
         creds['access_token'] == null ||
         creds['access_token']!.isEmpty) {
       return false;
     }
+    if (epoch != _authEpoch) return false;
     _appKey = creds['app_key'];
     _accessToken = creds['access_token'];
     _email = creds['email'];
@@ -346,7 +374,64 @@ class PCloudClientAdapter extends CloudStorageClient
     return {'folders': folders, 'files': files};
   }
 
-  // --- Upload ---
+  // --- Bounded transfers ---
+
+  (int, String, String) _captureTransfer() {
+    if (!isAuthenticated) throw StateError('pCloud is not authenticated.');
+    return (_authEpoch, _accessToken!, _apiBase);
+  }
+
+  void _checkTransfer((int, String, String) captured) {
+    if (!isAuthenticated ||
+        _authEpoch != captured.$1 ||
+        _accessToken != captured.$2 ||
+        _apiBase != captured.$3) {
+      throw StateError('The original pCloud account is no longer connected.');
+    }
+  }
+
+  Map<String, dynamic> _transferMetadata(
+    http.Response response,
+    String operation,
+  ) {
+    if (response.statusCode != 200) {
+      throw StateError('pCloud $operation failed (${response.statusCode}).');
+    }
+    final Object? decoded;
+    try {
+      decoded = json.decode(response.body);
+    } catch (_) {
+      throw StateError('pCloud $operation returned invalid metadata.');
+    }
+    if (decoded is! Map<String, dynamic> || decoded['result'] != 0) {
+      throw StateError('pCloud $operation did not confirm success.');
+    }
+    return decoded;
+  }
+
+  Future<Map<String, dynamic>> _readTransferMetadata(
+    (int, String, String) captured,
+    String method,
+    Map<String, String> parameters,
+  ) async {
+    _checkTransfer(captured);
+    final client = http.Client();
+    try {
+      final uri = Uri.parse(
+        '${captured.$3}/$method',
+      ).replace(queryParameters: {'access_token': captured.$2, ...parameters});
+      final request = http.Request('GET', uri)..followRedirects = false;
+      final response = await sendTransferRequest(
+        client,
+        request,
+        operation: 'pCloud $method',
+      );
+      _checkTransfer(captured);
+      return _transferMetadata(response, method);
+    } finally {
+      client.close();
+    }
+  }
 
   @override
   Future<void> uploadFile(
@@ -354,79 +439,162 @@ class PCloudClientAdapter extends CloudStorageClient
     String fileName,
     String targetPath, {
     Function(int, int)? onProgress,
+  }) => uploadStream(
+    Stream.value(fileData),
+    fileData.length,
+    fileName,
+    targetPath,
+    onProgress: onProgress,
+  );
+
+  @override
+  Future<void> uploadStream(
+    Stream<List<int>> dataStream,
+    int length,
+    String fileName,
+    String targetPath, {
+    Function(int, int)? onProgress,
   }) async {
-    _ensureToken();
-
-    final folderId = await _resolveFolderId(targetPath);
-
-    // pCloud uploadfile uses multipart/form-data
-    final uri = Uri.parse('$_apiBase/uploadfile');
-    final request = http.MultipartRequest('POST', uri)
-      ..fields['access_token'] = _accessToken!
-      ..fields['folderid'] = folderId.toString()
-      ..fields['filename'] = fileName
-      ..files.add(
-        http.MultipartFile.fromBytes('file', fileData, filename: fileName),
+    if (length < 0) throw ArgumentError.value(length, 'length');
+    if (fileName.isEmpty ||
+        fileName == '.' ||
+        fileName == '..' ||
+        p.posix.basename(fileName) != fileName) {
+      throw ArgumentError.value(fileName, 'fileName');
+    }
+    final captured = _captureTransfer();
+    final parent = p.posix.normalize(p.posix.join('/', targetPath));
+    // Resolve the supplied path on the server, bypassing cached folder IDs.
+    // Official HTTP protocol supports a single raw PUT body plus filename.
+    // https://docs.pcloud.com/protocols/http_json_protocol/uploading_files.html
+    final uri = Uri.parse('${captured.$3}/uploadfile').replace(
+      queryParameters: {
+        'access_token': captured.$2,
+        'path': parent,
+        'filename': fileName,
+        'nopartial': '1',
+      },
+    );
+    http.Response response;
+    if (kIsWeb) {
+      final spool = await createTransferSpool(
+        dataStream,
+        expectedLength: length,
+        checkpoint: () async => _checkTransfer(captured),
       );
-
-    final streamed = await request.send();
-    final resp = await http.Response.fromStream(streamed);
-
-    if (resp.statusCode != 200) {
-      throw Exception(
-        'pCloud upload failed (${resp.statusCode}): ${resp.body}',
+      try {
+        response = await uploadSpooledHttpBody(
+          uri,
+          spool,
+          operation: 'pCloud upload',
+          checkCurrent: () => _checkTransfer(captured),
+          onProgress: onProgress,
+        );
+      } finally {
+        await spool.dispose();
+      }
+    } else {
+      var sent = 0;
+      final body = validatedTransferParts(dataStream, length, 64 * 1024).map((
+        part,
+      ) {
+        _checkTransfer(captured);
+        sent += part.length;
+        onProgress?.call(sent, length);
+        return part;
+      });
+      final client = http.Client();
+      try {
+        response = await sendTransferRequest(
+          client,
+          _PCloudUploadRequest(uri, body, length),
+          operation: 'pCloud upload',
+        );
+      } finally {
+        client.close();
+      }
+    }
+    _checkTransfer(captured);
+    final data = _transferMetadata(response, 'upload');
+    final entries = data['metadata'];
+    final metadata = entries is List && entries.length == 1
+        ? entries.single
+        : null;
+    if (metadata is! Map ||
+        metadata['fileid'] is! num ||
+        metadata['isfolder'] == true ||
+        metadata['name'] != fileName ||
+        metadata['size'] != length ||
+        (metadata['path'] != null &&
+            metadata['path'] != p.posix.join(parent, fileName))) {
+      throw StateError(
+        'pCloud did not confirm the uploaded file identity and size.',
       );
     }
-    final data = json.decode(resp.body) as Map<String, dynamic>;
-    final result = data['result'] as int? ?? -1;
-    if (result != 0) {
-      throw Exception(
-        'pCloud upload error (result=$result): ${data['error'] ?? resp.body}',
-      );
-    }
-
-    onProgress?.call(fileData.length, fileData.length);
+    onProgress?.call(length, length);
   }
 
-  // --- Download ---
+  @override
+  Stream<List<int>> downloadStream(
+    String remotePath, {
+    Function(int, int)? onProgress,
+  }) async* {
+    final captured = _captureTransfer();
+    final path = p.posix.normalize(p.posix.join('/', remotePath));
+    final stat = await _readTransferMetadata(captured, 'stat', {'path': path});
+    final metadata = stat['metadata'];
+    if (metadata is! Map ||
+        metadata['isfolder'] == true ||
+        metadata['fileid'] is! num ||
+        metadata['size'] is! int ||
+        (metadata['size'] as int) < 0) {
+      throw StateError(
+        'pCloud did not return a readable file identity and size.',
+      );
+    }
+    final link = await _readTransferMetadata(captured, 'getfilelink', {
+      'fileid': metadata['fileid'].toString(),
+    });
+    final hosts = link['hosts'];
+    final pathPart = link['path'];
+    if (hosts is! List ||
+        hosts.isEmpty ||
+        hosts.first is! String ||
+        pathPart is! String ||
+        !pathPart.startsWith('/') ||
+        pathPart.startsWith('//')) {
+      throw StateError('pCloud returned an invalid download address.');
+    }
+    final host = hosts.first as String;
+    if (!RegExp(r'^[A-Za-z0-9.-]+$').hasMatch(host)) {
+      throw StateError('pCloud returned an invalid download host.');
+    }
+    final uri = Uri.parse('https://$host$pathPart');
+    await for (final part in streamHttpDownload(
+      uri,
+      operation: 'pCloud download',
+      expectedLength: metadata['size'] as int,
+      onProgress: onProgress,
+    )) {
+      _checkTransfer(captured);
+      yield part;
+    }
+    _checkTransfer(captured);
+  }
 
   @override
   Future<Uint8List> downloadFileBytes(
     String remotePath, {
     Function(int, int)? onProgress,
   }) async {
-    _ensureToken();
-
-    // Step 1: resolve file ID from path
-    final fileId = await _resolveFileId(remotePath);
-
-    // Step 2: get a download link
-    final linkUri = Uri.parse('$_apiBase/getfilelink').replace(
-      queryParameters: {
-        'access_token': _accessToken!,
-        'fileid': fileId.toString(),
-      },
-    );
-
-    final linkResp = await http.get(linkUri);
-    final linkData = _parseResponse(linkResp, 'getfilelink');
-
-    // pCloud returns a list of hosts and a path to form the download URL
-    final hosts = linkData['hosts'] as List?;
-    final dlPath = linkData['path'] as String?;
-    if (hosts == null || hosts.isEmpty || dlPath == null) {
-      throw Exception('pCloud: no download link returned');
+    final bytes = BytesBuilder(copy: false);
+    await for (final part in downloadStream(
+      remotePath,
+      onProgress: onProgress,
+    )) {
+      bytes.add(part);
     }
-    final downloadUrl = 'https://${hosts.first}$dlPath';
-
-    // Step 3: download the file
-    final dlResp = await http.get(Uri.parse(downloadUrl));
-    if (dlResp.statusCode != 200) {
-      throw Exception('pCloud download failed (${dlResp.statusCode})');
-    }
-
-    onProgress?.call(dlResp.bodyBytes.length, dlResp.bodyBytes.length);
-    return dlResp.bodyBytes;
+    return bytes.takeBytes();
   }
 
   @override
@@ -435,8 +603,21 @@ class PCloudClientAdapter extends CloudStorageClient
     String localPath, {
     Function(int, int)? onProgress,
   }) async {
-    final bytes = await downloadFileBytes(remotePath, onProgress: onProgress);
-    await File(localPath).writeAsBytes(bytes);
+    if (kIsWeb) {
+      throw UnsupportedError('Use browser file storage to save this download.');
+    }
+    final writer = await File(localPath).open(mode: FileMode.write);
+    try {
+      await for (final part in downloadStream(
+        remotePath,
+        onProgress: onProgress,
+      )) {
+        await writer.writeFrom(part);
+      }
+      await writer.flush();
+    } finally {
+      await writer.close();
+    }
   }
 
   // --- Folder ---
@@ -617,10 +798,16 @@ class PCloudClientAdapter extends CloudStorageClient
 
   Future<void> _fetchUserInfo() async {
     _ensureToken();
+    final epoch = _authEpoch;
+    final token = _accessToken!;
+    final base = _apiBase;
     final uri = Uri.parse(
-      '$_apiBase/userinfo',
-    ).replace(queryParameters: {'access_token': _accessToken!});
+      '$base/userinfo',
+    ).replace(queryParameters: {'access_token': token});
     final resp = await http.get(uri);
+    if (epoch != _authEpoch || token != _accessToken || base != _apiBase) {
+      throw StateError('The pCloud account changed during authentication.');
+    }
     final data = _parseResponse(resp, 'userinfo');
     _email = data['email'] as String?;
   }
@@ -644,6 +831,7 @@ class PCloudClientAdapter extends CloudStorageClient
   }
 
   Future<void> _browserOAuthFlow() async {
+    final epoch = _authEpoch;
     const redirectUri = 'http://localhost:$_redirectPort';
 
     final authUri = Uri.parse(_authUrl).replace(
@@ -706,6 +894,9 @@ class PCloudClientAdapter extends CloudStorageClient
       await server.close();
     }
 
+    if (epoch != _authEpoch) {
+      throw StateError('pCloud authentication was superseded.');
+    }
     if (authCode == null) {
       throw Exception('pCloud authorization was cancelled or failed');
     }
@@ -720,6 +911,9 @@ class PCloudClientAdapter extends CloudStorageClient
     );
 
     final tokenResp = await http.get(tokenUri);
+    if (epoch != _authEpoch) {
+      throw StateError('pCloud authentication was superseded.');
+    }
     if (tokenResp.statusCode != 200) {
       throw Exception(
         'pCloud token exchange failed (${tokenResp.statusCode}): ${tokenResp.body}',
@@ -979,5 +1173,19 @@ class PCloudClientAdapter extends CloudStorageClient
     } finally {
       await fileClose(fd);
     }
+  }
+}
+
+class _PCloudUploadRequest extends http.BaseRequest {
+  _PCloudUploadRequest(Uri uri, this.body, int length) : super('PUT', uri) {
+    contentLength = length;
+    followRedirects = false;
+    headers['content-type'] = 'application/octet-stream';
+  }
+  final Stream<List<int>> body;
+  @override
+  http.ByteStream finalize() {
+    super.finalize();
+    return http.ByteStream(body);
   }
 }

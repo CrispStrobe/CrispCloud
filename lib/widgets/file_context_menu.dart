@@ -28,6 +28,10 @@ import '../services/archive_service.dart';
 import '../services/checksum_service.dart'
     show ChecksumService, ChecksumAlgorithm;
 import '../services/file_operation_backend.dart';
+import '../services/file_bytes_loader.dart';
+import '../services/panel_source_service.dart';
+import '../services/viewer_spool.dart';
+import 'file_origin_actions.dart';
 import '../services/cloud_storage_interface.dart'
     show CloudStorageClientCapabilities;
 import '../services/file_split_service.dart';
@@ -59,6 +63,25 @@ import 'version_history_dialog.dart' show showVersionHistoryDialog;
 const _log = Log('FileContextMenu');
 
 /// Text/code files are editable via the built-in F4 editor.
+
+Future<void> openListedFileWithSystemEditor(
+  BuildContext context,
+  WidgetRef ref,
+  FileItem file,
+) async {
+  try {
+    if (kIsWeb) throw UnsupportedError('System editor not available');
+    final origin = captureFileActionOrigin(ref, file);
+    await withNativeFileAction(ref, origin, [requireFilePath(file)], () async {
+      if (context.mounted) await openWithSystemEditor(context, file.path!);
+    });
+  } catch (error) {
+    if (context.mounted) {
+      ScaffoldMessenger.of(context)
+          .showSnackBar(SnackBar(content: Text('$error')));
+    }
+  }
+}
 
 /// Open a local file with the OS default application via a file:// URI.
 Future<void> openWithSystemEditor(BuildContext context, String path) async {
@@ -96,7 +119,7 @@ void _showResultListContextMenu(
   final panel = ref.read(panelProvider(side));
   var verified = true;
   try {
-    panel.captureOperationOrigin(files);
+    panel.captureOperationGroups(files);
   } catch (_) {
     verified = false;
   }
@@ -109,10 +132,16 @@ void _showResultListContextMenu(
   }) => PopupMenuItem<void>(
     enabled: !requiresSource || verified,
     child: Row(
-      children: [Icon(icon, size: 18), const SizedBox(width: 10), Text(label)],
+      children: [
+        Icon(icon, size: 18),
+        const SizedBox(width: 10),
+        Expanded(child: Text(label)),
+      ],
     ),
     onTap: () => Future<void>.delayed(Duration.zero, () async {
-      if (!context.mounted) return;
+      if (!context.mounted) {
+        return;
+      }
       try {
         await action();
       } catch (error) {
@@ -261,6 +290,79 @@ void showFileContextMenu(
     return;
   }
 
+  if (panel.isInArchive) {
+    showCurrentArchiveWorkspaceDialog(
+      context,
+      ref,
+      side,
+      focusedMember: files.length == 1 ? files.single : null,
+    );
+    return;
+  }
+  final PanelFileOrigin origin;
+  try {
+    origin = panel.captureOperationOrigin(files);
+  } catch (_) {
+    _showResultListContextMenu(context, ref, side, files, position);
+    return;
+  }
+  final native =
+      !kIsWeb &&
+      origin.source is LocalPanelSource &&
+      files.every((entry) => entry.path != null);
+  final remote = origin.source is RemotePanelSource
+      ? origin.source as RemotePanelSource
+      : null;
+  final oppositeSide = side == PanelSide.local
+      ? PanelSide.remote
+      : PanelSide.local;
+  PanelFileOrigin? destination;
+  try {
+    destination = ref.read(panelProvider(oppositeSide)).captureCurrentOrigin();
+  } catch (_) {}
+  bool current() {
+    if (origin.isCurrent) {
+      return true;
+    }
+    if (context.mounted) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('The original file account is no longer connected.'),
+        ),
+      );
+    }
+    return false;
+  }
+
+  void nativeAction(Iterable<String> paths, Future<void> Function() action) {
+    unawaited(() async {
+      try {
+        await withNativeFileAction(ref, origin, paths, action);
+      } catch (error) {
+        if (context.mounted) {
+          ScaffoldMessenger.of(context)
+              .showSnackBar(SnackBar(content: Text('$error')));
+        }
+      }
+    }());
+  }
+
+  void transfer(FileOperationKind kind) {
+    if (!context.mounted || !current()) {
+      return;
+    }
+    showFileOperationDialog(
+      context,
+      ref,
+      side,
+      files,
+      kind: kind,
+      sourceOrigin: origin,
+      destinationOrigin: destination,
+      destinationPath: destination?.source.currentPath,
+    );
+  }
+
   final isMultiSelect = files.length > 1;
   final isSingleFolder = files.length == 1 && files.first.isFolder;
 
@@ -274,7 +376,7 @@ void showFileContextMenu(
           children: [
             Icon(action.icon),
             const SizedBox(width: 8),
-            Text(context.pdfOpTr(action.label)),
+            Expanded(child: Text(context.pdfOpTr(action.label))),
           ],
         ),
         onTap: () => Future.delayed(Duration.zero, () {
@@ -294,7 +396,7 @@ void showFileContextMenu(
           children: [
             const Icon(Icons.folder_open),
             const SizedBox(width: 8),
-            Text(AppLocalizations.of(context)!.open),
+            Expanded(child: Text(AppLocalizations.of(context)!.open)),
           ],
         ),
         onTap: () => Future.delayed(
@@ -307,7 +409,7 @@ void showFileContextMenu(
 
   // Specialized editors and text/code editing for a single file.
   if (!isMultiSelect && !isSingleFolder) {
-    final preferExternal = ref.read(preferExternalEditorProvider);
+    final preferExternal = native && ref.read(preferExternalEditorProvider);
     if (isImageEditorFileName(file.name)) {
       items.add(
         PopupMenuItem(
@@ -315,11 +417,13 @@ void showFileContextMenu(
             children: [
               const Icon(Icons.edit_outlined),
               const SizedBox(width: 8),
-              Text(context.imageTr('Edit Image')),
+              Expanded(child: Text(context.imageTr('Edit Image'))),
             ],
           ),
           onTap: () => Future.delayed(Duration.zero, () {
-            if (context.mounted) showFileEditorDialog(context, ref, file, side);
+            if (context.mounted) {
+              showFileEditorDialog(context, ref, file, side);
+            }
           }),
         ),
       );
@@ -331,11 +435,13 @@ void showFileContextMenu(
             children: [
               const Icon(Icons.edit_document),
               const SizedBox(width: 8),
-              Text(context.pdfTr('Edit PDF')),
+              Expanded(child: Text(context.pdfTr('Edit PDF'))),
             ],
           ),
           onTap: () => Future.delayed(Duration.zero, () {
-            if (context.mounted) showFileEditorDialog(context, ref, file, side);
+            if (context.mounted) {
+              showFileEditorDialog(context, ref, file, side);
+            }
           }),
         ),
       );
@@ -348,56 +454,75 @@ void showFileContextMenu(
             children: [
               const Icon(Icons.edit),
               const SizedBox(width: 8),
-              Text(preferExternal ? 'Edit (System Editor)' : 'Edit (Built-in)'),
+              Expanded(
+                child: Text(
+                  preferExternal ? 'Edit (System Editor)' : 'Edit (Built-in)',
+                ),
+              ),
             ],
           ),
           onTap: () => Future.delayed(Duration.zero, () {
-            if (!context.mounted) return;
-            if (preferExternal && file.path != null && !kIsWeb) {
-              openWithSystemEditor(context, file.path!);
-            } else {
-              showFileEditorDialog(context, ref, file, side);
+            if (!context.mounted) {
+              return;
             }
-          }),
-        ),
-      );
-      // Secondary option (the other editor)
-      items.add(
-        PopupMenuItem(
-          child: Row(
-            children: [
-              Icon(
-                preferExternal ? Icons.edit_note : Icons.open_in_new,
-                size: 20,
-              ),
-              const SizedBox(width: 8),
-              Text(
-                preferExternal ? 'Edit (Built-in)' : 'Open with System Editor',
-              ),
-            ],
-          ),
-          onTap: () => Future.delayed(Duration.zero, () {
-            if (!context.mounted) return;
             if (preferExternal) {
-              showFileEditorDialog(context, ref, file, side);
-            } else if (file.path != null && !kIsWeb) {
-              openWithSystemEditor(context, file.path!);
+              if (current()) {
+                nativeAction([
+                  file.path!,
+                ], () => openWithSystemEditor(context, file.path!));
+              }
             } else {
-              ScaffoldMessenger.of(context).showSnackBar(
-                const SnackBar(content: Text('System editor not available')),
-              );
+              showFileEditorDialog(context, ref, file, side);
             }
           }),
         ),
       );
+      // Native applications receive verified local paths only.
+      if (native) {
+        items.add(
+          PopupMenuItem(
+            child: Row(
+              children: [
+                Icon(
+                  preferExternal ? Icons.edit_note : Icons.open_in_new,
+                  size: 20,
+                ),
+                const SizedBox(width: 8),
+                Expanded(
+                  child: Text(
+                    preferExternal
+                        ? 'Edit (Built-in)'
+                        : 'Open with System Editor',
+                  ),
+                ),
+              ],
+            ),
+            onTap: () => Future.delayed(Duration.zero, () {
+              if (!context.mounted) {
+                return;
+              }
+              if (preferExternal) {
+                showFileEditorDialog(context, ref, file, side);
+              } else if (current()) {
+                nativeAction([
+                  file.path!,
+                ], () => openWithSystemEditor(context, file.path!));
+              } else {
+                ScaffoldMessenger.of(context).showSnackBar(
+                  const SnackBar(content: Text('System editor not available')),
+                );
+              }
+            }),
+          ),
+        );
+      }
     }
   }
 
   // Open with system default (all local non-folder files — DC-13 file associations)
   if (!isMultiSelect &&
       !isSingleFolder &&
-      !kIsWeb &&
-      side == PanelSide.local &&
+      native &&
       file.path != null &&
       !isTextEditableName(file.name)) {
     items.add(
@@ -406,12 +531,18 @@ void showFileContextMenu(
           children: [
             Icon(Icons.open_in_new, size: 20),
             SizedBox(width: 8),
-            Text('Open with System App'),
+            Expanded(child: Text('Open with System App')),
           ],
         ),
         onTap: () => Future.delayed(Duration.zero, () {
-          if (!context.mounted) return;
-          openWithSystemEditor(context, file.path!);
+          if (!context.mounted) {
+            return;
+          }
+          if (current()) {
+            nativeAction([
+              file.path!,
+            ], () => openWithSystemEditor(context, file.path!));
+          }
         }),
       ),
     );
@@ -420,7 +551,6 @@ void showFileContextMenu(
   // Verify copy: compare local file MD5 against same-named file in opposite panel (DC-15)
   if (!isMultiSelect &&
       !isSingleFolder &&
-      !kIsWeb &&
       side == PanelSide.local &&
       file.path != null &&
       !file.isFolder) {
@@ -436,11 +566,13 @@ void showFileContextMenu(
             children: [
               Icon(Icons.verified, size: 20),
               SizedBox(width: 8),
-              Text('Verify against remote'),
+              Expanded(child: Text('Verify against other panel')),
             ],
           ),
           onTap: () => Future.delayed(Duration.zero, () {
-            if (!context.mounted) return;
+            if (!context.mounted) {
+              return;
+            }
             _verifyAgainstRemote(context, ref, file, oppMatch.first);
           }),
         ),
@@ -449,7 +581,7 @@ void showFileContextMenu(
   }
 
   // Compare with opposite panel (single non-folder file, both panels connected)
-  if (!isMultiSelect && !isSingleFolder && ref.read(authProvider).isConnected) {
+  if (!isMultiSelect && !isSingleFolder) {
     final oppositeSide = side == PanelSide.local
         ? PanelSide.remote
         : PanelSide.local;
@@ -465,11 +597,13 @@ void showFileContextMenu(
             children: [
               Icon(Icons.compare_arrows),
               SizedBox(width: 8),
-              Text('Compare'),
+              Expanded(child: Text('Compare')),
             ],
           ),
           onTap: () => Future.delayed(Duration.zero, () {
-            if (!context.mounted) return;
+            if (!context.mounted) {
+              return;
+            }
             if (side == PanelSide.local) {
               showDiffViewerDialog(
                 context,
@@ -496,54 +630,61 @@ void showFileContextMenu(
   }
 
   // Upload to Remote
-  if (side == PanelSide.local && ref.read(authProvider).isConnected) {
+  if (origin.source is LocalPanelSource &&
+      destination?.source is RemotePanelSource) {
     items.add(
       PopupMenuItem(
         child: Row(
           children: [
             const Icon(Icons.upload),
             const SizedBox(width: 8),
-            Text('Upload${isMultiSelect ? ' (${files.length})' : ''}'),
+            Expanded(
+              child: Text('Upload${isMultiSelect ? ' (${files.length})' : ''}'),
+            ),
           ],
         ),
         onTap: () => Future.delayed(
           Duration.zero,
-          () => ref.read(transferProvider).uploadFiles(files),
+          () => transfer(FileOperationKind.copy),
         ),
       ),
     );
   }
 
   // Download to Local
-  if (side == PanelSide.remote) {
+  if (remote != null && destination?.source is LocalPanelSource) {
     items.add(
       PopupMenuItem(
         child: Row(
           children: [
             const Icon(Icons.download),
             const SizedBox(width: 8),
-            Text('Download${isMultiSelect ? ' (${files.length})' : ''}'),
+            Expanded(
+              child: Text(
+                'Download${isMultiSelect ? ' (${files.length})' : ''}',
+              ),
+            ),
           ],
         ),
         onTap: () => Future.delayed(
           Duration.zero,
-          () => ref.read(transferProvider).downloadFiles(files),
+          () => transfer(FileOperationKind.copy),
         ),
       ),
     );
   }
 
   // Share (mobile platforms only — local files)
-  if (!kIsWeb &&
-      (Platform.isAndroid || Platform.isIOS) &&
-      side == PanelSide.local) {
+  if (!kIsWeb && (Platform.isAndroid || Platform.isIOS) && native) {
     items.add(
       PopupMenuItem(
         child: Row(
           children: [
             const Icon(Icons.share),
             const SizedBox(width: 8),
-            Text('Share${isMultiSelect ? ' (${files.length})' : ''}'),
+            Expanded(
+              child: Text('Share${isMultiSelect ? ' (${files.length})' : ''}'),
+            ),
           ],
         ),
         onTap: () => Future.delayed(Duration.zero, () {
@@ -551,7 +692,9 @@ void showFileContextMenu(
               .where((f) => f.path != null)
               .map((f) => f.path!)
               .toList();
-          ShareService.shareFiles(paths);
+          if (current()) {
+            nativeAction(paths, () => ShareService.shareFiles(paths));
+          }
         }),
       ),
     );
@@ -560,10 +703,10 @@ void showFileContextMenu(
   // Share (mobile platforms only — remote files)
   if (!kIsWeb &&
       (Platform.isAndroid || Platform.isIOS) &&
-      side == PanelSide.remote &&
+      remote != null &&
       !isMultiSelect &&
       !isSingleFolder) {
-    final client = ref.read(authProvider).client;
+    final client = remote.client;
 
     // "Share Link" — only for providers with native share APIs
     if (client.capabilities.nativeShare) {
@@ -573,13 +716,15 @@ void showFileContextMenu(
             children: [
               const Icon(Icons.link),
               const SizedBox(width: 8),
-              Text(AppLocalizations.of(context)!.shareLink),
+              Expanded(child: Text(AppLocalizations.of(context)!.shareLink)),
             ],
           ),
           onTap: () => Future.delayed(Duration.zero, () async {
-            if (!context.mounted) return;
+            if (!context.mounted) {
+              return;
+            }
             try {
-              showShareLinkDialog(context, ref, file);
+              showShareLinkDialog(context, ref, file, sourceOrigin: origin);
             } catch (e) {
               _log.warn('operation failed', e);
               if (context.mounted) {
@@ -600,11 +745,13 @@ void showFileContextMenu(
           children: [
             const Icon(Icons.share),
             const SizedBox(width: 8),
-            Text(AppLocalizations.of(context)!.shareLink),
+            Expanded(child: Text(AppLocalizations.of(context)!.shareLink)),
           ],
         ),
         onTap: () => Future.delayed(Duration.zero, () async {
-          if (!context.mounted) return;
+          if (!context.mounted) {
+            return;
+          }
           // Show loading snackbar
           ScaffoldMessenger.of(context).showSnackBar(
             const SnackBar(
@@ -616,21 +763,33 @@ void showFileContextMenu(
                     child: CircularProgressIndicator(strokeWidth: 2),
                   ),
                   SizedBox(width: 12),
-                  Text('Preparing file for sharing...'),
+                  Expanded(child: Text('Preparing file for sharing...')),
                 ],
               ),
               duration: Duration(seconds: 30),
             ),
           );
           try {
-            final remotePath =
-                file.path ?? p.posix.join(panel.currentPath, file.name);
-            final tempPath = p.join(Directory.systemTemp.path, file.name);
-            await client.downloadFileByPath(remotePath, tempPath);
-            if (context.mounted) {
+            requireCurrentOrigin(origin);
+            final backend = CloudOperationBackend(
+              client,
+              isCurrent: () => origin.isCurrent,
+            );
+            final spool = await createViewerSpool(
+              backend,
+              file,
+              isCancelled: () => !context.mounted,
+            );
+            try {
+              requireCurrentOrigin(origin);
+              if (!context.mounted) {
+                return;
+              }
               ScaffoldMessenger.of(context).hideCurrentSnackBar();
+              await Share.shareXFiles([XFile(spool.path)], text: file.name);
+            } finally {
+              await spool.close();
             }
-            await Share.shareXFiles([XFile(tempPath)], text: file.name);
           } catch (e) {
             _log.warn('operation failed', e);
             if (context.mounted) {
@@ -646,8 +805,7 @@ void showFileContextMenu(
   }
 
   // Divider
-  if ((side == PanelSide.local && ref.read(authProvider).isConnected) ||
-      side == PanelSide.remote) {
+  if (destination != null) {
     items.add(const PopupMenuDivider());
   }
 
@@ -695,18 +853,24 @@ void showFileContextMenu(
   ]);
 
   // Copy to... / Download (web local)
-  if (kIsWeb && side == PanelSide.local) {
+  if (kIsWeb && origin.source is LocalPanelSource) {
     items.add(
       PopupMenuItem(
         child: Row(
           children: [
             const Icon(Icons.download),
             const SizedBox(width: 8),
-            Text('Download${isMultiSelect ? ' (${files.length})' : ''}'),
+            Expanded(
+              child: Text(
+                'Download${isMultiSelect ? ' (${files.length})' : ''}',
+              ),
+            ),
           ],
         ),
         onTap: () => Future.delayed(Duration.zero, () {
-          _downloadFilesOnWeb(ref, files);
+          if (context.mounted) {
+            _downloadFilesOnWeb(context, ref, files, origin);
+          }
         }),
       ),
     );
@@ -717,12 +881,18 @@ void showFileContextMenu(
           children: [
             const Icon(Icons.content_copy),
             const SizedBox(width: 8),
-            Text('Copy to...${isMultiSelect ? ' (${files.length})' : ''}'),
+            Expanded(
+              child: Text(
+                'Copy to...${isMultiSelect ? ' (${files.length})' : ''}',
+              ),
+            ),
           ],
         ),
         onTap: () => Future.delayed(Duration.zero, () {
-          if (!context.mounted) return;
-          _showCopyDialog(context, ref, side, files);
+          if (!context.mounted) {
+            return;
+          }
+          transfer(FileOperationKind.copy);
         }),
       ),
     );
@@ -735,12 +905,18 @@ void showFileContextMenu(
         children: [
           const Icon(Icons.drive_file_move),
           const SizedBox(width: 8),
-          Text('Move to...${isMultiSelect ? ' (${files.length})' : ''}'),
+          Expanded(
+            child: Text(
+              'Move to...${isMultiSelect ? ' (${files.length})' : ''}',
+            ),
+          ),
         ],
       ),
       onTap: () => Future.delayed(Duration.zero, () {
-        if (!context.mounted) return;
-        _showMoveDialog(context, ref, side, files);
+        if (!context.mounted) {
+          return;
+        }
+        transfer(FileOperationKind.move);
       }),
     ),
   );
@@ -753,11 +929,15 @@ void showFileContextMenu(
           children: [
             const Icon(Icons.edit),
             const SizedBox(width: 8),
-            Text('${AppLocalizations.of(context)!.rename} (F2)'),
+            Expanded(
+              child: Text('${AppLocalizations.of(context)!.rename} (F2)'),
+            ),
           ],
         ),
         onTap: () => Future.delayed(Duration.zero, () {
-          if (!context.mounted) return;
+          if (!context.mounted) {
+            return;
+          }
           showRenameDialog(context, ref, side, file);
         }),
       ),
@@ -772,11 +952,13 @@ void showFileContextMenu(
           children: [
             const Icon(Icons.drive_file_rename_outline),
             const SizedBox(width: 8),
-            Text('Batch Rename (${files.length})'),
+            Expanded(child: Text('Batch Rename (${files.length})')),
           ],
         ),
         onTap: () => Future.delayed(Duration.zero, () {
-          if (!context.mounted) return;
+          if (!context.mounted) {
+            return;
+          }
           showBatchRenameDialog(context, ref, side, files);
         }),
       ),
@@ -784,14 +966,12 @@ void showFileContextMenu(
   }
 
   // Share link (remote, single file, provider supports sharing — non-mobile or no supportsNativeShare)
-  if (side == PanelSide.remote &&
-      !isMultiSelect &&
-      ref.read(authProvider).client.capabilities.sharing) {
+  if (remote != null && !isMultiSelect && remote.client.capabilities.sharing) {
     // On mobile with supportsNativeShare, Share Link is already shown above; avoid duplicate
     final isMobileNative =
         !kIsWeb &&
         (Platform.isAndroid || Platform.isIOS) &&
-        ref.read(authProvider).client.capabilities.nativeShare;
+        remote.client.capabilities.nativeShare;
     if (!isMobileNative) {
       items.add(
         PopupMenuItem(
@@ -799,12 +979,14 @@ void showFileContextMenu(
             children: [
               const Icon(Icons.link),
               const SizedBox(width: 8),
-              Text(AppLocalizations.of(context)!.shareLink),
+              Expanded(child: Text(AppLocalizations.of(context)!.shareLink)),
             ],
           ),
           onTap: () => Future.delayed(Duration.zero, () {
-            if (!context.mounted) return;
-            showShareLinkDialog(context, ref, file);
+            if (!context.mounted) {
+              return;
+            }
+            showShareLinkDialog(context, ref, file, sourceOrigin: origin);
           }),
         ),
       );
@@ -812,10 +994,10 @@ void showFileContextMenu(
   }
 
   // Version history (remote, single file, provider supports versioning)
-  if (side == PanelSide.remote &&
+  if (remote != null &&
       !isMultiSelect &&
       !isSingleFolder &&
-      ref.read(authProvider).client.capabilities.versioning) {
+      remote.client.capabilities.versioning) {
     items.add(const PopupMenuDivider());
     items.add(
       PopupMenuItem(
@@ -823,33 +1005,36 @@ void showFileContextMenu(
           children: [
             Icon(Icons.history),
             SizedBox(width: 8),
-            Text('Version History'),
+            Expanded(child: Text('Version History')),
           ],
         ),
         onTap: () => Future.delayed(Duration.zero, () {
-          if (!context.mounted) return;
-          showVersionHistoryDialog(context, ref, file);
+          if (!context.mounted) {
+            return;
+          }
+          showVersionHistoryDialog(context, ref, file, sourceOrigin: origin);
         }),
       ),
     );
   }
 
   // Permissions (SFTP only, single file)
-  if (!isMultiSelect && side == PanelSide.remote) {
-    final auth = ref.read(authProvider);
-    if (auth.client is SFTPClientAdapter) {
+  if (!isMultiSelect && remote != null) {
+    if (remote.client is SFTPClientAdapter) {
       items.add(
         PopupMenuItem(
           child: const Row(
             children: [
               Icon(Icons.security),
               SizedBox(width: 8),
-              Text('Permissions'),
+              Expanded(child: Text('Permissions')),
             ],
           ),
           onTap: () => Future.delayed(Duration.zero, () {
-            if (!context.mounted) return;
-            showPermissionsDialog(context, ref, file);
+            if (!context.mounted) {
+              return;
+            }
+            showPermissionsDialog(context, ref, file, sourceOrigin: origin);
           }),
         ),
       );
@@ -873,7 +1058,7 @@ void showFileContextMenu(
   }
 
   // Archive operations (local files only, not on web)
-  if (!kIsWeb && side == PanelSide.local) {
+  if (native) {
     // Browse archive: show for single archive file
     if (!isMultiSelect &&
         ArchiveService.isArchive(file.name) &&
@@ -884,11 +1069,15 @@ void showFileContextMenu(
             children: [
               const Icon(Icons.folder_zip),
               const SizedBox(width: 8),
-              Text(AppLocalizations.of(context)!.browseArchive),
+              Expanded(
+                child: Text(AppLocalizations.of(context)!.browseArchive),
+              ),
             ],
           ),
           onTap: () => Future.delayed(Duration.zero, () {
-            ref.read(panelProvider(side)).enterArchive(file);
+            if (current()) {
+              ref.read(panelProvider(side)).enterArchive(file);
+            }
           }),
         ),
       );
@@ -903,14 +1092,16 @@ void showFileContextMenu(
             children: [
               const Icon(Icons.unarchive),
               const SizedBox(width: 8),
-              Text(AppLocalizations.of(context)!.extractHere),
+              Expanded(child: Text(AppLocalizations.of(context)!.extractHere)),
             ],
           ),
           onTap: () => Future.delayed(Duration.zero, () async {
             try {
               final dir = p.dirname(file.path!);
-              await ArchiveService.extractArchive(file.path!, dir);
-              ref.read(panelProvider(PanelSide.local)).refresh();
+              await withNativeFileAction(ref, origin, [
+                dir,
+              ], () => ArchiveService.extractArchive(file.path!, dir));
+              ref.read(panelProvider(side)).refresh();
               if (context.mounted) {
                 ScaffoldMessenger.of(context).showSnackBar(
                   const SnackBar(
@@ -939,7 +1130,11 @@ void showFileContextMenu(
             children: [
               const Icon(Icons.archive),
               const SizedBox(width: 8),
-              Text('Create Zip${isMultiSelect ? ' (${files.length})' : ''}'),
+              Expanded(
+                child: Text(
+                  'Create Zip${isMultiSelect ? ' (${files.length})' : ''}',
+                ),
+              ),
             ],
           ),
           onTap: () => Future.delayed(Duration.zero, () async {
@@ -948,11 +1143,15 @@ void showFileContextMenu(
                   .where((f) => f.path != null)
                   .map((f) => f.path!)
                   .toList();
-              if (paths.isEmpty) return;
+              if (paths.isEmpty) {
+                return;
+              }
               final basePath = p.dirname(paths.first);
-              final zipBytes = await ArchiveService.createZip(
+              final zipBytes = await withNativeFileAction(
+                ref,
+                origin,
                 paths,
-                basePath: basePath,
+                () => ArchiveService.createZip(paths, basePath: basePath),
               );
               final zipName = isMultiSelect
                   ? 'archive.zip'
@@ -967,9 +1166,11 @@ void showFileContextMenu(
                 );
                 suffix++;
               }
-              await File(zipPath).create(exclusive: true);
-              await File(zipPath).writeAsBytes(zipBytes, flush: true);
-              ref.read(panelProvider(PanelSide.local)).refresh();
+              await withNativeFileAction(ref, origin, [basePath], () async {
+                await File(zipPath).create(exclusive: true);
+                await File(zipPath).writeAsBytes(zipBytes, flush: true);
+              });
+              ref.read(panelProvider(side)).refresh();
               if (context.mounted) {
                 ScaffoldMessenger.of(
                   context,
@@ -990,7 +1191,7 @@ void showFileContextMenu(
   }
 
   // Reveal in Finder / Explorer (local files only)
-  if (!kIsWeb && side == PanelSide.local && file.path != null) {
+  if (native && file.path != null) {
     final revealLabel = Platform.isMacOS
         ? 'Reveal in Finder'
         : Platform.isWindows
@@ -1002,11 +1203,12 @@ void showFileContextMenu(
           children: [
             const Icon(Icons.folder_open, size: 20),
             const SizedBox(width: 8),
-            Text(revealLabel),
+            Expanded(child: Text(revealLabel)),
           ],
         ),
         onTap: () async {
           try {
+            requireCurrentOrigin(origin);
             if (Platform.isMacOS) {
               await Process.run('open', ['-R', file.path!]);
             } else if (Platform.isWindows) {
@@ -1033,11 +1235,13 @@ void showFileContextMenu(
           children: [
             const Icon(Icons.info_outline),
             const SizedBox(width: 8),
-            Text(AppLocalizations.of(context)!.properties),
+            Expanded(child: Text(AppLocalizations.of(context)!.properties)),
           ],
         ),
         onTap: () => Future.delayed(Duration.zero, () {
-          if (!context.mounted) return;
+          if (!context.mounted) {
+            return;
+          }
           _showPropertiesDialog(context, file);
         }),
       ),
@@ -1045,19 +1249,23 @@ void showFileContextMenu(
   }
 
   // Calculate Size (folders only, not on web)
-  if (isSingleFolder && !kIsWeb && side == PanelSide.local) {
+  if (isSingleFolder && native) {
     items.add(
       PopupMenuItem(
         child: const Row(
           children: [
             Icon(Icons.data_usage),
             SizedBox(width: 8),
-            Text('Calculate Size'),
+            Expanded(child: Text('Calculate Size')),
           ],
         ),
         onTap: () => Future.delayed(Duration.zero, () {
-          if (!context.mounted) return;
-          _showFolderSize(context, file);
+          if (!context.mounted) {
+            return;
+          }
+          if (current()) {
+            _showFolderSize(context, ref, file, origin);
+          }
         }),
       ),
     );
@@ -1070,14 +1278,11 @@ void showFileContextMenu(
         children: [
           Icon(Icons.content_copy, size: 20),
           SizedBox(width: 8),
-          Text('Copy name(s)'),
+          Expanded(child: Text('Copy name(s)')),
         ],
       ),
       onTap: () {
-        final sel = panel.selection;
-        final items2 = sel.isEmpty
-            ? (file.name != '..' ? {file} : <FileItem>{})
-            : sel;
+        final items2 = files.where((entry) => entry.name != '..');
         Clipboard.setData(
           ClipboardData(text: items2.map((f) => f.name).join('\n')),
         );
@@ -1090,14 +1295,11 @@ void showFileContextMenu(
         children: [
           Icon(Icons.link, size: 20),
           SizedBox(width: 8),
-          Text('Copy path(s)'),
+          Expanded(child: Text('Copy path(s)')),
         ],
       ),
       onTap: () {
-        final sel = panel.selection;
-        final items2 = sel.isEmpty
-            ? (file.name != '..' ? {file} : <FileItem>{})
-            : sel;
+        final items2 = files.where((entry) => entry.name != '..');
         Clipboard.setData(
           ClipboardData(text: items2.map((f) => f.path ?? f.name).join('\n')),
         );
@@ -1114,10 +1316,16 @@ void showFileContextMenu(
       Future<void> Function() action,
     ) => PopupMenuItem<void>(
       child: Row(
-        children: [Icon(icon, size: 20), const SizedBox(width: 8), Text(label)],
+        children: [
+          Icon(icon, size: 20),
+          const SizedBox(width: 8),
+          Expanded(child: Text(label)),
+        ],
       ),
       onTap: () => Future<void>.delayed(Duration.zero, () async {
-        if (context.mounted) await action();
+        if (context.mounted) {
+          await action();
+        }
       }),
     );
     items.add(
@@ -1162,12 +1370,8 @@ void showFileContextMenu(
     }
   }
 
-  // Create symlink (local or SFTP, single file, desktop only)
-  if (!kIsWeb &&
-      !isMultiSelect &&
-      (side == PanelSide.local ||
-          (side == PanelSide.remote &&
-              ref.read(authProvider).client is SFTPClientAdapter))) {
+  // Native symbolic and hard links require a captured local file.
+  if (native && !isMultiSelect) {
     if (!kIsWeb &&
         (Platform.isMacOS || Platform.isLinux || Platform.isWindows)) {
       items.add(
@@ -1176,12 +1380,14 @@ void showFileContextMenu(
             children: [
               Icon(Icons.link, size: 20),
               SizedBox(width: 8),
-              Text('Create Link...'),
+              Expanded(child: Text('Create Link...')),
             ],
           ),
           onTap: () => Future.delayed(Duration.zero, () {
-            if (!context.mounted) return;
-            _showCreateLinkDialog(context, ref, side, file);
+            if (!context.mounted) {
+              return;
+            }
+            _showCreateLinkDialog(context, ref, side, file, origin);
           }),
         ),
       );
@@ -1189,9 +1395,7 @@ void showFileContextMenu(
   }
 
   // Secure wipe (local files, desktop only)
-  if (!kIsWeb &&
-      side == PanelSide.local &&
-      (Platform.isMacOS || Platform.isLinux || Platform.isWindows)) {
+  if (native && (Platform.isMacOS || Platform.isLinux || Platform.isWindows)) {
     items.add(
       PopupMenuItem(
         child: Row(
@@ -1202,15 +1406,19 @@ void showFileContextMenu(
               color: Theme.of(context).colorScheme.error,
             ),
             const SizedBox(width: 8),
-            Text(
-              'Secure Wipe${isMultiSelect ? ' (${files.length})' : ''}',
-              style: TextStyle(color: Theme.of(context).colorScheme.error),
+            Expanded(
+              child: Text(
+                'Secure Wipe${isMultiSelect ? ' (${files.length})' : ''}',
+                style: TextStyle(color: Theme.of(context).colorScheme.error),
+              ),
             ),
           ],
         ),
         onTap: () => Future.delayed(Duration.zero, () {
-          if (!context.mounted) return;
-          _showSecureWipeDialog(context, ref, side, files);
+          if (!context.mounted) {
+            return;
+          }
+          _showSecureWipeDialog(context, ref, side, files, origin);
         }),
       ),
     );
@@ -1225,14 +1433,18 @@ void showFileContextMenu(
         children: [
           Icon(Icons.delete, color: Theme.of(context).colorScheme.error),
           const SizedBox(width: 8),
-          Text(
-            'Delete${isMultiSelect ? ' (${files.length})' : ''}',
-            style: TextStyle(color: Theme.of(context).colorScheme.error),
+          Expanded(
+            child: Text(
+              'Delete${isMultiSelect ? ' (${files.length})' : ''}',
+              style: TextStyle(color: Theme.of(context).colorScheme.error),
+            ),
           ),
         ],
       ),
       onTap: () => Future.delayed(Duration.zero, () {
-        if (!context.mounted) return;
+        if (!context.mounted) {
+          return;
+        }
         confirmDelete(context, ref, side, files);
       }),
     ),
@@ -1244,24 +1456,29 @@ void showFileContextMenu(
       .where((f) => f.path != null)
       .map((f) => f.path!)
       .toList();
-  final pluginItems = pluginRegistry.getContextMenuItems(filePaths);
+  final pluginItems = native
+      ? pluginRegistry.getContextMenuItems(filePaths)
+      : [];
   if (pluginItems.isNotEmpty) {
     items.add(const PopupMenuDivider());
     for (final menuItem in pluginItems) {
-      if (!menuItem.enabled) continue;
+      if (!menuItem.enabled) {
+        continue;
+      }
       items.add(
         PopupMenuItem(
           onTap: menuItem.onSelected != null
-              ? () => Future.delayed(
-                  Duration.zero,
-                  () => menuItem.onSelected!(filePaths),
-                )
+              ? () => Future.delayed(Duration.zero, () {
+                  if (current()) {
+                    menuItem.onSelected!(filePaths);
+                  }
+                })
               : null,
           child: Row(
             children: [
               const Icon(Icons.extension, size: 20),
               const SizedBox(width: 8),
-              Text(menuItem.label),
+              Expanded(child: Text(menuItem.label)),
             ],
           ),
         ),
@@ -1318,7 +1535,9 @@ void showRenameDialog(
           if (value.isNotEmpty && value != file.name) {
             try {
               await ref.read(panelProvider(side)).renameFile(file, value);
-              if (context.mounted) Navigator.pop(context);
+              if (context.mounted) {
+                Navigator.pop(context);
+              }
             } catch (e) {
               _log.warn('operation failed', e);
               if (context.mounted) {
@@ -1346,7 +1565,9 @@ void showRenameDialog(
                 await ref
                     .read(panelProvider(side))
                     .renameFile(file, controller.text);
-                if (context.mounted) Navigator.pop(context);
+                if (context.mounted) {
+                  Navigator.pop(context);
+                }
               } catch (e) {
                 _log.warn('operation failed', e);
                 if (context.mounted) {
@@ -1369,18 +1590,48 @@ void showRenameDialog(
 }
 
 /// Download local files on web via browser download.
-void _downloadFilesOnWeb(WidgetRef ref, List<FileItem> files) {
-  _log.debug('downloadFilesOnWeb: ${files.length} files');
-  if (!kIsWeb) return;
-  final localSvc = ref.read(localFileServiceProvider);
-  for (final file in files) {
-    if (file.isFolder || file.path == null) continue;
-    localSvc
-        .readFile(file.path!, fileItem: file)
-        .then((bytes) {
-          _triggerBrowserDownload(bytes, file.name);
-        })
-        .catchError((_) {});
+Future<void> _downloadFilesOnWeb(
+  BuildContext context,
+  WidgetRef ref,
+  List<FileItem> files,
+  PanelFileOrigin origin,
+) async {
+  if (!kIsWeb) {
+    return;
+  }
+  try {
+    requireCurrentOrigin(origin);
+    if (origin.source is! LocalPanelSource) {
+      throw StateError('The original browser folder is unavailable.');
+    }
+    final backend = fileOperationBackend(
+      source: origin.source,
+      local: ref.read(localFileServiceProvider),
+      isCurrent: () => origin.isCurrent,
+    );
+    for (final file in files) {
+      if (file.isFolder) {
+        continue;
+      }
+      final current = await backend.stat(requireFilePath(file));
+      if (current == null || current.isFolder) {
+        throw StateError('The original file is unavailable.');
+      }
+      // The browser Blob fallback necessarily buffers. Larger files use the
+      // ordinary Copy dialog and its streaming destination instead.
+      final bytes = await readFileBytesBounded(
+        backend,
+        current,
+        maxBytes: 64 * 1024 * 1024,
+      );
+      requireCurrentOrigin(origin);
+      _triggerBrowserDownload(bytes, file.name);
+    }
+  } catch (error) {
+    if (context.mounted) {
+      ScaffoldMessenger.of(context)
+          .showSnackBar(SnackBar(content: Text('$error')));
+    }
   }
 }
 
@@ -1498,7 +1749,9 @@ class _PropertiesDialogState extends ConsumerState<_PropertiesDialog> {
         !kIsWeb) {
       try {
         final stat = await FileStat.stat(widget.file.path!);
-        if (mounted && _origin?.isCurrent == true) setState(() => _stat = stat);
+        if (mounted && _origin?.isCurrent == true) {
+          setState(() => _stat = stat);
+        }
       } catch (e) {
         _log.warn('initState failed', e);
       }
@@ -1518,7 +1771,9 @@ class _PropertiesDialogState extends ConsumerState<_PropertiesDialog> {
   }
 
   Future<void> _computeMd5() async {
-    if (widget.file.path == null) return;
+    if (widget.file.path == null) {
+      return;
+    }
     setState(() => _computingMd5 = true);
     try {
       final origin = _origin;
@@ -1693,7 +1948,9 @@ Widget _propertyRow(
 Future<int> _calculateFolderSize(String path) async {
   int totalSize = 0;
   final dir = Directory(path);
-  if (!await dir.exists()) return 0;
+  if (!await dir.exists()) {
+    return 0;
+  }
   await for (final entity in dir.list(recursive: true, followLinks: false)) {
     if (entity is File) {
       try {
@@ -1706,15 +1963,24 @@ Future<int> _calculateFolderSize(String path) async {
   return totalSize;
 }
 
-void _showFolderSize(BuildContext context, FileItem file) {
-  if (file.path == null) return;
-
+void _showFolderSize(
+  BuildContext context,
+  WidgetRef ref,
+  FileItem file,
+  PanelFileOrigin origin,
+) {
+  if (file.path == null) {
+    return;
+  }
+  final result = withNativeFileAction(ref, origin, [
+    file.path!,
+  ], () => _calculateFolderSize(file.path!));
   showDialog(
     context: context,
     barrierDismissible: false,
     builder: (ctx) {
       return FutureBuilder<int>(
-        future: _calculateFolderSize(file.path!),
+        future: result,
         builder: (context, snapshot) {
           if (snapshot.connectionState == ConnectionState.waiting) {
             return AlertDialog(
@@ -1753,7 +2019,10 @@ void _showFolderSize(BuildContext context, FileItem file) {
               mainAxisSize: MainAxisSize.min,
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                _propertyRow(context, 'Total Size', formatBytes(size)),
+                if (snapshot.hasError)
+                  Text('${snapshot.error}')
+                else
+                  _propertyRow(context, 'Total Size', formatBytes(size)),
                 _propertyRow(context, 'Bytes', size.toString()),
               ],
             ),
@@ -1775,6 +2044,7 @@ void _showCreateLinkDialog(
   WidgetRef ref,
   PanelSide side,
   FileItem file,
+  PanelFileOrigin origin,
 ) {
   final controller = TextEditingController(
     text: file.path != null ? '${file.path!}_link' : '',
@@ -1818,11 +2088,23 @@ void _showCreateLinkDialog(
             onPressed: () async {
               Navigator.pop(context);
               try {
-                if (isSymlink) {
-                  await LinkService.createSymlink(file.path!, controller.text);
-                } else {
-                  await LinkService.createHardlink(file.path!, controller.text);
+                final target = requireFilePath(file);
+                final linkPath = controller.text.trim();
+                if (!p.isAbsolute(linkPath) || linkPath == target) {
+                  throw ArgumentError('Choose a different absolute link path.');
                 }
+                await withNativeFileAction(
+                  ref,
+                  origin,
+                  [target, p.dirname(linkPath)],
+                  () async {
+                    if (isSymlink) {
+                      await LinkService.createSymlink(target, linkPath);
+                    } else {
+                      await LinkService.createHardlink(target, linkPath);
+                    }
+                  },
+                );
                 ref.read(panelProvider(side)).refresh();
                 if (context.mounted) {
                   ScaffoldMessenger.of(context).showSnackBar(
@@ -1855,6 +2137,7 @@ void _showSecureWipeDialog(
   WidgetRef ref,
   PanelSide side,
   List<FileItem> files,
+  PanelFileOrigin origin,
 ) {
   int passes = 3;
 
@@ -1883,15 +2166,9 @@ void _showSecureWipeDialog(
                 border: OutlineInputBorder(),
               ),
               items: const [
-                DropdownMenuItem(value: 1, child: Text('1 pass (quick)')),
-                DropdownMenuItem(
-                  value: 3,
-                  child: Text('3 passes (DoD standard)'),
-                ),
-                DropdownMenuItem(
-                  value: 7,
-                  child: Text('7 passes (high security)'),
-                ),
+                DropdownMenuItem(value: 1, child: Text('1 pass')),
+                DropdownMenuItem(value: 3, child: Text('3 passes')),
+                DropdownMenuItem(value: 7, child: Text('7 passes')),
               ],
               onChanged: (v) => setState(() => passes = v!),
             ),
@@ -1911,18 +2188,27 @@ void _showSecureWipeDialog(
               Navigator.pop(context);
               try {
                 for (final file in files) {
-                  if (file.path == null) continue;
-                  if (file.isFolder) {
-                    await SecureWipeService.secureWipeDirectory(
-                      file.path!,
-                      passes: passes,
-                    );
-                  } else {
-                    await SecureWipeService.secureWipe(
-                      file.path!,
-                      passes: passes,
-                    );
+                  if (file.path == null) {
+                    continue;
                   }
+                  await withNativeFileAction(
+                    ref,
+                    origin,
+                    [file.path!],
+                    () async {
+                      if (file.isFolder) {
+                        await SecureWipeService.secureWipeDirectory(
+                          file.path!,
+                          passes: passes,
+                        );
+                      } else {
+                        await SecureWipeService.secureWipe(
+                          file.path!,
+                          passes: passes,
+                        );
+                      }
+                    },
+                  );
                 }
                 ref.read(panelProvider(side)).refresh();
                 ref.read(panelProvider(side)).clearSelection();

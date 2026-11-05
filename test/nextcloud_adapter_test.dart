@@ -2,6 +2,8 @@
 
 import 'package:flutter_test/flutter_test.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import 'package:http/http.dart' as http;
+import 'package:http/testing.dart';
 
 import 'package:crisp_cloud/services/delta_sync_service.dart';
 import 'package:crisp_cloud/services/nextcloud_client_adapter.dart';
@@ -47,18 +49,33 @@ void main() {
   });
 
   group('NextcloudClientAdapter capability flags', () {
-    test('supports versioning', () => expect(adapter.supportsVersioning, isTrue));
+    test(
+      'supports versioning',
+      () => expect(adapter.supportsVersioning, isTrue),
+    );
     test('supports sharing', () => expect(adapter.supportsSharing, isTrue));
     test('supports search', () => expect(adapter.supportsSearch, isTrue));
     test('supports trash', () => expect(adapter.supportsTrash, isTrue));
-    test('does not support streaming', () => expect(adapter.supportsStreaming, isFalse));
-    test('does not support multipart', () => expect(adapter.supportsMultipart, isFalse));
-    test('does not support thumbnails', () => expect(adapter.supportsThumbnails, isFalse));
+    test(
+      'supports bounded streaming',
+      () => expect(adapter.supportsStreaming, isTrue),
+    );
+    test(
+      'does not support multipart',
+      () => expect(adapter.supportsMultipart, isFalse),
+    );
+    test(
+      'does not support thumbnails',
+      () => expect(adapter.supportsThumbnails, isFalse),
+    );
   });
 
   group('NextcloudClientAdapter 2FA', () {
     test('is2faNeeded returns false', () async {
-      expect(await adapter.is2faNeeded('user@https://nextcloud.example.com'), isFalse);
+      expect(
+        await adapter.is2faNeeded('user@https://nextcloud.example.com'),
+        isFalse,
+      );
     });
   });
 
@@ -66,11 +83,13 @@ void main() {
     test('login throws when identity has no @http', () async {
       expect(
         () => adapter.login('invalidformat', 'password'),
-        throwsA(isA<Exception>().having(
-          (e) => e.toString(),
-          'message',
-          contains('Format must be username@https://'),
-        )),
+        throwsA(
+          isA<Exception>().having(
+            (e) => e.toString(),
+            'message',
+            contains('Format must be username@https://'),
+          ),
+        ),
       );
     });
 
@@ -89,11 +108,15 @@ void main() {
     });
 
     test('login fails with invalid server (no network)', () async {
-      // This will fail at the connection test step, not the format validation
-      expect(
-        () => adapter.login('user@https://invalid.local.nextcloud.test', 'password'),
-        throwsA(isA<Exception>()),
-      );
+      await http.runWithClient(() async {
+        await expectLater(
+          adapter.login(
+            'user@https://invalid.local.nextcloud.test',
+            'password',
+          ),
+          throwsException,
+        );
+      }, () => MockClient((_) async => http.Response('', 503)));
     });
   });
 
@@ -172,7 +195,9 @@ void main() {
         'password': 'valid-password',
         'serverUrl': 'https://invalid.local.nextcloud.test',
       });
-      expect(await adapter.restoreCredentials(), isFalse);
+      await http.runWithClient(() async {
+        expect(await adapter.restoreCredentials(), isFalse);
+      }, () => MockClient((_) async => http.Response('', 503)));
     });
   });
 
@@ -259,16 +284,15 @@ void main() {
 
     test('deltaDownload returns null when deltaSyncEnabled is false', () async {
       adapter.deltaSyncEnabled = false;
-      final result =
-          await adapter.deltaDownload('/remote.bin', '/tmp/local.bin');
+      final result = await adapter.deltaDownload(
+        '/remote.bin',
+        '/tmp/local.bin',
+      );
       expect(result, isNull);
     });
 
     test('getFileETag throws when not authenticated', () {
-      expect(
-        () => adapter.getFileETag('/test.bin'),
-        throwsA(isA<Exception>()),
-      );
+      expect(() => adapter.getFileETag('/test.bin'), throwsA(isA<Exception>()));
     });
 
     test('downloadRange throws when not authenticated', () {
@@ -305,23 +329,26 @@ void main() {
         blockCount: 3,
         signatures: [
           const BlockSignature(
-              blockIndex: 0,
-              offset: 0,
-              size: 4194304,
-              weakHash: 0xABCD1234,
-              strongHash: 'a1b2c3d4e5f6a1b2c3d4e5f6a1b2c3d4a1b2c3d4e5f6a1b2c3d4e5f6a1b2c3d4'),
+            blockIndex: 0,
+            offset: 0,
+            size: 4194304,
+            weakHash: 0xABCD1234,
+            strongHash: 'a1b2c3d4e5f6a1b2c3d4e5f6a1b2c3d4a1b2c3d4e5f6a1b2c3d4e5f6a1b2c3d4',
+          ),
           const BlockSignature(
-              blockIndex: 1,
-              offset: 4194304,
-              size: 4194304,
-              weakHash: 0xDEADBEEF,
-              strongHash: 'deadbeefdeadbeefdeadbeefdeadbeefdeadbeefdeadbeefdeadbeefdeadbeef'),
+            blockIndex: 1,
+            offset: 4194304,
+            size: 4194304,
+            weakHash: 0xDEADBEEF,
+            strongHash: 'deadbeefdeadbeefdeadbeefdeadbeefdeadbeefdeadbeefdeadbeefdeadbeef',
+          ),
           const BlockSignature(
-              blockIndex: 2,
-              offset: 8388608,
-              size: 4194304,
-              weakHash: 0x12345678,
-              strongHash: '1234567812345678123456781234567812345678123456781234567812345678'),
+            blockIndex: 2,
+            offset: 8388608,
+            size: 4194304,
+            weakHash: 0x12345678,
+            strongHash: '1234567812345678123456781234567812345678123456781234567812345678',
+          ),
         ],
         createdAt: DateTime.utc(2026, 6, 8),
       );
@@ -349,11 +376,19 @@ void main() {
         blockCount: 2,
         signatures: [
           const BlockSignature(
-              blockIndex: 0, offset: 0, size: 4194304,
-              weakHash: 0xAAAA, strongHash: 'aaaa'),
+            blockIndex: 0,
+            offset: 0,
+            size: 4194304,
+            weakHash: 0xAAAA,
+            strongHash: 'aaaa',
+          ),
           const BlockSignature(
-              blockIndex: 1, offset: 4194304, size: 4194304,
-              weakHash: 0xBBBB, strongHash: 'changed_hash'),
+            blockIndex: 1,
+            offset: 4194304,
+            size: 4194304,
+            weakHash: 0xBBBB,
+            strongHash: 'changed_hash',
+          ),
         ],
         createdAt: DateTime.utc(2026, 6, 8),
       );
@@ -365,11 +400,19 @@ void main() {
         blockCount: 2,
         signatures: [
           const BlockSignature(
-              blockIndex: 0, offset: 0, size: 4194304,
-              weakHash: 0xAAAA, strongHash: 'aaaa'),
+            blockIndex: 0,
+            offset: 0,
+            size: 4194304,
+            weakHash: 0xAAAA,
+            strongHash: 'aaaa',
+          ),
           const BlockSignature(
-              blockIndex: 1, offset: 4194304, size: 4194304,
-              weakHash: 0xCCCC, strongHash: 'original_hash'),
+            blockIndex: 1,
+            offset: 4194304,
+            size: 4194304,
+            weakHash: 0xCCCC,
+            strongHash: 'original_hash',
+          ),
         ],
         createdAt: DateTime.utc(2026, 6, 7),
       );
@@ -383,7 +426,7 @@ void main() {
 
     test('BlockTransferPlan skips unchanged blocks', () {
       final svc = DeltaSyncService();
-      final delta = DeltaResult(
+      const delta = DeltaResult(
         filePath: '/test.bin',
         totalBlocks: 3,
         changedBlocks: [1],
@@ -397,14 +440,24 @@ void main() {
         totalSize: 12582912,
         blockSize: 4194304,
         blockCount: 3,
-        signatures: List.generate(3, (i) => BlockSignature(
-          blockIndex: i, offset: i * 4194304, size: 4194304,
-          weakHash: i, strongHash: 'hash$i',
-        )),
+        signatures: List.generate(
+          3,
+          (i) => BlockSignature(
+            blockIndex: i,
+            offset: i * 4194304,
+            size: 4194304,
+            weakHash: i,
+            strongHash: 'hash$i',
+          ),
+        ),
         createdAt: DateTime.utc(2026, 6, 8),
       );
 
-      final plan = svc.createTransferPlan(delta, TransferDirection.upload, localMap);
+      final plan = svc.createTransferPlan(
+        delta,
+        TransferDirection.upload,
+        localMap,
+      );
       expect(plan.operations.length, equals(3));
       expect(plan.operations[0].type, equals(BlockOperationType.skip));
       expect(plan.operations[1].type, equals(BlockOperationType.upload));

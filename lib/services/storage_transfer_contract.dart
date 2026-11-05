@@ -119,6 +119,10 @@ mixin CloudTransferOperations {
   /// An empty value means the provider cannot restore a job after restart.
   String get transferIdentity => '';
 
+  /// Match an account-scoped, persisted upload session for this exact private
+  /// path. Execution still verifies the remote parts and source digests.
+  Future<bool> hasPendingUpload(String path, {int? length}) async => false;
+
   Future<CloudTransferResult> copyToExact(
     String sourcePath,
     String destinationPath, {

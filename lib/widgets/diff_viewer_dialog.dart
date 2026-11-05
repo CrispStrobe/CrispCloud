@@ -6,6 +6,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import '../l10n/commander_strings.dart';
 import '../models/file_item.dart';
 import '../models/panel_side.dart';
 import '../providers/providers.dart';
@@ -241,15 +242,15 @@ class _DiffViewerDialogState extends ConsumerState<_DiffViewerDialog> {
       final discard = await showDialog<bool>(
         context: context,
         builder: (ctx) => AlertDialog(
-          title: const Text('Discard unsaved merge?'),
+          title: Text(context.commanderTr("Discard unsaved merge?")),
           actions: [
             TextButton(
               onPressed: () => Navigator.pop(ctx, false),
-              child: const Text('Keep editing'),
+              child: Text(context.commanderTr("Keep editing")),
             ),
             FilledButton(
               onPressed: () => Navigator.pop(ctx, true),
-              child: const Text('Discard'),
+              child: Text(context.commanderTr("Discard")),
             ),
           ],
         ),
@@ -280,115 +281,135 @@ class _DiffViewerDialogState extends ConsumerState<_DiffViewerDialog> {
                       overflow: TextOverflow.ellipsis,
                     ),
                   ),
-                  if (_dirty) const Text('Unsaved merge'),
                   IconButton(
                     onPressed: _close,
-                    tooltip: _loading ? 'Stop comparison' : 'Close',
+                    tooltip: _loading
+                        ? context.commanderTr("Stop comparison")
+                        : context.commanderTr("Close"),
                     icon: Icon(_loading ? Icons.stop : Icons.close),
                   ),
                 ],
               ),
             ),
-            Wrap(
-              crossAxisAlignment: WrapCrossAlignment.center,
-              spacing: 8,
-              children: [
-                IconButton(
-                  tooltip: 'Swap files and merge target',
-                  onPressed:
-                      _loading ||
-                          _dirty ||
-                          _leftSource == null ||
-                          _rightSource == null
-                      ? null
-                      : () {
-                          setState(() {
-                            _swapped = !_swapped;
-                            final previousLeftSource = _leftSource;
-                            _leftSource = _rightSource;
-                            _rightSource = previousLeftSource;
-                            final previousLeftOrigin = _leftOrigin;
-                            _leftOrigin = _writeOrigin;
-                            _writeOrigin = previousLeftOrigin;
-                            _leftDocument = null;
-                            _rightDocument = null;
-                            _rows = [];
-                            _hunks = [];
-                          });
-                          _loadFiles();
-                        },
-                  icon: const Icon(Icons.swap_horiz),
+            if (_dirty) Text(context.commanderTr("Unsaved merge")),
+            ConstrainedBox(
+              constraints: BoxConstraints(
+                maxHeight: MediaQuery.sizeOf(context).height * .35,
+              ),
+              child: SingleChildScrollView(
+                child: Wrap(
+                  crossAxisAlignment: WrapCrossAlignment.center,
+                  spacing: 8,
+                  children: [
+                    IconButton(
+                      tooltip: context.commanderTr(
+                        "Swap files and merge target",
+                      ),
+                      onPressed:
+                          _loading ||
+                              _dirty ||
+                              _leftSource == null ||
+                              _rightSource == null
+                          ? null
+                          : () {
+                              setState(() {
+                                _swapped = !_swapped;
+                                final previousLeftSource = _leftSource;
+                                _leftSource = _rightSource;
+                                _rightSource = previousLeftSource;
+                                final previousLeftOrigin = _leftOrigin;
+                                _leftOrigin = _writeOrigin;
+                                _writeOrigin = previousLeftOrigin;
+                                _leftDocument = null;
+                                _rightDocument = null;
+                                _rows = [];
+                                _hunks = [];
+                              });
+                              _loadFiles();
+                            },
+                      icon: const Icon(Icons.swap_horiz),
+                    ),
+                    FilterChip(
+                      label: Text(context.commanderTr("Binary")),
+                      selected: _binary,
+                      onSelected: _loading || _dirty
+                          ? null
+                          : (value) {
+                              setState(() => _binary = value);
+                              _loadFiles();
+                            },
+                    ),
+                    if (!_binary) ...[
+                      FilterChip(
+                        label: Text(context.commanderTr("Ignore whitespace")),
+                        selected: _ignoreWhitespace,
+                        onSelected: _loading || _leftDocument == null
+                            ? null
+                            : (value) => setState(() {
+                                _ignoreWhitespace = value;
+                                _recompute();
+                              }),
+                      ),
+                      FilterChip(
+                        label: Text(context.commanderTr("Ignore case")),
+                        selected: _ignoreCase,
+                        onSelected: _loading || _leftDocument == null
+                            ? null
+                            : (value) => setState(() {
+                                _ignoreCase = value;
+                                _recompute();
+                              }),
+                      ),
+                      IconButton(
+                        onPressed: _hunks.isEmpty ? null : () => _jump(-1),
+                        tooltip: context.commanderTr("Previous difference"),
+                        icon: const Icon(Icons.arrow_upward),
+                      ),
+                      Text(
+                        _hunks.isEmpty
+                            ? context.commanderTr("No differences")
+                            : context.commanderTr("{0} / {1} blocks", [
+                                _hunkIndex + 1,
+                                _hunks.length,
+                              ]),
+                      ),
+                      IconButton(
+                        onPressed: _hunks.isEmpty ? null : () => _jump(1),
+                        tooltip: context.commanderTr("Next difference"),
+                        icon: const Icon(Icons.arrow_downward),
+                      ),
+                      TextButton.icon(
+                        onPressed: _loading || _hunks.isEmpty
+                            ? null
+                            : _useLeftHunk,
+                        icon: const Icon(Icons.arrow_forward),
+                        label: Text(context.commanderTr("Use left block")),
+                      ),
+                      FilterChip(
+                        label: Text(
+                          context.commanderTr("Edit merged right file"),
+                        ),
+                        selected: _edit,
+                        onSelected: _loading
+                            ? null
+                            : (value) => setState(() {
+                                _edit = value;
+                                if (!value) _recompute();
+                              }),
+                      ),
+                      FilledButton(
+                        onPressed:
+                            _loading ||
+                                !_dirty ||
+                                _writeOrigin?.isCurrent != true
+                            ? null
+                            : _save,
+                        child: Text(context.commanderTr("Save merge to right")),
+                      ),
+                    ],
+                  ],
                 ),
-                FilterChip(
-                  label: const Text('Binary'),
-                  selected: _binary,
-                  onSelected: _loading || _dirty
-                      ? null
-                      : (value) {
-                          setState(() => _binary = value);
-                          _loadFiles();
-                        },
-                ),
-                if (!_binary) ...[
-                  FilterChip(
-                    label: const Text('Ignore whitespace'),
-                    selected: _ignoreWhitespace,
-                    onSelected: _loading || _leftDocument == null
-                        ? null
-                        : (value) => setState(() {
-                            _ignoreWhitespace = value;
-                            _recompute();
-                          }),
-                  ),
-                  FilterChip(
-                    label: const Text('Ignore case'),
-                    selected: _ignoreCase,
-                    onSelected: _loading || _leftDocument == null
-                        ? null
-                        : (value) => setState(() {
-                            _ignoreCase = value;
-                            _recompute();
-                          }),
-                  ),
-                  IconButton(
-                    onPressed: _hunks.isEmpty ? null : () => _jump(-1),
-                    tooltip: 'Previous difference',
-                    icon: const Icon(Icons.arrow_upward),
-                  ),
-                  Text(
-                    _hunks.isEmpty
-                        ? 'No differences'
-                        : '${_hunkIndex + 1} / ${_hunks.length} blocks',
-                  ),
-                  IconButton(
-                    onPressed: _hunks.isEmpty ? null : () => _jump(1),
-                    tooltip: 'Next difference',
-                    icon: const Icon(Icons.arrow_downward),
-                  ),
-                  TextButton.icon(
-                    onPressed: _loading || _hunks.isEmpty ? null : _useLeftHunk,
-                    icon: const Icon(Icons.arrow_forward),
-                    label: const Text('Use left block'),
-                  ),
-                  FilterChip(
-                    label: const Text('Edit merged right file'),
-                    selected: _edit,
-                    onSelected: _loading
-                        ? null
-                        : (value) => setState(() {
-                            _edit = value;
-                            if (!value) _recompute();
-                          }),
-                  ),
-                  FilledButton(
-                    onPressed:
-                        _loading || !_dirty || _writeOrigin?.isCurrent != true
-                        ? null
-                        : _save,
-                    child: const Text('Save merge to right'),
-                  ),
-                ],
-              ],
+              ),
             ),
             if (_error != null)
               Padding(
@@ -400,7 +421,10 @@ class _DiffViewerDialogState extends ConsumerState<_DiffViewerDialog> {
               ),
             if (_loading) ...[
               const LinearProgressIndicator(),
-              if (_binary) Text('Compared $_comparedBytes bytes'),
+              if (_binary)
+                Text(
+                  context.commanderTr("Compared {0} bytes", [_comparedBytes]),
+                ),
             ],
             Expanded(
               child: _loading
@@ -418,16 +442,25 @@ class _DiffViewerDialogState extends ConsumerState<_DiffViewerDialog> {
   Widget _binaryView() {
     final result = _binaryResult;
     if (result == null) {
-      return const Center(child: Text('No comparison result.'));
+      return Center(child: Text(context.commanderTr("No comparison result.")));
     }
     return Center(
       child: SelectableText(
         result.equal
-            ? 'Files are byte-for-byte identical (${result.leftBytes} bytes).'
-            : 'Files differ in ${result.differingBytes} byte positions.\n'
-                  'First difference: byte ${result.firstDifference} (0x${result.firstDifference!.toRadixString(16)}).\n'
-                  'Left: ${result.leftBytes} bytes • Right: ${result.rightBytes} bytes.\n'
-                  'Comparison streams both files without loading the entire contents.',
+            ? context.commanderTr(
+                "Files are byte-for-byte identical ({0} bytes).",
+                [result.leftBytes],
+              )
+            : context.commanderTr(
+                "Files differ in {0} byte positions.\nFirst difference: byte {1} (0x{2}).\nLeft: {3} bytes • Right: {4} bytes.\nComparison streams both files without loading the entire contents.",
+                [
+                  result.differingBytes,
+                  result.firstDifference,
+                  result.firstDifference!.toRadixString(16),
+                  result.leftBytes,
+                  result.rightBytes,
+                ],
+              ),
       ),
     );
   }
@@ -445,8 +478,10 @@ class _DiffViewerDialogState extends ConsumerState<_DiffViewerDialog> {
           style: const TextStyle(fontFamily: 'monospace', fontSize: 13),
           decoration: InputDecoration(
             border: const OutlineInputBorder(),
-            labelText:
-                'Merged right • ${_rightDocument!.document.encoding.label} • ${_rightDocument!.document.lineEnding.label}',
+            labelText: context.commanderTr("Merged right • {0} • {1}", [
+              _rightDocument!.document.encoding.label,
+              _rightDocument!.document.lineEnding.label,
+            ]),
           ),
           onChanged: (_) => setState(() {
             _dirty = true;
@@ -543,7 +578,10 @@ class _ContentDiffDialog extends StatelessWidget {
                 children: [
                   const Icon(Icons.compare, size: 20),
                   const SizedBox(width: 8),
-                  Text('Version Diff', style: theme.textTheme.titleMedium),
+                  Text(
+                    context.commanderTr("Version Diff"),
+                    style: theme.textTheme.titleMedium,
+                  ),
                   const Spacer(),
                   Text(
                     '+$added',
@@ -570,7 +608,9 @@ class _ContentDiffDialog extends StatelessWidget {
             ),
             Expanded(
               child: diffResult.isEmpty
-                  ? const Center(child: Text('Files are identical'))
+                  ? Center(
+                      child: Text(context.commanderTr("Files are identical")),
+                    )
                   : Row(
                       children: [
                         _buildPane(

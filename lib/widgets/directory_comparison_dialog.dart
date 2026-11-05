@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import '../l10n/commander_strings.dart';
+import 'commander_review_dialog.dart';
 import '../models/panel_side.dart';
 import '../providers/providers.dart';
 import '../services/directory_comparison_service.dart';
@@ -34,7 +36,7 @@ class _DirectoryComparisonDialogState
       _verify = true,
       _recursive = true,
       _showEqual = false;
-  String? _message;
+  String Function(BuildContext)? _message;
   @override
   void initState() {
     super.initState();
@@ -52,7 +54,7 @@ class _DirectoryComparisonDialogState
     setState(() {
       _busy = true;
       _cancel = false;
-      _message = 'Comparing…';
+      _message = (context) => context.commanderTr("Comparing…");
       _plan = null;
       _choices.clear();
     });
@@ -80,22 +82,29 @@ class _DirectoryComparisonDialogState
         isCancelled: () => _cancel,
         onProgress: (count, path) {
           if (mounted && count % 20 == 0) {
-            setState(() => _message = '$count compared: $path');
+            setState(
+              () =>
+                  _message = (context) =>
+                      context.commanderTr("{0} compared: {1}", [count, path]),
+            );
           }
         },
       );
       if (mounted) {
         setState(() {
           _plan = plan;
-          _message = plan.errors.isNotEmpty
+          _message = (context) => plan.errors.isNotEmpty
               ? plan.errors.join('\n')
               : plan.cancelled
-              ? 'Comparison cancelled.'
-              : '${plan.rows.length} entries compared. Select the actions to apply.';
+              ? context.commanderTr("Comparison cancelled.")
+              : context.commanderTr(
+                  "{0} entries compared. Select the actions to apply.",
+                  [plan.rows.length],
+                );
         });
       }
     } catch (error) {
-      if (mounted) setState(() => _message = error.toString());
+      if (mounted) setState(() => _message = (_) => error.toString());
     } finally {
       if (mounted) setState(() => _busy = false);
     }
@@ -106,7 +115,7 @@ class _DirectoryComparisonDialogState
       _busy = true;
       _cancel = false;
       _control = FileOperationControl();
-      _message = 'Validating reviewed files…';
+      _message = (context) => context.commanderTr("Validating reviewed files…");
     });
     try {
       final errors = await _service.apply(
@@ -114,17 +123,17 @@ class _DirectoryComparisonDialogState
         Map.of(_choices),
         control: _control!,
         onProgress: (path) {
-          if (mounted) setState(() => _message = path);
+          if (mounted) setState(() => _message = (_) => path);
         },
       );
       if (mounted) {
         setState(() {
           _plan = null;
-          _message = errors.isNotEmpty
+          _message = (context) => errors.isNotEmpty
               ? errors.join('\n')
               : _control!.isCancelled
-              ? 'Cancelled. Completed copies are retained.'
-              : 'Reviewed changes applied.';
+              ? context.commanderTr("Cancelled. Completed copies are retained.")
+              : context.commanderTr("Reviewed changes applied.");
         });
       }
       if (mounted) {
@@ -132,7 +141,7 @@ class _DirectoryComparisonDialogState
         await ref.read(panelProvider(PanelSide.remote)).refresh();
       }
     } catch (error) {
-      if (mounted) setState(() => _message = error.toString());
+      if (mounted) setState(() => _message = (_) => error.toString());
     } finally {
       if (mounted) setState(() => _busy = false);
     }
@@ -150,102 +159,122 @@ class _DirectoryComparisonDialogState
         [];
     return PopScope(
       canPop: !_busy,
-      child: AlertDialog(
-        title: const Text('Compare current panel directories'),
-        content: SizedBox(
-          width: 850,
-          height: 500,
-          child: Column(
-            children: [
-              Wrap(
-                crossAxisAlignment: WrapCrossAlignment.center,
-                spacing: 12,
-                children: [
-                  FilterChip(
-                    label: const Text('Subdirectories'),
-                    selected: _recursive,
-                    onSelected: _busy
-                        ? null
-                        : (value) => setState(() {
-                            _recursive = value;
-                            _plan = null;
-                          }),
-                  ),
-                  FilterChip(
-                    label: const Text('Compare file contents'),
-                    selected: _verify,
-                    onSelected: _busy
-                        ? null
-                        : (value) => setState(() {
-                            _verify = value;
-                            _plan = null;
-                          }),
-                  ),
-                  FilterChip(
-                    label: const Text('Show equal'),
-                    selected: _showEqual,
-                    onSelected: (value) => setState(() => _showEqual = value),
-                  ),
-                ],
-              ),
-              if (_plan != null)
-                Text(
-                  '${_plan!.left.label}: ${_plan!.leftRoot} ↔ ${_plan!.right.label}: ${_plan!.rightRoot}',
-                ),
-              if (_message != null) Text(_message!, maxLines: 4),
-              if (_busy) const LinearProgressIndicator(),
-              if (_plan != null && !_busy)
+      child: CommanderReviewDialog(
+        title: context.commanderTr("Compare current panel directories"),
+        slivers: [
+          SliverToBoxAdapter(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
                 Wrap(
-                  spacing: 8,
+                  crossAxisAlignment: WrapCrossAlignment.center,
+                  spacing: 12,
                   children: [
-                    for (final direction in [
-                      DirectoryComparisonAction.copyToRight,
-                      DirectoryComparisonAction.copyToLeft,
-                    ])
-                      TextButton(
-                        onPressed: () => setState(() {
-                          for (final row in rows) {
-                            if (row.status != DirectoryComparisonStatus.equal &&
-                                row.choices.contains(direction)) {
-                              _choices[row.relativePath] = direction;
-                            }
-                          }
-                        }),
-                        child: Text(
-                          direction == DirectoryComparisonAction.copyToRight
-                              ? 'Differences → Right'
-                              : 'Differences → Left',
-                        ),
-                      ),
-                    TextButton(
-                      onPressed: () => setState(_choices.clear),
-                      child: const Text('Clear actions'),
+                    FilterChip(
+                      label: Text(context.commanderTr("Subdirectories")),
+                      selected: _recursive,
+                      onSelected: _busy
+                          ? null
+                          : (value) => setState(() {
+                              _recursive = value;
+                              _plan = null;
+                            }),
+                    ),
+                    FilterChip(
+                      label: Text(context.commanderTr("Compare file contents")),
+                      selected: _verify,
+                      onSelected: _busy
+                          ? null
+                          : (value) => setState(() {
+                              _verify = value;
+                              _plan = null;
+                            }),
+                    ),
+                    FilterChip(
+                      label: Text(context.commanderTr("Show equal")),
+                      selected: _showEqual,
+                      onSelected: (value) => setState(() => _showEqual = value),
                     ),
                   ],
                 ),
-              Expanded(
-                child: ListView.builder(
-                  itemCount: rows.length,
-                  itemBuilder: (context, index) {
-                    final row = rows[index];
-                    return ListTile(
-                      title: Text(row.relativePath),
-                      subtitle: Text(row.status.name),
-                      trailing: DropdownButton<DirectoryComparisonAction>(
-                        value:
+                if (_plan != null)
+                  Text(
+                    '${_plan!.left.label}: ${_plan!.leftRoot} ↔ ${_plan!.right.label}: ${_plan!.rightRoot}',
+                  ),
+                if (_message != null)
+                  Semantics(liveRegion: true, child: Text(_message!(context))),
+                if (_busy) const LinearProgressIndicator(),
+                if (_plan != null && !_busy)
+                  Wrap(
+                    spacing: 8,
+                    children: [
+                      for (final direction in [
+                        DirectoryComparisonAction.copyToRight,
+                        DirectoryComparisonAction.copyToLeft,
+                      ])
+                        TextButton(
+                          onPressed: () => setState(() {
+                            for (final row in rows) {
+                              if (row.status !=
+                                      DirectoryComparisonStatus.equal &&
+                                  row.choices.contains(direction)) {
+                                _choices[row.relativePath] = direction;
+                              }
+                            }
+                          }),
+                          child: Text(
+                            direction == DirectoryComparisonAction.copyToRight
+                                ? context.commanderTr("Differences → Right")
+                                : context.commanderTr("Differences → Left"),
+                          ),
+                        ),
+                      TextButton(
+                        onPressed: () => setState(_choices.clear),
+                        child: Text(context.commanderTr("Clear actions")),
+                      ),
+                    ],
+                  ),
+              ],
+            ),
+          ),
+          SliverList.builder(
+            itemCount: rows.length,
+            itemBuilder: (context, index) {
+              final row = rows[index];
+              return Card(
+                child: Padding(
+                  padding: const EdgeInsets.all(12),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(row.relativePath, textDirection: TextDirection.ltr),
+                      Text(context.commanderEnum(row.status)),
+                      const SizedBox(height: 8),
+                      DropdownButtonFormField<DirectoryComparisonAction>(
+                        key: ValueKey('compare-action-${row.relativePath}'),
+                        isExpanded: true,
+                        decoration: InputDecoration(
+                          labelText: context.commanderTr("Action"),
+                        ),
+                        initialValue:
                             _choices[row.relativePath] ??
                             DirectoryComparisonAction.skip,
                         items: [
                           for (final choice in row.choices)
                             DropdownMenuItem(
                               value: choice,
-                              child: Text(switch (choice) {
-                                DirectoryComparisonAction.skip => 'Skip',
-                                DirectoryComparisonAction.copyToRight =>
-                                  'Left → Right',
-                                DirectoryComparisonAction.copyToLeft =>
-                                  'Right → Left',
-                              }),
+                              child: Text(
+                                switch (choice) {
+                                  DirectoryComparisonAction.skip =>
+                                    context.commanderTr("Skip"),
+                                  DirectoryComparisonAction.copyToRight =>
+                                    context.commanderTr("Left → Right"),
+                                  DirectoryComparisonAction.copyToLeft =>
+                                    context.commanderTr("Right → Left"),
+                                },
+                                maxLines: 1,
+                                overflow: TextOverflow.ellipsis,
+                              ),
                             ),
                         ],
                         onChanged: _busy
@@ -254,17 +283,21 @@ class _DirectoryComparisonDialogState
                                 () => _choices[row.relativePath] = value!,
                               ),
                       ),
-                    );
-                  },
+                    ],
+                  ),
                 ),
-              ),
-              const Text(
-                'Applying replaces the reviewed destination files. Unselected children and files remain untouched. Use Sync Pairs for deletion-aware synchronization.',
-                style: TextStyle(fontSize: 12),
-              ),
-            ],
+              );
+            },
           ),
-        ),
+          SliverToBoxAdapter(
+            child: Text(
+              context.commanderTr(
+                "Applying replaces the reviewed destination files. Unselected children and files remain untouched. Use Sync Pairs for deletion-aware synchronization.",
+              ),
+              style: const TextStyle(fontSize: 12),
+            ),
+          ),
+        ],
         actions: [
           if (_busy)
             TextButton(
@@ -272,15 +305,15 @@ class _DirectoryComparisonDialogState
                 setState(() => _cancel = true);
                 _control?.cancel();
               },
-              child: const Text('Stop'),
+              child: Text(context.commanderTr("Stop")),
             ),
           TextButton(
             onPressed: _busy ? null : () => Navigator.pop(context),
-            child: const Text('Close'),
+            child: Text(context.commanderTr("Close")),
           ),
           TextButton(
             onPressed: _busy ? null : _compare,
-            child: const Text('Compare'),
+            child: Text(context.commanderTr("Compare")),
           ),
           FilledButton(
             onPressed:
@@ -293,7 +326,7 @@ class _DirectoryComparisonDialogState
                     )
                 ? null
                 : _apply,
-            child: const Text('Apply selected actions'),
+            child: Text(context.commanderTr("Apply selected actions")),
           ),
         ],
       ),

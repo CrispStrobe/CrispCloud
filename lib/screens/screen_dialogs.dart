@@ -210,33 +210,25 @@ Widget _shortcutRow(String keys, String description) {
 void uploadSelected(BuildContext context, WidgetRef ref) {
   final panel = ref.read(panelProvider(PanelSide.local));
   if (panel.selection.isEmpty) return;
-  if (panel.showingSearchResults) {
-    showFileOperationDialog(
-      context,
-      ref,
-      PanelSide.local,
-      panel.selection.toList(),
-      kind: FileOperationKind.copy,
-    );
-    return;
-  }
-  ref.read(transferProvider).uploadFiles(panel.selection.toList());
+  showFileOperationDialog(
+    context,
+    ref,
+    PanelSide.local,
+    panel.selection.toList(),
+    kind: FileOperationKind.copy,
+  );
 }
 
 void downloadSelected(BuildContext context, WidgetRef ref) {
   final panel = ref.read(panelProvider(PanelSide.remote));
   if (panel.selection.isEmpty) return;
-  if (panel.showingSearchResults) {
-    showFileOperationDialog(
-      context,
-      ref,
-      PanelSide.remote,
-      panel.selection.toList(),
-      kind: FileOperationKind.copy,
-    );
-    return;
-  }
-  ref.read(transferProvider).downloadFiles(panel.selection.toList());
+  showFileOperationDialog(
+    context,
+    ref,
+    PanelSide.remote,
+    panel.selection.toList(),
+    kind: FileOperationKind.copy,
+  );
 }
 
 void confirmDeleteSelected(BuildContext context, WidgetRef ref) {

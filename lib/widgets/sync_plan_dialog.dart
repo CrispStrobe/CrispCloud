@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import '../l10n/commander_strings.dart';
+import 'commander_review_dialog.dart';
 import '../providers/sync_provider.dart';
 import '../services/sync_engine.dart';
 
@@ -25,7 +27,8 @@ class _SyncPlanDialogState extends ConsumerState<_SyncPlanDialog> {
   bool _cancel = false;
   String? _error;
   SyncResult? _result;
-  String _progress = 'Comparing directories and file contents…';
+  String Function(BuildContext) _progress = (context) =>
+      context.commanderTr("Comparing directories and file contents…");
 
   @override
   void initState() {
@@ -45,16 +48,19 @@ class _SyncPlanDialogState extends ConsumerState<_SyncPlanDialog> {
       _cancel = false;
       _error = null;
       _result = null;
+      _progress = (context) =>
+          context.commanderTr("Comparing directories and file contents…");
     });
     try {
       final plan = await ref
           .read(syncProvider)
           .planOne(widget.pairId, isCancelled: () => _cancel);
-      if (mounted)
+      if (mounted) {
         setState(() {
           _plan = plan;
           _decisions.clear();
         });
+      }
     } catch (error) {
       if (mounted) setState(() => _error = error.toString());
     } finally {
@@ -76,18 +82,22 @@ class _SyncPlanDialogState extends ConsumerState<_SyncPlanDialog> {
       final confirmed = await showDialog<bool>(
         context: context,
         builder: (ctx) => AlertDialog(
-          title: Text('Apply $deletions deletion(s)?'),
-          content: const Text(
-            'Synchronization deletions may be permanent. Review each delete direction before continuing.',
+          title: Text(
+            context.commanderTr("Apply {0} deletion(s)?", [deletions]),
+          ),
+          content: Text(
+            context.commanderTr(
+              "Synchronization deletions may be permanent. Review each delete direction before continuing.",
+            ),
           ),
           actions: [
             TextButton(
               onPressed: () => Navigator.pop(ctx, false),
-              child: const Text('Cancel'),
+              child: Text(context.commanderTr("Cancel")),
             ),
             FilledButton(
               onPressed: () => Navigator.pop(ctx, true),
-              child: const Text('Apply reviewed plan'),
+              child: Text(context.commanderTr("Apply reviewed plan")),
             ),
           ],
         ),
@@ -98,7 +108,8 @@ class _SyncPlanDialogState extends ConsumerState<_SyncPlanDialog> {
       _busy = true;
       _cancel = false;
       _error = null;
-      _progress = 'Checking the comparison is still current…';
+      _progress = (context) =>
+          context.commanderTr("Checking the comparison is still current…");
     });
     try {
       final result = await ref
@@ -108,14 +119,17 @@ class _SyncPlanDialogState extends ConsumerState<_SyncPlanDialog> {
             decisions: Map.of(_decisions),
             isCancelled: () => _cancel,
             onProgress: (done, total, path) {
-              if (mounted) setState(() => _progress = '$done / $total: $path');
+              if (mounted) {
+                setState(() => _progress = (_) => '$done / $total: $path');
+              }
             },
           );
-      if (mounted)
+      if (mounted) {
         setState(() {
           _result = result;
           _plan = null;
         });
+      }
     } catch (error) {
       if (mounted) setState(() => _error = error.toString());
     } finally {
@@ -138,57 +152,106 @@ class _SyncPlanDialogState extends ConsumerState<_SyncPlanDialog> {
   @override
   Widget build(BuildContext context) => PopScope(
     canPop: !_busy,
-    child: AlertDialog(
-      title: Text(
-        _plan == null ? 'Review synchronization' : 'Review ${_plan!.pair.name}',
-      ),
-      content: SizedBox(
-        width: 800,
-        height: 480,
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            const Text(
-              'Compare first, choose an action for each row, then apply. Changed files or connections invalidate the plan.',
-            ),
-            if (_busy) ...[const LinearProgressIndicator(), Text(_progress)],
-            if (_error != null)
+    child: CommanderReviewDialog(
+      title: _plan == null
+          ? context.commanderTr("Review synchronization")
+          : context.commanderTr("Review {0}", [_plan!.pair.name]),
+      slivers: [
+        SliverToBoxAdapter(
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
               Text(
-                _error!,
-                style: TextStyle(color: Theme.of(context).colorScheme.error),
-              ),
-            if (_result != null) ...[
-              Text(
-                '${_result!.uploaded} uploaded • ${_result!.downloaded} downloaded • '
-                '${_result!.deletedLocal + _result!.deletedRemote} deleted • ${_result!.conflicts} unresolved',
-              ),
-              if (_result!.cancelled)
-                const Text('Cancelled; completed actions are retained.'),
-              for (final error in _result!.errorMessages) Text(error),
-            ],
-            if (_plan != null) ...[
-              Text('${_plan!.actions.length} planned action(s)'),
-              if (_plan!.actions.isEmpty)
-                const Text(
-                  'No changes required. Applying will record the verified baseline.',
+                context.commanderTr(
+                  "Compare first, choose an action for each row, then apply. Changed files or connections invalidate the plan.",
                 ),
-              Expanded(
-                child: ListView.builder(
-                  itemCount: _plan!.actions.length,
-                  itemBuilder: (context, index) {
-                    final action = _plan!.actions[index];
-                    return ListTile(
-                      title: Text(action.relativePath),
-                      subtitle: Text(
-                        'Local: ${action.localModified ?? "unknown"}  •  Cloud: ${action.remoteModified ?? "unknown"}',
+              ),
+              if (_busy) ...[
+                const LinearProgressIndicator(),
+                Semantics(liveRegion: true, child: Text(_progress(context))),
+              ],
+              if (_error != null)
+                Text(
+                  _error!,
+                  style: TextStyle(color: Theme.of(context).colorScheme.error),
+                ),
+              if (_result != null) ...[
+                Text(
+                  context.commanderTr(
+                    "{0} uploaded • {1} downloaded • {2} deleted • {3} unresolved",
+                    [
+                      _result!.uploaded,
+                      _result!.downloaded,
+                      _result!.deletedLocal + _result!.deletedRemote,
+                      _result!.conflicts,
+                    ],
+                  ),
+                ),
+                if (_result!.cancelled)
+                  Text(
+                    context.commanderTr(
+                      "Cancelled; completed actions are retained.",
+                    ),
+                  ),
+                for (final error in _result!.errorMessages) Text(error),
+              ],
+              if (_plan != null) ...[
+                Text(
+                  context.commanderTr("{0} planned action(s)", [
+                    _plan!.actions.length,
+                  ]),
+                ),
+                if (_plan!.actions.isEmpty)
+                  Text(
+                    context.commanderTr(
+                      "No changes required. Applying will record the verified baseline.",
+                    ),
+                  ),
+              ],
+            ],
+          ),
+        ),
+        if (_plan != null)
+          SliverList.builder(
+            itemCount: _plan!.actions.length,
+            itemBuilder: (context, index) {
+              final action = _plan!.actions[index];
+              return Card(
+                child: Padding(
+                  padding: const EdgeInsets.all(12),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        action.relativePath,
+                        textDirection: TextDirection.ltr,
                       ),
-                      trailing: DropdownButton<SyncActionType>(
-                        value: _decisions[action.relativePath] ?? action.type,
+                      Text(
+                        context.commanderTr("Local: {0}  •  Cloud: {1}", [
+                          action.localModified ??
+                              context.commanderTr("Unknown"),
+                          action.remoteModified ??
+                              context.commanderTr("Unknown"),
+                        ]),
+                      ),
+                      const SizedBox(height: 8),
+                      DropdownButtonFormField<SyncActionType>(
+                        key: ValueKey('sync-action-${action.relativePath}'),
+                        isExpanded: true,
+                        decoration: InputDecoration(
+                          labelText: context.commanderTr("Action"),
+                        ),
+                        initialValue:
+                            _decisions[action.relativePath] ?? action.type,
                         items: [
                           for (final choice in _plan!.choicesFor(action))
                             DropdownMenuItem(
                               value: choice,
-                              child: Text(_label(choice)),
+                              child: Text(
+                                context.commanderTr(_label(choice)),
+                                maxLines: 1,
+                                overflow: TextOverflow.ellipsis,
+                              ),
                             ),
                         ],
                         onChanged: _busy
@@ -197,31 +260,30 @@ class _SyncPlanDialogState extends ConsumerState<_SyncPlanDialog> {
                                 () => _decisions[action.relativePath] = value!,
                               ),
                       ),
-                    );
-                  },
+                    ],
+                  ),
                 ),
-              ),
-            ],
-          ],
-        ),
-      ),
+              );
+            },
+          ),
+      ],
       actions: [
         if (_busy)
           TextButton(
             onPressed: () => setState(() => _cancel = true),
-            child: const Text('Stop'),
+            child: Text(context.commanderTr("Stop")),
           ),
         TextButton(
           onPressed: _busy ? null : () => Navigator.pop(context),
-          child: const Text('Close'),
+          child: Text(context.commanderTr("Close")),
         ),
         TextButton(
           onPressed: _busy ? null : _compare,
-          child: const Text('Compare again'),
+          child: Text(context.commanderTr("Compare again")),
         ),
         FilledButton(
           onPressed: _busy || _plan == null ? null : _execute,
-          child: const Text('Apply reviewed plan'),
+          child: Text(context.commanderTr("Apply reviewed plan")),
         ),
       ],
     ),
