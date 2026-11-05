@@ -288,8 +288,8 @@ class _FileGridViewState extends ConsumerState<FileGridView> {
         final itemWidth = math.max(1.0, (constraints.maxWidth - 16 - (columns - 1) * 8) / columns);
         final imageHeight = widget.tileLayout ? math.min(itemWidth * 0.38, prefs.thumbnailSize * 0.58) : itemWidth * 0.76;
         final scaler = MediaQuery.textScalerOf(context);
-        final nameHeight = prefs.showNames ? scaler.scale(14) * 2 + 6 : 0;
-        final detailsHeight = prefs.showDetails ? scaler.scale(12) * (widget.tileLayout ? 3 : 2) + 10 : 0;
+        final nameHeight = prefs.showNames ? scaler.scale(14) * 2 + 6 : 0.0;
+        final detailsHeight = prefs.showDetails ? scaler.scale(12) * (widget.tileLayout ? 3 : 2) + 10 : 0.0;
         final rowHeight = widget.tileLayout
             ? math.max(imageHeight + 20, nameHeight + detailsHeight + 20)
             : imageHeight + nameHeight + detailsHeight + 20;
