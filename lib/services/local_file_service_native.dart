@@ -6,6 +6,7 @@
 import 'dart:io';
 import 'package:flutter/foundation.dart';
 import 'package:file_picker/file_picker.dart';
+import 'package:path/path.dart' as p;
 import 'package:path_provider/path_provider.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:macos_secure_bookmarks/macos_secure_bookmarks.dart';
@@ -173,13 +174,32 @@ class MacosFileService implements LocalFileService, LocalFileSaveReporter {
   /// A symlink under a granted folder can point into an ungranted volume. The
   /// sandbox then denies the target even though the link's path looks covered.
   Future<String> _accessPath(String path) async {
+    // realpath resolves links in every path component, but the sandbox can
+    // deny it when the target volume is not granted yet. Fall back to reading
+    // the final symlink itself, which only needs access to the granted parent.
     try {
       return await File(path).resolveSymbolicLinks();
     } catch (_) {
+      var current = path;
+      for (var i = 0; i < 10; i++) {
+        try {
+          final type =
+              await FileSystemEntity.type(current, followLinks: false);
+          if (type != FileSystemEntityType.link) return current;
+          final target = await Link(current).target();
+          current = p.normalize(
+            p.isAbsolute(target)
+                ? target
+                : p.join(p.dirname(current), target),
+          );
+        } catch (_) {
+          break;
+        }
+      }
       try {
         return await Directory(path).resolveSymbolicLinks();
       } catch (_) {
-        return path;
+        return current;
       }
     }
   }
@@ -199,7 +219,11 @@ class MacosFileService implements LocalFileService, LocalFileSaveReporter {
     }
     try {
       final type = await FileSystemEntity.type(path);
-      if (type == FileSystemEntityType.notFound) return false;
+      if (type == FileSystemEntityType.notFound) {
+        // A missing file is not a permission problem when a scope already
+        // covers its folder; saving a new file there is still allowed.
+        return scope != null;
+      }
       if (type == FileSystemEntityType.directory) {
         return await Directory(path).exists();
       }
