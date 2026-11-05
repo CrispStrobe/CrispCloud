@@ -1,5 +1,6 @@
 // lib/services/cloud_storage_interface.dart
 import 'dart:async';
+import 'dart:convert';
 import 'dart:typed_data';
 
 import 'azure_blob_adapter.dart'; // AzureBlobAdapter
@@ -21,6 +22,7 @@ import 'smb_config_service.dart';
 import 'secure_storage_service.dart';
 import 'storage_transfer_contract.dart';
 import 'transfer_spool.dart';
+import 'storage_identity.dart';
 
 export 'storage_transfer_contract.dart';
 
@@ -135,10 +137,9 @@ abstract class CloudStorageClient {
   /// Providers that support server-side copy should override this.
   Future<void> copyPath(String sourcePath, String targetPath) async {
     final fileName = sourcePath.split('/').last;
-    final account = userId;
-    final bucket = bucketId;
+    final storage = storageReferenceForClient(this);
     void checkCurrent() {
-      if (!isAuthenticated || userId != account || bucketId != bucket) {
+      if (!isAuthenticated || storageReferenceForClient(this) != storage) {
         throw StateError(
           'The original transfer account is no longer available.',
         );
@@ -241,7 +242,7 @@ abstract class CloudStorageClient {
         }
         if (tooLarge) continue;
         final bytes = contentBytes.takeBytes();
-        final content = String.fromCharCodes(bytes);
+        final content = utf8.decode(bytes, allowMalformed: true);
         final lowerContent = content.toLowerCase();
         final idx = lowerContent.indexOf(lowerQuery);
         if (idx == -1) continue;
@@ -291,8 +292,19 @@ abstract class CloudStorageClient {
         'Larger files require its streaming upload implementation.',
       );
     }
+    final storage = storageReferenceForClient(this);
+    void checkCurrent() {
+      if (!isAuthenticated || storageReferenceForClient(this) != storage) {
+        throw StateError(
+          'The original transfer account is no longer available.',
+        );
+      }
+    }
+
+    checkCurrent();
     final builder = BytesBuilder(copy: false);
     await for (final chunk in dataStream) {
+      checkCurrent();
       if (builder.length + chunk.length > length) {
         throw StateError('Upload source exceeded its declared length.');
       }
@@ -301,12 +313,14 @@ abstract class CloudStorageClient {
     if (builder.length != length) {
       throw StateError('Upload source ended before its declared length.');
     }
+    checkCurrent();
     await uploadFile(
       builder.takeBytes(),
       fileName,
       targetPath,
       onProgress: onProgress,
     );
+    checkCurrent();
   }
 
   /// Providers must implement actual bounded reads. A directory's recorded

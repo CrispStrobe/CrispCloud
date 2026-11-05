@@ -42,6 +42,7 @@ class EncryptedStorageWrapper
 
   final CloudStorageClient _inner;
   final Uint8List _key;
+  int _sessionEpoch = 0;
 
   /// Access the unwrapped inner client (used by disableEncryption).
   CloudStorageClient get inner => _inner;
@@ -74,14 +75,19 @@ class EncryptedStorageWrapper
   // ---------------------------------------------------------------------------
 
   @override
-  Future<void> login(String email, String password, {String? twoFactorCode}) =>
-      _inner.login(email, password, twoFactorCode: twoFactorCode);
+  Future<void> login(String email, String password, {String? twoFactorCode}) {
+    _sessionEpoch++;
+    return _inner.login(email, password, twoFactorCode: twoFactorCode);
+  }
 
   @override
   Future<bool> is2faNeeded(String email) => _inner.is2faNeeded(email);
 
   @override
-  Future<void> logout() => _inner.logout();
+  Future<void> logout() {
+    _sessionEpoch++;
+    return _inner.logout();
+  }
 
   @override
   bool get isAuthenticated => _inner.isAuthenticated;
@@ -191,10 +197,12 @@ class EncryptedStorageWrapper
     String targetPath, {
     Function(int, int)? onProgress,
   }) async {
+    final check = _captureTransfer();
     final encrypted = await _crypto.encrypt(
       await _gcmKey(),
       Uint8List.fromList(fileData),
     );
+    check();
     final uploadName = encryptFilenames
         ? EncryptionService.encryptFilename(fileName, _key)
         : fileName;
@@ -204,6 +212,7 @@ class EncryptedStorageWrapper
       targetPath,
       onProgress: onProgress,
     );
+    check();
   }
 
   // ---------------------------------------------------------------------------
@@ -215,11 +224,15 @@ class EncryptedStorageWrapper
     String remotePath, {
     Function(int, int)? onProgress,
   }) async {
+    final check = _captureTransfer();
     final encrypted = await _inner.downloadFileBytes(
       remotePath,
       onProgress: onProgress,
     );
-    return _crypto.decrypt(await _gcmKey(), encrypted);
+    check();
+    final plaintext = await _crypto.decrypt(await _gcmKey(), encrypted);
+    check();
+    return plaintext;
   }
 
   @override
@@ -263,8 +276,10 @@ class EncryptedStorageWrapper
 
   void Function() _captureTransfer() {
     final storage = storageReferenceForClient(_inner);
+    final epoch = _sessionEpoch;
     void check() {
-      if (!_inner.isAuthenticated ||
+      if (_sessionEpoch != epoch ||
+          !_inner.isAuthenticated ||
           storageReferenceForClient(_inner) != storage) {
         throw StateError(
           'The original encrypted-storage account is no longer available.',

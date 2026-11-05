@@ -130,6 +130,15 @@ Stream<List<int>> authenticatedGcmDownload(
     checkCurrent();
   }
 
+  void cancelProvider() {
+    final cancellation = upstream?.cancel();
+    if (cancellation != null) {
+      // An async* provider may be stuck in an uncancellable network future.
+      // Its eventual cleanup must not hold our input/spool cleanup hostage.
+      unawaited(cancellation.catchError((Object _, StackTrace __) {}));
+    }
+  }
+
   Future<void> run() async {
     TransferSpool? spool;
     try {
@@ -159,7 +168,7 @@ Stream<List<int>> authenticatedGcmDownload(
     },
     onPause: () => upstream?.pause(),
     onResume: () => upstream?.resume(),
-    onCancel: () => upstream?.cancel(),
+    onCancel: cancelProvider,
   );
   output = StreamController<List<int>>(
     onListen: () => running = run(),
@@ -176,7 +185,7 @@ Stream<List<int>> authenticatedGcmDownload(
       cancelled = true;
       resumed?.complete();
       resumed = null;
-      await upstream?.cancel();
+      cancelProvider();
       unawaited(input.close());
       await running;
     },

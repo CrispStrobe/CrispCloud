@@ -1,12 +1,22 @@
+import 'dart:convert';
 import 'dart:typed_data';
 
 import 'package:crisp_cloud/services/cloud_storage_interface.dart';
+import 'package:crisp_cloud/models/storage_reference.dart';
 import 'package:flutter_test/flutter_test.dart';
 
-class _LegacyClient extends CloudStorageClient {
+class _LegacyClient extends CloudStorageClient
+    implements StorageNamespaceIdentity {
   int byteDownloads = 0;
   final uploads = <List<int>>[];
   String account = 'original';
+  String namespace = 'endpoint-a';
+  @override
+  String get storageNamespace => namespace;
+  @override
+  String get providerName => 'Memory fixture';
+  @override
+  String get rootPath => '/';
   @override
   bool get isAuthenticated => true;
   @override
@@ -131,6 +141,45 @@ void main() {
     client = _StreamingClient(source);
     await expectLater(client.copyPath('/source', '/target'), throwsStateError);
     expect(client.uploads, isEmpty);
+  });
+
+  test(
+    'legacy upload cannot commit after its source changes account',
+    () async {
+      final client = _LegacyClient();
+      Stream<List<int>> source() async* {
+        yield [1];
+        client.account = 'other';
+        yield [2];
+      }
+
+      await expectLater(
+        client.uploadStream(source(), 2, 'target', '/'),
+        throwsStateError,
+      );
+      expect(client.uploads, isEmpty);
+    },
+  );
+
+  test('same-user namespace change cannot redirect a spooled copy', () async {
+    late _StreamingClient client;
+    Stream<List<int>> source() async* {
+      yield [1];
+      client.namespace = 'endpoint-b';
+      yield [2];
+    }
+
+    client = _StreamingClient(source);
+    await expectLater(client.copyPath('/source', '/target'), throwsStateError);
+    expect(client.uploads, isEmpty);
+  });
+
+  test('fallback text search decodes UTF-8 content', () async {
+    final client = _StreamingClient(
+      () => Stream.value(utf8.encode('résumé Ελληνικά')),
+    );
+    final result = await client.fullTextSearch('Ελληνικά', '/');
+    expect(result.single['snippet'], 'résumé Ελληνικά');
   });
 
   test(

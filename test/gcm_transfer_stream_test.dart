@@ -71,6 +71,29 @@ void main() {
       await source.close();
     },
   );
+  test(
+    'stalled provider cleanup cannot block cancellation of the owned spool',
+    () async {
+      final listening = Completer<void>();
+      final stalled = Completer<void>();
+      Stream<List<int>> source() async* {
+        listening.complete();
+        await stalled.future;
+        yield [1];
+      }
+
+      final subscription = authenticatedGcmDownload(source(), key, () {})
+          .listen(
+            (_) =>
+                fail('An unfinished encrypted source cannot emit plaintext.'),
+          );
+      await listening.future;
+      await subscription.cancel().timeout(const Duration(seconds: 2));
+      // Release the fake provider after proving it did not block owned cleanup.
+      stalled.complete();
+    },
+  );
+
   test('truncated nonce or tag is rejected without output', () async {
     for (final size in [0, 1, 11, 12, 27]) {
       await expectLater(

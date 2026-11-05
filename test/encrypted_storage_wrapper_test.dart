@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'dart:io';
 import 'dart:typed_data';
 
@@ -5,6 +6,18 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:crisp_cloud/services/cloud_storage_interface.dart';
 import 'package:crisp_cloud/services/encryption_service.dart';
 import 'package:crisp_cloud/services/encrypted_storage_wrapper.dart';
+import 'package:crisp_cloud/services/web_crypto_provider.dart';
+
+class _PausedCrypto extends PointycastleCryptoProvider {
+  final started = Completer<void>();
+  final release = Completer<void>();
+  @override
+  Future<Uint8List> encrypt(Object key, Uint8List plaintext) async {
+    started.complete();
+    await release.future;
+    return super.encrypt(key, plaintext);
+  }
+}
 
 /// Simple mock that records what was uploaded and serves fixed download data.
 class MockCloudClient implements CloudStorageClient {
@@ -348,6 +361,43 @@ void main() {
       );
       expect(mockClient.lastUploadedData, isNull);
     });
+
+    test(
+      'same-account login cannot reactivate an already captured upload',
+      () async {
+        Stream<List<int>> source() async* {
+          await wrapper.logout();
+          await wrapper.login('same-account', 'fixture');
+          yield [1, 2, 3];
+        }
+
+        await expectLater(
+          wrapper.uploadStream(source(), 3, 'target', '/'),
+          throwsStateError,
+        );
+        expect(mockClient.lastUploadedData, isNull);
+      },
+    );
+
+    test(
+      'a byte upload cannot change accounts during asynchronous encryption',
+      () async {
+        final crypto = _PausedCrypto();
+        final guarded = EncryptedStorageWrapper(
+          inner: mockClient,
+          encryptionKey: testKey,
+          cryptoProvider: crypto,
+        );
+        final operation = guarded.uploadFile([1, 2, 3], 'target', '/');
+        await crypto.started.future;
+        await guarded.logout();
+        await guarded.login('same-account', 'fixture');
+        final rejected = expectLater(operation, throwsStateError);
+        crypto.release.complete();
+        await rejected;
+        expect(mockClient.lastUploadedData, isNull);
+      },
+    );
 
     test('copy decrypts and re-encrypts through bounded streams', () async {
       final plain = Uint8List.fromList([1, 2, 3, 4]);
