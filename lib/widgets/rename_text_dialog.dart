@@ -4,6 +4,8 @@ import 'package:file_picker/file_picker.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 
+import '../l10n/commander_strings.dart';
+
 /// Editable text exchange for target-name lists and versioned rule presets.
 class RenameTextDialog extends StatefulWidget {
   const RenameTextDialog({
@@ -65,7 +67,7 @@ class _RenameTextDialogState extends State<RenameTextDialog> {
     setState(() => _busy = true);
     try {
       await FilePicker.platform.saveFile(
-        dialogTitle: 'Save ${widget.title.toLowerCase()}',
+        dialogTitle: context.commanderTr("Save {0}", [widget.title]),
         fileName: widget.filename,
         bytes: Uint8List.fromList(utf8.encode(_text.text)),
       );
@@ -96,10 +98,10 @@ class _RenameTextDialogState extends State<RenameTextDialog> {
               expands: true,
               minLines: null,
               maxLines: null,
-              decoration: const InputDecoration(
-                border: OutlineInputBorder(),
+              decoration: InputDecoration(
+                border: const OutlineInputBorder(),
                 alignLabelWithHint: true,
-                labelText: 'Text',
+                labelText: context.commanderTr("Text"),
               ),
               onChanged: (value) =>
                   setState(() => _error = widget.validate?.call(value)),
@@ -120,12 +122,12 @@ class _RenameTextDialogState extends State<RenameTextDialog> {
               TextButton.icon(
                 onPressed: _busy ? null : _read,
                 icon: const Icon(Icons.upload_file),
-                label: const Text('Load file'),
+                label: Text(context.commanderTr("Load file")),
               ),
               TextButton.icon(
                 onPressed: _busy ? null : _save,
                 icon: const Icon(Icons.save_alt),
-                label: const Text('Save file'),
+                label: Text(context.commanderTr("Save file")),
               ),
               TextButton(
                 onPressed: _busy
@@ -141,13 +143,13 @@ class _RenameTextDialogState extends State<RenameTextDialog> {
                           );
                         }
                       },
-                child: const Text('Paste'),
+                child: Text(context.commanderTr("Paste")),
               ),
               TextButton(
                 onPressed: _busy
                     ? null
                     : () => Clipboard.setData(ClipboardData(text: _text.text)),
-                child: const Text('Copy'),
+                child: Text(context.commanderTr("Copy")),
               ),
             ],
           ),
@@ -157,7 +159,7 @@ class _RenameTextDialogState extends State<RenameTextDialog> {
     actions: [
       TextButton(
         onPressed: _busy ? null : () => Navigator.pop(context),
-        child: const Text('Cancel'),
+        child: Text(context.commanderTr("Cancel")),
       ),
       FilledButton(
         key: const ValueKey('rename-import-apply'),

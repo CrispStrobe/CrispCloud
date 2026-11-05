@@ -6,6 +6,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:path/path.dart' as p;
 
+import '../l10n/commander_strings.dart';
 import '../l10n/app_localizations.dart';
 import '../models/file_item.dart';
 import '../models/panel_side.dart';
@@ -250,12 +251,16 @@ class _BatchRenameDialogState extends ConsumerState<BatchRenameDialog> {
               crossAxisAlignment: CrossAxisAlignment.stretch,
               children: [
                 Text(
-                  'Multi-rename (${_files.length} items)',
+                  context.commanderTr("Multi-rename ({0} items)", [
+                    _files.length,
+                  ]),
                   style: theme.textTheme.titleLarge,
                 ),
                 const SizedBox(height: 4),
                 Text(
-                  'Combine masks, replacement and case changes. The counter follows preview order.',
+                  context.commanderTr(
+                    "Combine masks, replacement and case changes. The counter follows preview order.",
+                  ),
                   style: theme.textTheme.bodySmall,
                 ),
                 const SizedBox(height: 12),
@@ -281,18 +286,22 @@ class _BatchRenameDialogState extends ConsumerState<BatchRenameDialog> {
                                   width: half,
                                   child: _field(
                                     _name,
-                                    'Name mask',
+                                    context.commanderTr("Name mask"),
                                     'rename-name-mask',
-                                    helper: '[N] original name · [C] counter · [P] parent',
+                                    helper: context.commanderTr(
+                                      "[N] original name · [C] counter · [P] parent",
+                                    ),
                                   ),
                                 ),
                                 SizedBox(
                                   width: half,
                                   child: _field(
                                     _extension,
-                                    'Extension mask',
+                                    context.commanderTr("Extension mask"),
                                     'rename-extension-mask',
-                                    helper: '[E] original extension · empty removes it',
+                                    helper: context.commanderTr(
+                                      "[E] original extension · empty removes it",
+                                    ),
                                   ),
                                 ),
                               ],
@@ -305,7 +314,7 @@ class _BatchRenameDialogState extends ConsumerState<BatchRenameDialog> {
                                 SizedBox(
                                   width: half,
                                   child: _casePicker(
-                                    'Name case',
+                                    context.commanderTr("Name case"),
                                     _nameCase,
                                     (value) => _nameCase = value,
                                   ),
@@ -313,7 +322,7 @@ class _BatchRenameDialogState extends ConsumerState<BatchRenameDialog> {
                                 SizedBox(
                                   width: half,
                                   child: _casePicker(
-                                    'Extension case',
+                                    context.commanderTr("Extension case"),
                                     _extensionCase,
                                     (value) => _extensionCase = value,
                                   ),
@@ -326,7 +335,7 @@ class _BatchRenameDialogState extends ConsumerState<BatchRenameDialog> {
                                 Expanded(
                                   child: _field(
                                     _start,
-                                    'Counter start',
+                                    context.commanderTr("Counter start"),
                                     'rename-counter-start',
                                     number: true,
                                   ),
@@ -335,7 +344,7 @@ class _BatchRenameDialogState extends ConsumerState<BatchRenameDialog> {
                                 Expanded(
                                   child: _field(
                                     _step,
-                                    'Step',
+                                    context.commanderTr("Step"),
                                     'rename-counter-step',
                                     number: true,
                                   ),
@@ -344,7 +353,7 @@ class _BatchRenameDialogState extends ConsumerState<BatchRenameDialog> {
                                 Expanded(
                                   child: _field(
                                     _width,
-                                    'Digits (1–12)',
+                                    context.commanderTr("Digits (1–12)"),
                                     'rename-counter-width',
                                     number: true,
                                   ),
@@ -358,16 +367,22 @@ class _BatchRenameDialogState extends ConsumerState<BatchRenameDialog> {
                               children: [
                                 SizedBox(
                                   width: half,
-                                  child: _field(_find, 'Find', 'rename-find'),
+                                  child: _field(
+                                    _find,
+                                    context.commanderTr("Find"),
+                                    'rename-find',
+                                  ),
                                 ),
                                 SizedBox(
                                   width: half,
                                   child: _field(
                                     _replace,
-                                    'Replace with',
+                                    context.commanderTr("Replace with"),
                                     'rename-replace',
                                     helper: _useRegex
-                                        ? r'Captures: $1, ${name} · literal dollar: $$'
+                                        ? context.commanderTr(
+                                            "Captures: \$1, \${name} · literal dollar: \$\$",
+                                          )
                                         : null,
                                   ),
                                 ),
@@ -379,12 +394,14 @@ class _BatchRenameDialogState extends ConsumerState<BatchRenameDialog> {
                               runSpacing: 8,
                               crossAxisAlignment: WrapCrossAlignment.center,
                               children: [
-                                _chip('Regex', _useRegex, (value) {
+                                _chip(context.commanderTr("Regex"), _useRegex, (
+                                  value,
+                                ) {
                                   _useRegex = value;
                                   if (value) _multiplePairs = false;
                                 }),
                                 _chip(
-                                  'Multiple literal pairs',
+                                  context.commanderTr("Multiple literal pairs"),
                                   _multiplePairs,
                                   (value) {
                                     _multiplePairs = value;
@@ -392,12 +409,12 @@ class _BatchRenameDialogState extends ConsumerState<BatchRenameDialog> {
                                   },
                                 ),
                                 _chip(
-                                  'Match case',
+                                  context.commanderTr("Match case"),
                                   _caseSensitive,
                                   (value) => _caseSensitive = value,
                                 ),
                                 _chip(
-                                  'First match only',
+                                  context.commanderTr("First match only"),
                                   _firstMatch,
                                   (value) => _firstMatch = value,
                                 ),
@@ -406,11 +423,13 @@ class _BatchRenameDialogState extends ConsumerState<BatchRenameDialog> {
                                   child: DropdownButton<RenameReplaceScope>(
                                     value: _scope,
                                     isExpanded: true,
-                                    items: const [
+                                    items: [
                                       DropdownMenuItem(
                                         value: RenameReplaceScope.fullName,
                                         child: Text(
-                                          'Replace in full name',
+                                          context.commanderTr(
+                                            "Replace in full name",
+                                          ),
                                           maxLines: 1,
                                           overflow: TextOverflow.ellipsis,
                                         ),
@@ -418,7 +437,9 @@ class _BatchRenameDialogState extends ConsumerState<BatchRenameDialog> {
                                       DropdownMenuItem(
                                         value: RenameReplaceScope.name,
                                         child: Text(
-                                          'Replace in name only',
+                                          context.commanderTr(
+                                            "Replace in name only",
+                                          ),
                                           maxLines: 1,
                                           overflow: TextOverflow.ellipsis,
                                         ),
@@ -426,7 +447,9 @@ class _BatchRenameDialogState extends ConsumerState<BatchRenameDialog> {
                                       DropdownMenuItem(
                                         value: RenameReplaceScope.extension,
                                         child: Text(
-                                          'Replace in extension',
+                                          context.commanderTr(
+                                            "Replace in extension",
+                                          ),
                                           maxLines: 1,
                                           overflow: TextOverflow.ellipsis,
                                         ),
@@ -445,39 +468,27 @@ class _BatchRenameDialogState extends ConsumerState<BatchRenameDialog> {
                             ),
                             if (_multiplePairs)
                               Text(
-                                'Separate simultaneous search/replacement pairs with |, for example red|blue → blue|green.',
+                                context.commanderTr(
+                                  "Separate simultaneous search/replacement pairs with |, for example red|blue → blue|green.",
+                                ),
                                 style: theme.textTheme.bodySmall,
                               ),
-                            const ExpansionTile(
+                            ExpansionTile(
                               tilePadding: EdgeInsets.zero,
                               title: Text(
-                                'Mask reference',
-                                style: TextStyle(fontSize: 13),
+                                context.commanderTr("Mask reference"),
+                                style: const TextStyle(fontSize: 13),
                               ),
                               children: [
                                 Align(
                                   alignment: Alignment.centerLeft,
                                   child: Padding(
-                                    padding: EdgeInsets.only(bottom: 12),
+                                    padding: const EdgeInsets.only(bottom: 12),
                                     child: Text(
-                                      '[N] name without the last extension; [E] extension without a dot; '
-                                      '[C] counter; [C:4] counter with four digits; [P] original parent folder.\n'
-                                      '[N1-4] first four characters; [N3-] from character 3; '
-                                      '[N-4--1] last four characters. Positions start at 1.\n'
-                                      '[YMD] and [hms] use the selected date source in CrispCloud/TC syntax. '
-                                      'DC uses [YYYY][MM][DD] and [hh][nn][ss].\n'
-                                      '[T1] modified; [T2] created; [T3] accessed; [T4] captured; [T5] batch time. '
-                                      '[T4+60m] shifts the captured date one hour. [meta:artist] uses supplied metadata.\n'
-                                      '[V:Project] uses a named variable; [G] creates a stable identifier for this preview. '
-                                      '[C7+2:4] starts at 7, steps by 2 and uses four digits.\n'
-                                      'TC inline case: [U] uppercase, [L] lowercase, [F] title case, [n] reset. '
-                                      '[B0] is the parent and [B1] the grandparent.\n'
-                                      'Use [[ and ]] for literal brackets, or [[] and []] in TC/DC syntax. '
-                                      'External Commander content plugins are not loaded; unsupported fields produce a preview error.\n'
-                                      'Folder names use the name mask only. A leading dot is part of a file name. '
-                                      'Masks are applied first, then replacement, then case changes. '
-                                      'Each transformation consumes the previous proposed name. Manual targets override the rule pipeline for that row.',
-                                      style: TextStyle(fontSize: 12),
+                                      context.commanderTr(
+                                        "[N] name without the last extension; [E] extension without a dot; [C] counter; [C:4] counter with four digits; [P] original parent folder.\n[N1-4] first four characters; [N3-] from character 3; [N-4--1] last four characters. Positions start at 1.\n[YMD] and [hms] use the selected date source in CrispCloud/TC syntax. DC uses [YYYY][MM][DD] and [hh][nn][ss].\n[T1] modified; [T2] created; [T3] accessed; [T4] captured; [T5] batch time. [T4+60m] shifts the captured date one hour. [meta:artist] uses supplied metadata.\n[V:Project] uses a named variable; [G] creates a stable identifier for this preview. [C7+2:4] starts at 7, steps by 2 and uses four digits.\nTC inline case: [U] uppercase, [L] lowercase, [F] title case, [n] reset. [B0] is the parent and [B1] the grandparent.\nUse [[ and ]] for literal brackets, or [[] and []] in TC/DC syntax. External Commander content plugins are not loaded; unsupported fields produce a preview error.\nFolder names use the name mask only. A leading dot is part of a file name. Masks are applied first, then replacement, then case changes. Each transformation consumes the previous proposed name. Manual targets override the rule pipeline for that row.",
+                                      ),
+                                      style: const TextStyle(fontSize: 12),
                                     ),
                                   ),
                                 ),
@@ -488,7 +499,9 @@ class _BatchRenameDialogState extends ConsumerState<BatchRenameDialog> {
                               crossAxisAlignment: WrapCrossAlignment.center,
                               children: [
                                 Text(
-                                  'Preview · ${plan.changeCount} changes',
+                                  context.commanderTr("Preview · {0} changes", [
+                                    plan.changeCount,
+                                  ]),
                                   style: theme.textTheme.titleSmall,
                                 ),
                                 Wrap(
@@ -510,7 +523,9 @@ class _BatchRenameDialogState extends ConsumerState<BatchRenameDialog> {
                                         Icons.sort_by_alpha,
                                         size: 16,
                                       ),
-                                      label: const Text('Sort by name'),
+                                      label: Text(
+                                        context.commanderTr("Sort by name"),
+                                      ),
                                     ),
                                     TextButton.icon(
                                       onPressed: !_editable
@@ -527,7 +542,9 @@ class _BatchRenameDialogState extends ConsumerState<BatchRenameDialog> {
                                         Icons.swap_vert,
                                         size: 16,
                                       ),
-                                      label: const Text('Reverse'),
+                                      label: Text(
+                                        context.commanderTr("Reverse"),
+                                      ),
                                     ),
                                   ],
                                 ),
@@ -541,7 +558,10 @@ class _BatchRenameDialogState extends ConsumerState<BatchRenameDialog> {
                                 spacing: 8,
                                 children: [
                                   Text(
-                                    '${_excludedPaths.length} excluded from this batch',
+                                    context.commanderTr(
+                                      "{0} excluded from this batch",
+                                      [_excludedPaths.length],
+                                    ),
                                   ),
                                   TextButton(
                                     onPressed: !_editable
@@ -550,26 +570,36 @@ class _BatchRenameDialogState extends ConsumerState<BatchRenameDialog> {
                                             _excludedPaths.clear();
                                             _changed();
                                           },
-                                    child: const Text('Restore excluded rows'),
+                                    child: Text(
+                                      context.commanderTr(
+                                        "Restore excluded rows",
+                                      ),
+                                    ),
                                   ),
                                 ],
                               ),
                             const SizedBox(height: 8),
                             Text(
                               plan.requiresStaging
-                                  ? 'This plan uses temporary sibling names to resolve case changes, dependencies or selected folders. Each physical move is saved for recovery.'
-                                  : 'Original items and existing destinations are checked before starting. Every completed move is recorded for batch restore.',
+                                  ? context.commanderTr(
+                                      "This plan uses temporary sibling names to resolve case changes, dependencies or selected folders. Each physical move is saved for recovery.",
+                                    )
+                                  : context.commanderTr(
+                                      "Original items and existing destinations are checked before starting. Every completed move is recorded for batch restore.",
+                                    ),
                               style: theme.textTheme.bodySmall,
                             ),
                             const SizedBox(height: 8),
                             _chip(
-                              'Stop on error',
+                              context.commanderTr("Stop on error"),
                               _stopOnError,
                               (value) => _stopOnError = value,
                             ),
                             if (_storage != null && !_storage!.exclusiveMoves)
                               Text(
-                                'This provider checks destination names before each move but does not guarantee an exclusive rename.',
+                                context.commanderTr(
+                                  "This provider checks destination names before each move but does not guarantee an exclusive rename.",
+                                ),
                                 style: theme.textTheme.bodySmall,
                               ),
                           ],
@@ -594,9 +624,13 @@ class _BatchRenameDialogState extends ConsumerState<BatchRenameDialog> {
                   const SizedBox(height: 4),
                   Text(
                     _cancelRequested
-                        ? 'Stopping after the current operation…'
+                        ? context.commanderTr(
+                            "Stopping after the current operation…",
+                          )
                         : _progress == null
-                        ? 'Checking original paths and destinations…'
+                        ? context.commanderTr(
+                            "Checking original paths and destinations…",
+                          )
                         : '${_progress!.message} · ${_progress!.completed} / ${_progress!.total}',
                     style: theme.textTheme.bodySmall,
                   ),
@@ -605,8 +639,16 @@ class _BatchRenameDialogState extends ConsumerState<BatchRenameDialog> {
                   Padding(
                     padding: const EdgeInsets.only(top: 8),
                     child: Text(
-                      '${_result!.cancelled ? "Stopped. " : ""}${_result!.renamed} renamed, '
-                      '${_result!.failed} failed, ${_result!.unchanged} unchanged, ${_result!.notRun} not run.',
+                      context.commanderTr(
+                        "{0}{1} renamed, {2} failed, {3} unchanged, {4} not run.",
+                        [
+                          _result!.cancelled ? "Stopped. " : "",
+                          _result!.renamed,
+                          _result!.failed,
+                          _result!.unchanged,
+                          _result!.notRun,
+                        ],
+                      ),
                       key: const ValueKey('rename-result'),
                       style: theme.textTheme.bodyMedium,
                     ),
@@ -621,24 +663,26 @@ class _BatchRenameDialogState extends ConsumerState<BatchRenameDialog> {
                       key: const ValueKey('rename-history'),
                       onPressed: _processing ? null : _openHistory,
                       icon: const Icon(Icons.history, size: 18),
-                      label: const Text('History / recovery'),
+                      label: Text(context.commanderTr("History / recovery")),
                     ),
                     if (_batch?.isComplete == true)
                       TextButton(
                         onPressed: _processing ? null : _restoreBatch,
-                        child: const Text('Undo batch'),
+                        child: Text(context.commanderTr("Undo batch")),
                       ),
                     if (_batch?.isComplete == true ||
                         _batch?.isRestored == true)
                       TextButton(
                         key: const ValueKey('rename-next-batch'),
                         onPressed: _processing ? null : _nextBatch,
-                        child: const Text('Continue with these items'),
+                        child: Text(
+                          context.commanderTr("Continue with these items"),
+                        ),
                       ),
                     if (_batch != null)
                       TextButton(
                         onPressed: _processing ? null : _exportReport,
-                        child: const Text('Export report'),
+                        child: Text(context.commanderTr("Export report")),
                       ),
                     TextButton(
                       onPressed: _processing
@@ -648,7 +692,7 @@ class _BatchRenameDialogState extends ConsumerState<BatchRenameDialog> {
                           : () => Navigator.pop(context, _result),
                       child: Text(
                         _processing
-                            ? 'Stop after current item'
+                            ? context.commanderTr("Stop after current item")
                             : _result != null
                             ? (text?.close ?? 'Close')
                             : (text?.cancel ?? 'Cancel'),
@@ -668,7 +712,11 @@ class _BatchRenameDialogState extends ConsumerState<BatchRenameDialog> {
                           Icons.drive_file_rename_outline,
                           size: 18,
                         ),
-                        label: Text('Rename ${plan.changeCount} items'),
+                        label: Text(
+                          context.commanderTr("Rename {0} items", [
+                            plan.changeCount,
+                          ]),
+                        ),
                       ),
                   ],
                 ),
@@ -683,7 +731,10 @@ class _BatchRenameDialogState extends ConsumerState<BatchRenameDialog> {
   Widget _advancedOptions(double width) => ExpansionTile(
     key: const ValueKey('rename-advanced'),
     tilePadding: EdgeInsets.zero,
-    title: const Text('Advanced rename rules', style: TextStyle(fontSize: 13)),
+    title: Text(
+      context.commanderTr("Advanced rename rules"),
+      style: const TextStyle(fontSize: 13),
+    ),
     childrenPadding: const EdgeInsets.only(bottom: 12),
     children: [
       Wrap(
@@ -693,12 +744,16 @@ class _BatchRenameDialogState extends ConsumerState<BatchRenameDialog> {
           SizedBox(
             width: width,
             child: _optionPicker<RenameMaskDialect>(
-              'Mask dialect',
+              context.commanderTr("Mask dialect"),
               _dialect,
-              const {
-                RenameMaskDialect.crispCloud: 'CrispCloud',
-                RenameMaskDialect.totalCommander: 'Total Commander',
-                RenameMaskDialect.doubleCommander: 'Double Commander',
+              {
+                RenameMaskDialect.crispCloud: context.commanderTr("CrispCloud"),
+                RenameMaskDialect.totalCommander: context.commanderTr(
+                  "Total Commander",
+                ),
+                RenameMaskDialect.doubleCommander: context.commanderTr(
+                  "Double Commander",
+                ),
               },
               (value) => _dialect = value,
             ),
@@ -706,31 +761,46 @@ class _BatchRenameDialogState extends ConsumerState<BatchRenameDialog> {
           SizedBox(
             width: width,
             child: _optionPicker<RenameDateSource>(
-              'Date source',
+              context.commanderTr("Date source"),
               _dateSource,
-              const {
-                RenameDateSource.modified: 'Modified time',
-                RenameDateSource.created: 'Created time (metadata)',
-                RenameDateSource.accessed: 'Accessed time (metadata)',
-                RenameDateSource.captured: 'Captured time (metadata)',
-                RenameDateSource.current: 'Time this dialog opened',
+              {
+                RenameDateSource.modified: context.commanderTr("Modified time"),
+                RenameDateSource.created: context.commanderTr(
+                  "Created time (metadata)",
+                ),
+                RenameDateSource.accessed: context.commanderTr(
+                  "Accessed time (metadata)",
+                ),
+                RenameDateSource.captured: context.commanderTr(
+                  "Captured time (metadata)",
+                ),
+                RenameDateSource.current: context.commanderTr(
+                  "Time this dialog opened",
+                ),
               },
               (value) => _dateSource = value,
             ),
           ),
           SizedBox(
             width: width,
-            child: _optionPicker<RenameDateZone>('Time zone', _dateZone, const {
-              RenameDateZone.original: 'Original time zone',
-              RenameDateZone.local: 'Local time zone',
-              RenameDateZone.utc: 'UTC',
-            }, (value) => _dateZone = value),
+            child: _optionPicker<RenameDateZone>(
+              context.commanderTr("Time zone"),
+              _dateZone,
+              {
+                RenameDateZone.original: context.commanderTr(
+                  "Original time zone",
+                ),
+                RenameDateZone.local: context.commanderTr("Local time zone"),
+                RenameDateZone.utc: context.commanderTr("UTC"),
+              },
+              (value) => _dateZone = value,
+            ),
           ),
           SizedBox(
             width: width,
             child: _field(
               _dateOffset,
-              'Date offset (minutes)',
+              context.commanderTr("Date offset (minutes)"),
               'rename-date-offset',
               number: true,
             ),
@@ -740,22 +810,22 @@ class _BatchRenameDialogState extends ConsumerState<BatchRenameDialog> {
       const SizedBox(height: 12),
       _field(
         _variables,
-        'Variables (one name=value per line)',
+        context.commanderTr("Variables (one name=value per line)"),
         'rename-variables',
-        helper: '[V:Project] uses Project=Holiday',
+        helper: context.commanderTr("[V:Project] uses Project=Holiday"),
       ),
       const SizedBox(height: 8),
-      const Text(
-        'TC ranges: [N1-5]. DC ranges: [N1:5] or [N1,5]. '
-        '[meta:artist] uses metadata already supplied by the source; unavailable '
-        'fields block the preview. The dialect is stored with presets.',
-        style: TextStyle(fontSize: 12),
+      Text(
+        context.commanderTr(
+          "TC ranges: [N1-5]. DC ranges: [N1:5] or [N1,5]. [meta:artist] uses metadata already supplied by the source; unavailable fields block the preview. The dialect is stored with presets.",
+        ),
+        style: const TextStyle(fontSize: 12),
       ),
       const SizedBox(height: 8),
       Align(
         alignment: Alignment.centerLeft,
         child: FilterChip(
-          label: const Text('Number colliding targets'),
+          label: Text(context.commanderTr("Number colliding targets")),
           selected: _collisions == RenameCollisionPolicy.number,
           onSelected: !_editable
               ? null
@@ -776,7 +846,10 @@ class _BatchRenameDialogState extends ConsumerState<BatchRenameDialog> {
     children: [
       if (_steps.length > 1) ...[
         Text(
-          'Transformation ${_selectedStep + 1} of ${_steps.length} · steps run in this order',
+          context.commanderTr(
+            "Transformation {0} of {1} · steps run in this order",
+            [_selectedStep + 1, _steps.length],
+          ),
           style: Theme.of(context).textTheme.titleSmall,
         ),
         Wrap(
@@ -788,7 +861,12 @@ class _BatchRenameDialogState extends ConsumerState<BatchRenameDialog> {
                 key: ValueKey('rename-step-$index'),
                 selected: index == _selectedStep,
                 label: Text(
-                  'Step ${index + 1}: ${index == _selectedStep ? _name.text : _steps[index].nameMask}',
+                  context.commanderTr("Step {0}: {1}", [
+                    index + 1,
+                    index == _selectedStep
+                        ? _name.text
+                        : _steps[index].nameMask,
+                  ]),
                   maxLines: 1,
                   overflow: TextOverflow.ellipsis,
                 ),
@@ -805,14 +883,14 @@ class _BatchRenameDialogState extends ConsumerState<BatchRenameDialog> {
                   ? null
                   : () => _moveStep(-1),
               icon: const Icon(Icons.arrow_back, size: 16),
-              label: const Text('Step earlier'),
+              label: Text(context.commanderTr("Step earlier")),
             ),
             TextButton.icon(
               onPressed: !_editable || _selectedStep == _steps.length - 1
                   ? null
                   : () => _moveStep(1),
               icon: const Icon(Icons.arrow_forward, size: 16),
-              label: const Text('Step later'),
+              label: Text(context.commanderTr("Step later")),
             ),
           ],
         ),
@@ -895,7 +973,7 @@ class _BatchRenameDialogState extends ConsumerState<BatchRenameDialog> {
             ? null
             : () => _editNames(plan),
         icon: const Icon(Icons.edit_note, size: 18),
-        label: const Text('Edit / import names'),
+        label: Text(context.commanderTr("Edit / import names")),
       ),
       TextButton.icon(
         key: const ValueKey('rename-add-step'),
@@ -914,7 +992,7 @@ class _BatchRenameDialogState extends ConsumerState<BatchRenameDialog> {
                 _changed();
               },
         icon: const Icon(Icons.add, size: 18),
-        label: const Text('Add transformation'),
+        label: Text(context.commanderTr("Add transformation")),
       ),
       TextButton.icon(
         key: const ValueKey('rename-export-names'),
@@ -923,16 +1001,18 @@ class _BatchRenameDialogState extends ConsumerState<BatchRenameDialog> {
             : () => showDialog<String>(
                 context: context,
                 builder: (_) => RenameTextDialog(
-                  title: 'Proposed names',
-                  instructions: 'One target name per current preview row. Save or copy this list for editing.',
+                  title: context.commanderTr("Proposed names"),
+                  instructions: context.commanderTr(
+                    "One target name per current preview row. Save or copy this list for editing.",
+                  ),
                   initialText: plan.entries
                       .map((entry) => entry.newName)
                       .join('\n'),
-                  submitLabel: 'Close',
+                  submitLabel: context.commanderTr("Close"),
                 ),
               ),
         icon: const Icon(Icons.file_download_outlined, size: 18),
-        label: const Text('Export names'),
+        label: Text(context.commanderTr("Export names")),
       ),
       TextButton.icon(
         onPressed: !_editable || _originError != null
@@ -940,7 +1020,9 @@ class _BatchRenameDialogState extends ConsumerState<BatchRenameDialog> {
             : _checkExistingNames,
         icon: const Icon(Icons.fact_check_outlined, size: 18),
         label: Text(
-          _checkingNames ? 'Checking names…' : 'Check existing names',
+          _checkingNames
+              ? context.commanderTr("Checking names…")
+              : context.commanderTr("Check existing names"),
         ),
       ),
       if (_targetNames.isNotEmpty)
@@ -951,7 +1033,7 @@ class _BatchRenameDialogState extends ConsumerState<BatchRenameDialog> {
                   _targetNames.clear();
                   _changed();
                 },
-          child: const Text('Clear manual names'),
+          child: Text(context.commanderTr("Clear manual names")),
         ),
     ],
   );
@@ -1078,11 +1160,13 @@ class _BatchRenameDialogState extends ConsumerState<BatchRenameDialog> {
           value: value,
           child: Text(
             switch (value) {
-              RenameCase.unchanged => 'Keep case',
-              RenameCase.lower => 'lowercase',
-              RenameCase.upper => 'UPPERCASE',
-              RenameCase.title => 'Title Case',
-              RenameCase.sentence => 'First letter uppercase',
+              RenameCase.unchanged => context.commanderTr("Keep case"),
+              RenameCase.lower => context.commanderTr("lowercase"),
+              RenameCase.upper => context.commanderTr("UPPERCASE"),
+              RenameCase.title => context.commanderTr("Title Case"),
+              RenameCase.sentence => context.commanderTr(
+                "First letter uppercase",
+              ),
             },
             maxLines: 1,
             overflow: TextOverflow.ellipsis,
@@ -1187,7 +1271,7 @@ class _BatchRenameDialogState extends ConsumerState<BatchRenameDialog> {
                   ),
                   const SizedBox(width: 8),
                   Text(
-                    errors.isEmpty ? status : 'Check',
+                    errors.isEmpty ? status : context.commanderTr("Check"),
                     style: Theme.of(context).textTheme.labelSmall,
                   ),
                 ],
@@ -1201,7 +1285,9 @@ class _BatchRenameDialogState extends ConsumerState<BatchRenameDialog> {
               if (_batch != null &&
                   _batch!.items[index].currentPath != entry.targetPath)
                 Text(
-                  'Current: ${_batch!.items[index].currentPath}',
+                  context.commanderTr("Current: {0}", [
+                    _batch!.items[index].currentPath,
+                  ]),
                   style: Theme.of(context).textTheme.bodySmall,
                 ),
               if (_editable)
@@ -1210,19 +1296,19 @@ class _BatchRenameDialogState extends ConsumerState<BatchRenameDialog> {
                   children: [
                     IconButton(
                       key: ValueKey('rename-edit-${entry.sourcePath}'),
-                      tooltip: 'Edit this proposed name',
+                      tooltip: context.commanderTr("Edit this proposed name"),
                       visualDensity: VisualDensity.compact,
                       onPressed: () => _editRow(entry),
                       icon: const Icon(Icons.edit_outlined, size: 18),
                     ),
                     IconButton(
-                      tooltip: 'Move earlier in preview',
+                      tooltip: context.commanderTr("Move earlier in preview"),
                       visualDensity: VisualDensity.compact,
                       onPressed: index == 0 ? null : () => _moveRow(entry, -1),
                       icon: const Icon(Icons.arrow_upward, size: 18),
                     ),
                     IconButton(
-                      tooltip: 'Move later in preview',
+                      tooltip: context.commanderTr("Move later in preview"),
                       visualDensity: VisualDensity.compact,
                       onPressed: index == plan.entries.length - 1
                           ? null
@@ -1231,7 +1317,9 @@ class _BatchRenameDialogState extends ConsumerState<BatchRenameDialog> {
                     ),
                     IconButton(
                       key: ValueKey('rename-exclude-${entry.sourcePath}'),
-                      tooltip: 'Exclude from this batch (keep file)',
+                      tooltip: context.commanderTr(
+                        "Exclude from this batch (keep file)",
+                      ),
                       visualDensity: VisualDensity.compact,
                       onPressed: () {
                         _excludedPaths.add(entry.sourcePath);
@@ -1260,12 +1348,12 @@ class _BatchRenameDialogState extends ConsumerState<BatchRenameDialog> {
           key: ValueKey('rename-preset-$_preset-${_presets.length}'),
           initialValue: _preset,
           isExpanded: true,
-          decoration: const InputDecoration(
-            labelText: 'Preset',
-            border: OutlineInputBorder(),
+          decoration: InputDecoration(
+            labelText: context.commanderTr("Preset"),
+            border: const OutlineInputBorder(),
             isDense: true,
           ),
-          hint: const Text('Custom settings'),
+          hint: Text(context.commanderTr("Custom settings")),
           items: [
             for (final name in _presets.keys.toList()..sort())
               DropdownMenuItem(
@@ -1285,24 +1373,24 @@ class _BatchRenameDialogState extends ConsumerState<BatchRenameDialog> {
       TextButton.icon(
         onPressed: _editable ? _savePreset : null,
         icon: const Icon(Icons.save_outlined, size: 18),
-        label: const Text('Save preset'),
+        label: Text(context.commanderTr("Save preset")),
       ),
       if (_preset != null)
         TextButton.icon(
           onPressed: _editable ? _deletePreset : null,
           icon: const Icon(Icons.delete_outline, size: 18),
-          label: const Text('Remove preset'),
+          label: Text(context.commanderTr("Remove preset")),
         ),
       TextButton(
         onPressed: !_editable
             ? null
             : () => _setOptions(const MultiRenameOptions()),
-        child: const Text('Reset'),
+        child: Text(context.commanderTr("Reset")),
       ),
       TextButton.icon(
         onPressed: _editable ? _exchangePresets : null,
         icon: const Icon(Icons.import_export, size: 18),
-        label: const Text('Import / export presets'),
+        label: Text(context.commanderTr("Import / export presets")),
       ),
     ],
   );
@@ -1360,12 +1448,14 @@ class _BatchRenameDialogState extends ConsumerState<BatchRenameDialog> {
     final content = await showDialog<String>(
       context: context,
       builder: (_) => RenameTextDialog(
-        title: 'Rename presets',
-        instructions: 'Save or copy this versioned preset export, or load another export to import it. Imported names replace same-named saved presets.',
+        title: context.commanderTr("Rename presets"),
+        instructions: context.commanderTr(
+          "Save or copy this versioned preset export, or load another export to import it. Imported names replace same-named saved presets.",
+        ),
         initialText: _presetStore.export(
           _presets.isEmpty ? {'Current settings': _options} : _presets,
         ),
-        submitLabel: 'Import presets',
+        submitLabel: context.commanderTr("Import presets"),
         filename: 'rename-presets.json',
         fileExtensions: const ['json'],
         validate: (value) {
@@ -1692,10 +1782,12 @@ class _BatchRenameDialogState extends ConsumerState<BatchRenameDialog> {
   Future<void> _exportReport() => showDialog<String>(
     context: context,
     builder: (_) => RenameTextDialog(
-      title: 'Rename batch report',
-      instructions: 'A complete record of intended names, confirmed current paths and recovery steps.',
+      title: context.commanderTr("Rename batch report"),
+      instructions: context.commanderTr(
+        "A complete record of intended names, confirmed current paths and recovery steps.",
+      ),
       initialText: const JsonEncoder.withIndent('  ').convert(_batch!.toJson()),
-      submitLabel: 'Close',
+      submitLabel: context.commanderTr("Close"),
       filename: 'rename-${_batch!.id}.json',
       fileExtensions: const ['json'],
     ),
@@ -1723,22 +1815,24 @@ class _RenamePresetNameDialogState extends State<_RenamePresetNameDialog> {
 
   @override
   Widget build(BuildContext context) => AlertDialog(
-    title: const Text('Save rename preset'),
+    title: Text(context.commanderTr("Save rename preset")),
     content: TextField(
       controller: _controller,
       autofocus: true,
       maxLength: 80,
-      decoration: const InputDecoration(labelText: 'Preset name'),
+      decoration: InputDecoration(
+        labelText: context.commanderTr("Preset name"),
+      ),
       onSubmitted: (_) => Navigator.pop(context, _controller.text.trim()),
     ),
     actions: [
       TextButton(
         onPressed: () => Navigator.pop(context),
-        child: const Text('Cancel'),
+        child: Text(context.commanderTr("Cancel")),
       ),
       FilledButton(
         onPressed: () => Navigator.pop(context, _controller.text.trim()),
-        child: const Text('Save'),
+        child: Text(context.commanderTr("Save")),
       ),
     ],
   );
