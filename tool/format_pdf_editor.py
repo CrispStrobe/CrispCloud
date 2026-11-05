@@ -20,6 +20,7 @@ APP_PATTERNS = (
     "lib/services/pdf_operations_host.dart",
     "lib/widgets/pdf_operations_dialog.dart",
     "test/support/pdf_operations_fixture.dart",
+    "test/support/pdf_operations_font_fixture.dart",
     "test/widget/pdf_operations_dialog_test.dart",
     "lib/services/pdf_device_export*.dart",
     "lib/services/pdf_edit_session.dart",

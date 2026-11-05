@@ -17,10 +17,11 @@ import 'package:pdf_operations/pdf_operations.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 import '../support/pdf_operations_fixture.dart';
+import '../support/pdf_operations_font_fixture.dart';
 
 const _defaultFontPath =
     'packages/dart_pdf_editor_assets/assets/fonts/DejaVuSans.ttf';
-late _TestFontBundle _fontBundle;
+final _fontBundle = _TestFontBundle(pdfOperationsFontFixture());
 
 class _TestFontBundle extends CachingAssetBundle {
   _TestFontBundle(this.font);
@@ -115,11 +116,6 @@ Future<void> _preview(WidgetTester tester) async {
 
 void main() {
   TestWidgetsFlutterBinding.ensureInitialized();
-  setUpAll(() async {
-    // Fetch actual font bytes outside widget fake time. Browser asset requests
-    // must finish before pumpAndSettle starts advancing the progress animation.
-    _fontBundle = _TestFontBundle(await rootBundle.load(_defaultFontPath));
-  });
   setUp(() => SharedPreferences.setMockInitialValues({}));
 
   test('menu and palette selection rules reject mixed files and folders', () {
