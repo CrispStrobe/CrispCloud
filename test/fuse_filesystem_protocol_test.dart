@@ -41,6 +41,41 @@ class _CloudClient implements CloudStorageClient {
   dynamic noSuchMethod(Invocation invocation) => super.noSuchMethod(invocation);
 }
 
+class _UnicodeClient implements CloudStorageClient {
+  final bool collisions;
+  String? downloadedPath;
+  _UnicodeClient({this.collisions = false});
+
+  @override
+  String get providerName => 'Unicode fixture';
+  @override
+  Future<Map<String, dynamic>?> resolvePath(String path) async => null;
+  @override
+  Future<Map<String, dynamic>> listPath(String path) async {
+    if (path == '/remote') {
+      if (collisions) {
+        return {'folders': [], 'files': [
+          {'name': 'café.txt', 'size': 5},
+          {'name': 'cafe\u0301.txt', 'size': 5},
+        ]};
+      }
+      return {'folders': [{'name': 'résumé'}], 'files': []};
+    }
+    if (path == '/remote/résumé') {
+      return {'folders': [], 'files': [{'name': 'café.txt', 'size': 5}]};
+    }
+    throw StateError('Unexpected provider path: $path');
+  }
+  @override
+  Future<Uint8List> downloadFileBytes(String remotePath,
+      {Function(int, int)? onProgress}) async {
+    downloadedPath = remotePath;
+    return Uint8List.fromList(utf8.encode('hello'));
+  }
+  @override
+  dynamic noSuchMethod(Invocation invocation) => super.noSuchMethod(invocation);
+}
+
 class _ResponseReader {
   final Socket socket;
   final _bytes = <int>[];
@@ -91,6 +126,64 @@ Uint8List _path(String path, [int? flags]) {
 }
 
 void main() {
+  test('IPC resolves normalized nested paths using original provider names', () async {
+    final client = _UnicodeClient();
+    final fs = FuseFilesystem(client: client, remotePath: '/remote');
+    unawaited(fs.serveRequests());
+    final socket = await Socket.connect(
+        InternetAddress(await fs.ready, type: InternetAddressType.unix), 0);
+    final reader = _ResponseReader(socket);
+    addTearDown(() async {
+      await socket.close();
+      await fs.dispose();
+    });
+    expect((await reader.send(2, 1, _path('/re\u0301sume\u0301'))).$1, 0);
+    const requested = '/re\u0301sume\u0301/cafe\u0301.txt';
+    final (attrError, attr) = await reader.send(1, 2, _path(requested));
+    expect(attrError, 0);
+    expect(ByteData.sublistView(attr).getUint64(4, Endian.big), 5);
+    final (openError, opened) = await reader.send(13, 3, _path(requested, 0));
+    expect(openError, 0);
+    final request = Uint8List(16);
+    ByteData.sublistView(request)
+      ..setUint32(0, ByteData.sublistView(opened).getUint32(0, Endian.big), Endian.big)
+      ..setUint64(4, 0, Endian.big)
+      ..setUint32(12, 5, Endian.big);
+    final (readError, bytes) = await reader.send(3, 4, request);
+    expect(readError, 0);
+    expect(utf8.decode(bytes), 'hello');
+    expect(client.downloadedPath, '/remote/résumé/café.txt');
+  });
+
+  test('IPC refuses ambiguous canonical filename collisions', () async {
+    final fs = FuseFilesystem(client: _UnicodeClient(collisions: true), remotePath: '/remote');
+    unawaited(fs.serveRequests());
+    final socket = await Socket.connect(
+        InternetAddress(await fs.ready, type: InternetAddressType.unix), 0);
+    final reader = _ResponseReader(socket);
+    addTearDown(() async {
+      await socket.close();
+      await fs.dispose();
+    });
+    expect((await reader.send(2, 1, _path('/'))).$1, 17); // EEXIST
+    expect((await reader.send(1, 2, _path('/café.txt'))).$1, 17);
+    expect((await reader.send(13, 3, _path('/cafe\u0301.txt', 0))).$1, 17);
+  });
+
+  test('IPC rejects traversal outside the mounted remote root', () async {
+    final fs = FuseFilesystem(client: _UnicodeClient(), remotePath: '/remote');
+    unawaited(fs.serveRequests());
+    final socket = await Socket.connect(
+        InternetAddress(await fs.ready, type: InternetAddressType.unix), 0);
+    final reader = _ResponseReader(socket);
+    addTearDown(() async {
+      await socket.close();
+      await fs.dispose();
+    });
+    expect((await reader.send(1, 1, _path('/../outside'))).$1, 13); // EACCES
+    expect((await reader.send(13, 2, _path('/../outside', 0))).$1, 13);
+  });
+
   test('IPC gets metadata and opens files from provider listings', () async {
     final fs = FuseFilesystem(
       client: _CloudClient(resolveFiles: false, listing: {

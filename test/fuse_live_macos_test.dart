@@ -1,5 +1,5 @@
-// Opt-in native integration: CRISPCLOUD_FUSE_TEST_BACKEND=macfuse-fskit or
-// fuse-t, and CRISPCLOUD_FUSE_TEST_HELPER=/path/to/crispcloud_fuse_bridge.
+// Opt-in native integration: CRISPCLOUD_FUSE_TEST_BACKEND=macfuse-fskit,
+// fuse-t or fuse-t-smb, and CRISPCLOUD_FUSE_TEST_HELPER=/path/to/bridge.
 import 'dart:async';
 import 'dart:convert';
 import 'dart:io';
@@ -10,6 +10,7 @@ import 'package:crisp_cloud/services/fuse_filesystem.dart';
 import 'package:crisp_cloud/services/fuse_mount_service.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import 'package:unorm_dart/unorm_dart.dart' as unorm;
 
 class _FixtureClient implements CloudStorageClient {
   @override
@@ -34,6 +35,7 @@ class _FixtureClient implements CloudStorageClient {
     Function(int, int)? onProgress,
   }) async {
     if (path.endsWith('/offline.txt')) throw const SocketException('offline');
+    if (path != '/remote/café.txt') throw StateError('Unexpected provider path: $path');
     return Uint8List.fromList(utf8.encode('hello'));
   }
 
@@ -81,6 +83,18 @@ void main() {
         await service.unmount(target.path);
         expect(service.getMounts().single.status, MountStatus.error);
         expect(await service.isPlatformMountPoint(target.path), isTrue);
+        final failedEntry = service.getMounts().single;
+        await expectLater(
+          service.mount(
+            client: null,
+            remotePath: ':local:${source.path}',
+            mountPoint: target.path,
+            macBackend: MacFuseBackend.rcloneNfs,
+          ),
+          throwsArgumentError,
+        );
+        expect(service.getMounts().single.helperPid, failedEntry.helperPid);
+        expect(service.getMounts().single.errorKey, 'unmountFailed');
         await expectLater(service.removeMount(target.path), throwsStateError);
         service.failUnmount = false;
         await service.unmount(target.path);
@@ -155,8 +169,9 @@ void main() {
                 (item) => item.uri.pathSegments.where((s) => s.isNotEmpty).last,
               )
               .toList();
-          expect(names, containsAll(['café.txt', '旅行']));
-          expect(await File('${mount.path}/café.txt').readAsString(), 'hello');
+          expect(names.map(unorm.nfc), containsAll(['café.txt', '旅行']));
+          final cafeName = names.singleWhere((name) => unorm.nfc(name) == 'café.txt');
+          expect(await File('${mount.path}/$cafeName').readAsString(), 'hello');
           expect(await Directory('${mount.path}/旅行').list().toList(), isEmpty);
           await expectLater(
             File('${mount.path}/offline.txt').readAsString(),

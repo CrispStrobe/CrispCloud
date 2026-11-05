@@ -847,7 +847,7 @@ CrispCloud becomes the **definitive open-source cloud file manager**: a single, 
 
 ### 11.4 Mounted Drives (Desktop)
 - [x] Experimental read-only macOS bridge and mount controls; macFUSE FSKit passed a local-fixture mount test.
-- [x] Explicit user-installed FUSE-T selection with non-commercial-use acknowledgement; FUSE-T remains unverified on a working mount.
+- [x] Explicit user-installed FUSE-T NFS/SMB selection with non-commercial-use acknowledgement; both passed local-fixture mounts.
 - [x] Experimental read-only rclone NFS option for separately configured remotes; a local fixture passed.
 - [ ] Validate Finder, real cloud providers, and the signed sandboxed application.
 - [ ] Implement and validate Linux and Windows mounting.

@@ -11,13 +11,14 @@ confirms non-commercial use.
 The repository's `LICENSE.txt` is AGPL-3.0. Its mention of non-commercial
 activity concerns one optional source-distribution mechanism; it is not a
 general non-commercial-use restriction. The checked-in Filen client is MPL-2.0;
-the checked-in Quds Office packages are MIT. The SMB dependency includes an
+the checked-in Quds Office packages are MIT. The `unorm_dart` Unicode
+normalization dependency used by the mount bridge is MIT-licensed. The SMB dependency includes an
 LGPL-2.1-or-later libsmb2 notice in `packages/crisp_storage/NOTICE-LIBSMB2.txt`
 and registers the notice in the app. Fonts and their notices are checked in.
 
 A text search of checked-in source and license files found no non-commercial
 runtime clause beyond the AGPL passage above. A separate keyword scan of the
-license files in the 230 packages in the local Dart package configuration found
+license files in the 230 packages then in the local Dart package configuration found
 no non-commercial-use restriction; six Flutter SDK packages have no separate
 package-level license file and fall under the SDK's licensing. macOS CocoaPods
 license files were also searched. These are keyword and file-presence checks,

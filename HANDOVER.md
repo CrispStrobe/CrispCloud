@@ -28,8 +28,10 @@ Linux and Windows mounting is not implemented. See
 [macOS test instructions](docs/macos_mount_testing.md), and
 [the FUSE and license audit](docs/fuse_and_license_audit.md).
 
-macFUSE FSKit and rclone NFS have passed local-fixture tests. FUSE-T NFS,
-Finder, actual cloud providers and the signed sandboxed application still need
+macFUSE FSKit, FUSE-T NFS and SMB, and rclone NFS have passed local-fixture
+tests. FUSE-T NFS required temporarily removing a conflicting system NFS option
+on the test Mac; the original setting was restored. Finder, actual cloud
+providers and the signed sandboxed application still need
 end-to-end verification. File Provider is a future project; see
 [the implementation plan](docs/macos_file_provider_plan.md).
 

@@ -511,12 +511,12 @@ Select files or folders → right-click → **Create ZIP**. CrispCloud compresse
 Mounted drives are experimental and read-only. On macOS, open **Mount as Drive**, select a backend, and choose an empty local mount point. CrispCloud does not install or bundle these runtimes.
 
 - **macFUSE FSKit** is the automatic choice. Install macFUSE separately and enable its file-system extension in System Settings under **Login Items & Extensions → By Category → File System Extensions**. Its kernel-extension backend is a separate explicit choice; Apple silicon requires Reduced Security for that backend.
-- **FUSE-T** must be installed and selected explicitly. CrispCloud asks you to confirm non-commercial FUSE-T use for each mount. Review [FUSE-T's license](https://github.com/macos-fuse-t/fuse-t/blob/main/License.txt). Its NFS backend has not mounted successfully in our test environment.
+- **FUSE-T** must be installed and selected explicitly. Choose its NFS or SMB backend; CrispCloud asks you to confirm non-commercial FUSE-T use for each mount. Review [FUSE-T's license](https://github.com/macos-fuse-t/fuse-t/blob/main/License.txt). System-wide NFS options can interfere with the NFS backend; SMB is an alternative.
 - **rclone NFS** uses a separately installed rclone and its own configured remote, such as `work:documents`; it does not reuse CrispCloud connections. The read-only NFS endpoint listens on the local machine and can be accessed by local processes.
 
 The macFUSE and FUSE-T bridge downloads a whole file into memory on first read and rejects files over 64 MiB. If a provider does not report the size in advance, the download may briefly exceed that limit before rejection. The limit does not apply to rclone's independent NFS backend.
 
-Live local-fixture tests passed for macFUSE FSKit and rclone NFS. Finder, real cloud remotes, and the signed sandboxed app still need end-to-end testing. Linux and Windows mounting is not implemented. See the [developer mount test guide](macos_mount_testing.md) for details.
+Live local-fixture tests passed for macFUSE FSKit, FUSE-T NFS and SMB, and rclone NFS. Finder, real cloud remotes, and the signed sandboxed app still need end-to-end testing. Linux and Windows mounting is not implemented. See the [developer mount test guide](macos_mount_testing.md) for details.
 
 ---
 

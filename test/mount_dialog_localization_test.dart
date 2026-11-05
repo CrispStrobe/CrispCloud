@@ -71,7 +71,7 @@ void main() {
           ),
         ),
       );
-      expect(find.byType(Text), findsNWidgets(15));
+      expect(find.byType(Text), findsNWidgets(16));
       expect(tester.takeException(), isNull);
     }
   });

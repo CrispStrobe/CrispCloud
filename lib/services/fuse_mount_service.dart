@@ -33,7 +33,11 @@ import 'log_service.dart';
 // ---------------------------------------------------------------------------
 
 /// Runtime used for a mount on macOS.
-enum MacFuseBackend { automatic, fuseT, macFuseFsKit, macFuseKernel, rcloneNfs }
+enum MacFuseBackend {
+  automatic, fuseT, macFuseFsKit, macFuseKernel, rcloneNfs, fuseTSmb;
+
+  bool get usesFuseT => this == fuseT || this == fuseTSmb;
+}
 
 /// Describes a single active or configured FUSE mount.
 class MountEntry {
@@ -143,6 +147,7 @@ class FuseMountService {
   static String macFuseRuntime(MacFuseBackend backend) => switch (backend) {
     MacFuseBackend.automatic => 'macfuse-fskit',
     MacFuseBackend.fuseT => 'fuse-t',
+    MacFuseBackend.fuseTSmb => 'fuse-t-smb',
     MacFuseBackend.macFuseFsKit => 'macfuse-fskit',
     MacFuseBackend.macFuseKernel => 'macfuse-kernel',
     MacFuseBackend.rcloneNfs => throw ArgumentError('rclone does not use the FUSE bridge'),
@@ -185,6 +190,12 @@ class FuseMountService {
 
   // Active helper processes keyed by mountPoint.
   final Map<String, Process> _processes = {};
+
+  // Mount startup can still be running before a helper has been registered.
+  // Track it so shutdown cannot miss a mount that appears moments later.
+  final Map<String, Completer<void>> _pendingMounts = {};
+  final Map<String, Completer<void>> _pendingUnmounts = {};
+  Completer<void>? _unmountAllComplete;
 
   /// Notifier called whenever the mount list changes (for Riverpod providers).
   void Function()? onChanged;
@@ -275,7 +286,10 @@ class FuseMountService {
     bool fuseTNonCommercialAcknowledged = false,
   }) async {
     _requireDesktop();
-    if (macBackend == MacFuseBackend.fuseT && !fuseTNonCommercialAcknowledged) {
+    if (_unmountAllComplete != null) {
+      throw StateError('Cannot mount while mounts are being shut down');
+    }
+    if (macBackend.usesFuseT && !fuseTNonCommercialAcknowledged) {
       throw ArgumentError('FUSE-T requires non-commercial-use acknowledgement');
     }
     if (macBackend != MacFuseBackend.rcloneNfs && client == null) {
@@ -290,7 +304,9 @@ class FuseMountService {
     }
 
     final canonical = _canonicalize(mountPoint);
-    if ({
+    if (_pendingMounts.containsKey(canonical) ||
+        _pendingUnmounts.containsKey(canonical) ||
+        _processes.containsKey(canonical) || {
       MountStatus.mounting,
       MountStatus.mounted,
       MountStatus.unmounting,
@@ -302,81 +318,88 @@ class FuseMountService {
       );
     }
 
-    final entry = MountEntry(
-      mountPoint: canonical,
-      label: label ?? '${client?.providerName ?? 'rclone'}:$remotePath',
-      provider: client?.providerName ?? 'rclone',
-      remotePath: remotePath,
-      macBackend: macBackend,
-      status: MountStatus.mounting,
-    );
-    _mounts[canonical] = entry;
-    _notify();
-
-    // A mount created by another process must never be replaced or unmounted.
-    // Probe before creating the directory or starting the native helper.
+    final startupComplete = Completer<void>();
+    _pendingMounts[canonical] = startupComplete;
     try {
-      if (await isPlatformMountPoint(canonical)) {
+      final entry = MountEntry(
+        mountPoint: canonical,
+        label: label ?? '${client?.providerName ?? 'rclone'}:$remotePath',
+        provider: client?.providerName ?? 'rclone',
+        remotePath: remotePath,
+        macBackend: macBackend,
+        status: MountStatus.mounting,
+      );
+      _mounts[canonical] = entry;
+      _notify();
+
+      // A mount created by another process must never be replaced or unmounted.
+      // Probe before creating the directory or starting the native helper.
+      try {
+        if (await isPlatformMountPoint(canonical)) {
+          _setError(
+            canonical,
+            'Mount point "$canonical" is already in use',
+            errorKey: 'mountPointOccupied',
+            errorValues: {'path': canonical},
+          );
+          return _mounts[canonical]!;
+        }
+      } catch (e) {
         _setError(
           canonical,
-          'Mount point "$canonical" is already in use',
-          errorKey: 'mountPointOccupied',
-          errorValues: {'path': canonical},
+          'Cannot inspect mount point "$canonical": $e',
+          errorKey: 'mountProbeFailed',
+          errorValues: {'path': canonical, 'error': '$e'},
         );
         return _mounts[canonical]!;
       }
-    } catch (e) {
-      _setError(
-        canonical,
-        'Cannot inspect mount point "$canonical": $e',
-        errorKey: 'mountProbeFailed',
-        errorValues: {'path': canonical, 'error': '$e'},
-      );
-      return _mounts[canonical]!;
-    }
 
-    // Ensure mount point directory exists.
-    try {
-      await Directory(canonical).create(recursive: true);
-    } catch (e) {
-      _setError(canonical, '$createFailedPrefix$e');
-      return _mounts[canonical]!;
-    }
-
-    // Check FUSE availability before proceeding.
-    final fuseError = macBackend == MacFuseBackend.rcloneNfs
-        ? (await _rclonePath() == null ? rcloneMissing : null)
-        : await checkFuseAvailability();
-    if (fuseError != null) {
-      _setError(canonical, fuseError);
-      return _mounts[canonical]!;
-    }
-
-    // Build and start the FUSE bridge.
-    try {
-      if (macBackend == MacFuseBackend.rcloneNfs) {
-        await _startRclone(entry);
-      } else {
-        await _startBridge(entry, client!);
+      // Ensure mount point directory exists.
+      try {
+        await Directory(canonical).create(recursive: true);
+      } catch (e) {
+        _setError(canonical, '$createFailedPrefix$e');
+        return _mounts[canonical]!;
       }
-      // The helper can exit immediately after the OS reports a mount. Its
-      // exit handler may already have changed the entry to an error.
-      if (_processes.containsKey(canonical) &&
-          _mounts[canonical]?.status != MountStatus.error) {
-        _mounts[canonical] = entry.copyWith(status: MountStatus.mounted);
-        _log.info('Mounted ${entry.provider}:${entry.remotePath} → $canonical');
-      }
-    } on _MountBridgeFailure catch (e, st) {
-      _log.error('Mount failed for $canonical', e, st);
-      _setError(canonical, e.message, errorKey: e.key, errorValues: e.values);
-    } catch (e, st) {
-      _log.error('Mount failed for $canonical', e, st);
-      _setError(canonical, e.toString());
-    }
 
-    await _persistMounts();
-    _notify();
-    return _mounts[canonical]!;
+      // Check FUSE availability before proceeding.
+      final fuseError = macBackend == MacFuseBackend.rcloneNfs
+          ? (await _rclonePath() == null ? rcloneMissing : null)
+          : await checkFuseAvailability();
+      if (fuseError != null) {
+        _setError(canonical, fuseError);
+        return _mounts[canonical]!;
+      }
+
+      // Build and start the FUSE bridge.
+      try {
+        if (macBackend == MacFuseBackend.rcloneNfs) {
+          await _startRclone(entry);
+        } else {
+          await _startBridge(entry, client!);
+        }
+        // The helper can exit immediately after the OS reports a mount. Its
+        // exit handler may already have changed the entry to an error.
+        if (_processes.containsKey(canonical) &&
+            _mounts[canonical]?.status != MountStatus.error) {
+          _mounts[canonical] = entry.copyWith(status: MountStatus.mounted);
+          _log.info('Mounted ${entry.provider}:${entry.remotePath} → $canonical');
+        }
+      } on _MountBridgeFailure catch (e, st) {
+        _log.error('Mount failed for $canonical', e, st);
+        _setError(canonical, e.message, errorKey: e.key, errorValues: e.values);
+      } catch (e, st) {
+        _log.error('Mount failed for $canonical', e, st);
+        _setError(canonical, e.toString());
+      }
+
+      await _persistMounts();
+      _notify();
+      return _mounts[canonical]!;
+    } finally {
+      _pendingMounts.remove(canonical);
+      startupComplete.complete();
+    }
   }
 
   /// Unmount the drive at [mountPoint].
@@ -386,6 +409,8 @@ class FuseMountService {
     _requireDesktop();
 
     final canonical = _canonicalize(mountPoint);
+    final pending = _pendingUnmounts[canonical];
+    if (pending != null) return pending.future;
     final entry = _mounts[canonical];
     if (entry == null) return;
     if (!_processes.containsKey(canonical) ||
@@ -393,32 +418,53 @@ class FuseMountService {
       return;
     }
 
-    _mounts[canonical] = entry.copyWith(status: MountStatus.unmounting);
-    _notify();
-
+    final unmountComplete = Completer<void>();
+    _pendingUnmounts[canonical] = unmountComplete;
     try {
-      await performPlatformUnmount(canonical);
-      await _stopBridge(canonical);
-      _mounts[canonical] = entry.copyWith(status: MountStatus.unmounted);
-      _log.info('Unmounted $canonical');
-    } catch (e, st) {
-      _log.error('Unmount failed for $canonical', e, st);
-      _setError(canonical, e.toString(),
-          errorKey: 'unmountFailed', errorValues: {'error': '$e'});
-    }
+      _mounts[canonical] = entry.copyWith(status: MountStatus.unmounting);
+      _notify();
 
-    await _persistMounts();
-    _notify();
+      try {
+        await performPlatformUnmount(canonical);
+        await _stopBridge(canonical);
+        _mounts[canonical] = entry.copyWith(status: MountStatus.unmounted);
+        _log.info('Unmounted $canonical');
+      } catch (e, st) {
+        _log.error('Unmount failed for $canonical', e, st);
+        _setError(canonical, e.toString(),
+            errorKey: 'unmountFailed', errorValues: {'error': '$e'});
+      }
+
+      await _persistMounts();
+      _notify();
+    } finally {
+      _pendingUnmounts.remove(canonical);
+      unmountComplete.complete();
+    }
   }
 
   /// Unmount all active mounts. Typically called on app exit.
   Future<void> unmountAll() async {
     if (!isSupported) return;
-    final keys = List<String>.from(_mounts.keys);
-    for (final key in keys) {
-      if (_processes.containsKey(key)) {
-        await unmount(key);
+    final existing = _unmountAllComplete;
+    if (existing != null) return existing.future;
+    final completion = Completer<void>();
+    _unmountAllComplete = completion;
+    try {
+      await Future.wait(_pendingMounts.values.map((pending) => pending.future));
+      await Future.wait(_pendingUnmounts.values.map((pending) => pending.future));
+      final keys = List<String>.from(_mounts.keys);
+      for (final key in keys) {
+        if (_processes.containsKey(key)) {
+          await unmount(key);
+        }
       }
+      // A separate unmount can start while a previous operation is awaited,
+      // including one whose helper subsequently exits.
+      await Future.wait(_pendingUnmounts.values.map((pending) => pending.future));
+    } finally {
+      _unmountAllComplete = null;
+      completion.complete();
     }
   }
 
@@ -442,6 +488,12 @@ class FuseMountService {
   /// Remove a mount entry entirely (must be unmounted first).
   Future<void> removeMount(String mountPoint) async {
     final canonical = _canonicalize(mountPoint);
+    if (_pendingMounts.containsKey(canonical) ||
+        _pendingUnmounts.containsKey(canonical) ||
+        {MountStatus.mounting, MountStatus.unmounting}
+        .contains(_mounts[canonical]?.status)) {
+      throw StateError('Cannot remove a mount while its state is changing');
+    }
     if (_processes.containsKey(canonical)) {
       await unmount(canonical);
       if (_processes.containsKey(canonical)) {

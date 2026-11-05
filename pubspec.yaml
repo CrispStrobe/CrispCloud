@@ -47,6 +47,7 @@ dependencies:
   # File Handling
   cross_file: ^0.3.3+8
   path: ^1.9.1
+  unorm_dart: ^0.3.3 # Unicode canonical equivalence for macOS mounted paths (MIT)
   path_provider: ^2.1.5
   
   # Sharing

@@ -56,6 +56,26 @@ class _ExitedHelperService extends _AvailableFuseMountService {
   Future<bool> isPlatformMountPoint(String mountPoint) async => false;
 }
 
+class _PausedUnmountService extends _AvailableFuseMountService {
+  _PausedUnmountService(this.helper);
+  final String helper;
+  final entered = Completer<void>();
+  final continueUnmount = Completer<void>();
+  int probes = 0;
+
+  @override
+  String get macBridgePath => helper;
+
+  @override
+  Future<bool> isPlatformMountPoint(String mountPoint) async => probes++ > 0;
+
+  @override
+  Future<void> performPlatformUnmount(String mountPoint) async {
+    entered.complete();
+    await continueUnmount.future;
+  }
+}
+
 class _TestCloudClient implements CloudStorageClient {
   @override
   String get providerName => 'Test';
@@ -204,6 +224,59 @@ void main() {
   // ---------------------------------------------------------------------------
 
   group('FuseMountService state', () {
+    test('unmountAll waits for a separately initiated unmount', () async {
+      if (!Platform.isMacOS) return;
+      SharedPreferences.setMockInitialValues({});
+      final root = await Directory.systemTemp.createTemp('unmount_drain_test_');
+      final helper = File('${root.path}/helper');
+      await helper.writeAsString('#!/bin/sh\nprintf "MOUNTED\\n"\nexec /bin/sleep 30\n');
+      expect((await Process.run('/bin/chmod', ['700', helper.path])).exitCode, 0);
+      final service = _PausedUnmountService(helper.path);
+      addTearDown(() async {
+        if (!service.continueUnmount.isCompleted) service.continueUnmount.complete();
+        await service.unmountAll();
+        await root.delete(recursive: true);
+      });
+      final mountPoint = '${root.path}/mount';
+      final entry = await service.mount(
+        client: _TestCloudClient(), remotePath: '/', mountPoint: mountPoint,
+      );
+      expect(entry.status, MountStatus.mounted);
+      final unmount = service.unmount(mountPoint);
+      await service.entered.future;
+      var drained = false;
+      final drain = service.unmountAll().then((_) => drained = true);
+      await Future<void>.delayed(Duration.zero);
+      expect(drained, isFalse);
+      service.continueUnmount.complete();
+      await unmount;
+      await drain;
+      expect(drained, isTrue);
+      expect(service.getMounts().single.status, MountStatus.unmounted);
+    });
+    test('unmountAll waits for an in-flight mount before completing', () async {
+      if (!FuseMountService.isSupported) return;
+      SharedPreferences.setMockInitialValues({});
+      final root = await Directory.systemTemp.createTemp('mount_drain_test_');
+      addTearDown(() => root.delete(recursive: true));
+      final service = _PausedMountProbeService();
+      final mount = service.mount(
+        client: _TestCloudClient(), remotePath: '/', mountPoint: '${root.path}/one',
+      );
+      await service.entered.future;
+      var drained = false;
+      final drain = service.unmountAll().then((_) => drained = true);
+      await Future<void>.delayed(Duration.zero);
+      expect(drained, isFalse);
+      await expectLater(
+        service.mount(client: _TestCloudClient(), remotePath: '/', mountPoint: '${root.path}/two'),
+        throwsStateError,
+      );
+      service.continueProbe.complete();
+      await mount;
+      await drain;
+      expect(drained, isTrue);
+    });
     test('reports a helper that exits after announcing readiness', () async {
       if (!Platform.isMacOS) return;
       SharedPreferences.setMockInitialValues({});
@@ -232,19 +305,22 @@ void main() {
     test('automatic selection never chooses FUSE-T', () {
       expect(FuseMountService.macFuseRuntime(MacFuseBackend.automatic), 'macfuse-fskit');
       expect(FuseMountService.macFuseRuntime(MacFuseBackend.fuseT), 'fuse-t');
+      expect(FuseMountService.macFuseRuntime(MacFuseBackend.fuseTSmb), 'fuse-t-smb');
     });
     test('FUSE-T cannot start without the non-commercial acknowledgement', () async {
       if (!FuseMountService.isSupported) return;
       final service = FuseMountService();
-      await expectLater(
-        service.mount(
-          client: _TestCloudClient(),
-          remotePath: '/',
-          mountPoint: '/tmp/crispcloud-fuse-no-consent',
-          macBackend: MacFuseBackend.fuseT,
-        ),
-        throwsArgumentError,
-      );
+      for (final backend in [MacFuseBackend.fuseT, MacFuseBackend.fuseTSmb]) {
+        await expectLater(
+          service.mount(
+            client: _TestCloudClient(),
+            remotePath: '/',
+            mountPoint: '/tmp/crispcloud-fuse-no-consent',
+            macBackend: backend,
+          ),
+          throwsArgumentError,
+        );
+      }
       expect(service.getMounts(), isEmpty);
     });
     test('rejects a second request while a mount is still mounting', () async {
@@ -260,6 +336,8 @@ void main() {
         mountPoint: mountPoint,
       );
       await service.entered.future;
+      expect(service.getMounts().single.status, MountStatus.mounting);
+      await expectLater(service.removeMount(mountPoint), throwsStateError);
       expect(service.getMounts().single.status, MountStatus.mounting);
       await expectLater(
         service.mount(

@@ -37,8 +37,9 @@ CRISPCLOUD_FUSE_TEST_BACKEND=macfuse-fskit \
   flutter test --no-pub test/fuse_live_macos_test.dart
 ```
 
-Repeat with `CRISPCLOUD_FUSE_TEST_BACKEND=fuse-t` after installing FUSE-T. The
-test checks listing, Unicode names, reading, rejection of writes, and unmount.
+Repeat with `CRISPCLOUD_FUSE_TEST_BACKEND=fuse-t` for FUSE-T NFS, or
+`fuse-t-smb` for its SMB backend, after installing FUSE-T. The test checks
+listing, Unicode names, reading, rejection of writes, and unmount.
 It is skipped in ordinary test runs. A passing helper test does not establish
 that the signed, sandboxed application can start the helper or load the FUSE
 runtime. Validate those separately in the signed app, including Finder access,
@@ -49,8 +50,17 @@ network disconnection, remounting, and the actual cloud providers to be shipped.
 FUSE-T writes runtime diagnostics under `~/Library/Logs/fuse-t/`. If it starts
 but the mount command fails, inspect that log and, if present, `/etc/nfs.conf`.
 Existing system-wide NFS defaults can affect mounts. On one macOS 26.2 test
-machine, FUSE-T 1.2.9 returned mount exit status 22 and the macOS mount command
-warned that the configured `nfssvers` option was unknown. That warning is a
-clue, not proof of the cause. Do not silently modify system-wide NFS settings:
-they can affect other mounts. A separate FUSE-T SMB experiment mounted but
-exposed a filename-normalization mismatch; it is not yet a supported fix.
+machine, FUSE-T 1.2.9 returned mount exit status 22. A controlled probe showed
+that the machine's `locallocks` default fails initial NFSv4 validation, whereas
+adding `nolocallocks` reaches the server connection attempt. The separate
+warning about an unknown `nfssvers` option is not the cause established by that
+probe. FUSE-T 1.2.9 rejects `nolocallocks` as a FUSE option. With the user's
+authorization, removing `locallocks` temporarily allowed the FUSE-T NFS
+fixture test to pass; the original configuration was restored afterward. Do
+not silently modify system-wide NFS settings: they can affect other mounts.
+
+FUSE-T SMB is an explicit alternative and passed the fixture tests without an
+NFS configuration change. The bridge resolves Unicode-equivalent path names
+back to the spelling stored by the provider. If a directory contains two
+canonically equivalent names, it returns `EEXIST` rather than risking access to
+the wrong object. Finder, cloud-provider and signed-sandbox testing remain open.

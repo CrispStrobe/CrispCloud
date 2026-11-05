@@ -333,7 +333,7 @@ class _AddMountDialogState extends ConsumerState<_AddMountDialog> {
       return;
     }
 
-    if (_backend == MacFuseBackend.fuseT && !await _confirmFuseT(context)) return;
+    if (_backend.usesFuseT && !await _confirmFuseT(context)) return;
     if (!context.mounted) return;
     setState(() {
       _mounting = true;
@@ -352,7 +352,7 @@ class _AddMountDialogState extends ConsumerState<_AddMountDialog> {
             mountPoint: mp,
             label: label,
             macBackend: _backend,
-            fuseTNonCommercialAcknowledged: _backend == MacFuseBackend.fuseT,
+            fuseTNonCommercialAcknowledged: _backend.usesFuseT,
           );
       if (!context.mounted) return;
       if (entry == null || entry.status == MountStatus.error) {
@@ -454,7 +454,7 @@ class _MountTile extends ConsumerWidget {
     WidgetRef ref,
     MountEntry entry,
   ) async {
-    if (entry.macBackend == MacFuseBackend.fuseT && !await _confirmFuseT(context)) return;
+    if (entry.macBackend.usesFuseT && !await _confirmFuseT(context)) return;
     if (!context.mounted) return;
     await ref
         .read(mountProvider)
@@ -463,7 +463,7 @@ class _MountTile extends ConsumerWidget {
           mountPoint: entry.mountPoint,
           label: entry.label,
           macBackend: entry.macBackend,
-          fuseTNonCommercialAcknowledged: entry.macBackend == MacFuseBackend.fuseT,
+          fuseTNonCommercialAcknowledged: entry.macBackend.usesFuseT,
         );
   }
 }

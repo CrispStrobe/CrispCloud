@@ -33,6 +33,7 @@ import 'dart:typed_data';
 import 'dart:convert';
 
 import 'package:path/path.dart' as p;
+import 'package:unorm_dart/unorm_dart.dart' as unorm;
 
 import 'cloud_storage_interface.dart';
 import 'log_service.dart';
@@ -327,19 +328,25 @@ class FuseFilesystem {
       }
     }
 
-    final info = await _itemForPath(path);
-    if (info == null) {
+    final resolved = await _itemForPath(path);
+    if (resolved == null) {
       throw const _FuseError(2); // ENOENT
     }
-    return _attrFromItem(info);
+    return _attrFromItem(resolved.item);
   }
 
   /// readdir → list directory, cache result.
   Future<Uint8List> _opReaddir(Uint8List payload) async {
     final path = _decodeString(payload, 0);
-    final remoteFull = _fullRemotePath(path);
-
-    final entries = await _listCached(remoteFull);
+    final resolved = path == '/' || path.isEmpty ? null : await _itemForPath(path);
+    if (path != '/' && path.isNotEmpty && resolved == null) {
+      throw const _FuseError(2); // ENOENT
+    }
+    if (resolved != null && !_isDirectory(resolved.item)) {
+      throw const _FuseError(20); // ENOTDIR
+    }
+    final entries = await _listCached(resolved?.remotePath ?? remotePath);
+    _rejectAmbiguousNames(entries);
     return _encodeDir(entries);
   }
 
@@ -361,17 +368,17 @@ class FuseFilesystem {
     final path = _decodeString(payload, 0);
     final flags = _readUint32(payload, 4 + utf8.encode(path).length);
     if (flags & 3 != 0) throw const _FuseError(30); // EROFS for existing files
-    final info = await _itemForPath(path);
-    if (info == null) throw const _FuseError(2);
-    if (info['type'] == 'folder' || info['type'] == 'directory' ||
-        info['isDirectory'] == true) {
+    final resolved = await _itemForPath(path);
+    if (resolved == null) throw const _FuseError(2);
+    final info = resolved.item;
+    if (_isDirectory(info)) {
       throw const _FuseError(21); // EISDIR
     }
     if (info['size'] is num && (info['size'] as num) > maxReadFileBytes) {
       throw const _FuseError(27); // EFBIG
     }
     final handleId = _nextHandle++;
-    _readBuffers[handleId] = _ReadBuffer(_fullRemotePath(path));
+    _readBuffers[handleId] = _ReadBuffer(resolved.remotePath);
     return _encodeUint32(handleId);
   }
 
@@ -591,12 +598,43 @@ class FuseFilesystem {
     }
   }
 
-  Future<Map<String, dynamic>?> _itemForPath(String path) async {
-    // Some providers resolve folders only, or do not have objects for
-    // implicit directories. Their parent listings contain the actual metadata.
-    final entries = await _listCached(_fullRemotePath(p.dirname(path)));
-    final item = entries.firstWhereOrNull((e) => e['name'] == p.basename(path));
-    return item ?? await client.resolvePath(_fullRemotePath(path));
+  Future<({String remotePath, Map<String, dynamic> item})?> _itemForPath(String path) async {
+    // macOS clients may send a decomposed filename for a composed remote
+    // name, including in intermediate directory components. Resolve each
+    // component in the parent listing and retain the provider's spelling.
+    final segments = p.posix.split(path).where((s) => s != '/' && s.isNotEmpty && s != '.').toList();
+    if (segments.contains('..')) throw const _FuseError(13); // EACCES
+    var current = remotePath;
+    Map<String, dynamic>? item;
+    for (var i = 0; i < segments.length; i++) {
+      final entries = await _listCached(current);
+      final normalized = unorm.nfc(segments[i]);
+      final matches = entries.where((e) => e['name'] is String && unorm.nfc(e['name'] as String) == normalized).toList();
+      // Never pick one of two remote objects that a normalizing filesystem
+      // cannot distinguish, even when the requested bytes match one exactly.
+      if (matches.length > 1) throw const _FuseError(17); // EEXIST
+      if (matches.isEmpty) {
+        final unresolved = p.join(current, p.joinAll(segments.sublist(i)));
+        final info = await client.resolvePath(unresolved);
+        return info == null ? null : (remotePath: unresolved, item: info);
+      }
+      item = matches.single;
+      current = p.join(current, item['name'] as String);
+      if (i < segments.length - 1 && !_isDirectory(item)) {
+        throw const _FuseError(20); // ENOTDIR
+      }
+    }
+    return item == null ? null : (remotePath: current, item: item);
+  }
+
+  void _rejectAmbiguousNames(List<Map<String, dynamic>> entries) {
+    final names = <String>{};
+    for (final entry in entries) {
+      final name = entry['name'];
+      if (name is String && !names.add(unorm.nfc(name))) {
+        throw const _FuseError(17); // EEXIST
+      }
+    }
   }
 
   void _invalidateDirCache(String remoteFull) {
@@ -645,13 +683,15 @@ class FuseFilesystem {
   // ---------------------------------------------------------------------------
 
   Uint8List _attrFromItem(Map<String, dynamic> item) {
-    final isDir = item['type'] == 'folder' ||
-        item['type'] == 'directory' ||
-        item['isDirectory'] == true;
+    final isDir = _isDirectory(item);
     final size = (item['size'] as num?)?.toInt() ?? 0;
     final modTimeMs = _parseModTime(item);
     return _encodeAttr(isDir: isDir, size: size, modTimeMs: modTimeMs);
   }
+
+  bool _isDirectory(Map<String, dynamic> item) => item['type'] == 'folder' ||
+        item['type'] == 'directory' ||
+        item['isDirectory'] == true;
 
   int _parseModTime(Map<String, dynamic> item) {
     final v = item['modificationTime'] ?? item['lastModified'] ?? item['modified'];
@@ -793,17 +833,4 @@ class _FuseError implements Exception {
   const _FuseError(this.errno);
   @override
   String toString() => 'FuseError(errno=$errno)';
-}
-
-// ---------------------------------------------------------------------------
-// Iterable extension (avoids importing collection package)
-// ---------------------------------------------------------------------------
-
-extension _IterableFirstWhereOrNull<T> on List<T> {
-  T? firstWhereOrNull(bool Function(T) test) {
-    for (final e in this) {
-      if (test(e)) return e;
-    }
-    return null;
-  }
 }

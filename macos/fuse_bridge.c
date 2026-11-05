@@ -181,14 +181,14 @@ static void *cc_init(struct fuse_conn_info *conn) {
 
 int main(int argc, char **argv) {
   if (argc != 4) {
-    fprintf(stderr, "usage: %s <mount-point> <socket> <fuse-t|macfuse-fskit|macfuse-kernel>\n", argv[0]);
+    fprintf(stderr, "usage: %s <mount-point> <socket> <fuse-t|fuse-t-smb|macfuse-fskit|macfuse-kernel>\n", argv[0]);
     return 2;
   }
-  if (strcmp(argv[3], "fuse-t") != 0 && strcmp(argv[3], "macfuse-fskit") != 0 &&
+  if (strcmp(argv[3], "fuse-t") != 0 && strcmp(argv[3], "fuse-t-smb") != 0 && strcmp(argv[3], "macfuse-fskit") != 0 &&
       strcmp(argv[3], "macfuse-kernel") != 0) {
     fprintf(stderr, "unknown FUSE backend\n"); return 2;
   }
-  const char *library = strcmp(argv[3], "fuse-t") == 0
+  const char *library = strncmp(argv[3], "fuse-t", 6) == 0
       ? "/usr/local/lib/libfuse-t.dylib" : "/usr/local/lib/libfuse.2.dylib";
   void *runtime = dlopen(library, RTLD_NOW | RTLD_LOCAL);
   if (!runtime) { fprintf(stderr, "%s: %s\n", library, dlerror()); return 1; }
@@ -210,7 +210,8 @@ int main(int argc, char **argv) {
     .read = cc_read, .release = cc_release, .statfs = cc_statfs,
     .init = cc_init,
   };
-  char *options = strcmp(argv[3], "macfuse-fskit") == 0 ? "ro,backend=fskit" : "ro";
+  char *options = strcmp(argv[3], "macfuse-fskit") == 0 ? "ro,backend=fskit" :
+                  strcmp(argv[3], "fuse-t-smb") == 0 ? "ro,backend=smb" : "ro";
   char *fuse_argv[] = { argv[0], "-f", "-s", "-o", options, argv[1], NULL };
   int result = run_fuse(6, fuse_argv, &ops, sizeof ops, NULL);
   close(ipc_fd); dlclose(runtime);
