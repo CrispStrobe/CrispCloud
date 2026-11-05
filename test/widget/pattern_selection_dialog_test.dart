@@ -280,5 +280,5 @@ void main() {
     await tester.tap(find.text('Cancel'));
     await tester.pumpAndSettle();
     await disposeHost(tester);
-  });
+  }, timeout: const Timeout(Duration(minutes: 1)));
 }

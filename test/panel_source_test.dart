@@ -510,7 +510,8 @@ void main() {
           const LocalPanelSource('/a') == const LocalPanelSource('/b'), isFalse);
     });
 
-    test('RemotePanelSource equality by provider + path', () {
+    test('RemotePanelSource distinguishes separate clients at the same path',
+        () {
       final clientA = StubCloudClient('X');
       final clientB = StubCloudClient('X');
       final a = RemotePanelSource(
@@ -523,7 +524,31 @@ void main() {
         client: clientB,
         path: '/p',
       );
+      expect(a, isNot(b));
+      expect(<RemotePanelSource>{a, b}, hasLength(2));
+    });
+
+    test('RemotePanelSource equality includes client, provider and path', () {
+      final client = StubCloudClient('X');
+      final a = RemotePanelSource(
+        providerName: 'X',
+        client: client,
+        path: '/p',
+      );
+      final b = RemotePanelSource(
+        providerName: 'X',
+        client: client,
+        path: '/p',
+      );
       expect(a, b);
+      expect(a.hashCode, b.hashCode);
+      expect(<RemotePanelSource>{a, b}, hasLength(1));
+      expect(a.withPath('/other'), isNot(a));
+      expect(a.withPath('/other').withPath('/p'), a);
+      expect(
+        RemotePanelSource(providerName: 'Y', client: client, path: '/p'),
+        isNot(a),
+      );
     });
   });
 }

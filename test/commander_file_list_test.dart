@@ -227,6 +227,11 @@ void main() {
 
   test('select all, invert and shift-click change only visible rows', () async {
     final panel = await remote();
+    // Extension filtering uses substring matching; the app defaults to prefix
+    // matching, which correctly would not match ".txt" against "a.txt".
+    await container
+        .read(quickSearchSettingsProvider.notifier)
+        .setMatchFromStart(false);
     panel.showSearchResults([
       item('/a.txt'),
       item('/b.png'),
@@ -235,6 +240,7 @@ void main() {
     ], origin: panel.captureRemoteSearchOrigin());
     final rows = {for (final file in panel.files!) file.name: file};
     panel.setFilter('.txt');
+    expect(panel.displayedFiles!.map((file) => file.name), ['a.txt', 'c.txt']);
     panel.selectAll();
     expect(panel.selection.map((file) => file.name).toSet(), {'a.txt', 'c.txt'});
     panel.clearFilter();

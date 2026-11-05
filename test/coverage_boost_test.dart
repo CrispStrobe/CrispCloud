@@ -36,6 +36,7 @@ import 'package:crisp_cloud/services/placeholder_service.dart';
 import 'package:crisp_cloud/services/sync_watcher.dart';
 import 'package:crisp_cloud/services/action_history_service.dart';
 import 'package:crisp_cloud/services/storage_analytics_service.dart';
+import 'package:crisp_cloud/services/storage_trash.dart';
 import 'package:crisp_cloud/services/saved_search_service.dart';
 import 'package:crisp_cloud/services/app_lock_service.dart';
 import 'package:crisp_cloud/services/formatters.dart';
@@ -812,8 +813,19 @@ void _actionHistoryTests() {
       expect(svc.canUndo(_rec(ActionType.delete, 'local')), isFalse);
     });
 
-    test('delete on remote can be undone', () {
-      expect(svc.canUndo(_rec(ActionType.delete, 'filen')), isTrue);
+    test('remote provider name does not grant delete undo capability', () {
+      expect(svc.canUndo(_rec(ActionType.delete, 'filen')), isFalse);
+    });
+
+    test('delete with a current bound restore action can be undone', () {
+      svc.recordNew(
+        type: ActionType.delete,
+        originalPath: '/remote/file.txt',
+        provider: 'filen',
+        isCurrent: () => true,
+        undoAction: () async => const UndoResult.success('Restored from trash'),
+      );
+      expect(svc.canUndo(svc.history.single), isTrue);
     });
 
     test('rename on local can be undone', () {
@@ -857,32 +869,93 @@ void _actionHistoryTests() {
       expect(result.success, isFalse);
     });
 
-    test('undo delete without restoreFromTrash handler fails', () async {
+    test('undo delete without a bound restore action fails', () async {
       final id = svc.recordNew(
           type: ActionType.delete,
           originalPath: '/remote/file.txt',
           provider: 'filen');
       final result = await svc.undo(id, const UndoContext());
       expect(result.success, isFalse);
-      expect(result.message, contains('trash'));
+      expect(result.message, contains('not reversible'));
+      expect(svc.history.single.id, id);
     });
 
-    test('undo delete with restoreFromTrash succeeds', () async {
-      String? restoredPath;
+    test('active pane restore handler cannot authorize an unbound delete',
+        () async {
+      var restoreCalls = 0;
       final id = svc.recordNew(
-          type: ActionType.delete,
-          originalPath: '/remote/x.txt',
-          provider: 'filen');
+        type: ActionType.delete,
+        originalPath: '/remote/x.txt',
+        provider: 'filen',
+      );
       final result = await svc.undo(
-          id,
-          UndoContext(
-              restoreFromTrash: (path) async {
-                restoredPath = path;
-              }));
+        id,
+        UndoContext(restoreFromTrash: (_) async {
+          restoreCalls++;
+        }),
+      );
+      expect(result.success, isFalse);
+      expect(restoreCalls, 0);
+      expect(svc.history.single.id, id);
+    });
+
+    test('undo delete uses its bound trash receipt and original source',
+        () async {
+      const receipt = TrashReceipt(
+        originalPath: '/remote/x.txt',
+        trashId: 'original-account-trash-item',
+      );
+      TrashReceipt? restoredReceipt;
+      var boundRestoreCalls = 0;
+      var activePaneRestoreCalls = 0;
+      final id = svc.recordNew(
+        type: ActionType.delete,
+        originalPath: receipt.originalPath,
+        provider: 'filen',
+        metadata: {'trash': receipt.toJson()},
+        isCurrent: () => true,
+        undoAction: () async {
+          boundRestoreCalls++;
+          restoredReceipt = receipt;
+          return const UndoResult.success('Restored from trash');
+        },
+      );
+      final result = await svc.undo(
+        id,
+        UndoContext(
+          restoreFromTrash: (_) async {
+            activePaneRestoreCalls++;
+          },
+        ),
+      );
       expect(result.success, isTrue);
-      expect(restoredPath, '/remote/x.txt');
-      // Action should be removed from history after successful undo
+      expect(restoredReceipt, same(receipt));
+      expect(boundRestoreCalls, 1);
+      expect(activePaneRestoreCalls, 0);
       expect(svc.history.any((a) => a.id == id), isFalse);
+    });
+
+    test('undo delete does not restore after its original source changes',
+        () async {
+      var sourceIsCurrent = true;
+      var restoreCalls = 0;
+      final id = svc.recordNew(
+        type: ActionType.delete,
+        originalPath: '/remote/x.txt',
+        provider: 'filen',
+        isCurrent: () => sourceIsCurrent,
+        undoAction: () async {
+          restoreCalls++;
+          return const UndoResult.success('Restored from trash');
+        },
+      );
+      expect(svc.canUndo(svc.history.single), isTrue);
+      sourceIsCurrent = false;
+      expect(svc.canUndo(svc.history.single), isFalse);
+      final result = await svc.undo(id, const UndoContext());
+      expect(result.success, isFalse);
+      expect(restoreCalls, 0);
+      expect(svc.history.single.id, id);
     });
 
     test('undo rename without newPath fails', () async {

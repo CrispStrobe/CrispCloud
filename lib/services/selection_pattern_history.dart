@@ -9,10 +9,11 @@ import 'file_selection_pattern.dart';
 class SelectionPatternHistory {
   static const storageKey = 'commander_selection_pattern_history_v1';
   static const maxEntries = 20;
-  static Future<void> _pendingWrite = Future.value();
+  static Future<void>? _pendingWrite;
 
   Future<List<FileSelectionPattern>> load() async {
-    await _pendingWrite;
+    final pending = _pendingWrite;
+    if (pending != null) await pending;
     return _read();
   }
 
@@ -38,9 +39,18 @@ class SelectionPatternHistory {
   }
 
   Future<void> remember(FileSelectionPattern pattern) {
-    final write = _pendingWrite.then((_) => _remember(pattern));
+    final pending = _pendingWrite;
+    final write = pending == null
+        ? _remember(pattern)
+        : pending.then((_) => _remember(pattern));
     // Preserve the caller's error while allowing a later dialog to retry.
-    _pendingWrite = write.catchError((Object _) {});
+    // Release settled futures so later dialogs do not inherit an old async
+    // zone. Only the latest queued write may clear the shared queue.
+    late final Future<void> queued;
+    queued = write.catchError((Object _) {}).whenComplete(() {
+      if (identical(_pendingWrite, queued)) _pendingWrite = null;
+    });
+    _pendingWrite = queued;
     return write;
   }
 

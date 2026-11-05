@@ -74,6 +74,17 @@ class _TestLocalFileService implements LocalFileService {
 
 }
 
+// Publish rows through the panel API and retain the displayed objects. The
+// panel deliberately copies input rows and only accepts its current objects
+// for selection; detached or stale same-path objects are not valid clicks.
+List<FileItem> _publishSelectionRows(PanelNotifier panel, List<String> names) {
+  panel.showSearchResults([
+    for (final name in names)
+      FileItem(name: name, isFolder: false, path: '/selection-fixture/$name'),
+  ]);
+  return panel.files!;
+}
+
 void main() {
   TestWidgetsFlutterBinding.ensureInitialized();
   late ProviderContainer container;
@@ -218,57 +229,80 @@ void main() {
 
     test('toggleSelection adds item to selection', () {
       final panel = container.read(panelProvider(PanelSide.local));
-      final item = FileItem(name: 'test.txt', isFolder: false);
+      final item = _publishSelectionRows(panel, ['test.txt']).single;
       panel.toggleSelection(item);
       expect(panel.selection.contains(item), isTrue);
     });
 
     test('toggleSelection replaces previous without modifier', () {
       final panel = container.read(panelProvider(PanelSide.local));
-      final item1 = FileItem(name: 'a.txt', isFolder: false, path: '/a.txt');
-      final item2 = FileItem(name: 'b.txt', isFolder: false, path: '/b.txt');
+      final items = _publishSelectionRows(panel, ['a.txt', 'b.txt']);
+      final item1 = items[0];
+      final item2 = items[1];
       panel.toggleSelection(item1);
+      expect(panel.selection.single, same(item1));
       panel.toggleSelection(item2);
       expect(panel.selection.length, equals(1));
-      expect(panel.selection.contains(item2), isTrue);
+      expect(panel.selection.single, same(item2));
     });
 
     test('toggleSelection with ctrlKey adds to selection', () {
       final panel = container.read(panelProvider(PanelSide.local));
-      final item1 = FileItem(name: 'a.txt', isFolder: false, path: '/a.txt');
-      final item2 = FileItem(name: 'b.txt', isFolder: false, path: '/b.txt');
+      final items = _publishSelectionRows(panel, ['a.txt', 'b.txt']);
+      final item1 = items[0];
+      final item2 = items[1];
       panel.toggleSelection(item1);
       panel.toggleSelection(item2, ctrlKey: true);
-      expect(panel.selection.length, equals(2));
+      expect(panel.selection, unorderedEquals([item1, item2]));
     });
 
     test('toggleSelection with ctrlKey removes already-selected', () {
       final panel = container.read(panelProvider(PanelSide.local));
-      final item = FileItem(name: 'a.txt', isFolder: false, path: '/a.txt');
+      final item = _publishSelectionRows(panel, ['a.txt']).single;
       panel.toggleSelection(item);
+      expect(panel.selection.single, same(item));
       panel.toggleSelection(item, ctrlKey: true);
       expect(panel.selection.contains(item), isFalse);
     });
 
     test('clearSelection empties selection', () {
       final panel = container.read(panelProvider(PanelSide.local));
-      final item = FileItem(name: 'test.txt', isFolder: false);
+      final item = _publishSelectionRows(panel, ['test.txt']).single;
       panel.toggleSelection(item);
+      expect(panel.selection.single, same(item));
       panel.clearSelection();
       expect(panel.selection, isEmpty);
     });
 
     test('isSelected returns true for selected item', () {
       final panel = container.read(panelProvider(PanelSide.local));
-      final item = FileItem(name: 'test.txt', isFolder: false);
+      final item = _publishSelectionRows(panel, ['test.txt']).single;
       panel.toggleSelection(item);
       expect(panel.isSelected(item), isTrue);
     });
 
     test('isSelected returns false for unselected item', () {
       final panel = container.read(panelProvider(PanelSide.local));
-      final item = FileItem(name: 'test.txt', isFolder: false);
+      final item = _publishSelectionRows(panel, ['test.txt']).single;
       expect(panel.isSelected(item), isFalse);
+    });
+
+    test('toggleSelection rejects detached and stale same-path rows', () {
+      final panel = container.read(panelProvider(PanelSide.local));
+      final old = _publishSelectionRows(panel, ['test.txt']).single;
+      panel.toggleSelection(old.copyWith());
+      expect(panel.selection, isEmpty);
+      panel.toggleSelection(old);
+      expect(panel.selection.single, same(old));
+
+      final current = _publishSelectionRows(panel, ['test.txt']).single;
+      expect(identical(current, old), isFalse);
+      panel.toggleSelection(old);
+      expect(panel.selection, isEmpty);
+      panel.toggleSelection(current);
+      expect(panel.selection.single, same(current));
+      panel.toggleSelection(old, ctrlKey: true);
+      expect(panel.selection.single, same(current));
     });
 
     test('sort defaults to name ascending', () {
@@ -322,10 +356,16 @@ void main() {
     test('selection is independent per panel', () {
       final local = container.read(panelProvider(PanelSide.local));
       final remote = container.read(panelProvider(PanelSide.remote));
-      final item = FileItem(name: 'test.txt', isFolder: false);
-      local.toggleSelection(item);
-      expect(local.selection.contains(item), isTrue);
-      expect(remote.selection.contains(item), isFalse);
+      final localItem = _publishSelectionRows(local, ['test.txt']).single;
+      final remoteItem = _publishSelectionRows(remote, ['test.txt']).single;
+      local.toggleSelection(localItem);
+      expect(local.selection.single, same(localItem));
+      expect(remote.selection, isEmpty);
+      remote.toggleSelection(remoteItem);
+      expect(remote.selection.single, same(remoteItem));
+      expect(local.selection.single, same(localItem));
+      remote.clearSelection();
+      expect(local.selection.single, same(localItem));
     });
 
     test('sort is independent per panel', () {

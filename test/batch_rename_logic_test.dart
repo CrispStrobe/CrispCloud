@@ -151,15 +151,17 @@ void main() {
       expect(result.message, contains('destination unknown'));
     });
 
-    test('undo delete without restoreFromTrash callback fails', () async {
-      svc.recordNew(
+    test('undo remote delete without a bound restore action fails', () async {
+      final id = svc.recordNew(
         type: ActionType.delete,
         originalPath: '/remote/file.txt',
         provider: 'filen',
       );
-      final result = await svc.undo(svc.history.first.id, const UndoContext());
-      expect(result.success, false);
-      expect(result.message, contains('trash'));
+      expect(svc.canUndo(svc.history.first), isFalse);
+      final result = await svc.undo(id, const UndoContext());
+      expect(result.success, isFalse);
+      expect(result.message, contains('not reversible'));
+      expect(svc.history.single.id, id);
     });
 
     test('undo createFolder remote without remoteDelete callback fails', () async {
