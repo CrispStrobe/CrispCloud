@@ -201,6 +201,9 @@ Future<void> main() async {
         child: const MyApp(),
       ));
       crashReporting!.reportBreadcrumb('Application UI mounted', 'startup');
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        _log.info('Startup UI rendered');
+      });
     } catch (e, stack) {
       _log.error('Critical error creating config service', e, stack);
       await crashReporting!.reportError(
