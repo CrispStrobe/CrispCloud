@@ -42,6 +42,22 @@ void main() {
     resolveConflict: resolveConflict,
   );
 
+  test(
+    'destination directory whitespace remains part of its exact path',
+    () async {
+      source.file('/source/file.txt', 'copied contents');
+      target.directory('/folder ');
+      target.file('/folder/file.txt', 'other destination');
+      final plan = await prepare(['/source/file.txt'], destination: '/folder ');
+      expect(plan.targetDirectory, '/folder ');
+      expect(plan.errors, isEmpty);
+    expect(plan.entries.single.destination, '/folder /file.txt');
+      await execute(plan);
+      expect(target.text('/folder /file.txt'), 'copied contents');
+      expect(target.text('/folder/file.txt'), 'other destination');
+    },
+  );
+
   group('bounded preview', () {
     test('entry budget disables a partial plan before any writes', () async {
       for (var i = 0; i < 100; i++) {

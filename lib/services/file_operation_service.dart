@@ -392,7 +392,7 @@ class FileOperationService {
   }) async {
     final entries = <FileOperationEntry>[];
     final errors = <String>[];
-    final target = destination.paths.normalize(targetDirectory.trim());
+    final target = destination.paths.normalize(targetDirectory);
     final plan = FileOperationPlan(
       source: source,
       destination: destination,

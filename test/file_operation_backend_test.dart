@@ -27,6 +27,56 @@ void main() {
     expect(client.cachedReads, isEmpty);
   });
 
+  for (final nested in [false, true]) {
+    test(
+      'transformed download length drives copy planning (nested: $nested)',
+      () async {
+        const contents = 'decrypted plaintext';
+        final client = _TransformedCloudClient(nested: nested)
+          ..put('/plain.txt', contents);
+        final source = CloudOperationBackend(client, isCurrent: () => true);
+        final targetClient = _CloudClient();
+        final destination = CloudOperationBackend(
+          targetClient,
+          isCurrent: () => true,
+        );
+        final file = (await source.stat('/plain.txt'))!;
+        expect(file.size, utf8.encode(contents).length);
+        expect(file.metadata!['size'], utf8.encode(contents).length + 28);
+        // Real stream overrides remain usable even when older adapters have not
+        // yet advertised their bounded-transfer capability flags.
+        expect(source.capabilities.boundedDownload, isFalse);
+        final plan = await const FileOperationService().prepare(
+          source: source,
+          destination: destination,
+          files: [file],
+          targetDirectory: '/target',
+        );
+        expect(plan.errors, isEmpty);
+        await const FileOperationService().execute(
+          plan,
+          control: FileOperationControl(),
+        );
+        expect(plan.entries.single.outcome, FileOperationOutcome.copied);
+        expect(targetClient.lastUploadLength, utf8.encode(contents).length);
+        expect(targetClient.text('/target/plain.txt'), contents);
+      },
+    );
+  }
+
+  test(
+    'invalid exact download lengths stop before transfer planning',
+    () async {
+      for (final length in [-1, 1.5, '19', double.nan]) {
+        final client = _TransformedCloudClient(lengthOverride: length)
+          ..put('/plain.txt', 'decrypted plaintext');
+        final backend = CloudOperationBackend(client, isCurrent: () => true);
+        await expectLater(backend.stat('/plain.txt'), throwsStateError);
+        expect(client.uploads, isEmpty);
+      }
+    },
+  );
+
   test(
     'a restored job reuses its exact opaque multipart staging target',
     () async {
@@ -53,7 +103,7 @@ void main() {
       expect(await target.stat(stage), isNull);
       expect(cloud.pending.keys, [stage]);
       final restored = TransferJournal(store);
-    await restored.initialize();
+      await restored.initialize();
       final preview = await const TransferRecoveryService().prepare(
         restored.job('multipart')!,
         source: source,
@@ -1402,6 +1452,34 @@ class _FreshCloudClient extends _CloudClient
     freshReads.add(path);
     return super.listPath(path);
   }
+}
+
+class _TransformedCloudClient extends _FreshCloudClient {
+  _TransformedCloudClient({this.nested = false, this.lengthOverride});
+  final bool nested;
+  final Object? lengthOverride;
+
+  @override
+  Future<Map<String, dynamic>> readDirectoryForEdit(String path) async {
+    final result = await super.readDirectoryForEdit(path);
+    for (final file in result['files'] as List) {
+      final downloadSize = lengthOverride ?? file['size'];
+      file['size'] = (file['size'] as int) + 28;
+      if (nested) {
+        file['metadata'] = {'downloadSize': downloadSize};
+      } else {
+        file['downloadSize'] = downloadSize;
+        file['metadata'] = {'downloadSize': 999};
+      }
+    }
+    return result;
+  }
+
+  @override
+  Future<Uint8List> downloadFileBytes(
+    String remotePath, {
+    Function(int, int)? onProgress,
+  }) => throw UnsupportedError('Only the bounded stream is available.');
 }
 
 class _DirectoryWithDisappearedChild extends Fake implements Directory {

@@ -889,13 +889,30 @@ class CloudOperationBackend extends FileOperationBackend {
         } else if (rawDate != null) {
           modified = DateTime.tryParse(rawDate.toString());
         }
+        final metadata = item['metadata'];
+        final declaredDownloadSize =
+            item['downloadSize'] ??
+            (metadata is Map ? metadata['downloadSize'] : null);
+        int? downloadSize;
+        if (declaredDownloadSize != null) {
+          if (declaredDownloadSize is! num ||
+              !declaredDownloadSize.isFinite ||
+              declaredDownloadSize < 0 ||
+              declaredDownloadSize != declaredDownloadSize.toInt()) {
+            throw StateError('$label returned an invalid download length.');
+          }
+          downloadSize = declaredDownloadSize.toInt();
+        }
         entries.add(
           FileItem(
             name: name,
             path: paths.join(path, name),
             isFolder: group == 'folders',
             uuid: item['uuid']?.toString(),
-            size: (item['size'] as num?)?.toInt(),
+            // Transformed/encrypted adapters expose the byte count yielded by
+            // their stream separately from their stored object size. Retain
+            // that original stored size in metadata for provider operations.
+            size: downloadSize ?? (item['size'] as num?)?.toInt(),
             updatedAt: modified,
             isSymlink: item['isSymlink'] == true,
             metadata: item,
