@@ -514,6 +514,27 @@ KeyEventResult handleKeyEvent(
     return KeyEventResult.handled;
   }
 
+  // Printable-character fallback for Total Commander-style quick search.
+  // The file list normally handles this in its own Focus, but the root Focus
+  // can own focus after panel/view changes. Do not swallow modified keys or
+  // navigation keys.
+  if (!isCtrl &&
+      !HardwareKeyboard.instance.isAltPressed &&
+      event is KeyDownEvent) {
+    final String? raw = event.character;
+    final String label = event.logicalKey.keyLabel;
+    final String? char = (raw != null && raw.isNotEmpty)
+        ? raw
+        : (label.length == 1 ? label : null);
+    if (char != null && char.isNotEmpty && char != ' ') {
+      final settings = ref.read(quickSearchSettingsProvider);
+      if (settings.mode != QuickSearchMode.off) {
+        panel.typeaheadAppend(char);
+        return KeyEventResult.handled;
+      }
+    }
+  }
+
   return KeyEventResult.ignored;
 }
 
