@@ -30,7 +30,8 @@ import '../services/checksum_service.dart'
 import '../services/file_operation_backend.dart';
 import '../services/cloud_storage_interface.dart'
     show CloudStorageClientCapabilities;
-import '../services/image_edit_session.dart' show isEditableImageFileName;
+import '../services/file_split_service.dart';
+import '../services/image_edit_session.dart' show isImageEditorFileName;
 import '../services/link_service.dart';
 import '../services/secure_wipe_service.dart';
 import '../services/log_service.dart';
@@ -78,8 +79,9 @@ Future<void> openWithSystemEditor(BuildContext context, String path) async {
   } catch (e) {
     _log.error('Failed to open with system editor: $e');
     if (context.mounted) {
-      ScaffoldMessenger.of(context)
-          .showSnackBar(SnackBar(content: Text('Failed to open file: $e')));
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(SnackBar(content: Text('Failed to open file: $e')));
     }
   }
 }
@@ -115,8 +117,9 @@ void _showResultListContextMenu(
         await action();
       } catch (error) {
         if (context.mounted) {
-          ScaffoldMessenger.of(context)
-              .showSnackBar(SnackBar(content: Text(error.toString())));
+          ScaffoldMessenger.of(
+            context,
+          ).showSnackBar(SnackBar(content: Text(error.toString())));
         }
       }
     }),
@@ -305,7 +308,7 @@ void showFileContextMenu(
   // Specialized editors and text/code editing for a single file.
   if (!isMultiSelect && !isSingleFolder) {
     final preferExternal = ref.read(preferExternalEditorProvider);
-    if (isEditableImageFileName(file.name)) {
+    if (isImageEditorFileName(file.name)) {
       items.add(
         PopupMenuItem(
           child: Row(
@@ -632,8 +635,9 @@ void showFileContextMenu(
             _log.warn('operation failed', e);
             if (context.mounted) {
               ScaffoldMessenger.of(context).hideCurrentSnackBar();
-              ScaffoldMessenger.of(context)
-                  .showSnackBar(SnackBar(content: Text('Share failed: $e')));
+              ScaffoldMessenger.of(
+                context,
+              ).showSnackBar(SnackBar(content: Text('Share failed: $e')));
             }
           }
         }),
@@ -967,8 +971,9 @@ void showFileContextMenu(
               await File(zipPath).writeAsBytes(zipBytes, flush: true);
               ref.read(panelProvider(PanelSide.local)).refresh();
               if (context.mounted) {
-                ScaffoldMessenger.of(context)
-                    .showSnackBar(SnackBar(content: Text('Created $zipName')));
+                ScaffoldMessenger.of(
+                  context,
+                ).showSnackBar(SnackBar(content: Text('Created $zipName')));
               }
             } catch (e) {
               _log.warn('operation failed', e);
@@ -1668,8 +1673,9 @@ Widget _propertyRow(
       children: [
         Text(
           label,
-          style: Theme.of(context).textTheme.labelMedium
-              ?.copyWith(color: Theme.of(context).colorScheme.primary),
+          style: Theme.of(context).textTheme.labelMedium?.copyWith(
+            color: Theme.of(context).colorScheme.primary,
+          ),
         ),
         const SizedBox(height: 4),
         SelectableText(

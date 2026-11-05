@@ -44,7 +44,7 @@ jobs:
         run: >-
           dart format --set-exit-if-changed
           lib/l10n/image_editor*.dart lib/services/image_*.dart
-          lib/widgets/image_editor*.dart test/image_*.dart
+          lib/widgets/image_editor*.dart lib/widgets/image_export_dialog.dart test/image_*.dart
           test/widget/image_editor*.dart test/support/image_editor*.dart
       - name: Analyze integration
         run: >-
@@ -52,11 +52,22 @@ jobs:
           lib/l10n/image_editor_strings.dart lib/l10n/image_editor_translations.dart
           lib/services/image_edit_session.dart lib/services/image_file_store.dart
           lib/services/pdf_file_store.dart
-          lib/services/image_editor_menu.dart lib/widgets/image_editor_dialog.dart
+          lib/services/image_editor_menu.dart lib/services/image_export_options.dart
+          lib/services/image_edit_project.dart lib/services/image_project_store.dart
+          lib/services/image_overlay.dart lib/services/image_gif_codec.dart
+          lib/services/image_raster_codec.dart
+          lib/services/image_device_export.dart lib/services/image_device_export_native.dart
+          lib/services/image_device_export_web.dart lib/widgets/image_export_dialog.dart
+          lib/widgets/image_editor_dialog.dart
           lib/widgets/image_editor_surface.dart lib/widgets/image_editor_menus.dart
           lib/widgets/file_editor_dialog.dart lib/utils/file_editability.dart
           lib/screens/screen_dialogs.dart
           test/image_edit_session_test.dart test/image_file_store_test.dart
+          test/image_export_options_test.dart test/image_device_export_test.dart
+          test/image_edit_project_test.dart test/image_project_store_test.dart
+          test/image_webp_file_store_test.dart test/image_gif_codec_test.dart
+          test/image_gif_file_store_test.dart test/image_overlay_test.dart
+          test/image_raster_codec_test.dart test/image_additional_file_store_test.dart
           test/image_editor_live_test.dart test/image_editor_menu_test.dart
           test/widget/image_editor_menus_test.dart
           test/widget/image_editor_routing_test.dart
@@ -70,6 +81,11 @@ jobs:
         run: >-
           flutter test --reporter expanded --concurrency=2
           test/image_edit_session_test.dart test/image_file_store_test.dart
+          test/image_export_options_test.dart test/image_device_export_test.dart
+          test/image_edit_project_test.dart test/image_project_store_test.dart
+          test/image_webp_file_store_test.dart test/image_gif_codec_test.dart
+          test/image_gif_file_store_test.dart test/image_overlay_test.dart
+          test/image_raster_codec_test.dart test/image_additional_file_store_test.dart
           test/image_editor_live_test.dart test/image_editor_menu_test.dart
           test/file_editability_test.dart test/pdf_file_store_test.dart
           test/widget/image_editor_menus_test.dart

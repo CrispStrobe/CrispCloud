@@ -128,7 +128,6 @@ void main() {
       'sound.m4a',
       'movie.mkv',
       'capture.webm',
-      'image.gif',
     ]) {
       await _openFile(tester, FileItem(name: name, isFolder: false));
       expect(find.byType(MediaEditorDialog), findsNothing);
