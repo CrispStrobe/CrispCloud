@@ -32,7 +32,8 @@ bool sameTransferVersion(FileItem before, FileItem after) =>
     (before.isFolder || (before.size == null || before.size == after.size)) &&
     (before.isFolder ||
         before.updatedAt == null ||
-        before.updatedAt == after.updatedAt) &&
+        (after.updatedAt != null &&
+            before.updatedAt!.isAtSameMomentAs(after.updatedAt!))) &&
     transferFileVersion(before) == transferFileVersion(after) &&
     (_stableObjectId(before) == null ||
         _stableObjectId(before) == _stableObjectId(after));
@@ -328,6 +329,15 @@ class TransferRecoveryService {
         'Reconnect the exact original source and destination before recovering this transfer.',
       );
     }
+    final protected = FileOperationPlan(
+      source: source,
+      destination: destination,
+      targetDirectory: job.targetDirectory,
+      options: job.options,
+      entries: [],
+      errors: [],
+      protectedDestinationPaths: job.protectedDestinationPaths,
+    );
     final rows = <FileOperationEntry>[];
     final issues = <int, String>{};
     final actions = <int, String>{};
@@ -366,6 +376,7 @@ class TransferRecoveryService {
             !destination.paths.isAbsolute(saved.destination)) {
           throw StateError('The saved transfer contains a relative path.');
         }
+        protected.assertDestinationUnprotected(saved.destination);
         final current = await source.stat(saved.source.path!);
         final target = await destination.stat(saved.destination);
         final expectedDigest =
@@ -549,7 +560,14 @@ class TransferRecoveryService {
         )) {
       throw StateError('There is no verified backup for this item.');
     }
-    if (await destination.stat(entry.destination) != null) {
+    final existing = await destination.stat(entry.destination);
+    if (existing != null) {
+      if (entry.phase == 'restoringBackup' &&
+          await destination.stat(path) == null &&
+          await transferDigest(destination, existing, control) == expected) {
+        await checkpoint?.call('backupRestored');
+        return;
+      }
       throw StateError(
         'The original destination is occupied. Move it aside before restoring.',
       );
@@ -573,7 +591,18 @@ class TransferRecoveryService {
     await control.checkpoint();
     _check(destination, control);
     await checkpoint?.call('restoringBackup');
+    final currentBackup = await destination.stat(path);
+    if (currentBackup == null || !sameTransferVersion(backup, currentBackup)) {
+      throw StateError('The recovery copy changed before restoration.');
+    }
     await destination.renameExisting(backup, entry.destination);
+    final restored = await destination.stat(entry.destination);
+    if (restored == null ||
+        await transferDigest(destination, restored, control) != expected) {
+      throw StateError(
+        'The restored copy needs review; its contents could not be confirmed.',
+      );
+    }
     await checkpoint?.call('backupRestored');
   }
 }

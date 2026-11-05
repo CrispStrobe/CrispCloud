@@ -14,6 +14,18 @@ enum TransferJobStatus {
   failed,
 }
 
+String transferStatusLabel(TransferJobStatus status) => switch (status) {
+  TransferJobStatus.preparing => 'Saving the plan',
+  TransferJobStatus.queued => 'Queued',
+  TransferJobStatus.running => 'Running',
+  TransferJobStatus.paused => 'Paused',
+  TransferJobStatus.waitingForDecision => 'Waiting for a conflict decision',
+  TransferJobStatus.interrupted => 'Interrupted · review to resume',
+  TransferJobStatus.completed => 'Completed',
+  TransferJobStatus.cancelled => 'Cancelled · unfinished items retained',
+  TransferJobStatus.failed => 'Needs review',
+};
+
 /// One reviewed operation. Authentication objects never enter this model.
 class TransferJobRecord {
   TransferJobRecord({
@@ -44,7 +56,7 @@ class TransferJobRecord {
   final StorageReference? source;
   final StorageReference? destination;
   final String targetDirectory;
-  final FileOperationOptions options;
+  FileOperationOptions options;
   final String sourceLabel;
   final String destinationLabel;
   final int expectedEntries;
