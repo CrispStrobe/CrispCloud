@@ -24,6 +24,8 @@ import 'package:path/path.dart' as p;
 import 'package:url_launcher/url_launcher.dart';
 
 import 'cloud_storage_interface.dart';
+import 'bounded_http_transfer.dart';
+import 'bounded_transfer_stream.dart';
 import 'dropbox_config_service.dart';
 import 'log_service.dart';
 import 'secure_storage_service.dart';
@@ -39,6 +41,8 @@ class DropboxClientAdapter extends CloudStorageClient
         nativeMove: true,
         atomicMove: true,
         noReplaceMove: true,
+        boundedUpload: true,
+        boundedDownload: true,
       );
 
   @override
@@ -168,6 +172,8 @@ class DropboxClientAdapter extends CloudStorageClient
   bool get supportsServerSideCopy => true;
   @override
   bool get supportsFullTextSearch => true;
+  @override
+  bool get supportsStreaming => true;
 
   // --- Auth ---
 
@@ -436,6 +442,142 @@ class DropboxClientAdapter extends CloudStorageClient
 
   // --- Upload ---
 
+  // Dropbox JSON arguments are HTTP header values: escape non-ASCII UTF-16
+  // units, including surrogate pairs, without changing the decoded filename.
+  static String _headerJson(Object value) {
+    final buffer = StringBuffer();
+    for (final unit in json.encode(value).codeUnits) {
+      buffer.write(
+        unit >= 0x7f
+            ? '\\u${unit.toRadixString(16).padLeft(4, '0')}'
+            : String.fromCharCode(unit),
+      );
+    }
+    return buffer.toString();
+  }
+
+  @override
+  Future<void> uploadStream(
+    Stream<List<int>> dataStream,
+    int length,
+    String fileName,
+    String targetPath, {
+    Function(int, int)? onProgress,
+  }) async {
+    if (length < 0) throw ArgumentError.value(length, 'length');
+    await _ensureToken();
+    final destination = _dbxPath(p.posix.join(targetPath, fileName));
+    final client = http.Client();
+    Future<http.Response> send(
+      String endpoint,
+      Object arguments,
+      List<int> bytes,
+    ) async {
+      await _ensureToken();
+      final request =
+          http.Request(
+              'POST',
+              Uri.parse('$_contentBase/files/upload_session/$endpoint'),
+            )
+            ..followRedirects = false
+            ..headers.addAll({
+              'Authorization': 'Bearer $_accessToken',
+              'Content-Type': 'application/octet-stream',
+              'Dropbox-API-Arg': _headerJson(arguments),
+            })
+            ..bodyBytes = bytes;
+      final response = await sendTransferRequest(
+        client,
+        request,
+        operation: 'Dropbox upload',
+      );
+      if (response.statusCode != 200) {
+        throw StateError('Dropbox upload failed (${response.statusCode}).');
+      }
+      return response;
+    }
+
+    try {
+      final started = await send('start', {'close': false}, const []);
+      final sessionId = (json.decode(started.body) as Map)['session_id'];
+      if (sessionId is! String || sessionId.isEmpty) {
+        throw StateError('Dropbox did not return an upload session.');
+      }
+      var offset = 0;
+      Future<void> finish(List<int> bytes) async {
+        final response = await send('finish', {
+          'cursor': {'session_id': sessionId, 'offset': offset},
+          'commit': {
+            'path': destination,
+            'mode': 'overwrite',
+            'autorename': false,
+            'mute': false,
+          },
+        }, bytes);
+        final metadata = json.decode(response.body) as Map;
+        if (metadata['size'] != length ||
+            metadata['id'] is! String ||
+            (metadata['path_display'] as String?)?.toLowerCase() !=
+                destination.toLowerCase()) {
+          throw StateError('Dropbox upload completion could not be verified.');
+        }
+      }
+
+      await for (final part in validatedTransferParts(
+        dataStream,
+        length,
+        8 * 1024 * 1024,
+      )) {
+        if (offset + part.length == length) {
+          await finish(part);
+        } else {
+          await send('append_v2', {
+            'cursor': {'session_id': sessionId, 'offset': offset},
+            'close': false,
+          }, part);
+        }
+        offset += part.length;
+        onProgress?.call(offset, length);
+      }
+      if (length == 0) {
+        await finish(const []);
+        onProgress?.call(0, 0);
+      }
+    } finally {
+      // Unfinished Dropbox sessions expire; never delete a destination to
+      // compensate for a missing finish acknowledgement.
+      client.close();
+    }
+  }
+
+  @override
+  Stream<List<int>> downloadStream(
+    String remotePath, {
+    Function(int, int)? onProgress,
+  }) async* {
+    await _ensureToken();
+    yield* streamHttpDownload(
+      Uri.parse('$_contentBase/files/download'),
+      operation: 'Dropbox download',
+      headers: {
+        'Authorization': 'Bearer $_accessToken',
+        'Dropbox-API-Arg': _headerJson({'path': _dbxPath(remotePath)}),
+      },
+      responseLength: (headers) {
+        final metadata =
+            json.decode(headers['dropbox-api-result'] ?? '{}') as Map;
+        final size = metadata['size'];
+        if (size is! int || size < 0) {
+          throw StateError(
+            'Dropbox download metadata did not include a valid size.',
+          );
+        }
+        return size;
+      },
+      onProgress: onProgress,
+    );
+  }
+
   @override
   Future<void> uploadFile(
     List<int> fileData,
@@ -443,6 +585,15 @@ class DropboxClientAdapter extends CloudStorageClient
     String targetPath, {
     Function(int, int)? onProgress,
   }) async {
+    if (fileData.length > 8 * 1024 * 1024) {
+      return uploadStream(
+        Stream.value(fileData),
+        fileData.length,
+        fileName,
+        targetPath,
+        onProgress: onProgress,
+      );
+    }
     await _ensureToken();
 
     final filePath = targetPath == '/' || targetPath.isEmpty
@@ -450,7 +601,7 @@ class DropboxClientAdapter extends CloudStorageClient
         : '$targetPath/$fileName';
 
     final uri = Uri.parse('$_contentBase/files/upload');
-    final apiArg = json.encode({
+    final apiArg = _headerJson({
       'path': filePath,
       'mode': 'overwrite',
       'autorename': false,
@@ -512,8 +663,13 @@ class DropboxClientAdapter extends CloudStorageClient
     String localPath, {
     Function(int, int)? onProgress,
   }) async {
-    final bytes = await downloadFileBytes(remotePath, onProgress: onProgress);
-    await File(localPath).writeAsBytes(bytes);
+    final sink = File(localPath).openWrite();
+    try {
+      await sink.addStream(downloadStream(remotePath, onProgress: onProgress));
+      await sink.flush();
+    } finally {
+      await sink.close();
+    }
   }
 
   // --- Folder ---

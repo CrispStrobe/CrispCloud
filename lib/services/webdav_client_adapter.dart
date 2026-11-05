@@ -2,12 +2,14 @@ import 'package:crisp_storage/crisp_storage.dart' as storage;
 
 // lib/services/webdav_client_adapter.dart
 import 'dart:async';
+import 'dart:typed_data';
 
 import 'package:flutter/foundation.dart';
 import 'package:webdav_client/webdav_client.dart' as webdav;
 import 'package:path/path.dart' as p;
 
 import 'cloud_storage_interface.dart';
+import 'bounded_transfer_stream.dart';
 import 'log_service.dart';
 import 'secure_storage_service.dart';
 import 'webdav_config_service.dart';
@@ -25,6 +27,7 @@ class WebDavClientAdapter extends CloudStorageClient
         atomicMove: true,
         noReplaceMove: true,
         boundedDownload: !kIsWeb,
+        boundedUpload: !kIsWeb,
       );
 
   @override
@@ -71,6 +74,7 @@ class WebDavClientAdapter extends CloudStorageClient
   static const _log = Log('WebDAVClient');
 
   final WebDavConfigService _config;
+  final webdav.Client Function(String, String, String) _clientFactory;
 
   WebDavConfigService get config => _config;
 
@@ -81,13 +85,23 @@ class WebDavClientAdapter extends CloudStorageClient
   String? _user;
   String? _host;
 
-  WebDavClientAdapter({required dynamic config})
-    : _config = (config is WebDavConfigService)
-          ? config
-          : WebDavConfigService(
-              configPath: '',
-              secureStorage: InMemorySecureStorage(),
-            );
+  WebDavClientAdapter({
+    required dynamic config,
+    webdav.Client Function(String, String, String)? clientFactory,
+  }) : _clientFactory =
+           clientFactory ??
+           ((url, user, password) => webdav.newClient(
+             url,
+             user: user,
+             password: password,
+             debug: false,
+           )),
+       _config = (config is WebDavConfigService)
+           ? config
+           : WebDavConfigService(
+               configPath: '',
+               secureStorage: InMemorySecureStorage(),
+             );
 
   @override
   String get providerName => 'WebDAV';
@@ -119,12 +133,7 @@ class WebDavClientAdapter extends CloudStorageClient
               allowLocalHttp: true,
             ),
           );
-    _client = webdav.newClient(
-      url,
-      user: user,
-      password: password,
-      debug: false,
-    );
+    _client = _clientFactory(url, user, password);
     _client!.setHeaders({'Content-Type': 'application/octet-stream'});
   }
 
@@ -146,7 +155,7 @@ class WebDavClientAdapter extends CloudStorageClient
     }
 
     try {
-      final tempClient = webdav.newClient(host, user: user, password: password);
+      final tempClient = _clientFactory(host, user, password);
       await tempClient.readDir('/');
     } catch (e) {
       throw Exception('Connection failed: $e');
@@ -264,6 +273,58 @@ class WebDavClientAdapter extends CloudStorageClient
     }
 
     return {'folders': folders, 'files': files};
+  }
+
+  @override
+  Future<void> uploadStream(
+    Stream<List<int>> dataStream,
+    int length,
+    String fileName,
+    String targetPath, {
+    Function(int, int)? onProgress,
+  }) async {
+    if (length < 0) throw ArgumentError.value(length, 'length');
+    if (kIsWeb) {
+      // The browser transport used by webdav_client collects request bodies.
+      // Bound that fallback explicitly instead of implying a streamed PUT.
+      if (length > 32 * 1024 * 1024) {
+        throw UnsupportedError(
+          'WebDAV uploads above 32 MiB require the desktop app.',
+        );
+      }
+      final bytes = BytesBuilder(copy: false);
+      await for (final part in validatedTransferParts(
+        dataStream,
+        length,
+        64 * 1024,
+      )) {
+        bytes.add(part);
+      }
+      return uploadFile(
+        bytes.takeBytes(),
+        fileName,
+        targetPath,
+        onProgress: onProgress,
+      );
+    }
+    await _ensureClient();
+    final path = Uri(path: p.posix.join(targetPath, fileName)).toString();
+    Stream<List<int>> checked = validatedTransferParts(
+      dataStream,
+      length,
+      64 * 1024,
+    );
+    if (length == 0) {
+      await checked.drain<void>();
+      checked = const Stream.empty();
+    }
+    await _client!.c.wdWriteWithStream(
+      _client!,
+      path,
+      checked,
+      length,
+      onProgress: onProgress,
+    );
   }
 
   @override
