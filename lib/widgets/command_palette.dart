@@ -7,6 +7,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../l10n/pdf_operations_strings.dart';
+import '../l10n/command_strings.dart';
 import '../models/file_item.dart';
 import '../models/panel_side.dart';
 import '../providers/providers.dart';
@@ -46,14 +47,22 @@ class _CommandPaletteState extends ConsumerState<CommandPalette> {
   List<_Command> _filtered = [];
   int _selectedIndex = 0;
 
-  late final List<_Command> _allCommands;
+  List<_Command> _allCommands = [];
 
   @override
   void initState() {
     super.initState();
-    _allCommands = _buildCommands();
-    _filtered = _allCommands;
     _focusNode.requestFocus();
+  }
+
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    _allCommands = _buildCommands();
+    final query = _controller.text.toLowerCase();
+    _filtered = query.isEmpty ? _allCommands : _allCommands
+        .where((command) => command.name.toLowerCase().contains(query)).toList();
+    _selectedIndex = 0;
   }
 
   @override
@@ -64,6 +73,7 @@ class _CommandPaletteState extends ConsumerState<CommandPalette> {
   }
 
   List<_Command> _buildCommands() {
+    final strings = CommandStrings(context);
     final side = ref.read(activePanelProvider);
     final panel = ref.read(panelProvider(side));
     final auth = ref.read(authProvider);
@@ -73,39 +83,39 @@ class _CommandPaletteState extends ConsumerState<CommandPalette> {
 
     return [
       // Navigation
-      _Command(name: 'Navigate Up', shortcut: 'Backspace', icon: Icons.arrow_upward, action: () => panel.navigateUp()),
-      _Command(name: 'Refresh Panel', shortcut: 'F5', icon: Icons.refresh, action: () => panel.refresh()),
-      _Command(name: 'Switch Panel', shortcut: 'Tab', icon: Icons.swap_horiz, action: () {
+      _Command(name: strings.text('up'), shortcut: 'Backspace', icon: Icons.arrow_upward, action: () => panel.navigateUp()),
+      _Command(name: strings.text('refresh'), shortcut: 'F5', icon: Icons.refresh, action: () => panel.refresh()),
+      _Command(name: strings.text('switch'), shortcut: 'Tab', icon: Icons.swap_horiz, action: () {
         ref.read(activePanelProvider.notifier).state =
             side == PanelSide.local ? PanelSide.remote : PanelSide.local;
       }),
-      _Command(name: 'Open Local Folder', icon: Icons.folder_open, action: () => ref.read(panelProvider(PanelSide.local)).pickLocalDirectory()),
+      _Command(name: strings.text('localFolder'), icon: Icons.folder_open, action: () => ref.read(panelProvider(PanelSide.local)).pickLocalDirectory()),
 
       // Go to path
-      _Command(name: 'Go to Path', shortcut: 'Ctrl+G', icon: Icons.folder_open, action: () {
+      _Command(name: strings.text('goPath'), shortcut: 'Ctrl+G', icon: Icons.folder_open, action: () {
         showGoToDialog(widget.parentContext, ref);
       }),
 
       // Selection
-      _Command(name: 'Select All', shortcut: 'Ctrl+A', icon: Icons.select_all, action: () => panel.selectAll()),
-      _Command(name: 'Clear Selection', shortcut: 'Esc', icon: Icons.deselect, action: () => panel.clearSelection()),
+      _Command(name: strings.text('selectAll'), shortcut: 'Ctrl+A', icon: Icons.select_all, action: () => panel.selectAll()),
+      _Command(name: strings.text('clearSelection'), shortcut: 'Esc', icon: Icons.deselect, action: () => panel.clearSelection()),
 
       // Tabs
-      _Command(name: 'New Tab', shortcut: 'Ctrl+T', icon: Icons.add, action: () => panel.addTab()),
-      _Command(name: 'Close Tab', shortcut: 'Ctrl+W', icon: Icons.close, action: () {
+      _Command(name: strings.text('newTab'), shortcut: 'Ctrl+T', icon: Icons.add, action: () => panel.addTab()),
+      _Command(name: strings.text('closeTab'), shortcut: 'Ctrl+W', icon: Icons.close, action: () {
         panel.closeTab(panel.activeTabId);
       }),
 
       // Transfers
       if (auth.isConnected && ref.read(panelProvider(PanelSide.local)).selection.isNotEmpty)
-        _Command(name: 'Upload Selected', shortcut: 'Ctrl+U', icon: Icons.upload, action: () =>
+        _Command(name: strings.text('upload'), shortcut: 'Ctrl+U', icon: Icons.upload, action: () =>
             ref.read(transferProvider).uploadFiles(ref.read(panelProvider(PanelSide.local)).selection.toList())),
       if (auth.isConnected && ref.read(panelProvider(PanelSide.remote)).selection.isNotEmpty)
-        _Command(name: 'Download Selected', shortcut: 'Ctrl+D', icon: Icons.download, action: () =>
+        _Command(name: strings.text('download'), shortcut: 'Ctrl+D', icon: Icons.download, action: () =>
             ref.read(transferProvider).downloadFiles(ref.read(panelProvider(PanelSide.remote)).selection.toList())),
 
       // View
-      _Command(name: 'Toggle Preview', shortcut: 'Space', icon: Icons.visibility, action: () {
+      _Command(name: strings.text('preview'), shortcut: 'Space', icon: Icons.visibility, action: () {
         ref.read(showPreviewProvider.notifier).state = !ref.read(showPreviewProvider);
       }),
 
@@ -118,28 +128,33 @@ class _CommandPaletteState extends ConsumerState<CommandPalette> {
         _Command(name: widget.parentContext.pdfOpTr(action.label), icon: action.icon, action: () {
           if (widget.parentContext.mounted) showPdfOperationsDialog(widget.parentContext, ref, pdfFiles, side, action);
         }),
-      _Command(name: 'Clear Completed Operations', icon: Icons.cleaning_services, action: () =>
+      _Command(name: strings.text('clearOps'), icon: Icons.cleaning_services, action: () =>
           ref.read(transferProvider).clearCompletedOperations()),
 
       // Connection
       if (!auth.isConnected)
-        _Command(name: 'Connect to Cloud', icon: Icons.cloud, action: () {}), // handled by caller
+        _Command(name: strings.text('connect'), icon: Icons.cloud, action: () {}), // handled by caller
       if (auth.isConnected)
-        _Command(name: 'Disconnect', icon: Icons.cloud_off, action: () => ref.read(authProvider).logout()),
+        _Command(name: strings.text('disconnect'), icon: Icons.cloud_off, action: () => ref.read(authProvider).logout()),
 
       // Sorting
       ...[SortBy.name, SortBy.size, SortBy.date, SortBy.extension].map((sort) =>
         _Command(
-          name: 'Sort by ${sort.name}',
+          name: strings.text(switch (sort) {
+            SortBy.name => 'sortName',
+            SortBy.size => 'sortSize',
+            SortBy.date => 'sortDate',
+            SortBy.extension => 'sortExtension',
+          }),
           icon: Icons.sort,
           action: () => panel.setSortBy(sort),
         ),
       ),
-      _Command(name: 'Toggle Sort Order', icon: Icons.swap_vert, action: () => panel.toggleSortOrder()),
+      _Command(name: strings.text('sortOrder'), icon: Icons.swap_vert, action: () => panel.toggleSortOrder()),
 
       // Panel actions
-      _Command(name: 'Refresh Local Panel', icon: Icons.refresh, action: () => ref.read(panelProvider(PanelSide.local)).refresh()),
-      _Command(name: 'Refresh Remote Panel', icon: Icons.refresh, action: () => ref.read(panelProvider(PanelSide.remote)).refresh()),
+      _Command(name: strings.text('refreshLocal'), icon: Icons.refresh, action: () => ref.read(panelProvider(PanelSide.local)).refresh()),
+      _Command(name: strings.text('refreshRemote'), icon: Icons.refresh, action: () => ref.read(panelProvider(PanelSide.remote)).refresh()),
     ];
   }
 
@@ -182,6 +197,8 @@ class _CommandPaletteState extends ConsumerState<CommandPalette> {
               child: Focus(
                 onKeyEvent: (node, event) {
                   if (event is! KeyDownEvent) return KeyEventResult.ignored;
+                  if (_filtered.isEmpty && (event.logicalKey == LogicalKeyboardKey.arrowDown ||
+                      event.logicalKey == LogicalKeyboardKey.arrowUp)) return KeyEventResult.handled;
                   if (event.logicalKey == LogicalKeyboardKey.arrowDown) {
                     setState(() {
                       _selectedIndex = (_selectedIndex + 1).clamp(0, _filtered.length - 1);
@@ -208,7 +225,7 @@ class _CommandPaletteState extends ConsumerState<CommandPalette> {
                   controller: _controller,
                   focusNode: _focusNode,
                   decoration: InputDecoration(
-                    hintText: 'Type a command...',
+                    hintText: CommandStrings(context).text('query'),
                     prefixIcon: const Icon(Icons.search, size: 20),
                     border: OutlineInputBorder(
                       borderRadius: BorderRadius.circular(8),
@@ -225,7 +242,7 @@ class _CommandPaletteState extends ConsumerState<CommandPalette> {
               child: _filtered.isEmpty
                   ? Padding(
                       padding: const EdgeInsets.all(16),
-                      child: Text('No matching commands',
+                      child: Text(CommandStrings(context).text('noCommands'),
                           style: TextStyle(color: theme.disabledColor)),
                     )
                   : ListView.builder(

@@ -14,12 +14,14 @@ class ChecksumVerifyResult {
   final String filename;
   final String expected;
   final String actual;
-  bool get ok => expected.toLowerCase() == actual.toLowerCase();
+  final Object? error;
+  bool get ok => error == null && expected.toLowerCase() == actual.toLowerCase();
 
   const ChecksumVerifyResult({
     required this.filename,
     required this.expected,
     required this.actual,
+    this.error,
   });
 }
 
@@ -104,11 +106,13 @@ class ChecksumService {
       final filePath = p.join(dir, filename.startsWith('*') ? filename.substring(1) : filename);
 
       String actual;
+      Object? error;
       try {
         actual = ext == '.sha256' || ext == '.sha1'
             ? await sha256File(filePath)
             : await md5File(filePath);
-      } catch (_) {
+      } catch (e) {
+        error = e;
         actual = '(file not found)';
       }
 
@@ -116,6 +120,7 @@ class ChecksumService {
         filename: filename,
         expected: expected,
         actual: actual,
+        error: error,
       ));
     }
     return results;

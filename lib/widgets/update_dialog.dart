@@ -20,7 +20,7 @@ import 'package:url_launcher/url_launcher.dart';
 
 import '../providers/update_provider.dart';
 import '../services/auto_update_service.dart';
-import '../l10n/app_localizations.dart';
+import '../l10n/update_dialog_strings.dart';
 
 // ---------------------------------------------------------------------------
 // Public convenience function
@@ -51,6 +51,7 @@ class UpdateDialog extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
+    final strings = UpdateDialogStrings(context);
     final checkAsync = ref.watch(updateCheckProvider);
     final channel = ref.watch(updateChannelProvider);
     final autoEnabled = ref.watch(autoUpdateEnabledProvider);
@@ -62,12 +63,11 @@ class UpdateDialog extends ConsumerWidget {
         children: [
           const Icon(Icons.system_update_alt),
           const SizedBox(width: 8),
-          const Text('Check for Updates'),
-          const Spacer(),
+          Expanded(child: Text(strings.text('Check for Updates'), overflow: TextOverflow.ellipsis)),
           IconButton(
             key: const Key('update_dialog_close'),
             icon: const Icon(Icons.close, size: 18),
-            tooltip: 'Close',
+            tooltip: strings.text('Close'),
             onPressed: () => Navigator.of(context).pop(),
           ),
         ],
@@ -107,7 +107,7 @@ class UpdateDialog extends ConsumerWidget {
               // ---- Channel selector ----
               const Divider(height: 32),
               Text(
-                'Update Channel',
+                strings.text('Update Channel'),
                 style: theme.textTheme.titleSmall,
               ),
               const SizedBox(height: 8),
@@ -122,8 +122,8 @@ class UpdateDialog extends ConsumerWidget {
               SwitchListTile(
                 key: const Key('update_auto_check_toggle'),
                 contentPadding: EdgeInsets.zero,
-                title: const Text('Check automatically on startup'),
-                subtitle: const Text('Runs a background check each time the app launches'),
+                title: Text(strings.text('Check automatically on startup')),
+                subtitle: Text(strings.text('Runs a background check each time the app launches')),
                 value: autoEnabled,
                 onChanged: (v) =>
                     ref.read(autoUpdateEnabledProvider.notifier).setEnabled(v),
@@ -146,7 +146,7 @@ class UpdateDialog extends ConsumerWidget {
         OutlinedButton.icon(
           key: const Key('update_check_now_button'),
           icon: const Icon(Icons.refresh, size: 16),
-          label: const Text('Check Now'),
+          label: Text(strings.text('Check Now')),
           onPressed: checkAsync.isLoading
               ? null
               : () => ref.invalidate(updateCheckProvider),
@@ -156,7 +156,7 @@ class UpdateDialog extends ConsumerWidget {
         TextButton(
           key: const Key('update_dialog_done'),
           onPressed: () => Navigator.of(context).pop(),
-          child: const Text('Done'),
+          child: Text(strings.text('Done')),
         ),
       ],
     );
@@ -175,13 +175,14 @@ class _VersionRow extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final strings = UpdateDialogStrings(context);
     final theme = Theme.of(context);
     return Row(
       children: [
         Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Text('Current version', style: theme.textTheme.labelSmall),
+            Text(strings.text('Current version'), style: theme.textTheme.labelSmall),
             Text(
               'v$currentVersion',
               key: const Key('update_current_version'),
@@ -197,7 +198,7 @@ class _VersionRow extends StatelessWidget {
               ? Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Text('Latest version', style: theme.textTheme.labelSmall),
+                    Text(strings.text('Latest version'), style: theme.textTheme.labelSmall),
                     Text(
                       info.version,
                       key: const Key('update_latest_version'),
@@ -224,6 +225,7 @@ class _LoadingBanner extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final strings = UpdateDialogStrings(context);
     return Container(
       key: const Key('update_loading_banner'),
       padding: const EdgeInsets.all(12),
@@ -231,15 +233,15 @@ class _LoadingBanner extends StatelessWidget {
         color: Theme.of(context).colorScheme.surfaceContainerHighest,
         borderRadius: BorderRadius.circular(8),
       ),
-      child: const Row(
+      child: Row(
         children: [
-          SizedBox(
+          const SizedBox(
             width: 20,
             height: 20,
             child: CircularProgressIndicator(strokeWidth: 2),
           ),
-          SizedBox(width: 12),
-          Text('Checking for updates…'),
+          const SizedBox(width: 12),
+          Expanded(child: Text(strings.text('Checking for updates…'))),
         ],
       ),
     );
@@ -252,6 +254,7 @@ class _ErrorBanner extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final strings = UpdateDialogStrings(context);
     return Container(
       key: const Key('update_error_banner'),
       padding: const EdgeInsets.all(12),
@@ -267,7 +270,7 @@ class _ErrorBanner extends StatelessWidget {
           const SizedBox(width: 8),
           Expanded(
             child: Text(
-              _friendlyError(message),
+              _friendlyError(message, strings),
               style: TextStyle(
                 color: Theme.of(context).colorScheme.onErrorContainer,
               ),
@@ -278,15 +281,15 @@ class _ErrorBanner extends StatelessWidget {
     );
   }
 
-  static String _friendlyError(String raw) {
+  static String _friendlyError(String raw, UpdateDialogStrings strings) {
     if (raw.contains('rate limit')) {
-      return 'GitHub API rate limit reached. Please try again later.';
+      return strings.text('GitHub API rate limit reached. Please try again later.');
     }
     if (raw.contains('Network error') || raw.contains('SocketException')) {
-      return 'Network error — check your internet connection and try again.';
+      return strings.text('Network error — check your internet connection and try again.');
     }
     if (raw.contains('not found')) {
-      return 'Repository not found. Check your update configuration.';
+      return strings.text('Repository not found. Check your update configuration.');
     }
     return raw.replaceFirst('AutoUpdateException: ', '');
   }
@@ -297,6 +300,7 @@ class _UpToDateBanner extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final strings = UpdateDialogStrings(context);
     return Container(
       key: const Key('update_up_to_date_banner'),
       padding: const EdgeInsets.all(12),
@@ -305,14 +309,14 @@ class _UpToDateBanner extends StatelessWidget {
         borderRadius: BorderRadius.circular(8),
         border: Border.all(color: Colors.green.shade200),
       ),
-      child: const Row(
+      child: Row(
         children: [
-          Icon(Icons.check_circle_outline, color: Colors.green, size: 20),
-          SizedBox(width: 8),
-          Text(
-            "You're up to date!",
-            key: Key('update_up_to_date_label'),
-          ),
+          const Icon(Icons.check_circle_outline, color: Colors.green, size: 20),
+          const SizedBox(width: 8),
+          Expanded(child: Text(
+            strings.text("You're up to date!"),
+            key: const Key('update_up_to_date_label'),
+          )),
         ],
       ),
     );
@@ -325,6 +329,7 @@ class _UpdateAvailableBanner extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final strings = UpdateDialogStrings(context);
     final theme = Theme.of(context);
     return Container(
       key: const Key('update_available_banner'),
@@ -340,7 +345,7 @@ class _UpdateAvailableBanner extends StatelessWidget {
           const SizedBox(width: 8),
           Expanded(
             child: Text(
-              'Update Available — ${info.version}',
+              strings.available(info.version),
               key: const Key('update_available_label'),
               style: TextStyle(
                 color: theme.colorScheme.onPrimaryContainer,
@@ -375,12 +380,13 @@ class _ReleaseNotesSection extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final strings = UpdateDialogStrings(context);
     if (info.releaseNotes.isEmpty) return const SizedBox.shrink();
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Text('Release Notes', style: Theme.of(context).textTheme.titleSmall),
+        Text(strings.text('Release Notes'), style: Theme.of(context).textTheme.titleSmall),
         const SizedBox(height: 8),
         Container(
           key: const Key('update_release_notes'),
@@ -431,23 +437,24 @@ class _ChannelSelector extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final strings = UpdateDialogStrings(context);
     return SegmentedButton<UpdateChannel>(
       key: const Key('update_channel_selector'),
-      segments: const [
+      segments: [
         ButtonSegment(
           value: UpdateChannel.stable,
-          label: Text('Stable'),
-          icon: Icon(Icons.verified_outlined, size: 16),
+          label: Text(strings.text('Stable')),
+          icon: const Icon(Icons.verified_outlined, size: 16),
         ),
         ButtonSegment(
           value: UpdateChannel.beta,
-          label: Text('Beta'),
-          icon: Icon(Icons.science_outlined, size: 16),
+          label: Text(strings.text('Beta')),
+          icon: const Icon(Icons.science_outlined, size: 16),
         ),
         ButtonSegment(
           value: UpdateChannel.nightly,
-          label: Text('Nightly'),
-          icon: Icon(Icons.nightlight_outlined, size: 16),
+          label: Text(strings.text('Nightly')),
+          icon: const Icon(Icons.nightlight_outlined, size: 16),
         ),
       ],
       selected: {current},
@@ -469,9 +476,10 @@ class _DownloadButton extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final strings = UpdateDialogStrings(context);
     return FilledButton.icon(
       icon: const Icon(Icons.download, size: 16),
-      label: const Text('Download Update'),
+      label: Text(strings.text('Download Update')),
       onPressed: () async {
         final uri = Uri.tryParse(info.downloadUrl);
         if (uri != null && await canLaunchUrl(uri)) {

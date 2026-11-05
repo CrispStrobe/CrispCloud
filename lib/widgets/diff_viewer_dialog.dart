@@ -6,8 +6,11 @@
 import 'dart:io';
 
 import 'package:flutter/material.dart';
+
+import '../l10n/provider_operation_strings.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import '../l10n/diff_viewer_strings.dart';
 import '../models/file_item.dart';
 import '../models/panel_side.dart';
 import '../providers/providers.dart';
@@ -19,16 +22,16 @@ void showDiffViewerFromContent(
   BuildContext context, {
   required String leftContent,
   required String rightContent,
-  String leftLabel = 'Left',
-  String rightLabel = 'Right',
+  String? leftLabel,
+  String? rightLabel,
 }) {
   showDialog(
     context: context,
     builder: (_) => _ContentDiffDialog(
       leftContent: leftContent,
       rightContent: rightContent,
-      leftLabel: leftLabel,
-      rightLabel: rightLabel,
+      leftLabel: leftLabel ?? DiffViewerStrings(context).text('left'),
+      rightLabel: rightLabel ?? DiffViewerStrings(context).text('right'),
     ),
   );
 }
@@ -113,7 +116,7 @@ class _DiffViewerDialogState extends ConsumerState<_DiffViewerDialog> {
       _log.error('Failed to load files for diff', e);
       if (mounted) {
         setState(() {
-          _error = 'Failed to load files: $e';
+          _error = DiffViewerStrings(context).value('loadError', localizedProviderError(context, e));
           _loading = false;
         });
       }
@@ -185,14 +188,14 @@ class _DiffViewerDialogState extends ConsumerState<_DiffViewerDialog> {
                   const SizedBox(width: 8),
                   Expanded(
                     child: Text(
-                      'Diff: ${widget.leftFile.name} vs ${widget.rightFile.name}',
+                      DiffViewerStrings(context).comparison(widget.leftFile.name, widget.rightFile.name),
                       style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 14),
                       overflow: TextOverflow.ellipsis,
                     ),
                   ),
                   if (!_loading && _error == null)
                     Text(
-                      '$changes ${changes == 1 ? 'change' : 'changes'}',
+                      DiffViewerStrings(context).value('changes', changes),
                       style: TextStyle(color: theme.colorScheme.primary, fontSize: 12),
                     ),
                   const SizedBox(width: 16),
@@ -211,7 +214,7 @@ class _DiffViewerDialogState extends ConsumerState<_DiffViewerDialog> {
                   : _error != null
                       ? Center(child: Text(_error!, style: TextStyle(color: theme.colorScheme.error)))
                       : _diffResult.isEmpty
-                          ? const Center(child: Text('Files are identical'))
+                          ? Center(child: Text(DiffViewerStrings(context).text('identical')))
                           : _buildDiffView(theme),
             ),
           ],
@@ -239,7 +242,7 @@ class _DiffViewerDialogState extends ConsumerState<_DiffViewerDialog> {
                     const SizedBox(width: 6),
                     Expanded(
                       child: Text(
-                        '${widget.leftSide == PanelSide.local ? 'Local' : 'Remote'}: ${widget.leftFile.name}',
+                        '${DiffViewerStrings(context).text(widget.leftSide == PanelSide.local ? 'local' : 'remote')}: ${widget.leftFile.name}',
                         style: const TextStyle(fontSize: 12, fontWeight: FontWeight.w500),
                         overflow: TextOverflow.ellipsis,
                       ),
@@ -303,7 +306,7 @@ class _DiffViewerDialogState extends ConsumerState<_DiffViewerDialog> {
                     const SizedBox(width: 6),
                     Expanded(
                       child: Text(
-                        '${widget.rightSide == PanelSide.local ? 'Local' : 'Remote'}: ${widget.rightFile.name}',
+                        '${DiffViewerStrings(context).text(widget.rightSide == PanelSide.local ? 'local' : 'remote')}: ${widget.rightFile.name}',
                         style: const TextStyle(fontSize: 12, fontWeight: FontWeight.w500),
                         overflow: TextOverflow.ellipsis,
                       ),
@@ -447,7 +450,7 @@ class _ContentDiffDialog extends StatelessWidget {
                 children: [
                   const Icon(Icons.compare, size: 20),
                   const SizedBox(width: 8),
-                  Text('Version Diff', style: theme.textTheme.titleMedium),
+                  Text(DiffViewerStrings(context).text('version'), style: theme.textTheme.titleMedium),
                   const Spacer(),
                   Text('+$added', style: const TextStyle(color: Colors.green, fontWeight: FontWeight.bold)),
                   const SizedBox(width: 8),
@@ -459,7 +462,7 @@ class _ContentDiffDialog extends StatelessWidget {
             ),
             Expanded(
               child: diffResult.isEmpty
-                  ? const Center(child: Text('Files are identical'))
+                  ? Center(child: Text(DiffViewerStrings(context).text('identical')))
                   : Row(
                       children: [
                         _buildPane(theme, leftLabel, diffResult, true, addedColor, removedColor),

@@ -115,7 +115,7 @@ class TransferNotifier extends ChangeNotifier {
         fileSize = file.size ?? 0;
       }
       fileProgresses
-          .add(FileProgress(name: file.name, path: file.path!, size: fileSize));
+          .add(FileProgress(name: file.name, path: file.path ?? file.name, size: fileSize));
       totalBytes += fileSize;
     }
 
@@ -123,7 +123,7 @@ class TransferNotifier extends ChangeNotifier {
       id: DateTime.now().millisecondsSinceEpoch.toString(),
       type: OperationType.upload,
       sourcePath:
-          files.length == 1 ? files.first.path! : '${files.length} files',
+          files.length == 1 ? (files.first.path ?? files.first.name) : '${files.length} files',
       targetPath: target,
       fileName: files.length == 1 ? files.first.name : '${files.length} files',
       totalBytes: totalBytes,
@@ -256,7 +256,9 @@ class TransferNotifier extends ChangeNotifier {
           operation.currentBytes = completedBytes;
         },
         onDone: (error) {
-          fileProgress.error = error?.toString();
+          // A task can report an app-authored failure without throwing (for
+          // example, a file without a local path). Do not erase it on success.
+          if (error != null) fileProgress.error = error.toString();
           tasksFinished++;
           if (tasksFinished == files.length) {
             _finalizeBatch(operation, fileProgresses);
@@ -468,15 +470,17 @@ class TransferNotifier extends ChangeNotifier {
   void _finalizeBatch(
       OperationProgress operation, List<FileProgress> fileProgresses) {
     if (operation.isCancelled) {
-      operation.fail('Cancelled by user');
+      operation.fail('Cancelled by user', code: TransferErrorCode.cancelled);
     } else {
       final failedCount = fileProgresses.where((f) => f.error != null).length;
       if (failedCount == 0) {
         operation.complete();
       } else if (failedCount == fileProgresses.length) {
-        operation.fail('All files failed');
+        operation.fail('All files failed', code: TransferErrorCode.allFilesFailed);
       } else {
-        operation.fail('$failedCount of ${fileProgresses.length} files failed');
+        operation.fail('$failedCount of ${fileProgresses.length} files failed',
+            code: TransferErrorCode.someFilesFailed,
+            arguments: {'failed': failedCount, 'total': fileProgresses.length});
       }
     }
     notifyListeners();

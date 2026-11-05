@@ -1,3 +1,4 @@
+import 'oauth_callback_page.dart';
 // lib/services/gdrive_client_adapter.dart
 //
 // Google Drive adapter using the Drive REST API v3 with pure HTTP.
@@ -16,7 +17,9 @@ import 'package:path/path.dart' as p;
 import 'package:url_launcher/url_launcher.dart';
 
 import 'cloud_storage_interface.dart';
+import 'connection_failure.dart';
 import 'gdrive_config_service.dart';
+import 'gdrive_operation_failure.dart';
 import 'log_service.dart';
 import 'secure_storage_service.dart';
 
@@ -99,7 +102,7 @@ class GDriveClientAdapter extends CloudStorageClient {
     _clientSecret = parts.length > 1 ? parts[1].trim() : null;
 
     if (_clientId == null || _clientId!.isEmpty) {
-      throw Exception('Client ID is required');
+      throw GDriveOperationFailure(GDriveOperationCode.clientId, 'Client ID is required');
     }
 
     // Check for stored refresh token first (re-auth without browser)
@@ -120,7 +123,7 @@ class GDriveClientAdapter extends CloudStorageClient {
 
     // Browser-based OAuth2 flow
     if (kIsWeb) {
-      throw Exception('Google Drive OAuth2 on web requires a different redirect flow. Use desktop or mobile.');
+      throw const ConnectionFailure(ConnectionFailureCode.oauthWebUnsupportedDesktopMobile, 'Google Drive OAuth2 on web requires a different redirect flow. Use desktop or mobile.', {'provider': 'Google Drive'});
     }
 
     await _browserOAuthFlow();
@@ -491,7 +494,7 @@ class GDriveClientAdapter extends CloudStorageClient {
 
       final resp = await http.Response.fromStream(await req.send());
       if (resp.statusCode != 200) {
-        throw Exception('GDrive upload update failed (${resp.statusCode}): ${resp.body}');
+        throw GDriveOperationFailure(GDriveOperationCode.uploadUpdate, 'GDrive upload update failed (${resp.statusCode}): ${resp.body}', {'status': resp.statusCode, 'body': resp.body});
       }
     } else {
       // Multipart upload: metadata + file content
@@ -532,7 +535,7 @@ class GDriveClientAdapter extends CloudStorageClient {
 
       final resp = await http.Response.fromStream(await req.send());
       if (resp.statusCode != 200) {
-        throw Exception('GDrive upload failed (${resp.statusCode}): ${resp.body}');
+        throw GDriveOperationFailure(GDriveOperationCode.upload, 'GDrive upload failed (${resp.statusCode}): ${resp.body}', {'status': resp.statusCode, 'body': resp.body});
       }
     }
 
@@ -582,14 +585,14 @@ class GDriveClientAdapter extends CloudStorageClient {
     final docMimeType = meta['mimeType'] as String? ?? '';
     final targetMime = exportMimeType ?? _googleDocsMimeTypes[docMimeType];
     if (targetMime == null) {
-      throw Exception('Not a Google Docs file or unknown type: $docMimeType');
+      throw GDriveOperationFailure(GDriveOperationCode.unsupportedDocument, 'Not a Google Docs file or unknown type: $docMimeType', {'type': docMimeType});
     }
 
     final uri = Uri.parse('$_apiBase/files/$fileId/export?mimeType=${Uri.encodeComponent(targetMime)}');
     final resp = await http.get(uri, headers: {'Authorization': 'Bearer $_accessToken'});
 
     if (resp.statusCode != 200) {
-      throw Exception('GDrive export failed (${resp.statusCode}): ${resp.body}');
+      throw GDriveOperationFailure(GDriveOperationCode.export, 'GDrive export failed (${resp.statusCode}): ${resp.body}', {'status': resp.statusCode, 'body': resp.body});
     }
 
     return resp.bodyBytes;
@@ -669,7 +672,7 @@ class GDriveClientAdapter extends CloudStorageClient {
     final resp = await http.get(uri, headers: {'Authorization': 'Bearer $_accessToken'});
 
     if (resp.statusCode != 200) {
-      throw Exception('GDrive revision download failed (${resp.statusCode}): ${resp.body}');
+      throw GDriveOperationFailure(GDriveOperationCode.revisionDownload, 'GDrive revision download failed (${resp.statusCode}): ${resp.body}', {'status': resp.statusCode, 'body': resp.body});
     }
 
     return resp.bodyBytes;
@@ -690,7 +693,7 @@ class GDriveClientAdapter extends CloudStorageClient {
     );
 
     if (resp.statusCode != 200) {
-      throw Exception('GDrive pin revision failed (${resp.statusCode}): ${resp.body}');
+      throw GDriveOperationFailure(GDriveOperationCode.pinRevision, 'GDrive pin revision failed (${resp.statusCode}): ${resp.body}', {'status': resp.statusCode, 'body': resp.body});
     }
   }
 
@@ -702,7 +705,7 @@ class GDriveClientAdapter extends CloudStorageClient {
     final resp = await http.delete(uri, headers: {'Authorization': 'Bearer $_accessToken'});
 
     if (resp.statusCode != 200 && resp.statusCode != 204) {
-      throw Exception('GDrive delete revision failed (${resp.statusCode}): ${resp.body}');
+      throw GDriveOperationFailure(GDriveOperationCode.deleteRevision, 'GDrive delete revision failed (${resp.statusCode}): ${resp.body}', {'status': resp.statusCode, 'body': resp.body});
     }
   }
 
@@ -713,7 +716,7 @@ class GDriveClientAdapter extends CloudStorageClient {
     await _ensureToken();
 
     final fileId = await _resolveFileId(remotePath);
-    if (fileId == null) throw Exception('File not found: $remotePath');
+    if (fileId == null) throw GDriveOperationFailure(GDriveOperationCode.fileNotFound, 'File not found: $remotePath', {'path': remotePath});
 
     // Check if this is a Google Docs file that needs export
     final meta = await _apiGet('/files/$fileId', queryParams: {
@@ -732,7 +735,7 @@ class GDriveClientAdapter extends CloudStorageClient {
     final resp = await http.get(uri, headers: {'Authorization': 'Bearer $_accessToken'});
 
     if (resp.statusCode != 200) {
-      throw Exception('GDrive download failed (${resp.statusCode}): ${resp.body}');
+      throw GDriveOperationFailure(GDriveOperationCode.download, 'GDrive download failed (${resp.statusCode}): ${resp.body}', {'status': resp.statusCode, 'body': resp.body});
     }
 
     onProgress?.call(resp.bodyBytes.length, resp.bodyBytes.length);
@@ -792,7 +795,7 @@ class GDriveClientAdapter extends CloudStorageClient {
   Future<void> copyPath(String sourcePath, String targetPath) async {
     await _ensureToken();
     final fileId = await _resolveFileId(sourcePath);
-    if (fileId == null) throw Exception('File not found: $sourcePath');
+    if (fileId == null) throw GDriveOperationFailure(GDriveOperationCode.fileNotFound, 'File not found: $sourcePath', {'path': sourcePath});
     final parentId = await _resolvePathToId(targetPath) ?? 'root';
     final fileName = p.posix.basename(sourcePath);
     _log.info('Server-side copy (GDrive): $sourcePath → $targetPath');
@@ -810,7 +813,7 @@ class GDriveClientAdapter extends CloudStorageClient {
       body: body,
     );
     if (resp.statusCode != 200) {
-      throw Exception('GDrive copy failed (${resp.statusCode}): ${resp.body}');
+      throw GDriveOperationFailure(GDriveOperationCode.copy, 'GDrive copy failed (${resp.statusCode}): ${resp.body}', {'status': resp.statusCode, 'body': resp.body});
     }
   }
 
@@ -820,13 +823,13 @@ class GDriveClientAdapter extends CloudStorageClient {
   Future<void> deletePath(String path) async {
     await _ensureToken();
     final fileId = await _resolveFileId(path);
-    if (fileId == null) throw Exception('Not found: $path');
+    if (fileId == null) throw GDriveOperationFailure(GDriveOperationCode.pathNotFound, 'Not found: $path', {'path': path});
 
     final uri = Uri.parse('$_apiBase/files/$fileId');
     final resp = await http.delete(uri, headers: {'Authorization': 'Bearer $_accessToken'});
 
     if (resp.statusCode != 204 && resp.statusCode != 200) {
-      throw Exception('GDrive delete failed (${resp.statusCode}): ${resp.body}');
+      throw GDriveOperationFailure(GDriveOperationCode.delete, 'GDrive delete failed (${resp.statusCode}): ${resp.body}', {'status': resp.statusCode, 'body': resp.body});
     }
 
     // Invalidate cache
@@ -837,7 +840,7 @@ class GDriveClientAdapter extends CloudStorageClient {
   Future<void> movePath(String sourcePath, String targetPath) async {
     await _ensureToken();
     final fileId = await _resolveFileId(sourcePath);
-    if (fileId == null) throw Exception('Not found: $sourcePath');
+    if (fileId == null) throw GDriveOperationFailure(GDriveOperationCode.pathNotFound, 'Not found: $sourcePath', {'path': sourcePath});
 
     // Get current parents
     final meta = await _apiGet('/files/$fileId', queryParams: {'fields': 'parents'});
@@ -851,7 +854,7 @@ class GDriveClientAdapter extends CloudStorageClient {
     final resp = await http.patch(uri, headers: {'Authorization': 'Bearer $_accessToken'});
 
     if (resp.statusCode != 200) {
-      throw Exception('GDrive move failed (${resp.statusCode}): ${resp.body}');
+      throw GDriveOperationFailure(GDriveOperationCode.move, 'GDrive move failed (${resp.statusCode}): ${resp.body}', {'status': resp.statusCode, 'body': resp.body});
     }
 
     _pathToId.remove(sourcePath);
@@ -861,7 +864,7 @@ class GDriveClientAdapter extends CloudStorageClient {
   Future<void> renamePath(String path, String newName) async {
     await _ensureToken();
     final fileId = await _resolveFileId(path);
-    if (fileId == null) throw Exception('Not found: $path');
+    if (fileId == null) throw GDriveOperationFailure(GDriveOperationCode.pathNotFound, 'Not found: $path', {'path': path});
 
     final body = json.encode({'name': newName});
     final uri = Uri.parse('$_apiBase/files/$fileId');
@@ -875,7 +878,7 @@ class GDriveClientAdapter extends CloudStorageClient {
     );
 
     if (resp.statusCode != 200) {
-      throw Exception('GDrive rename failed (${resp.statusCode}): ${resp.body}');
+      throw GDriveOperationFailure(GDriveOperationCode.rename, 'GDrive rename failed (${resp.statusCode}): ${resp.body}', {'status': resp.statusCode, 'body': resp.body});
     }
 
     _pathToId.remove(path);
@@ -934,7 +937,7 @@ class GDriveClientAdapter extends CloudStorageClient {
   // --- Internal helpers ---
 
   Future<void> _ensureToken() async {
-    if (_accessToken == null) throw Exception('Not authenticated');
+    if (_accessToken == null) throw GDriveOperationFailure(GDriveOperationCode.unauthenticated, 'Not authenticated');
     if (_tokenExpiry != null && DateTime.now().isAfter(_tokenExpiry!)) {
       await _refreshAccessToken();
     }
@@ -942,7 +945,7 @@ class GDriveClientAdapter extends CloudStorageClient {
 
   Future<void> _refreshAccessToken() async {
     if (_refreshToken == null || _clientId == null) {
-      throw Exception('Cannot refresh: missing refresh token or client ID');
+      throw GDriveOperationFailure(GDriveOperationCode.missingRefresh, 'Cannot refresh: missing refresh token or client ID');
     }
 
     final body = <String, String>{
@@ -954,7 +957,7 @@ class GDriveClientAdapter extends CloudStorageClient {
 
     final resp = await http.post(Uri.parse(_tokenUrl), body: body);
     if (resp.statusCode != 200) {
-      throw Exception('Token refresh failed (${resp.statusCode}): ${resp.body}');
+      throw GDriveOperationFailure(GDriveOperationCode.tokenRefresh, 'Token refresh failed (${resp.statusCode}): ${resp.body}', {'status': resp.statusCode, 'body': resp.body});
     }
 
     final data = json.decode(resp.body) as Map<String, dynamic>;
@@ -983,21 +986,22 @@ class GDriveClientAdapter extends CloudStorageClient {
       await launchUrl(authUri, mode: LaunchMode.externalApplication);
     } else {
       await server.close();
-      throw Exception('Could not open browser for Google Drive authorization');
+      throw const ConnectionFailure(ConnectionFailureCode.oauthBrowserUnavailable, 'Could not open browser for Google Drive authorization', {'provider': 'Google Drive'});
     }
 
     // Wait for redirect with auth code
     String? authCode;
     try {
       await for (final request in server) {
+        final page = await OAuthCallbackPage.effective();
         final code = request.uri.queryParameters['code'];
         final error = request.uri.queryParameters['error'];
 
         if (error != null) {
           request.response
             ..statusCode = 200
-            ..headers.contentType = ContentType.html
-            ..write('<html><body><h2>Authorization denied: $error</h2><p>You can close this window.</p></body></html>');
+            ..headers.contentType = ContentType('text', 'html', charset: 'utf-8')
+            ..write(page.deniedHtml(error));
           await request.response.close();
           break;
         }
@@ -1006,8 +1010,8 @@ class GDriveClientAdapter extends CloudStorageClient {
           authCode = code;
           request.response
             ..statusCode = 200
-            ..headers.contentType = ContentType.html
-            ..write('<html><body><h2>Authorization successful!</h2><p>You can close this window and return to CrispCloud.</p></body></html>');
+            ..headers.contentType = ContentType('text', 'html', charset: 'utf-8')
+            ..write(page.successHtml());
           await request.response.close();
           break;
         }
@@ -1015,7 +1019,7 @@ class GDriveClientAdapter extends CloudStorageClient {
         // Ignore other requests (favicon etc)
         request.response
           ..statusCode = 404
-          ..write('Not found');
+          ..write(page.notFound);
         await request.response.close();
       }
     } finally {
@@ -1023,7 +1027,7 @@ class GDriveClientAdapter extends CloudStorageClient {
     }
 
     if (authCode == null) {
-      throw Exception('Google Drive authorization was cancelled or failed');
+      throw const ConnectionFailure(ConnectionFailureCode.oauthCancelled, 'Google Drive authorization was cancelled or failed', {'provider': 'Google Drive'});
     }
 
     // Exchange code for tokens
@@ -1037,7 +1041,7 @@ class GDriveClientAdapter extends CloudStorageClient {
 
     final tokenResp = await http.post(Uri.parse(_tokenUrl), body: tokenBody);
     if (tokenResp.statusCode != 200) {
-      throw Exception('Token exchange failed (${tokenResp.statusCode}): ${tokenResp.body}');
+      throw GDriveOperationFailure(GDriveOperationCode.tokenExchange, 'Token exchange failed (${tokenResp.statusCode}): ${tokenResp.body}', {'status': tokenResp.statusCode, 'body': tokenResp.body});
     }
 
     final tokenData = json.decode(tokenResp.body) as Map<String, dynamic>;
@@ -1109,13 +1113,13 @@ class GDriveClientAdapter extends CloudStorageClient {
       await _refreshAccessToken();
       final retryResp = await http.get(uri, headers: {'Authorization': 'Bearer $_accessToken'});
       if (retryResp.statusCode != 200) {
-        throw Exception('GDrive API error (${retryResp.statusCode}): ${retryResp.body}');
+        throw GDriveOperationFailure(GDriveOperationCode.api, 'GDrive API error (${retryResp.statusCode}): ${retryResp.body}', {'status': retryResp.statusCode, 'body': retryResp.body});
       }
       return json.decode(retryResp.body) as Map<String, dynamic>;
     }
 
     if (resp.statusCode != 200) {
-      throw Exception('GDrive API error (${resp.statusCode}): ${resp.body}');
+      throw GDriveOperationFailure(GDriveOperationCode.api, 'GDrive API error (${resp.statusCode}): ${resp.body}', {'status': resp.statusCode, 'body': resp.body});
     }
 
     return json.decode(resp.body) as Map<String, dynamic>;
@@ -1133,7 +1137,7 @@ class GDriveClientAdapter extends CloudStorageClient {
     );
 
     if (resp.statusCode != 200) {
-      throw Exception('GDrive API error (${resp.statusCode}): ${resp.body}');
+      throw GDriveOperationFailure(GDriveOperationCode.api, 'GDrive API error (${resp.statusCode}): ${resp.body}', {'status': resp.statusCode, 'body': resp.body});
     }
 
     return json.decode(resp.body) as Map<String, dynamic>;

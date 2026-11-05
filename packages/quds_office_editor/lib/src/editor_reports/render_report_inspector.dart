@@ -2313,21 +2313,20 @@ class RenderReportInspector extends RenderBox
     return s.isEmpty ? s : s[0].toUpperCase() + s.substring(1);
   }
 
-  static final RegExp _elementsTitle = RegExp(r'^(\d+) elements$');
-
   String get _titleText {
-    final String raw = _controller.inspectorTitle;
-    final RegExpMatch? many = _elementsTitle.firstMatch(raw);
-    if (many != null) {
-      return _s.count(int.parse(many[1]!), 'element');
+    final selected = _controller.selectedElements;
+    if (_controller.inspectorPage == ReportInspectorPage.properties &&
+        _controller.mode != ReportDesignMode.data &&
+        selected.length == 1) {
+      return _s.elementTitle(selected.first);
     }
-    final int colon = raw.indexOf(': ');
-    if (colon > 0 && _controller.selectedElements.length != 1) {
-      final String head = raw.substring(0, colon);
-      final String tail = raw.substring(colon + 2);
-      return '${_s.t(head)}: ${head == 'Band' ? _s.t(_spaced(tail)) : tail}';
-    }
-    return _s.t(raw);
+    return _s.inspectorTitle(
+      _controller.inspectorTitle,
+      objectSelected: false,
+      dataFields:
+          _controller.mode == ReportDesignMode.data &&
+          _controller.dataTable.isFields,
+    );
   }
 
   (ReportToolbarIcon, String) get _titleBadge {
@@ -3503,7 +3502,7 @@ class RenderReportInspector extends RenderBox
     final String faces = dot < 0 ? card : card.substring(0, dot);
     final String bytes = dot < 0 ? '' : card.substring(dot + 3);
     final TextPainter info = _text(
-      bytes.isEmpty ? _tr(faces) : '${_tr(faces)} · $bytes',
+      bytes.isEmpty ? _s.fontFaces(faces) : '${_s.fontFaces(faces)} · $bytes',
       11,
       _muted,
       w,

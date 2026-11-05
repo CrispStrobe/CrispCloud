@@ -45,11 +45,17 @@ for ((second = 0; second < WATCH_SECONDS; second++)); do
 done
 
 if grep -Eqi \
-  'loading libcrypto in an unsafe way|unrecognized selector|SIGABRT|Abort trap' \
+  'loading libcrypto in an unsafe way|unrecognized selector|SIGABRT|Abort trap|Critical error creating config service' \
   "$LOG_FILE"; then
   echo "error: fatal startup signature found in app log" >&2
   sed -n '1,200p' "$LOG_FILE" >&2
   exit 1
 fi
 
-echo "CrispCloud remained healthy for ${WATCH_SECONDS}s"
+if ! grep -Fq '[Main] Startup UI rendered' "$LOG_FILE"; then
+  echo "error: CrispCloud did not render its startup UI within ${WATCH_SECONDS}s" >&2
+  sed -n '1,200p' "$LOG_FILE" >&2
+  exit 1
+fi
+
+echo "CrispCloud rendered its startup UI and remained healthy for ${WATCH_SECONDS}s"

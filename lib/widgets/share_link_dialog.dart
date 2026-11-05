@@ -17,13 +17,22 @@ import '../services/dropbox_client_adapter.dart';
 import '../services/onedrive_client_adapter.dart';
 import '../services/s3_client_adapter.dart';
 import '../services/log_service.dart';
+import '../l10n/provider_operation_strings.dart';
 import '../l10n/app_localizations.dart';
+import '../l10n/share_link_strings.dart';
 
 void showShareLinkDialog(BuildContext context, WidgetRef ref, FileItem file) {
   showDialog(
     context: context,
     builder: (_) => _ShareLinkDialog(file: file),
   );
+}
+
+class _ShareMessage implements Exception {
+  const _ShareMessage(this.message);
+  final String message;
+  @override
+  String toString() => message;
 }
 
 class _ShareLinkDialog extends ConsumerStatefulWidget {
@@ -65,6 +74,7 @@ class _ShareLinkDialogState extends ConsumerState<_ShareLinkDialog> {
   }
 
   Future<void> _generateLink() async {
+    final strings = ShareLinkStrings(context);
     setState(() { _loading = true; _error = null; });
 
     try {
@@ -116,9 +126,7 @@ class _ShareLinkDialogState extends ConsumerState<_ShareLinkDialog> {
         );
         if (resp.statusCode == 200 || resp.statusCode == 409) {
           final data = json.decode(resp.body);
-          url = data['url'] ?? data['error']?['.tag'] == 'shared_link_already_exists'
-              ? 'Link already exists (check Dropbox sharing settings)'
-              : null;
+          url = data['url'] as String?;
           // On 409 (already exists), try to get the existing link
           if (resp.statusCode == 409) {
             final listResp = await http.post(
@@ -132,7 +140,7 @@ class _ShareLinkDialogState extends ConsumerState<_ShareLinkDialog> {
             }
           }
         } else {
-          throw Exception('Dropbox share failed: ${resp.statusCode} ${resp.body}');
+          throw _ShareMessage(strings.failure('Dropbox', resp.statusCode, resp.body));
         }
       } else if (client is OneDriveClientAdapter) {
         final token = client.accessToken!;
@@ -157,7 +165,7 @@ class _ShareLinkDialogState extends ConsumerState<_ShareLinkDialog> {
           final data = json.decode(resp.body);
           url = data['link']?['webUrl'];
         } else {
-          throw Exception('OneDrive share failed: ${resp.statusCode} ${resp.body}');
+          throw _ShareMessage(strings.failure('OneDrive', resp.statusCode, resp.body));
         }
       } else if (client is S3ClientAdapter) {
         final expiry = _useExpiration
@@ -165,9 +173,13 @@ class _ShareLinkDialogState extends ConsumerState<_ShareLinkDialog> {
             : const Duration(hours: 1);
         url = client.generatePresignedUrl(path, expires: expiry);
       } else if (client.supportsSharing) {
-        url = 'Share links not yet implemented for ${client.providerName}';
+        throw _ShareMessage(strings.provider('Share links are not yet implemented for {provider}.', client.providerName));
       } else {
-        throw UnsupportedError('${client.providerName} does not support sharing');
+        throw _ShareMessage(strings.provider('{provider} does not support sharing.', client.providerName));
+      }
+
+      if (url == null || url.isEmpty) {
+        throw _ShareMessage(strings.text('The provider did not return a share link.'));
       }
 
       if (mounted) {
@@ -181,7 +193,7 @@ class _ShareLinkDialogState extends ConsumerState<_ShareLinkDialog> {
       _log.error('Share link generation failed', e);
       if (mounted) {
         setState(() {
-          _error = e.toString();
+          _error = localizedProviderError(context, e);
           _loading = false;
         });
       }
@@ -191,13 +203,14 @@ class _ShareLinkDialogState extends ConsumerState<_ShareLinkDialog> {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
+    final strings = ShareLinkStrings(context);
 
     return AlertDialog(
       title: Row(
         children: [
           const Icon(Icons.link, size: 20),
           const SizedBox(width: 8),
-          Expanded(child: Text('Share — ${widget.file.name}', overflow: TextOverflow.ellipsis)),
+          Expanded(child: Text(strings.name('Share — {name}', widget.file.name), overflow: TextOverflow.ellipsis)),
         ],
       ),
       content: SizedBox(
@@ -215,18 +228,18 @@ class _ShareLinkDialogState extends ConsumerState<_ShareLinkDialog> {
         if (!_generated && !_loading)
           ElevatedButton.icon(
             icon: const Icon(Icons.link, size: 16),
-            label: const Text('Generate Link'),
+            label: Text(strings.text('Generate Link')),
             onPressed: _generateLink,
           ),
         if (_generated && _shareUrl != null)
           ElevatedButton.icon(
             icon: const Icon(Icons.copy, size: 16),
-            label: const Text('Copy Link'),
+            label: Text(strings.text('Copy Link')),
             onPressed: () {
               Clipboard.setData(ClipboardData(text: _shareUrl ?? ''));
               Navigator.pop(context);
               ScaffoldMessenger.of(context).showSnackBar(
-                const SnackBar(content: Text('Link copied to clipboard')),
+                SnackBar(content: Text(strings.text('Link copied to clipboard'))),
               );
             },
           ),
@@ -235,18 +248,19 @@ class _ShareLinkDialogState extends ConsumerState<_ShareLinkDialog> {
   }
 
   Widget _buildOptionsView(ThemeData theme) {
+    final strings = ShareLinkStrings(context);
     return Column(
       mainAxisSize: MainAxisSize.min,
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Text('Share Options', style: theme.textTheme.titleSmall),
+        Text(strings.text('Share Options'), style: theme.textTheme.titleSmall),
         const SizedBox(height: 12),
 
         // Password protection
         if (_supportsPassword) ...[
           SwitchListTile(
-            title: const Text('Password Protection'),
-            subtitle: const Text('Require password to access'),
+            title: Text(strings.text('Password Protection')),
+            subtitle: Text(strings.text('Require password to access')),
             value: _usePassword,
             onChanged: (v) => setState(() => _usePassword = v),
             dense: true,
@@ -257,10 +271,10 @@ class _ShareLinkDialogState extends ConsumerState<_ShareLinkDialog> {
               padding: const EdgeInsets.only(left: 16, bottom: 8),
               child: TextField(
                 controller: _passwordController,
-                decoration: const InputDecoration(
-                  labelText: 'Link Password',
-                  border: OutlineInputBorder(),
-                  prefixIcon: Icon(Icons.lock),
+                decoration: InputDecoration(
+                  labelText: strings.text('Link Password'),
+                  border: const OutlineInputBorder(),
+                  prefixIcon: const Icon(Icons.lock),
                   isDense: true,
                 ),
                 obscureText: true,
@@ -271,8 +285,8 @@ class _ShareLinkDialogState extends ConsumerState<_ShareLinkDialog> {
         // Expiration
         if (_supportsExpiration) ...[
           SwitchListTile(
-            title: const Text('Expiration'),
-            subtitle: Text(_useExpiration ? 'Expires in $_expirationDays days' : 'Link never expires'),
+            title: Text(strings.text('Expiration')),
+            subtitle: Text(_useExpiration ? strings.expires(_expirationDays) : strings.text('Link never expires')),
             value: _useExpiration,
             onChanged: (v) => setState(() => _useExpiration = v),
             dense: true,
@@ -283,17 +297,12 @@ class _ShareLinkDialogState extends ConsumerState<_ShareLinkDialog> {
               padding: const EdgeInsets.only(left: 16, bottom: 8),
               child: Row(
                 children: [
-                  const Text('Expires in: '),
+                  Text(strings.text('Expires in:')),
                   const SizedBox(width: 8),
                   DropdownButton<int>(
                     value: _expirationDays,
-                    items: const [
-                      DropdownMenuItem(value: 1, child: Text('1 day')),
-                      DropdownMenuItem(value: 3, child: Text('3 days')),
-                      DropdownMenuItem(value: 7, child: Text('7 days')),
-                      DropdownMenuItem(value: 14, child: Text('14 days')),
-                      DropdownMenuItem(value: 30, child: Text('30 days')),
-                      DropdownMenuItem(value: 90, child: Text('90 days')),
+                    items: [for (final days in [1, 3, 7, 14, 30, 90])
+                      DropdownMenuItem(value: days, child: Text(strings.duration(days))),
                     ],
                     onChanged: (v) => setState(() => _expirationDays = v ?? 7),
                   ),
@@ -304,7 +313,7 @@ class _ShareLinkDialogState extends ConsumerState<_ShareLinkDialog> {
 
         if (!_supportsPassword && !_supportsExpiration)
           Text(
-            'This provider does not support password or expiration options.',
+            strings.text('This provider does not support password or expiration options.'),
             style: TextStyle(fontSize: 12, color: theme.colorScheme.onSurfaceVariant),
           ),
       ],
@@ -312,6 +321,7 @@ class _ShareLinkDialogState extends ConsumerState<_ShareLinkDialog> {
   }
 
   Widget _buildResultView(ThemeData theme) {
+    final strings = ShareLinkStrings(context);
     return Column(
       mainAxisSize: MainAxisSize.min,
       children: [
@@ -320,14 +330,14 @@ class _ShareLinkDialogState extends ConsumerState<_ShareLinkDialog> {
           readOnly: true,
           decoration: InputDecoration(
             border: const OutlineInputBorder(),
-            labelText: 'Share URL',
+            labelText: strings.text('Share URL'),
             suffixIcon: IconButton(
               icon: const Icon(Icons.copy),
-              tooltip: 'Copy to clipboard',
+              tooltip: strings.text('Copy to clipboard'),
               onPressed: () {
                 Clipboard.setData(ClipboardData(text: _shareUrl ?? ''));
                 ScaffoldMessenger.of(context).showSnackBar(
-                  const SnackBar(content: Text('Link copied to clipboard')),
+                  SnackBar(content: Text(strings.text('Link copied to clipboard'))),
                 );
               },
             ),
@@ -339,7 +349,7 @@ class _ShareLinkDialogState extends ConsumerState<_ShareLinkDialog> {
             children: [
               Icon(Icons.lock, size: 14, color: theme.colorScheme.primary),
               const SizedBox(width: 4),
-              Text('Password protected', style: TextStyle(fontSize: 12, color: theme.colorScheme.primary)),
+              Text(strings.text('Password protected'), style: TextStyle(fontSize: 12, color: theme.colorScheme.primary)),
             ],
           ),
         if (_useExpiration)
@@ -347,12 +357,12 @@ class _ShareLinkDialogState extends ConsumerState<_ShareLinkDialog> {
             children: [
               Icon(Icons.timer, size: 14, color: theme.colorScheme.tertiary),
               const SizedBox(width: 4),
-              Text('Expires in $_expirationDays days', style: TextStyle(fontSize: 12, color: theme.colorScheme.tertiary)),
+              Text(strings.expires(_expirationDays), style: TextStyle(fontSize: 12, color: theme.colorScheme.tertiary)),
             ],
           ),
         const SizedBox(height: 8),
         Text(
-          'Anyone with this link can access the file.',
+          strings.text('Anyone with this link can access the file.'),
           style: TextStyle(fontSize: 12, color: theme.colorScheme.onSurfaceVariant),
         ),
       ],

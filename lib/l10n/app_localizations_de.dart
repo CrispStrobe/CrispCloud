@@ -749,20 +749,20 @@ class AppLocalizationsDe extends AppLocalizations {
 
   @override
   String nItems(int count) {
-    return '$count Eintraege';
+    return '$count Einträge';
   }
 
   @override
   String nTransfers(int count) {
-    return '$count Transfer(s)';
+    return '$count Übertragung(en)';
   }
 
   @override
-  String get syncing => 'Synchronisiere';
+  String get syncing => 'Synchronisierung';
 
   @override
   String lastSyncChanges(int count) {
-    return 'Letzte Sync: $count Aenderungen';
+    return 'Letzte Synchronisierung: $count Änderungen';
   }
 
   @override
@@ -1047,10 +1047,10 @@ class AppLocalizationsDe extends AppLocalizations {
   String get connectToB2 => 'Mit Backblaze B2 verbinden';
 
   @override
-  String get applicationKeyId => 'Application Key ID';
+  String get applicationKeyId => 'Anwendungsschlüssel-ID';
 
   @override
-  String get applicationKey => 'Application Key';
+  String get applicationKey => 'Anwendungsschlüssel';
 
   @override
   String get bucketNameOptional => 'Bucket-Name (optional)';

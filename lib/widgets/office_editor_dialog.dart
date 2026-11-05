@@ -26,7 +26,11 @@ import '../models/panel_side.dart';
 import '../providers/providers.dart';
 import '../services/file_bytes_loader.dart';
 import '../services/log_service.dart';
+import '../l10n/file_bytes_error_strings.dart';
+import '../l10n/provider_operation_strings.dart';
 import '../l10n/office_editor_strings.dart';
+import '../l10n/office_fallback_strings.dart';
+import '../l10n/office_surface_strings.dart';
 import '../services/office_editor_menu.dart';
 import 'office_editor_find_bar.dart';
 import 'office_editor_ribbon.dart';
@@ -134,6 +138,8 @@ class _OfficeEditorDialogState extends ConsumerState<OfficeEditorDialog> {
   void didChangeDependencies() {
     super.didChangeDependencies();
     _providerContainer = ProviderScope.containerOf(context, listen: false);
+    _config = _config.copyWith(strings: OfficeSurfaceStrings.of(context));
+    _controller?.syncConfig(_config);
   }
 
   @override
@@ -237,7 +243,8 @@ class _OfficeEditorDialogState extends ConsumerState<OfficeEditorDialog> {
       if (!mounted) return;
       setState(() {
         _loading = false;
-        _error = '${context.tr('Could not open this document')}: $e';
+        _error = '${context.tr('Could not open this document')}: '
+            '${localizedFileBytesError(context, e)}';
       });
     }
   }
@@ -285,7 +292,8 @@ class _OfficeEditorDialogState extends ConsumerState<OfficeEditorDialog> {
       setState(() => _saving = false);
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
-          content: Text('${context.tr('Save failed')}: $e'),
+          content: Text('${context.tr('Save failed')}: '
+              '${localizedProviderError(context, e)}'),
           backgroundColor: Theme.of(context).colorScheme.error,
         ),
       );
@@ -302,7 +310,10 @@ class _OfficeEditorDialogState extends ConsumerState<OfficeEditorDialog> {
       context: context,
       builder: (dialogContext) => AlertDialog(
         title: Text(context.tr('Unsaved changes')),
-        content: Text('${context.tr('Save changes to')} ${widget.file.name} ${context.tr('before closing?')}'),
+        content: Text(OfficeFallbackStrings.closeConfirmation(
+          Localizations.maybeLocaleOf(dialogContext)?.languageCode ?? 'en',
+          widget.file.name,
+        )),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(dialogContext, 'cancel'),
@@ -336,8 +347,7 @@ class _OfficeEditorDialogState extends ConsumerState<OfficeEditorDialog> {
       if (!await dir.exists()) await dir.create(recursive: true);
       final safeName =
           widget.file.name.replaceAll(RegExp(r'[^A-Za-z0-9._-]'), '_');
-      final name =
-          '${DateTime.now().millisecondsSinceEpoch}_$safeName';
+      final name = '${DateTime.now().millisecondsSinceEpoch}_$safeName';
       await File('${dir.path}/$name').writeAsBytes(bytes, flush: true);
     } catch (_) {
       // Snapshots are best-effort.
@@ -403,17 +413,15 @@ class _OfficeEditorDialogState extends ConsumerState<OfficeEditorDialog> {
             _wordShortcut((WmlRunProps p) => p.italic = !p.italic),
         const SingleActivator(LogicalKeyboardKey.keyU, control: true): () =>
             _wordShortcut(
-              (WmlRunProps p) => p.underline =
-                  p.underline == WmlUnderline.none
-                      ? WmlUnderline.single
-                      : WmlUnderline.none,
+              (WmlRunProps p) => p.underline = p.underline == WmlUnderline.none
+                  ? WmlUnderline.single
+                  : WmlUnderline.none,
             ),
         const SingleActivator(LogicalKeyboardKey.keyU, meta: true): () =>
             _wordShortcut(
-              (WmlRunProps p) => p.underline =
-                  p.underline == WmlUnderline.none
-                      ? WmlUnderline.single
-                      : WmlUnderline.none,
+              (WmlRunProps p) => p.underline = p.underline == WmlUnderline.none
+                  ? WmlUnderline.single
+                  : WmlUnderline.none,
             ),
         const SingleActivator(LogicalKeyboardKey.keyZ, control: true): () =>
             _controller?.undo(),
@@ -444,13 +452,15 @@ class _OfficeEditorDialogState extends ConsumerState<OfficeEditorDialog> {
     }
     if (_kind == OfficeEditorKind.unsupported) {
       return _messagePane(
-        context.tr('This Office format cannot be edited safely. Use F3 to view it, or save it as .docx / .xlsx / .pptx and edit that.'),
+        context.tr(
+            'This Office format cannot be edited safely. Use F3 to view it, or save it as .docx / .xlsx / .pptx and edit that.'),
         theme,
       );
     }
     final controller = _controller;
     if (controller == null) {
-      return _messagePane(context.tr('The document could not be loaded.'), theme);
+      return _messagePane(
+          context.tr('The document could not be loaded.'), theme);
     }
     final Widget editor = switch (_kind) {
       OfficeEditorKind.word => QudsWordEditor(
@@ -530,5 +540,3 @@ class _OfficeEditorDialogState extends ConsumerState<OfficeEditorDialog> {
     );
   }
 }
-
-

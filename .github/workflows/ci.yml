@@ -398,6 +398,12 @@ jobs:
 
       - run: flutter config --enable-macos-desktop
       - run: flutter pub get
+      - name: Check macOS startup smoke test behavior
+        run: bash test/macos_startup_smoke_test.sh
+      - name: Check native FUSE directory pagination
+        run: |
+          clang -std=c11 -O2 -Wall -Wextra -Werror -I macos/vendor test/fuse_bridge_readdir_test.c -o /tmp/crispcloud-fuse-readdir-test
+          /tmp/crispcloud-fuse-readdir-test
       - name: macOS regression tests
         run: >-
           flutter test --concurrency=2
@@ -405,6 +411,11 @@ jobs:
           test/finder_extension_test.dart
           test/local_file_service_test.dart
           test/xdg_test.dart
+          test/azure_range_read_test.dart
+          test/fuse_filesystem_protocol_test.dart
+          test/fuse_mount_test.dart
+          test/sftp_operation_localization_test.dart
+          test/native_preview_error_localization_test.dart
       - run: flutter build macos --release
 
       - name: Launch release bundle

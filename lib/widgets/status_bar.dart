@@ -9,6 +9,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../models/panel_side.dart';
 import '../providers/providers.dart';
 import '../l10n/app_localizations.dart';
+import '../l10n/misc_ui_strings.dart';
 import '../utils/formatters.dart';
 
 class StatusBar extends ConsumerStatefulWidget {
@@ -107,7 +108,7 @@ class _StatusBarState extends ConsumerState<StatusBar> {
               final score = privacyScore(auth.providerName);
               final scoreColor = score >= 70 ? Colors.green : score >= 50 ? Colors.orange : Colors.red;
               return Tooltip(
-                message: 'Privacy: ${privacyLabel(score)} ($score/100)',
+                message: '${MiscUiStrings(context).text('privacy')}: ${MiscUiStrings(context).privacyLevel(score)} ($score/100)',
                 child: Icon(Icons.shield, size: 12, color: scoreColor),
               );
             }),

@@ -11,12 +11,17 @@
 // Buttons: Cancel | Test Connection | Connect
 
 import 'package:flutter/material.dart';
+
+import '../l10n/provider_operation_strings.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../providers/core_providers.dart';
 import '../services/hetzner_adapter.dart';
 import '../services/hetzner_config_service.dart';
 import '../l10n/app_localizations.dart';
+import '../l10n/hetzner_setup_strings.dart';
+import '../l10n/cloud_setup_strings.dart';
+import '../l10n/connection_dialog_extra_strings.dart';
 
 class HetznerConnectionDialog extends ConsumerStatefulWidget {
   const HetznerConnectionDialog({super.key});
@@ -72,18 +77,21 @@ class _HetznerConnectionDialogState
     });
   }
 
+  String _text(String key, [Map<String, Object> values = const {}]) =>
+      HetznerSetupStrings(context).text(key, values);
+
   // ── Validation ────────────────────────────────────────────────────────────
 
   String? _validate() {
     final username = _usernameController.text.trim();
-    if (username.isEmpty) return 'Username is required (e.g. u123456)';
+    if (username.isEmpty) return _text('usernameRequired');
 
     // Soft format hint — Hetzner usernames start with 'u' followed by digits.
     if (!RegExp(r'^u\d+$').hasMatch(username)) {
-      return 'Username should be in uNNNNNN format (e.g. u123456)';
+      return _text('usernameFormat');
     }
 
-    if (_passwordController.text.isEmpty) return 'Password is required';
+    if (_passwordController.text.isEmpty) return _text('passwordRequired');
 
     return null;
   }
@@ -134,16 +142,16 @@ class _HetznerConnectionDialogState
                     context: context,
                     barrierDismissible: false,
                     builder: (ctx) => AlertDialog(
-                            title: const Text('Verify SSH server'),
+                            title: Text(ConnectionDialogExtraStrings(context).text('verifySsh')),
                             content: SelectableText(
-                                '$endpoint\n\n$fingerprint\n\nCompare this host key with your server.'),
+                                ConnectionDialogExtraStrings(context).text('sshFingerprint', {'endpoint': endpoint, 'fingerprint': fingerprint})),
                             actions: [
                               TextButton(
                                   onPressed: () => Navigator.pop(ctx, false),
-                                  child: const Text('Cancel')),
+                                  child: Text(AppLocalizations.of(context)!.cancel)),
                               FilledButton(
                                   onPressed: () => Navigator.pop(ctx, true),
-                                  child: const Text('Trust server'))
+                                  child: Text(ConnectionDialogExtraStrings(context).text('trust')))
                             ])) ??
                 false;
           });
@@ -160,15 +168,15 @@ class _HetznerConnectionDialogState
       if (!mounted) return;
       setState(() {
         _testResult = latency >= 0
-            ? 'Connection successful (${latency}ms)'
-            : 'Connected but health check timed out';
+            ? _text('success', {'latency': latency})
+            : _text('healthTimeout');
         _isTesting = false;
       });
     } catch (e) {
       if (!mounted) return;
       setState(() {
         _error =
-            'Test failed: ${e.toString().replaceAll('Exception:', '').trim()}';
+            CloudSetupStrings(context).text('testFailed', {'error': localizedProviderError(context, e).replaceAll('Exception:', '').trim()});
         _isTesting = false;
       });
     }
@@ -204,7 +212,7 @@ class _HetznerConnectionDialogState
     } catch (e) {
       if (mounted) {
         setState(() {
-          _error = e.toString().replaceAll('Exception:', '').trim();
+          _error = localizedProviderError(context, e).replaceAll('Exception:', '').trim();
           _isLoading = false;
         });
       }
@@ -218,7 +226,7 @@ class _HetznerConnectionDialogState
     final busy = _isLoading || _isTesting;
 
     return AlertDialog(
-      title: const Text('Connect to Hetzner Storage Box'),
+      title: Text(_text('connectTitle')),
       scrollable: true,
       content: SizedBox(
         width: 420,
@@ -234,15 +242,13 @@ class _HetznerConnectionDialogState
                       .textTheme
                       .bodySmall
                       ?.copyWith(fontSize: 12),
-                  children: const [
-                    TextSpan(
+                  children: [
+                    const TextSpan(
                       text: 'Hetzner Storage Box — ',
                       style: TextStyle(fontWeight: FontWeight.bold),
                     ),
                     TextSpan(
-                      text: 'connect via SFTP (port 23) or WebDAV (HTTPS). '
-                          'Your username is shown in the Robot & Storage Box panel '
-                          'in the Hetzner Cloud Console.',
+                      text: _text('info'),
                     ),
                   ],
                 ),
@@ -256,12 +262,12 @@ class _HetznerConnectionDialogState
               controller: _usernameController,
               enabled: !busy,
               onChanged: (_) => setState(() {}), // refresh preview
-              decoration: const InputDecoration(
-                labelText: 'Username',
+              decoration: InputDecoration(
+                labelText: AppLocalizations.of(context)!.username,
                 hintText: 'u123456',
-                border: OutlineInputBorder(),
-                prefixIcon: Icon(Icons.person_outline),
-                helperText: 'Format: uNNNNNN (shown in Hetzner console)',
+                border: const OutlineInputBorder(),
+                prefixIcon: const Icon(Icons.person_outline),
+                helperText: _text('usernameHelp'),
               ),
             ),
             const SizedBox(height: 16),
@@ -273,7 +279,7 @@ class _HetznerConnectionDialogState
               enabled: !busy,
               obscureText: _obscurePassword,
               decoration: InputDecoration(
-                labelText: 'Password',
+                labelText: AppLocalizations.of(context)!.password,
                 border: const OutlineInputBorder(),
                 prefixIcon: const Icon(Icons.lock_outline),
                 suffixIcon: IconButton(
@@ -291,7 +297,7 @@ class _HetznerConnectionDialogState
 
             // ── Protocol selector ───────────────────────────────────────────
             Text(
-              'Protocol',
+              _text('protocol'),
               style: Theme.of(context).textTheme.labelLarge,
             ),
             const SizedBox(height: 4),
@@ -301,12 +307,12 @@ class _HetznerConnectionDialogState
                 if (busy || v == null) return;
                 setState(() => _protocol = v);
               },
-              child: const Row(
+              child: Row(
                 children: [
                   Expanded(
                     child: RadioListTile<HetznerProtocol>(
-                      key: Key('hetzner_proto_sftp'),
-                      title: Text('SFTP  (port 23)'),
+                      key: const Key('hetzner_proto_sftp'),
+                      title: Text(_text('sftp')),
                       value: HetznerProtocol.sftp,
                       dense: true,
                       contentPadding: EdgeInsets.zero,
@@ -314,8 +320,8 @@ class _HetznerConnectionDialogState
                   ),
                   Expanded(
                     child: RadioListTile<HetznerProtocol>(
-                      key: Key('hetzner_proto_webdav'),
-                      title: Text('WebDAV  (HTTPS)'),
+                      key: const Key('hetzner_proto_webdav'),
+                      title: const Text('WebDAV  (HTTPS)'),
                       value: HetznerProtocol.webdav,
                       dense: true,
                       contentPadding: EdgeInsets.zero,
@@ -358,13 +364,12 @@ class _HetznerConnectionDialogState
               key: const Key('hetzner_subaccount'),
               controller: _subAccountController,
               enabled: !busy,
-              decoration: const InputDecoration(
-                labelText: 'Sub-account (optional)',
+              decoration: InputDecoration(
+                labelText: _text('subAccount'),
                 hintText: 'sub1',
-                border: OutlineInputBorder(),
-                prefixIcon: Icon(Icons.manage_accounts_outlined),
-                helperText: 'Leave blank to use the main account. '
-                    'Effective login: uNNNNNN-subN',
+                border: const OutlineInputBorder(),
+                prefixIcon: const Icon(Icons.manage_accounts_outlined),
+                helperText: _text('subHelp'),
               ),
             ),
 
@@ -393,7 +398,7 @@ class _HetznerConnectionDialogState
                   height: 16,
                   child: CircularProgressIndicator(strokeWidth: 2),
                 )
-              : const Text('Test Connection'),
+              : Text(CloudSetupStrings(context).text('test')),
         ),
         ElevatedButton(
           onPressed: busy ? null : _connect,
@@ -403,7 +408,7 @@ class _HetznerConnectionDialogState
                   height: 16,
                   child: CircularProgressIndicator(strokeWidth: 2),
                 )
-              : const Text('Connect'),
+              : Text(AppLocalizations.of(context)!.connect),
         ),
       ],
     );

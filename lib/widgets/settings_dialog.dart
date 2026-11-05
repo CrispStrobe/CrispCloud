@@ -15,6 +15,8 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../l10n/app_localizations.dart';
+import '../l10n/settings_strings.dart';
+
 import '../providers/accessibility_provider.dart';
 import '../providers/analytics_provider.dart';
 import '../providers/delta_sync_provider.dart';
@@ -48,8 +50,9 @@ class SettingsDialog extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
+    final s = SettingsStrings(context);
     return AlertDialog(
-      title: const Text('Settings'),
+      title: Text(s.text('Settings')),
       scrollable: true,
       contentPadding: const EdgeInsets.fromLTRB(0, 0, 0, 0),
       content: SizedBox(
@@ -83,7 +86,7 @@ class SettingsDialog extends ConsumerWidget {
       actions: [
         ElevatedButton(
           onPressed: () => Navigator.pop(context),
-          child: const Text('Done'),
+          child: Text(s.text('Done')),
         ),
       ],
     );
@@ -97,45 +100,49 @@ class SettingsDialog extends ConsumerWidget {
 class _GeneralSection extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
+    final s = SettingsStrings(context);
     final fkeyVisible = ref.watch(fkeyBarVisibleProvider);
 
     return _Section(
-      title: 'General',
+      title: s.text('General'),
       icon: Icons.tune,
       children: [
         SwitchListTile(
           key: const Key('settings_fkey_bar_toggle'),
           value: fkeyVisible,
-          onChanged: (_) =>
-              ref.read(fkeyBarVisibleProvider.notifier).toggle(),
-          title: const Text('F-key Bar'),
-          subtitle: const Text(
-            'Show F3–F8 shortcut buttons at the bottom of the screen',
+          onChanged: (_) => ref.read(fkeyBarVisibleProvider.notifier).toggle(),
+          title: Text(s.text('F-key Bar')),
+          subtitle: Text(
+            s.text('Show F3–F8 shortcut buttons at the bottom of the screen'),
           ),
-          secondary: Icon(
-            fkeyVisible ? Icons.keyboard : Icons.keyboard_hide,
-          ),
+          secondary: Icon(fkeyVisible ? Icons.keyboard : Icons.keyboard_hide),
           dense: false,
-          contentPadding:
-              const EdgeInsets.symmetric(horizontal: 24, vertical: 4),
+          contentPadding: const EdgeInsets.symmetric(
+            horizontal: 24,
+            vertical: 4,
+          ),
         ),
         ListTile(
           key: const Key('settings_toolbar_customize'),
           leading: const Icon(Icons.view_column_outlined),
-          title: const Text('Customize Toolbar'),
-          subtitle: const Text('Add, remove, or reorder toolbar buttons'),
+          title: Text(s.text('Customize Toolbar')),
+          subtitle: Text(s.text('Add, remove, or reorder toolbar buttons')),
           trailing: const Icon(Icons.chevron_right),
-          contentPadding:
-              const EdgeInsets.symmetric(horizontal: 24, vertical: 4),
+          contentPadding: const EdgeInsets.symmetric(
+            horizontal: 24,
+            vertical: 4,
+          ),
           onTap: () {
             // Dismiss settings first, then open toolbar customization.
             Navigator.pop(context);
             // The toolbar customization dialog is opened by the caller
             // through a separate route / dialog in provider_settings_dialog.
             ScaffoldMessenger.of(context).showSnackBar(
-              const SnackBar(
-                content: Text('Open View → Toolbar to customize buttons'),
-                duration: Duration(seconds: 2),
+              SnackBar(
+                content: Text(
+                  s.text('Open View → Toolbar to customize buttons'),
+                ),
+                duration: const Duration(seconds: 2),
               ),
             );
           },
@@ -152,6 +159,7 @@ class _GeneralSection extends ConsumerWidget {
 class _AppearanceSection extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
+    final s = SettingsStrings(context);
     final double fontSize = ref.watch(fontSizeProvider);
     final String family = ref.watch(fontFamilyProvider);
     final themeService = ref.watch(themeProvider);
@@ -167,13 +175,13 @@ class _AppearanceSection extends ConsumerWidget {
     };
 
     return _Section(
-      title: 'Appearance',
+      title: s.text('Appearance'),
       icon: Icons.text_fields,
       children: [
         Padding(
           padding: const EdgeInsets.fromLTRB(24, 4, 24, 0),
           child: Text(
-            'Theme and accent',
+            s.text('Theme and accent'),
             style: Theme.of(context).textTheme.bodyMedium,
           ),
         ),
@@ -182,15 +190,17 @@ class _AppearanceSection extends ConsumerWidget {
         Padding(
           padding: const EdgeInsets.fromLTRB(24, 0, 24, 0),
           child: Text(
-            'File-list font',
+            s.text('File-list font'),
             style: Theme.of(context).textTheme.bodyMedium,
           ),
         ),
         ListTile(
           key: const Key('settings_font_family'),
           leading: const Icon(Icons.font_download_outlined),
-          title: const Text('File list font'),
-          subtitle: const Text('Used for names, sizes and dates in the panels'),
+          title: Text(s.text('File list font')),
+          subtitle: Text(
+            s.text('Used for names, sizes and dates in the panels'),
+          ),
           trailing: SizedBox(
             width: 190,
             child: DropdownButton<String>(
@@ -201,7 +211,10 @@ class _AppearanceSection extends ConsumerWidget {
                 for (final MapEntry<String, String> entry in families.entries)
                   DropdownMenuItem<String>(
                     value: entry.key,
-                    child: Text(entry.value, overflow: TextOverflow.ellipsis),
+                    child: Text(
+                      s.text(entry.value),
+                      overflow: TextOverflow.ellipsis,
+                    ),
                   ),
               ],
               onChanged: (String? value) {
@@ -217,7 +230,7 @@ class _AppearanceSection extends ConsumerWidget {
         ListTile(
           key: const Key('settings_font_size'),
           leading: const Icon(Icons.format_size),
-          title: const Text('File list font size'),
+          title: Text(s.text('File list font size')),
           subtitle: Text('${fontSize.toStringAsFixed(0)} pt'),
           trailing: SizedBox(
             width: 190,
@@ -237,7 +250,7 @@ class _AppearanceSection extends ConsumerWidget {
         Padding(
           padding: const EdgeInsets.fromLTRB(24, 0, 24, 10),
           child: Text(
-            'Example: Annual-Report-2026.pdf   ·   2.4 MB   ·   Today',
+            s.text('Example: Annual-Report-2026.pdf   ·   2.4 MB   ·   Today'),
             style: TextStyle(
               fontFamily: family == 'system' ? null : family,
               fontSize: fontSize,
@@ -256,17 +269,18 @@ class _AppearanceSection extends ConsumerWidget {
 class _QuickSearchSection extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
+    final s = SettingsStrings(context);
     final settings = ref.watch(quickSearchSettingsProvider);
     final notifier = ref.read(quickSearchSettingsProvider.notifier);
     final modeLabel = switch (settings.mode) {
-      QuickSearchMode.select => 'Select every matching file',
-      QuickSearchMode.jump => 'Jump to the next matching file',
-      QuickSearchMode.filter => 'Filter the file list',
-      QuickSearchMode.off => 'Disabled',
+      QuickSearchMode.select => s.text('Select every matching file'),
+      QuickSearchMode.jump => s.text('Jump to the next matching file'),
+      QuickSearchMode.filter => s.text('Filter the file list'),
+      QuickSearchMode.off => s.text('Disabled'),
     };
 
     return _Section(
-      title: 'Quick Search',
+      title: s.text('Quick Search'),
       icon: Icons.search,
       children: [
         Padding(
@@ -274,28 +288,30 @@ class _QuickSearchSection extends ConsumerWidget {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              Text('Typing in the file list',
-                  style: Theme.of(context).textTheme.bodyMedium),
+              Text(
+                s.text('Typing in the file list'),
+                style: Theme.of(context).textTheme.bodyMedium,
+              ),
               const SizedBox(height: 8),
               SegmentedButton<QuickSearchMode>(
                 key: const Key('settings_quick_search_mode'),
                 showSelectedIcon: false,
-                segments: const [
+                segments: [
                   ButtonSegment(
                     value: QuickSearchMode.select,
-                    label: Text('Select'),
+                    label: Text(s.text('Select')),
                   ),
                   ButtonSegment(
                     value: QuickSearchMode.jump,
-                    label: Text('Jump'),
+                    label: Text(s.text('Jump')),
                   ),
                   ButtonSegment(
                     value: QuickSearchMode.filter,
-                    label: Text('Filter'),
+                    label: Text(s.text('Filter')),
                   ),
                   ButtonSegment(
                     value: QuickSearchMode.off,
-                    label: Text('Off'),
+                    label: Text(s.text('Off')),
                   ),
                 ],
                 selected: {settings.mode},
@@ -306,8 +322,8 @@ class _QuickSearchSection extends ConsumerWidget {
               Text(
                 modeLabel,
                 style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                      color: Theme.of(context).colorScheme.onSurfaceVariant,
-                    ),
+                  color: Theme.of(context).colorScheme.onSurfaceVariant,
+                ),
               ),
             ],
           ),
@@ -316,8 +332,8 @@ class _QuickSearchSection extends ConsumerWidget {
           key: const Key('settings_quick_search_prefix'),
           value: settings.matchFromStart,
           onChanged: notifier.setMatchFromStart,
-          title: const Text('Match from the beginning'),
-          subtitle: const Text('Off: match anywhere in the file name'),
+          title: Text(s.text('Match from the beginning')),
+          subtitle: Text(s.text('Off: match anywhere in the file name')),
           contentPadding: const EdgeInsets.symmetric(horizontal: 24),
           dense: true,
         ),
@@ -325,7 +341,7 @@ class _QuickSearchSection extends ConsumerWidget {
           key: const Key('settings_quick_search_case'),
           value: settings.caseSensitive,
           onChanged: notifier.setCaseSensitive,
-          title: const Text('Case sensitive'),
+          title: Text(s.text('Case sensitive')),
           contentPadding: const EdgeInsets.symmetric(horizontal: 24),
           dense: true,
         ),
@@ -333,19 +349,20 @@ class _QuickSearchSection extends ConsumerWidget {
           key: const Key('settings_quick_search_arrows'),
           value: settings.arrowNavigation,
           onChanged: notifier.setArrowNavigation,
-          title: const Text('Arrow keys cycle through matches'),
-          subtitle: const Text(
-              'Up/Down move to the previous/next match while searching'),
+          title: Text(s.text('Arrow keys cycle through matches')),
+          subtitle: Text(
+            s.text('Up/Down move to the previous/next match while searching'),
+          ),
           contentPadding: const EdgeInsets.symmetric(horizontal: 24),
           dense: true,
         ),
         ListTile(
           leading: const Icon(Icons.timer_outlined),
-          title: const Text('Reset search after'),
+          title: Text(s.text('Reset search after')),
           subtitle: Text(
             settings.resetSeconds == 0
-                ? 'Never'
-                : '${settings.resetSeconds} second(s) of inactivity',
+                ? s.text('Never')
+                : s.inactivity(settings.resetSeconds),
           ),
           trailing: DropdownButton<int>(
             key: const Key('settings_quick_search_reset'),
@@ -353,13 +370,13 @@ class _QuickSearchSection extends ConsumerWidget {
             onChanged: (value) {
               if (value != null) notifier.setResetSeconds(value);
             },
-            items: const [
-              DropdownMenuItem(value: 0, child: Text('Never')),
-              DropdownMenuItem(value: 1, child: Text('1 s')),
-              DropdownMenuItem(value: 2, child: Text('2 s')),
-              DropdownMenuItem(value: 3, child: Text('3 s')),
-              DropdownMenuItem(value: 5, child: Text('5 s')),
-              DropdownMenuItem(value: 10, child: Text('10 s')),
+            items: [
+              DropdownMenuItem(value: 0, child: Text(s.text('Never'))),
+              DropdownMenuItem(value: 1, child: Text(s.seconds(1))),
+              DropdownMenuItem(value: 2, child: Text(s.seconds(2))),
+              DropdownMenuItem(value: 3, child: Text(s.seconds(3))),
+              DropdownMenuItem(value: 5, child: Text(s.seconds(5))),
+              DropdownMenuItem(value: 10, child: Text(s.seconds(10))),
             ],
           ),
           contentPadding: const EdgeInsets.symmetric(horizontal: 24),
@@ -377,6 +394,7 @@ class _QuickSearchSection extends ConsumerWidget {
 class _LanguageSection extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
+    final s = SettingsStrings(context);
     final Locale? current = ref.watch(localeProvider);
     const labels = <String, String>{
       'system': 'System default',
@@ -390,29 +408,29 @@ class _LanguageSection extends ConsumerWidget {
       'ko': '한국어',
       'ar': 'العربية',
     };
-    final locales = <String>{
-      'system',
-      ...AppLocalizations.supportedLocales.map((l) => l.languageCode),
-    }.toList()
-      ..sort((a, b) {
-        if (a == 'system') return -1;
-        if (b == 'system') return 1;
-        return a.compareTo(b);
-      });
+    final locales =
+        <String>{
+          'system',
+          ...AppLocalizations.supportedLocales.map((l) => l.languageCode),
+        }.toList()..sort((a, b) {
+          if (a == 'system') return -1;
+          if (b == 'system') return 1;
+          return a.compareTo(b);
+        });
     final currentCode = current?.languageCode ?? 'system';
 
     return _Section(
-      title: 'Language',
+      title: s.text('Language'),
       icon: Icons.language,
       children: [
         ListTile(
           key: const Key('settings_language'),
           leading: const Icon(Icons.translate),
-          title: const Text('App language'),
+          title: Text(s.text('App language')),
           subtitle: Text(
             current == null
-                ? 'Follows the system language'
-                : 'Applies immediately and is saved',
+                ? s.text('Follows the system language')
+                : s.text('Applies immediately and is saved'),
           ),
           trailing: SizedBox(
             width: 190,
@@ -425,16 +443,18 @@ class _LanguageSection extends ConsumerWidget {
                   DropdownMenuItem<String>(
                     value: code,
                     child: Text(
-                      labels[code] ?? code.toUpperCase(),
+                      code == 'system'
+                          ? s.text('System default')
+                          : labels[code] ?? code.toUpperCase(),
                       overflow: TextOverflow.ellipsis,
                     ),
                   ),
               ],
               onChanged: (value) {
                 if (value == null) return;
-                ref.read(localeProvider.notifier).setLocale(
-                      value == 'system' ? null : Locale(value),
-                    );
+                ref
+                    .read(localeProvider.notifier)
+                    .setLocale(value == 'system' ? null : Locale(value));
               },
             ),
           ),
@@ -444,8 +464,9 @@ class _LanguageSection extends ConsumerWidget {
         Padding(
           padding: const EdgeInsets.fromLTRB(24, 0, 24, 10),
           child: Text(
-            'The selected language is stored locally and restored on the '
-            'next launch.',
+            s.text(
+              'The selected language is stored locally and restored on the next launch.',
+            ),
             style: Theme.of(context).textTheme.bodySmall,
           ),
         ),
@@ -461,11 +482,12 @@ class _LanguageSection extends ConsumerWidget {
 class _CacheSection extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
+    final s = SettingsStrings(context);
     return _Section(
-      title: 'Cache',
+      title: s.text('Cache'),
       icon: Icons.storage,
-      children: [
-        const Padding(
+      children: const [
+        Padding(
           padding: EdgeInsets.symmetric(horizontal: 24),
           child: CacheSettingsPanel(),
         ),
@@ -498,19 +520,20 @@ class _NetworkSectionState extends ConsumerState<_NetworkSection> {
 
   @override
   Widget build(BuildContext context) {
+    final s = SettingsStrings(context);
     final config = ref.watch(proxyServiceProvider).config;
     final proxySummary = config.isEnabled
         ? '${config.type.name.toUpperCase()} ${config.host}:${config.port}'
-        : 'Direct connection';
+        : s.text('Direct connection');
 
     return _Section(
-      title: 'Network',
+      title: s.text('Network'),
       icon: Icons.lan_outlined,
       children: [
         ListTile(
           key: const Key('settings_proxy'),
           leading: const Icon(Icons.vpn_lock_outlined),
-          title: const Text('Proxy and certificates'),
+          title: Text(s.text('Proxy and certificates')),
           subtitle: Text(proxySummary),
           trailing: const Icon(Icons.chevron_right),
           contentPadding: const EdgeInsets.symmetric(horizontal: 24),
@@ -520,9 +543,9 @@ class _NetworkSectionState extends ConsumerState<_NetworkSection> {
         ListTile(
           key: const Key('settings_provider'),
           leading: const Icon(Icons.cloud_outlined),
-          title: const Text('Cloud provider request settings'),
-          subtitle: const Text(
-            'Timeout, headers, redirects and TLS verification',
+          title: Text(s.text('Cloud provider request settings')),
+          subtitle: Text(
+            s.text('Timeout, headers, redirects and TLS verification'),
           ),
           trailing: const Icon(Icons.chevron_right),
           contentPadding: const EdgeInsets.symmetric(horizontal: 24),
@@ -541,48 +564,47 @@ class _NetworkSectionState extends ConsumerState<_NetworkSection> {
 class _AccessibilitySection extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
+    final s = SettingsStrings(context);
     final highContrast = ref.watch(highContrastProvider);
     final reducedMotion = ref.watch(reducedMotionProvider);
 
     return _Section(
-      title: 'Accessibility',
+      title: s.text('Accessibility'),
       icon: Icons.accessibility_new,
       children: [
         SwitchListTile(
           key: const Key('settings_high_contrast_toggle'),
           value: highContrast,
-          onChanged: (_) =>
-              ref.read(highContrastProvider.notifier).toggle(),
-          title: const Text('High Contrast'),
-          subtitle: const Text(
-            'Increase colour contrast for text and UI elements',
+          onChanged: (_) => ref.read(highContrastProvider.notifier).toggle(),
+          title: Text(s.text('High Contrast')),
+          subtitle: Text(
+            s.text('Increase colour contrast for text and UI elements'),
           ),
           secondary: Icon(
-            highContrast
-                ? Icons.contrast
-                : Icons.contrast_outlined,
+            highContrast ? Icons.contrast : Icons.contrast_outlined,
           ),
           dense: false,
-          contentPadding:
-              const EdgeInsets.symmetric(horizontal: 24, vertical: 4),
+          contentPadding: const EdgeInsets.symmetric(
+            horizontal: 24,
+            vertical: 4,
+          ),
         ),
         SwitchListTile(
           key: const Key('settings_reduced_motion_toggle'),
           value: reducedMotion,
-          onChanged: (_) =>
-              ref.read(reducedMotionProvider.notifier).toggle(),
-          title: const Text('Reduced Motion'),
-          subtitle: const Text(
-            'Minimise animations and transition effects',
-          ),
+          onChanged: (_) => ref.read(reducedMotionProvider.notifier).toggle(),
+          title: Text(s.text('Reduced Motion')),
+          subtitle: Text(s.text('Minimise animations and transition effects')),
           secondary: Icon(
             reducedMotion
                 ? Icons.motion_photos_off
                 : Icons.motion_photos_on_outlined,
           ),
           dense: false,
-          contentPadding:
-              const EdgeInsets.symmetric(horizontal: 24, vertical: 4),
+          contentPadding: const EdgeInsets.symmetric(
+            horizontal: 24,
+            vertical: 4,
+          ),
         ),
       ],
     );
@@ -596,10 +618,11 @@ class _AccessibilitySection extends ConsumerWidget {
 class _PrivacySection extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
+    final s = SettingsStrings(context);
     final analyticsEnabled = ref.watch(analyticsEnabledProvider);
 
     return _Section(
-      title: 'Privacy',
+      title: s.text('Privacy'),
       icon: Icons.shield_outlined,
       children: [
         SwitchListTile(
@@ -607,10 +630,11 @@ class _PrivacySection extends ConsumerWidget {
           value: analyticsEnabled,
           onChanged: (value) =>
               ref.read(analyticsEnabledProvider.notifier).setEnabled(value),
-          title: const Text('Share Usage Analytics'),
-          subtitle: const Text(
-            'Send anonymous feature-usage data to help improve CrispCloud. '
-            'No file names, paths, or credentials are ever collected.',
+          title: Text(s.text('Share Usage Analytics')),
+          subtitle: Text(
+            s.text(
+              'Send anonymous feature-usage data to help improve CrispCloud. No file names, paths, or credentials are ever collected.',
+            ),
           ),
           secondary: Icon(
             analyticsEnabled
@@ -621,8 +645,10 @@ class _PrivacySection extends ConsumerWidget {
                 : null,
           ),
           dense: false,
-          contentPadding:
-              const EdgeInsets.symmetric(horizontal: 24, vertical: 4),
+          contentPadding: const EdgeInsets.symmetric(
+            horizontal: 24,
+            vertical: 4,
+          ),
         ),
         if (analyticsEnabled)
           Padding(
@@ -630,22 +656,22 @@ class _PrivacySection extends ConsumerWidget {
             child: Container(
               padding: const EdgeInsets.all(10),
               decoration: BoxDecoration(
-                color: Theme.of(context)
-                    .colorScheme
-                    .surfaceContainerHighest
-                    .withValues(alpha: 0.5),
+                color: Theme.of(
+                  context,
+                ).colorScheme.surfaceContainerHighest.withValues(alpha: 0.5),
                 borderRadius: BorderRadius.circular(8),
               ),
-              child: const Row(
+              child: Row(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Icon(Icons.info_outline, size: 16),
-                  SizedBox(width: 8),
+                  const Icon(Icons.info_outline, size: 16),
+                  const SizedBox(width: 8),
                   Expanded(
                     child: Text(
-                      'Data is stored locally and summarised before any '
-                      'transmission. You can disable this at any time.',
-                      style: TextStyle(fontSize: 12),
+                      s.text(
+                        'Data is stored locally and summarised before any transmission. You can disable this at any time.',
+                      ),
+                      style: const TextStyle(fontSize: 12),
                     ),
                   ),
                 ],
@@ -678,21 +704,22 @@ const _kBlockSizeOptions = [
 class _AdvancedSection extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
+    final s = SettingsStrings(context);
     final deltaSyncEnabled = ref.watch(deltaSyncEnabledProvider);
     final blockSize = ref.watch(deltaBlockSizeProvider);
 
     // Find the nearest option or use a fallback label.
-    final blockSizeLabel = _kBlockSizeOptions
-        .cast<(int, String)?>()
-        .firstWhere(
-          (o) => o!.$1 == blockSize,
-          orElse: () => null,
-        )
-        ?.$2 ??
+    final blockSizeLabel =
+        _kBlockSizeOptions
+            .cast<(int, String)?>()
+            .firstWhere((o) => o!.$1 == blockSize, orElse: () => null)
+            ?.$2 ??
         '${(blockSize / (1024 * 1024)).toStringAsFixed(1)} MB';
 
+    final localizedBlockSizeLabel = s.text(blockSizeLabel);
+
     return _Section(
-      title: 'Advanced',
+      title: s.text('Advanced'),
       icon: Icons.settings_applications_outlined,
       children: [
         SwitchListTile(
@@ -700,10 +727,11 @@ class _AdvancedSection extends ConsumerWidget {
           value: deltaSyncEnabled,
           onChanged: (value) =>
               ref.read(deltaSyncEnabledProvider.notifier).setEnabled(value),
-          title: const Text('Delta Sync'),
-          subtitle: const Text(
-            'Transfer only changed blocks for files larger than 10 MB, '
-            'reducing bandwidth usage.',
+          title: Text(s.text('Delta Sync')),
+          subtitle: Text(
+            s.text(
+              'Transfer only changed blocks for files larger than 10 MB, reducing bandwidth usage.',
+            ),
           ),
           secondary: Icon(
             deltaSyncEnabled
@@ -714,43 +742,42 @@ class _AdvancedSection extends ConsumerWidget {
                 : null,
           ),
           dense: false,
-          contentPadding:
-              const EdgeInsets.symmetric(horizontal: 24, vertical: 4),
+          contentPadding: const EdgeInsets.symmetric(
+            horizontal: 24,
+            vertical: 4,
+          ),
         ),
         if (deltaSyncEnabled) ...[
           Padding(
             padding: const EdgeInsets.fromLTRB(24, 0, 24, 8),
             child: DropdownButtonFormField<int>(
               key: const Key('settings_delta_block_size'),
-              initialValue: _kBlockSizeOptions
+              isExpanded: true,
+              initialValue:
+                  _kBlockSizeOptions
                       .cast<(int, String)?>()
-                      .firstWhere(
-                        (o) => o!.$1 == blockSize,
-                        orElse: () => null,
-                      )
+                      .firstWhere((o) => o!.$1 == blockSize, orElse: () => null)
                       ?.$1 ??
                   blockSize,
-              decoration: const InputDecoration(
-                labelText: 'Block Size',
-                border: OutlineInputBorder(),
+              decoration: InputDecoration(
+                labelText: s.text('Block Size'),
+                border: const OutlineInputBorder(),
                 isDense: true,
-                helperText:
-                    'Smaller blocks improve bandwidth savings; larger blocks '
-                    'reduce hashing overhead.',
+                helperText: s.text(
+                  'Smaller blocks improve bandwidth savings; larger blocks reduce hashing overhead.',
+                ),
               ),
               items: _kBlockSizeOptions
                   .map(
                     (o) => DropdownMenuItem<int>(
                       value: o.$1,
-                      child: Text(o.$2),
+                      child: Text(s.text(o.$2)),
                     ),
                   )
                   .toList(),
               onChanged: (value) {
                 if (value != null) {
-                  ref
-                      .read(deltaBlockSizeProvider.notifier)
-                      .setBlockSize(value);
+                  ref.read(deltaBlockSizeProvider.notifier).setBlockSize(value);
                 }
               },
             ),
@@ -758,7 +785,7 @@ class _AdvancedSection extends ConsumerWidget {
           Padding(
             padding: const EdgeInsets.fromLTRB(24, 0, 24, 8),
             child: Text(
-              'Current: $blockSizeLabel',
+              s.current(localizedBlockSizeLabel),
               style: Theme.of(context).textTheme.bodySmall,
             ),
           ),
@@ -775,19 +802,22 @@ class _AdvancedSection extends ConsumerWidget {
 class _FileColorsSection extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
+    final s = SettingsStrings(context);
     final colorService = ref.watch(fileTypeColorProvider);
 
     return _Section(
-      title: 'File Colors',
+      title: s.text('File Colors'),
       icon: Icons.palette_outlined,
       children: [
         SwitchListTile(
           key: const Key('settings_file_colors_toggle'),
           value: colorService.enabled,
           onChanged: (value) => colorService.setEnabled(value),
-          title: const Text('Colorize Files by Type'),
-          subtitle: const Text(
-            'Apply per-extension colors to file names and icons in the file list',
+          title: Text(s.text('Colorize Files by Type')),
+          subtitle: Text(
+            s.text(
+              'Apply per-extension colors to file names and icons in the file list',
+            ),
           ),
           secondary: Icon(
             colorService.enabled
@@ -798,31 +828,35 @@ class _FileColorsSection extends ConsumerWidget {
                 : null,
           ),
           dense: false,
-          contentPadding:
-              const EdgeInsets.symmetric(horizontal: 24, vertical: 4),
+          contentPadding: const EdgeInsets.symmetric(
+            horizontal: 24,
+            vertical: 4,
+          ),
         ),
         if (colorService.enabled) ...[
-          ...colorService.rules.map((rule) => ListTile(
-            dense: true,
-            contentPadding: const EdgeInsets.symmetric(horizontal: 24),
-            leading: Container(
-              width: 16,
-              height: 16,
-              decoration: BoxDecoration(
-                color: rule.color,
-                borderRadius: BorderRadius.circular(3),
+          ...colorService.rules.map(
+            (rule) => ListTile(
+              dense: true,
+              contentPadding: const EdgeInsets.symmetric(horizontal: 24),
+              leading: Container(
+                width: 16,
+                height: 16,
+                decoration: BoxDecoration(
+                  color: rule.color,
+                  borderRadius: BorderRadius.circular(3),
+                ),
+              ),
+              title: Text(
+                rule.extensions,
+                style: const TextStyle(fontSize: 12, fontFamily: 'monospace'),
               ),
             ),
-            title: Text(
-              rule.extensions,
-              style: const TextStyle(fontSize: 12, fontFamily: 'monospace'),
-            ),
-          )),
+          ),
           Padding(
             padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 4),
             child: TextButton.icon(
               icon: const Icon(Icons.restore, size: 16),
-              label: const Text('Reset to Defaults'),
+              label: Text(s.text('Reset to Defaults')),
               onPressed: () => colorService.resetToDefaults(),
             ),
           ),
@@ -856,16 +890,18 @@ class _Section extends StatelessWidget {
           padding: const EdgeInsets.fromLTRB(24, 16, 24, 4),
           child: Row(
             children: [
-              Icon(icon,
-                  size: 18,
-                  color: Theme.of(context).colorScheme.primary),
+              Icon(
+                icon,
+                size: 18,
+                color: Theme.of(context).colorScheme.primary,
+              ),
               const SizedBox(width: 8),
               Text(
                 title,
                 style: Theme.of(context).textTheme.titleSmall?.copyWith(
-                      color: Theme.of(context).colorScheme.primary,
-                      fontWeight: FontWeight.w600,
-                    ),
+                  color: Theme.of(context).colorScheme.primary,
+                  fontWeight: FontWeight.w600,
+                ),
               ),
             ],
           ),

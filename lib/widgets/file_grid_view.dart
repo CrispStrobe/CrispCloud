@@ -10,6 +10,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import 'dart:io';
 
+import '../l10n/app_localizations.dart';
 import '../models/file_item.dart';
 import '../models/panel_side.dart';
 import '../providers/providers.dart';
@@ -35,7 +36,7 @@ class FileGridView extends ConsumerWidget {
     final panel = ref.watch(panelProvider(side));
 
     if (files.isEmpty) {
-      return const Center(child: Text('Empty folder'));
+      return Center(child: Text(AppLocalizations.of(context)?.emptyFolder ?? 'Empty folder'));
     }
 
     return GridView.builder(

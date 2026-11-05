@@ -1,6 +1,5 @@
 // ignore: unused_import
 import 'package:intl/intl.dart' as intl;
-
 import 'app_localizations.dart';
 
 // ignore_for_file: type=lint
@@ -67,7 +66,7 @@ class AppLocalizationsKo extends AppLocalizations {
   String get clear => '지우기';
 
   @override
-  String get ok => 'OK';
+  String get ok => '확인';
 
   @override
   String get yes => '예';
@@ -432,7 +431,7 @@ class AppLocalizationsKo extends AppLocalizations {
   String get darkTheme => '다크';
 
   @override
-  String get oledTheme => 'OLED Black';
+  String get oledTheme => 'OLED 블랙';
 
   @override
   String get nordTheme => 'Nord';
@@ -524,714 +523,709 @@ class AppLocalizationsKo extends AppLocalizations {
   String get compareProviders => '공급자 비교';
 
   @override
-  String get singlePanel => 'Single Panel';
+  String get singlePanel => '단일 패널';
 
   @override
-  String get dualPanel => 'Dual Panel';
+  String get dualPanel => '이중 패널';
 
   @override
-  String get showTreeSidebar => 'Show Tree Sidebar';
+  String get showTreeSidebar => '트리 사이드바 표시';
 
   @override
-  String get hideTreeSidebar => 'Hide Tree Sidebar';
+  String get hideTreeSidebar => '트리 사이드바 숨기기';
 
   @override
-  String get detailsList => 'Details List';
+  String get detailsList => '상세 목록';
 
   @override
-  String get largeItems => 'Large Items';
+  String get largeItems => '큰 항목';
 
   @override
-  String get compactItems => 'Compact Items';
+  String get compactItems => '간결한 항목';
 
   @override
-  String get showPreview => 'Show Preview';
+  String get showPreview => '미리 보기 표시';
 
   @override
-  String get hidePreview => 'Hide Preview';
+  String get hidePreview => '미리 보기 숨기기';
 
   @override
-  String get showTerminal => 'Show Terminal';
+  String get showTerminal => '터미널 표시';
 
   @override
-  String get hideTerminal => 'Hide Terminal';
+  String get hideTerminal => '터미널 숨기기';
 
   @override
-  String get moreActions => 'More actions';
+  String get moreActions => '추가 작업';
 
   @override
-  String get mountAsDrive => 'Mount as Drive';
+  String get mountAsDrive => '드라이브로 마운트';
 
   @override
-  String get auditLog => 'Audit Log';
+  String get auditLog => '감사 로그';
 
   @override
-  String get systemLog => 'System Log';
+  String get systemLog => '시스템 로그';
 
   @override
-  String get cacheSettings => 'Cache Settings';
+  String get cacheSettings => '캐시 설정';
 
   @override
-  String get keyboardShortcuts => 'Keyboard Shortcuts';
+  String get keyboardShortcuts => '키보드 단축키';
 
   @override
-  String get swapPanels => 'Swap Panels';
+  String get swapPanels => '패널 교환';
 
   @override
-  String get connectToCloud => 'Connect to Cloud';
+  String get connectToCloud => '클라우드에 연결';
 
   @override
   String browseProvider(String provider) {
-    return 'Browse $provider';
+    return '$provider 탐색';
   }
 
   @override
-  String get pleaseConnectRemote => 'Please connect to access remote files';
+  String get pleaseConnectRemote => '원격 파일에 액세스하려면 연결하세요';
 
   @override
-  String get notConnected => 'Not connected';
+  String get notConnected => '연결되지 않음';
 
   @override
-  String get connectToCloudShort => 'Connect to cloud';
+  String get connectToCloudShort => '클라우드에 연결';
 
   @override
-  String get loggedIn => 'Logged in';
+  String get loggedIn => '로그인됨';
 
   @override
-  String get localFiles => 'Local Files';
+  String get localFiles => '로컬 파일';
 
   @override
-  String get remoteFiles => 'Remote Files';
+  String get remoteFiles => '원격 파일';
 
   @override
-  String get bookmarkFolder => 'Bookmark current folder';
+  String get bookmarkFolder => '현재 폴더 북마크';
 
   @override
-  String get noFolders => 'No folders';
+  String get noFolders => '폴더가 없습니다';
 
   @override
-  String get selectFileToPreview => 'Select a file to preview';
+  String get selectFileToPreview => '미리 볼 파일 선택';
 
   @override
   String fileTooLarge(String size) {
-    return 'File too large to preview ($size)';
+    return '파일이 너무 커서 미리 볼 수 없습니다 ($size)';
   }
 
   @override
   String previewFailed(String error) {
-    return 'Preview failed: $error';
+    return '미리 보기 실패: $error';
   }
 
   @override
-  String get firstPage => 'First page';
+  String get firstPage => '첫 페이지';
 
   @override
-  String get previousPage => 'Previous page';
+  String get previousPage => '이전 페이지';
 
   @override
-  String get nextPage => 'Next page';
+  String get nextPage => '다음 페이지';
 
   @override
-  String get lastPage => 'Last page';
+  String get lastPage => '마지막 페이지';
 
   @override
-  String get playAudio => 'Play Audio';
+  String get playAudio => '오디오 재생';
 
   @override
-  String get playVideo => 'Play Video';
+  String get playVideo => '동영상 재생';
 
   @override
-  String get emptyFile => 'Empty file';
+  String get emptyFile => '빈 파일';
 
   @override
   String systemLogTitle(int count) {
-    return 'System Log ($count entries)';
+    return '시스템 로그 ($count개 항목)';
   }
 
   @override
-  String get minimumLevel => 'Minimum level';
+  String get minimumLevel => '최소 수준';
 
   @override
-  String get pauseAutoScroll => 'Pause auto-scroll';
+  String get pauseAutoScroll => '자동 스크롤 일시 정지';
 
   @override
-  String get resumeAutoScroll => 'Resume auto-scroll';
+  String get resumeAutoScroll => '자동 스크롤 재개';
 
   @override
-  String get copyVisible => 'Copy visible';
+  String get copyVisible => '표시된 내용 복사';
 
   @override
-  String get copyAll => 'Copy all';
+  String get copyAll => '모두 복사';
 
   @override
-  String get filterLogs => 'Filter logs...';
+  String get filterLogs => '로그 필터링...';
 
   @override
-  String get visibleLinesCopied => 'Visible lines copied';
+  String get visibleLinesCopied => '표시된 줄을 복사했습니다';
 
   @override
-  String get allLogsCopied => 'All logs copied';
+  String get allLogsCopied => '모든 로그를 복사했습니다';
 
   @override
-  String get open => 'Open';
+  String get open => '열기';
 
   @override
-  String get editSystemEditor => 'Edit (System Editor)';
+  String get editSystemEditor => '편집 (시스템 편집기)';
 
   @override
-  String get editBuiltIn => 'Edit (Built-in)';
+  String get editBuiltIn => '편집 (내장 편집기)';
 
   @override
-  String get openWithSystemApp => 'Open with System App';
+  String get openWithSystemApp => '시스템 앱으로 열기';
 
   @override
-  String get verifyAgainstRemote => 'Verify against remote';
+  String get verifyAgainstRemote => '원격 파일과 비교';
 
   @override
-  String get browseArchive => 'Browse Archive';
+  String get browseArchive => '압축 파일 탐색';
 
   @override
-  String get archiveExtracted => 'Archive extracted successfully';
+  String get archiveExtracted => '압축 파일을 추출했습니다';
 
   @override
-  String get revealInFinder => 'Reveal in Finder';
+  String get revealInFinder => 'Finder에서 보기';
 
   @override
-  String get showInExplorer => 'Show in Explorer';
+  String get showInExplorer => '탐색기에서 보기';
 
   @override
-  String get openContainingFolder => 'Open containing folder';
+  String get openContainingFolder => '포함된 폴더 열기';
 
   @override
-  String get properties => 'Properties';
+  String get properties => '속성';
 
   @override
-  String get copyNames => 'Copy name(s)';
+  String get copyNames => '이름 복사';
 
   @override
-  String get copyPaths => 'Copy path(s)';
+  String get copyPaths => '경로 복사';
 
   @override
-  String get createMd5 => 'Create .md5 file';
+  String get createMd5 => '.md5 파일 만들기';
 
   @override
-  String get verifyChecksumFile => 'Verify checksum file';
+  String get verifyChecksumFile => '체크섬 파일 확인';
 
   @override
-  String get splitFile => 'Split File';
+  String get splitFile => '파일 분할';
 
   @override
-  String get combineParts => 'Combine Parts';
+  String get combineParts => '분할 파일 합치기';
 
   @override
-  String get createLink => 'Create Link...';
+  String get createLink => '링크 만들기...';
 
   @override
-  String get secureWipe => 'Secure Wipe';
+  String get secureWipe => '안전하게 지우기';
 
   @override
   String confirmDeleteBody(int count) {
-    return 'Are you sure you want to delete $count item(s)?';
+    return '항목 $count개를 삭제하시겠습니까?';
   }
 
   @override
   String totalSize(String size) {
-    return 'Total size: $size';
+    return '전체 크기: $size';
   }
 
   @override
-  String get cannotBeUndone => 'This action cannot be undone.';
+  String get cannotBeUndone => '이 작업은 취소할 수 없습니다.';
 
   @override
   String nItems(int count) {
-    return '$count items';
+    return '항목 $count개';
   }
 
   @override
   String nTransfers(int count) {
-    return '$count transfer(s)';
+    return '전송 $count개';
   }
 
   @override
-  String get syncing => 'Syncing';
+  String get syncing => '동기화 중';
 
   @override
   String lastSyncChanges(int count) {
-    return 'Last sync: $count changes';
+    return '마지막 동기화: 변경 $count건';
   }
 
   @override
   String nPairs(int count) {
-    return '$count pair(s)';
+    return '쌍 $count개';
   }
 
   @override
-  String get hidden => 'Hidden';
+  String get hidden => '숨김';
 
   @override
   String free(String size) {
-    return 'Free: $size';
+    return '여유 공간: $size';
   }
 
   @override
-  String get aboutLegal => 'About / Legal';
+  String get aboutLegal => '정보 / 법적 고지';
 
   @override
-  String get appDescription =>
-      'An unofficial, open-source client for Filen.io, SFTP & WebDAV.';
+  String get appDescription => 'Filen.io, SFTP 및 WebDAV용 비공식 오픈 소스 클라이언트입니다.';
 
   @override
-  String get serviceProvider => 'Service Provider';
+  String get serviceProvider => '서비스 공급자';
 
   @override
-  String get contact => 'Contact';
+  String get contact => '연락처';
 
   @override
-  String get disclaimer => 'Disclaimer';
+  String get disclaimer => '면책 조항';
 
   @override
   String get disclaimerText =>
-      'This software is provided \"as is\", without warranty of any kind. This app is not affiliated with Filen.io, or any other cloud provider.';
+      '이 소프트웨어는 어떠한 보증 없이 있는 그대로 제공됩니다. 이 앱은 Filen.io 또는 다른 클라우드 공급자와 제휴하지 않았습니다.';
 
   @override
-  String get sourceCode => 'Source Code (GitHub)';
+  String get sourceCode => '소스 코드 (GitHub)';
 
   @override
-  String get website => 'Website';
+  String get website => '웹사이트';
 
   @override
-  String get viewLicenses => 'View Open Source Licenses';
+  String get viewLicenses => '오픈 소스 라이선스 보기';
 
   @override
-  String get flatView => 'Flat View (all subdirectories)';
+  String get flatView => '평면 보기 (모든 하위 폴더)';
 
   @override
-  String get exitFlatView => 'Exit Flat View';
+  String get exitFlatView => '평면 보기 종료';
 
   @override
-  String get showHiddenFiles => 'Show hidden files';
+  String get showHiddenFiles => '숨김 파일 표시';
 
   @override
-  String get hideHiddenFiles => 'Hide hidden files';
+  String get hideHiddenFiles => '숨김 파일 숨기기';
 
   @override
-  String get touchFriendlyView => 'Switch to touch-friendly view';
+  String get touchFriendlyView => '터치 친화적 보기로 전환';
 
   @override
-  String get compactView => 'Switch to compact view';
+  String get compactView => '간결한 보기로 전환';
 
   @override
-  String get sort => 'Sort';
+  String get sort => '정렬';
 
   @override
-  String get secondarySort => 'Secondary Sort';
+  String get secondarySort => '보조 정렬';
 
   @override
-  String get none => 'None';
+  String get none => '없음';
 
   @override
-  String get byName => 'by Name';
+  String get byName => '이름순';
 
   @override
-  String get bySize => 'by Size';
+  String get bySize => '크기순';
 
   @override
-  String get byDate => 'by Date';
+  String get byDate => '날짜순';
 
   @override
-  String get enterPath => 'Enter path...';
+  String get enterPath => '경로 입력...';
 
   @override
-  String get editPath => 'Edit path';
+  String get editPath => '경로 편집';
 
   @override
-  String get searchResults => 'Search results';
+  String get searchResults => '검색 결과';
 
   @override
   String nFiles(int count) {
-    return '$count file(s)';
+    return '파일 $count개';
   }
 
   @override
   String copyNItems(int count) {
-    return 'Copy $count item(s)';
+    return '항목 $count개 복사';
   }
 
   @override
   String moveNItems(int count) {
-    return 'Move $count item(s)';
+    return '항목 $count개 이동';
   }
 
   @override
-  String get targetPath => 'Target path';
+  String get targetPath => '대상 경로';
 
   @override
   String saved(String name) {
-    return 'Saved $name';
+    return '$name 저장됨';
   }
 
   @override
   String saveFailed(String error) {
-    return 'Save failed: $error';
+    return '저장 실패: $error';
   }
 
   @override
-  String get unsavedChanges => 'Unsaved Changes';
+  String get unsavedChanges => '저장되지 않은 변경 사항';
 
   @override
-  String get discardChanges => 'You have unsaved changes. Discard them?';
+  String get discardChanges => '저장되지 않은 변경 사항이 있습니다. 버리시겠습니까?';
 
   @override
-  String get discard => 'Discard';
+  String get discard => '버리기';
 
   @override
-  String get saveShortcut => 'Save (Ctrl+S)';
+  String get saveShortcut => '저장 (Ctrl+S)';
 
   @override
-  String get fileModifiedOnServer =>
-      'This file was modified on the server since you opened it.';
+  String get fileModifiedOnServer => '파일을 연 후 서버에서 수정되었습니다.';
 
   @override
-  String get saveAnyway => 'Save Anyway';
+  String get saveAnyway => '그래도 저장';
 
   @override
-  String get reload => 'Reload';
+  String get reload => '다시 불러오기';
 
   @override
-  String get saveProfile => 'Save Profile';
+  String get saveProfile => '프로필 저장';
 
   @override
-  String get profileName => 'Profile Name';
+  String get profileName => '프로필 이름';
 
   @override
-  String get profileNameHint => 'e.g., Work S3, Personal SFTP';
+  String get profileNameHint => '예: 업무용 S3, 개인용 SFTP';
 
   @override
   String profileSaved(String name) {
-    return 'Profile \"$name\" saved';
+    return '프로필 \"$name\" 저장됨';
   }
 
   @override
-  String get connectToCloudStorage => 'Connect to Cloud Storage';
+  String get connectToCloudStorage => '클라우드 저장소에 연결';
 
   @override
-  String get savedProfiles => 'Saved Profiles';
+  String get savedProfiles => '저장된 프로필';
 
   @override
-  String get loadProfile => 'Load a saved profile...';
+  String get loadProfile => '저장된 프로필 불러오기...';
 
   @override
-  String get deleteProfile => 'Delete Profile';
+  String get deleteProfile => '프로필 삭제';
 
   @override
-  String get saveAsProfile => 'Save as Profile';
+  String get saveAsProfile => '프로필로 저장';
 
   @override
-  String get enableEncryption => 'Enable Client-Side Encryption';
+  String get enableEncryption => '클라이언트 측 암호화 활성화';
 
   @override
-  String get encryptBeforeUpload => 'Encrypt files before upload (AES-256-GCM)';
+  String get encryptBeforeUpload => '업로드 전에 파일 암호화 (AES-256-GCM)';
 
   @override
-  String get encryptionPassphrase => 'Encryption Passphrase';
+  String get encryptionPassphrase => '암호화 암호문구';
 
   @override
-  String get appLocked => 'CrispCloud is Locked';
+  String get appLocked => 'CrispCloud가 잠겨 있습니다';
 
   @override
-  String get enterPinToContinue => 'Enter your PIN or password to continue';
+  String get enterPinToContinue => '계속하려면 PIN 또는 비밀번호를 입력하세요';
 
   @override
-  String get pinPassword => 'PIN / Password';
+  String get pinPassword => 'PIN / 비밀번호';
 
   @override
-  String get incorrectPin => 'Incorrect PIN or password';
+  String get incorrectPin => 'PIN 또는 비밀번호가 올바르지 않습니다';
 
   @override
-  String get tooManyAttempts =>
-      'Too many failed attempts. Restart the app to try again.';
+  String get tooManyAttempts => '실패 횟수가 너무 많습니다. 다시 시도하려면 앱을 다시 시작하세요.';
 
   @override
   String attemptsRemaining(int count) {
-    return '$count attempts remaining';
+    return '남은 시도 횟수: $count회';
   }
 
   @override
-  String get appLockSetup => 'Set Up App Lock';
+  String get appLockSetup => '앱 잠금 설정';
 
   @override
-  String get changeAppLockCode => 'Change App Lock';
+  String get changeAppLockCode => '앱 잠금 변경';
 
   @override
-  String get currentPin => 'Current PIN / Password';
+  String get currentPin => '현재 PIN / 비밀번호';
 
   @override
-  String get newPin => 'New PIN / Password';
+  String get newPin => '새 PIN / 비밀번호';
 
   @override
-  String get confirmPin => 'Confirm PIN / Password';
+  String get confirmPin => 'PIN / 비밀번호 확인';
 
   @override
-  String get minFourChars => 'Minimum 4 characters';
+  String get minFourChars => '최소 4자';
 
   @override
-  String get codesDoNotMatch => 'Codes do not match';
+  String get codesDoNotMatch => '코드가 일치하지 않습니다';
 
   @override
-  String get autoLockAfter => 'Auto-lock after';
+  String get autoLockAfter => '자동 잠금 시간';
 
   @override
-  String get immediately => 'Immediately';
+  String get immediately => '즉시';
 
   @override
-  String get oneMinute => '1 minute';
+  String get oneMinute => '1분';
 
   @override
-  String get fiveMinutes => '5 minutes';
+  String get fiveMinutes => '5분';
 
   @override
-  String get fifteenMinutes => '15 minutes';
+  String get fifteenMinutes => '15분';
 
   @override
-  String get thirtyMinutes => '30 minutes';
+  String get thirtyMinutes => '30분';
 
   @override
-  String get oneHour => '1 hour';
+  String get oneHour => '1시간';
 
   @override
-  String get connectToHetzner => 'Connect to Hetzner Storage Box';
+  String get connectToHetzner => 'Hetzner Storage Box에 연결';
 
   @override
-  String get sftpPort23 => 'SFTP (port 23)';
+  String get sftpPort23 => 'SFTP (포트 23)';
 
   @override
   String get webdavHttps => 'WebDAV (HTTPS)';
 
   @override
-  String get testConnection => 'Test Connection';
+  String get testConnection => '연결 테스트';
 
   @override
-  String get connectionSuccessful => 'Connection successful';
+  String get connectionSuccessful => '연결 성공';
 
   @override
   String testFailed(String error) {
-    return 'Test failed: $error';
+    return '테스트 실패: $error';
   }
 
   @override
-  String get connectToAzure => 'Connect to Azure Blob Storage';
+  String get connectToAzure => 'Azure Blob Storage에 연결';
 
   @override
-  String get authenticationMode => 'Authentication Mode';
+  String get authenticationMode => '인증 방식';
 
   @override
-  String get accountName => 'Account Name';
+  String get accountName => '계정 이름';
 
   @override
-  String get container => 'Container';
+  String get container => '컨테이너';
 
   @override
   String get sasUrl => 'SAS URL';
 
   @override
-  String get sasToken => 'SAS Token';
+  String get sasToken => 'SAS 토큰';
 
   @override
-  String get connectToB2 => 'Connect to Backblaze B2';
+  String get connectToB2 => 'Backblaze B2에 연결';
 
   @override
-  String get applicationKeyId => 'Application Key ID';
+  String get applicationKeyId => '애플리케이션 키 ID';
 
   @override
-  String get applicationKey => 'Application Key';
+  String get applicationKey => '애플리케이션 키';
 
   @override
-  String get bucketNameOptional => 'Bucket Name (optional)';
+  String get bucketNameOptional => '버킷 이름 (선택 사항)';
 
   @override
-  String get mount => 'Mount';
+  String get mount => '마운트';
 
   @override
-  String get unmount => 'Unmount';
+  String get unmount => '마운트 해제';
 
   @override
-  String get displayName => 'Display Name';
+  String get displayName => '표시 이름';
 
   @override
-  String get localMountPoint => 'Local Mount Point';
+  String get localMountPoint => '로컬 마운트 지점';
 
   @override
-  String get newMount => 'New Mount';
+  String get newMount => '새 마운트';
 
   @override
-  String get noMountsConfigured => 'No mounts configured';
+  String get noMountsConfigured => '설정된 마운트가 없습니다';
 
   @override
   String get fuseDesktopOnly =>
-      'FUSE mounts are only available on macOS, Linux, and Windows desktop.';
+      'FUSE 마운트는 macOS, Linux 및 Windows 데스크톱에서만 사용할 수 있습니다.';
 
   @override
-  String get multiCloud => 'Multi-Cloud';
+  String get multiCloud => '멀티 클라우드';
 
   @override
-  String get connections => 'Connections';
+  String get connections => '연결';
 
   @override
-  String get transfer => 'Transfer';
+  String get transfer => '전송';
 
   @override
-  String get compareAndSearch => 'Compare & Search';
+  String get compareAndSearch => '비교 및 검색';
 
   @override
-  String get noConnectionsYet => 'No connections registered yet.';
+  String get noConnectionsYet => '등록된 연결이 없습니다.';
 
   @override
-  String get startTransfer => 'Start Transfer';
+  String get startTransfer => '전송 시작';
 
   @override
-  String get syncPairs => 'Sync Pairs';
+  String get syncPairs => '동기화 쌍';
 
   @override
-  String get enableAutoSync => 'Enable Auto-Sync';
+  String get enableAutoSync => '자동 동기화 켜기';
 
   @override
-  String get disableAutoSync => 'Disable Auto-Sync';
+  String get disableAutoSync => '자동 동기화 끄기';
 
   @override
-  String get noSyncPairs => 'No sync pairs configured';
+  String get noSyncPairs => '설정된 동기화 쌍이 없습니다';
 
   @override
-  String get replayOffline => 'Replay Offline';
+  String get replayOffline => '오프라인 작업 재실행';
 
   @override
-  String get newSyncPair => 'New Sync Pair';
+  String get newSyncPair => '새 동기화 쌍';
 
   @override
-  String get cacheUsage => 'Cache Usage';
+  String get cacheUsage => '캐시 사용량';
 
   @override
-  String get maximumCacheSize => 'Maximum Cache Size';
+  String get maximumCacheSize => '최대 캐시 크기';
 
   @override
-  String get clearCacheConfirm =>
-      'Remove all cached files? They will be re-downloaded when needed.';
+  String get clearCacheConfirm => '캐시된 파일을 모두 삭제하시겠습니까? 필요할 때 다시 다운로드됩니다.';
 
   @override
   String batchRenameTitle(int count) {
-    return 'Batch Rename ($count files)';
+    return '일괄 이름 변경 (파일 $count개)';
   }
 
   @override
-  String get findReplace => 'Find/Replace';
+  String get findReplace => '찾기/바꾸기';
 
   @override
-  String get number => 'Number';
+  String get number => '번호 매기기';
 
   @override
-  String get prefixSuffix => 'Prefix/Suffix';
+  String get prefixSuffix => '접두사/접미사';
 
   @override
-  String get extension => 'Extension';
+  String get extension => '확장자';
 
   @override
-  String get duplicateFinder => 'Duplicate Finder';
+  String get duplicateFinder => '중복 파일 찾기';
 
   @override
-  String get noDuplicatesFound => 'No duplicates found!';
+  String get noDuplicatesFound => '중복 파일이 없습니다!';
 
   @override
-  String get chooseTheme => 'Choose Theme';
+  String get chooseTheme => '테마 선택';
 
   @override
-  String get checkForUpdates => 'Check for Updates';
+  String get checkForUpdates => '업데이트 확인';
 
   @override
-  String get youAreUpToDate => 'You\'re up to date';
+  String get youAreUpToDate => '최신 버전입니다';
 
   @override
-  String get updateAvailable => 'Update available';
+  String get updateAvailable => '업데이트가 있습니다';
 
   @override
-  String get releaseNotes => 'Release notes';
+  String get releaseNotes => '릴리스 정보';
 
   @override
-  String get checkNow => 'Check Now';
+  String get checkNow => '지금 확인';
 
   @override
-  String get general => 'General';
+  String get general => '일반';
 
   @override
-  String get accessibility => 'Accessibility';
+  String get accessibility => '접근성';
 
   @override
-  String get privacy => 'Privacy';
+  String get privacy => '개인정보 보호';
 
   @override
-  String get advanced => 'Advanced';
+  String get advanced => '고급';
 
   @override
-  String get showFKeyButtons =>
-      'Show F3-F8 shortcut buttons at the bottom of the screen';
+  String get showFKeyButtons => '화면 하단에 F3-F8 단축 버튼 표시';
 
   @override
-  String get exportKeys => 'Export/Import Encryption Keys';
+  String get exportKeys => '암호화 키 내보내기/가져오기';
 
   @override
-  String get backupRecovery => 'BIP39 Mnemonic Backup and Recovery';
+  String get backupRecovery => 'BIP39 복구 문구 백업 및 복구';
 
   @override
-  String get noActiveOperations => 'No active operations';
+  String get noActiveOperations => '진행 중인 작업 없음';
 
   @override
-  String get refreshAll => 'Refresh All';
+  String get refreshAll => '모두 새로고침';
 
   @override
-  String get newName => 'New name';
+  String get newName => '새 이름';
 
   @override
-  String get items => 'Items:';
+  String get items => '항목:';
 
   @override
   String andMore(int count) {
-    return '... and $count more';
+    return '... 외 $count개';
   }
 
   @override
-  String get searchPattern => 'Search Pattern';
+  String get searchPattern => '검색 패턴';
 
   @override
-  String get findPattern => 'Find Pattern';
+  String get findPattern => '찾기 패턴';
 
   @override
-  String get searchHint => 'Search for files...';
+  String get searchHint => '파일 검색...';
 
   @override
-  String get findHint => 'e.g., *.pdf, report*';
+  String get findHint => '예: *.pdf, report*';
 
   @override
-  String get noResultsFound => 'No results found';
+  String get noResultsFound => '결과가 없습니다';
 
   @override
-  String get size => 'Size';
+  String get size => '크기';
 
   @override
-  String get date => 'Date';
+  String get date => '날짜';
 
   @override
-  String get name => 'Name';
+  String get name => '이름';
 
   @override
-  String get type => 'Type';
+  String get type => '유형';
 
   @override
-  String get created => 'Created';
+  String get created => '생성됨';
 
   @override
-  String get accessed => 'Accessed';
+  String get accessed => '접근함';
 
   @override
-  String get computeMd5 => 'Compute MD5';
+  String get computeMd5 => 'MD5 계산';
 
   @override
-  String get protocol => 'Protocol';
+  String get protocol => '프로토콜';
 }

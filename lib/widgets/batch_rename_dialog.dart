@@ -12,6 +12,7 @@ import '../models/file_item.dart';
 import '../models/panel_side.dart';
 import '../providers/providers.dart';
 import '../l10n/app_localizations.dart';
+import '../l10n/batch_rename_strings.dart';
 
 enum RenameMode { findReplace, numbering, prefixSuffix, extension }
 
@@ -105,27 +106,33 @@ class _BatchRenameDialogState extends ConsumerState<BatchRenameDialog> {
     }
   }
 
+  String _t(String key, [Map<String, Object> values = const {}]) =>
+      BatchRenameStrings(context).text(key, values);
+
   @override
   Widget build(BuildContext context) {
     final previews = _preview;
 
     return AlertDialog(
-      title: Text('Batch Rename (${widget.files.length} files)'),
+      title: Text(_t('title', {'count': widget.files.length})),
       content: SizedBox(
         width: 500,
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
             // Mode selector
-            SegmentedButton<RenameMode>(
-              segments: const [
-                ButtonSegment(value: RenameMode.findReplace, label: Text('Find/Replace')),
-                ButtonSegment(value: RenameMode.numbering, label: Text('Number')),
-                ButtonSegment(value: RenameMode.prefixSuffix, label: Text('Prefix/Suffix')),
-                ButtonSegment(value: RenameMode.extension, label: Text('Extension')),
+            SingleChildScrollView(
+              scrollDirection: Axis.horizontal,
+              child: SegmentedButton<RenameMode>(
+              segments: [
+                ButtonSegment(value: RenameMode.findReplace, label: Text(_t('findReplace'))),
+                ButtonSegment(value: RenameMode.numbering, label: Text(_t('number'))),
+                ButtonSegment(value: RenameMode.prefixSuffix, label: Text(_t('prefixSuffix'))),
+                ButtonSegment(value: RenameMode.extension, label: Text(_t('extension'))),
               ],
               selected: {_mode},
               onSelectionChanged: (s) => setState(() => _mode = s.first),
+              ),
             ),
             const SizedBox(height: 16),
 
@@ -187,7 +194,7 @@ class _BatchRenameDialogState extends ConsumerState<BatchRenameDialog> {
             if (widget.files.length > 10)
               Padding(
                 padding: const EdgeInsets.only(top: 4),
-                child: Text('... and ${widget.files.length - 10} more',
+                child: Text(_t('more', {'count': widget.files.length - 10}),
                     style: Theme.of(context).textTheme.bodySmall),
               ),
           ],
@@ -202,7 +209,7 @@ class _BatchRenameDialogState extends ConsumerState<BatchRenameDialog> {
           onPressed: _isProcessing ? null : _executeRename,
           child: _isProcessing
               ? const SizedBox(width: 16, height: 16, child: CircularProgressIndicator(strokeWidth: 2))
-              : const Text('Rename All'),
+              : Text(_t('renameAll')),
         ),
       ],
     );
@@ -214,20 +221,20 @@ class _BatchRenameDialogState extends ConsumerState<BatchRenameDialog> {
         return [
           TextField(
             controller: _findController,
-            decoration: const InputDecoration(labelText: 'Find', border: OutlineInputBorder(), isDense: true),
+            decoration: InputDecoration(labelText: _t('find'), border: const OutlineInputBorder(), isDense: true),
             onChanged: (_) => setState(() {}),
           ),
           const SizedBox(height: 8),
           TextField(
             controller: _replaceController,
-            decoration: const InputDecoration(labelText: 'Replace with', border: OutlineInputBorder(), isDense: true),
+            decoration: InputDecoration(labelText: _t('replace'), border: const OutlineInputBorder(), isDense: true),
             onChanged: (_) => setState(() {}),
           ),
           const SizedBox(height: 4),
           Row(
             children: [
               Checkbox(value: _useRegex, onChanged: (v) => setState(() => _useRegex = v ?? false)),
-              const Text('Use regex', style: TextStyle(fontSize: 13)),
+              Text(_t('regex'), style: const TextStyle(fontSize: 13)),
             ],
           ),
         ];
@@ -235,7 +242,7 @@ class _BatchRenameDialogState extends ConsumerState<BatchRenameDialog> {
         return [
           TextField(
             controller: _startNumController,
-            decoration: const InputDecoration(labelText: 'Start number', border: OutlineInputBorder(), isDense: true),
+            decoration: InputDecoration(labelText: _t('start'), border: const OutlineInputBorder(), isDense: true),
             keyboardType: TextInputType.number,
             onChanged: (_) => setState(() {}),
           ),
@@ -244,13 +251,13 @@ class _BatchRenameDialogState extends ConsumerState<BatchRenameDialog> {
         return [
           TextField(
             controller: _prefixController,
-            decoration: const InputDecoration(labelText: 'Prefix', border: OutlineInputBorder(), isDense: true),
+            decoration: InputDecoration(labelText: _t('prefix'), border: const OutlineInputBorder(), isDense: true),
             onChanged: (_) => setState(() {}),
           ),
           const SizedBox(height: 8),
           TextField(
             controller: _suffixController,
-            decoration: const InputDecoration(labelText: 'Suffix (before extension)', border: OutlineInputBorder(), isDense: true),
+            decoration: InputDecoration(labelText: _t('suffix'), border: const OutlineInputBorder(), isDense: true),
             onChanged: (_) => setState(() {}),
           ),
         ];
@@ -258,7 +265,7 @@ class _BatchRenameDialogState extends ConsumerState<BatchRenameDialog> {
         return [
           TextField(
             controller: _extensionController,
-            decoration: const InputDecoration(labelText: 'New extension (without dot)', border: OutlineInputBorder(), isDense: true),
+            decoration: InputDecoration(labelText: _t('newExtension'), border: const OutlineInputBorder(), isDense: true),
             onChanged: (_) => setState(() {}),
           ),
         ];
@@ -281,7 +288,7 @@ class _BatchRenameDialogState extends ConsumerState<BatchRenameDialog> {
     } catch (e) {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Rename failed: $e')),
+          SnackBar(content: Text(_t('failed', {'error': e}))),
         );
       }
     }

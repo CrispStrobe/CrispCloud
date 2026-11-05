@@ -8,6 +8,7 @@ import 'package:quds_office_engine/quds_office_engine.dart';
 
 import '../embed/office_theme.dart';
 import 'report_layout_painter.dart';
+import 'report_designer_strings.dart';
 import 'report_pinch_zoom.dart';
 
 /// Paginated live preview of a [ReportDocumentLayout].
@@ -19,6 +20,7 @@ class ReportPreviewSurface extends LeafRenderObjectWidget {
     this.error,
     this.zoom = 1,
     this.theme = OfficeTheme.light,
+    this.strings = ReportDesignerStrings.english,
     this.onZoom,
     this.onPickElement,
   });
@@ -35,6 +37,9 @@ class ReportPreviewSurface extends LeafRenderObjectWidget {
   /// theme API.
   final OfficeTheme theme;
 
+  /// Interface labels for preview status and accessibility.
+  final ReportDesignerStrings strings;
+
   /// Ctrl + wheel zoom request.
   final ValueChanged<double>? onZoom;
 
@@ -48,6 +53,7 @@ class ReportPreviewSurface extends LeafRenderObjectWidget {
         error: error,
         zoom: zoom,
         theme: theme,
+        strings: strings,
         onZoom: onZoom,
         onPickElement: onPickElement,
       );
@@ -62,6 +68,7 @@ class ReportPreviewSurface extends LeafRenderObjectWidget {
       ..error = error
       ..zoom = zoom
       ..theme = theme
+      ..strings = strings
       ..onZoom = onZoom
       ..onPickElement = onPickElement;
   }
@@ -75,9 +82,13 @@ class RenderReportPreview extends RenderBox {
     this._error,
     this._zoom = 1,
     required this._theme,
+    ReportDesignerStrings strings = ReportDesignerStrings.english,
     this.onZoom,
     this.onPickElement,
-  }) : _layout = document {
+  }) : _layout = document,
+       // Keep the public parameter named `strings`.
+       // ignore: prefer_initializing_formals
+       _strings = strings {
     _painter.onImageReady = markNeedsPaint;
   }
 
@@ -85,6 +96,7 @@ class RenderReportPreview extends RenderBox {
   String? _error;
   double _zoom;
   OfficeTheme _theme;
+  ReportDesignerStrings _strings;
 
   /// onZoom API.
   ValueChanged<double>? onZoom;
@@ -170,6 +182,20 @@ class RenderReportPreview extends RenderBox {
     }
     _theme = value;
     markNeedsPaint();
+  }
+
+  /// Interface labels used by this surface.
+  ReportDesignerStrings get strings => _strings;
+
+  set strings(ReportDesignerStrings value) {
+    if (identical(value, _strings)) return;
+    _strings = value;
+    for (final painter in _labels.values) {
+      painter.dispose();
+    }
+    _labels.clear();
+    markNeedsPaint();
+    markNeedsSemanticsUpdate();
   }
 
   /// Current page (1-based) at the top of the viewport.
@@ -343,7 +369,7 @@ class RenderReportPreview extends RenderBox {
     );
     final ReportDocumentLayout? doc = _layout;
     if (doc == null) {
-      final String message = _error ?? 'Nothing to preview';
+      final String message = _error == null ? _strings.t('Nothing to preview') : _strings.diagnostic(_error!);
       _label(
         message,
         13,
@@ -375,11 +401,12 @@ class RenderReportPreview extends RenderBox {
       _painter.paintPage(canvas, doc, doc.pages[i]);
       canvas.restore();
     }
+    final pageStatus = _strings.format('Page {current} of {total}',
+        {'current': currentPage, 'total': doc.pages.length});
     final String status = doc.warnings.isEmpty
-        ? 'Page $currentPage of ${doc.pages.length}'
-        : 'Page $currentPage of ${doc.pages.length}  ·  '
-              '${doc.warnings.length} warning'
-              '${doc.warnings.length == 1 ? '' : 's'}: ${doc.warnings.first}';
+        ? pageStatus
+        : '$pageStatus  ·  ${_strings.count(doc.warnings.length, 'warning')}: '
+            '${_strings.diagnostic(doc.warnings.first)}';
     final TextPainter tp = _label(
       status,
       11,
@@ -422,7 +449,7 @@ class RenderReportPreview extends RenderBox {
           color: color,
         ),
       ),
-      textDirection: TextDirection.ltr,
+      textDirection: _strings.direction,
       maxLines: 3,
       ellipsis: '…',
     )..layout(maxWidth: maxW < 40 ? 40 : maxW);
@@ -436,10 +463,10 @@ class RenderReportPreview extends RenderBox {
     final ReportDocumentLayout? doc = _layout;
     config
       ..isSemanticBoundary = true
-      ..textDirection = TextDirection.ltr
-      ..label = 'Report preview'
+      ..textDirection = _strings.direction
+      ..label = _strings.t('Report preview')
       ..value = doc == null
-          ? (_error ?? '')
-          : '${doc.pages.length} page${doc.pages.length == 1 ? '' : 's'}';
+          ? (_error == null ? '' : _strings.diagnostic(_error!))
+          : _strings.count(doc.pages.length, 'page');
   }
 }

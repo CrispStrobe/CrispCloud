@@ -1,5 +1,7 @@
 import '../services/sftp_client_adapter.dart';
 import '../services/smb_client_adapter.dart';
+import 'dart:convert';
+import 'package:file_picker/file_picker.dart';
 import 'package:flutter/foundation.dart';
 // lib/widgets/connection_dialog.dart
 import 'package:flutter/material.dart';
@@ -15,6 +17,12 @@ import 'azure_connection_dialog.dart';
 import 'b2_connection_dialog.dart';
 import 'proxy_settings_dialog.dart';
 import '../l10n/app_localizations.dart';
+import '../l10n/connection_dialog_extra_strings.dart';
+import '../l10n/connection_strings.dart';
+import '../l10n/connection_failure_strings.dart';
+import '../l10n/provider_operation_strings.dart';
+import '../l10n/sftp_key_strings.dart';
+import '../services/nextcloud_client_adapter.dart';
 
 class ConnectionDialog extends ConsumerStatefulWidget {
   const ConnectionDialog({super.key});
@@ -36,6 +44,10 @@ class _ConnectionDialogState extends ConsumerState<ConnectionDialog> {
   final _portController =
       TextEditingController(text: '22'); // Default SFTP port
   final _sftpUserController = TextEditingController();
+  final _sftpKeyPassphraseController = TextEditingController();
+  bool _sftpUsePrivateKey = false;
+  String? _sftpPrivateKey;
+  String? _sftpPrivateKeyName;
 
   // FTP Specific Controllers
   final _ftpHostController = TextEditingController();
@@ -237,17 +249,18 @@ class _ConnectionDialogState extends ConsumerState<ConnectionDialog> {
   }
 
   Future<void> _saveProfile() async {
+    final t = ConnectionDialogExtraStrings(context);
     final nameController = TextEditingController();
     final name = await showDialog<String>(
       context: context,
       builder: (ctx) => AlertDialog(
-        title: Text(AppLocalizations.of(context)!.saveProfile),
+        title: Text(t.text('saveProfile')),
         content: TextField(
           controller: nameController,
-          decoration: const InputDecoration(
-            labelText: 'Profile Name',
-            hintText: 'e.g., Work S3, Personal SFTP',
-            border: OutlineInputBorder(),
+          decoration: InputDecoration(
+            labelText: t.text('profileName'),
+            hintText: t.text('profileHint'),
+            border: const OutlineInputBorder(),
           ),
           autofocus: true,
           onSubmitted: (v) => Navigator.pop(ctx, v),
@@ -272,13 +285,26 @@ class _ConnectionDialogState extends ConsumerState<ConnectionDialog> {
     await _loadProfiles();
     if (mounted) {
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Profile "$name" saved')),
+        SnackBar(content: Text(t.text('profileSaved', {'name': name}))),
       );
     }
   }
 
+  String _credentialHintKey(CloudProvider provider) => switch (provider) {
+        CloudProvider.dropbox || CloudProvider.gdrive ||
+        CloudProvider.onedrive || CloudProvider.pcloud => 'hintOauth',
+        CloudProvider.azure => 'hintAzure',
+        CloudProvider.b2 => 'hintB2',
+        CloudProvider.s3 => 'hintS3',
+        CloudProvider.ftp || CloudProvider.sftp || CloudProvider.smb ||
+        CloudProvider.webdav || CloudProvider.nextcloud => 'hintServer',
+        _ => 'hintSecure',
+      };
+
   @override
   Widget build(BuildContext context) {
+    final t = ConnectionDialogExtraStrings(context);
+    final l10n = AppLocalizations.of(context)!;
     // Determine which fields to show based on provider
     final isAzure = _selectedProvider == CloudProvider.azure;
     final isB2 = _selectedProvider == CloudProvider.b2;
@@ -290,13 +316,12 @@ class _ConnectionDialogState extends ConsumerState<ConnectionDialog> {
     final isNextcloud = _selectedProvider == CloudProvider.nextcloud;
     final isSftp = _selectedProvider == CloudProvider.sftp;
     final isS3 = _selectedProvider == CloudProvider.s3;
-    final isInternxt = _selectedProvider == CloudProvider.internxt;
     final isWebDav = _selectedProvider == CloudProvider.webdav;
     final isSmb = _selectedProvider == CloudProvider.smb;
     final isOAuth = isGDrive || isOneDrive || isDropbox || isPCloud;
 
     return AlertDialog(
-      title: const Text('Connect to Cloud Storage'),
+      title: Text(t.text('connectTitle')),
       scrollable: true, // Allow scrolling if keyboard covers fields
       content: SizedBox(
         width: 400,
@@ -306,9 +331,9 @@ class _ConnectionDialogState extends ConsumerState<ConnectionDialog> {
             // --- 1. Provider Selection ---
             DropdownButtonFormField<CloudProvider>(
               initialValue: _selectedProvider,
-              decoration: const InputDecoration(
-                labelText: 'Provider',
-                border: OutlineInputBorder(),
+              decoration: InputDecoration(
+                labelText: l10n.provider,
+                border: const OutlineInputBorder(),
               ),
               items: CloudProvider.values.map((provider) {
                 final enabled = (provider != CloudProvider.internxt ||
@@ -319,7 +344,7 @@ class _ConnectionDialogState extends ConsumerState<ConnectionDialog> {
                   child: Text(
                     enabled
                         ? provider.displayName
-                        : '${provider.displayName} (Disabled)',
+                        : t.text('disabled', {'name': provider.displayName}),
                     style: TextStyle(
                       color: enabled ? null : Theme.of(context).disabledColor,
                     ),
@@ -346,7 +371,7 @@ class _ConnectionDialogState extends ConsumerState<ConnectionDialog> {
 
             const SizedBox(height: 8),
             Semantics(
-              label: 'Provider setup guidance',
+              label: t.text('providerGuidance'),
               child: Container(
                 width: double.infinity,
                 padding: const EdgeInsets.all(12),
@@ -358,12 +383,12 @@ class _ConnectionDialogState extends ConsumerState<ConnectionDialog> {
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Text(
-                      _selectedProvider.onboardingDescription,
+                      t.text('provider${_selectedProvider.name[0].toUpperCase()}${_selectedProvider.name.substring(1)}'),
                       style: Theme.of(context).textTheme.bodySmall,
                     ),
                     const SizedBox(height: 4),
                     Text(
-                      _selectedProvider.credentialHint,
+                      t.text(_credentialHintKey(_selectedProvider)),
                       style: Theme.of(context).textTheme.bodySmall?.copyWith(
                             color:
                                 Theme.of(context).colorScheme.onSurfaceVariant,
@@ -381,12 +406,12 @@ class _ConnectionDialogState extends ConsumerState<ConnectionDialog> {
                 children: [
                   Expanded(
                     child: DropdownButtonFormField<String>(
-                      decoration: const InputDecoration(
-                        labelText: 'Saved Profiles',
-                        border: OutlineInputBorder(),
+                      decoration: InputDecoration(
+                        labelText: t.text('savedProfiles'),
+                        border: const OutlineInputBorder(),
                         isDense: true,
                       ),
-                      hint: const Text('Load a saved profile...'),
+                      hint: Text(t.text('loadProfile')),
                       items: _profiles
                           .map((p) => DropdownMenuItem(
                                 value: p.name,
@@ -404,14 +429,14 @@ class _ConnectionDialogState extends ConsumerState<ConnectionDialog> {
                   const SizedBox(width: 8),
                   IconButton(
                     icon: const Icon(Icons.delete, size: 18),
-                    tooltip: 'Delete selected profile',
+                    tooltip: t.text('deleteSelected'),
                     onPressed: () async {
                       if (_profiles.isEmpty) return;
                       // Delete the last selected (or first)
                       final name = await showDialog<String>(
                         context: context,
                         builder: (ctx) => AlertDialog(
-                          title: const Text('Delete Profile'),
+                          title: Text(t.text('deleteProfile')),
                           content: Column(
                             mainAxisSize: MainAxisSize.min,
                             children: _profiles
@@ -449,8 +474,8 @@ class _ConnectionDialogState extends ConsumerState<ConnectionDialog> {
               alignment: Alignment.centerRight,
               child: TextButton.icon(
                 icon: const Icon(Icons.save, size: 14),
-                label: const Text('Save as Profile',
-                    style: TextStyle(fontSize: 12)),
+                label: Text(t.text('saveProfile'),
+                    style: const TextStyle(fontSize: 12)),
                 onPressed: _saveProfile,
               ),
             ),
@@ -487,15 +512,14 @@ class _ConnectionDialogState extends ConsumerState<ConnectionDialog> {
                       .withValues(alpha: 0.3),
                   borderRadius: BorderRadius.circular(8),
                 ),
-                child: const Row(
+                child: Row(
                   children: [
-                    Icon(Icons.info_outline, size: 16),
-                    SizedBox(width: 8),
+                    const Icon(Icons.info_outline, size: 16),
+                    const SizedBox(width: 8),
                     Expanded(
                       child: Text(
-                        'Click Connect to open the Azure Blob Storage connection dialog '
-                        'where you can enter your Account Key, SAS Token, or Connection String.',
-                        style: TextStyle(fontSize: 12),
+                        t.text('azureHelp'),
+                        style: const TextStyle(fontSize: 12),
                       ),
                     ),
                   ],
@@ -511,15 +535,14 @@ class _ConnectionDialogState extends ConsumerState<ConnectionDialog> {
                       .withValues(alpha: 0.3),
                   borderRadius: BorderRadius.circular(8),
                 ),
-                child: const Row(
+                child: Row(
                   children: [
-                    Icon(Icons.info_outline, size: 16),
-                    SizedBox(width: 8),
+                    const Icon(Icons.info_outline, size: 16),
+                    const SizedBox(width: 8),
                     Expanded(
                       child: Text(
-                        'Click Connect to open the Backblaze B2 connection dialog '
-                        'where you can enter your Application Key ID and Application Key.',
-                        style: TextStyle(fontSize: 12),
+                        t.text('b2Help'),
+                        style: const TextStyle(fontSize: 12),
                       ),
                     ),
                   ],
@@ -528,22 +551,22 @@ class _ConnectionDialogState extends ConsumerState<ConnectionDialog> {
             ] else if (isDropbox) ...[
               TextField(
                 controller: _dropboxAppKeyController,
-                decoration: const InputDecoration(
-                  labelText: 'App Key',
+                decoration: InputDecoration(
+                  labelText: l10n.appKey,
                   hintText: 'your_app_key',
-                  border: OutlineInputBorder(),
-                  prefixIcon: Icon(Icons.key),
-                  helperText: 'From Dropbox App Console → Settings',
+                  border: const OutlineInputBorder(),
+                  prefixIcon: const Icon(Icons.key),
+                  helperText: t.text('dropboxConsole'),
                 ),
                 enabled: !_isLoading,
               ),
               const SizedBox(height: 16),
               TextField(
                 controller: _dropboxAppSecretController,
-                decoration: const InputDecoration(
-                  labelText: 'App Secret (optional)',
-                  border: OutlineInputBorder(),
-                  prefixIcon: Icon(Icons.lock_outline),
+                decoration: InputDecoration(
+                  labelText: t.text('appSecretOptional'),
+                  border: const OutlineInputBorder(),
+                  prefixIcon: const Icon(Icons.lock_outline),
                 ),
                 obscureText: true,
                 enabled: !_isLoading,
@@ -558,15 +581,14 @@ class _ConnectionDialogState extends ConsumerState<ConnectionDialog> {
                       .withValues(alpha: 0.3),
                   borderRadius: BorderRadius.circular(8),
                 ),
-                child: const Row(
+                child: Row(
                   children: [
-                    Icon(Icons.info_outline, size: 16),
-                    SizedBox(width: 8),
+                    const Icon(Icons.info_outline, size: 16),
+                    const SizedBox(width: 8),
                     Expanded(
                       child: Text(
-                        'Click Connect to open Dropbox sign-in in your browser. '
-                        'Authorize CrispCloud, then return here.',
-                        style: TextStyle(fontSize: 12),
+                        t.text('oauthHelp', {'provider': 'Dropbox'}),
+                        style: const TextStyle(fontSize: 12),
                       ),
                     ),
                   ],
@@ -575,23 +597,23 @@ class _ConnectionDialogState extends ConsumerState<ConnectionDialog> {
             ] else if (isGDrive) ...[
               TextField(
                 controller: _gdriveClientIdController,
-                decoration: const InputDecoration(
-                  labelText: 'OAuth2 Client ID',
+                decoration: InputDecoration(
+                  labelText: t.text('oauthId'),
                   hintText: '123456789.apps.googleusercontent.com',
-                  border: OutlineInputBorder(),
-                  prefixIcon: Icon(Icons.key),
+                  border: const OutlineInputBorder(),
+                  prefixIcon: const Icon(Icons.key),
                   helperText:
-                      'From Google Cloud Console → APIs & Services → Credentials',
+                      t.text('googleConsole'),
                 ),
                 enabled: !_isLoading,
               ),
               const SizedBox(height: 16),
               TextField(
                 controller: _gdriveClientSecretController,
-                decoration: const InputDecoration(
-                  labelText: 'Client Secret (optional for desktop)',
-                  border: OutlineInputBorder(),
-                  prefixIcon: Icon(Icons.lock_outline),
+                decoration: InputDecoration(
+                  labelText: t.text('clientSecretDesktop'),
+                  border: const OutlineInputBorder(),
+                  prefixIcon: const Icon(Icons.lock_outline),
                 ),
                 obscureText: true,
                 enabled: !_isLoading,
@@ -606,15 +628,14 @@ class _ConnectionDialogState extends ConsumerState<ConnectionDialog> {
                       .withValues(alpha: 0.3),
                   borderRadius: BorderRadius.circular(8),
                 ),
-                child: const Row(
+                child: Row(
                   children: [
-                    Icon(Icons.info_outline, size: 16),
-                    SizedBox(width: 8),
+                    const Icon(Icons.info_outline, size: 16),
+                    const SizedBox(width: 8),
                     Expanded(
                       child: Text(
-                        'Click Connect to open Google sign-in in your browser. '
-                        'Authorize CrispCloud, then return here.',
-                        style: TextStyle(fontSize: 12),
+                        t.text('oauthHelp', {'provider': 'Google'}),
+                        style: const TextStyle(fontSize: 12),
                       ),
                     ),
                   ],
@@ -623,22 +644,22 @@ class _ConnectionDialogState extends ConsumerState<ConnectionDialog> {
             ] else if (isOneDrive) ...[
               TextField(
                 controller: _onedriveClientIdController,
-                decoration: const InputDecoration(
-                  labelText: 'Application (Client) ID',
+                decoration: InputDecoration(
+                  labelText: t.text('appClientId'),
                   hintText: 'xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx',
-                  border: OutlineInputBorder(),
-                  prefixIcon: Icon(Icons.key),
-                  helperText: 'From Azure Portal → App Registrations',
+                  border: const OutlineInputBorder(),
+                  prefixIcon: const Icon(Icons.key),
+                  helperText: t.text('azureConsole'),
                 ),
                 enabled: !_isLoading,
               ),
               const SizedBox(height: 16),
               TextField(
                 controller: _onedriveClientSecretController,
-                decoration: const InputDecoration(
-                  labelText: 'Client Secret (optional for public apps)',
-                  border: OutlineInputBorder(),
-                  prefixIcon: Icon(Icons.lock_outline),
+                decoration: InputDecoration(
+                  labelText: t.text('clientSecretPublic'),
+                  border: const OutlineInputBorder(),
+                  prefixIcon: const Icon(Icons.lock_outline),
                 ),
                 obscureText: true,
                 enabled: !_isLoading,
@@ -653,15 +674,14 @@ class _ConnectionDialogState extends ConsumerState<ConnectionDialog> {
                       .withValues(alpha: 0.3),
                   borderRadius: BorderRadius.circular(8),
                 ),
-                child: const Row(
+                child: Row(
                   children: [
-                    Icon(Icons.info_outline, size: 16),
-                    SizedBox(width: 8),
+                    const Icon(Icons.info_outline, size: 16),
+                    const SizedBox(width: 8),
                     Expanded(
                       child: Text(
-                        'Click Connect to open Microsoft sign-in in your browser. '
-                        'Authorize CrispCloud, then return here.',
-                        style: TextStyle(fontSize: 12),
+                        t.text('oauthHelp', {'provider': 'Microsoft'}),
+                        style: const TextStyle(fontSize: 12),
                       ),
                     ),
                   ],
@@ -670,21 +690,20 @@ class _ConnectionDialogState extends ConsumerState<ConnectionDialog> {
             ] else if (isPCloud) ...[
               TextField(
                 controller: _pcloudAppKeyController,
-                decoration: const InputDecoration(
-                  labelText: 'App Key',
+                decoration: InputDecoration(
+                  labelText: l10n.appKey,
                   hintText: 'your_pcloud_app_key',
-                  border: OutlineInputBorder(),
-                  prefixIcon: Icon(Icons.key),
-                  helperText: 'From pCloud Developer Console → My Applications',
+                  border: const OutlineInputBorder(),
+                  prefixIcon: const Icon(Icons.key),
+                  helperText: t.text('pcloudConsole'),
                 ),
                 enabled: !_isLoading,
               ),
               const SizedBox(height: 12),
               CheckboxListTile(
-                title: const Text('Use EU servers (eapi.pcloud.com)'),
-                subtitle: const Text(
-                    'Required if your account is registered in the EU',
-                    style: TextStyle(fontSize: 11)),
+                title: Text(t.text('useEu')),
+                subtitle: Text(t.text('euRequired'),
+                    style: const TextStyle(fontSize: 11)),
                 value: _pcloudUseEu,
                 onChanged: _isLoading
                     ? null
@@ -703,15 +722,14 @@ class _ConnectionDialogState extends ConsumerState<ConnectionDialog> {
                       .withValues(alpha: 0.3),
                   borderRadius: BorderRadius.circular(8),
                 ),
-                child: const Row(
+                child: Row(
                   children: [
-                    Icon(Icons.info_outline, size: 16),
-                    SizedBox(width: 8),
+                    const Icon(Icons.info_outline, size: 16),
+                    const SizedBox(width: 8),
                     Expanded(
                       child: Text(
-                        'Click Connect to open pCloud sign-in in your browser. '
-                        'Authorize CrispCloud, then return here.',
-                        style: TextStyle(fontSize: 12),
+                        t.text('oauthHelp', {'provider': 'pCloud'}),
+                        style: const TextStyle(fontSize: 12),
                       ),
                     ),
                   ],
@@ -721,11 +739,11 @@ class _ConnectionDialogState extends ConsumerState<ConnectionDialog> {
               // S3: Endpoint URL
               TextField(
                 controller: _s3EndpointController,
-                decoration: const InputDecoration(
-                  labelText: 'Endpoint URL',
+                decoration: InputDecoration(
+                  labelText: l10n.endpoint,
                   hintText: 'https://s3.amazonaws.com',
-                  border: OutlineInputBorder(),
-                  prefixIcon: Icon(Icons.link),
+                  border: const OutlineInputBorder(),
+                  prefixIcon: const Icon(Icons.link),
                 ),
                 enabled: !_isLoading,
               ),
@@ -737,10 +755,10 @@ class _ConnectionDialogState extends ConsumerState<ConnectionDialog> {
                   Expanded(
                     child: TextField(
                       controller: _s3RegionController,
-                      decoration: const InputDecoration(
-                        labelText: 'Region',
+                      decoration: InputDecoration(
+                        labelText: l10n.region,
                         hintText: 'us-east-1',
-                        border: OutlineInputBorder(),
+                        border: const OutlineInputBorder(),
                       ),
                       enabled: !_isLoading,
                     ),
@@ -749,10 +767,10 @@ class _ConnectionDialogState extends ConsumerState<ConnectionDialog> {
                   Expanded(
                     child: TextField(
                       controller: _s3BucketController,
-                      decoration: const InputDecoration(
-                        labelText: 'Bucket',
+                      decoration: InputDecoration(
+                        labelText: l10n.bucket,
                         hintText: 'my-bucket',
-                        border: OutlineInputBorder(),
+                        border: const OutlineInputBorder(),
                       ),
                       enabled: !_isLoading,
                     ),
@@ -763,10 +781,10 @@ class _ConnectionDialogState extends ConsumerState<ConnectionDialog> {
               // S3: Access Key
               TextField(
                 controller: _s3AccessKeyController,
-                decoration: const InputDecoration(
-                  labelText: 'Access Key',
-                  border: OutlineInputBorder(),
-                  prefixIcon: Icon(Icons.vpn_key_outlined),
+                decoration: InputDecoration(
+                  labelText: l10n.accessKey,
+                  border: const OutlineInputBorder(),
+                  prefixIcon: const Icon(Icons.vpn_key_outlined),
                 ),
                 enabled: !_isLoading,
               ),
@@ -774,10 +792,10 @@ class _ConnectionDialogState extends ConsumerState<ConnectionDialog> {
               // S3: Secret Key
               TextField(
                 controller: _s3SecretKeyController,
-                decoration: const InputDecoration(
-                  labelText: 'Secret Key',
-                  border: OutlineInputBorder(),
-                  prefixIcon: Icon(Icons.lock_outline),
+                decoration: InputDecoration(
+                  labelText: l10n.secretKey,
+                  border: const OutlineInputBorder(),
+                  prefixIcon: const Icon(Icons.lock_outline),
                 ),
                 obscureText: true,
                 enabled: !_isLoading,
@@ -786,14 +804,14 @@ class _ConnectionDialogState extends ConsumerState<ConnectionDialog> {
               // S3: Server-Side Encryption
               DropdownButtonFormField<S3Encryption>(
                 value: _s3Encryption,
-                decoration: const InputDecoration(
-                  labelText: 'Server-Side Encryption',
-                  border: OutlineInputBorder(),
-                  prefixIcon: Icon(Icons.enhanced_encryption_outlined),
+                decoration: InputDecoration(
+                  labelText: t.text('serverEncryption'),
+                  border: const OutlineInputBorder(),
+                  prefixIcon: const Icon(Icons.enhanced_encryption_outlined),
                 ),
-                items: const [
+                items: [
                   DropdownMenuItem(
-                      value: S3Encryption.none, child: Text('None')),
+                      value: S3Encryption.none, child: Text(t.text('none'))),
                   DropdownMenuItem(
                       value: S3Encryption.sseS3,
                       child: Text('SSE-S3 (AES-256)')),
@@ -810,9 +828,9 @@ class _ConnectionDialogState extends ConsumerState<ConnectionDialog> {
                 const SizedBox(height: 12),
                 TextField(
                   controller: _s3KmsKeyIdController,
-                  decoration: const InputDecoration(
-                    labelText: 'KMS Key ID (optional, uses default if empty)',
-                    border: OutlineInputBorder(),
+                  decoration: InputDecoration(
+                    labelText: t.text('kmsOptional'),
+                    border: const OutlineInputBorder(),
                     hintText: 'arn:aws:kms:region:account:key/key-id',
                   ),
                   enabled: !_isLoading,
@@ -822,10 +840,10 @@ class _ConnectionDialogState extends ConsumerState<ConnectionDialog> {
               // S3: Storage Class
               DropdownButtonFormField<S3StorageClass>(
                 value: _s3StorageClass,
-                decoration: const InputDecoration(
-                  labelText: 'Storage Class',
-                  border: OutlineInputBorder(),
-                  prefixIcon: Icon(Icons.storage_outlined),
+                decoration: InputDecoration(
+                  labelText: t.text('storageClass'),
+                  border: const OutlineInputBorder(),
+                  prefixIcon: const Icon(Icons.storage_outlined),
                 ),
                 items: S3StorageClass.values
                     .map((sc) => DropdownMenuItem(
@@ -848,10 +866,10 @@ class _ConnectionDialogState extends ConsumerState<ConnectionDialog> {
                     flex: 2,
                     child: TextField(
                       controller: _ftpHostController,
-                      decoration: const InputDecoration(
-                        labelText: 'Host',
+                      decoration: InputDecoration(
+                        labelText: l10n.host,
                         hintText: 'ftp.example.com',
-                        border: OutlineInputBorder(),
+                        border: const OutlineInputBorder(),
                       ),
                       enabled: !_isLoading,
                     ),
@@ -861,10 +879,10 @@ class _ConnectionDialogState extends ConsumerState<ConnectionDialog> {
                     flex: 1,
                     child: TextField(
                       controller: _ftpPortController,
-                      decoration: const InputDecoration(
-                        labelText: 'Port',
+                      decoration: InputDecoration(
+                        labelText: l10n.port,
                         hintText: '21',
-                        border: OutlineInputBorder(),
+                        border: const OutlineInputBorder(),
                       ),
                       keyboardType: TextInputType.number,
                       enabled: !_isLoading,
@@ -876,18 +894,18 @@ class _ConnectionDialogState extends ConsumerState<ConnectionDialog> {
               // FTP: Username
               TextField(
                 controller: _ftpUserController,
-                decoration: const InputDecoration(
-                  labelText: 'Username',
+                decoration: InputDecoration(
+                  labelText: l10n.username,
                   hintText: 'ftpuser',
-                  border: OutlineInputBorder(),
-                  prefixIcon: Icon(Icons.person_outline),
+                  border: const OutlineInputBorder(),
+                  prefixIcon: const Icon(Icons.person_outline),
                 ),
                 enabled: !_isLoading,
               ),
               const SizedBox(height: 16),
               // FTP: Use TLS checkbox
               CheckboxListTile(
-                title: const Text('Use TLS (FTPS)'),
+                title: Text(t.text('useTls')),
                 value: _ftpUseTLS,
                 onChanged: _isLoading
                     ? null
@@ -908,10 +926,10 @@ class _ConnectionDialogState extends ConsumerState<ConnectionDialog> {
                     flex: 2,
                     child: TextField(
                       controller: _hostController,
-                      decoration: const InputDecoration(
-                        labelText: 'Host',
+                      decoration: InputDecoration(
+                        labelText: l10n.host,
                         hintText: 'u123.your-storagebox.de',
-                        border: OutlineInputBorder(),
+                        border: const OutlineInputBorder(),
                       ),
                       enabled: !_isLoading,
                     ),
@@ -921,10 +939,10 @@ class _ConnectionDialogState extends ConsumerState<ConnectionDialog> {
                     flex: 1,
                     child: TextField(
                       controller: _portController,
-                      decoration: const InputDecoration(
-                        labelText: 'Port',
+                      decoration: InputDecoration(
+                        labelText: l10n.port,
                         hintText: '22',
-                        border: OutlineInputBorder(),
+                        border: const OutlineInputBorder(),
                       ),
                       keyboardType: TextInputType.number,
                       enabled: !_isLoading,
@@ -936,20 +954,57 @@ class _ConnectionDialogState extends ConsumerState<ConnectionDialog> {
               // SFTP: Username
               TextField(
                 controller: _sftpUserController,
-                decoration: const InputDecoration(
-                  labelText: 'Username',
+                decoration: InputDecoration(
+                  labelText: l10n.username,
                   hintText: 'u12345',
-                  border: OutlineInputBorder(),
-                  prefixIcon: Icon(Icons.person_outline),
+                  border: const OutlineInputBorder(),
+                  prefixIcon: const Icon(Icons.person_outline),
                 ),
                 enabled: !_isLoading,
               ),
+              const SizedBox(height: 16),
+              DropdownButtonFormField<bool>(
+                initialValue: _sftpUsePrivateKey,
+                decoration: InputDecoration(
+                  labelText: SftpKeyStrings(context).authentication,
+                  border: const OutlineInputBorder(),
+                ),
+                items: [
+                  DropdownMenuItem(value: false, child: Text(SftpKeyStrings(context).password)),
+                  DropdownMenuItem(value: true, child: Text(SftpKeyStrings(context).privateKey)),
+                ],
+                onChanged: _isLoading ? null : (value) {
+                  if (value != null) setState(() => _sftpUsePrivateKey = value);
+                },
+              ),
+              if (_sftpUsePrivateKey) ...[
+                const SizedBox(height: 12),
+                OutlinedButton.icon(
+                  onPressed: _isLoading ? null : _chooseSftpPrivateKey,
+                  icon: const Icon(Icons.key),
+                  label: Text(SftpKeyStrings(context).chooseKey),
+                ),
+                if (_sftpPrivateKeyName != null)
+                  Text('${SftpKeyStrings(context).keySelected}: $_sftpPrivateKeyName'),
+                const SizedBox(height: 12),
+                TextField(
+                  controller: _sftpKeyPassphraseController,
+                  obscureText: true,
+                  enabled: !_isLoading,
+                  decoration: InputDecoration(
+                    labelText: SftpKeyStrings(context).passphrase,
+                    helperText: SftpKeyStrings(context).storageHelp,
+                    helperMaxLines: 3,
+                    border: const OutlineInputBorder(),
+                  ),
+                ),
+              ],
             ] else if (isWebDav || isSmb) ...[
               // WebDAV Fields
               TextField(
                 controller: _hostController,
                 decoration: InputDecoration(
-                  labelText: 'Server URL',
+                  labelText: l10n.serverUrl,
                   hintText: isSmb ? 'smb://nas.local/Share/' : 'https://cloud.example.com/remote.php/dav/files/user/',
                   border: const OutlineInputBorder(),
                   prefixIcon: const Icon(Icons.link),
@@ -959,17 +1014,17 @@ class _ConnectionDialogState extends ConsumerState<ConnectionDialog> {
               const SizedBox(height: 16),
               TextField(
                 controller: _emailController, // Reuse as Username
-                decoration: const InputDecoration(
-                  labelText: 'Username',
-                  border: OutlineInputBorder(),
-                  prefixIcon: Icon(Icons.person),
+                decoration: InputDecoration(
+                  labelText: l10n.username,
+                  border: const OutlineInputBorder(),
+                  prefixIcon: const Icon(Icons.person),
                 ),
                 enabled: !_isLoading,
               ),
               if (isSmb) CheckboxListTile(
                 contentPadding: EdgeInsets.zero,
-                title: const Text('Require SMB3 encryption'),
-                subtitle: const Text('Turn off only for an older NAS on a trusted network. Signing is always required. Use DOMAIN\\user for a domain account.'),
+                title: Text(t.text('requireSmb')),
+                subtitle: Text(t.text('smbHelp')),
                 value: _smbRequireEncryption,
                 onChanged: _isLoading ? null : (v) => setState(() => _smbRequireEncryption = v!),
               ),
@@ -977,12 +1032,12 @@ class _ConnectionDialogState extends ConsumerState<ConnectionDialog> {
               // Nextcloud: Server URL
               TextField(
                 controller: _nextcloudServerUrlController,
-                decoration: const InputDecoration(
-                  labelText: 'Server URL',
+                decoration: InputDecoration(
+                  labelText: AppLocalizations.of(context)!.serverUrl,
                   hintText: 'https://nextcloud.example.com',
-                  border: OutlineInputBorder(),
-                  prefixIcon: Icon(Icons.cloud_outlined),
-                  helperText: 'Your Nextcloud server address',
+                  border: const OutlineInputBorder(),
+                  prefixIcon: const Icon(Icons.cloud_outlined),
+                  helperText: ConnectionStrings.of(context).serverAddress,
                 ),
                 enabled: !_isLoading,
               ),
@@ -990,10 +1045,10 @@ class _ConnectionDialogState extends ConsumerState<ConnectionDialog> {
               // Nextcloud: Username
               TextField(
                 controller: _nextcloudUsernameController,
-                decoration: const InputDecoration(
-                  labelText: 'Username',
-                  border: OutlineInputBorder(),
-                  prefixIcon: Icon(Icons.person_outline),
+                decoration: InputDecoration(
+                  labelText: l10n.username,
+                  border: const OutlineInputBorder(),
+                  prefixIcon: const Icon(Icons.person_outline),
                 ),
                 enabled: !_isLoading,
               ),
@@ -1002,7 +1057,7 @@ class _ConnectionDialogState extends ConsumerState<ConnectionDialog> {
               TextField(
                 controller: _emailController,
                 decoration: InputDecoration(
-                  labelText: isInternxt ? 'Email' : 'Email Address',
+                  labelText: t.text('email'),
                   border: const OutlineInputBorder(),
                   prefixIcon: const Icon(Icons.email_outlined),
                 ),
@@ -1013,13 +1068,19 @@ class _ConnectionDialogState extends ConsumerState<ConnectionDialog> {
             const SizedBox(height: 16),
 
             // --- 4. Password (Common — hidden for S3/OAuth providers which use own auth) ---
-            if (!isS3 && !isOAuth) ...[
+            if (!isS3 && !isOAuth && !(isSftp && _sftpUsePrivateKey)) ...[
               TextField(
                 controller: _passwordController,
-                decoration: const InputDecoration(
-                  labelText: 'Password',
-                  border: OutlineInputBorder(),
-                  prefixIcon: Icon(Icons.lock_outline),
+                decoration: InputDecoration(
+                  labelText: isNextcloud
+                      ? ConnectionStrings.of(context).passwordOrAppPassword
+                      : AppLocalizations.of(context)!.password,
+                  helperText: isNextcloud
+                      ? ConnectionStrings.of(context).appPasswordHelp
+                      : null,
+                  helperMaxLines: 2,
+                  border: const OutlineInputBorder(),
+                  prefixIcon: const Icon(Icons.lock_outline),
                 ),
                 obscureText: true,
                 enabled: !_isLoading,
@@ -1031,10 +1092,10 @@ class _ConnectionDialogState extends ConsumerState<ConnectionDialog> {
               const SizedBox(height: 16),
               TextField(
                 controller: _tfaController,
-                decoration: const InputDecoration(
-                  labelText: '2FA Code',
-                  border: OutlineInputBorder(),
-                  prefixIcon: Icon(Icons.security),
+                decoration: InputDecoration(
+                  labelText: l10n.twoFactorCode,
+                  border: const OutlineInputBorder(),
+                  prefixIcon: const Icon(Icons.security),
                 ),
                 enabled: !_isLoading,
               ),
@@ -1047,8 +1108,8 @@ class _ConnectionDialogState extends ConsumerState<ConnectionDialog> {
               alignment: Alignment.centerLeft,
               child: TextButton.icon(
                 icon: const Icon(Icons.vpn_lock, size: 16),
-                label: const Text('Proxy Settings',
-                    style: TextStyle(fontSize: 12)),
+                label: Text(l10n.proxySettings,
+                    style: const TextStyle(fontSize: 12)),
                 onPressed: () {
                   showDialog(
                     context: context,
@@ -1063,10 +1124,10 @@ class _ConnectionDialogState extends ConsumerState<ConnectionDialog> {
             CheckboxListTile(
               value: _enableEncryption,
               onChanged: (v) => setState(() => _enableEncryption = v ?? false),
-              title: const Text('Enable Client-Side Encryption',
-                  style: TextStyle(fontSize: 14)),
-              subtitle: const Text('Encrypt files before upload (AES-256-GCM)',
-                  style: TextStyle(fontSize: 12)),
+              title: Text(t.text('clientEncryption'),
+                  style: const TextStyle(fontSize: 14)),
+              subtitle: Text(t.text('encryptHelp'),
+                  style: const TextStyle(fontSize: 12)),
               secondary: Icon(
                 _enableEncryption ? Icons.lock : Icons.lock_open,
                 color: _enableEncryption
@@ -1081,12 +1142,11 @@ class _ConnectionDialogState extends ConsumerState<ConnectionDialog> {
               TextField(
                 controller: _passphraseController,
                 obscureText: true,
-                decoration: const InputDecoration(
-                  labelText: 'Encryption Passphrase',
-                  border: OutlineInputBorder(),
-                  prefixIcon: Icon(Icons.key),
-                  helperText:
-                      'Files will be encrypted/decrypted with this passphrase',
+                decoration: InputDecoration(
+                  labelText: t.text('passphrase'),
+                  border: const OutlineInputBorder(),
+                  prefixIcon: const Icon(Icons.key),
+                  helperText: t.text('passphraseHelp'),
                 ),
                 enabled: !_isLoading,
               ),
@@ -1107,13 +1167,50 @@ class _ConnectionDialogState extends ConsumerState<ConnectionDialog> {
                   height: 20,
                   child: CircularProgressIndicator(strokeWidth: 2),
                 )
-              : const Text('Connect'),
+              : Text(l10n.connect),
         ),
       ],
     );
   }
 
+  Future<void> _chooseSftpPrivateKey() async {
+    try {
+      final result = await FilePicker.platform.pickFiles(withData: true);
+      if (!mounted || result == null) return;
+      final file = result.files.single;
+      final bytes = file.bytes;
+      if (bytes == null || bytes.isEmpty || bytes.length > 1024 * 1024) {
+        setState(() {
+          _sftpPrivateKey = null;
+          _sftpPrivateKeyName = null;
+          _error = SftpKeyStrings(context).readFailed;
+        });
+        return;
+      }
+      final pem = utf8.decode(bytes);
+      setState(() {
+        _sftpPrivateKey = pem;
+        _sftpPrivateKeyName = file.name;
+        _error = null;
+      });
+    } catch (_) {
+      if (mounted) {
+        setState(() {
+          _sftpPrivateKey = null;
+          _sftpPrivateKeyName = null;
+          _error = SftpKeyStrings(context).readFailed;
+        });
+      }
+    }
+  }
+
   Future<void> _handleLogin() async {
+    final t = ConnectionDialogExtraStrings(context);
+    if (_selectedProvider == CloudProvider.sftp &&
+        _sftpUsePrivateKey && _sftpPrivateKey == null) {
+      setState(() => _error = SftpKeyStrings(context).keyRequired);
+      return;
+    }
     setState(() {
       _isLoading = true;
       _error = null;
@@ -1154,7 +1251,7 @@ class _ConnectionDialogState extends ConsumerState<ConnectionDialog> {
         return;
       } else if (_selectedProvider == CloudProvider.dropbox) {
         if (_dropboxAppKeyController.text.isEmpty) {
-          throw Exception('App Key is required');
+          throw Exception(t.text('keyRequired'));
         }
         final appKey = _dropboxAppKeyController.text.trim();
         final appSecret = _dropboxAppSecretController.text.trim();
@@ -1163,7 +1260,7 @@ class _ConnectionDialogState extends ConsumerState<ConnectionDialog> {
       } else if (_selectedProvider == CloudProvider.gdrive) {
         // Google Drive: OAuth2 browser flow
         if (_gdriveClientIdController.text.isEmpty) {
-          throw Exception('OAuth2 Client ID is required');
+          throw Exception(t.text('oauthIdRequired'));
         }
         final clientId = _gdriveClientIdController.text.trim();
         final clientSecret = _gdriveClientSecretController.text.trim();
@@ -1173,7 +1270,7 @@ class _ConnectionDialogState extends ConsumerState<ConnectionDialog> {
       } else if (_selectedProvider == CloudProvider.onedrive) {
         // OneDrive: OAuth2 browser flow
         if (_onedriveClientIdController.text.isEmpty) {
-          throw Exception('Application (Client) ID is required');
+          throw Exception(t.text('applicationIdRequired'));
         }
         final clientId = _onedriveClientIdController.text.trim();
         final clientSecret = _onedriveClientSecretController.text.trim();
@@ -1183,7 +1280,7 @@ class _ConnectionDialogState extends ConsumerState<ConnectionDialog> {
       } else if (_selectedProvider == CloudProvider.pcloud) {
         // pCloud: OAuth2 browser flow
         if (_pcloudAppKeyController.text.isEmpty) {
-          throw Exception('App Key is required');
+          throw Exception(t.text('keyRequired'));
         }
         final appKey = _pcloudAppKeyController.text.trim();
         identity = _pcloudUseEu ? '$appKey|eu' : appKey;
@@ -1195,12 +1292,12 @@ class _ConnectionDialogState extends ConsumerState<ConnectionDialog> {
             _s3AccessKeyController.text.isEmpty ||
             _s3SecretKeyController.text.isEmpty) {
           throw Exception(
-              'Endpoint, Bucket, Access Key, and Secret Key are required');
+              t.text('s3Required'));
         }
         final endpoint = _s3EndpointController.text.trim();
         if (!endpoint.startsWith('http://') &&
             !endpoint.startsWith('https://')) {
-          throw Exception('Endpoint must start with http:// or https://');
+          throw Exception(t.text('endpointScheme'));
         }
         final region = _s3RegionController.text.trim().isEmpty
             ? 'us-east-1'
@@ -1214,7 +1311,7 @@ class _ConnectionDialogState extends ConsumerState<ConnectionDialog> {
         // FTP Validation
         if (_ftpHostController.text.isEmpty ||
             _ftpUserController.text.isEmpty) {
-          throw Exception('Host and Username are required');
+          throw Exception(t.text('hostUserRequired'));
         }
 
         // Validate port
@@ -1222,7 +1319,7 @@ class _ConnectionDialogState extends ConsumerState<ConnectionDialog> {
             _ftpPortController.text.isEmpty ? '21' : _ftpPortController.text;
         final portNum = int.tryParse(portStr);
         if (portNum == null || portNum < 1 || portNum > 65535) {
-          throw Exception('Port must be a number between 1 and 65535');
+          throw Exception(t.text('portInvalid'));
         }
         // Construct composite identity for FTP Adapter: "username@host:port?tls=true"
         final tlsFlag = _ftpUseTLS ? '?tls=true' : '';
@@ -1231,8 +1328,8 @@ class _ConnectionDialogState extends ConsumerState<ConnectionDialog> {
         password = _passwordController.text;
       } else if (_selectedProvider == CloudProvider.sftp) {
         // SFTP Validation
-        if (_hostController.text.isEmpty || _sftpUserController.text.isEmpty) {
-          throw Exception('Host and Username are required');
+        if (_hostController.text.trim().isEmpty || _sftpUserController.text.trim().isEmpty) {
+          throw Exception(t.text('hostUserRequired'));
         }
 
         // Validate port
@@ -1240,29 +1337,32 @@ class _ConnectionDialogState extends ConsumerState<ConnectionDialog> {
             _portController.text.isEmpty ? '22' : _portController.text;
         final portNum = int.tryParse(portStr);
         if (portNum == null || portNum < 1 || portNum > 65535) {
-          throw Exception('Port must be a number between 1 and 65535');
+          throw Exception(t.text('portInvalid'));
         }
-        // Construct composite identity for SFTP Adapter: "username@host:port"
-        identity =
-            '${_sftpUserController.text}@${_hostController.text}:$portStr';
+        identity = SFTPClientAdapter.identityFromFields(
+          username: _sftpUserController.text,
+          host: _hostController.text,
+          port: portNum,
+          web: kIsWeb,
+        );
         password = _passwordController.text;
       } else if (_selectedProvider == CloudProvider.smb) {
         if (_hostController.text.trim().isEmpty || _emailController.text.trim().isEmpty) {
-          throw const FormatException('Server URL and username are required.');
+          throw Exception(t.text('urlUserRequired'));
         }
         identity = '${_emailController.text.trim()}@${_hostController.text.trim()}';
         password = _passwordController.text;
       } else if (_selectedProvider == CloudProvider.webdav) {
         if (_hostController.text.isEmpty || _emailController.text.isEmpty) {
-          throw Exception('Server URL and Username are required');
+          throw Exception(t.text('urlUserRequired'));
         }
         final url = _hostController.text.trim();
         if (!url.startsWith('http://') && !url.startsWith('https://')) {
-          throw Exception('Server URL must start with http:// or https://');
+          throw Exception(t.text('urlScheme'));
         }
         final parsed = Uri.tryParse(url);
         if (parsed == null || !parsed.hasAuthority) {
-          throw Exception('Invalid server URL');
+          throw Exception(t.text('invalidUrl'));
         }
         // Pack as: username@https://server.com/dav
         identity = '${_emailController.text}@$url';
@@ -1270,15 +1370,15 @@ class _ConnectionDialogState extends ConsumerState<ConnectionDialog> {
       } else if (_selectedProvider == CloudProvider.nextcloud) {
         if (_nextcloudUsernameController.text.isEmpty ||
             _nextcloudServerUrlController.text.isEmpty) {
-          throw Exception('Server URL and Username are required');
+          throw Exception(t.text('urlUserRequired'));
         }
         final url = _nextcloudServerUrlController.text.trim();
         if (!url.startsWith('http://') && !url.startsWith('https://')) {
-          throw Exception('Server URL must start with http:// or https://');
+          throw Exception(t.text('urlScheme'));
         }
         final parsed = Uri.tryParse(url);
         if (parsed == null || !parsed.hasAuthority) {
-          throw Exception('Invalid server URL');
+          throw Exception(t.text('invalidUrl'));
         }
         // Pack as: username@https://nextcloud.example.com
         identity = '${_nextcloudUsernameController.text.trim()}@$url';
@@ -1286,7 +1386,7 @@ class _ConnectionDialogState extends ConsumerState<ConnectionDialog> {
       } else {
         // Standard Email
         if (_emailController.text.isEmpty) {
-          throw Exception('Email is required');
+          throw Exception(t.text('emailRequired'));
         }
         identity = _emailController.text;
         password = _passwordController.text;
@@ -1324,16 +1424,16 @@ class _ConnectionDialogState extends ConsumerState<ConnectionDialog> {
                   context: context,
                   barrierDismissible: false,
                   builder: (ctx) => AlertDialog(
-                          title: const Text('Verify SSH server'),
+                          title: Text(t.text('verifySsh')),
                           content: SelectableText(
-                              'Server: $endpoint\n\nSHA256 host key:\n$fingerprint\n\nCompare this fingerprint with your server before trusting it.'),
+                              t.text('sshFingerprint', {'endpoint': endpoint, 'fingerprint': fingerprint})),
                           actions: [
                             TextButton(
                                 onPressed: () => Navigator.pop(ctx, false),
-                                child: const Text('Cancel')),
+                                child: Text(AppLocalizations.of(context)!.cancel)),
                             FilledButton(
                                 onPressed: () => Navigator.pop(ctx, true),
-                                child: const Text('Trust server'))
+                                child: Text(t.text('trust')))
                           ])) ??
               false;
         };
@@ -1342,11 +1442,16 @@ class _ConnectionDialogState extends ConsumerState<ConnectionDialog> {
       if (auth.client is SmbClientAdapter) {
         (auth.client as SmbClientAdapter).requireEncryption = _smbRequireEncryption;
       }
-      await auth.login(
-        identity,
-        password,
-        _tfaController.text.isEmpty ? null : _tfaController.text,
-      );
+      if (_selectedProvider == CloudProvider.sftp && _sftpUsePrivateKey) {
+        await auth.loginSftpWithPrivateKey(identity, _sftpPrivateKey!,
+            _sftpKeyPassphraseController.text.isEmpty ? null : _sftpKeyPassphraseController.text);
+      } else {
+        await auth.login(
+          identity,
+          password,
+          _tfaController.text.isEmpty ? null : _tfaController.text,
+        );
+      }
 
       // 5. Apply S3-specific settings after login
       if (_selectedProvider == CloudProvider.s3) {
@@ -1375,7 +1480,11 @@ class _ConnectionDialogState extends ConsumerState<ConnectionDialog> {
     } catch (e) {
       if (mounted) {
         setState(() {
-          _error = e.toString().replaceAll('Exception:', '').trim();
+          _error = e is NextcloudAuthenticationException
+              ? ConnectionStrings.of(context).authenticationFailed
+              : localizedKnownProviderError(context, e) ??
+                  localizedConnectionFailure(context, e) ??
+                  e.toString().replaceAll('Exception:', '').trim();
           _isLoading = false;
         });
       }
@@ -1390,6 +1499,7 @@ class _ConnectionDialogState extends ConsumerState<ConnectionDialog> {
     _hostController.dispose();
     _portController.dispose();
     _sftpUserController.dispose();
+    _sftpKeyPassphraseController.dispose();
     _ftpHostController.dispose();
     _ftpPortController.dispose();
     _ftpUserController.dispose();

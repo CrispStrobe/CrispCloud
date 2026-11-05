@@ -5,6 +5,7 @@
 // kept for callers that still need a standalone picker.
 
 import 'package:flutter/material.dart';
+import '../l10n/theme_update_strings.dart';
 import '../services/theme_service.dart';
 
 class ThemePickerDialog extends StatelessWidget {
@@ -15,7 +16,7 @@ class ThemePickerDialog extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return AlertDialog(
-      title: const Text('Choose Theme'),
+      title: Text(ThemeUpdateStrings(context).text('choose')),
       scrollable: true,
       content: SizedBox(
         width: 340,
@@ -24,7 +25,7 @@ class ThemePickerDialog extends StatelessWidget {
       actions: [
         TextButton(
           onPressed: () => Navigator.pop(context),
-          child: const Text('Done'),
+          child: Text(ThemeUpdateStrings(context).text('done')),
         ),
       ],
     );
@@ -44,9 +45,15 @@ class ThemeSettingsPanel extends StatelessWidget {
       children: [
         ...AppThemeMode.values.map((mode) {
           final isSelected = themeService.currentMode == mode;
-          final label = mode == AppThemeMode.system
-              ? 'System'
-              : builtInThemes[mode]?.name ?? mode.name;
+          final label = ThemeUpdateStrings(context).text(switch (mode) {
+            AppThemeMode.system => 'system',
+            AppThemeMode.light => 'light',
+            AppThemeMode.dark => 'dark',
+            AppThemeMode.oledBlack => 'oled',
+            AppThemeMode.nord => 'nord',
+            AppThemeMode.dracula => 'dracula',
+            AppThemeMode.materialYou => 'materialYou',
+          });
           final swatch = _swatchColor(mode);
 
           return ListTile(
@@ -68,8 +75,10 @@ class ThemeSettingsPanel extends StatelessWidget {
             ),
             title: Text(label),
             trailing: isSelected
-                ? Icon(Icons.check,
-                    color: Theme.of(context).colorScheme.primary)
+                ? Icon(
+                    Icons.check,
+                    color: Theme.of(context).colorScheme.primary,
+                  )
                 : null,
             onTap: () => themeService.setTheme(mode),
           );
@@ -82,8 +91,10 @@ class ThemeSettingsPanel extends StatelessWidget {
           alignment: Alignment.centerLeft,
           child: Padding(
             padding: const EdgeInsets.symmetric(horizontal: 24),
-            child: Text('Accent Color',
-                style: Theme.of(context).textTheme.titleSmall),
+            child: Text(
+              ThemeUpdateStrings(context).text('accent'),
+              style: Theme.of(context).textTheme.titleSmall,
+            ),
           ),
         ),
         const SizedBox(height: 8),
@@ -93,17 +104,61 @@ class ThemeSettingsPanel extends StatelessWidget {
             spacing: 8,
             runSpacing: 8,
             children: [
-              _colorDot(context, null, 'Default'),
-              _colorDot(context, Colors.blue, 'Blue'),
-              _colorDot(context, Colors.indigo, 'Indigo'),
-              _colorDot(context, Colors.purple, 'Purple'),
-              _colorDot(context, Colors.pink, 'Pink'),
-              _colorDot(context, Colors.red, 'Red'),
-              _colorDot(context, Colors.orange, 'Orange'),
-              _colorDot(context, Colors.amber, 'Amber'),
-              _colorDot(context, Colors.green, 'Green'),
-              _colorDot(context, Colors.teal, 'Teal'),
-              _colorDot(context, Colors.cyan, 'Cyan'),
+              _colorDot(
+                context,
+                null,
+                ThemeUpdateStrings(context).text('default'),
+              ),
+              _colorDot(
+                context,
+                Colors.blue,
+                ThemeUpdateStrings(context).text('blue'),
+              ),
+              _colorDot(
+                context,
+                Colors.indigo,
+                ThemeUpdateStrings(context).text('indigo'),
+              ),
+              _colorDot(
+                context,
+                Colors.purple,
+                ThemeUpdateStrings(context).text('purple'),
+              ),
+              _colorDot(
+                context,
+                Colors.pink,
+                ThemeUpdateStrings(context).text('pink'),
+              ),
+              _colorDot(
+                context,
+                Colors.red,
+                ThemeUpdateStrings(context).text('red'),
+              ),
+              _colorDot(
+                context,
+                Colors.orange,
+                ThemeUpdateStrings(context).text('orange'),
+              ),
+              _colorDot(
+                context,
+                Colors.amber,
+                ThemeUpdateStrings(context).text('amber'),
+              ),
+              _colorDot(
+                context,
+                Colors.green,
+                ThemeUpdateStrings(context).text('green'),
+              ),
+              _colorDot(
+                context,
+                Colors.teal,
+                ThemeUpdateStrings(context).text('teal'),
+              ),
+              _colorDot(
+                context,
+                Colors.cyan,
+                ThemeUpdateStrings(context).text('cyan'),
+              ),
             ],
           ),
         ),
@@ -132,7 +187,8 @@ class ThemeSettingsPanel extends StatelessWidget {
   }
 
   Widget _colorDot(BuildContext context, Color? color, String label) {
-    final isSelected = themeService.customAccent == color ||
+    final isSelected =
+        themeService.customAccent == color ||
         (color == null && themeService.customAccent == null);
 
     return Tooltip(
@@ -156,8 +212,8 @@ class ThemeSettingsPanel extends StatelessWidget {
           child: color == null
               ? const Icon(Icons.auto_awesome, size: 14, color: Colors.white)
               : isSelected
-                  ? const Icon(Icons.check, size: 14, color: Colors.white)
-                  : null,
+              ? const Icon(Icons.check, size: 14, color: Colors.white)
+              : null,
         ),
       ),
     );

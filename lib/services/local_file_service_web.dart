@@ -1,3 +1,4 @@
+import 'web_file_failure.dart';
 // services/local_file_service_web.dart
 //
 // Web implementation of LocalFileService using virtual filesystem.
@@ -335,7 +336,7 @@ class WebFileService
       }
     }
 
-    if (fileRef == null) throw Exception('File ref not found: $path');
+    if (fileRef == null) throw WebFileException(WebFileFailureCode.fileMissing, 'File ref not found: $path', {'path': path});
 
     return _readBrowserFile(path, fileRef);
   }
@@ -465,7 +466,7 @@ class WebFileService
         await js_util.promiseToFuture(promise);
       } catch (e) {
         _log.debug('FSA removeEntry failed: $e');
-        throw Exception('Delete failed: $e');
+        throw WebFileException(WebFileFailureCode.deleteFailed, 'Delete failed: $e', {'error': e});
       }
     }
 
@@ -480,10 +481,10 @@ class WebFileService
   Future<void> createDirectory(String path) async {
     _log.debug('createDirectory: $path');
     final rootHandle = _findRootHandle(path);
-    if (rootHandle == null) throw Exception('No root handle for path: $path');
+    if (rootHandle == null) throw WebFileException(WebFileFailureCode.rootMissing, 'No root handle for path: $path', {'path': path});
 
     final permState = await _verifyPermission(rootHandle, 'readwrite');
-    if (!permState) throw Exception('Permission denied for directory creation');
+    if (!permState) throw WebFileException(WebFileFailureCode.permission, 'Permission denied for directory creation');
 
     final parts = path.split('/').where((s) => s.isNotEmpty).toList();
     dynamic current = rootHandle;

@@ -37,8 +37,8 @@ CrispCloud is an open-source, cross-platform cloud file manager. It connects to 
 
 Download the latest release for your platform from the GitHub Releases page:
 
-- **macOS**: `.dmg` disk image (macFUSE optional for mounted drives)
-- **Windows**: `.exe` installer (WinFsp optional for mounted drives)
+- **macOS**: `.dmg` disk image
+- **Windows**: `.exe` installer
 - **Linux**: `.AppImage`, `.deb`, or `.rpm`
 - **Android**: `.apk` or Play Store
 - **iOS**: App Store
@@ -66,7 +66,7 @@ To connect to a second provider simultaneously, click the **+** button in the re
 |----------|------|-----------|------------|---------|------------------|
 | **Filen** | Email + password | Yes | No | No | No |
 | **Internxt** | Email + password | No | No | No | No |
-| **SFTP** | Password or key | Yes (native) | No | No | No |
+| **SFTP** | Password or SSH private key | Yes (native) | No | No | No |
 | **WebDAV** | Username + password | No | No | No | No |
 | **S3 / S3-compatible** | Access key + secret | Yes | No | No | No |
 | **FTP / FTPS** | Username + password | No | No | No | No |
@@ -508,27 +508,15 @@ Select files or folders → right-click → **Create ZIP**. CrispCloud compresse
 
 ## FUSE Mounted Drives
 
-On desktop platforms, CrispCloud can mount a remote connection as a local drive letter (Windows) or mount point (macOS/Linux). Any application on your system can then read and write the cloud storage as if it were a local disk.
+Mounted drives are experimental and read-only. On macOS, open **Mount as Drive**, select a backend, and choose an empty local mount point. CrispCloud does not install or bundle these runtimes.
 
-**Requirements:**
-- macOS: macFUSE or FUSE-T
-- Windows: WinFsp
-- Linux: FUSE (libfuse / fusermount3)
+- **macFUSE FSKit** is the automatic choice. Install macFUSE separately and enable its file-system extension in System Settings under **Login Items & Extensions → By Category → File System Extensions**. Its kernel-extension backend is a separate explicit choice; Apple silicon requires Reduced Security for that backend.
+- **FUSE-T** must be installed and selected explicitly. Choose its NFS or SMB backend; CrispCloud asks you to confirm non-commercial FUSE-T use for each mount. Review [FUSE-T's license](https://github.com/macos-fuse-t/fuse-t/blob/main/License.txt). System-wide NFS options can interfere with the NFS backend; SMB is an alternative.
+- **rclone NFS** uses a separately installed rclone and its own configured remote, such as `work:documents`; it does not reuse CrispCloud connections. The read-only NFS endpoint listens on the local machine and can be accessed by local processes.
 
-### Mounting
+The macFUSE and FUSE-T bridge supports files over 64 MiB for Azure Blob using bounded range reads. Other providers and encrypted connections, including encrypted Azure connections, use a whole-file download and retain the 64 MiB limit. If a provider does not report the size in advance, that fallback may briefly exceed the limit before rejection. Separate Azure range requests do not provide a snapshot if the remote file changes while open. The limit does not apply to rclone's independent NFS backend.
 
-1. Connect to a remote provider.
-2. Go to **Tools → Mount Drive** or press **Ctrl+Shift+M**.
-3. Choose a mount point or drive letter.
-4. Click **Mount**. The drive appears in your OS file manager within seconds.
-
-### Performance
-
-Mounted drives use a directory listing cache (30-second TTL) and 256 KB read-ahead to minimize round-trips. Write-back is performed when a file handle is closed.
-
-### Unmount
-
-Right-click the mount in the sidebar → **Unmount**, or use your OS's eject controls. All mounts are unmounted automatically when CrispCloud closes.
+Live local-fixture tests passed for macFUSE FSKit, FUSE-T NFS and SMB, and rclone NFS. Finder, real cloud remotes, and the signed sandboxed app still need end-to-end testing. Linux and Windows mounting is not implemented. See the [developer mount test guide](macos_mount_testing.md) for details.
 
 ---
 

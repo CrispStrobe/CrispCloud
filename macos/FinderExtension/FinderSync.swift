@@ -26,6 +26,29 @@ import FinderSync
 
 class FinderSyncExtension: FIFinderSync {
 
+    // Finder runs this extension in its own process and language environment.
+    // Use the user's preferred system language, falling back to English.
+    private static var uploadLabel: String {
+        let translations = [
+            "en": "Upload to CrispCloud",
+            "de": "Zu CrispCloud hochladen",
+            "fr": "Importer dans CrispCloud",
+            "es": "Subir a CrispCloud",
+            "pt": "Carregar para o CrispCloud",
+            "zh": "上传到 CrispCloud",
+            "ja": "CrispCloud にアップロード",
+            "ko": "CrispCloud에 업로드",
+            "ar": "رفع إلى CrispCloud",
+        ]
+        for preferred in Locale.preferredLanguages {
+            if let language = preferred.split(whereSeparator: { $0 == "-" || $0 == "_" }).first,
+               let label = translations[String(language).lowercased()] {
+                return label
+            }
+        }
+        return translations["en"]!
+    }
+
     // MARK: - Monitored directories
 
     override init() {
@@ -47,7 +70,7 @@ class FinderSyncExtension: FIFinderSync {
 
         if menuKind == .contextualMenuForItems || menuKind == .contextualMenuForContainer {
             let item = NSMenuItem(
-                title: "Upload to CrispCloud",
+                title: Self.uploadLabel,
                 action: #selector(uploadToCrispCloud(_:)),
                 keyEquivalent: ""
             )

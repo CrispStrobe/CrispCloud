@@ -4,6 +4,8 @@
 // with add, close, pin, reorder, and context menu.
 
 import 'package:flutter/material.dart';
+import '../l10n/app_localizations.dart';
+import '../l10n/panel_tab_strings.dart';
 import '../models/panel_tab.dart';
 import 'file_list_view.dart' show PanelDragData;
 
@@ -172,28 +174,28 @@ class PanelTabBar extends StatelessWidget {
               Icon(tab.isPinned ? Icons.push_pin_outlined : Icons.push_pin,
                   size: 16),
               const SizedBox(width: 8),
-              Text(tab.isPinned ? 'Unpin' : 'Pin Tab'),
+              Expanded(child: Text(tab.isPinned ? AppLocalizations.of(context)!.unpinTab : AppLocalizations.of(context)!.pinTab)),
             ],
           ),
           onTap: () => onTabPinToggle?.call(tab.id),
         ),
         if (!tab.isPinned && tabs.length > 1)
           PopupMenuItem(
-            child: const Row(
+            child: Row(
               children: [
                 Icon(Icons.close, size: 16),
                 SizedBox(width: 8),
-                Text('Close Tab'),
+                Expanded(child: Text(AppLocalizations.of(context)!.closeTab)),
               ],
             ),
             onTap: () => onTabClosed(tab.id),
           ),
         PopupMenuItem(
-          child: const Row(
+          child: Row(
             children: [
               Icon(Icons.close_fullscreen, size: 16),
               SizedBox(width: 8),
-              Text('Close Other Tabs'),
+              Expanded(child: Text(AppLocalizations.of(context)!.closeOtherTabs)),
             ],
           ),
           onTap: () {
@@ -206,21 +208,21 @@ class PanelTabBar extends StatelessWidget {
         ),
         PopupMenuItem(
           onTap: onNewTab,
-          child: const Row(
+          child: Row(
             children: [
               Icon(Icons.content_copy, size: 16),
               SizedBox(width: 8),
-              Text('Duplicate Tab'),
+              Expanded(child: Text(AppLocalizations.of(context)!.duplicateTab)),
             ],
           ),
         ),
         if (onTabRenamed != null)
           PopupMenuItem(
-            child: const Row(
+            child: Row(
               children: [
                 Icon(Icons.edit, size: 16),
                 SizedBox(width: 8),
-                Text('Rename Tab'),
+                Expanded(child: Text(PanelTabStrings(context).text('renameTab'))),
               ],
             ),
             onTap: () {
@@ -240,12 +242,12 @@ class PanelTabBar extends StatelessWidget {
     showDialog(
       context: context,
       builder: (ctx) => AlertDialog(
-        title: const Text('Rename Tab'),
+        title: Text(PanelTabStrings(context).text('renameTab')),
         content: TextField(
           controller: ctrl,
           autofocus: true,
-          decoration: const InputDecoration(
-            labelText: 'Tab name',
+          decoration: InputDecoration(
+            labelText: PanelTabStrings(ctx).text('tabName'),
             border: OutlineInputBorder(),
           ),
           onSubmitted: (v) {
@@ -256,7 +258,7 @@ class PanelTabBar extends StatelessWidget {
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(ctx),
-            child: const Text('Cancel'),
+            child: Text(AppLocalizations.of(ctx)!.cancel),
           ),
           ElevatedButton(
             onPressed: () {
@@ -264,7 +266,7 @@ class PanelTabBar extends StatelessWidget {
               if (v.isNotEmpty) onTabRenamed!(tab.id, v);
               Navigator.pop(ctx);
             },
-            child: const Text('Rename'),
+            child: Text(AppLocalizations.of(ctx)!.rename),
           ),
         ],
       ),

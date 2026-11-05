@@ -15,6 +15,7 @@ import '../models/panel_side.dart';
 import '../providers/providers.dart';
 import '../utils/formatters.dart';
 import '../l10n/app_localizations.dart';
+import '../l10n/duplicate_finder_strings.dart';
 
 void showDuplicateFinderDialog(BuildContext context, WidgetRef ref) {
   showDialog(
@@ -100,6 +101,7 @@ class _DuplicateFinderDialogState extends ConsumerState<_DuplicateFinderDialog> 
 
   @override
   Widget build(BuildContext context) {
+    final strings = DuplicateFinderStrings(context);
     final activePanel = ref.watch(activePanelProvider);
     final totalDuplicates = _duplicateGroups.fold<int>(0, (s, g) => s + g.length - 1);
     final wastedBytes = _duplicateGroups.fold<int>(0, (s, g) {
@@ -108,11 +110,11 @@ class _DuplicateFinderDialogState extends ConsumerState<_DuplicateFinderDialog> 
     });
 
     return AlertDialog(
-      title: const Row(
+      title: Row(
         children: [
-          Icon(Icons.find_replace, size: 20),
-          SizedBox(width: 8),
-          Text('Duplicate Finder'),
+          const Icon(Icons.find_replace, size: 20),
+          const SizedBox(width: 8),
+          Text(strings.text('finder')),
         ],
       ),
       content: SizedBox(
@@ -124,7 +126,7 @@ class _DuplicateFinderDialogState extends ConsumerState<_DuplicateFinderDialog> 
             if (_scanning) ...[
               LinearProgressIndicator(value: _totalCount > 0 ? _scannedCount / _totalCount : null),
               const SizedBox(height: 8),
-              Text('Scanning... $_scannedCount / $_totalCount files', style: const TextStyle(fontSize: 12)),
+              Text(strings.text('scanning', {'done': _scannedCount, 'total': _totalCount}), style: const TextStyle(fontSize: 12)),
             ] else if (_done) ...[
               Container(
                 padding: const EdgeInsets.all(8),
@@ -143,8 +145,8 @@ class _DuplicateFinderDialogState extends ConsumerState<_DuplicateFinderDialog> 
                     Expanded(
                       child: Text(
                         _duplicateGroups.isEmpty
-                            ? 'No duplicates found!'
-                            : '$totalDuplicates duplicate files in ${_duplicateGroups.length} groups (${formatBytes(wastedBytes)} wasted)',
+                            ? strings.text('none')
+                            : strings.text('summary', {'count': totalDuplicates, 'groups': _duplicateGroups.length, 'size': formatBytes(wastedBytes)}),
                         style: const TextStyle(fontSize: 12),
                       ),
                     ),
@@ -153,8 +155,7 @@ class _DuplicateFinderDialogState extends ConsumerState<_DuplicateFinderDialog> 
               ),
             ] else ...[
               Text(
-                'Scan ${activePanel == PanelSide.local ? "local" : "remote"} files for duplicates.\n'
-                '${activePanel == PanelSide.local ? "Uses MD5 hash for accurate matching." : "Uses file size matching (no download)."}',
+                strings.text(activePanel == PanelSide.local ? 'local' : 'remote'),
                 style: const TextStyle(fontSize: 12),
               ),
             ],
@@ -181,7 +182,7 @@ class _DuplicateFinderDialogState extends ConsumerState<_DuplicateFinderDialog> 
                             ),
                             title: Text(group.first.name, style: const TextStyle(fontSize: 13)),
                             subtitle: Text(
-                              '${group.length} copies • ${formatBytes(group.first.size ?? 0)} each',
+                              strings.text('copies', {'count': group.length, 'size': formatBytes(group.first.size ?? 0)}),
                               style: const TextStyle(fontSize: 11),
                             ),
                             children: group.map((f) => ListTile(
@@ -193,7 +194,7 @@ class _DuplicateFinderDialogState extends ConsumerState<_DuplicateFinderDialog> 
                                   : null,
                               trailing: IconButton(
                                 icon: const Icon(Icons.delete, size: 16, color: Colors.red),
-                                tooltip: 'Delete this copy',
+                                tooltip: strings.text('delete'),
                                 onPressed: () async {
                                   final panel = ref.read(panelProvider(activePanel));
                                   await panel.deleteFiles([f]);
@@ -217,7 +218,7 @@ class _DuplicateFinderDialogState extends ConsumerState<_DuplicateFinderDialog> 
         if (!_scanning)
           ElevatedButton.icon(
             icon: const Icon(Icons.search, size: 16),
-            label: Text(_done ? 'Scan Again' : 'Scan'),
+            label: Text(strings.text(_done ? 'scanAgain' : 'scan')),
             onPressed: _scan,
           ),
       ],

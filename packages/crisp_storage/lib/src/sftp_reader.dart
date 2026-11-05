@@ -17,7 +17,11 @@ class SftpReader {
   bool _closed = false;
   SftpReader(this.connection, this.resolve);
   void _checkOpen() {
-    if (_closed) throw const RemoteException('Download paused.');
+    if (_closed)
+      throw const RemoteException(
+        'Download paused.',
+        code: RemoteErrorCode.paused,
+      );
   }
 
   Future<SftpClient> _open() async {
@@ -34,18 +38,19 @@ class SftpReader {
         await socket.close();
         _checkOpen();
       }
-      final ssh = await openVerifiedSsh(socket,
-          username: connection.username,
-          password: connection.secret,
-          onCreated: (client) => _ssh = client,
-          verify: (_, fingerprint) {
-            observed = utf8.decode(fingerprint);
-            if (observed != connection.hostKey) {
-              throw SftpHostKeyException(observed!,
-                  expected: connection.hostKey);
-            }
-            return true;
-          });
+      final ssh = await openVerifiedSsh(
+        socket,
+        username: connection.username,
+        password: connection.secret,
+        onCreated: (client) => _ssh = client,
+        verify: (_, fingerprint) {
+          observed = utf8.decode(fingerprint);
+          if (observed != connection.hostKey) {
+            throw SftpHostKeyException(observed!, expected: connection.hostKey);
+          }
+          return true;
+        },
+      );
       _ssh = ssh;
       if (_closed) {
         await ssh.close();
@@ -53,8 +58,8 @@ class SftpReader {
       }
       _checkOpen();
       final client = _sftp = await ssh.sftp().timeout(
-            const Duration(seconds: 15),
-          );
+        const Duration(seconds: 15),
+      );
       _root = p.posix.normalize(
         await client
             .absolute(Uri.decodeComponent(connection.url.path))
@@ -69,6 +74,7 @@ class SftpReader {
       }
       throw const RemoteException(
         'Could not connect to SFTP. Check the server, username and password.',
+        code: RemoteErrorCode.sftpConnect,
       );
     }
   }
@@ -84,6 +90,8 @@ class SftpReader {
     if (canonical != _root && !p.posix.isWithin(_root!, canonical)) {
       throw const RemoteException(
         'The SFTP path is outside this connection’s root.',
+        code: RemoteErrorCode.outsideRoot,
+        arguments: {'protocol': 'SFTP'},
       );
     }
     return canonical;
@@ -91,10 +99,15 @@ class SftpReader {
 
   Future<List<RemoteEntry>> browse(String path) async {
     final target = await _path(path);
-    final listing =
-        await _sftp!.listdir(target).timeout(const Duration(seconds: 20));
+    final listing = await _sftp!
+        .listdir(target)
+        .timeout(const Duration(seconds: 20));
     if (listing.length > 10000) {
-      throw const RemoteException('SFTP folder is too large.');
+      throw const RemoteException(
+        'SFTP folder is too large.',
+        code: RemoteErrorCode.folderTooLarge,
+        arguments: {'protocol': 'SFTP'},
+      );
     }
     final parent = resolve(path.isEmpty ? connection.url.toString() : path);
     final result = <RemoteEntry>[];
@@ -109,7 +122,8 @@ class SftpReader {
         continue;
       }
       final uri = parent.replace(
-        path: p.posix.join(Uri.decodeComponent(parent.path), name) +
+        path:
+            p.posix.join(Uri.decodeComponent(parent.path), name) +
             (entry.attr.isDirectory ? '/' : ''),
       );
       result.add(
@@ -125,8 +139,8 @@ class SftpReader {
       (a, b) => a.type == b.type
           ? a.name.toLowerCase().compareTo(b.name.toLowerCase())
           : a.type == 'folder'
-              ? -1
-              : 1,
+          ? -1
+          : 1,
     );
     return result;
   }
@@ -147,10 +161,13 @@ class SftpReader {
       if (!attrs.isFile || size == null || size <= 0 || size > limit) {
         throw const RemoteException(
           'SFTP file is empty, unsupported or exceeds the download limit.',
+          code: RemoteErrorCode.invalidFile,
+          arguments: {'protocol': 'SFTP'},
         );
       }
-      final validator =
-          attrs.modifyTime == null ? '' : '${attrs.modifyTime}:$size';
+      final validator = attrs.modifyTime == null
+          ? ''
+          : '${attrs.modifyTime}:$size';
       final source = resolve(path).toString();
       final saved = await DownloadState.read(output);
       var offset = await output.exists() ? await output.length() : 0;
@@ -169,13 +186,18 @@ class SftpReader {
         await DownloadState(source, validator, size).save(output);
         onBytes?.call(received);
         if (offset < size) {
-          await for (final bytes in file
-              .read(offset: offset, length: size - offset)
-              .timeout(const Duration(seconds: 30))) {
+          await for (final bytes
+              in file
+                  .read(offset: offset, length: size - offset)
+                  .timeout(const Duration(seconds: 30))) {
             _checkOpen();
             received += bytes.length;
             if (received > size || received > limit) {
-              throw const RemoteException('SFTP file changed during download.');
+              throw const RemoteException(
+                'SFTP file changed during download.',
+                code: RemoteErrorCode.fileChanged,
+                arguments: {'protocol': 'SFTP'},
+              );
             }
             sink.add(bytes);
             if (received % (1024 * 1024) < bytes.length) await sink.flush();
@@ -184,12 +206,18 @@ class SftpReader {
         }
         await sink.flush();
         if (received != size) {
-          throw const RemoteException('SFTP download was incomplete.');
+          throw const RemoteException(
+            'SFTP download was incomplete.',
+            code: RemoteErrorCode.incomplete,
+            arguments: {'protocol': 'SFTP'},
+          );
         }
         final after = await file.stat().timeout(const Duration(seconds: 15));
         if (after.size != size || after.modifyTime != attrs.modifyTime) {
           throw const RemoteException(
             'SFTP file changed during download. Retry it.',
+            code: RemoteErrorCode.fileChanged,
+            arguments: {'protocol': 'SFTP'},
           );
         }
       } finally {

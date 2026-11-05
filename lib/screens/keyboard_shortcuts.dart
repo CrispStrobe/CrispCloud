@@ -9,6 +9,9 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import '../l10n/app_localizations.dart';
+import '../l10n/command_strings.dart';
+import '../l10n/undo_presentation.dart';
 import '../models/file_item.dart';
 import '../models/panel_side.dart';
 import '../providers/providers.dart';
@@ -607,9 +610,9 @@ void _undoLastAction(BuildContext context, WidgetRef ref, PanelSide activePanel)
   final last = historyNotifier.lastAction;
   if (last == null) {
     ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(
-        content: Text('Nothing to undo'),
-        duration: Duration(seconds: 2),
+      SnackBar(
+        content: Text(CommandStrings(context).text('nothingUndo')),
+        duration: const Duration(seconds: 2),
       ),
     );
     return;
@@ -618,7 +621,7 @@ void _undoLastAction(BuildContext context, WidgetRef ref, PanelSide activePanel)
   if (!historyNotifier.canUndo(last)) {
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(
-        content: Text('Cannot undo: ${last.description}'),
+        content: Text(CommandStrings(context).text('cannotUndo', {'action': UndoPresentation(context).description(last)})),
         duration: const Duration(seconds: 3),
       ),
     );
@@ -632,7 +635,7 @@ void _undoLastAction(BuildContext context, WidgetRef ref, PanelSide activePanel)
     if (!context.mounted) return;
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(
-        content: Text(result.message),
+        content: Text(UndoPresentation(context).result(result)),
         duration: const Duration(seconds: 3),
         backgroundColor: result.success ? null : Theme.of(context).colorScheme.error,
       ),
@@ -663,11 +666,11 @@ void _showPatternDialog(BuildContext context, PanelNotifier panel, {required boo
   showDialog<void>(
     context: context,
     builder: (ctx) => AlertDialog(
-      title: Text(select ? 'Select by pattern' : 'Deselect by pattern'),
+      title: Text(CommandStrings(context).text(select ? 'selectPattern' : 'deselectPattern')),
       content: TextField(
         controller: ctrl,
         autofocus: true,
-        decoration: const InputDecoration(hintText: 'e.g. *.dart, doc*, *test*'),
+        decoration: InputDecoration(hintText: CommandStrings(context).text('patternHint')),
         onSubmitted: (v) {
           if (select) {
             panel.selectByPattern(v);
@@ -678,7 +681,7 @@ void _showPatternDialog(BuildContext context, PanelNotifier panel, {required boo
         },
       ),
       actions: [
-        TextButton(onPressed: () => Navigator.pop(ctx), child: const Text('Cancel')),
+        TextButton(onPressed: () => Navigator.pop(ctx), child: Text(AppLocalizations.of(context)!.cancel)),
         ElevatedButton(
           onPressed: () {
             if (select) {
@@ -688,7 +691,7 @@ void _showPatternDialog(BuildContext context, PanelNotifier panel, {required boo
             }
             Navigator.pop(ctx);
           },
-          child: Text(select ? 'Select' : 'Deselect'),
+          child: Text(CommandStrings(context).text(select ? 'select' : 'deselect')),
         ),
       ],
     ),

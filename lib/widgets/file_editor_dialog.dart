@@ -14,6 +14,8 @@ import 'dart:io';
 
 import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:flutter/material.dart';
+
+import '../l10n/provider_operation_strings.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:path/path.dart' as p;
@@ -23,6 +25,7 @@ import '../l10n/app_localizations.dart';
 import '../models/file_item.dart';
 import '../models/panel_side.dart';
 import '../providers/providers.dart';
+import '../l10n/file_editor_strings.dart';
 import '../services/editor_document.dart';
 import '../services/editor_highlighting.dart';
 import '../services/log_service.dart';
@@ -245,9 +248,9 @@ class _FileEditorPageState extends ConsumerState<_FileEditorPage> {
           if (kIsWeb || e is! PathAccessException) rethrow;
           final granted = await service.ensureAccess(path);
           if (!granted) {
+            if (!mounted) return;
             throw FileSystemException(
-              'Access to "$path" was not granted. Grant access to its folder '
-              'and try again.',
+              FileEditorStrings(context).value('access', path),
               path,
             );
           }
@@ -273,7 +276,7 @@ class _FileEditorPageState extends ConsumerState<_FileEditorPage> {
       _log.warn('operation failed', e);
       if (!mounted) return;
       setState(() {
-        _error = 'Failed to load file: $e';
+        _error = FileEditorStrings(context).value('loadError', localizedProviderError(context, e));
         _loading = false;
       });
     }
@@ -396,7 +399,7 @@ class _FileEditorPageState extends ConsumerState<_FileEditorPage> {
     ref.read(panelProvider(widget.side)).refreshFiles();
     if (manual) {
       ScaffoldMessenger.of(context)
-          .showSnackBar(SnackBar(content: Text('Saved ${widget.file.name}')));
+          .showSnackBar(SnackBar(content: Text(FileEditorStrings(context).value('saved', widget.file.name))));
     }
   }
 
@@ -529,7 +532,7 @@ class _FileEditorPageState extends ConsumerState<_FileEditorPage> {
       context: context,
       builder: (ctx) => AlertDialog(
         title: Text(AppLocalizations.of(context)!.unsavedChanges),
-        content: const Text('You have unsaved changes. Discard them?'),
+        content: Text(FileEditorStrings(context).text('unsaved')),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(ctx, false),
@@ -638,7 +641,7 @@ class _FileEditorPageState extends ConsumerState<_FileEditorPage> {
                     borderRadius: BorderRadius.circular(4),
                   ),
                   child: Text(
-                    'Modified',
+                    FileEditorStrings(context).text('modified'),
                     style: TextStyle(
                       fontSize: 10,
                       color: theme.colorScheme.onPrimary,
@@ -655,9 +658,7 @@ class _FileEditorPageState extends ConsumerState<_FileEditorPage> {
                   _highlightEnabled ? Icons.code : Icons.code_off,
                   size: 20,
                 ),
-                tooltip: _highlightEnabled
-                    ? 'Disable syntax highlighting'
-                    : 'Enable syntax highlighting',
+                tooltip: FileEditorStrings(context).text(_highlightEnabled ? 'disable' : 'enable'),
                 onPressed: _toggleHighlighting,
               ),
             _isSaving
@@ -674,7 +675,7 @@ class _FileEditorPageState extends ConsumerState<_FileEditorPage> {
                       Icons.save,
                       color: _isModified ? theme.colorScheme.primary : null,
                     ),
-                    tooltip: 'Save (Ctrl/Cmd+S)',
+                    tooltip: FileEditorStrings(context).text('saveShortcut'),
                     onPressed: _isModified
                         ? () => unawaited(_saveFile())
                         : null,

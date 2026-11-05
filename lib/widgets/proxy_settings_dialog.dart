@@ -13,6 +13,7 @@ import '../providers/core_providers.dart';
 import '../services/cert_pinning_service.dart';
 import '../services/proxy_service.dart';
 import '../l10n/app_localizations.dart';
+import '../l10n/proxy_settings_strings.dart';
 
 class ProxySettingsDialog extends ConsumerStatefulWidget {
   const ProxySettingsDialog({super.key});
@@ -49,6 +50,7 @@ class _ProxySettingsDialogState extends ConsumerState<ProxySettingsDialog> {
 
   @override
   Widget build(BuildContext context) {
+    final strings = ProxySettingsStrings(context);
     return AlertDialog(
       title: Text(AppLocalizations.of(context)!.proxySettings),
       scrollable: true,
@@ -59,15 +61,16 @@ class _ProxySettingsDialogState extends ConsumerState<ProxySettingsDialog> {
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             DropdownButtonFormField<ProxyType>(
+              isExpanded: true,
               initialValue: _type,
-              decoration: const InputDecoration(
-                labelText: 'Proxy Type',
-                border: OutlineInputBorder(),
+              decoration: InputDecoration(
+                labelText: strings.text('Proxy Type'),
+                border: const OutlineInputBorder(),
               ),
-              items: const [
-                DropdownMenuItem(value: ProxyType.none, child: Text('No Proxy (Direct)')),
-                DropdownMenuItem(value: ProxyType.http, child: Text('HTTP / HTTPS Proxy')),
-                DropdownMenuItem(value: ProxyType.socks5, child: Text('SOCKS5 Proxy')),
+              items: [
+                DropdownMenuItem(value: ProxyType.none, child: Text(strings.text('No Proxy (Direct)'))),
+                DropdownMenuItem(value: ProxyType.http, child: Text(strings.text('HTTP / HTTPS Proxy'))),
+                DropdownMenuItem(value: ProxyType.socks5, child: Text(strings.text('SOCKS5 Proxy'))),
               ],
               onChanged: (v) => setState(() => _type = v ?? ProxyType.none),
             ),
@@ -81,7 +84,7 @@ class _ProxySettingsDialogState extends ConsumerState<ProxySettingsDialog> {
                     child: TextField(
                       controller: _hostController,
                       decoration: InputDecoration(
-                        labelText: 'Proxy Host',
+                        labelText: strings.text('Proxy Host'),
                         hintText: _type == ProxyType.socks5 ? '127.0.0.1' : 'proxy.company.com',
                         border: const OutlineInputBorder(),
                       ),
@@ -92,7 +95,7 @@ class _ProxySettingsDialogState extends ConsumerState<ProxySettingsDialog> {
                     child: TextField(
                       controller: _portController,
                       decoration: InputDecoration(
-                        labelText: 'Port',
+                        labelText: strings.text('Port'),
                         hintText: _type == ProxyType.socks5 ? '1080' : '8080',
                         border: const OutlineInputBorder(),
                       ),
@@ -104,30 +107,30 @@ class _ProxySettingsDialogState extends ConsumerState<ProxySettingsDialog> {
               const SizedBox(height: 16),
               TextField(
                 controller: _usernameController,
-                decoration: const InputDecoration(
-                  labelText: 'Username (optional)',
-                  border: OutlineInputBorder(),
-                  prefixIcon: Icon(Icons.person_outline),
+                decoration: InputDecoration(
+                  labelText: strings.text('Username (optional)'),
+                  border: const OutlineInputBorder(),
+                  prefixIcon: const Icon(Icons.person_outline),
                 ),
               ),
               const SizedBox(height: 16),
               TextField(
                 controller: _passwordController,
                 obscureText: true,
-                decoration: const InputDecoration(
-                  labelText: 'Password (optional)',
-                  border: OutlineInputBorder(),
-                  prefixIcon: Icon(Icons.lock_outline),
+                decoration: InputDecoration(
+                  labelText: strings.text('Password (optional)'),
+                  border: const OutlineInputBorder(),
+                  prefixIcon: const Icon(Icons.lock_outline),
                 ),
               ),
               const SizedBox(height: 16),
               TextField(
                 controller: _noProxyController,
-                decoration: const InputDecoration(
-                  labelText: 'No Proxy (bypass list)',
+                decoration: InputDecoration(
+                  labelText: strings.text('No Proxy (bypass list)'),
                   hintText: 'localhost, 127.0.0.1, .local',
-                  border: OutlineInputBorder(),
-                  helperText: 'Comma-separated hostnames to bypass proxy',
+                  border: const OutlineInputBorder(),
+                  helperText: strings.text('Comma-separated hostnames to bypass proxy'),
                 ),
               ),
             ],
@@ -145,8 +148,8 @@ class _ProxySettingsDialogState extends ConsumerState<ProxySettingsDialog> {
                   Expanded(
                     child: Text(
                       _type == ProxyType.none
-                          ? 'Environment variables (HTTP_PROXY, HTTPS_PROXY) are auto-detected.'
-                          : 'Manual settings override environment variables.',
+                          ? strings.text('Environment variables (HTTP_PROXY, HTTPS_PROXY) are auto-detected.')
+                          : strings.text('Manual settings override environment variables.'),
                       style: const TextStyle(fontSize: 12),
                     ),
                   ),
@@ -158,10 +161,10 @@ class _ProxySettingsDialogState extends ConsumerState<ProxySettingsDialog> {
             CheckboxListTile(
               value: _certPinningEnabled,
               onChanged: (v) => setState(() => _certPinningEnabled = v ?? false),
-              title: const Text('Certificate Pinning', style: TextStyle(fontSize: 14)),
-              subtitle: const Text(
-                'Verify TLS certificates for Google, Microsoft, Dropbox, Amazon',
-                style: TextStyle(fontSize: 11),
+              title: Text(strings.text('Certificate Pinning'), style: const TextStyle(fontSize: 14)),
+              subtitle: Text(
+                strings.text('Verify TLS certificates for Google, Microsoft, Dropbox, Amazon'),
+                style: const TextStyle(fontSize: 11),
               ),
               secondary: Icon(
                 _certPinningEnabled ? Icons.verified_user : Icons.shield_outlined,
@@ -175,16 +178,17 @@ class _ProxySettingsDialogState extends ConsumerState<ProxySettingsDialog> {
             Padding(
               padding: const EdgeInsets.symmetric(vertical: 4),
               child: DropdownButtonFormField<TlsVersion>(
+                isExpanded: true,
                 initialValue: _minTlsVersion,
-                decoration: const InputDecoration(
-                  labelText: 'Minimum TLS Version',
-                  border: OutlineInputBorder(),
+                decoration: InputDecoration(
+                  labelText: strings.text('Minimum TLS Version'),
+                  border: const OutlineInputBorder(),
                   isDense: true,
                 ),
-                items: const [
-                  DropdownMenuItem(value: TlsVersion.tls12, child: Text('TLS 1.2 (recommended)')),
-                  DropdownMenuItem(value: TlsVersion.tls13, child: Text('TLS 1.3 (strict)')),
-                  DropdownMenuItem(value: TlsVersion.any, child: Text('Any (legacy override)')),
+                items: [
+                  DropdownMenuItem(value: TlsVersion.tls12, child: Text(strings.text('TLS 1.2 (recommended)'))),
+                  DropdownMenuItem(value: TlsVersion.tls13, child: Text(strings.text('TLS 1.3 (strict)'))),
+                  DropdownMenuItem(value: TlsVersion.any, child: Text(strings.text('Any (legacy override)'))),
                 ],
                 onChanged: (v) => setState(() => _minTlsVersion = v ?? TlsVersion.tls12),
               ),
@@ -197,14 +201,14 @@ class _ProxySettingsDialogState extends ConsumerState<ProxySettingsDialog> {
                   color: Colors.orange.withValues(alpha: 0.12),
                   borderRadius: BorderRadius.circular(8),
                 ),
-                child: const Row(
+                child: Row(
                   children: [
-                    Icon(Icons.warning_amber_rounded, size: 16, color: Colors.orange),
-                    SizedBox(width: 8),
+                    const Icon(Icons.warning_amber_rounded, size: 16, color: Colors.orange),
+                    const SizedBox(width: 8),
                     Expanded(
                       child: Text(
-                        'Allowing any TLS version may expose connections to downgrade attacks.',
-                        style: TextStyle(fontSize: 11, color: Colors.orange),
+                        strings.text('Allowing any TLS version may expose connections to downgrade attacks.'),
+                        style: const TextStyle(fontSize: 11, color: Colors.orange),
                       ),
                     ),
                   ],
@@ -215,16 +219,16 @@ class _ProxySettingsDialogState extends ConsumerState<ProxySettingsDialog> {
             Padding(
               padding: const EdgeInsets.symmetric(vertical: 4),
               child: Text(
-                'Custom CA Certificates',
+                strings.text('Custom CA Certificates'),
                 style: Theme.of(context).textTheme.titleSmall,
               ),
             ),
             if (_customCaCerts.isEmpty)
-              const Padding(
-                padding: EdgeInsets.only(bottom: 8),
+              Padding(
+                padding: const EdgeInsets.only(bottom: 8),
                 child: Text(
-                  'No custom CA certificates imported.',
-                  style: TextStyle(fontSize: 12, color: Colors.grey),
+                  strings.text('No custom CA certificates imported.'),
+                  style: const TextStyle(fontSize: 12, color: Colors.grey),
                 ),
               ),
             for (var i = 0; i < _customCaCerts.length; i++)
@@ -239,7 +243,7 @@ class _ProxySettingsDialogState extends ConsumerState<ProxySettingsDialog> {
                 ),
                 trailing: IconButton(
                   icon: const Icon(Icons.delete_outline, size: 18),
-                  tooltip: 'Remove certificate',
+                  tooltip: strings.text('Remove certificate'),
                   onPressed: () async {
                     await ref.read(certPinningProvider).removeCustomCaCert(i);
                     setState(() {
@@ -253,7 +257,7 @@ class _ProxySettingsDialogState extends ConsumerState<ProxySettingsDialog> {
               alignment: Alignment.centerLeft,
               child: TextButton.icon(
                 icon: const Icon(Icons.add, size: 16),
-                label: const Text('Import Certificate', style: TextStyle(fontSize: 13)),
+                label: Text(strings.text('Import Certificate'), style: const TextStyle(fontSize: 13)),
                 onPressed: _importCaCert,
               ),
             ),
@@ -268,7 +272,7 @@ class _ProxySettingsDialogState extends ConsumerState<ProxySettingsDialog> {
               if (!context.mounted) return;
               Navigator.pop(context, true);
             },
-            child: Text(AppLocalizations.of(context)!.refresh),
+            child: Text(strings.text('Clear')),
           ),
         TextButton(
           onPressed: () => Navigator.pop(context, false),
@@ -301,10 +305,11 @@ class _ProxySettingsDialogState extends ConsumerState<ProxySettingsDialog> {
   }
 
   Future<void> _save() async {
+    final strings = ProxySettingsStrings(context);
     final port = int.tryParse(_portController.text) ?? 0;
     if (_type != ProxyType.none && (_hostController.text.isEmpty || port <= 0)) {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Host and valid port are required')),
+        SnackBar(content: Text(strings.text('Host and valid port are required'))),
       );
       return;
     }
@@ -329,10 +334,10 @@ class _ProxySettingsDialogState extends ConsumerState<ProxySettingsDialog> {
     if (mounted) {
       Navigator.pop(context, true);
       final parts = <String>[];
-      if (config.isEnabled) parts.add('Proxy: ${config.type.name} ${config.host}:${config.port}');
-      if (_certPinningEnabled) parts.add('Cert pinning: on');
+      if (config.isEnabled) parts.add(strings.proxy(config.type.name, config.host, config.port));
+      if (_certPinningEnabled) parts.add(strings.text('Cert pinning: on'));
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text(parts.isEmpty ? 'Proxy disabled' : parts.join(' | '))),
+        SnackBar(content: Text(parts.isEmpty ? strings.text('Proxy disabled') : parts.join(' | '))),
       );
     }
   }

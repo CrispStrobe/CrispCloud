@@ -1,5 +1,9 @@
 # PLAN.md — CrispCloud: The Ultimate Cross-Platform Cloud File Manager
 
+> Historical roadmap: dates, estimates and completion markers below may be
+> outdated. Verify implementation and tests before relying on them. Current
+> mount status is recorded in section 11.4 and the user guide.
+
 > Previous hardening plan (completed 2026-05-29) moved to HISTORY.md.
 
 ## Vision
@@ -842,12 +846,12 @@ CrispCloud becomes the **definitive open-source cloud file manager**: a single, 
 - [x] Replace the generic "Empty folder" text for this specific case only
 
 ### 11.4 Mounted Drives (Desktop)
-- [x] Mount remote storage as a local drive letter / mount point — `FuseMountService` + `MountDialog` + `MountNotifier`
-- [x] macOS: FUSE / macFUSE integration — helper script detects macFUSE/FUSE-T
-- [x] Windows: WinFsp / Dokan virtual filesystem — helper script detects WinFsp
-- [x] Linux: FUSE mount — helper script detects fusermount3/fusermount
-- [x] Read/write with caching, works with any native app — dir listing cache (30s TTL), read-ahead (256KB), write-back on close
-- [x] Automatic disconnect on sleep/hibernate — `autoUnmountOnExit` flag, `unmountAll()` on dispose
+- [x] Experimental read-only macOS bridge and mount controls; macFUSE FSKit passed a local-fixture mount test.
+- [x] Explicit user-installed FUSE-T NFS/SMB selection with non-commercial-use acknowledgement; both passed local-fixture mounts.
+- [x] Experimental read-only rclone NFS option for separately configured remotes; a local fixture passed.
+- [ ] Validate Finder, real cloud providers, and the signed sandboxed application.
+- [ ] Implement and validate Linux and Windows mounting.
+- [ ] Implement safe write support, large-file streaming, and sleep/hibernate handling. Exit cleanup is not sleep handling.
 
 ---
 

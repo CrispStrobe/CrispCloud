@@ -6,8 +6,12 @@
 
 
 import 'package:flutter/material.dart';
+
+import '../l10n/page_navigation_strings.dart';
+import '../l10n/streaming_view_strings.dart';
 import 'package:pdfx/pdfx.dart';
 
+import '../l10n/app_localizations.dart';
 import '../services/file_bytes_loader.dart';
 import '../services/internal_viewer_service.dart';
 
@@ -59,7 +63,7 @@ class MonoLineListView extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     if (lines.isEmpty || (lines.length == 1 && lines.first.isEmpty)) {
-      return const Center(child: Text('(empty file)'));
+      return Center(child: Text(AppLocalizations.of(context)?.emptyFile ?? 'Empty file'));
     }
 
     final theme = Theme.of(context);
@@ -311,8 +315,8 @@ class _StreamingSafeViewState extends State<StreamingSafeView> {
       itemBuilder: (context, i) {
         if (i >= _lineOffsets.length) {
           final msg = widget.source.size > kMaxIndexedBytes
-              ? '(indexed to ${kMaxIndexedBytes ~/ (1024 * 1024)} MB — use Hex mode for deeper offsets)'
-              : '(loading…)';
+              ? StreamingViewStrings(context).indexed(kMaxIndexedBytes ~/ (1024 * 1024))
+              : StreamingViewStrings(context).text('loading');
           return Row(
             children: [
               Text('…', style: dimStyle),
@@ -407,10 +411,12 @@ class PdfPagePanel extends StatelessWidget {
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
               IconButton(
+                tooltip: PageNavigationStrings(context).text('first'),
                 icon: const Icon(Icons.first_page, size: 20),
                 onPressed: () => controller.jumpToPage(1),
               ),
               IconButton(
+                tooltip: PageNavigationStrings(context).text('previous'),
                 icon: const Icon(Icons.chevron_left, size: 20),
                 onPressed: () {
                   final current = controller.page;
@@ -427,6 +433,7 @@ class PdfPagePanel extends StatelessWidget {
                 ),
               ),
               IconButton(
+                tooltip: PageNavigationStrings(context).text('next'),
                 icon: const Icon(Icons.chevron_right, size: 20),
                 onPressed: () {
                   final current = controller.page;
@@ -437,6 +444,7 @@ class PdfPagePanel extends StatelessWidget {
                 },
               ),
               IconButton(
+                tooltip: PageNavigationStrings(context).text('last'),
                 icon: const Icon(Icons.last_page, size: 20),
                 onPressed: () {
                   final pages = controller.pagesCount;

@@ -8,8 +8,10 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../providers/search_provider.dart';
 import '../services/saved_search_service.dart';
+import '../utils/formatters.dart' show formatBytes;
 import 'search_dialogs.dart' show showSearchResultsDialog;
 import '../l10n/app_localizations.dart';
+import '../l10n/saved_search_strings.dart';
 
 // ---------------------------------------------------------------------------
 // Public helpers
@@ -33,12 +35,12 @@ Future<void> showSaveSearchDialog(
   final confirmed = await showDialog<bool>(
     context: context,
     builder: (ctx) => AlertDialog(
-      title: const Text('Save Search'),
+      title: Text(SavedSearchStrings(ctx).text('saveTitle')),
       content: TextField(
         controller: controller,
-        decoration: const InputDecoration(
-          labelText: 'Name for this search',
-          hintText: 'e.g., Large PDFs, Recent Images…',
+        decoration: InputDecoration(
+          labelText: SavedSearchStrings(ctx).text('name'),
+          hintText: SavedSearchStrings(ctx).text('hint'),
           border: OutlineInputBorder(),
           prefixIcon: Icon(Icons.bookmark_add_outlined),
         ),
@@ -48,11 +50,11 @@ Future<void> showSaveSearchDialog(
       actions: [
         TextButton(
           onPressed: () => Navigator.pop(ctx, false),
-          child: const Text('Cancel'),
+          child: Text(AppLocalizations.of(ctx)!.cancel),
         ),
         ElevatedButton(
           onPressed: () => Navigator.pop(ctx, true),
-          child: const Text('Save'),
+          child: Text(AppLocalizations.of(ctx)!.save),
         ),
       ],
     ),
@@ -65,7 +67,7 @@ Future<void> showSaveSearchDialog(
         );
     if (context.mounted) {
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Search "${controller.text.trim()}" saved')),
+        SnackBar(content: Text(SavedSearchStrings(context).value('saved', controller.text.trim()))),
       );
     }
   }
@@ -89,28 +91,27 @@ class _SavedSearchesDialog extends ConsumerWidget {
     final searches = widgetRef.watch(searchProvider).savedSearches;
 
     return AlertDialog(
-      title: const Row(
+      title: Row(
         children: [
           Icon(Icons.bookmarks_outlined),
           SizedBox(width: 8),
-          Text('Saved Searches'),
+          Text(SavedSearchStrings(context).text('title')),
         ],
       ),
       content: SizedBox(
         width: 480,
         child: searches.isEmpty
-            ? const Padding(
+            ? Padding(
                 padding: EdgeInsets.symmetric(vertical: 32),
                 child: Column(
                   mainAxisSize: MainAxisSize.min,
                   children: [
                     Icon(Icons.search_off, size: 48, color: Colors.grey),
                     SizedBox(height: 8),
-                    Text('No saved searches yet'),
+                    Text(SavedSearchStrings(context).text('empty')),
                     SizedBox(height: 4),
                     Text(
-                      'Use the "Save Search" button in the Find dialog\n'
-                      'to save your current query and filters.',
+                      SavedSearchStrings(context).text('emptyHelp'),
                       textAlign: TextAlign.center,
                       style: TextStyle(fontSize: 12, color: Colors.grey),
                     ),
@@ -181,12 +182,12 @@ class _SavedSearchTile extends StatelessWidget {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Text(
-            'Query: "${search.query}"',
+            SavedSearchStrings(context).value('query', search.query),
             style: const TextStyle(fontSize: 12),
             overflow: TextOverflow.ellipsis,
           ),
           Text(
-            search.filterSummary,
+            localizedSavedSearchFilterSummary(context, search),
             style: TextStyle(
                 fontSize: 11,
                 color: Theme.of(context).colorScheme.onSurfaceVariant),
@@ -200,16 +201,40 @@ class _SavedSearchTile extends StatelessWidget {
         children: [
           IconButton(
             icon: const Icon(Icons.play_arrow_outlined),
-            tooltip: 'Run',
+            tooltip: SavedSearchStrings(context).text('run'),
             onPressed: onRun,
           ),
           IconButton(
             icon: const Icon(Icons.delete_outline),
-            tooltip: 'Delete',
+            tooltip: AppLocalizations.of(context)!.delete,
             onPressed: onDelete,
           ),
         ],
       ),
     );
   }
+}
+
+/// Formats persisted filter values using labels and date conventions for the UI locale.
+String localizedSavedSearchFilterSummary(BuildContext context, SavedSearch search) {
+  final strings = SavedSearchStrings(context);
+  final parts = <String>[];
+  if (search.filterByType.isNotEmpty) {
+    final types = search.filterByType.take(3).join(', ');
+    parts.add('${strings.text('type')}: $types${search.filterByType.length > 3 ? '…' : ''}');
+  }
+  if (search.filterByMinSize != null) {
+    parts.add('${strings.text('min')}: ${formatBytes(search.filterByMinSize!)}');
+  }
+  if (search.filterByMaxSize != null) {
+    parts.add('${strings.text('max')}: ${formatBytes(search.filterByMaxSize!)}');
+  }
+  final material = MaterialLocalizations.of(context);
+  if (search.filterByDateAfter != null) {
+    parts.add('${strings.text('after')}: ${material.formatShortDate(search.filterByDateAfter!)}');
+  }
+  if (search.filterByDateBefore != null) {
+    parts.add('${strings.text('before')}: ${material.formatShortDate(search.filterByDateBefore!)}');
+  }
+  return parts.isEmpty ? strings.text('noFilters') : parts.join(' · ');
 }

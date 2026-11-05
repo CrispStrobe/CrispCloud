@@ -6,12 +6,15 @@
 
 
 import 'package:flutter/material.dart';
+
+import '../l10n/access_and_fkey_strings.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../providers/providers.dart';
 import '../services/encryption_service.dart';
 import '../utils/secure_clipboard.dart';
 import '../l10n/app_localizations.dart';
+import '../l10n/key_management_strings.dart';
 
 void showKeyManagementDialog(BuildContext context, WidgetRef ref) {
   showDialog(
@@ -43,6 +46,9 @@ class _KeyManagementDialogState extends ConsumerState<_KeyManagementDialog>
   final _importBundleController = TextEditingController();
   String? _importError;
   String? _importSuccess;
+
+  String _t(String key, [Map<String, Object> values = const {}]) =>
+      KeyManagementStrings(context).text(key, values);
 
   @override
   void initState() {
@@ -76,11 +82,11 @@ class _KeyManagementDialogState extends ConsumerState<_KeyManagementDialog>
       // The user should use the backup bundle for full recovery.
       final salt = EncryptionService.generateSalt();
       ref.read(authProvider).enableEncryptionWithKey(key, salt);
-      setState(() => _importSuccess = 'Key recovered from mnemonic. '
-          'Note: a new salt was generated. Previously encrypted files will '
-          'still decrypt correctly (salt is only for key derivation).');
+      setState(() => _importSuccess = _t('mnemonicSuccess'));
     } on FormatException catch (e) {
-      setState(() => _importError = e.message);
+      setState(() => _importError = e is EncryptionFormatException
+          ? _t(e.code.name, e.arguments)
+          : e.message);
     } catch (e) {
       setState(() => _importError = e.toString());
     }
@@ -96,9 +102,11 @@ class _KeyManagementDialogState extends ConsumerState<_KeyManagementDialog>
           EncryptionService.importKeyFromHex(_importHexController.text);
       final salt = EncryptionService.generateSalt();
       ref.read(authProvider).enableEncryptionWithKey(key, salt);
-      setState(() => _importSuccess = 'Key imported successfully.');
+      setState(() => _importSuccess = _t('hexSuccess'));
     } on FormatException catch (e) {
-      setState(() => _importError = e.message);
+      setState(() => _importError = e is EncryptionFormatException
+          ? _t(e.code.name, e.arguments)
+          : e.message);
     } catch (e) {
       setState(() => _importError = e.toString());
     }
@@ -117,9 +125,11 @@ class _KeyManagementDialogState extends ConsumerState<_KeyManagementDialog>
             result['salt']!,
           );
       setState(() =>
-          _importSuccess = 'Key and salt restored from backup bundle.');
+          _importSuccess = _t('bundleSuccess'));
     } on FormatException catch (e) {
-      setState(() => _importError = e.message);
+      setState(() => _importError = e is EncryptionFormatException
+          ? _t(e.code.name, e.arguments)
+          : e.message);
     } catch (e) {
       setState(() => _importError = e.toString());
     }
@@ -128,7 +138,7 @@ class _KeyManagementDialogState extends ConsumerState<_KeyManagementDialog>
   void _copyToClipboard(String data, String label) {
     SecureClipboard.copy(data);
     ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(content: Text('$label copied to clipboard (auto-clears in 30s)')),
+      SnackBar(content: Text(_t('copied', {'label': label}))),
     );
   }
 
@@ -148,11 +158,11 @@ class _KeyManagementDialogState extends ConsumerState<_KeyManagementDialog>
     final hasKey = auth.encryptionKey != null;
 
     return AlertDialog(
-      title: const Row(
+      title: Row(
         children: [
-          Icon(Icons.key, size: 20),
-          SizedBox(width: 8),
-          Text('Key Management'),
+          const Icon(Icons.key, size: 20),
+          const SizedBox(width: 8),
+          Text(_t('keyManagement')),
         ],
       ),
       content: SizedBox(
@@ -176,8 +186,7 @@ class _KeyManagementDialogState extends ConsumerState<_KeyManagementDialog>
                     const SizedBox(width: 8),
                     Expanded(
                       child: Text(
-                        'Encryption is not active. Enable it in the connection dialog, '
-                        'or import an existing key below.',
+                        _t('inactive'),
                         style: TextStyle(
                           fontSize: 12,
                           color: theme.colorScheme.onErrorContainer,
@@ -189,9 +198,9 @@ class _KeyManagementDialogState extends ConsumerState<_KeyManagementDialog>
               ),
             TabBar(
               controller: _tabController,
-              tabs: const [
-                Tab(text: 'Export / Backup'),
-                Tab(text: 'Import / Recover'),
+              tabs: [
+                Tab(text: _t('exportTab')),
+                Tab(text: _t('importTab')),
               ],
             ),
             const SizedBox(height: 12),
@@ -223,7 +232,7 @@ class _KeyManagementDialogState extends ConsumerState<_KeyManagementDialog>
           children: [
             Icon(Icons.lock_open, size: 48, color: theme.disabledColor),
             const SizedBox(height: 8),
-            Text('No encryption key to export',
+            Text(_t('noKey'),
                 style: TextStyle(color: theme.disabledColor)),
           ],
         ),
@@ -238,11 +247,11 @@ class _KeyManagementDialogState extends ConsumerState<_KeyManagementDialog>
           _exportSection(
             theme,
             icon: Icons.article,
-            title: 'Recovery Phrase (BIP39)',
+            title: _t('phrase'),
             subtitle:
                 'Write down these 24 words in order. They can recover your key.',
             content: _mnemonic ?? '',
-            copyLabel: 'Mnemonic',
+            copyLabel: _t('mnemonic'),
             sensitive: true,
           ),
           const SizedBox(height: 16),
@@ -250,10 +259,10 @@ class _KeyManagementDialogState extends ConsumerState<_KeyManagementDialog>
           _exportSection(
             theme,
             icon: Icons.vpn_key,
-            title: 'Raw Key (Hex)',
-            subtitle: '32-byte encryption key as hexadecimal.',
+            title: _t('raw'),
+            subtitle: _t('rawHelp'),
             content: _keyHex ?? '',
-            copyLabel: 'Key',
+            copyLabel: _t('key'),
             sensitive: true,
           ),
           const SizedBox(height: 16),
@@ -261,11 +270,11 @@ class _KeyManagementDialogState extends ConsumerState<_KeyManagementDialog>
           _exportSection(
             theme,
             icon: Icons.backup,
-            title: 'Full Backup Bundle',
+            title: _t('bundle'),
             subtitle:
                 'JSON with mnemonic, salt, and verification. Best for full recovery.',
             content: _backupBundle ?? '',
-            copyLabel: 'Backup bundle',
+            copyLabel: _t('bundleLabel'),
             sensitive: true,
           ),
         ],
@@ -318,7 +327,7 @@ class _KeyManagementDialogState extends ConsumerState<_KeyManagementDialog>
           alignment: Alignment.centerRight,
           child: TextButton.icon(
             icon: const Icon(Icons.copy, size: 14),
-            label: Text('Copy $copyLabel', style: const TextStyle(fontSize: 12)),
+            label: Text(_t('copy', {'label': copyLabel}), style: const TextStyle(fontSize: 12)),
             onPressed: () => _copyToClipboard(content, copyLabel),
           ),
         ),
@@ -374,7 +383,7 @@ class _KeyManagementDialogState extends ConsumerState<_KeyManagementDialog>
           ],
 
           // Import from backup bundle (recommended)
-          Text('Restore from Backup Bundle (recommended)',
+          Text(_t('restoreTitle'),
               style: TextStyle(
                   fontWeight: FontWeight.bold,
                   fontSize: 13,
@@ -382,10 +391,11 @@ class _KeyManagementDialogState extends ConsumerState<_KeyManagementDialog>
           const SizedBox(height: 4),
           TextField(
             controller: _importBundleController,
+            onChanged: (_) => setState(() {}),
             maxLines: 3,
-            decoration: const InputDecoration(
-              border: OutlineInputBorder(),
-              hintText: 'Paste backup bundle JSON...',
+            decoration: InputDecoration(
+              border: const OutlineInputBorder(),
+              hintText: _t('bundleHint'),
               isDense: true,
             ),
             style: const TextStyle(fontFamily: 'monospace', fontSize: 11),
@@ -393,7 +403,7 @@ class _KeyManagementDialogState extends ConsumerState<_KeyManagementDialog>
           const SizedBox(height: 4),
           ElevatedButton.icon(
             icon: const Icon(Icons.restore, size: 16),
-            label: const Text('Restore from Bundle'),
+            label: Text(_t('restore')),
             onPressed: _importBundleController.text.isEmpty
                 ? null
                 : _importFromBundle,
@@ -401,15 +411,16 @@ class _KeyManagementDialogState extends ConsumerState<_KeyManagementDialog>
           const Divider(height: 24),
 
           // Import from mnemonic
-          const Text('Recover from Mnemonic (24 words)',
-              style: TextStyle(fontWeight: FontWeight.bold, fontSize: 13)),
+          Text(_t('recoverTitle'),
+              style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 13)),
           const SizedBox(height: 4),
           TextField(
             controller: _importMnemonicController,
+            onChanged: (_) => setState(() {}),
             maxLines: 2,
-            decoration: const InputDecoration(
-              border: OutlineInputBorder(),
-              hintText: 'word1 word2 word3 ... word24',
+            decoration: InputDecoration(
+              border: const OutlineInputBorder(),
+              hintText: AccessAndFKeyStrings(Localizations.localeOf(context)).mnemonicHint,
               isDense: true,
             ),
             style: const TextStyle(fontSize: 12),
@@ -417,7 +428,7 @@ class _KeyManagementDialogState extends ConsumerState<_KeyManagementDialog>
           const SizedBox(height: 4),
           ElevatedButton.icon(
             icon: const Icon(Icons.vpn_key, size: 16),
-            label: const Text('Recover from Mnemonic'),
+            label: Text(_t('recover')),
             onPressed: _importMnemonicController.text.isEmpty
                 ? null
                 : _importFromMnemonic,
@@ -425,14 +436,15 @@ class _KeyManagementDialogState extends ConsumerState<_KeyManagementDialog>
           const Divider(height: 24),
 
           // Import from hex
-          const Text('Import Raw Key (Hex)',
-              style: TextStyle(fontWeight: FontWeight.bold, fontSize: 13)),
+          Text(_t('importRaw'),
+              style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 13)),
           const SizedBox(height: 4),
           TextField(
             controller: _importHexController,
-            decoration: const InputDecoration(
-              border: OutlineInputBorder(),
-              hintText: '64 hex characters (32 bytes)',
+            onChanged: (_) => setState(() {}),
+            decoration: InputDecoration(
+              border: const OutlineInputBorder(),
+              hintText: _t('hexHint'),
               isDense: true,
             ),
             style: const TextStyle(fontFamily: 'monospace', fontSize: 12),
@@ -440,7 +452,7 @@ class _KeyManagementDialogState extends ConsumerState<_KeyManagementDialog>
           const SizedBox(height: 4),
           ElevatedButton.icon(
             icon: const Icon(Icons.input, size: 16),
-            label: const Text('Import Hex Key'),
+            label: Text(_t('importHex')),
             onPressed: _importHexController.text.isEmpty
                 ? null
                 : _importFromHex,

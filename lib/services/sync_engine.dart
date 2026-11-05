@@ -47,18 +47,32 @@ class SyncAction {
   });
 
   @override
-  String toString() => 'SyncAction($type, $relativePath${isFolder ? ' [dir]' : ''})';
+  String toString() =>
+      'SyncAction($type, $relativePath${isFolder ? ' [dir]' : ''})';
 }
 
 enum SyncActionType {
-  upload,       // local file is new or modified → push to remote
-  download,     // remote file is new or modified → pull to local
-  deleteLocal,  // file was deleted on remote → delete locally
+  upload, // local file is new or modified → push to remote
+  download, // remote file is new or modified → pull to local
+  deleteLocal, // file was deleted on remote → delete locally
   deleteRemote, // file was deleted locally → delete on remote
-  conflict,     // both sides changed → needs resolution
+  conflict, // both sides changed → needs resolution
   createLocalFolder,
   createRemoteFolder,
-  skip,         // no action needed (already synced)
+  skip, // no action needed (already synced)
+}
+
+/// Retains the original error alongside the legacy string representation.
+class SyncFailureDetail {
+  const SyncFailureDetail(
+      {required this.location,
+      this.cause,
+      this.providerUnavailable = false,
+      this.provider});
+  final String location;
+  final Object? cause;
+  final bool providerUnavailable;
+  final String? provider;
 }
 
 /// Result of a sync run.
@@ -70,6 +84,7 @@ class SyncResult {
   final int conflicts;
   final int errors;
   final List<String> errorMessages;
+  final List<SyncFailureDetail> failureDetails;
 
   const SyncResult({
     this.uploaded = 0,
@@ -79,22 +94,26 @@ class SyncResult {
     this.conflicts = 0,
     this.errors = 0,
     this.errorMessages = const [],
+    this.failureDetails = const [],
   });
 
   SyncResult operator +(SyncResult other) => SyncResult(
-    uploaded: uploaded + other.uploaded,
-    downloaded: downloaded + other.downloaded,
-    deletedLocal: deletedLocal + other.deletedLocal,
-    deletedRemote: deletedRemote + other.deletedRemote,
-    conflicts: conflicts + other.conflicts,
-    errors: errors + other.errors,
-    errorMessages: [...errorMessages, ...other.errorMessages],
-  );
+        uploaded: uploaded + other.uploaded,
+        downloaded: downloaded + other.downloaded,
+        deletedLocal: deletedLocal + other.deletedLocal,
+        deletedRemote: deletedRemote + other.deletedRemote,
+        conflicts: conflicts + other.conflicts,
+        errors: errors + other.errors,
+        errorMessages: [...errorMessages, ...other.errorMessages],
+        failureDetails: [...failureDetails, ...other.failureDetails],
+      );
 
-  bool get hasChanges => uploaded + downloaded + deletedLocal + deletedRemote + conflicts > 0;
+  bool get hasChanges =>
+      uploaded + downloaded + deletedLocal + deletedRemote + conflicts > 0;
 
   @override
-  String toString() => 'SyncResult(up:$uploaded down:$downloaded delL:$deletedLocal delR:$deletedRemote conflicts:$conflicts errors:$errors)';
+  String toString() =>
+      'SyncResult(up:$uploaded down:$downloaded delL:$deletedLocal delR:$deletedRemote conflicts:$conflicts errors:$errors)';
 }
 
 class SyncEngine {
@@ -108,10 +127,19 @@ class SyncEngine {
   ///
   /// If include patterns are set, the path must match at least one.
   /// If exclude patterns are set, the path must not match any.
-  static bool passesFilter(String relativePath, String includePatterns, String excludePatterns) {
+  static bool passesFilter(
+      String relativePath, String includePatterns, String excludePatterns) {
     // Parse patterns (comma-separated, trim whitespace, skip empty)
-    final includes = includePatterns.split(',').map((s) => s.trim()).where((s) => s.isNotEmpty).toList();
-    final excludes = excludePatterns.split(',').map((s) => s.trim()).where((s) => s.isNotEmpty).toList();
+    final includes = includePatterns
+        .split(',')
+        .map((s) => s.trim())
+        .where((s) => s.isNotEmpty)
+        .toList();
+    final excludes = excludePatterns
+        .split(',')
+        .map((s) => s.trim())
+        .where((s) => s.isNotEmpty)
+        .toList();
 
     // Check excludes first
     for (final pattern in excludes) {
@@ -183,7 +211,10 @@ class SyncEngine {
       final known = dbMap[path];
 
       final action = _computeAction(
-        path, local, remote, known,
+        path,
+        local,
+        remote,
+        known,
         policy: policy,
         direction: direction,
       );
@@ -199,12 +230,15 @@ class SyncEngine {
 
     // Process folders first (create), then files, then deletes last
     final folderCreates = actions.where((a) =>
-        a.type == SyncActionType.createLocalFolder || a.type == SyncActionType.createRemoteFolder);
+        a.type == SyncActionType.createLocalFolder ||
+        a.type == SyncActionType.createRemoteFolder);
     final fileActions = actions.where((a) =>
         a.type == SyncActionType.upload || a.type == SyncActionType.download);
     final deleteActions = actions.where((a) =>
-        a.type == SyncActionType.deleteLocal || a.type == SyncActionType.deleteRemote);
-    final conflictActions = actions.where((a) => a.type == SyncActionType.conflict);
+        a.type == SyncActionType.deleteLocal ||
+        a.type == SyncActionType.deleteRemote);
+    final conflictActions =
+        actions.where((a) => a.type == SyncActionType.conflict);
 
     for (final action in folderCreates) {
       result = result + await _executeAction(action, pair, client);
@@ -258,22 +292,38 @@ class SyncEngine {
       if (existsLocal && !existsRemote) {
         // New local file → upload (if direction allows)
         if (direction == SyncDirection.downloadOnly) {
-          return SyncAction(type: SyncActionType.skip, relativePath: relativePath);
+          return SyncAction(
+              type: SyncActionType.skip, relativePath: relativePath);
         }
         if (local.isFolder) {
-          return SyncAction(type: SyncActionType.createRemoteFolder, relativePath: relativePath, isFolder: true);
+          return SyncAction(
+              type: SyncActionType.createRemoteFolder,
+              relativePath: relativePath,
+              isFolder: true);
         }
-        return SyncAction(type: SyncActionType.upload, relativePath: relativePath, localModified: local.modified);
+        return SyncAction(
+            type: SyncActionType.upload,
+            relativePath: relativePath,
+            localModified: local.modified);
       }
       if (!existsLocal && existsRemote) {
         // New remote file → download
         if (direction == SyncDirection.uploadOnly) {
-          return SyncAction(type: SyncActionType.skip, relativePath: relativePath);
+          return SyncAction(
+              type: SyncActionType.skip, relativePath: relativePath);
         }
         if (remote.isFolder) {
-          return SyncAction(type: SyncActionType.createLocalFolder, relativePath: relativePath, isFolder: true);
+          return SyncAction(
+              type: SyncActionType.createLocalFolder,
+              relativePath: relativePath,
+              isFolder: true);
         }
-        return SyncAction(type: SyncActionType.download, relativePath: relativePath, remoteModified: remote.modified, remoteContentHash: remote.contentHash, remoteSize: remote.size);
+        return SyncAction(
+            type: SyncActionType.download,
+            relativePath: relativePath,
+            remoteModified: remote.modified,
+            remoteContentHash: remote.contentHash,
+            remoteSize: remote.size);
       }
       return SyncAction(type: SyncActionType.skip, relativePath: relativePath);
     }
@@ -282,38 +332,59 @@ class SyncEngine {
 
     // Deleted on both sides → clean up DB entry
     if (!existsLocal && !existsRemote) {
-      return SyncAction(type: SyncActionType.skip, relativePath: relativePath, dbEntry: known);
+      return SyncAction(
+          type: SyncActionType.skip,
+          relativePath: relativePath,
+          dbEntry: known);
     }
 
     // Deleted locally, still exists remote → delete remote or re-download
     if (!existsLocal && existsRemote) {
       if (direction == SyncDirection.downloadOnly) {
-        return SyncAction(type: SyncActionType.download, relativePath: relativePath, remoteModified: remote.modified, remoteContentHash: remote.contentHash, remoteSize: remote.size);
+        return SyncAction(
+            type: SyncActionType.download,
+            relativePath: relativePath,
+            remoteModified: remote.modified,
+            remoteContentHash: remote.contentHash,
+            remoteSize: remote.size);
       }
       // Check if remote was also modified since last sync
-      if (known.remoteModified != null && remote.modified != null &&
+      if (known.remoteModified != null &&
+          remote.modified != null &&
           remote.modified!.isAfter(known.remoteModified!)) {
         // Remote changed after our last sync — conflict
         return _resolveConflict(relativePath, local, remote, known, policy);
       }
-      return SyncAction(type: SyncActionType.deleteRemote, relativePath: relativePath, dbEntry: known);
+      return SyncAction(
+          type: SyncActionType.deleteRemote,
+          relativePath: relativePath,
+          dbEntry: known);
     }
 
     // Deleted remotely, still exists local → delete local or re-upload
     if (existsLocal && !existsRemote) {
       if (direction == SyncDirection.uploadOnly) {
-        return SyncAction(type: SyncActionType.upload, relativePath: relativePath, localModified: local.modified);
+        return SyncAction(
+            type: SyncActionType.upload,
+            relativePath: relativePath,
+            localModified: local.modified);
       }
-      if (known.localModified != null && local.modified != null &&
+      if (known.localModified != null &&
+          local.modified != null &&
           local.modified!.isAfter(known.localModified!)) {
         return _resolveConflict(relativePath, local, remote, known, policy);
       }
-      return SyncAction(type: SyncActionType.deleteLocal, relativePath: relativePath, dbEntry: known);
+      return SyncAction(
+          type: SyncActionType.deleteLocal,
+          relativePath: relativePath,
+          dbEntry: known);
     }
 
     // Both exist — check for modifications
-    final localChanged = _isModified(local!, known.localModified, known.localSize);
-    final remoteChanged = _isRemoteModified(remote!, known.remoteModified, known.remoteSize,
+    final localChanged =
+        _isModified(local!, known.localModified, known.localSize);
+    final remoteChanged = _isRemoteModified(
+        remote!, known.remoteModified, known.remoteSize,
         knownHash: known.remoteHash);
 
     if (!localChanged && !remoteChanged) {
@@ -322,16 +393,26 @@ class SyncEngine {
 
     if (localChanged && !remoteChanged) {
       if (direction == SyncDirection.downloadOnly) {
-        return SyncAction(type: SyncActionType.skip, relativePath: relativePath);
+        return SyncAction(
+            type: SyncActionType.skip, relativePath: relativePath);
       }
-      return SyncAction(type: SyncActionType.upload, relativePath: relativePath, localModified: local.modified);
+      return SyncAction(
+          type: SyncActionType.upload,
+          relativePath: relativePath,
+          localModified: local.modified);
     }
 
     if (!localChanged && remoteChanged) {
       if (direction == SyncDirection.uploadOnly) {
-        return SyncAction(type: SyncActionType.skip, relativePath: relativePath);
+        return SyncAction(
+            type: SyncActionType.skip, relativePath: relativePath);
       }
-      return SyncAction(type: SyncActionType.download, relativePath: relativePath, remoteModified: remote.modified, remoteContentHash: remote.contentHash, remoteSize: remote.size);
+      return SyncAction(
+          type: SyncActionType.download,
+          relativePath: relativePath,
+          remoteModified: remote.modified,
+          remoteContentHash: remote.contentHash,
+          remoteSize: remote.size);
     }
 
     // Both changed → conflict
@@ -347,21 +428,38 @@ class SyncEngine {
   ) {
     switch (policy) {
       case ConflictPolicy.localWins:
-        return SyncAction(type: SyncActionType.upload, relativePath: relativePath, localModified: local?.modified);
+        return SyncAction(
+            type: SyncActionType.upload,
+            relativePath: relativePath,
+            localModified: local?.modified);
       case ConflictPolicy.remoteWins:
-        return SyncAction(type: SyncActionType.download, relativePath: relativePath, remoteModified: remote?.modified, remoteSize: remote?.size);
+        return SyncAction(
+            type: SyncActionType.download,
+            relativePath: relativePath,
+            remoteModified: remote?.modified,
+            remoteSize: remote?.size);
       case ConflictPolicy.newestWins:
         final localTime = local?.modified ?? DateTime(1970);
         final remoteTime = remote?.modified ?? DateTime(1970);
         if (localTime.isAfter(remoteTime)) {
-          return SyncAction(type: SyncActionType.upload, relativePath: relativePath, localModified: localTime);
+          return SyncAction(
+              type: SyncActionType.upload,
+              relativePath: relativePath,
+              localModified: localTime);
         } else {
-          return SyncAction(type: SyncActionType.download, relativePath: relativePath, remoteModified: remoteTime, remoteSize: remote?.size);
+          return SyncAction(
+              type: SyncActionType.download,
+              relativePath: relativePath,
+              remoteModified: remoteTime,
+              remoteSize: remote?.size);
         }
       case ConflictPolicy.keepBoth:
         // Upload local with a renamed copy, then download remote
         // For now, treat as upload (caller renames the local copy)
-        return SyncAction(type: SyncActionType.upload, relativePath: relativePath, localModified: local?.modified);
+        return SyncAction(
+            type: SyncActionType.upload,
+            relativePath: relativePath,
+            localModified: local?.modified);
       case ConflictPolicy.manual:
         return SyncAction(
           type: SyncActionType.conflict,
@@ -383,7 +481,8 @@ class SyncEngine {
     return timeDiff > 1 || file.size != knownSize;
   }
 
-  bool _isRemoteModified(_FileInfo file, DateTime? knownModified, int knownSize, {String? knownHash}) {
+  bool _isRemoteModified(_FileInfo file, DateTime? knownModified, int knownSize,
+      {String? knownHash}) {
     if (file.isFolder) return false;
     if (knownModified == null) return true;
 
@@ -401,7 +500,8 @@ class SyncEngine {
   }
 
   /// Execute a single sync action.
-  Future<SyncResult> _executeAction(SyncAction action, SyncPair pair, CloudStorageClient client) async {
+  Future<SyncResult> _executeAction(
+      SyncAction action, SyncPair pair, CloudStorageClient client) async {
     final localBase = pair.localPath;
     final remoteBase = pair.remotePath;
     final localPath = p.join(localBase, action.relativePath);
@@ -415,7 +515,8 @@ class SyncEngine {
           final targetDir = p.posix.dirname(remotePath);
           await client.uploadFile(bytes, fileName, targetDir);
           final stat = await File(localPath).stat();
-          await _updateEntryAfterSync(pair.id, action.relativePath, stat, bytes.length);
+          await _updateEntryAfterSync(
+              pair.id, action.relativePath, stat, bytes.length);
           return const SyncResult(uploaded: 1);
 
         case SyncActionType.download:
@@ -439,7 +540,8 @@ class SyncEngine {
           await file.parent.create(recursive: true);
           await file.writeAsBytes(bytes);
           final stat = await file.stat();
-          await _updateEntryAfterSync(pair.id, action.relativePath, stat, bytes.length,
+          await _updateEntryAfterSync(
+              pair.id, action.relativePath, stat, bytes.length,
               remoteContentHash: action.remoteContentHash);
           return const SyncResult(downloaded: 1);
 
@@ -462,7 +564,9 @@ class SyncEngine {
           // Remove from DB
           final existing = await db.getEntry(pair.id, action.relativePath);
           if (existing != null) {
-            await (db.delete(db.syncEntries)..where((t) => t.id.equals(existing.id))).go();
+            await (db.delete(db.syncEntries)
+                  ..where((t) => t.id.equals(existing.id)))
+                .go();
           }
           return const SyncResult(deletedRemote: 1);
 
@@ -500,11 +604,17 @@ class SyncEngine {
         status: const Value('error'),
         error: Value(e.toString()),
       ));
-      return SyncResult(errors: 1, errorMessages: ['${action.relativePath}: $e']);
+      return SyncResult(errors: 1, errorMessages: [
+        '${action.relativePath}: $e'
+      ], failureDetails: [
+        SyncFailureDetail(location: action.relativePath, cause: e)
+      ]);
     }
   }
 
-  Future<void> _updateEntryAfterSync(int pairId, String relativePath, FileStat stat, int size, {String? remoteContentHash}) async {
+  Future<void> _updateEntryAfterSync(
+      int pairId, String relativePath, FileStat stat, int size,
+      {String? remoteContentHash}) async {
     await db.upsertEntry(SyncEntriesCompanion.insert(
       pairId: pairId,
       relativePath: relativePath,
@@ -544,7 +654,8 @@ class SyncEngine {
   }
 
   /// Recursively scan a remote directory via the cloud client.
-  Future<Map<String, _FileInfo>> _scanRemote(CloudStorageClient client, String basePath) async {
+  Future<Map<String, _FileInfo>> _scanRemote(
+      CloudStorageClient client, String basePath) async {
     final result = <String, _FileInfo>{};
     await _scanRemoteRecursive(client, basePath, '', result);
     return result;
@@ -594,8 +705,13 @@ class SyncEngine {
       }
       final size = file['size'] as int? ?? 0;
       // Capture provider content hash for delta sync (Dropbox, OneDrive)
-      final contentHash = file['content_hash'] as String? ?? file['crc32Hash'] as String?;
-      result[relative] = _FileInfo(isFolder: false, modified: modified, size: size, contentHash: contentHash);
+      final contentHash =
+          file['content_hash'] as String? ?? file['crc32Hash'] as String?;
+      result[relative] = _FileInfo(
+          isFolder: false,
+          modified: modified,
+          size: size,
+          contentHash: contentHash);
     }
   }
 }
@@ -610,5 +726,6 @@ class _FileInfo {
   /// When available, enables delta sync — only transfer files whose hash changed.
   final String? contentHash;
 
-  const _FileInfo({required this.isFolder, this.modified, this.size = 0, this.contentHash});
+  const _FileInfo(
+      {required this.isFolder, this.modified, this.size = 0, this.contentHash});
 }

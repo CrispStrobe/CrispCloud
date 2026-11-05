@@ -12,6 +12,7 @@ import '../embed/office_theme.dart';
 import 'report_completion_popup.dart';
 import 'report_design_layout.dart';
 import 'report_designer_controller.dart';
+import 'report_designer_strings.dart';
 import 'report_element_painter.dart';
 import 'report_layout_painter.dart';
 import 'report_pinch_zoom.dart';
@@ -1043,6 +1044,7 @@ class RenderReportDesigner extends RenderBox implements MouseTrackerAnnotation {
           hideText: e.id == editing,
           fonts: _controller.effectiveFonts,
           data: _controller.mockData,
+          strings: _controller.strings,
         );
       }
     }
@@ -1093,13 +1095,18 @@ class RenderReportDesigner extends RenderBox implements MouseTrackerAnnotation {
   };
 
   /// Caption text for [band].
-  static String captionOf(ReportBand band) {
-    final String name = bandName(band.kind);
+  static String captionOf(
+    ReportBand band, {
+    ReportDesignerStrings strings = ReportDesignerStrings.english,
+  }) {
+    final String name = strings.t(bandName(band.kind));
+    String label(String key) =>
+        strings.languageCode == 'en' ? key.toLowerCase() : strings.t(key);
     final List<String> notes = <String>[
-      if (band.dataSet != null) 'data: ${band.dataSet}',
-      if (band.groupBy != null) 'group: ${band.groupBy}',
-      if (band.sortBy != null) 'sort: ${band.sortBy}',
-      if (band.filter != null) 'filter: ${band.filter}',
+      if (band.dataSet != null) '${label('Data')}: ${band.dataSet}',
+      if (band.groupBy != null) '${label('Group')}: ${band.groupBy}',
+      if (band.sortBy != null) '${label('Sort')}: ${band.sortBy}',
+      if (band.filter != null) '${label('Filter')}: ${band.filter}',
     ];
     return notes.isEmpty ? name : '$name  ·  ${notes.join('  ·  ')}';
   }
@@ -1119,7 +1126,7 @@ class RenderReportDesigner extends RenderBox implements MouseTrackerAnnotation {
             ? _theme.selectionStroke.withValues(alpha: 0.22)
             : (_captionFill[slot.band.kind] ?? const Color(0xFFEDEDED)),
     );
-    final String label = captionOf(slot.band);
+    final String label = captionOf(slot.band, strings: _controller.strings);
     final TextPainter tp = _label(label, 7.5, const Color(0xFF374151), true);
     final double x = layout.template.mirrored
         ? slot.caption.right - 6 - tp.width
@@ -1337,13 +1344,22 @@ class RenderReportDesigner extends RenderBox implements MouseTrackerAnnotation {
       }
     }
     canvas.restore();
-    canvas.drawLine(Offset(ruler, ruler), Offset(size.width, ruler), edge);
-    canvas.drawLine(Offset(ruler, ruler), Offset(ruler, size.height), edge);
-    canvas.drawRect(Rect.fromLTWH(0, 0, ruler, ruler), bg);
+    canvas.drawLine(
+      const Offset(ruler, ruler),
+      Offset(size.width, ruler),
+      edge,
+    );
+    canvas.drawLine(
+      const Offset(ruler, ruler),
+      Offset(ruler, size.height),
+      edge,
+    );
+    canvas.drawRect(const Rect.fromLTWH(0, 0, ruler, ruler), bg);
   }
 
   TextPainter _label(String text, double size, Color color, bool bold) {
-    final String key = '$text|$size|${color.toARGB32()}|$bold';
+    final String key =
+        '$text|$size|${color.toARGB32()}|$bold|${_controller.strings.direction.index}';
     final TextPainter? hit = _labels[key];
     if (hit != null) {
       return hit;
@@ -1365,7 +1381,7 @@ class RenderReportDesigner extends RenderBox implements MouseTrackerAnnotation {
           fontWeight: bold ? FontWeight.w600 : FontWeight.normal,
         ),
       ),
-      textDirection: TextDirection.ltr,
+      textDirection: _controller.strings.direction,
       maxLines: 1,
     )..layout();
     _labels[key] = tp;
@@ -1387,8 +1403,19 @@ class RenderReportDesigner extends RenderBox implements MouseTrackerAnnotation {
     super.describeSemanticsConfiguration(config);
     config
       ..isSemanticBoundary = true
-      ..textDirection = TextDirection.ltr
-      ..label = 'Report designer canvas'
-      ..value = _controller.inspectorTitle;
+      ..textDirection = _controller.strings.direction
+      ..label = _controller.strings.t('Report designer canvas')
+      ..value =
+          _controller.inspectorPage == ReportInspectorPage.properties &&
+              _controller.mode != ReportDesignMode.data &&
+              _controller.selectedElements.length == 1
+          ? _controller.strings.elementTitle(_controller.selectedElements.first)
+          : _controller.strings.inspectorTitle(
+              _controller.inspectorTitle,
+              objectSelected: false,
+              dataFields:
+                  _controller.mode == ReportDesignMode.data &&
+                  _controller.dataTable.isFields,
+            );
   }
 }

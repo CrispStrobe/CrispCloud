@@ -21,6 +21,10 @@ import '../widgets/file_editor_dialog.dart' show showFileEditorDialog;
 import '../widgets/internal_viewer_dialog.dart'
     show InternalViewerAction, showInternalViewer;
 import '../l10n/app_localizations.dart';
+import '../l10n/command_strings.dart';
+import '../l10n/undo_presentation.dart';
+import '../l10n/screen_dialog_strings.dart';
+import '../l10n/shortcut_strings.dart';
 import '../services/log_service.dart';
 
 const _log = Log('ScreenDialogs');
@@ -34,11 +38,9 @@ List<FileItem> _selectedOrCursor(PanelNotifier panel) {
   if (cursor != null && cursor.name != '..') return <FileItem>[cursor];
   return const <FileItem>[];
 }
+
 void showConnectionDialogScreen(BuildContext context) {
-  showDialog(
-    context: context,
-    builder: (context) => const ConnectionDialog(),
-  );
+  showDialog(context: context, builder: (context) => const ConnectionDialog());
 }
 
 /// Directly open the Azure Blob Storage connection dialog.
@@ -61,8 +63,8 @@ void confirmLogoutRiverpod(BuildContext context, WidgetRef ref) {
   showDialog(
     context: context,
     builder: (context) => AlertDialog(
-      title: const Text('Confirm Logout'),
-      content: const Text('Are you sure you want to logout from Cloud?'),
+      title: Text(ScreenDialogStrings(context).text('logoutTitle')),
+      content: Text(ScreenDialogStrings(context).text('logoutConfirm')),
       actions: [
         TextButton(
           onPressed: () => Navigator.pop(context),
@@ -74,7 +76,9 @@ void confirmLogoutRiverpod(BuildContext context, WidgetRef ref) {
             if (context.mounted) {
               Navigator.pop(context);
               ScaffoldMessenger.of(context).showSnackBar(
-                const SnackBar(content: Text('Logged out successfully')),
+                SnackBar(
+                  content: Text(CommandStrings(context).text('loggedOut')),
+                ),
               );
             }
           },
@@ -82,7 +86,7 @@ void confirmLogoutRiverpod(BuildContext context, WidgetRef ref) {
             backgroundColor: Theme.of(context).colorScheme.error,
             foregroundColor: Theme.of(context).colorScheme.onError,
           ),
-          child: const Text('Logout'),
+          child: Text(AppLocalizations.of(context)!.logout),
         ),
       ],
     ),
@@ -97,83 +101,152 @@ void showKeyboardShortcutsHelp(BuildContext context) {
   showDialog(
     context: context,
     builder: (context) => AlertDialog(
-      title: const Text('Keyboard Shortcuts'),
+      title: Text(AppLocalizations.of(context)!.keyboardShortcuts),
       content: SingleChildScrollView(
         child: Column(
           mainAxisSize: MainAxisSize.min,
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             // F-keys (DC orthodox FM)
-            _shortcutRow('F1', 'This help dialog'),
-            _shortcutRow('F2 / Shift+F6', 'Rename (in-place)'),
-            _shortcutRow('F3', 'View file (full-screen)'),
-            _shortcutRow('F4', 'Edit file (built-in)'),
-            _shortcutRow('Shift+F4', 'Open with system editor'),
-            _shortcutRow('F5 / Ctrl+C', 'Copy to…'),
-            _shortcutRow('Ctrl+R', 'Refresh'),
-            _shortcutRow('F6 / Ctrl+X', 'Move to…'),
-            _shortcutRow('F7 / Ctrl+N', 'New folder'),
-            _shortcutRow('F8 / Delete', 'Delete selected'),
+            _shortcutRow('F1', ShortcutStrings(context).description(0)),
+            _shortcutRow(
+              'F2 / Shift+F6',
+              ShortcutStrings(context).description(1),
+            ),
+            _shortcutRow('F3', ShortcutStrings(context).description(2)),
+            _shortcutRow('F4', ShortcutStrings(context).description(3)),
+            _shortcutRow('Shift+F4', ShortcutStrings(context).description(4)),
+            _shortcutRow(
+              'F5 / Ctrl+C',
+              ShortcutStrings(context).description(5),
+            ),
+            _shortcutRow('Ctrl+R', ShortcutStrings(context).description(6)),
+            _shortcutRow(
+              'F6 / Ctrl+X',
+              ShortcutStrings(context).description(7),
+            ),
+            _shortcutRow(
+              'F7 / Ctrl+N',
+              ShortcutStrings(context).description(8),
+            ),
+            _shortcutRow(
+              'F8 / Delete',
+              ShortcutStrings(context).description(9),
+            ),
             const Divider(),
             // Navigation
-            _shortcutRow('Alt+← / Alt+→', 'Back / Forward (history)'),
-            _shortcutRow('Backspace', 'Navigate up / leave archive'),
-            _shortcutRow('Esc (in archive)', 'Exit archive'),
-            _shortcutRow('Enter', 'Open folder / file'),
-            _shortcutRow('Ctrl+Enter', 'Open item in the other panel'),
-            _shortcutRow('Ctrl+← / Ctrl+→', 'Open item in left / right panel'),
-            _shortcutRow('Tab', 'Switch panels'),
-            _shortcutRow('Ctrl+G / Ctrl+L', 'Go to path'),
-            _shortcutRow('Alt+F7', 'Search all files'),
-            _shortcutRow('Ctrl+F', 'Filter files'),
-            _shortcutRow('Type letters', 'Quick search / filter (see Settings)'),
-            _shortcutRow('↑ / ↓ while searching', 'Previous / next match'),
+            _shortcutRow(
+              'Alt+← / Alt+→',
+              ShortcutStrings(context).description(10),
+            ),
+            _shortcutRow(
+              'Backspace',
+              ShortcutStrings(context).extra('upArchive'),
+            ),
+            _shortcutRow(
+              'Esc (${ShortcutStrings(context).extra('archive')})',
+              ShortcutStrings(context).extra('exitArchive'),
+            ),
+            _shortcutRow('Enter', ShortcutStrings(context).description(12)),
+            _shortcutRow(
+              'Ctrl+Enter',
+              ShortcutStrings(context).extra('oppositeItem'),
+            ),
+            _shortcutRow(
+              'Ctrl+← / Ctrl+→',
+              ShortcutStrings(context).extra('directionItem'),
+            ),
+            _shortcutRow('Tab', ShortcutStrings(context).description(14)),
+            _shortcutRow(
+              'Ctrl+G / Ctrl+L',
+              ShortcutStrings(context).description(15),
+            ),
+            _shortcutRow(
+              'Alt+F7',
+              AppLocalizations.of(context)!.searchAllFiles,
+            ),
+            _shortcutRow('Ctrl+F', ShortcutStrings(context).description(16)),
+            _shortcutRow(
+              ShortcutStrings(context).keyLabel('type'),
+              ShortcutStrings(context).description(17),
+            ),
+            _shortcutRow(
+              ShortcutStrings(context).keyLabel('arrows'),
+              ShortcutStrings(context).description(18),
+            ),
             const Divider(),
             // Selection
-            _shortcutRow('Ctrl+A', 'Select all'),
-            _shortcutRow('Numpad *', 'Invert selection'),
-            _shortcutRow('Numpad +', 'Select by pattern'),
-            _shortcutRow('Numpad -', 'Deselect by pattern'),
-            _shortcutRow('Space / Insert', 'Mark + advance'),
-            _shortcutRow('Numpad 5', 'Select all'),
-            _shortcutRow('Shift+↑/↓', 'Extend selection'),
-            _shortcutRow('Escape', 'Clear selection / type-ahead'),
+            _shortcutRow('Ctrl+A', ShortcutStrings(context).description(19)),
+            _shortcutRow('Numpad *', ShortcutStrings(context).description(20)),
+            _shortcutRow('Numpad +', ShortcutStrings(context).description(21)),
+            _shortcutRow('Numpad -', ShortcutStrings(context).description(22)),
+            _shortcutRow(
+              'Space / Insert',
+              ShortcutStrings(context).description(23),
+            ),
+            _shortcutRow('Numpad 5', ShortcutStrings(context).description(19)),
+            _shortcutRow('Shift+↑/↓', ShortcutStrings(context).description(24)),
+            _shortcutRow('Escape', ShortcutStrings(context).description(25)),
             const Divider(),
             // File operations
-            _shortcutRow('Ctrl+C', 'Copy to…'),
-            _shortcutRow('Ctrl+Z', 'Undo last action'),
-            _shortcutRow('Ctrl+Shift+C', 'Copy paths to clipboard'),
-            _shortcutRow('Ctrl+Shift+N', 'Copy names to clipboard'),
-            _shortcutRow('Ctrl+=', 'Sync opposite panel to here'),
+            _shortcutRow('Ctrl+C', ShortcutStrings(context).description(5)),
+            _shortcutRow('Ctrl+Z', ShortcutStrings(context).description(26)),
+            _shortcutRow(
+              'Ctrl+Shift+C',
+              ShortcutStrings(context).description(27),
+            ),
+            _shortcutRow(
+              'Ctrl+Shift+N',
+              ShortcutStrings(context).description(28),
+            ),
+            _shortcutRow('Ctrl+=', ShortcutStrings(context).description(29)),
             const Divider(),
             // Sort
-            _shortcutRow('Ctrl+F3', 'Sort by name'),
-            _shortcutRow('Ctrl+F4', 'Sort by extension'),
-            _shortcutRow('Ctrl+F5', 'Sort by date'),
-            _shortcutRow('Ctrl+F6', 'Sort by size'),
-            _shortcutRow('Ctrl+. / Ctrl+H', 'Toggle hidden files'),
-            _shortcutRow('Ctrl+B', 'Toggle bookmark for current folder'),
-            _shortcutRow('Ctrl+I / Alt+Enter', 'File properties'),
-            _shortcutRow('Shift+F10', 'Context menu'),
+            _shortcutRow('Ctrl+F3', ShortcutStrings(context).description(30)),
+            _shortcutRow('Ctrl+F4', ShortcutStrings(context).description(31)),
+            _shortcutRow('Ctrl+F5', ShortcutStrings(context).description(32)),
+            _shortcutRow('Ctrl+F6', ShortcutStrings(context).description(33)),
+            _shortcutRow(
+              'Ctrl+. / Ctrl+H',
+              ShortcutStrings(context).description(34),
+            ),
+            _shortcutRow('Ctrl+B', ShortcutStrings(context).description(35)),
+            _shortcutRow(
+              'Ctrl+I / Alt+Enter',
+              ShortcutStrings(context).description(36),
+            ),
+            _shortcutRow(
+              'Shift+F10',
+              ShortcutStrings(context).extra('contextMenu'),
+            ),
             const Divider(),
             // View / Tabs
-            _shortcutRow('Ctrl+1', 'Brief view mode'),
-            _shortcutRow('Ctrl+2', 'Full view mode'),
-            _shortcutRow('Ctrl+3', 'Tree view mode'),
-            _shortcutRow('Ctrl+T', 'New tab'),
-            _shortcutRow('Ctrl+W', 'Close tab'),
-            _shortcutRow('Ctrl+Tab', 'Next tab'),
-            _shortcutRow('Ctrl+Shift+Tab', 'Previous tab'),
-            _shortcutRow('Ctrl+Shift+P', 'Command palette'),
+            _shortcutRow('Ctrl+1', ShortcutStrings(context).description(37)),
+            _shortcutRow('Ctrl+2', ShortcutStrings(context).description(38)),
+            _shortcutRow('Ctrl+3', ShortcutStrings(context).description(39)),
+            _shortcutRow('Ctrl+T', ShortcutStrings(context).description(40)),
+            _shortcutRow('Ctrl+W', ShortcutStrings(context).description(41)),
+            _shortcutRow('Ctrl+Tab', ShortcutStrings(context).description(42)),
+            _shortcutRow(
+              'Ctrl+Shift+Tab',
+              ShortcutStrings(context).description(43),
+            ),
+            _shortcutRow(
+              'Ctrl+Shift+P',
+              ShortcutStrings(context).description(44),
+            ),
             const Divider(),
             // Transfer
-            _shortcutRow('Ctrl+U', 'Upload'),
-            _shortcutRow('Ctrl+D', 'Download'),
+            _shortcutRow('Ctrl+U', ShortcutStrings(context).description(45)),
+            _shortcutRow('Ctrl+D', ShortcutStrings(context).description(46)),
           ],
         ),
       ),
       actions: [
-        TextButton(onPressed: () => Navigator.pop(context), child: const Text('Close')),
+        TextButton(
+          onPressed: () => Navigator.pop(context),
+          child: Text(AppLocalizations.of(context)!.close),
+        ),
       ],
     ),
   );
@@ -186,7 +259,13 @@ Widget _shortcutRow(String keys, String description) {
       children: [
         SizedBox(
           width: 120,
-          child: Text(keys, style: const TextStyle(fontWeight: FontWeight.bold, fontFamily: 'monospace')),
+          child: Text(
+            keys,
+            style: const TextStyle(
+              fontWeight: FontWeight.bold,
+              fontFamily: 'monospace',
+            ),
+          ),
         ),
         Expanded(child: Text(description)),
       ],
@@ -210,16 +289,23 @@ void confirmDeleteSelected(BuildContext context, WidgetRef ref) {
   final activePanel = ref.read(activePanelProvider);
   final panel = ref.read(panelProvider(activePanel));
   final targets = _selectedOrCursor(panel);
-  _log.debug('confirmDeleteSelected: ${targets.length} items, side=${activePanel.name}');
+  _log.debug(
+    'confirmDeleteSelected: ${targets.length} items, side=${activePanel.name}',
+  );
   if (targets.isEmpty) return;
 
   showDialog(
     context: context,
     builder: (context) => AlertDialog(
-      title: const Text('Confirm Delete'),
-      content: Text('Delete ${targets.length} item(s)?'),
+      title: Text(AppLocalizations.of(context)!.confirmDeleteTitle),
+      content: Text(
+        AppLocalizations.of(context)!.confirmDeleteMessage(targets.length),
+      ),
       actions: [
-        TextButton(onPressed: () => Navigator.pop(context), child: Text(AppLocalizations.of(context)!.cancel)),
+        TextButton(
+          onPressed: () => Navigator.pop(context),
+          child: Text(AppLocalizations.of(context)!.cancel),
+        ),
         ElevatedButton(
           onPressed: () async {
             final files = targets;
@@ -230,7 +316,7 @@ void confirmDeleteSelected(BuildContext context, WidgetRef ref) {
                 context,
                 ref,
                 activePanel,
-                'Deleted ${files.length} item(s)',
+                ScreenDialogStrings(context).value('deleted', files.length),
               );
             }
           },
@@ -238,7 +324,7 @@ void confirmDeleteSelected(BuildContext context, WidgetRef ref) {
             backgroundColor: Theme.of(context).colorScheme.error,
             foregroundColor: Theme.of(context).colorScheme.onError,
           ),
-          child: const Text('Delete'),
+          child: Text(AppLocalizations.of(context)!.delete),
         ),
       ],
     ),
@@ -259,7 +345,13 @@ void showRenameDialog(BuildContext context, WidgetRef ref) {
       await panel.renameFile(file, value);
       if (context.mounted) {
         Navigator.pop(context);
-        _showUndoSnackBar(context, ref, activePanel, 'Renamed "${file.name}" to "$value"');
+        _showUndoSnackBar(
+          context,
+          ref,
+          activePanel,
+          ScreenDialogStrings(context)
+              .value('renamed', '${file.name} → $value'),
+        );
       }
     }
   }
@@ -267,18 +359,24 @@ void showRenameDialog(BuildContext context, WidgetRef ref) {
   showDialog(
     context: context,
     builder: (context) => AlertDialog(
-      title: const Text('Rename'),
+      title: Text(AppLocalizations.of(context)!.rename),
       content: TextField(
         controller: controller,
-        decoration: const InputDecoration(labelText: 'New name', border: OutlineInputBorder()),
+        decoration: InputDecoration(
+          labelText: AppLocalizations.of(context)!.newName,
+          border: const OutlineInputBorder(),
+        ),
         autofocus: true,
         onSubmitted: doRename,
       ),
       actions: [
-        TextButton(onPressed: () => Navigator.pop(context), child: Text(AppLocalizations.of(context)!.cancel)),
+        TextButton(
+          onPressed: () => Navigator.pop(context),
+          child: Text(AppLocalizations.of(context)!.cancel),
+        ),
         ElevatedButton(
           onPressed: () => doRename(controller.text),
-          child: const Text('Rename'),
+          child: Text(AppLocalizations.of(context)!.rename),
         ),
       ],
     ),
@@ -290,7 +388,8 @@ void viewSelectedFile(BuildContext context, WidgetRef ref) {
   final activePanel = ref.read(activePanelProvider);
   final panel = ref.read(panelProvider(activePanel));
   // TC/DC view the file under the cursor, not the selection set.
-  final target = panel.cursorItem ??
+  final target =
+      panel.cursorItem ??
       (panel.selection.isNotEmpty ? panel.selection.first : null);
   if (target == null || target.isFolder) return;
   // Full-screen DC-style viewer: text/ASCII/binary/hex/image/markdown/PDF/
@@ -327,9 +426,9 @@ Future<void> _viewFile(
     }
   } catch (e) {
     if (context.mounted) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Cannot view ${target.name}: $e')),
-      );
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(SnackBar(content: Text('Cannot view ${target.name}: $e')));
     }
   } finally {
     // Keep the file selected and the panel keyboard-focused after the viewer
@@ -342,7 +441,8 @@ Future<void> _viewFile(
 void editSelectedFile(BuildContext context, WidgetRef ref) {
   final activePanel = ref.read(activePanelProvider);
   final panel = ref.read(panelProvider(activePanel));
-  final target = panel.cursorItem ??
+  final target =
+      panel.cursorItem ??
       (panel.selection.isNotEmpty ? panel.selection.first : null);
   if (target == null || target.isFolder) return;
   unawaited(_editFile(context, ref, panel, activePanel, target));
@@ -384,10 +484,14 @@ void showCopyDialogFromSelection(BuildContext context, WidgetRef ref) {
   // On web: if the opposite panel has a local folder open, copy there.
   // Otherwise download via browser.
   if (kIsWeb) {
-    final opposite = activePanel == PanelSide.local ? PanelSide.remote : PanelSide.local;
+    final opposite = activePanel == PanelSide.local
+        ? PanelSide.remote
+        : PanelSide.local;
     final oppositePanel = ref.read(panelProvider(opposite));
     final oppPath = oppositePanel.currentPath;
-    _log.debug('web copy: active=${activePanel.name} oppPath=$oppPath selection=${targets.length}');
+    _log.debug(
+      'web copy: active=${activePanel.name} oppPath=$oppPath selection=${targets.length}',
+    );
 
     // If the opposite panel has a local folder open (not just '/'), copy there.
     if (oppPath.length > 1) {
@@ -401,7 +505,15 @@ void showCopyDialogFromSelection(BuildContext context, WidgetRef ref) {
     return;
   }
 
-  _showPathDialog(context, ref, activePanel, panel, targets, 'Copy', panel.copyFiles);
+  _showPathDialog(
+    context,
+    ref,
+    activePanel,
+    panel,
+    targets,
+    true,
+    panel.copyFiles,
+  );
 }
 
 /// Download local files via browser on web.
@@ -409,14 +521,17 @@ void _downloadFilesOnWeb(WidgetRef ref, List<FileItem> files) {
   final localSvc = ref.read(localFileServiceProvider);
   for (final file in files) {
     if (file.isFolder || file.path == null) continue;
-    localSvc.readFile(file.path!, fileItem: file).then((bytes) {
-      final blob = html.Blob([bytes]);
-      final url = html.Url.createObjectUrlFromBlob(blob);
-      html.AnchorElement(href: url)
-        ..setAttribute('download', file.name)
-        ..click();
-      html.Url.revokeObjectUrl(url);
-    }).catchError((_) {});
+    localSvc
+        .readFile(file.path!, fileItem: file)
+        .then((bytes) {
+          final blob = html.Blob([bytes]);
+          final url = html.Url.createObjectUrlFromBlob(blob);
+          html.AnchorElement(href: url)
+            ..setAttribute('download', file.name)
+            ..click();
+          html.Url.revokeObjectUrl(url);
+        })
+        .catchError((_) {});
   }
 }
 
@@ -424,15 +539,21 @@ void showMoveDialogFromSelection(BuildContext context, WidgetRef ref) {
   final activePanel = ref.read(activePanelProvider);
   final panel = ref.read(panelProvider(activePanel));
   final targets = _selectedOrCursor(panel);
-  _log.debug('showMoveDialogFromSelection: ${targets.length} items, side=${activePanel.name}');
+  _log.debug(
+    'showMoveDialogFromSelection: ${targets.length} items, side=${activePanel.name}',
+  );
   if (targets.isEmpty) return;
 
   // On web: move to opposite panel's directory automatically.
   if (kIsWeb) {
-    final opposite = activePanel == PanelSide.local ? PanelSide.remote : PanelSide.local;
+    final opposite = activePanel == PanelSide.local
+        ? PanelSide.remote
+        : PanelSide.local;
     final oppositePanel = ref.read(panelProvider(opposite));
     final oppPath = oppositePanel.currentPath;
-    _log.debug('web move: active=${activePanel.name} oppPath=$oppPath selection=${targets.length}');
+    _log.debug(
+      'web move: active=${activePanel.name} oppPath=$oppPath selection=${targets.length}',
+    );
 
     if (oppPath.length > 1) {
       panel.moveFiles(targets, oppPath).then((_) {
@@ -442,7 +563,15 @@ void showMoveDialogFromSelection(BuildContext context, WidgetRef ref) {
     }
   }
 
-  _showPathDialog(context, ref, activePanel, panel, targets, 'Move', panel.moveFiles);
+  _showPathDialog(
+    context,
+    ref,
+    activePanel,
+    panel,
+    targets,
+    false,
+    panel.moveFiles,
+  );
 }
 
 void _showPathDialog(
@@ -451,7 +580,7 @@ void _showPathDialog(
   PanelSide activePanel,
   PanelNotifier panel,
   List<FileItem> files,
-  String operation,
+  bool isCopy,
   Future<void> Function(List<FileItem>, String) action,
 ) {
   final controller = TextEditingController(text: panel.currentPath);
@@ -460,7 +589,9 @@ void _showPathDialog(
     if (value.isNotEmpty) {
       await action(files, value);
       // Refresh opposite panel in case the target path is there.
-      final opposite = activePanel == PanelSide.local ? PanelSide.remote : PanelSide.local;
+      final opposite = activePanel == PanelSide.local
+          ? PanelSide.remote
+          : PanelSide.local;
       ref.read(panelProvider(opposite)).refresh();
       if (context.mounted) {
         Navigator.pop(context);
@@ -468,7 +599,8 @@ void _showPathDialog(
           context,
           ref,
           activePanel,
-          '${operation}d ${files.length} item(s) to $value',
+          ScreenDialogStrings(context)
+              .value(isCopy ? 'copied' : 'moved', '${files.length} → $value'),
         );
       }
     }
@@ -477,25 +609,43 @@ void _showPathDialog(
   showDialog(
     context: context,
     builder: (context) => AlertDialog(
-      title: Text('$operation ${files.length} item(s)'),
+      title: Text(
+        isCopy
+            ? AppLocalizations.of(context)!.copyNItems(files.length)
+            : AppLocalizations.of(context)!.moveNItems(files.length),
+      ),
       content: TextField(
         controller: controller,
-        decoration: const InputDecoration(labelText: 'Target path', border: OutlineInputBorder()),
+        decoration: InputDecoration(
+          labelText: AppLocalizations.of(context)!.targetPath,
+          border: const OutlineInputBorder(),
+        ),
         autofocus: true,
         onSubmitted: doAction,
       ),
       actions: [
-        TextButton(onPressed: () => Navigator.pop(context), child: Text(AppLocalizations.of(context)!.cancel)),
+        TextButton(
+          onPressed: () => Navigator.pop(context),
+          child: Text(AppLocalizations.of(context)!.cancel),
+        ),
         ElevatedButton(
           onPressed: () => doAction(controller.text),
-          child: Text(operation),
+          child: Text(
+            isCopy
+                ? AppLocalizations.of(context)!.copy
+                : AppLocalizations.of(context)!.move,
+          ),
         ),
       ],
     ),
   );
 }
 
-void showCreateFolderDialog(BuildContext context, WidgetRef ref, PanelSide side) {
+void showCreateFolderDialog(
+  BuildContext context,
+  WidgetRef ref,
+  PanelSide side,
+) {
   final panel = ref.read(panelProvider(side));
   final controller = TextEditingController();
 
@@ -504,7 +654,12 @@ void showCreateFolderDialog(BuildContext context, WidgetRef ref, PanelSide side)
       await panel.createFolder(value);
       if (context.mounted) {
         Navigator.pop(context);
-        _showUndoSnackBar(context, ref, side, 'Created folder "$value"');
+        _showUndoSnackBar(
+          context,
+          ref,
+          side,
+          ScreenDialogStrings(context).value('folderCreated', value),
+        );
       }
     }
   }
@@ -512,18 +667,24 @@ void showCreateFolderDialog(BuildContext context, WidgetRef ref, PanelSide side)
   showDialog(
     context: context,
     builder: (context) => AlertDialog(
-      title: const Text('New Folder'),
+      title: Text(AppLocalizations.of(context)!.newFolder),
       content: TextField(
         controller: controller,
-        decoration: const InputDecoration(labelText: 'Folder name', border: OutlineInputBorder()),
+        decoration: InputDecoration(
+          labelText: AppLocalizations.of(context)!.folderName,
+          border: const OutlineInputBorder(),
+        ),
         autofocus: true,
         onSubmitted: doCreate,
       ),
       actions: [
-        TextButton(onPressed: () => Navigator.pop(context), child: Text(AppLocalizations.of(context)!.cancel)),
+        TextButton(
+          onPressed: () => Navigator.pop(context),
+          child: Text(AppLocalizations.of(context)!.cancel),
+        ),
         ElevatedButton(
           onPressed: () => doCreate(controller.text),
-          child: const Text('Create'),
+          child: Text(AppLocalizations.of(context)!.create),
         ),
       ],
     ),
@@ -536,29 +697,44 @@ void showReceivedFilesDialog(BuildContext context, List<String> files) {
   showDialog(
     context: context,
     builder: (context) => AlertDialog(
-      title: const Text('Received Files'),
+      title: Text(ScreenDialogStrings(context).text('received')),
       content: Column(
         mainAxisSize: MainAxisSize.min,
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Text('Upload ${files.length} file(s) to Cloud?'),
+          Text(
+            ScreenDialogStrings(context).value('uploadConfirm', files.length),
+          ),
           const SizedBox(height: 8),
-          ...files.take(5).map((path) => Padding(
-                padding: const EdgeInsets.symmetric(vertical: 2),
-                child: Text('• ${p.basename(path)}', style: const TextStyle(fontSize: 12)),
-              )),
+          ...files
+              .take(5)
+              .map(
+                (path) => Padding(
+                  padding: const EdgeInsets.symmetric(vertical: 2),
+                  child: Text(
+                    '• ${p.basename(path)}',
+                    style: const TextStyle(fontSize: 12),
+                  ),
+                ),
+              ),
           if (files.length > 5)
-            Text('... and ${files.length - 5} more', style: const TextStyle(fontSize: 12)),
+            Text(
+              AppLocalizations.of(context)!.andMore(files.length - 5),
+              style: const TextStyle(fontSize: 12),
+            ),
         ],
       ),
       actions: [
-        TextButton(onPressed: () => Navigator.pop(context), child: Text(AppLocalizations.of(context)!.cancel)),
+        TextButton(
+          onPressed: () => Navigator.pop(context),
+          child: Text(AppLocalizations.of(context)!.cancel),
+        ),
         ElevatedButton(
           onPressed: () {
             // Will be wired when receive service is connected to Riverpod
             Navigator.pop(context);
           },
-          child: const Text('Upload'),
+          child: Text(AppLocalizations.of(context)!.upload),
         ),
       ],
     ),
@@ -579,12 +755,12 @@ void showGoToDialog(BuildContext context, WidgetRef ref) {
   showDialog(
     context: context,
     builder: (ctx) => AlertDialog(
-      title: const Text('Go to Path'),
+      title: Text(ScreenDialogStrings(context).text('goPath')),
       content: TextField(
         controller: controller,
         autofocus: true,
-        decoration: const InputDecoration(
-          labelText: 'Path',
+        decoration: InputDecoration(
+          labelText: ScreenDialogStrings(context).text('path'),
           border: OutlineInputBorder(),
           prefixIcon: Icon(Icons.folder_open),
         ),
@@ -596,7 +772,10 @@ void showGoToDialog(BuildContext context, WidgetRef ref) {
         },
       ),
       actions: [
-        TextButton(onPressed: () => Navigator.pop(ctx), child: Text(AppLocalizations.of(context)!.cancel)),
+        TextButton(
+          onPressed: () => Navigator.pop(ctx),
+          child: Text(AppLocalizations.of(context)!.cancel),
+        ),
         ElevatedButton(
           onPressed: () {
             if (controller.text.isNotEmpty) {
@@ -604,7 +783,7 @@ void showGoToDialog(BuildContext context, WidgetRef ref) {
               Navigator.pop(ctx);
             }
           },
-          child: const Text('Go'),
+          child: Text(ScreenDialogStrings(context).text('go')),
         ),
       ],
     ),
@@ -634,14 +813,14 @@ void _showUndoSnackBar(
       duration: const Duration(seconds: 4),
       action: canUndo
           ? SnackBarAction(
-              label: 'Undo',
+              label: ScreenDialogStrings(context).text('undo'),
               onPressed: () {
                 final undoCtx = _buildUndoCtx(ref, side);
                 historyNotifier.undo(last.id, undoCtx).then((result) {
                   if (!context.mounted) return;
                   ScaffoldMessenger.of(context).showSnackBar(
                     SnackBar(
-                      content: Text(result.message),
+                      content: Text(UndoPresentation(context).result(result)),
                       duration: const Duration(seconds: 3),
                       backgroundColor: result.success
                           ? null
@@ -665,7 +844,8 @@ UndoContext _buildUndoCtx(WidgetRef ref, PanelSide side) {
   final client = ref.read(authProvider).client;
   return UndoContext(
     remoteRename: (currentPath, name) => client.renamePath(currentPath, name),
-    remoteMove: (currentPath, targetDir) => client.movePath(currentPath, targetDir),
+    remoteMove: (currentPath, targetDir) =>
+        client.movePath(currentPath, targetDir),
     remoteDelete: (path) => client.deletePath(path),
   );
 }

@@ -578,6 +578,16 @@ class ReportDesignerController extends ChangeNotifier {
   var _fontSearch = '';
   final Set<String> _embedding = <String>{};
   String? _notice;
+  String? _fontNoticeOriginal;
+  String? _deviceFontNoticeOriginal;
+  String _deviceFontNoticeFamily = '';
+  List<String> _deviceFontNoticeFaces = const [];
+  String _deviceFontNoticeSize = '';
+  String? _importNoticeOriginal;
+  int _importNoticeRows = 0;
+  String _importNoticeTable = '';
+  List<String> _fontNoticeFamilies = const [];
+  List<(String, String)> _fontNoticeErrors = const [];
   ReportFontRegistry? _merged;
   ReportFontRegistry? _mergedBase;
   int _mergedRevision = -1;
@@ -2646,9 +2656,7 @@ class ReportDesignerController extends ChangeNotifier {
     final int end = textEditor.selectionEnd;
     final List<ReportTextRun> source =
         element.runs.isEmpty || element.plainText != all
-        ? <ReportTextRun>[
-            ReportTextRun(text: all, bold: element.style.bold),
-          ]
+        ? <ReportTextRun>[ReportTextRun(text: all, bold: element.style.bold)]
         : <ReportTextRun>[for (final ReportTextRun r in element.runs) r.copy()];
     final bool on = !_rangeBold(source, start, end);
     element.runs
@@ -7096,6 +7104,9 @@ class ReportDesignerController extends ChangeNotifier {
       _notice =
           'Imported ${rows.length} row${rows.length == 1 ? '' : 's'} '
           'into $table';
+      _importNoticeOriginal = _notice;
+      _importNoticeRows = rows.length;
+      _importNoticeTable = table;
       notifyListeners();
     }
     return done;
@@ -7378,7 +7389,7 @@ class ReportDesignerController extends ChangeNotifier {
             label: 'Name',
             kind: ReportPropertyKind.text,
             value: c.name,
-            hint: 'used as item.${c.name}',
+            hint: strings.format('used as item.{name}', {'name': c.name}),
             group: cg,
           ),
           ReportProperty(
@@ -7612,6 +7623,31 @@ class ReportDesignerController extends ChangeNotifier {
   /// the next template change.
   String? get notice => _notice;
 
+  /// Status notice localized without parsing imported file or family names.
+  String? get localizedNotice {
+    final notice = _notice;
+    if (notice == null) return null;
+    if (identical(notice, _deviceFontNoticeOriginal)) {
+      return strings.embeddedFontNotice(
+        _deviceFontNoticeFamily,
+        _deviceFontNoticeFaces,
+        _deviceFontNoticeSize,
+      );
+    }
+    if (identical(notice, _importNoticeOriginal)) {
+      return strings.importedRows(_importNoticeRows, _importNoticeTable);
+    }
+    if (!identical(notice, _fontNoticeOriginal)) {
+      return strings.assetNotice(notice);
+    }
+    return <String>[
+      if (_fontNoticeFamilies.isNotEmpty)
+        strings.assetNotice('Embedded ${_fontNoticeFamilies.join(', ')}'),
+      for (final (name, error) in _fontNoticeErrors)
+        '$name: ${strings.assetNotice(error)}',
+    ].join('  ·  ');
+  }
+
   /// Filter of the Fonts page's device list (case-insensitive substring).
   String get fontSearch => _fontSearch;
 
@@ -7715,11 +7751,13 @@ class ReportDesignerController extends ChangeNotifier {
     final List<(ReportFontFileInfo, Uint8List)> faces =
         <(ReportFontFileInfo, Uint8List)>[];
     final List<String> errors = <String>[];
+    final List<(String, String)> fontErrors = <(String, String)>[];
     for (final ({String name, Uint8List bytes}) file in files) {
       try {
         faces.add((_uprightFace(file.bytes), file.bytes));
       } on ReportFontException catch (e) {
         errors.add('${file.name}: ${e.message}');
+        fontErrors.add((file.name, e.message));
       }
     }
     final List<String> added = <String>[
@@ -7739,6 +7777,9 @@ class ReportDesignerController extends ChangeNotifier {
       if (added.isNotEmpty) 'Embedded ${added.join(', ')}',
       ...errors,
     ].join('  ·  ');
+    _fontNoticeOriginal = _notice;
+    _fontNoticeFamilies = List.unmodifiable(added);
+    _fontNoticeErrors = List.unmodifiable(fontErrors);
     notifyListeners();
     return added;
   }
@@ -7766,6 +7807,15 @@ class ReportDesignerController extends ChangeNotifier {
         message =
             'Embedded $family (${_faceNames(files)}, '
             '${_byteSize(files.byteLength)})';
+        _deviceFontNoticeOriginal = message;
+        _deviceFontNoticeFamily = family;
+        _deviceFontNoticeFaces = [
+          if (files.regular != null) 'Regular',
+          if (files.bold != null) 'Bold',
+          if (files.italic != null) 'Italic',
+          if (files.boldItalic != null) 'Bold Italic',
+        ];
+        _deviceFontNoticeSize = _byteSize(files.byteLength);
       }
     } on Object catch (e) {
       if (_disposed) {

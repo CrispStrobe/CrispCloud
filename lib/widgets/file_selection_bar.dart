@@ -3,6 +3,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import '../l10n/app_localizations.dart';
 import '../models/file_item.dart';
 import '../models/panel_side.dart';
 import '../providers/providers.dart';
@@ -66,7 +67,7 @@ class FileSelectionBar extends ConsumerWidget {
               children: [
                 Icon(Icons.check_circle, size: 20, color: theme.colorScheme.onSecondaryContainer),
                 const SizedBox(width: 8),
-                Text('${selection.length} selected',
+                Text(AppLocalizations.of(context)!.nSelected(selection.length),
                     style: TextStyle(fontWeight: FontWeight.bold, color: theme.colorScheme.onSecondaryContainer)),
                 if (totalSize > 0) ...[
                   const SizedBox(width: 8),
@@ -77,13 +78,13 @@ class FileSelectionBar extends ConsumerWidget {
 
                 if (side == PanelSide.local && auth.isConnected)
                   responsiveButton(
-                    icon: Icons.upload, label: 'Upload', tooltip: 'Upload', showLabel: showLabels,
+                    icon: Icons.upload, label: AppLocalizations.of(context)!.upload, tooltip: AppLocalizations.of(context)!.upload, showLabel: showLabels,
                     onPressed: () => transfers.uploadFiles(files),
                   ),
 
                 if (side == PanelSide.remote)
                   responsiveButton(
-                    icon: Icons.download, label: 'Download', tooltip: 'Download', showLabel: showLabels,
+                    icon: Icons.download, label: AppLocalizations.of(context)!.download, tooltip: AppLocalizations.of(context)!.download, showLabel: showLabels,
                     onPressed: () => transfers.downloadFiles(files),
                   ),
 
@@ -91,26 +92,26 @@ class FileSelectionBar extends ConsumerWidget {
 
                 IconButton(
                   icon: const Icon(Icons.content_copy, size: 20),
-                  tooltip: 'Copy to...',
+                  tooltip: AppLocalizations.of(context)!.copyTo,
                   color: theme.colorScheme.onSecondaryContainer,
                   onPressed: () => showCopyDialog(context, ref, side, files),
                 ),
                 IconButton(
                   icon: const Icon(Icons.drive_file_move, size: 20),
-                  tooltip: 'Move to...',
+                  tooltip: AppLocalizations.of(context)!.moveTo,
                   color: theme.colorScheme.onSecondaryContainer,
                   onPressed: () => showMoveDialog(context, ref, side, files),
                 ),
                 IconButton(
                   icon: const Icon(Icons.delete, size: 20),
-                  tooltip: 'Delete',
+                  tooltip: AppLocalizations.of(context)!.delete,
                   color: theme.colorScheme.onSecondaryContainer,
                   onPressed: () => confirmDelete(context, ref, side, files),
                 ),
 
                 const SizedBox(width: 16),
                 responsiveButton(
-                  icon: Icons.clear, label: 'Clear', tooltip: 'Clear selection', showLabel: showLabels,
+                  icon: Icons.clear, label: AppLocalizations.of(context)!.clear, tooltip: AppLocalizations.of(context)!.clearSelection, showLabel: showLabels,
                   onPressed: () => panel.clearSelection(),
                 ),
               ],

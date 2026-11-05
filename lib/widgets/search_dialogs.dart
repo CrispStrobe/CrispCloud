@@ -14,6 +14,7 @@ import 'file_list_view.dart' show getFileIcon;
 import 'saved_searches_dialog.dart'
     show showSavedSearchesDialog, showSaveSearchDialog;
 import '../l10n/app_localizations.dart';
+import '../l10n/search_dialog_strings.dart';
 
 // ---------------------------------------------------------------------------
 // Public API
@@ -26,11 +27,11 @@ void showSearchDialog(BuildContext context, WidgetRef ref) {
   showDialog(
     context: context,
     builder: (dialogContext) => AlertDialog(
-      title: const Text('Fuzzy Search (All Files)'),
+      title: Text(SearchDialogStrings(context).text('fuzzy')),
       content: TextField(
         controller: controller,
-        decoration: const InputDecoration(
-          labelText: 'Search query',
+        decoration: InputDecoration(
+          labelText: SearchDialogStrings(context).text('query'),
           border: OutlineInputBorder(),
           prefixIcon: Icon(Icons.search),
         ),
@@ -85,12 +86,12 @@ void showSearchResultsDialog(BuildContext context, WidgetRef ref,
   showDialog(
     context: context,
     builder: (ctx) => AlertDialog(
-      title: Text('Search Results for "$query"'),
+      title: Text(SearchDialogStrings(context).value('results', query)),
       content: SizedBox(
         width: double.maxFinite,
         height: 400,
         child: allItems.isEmpty
-            ? const Center(child: Text('No results found.'))
+            ? Center(child: Text(SearchDialogStrings(context).text('none')))
             : ListView.builder(
                 itemCount: allItems.length,
                 itemBuilder: (ctx2, index) {
@@ -141,7 +142,7 @@ void showSearchResultsDialog(BuildContext context, WidgetRef ref,
         if (allItems.isNotEmpty)
           TextButton.icon(
             icon: const Icon(Icons.folder_special_outlined, size: 16),
-            label: const Text('Show as Folder'),
+            label: Text(SearchDialogStrings(context).text('folder')),
             onPressed: () {
               ref
                   .read(searchProvider)
@@ -269,7 +270,7 @@ class _FindDialogState extends State<_FindDialog> {
       } catch (e) {
         if (panelCtx.mounted) {
           ScaffoldMessenger.of(panelCtx).showSnackBar(
-            SnackBar(content: Text('Invalid regex: $e')),
+            SnackBar(content: Text(SearchDialogStrings(panelCtx).value('badRegex', e))),
           );
         }
       }
@@ -303,7 +304,7 @@ class _FindDialogState extends State<_FindDialog> {
   Widget build(BuildContext context) {
     final colorScheme = Theme.of(context).colorScheme;
     return AlertDialog(
-      title: Text('Find in "${p.basename(_remotePath)}"'),
+      title: Text(SearchDialogStrings(context).value('findIn', p.basename(_remotePath))),
       content: SingleChildScrollView(
         child: Column(
           mainAxisSize: MainAxisSize.min,
@@ -314,8 +315,8 @@ class _FindDialogState extends State<_FindDialog> {
               controller: _patternCtrl,
               decoration: InputDecoration(
                 labelText: _useRegex
-                    ? 'Regex pattern'
-                    : 'Pattern (e.g. *.pdf, report-*)',
+                    ? SearchDialogStrings(context).text('regexPattern')
+                    : SearchDialogStrings(context).text('pattern'),
                 border: const OutlineInputBorder(),
                 prefixIcon: const Icon(Icons.find_in_page),
               ),
@@ -333,11 +334,11 @@ class _FindDialogState extends State<_FindDialog> {
                       ? null
                       : (v) => setState(() => _useRegex = v ?? false),
                 ),
-                const Text('Use regex', style: TextStyle(fontSize: 13)),
+                Text(SearchDialogStrings(context).text('useRegex'), style: TextStyle(fontSize: 13)),
                 const Spacer(),
                 if (_useRegex)
                   Text(
-                    'Filters current listing',
+                    SearchDialogStrings(context).text('filterListing'),
                     style: TextStyle(
                         fontSize: 11, color: colorScheme.onSurfaceVariant),
                   ),
@@ -354,11 +355,11 @@ class _FindDialogState extends State<_FindDialog> {
                     if (_searchContents) _useRegex = false;
                   }),
                 ),
-                const Text('Search file contents', style: TextStyle(fontSize: 13)),
+                Text(SearchDialogStrings(context).text('contents'), style: TextStyle(fontSize: 13)),
                 const Spacer(),
                 if (_searchContents)
                   Text(
-                    'Full-text search',
+                    SearchDialogStrings(context).text('fullText'),
                     style: TextStyle(
                         fontSize: 11, color: colorScheme.onSurfaceVariant),
                   ),
@@ -368,7 +369,7 @@ class _FindDialogState extends State<_FindDialog> {
             const Divider(height: 20),
 
             // --- File type chips ---
-            Text('File type',
+            Text(SearchDialogStrings(context).text('fileType'),
                 style: Theme.of(context)
                     .textTheme
                     .labelMedium
@@ -380,7 +381,7 @@ class _FindDialogState extends State<_FindDialog> {
               children: FileTypeCategory.values.map((cat) {
                 final selected = _selectedCategories.contains(cat);
                 return FilterChip(
-                  label: Text(_categoryLabel(cat)),
+                  label: Text(_categoryLabel(context, cat)),
                   selected: selected,
                   onSelected: (v) => setState(() {
                     if (v) {
@@ -396,7 +397,7 @@ class _FindDialogState extends State<_FindDialog> {
             const Divider(height: 20),
 
             // --- Size range ---
-            Text('Size',
+            Text(SearchDialogStrings(context).text('size'),
                 style: Theme.of(context)
                     .textTheme
                     .labelMedium
@@ -407,8 +408,8 @@ class _FindDialogState extends State<_FindDialog> {
                 Expanded(
                   child: TextField(
                     controller: _minSizeCtrl,
-                    decoration: const InputDecoration(
-                      labelText: 'Min',
+                    decoration: InputDecoration(
+                      labelText: SearchDialogStrings(context).text('min'),
                       border: OutlineInputBorder(),
                       isDense: true,
                     ),
@@ -429,8 +430,8 @@ class _FindDialogState extends State<_FindDialog> {
                 Expanded(
                   child: TextField(
                     controller: _maxSizeCtrl,
-                    decoration: const InputDecoration(
-                      labelText: 'Max',
+                    decoration: InputDecoration(
+                      labelText: SearchDialogStrings(context).text('max'),
                       border: OutlineInputBorder(),
                       isDense: true,
                     ),
@@ -453,7 +454,7 @@ class _FindDialogState extends State<_FindDialog> {
             const Divider(height: 20),
 
             // --- Date range ---
-            Text('Modified date',
+            Text(SearchDialogStrings(context).text('modified'),
                 style: Theme.of(context)
                     .textTheme
                     .labelMedium
@@ -463,7 +464,7 @@ class _FindDialogState extends State<_FindDialog> {
               children: [
                 Expanded(
                   child: _DatePickerTile(
-                    label: 'After',
+                    label: SearchDialogStrings(context).text('after'),
                     date: _dateAfter,
                     onTap: () => _pickDate(isAfter: true),
                     onClear: _dateAfter != null
@@ -474,7 +475,7 @@ class _FindDialogState extends State<_FindDialog> {
                 const SizedBox(width: 8),
                 Expanded(
                   child: _DatePickerTile(
-                    label: 'Before',
+                    label: SearchDialogStrings(context).text('before'),
                     date: _dateBefore,
                     onTap: () => _pickDate(isAfter: false),
                     onClear: _dateBefore != null
@@ -491,7 +492,7 @@ class _FindDialogState extends State<_FindDialog> {
         // Saved Searches
         TextButton.icon(
           icon: const Icon(Icons.bookmarks_outlined, size: 16),
-          label: const Text('Saved'),
+          label: Text(SearchDialogStrings(context).text('saved')),
           onPressed: () {
             Navigator.pop(context);
             showSavedSearchesDialog(widget.panelContext, widget.ref);
@@ -500,7 +501,7 @@ class _FindDialogState extends State<_FindDialog> {
         // Save Current Search
         TextButton.icon(
           icon: const Icon(Icons.bookmark_add_outlined, size: 16),
-          label: const Text('Save'),
+          label: Text(AppLocalizations.of(context)!.save),
           onPressed: _patternCtrl.text.isEmpty
               ? null
               : () async {
@@ -519,7 +520,7 @@ class _FindDialogState extends State<_FindDialog> {
         ),
         ElevatedButton(
           onPressed: _doFind,
-          child: const Text('Find'),
+          child: Text(SearchDialogStrings(context).text('find')),
         ),
       ],
     );
@@ -621,19 +622,19 @@ class _DatePickerTile extends StatelessWidget {
 // Helpers
 // ---------------------------------------------------------------------------
 
-String _categoryLabel(FileTypeCategory cat) {
+String _categoryLabel(BuildContext context, FileTypeCategory cat) {
   switch (cat) {
     case FileTypeCategory.documents:
-      return 'Documents';
+      return SearchDialogStrings(context).text('documents');
     case FileTypeCategory.images:
-      return 'Images';
+      return SearchDialogStrings(context).text('images');
     case FileTypeCategory.videos:
-      return 'Videos';
+      return SearchDialogStrings(context).text('videos');
     case FileTypeCategory.audio:
-      return 'Audio';
+      return SearchDialogStrings(context).text('audio');
     case FileTypeCategory.archives:
-      return 'Archives';
+      return SearchDialogStrings(context).text('archives');
     case FileTypeCategory.code:
-      return 'Code';
+      return SearchDialogStrings(context).text('code');
   }
 }

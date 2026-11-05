@@ -121,6 +121,14 @@ void main() {
         expect(results.first.ok, isFalse);
       });
 
+      test('missing file retains its failure rather than a fake checksum', () async {
+        final list = File('${tempDir.path}/missing.md5');
+        await list.writeAsString('abc  missing.txt\n');
+        final result = (await ChecksumService.verifyChecksumFile(list.path)).single;
+        expect(result.ok, isFalse);
+        expect(result.error, isA<FileSystemException>());
+      });
+
       test('generateSha256File creates .sha256 sidecar file', () async {
         final testFile = File('${tempDir.path}/sha256test.txt');
         await testFile.writeAsString('sha256 test');

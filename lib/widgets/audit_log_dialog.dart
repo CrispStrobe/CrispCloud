@@ -9,7 +9,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../providers/providers.dart';
 import '../services/audit_service.dart';
 import '../utils/formatters.dart' as fmt;
-import '../l10n/app_localizations.dart';
+import '../l10n/audit_log_strings.dart';
 
 void showAuditLogDialog(BuildContext context) {
   showDialog(
@@ -55,22 +55,23 @@ class _AuditLogDialogState extends ConsumerState<_AuditLogDialog> {
     await Clipboard.setData(ClipboardData(text: json));
     if (!mounted) return;
     ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(content: Text('Audit log copied to clipboard as JSON')),
+      SnackBar(content: Text(AuditLogStrings(context).text('Audit log copied to clipboard as JSON'))),
     );
   }
 
   Future<void> _clear() async {
+    final strings = AuditLogStrings(context);
     final confirmed = await showDialog<bool>(
       context: context,
       builder: (ctx) => AlertDialog(
-        title: const Text('Clear Audit Log'),
-        content: const Text('This will permanently delete all audit log entries. Continue?'),
+        title: Text(strings.text('Clear Audit Log')),
+        content: Text(strings.text('This will permanently delete all audit log entries. Continue?')),
         actions: [
-          TextButton(onPressed: () => Navigator.pop(ctx, false), child: const Text('Cancel')),
+          TextButton(onPressed: () => Navigator.pop(ctx, false), child: Text(strings.text('Cancel'))),
           TextButton(
             onPressed: () => Navigator.pop(ctx, true),
             style: TextButton.styleFrom(foregroundColor: Theme.of(ctx).colorScheme.error),
-            child: Text(AppLocalizations.of(context)!.clear),
+            child: Text(strings.text('Clear')),
           ),
         ],
       ),
@@ -83,13 +84,13 @@ class _AuditLogDialogState extends ConsumerState<_AuditLogDialog> {
 
   @override
   Widget build(BuildContext context) {
+    final strings = AuditLogStrings(context);
     return AlertDialog(
       title: Row(
         children: [
           const Icon(Icons.history),
           const SizedBox(width: 8),
-          const Text('Audit Log'),
-          const Spacer(),
+          Expanded(child: Text(strings.text('Audit Log'), overflow: TextOverflow.ellipsis)),
           if (_loading)
             const SizedBox(
               width: 18,
@@ -98,7 +99,7 @@ class _AuditLogDialogState extends ConsumerState<_AuditLogDialog> {
             ),
           IconButton(
             icon: const Icon(Icons.refresh, size: 20),
-            tooltip: 'Refresh',
+            tooltip: strings.text('Refresh'),
             onPressed: _load,
           ),
         ],
@@ -109,13 +110,13 @@ class _AuditLogDialogState extends ConsumerState<_AuditLogDialog> {
         child: _loading
             ? const Center(child: CircularProgressIndicator())
             : _entries.isEmpty
-                ? const Center(
+                ? Center(
                     child: Column(
                       mainAxisSize: MainAxisSize.min,
                       children: [
-                        Icon(Icons.history_toggle_off, size: 48, color: Colors.grey),
-                        SizedBox(height: 12),
-                        Text('No audit entries yet', style: TextStyle(color: Colors.grey)),
+                        const Icon(Icons.history_toggle_off, size: 48, color: Colors.grey),
+                        const SizedBox(height: 12),
+                        Text(strings.text('No audit entries yet'), style: const TextStyle(color: Colors.grey)),
                       ],
                     ),
                   )
@@ -131,17 +132,17 @@ class _AuditLogDialogState extends ConsumerState<_AuditLogDialog> {
       actions: [
         TextButton.icon(
           icon: const Icon(Icons.copy, size: 18),
-          label: const Text('Export JSON'),
+          label: Text(strings.text('Export JSON')),
           onPressed: _entries.isEmpty ? null : _export,
         ),
         TextButton.icon(
           icon: Icon(Icons.delete_outline, size: 18, color: Theme.of(context).colorScheme.error),
-          label: Text('Clear', style: TextStyle(color: Theme.of(context).colorScheme.error)),
+          label: Text(strings.text('Clear'), style: TextStyle(color: Theme.of(context).colorScheme.error)),
           onPressed: _entries.isEmpty ? null : _clear,
         ),
         TextButton(
           onPressed: () => Navigator.pop(context),
-          child: Text(AppLocalizations.of(context)!.close),
+          child: Text(strings.text('Close')),
         ),
       ],
     );
@@ -160,7 +161,17 @@ class _AuditEntryTile extends StatelessWidget {
 
     final icon = _operationIcon(entry.operation);
     final color = entry.success ? colorScheme.primary : colorScheme.error;
-    final opLabel = entry.operation.name.toUpperCase();
+    final strings = AuditLogStrings(context);
+    final opLabel = strings.text(switch (entry.operation) {
+      AuditOperation.upload => 'Upload',
+      AuditOperation.download => 'Download',
+      AuditOperation.delete => 'Delete',
+      AuditOperation.rename => 'Rename',
+      AuditOperation.move => 'Move',
+      AuditOperation.copy => 'Copy',
+      AuditOperation.createFolder => 'Create folder',
+      AuditOperation.sync => 'Sync',
+    });
 
     final ts = entry.timestamp;
     final timeStr = '${ts.year}-${_pad(ts.month)}-${_pad(ts.day)} '

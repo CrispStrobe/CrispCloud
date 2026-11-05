@@ -6,6 +6,7 @@
 
 import 'dart:convert';
 import 'dart:io';
+import 'dart:ui' show PlatformDispatcher;
 
 import 'package:file_selector/file_selector.dart';
 import 'package:flutter/foundation.dart';
@@ -13,6 +14,8 @@ import 'package:macos_secure_bookmarks/macos_secure_bookmarks.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 import '../utils/path_access.dart';
+import '../l10n/access_and_fkey_strings.dart';
+import 'locale_preference.dart';
 
 class MacOSBookmarkService {
   /// Current multi-bookmark store.
@@ -85,9 +88,10 @@ class MacOSBookmarkService {
   static Future<String?> requestDirectoryAccess({String? initialDirectory}) async {
     if (!Platform.isMacOS) return null;
     try {
+      final locale = await LocalePreference.read(refresh: true) ?? PlatformDispatcher.instance.locale;
       final String? directoryPath = await getDirectoryPath(
         initialDirectory: initialDirectory,
-        confirmButtonText: 'Grant Access',
+        confirmButtonText: AccessAndFKeyStrings(locale).grantAccess,
       );
       if (directoryPath == null) return null;
       await addBookmark(directoryPath);
