@@ -21,6 +21,7 @@ import '../screens/screen_dialogs.dart'
         downloadSelected;
 import 'pattern_selection_dialog.dart';
 import 'file_list_dialog.dart';
+import 'file_clipboard_actions.dart';
 import 'pdf_editor_dialog.dart';
 import 'pdf_operations_dialog.dart';
 
@@ -155,6 +156,25 @@ class _CommandPaletteState extends ConsumerState<CommandPalette> {
         shortcut: 'F6',
         icon: Icons.drive_file_move,
         action: () => showMoveDialogFromSelection(widget.parentContext, ref),
+      ),
+      _Command(
+        name: 'Copy Files to Clipboard',
+        shortcut: 'Ctrl+C',
+        icon: Icons.content_copy,
+        action: () => copyFilesToClipboard(widget.parentContext, ref, side),
+      ),
+      _Command(
+        name: 'Cut Files to Clipboard',
+        shortcut: 'Ctrl+X',
+        icon: Icons.content_cut,
+        action: () =>
+            copyFilesToClipboard(widget.parentContext, ref, side, cut: true),
+      ),
+      _Command(
+        name: 'Paste Files with Options',
+        shortcut: 'Ctrl+V',
+        icon: Icons.content_paste,
+        action: () => pasteFilesFromClipboard(widget.parentContext, ref, side),
       ),
       _Command(
         name: 'Import File List',

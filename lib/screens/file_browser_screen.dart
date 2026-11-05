@@ -40,6 +40,7 @@ import '../widgets/settings_dialog.dart' show showSettingsDialog;
 import '../widgets/search_dialogs.dart' show showSearchDialog, showFindDialog;
 import '../widgets/pattern_selection_dialog.dart';
 import '../widgets/file_list_dialog.dart';
+import '../widgets/file_clipboard_actions.dart';
 import '../widgets/file_toolbar.dart' show showPanelFilterDialog;
 import '../widgets/file_context_menu.dart' show showPropertiesDialog;
 import '../widgets/status_bar.dart';
@@ -398,6 +399,31 @@ class _FileBrowserScreenState extends ConsumerState<FileBrowserScreen> {
         label: 'Select All',
         shortcut: const SingleActivator(LogicalKeyboardKey.keyA, meta: true),
         onSelected: () => _activePanel(ref).selectAll(),
+      ),
+      PlatformMenuItem(
+        label: 'Copy Files',
+        shortcut: const SingleActivator(LogicalKeyboardKey.keyC, meta: true),
+        onSelected: () =>
+            copyFilesToClipboard(context, ref, ref.read(activePanelProvider)),
+      ),
+      PlatformMenuItem(
+        label: 'Cut Files',
+        shortcut: const SingleActivator(LogicalKeyboardKey.keyX, meta: true),
+        onSelected: () => copyFilesToClipboard(
+          context,
+          ref,
+          ref.read(activePanelProvider),
+          cut: true,
+        ),
+      ),
+      PlatformMenuItem(
+        label: 'Paste Files...',
+        shortcut: const SingleActivator(LogicalKeyboardKey.keyV, meta: true),
+        onSelected: () => pasteFilesFromClipboard(
+          context,
+          ref,
+          ref.read(activePanelProvider),
+        ),
       ),
       PlatformMenuItem(
         label: 'Invert Selection',

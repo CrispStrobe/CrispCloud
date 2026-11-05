@@ -25,6 +25,7 @@ import '../services/archive_service.dart';
 import '../widgets/command_palette.dart';
 import '../widgets/pattern_selection_dialog.dart';
 import '../widgets/file_list_dialog.dart';
+import '../widgets/file_clipboard_actions.dart';
 import '../widgets/file_context_menu.dart'
     show openWithSystemEditor, showPropertiesDialog, showFileContextMenu;
 import '../widgets/file_toolbar.dart' show showPanelFilterDialog;
@@ -394,15 +395,19 @@ KeyEventResult handleKeyEvent(
     return KeyEventResult.handled;
   }
 
-  // Ctrl+C - Copy to...
+  // Native file clipboard; F5/F6 remain the reviewed Commander dialogs.
   if (isCtrl && event.logicalKey == LogicalKeyboardKey.keyC) {
-    showCopyDialogFromSelection(context, ref);
+    copyFilesToClipboard(context, ref, activePanel);
     return KeyEventResult.handled;
   }
 
   // Ctrl+X - Move
   if (isCtrl && event.logicalKey == LogicalKeyboardKey.keyX) {
-    showMoveDialogFromSelection(context, ref);
+    copyFilesToClipboard(context, ref, activePanel, cut: true);
+    return KeyEventResult.handled;
+  }
+  if (isCtrl && event.logicalKey == LogicalKeyboardKey.keyV) {
+    pasteFilesFromClipboard(context, ref, activePanel);
     return KeyEventResult.handled;
   }
 

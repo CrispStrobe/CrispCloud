@@ -26,7 +26,6 @@ import '../l10n/app_localizations.dart';
 import '../l10n/image_editor_strings.dart';
 import '../services/image_edit_session.dart' show isEditableImageFileName;
 
-
 /// Explicit selection, or the cursor item when nothing is marked. This mirrors
 /// Total Commander: F5/F6/F8 operate on the item under the cursor when there
 /// is no multi-selection.
@@ -109,9 +108,9 @@ void showKeyboardShortcutsHelp(BuildContext context) {
             _shortcutRow('F3', 'View file (full-screen)'),
             _shortcutRow('F4', 'Edit file (built-in)'),
             _shortcutRow('Shift+F4', 'Open with system editor'),
-            _shortcutRow('F5 / Ctrl+C', 'Copy to…'),
+            _shortcutRow('F5', 'Copy with options…'),
             _shortcutRow('Ctrl+R', 'Refresh'),
-            _shortcutRow('F6 / Ctrl+X', 'Move to…'),
+            _shortcutRow('F6', 'Move with options…'),
             _shortcutRow('F7 / Ctrl+N', 'New folder'),
             _shortcutRow('F8 / Delete', 'Delete selected'),
             const Divider(),
@@ -143,7 +142,8 @@ void showKeyboardShortcutsHelp(BuildContext context) {
             _shortcutRow('Escape', 'Clear selection / type-ahead'),
             const Divider(),
             // File operations
-            _shortcutRow('Ctrl+C', 'Copy with options…'),
+            _shortcutRow('Ctrl+C / Ctrl+X', 'Copy / cut files to clipboard'),
+            _shortcutRow('Ctrl+V', 'Paste files with options…'),
             _shortcutRow('Ctrl+M', 'Multi-Rename'),
             _shortcutRow('Ctrl+Shift+L', 'Import file list'),
             _shortcutRow('Ctrl+Z', 'Undo last action'),

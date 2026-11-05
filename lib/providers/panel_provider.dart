@@ -668,6 +668,14 @@ class PanelNotifier extends ChangeNotifier {
     return _remoteOrigin(auth.client, auth.providerName, _remotePath);
   }
 
+  /// The OS clipboard supplies paths; callers stat every item before planning.
+  PanelFileOrigin captureLocalClipboardOrigin(String parent) {
+    if (_isDisposed || kIsWeb || !p.isAbsolute(parent)) {
+      throw StateError('The local file clipboard is unavailable.');
+    }
+    return PanelFileOrigin._(LocalPanelSource(parent), () => !_isDisposed);
+  }
+
   /// Origins for file operations are deliberately separate from editor origins.
   /// A result can be copied/moved/renamed at its captured full path while
   /// [originForFile] continues to reject virtual lists for editor writeback.

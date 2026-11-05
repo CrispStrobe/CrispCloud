@@ -43,6 +43,7 @@ import 'package:path/path.dart' as p;
 
 import 'batch_rename_dialog.dart' show showBatchRenameDialog;
 import 'file_operation_dialog.dart';
+import 'file_clipboard_actions.dart';
 import '../services/file_operation_service.dart';
 import 'diff_viewer_dialog.dart' show showDiffViewerDialog;
 import 'file_editor_dialog.dart' show showFileEditorDialog;
@@ -125,6 +126,16 @@ void _showResultListContextMenu(
       Offset.zero & overlay.size,
     ),
     items: [
+      command(
+        'Copy files to clipboard',
+        Icons.content_copy,
+        () => copyFilesToClipboard(context, ref, side, items: files),
+      ),
+      command(
+        'Cut files to clipboard',
+        Icons.content_cut,
+        () => copyFilesToClipboard(context, ref, side, cut: true, items: files),
+      ),
       if (files.length == 1)
         command(
           'Open containing folder',
@@ -594,6 +605,49 @@ void showFileContextMenu(
       side == PanelSide.remote) {
     items.add(const PopupMenuDivider());
   }
+
+  // Menus and keyboard shortcuts share the captured clipboard flow.
+  items.addAll([
+    PopupMenuItem(
+      child: const ListTile(
+        leading: Icon(Icons.content_copy),
+        title: Text('Copy files to clipboard'),
+      ),
+      onTap: () => Future<void>.delayed(Duration.zero, () async {
+        if (context.mounted) {
+          await copyFilesToClipboard(context, ref, side, items: files);
+        }
+      }),
+    ),
+    PopupMenuItem(
+      child: const ListTile(
+        leading: Icon(Icons.content_cut),
+        title: Text('Cut files to clipboard'),
+      ),
+      onTap: () => Future<void>.delayed(Duration.zero, () async {
+        if (context.mounted) {
+          await copyFilesToClipboard(
+            context,
+            ref,
+            side,
+            cut: true,
+            items: files,
+          );
+        }
+      }),
+    ),
+    PopupMenuItem(
+      child: const ListTile(
+        leading: Icon(Icons.content_paste),
+        title: Text('Paste files with options…'),
+      ),
+      onTap: () => Future<void>.delayed(Duration.zero, () async {
+        if (context.mounted) {
+          await pasteFilesFromClipboard(context, ref, side);
+        }
+      }),
+    ),
+  ]);
 
   // Copy to... / Download (web local)
   if (kIsWeb && side == PanelSide.local) {
@@ -1388,7 +1442,12 @@ void showMoveDialog(
   _showMoveDialog(context, ref, side, files);
 }
 
-void confirmDelete(BuildContext context, WidgetRef ref, PanelSide side, List<FileItem> files) {
+void confirmDelete(
+  BuildContext context,
+  WidgetRef ref,
+  PanelSide side,
+  List<FileItem> files,
+) {
   showFileDeleteDialog(context, ref, side, files);
 }
 
