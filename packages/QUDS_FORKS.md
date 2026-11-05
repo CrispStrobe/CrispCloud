@@ -49,6 +49,9 @@ PDF comparison tool.
 - `separator` and `continuationSeparator` note chrome is recreated on save;
 - each note body gets a `footnoteRef`/`endnoteRef` mark with direct superscript
   formatting and the conventional separating space;
+- Word paragraph/run/style/section/numbering child elements are emitted in
+  ECMA-376 order; `w:highlight` hex values are mapped back to Word's named
+  highlight enum;
 - PDF watermarks rotate as one marked line and survive missing-script faces;
 - feature-showcase template detail bands fit their item table.
 

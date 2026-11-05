@@ -478,6 +478,32 @@ abstract final class WmlHighlight {
         return null;
     }
   }
+
+  /// Inverse of [toRgb]: Word's ST_HighlightColor names, or null when the
+  /// RGB value is not one of the standard highlight colours.
+  static String? toName(String? rgb) {
+    if (rgb == null || rgb.isEmpty) return null;
+    final String value = rgb.replaceFirst('#', '').toUpperCase();
+    const Map<String, String> names = <String, String>{
+      'FFFF00': 'yellow',
+      '00FF00': 'green',
+      '00FFFF': 'cyan',
+      'FF00FF': 'magenta',
+      '0000FF': 'blue',
+      'FF0000': 'red',
+      '000080': 'darkBlue',
+      '008080': 'darkCyan',
+      '008000': 'darkGreen',
+      '800080': 'darkMagenta',
+      '800000': 'darkRed',
+      '808000': 'darkYellow',
+      '808080': 'darkGray',
+      'C0C0C0': 'lightGray',
+      '000000': 'black',
+      'FFFFFF': 'white',
+    };
+    return names[value];
+  }
 }
 
 /// Class WmlRunProps.

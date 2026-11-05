@@ -843,9 +843,8 @@ class WordDeserializer {
               reader.getAttribute('val', namespaceUri: OfficeNamespaces.w) ??
               props.color;
         case 'highlight':
-          props.highlight = reader.getAttribute(
-            'val',
-            namespaceUri: OfficeNamespaces.w,
+          props.highlight = WmlHighlight.toRgb(
+            reader.getAttribute('val', namespaceUri: OfficeNamespaces.w),
           );
         case 'sz':
         case 'szCs':

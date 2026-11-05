@@ -562,6 +562,10 @@ typedef WordParagraphChoice = ({
   double spacingBefore,
   double spacingAfter,
   double lineSpacing,
+  WmlLineSpacingRule lineSpacingRule,
+  int dropCapLines,
+  String borderColor,
+  List<double> tabStops,
   bool keepTogether,
   bool pageBreakBefore,
 });
@@ -585,6 +589,14 @@ Future<WordParagraphChoice?> showWordParagraphDialog(
       TextEditingController(text: current.spacingAfter.toStringAsFixed(0));
   final TextEditingController line =
       TextEditingController(text: current.lineSpacing.toStringAsFixed(2));
+  WmlLineSpacingRule lineSpacingRule = current.lineSpacingRule;
+  final TextEditingController dropCap =
+      TextEditingController(text: current.dropCapLines.toString());
+  final TextEditingController border =
+      TextEditingController(text: current.borderColor ?? '');
+  final TextEditingController tabStops = TextEditingController(
+    text: current.tabs.map((WmlTabStop t) => t.position.toStringAsFixed(0)).join(', '),
+  );
   bool keepTogether = current.keepTogether;
   bool pageBreakBefore = current.pageBreakBefore;
 
@@ -655,6 +667,67 @@ Future<WordParagraphChoice?> showWordParagraphDialog(
                         Expanded(child: _numberField(line, ctx.tr('Line spacing'))),
                       ],
                     ),
+                    const SizedBox(height: 8),
+                    DropdownButtonFormField<WmlLineSpacingRule>(
+                      initialValue: lineSpacingRule,
+                      decoration: InputDecoration(
+                        labelText: ctx.tr('Line spacing rule'),
+                        isDense: true,
+                        border: const OutlineInputBorder(),
+                      ),
+                      items: const <DropdownMenuItem<WmlLineSpacingRule>>[
+                        DropdownMenuItem(
+                          value: WmlLineSpacingRule.auto,
+                          child: Text('Multiple / single'),
+                        ),
+                        DropdownMenuItem(
+                          value: WmlLineSpacingRule.atLeast,
+                          child: Text('At least (pt)'),
+                        ),
+                        DropdownMenuItem(
+                          value: WmlLineSpacingRule.exact,
+                          child: Text('Exactly (pt)'),
+                        ),
+                      ],
+                      onChanged: (WmlLineSpacingRule? value) {
+                        if (value != null) {
+                          setState(() => lineSpacingRule = value);
+                        }
+                      },
+                    ),
+                    const SizedBox(height: 10),
+                    Row(
+                      children: <Widget>[
+                        Expanded(
+                          child: _numberField(
+                            dropCap,
+                            ctx.tr('Drop cap lines'),
+                            integer: true,
+                          ),
+                        ),
+                        const SizedBox(width: 8),
+                        Expanded(
+                          flex: 2,
+                          child: TextField(
+                            controller: border,
+                            decoration: InputDecoration(
+                              labelText: ctx.tr('Paragraph border (RRGGBB)'),
+                              isDense: true,
+                              border: const OutlineInputBorder(),
+                            ),
+                          ),
+                        ),
+                      ],
+                    ),
+                    const SizedBox(height: 10),
+                    TextField(
+                      controller: tabStops,
+                      decoration: InputDecoration(
+                        labelText: ctx.tr('Tab stops (pt, comma separated)'),
+                        isDense: true,
+                        border: const OutlineInputBorder(),
+                      ),
+                    ),
                     const SizedBox(height: 6),
                     SwitchListTile(
                       dense: true,
@@ -685,6 +758,10 @@ Future<WordParagraphChoice?> showWordParagraphDialog(
                 onPressed: () {
                   double parse(TextEditingController c, double fallback) =>
                       double.tryParse(c.text.trim()) ?? fallback;
+                  final String borderColor = border.text
+                      .trim()
+                      .replaceAll('#', '')
+                      .toUpperCase();
                   Navigator.pop<WordParagraphChoice>(ctx, (
                     align: align,
                     left: parse(left, current.indent.left),
@@ -694,6 +771,20 @@ Future<WordParagraphChoice?> showWordParagraphDialog(
                     spacingBefore: parse(before, current.spacingBefore),
                     spacingAfter: parse(after, current.spacingAfter),
                     lineSpacing: parse(line, current.lineSpacing),
+                    lineSpacingRule: lineSpacingRule,
+                    dropCapLines:
+                        (int.tryParse(dropCap.text.trim()) ?? current.dropCapLines)
+                            .clamp(0, 10),
+                    borderColor:
+                        RegExp(r'^[0-9A-F]{6}$').hasMatch(borderColor)
+                            ? borderColor
+                            : '',
+                    tabStops: tabStops.text
+                        .split(',')
+                        .map((String value) => double.tryParse(value.trim()))
+                        .whereType<double>()
+                        .where((double value) => value >= 0)
+                        .toList(),
                     keepTogether: keepTogether,
                     pageBreakBefore: pageBreakBefore,
                   ));
@@ -708,10 +799,14 @@ Future<WordParagraphChoice?> showWordParagraphDialog(
   );
 }
 
-Widget _numberField(TextEditingController controller, String label) {
+Widget _numberField(
+  TextEditingController controller,
+  String label, {
+  bool integer = false,
+}) {
   return TextField(
     controller: controller,
-    keyboardType: const TextInputType.numberWithOptions(decimal: true),
+    keyboardType: TextInputType.numberWithOptions(decimal: !integer),
     decoration: InputDecoration(labelText: label, isDense: true),
   );
 }
