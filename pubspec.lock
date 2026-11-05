@@ -193,6 +193,13 @@ packages:
       url: "https://pub.dev"
     source: hosted
     version: "0.1.1"
+  crisp_audio:
+    dependency: "direct main"
+    description:
+      path: "packages/crisp_audio"
+      relative: true
+    source: path
+    version: "0.1.0"
   crisp_storage:
     dependency: "direct main"
     description:
@@ -1022,10 +1029,10 @@ packages:
     dependency: transitive
     description:
       name: mime
-      sha256: "801fd0b26f14a4a58ccb09d5892c3fbdeff209594300a542492cf13fba9d247a"
+      sha256: bd47de35f07e27267e69c8c8b22edf9473bfee170a60d60fcc93730c5144b7f6
       url: "https://pub.dev"
     source: hosted
-    version: "1.0.6"
+    version: "2.1.0"
   mime_type:
     dependency: transitive
     description:
@@ -1255,6 +1262,13 @@ packages:
       relative: true
     source: path
     version: "14.24.0"
+  pro_video_editor:
+    dependency: "direct main"
+    description:
+      path: "packages/pro_video_editor"
+      relative: true
+    source: path
+    version: "2.51.0"
   process:
     dependency: transitive
     description:
@@ -1787,7 +1801,7 @@ packages:
     source: hosted
     version: "2.10.0"
   video_player_platform_interface:
-    dependency: transitive
+    dependency: "direct dev"
     description:
       name: video_player_platform_interface
       sha256: e4ae5bc934b528e5b95c5e47be2812860186260cd3eed3ac62f5ed380fdd1613

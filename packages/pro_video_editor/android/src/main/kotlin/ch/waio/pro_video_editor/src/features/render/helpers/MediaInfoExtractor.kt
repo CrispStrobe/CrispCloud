@@ -1,0 +1,400 @@
+package ch.waio.pro_video_editor.src.features.render.helpers
+
+import RENDER_TAG
+import android.content.Context
+import android.media.MediaExtractor
+import android.media.MediaFormat
+import android.media.MediaMetadataRetriever
+import androidx.media3.common.util.UnstableApi
+import ch.waio.pro_video_editor.src.shared.logging.PluginLog as Log
+import ch.waio.pro_video_editor.src.shared.media.contentDataSource
+import ch.waio.pro_video_editor.src.shared.media.mediaSourceLength
+import ch.waio.pro_video_editor.src.shared.media.openMediaExtractor
+
+/**
+ * Utility class for extracting media information from video and audio files.
+ *
+ * Provides methods to extract duration, channel count, and sample rate
+ * using Android's MediaExtractor API.
+ */
+@UnstableApi
+class MediaInfoExtractor(private val context: Context) {
+
+    /**
+     * Whether the file at [path] carries an audio track at all.
+     *
+     * @param path Absolute path to a media file
+     * @return `false` also when the file cannot be read
+     */
+    fun hasAudioTrack(path: String): Boolean {
+        val extractor = MediaExtractor()
+        return try {
+            extractor.contentDataSource(context, path)
+            (0 until extractor.trackCount).any { i ->
+                extractor.getTrackFormat(i).getString(MediaFormat.KEY_MIME)
+                    ?.startsWith("audio/") == true
+            }
+        } catch (e: Exception) {
+            false
+        } finally {
+            extractor.release()
+        }
+    }
+
+    /**
+     * Retrieves video duration from file.
+     *
+     * @param videoPath Absolute path to video file
+     * @return Duration in microseconds, or 0 if not found
+     */
+    fun getVideoDuration(videoPath: String): Long {
+        return try {
+            val extractor = openMediaExtractor(context, videoPath)
+            var duration = 0L
+
+            for (i in 0 until extractor.trackCount) {
+                val format = extractor.getTrackFormat(i)
+                val mime = format.getString(MediaFormat.KEY_MIME) ?: ""
+                if (mime.startsWith("video/")) {
+                    duration = format.getLong(MediaFormat.KEY_DURATION)
+                    break
+                }
+            }
+
+            extractor.release()
+            duration
+        } catch (e: Exception) {
+            Log.e(RENDER_TAG, "Failed to get video duration for $videoPath: ${e.message}")
+            0L
+        }
+    }
+
+    /**
+     * Probes the bitrate of a video file for the bitrate-cap decision
+     * ([BitrateCapPolicy]).
+     *
+     * Tries, in order:
+     * 1. The video track's own `KEY_BIT_RATE` from the container (exact).
+     * 2. The overall container bitrate from [MediaMetadataRetriever]
+     *    (includes audio, so it slightly overestimates the video track).
+     * 3. File size divided by duration (same overestimate).
+     *
+     * @param videoPath Absolute path to video file
+     * @return Bitrate in bits per second, or null when it cannot be determined
+     */
+    fun getVideoBitrate(videoPath: String): Long? {
+        try {
+            val extractor = MediaExtractor()
+            try {
+                extractor.contentDataSource(context, videoPath)
+                for (i in 0 until extractor.trackCount) {
+                    val format = extractor.getTrackFormat(i)
+                    val mime = format.getString(MediaFormat.KEY_MIME) ?: ""
+                    if (mime.startsWith("video/")) {
+                        if (format.containsKey(MediaFormat.KEY_BIT_RATE)) {
+                            val rate = format.getInteger(MediaFormat.KEY_BIT_RATE).toLong()
+                            if (rate > 0) return rate
+                        }
+                        break
+                    }
+                }
+            } finally {
+                extractor.release()
+            }
+        } catch (e: Exception) {
+            Log.w(RENDER_TAG, "Track bitrate probe failed for $videoPath: ${e.message}")
+        }
+
+        try {
+            val retriever = MediaMetadataRetriever()
+            try {
+                retriever.contentDataSource(context, videoPath)
+                val rate = retriever
+                    .extractMetadata(MediaMetadataRetriever.METADATA_KEY_BITRATE)
+                    ?.toLongOrNull()
+                if (rate != null && rate > 0) return rate
+            } finally {
+                retriever.release()
+            }
+        } catch (e: Exception) {
+            Log.w(RENDER_TAG, "Container bitrate probe failed for $videoPath: ${e.message}")
+        }
+
+        try {
+            val durationUs = getVideoDuration(videoPath)
+            val sizeBytes = mediaSourceLength(context, videoPath)
+            if (durationUs > 0 && sizeBytes > 0) {
+                return sizeBytes * 8L * 1_000_000L / durationUs
+            }
+        } catch (e: Exception) {
+            Log.w(RENDER_TAG, "File-size bitrate estimate failed for $videoPath: ${e.message}")
+        }
+
+        Log.w(RENDER_TAG, "Could not determine video bitrate for $videoPath")
+        return null
+    }
+
+    /**
+     * Retrieves video frame rate from file.
+     *
+     * @param videoPath Absolute path to video file
+     * @return Frame rate, or null if unavailable
+     */
+    fun getVideoFrameRate(videoPath: String): Float? {
+        return try {
+            val extractor = openMediaExtractor(context, videoPath)
+            var frameRate: Float? = null
+
+            for (i in 0 until extractor.trackCount) {
+                val format = extractor.getTrackFormat(i)
+                val mime = format.getString(MediaFormat.KEY_MIME) ?: ""
+                if (mime.startsWith("video/")) {
+                    if (format.containsKey(MediaFormat.KEY_FRAME_RATE)) {
+                        frameRate = format.getInteger(MediaFormat.KEY_FRAME_RATE).toFloat()
+                    }
+                    break
+                }
+            }
+
+            extractor.release()
+            frameRate
+        } catch (e: Exception) {
+            Log.e(RENDER_TAG, "Failed to get video frame rate for $videoPath: ${e.message}")
+            null
+        }
+    }
+
+    /**
+     * Retrieves audio duration from file.
+     *
+     * @param audioPath Absolute path to audio file
+     * @return Duration in microseconds, or 0 if not found
+     */
+    fun getAudioDuration(audioPath: String): Long {
+        return try {
+            val extractor = openMediaExtractor(context, audioPath)
+            var duration = 0L
+
+            for (i in 0 until extractor.trackCount) {
+                val format = extractor.getTrackFormat(i)
+                val mime = format.getString(MediaFormat.KEY_MIME) ?: ""
+                if (mime.startsWith("audio/")) {
+                    duration = format.getLong(MediaFormat.KEY_DURATION)
+                    Log.d(RENDER_TAG, "Audio duration: ${duration / 1000} ms")
+                    break
+                }
+            }
+
+            extractor.release()
+            duration
+        } catch (e: Exception) {
+            Log.e(RENDER_TAG, "Failed to get audio duration: ${e.message}")
+            0L
+        }
+    }
+
+    /**
+     * Detects the number of audio channels in a video file.
+     *
+     * @param videoPath Absolute path to video file
+     * @return Number of channels (1=mono, 2=stereo, 6=5.1), or null if not found
+     */
+    fun getAudioChannelCount(videoPath: String): Int? {
+        return try {
+            val extractor = openMediaExtractor(context, videoPath)
+            var channelCount: Int? = null
+
+            for (i in 0 until extractor.trackCount) {
+                val format = extractor.getTrackFormat(i)
+                val mime = format.getString(MediaFormat.KEY_MIME) ?: ""
+                if (mime.startsWith("audio/")) {
+                    channelCount = format.getInteger(MediaFormat.KEY_CHANNEL_COUNT)
+                    Log.d(RENDER_TAG, "File $videoPath: $channelCount audio channels")
+                    break
+                }
+            }
+
+            extractor.release()
+            channelCount
+        } catch (e: Exception) {
+            Log.e(RENDER_TAG, "Failed to detect audio channels for $videoPath: ${e.message}")
+            null
+        }
+    }
+
+    /**
+     * Detects sample rate of an audio file.
+     *
+     * @param audioPath Absolute path to audio file
+     * @return Sample rate in Hz (e.g., 48000), or 0 if not found
+     */
+    fun getAudioSampleRate(audioPath: String): Int {
+        return try {
+            val extractor = openMediaExtractor(context, audioPath)
+            var sampleRate = 0
+
+            for (i in 0 until extractor.trackCount) {
+                val format = extractor.getTrackFormat(i)
+                val mime = format.getString(MediaFormat.KEY_MIME) ?: ""
+                if (mime.startsWith("audio/")) {
+                    sampleRate = format.getInteger(MediaFormat.KEY_SAMPLE_RATE)
+                    Log.d(RENDER_TAG, "Audio sample rate: $sampleRate Hz")
+                    break
+                }
+            }
+
+            extractor.release()
+            sampleRate
+        } catch (e: Exception) {
+            Log.e(RENDER_TAG, "Failed to detect audio sample rate: ${e.message}")
+            0
+        }
+    }
+
+    /**
+     * Data class containing video format information for transcoding decisions.
+     * 
+     * @property isHevc True if video uses HEVC/H.265 codec
+     * @property bitDepth Color bit depth (8 or 10)
+     * @property isHdr True if video has HDR metadata (HLG, HDR10, etc.)
+     * @property profile Codec profile string (e.g., "hvc1.2.4.H120")
+     * @property mime The video track's MIME type, or null when no video track
+     *  could be read
+     * @property colorTransfer The video track's `MediaFormat.KEY_COLOR_TRANSFER`,
+     *  or null when the file does not state one
+     * @property bitDepthStated Whether [bitDepth] was read from the file (its
+     *  bit depth or a Main 10 profile) rather than assumed to be 8
+     */
+    data class VideoFormatInfo(
+        val isHevc: Boolean,
+        val bitDepth: Int,
+        val isHdr: Boolean,
+        val profile: String?,
+        val mime: String? = null,
+        val colorTransfer: Int? = null,
+        val bitDepthStated: Boolean = false
+    ) {
+        /**
+         * Determines if video requires transcoding to H.264 before applying GPU effects.
+         * 
+         * HEVC 10-bit HDR videos (hvc1.2.4.H120) have GPU surface compatibility issues
+         * when applying effects on Android. These need to be transcoded to H.264 8-bit first.
+         */
+        fun needsTranscodingForEffects(): Boolean {
+            // Transcode if: HEVC + (10-bit OR HDR)
+            return isHevc && (bitDepth > 8 || isHdr)
+        }
+    }
+
+    /**
+     * Extracts detailed video format information to determine transcoding needs.
+     * 
+     * Specifically detects HEVC 10-bit HDR videos that cause GPU surface issues
+     * when applying effects (colorMatrix, blur, overlay).
+     * 
+     * @param videoPath Absolute path to video file
+     * @return VideoFormatInfo with codec, bit depth, and HDR information
+     */
+    fun getVideoFormatInfo(videoPath: String): VideoFormatInfo {
+        return try {
+            val extractor = openMediaExtractor(context, videoPath)
+
+            var isHevc = false
+            var bitDepth = 8
+            var isHdr = false
+            val profile: String? = null
+            var videoMime: String? = null
+            var colorTransfer: Int? = null
+            var bitDepthStated = false
+
+            for (i in 0 until extractor.trackCount) {
+                val format = extractor.getTrackFormat(i)
+                val mime = format.getString(MediaFormat.KEY_MIME) ?: ""
+
+                if (mime.startsWith("video/")) {
+                    videoMime = mime
+                    // Check if HEVC
+                    isHevc = mime == "video/hevc" || mime == "video/h265"
+
+                    // Try to get bit depth (API 24+)
+                    try {
+                        if (format.containsKey("color-bit-depth")) {
+                            bitDepth = format.getInteger("color-bit-depth")
+                            bitDepthStated = true
+                        }
+                    } catch (e: Exception) {
+                        // Key not available on older devices
+                    }
+
+                    // Check for HDR transfer function (API 24+)
+                    try {
+                        if (format.containsKey(MediaFormat.KEY_COLOR_TRANSFER)) {
+                            val transfer = format.getInteger(MediaFormat.KEY_COLOR_TRANSFER)
+                            colorTransfer = transfer
+                            // HDR transfer functions: HLG (7), PQ/HDR10 (6), Linear HDR (1)
+                            isHdr = transfer == 7 || transfer == 6 || transfer == 1
+                        }
+                    } catch (e: Exception) {
+                        // Key not available
+                    }
+
+                    // Check color standard for wide color gamut (usually indicates HDR)
+                    try {
+                        if (format.containsKey(MediaFormat.KEY_COLOR_STANDARD)) {
+                            val standard = format.getInteger(MediaFormat.KEY_COLOR_STANDARD)
+                            // BT.2020 (6) - typically used with HDR content
+                            if (standard == 6) {
+                                isHdr = true
+                            }
+                        }
+                    } catch (e: Exception) {
+                        // Key not available
+                    }
+
+                    // Try to get codec profile string
+                    try {
+                        if (format.containsKey("csd-0")) {
+                            val csd = format.getByteBuffer("csd-0")
+                            // The profile is encoded in the codec-specific data
+                            // For now, just log that we have codec data
+                        }
+                    } catch (e: Exception) {
+                        // Key not available
+                    }
+
+                    // If HEVC and no explicit bit-depth found, check profile level
+                    // Main 10 profile typically uses 10-bit
+                    if (isHevc && bitDepth == 8) {
+                        try {
+                            if (format.containsKey(MediaFormat.KEY_PROFILE)) {
+                                val profileLevel = format.getInteger(MediaFormat.KEY_PROFILE)
+                                // Main 10 profile = 2
+                                if (profileLevel == 2) {
+                                    bitDepth = 10
+                                    bitDepthStated = true
+                                }
+                            }
+                        } catch (e: Exception) {
+                            // Key not available
+                        }
+                    }
+
+                    Log.d(
+                        RENDER_TAG,
+                        "Video format: mime=$mime, isHevc=$isHevc, bitDepth=$bitDepth, isHdr=$isHdr"
+                    )
+                    break
+                }
+            }
+
+            extractor.release()
+            VideoFormatInfo(
+                isHevc, bitDepth, isHdr, profile, videoMime, colorTransfer, bitDepthStated
+            )
+        } catch (e: Exception) {
+            Log.e(RENDER_TAG, "Failed to get video format info for $videoPath: ${e.message}")
+            // Return safe defaults - assume no transcoding needed
+            VideoFormatInfo(isHevc = false, bitDepth = 8, isHdr = false, profile = null)
+        }
+    }
+}

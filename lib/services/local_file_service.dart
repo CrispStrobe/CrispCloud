@@ -36,6 +36,21 @@ abstract interface class FreshLocalFileReader {
   });
 }
 
+/// Runs native, file-based media work while access to the path is held.
+///
+/// Editors use this optional interface instead of reading a whole video into
+/// memory. The callback receives the resolved path, and may keep a stream open
+/// until its future completes. Implementations must acquire a separate security
+/// scope for every invocation, so concurrent transfers cannot release an
+/// editor's access. For a new output, [forWrite] grants its containing folder.
+abstract interface class LocalMediaFileAccess {
+  Future<T> withMediaFileAccess<T>(
+    String path,
+    Future<T> Function(String accessiblePath) operation, {
+    bool forWrite = false,
+  });
+}
+
 extension LocalFileEditorOperations on LocalFileService {
   Future<Uint8List> readFileForEdit(
     String path, {

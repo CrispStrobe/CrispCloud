@@ -49,6 +49,7 @@ import 'services/pdf_font_licenses.dart';
 import 'services/secure_storage_service.dart';
 import 'services/secure_storage_web.dart';
 import 'widgets/lock_screen.dart';
+import 'services/media_video_backend.dart' show registerMediaVideoLicenses;
 
 /// Displays initialization failures without depending on app providers.
 class StartupFailureApp extends StatelessWidget {
@@ -59,20 +60,24 @@ class StartupFailureApp extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) => MaterialApp(
-        locale: locale,
-        supportedLocales: AppLocalizations.supportedLocales,
-        localizationsDelegates: AppLocalizations.localizationsDelegates,
-        home: Builder(builder: (context) => Scaffold(
-          body: Center(child: Padding(
+    locale: locale,
+    supportedLocales: AppLocalizations.supportedLocales,
+    localizationsDelegates: AppLocalizations.localizationsDelegates,
+    home: Builder(
+      builder: (context) => Scaffold(
+        body: Center(
+          child: Padding(
             padding: const EdgeInsets.all(32),
             child: Text(
               '${StartupFailureStrings(context).title}\n${localizedProviderError(context, error)}',
               style: const TextStyle(color: Colors.red, fontSize: 16),
               textAlign: TextAlign.center,
             ),
-          )),
-        )),
-      );
+          ),
+        ),
+      ),
+    ),
+  );
 }
 
 const _log = Log('Main');
@@ -83,153 +88,177 @@ const _appVersion = String.fromEnvironment(
 
 Future<void> main() async {
   CrashReportingService? crashReporting;
-  runZonedGuarded(() async {
-    WidgetsFlutterBinding.ensureInitialized();
-    registerBundledEditorAssets();
-    registerPdfFontLicenses();
-    LicenseRegistry.addLicense(() => Stream.value(
-        const LicenseEntryWithLineBreaks(['libsmb2'], smbLicense)));
-
-    crashReporting = CrashReportingService(
-      backend: LocalBackend(),
-      appVersion: _appVersion,
-    );
-    await crashReporting!.initialize();
-    crashReporting!.installGlobalHandlers();
-    crashReporting!.reportBreadcrumb('Flutter binding ready', 'startup');
-
-    // Route AES-GCM to the platform's hardware-accelerated crypto on native
-    // (Android Keystore / Apple CryptoKit) — ~1000 MB/s vs ~1-9 MB/s pure-Dart
-    // for file encryption. No-op on web (which uses WebCrypto directly).
-    if (!kIsWeb) {
-      FlutterCryptography.enable();
-    }
-
-    // Disable browser context menu on web so our custom context menu works.
-    if (kIsWeb) {
-      BrowserContextMenu.disableContextMenu();
-    }
-
-    // Register the Workmanager background task callback (Android/iOS only).
-    // Must be called before runApp() so the callback isolate can be spawned.
-    await BackgroundSyncService.initialize();
-    crashReporting!.reportBreadcrumb('Background services ready', 'startup');
-
-    _log.info('App starting...');
-
-    // Initialize secure storage and migrate credentials.
-    // On web, use encrypted localStorage with a master password.
-    // On native platforms, use OS-level secure storage (Keychain, etc.).
-    final SecureStorage secureStorage;
-    if (kIsWeb) {
-      final webStorage = WebEncryptedStorage(LocalStorageBackend());
-      // The master password prompt is handled by WebMasterPasswordGate below.
-      // We pass the un-initialized storage and let the gate handle it.
-      secureStorage = webStorage;
-    } else {
-      secureStorage = PlatformSecureStorage();
-      await CredentialMigration.migrateIfNeeded(secureStorage);
-    }
-    crashReporting!.reportBreadcrumb('Secure storage ready', 'startup');
-
-    // Platform-specific config path
-    String configPath;
-    if (kIsWeb) {
-      configPath = 'cloud-storage-config';
-    } else if (Platform.isAndroid || Platform.isIOS) {
-      final dir = await getApplicationSupportDirectory();
-      configPath = p.join(dir.path, '.cloud-storage-config');
-    } else {
-      final home = Platform.environment['HOME'] ??
-          Platform.environment['USERPROFILE'] ??
-          '.';
-      configPath = p.join(home, '.cloud-storage-config');
-    }
-
-    _log.info('Config path: $configPath');
-    crashReporting!.reportBreadcrumb('Configuration path resolved', 'startup');
-
-    // Load proxy and certificate pinning configuration
-    final certPinning = CertPinningService();
-    await certPinning.load();
-
-    final proxyService = ProxyService();
-    await proxyService.load();
-    proxyService.setCertPinning(certPinning);
-    proxyService.applyGlobally();
-    crashReporting!.reportBreadcrumb('Network policy ready', 'startup');
-
-    // Initialize file cache, thumbnail service, and audit service
-    final fileCache = FileCacheService();
-    await fileCache.init();
-
-    final thumbnailService = ThumbnailService();
-    await thumbnailService.init();
-
-    final auditService = AuditService();
-    await auditService.init();
-    crashReporting!.reportBreadcrumb('Caches and audit log ready', 'startup');
-
-    CloudProvider defaultProvider = await _getDefaultProvider();
-
-    if (defaultProvider == CloudProvider.internxt &&
-        !CloudStorageFactory.isInternxtSupported) {
-      _log.warn(
-          'Internxt preference detected but provider is disabled. Forcing Filen.');
-      defaultProvider = CloudProvider.filen;
-    }
-
-    try {
-      final configService = await _createConfigService(
-          configPath, defaultProvider, secureStorage);
-
-      final savedLocale = await LocalePreference.read();
-      runApp(ProviderScope(
-        overrides: [
-          localeProvider.overrideWith((ref) => LocaleNotifier(initialLocale: savedLocale, load: false)),
-          secureStorageProvider.overrideWithValue(secureStorage),
-          configPathProvider.overrideWithValue(configPath),
-          proxyServiceProvider.overrideWithValue(proxyService),
-          certPinningProvider.overrideWithValue(certPinning),
-          fileCacheProvider.overrideWithValue(fileCache),
-          thumbnailServiceProvider.overrideWithValue(thumbnailService),
-          auditServiceProvider.overrideWithValue(auditService),
-          crashReportingServiceProvider.overrideWithValue(crashReporting!),
-          authProvider.overrideWith((ref) => AuthNotifier(
-                ref,
-                initialProvider: defaultProvider,
-                config: configService,
-                configPath: configPath,
-                secureStorage: secureStorage,
-              )),
-        ],
-        child: const MyApp(),
-      ));
-      crashReporting!.reportBreadcrumb('Application UI mounted', 'startup');
-      WidgetsBinding.instance.addPostFrameCallback((_) {
-        _log.info('Startup UI rendered');
-      });
-    } catch (e, stack) {
-      _log.error('Critical error creating config service', e, stack);
-      await crashReporting!.reportError(
-        e,
-        stack,
-        context: const {'origin': 'startup_config'},
+  runZonedGuarded(
+    () async {
+      WidgetsFlutterBinding.ensureInitialized();
+      registerBundledEditorAssets();
+      registerPdfFontLicenses();
+      registerMediaVideoLicenses();
+      LicenseRegistry.addLicense(
+        () => Stream.value(
+          const LicenseEntryWithLineBreaks(['libsmb2'], smbLicense),
+        ),
       );
-      // Show an error screen instead of a black screen
-      runApp(StartupFailureApp(error: e));
-    }
-  }, (error, stack) {
-    _log.error('Uncaught error', error, stack);
-    final reporter = crashReporting;
-    if (reporter != null) {
-      unawaited(reporter.reportError(
-        error,
-        stack,
-        context: const {'origin': 'root_zone'},
-      ));
-    }
-  });
+
+      crashReporting = CrashReportingService(
+        backend: LocalBackend(),
+        appVersion: _appVersion,
+      );
+      await crashReporting!.initialize();
+      crashReporting!.installGlobalHandlers();
+      crashReporting!.reportBreadcrumb('Flutter binding ready', 'startup');
+
+      // Route AES-GCM to the platform's hardware-accelerated crypto on native
+      // (Android Keystore / Apple CryptoKit) — ~1000 MB/s vs ~1-9 MB/s pure-Dart
+      // for file encryption. No-op on web (which uses WebCrypto directly).
+      if (!kIsWeb) {
+        FlutterCryptography.enable();
+      }
+
+      // Disable browser context menu on web so our custom context menu works.
+      if (kIsWeb) {
+        BrowserContextMenu.disableContextMenu();
+      }
+
+      // Register the Workmanager background task callback (Android/iOS only).
+      // Must be called before runApp() so the callback isolate can be spawned.
+      await BackgroundSyncService.initialize();
+      crashReporting!.reportBreadcrumb('Background services ready', 'startup');
+
+      _log.info('App starting...');
+
+      // Initialize secure storage and migrate credentials.
+      // On web, use encrypted localStorage with a master password.
+      // On native platforms, use OS-level secure storage (Keychain, etc.).
+      final SecureStorage secureStorage;
+      if (kIsWeb) {
+        final webStorage = WebEncryptedStorage(LocalStorageBackend());
+        // The master password prompt is handled by WebMasterPasswordGate below.
+        // We pass the un-initialized storage and let the gate handle it.
+        secureStorage = webStorage;
+      } else {
+        secureStorage = PlatformSecureStorage();
+        await CredentialMigration.migrateIfNeeded(secureStorage);
+      }
+      crashReporting!.reportBreadcrumb('Secure storage ready', 'startup');
+
+      // Platform-specific config path
+      String configPath;
+      if (kIsWeb) {
+        configPath = 'cloud-storage-config';
+      } else if (Platform.isAndroid || Platform.isIOS) {
+        final dir = await getApplicationSupportDirectory();
+        configPath = p.join(dir.path, '.cloud-storage-config');
+      } else {
+        final home =
+            Platform.environment['HOME'] ??
+            Platform.environment['USERPROFILE'] ??
+            '.';
+        configPath = p.join(home, '.cloud-storage-config');
+      }
+
+      _log.info('Config path: $configPath');
+      crashReporting!.reportBreadcrumb(
+        'Configuration path resolved',
+        'startup',
+      );
+
+      // Load proxy and certificate pinning configuration
+      final certPinning = CertPinningService();
+      await certPinning.load();
+
+      final proxyService = ProxyService();
+      await proxyService.load();
+      proxyService.setCertPinning(certPinning);
+      proxyService.applyGlobally();
+      crashReporting!.reportBreadcrumb('Network policy ready', 'startup');
+
+      // Initialize file cache, thumbnail service, and audit service
+      final fileCache = FileCacheService();
+      await fileCache.init();
+
+      final thumbnailService = ThumbnailService();
+      await thumbnailService.init();
+
+      final auditService = AuditService();
+      await auditService.init();
+      crashReporting!.reportBreadcrumb('Caches and audit log ready', 'startup');
+
+      CloudProvider defaultProvider = await _getDefaultProvider();
+
+      if (defaultProvider == CloudProvider.internxt &&
+          !CloudStorageFactory.isInternxtSupported) {
+        _log.warn(
+          'Internxt preference detected but provider is disabled. Forcing Filen.',
+        );
+        defaultProvider = CloudProvider.filen;
+      }
+
+      try {
+        final configService = await _createConfigService(
+          configPath,
+          defaultProvider,
+          secureStorage,
+        );
+
+        final savedLocale = await LocalePreference.read();
+        runApp(
+          ProviderScope(
+            overrides: [
+              localeProvider.overrideWith(
+                (ref) =>
+                    LocaleNotifier(initialLocale: savedLocale, load: false),
+              ),
+              secureStorageProvider.overrideWithValue(secureStorage),
+              configPathProvider.overrideWithValue(configPath),
+              proxyServiceProvider.overrideWithValue(proxyService),
+              certPinningProvider.overrideWithValue(certPinning),
+              fileCacheProvider.overrideWithValue(fileCache),
+              thumbnailServiceProvider.overrideWithValue(thumbnailService),
+              auditServiceProvider.overrideWithValue(auditService),
+              crashReportingServiceProvider.overrideWithValue(crashReporting!),
+              authProvider.overrideWith(
+                (ref) => AuthNotifier(
+                  ref,
+                  initialProvider: defaultProvider,
+                  config: configService,
+                  configPath: configPath,
+                  secureStorage: secureStorage,
+                ),
+              ),
+            ],
+            child: const MyApp(),
+          ),
+        );
+        crashReporting!.reportBreadcrumb('Application UI mounted', 'startup');
+        WidgetsBinding.instance.addPostFrameCallback((_) {
+          _log.info('Startup UI rendered');
+        });
+      } catch (e, stack) {
+        _log.error('Critical error creating config service', e, stack);
+        await crashReporting!.reportError(
+          e,
+          stack,
+          context: const {'origin': 'startup_config'},
+        );
+        // Show an error screen instead of a black screen
+        runApp(StartupFailureApp(error: e));
+      }
+    },
+    (error, stack) {
+      _log.error('Uncaught error', error, stack);
+      final reporter = crashReporting;
+      if (reporter != null) {
+        unawaited(
+          reporter.reportError(
+            error,
+            stack,
+            context: const {'origin': 'root_zone'},
+          ),
+        );
+      }
+    },
+  );
 }
 
 Future<CloudProvider> _getDefaultProvider() async {
@@ -282,34 +311,54 @@ Future<dynamic> _createConfigService(
     switch (provider) {
       case CloudProvider.dropbox:
         return DropboxConfigService(
-            configPath: configPath, secureStorage: secureStorage);
+          configPath: configPath,
+          secureStorage: secureStorage,
+        );
       case CloudProvider.filen:
         return FilenConfigService(
-            configPath: configPath, secureStorage: secureStorage);
+          configPath: configPath,
+          secureStorage: secureStorage,
+        );
       case CloudProvider.ftp:
         return FTPConfigService(
-            configPath: configPath, secureStorage: secureStorage);
+          configPath: configPath,
+          secureStorage: secureStorage,
+        );
       case CloudProvider.gdrive:
         return GDriveConfigService(
-            configPath: configPath, secureStorage: secureStorage);
+          configPath: configPath,
+          secureStorage: secureStorage,
+        );
       case CloudProvider.onedrive:
         return OneDriveConfigService(
-            configPath: configPath, secureStorage: secureStorage);
+          configPath: configPath,
+          secureStorage: secureStorage,
+        );
       case CloudProvider.s3:
         return S3ConfigService(
-            configPath: configPath, secureStorage: secureStorage);
+          configPath: configPath,
+          secureStorage: secureStorage,
+        );
       case CloudProvider.nextcloud:
         return NextcloudConfigService(
-            configPath: configPath, secureStorage: secureStorage);
+          configPath: configPath,
+          secureStorage: secureStorage,
+        );
       case CloudProvider.pcloud:
         return PCloudConfigService(
-            configPath: configPath, secureStorage: secureStorage);
+          configPath: configPath,
+          secureStorage: secureStorage,
+        );
       case CloudProvider.sftp:
         return SFTPConfigService(
-            configPath: configPath, secureStorage: secureStorage);
+          configPath: configPath,
+          secureStorage: secureStorage,
+        );
       case CloudProvider.webdav:
         return WebDavConfigService(
-            configPath: configPath, secureStorage: secureStorage);
+          configPath: configPath,
+          secureStorage: secureStorage,
+        );
       case CloudProvider.smb:
         return SmbConfigService(secureStorage);
       case CloudProvider.internxt:
@@ -320,7 +369,9 @@ Future<dynamic> _createConfigService(
           );
         } else {
           return FilenConfigService(
-              configPath: configPath, secureStorage: secureStorage);
+            configPath: configPath,
+            secureStorage: secureStorage,
+          );
         }
       case CloudProvider.azure:
         return AzureConfigService(secureStorage: secureStorage);
@@ -330,7 +381,9 @@ Future<dynamic> _createConfigService(
   } catch (e) {
     _log.error('Critical error creating config service', e);
     return FilenConfigService(
-        configPath: configPath, secureStorage: secureStorage);
+      configPath: configPath,
+      secureStorage: secureStorage,
+    );
   }
 }
 
@@ -514,7 +567,8 @@ class WebMasterPasswordGateState extends ConsumerState<WebMasterPasswordGate> {
     } on StateError catch (e) {
       if (mounted) {
         setState(() {
-          _error = e.message == 'Incorrect master password' ||
+          _error =
+              e.message == 'Incorrect master password' ||
                   e.message == 'Master password verification failed'
               ? WebVaultStrings(context).incorrect
               : WebVaultStrings(context).failure(e.message);
@@ -535,9 +589,7 @@ class WebMasterPasswordGateState extends ConsumerState<WebMasterPasswordGate> {
   Widget build(BuildContext context) {
     // While checking if gate is needed, show a loading screen
     if (_loading) {
-      return const Scaffold(
-        body: Center(child: CircularProgressIndicator()),
-      );
+      return const Scaffold(body: Center(child: CircularProgressIndicator()));
     }
 
     final strings = WebVaultStrings(context);
@@ -599,11 +651,13 @@ class WebMasterPasswordGateState extends ConsumerState<WebMasterPasswordGate> {
                             ? const SizedBox(
                                 width: 20,
                                 height: 20,
-                                child:
-                                    CircularProgressIndicator(strokeWidth: 2),
+                                child: CircularProgressIndicator(
+                                  strokeWidth: 2,
+                                ),
                               )
                             : Text(
-                                _isNewVault ? strings.create : strings.unlock),
+                                _isNewVault ? strings.create : strings.unlock,
+                              ),
                       ),
                     ),
                   ],

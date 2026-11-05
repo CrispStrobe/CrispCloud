@@ -20,6 +20,7 @@ import '../services/log_service.dart';
 import '../services/panel_source_service.dart';
 import '../services/pdf_edit_session.dart';
 import '../services/pdf_device_export.dart';
+import '../services/pdf_editor_menu.dart';
 import '../services/pdf_file_store.dart';
 
 const _log = Log('PdfEditor');
@@ -90,6 +91,9 @@ class _PdfEditorDialogState extends ConsumerState<PdfEditorDialog> {
   bool _pendingRedactions = false;
   String? _error;
   String? _errorDetail;
+  PdfEditorMenuActions? _menuActions;
+  ProviderContainer? _providerContainer;
+  String? _menuSignature;
 
   bool get _busy =>
       (_session?.isSaving ?? false) || _exporting || _choosingSave;
@@ -102,13 +106,91 @@ class _PdfEditorDialogState extends ConsumerState<PdfEditorDialog> {
   }
 
   @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    _providerContainer = ProviderScope.containerOf(context, listen: false);
+    _menuSignature = null;
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (mounted) _publishMenu();
+    });
+  }
+
+  @override
   void dispose() {
+    final container = _providerContainer;
+    final actions = _menuActions;
+    _menuActions = null;
+    _providerContainer = null;
+    if (container != null && actions != null) {
+      scheduleMicrotask(() {
+        try {
+          if (identical(container.read(pdfEditorMenuProvider), actions)) {
+            container.read(pdfEditorMenuProvider.notifier).state = null;
+          }
+        } catch (_) {
+          // The provider container may already be disposed.
+        }
+      });
+    }
     _controller?.removeListener(_onRevision);
     _controller?.dispose();
     _session?.removeListener(_onSessionChanged);
     _session?.dispose();
     if (widget.preferencesOverride == null) _preferences?.dispose();
     super.dispose();
+  }
+
+  void _publishMenu() {
+    final container = _providerContainer;
+    if (container == null) return;
+    final controller = _controller;
+    final dirty = _session?.isDirty ?? false;
+    final operational = !_loading && _error == null && !_busy;
+    final canUndo = operational && (controller?.canUndo ?? false);
+    final canRedo = operational && (controller?.canRedo ?? false);
+    final signature = <bool>[
+      dirty,
+      operational,
+      _copyOnly,
+      canUndo,
+      canRedo,
+    ].join('|');
+    if (signature == _menuSignature && _menuActions != null) return;
+    _menuSignature = signature;
+    final actions = PdfEditorMenuActions(
+      perform: _performMenuAction,
+      canSave: operational && (dirty || _copyOnly),
+      canSaveCopy: operational,
+      canExport: operational,
+      canClose: !_busy,
+      canUndo: canUndo,
+      canRedo: canRedo,
+    );
+    _menuActions = actions;
+    container.read(pdfEditorMenuProvider.notifier).state = actions;
+  }
+
+  void _performMenuAction(PdfEditorMenuAction action) {
+    switch (action) {
+      case PdfEditorMenuAction.save:
+        unawaited(_save());
+        break;
+      case PdfEditorMenuAction.saveCopy:
+        unawaited(_save(copy: true));
+        break;
+      case PdfEditorMenuAction.exportCopy:
+        unawaited(_exportDevice());
+        break;
+      case PdfEditorMenuAction.close:
+        unawaited(_requestClose());
+        break;
+      case PdfEditorMenuAction.undo:
+        _controller?.undo();
+        break;
+      case PdfEditorMenuAction.redo:
+        _controller?.redo();
+        break;
+    }
   }
 
   PdfFileStore _captureStore() {
@@ -160,6 +242,7 @@ class _PdfEditorDialogState extends ConsumerState<PdfEditorDialog> {
       _error = null;
       _errorDetail = null;
     });
+    _publishMenu();
     PdfEditingController? candidate;
     try {
       if ((widget.file.size ?? 0) > kPdfEditorInputLimitBytes) {
@@ -215,6 +298,7 @@ class _PdfEditorDialogState extends ConsumerState<PdfEditorDialog> {
         ..addListener(_onSessionChanged);
       _controller!.addListener(_onRevision);
       setState(() => _loading = false);
+      _publishMenu();
     } catch (error, stack) {
       candidate?.dispose();
       _log.warn('Could not open PDF', error, stack);
@@ -226,6 +310,7 @@ class _PdfEditorDialogState extends ConsumerState<PdfEditorDialog> {
             : 'Could not open PDF';
         _errorDetail = error is _PdfOpenMessage ? null : '$error';
       });
+      _publishMenu();
     }
   }
 
@@ -288,7 +373,9 @@ class _PdfEditorDialogState extends ConsumerState<PdfEditorDialog> {
   }
 
   void _onSessionChanged() {
-    if (mounted) setState(() {});
+    if (!mounted) return;
+    setState(() {});
+    _publishMenu();
   }
 
   void _onRevision() {
@@ -299,6 +386,7 @@ class _PdfEditorDialogState extends ConsumerState<PdfEditorDialog> {
     // length. The editor's onDocumentChanged length check alone does not.
     _updateRedactionStatus(controller.document);
     _session!.updateBytes(controller.bytes);
+    _publishMenu();
   }
 
   void _updateRedactionStatus(PdfDocument document) {
@@ -319,10 +407,14 @@ class _PdfEditorDialogState extends ConsumerState<PdfEditorDialog> {
     String? fileName;
     if (copy) {
       setState(() => _choosingSave = true);
+      _publishMenu();
       try {
         fileName = await _askCopyName('edited');
       } finally {
-        if (mounted) setState(() => _choosingSave = false);
+        if (mounted) {
+          setState(() => _choosingSave = false);
+          _publishMenu();
+        }
       }
       if (!mounted || fileName == null) return null;
     }
@@ -452,6 +544,7 @@ class _PdfEditorDialogState extends ConsumerState<PdfEditorDialog> {
     final snapshot = Uint8List.fromList(_session!.bytes);
     final revision = _controller!.revisionId;
     setState(() => _exporting = true);
+    _publishMenu();
     try {
       final exporter = widget.deviceExporterOverride ?? exportPdfCopy;
       final outcome = await exporter(snapshot, _suggestCopyName('edited'));
@@ -468,7 +561,10 @@ class _PdfEditorDialogState extends ConsumerState<PdfEditorDialog> {
       if (mounted) _notice('Could not export PDF', detail: '$error');
       return null;
     } finally {
-      if (mounted) setState(() => _exporting = false);
+      if (mounted) {
+        setState(() => _exporting = false);
+        _publishMenu();
+      }
     }
   }
 

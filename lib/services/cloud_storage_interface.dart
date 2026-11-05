@@ -30,6 +30,26 @@ abstract interface class CloudStorageRangeReader {
   Future<Uint8List> readFileRange(String remotePath, int offset, int length);
 }
 
+/// Optional fresh-directory contract for editors that must verify source size
+/// and copy destinations. Cached providers invalidate relevant listing/path
+/// caches before implementing this operation. Pagination tokens must remain in
+/// the result if the adapter has not fetched every page.
+/// A file's `size` describes stored bytes. A transforming wrapper can also
+/// expose `downloadSize`, the exact byte count returned by downloadStream.
+abstract interface class FreshCloudDirectoryReader {
+  Future<Map<String, dynamic>> readDirectoryForEdit(String path);
+}
+
+extension CloudEditorDirectoryOperations on CloudStorageClient {
+  Future<Map<String, dynamic>> listPathForEdit(String path) {
+    final client = this;
+    if (client is FreshCloudDirectoryReader) {
+      return (client as FreshCloudDirectoryReader).readDirectoryForEdit(path);
+    }
+    return client.listPath(path);
+  }
+}
+
 /// Abstract interface for cloud storage providers
 abstract class CloudStorageClient {
   // Authentication
@@ -59,8 +79,10 @@ abstract class CloudStorageClient {
   });
 
   /// Download a file and return its bytes directly (Used for Web downloads)
-  Future<Uint8List> downloadFileBytes(String remotePath,
-      {Function(int, int)? onProgress});
+  Future<Uint8List> downloadFileBytes(
+    String remotePath, {
+    Function(int, int)? onProgress,
+  });
 
   // Folder operations
   Future<void> createFolderPath(String path);
@@ -190,8 +212,9 @@ abstract class CloudStorageClient {
       if (size > maxSize) continue;
 
       try {
-        final filePath =
-            remotePath.endsWith('/') ? '$remotePath$name' : '$remotePath/$name';
+        final filePath = remotePath.endsWith('/')
+            ? '$remotePath$name'
+            : '$remotePath/$name';
         final bytes = await downloadFileBytes(filePath);
         final content = String.fromCharCodes(bytes);
         final lowerContent = content.toLowerCase();
@@ -237,8 +260,12 @@ abstract class CloudStorageClient {
     await for (final chunk in dataStream) {
       builder.add(chunk);
     }
-    await uploadFile(builder.takeBytes(), fileName, targetPath,
-        onProgress: onProgress);
+    await uploadFile(
+      builder.takeBytes(),
+      fileName,
+      targetPath,
+      onProgress: onProgress,
+    );
   }
 
   /// Stream-based download. Returns a stream of chunks.
@@ -266,7 +293,7 @@ enum CloudProvider {
   s3,
   sftp,
   webdav,
-  smb
+  smb,
 }
 
 /// Provider features that affect available actions and transfer strategy.
@@ -296,15 +323,15 @@ class CloudCapabilities {
   });
 
   List<String> get highlights => [
-        if (streaming) 'low-memory transfers',
-        if (multipart) 'resumable large uploads',
-        if (versioning) 'version history',
-        if (sharing) 'share links',
-        if (search) 'server search',
-        if (thumbnails) 'remote previews',
-        if (trash) 'recoverable deletion',
-        if (serverSideCopy) 'fast cloud copies',
-      ];
+    if (streaming) 'low-memory transfers',
+    if (multipart) 'resumable large uploads',
+    if (versioning) 'version history',
+    if (sharing) 'share links',
+    if (search) 'server search',
+    if (thumbnails) 'remote previews',
+    if (trash) 'recoverable deletion',
+    if (serverSideCopy) 'fast cloud copies',
+  ];
 }
 
 /// A source-compatible capability contract for clients and test doubles.
@@ -313,86 +340,83 @@ class CloudCapabilities {
 /// Dart's `implements` requires concrete members to be reimplemented too.
 extension CloudStorageClientCapabilities on CloudStorageClient {
   CloudCapabilities get capabilities => CloudCapabilities(
-        streaming: supportsStreaming,
-        multipart: supportsMultipart,
-        versioning: supportsVersioning,
-        sharing: supportsSharing,
-        search: supportsSearch,
-        thumbnails: supportsThumbnails,
-        trash: supportsTrash,
-        nativeShare: supportsNativeShare,
-        serverSideCopy: supportsServerSideCopy,
-        fullTextSearch: supportsFullTextSearch,
-      );
+    streaming: supportsStreaming,
+    multipart: supportsMultipart,
+    versioning: supportsVersioning,
+    sharing: supportsSharing,
+    search: supportsSearch,
+    thumbnails: supportsThumbnails,
+    trash: supportsTrash,
+    nativeShare: supportsNativeShare,
+    serverSideCopy: supportsServerSideCopy,
+    fullTextSearch: supportsFullTextSearch,
+  );
 }
 
 /// Stable provider metadata used before a client has been authenticated.
 extension CloudProviderMetadata on CloudProvider {
   String get displayName => switch (this) {
-        CloudProvider.azure => 'Azure Blob Storage',
-        CloudProvider.b2 => 'Backblaze B2',
-        CloudProvider.dropbox => 'Dropbox',
-        CloudProvider.filen => 'Filen',
-        CloudProvider.ftp => 'FTP / FTPS',
-        CloudProvider.gdrive => 'Google Drive',
-        CloudProvider.internxt => 'Internxt',
-        CloudProvider.nextcloud => 'Nextcloud',
-        CloudProvider.onedrive => 'OneDrive / SharePoint',
-        CloudProvider.pcloud => 'pCloud',
-        CloudProvider.s3 => 'S3 / S3-Compatible',
-        CloudProvider.sftp => 'SFTP / Storage Box',
-        CloudProvider.webdav => 'WebDAV',
-        CloudProvider.smb => 'SMB / NAS',
-      };
+    CloudProvider.azure => 'Azure Blob Storage',
+    CloudProvider.b2 => 'Backblaze B2',
+    CloudProvider.dropbox => 'Dropbox',
+    CloudProvider.filen => 'Filen',
+    CloudProvider.ftp => 'FTP / FTPS',
+    CloudProvider.gdrive => 'Google Drive',
+    CloudProvider.internxt => 'Internxt',
+    CloudProvider.nextcloud => 'Nextcloud',
+    CloudProvider.onedrive => 'OneDrive / SharePoint',
+    CloudProvider.pcloud => 'pCloud',
+    CloudProvider.s3 => 'S3 / S3-Compatible',
+    CloudProvider.sftp => 'SFTP / Storage Box',
+    CloudProvider.webdav => 'WebDAV',
+    CloudProvider.smb => 'SMB / NAS',
+  };
 
   String get onboardingDescription => switch (this) {
-        CloudProvider.azure =>
-          'For Azure containers and enterprise object storage.',
-        CloudProvider.b2 =>
-          'Cost-focused object storage with large-file support.',
-        CloudProvider.dropbox =>
-          'Personal cloud with OAuth, sharing, and previews.',
-        CloudProvider.filen => 'Privacy-focused personal cloud storage.',
-        CloudProvider.ftp =>
-          'Connect to a traditional FTP or encrypted FTPS server.',
-        CloudProvider.gdrive =>
-          'Personal or Workspace Drive with OAuth and search.',
-        CloudProvider.internxt =>
-          'Privacy-focused cloud with client-side encryption.',
-        CloudProvider.nextcloud =>
-          'Self-hosted cloud with files, sharing, and search.',
-        CloudProvider.onedrive =>
-          'Microsoft personal, business, or SharePoint storage.',
-        CloudProvider.pcloud =>
-          'Personal cloud storage authenticated with OAuth.',
-        CloudProvider.s3 => 'AWS S3 or a compatible object-storage endpoint.',
-        CloudProvider.sftp =>
-          'Secure file access, including Hetzner Storage Box.',
-        CloudProvider.webdav =>
-          'A standards-based server or compatible cloud drive.',
-        CloudProvider.smb => 'Windows, Samba and NAS file shares in the installed app.',
-      };
+    CloudProvider.azure =>
+      'For Azure containers and enterprise object storage.',
+    CloudProvider.b2 => 'Cost-focused object storage with large-file support.',
+    CloudProvider.dropbox =>
+      'Personal cloud with OAuth, sharing, and previews.',
+    CloudProvider.filen => 'Privacy-focused personal cloud storage.',
+    CloudProvider.ftp =>
+      'Connect to a traditional FTP or encrypted FTPS server.',
+    CloudProvider.gdrive =>
+      'Personal or Workspace Drive with OAuth and search.',
+    CloudProvider.internxt =>
+      'Privacy-focused cloud with client-side encryption.',
+    CloudProvider.nextcloud =>
+      'Self-hosted cloud with files, sharing, and search.',
+    CloudProvider.onedrive =>
+      'Microsoft personal, business, or SharePoint storage.',
+    CloudProvider.pcloud => 'Personal cloud storage authenticated with OAuth.',
+    CloudProvider.s3 => 'AWS S3 or a compatible object-storage endpoint.',
+    CloudProvider.sftp => 'Secure file access, including Hetzner Storage Box.',
+    CloudProvider.webdav =>
+      'A standards-based server or compatible cloud drive.',
+    CloudProvider.smb =>
+      'Windows, Samba and NAS file shares in the installed app.',
+  };
 
   String get credentialHint => switch (this) {
-        CloudProvider.dropbox ||
-        CloudProvider.gdrive ||
-        CloudProvider.onedrive ||
-        CloudProvider.pcloud =>
-          'You will sign in in your provider\'s browser window.',
-        CloudProvider.azure =>
-          'Have the account name, container, and access key ready.',
-        CloudProvider.b2 =>
-          'Have the key ID, application key, and bucket ready.',
-        CloudProvider.s3 =>
-          'Have the endpoint, region, bucket, and access keys ready.',
-        CloudProvider.ftp ||
-        CloudProvider.sftp ||
-        CloudProvider.smb ||
-        CloudProvider.webdav ||
-        CloudProvider.nextcloud =>
-          'Have the server address and account credentials ready.',
-        _ => 'Your credentials are stored in the platform secure store.',
-      };
+    CloudProvider.dropbox ||
+    CloudProvider.gdrive ||
+    CloudProvider.onedrive ||
+    CloudProvider.pcloud =>
+      'You will sign in in your provider\'s browser window.',
+    CloudProvider.azure =>
+      'Have the account name, container, and access key ready.',
+    CloudProvider.b2 => 'Have the key ID, application key, and bucket ready.',
+    CloudProvider.s3 =>
+      'Have the endpoint, region, bucket, and access keys ready.',
+    CloudProvider.ftp ||
+    CloudProvider.sftp ||
+    CloudProvider.smb ||
+    CloudProvider.webdav ||
+    CloudProvider.nextcloud =>
+      'Have the server address and account credentials ready.',
+    _ => 'Your credentials are stored in the platform secure store.',
+  };
 }
 
 /// Factory for creating cloud storage clients
@@ -402,8 +426,10 @@ class CloudStorageFactory {
   // --- TOGGLE: Set this to false to disable Internxt globally ---
   static const bool isInternxtSupported = true;
 
-  static CloudStorageClient create(CloudProvider provider,
-      {required dynamic config}) {
+  static CloudStorageClient create(
+    CloudProvider provider, {
+    required dynamic config,
+  }) {
     // Robust fallback: If Internxt is selected but disabled, force Filen or throw
     if (provider == CloudProvider.internxt && !isInternxtSupported) {
       _log.warn('Internxt is currently disabled. Defaulting to Filen.');
@@ -432,7 +458,11 @@ class CloudStorageFactory {
         case CloudProvider.webdav:
           return WebDavClientAdapter(config: config);
         case CloudProvider.smb:
-          return SmbClientAdapter(config: config is SmbConfigService ? config : SmbConfigService(InMemorySecureStorage()));
+          return SmbClientAdapter(
+            config: config is SmbConfigService
+                ? config
+                : SmbConfigService(InMemorySecureStorage()),
+          );
         case CloudProvider.internxt:
           if (isInternxtSupported) {
             return InternxtClientAdapter(config: config);

@@ -23,7 +23,8 @@ import 'gdrive_operation_failure.dart';
 import 'log_service.dart';
 import 'secure_storage_service.dart';
 
-class GDriveClientAdapter extends CloudStorageClient {
+class GDriveClientAdapter extends CloudStorageClient
+    implements FreshCloudDirectoryReader {
   static const _log = Log('GDriveClient');
 
   final GDriveConfigService _config;
@@ -247,6 +248,20 @@ class GDriveClientAdapter extends CloudStorageClient {
   }
 
   // --- List ---
+
+  @override
+  Future<Map<String, dynamic>> readDirectoryForEdit(String path) async {
+    await _ensureToken();
+    _pathToId
+      ..clear()
+      ..['/'] = 'root';
+    if (await _resolvePathToId(path) == null) {
+      // Ordinary navigation can fall back to root. An editor must never turn a
+      // missing destination into permission to create a copy in another folder.
+      throw StateError('The source directory could not be verified.');
+    }
+    return listPath(path);
+  }
 
   @override
   Future<Map<String, dynamic>> listPath(String path) async {

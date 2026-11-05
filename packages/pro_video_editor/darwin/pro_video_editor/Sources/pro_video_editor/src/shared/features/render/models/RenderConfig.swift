@@ -1,0 +1,1039 @@
+import CoreGraphics
+import Foundation
+
+#if os(macOS)
+  import FlutterMacOS
+#else
+  import Flutter
+#endif
+
+/// Configuration for a single animation on an image layer.
+struct LayerAnimationConfig {
+  /// 10°, the tilt of a wiggle without its own `wiggleAngle`.
+  static let defaultWiggleAngle = 0.17453292519943295
+  /// Half the layer's height, the lift of a bounce without its own
+  /// `bounceHeight`.
+  static let defaultBounceHeight = 0.5
+  /// Once all the way round, the turn of a spin or flip without its own
+  /// `turns`.
+  static let defaultTurns = 1.0
+
+  /// The kind of animation: "fade", "slide", "scale", "wiggle", "bounce",
+  /// "spin", "flip", or "typewriter" / "wordByWord", which the renderer skips
+  /// because a layer is one fixed image.
+  let type: String
+  /// When the animation plays: "animateIn", "animateOut", "animateInOut", or
+  /// "loop" for as long as the layer is visible.
+  let phase: String
+  /// Duration in microseconds, or of one cycle of a loop.
+  let durationUs: Int64
+  /// Easing curve: "linear", "easeIn", "easeOut", or "easeInOut".
+  let curve: String
+  /// Slide direction: "left", "right", "top", or "bottom". Only for slide animations.
+  let slideDirection: String?
+  /// Custom slide start point — the layer's top-left corner in frame pixels
+  /// from the top-left origin, the same coordinates as the layer's own
+  /// position. Overrides `slideDirection` when set.
+  let slideFrom: CGPoint?
+  /// Starting scale factor for scale animations (e.g. 0.0 = invisible, 0.5 = half size).
+  let scaleFrom: Double?
+  /// How far a wiggle tilts the layer, in radians, clockwise first.
+  var wiggleAngle: Double? = nil
+  /// How high a bounce lifts the layer, as a multiple of its own height.
+  var bounceHeight: Double? = nil
+  /// How far a spin or flip turns the layer, in full turns, clockwise for a
+  /// positive value.
+  var turns: Double? = nil
+  /// The axis a flip turns the layer around: "vertical" (the default) or
+  /// "horizontal".
+  var flipAxis: String? = nil
+  /// Where a loop starts repeating, on the output timeline; -1 = the layer's
+  /// start.
+  var loopStartUs: Int64 = -1
+  /// Where a loop stops, on the output timeline; -1 = the layer's end.
+  var loopEndUs: Int64 = -1
+  /// How far into its cycle a loop already is where it starts, in µs.
+  var loopPhaseUs: Int64 = 0
+
+  static func fromArguments(_ args: [String: Any]?) -> LayerAnimationConfig? {
+    guard let args = args,
+      let type = args["type"] as? String,
+      let phase = args["phase"] as? String,
+      let durationUs = (args["durationUs"] as? NSNumber)?.int64Value
+    else { return nil }
+
+    var slideFrom: CGPoint? = nil
+    if let point = args["slideFrom"] as? [String: Any],
+      let dx = (point["dx"] as? NSNumber)?.doubleValue,
+      let dy = (point["dy"] as? NSNumber)?.doubleValue
+    {
+      slideFrom = CGPoint(x: dx, y: dy)
+    }
+
+    return LayerAnimationConfig(
+      type: type,
+      phase: phase,
+      durationUs: durationUs,
+      curve: args["curve"] as? String ?? "linear",
+      slideDirection: args["slideDirection"] as? String,
+      slideFrom: slideFrom,
+      scaleFrom: (args["scaleFrom"] as? NSNumber)?.doubleValue,
+      wiggleAngle: (args["wiggleAngle"] as? NSNumber)?.doubleValue,
+      bounceHeight: (args["bounceHeight"] as? NSNumber)?.doubleValue,
+      turns: (args["turns"] as? NSNumber)?.doubleValue,
+      flipAxis: args["flipAxis"] as? String,
+      loopStartUs: (args["loopStartUs"] as? NSNumber)?.int64Value ?? -1,
+      loopEndUs: (args["loopEndUs"] as? NSNumber)?.int64Value ?? -1,
+      loopPhaseUs: (args["loopPhaseUs"] as? NSNumber)?.int64Value ?? 0
+    )
+  }
+}
+
+/// Configuration for a transition played between a clip and the next one.
+struct ClipTransitionConfig {
+  /// Transition kind: "dissolve", "fadeToBlack", "fadeToWhite", "slide",
+  /// "push", "wipe", or one ``ClipTransitionEffects`` draws ("zoomIn",
+  /// "zoomOut", "spin", "whipPan", "blur", "glitch", "flash", "iris",
+  /// "stretch", "lightLeak", "clockWipe", "diagonalWipe", "flip", "cube").
+  let type: String
+  /// Transition duration in microseconds.
+  let durationUs: Int64
+  /// Easing curve: "linear", "easeIn", "easeOut", "easeInOut", …
+  let curve: String
+  /// Direction for directional transitions: "left", "right", "up", "down".
+  let direction: String
+
+  /// True when this transition overlaps and blends the two clips.
+  var isOverlap: Bool {
+    type == "dissolve" || type == "slide" || type == "push" || type == "wipe"
+      || ClipTransitionEffects.handles(type)
+  }
+
+  /// True when this transition dips through a solid color (no overlap).
+  var isDip: Bool {
+    type == "fadeToBlack" || type == "fadeToWhite"
+  }
+
+  static func fromArguments(_ args: [String: Any]?) -> ClipTransitionConfig? {
+    guard let args = args,
+      let type = args["type"] as? String,
+      let durationUs = (args["durationUs"] as? NSNumber)?.int64Value
+    else { return nil }
+    return ClipTransitionConfig(
+      type: type,
+      durationUs: durationUs,
+      curve: args["curve"] as? String ?? "linear",
+      direction: args["direction"] as? String ?? "left"
+    )
+  }
+}
+
+/// Turns an image layer into an area that blurs or pixelates the picture
+/// beneath it instead of drawing its image; see `LayerCensor` on the Dart side.
+public struct LayerCensorConfig: Sendable, Equatable {
+  enum CensorType: Sendable {
+    case blur
+    case pixelate
+  }
+
+  /// The strengths used when the channel sends none, those of the Dart
+  /// `LayerCensor.blur()` and `LayerCensor.pixelate()`.
+  static let defaultSigma = 24.0
+  static let defaultBlockSize = 32.0
+
+  /// How the area is hidden.
+  let type: CensorType
+  /// The blur's standard deviation, or the edge length of a pixelate block,
+  /// in pixels of the frame the layer is laid out in.
+  let strength: Double
+
+  /// The edge length of a pixelate block in whole pixels, at least two: one
+  /// pixel per block would leave the picture as it is.
+  var blockSize: Int { max(2, Int(strength.rounded())) }
+
+  /// Parses the `censor` entry of an image layer, or `nil` when the layer has
+  /// none and is drawn as an image.
+  ///
+  /// Any censor map yields a censor, so a layer that was meant to hide
+  /// something never shows its mask image instead.
+  static func fromArguments(_ args: [String: Any]?) -> LayerCensorConfig? {
+    guard let args = args else { return nil }
+    let type: CensorType = (args["type"] as? String) == "pixelate" ? .pixelate : .blur
+    let fallback = type == .pixelate ? defaultBlockSize : defaultSigma
+    var strength = (args["strength"] as? NSNumber)?.doubleValue ?? fallback
+    if !(strength > 0) || !strength.isFinite { strength = fallback }
+    return LayerCensorConfig(type: type, strength: strength)
+  }
+}
+
+/// Draws bars or a wave that move with the sound in an image layer's box
+/// instead of its image; see `LayerAudioVisualizer` on the Dart side.
+public struct LayerAudioVisualizerConfig: Sendable, Equatable {
+  enum Style: Sendable {
+    case bars
+    case mirroredBars
+    case wave
+    case circle
+  }
+
+  /// The defaults of the Dart `LayerAudioVisualizer`.
+  static let defaultFramesPerSecond = 60.0
+  static let defaultColor: UInt32 = 0xFFFF_FFFF
+
+  /// How the levels are drawn.
+  let style: Style
+  /// The ARGB color every shape is filled with.
+  let color: UInt32
+  /// How many bands every row of `levels` holds.
+  let bandCount: Int
+  /// The level of every band, row after row, from 0 to 1. Row `row` is the
+  /// moment `row / framesPerSecond` seconds into the rendered video.
+  let levels: [Float]
+  /// How many rows of `levels` there are a second.
+  let framesPerSecond: Double
+  /// How much of its share a bar fills, from above 0 to 1; `nil` takes the
+  /// style's own.
+  var barFill: Double? = nil
+
+  /// How many rows `levels` holds.
+  var frameCount: Int { levels.count / bandCount }
+
+  /// Writes the level of every band at `timeUs` on the rendered video into
+  /// `into`, mixed linearly between the two rows around it; the same mix as
+  /// `LayerAudioVisualizer.levelsAt`. Before the first row and after the last
+  /// one every band is silent.
+  func levels(atUs timeUs: Int64, into: inout [Float]) {
+    let position = Double(timeUs) * framesPerSecond / 1_000_000
+    let rowFloor = position.rounded(.down)
+    let row = Int(rowFloor)
+    let mix = position - rowFloor
+    for band in 0..<min(bandCount, into.count) {
+      let from = level(row: row, band: band)
+      let to = level(row: row + 1, band: band)
+      into[band] = Float(from + (to - from) * mix)
+    }
+  }
+
+  private func level(row: Int, band: Int) -> Double {
+    guard row >= 0, row < frameCount else { return 0 }
+    return audioVisualizerUnitLevel(levels[row * bandCount + band])
+  }
+
+  /// Parses the `audioVisualizer` entry of an image layer, or `nil` when the
+  /// layer has none and draws its image.
+  ///
+  /// The levels arrive as a `Float32List`; a plain list of numbers is read
+  /// too. A table cut short keeps its whole rows, and an unknown style draws
+  /// bars.
+  static func fromArguments(_ args: [String: Any]?) -> LayerAudioVisualizerConfig? {
+    guard let args = args else { return nil }
+    let bandCount = max(1, (args["bandCount"] as? NSNumber)?.intValue ?? 1)
+    var levels: [Float]
+    if let typed = args["levels"] as? FlutterStandardTypedData {
+      levels = typed.data.withUnsafeBytes { Array($0.bindMemory(to: Float.self)) }
+    } else if let list = args["levels"] as? [NSNumber] {
+      levels = list.map { $0.floatValue }
+    } else {
+      levels = []
+    }
+    levels.removeLast(levels.count % bandCount)
+    let style: Style
+    switch args["style"] as? String {
+    case "mirroredBars": style = .mirroredBars
+    case "wave": style = .wave
+    case "circle": style = .circle
+    default: style = .bars
+    }
+    var framesPerSecond =
+      (args["framesPerSecond"] as? NSNumber)?.doubleValue ?? defaultFramesPerSecond
+    if !(framesPerSecond > 0) || !framesPerSecond.isFinite {
+      framesPerSecond = defaultFramesPerSecond
+    }
+    let color =
+      (args["color"] as? NSNumber).map { UInt32(truncatingIfNeeded: $0.int64Value) }
+      ?? defaultColor
+    var barFill = (args["barFill"] as? NSNumber)?.doubleValue
+    if let fill = barFill, !(fill > 0 && fill <= 1) { barFill = nil }
+    return LayerAudioVisualizerConfig(
+      style: style, color: color, bandCount: bandCount, levels: levels,
+      framesPerSecond: framesPerSecond, barFill: barFill)
+  }
+}
+
+/// A layer's placement at one point of the timeline, mirroring the Dart
+/// `TimelineKeyframe`.
+struct KeyframeConfig: Sendable, Equatable {
+  /// When the placement applies, on the layer's own timeline, in µs.
+  let timeUs: Int64
+  /// Top-left x of the layer's unscaled box, in frame pixels.
+  let x: Double
+  /// Top-left y of the layer's unscaled box, in frame pixels (top-left origin).
+  let y: Double
+  /// How much the box is grown around its center.
+  var scale: Double = 1
+  /// Clockwise rotation around the box center, in radians.
+  var rotation: Double = 0
+  /// Opacity from 0 to 1.
+  var opacity: Double = 1
+  /// Easing toward the next keyframe (see `applyEasing`).
+  var curve: String = "linear"
+
+  static func fromArguments(_ args: [String: Any]) -> KeyframeConfig {
+    KeyframeConfig(
+      timeUs: (args["timeUs"] as? NSNumber)?.int64Value ?? 0,
+      x: (args["x"] as? NSNumber)?.doubleValue ?? 0,
+      y: (args["y"] as? NSNumber)?.doubleValue ?? 0,
+      scale: (args["scale"] as? NSNumber)?.doubleValue ?? 1,
+      rotation: (args["rotation"] as? NSNumber)?.doubleValue ?? 0,
+      opacity: (args["opacity"] as? NSNumber)?.doubleValue ?? 1,
+      curve: args["curve"] as? String ?? "linear")
+  }
+
+  /// The keyframes in [raw], a list of maps, sorted by time.
+  static func list(from raw: Any?) -> [KeyframeConfig] {
+    guard let maps = raw as? [[String: Any]] else { return [] }
+    return maps.map { fromArguments($0) }.sorted { $0.timeUs < $1.timeUs }
+  }
+}
+
+public struct ImageLayerConfig: Sendable {
+  /// Where this layer's encoded image lives — a path when the caller had it on
+  /// disk, bytes otherwise.
+  let image: EncodedImage
+  let startUs: Int64
+  /// endUs of -1 indicates the image should be displayed until the end of the video.
+  var endUs: Int64
+  /// x position in pixels. When nil, the image is stretched to fill the video frame.
+  let x: Int64?
+  /// y position in pixels. When nil, the image is stretched to fill the video frame.
+  let y: Int64?
+  /// Target width in pixels. When nil, the image is used at its original width.
+  let width: Double?
+  /// Target height in pixels. When nil, the image is used at its original height.
+  let height: Double?
+  /// Clockwise rotation around the layer center, in radians.
+  let rotation: Double
+  /// Whether an animated image (GIF) repeats while the layer is visible.
+  let loop: Bool
+  /// How far into an animated image (GIF) playback begins when the layer
+  /// appears, in microseconds.
+  let animationOffsetUs: Int64
+  /// Animations to apply to this layer.
+  let animations: [LayerAnimationConfig]
+  /// Blurs or pixelates the picture beneath the layer instead of drawing
+  /// [image], which then only marks the area. `nil` draws the image.
+  var censor: LayerCensorConfig? = nil
+  /// Where the animations count from, when that is not `startUs` (-1 =
+  /// `startUs`).
+  var animationStartUs: Int64 = -1
+  /// Where the animations end, when that is not `endUs` (-1 = `endUs`).
+  var animationEndUs: Int64 = -1
+  /// The layer's placement over time, sorted by time. They replace `x`, `y`
+  /// and `rotation`, scale the size around its center and set the opacity;
+  /// empty keeps the layer where `x` and `y` put it.
+  var keyframes: [KeyframeConfig] = []
+  /// The clock `keyframes` are timed on; see `KeyframeClock`.
+  var keyframeClock: KeyframeClock = .output
+  /// Draws bars or a wave that move with the sound in the layer's box instead
+  /// of `image`, which is then not read. `nil` draws the image.
+  var audioVisualizer: LayerAudioVisualizerConfig? = nil
+  /// How the layer combines with the picture beneath it; see `blendLayer`.
+  /// A censor layer draws nothing and ignores it.
+  var blendMode: LayerBlendMode = .normal
+  /// A shape the image shows through, drawn on every frame in the image's own
+  /// box before the layer is placed; `nil` draws the whole image. A censor or
+  /// an audio visualizer layer ignores it.
+  var shapeMask: ShapeMaskConfig? = nil
+  /// Images shown one after the other instead of `image`, each for its
+  /// duration, the way an animated GIF's frames are; empty draws `image`. A
+  /// censor or an audio visualizer layer ignores them.
+  var frames: [ImageLayerFrameConfig] = []
+
+  static func fromArguments(_ args: [String: Any]?) -> ImageLayerConfig? {
+    guard let args = args,
+      let image = EncodedImage.from(args, pathKey: "imagePath", dataKey: "imageData")
+    else { return nil }
+
+    // Parse animations array
+    var animations: [LayerAnimationConfig] = []
+    if let animsRaw = args["animations"] as? [[String: Any]] {
+      animations = animsRaw.compactMap { LayerAnimationConfig.fromArguments($0) }
+    }
+
+    // Parse optional size
+    let width = (args["width"] as? NSNumber)?.doubleValue
+    let height = (args["height"] as? NSNumber)?.doubleValue
+    let rotation = (args["rotation"] as? NSNumber)?.doubleValue ?? 0.0
+    let loop = (args["loop"] as? Bool) ?? true
+    let animationOffsetUs = max(0, (args["animationOffsetUs"] as? NSNumber)?.int64Value ?? 0)
+
+    // Use -1 as sentinel value for "from start" when startUs is null
+    // Use -1 for endUs to signify "until the end of the video"
+    return ImageLayerConfig(
+      image: image,
+      startUs: (args["startUs"] as? NSNumber)?.int64Value ?? -1,
+      endUs: (args["endUs"] as? NSNumber)?.int64Value ?? -1,
+      x: (args["x"] as? NSNumber)?.int64Value,
+      y: (args["y"] as? NSNumber)?.int64Value,
+      width: width,
+      height: height,
+      rotation: rotation,
+      loop: loop,
+      animationOffsetUs: animationOffsetUs,
+      animations: animations,
+      censor: LayerCensorConfig.fromArguments(args["censor"] as? [String: Any]),
+      animationStartUs: (args["animationStartUs"] as? NSNumber)?.int64Value ?? -1,
+      animationEndUs: (args["animationEndUs"] as? NSNumber)?.int64Value ?? -1,
+      keyframes: KeyframeConfig.list(from: args["keyframes"]),
+      keyframeClock: KeyframeClock.from(args["keyframeClock"]),
+      audioVisualizer: LayerAudioVisualizerConfig.fromArguments(
+        args["audioVisualizer"] as? [String: Any]),
+      blendMode: LayerBlendMode.from(args["blendMode"]),
+      shapeMask: ShapeMaskConfig.from(args["shapeMask"]),
+      frames: ImageLayerFrameConfig.list(from: args["frames"])
+    )
+  }
+}
+
+/// One image of an image layer's frame sequence and how long it shows.
+struct ImageLayerFrameConfig: Sendable {
+  let image: EncodedImage
+  /// How long the frame shows before the next one, in µs.
+  let durationUs: Int64
+
+  /// The frames in a layer's `frames` list, in order. A frame whose image is
+  /// missing or that shows for no time is left out.
+  static func list(from raw: Any?) -> [ImageLayerFrameConfig] {
+    guard let entries = raw as? [[String: Any]] else { return [] }
+    return entries.compactMap { entry in
+      guard let image = EncodedImage.from(entry, pathKey: "imagePath", dataKey: "imageData"),
+        let durationUs = (entry["durationUs"] as? NSNumber)?.int64Value, durationUs > 0
+      else { return nil }
+      return ImageLayerFrameConfig(image: image, durationUs: durationUs)
+    }
+  }
+}
+
+/// Configuration for a color filter with an optional time range.
+public struct ColorFilterConfig: Sendable {
+  let matrix: [Double]
+  /// startUs of -1 means the filter applies from the start of the video.
+  let startUs: Int64
+  /// endUs of -1 means the filter applies until the end of the video.
+  let endUs: Int64
+
+  static func fromArguments(_ args: [String: Any]?) -> ColorFilterConfig? {
+    guard let args = args,
+      let matrixRaw = args["matrix"] as? [NSNumber]
+    else { return nil }
+    let matrix = matrixRaw.map { $0.doubleValue }
+    guard !matrix.isEmpty else { return nil }
+    return ColorFilterConfig(
+      matrix: matrix,
+      startUs: (args["startUs"] as? NSNumber)?.int64Value ?? -1,
+      endUs: (args["endUs"] as? NSNumber)?.int64Value ?? -1
+    )
+  }
+}
+
+extension VideoEffectConfig {
+  /// Parses one entry of the `effects` argument: a Dart-built table of frames
+  /// sent as a `Float64List`. Nil when it carries no usable table.
+  static func fromArguments(_ args: [String: Any]) -> VideoEffectConfig? {
+    let values: [Double]
+    if let typed = args["frames"] as? FlutterStandardTypedData {
+      values = typed.data.withUnsafeBytes { Array($0.bindMemory(to: Double.self)) }
+    } else if let list = args["frames"] as? [NSNumber] {
+      values = list.map { $0.doubleValue }
+    } else {
+      return nil
+    }
+    return from(
+      values: values,
+      stride: (args["stride"] as? NSNumber)?.intValue ?? 0,
+      frameRate: (args["frameRate"] as? NSNumber)?.intValue ?? 24,
+      startUs: (args["startUs"] as? NSNumber)?.int64Value,
+      endUs: (args["endUs"] as? NSNumber)?.int64Value)
+  }
+}
+
+/// Configuration for removing a solid-colored background ("green screen").
+///
+/// Mirrors the Dart `ChromaKey` model and the Kotlin `ChromaKeyConfig`. The
+/// keying math itself lives in `ApplyChromaKey.swift` and is byte-for-byte the
+/// same formula the Android fragment shader runs.
+public struct ChromaKeyConfig: Sendable, Equatable {
+  /// The screen color to remove, as gamma-encoded RGB in 0...1.
+  let keyR: Double
+  let keyG: Double
+  let keyB: Double
+  /// Radius around the key within which a pixel is removed completely: in the
+  /// chroma plane, plus brightness for a neutral key.
+  let similarity: Double
+  /// Width of the soft ramp just beyond `similarity`.
+  let smoothness: Double
+  /// How strongly the key's color cast is pulled out of the remaining pixels.
+  let spill: Double
+  /// Solid background ARGB, or -1 when none (the sentinel convention used by
+  /// `ColorFilterConfig.startUs`/`endUs`).
+  let backgroundColor: Int64
+  /// Where the background image lives, or nil when there is none.
+  let backgroundImage: EncodedImage?
+
+  /// Whether the keyed area is left transparent rather than filled.
+  var isTransparent: Bool { backgroundColor == -1 && backgroundImage == nil }
+
+  /// The same key, but filling the removed area with opaque black.
+  ///
+  /// Used on the single-track path, where nothing sits underneath and the codec
+  /// carries no alpha, so "transparent" has no meaning. Android does the same
+  /// substitution in `applyChromaKey(flattenTransparency:)`.
+  func withOpaqueBlackBackground() -> ChromaKeyConfig {
+    ChromaKeyConfig(
+      keyR: keyR, keyG: keyG, keyB: keyB,
+      similarity: similarity, smoothness: smoothness, spill: spill,
+      backgroundColor: Int64(0xFF00_0000), backgroundImage: nil)
+  }
+
+  /// The key color projected onto the Cb/Cr chroma plane.
+  var keyChroma: (cb: Double, cr: Double) {
+    chromaOf(r: keyR, g: keyG, b: keyB)
+  }
+
+  /// BT.601 luma of the key color.
+  var keyLuma: Double { lumaOf(r: keyR, g: keyG, b: keyB) }
+
+  /// How much brightness counts toward the matte distance: 0 for a saturated
+  /// key, 1 for a neutral one. See `lumaWeightOf(cb:cr:)`.
+  var lumaWeight: Double {
+    let c = keyChroma
+    return lumaWeightOf(cb: c.cb, cr: c.cr)
+  }
+
+  /// The unit vector pointing from neutral toward the key hue, used to pull
+  /// the key's cast back out during spill suppression. Zero for a neutral
+  /// (gray) key color, which disables despill rather than dividing by zero.
+  var keyDirection: (cb: Double, cr: Double) {
+    let c = keyChroma
+    let length = (c.cb * c.cb + c.cr * c.cr).squareRoot()
+    guard length > 1e-5 else { return (0, 0) }
+    return (c.cb / length, c.cr / length)
+  }
+
+  /// Stable identity for the compositor's color-cube cache.
+  ///
+  /// Deliberately not `hashValue`: Swift seeds its hashing per process, so a
+  /// hash is not a safe cache key across the lifetime of a render, and the
+  /// background image data is far too large to hash per frame.
+  var cacheKey: String {
+    return "\(keyR),\(keyG),\(keyB),\(similarity),\(smoothness),\(spill),"
+      + "\(backgroundColor),\(backgroundImageFingerprint)"
+  }
+
+  /// Cheap content fingerprint of the background image.
+  ///
+  /// A path is already an identity, so it is used as-is. For bytes, the count
+  /// alone is not one — two different backgrounds that happen to be the same
+  /// size would share a cache entry, and the second clip would render the
+  /// first one's image. Mixing in the head and tail bytes separates them while
+  /// staying O(1), which matters because `cacheKey` is evaluated per frame.
+  private var backgroundImageFingerprint: String {
+    guard let image = backgroundImage else { return "0" }
+    guard case .bytes(let data) = image else { return image.describe }
+    guard !data.isEmpty else { return "0" }
+
+    let sampleSize = min(32, data.count)
+    let head = data.prefix(sampleSize).reduce(into: UInt64(1_469_598_103_934_665_603)) {
+      accumulator, byte in
+      accumulator = (accumulator ^ UInt64(byte)) &* 1_099_511_628_211
+    }
+    let tail = data.suffix(sampleSize).reduce(into: UInt64(1_469_598_103_934_665_603)) {
+      accumulator, byte in
+      accumulator = (accumulator ^ UInt64(byte)) &* 1_099_511_628_211
+    }
+    return "\(data.count)-\(head)-\(tail)"
+  }
+
+  static func fromArguments(_ args: [String: Any]?) -> ChromaKeyConfig? {
+    guard let args = args,
+      let keyColor = (args["keyColor"] as? NSNumber)?.int64Value
+    else { return nil }
+
+    let backgroundImage = EncodedImage.from(
+      args, pathKey: "bgImagePath", dataKey: "bgImageData")
+
+    return ChromaKeyConfig(
+      keyR: Double((keyColor >> 16) & 0xFF) / 255.0,
+      keyG: Double((keyColor >> 8) & 0xFF) / 255.0,
+      keyB: Double(keyColor & 0xFF) / 255.0,
+      similarity: (args["similarity"] as? NSNumber)?.doubleValue ?? 0.20,
+      smoothness: (args["smoothness"] as? NSNumber)?.doubleValue ?? 0.08,
+      spill: (args["spill"] as? NSNumber)?.doubleValue ?? 0.5,
+      backgroundColor: (args["bgColor"] as? NSNumber)?.int64Value ?? -1,
+      backgroundImage: backgroundImage
+    )
+  }
+}
+
+/// Configuration for a custom audio track with timing and volume.
+struct AudioTrackConfig {
+  let path: String
+  let volume: Float
+  /// Pitch-preserving speed of the trimmed source, before looping and fades.
+  let playbackSpeed: Double
+  /// A speed that changes along the trimmed source, instead of
+  /// `playbackSpeed`, at unchanged pitch. `nil` = constant.
+  let speedRamp: SpeedRamp?
+  /// Equalizer of the track. `nil` = unchanged.
+  let equalizer: AudioEqualizer?
+  let loop: Bool
+  /// Start offset within the audio file in microseconds.
+  let audioStartUs: Int64?
+  /// End offset within the audio file in microseconds.
+  let audioEndUs: Int64?
+  /// When to start playing in the composition timeline. -1 means from the start.
+  let startUs: Int64
+  /// When to stop playing in the composition timeline. -1 means until the end.
+  let endUs: Int64
+  /// How long the track rises from silence to `volume` after it starts, in microseconds.
+  let fadeInUs: Int64
+  /// How long the track falls to silence before its audio ends, in microseconds.
+  let fadeOutUs: Int64
+  /// Scales `volume` over the exported video. `nil` = constant.
+  let volumeCurve: VolumeCurve?
+
+  static func fromArguments(_ args: [String: Any]?) -> AudioTrackConfig? {
+    guard let args = args,
+      let path = args["path"] as? String, !path.isEmpty
+    else { return nil }
+    return AudioTrackConfig(
+      path: path,
+      volume: (args["volume"] as? NSNumber)?.floatValue ?? 1.0,
+      playbackSpeed: (args["playbackSpeed"] as? NSNumber)?.doubleValue ?? 1.0,
+      speedRamp: SpeedRamp.fromArguments(args["speedRamp"]),
+      equalizer: AudioEqualizer.from(args["equalizer"]),
+      loop: args["loop"] as? Bool ?? true,
+      audioStartUs: (args["audioStartUs"] as? NSNumber)?.int64Value,
+      audioEndUs: (args["audioEndUs"] as? NSNumber)?.int64Value,
+      startUs: (args["startUs"] as? NSNumber)?.int64Value ?? -1,
+      endUs: (args["endUs"] as? NSNumber)?.int64Value ?? -1,
+      fadeInUs: (args["fadeInUs"] as? NSNumber)?.int64Value ?? 0,
+      fadeOutUs: (args["fadeOutUs"] as? NSNumber)?.int64Value ?? 0,
+      volumeCurve: VolumeCurve.from(args["volumeCurve"])
+    )
+  }
+}
+
+/// Placement and scaling of a video segment within the composition canvas.
+struct SegmentTransformConfig: Sendable {
+  /// Top-left x position in canvas pixels. `nil` = 0.
+  let offsetX: Double?
+  /// Top-left y position in canvas pixels. `nil` = 0.
+  let offsetY: Double?
+  /// Target width in canvas pixels. `nil` = source width.
+  let width: Double?
+  /// Target height in canvas pixels. `nil` = source height.
+  let height: Double?
+  /// How the source is scaled into the target size: "fill", "contain", "cover".
+  let fit: String
+  /// Clockwise rotation of the placed box around its own centre, in radians.
+  /// The offset/size above keep describing the unrotated box.
+  let rotation: Double
+
+  static func fromArguments(_ args: [String: Any]?) -> SegmentTransformConfig? {
+    guard let args = args else { return nil }
+    let offset = args["offset"] as? [String: Any]
+    let size = args["size"] as? [String: Any]
+    return SegmentTransformConfig(
+      offsetX: (offset?["dx"] as? NSNumber)?.doubleValue,
+      offsetY: (offset?["dy"] as? NSNumber)?.doubleValue,
+      width: (size?["width"] as? NSNumber)?.doubleValue,
+      height: (size?["height"] as? NSNumber)?.doubleValue,
+      fit: args["fit"] as? String ?? "cover",
+      rotation: (args["rotation"] as? NSNumber)?.doubleValue ?? 0.0
+    )
+  }
+}
+
+/// The clock a layer's keyframes are timed on, mirroring the Dart
+/// `KeyframeClockPoint`s: a time on the output timeline maps to the time the
+/// keyframes are measured in, piecewise linear through `points`, sorted by
+/// output time. Before the first point and after the last one it runs as fast
+/// as the output; without points it is the output timeline itself.
+///
+/// Lets keyframes keep the timing they were made on, such as an editor that
+/// shows a clip transition at a different pace than the video plays it: every
+/// frame is placed by its time on that clock, so an eased motion follows its
+/// own curve exactly. Mirrors `KeyframeClock` on Android.
+struct KeyframeClock: Sendable, Equatable {
+  struct Point: Sendable, Equatable {
+    let outputUs: Int64
+    let keyframeUs: Int64
+  }
+
+  let points: [Point]
+
+  static let output = KeyframeClock(points: [])
+
+  /// The keyframe time at [outputUs] on the output timeline. Where two points
+  /// share an output time, the clock jumps: the earlier one holds at that time
+  /// and the later one counts on from just after it.
+  func keyframeTimeUs(_ outputUs: Int64) -> Int64 {
+    guard let first = points.first, let last = points.last else { return outputUs }
+    if outputUs <= first.outputUs { return first.keyframeUs + (outputUs - first.outputUs) }
+    for i in 1..<points.count {
+      let to = points[i]
+      if outputUs > to.outputUs { continue }
+      // from.outputUs < outputUs <= to.outputUs, so the span is never empty.
+      let from = points[i - 1]
+      let share = Double(outputUs - from.outputUs) / Double(to.outputUs - from.outputUs)
+      // Ties to even, as `kotlin.math.round` on Android.
+      return from.keyframeUs
+        + Int64((share * Double(to.keyframeUs - from.keyframeUs)).rounded(.toNearestOrEven))
+    }
+    return last.keyframeUs + (outputUs - last.outputUs)
+  }
+
+  /// The clock in [raw], a list of `{outputUs, keyframeUs}` maps; an entry
+  /// that is not one is skipped, as on Android.
+  static func from(_ raw: Any?) -> KeyframeClock {
+    guard let entries = raw as? [Any] else { return .output }
+    let points = entries.compactMap { entry -> Point? in
+      guard let map = entry as? [String: Any],
+        let output = (map["outputUs"] as? NSNumber)?.int64Value,
+        let keyframe = (map["keyframeUs"] as? NSNumber)?.int64Value
+      else { return nil }
+      return Point(outputUs: output, keyframeUs: keyframe)
+    }
+    return KeyframeClock(points: points.sorted { $0.outputUs < $1.outputUs })
+  }
+}
+
+/// A single layer (track) of a multi-layer composition.
+struct LayerConfig: Sendable {
+  /// Time-ordered clips on this layer.
+  let clips: [VideoClip]
+  /// Opacity of the whole layer (0...1).
+  let opacity: Float
+  /// Default placement for clips without their own transform.
+  let transform: SegmentTransformConfig?
+  /// Default chroma key for the clips on this layer. A clip's own key wins;
+  /// `nil` falls back to the global key.
+  let chromaKey: ChromaKeyConfig?
+  /// Alpha matte stretched over each clip's own upright frame, after its
+  /// chroma key and before it is placed; `nil` shows every clip whole. See
+  /// `applyLayerMatte(_:to:)`.
+  var mask: EncodedImage? = nil
+  /// The layer's placement over time, sorted by time and on the composition
+  /// timeline; empty keeps every clip where its transform puts it.
+  var keyframes: [KeyframeConfig] = []
+  /// The clock `keyframes` are timed on; see `KeyframeClock`.
+  var keyframeClock: KeyframeClock = .output
+  /// How the layer's clips combine with the layers below them; see
+  /// `blendLayer`.
+  var blendMode: LayerBlendMode = .normal
+  /// A shape every clip shows through, drawn on each frame where `mask` is
+  /// applied; `nil` shows every clip whole. See `ShapeMaskRenderer`.
+  var shapeMask: ShapeMaskConfig? = nil
+
+  static func fromArguments(_ args: [String: Any]?) -> LayerConfig? {
+    guard let args = args,
+      let clipsRaw = args["clips"] as? [[String: Any]]
+    else { return nil }
+    let clips = clipsRaw.compactMap { VideoClip.fromMap($0) }
+    guard !clips.isEmpty else { return nil }
+    return LayerConfig(
+      clips: clips,
+      opacity: (args["opacity"] as? NSNumber)?.floatValue ?? 1.0,
+      transform: SegmentTransformConfig.fromArguments(args["transform"] as? [String: Any]),
+      chromaKey: ChromaKeyConfig.fromArguments(args["chromaKey"] as? [String: Any]),
+      mask: EncodedImage.from(args, pathKey: "maskPath", dataKey: "maskData"),
+      keyframes: KeyframeConfig.list(from: args["keyframes"]),
+      keyframeClock: KeyframeClock.from(args["keyframeClock"]),
+      blendMode: LayerBlendMode.from(args["blendMode"]),
+      shapeMask: ShapeMaskConfig.from(args["shapeMask"])
+    )
+  }
+}
+
+/// A multi-layer composition that stacks several tracks on a fixed canvas.
+struct CompositionConfig: Sendable {
+  /// Layers ordered bottom-to-top (last layer drawn on top).
+  let layers: [LayerConfig]
+  /// Output canvas width in pixels. `nil` = derive from the first clip.
+  let canvasWidth: Double?
+  /// Output canvas height in pixels. `nil` = derive from the first clip.
+  let canvasHeight: Double?
+  /// Background ARGB color filling areas not covered by any layer.
+  let backgroundColor: Int64
+
+  static func fromArguments(_ args: [String: Any]?) -> CompositionConfig? {
+    guard let args = args,
+      let layersRaw = args["layers"] as? [[String: Any]]
+    else { return nil }
+    let layers = layersRaw.compactMap { LayerConfig.fromArguments($0) }
+    guard !layers.isEmpty else { return nil }
+    return CompositionConfig(
+      layers: layers,
+      canvasWidth: (args["canvasWidth"] as? NSNumber)?.doubleValue,
+      canvasHeight: (args["canvasHeight"] as? NSNumber)?.doubleValue,
+      backgroundColor: (args["backgroundColor"] as? NSNumber)?.int64Value ?? Int64(0xFF00_0000)
+    )
+  }
+}
+
+/// Configuration model for video rendering operations.
+///
+/// This struct encapsulates all parameters required for rendering a video with
+/// effects, transformations, and audio mixing. It supports both single-video
+/// and multi-video rendering with comprehensive effect options.
+struct RenderConfig: Sendable {
+  /// List of video clips to render (concatenated in order)
+  let videoClips: [VideoClip]
+
+  /// Optional multi-layer composition. When set, [videoClips] is empty and the
+  /// layered render path is used instead of the single-track concatenation.
+  let composition: CompositionConfig?
+
+  /// Optional list of image layers to overlay at specified time intervals.
+  let imageLayers: [ImageLayerConfig]
+
+  /// Output format for the rendered video (e.g., "mp4", "mov")
+  let outputFormat: String
+
+  /// Optional absolute path where output should be saved (nil = return bytes)
+  let outputPath: String?
+
+  /// Number of 90-degree clockwise rotations to apply (0-3)
+  let rotateTurns: Int?
+
+  /// Whether to flip video horizontally
+  let flipX: Bool
+
+  /// Whether to flip video vertically
+  let flipY: Bool
+
+  /// Crop width in pixels (nil = no crop)
+  let cropWidth: Int?
+
+  /// Crop height in pixels (nil = no crop)
+  let cropHeight: Int?
+
+  /// Crop X offset in pixels (nil = centered)
+  let cropX: Int?
+
+  /// Crop Y offset in pixels (nil = centered)
+  let cropY: Int?
+
+  /// Horizontal scale factor (nil = no scaling)
+  let scaleX: Float?
+
+  /// Vertical scale factor (nil = no scaling)
+  let scaleY: Float?
+
+  /// Exact output canvas width in pixels (nil = derive from source/scale).
+  /// When set, the video is scaled to fit inside the canvas (preserving aspect
+  /// ratio), centered, and padded with black.
+  let outputWidth: Int?
+
+  /// Exact output canvas height in pixels (nil = derive from source/scale).
+  let outputHeight: Int?
+
+  /// The exact output canvas size, when both dimensions are provided.
+  var outputResolution: CGSize? {
+    guard let width = outputWidth, let height = outputHeight else { return nil }
+    return CGSize(width: width, height: height)
+  }
+
+  /// Target bitrate in bits per second (nil = auto)
+  let bitrate: Int?
+
+  /// Upper limit for the output frame rate in fps (nil = keep source fps)
+  let maxFrameRate: Int?
+
+  /// Derive composition frame times from the single source track.
+  let preserveSourceFrameTiming: Bool
+
+  /// Whether to include audio in output
+  let enableAudio: Bool
+
+  /// Whether to end each clip where both of its tracks still have content
+  ///
+  /// A source asset's audio and video tracks routinely end tens of
+  /// milliseconds apart. Spanning the longer one leaves a tail of missing
+  /// audio or a frozen frame, which a looping player replays as a seam.
+  let trimToCommonTrackEnd: Bool
+
+  /// Playback speed multiplier (e.g., 2.0 = 2x speed)
+  let playbackSpeed: Float?
+
+  /// List of color filters with optional time ranges
+  let colorFilters: [ColorFilterConfig]
+
+  /// Glitch, VHS, pixelate and other pixel effects, applied before `colorFilters`
+  let effects: [VideoEffectConfig]
+
+  /// Effects the app registered with `CustomVideoEffects`, applied before
+  /// `effects`, in list order.
+  let customEffects: [CustomVideoEffectConfig]
+
+  /// List of audio tracks with timing, volume and looping configuration
+  let audioTracks: [AudioTrackConfig]
+
+  /// Blur radius (nil = no blur, experimental feature)
+  let blur: Double?
+
+  /// Removes a solid-colored background ("green screen") from every clip that
+  /// does not carry its own key. A `VideoClip.chromaKey` overrides this, and in
+  /// the layered path a `LayerConfig.chromaKey` sits between the two.
+  let chromaKey: ChromaKeyConfig?
+
+  /// Global start time in microseconds for trimming the final composition
+  let startUs: Int64?
+
+  /// Global end time in microseconds for trimming the final composition
+  let endUs: Int64?
+
+  /// Whether to optimize the video for network streaming (fast start).
+  /// When true, moves the moov atom to the beginning of the file.
+  let shouldOptimizeForNetworkUse: Bool
+
+  /// Whether to apply cropping to the image overlay along with the video.
+  /// When true, the image overlay is cropped together with the video.
+  /// When false (default), the overlay is scaled to the final cropped size.
+  let imageBytesWithCropping: Bool
+
+  /// Returns a copy of this config with the specified fields replaced.
+  /// Fields not provided retain their current values.
+  func copyWith(
+    videoClips: [VideoClip]? = nil
+  ) -> RenderConfig {
+    return RenderConfig(
+      videoClips: videoClips ?? self.videoClips,
+      composition: self.composition,
+      imageLayers: self.imageLayers,
+      outputFormat: self.outputFormat,
+      outputPath: self.outputPath,
+      rotateTurns: self.rotateTurns,
+      flipX: self.flipX,
+      flipY: self.flipY,
+      cropWidth: self.cropWidth,
+      cropHeight: self.cropHeight,
+      cropX: self.cropX,
+      cropY: self.cropY,
+      scaleX: self.scaleX,
+      scaleY: self.scaleY,
+      outputWidth: self.outputWidth,
+      outputHeight: self.outputHeight,
+      bitrate: self.bitrate,
+      maxFrameRate: self.maxFrameRate,
+      preserveSourceFrameTiming: self.preserveSourceFrameTiming,
+      enableAudio: self.enableAudio,
+      trimToCommonTrackEnd: self.trimToCommonTrackEnd,
+      playbackSpeed: self.playbackSpeed,
+      colorFilters: self.colorFilters,
+      effects: self.effects,
+      customEffects: self.customEffects,
+      audioTracks: self.audioTracks,
+      blur: self.blur,
+      chromaKey: self.chromaKey,
+      startUs: self.startUs,
+      endUs: self.endUs,
+      shouldOptimizeForNetworkUse: self.shouldOptimizeForNetworkUse,
+      imageBytesWithCropping: self.imageBytesWithCropping
+    )
+  }
+
+  static func fromArguments(_ arguments: [String: Any]?) -> RenderConfig? {
+    guard let args = arguments else {
+      return nil
+    }
+
+    // Parse video clips (single-track path)
+    var videoClips: [VideoClip] = []
+    if let videoClipsRaw = args["videoClips"] as? [[String: Any]] {
+      videoClips = videoClipsRaw.compactMap { VideoClip.fromMap($0) }
+    }
+
+    // Parse multi-layer composition (layered path)
+    let composition = CompositionConfig.fromArguments(args["composition"] as? [String: Any])
+
+    // Parse color filters
+    var colorFilters: [ColorFilterConfig] = []
+    if let filtersRaw = args["colorFilters"] as? [[String: Any]] {
+      colorFilters = filtersRaw.compactMap { filterMap in
+        ColorFilterConfig.fromArguments(filterMap)
+      }
+    }
+
+    // Parse video effects
+    var effects: [VideoEffectConfig] = []
+    if let effectsRaw = args["effects"] as? [[String: Any]] {
+      effects = effectsRaw.compactMap { VideoEffectConfig.fromArguments($0) }
+      if effects.count != effectsRaw.count {
+        PluginLog.print("⚠️ Skipped \(effectsRaw.count - effects.count) unreadable video effect(s)")
+      }
+    }
+
+    // Parse custom video effects
+    var customEffects: [CustomVideoEffectConfig] = []
+    if let customRaw = args["customEffects"] as? [[String: Any]] {
+      customEffects = customRaw.compactMap { CustomVideoEffectConfig.fromArguments($0) }
+      if customEffects.count != customRaw.count {
+        PluginLog.print(
+          "⚠️ Skipped \(customRaw.count - customEffects.count) custom video effect(s) without an id")
+      }
+    }
+
+    // Parse audio tracks
+    var audioTracks: [AudioTrackConfig] = []
+    if let tracksRaw = args["audioTracks"] as? [[String: Any]] {
+      audioTracks = tracksRaw.compactMap { trackMap in
+        AudioTrackConfig.fromArguments(trackMap)
+      }
+    }
+
+    // Parse image layers
+    var imageLayers: [ImageLayerConfig] = []
+    if let layersRaw = args["imageLayers"] as? [[String: Any]] {
+      imageLayers = layersRaw.compactMap { layerMap in
+        ImageLayerConfig.fromArguments(layerMap)
+      }
+    }
+
+    return RenderConfig(
+      videoClips: videoClips,
+      composition: composition,
+      imageLayers: imageLayers,
+      outputFormat: args["outputFormat"] as? String ?? "mp4",
+      outputPath: args["outputPath"] as? String,
+      rotateTurns: args["rotateTurns"] as? Int,
+      flipX: args["flipX"] as? Bool ?? false,
+      flipY: args["flipY"] as? Bool ?? false,
+      cropWidth: args["cropWidth"] as? Int,
+      cropHeight: args["cropHeight"] as? Int,
+      cropX: args["cropX"] as? Int,
+      cropY: args["cropY"] as? Int,
+      scaleX: (args["scaleX"] as? NSNumber)?.floatValue,
+      scaleY: (args["scaleY"] as? NSNumber)?.floatValue,
+      outputWidth: (args["outputWidth"] as? NSNumber)?.intValue,
+      outputHeight: (args["outputHeight"] as? NSNumber)?.intValue,
+      bitrate: args["bitrate"] as? Int,
+      maxFrameRate: (args["maxFrameRate"] as? NSNumber)?.intValue,
+      preserveSourceFrameTiming: args["preserveSourceFrameTiming"] as? Bool ?? false,
+      enableAudio: args["enableAudio"] as? Bool ?? true,
+      trimToCommonTrackEnd: args["trimToCommonTrackEnd"] as? Bool ?? false,
+      playbackSpeed: (args["playbackSpeed"] as? NSNumber)?.floatValue,
+      colorFilters: colorFilters,
+      effects: effects,
+      customEffects: customEffects,
+      audioTracks: audioTracks,
+      blur: (args["blur"] as? NSNumber)?.doubleValue,
+      chromaKey: ChromaKeyConfig.fromArguments(args["chromaKey"] as? [String: Any]),
+      startUs: (args["startUs"] as? NSNumber)?.int64Value,
+      endUs: (args["endUs"] as? NSNumber)?.int64Value,
+      shouldOptimizeForNetworkUse: args["shouldOptimizeForNetworkUse"] as? Bool ?? true,
+      imageBytesWithCropping: args["imageBytesWithCropping"] as? Bool ?? false
+    )
+  }
+}

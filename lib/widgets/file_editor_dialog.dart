@@ -29,6 +29,8 @@ import '../providers/providers.dart';
 import '../l10n/file_editor_strings.dart';
 import '../l10n/code_document_ui_strings.dart';
 import '../l10n/image_editor_strings.dart';
+import '../l10n/media_editor_strings.dart';
+import '../services/media_capabilities.dart';
 import '../services/code_editor_menu.dart';
 import '../services/editor_document.dart';
 import '../services/editor_highlighting.dart';
@@ -40,6 +42,7 @@ import 'code_editor_context_menu.dart';
 import 'code_editor_find_panel.dart';
 import 'code_editor_status_bar.dart';
 import 'image_editor_dialog.dart';
+import 'media_editor_dialog.dart';
 import 'office_editor_dialog.dart';
 import 'pdf_editor_dialog.dart';
 
@@ -58,6 +61,17 @@ Future<void> showFileEditorDialog(
     }
     if (isPdfFileName(file.name)) {
       await showPdfEditorDialog(context, ref, file, side);
+      return;
+    }
+    final mediaKind = mediaKindForFileName(file.name);
+    if (mediaKind != null) {
+      if (MediaCapabilities.canEdit(mediaKind)) {
+        await showMediaEditorDialog(context, ref, file, side);
+      } else {
+        ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(
+          context.mediaTr('This media format cannot be edited on this platform.'),
+        )));
+      }
       return;
     }
     // Office documents get the rich Word/Sheet/Slides editor instead of the

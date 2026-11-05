@@ -404,13 +404,18 @@ class OneDriveClientAdapter extends CloudStorageClient {
     await _ensureToken();
 
     // Simple upload for files <= 4MB, otherwise use upload session
-    final parentPath = targetPath == '/' || targetPath.isEmpty
-        ? '/me/drive/root'
-        : '/me/drive/root:$targetPath:';
-    final uploadUrl = '$_graphBase$parentPath:/$fileName:/content';
+    // Address the complete destination once. Appending another colon-delimited
+    // path to a directory address produces an invalid double-colon URL.
+    final destination = p.posix.join(targetPath, fileName);
+    final base = Uri.parse(_graphBase);
+    final uploadUri = base.replace(pathSegments: [
+      ...base.pathSegments,
+      ..._drivePath(destination).split('/').where((segment) => segment.isNotEmpty),
+      'content',
+    ]);
 
     final resp = await http.put(
-      Uri.parse(uploadUrl),
+      uploadUri,
       headers: {
         ..._authHeaders(),
         'Content-Type': 'application/octet-stream',

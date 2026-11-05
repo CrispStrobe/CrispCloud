@@ -124,7 +124,8 @@ Future<void> writeLocalEditorFile(
 }
 
 // --- macOS Implementation ---
-class MacosFileService implements LocalFileService, LocalFileSaveReporter {
+class MacosFileService
+    implements LocalFileService, LocalFileSaveReporter, LocalMediaFileAccess {
   String? _grantedBasePath;
   final _bookmarks = SecureBookmarks();
   List<FileSystemEntity> _resolvedBookmarks = <FileSystemEntity>[];
@@ -357,6 +358,32 @@ class MacosFileService implements LocalFileService, LocalFileSaveReporter {
     }
   }
 
+  @override
+  Future<T> withMediaFileAccess<T>(
+    String path,
+    Future<T> Function(String accessiblePath) operation, {
+    bool forWrite = false,
+  }) async {
+    final accessRoot = forWrite ? p.dirname(path) : path;
+    if (!await ensureAccess(accessRoot)) {
+      throw FileSystemException(
+        'Access to the media file was denied.',
+        path,
+        const OSError('Access denied', 13),
+      );
+    }
+    final accessibleRoot = await _accessPath(accessRoot);
+    final accessiblePath = forWrite
+        ? p.join(accessibleRoot, p.basename(path))
+        : accessibleRoot;
+    final scope = await _beginScope(accessRoot);
+    try {
+      return await operation(accessiblePath);
+    } finally {
+      await _endScope(scope);
+    }
+  }
+
   Future<FileSystemEntity?> _beginScope(String path) async {
     if (_resolvedBookmarks.isEmpty) await _loadAndResolveBookmarks();
     final String accessPath = await _accessPath(path);
@@ -480,7 +507,8 @@ class MacosFileService implements LocalFileService, LocalFileSaveReporter {
 }
 
 // --- Windows/Linux Implementation ---
-class DesktopFileService implements LocalFileService, LocalFileSaveReporter {
+class DesktopFileService
+    implements LocalFileService, LocalFileSaveReporter, LocalMediaFileAccess {
   @override
   String currentPath = Platform.environment['HOME'] ?? Platform.environment['USERPROFILE'] ?? '/';
 
@@ -554,6 +582,13 @@ class DesktopFileService implements LocalFileService, LocalFileSaveReporter {
   }
 
   @override
+  Future<T> withMediaFileAccess<T>(
+    String path,
+    Future<T> Function(String accessiblePath) operation, {
+    bool forWrite = false,
+  }) => operation(path);
+
+  @override
   Future<bool> hasAccessToPath(String path) async => true;
 
   @override
@@ -608,7 +643,8 @@ class DesktopFileService implements LocalFileService, LocalFileSaveReporter {
 }
 
 // --- Mobile (Android/iOS) Implementation ---
-class MobileFileService implements LocalFileService, LocalFileSaveReporter {
+class MobileFileService
+    implements LocalFileService, LocalFileSaveReporter, LocalMediaFileAccess {
   String? _grantedBasePath;
   static const String _mobileBookmarkKey = 'mobile_bookmark_data';
   final _bookmarks = SecureBookmarks();
@@ -779,6 +815,34 @@ class MobileFileService implements LocalFileService, LocalFileSaveReporter {
           await _bookmarks.stopAccessingSecurityScopedResource(activeScope);
         } catch (_) {
           // Releasing access must not change the result of a completed write.
+        }
+      }
+    }
+  }
+
+  @override
+  Future<T> withMediaFileAccess<T>(
+    String path,
+    Future<T> Function(String accessiblePath) operation, {
+    bool forWrite = false,
+  }) async {
+    if (_resolvedBookmarkFile == null) await _loadAndResolveBookmark();
+    final scope = _resolvedBookmarkFile;
+    final accessRoot = forWrite ? p.dirname(path) : path;
+    final activeScope =
+        scope != null && isSameOrUnderPath(accessRoot, scope.path) ? scope : null;
+    if (activeScope != null) {
+      await _bookmarks.startAccessingSecurityScopedResource(activeScope);
+    }
+    try {
+      return await operation(path);
+    } finally {
+      if (activeScope != null) {
+        try {
+          await _bookmarks.stopAccessingSecurityScopedResource(activeScope);
+        } catch (_) {
+          // A scope-release failure must not turn a completed copy into a
+          // failed save and encourage the editor to upload it again.
         }
       }
     }

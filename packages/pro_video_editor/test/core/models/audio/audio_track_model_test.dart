@@ -1,0 +1,279 @@
+import 'package:flutter_test/flutter_test.dart';
+import 'package:pro_video_editor/pro_video_editor.dart';
+
+void main() {
+  group('VideoAudioTrack', () {
+    final track = VideoAudioTrack(
+      path: '/audio/music.mp3',
+      volume: 0.8,
+      playbackSpeed: 0.5,
+      loop: true,
+      audioStartTime: const Duration(seconds: 5),
+      audioEndTime: const Duration(seconds: 30),
+      startTime: const Duration(seconds: 2),
+      endTime: const Duration(seconds: 20),
+      fadeInDuration: const Duration(milliseconds: 500),
+      fadeOutDuration: const Duration(seconds: 1),
+    );
+
+    group('playbackSpeed', () {
+      test(
+        'survives JSON and copyWith without moving source trim or fades',
+        () {
+          final restored = VideoAudioTrack.fromJson(track.toJson());
+          expect(restored.playbackSpeed, 0.5);
+          final faster = restored.copyWith(playbackSpeed: 2);
+          expect(faster.playbackSpeed, 2);
+          expect(faster.audioStartTime, const Duration(seconds: 5));
+          expect(faster.audioEndTime, const Duration(seconds: 30));
+          expect(faster.startTime, const Duration(seconds: 2));
+          expect(faster.fadeInDuration, const Duration(milliseconds: 500));
+          expect(faster, isNot(restored));
+          expect(faster.hashCode, isNot(restored.hashCode));
+        },
+      );
+
+      test('old saved tracks default to normal playback', () {
+        final oldMap = track.toMap()..remove('playbackSpeed');
+        expect(VideoAudioTrack.fromMap(oldMap).playbackSpeed, 1);
+      });
+
+      for (final speed in [0.0, -1.0, double.nan, double.infinity]) {
+        test('rejects invalid speed $speed', () {
+          expect(
+            () => VideoAudioTrack(path: '/audio.wav', playbackSpeed: speed),
+            throwsAssertionError,
+          );
+        });
+      }
+    });
+
+    group('speedRamp', () {
+      const ramp = VideoSpeedRamp([
+        VideoSpeedRampPoint(position: 0, speed: 2),
+        VideoSpeedRampPoint(position: 1, speed: 0.5),
+      ]);
+
+      test('survives JSON without moving source trim or fades', () {
+        final ramped = track.copyWith(speedRamp: ramp);
+        final restored = VideoAudioTrack.fromJson(ramped.toJson());
+        expect(restored.speedRamp, ramp);
+        expect(restored.playbackSpeed, 1);
+        expect(restored.audioStartTime, const Duration(seconds: 5));
+        expect(restored.fadeInDuration, const Duration(milliseconds: 500));
+        expect(restored, ramped);
+        expect(restored.hashCode, ramped.hashCode);
+      });
+
+      test('keeps a cropped ramp through JSON', () {
+        final cropped = ramp.cropped(0.25, 0.75);
+        final restored = VideoAudioTrack.fromJson(
+          track.copyWith(speedRamp: cropped).toJson(),
+        );
+        expect(restored.speedRamp, cropped);
+        expect(restored.speedRamp!.steps, cropped.steps);
+      });
+
+      test('replaces the playback speed, and a speed replaces it', () {
+        final ramped = track.copyWith(speedRamp: ramp);
+        expect(ramped.playbackSpeed, 1);
+        expect(ramped, isNot(track));
+        final constant = ramped.copyWith(playbackSpeed: 2);
+        expect(constant.speedRamp, isNull);
+        expect(constant.playbackSpeed, 2);
+        expect(ramped.copyWith(volume: 0.5).speedRamp, ramp);
+      });
+
+      test('old saved tracks play without a ramp', () {
+        final oldMap = track.toMap()..remove('speedRamp');
+        expect(VideoAudioTrack.fromMap(oldMap).speedRamp, isNull);
+      });
+
+      test('rejects a ramp together with a playback speed', () {
+        expect(
+          () => VideoAudioTrack(
+            path: '/audio.wav',
+            playbackSpeed: 2,
+            speedRamp: ramp,
+          ),
+          throwsAssertionError,
+        );
+      });
+    });
+
+    group('toMap', () {
+      test('serializes all fields correctly', () {
+        final map = track.toMap();
+
+        expect(map['path'], '/audio/music.mp3');
+        expect(map['volume'], 0.8);
+        expect(map['loop'], true);
+        expect(map['audioStartTime'], 5000000);
+        expect(map['audioEndTime'], 30000000);
+        expect(map['startTime'], 2000000);
+        expect(map['endTime'], 20000000);
+        expect(map['fadeInDuration'], 500000);
+        expect(map['fadeOutDuration'], 1000000);
+      });
+
+      test('serializes null durations as null', () {
+        const minimal = VideoAudioTrack(path: '/audio.mp3');
+        final map = minimal.toMap();
+
+        expect(map['audioStartTime'], isNull);
+        expect(map['audioEndTime'], isNull);
+        expect(map['startTime'], isNull);
+        expect(map['endTime'], isNull);
+      });
+    });
+
+    group('fromMap', () {
+      test('deserializes all fields correctly', () {
+        final map = track.toMap();
+        final restored = VideoAudioTrack.fromMap(map);
+
+        expect(restored.path, track.path);
+        expect(restored.volume, track.volume);
+        expect(restored.loop, track.loop);
+        expect(restored.audioStartTime, track.audioStartTime);
+        expect(restored.audioEndTime, track.audioEndTime);
+        expect(restored.startTime, track.startTime);
+        expect(restored.endTime, track.endTime);
+        expect(restored.fadeInDuration, track.fadeInDuration);
+        expect(restored.fadeOutDuration, track.fadeOutDuration);
+      });
+
+      test('reads a map written before fades existed as no fade', () {
+        final restored = VideoAudioTrack.fromMap({
+          'path': '/audio.mp3',
+          'volume': 1.0,
+          'loop': false,
+        });
+
+        expect(restored.fadeInDuration, Duration.zero);
+        expect(restored.fadeOutDuration, Duration.zero);
+      });
+
+      test('handles null durations', () {
+        final restored = VideoAudioTrack.fromMap({
+          'path': '/audio.mp3',
+          'volume': 1.0,
+          'loop': false,
+          'audioStartTime': null,
+          'audioEndTime': null,
+          'startTime': null,
+          'endTime': null,
+        });
+
+        expect(restored.audioStartTime, isNull);
+        expect(restored.audioEndTime, isNull);
+        expect(restored.startTime, isNull);
+        expect(restored.endTime, isNull);
+      });
+
+      test('parses numeric strings safely', () {
+        final restored = VideoAudioTrack.fromMap({
+          'path': '/audio.mp3',
+          'volume': '0.5',
+          'loop': true,
+          'audioStartTime': '1000000',
+          'audioEndTime': null,
+          'startTime': null,
+          'endTime': null,
+        });
+
+        expect(restored.volume, 0.5);
+        expect(restored.audioStartTime, const Duration(seconds: 1));
+      });
+    });
+
+    group('toJson / fromJson', () {
+      test('roundtrip preserves data', () {
+        final json = track.toJson();
+        final restored = VideoAudioTrack.fromJson(json);
+
+        expect(restored, track);
+      });
+    });
+
+    group('copyWith', () {
+      test('creates copy with updated fields', () {
+        final copy = track.copyWith(volume: 0.5, loop: false);
+
+        expect(copy.volume, 0.5);
+        expect(copy.loop, false);
+        expect(copy.path, track.path);
+        expect(copy.startTime, track.startTime);
+      });
+
+      test('preserves original when no args given', () {
+        final copy = track.copyWith();
+        expect(copy, track);
+      });
+    });
+
+    group('equality', () {
+      test('equal instances are equal', () {
+        final other = VideoAudioTrack.fromMap(track.toMap());
+        expect(other, track);
+      });
+
+      test('different instances are not equal', () {
+        final other = track.copyWith(volume: 0.1);
+        expect(other, isNot(track));
+      });
+
+      test('a different fade makes the tracks differ', () {
+        expect(track.copyWith(fadeInDuration: Duration.zero), isNot(track));
+        expect(track.copyWith(fadeOutDuration: Duration.zero), isNot(track));
+      });
+    });
+
+    group('equalizer', () {
+      const equalizer = AudioEqualizer(
+        bands: [
+          AudioEqualizerBand(
+            type: AudioEqualizerBandType.lowShelf,
+            frequency: 200,
+            gain: 4,
+          ),
+          AudioEqualizerBand(
+            type: AudioEqualizerBandType.highShelf,
+            frequency: 3000,
+            gain: -2,
+          ),
+        ],
+      );
+
+      test('defaults to none', () {
+        expect(const VideoAudioTrack(path: '/audio.mp3').equalizer, isNull);
+      });
+
+      test('round-trips through toMap and fromMap', () {
+        final withEqualizer = track.copyWith(equalizer: equalizer);
+
+        expect(
+          VideoAudioTrack.fromMap(withEqualizer.toMap()).equalizer,
+          equalizer,
+        );
+      });
+
+      test('a different equalizer makes the tracks differ', () {
+        expect(track.copyWith(equalizer: equalizer), isNot(track));
+      });
+    });
+
+    group('fade', () {
+      test('defaults to none', () {
+        const minimal = VideoAudioTrack(path: '/audio.mp3');
+
+        expect(minimal.fadeInDuration, Duration.zero);
+        expect(minimal.fadeOutDuration, Duration.zero);
+      });
+    });
+
+    test('toString contains class name', () {
+      expect(track.toString(), contains('VideoAudioTrack'));
+    });
+  });
+}

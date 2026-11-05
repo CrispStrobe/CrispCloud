@@ -1,0 +1,27 @@
+group = 'com.crispcloud.crisp_audio'
+version = '0.1.0'
+
+apply plugin: 'com.android.library'
+
+android {
+    namespace = 'com.crispcloud.crisp_audio'
+    compileSdk = 36
+    // Match CrispCloud's app module and its other native dependencies.
+    ndkVersion = '28.2.13676358'
+
+    defaultConfig {
+        // 64-bit stdio offsets (fseeko64) require API24. Match the app's
+        // minimum so 32-bit ABIs do not compile against unavailable symbols.
+        minSdk = 24
+        externalNativeBuild {
+            cmake {
+                arguments '-DANDROID_STL=c++_static'
+            }
+        }
+    }
+    externalNativeBuild {
+        cmake {
+            path '../src/CMakeLists.txt'
+        }
+    }
+}

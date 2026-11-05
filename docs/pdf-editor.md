@@ -12,6 +12,8 @@ For selected-file actions and matching CLI commands, see
 The editor offers annotations, notes, drawing, standard AcroForm fields,
 page-content tools, page reordering/rotation, insertion, extraction and
 splitting. CrispCloud supplies file picking, persistence and export callbacks.
+On macOS the app menu mirrors Save, Save a Copy, Export a Copy, Close and
+undo/redo while the editor is open.
 Rendering and content-editing fidelity depend on the input PDF and available
 fonts; the small integration corpus does not establish compatibility with
 every PDF producer or complex layout.
