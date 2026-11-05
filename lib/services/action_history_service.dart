@@ -78,6 +78,10 @@ class ActionRecord {
       case ActionType.delete:
         return 'Deleted ${p.basename(originalPath)}';
       case ActionType.rename:
+        if (metadata['renameBatchCount'] is int) {
+          final count = metadata['renameBatchCount'] as int;
+          return 'Renamed batch of $count ${count == 1 ? 'item' : 'items'}';
+        }
         final oldName = p.basename(originalPath);
         final newName = newPath != null ? p.basename(newPath!) : '?';
         return 'Renamed $oldName → $newName';
