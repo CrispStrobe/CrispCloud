@@ -20,6 +20,7 @@ import 'smb_client_adapter.dart';
 import 'smb_config_service.dart';
 import 'secure_storage_service.dart';
 import 'storage_transfer_contract.dart';
+import 'transfer_spool.dart';
 
 export 'storage_transfer_contract.dart';
 
@@ -72,8 +73,10 @@ abstract class CloudStorageClient {
   });
 
   /// Download a file and return its bytes directly (Used for Web downloads)
-  Future<Uint8List> downloadFileBytes(String remotePath,
-      {Function(int, int)? onProgress});
+  Future<Uint8List> downloadFileBytes(
+    String remotePath, {
+    Function(int, int)? onProgress,
+  });
 
   // Folder operations
   Future<void> createFolderPath(String path);
@@ -127,12 +130,33 @@ abstract class CloudStorageClient {
   }
 
   /// Server-side copy a file from [sourcePath] to [targetPath].
-  /// Default implementation downloads the file bytes and re-uploads them.
+  /// The compatibility implementation uses an owned disk/browser spool and
+  /// streaming APIs, so an absent native-copy method cannot buffer a whole file.
   /// Providers that support server-side copy should override this.
   Future<void> copyPath(String sourcePath, String targetPath) async {
     final fileName = sourcePath.split('/').last;
-    final bytes = await downloadFileBytes(sourcePath);
-    await uploadFile(bytes, fileName, targetPath);
+    final account = userId;
+    final bucket = bucketId;
+    void checkCurrent() {
+      if (!isAuthenticated || userId != account || bucketId != bucket) {
+        throw StateError(
+          'The original transfer account is no longer available.',
+        );
+      }
+    }
+
+    checkCurrent();
+    final spool = await createTransferSpool(
+      downloadStream(sourcePath),
+      checkpoint: () async => checkCurrent(),
+    );
+    try {
+      checkCurrent();
+      await uploadStream(spool.openRead(), spool.length, fileName, targetPath);
+      checkCurrent();
+    } finally {
+      await spool.dispose();
+    }
   }
 
   /// Full-text search: search inside file contents in the given directory.
@@ -203,9 +227,20 @@ abstract class CloudStorageClient {
       if (size > maxSize) continue;
 
       try {
-        final filePath =
-            remotePath.endsWith('/') ? '$remotePath$name' : '$remotePath/$name';
-        final bytes = await downloadFileBytes(filePath);
+        final filePath = remotePath.endsWith('/')
+            ? '$remotePath$name'
+            : '$remotePath/$name';
+        final contentBytes = BytesBuilder(copy: false);
+        var tooLarge = false;
+        await for (final chunk in downloadStream(filePath)) {
+          if (contentBytes.length + chunk.length > maxSize) {
+            tooLarge = true;
+            break;
+          }
+          contentBytes.add(chunk);
+        }
+        if (tooLarge) continue;
+        final bytes = contentBytes.takeBytes();
         final content = String.fromCharCodes(bytes);
         final lowerContent = content.toLowerCase();
         final idx = lowerContent.indexOf(lowerQuery);
@@ -236,8 +271,13 @@ abstract class CloudStorageClient {
     return results;
   }
 
-  /// Stream-based upload. Providers that support streaming override this.
-  /// Default implementation buffers the stream and calls uploadFile.
+  /// Maximum payload accepted by the legacy byte-upload compatibility path.
+  /// Transfer adapters override [uploadStream] with a bounded implementation.
+  static const maxBufferedUploadBytes = 32 * 1024 * 1024;
+
+  /// Small legacy uploads remain supported with a strict byte ceiling. Reject
+  /// oversized declarations before reading the source, and validate its exact
+  /// length before giving any bytes to the provider's committing upload API.
   Future<void> uploadStream(
     Stream<List<int>> dataStream,
     int length,
@@ -245,23 +285,40 @@ abstract class CloudStorageClient {
     String targetPath, {
     Function(int, int)? onProgress,
   }) async {
-    // Default: buffer to memory and delegate to uploadFile
+    if (length < 0 || length > maxBufferedUploadBytes) {
+      throw UnsupportedError(
+        'This provider requires a known upload size of at most 32 MiB. '
+        'Larger files require its streaming upload implementation.',
+      );
+    }
     final builder = BytesBuilder(copy: false);
     await for (final chunk in dataStream) {
+      if (builder.length + chunk.length > length) {
+        throw StateError('Upload source exceeded its declared length.');
+      }
       builder.add(chunk);
     }
-    await uploadFile(builder.takeBytes(), fileName, targetPath,
-        onProgress: onProgress);
+    if (builder.length != length) {
+      throw StateError('Upload source ended before its declared length.');
+    }
+    await uploadFile(
+      builder.takeBytes(),
+      fileName,
+      targetPath,
+      onProgress: onProgress,
+    );
   }
 
-  /// Stream-based download. Returns a stream of chunks.
-  /// Default implementation downloads all bytes then yields them as one chunk.
+  /// Providers must implement actual bounded reads. A directory's recorded
+  /// size cannot make a whole-file byte download safe: the source can grow or
+  /// the response can differ, before a caller has the chance to check it.
   Stream<List<int>> downloadStream(
     String remotePath, {
     Function(int, int)? onProgress,
   }) async* {
-    final bytes = await downloadFileBytes(remotePath, onProgress: onProgress);
-    yield bytes;
+    throw UnsupportedError(
+      'This provider has no bounded streaming download implementation.',
+    );
   }
 }
 
@@ -279,7 +336,7 @@ enum CloudProvider {
   s3,
   sftp,
   webdav,
-  smb
+  smb,
 }
 
 /// Provider features that affect available actions and transfer strategy.
@@ -311,15 +368,15 @@ class CloudCapabilities {
   });
 
   List<String> get highlights => [
-        if (streaming) 'low-memory transfers',
-        if (multipart) 'resumable large uploads',
-        if (versioning) 'version history',
-        if (sharing) 'share links',
-        if (search) 'server search',
-        if (thumbnails) 'remote previews',
-        if (trash) 'recoverable deletion',
-        if (serverSideCopy) 'fast cloud copies',
-      ];
+    if (streaming) 'low-memory transfers',
+    if (multipart) 'resumable large uploads',
+    if (versioning) 'version history',
+    if (sharing) 'share links',
+    if (search) 'server search',
+    if (thumbnails) 'remote previews',
+    if (trash) 'recoverable deletion',
+    if (serverSideCopy) 'fast cloud copies',
+  ];
 }
 
 /// A source-compatible capability contract for clients and test doubles.
@@ -329,95 +386,92 @@ class CloudCapabilities {
 extension CloudStorageClientCapabilities on CloudStorageClient {
   StorageTransferCapabilities get transferCapabilities =>
       this is CloudTransferOperations
-          ? (this as CloudTransferOperations).transferCapabilities
-          : const StorageTransferCapabilities();
+      ? (this as CloudTransferOperations).transferCapabilities
+      : const StorageTransferCapabilities();
 
   String get transferIdentity => this is CloudTransferOperations
       ? (this as CloudTransferOperations).transferIdentity
       : '';
 
   CloudCapabilities get capabilities => CloudCapabilities(
-        streaming: supportsStreaming,
-        multipart: supportsMultipart,
-        versioning: supportsVersioning,
-        sharing: supportsSharing,
-        search: supportsSearch,
-        thumbnails: supportsThumbnails,
-        trash: supportsTrash,
-        nativeShare: supportsNativeShare,
-        serverSideCopy: supportsServerSideCopy,
-        fullTextSearch: supportsFullTextSearch,
-        transfer: transferCapabilities,
-      );
+    streaming: supportsStreaming,
+    multipart: supportsMultipart,
+    versioning: supportsVersioning,
+    sharing: supportsSharing,
+    search: supportsSearch,
+    thumbnails: supportsThumbnails,
+    trash: supportsTrash,
+    nativeShare: supportsNativeShare,
+    serverSideCopy: supportsServerSideCopy,
+    fullTextSearch: supportsFullTextSearch,
+    transfer: transferCapabilities,
+  );
 }
 
 /// Stable provider metadata used before a client has been authenticated.
 extension CloudProviderMetadata on CloudProvider {
   String get displayName => switch (this) {
-        CloudProvider.azure => 'Azure Blob Storage',
-        CloudProvider.b2 => 'Backblaze B2',
-        CloudProvider.dropbox => 'Dropbox',
-        CloudProvider.filen => 'Filen',
-        CloudProvider.ftp => 'FTP / FTPS',
-        CloudProvider.gdrive => 'Google Drive',
-        CloudProvider.internxt => 'Internxt',
-        CloudProvider.nextcloud => 'Nextcloud',
-        CloudProvider.onedrive => 'OneDrive / SharePoint',
-        CloudProvider.pcloud => 'pCloud',
-        CloudProvider.s3 => 'S3 / S3-Compatible',
-        CloudProvider.sftp => 'SFTP / Storage Box',
-        CloudProvider.webdav => 'WebDAV',
-        CloudProvider.smb => 'SMB / NAS',
-      };
+    CloudProvider.azure => 'Azure Blob Storage',
+    CloudProvider.b2 => 'Backblaze B2',
+    CloudProvider.dropbox => 'Dropbox',
+    CloudProvider.filen => 'Filen',
+    CloudProvider.ftp => 'FTP / FTPS',
+    CloudProvider.gdrive => 'Google Drive',
+    CloudProvider.internxt => 'Internxt',
+    CloudProvider.nextcloud => 'Nextcloud',
+    CloudProvider.onedrive => 'OneDrive / SharePoint',
+    CloudProvider.pcloud => 'pCloud',
+    CloudProvider.s3 => 'S3 / S3-Compatible',
+    CloudProvider.sftp => 'SFTP / Storage Box',
+    CloudProvider.webdav => 'WebDAV',
+    CloudProvider.smb => 'SMB / NAS',
+  };
 
   String get onboardingDescription => switch (this) {
-        CloudProvider.azure =>
-          'For Azure containers and enterprise object storage.',
-        CloudProvider.b2 =>
-          'Cost-focused object storage with large-file support.',
-        CloudProvider.dropbox =>
-          'Personal cloud with OAuth, sharing, and previews.',
-        CloudProvider.filen => 'Privacy-focused personal cloud storage.',
-        CloudProvider.ftp =>
-          'Connect to a traditional FTP or encrypted FTPS server.',
-        CloudProvider.gdrive =>
-          'Personal or Workspace Drive with OAuth and search.',
-        CloudProvider.internxt =>
-          'Privacy-focused cloud with client-side encryption.',
-        CloudProvider.nextcloud =>
-          'Self-hosted cloud with files, sharing, and search.',
-        CloudProvider.onedrive =>
-          'Microsoft personal, business, or SharePoint storage.',
-        CloudProvider.pcloud =>
-          'Personal cloud storage authenticated with OAuth.',
-        CloudProvider.s3 => 'AWS S3 or a compatible object-storage endpoint.',
-        CloudProvider.sftp =>
-          'Secure file access, including Hetzner Storage Box.',
-        CloudProvider.webdav =>
-          'A standards-based server or compatible cloud drive.',
-        CloudProvider.smb => 'Windows, Samba and NAS file shares in the installed app.',
-      };
+    CloudProvider.azure =>
+      'For Azure containers and enterprise object storage.',
+    CloudProvider.b2 => 'Cost-focused object storage with large-file support.',
+    CloudProvider.dropbox =>
+      'Personal cloud with OAuth, sharing, and previews.',
+    CloudProvider.filen => 'Privacy-focused personal cloud storage.',
+    CloudProvider.ftp =>
+      'Connect to a traditional FTP or encrypted FTPS server.',
+    CloudProvider.gdrive =>
+      'Personal or Workspace Drive with OAuth and search.',
+    CloudProvider.internxt =>
+      'Privacy-focused cloud with client-side encryption.',
+    CloudProvider.nextcloud =>
+      'Self-hosted cloud with files, sharing, and search.',
+    CloudProvider.onedrive =>
+      'Microsoft personal, business, or SharePoint storage.',
+    CloudProvider.pcloud => 'Personal cloud storage authenticated with OAuth.',
+    CloudProvider.s3 => 'AWS S3 or a compatible object-storage endpoint.',
+    CloudProvider.sftp => 'Secure file access, including Hetzner Storage Box.',
+    CloudProvider.webdav =>
+      'A standards-based server or compatible cloud drive.',
+    CloudProvider.smb =>
+      'Windows, Samba and NAS file shares in the installed app.',
+  };
 
   String get credentialHint => switch (this) {
-        CloudProvider.dropbox ||
-        CloudProvider.gdrive ||
-        CloudProvider.onedrive ||
-        CloudProvider.pcloud =>
-          'You will sign in in your provider\'s browser window.',
-        CloudProvider.azure =>
-          'Have the account name, container, and access key ready.',
-        CloudProvider.b2 =>
-          'Have the key ID, application key, and bucket ready.',
-        CloudProvider.s3 =>
-          'Have the endpoint, region, bucket, and access keys ready.',
-        CloudProvider.ftp ||
-        CloudProvider.sftp ||
-        CloudProvider.smb ||
-        CloudProvider.webdav ||
-        CloudProvider.nextcloud =>
-          'Have the server address and account credentials ready.',
-        _ => 'Your credentials are stored in the platform secure store.',
-      };
+    CloudProvider.dropbox ||
+    CloudProvider.gdrive ||
+    CloudProvider.onedrive ||
+    CloudProvider.pcloud =>
+      'You will sign in in your provider\'s browser window.',
+    CloudProvider.azure =>
+      'Have the account name, container, and access key ready.',
+    CloudProvider.b2 => 'Have the key ID, application key, and bucket ready.',
+    CloudProvider.s3 =>
+      'Have the endpoint, region, bucket, and access keys ready.',
+    CloudProvider.ftp ||
+    CloudProvider.sftp ||
+    CloudProvider.smb ||
+    CloudProvider.webdav ||
+    CloudProvider.nextcloud =>
+      'Have the server address and account credentials ready.',
+    _ => 'Your credentials are stored in the platform secure store.',
+  };
 }
 
 /// Factory for creating cloud storage clients
@@ -427,8 +481,10 @@ class CloudStorageFactory {
   // --- TOGGLE: Set this to false to disable Internxt globally ---
   static const bool isInternxtSupported = true;
 
-  static CloudStorageClient create(CloudProvider provider,
-      {required dynamic config}) {
+  static CloudStorageClient create(
+    CloudProvider provider, {
+    required dynamic config,
+  }) {
     // Robust fallback: If Internxt is selected but disabled, force Filen or throw
     if (provider == CloudProvider.internxt && !isInternxtSupported) {
       _log.warn('Internxt is currently disabled. Defaulting to Filen.');
@@ -457,7 +513,11 @@ class CloudStorageFactory {
         case CloudProvider.webdav:
           return WebDavClientAdapter(config: config);
         case CloudProvider.smb:
-          return SmbClientAdapter(config: config is SmbConfigService ? config : SmbConfigService(InMemorySecureStorage()));
+          return SmbClientAdapter(
+            config: config is SmbConfigService
+                ? config
+                : SmbConfigService(InMemorySecureStorage()),
+          );
         case CloudProvider.internxt:
           if (isInternxtSupported) {
             return InternxtClientAdapter(config: config);
