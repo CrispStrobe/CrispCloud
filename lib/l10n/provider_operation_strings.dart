@@ -1,3 +1,4 @@
+import 'mount_guard_error_strings.dart';
 import '../services/auth_sync_notice.dart';
 import 'auth_sync_notice_strings.dart';
 import 'provider_workflow_strings.dart';
@@ -43,6 +44,8 @@ String? localizedKnownProviderError(BuildContext context, Object error) =>
     localizedKnownProviderErrorForLanguage(Localizations.maybeLocaleOf(context)?.languageCode ?? 'en', error);
 
 String? localizedKnownProviderErrorForLanguage(String language, Object error) {
+  final mountGuard = localizedMountGuardErrorForLanguage(language, error);
+  if (mountGuard != null) return mountGuard;
   final workflow = localizedProviderWorkflowErrorForLanguage(language, error);
   if (workflow != null) return workflow;
   if (error is AuthSyncNotice) return localizedAuthSyncNotice(language, error);

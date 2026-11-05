@@ -400,6 +400,8 @@ jobs:
       - run: flutter pub get
       - name: Check macOS startup smoke test behavior
         run: bash test/macos_startup_smoke_test.sh
+      - name: Check native FUSE helper signing
+        run: bash test/macos_fuse_bridge_signing_test.sh
       - name: Check native FUSE directory pagination
         run: |
           clang -std=c11 -O2 -Wall -Wextra -Werror -I macos/vendor test/fuse_bridge_readdir_test.c -o /tmp/crispcloud-fuse-readdir-test

@@ -11,5 +11,6 @@ mkdir -p "$output_dir"
 
 if [ -n "${EXPANDED_CODE_SIGN_IDENTITY:-}" ]; then
   /usr/bin/codesign --force --sign "$EXPANDED_CODE_SIGN_IDENTITY" \
+    --entitlements "$SRCROOT/Runner/FuseBridge.entitlements" \
     --timestamp=none "$output_file"
 fi

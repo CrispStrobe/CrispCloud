@@ -172,7 +172,25 @@ jobs:
             /usr/libexec/PlistBuddy -c "Add :com.apple.developer.team-identifier string $TEAM" "$out"
             echo "$out"
           }
-          # Sign nested-first: frameworks, then the extension, then the app.
+          # Sign nested-first, including the executable helper before the app.
+          # Do not use the app's augmented entitlements for this tool: sandbox
+          # inheritance requires the dedicated app-sandbox + inherit pair.
+          HELPER="$APP/Contents/Resources/crispcloud_fuse_bridge"
+          test -x "$HELPER" || { echo "::error::FUSE bridge missing"; exit 1; }
+          codesign --force --timestamp --sign "$IDENT" \
+            --entitlements macos/Runner/FuseBridge.entitlements "$HELPER"
+          codesign --verify --all-architectures --strict "$HELPER"
+          codesign -d --entitlements - --xml "$HELPER" 2>/dev/null \
+            > "$RUNNER_TEMP/fuse-bridge-entitlements.plist"
+          python3 - "$RUNNER_TEMP/fuse-bridge-entitlements.plist" <<'PYENTS'
+          import plistlib, sys
+          with open(sys.argv[1], 'rb') as source:
+              actual = plistlib.load(source)
+          expected = {'com.apple.security.app-sandbox': True,
+                      'com.apple.security.inherit': True}
+          if actual != expected:
+              raise SystemExit('FUSE bridge sandbox inheritance entitlements are incorrect')
+          PYENTS
           find "$APP/Contents/Frameworks" -name '*.framework' -maxdepth 1 -print0 2>/dev/null \
             | xargs -0 -I{} codesign --force --timestamp --options runtime --sign "$IDENT" {} || true
           find "$APP/Contents/Frameworks" -name '*.dylib' -print0 2>/dev/null \

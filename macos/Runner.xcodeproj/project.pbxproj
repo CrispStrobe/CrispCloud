@@ -430,6 +430,7 @@
 			);
 			inputPaths = (
 				"$(SRCROOT)/fuse_bridge.c",
+				"$(SRCROOT)/Runner/FuseBridge.entitlements",
 			);
 			name = "Build FUSE bridge";
 			outputPaths = (

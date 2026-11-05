@@ -1531,7 +1531,7 @@ class _InternalViewerDialogState extends ConsumerState<InternalViewerDialog> {
               if (!_loading && _error == null) ...[
                 if (_canEdit)
                   IconButton(
-                    tooltip: '${AppLocalizations.of(context)!.edit} (F4)',
+                    tooltip: '${AppLocalizations.of(context)?.edit ?? 'Edit'} (F4)',
                     icon: const Icon(Icons.edit_outlined),
                     onPressed: () => Navigator.of(context)
                         .pop(InternalViewerAction.edit),

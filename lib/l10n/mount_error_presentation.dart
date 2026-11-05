@@ -1,3 +1,4 @@
+import 'mount_guard_error_strings.dart';
 import 'package:flutter/widgets.dart';
 
 import '../services/fuse_mount_service.dart';
@@ -18,6 +19,9 @@ String localizedMountEntryError(BuildContext context, MountEntry entry) {
 
 /// Localizes known service messages while preserving unrecognized OS details.
 String localizedMountError(BuildContext context, String message) {
+  final guard = localizedMountGuardErrorForLanguage(
+      Localizations.maybeLocaleOf(context)?.languageCode ?? 'en', message);
+  if (guard != null) return guard;
   final strings = MountDialogStrings(context);
   if (message == FuseMountService.rcloneMissing) {
     return MountBackendStrings(context).rcloneMissing;

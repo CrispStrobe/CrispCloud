@@ -87,3 +87,21 @@ mode is not supported: pending uploads are not serialized against close or
 shutdown, and flush failures are currently swallowed during cleanup. Do not
 enable writable mounts until those paths have dedicated concurrency and
 failure-recovery tests.
+
+## Signed helper checks
+
+`bash test/macos_fuse_bridge_signing_test.sh` compiles a disposable universal
+helper, signs it ad hoc, and verifies its signature and exact sandbox-inheritance
+entitlements without launching it. Distribution signing re-signs the helper
+with the distribution identity before sealing the parent app. The helper uses
+its own entitlement file, not the parent app's identity or resource grants.
+See [Apple's helper-tool signing guidance](https://developer.apple.com/documentation/xcode/embedding-a-helper-tool-in-a-sandboxed-app).
+
+These checks do not establish that mounting works from a signed sandboxed app.
+The runtime remains separately installed; it is never bundled or re-signed by
+CrispCloud. Existing helper runtime flags are unchanged. If hardened runtime is
+enabled for the helper in future, its loading of a different developer's FUSE
+library needs explicit library-validation review. Inherited sandbox rights,
+mount-directory access and IPC socket access also need an isolated development
+host test. Use a unique probe bundle identity with no credential or preference
+APIs, rather than launching the production identity with a temporary HOME.
