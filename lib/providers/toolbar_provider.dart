@@ -87,26 +87,27 @@ class PanelViewModeNotifier extends StateNotifier<PanelViewMode> {
   PanelViewModeNotifier(this._service, this._side)
       : super(PanelViewMode.full) {
     _service.getMode(_side).then((mode) {
-      if (mounted) state = mode;
+      if (mounted && _changes == 0) state = mode;
     });
   }
 
   final PanelViewModeService _service;
   final PanelSide _side;
+  int _changes = 0;
 
   Future<void> setMode(PanelViewMode mode) async {
+    _changes++;
+    if (mounted) state = mode;
     await _service.setMode(_side, mode);
-    state = mode;
   }
 
   Future<void> cycleMode() async {
-    var next = await _service.cycleMode(_side);
+    var next = state.next;
     // Tree view is not available on web — skip to brief.
     if (next == PanelViewMode.tree && kIsWeb) {
       next = PanelViewMode.brief;
-      await _service.setMode(_side, next);
     }
-    state = next;
+    await setMode(next);
   }
 }
 

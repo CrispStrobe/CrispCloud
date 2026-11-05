@@ -15,9 +15,11 @@ import 'package:shared_preferences/shared_preferences.dart';
 import 'package:crisp_cloud/models/file_item.dart';
 import 'package:crisp_cloud/models/panel_side.dart';
 import 'package:crisp_cloud/providers/providers.dart';
+import 'package:crisp_cloud/providers/panel_source_provider.dart';
 import 'package:crisp_cloud/services/cloud_storage_interface.dart';
 import 'package:crisp_cloud/services/filen_config_service.dart';
 import 'package:crisp_cloud/services/local_file_service.dart';
+import 'package:crisp_cloud/services/panel_source_service.dart';
 import 'package:crisp_cloud/services/secure_storage_service.dart';
 
 class _ArchiveFileService implements LocalFileService {
@@ -54,7 +56,7 @@ class _ArchiveFileService implements LocalFileService {
   Future<bool> hasAccessToPath(String path) async => true;
 
   @override
-  Future<List<FileSystemEntity>?> listDirectory(String path) async => const [];
+  Future<List<FileSystemEntity>?> listDirectory(String path) async => [File(zipPath)];
 
   @override
   Future<String?> requestDirectoryAccess({String? initialDirectory}) async =>
@@ -140,9 +142,8 @@ void main() {
     final panel = container.read(panelProvider(PanelSide.local));
     await Future<void>.delayed(const Duration(milliseconds: 50));
 
-    await panel.enterArchive(
-      FileItem(name: 'sample.zip', path: zipPath, isFolder: false),
-    );
+    await panel.refresh();
+    await panel.enterArchive(panel.files!.firstWhere((file) => file.path == zipPath));
 
     expect(panel.isInArchive, isTrue);
     final member = panel.files!.firstWhere((f) => f.name == 'hello.txt');
@@ -165,14 +166,33 @@ void main() {
     final panel = container.read(panelProvider(PanelSide.local));
     await Future<void>.delayed(const Duration(milliseconds: 50));
 
-    await panel.enterArchive(
-      FileItem(name: 'sample.zip', path: zipPath, isFolder: false),
-    );
+    await panel.refresh();
+    await panel.enterArchive(panel.files!.firstWhere((file) => file.path == zipPath));
     expect(panel.isInArchive, isTrue);
 
     await panel.navigateToPath(tempDir.path);
 
     expect(panel.isInArchive, isFalse);
     expect(panel.currentPath, tempDir.path);
+  });
+
+  test('a local archive in the right pane reads and returns to local storage', () async {
+    final panel = container.read(panelProvider(PanelSide.remote));
+    await Future<void>.delayed(const Duration(milliseconds: 50));
+    container.read(panelSourceProvider(PanelSide.remote).notifier)
+        .setSource(LocalPanelSource(tempDir.path));
+    await Future<void>.delayed(const Duration(milliseconds: 50));
+    final file = panel.files!.firstWhere((file) => file.path == zipPath);
+    expect(panel.originForFile(file)!.source, isA<LocalPanelSource>());
+    await panel.enterArchive(file);
+    expect(panel.archiveSource!.parent, isA<LocalPanelSource>());
+    final member = panel.files!.firstWhere((file) => file.name == 'hello.txt');
+    expect(String.fromCharCodes(await panel.readArchiveMember(member)), 'Hello');
+    await expectLater(panel.readArchiveMember(member, maxBytes: 4), throwsException);
+    panel.exitArchive();
+    await Future<void>.delayed(const Duration(milliseconds: 50));
+    expect(panel.isInArchive, isFalse);
+    expect(panel.currentPath, tempDir.path);
+    expect(panel.files!.any((file) => file.path == zipPath), isTrue);
   });
 }

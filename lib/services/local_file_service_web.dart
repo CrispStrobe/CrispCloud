@@ -18,7 +18,8 @@ LocalFileService createPlatformFileService() {
 }
 
 class WebFileService
-    implements LocalFileService, LocalFileSaveReporter, FreshLocalFileReader {
+    implements LocalFileService, LocalFileSaveReporter, FreshLocalFileReader,
+        LocalFileSourceIdentity {
   static const _log = Log('WebFS');
 
   // Singleton pattern to preserve state across reloads/instantiations
@@ -32,6 +33,13 @@ class WebFileService
 
   // File System Access API Handles (Chrome/Edge only) — one per opened root folder.
   static final Map<String, dynamic> _rootHandles = {};
+  static final Map<String, Object> _rootIdentities = {};
+
+  @override
+  Object? sourceIdentityForPath(String path) {
+    final parts = path.split('/').where((part) => part.isNotEmpty);
+    return parts.isEmpty ? null : _rootIdentities['/${parts.first}'];
+  }
 
   @override
   String currentPath = '/';
@@ -80,6 +88,7 @@ class WebFileService
         _clearSubtree('/$rootName');
 
         _rootHandles['/$rootName'] = dirHandle;
+        _rootIdentities['/$rootName'] = Object();
 
         // Add the root folder to top-level listing (if not already there).
         if (!_virtualTree['/']!.any((e) => e.path == '/$rootName')) {
@@ -124,6 +133,11 @@ class WebFileService
       }
 
       debugPrint("[Web] Processing ${input.files!.length} files via legacy input (root: $rootName)...");
+
+      // A new file-input grant can name an unrelated folder. Discard both
+      // cached children and any previous writable handle for that name.
+      _clearSubtree('/$rootName');
+      _rootIdentities['/$rootName'] = Object();
 
       if (!_virtualTree['/']!.any((e) => e.path == '/$rootName')) {
         _virtualTree['/']!.add(Directory('/$rootName'));
@@ -187,6 +201,7 @@ class WebFileService
     _fileRefs.removeWhere((k, _) => k.startsWith('$rootPath/') || k == rootPath);
     _dirHandles.removeWhere((k, _) => k == rootPath || k.startsWith('$rootPath/'));
     _rootHandles.remove(rootPath);
+    _rootIdentities.remove(rootPath);
   }
 
   /// Load only the immediate children of a directory handle (no recursion).

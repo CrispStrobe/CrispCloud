@@ -51,6 +51,13 @@ abstract interface class LocalMediaFileAccess {
   });
 }
 
+/// Optional identity for a granted virtual filesystem root. A path alone
+/// cannot distinguish two different browser folders both named "Photos".
+/// New grants must return a new opaque token; ordinary file refreshes keep it.
+abstract interface class LocalFileSourceIdentity {
+  Object? sourceIdentityForPath(String path);
+}
+
 extension LocalFileEditorOperations on LocalFileService {
   Future<Uint8List> readFileForEdit(
     String path, {
