@@ -1,0 +1,630 @@
+## CrispCloud maintained copy of 2.51.0
+
+- Register only Android/iOS/macOS plugins, avoiding unused desktop metadata
+  dependencies on unsupported editing targets.
+- Bundle native Android dependency license notices.
+- Bundle an Apple privacy manifest describing file metadata access on media
+  snapshots and outputs staged inside the app's container.
+- Preserve the upstream renderer and regression tests without changes.
+
+## 2.51.0
+- **FEAT**(iOS, macOS): `EditorVideo.content` and `VideoAudioTrack.path` take a photo library `ph://` URL, such as the ones `file_picker` returns with `copyMedia: false`, and read the video in place without copying it. Only a slow-motion video is exported once into the cache. iOS apps now need `NSPhotoLibraryUsageDescription` in their `Info.plist`.
+
+## 2.50.1
+- **FIX**(iOS, macOS): A `VideoSegment` trim a fraction of a microsecond off a frame's start, such as a frame time from `getLumaFrameStream`, cuts on that frame. The sliver of the neighbouring frame it took in rendered as a whole extra frame at the end or the start.
+- **FIX**(android): A `VideoSegment` trim one microsecond after a frame's start, such as a frame time rounded instead of truncated, cuts on that frame instead of keeping it at the end or dropping it at the start.
+
+## 2.50.0
+- **FEAT**(iOS, macOS): `VideoRenderData.preserveSourceFrameTiming` renders on the source track's own frame times, so a fractional- or variable-rate clip keeps every picture and timestamp. Needs one forward segment at original speed; Android already behaves this way.
+- **FIX**(android): A trimmed segment no longer loses the B-frames just before its end. Media3 is updated to 1.11.1; apps that force a Media3 version need 1.11.0 or later.
+
+## 2.49.0
+- **FEAT**(android, iOS, macOS): Speed ramps on audio tracks. `VideoAudioTrack.speedRamp` speeds a custom track up and down along a `VideoSpeedRamp` at unchanged pitch, and `AudioMergeSegment.speedRamp` bakes the same stretch into a merged file for an editor preview. Ducking and `AudioLevelEnvelope` follow the ramp.
+
+## 2.48.0
+- **FEAT**(android, iOS, macOS): Spin and flip layer animations. `LayerAnimationType.spin` turns a layer around its centre and `LayerAnimationType.flip` turns it around its vertical or horizontal axis like a card (`FlipAxis`), both by `LayerAnimation.turns` full turns. In a `loop` they keep turning instead of swinging back. A `switch` over `LayerAnimationType` has to handle the new values.
+
+## 2.47.0
+- **FEAT**(android, iOS, macOS): Five more clip transitions. `lightLeak` washes warm light across the cut, `clockWipe` reveals the next clip behind a hand sweeping around the centre, `diagonalWipe` reveals it along a diagonal edge, `flip` turns the picture over like a card and `cube` turns it like the side of a cube. `diagonalWipe`, `flip` and `cube` take a `direction`. `lightLeak` counts as a flash (`ClipTransitionType.flashes`).
+
+## 2.46.0
+- **FEAT**(android, iOS, macOS): Clip keyframes. `VideoSegment.keyframes` pans, zooms and turns a clip's picture between `SegmentKeyframe`s, e.g. for a push-in or a pan across a wide shot. The motion is keyed to the clip's source frames, so it stays on them through trims, speed changes, reverse and overlap transitions.
+
+## 2.45.1
+- **FIX**(iOS, macOS): Videos re-encoded for a `bitrate` and stop-motion videos are tagged BT.709, so FFmpeg-based players no longer shift their colors.
+- **FIX**(iOS, macOS): A render with a `bitrate` shows a BT.601 source in the same colors as one without.
+
+## 2.45.0
+- **FEAT**(android, iOS, macOS): Frame sequences. `ImageLayer.sequence` plays a list of `ImageLayerFrame`s, each for its own duration, from one layer, like the frames of an animated GIF. A picture that changes over time, such as a running timer, no longer needs a layer per image, which made Android exports slow or stall.
+
+## 2.44.0
+- **FEAT**(android, iOS, macOS): Shape masks that change over time. `VideoLayer.shapeMask` and `ImageLayer.shapeMask` take a `LayerShapeMask` with the shapes of pro_image_editor's `LayerMask`, and its keyframes move, resize, turn and soften it, so a mask can reveal a clip or wipe across it.
+
+## 2.43.2
+- **FIX**: Tasks created in one go no longer share an id. Every config's default task id was the current time, so two `getWaveform` calls started together, like `AudioDucking.analyze` measuring two voice-overs, often got the same one, and the platforms refused the second with `TASK_ALREADY_RUNNING`; with several voice-overs nothing ducked. Default ids now never repeat within an isolate.
+
+## 2.43.1
+- **FIX**(iOS, macOS): A clip whose first video frame starts a few milliseconds late, as in many ffmpeg transcodes and fragmented mp4s, no longer opens with a black frame and plays one frame late; it starts on its first frame, as on Android.
+- **FIX**(iOS, macOS): A layered composition ends a clip at its last video frame, as on Android, instead of showing the layer below while the container runs on.
+
+## 2.43.0
+- **FEAT**(android, iOS, macOS): Audio ducking. `AudioDucking.analyze` turns voice-over tracks into an `AudioVolumeCurve` that lowers the music while somebody talks, and `VideoAudioTrack.volumeCurve` applies any such curve in the render.
+- **FIX**(android, iOS, macOS): `getWaveform` keeps time at sample rates that `high` and `ultra` do not divide evenly, like 44.1 kHz, and Android no longer stretches audio with more than two channels.
+
+## 2.42.0
+- **FEAT**(android, iOS, macOS): Blend modes. `ImageLayer.blendMode` and `VideoLayer.blendMode` blend a layer with the picture beneath it (`multiply`, `screen`, `overlay`, `softLight`, `darken`, `lighten`, `add`, `difference`), e.g. for a double exposure or a light leak. `LayerBlendMode.blendMode` is the Flutter `BlendMode` that previews the same result.
+
+## 2.41.2
+- **FIX**(iOS, macOS): A render with a `bitrate` no longer fails with `RENDER_ERROR` (-11861) when the source audio has a low sample rate, such as 22.05 kHz mono. The AAC bitrate now stays within what the encoder accepts for the format. Audio at a rate AAC does not support, such as 7.35 or 37.8 kHz, is resampled to the next supported rate instead of crashing the app.
+
+## 2.41.1
+- **FIX**: `VideoSpeedRamp.cropped` keeps the steps the whole ramp played there, so splitting or trimming a ramped segment no longer moves the cut or changes its length. `toMap` stores the crop under `crop`.
+
+## 2.41.0
+- **FEAT**(android, iOS, macOS): `VideoAudioTrack.playbackSpeed` plays a custom audio track faster or slower at unchanged pitch, keeping stereo and gap-less loops. Source trims stay in source time; placement and fades stay in output time.
+
+## 2.40.0
+- **FEAT**(android, iOS, macOS): Loop point search. `VideoLoopPointFinder.findLoopPoint` finds where to cut a video so it loops without a visible jump, matching the last frames and their motion against the first ones, optionally also searching the start or reading it from another clip.
+
+## 2.39.0
+- **FEAT**(android, iOS, macOS): Speed ramps. `VideoSegment.speedRamp` lets a clip speed up and slow down while it plays, eased between the speeds of a `VideoSpeedRamp`, whose `outputDuration`, `sourceToOutput` and `outputToSource` give the exact timing the render uses. The clip's sound follows the speed like a tape.
+
+## 2.38.0
+- **FEAT**(android, iOS, macOS): Nine more overlap clip transitions: `zoomIn`, `zoomOut`, `spin`, `whipPan`, `blur`, `glitch`, `flash`, `iris` and `stretch`; `whipPan` and `stretch` take a direction. `ClipTransitionType.isDip`, `isOverlap`, `usesDirection` and `flashes` tell the types apart, so an app no longer hard-codes them and can keep flashes within WCAG 2.3.1.
+- **PERF**(android): Dissolve, slide, push and wipe pre-render several times faster, with the same output.
+- **FIX**(iOS, macOS): An overlap transition out of a clip whose file runs past its last video frame no longer loses the outgoing clip for the rest of the blend.
+
+## 2.37.0
+- **FEAT**(android): `RenderEncoderException.codecKind` says whether a decoder or the encoder could not be acquired, and `RenderEncoderException.details` keeps what the platform reported. Only a decoder shortage is fixed by fewer layers or released preview players, so an app can now tell the user what to change.
+
+## 2.36.0
+- **FEAT**(android, iOS, macOS): Object tracking. `VideoObjectTracker.trackVideo` follows a region marked on one frame forward and backward through a clip, in a background isolate and without an ML model, so a text or sticker can be pinned to a moving subject. A loosely drawn region follows the subject, not the background around it. The returned `VideoObjectTrack` holds the object's position, size, scale and rotation per frame and says where it was lost, e.g. when it left the frame.
+
+## 2.35.0
+- **FEAT**(android, iOS, macOS): Video stabilization. `VideoStabilizationAnalyzer.analyzeVideo` measures the camera shake in a clip with classical motion estimation in a background isolate (no ML model) and plans a steadier path that zooms in no further than `maxZoom`; where steadying would need more, some shake stays. `VideoSegment.stabilization` applies the result in a render, each frame by its source timestamp.
+- **FEAT**(android, iOS, macOS): `getLumaFrameStream` streams every frame of a range as raw 8-bit grayscale with its source timestamp, upright and in presentation order, for motion analysis without image encoding.
+
+## 2.34.0
+- **FEAT**(android, iOS, macOS): `VideoLayer.mask` shapes a layer's clips with an alpha matte, so a clip can show in a circle or a heart, or fade out through a soft edge over the layers below. The mask moves, scales and turns with each clip.
+
+## 2.33.4
+- **FIX**(android, iOS, macOS): A render with an `endTime` skips the overlap transitions that would start after it. Each one used to be encoded first, so a 6 s export of a long timeline with a transition between every clip took minutes; it now takes about as long as the same clips without transitions.
+
+## 2.33.3
+- **FIX**(iOS, macOS): The audio crossfade of an overlap transition and of the loop-restart blend now follows the transition's curve, like the picture and the Android export, instead of a straight line. Through an elastic curve's overshoot each clip holds at its own volume or at silence.
+
+## 2.33.2
+- **FIX**(android, iOS, macOS): A render's memory no longer grows with every still image layer. A video with 200 stickers or drawing strokes now needs about as much as one with a single sticker, and exports faster.
+
+## 2.33.1
+- **FIX**(iOS): Leaving the app during a render or a stop-motion render no longer fails it with `Operation Interrupted`. It keeps running in the background while iOS allows (about 30 s), and otherwise starts over once the app is back.
+- **FIX**(iOS, macOS): A render without a bitrate cap and a stop-motion render overwrite a file already at the output path instead of failing.
+
+## 2.33.0
+- **FEAT**(android, iOS, macOS): `ImageLayer.audioVisualizer` draws bars, mirrored bars, a wave or a ring of bars that move with the sound, from band levels the app passes as a `LayerAudioVisualizer`. `AudioVisualizerPainter` draws the same shapes for an editor preview.
+
+## 2.32.2
+- **FIX**(android): In apps minified with R8, exports on Android 11 and older no longer fail with `Video frame processing error` or, under R8 full mode, crash the app with `NoClassDefFoundError`. The plugin now ships consumer ProGuard rules for Media3.
+
+## 2.32.1
+- **FIX**(android): A layer turned by its keyframes or by a wiggle stays where it was placed when it sits more than half its size past the frame edge with its corners still reaching in, as on iOS and macOS. It used to be pulled in to at most half its upright size past the edge, so more of it showed than in the preview.
+
+## 2.32.0
+- **FEAT**(android, iOS, macOS): `VideoSegment.equalizer` and `VideoAudioTrack.equalizer` shape a clip's or a track's sound with an `AudioEqualizer` of low-shelf, peak and high-shelf bands. Both platforms compute the same filters, and a boost that would clip is limited at -1 dBFS.
+- **FIX**(android, iOS, macOS): The audio crossfade of an overlap transition plays each clip at its own volume, where it used to play both at their original level, and fades the other clip in or out when one is muted instead of going silent.
+- **FIX**(android): A muted clip, or one without audio, ahead of a clip with 5.1 audio no longer fails the export.
+
+## 2.31.0
+- **FEAT**(android, iOS, macOS): `ImageLayer.keyframeClock` and `VideoLayer.keyframeClock` time a layer's keyframes on a clock of their own, mapped piece by piece from the video's timeline through `KeyframeClockPoint`s. Keyframes made in an editor that shows a clip transition at a different pace than the video plays it keep every eased motion on the curve the editor shows.
+
+## 2.30.0
+- **FEAT**(android, iOS, macOS): `LayerAnimation.loopPhase` starts a loop part way into its cycle, so a loop split into parts that repeat at different paces stays in step from one part to the next.
+
+## 2.29.1
+- **FIX**(android): On a sped-up segment, image layers with their animations and keyframes, timed color filters and the frame rate cap follow the output timeline, as on iOS and macOS.
+
+## 2.29.0
+- **FEAT**(android, iOS, macOS): `ImageLayer.keyframes` and `VideoLayer.keyframes` move a layer between `TimelineKeyframe`s (position, size, rotation, opacity) with easing; layer animations play on top.
+- **FEAT**(android, iOS, macOS): `LayerAnimation.loopStart`/`loopEnd` limit a loop to part of a layer, e.g. the stretch between two keyframes.
+- **FIX**(android): An image layer centred outside the frame is drawn with the part that reaches into it instead of being dropped.
+
+## 2.28.0
+- **FEAT**(android, iOS, macOS): `VideoEffect.triggers` fires an effect at given points in time instead of continuously, for example on the beats of a song: one zoom punch, flash or glitch burst per trigger. Preview and export start each hit on the same frame.
+
+## 2.27.0
+- **FEAT**(android, iOS, macOS): `LayerAnimationType.wiggle` tilts an image layer by `LayerAnimation.wiggleAngle` and `LayerAnimationType.bounce` lifts it by `LayerAnimation.bounceHeight` times its height, censor layers included.
+- **FEAT**(android, iOS, macOS): `AnimationPhase.loop` repeats an animation for as long as the layer is visible, one cycle per `duration`.
+- **FEAT**(android, iOS, macOS): `ImageLayer.animationStartTime`/`animationEndTime` let several layers that each show part of one overlay share one run of animations instead of restarting them.
+- **FEAT**: `LayerAnimationType.typewriter` and `wordByWord` mirror `pro_image_editor`'s text reveals so animations convert between the packages; the renderer skips them.
+- **FIX**(iOS, macOS): A slide and a scale on the same layer now compose the same in either list order, as on Android.
+
+## 2.26.0
+- **FEAT**(android, iOS, macOS): `VideoRenderData.customEffects` renders video effects the app writes itself in native code: a GLSL shader on Android, Core Image on iOS and macOS, registered under an id with `CustomVideoEffects.register` and named by a `CustomVideoEffect`, with its own params and time range. An effect can ask for earlier frames of the same clip, counted on the rendered video, so an effect such as an echo trail exports the same however the clip was played. A render that names an id nothing is registered under fails. On iOS and macOS a render with a `VideoRenderData.composition` skips them for now.
+
+## 2.25.0
+- **FEAT**(android, iOS, macOS): `ImageLayer.censor` blurs (`LayerCensor.blur`) or pixelates (`LayerCensor.pixelate`) the picture beneath an image layer instead of drawing it, e.g. to hide a face or a license plate. Image layers after it stay on top.
+
+## 2.24.0
+- **FEAT**(android, iOS, macOS): A volume above 1.0 on a `VideoSegment` or a `VideoAudioTrack` no longer clips loud audio such as a mastered song; peaks that would pass -1 dBFS are limited instead. Volumes at or below 1.0 render as before.
+- **FIX**(iOS, macOS): A clip of 2 s or less plays at its own volume from the start. Before, it faded from the previous clip's volume across its whole length.
+
+## 2.23.0
+- **FEAT**(android): `EditorVideo.safeFilePath` copies an `EditorVideo.content` video into a temporary file instead of throwing. Without that call, the plugin keeps reading the URI in place.
+- **FIX**(android): `EditorVideo.content` works with providers that stream the file without random access, as some cloud and archive providers do. Such a source is copied once into the cache; before, most calls failed with `setDataSource failed`.
+
+## 2.22.0
+- **FEAT**(android): `EditorVideo.content` reads a `content://` URI, e.g. from the photo picker or the Storage Access Framework, in place instead of copying the file. Other platforms throw an `UnsupportedError`. `EditorVideoType` gains `content`.
+- **FIX**(iOS, macOS): WAV extraction of HE-AAC audio writes the decoded sample rate and channel count, so the file no longer plays two to four times too long.
+- **FIX**(android): A trimmed WAV extraction keeps exactly the requested range. It came out up to ~110 ms short and shifted.
+
+## 2.21.0
+- **FEAT**(android, iOS, macOS): Four more video effects: `blockGlitch` (the picture breaks into coarse blocks while slices slip sideways, in short bursts), `filmGrain` (fine, calm grain), `signalInterference` (thin flickering slices that shift sideways, with bursts of noise) and `crt` (strong scanlines and a slight color fringe, without movement).
+- **FEAT**(android, iOS, macOS): Video effects that move or rearrange the picture: `shake`, `zoomPulse`, `mirror`, `kaleidoscope`, `splitScreen` and `wave`. `VideoEffectFrame` gains a geometry stage for them, ahead of every other operation: a wave (`waveAmplitude`, `wavePeriod`, `wavePhase`), then `zoom`, `offsetX`/`offsetY`, `mirrorX`/`mirrorY`, then `tiles`, so `VideoEffectFrame.toList` grows from 27 to 36 values. `VideoEffectPreview` shows them live as well.
+- **FEAT**(android, iOS, macOS): A `glow` effect: the brightest areas bloom softly into their surroundings. `VideoEffectFrame` gains `glow`, `glowThreshold` and `glowRadius`, applied last, so `toList` grows to 39 values. `VideoEffectPreview` shows it live.
+
+## 2.20.0
+- **FEAT**(android, iOS, macOS): `VideoRenderData.effects` adds effects that distort the picture itself: glitch, RGB split, VHS, TV static, old film, pixelate, pixel pulse, strobe, negative flash and vignette, each with an intensity and an optional time range. A flashing effect on its own stays below the three flashes a second that WCAG 2.3.1 allows.
+- **FEAT**: `VideoEffectPreview` shows the same effects live over a video player, frame for frame what the export renders (Impeller only).
+
+## 2.19.1
+- **FIX**(android): Image layers keep their place and size on segments of another resolution, as on iOS and macOS, instead of drifting and growing on a smaller segment.
+
+## 2.19.0
+- **FEAT**(android, iOS, macOS): `ChromaKey` can key a white or light grey wall: a neutral key weighs brightness too, so black and dark greys stay, and `ChromaKey.autoDetect` accepts a bright neutral border. Green and blue screens key exactly as before.
+
+## 2.18.1
+- **FIX**(android): With a custom audio track mixed in, each segment and track keeps its own `volume`. Volumes could swap between sources, and a segment's volume was ignored.
+- **FIX**(android): A layered `VideoComposition` keeps its layers' own audio, placed where each clip plays and at its volume.
+- **FIX**(android): 5.1 audio mixed with stereo no longer fails the render, and its stereo downmix no longer moves front right to the left channel.
+
+## 2.18.0
+- **FIX**(iOS, macOS): A `VideoAudioTrack` is placed on the exported video, as on Android. With a `VideoRenderData.startTime` trim, its `startTime`/`endTime` count from the trimmed start, and its fades land at the output's edges instead of being cut off.
+
+## 2.17.0
+- **FEAT**(android, iOS, macOS): `VideoAudioTrack.fadeInDuration` and `fadeOutDuration` fade a custom audio track in from and out to silence. The fade out ends where the track's audio ends.
+
+## 2.16.0
+- **FEAT**(android): A failed render reports the video formats it read. `NativeFailureDetails.sources` lists MIME type, bit depth and transfer (`sdr`, `hlg`, `pq`), and `hasHdrSource` tells an HDR failure apart from an SDR one. Apple platforms leave it null.
+- **FIX**(android): A render failure's details now fit a crash reporter's message limit: each `cause` entry keeps only the first line of its message, so a GL error no longer carries the whole shader source.
+
+## 2.15.0
+- **FEAT**(android, iOS, macOS): `ImageLayer.animationOffset` starts an animated layer (GIF) that far into its animation, so one animation can carry on across several layers instead of restarting at each one.
+- **FIX**(android, iOS, macOS): A `fadeToBlack`/`fadeToWhite` transition now dips the whole output frame when a custom resolution letterboxes the clip. Android dipped only a source-sized rectangle, iOS/macOS left the bars out.
+- **FIX**(iOS, macOS): A clip with a rotation flag, such as any portrait phone recording, no longer renders upside down in a `VideoComposition`.
+- **FIX**(iOS, macOS): A trimmed HDR (HEVC 10-bit) segment renders at its footage's frame rate again. Since 2.14.2 a short window of phone footage could come out re-timed, with an extra frame and slightly too long.
+
+## 2.14.2
+- **PERF**(iOS, macOS): A trimmed segment of an HDR (HEVC 10-bit) video now pre-transcodes only the part that is exported, so a 10 s export from a one-minute clip no longer re-encodes the whole minute first (#192).
+
+## 2.14.1
+- **FIX**(iOS, macOS): HDR (HEVC 10-bit) videos no longer render with a color cast. The pre-transcode to SDR wrote the green channel into blue, a regression since 1.17.3.
+
+## 2.14.0
+- **FEAT**(android, iOS, macOS): `SegmentTransform.rotation` turns a composition clip clockwise around its own centre (radians, like `Transform.rotate`). `offset`/`size` keep describing the unrotated layout box and the source is still clipped to it before the turn, so `cover` overflow is cut at the box edge rather than swinging back into view. Web, Windows and Linux ignore the field.
+
+## 2.13.3
+- **FIX**(iOS, macOS): The HDR pre-transcode and the overlap-transition pre-render now run under the same export gate and stall watchdog as the main encode. A stalled setup stage fails the render with an `ExportWatchdog` error instead of hanging it forever or silently degrading to the HDR source / a hard cut, and concurrent renders no longer run every pre-transcode and blend at once.
+
+## 2.13.2
+- **FIX**(iOS, macOS): Two renders in flight at once no longer crash the app (`EXC_BAD_ACCESS`) or composite with each other's crop, color filters and overlays; every render now carries its own compositor configuration.
+
+## 2.13.1
+- **FIX**(android): An overlap transition (dissolve / slide / push / wipe) between a clip stored with a rotation flag (a phone recording is typically coded landscape and flagged 90°/270°) and a clip stored upright no longer degrades to a hard cut; both sides are blended in their display orientation, so only the size a clip shows at has to match.
+
+## 2.13.0
+- **FEAT**(android, iOS, macOS, web): `ProVideoEditor.getThumbnailStream` delivers a `ThumbnailConfigs` request as a stream of `ThumbnailFrame`s while it decodes — one native pass for the whole request, each frame tagged with the `timestamps` indices it resolves to. Cancelling the subscription (or `cancel(id)`) stops the decoder; web delivers the complete set frame by frame.
+- **FEAT**(android): `ThumbnailConfigs.maxParallelDecoders` caps the hardware decoder sessions a thumbnail request holds at once (default 3); pass `1` next to a live preview player.
+- **FIX**(android): When a `getThumbnails` strategy fails partway, the fallbacks now decode only the missing frames, and frames the first pass could not produce are no longer dropped.
+- **FEAT**(android, iOS, macOS): A failed render, split, audio extraction or merge now says what failed in a form an app can branch on: `NativeFailureDetails.of(error)` reads the platform's error domain, code and cause chain off the `PlatformException`, and `isOutOfStorage` names the one failure a retry cannot fix.
+- **FIX**(iOS, macOS): A cancelled job answers before the cancel does and its id is free from that moment, so a retry that restarts the same id right after cancelling is no longer refused with `TASK_ALREADY_RUNNING`. Same contract as Android.
+- **FIX**(android, iOS, macOS): A job restarted under a cancelled id begins only once the cancelled pipeline has finished unwinding, so the old job's cleanup can no longer delete the retry's output.
+
+## 2.12.1
+- **FIX**(android): An overlay pinched far past the canvas no longer takes the app down with an `OutOfMemoryError`. Its raster is held to four frames' worth of pixels; placement and extent are unchanged, and a layer within that allowance renders exactly as before.
+- **FIX**(android): A render whose overlay still cannot be rastered fails with a `RENDER_ERROR` naming the layer's size instead of killing the process.
+
+## 2.12.0
+- **FEAT**(android, iOS, macOS): `LayerAnimation.slideFrom` gives a slide animation its own start point instead of a canvas edge. It takes the layer's top-left corner in the same pixel coordinates as `ImageLayer.offset`, may sit outside the frame, and overrides `slideDirection` when both are set.
+
+## 2.11.4
+- **FIX**(android): An overlay layer — a drawing, sticker, text or caption — no longer takes the app down with an `OutOfMemoryError` when the source clip is higher-resolution than the export. Each overlay is now rastered at the size that survives to the encoded frame instead of at the source resolution, so a 4K clip exported at 1080p no longer draws every layer at four times the pixels it can show. An export whose output resolution matches its source is unchanged.
+- **PERF**(android): Converting an overlay's premultiplied alpha works through a small scratch band instead of a second full-frame buffer, halving the heap peak of that step without slowing it down.
+
+## 2.11.3
+- **FIX**(iOS, macOS): Cancelling a render or split while its export still waits for the encoder no longer crashes the app. The queued session was cancelled and then started anyway, which AVFoundation answers with an Objective-C exception Swift cannot catch.
+- **FIX**(iOS, macOS): A cancelled render now unwinds at the HDR pre-transcode or transition pre-render it is in, instead of building the whole composition first and reporting the cancellation as a render error.
+- **FIX**(iOS, macOS): Cancelling an audio merge now stops its encoder instead of running the container to completion, and a cancelled extraction no longer encodes a result nobody reads.
+- **FIX**(iOS, macOS): A cancelled or failed job no longer leaves a half-written file behind — a split half at the path you gave it, a transition blend, or a merge container.
+
+## 2.11.2
+- **PERF**(android, iOS, macOS): A file-backed image is handed to the renderer as a path and opened only while it is decoded, instead of crossing the platform channel as bytes. A few hundred stop-motion frames at 3–4 MB each used to exhaust Android's heap before the first one was decoded. Applies to `StopMotionFrame`, image `VideoLayer`s and `ChromaKey.backgroundImage` built from `EditorLayerImage.file`; other sources still travel as bytes.
+- **PERF**(android): A `VideoRenderData.audioTracks` entry is pre-rendered through a scratch file instead of one in-memory PCM byte array, which reached ~30 MB for a three-minute stereo track.
+- **FIX**(android): A source whose decoder emits float PCM no longer comes out as noise in `extractAudio`/`mergeAudio` — the samples were read big-endian on a little-endian device.
+- **FIX**(android): An `audioTracks` entry that is shorter than its slot and not looping now fills the rest of that slot with silence, as documented, instead of ending the exported audio early.
+
+## 2.11.1
+- **FIX**(android, iOS, macOS): A `ChromaKey.backgroundImage` or image `VideoLayer` fed a photo straight from the gallery no longer renders sideways — the EXIF `Orientation` tag is now honored on all three platforms.
+- **FIX**(iOS, macOS): A stop-motion frame no longer lands sideways when its thumbnail decode falls back to the full-size decode.
+- **PERF**(android): An image `VideoLayer` is decoded at the size it will be scaled to instead of at full resolution, so a large gallery photo no longer risks an out-of-memory overlay.
+
+## 2.11.0
+- **FEAT**(android, iOS, macOS): Add `ChromaKey` — green-screen removal with a soft edge and spill suppression. The keyed area becomes a `backgroundColor`, a `backgroundImage`, or (in a `VideoComposition`) the layer below. Settable on `VideoRenderData`, `VideoLayer` and `VideoSegment`, resolved per clip as segment → layer → global. H.264/HEVC carry no alpha, so on the single-track `videoSegments` path a key without a background is flattened to black.
+- **FEAT**: `ChromaKey.autoDetect(video)` measures the key color and `similarity` off the footage, for any saturated screen hue. `ChromaKey.detect` returns the raw measurement. Costs one thumbnail decode, no render.
+- **FEAT**: `ChromaKey.greenScreen()` and `ChromaKey.blueScreen()` presets. Blue separates skin better but crowds denim and blue eyes, so it keys tighter and despills more gently.
+- **FIX**(android): A `VideoComposition` layer no longer squares its own alpha. `VideoCompositionTransformation` blended against an already-transparent framebuffer, thinning any partially transparent edge.
+- **FIX**(android, iOS, macOS): Two sources resolved in the same millisecond no longer collide on one temp file in `EditorVideo.safeFilePath`.
+
+## 2.10.0
+- **FEAT**(iOS, macOS): Add `VideoRenderData.trimToCommonTrackEnd` (default `false`). Ends each clip where both its video and audio track still have content, so an export no longer finishes on a stretch of missing audio — the seam a looping player replays every cycle. Leave it off when a clip is meant to outlast its own audio.
+
+## 2.9.0
+- **FEAT**(android): `RenderEncoderException` now carries `isTransient`. A render that failed because the device's codec resources were exhausted is flagged as retryable, so it can be told apart from a genuine format/encoder incompatibility, which is not. Covers a starved decoder as well as a starved encoder.
+- **FIX**(android): The software-encoder fallback no longer silently re-runs the hardware encoder under a `software-encoder` label. It is skipped with an explicit log line when the device has no usable software encoder.
+
+## 2.8.0
+- **FEAT**(android, iOS, macOS): Add `ProVideoEditor.mergeAudioToFile` — merge an ordered list of trimmed clip windows (`AudioMergeConfigs`) into one gap-less audio file plus a per-segment offset map (`AudioMergeResult`) that maps each clip back onto the output timeline. Every segment is brought to one uniform format (optional `sampleRate`/`channels` resample/downmix), a clip without an audio track contributes silence instead of throwing, and a single-segment merge is byte-for-byte identical to `extractAudioToFile`. WAV output is exact on all platforms; other formats encode to AAC. Not supported on Web/Windows/Linux.
+
+## 2.7.1
+- **FIX**(android, iOS, macOS): A clip transition whose blend fully consumes an adjacent clip (no non-blended body left) now renders instead of degrading to a hard cut. `planOverlap` previously required both sides to keep some non-blended body, so a boundary where a clip is entirely the blend — two back-to-back transitions sharing a short clip, or a pre-rendered seam trimmed to exactly the blend — fell back to a hard cut (`not enough content for boundary`). The fully-consumed side is now dropped and the blend takes its place; zero-length clips are no longer fed to the composer.
+
+## 2.7.0
+- **PERF**(iOS, macOS): Splitting without an explicit `bitrate` now stream-copies both halves (passthrough export, frame-accurate via a container edit list) instead of re-encoding them. Measured on an M-series Mac: 29.5s 720p H.264 404ms → 32ms, 5s 10-bit HEVC 793ms → 13ms, 32s 4K60 14.3s → 0.12s. This also fixes two quality losses of the old re-encode: 60fps sources no longer drop to 30fps, and HEVC/HDR sources are no longer converted to 8-bit H.264. An explicit `bitrate`/`qualityConfig` re-encodes as before; a source that cannot be stream-copied falls back to the re-encode automatically.
+- **PERF**(android): A split without an explicit `bitrate` now transmuxes both halves losslessly (Media3 edit-list trim: the mid-GOP half keeps samples from the preceding keyframe and an MP4 edit list gates playback at the exact cut — frame-accuracy verified pixel-exact against the plugin's own thumbnail/metadata pipelines). Measured on a Galaxy S26: 32s 4K60 8.6s → 1.2s, 5s 10-bit HEVC 724ms → 290ms, 29.5s 720p H.264 1.4s → 1.0s. The halves no longer lose quality and HEVC/HDR no longer converts to 8-bit H.264. An out-of-range split position is now validated explicitly up front (same `PlatformException` as before, since a transmux — unlike the old transcode — would not fail on its own).
+- **FIX**(iOS, macOS): The export watchdog now fires reliably for bounds tighter than its 250ms poll interval, and a stall/timeout is no longer misreported as a cancellation when the force-cancelled export happens to finish the race first.
+
+## 2.6.0
+- **FIX**(android, iOS, macOS): Concurrent split and render re-encodes no longer contend for the hardware encoder. They share a process-wide gate so only one runs at a time; previously they starved each other on the shared encoder pool — measured, three concurrent 4K re-encodes each took ~43s versus ~19s alone — and on a throttled device a starved session could sit at 0% until the watchdog (the reported split freeze). Each encode now runs at its solo speed, and the wait is queued *before* the watchdog starts, so it never counts as a stall. Passthrough/stream-copy exports (no encoder) stay ungated.
+- **FEAT**(android, iOS, macOS): Split and render exports are guarded by a stall watchdog: an encode that makes no forward progress for `stallTimeout` (split default 12s) is force-cancelled with a diagnostic reason instead of hanging — e.g. `Split export stalled after 12s with no progress [half=end progress=0.00 segment=0.52s split=0.53s total=1.05s preset=… audio=false]` (`preset` on iOS/macOS, `mime` on Android). A wedged encode therefore releases its gate slot instead of deadlocking later exports. `exportTimeout` (hard bound) and `stallTimeout` (inner bound) are tunable on `SplitVideoModel` (`stallTimeout` must be `< exportTimeout`); successful exports are unaffected.
+
+## 2.5.1
+- **FIX**(iOS, macOS): Loading many clips no longer freezes the editor. A thumbnail decoder race (out-of-order callbacks seen on iOS 26.5) could hang `getThumbnails` forever or map frames to the wrong timestamps; frames now stay index-aligned with their requested timestamps and the call always completes.
+
+## 2.5.0
+- **FEAT**(android, iOS, macOS): A `ClipTransition` on the **last (or only)** `VideoSegment` now wraps back into the first segment, so a single-track render loops seamlessly — e.g. a `dissolve` on one segment cross-dissolves on restart. Overlap types (dissolve/slide/push/wipe) shorten the output by the transition duration and require a single clip longer than 2× the duration (otherwise the wrap is skipped); dip types (fadeToBlack/fadeToWhite) keep the length and dip through the color at the seam. Previously a transition on the last segment was silently ignored.
+
+## 2.4.0
+- **FIX**(android, iOS, macOS): The render `bitrate` is now enforced as a real maximum instead of being silently ignored (Android transmuxed the source untouched; iOS/macOS picked an `AVAssetExportSession` preset with its own bitrate). A source above the cap is re-encoded down to it, a source already within it keeps a lossless fast path (transmux / passthrough), and a `null` bitrate is unchanged. Note: an over-cap source that used to export losslessly is now re-encoded.
+
+## 2.3.0
+- **CHORE**(android): Migrate the Android module to Flutter's built-in Kotlin (drop the manual Kotlin Gradle Plugin apply) so the plugin no longer triggers the KGP deprecation warning and stays AGP 9+ compatible. Now requires Flutter 3.44+.
+
+## 2.2.4
+- **FIX**(android, iOS, macOS): Stop-motion render progress now advances smoothly instead of sitting near 0% and snapping to 100% at the end. Media3's image-to-video export reports no intra-export progress on Android, so the encode phase is now driven by a smooth, monotonic time-based estimate (using the real value when available); Darwin reports 100% only after the writer finishes so the finalize step stays visible.
+
+## 2.2.3
+- **PERF**(android): Timestamp thumbnails (`getThumbnails`) are now extracted with up to three parallel hardware decoders that each decode forward through a contiguous timeline chunk (every GOP decoded at most once), with frames GPU-scaled straight to the thumbnail size — instead of one software `MediaMetadataRetriever` per timestamp. Measured on a Galaxy S26: 20 timeline thumbnails from a 720p H.264 video 2.8s → 0.64s (~4x), 10 from a 1080p 10-bit HEVC video 6.2s → 0.3s (~20x), 14 from a 6s 4K60 HEVC clip 3.6s → 1.3s (~3x), with roughly 3-4x less CPU overall. Extraction keeps its speed while the UI is actively rendering (batch-mode decoder hints, non-blocking pump at display priority). Frame positions are unchanged (still the closest frame) and HDR10/rotation are handled by the GPU. Falls back to Media3 `FrameExtractor`, then to the previous retriever path when a video can't be decoded in hardware.
+
+## 2.2.2
+- **FIX**(android, iOS, macOS): Layer `animateOut` / `animateInOut` animations now play for layers that run until the end of the video (`endTime` unset). An open-ended layer's end previously resolved to "infinity", so the out-phase never triggered and the layer popped off at the last frame; it now resolves to the composition length, so the layer animates out. Only layers carrying an out-phase animation are affected.
+- **FIX**(iOS, macOS): Smoother clip transitions. The pre-rendered transition clip is now authored at the composition's frame rate (`max(30, source fps)`) instead of only the outgoing clip's, so a 25 fps source no longer stutters at the transition seams; directional `slide` / `push` transitions also use one easing ramp per output frame, removing velocity kinks with `bounce` / `elastic` curves.
+
+## 2.2.1
+- **FIX**(iOS, macOS): Fix a layer sliding in from an edge briefly shifting and shrinking the video (e.g. a black bar at the top) when a custom output resolution is set. Off-frame overlay content is now clipped to the video frame before letterboxing, so the frame no longer inflates during the animation.
+
+## 2.2.0
+- **FEAT**(android, iOS, macOS): Add `ProVideoEditor.splitVideo` — a frame-accurate split that cuts one video into two files (`SplitVideoModel`). Each half is re-encoded from the exact cut frame without the render compositor/effects, making it far faster and more stall-resistant than splitting via `renderVideoToFile`; every export is guarded by a watchdog timeout. Cancellable and progress-reporting via the task `id`. Web/Windows/Linux throw `UnimplementedError`.
+
+## 2.1.3
+- **FIX**(iOS, macOS): Make FlutterEngine detach terminal for method-channel result delivery. After detach, a late render/audio/waveform/metadata/thumbnail callback no longer calls a captured `FlutterResult` against a torn-down engine, closing the remaining `NSInternalInconsistencyException: Sending a message before the FlutterEngine has been run` path from 2.1.2.
+
+## 2.1.2
+- **FIX**(iOS, macOS): Cancel active tasks and clear event sinks when the FlutterEngine is torn down. In-flight render/audio/waveform callbacks no longer message a stopped engine, fixing `NSInternalInconsistencyException: Sending a message before the FlutterEngine has been run` crashes on app termination or surface recreation.
+
+## 2.1.1
+- **FIX**(android): The global output trim now respects per-clip and global `playbackSpeed`. A sped-up composition capped by `endTime` was trimmed against the source timeline, cutting the output far shorter than the preview; the cap now limits the post-speed output length, matching iOS.
+
+## 2.1.0
+- **FIX**(android, iOS, macOS): `VideoQualityConfig.custom(resolution: …)` now renders to exactly that resolution. The video is scaled to fit (preserving aspect ratio), centered, and padded with black instead of producing an aspect-scaled size (e.g. a 720x720 source with a 1080x1920 resolution previously exported 1080x1080, now 1080x1920 letterboxed). Android letterboxes with a `Presentation` effect; Darwin composites the frame onto a black canvas. Quality presets keep their aspect-preserving scale. A `qualityConfig`'s `bitrate` is now also applied when used without an explicit `bitrate`.
+- **FEAT**(android, iOS, macOS): Animated GIF image layers. `ImageLayer` now detects animated GIFs automatically and plays them back frame by frame; the new `loop` flag (default `true`) repeats the animation for the layer's time range or holds the last frame when `false`. All existing layer properties (position, size, rotation, timing, animations) apply unchanged. Android decodes frames via `Movie` and swaps them per overlay frame; Darwin decodes via `CGImageSource` and selects the frame per composition time. Web/Windows/Linux ignore the field.
+- **FEAT**(android, iOS, macOS): Add an output frame-rate cap via a new `maxFrameRate` field on `VideoRenderData`. It is an upper limit, not a target: a faster source is reduced to it (e.g. 60→30 fps) while a slower source is left untouched, lowering encoding cost and output file size. Android drops surplus frames with Media3's `FrameDropEffect`; Darwin caps the composition `frameDuration`. Web/Windows/Linux ignore the field.
+- **FEAT**(android, iOS, macOS): Add per-layer rotation to image overlays via a new `rotation` field on `ImageLayer` (radians, clockwise around the layer center — matches Flutter's `Transform.rotate`, so a `pro_image_editor` layer rotation can be forwarded directly). `offset`/`size` keep describing the layout box before rotation. Web/Windows/Linux ignore the field.
+
+## 2.0.0
+- **BREAKING**: Remove the previously deprecated APIs. Migrate as follows:
+  - `VideoRenderData.video` → `videoSegments: [VideoSegment(video: …)]`
+  - `VideoRenderData.imageBytes` → `imageLayers`
+  - `VideoRenderData.playbackSpeed` → `VideoSegment.playbackSpeed`
+  - `VideoRenderData.colorMatrixList` → `colorFilters` (`ColorFilter`)
+  - `VideoRenderData.customAudioPath` / `customAudioStartTime` / `customAudioVolume` / `loopCustomAudio` → `audioTracks` (`VideoAudioTrack`)
+  - `VideoRenderData.originalAudioVolume` → `VideoSegment.volume`
+  - `VideoMetadata.originalResolution` → `rawResolution`
+
+## 1.22.0
+- **FEAT**(android, iOS, macOS): Add multi-layer video compositions via a new `composition` field on `VideoRenderData` (`VideoComposition`). A composition stacks several `VideoLayer`s on a fixed-size canvas, each layer being a time-ordered track of `VideoSegment`s composited bottom-to-top with its own `opacity` and placement (`SegmentTransform`: `offset`, `size`, `fit` = `fill`/`contain`/`cover`). Clips gain `timelineStart` (delayed entry on a layer) and `transform` (per-clip placement), enabling picture-in-picture, side-by-side and grid layouts over a configurable `backgroundColor`. Android composites layered Media3 sequences with a per-clip GL transform (cover overflow is scissored to its rect); Darwin uses a custom `AVVideoCompositing` compositor. Per-clip `transition`, `playbackSpeed` and `reverseVideo` are not applied inside a composition. Web/Windows/Linux ignore the field.
+
+## 1.21.5
+- **FIX**(android): Fix video export failing with a codec exception on Qualcomm `c2.qti.*` encoders. The encoder is now retried through a fallback chain (operating-rate cap → unset → Main/Baseline profile → software) before surfacing a typed `RenderEncoderException`; working devices keep their original export speed.
+- **FIX**(android, iOS, macOS): Fix a render/cancel race where cancelling right after starting an export failed with `TASK_NOT_FOUND`. An early cancel is now handled in the Dart layer before the native task starts, so the render resolves as canceled.
+
+## 1.21.4
+- **FIX**(android, iOS, macOS): Fix layer `slide` animations only moving the layer by its own size, leaving it partly visible at the animation's start/end. Slides are now edge-aware and carry the layer fully off-screen in the slide direction. Requires the matching `pro_image_editor` release so the in-editor preview matches the export.
+
+## 1.21.3
+- **FIX**(android): Fix `OutOfMemoryError` when pre-rendering longer overlap clip transitions (dissolve/slide/push/wipe). Both sides previously decoded every I420 frame into memory at once (~370 MB for a 2 s 1080p30 transition); frames are now spilled to a temp file and streamed back one at a time during encoding, so heap use stays constant regardless of duration/fps/resolution — at full quality.
+
+## 1.21.2
+- **FIX**(android, iOS, macOS): Fix per-segment `playbackSpeed` being ignored on clips that take part in an overlap clip transition (dissolve/slide/push/wipe). The transition pre-render now resolves the blend in output (post-speed) time and replays each side at its own speed, so footage inside the transition plays at the requested speed instead of falling back to 1×. Independent per-side speeds are supported; dip transitions (`fadeToBlack`/`fadeToWhite`) already honored speed.
+
+## 1.21.1
+- **FIX**(android): Fix overlap clip transitions (dissolve/slide/push/wipe) appearing rotated 90°/180° when a clip carries container rotation metadata (e.g. portrait phone videos). The transition pre-render decodes coded (un-rotated) frames, so it now re-applies the source rotation via `MediaMuxer.setOrientationHint` and maps geometric directions into coded space.
+
+## 1.21.0
+- **FEAT**(android, iOS, macOS): Add clip transitions between adjacent `VideoSegment`s via a new `transition` field (`ClipTransition` with `type`, `duration`, `curve`, `direction`). Supports `dissolve`, `slide`, `push` and `wipe` (overlap and shorten the output) plus `fadeToBlack` and `fadeToWhite` (dip through a color, duration unchanged). Web/Windows/Linux ignore the field.
+
+## 1.20.0
+- **FEAT**(android, iOS, macOS): Add stop-motion support to turn a sequence of still images into a video via `ProVideoEditor.instance.renderStopMotion` / `renderStopMotionToFile`. Each `StopMotionFrame` is held for `1 / frameRate` seconds (or a per-frame `duration` override) and encoded into a single silent video. The output size defaults to the first frame and frames are mapped onto it via `StopMotionFit` (`contain` / `cover` / `stretch`). Darwin encodes with `AVAssetWriter` + a pixel-buffer adaptor; Android uses Media3 Transformer image input with a `Presentation` effect. Progress and cancellation reuse the existing render task infrastructure. Audio is not mixed in — pass the result through `renderVideo` with `audioTracks` to add music. Web/Windows/Linux are not supported.
+
+## 1.19.1
+- **FIX**(iOS, macOS): Fix custom audio tracks being silently dropped when the source asset's duration fails to resolve. `AudioPreRenderer` previously fell back to a zero duration on `asset.load(.duration)` failure, which collapsed an open-ended trim (`audioEndTime == nil`) into a zero-length range and discarded the track with a misleading `invalid trim range … end=0.0s` log. The renderer now loads the audio track first and falls back to its `timeRange` duration (the real audio length), only aborting when neither source resolves. Android already decodes to the real end-of-stream for an open-ended trim, so no change was needed there.
+
+## 1.19.0
+- **FEAT**(android, iOS, macOS): Forward native plugin logs back to Dart via `ProVideoEditor.instance.logStream`. Every entry written through the shared native logger (including the full renderer diagnostics) is now emitted as a `NativeLogEntry` (`level`, `tag`, `message`, `timestamp`, optional `stackTrace`), so host apps can pipe these into their own Dart logger and export them. Forwarding is gated by the same `nativeLogLevel` as the native console output. Web/Windows/Linux keep an empty stream.
+
+## 1.18.0
+- **FEAT**(android, iOS, macOS): Add `speed` to `AudioExtractConfigs` for pitch-preserving playback-speed changes during audio extraction (e.g. `2.0` for double speed, `0.5` for half). WAV applies the time-stretch directly on the decoded PCM (Android `SonicAudioProcessor`; AVFoundation `AVAssetReaderAudioMixOutput` with the spectral time-pitch algorithm), while compressed formats are re-encoded — Android via a Media3 `Transformer`, Darwin via `AVAssetExportPresetAppleM4A` with a scaled time range. Note: on Apple platforms a non-`1.0` speed re-encodes to AAC/M4A, so `caf` output falls back to M4A content.
+
+## 1.17.6
+- **FIX**(iOS, macOS): Fix unstable/glitchy audio on reversed clips inside multi-clip timelines. `AudioReverser` now preserves the source audio format (sample rate and channel count) instead of forcing 44.1 kHz stereo, so a reversed clip's audio matches its untouched neighbours and AVFoundation no longer has to reconcile mixed formats within a single composition audio track during looped playback. The reversed segment is also written as an AVFoundation-authored CAF/PCM file (replacing the hand-authored WAV) and inserted at its decoded duration without padding, avoiding encoder priming artifacts and audio-timing drift in the exported video.
+
+## 1.17.5
+- **FIX**(android): Fix custom audio tracks extending sped-up renders to the original source duration. Custom audio is now constrained to the rendered video timeline after global and per-clip playback speed, preventing the final video frame from freezing after the sped-up video content ends.
+
+## 1.17.4
+- **FIX**(web, wasm): Fix pub.dev platform compatibility score. Replace direct `dart:io` and `package:path_provider` imports in the package's public import chain with conditional platform shims, eliminating the "Package does not support platform Web" and "Not compatible with runtime wasm" warnings.
+
+## 1.17.3
+- **FEAT**(darwin): Add Swift Package Manager (SPM) support for iOS and macOS. The darwin implementation is now distributed as a local SPM package, replacing the previous CocoaPods-only setup.
+
+## 1.17.2
+- **FIX**(android): Prevent `RENDER_ERROR` codec exceptions on hardware encoders (e.g. Qualcomm AVC `c2.qti.avc.encoder`) by enabling encoder fallback in the main render path, clamping the requested bitrate into the codec's supported range, and preferring VBR over CBR at high bitrates.
+- **FIX**(android): Harden the reverse-video pre-render against crashes. The all-intra encoder is now configured with a clamped bitrate and progressive fallback to avoid `MediaCodec.CodecException`, and the in-memory remux is guarded against `OutOfMemoryError` by checking the temp file size against available heap before loading frames. On failure the clip gracefully degrades to forward playback.
+
+## 1.17.1
+- **FIX**(android): Fix reversed HEVC videos ignoring the rotation metadata tag, causing sideways/upside-down output.
+- **FIX**(iOS, macOS): Fix `AVErrorInvalidVideoComposition` (Code -11841) during reverse playback. `AudioReverser` produces PCM frames at 44 100 Hz, so the reversed WAV duration (`PCMFrameCount / 44100`) is a few microseconds longer than the video clip duration. This extended `composition.duration` beyond the `AVVideoComposition` instruction coverage. Fixed by clamping the inserted WAV range to `clipDuration` via `CMTimeMinimum`.
+
+## 1.17.0
+- **FEAT**(android, iOS, macOS): Add `reverseVideo` flag to `VideoSegment` to play a clip backwards. When `true`, the segment renders from its trimmed end back to its trimmed start while other segments keep their own direction.
+
+## 1.16.3
+- **FIX**(linux): Fix Linux build by replacing the unavailable C++ Flutter embedder API (`flutter::EncodableValue`) with the GLib-based `FlValue` API. Update CMakeLists to use GStreamer (`gstreamer-1.0`, `gstreamer-pbutils-1.0`) instead of the unused libavformat/libavcodec/libavutil pkg-config targets. Fix source file extensions (`.cc` instead of `.cpp`).
+
+## 1.16.2
+- **FIX**(android, iOS, macOS): Eliminate audible clicks/gaps at custom audio loop boundaries and clip transitions. Each custom audio track is now pre-rendered to a single gap-less PCM WAV file before being inserted into the composition, avoiding AAC encoder frame realignment (Android Media3) and codec priming/padding artifacts (AVFoundation `insertTimeRange` per loop iteration on iOS/macOS). Volume control remains in the mixer layer for post-hoc adjustments without re-decoding.
+
+## 1.16.1
+- **FIX**(iOS, macOS): Fix crash `No source tracks available for compositing` when rendering H.264 MP4 files whose container duration slightly exceeds the video track's actual frame duration. The compositor time range is now clamped to the video track's real `timeRange` before inserting into the composition, preventing AVFoundation from requesting frames that have no pixel buffer. A black-frame fallback was also added as a safety net.
+
+## 1.16.0
+- **FEAT**(android, iOS, macOS): Add per-clip `playbackSpeed` to `VideoSegment`, allowing each segment in a multi-clip composition to have its own playback speed (e.g. `2.0` for fast-forward, `0.5` for slow-motion).
+- **DEPRECATED**: `VideoRenderData.playbackSpeed` is deprecated. Use `VideoSegment.playbackSpeed` instead.
+
+## 1.15.2
+- **FIX**(example): Replace deprecated `CompleteParameters.customAudioTrack` usage with `CompleteParameters.audioTracks` in the basic video editor example.
+
+## 1.15.1
+- **FIX**(iOS, macOS): Refactor audio extraction to use synchronous file writing for improved stability.
+
+## 1.15.0
+- **FEAT**(android, iOS, macOS): Add `NativeLogLevel` parameter to all API methods for controlling native log verbosity per call. Supported levels: `none`, `error`, `warning`, `info`, `debug`, `verbose`.
+
+## 1.14.4
+- **FIX**(android): Fix image layers crash on Android by recycling intermediate thumbnail bitmaps.
+- **FIX**(android, iOS, macOS): Additional fixes for audio extraction.
+- **CHORE**(android): Bump Android `compileSdk` to 36.
+
+## 1.14.3
+- **FIX**(iOS, macOS): Resolve crash in `extractToWav()` caused by starting the writer session at `.zero` instead of the actual sample time.
+
+## 1.14.2
+- **FIX**(android, iOS, macOS): Correct audio extraction to WAV format in `extractAudioToFile`.
+
+## 1.14.1
+- **FIX**(android): Fix compatibility with media3 1.10.0 by replacing removed `ChannelMixingMatrix.create` with `ChannelMixingMatrix.createForConstantGain`.
+
+## 1.14.0
+- **FEAT**(android, iOS, macOS, web): Add `getSingleThumbnail` method with `SingleThumbnailConfigs` to extract the first or last frame of a video via `ThumbnailPosition.first` / `ThumbnailPosition.last`.
+
+## 1.13.2
+- **FIX**(android): Fix image layer distortion when `imageBytesWithCropping` is enabled with a crop transform and qualityConfigs.
+
+## 1.13.1
+- **FIX**: Fix `VideoQualityConfig` stretching video when target resolution has a different aspect ratio. Now uses uniform scaling (BoxFit.contain) to preserve the original aspect ratio.
+
+## 1.13.0
+- **FEAT**(android, iOS, macOS): Add optional `size` field on `ImageLayer` to scale overlay images to specific dimensions before rendering.
+
+## 1.12.0
+- **FEAT**(android, iOS, macOS): Add layer animations with `LayerAnimation` on `ImageLayer`. Supports fade, slide, and scale animations with `animateIn`, `animateOut`, and `animateInOut` phases. Includes 13 easing curves: linear, easeIn, easeOut, easeInOut, easeInCubic, easeOutCubic, easeInOutCubic, bounceIn, bounceOut, bounceInOut, elasticIn, elasticOut, elasticInOut.
+- **FIX**(iOS, macOS): Replace deprecated `AVMutableVideoCompositionLayerInstruction` with `AVVideoCompositionLayerInstruction.Configuration` on macOS 26+ / iOS 26+, with backward-compatible fallback.
+
+## 1.11.0
+- **FEAT**(android, iOS, macOS): Add timeline-based color filters via `ColorFilter` with optional `startTime`/`endTime` for applying different filters to specific time ranges.
+- **FEAT**(android, iOS, macOS): Add multi-track audio support via `VideoAudioTrack` with per-track volume, loop, and timeline placement (`startTime`, `endTime`, `audioStartTime`, `audioEndTime`).
+- **FEAT**(android, iOS, macOS): Add per-clip volume control via `VideoSegment.volume` for adjusting audio levels on individual video segments.
+- **FEAT**(android, iOS, macOS): Add `VideoSegment` model replacing single `video` field for concatenating multiple clips with individual trim and volume settings.
+- **DEPRECATED**: `video`, `imageBytes`, `colorMatrixList`, `customAudioPath`, `customAudioStartTime`, `customAudioVolume`, `loopCustomAudio`, and `originalAudioVolume` on `VideoRenderData`. Use `videoSegments`, `imageLayers`, `colorFilters`, and `audioTracks` instead.
+
+## 1.10.0
+- **FEAT**(android, iOS, macOS): Add time-based image overlay layers. Allows positioning image overlays at specific x/y coordinates with optional start and end times for timed visibility during video rendering.
+
+## 1.9.3
+- **FIX**(android, iOS, macOS): Fixed rendering failure with HEVC encoded videos.
+
+## 1.9.2
+- **FIX**(all): Fix file write failures when the target directory does not exist. `writeMemoryVideoToFile`, `writeAssetVideoToFile`, and `fetchVideoToFile` now create parent directories recursively before writing.
+
+## 1.9.1
+- **FIX**(android): Strip metadata (GPS, title, artist, etc.) from rendered videos. Previously, Android's Media3 Transformer copied all source metadata to the output, while iOS/macOS correctly removed them to protect the privacy from users.
+
+## 1.9.0
+- **FEAT**(android, iOS, macOS): Add `gpsCoordinates` to `VideoMetadata` for extracting GPS location from videos.
+- **FEAT**(android, iOS, macOS): Add `frameRate` to `VideoMetadata` for extracting video frame rate.
+- **FEAT**(iOS, macOS): Add `cameraMake` and `cameraModel` to `VideoMetadata` for extracting camera information.
+
+## 1.8.0
+- **FEAT**(android, iOS, macOS): Add `customAudioStartTime` option to `VideoRenderData`. Allows starting the custom audio track from a specific offset instead of from the beginning. Useful for using a specific section of a longer audio file.
+
+## 1.7.0
+- **FEAT**(android, iOS, macOS): Add `loopCustomAudio` option to `VideoRenderData`. When `false`, custom audio plays once instead of looping to match the video duration. Defaults to `true` for backward compatibility.
+
+## 1.6.2
+- **FIX**(iOS, macOS): Fixed crash when merging multiple MOV video clips on older devices (e.g., iPhone 7, iOS 15). The issue was caused by `AVMutableVideoCompositionInstruction` not properly deriving `requiredSourceTrackIDs` from layer instructions when using a custom video compositor. Introduced `CustomVideoCompositionInstruction` that explicitly provides source track IDs.
+
+## 1.6.1
+- **FIX**(iOS, macOS): Fixed video appearing upside down after export due to coordinate system mismatch between AVFoundation (top-left origin) and CIImage (bottom-left origin). The transform is now properly converted between coordinate systems.
+
+## 1.6.0
+- **FIX**(iOS, macOS): Fixed portrait mode videos being rotated incorrectly after export. The video rotation was being applied twice (once via layer instruction transform and again via orientation correction), causing portrait videos to appear with incorrect pixel orientation despite correct dimensions.
+- **DEPRECATED**(metadata): `originalResolution` is now deprecated. Use `rawResolution` instead.
+- **FIX**(android): Video metadata now returns display dimensions (after rotation correction), consistent with iOS/macOS. Previously, Android returned raw dimensions while iOS/macOS returned display dimensions.
+- **FEAT**(metadata): Add `rawResolution` getter to retrieve the raw video dimensions before rotation is applied.
+
+## 1.5.2
+- **FIX**(iOS, macOS): Fixed color filters (`colorMatrixList`), blur, and flip effects being incorrectly applied to overlay images when `imageBytesWithCropping` is enabled. These effects are now applied only to the video before compositing the overlay.
+
+## 1.5.1
+- **FIX**(android): Fixed semi-transparent overlay layers appearing darker than expected during video rendering. The issue was caused by double alpha premultiplication — Android's BitmapFactory produces premultiplied pixels while Media3's overlay shader applies alpha again. Pixel data is now converted to straight alpha before uploading to the GPU.
+
+## 1.5.0
+- **FEAT**(android, iOS, macOS): Add `imageBytesWithCropping` option to `VideoRenderData`. When enabled, the image overlay is applied before cropping and gets cropped together with the video instead of being scaled to the final cropped size.
+
+## 1.4.2
+- **FIX**(android): Fixed black edges appearing around transparent overlay layers during video rendering by using proper ARGB_8888 bitmap configuration and correct alpha blending.
+
+## 1.4.1
+- **FIX**(iOS, macOS): Fix Swift compiler type-check error by breaking up complex bit-shift expression into sub-expressions.
+
+## 1.4.0
+- **FEAT**(android, iOS, macOS): Add `shouldOptimizeForNetworkUse` render option to enable progressive streaming by placing moov atom at file start (fast start). Enabled by default.
+- **FEAT**(android, iOS, macOS): Add `isOptimizedForStreaming` metadata property to detect if a video has moov before mdat for streaming compatibility.
+- **FEAT**(android, iOS, macOS): Add optional `checkStreamingOptimization` parameter to `getMetadata()` for on-demand MP4 atom analysis.
+
+## 1.3.0
+- **FEAT**(android, iOS, macOS): Add waveform generation with `getWaveform` method to extract audio peak data for visualization.
+- **FEAT**(android, iOS, macOS): Add streaming waveform generation with `getWaveformStream` for progressive real-time waveform display.
+- **FEAT**(widgets): Add `AudioWaveform` widget for static waveform visualization with playback position indicator and seek support.
+- **FEAT**(widgets): Add `AudioWaveform.streaming` constructor for animated progressive waveform rendering during generation.
+- **FEAT**(android, iOS, macOS): Add WAV format support for audio extraction.
+
+## 1.2.3
+- **PERF**(android): Improves render performance on Android when mixing with a custom audio track.
+
+## 1.2.2
+- **FIX**(trim): Improved global trim precision by adding frame compensation to prevent encoder overshoot.
+
+## 1.2.1
+- **CHORE**: Adjusted code style to comply with lint rules.
+
+## 1.2.0
+- **FEAT**(android, iOS, macOS): Add `hasAudioTrack` method to check if a video contains an audio track before attempting extraction.
+- **FEAT**(android, iOS, macOS): Add `NO_AUDIO` error code and `AudioNoTrackException` for better error handling when videos have no audio track during extraction.
+
+## 1.1.0
+- **FEAT**(android, iOS, macOS): Add audio extraction feature with `extractAudio` and `extractAudioToFile` methods. Supports MP3, AAC, and M4A formats with optional trimming and bitrate configuration.
+
+## 1.0.0
+- **FEAT**(android, iOS, macOS): Add video concatenation with `videoClips` parameter for merging multiple videos.
+- **FEAT**(android, iOS, macOS): Add audio mixing with `customAudioPath`, `originalAudioVolume`, and `customAudioVolume` parameters for enhanced audio control.
+- **FEAT**(android, iOS, macOS): Add `jpegQuality` parameter to `ThumbnailConfigs` which allows setting the JPEG quality for thumbnails.
+- **BREAKING** refactor(video_model): Rename `RenderVideoModel` to `VideoRenderData`.
+
+## 0.4.0
+- **FEAT**(android, iOS, macOS): Add `ProVideoEditor.instance.cancel(taskId)` for cancelling started export tasks.
+
+## 0.3.0
+- **FEAT**(presets): Add video quality presets for simplified export configuration. Details in PR [#55](https://github.com/hm21/pro_video_editor/pull/55).
+
+## 0.2.4
+- **CHORE**(android): Update Media3 dependencies to version 1.8.0.
+
+## 0.2.3
+- **FIX**(windows): Resolve issue of crashing when reading metadata on Windows.
+
+## 0.2.2
+- **FEAT**(metadata): Add `originalResolution` to metadata and auto-correct `resolution` based on video orientation.
+
+## 0.2.1
+- **FIX**(android): Resolved issue where metadata returned incorrect resolution for rotated videos. This resolves issue [#42](https://github.com/hm21/pro_video_editor/issues/42).
+
+## 0.2.0
+- **FEAT**: Add `renderVideoToFile` to return the file path instead of a Uint8List, preventing RAM overload on older devices or when handling larger videos.
+
+## 0.1.8
+- **FIX**(android): Fixed crash during video export when applying overlay effects. The issue was caused by using `ImmutableList.of(bitmapOverlay)` instead of a Kotlin-compatible list. This has been resolved by using `listOf(bitmapOverlay)` instead.
+- **CHORE**(android): Updated `media3` dependencies to the latest stable versions for better compatibility and stability.
+
+## 0.1.7
+- **FIX**(iOS, macOS): Resolved a crash that occurred when setting playback speed below 1x. This resolves issue [#29](https://github.com/hm21/pro_video_editor/issues/29).
+
+## 0.1.6
+- **FIX**(iOS, macOS): Fixed rotation transforms not properly swapping render dimensions for 90°/270° rotations, resolving squeezed video output with black bars.
+
+## 0.1.5
+- **FIX**(window, linux, iOS, macOS): Correct bitrate extraction from metadata. 
+- **FIX**(android): Remove unsupported WebM output format; Android only supports MP4 generation. 
+- **TEST**: Add integration tests for all core functionalities.
+
+## 0.1.4
+- **FIX**(iOS, macOS): Fixed AVFoundation -11841 "Operation Stopped" errors when exporting videos selected via image_picker package
+- **FIX**(iOS, macOS): Fixed video rotation metadata not being properly handled, causing incorrect orientation in exported videos
+- **FIX**(iOS, macOS): Fixed random video loading failures from image_picker package due to complex transform metadata
+- **FIX**(iOS, macOS): Enhanced video composition pipeline to properly process iPhone camera orientation transforms
+
+## 0.1.3
+- **FIX**(iOS, macOS): Resolved multiple issue where, in some Swift versions, a trailing comma in the constructor caused an error.
+
+## 0.1.2
+- **FIX**(iOS, macOS): Resolved an issue where, in some Swift versions, a trailing comma in the constructor caused an error.
+
+## 0.1.1
+- **DOCS**: Updated README with new examples and images.
+
+## 0.1.0* 
+- **FEAT**(iOS): Added render functions for iOS.
+- **FEAT**(macOS): Added render functions for macOS.
+
+## 0.0.14
+- **FIX**: Resolve various crop and rotation issues.
+- **REFACTOR**(android): Improve code quality.
+- **FEAT**(example): Add video-editor example.
+
+## 0.0.13
+- **FIX**(crop): Resolve issues that crop not working.
+
+## 0.0.12
+- **FIX**(layer): Fixed incorrect layer scaling caused by misinterpreted video dimensions.
+
+## 0.0.11
+- **FIX**(rotation): Resolve various issues when video is rotated.
+
+## 0.0.10
+- **FEAT**(native-code): Remove the ffmpeg package and start implementing native code.
+
+## 0.0.9
+- **REFACTOR**(encoding): Export encoding models for easier import from main package
+
+## 0.0.8
+- **FEAT**(audio): Add enable audio parameter
+
+## 0.0.7
+- **FEAT**(iOS, macOS): Add video generation support for macOS and iOS
+
+## 0.0.6
+- **FIX**(crop): Ensure crop dimensions are even to avoid libx264 errors
+
+## 0.0.5
+- **FEAT**: Add support for color 4x5 matrices
+
+## 0.0.4
+- **FEAT**: Add video parser functions for android
+
+## 0.0.3
+- **FIX**: Resolve thumbnail generation on web.
+
+## 0.0.2
+- **FEAT**: Add `getVideoInformation` and `createVideoThumbnails` for all platforms.
+
+## 0.0.1
+
+- **CHORE**: Initial release.

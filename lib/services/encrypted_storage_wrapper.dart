@@ -27,9 +27,14 @@ import 'web_crypto_factory_io.dart'
 ///   encryptionKey: key,
 /// );
 /// ```
-class EncryptedStorageWrapper implements CloudStorageClient, StorageNamespaceIdentity {
+class EncryptedStorageWrapper
+    implements
+        CloudStorageClient,
+        StorageNamespaceIdentity,
+        FreshCloudDirectoryReader {
   @override
-  String get storageNamespace => 'encrypted:${storageReferenceForClient(_inner).id}';
+  String get storageNamespace =>
+      'encrypted:${storageReferenceForClient(_inner).id}';
 
   final CloudStorageClient _inner;
   final Uint8List _key;
@@ -54,9 +59,9 @@ class EncryptedStorageWrapper implements CloudStorageClient, StorageNamespaceIde
     required Uint8List encryptionKey,
     this.encryptFilenames = false,
     WebCryptoProvider? cryptoProvider,
-  })  : _inner = inner,
-        _key = encryptionKey,
-        _crypto = cryptoProvider ?? defaultWebCryptoProvider();
+  }) : _inner = inner,
+       _key = encryptionKey,
+       _crypto = cryptoProvider ?? defaultWebCryptoProvider();
 
   // ---------------------------------------------------------------------------
   // Pass-through: authentication
@@ -128,6 +133,34 @@ class EncryptedStorageWrapper implements CloudStorageClient, StorageNamespaceIde
   Future<Map<String, dynamic>> listPath(String path) => _inner.listPath(path);
 
   @override
+  Future<Map<String, dynamic>> readDirectoryForEdit(String path) async {
+    final listing = await _inner.listPathForEdit(path);
+    final files = listing['files'];
+    if (files is! List) return listing;
+    return {
+      ...listing,
+      'files': [for (final entry in files) _withPlaintextSize(entry)],
+    };
+  }
+
+  static dynamic _withPlaintextSize(dynamic entry) {
+    if (entry is! Map ||
+        entry['isFolder'] == true ||
+        entry['type'] == 'folder') {
+      return entry;
+    }
+    final metadata = entry['metadata'] is Map ? entry['metadata'] as Map : null;
+    final size = int.tryParse(
+      '${entry['downloadSize'] ?? metadata?['downloadSize'] ?? entry['size'] ?? metadata?['size']}',
+    );
+    if (size == null) return entry;
+    // EncryptionService and both crypto backends use a 12-byte nonce and a
+    // 16-byte GCM tag. Retain stored size for the editor's pre-download cap;
+    // downloadStream yields plaintext, whose exact size excludes the envelope.
+    return {...entry, 'downloadSize': size - 28};
+  }
+
+  @override
   Future<void> createFolderPath(String path) => _inner.createFolderPath(path);
 
   @override
@@ -152,13 +185,19 @@ class EncryptedStorageWrapper implements CloudStorageClient, StorageNamespaceIde
     String targetPath, {
     Function(int, int)? onProgress,
   }) async {
-    final encrypted =
-        await _crypto.encrypt(await _gcmKey(), Uint8List.fromList(fileData));
+    final encrypted = await _crypto.encrypt(
+      await _gcmKey(),
+      Uint8List.fromList(fileData),
+    );
     final uploadName = encryptFilenames
         ? EncryptionService.encryptFilename(fileName, _key)
         : fileName;
-    await _inner.uploadFile(encrypted, uploadName, targetPath,
-        onProgress: onProgress);
+    await _inner.uploadFile(
+      encrypted,
+      uploadName,
+      targetPath,
+      onProgress: onProgress,
+    );
   }
 
   // ---------------------------------------------------------------------------
@@ -166,10 +205,14 @@ class EncryptedStorageWrapper implements CloudStorageClient, StorageNamespaceIde
   // ---------------------------------------------------------------------------
 
   @override
-  Future<Uint8List> downloadFileBytes(String remotePath,
-      {Function(int, int)? onProgress}) async {
-    final encrypted =
-        await _inner.downloadFileBytes(remotePath, onProgress: onProgress);
+  Future<Uint8List> downloadFileBytes(
+    String remotePath, {
+    Function(int, int)? onProgress,
+  }) async {
+    final encrypted = await _inner.downloadFileBytes(
+      remotePath,
+      onProgress: onProgress,
+    );
     return _crypto.decrypt(await _gcmKey(), encrypted);
   }
 
@@ -180,13 +223,17 @@ class EncryptedStorageWrapper implements CloudStorageClient, StorageNamespaceIde
     Function(int, int)? onProgress,
   }) async {
     // Download encrypted bytes, decrypt, then write to local path.
-    final encrypted =
-        await _inner.downloadFileBytes(remotePath, onProgress: onProgress);
+    final encrypted = await _inner.downloadFileBytes(
+      remotePath,
+      onProgress: onProgress,
+    );
     final decrypted = await _crypto.decrypt(await _gcmKey(), encrypted);
 
     if (kIsWeb) {
-      throw UnsupportedError('downloadFileByPath is not supported on web. '
-          'Use downloadFileBytes instead.');
+      throw UnsupportedError(
+        'downloadFileByPath is not supported on web. '
+        'Use downloadFileBytes instead.',
+      );
     }
 
     final file = await File(localPath).create(recursive: true);
@@ -210,8 +257,12 @@ class EncryptedStorageWrapper implements CloudStorageClient, StorageNamespaceIde
     await for (final chunk in dataStream) {
       builder.add(chunk);
     }
-    await uploadFile(builder.takeBytes(), fileName, targetPath,
-        onProgress: onProgress);
+    await uploadFile(
+      builder.takeBytes(),
+      fileName,
+      targetPath,
+      onProgress: onProgress,
+    );
   }
 
   @override
@@ -219,8 +270,10 @@ class EncryptedStorageWrapper implements CloudStorageClient, StorageNamespaceIde
     String remotePath, {
     Function(int, int)? onProgress,
   }) async* {
-    final decrypted =
-        await downloadFileBytes(remotePath, onProgress: onProgress);
+    final decrypted = await downloadFileBytes(
+      remotePath,
+      onProgress: onProgress,
+    );
     yield decrypted;
   }
 
@@ -252,11 +305,11 @@ class EncryptedStorageWrapper implements CloudStorageClient, StorageNamespaceIde
   }
 
   @override
-  bool get supportsFullTextSearch =>
-      false; // encrypted content can't be searched server-side
+  bool get supportsFullTextSearch => false; // encrypted content can't be searched server-side
 
   @override
   Future<List<Map<String, dynamic>>> fullTextSearch(
-          String query, String remotePath) async =>
-      [];
+    String query,
+    String remotePath,
+  ) async => [];
 }

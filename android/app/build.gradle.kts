@@ -43,7 +43,8 @@ android {
 
     defaultConfig {
         applicationId = "com.crispstrobe.cloud"
-        minSdk = flutter.minSdkVersion
+        // Media3 video editing requires Android 7.0 (API 24).
+        minSdk = maxOf(flutter.minSdkVersion, 24)
         targetSdk = flutter.targetSdkVersion
         versionCode = flutter.versionCode
         versionName = flutter.versionName

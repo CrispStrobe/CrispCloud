@@ -2,11 +2,12 @@
 import 'cloud_storage_interface.dart';
 import 'package:filen_client/filen_client.dart';
 import 'filen_config_service.dart';
-import 'dart:io';
 import 'package:flutter/foundation.dart'; // for kIsWeb
 import 'log_service.dart';
+import 'upload_temp_file.dart';
 
-class FilenClientAdapter extends CloudStorageClient {
+class FilenClientAdapter extends CloudStorageClient
+    implements FreshCloudDirectoryReader {
   static const _log = Log('FilenClient');
 
   final FilenClient _client;
@@ -112,6 +113,27 @@ class FilenClientAdapter extends CloudStorageClient {
   }
   
   @override
+  Future<Map<String, dynamic>> readDirectoryForEdit(String path) async {
+    // Filen caches directory contents for ten minutes. Refresh only the path's
+    // ancestors and target folder instead of evicting unrelated file listings.
+    final cache = _client.cache;
+    cache.clearPathCache();
+    var parentUuid = _client.baseFolderUUID;
+    var prefix = '';
+    for (final segment in path.split('/').where((part) => part.isNotEmpty)) {
+      cache.invalidate(parentUuid);
+      prefix = '$prefix/$segment';
+      final folder = await _client.resolvePath(prefix);
+      if (folder['type'] != 'folder' || folder['uuid'] is! String) {
+        throw StateError('The source directory could not be verified.');
+      }
+      parentUuid = folder['uuid'] as String;
+    }
+    cache.invalidate(parentUuid);
+    return listPath(path);
+  }
+
+  @override
   Future<Map<String, dynamic>> listPath(String path) async {
     try {
       // 1. Resolve path to get the UUID
@@ -169,12 +191,7 @@ class FilenClientAdapter extends CloudStorageClient {
     } else {
       // --- NATIVE PATH (Disk) ---
       // Wrapped in 'else' to ensure Directory.systemTemp is unreachable on Web
-      try {
-        final tempDir = Directory.systemTemp;
-        final tempFile = File('${tempDir.path}/$fileName');
-        await tempFile.writeAsBytes(fileData);
-        
-        try {
+      await withTemporaryUploadFile(fileName, fileData, (tempFile) async {
           await _client.uploadFile(
             tempFile,
             parentUuid,
@@ -182,14 +199,7 @@ class FilenClientAdapter extends CloudStorageClient {
           if (onProgress != null) {
             onProgress(fileData.length, fileData.length);
           }
-        } finally {
-          if (await tempFile.exists()) {
-            await tempFile.delete();
-          }
-        }
-      } catch (e) {
-        rethrow;
-      }
+      });
     }
   }
   

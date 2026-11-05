@@ -1,0 +1,217 @@
+import AVFoundation
+import Foundation
+
+/// Builder for inserting a custom audio track into an `AVMutableComposition`.
+///
+/// The track is first **pre-rendered to a single, gap-less PCM WAV file**
+/// via [AudioPreRenderer]. The composition then inserts this WAV with a
+/// single `insertTimeRange` call, which avoids audible clicks at every
+/// loop restart caused by AAC/MP3 codec priming when the source is
+/// inserted multiple times directly into the composition.
+internal class AudioSequenceBuilder {
+
+  /// Result of a successful build operation.
+  struct BuildResult {
+    let track: AVMutableCompositionTrack
+    /// Temporary pre-rendered audio file. The owner of the
+    /// composition (RenderVideo) MUST delete this file once the
+    /// export has finished (success or failure).
+    let temporaryURL: URL
+  }
+
+  private let audioPath: String
+  /// The span of the composition the export keeps. The track's start and end
+  /// count from its start, and the track never plays past its end.
+  private let window: CMTimeRange
+  private var loopAudio: Bool = true
+  private var playbackSpeed: Double = 1
+  private var speedRamp: SpeedRamp?
+  private var audioStartTime: CMTime = .zero
+  private var audioEndTime: CMTime?
+  /// Where on the output timeline (from `window.start`) this track starts.
+  private var compositionInsertTime: CMTime = .zero
+  /// How long this audio track should play in the composition.
+  /// If nil, it plays until the window ends.
+  private var compositionPlayDuration: CMTime?
+  /// How long the track fades in after it starts.
+  private var fadeIn: CMTime = .zero
+  /// How long the track fades out before its audio ends.
+  private var fadeOut: CMTime = .zero
+  /// How the volume changes over the output timeline; nil keeps it constant.
+  private var volumeCurve: VolumeCurve?
+
+  /// Initializes builder with audio path and the span of the composition the
+  /// export keeps.
+  init(audioPath: String, window: CMTimeRange) {
+    self.audioPath = audioPath
+    self.window = window
+  }
+
+  @discardableResult
+  func setLoop(_ loop: Bool) -> AudioSequenceBuilder {
+    self.loopAudio = loop
+    return self
+  }
+
+  /// Sets the source speed before looping, padding and fades.
+  @discardableResult
+  func setPlaybackSpeed(_ speed: Double) -> AudioSequenceBuilder {
+    self.playbackSpeed = speed
+    return self
+  }
+
+  /// Sets a speed that changes along the source, instead of the playback
+  /// speed, before looping, padding and fades; nil plays at that speed.
+  @discardableResult
+  func setSpeedRamp(_ ramp: SpeedRamp?) -> AudioSequenceBuilder {
+    self.speedRamp = ramp
+    return self
+  }
+
+  @discardableResult
+  func setAudioStartTime(_ startTimeUs: Int64?) -> AudioSequenceBuilder {
+    if let startTimeUs = startTimeUs, startTimeUs > 0 {
+      self.audioStartTime = CMTime(value: startTimeUs, timescale: 1_000_000)
+    }
+    return self
+  }
+
+  @discardableResult
+  func setAudioEndTime(_ endTimeUs: Int64?) -> AudioSequenceBuilder {
+    if let endTimeUs = endTimeUs, endTimeUs > 0 {
+      self.audioEndTime = CMTime(value: endTimeUs, timescale: 1_000_000)
+    }
+    return self
+  }
+
+  @discardableResult
+  func setCompositionStartTime(_ startUs: Int64?) -> AudioSequenceBuilder {
+    if let startUs = startUs, startUs > 0 {
+      self.compositionInsertTime = CMTime(value: startUs, timescale: 1_000_000)
+    }
+    return self
+  }
+
+  @discardableResult
+  func setCompositionEndTime(_ endUs: Int64?) -> AudioSequenceBuilder {
+    if let endUs = endUs, endUs > 0 {
+      let endTime = CMTime(value: endUs, timescale: 1_000_000)
+      self.compositionPlayDuration = CMTimeSubtract(endTime, compositionInsertTime)
+    }
+    return self
+  }
+
+  /// Sets how long the track fades in after it starts and fades out before
+  /// its audio ends. See `AudioPreRenderer.render`.
+  @discardableResult
+  func setFade(inUs: Int64, outUs: Int64) -> AudioSequenceBuilder {
+    self.fadeIn = CMTime(value: max(inUs, 0), timescale: 1_000_000)
+    self.fadeOut = CMTime(value: max(outUs, 0), timescale: 1_000_000)
+    return self
+  }
+
+  /// Sets how the volume changes over the output timeline; nil keeps it
+  /// constant. Baked into the pre-rendered audio with the fades, see
+  /// `AudioPreRenderer.render`.
+  @discardableResult
+  func setVolumeCurve(_ curve: VolumeCurve?) -> AudioSequenceBuilder {
+    self.volumeCurve = curve
+    return self
+  }
+
+  /// Pre-renders the audio and inserts it into `composition` with a
+  /// single `insertTimeRange` call.
+  func build(in composition: AVMutableComposition) async throws -> BuildResult? {
+    guard playbackSpeed.isFinite, playbackSpeed > 0 else {
+      throw NSError(domain: "AudioSequenceBuilder", code: 1,
+        userInfo: [NSLocalizedDescriptionKey: "Audio speed must be finite and positive"])
+    }
+    // Compute play duration in the composition.
+    let remainingCompositionTime = CMTimeSubtract(window.duration, compositionInsertTime)
+    let playDuration = compositionPlayDuration ?? remainingCompositionTime
+    let effectivePlayDuration = CMTimeMinimum(playDuration, remainingCompositionTime)
+
+    if CMTimeCompare(effectivePlayDuration, .zero) <= 0 {
+      PluginLog.print("⚠️ No time remaining in composition for audio track")
+      return nil
+    }
+
+    // Pre-render the audio: handles trim, loop and silence-padding
+    // entirely on PCM samples.
+    guard
+      let prerender = await AudioPreRenderer.render(
+        audioPath: audioPath,
+        audioStartTime: audioStartTime,
+        audioEndTime: audioEndTime,
+        loop: loopAudio,
+        targetBodyDuration: effectivePlayDuration,
+        playbackSpeed: playbackSpeed,
+        speedRamp: speedRamp,
+        fadeIn: fadeIn,
+        fadeOut: fadeOut,
+        volumeCurve: volumeCurve,
+        outputStart: compositionInsertTime
+      )
+    else {
+      return nil
+    }
+
+    // Load the pre-rendered audio and insert it once into the composition.
+    let prerenderAsset = AVURLAsset(url: prerender.outputURL)
+    var prerenderTracks: [AVAssetTrack] = []
+
+    if #available(iOS 15.0, macOS 13.0, *) {
+      prerenderTracks = (try? await prerenderAsset.loadTracks(withMediaType: .audio)) ?? []
+    } else {
+      prerenderTracks = prerenderAsset.tracks(withMediaType: .audio)
+    }
+
+    guard let sourceTrack = prerenderTracks.first else {
+      PluginLog.print("⚠️ Pre-rendered audio has no audio track")
+      try? FileManager.default.removeItem(at: prerender.outputURL)
+      return nil
+    }
+
+    guard
+      let compositionAudioTrack = composition.addMutableTrack(
+        withMediaType: .audio,
+        preferredTrackID: kCMPersistentTrackID_Invalid
+      )
+    else {
+      PluginLog.print("⚠️ Failed to add custom audio track")
+      try? FileManager.default.removeItem(at: prerender.outputURL)
+      return nil
+    }
+
+    // Insert the entire pre-rendered file at the composition offset.
+    // The pre-render duration is already aligned to the requested
+    // play duration (loop+trim handled at PCM level).
+    let insertDuration = CMTimeMinimum(prerender.duration, effectivePlayDuration)
+    let timeRange = CMTimeRange(start: .zero, duration: insertDuration)
+    let insertTime = CMTimeAdd(window.start, compositionInsertTime)
+
+    do {
+      try compositionAudioTrack.insertTimeRange(
+        timeRange, of: sourceTrack, at: insertTime
+      )
+    } catch {
+      PluginLog.print("⚠️ Failed to insert pre-rendered audio: \(error)")
+      try? FileManager.default.removeItem(at: prerender.outputURL)
+      throw error
+    }
+
+    if CMTimeCompare(insertTime, .zero) > 0 {
+      PluginLog.print(
+        "🎵 Audio placed at composition time: \(insertTime.seconds)s"
+      )
+    }
+    PluginLog.print(
+      "🎼 Pre-rendered audio inserted: \(insertDuration.seconds)s (loop=\(loopAudio))"
+    )
+
+    return BuildResult(
+      track: compositionAudioTrack,
+      temporaryURL: prerender.outputURL
+    )
+  }
+}

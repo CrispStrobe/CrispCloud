@@ -24,7 +24,7 @@ void main() {
       'photo.webp',
       'photo.heic',
       'diagram.svg',
-      'movie.mp4',
+      'movie.avi',
       'archive.zip',
       'legacy.doc',
       'legacy.xls',
