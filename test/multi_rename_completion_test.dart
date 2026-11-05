@@ -39,6 +39,38 @@ void main() {
   );
 
   group('versioned mask dialects', () {
+    test('original and UTC time zones preserve explicit captured offsets', () {
+      final image = file(
+        '/photo.jpg',
+        metadata: {'dateTaken': '2024-12-31T23:30:00-02:00'},
+      );
+      const original = MultiRenameOptions(
+        nameMask: '[YMD]_[hms]',
+        dateSource: RenameDateSource.captured,
+      );
+      expect(
+        preview([image], original).entries.single.newName,
+        '20241231_233000.jpg',
+      );
+      expect(
+        preview(
+          [image],
+          original.copyWith(dateZone: RenameDateZone.utc),
+        ).entries.single.newName,
+        '20250101_013000.jpg',
+      );
+    });
+
+    test('TC title-case directives retain word state across literal and token fragments', () {
+      final result = preview(
+        [file('/HELLO.txt')],
+        const MultiRenameOptions(
+          dialect: RenameMaskDialect.totalCommander,
+          nameMask: '[F]my [N] WORLD[n]',
+        ),
+      );
+      expect(result.entries.single.newName, 'My Hello World.txt');
+    });
     test(
       'TC combined date fields, inline case and custom counters compose',
       () {
@@ -277,6 +309,15 @@ void main() {
   });
 
   group('editable pipelines', () {
+    test('manual row targets can replace unavailable metadata transforms', () {
+      final result = preview(
+        [file('/a.txt')],
+        const MultiRenameOptions(nameMask: '[meta:artist]'),
+        names: {'/a.txt': 'manual.txt'},
+      );
+      expect(result.isValid, isTrue);
+      expect(result.entries.single.newName, 'manual.txt');
+    });
     test('steps consume the preceding virtual name without any file I/O', () {
       final result = preview(
         [file('/a/IMG_09.JPG')],
@@ -462,6 +503,14 @@ void main() {
   });
 
   group('reviewable final paths', () {
+    test('case-only changes use temporary names even when the host is case sensitive', () {
+      final result = preview(
+        [file('/a.txt')],
+        const MultiRenameOptions(nameCase: RenameCase.upper),
+        sensitive: true,
+      );
+      expect(result.requiresStaging, isTrue);
+    });
     test(
       'numbering accounts for duplicates, existing targets and unchanged rows',
       () {

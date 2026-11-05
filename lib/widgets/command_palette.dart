@@ -21,6 +21,9 @@ import '../screens/screen_dialogs.dart'
         downloadSelected;
 import 'pattern_selection_dialog.dart';
 import 'file_list_dialog.dart';
+import 'file_collections_dialog.dart';
+import 'rename_history_dialog.dart';
+import 'directory_comparison_dialog.dart';
 import 'file_clipboard_actions.dart';
 import 'pdf_editor_dialog.dart';
 import 'pdf_operations_dialog.dart';
@@ -192,6 +195,38 @@ class _CommandPaletteState extends ConsumerState<CommandPalette> {
         icon: Icons.playlist_play,
         action: () => showFileListDialog(widget.parentContext, ref, side),
       ),
+      _Command(
+        name: 'Rename History, Batch Undo and Recovery',
+        icon: Icons.history,
+        action: () => showRenameHistoryDialog(widget.parentContext, ref, side),
+      ),
+      _Command(
+        name: 'Save or Manage File Collections',
+        icon: Icons.collections_bookmark_outlined,
+        action: () =>
+            showFileCollectionsDialog(widget.parentContext, ref, side),
+      ),
+      _Command(
+        name: 'Compare Folders and Review Changes',
+        icon: Icons.compare_arrows,
+        action: () => showDirectoryComparisonDialog(widget.parentContext, ref),
+      ),
+      _Command(
+        name: 'Remember Selection',
+        icon: Icons.bookmark_add_outlined,
+        action: () => panel.rememberSelection(),
+      ),
+      _Command(
+        name: 'Restore Selection',
+        icon: Icons.restore,
+        action: () => panel.restoreSelection(),
+      ),
+      if (panel.showingSearchResults)
+        _Command(
+          name: 'Refresh Collection Items',
+          icon: Icons.refresh,
+          action: () => panel.refresh(),
+        ),
       _Command(
         name: 'Select All',
         shortcut: 'Ctrl+A',

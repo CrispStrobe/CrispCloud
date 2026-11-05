@@ -7,14 +7,17 @@ import 'package:file_picker/file_picker.dart';
 import '../utils/path_access.dart';
 import 'local_file_service.dart';
 
-Future<String?> exportFileListText(String text) async {
+Future<String?> exportFileListText(
+  String text, {
+  String fileName = 'file-list.txt',
+}) async {
   final bytes = Uint8List.fromList(utf8.encode(text));
   final mobile = Platform.isAndroid || Platform.isIOS;
   final path = await FilePicker.platform.saveFile(
     dialogTitle: 'Export file list',
-    fileName: 'file-list.txt',
+    fileName: fileName,
     type: FileType.custom,
-    allowedExtensions: const ['txt', 'lst'],
+    allowedExtensions: [fileName.split('.').last],
     bytes: mobile ? bytes : null,
     lockParentWindow: true,
   );

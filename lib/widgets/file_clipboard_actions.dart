@@ -73,7 +73,7 @@ Future<void> pasteFilesFromClipboard(
     late final List<FileItem> files;
     late final bool cut;
     if (internal != null) {
-      if (!internal.origin.isCurrent) {
+      if (!internal.isCurrent) {
         throw StateError(
           'Reconnect and copy the original files again before pasting.',
         );
@@ -119,23 +119,27 @@ Future<void> pasteFilesFromClipboard(
       files,
       kind: cut ? FileOperationKind.move : FileOperationKind.copy,
       sourceOrigin: source,
+      sourceGroups: internal?.groups,
       destinationOrigin: destination,
       destinationPath: destination.source.currentPath,
     );
     // A cut selection is kept until the source is consumed; a cancelled or
     // partial transfer must remain available for retry.
-    if (cut && internal != null && source.isCurrent) {
-      final backend = fileOperationBackend(
-        source: source.source,
-        local: ref.read(localFileServiceProvider),
-        isCurrent: () => source.isCurrent,
-      );
+    if (cut && internal != null && internal.isCurrent) {
       var remaining = false;
-      for (final file in files) {
-        if (await backend.stat(file.path!) != null) {
-          remaining = true;
-          break;
+      for (final group in internal.groups.entries) {
+        final backend = fileOperationBackend(
+          source: group.key.source,
+          local: ref.read(localFileServiceProvider),
+          isCurrent: () => group.key.isCurrent,
+        );
+        for (final file in group.value) {
+          if (await backend.stat(file.path!) != null) {
+            remaining = true;
+            break;
+          }
         }
+        if (remaining) break;
       }
       if (!remaining) clipboard.clear();
     }

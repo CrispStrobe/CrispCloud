@@ -39,20 +39,31 @@ class RenameFingerprint {
   final String? linkTarget;
   final String? digest;
 
-  factory RenameFingerprint.fromFile(FileItem file, {String? digest}) =>
-      RenameFingerprint(
-        folder: file.isFolder,
-        objectId: file.uuid,
-        version:
-            file.metadata?['version']?.toString() ??
-            file.metadata?['eTag']?.toString() ??
-            file.metadata?['etag']?.toString(),
-        size: file.size,
-        modified: file.updatedAt,
-        link: file.isSymlink == true,
-        linkTarget: file.symlinkTarget,
-        digest: digest,
-      );
+  factory RenameFingerprint.fromFile(
+    FileItem file, {
+    String? digest,
+  }) => RenameFingerprint(
+    folder: file.isFolder,
+    // Several path-oriented adapters use the path as a UI UUID. Such aliases
+    // change when renamed and cannot certify an interrupted mutation.
+    objectId:
+        file.uuid == null ||
+            file.uuid!.isEmpty ||
+            file.uuid == file.path ||
+            file.uuid!.startsWith('/') ||
+            RegExp(r'^[A-Za-z]:[\\/]').hasMatch(file.uuid!)
+        ? null
+        : file.uuid,
+    version:
+        file.metadata?['version']?.toString() ??
+        file.metadata?['eTag']?.toString() ??
+        file.metadata?['etag']?.toString(),
+    size: file.size,
+    modified: file.updatedAt,
+    link: file.isSymlink == true,
+    linkTarget: file.symlinkTarget,
+    digest: digest,
+  );
 
   bool matches(RenameFingerprint other, {bool afterMove = false}) {
     if (folder != other.folder || link != other.link) return false;
@@ -65,7 +76,8 @@ class RenameFingerprint {
     if (!folder &&
         !afterMove &&
         modified != null &&
-        modified != other.modified) {
+        (other.modified == null ||
+            !modified!.isAtSameMomentAs(other.modified!))) {
       return false;
     }
     if (digest != null && digest != other.digest) return false;
@@ -82,7 +94,7 @@ class RenameFingerprint {
     if (objectId != null) 'objectId': objectId,
     if (version != null) 'version': version,
     if (size != null) 'size': size,
-    if (modified != null) 'modified': modified!.toIso8601String(),
+    if (modified != null) 'modified': modified!.toUtc().toIso8601String(),
     if (linkTarget != null) 'linkTarget': linkTarget,
     if (digest != null) 'digest': digest,
   };
@@ -106,17 +118,20 @@ class RenameBatchItem {
     required this.targetPath,
     required this.currentPath,
     required this.fingerprint,
+    this.error,
   });
 
   final String sourcePath;
   final String targetPath;
   String currentPath;
   RenameFingerprint fingerprint;
+  String? error;
 
-  FileItem asFile(String name) => FileItem(
+  FileItem asFile(String name, {String? storageId}) => FileItem(
     name: name,
     path: currentPath,
     uuid: fingerprint.objectId,
+    storageId: storageId,
     isFolder: fingerprint.folder,
     size: fingerprint.size,
     updatedAt: fingerprint.modified,
@@ -130,6 +145,7 @@ class RenameBatchItem {
     'target': targetPath,
     'current': currentPath,
     'fingerprint': fingerprint.toJson(),
+    if (error != null) 'error': error,
   };
   factory RenameBatchItem.fromJson(Map<String, dynamic> value) =>
       RenameBatchItem(
@@ -139,6 +155,7 @@ class RenameBatchItem {
         fingerprint: RenameFingerprint.fromJson(
           Map<String, dynamic>.from(value['fingerprint'] as Map),
         ),
+        error: value['error'] as String?,
       );
 }
 
@@ -151,6 +168,7 @@ class RenameBatchStep {
     this.state = RenameStepState.pending,
     this.before,
     this.after,
+    this.copied,
   });
 
   final int itemIndex;
@@ -161,6 +179,10 @@ class RenameBatchStep {
   RenameFingerprint? before;
   RenameFingerprint? after;
 
+  /// Confirmed exclusive copy, persisted before conditionally deleting its
+  /// source. Applies to the currently in-flight direction (rename or restore).
+  RenameFingerprint? copied;
+
   Map<String, dynamic> toJson() => {
     'item': itemIndex,
     'from': from,
@@ -169,6 +191,7 @@ class RenameBatchStep {
     'state': state.name,
     if (before != null) 'before': before!.toJson(),
     if (after != null) 'after': after!.toJson(),
+    if (copied != null) 'copied': copied!.toJson(),
   };
   factory RenameBatchStep.fromJson(Map<String, dynamic> value) =>
       RenameBatchStep(
@@ -185,6 +208,11 @@ class RenameBatchStep {
         after: value['after'] is Map
             ? RenameFingerprint.fromJson(
                 Map<String, dynamic>.from(value['after'] as Map),
+              )
+            : null,
+        copied: value['copied'] is Map
+            ? RenameFingerprint.fromJson(
+                Map<String, dynamic>.from(value['copied'] as Map),
               )
             : null,
       );
@@ -239,7 +267,7 @@ class RenameBatchRecord {
     'schema': 1,
     'id': id,
     'storage': storage.toJson(),
-    'created': created.toIso8601String(),
+    'created': created.toUtc().toIso8601String(),
     'windowsPaths': windowsPaths,
     'caseSensitivePaths': caseSensitivePaths,
     'exclusiveMoves': exclusiveMoves,

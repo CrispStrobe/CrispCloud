@@ -18,7 +18,7 @@ FileItem item(String path, {bool folder = false, String? id}) => FileItem(
   name: p.posix.basename(path),
   path: path,
   isFolder: folder,
-  uuid: id ?? path,
+  uuid: id ?? 'object:$path',
   size: folder ? null : 3,
   updatedAt: DateTime.utc(2024, 1, 1),
 );
@@ -133,12 +133,12 @@ void main() {
       expect(record.steps, hasLength(4));
       await service.run(record, storage);
       expect(record.state, RenameBatchState.completed);
-      expect(storage.files['/b.txt']!.uuid, '/a.txt');
-      expect(storage.files['/a.txt']!.uuid, '/b.txt');
+      expect(storage.files['/b.txt']!.uuid, 'object:/a.txt');
+      expect(storage.files['/a.txt']!.uuid, 'object:/b.txt');
       await service.restore(record, storage);
       expect(record.state, RenameBatchState.restored);
-      expect(storage.files['/a.txt']!.uuid, '/a.txt');
-      expect(storage.files['/b.txt']!.uuid, '/b.txt');
+      expect(storage.files['/a.txt']!.uuid, 'object:/a.txt');
+      expect(storage.files['/b.txt']!.uuid, 'object:/b.txt');
       expect(
         storage.files.keys.any((key) => key.contains('.crisp-rename')),
         isFalse,
@@ -240,6 +240,24 @@ void main() {
   });
 
   group('preconditions and collision safety', () {
+    test('serialized fingerprints compare timestamp instants across time-zone representations', () {
+      final fingerprint = RenameFingerprint(
+        folder: false,
+        size: 3,
+        modified: DateTime(2024, 1, 1),
+      );
+      final reopened = RenameFingerprint.fromJson(fingerprint.toJson());
+      expect(reopened.modified!.isUtc, isTrue);
+      expect(fingerprint.matches(reopened), isTrue);
+    });
+    test('path-valued adapter UUIDs cannot certify an interrupted rename', () {
+      final before = RenameFingerprint.fromFile(item('/a', id: '/a'));
+      final after = RenameFingerprint.fromFile(item('/b', id: '/b'));
+      expect(before.objectId, isNull);
+      expect(after.objectId, isNull);
+      expect(before.canReconcile, isFalse);
+      expect(before.matches(after, afterMove: true), isTrue);
+    });
     test(
       'external occupied targets stop the entire batch before mutation',
       () async {
@@ -310,7 +328,7 @@ void main() {
       await service.run(record, storage);
       expect(record.state, RenameBatchState.needsReview);
       expect(storage.files['/new']!.uuid, 'racer');
-      expect(storage.files['/a']!.uuid, '/a');
+      expect(storage.files['/a']!.uuid, 'object:/a');
       expect(storage.moves, isEmpty);
     });
 
@@ -373,7 +391,7 @@ void main() {
         final reopened = (await store.read(record.id))!;
         await RenameBatchService(store).run(reopened, storage);
         expect(reopened.isComplete, isTrue);
-        expect(storage.files['/b']!.uuid, '/a');
+        expect(storage.files['/b']!.uuid, 'object:/a');
       },
     );
 
@@ -393,8 +411,8 @@ void main() {
         );
         await service.restore(record, storage);
         expect(record.isRestored, isTrue);
-        expect(storage.files['/a']!.uuid, '/a');
-        expect(storage.files['/b']!.uuid, '/b');
+        expect(storage.files['/a']!.uuid, 'object:/a');
+        expect(storage.files['/b']!.uuid, 'object:/b');
       },
     );
 

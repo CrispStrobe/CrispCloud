@@ -18,12 +18,64 @@ import '../utils/formatters.dart';
 import 'file_operation_dialog.dart';
 import 'internal_viewer_dialog.dart';
 
+enum ArchiveWorkspaceAction { browse, copyOut, moveOut, edit }
+
+/// Reuses the actual archive account and the member selection of an archive
+/// panel. Member paths are archive-relative; the container path is kept separate.
+Future<void> showCurrentArchiveWorkspaceDialog(
+  BuildContext context,
+  WidgetRef ref,
+  PanelSide side, {
+  ArchiveWorkspaceAction action = ArchiveWorkspaceAction.browse,
+  FileItem? focusedMember,
+}) async {
+  try {
+    final panel = ref.read(panelProvider(side));
+    final origin = panel.captureArchiveOrigin();
+    final archive = panel.archiveSource!;
+    final selected = focusedMember != null
+        ? [focusedMember]
+        : panel.selection.isNotEmpty
+        ? panel.selection.toList()
+        : panel.cursorItem == null
+        ? <FileItem>[]
+        : [panel.cursorItem!];
+    String memberPath(String path) =>
+        '/${path.replaceAll(RegExp(r'^/+|/+$'), '')}';
+    await showArchiveWorkspaceDialog(
+      context,
+      ref,
+      side,
+      FileItem(
+        name: archive.archiveName,
+        path: archive.archivePath,
+        isFolder: false,
+      ),
+      sourceOrigin: origin,
+      initialDirectory: memberPath(archive.innerPath),
+      initialSelectedPaths: selected
+          .where((file) => file.name != '..' && file.path != null)
+          .map((file) => memberPath(file.path!))
+          .toSet(),
+      initialAction: action,
+    );
+  } catch (error) {
+    if (context.mounted) {
+      ScaffoldMessenger.of(context)
+          .showSnackBar(SnackBar(content: Text('$error')));
+    }
+  }
+}
+
 Future<void> showArchiveWorkspaceDialog(
   BuildContext context,
   WidgetRef ref,
   PanelSide side,
   FileItem file, {
   PanelFileOrigin? sourceOrigin,
+  String initialDirectory = '/',
+  Set<String> initialSelectedPaths = const {},
+  ArchiveWorkspaceAction initialAction = ArchiveWorkspaceAction.browse,
 }) async {
   try {
     final origin =
@@ -32,8 +84,14 @@ Future<void> showArchiveWorkspaceDialog(
     await showDialog<void>(
       context: context,
       barrierDismissible: false,
-      builder: (_) =>
-          _ArchiveWorkspaceDialog(side: side, file: file, origin: origin),
+      builder: (_) => _ArchiveWorkspaceDialog(
+        side: side,
+        file: file,
+        origin: origin,
+        initialDirectory: initialDirectory,
+        initialSelectedPaths: initialSelectedPaths,
+        initialAction: initialAction,
+      ),
     );
     if (context.mounted) await ref.read(panelProvider(side)).refresh();
   } catch (error) {
@@ -49,10 +107,16 @@ class _ArchiveWorkspaceDialog extends ConsumerStatefulWidget {
     required this.side,
     required this.file,
     required this.origin,
+    required this.initialDirectory,
+    required this.initialSelectedPaths,
+    required this.initialAction,
   });
   final PanelSide side;
   final FileItem file;
   final PanelFileOrigin origin;
+  final String initialDirectory;
+  final Set<String> initialSelectedPaths;
+  final ArchiveWorkspaceAction initialAction;
   @override
   ConsumerState<_ArchiveWorkspaceDialog> createState() =>
       _ArchiveWorkspaceDialogState();
@@ -72,7 +136,32 @@ class _ArchiveWorkspaceDialogState
   @override
   void initState() {
     super.initState();
-    _open();
+    unawaited(_openInitial());
+  }
+
+  Future<void> _openInitial() async {
+    await _open();
+    if (!mounted || _workspace == null) return;
+    if (widget.initialAction == ArchiveWorkspaceAction.copyOut &&
+        _selection.isNotEmpty) {
+      await _copyOut();
+    } else if (widget.initialAction == ArchiveWorkspaceAction.moveOut &&
+        _selection.isNotEmpty) {
+      if (_workspace!.canUpdate) {
+        await _moveOut();
+      } else {
+        setState(() => _message = _workspace!.updateSupport);
+      }
+    } else if (widget.initialAction == ArchiveWorkspaceAction.edit &&
+        _selection.length == 1) {
+      if (_workspace!.canUpdate && isTextEditableName(_selection.single.name)) {
+        await _edit();
+      } else {
+        setState(
+          () => _message = 'Copy this member out, edit it, then add it with replacement enabled.',
+        );
+      }
+    }
   }
 
   @override
@@ -117,7 +206,17 @@ class _ArchiveWorkspaceDialogState
           }
           setState(() {
             _workspace = workspace;
-            _selected.clear();
+            _path = widget.initialDirectory;
+            _selected
+              ..clear()
+              ..addAll(
+                workspace
+                    .list(_path)
+                    .where(
+                      (file) => widget.initialSelectedPaths.contains(file.path),
+                    )
+                    .map((file) => file.path!),
+              );
           });
           return;
         } on ArchivePasswordRequiredException catch (error) {
@@ -309,6 +408,54 @@ class _ArchiveWorkspaceDialogState
     });
   }
 
+  Future<void> _moveOut() async {
+    final proceed = await showDialog<bool>(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        title: const Text('Move members out of this archive?'),
+        content: const Text(
+          'Choose copy options next. Only successfully copied and verified members are removed from the working archive. Save archive to commit the removal.',
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(ctx, false),
+            child: const Text('Cancel'),
+          ),
+          FilledButton(
+            onPressed: () => Navigator.pop(ctx, true),
+            child: const Text('Continue'),
+          ),
+        ],
+      ),
+    );
+    if (proceed != true || !mounted) return;
+    final files = _selection;
+    await _run(() async {
+      final plan = await showFileOperationDialog(
+        context,
+        ref,
+        widget.side,
+        files,
+        kind: FileOperationKind.copy,
+        sourceOrigin: widget.origin,
+        sourceBackend: _workspace!.backend,
+      );
+      if (plan == null || !mounted) return;
+      final count = await _workspace!.stageCopiedMemberRemoval(
+        plan,
+        isCancelled: () => _cancelled || !mounted,
+      );
+      if (mounted) {
+        setState(() {
+          _selected.clear();
+          _message = count == 0
+              ? 'No copied members were removed.'
+              : 'Moved $count member(s) in the working copy. Save archive to commit removal.';
+        });
+      }
+    });
+  }
+
   Future<void> _save() async => _run(() async {
     await _workspace!.save(isCancelled: () => _cancelled || !mounted);
     if (mounted) setState(() => _message = 'Archive saved and verified.');
@@ -419,6 +566,13 @@ class _ArchiveWorkspaceDialogState
                           : null,
                       icon: const Icon(Icons.copy),
                       label: const Text('Copy out with options…'),
+                    ),
+                    TextButton.icon(
+                      onPressed: editable && selected.isNotEmpty
+                          ? _moveOut
+                          : null,
+                      icon: const Icon(Icons.drive_file_move_outline),
+                      label: const Text('Move out with options…'),
                     ),
                     TextButton.icon(
                       onPressed: editable ? _add : null,

@@ -174,4 +174,38 @@ void main() {
       expect(await clipboard.stillOwnsClipboard(native), isFalse);
     },
   );
+  test('mixed collections keep every captured source and reject a disconnected account', () async {
+    debugDefaultTargetPlatformOverride = TargetPlatform.linux;
+    final remote = container.read(panelProvider(PanelSide.remote));
+    final local = container.read(panelProvider(PanelSide.local));
+    await remote.refresh();
+    await local.refresh();
+    final cloudFile = remote.files!.single;
+    final localFile = local.files!.singleWhere((file) => file.name != '..');
+    final cloudOrigin = remote.captureOperationOrigin([cloudFile]);
+    final localOrigin = local.captureOperationOrigin([localFile]);
+    remote.showSearchResults(
+      [cloudFile, localFile],
+      originForFile: (file) =>
+          identical(file, cloudFile) ? cloudOrigin : localOrigin,
+    );
+    final clipboard = FileClipboardNotifier();
+    await clipboard.capture(remote, remote.files!, native, cut: true);
+    final captured = clipboard.selection!;
+    expect(captured.groups.length, 2);
+    expect(captured.native, isFalse);
+    expect(nativeClipboard, isNull);
+    expect(captured.isCurrent, isTrue);
+    expect(await clipboard.stillOwnsClipboard(native), isTrue);
+    expect(() => captured.groups.clear(), throwsUnsupportedError);
+    expect(() => captured.groups.values.first.clear(), throwsUnsupportedError);
+    await remote.navigateToPath('/other');
+    expect(captured.files.map((file) => file.path).toSet(), {
+      '/file.txt',
+      '${directory.path}/local.txt',
+    });
+    auth.disconnect();
+    expect(captured.isCurrent, isFalse);
+    expect(localOrigin.isCurrent, isTrue);
+  });
 }

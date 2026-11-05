@@ -235,6 +235,77 @@ class ArchiveWorkspace {
     _publish(updated);
   }
 
+  /// Stages removal only for members whose foreground copy completed and whose
+  /// destination still contains the same bytes. The archive itself is unchanged
+  /// until [save]; skipped, failed and filtered members remain in the workspace.
+  Future<int> stageCopiedMemberRemoval(
+    FileOperationPlan plan, {
+    bool Function()? isCancelled,
+  }) async {
+    _check(writing: true);
+    if (!identical(plan.source.identity, this)) {
+      throw StateError('The completed copy belongs to a different archive.');
+    }
+    final updated = Map.of(_entries);
+    var removed = 0;
+    for (final entry in plan.entries) {
+      if (entry.source.isFolder ||
+          entry.outcome != FileOperationOutcome.copied) {
+        continue;
+      }
+      _check(writing: true);
+      if (isCancelled?.call() ?? false) {
+        throw StateError('Archive move cancelled.');
+      }
+      final original = await read(entry.source.path!);
+      final target = await plan.destination.stat(entry.destination);
+      if (target == null || target.isFolder || target.isSymlink == true) {
+        throw StateError(
+          'The copied destination is missing: ${entry.destination}',
+        );
+      }
+      final copied = await _read(
+        plan.destination,
+        target,
+        kArchiveReadLimit,
+        isCancelled: isCancelled,
+      );
+      final after = await plan.destination.stat(entry.destination);
+      if (!plan.destination.isCurrent ||
+          after == null ||
+          after.uuid != target.uuid ||
+          after.size != target.size ||
+          after.updatedAt != target.updatedAt ||
+          sha256.convert(original).toString() !=
+              sha256.convert(copied).toString()) {
+        throw StateError(
+          'The copied destination changed: ${entry.destination}',
+        );
+      }
+      final name = entry.source.path!.replaceFirst(RegExp(r'^/+'), '');
+      if (updated.remove(name) != null) removed++;
+    }
+    // A directory can disappear only when every remaining child is gone.
+    // Filtering or skipped conflicts therefore never delete uncopied members.
+    final folders =
+        plan.entries
+            .where((entry) => entry.source.isFolder && entry.completed)
+            .map((entry) => entry.source.path!.replaceFirst(RegExp(r'^/+'), ''))
+            .toList()
+          ..sort((a, b) => b.length.compareTo(a.length));
+    for (final folder in folders) {
+      if (!updated.keys.any((path) => path.startsWith('$folder/'))) {
+        if (updated.remove(folder) != null) removed++;
+      }
+    }
+    _check(writing: true);
+    if (isCancelled?.call() ?? false) {
+      throw StateError('Archive move cancelled.');
+    }
+    if (removed > 0) _publish(updated);
+    return removed;
+  }
+
   void rename(String path, String newPath) {
     _check(writing: true);
     final from = ArchiveService.safeMemberPath(

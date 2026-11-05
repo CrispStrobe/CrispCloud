@@ -21,6 +21,19 @@ abstract class RenameBatchStorage {
   Future<FileItem?> stat(String path);
   Future<void> move(FileItem source, String destination);
 
+  /// Known unsupported operations are rejected for the complete batch before
+  /// its first mutation. Runtime checks still apply immediately before moving.
+  String? renameProblem(FileItem item) => null;
+
+  /// Copy/delete providers must durably record the verified exclusive copy
+  /// before deleting its version-bound source. Native moves need no substep.
+  Future<void> moveWithJournal(
+    FileItem source,
+    String destination, {
+    RenameFingerprint? copied,
+    required Future<void> Function(RenameFingerprint) onCopied,
+  }) => move(source, destination);
+
   /// A streaming digest is useful where the backend lacks stable object IDs.
   /// Null means an interrupted ambiguous rename requires manual inspection.
   Future<String?> contentDigest(FileItem item) async => null;
@@ -119,11 +132,20 @@ class RenameBatchService {
       final captured = RenameFingerprint.fromFile(entry.file);
       final actual = RenameFingerprint.fromFile(source);
       if (!captured.matches(actual) ||
+          (captured.folder &&
+              !captured.link &&
+              captured.modified != null &&
+              (actual.modified == null ||
+                  !captured.modified!.isAtSameMomentAs(actual.modified!))) ||
           storage.paths.normalize(source.path!) != entry.sourcePath) {
         problems[entry.sourcePath] =
             'The original item changed since selection. Refresh the preview.';
       }
       if (entry.directChange) {
+        final unsupported = storage.renameProblem(source);
+        if (unsupported != null) {
+          problems[entry.sourcePath] = unsupported;
+        }
         final directTarget = storage.paths.join(
           storage.paths.dirname(entry.sourcePath),
           entry.newName,
@@ -315,7 +337,8 @@ class RenameBatchService {
       );
     }
     final actual = await _fingerprint(destination, storage);
-    if (!expected.matches(actual, afterMove: true)) {
+    if (!(step.copied?.matches(actual) ??
+        expected.matches(actual, afterMove: true))) {
       throw StateError(
         'The observed destination conflicts with the saved object fingerprint.',
       );
@@ -381,16 +404,21 @@ class RenameBatchService {
           ),
         );
         try {
+          record.items[step.itemIndex].error = null;
           final source = await storage.stat(from);
           _check(storage);
           if (source == null) throw StateError('Source is missing: $from');
-          final wanted = record.restoring
-              ? step.after
-              : record.items[step.itemIndex].fingerprint;
+          // Earlier reverse steps can legitimately assign a new provider
+          // version to this same item (notably staged copy/delete renames).
+          // Compare its last confirmed current object, not an older step's
+          // destination version. The in-flight step still captures a fresh
+          // before/after fingerprint below for interruption reconciliation.
+          final wanted = record.items[step.itemIndex].fingerprint;
           final fresh = await _fingerprint(source, storage);
-          // A directory's contents and modified time may have changed through
-          // earlier child steps. Its stable object ID and type must still match.
-          if (wanted != null && !_matchesBeforeStep(wanted, fresh)) {
+          // Child steps can change directory timestamps and provider versions.
+          // A saved content digest still protects a directory once staged;
+          // reverse ordering restores the corresponding child names first.
+          if (!_matchesBeforeStep(wanted, fresh)) {
             throw StateError(
               'Source changed after the batch was prepared: $from',
             );
@@ -406,9 +434,18 @@ class RenameBatchService {
             step.state = RenameStepState.inFlight;
             step.before = fresh;
           }
+          step.copied = null;
           await _save(record);
           _check(storage);
-          await storage.move(source, to);
+          await storage.moveWithJournal(
+            source,
+            to,
+            onCopied: (copied) async {
+              step.copied = copied;
+              await _save(record);
+              _check(storage);
+            },
+          );
           _check(storage);
           final moved = await storage.stat(to);
           if (moved == null) {
@@ -417,7 +454,8 @@ class RenameBatchService {
             );
           }
           final after = await _fingerprint(moved, storage);
-          if (!fresh.matches(after, afterMove: true)) {
+          if (!(step.copied?.matches(after) ??
+              fresh.matches(after, afterMove: true))) {
             throw RenameBatchNeedsReview(
               'The destination identity changed unexpectedly: $to',
             );
@@ -431,6 +469,7 @@ class RenameBatchService {
           );
           await _save(record);
         } catch (error) {
+          record.items[step.itemIndex].error = error.toString();
           if (error is RenameBatchPersistenceException) rethrow;
           // A provider may fail after committing a rename. Reconcile the
           // journalled intent before deciding whether it is safe to continue.
@@ -439,6 +478,7 @@ class RenameBatchService {
             await _reconcileStep(record, step, storage);
             if (step.state == RenameStepState.completed ||
                 step.state == RenameStepState.restored) {
+              record.items[step.itemIndex].error = null;
               continue;
             }
           }
@@ -495,6 +535,54 @@ class RenameBatchService {
     final before = await storage.stat(from);
     final after = await storage.stat(to);
     _check(storage);
+    final copied = step.copied;
+    if (copied != null) {
+      if (copied.version == null ||
+          after == null ||
+          !copied.matches(await _fingerprint(after, storage))) {
+        throw RenameBatchNeedsReview(
+          'The copied destination changed during interruption: $to. The source was retained.',
+        );
+      }
+      if (before != null) {
+        if (!expected.matches(await _fingerprint(before, storage))) {
+          throw RenameBatchNeedsReview(
+            'The source changed after its recovery copy: $from. Both items were retained.',
+          );
+        }
+        await storage.moveWithJournal(
+          before,
+          to,
+          copied: copied,
+          onCopied: (value) async {
+            step.copied = value;
+            await _save(record);
+          },
+        );
+        _check(storage);
+        if (await storage.stat(from) != null) {
+          throw RenameBatchNeedsReview(
+            'The provider did not confirm deletion of the copied source: $from',
+          );
+        }
+      }
+      final confirmed = await storage.stat(to);
+      if (confirmed == null ||
+          !copied.matches(await _fingerprint(confirmed, storage))) {
+        throw RenameBatchNeedsReview(
+          'The copied destination changed before completion: $to',
+        );
+      }
+      _completeStep(
+        record,
+        step,
+        await _fingerprint(confirmed, storage),
+        storage,
+        reverse: reverse,
+      );
+      await _save(record);
+      return;
+    }
     if (before != null && after == null) {
       final fingerprint = await _fingerprint(before, storage);
       if (!expected.matches(fingerprint)) {
@@ -525,7 +613,9 @@ class RenameBatchService {
     FileItem file,
     RenameBatchStorage storage,
   ) async {
-    final digest = file.uuid == null ? await storage.contentDigest(file) : null;
+    final digest = RenameFingerprint.fromFile(file).objectId == null
+        ? await storage.contentDigest(file)
+        : null;
     _check(storage);
     return RenameFingerprint.fromFile(file, digest: digest);
   }
@@ -537,7 +627,8 @@ class RenameBatchService {
     if (expected.folder && !expected.link) {
       return actual.folder &&
           !actual.link &&
-          (expected.objectId == null || expected.objectId == actual.objectId);
+          (expected.objectId == null || expected.objectId == actual.objectId) &&
+          (expected.digest == null || expected.digest == actual.digest);
     }
     return expected.matches(actual);
   }
@@ -656,6 +747,7 @@ class RenameBatchService {
             item.currentPath)
           (sinceTargets ? item.targetPath : item.sourcePath): item.asFile(
             paths.basename(item.currentPath),
+            storageId: record.storage.id,
           ),
     };
   }

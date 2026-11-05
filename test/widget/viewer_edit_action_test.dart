@@ -1,163 +1,221 @@
-// test/widget/viewer_edit_action_test.dart
-//
-// The F3 viewer offers an Edit handoff only when F4 can save the file, and
-// returns InternalViewerAction.edit to the host.
-
 import 'dart:io';
-import 'dart:typed_data';
 
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 import 'package:crisp_cloud/models/file_item.dart';
 import 'package:crisp_cloud/models/panel_side.dart';
-import 'package:crisp_cloud/providers/core_providers.dart';
+import 'package:crisp_cloud/providers/providers.dart';
+import 'package:crisp_cloud/providers/panel_source_provider.dart';
 import 'package:crisp_cloud/services/local_file_service.dart';
+import 'package:crisp_cloud/services/panel_source_service.dart';
 import 'package:crisp_cloud/widgets/internal_viewer_dialog.dart';
 
-class _TextFileService implements LocalFileService {
-  _TextFileService(this.bytes);
+import '../support/workflow_fake_client.dart';
 
-  final Uint8List bytes;
-
+class _Local extends Fake implements LocalFileService {
   @override
-  String currentPath = Directory.systemTemp.path;
-
+  String currentPath = '/landing';
   @override
   String? get grantedBasePath => currentPath;
-
-  @override
-  Future<bool> ensureAccess(String path) async => true;
-
-  @override
-  Future<bool> beginStreamAccess(String path) async => true;
-
-  @override
-  Future<void> endStreamAccess() async {}
-
-  @override
-  Future<int?> fileLength(String path) async => bytes.length;
-
   @override
   Future<String> getInitialPath() async => currentPath;
-
   @override
   Future<String> getSafeFallbackDirectory() async => currentPath;
-
   @override
-  Future<bool> hasAccessToPath(String path) async => true;
-
-  @override
-  Future<List<FileSystemEntity>?> listDirectory(String path) async => const [];
-
-  @override
-  Future<String?> requestDirectoryAccess({String? initialDirectory}) async =>
-      currentPath;
-
-  @override
-  Future<Uint8List> readFile(String path, {FileItem? fileItem}) async => bytes;
-
-  @override
-  Future<void> saveFile(String path, Uint8List data) async {}
-
-  @override
-  Future<void> createDirectory(String path) async {}
-
-  @override
-  Future<void> deleteEntry(String path, bool isFolder) async {}
-
+  Future<List<FileSystemEntity>?> listDirectory(String path) async => [];
   @override
   Future<void> refresh() async {}
+}
+
+class _Auth extends ChangeNotifier implements AuthNotifier {
+  _Auth(this.client);
+  @override
+  final WorkflowFakeClient client;
+  @override
+  bool get isConnected => client.current;
+  @override
+  String? userEmail = 'fixture@example.test';
+  @override
+  String get providerName => client.providerName;
+  void disconnect() {
+    client.current = false;
+    notifyListeners();
+  }
 
   @override
-  Map<String, dynamic> getWebMetadata(String path) => {};
-
-  @override
-  Object? getWebFileRef(String path) => null;
-
-  @override
-  Future<List<FileItem>> walkFiles(
-    String path, {
-    bool includeHidden = false,
-    int maxItems = 10000,
-  }) async =>
-      const <FileItem>[];
+  dynamic noSuchMethod(Invocation invocation) => super.noSuchMethod(invocation);
 }
 
 void main() {
-  testWidgets('text viewer exposes Edit and returns the edit action', (
-    tester,
-  ) async {
-    final bytes = Uint8List.fromList('one\ntwo\n'.codeUnits);
-    late Future<InternalViewerAction> result;
-    final file = FileItem(
-      name: 'notes.txt',
-      path: '/tmp/notes.txt',
-      isFolder: false,
-      size: bytes.length,
+  late WorkflowFakeClient cloud;
+  late _Auth auth;
+  late ProviderContainer container;
+  late PanelNotifier panel;
+  setUp(() async {
+    SharedPreferences.setMockInitialValues({});
+    cloud = WorkflowFakeClient()
+      ..put('/a.txt', 'first file\n'.codeUnits)
+      ..put('/b.txt', 'unselected\n'.codeUnits)
+      ..put('/c.txt', 'third file\n'.codeUnits)
+      ..put('/blob.bin', [0, 1, 2]);
+    auth = _Auth(cloud);
+    container = ProviderContainer(
+      overrides: [
+        authProvider.overrideWith((_) => auth),
+        localFileServiceProvider.overrideWithValue(_Local()),
+      ],
     );
+    panel = container.read(panelProvider(PanelSide.remote));
+    await panel.refresh();
+  });
+  tearDown(() => container.dispose());
 
-    await tester.pumpWidget(
-      ProviderScope(
-        overrides: [
-          localFileServiceProvider.overrideWithValue(_TextFileService(bytes)),
-        ],
-        child: MaterialApp(
-          home: Builder(
-            builder: (context) => Scaffold(
-              body: Center(
-                child: ElevatedButton(
+  FileItem item(String name) =>
+      panel.files!.firstWhere((file) => file.name == name);
+
+  testWidgets(
+    'navigation keeps only selected files and edits the displayed file',
+    (tester) async {
+      panel.toggleSelection(item('a.txt'));
+      panel.toggleSelection(item('c.txt'), ctrlKey: true);
+      late Future<InternalViewerAction> result;
+      FileItem? viewed;
+      await tester.pumpWidget(
+        UncontrolledProviderScope(
+          container: container,
+          child: MaterialApp(
+            home: Builder(
+              builder: (context) => Scaffold(
+                body: TextButton(
                   onPressed: () {
                     result = showInternalViewer(
                       context,
-                      file: file,
-                      side: PanelSide.local,
+                      file: item('a.txt'),
+                      side: PanelSide.remote,
+                      onFileChanged: (file) => viewed = file,
                     );
                   },
-                  child: const Text('open'),
+                  child: const Text('Open'),
                 ),
               ),
             ),
           ),
         ),
-      ),
-    );
+      );
+      await tester.tap(find.text('Open'));
+      await tester.pumpAndSettle();
+      expect(find.text('1 / 2'), findsOneWidget);
+      expect(find.byTooltip('Edit (F4)'), findsOneWidget);
+      await tester.tap(find.byTooltip('Next file (Alt+Right)'));
+      await tester.pumpAndSettle();
+      expect(find.text('c.txt'), findsOneWidget);
+      expect(find.text('2 / 2'), findsOneWidget);
+      expect(viewed, same(item('c.txt')));
+      await tester.tap(find.byTooltip('Edit (F4)'));
+      await tester.pumpAndSettle();
+      expect(await result, InternalViewerAction.edit);
+    },
+  );
 
-    await tester.tap(find.text('open'));
-    await tester.pumpAndSettle();
+  testWidgets(
+    'reload and follow use fresh bytes and stop on captured account loss',
+    (tester) async {
+      await tester.pumpWidget(
+        UncontrolledProviderScope(
+          container: container,
+          child: MaterialApp(
+            home: InternalViewerDialog(
+              file: item('a.txt'),
+              side: PanelSide.remote,
+            ),
+          ),
+        ),
+      );
+      await tester.pumpAndSettle();
+      cloud.put('/a.txt', 'reloaded text\n'.codeUnits);
+      await tester.tap(find.byTooltip('Reload (F5)'));
+      await tester.pumpAndSettle();
+      expect(find.textContaining('reloaded text'), findsWidgets);
+      await tester.tap(find.byTooltip('Follow end of file'));
+      await tester.pumpAndSettle();
+      cloud.put('/a.txt', 'reloaded text\nnew line\n'.codeUnits);
+      await tester.pump(const Duration(seconds: 1));
+      await tester.pumpAndSettle();
+      expect(find.textContaining('new line'), findsWidgets);
+      auth.disconnect();
+      await tester.pump(const Duration(seconds: 1));
+      await tester.pumpAndSettle();
+      expect(find.textContaining('source changed'), findsWidgets);
+      expect(find.byTooltip('Edit (F4)'), findsNothing);
+    },
+  );
 
-    expect(find.byTooltip('Edit (F4)'), findsOneWidget);
-    await tester.tap(find.byTooltip('Edit (F4)'));
-    await tester.pumpAndSettle();
+  testWidgets(
+    'a remote file in the left pane uses its actual captured source',
+    (tester) async {
+      final left = container.read(panelProvider(PanelSide.local));
+      await tester.pump();
+      container
+          .read(panelSourceProvider(PanelSide.local).notifier)
+          .setSource(
+            RemotePanelSource(
+              providerName: cloud.providerName,
+              client: cloud,
+              path: '/',
+            ),
+          );
+      await left.refresh();
+      final listed = left.files!.firstWhere((file) => file.name == 'a.txt');
+      await tester.pumpWidget(
+        UncontrolledProviderScope(
+          container: container,
+          child: MaterialApp(
+            home: InternalViewerDialog(file: listed, side: PanelSide.local),
+          ),
+        ),
+      );
+      await tester.pumpAndSettle();
+      expect(find.textContaining('first file'), findsWidgets);
+      expect(find.byTooltip('Edit (F4)'), findsOneWidget);
+    },
+  );
 
-    expect(await result, InternalViewerAction.edit);
-  });
-
-  testWidgets('view-only formats do not expose Edit', (tester) async {
-    final bytes = Uint8List.fromList(<int>[0, 1, 2, 3]);
-    final file = FileItem(
-      name: 'blob.bin',
-      path: '/tmp/blob.bin',
-      isFolder: false,
-      size: bytes.length,
-    );
-
+  testWidgets('unverified row copies and binary formats do not expose Edit', (
+    tester,
+  ) async {
     await tester.pumpWidget(
-      ProviderScope(
-        overrides: [
-          localFileServiceProvider.overrideWithValue(_TextFileService(bytes)),
-        ],
+      UncontrolledProviderScope(
+        container: container,
         child: MaterialApp(
           home: InternalViewerDialog(
-            file: file,
-            side: PanelSide.local,
+            file: item('a.txt').copyWith(),
+            side: PanelSide.remote,
           ),
         ),
       ),
     );
     await tester.pumpAndSettle();
-
+    expect(
+      find.textContaining('original viewer source is unavailable'),
+      findsWidgets,
+    );
+    expect(find.byTooltip('Edit (F4)'), findsNothing);
+    await tester.pumpWidget(
+      UncontrolledProviderScope(
+        container: container,
+        child: MaterialApp(
+          home: InternalViewerDialog(
+            key: const ValueKey('binary'),
+            file: item('blob.bin'),
+            side: PanelSide.remote,
+          ),
+        ),
+      ),
+    );
+    await tester.pumpAndSettle();
     expect(find.byTooltip('Edit (F4)'), findsNothing);
   });
 }

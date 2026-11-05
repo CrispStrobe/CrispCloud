@@ -454,6 +454,7 @@ DateTime _date(
     ]),
   };
   DateTime? date;
+  DateTime? originalWallClock;
   if (value is DateTime) date = value;
   if (value is num) {
     if (!value.isFinite ||
@@ -472,6 +473,15 @@ DateTime _date(
         '${value.substring(0, 10).replaceAll(':', '-')}T${value.substring(11)}',
       );
     }
+    // DateTime.parse normalizes an explicit offset to UTC. Preserve the
+    // captured wall-clock fields when the user selected the original zone.
+    final zone = RegExp(r'([+-])(\d{2}):?(\d{2})$').firstMatch(value);
+    if (date != null && zone != null) {
+      final minutes = int.parse(zone[2]!) * 60 + int.parse(zone[3]!);
+      originalWallClock = date.add(
+        Duration(minutes: zone[1] == '-' ? -minutes : minutes),
+      );
+    }
   }
   if (date == null) {
     throw _UnavailableRenameValue(
@@ -479,7 +489,7 @@ DateTime _date(
     );
   }
   return switch (context.dateZone) {
-    RenameDateZone.original => date,
+    RenameDateZone.original => originalWallClock ?? date,
     RenameDateZone.local => date.toLocal(),
     RenameDateZone.utc => date.toUtc(),
   };

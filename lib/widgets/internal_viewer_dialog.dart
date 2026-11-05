@@ -45,6 +45,10 @@ import '../models/panel_side.dart';
 import '../providers/providers.dart';
 import '../services/archive_viewer_service.dart';
 import '../services/file_bytes_loader.dart';
+import '../services/file_operation_backend.dart';
+import '../services/file_operation_service.dart';
+import '../services/viewer_spool.dart';
+import '../services/viewer_tail_service.dart';
 import '../services/internal_viewer_service.dart';
 import '../services/local_file_service.dart';
 import '../services/log_service.dart';
@@ -93,25 +97,113 @@ Future<InternalViewerAction> showInternalViewer(
   required PanelSide side,
   Uint8List? bytesOverride,
   String? displayName,
+  PanelFileOrigin? origin,
+  ValueChanged<FileItem>? onFileChanged,
 }) async {
   final result = await showDialog<InternalViewerAction>(
     context: context,
     barrierDismissible: false,
     builder: (_) => Dialog.fullscreen(
-      child: InternalViewerDialog(
+      child: _ViewerSessionHost(
         file: file,
         side: side,
         bytesOverride: bytesOverride,
         displayName: displayName,
+        origin: origin,
+        onFileChanged: onFileChanged,
       ),
     ),
   );
   return result ?? InternalViewerAction.close;
 }
 
+/// Captures the ordered visible selection once. Navigating a collection never
+/// resolves a row through whichever account happens to be active later.
+class _ViewerSessionHost extends ConsumerStatefulWidget {
+  const _ViewerSessionHost({
+    required this.file,
+    required this.side,
+    this.bytesOverride,
+    this.displayName,
+    this.origin,
+    this.onFileChanged,
+  });
+  final FileItem file;
+  final PanelSide side;
+  final Uint8List? bytesOverride;
+  final String? displayName;
+  final PanelFileOrigin? origin;
+  final ValueChanged<FileItem>? onFileChanged;
+  @override
+  ConsumerState<_ViewerSessionHost> createState() => _ViewerSessionHostState();
+}
+
+class _ViewerSessionHostState extends ConsumerState<_ViewerSessionHost> {
+  late List<({FileItem file, PanelFileOrigin? origin})> _items;
+  int _index = 0;
+  @override
+  void initState() {
+    super.initState();
+    if (widget.bytesOverride != null) {
+      _items = [(file: widget.file, origin: null)];
+      return;
+    }
+    final panel = ref.read(panelProvider(widget.side));
+    final visible = (panel.displayedFiles ?? const <FileItem>[])
+        .where((file) => !file.isFolder && file.name != '..')
+        .toList();
+    final selected = visible.where(panel.selection.contains).toList();
+    final candidates = widget.bytesOverride != null
+        ? [widget.file]
+        : selected.length > 1 &&
+              selected.any((file) => identical(file, widget.file))
+        ? selected
+        : visible;
+    if (!candidates.any((file) => identical(file, widget.file))) {
+      candidates.insert(0, widget.file);
+    }
+    _items = [
+      for (final file in candidates)
+        (
+          file: file,
+          origin: identical(file, widget.file) && widget.origin != null
+              ? widget.origin
+              : panel.originForOperation(file),
+        ),
+    ];
+    _index = _items.indexWhere((item) => identical(item.file, widget.file));
+  }
+
+  void _go(int delta) {
+    final next = _index + delta;
+    if (next < 0 || next >= _items.length) return;
+    setState(() => _index = next);
+    widget.onFileChanged?.call(_items[next].file);
+  }
+
+  @override
+  Widget build(BuildContext context) => InternalViewerDialog(
+    key: ValueKey(_index),
+    file: _items[_index].file,
+    side: widget.side,
+    origin: _items[_index].origin,
+    bytesOverride: widget.bytesOverride,
+    displayName: widget.displayName,
+    onPrevious: _index > 0 ? () => _go(-1) : null,
+    onNext: _index + 1 < _items.length ? () => _go(1) : null,
+    positionLabel: _items.length > 1
+        ? '${_index + 1} / ${_items.length}'
+        : null,
+  );
+}
+
 class InternalViewerDialog extends ConsumerStatefulWidget {
   final FileItem file;
   final PanelSide side;
+  final PanelFileOrigin? origin;
+  final VoidCallback? onPrevious;
+  final VoidCallback? onNext;
+  final String? positionLabel;
 
   /// When set, these bytes are viewed instead of reading [file]
   /// (used by tests and by archive-member viewing).
@@ -126,6 +218,10 @@ class InternalViewerDialog extends ConsumerStatefulWidget {
     required this.side,
     this.bytesOverride,
     this.displayName,
+    this.origin,
+    this.onPrevious,
+    this.onNext,
+    this.positionLabel,
   });
 
   @override
@@ -137,6 +233,17 @@ class _InternalViewerDialogState extends ConsumerState<InternalViewerDialog> {
   // ---- Core data -----------------------------------------------------------
   Uint8List? _fullData;
   ViewBytesSource? _source;
+  PanelFileOrigin? _origin;
+  ViewerSpool? _spool;
+  int _loadToken = 0;
+  int _downloadedBytes = 0;
+  int? _downloadTotal;
+  Timer? _tailTimer;
+  ViewerTailService? _tailService;
+  bool _tailEnabled = false;
+  bool _tailLoading = false;
+  String? _tailEncoding;
+
   bool _loading = true;
   bool _preparing = false;
   String? _error;
@@ -206,8 +313,10 @@ class _InternalViewerDialogState extends ConsumerState<InternalViewerDialog> {
   // ---- Rich-mode resources -------------------------------------------------
   PdfController? _pdfController;
   PdfDocument? _pdfDoc;
+
   /// True while a macOS/iOS security scope is held for PdfDocument.openFile.
   bool _pdfStreamAccess = false;
+  bool _mediaStreamAccess = false;
   VideoPlayerController? _videoController;
   String? _mediaBlobUrl;
   String? _tempMediaPath;
@@ -231,6 +340,7 @@ class _InternalViewerDialogState extends ConsumerState<InternalViewerDialog> {
   /// they stay view-only. Otherwise show Edit for formats F4 can save.
   bool get _canEdit =>
       widget.bytesOverride == null &&
+      _origin?.isCurrent == true &&
       !widget.file.isFolder &&
       isEditableInBuiltInEditor(_viewName);
 
@@ -265,16 +375,27 @@ class _InternalViewerDialogState extends ConsumerState<InternalViewerDialog> {
   @override
   void initState() {
     super.initState();
+    _origin =
+        widget.origin ??
+        (widget.bytesOverride == null
+            ? ref
+                  .read(panelProvider(widget.side))
+                  .originForOperation(widget.file)
+            : null);
     unawaited(_initialLoad());
   }
 
   @override
   void dispose() {
+    ++_loadToken;
+    ++_prepareToken;
+    _tailTimer?.cancel();
     _searchDebounce?.cancel();
     _searchController.dispose();
     _searchFocus.dispose();
     _vScroll.dispose();
-    _disposeModeResources();
+    _disposeModeResources(spool: _spool);
+    _spool = null;
     _source?.dispose();
     _source = null;
     super.dispose();
@@ -284,103 +405,149 @@ class _InternalViewerDialogState extends ConsumerState<InternalViewerDialog> {
   // Loading
   // ---------------------------------------------------------------------------
 
-  Future<void> _initialLoad() async {
+  FileOperationBackend _capturedBackend() {
+    final origin = _origin;
+    if (origin == null || !origin.isCurrent) {
+      throw const FileBytesLoadException(
+        'The original viewer source is unavailable. Refresh or reopen the file.',
+      );
+    }
+    return fileOperationBackend(
+      source: origin.source,
+      local: ref.read(localFileServiceProvider),
+      isCurrent: () => mounted && origin.isCurrent,
+    );
+  }
+
+  String? get _nativeViewPath {
+    if (kIsWeb || widget.bytesOverride != null) return null;
+    if (_spool != null) return _spool!.path;
+    return _origin?.source.isLocal == true ? widget.file.path : null;
+  }
+
+  Future<void> _initialLoad({ViewerMode? preferredMode}) async {
+    final loadToken = ++_loadToken;
+    bool current() => mounted && loadToken == _loadToken;
     try {
-      final Uint8List? override = widget.bytesOverride;
+      final override = widget.bytesOverride;
       if (override != null) {
         await _useMemorySource(override);
-      } else if (widget.side == PanelSide.local &&
-          !kIsWeb &&
-          widget.file.path != null) {
-        final path = widget.file.path!;
-        final localSvc = ref.read(localFileServiceProvider);
-
-        // Prefer the listing size; fall back to a probe that prompts for
-        // macOS sandbox access when needed.
-        var length = widget.file.size;
-        if (length == null) {
-          length = await localSvc.fileLength(path);
-          if (length == null) {
-            final granted = await localSvc.ensureAccess(path);
-            if (!granted) {
-              throw FileBytesLoadException(
-                'Access to "$path" was not granted. Grant access to its '
-                'folder and try again.',
-              );
-            }
-            length = await localSvc.fileLength(path);
-          }
+      } else {
+        final backend = _capturedBackend();
+        final path =
+            widget.file.path ??
+            backend.paths.join(_origin!.source.currentPath, widget.file.name);
+        final fresh = await backend.stat(path);
+        if (fresh == null || fresh.isFolder) {
+          throw FileBytesLoadException('File not found: $path');
         }
-        if (length == null) {
-          throw FileBytesLoadException(
-            'File not found or access denied: $path',
+        if (widget.file.uuid != null && widget.file.uuid != fresh.uuid) {
+          throw const FileBytesLoadException(
+            'A different file now occupies this path. Reopen it.',
           );
         }
-
-        // PDFs are opened in place by the PDF engine below. Avoid reading the
-        // entire file into Dart memory first: for large PDFs this was the main
-        // source of the F3 opening delay.
-        final isPdfName = _viewName.toLowerCase().endsWith('.pdf');
-        if (length > kAutoFullLoadBytes || isPdfName) {
+        if (!current()) return;
+        if (!kIsWeb &&
+            _origin!.source.isLocal &&
+            ((fresh.size ?? 0) > kAutoFullLoadBytes ||
+                _viewName.toLowerCase().endsWith('.pdf') ||
+                _viewerService.detectMode(_viewName) == ViewerMode.media)) {
+          final local = ref.read(localFileServiceProvider);
           final source = ViewBytesSource.file(
             path,
             acquireAccess: () async {
-              final ok = await localSvc.beginStreamAccess(path);
-              if (!ok) {
+              if (!_origin!.isCurrent || !await local.beginStreamAccess(path)) {
                 throw FileBytesLoadException(
-                  'Access to "$path" was not granted. Grant access to its '
-                  'folder and try again.',
+                  'Access to "$path" was not granted.',
                 );
               }
             },
-            releaseAccess: localSvc.endStreamAccess,
+            releaseAccess: local.endStreamAccess,
           );
-          await source.open();
+          try {
+            await source.open();
+            if (!current()) {
+              source.dispose();
+              return;
+            }
+            _source?.dispose();
+            _source = source;
+          } catch (_) {
+            source.dispose();
+            rethrow;
+          }
+        } else if (!kIsWeb &&
+            !_origin!.source.isLocal &&
+            (fresh.size == null || fresh.size! > kAutoFullLoadBytes)) {
+          final spool = await createViewerSpool(
+            backend,
+            fresh,
+            isCancelled: () => !current(),
+            onProgress: (bytes, total) {
+              if (current()) {
+                setState(() {
+                  _downloadedBytes = bytes;
+                  _downloadTotal = total;
+                });
+              }
+            },
+          );
+          if (!current()) {
+            await spool.close();
+            return;
+          }
+          final source = ViewBytesSource.file(spool.path);
+          try {
+            await source.open();
+          } catch (_) {
+            source.dispose();
+            await spool.close();
+            rethrow;
+          }
+          if (!current()) {
+            source.dispose();
+            await spool.close();
+            return;
+          }
+          _spool = spool;
           _source?.dispose();
           _source = source;
         } else {
-          final data = await loadFileBytes(ref, widget.file, widget.side);
+          final data = await loadFileBytes(
+            ref,
+            widget.file,
+            widget.side,
+            capBytes: kViewerFullDataCap,
+            origin: _origin,
+          );
+          if (!current()) return;
           await _useMemorySource(data);
         }
-      } else {
-        final data = await loadFileBytes(
-          ref,
-          widget.file,
-          widget.side,
-          capBytes: kViewerFullDataCap,
-        );
-        await _useMemorySource(data);
       }
-
-      if (!mounted || _source == null) return;
-
+      if (!current() || _source == null) return;
       var auto = _viewerService.detectMode(
         _viewName,
         header: _source!.readSync(0, 4096),
       );
-
       if (auto == ViewerMode.archive && _isSingleCompressed(_viewName)) {
         final expanded = await _expandSingleCompressed();
-        if (!mounted) return;
-        if (expanded) {
-          auto = _viewerService.detectMode(
-            _expansionName ?? _viewName,
-            header: _source!.readSync(0, 4096),
-          );
-        } else {
-          auto = ViewerMode.hex;
-        }
+        if (!current()) return;
+        auto = expanded
+            ? _viewerService.detectMode(
+                _expansionName ?? _viewName,
+                header: _source!.readSync(0, 4096),
+              )
+            : ViewerMode.hex;
       }
-
-      if (!mounted) return;
+      if (!current()) return;
       setState(() {
         _loading = false;
         _autoMode = auto;
       });
-      _selectMode(auto);
+      _selectMode(preferredMode ?? auto);
     } catch (e, st) {
       _log.warn('viewer initial load failed', e, st);
-      if (!mounted) return;
+      if (!current()) return;
       setState(() {
         _loading = false;
         _error = _describeError(e);
@@ -393,6 +560,10 @@ class _InternalViewerDialogState extends ConsumerState<InternalViewerDialog> {
     _fullData = data;
     final source = ViewBytesSource.memory(data);
     await source.open();
+    if (!mounted) {
+      source.dispose();
+      return;
+    }
     _source = source;
   }
 
@@ -421,11 +592,20 @@ class _InternalViewerDialogState extends ConsumerState<InternalViewerDialog> {
     if (size > kViewerFullDataCap) {
       throw FileBytesTooLargeException(size, kViewerFullDataCap);
     }
+    if (_spool != null && _source != null) {
+      final bytes = BytesBuilder(copy: false);
+      for (var offset = 0; offset < size; offset += 256 * 1024) {
+        bytes.add(_source!.readSync(offset, 256 * 1024));
+      }
+      _fullData = bytes.takeBytes();
+      return _fullData!;
+    }
     final data = await loadFileBytes(
       ref,
       widget.file,
       widget.side,
       capBytes: kViewerFullDataCap,
+      origin: _origin,
     );
     _fullData = data;
     return data;
@@ -436,8 +616,8 @@ class _InternalViewerDialogState extends ConsumerState<InternalViewerDialog> {
   String _describeError(Object error) {
     if (error is FileBytesTooLargeException) {
       return '${error.message}\n\n'
-          'Hex, ASCII and Binary views need the file on the local disk; '
-          'remote files are limited to ${formatBytes(kViewerFullDataCap)}.';
+          'This mode needs a complete byte array. Hex, ASCII, Binary and text '
+          'can use a local file or a streamed temporary copy.';
     }
     return error.toString();
   }
@@ -448,6 +628,10 @@ class _InternalViewerDialogState extends ConsumerState<InternalViewerDialog> {
 
   void _selectMode(ViewerMode mode) {
     if (!mounted) return;
+    if (_tailEnabled) {
+      _reload(preferredMode: mode);
+      return;
+    }
     final token = ++_prepareToken;
     _disposeModeResources();
     _searchDebounce?.cancel();
@@ -538,9 +722,9 @@ class _InternalViewerDialogState extends ConsumerState<InternalViewerDialog> {
           _officeView = document.deck != null
               ? _OfficeView.slides
               : (document.kind == OfficeDocumentKind.spreadsheet &&
-                      (document.csv?.isNotEmpty ?? false)
-                  ? _OfficeView.table
-                  : _OfficeView.formatted);
+                        (document.csv?.isNotEmpty ?? false)
+                    ? _OfficeView.table
+                    : _OfficeView.formatted);
           setState(() {
             _preparing = false;
             _viewNote = document.note;
@@ -554,7 +738,8 @@ class _InternalViewerDialogState extends ConsumerState<InternalViewerDialog> {
           if (mode == ViewerMode.font && data.length > _kFontPreviewCap) {
             setState(() {
               _preparing = false;
-              _richError = 'This font is too large to preview safely '
+              _richError =
+                  'This font is too large to preview safely '
                   '(${formatBytes(data.length)}).';
             });
             return;
@@ -563,31 +748,29 @@ class _InternalViewerDialogState extends ConsumerState<InternalViewerDialog> {
           return;
         case ViewerMode.pdf:
           setState(() => _preparing = true);
-          final String? localPath = (widget.bytesOverride == null &&
-                  !kIsWeb &&
-                  widget.side == PanelSide.local &&
-                  widget.file.path != null)
-              ? widget.file.path
-              : null;
+          final localPath = _nativeViewPath;
           PdfDocument? doc;
           bool streamAccess = false;
           LocalFileService? localSvc;
           if (localPath != null) {
-            localSvc = ref.read(localFileServiceProvider);
+            localSvc = _spool == null
+                ? ref.read(localFileServiceProvider)
+                : null;
             // Keep the security-scoped access open until the document is
             // closed; PdfDocument reads from the path lazily.
-            final acquired = await localSvc!.beginStreamAccess(localPath);
+            final acquired =
+                localSvc == null || await localSvc.beginStreamAccess(localPath);
             if (!mounted || token != _prepareToken) {
-              if (acquired) await localSvc.endStreamAccess();
+              if (acquired) await localSvc?.endStreamAccess();
               return;
             }
             if (acquired) {
               try {
                 doc = await PdfDocument.openFile(localPath);
-                streamAccess = true;
+                streamAccess = localSvc != null;
               } catch (e, st) {
                 _log.warn('PdfDocument.openFile failed; using bytes', e, st);
-                await localSvc.endStreamAccess();
+                await localSvc?.endStreamAccess();
               }
             }
           }
@@ -610,9 +793,14 @@ class _InternalViewerDialogState extends ConsumerState<InternalViewerDialog> {
           return;
         case ViewerMode.media:
           setState(() => _preparing = true);
-          final data = await _ensureFullData();
-          if (!mounted || token != _prepareToken) return;
-          await _prepareMedia(data, token);
+          final nativePath = _nativeViewPath;
+          if (nativePath != null) {
+            await _prepareMediaFile(nativePath, token);
+          } else {
+            final data = await _ensureFullData();
+            if (!mounted || token != _prepareToken) return;
+            await _prepareMedia(data, token);
+          }
           if (!mounted || token != _prepareToken) return;
           setState(() => _preparing = false);
           return;
@@ -633,15 +821,19 @@ class _InternalViewerDialogState extends ConsumerState<InternalViewerDialog> {
     }
   }
 
-  void _disposeModeResources() {
+  void _disposeModeResources({ViewerSpool? spool}) {
     final pdf = _pdfController;
     _pdfController = null;
     final doc = _pdfDoc;
     _pdfDoc = null;
     final releasePdfStream = _pdfStreamAccess;
     _pdfStreamAccess = false;
-    final pdfLocalService =
-        releasePdfStream ? ref.read(localFileServiceProvider) : null;
+    final pdfLocalService = releasePdfStream
+        ? ref.read(localFileServiceProvider)
+        : null;
+    final mediaAccess = _mediaStreamAccess;
+    _mediaStreamAccess = false;
+    final mediaLocal = mediaAccess ? ref.read(localFileServiceProvider) : null;
     final video = _videoController;
     _videoController = null;
     final tempPath = _tempMediaPath;
@@ -682,6 +874,16 @@ class _InternalViewerDialogState extends ConsumerState<InternalViewerDialog> {
         } catch (_) {
           // Best effort.
         }
+      }
+      if (mediaAccess) {
+        try {
+          await mediaLocal?.endStreamAccess();
+        } catch (_) {}
+      }
+      if (spool != null) {
+        try {
+          await spool.close();
+        } catch (_) {}
       }
       if (blobUrl != null && kIsWeb) html.Url.revokeObjectUrl(blobUrl);
       if (archive != null) unawaited(archive.close());
@@ -747,6 +949,27 @@ class _InternalViewerDialogState extends ConsumerState<InternalViewerDialog> {
       _preparing = false;
       _richError = 'Too many incorrect password attempts.';
     });
+  }
+
+  Future<void> _prepareMediaFile(String path, int token) async {
+    final local = _spool == null ? ref.read(localFileServiceProvider) : null;
+    if (local != null && !await local.beginStreamAccess(path)) {
+      throw FileBytesLoadException('Access to "$path" was not granted.');
+    }
+    final candidate = VideoPlayerController.file(File(path));
+    var retained = false;
+    try {
+      await candidate.initialize();
+      if (!mounted || token != _prepareToken) return;
+      _videoController = candidate;
+      _mediaStreamAccess = local != null;
+      retained = true;
+    } finally {
+      if (!retained) {
+        await candidate.dispose();
+        await local?.endStreamAccess();
+      }
+    }
   }
 
   Future<void> _prepareMedia(Uint8List data, int token) async {
@@ -847,7 +1070,6 @@ class _InternalViewerDialogState extends ConsumerState<InternalViewerDialog> {
     }
   }
 
-
   static String _extensionOf(String name) {
     final dot = name.lastIndexOf('.');
     if (dot < 0 || dot == name.length - 1) return '';
@@ -865,7 +1087,7 @@ class _InternalViewerDialogState extends ConsumerState<InternalViewerDialog> {
     if (data == null) return '';
     final decoded = InternalViewerService.decodeTextForView(
       data,
-      encoding: _encodingOverride,
+      encoding: _encodingOverride ?? _tailEncoding,
     );
     _decodedText = decoded.text;
     _encoding = decoded.encoding;
@@ -1074,8 +1296,9 @@ class _InternalViewerDialogState extends ConsumerState<InternalViewerDialog> {
     _searchDebounce?.cancel();
     if (_isStreamed) {
       setState(() {
-        _searchNote =
-            value.trim().isEmpty ? null : 'press Enter to scan the file';
+        _searchNote = value.trim().isEmpty
+            ? null
+            : 'press Enter to scan the file';
       });
       return;
     }
@@ -1179,8 +1402,9 @@ class _InternalViewerDialogState extends ConsumerState<InternalViewerDialog> {
     final source = _source;
     final out = <int>[];
     if (source == null) return out;
-    final limit =
-        source.size < _kStreamSearchCap ? source.size : _kStreamSearchCap;
+    final limit = source.size < _kStreamSearchCap
+        ? source.size
+        : _kStreamSearchCap;
     const chunk = 1 << 20;
     var position = 0;
     while (position < limit && out.length < _kSearchMaxMatches) {
@@ -1282,9 +1506,15 @@ class _InternalViewerDialogState extends ConsumerState<InternalViewerDialog> {
   // Misc actions
   // ---------------------------------------------------------------------------
 
-  void _reload() {
+  void _reload({ViewerMode? preferredMode}) {
+    _tailTimer?.cancel();
+    _tailEnabled = false;
+    _tailService = null;
+    _tailEncoding = null;
     ++_prepareToken;
-    _disposeModeResources();
+    ++_loadToken;
+    _disposeModeResources(spool: _spool);
+    _spool = null;
     _source?.dispose();
     _source = null;
     _fullData = null;
@@ -1313,7 +1543,90 @@ class _InternalViewerDialogState extends ConsumerState<InternalViewerDialog> {
       _preparing = false;
       _mode = ViewerMode.text;
     });
-    unawaited(_initialLoad());
+    _downloadedBytes = 0;
+    _downloadTotal = null;
+    unawaited(_initialLoad(preferredMode: preferredMode));
+  }
+
+  void _toggleTail() {
+    if (_tailEnabled) {
+      _reload();
+      return;
+    }
+    try {
+      final backend = _capturedBackend();
+      _tailService = ViewerTailService(backend, widget.file);
+      ++_loadToken;
+      ++_prepareToken;
+      _disposeModeResources(spool: _spool);
+      _spool = null;
+      _source?.dispose();
+      _source = null;
+      _fullData = null;
+      _searchController.clear();
+      setState(() {
+        _tailEnabled = true;
+        _loading = true;
+        _error = null;
+      });
+      unawaited(_pollTail());
+      _tailTimer = Timer.periodic(
+        const Duration(seconds: 1),
+        (_) => unawaited(_pollTail()),
+      );
+    } catch (error) {
+      _showSnack('$error');
+    }
+  }
+
+  Future<void> _pollTail() async {
+    if (_tailLoading || !_tailEnabled) return;
+    _tailLoading = true;
+    final service = _tailService;
+    try {
+      final sample = await service!.read(
+        isCancelled: () => !mounted || !_tailEnabled || service != _tailService,
+        encodingOverride: _encodingOverride,
+      );
+      if (!mounted || !_tailEnabled || service != _tailService) return;
+      await _useMemorySource(sample.bytes);
+      _decodedText = null;
+      _lineStarts = null;
+      _displayLines = null;
+      _safeText = null;
+      _safeLines = null;
+      _safeStarts = null;
+      _safeBinary = null;
+      _matches = const [];
+      _matchIndex = -1;
+      _matchHighlightStart = null;
+      _matchHighlightEnd = null;
+      _tailEncoding = sample.offset > 0 ? sample.encoding : null;
+      _ensureText();
+      setState(() {
+        _loading = false;
+        _mode = ViewerMode.text;
+        _richError = null;
+        _viewNote =
+            'Following bytes ${sample.offset}–${sample.totalBytes}'
+            '${sample.replacedOrTruncated ? ' · file replaced or truncated' : ''}';
+      });
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        if (mounted && _tailEnabled && _vScroll.hasClients) {
+          _vScroll.jumpTo(_vScroll.position.maxScrollExtent);
+        }
+      });
+    } catch (error) {
+      if (!mounted || !_tailEnabled || service != _tailService) return;
+      _tailTimer?.cancel();
+      setState(() {
+        _tailEnabled = false;
+        _loading = false;
+        _error = '$error';
+      });
+    } finally {
+      _tailLoading = false;
+    }
   }
 
   void _onMenuSelected(String value) {
@@ -1467,7 +1780,8 @@ class _InternalViewerDialogState extends ConsumerState<InternalViewerDialog> {
       return matches.first;
     } on ArchivePasswordRequiredException catch (e) {
       _showSnack(
-          e.wrongPassword ? 'Incorrect password.' : 'Password required.');
+        e.wrongPassword ? 'Incorrect password.' : 'Password required.',
+      );
       return null;
     } on ArchiveViewException catch (e) {
       _showSnack(e.message);
@@ -1491,6 +1805,15 @@ class _InternalViewerDialogState extends ConsumerState<InternalViewerDialog> {
     final theme = Theme.of(context);
     return CallbackShortcuts(
       bindings: <ShortcutActivator, VoidCallback>{
+        const SingleActivator(LogicalKeyboardKey.arrowLeft, alt: true): () =>
+            widget.onPrevious?.call(),
+        const SingleActivator(LogicalKeyboardKey.arrowRight, alt: true): () =>
+            widget.onNext?.call(),
+        const SingleActivator(LogicalKeyboardKey.f5): _reload,
+        const SingleActivator(LogicalKeyboardKey.keyR, control: true): _reload,
+        const SingleActivator(LogicalKeyboardKey.f4): () {
+          if (_canEdit) Navigator.of(context).pop(InternalViewerAction.edit);
+        },
         const SingleActivator(LogicalKeyboardKey.f3): () => _gotoMatch(1),
         const SingleActivator(LogicalKeyboardKey.f3, shift: true): () =>
             _gotoMatch(-1),
@@ -1512,13 +1835,43 @@ class _InternalViewerDialogState extends ConsumerState<InternalViewerDialog> {
             title: Text(_title, overflow: TextOverflow.ellipsis),
             titleTextStyle: theme.textTheme.titleMedium,
             actions: [
+              if (widget.positionLabel != null) ...[
+                IconButton(
+                  tooltip: 'Previous file (Alt+Left)',
+                  onPressed: widget.onPrevious,
+                  icon: const Icon(Icons.chevron_left),
+                ),
+                Center(child: Text(widget.positionLabel!)),
+                IconButton(
+                  tooltip: 'Next file (Alt+Right)',
+                  onPressed: widget.onNext,
+                  icon: const Icon(Icons.chevron_right),
+                ),
+              ],
+              IconButton(
+                tooltip: 'Reload (F5)',
+                onPressed: _loading ? null : _reload,
+                icon: const Icon(Icons.refresh),
+              ),
               if (!_loading && _error == null) ...[
+                if (widget.bytesOverride == null && _origin?.isCurrent == true)
+                  IconButton(
+                    tooltip: _tailEnabled
+                        ? 'Stop following'
+                        : 'Follow end of file',
+                    onPressed: _toggleTail,
+                    icon: Icon(
+                      _tailEnabled
+                          ? Icons.pause_circle_outline
+                          : Icons.vertical_align_bottom,
+                    ),
+                  ),
                 if (_canEdit)
                   IconButton(
                     tooltip: 'Edit (F4)',
                     icon: const Icon(Icons.edit_outlined),
-                    onPressed: () => Navigator.of(context)
-                        .pop(InternalViewerAction.edit),
+                    onPressed: () =>
+                        Navigator.of(context).pop(InternalViewerAction.edit),
                   ),
                 IconButton(
                   tooltip: 'Search (Ctrl+F)',
@@ -1580,10 +1933,7 @@ class _InternalViewerDialogState extends ConsumerState<InternalViewerDialog> {
                       child: Text('Copy all text'),
                     ),
                     const PopupMenuDivider(),
-                    const PopupMenuItem(
-                      value: 'reload',
-                      child: Text('Reload'),
-                    ),
+                    const PopupMenuItem(value: 'reload', child: Text('Reload')),
                   ],
                 ),
               ],
@@ -1599,10 +1949,28 @@ class _InternalViewerDialogState extends ConsumerState<InternalViewerDialog> {
               if (!_loading && _error == null) _buildToolbar(theme),
               Expanded(
                 child: _loading
-                    ? const Center(child: CircularProgressIndicator())
+                    ? Center(
+                        child: Column(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            const CircularProgressIndicator(),
+                            if (_downloadedBytes > 0)
+                              Padding(
+                                padding: const EdgeInsets.all(16),
+                                child: Text(
+                                  'Preparing temporary copy: ${formatBytes(_downloadedBytes)}'
+                                  '${_downloadTotal == null ? '' : ' / ${formatBytes(_downloadTotal!)}'}',
+                                ),
+                              ),
+                            const Text(
+                              'Close or select another file to cancel.',
+                            ),
+                          ],
+                        ),
+                      )
                     : _error != null
-                        ? _messagePane(_error!, theme)
-                        : _buildBody(theme),
+                    ? _messagePane(_error!, theme)
+                    : _buildBody(theme),
               ),
               if (!_loading) _buildStatusBar(theme),
             ],
@@ -1692,13 +2060,11 @@ class _InternalViewerDialogState extends ConsumerState<InternalViewerDialog> {
   }
 
   ButtonStyle get _compactButtonStyle => const ButtonStyle(
-        visualDensity: VisualDensity.compact,
-        tapTargetSize: MaterialTapTargetSize.shrinkWrap,
-        padding: WidgetStatePropertyAll(
-          EdgeInsets.symmetric(horizontal: 8),
-        ),
-        textStyle: WidgetStatePropertyAll(TextStyle(fontSize: 12)),
-      );
+    visualDensity: VisualDensity.compact,
+    tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+    padding: WidgetStatePropertyAll(EdgeInsets.symmetric(horizontal: 8)),
+    textStyle: WidgetStatePropertyAll(TextStyle(fontSize: 12)),
+  );
 
   Widget _pdfViewToggle() {
     return Padding(
@@ -1777,10 +2143,7 @@ class _InternalViewerDialogState extends ConsumerState<InternalViewerDialog> {
         style: _compactButtonStyle,
         segments: [
           for (final option in options)
-            ButtonSegment(
-              value: option,
-              label: Text(_officeViewLabel(option)),
-            ),
+            ButtonSegment(value: option, label: Text(_officeViewLabel(option))),
         ],
         selected: {_officeView},
         onSelectionChanged: (selection) {
@@ -1812,8 +2175,10 @@ class _InternalViewerDialogState extends ConsumerState<InternalViewerDialog> {
                       ? 'Hex bytes (e.g. DE AD BE EF) or text'
                       : 'Search text or 0x… bytes',
                   border: const OutlineInputBorder(),
-                  contentPadding:
-                      const EdgeInsets.symmetric(horizontal: 8, vertical: 6),
+                  contentPadding: const EdgeInsets.symmetric(
+                    horizontal: 8,
+                    vertical: 6,
+                  ),
                 ),
                 onChanged: _onSearchChanged,
                 onSubmitted: _onSearchSubmitted,
@@ -2162,13 +2527,13 @@ class _InternalViewerDialogState extends ConsumerState<InternalViewerDialog> {
   }
 
   String _officeViewLabel(_OfficeView view) => switch (view) {
-        _OfficeView.slides => 'Slides',
-        _OfficeView.pdf => 'Pages',
-        _OfficeView.formatted => 'Formatted',
-        _OfficeView.table => 'Table',
-        _OfficeView.text => 'Text',
-        _OfficeView.raw => 'XML',
-      };
+    _OfficeView.slides => 'Slides',
+    _OfficeView.pdf => 'Pages',
+    _OfficeView.formatted => 'Formatted',
+    _OfficeView.table => 'Table',
+    _OfficeView.text => 'Text',
+    _OfficeView.raw => 'XML',
+  };
 
   Widget _buildOfficeContent(OfficeDocument document, ThemeData theme) {
     switch (_officeView) {
@@ -2232,7 +2597,10 @@ class _InternalViewerDialogState extends ConsumerState<InternalViewerDialog> {
           if (document.plainText.trim().isNotEmpty) {
             return _buildOfficeText(document, theme);
           }
-          return _messagePane('No readable content found in this document.', theme);
+          return _messagePane(
+            'No readable content found in this document.',
+            theme,
+          );
         }
         return Markdown(
           data: markdown,
@@ -2382,9 +2750,8 @@ class _InternalViewerDialogState extends ConsumerState<InternalViewerDialog> {
                 // image-decompression bombs while remaining crisp on HiDPI.
                 cacheWidth: 4096,
                 cacheHeight: 4096,
-                errorBuilder: (_, __, ___) => const Center(
-                  child: Text('Unable to decode this image.'),
-                ),
+                errorBuilder: (_, __, ___) =>
+                    const Center(child: Text('Unable to decode this image.')),
               ),
       ),
     );
@@ -2756,6 +3123,5 @@ class _TextPromptDialogState extends State<_TextPromptDialog> {
     );
   }
 }
-
 
 enum _OfficeView { slides, pdf, formatted, table, text, raw }

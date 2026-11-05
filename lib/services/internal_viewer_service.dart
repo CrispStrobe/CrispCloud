@@ -817,8 +817,28 @@ class InternalViewerService {
         return (text: _decodeUtf16(data, false), encoding: 'utf16le');
       case 'utf16be':
         return (text: _decodeUtf16(data, true), encoding: 'utf16be');
+      case 'utf32le':
+        return (text: _decodeUtf32(data, false), encoding: 'utf32le');
+      case 'utf32be':
+        return (text: _decodeUtf32(data, true), encoding: 'utf32be');
       case 'utf8':
         return (text: utf8.decode(data, allowMalformed: true), encoding: 'utf8');
+    }
+
+    // Test four-byte BOMs before the UTF-16 prefixes they can share.
+    if (data.length >= 4 &&
+        data[0] == 0xff &&
+        data[1] == 0xfe &&
+        data[2] == 0 &&
+        data[3] == 0) {
+      return (text: _decodeUtf32(data.sublist(4), false), encoding: 'utf32le');
+    }
+    if (data.length >= 4 &&
+        data[0] == 0 &&
+        data[1] == 0 &&
+        data[2] == 0xfe &&
+        data[3] == 0xff) {
+      return (text: _decodeUtf32(data.sublist(4), true), encoding: 'utf32be');
     }
 
     // UTF-16 LE BOM (FF FE).
@@ -858,6 +878,21 @@ class InternalViewerService {
 
     // Fall back to Latin-1 which can always decode arbitrary bytes.
     return (text: latin1.decode(data), encoding: 'latin1');
+  }
+
+  static String _decodeUtf32(Uint8List data, bool bigEndian) {
+    final buffer = StringBuffer();
+    final view = ByteData.sublistView(data);
+    for (var offset = 0; offset + 4 <= data.length; offset += 4) {
+      final code = view.getUint32(
+        offset,
+        bigEndian ? Endian.big : Endian.little,
+      );
+      buffer.writeCharCode(
+        code > 0x10ffff || (code >= 0xd800 && code <= 0xdfff) ? 0xfffd : code,
+      );
+    }
+    return buffer.toString();
   }
 
   /// Detect BOM-less UTF-16 by sampling the first kilobyte.

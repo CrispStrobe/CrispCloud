@@ -3,11 +3,14 @@ import 'dart:convert';
 
 import 'package:universal_html/html.dart' as html;
 
-Future<String?> exportFileListText(String text) async {
+Future<String?> exportFileListText(
+  String text, {
+  String fileName = 'file-list.txt',
+}) async {
   final blob = html.Blob([utf8.encode(text)], 'text/plain;charset=utf-8');
   final url = html.Url.createObjectUrlFromBlob(blob);
   final anchor = html.AnchorElement(href: url)
-    ..setAttribute('download', 'file-list.txt')
+    ..setAttribute('download', fileName)
     ..style.display = 'none';
   try {
     html.document.body?.children.add(anchor);

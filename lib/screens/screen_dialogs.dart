@@ -18,13 +18,12 @@ import '../widgets/b2_connection_dialog.dart';
 import '../widgets/connection_dialog.dart';
 import '../widgets/file_editor_dialog.dart' show showFileEditorDialog;
 import '../widgets/file_operation_dialog.dart';
+import '../widgets/archive_workspace_dialog.dart';
 import '../widgets/batch_rename_dialog.dart' show showBatchRenameDialog;
 import '../services/file_operation_service.dart';
 import '../widgets/internal_viewer_dialog.dart'
     show InternalViewerAction, showInternalViewer;
 import '../l10n/app_localizations.dart';
-import '../l10n/image_editor_strings.dart';
-import '../services/image_edit_session.dart' show isEditableImageFileName;
 
 /// Explicit selection, or the cursor item when nothing is marked. This mirrors
 /// Total Commander: F5/F6/F8 operate on the item under the cursor when there
@@ -318,6 +317,7 @@ Future<void> _viewFile(
   PanelSide side,
   FileItem target,
 ) async {
+  var viewedFile = target;
   try {
     InternalViewerAction action = InternalViewerAction.close;
     if (panel.isInArchive) {
@@ -333,10 +333,15 @@ Future<void> _viewFile(
         displayName: target.name,
       );
     } else {
-      action = await showInternalViewer(context, file: target, side: side);
+      action = await showInternalViewer(
+        context,
+        file: target,
+        side: side,
+        onFileChanged: (file) => viewedFile = file,
+      );
     }
     if (action == InternalViewerAction.edit && context.mounted) {
-      await _editFile(context, ref, panel, side, target);
+      await _editFile(context, ref, panel, side, viewedFile);
     }
   } catch (e) {
     if (context.mounted) {
@@ -347,7 +352,7 @@ Future<void> _viewFile(
   } finally {
     // Keep the file selected and the panel keyboard-focused after the viewer
     // closes, so F3/F4 can be pressed again immediately.
-    panel.restoreCursorAndFocus(target);
+    panel.restoreCursorAndFocus(viewedFile);
   }
 }
 
@@ -371,20 +376,13 @@ Future<void> _editFile(
 ) async {
   try {
     if (panel.isInArchive) {
-      if (context.mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text(
-              isEditableImageFileName(target.name)
-                  ? context.imageTr(
-                      'Extract this file from its archive or container before editing.',
-                    )
-                  : 'Editing files inside an archive is not supported. '
-                        'Extract the file first.',
-            ),
-          ),
-        );
-      }
+      await showCurrentArchiveWorkspaceDialog(
+        context,
+        ref,
+        side,
+        action: ArchiveWorkspaceAction.edit,
+        focusedMember: target,
+      );
       return;
     }
     await showFileEditorDialog(context, ref, target, side);
@@ -395,7 +393,19 @@ Future<void> _editFile(
 
 void showCopyDialogFromSelection(BuildContext context, WidgetRef ref) {
   final side = ref.read(activePanelProvider);
-  final files = _selectedOrCursor(ref.read(panelProvider(side)));
+  final panel = ref.read(panelProvider(side));
+  if (panel.isInArchive) {
+    unawaited(
+      showCurrentArchiveWorkspaceDialog(
+        context,
+        ref,
+        side,
+        action: ArchiveWorkspaceAction.copyOut,
+      ),
+    );
+    return;
+  }
+  final files = _selectedOrCursor(panel);
   showFileOperationDialog(
     context,
     ref,
@@ -407,7 +417,19 @@ void showCopyDialogFromSelection(BuildContext context, WidgetRef ref) {
 
 void showMoveDialogFromSelection(BuildContext context, WidgetRef ref) {
   final side = ref.read(activePanelProvider);
-  final files = _selectedOrCursor(ref.read(panelProvider(side)));
+  final panel = ref.read(panelProvider(side));
+  if (panel.isInArchive) {
+    unawaited(
+      showCurrentArchiveWorkspaceDialog(
+        context,
+        ref,
+        side,
+        action: ArchiveWorkspaceAction.moveOut,
+      ),
+    );
+    return;
+  }
+  final files = _selectedOrCursor(panel);
   showFileOperationDialog(
     context,
     ref,

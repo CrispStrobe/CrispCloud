@@ -119,7 +119,7 @@ extension S3StorageClassX on S3StorageClass {
 
 class S3ClientAdapter extends CloudStorageClient
     with CloudTransferOperations
-    implements StorageNamespaceIdentity {
+    implements StorageNamespaceIdentity, ObjectStorageNamespace {
   @override
   String get storageNamespace =>
       '${_endpoint ?? ''}|${_region ?? ''}|${_bucket ?? ''}';
