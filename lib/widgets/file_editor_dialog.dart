@@ -18,7 +18,11 @@ import '../models/file_item.dart';
 import '../models/panel_side.dart';
 import '../providers/providers.dart';
 import '../l10n/app_localizations.dart';
+import '../l10n/image_editor_strings.dart';
+import '../services/image_edit_session.dart' show isEditableImageFileName;
 import '../services/log_service.dart';
+import '../utils/file_editability.dart' show isTextEditableName;
+import 'image_editor_dialog.dart';
 import 'office_editor_dialog.dart';
 import 'pdf_editor_dialog.dart';
 
@@ -27,6 +31,10 @@ Future<void> showFileEditorDialog(
     BuildContext context, WidgetRef ref, FileItem file, PanelSide side) async {
   if (file.isFolder) return;
   try {
+    if (isEditableImageFileName(file.name)) {
+      await showImageEditorDialog(context, ref, file, side);
+      return;
+    }
     if (isPdfFileName(file.name)) {
       await showPdfEditorDialog(context, ref, file, side);
       return;
@@ -35,6 +43,18 @@ Future<void> showFileEditorDialog(
     // plain-text editor.
     if (isOfficeFileName(file.name)) {
       await showOfficeEditorDialog(context, ref, file, side);
+      return;
+    }
+    // F4 and the native menu can be invoked even when the viewer's Edit button
+    // is disabled. Never decode an unsupported binary file as editable text.
+    if (!isTextEditableName(file.name)) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(context.imageTr(
+            'This file type cannot be edited here. Use F3 to view it.',
+          )),
+        ),
+      );
       return;
     }
     await Navigator.of(context).push(MaterialPageRoute(

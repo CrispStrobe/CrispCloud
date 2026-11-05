@@ -5,10 +5,13 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:crisp_cloud/utils/file_editability.dart';
 
 void main() {
-  test('text, PDF and OOXML files are editable', () {
+  test('text, raster images, PDF and OOXML files are editable', () {
     expect(isEditableInBuiltInEditor('notes.txt'), isTrue);
     expect(isEditableInBuiltInEditor('README'), isTrue);
     expect(isEditableInBuiltInEditor('main.dart'), isTrue);
+    expect(isEditableInBuiltInEditor('photo.jpg'), isTrue);
+    expect(isEditableInBuiltInEditor('photo.JPEG'), isTrue);
+    expect(isEditableInBuiltInEditor('drawing.PNG'), isTrue);
     expect(isEditableInBuiltInEditor('report.pdf'), isTrue);
     expect(isEditableInBuiltInEditor('letter.docx'), isTrue);
     expect(isEditableInBuiltInEditor('book.xlsx'), isTrue);
@@ -17,7 +20,10 @@ void main() {
 
   test('view-only and binary formats are not offered as editable', () {
     for (final name in <String>[
-      'photo.jpg',
+      'animation.gif',
+      'photo.webp',
+      'photo.heic',
+      'diagram.svg',
       'movie.mp4',
       'archive.zip',
       'legacy.doc',
@@ -27,5 +33,20 @@ void main() {
     ]) {
       expect(isEditableInBuiltInEditor(name), isFalse, reason: name);
     }
+  });
+
+  test('image names must end in a supported image extension', () {
+    expect(isEditableInBuiltInEditor('photo.jpg.zip'), isFalse);
+    expect(isEditableInBuiltInEditor('drawing.png.exe'), isFalse);
+    expect(isEditableInBuiltInEditor('photo.jpg.'), isFalse);
+    expect(isEditableInBuiltInEditor('drawing.png.'), isFalse);
+  });
+
+  test('extensionless and known hidden text files remain editable', () {
+    expect(isTextEditableName('README'), isTrue);
+    expect(isTextEditableName('Makefile'), isTrue);
+    expect(isTextEditableName('.env'), isTrue);
+    expect(isTextEditableName('.gitignore'), isTrue);
+    expect(isTextEditableName('photo.jpg.'), isFalse);
   });
 }
