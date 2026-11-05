@@ -1231,6 +1231,9 @@ class _BatchRenameDialogState extends ConsumerState<BatchRenameDialog> {
     }
     final history = ref.read(actionHistoryProvider.notifier);
     final capturedTargets = <String, FileItem?>{};
+    final sourceSnapshots = {
+      for (final entry in plan.entries) entry.sourcePath: entry.file,
+    };
     setState(() {
       _processing = true;
       _executionPlan = plan;
@@ -1241,7 +1244,18 @@ class _BatchRenameDialogState extends ConsumerState<BatchRenameDialog> {
     try {
       final result = await _service.execute(
         plan,
-        exists: (path) => _panel.operationPathExists(path, origin),
+        exists: (path) async {
+          final current = await _panel.operationFileInfo(path, origin);
+          final captured = sourceSnapshots[path];
+          if (current != null && captured != null &&
+              !RenameBatchUndo.matchesSnapshot(captured, current)) {
+            throw StateError(
+              'The original item changed after this dialog opened: $path. '
+              'Refresh the source and review the names again.',
+            );
+          }
+          return current != null;
+        },
         rename: (file, name) async {
           await _panel.renameFile(
             file, name,

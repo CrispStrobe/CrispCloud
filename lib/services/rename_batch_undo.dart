@@ -52,7 +52,7 @@ class RenameBatchUndo {
           final current = await stat(path);
           if (_remaining.containsKey(path) && current != null) {
             final captured = _capturedTargets[path];
-            if (captured == null || !_sameItem(captured, current)) {
+            if (captured == null || !matchesSnapshot(captured, current)) {
               throw StateError(
                 'The renamed item changed or cannot be verified: $path. '
                 'Undo will not rename a replacement item.',
@@ -74,7 +74,10 @@ class RenameBatchUndo {
     }
   }
 
-  static bool _sameItem(FileItem captured, FileItem current) {
+  /// Compare the identity/version evidence supplied by a storage backend.
+  /// Missing evidence is not invented; exact provider-side conditional writes
+  /// remain a backend capability, rather than a guarantee of this comparison.
+  static bool matchesSnapshot(FileItem captured, FileItem current) {
     if (captured.isFolder != current.isFolder ||
         (captured.isSymlink == true) != (current.isSymlink == true) ||
         (captured.uuid != null && captured.uuid != current.uuid) ||

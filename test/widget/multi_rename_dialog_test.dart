@@ -33,6 +33,7 @@ class _Local extends Fake implements LocalFileService {
 class _Cloud extends Fake implements CloudStorageClient {
   final paths = <String>{'/first.txt', '/second.txt'};
   final renames = <String>[];
+  final sizes = <String, int>{};
   Future<void> Function(String path)? afterRename;
   @override
   String get providerName => 'Rename test';
@@ -51,7 +52,7 @@ class _Cloud extends Fake implements CloudStorageClient {
     'files': [
       for (final file in paths)
         if (p.posix.dirname(file) == path)
-          {'name': p.posix.basename(file), 'path': file, 'size': 5},
+          {'name': p.posix.basename(file), 'path': file, 'size': sizes[file] ?? 5},
     ],
   };
 
@@ -205,6 +206,24 @@ void main() {
       ),
       findsOneWidget,
     );
+  });
+
+  testWidgets('changed source metadata blocks the batch before any rename', (
+    tester,
+  ) async {
+    await open(tester);
+    cloud.sizes['/second.txt'] = 9;
+    await tester.enterText(
+      find.byKey(const ValueKey('rename-name-mask')), '[N]_new',
+    );
+    await tester.pumpAndSettle();
+    await tester.tap(find.byKey(const ValueKey('rename-apply')));
+    await tester.pumpAndSettle();
+    expect(cloud.renames, isEmpty);
+    expect(cloud.paths, {'/first.txt', '/second.txt'});
+    expect(find.text(
+      'Nothing was renamed. Resolve the path errors shown in the preview.',
+    ), findsOneWidget);
   });
 
   testWidgets('presets persist and restore the actual mask settings', (

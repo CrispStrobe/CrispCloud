@@ -13,8 +13,10 @@ of whether that source is shown in the left or right panel.
 | Select by wildcard or regex | Numpad + | More actions, Edit menu, command palette, file-list toolbar |
 | Deselect by wildcard or regex | Numpad - | Edit menu, command palette |
 | Invert selection | Numpad * | Edit menu |
-| Copy with options | F5 / Ctrl+C | More actions, context menu, selection bar, command palette |
-| Move with options | F6 / Ctrl+X | More actions, context menu, selection bar, command palette |
+| Copy with options | F5 / Shift+F5 | More actions, context menu, selection bar, command palette |
+| Move with options | F6 | More actions, context menu, selection bar, command palette |
+| Copy / cut files to clipboard | Ctrl+C / Ctrl+X | Edit menu, context menu, command palette |
+| Paste files through copy/move options | Ctrl+V | Edit menu, context menu, command palette |
 | Import a file list | Ctrl+Shift+L | More actions, Edit menu, command palette, file-list toolbar |
 | Export a file list | — | More actions, Edit menu, command palette, file-list toolbar |
 
@@ -27,6 +29,9 @@ menu labels Multi-Rename as **Batch Rename**.
 The keyboard handler also accepts Meta in place of Ctrl on macOS. Shift+F5
 opens copy options. For a same-folder file duplicate, choose that folder and
 **Keep both**.
+
+Clipboard copy/cut captures the source selection. Paste opens the same reviewed
+transfer options at the destination; it does not immediately overwrite files.
 
 ## Multi-rename
 

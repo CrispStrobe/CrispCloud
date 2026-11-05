@@ -145,8 +145,8 @@ S3 uploads larger than 5 MB automatically use multipart upload with per-part pro
 
 ### Move and Copy
 
-- **Move**: select files, drag them to the target panel or folder. Alternatively, select → **F6** (Move).
-- **Copy**: select files → **F5** (Copy) or drag while holding **Ctrl** on desktop.
+- **Move**: select files and press **F6** to review move options, or **Ctrl+X** followed by **Ctrl+V** in the destination.
+- **Copy**: select files and press **F5**, drag them to the other pane, or use **Ctrl+C** followed by **Ctrl+V**. Each route opens copy options before starting a transfer.
 - **Copy/move with options**: F5/F6 opens a preview with destination, conflict, recursion, filter, metadata, and verification controls. Cloud transfers through this dialog use the provider streaming contracts and may transfer data through your device; providers without streaming support may buffer it.
 
 ### Delete
@@ -421,8 +421,10 @@ Use **Arrow keys** to navigate and **Enter** to execute. The palette is context-
 | Shortcut | Action |
 |----------|--------|
 | F2 | Rename selected file |
-| F5 / Ctrl+C | Open copy options for selected files |
-| F6 / Ctrl+X | Open move options for selected files |
+| F5 / Shift+F5 | Open copy options for selected files |
+| F6 | Open move options for selected files |
+| Ctrl+C / Ctrl+X | Copy / cut the captured file selection |
+| Ctrl+V | Paste through reviewed copy/move options |
 | F7 | Create new folder |
 | F8 / Delete | Delete selected files |
 | Ctrl+Z | Undo last action |
