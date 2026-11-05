@@ -122,8 +122,17 @@ class _FilePanelState extends ConsumerState<FilePanel> {
     final currentPath = panel.currentPath;
     final selection = panel.selection;
 
-    // Web/empty state: show action buttons instead of spinner
+    final layout = widget.side == PanelSide.local
+        ? ref.watch(localViewModeProvider)
+        : ref.watch(remoteViewModeProvider);
+    final visualLayout =
+        layout == ViewMode.grid ||
+        layout == ViewMode.tiles ||
+        layout == ViewMode.gallery;
+    // Web/empty state: show action buttons instead of spinner. Visual layouts
+    // keep their search/view controls usable in empty folders.
     if (kIsWeb &&
+        !visualLayout &&
         (files == null || files.isEmpty) &&
         !panel.isLoading &&
         !panel.showingSearchResults) {
@@ -192,7 +201,8 @@ class _FilePanelState extends ConsumerState<FilePanel> {
           return false;
         }
         try {
-          ref.read(panelProvider(details.data.sourceSide))
+          ref
+              .read(panelProvider(details.data.sourceSide))
               .captureOperationOrigin(details.data.files);
           panel.captureCurrentOrigin();
           return true;
@@ -245,8 +255,9 @@ class _FilePanelState extends ConsumerState<FilePanel> {
                     color: Theme.of(context).colorScheme.primary,
                     width: 2,
                   ),
-                  color: Theme.of(context).colorScheme.primary
-                      .withValues(alpha: 0.08),
+                  color: Theme.of(
+                    context,
+                  ).colorScheme.primary.withValues(alpha: 0.08),
                 ),
                 child: Center(
                   child: Column(
@@ -474,8 +485,9 @@ class _FilePanelState extends ConsumerState<FilePanel> {
                 }
               } catch (error) {
                 if (context.mounted) {
-                  ScaffoldMessenger.of(context)
-                      .showSnackBar(SnackBar(content: Text('$error')));
+                  ScaffoldMessenger.of(
+                    context,
+                  ).showSnackBar(SnackBar(content: Text('$error')));
                 }
               }
             },
@@ -593,14 +605,18 @@ class _FilePanelState extends ConsumerState<FilePanel> {
           if (ref.watch(showSelectionBarProvider) && selection.isNotEmpty)
             FileSelectionBar(side: widget.side, selection: selection),
           if (ref.watch(panelViewModeProvider(widget.side)) ==
-              PanelViewMode.full)
+                  PanelViewMode.full &&
+              (widget.side == PanelSide.local
+                      ? ref.watch(localViewModeProvider)
+                      : ref.watch(remoteViewModeProvider)) ==
+                  ViewMode.list)
             _CompactColumnHeader(side: widget.side, panel: panel),
           // Loading indicator shown while directory listing is in progress
           if (panel.isLoading) const LinearProgressIndicator(minHeight: 2),
           Expanded(
             child: files == null
                 ? const Center(child: CircularProgressIndicator())
-                : files.isEmpty
+                : files.isEmpty && !visualLayout
                 ? Center(
                     child: _isDragging && widget.side == PanelSide.remote
                         ? Column(
@@ -628,8 +644,9 @@ class _FilePanelState extends ConsumerState<FilePanel> {
                               Icon(
                                 Icons.cloud_off,
                                 size: 56,
-                                color: Theme.of(context).colorScheme.onSurface
-                                    .withValues(alpha: 0.3),
+                                color: Theme.of(
+                                  context,
+                                ).colorScheme.onSurface.withValues(alpha: 0.3),
                               ),
                               const SizedBox(height: 12),
                               Text(
@@ -646,8 +663,9 @@ class _FilePanelState extends ConsumerState<FilePanel> {
                               ElevatedButton.icon(
                                 icon: const Icon(Icons.login, size: 18),
                                 label: Text(
-                                  AppLocalizations.of(context)!
-                                      .connectToCloudShort,
+                                  AppLocalizations.of(
+                                    context,
+                                  )!.connectToCloudShort,
                                 ),
                                 onPressed: () =>
                                     showConnectionDialogScreen(context),
@@ -669,8 +687,9 @@ class _FilePanelState extends ConsumerState<FilePanel> {
                           right: 0,
                           bottom: 0,
                           child: Container(
-                            color: Theme.of(context).colorScheme.inverseSurface
-                                .withValues(alpha: 0.9),
+                            color: Theme.of(
+                              context,
+                            ).colorScheme.inverseSurface.withValues(alpha: 0.9),
                             padding: const EdgeInsets.symmetric(
                               horizontal: 12,
                               vertical: 4,
@@ -682,9 +701,9 @@ class _FilePanelState extends ConsumerState<FilePanel> {
                                       ? Icons.filter_list
                                       : Icons.search,
                                   size: 16,
-                                  color: Theme.of(context)
-                                      .colorScheme
-                                      .onInverseSurface,
+                                  color: Theme.of(
+                                    context,
+                                  ).colorScheme.onInverseSurface,
                                 ),
                                 const SizedBox(width: 8),
                                 Expanded(
@@ -695,9 +714,9 @@ class _FilePanelState extends ConsumerState<FilePanel> {
                                         panel.filterQuery,
                                     style: TextStyle(
                                       fontSize: 13,
-                                      color: Theme.of(context)
-                                          .colorScheme
-                                          .onInverseSurface,
+                                      color: Theme.of(
+                                        context,
+                                      ).colorScheme.onInverseSurface,
                                     ),
                                   ),
                                 ),
@@ -709,9 +728,9 @@ class _FilePanelState extends ConsumerState<FilePanel> {
                                       '${panel.typeaheadMatchCount}',
                                       style: TextStyle(
                                         fontSize: 12,
-                                        color: Theme.of(context)
-                                            .colorScheme
-                                            .onInverseSurface,
+                                        color: Theme.of(
+                                          context,
+                                        ).colorScheme.onInverseSurface,
                                       ),
                                     ),
                                   ),
@@ -720,9 +739,9 @@ class _FilePanelState extends ConsumerState<FilePanel> {
                                   child: Icon(
                                     Icons.close,
                                     size: 16,
-                                    color: Theme.of(context)
-                                        .colorScheme
-                                        .onInverseSurface,
+                                    color: Theme.of(
+                                      context,
+                                    ).colorScheme.onInverseSurface,
                                   ),
                                 ),
                               ],

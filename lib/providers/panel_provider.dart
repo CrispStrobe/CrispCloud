@@ -3490,7 +3490,9 @@ class PanelNotifier extends ChangeNotifier {
       folderPath = createdPath;
       await backend.createDirectory(createdPath);
       if (!origin.isCurrent) {
-        throw StateError('The storage account changed while creating the folder.');
+        throw StateError(
+          'The storage account changed while creating the folder.',
+        );
       }
       await audit.logSuccess(
         operation: AuditOperation.createFolder,
@@ -4368,7 +4370,10 @@ class PanelNotifier extends ChangeNotifier {
   /// Read one member of the currently opened archive for the internal viewer.
   /// The archive is reopened metadata-only, so F3 works for files inside ZIP,
   /// TAR, 7z and RAR archives that the panel is browsing.
-  Future<Uint8List> readArchiveMember(FileItem file) async {
+  Future<Uint8List> readArchiveMember(
+    FileItem file, {
+    int maxBytes = kArchiveReadLimit,
+  }) async {
     final source = _archiveSource;
     final bytes = _archiveBytes;
     if (source == null ||
@@ -4398,7 +4403,7 @@ class PanelNotifier extends ChangeNotifier {
           'Could not find "${file.name}" inside ${source.archiveName}.',
         );
       }
-      return await archive.readMember(match, maxBytes: kArchiveReadLimit);
+      return await archive.readMember(match, maxBytes: maxBytes);
     } finally {
       await archive?.close();
     }
