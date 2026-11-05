@@ -1,0 +1,421 @@
+package ch.waio.pro_video_editor.src.features.render.helpers
+
+import kotlin.test.Test
+import kotlin.test.assertEquals
+import kotlin.test.assertNull
+
+internal class ClipTransitionGeometryTest {
+
+    @Test
+    fun planOverlap_atOneXMatchesLegacyBehavior() {
+        val plan = ClipTransitionGeometry.planOverlap(
+            outgoingSourceDurationUs = 1_000_000L,
+            incomingSourceDurationUs = 1_000_000L,
+            transitionDurationUs = 300_000L,
+            outgoingSpeed = null,
+            incomingSpeed = null,
+        )
+        // At 1× the output duration equals the source consumed on both sides.
+        assertEquals(
+            ClipTransitionGeometry.OverlapPlan(300_000L, 300_000L, 300_000L),
+            plan,
+        )
+    }
+
+    @Test
+    fun planOverlap_speedTwoConsumesDoubleSource() {
+        val plan = ClipTransitionGeometry.planOverlap(
+            outgoingSourceDurationUs = 1_000_000L,
+            incomingSourceDurationUs = 1_000_000L,
+            transitionDurationUs = 200_000L,
+            outgoingSpeed = 2.0f,
+            incomingSpeed = 2.0f,
+        )
+        // 200ms of OUTPUT at 2× consumes 400ms of source from each side.
+        assertEquals(
+            ClipTransitionGeometry.OverlapPlan(200_000L, 400_000L, 400_000L),
+            plan,
+        )
+    }
+
+    @Test
+    fun planOverlap_slowMotionConsumesHalfSource() {
+        val plan = ClipTransitionGeometry.planOverlap(
+            outgoingSourceDurationUs = 1_000_000L,
+            incomingSourceDurationUs = 1_000_000L,
+            transitionDurationUs = 300_000L,
+            outgoingSpeed = 0.5f,
+            incomingSpeed = null,
+        )
+        // 300ms output at 0.5× consumes 150ms of the outgoing source; the
+        // incoming side stays 1× and consumes the full 300ms.
+        assertEquals(
+            ClipTransitionGeometry.OverlapPlan(300_000L, 150_000L, 300_000L),
+            plan,
+        )
+    }
+
+    @Test
+    fun planOverlap_supportsIndependentPerSideSpeeds() {
+        val plan = ClipTransitionGeometry.planOverlap(
+            outgoingSourceDurationUs = 1_000_000L,
+            incomingSourceDurationUs = 1_000_000L,
+            transitionDurationUs = 400_000L,
+            outgoingSpeed = 2.0f,
+            incomingSpeed = 0.5f,
+        )
+        // Outgoing 2× → 800ms source; incoming 0.5× → 200ms source; both for a
+        // single 400ms output blend.
+        assertEquals(
+            ClipTransitionGeometry.OverlapPlan(400_000L, 800_000L, 200_000L),
+            plan,
+        )
+    }
+
+    @Test
+    fun planOverlap_clampsRequestedDurationToShorterOutputSide() {
+        val plan = ClipTransitionGeometry.planOverlap(
+            outgoingSourceDurationUs = 1_000_000L, // 500ms output @2×
+            incomingSourceDurationUs = 4_000_000L, // 4000ms output @1×
+            transitionDurationUs = 2_000_000L,
+            outgoingSpeed = 2.0f,
+            incomingSpeed = null,
+        )
+        // Clamped to the shorter output side (500ms): min(2000ms, 500ms, 4000ms).
+        // That fully consumes the outgoing clip (tail 1000ms == source); the
+        // caller drops it and keeps the blend, so a plan is produced.
+        assertEquals(
+            ClipTransitionGeometry.OverlapPlan(500_000L, 1_000_000L, 500_000L),
+            plan,
+        )
+    }
+
+    @Test
+    fun planOverlap_rendersWhenTransitionConsumesWholeClip() {
+        // Two 550ms clips at 2× (275ms output each) with a 500ms transition. The
+        // blend consumes an entire clip (body == 0); the caller drops the
+        // fully-consumed side and keeps the blend, so a plan is produced rather
+        // than a hard cut.
+        val plan = ClipTransitionGeometry.planOverlap(
+            outgoingSourceDurationUs = 550_000L,
+            incomingSourceDurationUs = 550_000L,
+            transitionDurationUs = 500_000L,
+            outgoingSpeed = 2.0f,
+            incomingSpeed = 2.0f,
+        )
+        assertEquals(
+            ClipTransitionGeometry.OverlapPlan(275_000L, 550_000L, 550_000L),
+            plan,
+        )
+    }
+
+    @Test
+    fun planOverlap_allowsBothSidesFullyConsumedAtOneX() {
+        // The seam reproduction: two 500ms clips (a 1s clip trimmed to its
+        // boundary half) with a 500ms transition at 1× — both sides are entirely
+        // the blend. A plan is produced; the caller keeps just the blend.
+        val plan = ClipTransitionGeometry.planOverlap(
+            outgoingSourceDurationUs = 500_000L,
+            incomingSourceDurationUs = 500_000L,
+            transitionDurationUs = 500_000L,
+            outgoingSpeed = null,
+            incomingSpeed = null,
+        )
+        assertEquals(
+            ClipTransitionGeometry.OverlapPlan(500_000L, 500_000L, 500_000L),
+            plan,
+        )
+    }
+
+    @Test
+    fun planOverlap_rendersWhenBodyRemainsAtSpeed() {
+        // Same 2× speed but a short enough transition to keep a visible body.
+        val plan = ClipTransitionGeometry.planOverlap(
+            outgoingSourceDurationUs = 1_000_000L, // 500ms output @2×
+            incomingSourceDurationUs = 1_000_000L,
+            transitionDurationUs = 150_000L,
+            outgoingSpeed = 2.0f,
+            incomingSpeed = 2.0f,
+        )
+        assertEquals(
+            ClipTransitionGeometry.OverlapPlan(150_000L, 300_000L, 300_000L),
+            plan,
+        )
+    }
+
+    @Test
+    fun planWrap_carvesEqualHeadAndTailAtOneX() {
+        // A 4s clip with a 500ms wrap: head and tail each consume 500ms of the
+        // same source, leaving a 3s middle body.
+        val plan = ClipTransitionGeometry.planWrap(
+            sourceDurationUs = 4_000_000L,
+            transitionDurationUs = 500_000L,
+            speed = null,
+        )
+        assertEquals(
+            ClipTransitionGeometry.OverlapPlan(500_000L, 500_000L, 500_000L),
+            plan,
+        )
+    }
+
+    @Test
+    fun planWrap_consumesDoubleSourceAtDoubleSpeed() {
+        // 300ms of OUTPUT at 2× consumes 600ms of source on each side; a 4s clip
+        // keeps a 2.8s middle body.
+        val plan = ClipTransitionGeometry.planWrap(
+            sourceDurationUs = 4_000_000L,
+            transitionDurationUs = 300_000L,
+            speed = 2.0f,
+        )
+        assertEquals(
+            ClipTransitionGeometry.OverlapPlan(300_000L, 600_000L, 600_000L),
+            plan,
+        )
+    }
+
+    @Test
+    fun planWrap_takesHeadAndTailAtTheirOwnSpeedsUnderARamp() {
+        // A ramp that starts at 2x and ends at 0.5x: 300ms of OUTPUT takes
+        // 600ms of source from the head and 150ms from the tail.
+        val plan = ClipTransitionGeometry.planWrap(
+            sourceDurationUs = 4_000_000L,
+            transitionDurationUs = 300_000L,
+            tailSpeed = 0.5f,
+            headSpeed = 2.0f,
+        )
+        assertEquals(
+            ClipTransitionGeometry.OverlapPlan(300_000L, 150_000L, 600_000L),
+            plan,
+        )
+        // Head and tail together may not use up the clip.
+        assertNull(
+            ClipTransitionGeometry.planWrap(
+                sourceDurationUs = 700_000L,
+                transitionDurationUs = 300_000L,
+                tailSpeed = 0.5f,
+                headSpeed = 2.0f,
+            )
+        )
+    }
+
+    @Test
+    fun planWrap_returnsNullWhenHeadAndTailWouldOverlap() {
+        // A 1s clip with a 600ms wrap: head + tail (1200ms) exceed the source,
+        // so no middle body remains → null (no wrap, hard restart).
+        assertNull(
+            ClipTransitionGeometry.planWrap(
+                sourceDurationUs = 1_000_000L,
+                transitionDurationUs = 600_000L,
+                speed = null,
+            )
+        )
+    }
+
+    @Test
+    fun planWrap_returnsNullAtExactlyHalf() {
+        // A wrap of exactly half the clip leaves a zero-length body → null.
+        assertNull(
+            ClipTransitionGeometry.planWrap(
+                sourceDurationUs = 1_000_000L,
+                transitionDurationUs = 500_000L,
+                speed = null,
+            )
+        )
+    }
+
+    @Test
+    fun planWrap_returnsNullForInvalidDurations() {
+        assertNull(
+            ClipTransitionGeometry.planWrap(
+                sourceDurationUs = 0L,
+                transitionDurationUs = 100_000L,
+                speed = null,
+            )
+        )
+        assertNull(
+            ClipTransitionGeometry.planWrap(
+                sourceDurationUs = 1_000_000L,
+                transitionDurationUs = 0L,
+                speed = null,
+            )
+        )
+    }
+
+    @Test
+    fun outputFrameCount_keepsFramesAtOneX() {
+        // 333ms tail at 1× → same frame count, played at the same rate.
+        assertEquals(
+            10,
+            ClipTransitionGeometry.outputFrameCount(
+                decodedTailFrames = 10,
+                tailSourceDurationUs = 333_000L,
+                outputDurationUs = 333_000L,
+            ),
+        )
+    }
+
+    @Test
+    fun outputFrameCount_halvesFramesAtDoubleSpeed() {
+        // 400ms tail compressed into a 200ms output → half the frames (2× faster).
+        assertEquals(
+            6,
+            ClipTransitionGeometry.outputFrameCount(
+                decodedTailFrames = 12,
+                tailSourceDurationUs = 400_000L,
+                outputDurationUs = 200_000L,
+            ),
+        )
+    }
+
+    @Test
+    fun outputFrameCount_doublesFramesAtHalfSpeed() {
+        // 150ms tail stretched over a 300ms output → twice the frames (0.5× slower).
+        assertEquals(
+            12,
+            ClipTransitionGeometry.outputFrameCount(
+                decodedTailFrames = 6,
+                tailSourceDurationUs = 150_000L,
+                outputDurationUs = 300_000L,
+            ),
+        )
+    }
+
+    @Test
+    fun outputFrameCount_fallsBackForNonPositiveInput() {
+        assertEquals(
+            8,
+            ClipTransitionGeometry.outputFrameCount(
+                decodedTailFrames = 8,
+                tailSourceDurationUs = 200_000L,
+                outputDurationUs = 0L,
+            ),
+        )
+    }
+
+    @Test
+    fun planOverlap_returnsNullForInvalidDurations() {
+        assertNull(
+            ClipTransitionGeometry.planOverlap(
+                outgoingSourceDurationUs = 0L,
+                incomingSourceDurationUs = 1_000_000L,
+                transitionDurationUs = 100_000L,
+                outgoingSpeed = 1.0f,
+                incomingSpeed = 1.0f,
+            )
+        )
+        assertNull(
+            ClipTransitionGeometry.planOverlap(
+                outgoingSourceDurationUs = 1_000_000L,
+                incomingSourceDurationUs = 1_000_000L,
+                transitionDurationUs = 0L,
+                outgoingSpeed = 1.0f,
+                incomingSpeed = 1.0f,
+            )
+        )
+    }
+
+    private fun clip(
+        sourceMs: Long,
+        blendMs: Long? = null,
+        speed: Float? = null,
+    ) = ClipTransitionGeometry.TimelineClip(
+        sourceDurationUs = sourceMs * 1_000L,
+        speed = speed,
+        blendDurationUs = blendMs?.let { it * 1_000L },
+    )
+
+    @Test
+    fun blendsPastEnd_onlyTheBlendsInsideTheRenderAreKept() {
+        // 50 clips of 4s with 500ms blends: blend 0 runs 3.5..4.0s, blend 1
+        // starts at 7.0s, after a 6.3s render end, and so does every later one.
+        val clips = List(50) { index -> clip(4_000L, blendMs = if (index < 49) 500L else null) }
+
+        val pastEnd = ClipTransitionGeometry.blendsPastEnd(clips, endUs = 6_300_000L)
+
+        assertEquals(false, pastEnd[0])
+        assertEquals((1 until 49).toList(), pastEnd.indices.filter { pastEnd[it] })
+    }
+
+    @Test
+    fun blendsPastEnd_keepsABlendTheEndCutsThrough() {
+        // Blend 0 starts at 3.5s; an end inside it still shows its first frames.
+        val clips = listOf(clip(4_000L, blendMs = 500L), clip(4_000L))
+
+        assertEquals(
+            listOf(false, false),
+            ClipTransitionGeometry.blendsPastEnd(clips, endUs = 3_700_000L).toList(),
+        )
+        assertEquals(
+            listOf(true, false),
+            ClipTransitionGeometry.blendsPastEnd(clips, endUs = 3_500_000L).toList(),
+        )
+    }
+
+    @Test
+    fun blendsPastEnd_placesBlendsAfterTheHeadThePreviousOneTook() {
+        // Blend 0 takes 500ms of clip 1's head, so blend 1 starts at 7.0s, not
+        // 7.5s: a 7.2s end still shows it.
+        val clips = listOf(
+            clip(4_000L, blendMs = 500L),
+            clip(4_000L, blendMs = 500L),
+            clip(4_000L),
+        )
+
+        assertEquals(
+            listOf(false, false, false),
+            ClipTransitionGeometry.blendsPastEnd(clips, endUs = 7_200_000L).toList(),
+        )
+    }
+
+    @Test
+    fun blendsPastEnd_laysClipsOutInOutputTime() {
+        // At 2x a 4s source plays for 2s, so blend 0 starts at 1.5s and blend 1
+        // at 3.0s.
+        val clips = listOf(
+            clip(4_000L, blendMs = 500L, speed = 2f),
+            clip(4_000L, blendMs = 500L, speed = 2f),
+            clip(4_000L, speed = 2f),
+        )
+
+        assertEquals(
+            listOf(false, true, false),
+            ClipTransitionGeometry.blendsPastEnd(clips, endUs = 2_000_000L).toList(),
+        )
+    }
+
+    @Test
+    fun blendsPastEnd_startOffsetPullsEveryBlendEarlier() {
+        // A loop wrap of up to 500ms moves the first clip's head to the end, so
+        // blend 1 may start as early as 6.5s.
+        val clips = listOf(
+            clip(4_000L, blendMs = 500L),
+            clip(4_000L, blendMs = 500L),
+            clip(4_000L),
+        )
+
+        assertEquals(
+            listOf(false, false, false),
+            ClipTransitionGeometry.blendsPastEnd(
+                clips, endUs = 6_800_000L, startOffsetUs = -500_000L
+            ).toList(),
+        )
+    }
+
+    @Test
+    fun blendsPastEnd_isEmptyWithoutAnEnd() {
+        val clips = listOf(clip(4_000L, blendMs = 500L), clip(4_000L))
+
+        assertEquals(
+            listOf(false, false),
+            ClipTransitionGeometry.blendsPastEnd(clips, endUs = null).toList(),
+        )
+    }
+
+    @Test
+    fun clipTimelineEndUs_undoesTheGlobalSpeed() {
+        // 6.3s of output at 2x is 12.6s of the clips' own timeline.
+        assertEquals(12_600_000L, ClipTransitionGeometry.clipTimelineEndUs(6_300_000L, 2f))
+        assertEquals(6_300_000L, ClipTransitionGeometry.clipTimelineEndUs(6_300_000L, null))
+        assertNull(ClipTransitionGeometry.clipTimelineEndUs(null, 2f))
+    }
+}

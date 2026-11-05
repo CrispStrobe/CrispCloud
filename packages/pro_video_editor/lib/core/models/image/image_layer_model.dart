@@ -1,0 +1,590 @@
+// ignore_for_file: public_member_api_docs, sort_constructors_first
+import 'dart:convert';
+import 'dart:ui';
+
+import 'package:flutter/foundation.dart';
+import 'package:pro_video_editor/shared/models/time_range_mixin.dart';
+import 'package:pro_video_editor/shared/utils/parser/double_parser.dart';
+import 'package:pro_video_editor/shared/utils/parser/int_parser.dart';
+import 'package:pro_video_editor/shared/utils/parser/offset_parser.dart';
+
+import 'editor_layer_image_model.dart';
+import 'image_layer_frame_model.dart';
+import 'keyframe_clock_point_model.dart';
+import 'layer_animation_model.dart';
+import 'layer_audio_visualizer_model.dart';
+import 'layer_blend_mode_model.dart';
+import 'layer_censor_model.dart';
+import 'layer_shape_mask_model.dart';
+import 'timeline_keyframe_model.dart';
+
+/// A model representing a video overlay layer with timing information.
+class ImageLayer with TimeRangeMixin {
+  /// Creates a [ImageLayer] with the given [image], [startTime],
+  /// and optional [endTime].
+  const ImageLayer({
+    required this.image,
+    this.startTime,
+    this.endTime,
+    this.offset,
+    this.size,
+    this.rotation = 0.0,
+    this.loop = true,
+    this.animationOffset = Duration.zero,
+    this.animations = const [],
+    this.animationStartTime,
+    this.animationEndTime,
+    this.censor,
+    this.keyframes = const [],
+    this.keyframeClock = const [],
+    this.audioVisualizer,
+    this.blendMode = LayerBlendMode.normal,
+    this.shapeMask,
+    this.frames = const [],
+  }) : assert(
+         startTime == null || endTime == null || startTime < endTime,
+         'startTime must be before endTime',
+       ),
+       assert(
+         animationOffset >= Duration.zero,
+         'animationOffset must not be negative',
+       ),
+       assert(
+         animationStartTime == null ||
+             animationEndTime == null ||
+             animationStartTime < animationEndTime,
+         'animationStartTime must be before animationEndTime',
+       ),
+       assert(
+         keyframes.length == 0 || offset != null,
+         'keyframes place a positioned layer; set [offset]',
+       ),
+       assert(
+         audioVisualizer == null || censor == null,
+         'A layer is either a censor or an audio visualizer',
+       ),
+       assert(
+         audioVisualizer == null || offset == null || size != null,
+         'An audio visualizer fills a box; set [size] with [offset]',
+       ),
+       assert(
+         censor == null || blendMode == LayerBlendMode.normal,
+         'A censor layer hides the picture beneath it and draws nothing to '
+         'blend',
+       ),
+       assert(
+         shapeMask == null || (censor == null && audioVisualizer == null),
+         'A shape mask shapes the image of a layer that draws one',
+       ),
+       assert(
+         frames.length == 0 || (censor == null && audioVisualizer == null),
+         'A frame sequence is drawn, so it is not for a censor or an audio '
+         'visualizer layer',
+       );
+
+  /// Creates a layer that shows [frames] one after the other, each for its
+  /// [ImageLayerFrame.duration], like the frames of an animated GIF; see
+  /// [ImageLayer.frames]. [frames] must not be empty.
+  ImageLayer.sequence({
+    required List<ImageLayerFrame> frames,
+    Duration? startTime,
+    Duration? endTime,
+    Offset? offset,
+    Size? size,
+    double rotation = 0.0,
+    bool loop = true,
+    Duration animationOffset = Duration.zero,
+    List<LayerAnimation> animations = const [],
+    Duration? animationStartTime,
+    Duration? animationEndTime,
+    List<TimelineKeyframe> keyframes = const [],
+    List<KeyframeClockPoint> keyframeClock = const [],
+    LayerBlendMode blendMode = LayerBlendMode.normal,
+    LayerShapeMask? shapeMask,
+  }) : this(
+         image: frames.first.image,
+         frames: frames,
+         startTime: startTime,
+         endTime: endTime,
+         offset: offset,
+         size: size,
+         rotation: rotation,
+         loop: loop,
+         animationOffset: animationOffset,
+         animations: animations,
+         animationStartTime: animationStartTime,
+         animationEndTime: animationEndTime,
+         keyframes: keyframes,
+         keyframeClock: keyframeClock,
+         blendMode: blendMode,
+         shapeMask: shapeMask,
+       );
+
+  /// Creates a layer that draws [visualizer] instead of an image; see
+  /// [LayerAudioVisualizer].
+  ///
+  /// It fills the box [offset] and [size] describe, or the whole frame when
+  /// [offset] is `null`, whatever [size] is.
+  ImageLayer.audioVisualizer({
+    required LayerAudioVisualizer visualizer,
+    Duration? startTime,
+    Duration? endTime,
+    Offset? offset,
+    Size? size,
+    double rotation = 0.0,
+    List<LayerAnimation> animations = const [],
+    Duration? animationStartTime,
+    Duration? animationEndTime,
+    List<TimelineKeyframe> keyframes = const [],
+    List<KeyframeClockPoint> keyframeClock = const [],
+    LayerBlendMode blendMode = LayerBlendMode.normal,
+  }) : this(
+         image: EditorLayerImage.memory(_transparentPixelPng),
+         startTime: startTime,
+         endTime: endTime,
+         offset: offset,
+         size: size,
+         rotation: rotation,
+         animations: animations,
+         animationStartTime: animationStartTime,
+         animationEndTime: animationEndTime,
+         keyframes: keyframes,
+         keyframeClock: keyframeClock,
+         audioVisualizer: visualizer,
+         blendMode: blendMode,
+       );
+
+  /// The image to overlay on the video.
+  ///
+  /// Animated formats (e.g. GIF) are detected automatically and played back
+  /// frame by frame for the time the layer is visible — see [loop]. Static
+  /// images are drawn unchanged.
+  ///
+  /// Not drawn when [frames] is not empty.
+  final EditorLayerImage image;
+
+  @override
+  final Duration? startTime;
+
+  @override
+  final Duration? endTime;
+
+  /// Position offset from the top-left corner of the video frame, in pixels.
+  ///
+  /// [Offset.dx] is the horizontal offset from the left edge.
+  /// [Offset.dy] is the vertical offset from the top edge.
+  ///
+  /// When `null`, the image is stretched to fill the entire video frame.
+  /// When set to a specific value (e.g., [Offset.zero]), the image is
+  /// placed at that position at its original size.
+  ///
+  /// When the video segments differ in resolution, the video frame is the one
+  /// they are composited into: the first segment's size, replaced by each
+  /// later segment that is wider or taller. Every segment is scaled to fit
+  /// inside it and the layer is placed from the scaled segment's top-left
+  /// corner, so a layer keeps its place and size on segments of one shape.
+  final Offset? offset;
+
+  /// The display size of the image layer, in pixels of the same frame as
+  /// [offset].
+  ///
+  /// [Size.width] is the target width of the image.
+  /// [Size.height] is the target height of the image.
+  ///
+  /// When `null`, the image is used at its original size (or stretched to
+  /// fill the frame when [offset] is also `null`).
+  final Size? size;
+
+  /// Clockwise rotation applied to the image layer, in **radians**.
+  ///
+  /// The image is rotated around its own center, so [offset] and [size] still
+  /// describe the unrotated layout box. This matches Flutter's
+  /// [Transform.rotate] convention, which makes it possible to forward a
+  /// `pro_image_editor` layer rotation directly.
+  ///
+  /// **Default**: `0.0` (no rotation).
+  final double rotation;
+
+  /// Whether an animated [image] (e.g. GIF) or the [frames] repeat while the
+  /// layer is visible.
+  ///
+  /// - `true` (default): the animation loops for the layer's whole time range.
+  /// - `false`: the animation plays once and then holds its last frame until
+  ///   the layer disappears.
+  ///
+  /// Has no effect on static images.
+  final bool loop;
+
+  /// How far into an animated [image] (e.g. GIF) or the [frames] playback
+  /// begins when the layer appears at [startTime].
+  ///
+  /// By default an animated layer starts on its first frame. Set this to
+  /// continue one animation across several layers: a layer that picks up
+  /// where `previous` left off passes
+  ///
+  /// ```dart
+  /// previous.animationOffset +
+  ///     (previous.endTime! - (previous.startTime ?? Duration.zero))
+  /// ```
+  ///
+  /// The offset counts toward [loop], so it wraps around a looping image and
+  /// lands on the last frame of one that does not loop.
+  ///
+  /// Has no effect on static images.
+  ///
+  /// **Default**: [Duration.zero].
+  final Duration animationOffset;
+
+  /// Animations to apply to this layer (e.g. fade, slide, scale).
+  ///
+  /// Multiple animations can be combined. Each animation specifies its
+  /// [LayerAnimation.phase] (in or out), [LayerAnimation.duration],
+  /// and optional [LayerAnimation.curve].
+  final List<LayerAnimation> animations;
+
+  /// Where the [animations] count from, when that is not [startTime].
+  ///
+  /// An [AnimationPhase.animateIn] plays from here and an
+  /// [AnimationPhase.loop] starts its first cycle here; the layer itself still
+  /// shows only from [startTime] to [endTime]. Set it, together with
+  /// [animationEndTime], to keep one set of animations running across several
+  /// layers that each show the content for part of the time, such as the
+  /// steps of a text that types itself out or the words of a karaoke caption
+  /// lighting up one by one: every part carries the same animations and the
+  /// same range, so a fade in carries on over the first parts and a wiggle
+  /// does not restart at each one.
+  ///
+  /// **Default**: `null`, which counts from [startTime].
+  final Duration? animationStartTime;
+
+  /// Where the [animations] end, when that is not [endTime]: an
+  /// [AnimationPhase.animateOut] finishes here. See [animationStartTime].
+  ///
+  /// **Default**: `null`, which ends at [endTime].
+  final Duration? animationEndTime;
+
+  /// Blurs or pixelates the picture beneath the layer instead of drawing
+  /// [image], which then only marks the area to hide. See [LayerCensor].
+  ///
+  /// The area takes its place, size, [rotation], time range and [animations]
+  /// from the layer exactly as [image] would be drawn, and a fade animation
+  /// fades the censor in and out.
+  ///
+  /// **Default**: `null`, which draws [image].
+  final LayerCensor? censor;
+
+  /// The layer's placement over time; see [TimelineKeyframe].
+  ///
+  /// When not empty, the keyframes set where the layer is, how big it is, how
+  /// far it is turned and how opaque it is at every point of its time range:
+  /// they replace [offset] and [rotation], scale [size] around its center and
+  /// fade the image. Their times are on the same timeline as [startTime] and
+  /// [endTime], and need not be in order. The [animations] play on top of the
+  /// keyframed placement: a slide starts from the edge nearest to it and a
+  /// bounce lifts by the keyframed height.
+  ///
+  /// A layer with keyframes needs an [offset]; a layer stretched over the
+  /// frame has no placement to move and ignores them.
+  ///
+  /// **Default**: empty, which keeps the layer where [offset] puts it.
+  final List<TimelineKeyframe> keyframes;
+
+  /// The clock [keyframes] are timed on; see [KeyframeClockPoint].
+  ///
+  /// When not empty, every frame is placed by the keyframes at its time on
+  /// this clock instead of at its time on the video, so the keyframes can
+  /// keep the timing they were made on. The [animations] stay on the video's
+  /// timeline.
+  ///
+  /// **Default**: empty, which times [keyframes] on the video's timeline.
+  final List<KeyframeClockPoint> keyframeClock;
+
+  /// Draws bars or a wave that move with the sound instead of [image], which
+  /// is then not read. See [LayerAudioVisualizer].
+  ///
+  /// The visualizer fills the layer's box: [size] at [offset], or the whole
+  /// frame for a stretched layer, one without an [offset].
+  ///
+  /// **Default**: `null`, which draws [image].
+  final LayerAudioVisualizer? audioVisualizer;
+
+  /// How the layer combines with the picture beneath it; see
+  /// [LayerBlendMode].
+  ///
+  /// The picture is everything the layer covers: the video with its
+  /// [VideoRenderData.effects], [VideoRenderData.colorFilters] and
+  /// [VideoRenderData.blur], and every image layer before it in
+  /// [VideoRenderData.imageLayers]. The layer's alpha — its image's own
+  /// transparency, a fade animation and its keyframes' opacity — fades
+  /// between that picture and the blended color.
+  ///
+  /// A [censor] layer draws nothing and keeps [LayerBlendMode.normal].
+  ///
+  /// **Default**: [LayerBlendMode.normal], which draws the image over the
+  /// picture.
+  ///
+  /// **Note:** Ignored on Web, Windows and Linux, which have no render
+  /// pipeline.
+  final LayerBlendMode blendMode;
+
+  /// A shape the layer's image shows through, drawn on every frame, so it can
+  /// change over time on its own; see [LayerShapeMask].
+  ///
+  /// It is measured in fractions of the image as it is drawn — sized to
+  /// [size], or stretched over the frame without an [offset] — before
+  /// [rotation], [keyframes] and [animations] place it, so it moves, scales
+  /// and turns with the layer as well. Its [LayerShapeMask.keyframes] are
+  /// timed like [keyframes], on [keyframeClock] when the layer has one.
+  ///
+  /// Not for a [censor] or an [audioVisualizer] layer.
+  ///
+  /// **Default**: `null`, which draws the whole image.
+  ///
+  /// **Note:** Ignored on Web, Windows and Linux, which have no render
+  /// pipeline.
+  final LayerShapeMask? shapeMask;
+
+  /// Images to show one after the other instead of [image], each for its
+  /// [ImageLayerFrame.duration], from [startTime] on — like the frames of an
+  /// animated GIF, so [loop] and [animationOffset] apply to them alike.
+  ///
+  /// One layer draws the whole sequence with one overlay that swaps its
+  /// image, where a layer per image costs the renderer a pass over the frame
+  /// for every one of them. Use it for a picture that changes over time,
+  /// such as a running timer or text that types itself out: frames that end
+  /// where the next one starts, and one that holds until [endTime] when
+  /// [loop] is `false`.
+  ///
+  /// Every frame is drawn into the layer's box like [image] would be, so
+  /// give them the same pixel size. Not for a [censor] or an
+  /// [audioVisualizer] layer.
+  ///
+  /// **Default**: empty, which draws [image].
+  ///
+  /// **Note:** Ignored on Web, Windows and Linux, which have no render
+  /// pipeline.
+  final List<ImageLayerFrame> frames;
+
+  ImageLayer copyWith({
+    EditorLayerImage? image,
+    Duration? startTime,
+    Duration? endTime,
+    Offset? offset,
+    Size? size,
+    double? rotation,
+    bool? loop,
+    Duration? animationOffset,
+    List<LayerAnimation>? animations,
+    Duration? animationStartTime,
+    Duration? animationEndTime,
+    LayerCensor? censor,
+    List<TimelineKeyframe>? keyframes,
+    List<KeyframeClockPoint>? keyframeClock,
+    LayerAudioVisualizer? audioVisualizer,
+    LayerBlendMode? blendMode,
+    LayerShapeMask? shapeMask,
+    List<ImageLayerFrame>? frames,
+  }) {
+    return ImageLayer(
+      image: image ?? this.image,
+      startTime: startTime ?? this.startTime,
+      endTime: endTime ?? this.endTime,
+      offset: offset ?? this.offset,
+      size: size ?? this.size,
+      rotation: rotation ?? this.rotation,
+      loop: loop ?? this.loop,
+      animationOffset: animationOffset ?? this.animationOffset,
+      animations: animations ?? this.animations,
+      animationStartTime: animationStartTime ?? this.animationStartTime,
+      animationEndTime: animationEndTime ?? this.animationEndTime,
+      censor: censor ?? this.censor,
+      keyframes: keyframes ?? this.keyframes,
+      keyframeClock: keyframeClock ?? this.keyframeClock,
+      audioVisualizer: audioVisualizer ?? this.audioVisualizer,
+      blendMode: blendMode ?? this.blendMode,
+      shapeMask: shapeMask ?? this.shapeMask,
+      frames: frames ?? this.frames,
+    );
+  }
+
+  Map<String, dynamic> toMap() {
+    return <String, dynamic>{
+      'image': image.toMap(),
+      'startTime': startTime?.inMicroseconds,
+      'endTime': endTime?.inMicroseconds,
+      'offset': offset != null ? {'dx': offset!.dx, 'dy': offset!.dy} : null,
+      'size': size != null
+          ? {'width': size!.width, 'height': size!.height}
+          : null,
+      'rotation': rotation,
+      'loop': loop,
+      'animationOffset': animationOffset.inMicroseconds,
+      'animations': animations.map((a) => a.toMap()).toList(),
+      'animationStartTime': animationStartTime?.inMicroseconds,
+      'animationEndTime': animationEndTime?.inMicroseconds,
+      'censor': censor?.toMap(),
+      'keyframes': keyframes.map((k) => k.toMap()).toList(),
+      'keyframeClock': keyframeClock.map((p) => p.toMap()).toList(),
+      'audioVisualizer': audioVisualizer?.toMap(),
+      'blendMode': blendMode.name,
+      'shapeMask': shapeMask?.toMap(),
+      'frames': frames.map((f) => f.toMap()).toList(),
+    };
+  }
+
+  factory ImageLayer.fromMap(Map<String, dynamic> map) {
+    return ImageLayer(
+      image: EditorLayerImage.fromMap(map['image'] as Map<String, dynamic>),
+      startTime: map['startTime'] != null
+          ? Duration(microseconds: safeParseInt(map['startTime']))
+          : null,
+      endTime: map['endTime'] != null
+          ? Duration(microseconds: safeParseInt(map['endTime']))
+          : null,
+      offset: map['offset'] != null
+          ? safeParseOffset(map['offset'] as Map<String, dynamic>)
+          : null,
+      size: map['size'] != null
+          ? Size(
+              safeParseDouble((map['size'] as Map<String, dynamic>)['width']),
+              safeParseDouble((map['size'] as Map<String, dynamic>)['height']),
+            )
+          : null,
+      rotation: map['rotation'] != null
+          ? safeParseDouble(map['rotation'])
+          : 0.0,
+      loop: map['loop'] as bool? ?? true,
+      animationOffset: map['animationOffset'] != null
+          ? Duration(microseconds: safeParseInt(map['animationOffset']))
+          : Duration.zero,
+      animations:
+          (map['animations'] as List<dynamic>?)
+              ?.map((a) => LayerAnimation.fromMap(a as Map<String, dynamic>))
+              .toList() ??
+          const [],
+      animationStartTime: map['animationStartTime'] != null
+          ? Duration(microseconds: safeParseInt(map['animationStartTime']))
+          : null,
+      animationEndTime: map['animationEndTime'] != null
+          ? Duration(microseconds: safeParseInt(map['animationEndTime']))
+          : null,
+      censor: map['censor'] != null
+          ? LayerCensor.fromMap(map['censor'] as Map<String, dynamic>)
+          : null,
+      keyframes:
+          (map['keyframes'] as List<dynamic>?)
+              ?.map(
+                (k) => TimelineKeyframe.fromMap(
+                  Map<String, dynamic>.from(k as Map),
+                ),
+              )
+              .toList() ??
+          const [],
+      keyframeClock: keyframeClockFromMap(map['keyframeClock']),
+      audioVisualizer: map['audioVisualizer'] != null
+          ? LayerAudioVisualizer.fromMap(
+              Map<String, dynamic>.from(map['audioVisualizer'] as Map),
+            )
+          : null,
+      blendMode: LayerBlendMode.fromName(map['blendMode']),
+      shapeMask: map['shapeMask'] is Map
+          ? LayerShapeMask.fromMap(
+              Map<String, dynamic>.from(map['shapeMask'] as Map),
+            )
+          : null,
+      frames:
+          (map['frames'] as List<dynamic>?)
+              ?.map(
+                (f) => ImageLayerFrame.fromMap(
+                  Map<String, dynamic>.from(f as Map),
+                ),
+              )
+              .toList() ??
+          const [],
+    );
+  }
+
+  String toJson() => json.encode(toMap());
+
+  factory ImageLayer.fromJson(String source) =>
+      ImageLayer.fromMap(json.decode(source) as Map<String, dynamic>);
+
+  @override
+  String toString() {
+    return 'ImageLayer('
+        'image: $image, '
+        'startTime: $startTime, '
+        'endTime: $endTime, '
+        'offset: $offset, '
+        'size: $size, '
+        'rotation: $rotation, '
+        'loop: $loop, '
+        'animationOffset: $animationOffset, '
+        'animations: $animations, '
+        'animationStartTime: $animationStartTime, '
+        'animationEndTime: $animationEndTime, '
+        'censor: $censor, '
+        'keyframes: $keyframes, '
+        'keyframeClock: $keyframeClock, '
+        'audioVisualizer: $audioVisualizer, '
+        'blendMode: $blendMode, '
+        'shapeMask: $shapeMask, '
+        'frames: $frames'
+        ')';
+  }
+
+  @override
+  bool operator ==(covariant ImageLayer other) {
+    if (identical(this, other)) return true;
+
+    return other.image == image &&
+        other.startTime == startTime &&
+        other.endTime == endTime &&
+        other.offset == offset &&
+        other.size == size &&
+        other.rotation == rotation &&
+        other.loop == loop &&
+        other.animationOffset == animationOffset &&
+        listEquals(other.animations, animations) &&
+        other.animationStartTime == animationStartTime &&
+        other.animationEndTime == animationEndTime &&
+        other.censor == censor &&
+        listEquals(other.keyframes, keyframes) &&
+        listEquals(other.keyframeClock, keyframeClock) &&
+        other.audioVisualizer == audioVisualizer &&
+        other.blendMode == blendMode &&
+        other.shapeMask == shapeMask &&
+        listEquals(other.frames, frames);
+  }
+
+  @override
+  int get hashCode {
+    return image.hashCode ^
+        startTime.hashCode ^
+        endTime.hashCode ^
+        offset.hashCode ^
+        size.hashCode ^
+        rotation.hashCode ^
+        loop.hashCode ^
+        animationOffset.hashCode ^
+        animations.hashCode ^
+        animationStartTime.hashCode ^
+        animationEndTime.hashCode ^
+        censor.hashCode ^
+        Object.hashAll(keyframes) ^
+        Object.hashAll(keyframeClock) ^
+        audioVisualizer.hashCode ^
+        blendMode.hashCode ^
+        shapeMask.hashCode ^
+        Object.hashAll(frames);
+  }
+}
+
+/// A fully transparent 1 x 1 PNG, the image of an
+/// [ImageLayer.audioVisualizer] layer, which no renderer reads.
+final Uint8List _transparentPixelPng = Uint8List.fromList(const [
+  137, 80, 78, 71, 13, 10, 26, 10, 0, 0, 0, 13, 73, 72, 68, 82, 0, 0, 0, 1, //
+  0, 0, 0, 1, 8, 6, 0, 0, 0, 31, 21, 196, 137, 0, 0, 0, 11, 73, 68, 65, 84,
+  120, 218, 99, 96, 0, 2, 0, 0, 5, 0, 1, 233, 250, 220, 216, 0, 0, 0, 0, 73,
+  69, 78, 68, 174, 66, 96, 130,
+]);

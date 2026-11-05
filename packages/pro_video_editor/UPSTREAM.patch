@@ -1,0 +1,125 @@
+--- a/pubspec.yaml
++++ b/pubspec.yaml
+@@ -1,6 +1,7 @@
+ name: pro_video_editor
+ description: "A Flutter video editor: Seamlessly enhance your videos with user-friendly editing features."
+ version: 2.51.0
++publish_to: none
+ homepage: https://github.com/hm21/pro_video_editor/
+ repository: https://github.com/hm21/pro_video_editor/
+ documentation: https://github.com/hm21/pro_video_editor/
+@@ -13,12 +14,6 @@
+   - video
+   - movie
+   - editor
+-
+-screenshots:
+-  - description: "Showcase from the video editor with the grounded design"
+-    path: assets/showcase.jpg
+-  - description: "Showcase from the video editor with simple design"
+-    path: assets/showcase1.jpg
+ 
+ environment:
+   sdk: '>=3.12.0 <4.0.0'
+@@ -46,6 +41,8 @@
+   mockito: ^5.4.6
+ 
+ flutter:
++  assets:
++    - assets/licenses/native.txt
+   # The live preview of `VideoEffect`s; see `VideoEffectPreview`.
+   shaders:
+     - shaders/video_effect.frag
+@@ -56,16 +53,9 @@
+       android:
+         package: ch.waio.pro_video_editor
+         pluginClass: ProVideoEditorPlugin
+-      linux:
+-        pluginClass: ProVideoEditorPlugin
+       ios:
+         pluginClass: ProVideoEditorPlugin
+         sharedDarwinSource: true
+       macos:
+         pluginClass: ProVideoEditorPlugin
+         sharedDarwinSource: true
+-      windows:
+-        pluginClass: ProVideoEditorPluginCApi
+-      web:
+-        pluginClass: ProVideoEditorWeb
+-        fileName: core/platform/web_method_channel.dart
+--- a/README.md
++++ b/README.md
+@@ -1,3 +1,12 @@
++# CrispCloud's vendored pro_video_editor 2.51.0
++
++This maintained copy registers the Android, iOS and macOS video export engines.
++Other platforms remain unavailable in CrispCloud's video capability policy.
++See [UPSTREAM.md](UPSTREAM.md) for the pinned archive, retained files, native
++licenses, privacy manifest and local changes. The upstream documentation below
++describes the complete upstream package, including features CrispCloud does not
++currently expose.
++
+ <img src="https://github.com/hm21/pro_video_editor/blob/stable/assets/logo.jpg?raw=true" alt="Logo" />
+ 
+ <p>
+--- a/CHANGELOG.md
++++ b/CHANGELOG.md
+@@ -1,3 +1,12 @@
++## CrispCloud maintained copy of 2.51.0
++
++- Register only Android/iOS/macOS plugins, avoiding unused desktop metadata
++  dependencies on unsupported editing targets.
++- Bundle native Android dependency license notices.
++- Bundle an Apple privacy manifest describing file metadata access on media
++  snapshots and outputs staged inside the app's container.
++- Preserve the upstream renderer and regression tests without changes.
++
+ ## 2.51.0
+ - **FEAT**(iOS, macOS): `EditorVideo.content` and `VideoAudioTrack.path` take a photo library `ph://` URL, such as the ones `file_picker` returns with `copyMedia: false`, and read the video in place without copying it. Only a slow-motion video is exported once into the cache. iOS apps now need `NSPhotoLibraryUsageDescription` in their `Info.plist`.
+ 
+--- a/darwin/pro_video_editor/Resources/PrivacyInfo.xcprivacy
++++ b/darwin/pro_video_editor/Resources/PrivacyInfo.xcprivacy
+@@ -5,7 +5,18 @@
+ 	<key>NSPrivacyTrackingDomains</key>
+ 	<array/>
+ 	<key>NSPrivacyAccessedAPITypes</key>
+-	<array/>
++	<array>
++		<dict>
++			<key>NSPrivacyAccessedAPIType</key>
++			<string>NSPrivacyAccessedAPICategoryFileTimestamp</string>
++			<key>NSPrivacyAccessedAPITypeReasons</key>
++			<array>
++				<!-- Metadata reads on the staged input and exported files in
++				     CrispCloud's own container. See UPSTREAM.md. -->
++				<string>C617.1</string>
++			</array>
++		</dict>
++	</array>
+ 	<key>NSPrivacyCollectedDataTypes</key>
+ 	<array/>
+ 	<key>NSPrivacyTracking</key>
+--- a/darwin/pro_video_editor.podspec
++++ b/darwin/pro_video_editor.podspec
+@@ -31,7 +31,6 @@
+     'DEFINES_MODULE' => 'YES' 
+   }
+ 
+-  # Uncomment if needed
+-  # s.ios.resource_bundles = {'pro_video_editor_ios_privacy' => ['pro_video_editor/Resources/PrivacyInfo.xcprivacy']}
+-  # s.osx.resource_bundles = {'pro_video_editor_osx_privacy' => ['pro_video_editor/Resources/PrivacyInfo.xcprivacy']}
+-end+  s.ios.resource_bundles = {'pro_video_editor_ios_privacy' => ['pro_video_editor/Resources/PrivacyInfo.xcprivacy']}
++  s.osx.resource_bundles = {'pro_video_editor_osx_privacy' => ['pro_video_editor/Resources/PrivacyInfo.xcprivacy']}
++end
+--- a/darwin/pro_video_editor/Package.swift
++++ b/darwin/pro_video_editor/Package.swift
+@@ -24,8 +24,7 @@
+       ],
+       path: ".",
+       resources: [
+-        // Uncomment if needed
+-        // .copy("Resources/PrivacyInfo.xcprivacy")
++        .copy("Resources/PrivacyInfo.xcprivacy")
+       ],
+       linkerSettings: [
+         .linkedFramework("Flutter", .when(platforms: [.iOS])),

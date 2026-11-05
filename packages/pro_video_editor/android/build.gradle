@@ -1,0 +1,88 @@
+group = "ch.waio.pro_video_editor"
+version = "1.0-SNAPSHOT"
+
+buildscript {
+    repositories {
+        google()
+        mavenCentral()
+    }
+
+    dependencies {
+        classpath("com.android.tools.build:gradle:8.11.1")
+    }
+}
+
+allprojects {
+    repositories {
+        google()
+        mavenCentral()
+    }
+}
+
+apply plugin: "com.android.library"
+
+kotlin {
+    compilerOptions {
+        jvmTarget = org.jetbrains.kotlin.gradle.dsl.JvmTarget.JVM_11
+    }
+}
+
+android {
+    namespace = "ch.waio.pro_video_editor"
+
+    compileSdk = 36
+
+    compileOptions {
+        sourceCompatibility = JavaVersion.VERSION_11
+        targetCompatibility = JavaVersion.VERSION_11
+    }
+
+    sourceSets {
+        main.java.srcDirs += "src/main/kotlin"
+        test.java.srcDirs += "src/test/kotlin"
+    }
+
+    defaultConfig {
+        minSdk = 24
+        consumerProguardFiles("consumer-rules.pro")
+    }
+
+    dependencies {
+        testImplementation("org.jetbrains.kotlin:kotlin-test")
+        testImplementation("org.mockito:mockito-core:5.1.1")
+        
+        // Media3 dependencies
+        def media3_version = "1.11.1"
+        implementation "androidx.media3:media3-common:$media3_version"
+        implementation("androidx.media3:media3-transformer:$media3_version")
+        implementation("androidx.media3:media3-inspector-frame:$media3_version")
+        implementation("androidx.media3:media3-effect:$media3_version")
+        implementation("androidx.media3:media3-muxer:$media3_version")
+
+        // EXIF metadata. Preferred over android.media.ExifInterface: it covers
+        // HEIF/AVIF/WebP/PNG as well as JPEG, and it is plain Java, so the
+        // orientation parsing is reachable from the JVM unit tests.
+        implementation("androidx.exifinterface:exifinterface:1.4.2")
+
+        // Coroutines
+        implementation("org.jetbrains.kotlinx:kotlinx-coroutines-android:1.7.3")
+        implementation("org.jetbrains.kotlinx:kotlinx-coroutines-core:1.7.3")
+    }
+
+    testOptions {
+        // Return default values (null/0/false) for un-mocked android.* calls so
+        // plugin unit tests can construct the plugin (which touches
+        // Handler/Looper) without Robolectric.
+        unitTests.returnDefaultValues = true
+
+        unitTests.all {
+            useJUnitPlatform()
+
+            testLogging {
+               events "passed", "skipped", "failed", "standardOut", "standardError"
+               outputs.upToDateWhen {false}
+               showStandardStreams = true
+            }
+        }
+    }
+}

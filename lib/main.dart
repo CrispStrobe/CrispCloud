@@ -44,6 +44,7 @@ import 'services/pdf_font_licenses.dart';
 import 'services/secure_storage_service.dart';
 import 'services/secure_storage_web.dart';
 import 'widgets/lock_screen.dart';
+import 'services/media_video_backend.dart' show registerMediaVideoLicenses;
 
 const _log = Log('Main');
 const _appVersion = String.fromEnvironment(
@@ -57,6 +58,7 @@ Future<void> main() async {
     WidgetsFlutterBinding.ensureInitialized();
     registerBundledEditorAssets();
     registerPdfFontLicenses();
+    registerMediaVideoLicenses();
     LicenseRegistry.addLicense(() => Stream.value(const LicenseEntryWithLineBreaks(['libsmb2'], smbLicense)));
 
     crashReporting = CrashReportingService(

@@ -1,0 +1,1111 @@
+package ch.waio.pro_video_editor.src.features.render.helpers
+
+import RENDER_TAG
+import android.content.Context
+import android.media.Image
+import android.media.MediaCodec
+import android.media.MediaCodecInfo
+import android.media.MediaCodecList
+import android.media.MediaExtractor
+import android.media.MediaFormat
+import android.media.MediaMuxer
+import androidx.media3.common.util.UnstableApi
+import ch.waio.pro_video_editor.src.features.render.models.EqualizerConfig
+import ch.waio.pro_video_editor.src.features.render.models.KeyframeConfig
+import ch.waio.pro_video_editor.src.shared.logging.PluginLog as Log
+import ch.waio.pro_video_editor.src.shared.media.openMediaExtractor
+import java.io.DataInputStream
+import java.io.DataOutputStream
+import java.io.File
+import java.io.RandomAccessFile
+import java.nio.ByteBuffer
+import kotlin.math.max
+import kotlin.math.min
+import kotlin.math.roundToInt
+
+/**
+ * Pre-renders an **overlap** clip transition (dissolve, slide, push, wipe, or
+ * one drawn by [ClipTransitionEffects]) into a single short MP4 that the main render pipeline consumes as an ordinary
+ * forward clip.
+ *
+ * It decodes the **tail** of the outgoing clip and the **head** of the incoming
+ * clip into packed I420 frames in their *display* orientation, blends them per
+ * output frame according to the transition [type]/[direction], and re-encodes
+ * the result upright. The two segments must show at the same size; if they
+ * differ the renderer returns `null` so the caller can fall back to a hard cut.
+ * How each clip is stored does not matter: a phone recording kept landscape
+ * with a rotation flag blends with an upright clip of the same picture.
+ *
+ * This mirrors [VideoReverser]'s MediaCodec decode → encode → mux approach and
+ * is intentionally isolated from the main composition so a failure degrades to
+ * a plain cut rather than crashing the render.
+ */
+@UnstableApi
+object ClipTransitionRenderer {
+
+    /** Result of [renderSync]. */
+    data class TransitionResult(val outputPath: String, val durationUs: Long)
+
+    private const val DECODER_TIMEOUT_US = 10_000L
+    private const val ENCODER_TIMEOUT_US = 10_000L
+    private const val DEFAULT_FPS = 30
+
+    /**
+     * Renders the blended transition segment.
+     *
+     * @param outTailStartUs Inclusive source start of the outgoing clip's tail.
+     * @param outTailEndUs Exclusive source end of the outgoing clip's tail.
+     * @param inHeadStartUs Inclusive source start of the incoming clip's head.
+     * @param inHeadEndUs Exclusive source end of the incoming clip's head.
+     * @param outputDurationUs Output (post-speed) duration of the blended clip.
+     *  The outgoing tail and incoming head source ranges are each replayed
+     *  across this duration, so a tail/head longer than [outputDurationUs]
+     *  is sped up by its clip's playback speed (and vice-versa). `<= 0`
+     *  preserves the legacy 1× behavior (output = outgoing tail duration).
+     * @param outgoingVolume Volume of the outgoing clip, applied to its side of
+     *  the audio crossfade the way its own audio is (null = unchanged).
+     * @param outgoingEqualizer Equalizer of the outgoing clip, likewise.
+     * @param incomingVolume Volume of the incoming clip, likewise.
+     * @param incomingEqualizer Equalizer of the incoming clip, likewise.
+     * @param outgoingKeyframes The outgoing clip's motion, by source timestamp
+     *  (see [segmentMotionAt]); each of its frames is moved before the blend.
+     * @param incomingKeyframes The incoming clip's motion, likewise.
+     * @return The rendered transition clip, or `null` if it could not be
+     *  produced (caller should fall back to a hard cut).
+     */
+    fun renderSync(
+        context: Context,
+        outgoingPath: String,
+        outTailStartUs: Long,
+        outTailEndUs: Long,
+        incomingPath: String,
+        inHeadStartUs: Long,
+        inHeadEndUs: Long,
+        type: String,
+        direction: String,
+        curve: String,
+        includeAudio: Boolean,
+        outputDurationUs: Long = 0L,
+        outgoingVolume: Float? = null,
+        outgoingEqualizer: EqualizerConfig? = null,
+        incomingVolume: Float? = null,
+        incomingEqualizer: EqualizerConfig? = null,
+        outgoingKeyframes: List<KeyframeConfig> = emptyList(),
+        incomingKeyframes: List<KeyframeConfig> = emptyList(),
+        onProgress: (Float) -> Unit = {},
+    ): TransitionResult? {
+        val outputFile = File(context.cacheDir, "transition_${System.currentTimeMillis()}.mp4")
+        val workDir = File(context.cacheDir, "transition_work_${System.currentTimeMillis()}")
+        workDir.mkdirs()
+
+        Log.i(
+            RENDER_TAG,
+            "Transition pre-render: type=$type dir=$direction, " +
+                    "out=${outTailStartUs / 1000}..${outTailEndUs / 1000}ms, " +
+                    "in=${inHeadStartUs / 1000}..${inHeadEndUs / 1000}ms"
+        )
+
+        try {
+            // 1) Decode both segments to packed I420 frames, spilled to disk so
+            //    long/high-res transitions don't OOM the heap.
+            val outSeg = decodeSegment(
+                context, outgoingPath, outTailStartUs, outTailEndUs, File(workDir, "out_frames.i420")
+            )
+            val inSeg = decodeSegment(
+                context, incomingPath, inHeadStartUs, inHeadEndUs, File(workDir, "in_frames.i420")
+            )
+
+            if (outSeg == null || inSeg == null ||
+                outSeg.frameCount == 0 || inSeg.frameCount == 0
+            ) {
+                Log.w(RENDER_TAG, "Transition: failed to decode one of the segments")
+                return null
+            }
+            if (outSeg.width != inSeg.width || outSeg.height != inSeg.height) {
+                Log.w(
+                    RENDER_TAG,
+                    "Transition: display size mismatch " +
+                            "(${outSeg.width}x${outSeg.height} vs ${inSeg.width}x${inSeg.height}); " +
+                            "falling back to hard cut"
+                )
+                return null
+            }
+
+            val width = outSeg.width
+            val height = outSeg.height
+            val tailDurationUs = (outTailEndUs - outTailStartUs).coerceAtLeast(1L)
+            // Number of OUTPUT frames. When [outputDurationUs] is shorter than the
+            // decoded tail (clip sped up) we emit proportionally fewer frames so
+            // the full tail/head footage is replayed faster; when it is longer
+            // (slowed down) we emit more. Defaults to the decoded tail (1×).
+            val frameCount = ClipTransitionGeometry.outputFrameCount(
+                decodedTailFrames = outSeg.frameCount,
+                tailSourceDurationUs = tailDurationUs,
+                outputDurationUs = outputDurationUs,
+            )
+            val effectiveDurationUs =
+                if (outputDurationUs > 0L) outputDurationUs else tailDurationUs
+            val frameDurationUs = (effectiveDurationUs / frameCount).coerceAtLeast(1L)
+
+            // 2) Pre-encode the cross-faded audio (best effort, no muxer yet).
+            var audioPre: AudioPreEncoded? = null
+            if (includeAudio) {
+                try {
+                    audioPre = preEncodeCrossfadeAudio(
+                        context,
+                        CrossfadeSide(
+                            outgoingPath, outTailStartUs, outTailEndUs,
+                            outgoingVolume, outgoingEqualizer,
+                        ),
+                        CrossfadeSide(
+                            incomingPath, inHeadStartUs, inHeadEndUs,
+                            incomingVolume, incomingEqualizer,
+                        ),
+                        curve, effectiveDurationUs, workDir
+                    )
+                } catch (e: Exception) {
+                    Log.w(RENDER_TAG, "Transition audio crossfade failed: ${e.message}")
+                    audioPre = null
+                }
+            }
+
+            // 3) Encode the blended video frames into the shared muxer. The
+            //    frames are already upright, so the output carries no rotation.
+            val muxer = MediaMuxer(outputFile.absolutePath, MediaMuxer.OutputFormat.MUXER_OUTPUT_MPEG_4)
+            var muxerStarted = false
+            var audioTrackIdx = -1
+            var videoTrackIdx = -1
+            val encoder = createEncoder(width, height, frameDurationUs)
+            val encInfo = MediaCodec.BufferInfo()
+            var outFramesRaf: RandomAccessFile? = null
+            var inFramesRaf: RandomAccessFile? = null
+
+            try {
+                // Read decoded frames back from disk one at a time; since they
+                // are fixed-size each output frame maps to a byte offset, so the
+                // heap only ever holds one frame per side.
+                val outRaf = RandomAccessFile(outSeg.framesFile, "r").also { outFramesRaf = it }
+                val inRaf = RandomAccessFile(inSeg.framesFile, "r").also { inFramesRaf = it }
+                val outFrameBuf = ByteArray(outSeg.frameBytes)
+                val inFrameBuf = ByteArray(inSeg.frameBytes)
+                // A side with keyframes is moved into a buffer of its own, so
+                // the decoded frame it reads from stays intact.
+                val outMoved = Motion(outgoingKeyframes, outSeg)
+                val inMoved = Motion(incomingKeyframes, inSeg)
+                var nextEncoderFrame = 0
+                var outputDone = false
+
+                // Feed all blended frames, draining the encoder as we go.
+                while (!outputDone) {
+                    // Feed one frame if available.
+                    if (nextEncoderFrame < frameCount) {
+                        val inIdx = encoder.dequeueInputBuffer(ENCODER_TIMEOUT_US)
+                        if (inIdx >= 0) {
+                            val progress = if (frameCount > 1) {
+                                nextEncoderFrame.toDouble() / (frameCount - 1)
+                            } else 1.0
+                            val eased = applyEasing(progress, curve)
+                            // Sample BOTH sides by progress so each source range
+                            // (tail/head) is replayed across the output frames,
+                            // applying that clip's playback speed to its footage.
+                            val aIdx = if (frameCount > 1) {
+                                (progress * (outSeg.frameCount - 1)).roundToInt()
+                            } else outSeg.frameCount - 1
+                            val bIdx = if (frameCount > 1) {
+                                (progress * (inSeg.frameCount - 1)).roundToInt()
+                            } else inSeg.frameCount - 1
+                            val aFrame = aIdx.coerceIn(0, outSeg.frameCount - 1)
+                            val bFrame = bIdx.coerceIn(0, inSeg.frameCount - 1)
+                            readFrame(outRaf, aFrame, outFrameBuf)
+                            readFrame(inRaf, bFrame, inFrameBuf)
+                            val outFrame = outMoved.apply(outFrameBuf, aFrame)
+                            val inFrame = inMoved.apply(inFrameBuf, bFrame)
+                            val blended = if (ClipTransitionEffects.handles(type)) {
+                                ClipTransitionEffects.compose(
+                                    type, direction, outFrame, inFrame,
+                                    width, height, eased, progress, effectiveDurationUs,
+                                )
+                            } else {
+                                blendFrame(
+                                    outFrame, inFrame,
+                                    width, height, eased, type, direction
+                                )
+                            }
+                            val encImage = encoder.getInputImage(inIdx)
+                            if (encImage != null) {
+                                i420ToImage(blended, encImage, width, height)
+                                encoder.queueInputBuffer(
+                                    inIdx, 0, width * height * 3 / 2,
+                                    nextEncoderFrame * frameDurationUs, 0
+                                )
+                            } else {
+                                encoder.queueInputBuffer(
+                                    inIdx, 0, 0, nextEncoderFrame * frameDurationUs, 0
+                                )
+                            }
+                            nextEncoderFrame++
+                            onProgress((nextEncoderFrame.toFloat() / frameCount).coerceIn(0f, 1f))
+                            if (nextEncoderFrame == frameCount) {
+                                // Signal EOS after the final frame.
+                                val eosIdx = encoder.dequeueInputBuffer(ENCODER_TIMEOUT_US)
+                                if (eosIdx >= 0) {
+                                    encoder.queueInputBuffer(
+                                        eosIdx, 0, 0,
+                                        nextEncoderFrame * frameDurationUs,
+                                        MediaCodec.BUFFER_FLAG_END_OF_STREAM
+                                    )
+                                }
+                            }
+                        }
+                    }
+
+                    // Drain available encoder output.
+                    val outIdx = encoder.dequeueOutputBuffer(encInfo, ENCODER_TIMEOUT_US)
+                    when {
+                        outIdx == MediaCodec.INFO_TRY_AGAIN_LATER -> { /* keep feeding */ }
+                        outIdx == MediaCodec.INFO_OUTPUT_FORMAT_CHANGED -> {
+                            audioPre?.let { audioTrackIdx = muxer.addTrack(it.format) }
+                            videoTrackIdx = muxer.addTrack(encoder.outputFormat)
+                            muxer.start()
+                            muxerStarted = true
+                        }
+                        outIdx >= 0 -> {
+                            val outBuf = encoder.getOutputBuffer(outIdx)!!
+                            if ((encInfo.flags and MediaCodec.BUFFER_FLAG_CODEC_CONFIG) != 0) {
+                                encInfo.size = 0
+                            }
+                            if (encInfo.size > 0 && muxerStarted && videoTrackIdx >= 0) {
+                                outBuf.position(encInfo.offset)
+                                outBuf.limit(encInfo.offset + encInfo.size)
+                                muxer.writeSampleData(videoTrackIdx, outBuf, encInfo)
+                            }
+                            encoder.releaseOutputBuffer(outIdx, false)
+                            if ((encInfo.flags and MediaCodec.BUFFER_FLAG_END_OF_STREAM) != 0) {
+                                outputDone = true
+                            }
+                        }
+                    }
+                }
+
+                // Replay buffered audio packets into the shared muxer.
+                audioPre?.let { pre ->
+                    if (muxerStarted && audioTrackIdx >= 0) {
+                        try {
+                            writeBufferedAudio(muxer, audioTrackIdx, pre.packetsFile)
+                        } catch (e: Exception) {
+                            Log.w(RENDER_TAG, "Transition audio remux failed: ${e.message}")
+                        }
+                    }
+                }
+            } finally {
+                try { encoder.stop() } catch (_: Exception) {}
+                try { encoder.release() } catch (_: Exception) {}
+                if (muxerStarted) {
+                    try { muxer.stop() } catch (_: Exception) {}
+                }
+                try { muxer.release() } catch (_: Exception) {}
+                try { audioPre?.packetsFile?.delete() } catch (_: Exception) {}
+                try { outFramesRaf?.close() } catch (_: Exception) {}
+                try { inFramesRaf?.close() } catch (_: Exception) {}
+            }
+
+            val durationUs = frameCount * frameDurationUs
+            Log.i(
+                RENDER_TAG,
+                "Transition pre-render done: ${outputFile.length()} bytes, " +
+                        "${durationUs / 1000}ms, $frameCount frames"
+            )
+            return TransitionResult(outputFile.absolutePath, durationUs)
+        } catch (e: Exception) {
+            Log.e(RENDER_TAG, "Transition pre-render failed: ${e.message}", e)
+            outputFile.delete()
+            return null
+        } finally {
+            workDir.deleteRecursively()
+        }
+    }
+
+    /** Deletes transition temp files (best effort). */
+    fun cleanupFiles(paths: Collection<String>) {
+        for (path in paths) {
+            try {
+                val f = File(path)
+                if (f.exists() && f.name.startsWith("transition_")) f.delete()
+            } catch (_: Exception) { /* ignore */ }
+        }
+    }
+
+    // ---------------------------------------------------------------------
+    // VIDEO DECODE
+    // ---------------------------------------------------------------------
+
+    /**
+     * A decoded transition segment whose frames are **spilled to disk** rather
+     * than held in the heap. Frames are packed I420 in display orientation
+     * ([width]×[height] is the size the clip shows at, not its coded size),
+     * each exactly [frameBytes] long, written sequentially to [framesFile];
+     * frame `i` lives at byte offset `i * frameBytes`, so the encoder can
+     * random-access any frame with a single seek. This bounds heap use to one
+     * frame per side regardless of transition duration/fps/resolution — the
+     * prior in-heap `List<ByteArray>` held every frame at once and OOM'd on
+     * long 1080p transitions.
+     */
+    private class DecodedSegment(
+        val framesFile: File,
+        val frameCount: Int,
+        val frameBytes: Int,
+        val width: Int,
+        val height: Int,
+        /** The source timestamp of each frame, in the order they were written. */
+        val ptsUs: LongArray,
+    )
+
+    /**
+     * Moves the frames of [segment] by [keyframes], each by its own source
+     * timestamp; a side without keyframes passes its frames through.
+     */
+    private class Motion(
+        private val keyframes: List<KeyframeConfig>,
+        private val segment: DecodedSegment,
+    ) {
+        private val moved = if (keyframes.isEmpty()) null else ByteArray(segment.frameBytes)
+
+        /** [frame], decoded frame [index] of the segment, as it is to be blended. */
+        fun apply(frame: ByteArray, index: Int): ByteArray {
+            val out = moved ?: return frame
+            val motion = segmentMotionAt(keyframes, segment.ptsUs[index])
+            if (motion == null || motion.isIdentity) return frame
+            I420Motion.warp(frame, segment.width, segment.height, motion, out)
+            return out
+        }
+    }
+
+    /**
+     * Decodes [path] within [[startUs]..[endUs]] into packed I420 frames,
+     * writing each frame sequentially to [framesFile] (one fixed-size frame
+     * after another) instead of accumulating them in the heap.
+     *
+     * Decoding to an [Image] does not apply the container rotation, so each
+     * frame is turned upright here. That is what lets a clip stored landscape
+     * with a 90°/270° flag blend with one stored upright, and it means the
+     * blended output needs no orientation hint of its own.
+     */
+    private fun decodeSegment(
+        context: Context, path: String, startUs: Long, endUs: Long, framesFile: File,
+    ): DecodedSegment? {
+        val extractor = openMediaExtractor(context, path)
+        val videoTrackIndex = findTrack(extractor, "video/") ?: run {
+            extractor.release(); return null
+        }
+        extractor.selectTrack(videoTrackIndex)
+        val inputFormat = extractor.getTrackFormat(videoTrackIndex)
+        val mime = inputFormat.getString(MediaFormat.KEY_MIME) ?: run {
+            extractor.release(); return null
+        }
+        val codedWidth = inputFormat.getInteger(MediaFormat.KEY_WIDTH)
+        val codedHeight = inputFormat.getInteger(MediaFormat.KEY_HEIGHT)
+        val rotation = if (inputFormat.containsKey(MediaFormat.KEY_ROTATION))
+            inputFormat.getInteger(MediaFormat.KEY_ROTATION) else 0
+        val (width, height) = I420Rotation.displaySize(codedWidth, codedHeight, rotation)
+        val frameBytes = width * height * 3 / 2
+        val quarterTurns = I420Rotation.quarterTurns(rotation)
+
+        val decoderFormat = inputFormat.also {
+            it.setInteger(
+                MediaFormat.KEY_COLOR_FORMAT,
+                MediaCodecInfo.CodecCapabilities.COLOR_FormatYUV420Flexible
+            )
+            // The frames are turned upright below, so the decoder must hand
+            // them out as coded (as SequentialFrameDecoder does for the same
+            // reason) rather than apply the container rotation itself.
+            if (rotation != 0) it.setInteger(MediaFormat.KEY_ROTATION, 0)
+        }
+        val decoder = MediaCodec.createDecoderByType(mime)
+        decoder.configure(decoderFormat, null, null, 0)
+        decoder.start()
+
+        // Spill frames to disk as they decode: a long 1080p transition holds
+        // hundreds of MB of I420 frames, which OOM'd when kept in a list.
+        val framesOut = framesFile.outputStream().buffered()
+        // One packed frame as coded and one turned upright, reused for every
+        // frame so the loop does not churn two multi-MB arrays per frame; an
+        // unrotated clip needs no second buffer.
+        val coded = ByteArray(frameBytes)
+        val upright = if (quarterTurns == 0) coded else ByteArray(frameBytes)
+        var frameCount = 0
+        val ptsUs = ArrayList<Long>()
+        val info = MediaCodec.BufferInfo()
+        var inputDone = false
+        var outputDone = false
+
+        extractor.seekTo(startUs, MediaExtractor.SEEK_TO_PREVIOUS_SYNC)
+        try {
+            while (!outputDone) {
+                if (!inputDone) {
+                    val inIdx = decoder.dequeueInputBuffer(DECODER_TIMEOUT_US)
+                    if (inIdx >= 0) {
+                        val t = extractor.sampleTime
+                        if (t < 0 || t >= endUs) {
+                            decoder.queueInputBuffer(
+                                inIdx, 0, 0, 0, MediaCodec.BUFFER_FLAG_END_OF_STREAM
+                            )
+                            inputDone = true
+                        } else {
+                            val buf = decoder.getInputBuffer(inIdx)!!
+                            buf.clear()
+                            val size = extractor.readSampleData(buf, 0)
+                            if (size < 0) {
+                                decoder.queueInputBuffer(
+                                    inIdx, 0, 0, 0, MediaCodec.BUFFER_FLAG_END_OF_STREAM
+                                )
+                                inputDone = true
+                            } else {
+                                decoder.queueInputBuffer(inIdx, 0, size, t, extractor.sampleFlags)
+                                extractor.advance()
+                            }
+                        }
+                    }
+                }
+
+                val outIdx = decoder.dequeueOutputBuffer(info, DECODER_TIMEOUT_US)
+                when {
+                    outIdx == MediaCodec.INFO_TRY_AGAIN_LATER -> {}
+                    outIdx == MediaCodec.INFO_OUTPUT_FORMAT_CHANGED -> {}
+                    outIdx >= 0 -> {
+                        if (info.size > 0 && info.presentationTimeUs in startUs until endUs) {
+                            val image = decoder.getOutputImage(outIdx)
+                            if (image != null) {
+                                imageToI420(image, codedWidth, codedHeight, coded)
+                                image.close()
+                                if (quarterTurns != 0) {
+                                    I420Rotation.rotate(
+                                        coded, codedWidth, codedHeight, rotation, upright
+                                    )
+                                }
+                                framesOut.write(upright)
+                                ptsUs.add(info.presentationTimeUs)
+                                frameCount++
+                            }
+                        }
+                        decoder.releaseOutputBuffer(outIdx, false)
+                        if ((info.flags and MediaCodec.BUFFER_FLAG_END_OF_STREAM) != 0) {
+                            outputDone = true
+                        }
+                    }
+                }
+            }
+        } finally {
+            try { decoder.stop() } catch (_: Exception) {}
+            try { decoder.release() } catch (_: Exception) {}
+            try { extractor.release() } catch (_: Exception) {}
+            try { framesOut.close() } catch (_: Exception) {}
+        }
+
+        if (frameCount == 0) {
+            framesFile.delete()
+            return null
+        }
+        return DecodedSegment(
+            framesFile, frameCount, frameBytes, width, height, ptsUs.toLongArray()
+        )
+    }
+
+    /**
+     * Reads frame [index] (0-based) from a disk-spilled segment into [buf],
+     * which must be exactly one frame ([DecodedSegment.frameBytes]) long. Frames
+     * are fixed-size and packed sequentially, so this is a single seek + read.
+     */
+    private fun readFrame(raf: RandomAccessFile, index: Int, buf: ByteArray) {
+        raf.seek(index.toLong() * buf.size)
+        raf.readFully(buf)
+    }
+
+    // ---------------------------------------------------------------------
+    // BLENDING
+    // ---------------------------------------------------------------------
+
+    /**
+     * Blends two packed I420 frames [a] (outgoing) and [b] (incoming) according
+     * to the transition [type]/[direction] at eased [p] (0 = fully outgoing,
+     * 1 = fully incoming).
+     *
+     * Rows (and chunks of the dissolve) are blended on every core, and the
+     * type and direction are resolved once rather than per pixel: blending
+     * one row at a time and comparing both strings at every pixel, a 0.5 s
+     * slide between 1080×1920 clips took 6.5 s to pre-render on a Galaxy S26.
+     *
+     * Internal for the JVM tests.
+     */
+    internal fun blendFrame(
+        a: ByteArray, b: ByteArray, w: Int, h: Int,
+        p: Double, type: String, direction: String,
+    ): ByteArray {
+        val out = ByteArray(a.size)
+        if (type == "dissolve") {
+            // Linear per-component blend across all three planes.
+            val inv = 1.0 - p
+            val chunk = 4096
+            ClipTransitionEffects.forEachRow((a.size + chunk - 1) / chunk) { part ->
+                for (i in part * chunk until min(a.size, (part + 1) * chunk)) {
+                    val av = a[i].toInt() and 0xFF
+                    val bv = b[i].toInt() and 0xFF
+                    out[i] = (av * inv + bv * p).roundToInt().coerceIn(0, 255).toByte()
+                }
+            }
+            return out
+        }
+
+        val cw = w / 2
+        val ch = h / 2
+        val ySize = w * h
+        val cSize = cw * ch
+        val kind = when (type) {
+            "wipe" -> GeometricBlend.WIPE
+            "slide" -> GeometricBlend.SLIDE
+            "push" -> GeometricBlend.PUSH
+            else -> GeometricBlend.NONE
+        }
+
+        // Y plane.
+        composePlane(a, b, out, 0, w, h, p, kind, direction)
+        // U plane.
+        composePlane(a, b, out, ySize, cw, ch, p, kind, direction)
+        // V plane.
+        composePlane(a, b, out, ySize + cSize, cw, ch, p, kind, direction)
+        return out
+    }
+
+    /** The geometric transitions [composePlane] draws. */
+    private enum class GeometricBlend { WIPE, SLIDE, PUSH, NONE }
+
+    /**
+     * Composes a single plane for geometric transitions (wipe/slide/push) by
+     * selecting, per output pixel, a source ([a] or [b]) and a source
+     * coordinate.
+     */
+    private fun composePlane(
+        a: ByteArray, b: ByteArray, out: ByteArray, offset: Int,
+        pw: Int, ph: Int, p: Double, kind: GeometricBlend, direction: String,
+    ) {
+        val shiftX = (p * pw).roundToInt()
+        val shiftY = (p * ph).roundToInt()
+        val left = direction == "left"
+        val right = direction == "right"
+        val up = direction == "up"
+        val down = direction == "down"
+        ClipTransitionEffects.forEachRow(ph) { y ->
+            for (x in 0 until pw) {
+                val o = offset + y * pw + x
+                var useIncoming = false
+                var sx = x
+                var sy = y
+                when (kind) {
+                    GeometricBlend.WIPE -> {
+                        useIncoming = when {
+                            right -> x < shiftX
+                            left -> x >= pw - shiftX
+                            down -> y < shiftY
+                            up -> y >= ph - shiftY
+                            else -> x < shiftX
+                        }
+                    }
+                    GeometricBlend.SLIDE -> {
+                        // Incoming slides in over a stationary outgoing.
+                        when {
+                            left -> {
+                                val edge = pw - shiftX
+                                if (x >= edge) { useIncoming = true; sx = x - edge }
+                            }
+                            right -> {
+                                if (x < shiftX) { useIncoming = true; sx = x + (pw - shiftX) }
+                            }
+                            up -> {
+                                val edge = ph - shiftY
+                                if (y >= edge) { useIncoming = true; sy = y - edge }
+                            }
+                            down -> {
+                                if (y < shiftY) { useIncoming = true; sy = y + (ph - shiftY) }
+                            }
+                        }
+                    }
+                    GeometricBlend.PUSH -> {
+                        // Both clips move together.
+                        when {
+                            left -> {
+                                if (x < pw - shiftX) { sx = x + shiftX }
+                                else { useIncoming = true; sx = x - (pw - shiftX) }
+                            }
+                            right -> {
+                                if (x >= shiftX) { sx = x - shiftX }
+                                else { useIncoming = true; sx = x + (pw - shiftX) }
+                            }
+                            up -> {
+                                if (y < ph - shiftY) { sy = y + shiftY }
+                                else { useIncoming = true; sy = y - (ph - shiftY) }
+                            }
+                            down -> {
+                                if (y >= shiftY) { sy = y - shiftY }
+                                else { useIncoming = true; sy = y + (ph - shiftY) }
+                            }
+                        }
+                    }
+                    GeometricBlend.NONE -> {}
+                }
+                sx = sx.coerceIn(0, pw - 1)
+                sy = sy.coerceIn(0, ph - 1)
+                val src = if (useIncoming) b else a
+                out[o] = src[offset + sy * pw + sx]
+            }
+        }
+    }
+
+    // ---------------------------------------------------------------------
+    // I420 <-> Image
+    // ---------------------------------------------------------------------
+
+    /**
+     * Packs a decoder [Image] (YUV420 flexible) as I420 into [out], which
+     * must hold `width * height * 3 / 2` bytes.
+     */
+    private fun imageToI420(image: Image, width: Int, height: Int, out: ByteArray) {
+        val cw = width / 2
+        val ch = height / 2
+        readPlane(image.planes[0], out, 0, width, height)
+        readPlane(image.planes[1], out, width * height, cw, ch)
+        readPlane(image.planes[2], out, width * height + cw * ch, cw, ch)
+    }
+
+    private fun readPlane(
+        plane: Image.Plane, dst: ByteArray, dstOffset: Int, pw: Int, ph: Int,
+    ) {
+        val buf = plane.buffer
+        val rowStride = plane.rowStride
+        val pixelStride = plane.pixelStride
+        val row = ByteArray(rowStride)
+        for (r in 0 until ph) {
+            val pos = r * rowStride
+            if (pos >= buf.limit()) break
+            buf.position(pos)
+            val toRead = min(rowStride, buf.remaining())
+            buf.get(row, 0, toRead)
+            val base = dstOffset + r * pw
+            if (pixelStride == 1) {
+                System.arraycopy(row, 0, dst, base, min(pw, toRead))
+            } else {
+                var c = 0
+                while (c < pw && c * pixelStride < toRead) {
+                    dst[base + c] = row[c * pixelStride]
+                    c++
+                }
+            }
+        }
+    }
+
+    /** Writes a packed I420 array into an encoder input [Image]. */
+    private fun i420ToImage(src: ByteArray, image: Image, width: Int, height: Int) {
+        val cw = width / 2
+        val ch = height / 2
+        writePlane(src, 0, image.planes[0], width, height)
+        writePlane(src, width * height, image.planes[1], cw, ch)
+        writePlane(src, width * height + cw * ch, image.planes[2], cw, ch)
+    }
+
+    private fun writePlane(
+        src: ByteArray, srcOffset: Int, plane: Image.Plane, pw: Int, ph: Int,
+    ) {
+        val buf = plane.buffer
+        val rowStride = plane.rowStride
+        val pixelStride = plane.pixelStride
+        for (r in 0 until ph) {
+            val pos = r * rowStride
+            if (pos >= buf.limit()) break
+            val base = srcOffset + r * pw
+            if (pixelStride == 1) {
+                buf.position(pos)
+                buf.put(src, base, min(pw, buf.remaining()))
+            } else {
+                val rowLen = min(rowStride, buf.limit() - pos)
+                val rowBytes = ByteArray(rowLen)
+                buf.position(pos)
+                buf.get(rowBytes)
+                var c = 0
+                while (c < pw && c * pixelStride < rowLen) {
+                    rowBytes[c * pixelStride] = src[base + c]
+                    c++
+                }
+                buf.position(pos)
+                buf.put(rowBytes)
+            }
+        }
+    }
+
+    // ---------------------------------------------------------------------
+    // ENCODER
+    // ---------------------------------------------------------------------
+
+    private fun createEncoder(width: Int, height: Int, frameDurationUs: Long): MediaCodec {
+        val mime = "video/avc"
+        val fps = if (frameDurationUs > 0) {
+            (1_000_000.0 / frameDurationUs).roundToInt().coerceIn(1, 120)
+        } else DEFAULT_FPS
+        val range = avcBitrateRange()
+        val candidates = listOf(width * height * 6, width * height * 4, width * height * 2)
+            .map { if (range != null) it.coerceIn(range.lower, range.upper) else it }
+            .filter { it > 0 }
+            .distinct()
+        var lastError: Exception? = null
+        for (bitrate in candidates) {
+            val format = MediaFormat.createVideoFormat(mime, width, height).apply {
+                setInteger(
+                    MediaFormat.KEY_COLOR_FORMAT,
+                    MediaCodecInfo.CodecCapabilities.COLOR_FormatYUV420Flexible
+                )
+                setInteger(MediaFormat.KEY_BIT_RATE, bitrate)
+                setInteger(MediaFormat.KEY_FRAME_RATE, fps)
+                setInteger(MediaFormat.KEY_I_FRAME_INTERVAL, 1)
+            }
+            val encoder = MediaCodec.createEncoderByType(mime)
+            try {
+                encoder.configure(format, null, null, MediaCodec.CONFIGURE_FLAG_ENCODE)
+                encoder.start()
+                return encoder
+            } catch (e: Exception) {
+                try { encoder.release() } catch (_: Exception) {}
+                lastError = e
+            }
+        }
+        throw IllegalStateException("Failed to configure transition encoder", lastError)
+    }
+
+    private fun avcBitrateRange(): android.util.Range<Int>? = try {
+        MediaCodecList(MediaCodecList.REGULAR_CODECS)
+            .codecInfos
+            .firstOrNull { it.isEncoder && it.supportedTypes.any { t -> t.equals("video/avc", true) } }
+            ?.getCapabilitiesForType("video/avc")
+            ?.videoCapabilities
+            ?.bitrateRange
+    } catch (_: Exception) {
+        null
+    }
+
+    // ---------------------------------------------------------------------
+    // AUDIO CROSSFADE
+    // ---------------------------------------------------------------------
+
+    private data class AudioPreEncoded(val format: MediaFormat, val packetsFile: File)
+
+    /** One clip's side of an audio crossfade: its source range and own audio settings. */
+    private class CrossfadeSide(
+        val path: String,
+        val startUs: Long,
+        val endUs: Long,
+        val volume: Float?,
+        val equalizer: EqualizerConfig?,
+    ) {
+        /** Whether the clip plays silent, so its side is silence, decoded or not. */
+        val isMuted: Boolean get() = volume != null && volume <= 0f
+    }
+
+    /**
+     * Decodes both segments' audio to PCM, time-scales each side to
+     * [outputDurationUs] (so it inherits its clip's playback speed), runs each
+     * through its clip's own equalizer and volume (see [ClipAudioChain]) so the
+     * blend sounds like the clips around it, cross-fades them sample-by-sample
+     * (outgoing gain 1→0, incoming gain 0→1, eased), and re-encodes AAC into a
+     * packet file (so it can be muxed after the video track is known).
+     *
+     * The equalizer runs after the time-scaling: the resampling shifts the
+     * pitch by the clip's speed, so filtering before it would move every band
+     * by that factor too. A muted side is not decoded at all; the other side
+     * fades in or out against silence.
+     */
+    private fun preEncodeCrossfadeAudio(
+        context: Context,
+        outgoing: CrossfadeSide,
+        incoming: CrossfadeSide,
+        curve: String, outputDurationUs: Long, workDir: File,
+    ): AudioPreEncoded? {
+        val outPcm = if (outgoing.isMuted) null else {
+            decodePcm(context, outgoing.path, outgoing.startUs, outgoing.endUs) ?: return null
+        }
+        val inPcm = if (incoming.isMuted) null else {
+            decodePcm(context, incoming.path, incoming.startUs, incoming.endUs) ?: return null
+        }
+        val format = outPcm ?: inPcm ?: return null
+        if (outPcm != null && inPcm != null &&
+            (outPcm.sampleRate != inPcm.sampleRate || outPcm.channelCount != inPcm.channelCount)
+        ) {
+            Log.w(RENDER_TAG, "Transition audio format mismatch; skipping crossfade")
+            return null
+        }
+
+        val sampleRate = format.sampleRate
+        val channelCount = format.channelCount
+        val frameSize = channelCount * 2
+
+        // Resample each side to the output (post-speed) duration so the
+        // crossfade is aligned and the audio matches the blended video length.
+        val targetFrames = if (outputDurationUs > 0L) {
+            ((outputDurationUs * sampleRate) / 1_000_000L).toInt().coerceAtLeast(1)
+        } else {
+            max(outPcm?.pcm?.size ?: 0, inPcm?.pcm?.size ?: 0) / frameSize
+        }
+        if (targetFrames <= 0) return null
+
+        val outScaled = outPcm?.let {
+            ClipAudioChain.apply(
+                resamplePcm(it.pcm, frameSize, targetFrames),
+                sampleRate, channelCount, outgoing.volume, outgoing.equalizer,
+            )
+        } ?: ByteArray(targetFrames * frameSize)
+        val inScaled = inPcm?.let {
+            ClipAudioChain.apply(
+                resamplePcm(it.pcm, frameSize, targetFrames),
+                sampleRate, channelCount, incoming.volume, incoming.equalizer,
+            )
+        } ?: ByteArray(targetFrames * frameSize)
+
+        // Mix into a single PCM buffer with an eased gain ramp.
+        val mixed = ByteArray(targetFrames * frameSize)
+        for (f in 0 until targetFrames) {
+            val p = applyEasing(
+                if (targetFrames > 1) f.toDouble() / (targetFrames - 1) else 1.0,
+                curve
+            )
+            val gOut = (1.0 - p)
+            val gIn = p
+            for (c in 0 until channelCount) {
+                val idx = (f * channelCount + c) * 2
+                val aSample = readSample(outScaled, idx)
+                val bSample = readSample(inScaled, idx)
+                val mixedSample = (aSample * gOut + bSample * gIn)
+                    .roundToInt().coerceIn(-32768, 32767)
+                mixed[idx] = (mixedSample and 0xFF).toByte()
+                mixed[idx + 1] = ((mixedSample shr 8) and 0xFF).toByte()
+            }
+        }
+
+        return encodeAac(mixed, sampleRate, channelCount, workDir)
+    }
+
+    /**
+     * Time-scales 16-bit PCM to [targetFrames] audio frames via nearest-sample
+     * mapping. Speeds up (fewer source frames per output) or slows down without
+     * changing pitch handling here — pitch is acceptable for a sub-second blend.
+     */
+    private fun resamplePcm(pcm: ByteArray, frameSize: Int, targetFrames: Int): ByteArray {
+        val srcFrames = pcm.size / frameSize
+        if (srcFrames <= 0) return ByteArray(targetFrames * frameSize)
+        if (srcFrames == targetFrames) return pcm
+        val out = ByteArray(targetFrames * frameSize)
+        val denom = if (targetFrames > 1) (targetFrames - 1).toDouble() else 1.0
+        for (f in 0 until targetFrames) {
+            val srcFrame = if (targetFrames > 1) {
+                ((f / denom) * (srcFrames - 1)).roundToInt().coerceIn(0, srcFrames - 1)
+            } else {
+                srcFrames - 1
+            }
+            System.arraycopy(pcm, srcFrame * frameSize, out, f * frameSize, frameSize)
+        }
+        return out
+    }
+
+    private fun readSample(pcm: ByteArray, idx: Int): Int {
+        if (idx + 1 >= pcm.size) return 0
+        val lo = pcm[idx].toInt() and 0xFF
+        val hi = pcm[idx + 1].toInt()
+        return (hi shl 8) or lo
+    }
+
+    private class DecodedPcm(val pcm: ByteArray, val sampleRate: Int, val channelCount: Int)
+
+    private fun decodePcm(
+        context: Context, path: String, startUs: Long, endUs: Long,
+    ): DecodedPcm? {
+        val extractor = openMediaExtractor(context, path)
+        val trackIndex = findTrack(extractor, "audio/") ?: run {
+            extractor.release(); return null
+        }
+        extractor.selectTrack(trackIndex)
+        val format = extractor.getTrackFormat(trackIndex)
+        val sampleRate = format.getInteger(MediaFormat.KEY_SAMPLE_RATE)
+        val channelCount = format.getInteger(MediaFormat.KEY_CHANNEL_COUNT)
+        val mime = format.getString(MediaFormat.KEY_MIME) ?: run {
+            extractor.release(); return null
+        }
+        val decoder = MediaCodec.createDecoderByType(mime)
+        decoder.configure(format, null, null, 0)
+        decoder.start()
+
+        val out = java.io.ByteArrayOutputStream()
+        val info = MediaCodec.BufferInfo()
+        var inputDone = false
+        var outputDone = false
+        extractor.seekTo(startUs, MediaExtractor.SEEK_TO_PREVIOUS_SYNC)
+        try {
+            while (!outputDone) {
+                if (!inputDone) {
+                    val inIdx = decoder.dequeueInputBuffer(DECODER_TIMEOUT_US)
+                    if (inIdx >= 0) {
+                        val t = extractor.sampleTime
+                        if (t < 0 || t >= endUs) {
+                            decoder.queueInputBuffer(inIdx, 0, 0, 0, MediaCodec.BUFFER_FLAG_END_OF_STREAM)
+                            inputDone = true
+                        } else {
+                            val buf = decoder.getInputBuffer(inIdx)!!
+                            buf.clear()
+                            val size = extractor.readSampleData(buf, 0)
+                            if (size < 0) {
+                                decoder.queueInputBuffer(inIdx, 0, 0, 0, MediaCodec.BUFFER_FLAG_END_OF_STREAM)
+                                inputDone = true
+                            } else {
+                                decoder.queueInputBuffer(inIdx, 0, size, t, 0)
+                                extractor.advance()
+                            }
+                        }
+                    }
+                }
+                val outIdx = decoder.dequeueOutputBuffer(info, DECODER_TIMEOUT_US)
+                when {
+                    outIdx == MediaCodec.INFO_TRY_AGAIN_LATER -> {}
+                    outIdx == MediaCodec.INFO_OUTPUT_FORMAT_CHANGED -> {}
+                    outIdx >= 0 -> {
+                        if (info.size > 0 && info.presentationTimeUs in startUs until endUs) {
+                            val buf = decoder.getOutputBuffer(outIdx)!!
+                            buf.position(info.offset)
+                            buf.limit(info.offset + info.size)
+                            val tmp = ByteArray(info.size)
+                            buf.get(tmp)
+                            out.write(tmp)
+                        }
+                        decoder.releaseOutputBuffer(outIdx, false)
+                        if ((info.flags and MediaCodec.BUFFER_FLAG_END_OF_STREAM) != 0) outputDone = true
+                    }
+                }
+            }
+        } finally {
+            try { decoder.stop() } catch (_: Exception) {}
+            try { decoder.release() } catch (_: Exception) {}
+            try { extractor.release() } catch (_: Exception) {}
+        }
+        val pcm = out.toByteArray()
+        return if (pcm.isEmpty()) null else DecodedPcm(pcm, sampleRate, channelCount)
+    }
+
+    private fun encodeAac(
+        pcm: ByteArray, sampleRate: Int, channelCount: Int, workDir: File,
+    ): AudioPreEncoded? {
+        val mime = "audio/mp4a-latm"
+        val format = MediaFormat.createAudioFormat(mime, sampleRate, channelCount).apply {
+            setInteger(MediaFormat.KEY_AAC_PROFILE, MediaCodecInfo.CodecProfileLevel.AACObjectLC)
+            setInteger(MediaFormat.KEY_BIT_RATE, 128_000)
+            setInteger(MediaFormat.KEY_MAX_INPUT_SIZE, 16384)
+        }
+        val encoder = MediaCodec.createEncoderByType(mime)
+        encoder.configure(format, null, null, MediaCodec.CONFIGURE_FLAG_ENCODE)
+        encoder.start()
+
+        val packetsFile = File(workDir, "transition_audio_packets.bin")
+        val packetsOut = DataOutputStream(packetsFile.outputStream().buffered())
+        var capturedFormat: MediaFormat? = null
+        val info = MediaCodec.BufferInfo()
+        val frameSize = channelCount * 2
+        val sampleDurationUs = 1_000_000L / sampleRate
+
+        fun drain(eos: Boolean) {
+            while (true) {
+                val idx = encoder.dequeueOutputBuffer(info, ENCODER_TIMEOUT_US)
+                when {
+                    idx == MediaCodec.INFO_TRY_AGAIN_LATER -> if (!eos) return
+                    idx == MediaCodec.INFO_OUTPUT_FORMAT_CHANGED -> capturedFormat = encoder.outputFormat
+                    idx >= 0 -> {
+                        val outBuf = encoder.getOutputBuffer(idx)!!
+                        val isConfig = (info.flags and MediaCodec.BUFFER_FLAG_CODEC_CONFIG) != 0
+                        if (!isConfig && info.size > 0) {
+                            outBuf.position(info.offset)
+                            outBuf.limit(info.offset + info.size)
+                            val bytes = ByteArray(info.size)
+                            outBuf.get(bytes)
+                            packetsOut.writeInt(info.size)
+                            packetsOut.writeLong(info.presentationTimeUs)
+                            packetsOut.writeInt(info.flags)
+                            packetsOut.write(bytes)
+                        }
+                        encoder.releaseOutputBuffer(idx, false)
+                        if ((info.flags and MediaCodec.BUFFER_FLAG_END_OF_STREAM) != 0) return
+                    }
+                }
+            }
+        }
+
+        try {
+            var offset = 0
+            var framePos = 0L
+            while (offset < pcm.size) {
+                val inIdx = encoder.dequeueInputBuffer(ENCODER_TIMEOUT_US)
+                if (inIdx < 0) { drain(false); continue }
+                val buf = encoder.getInputBuffer(inIdx)!!
+                buf.clear()
+                val toWrite = min(buf.capacity(), pcm.size - offset)
+                val aligned = (toWrite / frameSize) * frameSize
+                if (aligned == 0) { encoder.queueInputBuffer(inIdx, 0, 0, 0, 0); break }
+                buf.put(pcm, offset, aligned)
+                encoder.queueInputBuffer(inIdx, 0, aligned, framePos * sampleDurationUs, 0)
+                framePos += aligned / frameSize
+                offset += aligned
+                drain(false)
+            }
+            while (true) {
+                val inIdx = encoder.dequeueInputBuffer(ENCODER_TIMEOUT_US)
+                if (inIdx >= 0) {
+                    encoder.queueInputBuffer(
+                        inIdx, 0, 0, framePos * sampleDurationUs,
+                        MediaCodec.BUFFER_FLAG_END_OF_STREAM
+                    )
+                    break
+                }
+                drain(false)
+            }
+            drain(true)
+        } finally {
+            try { encoder.stop() } catch (_: Exception) {}
+            try { encoder.release() } catch (_: Exception) {}
+            try { packetsOut.close() } catch (_: Exception) {}
+        }
+
+        val fmt = capturedFormat
+        if (fmt == null || packetsFile.length() == 0L) {
+            packetsFile.delete()
+            return null
+        }
+        return AudioPreEncoded(fmt, packetsFile)
+    }
+
+    private fun writeBufferedAudio(muxer: MediaMuxer, audioTrackIndex: Int, packets: File) {
+        val info = MediaCodec.BufferInfo()
+        DataInputStream(packets.inputStream().buffered()).use { input ->
+            while (true) {
+                val size = try { input.readInt() } catch (_: Exception) { break }
+                val ptsUs = input.readLong()
+                val flags = input.readInt()
+                val bytes = ByteArray(size)
+                input.readFully(bytes)
+                val buf = ByteBuffer.allocate(size).apply { put(bytes); flip() }
+                info.set(0, size, ptsUs, flags)
+                muxer.writeSampleData(audioTrackIndex, buf, info)
+            }
+        }
+    }
+
+    // ---------------------------------------------------------------------
+    // SHARED
+    // ---------------------------------------------------------------------
+
+    private fun findTrack(extractor: MediaExtractor, mimePrefix: String): Int? {
+        for (i in 0 until extractor.trackCount) {
+            val mime = extractor.getTrackFormat(i).getString(MediaFormat.KEY_MIME) ?: continue
+            if (mime.startsWith(mimePrefix)) return i
+        }
+        return null
+    }
+}
