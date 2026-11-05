@@ -12,9 +12,12 @@ import '../services/file_operation_backend.dart';
 import '../services/file_operation_service.dart';
 import '../services/file_selection_pattern.dart';
 import '../services/file_operation_profiles.dart';
+import '../services/read_only_operation_backend.dart';
 import 'file_operation_conflict_dialog.dart';
 
-Future<void> showFileOperationDialog(
+/// Returns the completed foreground plan for callers that need to apply a
+/// follow-up operation to successful entries. Cancellation/background is null.
+Future<FileOperationPlan?> showFileOperationDialog(
   BuildContext context,
   WidgetRef ref,
   PanelSide side,
@@ -23,9 +26,10 @@ Future<void> showFileOperationDialog(
   PanelFileOrigin? sourceOrigin,
   PanelFileOrigin? destinationOrigin,
   String? destinationPath,
+  FileOperationBackend? sourceBackend,
 }) async {
-  if (files.isEmpty) return;
-  await showDialog<void>(
+  if (files.isEmpty) return null;
+  final result = await showDialog<FileOperationPlan>(
     context: context,
     barrierDismissible: false,
     builder: (_) => FileOperationDialog(
@@ -35,9 +39,11 @@ Future<void> showFileOperationDialog(
       sourceOrigin: sourceOrigin,
       destinationOrigin: destinationOrigin,
       destinationPath: destinationPath,
+      sourceBackend: sourceBackend,
     ),
   );
   if (context.mounted) ref.read(panelProvider(side)).focusList();
+  return result;
 }
 
 class FileOperationDialog extends ConsumerStatefulWidget {
@@ -49,6 +55,7 @@ class FileOperationDialog extends ConsumerStatefulWidget {
     this.sourceOrigin,
     this.destinationOrigin,
     this.destinationPath,
+    this.sourceBackend,
   });
   final PanelSide side;
   final List<FileItem> files;
@@ -56,6 +63,10 @@ class FileOperationDialog extends ConsumerStatefulWidget {
   final PanelFileOrigin? sourceOrigin;
   final PanelFileOrigin? destinationOrigin;
   final String? destinationPath;
+
+  /// Read-only snapshot source, e.g. archive members. Requires [sourceOrigin]
+  /// for the original account guard. These copies finish in this dialog.
+  final FileOperationBackend? sourceBackend;
   @override
   ConsumerState<FileOperationDialog> createState() =>
       _FileOperationDialogState();
@@ -85,6 +96,7 @@ class _FileOperationDialogState extends ConsumerState<FileOperationDialog> {
   final _origins = <PanelSide, PanelFileOrigin>{};
   late final PanelNotifier _panel;
   PanelFileOrigin? _sourceOrigin;
+  FileOperationBackend? _capturedSourceBackend;
   PanelSide? _destinationSide;
   FileConflictPolicy _fileConflict = FileConflictPolicy.ask;
   DirectoryConflictPolicy _directoryConflict = DirectoryConflictPolicy.merge;
@@ -114,8 +126,21 @@ class _FileOperationDialogState extends ConsumerState<FileOperationDialog> {
     super.initState();
     _panel = ref.read(panelProvider(widget.side));
     try {
+      if (widget.sourceBackend != null &&
+          (widget.sourceOrigin == null ||
+              widget.kind != FileOperationKind.copy)) {
+        throw StateError(
+          'A snapshot copy requires its captured source account and Copy mode.',
+        );
+      }
       _sourceOrigin =
           widget.sourceOrigin ?? _panel.captureOperationOrigin(widget.files);
+      _capturedSourceBackend = widget.sourceBackend == null
+          ? _backend(_sourceOrigin!)
+          : ReadOnlyOperationBackend(
+              widget.sourceBackend!,
+              isAvailable: () => _sourceOrigin!.isCurrent,
+            );
       _origins[widget.side] = _sourceOrigin!;
       final opposite = widget.side == PanelSide.local
           ? PanelSide.remote
@@ -133,7 +158,7 @@ class _FileOperationDialogState extends ConsumerState<FileOperationDialog> {
       _destination.text =
           widget.destinationPath ??
           _origins[_destinationSide]!.source.currentPath;
-      final backend = _backend(_sourceOrigin!);
+      final backend = _capturedSourceBackend!;
       var base = backend.paths.dirname(widget.files.first.path!);
       while (widget.files.any(
         (file) => !backend.paths.isWithin(base, file.path!),
@@ -199,7 +224,7 @@ class _FileOperationDialogState extends ConsumerState<FileOperationDialog> {
     try {
       final plan = await const FileOperationService().prepare(
         files: widget.files,
-        source: _backend(origin),
+        source: _capturedSourceBackend!,
         destination: _backend(destinationOrigin),
         targetDirectory: _destination.text,
         control: _control,
@@ -368,6 +393,7 @@ class _FileOperationDialogState extends ConsumerState<FileOperationDialog> {
   }
 
   Future<void> _start({bool background = false}) async {
+    if (background && widget.sourceBackend != null) return;
     final plan = _plan;
     final sourceOrigin = _sourceOrigin;
     if (plan == null || !plan.canExecute || sourceOrigin == null) return;
@@ -429,9 +455,7 @@ class _FileOperationDialogState extends ConsumerState<FileOperationDialog> {
     final destinationBackend = destinationOrigin == null
         ? null
         : _backend(destinationOrigin);
-    final sourceBackend = _sourceOrigin == null
-        ? null
-        : _backend(_sourceOrigin!);
+    final sourceBackend = _capturedSourceBackend;
     final supportsTime = destinationBackend?.supportsModifiedTime ?? false;
     final supportsLinks =
         (destinationBackend?.supportsSymbolicLinks ?? false) &&
@@ -481,7 +505,7 @@ class _FileOperationDialogState extends ConsumerState<FileOperationDialog> {
               children: [
                 if (_sourceOrigin != null)
                   Text(
-                    'From ${_sourceOrigin!.source.displayName} · original item paths',
+                    'From ${sourceBackend?.label ?? _sourceOrigin!.source.displayName} · original item paths',
                   ),
                 const SizedBox(height: 12),
                 DropdownButtonFormField<PanelSide>(
@@ -1003,14 +1027,17 @@ class _FileOperationDialogState extends ConsumerState<FileOperationDialog> {
             ),
           ] else ...[
             TextButton(
-              onPressed: _preparing ? null : () => Navigator.pop(context),
+              onPressed: _preparing
+                  ? null
+                  : () => Navigator.pop(context, _finished ? _plan : null),
               child: Text(_finished ? 'Close' : 'Cancel'),
             ),
             OutlinedButton(
               onPressed: _preparing || _sourceOrigin == null ? null : _preview,
               child: const Text('Preview'),
             ),
-            if (_fileConflict != FileConflictPolicy.ask &&
+            if (widget.sourceBackend == null &&
+                _fileConflict != FileConflictPolicy.ask &&
                 _directoryConflict != DirectoryConflictPolicy.ask)
               TextButton(
                 onPressed:

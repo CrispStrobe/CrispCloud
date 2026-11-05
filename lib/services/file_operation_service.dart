@@ -1,9 +1,11 @@
 import 'dart:async';
+import 'dart:convert';
 
 import 'package:crypto/crypto.dart';
 import 'package:path/path.dart' as p;
 
 import '../models/file_item.dart';
+import '../models/storage_reference.dart';
 import 'file_operation_options.dart';
 import 'destination_name_mask.dart';
 import 'storage_transfer_contract.dart';
@@ -16,7 +18,11 @@ export 'file_operation_options.dart';
 abstract class FileOperationBackend {
   Object get identity;
   String? get persistentStorageId => null;
+  StorageReference? get storageReference => null;
   bool get canRecover => false;
+
+  /// The verifier runs against a complete temporary file before replacement.
+  bool get supportsStagedVerification => false;
   StorageTransferCapabilities get capabilities =>
       const StorageTransferCapabilities();
   String get label;
@@ -116,7 +122,9 @@ class FileOperationEntry {
   FileOperationOutcome outcome = FileOperationOutcome.pending;
   String? message;
   Map<String, dynamic>? recovery;
-  bool get failed => outcome == FileOperationOutcome.failed;
+  bool get failed =>
+      outcome == FileOperationOutcome.failed ||
+      outcome == FileOperationOutcome.metadataFailed;
   bool get completed =>
       outcome == FileOperationOutcome.copied ||
       outcome == FileOperationOutcome.moved ||
@@ -131,6 +139,7 @@ class FileOperationPlan {
     required this.options,
     required this.entries,
     required this.errors,
+    this.protectedDestinationPaths = const [],
   });
   final FileOperationBackend source;
   final FileOperationBackend destination;
@@ -138,6 +147,30 @@ class FileOperationPlan {
   final FileOperationOptions options;
   final List<FileOperationEntry> entries;
   final List<String> errors;
+
+  /// Selected sources belonging to this destination account, including sources
+  /// captured by other groups in a mixed-account collection operation.
+  final List<String> protectedDestinationPaths;
+
+  bool overlapsProtectedDestination(String path) {
+    final key = destination.destinationPathKey(path);
+    return protectedDestinationPaths.any((root) {
+      final protected = destination.destinationPathKey(root);
+      return key == protected ||
+          destination.paths.isWithin(protected, key) ||
+          destination.paths.isWithin(key, protected);
+    });
+  }
+
+  void assertDestinationUnprotected(String path) {
+    if (overlapsProtectedDestination(path)) {
+      throw StateError(
+        'Destination overlaps another selected source: $path. '
+        'Choose another name or directory.',
+      );
+    }
+  }
+
   bool get canExecute =>
       errors.isEmpty &&
       entries.any((entry) => entry.outcome == FileOperationOutcome.pending);
@@ -188,6 +221,14 @@ class FileOperationCancelled implements Exception {
   const FileOperationCancelled();
   @override
   String toString() => 'Cancelled';
+}
+
+class FileOperationMetadataFailure implements Exception {
+  const FileOperationMetadataFailure(this.error);
+  final Object error;
+  @override
+  String toString() =>
+      'Contents copied; metadata could not be preserved: $error';
 }
 
 /// Decisions returned by the conflict UI. Cancel stops the entire job.
@@ -248,6 +289,7 @@ class FileOperationService {
     required String targetDirectory,
     FileOperationOptions options = const FileOperationOptions(),
     FileOperationControl? control,
+    List<String> protectedDestinationPaths = const [],
   }) async {
     final entries = <FileOperationEntry>[];
     final errors = <String>[];
@@ -259,11 +301,18 @@ class FileOperationService {
       options: options,
       entries: entries,
       errors: errors,
+      protectedDestinationPaths: List.unmodifiable(protectedDestinationPaths),
     );
     _checkSources(source, destination);
     if (targetDirectory.trim().isEmpty ||
         !destination.paths.isAbsolute(target)) {
       errors.add('Choose an absolute destination directory.');
+      return plan;
+    }
+    if (protectedDestinationPaths.any(
+      (path) => !destination.paths.isAbsolute(path) || path.contains('\u0000'),
+    )) {
+      errors.add('Protected source paths must be absolute paths.');
       return plan;
     }
     if (options.preserveModified && !destination.supportsModifiedTime) {
@@ -466,6 +515,13 @@ class FileOperationService {
         entry.destination = output;
         entry.existing = null;
       }
+      if (plan.overlapsProtectedDestination(output)) {
+        errors.add(
+          'Destination overlaps another selected source: $output. '
+          'Choose another name or directory.',
+        );
+        return;
+      }
       destinations[destination.destinationPathKey(output)] = entry;
       if (file.isFolder && file.isSymlink != true) {
         final children = await source.list(path);
@@ -619,12 +675,21 @@ class FileOperationService {
             'Source changed after preview: ${entry.source.path}',
           );
         }
+        plan.assertDestinationUnprotected(entry.destination);
+        if (entry.recovery?['resumeAfterCommit'] == true) {
+          await _finishCommittedEntry(plan, entry, control, checkpoint);
+          onEntryComplete?.call(entry);
+          continue;
+        }
         var existing = await target.stat(entry.destination);
         _checkSources(source, target);
         if (source.identity == target.identity &&
             existing?.path != null &&
             source.samePath(entry.source.path!, existing!.path!)) {
           throw StateError('Destination resolves to the source itself.');
+        }
+        if (existing?.path != null) {
+          plan.assertDestinationUnprotected(existing!.path!);
         }
         var replace = false;
         var resumeOffset = 0;
@@ -651,8 +716,11 @@ class FileOperationService {
                   decision != FileConflictDecision.merge &&
                   decision != FileConflictDecision.skip &&
                   decision != FileConflictDecision.cancel) ||
-              (!entry.source.isFolder && decision == FileConflictDecision.merge)) {
-            throw StateError('The conflict decision is not valid for this item.');
+              (!entry.source.isFolder &&
+                  decision == FileConflictDecision.merge)) {
+            throw StateError(
+              'The conflict decision is not valid for this item.',
+            );
           }
           if (resolution.applyToAll && resolution.name == null) {
             if (entry.source.isFolder) {
@@ -688,7 +756,9 @@ class FileOperationService {
           }
           if (checkedDestination == null ||
               !_sameVersion(existing, checkedDestination)) {
-            throw StateError('Destination changed while resolving the conflict.');
+            throw StateError(
+              'Destination changed while resolving the conflict.',
+            );
           }
           if (decision == FileConflictDecision.keepBoth) {
             entry.destination = await _availableName(
@@ -707,6 +777,7 @@ class FileOperationService {
               target.paths.dirname(entry.destination),
               name,
             );
+            plan.assertDestinationUnprotected(renamed);
             if (reserved.contains(target.destinationPathKey(renamed)) ||
                 await target.stat(renamed) != null) {
               throw StateError(
@@ -716,6 +787,13 @@ class FileOperationService {
             if (decision == FileConflictDecision.renameSource) {
               entry.destination = renamed;
             } else {
+              entry.recovery = {
+                ...?entry.recovery,
+                'renamedExistingPath': renamed,
+              };
+              plan.assertDestinationUnprotected(
+                existing.path ?? entry.destination,
+              );
               await checkpoint?.call(entry, 'renamingExisting');
               await target.renameExisting(existing, renamed);
               entry.message = 'Previous destination preserved as $renamed';
@@ -753,6 +831,32 @@ class FileOperationService {
         }
         await control.checkpoint();
         _checkSources(source, target);
+        plan.assertDestinationUnprotected(entry.destination);
+        final recoveredStagePath =
+            entry.recovery?['resumeStagePath'] as String?;
+        if (recoveredStagePath != null && !append && resumeOffset == 0) {
+          plan.assertDestinationUnprotected(recoveredStagePath);
+          final staged = await target.stat(recoveredStagePath);
+          if (staged == null ||
+              staged.isFolder ||
+              staged.isSymlink == true ||
+              staged.size == null ||
+              entry.source.size == null ||
+              staged.size! > entry.source.size!) {
+            throw StateError('The saved partial copy is no longer usable.');
+          }
+          await _verifyPrefix(
+            source,
+            entry.source,
+            target,
+            staged,
+            staged.size!,
+            control,
+          );
+          originalDestination = staged;
+          resumeOffset = staged.size!;
+        }
+        await checkpoint?.call(entry, 'creatingParent');
         await _ensureDirectory(target, target.paths.dirname(entry.destination));
         if (entry.source.isFolder && entry.source.isSymlink != true) {
           await _ensureDirectory(target, entry.destination);
@@ -761,11 +865,13 @@ class FileOperationService {
               ? 'Directory created.'
               : 'Merged into existing directory.';
         } else {
+          entry.recovery = {...?entry.recovery, 'append': append};
           await checkpoint?.call(entry, 'writing');
           var nativeMoved = false;
           var nativeCopied = false;
           if (options.preferNative &&
               !replace &&
+              recoveredStagePath == null &&
               !options.verifyContents &&
               source.identity == target.identity &&
               options.kind == FileOperationKind.move) {
@@ -777,6 +883,7 @@ class FileOperationService {
           if (!nativeMoved &&
               options.preferNative &&
               !append &&
+              recoveredStagePath == null &&
               resumeOffset == 0 &&
               entry.source.isSymlink != true &&
               source.identity == target.identity) {
@@ -837,7 +944,20 @@ class FileOperationService {
                 expectedLength,
                 replace: replace,
                 checkpoint: (state) async {
-                  entry.recovery = {...?entry.recovery, ...state};
+                  for (final key in [
+                    'stagingPath',
+                    'backupPath',
+                    'destination',
+                  ]) {
+                    final path = state[key];
+                    if (path is String) plan.assertDestinationUnprotected(path);
+                  }
+                  entry.recovery = {
+                    ...?entry.recovery,
+                    ...state,
+                    if (inputDigest.value != null)
+                      'contentSha256': inputDigest.value!.toString(),
+                  };
                   await checkpoint?.call(entry, state['phase'] as String);
                 },
                 verifyStaged:
@@ -892,32 +1012,11 @@ class FileOperationService {
                 );
               }
             }
+            entry.recovery = {...?entry.recovery, 'dataVerified': true};
             await checkpoint?.call(entry, 'verified');
-            if (options.preserveModified && entry.source.updatedAt != null) {
-              await target.setModified(
-                entry.destination,
-                entry.source.updatedAt!,
-              );
-            }
           }
-          if (options.preservePermissions ||
-              options.preserveOwnership ||
-              options.preserveExtendedAttributes ||
-              options.preserveAcl) {
-            final metadata = await source.readMetadata(entry.source.path!);
-            await target.writeMetadata(
-              entry.destination,
-              TransferMetadata(
-                mode: options.preservePermissions ? metadata.mode : null,
-                owner: options.preserveOwnership ? metadata.owner : null,
-                group: options.preserveOwnership ? metadata.group : null,
-                extendedAttributes: options.preserveExtendedAttributes
-                    ? metadata.extendedAttributes
-                    : const {},
-                acl: options.preserveAcl ? metadata.acl : null,
-              ),
-            );
-          }
+          await checkpoint?.call(entry, 'metadata');
+          await _preserveMetadata(source, target, entry, options);
           if (options.kind == FileOperationKind.move) {
             await control.checkpoint();
             _checkSources(source, target);
@@ -942,10 +1041,17 @@ class FileOperationService {
       } on FileOperationCancelled {
         entry.outcome = FileOperationOutcome.cancelled;
         entry.message = 'Cancelled; source retained.';
+        await checkpoint?.call(entry, 'cancelled');
+      } on FileOperationMetadataFailure catch (error) {
+        entry.outcome = FileOperationOutcome.metadataFailed;
+        entry.message = '$error. Source retained.';
+        stopped = options.stopOnError;
+        await checkpoint?.call(entry, 'metadataFailed');
       } catch (error) {
         entry.outcome = FileOperationOutcome.failed;
         entry.message = error.toString();
         stopped = options.stopOnError;
+        await checkpoint?.call(entry, 'failed');
       }
       onEntryComplete?.call(entry);
     }
@@ -959,10 +1065,13 @@ class FileOperationService {
         try {
           await control.checkpoint();
           _checkSources(source, target);
+          plan.assertDestinationUnprotected(entry.destination);
           await target.setModified(entry.destination, entry.source.updatedAt!);
         } catch (error) {
+          entry.outcome = FileOperationOutcome.metadataFailed;
           entry.message =
               'Contents copied; directory timestamp could not be preserved: $error';
+          await checkpoint?.call(entry, 'metadataFailed');
           onEntryComplete?.call(entry);
         }
       }
@@ -978,6 +1087,7 @@ class FileOperationService {
           _checkSources(source, target);
           // No recursive deletion: excluded/skipped/new files keep their parent.
           if ((await source.list(entry.source.path!)).isEmpty) {
+            await checkpoint?.call(entry, 'deletingSourceDirectory');
             await source.deleteEmptyDirectory(entry.source.path!);
             entry.outcome = FileOperationOutcome.moved;
             entry.message = 'Empty source directory removed.';
@@ -988,9 +1098,89 @@ class FileOperationService {
         } catch (error) {
           entry.message = 'Source directory retained: $error';
         }
+        await checkpoint?.call(entry, 'complete');
         onEntryComplete?.call(entry);
       }
     }
+  }
+
+  Future<void> _preserveMetadata(
+    FileOperationBackend source,
+    FileOperationBackend target,
+    FileOperationEntry entry,
+    FileOperationOptions options,
+  ) async {
+    try {
+      if (entry.source.isSymlink == true &&
+          (options.preserveModified ||
+              options.preservePermissions ||
+              options.preserveOwnership ||
+              options.preserveExtendedAttributes ||
+              options.preserveAcl)) {
+        throw UnsupportedError(
+          'Link metadata cannot be changed without following the target.',
+        );
+      }
+      if (options.preserveModified && entry.source.updatedAt != null) {
+        await target.setModified(entry.destination, entry.source.updatedAt!);
+      }
+      if (options.preservePermissions ||
+          options.preserveOwnership ||
+          options.preserveExtendedAttributes ||
+          options.preserveAcl) {
+        final metadata = await source.readMetadata(entry.source.path!);
+        await target.writeMetadata(
+          entry.destination,
+          TransferMetadata(
+            mode: options.preservePermissions ? metadata.mode : null,
+            owner: options.preserveOwnership ? metadata.owner : null,
+            group: options.preserveOwnership ? metadata.group : null,
+            extendedAttributes: options.preserveExtendedAttributes
+                ? metadata.extendedAttributes
+                : const {},
+            acl: options.preserveAcl ? metadata.acl : null,
+          ),
+        );
+      }
+    } catch (error) {
+      throw FileOperationMetadataFailure(error);
+    }
+  }
+
+  Future<void> _finishCommittedEntry(
+    FileOperationPlan plan,
+    FileOperationEntry entry,
+    FileOperationControl control,
+    Future<void> Function(FileOperationEntry, String)? checkpoint,
+  ) async {
+    await checkpoint?.call(entry, 'finishingCopy');
+    final written = await plan.destination.stat(entry.destination);
+    final expected =
+        entry.recovery?['contentSha256'] ?? entry.recovery?['sourceSha256'];
+    if (written == null ||
+        expected is! String ||
+        await _digest(plan.destination, written, control, plan.source) !=
+            expected) {
+      throw StateError(
+        'The previously copied destination changed. Review it before retrying.',
+      );
+    }
+    await _preserveMetadata(plan.source, plan.destination, entry, plan.options);
+    if (plan.options.kind == FileOperationKind.move) {
+      await control.checkpoint();
+      _checkSources(plan.source, plan.destination);
+      final current = await plan.source.stat(entry.source.path!);
+      if (current == null || !_sameVersion(entry.source, current)) {
+        throw StateError('The source changed before cleanup; it was retained.');
+      }
+      await checkpoint?.call(entry, 'deletingSource');
+      await plan.source.deleteFile(entry.source);
+      entry.outcome = FileOperationOutcome.moved;
+    } else {
+      entry.outcome = FileOperationOutcome.copied;
+    }
+    entry.message = 'Verified earlier copy; finished remaining steps.';
+    await checkpoint?.call(entry, 'complete');
   }
 
   bool _sameVersion(FileItem before, FileItem after) =>
@@ -1010,6 +1200,11 @@ class FileOperationService {
     FileOperationControl control,
     FileOperationBackend other,
   ) async {
+    if (file.isSymlink == true) {
+      return sha256
+          .convert(utf8.encode('link:${file.symlinkTarget}'))
+          .toString();
+    }
     final hash = await sha256
         .bind(
           backend.readFile(file).asyncMap((chunk) async {

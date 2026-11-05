@@ -15,6 +15,7 @@ import 'dart:async';
 import 'dart:convert';
 
 import 'package:crypto/crypto.dart';
+
 import 'dart:io';
 
 import 'package:flutter/foundation.dart';
@@ -27,7 +28,83 @@ import 'dropbox_config_service.dart';
 import 'log_service.dart';
 import 'secure_storage_service.dart';
 
-class DropboxClientAdapter extends CloudStorageClient {
+class DropboxClientAdapter extends CloudStorageClient
+    with CloudTransferOperations {
+  @override
+  StorageTransferCapabilities get transferCapabilities =>
+      const StorageTransferCapabilities(
+        caseSensitivity: StorageCaseSensitivity.insensitive,
+        nativeCopy: true,
+        noReplaceCopy: true,
+        nativeMove: true,
+        atomicMove: true,
+        noReplaceMove: true,
+      );
+
+  @override
+  Future<CloudTransferResult> copyToExact(
+    String sourcePath,
+    String destinationPath, {
+    bool replace = false,
+    String? expectedSourceVersion,
+    String? expectedDestinationVersion,
+    TransferCheckpoint? checkpoint,
+    void Function(int, int)? onProgress,
+  }) async {
+    await _ensureToken();
+    await checkpoint?.call();
+    if (replace ||
+        expectedSourceVersion != null ||
+        expectedDestinationVersion != null) {
+      throw UnsupportedError(
+        'Dropbox exact copy requires an unused destination.',
+      );
+    }
+    final result = await _rpcPost('/files/copy_v2', {
+      'from_path': _dbxPath(sourcePath),
+      'to_path': _dbxPath(destinationPath),
+      'autorename': false,
+    });
+    final metadata = result['metadata'] as Map;
+    return CloudTransferResult(
+      path: metadata['path_display'] as String? ?? destinationPath,
+      id: metadata['id'] as String?,
+      version: metadata['rev'] as String?,
+      size: (metadata['size'] as num?)?.toInt(),
+    );
+  }
+
+  @override
+  Future<CloudTransferResult> moveToExact(
+    String sourcePath,
+    String destinationPath, {
+    bool replace = false,
+    String? expectedSourceVersion,
+    String? expectedDestinationVersion,
+    TransferCheckpoint? checkpoint,
+  }) async {
+    await _ensureToken();
+    await checkpoint?.call();
+    if (replace ||
+        expectedSourceVersion != null ||
+        expectedDestinationVersion != null) {
+      throw UnsupportedError(
+        'Dropbox move cannot enforce a version condition.',
+      );
+    }
+    final result = await _rpcPost('/files/move_v2', {
+      'from_path': _dbxPath(sourcePath),
+      'to_path': _dbxPath(destinationPath),
+      'autorename': false,
+    });
+    final metadata = result['metadata'] as Map;
+    return CloudTransferResult(
+      path: metadata['path_display'] as String? ?? destinationPath,
+      id: metadata['id'] as String?,
+      version: metadata['rev'] as String?,
+    );
+  }
+
   static const _log = Log('DropboxClient');
 
   final DropboxConfigService _config;
@@ -49,9 +126,12 @@ class DropboxClientAdapter extends CloudStorageClient {
   static const _redirectPort = 43825;
 
   DropboxClientAdapter({required dynamic config})
-      : _config = (config is DropboxConfigService)
-            ? config
-            : DropboxConfigService(configPath: '', secureStorage: InMemorySecureStorage());
+    : _config = (config is DropboxConfigService)
+          ? config
+          : DropboxConfigService(
+              configPath: '',
+              secureStorage: InMemorySecureStorage(),
+            );
 
   @override
   String get providerName => 'Dropbox';
@@ -92,7 +172,11 @@ class DropboxClientAdapter extends CloudStorageClient {
   // --- Auth ---
 
   @override
-  Future<void> login(String identity, String password, {String? twoFactorCode}) async {
+  Future<void> login(
+    String identity,
+    String password, {
+    String? twoFactorCode,
+  }) async {
     // identity format: "appKey" or "appKey|appSecret"
     final parts = identity.split('|');
     _appKey = parts[0].trim();
@@ -117,7 +201,9 @@ class DropboxClientAdapter extends CloudStorageClient {
     }
 
     if (kIsWeb) {
-      throw Exception('Dropbox OAuth2 on web requires a different redirect flow.');
+      throw Exception(
+        'Dropbox OAuth2 on web requires a different redirect flow.',
+      );
     }
 
     await _browserOAuthFlow();
@@ -156,10 +242,17 @@ class DropboxClientAdapter extends CloudStorageClient {
     await _ensureToken();
     try {
       final path = remotePath.isEmpty || remotePath == '/' ? '' : remotePath;
-      final arg = json.encode({'resource': {'.tag': 'path', 'path': path}, 'format': 'jpeg', 'size': 'w128h128'});
+      final arg = json.encode({
+        'resource': {'.tag': 'path', 'path': path},
+        'format': 'jpeg',
+        'size': 'w128h128',
+      });
       final resp = await http.post(
         Uri.parse('https://content.dropboxapi.com/2/files/get_thumbnail_v2'),
-        headers: {'Authorization': 'Bearer $_accessToken', 'Dropbox-API-Arg': arg},
+        headers: {
+          'Authorization': 'Bearer $_accessToken',
+          'Dropbox-API-Arg': arg,
+        },
       );
       if (resp.statusCode == 200) return resp.bodyBytes;
     } catch (_) {}
@@ -168,7 +261,9 @@ class DropboxClientAdapter extends CloudStorageClient {
 
   Future<bool> restoreCredentials() async {
     final creds = await _config.readCredentials();
-    if (creds == null || creds['refresh_token'] == null || creds['refresh_token']!.isEmpty) {
+    if (creds == null ||
+        creds['refresh_token'] == null ||
+        creds['refresh_token']!.isEmpty) {
       return false;
     }
     _appKey = creds['app_key'];
@@ -200,7 +295,9 @@ class DropboxClientAdapter extends CloudStorageClient {
   Future<Map<String, dynamic>?> resolvePath(String path) async {
     await _ensureToken();
     try {
-      final resp = await _rpcPost('/files/get_metadata', {'path': _dbxPath(path)});
+      final resp = await _rpcPost('/files/get_metadata', {
+        'path': _dbxPath(path),
+      });
       return resp;
     } catch (_) {
       return null;
@@ -232,7 +329,8 @@ class DropboxClientAdapter extends CloudStorageClient {
         final entry = <String, dynamic>{
           'name': name,
           'uuid': id,
-          if (map['server_modified'] != null) 'lastModified': map['server_modified'],
+          if (map['server_modified'] != null)
+            'lastModified': map['server_modified'],
           if (map['size'] != null) 'size': map['size'] as int,
           // Content hash for delta sync (256-bit block hash)
           if (map['content_hash'] != null) 'content_hash': map['content_hash'],
@@ -273,7 +371,9 @@ class DropboxClientAdapter extends CloudStorageClient {
       if (cursor == null) {
         resp = await _rpcPost('/sharing/list_folders', {'limit': 100});
       } else {
-        resp = await _rpcPost('/sharing/list_folders/continue', {'cursor': cursor});
+        resp = await _rpcPost('/sharing/list_folders/continue', {
+          'cursor': cursor,
+        });
       }
 
       for (final item in (resp['entries'] as List?) ?? []) {
@@ -282,7 +382,9 @@ class DropboxClientAdapter extends CloudStorageClient {
           'name': map['name'] as String? ?? 'Unknown',
           'sharedFolderId': map['shared_folder_id'] as String? ?? '',
           if (map['path_lower'] != null) 'path': map['path_lower'],
-          'accessType': (map['access_type'] as Map<String, dynamic>?)?['.tag'] ?? 'viewer',
+          'accessType':
+              (map['access_type'] as Map<String, dynamic>?)?['.tag'] ??
+              'viewer',
         });
       }
 
@@ -317,7 +419,9 @@ class DropboxClientAdapter extends CloudStorageClient {
     final blockHashes = <int>[];
 
     for (int offset = 0; offset < data.length; offset += blockSize) {
-      final end = (offset + blockSize > data.length) ? data.length : offset + blockSize;
+      final end = (offset + blockSize > data.length)
+          ? data.length
+          : offset + blockSize;
       final block = data.sublist(offset, end);
       blockHashes.addAll(sha256.convert(block).bytes);
     }
@@ -364,7 +468,9 @@ class DropboxClientAdapter extends CloudStorageClient {
     );
 
     if (resp.statusCode != 200) {
-      throw Exception('Dropbox upload failed (${resp.statusCode}): ${resp.body}');
+      throw Exception(
+        'Dropbox upload failed (${resp.statusCode}): ${resp.body}',
+      );
     }
 
     onProgress?.call(fileData.length, fileData.length);
@@ -373,7 +479,10 @@ class DropboxClientAdapter extends CloudStorageClient {
   // --- Download ---
 
   @override
-  Future<Uint8List> downloadFileBytes(String remotePath, {Function(int, int)? onProgress}) async {
+  Future<Uint8List> downloadFileBytes(
+    String remotePath, {
+    Function(int, int)? onProgress,
+  }) async {
     await _ensureToken();
 
     final uri = Uri.parse('$_contentBase/files/download');
@@ -388,7 +497,9 @@ class DropboxClientAdapter extends CloudStorageClient {
     );
 
     if (resp.statusCode != 200) {
-      throw Exception('Dropbox download failed (${resp.statusCode}): ${resp.body}');
+      throw Exception(
+        'Dropbox download failed (${resp.statusCode}): ${resp.body}',
+      );
     }
 
     onProgress?.call(resp.bodyBytes.length, resp.bodyBytes.length);
@@ -396,7 +507,11 @@ class DropboxClientAdapter extends CloudStorageClient {
   }
 
   @override
-  Future<void> downloadFileByPath(String remotePath, String localPath, {Function(int, int)? onProgress}) async {
+  Future<void> downloadFileByPath(
+    String remotePath,
+    String localPath, {
+    Function(int, int)? onProgress,
+  }) async {
     final bytes = await downloadFileBytes(remotePath, onProgress: onProgress);
     await File(localPath).writeAsBytes(bytes);
   }
@@ -414,7 +529,8 @@ class DropboxClientAdapter extends CloudStorageClient {
       });
     } catch (e) {
       // 409 conflict = folder exists — fine
-      if (!e.toString().contains('409') && !e.toString().contains('path/conflict')) {
+      if (!e.toString().contains('409') &&
+          !e.toString().contains('path/conflict')) {
         rethrow;
       }
     }
@@ -561,7 +677,9 @@ class DropboxClientAdapter extends CloudStorageClient {
 
     final resp = await http.post(Uri.parse(_tokenUrl), body: body);
     if (resp.statusCode != 200) {
-      throw Exception('Token refresh failed (${resp.statusCode}): ${resp.body}');
+      throw Exception(
+        'Token refresh failed (${resp.statusCode}): ${resp.body}',
+      );
     }
 
     final data = json.decode(resp.body) as Map<String, dynamic>;
@@ -573,14 +691,19 @@ class DropboxClientAdapter extends CloudStorageClient {
   Future<void> _browserOAuthFlow() async {
     const redirectUri = 'http://localhost:$_redirectPort';
 
-    final authUri = Uri.parse(_authUrl).replace(queryParameters: {
-      'client_id': _appKey!,
-      'redirect_uri': redirectUri,
-      'response_type': 'code',
-      'token_access_type': 'offline', // Request refresh token
-    });
+    final authUri = Uri.parse(_authUrl).replace(
+      queryParameters: {
+        'client_id': _appKey!,
+        'redirect_uri': redirectUri,
+        'response_type': 'code',
+        'token_access_type': 'offline', // Request refresh token
+      },
+    );
 
-    final server = await HttpServer.bind(InternetAddress.loopbackIPv4, _redirectPort);
+    final server = await HttpServer.bind(
+      InternetAddress.loopbackIPv4,
+      _redirectPort,
+    );
 
     if (await canLaunchUrl(authUri)) {
       await launchUrl(authUri, mode: LaunchMode.externalApplication);
@@ -599,7 +722,9 @@ class DropboxClientAdapter extends CloudStorageClient {
           request.response
             ..statusCode = 200
             ..headers.contentType = ContentType.html
-            ..write('<html><body><h2>Authorization denied: $error</h2><p>You can close this window.</p></body></html>');
+            ..write(
+              '<html><body><h2>Authorization denied: $error</h2><p>You can close this window.</p></body></html>',
+            );
           await request.response.close();
           break;
         }
@@ -609,7 +734,9 @@ class DropboxClientAdapter extends CloudStorageClient {
           request.response
             ..statusCode = 200
             ..headers.contentType = ContentType.html
-            ..write('<html><body><h2>Authorization successful!</h2><p>You can close this window and return to CrispCloud.</p></body></html>');
+            ..write(
+              '<html><body><h2>Authorization successful!</h2><p>You can close this window and return to CrispCloud.</p></body></html>',
+            );
           await request.response.close();
           break;
         }
@@ -639,7 +766,9 @@ class DropboxClientAdapter extends CloudStorageClient {
 
     final tokenResp = await http.post(Uri.parse(_tokenUrl), body: tokenBody);
     if (tokenResp.statusCode != 200) {
-      throw Exception('Token exchange failed (${tokenResp.statusCode}): ${tokenResp.body}');
+      throw Exception(
+        'Token exchange failed (${tokenResp.statusCode}): ${tokenResp.body}',
+      );
     }
 
     final tokenData = json.decode(tokenResp.body) as Map<String, dynamic>;
@@ -678,7 +807,9 @@ class DropboxClientAdapter extends CloudStorageClient {
         body: body != null ? json.encode(body) : null,
       );
       if (retryResp.statusCode != 200) {
-        throw Exception('Dropbox API error (${retryResp.statusCode}): ${retryResp.body}');
+        throw Exception(
+          'Dropbox API error (${retryResp.statusCode}): ${retryResp.body}',
+        );
       }
       return json.decode(retryResp.body) as Map<String, dynamic>;
     }
@@ -716,12 +847,14 @@ class DropboxClientAdapter extends CloudStorageClient {
     final matches = (resp['matches'] as List?) ?? [];
 
     return matches.map((m) {
-      final metadata = ((m as Map)['metadata'] as Map)['metadata'] as Map<String, dynamic>;
+      final metadata =
+          ((m as Map)['metadata'] as Map)['metadata'] as Map<String, dynamic>;
       return <String, dynamic>{
         'name': metadata['name'] ?? 'Untitled',
         'id': metadata['id'],
         'path': metadata['path_display'],
-        if (metadata['server_modified'] != null) 'lastModified': metadata['server_modified'],
+        if (metadata['server_modified'] != null)
+          'lastModified': metadata['server_modified'],
         if (metadata['size'] != null) 'size': (metadata['size'] as num).toInt(),
         'isPaper': true,
       };
@@ -732,7 +865,10 @@ class DropboxClientAdapter extends CloudStorageClient {
   ///
   /// [docPath] — the Dropbox path to the Paper document.
   /// [format] — 'markdown' or 'html' (default: 'markdown').
-  Future<String> exportPaperDoc(String docPath, {String format = 'markdown'}) async {
+  Future<String> exportPaperDoc(
+    String docPath, {
+    String format = 'markdown',
+  }) async {
     await _ensureToken();
 
     final uri = Uri.parse('$_contentBase/files/export');

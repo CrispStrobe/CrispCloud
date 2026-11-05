@@ -40,81 +40,173 @@ void main() {
     resolveConflict: resolveConflict,
   );
 
-  group('advanced transfer options', () {
-    test('an exact file name composes with preserved relative parent paths', () async {
-      source.file('/base/sub/old.txt', 'payload');
-      final plan = await prepare(
-        ['/base/sub/old.txt'],
-        options: const FileOperationOptions(
-          destinationName: 'renamed.txt',
-          preserveRelativePaths: true,
-          relativeBase: '/base',
-        ),
-      );
-      expect(plan.errors, isEmpty);
-      expect(plan.entries.single.destination, '/target/sub/renamed.txt');
-      await execute(plan);
-      expect(target.text('/target/sub/renamed.txt'), 'payload');
-      expect(target.contains('/target/sub/old.txt'), isFalse);
-    });
+  group('selected sources on the destination account', () {
+    for (final path in [
+      '/target/report.txt',
+      '/target',
+      '/target/report.txt/child',
+    ]) {
+      test('planning rejects overlap with protected root $path', () async {
+        source.file('/source/report.txt', 'new contents');
+        final plan = await service.prepare(
+          files: [source.item('/source/report.txt')],
+          source: source,
+          destination: target,
+          targetDirectory: '/target',
+          protectedDestinationPaths: [path],
+          options: const FileOperationOptions(
+            fileConflict: FileConflictPolicy.replace,
+          ),
+        );
+        expect(plan.canExecute, isFalse);
+        expect(plan.errors.join(), contains('another selected source'));
+        expect(target.writeAttempts, isEmpty);
+      });
+    }
 
-    test('an exact folder name preserves relative parents and descendant names', () async {
-      source.file('/base/sub/tree/nested/a.txt', 'payload');
-      final plan = await prepare(
-        ['/base/sub/tree'],
+    for (final decision in [
+      FileConflictDecision.renameSource,
+      FileConflictDecision.renameDestination,
+    ]) {
+      test(
+        'dynamic ${decision.name} cannot touch a protected selected path',
+        () async {
+          source.file('/source/report.txt', 'new contents');
+          target.file('/target/report.txt', 'old contents');
+          final plan = await service.prepare(
+            files: [source.item('/source/report.txt')],
+            source: source,
+            destination: target,
+            targetDirectory: '/target',
+            protectedDestinationPaths: ['/target/selected.txt'],
+          );
+          expect(plan.canExecute, isTrue);
+          await service.execute(
+            plan,
+            control: FileOperationControl(),
+            resolveDetailedConflict: (entry, existing) async =>
+                FileConflictResolution(decision, name: 'selected.txt'),
+          );
+          expect(plan.entries.single.failed, isTrue);
+          expect(
+            plan.entries.single.message,
+            contains('another selected source'),
+          );
+          expect(target.writeAttempts, isEmpty);
+          expect(target.text('/target/report.txt'), 'old contents');
+          expect(source.text('/source/report.txt'), 'new contents');
+        },
+      );
+    }
+
+    test('keep-both allocation rechecks protected selected paths', () async {
+      source.file('/source/report.txt', 'new contents');
+      final plan = await service.prepare(
+        files: [source.item('/source/report.txt')],
+        source: source,
+        destination: target,
+        targetDirectory: '/target',
+        protectedDestinationPaths: ['/target/report (1).txt'],
         options: const FileOperationOptions(
-          destinationName: 'renamed',
-          preserveRelativePaths: true,
-          relativeBase: '/base',
+          fileConflict: FileConflictPolicy.keepBoth,
         ),
       );
-      expect(plan.errors, isEmpty);
+      target.file('/target/report.txt', 'appeared after preview');
       await execute(plan);
-      expect(target.text('/target/sub/renamed/nested/a.txt'), 'payload');
-      expect(target.contains('/target/sub/tree'), isFalse);
+      expect(plan.entries.single.failed, isTrue);
+      expect(plan.entries.single.message, contains('another selected source'));
+      expect(target.writeAttempts, isEmpty);
+      expect(target.text('/target/report.txt'), 'appeared after preview');
     });
+  });
+
+  group('advanced transfer options', () {
+    test(
+      'an exact file name composes with preserved relative parent paths',
+      () async {
+        source.file('/base/sub/old.txt', 'payload');
+        final plan = await prepare(
+          ['/base/sub/old.txt'],
+          options: const FileOperationOptions(
+            destinationName: 'renamed.txt',
+            preserveRelativePaths: true,
+            relativeBase: '/base',
+          ),
+        );
+        expect(plan.errors, isEmpty);
+        expect(plan.entries.single.destination, '/target/sub/renamed.txt');
+        await execute(plan);
+        expect(target.text('/target/sub/renamed.txt'), 'payload');
+        expect(target.contains('/target/sub/old.txt'), isFalse);
+      },
+    );
+
+    test(
+      'an exact folder name preserves relative parents and descendant names',
+      () async {
+        source.file('/base/sub/tree/nested/a.txt', 'payload');
+        final plan = await prepare(
+          ['/base/sub/tree'],
+          options: const FileOperationOptions(
+            destinationName: 'renamed',
+            preserveRelativePaths: true,
+            relativeBase: '/base',
+          ),
+        );
+        expect(plan.errors, isEmpty);
+        await execute(plan);
+        expect(target.text('/target/sub/renamed/nested/a.txt'), 'payload');
+        expect(target.contains('/target/sub/tree'), isFalse);
+      },
+    );
 
     for (final kind in FileOperationKind.values) {
-      test('${kind.name} rejects masks that overwrite another selected source', () async {
-        source.file('/source/a.txt', 'first source');
-        source.file('/source/a.txt.bak', 'second source');
+      test(
+        '${kind.name} rejects masks that overwrite another selected source',
+        () async {
+          source.file('/source/a.txt', 'first source');
+          source.file('/source/a.txt.bak', 'second source');
+          final plan = await prepare(
+            ['/source/a.txt', '/source/a.txt.bak'],
+            targetBackend: source,
+            destination: '/source',
+            options: FileOperationOptions(
+              kind: kind,
+              destinationMask: '*.*.bak',
+              fileConflict: FileConflictPolicy.replace,
+            ),
+          );
+          expect(plan.canExecute, isFalse);
+          expect(plan.errors.join(), contains('overlaps a selected source'));
+          await expectLater(execute(plan), throwsStateError);
+          expect(source.writeAttempts, isEmpty);
+          expect(source.text('/source/a.txt'), 'first source');
+          expect(source.text('/source/a.txt.bak'), 'second source');
+        },
+      );
+    }
+
+    test(
+      'a filtered selected source is protected from destination masks',
+      () async {
+        source.file('/source/a.txt', 'copy');
+        source.file('/source/a.txt.bak', 'retain');
         final plan = await prepare(
           ['/source/a.txt', '/source/a.txt.bak'],
           targetBackend: source,
           destination: '/source',
           options: FileOperationOptions(
-            kind: kind,
             destinationMask: '*.*.bak',
             fileConflict: FileConflictPolicy.replace,
+            pattern: FileSelectionPattern('*.txt'),
           ),
         );
         expect(plan.canExecute, isFalse);
         expect(plan.errors.join(), contains('overlaps a selected source'));
-        await expectLater(execute(plan), throwsStateError);
         expect(source.writeAttempts, isEmpty);
-        expect(source.text('/source/a.txt'), 'first source');
-        expect(source.text('/source/a.txt.bak'), 'second source');
-      });
-    }
-
-    test('a filtered selected source is protected from destination masks', () async {
-      source.file('/source/a.txt', 'copy');
-      source.file('/source/a.txt.bak', 'retain');
-      final plan = await prepare(
-        ['/source/a.txt', '/source/a.txt.bak'],
-        targetBackend: source,
-        destination: '/source',
-        options: FileOperationOptions(
-          destinationMask: '*.*.bak',
-          fileConflict: FileConflictPolicy.replace,
-          pattern: FileSelectionPattern('*.txt'),
-        ),
-      );
-      expect(plan.canExecute, isFalse);
-      expect(plan.errors.join(), contains('overlaps a selected source'));
-      expect(source.writeAttempts, isEmpty);
-      expect(source.text('/source/a.txt.bak'), 'retain');
-    });
+        expect(source.text('/source/a.txt.bak'), 'retain');
+      },
+    );
 
     test(
       'destination masks are planned recursively and collisions are rejected',
@@ -543,12 +635,15 @@ void main() {
         ),
       );
       final asked = <String>[];
-      await execute(plan, resolveConflict: (entry, _) async {
-        asked.add(entry.source.path!);
-        return entry.source.path == '/left/common'
-            ? FileConflictDecision.skip
-            : FileConflictDecision.merge;
-      });
+      await execute(
+        plan,
+        resolveConflict: (entry, _) async {
+          asked.add(entry.source.path!);
+          return entry.source.path == '/left/common'
+              ? FileConflictDecision.skip
+              : FileConflictDecision.merge;
+        },
+      );
       expect(asked, ['/left/common', '/right/common']);
       expect(target.contains('/target/common/a.txt'), isFalse);
       expect(target.text('/target/common/b.txt'), 'right');
@@ -563,7 +658,10 @@ void main() {
           directoryConflict: DirectoryConflictPolicy.ask,
         ),
       );
-      await execute(plan, resolveConflict: (_, __) async => FileConflictDecision.keepBoth);
+      await execute(
+        plan,
+        resolveConflict: (_, __) async => FileConflictDecision.keepBoth,
+      );
       expect(plan.entries.first.outcome, FileOperationOutcome.failed);
       expect(plan.entries.first.message, contains('not valid for this item'));
       expect(target.writeAttempts, isEmpty);
@@ -753,39 +851,56 @@ void main() {
   });
 
   group('failure, cancellation, and authentication safety', () {
-    test('a destination edited during conflict inspection is never replaced', () async {
-      source.file('/source/a.txt', 'incoming');
-      target.file('/target/a.txt', 'original');
-      final plan = await prepare(['/source/a.txt']);
-      await execute(plan, resolveConflict: (_, __) async {
-        target.file('/target/a.txt', 'concurrent edit');
-        return FileConflictDecision.replace;
-      });
-      expect(plan.entries.single.outcome, FileOperationOutcome.failed);
-      expect(plan.entries.single.message, contains('Destination changed while resolving'));
-      expect(target.text('/target/a.txt'), 'concurrent edit');
-      expect(target.writeAttempts, isEmpty);
-      expect(source.text('/source/a.txt'), 'incoming');
-    });
+    test(
+      'a destination edited during conflict inspection is never replaced',
+      () async {
+        source.file('/source/a.txt', 'incoming');
+        target.file('/target/a.txt', 'original');
+        final plan = await prepare(['/source/a.txt']);
+        await execute(
+          plan,
+          resolveConflict: (_, __) async {
+            target.file('/target/a.txt', 'concurrent edit');
+            return FileConflictDecision.replace;
+          },
+        );
+        expect(plan.entries.single.outcome, FileOperationOutcome.failed);
+        expect(
+          plan.entries.single.message,
+          contains('Destination changed while resolving'),
+        );
+        expect(target.text('/target/a.txt'), 'concurrent edit');
+        expect(target.writeAttempts, isEmpty);
+        expect(source.text('/source/a.txt'), 'incoming');
+      },
+    );
 
-    test('a source edited during conflict inspection is retained without copying', () async {
-      source.file('/source/a.txt', 'incoming');
-      target.file('/target/a.txt', 'original');
-      final plan = await prepare(
-        ['/source/a.txt'],
-        options: const FileOperationOptions(kind: FileOperationKind.move),
-      );
-      await execute(plan, resolveConflict: (_, __) async {
-        source.file('/source/a.txt', 'concurrent source edit');
-        return FileConflictDecision.replace;
-      });
-      expect(plan.entries.single.outcome, FileOperationOutcome.failed);
-      expect(plan.entries.single.message, contains('Source changed while resolving'));
-      expect(target.text('/target/a.txt'), 'original');
-      expect(target.writeAttempts, isEmpty);
-      expect(source.text('/source/a.txt'), 'concurrent source edit');
-      expect(source.deleted, isEmpty);
-    });
+    test(
+      'a source edited during conflict inspection is retained without copying',
+      () async {
+        source.file('/source/a.txt', 'incoming');
+        target.file('/target/a.txt', 'original');
+        final plan = await prepare([
+          '/source/a.txt',
+        ], options: const FileOperationOptions(kind: FileOperationKind.move));
+        await execute(
+          plan,
+          resolveConflict: (_, __) async {
+            source.file('/source/a.txt', 'concurrent source edit');
+            return FileConflictDecision.replace;
+          },
+        );
+        expect(plan.entries.single.outcome, FileOperationOutcome.failed);
+        expect(
+          plan.entries.single.message,
+          contains('Source changed while resolving'),
+        );
+        expect(target.text('/target/a.txt'), 'original');
+        expect(target.writeAttempts, isEmpty);
+        expect(source.text('/source/a.txt'), 'concurrent source edit');
+        expect(source.deleted, isEmpty);
+      },
+    );
 
     for (final stopOnError in [true, false]) {
       test(

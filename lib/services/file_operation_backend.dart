@@ -7,6 +7,7 @@ import 'package:path/path.dart' as p;
 import 'package:uuid/uuid.dart';
 
 import '../models/file_item.dart';
+import '../models/storage_reference.dart';
 import 'cloud_storage_interface.dart';
 import 'file_operation_service.dart';
 import 'local_file_service.dart';
@@ -30,7 +31,7 @@ FileOperationBackend fileOperationBackend({
 
 class LocalOperationBackend extends FileOperationBackend {
   LocalOperationBackend(this.service, {required bool Function() isCurrent})
-      : _isCurrent = isCurrent;
+    : _isCurrent = isCurrent;
   static final _reference = storageReferenceForSource(
     const LocalPanelSource('/'),
   );
@@ -41,7 +42,12 @@ class LocalOperationBackend extends FileOperationBackend {
   @override
   String get persistentStorageId => _reference.id;
   @override
+  StorageReference get storageReference => _reference;
+  @override
   bool get canRecover => !kIsWeb;
+  @override
+  bool get supportsStagedVerification =>
+      !kIsWeb || service is LocalTransferFileOperations;
   @override
   StorageTransferCapabilities get capabilities => StorageTransferCapabilities(
     caseSensitivity: !kIsWeb && (Platform.isWindows || Platform.isMacOS)
@@ -257,12 +263,54 @@ class LocalOperationBackend extends FileOperationBackend {
   }) async {
     _check();
     if (kIsWeb && service is LocalTransferFileOperations) {
-      await (service as LocalTransferFileOperations).writeTransferStream(
-        path,
-        data,
-        length,
-        replace: replace,
+      final transfer = service as LocalTransferFileOperations;
+      final stagedPath = paths.join(
+        paths.dirname(path),
+        '.crisp-transfer-${const Uuid().v4()}.tmp',
       );
+      await checkpoint?.call({
+        'phase': 'staging',
+        'destination': path,
+        'stagedPath': stagedPath,
+      });
+      var committed = false;
+      try {
+        await transfer.writeTransferStream(
+          stagedPath,
+          data,
+          length,
+          replace: false,
+        );
+        final staged = await stat(stagedPath);
+        if (staged == null) {
+          throw StateError('Browser staged file is unavailable.');
+        }
+        await verifyStaged?.call(staged);
+        _check();
+        await checkpoint?.call({
+          'phase': 'committing',
+          'destination': path,
+          'stagedPath': stagedPath,
+        });
+        await transfer.writeTransferStream(
+          path,
+          transfer.readTransferStream(stagedPath),
+          staged.size,
+          replace: replace,
+        );
+        committed = true;
+        await checkpoint?.call({'phase': 'committed', 'destination': path});
+      } finally {
+        if (isCurrent) {
+          try {
+            await service.deleteEntry(stagedPath, false);
+          } catch (_) {
+            if (!committed) {
+              /* The journal retains the staged path for review. */
+            }
+          }
+        }
+      }
       return;
     }
     if (kIsWeb) {
@@ -483,7 +531,7 @@ class LocalOperationBackend extends FileOperationBackend {
 
 class CloudOperationBackend extends FileOperationBackend {
   CloudOperationBackend(this.client, {required bool Function() isCurrent})
-      : _isCurrent = isCurrent;
+    : _isCurrent = isCurrent;
   final CloudStorageClient client;
   final bool Function() _isCurrent;
   @override
@@ -491,7 +539,11 @@ class CloudOperationBackend extends FileOperationBackend {
   @override
   String get persistentStorageId => storageReferenceForClient(client).id;
   @override
+  StorageReference get storageReference => storageReferenceForClient(client);
+  @override
   bool get canRecover => storageReferenceForClient(client).persistent;
+  @override
+  bool get supportsStagedVerification => true;
   @override
   StorageTransferCapabilities get capabilities => client.transferCapabilities;
   @override
@@ -837,7 +889,9 @@ class CloudOperationBackend extends FileOperationBackend {
     final result = await (client as CloudTransferOperations).moveToExact(
       file.path!,
       destination,
-      expectedSourceVersion: _fileVersion(file),
+      expectedSourceVersion: capabilities.conditionalMove
+          ? _fileVersion(file)
+          : null,
     );
     _check();
     if (destinationPathKey(result.path) != destinationPathKey(destination)) {
@@ -856,18 +910,29 @@ class CloudOperationBackend extends FileOperationBackend {
     TransferCheckpoint? checkpoint,
   }) async {
     _check();
-    if (!capabilities.nativeCopy || client is! CloudTransferOperations) {
+    if (!capabilities.nativeCopy ||
+        !capabilities.noReplaceCopy ||
+        client is! CloudTransferOperations) {
       return false;
     }
     // A replacement still uses staging/backup in writeFile. Native adapters
     // must guarantee exact-name, no-clobber semantics for this direct fast path.
     if (replace) return false;
-    final result = await (client as CloudTransferOperations).copyToExact(
-      file.path!,
-      destination,
-      expectedSourceVersion: _fileVersion(file),
-      checkpoint: checkpoint,
-    );
+    late CloudTransferResult result;
+    try {
+      result = await (client as CloudTransferOperations).copyToExact(
+        file.path!,
+        destination,
+        expectedSourceVersion: capabilities.conditionalCopy
+            ? _fileVersion(file)
+            : null,
+        checkpoint: checkpoint,
+      );
+    } on UnsupportedError {
+      // Adapters may decline a large object or an unsupported conditional
+      // operation before mutation. Stream the same reviewed item instead.
+      return false;
+    }
     _check();
     if (destinationPathKey(result.path) != destinationPathKey(destination)) {
       throw StateError(

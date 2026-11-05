@@ -12,6 +12,9 @@ class StorageTransferCapabilities {
     this.nativeMove = false,
     this.atomicMove = false,
     this.noReplaceMove = false,
+    this.noReplaceCopy = false,
+    this.conditionalCopy = false,
+    this.conditionalMove = false,
     this.conditionalDelete = false,
     this.readRanges = false,
     this.resumableUpload = false,
@@ -35,6 +38,9 @@ class StorageTransferCapabilities {
   /// Local callers must additionally handle cross-volume failure.
   final bool atomicMove;
   final bool noReplaceMove;
+  final bool noReplaceCopy;
+  final bool conditionalCopy;
+  final bool conditionalMove;
   final bool conditionalDelete;
   final bool readRanges;
   final bool resumableUpload;

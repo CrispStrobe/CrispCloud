@@ -44,6 +44,7 @@ import 'package:path/path.dart' as p;
 import 'batch_rename_dialog.dart' show showBatchRenameDialog;
 import 'file_operation_dialog.dart';
 import 'file_clipboard_actions.dart';
+import 'archive_workspace_dialog.dart';
 import '../services/file_operation_service.dart';
 import 'diff_viewer_dialog.dart' show showDiffViewerDialog;
 import 'file_editor_dialog.dart' show showFileEditorDialog;
@@ -136,6 +137,14 @@ void _showResultListContextMenu(
         Icons.content_cut,
         () => copyFilesToClipboard(context, ref, side, cut: true, items: files),
       ),
+      if (files.length == 1 &&
+          !files.single.isFolder &&
+          ArchiveService.isArchive(files.single.name))
+        command(
+          'Manage archive…',
+          Icons.archive_outlined,
+          () => showArchiveWorkspaceDialog(context, ref, side, files.single),
+        ),
       if (files.length == 1)
         command(
           'Open containing folder',
@@ -809,6 +818,22 @@ void showFileContextMenu(
         ),
       );
     }
+  }
+
+  if (!isMultiSelect && !file.isFolder && ArchiveService.isArchive(file.name)) {
+    items.add(
+      PopupMenuItem(
+        child: const ListTile(
+          leading: Icon(Icons.archive_outlined),
+          title: Text('Manage archive…'),
+        ),
+        onTap: () => Future<void>.delayed(Duration.zero, () async {
+          if (context.mounted) {
+            await showArchiveWorkspaceDialog(context, ref, side, file);
+          }
+        }),
+      ),
+    );
   }
 
   // Archive operations (local files only, not on web)

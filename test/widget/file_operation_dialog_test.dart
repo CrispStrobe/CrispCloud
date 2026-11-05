@@ -11,6 +11,7 @@ import 'package:crisp_cloud/services/cloud_storage_interface.dart';
 import 'package:crisp_cloud/services/file_operation_backend.dart';
 import 'package:crisp_cloud/services/file_operation_profiles.dart';
 import 'package:crisp_cloud/services/file_operation_service.dart';
+import 'package:crisp_cloud/services/file_operation_backend.dart';
 import 'package:crisp_cloud/services/local_file_service.dart';
 import 'package:crisp_cloud/services/panel_source_service.dart';
 import 'package:crisp_cloud/widgets/file_operation_dialog.dart';
@@ -196,6 +197,8 @@ void main() {
     WidgetTester tester, {
     FileOperationKind kind = FileOperationKind.copy,
     Size size = const Size(1100, 1000),
+    FileOperationBackend? sourceBackend,
+    PanelFileOrigin? sourceOrigin,
   }) async {
     tester.view.physicalSize = size;
     tester.view.devicePixelRatio = 1;
@@ -210,6 +213,8 @@ void main() {
               side: PanelSide.remote,
               files: files,
               kind: kind,
+              sourceBackend: sourceBackend,
+              sourceOrigin: sourceOrigin,
             ),
           ),
         ),
@@ -269,6 +274,61 @@ void main() {
           'reads: ${cloud.reads}; uploads: ${cloud.uploads}; renames: ${cloud.renamed}',
     );
   }
+
+  testWidgets('snapshot source copies through the captured read backend', (
+    tester,
+  ) async {
+    final snapshot = _Cloud();
+    snapshot.files.clear();
+    snapshot.files['/member.txt'] = utf8.encode('from archive');
+    final origin = container
+        .read(panelProvider(PanelSide.remote))
+        .captureCurrentOrigin();
+    files = [
+      FileItem(
+        name: 'member.txt',
+        path: '/member.txt',
+        isFolder: false,
+        size: 12,
+        updatedAt: DateTime.utc(2026, 1, 1),
+      ),
+    ];
+    await open(
+      tester,
+      sourceBackend: CloudOperationBackend(snapshot, isCurrent: () => true),
+      sourceOrigin: origin,
+    );
+    await useCloudDestination(tester);
+    await tester.tap(find.widgetWithText(OutlinedButton, 'Preview'));
+    await tester.pumpAndSettle();
+    await runOperation(tester, FileOperationKind.copy);
+    expect(cloud.files['/target/member.txt'], utf8.encode('from archive'));
+    expect(snapshot.reads, contains('/member.txt'));
+    expect(cloud.reads, isNot(contains('/member.txt')));
+    expect(find.text('Queue in background'), findsNothing);
+  });
+
+  testWidgets('snapshot override cannot authorize a move or omit its account', (
+    tester,
+  ) async {
+    await open(
+      tester,
+      kind: FileOperationKind.move,
+      sourceBackend: CloudOperationBackend(cloud, isCurrent: () => true),
+    );
+    expect(
+      find.textContaining('requires its captured source account'),
+      findsOneWidget,
+    );
+    expect(
+      tester
+          .widget<OutlinedButton>(
+            find.widgetWithText(OutlinedButton, 'Preview'),
+          )
+          .onPressed,
+      isNull,
+    );
+  });
 
   testWidgets('default destination is the verified opposite storage and path', (
     tester,

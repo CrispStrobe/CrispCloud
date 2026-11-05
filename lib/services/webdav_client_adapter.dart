@@ -1,16 +1,73 @@
 import 'package:crisp_storage/crisp_storage.dart' as storage;
+
 // lib/services/webdav_client_adapter.dart
 import 'dart:async';
+
 import 'package:flutter/foundation.dart';
 import 'package:webdav_client/webdav_client.dart' as webdav;
 import 'package:path/path.dart' as p;
+
 import 'cloud_storage_interface.dart';
 import 'log_service.dart';
 import 'secure_storage_service.dart';
 import 'webdav_config_service.dart';
+
 import 'dart:io' as dart_io;
 
-class WebDavClientAdapter extends CloudStorageClient {
+class WebDavClientAdapter extends CloudStorageClient
+    with CloudTransferOperations {
+  @override
+  StorageTransferCapabilities get transferCapabilities =>
+      const StorageTransferCapabilities(
+        nativeCopy: true,
+        noReplaceCopy: true,
+        nativeMove: true,
+        atomicMove: true,
+        noReplaceMove: true,
+        boundedDownload: !kIsWeb,
+      );
+
+  @override
+  Future<CloudTransferResult> copyToExact(
+    String sourcePath,
+    String destinationPath, {
+    bool replace = false,
+    String? expectedSourceVersion,
+    String? expectedDestinationVersion,
+    TransferCheckpoint? checkpoint,
+    void Function(int, int)? onProgress,
+  }) async {
+    await _ensureClient();
+    await checkpoint?.call();
+    if (expectedSourceVersion != null || expectedDestinationVersion != null) {
+      throw UnsupportedError(
+        'This WebDAV library cannot send conditional copy headers.',
+      );
+    }
+    await _client!.copy(sourcePath, destinationPath, replace);
+    return CloudTransferResult(path: destinationPath);
+  }
+
+  @override
+  Future<CloudTransferResult> moveToExact(
+    String sourcePath,
+    String destinationPath, {
+    bool replace = false,
+    String? expectedSourceVersion,
+    String? expectedDestinationVersion,
+    TransferCheckpoint? checkpoint,
+  }) async {
+    await _ensureClient();
+    await checkpoint?.call();
+    if (expectedSourceVersion != null || expectedDestinationVersion != null) {
+      throw UnsupportedError(
+        'This WebDAV library cannot send conditional move headers.',
+      );
+    }
+    await _client!.rename(sourcePath, destinationPath, replace);
+    return CloudTransferResult(path: destinationPath);
+  }
+
   static const _log = Log('WebDAVClient');
 
   final WebDavConfigService _config;
@@ -25,10 +82,12 @@ class WebDavClientAdapter extends CloudStorageClient {
   String? _host;
 
   WebDavClientAdapter({required dynamic config})
-      : _config = (config is WebDavConfigService)
-            ? config
-            : WebDavConfigService(
-                configPath: '', secureStorage: InMemorySecureStorage());
+    : _config = (config is WebDavConfigService)
+          ? config
+          : WebDavConfigService(
+              configPath: '',
+              secureStorage: InMemorySecureStorage(),
+            );
 
   @override
   String get providerName => 'WebDAV';
@@ -49,14 +108,17 @@ class WebDavClientAdapter extends CloudStorageClient {
     _streamClient?.close();
     _streamClient = kIsWeb
         ? null
-        : storage.RemoteClient(storage.RemoteConnection(
-            id: 'crispcloud-webdav',
-            name: 'WebDAV',
-            kind: 'webdav',
-            url: url,
-            username: user,
-            secret: password,
-            allowLocalHttp: true));
+        : storage.RemoteClient(
+            storage.RemoteConnection(
+              id: 'crispcloud-webdav',
+              name: 'WebDAV',
+              kind: 'webdav',
+              url: url,
+              username: user,
+              secret: password,
+              allowLocalHttp: true,
+            ),
+          );
     _client = webdav.newClient(
       url,
       user: user,
@@ -67,8 +129,11 @@ class WebDavClientAdapter extends CloudStorageClient {
   }
 
   @override
-  Future<void> login(String email, String password,
-      {String? twoFactorCode}) async {
+  Future<void> login(
+    String email,
+    String password, {
+    String? twoFactorCode,
+  }) async {
     String user = email;
     String host = '';
 
@@ -198,10 +263,7 @@ class WebDavClientAdapter extends CloudStorageClient {
       throw Exception('Failed to list path $path: $e');
     }
 
-    return {
-      'folders': folders,
-      'files': files,
-    };
+    return {'folders': folders, 'files': files};
   }
 
   @override
@@ -234,8 +296,10 @@ class WebDavClientAdapter extends CloudStorageClient {
     }
     final sink = dart_io.File(localPath).openWrite();
     try {
-      await for (final chunk
-          in downloadStream(remotePath, onProgress: onProgress)) {
+      await for (final chunk in downloadStream(
+        remotePath,
+        onProgress: onProgress,
+      )) {
         sink.add(chunk);
         // Apply disk backpressure instead of accumulating the whole response.
         await sink.flush();
@@ -246,16 +310,19 @@ class WebDavClientAdapter extends CloudStorageClient {
   }
 
   @override
-  Stream<List<int>> downloadStream(String remotePath,
-      {Function(int, int)? onProgress}) async* {
+  Stream<List<int>> downloadStream(
+    String remotePath, {
+    Function(int, int)? onProgress,
+  }) async* {
     await _ensureClient();
     if (kIsWeb) {
       yield await downloadFileBytes(remotePath, onProgress: onProgress);
       return;
     }
     yield* _streamClient!.downloadStream(
-        Uri(path: remotePath.replaceFirst(RegExp(r'^/+'), '')).toString(),
-        onProgress: onProgress);
+      Uri(path: remotePath.replaceFirst(RegExp(r'^/+'), '')).toString(),
+      onProgress: onProgress,
+    );
   }
 
   @override
@@ -267,8 +334,7 @@ class WebDavClientAdapter extends CloudStorageClient {
   @override
   Future<void> deletePath(String path) async {
     await _ensureClient();
-    await _client!.remove(
-        path); // 'remove' instead of 'removeAll' in 1.2.2 usually, checking common usage
+    await _client!.remove(path); // 'remove' instead of 'removeAll' in 1.2.2 usually, checking common usage
   }
 
   @override

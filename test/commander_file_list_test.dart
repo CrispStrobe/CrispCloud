@@ -92,7 +92,8 @@ class _Auth extends ChangeNotifier implements AuthNotifier {
   dynamic noSuchMethod(Invocation invocation) => super.noSuchMethod(invocation);
 }
 
-class _Local extends Fake implements LocalFileService, ScopedLocalFileOperations {
+class _Local extends Fake
+    implements LocalFileService, ScopedLocalFileOperations {
   @override
   String currentPath = '/';
   String? directory;
@@ -242,7 +243,10 @@ void main() {
     panel.setFilter('.txt');
     expect(panel.displayedFiles!.map((file) => file.name), ['a.txt', 'c.txt']);
     panel.selectAll();
-    expect(panel.selection.map((file) => file.name).toSet(), {'a.txt', 'c.txt'});
+    expect(panel.selection.map((file) => file.name).toSet(), {
+      'a.txt',
+      'c.txt',
+    });
     panel.clearFilter();
     panel.toggleSelection(rows['b.png']!, ctrlKey: true);
     panel.setFilter('.txt');
@@ -251,55 +255,67 @@ void main() {
     panel.clearSelection();
     panel.toggleSelection(rows['a.txt']!);
     panel.toggleSelection(rows['c.txt']!, shiftKey: true);
-    expect(panel.selection.map((file) => file.name).toSet(), {'a.txt', 'c.txt'});
+    expect(panel.selection.map((file) => file.name).toSet(), {
+      'a.txt',
+      'c.txt',
+    });
   });
 
-  test('selection memory resolves fresh rows by original source and path', () async {
-    final panel = await remote();
-    final origin = panel.captureRemoteSearchOrigin();
-    panel.showSearchResults([
-      item('/one/same.txt'),
-      item('/two/same.txt'),
-    ], origin: origin);
-    panel.applyPatternSelection(
-      FileSelectionPattern('/two/*', matchFullPath: true),
-    );
-    final old = panel.selection.single;
-    expect(panel.rememberSelection(), 1);
-    panel.showSearchResults([
-      item('/one/same.txt'),
-      item('/two/same.txt'),
-    ], origin: origin);
-    expect(panel.restoreSelection(), 1);
-    expect(panel.selection.single.path, '/two/same.txt');
-    expect(identical(panel.selection.single, old), isFalse);
-    expect(panel.captureOperationOrigin(panel.selection.toList()).isCurrent, isTrue);
-    panel.setFilter('no visible matches');
-    expect(panel.restorableSelectionCount, 0);
-  });
+  test(
+    'selection memory resolves fresh rows by original source and path',
+    () async {
+      final panel = await remote();
+      final origin = panel.captureRemoteSearchOrigin();
+      panel.showSearchResults([
+        item('/one/same.txt'),
+        item('/two/same.txt'),
+      ], origin: origin);
+      panel.applyPatternSelection(
+        FileSelectionPattern('/two/*', matchFullPath: true),
+      );
+      final old = panel.selection.single;
+      expect(panel.rememberSelection(), 1);
+      panel.showSearchResults([
+        item('/one/same.txt'),
+        item('/two/same.txt'),
+      ], origin: origin);
+      expect(panel.restoreSelection(), 1);
+      expect(panel.selection.single.path, '/two/same.txt');
+      expect(identical(panel.selection.single, old), isFalse);
+      expect(
+        panel.captureOperationOrigin(panel.selection.toList()).isCurrent,
+        isTrue,
+      );
+      panel.setFilter('no visible matches');
+      expect(panel.restorableSelectionCount, 0);
+    },
+  );
 
-  test('selection memory does not select a replacement object or another account', () async {
-    final panel = await remote();
-    panel.showSearchResults([
-      item('/one/same.txt').copyWith(uuid: 'original-object'),
-    ], origin: panel.captureRemoteSearchOrigin());
-    panel.selectAll();
-    expect(panel.rememberSelection(), 1);
-    panel.showSearchResults([
-      item('/one/same.txt').copyWith(uuid: 'replacement-object'),
-    ], origin: panel.captureRemoteSearchOrigin());
-    expect(panel.restoreSelection(), 0);
-    expect(panel.selection, isEmpty);
+  test(
+    'selection memory does not select a replacement object or another account',
+    () async {
+      final panel = await remote();
+      panel.showSearchResults([
+        item('/one/same.txt').copyWith(uuid: 'original-object'),
+      ], origin: panel.captureRemoteSearchOrigin());
+      panel.selectAll();
+      expect(panel.rememberSelection(), 1);
+      panel.showSearchResults([
+        item('/one/same.txt').copyWith(uuid: 'replacement-object'),
+      ], origin: panel.captureRemoteSearchOrigin());
+      expect(panel.restoreSelection(), 0);
+      expect(panel.selection, isEmpty);
 
-    auth.connection(false);
-    auth.connection(true);
-    panel.showSearchResults([
-      item('/one/same.txt').copyWith(uuid: 'original-object'),
-    ], origin: panel.captureRemoteSearchOrigin());
-    expect(panel.restorableSelectionCount, 0);
-    expect(panel.restoreSelection(), 0);
-    expect(panel.selection, isEmpty);
-  });
+      auth.connection(false);
+      auth.connection(true);
+      panel.showSearchResults([
+        item('/one/same.txt').copyWith(uuid: 'original-object'),
+      ], origin: panel.captureRemoteSearchOrigin());
+      expect(panel.restorableSelectionCount, 0);
+      expect(panel.restoreSelection(), 0);
+      expect(panel.selection, isEmpty);
+    },
+  );
 
   test('selection memories stay with their original tabs', () async {
     final panel = await remote();
@@ -320,25 +336,29 @@ void main() {
     expect(panel.selection.single.path, '/one/same.txt');
   });
 
-  test('mixed-storage same-path results are rejected without losing current rows', () async {
-    final remotePanel = await remote();
-    final localPanel = container.read(panelProvider(PanelSide.local));
-    await localPanel.refresh();
-    final cloudOrigin = remotePanel.captureRemoteSearchOrigin();
-    final localOrigin = localPanel.captureCurrentOrigin();
-    final cloudFile = item('/one/same.txt');
-    final localFile = item('/one/same.txt');
-    final before = List<FileItem>.of(remotePanel.files!);
-    expect(
-      () => remotePanel.showSearchResults(
-        [cloudFile, localFile],
-        originForFile: (file) => identical(file, cloudFile) ? cloudOrigin : localOrigin,
-      ),
-      throwsStateError,
-    );
-    expect(remotePanel.files, before);
-    expect(remotePanel.showingSearchResults, isFalse);
-  });
+  test(
+    'mixed-storage same-path results are rejected without losing current rows',
+    () async {
+      final remotePanel = await remote();
+      final localPanel = container.read(panelProvider(PanelSide.local));
+      await localPanel.refresh();
+      final cloudOrigin = remotePanel.captureRemoteSearchOrigin();
+      final localOrigin = localPanel.captureCurrentOrigin();
+      final cloudFile = item('/one/same.txt');
+      final localFile = item('/one/same.txt');
+      final before = List<FileItem>.of(remotePanel.files!);
+      expect(
+        () => remotePanel.showSearchResults(
+          [cloudFile, localFile],
+          originForFile: (file) =>
+              identical(file, cloudFile) ? cloudOrigin : localOrigin,
+        ),
+        throwsStateError,
+      );
+      expect(remotePanel.files, before);
+      expect(remotePanel.showingSearchResults, isFalse);
+    },
+  );
 
   test(
     'feed to panel keeps paths while editor writeback stays restricted',
@@ -395,31 +415,37 @@ void main() {
     },
   );
 
-  test('operation sibling preview follows the captured source after navigation', () async {
-    final panel = await remote();
-    final origin = panel.captureCurrentOrigin();
-    container
-        .read(panelSourceProvider(PanelSide.remote).notifier)
-        .setSource(const LocalPanelSource('/local'));
-    await panel.refresh();
+  test(
+    'operation sibling preview follows the captured source after navigation',
+    () async {
+      final panel = await remote();
+      final origin = panel.captureCurrentOrigin();
+      container
+          .read(panelSourceProvider(PanelSide.remote).notifier)
+          .setSource(const LocalPanelSource('/local'));
+      await panel.refresh();
 
-    final siblings = await panel.listOperationDirectory('/two', origin);
-    expect(siblings.single.path, '/two/same.txt');
-    expect(cloud.paths.last, '/two');
-    expect(panel.captureCurrentOrigin().source, isA<LocalPanelSource>());
-  });
+      final siblings = await panel.listOperationDirectory('/two', origin);
+      expect(siblings.single.path, '/two/same.txt');
+      expect(cloud.paths.last, '/two');
+      expect(panel.captureCurrentOrigin().source, isA<LocalPanelSource>());
+    },
+  );
 
-  test('operation sibling preview rejects an account changed during listing', () async {
-    final panel = await remote();
-    final origin = panel.captureCurrentOrigin();
-    cloud.delay = Completer<void>();
-    final listing = panel.listOperationDirectory('/one', origin);
-    await Future<void>.delayed(Duration.zero);
-    auth.connection(false);
-    auth.connection(true);
-    cloud.delay!.complete();
-    await expectLater(listing, throwsStateError);
-  });
+  test(
+    'operation sibling preview rejects an account changed during listing',
+    () async {
+      final panel = await remote();
+      final origin = panel.captureCurrentOrigin();
+      cloud.delay = Completer<void>();
+      final listing = panel.listOperationDirectory('/one', origin);
+      await Future<void>.delayed(Duration.zero);
+      auth.connection(false);
+      auth.connection(true);
+      cloud.delay!.complete();
+      await expectLater(listing, throwsStateError);
+    },
+  );
 
   test('operation metadata stays source-bound and rejects relative or stale lookups', () async {
     final panel = await remote();
@@ -451,34 +477,41 @@ void main() {
     await expectLater(pending, throwsStateError);
   });
 
-  test('native panel rename cannot replace a target created after preview', () async {
-    final root = await Directory.systemTemp.createTemp('commander-rename-race-');
-    addTearDown(() => root.delete(recursive: true));
-    final source = await File('${root.path}/source.txt').writeAsString('source');
-    final target = File('${root.path}/target.txt');
-    local.directory = root.path;
-    final panel = container.read(panelProvider(PanelSide.local));
-    await panel.navigateToPath(root.path);
-    final file = panel.files!.singleWhere((item) => item.path == source.path);
-    local.onAccess = (path) async {
-      if (path == source.path) {
-        await target.writeAsString('concurrent target');
-      }
-    };
+  test(
+    'native panel rename cannot replace a target created after preview',
+    () async {
+      final root = await Directory.systemTemp.createTemp(
+        'commander-rename-race-',
+      );
+      addTearDown(() => root.delete(recursive: true));
+      final source = await File('${root.path}/source.txt')
+          .writeAsString('source');
+      final target = File('${root.path}/target.txt');
+      local.directory = root.path;
+      final panel = container.read(panelProvider(PanelSide.local));
+      await panel.navigateToPath(root.path);
+      final file = panel.files!.singleWhere((item) => item.path == source.path);
+      local.onAccess = (path) async {
+        if (path == source.path) {
+          await target.writeAsString('concurrent target');
+        }
+      };
 
-    await expectLater(
-      panel.renameFile(
-        file,
-        'target.txt',
-        refreshAfter: false,
-        rethrowErrors: true,
-        recordHistory: false,
-      ),
-      throwsA(isA<FileSystemException>()),
-    );
-    expect(await source.readAsString(), 'source');
-    expect(await target.readAsString(), 'concurrent target');
-  }, skip: !supportsNativeExclusiveRename);
+      await expectLater(
+        panel.renameFile(
+          file,
+          'target.txt',
+          refreshAfter: false,
+          rethrowErrors: true,
+          recordHistory: false,
+        ),
+        throwsA(isA<FileSystemException>()),
+      );
+      expect(await source.readAsString(), 'source');
+      expect(await target.readAsString(), 'concurrent target');
+    },
+    skip: !supportsNativeExclusiveRename,
+  );
 
   test('remove-from-list never deletes underlying local files', () async {
     final root = await Directory.systemTemp.createTemp('commander-list-');
