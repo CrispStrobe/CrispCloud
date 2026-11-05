@@ -54,6 +54,7 @@ jobs:
           lib/services/pdf_file_store.dart
           lib/services/image_editor_menu.dart lib/services/image_export_options.dart
           lib/services/image_edit_project.dart lib/services/image_project_store.dart
+          lib/services/image_overlay.dart
           lib/services/image_device_export.dart lib/services/image_device_export_native.dart
           lib/services/image_device_export_web.dart lib/widgets/image_export_dialog.dart
           lib/widgets/image_editor_dialog.dart

@@ -9,6 +9,7 @@ import 'package:crisp_cloud/services/image_edit_project.dart';
 import 'package:crisp_cloud/services/image_editor_menu.dart';
 import 'package:crisp_cloud/services/image_file_store.dart';
 import 'package:crisp_cloud/services/image_project_store.dart';
+import 'package:crisp_cloud/services/image_overlay.dart';
 import 'package:crisp_cloud/services/pdf_file_store.dart';
 import 'package:crisp_cloud/widgets/image_editor_dialog.dart';
 import 'package:flutter/foundation.dart' show kIsWeb;
@@ -159,6 +160,7 @@ class _Harness {
     )?
     exporter,
     ImageProjectStore? projectStore,
+    ImageOverlayPicker? overlayPicker,
     Future<ImageSaveOutcome?> Function(Uint8List, String, String)?
     projectExporter,
   }) async {
@@ -191,6 +193,7 @@ class _Harness {
                       enableIsolateGeneration: enableIsolateGeneration,
                       deviceExporterOverride: exporter,
                       projectStoreOverride: projectStore,
+                      overlayPickerOverride: overlayPicker,
                       projectExporterOverride: projectExporter,
                     ),
                   ),
@@ -470,6 +473,50 @@ void main() {
       reason: 'undo layer removal',
     );
   });
+
+  _desktopTestWidgets(
+    'image overlay remains editable after a project round trip',
+    (tester) async {
+      final raster = _MemoryImageStore();
+      final first = _Harness(tester, raster);
+      Uint8List? saved;
+      final overlay = ImageOverlay(
+        name: 'overlay.png',
+        bytes: buildImageEditorFixture(seed: 7),
+      );
+      await first.open(
+        overlayPicker: (_) async => overlay,
+        projectExporter: (bytes, name, title) async {
+          saved = bytes;
+          return ImageSaveOutcome.savedCopy;
+        },
+      );
+      await tester.ensureVisible(_command(ImageEditorAction.addOverlay));
+      await tester.tap(_command(ImageEditorAction.addOverlay));
+      await _until(
+        tester,
+        () => first.editor.activeLayers.whereType<WidgetLayer>().isNotEmpty,
+        reason: 'image overlay insertion',
+      );
+      await tester.ensureVisible(_command(ImageEditorAction.saveProjectCopy));
+      await tester.tap(_command(ImageEditorAction.saveProjectCopy));
+      await _until(
+        tester,
+        () => saved != null && !first.actions.busy,
+        reason: 'overlay project export',
+      );
+      final backing = _MemoryProjectStore(saved!);
+      await tester.pumpWidget(const SizedBox.shrink());
+      final reopened = _Harness(tester, raster);
+      await reopened.open(projectStore: ImageProjectStore(backing));
+      final layer = reopened.editor.activeLayers
+          .whereType<WidgetLayer>()
+          .single;
+      expect(layer.exportConfigs.id, 'crispcloud.image-overlay.v1');
+      expect(layer.exportConfigs.meta!['name'], 'overlay.png');
+      expect(_saveEnabled(tester), isFalse);
+    },
+  );
 
   _desktopTestWidgets('exporting a copy keeps the original dirty', (
     tester,

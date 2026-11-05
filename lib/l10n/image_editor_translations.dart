@@ -38,6 +38,8 @@ const imageEditorInvariantFilterNames = <String, String>{
 const imageEditorTranslations = <String, Map<String, String>>{
   'en': <String, String>{
     ...imageEditorInvariantFilterNames,
+    'Add image overlay': 'Add image overlay',
+    'Could not add image overlay': 'Could not add image overlay',
     'Layers': 'Layers',
     'No layers yet': 'No layers yet',
     'Drawing': 'Drawing',
@@ -198,6 +200,9 @@ const imageEditorTranslations = <String, Map<String, String>>{
   },
   'de': <String, String>{
     ...imageEditorInvariantFilterNames,
+    'Add image overlay': 'Bildüberlagerung hinzufügen',
+    'Could not add image overlay':
+        'Bildüberlagerung konnte nicht hinzugefügt werden',
     'Layers': 'Ebenen',
     'No layers yet': 'Noch keine Ebenen',
     'Drawing': 'Zeichnung',
@@ -353,6 +358,8 @@ const imageEditorTranslations = <String, Map<String, String>>{
   },
   'fr': <String, String>{
     ...imageEditorInvariantFilterNames,
+    'Add image overlay': 'Ajouter une image superposée',
+    'Could not add image overlay': 'Impossible d’ajouter l’image superposée',
     'Layers': 'Calques',
     'No layers yet': 'Aucun calque',
     'Drawing': 'Dessin',
@@ -511,6 +518,8 @@ const imageEditorTranslations = <String, Map<String, String>>{
   },
   'es': <String, String>{
     ...imageEditorInvariantFilterNames,
+    'Add image overlay': 'Añadir imagen superpuesta',
+    'Could not add image overlay': 'No se pudo añadir la imagen superpuesta',
     'Layers': 'Capas',
     'No layers yet': 'Aún no hay capas',
     'Drawing': 'Dibujo',
@@ -666,6 +675,9 @@ const imageEditorTranslations = <String, Map<String, String>>{
   },
   'pt': <String, String>{
     ...imageEditorInvariantFilterNames,
+    'Add image overlay': 'Adicionar imagem sobreposta',
+    'Could not add image overlay':
+        'Não foi possível adicionar a imagem sobreposta',
     'Layers': 'Camadas',
     'No layers yet': 'Ainda não há camadas',
     'Drawing': 'Desenho',
@@ -823,6 +835,8 @@ const imageEditorTranslations = <String, Map<String, String>>{
   },
   'zh': <String, String>{
     ...imageEditorInvariantFilterNames,
+    'Add image overlay': '添加叠加图像',
+    'Could not add image overlay': '无法添加叠加图像',
     'Layers': '图层',
     'No layers yet': '暂无图层',
     'Drawing': '绘图',
@@ -976,6 +990,8 @@ const imageEditorTranslations = <String, Map<String, String>>{
   },
   'ja': <String, String>{
     ...imageEditorInvariantFilterNames,
+    'Add image overlay': '画像を重ねて追加',
+    'Could not add image overlay': '画像を重ねて追加できませんでした',
     'Layers': 'レイヤー',
     'No layers yet': 'レイヤーはまだありません',
     'Drawing': '描画',
@@ -1134,6 +1150,8 @@ const imageEditorTranslations = <String, Map<String, String>>{
   },
   'ko': <String, String>{
     ...imageEditorInvariantFilterNames,
+    'Add image overlay': '이미지 오버레이 추가',
+    'Could not add image overlay': '이미지 오버레이를 추가하지 못했습니다',
     'Layers': '레이어',
     'No layers yet': '아직 레이어가 없습니다',
     'Drawing': '그리기',
@@ -1293,6 +1311,8 @@ const imageEditorTranslations = <String, Map<String, String>>{
   },
   'ar': <String, String>{
     ...imageEditorInvariantFilterNames,
+    'Add image overlay': 'إضافة صورة متراكبة',
+    'Could not add image overlay': 'تعذرت إضافة الصورة المتراكبة',
     'Layers': 'الطبقات',
     'No layers yet': 'لا توجد طبقات بعد',
     'Drawing': 'رسم',

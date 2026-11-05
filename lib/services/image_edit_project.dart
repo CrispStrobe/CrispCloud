@@ -53,6 +53,7 @@ class ImageEditProject {
           value['history'] is! Map<String, dynamic>) {
         throw const FormatException('Invalid image project');
       }
+      _rejectExternalReferences(value['history']);
       final name = value['sourceName'] as String;
       if (name.isEmpty ||
           name.contains('/') ||
@@ -73,6 +74,24 @@ class ImageEditProject {
       rethrow;
     } catch (_) {
       throw const FormatException('Invalid image project');
+    }
+  }
+}
+
+void _rejectExternalReferences(Object? value) {
+  if (value is Map) {
+    for (final entry in value.entries) {
+      if (const {'networkUrl', 'fileUrl', 'assetPath'}.contains(entry.key) &&
+          entry.value != null) {
+        throw const FormatException(
+          'External project layers are not supported',
+        );
+      }
+      _rejectExternalReferences(entry.value);
+    }
+  } else if (value is List) {
+    for (final item in value) {
+      _rejectExternalReferences(item);
     }
   }
 }

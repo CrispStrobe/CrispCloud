@@ -30,6 +30,30 @@ void main() {
     });
   });
 
+  test('rejects project layers referring to external files or URLs', () {
+    for (final field in ['fileUrl', 'networkUrl', 'assetPath']) {
+      final project = ImageEditProject(
+        sourceName: 'photo.png',
+        sourceBytes: buildImageEditorFixture(),
+        history: {
+          'history': [
+            {
+              'layers': [
+                {
+                  'exportConfigs': {field: 'external'},
+                },
+              ],
+            },
+          ],
+        },
+      );
+      expect(
+        () => ImageEditProject.decode(project.encode()),
+        throwsFormatException,
+      );
+    }
+  });
+
   test('rejects damaged source and invalid envelope', () {
     final project = ImageEditProject(
       sourceName: 'photo.png',

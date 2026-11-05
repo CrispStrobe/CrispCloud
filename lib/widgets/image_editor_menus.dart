@@ -63,6 +63,7 @@ List<PlatformMenuItem> buildImageEditorPlatformMenus(
     PlatformMenu(
       label: context.imageTr('Image'),
       menus: <PlatformMenuItem>[
+        item('Add image overlay', ImageEditorAction.addOverlay),
         item('Layers', ImageEditorAction.layers),
         item('Zoom in', ImageEditorAction.zoomIn),
         item('Zoom out', ImageEditorAction.zoomOut),

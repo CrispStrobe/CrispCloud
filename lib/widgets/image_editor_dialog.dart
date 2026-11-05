@@ -16,6 +16,7 @@ import '../providers/providers.dart';
 import '../services/image_device_export.dart';
 import '../services/image_edit_project.dart';
 import '../services/image_project_store.dart';
+import '../services/image_overlay.dart';
 import '../services/pdf_file_store.dart';
 import '../services/image_edit_session.dart';
 import '../services/image_export_options.dart';
@@ -53,6 +54,7 @@ class ImageEditorDialog extends ConsumerStatefulWidget {
     this.deviceExporterOverride,
     this.projectStoreOverride,
     this.projectExporterOverride,
+    this.overlayPickerOverride,
   });
 
   final FileItem file;
@@ -65,6 +67,7 @@ class ImageEditorDialog extends ConsumerStatefulWidget {
   final ImageDeviceExporter? deviceExporterOverride;
   final ImageProjectStore? projectStoreOverride;
   final ImageProjectExporter? projectExporterOverride;
+  final ImageOverlayPicker? overlayPickerOverride;
 
   @override
   ConsumerState<ImageEditorDialog> createState() => _ImageEditorDialogState();
@@ -246,7 +249,12 @@ class _ImageEditorDialogState extends ConsumerState<ImageEditorDialog> {
       _onHistory(editor.stateManager, editor);
       if (_project case final project?) {
         await editor.importStateHistory(
-          ImportStateHistory.fromMap(project.history),
+          ImportStateHistory.fromMap(
+            project.history,
+            configs: ImportEditorConfigs(
+              widgetLoader: imageProjectWidgetLoader,
+            ),
+          ),
         );
         if (!mounted) return;
         _onHistory(editor.stateManager, editor);
@@ -401,6 +409,8 @@ class _ImageEditorDialogState extends ConsumerState<ImageEditorDialog> {
     switch (action) {
       case ImageEditorAction.save:
         unawaited(_save());
+      case ImageEditorAction.addOverlay:
+        unawaited(_addOverlay());
       case ImageEditorAction.saveProjectCopy:
         unawaited(_saveProjectCopy());
       case ImageEditorAction.exportCopy:
@@ -497,6 +507,41 @@ class _ImageEditorDialogState extends ConsumerState<ImageEditorDialog> {
       }
       return false;
     } finally {
+      _scheduleRefresh();
+    }
+  }
+
+  Future<void> _addOverlay() async {
+    final editor = _editorKey.currentState;
+    if (editor == null || !_canEdit) return;
+    final title = context.imageTr('Add image overlay');
+    setState(() => _exporting = true);
+    _scheduleRefresh();
+    try {
+      final overlay = await (widget.overlayPickerOverride ?? pickImageOverlay)(
+        title,
+      );
+      if (!mounted || overlay == null) return;
+      final codec = await ui.instantiateImageCodec(overlay.bytes);
+      try {
+        if (codec.frameCount != 1)
+          throw const ImageEditException(ImageEditFailure.animatedImage);
+        final frame = await codec.getNextFrame();
+        frame.image.dispose();
+      } finally {
+        codec.dispose();
+      }
+      if (!mounted) return;
+      editor.addLayer(imageOverlayLayer(overlay));
+    } catch (error, stack) {
+      _log.warn('Could not add image overlay', error, stack);
+      if (mounted)
+        _showMessage(
+          _messageFor(error, 'Could not add image overlay'),
+          error: true,
+        );
+    } finally {
+      if (mounted) setState(() => _exporting = false);
       _scheduleRefresh();
     }
   }
@@ -1064,6 +1109,11 @@ class _ImageEditorDialogState extends ConsumerState<ImageEditorDialog> {
     (ImageEditorAction.exportCopy, 'Export image copy', Icons.ios_share),
     (ImageEditorAction.undo, 'Undo', Icons.undo),
     (ImageEditorAction.redo, 'Redo', Icons.redo),
+    (
+      ImageEditorAction.addOverlay,
+      'Add image overlay',
+      Icons.add_photo_alternate_outlined,
+    ),
     (ImageEditorAction.layers, 'Layers', Icons.layers_outlined),
     (ImageEditorAction.zoomIn, 'Zoom in', Icons.zoom_in),
     (ImageEditorAction.zoomOut, 'Zoom out', Icons.zoom_out),
