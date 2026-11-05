@@ -25,7 +25,8 @@ import 'web_crypto_factory_io.dart'
 ///   encryptionKey: key,
 /// );
 /// ```
-class EncryptedStorageWrapper implements CloudStorageClient {
+class EncryptedStorageWrapper
+    implements CloudStorageClient, FreshCloudDirectoryReader {
   final CloudStorageClient _inner;
   final Uint8List _key;
 
@@ -121,6 +122,32 @@ class EncryptedStorageWrapper implements CloudStorageClient {
 
   @override
   Future<Map<String, dynamic>> listPath(String path) => _inner.listPath(path);
+
+  @override
+  Future<Map<String, dynamic>> readDirectoryForEdit(String path) async {
+    final listing = await _inner.listPathForEdit(path);
+    final files = listing['files'];
+    if (files is! List) return listing;
+    return {
+      ...listing,
+      'files': [
+        for (final entry in files) _withPlaintextSize(entry),
+      ],
+    };
+  }
+
+  static dynamic _withPlaintextSize(dynamic entry) {
+    if (entry is! Map || entry['isFolder'] == true || entry['type'] == 'folder') {
+      return entry;
+    }
+    final metadata = entry['metadata'] is Map ? entry['metadata'] as Map : null;
+    final size = int.tryParse('${entry['downloadSize'] ?? metadata?['downloadSize'] ?? entry['size'] ?? metadata?['size']}');
+    if (size == null) return entry;
+    // EncryptionService and both crypto backends use a 12-byte nonce and a
+    // 16-byte GCM tag. Retain stored size for the editor's pre-download cap;
+    // downloadStream yields plaintext, whose exact size excludes the envelope.
+    return {...entry, 'downloadSize': size - 28};
+  }
 
   @override
   Future<void> createFolderPath(String path) => _inner.createFolderPath(path);

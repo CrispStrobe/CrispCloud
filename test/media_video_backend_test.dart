@@ -19,25 +19,31 @@ void main() {
     height: 1080,
     frameRate: 30,
   );
-  const trim = MediaEdit(start: Duration(seconds: 2), end: Duration(seconds: 5));
+  const trim = MediaEdit(
+    start: Duration(seconds: 2),
+    end: Duration(seconds: 5),
+  );
 
   group('video export contract', () {
-    test('trim is applied once to the source and retains frame timing', () async {
-      final request = buildMediaVideoRenderData(
-        inputPath: '/snapshot/movie.mp4',
-        info: sourceInfo,
-        edit: trim,
-      );
-      expect(request.videoSegments, hasLength(1));
-      expect(request.videoSegments!.single.startTime, trim.start);
-      expect(request.videoSegments!.single.endTime, trim.end);
-      expect(request.startTime, isNull);
-      expect(request.endTime, isNull);
-      expect(request.preserveSourceFrameTiming, isTrue);
-      expect(request.outputFormat, VideoOutputFormat.mp4);
-      expect(request.shouldOptimizeForNetworkUse, isTrue);
-      expect(request.enableAudio, isTrue);
-    });
+    test(
+      'trim is applied once to the source and retains frame timing',
+      () async {
+        final request = buildMediaVideoRenderData(
+          inputPath: '/snapshot/movie.mp4',
+          info: sourceInfo,
+          edit: trim,
+        );
+        expect(request.videoSegments, hasLength(1));
+        expect(request.videoSegments!.single.startTime, trim.start);
+        expect(request.videoSegments!.single.endTime, trim.end);
+        expect(request.startTime, isNull);
+        expect(request.endTime, isNull);
+        expect(request.preserveSourceFrameTiming, isTrue);
+        expect(request.outputFormat, VideoOutputFormat.mp4);
+        expect(request.shouldOptimizeForNetworkUse, isTrue);
+        expect(request.enableAudio, isTrue);
+      },
+    );
 
     test('crop uses source orientation, then rotation and resize', () {
       final request = buildMediaVideoRenderData(
@@ -94,7 +100,10 @@ void main() {
 
     test('rejects invalid edits before invoking a native encoder', () {
       final badEdits = <MediaEdit>[
-        const MediaEdit(start: Duration(seconds: -1), end: Duration(seconds: 2)),
+        const MediaEdit(
+          start: Duration(seconds: -1),
+          end: Duration(seconds: 2),
+        ),
         const MediaEdit(start: Duration.zero, end: Duration(seconds: 11)),
         const MediaEdit(start: Duration(seconds: 2), end: Duration(seconds: 2)),
         const MediaEdit(
@@ -158,12 +167,17 @@ void main() {
     late MediaVideoBackend backend;
 
     setUp(() async {
-      directory = await Directory.systemTemp.createTemp('crisp_video_contract_');
+      directory = await Directory.systemTemp.createTemp(
+        'crisp_video_contract_',
+      );
       source = File('${directory.path}/input.mp4');
       output = File('${directory.path}/export.mp4');
       await source.writeAsBytes(List<int>.filled(100, 17));
       engine = _FakeVideoEditor(source.path);
-      backend = MediaVideoBackend(editor: engine, platform: TargetPlatform.macOS);
+      backend = MediaVideoBackend(
+        editor: engine,
+        platform: TargetPlatform.macOS,
+      );
     });
 
     tearDown(() async {
@@ -171,7 +185,10 @@ void main() {
       await directory.delete(recursive: true);
     });
 
-    Future<void> render({MediaCancellation? cancellation, MediaEdit edit = trim}) {
+    Future<void> render({
+      MediaCancellation? cancellation,
+      MediaEdit edit = trim,
+    }) {
       return backend.render(
         inputPath: source.path,
         outputPath: output.path,
@@ -213,35 +230,41 @@ void main() {
       expect(await source.readAsBytes(), everyElement(17));
     });
 
-    test('a partial native failure is removed and export can be retried', () async {
-      engine.renderAction = (path, request) async {
-        await File(path).writeAsBytes(<int>[1, 2, 3]);
-        throw StateError('Encoder rejected the request.');
-      };
-      await expectLater(render(), throwsStateError);
-      expect(await output.exists(), isFalse);
-      engine.renderAction = null;
-      await render();
-      expect(await output.length(), 100);
-    });
+    test(
+      'a partial native failure is removed and export can be retried',
+      () async {
+        engine.renderAction = (path, request) async {
+          await File(path).writeAsBytes(<int>[1, 2, 3]);
+          throw StateError('Encoder rejected the request.');
+        };
+        await expectLater(render(), throwsStateError);
+        expect(await output.exists(), isFalse);
+        engine.renderAction = null;
+        await render();
+        expect(await output.length(), 100);
+      },
+    );
 
-    test('missing/truncated or ignored edits are not accepted as exports', () async {
-      engine.renderAction = (path, request) async {};
-      await expectLater(render(), throwsFormatException);
-      expect(await output.exists(), isFalse);
-      engine.renderAction = (path, request) =>
-          File(path).writeAsBytes(<int>[1, 2, 3]).then((_) {});
-      await expectLater(render(), throwsFormatException);
-      expect(await output.exists(), isFalse);
-      engine.renderAction = null;
-      engine.outputDuration = const Duration(seconds: 10); // trim ignored
-      await expectLater(render(), throwsFormatException);
-      expect(await output.exists(), isFalse);
-      engine.outputDuration = const Duration(seconds: 3);
-      engine.outputSize = const Size(1280, 720); // unexpected encoder scaling
-      await expectLater(render(), throwsFormatException);
-      expect(await output.exists(), isFalse);
-    });
+    test(
+      'missing/truncated or ignored edits are not accepted as exports',
+      () async {
+        engine.renderAction = (path, request) async {};
+        await expectLater(render(), throwsFormatException);
+        expect(await output.exists(), isFalse);
+        engine.renderAction = (path, request) =>
+            File(path).writeAsBytes(<int>[1, 2, 3]).then((_) {});
+        await expectLater(render(), throwsFormatException);
+        expect(await output.exists(), isFalse);
+        engine.renderAction = null;
+        engine.outputDuration = const Duration(seconds: 10); // trim ignored
+        await expectLater(render(), throwsFormatException);
+        expect(await output.exists(), isFalse);
+        engine.outputDuration = const Duration(seconds: 3);
+        engine.outputSize = const Size(1280, 720); // unexpected encoder scaling
+        await expectLater(render(), throwsFormatException);
+        expect(await output.exists(), isFalse);
+      },
+    );
 
     test('mute is verified against the reopened audio track', () async {
       const muted = MediaEdit(
@@ -267,59 +290,71 @@ void main() {
       expect(await output.exists(), isFalse);
     });
 
-    test('in-flight cancellation waits, removes partial output and permits retry', () async {
-      final started = Completer<void>();
-      final finished = Completer<void>();
-      engine.renderAction = (path, request) async {
-        await File(path).writeAsBytes(<int>[9, 8, 7]);
-        started.complete();
-        await finished.future;
-      };
-      engine.cancelAction = (id) async {
-        finished.completeError(const RenderCanceledException());
-      };
-      final cancellation = MediaCancellation();
-      final result = render(cancellation: cancellation);
-      final checked = expectLater(result, throwsA(isA<MediaOperationCancelled>()));
-      await started.future;
-      cancellation.cancel();
-      await checked;
-      expect(engine.cancelledIds, <String>[engine.requests.single.id]);
-      expect(await output.exists(), isFalse);
-      engine.renderAction = null;
-      await render();
-      expect(await output.exists(), isTrue);
-    });
-
-    test('a late cancellation discards even a completed native render', () async {
-      final cancellation = MediaCancellation();
-      engine.renderAction = (path, request) async {
-        await File(path).writeAsBytes(List<int>.filled(100, 42));
+    test(
+      'in-flight cancellation waits, removes partial output and permits retry',
+      () async {
+        final started = Completer<void>();
+        final finished = Completer<void>();
+        engine.renderAction = (path, request) async {
+          await File(path).writeAsBytes(<int>[9, 8, 7]);
+          started.complete();
+          await finished.future;
+        };
+        engine.cancelAction = (id) async {
+          finished.completeError(const RenderCanceledException());
+        };
+        final cancellation = MediaCancellation();
+        final result = render(cancellation: cancellation);
+        final checked = expectLater(
+          result,
+          throwsA(isA<MediaOperationCancelled>()),
+        );
+        await started.future;
         cancellation.cancel();
-      };
-      await expectLater(
-        render(cancellation: cancellation),
-        throwsA(isA<MediaOperationCancelled>()),
-      );
-      expect(await output.exists(), isFalse);
-    });
+        await checked;
+        expect(engine.cancelledIds, <String>[engine.requests.single.id]);
+        expect(await output.exists(), isFalse);
+        engine.renderAction = null;
+        await render();
+        expect(await output.exists(), isTrue);
+      },
+    );
 
-    test('overlapping exports are rejected while the first remains valid', () async {
-      final started = Completer<void>();
-      final finish = Completer<void>();
-      engine.renderAction = (path, request) async {
-        started.complete();
-        await finish.future;
-        await File(path).writeAsBytes(List<int>.filled(100, 42));
-      };
-      final first = render();
-      await started.future;
-      await expectLater(render(), throwsStateError);
-      finish.complete();
-      await first;
-      expect(engine.requests, hasLength(1));
-      expect(await output.exists(), isTrue);
-    });
+    test(
+      'a late cancellation discards even a completed native render',
+      () async {
+        final cancellation = MediaCancellation();
+        engine.renderAction = (path, request) async {
+          await File(path).writeAsBytes(List<int>.filled(100, 42));
+          cancellation.cancel();
+        };
+        await expectLater(
+          render(cancellation: cancellation),
+          throwsA(isA<MediaOperationCancelled>()),
+        );
+        expect(await output.exists(), isFalse);
+      },
+    );
+
+    test(
+      'overlapping exports are rejected while the first remains valid',
+      () async {
+        final started = Completer<void>();
+        final finish = Completer<void>();
+        engine.renderAction = (path, request) async {
+          started.complete();
+          await finish.future;
+          await File(path).writeAsBytes(List<int>.filled(100, 42));
+        };
+        final first = render();
+        await started.future;
+        await expectLater(render(), throwsStateError);
+        finish.complete();
+        await first;
+        expect(engine.requests, hasLength(1));
+        expect(await output.exists(), isTrue);
+      },
+    );
   });
 }
 

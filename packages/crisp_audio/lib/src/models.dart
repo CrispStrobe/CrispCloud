@@ -12,7 +12,8 @@ class AudioMetadata {
   final int channels;
 
   Duration get duration => Duration(
-    microseconds: (frames * Duration.microsecondsPerSecond + sampleRate - 1) ~/
+    microseconds:
+        (frames * Duration.microsecondsPerSecond + sampleRate - 1) ~/
         sampleRate,
   );
 }

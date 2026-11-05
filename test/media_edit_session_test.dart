@@ -2,22 +2,39 @@ import 'package:crisp_cloud/services/media_edit_session.dart';
 import 'package:crisp_cloud/services/media_editor_backend.dart';
 import 'package:flutter_test/flutter_test.dart';
 
-const audio = MediaInfo(kind: MediaKind.audio, duration: Duration(seconds: 20), sampleRate: 48000, channels: 2);
+const audio = MediaInfo(
+  kind: MediaKind.audio,
+  duration: Duration(seconds: 20),
+  sampleRate: 48000,
+  channels: 2,
+);
 
 void main() {
-  test('export captures immutable recipe and locks history until completion', () {
-    final session = MediaEditSession(audio);
-    session.apply(session.edit.copyWith(start: const Duration(seconds: 2), end: const Duration(seconds: 10), gainDb: -6));
-    final revision = session.beginExport();
-    expect(revision.edit.duration, const Duration(seconds: 8));
-    expect(session.canUndo, isFalse);
-    expect(() => session.apply(session.edit.copyWith(gainDb: 3)), throwsA(isA<MediaEditException>()));
-    session.undo();
-    expect(identical(session.revision, revision), isTrue);
-    session.finishExport(revision, persisted: true);
-    expect(session.isDirty, isFalse);
-    expect(session.canUndo, isTrue);
-  });
+  test(
+    'export captures immutable recipe and locks history until completion',
+    () {
+      final session = MediaEditSession(audio);
+      session.apply(
+        session.edit.copyWith(
+          start: const Duration(seconds: 2),
+          end: const Duration(seconds: 10),
+          gainDb: -6,
+        ),
+      );
+      final revision = session.beginExport();
+      expect(revision.edit.duration, const Duration(seconds: 8));
+      expect(session.canUndo, isFalse);
+      expect(
+        () => session.apply(session.edit.copyWith(gainDb: 3)),
+        throwsA(isA<MediaEditException>()),
+      );
+      session.undo();
+      expect(identical(session.revision, revision), isTrue);
+      session.finishExport(revision, persisted: true);
+      expect(session.isDirty, isFalse);
+      expect(session.canUndo, isTrue);
+    },
+  );
 
   test('failed save and preview never mark edits clean', () {
     final session = MediaEditSession(audio);
@@ -53,7 +70,10 @@ void main() {
     session.finishExport(first, persisted: false);
     session.apply(session.edit.copyWith(gainDb: 2));
     final second = session.beginExport();
-    expect(() => session.finishExport(first, persisted: true), throwsStateError);
+    expect(
+      () => session.finishExport(first, persisted: true),
+      throwsStateError,
+    );
     expect(session.isExporting, isTrue);
     expect(session.isDirty, isTrue);
     session.finishExport(second, persisted: false);
@@ -78,10 +98,21 @@ void main() {
   });
 
   test('video rejects malformed crops and unavailable audio processing', () {
-    final session = MediaEditSession(const MediaInfo(kind: MediaKind.video, duration: Duration(seconds: 4), width: 1920, height: 1080));
+    final session = MediaEditSession(
+      const MediaInfo(
+        kind: MediaKind.video,
+        duration: Duration(seconds: 4),
+        width: 1920,
+        height: 1080,
+      ),
+    );
     for (final edit in [
-      session.edit.copyWith(crop: const MediaCrop(x: 0.5, y: 0, width: 0.6, height: 1)),
-      session.edit.copyWith(crop: const MediaCrop(x: 0, y: double.nan, width: 1, height: 1)),
+      session.edit.copyWith(
+        crop: const MediaCrop(x: 0.5, y: 0, width: 0.6, height: 1),
+      ),
+      session.edit.copyWith(
+        crop: const MediaCrop(x: 0, y: double.nan, width: 1, height: 1),
+      ),
       session.edit.copyWith(maxOutputHeight: 1),
       session.edit.copyWith(quarterTurns: 4),
       session.edit.copyWith(gainDb: -6),
@@ -89,7 +120,14 @@ void main() {
     ]) {
       expect(() => session.apply(edit), throwsA(isA<MediaEditException>()));
     }
-    session.apply(session.edit.copyWith(crop: const MediaCrop(x: 0.25, y: 0, width: 0.5, height: 1), quarterTurns: 1, muted: true, maxOutputHeight: 720));
+    session.apply(
+      session.edit.copyWith(
+        crop: const MediaCrop(x: 0.25, y: 0, width: 0.5, height: 1),
+        quarterTurns: 1,
+        muted: true,
+        maxOutputHeight: 720,
+      ),
+    );
     expect(session.isDirty, isTrue);
   });
 
@@ -103,6 +141,9 @@ void main() {
     expect(calls, 1);
     cancellation.addListener(listener);
     expect(calls, 2);
-    expect(cancellation.throwIfCancelled, throwsA(isA<MediaOperationCancelled>()));
+    expect(
+      cancellation.throwIfCancelled,
+      throwsA(isA<MediaOperationCancelled>()),
+    );
   });
 }

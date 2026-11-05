@@ -12,11 +12,7 @@ MediaKind? mediaKindForFileName(String name) {
 }
 
 abstract final class MediaCapabilities {
-  static bool canEdit(
-    MediaKind kind, {
-    TargetPlatform? platform,
-    bool? isWeb,
-  }) {
+  static bool canEdit(MediaKind kind, {TargetPlatform? platform, bool? isWeb}) {
     if (isWeb ?? kIsWeb) return false;
     final target = platform ?? defaultTargetPlatform;
     if (kind == MediaKind.audio) return target != TargetPlatform.fuchsia;

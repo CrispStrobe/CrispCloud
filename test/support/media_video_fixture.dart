@@ -320,5 +320,5 @@ Uint8List mediaVideoFixture() => base64Decode(
   'dySSAAAAAIhzDw8PDw8PDw8PPh4eHh4efDz4eHh4eHh4eHh4eHh4eHh7h4eHh4eHh4eHh4eHh4eHh4eHh6w8PDw8PDw8PDw8PDw8'
   'PDw8PDw8PDw8PDw8PDw8PnDw8PDw8PHh4eHh4eHh5eMPDw8PD4x6y59OvOfF+AEgMYvh0b1z/Hq/383d3ckkiJEiIeEA58h/htv4'
   'zfHw38G+Pj4b+Pj4+Pj4+Pj4+Pj4+Pj4+Pj4+Pj48fj4+Pj4+Pj4+Pj4+Pj4+Pj4+Pj4+Pj4+Pj4+Pj4+Pj4+Pj4+Pj4+Pj4+Pj4'
-  '+Pj4+Pj4+Pj4+Pj4+Pj4+Pj4+Pjg'
+  '+Pj4+Pj4+Pj4+Pj4+Pj4+Pj4+Pjg',
 );

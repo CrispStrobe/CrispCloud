@@ -5,6 +5,7 @@ import 'package:path/path.dart' as p;
 import 'package:flutter/foundation.dart';
 
 import 'cloud_storage_interface.dart';
+import 'upload_temp_file.dart';
 import 'ftp_config_service.dart';
 import 'log_service.dart';
 import 'secure_storage_service.dart';
@@ -248,24 +249,15 @@ class FTPClientAdapter extends CloudStorageClient {
   }) async {
     await _ensureConnection();
 
-    // Write bytes to a temp file, then upload
-    final tempDir = Directory.systemTemp;
-    final tempFile = File(p.join(tempDir.path, 'ftp_upload_$fileName'));
-
-    try {
-      await tempFile.writeAsBytes(fileData);
-
+    // A separate directory also isolates concurrent uploads with the same name.
+    await withTemporaryUploadFile(fileName, fileData, (tempFile) async {
       await _ftpClient!.changeDirectory(targetPath);
       final success = await _ftpClient!.uploadFile(tempFile, sRemoteName: fileName);
       if (!success) {
         throw Exception('FTP upload failed for $fileName');
       }
       onProgress?.call(fileData.length, fileData.length);
-    } finally {
-      if (await tempFile.exists()) {
-        await tempFile.delete();
-      }
-    }
+    });
   }
 
   @override

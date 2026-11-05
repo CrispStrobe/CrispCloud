@@ -31,6 +31,7 @@ void main() {
     'native video: trim, crop, rotation, resize, mute, reopen, cancellation',
     () async {
       final temporary = await getTemporaryDirectory();
+      await temporary.create(recursive: true);
       final workspace = await Directory(temporary.path)
           .createTemp('crispcloud_video_contract_');
       const keepOutput = bool.fromEnvironment('MEDIA_TEST_KEEP_OUTPUT');
@@ -73,7 +74,9 @@ void main() {
       expect(cropped.height, 80);
       expect(cropped.duration.inMilliseconds, closeTo(2000, 100));
       expect(
-        await ProVideoEditor.instance.hasAudioTrack(EditorVideo.file(cropOutput)),
+        await ProVideoEditor.instance.hasAudioTrack(
+          EditorVideo.file(cropOutput),
+        ),
         isFalse,
       );
       final frames = await _frames(
@@ -109,7 +112,9 @@ void main() {
       expect(resized.height, 90);
       expect(resized.duration.inMilliseconds, closeTo(3000, 100));
       expect(
-        await ProVideoEditor.instance.hasAudioTrack(EditorVideo.file(audioOutput)),
+        await ProVideoEditor.instance.hasAudioTrack(
+          EditorVideo.file(audioOutput),
+        ),
         isTrue,
       );
 
@@ -167,8 +172,10 @@ void main() {
         ),
         cancellation: MediaCancellation(),
       );
-      expect((await backend.probe(retryOutput.path)).duration.inMilliseconds,
-          closeTo(1000, 100));
+      expect(
+        (await backend.probe(retryOutput.path)).duration.inMilliseconds,
+        closeTo(1000, 100),
+      );
       expect(await input.readAsBytes(), orderedEquals(sourceBytes));
 
       if (keepOutput) {
@@ -206,7 +213,11 @@ Future<List<image.Image>> _frames(
   expect(bytes, hasLength(timestamps.length));
   return bytes.map((frame) {
     final decoded = image.decodePng(frame);
-    expect(decoded, isNotNull, reason: 'Exported frames must decode independently.');
+    expect(
+      decoded,
+      isNotNull,
+      reason: 'Exported frames must decode independently.',
+    );
     expect(decoded!.width, size.width.toInt());
     expect(decoded.height, size.height.toInt());
     return decoded;

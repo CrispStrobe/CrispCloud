@@ -7,11 +7,31 @@ import 'package:flutter_test/flutter_test.dart';
 void main() {
   test('capability matrix exposes only implemented native backends', () {
     for (final platform in TargetPlatform.values) {
-      expect(MediaCapabilities.canEdit(MediaKind.audio, platform: platform, isWeb: false), platform != TargetPlatform.fuchsia);
-      expect(MediaCapabilities.canEdit(MediaKind.video, platform: platform, isWeb: false),
-          {TargetPlatform.android, TargetPlatform.iOS, TargetPlatform.macOS}.contains(platform));
+      expect(
+        MediaCapabilities.canEdit(
+          MediaKind.audio,
+          platform: platform,
+          isWeb: false,
+        ),
+        platform != TargetPlatform.fuchsia,
+      );
+      expect(
+        MediaCapabilities.canEdit(
+          MediaKind.video,
+          platform: platform,
+          isWeb: false,
+        ),
+        {
+          TargetPlatform.android,
+          TargetPlatform.iOS,
+          TargetPlatform.macOS,
+        }.contains(platform),
+      );
       for (final kind in MediaKind.values) {
-        expect(MediaCapabilities.canEdit(kind, platform: platform, isWeb: true), isFalse);
+        expect(
+          MediaCapabilities.canEdit(kind, platform: platform, isWeb: true),
+          isFalse,
+        );
       }
     }
   });
@@ -23,7 +43,14 @@ void main() {
     for (final name in ['clip.MOV', 'clip.mp4', 'clip.m4v']) {
       expect(mediaKindForFileName(name), MediaKind.video);
     }
-    for (final name in ['clip.avi', 'voice.aac', 'voice.m4a', 'clip.mp4.exe', 'voice.wav.', 'mp4']) {
+    for (final name in [
+      'clip.avi',
+      'voice.aac',
+      'voice.m4a',
+      'clip.mp4.exe',
+      'voice.wav.',
+      'mp4',
+    ]) {
       expect(mediaKindForFileName(name), isNull);
     }
   });

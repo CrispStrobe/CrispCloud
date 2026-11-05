@@ -21,10 +21,11 @@ void registerMediaVideoLicenses() {
     final text = await rootBundle.loadString(
       'packages/pro_video_editor/assets/licenses/native.txt',
     );
-    yield LicenseEntryWithLineBreaks(
-      const <String>['AndroidX Media3', 'AndroidX ExifInterface', 'Kotlin coroutines'],
-      text,
-    );
+    yield LicenseEntryWithLineBreaks(const <String>[
+      'AndroidX Media3',
+      'AndroidX ExifInterface',
+      'Kotlin coroutines',
+    ], text);
   });
 }
 
@@ -34,11 +35,9 @@ void registerMediaVideoLicenses() {
 /// overwrites the input or an existing destination. A native render is only
 /// considered successful after its output can be reopened and inspected.
 class MediaVideoBackend implements MediaEditorBackend {
-  MediaVideoBackend({
-    ProVideoEditor? editor,
-    TargetPlatform? platform,
-  }) : _editorOverride = editor,
-       _platformOverride = platform;
+  MediaVideoBackend({ProVideoEditor? editor, TargetPlatform? platform})
+    : _editorOverride = editor,
+      _platformOverride = platform;
 
   final ProVideoEditor? _editorOverride;
   final TargetPlatform? _platformOverride;
@@ -99,7 +98,10 @@ class MediaVideoBackend implements MediaEditorBackend {
         throw ArgumentError('The export path must differ from the input.');
       }
       if (await output.exists()) {
-        throw FileSystemException('The export path already exists.', outputPath);
+        throw FileSystemException(
+          'The export path already exists.',
+          outputPath,
+        );
       }
 
       final info = await probe(inputPath);
@@ -286,16 +288,16 @@ class _VideoExportPlan {
       width = right - left;
       height = bottom - top;
       if (width < 2 || height < 2) {
-        throw ArgumentError('The crop must contain at least two pixels per axis.');
+        throw ArgumentError(
+          'The crop must contain at least two pixels per axis.',
+        );
       }
     }
 
     final turns = edit.quarterTurns % 4;
     final rotatedWidth = turns.isOdd ? height : width;
     final rotatedHeight = turns.isOdd ? width : height;
-    final scale = limit == null
-        ? 1.0
-        : math.min(1.0, limit / rotatedHeight);
+    final scale = limit == null ? 1.0 : math.min(1.0, limit / rotatedHeight);
     // Hardware H.264 encoders commonly require even dimensions. Round down
     // by at most one pixel per axis; this also avoids exceeding a resize cap.
     outputWidth = math.max(2, (rotatedWidth * scale / 2).floor() * 2);

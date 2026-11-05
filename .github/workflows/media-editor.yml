@@ -50,6 +50,7 @@ jobs:
           lib/l10n/media_editor_strings.dart lib/services/media_*.dart
           lib/widgets/media_*.dart test/media_*.dart
           test/widget/media_*.dart packages/crisp_audio/lib
+          lib/services/upload_temp_file.dart test/upload_temp_file_test.dart
           integration_test/media_*test.dart
           test/support/media_video_fixture.dart
       - name: Analyze media integration
@@ -61,11 +62,13 @@ jobs:
           lib/services/media_audio_backend.dart lib/services/media_video_backend.dart
           lib/widgets/media_editor_dialog.dart lib/widgets/media_editor_controls.dart
           lib/widgets/media_editor_preview.dart lib/widgets/media_editor_menus.dart
-          packages/crisp_audio/lib test/media_edit_session_test.dart
-          test/media_capabilities_test.dart test/media_editor_strings_test.dart
-          test/media_file_store_test.dart test/media_audio_backend_test.dart
-          test/media_video_backend_test.dart test/widget/media_editor_dialog_test.dart
-          test/widget/media_editor_routing_test.dart integration_test/media_export_test.dart
+          lib/services/cloud_storage_interface.dart lib/services/encrypted_storage_wrapper.dart
+          lib/services/azure_blob_adapter.dart lib/services/filen_client_adapter.dart
+          lib/services/ftp_client_adapter.dart lib/services/gdrive_client_adapter.dart
+          lib/services/onedrive_client_adapter.dart lib/services/pcloud_client_adapter.dart
+          lib/services/upload_temp_file.dart test/upload_temp_file_test.dart
+          packages/crisp_audio/lib test/media_*test.dart test/widget/media_*test.dart
+          integration_test/media_export_test.dart
           integration_test/media_audio_export_test.dart integration_test/media_video_export_test.dart
       - name: File, history, platform, localization, FFI and editor lifecycle contracts
         if: success() || failure()
@@ -73,10 +76,7 @@ jobs:
           CRISP_AUDIO_LIBRARY: ${{ github.workspace }}/build/media-native/libcrisp_audio.so
         run: >-
           flutter test --reporter expanded --concurrency=2
-          test/media_edit_session_test.dart test/media_capabilities_test.dart
-          test/media_editor_strings_test.dart test/media_file_store_test.dart
-          test/media_audio_backend_test.dart test/media_video_backend_test.dart
-          test/widget/media_editor_dialog_test.dart test/widget/media_editor_routing_test.dart
+          test/media_*test.dart test/widget/media_*test.dart test/upload_temp_file_test.dart
           test/file_editability_test.dart
       - name: Web rejects unavailable media editing and remains compilable
         if: success() || failure()

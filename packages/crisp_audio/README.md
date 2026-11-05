@@ -17,7 +17,7 @@ source and never chooses an external destination.
 | Fades | Linear amplitude ramps at selected-region boundaries; overlapping ramps multiply |
 | Mute | Exported samples are zero |
 | Export | New PCM16 little-endian WAV; existing paths are rejected |
-| Platforms | iOS, macOS, Android, Windows, Linux; web has an explicit unsupported stub |
+| Platforms | iOS, macOS, Android API 24+, Windows, Linux; web has an explicit unsupported stub |
 
 The backend caps inspected inputs at 24 hours and exports at the ordinary
 RIFF/WAV 32-bit chunk size. The host can impose smaller practical file limits.

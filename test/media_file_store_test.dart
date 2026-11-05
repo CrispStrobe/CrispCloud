@@ -4,6 +4,8 @@ import 'dart:typed_data';
 
 import 'package:crisp_cloud/models/file_item.dart';
 import 'package:crisp_cloud/services/cloud_storage_interface.dart';
+import 'package:crisp_cloud/services/encrypted_storage_wrapper.dart';
+import 'package:crisp_cloud/services/encryption_service.dart';
 import 'package:crisp_cloud/services/file_cache_service.dart';
 import 'package:crisp_cloud/services/local_file_service_native.dart';
 import 'package:crisp_cloud/services/media_file_store.dart';
@@ -82,6 +84,18 @@ void main() {
       expect(await original.exists(), isTrue);
     });
 
+    test('a fresh app creates its missing private temporary parent before staging', () async {
+      await temporary.delete();
+      expect(await temporary.exists(), isFalse);
+      final snapshot = await store.stage();
+      expect(await File(snapshot).readAsBytes(), _bytes(1));
+      expect(p.isWithin(temporary.path, snapshot), isTrue);
+      await store.dispose();
+      expect(await temporary.exists(), isTrue);
+      expect(await temporary.list().toList(), isEmpty);
+      expect(await original.readAsBytes(), _bytes(1));
+    });
+
     test('exports a copy under a write scope and leaves the source and render intact', () async {
       final snapshot = await store.stage();
       final output = await _rendered(store);
@@ -139,7 +153,7 @@ void main() {
       expect(results.whereType<MediaStoreException>().single.reason, MediaStoreFailure.nameConflict);
       expect(
         await File(p.join(directory.path, 'same-name.wav')).readAsBytes(),
-        anyOf(_bytes(3, 2048), _bytes(5, 2048)),
+        anyOf(equals(_bytes(3, 2048)), equals(_bytes(5, 2048))),
       );
       expect(await original.readAsBytes(), _bytes(1));
     });
@@ -282,6 +296,158 @@ void main() {
       expect(cache.removed, ['fixture-cloud:/media/edited-65ad.wav']);
     });
 
+    test('folder-only and guessed file resolvers cannot determine media existence', () async {
+      for (final resolver in <Map<String, dynamic>? Function(String)>[
+        (_) => null, // Google Drive/pCloud file paths are not folder IDs.
+        (path) => {'id': 'folder-id', 'path': path},
+        (path) => {'type': 'file', 'name': p.posix.basename(path), 'path': path}, // FTP guesses.
+      ]) {
+        await store.dispose();
+        client = _FolderLookupCloud(resolver)..files['/media/source.wav'] = _bytes(1);
+        store = MediaFileStore.remote(
+          client: client, providerName: 'fixture-cloud', cache: cache,
+          file: _file('/media/source.wav'), isCurrentAccount: () => current,
+          temporaryDirectory: temporary.path,
+        );
+        expect(await File(await store.stage()).readAsBytes(), _bytes(1));
+        final output = await _rendered(store);
+        expect(await store.saveCopy(output, 'copy.wav'), MediaSaveOutcome.savedCopy);
+        expect(client.resolves, 0, reason: 'Fresh parent entries are the file contract');
+        expect(client.files['/media/copy.wav'], _bytes(2, 2048));
+      }
+    });
+
+    test('cached adapters use the optional fresh-directory hook for every verification', () async {
+      await store.dispose();
+      final fresh = _FreshCloud()..files['/media/source.wav'] = _bytes(1);
+      client = fresh;
+      store = MediaFileStore.remote(
+        client: client, providerName: 'fixture-cloud', cache: cache,
+        file: _file('/media/source.wav'), isCurrentAccount: () => current,
+        temporaryDirectory: temporary.path,
+      );
+      await store.stage();
+      final output = await _rendered(store);
+      await store.saveCopy(output, 'copy.wav');
+      expect(fresh.freshReads, 3);
+      expect(fresh.cachedReads, 0);
+    });
+
+    test('an encryption wrapper preserves fresh reads and verifies plaintext length', () async {
+      await store.dispose();
+      final key = _bytes(7, 32);
+      final encrypted = EncryptionService.encrypt(_bytes(1), key);
+      final fresh = _FreshCloud()..files['/media/source.wav'] = encrypted;
+      client = fresh;
+      store = MediaFileStore.remote(
+        client: EncryptedStorageWrapper(inner: fresh, encryptionKey: key),
+        providerName: 'fixture-cloud', cache: cache,
+        file: _file('/media/source.wav'), isCurrentAccount: () => current,
+        temporaryDirectory: temporary.path,
+      );
+      expect(await File(await store.stage()).readAsBytes(), _bytes(1));
+      final output = await _rendered(store);
+      await store.saveCopy(output, 'copy.wav');
+      expect(fresh.freshReads, 3);
+      expect(fresh.cachedReads, 0);
+      expect(fresh.files['/media/source.wav'], encrypted);
+      expect(EncryptionService.decrypt(fresh.files['/media/copy.wav']!, key), _bytes(2, 2048));
+    });
+
+    test('the ciphertext size is capped before an encrypted buffering download', () async {
+      await store.dispose();
+      final key = _bytes(7, 32);
+      final fresh = _FreshCloud()
+        ..files['/media/source.wav'] = EncryptionService.encrypt(_bytes(1), key);
+      client = fresh;
+      store = MediaFileStore.remote(
+        client: EncryptedStorageWrapper(inner: fresh, encryptionKey: key),
+        providerName: 'fixture-cloud', cache: cache,
+        file: _file('/media/source.wav'), isCurrentAccount: () => current,
+        transferLimitBytes: 4096, temporaryDirectory: temporary.path,
+      );
+      await expectLater(store.stage(), _failure(MediaStoreFailure.tooLarge));
+      expect(fresh.downloads, 0);
+    });
+
+    test('B2 combined directory entries preserve folder collisions and fresh size', () async {
+      client.listingOverride = {
+        'files': [
+          {'name': 'source.wav', 'isFolder': false, 'size': 4096, 'uuid': 'file-id'},
+          {'name': 'occupied.wav', 'isFolder': true, 'path': '/media/occupied.wav/'},
+        ],
+        'nextStartFileName': null,
+      };
+      await store.stage();
+      final output = await _rendered(store);
+      await expectLater(store.saveCopy(output, 'occupied.wav'), _failure(MediaStoreFailure.nameConflict));
+      expect(client.uploads, isEmpty);
+      expect(await store.saveCopy(output, 'free.wav'), MediaSaveOutcome.savedCopy);
+    });
+
+    test('partial pages cannot authorize staging or an unused export filename', () async {
+      final complete = <String, dynamic>{
+        'files': [{'name': 'source.wav', 'size': 4096}],
+        'folders': <dynamic>[],
+      };
+      for (final token in ['nextStartFileName', 'nextMarker', 'nextPageToken', '@odata.nextLink']) {
+        client.listingOverride = {...complete, token: 'next-page'};
+        await expectLater(store.stage(), _failure(MediaStoreFailure.sourceUnavailable));
+      }
+      expect(client.downloads, 0);
+      client.listingOverride = complete;
+      await store.stage();
+      final output = await _rendered(store);
+      for (final flag in ['hasMore', 'has_more', 'isTruncated']) {
+        client.listingOverride = {...complete, flag: true};
+        await expectLater(store.saveCopy(output, 'copy.wav'), _failure(MediaStoreFailure.unverifiedDestination));
+      }
+      expect(client.uploads, isEmpty);
+    });
+
+    test('ambiguous duplicate names and replacement UUIDs cannot select another source', () async {
+      client.listingOverride = {
+        'files': [
+          {'name': 'source.wav', 'size': 4096, 'uuid': 'first'},
+          {'name': 'source.wav', 'size': 4096, 'uuid': 'second'},
+        ],
+        'folders': <dynamic>[],
+      };
+      await expectLater(store.stage(), _failure(MediaStoreFailure.sourceUnavailable));
+      await store.dispose();
+      store = MediaFileStore.remote(
+        client: client, providerName: 'fixture-cloud', cache: cache,
+        file: _file('/media/source.wav').copyWith(uuid: 'first'),
+        isCurrentAccount: () => current, temporaryDirectory: temporary.path,
+      );
+      client.listingOverride = {
+        'files': [{'name': 'source.wav', 'size': 4096, 'uuid': 'second'}],
+        'folders': <dynamic>[],
+      };
+      await expectLater(store.stage(), _failure(MediaStoreFailure.sourceUnavailable));
+      expect(client.downloads, 0);
+    });
+
+    test('an Azure-shaped uploader receives a directory instead of overwriting its prefix blob', () async {
+      await store.dispose();
+      final azure = _AzureShapeCloud()
+        ..files['/container/media/source.wav'] = _bytes(1)
+        ..files['/container/media'] = _bytes(9);
+      client = azure;
+      store = MediaFileStore.remote(
+        client: client, providerName: 'fixture-cloud', cache: cache,
+        file: _file('/container/media/source.wav'), isCurrentAccount: () => current,
+        temporaryDirectory: temporary.path,
+      );
+      await store.stage();
+      final output = await _rendered(store);
+      await store.saveCopy(output, 'copy.wav');
+      expect(azure.lastTargetDirectory, '/container/media/');
+      expect(client.files['/container/media'], _bytes(9));
+      expect(client.files['/container/media/source.wav'], _bytes(1));
+      expect(client.files['/container/media/copy.wav'], _bytes(2, 2048));
+    });
+
     test('a streaming flag cannot bypass the conservative remote transfer limit', () async {
       client.reportedSize = kMediaRemoteTransferLimitBytes + 1;
       expect(client.supportsStreaming, isTrue);
@@ -312,12 +478,12 @@ void main() {
       expect(await File(output).exists(), isTrue);
     });
 
-    test('unknown or missing fresh source metadata never starts a buffering fallback', () async {
+    test('unknown or missing fresh source listing metadata never starts a buffering fallback', () async {
       client.hideSize = true;
       await expectLater(store.stage(), _failure(MediaStoreFailure.sourceUnavailable));
       expect(client.downloads, 0);
       client.hideSize = false;
-      client.hideMetadata = true;
+      client.listingOverride = {'files': <dynamic>[], 'folders': <dynamic>[]};
       await expectLater(store.stage(), _failure(MediaStoreFailure.sourceUnavailable));
       expect(client.downloads, 0);
     });
@@ -381,6 +547,7 @@ void main() {
       expect(client.files['/media/copy.wav'], _bytes(2, 2048));
       expect(client.files['/media/source.wav'], _bytes(1));
       expect(await File(output).exists(), isTrue);
+      expect(cache.removed, ['fixture-cloud:/media/copy.wav']);
     });
 
     test('a failed upload preserves the rendered file for retry', () async {
@@ -425,6 +592,15 @@ void main() {
       cache.failRemove = true;
       expect(await store.saveCopy(output, 'copy.wav'), MediaSaveOutcome.savedCopy);
       expect(client.uploads, ['/media/copy.wav']);
+    });
+
+    test('an account change during cache cleanup is reported after invalidating the completed copy', () async {
+      await store.stage();
+      final output = await _rendered(store);
+      cache.afterRemove = () => current = false;
+      await expectLater(store.saveCopy(output, 'copy.wav'), _failure(MediaStoreFailure.accountChanged));
+      expect(client.uploads, ['/media/copy.wav']);
+      expect(cache.removed, ['fixture-cloud:/media/copy.wav']);
     });
 
     test('dispose waits for an active download and cleans only its private directory', () async {
@@ -490,6 +666,7 @@ class _Cloud extends CloudStorageClient {
   final files = <String, Uint8List>{};
   final uploads = <String>[];
   int downloads = 0;
+  int resolves = 0;
   String accountUserId = 'user-1';
   String? revision;
   int? reportedSize;
@@ -516,6 +693,7 @@ class _Cloud extends CloudStorageClient {
 
   @override
   Future<Map<String, dynamic>?> resolvePath(String path) async {
+    resolves++;
     if (hideMetadata) return null;
     final bytes = files[path];
     if (bytes == null) return null;
@@ -533,7 +711,11 @@ class _Cloud extends CloudStorageClient {
       'files': [
         for (final entry in files.entries)
           if (p.posix.dirname(entry.key) == path)
-            {'name': p.posix.basename(entry.key), 'size': entry.value.length},
+            {
+              'name': p.posix.basename(entry.key),
+              if (!hideSize) 'size': reportedSize ?? entry.value.length,
+              if (revision != null) 'versionId': revision,
+            },
       ],
       'folders': <Map<String, dynamic>>[],
     };
@@ -552,6 +734,15 @@ class _Cloud extends CloudStorageClient {
       if (failDownload) throw StateError('Interrupted download');
     }
     afterDownload?.call();
+  }
+
+  @override
+  Future<Uint8List> downloadFileBytes(String remotePath, {Function(int, int)? onProgress}) async {
+    final bytes = BytesBuilder(copy: false);
+    await for (final chunk in downloadStream(remotePath, onProgress: onProgress)) {
+      bytes.add(chunk);
+    }
+    return bytes.takeBytes();
   }
 
   @override
@@ -576,6 +767,7 @@ class _Cache extends FileCacheService {
   int reads = 0;
   bool failRemove = false;
   final removed = <String>[];
+  void Function()? afterRemove;
 
   @override
   Future<List<int>?> get(String remotePath, String provider) async {
@@ -587,5 +779,47 @@ class _Cache extends FileCacheService {
   Future<void> remove(String remotePath, String provider) async {
     removed.add('$provider:$remotePath');
     if (failRemove) throw StateError('Cache unavailable');
+    afterRemove?.call();
+  }
+}
+
+class _FolderLookupCloud extends _Cloud {
+  _FolderLookupCloud(this.resolver);
+  final Map<String, dynamic>? Function(String) resolver;
+
+  @override
+  Future<Map<String, dynamic>?> resolvePath(String path) async {
+    resolves++;
+    return resolver(path);
+  }
+}
+
+class _FreshCloud extends _Cloud implements FreshCloudDirectoryReader {
+  int freshReads = 0;
+  int cachedReads = 0;
+
+  @override
+  Future<Map<String, dynamic>> listPath(String path) async {
+    cachedReads++;
+    return {'files': <dynamic>[], 'folders': <dynamic>[]};
+  }
+
+  @override
+  Future<Map<String, dynamic>> readDirectoryForEdit(String path) {
+    freshReads++;
+    return super.listPath(path);
+  }
+}
+
+class _AzureShapeCloud extends _Cloud {
+  String? lastTargetDirectory;
+
+  @override
+  Future<void> uploadFile(List<int> fileData, String fileName, String targetPath,
+      {Function(int, int)? onProgress}) async {
+    lastTargetDirectory = targetPath;
+    final target = targetPath.endsWith('/') ? '$targetPath$fileName' : targetPath;
+    uploads.add(target);
+    files[target] = Uint8List.fromList(fileData);
   }
 }

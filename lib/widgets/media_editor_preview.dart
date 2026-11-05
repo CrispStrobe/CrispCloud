@@ -35,6 +35,49 @@ class _MediaEditorPreviewState extends State<MediaEditorPreview> {
   bool _failed = false;
   bool _stopping = false;
 
+  bool _owns(VideoPlayerController controller) =>
+      mounted && identical(_controller, controller);
+
+  void _markFailed(VideoPlayerController controller) {
+    if (_owns(controller) && !_failed) setState(() => _failed = true);
+  }
+
+  /// Playback is optional: a platform command failure should leave the editor
+  /// usable and must not become an uncaught asynchronous framework error.
+  Future<void> _runPlayerOperation(
+    VideoPlayerController controller,
+    Future<void> Function() operation,
+  ) async {
+    if (!_owns(controller)) return;
+    try {
+      await operation();
+    } catch (_) {
+      _markFailed(controller);
+      // A failed seek/volume update must not leave audible playback behind an
+      // unavailable-preview message. A failed pause is already handled here.
+      if (_owns(controller)) {
+        try { await controller.pause(); } catch (_) {}
+      }
+    }
+  }
+
+  Future<void> _stop(VideoPlayerController controller) async {
+    if (_stopping) return;
+    _stopping = true;
+    try {
+      await _runPlayerOperation(controller, controller.pause);
+    } finally {
+      _stopping = false;
+    }
+  }
+
+  Future<void> _release(VideoPlayerController controller) async {
+    try { await controller.dispose(); } catch (_) {
+      // The native player may already have been reclaimed. Its disposed UI
+      // cannot report an error, and this must not interrupt workspace cleanup.
+    }
+  }
+
   @override
   void initState() {
     super.initState();
@@ -47,12 +90,13 @@ class _MediaEditorPreviewState extends State<MediaEditorPreview> {
     controller.addListener(_changed);
     try {
       await controller.initialize();
-      if (!mounted) return;
+      if (!_owns(controller)) return;
       await controller.setVolume(widget.edit.muted ? 0 : 1);
+      if (!_owns(controller)) return;
       await controller.seekTo(widget.edit.start);
-      if (mounted) setState(() {});
+      if (_owns(controller)) setState(() {});
     } catch (_) {
-      if (mounted) setState(() => _failed = true);
+      _markFailed(controller);
     }
   }
 
@@ -61,19 +105,26 @@ class _MediaEditorPreviewState extends State<MediaEditorPreview> {
     super.didUpdateWidget(oldWidget);
     final controller = _controller;
     if (controller == null || !controller.value.isInitialized) return;
-    if (!widget.enabled && controller.value.isPlaying) unawaited(controller.pause());
-    if (oldWidget.edit.muted != widget.edit.muted) unawaited(controller.setVolume(widget.edit.muted ? 0 : 1));
+    if (!widget.enabled && controller.value.isPlaying) unawaited(_stop(controller));
+    if (oldWidget.edit.muted != widget.edit.muted) {
+      unawaited(_runPlayerOperation(controller, () => controller.setVolume(widget.edit.muted ? 0 : 1)));
+    }
     if (controller.value.position < widget.edit.start || controller.value.position >= widget.edit.end) {
-      unawaited(controller.seekTo(widget.edit.start));
+      unawaited(_runPlayerOperation(controller, () => controller.seekTo(widget.edit.start)));
     }
   }
 
   void _changed() {
     final controller = _controller;
-    if (!mounted || controller == null) return;
-    if (controller.value.isPlaying && controller.value.position >= widget.edit.end && !_stopping) {
-      _stopping = true;
-      unawaited(controller.pause().then((_) { _stopping = false; }));
+    if (!mounted || controller == null || _failed) return;
+    if (controller.value.hasError) {
+      _markFailed(controller);
+      if (controller.value.isPlaying) unawaited(_stop(controller));
+      return;
+    }
+    if (controller.value.isPlaying &&
+        (!widget.enabled || controller.value.position >= widget.edit.end)) {
+      unawaited(_stop(controller));
     }
     setState(() {});
   }
@@ -81,27 +132,36 @@ class _MediaEditorPreviewState extends State<MediaEditorPreview> {
   @override
   void dispose() {
     final controller = _controller;
+    _controller = null;
     if (controller != null) {
       controller.removeListener(_changed);
-      unawaited(controller.dispose());
+      unawaited(_release(controller));
     }
     super.dispose();
   }
 
   Future<void> _toggle() async {
-    final controller = _controller!;
-    try {
+    final controller = _controller;
+    if (controller == null || !widget.enabled) return;
+    await _runPlayerOperation(controller, () async {
       if (controller.value.isPlaying) {
         await controller.pause();
       } else {
         if (controller.value.position >= widget.edit.end || controller.value.position < widget.edit.start) {
           await controller.seekTo(widget.edit.start);
         }
+        // A seek can still be pending when an export disables the preview or
+        // a new rendered file replaces this controller. Do not start it then.
+        if (!_owns(controller) || !widget.enabled) return;
         await controller.play();
       }
-    } catch (_) {
-      if (mounted) setState(() => _failed = true);
-    }
+    });
+  }
+
+  void _seek(Duration position) {
+    final controller = _controller;
+    if (controller == null || !widget.enabled) return;
+    unawaited(_runPlayerOperation(controller, () => controller.seekTo(position)));
   }
 
   @override
@@ -122,13 +182,13 @@ class _MediaEditorPreviewState extends State<MediaEditorPreview> {
         IconButton(tooltip: context.mediaTr(controller.value.isPlaying ? 'Pause' : 'Play'),
           onPressed: widget.enabled ? _toggle : null,
           icon: Icon(controller.value.isPlaying ? Icons.pause : Icons.play_arrow)),
-        Expanded(child: Slider(
+        Expanded(child: Directionality(textDirection: TextDirection.ltr, child: Slider(
           value: position,
           min: widget.edit.start.inMicroseconds.toDouble(),
           max: widget.edit.end.inMicroseconds.toDouble(),
           semanticFormatterCallback: (value) => formatMediaTime(Duration(microseconds: value.round())),
-          onChanged: widget.enabled ? (value) => unawaited(controller.seekTo(Duration(microseconds: value.round()))) : null,
-        )),
+          onChanged: widget.enabled ? (value) => _seek(Duration(microseconds: value.round())) : null,
+        ))),
         Text(formatMediaTime(Duration(microseconds: position.round()))),
       ]),
     ]);

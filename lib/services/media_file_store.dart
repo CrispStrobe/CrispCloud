@@ -168,7 +168,12 @@ abstract class _MediaFileStoreBase extends MediaFileStore {
     if (_workspace case final directory?) return directory;
     final parent = temporaryDirectory ?? (await getTemporaryDirectory()).path;
     assertOrigin();
-    return _workspace = await Directory(p.normalize(p.absolute(parent))).createTemp('crisp-media-');
+    // A newly installed sandboxed macOS app may not have its cache directory
+    // yet. Only create this private temporary parent, never source directories.
+    final root = Directory(p.normalize(p.absolute(parent)));
+    await root.create(recursive: true);
+    assertOrigin();
+    return _workspace = await root.createTemp('crisp-media-');
   }
 
   @override
@@ -467,21 +472,122 @@ class _RemoteMediaFileStore extends _MediaFileStoreBase {
     }
   }
 
-  Future<Map<String, String>> _metadata() async {
+  Future<_MediaRemoteDirectory> _parentDirectory(MediaStoreFailure failure) async {
     assertOrigin();
-    final info = await client.resolvePath(path);
-    assertOrigin();
-    if (info == null || info['type'] == 'folder' || info['isFolder'] == true) {
-      throw const MediaStoreException(MediaStoreFailure.sourceUnavailable);
+    try {
+      final listing = await client.listPathForEdit(p.posix.dirname(path));
+      assertOrigin();
+      return _parseDirectory(listing);
+    } catch (_) {
+      assertOrigin();
+      throw MediaStoreException(failure);
     }
-    // A provider that buffers its fallback download must not receive an
-    // unbounded request. Listing size alone may be stale; require fresh size.
+  }
+
+  static _MediaRemoteDirectory _parseDirectory(Map<String, dynamic> listing) {
+    // B2 exposes its next page; Azure exposes NextMarker. Several other
+    // adapters consume all pages internally. Never interpret an unfinished
+    // listing as evidence that an export name is unused.
+    for (final key in const [
+      'nextStartFileName', 'nextFileName', 'nextMarker', 'NextMarker',
+      'nextPageToken', 'nextContinuationToken', 'continuationToken',
+      'nextCursor', 'nextLink', '@odata.nextLink',
+    ]) {
+      final value = listing[key];
+      if (value != null && '$value'.trim().isNotEmpty) {
+        throw const MediaStoreException(MediaStoreFailure.unverifiedDestination);
+      }
+    }
+    for (final key in const ['hasMore', 'has_more', 'isTruncated', 'IsTruncated', 'hasNextPage']) {
+      if (listing[key] == true || listing[key] == 'true') {
+        throw const MediaStoreException(MediaStoreFailure.unverifiedDestination);
+      }
+    }
+    final rawFiles = listing['files'];
+    final rawFolders = listing['folders'];
+    if (rawFiles is! List ||
+        (listing.containsKey('folders') && rawFolders is! List) ||
+        (!listing.containsKey('folders') && !listing.containsKey('nextStartFileName'))) {
+      throw const MediaStoreException(MediaStoreFailure.unverifiedDestination);
+    }
+    final files = <Map<String, dynamic>>[];
+    final folders = <Map<String, dynamic>>[];
+    void addEntries(List entries, bool? defaultFolder) {
+      for (final entry in entries) {
+        if (entry is! Map) {
+          throw const MediaStoreException(MediaStoreFailure.unverifiedDestination);
+        }
+        final nested = entry['metadata'];
+        final info = <String, dynamic>{
+          if (nested is Map)
+            for (final value in nested.entries)
+              if (value.key is String) value.key as String: value.value,
+          for (final value in entry.entries)
+            if (value.key is String && value.value != null)
+              value.key as String: value.value,
+        };
+        final name = info['name'];
+        if (name is! String || name.isEmpty || name == '.' || name == '..' || name.contains('/')) {
+          throw const MediaStoreException(MediaStoreFailure.unverifiedDestination);
+        }
+        final bool? explicitFolder = info['isFolder'] is bool
+            ? info['isFolder'] as bool
+            : info['type'] == 'folder' ? true : info['type'] == 'file' ? false : null;
+        final isFolder = explicitFolder ?? defaultFolder;
+        // B2 combines files and folders into one list. Its entries all carry
+        // isFolder; missing classification must not silently hide directories.
+        if (isFolder == null) {
+          throw const MediaStoreException(MediaStoreFailure.unverifiedDestination);
+        }
+        (isFolder ? folders : files).add(info);
+      }
+    }
+    addEntries(rawFiles, rawFolders is List ? false : null);
+    if (rawFolders is List) addEntries(rawFolders, true);
+    return (files: files, folders: folders);
+  }
+
+  Map<String, dynamic> _originalEntry(_MediaRemoteDirectory directory, MediaStoreFailure failure) {
+    final originalName = p.posix.basename(path).toLowerCase();
+    final matches = directory.files.where(
+      (entry) => (entry['name'] as String).toLowerCase() == originalName,
+    ).toList();
+    if (matches.length != 1 || directory.folders.any(
+      (entry) => (entry['name'] as String).toLowerCase() == originalName,
+    )) {
+      // Duplicate Google Drive names cannot be addressed safely by the
+      // generic path-based download API, even when one UUID is familiar.
+      throw MediaStoreException(failure);
+    }
+    final info = matches.single;
+    final identity = info['uuid'] ?? info['id'] ?? info['fileId'];
+    if ((file.uuid?.isNotEmpty ?? false) && identity != null &&
+        '$identity'.isNotEmpty && file.uuid != '$identity') {
+      throw MediaStoreException(failure);
+    }
+    return info;
+  }
+
+  Future<Map<String, String>> _metadata() async {
+    // resolvePath is not a common file-stat contract: Google Drive/pCloud only
+    // resolve folders, and FTP guesses that any failed directory lookup is a
+    // file. Use a fresh, complete parent listing for every provider instead.
+    final directory = await _parentDirectory(MediaStoreFailure.sourceUnavailable);
+    final info = _originalEntry(directory, MediaStoreFailure.sourceUnavailable);
+    // The captured FileItem's size may be stale. Require the fresh listing's
+    // size before allowing an adapter to invoke a buffering download fallback.
     final size = int.tryParse('${info['size']}');
     if (size == null || size < 0) {
       throw const MediaStoreException(MediaStoreFailure.sourceUnavailable);
     }
     _MediaFileStoreBase.assertSize(size, inputLimitBytes);
+    final downloadSize = int.tryParse('${info['downloadSize'] ?? size}');
+    if (downloadSize == null || downloadSize < 0) {
+      throw const MediaStoreException(MediaStoreFailure.sourceUnavailable);
+    }
+    _MediaFileStoreBase.assertSize(downloadSize, inputLimitBytes);
     return {
+      'downloadSize': '$downloadSize',
       for (final key in const [
         'size',
         'etag',
@@ -494,6 +600,11 @@ class _RemoteMediaFileStore extends _MediaFileStoreBase {
         'lastModified',
         'modificationTime',
         'uuid',
+        'id',
+        'fileId',
+        'content_hash',
+        'sha1',
+        'crc32Hash',
       ])
         if (info[key] != null) key: '${info[key]}',
     };
@@ -512,7 +623,7 @@ class _RemoteMediaFileStore extends _MediaFileStoreBase {
       client.downloadStream(path),
       destination,
       limitBytes: inputLimitBytes,
-      expectedBytes: int.parse(before['size']!),
+      expectedBytes: int.parse(before['downloadSize']!),
     );
     final after = await _metadata();
     if (before.keys.any((key) => before[key] != after[key])) {
@@ -521,46 +632,13 @@ class _RemoteMediaFileStore extends _MediaFileStoreBase {
   }
 
   Future<void> _verifyDestination(String target) async {
-    assertOrigin();
-    final existing = await client.resolvePath(target);
-    assertOrigin();
-    if (existing != null) {
-      throw const MediaStoreException(MediaStoreFailure.nameConflict);
-    }
-    // Adapters can collapse lookup failures into null. Require independent,
-    // positive evidence that this is still the original's parent directory.
-    final Map<String, dynamic> listing;
-    try {
-      listing = await client.listPath(p.posix.dirname(path));
-    } catch (_) {
-      assertOrigin();
-      throw const MediaStoreException(MediaStoreFailure.unverifiedDestination);
-    }
-    assertOrigin();
-    final files = listing['files'];
-    final folders = listing['folders'];
-    if (files is! List || folders is! List) {
-      throw const MediaStoreException(MediaStoreFailure.unverifiedDestination);
-    }
-    final originalName = p.posix.basename(path).toLowerCase();
+    final directory = await _parentDirectory(MediaStoreFailure.unverifiedDestination);
+    _originalEntry(directory, MediaStoreFailure.unverifiedDestination);
     final targetName = p.posix.basename(target).toLowerCase();
-    var foundOriginal = false;
-    for (final entry in [...files, ...folders]) {
-      if (entry is! Map || entry['name'] is! String) {
-        throw const MediaStoreException(MediaStoreFailure.unverifiedDestination);
-      }
+    for (final entry in [...directory.files, ...directory.folders]) {
       if ((entry['name'] as String).toLowerCase() == targetName) {
         throw const MediaStoreException(MediaStoreFailure.nameConflict);
       }
-    }
-    for (final entry in files) {
-      if ((entry['name'] as String).toLowerCase() == originalName) {
-        foundOriginal = true;
-        break;
-      }
-    }
-    if (!foundOriginal) {
-      throw const MediaStoreException(MediaStoreFailure.unverifiedDestination);
     }
   }
 
@@ -594,11 +672,14 @@ class _RemoteMediaFileStore extends _MediaFileStoreBase {
           _uploadBytes(output, length),
           length,
           p.posix.basename(target),
-          p.posix.dirname(target),
+          // Azure distinguishes a directory from a full blob key by its final
+          // slash. Other adapters normalize/join this directory path.
+          '${p.posix.dirname(target).replaceFirst(RegExp(r'/+$'), '')}/',
         );
-        assertOrigin();
         // Failure of housekeeping after a successful write must not encourage
-        // a second upload. Do not insert account-specific bytes into the cache.
+        // a second upload. Invalidate even if the account changed while upload
+        // was in flight: the cache key is shared by provider/path. Then report
+        // the account change without claiming persistence to the new account.
         try {
           await cache.remove(target, providerName);
         } catch (error, stack) {
@@ -608,6 +689,12 @@ class _RemoteMediaFileStore extends _MediaFileStoreBase {
             stack,
           );
         }
+        assertOrigin();
         return MediaSaveOutcome.savedCopy;
       });
 }
+
+typedef _MediaRemoteDirectory = ({
+  List<Map<String, dynamic>> files,
+  List<Map<String, dynamic>> folders,
+});

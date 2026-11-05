@@ -174,7 +174,9 @@ class MediaEditorControlsState extends State<MediaEditorControls> {
 
   List<Widget> _videoControls(BuildContext context) {
     final crop = edit.crop;
-    final cropAspect = crop == null ? null : info.width! * crop.width / (info.height! * crop.height);
+    final sourceCropAspect = crop == null ? null : info.width! * crop.width / (info.height! * crop.height);
+    final cropAspect = sourceCropAspect == null ? null :
+        edit.quarterTurns.isOdd ? 1 / sourceCropAspect : sourceCropAspect;
     final ratio = cropAspect == null ? 0 : (cropAspect - 1).abs() < 0.001 ? 1 :
         (cropAspect - 16 / 9).abs() < 0.001 ? 2 : 3;
     return [
@@ -195,7 +197,10 @@ class MediaEditorControlsState extends State<MediaEditorControls> {
         onChanged: enabled ? (value) {
           if (value == null) return;
           if (value == 0) { onChanged(edit.copyWith(clearCrop: true)); return; }
-          final target = value == 1 ? 1.0 : value == 2 ? 16 / 9 : 9 / 16;
+          final outputAspect = value == 1 ? 1.0 : value == 2 ? 16 / 9 : 9 / 16;
+          // Presets describe the output the user sees. The render recipe's
+          // crop is in source coordinates, before its clockwise rotation.
+          final target = edit.quarterTurns.isOdd ? 1 / outputAspect : outputAspect;
           final source = info.width! / info.height!;
           final width = math.min(1.0, target / source);
           final height = math.min(1.0, source / target);
@@ -243,14 +248,23 @@ class _TrimSliderState extends State<_TrimSlider> {
   Widget build(BuildContext context) {
     final values = _drag ?? RangeValues(widget.edit.start.inMicroseconds.toDouble(), widget.edit.end.inMicroseconds.toDouble());
     return Semantics(
+      // Each thumb is an independent adjustable accessibility node. Keep the
+      // label on a stable parent rather than merging it into changing siblings.
+      container: true,
+      explicitChildNodes: true,
       label: context.mediaTr('Trim'),
-      child: RangeSlider(values: values, max: widget.info.duration.inMicroseconds.toDouble(),
+      // Media time follows the waveform's physical left-to-right axis in
+      // every locale; surrounding controls and labels retain their direction.
+      child: Directionality(textDirection: TextDirection.ltr,
+        child: RangeSlider(values: values, max: widget.info.duration.inMicroseconds.toDouble(),
         labels: RangeLabels(formatMediaTime(Duration(microseconds: values.start.round())), formatMediaTime(Duration(microseconds: values.end.round()))),
+        semanticFormatterCallback: (value) => formatMediaTime(Duration(microseconds: value.round())),
         onChanged: widget.enabled ? (value) => setState(() => _drag = value) : null,
         onChangeEnd: widget.enabled ? (value) {
           if (value.end - value.start >= 1) widget.onChanged(Duration(microseconds: value.start.round()), Duration(microseconds: value.end.round()));
           setState(() => _drag = null);
         } : null,
+        ),
       ),
     );
   }

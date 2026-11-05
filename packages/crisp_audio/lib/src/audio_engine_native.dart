@@ -176,17 +176,19 @@ Object? _runAudioWork(_WorkRequest request) {
         final render = request.render!;
         final output = render.outputPath.toNativeUtf8();
         try {
-          _check(native.render(
-            job,
-            input,
-            output,
-            render.start.inMicroseconds,
-            render.end.inMicroseconds,
-            render.gainDb,
-            render.fadeIn.inMicroseconds,
-            render.fadeOut.inMicroseconds,
-            render.muted ? 1 : 0,
-          ));
+          _check(
+            native.render(
+              job,
+              input,
+              output,
+              render.start.inMicroseconds,
+              render.end.inMicroseconds,
+              render.gainDb,
+              render.fadeIn.inMicroseconds,
+              render.fadeOut.inMicroseconds,
+              render.muted ? 1 : 0,
+            ),
+          );
           return null;
         } finally {
           calloc.free(output);
@@ -242,36 +244,64 @@ class _Bindings {
 
   final DynamicLibrary library;
 
-  late final createJob = library.lookupFunction<
-    Pointer<Void> Function(), Pointer<Void> Function()
-  >('crisp_audio_job_create');
+  late final createJob = library
+      .lookupFunction<Pointer<Void> Function(), Pointer<Void> Function()>(
+        'crisp_audio_job_create',
+      );
 
-  late final cancelJob = library.lookupFunction<
-    Void Function(Pointer<Void>), void Function(Pointer<Void>)
-  >('crisp_audio_job_cancel');
+  late final cancelJob = library
+      .lookupFunction<
+        Void Function(Pointer<Void>),
+        void Function(Pointer<Void>)
+      >('crisp_audio_job_cancel');
 
-  late final jobProgress = library.lookupFunction<
-    Uint32 Function(Pointer<Void>), int Function(Pointer<Void>)
-  >('crisp_audio_job_progress');
+  late final jobProgress = library
+      .lookupFunction<
+        Uint32 Function(Pointer<Void>),
+        int Function(Pointer<Void>)
+      >('crisp_audio_job_progress');
 
-  late final destroyJob = library.lookupFunction<
-    Void Function(Pointer<Void>), void Function(Pointer<Void>)
-  >('crisp_audio_job_destroy');
+  late final destroyJob = library
+      .lookupFunction<
+        Void Function(Pointer<Void>),
+        void Function(Pointer<Void>)
+      >('crisp_audio_job_destroy');
 
-  late final probe = library.lookupFunction<
-    Int32 Function(Pointer<Void>, Pointer<Utf8>, Pointer<_NativeAudioInfo>),
-    int Function(Pointer<Void>, Pointer<Utf8>, Pointer<_NativeAudioInfo>)
-  >('crisp_audio_probe');
+  late final probe = library
+      .lookupFunction<
+        Int32 Function(Pointer<Void>, Pointer<Utf8>, Pointer<_NativeAudioInfo>),
+        int Function(Pointer<Void>, Pointer<Utf8>, Pointer<_NativeAudioInfo>)
+      >('crisp_audio_probe');
 
-  late final waveform = library.lookupFunction<
-    Int32 Function(Pointer<Void>, Pointer<Utf8>, Pointer<Float>, Uint32),
-    int Function(Pointer<Void>, Pointer<Utf8>, Pointer<Float>, int)
-  >('crisp_audio_waveform');
+  late final waveform = library
+      .lookupFunction<
+        Int32 Function(Pointer<Void>, Pointer<Utf8>, Pointer<Float>, Uint32),
+        int Function(Pointer<Void>, Pointer<Utf8>, Pointer<Float>, int)
+      >('crisp_audio_waveform');
 
-  late final render = library.lookupFunction<
-    Int32 Function(Pointer<Void>, Pointer<Utf8>, Pointer<Utf8>, Int64, Int64,
-      Double, Int64, Int64, Int32),
-    int Function(Pointer<Void>, Pointer<Utf8>, Pointer<Utf8>, int, int,
-      double, int, int, int)
-  >('crisp_audio_render');
+  late final render = library
+      .lookupFunction<
+        Int32 Function(
+          Pointer<Void>,
+          Pointer<Utf8>,
+          Pointer<Utf8>,
+          Int64,
+          Int64,
+          Double,
+          Int64,
+          Int64,
+          Int32,
+        ),
+        int Function(
+          Pointer<Void>,
+          Pointer<Utf8>,
+          Pointer<Utf8>,
+          int,
+          int,
+          double,
+          int,
+          int,
+          int,
+        )
+      >('crisp_audio_render');
 }

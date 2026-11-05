@@ -1,4 +1,5 @@
 import 'dart:async';
+import 'dart:convert';
 import 'dart:io';
 import 'dart:math' as math;
 
@@ -24,6 +25,27 @@ import '../services/media_video_backend.dart';
 import '../services/panel_source_service.dart';
 import 'media_editor_controls.dart';
 import 'media_editor_preview.dart';
+
+/// A portable default name, leaving room for the unique suffix and extension
+/// within the store's 240-byte filename limit. Iterate Unicode code points so
+/// shortening a name cannot split a surrogate pair or an encoded UTF-8 byte.
+String defaultMediaExportFileName(String sourceName, String extension) {
+  final sourceStem = p.basenameWithoutExtension(sourceName)
+      .replaceAll(RegExp(r'[<>:"/\\|?*\x00-\x1f]'), '_')
+      .trim();
+  final shortened = StringBuffer();
+  var bytes = 0;
+  for (final rune in sourceStem.runes) {
+    final character = String.fromCharCode(rune);
+    final length = utf8.encode(character).length;
+    if (bytes + length > 160) break;
+    shortened.write(character);
+    bytes += length;
+  }
+  final stem = shortened.toString().trim().replaceAll(RegExp(r'[. ]+$'), '');
+  return '${stem.isEmpty ? 'media' : stem}-edited-'
+      '${const Uuid().v4().substring(0, 8)}.$extension';
+}
 
 Future<void> showMediaEditorDialog(BuildContext context, WidgetRef ref, FileItem file, PanelSide side) =>
     showDialog<void>(context: context, barrierDismissible: false,
@@ -62,6 +84,7 @@ class _MediaEditorDialogState extends ConsumerState<MediaEditorDialog> {
   String? _statusKey;
   String? _lastFileName;
   bool _loading = true;
+  bool _loadInProgress = false;
   bool _working = false;
   bool _saving = false;
   bool _naming = false;
@@ -90,7 +113,8 @@ class _MediaEditorDialogState extends ConsumerState<MediaEditorDialog> {
   }
 
   void _startLoad() {
-    if (_working) return;
+    if (!mounted || _working || _loadInProgress) return;
+    _loadInProgress = true;
     _activeWork = _load();
     unawaited(_activeWork);
   }
@@ -144,6 +168,7 @@ class _MediaEditorDialogState extends ConsumerState<MediaEditorDialog> {
       _log.warn('Could not open media', error, stack);
       if (mounted) setState(() { _loading = false; _errorKey = _messageFor(error, 'Could not open media'); });
     } finally {
+      _loadInProgress = false;
       _scheduleMenu();
     }
   }
@@ -200,26 +225,35 @@ class _MediaEditorDialogState extends ConsumerState<MediaEditorDialog> {
   }
 
   Future<String?> _chooseFileName() async {
-    final stem = p.basenameWithoutExtension(widget.file.name);
-    final shortened = stem.length > 100 ? stem.substring(0, 100) : stem;
-    final initial = _lastFileName ?? '$shortened-edited-${const Uuid().v4().substring(0, 8)}.$_extension';
-    final controller = TextEditingController(text: initial);
+    final initial = _lastFileName ?? defaultMediaExportFileName(widget.file.name, _extension);
+    return _showEditorPrompt((_) => _MediaExportNameDialog(initialFileName: initial));
+  }
+
+  Future<String?> _showEditorPrompt(WidgetBuilder builder) async {
     setState(() => _naming = true);
     _scheduleMenu();
     try {
-      return await showDialog<String>(context: context, builder: (dialogContext) => AlertDialog(
-        title: Text(dialogContext.mediaTr('Export copy')),
-        content: SizedBox(width: 440, child: TextField(controller: controller, autofocus: true,
-          decoration: InputDecoration(labelText: dialogContext.mediaTr('File name')),
-          onSubmitted: (value) => Navigator.pop(dialogContext, value.trim()))),
-        actions: [
-          TextButton(onPressed: () => Navigator.pop(dialogContext), child: Text(dialogContext.mediaTr('Cancel'))),
-          FilledButton(onPressed: () => Navigator.pop(dialogContext, controller.text.trim()), child: Text(dialogContext.mediaTr('Create copy'))),
-        ],
-      ));
+      // Let the controls finish losing focus and updating their accessibility
+      // nodes before a second modal route hides this editor's semantics.
+      await WidgetsBinding.instance.endOfFrame;
+      if (!mounted) return null;
+      final navigator = Navigator.of(context, rootNavigator: true);
+      final route = DialogRoute<String>(
+        context: context,
+        builder: builder,
+        themes: InheritedTheme.capture(from: context, to: navigator.context),
+        barrierColor: DialogTheme.of(context).barrierColor ??
+            Theme.of(context).dialogTheme.barrierColor ?? Colors.black54,
+        traversalEdgeBehavior: TraversalEdgeBehavior.closedLoop,
+      );
+      final result = await navigator.push(route);
+      // Flutter 3.47 can retain stale slider semantics if a blocked subtree is
+      // rebuilt while a dialog disappears (flutter/flutter#193706). Re-enable
+      // the controls only after the modal barrier has actually been removed.
+      await route.completed;
+      await WidgetsBinding.instance.endOfFrame;
+      return result;
     } finally {
-      // The outgoing route can still paint its text field during dismissal.
-      WidgetsBinding.instance.addPostFrameCallback((_) => controller.dispose());
       if (mounted) setState(() => _naming = false);
       _scheduleMenu();
     }
@@ -252,9 +286,11 @@ class _MediaEditorDialogState extends ConsumerState<MediaEditorDialog> {
     final cancellation = MediaCancellation();
     _cancellation = cancellation;
     setState(() { _working = true; _progress = 0; _errorKey = null; _statusKey = null; });
-    final revision = session.beginExport();
+    MediaEditRevision? revision;
+    String? pendingOutputPath;
     var persisted = false;
     try {
+      revision = session.beginExport();
       if (_renderedRevision != revision.id || _renderedPath == null) {
         final oldPath = _renderedPath;
         _renderedPath = null;
@@ -262,6 +298,7 @@ class _MediaEditorDialogState extends ConsumerState<MediaEditorDialog> {
         _renderedRevision = null;
         if (oldPath != null) { try { await File(oldPath).delete(); } catch (_) {} }
         final outputPath = await _store!.createOutputPath(_extension);
+        pendingOutputPath = outputPath;
         await _backend!.render(inputPath: _inputPath!, outputPath: outputPath, edit: revision.edit,
           cancellation: cancellation, onProgress: (value) {
             if (mounted && value.isFinite) setState(() => _progress = value.clamp(0, 1).toDouble());
@@ -272,6 +309,7 @@ class _MediaEditorDialogState extends ConsumerState<MediaEditorDialog> {
         _renderedPath = outputPath;
         _renderedInfo = info;
         _renderedRevision = revision.id;
+        pendingOutputPath = null;
       }
       cancellation.throwIfCancelled();
       if (!mounted) return;
@@ -292,9 +330,20 @@ class _MediaEditorDialogState extends ConsumerState<MediaEditorDialog> {
       _log.warn('Could not export media', error, stack);
       if (mounted) setState(() => _errorKey = _messageFor(error, 'Could not export media'));
     } finally {
+      // A completed native file is not retained until the host's independent
+      // probe/validation succeeds. Remove it immediately after a failure so
+      // repeated retries cannot fill the editor's temporary workspace.
+      if (pendingOutputPath != null) {
+        try {
+          final pending = File(pendingOutputPath);
+          if (await pending.exists()) await pending.delete();
+        } catch (error, stack) {
+          _log.warn('Could not remove an unverified media export', error, stack);
+        }
+      }
       _cancellation = null;
       if (mounted) {
-        session.finishExport(revision, persisted: persisted);
+        if (revision != null) session.finishExport(revision, persisted: persisted);
         setState(() { _working = false; _saving = false; });
         _scheduleMenu();
       }
@@ -302,9 +351,16 @@ class _MediaEditorDialogState extends ConsumerState<MediaEditorDialog> {
   }
 
   void _validateOutput(MediaInfo source, MediaEdit edit, MediaInfo output) {
+    final reportedFrameRate = source.frameRate;
+    final frameRate = reportedFrameRate != null &&
+        reportedFrameRate.isFinite && reportedFrameRate > 0
+        ? reportedFrameRate : 24.0;
+    final reportedSampleRate = source.sampleRate;
+    final sampleRate = reportedSampleRate != null && reportedSampleRate > 0
+        ? reportedSampleRate : 48000;
     final toleranceUs = source.kind == MediaKind.audio ?
-        math.max(1000, (2000000 / (source.sampleRate ?? 48000)).ceil()) :
-        math.max(100000, (2000000 / (source.frameRate ?? 24)).ceil());
+        math.max(1000, (2000000 / sampleRate).ceil()) :
+        math.max(100000, (2000000 / frameRate).ceil());
     if (output.kind != source.kind || output.duration <= Duration.zero ||
         (output.duration - edit.duration).inMicroseconds.abs() > toleranceUs) {
       throw const MediaStoreException(MediaStoreFailure.invalidOutput);
@@ -313,13 +369,9 @@ class _MediaEditorDialogState extends ConsumerState<MediaEditorDialog> {
 
   Future<void> _requestClose() async {
     if (_busy || !mounted) return;
-    _controlsKey.currentState?.commit();
+    if (!(_controlsKey.currentState?.commit() ?? true)) return;
     if (_session?.isDirty ?? false) {
-      setState(() => _naming = true);
-      _scheduleMenu();
-      String? decision;
-      try {
-        decision = await showDialog<String>(context: context, builder: (dialogContext) => AlertDialog(
+      final decision = await _showEditorPrompt((dialogContext) => AlertDialog(
         title: Text(dialogContext.mediaTr('Export changes before closing?')),
         content: Text(dialogContext.mediaTr('Unsaved changes will be lost.')),
         actions: [
@@ -327,11 +379,7 @@ class _MediaEditorDialogState extends ConsumerState<MediaEditorDialog> {
           TextButton(onPressed: () => Navigator.pop(dialogContext, 'discard'), child: Text(dialogContext.mediaTr('Discard'))),
           FilledButton(onPressed: () => Navigator.pop(dialogContext, 'export'), child: Text(dialogContext.mediaTr('Export copy'))),
         ],
-        ));
-      } finally {
-        if (mounted) setState(() => _naming = false);
-        _scheduleMenu();
-      }
+      ));
       if (!mounted || decision == null || decision == 'cancel') return;
       if (decision == 'export') {
         await _exportCopy();
@@ -449,6 +497,38 @@ class _MediaEditorDialogState extends ConsumerState<MediaEditorDialog> {
       ))),
     );
   }
+}
+
+/// The route owns its input for the entire dismissal animation. A showDialog
+/// future resolves at pop start, before the outgoing TextField is unmounted.
+class _MediaExportNameDialog extends StatefulWidget {
+  const _MediaExportNameDialog({required this.initialFileName});
+  final String initialFileName;
+
+  @override
+  State<_MediaExportNameDialog> createState() => _MediaExportNameDialogState();
+}
+
+class _MediaExportNameDialogState extends State<_MediaExportNameDialog> {
+  late final _controller = TextEditingController(text: widget.initialFileName);
+
+  @override
+  void dispose() {
+    _controller.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) => AlertDialog(
+    title: Text(context.mediaTr('Export copy')),
+    content: SizedBox(width: 440, child: TextField(controller: _controller, autofocus: true,
+      decoration: InputDecoration(labelText: context.mediaTr('File name')),
+      onSubmitted: (value) => Navigator.pop(context, value.trim()))),
+    actions: [
+      TextButton(onPressed: () => Navigator.pop(context), child: Text(context.mediaTr('Cancel'))),
+      FilledButton(onPressed: () => Navigator.pop(context, _controller.text.trim()), child: Text(context.mediaTr('Create copy'))),
+    ],
+  );
 }
 
 class _MediaOpenMessage implements Exception {

@@ -1,4 +1,5 @@
 import 'dart:async';
+import 'dart:io';
 import 'dart:math' as math;
 
 import 'package:crisp_cloud/l10n/app_localizations.dart';
@@ -29,6 +30,7 @@ class _MemoryStore extends MediaFileStore {
   int failedSaves = 0;
   int stages = 0;
   bool disposed = false;
+  String? outputDirectory;
 
   @override
   String get displayName => kind == MediaKind.audio ? 'recording.wav' : 'clip.mp4';
@@ -52,7 +54,7 @@ class _MemoryStore extends MediaFileStore {
 
   @override
   Future<String> createOutputPath(String extension) async {
-    final output = '/__crisp_media_widget_test__/output-${issuedPaths.length}.$extension';
+    final output = '${outputDirectory ?? '/__crisp_media_widget_test__'}/output-${issuedPaths.length}.$extension';
     issuedPaths.add(output);
     return output;
   }
@@ -92,6 +94,9 @@ class _Backend implements MediaEditorBackend {
   final outputs = <String, MediaInfo>{};
   bool holdRender = false;
   bool invalidOutput = false;
+  bool writeOutputFile = false;
+  bool failOutputProbe = false;
+  double? reportedFrameRate = 30;
   int cancellationNotifications = 0;
 
   MediaInfo get sourceInfo => MediaInfo(
@@ -101,12 +106,15 @@ class _Backend implements MediaEditorBackend {
     channels: kind == MediaKind.audio ? 2 : null,
     width: kind == MediaKind.video ? 1920 : null,
     height: kind == MediaKind.video ? 1080 : null,
-    frameRate: kind == MediaKind.video ? 30 : null,
+    frameRate: kind == MediaKind.video ? reportedFrameRate : null,
   );
 
   @override
   Future<MediaInfo> probe(String inputPath) async {
     probes.add(inputPath);
+    if (failOutputProbe && outputs.containsKey(inputPath)) {
+      throw const FormatException('Simulated output decoder failure');
+    }
     return outputs[inputPath] ?? sourceInfo;
   }
 
@@ -161,6 +169,7 @@ class _Backend implements MediaEditorBackend {
       height: height?.round(),
       frameRate: sourceInfo.frameRate,
     );
+    if (writeOutputFile) await File(outputPath).writeAsBytes(List<int>.filled(64, 7));
     onProgress?.call(1);
   }
 }
@@ -173,6 +182,8 @@ Finder get _close => find.byTooltip('Close editor');
 Finder get _export => find.byTooltip('Export copy');
 Finder get _unsaved => find.text('Export changes before closing?');
 
+final _frameworkErrorStacks = <Object, StackTrace>{};
+
 Future<void> _until(WidgetTester tester, bool Function() condition, String reason) async {
   for (var frame = 0; frame < 200; frame++) {
     await tester.pump(const Duration(milliseconds: 20));
@@ -180,7 +191,9 @@ Future<void> _until(WidgetTester tester, bool Function() condition, String reaso
     // completion a real event turn without relying on the fake widget clock.
     await tester.runAsync(() => Future<void>.delayed(const Duration(milliseconds: 1)));
     final error = tester.takeException();
-    if (error != null) throw error;
+    if (error != null) {
+      Error.throwWithStackTrace(error, _frameworkErrorStacks[error] ?? StackTrace.current);
+    }
     if (condition()) {
       await tester.pump();
       return;
@@ -203,6 +216,14 @@ class _Harness {
   MediaEditorControls get controls => tester.widget<MediaEditorControls>(find.byType(MediaEditorControls));
 
   Future<void> open({bool waitForReady = true}) async {
+    // Keep the framework's original stack if a helper consumes its exception;
+    // otherwise a layout/semantics failure appears to originate in _until.
+    final previousErrorHandler = FlutterError.onError;
+    FlutterError.onError = (details) {
+      if (details.stack case final stack?) _frameworkErrorStacks[details.exception] = stack;
+      previousErrorHandler?.call(details);
+    };
+    addTearDown(() => FlutterError.onError = previousErrorHandler);
     tester.view.physicalSize = const Size(1280, 1100);
     tester.view.devicePixelRatio = 1;
     addTearDown(tester.view.reset);
@@ -302,7 +323,10 @@ class _Harness {
 }
 
 void main() {
-  setUp(() => SharedPreferences.setMockInitialValues({}));
+  setUp(() {
+    SharedPreferences.setMockInitialValues({});
+    _frameworkErrorStacks.clear();
+  });
 
   testWidgets('loading blocks commands until source metadata and waveform are ready', (tester) async {
     final harness = _Harness(tester);
@@ -351,6 +375,23 @@ void main() {
     expect(harness.store.savedCopies, [(render.outputPath, 'voice-edited.wav')]);
     expect(render.outputPath, isNot(harness.store.path));
     expect(find.text('Copy exported'), findsOneWidget);
+    await harness.closeCleanly();
+  });
+
+  testWidgets('invalid pending precision text prevents a clean editor from closing', (tester) async {
+    final harness = _Harness(tester);
+    await harness.open();
+    await harness.time('Start', '1:', submit: false);
+    await tester.tap(_close);
+    await tester.pump(const Duration(milliseconds: 400));
+    expect(find.byType(MediaEditorDialog), findsOneWidget);
+    expect(_unsaved, findsNothing);
+    expect(find.text('Could not apply changes'), findsWidgets);
+    expect(harness.controls.edit.start, Duration.zero);
+    expect(harness.store.disposed, isFalse);
+    expect(harness.backend.renders, isEmpty);
+
+    await harness.time('Start', '0:00.000');
     await harness.closeCleanly();
   });
 
@@ -456,6 +497,37 @@ void main() {
     await harness.closeCleanly();
   });
 
+  testWidgets('a file that fails the host reopen check is removed before retry', (tester) async {
+    final temporary = (await tester.runAsync(
+      () => Directory.systemTemp.createTemp('crisp_media_host_cleanup_'),
+    ))!;
+    addTearDown(() async {
+      if (await temporary.exists()) await temporary.delete(recursive: true);
+    });
+    final harness = _Harness(tester);
+    harness.store.outputDirectory = temporary.path;
+    harness.backend.writeOutputFile = true;
+    harness.backend.failOutputProbe = true;
+    await harness.open();
+    await harness.value('Gain', -3);
+    await harness.chooseExport(fileName: 'checked.wav');
+    final rejectedPath = harness.store.issuedPaths.single;
+    expect(await tester.runAsync(() => File(rejectedPath).exists()), isFalse);
+    expect(harness.store.attempts, isEmpty);
+    expect(find.text('Could not export media'), findsOneWidget);
+
+    harness.backend.failOutputProbe = false;
+    await harness.chooseExport(fileName: 'checked.wav');
+    expect(harness.store.issuedPaths, hasLength(2));
+    expect(harness.store.savedCopies, hasLength(1));
+    expect(
+      await tester.runAsync(() => File(harness.store.savedCopies.single.$1).exists()),
+      isTrue,
+      reason: 'A verified render remains available for persistence/retry.',
+    );
+    await harness.closeCleanly();
+  });
+
   testWidgets('a failed load shows a safe error and retry starts no renderer', (tester) async {
     final harness = _Harness(tester);
     harness.store.failedStages = 1;
@@ -469,6 +541,39 @@ void main() {
     expect(harness.backend.renders, isEmpty);
     await harness.closeCleanly();
   });
+
+  testWidgets('queued Retry callbacks cannot overlap the same load', (tester) async {
+    final harness = _Harness(tester);
+    harness.store.failedStages = 1;
+    await harness.open(waitForReady: false);
+    await _until(tester,
+      () => find.widgetWithText(OutlinedButton, 'Retry').evaluate().isNotEmpty,
+      'failed load and retry button');
+    harness.store.stageGate = Completer<void>();
+    final retry = tester.widget<OutlinedButton>(find.widgetWithText(OutlinedButton, 'Retry')).onPressed!;
+    // Two button callbacks queued before the loading frame replaces the button.
+    retry();
+    retry();
+    expect(harness.store.stages, 2, reason: 'One failed initial load and one retry.');
+    await tester.pump();
+    expect(find.text('Loading media…'), findsOneWidget);
+    harness.store.stageGate!.complete();
+    await harness.ready();
+    expect(harness.backend.probes, hasLength(1));
+    await harness.closeCleanly();
+  });
+
+  for (final frameRate in <double>[0, double.nan, double.infinity]) {
+    testWidgets('video with unknown frame rate $frameRate can pass output validation', (tester) async {
+      final harness = _Harness(tester, kind: MediaKind.video);
+      harness.backend.reportedFrameRate = frameRate;
+      await harness.open();
+      await harness.chooseExport(fileName: 'unknown-rate.mp4');
+      expect(harness.store.savedCopies, hasLength(1));
+      expect(find.text('Copy exported'), findsOneWidget);
+      await harness.closeCleanly();
+    });
+  }
 
   testWidgets('cancelling filename selection leaves edits available without rendering', (tester) async {
     final harness = _Harness(tester);

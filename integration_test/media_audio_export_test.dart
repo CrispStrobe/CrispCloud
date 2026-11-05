@@ -12,9 +12,11 @@ import 'package:path_provider/path_provider.dart';
 void main() {
   IntegrationTestWidgetsFlutterBinding.ensureInitialized();
 
-  testWidgets('packaged audio plugin loads, exports PCM, cancels and retries',
-      (tester) async {
+  testWidgets('packaged audio plugin loads, exports PCM, cancels and retries', (
+    tester,
+  ) async {
     final temp = await getTemporaryDirectory();
+    await temp.create(recursive: true);
     final directory = await Directory(temp.path)
         .createTemp('crisp-audio-integration-');
     try {
@@ -77,10 +79,14 @@ void main() {
         if (frame < 800) fade *= frame / 799;
         if (4800 - frame <= 1600) fade *= (4799 - frame) / 1599;
         final gain = math.pow(10, -6 / 20) * fade;
-        expect(wav.getInt16(44 + frame * 4, Endian.little),
-            closeTo((10000 * gain).round(), 1));
-        expect(wav.getInt16(46 + frame * 4, Endian.little),
-            closeTo((-5000 * gain).round(), 1));
+        expect(
+          wav.getInt16(44 + frame * 4, Endian.little),
+          closeTo((10000 * gain).round(), 1),
+        );
+        expect(
+          wav.getInt16(46 + frame * 4, Endian.little),
+          closeTo((-5000 * gain).round(), 1),
+        );
       }
       final reopened = await backend.probe(output.path);
       expect(reopened.duration, const Duration(milliseconds: 600));

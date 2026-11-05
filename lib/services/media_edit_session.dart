@@ -162,7 +162,14 @@ class MediaEdit {
 
   @override
   int get hashCode => Object.hash(
-    start, end, gainDb, fadeIn, fadeOut, muted, quarterTurns, crop,
+    start,
+    end,
+    gainDb,
+    fadeIn,
+    fadeOut,
+    muted,
+    quarterTurns,
+    crop,
     maxOutputHeight,
   );
 }
@@ -192,7 +199,9 @@ class MediaEditSession extends ChangeNotifier {
             ((info.width ?? 0) < 2 || (info.height ?? 0) < 2))) {
       throw const MediaEditException(MediaEditFailure.invalidMedia);
     }
-    _history.add(MediaEditRevision(0, MediaEdit(start: Duration.zero, end: info.duration)));
+    _history.add(
+      MediaEditRevision(0, MediaEdit(start: Duration.zero, end: info.duration)),
+    );
   }
 
   final MediaInfo info;
