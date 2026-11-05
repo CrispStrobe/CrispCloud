@@ -113,4 +113,44 @@ void main() {
       throwsFormatException,
     );
   });
+
+  test('URI-decoded control characters cannot enter a path list', () {
+    for (final encoded in ['%00', '%09', '%0a', '%0d', '%7f']) {
+      expect(
+        () => FileListPaths.parse(
+          'file:///docs/a${encoded}b.txt',
+          basePath: '/docs',
+          local: true,
+        ),
+        throwsFormatException,
+      );
+    }
+  });
+
+  test('exports refuse controls that import could not round-trip', () {
+    for (final control in ['\u0001', '\t', '\u007f']) {
+      expect(
+        () => FileListPaths.encode(['/docs/a${control}b.txt']),
+        throwsFormatException,
+      );
+    }
+  });
+
+  test('a Windows list cannot be reinterpreted as relative POSIX filenames', () {
+    expect(
+      () => FileListPaths.parse(
+        r'C:\Docs\a.txt',
+        basePath: '/docs',
+        local: true,
+      ),
+      throwsFormatException,
+    );
+  });
+
+  test('file URI scheme matching is case insensitive', () {
+    expect(
+      FileListPaths.parse('FILE:///docs/a.txt', basePath: '/', local: true),
+      ['/docs/a.txt'],
+    );
+  });
 }

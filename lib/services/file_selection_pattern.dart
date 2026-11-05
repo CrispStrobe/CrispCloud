@@ -72,6 +72,40 @@ class FileSelectionPattern {
   late final List<RegExp> _includes;
   late final List<RegExp> _excludes;
 
+  /// Store matching options only; a history entry never changes the requested
+  /// select/deselect action when recalled from another command.
+  Map<String, Object> toJson() => {
+    'expression': expression,
+    'mode': mode.name,
+    'caseSensitive': caseSensitive,
+    'matchFullPath': matchFullPath,
+    'includeFiles': includeFiles,
+    'includeFolders': includeFolders,
+  };
+
+  factory FileSelectionPattern.fromJson(Map<String, dynamic> json) {
+    final expression = json['expression'];
+    final mode = json['mode'];
+    if (expression is! String ||
+        !FilePatternMode.values.any((value) => value.name == mode) ||
+        const [
+          'caseSensitive',
+          'matchFullPath',
+          'includeFiles',
+          'includeFolders',
+        ].any((key) => json[key] is! bool)) {
+      throw const FormatException('Invalid saved selection pattern.');
+    }
+    return FileSelectionPattern(
+      expression,
+      mode: FilePatternMode.values.byName(mode as String),
+      caseSensitive: json['caseSensitive'] as bool,
+      matchFullPath: json['matchFullPath'] as bool,
+      includeFiles: json['includeFiles'] as bool,
+      includeFolders: json['includeFolders'] as bool,
+    );
+  }
+
   static List<String> _masks(String text) => text
       .split(';')
       .map((mask) => mask.trim())

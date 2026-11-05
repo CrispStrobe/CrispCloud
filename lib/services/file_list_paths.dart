@@ -1,3 +1,5 @@
+import 'dart:convert';
+
 import 'package:path/path.dart' as p;
 
 /// Interchange format for Commander file lists: one original path per line.
@@ -13,7 +15,8 @@ class FileListPaths {
     required bool local,
     int maxItems = 10000,
   }) {
-    if (text.length > 4 * 1024 * 1024) {
+    if (text.length > 4 * 1024 * 1024 ||
+        utf8.encode(text).length > 4 * 1024 * 1024) {
       throw const FormatException(
         'The file list is too large (maximum 4 MiB of text).',
       );
@@ -39,10 +42,10 @@ class FileListPaths {
           'Line $lineNumber contains an empty quoted path.',
         );
       }
-      if (line.contains(RegExp(r'[\x00-\x1f]'))) {
+      if (line.contains(RegExp(r'[\x00-\x1f\x7f]'))) {
         throw FormatException('Line $lineNumber contains a control character.');
       }
-      if (line.startsWith('file:')) {
+      if (line.toLowerCase().startsWith('file:')) {
         if (!local) {
           throw FormatException(
             'Line $lineNumber is a local file URL. Choose a local panel first.',
@@ -54,17 +57,26 @@ class FileListPaths {
           throw FormatException(
             'Line $lineNumber is not a valid local file URL.',
           );
+        } on UnsupportedError {
+          throw FormatException(
+            'Line $lineNumber is not a file URL for this local filesystem.',
+          );
         }
       } else if (line.contains('://')) {
         throw FormatException(
           'Line $lineNumber is a URL. File lists use paths in the current source.',
         );
       }
-      if (!local &&
+      // Validate again after URI decoding, which can introduce encoded newlines
+      // or nulls that were not visible in the source text.
+      if (line.contains(RegExp(r'[\x00-\x1f\x7f]'))) {
+        throw FormatException('Line $lineNumber contains a control character.');
+      }
+      if (!windows &&
           (RegExp(r'^[A-Za-z]:[\\/]').hasMatch(line) ||
               line.startsWith(r'\\'))) {
         throw FormatException(
-          'Line $lineNumber is a Windows path. Choose a local panel first.',
+          'Line $lineNumber is a Windows path. Choose its Windows filesystem first.',
         );
       }
       final resolved = paths.normalize(
@@ -93,9 +105,9 @@ class FileListPaths {
   static String encode(Iterable<String> paths) {
     final unique = <String>{};
     for (final path in paths) {
-      if (path.contains(RegExp(r'[\r\n\x00]'))) {
+      if (path.contains(RegExp(r'[\x00-\x1f\x7f]'))) {
         throw const FormatException(
-          'A path contains a line break and cannot be exported as a text list.',
+          'A path contains a control character and cannot be exported as a text list.',
         );
       }
       if (path.isNotEmpty) unique.add(path);

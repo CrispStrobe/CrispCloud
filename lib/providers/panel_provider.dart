@@ -22,6 +22,7 @@ import '../services/captured_file_target.dart';
 import '../services/storage_identity.dart';
 import '../services/storage_trash.dart';
 import '../services/native_file_operations.dart';
+import '../services/native_file_primitives.dart';
 import '../services/archive_service.dart';
 import '../services/archive_viewer_service.dart';
 import '../services/audit_service.dart';
@@ -117,6 +118,8 @@ class PanelNotifier extends ChangeNotifier {
   String get fileListTitle => _fileListTitle;
   PanelFileOrigin? _fileListOrigin;
   final Map<String, _FileListSnapshot> _fileListTabs = {};
+  final Map<String, Map<(StorageReference, String), _SelectionMemoryEntry>>
+      _selectionMemories = {};
 
   bool get canOperateOnFileList =>
       !_showingSearchResults || (_fileListOrigin?.isCurrent ?? false);
@@ -805,6 +808,14 @@ class PanelNotifier extends ChangeNotifier {
       if (result.name == '..' || result.name == '.') continue;
       final verified =
           originForFile?.call(result) ?? origin ?? originForOperation(result);
+      if (verified != null &&
+          commonOrigin != null &&
+          (!_sameStorage(commonOrigin.source, verified.source) ||
+              commonOrigin.storageReference != verified.storageReference)) {
+        throw StateError(
+          'A file list cannot mix storage accounts. Open a separate list for each source.',
+        );
+      }
       var path = result.path;
       if ((path == null || path.isEmpty) &&
           verified != null &&
@@ -1617,6 +1628,8 @@ class PanelNotifier extends ChangeNotifier {
     _log.debug(
       'toggleSelection: ${item.name} shift=$shiftKey ctrl=$ctrlKey lastSelected=${_lastSelected?.name} side=$side',
     );
+    final files = _files;
+    if (files == null || !_containsIdentical(files, item)) return;
     // Ensure this panel is the active panel (drives F-key context).
     if (_ref.read(activePanelProvider) != side) {
       _ref.read(activePanelProvider.notifier).state = side;
@@ -1627,20 +1640,26 @@ class PanelNotifier extends ChangeNotifier {
       if (idx != -1) _cursorIndex = idx;
     }
     // ".." cannot be selection-marked — clicking it just moves cursor
-    if (item.name == '..') {
+    if (item.name == '..' || item.name == '.') {
       _lastSelected = null;
       notifyListeners();
       return;
     }
-    if (shiftKey && _lastSelected != null && _files != null) {
-      final startIdx = _files!.indexOf(_lastSelected!);
-      final endIdx = _files!.indexOf(item);
+    if (shiftKey && _lastSelected != null) {
+      final displayed = displayedFiles ?? const <FileItem>[];
+      final startIdx = _indexOfIdentical(displayed, _lastSelected!);
+      final endIdx = _indexOfIdentical(displayed, item);
       if (startIdx != -1 && endIdx != -1) {
         final start = startIdx < endIdx ? startIdx : endIdx;
         final end = startIdx < endIdx ? endIdx : startIdx;
         for (var i = start; i <= end; i++) {
-          if (_files![i].name != '..') _selection.add(_files![i]);
+          if (displayed[i].name != '..' && displayed[i].name != '.') {
+            _selection.add(displayed[i]);
+          }
         }
+      } else if (endIdx != -1) {
+        // A previous anchor can disappear when a filter is applied.
+        _selection.add(item);
       }
     } else if (ctrlKey) {
       if (_selection.contains(item)) {
@@ -1657,22 +1676,24 @@ class PanelNotifier extends ChangeNotifier {
   }
 
   void selectAll() {
-    _log.debug('selectAll (${_files?.length ?? 0} files)');
-    if (_files != null) {
-      _selection.addAll(_files!.where((f) => f.name != '..'));
+    final displayed = displayedFiles;
+    _log.debug('selectAll (${displayed?.length ?? 0} visible files)');
+    if (displayed != null) {
+      _selection.addAll(
+        displayed.where((f) => f.name != '..' && f.name != '.'),
+      );
       notifyListeners();
     }
   }
 
   void invertSelection() {
     _log.debug('invertSelection (was ${_selection.length} selected)');
-    if (_files == null) return;
-    final newSel = _files!
-        .where((f) => f.name != '..' && !_selection.contains(f))
-        .toSet();
-    _selection
-      ..clear()
-      ..addAll(newSel);
+    final displayed = displayedFiles;
+    if (displayed == null) return;
+    for (final item in displayed) {
+      if (item.name == '..' || item.name == '.') continue;
+      if (!_selection.remove(item)) _selection.add(item);
+    }
     _lastSelected = null;
     notifyListeners();
   }
@@ -1682,6 +1703,90 @@ class PanelNotifier extends ChangeNotifier {
     _selection.clear();
     _lastSelected = null;
     notifyListeners();
+  }
+
+  bool get _canUseSelectionMemory =>
+      !_isDisposed &&
+      !_isLoading &&
+      !isInArchive &&
+      _verifiedListingGeneration == _listingGeneration;
+
+  (StorageReference, String)? _selectionMemoryKey(
+    FileItem item,
+    PanelFileOrigin origin,
+  ) {
+    if (item.name == '..' || item.name == '.') return null;
+    final paths = origin.source.isRemote || kIsWeb ? p.posix : p.context;
+    final path = item.path ?? paths.join(origin.source.currentPath, item.name);
+    if (!paths.isAbsolute(path)) return null;
+    return (origin.storageReference, paths.normalize(path));
+  }
+
+  /// Remember marks for this tab and storage session, never just basenames.
+  /// Restoration resolves fresh, verified rows; saved objects grant no writes.
+  int rememberSelection() {
+    if (!_canUseSelectionMemory || _activeTabId.isEmpty) return 0;
+    final remembered = <(StorageReference, String), _SelectionMemoryEntry>{};
+    for (final item in _files ?? const <FileItem>[]) {
+      if (!_selection.contains(item)) continue;
+      final origin = _fileOrigins[item];
+      if (origin == null || !origin.isCurrent) continue;
+      final key = _selectionMemoryKey(item, origin);
+      if (key != null) {
+        remembered[key] = _SelectionMemoryEntry(
+          origin: origin,
+          objectId: item.uuid,
+          isFolder: item.isFolder,
+        );
+      }
+    }
+    if (remembered.isEmpty) return 0;
+    _selectionMemories[_activeTabId] = remembered;
+    notifyListeners();
+    return remembered.length;
+  }
+
+  int get rememberedSelectionCount =>
+      _selectionMemories[_activeTabId]?.length ?? 0;
+
+  List<FileItem> _restorableSelection() {
+    if (!_canUseSelectionMemory) return const [];
+    final remembered = _selectionMemories[_activeTabId];
+    if (remembered == null || remembered.isEmpty) return const [];
+    final matches = <(StorageReference, String), FileItem?>{};
+    for (final item in displayedFiles ?? const <FileItem>[]) {
+      final origin = _fileOrigins[item];
+      if (origin == null || !origin.isCurrent) continue;
+      final key = _selectionMemoryKey(item, origin);
+      if (key == null) continue;
+      final memory = remembered[key];
+      if (memory == null ||
+          !memory.origin.isCurrent ||
+          !_sameStorage(memory.origin.source, origin.source) ||
+          memory.isFolder != item.isFolder ||
+          (memory.objectId != null && memory.objectId != item.uuid)) {
+        continue;
+      }
+      // An ambiguous directory entry is never chosen by a saved mark.
+      matches[key] = matches.containsKey(key) ? null : item;
+    }
+    return matches.values.whereType<FileItem>().toList();
+  }
+
+  int get restorableSelectionCount => _restorableSelection().length;
+
+  /// Replace marks with remembered items still visible in this tab and source.
+  /// If none can be resolved, retain the current marks instead of erasing them.
+  int restoreSelection() {
+    final restored = _restorableSelection();
+    if (restored.isEmpty) return 0;
+    _selection
+      ..clear()
+      ..addAll(restored);
+    _lastSelected = null;
+    _rememberFileListTab();
+    notifyListeners();
+    return restored.length;
   }
 
   // --- Cursor (keyboard focus, separate from selection marks) ---
@@ -2465,6 +2570,26 @@ class PanelNotifier extends ChangeNotifier {
     return item != null;
   }
 
+  /// Read siblings from the storage captured when an operation was opened.
+  /// A tab/source change must never redirect a preview to the current pane.
+  Future<List<FileItem>> listOperationDirectory(
+    String path,
+    PanelFileOrigin origin,
+  ) async {
+    if (!origin.isCurrent) throw StateError('The storage account changed.');
+    final backend = fileOperationBackend(
+      source: origin.source,
+      local: _localFileService,
+      isCurrent: () => origin.isCurrent,
+    );
+    if (!backend.paths.isAbsolute(path)) {
+      throw const FormatException('Use an absolute original directory path.');
+    }
+    final items = await backend.list(backend.paths.normalize(path));
+    if (!origin.isCurrent) throw StateError('The storage account changed.');
+    return List.unmodifiable(items);
+  }
+
   Future<void> renameFile(
     FileItem file,
     String newName, {
@@ -2541,12 +2666,10 @@ class PanelNotifier extends ChangeNotifier {
           if (!origin.isCurrent) {
             throw StateError('The source is no longer available.');
           }
-          if (file.isSymlink == true) {
-            await Link(src).rename(computedNewPath);
-          } else if (file.isFolder) {
-            await Directory(src).rename(computedNewPath);
-          } else {
-            await File(src).rename(computedNewPath);
+          if (!await moveNativeNoReplace(src, computedNewPath)) {
+            throw UnsupportedError(
+              'This filesystem cannot safely rename without replacing an existing item.',
+            );
           }
         });
       } else {
@@ -2976,6 +3099,7 @@ class PanelNotifier extends ChangeNotifier {
     final idx = _tabs.indexOf(tab);
     _tabs.remove(tab);
     _fileListTabs.remove(tabId);
+    _selectionMemories.remove(tabId);
     if (_activeTabId == tabId) {
       _leaveFileList();
       final newIdx = idx.clamp(0, _tabs.length - 1);
@@ -3694,6 +3818,18 @@ class FileListImportResult {
   const FileListImportResult({required this.loaded, required this.failures});
   final int loaded;
   final Map<String, String> failures;
+}
+
+class _SelectionMemoryEntry {
+  const _SelectionMemoryEntry({
+    required this.origin,
+    required this.objectId,
+    required this.isFolder,
+  });
+
+  final PanelFileOrigin origin;
+  final String? objectId;
+  final bool isFolder;
 }
 
 class _FileListSnapshot {

@@ -1,9 +1,13 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../models/panel_side.dart';
 import '../providers/panel_provider.dart';
 import '../services/file_selection_pattern.dart';
+import '../services/log_service.dart';
+import '../services/selection_pattern_history.dart';
 
 export '../services/file_selection_pattern.dart' show SelectionAction;
 
@@ -38,12 +42,43 @@ class _PatternSelectionDialog extends ConsumerStatefulWidget {
 
 class _PatternSelectionDialogState
     extends ConsumerState<_PatternSelectionDialog> {
+  static const _log = Log('PatternSelectionDialog');
   final _controller = TextEditingController(text: '*');
+  final _history = SelectionPatternHistory();
+  List<FileSelectionPattern> _recentPatterns = const [];
   FilePatternMode _mode = FilePatternMode.wildcard;
   late SelectionAction _action = widget.initialAction;
   bool _caseSensitive = false;
   bool _matchFullPath = false;
   String _kind = 'all';
+  String? _memoryMessage;
+
+  @override
+  void initState() {
+    super.initState();
+    unawaited(_loadHistory());
+  }
+
+  Future<void> _loadHistory() async {
+    try {
+      final patterns = await _history.load();
+      if (mounted) setState(() => _recentPatterns = patterns);
+    } catch (error) {
+      _log.warn('Selection pattern history could not be loaded', error);
+    }
+  }
+
+  void _recall(FileSelectionPattern pattern) {
+    setState(() {
+      _controller.text = pattern.expression;
+      _mode = pattern.mode;
+      _caseSensitive = pattern.caseSensitive;
+      _matchFullPath = pattern.matchFullPath;
+      _kind = pattern.includeFiles
+          ? (pattern.includeFolders ? 'all' : 'files')
+          : 'folders';
+    });
+  }
 
   @override
   void dispose() {
@@ -74,6 +109,7 @@ class _PatternSelectionDialogState
     final matches = pattern == null
         ? 0
         : displayed.where(pattern.matches).length;
+    final restorable = panel.restorableSelectionCount;
 
     return AlertDialog(
       title: const Text('Select by pattern'),
@@ -113,6 +149,24 @@ class _PatternSelectionDialogState
                       ? 'Masks'
                       : 'Expression',
                   border: const OutlineInputBorder(),
+                  suffixIcon: PopupMenuButton<FileSelectionPattern>(
+                    key: const ValueKey('selection-pattern-history'),
+                    tooltip: 'Recent patterns',
+                    enabled: _recentPatterns.isNotEmpty,
+                    icon: const Icon(Icons.history),
+                    onSelected: _recall,
+                    itemBuilder: (_) => [
+                      for (final recent in _recentPatterns)
+                        PopupMenuItem(
+                          value: recent,
+                          child: Text(
+                            '${recent.mode == FilePatternMode.regex ? 'Regex' : 'Wildcards'}: ${recent.expression}',
+                            maxLines: 2,
+                            overflow: TextOverflow.ellipsis,
+                          ),
+                        ),
+                    ],
+                  ),
                   errorText: error,
                   errorMaxLines: 3,
                   helperText: _mode == FilePatternMode.wildcard
@@ -168,6 +222,7 @@ class _PatternSelectionDialogState
               ),
               const SizedBox(height: 12),
               DropdownButtonFormField<String>(
+                key: ValueKey('selection-kind-$_kind'),
                 isExpanded: true,
                 initialValue: _kind,
                 decoration: const InputDecoration(
@@ -220,6 +275,47 @@ class _PatternSelectionDialogState
                 '$matches matching item(s) in the visible list',
                 style: Theme.of(context).textTheme.bodySmall,
               ),
+              const Divider(height: 24),
+              Wrap(
+                spacing: 8,
+                runSpacing: 4,
+                children: [
+                  TextButton.icon(
+                    key: const ValueKey('remember-panel-selection'),
+                    onPressed: panel.selection.isEmpty
+                        ? null
+                        : () {
+                            final count = panel.rememberSelection();
+                            setState(() {
+                              _memoryMessage = count == 0
+                                  ? 'Refresh the source before remembering its selection.'
+                                  : 'Remembered $count selected item(s) for this tab.';
+                            });
+                          },
+                    icon: const Icon(Icons.bookmark_add_outlined),
+                    label: const Text('Remember selection'),
+                  ),
+                  TextButton.icon(
+                    key: const ValueKey('restore-panel-selection'),
+                    onPressed: restorable == 0
+                        ? null
+                        : () {
+                            final count = panel.restoreSelection();
+                            setState(() {
+                              _memoryMessage = 'Restored $count selected item(s).';
+                            });
+                          },
+                    icon: const Icon(Icons.restore),
+                    label: Text('Restore selection ($restorable)'),
+                  ),
+                ],
+              ),
+              Text(
+                _memoryMessage ??
+                    'Remembered marks stay in this tab for the current session. '
+                        'Restore includes only visible, verified original paths.',
+                style: Theme.of(context).textTheme.bodySmall,
+              ),
             ],
           ),
         ),
@@ -242,6 +338,11 @@ class _PatternSelectionDialogState
     ref
         .read(panelProvider(widget.side))
         .applyPatternSelection(pattern, action: _action);
+    unawaited(
+      _history.remember(pattern).catchError((Object error) {
+        _log.warn('Selection pattern history could not be saved', error);
+      }),
+    );
     Navigator.pop(context);
   }
 }
