@@ -69,7 +69,7 @@ class _TextEditorBottomBarState extends State<TextEditorBottomBar> {
         child: IconButton(
           onPressed: () => widget.onFontChange(items[index]),
           icon: Text(
-            'Aa',
+            widget.configs.i18n.textEditor.fontFamilyExampleText,
             style: items[index].copyWith(
               color: isSelected ? Colors.black : Colors.white,
             ),

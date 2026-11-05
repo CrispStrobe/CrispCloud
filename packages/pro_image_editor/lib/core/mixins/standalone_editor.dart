@@ -251,7 +251,11 @@ mixin StandaloneEditorState<
 
   /// Closes the editor without applying changes.
   void close() {
-    if (initConfigs.callbacks.onCloseEditor == null) {
+    // CrispCloud: the main editor's close callback belongs to the host dialog.
+    // An embedded sub-editor must dismiss its own route, not the host.
+    final isEmbedded =
+        configs.mainEditor.enableSubEditorPage && !initConfigs.convertToUint8List;
+    if (isEmbedded || initConfigs.callbacks.onCloseEditor == null) {
       Navigator.pop(context);
     } else {
       initConfigs.callbacks.onCloseEditor?.call(editorMode);

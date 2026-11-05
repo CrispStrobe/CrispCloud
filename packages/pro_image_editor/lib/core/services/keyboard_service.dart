@@ -23,9 +23,7 @@ class KeyboardService {
   /// - [LogicalKeyboardKey.meta] (useful for macOS where Meta is the
   /// command key)
   bool get isCtrlPressed =>
-      isKeyPressed(LogicalKeyboardKey.controlLeft) ||
-      isKeyPressed(LogicalKeyboardKey.controlRight) ||
-      isKeyPressed(LogicalKeyboardKey.meta);
+      keyboard.isControlPressed || keyboard.isMetaPressed;
 
   /// Returns `true` if either Shift key is currently pressed.
   ///

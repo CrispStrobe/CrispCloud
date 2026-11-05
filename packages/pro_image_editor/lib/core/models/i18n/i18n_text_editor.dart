@@ -21,8 +21,10 @@ class I18nTextEditor {
   /// ```
   const I18nTextEditor({
     this.inputHintText = 'Enter text',
+    this.fontFamilyExampleText = 'Aa',
     this.bottomNavigationBarText = 'Text',
     this.back = 'Back',
+    this.cancel = 'Cancel',
     this.done = 'Done',
     this.textAlign = 'Align text',
     this.fontScale = 'Font scale',
@@ -33,6 +35,9 @@ class I18nTextEditor {
   /// Placeholder text displayed in the text input field.
   final String inputHintText;
 
+  /// Sample text shown by the font-family/style chooser.
+  final String fontFamilyExampleText;
+
   /// Text for the bottom navigation bar item that opens the Text Editor.
   final String bottomNavigationBarText;
 
@@ -41,6 +46,9 @@ class I18nTextEditor {
 
   /// Text for the "Back" button.
   final String back;
+
+  /// Text for dismissing the text editor's overflow action sheet.
+  final String cancel;
 
   /// Text for the "Align text" setting.
   final String textAlign;

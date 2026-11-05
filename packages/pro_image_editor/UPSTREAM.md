@@ -35,10 +35,25 @@ upstream tests comprise 822 files before local changes.
 | File | Change |
 | --- | --- |
 | `pubspec.yaml` | Set `publish_to: none` and remove metadata for omitted showcase images. |
+| `lib/features/main_editor/main_editor.dart` | Route capture and Escape through the nested navigator; prevent repeated close calls from popping the host; include blur in `closeSubEditor`. |
+| `lib/core/mixins/standalone_editor.dart` | Close embedded sub-editor routes without invoking the main host's close callback. |
+| `lib/core/services/keyboard_service.dart` | Recognize both physical Command keys with Flutter's `isMetaPressed` modifier state. |
+| `lib/core/models/i18n/i18n_text_editor.dart` | Expose the overflow Cancel label and the font-style sample text. |
+| `lib/shared/widgets/platform/platform_popup_menu.dart` | Accept a translated Cancel label, with a localized Cupertino fallback. |
+| `lib/features/paint_editor/widgets/paint_editor_appbar.dart` | Supply the configured paint-editor Cancel label. |
+| `lib/features/text_editor/widgets/text_editor_appbar.dart` | Supply the configured text-editor Cancel label. |
+| `lib/features/text_editor/widgets/text_editor_bottom_bar.dart` | Use the configured script sample in font-style buttons. |
+| `README.md`, `CHANGELOG.md` | Identify the maintained copy and document the changes above. |
 
-Local changes to the runtime are documented here as they are introduced. The
-application owns its editor menus, save workflow, file-format checks, and
-translations; they do not belong in upstream package defaults.
+`UPSTREAM.patch` records changes to the imported files. New tests in
+`test/crispcloud/` cover nested cancellation, Escape, capture without losing the
+host route, apply/undo/redo, Command-key recognition, and translated overflow
+and font-style controls. The application owns its editor menus, save workflow,
+file-format checks, and translations; they do not belong in upstream defaults.
+
+Capture retains upstream's behavior of discarding a pending sub-editor's
+unapplied changes. A host should finish applying the active tool, or disable
+Save until the user applies or cancels it, before capturing the main image.
 
 ## Reproduce and validate
 
@@ -53,6 +68,7 @@ Use the application's Flutter toolchain (Flutter 3.47.8 / Dart 3.13.7):
 cd packages/pro_image_editor
 flutter pub get
 flutter analyze
+flutter test test/crispcloud
 flutter test
 ```
 
@@ -60,3 +76,15 @@ Package-local lockfiles and generated `.dart_tool/` or `build/` directories are
 not committed. The application's root lockfile records the shipped dependency
 resolution. Run CrispCloud's image edit session, widget, and live integration
 tests in addition to the focused package regressions whenever this fork changes.
+
+The runtime patch uses paths relative to the upstream package. From the
+CrispCloud repository root, apply it with:
+
+```sh
+git apply --directory=packages/pro_image_editor \
+  packages/pro_image_editor/UPSTREAM.patch
+```
+
+The new provenance document and local tests are maintained separately from
+that patch. No browser-worker code is changed, so the shipped workers remain
+byte-identical to the verified archive.

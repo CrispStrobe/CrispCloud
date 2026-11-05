@@ -1,0 +1,284 @@
+diff --git a/CHANGELOG.md b/CHANGELOG.md
+--- a/CHANGELOG.md
++++ b/CHANGELOG.md
+@@ -1,4 +1,16 @@
+ # Changelog
++
++## Unreleased (CrispCloud)
++
++- Keep embedded tool cancellation, Escape, and image/layer capture within the
++  editor's nested navigator, preserving the host dialog and its close callback.
++- Include blur in the host's `closeSubEditor` action and ignore repeat closes
++  during transitions.
++- Recognize left and right Command keys for desktop editing shortcuts.
++- Localize Cupertino overflow cancellation and expose text font-style samples
++  for the current script.
++- Retain upstream tests and add focused embedded-editor regressions in
++  `test/crispcloud/`. See `UPSTREAM.md` for the pinned source and patch inventory.
+ 
+ ## 14.24.0
+ - **FEAT**(paint-editor): Add `PaintEditorConfigs.freeStyleCustomModes` so a custom paint mode records the whole stroke, like `PaintMode.freeStyle`, and its custom path builder can draw a brush.
+@@ -1761,4 +1773,4 @@
+ - **FEAT**: TextEditor
+ - **FEAT**: CropRotateEditor
+ - **FEAT**: FilterEditor
+-- **FEAT**: EmojiEditor+- **FEAT**: EmojiEditor
+diff --git a/README.md b/README.md
+--- a/README.md
++++ b/README.md
+@@ -1,3 +1,7 @@
++> **CrispCloud maintained copy:** Pinned to pro_image_editor 14.24.0 with
++> focused embedded navigation, keyboard, and localization fixes. See
++> [UPSTREAM.md](UPSTREAM.md) for provenance, patch inventory, and tests.
++
+ <img src="https://github.com/hm21/pro_image_editor/blob/stable/assets/logo.jpg?raw=true" alt="Logo" />
+ 
+ <p>
+@@ -330,4 +334,4 @@
+   <img src="https://contrib.rocks/image?repo=hm21/pro_image_editor" />
+ </a>
+ 
+-Made with [contrib.rocks](https://contrib.rocks).+Made with [contrib.rocks](https://contrib.rocks).
+diff --git a/lib/core/mixins/standalone_editor.dart b/lib/core/mixins/standalone_editor.dart
+--- a/lib/core/mixins/standalone_editor.dart
++++ b/lib/core/mixins/standalone_editor.dart
+@@ -251,7 +251,11 @@
+ 
+   /// Closes the editor without applying changes.
+   void close() {
+-    if (initConfigs.callbacks.onCloseEditor == null) {
++    // CrispCloud: the main editor's close callback belongs to the host dialog.
++    // An embedded sub-editor must dismiss its own route, not the host.
++    final isEmbedded =
++        configs.mainEditor.enableSubEditorPage && !initConfigs.convertToUint8List;
++    if (isEmbedded || initConfigs.callbacks.onCloseEditor == null) {
+       Navigator.pop(context);
+     } else {
+       initConfigs.callbacks.onCloseEditor?.call(editorMode);
+diff --git a/lib/core/models/i18n/i18n_text_editor.dart b/lib/core/models/i18n/i18n_text_editor.dart
+--- a/lib/core/models/i18n/i18n_text_editor.dart
++++ b/lib/core/models/i18n/i18n_text_editor.dart
+@@ -21,8 +21,10 @@
+   /// ```
+   const I18nTextEditor({
+     this.inputHintText = 'Enter text',
++    this.fontFamilyExampleText = 'Aa',
+     this.bottomNavigationBarText = 'Text',
+     this.back = 'Back',
++    this.cancel = 'Cancel',
+     this.done = 'Done',
+     this.textAlign = 'Align text',
+     this.fontScale = 'Font scale',
+@@ -33,6 +35,9 @@
+   /// Placeholder text displayed in the text input field.
+   final String inputHintText;
+ 
++  /// Sample text shown by the font-family/style chooser.
++  final String fontFamilyExampleText;
++
+   /// Text for the bottom navigation bar item that opens the Text Editor.
+   final String bottomNavigationBarText;
+ 
+@@ -41,6 +46,9 @@
+ 
+   /// Text for the "Back" button.
+   final String back;
++
++  /// Text for dismissing the text editor's overflow action sheet.
++  final String cancel;
+ 
+   /// Text for the "Align text" setting.
+   final String textAlign;
+diff --git a/lib/core/services/keyboard_service.dart b/lib/core/services/keyboard_service.dart
+--- a/lib/core/services/keyboard_service.dart
++++ b/lib/core/services/keyboard_service.dart
+@@ -23,9 +23,7 @@
+   /// - [LogicalKeyboardKey.meta] (useful for macOS where Meta is the
+   /// command key)
+   bool get isCtrlPressed =>
+-      isKeyPressed(LogicalKeyboardKey.controlLeft) ||
+-      isKeyPressed(LogicalKeyboardKey.controlRight) ||
+-      isKeyPressed(LogicalKeyboardKey.meta);
++      keyboard.isControlPressed || keyboard.isMetaPressed;
+ 
+   /// Returns `true` if either Shift key is currently pressed.
+   ///
+diff --git a/lib/features/main_editor/main_editor.dart b/lib/features/main_editor/main_editor.dart
+--- a/lib/features/main_editor/main_editor.dart
++++ b/lib/features/main_editor/main_editor.dart
+@@ -747,7 +747,7 @@
+                 // set the fake hero first
+                 cropRotateEditor.currentState!.close();
+               } else {
+-                Navigator.pop(context);
++                _popSubEditorRoute();
+               }
+             }
+           } else {
+@@ -3342,7 +3342,7 @@
+     }
+ 
+     if (isSubEditorOpen) {
+-      Navigator.pop(context);
++      _popSubEditorRoute();
+       if (!_pageOpenCompleter.isCompleted) await _pageOpenCompleter.future;
+       if (!mounted) return Uint8List.fromList([]);
+     }
+@@ -3413,7 +3413,7 @@
+     }
+ 
+     if (isSubEditorOpen) {
+-      Navigator.pop(context);
++      _popSubEditorRoute();
+       if (!_pageOpenCompleter.isCompleted) await _pageOpenCompleter.future;
+       if (!mounted) return <ExportedLayer>[];
+     }
+@@ -3435,17 +3435,40 @@
+     );
+   }
+ 
+-  /// Closes all active sub-editors within the main editor, including paint,
+-  /// text, crop/rotate, filter, tune, and emoji editors.
+-  /// This ensures that any open sub-editor is properly closed and the main
+-  /// editor returns to its default state.
++  // CrispCloud: embedded editors own a nested Navigator. Looking up the
++  // Navigator above this State would pop the host dialog instead. A second
++  // close during the reverse transition must not pop another route either.
++  void _popSubEditorRoute() {
++    if (!mounted || !isSubEditorOpen || isSubEditorClosing) return;
++    final navigator = mainEditorConfigs.enableSubEditorPage
++        ? _navigatorKey.currentState
++        : Navigator.of(context);
++    if (navigator?.canPop() ?? false) navigator!.pop();
++  }
++
++  /// Closes the active sub-editor without applying its pending changes.
++  ///
++  /// Embedded sub-editors close inside their own navigator and leave the
++  /// host route open. Calls made during a close transition are ignored.
+   void closeSubEditor() {
+-    paintEditor.currentState?.close();
+-    textEditor.currentState?.close();
+-    cropRotateEditor.currentState?.close();
+-    filterEditor.currentState?.close();
+-    tuneEditor.currentState?.close();
+-    emojiEditor.currentState?.close();
++    if (!isSubEditorOpen || isSubEditorClosing) return;
++    if (paintEditor.currentState case final editor?) {
++      editor.close();
++    } else if (textEditor.currentState case final editor?) {
++      editor.close();
++    } else if (cropRotateEditor.currentState case final editor?) {
++      editor.close();
++    } else if (filterEditor.currentState case final editor?) {
++      editor.close();
++    } else if (tuneEditor.currentState case final editor?) {
++      editor.close();
++    } else if (blurEditor.currentState case final editor?) {
++      editor.close();
++    } else if (emojiEditor.currentState case final editor?) {
++      editor.close();
++    } else {
++      _popSubEditorRoute();
++    }
+   }
+ 
+   /// Close the image editor.
+diff --git a/lib/features/paint_editor/widgets/paint_editor_appbar.dart b/lib/features/paint_editor/widgets/paint_editor_appbar.dart
+--- a/lib/features/paint_editor/widgets/paint_editor_appbar.dart
++++ b/lib/features/paint_editor/widgets/paint_editor_appbar.dart
+@@ -155,6 +155,7 @@
+       PlatformPopupBtn(
+         designMode: designMode,
+         title: i18n.smallScreenMoreTooltip,
++        cancelLabel: i18n.cancel,
+         options: [
+           if (paintEditorConfigs.showLineWidthAdjustmentButton)
+             PopupMenuOption(
+diff --git a/lib/features/text_editor/widgets/text_editor_appbar.dart b/lib/features/text_editor/widgets/text_editor_appbar.dart
+--- a/lib/features/text_editor/widgets/text_editor_appbar.dart
++++ b/lib/features/text_editor/widgets/text_editor_appbar.dart
+@@ -95,6 +95,7 @@
+           PlatformPopupBtn(
+             designMode: designMode,
+             title: i18n.smallScreenMoreTooltip,
++            cancelLabel: i18n.cancel,
+             options: [
+               if (textEditorConfigs.showTextAlignButton)
+                 PopupMenuOption(
+diff --git a/lib/features/text_editor/widgets/text_editor_bottom_bar.dart b/lib/features/text_editor/widgets/text_editor_bottom_bar.dart
+--- a/lib/features/text_editor/widgets/text_editor_bottom_bar.dart
++++ b/lib/features/text_editor/widgets/text_editor_bottom_bar.dart
+@@ -69,7 +69,7 @@
+         child: IconButton(
+           onPressed: () => widget.onFontChange(items[index]),
+           icon: Text(
+-            'Aa',
++            widget.configs.i18n.textEditor.fontFamilyExampleText,
+             style: items[index].copyWith(
+               color: isSelected ? Colors.black : Colors.white,
+             ),
+diff --git a/lib/shared/widgets/platform/platform_popup_menu.dart b/lib/shared/widgets/platform/platform_popup_menu.dart
+--- a/lib/shared/widgets/platform/platform_popup_menu.dart
++++ b/lib/shared/widgets/platform/platform_popup_menu.dart
+@@ -44,6 +44,7 @@
+     required this.designMode,
+     required this.title,
+     this.message,
++    this.cancelLabel,
+   });
+ 
+   /// A list of [PopupMenuOption]s to be displayed when the popup button is
+@@ -71,6 +72,11 @@
+   /// This message can provide additional information or context to the user,
+   /// enhancing the understanding of the button's purpose or function.
+   final String? message;
++
++  /// Localized text for dismissing a Cupertino action sheet.
++  ///
++  /// Uses the current Cupertino localization when no label is supplied.
++  final String? cancelLabel;
+ 
+   @override
+   State<PlatformPopupBtn> createState() => _PlatformPopupBtnState();
+@@ -136,7 +142,10 @@
+         isDefaultAction: false,
+         isDestructiveAction: true,
+         onPressed: () => Navigator.pop(context),
+-        child: const Text('Cancel'),
++        child: Text(
++          widget.cancelLabel ??
++              CupertinoLocalizations.of(context).cancelButtonLabel,
++        ),
+       ),
+     );
+   }
+diff --git a/pubspec.yaml b/pubspec.yaml
+--- a/pubspec.yaml
++++ b/pubspec.yaml
+@@ -1,4 +1,5 @@
+ name: pro_image_editor
++publish_to: none
+ description: "A Flutter image editor: Seamlessly enhance your images with user-friendly editing features."
+ version: 14.24.0
+ homepage: https://github.com/hm21/pro_image_editor/
+@@ -13,14 +14,6 @@
+   - photo
+   - picture
+   - editor
+-
+-screenshots:
+-  - description: "Showcase from the image editor with the frosted-glass design"
+-    path: assets/showcase-frosted-glass.jpg
+-  - description: "Showcase from the image editor with the WhatsApp design"
+-    path: assets/showcase-whatsapp.jpg
+-  - description: "Showcase from the image editor with simple design"
+-    path: assets/showcase.jpg
+ 
+ platforms:
+   android:
+@@ -79,4 +72,4 @@
+   fonts:
+    - family: ProImageEditorIcons
+      fonts:
+-      - asset: assets/fonts/ProImageEditorIcons.ttf+      - asset: assets/fonts/ProImageEditorIcons.ttf

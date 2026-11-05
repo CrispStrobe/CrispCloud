@@ -95,6 +95,7 @@ class TextEditorAppBar extends StatelessWidget implements PreferredSizeWidget {
           PlatformPopupBtn(
             designMode: designMode,
             title: i18n.smallScreenMoreTooltip,
+            cancelLabel: i18n.cancel,
             options: [
               if (textEditorConfigs.showTextAlignButton)
                 PopupMenuOption(

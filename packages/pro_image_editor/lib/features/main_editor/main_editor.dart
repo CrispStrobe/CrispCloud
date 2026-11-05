@@ -747,7 +747,7 @@ class ProImageEditorState extends State<ProImageEditor>
                 // set the fake hero first
                 cropRotateEditor.currentState!.close();
               } else {
-                Navigator.pop(context);
+                _popSubEditorRoute();
               }
             }
           } else {
@@ -3342,7 +3342,7 @@ class ProImageEditorState extends State<ProImageEditor>
     }
 
     if (isSubEditorOpen) {
-      Navigator.pop(context);
+      _popSubEditorRoute();
       if (!_pageOpenCompleter.isCompleted) await _pageOpenCompleter.future;
       if (!mounted) return Uint8List.fromList([]);
     }
@@ -3413,7 +3413,7 @@ class ProImageEditorState extends State<ProImageEditor>
     }
 
     if (isSubEditorOpen) {
-      Navigator.pop(context);
+      _popSubEditorRoute();
       if (!_pageOpenCompleter.isCompleted) await _pageOpenCompleter.future;
       if (!mounted) return <ExportedLayer>[];
     }
@@ -3435,17 +3435,40 @@ class ProImageEditorState extends State<ProImageEditor>
     );
   }
 
-  /// Closes all active sub-editors within the main editor, including paint,
-  /// text, crop/rotate, filter, tune, and emoji editors.
-  /// This ensures that any open sub-editor is properly closed and the main
-  /// editor returns to its default state.
+  // CrispCloud: embedded editors own a nested Navigator. Looking up the
+  // Navigator above this State would pop the host dialog instead. A second
+  // close during the reverse transition must not pop another route either.
+  void _popSubEditorRoute() {
+    if (!mounted || !isSubEditorOpen || isSubEditorClosing) return;
+    final navigator = mainEditorConfigs.enableSubEditorPage
+        ? _navigatorKey.currentState
+        : Navigator.of(context);
+    if (navigator?.canPop() ?? false) navigator!.pop();
+  }
+
+  /// Closes the active sub-editor without applying its pending changes.
+  ///
+  /// Embedded sub-editors close inside their own navigator and leave the
+  /// host route open. Calls made during a close transition are ignored.
   void closeSubEditor() {
-    paintEditor.currentState?.close();
-    textEditor.currentState?.close();
-    cropRotateEditor.currentState?.close();
-    filterEditor.currentState?.close();
-    tuneEditor.currentState?.close();
-    emojiEditor.currentState?.close();
+    if (!isSubEditorOpen || isSubEditorClosing) return;
+    if (paintEditor.currentState case final editor?) {
+      editor.close();
+    } else if (textEditor.currentState case final editor?) {
+      editor.close();
+    } else if (cropRotateEditor.currentState case final editor?) {
+      editor.close();
+    } else if (filterEditor.currentState case final editor?) {
+      editor.close();
+    } else if (tuneEditor.currentState case final editor?) {
+      editor.close();
+    } else if (blurEditor.currentState case final editor?) {
+      editor.close();
+    } else if (emojiEditor.currentState case final editor?) {
+      editor.close();
+    } else {
+      _popSubEditorRoute();
+    }
   }
 
   /// Close the image editor.

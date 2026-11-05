@@ -44,6 +44,7 @@ class PlatformPopupBtn extends StatefulWidget {
     required this.designMode,
     required this.title,
     this.message,
+    this.cancelLabel,
   });
 
   /// A list of [PopupMenuOption]s to be displayed when the popup button is
@@ -71,6 +72,11 @@ class PlatformPopupBtn extends StatefulWidget {
   /// This message can provide additional information or context to the user,
   /// enhancing the understanding of the button's purpose or function.
   final String? message;
+
+  /// Localized text for dismissing a Cupertino action sheet.
+  ///
+  /// Uses the current Cupertino localization when no label is supplied.
+  final String? cancelLabel;
 
   @override
   State<PlatformPopupBtn> createState() => _PlatformPopupBtnState();
@@ -136,7 +142,10 @@ class _PlatformPopupBtnState extends State<PlatformPopupBtn> {
         isDefaultAction: false,
         isDestructiveAction: true,
         onPressed: () => Navigator.pop(context),
-        child: const Text('Cancel'),
+        child: Text(
+          widget.cancelLabel ??
+              CupertinoLocalizations.of(context).cancelButtonLabel,
+        ),
       ),
     );
   }

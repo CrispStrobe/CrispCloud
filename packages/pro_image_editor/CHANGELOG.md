@@ -1,5 +1,17 @@
 # Changelog
 
+## Unreleased (CrispCloud)
+
+- Keep embedded tool cancellation, Escape, and image/layer capture within the
+  editor's nested navigator, preserving the host dialog and its close callback.
+- Include blur in the host's `closeSubEditor` action and ignore repeat closes
+  during transitions.
+- Recognize left and right Command keys for desktop editing shortcuts.
+- Localize Cupertino overflow cancellation and expose text font-style samples
+  for the current script.
+- Retain upstream tests and add focused embedded-editor regressions in
+  `test/crispcloud/`. See `UPSTREAM.md` for the pinned source and patch inventory.
+
 ## 14.24.0
 - **FEAT**(paint-editor): Add `PaintEditorConfigs.freeStyleCustomModes` so a custom paint mode records the whole stroke, like `PaintMode.freeStyle`, and its custom path builder can draw a brush.
 - **FEAT**(paint-editor): Export `PathBuilderFreestyle` and add `PathBuilderBase.drawInLayer`, so a custom brush that overrides `draw` with several draw calls keeps the opacity and the eraser working.
