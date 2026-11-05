@@ -32,6 +32,9 @@ import 'log_service.dart';
 // Data model
 // ---------------------------------------------------------------------------
 
+/// Runtime used for a mount on macOS.
+enum MacFuseBackend { automatic, fuseT, macFuseFsKit, macFuseKernel }
+
 /// Describes a single active or configured FUSE mount.
 class MountEntry {
   /// Unique key = mount point path, normalised with no trailing slash.
@@ -45,6 +48,7 @@ class MountEntry {
 
   /// Remote path on the cloud provider to expose as the mount root.
   final String remotePath;
+  final MacFuseBackend macBackend;
 
   /// Current lifecycle state.
   MountStatus status;
@@ -64,6 +68,7 @@ class MountEntry {
     required this.label,
     required this.provider,
     required this.remotePath,
+    this.macBackend = MacFuseBackend.automatic,
     this.status = MountStatus.unmounted,
     this.errorMessage,
     this.errorKey,
@@ -77,6 +82,7 @@ class MountEntry {
     'label': label,
     'provider': provider,
     'remotePath': remotePath,
+    'macBackend': macBackend.name,
   };
 
   factory MountEntry.fromMap(Map<String, String> m) => MountEntry(
@@ -84,6 +90,7 @@ class MountEntry {
     label: m['label']!,
     provider: m['provider']!,
     remotePath: m['remotePath']!,
+    macBackend: MacFuseBackend.values.where((v) => v.name == m['macBackend']).firstOrNull ?? MacFuseBackend.automatic,
   );
 
   MountEntry copyWith({
@@ -97,6 +104,7 @@ class MountEntry {
     label: label,
     provider: provider,
     remotePath: remotePath,
+    macBackend: macBackend,
     status: status ?? this.status,
     errorMessage: errorMessage ?? this.errorMessage,
     errorKey: errorKey ?? this.errorKey,
@@ -239,6 +247,7 @@ class FuseMountService {
     required String remotePath,
     required String mountPoint,
     String? label,
+    MacFuseBackend macBackend = MacFuseBackend.automatic,
   }) async {
     _requireDesktop();
 
@@ -260,6 +269,7 @@ class FuseMountService {
       label: label ?? '${client.providerName}:$remotePath',
       provider: client.providerName,
       remotePath: remotePath,
+      macBackend: macBackend,
       status: MountStatus.mounting,
     );
     _mounts[canonical] = entry;
@@ -408,6 +418,7 @@ class FuseMountService {
           'label': parts[1],
           'provider': parts[2],
           'remotePath': parts[3],
+          if (parts.length > 4) 'macBackend': parts[4],
         });
         _mounts.putIfAbsent(m.mountPoint, () => m);
       }
@@ -423,7 +434,7 @@ class FuseMountService {
       final list = _mounts.values
           .map(
             (e) =>
-                [e.mountPoint, e.label, e.provider, e.remotePath].join('\x1F'),
+                [e.mountPoint, e.label, e.provider, e.remotePath, e.macBackend.name].join('\x1F'),
           )
           .toList();
       await prefs.setStringList(_prefKey, list);
@@ -505,6 +516,7 @@ class FuseMountService {
       label: previous.label,
       provider: previous.provider,
       remotePath: previous.remotePath,
+      macBackend: previous.macBackend,
       status: MountStatus.error,
       errorMessage: message,
       errorKey: errorKey,
@@ -525,9 +537,13 @@ class FuseMountService {
     if (!Platform.isMacOS || !await File(_macBridgePath).exists()) {
       throw StateError(bridgeMissing);
     }
-    final runtime = await File('/usr/local/lib/libfuse-t.dylib').exists()
-        ? 'fuse-t'
-        : 'macfuse';
+    final runtime = switch (entry.macBackend) {
+      MacFuseBackend.automatic => await File('/usr/local/lib/libfuse-t.dylib').exists()
+          ? 'fuse-t' : 'macfuse-fskit',
+      MacFuseBackend.fuseT => 'fuse-t',
+      MacFuseBackend.macFuseFsKit => 'macfuse-fskit',
+      MacFuseBackend.macFuseKernel => 'macfuse-kernel',
+    };
     final fs = FuseFilesystem(client: client, remotePath: entry.remotePath);
     _filesystems[entry.mountPoint] = fs;
     unawaited(fs.serveRequests());
@@ -597,7 +613,7 @@ class FuseMountService {
         }),
       );
     } catch (_) {
-      if (process != null && runtime == 'macfuse') {
+      if (process != null && runtime.startsWith('macfuse-')) {
         // macFUSE can leave mount_macfuse waiting for an unavailable kext.
         // Stop that child before the bridge exits and it is reparented.
         try {

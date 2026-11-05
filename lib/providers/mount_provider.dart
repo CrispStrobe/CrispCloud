@@ -104,6 +104,7 @@ class MountNotifier extends ChangeNotifier {
     required String remotePath,
     required String mountPoint,
     String? label,
+    MacFuseBackend macBackend = MacFuseBackend.automatic,
   }) async {
     _lastMountFailure = null;
     if (!isSupported) {
@@ -131,6 +132,7 @@ class MountNotifier extends ChangeNotifier {
         remotePath: remotePath,
         mountPoint: mountPoint,
         label: label,
+        macBackend: macBackend,
       );
       if (entry.status == MountStatus.error) {
         _ref
@@ -153,6 +155,7 @@ class MountNotifier extends ChangeNotifier {
     required String remotePath,
     required String mountPoint,
     String? label,
+    MacFuseBackend macBackend = MacFuseBackend.automatic,
   }) async {
     if (!isSupported) {
       _ref
@@ -166,6 +169,7 @@ class MountNotifier extends ChangeNotifier {
         remotePath: remotePath,
         mountPoint: mountPoint,
         label: label,
+        macBackend: macBackend,
       );
       if (entry.status == MountStatus.error) {
         _ref

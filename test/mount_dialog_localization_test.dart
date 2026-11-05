@@ -1,5 +1,6 @@
 import 'package:crisp_cloud/l10n/app_localizations.dart';
 import 'package:crisp_cloud/l10n/mount_dialog_strings.dart';
+import 'package:crisp_cloud/l10n/mount_backend_strings.dart';
 import 'package:crisp_cloud/l10n/mount_error_presentation.dart';
 import 'package:crisp_cloud/services/fuse_mount_service.dart';
 import 'package:crisp_cloud/widgets/mount_dialog.dart';
@@ -49,17 +50,22 @@ void main() {
           home: Builder(
             builder: (context) {
               final strings = MountDialogStrings(context);
-              return Column(
+              final backends = MountBackendStrings(context);
+              return SingleChildScrollView(child: Column(
                 children: [
                   Text(strings.text('mount')),
                   Text(strings.text('bridgeMissing')),
+                  Text(backends.title),
+                  Text(backends.kernelWarning),
+                  for (final backend in MacFuseBackend.values)
+                    Text(backends.label(backend)),
                 ],
-              );
+              ));
             },
           ),
         ),
       );
-      expect(find.byType(Text), findsNWidgets(2));
+      expect(find.byType(Text), findsNWidgets(8));
       expect(tester.takeException(), isNull);
     }
   });

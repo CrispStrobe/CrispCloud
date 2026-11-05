@@ -137,6 +137,7 @@ void main() {
         label: 'RT',
         provider: 'OneDrive',
         remotePath: '/Docs',
+        macBackend: MacFuseBackend.macFuseKernel,
       );
       final m = e.toMap();
       expect(m['mountPoint'], '/mnt/roundtrip');
@@ -149,6 +150,11 @@ void main() {
       expect(restored.label, e.label);
       expect(restored.provider, e.provider);
       expect(restored.remotePath, e.remotePath);
+      expect(restored.macBackend, MacFuseBackend.macFuseKernel);
+      expect(restored.copyWith(status: MountStatus.error).macBackend,
+          MacFuseBackend.macFuseKernel);
+      m.remove('macBackend');
+      expect(MountEntry.fromMap(m).macBackend, MacFuseBackend.automatic);
       expect(restored.status, MountStatus.unmounted); // default
     });
 

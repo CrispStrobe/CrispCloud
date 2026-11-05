@@ -20,6 +20,7 @@ import '../providers/mount_provider.dart';
 import '../services/fuse_mount_service.dart';
 import '../l10n/app_localizations.dart';
 import '../l10n/mount_dialog_strings.dart';
+import '../l10n/mount_backend_strings.dart';
 import '../l10n/mount_error_presentation.dart';
 import '../l10n/terminal_mount_error_strings.dart';
 
@@ -144,6 +145,7 @@ class _AddMountDialogState extends ConsumerState<_AddMountDialog> {
   final _labelController = TextEditingController();
   bool _mounting = false;
   String? _error;
+  MacFuseBackend _backend = MacFuseBackend.automatic;
 
   @override
   void dispose() {
@@ -175,6 +177,25 @@ class _AddMountDialogState extends ConsumerState<_AddMountDialog> {
                     ),
                   ],
                 ),
+                const SizedBox(height: 12),
+                DropdownButtonFormField<MacFuseBackend>(
+                  initialValue: _backend,
+                  decoration: InputDecoration(
+                    labelText: MountBackendStrings(context).title,
+                    border: const OutlineInputBorder(),
+                  ),
+                  items: MacFuseBackend.values.map((backend) => DropdownMenuItem(
+                    value: backend,
+                    child: Text(MountBackendStrings(context).label(backend)),
+                  )).toList(),
+                  onChanged: _mounting ? null : (value) {
+                    if (value != null) setState(() => _backend = value);
+                  },
+                ),
+                if (_backend == MacFuseBackend.macFuseKernel) ...[
+                  const SizedBox(height: 8),
+                  Text(MountBackendStrings(context).kernelWarning),
+                ],
                 const SizedBox(height: 12),
               ],
               TextField(
@@ -297,6 +318,7 @@ class _AddMountDialogState extends ConsumerState<_AddMountDialog> {
             remotePath: remote.isEmpty ? '/' : remote,
             mountPoint: mp,
             label: label,
+            macBackend: _backend,
           );
       if (!context.mounted) return;
       if (entry == null || entry.status == MountStatus.error) {
@@ -403,6 +425,7 @@ class _MountTile extends ConsumerWidget {
           remotePath: entry.remotePath,
           mountPoint: entry.mountPoint,
           label: entry.label,
+          macBackend: entry.macBackend,
         );
   }
 }
