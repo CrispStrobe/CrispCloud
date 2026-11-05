@@ -193,6 +193,13 @@ void main() {
   // ---------------------------------------------------------------------------
 
   group('FuseMountService state', () {
+    test('rclone accepts configured names without inline credentials', () {
+      expect(FuseMountService.isValidRcloneRemote('work:documents'), isTrue);
+      expect(FuseMountService.isValidRcloneRemote(':local:/tmp/fixture'), isTrue);
+      expect(FuseMountService.isValidRcloneRemote(':s3,secret=secret:bucket'), isFalse);
+      expect(FuseMountService.isValidRcloneRemote('/'), isFalse);
+      expect(FuseMountService.isValidRcloneRemote('--option:foo'), isFalse);
+    });
     test('automatic selection never chooses FUSE-T', () {
       expect(FuseMountService.macFuseRuntime(MacFuseBackend.automatic), 'macfuse-fskit');
       expect(FuseMountService.macFuseRuntime(MacFuseBackend.fuseT), 'fuse-t');

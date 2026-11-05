@@ -133,6 +133,12 @@ enum MountStatus { unmounted, mounting, mounted, unmounting, error }
 class FuseMountService {
   static const _log = Log('FuseMountService');
 
+  /// Accept configured remote names and the credential-free local backend;
+  /// reject connection-string options that could expose secrets in argv.
+  static bool isValidRcloneRemote(String remote) =>
+      remote.startsWith(':local:') ||
+      RegExp(r'^[A-Za-z0-9_][A-Za-z0-9_. -]*:').hasMatch(remote);
+
   @visibleForTesting
   static String macFuseRuntime(MacFuseBackend backend) => switch (backend) {
     MacFuseBackend.automatic => 'macfuse-fskit',
@@ -279,7 +285,7 @@ class FuseMountService {
       throw UnsupportedError('rclone NFS is currently available on macOS only');
     }
     if (macBackend == MacFuseBackend.rcloneNfs &&
-        (!remotePath.contains(':') || remotePath.startsWith('-'))) {
+        !isValidRcloneRemote(remotePath)) {
       throw ArgumentError('An rclone remote such as work:documents is required');
     }
 

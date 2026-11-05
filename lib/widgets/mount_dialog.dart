@@ -328,7 +328,7 @@ class _AddMountDialogState extends ConsumerState<_AddMountDialog> {
       return;
     }
     if (_backend == MacFuseBackend.rcloneNfs &&
-        (!remote.contains(':') || remote.startsWith('-'))) {
+        !FuseMountService.isValidRcloneRemote(remote)) {
       setState(() => _error = MountBackendStrings(context).rcloneHint);
       return;
     }
