@@ -16,6 +16,12 @@ from pathlib import Path
 ROOT = Path(__file__).resolve().parents[1]
 APP_PATTERNS = (
     "lib/l10n/pdf_editor_strings.dart",
+    "lib/l10n/pdf_operations_strings.dart",
+    "lib/services/pdf_operations_host.dart",
+    "lib/widgets/pdf_operations_dialog.dart",
+    "test/support/pdf_operations_fixture.dart",
+    "test/support/pdf_operations_font_fixture.dart",
+    "test/widget/pdf_operations_dialog_test.dart",
     "lib/services/pdf_device_export*.dart",
     "lib/services/pdf_edit_session.dart",
     "lib/services/pdf_file_store.dart",
@@ -38,6 +44,11 @@ def main() -> None:
         str(path.relative_to(ROOT))
         for pattern in (
             "packages/dart_pdf_editor/test/**/*.dart",
+            "packages/pdf_operations/**/*.dart",
+            "packages/pdf_document/test/crisp_*.dart",
+            "packages/pdf_document/lib/src/ocr_editor.dart",
+            "packages/pdf_document/lib/src/page_editor.dart",
+            "packages/pdf_document/lib/src/document_merge.dart",
             "packages/dart_pdf_editor_secure_storage/lib/**/*.dart",
             "packages/dart_pdf_editor_secure_storage/test/**/*.dart",
         )

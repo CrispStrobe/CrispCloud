@@ -1,0 +1,9 @@
+{
+  "upstream": "https://github.com/ben-milanko/dart-pdf",
+  "baseCommit": "87adaa022c5ed6b22ca3232b6cae4a03e8389e98",
+  "expectedTree": "0baaf110059034f24896deecdeea9886197bb4a3",
+  "patchSha256": "d28b9046b2d8170223e037dea4ca2f90dcf9ef05aaaa95c65404a9079bd02347",
+  "intendedRepository": "CrispStrobe/dart-pdf",
+  "featureBranch": "feature/crispcloud-pdf-operations",
+  "status": "fork creation awaiting authenticated access"
+}

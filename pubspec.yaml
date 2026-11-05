@@ -36,6 +36,8 @@ dependencies:
   # Pinned upstream runtime with optional secure-storage adapters separated.
   # See packages/dart_pdf_editor/UPSTREAM.md for provenance and local patches.
   dart_pdf_editor: 14.0.0
+  pdf_operations:
+    path: packages/pdf_operations
   dart_pdf_editor_assets: 14.0.0
   pdf_cos: 14.0.0
   pdf_document: 14.0.0
@@ -151,6 +153,9 @@ dev_dependencies:
   covfuzz: ^0.1.1
 
 dependency_overrides:
+  # Maintained core for form-preserving extraction and Unicode OCR.
+  pdf_document:
+    path: packages/pdf_document
   # The assets companion also resolves to our pinned, plugin-free editor.
   dart_pdf_editor:
     path: packages/dart_pdf_editor

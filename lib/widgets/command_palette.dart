@@ -6,9 +6,13 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import '../l10n/pdf_operations_strings.dart';
+import '../models/file_item.dart';
 import '../models/panel_side.dart';
 import '../providers/providers.dart';
 import '../screens/screen_dialogs.dart' show showGoToDialog;
+import 'pdf_editor_dialog.dart';
+import 'pdf_operations_dialog.dart';
 
 class _Command {
   final String name;
@@ -63,6 +67,9 @@ class _CommandPaletteState extends ConsumerState<CommandPalette> {
     final side = ref.read(activePanelProvider);
     final panel = ref.read(panelProvider(side));
     final auth = ref.read(authProvider);
+    final pdfFiles = panel.selection.isNotEmpty
+        ? panel.selection.toList()
+        : <FileItem>[if (panel.cursorItem case final file?) file];
 
     return [
       // Navigation
@@ -103,6 +110,14 @@ class _CommandPaletteState extends ConsumerState<CommandPalette> {
       }),
 
       // Operations
+      if (pdfFiles.length == 1 && !pdfFiles.single.isFolder && isPdfFileName(pdfFiles.single.name))
+        _Command(name: widget.parentContext.pdfOpTr('Edit PDF'), icon: Icons.edit_document, action: () {
+          if (widget.parentContext.mounted) showPdfEditorDialog(widget.parentContext, ref, pdfFiles.single, side);
+        }),
+      for (final action in pdfOperationsForSelection(pdfFiles))
+        _Command(name: widget.parentContext.pdfOpTr(action.label), icon: action.icon, action: () {
+          if (widget.parentContext.mounted) showPdfOperationsDialog(widget.parentContext, ref, pdfFiles, side, action);
+        }),
       _Command(name: 'Clear Completed Operations', icon: Icons.cleaning_services, action: () =>
           ref.read(transferProvider).clearCompletedOperations()),
 

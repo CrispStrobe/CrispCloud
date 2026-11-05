@@ -1,79 +1,10 @@
---- a/packages/dart_pdf_editor/pubspec.yaml
-+++ b/packages/dart_pdf_editor/pubspec.yaml
-@@ -3,6 +3,7 @@
-   Flutter PDF editor and viewer for Dart: native rendering, text selection,
-   search, annotations, forms, signatures, page editing, and document comparison.
- version: 14.0.0
-+publish_to: none
- homepage: https://dart-pdf.com/flutter-pdf-editor
- repository: https://github.com/ben-milanko/dart-pdf/tree/main/packages/dart_pdf_editor
- issue_tracker: https://github.com/ben-milanko/dart-pdf/issues
-@@ -12,7 +13,6 @@
-   - pdf-editor
-   - annotations
-   - forms
--resolution: workspace
-
- environment:
-   sdk: ^3.5.0
-@@ -33,17 +33,16 @@
-   # The Material design library (the stock chrome). 7.0 moved off
-   # package:flutter/material.dart; see doc/MIGRATING-7.0.0.md.
-   material_ui: ^1.8.0
--  # Keychain/Keystore-backed persistence for signing identities
--  # (SecureIdentityStore); the private key never touches shared_preferences.
--  flutter_secure_storage: ^11.2.0
-+  # Persistent secret stores are provided by an optional local companion;
-+  # the editor core imposes no secure-storage plugin version on its host.
-   # Cross-platform HTTP client (VM + web via fetch) for the progressive remote
-   # PDF byte source (PdfHttpByteSource); uses Range requests, no dart:io in our
-   # code. See src/http_byte_source.dart.
-   http: ^1.2.0
-   image: ^4.12.0
--  pdf_cos: ^14.0.0
--  pdf_document: ^14.0.0
--  pdf_graphics: ^14.0.0
-+  pdf_cos: 14.0.0
-+  pdf_document: 14.0.0
-+  pdf_graphics: 14.0.0
-   shared_preferences: ^2.5.6
-   # Opens hyperlink (/URI) actions the viewer follows itself; see
-   # PdfViewer.onLaunchUrl. Web-safe, no dart:io.
-@@ -53,14 +52,9 @@
-   web: ^1.1.2
-
- dev_dependencies:
--  pdf_test_fixtures: ^14.0.0
-   flutter_lints: ^6.0.0
-   flutter_test:
-     sdk: flutter
--  # Stub the url_launcher platform channel in the hyperlink-launch tests so
--  # they exercise the default launcher without a real platform binding.
--  plugin_platform_interface: ^2.1.8
--  url_launcher_platform_interface: ^2.3.2
-
- flutter:
-   generate: true
---- a/packages/dart_pdf_editor/README.md
-+++ b/packages/dart_pdf_editor/README.md
-@@ -1,3 +1,12 @@
-+> **CrispCloud vendored copy.** This directory contains Apache-2.0 upstream
-+> `dart_pdf_editor` 14.0.0 with a small compatibility patch. Use the root app's
-+> path dependency. See [UPSTREAM.md](UPSTREAM.md) for the pinned source,
-+> modifications, upgrade instructions, and tests. Secure persistence is now
-+> available from the optional sibling `dart_pdf_editor_secure_storage` package;
-+> the editor core keeps its store interfaces and session-only memory stores.
-+> The remaining documentation below is the upstream README; relative links to
-+> monorepo examples and documentation refer to the pinned upstream repository.
-+
- ![dart-pdf, an open-source Flutter PDF editor and pure-Dart renderer](https://raw.githubusercontent.com/ben-milanko/dart-pdf/main/doc/banner.png)
-
- # Flutter PDF editor: dart_pdf_editor
+diff --git a/packages/dart_pdf_editor/CHANGELOG.md b/packages/dart_pdf_editor/CHANGELOG.md
+index c189e60..647c1c3 100644
 --- a/packages/dart_pdf_editor/CHANGELOG.md
 +++ b/packages/dart_pdf_editor/CHANGELOG.md
-@@ -1,4 +1,19 @@
+@@ -1,5 +1,20 @@
  # Changelog
-+
+ 
 +## CrispCloud compatibility patch on 14.0.0
 +
 +- Vendor the runtime package at upstream commit
@@ -88,25 +19,45 @@
 +  custom group defaults, and Apply controls. The engine algorithm is unchanged.
 +- Resolve the package outside the upstream workspace, pin the PDF core packages
 +  to 14.0.0, and add focused compatibility tests with generated PDF fixtures.
-
++
  ## 14.0.0
-
+ 
+ - **BREAKING:** add `shellTwoPageView` and `shellTwoPageCover` to `DartPdfEditorLocalizations`. Custom subclasses must implement both; see `doc/MIGRATING-14.0.0.md`.
+diff --git a/packages/dart_pdf_editor/README.md b/packages/dart_pdf_editor/README.md
+index 07af27f..0cb74e0 100644
+--- a/packages/dart_pdf_editor/README.md
++++ b/packages/dart_pdf_editor/README.md
+@@ -1,3 +1,12 @@
++> **CrispCloud vendored copy.** This directory contains Apache-2.0 upstream
++> `dart_pdf_editor` 14.0.0 with a small compatibility patch. Use the root app's
++> path dependency. See [UPSTREAM.md](UPSTREAM.md) for the pinned source,
++> modifications, upgrade instructions, and tests. Secure persistence is now
++> available from the optional sibling `dart_pdf_editor_secure_storage` package;
++> the editor core keeps its store interfaces and session-only memory stores.
++> The remaining documentation below is the upstream README; relative links to
++> monorepo examples and documentation refer to the pinned upstream repository.
++
+ ![dart-pdf, an open-source Flutter PDF editor and pure-Dart renderer](https://raw.githubusercontent.com/ben-milanko/dart-pdf/main/doc/banner.png)
+ 
+ # Flutter PDF editor: dart_pdf_editor
+diff --git a/packages/dart_pdf_editor/lib/src/editing/editing_toolbar.dart b/packages/dart_pdf_editor/lib/src/editing/editing_toolbar.dart
+index 1a2a4be..3709967 100644
 --- a/packages/dart_pdf_editor/lib/src/editing/editing_toolbar.dart
 +++ b/packages/dart_pdf_editor/lib/src/editing/editing_toolbar.dart
 @@ -1,3 +1,4 @@
 +// CrispCloud modification: honor host redaction restrictions. See UPSTREAM.md.
  import 'dart:typed_data';
-
+ 
  import 'package:flutter/gestures.dart' show PointerDeviceKind;
-@@ -1311,6 +1312,7 @@
+@@ -1311,6 +1312,7 @@ class _PdfEditingToolbarState extends State<PdfEditingToolbar> {
    }
-
+ 
    Future<void> _applyRedactions(BuildContext context) async {
 +    if (widget.tools?.contains(PdfEditTool.redact) == false) return;
      final confirmed = await PdfEditorPresenter.of(context).confirm(
        context,
        PdfConfirmRequest(
-@@ -1323,6 +1325,7 @@
+@@ -1323,6 +1325,7 @@ class _PdfEditingToolbarState extends State<PdfEditingToolbar> {
        ),
      );
      if (!confirmed || !context.mounted) return;
@@ -114,7 +65,7 @@
      final burned = controller.applyRedactions();
      _flattenToast(
        context,
-@@ -2023,7 +2026,8 @@
+@@ -2023,7 +2026,8 @@ class _PdfEditingToolbarState extends State<PdfEditingToolbar> {
          ),
        ];
      }
@@ -124,24 +75,26 @@
        final findToRedact = widget.onFindToRedact;
        return [
          if (flatten != null) ...[flatten, _MiniDivider(axis: axis)],
+diff --git a/packages/dart_pdf_editor/lib/src/editing/editor_commands.dart b/packages/dart_pdf_editor/lib/src/editing/editor_commands.dart
+index 5233c28..d097e69 100644
 --- a/packages/dart_pdf_editor/lib/src/editing/editor_commands.dart
 +++ b/packages/dart_pdf_editor/lib/src/editing/editor_commands.dart
 @@ -1,3 +1,4 @@
 +// CrispCloud modification: honor host redaction restrictions. See UPSTREAM.md.
  import 'dart:async';
-
+ 
  import 'package:flutter/foundation.dart';
-@@ -258,7 +259,8 @@
+@@ -258,7 +259,8 @@ class PdfEditorCommands extends ChangeNotifier {
    /// lists the tools only.
    PdfEditorFeatures? features;
-
+ 
 -  /// The editing tools [catalog] offers, null meaning all of them.
 +  /// The editing tools commands may arm and [catalog] offers, null meaning all
 +  /// of them. CrispCloud enforces this for direct calls as well as visible UI.
    Set<PdfEditTool>? tools;
-
+ 
    /// The tool key bindings [catalog] reports as each tool's shortcut.
-@@ -347,7 +349,11 @@
+@@ -347,7 +349,11 @@ class PdfEditorCommands extends ChangeNotifier {
      }
      openGroupId = group.id;
      if (groupForTool(_controller.tool)?.id == group.id) return;
@@ -154,7 +107,7 @@
      if (_controller.tool != null) viewerController.clearSelection();
      // markup arms no tool, so its style scope is set explicitly (after the
      // tool reset above, which would otherwise clear it) - this is what lets
-@@ -388,6 +394,7 @@
+@@ -388,6 +394,7 @@ class PdfEditorCommands extends ChangeNotifier {
    /// is a no-op. Returns whether [tool] is armed afterwards - false when a
    /// prompt was dismissed.
    Future<bool> armTool(BuildContext context, PdfEditTool tool) async {
@@ -162,7 +115,7 @@
      if (_controller.tool == tool) return true;
      await toggleTool(context, tool);
      return _controller.tool == tool;
-@@ -397,6 +404,7 @@
+@@ -397,6 +404,7 @@ class PdfEditorCommands extends ChangeNotifier {
    /// when it is already armed, drops back to Select. Returns whether [tool]
    /// is armed afterwards.
    Future<bool> toggleTool(BuildContext context, PdfEditTool tool) async {
@@ -170,7 +123,7 @@
      switch (tool) {
        case PdfEditTool.measureDistance:
        case PdfEditTool.measurePerimeter:
-@@ -418,6 +426,7 @@
+@@ -418,6 +426,7 @@ class PdfEditorCommands extends ChangeNotifier {
    /// when it is already armed - never to no tool at all, so tapping the
    /// active tool off leaves things selectable. Clears the text selection.
    void toggleToolNow(PdfEditTool tool) {
@@ -178,7 +131,7 @@
      // arming Redact over a text selection marks it, as a markup tool does
      if (tool == PdfEditTool.redact &&
          _controller.tool != tool &&
-@@ -516,6 +525,7 @@
+@@ -516,6 +525,7 @@ class PdfEditorCommands extends ChangeNotifier {
    /// mark per page over the selected glyphs). Nothing is removed until the
    /// marks are applied.
    void redactSelection() {
@@ -186,19 +139,22 @@
      // capture before the edit: the document swap clears the selection
      final quadsByPage = {
        for (final page in viewerController.selectionPages)
+diff --git a/packages/dart_pdf_editor/lib/src/editing/form_secret_store.dart b/packages/dart_pdf_editor/lib/src/editing/form_secret_store.dart
+index ac4e5b5..650b358 100644
 --- a/packages/dart_pdf_editor/lib/src/editing/form_secret_store.dart
 +++ b/packages/dart_pdf_editor/lib/src/editing/form_secret_store.dart
-@@ -1,7 +1,6 @@
+@@ -1,8 +1,7 @@
 -import 'dart:convert';
 +// CrispCloud modification: platform persistence is an optional companion.
 +// See UPSTREAM.md for provenance and patch details.
  import 'dart:typed_data';
--
+ 
 -import 'package:flutter_secure_storage/flutter_secure_storage.dart';
-
+-
  /// Where [PdfEditingController] keeps password-field values instead of the
  /// PDF (ISO 32000 §12.7.4.3: readers "shall never store the value" of a
-@@ -14,8 +13,8 @@
+ /// password field in the file).
+@@ -14,8 +13,8 @@ import 'package:flutter_secure_storage/flutter_secure_storage.dart';
  /// back and a different document never sees them.
  ///
  /// Mirrors [PdfIdentityStore]: async and backend-agnostic, with an
@@ -209,7 +165,7 @@
  abstract interface class PdfFormSecretStore {
    /// Every value stored for [documentId], keyed by field name.
    Future<Map<String, String>> readAll(String documentId);
-@@ -72,93 +71,3 @@
+@@ -72,93 +71,3 @@ class InMemoryFormSecretStore implements PdfFormSecretStore {
      _byDocument.remove(documentId);
    }
  }
@@ -303,6 +259,8 @@
 -    await _storage.delete(key: _indexKey);
 -  }
 -}
+diff --git a/packages/dart_pdf_editor/lib/src/editing/signing_identity_store.dart b/packages/dart_pdf_editor/lib/src/editing/signing_identity_store.dart
+index 6170a91..eecc5f2 100644
 --- a/packages/dart_pdf_editor/lib/src/editing/signing_identity_store.dart
 +++ b/packages/dart_pdf_editor/lib/src/editing/signing_identity_store.dart
 @@ -1,13 +1,12 @@
@@ -312,7 +270,7 @@
 +// CrispCloud modification: platform persistence is an optional companion.
 +// See UPSTREAM.md for provenance and patch details.
  import 'package:pdf_document/pdf_document.dart';
-
+ 
  /// Persistence for one-tap [PdfSigningIdentity]s (see
  /// [PdfSigningIdentity.generate]). An identity is stored by a caller-chosen
  /// [id] as its PEM (`toPem()`), which carries the unprotected private key -
@@ -323,7 +281,7 @@
  ///
  /// Implementations are async and backend-agnostic; the "Create signing
  /// identity" dialog takes one so the host chooses where keys live (or passes
-@@ -50,59 +49,3 @@
+@@ -50,59 +49,3 @@ class InMemoryIdentityStore implements PdfIdentityStore {
      _pemById.remove(id);
    }
  }
@@ -383,6 +341,42 @@
 -    }
 -  }
 -}
+diff --git a/packages/dart_pdf_editor/lib/src/insert_pages_dialog.dart b/packages/dart_pdf_editor/lib/src/insert_pages_dialog.dart
+index e462840..2fa31df 100644
+--- a/packages/dart_pdf_editor/lib/src/insert_pages_dialog.dart
++++ b/packages/dart_pdf_editor/lib/src/insert_pages_dialog.dart
+@@ -11,12 +11,18 @@ import 'editing/editing_controller.dart';
+ import 'l10n/pdf_l10n.dart';
+ 
+ /// A PDF the host read for "Insert pages": its display [name] and [bytes].
++///
++/// The host obtains [password] before presenting the insertion dialog. It is
++/// used only to open this source; imported pages follow the destination's
++/// encryption policy. Hosts should disclose a change in protection before
++/// inserting protected pages into an unencrypted document.
+ @immutable
+ class PdfInsertFile {
+-  const PdfInsertFile(this.name, this.bytes);
++  const PdfInsertFile(this.name, this.bytes, {this.password = ''});
+ 
+   final String name;
+   final Uint8List bytes;
++  final String password;
+ }
+ 
+ /// Asks the host for PDFs to insert (an empty list = cancelled). Needs the
+@@ -218,7 +224,7 @@ class _InsertPagesDialogState extends State<_InsertPagesDialog> {
+     _failed.clear();
+     for (final file in files) {
+       try {
+-        final document = PdfDocument.open(file.bytes);
++        final document = PdfDocument.open(file.bytes, password: file.password);
+         if (document.pageCount == 0) throw const FormatException('no pages');
+         _entries.add(_Entry(file, document));
+       } catch (_) {
+diff --git a/current/packages/dart_pdf_editor/lib/src/overprint_rerecord_worker.dart b/packages/dart_pdf_editor/lib/src/overprint_rerecord_worker.dart
+new file mode 100644
+index 0000000..4cfc677
 --- /dev/null
 +++ b/packages/dart_pdf_editor/lib/src/overprint_rerecord_worker.dart
 @@ -0,0 +1,4 @@
@@ -390,6 +384,9 @@
 +// See UPSTREAM.md for provenance and patch details.
 +export 'overprint_rerecord_worker_stub.dart'
 +    if (dart.library.io) 'overprint_rerecord_worker_native.dart';
+diff --git a/current/packages/dart_pdf_editor/lib/src/overprint_rerecord_worker_native.dart b/packages/dart_pdf_editor/lib/src/overprint_rerecord_worker_native.dart
+new file mode 100644
+index 0000000..238435b
 --- /dev/null
 +++ b/packages/dart_pdf_editor/lib/src/overprint_rerecord_worker_native.dart
 @@ -0,0 +1,50 @@
@@ -443,6 +440,9 @@
 +    );
 +  });
 +}
+diff --git a/current/packages/dart_pdf_editor/lib/src/overprint_rerecord_worker_stub.dart b/packages/dart_pdf_editor/lib/src/overprint_rerecord_worker_stub.dart
+new file mode 100644
+index 0000000..ef23b1f
 --- /dev/null
 +++ b/packages/dart_pdf_editor/lib/src/overprint_rerecord_worker_stub.dart
 @@ -0,0 +1,16 @@
@@ -462,14 +462,16 @@
 +  double? maxImagePixelRatio,
 +}) async =>
 +    null;
+diff --git a/packages/dart_pdf_editor/lib/src/pdf_editor_view.dart b/packages/dart_pdf_editor/lib/src/pdf_editor_view.dart
+index a6daf5d..de7febe 100644
 --- a/packages/dart_pdf_editor/lib/src/pdf_editor_view.dart
 +++ b/packages/dart_pdf_editor/lib/src/pdf_editor_view.dart
 @@ -1,3 +1,4 @@
 +// CrispCloud modification: honor host redaction restrictions. See UPSTREAM.md.
  import 'dart:async' show unawaited;
-
+ 
  import 'package:flutter/foundation.dart' show defaultTargetPlatform, mapEquals;
-@@ -925,6 +926,14 @@
+@@ -925,6 +926,14 @@ class _PdfEditorViewState extends State<PdfEditorView> {
      session
        ..providedCustomStamps = widget.customStamps
        ..colorLocked = !widget.features.colorControls;
@@ -482,9 +484,9 @@
 +          : null;
 +    }
    }
-
+ 
    /// Binds the Apple Pencil double-tap to the session's eraser toggle on
-@@ -1388,6 +1397,11 @@
+@@ -1388,6 +1397,11 @@ class _PdfEditorViewState extends State<PdfEditorView> {
            };
      final availableShortcuts =
          Map<PdfEditTool, PdfToolShortcut>.of(_toolShortcuts);
@@ -496,7 +498,7 @@
      if (widget.onPlaceSignature == null) {
        availableShortcuts.remove(PdfEditTool.signatureBox);
      }
-@@ -1479,6 +1493,8 @@
+@@ -1479,6 +1493,8 @@ class _PdfEditorViewState extends State<PdfEditorView> {
                  // it the content tool) is available; a read-only shell keeps
                  // the panel a pure find panel
                  editing: features.toolbar ? session : null,
@@ -505,7 +507,7 @@
                  preferences: prefs,
                  dock: prefs.searchPanelDock,
                  bottomSheet: bottomSheet,
-@@ -1851,12 +1867,14 @@
+@@ -1851,12 +1867,14 @@ class _PdfEditorViewState extends State<PdfEditorView> {
                          ? () => prefs.showAnnotationLibraryPanel =
                              !prefs.showAnnotationLibraryPanel
                          : null,
@@ -526,7 +528,7 @@
                      palette: widget.palette,
                      tools: availableTools,
                      groups: features.toolGroups,
-@@ -2088,6 +2106,9 @@
+@@ -2088,6 +2106,9 @@ class _PdfEditorViewState extends State<PdfEditorView> {
                                (features.toolGroups == null ||
                                    features.toolGroups!
                                        .contains(PdfEditToolGroup.markup)),
@@ -536,6 +538,8 @@
                            // The desktop toolbar floats over the viewer. Leave a
                            // scrollable tail tall enough for its dock and
                            // contextual strip, so the last page can move fully
+diff --git a/packages/dart_pdf_editor/lib/src/pdf_viewer.dart b/packages/dart_pdf_editor/lib/src/pdf_viewer.dart
+index 99c20a8..38e8324 100644
 --- a/packages/dart_pdf_editor/lib/src/pdf_viewer.dart
 +++ b/packages/dart_pdf_editor/lib/src/pdf_viewer.dart
 @@ -1,3 +1,4 @@
@@ -543,7 +547,7 @@
  import 'dart:async';
  import 'design/viewer_tokens.dart';
  import 'dart:math' as math;
-@@ -1458,6 +1459,7 @@
+@@ -1458,6 +1459,7 @@ class PdfViewer extends StatefulWidget {
      this.editingPalette = defaultStyledTextPalette,
      this.textSelectionEditing = true,
      this.textSelectionMarkup = true,
@@ -551,20 +555,20 @@
      this.annotationMenuBuilder,
      this.onSaveAnnotationImage,
      this.textMenuBuilder,
-@@ -1763,6 +1765,12 @@
-   /// Whether an editor-backed text selection exposes highlight, underline,
+@@ -1764,6 +1766,12 @@ class PdfViewer extends StatefulWidget {
    /// strikeout, and squiggly actions. Has no effect without [editing].
    final bool textSelectionMarkup;
-+
+ 
 +  /// Whether text context menus, touch chips and tool actions offer redaction.
 +  /// CrispCloud
 +  /// disables this together with the tool and its keyboard shortcut because
 +  /// partial image/Form XObject redaction is not supported by this engine.
 +  final bool textSelectionRedaction;
-
++
    /// Adds the app's own entries to the annotation context menu (the
    /// right-click menu - z-order and delete come stock). Called when the
-@@ -7555,8 +7563,9 @@
+   /// menu opens, with the selection it acts on; the custom entries
+@@ -7555,8 +7563,9 @@ class _PdfViewerState extends State<PdfViewer>
          _markupSubmenuEntry(globalPosition),
          stock(
              'link', l10n.linkDialogTitle, Icons.link, _addLinkToTextSelection),
@@ -576,7 +580,7 @@
        ],
        stock('select-all', l10n.viewerSelectAll, Icons.select_all,
            () => _selectAllTextOn(page),
-@@ -7737,6 +7746,7 @@
+@@ -7737,6 +7746,7 @@ class _PdfViewerState extends State<PdfViewer>
    /// page over the selected glyphs) and arms the Redact tool, whose strip
    /// carries the Apply button that burns the marks.
    void _redactTextSelection() {
@@ -584,7 +588,7 @@
      final editing = widget.editing;
      if (editing == null || _selRange == null) return;
      final quadsByPage = {
-@@ -8547,6 +8557,7 @@
+@@ -8547,6 +8557,7 @@ class _PdfViewerState extends State<PdfViewer>
    /// first, exactly as the toolbar does: the measuring scale for a measure
    /// tool, a signature for the signature tool.
    void _armTool(PdfEditTool tool) {
@@ -592,7 +596,7 @@
      final editing = widget.editing;
      if (editing == null) return;
      final commands = context
-@@ -9311,7 +9322,9 @@
+@@ -9311,7 +9322,9 @@ class _PdfViewerState extends State<PdfViewer>
        onAddLink: widget.editing != null && widget.textSelectionMarkup
            ? _addLinkToTextSelection
            : null,
@@ -603,17 +607,19 @@
            ? _redactTextSelection
            : null,
      );
+diff --git a/packages/dart_pdf_editor/lib/src/retained_scene.dart b/packages/dart_pdf_editor/lib/src/retained_scene.dart
+index bc36386..e7f2dc0 100644
 --- a/packages/dart_pdf_editor/lib/src/retained_scene.dart
 +++ b/packages/dart_pdf_editor/lib/src/retained_scene.dart
 @@ -13,7 +13,6 @@
  /// runs after [record] returns.
  library;
-
+ 
 -import 'dart:isolate';
  import 'dart:math' as math;
  import 'dart:ui' as ui;
-
-@@ -26,6 +25,8 @@
+ 
+@@ -26,6 +25,8 @@ import 'banded_transcript.dart';
  import 'canvas_device.dart';
  import 'canvas_path_cache.dart';
  import 'image_decoder.dart';
@@ -622,7 +628,7 @@
  import 'perf_log.dart';
  import 'renderer.dart';
  import 'render_worker.dart';
-@@ -485,8 +486,9 @@
+@@ -485,8 +486,9 @@ class PdfRetainedScene {
    /// ordinary page walk never retries by itself; an optional tile backend can
    /// use this only after conservatively rejecting the default transcript.
    ///
@@ -634,7 +640,7 @@
    /// keep the isolate hand-off bounded), recordings that skipped annotations,
    /// and pages no longer reachable from their document.
    Future<PdfRetainedScene>? rerecordWithOverprintMaxDimension(
-@@ -494,7 +496,8 @@
+@@ -494,7 +496,8 @@ class PdfRetainedScene {
    ) {
      final options = _recordingOptions;
      final document = page.document;
@@ -644,7 +650,7 @@
          options == null ||
          maxDimension <= 0 ||
          document.cos.isEncrypted ||
-@@ -515,38 +518,18 @@
+@@ -515,38 +518,18 @@ class PdfRetainedScene {
      int maxDimension,
      ({double? maxImagePixelRatio, double imageDecodeHeadroom}) options,
    ) async {
@@ -692,46 +698,48 @@
      if (encoded == null) {
        throw StateError('overprint retry command buffer is not transferable');
      }
+diff --git a/packages/dart_pdf_editor/lib/src/search_panel.dart b/packages/dart_pdf_editor/lib/src/search_panel.dart
+index af4e4da..4b4424d 100644
 --- a/packages/dart_pdf_editor/lib/src/search_panel.dart
 +++ b/packages/dart_pdf_editor/lib/src/search_panel.dart
 @@ -1,3 +1,4 @@
 +// CrispCloud modification: honor host redaction restrictions. See UPSTREAM.md.
  import 'dart:async';
-
+ 
  import 'design/viewer_tokens.dart';
-@@ -235,6 +236,7 @@
+@@ -235,6 +236,7 @@ class PdfSearchResultsPanel extends StatefulWidget {
      this.maxWidth = 480,
      this.bottomSheet = false,
      this.showOptions = true,
 +    this.showRedaction = true,
      this.onClose,
    });
-
-@@ -244,6 +246,10 @@
-   /// leaves the panel a pure find panel - which is what a read-only viewer
+ 
+@@ -245,6 +247,10 @@ class PdfSearchResultsPanel extends StatefulWidget {
    /// wants.
    final PdfEditingController? editing;
-+
+ 
 +  /// Whether find-to-redact controls are available, independently of replace.
 +  /// CrispCloud honors the host's redaction tool restriction here too.
 +  final bool showRedaction;
-
++
    /// Persists the user-dragged width when provided.
    final PdfEditingPreferences? preferences;
-@@ -299,9 +305,11 @@
+ 
+@@ -299,9 +305,11 @@ class _PdfSearchResultsPanelState extends State<PdfSearchResultsPanel> {
    bool _redactExpandedLocal = false;
-
+ 
    bool get _redactExpanded =>
 -      widget.preferences?.searchRedactExpanded ?? _redactExpandedLocal;
 +      widget.showRedaction &&
 +      (widget.preferences?.searchRedactExpanded ?? _redactExpandedLocal);
-
+ 
    void _toggleRedact() {
 +    if (!widget.showRedaction) return;
      final next = !_redactExpanded;
      final prefs = widget.preferences;
      if (prefs != null) {
-@@ -550,7 +558,7 @@
+@@ -550,7 +558,7 @@ class _PdfSearchResultsPanelState extends State<PdfSearchResultsPanel> {
                          selected: _replaceExpanded,
                          onPressed: _toggleReplace,
                        ),
@@ -740,7 +748,7 @@
                        PdfPanelToggleButton(
                          key: const ValueKey('pdf-search-redact-toggle'),
                          iconData: Icons.gradient,
-@@ -567,7 +575,9 @@
+@@ -567,7 +575,9 @@ class _PdfSearchResultsPanelState extends State<PdfSearchResultsPanel> {
                      field: _replaceField,
                      geometry: geometry,
                    ),
@@ -751,3 +759,62 @@
                    _RedactBar(
                      controller: controller,
                      editing: widget.editing!,
+diff --git a/packages/dart_pdf_editor/pubspec.yaml b/packages/dart_pdf_editor/pubspec.yaml
+index 57b8c1e..f6852b2 100644
+--- a/packages/dart_pdf_editor/pubspec.yaml
++++ b/packages/dart_pdf_editor/pubspec.yaml
+@@ -3,6 +3,7 @@ description: >-
+   Flutter PDF editor and viewer for Dart: native rendering, text selection,
+   search, annotations, forms, signatures, page editing, and document comparison.
+ version: 14.0.0
++publish_to: none
+ homepage: https://dart-pdf.com/flutter-pdf-editor
+ repository: https://github.com/ben-milanko/dart-pdf/tree/main/packages/dart_pdf_editor
+ issue_tracker: https://github.com/ben-milanko/dart-pdf/issues
+@@ -12,7 +13,6 @@ topics:
+   - pdf-editor
+   - annotations
+   - forms
+-resolution: workspace
+ 
+ environment:
+   sdk: ^3.5.0
+@@ -33,17 +33,16 @@ dependencies:
+   # The Material design library (the stock chrome). 7.0 moved off
+   # package:flutter/material.dart; see doc/MIGRATING-7.0.0.md.
+   material_ui: ^1.8.0
+-  # Keychain/Keystore-backed persistence for signing identities
+-  # (SecureIdentityStore); the private key never touches shared_preferences.
+-  flutter_secure_storage: ^11.2.0
++  # Persistent secret stores are provided by an optional local companion;
++  # the editor core imposes no secure-storage plugin version on its host.
+   # Cross-platform HTTP client (VM + web via fetch) for the progressive remote
+   # PDF byte source (PdfHttpByteSource); uses Range requests, no dart:io in our
+   # code. See src/http_byte_source.dart.
+   http: ^1.2.0
+   image: ^4.12.0
+-  pdf_cos: ^14.0.0
+-  pdf_document: ^14.0.0
+-  pdf_graphics: ^14.0.0
++  pdf_cos: 14.0.0
++  pdf_document: 14.0.0
++  pdf_graphics: 14.0.0
+   shared_preferences: ^2.5.6
+   # Opens hyperlink (/URI) actions the viewer follows itself; see
+   # PdfViewer.onLaunchUrl. Web-safe, no dart:io.
+@@ -53,14 +52,10 @@ dependencies:
+   web: ^1.1.2
+ 
+ dev_dependencies:
+-  pdf_test_fixtures: ^14.0.0
++  pdf_test_fixtures: 14.0.0
+   flutter_lints: ^6.0.0
+   flutter_test:
+     sdk: flutter
+-  # Stub the url_launcher platform channel in the hyperlink-launch tests so
+-  # they exercise the default launcher without a real platform binding.
+-  plugin_platform_interface: ^2.1.8
+-  url_launcher_platform_interface: ^2.3.2
+ 
+ flutter:
+   generate: true

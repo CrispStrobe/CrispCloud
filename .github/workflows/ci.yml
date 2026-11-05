@@ -71,6 +71,8 @@ jobs:
           (cd packages/quds_office_editor && flutter pub get)
           (cd packages/dart_pdf_editor && flutter pub get)
           (cd packages/dart_pdf_editor_secure_storage && flutter pub get)
+          (cd packages/pdf_document && dart pub get)
+          (cd packages/pdf_operations && dart pub get)
 
       - name: Shared storage contracts
         working-directory: packages/crisp_storage

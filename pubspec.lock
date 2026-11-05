@@ -1141,10 +1141,9 @@ packages:
   pdf_document:
     dependency: "direct main"
     description:
-      name: pdf_document
-      sha256: a285e8cef1ab82b45486929318356c9837ba511440cda1a7b963d5efa91ca943
-      url: "https://pub.dev"
-    source: hosted
+      path: "packages/pdf_document"
+      relative: true
+    source: path
     version: "14.0.0"
   pdf_graphics:
     dependency: transitive
@@ -1154,6 +1153,13 @@ packages:
       url: "https://pub.dev"
     source: hosted
     version: "14.0.0"
+  pdf_operations:
+    dependency: "direct main"
+    description:
+      path: "packages/pdf_operations"
+      relative: true
+    source: path
+    version: "0.1.0"
   pdfx:
     dependency: "direct main"
     description:

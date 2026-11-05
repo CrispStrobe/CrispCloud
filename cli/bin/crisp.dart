@@ -17,7 +17,8 @@ import 'package:crisp/cli_app.dart';
 
 Future<void> main(List<String> arguments) async {
   // Handle --version before routing to CommandRunner
-  if (arguments.contains('--version') || arguments.contains('-V')) {
+  if (arguments.isNotEmpty &&
+      (arguments.first == '--version' || arguments.first == '-V')) {
     stdout.writeln('crisp 0.1.0');
     exit(0);
   }

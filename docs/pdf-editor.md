@@ -4,6 +4,8 @@ CrispCloud embeds the Apache-2.0 `dart_pdf_editor` 14.0.0 runtime for editing
 existing PDFs. The `pdfx` preview remains available for reading. Open the editor
 with F4, the file context menu's Edit action, or Edit in the PDF preview.
 PDFs are routed to this editor before the plain-text editor.
+For selected-file actions and matching CLI commands, see
+[PDF operations](pdf-operations.md).
 
 ## Features and limits
 
@@ -96,9 +98,11 @@ and commit, and a reproducible local patch. See its
 
 The optional secure-storage implementations are in the sibling
 `dart_pdf_editor_secure_storage` package. The application does not depend on
-that companion. The core `pdf_cos`, `pdf_document`, `pdf_graphics` and bundled
-editor-assets packages are pinned to 14.0.0, with the application resolution
-recorded in `pubspec.lock`. Bundled fonts and the web worker are registered
+that companion. The core and bundled editor-assets packages are pinned to
+14.0.0. Both the application and CLI use the maintained `pdf_document` source
+snapshot for extraction and Unicode OCR, and the shared `pdf_operations`
+package. Their resolved dependencies are recorded in the application and CLI
+lockfiles. Bundled fonts and the web worker are registered
 during application startup.
 Their separate OFL, Bitstream/Arev, and GUST/LPPL font licenses and provenance
 are [bundled with the app](../assets/licenses/pdf_fonts/README.md) and available

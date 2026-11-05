@@ -11,6 +11,7 @@ import 'package:pdf_cos/pdf_cos.dart' show CosPasswordException;
 import 'package:pdf_document/pdf_document.dart' show PdfAcroForm, PdfSignature;
 
 import '../l10n/pdf_editor_strings.dart';
+import '../l10n/pdf_operations_strings.dart';
 import '../models/file_item.dart';
 import '../models/panel_side.dart';
 import '../providers/panel_source_provider.dart';
@@ -228,7 +229,10 @@ class _PdfEditorDialogState extends ConsumerState<PdfEditorDialog> {
     }
   }
 
-  Future<String?> _askPassword({required bool incorrect}) async {
+  Future<String?> _askPassword({
+    required bool incorrect,
+    String? fileName,
+  }) async {
     final text = TextEditingController();
     final route = DialogRoute<String>(
       context: context,
@@ -239,6 +243,10 @@ class _PdfEditorDialogState extends ConsumerState<PdfEditorDialog> {
           mainAxisSize: MainAxisSize.min,
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
+            if (fileName != null) ...[
+              Text(fileName),
+              const SizedBox(height: 8),
+            ],
             Text(
               context.pdfTr(
                 incorrect
@@ -589,6 +597,78 @@ class _PdfEditorDialogState extends ConsumerState<PdfEditorDialog> {
     }
   }
 
+  Future<List<PdfInsertFile>> _pickPdfFiles() async {
+    try {
+      final picked = await FilePicker.platform.pickFiles(
+        type: FileType.custom,
+        allowedExtensions: const ['pdf'],
+        allowMultiple: true,
+        withData: true,
+      );
+      if (!mounted || picked == null) return const [];
+      final files = <PdfInsertFile>[];
+      var totalBytes = _controller!.bytes.length;
+      var importsProtectedPages = false;
+      for (final file in picked.files) {
+        final bytes = file.bytes;
+        if (file.size > kPdfEditorInputLimitBytes ||
+            (bytes?.length ?? 0) > kPdfEditorInputLimitBytes) {
+          throw const PdfFileTooLargeException(kPdfEditorInputLimitBytes);
+        }
+        if (bytes == null) {
+          throw const _PdfOpenMessage(
+            'The browser did not provide file contents. Please select the file again.',
+          );
+        }
+        totalBytes += bytes.length;
+        if (totalBytes > 256 * 1024 * 1024) {
+          throw _PdfOpenMessage(
+            context.pdfOpTr('Selected PDFs exceed the 256 MiB input limit.'),
+          );
+        }
+        PdfDocument? document;
+        var password = '';
+        var attemptedPassword = false;
+        while (document == null) {
+          try {
+            document = PdfDocument.open(bytes, password: password);
+          } on CosPasswordException {
+            final entered = await _askPassword(
+              incorrect: attemptedPassword,
+              fileName: file.name,
+            );
+            if (!mounted || entered == null) return const [];
+            password = entered;
+            attemptedPassword = true;
+          }
+        }
+        if (PdfAcroForm.of(document)?.hasXfa ?? false) {
+          throw const _PdfOpenMessage(
+            'XFA forms cannot be edited here. Open this PDF with an XFA-capable application.',
+          );
+        }
+        importsProtectedPages |= document.cos.isEncrypted;
+        files.add(PdfInsertFile(file.name, bytes, password: password));
+      }
+      if (importsProtectedPages && !_controller!.document.cos.isEncrypted) {
+        if (!await _confirm(
+              context.pdfOpTr('Insert protected pages?'),
+              context.pdfOpTr(
+                'The inserted pages will use this document’s protection. This document has no password protection.',
+              ),
+              'Continue',
+            ) ||
+            !mounted) {
+          return const [];
+        }
+      }
+      return files;
+    } catch (error) {
+      if (mounted) _notice('Could not read selected file', detail: '$error');
+      return const [];
+    }
+  }
+
   Future<void> _exportPages(List<Uint8List> documents) async {
     if (_busy || documents.isEmpty) return;
     setState(() => _exporting = true);
@@ -779,7 +859,7 @@ class _PdfEditorDialogState extends ConsumerState<PdfEditorDialog> {
                         alwaysAllowSave: true,
                         onSave: (_) => unawaited(_save()),
                         onSaveAs: (_) => unawaited(_save(copy: true)),
-                        onPickPdfToInsert: () => _pickFile(['pdf']),
+                        onPickPdfFilesToInsert: _pickPdfFiles,
                         imagePicker: (_) => _pickFile(['png', 'jpg', 'jpeg']),
                         onExportPages: (bytes) =>
                             unawaited(_exportPages([bytes])),

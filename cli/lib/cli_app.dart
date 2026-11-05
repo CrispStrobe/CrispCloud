@@ -11,6 +11,7 @@ import 'commands/config.dart';
 import 'commands/connect.dart';
 import 'commands/download.dart';
 import 'commands/ls.dart';
+import 'commands/pdf.dart';
 import 'commands/providers.dart';
 import 'commands/search.dart';
 import 'commands/share.dart';
@@ -24,18 +25,18 @@ import 'config/cli_config.dart';
 CommandRunner<int> buildRunner({String? configPath}) {
   final config = CliConfig(path: configPath);
 
-  final runner = CommandRunner<int>(
+  final runner = PdfAwareCommandRunner(
     'crisp',
     'CrispCloud CLI — manage cloud storage from the terminal.',
   );
 
   // Top-level flags
   runner.argParser.addFlag(
-      'version',
-      abbr: 'V',
-      negatable: false,
-      help: 'Print the crisp version.',
-    );
+    'version',
+    abbr: 'V',
+    negatable: false,
+    help: 'Print the crisp version.',
+  );
 
   // Register commands
   runner
@@ -48,6 +49,7 @@ CommandRunner<int> buildRunner({String? configPath}) {
     ..addCommand(ShareCommand(config))
     ..addCommand(ProvidersCommand(config))
     ..addCommand(ConfigCommand(config))
+    ..addCommand(PdfCommand(config))
     ..addCommand(CompletionCommand());
 
   return runner;
@@ -98,7 +100,7 @@ _crisp_completion() {
   cur="${COMP_WORDS[COMP_CWORD]}"
   prev="${COMP_WORDS[COMP_CWORD-1]}"
 
-  local commands="connect ls upload download sync search share providers config completion"
+  local commands="connect ls upload download sync search share providers config pdf completion"
 
   if [[ ${COMP_CWORD} -eq 1 ]]; then
     COMPREPLY=( $(compgen -W "${commands}" -- "${cur}") )
@@ -117,6 +119,13 @@ _crisp_completion() {
       ;;
     config)
       COMPREPLY=( $(compgen -W "show path set-default remove" -- "${cur}") )
+      ;;
+    pdf)
+      if [[ ${COMP_CWORD} -eq 2 ]]; then
+        COMPREPLY=( $(compgen -W "info text search merge extract rotate reorder delete-pages watermark fill insert-image ocr" -- "${cur}") )
+      else
+        COMPREPLY=( $(compgen -f -- "${cur}") $(compgen -W "--output --pages --json --password-file --overwrite" -- "${cur}") )
+      fi
       ;;
     completion)
       COMPREPLY=( $(compgen -W "bash zsh fish" -- "${cur}") )
@@ -148,6 +157,7 @@ _crisp() {
         'share[Generate share link]' \
         'providers[List providers]' \
         'config[Manage configuration]' \
+        'pdf[Inspect and edit PDFs]' \
         'completion[Shell completion]'
       ;;
     args)
@@ -157,6 +167,13 @@ _crisp() {
           ;;
         config)
           _values 'subcommand' show path set-default remove
+          ;;
+        pdf)
+          if (( CURRENT == 3 )); then
+            _values 'PDF operation' info text search merge extract rotate reorder delete-pages watermark fill insert-image ocr
+          else
+            _files
+          fi
           ;;
         completion)
           _values 'shell' bash zsh fish
@@ -175,7 +192,7 @@ _crisp "$@"
   static const _fishCompletion = r'''
 # crisp fish completion
 
-set -l commands connect ls upload download sync search share providers config completion
+set -l commands connect ls upload download sync search share providers config pdf completion
 
 # Top-level commands
 complete -c crisp -f -n "not __fish_seen_subcommand_from $commands" -a connect -d "Connect a provider"
@@ -187,6 +204,7 @@ complete -c crisp -f -n "not __fish_seen_subcommand_from $commands" -a search -d
 complete -c crisp -f -n "not __fish_seen_subcommand_from $commands" -a share -d "Generate share link"
 complete -c crisp -f -n "not __fish_seen_subcommand_from $commands" -a providers -d "List providers"
 complete -c crisp -f -n "not __fish_seen_subcommand_from $commands" -a config -d "Manage configuration"
+complete -c crisp -f -n "not __fish_seen_subcommand_from $commands" -a pdf -d "Inspect and edit PDFs"
 complete -c crisp -f -n "not __fish_seen_subcommand_from $commands" -a completion -d "Shell completion"
 
 # connect provider types
@@ -197,6 +215,13 @@ complete -c crisp -f -n "__fish_seen_subcommand_from config" -a "show path set-d
 
 # completion shells
 complete -c crisp -f -n "__fish_seen_subcommand_from completion" -a "bash zsh fish"
+
+# PDF operations
+complete -c crisp -f -n "__fish_seen_subcommand_from pdf; and not __fish_seen_subcommand_from info text search merge extract rotate reorder delete-pages watermark fill insert-image ocr" -a "info text search merge extract rotate reorder delete-pages watermark fill insert-image ocr"
+complete -c crisp -n "__fish_seen_subcommand_from pdf" -l output -s o -r -d "Separate output PDF"
+complete -c crisp -n "__fish_seen_subcommand_from pdf" -l pages -r -d "One-based page range"
+complete -c crisp -n "__fish_seen_subcommand_from pdf" -l password-file -r -d "Private password file"
+complete -c crisp -n "__fish_seen_subcommand_from pdf" -l json -s j -d "JSON output"
 
 # common flags
 complete -c crisp -n "__fish_seen_subcommand_from ls download search share sync" -l provider -s p -d "Provider name"

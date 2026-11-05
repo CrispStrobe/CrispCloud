@@ -1,0 +1,135 @@
+import 'package:flutter/widgets.dart';
+
+/// Host-owned PDF workflows. The embedded editor localizes its own tools.
+abstract final class PdfOperationsStrings {
+  static String translate(BuildContext context, String english) =>
+      Localizations.localeOf(context).languageCode == 'de'
+      ? _de[english] ?? english
+      : english;
+
+  static const _de = <String, String>{
+    'Edit PDF': 'PDF bearbeiten',
+    'Merge selected PDFs': 'Ausgewählte PDFs zusammenführen',
+    'Extract these pages': 'Diese Seiten extrahieren',
+    'Rotate selected pages': 'Ausgewählte Seiten drehen',
+    'Reorder PDF pages': 'PDF-Seiten neu anordnen',
+    'Delete PDF pages': 'PDF-Seiten löschen',
+    'Add a watermark': 'Wasserzeichen hinzufügen',
+    'Fill known form fields': 'Benannte Formularfelder ausfüllen',
+    'Insert an image': 'Bild einfügen',
+    'Import OCR text': 'OCR-Text importieren',
+    'Could not start PDF operation':
+        'PDF-Vorgang konnte nicht gestartet werden',
+    'Password required': 'Passwort erforderlich',
+    'Password': 'Passwort',
+    'Incorrect password. Try again.': 'Falsches Passwort. Erneut versuchen.',
+    'Open': 'Öffnen',
+    'Cancel': 'Abbrechen',
+    'Close': 'Schließen',
+    'Retry': 'Erneut versuchen',
+    'Font size': 'Schriftgröße',
+    'Angle': 'Winkel',
+    'Margin (points)': 'Rand (Punkte)',
+    'Width (%)': 'Breite (%)',
+    'Height (%)': 'Höhe (%)',
+    'Left (%)': 'Links (%)',
+    'Top (%)': 'Oben (%)',
+    'Choose a PNG or JPEG image.': 'Wählen Sie ein PNG- oder JPEG-Bild.',
+    'The selected file could not be read.':
+        'Die ausgewählte Datei konnte nicht gelesen werden.',
+    'Choose a new PDF file name without a folder path.':
+        'Wählen Sie einen neuen PDF-Dateinamen ohne Ordnerpfad.',
+    'Download started. Keep the downloaded file before closing.': 'Download gestartet. Bewahren Sie die heruntergeladene Datei vor dem Schließen auf.',
+    'PDF copy saved.': 'PDF-Kopie gespeichert.',
+    'Close after downloading?': 'Nach dem Herunterladen schließen?',
+    'Close without saving?': 'Ohne Speichern schließen?',
+    'Make sure the downloaded PDF is available before closing.': 'Stellen Sie vor dem Schließen sicher, dass die heruntergeladene PDF verfügbar ist.',
+    'The generated PDF has not been saved. You can return to the preview to save or export it.': 'Die erzeugte PDF wurde noch nicht gespeichert. Kehren Sie zur Vorschau zurück, um sie zu speichern oder zu exportieren.',
+    'Return to preview': 'Zurück zur Vorschau',
+    'Pages': 'Seiten',
+    'pages': 'Seiten',
+    'New page order': 'Neue Seitenreihenfolge',
+    'List every page once, for example 3,1,2 or 5-1.':
+        'Geben Sie jede Seite genau einmal an, zum Beispiel 3,1,2 oder 5-1.',
+    'Use all, 1-3,7, or a descending range such as 5-1.':
+        'Verwenden Sie all, 1-3,7 oder einen absteigenden Bereich wie 5-1.',
+    'PDFs are merged in the order below. Choose pages from each source.': 'PDFs werden in der folgenden Reihenfolge zusammengeführt. Wählen Sie die Seiten jeder Quelldatei.',
+    'Move up': 'Nach oben',
+    'Move down': 'Nach unten',
+    'Choose PNG / JPEG': 'PNG / JPEG auswählen',
+    'Font': 'Schrift',
+    'Choose TTF / OTF': 'TTF / OTF auswählen',
+    'Opacity': 'Deckkraft',
+    'Bake the new marks into page content':
+        'Neue Markierungen in den Seiteninhalt einbetten',
+    'Turn off to keep the new marks as editable annotations. Existing annotations and form fields are preserved.': 'Deaktivieren Sie diese Option, um neue Markierungen als bearbeitbare Anmerkungen zu behalten. Bestehende Anmerkungen und Formularfelder bleiben erhalten.',
+    'Text': 'Text',
+    'Logo / image': 'Logo / Bild',
+    'Watermark text': 'Wasserzeichentext',
+    'Position': 'Position',
+    'Watermarks are placed over page content. Review the generated preview before saving.': 'Wasserzeichen werden über den Seiteninhalt gelegt. Prüfen Sie die erzeugte Vorschau vor dem Speichern.',
+    'Top left': 'Oben links',
+    'Top center': 'Oben mittig',
+    'Top right': 'Oben rechts',
+    'Center left': 'Mitte links',
+    'Center': 'Mitte',
+    'Center right': 'Mitte rechts',
+    'Bottom left': 'Unten links',
+    'Bottom center': 'Unten mittig',
+    'Bottom right': 'Unten rechts',
+    'Placement is measured from the visible top-left corner of each page, including rotated pages.': 'Die Position wird von der sichtbaren oberen linken Ecke jeder Seite aus gemessen, auch bei gedrehten Seiten.',
+    'Blank keeps aspect ratio': 'Leer: Seitenverhältnis beibehalten',
+    'This PDF has no named AcroForm fields. Open the editor to place text or create form fields.': 'Diese PDF hat keine benannten AcroForm-Felder. Öffnen Sie den Editor, um Text oder Formularfelder hinzuzufügen.',
+    'Only changed fields are written. Field names and option values must match the PDF exactly. Password, signature, and read-only fields cannot be batch-filled.': 'Nur geänderte Felder werden geschrieben. Feldnamen und Optionswerte müssen exakt mit der PDF übereinstimmen. Passwort-, Signatur- und schreibgeschützte Felder können nicht stapelweise ausgefüllt werden.',
+    'Fields': 'Felder',
+    'Import JSON': 'JSON importieren',
+    'Field name → value': 'Feldname → Wert',
+    'Text: string; checkbox: true/false; radio/choice: option value; multiple choice: array of values.': 'Text: Zeichenfolge; Kontrollkästchen: true/false; Auswahl: Optionswert; Mehrfachauswahl: Werteliste.',
+    'Known field names': 'Bekannte Feldnamen',
+    'OCR data exceeds 16 MiB.': 'Die OCR-Daten überschreiten 16 MiB.',
+    'OCR data must be a JSON array of pages with text spans.':
+        'OCR-Daten müssen eine JSON-Liste von Seiten mit Textbereichen sein.',
+    'Minimum confidence (0–1)': 'Mindestzuverlässigkeit (0–1)',
+    'Import text already recognized by an OCR tool. This action does not recognize images or contact a recognition service.': 'Importieren Sie bereits von einem OCR-Werkzeug erkannten Text. Dieser Vorgang führt keine Bilderkennung aus und kontaktiert keinen Erkennungsdienst.',
+    'Use one-based page numbers. Each span needs text and bounds [left, bottom, right, top] in PDF points, not image pixels. Confidence is optional and defaults to 1.': 'Seitennummern beginnen bei 1. Jeder Bereich benötigt Text und Grenzen [links, unten, rechts, oben] in PDF-Punkten, nicht in Bildpixeln. Die Zuverlässigkeit ist optional und beträgt standardmäßig 1.',
+    'Import OCR JSON': 'OCR-JSON importieren',
+    'Recognized page spans (JSON)': 'Erkannte Textbereiche je Seite (JSON)',
+    'Skip pages that already contain text':
+        'Seiten mit vorhandenem Text überspringen',
+    'Turning this off appends another text layer and can duplicate existing searchable text.': 'Wenn Sie dies deaktivieren, wird eine weitere Textebene hinzugefügt. Dadurch kann vorhandener durchsuchbarer Text doppelt erscheinen.',
+    'The added text is invisible. Select or search text in the generated preview to check the result.': 'Der hinzugefügte Text ist unsichtbar. Markieren oder suchen Sie Text in der erzeugten Vorschau, um das Ergebnis zu prüfen.',
+    'Search preview text': 'Text in der Vorschau suchen',
+    'Clear search': 'Suche löschen',
+    'Previous match': 'Vorheriger Treffer',
+    'Next match': 'Nächster Treffer',
+    'required': 'erforderlich',
+    'read-only': 'schreibgeschützt',
+    'password': 'Passwort',
+    'Rotation': 'Drehung',
+    '90° clockwise': '90° im Uhrzeigersinn',
+    '90° counterclockwise': '90° gegen den Uhrzeigersinn',
+    'At least one page must remain. Deleting pages is a page organization action; it is not secure content removal.': 'Mindestens eine Seite muss erhalten bleiben. Beim Löschen werden Seiten neu organisiert; Inhalte werden dadurch nicht sicher entfernt.',
+    'Allow an unprotected output when required':
+        'Ungeschützte Ausgabe zulassen, falls erforderlich',
+    'Page extraction can remove password protection. Merge output follows the first PDF’s encryption. Only continue if that output is appropriate.': 'Beim Extrahieren kann der Passwortschutz entfallen. Zusammengeführte PDFs übernehmen die Verschlüsselung der ersten PDF. Fahren Sie nur fort, wenn diese Ausgabe geeignet ist.',
+    'Review the generated PDF, then save a new copy or export it to your device.': 'Prüfen Sie die erzeugte PDF. Speichern Sie dann eine neue Kopie oder exportieren Sie sie auf Ihr Gerät.',
+    'Review output notes': 'Hinweise zur Ausgabe prüfen',
+    'Output file name': 'Ausgabedateiname',
+    'New copy beside': 'Neue Kopie neben',
+    'Back to options': 'Zurück zu den Optionen',
+    'Preview PDF': 'PDF-Vorschau',
+    'Download PDF': 'PDF herunterladen',
+    'Export PDF': 'PDF exportieren',
+    'Save new copy': 'Neue Kopie speichern',
+    'Reading PDFs…': 'PDFs werden gelesen…',
+    'Selected PDFs exceed the 256 MiB input limit.':
+        'Die ausgewählten PDFs überschreiten die Eingabegrenze von 256 MiB.',
+    'Insert protected pages?': 'Geschützte Seiten einfügen?',
+    'The inserted pages will use this document’s protection. This document has no password protection.': 'Eingefügte Seiten übernehmen den Schutz dieses Dokuments. Dieses Dokument hat keinen Passwortschutz.',
+  };
+}
+
+extension PdfOperationsTranslation on BuildContext {
+  String pdfOpTr(String english) =>
+      PdfOperationsStrings.translate(this, english);
+}
