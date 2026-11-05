@@ -45,6 +45,17 @@ class _OccupiedMountProbeService extends _AvailableFuseMountService {
   Future<bool> isPlatformMountPoint(String mountPoint) async => true;
 }
 
+class _ExitedHelperService extends _AvailableFuseMountService {
+  _ExitedHelperService(this.helper);
+  final String helper;
+
+  @override
+  String get macBridgePath => helper;
+
+  @override
+  Future<bool> isPlatformMountPoint(String mountPoint) async => false;
+}
+
 class _TestCloudClient implements CloudStorageClient {
   @override
   String get providerName => 'Test';
@@ -193,6 +204,24 @@ void main() {
   // ---------------------------------------------------------------------------
 
   group('FuseMountService state', () {
+    test('reports a helper that exits after announcing readiness', () async {
+      if (!Platform.isMacOS) return;
+      SharedPreferences.setMockInitialValues({});
+      final root = await Directory.systemTemp.createTemp('mount_exited_test_');
+      addTearDown(() => root.delete(recursive: true));
+      final helper = File('${root.path}/helper');
+      await helper.writeAsString('#!/bin/sh\nprintf "MOUNTED\\n"\nexit 17\n');
+      expect((await Process.run('/bin/chmod', ['700', helper.path])).exitCode, 0);
+      final service = _ExitedHelperService(helper.path);
+      final entry = await service.mount(
+        client: _TestCloudClient(),
+        remotePath: '/',
+        mountPoint: '${root.path}/mount',
+      );
+      expect(entry.status, MountStatus.error);
+      expect(entry.errorKey, 'helperExited');
+      expect(entry.errorValues['code'], 17);
+    });
     test('rclone accepts configured names without inline credentials', () {
       expect(FuseMountService.isValidRcloneRemote('work:documents'), isTrue);
       expect(FuseMountService.isValidRcloneRemote(':local:/tmp/fixture'), isTrue);

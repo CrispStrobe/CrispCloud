@@ -227,7 +227,7 @@ class FuseMountService {
 
   Future<String?> _checkMacFuse() async {
     if (await _rclonePath() != null) return null;
-    if (!await File(_macBridgePath).exists()) return bridgeMissing;
+    if (!await File(macBridgePath).exists()) return bridgeMissing;
     if (await File('/usr/local/lib/libfuse-t.dylib').exists()) return null;
     if (await File('/usr/local/lib/libfuse.2.dylib').exists() &&
         await Directory('/Library/Filesystems/macfuse.fs').exists()) {
@@ -359,8 +359,13 @@ class FuseMountService {
       } else {
         await _startBridge(entry, client!);
       }
-      _mounts[canonical] = entry.copyWith(status: MountStatus.mounted);
-      _log.info('Mounted ${entry.provider}:${entry.remotePath} → $canonical');
+      // The helper can exit immediately after the OS reports a mount. Its
+      // exit handler may already have changed the entry to an error.
+      if (_processes.containsKey(canonical) &&
+          _mounts[canonical]?.status != MountStatus.error) {
+        _mounts[canonical] = entry.copyWith(status: MountStatus.mounted);
+        _log.info('Mounted ${entry.provider}:${entry.remotePath} → $canonical');
+      }
     } on _MountBridgeFailure catch (e, st) {
       _log.error('Mount failed for $canonical', e, st);
       _setError(canonical, e.message, errorKey: e.key, errorValues: e.values);
@@ -582,7 +587,7 @@ class FuseMountService {
   // ---------------------------------------------------------------------------
 
   Future<void> _startBridge(MountEntry entry, CloudStorageClient client) async {
-    if (!Platform.isMacOS || !await File(_macBridgePath).exists()) {
+    if (!Platform.isMacOS || !await File(macBridgePath).exists()) {
       throw StateError(bridgeMissing);
     }
     final runtime = macFuseRuntime(entry.macBackend);
@@ -592,11 +597,13 @@ class FuseMountService {
     Process? process;
     try {
       final socketPath = await fs.ready.timeout(const Duration(seconds: 5));
-      process = await Process.start(_macBridgePath, [
+      process = await Process.start(macBridgePath, [
         entry.mountPoint,
         socketPath,
         runtime,
       ]);
+      int? exitStatus;
+      unawaited(process.exitCode.then((code) => exitStatus = code));
       final mounted = Completer<void>();
       process.stdout
           .transform(utf8.decoder)
@@ -625,6 +632,13 @@ class FuseMountService {
       ]).timeout(const Duration(seconds: 20));
       var visible = false;
       for (var attempt = 0; attempt < 20; attempt++) {
+        if (exitStatus != null) {
+          throw _MountBridgeFailure(
+            'helperExited',
+            'FUSE bridge exited ($exitStatus): $errors',
+            {'code': exitStatus!, 'error': '$errors'},
+          );
+        }
         if (await isPlatformMountPoint(entry.mountPoint)) {
           visible = true;
           break;
@@ -725,7 +739,8 @@ class FuseMountService {
     }
   }
 
-  String get _macBridgePath => p.normalize(
+  @visibleForTesting
+  String get macBridgePath => p.normalize(
     p.join(
       p.dirname(Platform.resolvedExecutable),
       '../Resources/crispcloud_fuse_bridge',

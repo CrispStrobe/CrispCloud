@@ -43,3 +43,14 @@ It is skipped in ordinary test runs. A passing helper test does not establish
 that the signed, sandboxed application can start the helper or load the FUSE
 runtime. Validate those separately in the signed app, including Finder access,
 network disconnection, remounting, and the actual cloud providers to be shipped.
+
+## FUSE-T NFS diagnostics
+
+FUSE-T writes runtime diagnostics under `~/Library/Logs/fuse-t/`. If it starts
+but the mount command fails, inspect that log and, if present, `/etc/nfs.conf`.
+Existing system-wide NFS defaults can affect mounts. On one macOS 26.2 test
+machine, FUSE-T 1.2.9 returned mount exit status 22 and the macOS mount command
+warned that the configured `nfssvers` option was unknown. That warning is a
+clue, not proof of the cause. Do not silently modify system-wide NFS settings:
+they can affect other mounts. A separate FUSE-T SMB experiment mounted but
+exposed a filename-normalization mismatch; it is not yet a supported fix.
