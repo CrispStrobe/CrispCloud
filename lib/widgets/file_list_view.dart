@@ -172,8 +172,20 @@ class FileListView extends ConsumerWidget {
       // autofocus = true when this is the active panel so compact tiles
       // (which have no inner Focus widget) still drive key events here.
       final isActivePanel = ref.read(activePanelProvider) == side;
+      if (isActivePanel) {
+        WidgetsBinding.instance.addPostFrameCallback((_) {
+          if (!context.mounted) return;
+          if (ModalRoute.of(context)?.isCurrent != true) return;
+          if (!panel.listFocusNode.hasFocus) {
+            panel.listFocusNode.requestFocus();
+          }
+        });
+      }
       return Listener(
-        onPointerDown: (event) => _PointerModifiers.update(event),
+        onPointerDown: (event) {
+          _PointerModifiers.update(event);
+          panel.listFocusNode.requestFocus();
+        },
         child: Focus(
         focusNode: panel.listFocusNode,
         autofocus: isActivePanel,
@@ -266,7 +278,11 @@ class FileListView extends ConsumerWidget {
               return KeyEventResult.handled;
             }
             // Printable char: quick search / quick filter.
-            final char = event.character;
+            final String? rawChar = event.character;
+            final String? label = event.logicalKey.keyLabel;
+            final String? char = (rawChar != null && rawChar.isNotEmpty)
+                ? rawChar
+                : (label != null && label.length == 1 ? label : null);
             if (char != null && char.isNotEmpty) {
               final settings = ref.read(quickSearchSettingsProvider);
               if (settings.mode != QuickSearchMode.off) {
