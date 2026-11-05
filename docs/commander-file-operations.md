@@ -54,12 +54,37 @@ For example, name mask `[P]_[N]_[C:3]` with extension mask `[E]` can produce
 configurable. The displayed ordering determines counter allocation and is
 frozen during execution.
 
+**Advanced rename rules** selects the saved mask dialect: CrispCloud, Total
+Commander, or Double Commander. The supported TC/DC range forms include
+`[N1-5]`, `[N1:5]`, and `[N1,5]` in their respective dialects. Date controls
+choose the captured modified/created/accessed/photo time, the time zone, and a
+minute offset. TC `[T2]` uses the time the dialog opened and `[T3]` uses the last
+options-change time; rebuilding the preview does not advance either clock.
+`[meta:artist]` reads supplied metadata and `[V:Project]` uses a variable such as
+`Project=Holiday`. Missing metadata is an explicit error. This is a documented
+mask subset; it does not load third-party Commander content plugins.
+
 Find/replace can apply to the name, extension, or full filename. Literal and
 regular-expression matching support case sensitivity and first/all matches.
 Regex replacements expand numbered captures such as `$1`, named captures such
 as `${name}`, and `$$` for a literal dollar sign. Separate case controls support
 unchanged, lower, upper, title, and sentence case. Named presets persist the
 settings between sessions.
+
+Use **Add transformation** to apply another mask/replacement/case step to the
+preceding proposed names without renaming anything in between. Earlier steps
+can be removed individually and the complete pipeline can be saved as a preset.
+**Multiple literal pairs** applies `red|blue` → `blue|green` simultaneously,
+without cascading replacements.
+
+Each preview row can be edited, moved earlier/later, or excluded from the batch.
+Excluded rows remain untouched and can be restored. **Edit / import names**
+accepts pasted text or a UTF-8 `.txt`/`.lst` file, exactly one complete name per
+included row in preview order. Manual names stay attached to the original path
+when rows are reordered. **Clear manual names** returns to the rules and enables
+adding further transformation steps. **Check existing names** reads the original
+parent folders; **Number colliding targets** allocates numbered alternatives in
+the preview, accounting for both selected and existing names.
 
 The full preview includes original paths, proposed names, and validation
 messages. A batch is blocked for invalid names, duplicate destinations in one
@@ -69,12 +94,16 @@ checks again before each item. An occupied destination is never intentionally
 overwritten. Cancel and stop/continue-on-error report completed, unchanged,
 failed, and unattempted rows separately.
 
-Successful renames update file lists at their original paths. Individual undo
-records retain their original storage/account guard and refuse occupied target
-names. The batch is not a transaction: cancellation or a later failure retains
-successful earlier renames. Cycles and occupied case-only renames require an
-unused intermediate name; parent/child renames require separate batches. Date
-masks require an available modified timestamp rather than substituting today.
+Successful renames update file lists at their original paths. After closing the
+tool, **Edit → Undo** restores the completed batch as one history action, including
+batches larger than the history's 50-action limit. Undo checks the entire reverse
+plan before changing files, retains the original storage/account guard, and
+refuses occupied original names. A failed partial undo retains only the remaining
+rows for retry. History is session-only. The batch is not a transaction:
+cancellation or a later failure retains successful earlier renames. Cycles and
+occupied case-only renames require an unused intermediate name; parent/child
+renames require separate batches. Date masks require the selected timestamp
+rather than silently substituting today.
 
 ## Pattern selection
 
@@ -108,6 +137,15 @@ Wildcard rules:
 Selection applies to visible entries; parent-directory rows are never selected.
 The same matcher filters files during copy/move while selected folders are
 traversed according to the recursion option.
+
+The pattern field's history button recalls the last 20 successfully applied
+patterns, including regex/wildcard mode, case, path matching, and item type.
+History is shared by the panes and survives restart; recalling a pattern keeps
+the current select/deselect action. **Remember selection** and **Restore
+selection** keep marks for the current tab/session. Restoration uses current,
+visible, verified original paths and omits missing files or changed accounts.
+Select all, invert, and Shift-click use the visible list; existing marks on
+nonvisible rows are preserved unless the selected action replaces all marks.
 
 ## Search results and reusable file lists
 
@@ -159,15 +197,23 @@ Changing any option invalidates that plan and requires another preview.
 
 Available options:
 
-- File conflicts: ask, skip, replace, replace only if source is newer, or keep
-  both with numbered destination names. Unknown timestamps never authorize
-  replace-if-newer. Keep-both names are allocated in the preview and checked
-  again during execution.
+- Exact destination name for a single selected root, or a file naming mask:
+  `*.*` keeps names, `*.bak` changes extensions, `*.*.bak` appends a suffix,
+  and `[N]_[C:000].[E]` adds a counter. The preview displays the exact paths.
+- File conflicts: ask, skip, replace, replace only if source is newer/larger/
+  smaller, or keep both with numbered destination names. Missing comparison
+  metadata does not authorize replacement. Keep-both names are allocated in the
+  preview and checked again during execution.
 - Folder conflicts: ask, merge contents, or skip the whole folder.
+- Individual conflicts can compare contents, rename the incoming item or preserve
+  the existing destination under another name, and apply a decision to remaining
+  conflicts. Both source and destination are rechecked after the decision.
 - Include subfolders; explicitly selected children still work when recursion is
   disabled. Selecting a folder and its child with recursion enabled processes
   that child once.
-- Wildcard/regex file filters, case sensitivity, and full-path matching.
+- Wildcard/regex file filters, case sensitivity, full-path matching, size/date
+  limits, excluded directories, hidden-item handling, and omission of folders
+  with no matching contents.
 - Direct placement in the destination or preservation of paths relative to an
   explicitly shown source base. Sources outside that base are rejected.
 - Preserve file modification times when the native destination supports it.
@@ -175,7 +221,20 @@ Available options:
   cloud traffic.
 - Copy symbolic links as links between native local filesystems. Links are
   skipped by default and never traversed recursively.
+- Preserve permissions, ownership, extended attributes, and ACLs only when both
+  storage endpoints declare support. An incompatible checked profile setting can
+  be cleared without modifying the saved profile.
+- Verified resume checks the destination prefix against the source before
+  completing it. Append combines the existing contents and incoming file. Both
+  require known lengths, use staging, and verify the combined content.
+- Prefer native/provider copy and move paths where the endpoint supports the
+  required exact-destination and completion contracts.
 - Stop on first error or continue, with per-item outcomes.
+
+Named profiles persist the complete operation options. Changing a field or
+loading a profile invalidates the old preview; Start always uses the newly
+reviewed plan. In-app panel drops open these same source-aware copy options,
+including after swapping which storage appears on each side.
 
 Start runs through the existing transfer queue. The dialog and operations panel
 support pause/resume/cancel. **Queue in background** is available when both
@@ -209,9 +268,10 @@ folder rename is unavailable; native and cloud folder rename use their actual
 rename operation. Unsupported metadata controls are disabled.
 
 These controls do not implement every platform-specific Commander operation:
-append/resume into existing files, reflinks, ownership/ACL preservation, provider
-permission editing, and transactional whole-batch rollback are outside this
-change. Cross-storage transfers use the provider's streaming contracts; a
+reflinks, universal provider permission editing, persistent interrupted-job
+recovery, and transactional whole-batch rollback are outside this change.
+Metadata options are available only for endpoints with the corresponding
+capability. Cross-storage transfers use the provider's streaming contracts; a
 provider without streaming support may buffer data. Unknown-length cloud
 uploads are buffered to determine an accurate length.
 

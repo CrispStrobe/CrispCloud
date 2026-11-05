@@ -11,9 +11,11 @@ import '../l10n/app_localizations.dart';
 import '../models/file_item.dart';
 import '../models/panel_side.dart';
 import '../providers/panel_provider.dart';
+import '../providers/action_history_provider.dart';
 import '../services/cloud_storage_interface.dart';
 import '../services/log_service.dart';
 import '../services/multi_rename_service.dart';
+import '../services/rename_batch_undo.dart';
 import '../services/panel_source_service.dart';
 import '../services/storage_transfer_contract.dart';
 import 'rename_names_dialog.dart';
@@ -52,6 +54,7 @@ class _BatchRenameDialogState extends ConsumerState<BatchRenameDialog> {
   final _dateOffset = TextEditingController(text: '0');
   final _variables = TextEditingController();
   final _referenceTime = DateTime.now();
+  late DateTime _optionsChangedAt = _referenceTime;
   final _targetNames = <String, String>{};
   final _excludedPaths = <String>{};
   final _steps = <MultiRenameOptions>[];
@@ -211,10 +214,12 @@ class _BatchRenameDialogState extends ConsumerState<BatchRenameDialog> {
         existingPaths: _existingPaths,
         caseSensitivePaths: _caseSensitivePaths,
         referenceTime: _referenceTime,
+        optionsChangedAt: _optionsChangedAt,
       );
 
   void _changed([String? _]) {
     setState(() {
+      _optionsChangedAt = DateTime.now();
       _executionErrors = {};
       _executionPlan = null;
       _message = null;
@@ -601,6 +606,14 @@ class _BatchRenameDialogState extends ConsumerState<BatchRenameDialog> {
                       '${_result!.failed} failed, ${_result!.unchanged} unchanged, ${_result!.notRun} not run.',
                       key: const ValueKey('rename-result'),
                       style: theme.textTheme.bodyMedium,
+                    ),
+                  ),
+                if ((_result?.renamed ?? 0) > 0)
+                  const Padding(
+                    padding: EdgeInsets.only(top: 4),
+                    child: Text(
+                      'After closing, Edit → Undo restores this batch as one action.',
+                      style: TextStyle(fontSize: 12),
                     ),
                   ),
                 const SizedBox(height: 12),
@@ -1216,6 +1229,8 @@ class _BatchRenameDialogState extends ConsumerState<BatchRenameDialog> {
       );
       return;
     }
+    final history = ref.read(actionHistoryProvider.notifier);
+    final capturedTargets = <String, FileItem?>{};
     setState(() {
       _processing = true;
       _executionPlan = plan;
@@ -1227,13 +1242,25 @@ class _BatchRenameDialogState extends ConsumerState<BatchRenameDialog> {
       final result = await _service.execute(
         plan,
         exists: (path) => _panel.operationPathExists(path, origin),
-        rename: (file, name) => _panel.renameFile(
-          file,
-          name,
-          refreshAfter: false,
-          rethrowErrors: true,
-          operationOrigin: origin,
-        ),
+        rename: (file, name) async {
+          await _panel.renameFile(
+            file, name,
+            refreshAfter: false,
+            rethrowErrors: true,
+            recordHistory: false,
+            operationOrigin: origin,
+          );
+          final target = _paths.join(_paths.dirname(file.path!), name);
+          try {
+            capturedTargets[target] =
+                await _panel.operationFileInfo(target, origin);
+          } catch (error) {
+            // The rename succeeded even if a later metadata read failed. Keep
+            // the outcome accurate and refuse unsafe undo for this row.
+            capturedTargets[target] = null;
+            _log.warn('Could not capture renamed item for undo', error);
+          }
+        },
         isCancelled: () => _cancelRequested || !mounted,
         continueOnError: !_stopOnError,
         onProgress: (progress) {
@@ -1241,6 +1268,9 @@ class _BatchRenameDialogState extends ConsumerState<BatchRenameDialog> {
         },
       );
       if (mounted) setState(() => _result = result);
+      if (result.renamed > 0) {
+        _recordBatchUndo(result, plan, origin, history, capturedTargets);
+      }
       if (origin.isCurrent && result.changes.isNotEmpty) {
         _panel.applyFileListChanges(result.changes, origin: origin);
         await _panel.refresh();
@@ -1263,6 +1293,60 @@ class _BatchRenameDialogState extends ConsumerState<BatchRenameDialog> {
         });
       }
     }
+  }
+
+  void _recordBatchUndo(
+    MultiRenameResult result, MultiRenamePlan plan, PanelFileOrigin origin,
+    ActionHistoryNotifier history, Map<String, FileItem?> capturedTargets,
+  ) {
+    final undo = RenameBatchUndo(
+      result,
+      pathContext: plan.pathContext,
+      caseSensitivePaths: plan.caseSensitivePaths,
+      capturedTargets: capturedTargets,
+    );
+    // The history callback outlives the dialog. Capture the panel and origin,
+    // never this widget's ref or whichever panel happens to be active later.
+    final panel = _panel;
+    final first = result.outcomes.firstWhere(
+      (outcome) => outcome.status == MultiRenameStatus.renamed,
+    ).entry;
+    history.record(
+      type: ActionType.rename,
+      originalPath: first.sourcePath,
+      newPath: first.targetPath,
+      provider: origin.source.displayName,
+      metadata: {'batchCount': result.renamed},
+      isCurrent: () => origin.isCurrent,
+      undoAction: () async {
+        if (!origin.isCurrent) {
+          return const UndoResult.failure('The storage account changed.');
+        }
+        final restored = await undo.execute(
+          stat: (path) => panel.operationFileInfo(path, origin),
+          rename: (file, name) => panel.renameFile(
+            file, name,
+            operationOrigin: origin,
+            refreshAfter: false,
+            rethrowErrors: true,
+            recordHistory: false,
+          ),
+        );
+        if (origin.isCurrent && restored.changes.isNotEmpty) {
+          panel.applyFileListChanges(restored.changes, origin: origin);
+          await panel.refresh();
+        }
+        if (undo.remaining != 0) {
+          final detail = restored.outcomes
+              .where((outcome) => outcome.message != null)
+              .map((outcome) => outcome.message).join('\n');
+          return UndoResult.failure(
+            '${restored.renamed} restored; ${undo.remaining} still need undo. $detail',
+          );
+        }
+        return UndoResult.success('Restored all ${result.renamed} renamed items.');
+      },
+    );
   }
 }
 

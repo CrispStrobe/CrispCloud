@@ -1,9 +1,11 @@
+import 'dart:async';
 import 'dart:io';
 
 import 'package:crisp_cloud/l10n/app_localizations.dart';
 import 'package:crisp_cloud/models/file_item.dart';
 import 'package:crisp_cloud/models/panel_side.dart';
 import 'package:crisp_cloud/providers/providers.dart';
+import 'package:crisp_cloud/providers/action_history_provider.dart';
 import 'package:crisp_cloud/services/cloud_storage_interface.dart';
 import 'package:crisp_cloud/services/local_file_service.dart';
 import 'package:crisp_cloud/widgets/batch_rename_dialog.dart';
@@ -31,6 +33,7 @@ class _Local extends Fake implements LocalFileService {
 class _Cloud extends Fake implements CloudStorageClient {
   final paths = <String>{'/first.txt', '/second.txt'};
   final renames = <String>[];
+  Future<void> Function(String path)? afterRename;
   @override
   String get providerName => 'Rename test';
   @override
@@ -61,6 +64,7 @@ class _Cloud extends Fake implements CloudStorageClient {
     paths.remove(path);
     paths.add(target);
     renames.add(path);
+    await afterRename?.call(path);
   }
 }
 
@@ -284,6 +288,56 @@ void main() {
     await tester.pumpAndSettle();
     expect(cloud.renames, ['/second.txt', '/first.txt']);
     expect(cloud.paths, {'/manual-first.txt', '/manual-second.txt'});
+  });
+
+  testWidgets('a completed batch is one source-bound undo action', (tester) async {
+    await open(tester);
+    await tester.enterText(
+      find.byKey(const ValueKey('rename-name-mask')), '[N]_new',
+    );
+    await tester.pumpAndSettle();
+    await tester.tap(find.byKey(const ValueKey('rename-apply')));
+    await tester.pumpAndSettle();
+    final history = container.read(actionHistoryProvider);
+    expect(history.history, hasLength(1));
+    expect(history.history.single.description, 'Renamed 2 items');
+    // Closing the dialog must not invalidate the captured undo callback.
+    await tester.pumpWidget(const SizedBox.shrink());
+    final undone = await history.undoLast(const UndoContext());
+    expect(undone?.success, isTrue);
+    expect(cloud.paths, {'/first.txt', '/second.txt'});
+    expect(history.history, isEmpty);
+  });
+
+  testWidgets('disposing an active dialog retains undo for completed rows', (
+    tester,
+  ) async {
+    final firstRenamed = Completer<void>();
+    final continueOperation = Completer<void>();
+    cloud.afterRename = (path) async {
+      if (path == '/first.txt') {
+        firstRenamed.complete();
+        await continueOperation.future;
+      }
+    };
+    await open(tester);
+    await tester.enterText(
+      find.byKey(const ValueKey('rename-name-mask')), '[N]_new',
+    );
+    await tester.pumpAndSettle();
+    await tester.tap(find.byKey(const ValueKey('rename-apply')));
+    await tester.pump();
+    expect(firstRenamed.isCompleted, isTrue);
+    await tester.pumpWidget(const SizedBox.shrink());
+    continueOperation.complete();
+    await tester.pumpAndSettle();
+    expect(cloud.paths, {'/first_new.txt', '/second.txt'});
+    final history = container.read(actionHistoryProvider);
+    expect(history.history, hasLength(1));
+    final undone = await history.undoLast(const UndoContext());
+    expect(undone?.success, isTrue);
+    expect(cloud.paths, {'/first.txt', '/second.txt'});
+    expect(tester.takeException(), isNull);
   });
 
   testWidgets('excluding a row keeps its file and reallocates the counter', (

@@ -100,3 +100,21 @@ implementation status, not a claim of universal Total/Double Commander parity.
 - Baseline audit and completion scope recorded. Parallel implementation uses
   isolated worktrees; finished commits are integrated and pushed to the feature
   branch in order. Remaining unchecked items are not represented as complete.
+
+### 2026-11-05: requested workflow integration pass
+
+The user-facing rename, selection, file-list and transfer workflows are now
+connected and documented in `commander-file-operations.md`. This pass adds
+editable/imported rename targets, row control, dialect/date/variable settings,
+pipelines, collision numbering, one-action batch undo, remembered selections,
+persisted pattern history, and source-aware panel drops. It also fixes transfer
+conflict and profile edge cases and protects asynchronous history mutations.
+
+Checkpoints `851158e`, `f069979`, `0739465`, and `44841b6` were pushed on the
+original feature branch. Because that branch was receiving concurrent work,
+the final pass continues on `feature/commander-workflow-polish`, forked from
+`cb58160` with the incoming synchronization, clipboard and rename-journal work
+preserved. The broader unchecked roadmap above remains separate from the
+completed user-facing integration; in particular, the new journal engine has
+its own contracts and tests, while this dialog currently executes independent
+renames and uses session-bound batch undo.

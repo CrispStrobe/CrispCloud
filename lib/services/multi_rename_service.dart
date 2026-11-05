@@ -340,9 +340,11 @@ class MultiRenameService {
     bool caseSensitivePaths = false,
     bool allowDependencies = false,
     DateTime? referenceTime,
+    DateTime? optionsChangedAt,
   }) {
     final paths = pathContext ?? p.posix;
     final capturedTime = referenceTime ?? DateTime.now();
+    final capturedOptionsTime = optionsChangedAt ?? capturedTime;
     final errors = <String>[];
     final steps = [options, ...options.additionalSteps];
     if (steps.length > 101 ||
@@ -408,6 +410,7 @@ class MultiRenameService {
         );
       }
       var newName = file.name;
+      final manualName = targetNames[source];
       if (errors.isEmpty) {
         try {
           for (var stepIndex = 0; stepIndex < steps.length; stepIndex++) {
@@ -423,9 +426,11 @@ class MultiRenameService {
               current.path!,
               paths,
               capturedTime,
+              optionsChangedAt: capturedOptionsTime,
+              allowUnavailableValues: manualName != null,
             );
           }
-          newName = targetNames[source] ?? newName;
+          newName = manualName ?? newName;
           if (newName != file.name) {
             final invalid = validateName(newName);
             if (invalid != null) problems.add(invalid);
@@ -769,8 +774,10 @@ class MultiRenameService {
     RegExp? pattern,
     String source,
     p.Context paths,
-    DateTime referenceTime,
-  ) {
+    DateTime referenceTime, {
+    required DateTime optionsChangedAt,
+    bool allowUnavailableValues = false,
+  }) {
     final original = _parts(file.name, file.isFolder);
     String mask(String value) => expandRenameMask(
       value,
@@ -785,12 +792,14 @@ class MultiRenameService {
         counterStep: options.counterStep,
         counterWidth: options.counterWidth,
         referenceTime: referenceTime,
+        optionsChangedAt: optionsChangedAt,
         dialect: options.dialect,
         dateSource: options.dateSource,
         dateZone: options.dateZone,
         dateOffsetMinutes: options.dateOffsetMinutes,
         variables: options.variables,
       ),
+      allowUnavailableValues: allowUnavailableValues,
     );
     var name = mask(options.nameMask);
     var extension = file.isFolder ? '' : mask(options.extensionMask);
@@ -807,17 +816,22 @@ class MultiRenameService {
           );
         }
         final expression = RegExp(
-          from.map(RegExp.escape).join('|'),
+          from.map((word) => '(${RegExp.escape(word)})').join('|'),
           caseSensitive: options.caseSensitive,
           unicode: true,
         );
         String substitute(Match match) {
-          final index = from.indexWhere(
-            (word) => options.caseSensitive
-                ? word == match[0]
-                : word.toLowerCase() == match[0]!.toLowerCase(),
+          if (to.length == 1) return to.single;
+          // Unicode regexp folding also matches characters such as long s
+          // and final sigma. Lowercase equality cannot identify those matches.
+          // Capturing each escaped alternative keeps the replacement tied to
+          // the exact alternative selected by the same regexp engine.
+          for (var index = 0; index < from.length; index++) {
+            if (match.group(index + 1) != null) return to[index];
+          }
+          throw const FormatException(
+            'The matched literal replacement pair could not be identified.',
           );
-          return to.length == 1 ? to.single : to[index];
         }
 
         return options.firstMatchOnly

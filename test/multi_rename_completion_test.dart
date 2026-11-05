@@ -25,6 +25,7 @@ void main() {
     Map<String, String> names = const {},
     Iterable<String> existing = const [],
     bool sensitive = false,
+    DateTime? optionsChangedAt,
   }) => service.preview(
     files,
     options,
@@ -34,6 +35,7 @@ void main() {
     allowDependencies: true,
     caseSensitivePaths: sensitive,
     referenceTime: referenceTime,
+    optionsChangedAt: optionsChangedAt,
   );
 
   group('versioned mask dialects', () {
@@ -54,6 +56,57 @@ void main() {
         expect(result.isValid, isTrue);
       },
     );
+
+    test('TC date switches retain their documented time sources', () {
+      final source = file('/photo.jpg', metadata: {
+        'createdAt': DateTime.utc(2001, 1, 1),
+        'accessedAt': DateTime.utc(2002, 1, 1),
+        'dateTaken': DateTime.utc(2020, 6, 7, 8, 9, 10),
+      });
+      final result = preview(
+        [source],
+        const MultiRenameOptions(
+          dialect: RenameMaskDialect.totalCommander,
+          nameMask: '[T1][YMD]_[T2][YMD]_[T3][YMD]_[T4][YMD]',
+        ),
+        optionsChangedAt: DateTime.utc(2026, 11, 6),
+      );
+      expect(result.isValid, isTrue);
+      expect(
+        result.entries.single.newName,
+        '20240203_20261105_20261106_20200607.jpg',
+      );
+
+      final defaultTime = preview(
+        [source],
+        const MultiRenameOptions(
+          dialect: RenameMaskDialect.totalCommander,
+          nameMask: '[T2][hms]_[T3][hms]',
+        ),
+      );
+      expect(defaultTime.entries.single.newName, '121314_121314.jpg');
+    });
+
+    test('CrispCloud date switches retain their previous meanings', () {
+      final result = preview(
+        [
+          file('/photo.jpg', metadata: {
+            'createdAt': DateTime.utc(2001, 1, 1),
+            'accessedAt': DateTime.utc(2002, 2, 2),
+            'dateTaken': DateTime.utc(2020, 6, 7),
+          }),
+        ],
+        const MultiRenameOptions(
+          nameMask: '[T2][YMD]_[T3][YMD]_[T4][YMD]_[T5][YMD]',
+        ),
+        optionsChangedAt: DateTime.utc(2026, 11, 6),
+      );
+      expect(result.isValid, isTrue);
+      expect(
+        result.entries.single.newName,
+        '20010101_20020202_20200607_20261105.jpg',
+      );
+    });
 
     test('DC ranges, padded dates, ancestor fields and escaped brackets', () {
       final complete = preview(
@@ -139,6 +192,88 @@ void main() {
         expect(result.entries.single.errors, isNotEmpty);
       }
     });
+
+    test('oversized offsets become preview errors without integer overflow', () {
+      for (final options in [
+        const MultiRenameOptions(
+          nameMask: '[Y]',
+          dateOffsetMinutes: 150000000000,
+        ),
+        const MultiRenameOptions(nameMask: '[T1+150000000000m][Y]'),
+        const MultiRenameOptions(nameMask: '[T1-150000000000m][Y]'),
+        const MultiRenameOptions(
+          nameMask: '[T1+999999999999999999999999d][Y]',
+        ),
+        const MultiRenameOptions(
+          nameMask: '[T1+100000000000m][Y]',
+          dateOffsetMinutes: 100000000000,
+        ),
+      ]) {
+        final result = preview([file('/a.txt')], options);
+        expect(result.canExecute, isFalse);
+        expect(result.entries.single.errors.single, contains('date offset'));
+      }
+    });
+
+    test('offsets cannot wrap a date past either supported epoch limit', () {
+      for (final sign in [-1, 1]) {
+        final source = file('/a.txt').copyWith(
+          updatedAt: DateTime.fromMillisecondsSinceEpoch(
+            sign * 8640000000000000,
+            isUtc: true,
+          ),
+        );
+        final result = preview(
+          [source],
+          MultiRenameOptions(
+            nameMask: '[Y]',
+            dateOffsetMinutes: sign * 100000000000,
+          ),
+        );
+        expect(result.canExecute, isFalse);
+        expect(
+          result.entries.single.errors.single,
+          contains('outside the supported date range'),
+        );
+      }
+    });
+
+    test('invalid numeric metadata dates remain explicit preview errors', () {
+      for (final value in <num>[
+        9000000000000000,
+        -9000000000000000,
+        double.infinity,
+        double.negativeInfinity,
+        double.nan,
+      ]) {
+        final result = preview(
+          [file('/a.txt', metadata: {'createdAt': value})],
+          const MultiRenameOptions(
+            nameMask: '[Y]',
+            dateSource: RenameDateSource.created,
+          ),
+        );
+        expect(result.canExecute, isFalse);
+        expect(
+          result.entries.single.errors.single,
+          contains('outside the supported date range'),
+        );
+      }
+      final valid = preview(
+        [
+          file('/a.txt', metadata: {
+            'createdAt': DateTime.utc(2024, 1, 2).millisecondsSinceEpoch,
+          }),
+        ],
+        const MultiRenameOptions(
+          nameMask: '[YMD]',
+          dateSource: RenameDateSource.created,
+          dateZone: RenameDateZone.utc,
+        ),
+      );
+      expect(valid.isValid, isTrue);
+      expect(valid.entries.single.newName, '20240102.txt');
+    });
   });
 
   group('editable pipelines', () {
@@ -189,6 +324,54 @@ void main() {
       },
     );
 
+    test('literal pairs retain Unicode regexp case-folding semantics', () {
+      final result = preview(
+        [file('/ſ_ς_S_Σ.txt')],
+        const MultiRenameOptions(
+          find: 's|σ',
+          replace: 'one|two',
+          multipleLiteralPairs: true,
+          caseSensitive: false,
+        ),
+      );
+      expect(result.isValid, isTrue);
+      expect(result.entries.single.newName, 'one_two_one_two.txt');
+
+      final firstOnly = preview(
+        [file('/ſ_ς_S_Σ.txt')],
+        const MultiRenameOptions(
+          find: 's|σ',
+          replace: 'one|two',
+          multipleLiteralPairs: true,
+          caseSensitive: false,
+          firstMatchOnly: true,
+        ),
+      );
+      expect(firstOnly.entries.single.newName, 'one_ς_S_Σ.txt');
+    });
+
+    test('literal pairs still escape regexp syntax and prefer the first pair', () {
+      final escaped = preview(
+        [file('/a.b_(x).txt')],
+        const MultiRenameOptions(
+          find: 'a.b|(x)',
+          replace: 'point|parens',
+          multipleLiteralPairs: true,
+        ),
+      );
+      expect(escaped.entries.single.newName, 'point_parens.txt');
+      final ordered = preview(
+        [file('/ſ.txt')],
+        const MultiRenameOptions(
+          find: 's|ſ',
+          replace: 'first|second',
+          multipleLiteralPairs: true,
+          caseSensitive: false,
+        ),
+      );
+      expect(ordered.entries.single.newName, 'first.txt');
+    });
+
     test('per-row targets follow original full paths after order changes', () {
       final a = file('/a/same.txt');
       final b = file('/b/same.txt');
@@ -201,6 +384,52 @@ void main() {
         '001.txt',
         'manual.txt',
       ]);
+    });
+
+    test('manual targets rescue only rows with unavailable metadata', () {
+      final result = preview(
+        [
+          file('/a.jpg', metadata: {'artist': 'Avery'}),
+          file('/b.jpg'),
+        ],
+        const MultiRenameOptions(nameMask: '[meta:artist]_[N]'),
+        names: {'/b.jpg': 'manual.jpg'},
+      );
+      expect(result.isValid, isTrue);
+      expect(result.entries.map((entry) => entry.newName), [
+        'Avery_a.jpg',
+        'manual.jpg',
+      ]);
+      final invalidName = preview(
+        [file('/a.jpg')],
+        const MultiRenameOptions(nameMask: '[meta:artist]'),
+        names: {'/a.jpg': '../escape.jpg'},
+      );
+      expect(invalidName.isValid, isFalse);
+      expect(invalidName.entries.single.errors, isNotEmpty);
+    });
+
+    test('manual targets cannot hide invalid masks or global syntax errors', () {
+      for (final options in [
+        const MultiRenameOptions(nameMask: '[meta:missing][UNKNOWN]'),
+        const MultiRenameOptions(
+          nameMask: '[meta:missing]',
+          extensionMask: '[UNKNOWN]',
+        ),
+        const MultiRenameOptions(
+          nameMask: '[meta:missing]',
+          additionalSteps: [MultiRenameOptions(nameMask: '[UNKNOWN]')],
+        ),
+        const MultiRenameOptions(nameMask: '[meta:missing]', useRegex: true, find: '('),
+        const MultiRenameOptions(nameMask: '[V:Project]'),
+      ]) {
+        final result = preview(
+          [file('/a.jpg')],
+          options,
+          names: {'/a.jpg': 'manual.jpg'},
+        );
+        expect(result.canExecute, isFalse, reason: options.toJson().toString());
+      }
     });
 
     test('invalid later steps block the entire pipeline before execution', () {

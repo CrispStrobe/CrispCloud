@@ -2566,16 +2566,28 @@ class PanelNotifier extends ChangeNotifier {
     await renameFile(item, trimmed);
   }
 
-  Future<bool> operationPathExists(String path, PanelFileOrigin origin) async {
+  Future<bool> operationPathExists(String path, PanelFileOrigin origin) async =>
+      await operationFileInfo(path, origin) != null;
+
+  /// Read fresh metadata at an original path, including after a rename.
+  /// Captured operations and undo must not resolve against a different pane
+  /// source or accept metadata fetched across an account change.
+  Future<FileItem?> operationFileInfo(
+    String path,
+    PanelFileOrigin origin,
+  ) async {
     if (!origin.isCurrent) throw StateError('The storage account changed.');
     final backend = fileOperationBackend(
       source: origin.source,
       local: _localFileService,
       isCurrent: () => origin.isCurrent,
     );
-    final item = await backend.stat(path);
+    if (!backend.paths.isAbsolute(path)) {
+      throw const FormatException('Use an absolute original file path.');
+    }
+    final item = await backend.stat(backend.paths.normalize(path));
     if (!origin.isCurrent) throw StateError('The storage account changed.');
-    return item != null;
+    return item;
   }
 
   /// Read siblings from the storage captured when an operation was opened.

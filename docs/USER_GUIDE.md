@@ -178,7 +178,7 @@ Right-click a file on an SFTP connection → **Permissions** to open the permiss
 
 ### Undo
 
-Use **Ctrl+Z** or Edit → **Undo Last Action** for a reversible action in the history. The history keeps the last 50 records. Multi-Rename records successful renames individually and binds undo to the original storage account. Copy/move with options reports each completed, skipped, or failed item; it does not offer whole-batch rollback. Delete recovery depends on the provider and available trash support.
+Use **Ctrl+Z** or Edit → **Undo Last Action** for a reversible action in the history. The history keeps the last 50 actions for the current session. Multi-Rename records the completed batch as one action, including batches of more than 50 files, and binds undo to the original storage account. Undo refuses occupied original names and can retry the remaining items after a partial failure. Copy/move with options reports each completed, skipped, or failed item; it does not offer whole-batch rollback. Delete recovery depends on the provider and available trash support.
 
 ---
 
@@ -487,7 +487,7 @@ The generated URL is copied to your clipboard. On mobile, the native share sheet
 
 Select files, then press **Ctrl+M** or choose **More actions → Multi-Rename**. The normal multi-selection context menu also opens this tool through **Batch Rename**.
 
-Use name and extension masks, counters, literal or regex find/replace, and case conversion to compose new names. The preview shows original paths, proposed names, and validation errors before execution. See [Multi-rename](commander-file-operations.md#multi-rename) for mask examples, presets, and collision handling.
+Use name and extension masks, counters, literal or regex find/replace, and case conversion to compose new names. Advanced controls select the CrispCloud/Total Commander/Double Commander mask dialect, dates, variables, and collision numbering. You can chain transformation steps, edit proposed names, import names from clipboard or a text file, reorder rows, or exclude items before execution. The preview shows original paths, proposed names, and validation errors. See [Multi-rename](commander-file-operations.md#multi-rename) for examples, presets, and undo.
 
 ---
 

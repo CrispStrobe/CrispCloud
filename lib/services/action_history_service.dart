@@ -78,6 +78,8 @@ class ActionRecord {
       case ActionType.delete:
         return 'Deleted ${p.basename(originalPath)}';
       case ActionType.rename:
+        final count = metadata['batchCount'];
+        if (count is int && count > 1) return 'Renamed $count items';
         final oldName = p.basename(originalPath);
         final newName = newPath != null ? p.basename(newPath!) : '?';
         return 'Renamed $oldName → $newName';
@@ -119,6 +121,7 @@ class ActionHistoryService {
 
   final _uuid = const Uuid();
   final List<ActionRecord> _history = [];
+  final Set<String> _undoing = {};
 
   // --- Public API ----------------------------------------------------------
 
@@ -167,6 +170,7 @@ class ActionHistoryService {
 
   /// Return true if [action] can be undone given the current environment.
   bool canUndo(ActionRecord action) {
+    if (_undoing.contains(action.id)) return false;
     if (action.isCurrent != null && !action.isCurrent!()) return false;
     if (action.undoAction != null) return true;
     if (kIsWeb && action.provider == 'local') return false;
@@ -188,6 +192,9 @@ class ActionHistoryService {
   /// The caller supplies [context] so this service never imports cloud clients
   /// or flutter widgets directly.
   Future<UndoResult> undo(String actionId, UndoContext context) async {
+    if (_undoing.contains(actionId)) {
+      return const UndoResult.failure('This action is already being undone.');
+    }
     final idx = _history.indexWhere((a) => a.id == actionId);
     if (idx == -1) {
       return const UndoResult.failure('Action not found in history.');
@@ -202,6 +209,7 @@ class ActionHistoryService {
       );
     }
 
+    _undoing.add(action.id);
     _log.info('Undoing action', {
       'id': actionId,
       'type': action.type.name,
@@ -213,7 +221,10 @@ class ActionHistoryService {
           ? await action.undoAction!()
           : await _performUndo(action, context);
       if (result.success) {
-        _history.removeAt(idx);
+        // Other actions may be recorded, undone, trimmed, or cleared while
+        // this callback awaits storage. Its earlier list index is no longer
+        // authoritative; remove only the action that actually completed.
+        _history.removeWhere((record) => record.id == action.id);
         _log.info('Undo successful', {'type': action.type.name});
       } else {
         _log.warn('Undo failed: ${result.message}');
@@ -222,6 +233,8 @@ class ActionHistoryService {
     } catch (e, st) {
       _log.error('Undo threw an exception', e, st);
       return UndoResult.failure('Undo failed: $e');
+    } finally {
+      _undoing.remove(action.id);
     }
   }
 
