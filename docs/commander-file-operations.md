@@ -1,240 +1,212 @@
 # Commander file operations
 
-CrispCloud supports a connected workflow: search or import a file list, refine
-its selection, preview a multi-rename or transfer, and inspect per-item results.
-Commands operate on the actual storage source and original paths, independent
-of whether that source is shown in the left or right panel.
+CrispCloud connects search, selection, reusable collections, rename, copy/move,
+recovery, comparison, archives, viewers and integrity tools. Commands capture
+each item's original storage account and path. The left/right pane label never
+determines which account an operation changes.
+
+Development is checkpointed on `feature/commander-file-operations`. This guide
+describes integrated behavior; the [completion plan](commander-completion-plan.md)
+tracks remaining integration. Earlier limits concerning session-only lists,
+individual rename undo, rename cycles and basic copy dialogs are superseded.
 
 ## Entry points
 
-| Action | Keyboard | Other entry points |
+| Action | Shortcut | Other entry points |
 | --- | --- | --- |
-| Multi-Rename | Ctrl+M | More actions, Edit menu, command palette, selection context menu |
-| Select by wildcard or regex | Numpad + | More actions, Edit menu, command palette, file-list toolbar |
-| Deselect by wildcard or regex | Numpad - | Edit menu, command palette |
+| Multi-Rename | Ctrl+M | More actions, Edit menu, palette, selection context menu |
+| Select / deselect by wildcard or regex | Numpad + / - | Edit menu, palette, file-list controls |
 | Invert selection | Numpad * | Edit menu |
-| Copy with options | F5 / Ctrl+C | More actions, context menu, selection bar, command palette |
-| Move with options | F6 / Ctrl+X | More actions, context menu, selection bar, command palette |
-| Import a file list | Ctrl+Shift+L | More actions, Edit menu, command palette, file-list toolbar |
-| Export a file list | — | More actions, Edit menu, command palette, file-list toolbar |
+| Copy / move with options | F5 / F6 | More actions, context menu, selection bar, palette |
+| File clipboard copy / cut / paste | Ctrl+C / Ctrl+X / Ctrl+V | Context menu, native clipboard where supported |
+| Import path list | Ctrl+Shift+L | More actions, Edit menu, palette, file-list controls |
+| Collections and rename/trash/transfer history | — | More actions, Edit menu, palette |
+| Checksums, split, combine | — | More actions, Edit menu, palette, context menus |
+| View / edit | F3 / F4 | Context menu |
 
-These shortcuts apply while the file browser has focus. **More actions** is the
-three-dot toolbar menu; the native **Edit** menu is available on macOS. The
-file-list toolbar appears after feeding search results or importing a list;
-its three-dot menu is **File list actions**. The normal multi-selection context
-menu labels Multi-Rename as **Batch Rename**.
+Shortcuts apply while the browser has focus. Relevant Ctrl commands also accept
+Meta on macOS. More actions is the three-dot toolbar menu; macOS has a native
+Edit menu. A selection context menu may label Multi-Rename as Batch Rename.
+Native clipboard integration includes paths and cut/copy intent. The app
+clipboard also retains source identities for mixed cloud collections.
 
-The keyboard handler also accepts Meta in place of Ctrl on macOS. Shift+F5
-opens copy options. For a same-folder file duplicate, choose that folder and
-**Keep both**.
+## Identity, search results and persistent collections
+
+Named collections persist source-aware references, marks and optional search
+definitions. Identical paths from different accounts remain different items.
+Refresh verifies the listed items; rerun executes the saved search again.
+
+File Collections opens, saves, appends marked items, renames, imports/exports
+and removes collections. Removing a collection or row keeps its stored files.
+Delete files is a separate operation. Verified moves and renames update active
+and inactive list tabs, including selected folder descendants.
+
+Unavailable accounts, missing items, metadata changes and replacement objects
+are distinguished. A different object at a saved path requires review before
+mutation. Cancelled refresh/rerun keeps the previous list. Restored tabs retain
+source identity and cannot fall back to another currently connected account.
+
+Collection JSON preserves account references. Plain UTF-8 `.txt` / `.lst`
+files contain paths only and must be imported against the correct source.
+Relative paths resolve against that source's directory. Malformed, missing or
+ambiguous paths never gain mutation permission. Plain import is bounded to
+10,000 entries / 4 MiB; collection documents to 100,000 entries / 32 MiB.
+
+Local references use an acknowledged random installation identity. A collection
+from another computer cannot bind to unrelated files with the same path.
+If identity persistence fails, references are session-only and cross-restart
+recovery is unavailable. Cloud identities include provider, account and
+endpoint/bucket namespace without storing credentials.
+
+## Search and selection
+
+Recursive search supports explicit roots, recursion/depth, wildcard/regex names,
+directory exclusions, hidden items, files/folders, extensions, size/date ranges,
+and bounded content matching with encoding options. Feed all or marked search
+hits to a source-aware panel list. Branch view uses the recursive search engine
+for local and cloud sources, with progress and cancellation.
+
+Select by pattern adds, removes, toggles or replaces marks on visible rows.
+Parent-directory entries are never marked. Selection memory, same-name/
+extension/path commands and pattern history complement the dialog.
+
+- `*` matches any sequence; `?` matches one character.
+- `;` separates alternatives, such as `*.jpg;*.png`.
+- `|` introduces exclusions: `*.jpg;*.png|thumb*;*_small.*`.
+- Exclusions-only `|*.tmp` includes everything else.
+- `*.*` includes extensionless names.
+- Wildcards match the whole name/path. Regex searches within it unless anchored.
+
+Saved criteria are shared by Search, Select by pattern and transfers. Transfers
+combine saved name/type/size/date/hidden/exclusion criteria with the visible
+filters. Selected items and Include subfolders define the transfer scope; saved
+search roots never replace the reviewed source list. Content/archive criteria
+must run as a search first, then feed verified results into a panel. They are
+not silently discarded by a selection or transfer.
 
 ## Multi-rename
 
-Select items, open Multi-Rename, and compose a **Name mask** and **Extension
-mask**. Their defaults, `[N]` and `[E]`, preserve the existing filename. Dotfiles
-and folder names are treated as names; folders do not acquire file extensions.
+The [multi-rename guide](MULTI_RENAME.md) documents syntax and recovery.
 
-| Mask | Meaning | Example |
-| --- | --- | --- |
-| `[N]` | Original name without its last extension | `report` from `report.pdf` |
-| `[E]` | Original extension without the dot | `pdf` |
-| `[C]` | Counter using the selected width | `001` |
-| `[C:4]` | Counter with an explicit width | `0001` |
-| `[P]` | Original parent folder name | `Invoices` |
-| `[N1-4]` | Inclusive, one-based name slice | First four Unicode code points |
-| `[N3-]` | Name from position three onward | Removes the first two code points |
-| `[N-4--1]` | Positions counted from the end | Last four code points |
-| `[E1-2]` | Extension slice | First two extension code points |
-| `[Y]`, `[M]`, `[D]` | Modified year, month, day | `[Y]-[M]-[D]` |
-| `[h]`, `[m]`, `[s]` | Modified hour, minute, second | `[h][m][s]` |
-| `[[`, `]]` | Literal opening/closing brackets | `[[draft]]` |
+- Name/extension masks, counters, Unicode ranges, parent/path/date fields,
+  available metadata, variables and explicit CrispCloud / TC / DC syntax modes.
+- Literal/regex replacement, capture groups, simultaneous literal pairs,
+  case conversion and editable, reorderable transformation pipelines.
+- Manual names, clipboard/file name-list exchange, exclusion and row ordering.
+- Persistent presets, JSON preset exchange and previewed collision numbering.
+- Chains, swaps, case-only and selected parent/child renames through recorded
+  temporary paths, with complete original/final path previews.
+- One whole-batch Undo, persistent history, reverse preview, recovery,
+  continue-from-current-items and exportable reports.
 
-For example, name mask `[P]_[N]_[C:3]` with extension mask `[E]` can produce
-`Invoices_report_001.pdf`. Counter start, signed step, and padding are
-configurable. The displayed ordering determines counter allocation and is
-frozen during execution.
+Each physical mutation has a saved intent and completion. Native records are
+flushed and atomically replaced; browser records use acknowledged updates.
+Failed persistence stops the next mutation. Undo is a checked reverse operation:
+changed files, occupied old names and disconnected accounts block unsafe reversal.
 
-Find/replace can apply to the name, extension, or full filename. Literal and
-regular-expression matching support case sensitivity and first/all matches.
-Regex replacements expand numbered captures such as `$1`, named captures such
-as `${name}`, and `$$` for a literal dollar sign. Separate case controls support
-unchanged, lower, upper, title, and sentence case. Named presets persist the
-settings between sessions.
+Native no-replace operations are used where available. Provider prechecks are
+identified as weaker when the API cannot enforce exclusion atomically.
+Individual object keys require exclusive version-conditional copy and delete;
+virtual folder prefixes are not native directory renames. Missing metadata
+produces a preview error. Legacy binary Commander content plugins are not loaded.
 
-The full preview includes original paths, proposed names, and validation
-messages. A batch is blocked for invalid names, duplicate destinations in one
-parent, source/target overlaps, or conflicting selected folders and descendants.
-Execution checks all sources and destinations before the first rename, then
-checks again before each item. An occupied destination is never intentionally
-overwritten. Cancel and stop/continue-on-error report completed, unchanged,
-failed, and unattempted rows separately.
+## Copy, move, queue and recovery
 
-Successful renames update file lists at their original paths. Individual undo
-records retain their original storage/account guard and refuse occupied target
-names. The batch is not a transaction: cancellation or a later failure retains
-successful earlier renames. Cycles and occupied case-only renames require an
-unused intermediate name; parent/child renames require separate batches. Date
-masks require an available modified timestamp rather than substituting today.
+Both endpoints are captured. The opposite verified pane is the initial
+destination. Preview shows the mapping before execution; changed options require
+another preview. Mixed-account collections are reviewed as captured source
+groups against one fixed destination, protecting all selected sources.
 
-## Pattern selection
+- Exact destination names, destination masks, relative paths, profiles and defaults.
+- Ask, skip, replace, newer/larger/smaller decisions, Keep both, verified partial
+  resume and explicit append. Unknown metadata cannot authorize a comparison.
+- Per-conflict rename, compare and apply-to-all, including rename-existing-target.
+- Folder merge/skip/ask, recursion, name/metadata filters, saved criteria,
+  directory exclusions and empty-result exclusion.
+- SHA-256 verification, modification times and capability-gated permissions,
+  ownership, extended attributes, ACLs and symbolic links.
+- Native/provider fast paths with explicit capabilities and completion checks.
+- Stop/continue-on-error and separate content-copy versus metadata-failure results.
 
-The **Select by pattern** dialog changes selection marks without filtering out
-panel rows. Choose **Wildcards** or **Regular expression**, enter a pattern, and
-choose an **Action**:
+Moves delete sources only after confirmed destination data. Failed, skipped,
+filtered and cancelled rows retain sources. Metadata failure may leave move
+cleanup pending. Staging and backup paths remain visible when restoration
+cannot finish.
 
-- **Add matches to selection** marks matching items.
-- **Remove matches from selection** clears matching marks.
-- **Invert matching marks** toggles matching items.
-- **Replace selection with matches** clears the previous selection and marks
-  only matches.
+Durable transfer history retains jobs, entry states, staging/backup evidence,
+source identities and queue settings. Interrupted jobs return for explicit review
+rather than automatic execution. Retry remaining, restart, reconcile a lost
+response and restore a verified backup use fresh evidence. Partial resume
+validates the existing prefix and original source.
 
-The first three actions preserve marks on nonmatching items. **Include** limits
-matching to **Files and folders**, **Files only**, or **Folders only**. Enable
-**Case sensitive** or **Match full original paths** when needed; otherwise the
-pattern matches filenames without regard to case. The dialog previews the
-matching count before **Apply**. Invalid expressions cannot be applied and
-leave the existing selection unchanged.
+Concurrency, priority and pending order persist. Paused jobs do not occupy
+running slots; cancelled queued jobs do not start. Foreground conflicts wait for
+a decision. Background queuing requires choices that can finish without an
+abandoned dialog. Clearing visible outcomes retains durable recovery records.
 
-Wildcard rules:
+## Comparison, archives, viewers and integrity
 
-- `*` matches any number of characters; `?` matches one.
-- `;` separates alternatives: `*.jpg;*.png`.
-- `|` introduces excluded masks: `*.jpg;*.png|thumb*;*_small.*`.
-- An exclusions-only expression such as `|*.tmp` includes everything else.
-- `*.*` includes extensionless names, following Commander conventions.
-- Wildcards match the entire name/path. Regex matches anywhere unless anchored;
-  for example `^IMG_[0-9]{4}\.(jpg|png)$` matches a whole filename.
+Folder comparison produces a reviewed plan with per-item decisions and fresh
+fingerprint checks. Synchronization Keep both preserves both contents. Duplicate
+candidates require content confirmation before being presented as identical.
 
-Selection applies to visible entries; parent-directory rows are never selected.
-The same matcher filters files during copy/move while selected folders are
-traversed according to the recursion option.
+Text comparison offers editable merge output and guarded saves; binary
+comparison and bounded reads are available. Editors retain their captured
+account and detect external changes. Browser download-copy saves are not
+represented as confirmed in-place writes.
 
-## Search results and reusable file lists
+The archive workspace supports ZIP, 7z, TAR and TAR.GZ edit/repack and selected
+member copy-out. Edits are staged until Save. Moving a member out removes its
+staged entry only after the copy succeeds. Containment checks, expansion budgets,
+source fingerprints and hashes guard extraction/repack. Unsupported formats or
+transformations fail explicitly.
 
-Use **Feed all to panel** in search results to keep hits as a virtual file list
-in the source panel. Mark result checkboxes to change the button to **Feed
-selected to panel** and retain only those hits. Each row retains its original
-full path and the storage/account that returned it. Same-named files from
-different directories remain distinct. The result dialog also offers **Copy
-paths** and an **Open containing folder** button on each result.
+Viewer playlists retain each row's original source, support reload and bounded
+tail, and route F4 to the correct editor. Remote media/PDF use owned spool files
+and release resources on close. Generic byte previews default to 64 MiB; remote
+viewer spooling is bounded to 2 GiB. Native viewing can use file-backed windows.
+Preview and Properties use captured origins rather than guessing locality from
+the path.
 
-A list panel supports pattern selection, Multi-Rename, copy/move options,
-original-path display, and opening the containing folder. **Remove from list
-(keep files)** only removes rows; **Delete files…** is a separate command that
-operates on the actual stored source. Use the toolbar's **Return to folder**
-close button to leave the list. Lists survive refresh and tab switches within
-the current app session. Completed operations update matching list tabs even
-while another tab or storage source is active. They are not silently reloaded
-as unrelated directory contents.
+Checksum tools stream MD5, SHA-1, SHA-256, SHA-512 and CRC32 and validate GNU/SFV
+manifests with exact filenames and safe paths. Split manifests record ordered
+parts, sizes, per-part SHA-256 and whole-file SHA-256. Combine preflights all
+parts and the destination, writes and verifies a stage, then commits. Missing/
+corrupt/changed parts, traversal, cancellation and account changes stop the
+operation. Legacy numbered parts require consent because no original checksum
+is available.
 
-Choose **Import file list** to open the **Import paths** view. Use **Open .txt /
-.lst**, **Paste paths**, or type paths into the text area, then choose **Load
-into panel**. Choose **Export file list** for the **Export paths** view, optionally
-enable **Selected items only**, and use **Save list…** or **Copy paths**. Both
-commands are also available in the list toolbar's **File list actions** menu.
+## Workspace and backend boundaries
 
-Import/export uses UTF-8 `.txt` or `.lst` files with one original path per line.
-Local import accepts local file URLs; relative paths resolve against the current
-directory in the chosen panel's storage source. Paths are normalized and
-deduplicated. Imports reject filesystem roots, unrelated URLs, malformed
-lines, more than 10,000 entries, and text larger than 4 MiB. Every imported item
-is verified by listing its parent through the selected storage source; missing
-or ambiguous entries are reported, and no unverified path gains mutation
-permission. Exported lists contain paths, not credentials or account identities.
-Choose the correct source before importing a saved list.
+Tabs support labels, reordering, four lock modes and source-bound snapshots.
+Inactive-tab duplication uses the clicked tab. Locked result tabs retain their
+rows, and account switching cannot rebind a protected tab. See the
+[workspace guide](WORKSPACE.md).
 
-Export a list to retain it across app restarts. Session-only list tabs keep
-account provenance in memory; saved path lists are verified again when loaded.
-An account disconnect/change invalidates old result operations. Editors retain
-their stronger existing origin checks; opening a list does not authorize editor
-writeback to unverified data.
+Capabilities remain platform/provider-specific. Browser storage can be evicted
+and directory permission revoked. Metadata, links, clipboard actions, exclusive
+rename and server operations differ by backend. Unsupported controls are
+disabled or rejected before mutation. An accepted asynchronous request is not
+proof of completion.
 
-## Copy and move options
+Distributed atomic rollback across unrelated stores and all legacy binary
+Commander plugins are not universal guarantees. Recovery uses recorded evidence
+and fresh validation. The completion plan tracks remaining adapter,
+workspace-manager, extension and localization checkpoints; do not treat those
+unchecked items as complete.
 
-The opposite panel's verified source/directory is the initial destination when
-available. The dialog also permits choosing this panel's storage and editing an
-absolute destination directory. **Preview** enumerates the selected work and
-shows the complete source-to-destination mapping before **Start** is enabled.
-Changing any option invalidates that plan and requires another preview.
+## Verification
 
-Available options:
-
-- File conflicts: ask, skip, replace, replace only if source is newer, or keep
-  both with numbered destination names. Unknown timestamps never authorize
-  replace-if-newer. Keep-both names are allocated in the preview and checked
-  again during execution.
-- Folder conflicts: ask, merge contents, or skip the whole folder.
-- Include subfolders; explicitly selected children still work when recursion is
-  disabled. Selecting a folder and its child with recursion enabled processes
-  that child once.
-- Wildcard/regex file filters, case sensitivity, and full-path matching.
-- Direct placement in the destination or preservation of paths relative to an
-  explicitly shown source base. Sources outside that base are rejected.
-- Preserve file modification times when the native destination supports it.
-- Optional SHA-256 content verification, which reads both copies and can add
-  cloud traffic.
-- Copy symbolic links as links between native local filesystems. Links are
-  skipped by default and never traversed recursively.
-- Stop on first error or continue, with per-item outcomes.
-
-Start runs through the existing transfer queue. The dialog and operations panel
-support pause/resume/cancel. **Queue in background** is available when both
-conflict policies have deterministic answers, so a closed dialog cannot leave
-an unanswered overwrite prompt. Completed, skipped, filtered, failed, and
-cancelled items remain distinguishable in operation results.
-
-### Transfer safety and backend boundaries
-
-Self-copies/moves, copies into a selected source folder, destination type
-conflicts, ambiguous names, and incompatible destination parents are rejected.
-Source versions and account guards are checked during execution. Failed,
-filtered, skipped, or cancelled copies never authorize source deletion. A move
-removes each source file only after its destination has been written and
-verified; optional checksum verification adds content comparison.
-
-Native writes use a temporary file in the destination directory and commit the
-completed data afterward. Cloud writes upload under a unique temporary name,
-verify that stage, preserve an existing destination under a recovery name, and
-then rename the staged copy into place. Failed commits attempt restoration;
-when recovery cannot complete, the error identifies the retained recovery path.
-Account changes prohibit cleanup against the replacement account.
-
-Cloud operations depend on the provider's listing/upload/rename contracts and
-are not distributed transactions or atomic compare-and-swap operations.
-Concurrent external changes can still cause an operation to fail. Empty source
-folders are retained in browsers and on cloud backends whose API exposes only
-recursive deletion; native move cleanup removes only truly empty directories.
-This avoids deleting files that appear after an emptiness check. Browser
-folder rename is unavailable; native and cloud folder rename use their actual
-rename operation. Unsupported metadata controls are disabled.
-
-These controls do not implement every platform-specific Commander operation:
-append/resume into existing files, reflinks, ownership/ACL preservation, provider
-permission editing, and transactional whole-batch rollback are outside this
-change. Cross-storage transfers use the provider's streaming contracts; a
-provider without streaming support may buffer data. Unknown-length cloud
-uploads are buffered to determine an accurate length.
-
-## Implementation and verification
-
-The main components are `MultiRenameService`, `FileSelectionPattern`,
-`FileOperationService`, and source-specific `FileOperationBackend` adapters.
-Riverpod panel/transfer notifiers own the captured origins, list updates,
-operation queue, audit logging, and source-bound rename undo.
-
-Focused tests cover rename transformations/collisions, selection and import
-validation, original-path/account provenance, list refresh/tabs/archive reads,
-copy/move policy and failure behavior, real native writes, cloud staging and
-recovery, and responsive dialog interactions. Existing panel, search, shortcut,
-queue, progress, local filesystem, and undo regression suites are also run.
-Validation uses the repository's pinned Flutter 3.47.8 / Dart 3.13.7 toolchain.
-The release web build is checked without deploying the app. Live provider
-credentials are not required by the deterministic tests.
+Tests exercise captured accounts, persistent collections, rename staging/undo,
+restart/recovery, failed transfers, native temporary files, mocked provider
+protocols, archives, integrity manifests and narrow widget layouts. Provider
+tests use fixtures, not live credentials. Validation uses Flutter 3.47.8 /
+Dart 3.13.7. These checkpoints do not deploy or merge the feature branch.
 
 Reference behavior:
 
 - [Total Commander advanced tutorial](https://www.ghisler.com/advanced.htm)
 - [Double Commander multi-rename](https://doublecmd.github.io/doc/en/multirename.html)
-- [Double Commander file selection](https://doublecmd.github.io/doc/en/help.html)
-- [Double Commander search results](https://doublecmd.github.io/doc/en/findfiles.html)
+- [Double Commander selection](https://doublecmd.github.io/doc/en/help.html)
+- [Double Commander search](https://doublecmd.github.io/doc/en/findfiles.html)
 - [Double Commander copy/move](https://doublecmd.github.io/doc/en/copymove.html)
