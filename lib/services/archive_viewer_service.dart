@@ -58,6 +58,8 @@ class ViewerArchiveMember {
 
   /// Links, devices, and other entries that must never be materialized.
   final bool isSpecial;
+  final DateTime? modified;
+  final int? posixMode;
 
   /// True when the stored path tried to escape the archive root (`..`) and
   /// was sanitized by the parser.
@@ -72,6 +74,8 @@ class ViewerArchiveMember {
     required this.isFile,
     required this.isEncrypted,
     this.isSpecial = false,
+    this.modified,
+    this.posixMode,
     required this.pathEscapedRoot,
     required this.index,
   });
@@ -232,6 +236,8 @@ Future<ViewerArchive> _openWithKoni(
         isFile: entry.isFile,
         isEncrypted: entry.isEncrypted,
         isSpecial: !entry.isFile && !entry.isDirectory,
+        modified: entry.modified,
+        posixMode: entry.posixMode,
         pathEscapedRoot: entry.pathEscapedRoot,
         index: i,
       ),

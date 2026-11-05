@@ -393,12 +393,35 @@ class MergeDocumentSession {
     if (bytes.length > maxTextBytes) {
       throw StateError('Merged text exceeds 8 MiB.');
     }
-    await source.writeFile(
-      file.path!,
-      Stream.value(bytes),
-      bytes.length,
-      replace: true,
-    );
+    if (source.supportsStagedVerification) {
+      await source.writePreparedFile(
+        file.path!,
+        Stream.value(bytes),
+        bytes.length,
+        replace: true,
+        verifyStaged: (staged) async {
+          final prepared = await readTextBytes(source, staged);
+          if (sha256.convert(prepared) != sha256.convert(bytes)) {
+            throw StateError(
+              'The prepared merge could not be verified. The destination was not replaced.',
+            );
+          }
+          final latest = await readTextBytes(source, file);
+          if (sha256.convert(latest).toString() != _fingerprint) {
+            throw StateError(
+              'The destination changed while saving. It was not replaced.',
+            );
+          }
+        },
+      );
+    } else {
+      await source.writeFile(
+        file.path!,
+        Stream.value(bytes),
+        bytes.length,
+        replace: true,
+      );
+    }
     if (!source.isCurrent) throw StateError('Source changed while saving.');
     final verified = await readTextBytes(
       source,

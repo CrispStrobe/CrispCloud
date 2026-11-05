@@ -10,7 +10,35 @@ import 'package:crisp_cloud/services/local_file_service.dart';
 
 import 'support/workflow_fake_client.dart';
 
+class _RacingMergeClient extends WorkflowFakeClient {
+  bool race = false;
+  @override
+  Future<void> uploadFile(
+    List<int> bytes,
+    String name,
+    String targetPath, {
+    Function(int, int)? onProgress,
+  }) async {
+    if (race && name.startsWith('.crisp-transfer-')) {
+      put('/file.txt', 'external'.codeUnits);
+    }
+    await super.uploadFile(bytes, name, targetPath, onProgress: onProgress);
+  }
+}
+
 void main() {
+  test('an external edit during merge staging cannot be overwritten', () async {
+    final client = _RacingMergeClient()..put('/file.txt', 'original'.codeUnits);
+    final source = CloudOperationBackend(client, isCurrent: () => true);
+    final session = await MergeDocumentSession.open(
+      source,
+      (await source.stat('/file.txt'))!,
+    );
+    client.race = true;
+    await expectLater(session.save('merged'), throwsStateError);
+    expect(client.files['/file.txt'], 'external'.codeUnits);
+  });
+
   test('binary file comparison rejects files changed while reading', () async {
     final a = WorkflowFakeClient()..put('/a', [1, 2]);
     final b = WorkflowFakeClient()..put('/b', [1, 2]);
