@@ -11,6 +11,7 @@ import 'package:crisp_cloud/services/image_editor_menu.dart';
 import 'package:crisp_cloud/services/image_file_store.dart';
 import 'package:crisp_cloud/services/image_gif_codec.dart';
 import 'package:crisp_cloud/services/image_project_store.dart';
+import 'package:crisp_cloud/services/image_raster_codec.dart';
 import 'package:crisp_cloud/services/image_overlay.dart';
 import 'package:crisp_cloud/services/pdf_file_store.dart';
 import 'package:crisp_cloud/widgets/image_editor_dialog.dart';
@@ -747,6 +748,41 @@ void main() {
       expect(_saveEnabled(tester), isFalse);
     },
   );
+
+  for (final format in AdditionalRasterFormat.values) {
+    _desktopTestWidgets(
+      '$format opens, edits and saves its original container',
+      (tester) async {
+        final pixels = image.decodePng(buildImageEditorFixture())!;
+        final backing = _MemoryProjectStore(
+          encodeAdditionalRaster(pixels, format),
+        );
+        final harness = _Harness(tester, _MemoryImageStore());
+        final ImageFileStore store = format == AdditionalRasterFormat.bmp
+            ? BmpImageFileStore(backing)
+            : TiffImageFileStore(backing);
+        await harness.open(
+          imageStore: store,
+          fileName: format == AdditionalRasterFormat.bmp
+              ? 'photo.bmp'
+              : 'photo.tiff',
+        );
+        await harness.addText('Edit');
+        await tester.tap(_save);
+        await _until(
+          tester,
+          () =>
+              backing.writes == 1 &&
+              !harness.actions.busy &&
+              !_saveEnabled(tester),
+          reason: 'additional raster source save',
+        );
+        final decoded = decodeAdditionalRaster(backing.bytes, format);
+        expect((decoded.width, decoded.height), (24, 16));
+        expect(decoded.getPixel(0, 0).a, 0);
+      },
+    );
+  }
 
   _desktopTestWidgets('exporting a copy keeps the original dirty', (
     tester,

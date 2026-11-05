@@ -311,8 +311,7 @@ class _ImageEditorDialogState extends ConsumerState<ImageEditorDialog> {
       if (!mounted) return;
       final sourceName =
           _project?.sourceName ??
-          ((widget.file.name.toLowerCase().endsWith('.webp') ||
-                  widget.file.name.toLowerCase().endsWith('.gif'))
+          (isTranscodedRasterFileName(widget.file.name)
               ? 'source.png'
               : widget.file.name);
       final info = inspectEditableImage(bytes, fileName: sourceName);
@@ -613,8 +612,7 @@ class _ImageEditorDialogState extends ConsumerState<ImageEditorDialog> {
       final project = ImageEditProject(
         sourceName:
             _project?.sourceName ??
-            ((widget.file.name.toLowerCase().endsWith('.webp') ||
-                    widget.file.name.toLowerCase().endsWith('.gif'))
+            (isTranscodedRasterFileName(widget.file.name)
                 ? '${p.basenameWithoutExtension(widget.file.name)}.png'
                 : widget.file.name),
         sourceBytes: _initialBytes!,
@@ -811,7 +809,7 @@ class _ImageEditorDialogState extends ConsumerState<ImageEditorDialog> {
     ImageSaveConflictException() || PdfSaveConflictException() => 'The original image changed or could not be verified. Reopen it before saving.',
     ImageEditException(:final reason) => switch (reason) {
       ImageEditFailure.unsupportedFormat =>
-        'Only PNG, JPEG, WebP, and GIF images can be edited.',
+        'This image format is not supported for editing.',
       ImageEditFailure.formatMismatch =>
         'The image contents do not match the filename extension.',
       ImageEditFailure.invalidImage =>

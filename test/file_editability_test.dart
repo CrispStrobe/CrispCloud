@@ -16,6 +16,9 @@ void main() {
     expect(isEditableInBuiltInEditor('drawing.PNG'), isTrue);
     expect(isEditableInBuiltInEditor('photo.webp'), isTrue);
     expect(isEditableInBuiltInEditor('image.gif'), isTrue);
+    expect(isEditableInBuiltInEditor('image.bmp'), isTrue);
+    expect(isEditableInBuiltInEditor('image.tif'), isTrue);
+    expect(isEditableInBuiltInEditor('image.TIFF'), isTrue);
     expect(isEditableInBuiltInEditor('report.pdf'), isTrue);
     expect(isEditableInBuiltInEditor('letter.docx'), isTrue);
     expect(isEditableInBuiltInEditor('book.xlsx'), isTrue);

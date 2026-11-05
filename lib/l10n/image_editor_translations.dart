@@ -121,8 +121,8 @@ const imageEditorTranslations = <String, Map<String, String>>{
     'Could not open image': 'Could not open image',
     'Could not save image': 'Could not save image',
     'Could not apply changes': 'Could not apply changes',
-    'Only PNG, JPEG, WebP, and GIF images can be edited.':
-        'Only PNG, JPEG, WebP, and GIF images can be edited.',
+    'This image format is not supported for editing.':
+        'This image format is not supported for editing.',
     'The image contents do not match the filename extension.':
         'The image contents do not match the filename extension.',
     'This image is invalid or could not be decoded.':
@@ -298,8 +298,8 @@ const imageEditorTranslations = <String, Map<String, String>>{
     'Could not open image': 'Bild konnte nicht geöffnet werden',
     'Could not save image': 'Bild konnte nicht gespeichert werden',
     'Could not apply changes': 'Änderungen konnten nicht angewendet werden',
-    'Only PNG, JPEG, WebP, and GIF images can be edited.':
-        'Nur PNG-, JPEG-, WebP- und GIF-Bilder können bearbeitet werden.',
+    'This image format is not supported for editing.':
+        'Dieses Bildformat wird für die Bearbeitung nicht unterstützt.',
     'The image contents do not match the filename extension.':
         'Der Bildinhalt stimmt nicht mit der Dateiendung überein.',
     'This image is invalid or could not be decoded.':
@@ -472,8 +472,8 @@ const imageEditorTranslations = <String, Map<String, String>>{
     'Could not open image': 'Impossible d’ouvrir l’image',
     'Could not save image': 'Impossible d’enregistrer l’image',
     'Could not apply changes': 'Impossible d’appliquer les modifications',
-    'Only PNG, JPEG, WebP, and GIF images can be edited.':
-        'Seules les images PNG, JPEG, WebP et GIF peuvent être modifiées.',
+    'This image format is not supported for editing.':
+        'Ce format d’image ne peut pas être modifié ici.',
     'The image contents do not match the filename extension.':
         'Le contenu de l’image ne correspond pas à l’extension du fichier.',
     'This image is invalid or could not be decoded.':
@@ -647,8 +647,8 @@ const imageEditorTranslations = <String, Map<String, String>>{
     'Could not open image': 'No se pudo abrir la imagen',
     'Could not save image': 'No se pudo guardar la imagen',
     'Could not apply changes': 'No se pudieron aplicar los cambios',
-    'Only PNG, JPEG, WebP, and GIF images can be edited.':
-        'Solo se pueden editar imágenes PNG, JPEG, WebP y GIF.',
+    'This image format is not supported for editing.':
+        'Este formato de imagen no se puede editar aquí.',
     'The image contents do not match the filename extension.':
         'El contenido de la imagen no coincide con la extensión del archivo.',
     'This image is invalid or could not be decoded.':
@@ -822,8 +822,8 @@ const imageEditorTranslations = <String, Map<String, String>>{
     'Could not open image': 'Não foi possível abrir a imagem',
     'Could not save image': 'Não foi possível salvar a imagem',
     'Could not apply changes': 'Não foi possível aplicar as alterações',
-    'Only PNG, JPEG, WebP, and GIF images can be edited.':
-        'Somente imagens PNG, JPEG, WebP e GIF podem ser editadas.',
+    'This image format is not supported for editing.':
+        'Este formato de imagem não pode ser editado aqui.',
     'The image contents do not match the filename extension.':
         'O conteúdo da imagem não corresponde à extensão do arquivo.',
     'This image is invalid or could not be decoded.':
@@ -998,8 +998,7 @@ const imageEditorTranslations = <String, Map<String, String>>{
     'Could not open image': '无法打开图像',
     'Could not save image': '无法保存图像',
     'Could not apply changes': '无法应用更改',
-    'Only PNG, JPEG, WebP, and GIF images can be edited.':
-        '只能编辑 PNG、JPEG、WebP 和 GIF 图像。',
+    'This image format is not supported for editing.': '此图像格式不支持编辑。',
     'The image contents do not match the filename extension.': '图像内容与文件扩展名不匹配。',
     'This image is invalid or could not be decoded.': '此图像无效或无法解码。',
     'Animated images cannot be overwritten by this editor.': '此编辑器无法覆盖动画图像。',
@@ -1175,8 +1174,7 @@ const imageEditorTranslations = <String, Map<String, String>>{
     'Could not open image': '画像を開けませんでした',
     'Could not save image': '画像を保存できませんでした',
     'Could not apply changes': '変更を適用できませんでした',
-    'Only PNG, JPEG, WebP, and GIF images can be edited.':
-        '編集できるのは PNG、JPEG、WebP、GIF 画像のみです。',
+    'This image format is not supported for editing.': 'この画像形式は編集に対応していません。',
     'The image contents do not match the filename extension.':
         '画像の内容とファイルの拡張子が一致しません。',
     'This image is invalid or could not be decoded.': 'この画像は無効か、デコードできませんでした。',
@@ -1356,8 +1354,7 @@ const imageEditorTranslations = <String, Map<String, String>>{
     'Could not open image': '이미지를 열 수 없습니다',
     'Could not save image': '이미지를 저장할 수 없습니다',
     'Could not apply changes': '변경 사항을 적용할 수 없습니다',
-    'Only PNG, JPEG, WebP, and GIF images can be edited.':
-        'PNG, JPEG, WebP 및 GIF 이미지만 편집할 수 있습니다.',
+    'This image format is not supported for editing.': '이 이미지 형식은 편집할 수 없습니다.',
     'The image contents do not match the filename extension.':
         '이미지 내용이 파일 확장자와 일치하지 않습니다.',
     'This image is invalid or could not be decoded.':
@@ -1537,8 +1534,8 @@ const imageEditorTranslations = <String, Map<String, String>>{
     'Could not open image': 'تعذّر فتح الصورة',
     'Could not save image': 'تعذّر حفظ الصورة',
     'Could not apply changes': 'تعذّر تطبيق التغييرات',
-    'Only PNG, JPEG, WebP, and GIF images can be edited.':
-        'يمكن تحرير صور PNG وJPEG وWebP وGIF فقط.',
+    'This image format is not supported for editing.':
+        'تنسيق الصورة هذا غير مدعوم للتحرير.',
     'The image contents do not match the filename extension.':
         'محتوى الصورة لا يطابق امتداد اسم الملف.',
     'This image is invalid or could not be decoded.':

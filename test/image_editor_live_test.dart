@@ -14,6 +14,7 @@ import 'package:crisp_cloud/services/image_project_store.dart';
 import 'package:crisp_cloud/services/pdf_file_store.dart';
 import 'package:crisp_cloud/services/image_file_store.dart';
 import 'package:crisp_cloud/services/image_gif_codec.dart';
+import 'package:crisp_cloud/services/image_raster_codec.dart';
 import 'package:crisp_cloud/services/local_file_service_native.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:image/image.dart' as image;
@@ -174,6 +175,47 @@ void main() {
       expect(await file.readAsBytes(), orderedEquals(written));
     },
   );
+
+  for (final format in AdditionalRasterFormat.values) {
+    test(
+      'real $format save preserves the container and detects conflict',
+      () async {
+        final extension = format == AdditionalRasterFormat.bmp ? 'bmp' : 'tiff';
+        final file = File('${directory.path}/picture.$extension');
+        final pixels = image.decodePng(buildImageEditorFixture())!;
+        await file.writeAsBytes(encodeAdditionalRaster(pixels, format));
+        final store = ImageFileStore.local(
+          service: DesktopFileService(),
+          file: FileItem(
+            name: 'picture.$extension',
+            path: file.path,
+            isFolder: false,
+          ),
+        );
+        final png = await store.load();
+        final edited = image.decodePng(png)!.convert(numChannels: 4);
+        edited.setPixelRgba(3, 3, 200, 30, 40, 255);
+        expect(
+          await store.save(image.encodePng(edited)),
+          ImageSaveOutcome.savedOriginal,
+        );
+        expect(
+          decodeAdditionalRaster(
+            await file.readAsBytes(),
+            format,
+          ).getPixel(3, 3).r,
+          200,
+        );
+        final external = encodeAdditionalRaster(pixels, format);
+        await file.writeAsBytes(external);
+        await expectLater(
+          store.save(image.encodePng(edited)),
+          throwsA(isA<ImageSaveConflictException>()),
+        );
+        expect(await file.readAsBytes(), orderedEquals(external));
+      },
+    );
+  }
 
   test(
     'real WebP save and conflict check preserve the source contract',
