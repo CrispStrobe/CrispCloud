@@ -12,14 +12,16 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../models/panel_side.dart';
 import '../providers/providers.dart';
+import '../l10n/file_panel_strings.dart';
 
 /// A volume/drive entry shown in the drive bar.
 class DriveEntry {
   final String path;
   final String label;
   final IconData icon;
+  final bool isHome;
 
-  const DriveEntry({required this.path, required this.label, required this.icon});
+  const DriveEntry({required this.path, required this.label, required this.icon, this.isHome = false});
 }
 
 /// Provider that caches the list of local drives/volumes.
@@ -36,7 +38,7 @@ Future<List<DriveEntry>> _macVolumes() async {
     final entries = <DriveEntry>[];
     // Always include home
     final home = Platform.environment['HOME'] ?? '/Users';
-    entries.add(DriveEntry(path: home, label: 'Home', icon: Icons.home));
+    entries.add(DriveEntry(path: home, label: 'Home', icon: Icons.home, isHome: true));
 
     final volumesDir = Directory('/Volumes');
     if (await volumesDir.exists()) {
@@ -60,7 +62,7 @@ Future<List<DriveEntry>> _linuxMounts() async {
   try {
     final entries = <DriveEntry>[];
     final home = Platform.environment['HOME'] ?? '/home';
-    entries.add(DriveEntry(path: home, label: 'Home', icon: Icons.home));
+    entries.add(DriveEntry(path: home, label: 'Home', icon: Icons.home, isHome: true));
     entries.add(const DriveEntry(path: '/', label: '/', icon: Icons.computer));
 
     final mountsFile = File('/proc/mounts');
@@ -208,7 +210,7 @@ class _DriveBarRow extends StatelessWidget {
                             : theme.colorScheme.onSurfaceVariant),
                     const SizedBox(width: 4),
                     Text(
-                      entry.label,
+                      entry.isHome ? FilePanelStrings(context).text('home') : entry.label,
                       style: TextStyle(
                         fontSize: 11,
                         color: isActive

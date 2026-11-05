@@ -48,10 +48,12 @@ class _CloudClient implements CloudStorageClient {
 class _DelayedListingClient extends _CloudClient {
   final listingStarted = Completer<void>();
   final listingResult = Completer<Map<String, dynamic>>();
+  final listedPaths = <String>[];
 
   @override
   Future<Map<String, dynamic>> listPath(String path) {
-    listingStarted.complete();
+    listedPaths.add(path);
+    if (!listingStarted.isCompleted) listingStarted.complete();
     return listingResult.future;
   }
 }
@@ -160,6 +162,27 @@ Uint8List _path(String path, [int? flags]) {
 }
 
 void main() {
+  test('disposing during listener startup never reports a ready mount', () async {
+    final fs = FuseFilesystem(client: _CloudClient(), remotePath: '/remote');
+    // Subscribe before startup so the expected ready error is always handled.
+    final readiness = expectLater(fs.ready, throwsA(anything));
+    final serving = fs.serveRequests();
+    final disposal = fs.dispose();
+    // Concurrent disposal must share the same shutdown and resource cleanup.
+    expect(identical(disposal, fs.dispose()), isTrue);
+    await disposal.timeout(const Duration(seconds: 3));
+    await serving.timeout(const Duration(seconds: 3));
+    await readiness;
+  });
+
+  test('a disposed filesystem cannot start a new listener', () async {
+    final fs = FuseFilesystem(client: _CloudClient(), remotePath: '/remote');
+    await fs.dispose();
+    final readiness = expectLater(fs.ready, throwsA(anything));
+    await fs.serveRequests().timeout(const Duration(seconds: 3));
+    await readiness;
+  });
+
   test('disposing the filesystem closes all accepted helper connections', () async {
     final fs = FuseFilesystem(client: _CloudClient(), remotePath: '/remote');
     final serving = fs.serveRequests();
@@ -197,9 +220,9 @@ void main() {
       socket.destroy();
       await fs.dispose();
     });
-    final payload = _path('/café.txt');
+    final payload = _path('/folder/café.txt', 0);
     final header = ByteData(12)
-      ..setUint32(0, FuseOpcode.getattr, Endian.big)
+      ..setUint32(0, FuseOpcode.open, Endian.big)
       ..setUint32(4, 9, Endian.big)
       ..setUint32(8, payload.length, Endian.big);
     socket.add([...header.buffer.asUint8List(), ...payload]);
@@ -209,9 +232,10 @@ void main() {
     // The eventual provider completion must not write into a destroyed socket
     // or surface an unhandled asynchronous error after unmount.
     client.listingResult.complete({'items': [
-      {'name': 'café.txt', 'type': 'file', 'size': 5}
+      {'name': 'folder', 'type': 'folder'}
     ]});
     await pumpEventQueue();
+    expect(client.listedPaths, ['/remote']);
     await serving;
   });
 

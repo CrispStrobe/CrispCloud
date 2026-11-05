@@ -154,6 +154,8 @@ class FuseFilesystem {
   Directory? _socketDirectory;
   final Completer<String> _ready = Completer<String>();
   bool _disposed = false;
+  Future<void>? _startupFuture;
+  Future<void>? _disposeFuture;
 
   /// Unix socket / named-pipe path for IPC with the helper process.
   String _socketPath = '';
@@ -172,20 +174,8 @@ class FuseFilesystem {
   /// This method runs until [dispose] is called.
   Future<void> serveRequests() async {
     try {
-      if (Platform.isWindows) {
-        _socketPath = r'\\.\pipe\crispcloud_fuse_' + _uniqueSuffix();
-      } else {
-        final tempRoot = Platform.isMacOS ? Directory('/tmp') : Directory.systemTemp;
-        _socketDirectory = await tempRoot.createTemp('crispcloud_fuse_');
-        _socketPath = p.join(_socketDirectory!.path, 'ipc.sock');
-        if (utf8.encode(_socketPath).length >= 104) {
-          throw StateError('FUSE IPC socket path exceeds the Unix socket limit');
-        }
-      }
-      _server = await ServerSocket.bind(
-        InternetAddress(_socketPath, type: InternetAddressType.unix),
-        0,
-      );
+      await (_startupFuture = _startServer());
+      _ensureActive();
       _log.info('FuseFilesystem IPC socket: $_socketPath');
       _ready.complete(_socketPath);
       await for (final socket in _server!) {
@@ -204,8 +194,34 @@ class FuseFilesystem {
     }
   }
 
+  Future<void> _startServer() async {
+    _ensureActive();
+    if (Platform.isWindows) {
+      _socketPath = r'\\.\pipe\crispcloud_fuse_' + _uniqueSuffix();
+    } else {
+      final tempRoot = Platform.isMacOS ? Directory('/tmp') : Directory.systemTemp;
+      _socketDirectory = await tempRoot.createTemp('crispcloud_fuse_');
+      _ensureActive();
+      _socketPath = p.join(_socketDirectory!.path, 'ipc.sock');
+      if (utf8.encode(_socketPath).length >= 104) {
+        throw StateError('FUSE IPC socket path exceeds the Unix socket limit');
+      }
+    }
+    _server = await ServerSocket.bind(
+      InternetAddress(_socketPath, type: InternetAddressType.unix),
+      0,
+    );
+    _ensureActive();
+  }
+
+  void _ensureActive() {
+    if (_disposed) throw const _FuseError(5); // EIO: unmounted
+  }
+
   /// Tear down the filesystem bridge, flush pending writes.
-  Future<void> dispose() async {
+  Future<void> dispose() => _disposeFuture ??= _dispose();
+
+  Future<void> _dispose() async {
     _disposed = true;
     // Closing the listener alone leaves already accepted helper connections
     // alive. Close those too so a helper waiting on a request sees EOF.
@@ -213,6 +229,13 @@ class FuseFilesystem {
       socket.destroy();
     }
     _connections.clear();
+    // Startup may still be awaiting createTemp/bind. Let it finish before
+    // closing the listener and deleting resources it created.
+    try {
+      await _startupFuture;
+    } catch (_) {
+      // serveRequests reports startup failure through ready.
+    }
     await _server?.close();
     await _flushAllWrites();
     _readBuffers.clear();
@@ -261,7 +284,8 @@ class FuseFilesystem {
     } finally {
       _connections.remove(socket);
       socket.destroy();
-      // dispose owns the shutdown flush; do not upload a dirty buffer twice.
+      // dispose owns a flush that starts after shutdown. An upload already in
+      // flight is not serialized here; writable mounts remain unsupported.
       if (!_disposed) await _flushAllWrites();
       _log.debug('FUSE helper disconnected');
     }
@@ -405,6 +429,7 @@ class FuseFilesystem {
     final flags = _readUint32(payload, 4 + utf8.encode(path).length);
     if (flags & 3 != 0) throw const _FuseError(30); // EROFS for existing files
     final resolved = await _itemForPath(path);
+    _ensureActive();
     if (resolved == null) throw const _FuseError(2);
     final info = resolved.item;
     if (_isDirectory(info)) {
@@ -550,6 +575,7 @@ class FuseFilesystem {
     int offset,
     int length,
   ) async {
+    _ensureActive();
     // If the requested range is entirely within the buffer, return immediately.
     final bufEnd = buf.bufferOffset + buf.data.length;
     if (offset >= buf.bufferOffset && offset + length <= bufEnd) {
@@ -576,6 +602,7 @@ class FuseFilesystem {
           offset,
           _ReadBuffer.chunkSize,
         );
+        _ensureActive();
         if (bytes.length > _ReadBuffer.chunkSize) throw const _FuseError(5);
         buf.bufferOffset = offset;
         buf.data = bytes;
@@ -591,6 +618,7 @@ class FuseFilesystem {
     // Legacy providers retain the bounded-size whole-file fallback.
     try {
       final rawBytes = await client.downloadFileBytes(buf.remotePath);
+      _ensureActive();
       if (rawBytes.length > maxReadFileBytes) {
         throw const _FuseError(27); // EFBIG
       }
@@ -642,11 +670,13 @@ class FuseFilesystem {
   // ---------------------------------------------------------------------------
 
   Future<List<Map<String, dynamic>>> _listCached(String remoteFull) async {
+    _ensureActive();
     final cached = _dirCache[remoteFull];
     if (cached != null && !cached.isExpired) return cached.entries;
 
     try {
       final result = await client.listPath(remoteFull);
+      _ensureActive();
       // CloudStorageClient.listPath returns a Map with an 'items' or similar key.
       final items = _extractItems(result);
       _dirCache[remoteFull] = _DirCache(items);
@@ -667,6 +697,7 @@ class FuseFilesystem {
     Map<String, dynamic>? item;
     for (var i = 0; i < segments.length; i++) {
       final entries = await _listCached(current);
+      _ensureActive();
       final normalized = unorm.nfc(segments[i]);
       final matches = entries.where((e) => e['name'] is String && unorm.nfc(e['name'] as String) == normalized).toList();
       // Never pick one of two remote objects that a normalizing filesystem
@@ -675,6 +706,7 @@ class FuseFilesystem {
       if (matches.isEmpty) {
         final unresolved = p.join(current, p.joinAll(segments.sublist(i)));
         final info = await client.resolvePath(unresolved);
+        _ensureActive();
         return info == null ? null : (remotePath: unresolved, item: info);
       }
       item = matches.single;

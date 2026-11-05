@@ -74,3 +74,16 @@ clang -std=c11 -O2 -Wall -Wextra -Werror -I macos/vendor \
   test/fuse_bridge_readdir_test.c -o /tmp/crispcloud-fuse-readdir-test
 /tmp/crispcloud-fuse-readdir-test
 ```
+
+## Bridge shutdown limits
+
+Unmount closes accepted helper connections, stops a listener still starting,
+and prevents pending provider responses from restoring handles or caches after
+shutdown. An already submitted network request may finish, but its result is
+discarded and path traversal does not submit follow-up requests.
+
+The mount service always starts the bridge read-only. The internal writable
+mode is not supported: pending uploads are not serialized against close or
+shutdown, and flush failures are currently swallowed during cleanup. Do not
+enable writable mounts until those paths have dedicated concurrency and
+failure-recovery tests.

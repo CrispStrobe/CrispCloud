@@ -1,11 +1,15 @@
 import 'package:flutter/widgets.dart';
 
+import 'pdf_workflow_translations.dart';
+
 /// Host-owned PDF workflows. The embedded editor localizes its own tools.
 abstract final class PdfOperationsStrings {
   static String translate(BuildContext context, String english) =>
       Localizations.localeOf(context).languageCode == 'de'
       ? _de[english] ?? english
-      : english;
+      : pdfWorkflowTranslations[Localizations.localeOf(context)
+                .languageCode]?[english] ??
+            english;
 
   static const _de = <String, String>{
     'Edit PDF': 'PDF bearbeiten',
