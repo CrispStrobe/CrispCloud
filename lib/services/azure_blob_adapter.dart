@@ -515,7 +515,13 @@ class AzureBlobAdapter extends CloudStorageClient {
       });
     }
 
-    return {'files': files, 'folders': folders};
+    final nextMarker = _xmlValue(xml, 'NextMarker');
+    return {
+      'files': files,
+      'folders': folders,
+      if (nextMarker != null && nextMarker.trim().isNotEmpty)
+        'nextMarker': nextMarker,
+    };
   }
 
   /// Parses a ListContainersResult XML blob into a list of container names.
@@ -609,6 +615,8 @@ class AzureBlobAdapter extends CloudStorageClient {
       'files': <Map<String, dynamic>>[],
       'folders': containers,
       'path': '/',
+      if ((_xmlValue(resp.body, 'NextMarker') ?? '').trim().isNotEmpty)
+        'nextMarker': _xmlValue(resp.body, 'NextMarker'),
     };
   }
 
@@ -642,10 +650,11 @@ class AzureBlobAdapter extends CloudStorageClient {
   }) async {
     final (:container, :blob) = _splitPath(targetPath);
     final c = _effectiveContainer(container);
-    // If targetPath points to a "folder" (ends with /), append the file name
+    // _splitPath removes a trailing slash. Preserve the caller's explicit
+    // directory intent here; no-slash callers retain the full-blob contract.
     final blobName = blob.isEmpty
         ? fileName
-        : (blob.endsWith('/') ? '$blob$fileName' : blob);
+        : (targetPath.endsWith('/') ? '$blob/$fileName' : blob);
 
     final extraHeaders = <String, String>{
       'x-ms-blob-type': 'BlockBlob',

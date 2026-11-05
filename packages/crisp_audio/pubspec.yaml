@@ -1,0 +1,33 @@
+name: crisp_audio
+description: Bounded-memory offline audio editing for CrispCloud.
+version: 0.1.0
+publish_to: none
+
+environment:
+  sdk: '>=3.13.0 <4.0.0'
+  flutter: '>=3.47.0'
+
+dependencies:
+  ffi: ^2.2.0
+  flutter:
+    sdk: flutter
+
+dev_dependencies:
+  flutter_test:
+    sdk: flutter
+
+flutter:
+  plugin:
+    platforms:
+      android:
+        ffiPlugin: true
+      ios:
+        ffiPlugin: true
+        sharedDarwinSource: true
+      macos:
+        ffiPlugin: true
+        sharedDarwinSource: true
+      linux:
+        ffiPlugin: true
+      windows:
+        ffiPlugin: true

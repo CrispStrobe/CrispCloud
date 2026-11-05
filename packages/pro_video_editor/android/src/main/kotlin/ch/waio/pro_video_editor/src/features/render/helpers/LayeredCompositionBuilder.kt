@@ -1,0 +1,680 @@
+package ch.waio.pro_video_editor.src.features.render.helpers
+
+import RENDER_TAG
+import applyChromaKey
+import android.content.Context
+import android.graphics.Bitmap
+import android.graphics.Color
+import android.media.MediaMetadataRetriever
+import android.net.Uri
+import androidx.media3.common.C
+import androidx.media3.common.Effect
+import androidx.media3.common.MediaItem
+import androidx.media3.common.util.UnstableApi
+import androidx.media3.effect.AlphaScale
+import androidx.media3.effect.Presentation
+import androidx.media3.transformer.Composition
+import androidx.media3.transformer.EditedMediaItem
+import androidx.media3.transformer.EditedMediaItemSequence
+import androidx.media3.transformer.Effects
+import ch.waio.pro_video_editor.src.features.render.models.AudioTrackConfig
+import ch.waio.pro_video_editor.src.features.render.models.ChromaKeyConfig
+import ch.waio.pro_video_editor.src.features.render.models.CompositionConfig
+import ch.waio.pro_video_editor.src.features.render.models.EqualizerConfig
+import ch.waio.pro_video_editor.src.features.render.models.LayerBlendMode
+import ch.waio.pro_video_editor.src.features.render.models.SegmentTransformConfig
+import ch.waio.pro_video_editor.src.features.render.models.VideoClip
+import ch.waio.pro_video_editor.src.shared.logging.PluginLog as Log
+import ch.waio.pro_video_editor.src.shared.media.ImageOrientation
+import ch.waio.pro_video_editor.src.shared.media.contentDataSource
+import ch.waio.pro_video_editor.src.shared.media.contentUri
+import ch.waio.pro_video_editor.src.shared.media.copyContentToFile
+import ch.waio.pro_video_editor.src.shared.media.isContentUri
+import ch.waio.pro_video_editor.src.shared.media.readablePath
+import java.io.File
+import kotlin.math.max
+
+/**
+ * Builds a layered Media3 [Composition] from a [CompositionConfig].
+ *
+ * Each layer becomes its own [EditedMediaItemSequence]. Placement is done by a
+ * per-clip [VideoCompositionTransformation] GlEffect that draws the clip into
+ * its target rectangle on a transparent, canvas-sized frame and scissors it to
+ * that rectangle (so `cover` overflow can't bleed onto other layers); the
+ * default Media3 compositor then alpha-blends the sequences. The sequences are
+ * submitted top-most first, because the compositor draws the first sequence on
+ * top of the rest (see [build]). Delayed entry (`timelineStart`) and inter-clip
+ * gaps are filled with a transparent image item rather than `addGap`, which
+ * avoids a crash in Media3's gap handling.
+ *
+ * Global color/blur effects and image overlays are applied at the composition
+ * level (on top of the composed frame).
+ *
+ * A layer with a [LayerBlendMode] other than [LayerBlendMode.NORMAL] cannot be
+ * blended by the compositor, so it and every layer above it are drawn by
+ * [CapturedVideoLayers] instead, before the composition's other effects.
+ */
+@UnstableApi
+class LayeredCompositionBuilder(
+    private val context: Context,
+    private val config: CompositionConfig,
+    private val enableAudio: Boolean,
+    /** Global color/blur effects, applied to the whole composed frame. */
+    private val globalVideoEffects: List<Effect> = emptyList(),
+    /** Image overlays, applied on top of the composed frame. */
+    private val imageLayers: List<VideoSequenceBuilder.ImageLayerConfig> = emptyList(),
+    /** Custom audio tracks mixed natively alongside the layers' audio. */
+    private val audioTracks: List<AudioTrackConfig> = emptyList(),
+    /** Global trim start across the whole composition, in microseconds. */
+    private val globalStartUs: Long? = null,
+    /** Global trim end across the whole composition, in microseconds. */
+    private val globalEndUs: Long? = null,
+    /**
+     * Chroma key for clips that carry neither their own nor a layer key.
+     * Resolved per clip as `clip ?: layer ?: global`; never merged.
+     */
+    private val globalChromaKey: ChromaKeyConfig? = null
+) {
+    val mediaInfoExtractor = MediaInfoExtractor(context)
+
+    /** Temp files (source duplicates) to delete after export. */
+    val temporaryFiles: MutableList<File> = mutableListOf()
+
+    private companion object {
+        /**
+         * Media3's Transformer drops the final partial GOP of the last item in a
+         * sequence when that item is clipped to end before its source end. A
+         * short transparent tail after such a clip flushes it. Kept small so the
+         * trimmed end is barely extended.
+         */
+        const val FLUSH_TAIL_US = 120_000L
+
+        /** Slack for treating a clip end as "the source end" (no real tail). */
+        const val SOURCE_END_EPSILON_US = 100_000L
+    }
+
+    /** A built layer sequence plus the metadata needed to finalize it. */
+    private data class PendingLayer(
+        val builder: EditedMediaItemSequence.Builder,
+        val durationUs: Long,
+        /** Whether the layer's last clip ends before its source end. */
+        val endsBeforeSource: Boolean,
+        /** The [CapturedVideoLayers] slot of a captured layer, else `null`. */
+        val captureSlot: Int? = null
+    )
+
+    /**
+     * A layer clip's audio, placed on the output timeline: the source range
+     * [srcStartUs, srcEndUs) plays from [outputStartUs] to [outputEndUs].
+     */
+    private data class LayerAudio(
+        val path: String,
+        val srcStartUs: Long,
+        val srcEndUs: Long?,
+        val outputStartUs: Long,
+        val outputEndUs: Long,
+        val volume: Float,
+        val equalizer: EqualizerConfig?
+    )
+
+    fun build(): Composition {
+        // Resolve the canvas size up front so transparent gaps can be sized.
+        var canvasW = config.canvasWidth?.toInt() ?: 0
+        var canvasH = config.canvasHeight?.toInt() ?: 0
+        if (canvasW <= 0 || canvasH <= 0) {
+            val first = config.layers.firstOrNull()?.clips?.firstOrNull()
+            if (first != null) {
+                val (w, h) = readDisplaySize(first.inputPath)
+                canvasW = w
+                canvasH = h
+            }
+        }
+        if (canvasW <= 0 || canvasH <= 0) {
+            canvasW = 1920
+            canvasH = 1080
+        }
+
+        // Declare only the video track type. Declaring AUDIO makes Media3 try to
+        // force a silent audio track on a muted/video-only layer, which crashes
+        // in SequenceAssetLoader during compositing. A video-only sequence
+        // carries no audio at all, though, so each layer clip's audio gets an
+        // audio-only sequence of its own instead (see [LayerAudio]).
+        val trackTypes = setOf(C.TRACK_TYPE_VIDEO)
+        val layerAudio = mutableListOf<LayerAudio>()
+
+        // Media3 can fail to produce frames for a second sequence streaming from
+        // the same file URI, so a reused source gets a distinct URI per layer.
+        val pathsUsedByPriorLayers = mutableSetOf<String>()
+
+        // Global trim across the whole composition timeline. Media3 has no
+        // output trim, so it is baked into each layer's clips: the untrimmed
+        // composition time is intersected with [globalStart, globalEnd] and the
+        // result is shifted so globalStart maps to 0 in the output.
+        val globalStart = globalStartUs ?: 0L
+        val globalEnd = globalEndUs ?: Long.MAX_VALUE
+
+        // Build each layer's sequence, tracking its filled duration so all
+        // layers can later be padded to the full composition length.
+        val pending = mutableListOf<PendingLayer>()
+        var globalDurationUs = 0L
+
+        // The lowest blended layer and every layer above it are drawn by
+        // [CapturedVideoLayers] rather than by the compositor, one slot each.
+        val firstCapturedIndex = config.layers.indexOfFirst {
+            it.blendMode != LayerBlendMode.NORMAL
+        }
+        val captured = if (firstCapturedIndex < 0) null else {
+            CapturedVideoLayers(config.layers.drop(firstCapturedIndex).map { it.blendMode })
+        }
+
+        for ((layerIndex, layer) in config.layers.withIndex()) {
+            val seqBuilder = EditedMediaItemSequence.Builder(trackTypes)
+                .setIsLooping(false)
+            val captureSlot = if (captured != null && layerIndex >= firstCapturedIndex) {
+                layerIndex - firstCapturedIndex
+            } else {
+                null
+            }
+            // Probed here, once per layer, so a matte that is not an image
+            // fails the render before it starts, as on iOS and macOS. Only the
+            // header is read: a file that breaks off after it still fails,
+            // but on the clip's first frame.
+            val maskEffect = layer.mask?.let { mask ->
+                val probe = ImageOrientation.probe(mask)
+                    ?: throw IllegalArgumentException(
+                        "The mask of layer $layerIndex does not decode (${mask.describe()})"
+                    )
+                MaskEffect(mask, probe)
+            }
+            val pathsInThisLayer = mutableSetOf<String>()
+            val layerSourceCopies = mutableMapOf<String, String>()
+            var untrimmedCursorUs = 0L
+            var outputCursorUs = 0L
+            var itemCount = 0
+            var lastClipEndsBeforeSource = false
+
+            for (clip in layer.clips) {
+                val (displayW, displayH) = readDisplaySize(clip.inputPath)
+                val srcMediaDurationUs = mediaInfoExtractor.getVideoDuration(clip.inputPath)
+                val fullDurationUs =
+                    ((clip.endUs ?: srcMediaDurationUs) - (clip.startUs ?: 0L))
+                        .coerceAtLeast(0L)
+                if (fullDurationUs <= 0) continue
+
+                // Untrimmed composition span of this clip.
+                val clipCompStart = maxOf(untrimmedCursorUs, clip.timelineStartUs ?: untrimmedCursorUs)
+                val clipCompEnd = clipCompStart + fullDurationUs
+                untrimmedCursorUs = clipCompEnd
+
+                // Intersect with the global trim window.
+                val visibleStart = maxOf(clipCompStart, globalStart)
+                val visibleEnd = minOf(clipCompEnd, globalEnd)
+                if (visibleEnd <= visibleStart) continue
+
+                val outputDurationUs = visibleEnd - visibleStart
+                val outputStartUs = visibleStart - globalStart
+                val trimmed = visibleStart > clipCompStart || visibleEnd < clipCompEnd
+
+                // Source range to play: keep the clip's own trim when the global
+                // trim doesn't cut this clip, else shift it accordingly.
+                val srcStartUs: Long?
+                val srcEndUs: Long?
+                if (trimmed) {
+                    val s = (clip.startUs ?: 0L) + (visibleStart - clipCompStart)
+                    srcStartUs = s
+                    srcEndUs = s + outputDurationUs
+                } else {
+                    srcStartUs = clip.startUs
+                    srcEndUs = clip.endUs
+                }
+
+                // Leading gap in the output timeline.
+                val gapUs = (outputStartUs - outputCursorUs).coerceAtLeast(0L)
+                if (gapUs > 0) {
+                    seqBuilder.addItem(
+                        transparentGapItem(
+                            gapUs, canvasW, canvasH,
+                            captureSlot?.let { captured!!.gapCaptureEffect(it) }
+                        )
+                    )
+                    outputCursorUs += gapUs
+                }
+
+                val effectivePath = if (clip.inputPath in pathsUsedByPriorLayers) {
+                    layerSourceCopies.getOrPut(clip.inputPath) {
+                        distinctSourceFor(clip.inputPath)
+                    }
+                } else {
+                    clip.inputPath
+                }
+                pathsInThisLayer.add(clip.inputPath)
+
+                val transform = clip.transform ?: layer.transform
+                val placement = segmentPlacement(
+                    transform, displayW, displayH, canvasW, canvasH
+                )
+                // Keyframes move the clip frame by frame, measured on the
+                // untrimmed composition timeline its first frame lies on.
+                val keyframeAnimator = if (layer.keyframes.isEmpty()) null else {
+                    SegmentKeyframeAnimator(
+                        keyframes = layer.keyframes,
+                        keyframeClock = layer.keyframeClock,
+                        transform = transform,
+                        displayW = displayW,
+                        displayH = displayH,
+                        canvasW = canvasW,
+                        canvasH = canvasH,
+                        clipStartUs = visibleStart
+                    )
+                }
+                seqBuilder.addItem(
+                    buildClipItem(
+                        clip, srcStartUs, srcEndUs, effectivePath, placement,
+                        displayW, displayH, layer.opacity, canvasW, canvasH,
+                        layer.chromaKey, maskEffect, keyframeAnimator,
+                        captureSlot?.let { captured!!.captureEffect(it) },
+                        // One per clip: Media3 times each clip's effects on a
+                        // timeline of its own, which the effect measures from
+                        // the clip's own start.
+                        layer.shapeMask?.let {
+                            ShapeMaskEffect(it, layer.keyframeClock, clipStartUs = visibleStart)
+                        }
+                    )
+                )
+                val volume = clip.volume ?: 1.0f
+                if (enableAudio && volume > 0f && mediaInfoExtractor.hasAudioTrack(clip.inputPath)) {
+                    layerAudio += LayerAudio(
+                        path = clip.inputPath,
+                        srcStartUs = srcStartUs ?: 0L,
+                        srcEndUs = srcEndUs,
+                        outputStartUs = outputStartUs,
+                        outputEndUs = outputStartUs + outputDurationUs,
+                        volume = volume,
+                        equalizer = clip.equalizer
+                    )
+                }
+                outputCursorUs += outputDurationUs
+                itemCount++
+                // Track whether this (so far last) clip ends before its source
+                // end, so we can flush Media3's dropped tail GOP if it stays last.
+                lastClipEndsBeforeSource =
+                    srcEndUs != null && srcEndUs < srcMediaDurationUs - SOURCE_END_EPSILON_US
+            }
+
+            if (itemCount == 0) continue
+            pending.add(
+                PendingLayer(seqBuilder, outputCursorUs, lastClipEndsBeforeSource, captureSlot)
+            )
+            globalDurationUs = max(globalDurationUs, outputCursorUs)
+            pathsUsedByPriorLayers.addAll(pathsInThisLayer)
+            Log.d(
+                RENDER_TAG,
+                "  Layer $layerIndex: items=$itemCount duration=${outputCursorUs / 1000}ms " +
+                    "opacity=${layer.opacity} masked=${maskEffect != null} " +
+                    "shapeMasked=${layer.shapeMask != null} " +
+                    "blend=${layer.blendMode.wireName} captured=${captureSlot != null}"
+            )
+        }
+
+        require(pending.isNotEmpty()) { "Composition produced no usable layers" }
+
+        // Pad every layer to the full composition duration so shorter layers
+        // don't freeze their last frame, then order them top-most first: the
+        // Media3 compositor draws the first sequence on top, and layer 0 is the
+        // bottom layer.
+        val layerSequences = pending.map { layer ->
+            val capture = layer.captureSlot?.let { captured!!.gapCaptureEffect(it) }
+            when {
+                layer.durationUs < globalDurationUs ->
+                    // Shorter layer: pad to full length. The pad also acts as the
+                    // following item that flushes this layer's last clip.
+                    layer.builder.addItem(
+                        transparentGapItem(
+                            globalDurationUs - layer.durationUs, canvasW, canvasH, capture
+                        )
+                    )
+                layer.endsBeforeSource ->
+                    // Longest layer whose last clip is cut before its source end:
+                    // append a short tail so Media3 doesn't drop its final GOP.
+                    layer.builder.addItem(
+                        transparentGapItem(FLUSH_TAIL_US, canvasW, canvasH, capture)
+                    )
+            }
+            layer.builder.build()
+        }.reversed()
+
+        // Solid background as the bottom-most sequence so areas not covered by
+        // any clip show the configured color (the default Media3 compositor
+        // would otherwise leave them black). Appended last = drawn at the bottom.
+        val videoSequences = layerSequences +
+            backgroundColorSequence(globalDurationUs, canvasW, canvasH)
+
+        // Each layer clip's audio, pre-rendered and placed exactly like a custom
+        // track, at the layer's volume.
+        val layerAudioSequences = layerAudio.mapNotNull { audio ->
+            AudioSequenceBuilder(context, audio.path, globalDurationUs)
+                .setLoop(false)
+                .setStartTime(audio.srcStartUs)
+                .setAudioEndTime(audio.srcEndUs)
+                .setCompositionStartTime(audio.outputStartUs)
+                .setCompositionEndTime(audio.outputEndUs)
+                .setEqualizer(audio.equalizer)
+                .setVolume(audio.volume)
+                .build()
+                ?.also { temporaryFiles.add(it.temporaryFile) }
+                ?.sequence
+        }
+
+        // Custom audio tracks as separate sequences, mixed natively by Media3.
+        // Each track carries its own volume (see AudioSequenceBuilder.setVolume).
+        val audioSequences = audioTracks.mapNotNull { track ->
+            AudioSequenceBuilder(context, track.path, globalDurationUs)
+                .setLoop(track.loop)
+                .setPlaybackSpeed(track.playbackSpeed)
+                .setSpeedRamp(track.speedRamp)
+                .setStartTime(track.audioStartUs)
+                .setAudioEndTime(track.audioEndUs)
+                .setCompositionStartTime(track.startUs)
+                .setCompositionEndTime(track.endUs)
+                .setFade(track.fadeInUs, track.fadeOutUs)
+                .setVolumeCurve(track.volumeCurve)
+                .setEqualizer(track.equalizer)
+                .setVolume(track.volume)
+                .build()
+                ?.also { temporaryFiles.add(it.temporaryFile) }
+                ?.sequence
+        }
+
+        val sequences = videoSequences + layerAudioSequences + audioSequences
+        Log.d(
+            RENDER_TAG,
+            "Layered composition: ${videoSequences.size} layers, " +
+                "${layerAudioSequences.size} layer audio, " +
+                "${audioSequences.size} audio tracks, canvas ${canvasW}x$canvasH, " +
+                "duration=${globalDurationUs / 1000}ms"
+        )
+
+        // Composition-level video effects: the captured layers first, which
+        // complete the composed frame, then global color/blur, then image
+        // overlays on top, then the canvas presentation last.
+        val compositionEffects = mutableListOf<Effect>()
+        captured?.let { compositionEffects += it.compositeEffect() }
+        compositionEffects += globalVideoEffects
+        // Resolve "until end" layers with an out-phase animation to the full
+        // composition length so their animateOut can play (the composition has a
+        // single global timeline, so this is unambiguous here).
+        applyTimedImageLayers(
+            compositionEffects,
+            resolveOpenEndedOutAnimations(imageLayers, globalDurationUs),
+            canvasW, canvasH
+        )
+        compositionEffects += Presentation.createForWidthAndHeight(
+            canvasW, canvasH, Presentation.LAYOUT_SCALE_TO_FIT
+        )
+
+        return Composition.Builder(sequences)
+            .setEffects(Effects(emptyList(), compositionEffects))
+            .build()
+    }
+
+    private fun buildClipItem(
+        clip: VideoClip,
+        srcStartUs: Long?,
+        srcEndUs: Long?,
+        inputPath: String,
+        placement: SegmentPlacement,
+        displayW: Int,
+        displayH: Int,
+        opacity: Float,
+        canvasW: Int,
+        canvasH: Int,
+        layerChromaKey: ChromaKeyConfig?,
+        maskEffect: MaskEffect?,
+        keyframeAnimator: SegmentKeyframeAnimator? = null,
+        captureEffect: Effect? = null,
+        shapeMaskEffect: ShapeMaskEffect? = null
+    ): EditedMediaItem {
+        val mediaItemBuilder = MediaItem.Builder().contentUri(inputPath)
+        if (srcStartUs != null || srcEndUs != null) {
+            val clipping = MediaItem.ClippingConfiguration.Builder()
+                .setStartPositionUs(srcStartUs ?: 0L)
+            if (srcEndUs != null) clipping.setEndPositionUs(srcEndUs)
+            mediaItemBuilder.setClippingConfiguration(clipping.build())
+        }
+
+        val effects = mutableListOf<Effect>()
+
+        // Chroma key first: each layer is keyed on its own source frame, before
+        // it is placed on the canvas. Keying the composed canvas afterwards
+        // would be meaningless, since it is already opaque.
+        //
+        // flattenTransparency stays off here — this is the whole point of the
+        // layered path. Media3's compositor blends the sequences with
+        // glBlendFuncSeparate, so a transparent key really does let the layer
+        // below show through.
+        applyChromaKey(
+            effects,
+            if (clip.suppressChromaKey) {
+                null
+            } else {
+                clip.chromaKey ?: layerChromaKey ?: globalChromaKey
+            }
+        )
+
+        // The layer's mask right after the key, still on the clip's own frame:
+        // the transformation below then places the masked frame, so the shape
+        // moves, scales and turns with the clip. A pixel the key removed stays
+        // removed, since the mask only ever scales the alpha down.
+        if (maskEffect != null) effects += maskEffect
+        // The shape mask goes in the same place, multiplying in after the
+        // still one.
+        if (shapeMaskEffect != null) effects += shapeMaskEffect
+
+        val draw = placement.draw
+        val clipBox = placement.clip
+        effects += VideoCompositionTransformation(
+            x = draw.x,
+            y = draw.y,
+            width = draw.w,
+            height = draw.h,
+            videoWidth = displayW,
+            videoHeight = displayH,
+            renderWidth = canvasW,
+            renderHeight = canvasH,
+            clipX = clipBox?.x,
+            clipY = clipBox?.y,
+            clipWidth = clipBox?.w,
+            clipHeight = clipBox?.h,
+            rotation = placement.rotation,
+            keyframeAnimator = keyframeAnimator
+        )
+        // Keyframes carry the opacity of a layer that has them; the
+        // transformation applies it frame by frame.
+        if (keyframeAnimator == null) applyOpacity(effects, opacity)
+
+        // Last, once the frame is placed and faded as it would reach the
+        // compositor: see [CapturedVideoLayers].
+        if (captureEffect != null) effects += captureEffect
+
+        // Note: no setDurationUs here. For video, Media3's duration is the input
+        // media length (pre-clip); the playable span is defined by the clipping
+        // above. Setting it to the clipped output makes Media3 treat the source
+        // as that short and clamps a mid-source end, dropping frames.
+        // The clip's audio plays from its own audio-only sequence (see
+        // [LayerAudio]); the video-only layer sequence never carries it.
+        return EditedMediaItem.Builder(mediaItemBuilder.build())
+            .setRemoveAudio(true)
+            .setEffects(Effects(emptyList(), effects))
+            .build()
+    }
+
+    /**
+     * A fully transparent, canvas-sized item of [durationUs], used to delay a
+     * layer's entry or bridge a gap between clips without `addGap`.
+     *
+     * [captureEffect] goes last for a layer [CapturedVideoLayers] draws, which
+     * has to know when the layer shows nothing.
+     */
+    private fun transparentGapItem(
+        durationUs: Long,
+        canvasW: Int,
+        canvasH: Int,
+        captureEffect: Effect? = null
+    ): EditedMediaItem {
+        val gapFile = File(context.cacheDir, "pve_transparent_gap.png")
+        if (!gapFile.exists()) {
+            try {
+                val bitmap = Bitmap.createBitmap(1, 1, Bitmap.Config.ARGB_8888)
+                bitmap.eraseColor(Color.TRANSPARENT)
+                gapFile.outputStream().use {
+                    bitmap.compress(Bitmap.CompressFormat.PNG, 100, it)
+                }
+            } catch (e: Exception) {
+                Log.e(RENDER_TAG, "Failed to create transparent gap PNG: ${e.message}")
+            }
+        }
+        // Fail loudly rather than building a MediaItem on a missing file, which
+        // would surface later as an opaque Media3 export error.
+        if (!gapFile.exists() || gapFile.length() == 0L) {
+            throw IllegalStateException(
+                "Could not create transparent gap frame at ${gapFile.path}"
+            )
+        }
+        val mediaItem = MediaItem.Builder()
+            .setUri(Uri.fromFile(gapFile))
+            .setImageDurationMs(maxOf(1, (durationUs + 999) / 1000))
+            .build()
+        val effects = mutableListOf<Effect>()
+        effects += AlphaScale(0f)
+        // Keep it off-screen too, in case alpha is ignored anywhere.
+        effects += VideoCompositionTransformation(
+            x = -100.0, y = -100.0, width = 1.0, height = 1.0,
+            videoWidth = 1, videoHeight = 1, renderWidth = canvasW, renderHeight = canvasH
+        )
+        if (captureEffect != null) effects += captureEffect
+        return EditedMediaItem.Builder(mediaItem)
+            .setFrameRate(30)
+            .setEffects(Effects(emptyList(), effects))
+            .build()
+    }
+
+    /**
+     * A full-canvas, solid [CompositionConfig.backgroundColor] sequence used as
+     * the bottom layer so areas not covered by any clip show the configured
+     * color. Without it the default Media3 compositor leaves them black.
+     */
+    private fun backgroundColorSequence(
+        durationUs: Long,
+        canvasW: Int,
+        canvasH: Int
+    ): EditedMediaItemSequence {
+        val argb = config.backgroundColor.toInt()
+        val bgFile = File(context.cacheDir, "pve_bg_$argb.png")
+        if (!bgFile.exists() || bgFile.length() == 0L) {
+            try {
+                val bitmap = Bitmap.createBitmap(1, 1, Bitmap.Config.ARGB_8888)
+                bitmap.eraseColor(argb)
+                bgFile.outputStream().use {
+                    bitmap.compress(Bitmap.CompressFormat.PNG, 100, it)
+                }
+            } catch (e: Exception) {
+                Log.e(RENDER_TAG, "Failed to create background PNG: ${e.message}")
+            }
+        }
+        if (!bgFile.exists() || bgFile.length() == 0L) {
+            throw IllegalStateException(
+                "Could not create background frame at ${bgFile.path}"
+            )
+        }
+        val mediaItem = MediaItem.Builder()
+            .setUri(Uri.fromFile(bgFile))
+            .setImageDurationMs(maxOf(1, (durationUs + 999) / 1000))
+            .build()
+        // Scale the 1x1 color to fill the whole canvas.
+        val item = EditedMediaItem.Builder(mediaItem)
+            .setFrameRate(30)
+            .setEffects(
+                Effects(
+                    emptyList(),
+                    listOf(
+                        VideoCompositionTransformation(
+                            x = 0.0, y = 0.0,
+                            width = canvasW.toDouble(), height = canvasH.toDouble(),
+                            videoWidth = 1, videoHeight = 1,
+                            renderWidth = canvasW, renderHeight = canvasH
+                        )
+                    )
+                )
+            )
+            .build()
+        return EditedMediaItemSequence.Builder(setOf(C.TRACK_TYPE_VIDEO))
+            .setIsLooping(false)
+            .addItem(item)
+            .build()
+    }
+
+    /**
+     * Returns a distinct file path with the same content as [path], so Media3
+     * sees a unique URI per layer. Prefers a symlink, falls back to a copy. The
+     * result is registered in [temporaryFiles] for cleanup after export.
+     *
+     * A content URI cannot be symlinked, so it is copied. A stream-only one
+     * already has a local copy, which is linked like any file.
+     */
+    private fun distinctSourceFor(path: String): String {
+        val source = path.readablePath()
+        if (source.isContentUri()) {
+            return try {
+                val dst = copyContentToFile(
+                    context, source, File(context.cacheDir, "layer_src_${System.nanoTime()}").path
+                )
+                temporaryFiles.add(dst)
+                dst.path
+            } catch (e: Exception) {
+                Log.w(RENDER_TAG, "Could not duplicate source $path: ${e.message}")
+                path
+            }
+        }
+        val src = File(source)
+        val ext = src.extension.ifEmpty { "mp4" }
+        val dst = File(context.cacheDir, "layer_src_${System.nanoTime()}.$ext")
+        try {
+            android.system.Os.symlink(src.absolutePath, dst.absolutePath)
+        } catch (e: Exception) {
+            try {
+                src.copyTo(dst, overwrite = true)
+            } catch (e2: Exception) {
+                Log.w(RENDER_TAG, "Could not duplicate source $path: ${e2.message}")
+                return path
+            }
+        }
+        temporaryFiles.add(dst)
+        return dst.path
+    }
+
+    /** Reads a clip's display size (rotation applied), or (0,0) on failure. */
+    private fun readDisplaySize(path: String): Pair<Int, Int> {
+        val retriever = MediaMetadataRetriever()
+        return try {
+            retriever.contentDataSource(context, path)
+            val w = retriever
+                .extractMetadata(MediaMetadataRetriever.METADATA_KEY_VIDEO_WIDTH)
+                ?.toIntOrNull() ?: 0
+            val h = retriever
+                .extractMetadata(MediaMetadataRetriever.METADATA_KEY_VIDEO_HEIGHT)
+                ?.toIntOrNull() ?: 0
+            val rotation = retriever
+                .extractMetadata(MediaMetadataRetriever.METADATA_KEY_VIDEO_ROTATION)
+                ?.toIntOrNull() ?: 0
+            if (rotation == 90 || rotation == 270) Pair(h, w) else Pair(w, h)
+        } catch (e: Exception) {
+            Log.w(RENDER_TAG, "Failed to read size for $path: ${e.message}")
+            Pair(0, 0)
+        } finally {
+            try {
+                retriever.release()
+            } catch (_: Exception) {
+            }
+        }
+    }
+}

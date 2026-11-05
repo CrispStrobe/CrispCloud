@@ -1,0 +1,742 @@
+package ch.waio.pro_video_editor.src.features.render.helpers
+
+import RENDER_TAG
+import android.content.Context
+import android.media.MediaExtractor
+import android.media.MediaFormat
+import androidx.media3.common.util.UnstableApi
+import ch.waio.pro_video_editor.src.features.render.models.SpeedRamp
+import ch.waio.pro_video_editor.src.features.render.models.VolumeCurve
+import ch.waio.pro_video_editor.src.shared.logging.PluginLog as Log
+import ch.waio.pro_video_editor.src.shared.media.PcmRangeDecoder
+import ch.waio.pro_video_editor.src.shared.media.contentDataSource
+import ch.waio.pro_video_editor.src.shared.media.mediaSourceExists
+import java.io.BufferedOutputStream
+import java.io.File
+import java.io.FileInputStream
+import java.io.FileOutputStream
+import java.io.OutputStream
+import java.io.RandomAccessFile
+import java.nio.ByteBuffer
+import java.nio.ByteOrder
+
+/**
+ * Pre-renders a custom audio track into a single, gap-less PCM WAV file
+ * that is ready to be inserted as ONE EditedMediaItem in the Media3
+ * composition.
+ *
+ * This is the core fix for audible clicks/gaps that occurred at every
+ * loop boundary and silence/audio transition with the previous
+ * implementation, where each loop iteration and silence segment was a
+ * separate `EditedMediaItem`. Each item boundary forced AAC encoder
+ * frame realignment, producing audible artifacts.
+ *
+ * The output file contains, in order:
+ *   1. Leading silence (matching `compositionStartUs`)
+ *   2. The trimmed source audio looped (or played once) to cover
+ *      `compositionDurationUs`, with sample-exact tail trimming
+ *   3. Trailing silence (matching `videoDurationUs - compositionStartUs -
+ *      compositionDurationUs`)
+ *
+ * An optional linear fade in and out and an optional [VolumeCurve] are baked
+ * into the audio body (2), so the mixer needs no time-varying gain of its
+ * own.
+ *
+ * The output sample rate matches the decoder output of the source file.
+ * Float PCM is converted to 16-bit signed PCM, and more than two channels are
+ * folded to stereo ([StereoDownmix]): Media3 converts only mono and stereo
+ * sources to the format of the mix, so a 5.1 track beside a stereo one would
+ * fail the export. Final resampling/mixing happens later inside Media3's
+ * encoder pipeline.
+ */
+@UnstableApi
+object AudioPreRenderer {
+
+    /**
+     * Result of a successful pre-render operation.
+     *
+     * @property outputFile The pre-rendered PCM WAV file (caller is
+     *   responsible for deleting it when no longer needed).
+     * @property sampleRate Sample rate of the WAV body (Hz).
+     * @property channelCount Number of channels in the WAV body.
+     */
+    data class Result(
+        val outputFile: File,
+        val sampleRate: Int,
+        val channelCount: Int
+    )
+
+    /**
+     * Pre-renders the audio track described by the parameters.
+     *
+     * @param context Android context (used for `cacheDir` and to open
+     *   content URIs).
+     * @param audioPath Absolute path to the source audio file, or a
+     *   `content://` URI.
+     * @param audioStartUs Trim start within the source (microseconds, >=0).
+     * @param audioEndUs Trim end within the source (microseconds, null
+     *   = use full source duration).
+     * @param loop If true, the trimmed window repeats to fill
+     *   `compositionDurationUs`. If false, plays once and any remaining
+     *   composition time is filled with silence.
+     * @param compositionStartUs Where on the composition timeline the
+     *   audio body should start. The output file contains this much
+     *   leading silence.
+     * @param compositionDurationUs How long the audio body should sound
+     *   on the composition timeline.
+     * @param videoDurationUs Total duration of the composition (used to
+     *   determine trailing silence).
+     * @param playbackSpeed Speed of the trimmed source at unchanged pitch. A
+     *   looped source is stretched as one sound, so its seams stay gap-less.
+     * @param speedRamp A speed that changes along the trimmed source, instead
+     *   of [playbackSpeed], also at unchanged pitch; each pass of a loop plays
+     *   the whole curve.
+     * @param fadeInUs How long the body rises from silence to full level
+     *   after it starts.
+     * @param fadeOutUs How long the body falls to silence before its audio
+     *   ends — the end of the body, or earlier when a non-looping source runs
+     *   out first.
+     * @param volumeCurve Scales the body over the composition timeline, on
+     *   top of the fades; null leaves it as it is.
+     * @return [Result] on success, null on failure (file missing, decode
+     *   error, invalid parameters).
+     */
+    fun render(
+        context: Context,
+        audioPath: String,
+        audioStartUs: Long,
+        audioEndUs: Long?,
+        loop: Boolean,
+        compositionStartUs: Long,
+        compositionDurationUs: Long,
+        videoDurationUs: Long,
+        fadeInUs: Long = 0L,
+        fadeOutUs: Long = 0L,
+        playbackSpeed: Float = 1.0f,
+        speedRamp: SpeedRamp? = null,
+        volumeCurve: VolumeCurve? = null
+    ): Result? {
+        if (!mediaSourceExists(context, audioPath)) {
+            Log.e(RENDER_TAG, "AudioPreRenderer: source file not found: $audioPath")
+            return null
+        }
+
+        if (compositionDurationUs <= 0L) {
+            Log.w(RENDER_TAG, "AudioPreRenderer: compositionDurationUs <= 0, skipping")
+            return null
+        }
+
+        // Step 1: Decode the trimmed source range into a scratch PCM file.
+        val decoded = try {
+            decodeRange(
+                context, audioPath, audioStartUs.coerceAtLeast(0L), audioEndUs
+            )
+        } catch (e: Exception) {
+            Log.e(RENDER_TAG, "AudioPreRenderer: decode failed: ${e.message}")
+            return null
+        } ?: return null
+
+        var stretchedFile: File? = null
+        try {
+            val source = if (playbackSpeed != 1f || speedRamp != null) {
+                // A looped source comes back as the whole body, seams included.
+                val file = try {
+                    File.createTempFile("speed_audio_", ".raw", context.cacheDir).also {
+                        stretchedFile = it
+                        AudioSpeedProcessor.stretch(
+                            decoded.pcmFile, it, decoded.sampleRate, decoded.channelCount,
+                            playbackSpeed,
+                            maxFrames = usToFrames(compositionDurationUs, decoded.sampleRate),
+                            loop = loop,
+                            ramp = speedRamp
+                        )
+                    }
+                } catch (e: Exception) {
+                    Log.e(RENDER_TAG, "AudioPreRenderer: speed change failed: ${e.message}")
+                    return null
+                }
+                DecodedAudio(file, file.length(), decoded.sampleRate, decoded.channelCount)
+            } else decoded
+            return assemble(
+                context = context,
+                decoded = source,
+                loop = loop,
+                compositionStartUs = compositionStartUs,
+                compositionDurationUs = compositionDurationUs,
+                videoDurationUs = videoDurationUs,
+                fadeInUs = fadeInUs,
+                fadeOutUs = fadeOutUs,
+                volumeCurve = volumeCurve
+            )
+        } finally {
+            stretchedFile?.delete()
+            decoded.pcmFile.delete()
+        }
+    }
+
+    /**
+     * Writes the WAV described by [decoded] and the composition timing, i.e.
+     * everything after the source has been decoded.
+     */
+    private fun assemble(
+        context: Context,
+        decoded: DecodedAudio,
+        loop: Boolean,
+        compositionStartUs: Long,
+        compositionDurationUs: Long,
+        videoDurationUs: Long,
+        fadeInUs: Long,
+        fadeOutUs: Long,
+        volumeCurve: VolumeCurve?
+    ): Result? {
+        if (decoded.byteLength <= 0L) {
+            Log.e(RENDER_TAG, "AudioPreRenderer: decoder produced no PCM data")
+            return null
+        }
+
+        val sampleRate = decoded.sampleRate
+        val channelCount = decoded.channelCount
+        val bytesPerFrame = channelCount * 2 // 16-bit PCM
+
+        // Step 2: Compute byte sizes for leading silence, audio body and
+        // trailing silence using the native sample rate.
+        val leadingSilenceBytes = alignToFrame(
+            usToBytes(compositionStartUs, sampleRate, bytesPerFrame),
+            bytesPerFrame
+        )
+        val bodyBytes = alignToFrame(
+            usToBytes(compositionDurationUs, sampleRate, bytesPerFrame),
+            bytesPerFrame
+        )
+        val totalCompositionBytes = leadingSilenceBytes + bodyBytes
+        val totalVideoBytes = alignToFrame(
+            usToBytes(videoDurationUs, sampleRate, bytesPerFrame),
+            bytesPerFrame
+        )
+        val trailingSilenceBytes = (totalVideoBytes - totalCompositionBytes)
+            .coerceAtLeast(0L)
+
+        // Step 3: Open the output WAV file and stream the data.
+        val outputFile = File(
+            context.cacheDir,
+            "prerender_audio_${System.currentTimeMillis()}_${System.nanoTime()}.wav"
+        )
+
+        try {
+            RandomAccessFile(outputFile, "rw").use { raf ->
+                writeWavHeader(raf, sampleRate, channelCount, dataSize = 0)
+
+                writeSilence(raf, leadingSilenceBytes)
+
+                val bodyBytesWritten = writeAudioBody(
+                    raf = raf,
+                    sourcePcm = decoded.pcmFile,
+                    targetBytes = bodyBytes,
+                    loop = loop,
+                    bytesPerFrame = bytesPerFrame
+                )
+
+                writeSilence(raf, trailingSilenceBytes)
+
+                val audibleBytes = audibleBodyBytes(
+                    bodyBytes = bodyBytesWritten,
+                    sourceBytes = decoded.byteLength,
+                    loop = loop,
+                    bytesPerFrame = bytesPerFrame
+                )
+                applyFade(
+                    raf = raf,
+                    bodyStart = WAV_HEADER_BYTES + leadingSilenceBytes,
+                    audibleBytes = audibleBytes,
+                    bytesPerFrame = bytesPerFrame,
+                    fadeInFrames = usToFrames(fadeInUs, sampleRate),
+                    fadeOutFrames = usToFrames(fadeOutUs, sampleRate)
+                )
+                if (volumeCurve != null) {
+                    // The WAV starts at the composition's first frame, so a
+                    // frame's index is its place on the curve's timeline.
+                    val firstFrame = leadingSilenceBytes / bytesPerFrame
+                    applyVolumeCurve(
+                        raf = raf,
+                        dataStart = WAV_HEADER_BYTES,
+                        frames = firstFrame until firstFrame + audibleBytes / bytesPerFrame,
+                        bytesPerFrame = bytesPerFrame,
+                        sampleRate = sampleRate,
+                        curve = volumeCurve
+                    )
+                }
+
+                // Update RIFF/data chunk sizes in the header.
+                val totalDataBytes =
+                    leadingSilenceBytes + bodyBytesWritten + trailingSilenceBytes
+                updateWavSizes(raf, totalDataBytes)
+            }
+        } catch (e: Exception) {
+            Log.e(RENDER_TAG, "AudioPreRenderer: write failed: ${e.message}")
+            outputFile.delete()
+            return null
+        }
+
+        Log.d(
+            RENDER_TAG,
+            "AudioPreRenderer: rendered ${outputFile.length()} bytes, " +
+                    "${sampleRate}Hz x ${channelCount}ch, " +
+                    "leadSilence=${compositionStartUs / 1000}ms, " +
+                    "body=${compositionDurationUs / 1000}ms, " +
+                    "loop=$loop, fadeIn=${fadeInUs / 1000}ms, " +
+                    "fadeOut=${fadeOutUs / 1000}ms, " +
+                    "volumeCurve=${volumeCurve?.timesUs?.size ?: 0} points"
+        )
+
+        return Result(outputFile, sampleRate, channelCount)
+    }
+
+    // ---------------------------------------------------------------------
+    // Internal: decoding
+    // ---------------------------------------------------------------------
+
+    /**
+     * The decoded source range, spooled to disk.
+     *
+     * @property pcmFile Scratch file holding the raw PCM; the caller deletes it.
+     * @property byteLength How many PCM bytes [pcmFile] holds.
+     */
+    private class DecodedAudio(
+        val pcmFile: File,
+        val byteLength: Long,
+        val sampleRate: Int,
+        val channelCount: Int
+    )
+
+    /**
+     * Decodes the audio range `[startUs, endUs)` from `path` into a scratch file
+     * of 16-bit signed little-endian PCM.
+     *
+     * The PCM goes to disk rather than into a byte array because it is the one
+     * allocation here that grows with the clip: a three-minute stereo track
+     * decodes to ~30 MB, and holding that (plus the copy every array growth
+     * makes) is enough to push an export over Android's managed-heap limit.
+     *
+     * Float PCM is converted to int16 and more than two channels are folded
+     * to stereo. The output sample rate matches the decoder output.
+     */
+    private fun decodeRange(
+        context: Context,
+        path: String,
+        startUs: Long,
+        endUs: Long?
+    ): DecodedAudio? {
+        val extractor = MediaExtractor()
+        val pcmFile = File(
+            context.cacheDir,
+            "prerender_pcm_${System.currentTimeMillis()}_${System.nanoTime()}.raw"
+        )
+        var pcmOutput: OutputStream? = null
+        var decodedFully = false
+
+        try {
+            extractor.contentDataSource(context, path)
+
+            var audioTrackIndex = -1
+            var inputFormat: MediaFormat? = null
+            for (i in 0 until extractor.trackCount) {
+                val format = extractor.getTrackFormat(i)
+                val mime = format.getString(MediaFormat.KEY_MIME) ?: continue
+                if (mime.startsWith("audio/")) {
+                    audioTrackIndex = i
+                    inputFormat = format
+                    break
+                }
+            }
+
+            if (audioTrackIndex < 0 || inputFormat == null) {
+                Log.e(RENDER_TAG, "AudioPreRenderer: no audio track in $path")
+                return null
+            }
+
+            val sink = BufferedOutputStream(FileOutputStream(pcmFile))
+            pcmOutput = sink
+
+            val effectiveEndUs = endUs ?: Long.MAX_VALUE
+            var pcmByteLength = 0L
+            var sampleRate = 0
+            var channelCount = 0
+
+            // The extractor seeks to the sync frame at or before `startUs`, so
+            // the first buffer usually begins early. Dropping that lead-in — and
+            // the tail past `endUs` — is what makes the trim sample-exact, which
+            // is what keeps a loop boundary gap-less.
+            var hasCrossedStart = false
+
+            PcmRangeDecoder.decode(
+                extractor = extractor,
+                audioTrackIndex = audioTrackIndex,
+                inputFormat = inputFormat,
+                startUs = startUs,
+                endUs = effectiveEndUs,
+                stopAfterEndUs = true,
+                onFormat = { format ->
+                    sampleRate = format.sampleRate
+                    channelCount = format.channelCount.coerceAtMost(2)
+                },
+                onPcm = { pcm, bufferStartUs, format ->
+                    val bytesPerFrame = (format.channelCount * 2).coerceAtLeast(1)
+                    val rate = format.sampleRate
+
+                    val skipBytes = if (!hasCrossedStart && rate > 0) {
+                        val deltaUs = (startUs - bufferStartUs).coerceAtLeast(0L)
+                        ((deltaUs * rate / 1_000_000L) * bytesPerFrame)
+                            .coerceAtMost(pcm.size.toLong()).toInt()
+                    } else 0
+
+                    val dropBytes = if (effectiveEndUs != Long.MAX_VALUE && rate > 0) {
+                        val frameDurationUs = 1_000_000.0 / rate
+                        val bufferEndUs = bufferStartUs +
+                                ((pcm.size / bytesPerFrame) * frameDurationUs).toLong()
+                        if (bufferEndUs > effectiveEndUs) {
+                            val overUs = bufferEndUs - effectiveEndUs
+                            ((overUs * rate / 1_000_000L) * bytesPerFrame)
+                                .coerceAtMost((pcm.size - skipBytes).toLong()).toInt()
+                        } else 0
+                    } else 0
+
+                    val writeLen = pcm.size - skipBytes - dropBytes
+                    if (writeLen > 0) {
+                        if (format.channelCount > 2) {
+                            val stereo = StereoDownmix.foldPcm16(
+                                pcm, skipBytes, writeLen, format.channelCount
+                            )
+                            sink.write(stereo)
+                            pcmByteLength += stereo.size
+                        } else {
+                            sink.write(pcm, skipBytes, writeLen)
+                            pcmByteLength += writeLen
+                        }
+                        hasCrossedStart = true
+                    }
+                },
+            )
+
+            sink.flush()
+
+            if (sampleRate <= 0 || channelCount <= 0) {
+                Log.e(RENDER_TAG, "AudioPreRenderer: decoder reported no usable PCM format")
+                return null
+            }
+
+            decodedFully = true
+            return DecodedAudio(
+                pcmFile = pcmFile,
+                byteLength = pcmByteLength,
+                sampleRate = sampleRate,
+                channelCount = channelCount
+            )
+        } finally {
+            try {
+                pcmOutput?.close()
+            } catch (_: Exception) {
+            }
+            try {
+                extractor.release()
+            } catch (_: Exception) {
+            }
+            // A range that never made it to a DecodedAudio owns no scratch file.
+            if (!decodedFully) pcmFile.delete()
+        }
+    }
+
+    // ---------------------------------------------------------------------
+    // Internal: WAV writing
+    // ---------------------------------------------------------------------
+
+    private fun writeWavHeader(
+        raf: RandomAccessFile,
+        sampleRate: Int,
+        channelCount: Int,
+        dataSize: Int
+    ) {
+        val bitsPerSample = 16
+        val byteRate = sampleRate * channelCount * bitsPerSample / 8
+        val blockAlign = (channelCount * bitsPerSample / 8).toShort()
+
+        val header = ByteBuffer.allocate(44).order(ByteOrder.LITTLE_ENDIAN)
+        header.put("RIFF".toByteArray(Charsets.US_ASCII))
+        header.putInt(36 + dataSize) // RIFF chunk size
+        header.put("WAVE".toByteArray(Charsets.US_ASCII))
+        header.put("fmt ".toByteArray(Charsets.US_ASCII))
+        header.putInt(16)             // fmt subchunk size (PCM)
+        header.putShort(1)            // PCM format
+        header.putShort(channelCount.toShort())
+        header.putInt(sampleRate)
+        header.putInt(byteRate)
+        header.putShort(blockAlign)
+        header.putShort(bitsPerSample.toShort())
+        header.put("data".toByteArray(Charsets.US_ASCII))
+        header.putInt(dataSize)
+
+        raf.seek(0)
+        raf.write(header.array())
+    }
+
+    /**
+     * Writes the measured [dataSize] into the RIFF and data chunk headers.
+     *
+     * RIFF sizes are *unsigned* 32-bit, so they are clamped at `0xFFFFFFFF`
+     * (~4 GB, the format's ceiling) rather than at [Int.MAX_VALUE] — clamping at
+     * half the range would still let `36 + dataSize` wrap negative and write a
+     * size no reader accepts, which is the corrupt-file case the measured byte
+     * count exists to prevent.
+     */
+    internal fun updateWavSizes(raf: RandomAccessFile, dataSize: Long) {
+        val safeDataSize = dataSize.coerceIn(0L, MAX_RIFF_SIZE)
+        val riffSize = (36L + safeDataSize).coerceAtMost(MAX_RIFF_SIZE)
+        // RIFF chunk size at offset 4 (little-endian).
+        raf.seek(4)
+        raf.write(uInt32ToLittleEndian(riffSize))
+        // data chunk size at offset 40 (little-endian).
+        raf.seek(40)
+        raf.write(uInt32ToLittleEndian(safeDataSize))
+        // Move back to end so subsequent writes append correctly.
+        raf.seek(raf.length())
+    }
+
+    private fun writeSilence(raf: RandomAccessFile, byteCount: Long) {
+        if (byteCount <= 0L) return
+        val chunk = ByteArray(8192)
+        var remaining = byteCount
+        while (remaining > 0) {
+            val toWrite = minOf(remaining, chunk.size.toLong()).toInt()
+            raf.write(chunk, 0, toWrite)
+            remaining -= toWrite
+        }
+    }
+
+    /**
+     * Fills [targetBytes] of audio body into [raf]: [sourcePcm] copied in,
+     * replayed from the start as often as needed when [loop] is set, and
+     * whatever the source cannot cover left silent.
+     *
+     * That silence is the documented behavior for a non-looping track shorter
+     * than its slot (see [render]) — and dropping the gap instead would end the
+     * WAV early, finishing the export short of the video. Covering it here
+     * rather than at the call site keeps the two from drifting apart.
+     *
+     * Returns how many bytes were written, which is [targetBytes] rounded down
+     * to a frame boundary. The count is what the WAV header declares, and a
+     * header that disagrees with the body by even one frame makes the file
+     * unreadable.
+     */
+    internal fun writeAudioBody(
+        raf: RandomAccessFile,
+        sourcePcm: File,
+        targetBytes: Long,
+        loop: Boolean,
+        bytesPerFrame: Int
+    ): Long {
+        if (targetBytes <= 0L) return 0L
+
+        // Align targetBytes to frame boundary (defensive).
+        val alignedTarget = (targetBytes / bytesPerFrame) * bytesPerFrame
+        val buffer = ByteArray(1 shl 16)
+        var written = 0L
+
+        while (written < alignedTarget) {
+            val passStart = written
+            FileInputStream(sourcePcm).use { source ->
+                while (written < alignedTarget) {
+                    val wanted = minOf(buffer.size.toLong(), alignedTarget - written).toInt()
+                    val read = source.read(buffer, 0, wanted)
+                    if (read <= 0) break
+                    raf.write(buffer, 0, read)
+                    written += read
+                }
+            }
+            // An empty (or vanished) source would otherwise spin here forever.
+            if (written == passStart || !loop) break
+        }
+
+        writeSilence(raf, alignedTarget - written)
+        return alignedTarget
+    }
+
+    /**
+     * How many bytes at the start of a [bodyBytes]-long body carry audio
+     * rather than the silence [writeAudioBody] pads with: all of them for a
+     * looping source, at most the source's own length for one that plays
+     * once, and none for an empty source.
+     */
+    internal fun audibleBodyBytes(
+        bodyBytes: Long,
+        sourceBytes: Long,
+        loop: Boolean,
+        bytesPerFrame: Int
+    ): Long {
+        if (sourceBytes <= 0L) return 0L
+        if (loop) return bodyBytes
+        return minOf(bodyBytes, alignToFrame(sourceBytes, bytesPerFrame))
+    }
+
+    /**
+     * Ramps the gain of the first [fadeInFrames] and the last [fadeOutFrames]
+     * of the [audibleBytes] of 16-bit PCM that start at [bodyStart] in [raf].
+     *
+     * Both ramps are linear, reaching silence at the audible edge, and where
+     * they overlap the quieter one wins, so a fade longer than the audio is
+     * cut short rather than rejected. Only the ramped frames are read back and
+     * rewritten; the rest of the body is untouched.
+     */
+    internal fun applyFade(
+        raf: RandomAccessFile,
+        bodyStart: Long,
+        audibleBytes: Long,
+        bytesPerFrame: Int,
+        fadeInFrames: Long,
+        fadeOutFrames: Long
+    ) {
+        val audibleFrames = audibleBytes / bytesPerFrame
+        if (audibleFrames <= 0L) return
+        val inEnd = fadeInFrames.coerceIn(0L, audibleFrames)
+        val outStart = (audibleFrames - fadeOutFrames.coerceAtLeast(0L))
+            .coerceAtLeast(0L)
+        if (inEnd <= 0L && outStart >= audibleFrames) return
+
+        // One pass when the ramps meet, so no frame is scaled twice.
+        val ranges = if (inEnd >= outStart) {
+            listOf(0L until audibleFrames)
+        } else {
+            listOf(0L until inEnd, outStart until audibleFrames)
+        }
+
+        scaleFrames(raf, bodyStart, ranges, bytesPerFrame) { frame ->
+            fadeGain(frame, audibleFrames, fadeInFrames, fadeOutFrames)
+        }
+    }
+
+    /**
+     * Scales the 16-bit PCM [frames] of [raf], counted from [dataStart], by
+     * [curve] at each frame's time (`frame / sampleRate`).
+     *
+     * Only the frames where the curve is below 1 are read back and
+     * rewritten; the rest stay untouched, like the frames around a fade.
+     */
+    internal fun applyVolumeCurve(
+        raf: RandomAccessFile,
+        dataStart: Long,
+        frames: LongRange,
+        bytesPerFrame: Int,
+        sampleRate: Int,
+        curve: VolumeCurve
+    ) {
+        if (frames.isEmpty()) return
+        val usPerFrame = 1_000_000.0 / sampleRate
+        val ranges = curve.loweredRangesUs().map { lowered ->
+            maxOf(frames.first, framesFromUs(lowered.first, sampleRate, ceil = true))..
+                minOf(frames.last, framesFromUs(lowered.last, sampleRate, ceil = false))
+        }
+        scaleFrames(raf, dataStart, ranges, bytesPerFrame) { frame ->
+            curve.volumeAt(frame * usPerFrame)
+        }
+    }
+
+    /**
+     * Scales every frame in [ranges] of the 16-bit PCM in [raf], counted from
+     * [dataStart], by [gainOf] its index. Only [ranges] are read back and
+     * rewritten, and a frame at a gain of 1 or more keeps its samples.
+     */
+    private inline fun scaleFrames(
+        raf: RandomAccessFile,
+        dataStart: Long,
+        ranges: List<LongRange>,
+        bytesPerFrame: Int,
+        gainOf: (Long) -> Double
+    ) {
+        val chunkFrames = (1 shl 16) / bytesPerFrame
+        val buffer = ByteArray(chunkFrames * bytesPerFrame)
+        for (range in ranges) {
+            var frame = range.first
+            while (frame <= range.last) {
+                val frames = minOf(chunkFrames.toLong(), range.last - frame + 1).toInt()
+                val length = frames * bytesPerFrame
+                val offset = dataStart + frame * bytesPerFrame
+                raf.seek(offset)
+                raf.readFully(buffer, 0, length)
+                for (i in 0 until frames) {
+                    val gain = gainOf(frame + i)
+                    if (gain >= 1.0) continue
+                    var p = i * bytesPerFrame
+                    val frameEnd = p + bytesPerFrame
+                    while (p < frameEnd) {
+                        val sample = ((buffer[p].toInt() and 0xFF) or
+                                (buffer[p + 1].toInt() shl 8)).toShort()
+                        val scaled = Math.round(sample * gain).toInt()
+                        buffer[p] = (scaled and 0xFF).toByte()
+                        buffer[p + 1] = ((scaled shr 8) and 0xFF).toByte()
+                        p += 2
+                    }
+                }
+                raf.seek(offset)
+                raf.write(buffer, 0, length)
+                frame += frames
+            }
+        }
+        raf.seek(raf.length())
+    }
+
+    /**
+     * The frame at [timeUs]: the first one at or after it when [ceil], else
+     * the last one at or before it. Unbounded times stay unbounded.
+     */
+    private fun framesFromUs(timeUs: Long, sampleRate: Int, ceil: Boolean): Long {
+        if (timeUs == Long.MIN_VALUE) return Long.MIN_VALUE
+        if (timeUs == Long.MAX_VALUE) return Long.MAX_VALUE
+        val frames = timeUs.toDouble() * sampleRate / 1_000_000.0
+        return if (ceil) Math.ceil(frames).toLong() else Math.floor(frames).toLong()
+    }
+
+    /**
+     * The gain of [frame] out of [audibleFrames]: rising from 0 over the first
+     * [fadeInFrames], falling to 0 over the last [fadeOutFrames], and the lower
+     * of the two where they overlap.
+     */
+    internal fun fadeGain(
+        frame: Long,
+        audibleFrames: Long,
+        fadeInFrames: Long,
+        fadeOutFrames: Long
+    ): Double {
+        val inGain = if (fadeInFrames > 0L) frame.toDouble() / fadeInFrames else 1.0
+        val outGain = if (fadeOutFrames > 0L) {
+            (audibleFrames - frame).toDouble() / fadeOutFrames
+        } else 1.0
+        return minOf(inGain, outGain, 1.0).coerceAtLeast(0.0)
+    }
+
+    // ---------------------------------------------------------------------
+    // Internal: math helpers
+    // ---------------------------------------------------------------------
+
+    private fun usToFrames(durationUs: Long, sampleRate: Int): Long {
+        if (durationUs <= 0L) return 0L
+        return (durationUs.toDouble() * sampleRate / 1_000_000.0).toLong()
+    }
+
+    private fun usToBytes(durationUs: Long, sampleRate: Int, bytesPerFrame: Int): Long {
+        return usToFrames(durationUs, sampleRate) * bytesPerFrame
+    }
+
+    private fun alignToFrame(byteCount: Long, bytesPerFrame: Int): Long {
+        if (bytesPerFrame <= 1) return byteCount
+        return (byteCount / bytesPerFrame) * bytesPerFrame
+    }
+
+    /** [value] as the four little-endian bytes of an unsigned 32-bit field. */
+    private fun uInt32ToLittleEndian(value: Long): ByteArray {
+        return ByteArray(4) { i -> ((value ushr (8 * i)) and 0xFF).toByte() }
+    }
+
+    /** The largest value a RIFF/data chunk size field can hold. */
+    private const val MAX_RIFF_SIZE = 0xFFFFFFFFL
+
+    /** Size of the canonical PCM WAV header [writeWavHeader] writes. */
+    private const val WAV_HEADER_BYTES = 44L
+}

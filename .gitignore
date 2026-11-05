@@ -36,6 +36,10 @@ migrate_working_dir/
 /packages/dart_pdf_editor_secure_storage/build/
 /packages/pro_image_editor/pubspec.lock
 /packages/pro_image_editor/build/
+/packages/pro_video_editor/pubspec.lock
+/packages/pro_video_editor/build/
+/packages/crisp_audio/pubspec.lock
+/packages/crisp_audio/build/
 # Flutter's browser test server serves test/ directly instead of built assets.
 /test/widget/assets/packages/pro_image_editor/
 

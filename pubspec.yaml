@@ -16,6 +16,9 @@ dependencies:
 
   # Host-controlled image editing; pinned, maintained fork and provenance below.
   pro_image_editor: 14.24.0
+  pro_video_editor: 2.51.0
+  crisp_audio:
+    path: packages/crisp_audio
   image: ^4.12.0
   material_ui: ^1.1.1
 
@@ -155,6 +158,7 @@ dev_dependencies:
   integration_test:
     sdk: flutter
   path_provider_platform_interface: ^2.1.2
+  video_player_platform_interface: ^6.8.0
   flutter_lints: ^3.0.0
   drift_dev: ^2.22.1
   build_runner: ^2.4.13
@@ -162,6 +166,8 @@ dev_dependencies:
   covfuzz: ^0.1.1
 
 dependency_overrides:
+  pro_video_editor:
+    path: packages/pro_video_editor
   pro_image_editor:
     path: packages/pro_image_editor
   # Maintained core for form-preserving extraction and Unicode OCR.

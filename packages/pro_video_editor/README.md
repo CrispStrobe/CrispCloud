@@ -1,0 +1,1266 @@
+# CrispCloud's vendored pro_video_editor 2.51.0
+
+This maintained copy registers the Android, iOS and macOS video export engines.
+Other platforms remain unavailable in CrispCloud's video capability policy.
+See [UPSTREAM.md](UPSTREAM.md) for the pinned archive, retained files, native
+licenses, privacy manifest and local changes. The upstream documentation below
+describes the complete upstream package, including features CrispCloud does not
+currently expose.
+
+<img src="https://github.com/hm21/pro_video_editor/blob/stable/assets/logo.jpg?raw=true" alt="Logo" />
+
+<p>
+    <a href="https://pub.dartlang.org/packages/pro_video_editor">
+        <img src="https://img.shields.io/pub/v/pro_video_editor.svg" alt="pub package">
+    </a>
+    <a href="https://github.com/sponsors/hm21">
+        <img src="https://img.shields.io/static/v1?label=Sponsor&message=%E2%9D%A4&logo=GitHub&color=%23f5372a" alt="Sponsor">
+    </a>
+    <a href="https://img.shields.io/github/license/hm21/pro_video_editor">
+        <img src="https://img.shields.io/github/license/hm21/pro_video_editor" alt="License">
+    </a>
+    <a href="https://github.com/hm21/pro_video_editor/issues">
+        <img src="https://img.shields.io/github/issues/hm21/pro_video_editor" alt="GitHub issues">
+    </a> 
+</p>
+
+The ProVideoEditor is a Flutter widget designed for video editing within your application. It provides a flexible and convenient way to integrate video editing capabilities into your Flutter project.
+
+
+## Table of contents
+
+- **[📷 Preview](#preview)**
+- **[✨ Features](#features)**
+- **[🔧 Setup](#setup)**
+- **[❓ Usage](#usage)**
+- **[💖 Sponsors](#sponsors)**
+- **[📦 Included Packages](#included-packages)**
+- **[🤝 Contributors](#contributors)**
+- **[📜 License](LICENSE)**
+- **[📜 Notices](NOTICES)**
+
+## Preview
+<table>
+  <thead>
+    <tr>
+      <th align="center">Basic-Editor</th>
+      <th align="center">Grounded-Design</th>
+      <th align="center">Paint-Editor</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td align="center" width="33.3%">
+        <img src="https://github.com/hm21/pro_video_editor/blob/stable/assets/preview/Main-Editor.jpg?raw=true" alt="Main-Editor" />
+      </td>
+      <td align="center" width="33.3%">
+        <img src="https://github.com/hm21/pro_video_editor/blob/stable/assets/preview/Grounded-Editor.jpg?raw=true" alt="Grounded-Editor" />
+      </td>
+      <td align="center" width="33.3%">
+        <img src="https://github.com/hm21/pro_video_editor/blob/stable/assets/preview/Paint-Editor.jpg?raw=true" alt="Paint-Editor" />
+      </td>
+    </tr>
+  </tbody>
+</table>
+<table>
+  <thead>
+    <tr>
+      <th align="center">Crop-Rotate-Editor</th>
+      <th align="center">Tune-Editor</th>
+      <th align="center">Filter-Editor</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td align="center" width="33.3%">
+        <img src="https://github.com/hm21/pro_video_editor/blob/stable/assets/preview/Crop-Rotate-Editor.jpg?raw=true" alt="Crop-Rotate-Editor" />
+      </td>
+      <td align="center" width="33.3%">
+        <img src="https://github.com/hm21/pro_video_editor/blob/stable/assets/preview/Tune-Editor.jpg?raw=true" alt="Tune-Editor" />
+      </td>
+      <td align="center" width="33.3%">
+        <img src="https://github.com/hm21/pro_video_editor/blob/stable/assets/preview/Filter-Editor.jpg?raw=true" alt="Filter-Editor" />
+      </td>
+    </tr>
+  </tbody>
+</table>
+<table>
+  <thead>
+    <tr>
+      <th align="center">Paint-Editor-Grounded</th>
+      <th align="center">Emoji-Editor</th>
+      <th align="center"></th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td align="center" width="33.3%">
+        <img src="https://github.com/hm21/pro_video_editor/blob/stable/assets/preview/Paint-Editor-Grounded.jpg?raw=true" alt="Paint-Editor-Grounded" />
+      </td>
+      <td align="center" width="33.3%">
+        <img src="https://github.com/hm21/pro_video_editor/blob/stable/assets/preview/Emoji-Editor.jpg?raw=true" alt="Emoji-Editor" />
+      </td>
+      <td align="center" width="33.3%">
+      </td>
+    </tr>
+  </tbody>
+</table>
+
+
+## Features
+
+#### 🎥 Video Editing Capabilities
+
+- 📈 **Metadata**: Extract detailed metadata from the video file.
+- 🖼️ **Thumbnails**: Generate one or multiple thumbnails from the video, in one call or streamed frame by frame.
+- 🎞️ **Keyframes**: Retrieve keyframe information from the video.
+- ✂️ **Trim**: Cut the video to a specified start and end time.
+- 🔗 **Merge Videos**: Concatenate multiple video clips into a single output.
+- 🎬 **Stop-Motion**: Turn a sequence of still images into a video, each frame held for a configurable duration.
+- ⏩ **Playback Speed**: Adjust the playback speed of the video.
+- 🎢 **Speed Ramps**: Let a clip speed up and slow down while it plays, eased between the speeds you set.
+- ⏪ **Reverse Video**: Play a video segment backwards.
+- 🎥 **Clip Keyframes**: Pan, zoom into and turn a clip's picture between keyframes, for a slow push-in, a punch-in on a reaction or a pan across a wide shot.
+- 🔇 **Mute Audio**: Remove or mute the audio track from the video.
+- ⏩ **Audio Track Speed**: Speed up or slow down custom audio tracks with `VideoAudioTrack.playbackSpeed`, preserving pitch and stereo on Android, iOS and macOS. Source trims stay in source time; placement and fades stay in output time.
+- 🎢 **Audio Track Speed Ramps**: Let a custom audio track speed up and slow down along a `VideoSpeedRamp` with `VideoAudioTrack.speedRamp`, at unchanged pitch, and preview the same stretch with `AudioMergeSegment.speedRamp`.
+- 🎚️ **Equalizer**: Raise or lower parts of the audio of a clip or a custom audio track with an `AudioEqualizer` of any number of bands, each a low shelf, a peak or a high shelf.
+- 🦆 **Audio Ducking**: Lower the music automatically while a voice-over talks and bring it back up when it stops. `AudioDucking.analyze` measures the voice tracks' loudness (no speech recognition) and returns an `AudioVolumeCurve` for `VideoAudioTrack.volumeCurve`; a preview that scales its volume by `AudioVolumeCurve.volumeAt` plays the same dips.
+- 📊 **Waveform**: Generate audio waveform data for visualization, with support for streaming mode.
+
+#### 🔧 **Transformations**
+- ✂️ Crop by `x`, `y`, `width`, and `height`
+- 🔁 Flip horizontally and/or vertically
+- 🔄 Rotate by 90deg turns
+- 🔍 Scale to a custom size
+
+#### 🎨 **Visual Effects**
+- 🖼️ **Layers**: Overlay a image like a text or drawings on the video.
+- 🕐 **Timed Image Layers**: Position image overlays at specific coordinates with optional start/end times.
+- 📐 **Layer Size**: Scale image layers to custom dimensions via the `size` property.
+- 🔄 **Layer Rotation**: Rotate image layers around their center via the `rotation` property (radians).
+- 🔄 **Segment Rotation**: Rotate a composition clip around its own center via `SegmentTransform.rotation` (radians). The `offset`/`size` keep describing the unrotated box, so a `pro_image_editor` layer rotation can be forwarded straight through.
+- 🎞️ **Animated GIF Layers**: Overlay animated GIFs — detected automatically and played frame by frame, with optional `loop`. `animationOffset` starts playback part-way in, so one animation can run on across several layers.
+- 🧮 **Frame Sequences**: `ImageLayer.sequence` plays a list of images, each for its own duration, from one layer — for a picture that changes over time, like a running timer.
+- 🎬 **Layer Animations**: Animate image layers with fade, slide, scale, wiggle, bounce, spin and flip effects, configurable easing curves, and in/out/inOut phases, or `loop` to keep a layer moving while it is visible. A slide travels to a canvas edge or to a start point you pick yourself. `animationStartTime`/`animationEndTime` let several layers that each show part of one overlay share one run of animations.
+- 🗝️ **Layer Keyframes**: Move image layers and composition layers between keyframes — position, size, rotation and opacity over time, eased with the same curves as the animations. A loop animation can play over the stretch between two keyframes only, `loopPhase` starts it part way into its cycle, and a `keyframeClock` keeps keyframes on the timing they were made on.
+- 🎭 **Layer Masks**: Show a `VideoLayer`'s clips only inside a shape — a circle, a heart, a rounded rectangle — or fade them out through a soft edge over the layers below, via `VideoLayer.mask`. Only the matte image's alpha counts, and the mask moves, scales and turns with each clip.
+- 🔶 **Moving Shape Masks**: Show a `VideoLayer`'s clips or an `ImageLayer`'s image inside a shape the renderer draws on every frame, via `VideoLayer.shapeMask` and `ImageLayer.shapeMask`: an ellipse, a rounded rectangle, a heart, a star, a triangle, a diamond, a hexagon, a speech bubble or a straight edge, soft or hard, inverted or not. `LayerShapeMaskKeyframe`s move, resize, turn and soften it over time along the 13 animation curves, so a mask can reveal a clip or wipe across it.
+- 🌗 **Blend Modes**: Combine an image layer or a `VideoLayer` with the picture beneath it instead of drawing it over it, via `ImageLayer.blendMode` and `VideoLayer.blendMode`: `multiply`, `screen`, `overlay`, `softLight`, `darken`, `lighten`, `add` and `difference` — for a double exposure of two clips, a light leak recorded against black that only adds its light, or a colored shape that tints the video. Opacity, masks, chroma keys, animations and keyframes fade the layer before it is blended, and `LayerBlendMode.blendMode` is the Flutter `BlendMode` a preview paints the same result with.
+- 🫥 **Censor Layers**: Blur or pixelate the part of the picture an image layer covers instead of drawing the layer, e.g. to hide a face or a license plate, via `ImageLayer.censor`. The layer's image is the shape of the area, and image layers after it stay sharp on top.
+- 📊 **Audio Visualizer Layers**: Draw bars, mirrored bars, a wave or a ring of bars that move with the sound in an image layer's box, via `ImageLayer.audioVisualizer`. The app hands over the levels of the sound's bands over time and can set how wide the bars are (`barFill`); `AudioVisualizerPainter` draws the same shapes in an editor preview.
+- 🎞️ **Clip Transitions**: Add transitions between adjacent clips — `dissolve`, `fadeToBlack`, `fadeToWhite`, `slide`, `push`, `wipe`, `zoomIn`, `zoomOut`, `spin`, `whipPan`, `blur`, `glitch`, `flash`, `iris`, `stretch`, `lightLeak`, `clockWipe`, `diagonalWipe`, `flip` and `cube` — with configurable duration, easing curve, and direction.
+- 🧮 **Color Matrix**: Apply one or multiple 4x5 color matrices (e.g., for filters).
+- 💧 **Blur**: Add a blur effect to the video.
+- ✨ **Video Effects**: `glitch` (channel split and slices that jump sideways), `rgbSplit` (a pulsing color fringe), `vhs` (scanlines, grain and a rolling tracking band), `tvStatic` (heavy flickering grain), `oldFilm` (sepia, grain and flicker), `pixelate`, `pixelPulse` (blocks that sharpen again every second), `strobe`, `negativeFlash`, `vignette`, `blockGlitch` (coarse blocks and slipping slices in short bursts), `filmGrain` (fine, calm grain), `signalInterference` (thin flickering slices and bursts of noise), `crt` (strong scanlines and a slight fringe), `shake`, `zoomPulse` (punches in every half second), `mirror`, `kaleidoscope`, `splitScreen` (the picture four times in a 2×2 grid), `wave` (rows bending along a rolling wave) and `glow` (the brightest areas bloom softly), each with an intensity and an optional time range. With `triggers` an effect fires on given points in time instead, such as the beats of a song: one zoom punch, flash or glitch burst per trigger. `VideoEffectPreview` shows the same frames live over a video player.
+- 🧩 **Custom Video Effects**: Write an effect yourself in native code — a GLSL shader on Android, Core Image on iOS and macOS — register it under an id, and add it to a render with `CustomVideoEffect`. It can ask for earlier frames of the clip, for effects such as an echo trail.
+- 🟩 **Chroma Key**: Remove a green (or blue, or any saturated hue) screen, or a bright white or light grey wall, with a soft edge and spill suppression, and fill it with a color, an image, or — in a `VideoComposition` — the layer below. `ChromaKey.autoDetect` measures the key straight off the footage; `greenScreen()`/`blueScreen()` presets are there when you already know. Configurable globally, per `VideoLayer`, or per `VideoSegment`.
+- 📡 **Bitrate**: Cap the video bitrate. Sources already below the cap are exported losslessly over the fast path; sources above it are re-encoded down to the cap. If constant bitrate (CBR) isn't supported, it will gracefully fall back to the next available mode.
+- 🌐 **Streaming Optimization**: Optimize video for progressive playback by placing metadata (moov atom) at the start of the file.
+
+#### 📱 **Runtime Features**
+- 📊 **Progress**: Track the progress of one or multiple running tasks.
+- 🧵 **Multi-Tasking**: Execute multiple video processing tasks concurrently.
+- 🔇 **Native Log Level**: Control native log verbosity per API call with `NativeLogLevel` (`none`, `error`, `warning`, `info`, `debug`, `verbose`).
+- 🪵 **Native Log Stream**: Receive native logs (including renderer diagnostics) back in Dart via `logStream` to pipe into your own logger and export.
+
+
+### Platform Support
+| Method                     | Android | iOS  | macOS  | Windows  | Linux  | Web   |
+|----------------------------|---------|------|--------|----------|--------|-------|
+| `Metadata`                 | ✅      | ✅  | ✅     | ✅      | ⚠️     | ✅   |
+| `Thumbnails`               | ✅      | ✅  | ✅     | ❌      | ❌     | ✅   |
+| `Thumbnail Streaming`      | ✅      | ✅  | ✅     | ❌      | ❌     | ✅   |
+| `KeyFrames`                | ✅      | ✅  | ✅     | ❌      | ❌     | ✅   |
+| `Rotate`                   | ✅      | ✅  | ✅     | ❌      | ❌     | 🚫   |
+| `Flip`                     | ✅      | ✅  | ✅     | ❌      | ❌     | 🚫   |
+| `Crop`                     | ✅      | ✅  | ✅     | ❌      | ❌     | 🚫   |
+| `Scale`                    | ✅      | ✅  | ✅     | ❌      | ❌     | 🚫   |
+| `Trim`                     | ✅      | ✅  | ✅     | ❌      | ❌     | 🚫   |
+| `Playback-Speed`           | ✅      | ✅  | ✅     | ❌      | ❌     | 🚫   |
+| `Remove-Audio`             | ✅      | ✅  | ✅     | ❌      | ❌     | 🚫   |
+| `Overlay Layers`           | ✅      | ✅  | ✅     | ❌      | ❌     | 🚫   |
+| `Timed Image Layers`       | ✅      | ✅  | ✅     | ❌      | ❌     | 🚫   |
+| `Layer Animations`          | ✅      | ✅  | ✅     | ❌      | ❌     | 🚫   |
+| `Layer Keyframes`           | ✅      | ✅  | ✅     | ❌      | ❌     | 🚫   |
+| `Clip Transitions`          | ✅      | ✅  | ✅     | ❌      | ❌     | 🚫   |
+| `Layer Size`                | ✅      | ✅  | ✅     | ❌      | ❌     | 🚫   |
+| `Layer Masks`               | ✅      | ✅  | ✅     | ❌      | ❌     | 🚫   |
+| `Moving Shape Masks`        | ✅      | ✅  | ✅     | ❌      | ❌     | 🚫   |
+| `Blend Modes`               | ✅      | ✅  | ✅     | ❌      | ❌     | 🚫   |
+| `Censor Layers`             | ✅      | ✅  | ✅     | ❌      | ❌     | 🚫   |
+| `Audio Visualizer Layers`   | ✅      | ✅  | ✅     | ❌      | ❌     | 🚫   |
+| `Multiple ColorMatrix 4x5` | ✅      | ✅  | ✅     | ❌      | ❌     | 🚫   |
+| `Cancel export task`       | ✅      | ✅  | ✅     | ❌      | ❌     | 🚫   |
+| `Blur background`          | 🧪      | 🧪  | 🧪     | ❌      | ❌     | 🚫   |
+| `Chroma Key (Greenscreen)` | ✅      | ✅  | ✅     | ❌      | ❌     | 🚫   |
+| `Video Effects`            | ✅      | ✅  | ✅     | ❌      | ❌     | 🚫   |
+| `Custom Video Effects`     | ✅      | ✅  | ✅     | ❌      | ❌     | 🚫   |
+| `Custom Audio Tracks`      | ✅      | ✅  | ✅     | ❌      | ❌     | 🚫   |
+| `Audio Equalizer`          | ✅      | ✅  | ✅     | ❌      | ❌     | 🚫   |
+| `Audio Ducking`            | ✅      | ✅  | ✅     | ❌      | ❌     | 🚫   |
+| `Merge Videos`             | ✅      | ✅  | ✅     | ❌      | ❌     | 🚫   |
+| `Stop-Motion (Images→Video)`| ✅     | ✅  | ✅     | ❌      | ❌     | 🚫   |
+| `Extract Audio`            | ✅      | ✅  | ✅     | ❌      | ❌     | 🚫   |
+| `Waveform`                 | ✅      | ✅  | ✅     | ❌      | ❌     | 🚫   |
+| `Waveform Streaming`       | ✅      | ✅  | ✅     | ❌      | ❌     | 🚫   |
+| `Streaming Optimization`   | ✅      | ✅  | ✅     | ❌      | ❌     | 🚫   |
+| `Censor-Layers "Pixelate"` | ❌      | ❌  | ❌     | ❌      | ❌     | 🚫   |
+
+
+
+#### Legend
+- ✅ Supported with Native-Code 
+- ⚠️ Supported with Native-Code but not tested
+- 🧪 Supported but visual output can differs from Flutter
+- ❌ Not supported but planned
+- 🚫 Not supported and not planned
+
+## Setup
+
+#### Android, Linux, Windows, Web
+
+No additional setup required.
+
+#### iOS
+
+Add `NSPhotoLibraryUsageDescription` to `ios/Runner/Info.plist`. The plugin reads photo library videos with PhotoKit, and App Store Connect rejects an app that links PhotoKit without this key, even if it never opens the photo library.
+
+```xml
+<key>NSPhotoLibraryUsageDescription</key>
+<string>Edit videos from your photo library.</string>
+```
+
+The plugin never asks for photo library access, so apps that don't read `ph://` videos never show a prompt. An app that does should ask for access first; otherwise the system prompts on the first `ph://` call, and that call fails.
+
+#### macOS
+
+No additional setup required. To read photo library videos, add the same `NSPhotoLibraryUsageDescription` key and, for a sandboxed app, the `com.apple.security.personal-information.photos-library` entitlement.
+
+## Usage
+
+#### Basic Example
+```dart
+var data = VideoRenderData(
+    videoSegments: [
+        VideoSegment(
+            video: EditorVideo.asset('assets/my-video.mp4'),
+            // video: EditorVideo.file(File('/path/to/video.mp4')),
+            // video: EditorVideo.network('https://example.com/video.mp4'),
+            // video: EditorVideo.memory(videoBytes),
+            // Android: a content:// URI, e.g. from the photo picker, read in place without copying.
+            // video: EditorVideo.content('content://media/picker/0/com.android.providers.media.photopicker/media/1000000123'),
+            // iOS, macOS: a photo library video, e.g. from file_picker with DarwinOptions(copyMedia: false), read in place.
+            // Ask for photo library access first; otherwise the system prompts on first use and that call fails.
+            // video: EditorVideo.content('ph:///ED7AC36B-A150-4C38-BB8C-B6D696F4F2ED/L0/001'),
+        ),
+    ],
+    enableAudio: false,
+    startTime: const Duration(seconds: 5),
+    endTime: const Duration(seconds: 20),
+);
+
+Uint8List result = await ProVideoEditor.instance.renderVideo(data);
+
+/// If you're rendering larger videos, it's better to write them directly to a file
+/// instead of returning them as a Uint8List, as this can overload your RAM.
+///
+/// final directory = await getTemporaryDirectory();
+/// String outputPath = '${directory.path}/my_video.mp4';
+///
+/// await ProVideoEditor.instance.renderVideoToFile('${directory.path}/my_video.mp4', data);
+
+/// Video effects, over the whole video or a time range. Animated effects start
+/// at `startTime` and repeat after at most 20 seconds.
+final effectTask = VideoRenderData(
+    videoSegments: [VideoSegment(video: video)],
+    effects: const [
+        VideoEffect.vhs(intensity: 0.6),
+        VideoEffect.glitch(
+            startTime: Duration(seconds: 2),
+            endTime: Duration(milliseconds: 2500),
+        ),
+        /// Fires on given points in time instead, here a zoom punch on each
+        /// beat of a song.
+        VideoEffect.zoomPulse(
+            triggers: [
+                Duration(milliseconds: 480),
+                Duration(milliseconds: 960),
+                Duration(milliseconds: 1440),
+            ],
+        ),
+    ],
+);
+
+/// The same effects, live over a player. `position` is the playhead on the
+/// timeline the effects' time ranges use. Needs Impeller; elsewhere the child
+/// shows unchanged and the export still applies the effects.
+VideoEffectPreview(
+    effects: effectTask.effects,
+    position: playheadNotifier,
+    child: videoPlayer,
+);
+
+/// Listen progress
+StreamBuilder<ProgressModel>(
+    stream: ProVideoEditor.instance.progressStream,
+    builder: (context, snapshot) {
+      var progress = snapshot.data?.progress ?? 0;
+      return CircularProgressIndicator(value: animatedValue);
+    }
+)
+```
+
+#### Quality Preset Example
+```dart
+/// Use quality presets for simplified video export configuration
+/// Available presets: ultra4K, k4, p1080High, p1080, p720High, p720, p480, low, custom
+var data = VideoRenderData.withQualityPreset(
+    videoSegments: [
+        VideoSegment(video: EditorVideo.asset('assets/my-video.mp4')),
+    ],
+    qualityPreset: VideoQualityPreset.p1080,  // 1080p at 8 Mbps
+    startTime: const Duration(seconds: 5),
+    endTime: const Duration(seconds: 20),
+);
+
+Uint8List result = await ProVideoEditor.instance.renderVideo(data);
+
+/// Override the preset's bitrate if needed
+var customData = VideoRenderData.withQualityPreset(
+    videoSegments: [
+        VideoSegment(video: EditorVideo.asset('assets/my-video.mp4')),
+    ],
+    qualityPreset: VideoQualityPreset.p720,
+    bitrateOverride: 5000000,  // 5 Mbps instead of default 3 Mbps
+);
+```
+
+#### Merge Videos Example
+```dart
+/// Concatenate multiple video clips into a single output video
+/// Each clip can have its own trim settings (startTime/endTime)
+var data = VideoRenderData(
+    videoSegments: [
+        VideoSegment(
+            video: EditorVideo.file(File('/path/to/video1.mp4')),
+            startTime: Duration(seconds: 0),
+            endTime: Duration(seconds: 5),
+        ),
+        VideoSegment(
+            video: EditorVideo.file(File('/path/to/video2.mp4')),
+            startTime: Duration(seconds: 2),
+            endTime: Duration(seconds: 8),
+        ),
+        VideoSegment(
+            video: EditorVideo.asset('assets/video3.mp4'),
+            // No trim - uses full video duration
+        ),
+    ],
+    outputFormat: VideoOutputFormat.mp4,
+);
+
+Uint8List result = await ProVideoEditor.instance.renderVideo(data);
+
+/// Note: You must use either 'video' (single video) OR 'videoSegments' (multiple videos),
+/// but not both. The clips will be joined in the order they appear in the list.
+```
+
+#### Stop-Motion Example
+```dart
+/// Turn a sequence of still images into a video.
+/// Each frame is held for 1 / frameRate seconds, unless a per-frame
+/// duration is provided.
+var data = StopMotionRenderData(
+    frames: [
+        StopMotionFrame(image: EditorLayerImage.file(File('/path/to/frame1.png'))),
+        StopMotionFrame(image: EditorLayerImage.file(File('/path/to/frame2.png'))),
+        StopMotionFrame(
+            image: EditorLayerImage.memory(frame3Bytes),
+            duration: const Duration(milliseconds: 500), // hold this frame longer
+        ),
+    ],
+    frameRate: 12,                  // default frame duration = 1/12s
+    fit: StopMotionFit.contain,     // contain | cover | stretch
+    // resolution: Size(1080, 1920), // optional, defaults to the first frame size
+);
+
+Uint8List result = await ProVideoEditor.instance.renderStopMotion(data);
+
+/// For long sequences, write directly to a file to avoid high memory usage:
+/// await ProVideoEditor.instance.renderStopMotionToFile(outputPath, data);
+
+/// The stop-motion output is silent. To add background music, pass the result
+/// through renderVideo with `audioTracks`.
+```
+
+#### Reverse Video Example
+```dart
+/// Render a segment backwards by setting reverseVideo to true.
+/// Other segments keep their original direction.
+var data = VideoRenderData(
+    videoSegments: [
+        VideoSegment(
+            video: EditorVideo.file(File('/path/to/clip.mp4')),
+            reverseVideo: true,
+        ),
+    ],
+    outputFormat: VideoOutputFormat.mp4,
+);
+
+Uint8List result = await ProVideoEditor.instance.renderVideo(data);
+```
+
+#### Clip Transitions Example
+```dart
+/// Add a transition between adjacent clips via `VideoSegment.transition`.
+/// The transition describes how a clip moves into the NEXT clip and is
+/// ignored on the last segment.
+///
+/// Overlap transitions (every type but fadeToBlack and fadeToWhite) blend the
+/// two clips and shorten the total output by the transition duration. Dip
+/// transitions (fadeToBlack, fadeToWhite) dip through a color and keep the
+/// duration.
+var data = VideoRenderData(
+    videoSegments: [
+        VideoSegment(
+            video: EditorVideo.asset('assets/clip-a.mp4'),
+            endTime: const Duration(seconds: 5),
+            transition: const ClipTransition(
+                type: ClipTransitionType.dissolve,
+                duration: Duration(milliseconds: 800),
+                curve: AnimationCurve.easeInOut,
+            ),
+        ),
+        VideoSegment(
+            video: EditorVideo.asset('assets/clip-b.mp4'),
+            // A directional transition (slide, push, wipe, whipPan, stretch,
+            // diagonalWipe, flip, cube) uses `direction`.
+            transition: const ClipTransition(
+                type: ClipTransitionType.wipe,
+                duration: Duration(milliseconds: 700),
+                direction: ClipTransitionDirection.right,
+            ),
+        ),
+        VideoSegment(video: EditorVideo.asset('assets/clip-c.mp4')),
+    ],
+    outputFormat: VideoOutputFormat.mp4,
+);
+
+Uint8List result = await ProVideoEditor.instance.renderVideo(data);
+
+/// Note: overlap transitions require the neighbouring clips to show at the
+/// same size (split clips from one source always do; a rotation flag on one
+/// of them is fine); otherwise the boundary falls back to a hard cut.
+```
+
+#### Composition (Layers) Example
+```dart
+/// While `videoSegments` concatenates clips into ONE track, a `VideoComposition`
+/// stacks several tracks (layers) on a fixed canvas so they overlap in time and
+/// space — picture-in-picture, side-by-side, grids, etc.
+///
+/// Layers are composited bottom-to-top (the last layer is drawn on top). Each
+/// layer is placed via `transform` (or per-clip `VideoSegment.transform`) and
+/// can have its own `opacity`. Uncovered areas show `backgroundColor`.
+var data = VideoRenderData(
+    composition: VideoComposition(
+        canvasSize: const Size(1080, 1920),
+        backgroundColor: const Color(0xFF000000),
+        layers: [
+            // Bottom layer: full-canvas background video.
+            VideoLayer(
+                clips: [VideoSegment(video: EditorVideo.asset('assets/main.mp4'))],
+            ),
+            // Top layer: a picture-in-picture overlay, muted, top-right.
+            VideoLayer(
+                opacity: 1.0,
+                transform: const SegmentTransform(
+                    offset: Offset(700, 60),
+                    size: Size(320, 568),
+                    fit: SegmentFit.cover,
+                    // Clockwise, in radians (like Transform.rotate). The box
+                    // above stays the unrotated layout box, and `cover`
+                    // overflow is cut at its edge before the turn.
+                    rotation: 0.15,
+                ),
+                // Optional: show the clip only inside a shape. Only the
+                // image's alpha counts; it is stretched over each clip's own
+                // frame before the fit, so it moves and turns with the clip.
+                // Draw it at the clip's aspect ratio, and note that `cover`
+                // cuts off whatever of the shape overflows the box.
+                mask: EditorLayerImage.asset('assets/circle_mask.png'),
+                // Optional: blend the clip with the layers below instead of
+                // drawing it over them, e.g. `screen` for a double exposure.
+                blendMode: LayerBlendMode.screen,
+                clips: [
+                    VideoSegment(
+                        video: EditorVideo.asset('assets/pip.mp4'),
+                        volume: 0,
+                        timelineStart: const Duration(seconds: 2), // appears at +2s
+                    ),
+                ],
+            ),
+        ],
+    ),
+    outputFormat: VideoOutputFormat.mp4,
+);
+
+Uint8List result = await ProVideoEditor.instance.renderVideo(data);
+
+/// Note: provide exactly one of `video`, `videoSegments` or `composition`.
+/// Per-clip `transition`, `playbackSpeed`, `speedRamp` and `reverseVideo` are
+/// not applied inside a composition — use `videoSegments` if you need those.
+```
+
+#### Custom Video Effect Example
+Write the effect in native code and register it under an id before the first render. On Android it draws with a fragment shader:
+
+```kotlin
+// MainActivity.configureFlutterEngine
+CustomVideoEffects.register("my.invert") { params -> InvertEffect(params) }
+
+class InvertEffect(params: Map<String, Any?>) : CustomVideoEffectRenderer() {
+    private val amount = (params["amount"] as? Number)?.toFloat() ?: 1f
+    private val shader = CustomVideoEffectShader(
+        """
+        precision mediump float;
+        uniform sampler2D uFrame;
+        uniform float uAmount;
+        varying vec2 vTexCoord;
+        void main() {
+          vec4 color = texture2D(uFrame, vTexCoord);
+          gl_FragColor = vec4(mix(color.rgb, 1.0 - color.rgb, uAmount), color.a);
+        }
+        """.trimIndent()
+    )
+
+    override fun render(frame: CustomVideoEffectFrame) {
+        shader.use()
+        shader.setTexture("uFrame", frame.textureId, 0)
+        shader.setFloat("uAmount", amount)
+        shader.draw()
+    }
+
+    override fun release() = shader.release()
+}
+```
+
+On iOS and macOS it returns a Core Image image:
+
+```swift
+// AppDelegate
+CustomVideoEffects.register("my.invert") { params in InvertEffect(params) }
+
+final class InvertEffect: CustomVideoEffectRenderer {
+  private let amount: Double
+  init(_ params: [String: Any]) { amount = (params["amount"] as? NSNumber)?.doubleValue ?? 1 }
+
+  func render(_ frame: CustomVideoEffectFrame) -> CIImage {
+    frame.image.applyingFilter("CIColorInvert").applyingFilter(
+      "CIDissolveTransition",
+      parameters: [kCIInputTargetImageKey: frame.image, kCIInputTimeKey: 1 - amount]
+    )
+  }
+}
+```
+
+Then name it in a render:
+
+```dart
+final bytes = await ProVideoEditor.instance.renderVideo(
+  VideoRenderData(
+    videoSegments: [VideoSegment(video: EditorVideo.file(path))],
+    customEffects: const [
+      CustomVideoEffect(
+        id: 'my.invert',
+        params: {'amount': 0.8},
+        startTime: Duration(seconds: 1),
+      ),
+    ],
+  ),
+);
+```
+
+An effect that needs earlier frames of the clip lists how far back each lies in `historyOffsetsUs`, in microseconds of the rendered video, and reads them from `frame.history`; `historyScale` keeps them smaller to save memory. The example app registers two such effects for its integration tests in `example/android/.../ExampleVideoEffects.kt`, `example/ios/Runner/AppDelegate.swift` and `example/macos/Runner/MainFlutterWindow.swift`.
+
+#### Extract Audio Example
+
+Extract audio track from a video.
+Supports MP3, AAC, and M4A formats with optional trimming.
+```dart
+/// Check if video has audio before extraction (recommended)
+final video = EditorVideo.asset('assets/video.mp4');
+bool hasAudio = await ProVideoEditor.instance.hasAudioTrack(video);
+
+if (!hasAudio) {
+    print('Video has no audio track');
+    return;
+}
+
+/// Extract with trimming
+var config = AudioExtractConfigs(
+    video: video,
+    format: AudioFormat.aac,
+    startTime: Duration(seconds: 10),
+    endTime: Duration(seconds: 30),
+);
+
+/// Save to file instead of returning as Uint8List
+final directory = await getTemporaryDirectory();
+String outputPath = '${directory.path}/extracted_audio.mp3';
+
+try {
+    await ProVideoEditor.instance.extractAudioToFile(outputPath, config);
+} on AudioNoTrackException {
+    print('Video has no audio track');
+}
+/// Alternative read the Uint8List directly like below.
+/// Uint8List audioData = await ProVideoEditor.instance.extractAudio(audioConfig);
+
+/// Listen to progress
+StreamBuilder<ProgressModel>(
+    stream: ProVideoEditor.instance.progressStreamById(config.id),
+    builder: (context, snapshot) {
+      var progress = snapshot.data?.progress ?? 0;
+      return CircularProgressIndicator(value: progress);
+    }
+)
+```
+
+#### Audio Ducking Example
+
+Lower the music while a voice-over talks. The voice tracks are measured by their loudness, and the music follows the returned curve: down to `volume` by the time the voice starts, back up `hold` after it stops.
+
+```dart
+final voiceOver = VideoAudioTrack(
+  path: voiceOverPath,
+  startTime: const Duration(seconds: 2),
+);
+
+// Lower the music to a quarter of its volume while somebody talks.
+final duck = await const AudioDucking(volume: 0.25).analyze(
+  [voiceOver],
+  videoDuration: const Duration(seconds: 6),
+);
+
+await ProVideoEditor.instance.renderVideoToFile(
+  outputPath,
+  VideoRenderData(
+    videoSegments: [VideoSegment(video: video)],
+    audioTracks: [
+      voiceOver,
+      VideoAudioTrack(path: musicPath, volume: 0.8, volumeCurve: duck),
+    ],
+  ),
+);
+
+// A preview plays the same dips by scaling the music's volume.
+musicPlayer.setVolume(0.8 * duck.volumeAt(position));
+```
+
+`AudioVolumeCurve` works without ducking too: any list of `AudioVolumePoint`s automates a track's volume, moving in a straight line from one point to the next.
+
+#### Waveform Example
+
+Generate audio waveform data for visualization. Supports multiple resolutions and optional streaming mode for progressive UI updates.
+
+```dart
+/// Basic waveform generation
+var config = WaveformConfigs(
+    video: EditorVideo.asset('assets/video.mp4'),
+    resolution: WaveformResolution.medium, // low, medium, high, ultra
+);
+
+WaveformData waveform = await ProVideoEditor.instance.getWaveform(config);
+
+print('Samples: ${waveform.sampleCount}');
+print('Duration: ${waveform.duration}ms');
+print('Stereo: ${waveform.isStereo}');
+
+/// Use the built-in AudioWaveform widget for display
+AudioWaveform(
+    waveform: waveform,
+    style: WaveformStyle(
+        height: 100,
+        waveColor: Colors.blue,
+        backgroundColor: Colors.grey.shade900,
+    ),
+)
+
+/// Interactive waveform with seek support
+AudioWaveform.interactive(
+    waveform: waveform,
+    currentPosition: currentPosition,
+    onSeek: (position) => print('Seek to: $position'),
+    style: WaveformStyle(
+        height: 120,
+    ),
+)
+```
+
+**Streaming Waveform:**
+
+For long videos, use streaming mode to get progressive updates with animated bars:
+
+```dart
+/// The streaming widget handles everything internally - 
+/// just provide the config and it manages the stream subscription,
+/// chunk accumulation, and animated bar rendering automatically.
+AudioWaveform.streaming(
+    config: WaveformConfigs(
+        video: EditorVideo.asset('assets/long-video.mp4'),
+        resolution: WaveformResolution.high,
+    ),
+    style: WaveformStyle(
+        height: 80,
+        waveColor: Colors.greenAccent,
+        backgroundColor: Colors.black,
+    ),
+    onComplete: () {
+        print('Waveform generation complete!');
+    },
+)
+
+/// For manual stream handling (advanced usage):
+var config = WaveformConfigs(
+    video: EditorVideo.asset('assets/long-video.mp4'),
+    resolution: WaveformResolution.high,
+    chunkSize: 100, // Emit every 100 samples
+);
+
+await for (var chunk in ProVideoEditor.instance.getWaveformStream(config)) {
+    print('Progress: ${(chunk.progress * 100).toStringAsFixed(0)}%');
+    
+    if (chunk.isComplete) {
+        print('Waveform generation complete!');
+    }
+}
+```
+
+#### Cancel an active render
+
+The cancel API is currently implemented only on **Android, iOS, and macOS**.
+On **Windows, Linux, and Web**, `cancel` is not wired up yet, so callers should either:
+
+* gate by platform before calling `cancel`, or
+* be prepared to handle a `PlatformException` / `UnimplementedError`.
+
+When you cancel a render started with `renderVideoToFile`, the returned `Future` completes with a **`RenderCanceledException`**. If your UI is awaiting that future directly (instead of using `unawaited`), make sure to catch this exception so you can reset any loading state cleanly rather than treating it as an error.
+
+```dart
+final renderModel = VideoRenderData(
+  videoSegments: [
+    VideoSegment(video: EditorVideo.asset('assets/sample.mp4')),
+  ],
+);
+
+final outputPath = '${(await getTemporaryDirectory()).path}/video.mp4';
+
+// Start the render. Keep the model.id so you can cancel it later.
+final renderFuture = ProVideoEditor.instance.renderVideoToFile(
+  outputPath,
+  renderModel,
+);
+
+// Option 1: fire-and-forget (example app pattern).
+unawaited(renderFuture);
+
+// Option 2: if you await directly, handle cancellation:
+try {
+  await renderFuture;
+} on RenderCanceledException {
+  // User canceled: reset UI state, do not treat as an error.
+}
+
+// ...from a UI callback (Android/iOS/macOS only)
+if (Platform.isAndroid || Platform.isIOS || Platform.isMacOS) {
+  await ProVideoEditor.instance.cancel(renderModel.id);
+}
+```
+
+A cancel answers at once, and the cancelled job's future completes before the cancel's does. The job's id is free again from that moment — a retry can start the same id right after cancelling it without being refused as already running. The cancelled pipeline may still be unwinding at that point, so a job restarted under the same id is accepted at once but begins only after that pipeline has finished — its output can never be removed by the old job's cleanup. Reuse the id for a retry to get that guarantee.
+
+#### Find out why a render failed
+
+A render that fails for any other reason throws a `PlatformException` (or, for encoder failures, a `RenderEncoderException`). Its message is the platform's own description of the failure — written for a person, and on iOS/macOS in that person's language, so it is nothing to branch on. `NativeFailureDetails` reads what is: the error's domain and code, and the chain of causes underneath.
+
+```dart
+try {
+  await ProVideoEditor.instance.renderVideoToFile(outputPath, renderModel);
+} on PlatformException catch (e) {
+  final details = NativeFailureDetails.of(e);
+  if (details?.isOutOfStorage ?? false) {
+    // Ask the user to free up space; a retry would hit the same wall.
+  } else {
+    // details?.domain, details?.code, details?.codeName, details?.cause
+  }
+}
+```
+
+| Platform | `domain` | `code` / `codeName` | `cause` |
+|---|---|---|---|
+| iOS, macOS | `NSError.domain`, e.g. `AVFoundationErrorDomain`, `NSPOSIXErrorDomain`, `ExportWatchdog` | `NSError.code` (`-11807` for `AVErrorDiskFull`) | the `NSUnderlyingErrorKey` chain |
+| Android | the outermost throwable's class, e.g. `androidx.media3.transformer.ExportException` | `ExportException.errorCode` and its name, e.g. `ERROR_CODE_VIDEO_FRAME_PROCESSING_FAILED` | the Java cause chain |
+
+A `RenderEncoderException` carries the same details in its `details` field. When it is transient (`isTransient`), a codec could not be acquired because the device ran out of them, and on Android `codecKind` says which: `RenderCodecKind.decoder` means the device had no decoder left for one of the inputs. The render's layers share the device's decoders with preview players and other exports, so fewer layers or releasing those players fixes it. `RenderCodecKind.encoder` means the output encoder was not available, which neither fixes.
+
+```dart
+try {
+  await ProVideoEditor.instance.renderVideoToFile(outputPath, renderModel);
+} on RenderEncoderException catch (e) {
+  if (e.isTransient && e.codecKind == RenderCodecKind.decoder) {
+    // Too much video decoded at once: release preview players, or suggest
+    // fewer layers.
+  }
+}
+```
+
+#### Advanced Example
+```dart
+/// Every option except videoSegments is optional.
+var task = VideoRenderData(
+    id: 'my-special-task',
+    videoSegments: [
+        VideoSegment(
+            video: EditorVideo.asset('assets/my-video.mp4'),
+            volume: 0.7, // Original audio at 70%
+            playbackSpeed: 2, // Double speed
+        ),
+    ],
+    imageLayers: [
+      ImageLayer(
+        image: EditorLayerImage.memory(layerBytes),
+        offset: const Offset(100, 50),
+        rotation: 45 * pi / 180, // clockwise, in radians (like Transform.rotate)
+        startTime: const Duration(seconds: 2),
+        endTime: const Duration(seconds: 8),
+      ),
+      // Pixelates the area an opaque mask image covers, e.g. a face, instead
+      // of drawing the image. Layers after it draw on top as usual.
+      ImageLayer(
+        image: EditorLayerImage.memory(maskBytes),
+        offset: const Offset(320, 180),
+        size: const Size(240, 300),
+        censor: const LayerCensor.pixelate(blockSize: 32),
+      ),
+      // Bars that move with the sound: 24 levels per row, 60 rows a second
+      // on the rendered video, which the app computes from the audio.
+      ImageLayer.audioVisualizer(
+        visualizer: LayerAudioVisualizer(
+          style: AudioVisualizerStyle.bars,
+          color: const Color(0xFF27C58B),
+          bandCount: 24,
+          levels: bandLevels,
+        ),
+        offset: const Offset(90, 1400),
+        size: const Size(900, 300),
+      ),
+    ],
+    outputFormat: VideoOutputFormat.mp4,
+    startTime: const Duration(seconds: 5),
+    endTime: const Duration(seconds: 20),
+    blur: 10,
+    bitrate: 5000000,
+    maxFrameRate: 30, // cap output at 30 fps (drops surplus frames)
+    enableAudio: false,
+    audioTracks: [
+      VideoAudioTrack(
+        path: customAudioPath,
+        volume: 0.3, // Background music at 30%
+        playbackSpeed: 0.5, // Twice as long, with unchanged pitch
+        equalizer: const AudioEqualizer(
+          bands: [
+            AudioEqualizerBand(
+              type: AudioEqualizerBandType.lowShelf,
+              frequency: 200,
+              gain: 4, // a little more bass
+            ),
+          ],
+        ),
+        fadeInDuration: const Duration(milliseconds: 500), // ease it in
+        fadeOutDuration: const Duration(seconds: 1), // and out at the end
+      ),
+    ],
+    transform: const ExportTransform(
+        flipX: true,
+        flipY: true,
+        x: 10,
+        y: 20,
+        width: 300,
+        height: 400,
+        rotateTurns: 3,
+        scaleX: .5,
+        scaleY: .5,
+    ),
+    colorFilters: [
+         ColorFilter(matrix: [ 1.0, 0.0, 0.0, 0.0, 50.0, 0.0, 1.0, 0.0, 0.0, 0.0, 0.0, 0.0, 1.0, 0.0, 0.0, 0.0, 0.0, 0.0, 1.0, 0.0 ]),
+         ColorFilter(matrix: [ 1.0, 0.0, 0.0, 0.0, 0.0, 0.0, 1.0, 0.0, 0.0, 0.0, 0.0, 0.0, 1.0, 0.0, 0.0, 0.0, 0.0, 0.0, 1.0, 0.0 ]),
+    ],
+    chromaKey: const ChromaKey(
+        // Defaults to SMPTE "chroma key green". Brightness matters as well as
+        // hue, so measure it with `ChromaKey.autoDetect` when you can.
+        color: Color(0xFF00B140),
+        similarity: 0.20,  // raise it if the screen survives the key
+        smoothness: 0.08,  // width of the soft edge
+        spill: 0.5,        // pull the green cast off the subject's edges
+        backgroundColor: Color(0xFF000000),
+    ),
+);
+
+Uint8List result = await ProVideoEditor.instance.renderVideo(task);
+
+/// Note: Blur is an experimental feature (🧪 in platform matrix)
+/// The blur effect may render differently than in Flutter's preview.
+
+/// Chroma key: the most reliable key is measured, not guessed. Paint, lighting
+/// and the camera all shift the recorded screen away from any constant, and
+/// that shift has to be paid for with a wider `similarity` — the very margin
+/// that protects the subject. On a real studio clip the SMPTE constant sat
+/// 0.10–0.20 away from the screen and needed `similarity: 0.20`; the measured
+/// color sat within 0.05 and 0.10 was plenty.
+final key = await ChromaKey.autoDetect(
+    greenScreenVideo,
+    backgroundColor: Colors.black,
+);
+
+/// When you already know the screen, the presets carry the measured values.
+/// Note that blue is not green with a different hue: it separates skin better,
+/// but denim (0.19), blue eyes (0.20) and light blue shirts (0.21) all crowd
+/// it, so `blueScreen()` keys tighter and despills more gently.
+const greenKey = ChromaKey.greenScreen(backgroundColor: Color(0xFF000000));
+const blueKey = ChromaKey.blueScreen(backgroundColor: Color(0xFF000000));
+
+/// Chroma key: to put a *video* behind the green screen, leave the key
+/// transparent and place the keyed clip on a layer above another one. In the
+/// single-track `videoSegments` path there is nothing underneath and the codec
+/// carries no alpha, so a key there needs a `backgroundColor` or
+/// `backgroundImage`.
+final keyedTask = VideoRenderData(
+    composition: VideoComposition(
+        layers: [
+            VideoLayer(clips: [VideoSegment(video: backgroundVideo)]),
+            VideoLayer(
+                clips: [VideoSegment(video: greenScreenVideo)],
+                chromaKey: const ChromaKey(),
+            ),
+        ],
+    ),
+);
+
+/// Video effects: glitch, VHS and pixelate, over the whole video or a time
+/// range. Animated effects start at `startTime` and repeat every 20 seconds.
+final effectTask = VideoRenderData(
+    videoSegments: [VideoSegment(video: video)],
+    effects: const [
+        VideoEffect.vhs(intensity: 0.6),
+        VideoEffect.glitch(
+            startTime: Duration(seconds: 2),
+            endTime: Duration(milliseconds: 2500),
+        ),
+        /// Fires on given points in time instead, here a zoom punch on each
+        /// beat of a song.
+        VideoEffect.zoomPulse(
+            triggers: [
+                Duration(milliseconds: 480),
+                Duration(milliseconds: 960),
+                Duration(milliseconds: 1440),
+            ],
+        ),
+    ],
+);
+
+/// The same effects, live over a player. `position` is the playhead on the
+/// timeline the effects' time ranges use. Needs Impeller; elsewhere the child
+/// shows unchanged and the export still applies the effects.
+VideoEffectPreview(
+    effects: effectTask.effects,
+    position: playheadNotifier,
+    child: videoPlayer,
+);
+
+/// Listen progress
+StreamBuilder<ProgressModel>(
+    stream: ProVideoEditor.instance.progressStreamById(task.id),
+    builder: (context, snapshot) {
+      var progress = snapshot.data?.progress ?? 0;
+      return TweenAnimationBuilder<double>(
+        tween: Tween<double>(begin: 0, end: progress),
+        duration: const Duration(milliseconds: 300),
+        builder: (context, animatedValue, _) {
+          return Row(
+            crossAxisAlignment: CrossAxisAlignment.center,
+            mainAxisAlignment: MainAxisAlignment.start,
+            spacing: 10,
+            children: [
+              CircularProgressIndicator(value: animatedValue),
+              Text(
+                '${(animatedValue * 100).toStringAsFixed(1)} / 100',
+                style: const TextStyle(
+                  fontSize: 20,
+                  fontWeight: FontWeight.w500,
+                ),
+              )
+            ],
+          );
+        });
+    }
+)
+```
+
+#### Preserve source frame timing
+
+For an iOS/macOS effect that must retain every source picture and its timing,
+set `preserveSourceFrameTiming: true` on `VideoRenderData`. This uses the source
+track's presentation times instead of rounding the source onto the renderer's
+fixed frame clock, including for fractional and variable frame rates.
+
+Use one forward `videoSegments` entry at its original speed and leave
+`maxFrameRate` unset. Layered compositions, multiple segments, transitions,
+reverse playback, speed changes, speed ramps and frame-rate caps fail the render
+when this mode is enabled.
+The option defaults to false and is ignored on other platforms.
+
+#### Editor Example
+The video editor requires the use of the [pro_image_editor](https://github.com/hm21/pro_image_editor). You can find the basic video editor example [here](https://github.com/hm21/pro_video_editor/blob/stable/example/lib/features/editor/pages/video_editor_basic_example_page.dart) and the "grounded" design example [here](https://github.com/hm21/pro_video_editor/blob/stable/example/lib/features/editor/pages/video_editor_grounded_example_page.dart).
+
+You can also use other prebuilt designs from pro_image_editor, such as the WhatsApp or Frosted Glass design. Just check the examples in pro_image_editor to see how it's done.
+
+---
+
+### API Reference
+
+#### VideoSegment
+Represents a video clip segment for merging multiple videos.
+
+```dart
+VideoSegment({
+  required EditorVideo video,    // Video source (file, asset, network, memory)
+  Duration? startTime,           // Optional: Start time for trimming
+  Duration? endTime,             // Optional: End time for trimming
+  double? volume,                // Optional: Per-clip volume multiplier
+  AudioEqualizer? equalizer,     // Optional: Per-clip equalizer bands
+  double? playbackSpeed,         // Optional: Per-clip playback speed
+  VideoSpeedRamp? speedRamp,     // Optional: Speed that changes while it plays
+  bool reverseVideo = false,     // Optional: Play this clip backwards
+  ClipTransition? transition,    // Optional: Transition into the NEXT clip
+  List<SegmentKeyframe> keyframes = const [], // Optional: Pan, zoom and turn
+})
+```
+
+**Parameters:**
+- `video` (required): The video source using `EditorVideo.file()`, `EditorVideo.asset()`, `EditorVideo.network()`, or `EditorVideo.memory()`.
+- `startTime` (optional): The starting point for this clip. If omitted, starts from the beginning (0:00). In `videoSegments`, a time within a microsecond of a frame's start cuts on that frame, so frame times from `getLumaFrameStream` can be passed as they are; a `VideoLayer` clip is cut at the time as given.
+- `endTime` (optional): The ending point for this clip, the start of the first frame left out. If omitted, uses the full video duration.
+- `volume` (optional): Per-clip audio volume multiplier (`0.0` = mute, `1.0` = original).
+- `equalizer` (optional): An `AudioEqualizer` whose `bands` raise or lower parts of the clip's audio, one after the other. Each `AudioEqualizerBand` is a `lowShelf` (everything below its `frequency`), a `peak` (a bell around its `frequency`, as narrow as its `q`) or a `highShelf` (everything above its `frequency`), with a `gain` in decibels, and there can be any number of them. Applied before `volume`; while any band boosts, the result is limited at -1 dBFS rather than clipped.
+- `playbackSpeed` (optional): Per-clip playback speed (e.g. `0.5` = half, `2.0` = double).
+- `speedRamp` (optional): A `VideoSpeedRamp` whose points put speeds along the clip, from `0` at its first frame to `1` at its last; the speed eases from one point to the next. Replaces `playbackSpeed`. `outputDuration`, `sourceToOutput` and `outputToSource` give the same timing the render uses, for laying out a timeline. The clip's sound follows the speed like a tape, so its pitch rises and falls with it.
+- `reverseVideo` (optional): Renders this clip backwards when `true`.
+- `transition` (optional): A `ClipTransition` describing how this clip transitions into the **next** clip (dissolve, fade-to-black, slide, etc.). Ignored on the last segment.
+- `keyframes` (optional): `SegmentKeyframe`s that pan, zoom and turn the clip's picture. Each keyframe belongs to the frame at its source timestamp: the picture is scaled by `scale` and turned by `rotation` around the frame's center, then shifted by `offset` (shares of the frame's width and height), and it eases from one keyframe to the next along the earlier one's `curve`. Every frame takes the placement of its own timestamp, so the motion stays on its frames however the clip is trimmed, sped up, ramped, reversed or blended into a transition. What the picture no longer covers is black. Only for `videoSegments`.
+
+**Usage Example:**
+```dart
+// Full video
+VideoSegment(video: EditorVideo.asset('video.mp4'))
+
+// Trimmed video (5s to 10s)
+VideoSegment(
+  video: EditorVideo.file(File('video.mp4')),
+  startTime: Duration(seconds: 5),
+  endTime: Duration(seconds: 10),
+)
+
+// A clearer voice: less rumble, more presence
+VideoSegment(
+  video: EditorVideo.asset('video.mp4'),
+  equalizer: const AudioEqualizer(
+    bands: [
+      AudioEqualizerBand(
+        type: AudioEqualizerBandType.lowShelf,
+        frequency: 150,
+        gain: -6,
+      ),
+      AudioEqualizerBand(
+        type: AudioEqualizerBandType.peak,
+        frequency: 3000,
+        gain: 4,
+        q: 1.2,
+      ),
+    ],
+  ),
+)
+
+// A slow push-in on the middle of the shot, easing to a stop
+VideoSegment(
+  video: EditorVideo.asset('video.mp4'),
+  keyframes: const [
+    SegmentKeyframe(
+      time: Duration(seconds: 1),
+      curve: AnimationCurve.easeInOutCubic,
+    ),
+    SegmentKeyframe(time: Duration(seconds: 4), scale: 1.4),
+  ],
+)
+
+// Fast run-up, slow motion on the peak, fast landing
+VideoSegment(
+  video: EditorVideo.asset('jump.mp4'),
+  speedRamp: const VideoSpeedRamp([
+    VideoSpeedRampPoint(position: 0, speed: 2),
+    VideoSpeedRampPoint(position: 0.45, speed: 0.3),
+    VideoSpeedRampPoint(position: 0.55, speed: 0.3),
+    VideoSpeedRampPoint(position: 1, speed: 2),
+  ]),
+)
+```
+
+---
+
+#### Metadata Example
+```dart
+VideoMetadata result = await ProVideoEditor.instance.getMetadata(
+    video: EditorVideo.asset('assets/my-video.mp4'),
+);
+```
+
+#### Thumbnails Example
+
+```dart
+List<Uint8List> result = await ProVideoEditor.instance.getThumbnails(
+    ThumbnailConfigs(
+        video: EditorVideo.asset('assets/my-video.mp4'),
+        outputFormat: ThumbnailFormat.jpeg,
+        timestamps: const [
+            Duration(seconds: 10),
+            Duration(seconds: 15),
+            Duration(seconds: 22),
+        ],
+        outputSize: const Size(200, 200),
+        boxFit: ThumbnailBoxFit.cover,
+    ),
+);
+```
+
+#### Thumbnail Stream Example
+
+For a timeline strip — dozens of frames per clip — ask for them all at once and
+consume them as they are decoded. The whole request is a single native decode
+pass, so it is far cheaper than splitting it into small `getThumbnails` calls
+for the sake of progressive fill, and cancelling the subscription stops the
+decoder immediately.
+
+```dart
+final configs = ThumbnailConfigs(
+    video: EditorVideo.file('/path/to/video.mp4'),
+    outputSize: const Size(96, 108),
+    timestamps: [
+        for (var ms = 0; ms < 6300; ms += 77) Duration(milliseconds: ms),
+    ],
+    // Android decodes with up to three hardware sessions in parallel. When
+    // a preview player shares the decoder pool, keep it to one.
+    maxParallelDecoders: 1,
+);
+
+final frames = List<Uint8List?>.filled(configs.timestamps.length, null);
+
+await for (final frame in ProVideoEditor.instance.getThumbnailStream(configs)) {
+    // Frames arrive in decode order; `indices` maps each one back onto
+    // `configs.timestamps`. Several timestamps can share one source frame.
+    for (final index in frame.indices) {
+        frames[index] = frame.bytes;
+    }
+    updateStrip(frames);
+}
+```
+
+#### Keyframes Example
+
+```dart
+List<Uint8List> result = await ProVideoEditor.instance.getKeyFrames(
+    KeyFramesConfigs(
+        video: EditorVideo.asset('assets/my-video.mp4'),
+        outputFormat: ThumbnailFormat.jpeg,
+        maxOutputFrames: 20,
+        outputSize: const Size(200, 200),
+        boxFit: ThumbnailBoxFit.cover,
+    ),
+);
+```
+
+#### Native Log Level Example
+
+Control native log verbosity per API call on Android, iOS, and macOS.
+
+```dart
+/// Silence all native logs for this call
+List<Uint8List> thumbnails = await ProVideoEditor.instance.getThumbnails(
+    ThumbnailConfigs(
+        video: EditorVideo.asset('assets/my-video.mp4'),
+        outputSize: const Size(200, 200),
+        timestamps: const [Duration(seconds: 5)],
+    ),
+    nativeLogLevel: NativeLogLevel.none,
+);
+
+/// Show only errors
+VideoMetadata metadata = await ProVideoEditor.instance.getMetadata(
+    video: EditorVideo.asset('assets/my-video.mp4'),
+    nativeLogLevel: NativeLogLevel.error,
+);
+
+/// Available levels: none, error, warning, info, debug, verbose
+```
+
+#### Native Log Stream Example
+
+Capture native logs (including the renderer diagnostics) in Dart so you can
+forward them to your own logger and let users export them. The stream emits a
+`NativeLogEntry` for every native log on Android, iOS, and macOS, gated by the
+`nativeLogLevel` you pass to the operation. On Web, Windows, and Linux the
+stream stays empty.
+
+```dart
+final subscription = ProVideoEditor.instance.logStream.listen((entry) {
+    // entry: level, tag, message, timestamp, optional stackTrace
+    myLogger.log(entry.level.name, entry.message,
+        tag: entry.tag, stackTrace: entry.stackTrace);
+});
+
+// Emit the rich renderer logs by raising the level for the call.
+await ProVideoEditor.instance.renderVideoToFile(
+    outputPath,
+    renderData,
+    nativeLogLevel: NativeLogLevel.debug,
+);
+
+// Cancel when no longer needed.
+await subscription.cancel();
+```
+
+
+## Sponsors 
+<p align="center">
+  <a href="https://github.com/sponsors/hm21">
+    <img src='https://raw.githubusercontent.com/hm21/sponsors/main/sponsorkit/sponsors.svg'/>
+  </a>
+</p>
+
+## Included Packages
+
+A big thanks to the authors of these amazing packages.
+
+- Packages created by the Dart team:
+  - [http](https://pub.dev/packages/http)
+  - [mime](https://pub.dev/packages/mime)
+  - [plugin_platform_interface](https://pub.dev/packages/plugin_platform_interface)
+  - [web](https://pub.dev/packages/web)
+
+
+## Contributors
+<a href="https://github.com/hm21/pro_video_editor/graphs/contributors">
+  <img src="https://contrib.rocks/image?repo=hm21/pro_video_editor" />
+</a>
+
+Made with [contrib.rocks](https://contrib.rocks).

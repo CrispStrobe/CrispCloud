@@ -1,0 +1,804 @@
+import 'dart:async';
+
+import 'package:flutter/foundation.dart';
+import 'package:plugin_platform_interface/plugin_platform_interface.dart';
+
+import '/core/models/audio/audio_extract_configs_model.dart';
+import '/core/models/audio/audio_merge_configs_model.dart';
+import '/core/models/audio/audio_merge_result_model.dart';
+import '/core/models/audio/waveform_chunk_model.dart';
+import '/core/models/audio/waveform_configs_model.dart';
+import '/core/models/audio/waveform_data_model.dart';
+import '/core/models/frame/luma_frame_configs_model.dart';
+import '/core/models/frame/luma_frame_model.dart';
+import '/core/models/platform/native_log_entry.dart';
+import '/core/models/platform/native_log_level.dart';
+import '/core/models/thumbnail/key_frames_configs_model.dart';
+import '/core/models/thumbnail/single_thumbnail_configs_model.dart';
+import '/core/models/thumbnail/thumbnail_configs_model.dart';
+import '/core/models/thumbnail/thumbnail_frame_model.dart';
+import '/core/models/video/editor_video_model.dart';
+import '/core/models/video/progress_model.dart';
+import '/core/models/video/split_video_model.dart';
+import '/core/models/video/video_metadata_model.dart';
+import '../analysis/video_stabilization_analyzer.dart';
+import '../models/video/stop_motion_render_data_model.dart';
+import '../models/video/video_render_data_model.dart';
+import 'native_method_channel.dart';
+
+/// Abstract platform interface for the Pro Video Editor plugin.
+///
+/// This class defines the contract that all platform-specific implementations
+/// must follow. It uses the plugin_platform_interface pattern to ensure type
+/// safety and proper platform switching.
+///
+/// Platform implementations:
+/// - [MethodChannelProVideoEditor] for iOS, Android, macOS, Windows, Linux
+/// - [ProVideoEditorWeb] for Web
+///
+/// The interface handles:
+/// - Video metadata extraction
+/// - Thumbnail and keyframe generation
+/// - Video rendering with effects
+/// - Progress tracking via streams
+/// - Task cancellation
+abstract class ProVideoEditor extends PlatformInterface {
+  /// Constructs a ProVideoEditorPlatform and initializes the progress stream.
+  ProVideoEditor() : super(token: _token) {
+    initializeStream();
+  }
+
+  static final Object _token = Object();
+
+  static ProVideoEditor _instance = MethodChannelProVideoEditor();
+
+  /// The default instance of [ProVideoEditor] to use.
+  ///
+  /// Defaults to [MethodChannelProVideoEditor].
+  static ProVideoEditor get instance => _instance;
+
+  /// The singleton instance of [ProVideoEditor].
+  static set instance(ProVideoEditor instance) {
+    PlatformInterface.verifyToken(instance, _token);
+    _instance = instance;
+  }
+
+  /// Sets up the native progress stream connection.
+  ///
+  /// Platform implementations must override this method to connect their
+  /// native event channels to [progressCtrl]. This is called automatically
+  /// in the constructor.
+  ///
+  /// Native implementations should:
+  /// - Set up EventChannel listeners
+  /// - Map native events to [ProgressModel]
+  /// - Handle errors gracefully
+  /// - Not initialize on unsupported platforms (Windows, Linux)
+  @protected
+  void initializeStream() {
+    throw UnimplementedError('[initializeStream()] has not been implemented.');
+  }
+
+  /// Broadcast stream controller for progress updates.
+  ///
+  /// Platform implementations add progress events here, which are then
+  /// exposed through [progressStream] and [progressStreamById].
+  @protected
+  final progressCtrl = StreamController<ProgressModel>.broadcast();
+
+  /// Broadcast stream controller for native log entries.
+  ///
+  /// Platform implementations forward log entries emitted by the native side
+  /// here, which are then exposed through [logStream].
+  @protected
+  final logCtrl = StreamController<NativeLogEntry>.broadcast();
+
+  /// Retrieves the platform version.
+  ///
+  /// Throws an [UnimplementedError] if not implemented.
+  Future<String?> getPlatformVersion() {
+    throw UnimplementedError('platformVersion() has not been implemented.');
+  }
+
+  /// Retrieves detailed metadata about the given video.
+  ///
+  /// Extracts comprehensive information including:
+  /// - Duration (in milliseconds)
+  /// - Resolution (width × height)
+  /// - Frame rate (FPS)
+  /// - Video codec and MIME type
+  /// - Audio tracks and channel configuration
+  /// - Orientation and rotation
+  ///
+  /// [value] An [EditorVideo] instance that can reference:
+  /// - Local file path
+  /// - Network URL (http/https)
+  /// - Asset path
+  /// - Memory bytes (Uint8List)
+  ///
+  /// [checkStreamingOptimization] If `true`, additionally checks whether the
+  /// video file is optimized for progressive streaming (moov atom before mdat).
+  /// This requires parsing the MP4 container structure which adds overhead.
+  /// Default is `false` for better performance.
+  ///
+  /// Returns a [Future] containing [VideoMetadata] with all extracted
+  /// information.
+  ///
+  /// Throws:
+  /// - [ArgumentError] if the video source is invalid
+  /// - [PlatformException] if native extraction fails
+  Future<VideoMetadata> getMetadata(
+    EditorVideo value, {
+    bool checkStreamingOptimization = false,
+    NativeLogLevel? nativeLogLevel,
+  }) {
+    throw UnimplementedError('getMetadata() has not been implemented.');
+  }
+
+  /// Checks if the given video has an audio track.
+  ///
+  /// This method allows you to verify the presence of an audio track before
+  /// attempting audio extraction, avoiding [AudioNoTrackException].
+  ///
+  /// [value] An [EditorVideo] instance that can reference:
+  /// - Local file path
+  /// - Network URL (http/https)
+  /// - Asset path
+  /// - Memory bytes (Uint8List)
+  ///
+  /// Returns `true` if the video contains at least one audio track,
+  /// `false` otherwise.
+  ///
+  /// Throws:
+  /// - [ArgumentError] if the video source is invalid
+  /// - [PlatformException] if native check fails
+  ///
+  /// Example:
+  /// ```dart
+  /// final video = EditorVideo.file('/path/to/video.mp4');
+  /// final hasAudio = await ProVideoEditor.instance.hasAudioTrack(video);
+  ///
+  /// if (hasAudio) {
+  ///   // Safe to extract audio
+  ///   await ProVideoEditor.instance.extractAudio(config);
+  /// } else {
+  ///   print('Video has no audio track');
+  /// }
+  /// ```
+  Future<bool> hasAudioTrack(
+    EditorVideo value, {
+    NativeLogLevel? nativeLogLevel,
+  }) {
+    throw UnimplementedError('hasAudioTrack() has not been implemented.');
+  }
+
+  /// Generates evenly distributed thumbnails from a video.
+  ///
+  /// Creates thumbnail images at regular intervals throughout the video
+  /// duration.
+  /// Useful for video timeline scrubbers and preview galleries.
+  ///
+  /// [value] Configuration containing:
+  /// - Video source ([EditorVideo])
+  /// - Number of thumbnails to generate
+  /// - Desired thumbnail dimensions
+  /// - Image quality settings
+  ///
+  /// Returns a list of PNG-encoded images as [Uint8List].
+  ///
+  /// Progress updates are emitted via [progressStreamById] using the task ID
+  /// from [ThumbnailConfigs.id].
+  Future<List<Uint8List>> getThumbnails(
+    ThumbnailConfigs value, {
+    NativeLogLevel? nativeLogLevel,
+  }) {
+    throw UnimplementedError('getThumbnails() has not been implemented.');
+  }
+
+  /// Streams thumbnails frame by frame while they are being decoded.
+  ///
+  /// Unlike [getThumbnails], which resolves once the whole set is ready, this
+  /// method emits a [ThumbnailFrame] the moment each frame is compressed, so a
+  /// timeline strip can fill in progressively — and the whole request is one
+  /// native decode pass instead of one pass per batch a caller would otherwise
+  /// split it into.
+  ///
+  /// Frames arrive in **decode order**, not request order; each carries the
+  /// [ThumbnailFrame.indices] into [ThumbnailConfigs.timestamps] it resolves
+  /// to. A timestamp the platform cannot decode is skipped rather than
+  /// reported. The stream closes once every timestamp has been attempted.
+  ///
+  /// Cancelling the subscription cancels the native task, so a caller that
+  /// stops listening stops the decoder too — it does not run to completion in
+  /// the background. [cancel] with [ThumbnailConfigs.id] does the same and
+  /// additionally surfaces a [RenderCanceledException] on the stream.
+  ///
+  /// The native task keeps its [ThumbnailConfigs.id] until the decoder has
+  /// actually stopped, which is shortly *after* a cancel returns. A caller
+  /// that cancels one stream and immediately starts another must give the
+  /// new request its own id (a fresh [ThumbnailConfigs] does); reusing the
+  /// id in that window fails the new stream with `TASK_ALREADY_RUNNING`.
+  ///
+  /// Throws:
+  /// - [RenderCanceledException] if cancelled via [cancel]
+  /// - [ArgumentError] if configuration is invalid
+  /// - [PlatformException] if thumbnail generation fails
+  ///
+  /// Example:
+  /// ```dart
+  /// final configs = ThumbnailConfigs(
+  ///   video: EditorVideo.file('/path/to/video.mp4'),
+  ///   outputSize: const Size(96, 108),
+  ///   timestamps: [for (var s = 0; s < 60; s++) Duration(seconds: s)],
+  ///   maxParallelDecoders: 1, // a preview player shares the decoder pool
+  /// );
+  ///
+  /// final frames = List<Uint8List?>.filled(configs.timestamps.length, null);
+  /// await for (final frame in
+  ///     ProVideoEditor.instance.getThumbnailStream(configs)) {
+  ///   for (final index in frame.indices) {
+  ///     frames[index] = frame.bytes;
+  ///   }
+  /// }
+  /// ```
+  Stream<ThumbnailFrame> getThumbnailStream(
+    ThumbnailConfigs value, {
+    NativeLogLevel? nativeLogLevel,
+  }) {
+    throw UnimplementedError('getThumbnailStream() has not been implemented.');
+  }
+
+  /// Streams every frame of a video range as raw 8-bit luma.
+  ///
+  /// Frames are decoded in one forward pass, turned upright, scaled into
+  /// [LumaFrameConfigs.outputSize] and emitted in presentation order with
+  /// their source timestamp — the input motion analysis such as
+  /// [VideoStabilizationAnalyzer] needs. No image is encoded, so a few
+  /// hundred small frames arrive in about the time the decoder takes.
+  ///
+  /// Cancelling the subscription cancels the native task. [cancel] with
+  /// [LumaFrameConfigs.id] does the same and surfaces a
+  /// [RenderCanceledException] on the stream.
+  ///
+  /// Throws:
+  /// - [RenderCanceledException] if cancelled via [cancel]
+  /// - [PlatformException] if the video cannot be decoded
+  ///
+  /// Example:
+  /// ```dart
+  /// final analyzer = VideoStabilizationAnalyzer(width: 180, height: 320);
+  /// await for (final frame in ProVideoEditor.instance.getLumaFrameStream(
+  ///   LumaFrameConfigs(
+  ///     video: EditorVideo.file('/path/to/video.mp4'),
+  ///     outputSize: const Size(320, 320),
+  ///     maxFrameRate: 30,
+  ///   ),
+  /// )) {
+  ///   analyzer.addFrame(frame.bytes, frame.time);
+  /// }
+  /// final stabilization = analyzer.finish();
+  /// ```
+  Stream<LumaFrame> getLumaFrameStream(
+    LumaFrameConfigs value, {
+    NativeLogLevel? nativeLogLevel,
+  }) {
+    throw UnimplementedError('getLumaFrameStream() has not been implemented.');
+  }
+
+  /// Extracts key frames from a video at scene changes.
+  ///
+  /// Analyzes the video and identifies frames where significant visual changes
+  /// occur (scene transitions, cuts, fades). More intelligent than evenly
+  /// distributed thumbnails.
+  ///
+  /// [value] Configuration containing:
+  /// - Video source ([EditorVideo])
+  /// - Detection sensitivity
+  /// - Maximum number of key frames
+  /// - Image quality settings
+  ///
+  /// Returns a list of PNG-encoded key frame images as [Uint8List].
+  ///
+  /// Progress updates are emitted via [progressStreamById] using the task ID
+  /// from [KeyFramesConfigs.id].
+  Future<List<Uint8List>> getKeyFrames(
+    KeyFramesConfigs value, {
+    NativeLogLevel? nativeLogLevel,
+  }) {
+    throw UnimplementedError('getKeyFrames() has not been implemented.');
+  }
+
+  /// Extracts a single thumbnail from a video — either the first or last frame.
+  ///
+  /// This is a convenience method that avoids specifying exact timestamps.
+  /// For [ThumbnailPosition.first], a frame at timestamp 0 is extracted.
+  /// For [ThumbnailPosition.last], the video duration is resolved
+  /// automatically (or from [SingleThumbnailConfigs.videoDuration] if
+  /// provided) and a frame near the end is extracted.
+  ///
+  /// [value] Configuration containing:
+  /// - Video source ([EditorVideo])
+  /// - Desired thumbnail dimensions
+  /// - Image quality settings
+  /// - Position (first or last)
+  ///
+  /// Returns the thumbnail as a [Uint8List], or `null` if extraction fails.
+  ///
+  /// Example:
+  /// ```dart
+  /// final config = SingleThumbnailConfigs(
+  ///   video: EditorVideo.file('/path/to/video.mp4'),
+  ///   outputSize: Size(256, 256),
+  ///   position: ThumbnailPosition.first,
+  /// );
+  ///
+  /// final thumbnail =
+  ///     await ProVideoEditor.instance.getSingleThumbnail(config);
+  /// ```
+  Future<Uint8List?> getSingleThumbnail(
+    SingleThumbnailConfigs value, {
+    NativeLogLevel? nativeLogLevel,
+  }) {
+    throw UnimplementedError('getSingleThumbnail() has not been implemented.');
+  }
+
+  /// Extracts audio from a video file.
+  ///
+  /// Extracts the audio track from the source video and converts it to the
+  /// specified audio format with the given quality settings.
+  ///
+  /// Supports:
+  /// - Multiple audio formats (MP3, AAC, WAV, M4A, OGG)
+  /// - Configurable bitrate for quality control
+  /// - Optional trimming (start/end time)
+  /// - Progress tracking via streams
+  ///
+  /// [value] Configuration containing:
+  /// - Video source ([EditorVideo])
+  /// - Output format ([AudioFormat])
+  /// - Bitrate in kbps (e.g., 128, 192, 320)
+  /// - Optional start and end times for trimming
+  /// - Task ID for progress tracking
+  ///
+  /// Returns the extracted audio as [Uint8List] in the specified format.
+  ///
+  /// **Note:** For large videos or when saving to disk, consider implementing
+  /// a file-based variant similar to [renderVideoToFile].
+  ///
+  /// Throws:
+  /// - [ArgumentError] if the video source is invalid
+  /// - [PlatformException] if audio extraction fails
+  /// - May throw if the video has no audio track
+  ///
+  /// Progress updates are emitted via [progressStreamById] using the task ID
+  /// from [AudioExtractConfigs.id].
+  ///
+  /// Example:
+  /// ```dart
+  /// final config = AudioExtractConfigs(
+  ///   video: EditorVideo.file('/path/to/video.mp4'),
+  ///   format: AudioFormat.mp3,
+  ///   bitrate: 192,
+  /// );
+  ///
+  /// // Listen to progress
+  /// ProVideoEditor.instance.progressStreamById(config.id).listen((progress) {
+  ///   print('Extraction progress: ${progress.progress * 100}%');
+  /// });
+  ///
+  /// final audioData = await ProVideoEditor.instance.extractAudio(config);
+  /// ```
+  Future<Uint8List> extractAudio(
+    AudioExtractConfigs value, {
+    NativeLogLevel? nativeLogLevel,
+  }) {
+    throw UnimplementedError('extractAudio() has not been implemented.');
+  }
+
+  /// Extracts audio from a video file and saves it directly to disk.
+  ///
+  /// Similar to [extractAudio] but writes the output directly to a file instead
+  /// of returning it in memory. **Recommended for production use** as it avoids
+  /// memory issues with large audio files.
+  ///
+  /// [filePath] Absolute path where the extracted audio will be saved.
+  /// The file extension should match the format specified in [value].
+  ///
+  /// [value] Complete extraction configuration including format and quality.
+  ///
+  /// Returns the [filePath] upon successful completion.
+  ///
+  /// Throws:
+  /// - [ArgumentError] if configuration or path is invalid
+  /// - [PlatformException] if extraction or file writing fails
+  ///
+  /// Progress updates are emitted via [progressStreamById] using the task ID
+  /// from [AudioExtractConfigs.id].
+  ///
+  /// Example:
+  /// ```dart
+  /// final config = AudioExtractConfigs(
+  ///   video: EditorVideo.file('/path/to/video.mp4'),
+  ///   format: AudioFormat.mp3,
+  ///   bitrate: 192,
+  /// );
+  ///
+  /// final outputPath = await ProVideoEditor.instance.extractAudioToFile(
+  ///   '/path/to/output.mp3',
+  ///   config,
+  /// );
+  /// ```
+  Future<String> extractAudioToFile(
+    String filePath,
+    AudioExtractConfigs value, {
+    NativeLogLevel? nativeLogLevel,
+  }) {
+    throw UnimplementedError('extractAudioToFile() has not been implemented.');
+  }
+
+  /// Merges the audio of several trimmed clip windows into a single,
+  /// seamlessly concatenated audio file and saves it to disk.
+  ///
+  /// Each [AudioMergeSegment] in [AudioMergeConfigs.segments] contributes only
+  /// its `[startTime, endTime)` window (measured in the source timeline), after
+  /// which its [AudioMergeSegment.speed] or [AudioMergeSegment.speedRamp] is
+  /// applied. Segments are concatenated **in list order with no gaps and no
+  /// silence between them**, and every segment is decoded/encoded to one
+  /// uniform format (see [AudioMergeConfigs]) so the concatenation is seamless.
+  ///
+  /// Unlike [extractAudioToFile], a segment whose source has **no audio track**
+  /// does not throw [AudioNoTrackException]; it contributes silence of its
+  /// normal output length so the returned offset map stays aligned.
+  ///
+  /// [filePath] Absolute path where the merged audio will be written.
+  /// [configs] The ordered segments and output-format configuration.
+  ///
+  /// Returns an [AudioMergeResult] with the written path, the total merged
+  /// duration, and a per-segment offset map (`outputStart` / `outputDuration`)
+  /// that lets callers map a timestamp in the output back onto each segment.
+  ///
+  /// Throws:
+  /// - [ArgumentError] if [AudioMergeConfigs.segments] is empty or a segment is
+  ///   invalid (`endTime <= startTime`, `speed <= 0`).
+  /// - [RenderCanceledException] if cancelled via [cancel].
+  /// - [PlatformException] if merging or file writing fails.
+  ///
+  /// Progress updates are emitted via [progressStreamById] using
+  /// [AudioMergeConfigs.id].
+  Future<AudioMergeResult> mergeAudioToFile(
+    String filePath,
+    AudioMergeConfigs configs, {
+    NativeLogLevel? nativeLogLevel,
+  }) {
+    throw UnimplementedError('mergeAudioToFile() has not been implemented.');
+  }
+
+  /// Generates waveform data from the audio track of a video.
+  ///
+  /// Extracts the audio, decodes it to PCM, and computes peak amplitudes
+  /// at the specified resolution. The resulting [WaveformData] can be used
+  /// to render a visual representation of the audio.
+  ///
+  /// **Architecture:** Audio decoding and peak computation happen natively
+  /// for performance. Flutter receives only the compact waveform arrays,
+  /// not raw PCM data.
+  ///
+  /// **Performance characteristics:**
+  /// - Processing speed: ~10x realtime on modern devices
+  /// - Memory: Resolution determines output size (~4 bytes per sample)
+  /// - Multi-resolution: Generate high-res once, downsample in Dart for zoom
+  ///
+  /// [value] Configuration specifying video source, resolution, and optional
+  /// time range for partial extraction.
+  ///
+  /// Returns [WaveformData] containing normalized peak amplitudes.
+  ///
+  /// Throws:
+  /// - [AudioNoTrackException] if the video has no audio track
+  /// - [RenderCanceledException] if cancelled via [cancel]
+  /// - [ArgumentError] if configuration is invalid
+  /// - [PlatformException] if waveform generation fails
+  ///
+  /// Progress updates are emitted via [progressStreamById] using
+  /// [WaveformConfigs.id].
+  ///
+  /// Example:
+  /// ```dart
+  /// final configs = WaveformConfigs(
+  ///   video: EditorVideo.file('/path/to/video.mp4'),
+  ///   resolution: WaveformResolution.high,
+  /// );
+  ///
+  /// // Listen to progress
+  /// ProVideoEditor.instance.progressStreamById(configs.id).listen((p) {
+  ///   print('Waveform generation: ${(p.progress * 100).toInt()}%');
+  /// });
+  ///
+  /// final waveform = await ProVideoEditor.instance.getWaveform(configs);
+  /// print('Generated ${waveform.sampleCount} samples');
+  /// ```
+  Future<WaveformData> getWaveform(
+    WaveformConfigs value, {
+    NativeLogLevel? nativeLogLevel,
+  }) {
+    throw UnimplementedError('getWaveform() has not been implemented.');
+  }
+
+  /// Streams waveform data progressively during generation.
+  ///
+  /// Unlike [getWaveform] which waits for complete generation, this method
+  /// emits [WaveformChunk] objects as they are generated, allowing for
+  /// progressive UI updates.
+  ///
+  /// **Benefits over [getWaveform]:**
+  /// - Immediate visual feedback as waveform data becomes available
+  /// - Better user experience for long audio files
+  /// - Can start displaying waveform before generation completes
+  ///
+  /// **Chunk size:** Controlled by [WaveformConfigs.chunkSize]. Smaller
+  /// values provide more frequent updates but with more overhead.
+  ///
+  /// [value] Configuration specifying video source, resolution, and optional
+  /// time range for partial extraction.
+  ///
+  /// Returns a [Stream] of [WaveformChunk] objects. The stream completes
+  /// when the waveform generation finishes (check [WaveformChunk.isComplete]).
+  ///
+  /// Throws:
+  /// - [AudioNoTrackException] if the video has no audio track
+  /// - [RenderCanceledException] if cancelled via [cancel]
+  /// - [ArgumentError] if configuration is invalid
+  /// - [PlatformException] if waveform generation fails
+  ///
+  /// Example:
+  /// ```dart
+  /// final configs = WaveformConfigs(
+  ///   video: EditorVideo.file('/path/to/video.mp4'),
+  ///   resolution: WaveformResolution.high,
+  ///   chunkSize: 50, // Emit every 50 samples
+  /// );
+  ///
+  /// final allChunks = <WaveformChunk>[];
+  ///
+  /// await for (final chunk in
+  /// ProVideoEditor.instance.getWaveformStream(configs)) {
+  ///   allChunks.add(chunk);
+  ///   updateProgressiveWaveformDisplay(allChunks);
+  ///
+  ///   if (chunk.isComplete) {
+  ///     print('Waveform generation complete!');
+  ///   }
+  /// }
+  /// ```
+  Stream<WaveformChunk> getWaveformStream(
+    WaveformConfigs value, {
+    NativeLogLevel? nativeLogLevel,
+  }) {
+    throw UnimplementedError('getWaveformStream() has not been implemented.');
+  }
+
+  /// Renders a video with effects and returns the result in memory.
+  ///
+  /// Processes the video according to [VideoRenderData] configuration:
+  /// - Video clips (concatenation, trimming)
+  /// - Visual effects (rotation, flip, crop, scale, blur, color correction)
+  /// - Image overlays
+  /// - Audio mixing (original + custom audio with volume control)
+  /// - Playback speed adjustment
+  /// - Output format and bitrate
+  ///
+  /// **Warning:** Returns the entire video in memory. For large videos
+  /// (>100MB), use [renderVideoToFile] instead to avoid memory issues.
+  ///
+  /// [value] Complete render configuration including all effects and settings.
+  ///
+  /// Returns the rendered video as [Uint8List] in the specified output format.
+  ///
+  /// Throws:
+  /// - [RenderCanceledException] if cancelled via [cancel]
+  /// - [ArgumentError] if configuration is invalid
+  /// - [PlatformException] if rendering fails
+  ///
+  /// Progress updates are emitted via [progressStreamById] using
+  /// [VideoRenderData.id].
+  Future<Uint8List> renderVideo(
+    VideoRenderData value, {
+    NativeLogLevel? nativeLogLevel,
+  }) {
+    throw UnimplementedError('renderVideo() has not been implemented.');
+  }
+
+  /// Renders a video with effects and saves it directly to a file.
+  ///
+  /// Processes the video according to [VideoRenderData] configuration and
+  /// writes the output directly to disk. **Recommended for production use**
+  /// as it avoids memory issues with large videos.
+  ///
+  /// Supports all effects from [renderVideo]:
+  /// - Multiple video clips with trimming
+  /// - Rotation, flip, crop, scale
+  /// - Blur and color correction
+  /// - Image overlays
+  /// - Audio mixing with volume control
+  /// - Playback speed adjustment
+  ///
+  /// [filePath] Absolute path where the rendered video will be saved.
+  /// [value] Complete render configuration.
+  ///
+  /// Returns the [filePath] upon successful completion.
+  ///
+  /// Throws:
+  /// - [RenderCanceledException] if cancelled via [cancel]
+  /// - [ArgumentError] if configuration or path is invalid
+  /// - [PlatformException] if rendering or file writing fails
+  ///
+  /// Progress updates are emitted via [progressStreamById] using
+  /// [VideoRenderData.id].
+  Future<String> renderVideoToFile(
+    String filePath,
+    VideoRenderData value, {
+    NativeLogLevel? nativeLogLevel,
+  }) {
+    throw UnimplementedError('renderVideoToFile() has not been implemented.');
+  }
+
+  /// Renders a stop-motion video from a sequence of still images and returns
+  /// the result in memory.
+  ///
+  /// Each frame in [StopMotionRenderData.frames] is held on screen for a fixed
+  /// duration (derived from [StopMotionRenderData.frameRate] or overridden per
+  /// frame) and encoded into a single video, producing the characteristic
+  /// choppy stop-motion look.
+  ///
+  /// The rendered output is silent. To add audio, pass the result through
+  /// [renderVideo] using `audioTracks`.
+  ///
+  /// **Warning:** Returns the entire video in memory. For long sequences, use
+  /// [renderStopMotionToFile] instead to avoid memory issues.
+  ///
+  /// [value] Complete stop-motion render configuration.
+  ///
+  /// Returns the rendered video as [Uint8List] in the specified output format.
+  ///
+  /// Throws:
+  /// - [RenderCanceledException] if cancelled via [cancel]
+  /// - [ArgumentError] if configuration is invalid
+  /// - [PlatformException] if rendering fails
+  ///
+  /// Progress updates are emitted via [progressStreamById] using
+  /// [StopMotionRenderData.id].
+  Future<Uint8List> renderStopMotion(
+    StopMotionRenderData value, {
+    NativeLogLevel? nativeLogLevel,
+  }) {
+    throw UnimplementedError('renderStopMotion() has not been implemented.');
+  }
+
+  /// Renders a stop-motion video from a sequence of still images and saves it
+  /// directly to a file.
+  ///
+  /// Similar to [renderStopMotion] but writes the output directly to disk
+  /// instead of returning it in memory. **Recommended for production use** as
+  /// it avoids memory issues with long sequences.
+  ///
+  /// [filePath] Absolute path where the rendered video will be saved.
+  /// [value] Complete stop-motion render configuration.
+  ///
+  /// Returns the [filePath] upon successful completion.
+  ///
+  /// Throws:
+  /// - [RenderCanceledException] if cancelled via [cancel]
+  /// - [ArgumentError] if configuration or path is invalid
+  /// - [PlatformException] if rendering or file writing fails
+  ///
+  /// Progress updates are emitted via [progressStreamById] using
+  /// [StopMotionRenderData.id].
+  Future<String> renderStopMotionToFile(
+    String filePath,
+    StopMotionRenderData value, {
+    NativeLogLevel? nativeLogLevel,
+  }) {
+    throw UnimplementedError(
+      'renderStopMotionToFile() has not been implemented.',
+    );
+  }
+
+  /// Cancels an active video processing task.
+  ///
+  /// Attempts to stop the task identified by [taskId]. The task ID comes from:
+  /// - [VideoRenderData.id] for render operations
+  /// - [ThumbnailConfigs.id] for a [getThumbnailStream] task
+  /// - [WaveformConfigs.id] for waveform generation
+  /// - [AudioExtractConfigs.id] / [AudioMergeConfigs.id] for audio tasks
+  ///
+  /// **Behavior:**
+  /// - If the task is running, it will be interrupted and cleaned up
+  /// - The task's Future will complete with a [RenderCanceledException]
+  /// - If the task is already complete, this is a no-op
+  /// - If the task ID is unknown, an [ArgumentError] is thrown
+  ///
+  /// [taskId] The unique identifier of the task to cancel. Must not be empty.
+  ///
+  /// Throws:
+  /// - [ArgumentError] if [taskId] is empty or invalid
+  /// - [PlatformException] if cancellation fails
+  ///
+  /// Example:
+  /// ```dart
+  /// final taskId = 'render_123';
+  /// try {
+  ///   await ProVideoEditor.instance.renderVideo(config);
+  /// } catch (e) {
+  ///   if (e is RenderCanceledException) {
+  ///     print('Render was cancelled');
+  ///   }
+  /// }
+  ///
+  /// // In another part of code:
+  /// await ProVideoEditor.instance.cancel(taskId);
+  /// ```
+  Future<void> cancel(String taskId) {
+    throw UnimplementedError('cancel() has not been implemented.');
+  }
+
+  /// Splits a single video into two files at a frame-accurate position.
+  ///
+  /// Cuts [SplitVideoModel.video] at [SplitVideoModel.splitPosition] and writes
+  /// the two halves to [SplitVideoModel.startOutputPath] and
+  /// [SplitVideoModel.endOutputPath].
+  ///
+  /// This is a dedicated, lightweight primitive: it re-encodes each half from
+  /// the exact split frame (so the cut is frame-accurate) but does **not** run
+  /// the full render pipeline (no compositor, effects, overlays or audio
+  /// mixing). That makes it considerably faster and far less likely to stall
+  /// than splitting via [renderVideoToFile].
+  ///
+  /// Returns the two output paths as `[startOutputPath, endOutputPath]`.
+  ///
+  /// Throws:
+  /// - [RenderCanceledException] if cancelled via [cancel]
+  /// - [ArgumentError] if the configuration is invalid
+  /// - [PlatformException] if splitting fails (including a timeout)
+  ///
+  /// Progress updates are emitted via [progressStreamById] using
+  /// [SplitVideoModel.id]; the first half maps to `0.0 → 0.5` and the second to
+  /// `0.5 → 1.0`.
+  Future<List<String>> splitVideo(
+    SplitVideoModel value, {
+    NativeLogLevel? nativeLogLevel,
+  }) {
+    throw UnimplementedError('splitVideo() has not been implemented.');
+  }
+
+  /// Stream of progress updates from native video tasks.
+  ///
+  /// Emits [ProgressModel] updates for all running or completed tasks. Each
+  /// emitted event contains a task ID, which can be used to filter specific
+  /// tasks.
+  Stream<ProgressModel> get progressStream => progressCtrl.stream;
+
+  /// Stream of progress updates for a specific task ID.
+  ///
+  /// Listens to [progressStream] and emits only the [ProgressModel] updates
+  /// matching the given [taskId]. Useful when tracking the progress of an
+  /// individual video task independently.
+  Stream<ProgressModel> progressStreamById(String taskId) =>
+      progressStream.where((item) => item.id == taskId);
+
+  /// Stream of log entries forwarded from the native plugin implementation.
+  ///
+  /// Mirrors the native console output (gated by the `nativeLogLevel` of the
+  /// running operation) so host apps can capture renderer diagnostics in their
+  /// own Dart logger and export them.
+  ///
+  /// Currently emits on Android, iOS, and macOS. On Web, Windows, and Linux
+  /// the stream stays empty.
+  ///
+  /// Example:
+  /// ```dart
+  /// ProVideoEditor.instance.logStream.listen((entry) {
+  ///   myLogger.log(entry.level.name, entry.message);
+  /// });
+  /// ```
+  Stream<NativeLogEntry> get logStream => logCtrl.stream;
+}
