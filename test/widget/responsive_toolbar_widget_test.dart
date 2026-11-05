@@ -320,8 +320,10 @@ void main() {
       expect(find.text('Sync Manager'), findsOneWidget);
       expect(find.text('Find Duplicates'), findsOneWidget);
       expect(find.text('Audit Log'), findsOneWidget);
-      expect(find.text('Cache Settings'), findsOneWidget);
-      expect(find.text('Theme'), findsOneWidget);
+      expect(find.text('Settings'), findsOneWidget);
+      // Cache, theme and language now live inside the unified Settings dialog.
+      expect(find.text('Cache Settings'), findsNothing);
+      expect(find.text('Theme'), findsNothing);
       expect(find.text('About'), findsOneWidget);
     });
   });
@@ -358,8 +360,10 @@ void main() {
       expect(find.text('Sync Manager'), findsOneWidget);
       expect(find.text('Find Duplicates'), findsOneWidget);
       expect(find.text('Audit Log'), findsOneWidget);
-      expect(find.text('Cache Settings'), findsOneWidget);
-      expect(find.text('Theme'), findsOneWidget);
+      expect(find.text('Settings'), findsOneWidget);
+      // Cache, theme and language now live inside the unified Settings dialog.
+      expect(find.text('Cache Settings'), findsNothing);
+      expect(find.text('Theme'), findsNothing);
       expect(find.text('About'), findsOneWidget);
     });
 

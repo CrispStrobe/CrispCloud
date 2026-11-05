@@ -13,6 +13,10 @@ analyzer:
     # Vendored PDF packages have their own workflows and package-local tests.
     - packages/dart_pdf_editor/test/**
     - packages/dart_pdf_editor_secure_storage/test/**
+    # PDF operations/document packages have their own package-local test setup.
+    - packages/pdf_document/test/**
+    - packages/pdf_operations/test/**
+    - packages/pdf_operations/tool/**
     - build/**
     - android/**
     - ios/**
