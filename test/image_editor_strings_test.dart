@@ -41,6 +41,7 @@ void main() {
       expect(i18n.paintEditor.changeOpacity, expected('Change opacity'));
       expect(i18n.textEditor.inputHintText, expected('Enter text'));
       expect(i18n.textEditor.cancel, expected('Cancel'));
+      expect(i18n.textEditor.reset, expected('Reset'));
       expect(i18n.textEditor.fontFamilyExampleText, expected('Aa'));
       expect(i18n.cropRotateEditor.bottomNavigationBarText, expected('Crop and rotate'));
       expect(i18n.cropRotateEditor.ratio, expected('Ratio'));

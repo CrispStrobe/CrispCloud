@@ -1,5 +1,4 @@
 import 'dart:async';
-import 'dart:typed_data';
 import 'dart:ui' as ui;
 
 import 'package:flutter/material.dart';
@@ -73,6 +72,7 @@ class _ImageEditorDialogState extends ConsumerState<ImageEditorDialog> {
   ProviderContainer? _container;
   ImageEditorMenuActions? _menuActions;
   bool _loading = true;
+  bool _loadInProgress = false;
   bool _ready = false;
   bool _closing = false;
   bool _applying = false;
@@ -84,9 +84,10 @@ class _ImageEditorDialogState extends ConsumerState<ImageEditorDialog> {
   bool get _saving => _session?.isSaving ?? false;
   bool get _busy => _saving || _closing || _applying || _allowPop;
   bool get _dirty => _session?.isDirty ?? false;
+  bool get _routeIsCurrent => ModalRoute.of(context)?.isCurrent ?? true;
   bool get _toolOpen =>
       _tool != null || (_editorKey.currentState?.isSubEditorOpen ?? false);
-  bool get _canEdit => _ready && !_loading && !_busy && !_toolOpen &&
+  bool get _canEdit => _routeIsCurrent && _ready && !_loading && !_busy && !_toolOpen &&
       !(_editorKey.currentState?.isLayerBeingTransformed ?? false);
 
   @override
@@ -161,6 +162,8 @@ class _ImageEditorDialogState extends ConsumerState<ImageEditorDialog> {
   }
 
   Future<void> _load() async {
+    if (_loadInProgress) return;
+    _loadInProgress = true;
     if (mounted) {
       setState(() {
         _loading = true;
@@ -175,6 +178,7 @@ class _ImageEditorDialogState extends ConsumerState<ImageEditorDialog> {
       }
       final store = _store ??= _captureStore();
       final bytes = await store.load();
+      if (!mounted) return;
       final info = inspectEditableImage(bytes, fileName: widget.file.name);
       // Validate compressed pixels with Flutter's real decoder before handing
       // them to a renderer which would otherwise stay on its loading surface.
@@ -200,6 +204,7 @@ class _ImageEditorDialogState extends ConsumerState<ImageEditorDialog> {
         _initialBytes = Uint8List.fromList(bytes);
         _info = info;
         _loading = false;
+        _errorKey = null;
       });
     } catch (error, stack) {
       _log.warn('Could not load image', error, stack);
@@ -208,8 +213,10 @@ class _ImageEditorDialogState extends ConsumerState<ImageEditorDialog> {
         _loading = false;
         _errorKey = _messageFor(error, 'Could not open image');
       });
+    } finally {
+      _loadInProgress = false;
+      _scheduleRefresh();
     }
-    _scheduleRefresh();
   }
 
   void _scheduleRefresh() {
@@ -229,7 +236,7 @@ class _ImageEditorDialogState extends ConsumerState<ImageEditorDialog> {
     canSave: _dirty,
     canUndo: _editorKey.currentState?.canUndo ?? false,
     canRedo: _editorKey.currentState?.canRedo ?? false,
-    busy: _busy,
+    busy: _busy || !_routeIsCurrent,
     canEdit: _canEdit,
   );
 
@@ -296,7 +303,9 @@ class _ImageEditorDialogState extends ConsumerState<ImageEditorDialog> {
     final store = _store;
     final editor = _editorKey.currentState;
     if (session == null || store == null || editor == null ||
-        !_canEdit || !session.isDirty) return false;
+        !_canEdit || !session.isDirty) {
+      return false;
+    }
     try {
       final outcome = await session.save(
         export: () async {
@@ -320,7 +329,9 @@ class _ImageEditorDialogState extends ConsumerState<ImageEditorDialog> {
       return !session.isDirty;
     } catch (error, stack) {
       _log.warn('Could not save image', error, stack);
-      if (mounted) _showMessage(_messageFor(error, 'Could not save image'), error: true);
+      if (mounted) {
+        _showMessage(_messageFor(error, 'Could not save image'), error: true);
+      }
       return false;
     } finally {
       _scheduleRefresh();
@@ -336,17 +347,17 @@ class _ImageEditorDialogState extends ConsumerState<ImageEditorDialog> {
     try {
       switch (_tool) {
         case SubEditor.paint:
-          editor.paintEditor.currentState?.done();
+          await editor.paintEditor.currentState?.done();
         case SubEditor.text:
           editor.textEditor.currentState?.done();
         case SubEditor.cropRotate:
           await editor.cropRotateEditor.currentState?.done();
         case SubEditor.filter:
-          editor.filterEditor.currentState?.done();
+          await editor.filterEditor.currentState?.done();
         case SubEditor.blur:
-          editor.blurEditor.currentState?.done();
+          await editor.blurEditor.currentState?.done();
         case SubEditor.tune:
-          editor.tuneEditor.currentState?.done();
+          await editor.tuneEditor.currentState?.done();
         default:
           break;
       }
@@ -357,14 +368,16 @@ class _ImageEditorDialogState extends ConsumerState<ImageEditorDialog> {
         _showMessage('Could not apply changes', error: true);
       }
     } finally {
-      // Several upstream done() methods return void while asynchronously
-      // capturing. Keep commands locked until onEndCloseSubEditor fires.
+      // Keep commands locked through the tool's reverse route transition.
+      // onEndCloseSubEditor releases the lock once the host surface is active.
       _scheduleRefresh();
     }
   }
 
   Future<void> _close() async {
-    if (_busy) return;
+    // Native commands can arrive while a tool popup or Settings overlays the
+    // editor. Never pop that unrelated route or discard unseen changes.
+    if (_busy || !_routeIsCurrent) return;
     if (_toolOpen) {
       _editorKey.currentState?.closeSubEditor();
       return;
@@ -399,7 +412,9 @@ class _ImageEditorDialogState extends ConsumerState<ImageEditorDialog> {
     );
     if (!mounted) return;
     setState(() => _closing = false);
-    if (action == 'discard' || (action == 'save' && await _save())) _pop();
+    if (action == 'discard' || (action == 'save' && await _save())) {
+      _pop();
+    }
     _scheduleRefresh();
   }
 
@@ -527,6 +542,7 @@ class _ImageEditorDialogState extends ConsumerState<ImageEditorDialog> {
             scrollDirection: Axis.horizontal,
             padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
             child: Row(children: [
+              if (!_toolOpen) ...[
               for (final action in _toolActions)
                 Padding(
                   padding: const EdgeInsetsDirectional.only(end: 4),
@@ -538,6 +554,7 @@ class _ImageEditorDialogState extends ConsumerState<ImageEditorDialog> {
                     label: Text(context.imageTr(action.$2)),
                   ),
                 ),
+              ],
               if (_toolOpen) ...[
                 TextButton(
                   key: const ValueKey('image-cancel-tool'),

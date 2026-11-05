@@ -33,22 +33,28 @@ void main() {
       );
     });
 
-    test('loads fresh bytes and saves through the captured account/path', () async {
-      expect(store.isRemote, isTrue);
-      expect(store.documentId, 'fixture-cloud:user-1:bucket-1:/photos/sample.png');
-      expect(await store.load(), original);
-      expect(cache.reads, 0);
-      expect(client.downloads, 1);
-      final edited = buildImageEditorFixture(seed: 1);
-      expect(await store.save(edited), ImageSaveOutcome.savedOriginal);
-      expect(client.uploads, ['/photos/sample.png']);
-      expect(client.files['/photos/sample.png'], edited);
-      expect(cache.removed, ['fixture-cloud:/photos/sample.png']);
-      // Advance the baseline only after the first actual write succeeds.
-      final later = buildImageEditorFixture(seed: 2);
-      expect(await store.save(later), ImageSaveOutcome.savedOriginal);
-      expect(client.files['/photos/sample.png'], later);
-    });
+    test(
+      'loads fresh bytes and saves through the captured account/path',
+      () async {
+        expect(store.isRemote, isTrue);
+        expect(
+          store.documentId,
+          'fixture-cloud:user-1:bucket-1:/photos/sample.png',
+        );
+        expect(await store.load(), original);
+        expect(cache.reads, 0);
+        expect(client.downloads, 1);
+        final edited = buildImageEditorFixture(seed: 1);
+        expect(await store.save(edited), ImageSaveOutcome.savedOriginal);
+        expect(client.uploads, ['/photos/sample.png']);
+        expect(client.files['/photos/sample.png'], edited);
+        expect(cache.removed, ['fixture-cloud:/photos/sample.png']);
+        // Advance the baseline only after the first actual write succeeds.
+        final later = buildImageEditorFixture(seed: 2);
+        expect(await store.save(later), ImageSaveOutcome.savedOriginal);
+        expect(client.files['/photos/sample.png'], later);
+      },
+    );
 
     test('same-length external changes cannot be overwritten', () async {
       await store.load();
@@ -62,17 +68,20 @@ void main() {
       expect(client.files['/photos/sample.png'], changed);
     });
 
-    test('provider revision changes are checked before a second download', () async {
-      client.revision = 'v1';
-      await store.load();
-      client.revision = 'v2';
-      await expectLater(
-        store.save(buildImageEditorFixture(seed: 1)),
-        throwsA(isA<ImageSaveConflictException>()),
-      );
-      expect(client.downloads, 1);
-      expect(client.uploads, isEmpty);
-    });
+    test(
+      'provider revision changes are checked before a second download',
+      () async {
+        client.revision = 'v1';
+        await store.load();
+        client.revision = 'v2';
+        await expectLater(
+          store.save(buildImageEditorFixture(seed: 1)),
+          throwsA(isA<ImageSaveConflictException>()),
+        );
+        expect(client.downloads, 1);
+        expect(client.uploads, isEmpty);
+      },
+    );
 
     test('an account switch cannot retarget an image save', () async {
       var current = true;
@@ -98,51 +107,65 @@ void main() {
       expect(client.uploads, isEmpty);
     });
 
-    test('failed upload keeps edits dirty and allows retry against the original', () async {
-      final session = ImageEditSession(
-        initialBytes: await store.load(),
-        format: ImageFileFormat.png,
-      )..updateRevision(1);
-      addTearDown(session.dispose);
-      client.failUpload = true;
-      await expectLater(
-        session.save(
-          export: () async => buildImageEditorFixture(seed: 1),
-          write: store.save,
-        ),
-        throwsStateError,
-      );
-      expect(session.isDirty, isTrue);
-      expect(client.files['/photos/sample.png'], original);
-      client.failUpload = false;
-      expect(
-        await session.save(
-          export: () async => buildImageEditorFixture(seed: 1),
-          write: store.save,
-        ),
-        ImageSaveOutcome.savedOriginal,
-      );
-      expect(session.isDirty, isFalse);
-    });
+    test(
+      'failed upload keeps edits dirty and allows retry against the original',
+      () async {
+        final session = ImageEditSession(
+          initialBytes: await store.load(),
+          format: ImageFileFormat.png,
+        )..updateRevision(1);
+        addTearDown(session.dispose);
+        client.failUpload = true;
+        await expectLater(
+          session.save(
+            export: () async => buildImageEditorFixture(seed: 1),
+            write: store.save,
+          ),
+          throwsStateError,
+        );
+        expect(session.isDirty, isTrue);
+        expect(client.files['/photos/sample.png'], original);
+        client.failUpload = false;
+        expect(
+          await session.save(
+            export: () async => buildImageEditorFixture(seed: 1),
+            write: store.save,
+          ),
+          ImageSaveOutcome.savedOriginal,
+        );
+        expect(session.isDirty, isFalse);
+      },
+    );
 
-    test('enforces the image-specific input budget before downloading', () async {
-      client.reportedSize = kImageEditorInputLimitBytes + 1;
-      await expectLater(
-        store.load(),
-        throwsA(isA<ImageEditException>().having(
-          (error) => error.reason, 'reason', ImageEditFailure.inputTooLarge,
-        )),
-      );
-      expect(client.downloads, 0);
-    });
+    test(
+      'enforces the image-specific input budget before downloading',
+      () async {
+        client.reportedSize = kImageEditorInputLimitBytes + 1;
+        await expectLater(
+          store.load(),
+          throwsA(
+            isA<ImageEditException>().having(
+              (error) => error.reason,
+              'reason',
+              ImageEditFailure.inputTooLarge,
+            ),
+          ),
+        );
+        expect(client.downloads, 0);
+      },
+    );
 
     test('wrong-format exports cannot reach the provider', () async {
       await store.load();
       await expectLater(
         store.save(buildImageEditorFixture(format: ImageFileFormat.jpeg)),
-        throwsA(isA<ImageEditException>().having(
-          (error) => error.reason, 'reason', ImageEditFailure.formatMismatch,
-        )),
+        throwsA(
+          isA<ImageEditException>().having(
+            (error) => error.reason,
+            'reason',
+            ImageEditFailure.formatMismatch,
+          ),
+        ),
       );
       expect(client.uploads, isEmpty);
     });
@@ -151,63 +174,91 @@ void main() {
       client.files['/photos/sample.png'] = imageTestAnimatedPng();
       await expectLater(
         store.load(),
-        throwsA(isA<ImageEditException>().having(
-          (error) => error.reason, 'reason', ImageEditFailure.animatedImage,
-        )),
+        throwsA(
+          isA<ImageEditException>().having(
+            (error) => error.reason,
+            'reason',
+            ImageEditFailure.animatedImage,
+          ),
+        ),
       );
-      await expectLater(store.save(buildImageEditorFixture()), throwsStateError);
+      await expectLater(
+        store.save(buildImageEditorFixture()),
+        throwsStateError,
+      );
       expect(client.uploads, isEmpty);
     });
 
-    test('concurrent saves/reloads cannot discard an active save baseline', () async {
-      await store.load();
-      final upload = Completer<void>();
-      client.uploadGate = upload;
-      final saving = store.save(buildImageEditorFixture(seed: 1));
-      await client.uploadStarted.future;
-      await expectLater(store.load(), throwsA(isA<ImageSaveInProgressException>()));
-      await expectLater(
-        store.save(buildImageEditorFixture(seed: 2)),
-        throwsA(isA<ImageSaveInProgressException>()),
+    test(
+      'concurrent saves/reloads cannot discard an active save baseline',
+      () async {
+        await store.load();
+        final upload = Completer<void>();
+        client.uploadGate = upload;
+        final saving = store.save(buildImageEditorFixture(seed: 1));
+        await client.uploadStarted.future;
+        await expectLater(
+          store.load(),
+          throwsA(isA<ImageSaveInProgressException>()),
+        );
+        await expectLater(
+          store.save(buildImageEditorFixture(seed: 2)),
+          throwsA(isA<ImageSaveInProgressException>()),
+        );
+        upload.complete();
+        await saving;
+        client.uploadGate = null;
+        expect(
+          await store.save(buildImageEditorFixture(seed: 2)),
+          ImageSaveOutcome.savedOriginal,
+        );
+      },
+    );
+
+    test(
+      'post-write cache failure does not turn a successful write into failure',
+      () async {
+        await store.load();
+        cache.failRemove = true;
+        expect(
+          await store.save(buildImageEditorFixture(seed: 1)),
+          ImageSaveOutcome.savedOriginal,
+        );
+        expect(client.uploads, hasLength(1));
+        expect(cache.removed, hasLength(1));
+      },
+    );
+  });
+
+  test(
+    'browser download keeps the image dirty and uses fresh source reads',
+    () async {
+      final service = _BrowserFiles();
+      final store = ImageFileStore.local(
+        service: service,
+        file: _file('/picked/sample.png'),
       );
-      upload.complete();
-      await saving;
-      client.uploadGate = null;
-      expect(await store.save(buildImageEditorFixture(seed: 2)), ImageSaveOutcome.savedOriginal);
-    });
-
-    test('post-write cache failure does not turn a successful write into failure', () async {
-      await store.load();
-      cache.failRemove = true;
-      expect(await store.save(buildImageEditorFixture(seed: 1)), ImageSaveOutcome.savedOriginal);
-      expect(client.uploads, hasLength(1));
-      expect(cache.removed, hasLength(1));
-    });
-  });
-
-  test('browser download keeps the image dirty and uses fresh source reads', () async {
-    final service = _BrowserFiles();
-    final store = ImageFileStore.local(
-      service: service,
-      file: _file('/picked/sample.png'),
-    );
-    final session = ImageEditSession(
-      initialBytes: await store.load(),
-      format: ImageFileFormat.png,
-    )..updateRevision(1);
-    addTearDown(session.dispose);
-    expect(service.readLimits, [kImageEditorInputLimitBytes]);
-    final edited = buildImageEditorFixture(seed: 1);
-    expect(
-      await session.save(export: () async => edited, write: store.save),
-      ImageSaveOutcome.downloadedCopy,
-    );
-    expect(service.current, buildImageEditorFixture());
-    expect(service.downloaded, edited);
-    expect(service.readLimits, [kImageEditorInputLimitBytes, kImageEditorOutputLimitBytes]);
-    expect(session.isDirty, isTrue);
-    expect(session.savedRevision, 0);
-  });
+      final session = ImageEditSession(
+        initialBytes: await store.load(),
+        format: ImageFileFormat.png,
+      )..updateRevision(1);
+      addTearDown(session.dispose);
+      expect(service.readLimits, [kImageEditorInputLimitBytes]);
+      final edited = buildImageEditorFixture(seed: 1);
+      expect(
+        await session.save(export: () async => edited, write: store.save),
+        ImageSaveOutcome.downloadedCopy,
+      );
+      expect(service.current, buildImageEditorFixture());
+      expect(service.downloaded, edited);
+      expect(service.readLimits, [
+        kImageEditorInputLimitBytes,
+        kImageEditorOutputLimitBytes,
+      ]);
+      expect(session.isDirty, isTrue);
+      expect(session.savedRevision, 0);
+    },
+  );
 }
 
 class _Cloud implements CloudStorageClient {

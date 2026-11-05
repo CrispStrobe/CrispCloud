@@ -36,8 +36,8 @@ class ImageEditorSurface extends StatelessWidget {
       colorSchemeSeed: colors.primary,
       fontFamily: theme.textTheme.bodyMedium?.fontFamily,
     );
-    final longestSide =
-        (info.width > info.height ? info.width : info.height).toDouble();
+    final longestSide = (info.width > info.height ? info.width : info.height)
+        .toDouble();
     return Localizations.override(
       context: context,
       delegates: material.GlobalMaterialLocalizations.delegates,
@@ -64,6 +64,7 @@ class ImageEditorSurface extends StatelessWidget {
               enableIsolateGeneration: enableIsolateGeneration,
             ),
             mainEditor: MainEditorConfigs(
+              hostOwnsNavigation: true,
               enableKeyboardShortcuts: false,
               enableEscapeButton: false,
               enableCloseButton: false,
@@ -86,6 +87,15 @@ class ImageEditorSurface extends StatelessWidget {
                 appBarColor: colors.onSurface,
                 bottomBarBackground: colors.surface,
                 bottomBarColor: colors.onSurface,
+              ),
+            ),
+            layerInteraction: LayerInteractionConfigs(
+              widgets: LayerInteractionWidgets(
+                contextMenuBuilder: (_, position, {
+                  required bool canEdit,
+                  required bool canRemove,
+                }) => _showLayerMenu(context, position,
+                    canEdit: canEdit, canRemove: canRemove),
               ),
             ),
             paintEditor: PaintEditorConfigs(
@@ -166,6 +176,47 @@ class ImageEditorSurface extends StatelessWidget {
           ),
         ),
       ),
+    );
+  }
+
+  Future<LayerContextMenuAction?> _showLayerMenu(
+    BuildContext context,
+    Offset globalPosition, {
+    required bool canEdit,
+    required bool canRemove,
+  }) {
+    // Use CrispCloud's Flutter Material popup on the host navigator. A package
+    // Material UI popup would lose its scoped localizations on that overlay.
+    final overlay = Navigator.of(context, rootNavigator: true)
+        .overlay!.context.findRenderObject()! as RenderBox;
+    final position = overlay.globalToLocal(globalPosition);
+    return showMenu<LayerContextMenuAction>(
+      context: context,
+      useRootNavigator: true,
+      position: RelativeRect.fromRect(
+        Rect.fromLTWH(position.dx, position.dy, 0, 0),
+        Offset.zero & overlay.size,
+      ),
+      items: [
+        if (canEdit) PopupMenuItem(
+          value: LayerContextMenuAction.edit,
+          child: ListTile(
+            leading: const Icon(Icons.edit_outlined),
+            title: Text(context.imageTr('Edit')),
+            contentPadding: EdgeInsets.zero,
+            dense: true,
+          ),
+        ),
+        if (canRemove) PopupMenuItem(
+          value: LayerContextMenuAction.remove,
+          child: ListTile(
+            leading: const Icon(Icons.delete_outline),
+            title: Text(context.imageTr('Remove')),
+            contentPadding: EdgeInsets.zero,
+            dense: true,
+          ),
+        ),
+      ],
     );
   }
 }

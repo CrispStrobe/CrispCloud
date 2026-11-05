@@ -122,7 +122,9 @@ ImageFileInfo _inspectPng(Uint8List bytes) {
     final payload = offset + 8;
     final end = payload + length;
     final typeBytes = Uint8List.sublistView(bytes, typeStart, payload);
-    if (typeBytes.any((b) => !((b >= 65 && b <= 90) || (b >= 97 && b <= 122))) ||
+    if (typeBytes.any(
+          (b) => !((b >= 65 && b <= 90) || (b >= 97 && b <= 122)),
+        ) ||
         (typeBytes[2] & 0x20) != 0) {
       _invalid();
     }
@@ -209,7 +211,12 @@ ImageFileInfo _inspectJpeg(Uint8List bytes) {
     final end = offset + length;
     if (marker == 0xe2 &&
         end - payload >= 4 &&
-        _startsWith(Uint8List.sublistView(bytes, payload, end), const [77, 80, 70, 0])) {
+        _startsWith(Uint8List.sublistView(bytes, payload, end), const [
+          77,
+          80,
+          70,
+          0,
+        ])) {
       throw const ImageEditException(ImageEditFailure.animatedImage);
     }
     if (marker == 0xc0 || marker == 0xc1 || marker == 0xc2) {
@@ -267,7 +274,8 @@ bool _startsWith(Uint8List bytes, List<int> signature) {
   return true;
 }
 
-Never _invalid() => throw const ImageEditException(ImageEditFailure.invalidImage);
+Never _invalid() =>
+    throw const ImageEditException(ImageEditFailure.invalidImage);
 
 /// Validate actual exported pixels and encoding independently of the editor.
 /// Never silently transcode a wrong-format or incomplete capture over a file.

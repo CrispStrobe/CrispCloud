@@ -17,14 +17,11 @@ List<PlatformMenuItem> buildImageEditorPlatformMenus(
     String label,
     ImageEditorAction action, {
     SingleActivator? shortcut,
-  }) =>
-      PlatformMenuItem(
-        label: context.imageTr(label),
-        shortcut: shortcut,
-        onSelected: editor.isEnabled(action)
-            ? () => editor.dispatch(action)
-            : null,
-      );
+  }) => PlatformMenuItem(
+    label: context.imageTr(label),
+    shortcut: shortcut,
+    onSelected: editor.isEnabled(action) ? () => editor.dispatch(action) : null,
+  );
 
   return <PlatformMenuItem>[
     PlatformMenu(

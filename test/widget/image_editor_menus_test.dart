@@ -35,58 +35,65 @@ Map<String, PlatformMenuItem> _items(List<PlatformMenu> menus) =>
     };
 
 void main() {
-  testWidgets('native menus dispatch image commands and expose save shortcuts',
-      (tester) async {
-    final calls = <ImageEditorAction>[];
-    final menus = await _buildMenus(
-      tester,
-      ImageEditorMenuActions(
-        perform: calls.add,
-        canSave: true,
-        canUndo: true,
-        canRedo: true,
-      ),
-    );
-    expect(menus.map((menu) => menu.label), <String>['File', 'Edit', 'Image']);
-    final items = _items(menus);
+  testWidgets(
+    'native menus dispatch image commands and expose save shortcuts',
+    (tester) async {
+      final calls = <ImageEditorAction>[];
+      final menus = await _buildMenus(
+        tester,
+        ImageEditorMenuActions(
+          perform: calls.add,
+          canSave: true,
+          canUndo: true,
+          canRedo: true,
+        ),
+      );
+      expect(menus.map((menu) => menu.label), <String>[
+        'File',
+        'Edit',
+        'Image',
+      ]);
+      final items = _items(menus);
 
-    items['Save']!.onSelected!();
-    items['Undo']!.onSelected!();
-    items['Redo']!.onSelected!();
-    items['Crop and rotate']!.onSelected!();
-    items['Draw']!.onSelected!();
-    items['Text']!.onSelected!();
-    items['Filters']!.onSelected!();
-    items['Blur']!.onSelected!();
-    items['Adjust']!.onSelected!();
-    items['Close editor']!.onSelected!();
-    expect(calls, <ImageEditorAction>[
-      ImageEditorAction.save,
-      ImageEditorAction.undo,
-      ImageEditorAction.redo,
-      ImageEditorAction.cropRotate,
-      ImageEditorAction.paint,
-      ImageEditorAction.text,
-      ImageEditorAction.filter,
-      ImageEditorAction.blur,
-      ImageEditorAction.tune,
-      ImageEditorAction.close,
-    ]);
+      items['Save']!.onSelected!();
+      items['Undo']!.onSelected!();
+      items['Redo']!.onSelected!();
+      items['Crop and rotate']!.onSelected!();
+      items['Draw']!.onSelected!();
+      items['Text']!.onSelected!();
+      items['Filters']!.onSelected!();
+      items['Blur']!.onSelected!();
+      items['Adjust']!.onSelected!();
+      items['Close editor']!.onSelected!();
+      expect(calls, <ImageEditorAction>[
+        ImageEditorAction.save,
+        ImageEditorAction.undo,
+        ImageEditorAction.redo,
+        ImageEditorAction.cropRotate,
+        ImageEditorAction.paint,
+        ImageEditorAction.text,
+        ImageEditorAction.filter,
+        ImageEditorAction.blur,
+        ImageEditorAction.tune,
+        ImageEditorAction.close,
+      ]);
 
-    final save = items['Save']!.shortcut! as SingleActivator;
-    expect(save.trigger, LogicalKeyboardKey.keyS);
-    expect(save.meta, isTrue);
-    final close = items['Close editor']!.shortcut! as SingleActivator;
-    expect(close.trigger, LogicalKeyboardKey.keyW);
-    expect(close.meta, isTrue);
-    final redo = items['Redo']!.shortcut! as SingleActivator;
-    expect(redo.trigger, LogicalKeyboardKey.keyZ);
-    expect(redo.meta, isTrue);
-    expect(redo.shift, isTrue);
-  });
+      final save = items['Save']!.shortcut! as SingleActivator;
+      expect(save.trigger, LogicalKeyboardKey.keyS);
+      expect(save.meta, isTrue);
+      final close = items['Close editor']!.shortcut! as SingleActivator;
+      expect(close.trigger, LogicalKeyboardKey.keyW);
+      expect(close.meta, isTrue);
+      final redo = items['Redo']!.shortcut! as SingleActivator;
+      expect(redo.trigger, LogicalKeyboardKey.keyZ);
+      expect(redo.meta, isTrue);
+      expect(redo.shift, isTrue);
+    },
+  );
 
-  testWidgets('native disabled commands have no selectable callback',
-      (tester) async {
+  testWidgets('native disabled commands have no selectable callback', (
+    tester,
+  ) async {
     final menus = await _buildMenus(
       tester,
       ImageEditorMenuActions(
@@ -102,8 +109,9 @@ void main() {
     }
   });
 
-  testWidgets('tool subeditors expose close without main image commands',
-      (tester) async {
+  testWidgets('tool subeditors expose close without main image commands', (
+    tester,
+  ) async {
     final calls = <ImageEditorAction>[];
     final menus = await _buildMenus(
       tester,
@@ -125,8 +133,9 @@ void main() {
     expect(calls, <ImageEditorAction>[ImageEditorAction.close]);
   });
 
-  testWidgets('native menu chrome follows the active application locale',
-      (tester) async {
+  testWidgets('native menu chrome follows the active application locale', (
+    tester,
+  ) async {
     final editor = ImageEditorMenuActions(
       perform: (_) {},
       canSave: true,
@@ -138,15 +147,20 @@ void main() {
       editor,
       locale: const Locale('de'),
     );
-    expect(
-      german.map((menu) => menu.label),
-      <String>['Datei', 'Bearbeiten', 'Bild'],
-    );
+    expect(german.map((menu) => menu.label), <String>[
+      'Datei',
+      'Bearbeiten',
+      'Bild',
+    ]);
     expect(_items(german), contains('Speichern'));
     expect(_items(german), isNot(contains('Save')));
 
     final english = await _buildMenus(tester, editor);
-    expect(english.map((menu) => menu.label), <String>['File', 'Edit', 'Image']);
+    expect(english.map((menu) => menu.label), <String>[
+      'File',
+      'Edit',
+      'Image',
+    ]);
     expect(_items(english), contains('Save'));
   });
 }

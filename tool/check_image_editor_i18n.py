@@ -24,11 +24,11 @@ VISIBLE_CLASSES = {
 DISABLED_CLASSES = {
     "I18nEmojiEditor", "I18nStickerEditor", "I18nAudioEditor", "I18nClipsEditor",
 }
-DART_STRING = r"'(?:\\.|[^'\\])*'"
+DART_STRING = r'''(?:'(?:\\.|[^'\\])*'|"(?:\\.|[^"\\])*")'''
 
 
 def unquote(value: str) -> str:
-    escapes = {"n": "\n", "r": "\r", "t": "\t", "'": "'", "\\": "\\", "$": "$"}
+    escapes = {"n": "\n", "r": "\r", "t": "\t", "'": "'", '"': '"', "\\": "\\", "$": "$"}
     return re.sub(r"\\(.)", lambda match: escapes[match[1]], value[1:-1])
 
 
@@ -79,6 +79,45 @@ def literal_arguments(source: str, names: str) -> set[str]:
     return result
 
 
+def check_visible_literals() -> None:
+    """Reject newly hardcoded labels in the audited, enabled editor surfaces."""
+    package = ROOT / "packages/pro_image_editor/lib"
+    paths = set()
+    for feature in (
+        "main_editor", "paint_editor", "text_editor", "crop_rotate_editor",
+        "tune_editor", "filter_editor", "blur_editor",
+    ):
+        paths.update((package / "features" / feature).rglob("*.dart"))
+    paths.update((package / "shared/widgets").rglob("*.dart"))
+    paths.update((ROOT / "lib/widgets").glob("image_editor_*.dart"))
+    pattern = re.compile(
+        rf"(?:\b(?:Text|SelectableText)\(\s*|"
+        rf"\b(?:tooltip|semanticLabel|semanticsLabel|hintText|label|message|title|text)\s*:\s*)"
+        rf"(?:r)?({DART_STRING})"
+    )
+    excluded = {
+        # Emoji preloading is disabled; the glyph is not a natural-language label.
+        "features/main_editor/widgets/main_editor_font_preloader.dart",
+        # These diagnostic strings are visible in DevTools, never in the editor.
+        "shared/widgets/extended/repaint/extended_render_repaint_boundary.dart",
+    }
+    for path in sorted(paths):
+        relative = path.relative_to(package).as_posix() if path.is_relative_to(package) else ""
+        if relative in excluded or relative.startswith("shared/widgets/video/"):
+            continue
+        source = re.sub(r"^\s*//.*$", "", path.read_text(), flags=re.M)
+        for match in pattern.finditer(source):
+            literal = unquote(match[1])
+            # Values made solely from interpolation/punctuation are not labels.
+            words = re.sub(r"\$\{[^}]*\}|\$[A-Za-z_]\w*", "", literal)
+            if not any(char.isalpha() for char in words):
+                continue
+            # The two A glyphs measure line height; they are never painted.
+            if relative.endswith("rounded_background_text_field.dart") and literal == "A":
+                continue
+            raise ValueError(f"Hardcoded visible label in {path.relative_to(ROOT)}: {literal}")
+
+
 def check() -> tuple[int, int]:
     strings = (ROOT / "lib/l10n/image_editor_strings.dart").read_text()
     translations = (ROOT / "lib/l10n/image_editor_translations.dart").read_text()
@@ -127,6 +166,29 @@ def check() -> tuple[int, int]:
         if nested not in VISIBLE_CLASSES | DISABLED_CLASSES:
             raise ValueError(f"New editor component requires localization review: {nested}")
 
+    # A preset added without an I18nFilters field otherwise falls through to its
+    # English source name in getFilterI18n. Check actual preset data as well.
+    presets_path = ROOT / (
+        "packages/pro_image_editor/lib/features/filter_editor/"
+        "utils/filter_generator/filter_presets.dart"
+    )
+    preset_names = {
+        unquote(match[1])
+        for match in re.finditer(rf"\bname:\s*({DART_STRING})", presets_path.read_text())
+    }
+    filter_cases = {
+        unquote(match[1]): match[2]
+        for match in re.finditer(
+            rf"\bcase\s+({DART_STRING}):\s*return\s+(\w+);",
+            class_sources["I18nFilters"],
+        )
+    }
+    filter_fields = set(re.findall(r"final String (\w+);", class_sources["I18nFilters"]))
+    if not preset_names <= filter_cases.keys():
+        raise ValueError(f"Unmapped filter names: {sorted(preset_names - filter_cases.keys())}")
+    if not set(filter_cases.values()) <= filter_fields:
+        raise ValueError("A filter label bypasses its localized string field")
+
     lookups = set()
     for match in re.finditer(rf"\bt\(\s*({DART_STRING})", strings):
         lookups.add(unquote(match[1]))
@@ -149,7 +211,7 @@ def check() -> tuple[int, int]:
             lookups.update(literal_arguments(source, "item"))
         if name.endswith("image_editor_dialog.dart"):
             lookups.update(literal_arguments(source, "_showMessage|_messageFor|_ImageOpenMessage"))
-            for match in re.finditer(rf"\(ImageEditorAction\.\w+,\s*({DART_STRING})", source):
+            for match in re.finditer(rf"\(\s*ImageEditorAction\.\w+,\s*({DART_STRING})", source):
                 lookups.add(unquote(match[1]))
             error_switch = re.search(r"String _messageFor\([^)]*\)\s*=>\s*switch[^{]*\{", source)
             if error_switch is not None:
@@ -157,6 +219,7 @@ def check() -> tuple[int, int]:
                 lookups.update(unquote(value[0]) for value in re.finditer(DART_STRING, body))
     if not lookups <= keys:
         raise ValueError(f"Missing visible strings: {sorted(lookups - keys)}")
+    check_visible_literals()
     return len(keys), field_count
 
 

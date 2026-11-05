@@ -50,7 +50,11 @@ void main() {
       await original.writeAsBytes(buildImageEditorFixture(format: format));
       final store = ImageFileStore.local(
         service: DesktopFileService(),
-        file: FileItem(name: 'picture.$extension', path: original.path, isFolder: false),
+        file: FileItem(
+          name: 'picture.$extension',
+          path: original.path,
+          isFolder: false,
+        ),
       );
       final source = await store.load();
       expect(await _engineDimensions(source), (24, 16));
@@ -71,60 +75,88 @@ void main() {
       final reopened = await original.readAsBytes();
       expect(reopened, exported);
       expect(await _engineDimensions(reopened), (16, 24));
-      expect(inspectEditableImage(reopened, fileName: original.path).format, format);
-      expect(await directory.list().length, 1, reason: 'No abandoned staging file');
+      expect(
+        inspectEditableImage(reopened, fileName: original.path).format,
+        format,
+      );
+      expect(
+        await directory.list().length,
+        1,
+        reason: 'No abandoned staging file',
+      );
     });
   }
 
-  test('an external file change blocks overwrite and keeps edits recoverable', () async {
-    final original = File('${directory.path}/picture.png');
-    final initial = buildImageEditorFixture();
-    await original.writeAsBytes(initial);
-    final store = ImageFileStore.local(
-      service: DesktopFileService(),
-      file: FileItem(name: 'picture.png', path: original.path, isFolder: false),
-    );
-    final session = ImageEditSession(
-      initialBytes: await store.load(),
-      format: ImageFileFormat.png,
-    )..updateRevision(1);
-    addTearDown(session.dispose);
-    final external = buildImageEditorFixture(seed: 2);
-    await original.writeAsBytes(external);
-    await expectLater(
-      session.save(
-        export: () async => buildImageEditorFixture(seed: 1),
-        write: store.save,
-      ),
-      throwsA(isA<ImageSaveConflictException>()),
-    );
-    expect(await original.readAsBytes(), external);
-    expect(session.isDirty, isTrue);
-    expect(session.savedBytes, initial);
-    expect(session.isSaving, isFalse);
-  });
+  test(
+    'an external file change blocks overwrite and keeps edits recoverable',
+    () async {
+      final original = File('${directory.path}/picture.png');
+      final initial = buildImageEditorFixture();
+      await original.writeAsBytes(initial);
+      final store = ImageFileStore.local(
+        service: DesktopFileService(),
+        file: FileItem(
+          name: 'picture.png',
+          path: original.path,
+          isFolder: false,
+        ),
+      );
+      final session = ImageEditSession(
+        initialBytes: await store.load(),
+        format: ImageFileFormat.png,
+      )..updateRevision(1);
+      addTearDown(session.dispose);
+      final external = buildImageEditorFixture(seed: 2);
+      await original.writeAsBytes(external);
+      await expectLater(
+        session.save(
+          export: () async => buildImageEditorFixture(seed: 1),
+          write: store.save,
+        ),
+        throwsA(isA<ImageSaveConflictException>()),
+      );
+      expect(await original.readAsBytes(), external);
+      expect(session.isDirty, isTrue);
+      expect(session.savedBytes, initial);
+      expect(session.isSaving, isFalse);
+    },
+  );
 
-  test('wrong-format export leaves the real source byte-for-byte unchanged', () async {
-    final original = File('${directory.path}/picture.jpg');
-    final initial = buildImageEditorFixture(format: ImageFileFormat.jpeg);
-    await original.writeAsBytes(initial);
-    final store = ImageFileStore.local(
-      service: DesktopFileService(),
-      file: FileItem(name: 'picture.jpg', path: original.path, isFolder: false),
-    );
-    final session = ImageEditSession(
-      initialBytes: await store.load(),
-      format: ImageFileFormat.jpeg,
-    )..updateRevision(1);
-    addTearDown(session.dispose);
-    await expectLater(
-      session.save(export: () async => buildImageEditorFixture(), write: store.save),
-      throwsA(isA<ImageEditException>().having(
-        (error) => error.reason, 'reason', ImageEditFailure.formatMismatch,
-      )),
-    );
-    expect(await original.readAsBytes(), initial);
-    expect(session.isDirty, isTrue);
-    expect(await _engineDimensions(await original.readAsBytes()), (24, 16));
-  });
+  test(
+    'wrong-format export leaves the real source byte-for-byte unchanged',
+    () async {
+      final original = File('${directory.path}/picture.jpg');
+      final initial = buildImageEditorFixture(format: ImageFileFormat.jpeg);
+      await original.writeAsBytes(initial);
+      final store = ImageFileStore.local(
+        service: DesktopFileService(),
+        file: FileItem(
+          name: 'picture.jpg',
+          path: original.path,
+          isFolder: false,
+        ),
+      );
+      final session = ImageEditSession(
+        initialBytes: await store.load(),
+        format: ImageFileFormat.jpeg,
+      )..updateRevision(1);
+      addTearDown(session.dispose);
+      await expectLater(
+        session.save(
+          export: () async => buildImageEditorFixture(),
+          write: store.save,
+        ),
+        throwsA(
+          isA<ImageEditException>().having(
+            (error) => error.reason,
+            'reason',
+            ImageEditFailure.formatMismatch,
+          ),
+        ),
+      );
+      expect(await original.readAsBytes(), initial);
+      expect(session.isDirty, isTrue);
+      expect(await _engineDimensions(await original.readAsBytes()), (24, 16));
+    },
+  );
 }

@@ -7,11 +7,8 @@ import 'package:image/image.dart' as image;
 
 import 'support/image_editor_fixture.dart';
 
-Matcher _failure(ImageEditFailure reason) => isA<ImageEditException>().having(
-  (error) => error.reason,
-  'reason',
-  reason,
-);
+Matcher _failure(ImageEditFailure reason) =>
+    isA<ImageEditException>().having((error) => error.reason, 'reason', reason);
 
 ImageEditSession _session({ImageFileFormat format = ImageFileFormat.png}) {
   final session = ImageEditSession(
@@ -29,8 +26,16 @@ void main() {
         expect(isEditableImageFileName(name), isTrue, reason: name);
       }
       for (final name in [
-        'photo.gif', 'photo.webp', 'photo.apng', 'photo.svg', 'photo.heic',
-        'photo.tiff', 'photo.png.txt', 'photo.jpg.', 'README', '',
+        'photo.gif',
+        'photo.webp',
+        'photo.apng',
+        'photo.svg',
+        'photo.heic',
+        'photo.tiff',
+        'photo.png.txt',
+        'photo.jpg.',
+        'README',
+        '',
       ]) {
         expect(isEditableImageFileName(name), isFalse, reason: name);
       }
@@ -51,7 +56,8 @@ void main() {
 
     test('filename and encoded content must agree', () {
       expect(
-        () => inspectEditableImage(buildImageEditorFixture(), fileName: 'x.jpg'),
+        () =>
+            inspectEditableImage(buildImageEditorFixture(), fileName: 'x.jpg'),
         throwsA(_failure(ImageEditFailure.formatMismatch)),
       );
       expect(
@@ -62,11 +68,15 @@ void main() {
         throwsA(_failure(ImageEditFailure.formatMismatch)),
       );
       expect(
-        () => inspectEditableImage(buildImageEditorFixture(), fileName: 'x.gif'),
+        () =>
+            inspectEditableImage(buildImageEditorFixture(), fileName: 'x.gif'),
         throwsA(_failure(ImageEditFailure.unsupportedFormat)),
       );
       expect(
-        () => inspectEditableImage(Uint8List.fromList([71, 73, 70]), fileName: 'x.png'),
+        () => inspectEditableImage(
+          Uint8List.fromList([71, 73, 70]),
+          fileName: 'x.png',
+        ),
         throwsA(_failure(ImageEditFailure.invalidImage)),
       );
     });
@@ -113,7 +123,14 @@ void main() {
       final jpg = buildImageEditorFixture(format: ImageFileFormat.jpeg);
       final mpo = Uint8List.fromList([
         ...jpg.sublist(0, 2),
-        0xff, 0xe2, 0, 6, 77, 80, 70, 0,
+        0xff,
+        0xe2,
+        0,
+        6,
+        77,
+        80,
+        70,
+        0,
         ...jpg.sublist(2),
       ]);
       expect(
@@ -137,7 +154,10 @@ void main() {
         );
       }
       expect(
-        () => inspectEditableImage(imageTestPngWithDimensions(0, 16), fileName: 'x.png'),
+        () => inspectEditableImage(
+          imageTestPngWithDimensions(0, 16),
+          fileName: 'x.png',
+        ),
         throwsA(_failure(ImageEditFailure.invalidImage)),
       );
     });
@@ -172,26 +192,29 @@ void main() {
   });
 
   group('host image edit session', () {
-    test('owns immutable saved bytes and starts at a custom clean revision', () {
-      final bytes = buildImageEditorFixture();
-      final expected = Uint8List.fromList(bytes);
-      final session = ImageEditSession(
-        initialBytes: bytes,
-        format: ImageFileFormat.png,
-        initialRevision: 42,
-      );
-      addTearDown(session.dispose);
-      bytes[0] = 0;
-      expect(session.savedBytes, expected);
-      expect(() => session.savedBytes[0] = 0, throwsUnsupportedError);
-      expect(session.currentRevision, 42);
-      expect(session.savedRevision, 42);
-      expect(session.isDirty, isFalse);
-      session.updateRevision(43);
-      expect(session.isDirty, isTrue);
-      session.updateRevision(42);
-      expect(session.isDirty, isFalse);
-    });
+    test(
+      'owns immutable saved bytes and starts at a custom clean revision',
+      () {
+        final bytes = buildImageEditorFixture();
+        final expected = Uint8List.fromList(bytes);
+        final session = ImageEditSession(
+          initialBytes: bytes,
+          format: ImageFileFormat.png,
+          initialRevision: 42,
+        );
+        addTearDown(session.dispose);
+        bytes[0] = 0;
+        expect(session.savedBytes, expected);
+        expect(() => session.savedBytes[0] = 0, throwsUnsupportedError);
+        expect(session.currentRevision, 42);
+        expect(session.savedRevision, 42);
+        expect(session.isDirty, isFalse);
+        session.updateRevision(43);
+        expect(session.isDirty, isTrue);
+        session.updateRevision(42);
+        expect(session.isDirty, isFalse);
+      },
+    );
 
     test('captures and persists a revision before marking it clean', () async {
       final session = _session()..updateRevision(1);
@@ -213,7 +236,11 @@ void main() {
       expect(session.savedRevision, 0);
       expect(written, bytes);
       bytes[0] = 0;
-      expect(written[0], 137, reason: 'The exporter can reuse a mutable buffer');
+      expect(
+        written[0],
+        137,
+        reason: 'The exporter can reuse a mutable buffer',
+      );
       expect(() => written[0] = 0, throwsUnsupportedError);
       upload.complete(ImageSaveOutcome.savedOriginal);
       expect(await saving, ImageSaveOutcome.savedOriginal);
@@ -258,7 +285,10 @@ void main() {
         },
       );
       session.updateRevision(2);
-      final failed = expectLater(saving, throwsA(_failure(ImageEditFailure.staleExport)));
+      final failed = expectLater(
+        saving,
+        throwsA(_failure(ImageEditFailure.staleExport)),
+      );
       capture.complete(buildImageEditorFixture(seed: 1));
       await failed;
       expect(writes, 0);
@@ -267,52 +297,58 @@ void main() {
       expect(session.isSaving, isFalse);
     });
 
-    test('concurrent saves are rejected before a second capture begins', () async {
-      final session = _session()..updateRevision(1);
-      final capture = Completer<Uint8List>();
-      final saving = session.save(
-        export: () => capture.future,
-        write: (_) async => ImageSaveOutcome.savedOriginal,
-      );
-      var secondCaptured = false;
-      await expectLater(
-        session.save(
-          export: () async {
-            secondCaptured = true;
-            return buildImageEditorFixture();
-          },
+    test(
+      'concurrent saves are rejected before a second capture begins',
+      () async {
+        final session = _session()..updateRevision(1);
+        final capture = Completer<Uint8List>();
+        final saving = session.save(
+          export: () => capture.future,
           write: (_) async => ImageSaveOutcome.savedOriginal,
-        ),
-        throwsA(isA<ImageSaveInProgressException>()),
-      );
-      expect(secondCaptured, isFalse);
-      capture.complete(buildImageEditorFixture(seed: 1));
-      await saving;
-    });
+        );
+        var secondCaptured = false;
+        await expectLater(
+          session.save(
+            export: () async {
+              secondCaptured = true;
+              return buildImageEditorFixture();
+            },
+            write: (_) async => ImageSaveOutcome.savedOriginal,
+          ),
+          throwsA(isA<ImageSaveInProgressException>()),
+        );
+        expect(secondCaptured, isFalse);
+        capture.complete(buildImageEditorFixture(seed: 1));
+        await saving;
+      },
+    );
 
-    test('failed writes preserve the source baseline and can be retried', () async {
-      final session = _session()..updateRevision(1);
-      final initial = session.savedBytes;
-      final failure = StateError('offline');
-      await expectLater(
-        session.save(
+    test(
+      'failed writes preserve the source baseline and can be retried',
+      () async {
+        final session = _session()..updateRevision(1);
+        final initial = session.savedBytes;
+        final failure = StateError('offline');
+        await expectLater(
+          session.save(
+            export: () async => buildImageEditorFixture(seed: 1),
+            write: (_) async => throw failure,
+          ),
+          throwsA(same(failure)),
+        );
+        expect(session.lastError, same(failure));
+        expect(session.savedBytes, initial);
+        expect(session.savedRevision, 0);
+        expect(session.isDirty, isTrue);
+        expect(session.isSaving, isFalse);
+        await session.save(
           export: () async => buildImageEditorFixture(seed: 1),
-          write: (_) async => throw failure,
-        ),
-        throwsA(same(failure)),
-      );
-      expect(session.lastError, same(failure));
-      expect(session.savedBytes, initial);
-      expect(session.savedRevision, 0);
-      expect(session.isDirty, isTrue);
-      expect(session.isSaving, isFalse);
-      await session.save(
-        export: () async => buildImageEditorFixture(seed: 1),
-        write: (_) async => ImageSaveOutcome.savedOriginal,
-      );
-      expect(session.isDirty, isFalse);
-      expect(session.lastError, isNull);
-    });
+          write: (_) async => ImageSaveOutcome.savedOriginal,
+        );
+        expect(session.isDirty, isFalse);
+        expect(session.lastError, isNull);
+      },
+    );
 
     test('failed export releases busy state without writing', () async {
       final session = _session()..updateRevision(1);
@@ -333,31 +369,37 @@ void main() {
       expect(session.isDirty, isTrue);
     });
 
-    test('empty, wrong-format and undecodable captures never reach storage', () async {
-      final session = _session()..updateRevision(1);
-      var writes = 0;
-      for (final bytes in [
-        Uint8List(0),
-        buildImageEditorFixture(format: ImageFileFormat.jpeg),
-        imageTestUndecodablePng(),
-      ]) {
-        await expectLater(
-          session.save(
-            export: () async => bytes,
-            write: (_) async {
-              writes++;
-              return ImageSaveOutcome.savedOriginal;
-            },
-          ),
-          throwsA(isA<ImageEditException>()),
-        );
-        expect(session.isDirty, isTrue);
-        expect(session.isSaving, isFalse);
-      }
-      expect(writes, 0);
-    });
+    test(
+      'empty, wrong-format and undecodable captures never reach storage',
+      () async {
+        final session = _session()..updateRevision(1);
+        var writes = 0;
+        for (final bytes in [
+          Uint8List(0),
+          buildImageEditorFixture(format: ImageFileFormat.jpeg),
+          imageTestUndecodablePng(),
+        ]) {
+          await expectLater(
+            session.save(
+              export: () async => bytes,
+              write: (_) async {
+                writes++;
+                return ImageSaveOutcome.savedOriginal;
+              },
+            ),
+            throwsA(isA<ImageEditException>()),
+          );
+          expect(session.isDirty, isTrue);
+          expect(session.isSaving, isFalse);
+        }
+        expect(writes, 0);
+      },
+    );
 
-    for (final outcome in [ImageSaveOutcome.savedCopy, ImageSaveOutcome.downloadedCopy]) {
+    for (final outcome in [
+      ImageSaveOutcome.savedCopy,
+      ImageSaveOutcome.downloadedCopy,
+    ]) {
       test('$outcome keeps the original dirty', () async {
         final session = _session()..updateRevision(1);
         final original = session.savedBytes;

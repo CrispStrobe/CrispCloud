@@ -17,12 +17,8 @@ Future<void> _openFile(WidgetTester tester, FileItem file) async {
         home: Consumer(
           builder: (context, ref, _) => Scaffold(
             body: TextButton(
-              onPressed: () => showFileEditorDialog(
-                context,
-                ref,
-                file,
-                PanelSide.local,
-              ),
+              onPressed: () =>
+                  showFileEditorDialog(context, ref, file, PanelSide.local),
               child: const Text('Open file with F4 dispatcher'),
             ),
           ),
@@ -37,15 +33,12 @@ Future<void> _openFile(WidgetTester tester, FileItem file) async {
 void main() {
   setUp(() => SharedPreferences.setMockInitialValues({}));
 
-  testWidgets('F4 dispatches supported raster images before loading bytes',
-      (tester) async {
+  testWidgets('F4 dispatches supported raster images before loading bytes', (
+    tester,
+  ) async {
     await _openFile(
       tester,
-      FileItem(
-        name: 'large.PNG',
-        isFolder: false,
-        size: 1024 * 1024 * 1024,
-      ),
+      FileItem(name: 'large.PNG', isFolder: false, size: 1024 * 1024 * 1024),
     );
 
     expect(find.byType(ImageEditorDialog), findsOneWidget);
@@ -53,12 +46,10 @@ void main() {
     await tester.pumpWidget(const SizedBox());
   });
 
-  testWidgets('F4 rejects unsupported image formats instead of editing bytes',
-      (tester) async {
-    await _openFile(
-      tester,
-      FileItem(name: 'animation.gif', isFolder: false),
-    );
+  testWidgets('F4 rejects unsupported image formats instead of editing bytes', (
+    tester,
+  ) async {
+    await _openFile(tester, FileItem(name: 'animation.gif', isFolder: false));
 
     expect(find.byType(ImageEditorDialog), findsNothing);
     expect(find.byType(TextField), findsNothing);

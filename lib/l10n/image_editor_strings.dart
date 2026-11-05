@@ -116,6 +116,7 @@ abstract final class ImageEditorStrings {
       bottomNavigationBarText: t('Text'),
       back: t('Back'),
       cancel: t('Cancel'),
+      reset: t('Reset'),
       done: t('Apply'),
       textAlign: t('Align text'),
       fontScale: t('Font scale'),
