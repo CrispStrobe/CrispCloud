@@ -29,7 +29,8 @@ FileOperationBackend fileOperationBackend({
 }
 
 class LocalOperationBackend extends FileOperationBackend {
-  LocalOperationBackend(this.service, {required this._isCurrent});
+  LocalOperationBackend(this.service, {required bool Function() isCurrent})
+      : _isCurrent = isCurrent;
   static final _reference = storageReferenceForSource(
     const LocalPanelSource('/'),
   );
@@ -481,7 +482,8 @@ class LocalOperationBackend extends FileOperationBackend {
 }
 
 class CloudOperationBackend extends FileOperationBackend {
-  CloudOperationBackend(this.client, {required this._isCurrent});
+  CloudOperationBackend(this.client, {required bool Function() isCurrent})
+      : _isCurrent = isCurrent;
   final CloudStorageClient client;
   final bool Function() _isCurrent;
   @override

@@ -500,6 +500,11 @@ class FileOperationService {
         relative = source.paths.relative(root.key, from: base);
       }
       final components = source.paths.split(relative);
+      if (options.destinationName != null) {
+        // Keep the source's relative parent folders while honoring its exact
+        // new root name. The two destination options compose independently.
+        components[components.length - 1] = options.destinationName!;
+      }
       final output = destination.paths.joinAll([target, ...components]);
       if (!destination.isWithin(target, output)) {
         errors.add('Destination would escape the selected directory: $output');
@@ -522,6 +527,24 @@ class FileOperationService {
         if (!containsIncludedFile) {
           directory.outcome = FileOperationOutcome.filtered;
           directory.message = 'Empty after filtering; excluded.';
+        }
+      }
+    }
+    if (source.identity == destination.identity) {
+      final selectedPaths = entries
+          .map((entry) => source.pathKey(entry.source.path!))
+          .toSet();
+      for (final entry in entries.where(
+        (entry) => entry.outcome == FileOperationOutcome.pending,
+      )) {
+        // A transformed name must not overwrite a later selected source,
+        // including a source excluded by the file filter. Copying in sequence
+        // cannot safely implement cycles or overlapping source/target chains.
+        if (selectedPaths.contains(source.pathKey(entry.destination))) {
+          errors.add(
+            'Destination overlaps a selected source: ${entry.destination}. '
+            'Choose another name or directory.',
+          );
         }
       }
     }
@@ -579,7 +602,7 @@ class FileOperationService {
         continue;
       }
       if (skippedDirectories.any(
-        (path) => target.isWithin(path, entry.destination),
+        (path) => source.isWithin(path, entry.source.path!),
       )) {
         entry.outcome = FileOperationOutcome.skipped;
         entry.message = 'Parent directory was skipped.';
@@ -598,6 +621,11 @@ class FileOperationService {
         }
         var existing = await target.stat(entry.destination);
         _checkSources(source, target);
+        if (source.identity == target.identity &&
+            existing?.path != null &&
+            source.samePath(entry.source.path!, existing!.path!)) {
+          throw StateError('Destination resolves to the source itself.');
+        }
         var replace = false;
         var resumeOffset = 0;
         var append = false;
@@ -619,6 +647,13 @@ class FileOperationService {
                 resolveDetailedConflict,
               );
           final decision = resolution.decision;
+          if ((entry.source.isFolder &&
+                  decision != FileConflictDecision.merge &&
+                  decision != FileConflictDecision.skip &&
+                  decision != FileConflictDecision.cancel) ||
+              (!entry.source.isFolder && decision == FileConflictDecision.merge)) {
+            throw StateError('The conflict decision is not valid for this item.');
+          }
           if (resolution.applyToAll && resolution.name == null) {
             if (entry.source.isFolder) {
               allFolders = resolution;
@@ -636,10 +671,24 @@ class FileOperationService {
             entry.outcome = FileOperationOutcome.skipped;
             entry.message = 'Destination exists; skipped.';
             if (entry.source.isFolder) {
-              skippedDirectories.add(entry.destination);
+              skippedDirectories.add(entry.source.path!);
             }
             onEntryComplete?.call(entry);
             continue;
+          }
+          // Conflict inspection can take time (or compare complete contents).
+          // Revalidate both snapshots before a decision can rename or replace
+          // an item that changed while the conflict dialog was open.
+          final checkedSource = await source.stat(entry.source.path!);
+          final checkedDestination = await target.stat(entry.destination);
+          _checkSources(source, target);
+          if (checkedSource == null ||
+              !_sameVersion(entry.source, checkedSource)) {
+            throw StateError('Source changed while resolving the conflict.');
+          }
+          if (checkedDestination == null ||
+              !_sameVersion(existing, checkedDestination)) {
+            throw StateError('Destination changed while resolving the conflict.');
           }
           if (decision == FileConflictDecision.keepBoth) {
             entry.destination = await _availableName(
