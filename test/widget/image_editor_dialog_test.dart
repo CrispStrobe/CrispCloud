@@ -19,6 +19,7 @@ import 'package:pro_image_editor/pro_image_editor.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 import '../support/image_editor_fixture.dart';
+import '../support/image_editor_test_diagnostics.dart';
 
 /// Only storage is substituted: decode, editing, capture, encoding, and host
 /// command handling all use the shipped editor and Flutter rendering engine.
@@ -244,10 +245,25 @@ class _Harness {
   }
 }
 
+// The engine chooses pointer behavior from foundation's platform, not the
+// Material theme. Flutter web tests default that platform to Android, so set
+// the desktop variant before the engine caches its platform capabilities.
+void _desktopTestWidgets(
+  String description,
+  WidgetTesterCallback callback, {
+  bool? skip,
+}) => testWidgets(
+  description,
+  callback,
+  skip: skip,
+  variant: TargetPlatformVariant.only(TargetPlatform.linux),
+);
+
 void main() {
+  installImageEditorBrowserDiagnostics();
   setUp(() => SharedPreferences.setMockInitialValues({}));
 
-  testWidgets('initial clean state and undo branches use real editor history', (
+  _desktopTestWidgets('initial clean state and undo branches use real editor history', (
     tester,
   ) async {
     final harness = _Harness(tester, _MemoryImageStore());
@@ -288,7 +304,7 @@ void main() {
     expect(harness.store.writes, isEmpty);
   });
 
-  testWidgets(
+  _desktopTestWidgets(
     'PNG rotate, repeated save, undo and reopen preserve alpha and dimensions',
     (tester) async {
       final store = _MemoryImageStore();
@@ -337,7 +353,7 @@ void main() {
     },
   );
 
-  testWidgets(
+  _desktopTestWidgets(
     'large-aspect JPEG rotate exports and reopens beyond the upstream 2000px cap',
     (tester) async {
       final store = _MemoryImageStore(
@@ -363,7 +379,7 @@ void main() {
     },
   );
 
-  testWidgets(
+  _desktopTestWidgets(
     'failed source save retains edits and close can retry the real capture',
     (tester) async {
       final store = _MemoryImageStore();
@@ -412,7 +428,7 @@ void main() {
     LogicalKeyboardKey.controlLeft,
     LogicalKeyboardKey.metaLeft,
   ]) {
-    testWidgets(
+    _desktopTestWidgets(
       '${modifier.keyLabel}+S saves exactly once and leaves the editor open',
       (tester) async {
         final store = _MemoryImageStore();
@@ -437,7 +453,7 @@ void main() {
     );
   }
 
-  testWidgets(
+  _desktopTestWidgets(
     'nested blur Cancel and Apply preserve the host and pending save boundary',
     (tester) async {
       final harness = _Harness(tester, _MemoryImageStore());
@@ -482,7 +498,7 @@ void main() {
     },
   );
 
-  testWidgets(
+  _desktopTestWidgets(
     'system Back creates one host unsaved prompt and cancel keeps edits',
     (tester) async {
       final harness = _Harness(tester, _MemoryImageStore());
@@ -503,7 +519,7 @@ void main() {
     },
   );
 
-  testWidgets(
+  _desktopTestWidgets(
     'secondary-click layer menu uses host UI and blocks background commands',
     (tester) async {
       final harness = _Harness(tester, _MemoryImageStore());
@@ -539,7 +555,7 @@ void main() {
     },
   );
 
-  testWidgets('pending source write locks commands and duplicate saves', (
+  _desktopTestWidgets('pending source write locks commands and duplicate saves', (
     tester,
   ) async {
     final upload = Completer<ImageSaveOutcome>();
@@ -570,7 +586,7 @@ void main() {
     expect(store.writes, hasLength(1));
   });
 
-  testWidgets(
+  _desktopTestWidgets(
     'browser production worker captures an edited image and reopens it',
     (tester) async {
       final store = _MemoryImageStore();

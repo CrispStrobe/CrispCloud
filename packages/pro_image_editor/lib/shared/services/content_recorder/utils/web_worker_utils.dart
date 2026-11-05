@@ -29,7 +29,14 @@ JSAny? jsify(Object? dartObject) {
   }
 
   if (dartObject is Uint8List) {
-    return dartObject.buffer.toJS;
+    // Encoder results can be views into a larger capacity buffer. Only this
+    // view belongs to the message: sending the backing buffer adds padding or
+    // unrelated prefix bytes and corrupts the encoded image at the receiver.
+    final bytes = dartObject.offsetInBytes == 0 &&
+            dartObject.lengthInBytes == dartObject.buffer.lengthInBytes
+        ? dartObject
+        : Uint8List.fromList(dartObject);
+    return bytes.buffer.toJS;
   }
 
   if (dartObject is List) {

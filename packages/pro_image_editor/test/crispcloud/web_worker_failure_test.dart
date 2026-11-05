@@ -10,6 +10,7 @@ import 'package:pro_image_editor/pro_image_editor.dart';
 import 'package:pro_image_editor/core/models/multi_threading/thread_request_model.dart';
 import 'package:pro_image_editor/shared/services/content_recorder/services/image_converter_service.dart';
 import 'package:pro_image_editor/shared/services/content_recorder/services/web_worker/web_worker_manager.dart';
+import 'package:pro_image_editor/shared/services/content_recorder/utils/web_worker_utils.dart' as worker_interop;
 import 'package:web/web.dart' as web;
 
 const _configs = ImageGenerationConfigs(
@@ -49,7 +50,13 @@ Future<ui.Image> _sourcePixels() async {
 
 Future<void> _expectValidPng(Uint8List? bytes) async {
   expect(bytes, isNotNull);
-  final codec = await ui.instantiateImageCodec(bytes!);
+  final encoded = bytes!;
+  // Decoders often tolerate trailing bytes; the original-file writer correctly
+  // requires the encoded image itself, not an encoder's entire capacity buffer.
+  expect(encoded.sublist(encoded.length - 12), orderedEquals([
+    0, 0, 0, 0, 73, 69, 78, 68, 174, 66, 96, 130,
+  ]), reason: 'The PNG must end exactly after its IEND chunk.');
+  final codec = await ui.instantiateImageCodec(encoded);
   try {
     final decoded = (await codec.getNextFrame()).image;
     try {
@@ -95,7 +102,22 @@ Future<void> _exerciseFailure(String scriptUrl) async {
 }
 
 void main() {
-  testWidgets('bundled production worker encodes twice without fallback or task leaks', (tester) async {
+  test('worker byte transfer preserves a subview offset and length', () {
+    final backing = Uint8List.fromList([99, 1, 2, 3, 88, 77]);
+    final view = Uint8List.sublistView(backing, 1, 4);
+    final transferred = worker_interop.jsify(view) as JSArrayBuffer;
+    expect(transferred.toDart.asUint8List(), orderedEquals([1, 2, 3]));
+  });
+
+  test('worker byte transfer omits unused encoder buffer capacity', () {
+    final backing = Uint8List(8192)..setRange(0, 3, [1, 2, 3]);
+    final view = Uint8List.sublistView(backing, 0, 3);
+    final transferred = worker_interop.jsify(view) as JSArrayBuffer;
+    expect(transferred.toDart.asUint8List(), orderedEquals([1, 2, 3]));
+  });
+
+
+  testWidgets('bundled production worker encodes PNG twice and JPEG without fallback or task leaks', (tester) async {
     await tester.runAsync(() async {
       // Flutter's test server exposes package files at this URL. It serves the
       // exact production JavaScript, without requiring a built asset tree.
@@ -112,7 +134,26 @@ void main() {
           expect(manager.pendingTasks, 0);
           expect(manager.threads.single.activeTasks, 0);
         }
-        expect(manager.dispatches, 2);
+        final jpeg = (await converter.convert(
+          image: pixels,
+          id: 'jpeg',
+          format: OutputFormat.jpg,
+        ).timeout(const Duration(seconds: 10)))!;
+        expect(jpeg.take(2), orderedEquals([0xff, 0xd8]));
+        expect(jpeg.sublist(jpeg.length - 2), orderedEquals([0xff, 0xd9]),
+          reason: 'The JPEG must end at its EOI marker.');
+        final codec = await ui.instantiateImageCodec(jpeg);
+        try {
+          final decoded = (await codec.getNextFrame()).image;
+          expect((decoded.width, decoded.height), (2, 2));
+          decoded.dispose();
+        } finally {
+          codec.dispose();
+        }
+        expect(manager.dispatches, 3);
+        expect(manager.isSupported, isTrue);
+        expect(manager.pendingTasks, 0);
+        expect(manager.threads.single.activeTasks, 0);
       } finally {
         manager.destroy();
         pixels.dispose();

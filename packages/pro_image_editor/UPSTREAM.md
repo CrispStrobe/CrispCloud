@@ -41,7 +41,8 @@ upstream tests comprise 822 files before local changes.
 | `lib/features/main_editor/services/desktop_interaction_manager.dart` | Report effective wheel transforms without mutating prior history; ignore no-op and canvas-zoom events. |
 | `lib/core/models/custom_widgets/layer_interaction_widgets.dart`, layer widget/context-menu service | Expose an optional typed host context-menu builder; preserve enabled actions, dismiss/error cleanup, and the upstream fallback. |
 | `lib/shared/widgets/overlays/editor_bottom_sheet.dart` | Preserve the scoped editor localizations around the complete popup route, including its sheet chrome, while retaining host navigator ownership. |
-| Image converter/render service and recorder controller | Preserve transparent image borders and source resolution when capturing image bounds; retain explicit drawing/layer crop overrides. The worker receives the corrected flag before conversion, so its bundled JavaScript needs no changes. |
+| Image converter/render service and recorder controller | Preserve transparent image borders and source resolution when capturing image bounds; retain explicit drawing/layer crop overrides. The worker receives the corrected crop flag before conversion. |
+| `lib/shared/services/content_recorder/utils/web_worker_utils.dart` | Send exactly the offset/length of a Uint8List view, avoiding unused encoder-buffer capacity in PNG/JPEG responses. The compiled worker and map are regenerated separately. |
 | Browser worker manager/thread and shared task manager | Reject pending work on script, execution, or message errors so the existing main-thread encoder can recover; clean failed tasks, count each task once, and inspect existing workers without creating leaked probes. The manager accepts an optional script URL while retaining the published default. |
 | `lib/core/services/keyboard_service.dart` and crop/paint desktop managers | Recognize both physical Command keys; read live Control/Meta/Shift state so a host-blocked key press or release cannot leave stale shortcut modifiers after an overlay closes. |
 | `lib/core/models/i18n/i18n_text_editor.dart` | Expose overflow Cancel, font-style sample, and font-size Reset labels. |
@@ -50,8 +51,10 @@ upstream tests comprise 822 files before local changes.
 | `lib/shared/utils/format_editor_number.dart`, slider sheet, bottom-sheet header, paint-property editor, and tune bottom bar | Format decimal/scale values and slider semantics for the active locale; localize Reset and Close tooltips. |
 | `README.md`, `CHANGELOG.md` | Identify this maintained copy and document the changes above. |
 
-`UPSTREAM.patch` records changes to imported files and the two new runtime
-helpers required by them. New tests in `test/crispcloud/` cover nested
+`UPSTREAM.patch` records changes to imported source files and the two new
+runtime helpers required by them. Generated worker JavaScript and its source
+map are committed at their normal paths rather than duplicated in the patch;
+they must be regenerated using the command below after applying source changes. New tests in `test/crispcloud/` cover nested
 cancellation, Escape, capture without losing the host route, repeated Apply,
 awaited completion failure and retry, apply/undo/redo, wheel history and
 branching, host navigation and menu contracts, scoped popup localization,
@@ -61,8 +64,9 @@ visible and spoken numbers, transparent image-border preservation, intentional
 drawing-only trimming, and the request passed to a worker. Browser-only
 regressions use real workers to verify recovery from script execution errors,
 malformed responses, and a missing worker asset without leaving Save pending.
-A direct browser regression also checks two successful encodes in the unchanged
-production worker, with no fallback or leaked active tasks.
+Direct browser regressions also check byte-view offset/length preservation
+and successful PNG and JPEG encodes in the production worker, including exact
+IEND/EOI boundaries, with no fallback or leaked active tasks.
 
 The application owns its editor menus, save workflow, file-format checks,
 and translations; they do not belong in upstream defaults. Its real-renderer
@@ -110,8 +114,31 @@ git apply --directory=packages/pro_image_editor \
 ```
 
 The new provenance document and local tests are maintained separately from
-that patch. The new runtime helpers are included, so the patch applies to the
-pristine package without relying on files outside the patch. The worker
-entrypoint and its codecs remain unchanged, so the compiled worker and source
-map remain byte-identical to the verified archive. Dispatch and error handling
-changes execute on the host UI side.
+that source patch. The new runtime helpers are included. Rebuild the worker
+before using the patched package; source and generated assets must ship
+together.
+
+## Regenerate the browser worker
+
+Use Flutter **3.47.8** / Dart **3.13.7** and the application's checked-in root
+`pubspec.lock`, without upgrading dependencies. Run the first command from the
+CrispCloud repository root. The explicit package configuration prevents the
+standalone package's development dependency resolution from changing the
+shipped worker.
+
+```sh
+flutter pub get
+cd packages/pro_image_editor
+dart compile js --packages=../../.dart_tool/package_config.json \
+  -o lib/web/web_worker.dart.js lib/web/web_worker.dart
+sha256sum lib/web/web_worker.dart.js lib/web/web_worker.dart.js.map
+```
+
+The CI workflow rebuilds these outputs before browser tests and exports them
+for review and commit. The main-thread byte-view helper and the bundled worker
+must pass the same subview and strict PNG/JPEG boundary regressions.
+
+| Committed generated output | SHA-256 |
+| --- | --- |
+| `lib/web/web_worker.dart.js` | Pending CI regeneration and artifact import. |
+| `lib/web/web_worker.dart.js.map` | Pending CI regeneration and artifact import. |

@@ -11,6 +11,7 @@ on:
       - 'test/**'
       - 'tool/check_image_editor_i18n.py'
       - 'tool/prepare_image_editor_browser_test.py'
+      - 'tool/build_image_editor_worker.py'
   pull_request:
     branches: [main]
   workflow_dispatch:
@@ -44,7 +45,7 @@ jobs:
           dart format
           lib/l10n/image_editor*.dart lib/services/image_*.dart
           lib/widgets/image_editor*.dart test/image_*.dart
-          test/widget/image_editor*.dart test/support/image_editor_fixture.dart
+          test/widget/image_editor*.dart test/support/image_editor*.dart
       - name: Analyze integration
         run: >-
           flutter analyze --no-fatal-infos --no-fatal-warnings
@@ -113,6 +114,8 @@ jobs:
           flutter-version: ${{ env.FLUTTER_VERSION }}
           cache: true
       - run: flutter pub get
+      - name: Build the worker from the locked application dependencies
+        run: python3 tool/build_image_editor_worker.py
       - name: Serve the production image worker in the Flutter test harness
         run: python3 tool/prepare_image_editor_browser_test.py
       - name: Browser routing and native-menu bridge
@@ -141,9 +144,20 @@ jobs:
           channel: stable
           flutter-version: ${{ env.FLUTTER_VERSION }}
           cache: true
+      - name: Resolve the application dependency lock for the shipped worker
+        working-directory: .
+        run: flutter pub get
+      - name: Build the shipped worker and preserve reviewable output
+        working-directory: .
+        run: python3 tool/build_image_editor_worker.py --emit-review
       - run: flutter pub get
       - name: Analyze maintained engine
         run: flutter analyze --no-fatal-infos --no-fatal-warnings lib test/crispcloud
       - run: flutter test --reporter expanded test/crispcloud
       - name: Real browser worker failures remain recoverable
         run: flutter test --reporter expanded --platform chrome test/crispcloud/web_worker_failure_test.dart
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: image-editor-worker-build
+          path: build/image_editor_worker/

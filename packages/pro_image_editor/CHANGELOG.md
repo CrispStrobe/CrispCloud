@@ -18,6 +18,9 @@
 - Recover from browser worker load, execution, and message failures through
   the existing encoder fallback; clear failed pending tasks and avoid leaking
   worker probes or double-counting active tasks.
+- Transfer only the bytes in an encoded Uint8List view to browser callers;
+  omit unused backing-buffer capacity so PNG/JPEG end at their IEND/EOI
+  boundaries. Rebuild the bundled worker and source map with the root lockfile.
 - Recognize left and right Command keys for desktop editing shortcuts and
   read live modifier state after host overlays consume key events.
 - Localize Cupertino overflow cancellation and expose text font-style samples

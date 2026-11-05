@@ -15,6 +15,7 @@ import 'package:pro_image_editor/pro_image_editor.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 import '../support/image_editor_fixture.dart';
+import '../support/image_editor_test_diagnostics.dart';
 
 class _ReadOnlyFixtureStore implements ImageFileStore {
   final _bytes = buildImageEditorFixture();
@@ -49,7 +50,12 @@ Future<void> _until(
     );
     final error = tester.takeException();
     if (error != null) throw error;
-    if (ready()) return;
+    if (ready()) {
+      // Menu state is published after the frame that schedules the matching
+      // header rebuild. Paint that rebuild before inspecting its controls.
+      await tester.pump();
+      return;
+    }
   }
   fail('Timed out waiting for $reason.');
 }
@@ -59,6 +65,17 @@ ImageEditorMenuActions _actions(WidgetTester tester) =>
       tester.element(find.byType(ImageEditorDialog)),
       listen: false,
     ).read(imageEditorMenuProvider)!;
+
+bool _cropMotionComplete(CropRotateEditorState crop) {
+  final painter = crop.cropPainter;
+  // Rotation controllers use Flutter's frame clock; the crop painter's fade
+  // and fit loops also use wall time. Wait for both clocks' visible result.
+  return painter != null &&
+      painter.fadeInOpacity == 1 &&
+      painter.rotationScaleFactor == crop.oldScaleFactor &&
+      !crop.rotateCtrl.isAnimating &&
+      !crop.scaleCtrl.isAnimating;
+}
 
 Future<GlobalKey<ProImageEditorState>> _openCrop(WidgetTester tester) async {
   tester.view.physicalSize = const Size(1280, 900);
@@ -109,13 +126,33 @@ Future<GlobalKey<ProImageEditorState>> _openCrop(WidgetTester tester) async {
     reason: 'embedded crop tool',
   );
   await tester.pump(const Duration(milliseconds: 400));
+  await _until(
+    tester,
+    () => _cropMotionComplete(editorKey.currentState!.cropRotateEditor.currentState!),
+    reason: 'crop entrance fade and fit complete',
+  );
   return editorKey;
 }
 
+// The engine chooses pointer behavior from foundation's platform, not the
+// Material theme. Flutter web tests default that platform to Android, so set
+// the desktop variant before the engine caches its platform capabilities.
+void _desktopTestWidgets(
+  String description,
+  WidgetTesterCallback callback, {
+  bool? skip,
+}) => testWidgets(
+  description,
+  callback,
+  skip: skip,
+  variant: TargetPlatformVariant.only(TargetPlatform.linux),
+);
+
 void main() {
+  installImageEditorBrowserDiagnostics();
   setUp(() => SharedPreferences.setMockInitialValues({}));
 
-  testWidgets(
+  _desktopTestWidgets(
     'Apply during a crop gesture remains retryable and a real Apply locks its transition',
     (tester) async {
       final editorKey = await _openCrop(tester);
@@ -157,7 +194,7 @@ void main() {
     },
   );
 
-  testWidgets('a host modal blocks crop keyboard edits until it is dismissed', (
+  _desktopTestWidgets('a host modal blocks crop keyboard edits until it is dismissed', (
     tester,
   ) async {
     final editorKey = await _openCrop(tester);
@@ -192,7 +229,9 @@ void main() {
     await tester.sendKeyEvent(LogicalKeyboardKey.keyR);
     await _until(
       tester,
-      () => crop.rotationCount != initialRotation && !crop.rotateCtrl.isAnimating,
+      () => crop.rotationCount != initialRotation &&
+          crop.canUndo &&
+          _cropMotionComplete(crop),
       reason: 'crop shortcut resumes on the visible route',
     );
     expect(crop.canUndo, isTrue);
