@@ -19,6 +19,9 @@ import 'webdav_client_adapter.dart';
 import 'smb_client_adapter.dart';
 import 'smb_config_service.dart';
 import 'secure_storage_service.dart';
+import 'storage_transfer_contract.dart';
+
+export 'storage_transfer_contract.dart';
 
 /// Abstract interface for cloud storage providers
 abstract class CloudStorageClient {
@@ -271,6 +274,7 @@ class CloudCapabilities {
   final bool nativeShare;
   final bool serverSideCopy;
   final bool fullTextSearch;
+  final StorageTransferCapabilities transfer;
 
   const CloudCapabilities({
     required this.streaming,
@@ -283,6 +287,7 @@ class CloudCapabilities {
     required this.nativeShare,
     required this.serverSideCopy,
     required this.fullTextSearch,
+    this.transfer = const StorageTransferCapabilities(),
   });
 
   List<String> get highlights => [
@@ -302,6 +307,15 @@ class CloudCapabilities {
 /// This intentionally remains an extension rather than an interface member:
 /// Dart's `implements` requires concrete members to be reimplemented too.
 extension CloudStorageClientCapabilities on CloudStorageClient {
+  StorageTransferCapabilities get transferCapabilities =>
+      this is CloudTransferOperations
+          ? (this as CloudTransferOperations).transferCapabilities
+          : const StorageTransferCapabilities();
+
+  String get transferIdentity => this is CloudTransferOperations
+      ? (this as CloudTransferOperations).transferIdentity
+      : '';
+
   CloudCapabilities get capabilities => CloudCapabilities(
         streaming: supportsStreaming,
         multipart: supportsMultipart,
@@ -313,6 +327,7 @@ extension CloudStorageClientCapabilities on CloudStorageClient {
         nativeShare: supportsNativeShare,
         serverSideCopy: supportsServerSideCopy,
         fullTextSearch: supportsFullTextSearch,
+        transfer: transferCapabilities,
       );
 }
 
