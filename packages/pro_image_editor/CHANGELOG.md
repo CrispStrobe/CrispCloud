@@ -18,7 +18,8 @@
 - Recover from browser worker load, execution, and message failures through
   the existing encoder fallback; clear failed pending tasks and avoid leaking
   worker probes or double-counting active tasks.
-- Recognize left and right Command keys for desktop editing shortcuts.
+- Recognize left and right Command keys for desktop editing shortcuts and
+  read live modifier state after host overlays consume key events.
 - Localize Cupertino overflow cancellation and expose text font-style samples
   for the current script, font-size Reset, and localized numeric slider labels
   and spoken values.

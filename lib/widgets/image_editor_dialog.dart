@@ -388,6 +388,12 @@ class _ImageEditorDialogState extends ConsumerState<ImageEditorDialog> {
     } finally {
       // Keep commands locked through the tool's reverse route transition.
       // onEndCloseSubEditor releases the lock once the host surface is active.
+      // A tool can decline Apply without closing (for example, crop while a
+      // pointer gesture is active). Its completed Future then promises no
+      // pending operation, so release the host lock to allow a later retry.
+      if (mounted && _applying && !editor.isSubEditorClosing) {
+        setState(() => _applying = false);
+      }
       _scheduleRefresh();
     }
   }
@@ -683,6 +689,14 @@ class _ImageEditorDialogState extends ConsumerState<ImageEditorDialog> {
               enableIsolateGeneration: widget.enableIsolateGeneration,
               callbacks: ProImageEditorCallbacks(
                 onCloseEditor: (_) => unawaited(_close()),
+                // These tools install global hardware-key handlers, which
+                // otherwise keep editing behind a host Settings/About route.
+                paintEditorCallbacks: PaintEditorCallbacks(
+                  onKeyboardEvent: (_) => _busy || !_routeIsCurrent,
+                ),
+                cropRotateEditorCallbacks: CropRotateEditorCallbacks(
+                  onKeyboardEvent: (_) => _busy || !_routeIsCurrent,
+                ),
                 mainEditorCallbacks: MainEditorCallbacks(
                   onStateHistoryChange: _onHistory,
                   onLayerInteractionEnd: _onGestureEnd,

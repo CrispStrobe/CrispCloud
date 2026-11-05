@@ -1,7 +1,7 @@
 diff --git a/CHANGELOG.md b/CHANGELOG.md
 --- a/CHANGELOG.md
 +++ b/CHANGELOG.md
-@@ -1,4 +1,29 @@
+@@ -1,4 +1,30 @@
  # Changelog
 +
 +## Unreleased (CrispCloud)
@@ -22,7 +22,8 @@ diff --git a/CHANGELOG.md b/CHANGELOG.md
 +- Recover from browser worker load, execution, and message failures through
 +  the existing encoder fallback; clear failed pending tasks and avoid leaking
 +  worker probes or double-counting active tasks.
-+- Recognize left and right Command keys for desktop editing shortcuts.
++- Recognize left and right Command keys for desktop editing shortcuts and
++  read live modifier state after host overlays consume key events.
 +- Localize Cupertino overflow cancellation and expose text font-style samples
 +  for the current script, font-size Reset, and localized numeric slider labels
 +  and spoken values.
@@ -31,7 +32,7 @@ diff --git a/CHANGELOG.md b/CHANGELOG.md
  
  ## 14.24.0
  - **FEAT**(paint-editor): Add `PaintEditorConfigs.freeStyleCustomModes` so a custom paint mode records the whole stroke, like `PaintMode.freeStyle`, and its custom path builder can draw a brush.
-@@ -1761,4 +1786,4 @@
+@@ -1761,4 +1787,4 @@
  - **FEAT**: TextEditor
  - **FEAT**: CropRotateEditor
  - **FEAT**: FilterEditor
@@ -484,6 +485,61 @@ diff --git a/lib/features/blur_editor/blur_editor.dart b/lib/features/blur_edito
    }
  
    /// Set the blur factor and update the UI.
+diff --git a/lib/features/crop_rotate_editor/services/crop_desktop_interaction_manager.dart b/lib/features/crop_rotate_editor/services/crop_desktop_interaction_manager.dart
+--- a/lib/features/crop_rotate_editor/services/crop_desktop_interaction_manager.dart
++++ b/lib/features/crop_rotate_editor/services/crop_desktop_interaction_manager.dart
+@@ -15,15 +15,12 @@
+   /// Build context for the interaction manager.
+   final BuildContext context;
+ 
+-  bool _ctrlDown = false;
+-  bool _shiftDown = false;
+-
+   /// Handles keyboard events.
+   ///
+   /// This method responds to key events and performs actions based on the
+   /// pressed keys.
+-  /// If the 'Escape' key is pressed and the widget is still mounted, it
+-  /// triggers the navigator to pop the current context.
++  /// Modifier state comes from the hardware keyboard because an embedding
++  /// host can suppress events while another route covers the editor.
+   bool onKey(
+     KeyEvent event, {
+     required Function(Offset) onTranslate,
+@@ -66,29 +63,12 @@
+           case 'Arrow Right':
+             onTranslate(Offset(-translateFactor, 0));
+             break;
+-          case 'Control Left':
+-          case 'Control Right':
+-            _ctrlDown = true;
+-            break;
+-          case 'Shift Left':
+-          case 'Shift Right':
+-            _shiftDown = true;
+-            break;
+           case 'Z':
+-            if (_ctrlDown && !HardwareKeyboard.instance.isAltPressed) {
+-              onUndoRedo(!_shiftDown);
++            final keyboard = HardwareKeyboard.instance;
++            if ((keyboard.isControlPressed || keyboard.isMetaPressed) &&
++                !keyboard.isAltPressed) {
++              onUndoRedo(!keyboard.isShiftPressed);
+             }
+-            break;
+-        }
+-      } else if (event is KeyUpEvent) {
+-        switch (key) {
+-          case 'Control Left':
+-          case 'Control Right':
+-            _ctrlDown = false;
+-            break;
+-          case 'Shift Left':
+-          case 'Shift Right':
+-            _shiftDown = false;
+             break;
+         }
+       }
 diff --git a/lib/features/filter_editor/filter_editor.dart b/lib/features/filter_editor/filter_editor.dart
 --- a/lib/features/filter_editor/filter_editor.dart
 +++ b/lib/features/filter_editor/filter_editor.dart
@@ -779,6 +835,59 @@ diff --git a/lib/features/paint_editor/paint_editor.dart b/lib/features/paint_ed
    }
  
    /// Adds a painted model as a new layer to the editor.
+diff --git a/lib/features/paint_editor/services/paint_desktop_interaction_manager.dart b/lib/features/paint_editor/services/paint_desktop_interaction_manager.dart
+--- a/lib/features/paint_editor/services/paint_desktop_interaction_manager.dart
++++ b/lib/features/paint_editor/services/paint_desktop_interaction_manager.dart
+@@ -18,43 +18,23 @@
+   /// The build context used for interactions.
+   final BuildContext context;
+ 
+-  bool _ctrlDown = false;
+-  bool _shiftDown = false;
+-
+   /// Handles keyboard events.
+   ///
+   /// This method responds to key events and performs actions based on the
+   /// pressed keys.
+-  /// If the 'Escape' key is pressed and the widget is still mounted, it
+-  /// triggers the navigator to pop the current context.
++  /// Modifier state comes from the hardware keyboard because an embedding
++  /// host can suppress events while another route covers the editor.
+   bool onKey(KeyEvent event, {required Function(bool) onUndoRedo}) {
+     final key = event.logicalKey.keyLabel;
+     if (context.mounted) {
+       if (event is KeyDownEvent) {
+         switch (key) {
+-          case 'Control Left':
+-          case 'Control Right':
+-            _ctrlDown = true;
+-            break;
+-          case 'Shift Left':
+-          case 'Shift Right':
+-            _shiftDown = true;
+-            break;
+           case 'Z':
+-            if (_ctrlDown && !HardwareKeyboard.instance.isAltPressed) {
+-              onUndoRedo(!_shiftDown);
++            final keyboard = HardwareKeyboard.instance;
++            if ((keyboard.isControlPressed || keyboard.isMetaPressed) &&
++                !keyboard.isAltPressed) {
++              onUndoRedo(!keyboard.isShiftPressed);
+             }
+-            break;
+-        }
+-      } else if (event is KeyUpEvent) {
+-        switch (key) {
+-          case 'Control Left':
+-          case 'Control Right':
+-            _ctrlDown = false;
+-            break;
+-          case 'Shift Left':
+-          case 'Shift Right':
+-            _shiftDown = false;
+             break;
+         }
+       }
 diff --git a/lib/features/paint_editor/widgets/paint_editor_appbar.dart b/lib/features/paint_editor/widgets/paint_editor_appbar.dart
 --- a/lib/features/paint_editor/widgets/paint_editor_appbar.dart
 +++ b/lib/features/paint_editor/widgets/paint_editor_appbar.dart

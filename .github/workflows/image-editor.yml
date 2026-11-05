@@ -19,7 +19,7 @@ permissions:
   contents: read
 
 concurrency:
-  group: image-editor-${{ github.ref }}
+  group: image-editor-${{ github.head_ref || github.ref_name }}
   cancel-in-progress: true
 
 env:
@@ -54,11 +54,13 @@ jobs:
           lib/services/image_editor_menu.dart lib/widgets/image_editor_dialog.dart
           lib/widgets/image_editor_surface.dart lib/widgets/image_editor_menus.dart
           lib/widgets/file_editor_dialog.dart lib/utils/file_editability.dart
+          lib/screens/screen_dialogs.dart
           test/image_edit_session_test.dart test/image_file_store_test.dart
           test/image_editor_live_test.dart test/image_editor_menu_test.dart
           test/widget/image_editor_menus_test.dart
           test/widget/image_editor_routing_test.dart
           test/widget/image_editor_dialog_test.dart
+          test/widget/image_editor_apply_lifecycle_test.dart
           test/image_editor_strings_test.dart
       - name: Check every exposed localization field
         run: python3 tool/check_image_editor_i18n.py
@@ -76,7 +78,10 @@ jobs:
         run: flutter test --reporter expanded test/image_editor_strings_test.dart
       - name: Real image editor lifecycle
         if: success() || failure()
-        run: flutter test --reporter expanded --concurrency=1 test/widget/image_editor_dialog_test.dart
+        run: >-
+          flutter test --reporter expanded --concurrency=1
+          test/widget/image_editor_dialog_test.dart
+          test/widget/image_editor_apply_lifecycle_test.dart
       - name: Record formatting and dependency changes for review
         if: always()
         run: |
@@ -117,7 +122,10 @@ jobs:
           test/widget/image_editor_routing_test.dart
       - name: Real browser edits and export
         if: success() || failure()
-        run: flutter test --reporter expanded --platform chrome --concurrency=1 test/widget/image_editor_dialog_test.dart
+        run: >-
+          flutter test --reporter expanded --platform chrome --concurrency=1
+          test/widget/image_editor_dialog_test.dart
+          test/widget/image_editor_apply_lifecycle_test.dart
 
   fork:
     name: Maintained image engine regression tests

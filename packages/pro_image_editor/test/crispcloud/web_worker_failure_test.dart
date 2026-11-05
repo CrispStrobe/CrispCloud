@@ -7,6 +7,7 @@ import 'dart:ui' as ui;
 
 import 'package:flutter_test/flutter_test.dart';
 import 'package:pro_image_editor/pro_image_editor.dart';
+import 'package:pro_image_editor/core/models/multi_threading/thread_request_model.dart';
 import 'package:pro_image_editor/shared/services/content_recorder/services/image_converter_service.dart';
 import 'package:pro_image_editor/shared/services/content_recorder/services/web_worker/web_worker_manager.dart';
 import 'package:web/web.dart' as web;
@@ -23,6 +24,13 @@ class _InspectableManager extends WebWorkerManager {
   _InspectableManager(String url) : super(_configs, workerScriptUrl: url);
 
   int get pendingTasks => tasks.length;
+  int dispatches = 0;
+
+  @override
+  Future<Uint8List?> send(ThreadRequest data) {
+    dispatches++;
+    return super.send(data);
+  }
 }
 
 Future<ui.Image> _sourcePixels() async {
@@ -87,6 +95,32 @@ Future<void> _exerciseFailure(String scriptUrl) async {
 }
 
 void main() {
+  testWidgets('bundled production worker encodes twice without fallback or task leaks', (tester) async {
+    await tester.runAsync(() async {
+      // Flutter's test server exposes package files at this URL. It serves the
+      // exact production JavaScript, without requiring a built asset tree.
+      final pixels = await _sourcePixels();
+      final manager = _InspectableManager('/packages/pro_image_editor/web/web_worker.dart.js');
+      final converter = ImageConverterService(configs: _configs, threadManager: manager);
+      try {
+        for (final id in ['first', 'second']) {
+          await _expectValidPng(await converter.convert(
+            image: pixels,
+            id: id,
+          ).timeout(const Duration(seconds: 10)));
+          expect(manager.isSupported, isTrue);
+          expect(manager.pendingTasks, 0);
+          expect(manager.threads.single.activeTasks, 0);
+        }
+        expect(manager.dispatches, 2);
+      } finally {
+        manager.destroy();
+        pixels.dispose();
+      }
+    });
+  });
+
+
   for (final scenario in <({String name, String script})>[
     (
       name: 'worker execution error completes pending capture and retries through fallback',

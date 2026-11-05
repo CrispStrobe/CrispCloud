@@ -123,12 +123,15 @@ flutter test --concurrency=2 \
   test/image_editor_strings_test.dart test/file_editability_test.dart \
   test/pdf_file_store_test.dart test/widget/image_editor_menus_test.dart \
   test/widget/image_editor_routing_test.dart
-flutter test --concurrency=1 test/widget/image_editor_dialog_test.dart
+flutter test --concurrency=1 \
+  test/widget/image_editor_dialog_test.dart \
+  test/widget/image_editor_apply_lifecycle_test.dart
 python3 tool/prepare_image_editor_browser_test.py
 flutter test --platform chrome --concurrency=1 \
   test/widget/image_editor_menus_test.dart \
   test/widget/image_editor_routing_test.dart \
-  test/widget/image_editor_dialog_test.dart
+  test/widget/image_editor_dialog_test.dart \
+  test/widget/image_editor_apply_lifecycle_test.dart
 ```
 
 Run the maintained engine's regression tests separately:
@@ -137,6 +140,7 @@ Run the maintained engine's regression tests separately:
 cd packages/pro_image_editor
 flutter pub get
 flutter test test/crispcloud
+flutter test --platform chrome test/crispcloud/web_worker_failure_test.dart
 ```
 
 The real-file tests are part of normal CI and require no provider credentials.

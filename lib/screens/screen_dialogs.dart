@@ -21,6 +21,8 @@ import '../widgets/file_editor_dialog.dart' show showFileEditorDialog;
 import '../widgets/internal_viewer_dialog.dart'
     show InternalViewerAction, showInternalViewer;
 import '../l10n/app_localizations.dart';
+import '../l10n/image_editor_strings.dart';
+import '../services/image_edit_session.dart' show isEditableImageFileName;
 import '../services/log_service.dart';
 
 const _log = Log('ScreenDialogs');
@@ -359,10 +361,14 @@ Future<void> _editFile(
     if (panel.isInArchive) {
       if (context.mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
+          SnackBar(
             content: Text(
-              'Editing files inside an archive is not supported. '
-              'Extract the file first.',
+              isEditableImageFileName(target.name)
+                  ? context.imageTr(
+                      'Extract this file from its archive or container before editing.',
+                    )
+                  : 'Editing files inside an archive is not supported. '
+                      'Extract the file first.',
             ),
           ),
         );

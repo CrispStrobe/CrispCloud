@@ -18,43 +18,23 @@ class PaintDesktopInteractionManager {
   /// The build context used for interactions.
   final BuildContext context;
 
-  bool _ctrlDown = false;
-  bool _shiftDown = false;
-
   /// Handles keyboard events.
   ///
   /// This method responds to key events and performs actions based on the
   /// pressed keys.
-  /// If the 'Escape' key is pressed and the widget is still mounted, it
-  /// triggers the navigator to pop the current context.
+  /// Modifier state comes from the hardware keyboard because an embedding
+  /// host can suppress events while another route covers the editor.
   bool onKey(KeyEvent event, {required Function(bool) onUndoRedo}) {
     final key = event.logicalKey.keyLabel;
     if (context.mounted) {
       if (event is KeyDownEvent) {
         switch (key) {
-          case 'Control Left':
-          case 'Control Right':
-            _ctrlDown = true;
-            break;
-          case 'Shift Left':
-          case 'Shift Right':
-            _shiftDown = true;
-            break;
           case 'Z':
-            if (_ctrlDown && !HardwareKeyboard.instance.isAltPressed) {
-              onUndoRedo(!_shiftDown);
+            final keyboard = HardwareKeyboard.instance;
+            if ((keyboard.isControlPressed || keyboard.isMetaPressed) &&
+                !keyboard.isAltPressed) {
+              onUndoRedo(!keyboard.isShiftPressed);
             }
-            break;
-        }
-      } else if (event is KeyUpEvent) {
-        switch (key) {
-          case 'Control Left':
-          case 'Control Right':
-            _ctrlDown = false;
-            break;
-          case 'Shift Left':
-          case 'Shift Right':
-            _shiftDown = false;
             break;
         }
       }

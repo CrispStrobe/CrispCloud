@@ -199,6 +199,7 @@ def check() -> tuple[int, int]:
         "lib/widgets/file_editor_dialog.dart",
         "lib/widgets/file_context_menu.dart",
         "lib/screens/file_browser_screen.dart",
+        "lib/screens/screen_dialogs.dart",
     ]
     for name in paths:
         path = ROOT / name

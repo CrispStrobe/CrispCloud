@@ -43,7 +43,7 @@ upstream tests comprise 822 files before local changes.
 | `lib/shared/widgets/overlays/editor_bottom_sheet.dart` | Preserve the scoped editor localizations around the complete popup route, including its sheet chrome, while retaining host navigator ownership. |
 | Image converter/render service and recorder controller | Preserve transparent image borders and source resolution when capturing image bounds; retain explicit drawing/layer crop overrides. The worker receives the corrected flag before conversion, so its bundled JavaScript needs no changes. |
 | Browser worker manager/thread and shared task manager | Reject pending work on script, execution, or message errors so the existing main-thread encoder can recover; clean failed tasks, count each task once, and inspect existing workers without creating leaked probes. The manager accepts an optional script URL while retaining the published default. |
-| `lib/core/services/keyboard_service.dart` | Recognize both physical Command keys with Flutter's `isMetaPressed` modifier state. |
+| `lib/core/services/keyboard_service.dart` and crop/paint desktop managers | Recognize both physical Command keys; read live Control/Meta/Shift state so a host-blocked key press or release cannot leave stale shortcut modifiers after an overlay closes. |
 | `lib/core/models/i18n/i18n_text_editor.dart` | Expose overflow Cancel, font-style sample, and font-size Reset labels. |
 | `lib/shared/widgets/platform/platform_popup_menu.dart` and paint/text appbars | Supply translated overflow Cancel labels, with a localized Cupertino fallback. |
 | Text bottom bar and text editor | Use the configured script sample and Reset label. |
@@ -55,11 +55,14 @@ helpers required by them. New tests in `test/crispcloud/` cover nested
 cancellation, Escape, capture without losing the host route, repeated Apply,
 awaited completion failure and retry, apply/undo/redo, wheel history and
 branching, host navigation and menu contracts, scoped popup localization,
-Command-key recognition, translated overflow/font controls, and localized
+Command-key recognition, live modifiers across host-blocked key events,
+translated overflow/font controls, and localized
 visible and spoken numbers, transparent image-border preservation, intentional
 drawing-only trimming, and the request passed to a worker. Browser-only
 regressions use real workers to verify recovery from script execution errors,
 malformed responses, and a missing worker asset without leaving Save pending.
+A direct browser regression also checks two successful encodes in the unchanged
+production worker, with no fallback or leaked active tasks.
 
 The application owns its editor menus, save workflow, file-format checks,
 and translations; they do not belong in upstream defaults. Its real-renderer
