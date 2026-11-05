@@ -3849,15 +3849,11 @@ class PanelNotifier extends ChangeNotifier {
       _secondarySortColumnId = null;
     }
     return FileViewConfiguration(
-      display: mode == ViewMode.grid
-          ? FileViewDisplay.grid
-          : mode == ViewMode.column
-          ? FileViewDisplay.column
-          : density == PanelViewMode.tree
-          ? FileViewDisplay.tree
-          : density == PanelViewMode.brief
-          ? FileViewDisplay.brief
-          : FileViewDisplay.full,
+      display: FileViewDisplay.values.firstWhere(
+        (display) =>
+            display.name == (mode == ViewMode.list ? density.name : mode.name),
+        orElse: () => FileViewDisplay.full,
+      ),
       columns: columns,
       widths: _ref.read(columnWidthsProvider(side)),
       sortBy: _sortBy,
@@ -3920,11 +3916,10 @@ class PanelNotifier extends ChangeNotifier {
                     : remoteViewModeProvider)
                 .notifier,
           )
-          .state = view.display == FileViewDisplay.grid
-          ? ViewMode.grid
-          : view.display == FileViewDisplay.column
-          ? ViewMode.column
-          : ViewMode.list;
+          .state = ViewMode.values.firstWhere(
+        (mode) => mode.name == view.display.name,
+        orElse: () => ViewMode.list,
+      );
     } finally {
       _applyingTabView = false;
     }
@@ -4182,10 +4177,18 @@ class PanelNotifier extends ChangeNotifier {
   Future<void> _restoreSelectedTab() async {
     final tab = activeTab;
     if (tab == null || _isDisposed) return;
-    _applyTabView(tab.view);
+    final savedView = tab.view;
+    _applyTabView(savedView);
     try {
       if (tab.collectionId != null) {
         await openCollection(tab.collectionId!);
+        if (!_isDisposed && _activeTabId == tab.id && savedView != null) {
+          _applyTabView(savedView);
+          _sortFiles();
+          _captureTabView();
+          notifyListeners();
+          await _saveTabs();
+        }
         return;
       }
       final storage = tab.storage;
@@ -4631,7 +4634,14 @@ class PanelNotifier extends ChangeNotifier {
       final cached = dirCache.get(cacheKey);
       if (cached != null && cached.isNotEmpty) {
         final prev = cursorItem;
-        _files = List.of(cached);
+        _files = cached
+            .where(
+              (file) =>
+                  _showHiddenFiles ||
+                  !file.name.startsWith('.') ||
+                  file.name == '..',
+            )
+            .toList();
         _sortFiles();
         _resetCursor(preserveItem: prev);
         notifyListeners();
@@ -5113,7 +5123,9 @@ class PanelNotifier extends ChangeNotifier {
           [];
 
       // Prepend ".." for cloud paths that aren't root
-      final allItems = [...folders, ...files];
+      final allItems = [...folders, ...files]
+          .where((file) => _showHiddenFiles || !file.name.startsWith('.'))
+          .toList();
       if (listingPath != '/' && listingPath.isNotEmpty) {
         final parentRemote = p.posix.dirname(listingPath);
         allItems.insert(

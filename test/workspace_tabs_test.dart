@@ -23,6 +23,7 @@ class _Cloud extends CloudStorageClient {
   _Cloud(this.account);
   final String account;
   final paths = <String>[];
+  bool includeHidden = false;
   bool authenticated = true;
   @override
   String get providerName => 'Workspace cloud';
@@ -42,6 +43,7 @@ class _Cloud extends CloudStorageClient {
     return {
       'files': [
         {'name': '$account.txt', 'uuid': '$account:$path', 'size': 3},
+        if (includeHidden) {'name': '.hidden', 'uuid': '$account:hidden:$path'},
       ],
       'folders': [
         if (path == '/') {'name': 'one'},
@@ -105,6 +107,52 @@ void main() {
     await panel.refresh();
   });
   tearDown(() => container.dispose());
+
+  test(
+    'every available visual layout survives a per-tab profile round-trip',
+    () async {
+      for (final mode in ViewMode.values.where(
+        (mode) => mode != ViewMode.list,
+      )) {
+        final display = FileViewDisplay.values.byName(mode.name);
+        await panel.applyViewConfiguration(
+          FileViewConfiguration(display: display),
+        );
+        final saved = await panel.exportTabs();
+        await panel.applyViewConfiguration(FileViewConfiguration());
+        await panel.restoreTabs(saved, replace: true, keepProtected: false);
+        expect(container.read(remoteViewModeProvider), mode);
+        expect(panel.captureViewConfiguration().display, display);
+      }
+    },
+  );
+
+  test('remote hidden files follow the saved view configuration', () async {
+    cloud.includeHidden = true;
+    await panel.refresh();
+    expect(panel.files!.any((file) => file.name == '.hidden'), isFalse);
+    await panel.applyViewConfiguration(FileViewConfiguration(showHidden: true));
+    expect(panel.files!.any((file) => file.name == '.hidden'), isTrue);
+    await panel.applyViewConfiguration(FileViewConfiguration());
+    expect(panel.files!.any((file) => file.name == '.hidden'), isFalse);
+  });
+
+  test(
+    'restored file-list tabs keep their saved filter after collection refresh',
+    () async {
+      panel.showSearchResults([
+        panel.files!.firstWhere((file) => !file.isFolder),
+      ], origin: panel.captureCurrentOrigin());
+      await panel.applyViewConfiguration(
+        FileViewConfiguration(filter: 'account', display: FileViewDisplay.grid),
+      );
+      final saved = await panel.exportTabs();
+      await panel.restoreTabs(saved, replace: true, keepProtected: false);
+      expect(panel.showingSearchResults, isTrue);
+      expect(panel.filterQuery, 'account');
+      expect(panel.captureViewConfiguration().display, FileViewDisplay.grid);
+    },
+  );
 
   test(
     'workspace captures and restores both pane layouts and active views',

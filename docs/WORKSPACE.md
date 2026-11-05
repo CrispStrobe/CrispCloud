@@ -23,10 +23,18 @@ The lock modes follow the behaviors described in the [Double Commander tab docum
 
 ## Saved views and workspace storage
 
-Each tab retains its display mode, visible column order and widths, primary and secondary sort, hidden-file setting and manual name filter. Temporary type-ahead text is not saved. Switching or closing tabs restores the destination tab's settings. Compact file rows and their headers share the same responsive column calculation: narrower panes keep the name readable and show the remaining columns when space is available.
+Open **Workspaces, bookmarks and views** from the tab bar. **Tab groups** can save, rename, update, reorder, append or replace both panes. Replacement keeps pinned and locked tabs by default. **Paired bookmarks** opens two captured locations together, with an option to open neighboring tabs. **View profiles** creates and edits named configurations and applies them to one or both panes. The column-header context menu also opens the view editor directly.
+
+Each tab retains its display mode (including grid, tiles and gallery), visible column order and widths, primary and secondary sort, hidden-file setting and manual name filter. Temporary type-ahead text is not saved. Switching or closing tabs restores the destination tab's settings, including saved filters on collection tabs. Compact file rows and their headers share the same responsive column calculation: narrower panes keep the name readable and show the remaining columns when space is available.
 
 Views support size, modification date, extension, original path, storage source, collection status and supplied metadata fields. Metadata columns can address a direct key or a dotted nested key and sort numeric values numerically. They do not execute an external metadata plugin or download file contents merely to display a column.
 
 Named groups capture both panes and their layout; paired bookmarks capture the two active locations. Both locations in a pair are checked against their original accounts before navigation begins. If a provider disconnects between opening the two panes, the error identifies that interruption; navigation is not a filesystem transaction.
 
 The versioned workspace settings document is written only after complete validation and a successful persistence acknowledgment. Import merges entries by stable saved IDs, validates the entire document first, and is limited to 2 MiB. Credentials, client objects and file contents are excluded. Foreign local installations remain foreign; an imported local path does not grant access on another machine. File-list tabs refer to separately persisted collections, which must also be available when transferring settings between installations.
+
+## Ordinary bookmarks and migration
+
+Ctrl+B, breadcrumb stars and the tree bookmark button now capture the actual storage account. A bookmarked file list is saved as a collection first. Bookmarks with the same path on different accounts remain distinct, and the volume/bookmark menus, tree and drive bar reopen the captured account instead of adopting the pane's current account.
+
+The **Single locations** section within **Paired bookmarks** opens, renames, removes, imports and exports ordinary bookmarks. Older bookmarks are retained but remain unbound because their original format recorded only the pane and path. **Bind original source…** shows the exact current account and bookmarked path for review before migration. Cancellation or an account disconnection leaves the old bookmark unbound. No automatic account guess is made. Bookmark JSON import validates the complete document and merges by account, collection and path; referenced collections remain separate exports.

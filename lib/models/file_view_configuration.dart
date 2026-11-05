@@ -2,7 +2,7 @@ import 'file_item.dart';
 import 'sort.dart';
 import '../utils/formatters.dart';
 
-enum FileViewDisplay { full, brief, tree, grid, column }
+enum FileViewDisplay { full, brief, tree, grid, column, tiles, gallery }
 
 enum FileColumnKind {
   size,

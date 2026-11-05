@@ -201,7 +201,14 @@ class FileColumnHeader extends ConsumerWidget {
     if (selection == ':configure') {
       onConfigure?.call();
     } else {
-      ref.read(columnWidthsProvider(side).notifier).toggleVisibility(selection);
+      ref
+          .read(columnWidthsProvider(side).notifier)
+          .toggleVisibility(
+            selection,
+            defaultWidth: view.columns
+                .firstWhere((column) => column.id == selection)
+                .defaultWidth,
+          );
     }
   }
 }

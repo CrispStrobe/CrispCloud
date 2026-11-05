@@ -195,8 +195,8 @@ class _ColumnWidthsNotifier extends StateNotifier<Map<String, double>> {
 
   bool isVisible(String col) => (state[col] ?? 0) > 0;
 
-  void toggleVisibility(String col) {
-    final current = state[col] ?? 0;
+  void toggleVisibility(String col, {double? defaultWidth}) {
+    final current = state[col] ?? defaultWidth ?? 0;
     if (current <= 0) {
       // Restore to default
       final defaults = {'size': 62.0, 'date': 78.0, 'ext': 40.0};

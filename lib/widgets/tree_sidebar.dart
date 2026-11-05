@@ -14,7 +14,7 @@ import '../models/file_item.dart';
 import '../models/panel_side.dart';
 import '../l10n/app_localizations.dart';
 import '../providers/providers.dart';
-import '../services/log_service.dart';
+import 'bookmark_actions.dart';
 
 class TreeSidebar extends ConsumerStatefulWidget {
   const TreeSidebar({super.key});
@@ -77,7 +77,7 @@ class _TreeSidebarState extends ConsumerState<TreeSidebar> {
                 ),
                 IconButton(
                   icon: Icon(
-                    ref.watch(bookmarksProvider).isBookmarked(currentPath, activePanel)
+                    isPanelBookmarked(ref.watch(bookmarksProvider), panel)
                         ? Icons.bookmark
                         : Icons.bookmark_border,
                     size: 14,
@@ -85,14 +85,7 @@ class _TreeSidebarState extends ConsumerState<TreeSidebar> {
                   padding: EdgeInsets.zero,
                   constraints: const BoxConstraints(),
                   tooltip: l.bookmarkFolder,
-                  onPressed: () {
-                    final bm = ref.read(bookmarksProvider);
-                    if (bm.isBookmarked(currentPath, activePanel)) {
-                      bm.remove(currentPath, activePanel);
-                    } else {
-                      bm.add(_pathLabel(currentPath), currentPath, activePanel);
-                    }
-                  },
+                  onPressed: () => togglePanelBookmark(context, ref, activePanel, label: _pathLabel(currentPath)),
                 ),
                 const SizedBox(width: 4),
                 IconButton(
@@ -327,8 +320,6 @@ class _TreeSidebarState extends ConsumerState<TreeSidebar> {
     if (filtered.isEmpty) return const SizedBox.shrink();
 
     final theme = Theme.of(context);
-    final panel = ref.read(panelProvider(activePanel));
-
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
@@ -340,7 +331,7 @@ class _TreeSidebarState extends ConsumerState<TreeSidebar> {
           )),
         ),
         ...filtered.map((b) => InkWell(
-          onTap: () => panel.navigateToPath(b.path),
+          onTap: () => openBookmark(context, ref, b, side: activePanel),
           child: Padding(
             padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 3),
             child: Row(
@@ -349,7 +340,7 @@ class _TreeSidebarState extends ConsumerState<TreeSidebar> {
                 const SizedBox(width: 6),
                 Expanded(child: Text(b.name, style: const TextStyle(fontSize: 12), overflow: TextOverflow.ellipsis)),
                 InkWell(
-                  onTap: () => ref.read(bookmarksProvider).remove(b.path, b.side),
+                  onTap: () => removeBookmark(context, ref, b),
                   child: Icon(Icons.close, size: 12, color: theme.colorScheme.onSurfaceVariant),
                 ),
               ],
