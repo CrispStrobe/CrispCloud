@@ -493,9 +493,45 @@ class WordSerializer {
     XmlWriter w,
     WmlParagraph paragraph, {
     WmlSection? sectionBreak,
+    bool noteReference = false,
+    bool endnote = false,
   }) {
     w.writeStartElement('p', prefix: 'w');
     _writePPr(w, paragraph.properties, sectionBreak: sectionBreak);
+    if (noteReference) {
+      // Word displays the automatic note number from this marker in the note
+      // body. Without it, Word shows the note text but no number.
+      w.writeStartElement('r', prefix: 'w');
+      w.writeStartElement('rPr', prefix: 'w');
+      w.writeStartElement('rStyle', prefix: 'w');
+      w.writeAttribute(
+        'w:val',
+        endnote ? 'EndnoteReference' : 'FootnoteReference',
+      );
+      w.writeEndElement();
+      // Direct formatting matters when the source package does not define
+      // the Word note-reference style. Word otherwise renders the number at
+      // body size and baseline instead of as a small superscript.
+      w.writeEmptyElement(
+        'vertAlign',
+        prefix: 'w',
+        attributes: <String, String>{'w:val': 'superscript'},
+      );
+      w.writeEndElement();
+      w.writeEmptyElement(
+        endnote ? 'endnoteRef' : 'footnoteRef',
+        prefix: 'w',
+      );
+      w.writeEndElement();
+      // Keep the automatic number separated from the first text run. Word's
+      // own note body normally starts with a space after the reference mark.
+      w.writeStartElement('r', prefix: 'w');
+      w.writeStartElement('t', prefix: 'w');
+      w.writeAttribute('xml:space', 'preserve');
+      w.writeText(' ');
+      w.writeEndElement();
+      w.writeEndElement();
+    }
     if (paragraph.properties.columnBreakBefore &&
         !paragraph.inlines.any(
           (WmlInline inline) =>
@@ -1661,8 +1697,13 @@ class WordSerializer {
     for (final WmlNote note in notes) {
       w.writeStartElement(item, prefix: 'w');
       w.writeAttribute('w:id', '${note.id}');
-      for (final WmlParagraph paragraph in note.paragraphs) {
-        _writeParagraph(w, paragraph);
+      for (var index = 0; index < note.paragraphs.length; index++) {
+        _writeParagraph(
+          w,
+          note.paragraphs[index],
+          noteReference: index == 0,
+          endnote: note.endnote,
+        );
       }
       w.writeEndElement();
     }

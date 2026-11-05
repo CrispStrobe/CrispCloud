@@ -20,7 +20,8 @@ List<String> _footnoteTexts(Uint8List bytes) {
           .whereType<xml.XmlElement>()
           .where((xml.XmlElement t) => t.name.local == 't')
           .map((xml.XmlElement t) => t.innerText)
-          .join())
+          .join()
+          .trim())
       .where((String text) => text.isNotEmpty)
       .toList();
 }
@@ -71,6 +72,9 @@ void main() {
     expect(_footnoteTexts(original), _footnoteTexts(saved));
     expect(_footnoteIdsByType(saved, 'separator'), contains(-1));
     expect(_footnoteIdsByType(saved, 'continuationSeparator'), contains(0));
+    final footnotesXml = utf8.decode(_parts(saved)['word/footnotes.xml']!);
+    expect(footnotesXml, contains('w:footnoteRef'));
+    expect(footnotesXml, contains('xml:space="preserve"> </w:t>'));
 
     final WordEditorController reopened =
         WordEditorController.fromBytes(saved);

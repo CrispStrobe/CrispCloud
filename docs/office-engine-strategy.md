@@ -56,11 +56,17 @@ minimal-edit outputs with Pandoc and python-docx:
 - both real footnotes survived;
 - `w:type="separator"` (`id=-1`) and
   `w:type="continuationSeparator"` (`id=0`) are present again;
+- each real footnote body has a `footnoteRef` mark and a separating space;
 - the minimal edit (`X` inserted at the start) survived.
 
-Microsoft Word and LibreOffice are not installed on this machine, so those two
-independent consumers remain to be run. Pandoc/python-docx are independent
-parsers, not substitutes for a Word/LibreOffice reopen test.
+Microsoft Word **is installed** and has now reopened, saved and exported the
+untouched/minimal outputs. The automated check is
+`tool/verify_word_roundtrip.py`; it stages files in Word's own sandbox
+container (`~/Library/Containers/com.microsoft.Word/Data/tmp/...`) so macOS
+does not repeatedly prompt for folder access. Word reported two footnotes,
+preserved body/footnote text, regenerated the separator chrome, and rendered
+superscript note marks with a space before the note text. The generated PDF is
+checked with `pdftotext`.
 
 ## Hard gate: save preservation
 
@@ -91,6 +97,31 @@ PoC therefore requires a host-owned WebView, an offline bundle of JS/WASM,
 workers, fonts and dynamic chunks, plus a byte/save bridge. No PoC was run in
 this environment because iOS hardware was unavailable and the browser runtime
 has not been packaged for the app.
+
+### CLI verification recommendations
+
+Use a layered harness rather than one parser:
+
+1. **Fast structural checks** — `python-docx`, `openpyxl`, `python-pptx`,
+   `lxml` and `zipfile` for relationships, parts, styles and note structures.
+2. **Semantic/text checks** — `pandoc` for DOCX→plain/Markdown, plus
+   `pdftotext` for rendered text and `pdftoppm` + ImageMagick `compare` or an
+   SSIM tool for visual regression.
+3. **Native consumer checks** — Word/Excel/PowerPoint AppleScript, using each
+   app's sandbox container for staging. This is the highest-value check for
+   actual Word compatibility; LibreOffice headless (`soffice --convert-to`) is
+   a useful cross-suite fallback if installed, but is not currently present.
+4. **Package/part diffing** — compare semantic XML parts, not whole-ZIP
+   hashes: content types, relationships, styles, numbering, footnotes,
+   headers/footers, media and formulas.
+
+CrispSorter's `scripts/verify_docx_independent.py` is the right *pattern*:
+author fixtures independently, run the real CLI, then verify with
+python-docx/zipfile. CrispTranslator's `debug_format.py` is directly reusable
+for DOCX XML checks (`footnotes`, separators, `footnoteRef`, styles, rsid
+hygiene, relationship integrity). CrispSorter is Tauri/Rust and
+CrispTranslator is Python, so neither supplies a Dart library; reuse their
+fixtures, assertions and CLI workflow rather than their runtime.
 
 The experiment must prove the integration, not just the demo.
 

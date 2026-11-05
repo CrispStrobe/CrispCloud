@@ -52,6 +52,8 @@ BetterOffice proof-of-concept criteria.
 - footnotes attach only to the page containing the reference glyph,
 - footnote/endnote separator and continuationSeparator chrome is recreated on
   save instead of being dropped,
+- footnote/endnote body marks are recreated with direct superscript formatting
+  and a separating space, so Word displays auto-numbered note marks correctly,
 - PDF watermarks rotate as one marked line and survive missing-script faces,
 - the feature-showcase template detail band fits its item table.
 
