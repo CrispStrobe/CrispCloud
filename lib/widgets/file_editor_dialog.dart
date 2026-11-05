@@ -30,7 +30,7 @@ import '../services/code_editor_menu.dart';
 import '../services/captured_file_target.dart';
 import '../services/editor_document.dart';
 import '../services/editor_highlighting.dart';
-import '../services/image_edit_session.dart' show isEditableImageFileName;
+import '../services/image_edit_session.dart' show isImageEditorFileName;
 import '../services/log_service.dart';
 import '../services/save_coordinator.dart';
 import '../utils/file_editability.dart' show isTextEditableName;
@@ -51,7 +51,7 @@ Future<void> showFileEditorDialog(
 ) async {
   if (file.isFolder) return;
   try {
-    if (isEditableImageFileName(file.name)) {
+    if (isImageEditorFileName(file.name)) {
       await showImageEditorDialog(context, ref, file, side);
       return;
     }

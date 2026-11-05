@@ -7,11 +7,18 @@ import 'package:crisp_cloud/utils/file_editability.dart';
 void main() {
   test('text, raster images, PDF and OOXML files are editable', () {
     expect(isEditableInBuiltInEditor('notes.txt'), isTrue);
+    expect(isEditableInBuiltInEditor('work.CCIMAGE'), isTrue);
+    expect(isEditableInBuiltInEditor('work.ccimage.zip'), isFalse);
     expect(isEditableInBuiltInEditor('README'), isTrue);
     expect(isEditableInBuiltInEditor('main.dart'), isTrue);
     expect(isEditableInBuiltInEditor('photo.jpg'), isTrue);
     expect(isEditableInBuiltInEditor('photo.JPEG'), isTrue);
     expect(isEditableInBuiltInEditor('drawing.PNG'), isTrue);
+    expect(isEditableInBuiltInEditor('photo.webp'), isTrue);
+    expect(isEditableInBuiltInEditor('image.gif'), isTrue);
+    expect(isEditableInBuiltInEditor('image.bmp'), isTrue);
+    expect(isEditableInBuiltInEditor('image.tif'), isTrue);
+    expect(isEditableInBuiltInEditor('image.TIFF'), isTrue);
     expect(isEditableInBuiltInEditor('report.pdf'), isTrue);
     expect(isEditableInBuiltInEditor('letter.docx'), isTrue);
     expect(isEditableInBuiltInEditor('book.xlsx'), isTrue);
@@ -20,8 +27,6 @@ void main() {
 
   test('view-only and binary formats are not offered as editable', () {
     for (final name in <String>[
-      'animation.gif',
-      'photo.webp',
       'photo.heic',
       'diagram.svg',
       'movie.avi',

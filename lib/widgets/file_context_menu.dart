@@ -30,7 +30,7 @@ import '../services/checksum_service.dart'
 import '../services/file_operation_backend.dart';
 import '../services/cloud_storage_interface.dart'
     show CloudStorageClientCapabilities;
-import '../services/image_edit_session.dart' show isEditableImageFileName;
+import '../services/image_edit_session.dart' show isImageEditorFileName;
 import '../services/link_service.dart';
 import '../services/secure_wipe_service.dart';
 import '../services/log_service.dart';
@@ -305,7 +305,7 @@ void showFileContextMenu(
   // Specialized editors and text/code editing for a single file.
   if (!isMultiSelect && !isSingleFolder) {
     final preferExternal = ref.read(preferExternalEditorProvider);
-    if (isEditableImageFileName(file.name)) {
+    if (isImageEditorFileName(file.name)) {
       items.add(
         PopupMenuItem(
           child: Row(
