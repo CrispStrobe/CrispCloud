@@ -308,10 +308,12 @@ class _ImageEditorDialogState extends ConsumerState<ImageEditorDialog> {
         bytes = await store.load();
       }
       if (!mounted) return;
-      final info = inspectEditableImage(
-        bytes,
-        fileName: _project?.sourceName ?? widget.file.name,
-      );
+      final sourceName =
+          _project?.sourceName ??
+          (widget.file.name.toLowerCase().endsWith('.webp')
+              ? 'source.png'
+              : widget.file.name);
+      final info = inspectEditableImage(bytes, fileName: sourceName);
       // Validate compressed pixels with Flutter's real decoder before handing
       // them to a renderer which would otherwise stay on its loading surface.
       final codec = await ui.instantiateImageCodec(bytes);
@@ -598,7 +600,11 @@ class _ImageEditorDialogState extends ConsumerState<ImageEditorDialog> {
         throw const ImageEditException(ImageEditFailure.staleExport);
       }
       final project = ImageEditProject(
-        sourceName: _project?.sourceName ?? widget.file.name,
+        sourceName:
+            _project?.sourceName ??
+            (widget.file.name.toLowerCase().endsWith('.webp')
+                ? '${p.basenameWithoutExtension(widget.file.name)}.png'
+                : widget.file.name),
         sourceBytes: _initialBytes!,
         history: history,
       );
@@ -786,7 +792,7 @@ class _ImageEditorDialogState extends ConsumerState<ImageEditorDialog> {
     ImageSaveConflictException() || PdfSaveConflictException() => 'The original image changed or could not be verified. Reopen it before saving.',
     ImageEditException(:final reason) => switch (reason) {
       ImageEditFailure.unsupportedFormat =>
-        'Only PNG and JPEG images can be edited.',
+        'Only PNG, JPEG, and WebP images can be edited.',
       ImageEditFailure.formatMismatch =>
         'The image contents do not match the filename extension.',
       ImageEditFailure.invalidImage =>

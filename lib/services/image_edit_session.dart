@@ -68,7 +68,9 @@ bool isEditableImageFileName(String name) =>
 
 /// Raster files and CrispCloud editable image projects share the F4 editor.
 bool isImageEditorFileName(String name) =>
-    isEditableImageFileName(name) || name.toLowerCase().endsWith('.ccimage');
+    isEditableImageFileName(name) ||
+    name.toLowerCase().endsWith('.webp') ||
+    name.toLowerCase().endsWith('.ccimage');
 
 /// Inspect structure and dimensions without allocating a full pixel buffer.
 ///

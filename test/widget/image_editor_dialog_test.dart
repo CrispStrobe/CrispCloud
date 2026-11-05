@@ -161,6 +161,8 @@ class _Harness {
     )?
     exporter,
     ImageProjectStore? projectStore,
+    ImageFileStore? imageStore,
+    String? fileName,
     ImageOverlayPicker? overlayPicker,
     Future<ImageSaveOutcome?> Function(Uint8List, String, String)?
     projectExporter,
@@ -183,13 +185,15 @@ class _Harness {
                   builder: (_) => Dialog.fullscreen(
                     child: ImageEditorDialog(
                       file: FileItem(
-                        name: projectStore == null
-                            ? store.displayName
-                            : 'sample.ccimage',
+                        name:
+                            fileName ??
+                            (projectStore == null
+                                ? store.displayName
+                                : 'sample.ccimage'),
                         isFolder: false,
                       ),
                       side: PanelSide.local,
-                      storeOverride: store,
+                      storeOverride: imageStore ?? store,
                       editorKey: key,
                       enableIsolateGeneration: enableIsolateGeneration,
                       deviceExporterOverride: exporter,
@@ -607,6 +611,48 @@ void main() {
     expect(dimensions, (24, 16));
     expect(_saveEnabled(tester), isTrue);
   });
+
+  _desktopTestWidgets(
+    'static WebP edits save as WebP and projects retain the pixels',
+    (tester) async {
+      final pixels = image.decodePng(buildImageEditorFixture())!;
+      final backing = _MemoryProjectStore(image.encodeWebP(pixels));
+      final harness = _Harness(tester, _MemoryImageStore());
+      Uint8List? projectBytes;
+      await harness.open(
+        imageStore: WebPImageFileStore(backing),
+        fileName: 'photo.webp',
+        projectExporter: (bytes, name, title) async {
+          projectBytes = bytes;
+          return ImageSaveOutcome.savedCopy;
+        },
+      );
+      await harness.addText('WebP edit');
+      await tester.ensureVisible(_command(ImageEditorAction.saveProjectCopy));
+      await tester.tap(_command(ImageEditorAction.saveProjectCopy));
+      await _until(
+        tester,
+        () => projectBytes != null && !harness.actions.busy,
+        reason: 'WebP project copy',
+      );
+      final project = ImageEditProject.decode(projectBytes!);
+      expect(project.sourceName, 'photo.png');
+      expect(image.decodePng(project.sourceBytes), isNotNull);
+      expect(_saveEnabled(tester), isTrue);
+      await tester.tap(_save);
+      await _until(
+        tester,
+        () =>
+            backing.writes == 1 &&
+            !harness.actions.busy &&
+            !_saveEnabled(tester),
+        reason: 'WebP source save',
+      );
+      final saved = image.decodeWebP(backing.bytes)!;
+      expect((saved.width, saved.height), (24, 16));
+      expect(saved.getPixel(0, 0).a, 0);
+    },
+  );
 
   _desktopTestWidgets('exporting a copy keeps the original dirty', (
     tester,

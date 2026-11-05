@@ -1,5 +1,6 @@
 import 'dart:typed_data';
 
+import 'package:flutter/foundation.dart' show compute;
 import 'package:image/image.dart' as image;
 
 import '../models/file_item.dart';
@@ -106,13 +107,7 @@ class WebPImageFileStore implements ImageFileStore {
       final bytes = await _delegate.load();
       if (bytes.length > kImageEditorInputLimitBytes)
         throw const ImageEditException(ImageEditFailure.inputTooLarge);
-      validateImageExport(bytes, ImageExportFormat.webp);
-      final decoder = image.WebPDecoder()..maxPixels = kImageEditorMaxPixels;
-      final pixels = decoder.decode(bytes);
-      if (pixels == null)
-        throw const ImageEditException(ImageEditFailure.invalidImage);
-      final png = image.encodePng(image.bakeOrientation(pixels));
-      inspectEditableImage(png, fileName: 'source.png');
+      final png = await compute(_webpToPng, bytes);
       _loaded = true;
       return png;
     } finally {
@@ -126,13 +121,8 @@ class WebPImageFileStore implements ImageFileStore {
     if (!_loaded) throw StateError('Load the image before saving it.');
     _busy = true;
     try {
-      validateImageEditorOutput(bytes, ImageFileFormat.png);
-      final pixels = image.PngDecoder(maxPixels: kImageEditorMaxPixels)
-          .decode(bytes);
-      if (pixels == null)
-        throw const ImageEditException(ImageEditFailure.invalidImage);
-      final output = image.encodeWebP(pixels);
-      validateImageExport(output, ImageExportFormat.webp);
+      final snapshot = Uint8List.fromList(bytes).asUnmodifiableView();
+      final output = await compute(_pngToWebp, snapshot);
       return switch (await _delegate.save(output)) {
         PdfSaveOutcome.savedOriginal => ImageSaveOutcome.savedOriginal,
         PdfSaveOutcome.savedCopy => ImageSaveOutcome.savedCopy,
@@ -160,6 +150,28 @@ class WebPImageFileStore implements ImageFileStore {
       );
     }
   }
+}
+
+Uint8List _webpToPng(Uint8List bytes) {
+  validateImageExport(bytes, ImageExportFormat.webp);
+  final decoder = image.WebPDecoder()..maxPixels = kImageEditorMaxPixels;
+  final pixels = decoder.decode(bytes);
+  if (pixels == null)
+    throw const ImageEditException(ImageEditFailure.invalidImage);
+  final png = image.encodePng(image.bakeOrientation(pixels));
+  inspectEditableImage(png, fileName: 'source.png');
+  return png;
+}
+
+Uint8List _pngToWebp(Uint8List bytes) {
+  validateImageEditorOutput(bytes, ImageFileFormat.png);
+  final pixels = image.PngDecoder(maxPixels: kImageEditorMaxPixels)
+      .decode(bytes);
+  if (pixels == null)
+    throw const ImageEditException(ImageEditFailure.invalidImage);
+  final output = image.encodeWebP(pixels);
+  validateImageExport(output, ImageExportFormat.webp);
+  return output;
 }
 
 class _ImageFileStore implements ImageFileStore {

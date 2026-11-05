@@ -56,6 +56,25 @@ void main() {
       expect(saved.getPixel(3, 3).r, 200);
     },
   );
+  test('animated WebP is rejected without changing the source', () async {
+    final first = image.decodePng(buildImageEditorFixture())!;
+    first.addFrame(image.Image.from(first));
+    final original = image.encodeWebP(first);
+    final backing = _WebPStore(original);
+    final store = WebPImageFileStore(backing);
+    await expectLater(
+      store.load(),
+      throwsA(
+        isA<ImageEditException>().having(
+          (e) => e.reason,
+          'reason',
+          ImageEditFailure.animatedImage,
+        ),
+      ),
+    );
+    expect(backing.bytes, orderedEquals(original));
+  });
+
   test('conflicts do not write the source and keep their host error', () async {
     final pixels = image.decodePng(buildImageEditorFixture())!;
     final backing = _WebPStore(image.encodeWebP(pixels));

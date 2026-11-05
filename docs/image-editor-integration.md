@@ -12,7 +12,7 @@ are recorded in the package's `UPSTREAM.md`.
 
 ## Save contract
 
-- Initial overwrite support is deliberately limited to static PNG and JPEG.
+- Overwrite support is limited to static PNG, JPEG, and WebP.
   Validate the bytes against the filename before opening; do not interpret
   unsupported binary files as text.
 - Preserve the input encoding and image resolution. Do not inherit the
@@ -54,7 +54,8 @@ results and any environment limitations are recorded here before completion.
 
 ## Implemented integration
 
-`showFileEditorDialog` dispatches `.png`, `.jpg`, and `.jpeg` to
+`showFileEditorDialog` dispatches `.png`, `.jpg`, `.jpeg`, `.webp`, and
+`.ccimage` projects to
 `ImageEditorDialog`. The same capability predicate enables the viewer's Edit
 button and the context-menu action. Unknown binary formats cannot fall through
 to the text editor. PNG animation chunks and JPEG multi-picture/trailing data
@@ -89,7 +90,9 @@ input and 64 MiB output limits. The image parser also enforces a maximum of
 origin before loading; changing the active pane/account cannot redirect an
 existing editor's save. Failed source verification blocks overwriting.
 
-Export explicitly selects the original PNG/JPEG encoding. A square bound
+Overwrite explicitly selects the original PNG/JPEG/WebP encoding. WebP is
+decoded to a PNG editing surface and saved as lossless WebP; its converted PNG
+must also fit the 32 MiB input limit. Animated WebP is rejected. A square bound
 based on the original longest side preserves full resolution after a quarter
 turn. PNG uses straight RGBA capture to preserve transparency. Edited output
 is a flattened raster; metadata, color-profile information, and high-bit-depth
@@ -125,8 +128,9 @@ exact dimensions, and JPEG quality. WebP export is lossless. JPEG composites tra
 copies: they do not mark the source saved. Browser downloads report initiation,
 not successful persistence.
 
-Save Project Copy writes a `.ccimage` file containing the original raster and
-serialized editing history. F4 reopens the project and restores editable layers;
+Save Project Copy writes a `.ccimage` file containing the source raster and
+serialized editing history. For WebP sources the embedded raster is the
+decoded, orientation-normalized PNG used by the editor. F4 reopens the project and restores editable layers;
 subsequent Save writes the project through the existing origin-bound conflict
 checks. Project content is limited to 64 MiB and its source bytes have a SHA-256
 integrity check. External file, network, and asset layer references are rejected;
