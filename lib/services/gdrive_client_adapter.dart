@@ -16,6 +16,8 @@ import 'package:path/path.dart' as p;
 import 'package:url_launcher/url_launcher.dart';
 
 import 'cloud_storage_interface.dart';
+import 'bounded_http_transfer.dart';
+import 'bounded_transfer_stream.dart';
 import 'gdrive_config_service.dart';
 import 'log_service.dart';
 import 'secure_storage_service.dart';
@@ -92,6 +94,8 @@ class GDriveClientAdapter extends CloudStorageClient
   bool get supportsServerSideCopy => true;
   @override
   bool get supportsFullTextSearch => true;
+  @override
+  bool get supportsStreaming => true;
 
   // --- Auth ---
 
@@ -248,11 +252,16 @@ class GDriveClientAdapter extends CloudStorageClient
           "name='${_escapeQuery(segment)}' and '$parentId' in parents and mimeType='application/vnd.google-apps.folder' and trashed=false";
       final resp = await _apiGet(
         '/files',
-        queryParams: {'q': query, 'fields': 'files(id,name)', 'pageSize': '1'},
+        queryParams: {'q': query, 'fields': 'files(id,name)', 'pageSize': '2'},
       );
 
       final files = (resp['files'] as List?) ?? [];
       if (files.isEmpty) return null;
+      if (files.length > 1) {
+        throw StateError(
+          'Google Drive contains multiple folders at this path.',
+        );
+      }
 
       final folderId = files[0]['id'] as String;
       _pathToId[accumulated] = folderId;
@@ -516,6 +525,118 @@ class GDriveClientAdapter extends CloudStorageClient
   // --- Upload ---
 
   @override
+  Future<void> uploadStream(
+    Stream<List<int>> dataStream,
+    int length,
+    String fileName,
+    String targetPath, {
+    Function(int, int)? onProgress,
+  }) async {
+    if (length < 0) throw ArgumentError.value(length, 'length');
+    if (length == 0) {
+      await validatedTransferParts(dataStream, 0, 1).drain<void>();
+      return uploadFile(const [], fileName, targetPath, onProgress: onProgress);
+    }
+    await _ensureToken();
+    final parentId = await _resolvePathToId(targetPath);
+    if (parentId == null) {
+      throw StateError('The upload destination no longer exists.');
+    }
+    final existingId = await _findFileInFolder(parentId, fileName);
+    final path = existingId == null ? '/files' : '/files/$existingId';
+    final request =
+        http.Request(
+            existingId == null ? 'POST' : 'PATCH',
+            Uri.parse('$_uploadBase$path').replace(
+              queryParameters: {'uploadType': 'resumable', 'fields': 'id,size'},
+            ),
+          )
+          ..followRedirects = false
+          ..headers.addAll({
+            'Authorization': 'Bearer $_accessToken',
+            'Content-Type': 'application/json; charset=UTF-8',
+            'X-Upload-Content-Type': 'application/octet-stream',
+            'X-Upload-Content-Length': '$length',
+          })
+          ..body = json.encode({
+            if (existingId == null) 'name': fileName,
+            if (existingId == null) 'parents': [parentId],
+          });
+    final client = http.Client();
+    try {
+      final session = await sendTransferRequest(
+        client,
+        request,
+        operation: 'Google Drive upload session',
+      );
+      if (session.statusCode != 200 && session.statusCode != 201) {
+        throw StateError(
+          'Google Drive upload session failed (${session.statusCode}).',
+        );
+      }
+      final location = Uri.tryParse(session.headers['location'] ?? '');
+      if (location == null ||
+          location.scheme != 'https' ||
+          location.userInfo.isNotEmpty ||
+          location.port != 443 ||
+          !(location.host == 'googleapis.com' ||
+              location.host.endsWith('.googleapis.com'))) {
+        throw StateError('Google Drive returned an invalid upload session.');
+      }
+      var offset = 0;
+      await for (final part in validatedTransferParts(
+        dataStream,
+        length,
+        2 * 1024 * 1024,
+      )) {
+        await _ensureToken();
+        final end = offset + part.length;
+        final chunk = http.Request('PUT', location)
+          ..followRedirects = false
+          ..headers.addAll({
+            'Authorization': 'Bearer $_accessToken',
+            'Content-Type': 'application/octet-stream',
+            'Content-Range': 'bytes $offset-${end - 1}/$length',
+          })
+          ..bodyBytes = part;
+        final response = await sendTransferRequest(
+          client,
+          chunk,
+          operation: 'Google Drive upload',
+        );
+        if (end < length) {
+          final range = RegExp(r'^bytes=0-(\d+)$')
+              .firstMatch(response.headers['range'] ?? '');
+          if (response.statusCode != 308 ||
+              range == null ||
+              int.tryParse(range.group(1)!) != end - 1) {
+            throw StateError(
+              'Google Drive did not acknowledge the uploaded range.',
+            );
+          }
+        } else {
+          if (response.statusCode != 200 && response.statusCode != 201) {
+            throw StateError(
+              'Google Drive did not confirm upload completion (${response.statusCode}).',
+            );
+          }
+          final metadata = json.decode(response.body) as Map<String, dynamic>;
+          if (metadata['id'] is! String ||
+              int.tryParse('${metadata['size']}') != length) {
+            throw StateError(
+              'Google Drive upload completion could not be verified.',
+            );
+          }
+        }
+        offset = end;
+        onProgress?.call(offset, length);
+      }
+    } finally {
+      client.close();
+    }
+  }
+
+  @override
   Future<void> uploadFile(
     List<int> fileData,
     String fileName,
@@ -524,7 +645,10 @@ class GDriveClientAdapter extends CloudStorageClient
   }) async {
     await _ensureToken();
 
-    final parentId = await _resolvePathToId(targetPath) ?? 'root';
+    final parentId = await _resolvePathToId(targetPath);
+    if (parentId == null) {
+      throw StateError('The upload destination no longer exists.');
+    }
 
     // Check if file already exists — update instead of create
     final existingId = await _findFileInFolder(parentId, fileName);
@@ -858,9 +982,47 @@ class GDriveClientAdapter extends CloudStorageClient
     String localPath, {
     Function(int, int)? onProgress,
   }) async {
-    final bytes = await downloadFileBytes(remotePath, onProgress: onProgress);
-    final file = File(localPath);
-    await file.writeAsBytes(bytes);
+    final sink = File(localPath).openWrite();
+    try {
+      await sink.addStream(downloadStream(remotePath, onProgress: onProgress));
+      await sink.flush();
+    } finally {
+      await sink.close();
+    }
+  }
+
+  @override
+  Stream<List<int>> downloadStream(
+    String remotePath, {
+    Function(int, int)? onProgress,
+  }) async* {
+    await _ensureToken();
+    final fileId = await _resolveFileId(remotePath);
+    if (fileId == null) {
+      throw StateError('The download source no longer exists.');
+    }
+    final metadata = await _apiGet(
+      '/files/$fileId',
+      queryParams: {'fields': 'mimeType,size'},
+    );
+    final mime = metadata['mimeType'] as String?;
+    final exportMime = _googleDocsMimeTypes[mime];
+    if (mime == 'application/vnd.google-apps.folder') {
+      throw StateError('Cannot download a folder as file bytes.');
+    }
+    final uri = exportMime == null
+        ? Uri.parse('$_apiBase/files/$fileId?alt=media')
+        : Uri.parse('$_apiBase/files/$fileId/export')
+              .replace(queryParameters: {'mimeType': exportMime});
+    yield* streamHttpDownload(
+      uri,
+      operation: 'Google Drive download',
+      headers: {'Authorization': 'Bearer $_accessToken'},
+      expectedLength: exportMime == null
+          ? int.tryParse('${metadata['size']}')
+          : null,
+      onProgress: onProgress,
+    );
   }
 
   // --- Folder ---
@@ -969,8 +1131,9 @@ class GDriveClientAdapter extends CloudStorageClient
       throw ArgumentError('Select a file or folder below the storage root.');
     }
     final parent = await _resolvePathToId(p.posix.dirname(path));
-    if (parent == null)
+    if (parent == null) {
       throw StateError('The original parent folder is unavailable.');
+    }
     final name = _escapeQuery(p.posix.basename(path));
     final result = await _apiGet(
       '/files',
@@ -1286,7 +1449,8 @@ class GDriveClientAdapter extends CloudStorageClient
 
     final parentPath = p.posix.dirname(path);
     final fileName = p.posix.basename(path);
-    final parentId = await _resolvePathToId(parentPath) ?? 'root';
+    final parentId = await _resolvePathToId(parentPath);
+    if (parentId == null) return null;
 
     return await _findFileInFolder(parentId, fileName);
   }
@@ -1296,10 +1460,13 @@ class GDriveClientAdapter extends CloudStorageClient
         "name='${_escapeQuery(name)}' and '$parentId' in parents and trashed=false";
     final resp = await _apiGet(
       '/files',
-      queryParams: {'q': query, 'fields': 'files(id)', 'pageSize': '1'},
+      queryParams: {'q': query, 'fields': 'files(id)', 'pageSize': '2'},
     );
     final files = (resp['files'] as List?) ?? [];
     if (files.isEmpty) return null;
+    if (files.length > 1) {
+      throw StateError('Google Drive contains multiple items at this path.');
+    }
     return files[0]['id'] as String;
   }
 

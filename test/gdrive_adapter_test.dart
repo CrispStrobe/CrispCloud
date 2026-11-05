@@ -74,8 +74,8 @@ void main() {
       expect(adapter.supportsTrash, isTrue);
     });
 
-    test('does not support streaming (default)', () {
-      expect(adapter.supportsStreaming, isFalse);
+    test('supports bounded streaming', () {
+      expect(adapter.supportsStreaming, isTrue);
     });
 
     test('does not support multipart (default)', () {

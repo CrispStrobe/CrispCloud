@@ -19,3 +19,35 @@ Stream<Uint8List> transferParts(Stream<List<int>> source, int partSize) async* {
   }
   if (pending.isNotEmpty) yield pending.takeBytes();
 }
+
+/// Validates the declared size before releasing the final upload part. A
+/// provider must not commit an apparently final part and only then discover
+/// that its source contains additional bytes. Earlier parts retain bounded
+/// backpressure, and at most the final part is held while checking EOF.
+Stream<Uint8List> validatedTransferParts(
+  Stream<List<int>> source,
+  int length,
+  int partSize,
+) async* {
+  if (length < 0) throw ArgumentError.value(length, 'length');
+  var received = 0;
+  Uint8List? finalPart;
+  await for (final part in transferParts(source, partSize)) {
+    if (finalPart != null || received + part.length > length) {
+      throw StateError('Upload source exceeded its declared length.');
+    }
+    received += part.length;
+    if (part.length < partSize && received < length) {
+      throw StateError('Upload source ended before its declared length.');
+    }
+    if (received == length) {
+      finalPart = part;
+    } else {
+      yield part;
+    }
+  }
+  if (received != length) {
+    throw StateError('Upload source ended before its declared length.');
+  }
+  if (finalPart != null) yield finalPart;
+}
