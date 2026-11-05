@@ -4,6 +4,7 @@ import 'dart:math' as math;
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import '../l10n/commander_strings.dart';
 import '../models/file_item.dart';
 import '../models/panel_side.dart';
 import '../models/rename_batch.dart';
@@ -112,15 +113,25 @@ class _RenameHistoryDialogState extends ConsumerState<RenameHistoryDialog> {
       await showDialog<bool>(
         context: context,
         builder: (context) => AlertDialog(
-          title: Text(restore ? 'Restore this batch?' : 'Resume this batch?'),
+          title: Text(
+            restore
+                ? context.commanderTr("Restore this batch?")
+                : context.commanderTr("Resume this batch?"),
+          ),
           scrollable: true,
           content: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               Text(
                 restore
-                    ? 'Restore ${record.changedCount} original names. Existing destinations and changed source items are checked again.'
-                    : 'Continue the saved physical rename steps on ${record.storage.provider}. Completed steps are reconciled before continuing.',
+                    ? context.commanderTr(
+                        "Restore {0} original names. Existing destinations and changed source items are checked again.",
+                        [record.changedCount],
+                      )
+                    : context.commanderTr(
+                        "Continue the saved physical rename steps on {0}. Completed steps are reconciled before continuing.",
+                        [record.storage.provider],
+                      ),
               ),
               const SizedBox(height: 12),
               for (final item in record.items.where(
@@ -137,11 +148,15 @@ class _RenameHistoryDialogState extends ConsumerState<RenameHistoryDialog> {
           actions: [
             TextButton(
               onPressed: () => Navigator.pop(context, false),
-              child: const Text('Cancel'),
+              child: Text(context.commanderTr("Cancel")),
             ),
             FilledButton(
               onPressed: () => Navigator.pop(context, true),
-              child: Text(restore ? 'Restore original names' : 'Resume'),
+              child: Text(
+                restore
+                    ? context.commanderTr("Restore original names")
+                    : context.commanderTr("Resume"),
+              ),
             ),
           ],
         ),
@@ -219,19 +234,22 @@ class _RenameHistoryDialogState extends ConsumerState<RenameHistoryDialog> {
     final confirmed = await showDialog<bool>(
       context: context,
       builder: (context) => AlertDialog(
-        title: const Text('Verify the observed destination'),
+        title: Text(context.commanderTr("Verify the observed destination")),
         scrollable: true,
         content: Text(
-          'This provider cannot automatically prove which item survived an interrupted rename. Inspect the destination using your provider before proceeding.\n\nOriginal: ${reverse ? step.to : step.from}\nObserved destination: ${reverse ? step.from : step.to}\n\nOnly confirm if the destination contains the original item. Both paths existing, or a known fingerprint mismatch, will still block recovery.',
+          context.commanderTr(
+            "This provider cannot automatically prove which item survived an interrupted rename. Inspect the destination using your provider before proceeding.\n\nOriginal: {0}\nObserved destination: {1}\n\nOnly confirm if the destination contains the original item. Both paths existing, or a known fingerprint mismatch, will still block recovery.",
+            [reverse ? step.to : step.from, reverse ? step.from : step.to],
+          ),
         ),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(context, false),
-            child: const Text('Cancel'),
+            child: Text(context.commanderTr("Cancel")),
           ),
           FilledButton(
             onPressed: () => Navigator.pop(context, true),
-            child: const Text('I verified this destination'),
+            child: Text(context.commanderTr("I verified this destination")),
           ),
         ],
       ),
@@ -270,10 +288,12 @@ class _RenameHistoryDialogState extends ConsumerState<RenameHistoryDialog> {
   Future<void> _report(RenameBatchRecord record) => showDialog<String>(
     context: context,
     builder: (_) => RenameTextDialog(
-      title: 'Rename batch report',
-      instructions: 'Original, current and intended paths, verified physical steps and any recovery decisions.',
+      title: context.commanderTr("Rename batch report"),
+      instructions: context.commanderTr(
+        "Original, current and intended paths, verified physical steps and any recovery decisions.",
+      ),
       initialText: const JsonEncoder.withIndent('  ').convert(record.toJson()),
-      submitLabel: 'Close',
+      submitLabel: context.commanderTr("Close"),
       filename: 'rename-${record.id}.json',
       fileExtensions: const ['json'],
     ),
@@ -293,20 +313,26 @@ class _RenameHistoryDialogState extends ConsumerState<RenameHistoryDialog> {
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
               Text(
-                'Rename history and recovery',
+                context.commanderTr("Rename history and recovery"),
                 style: Theme.of(context).textTheme.titleLarge,
               ),
               const SizedBox(height: 8),
-              const Text(
-                'Every batch retains its complete item list. Resume interrupted work or restore names after reconnecting the original storage account.',
+              Text(
+                context.commanderTr(
+                  "Every batch retains its complete item list. Resume interrupted work or restore names after reconnecting the original storage account.",
+                ),
               ),
               const SizedBox(height: 12),
               Expanded(
                 child: _records == null
                     ? const Center(child: CircularProgressIndicator())
                     : _records!.isEmpty
-                    ? const Center(
-                        child: Text('No rename batches have been recorded.'),
+                    ? Center(
+                        child: Text(
+                          context.commanderTr(
+                            "No rename batches have been recorded.",
+                          ),
+                        ),
                       )
                     : ListView.builder(
                         itemCount: _records!.length,
@@ -316,17 +342,22 @@ class _RenameHistoryDialogState extends ConsumerState<RenameHistoryDialog> {
                           return ExpansionTile(
                             key: ValueKey('rename-history-${record.id}'),
                             title: Text(
-                              '${record.changedCount} items · ${record.state.name}',
+                              context.commanderTr("{0} items · {1}", [
+                                record.changedCount,
+                                context.commanderEnum(record.state),
+                              ]),
                             ),
                             subtitle: Text(
-                              '${record.created.toLocal()} · ${record.storage.provider}${_available(record) ? '' : ' · Connect original account'}',
+                              '${record.created.toLocal()} · ${record.storage.provider}${_available(record) ? '' : ' · ${context.commanderTr("Connect original account")}'}',
                             ),
                             children: [
                               if (!record.exclusiveMoves)
-                                const Padding(
-                                  padding: EdgeInsets.all(8),
+                                Padding(
+                                  padding: const EdgeInsets.all(8),
                                   child: Text(
-                                    'This provider checks destinations before each move but does not guarantee an exclusive rename.',
+                                    context.commanderTr(
+                                      "This provider checks destinations before each move but does not guarantee an exclusive rename.",
+                                    ),
                                   ),
                                 ),
                               SizedBox(
@@ -346,7 +377,10 @@ class _RenameHistoryDialogState extends ConsumerState<RenameHistoryDialog> {
                                         overflow: TextOverflow.ellipsis,
                                       ),
                                       subtitle: Text(
-                                        'Original: ${item.sourcePath}\nPlanned: ${item.targetPath}',
+                                        context.commanderTr(
+                                          "Original: {0}\nPlanned: {1}",
+                                          [item.sourcePath, item.targetPath],
+                                        ),
                                         maxLines: 2,
                                         overflow: TextOverflow.ellipsis,
                                       ),
@@ -378,8 +412,10 @@ class _RenameHistoryDialogState extends ConsumerState<RenameHistoryDialog> {
                                           : null,
                                       child: Text(
                                         record.restoring
-                                            ? 'Continue restore'
-                                            : 'Resume',
+                                            ? context.commanderTr(
+                                                "Continue restore",
+                                              )
+                                            : context.commanderTr("Resume"),
                                       ),
                                     ),
                                   if (record.canRestore)
@@ -387,8 +423,10 @@ class _RenameHistoryDialogState extends ConsumerState<RenameHistoryDialog> {
                                       onPressed: available
                                           ? () => _run(record, restore: true)
                                           : null,
-                                      child: const Text(
-                                        'Restore original names',
+                                      child: Text(
+                                        context.commanderTr(
+                                          "Restore original names",
+                                        ),
                                       ),
                                     ),
                                   if (record.state ==
@@ -397,15 +435,19 @@ class _RenameHistoryDialogState extends ConsumerState<RenameHistoryDialog> {
                                       onPressed: available
                                           ? () => _verify(record)
                                           : null,
-                                      child: const Text(
-                                        'Verify observed destination',
+                                      child: Text(
+                                        context.commanderTr(
+                                          "Verify observed destination",
+                                        ),
                                       ),
                                     ),
                                   TextButton(
                                     onPressed: _busy
                                         ? null
                                         : () => _report(record),
-                                    child: const Text('Report / export'),
+                                    child: Text(
+                                      context.commanderTr("Report / export"),
+                                    ),
                                   ),
                                 ],
                               ),
@@ -443,8 +485,11 @@ class _RenameHistoryDialogState extends ConsumerState<RenameHistoryDialog> {
                 ),
                 Text(
                   _cancel
-                      ? 'Stopping after the current operation…'
-                      : _progress?.message ?? 'Checking recovery state…',
+                      ? context.commanderTr(
+                          "Stopping after the current operation…",
+                        )
+                      : _progress?.message ??
+                            context.commanderTr("Checking recovery state…"),
                 ),
               ],
               const SizedBox(height: 12),
@@ -454,7 +499,11 @@ class _RenameHistoryDialogState extends ConsumerState<RenameHistoryDialog> {
                   onPressed: _busy
                       ? () => setState(() => _cancel = true)
                       : () => Navigator.pop(context, _lastChanged),
-                  child: Text(_busy ? 'Stop after current operation' : 'Close'),
+                  child: Text(
+                    _busy
+                        ? context.commanderTr("Stop after current operation")
+                        : context.commanderTr("Close"),
+                  ),
                 ),
               ),
             ],

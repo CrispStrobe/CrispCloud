@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import '../l10n/commander_strings.dart';
 import '../models/panel_side.dart';
 import '../providers/panel_provider.dart';
 import '../providers/trash_history_provider.dart';
@@ -51,7 +52,7 @@ class _TrashHistoryDialogState extends ConsumerState<TrashHistoryDialog> {
     return PopScope(
       canPop: _busy == null,
       child: AlertDialog(
-        title: const Text('Trash history and restore'),
+        title: Text(context.commanderTr("Trash history and restore")),
         content: SizedBox(
           width: 740,
           height: 500,
@@ -61,8 +62,10 @@ class _TrashHistoryDialogState extends ConsumerState<TrashHistoryDialog> {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    const Text(
-                      'Restore returns an item to its original path and account. An occupied path is never replaced. System or provider trash retention still applies.',
+                    Text(
+                      context.commanderTr(
+                        "Restore returns an item to its original path and account. An occupied path is never replaced. System or provider trash retention still applies.",
+                      ),
                     ),
                     if (_busy != null) const LinearProgressIndicator(),
                     if (_error != null)
@@ -77,13 +80,19 @@ class _TrashHistoryDialogState extends ConsumerState<TrashHistoryDialog> {
                       ),
                     if (store.errors.isNotEmpty)
                       ExpansionTile(
-                        title: const Text('History storage needs attention'),
+                        title: Text(
+                          context.commanderTr(
+                            "History storage needs attention",
+                          ),
+                        ),
                         children: [SelectableText(store.errors.join('\n'))],
                       ),
                     if (records.isEmpty)
-                      const Padding(
-                        padding: EdgeInsets.all(24),
-                        child: Text('No recorded trash operations.'),
+                      Padding(
+                        padding: const EdgeInsets.all(24),
+                        child: Text(
+                          context.commanderTr("No recorded trash operations."),
+                        ),
                       ),
                     const SizedBox(height: 12),
                   ],
@@ -119,15 +128,19 @@ class _TrashHistoryDialogState extends ConsumerState<TrashHistoryDialog> {
                           ),
                           SelectableText(record.file.path),
                           Text(
-                            '${panel.storageDisplayName(record.file.storage)} · $status',
+                            '${panel.storageDisplayName(record.file.storage)} · ${context.commanderTr(status)}',
                           ),
                           if (!record.file.storage.persistent)
-                            const Text(
-                              'Original source was available for that session only.',
+                            Text(
+                              context.commanderTr(
+                                "Original source was available for that session only.",
+                              ),
                             ),
                           if (origin == null)
-                            const Text(
-                              'Reconnect the original account or installation to restore.',
+                            Text(
+                              context.commanderTr(
+                                "Reconnect the original account or installation to restore.",
+                              ),
                             ),
                           if (record.detail != null) Text(record.detail!),
                           if (record.state != TrashRecordState.restored)
@@ -136,7 +149,9 @@ class _TrashHistoryDialogState extends ConsumerState<TrashHistoryDialog> {
                                   ? () => _restore(record)
                                   : null,
                               icon: const Icon(Icons.restore_from_trash),
-                              label: const Text('Restore original item'),
+                              label: Text(
+                                context.commanderTr("Restore original item"),
+                              ),
                             ),
                         ],
                       ),
@@ -158,11 +173,11 @@ class _TrashHistoryDialogState extends ConsumerState<TrashHistoryDialog> {
                       if (mounted) setState(() => _error = '$error');
                     }
                   },
-            child: const Text('Clear restored history'),
+            child: Text(context.commanderTr("Clear restored history")),
           ),
           TextButton(
             onPressed: _busy != null ? null : () => Navigator.pop(context),
-            child: const Text('Close'),
+            child: Text(context.commanderTr("Close")),
           ),
         ],
       ),

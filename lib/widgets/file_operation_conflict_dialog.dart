@@ -3,6 +3,7 @@ import 'dart:convert';
 import 'package:crypto/crypto.dart';
 import 'package:flutter/material.dart';
 
+import '../l10n/commander_strings.dart';
 import '../models/file_item.dart';
 import '../services/file_operation_service.dart';
 import 'diff_viewer_dialog.dart';
@@ -140,7 +141,11 @@ class _ConflictDialogState extends State<_ConflictDialog> {
     final entry = widget.entry;
     final folder = entry.source.isFolder;
     return AlertDialog(
-      title: Text(folder ? 'Folder already exists' : 'File already exists'),
+      title: Text(
+        folder
+            ? context.commanderTr("Folder already exists")
+            : context.commanderTr("File already exists"),
+      ),
       content: SizedBox(
         width: 620,
         child: SingleChildScrollView(
@@ -149,9 +154,19 @@ class _ConflictDialogState extends State<_ConflictDialog> {
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               SelectableText(
-                'Source: ${entry.source.path}\nDestination: ${entry.destination}\n\n'
-                'Source: ${entry.source.size ?? 'unknown'} bytes · ${entry.source.updatedAt ?? 'time unknown'}\n'
-                'Destination: ${widget.existing.size ?? 'unknown'} bytes · ${widget.existing.updatedAt ?? 'time unknown'}',
+                context.commanderTr(
+                  "Source: {0}\nDestination: {1}\n\nSource: {2} bytes · {3}\nDestination: {4} bytes · {5}",
+                  [
+                    entry.source.path,
+                    entry.destination,
+                    entry.source.size ?? context.commanderTr("Unknown"),
+                    entry.source.updatedAt ??
+                        context.commanderTr("Time unknown"),
+                    widget.existing.size ?? context.commanderTr("Unknown"),
+                    widget.existing.updatedAt ??
+                        context.commanderTr("Time unknown"),
+                  ],
+                ),
               ),
               if (!folder) ...[
                 Wrap(
@@ -159,13 +174,13 @@ class _ConflictDialogState extends State<_ConflictDialog> {
                   children: [
                     TextButton(
                       onPressed: _comparing ? null : () => _compare(text: true),
-                      child: const Text('Compare text'),
+                      child: Text(context.commanderTr("Compare text")),
                     ),
                     TextButton(
                       onPressed: _comparing
                           ? null
                           : () => _compare(text: false),
-                      child: const Text('Compare SHA-256'),
+                      child: Text(context.commanderTr("Compare SHA-256")),
                     ),
                   ],
                 ),
@@ -174,9 +189,11 @@ class _ConflictDialogState extends State<_ConflictDialog> {
                 const SizedBox(height: 8),
                 TextField(
                   controller: _name,
-                  decoration: const InputDecoration(
-                    labelText: 'New filename for this conflict',
-                    border: OutlineInputBorder(),
+                  decoration: InputDecoration(
+                    labelText: context.commanderTr(
+                      "New filename for this conflict",
+                    ),
+                    border: const OutlineInputBorder(),
                   ),
                 ),
                 Wrap(
@@ -187,7 +204,7 @@ class _ConflictDialogState extends State<_ConflictDialog> {
                         FileConflictDecision.renameSource,
                         renamed: true,
                       ),
-                      child: const Text('Rename incoming file'),
+                      child: Text(context.commanderTr("Rename incoming file")),
                     ),
                     if (widget.destination.capabilities.noReplaceMove)
                       TextButton(
@@ -195,7 +212,9 @@ class _ConflictDialogState extends State<_ConflictDialog> {
                           FileConflictDecision.renameDestination,
                           renamed: true,
                         ),
-                        child: const Text('Rename existing file'),
+                        child: Text(
+                          context.commanderTr("Rename existing file"),
+                        ),
                       ),
                   ],
                 ),
@@ -205,11 +224,15 @@ class _ConflictDialogState extends State<_ConflictDialog> {
                     TextButton(
                       onPressed: () =>
                           _choose(FileConflictDecision.resumeVerified),
-                      child: const Text('Resume after prefix check'),
+                      child: Text(
+                        context.commanderTr("Resume after prefix check"),
+                      ),
                     ),
                     TextButton(
                       onPressed: () => _choose(FileConflictDecision.append),
-                      child: const Text('Append to existing file'),
+                      child: Text(
+                        context.commanderTr("Append to existing file"),
+                      ),
                     ),
                   ],
                 ),
@@ -218,7 +241,9 @@ class _ConflictDialogState extends State<_ConflictDialog> {
                 contentPadding: EdgeInsets.zero,
                 value: _all,
                 title: Text(
-                  'Apply this decision to remaining ${folder ? 'folders' : 'files'}',
+                  context.commanderTr("Apply this decision to remaining {0}", [
+                    context.commanderTr(folder ? "Folders" : "Files"),
+                  ]),
                 ),
                 onChanged: (value) => setState(() => _all = value!),
               ),
@@ -229,22 +254,26 @@ class _ConflictDialogState extends State<_ConflictDialog> {
       actions: [
         TextButton(
           onPressed: () => _choose(FileConflictDecision.cancel),
-          child: const Text('Cancel operation'),
+          child: Text(context.commanderTr("Cancel operation")),
         ),
         TextButton(
           onPressed: () => _choose(FileConflictDecision.skip),
-          child: const Text('Skip'),
+          child: Text(context.commanderTr("Skip")),
         ),
         if (!folder)
           TextButton(
             onPressed: () => _choose(FileConflictDecision.keepBoth),
-            child: const Text('Keep both'),
+            child: Text(context.commanderTr("Keep both")),
           ),
         FilledButton(
           onPressed: () => _choose(
             folder ? FileConflictDecision.merge : FileConflictDecision.replace,
           ),
-          child: Text(folder ? 'Merge folder' : 'Replace file'),
+          child: Text(
+            folder
+                ? context.commanderTr("Merge folder")
+                : context.commanderTr("Replace file"),
+          ),
         ),
       ],
     );

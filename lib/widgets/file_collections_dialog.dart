@@ -7,6 +7,7 @@ import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:uuid/uuid.dart';
 
+import '../l10n/commander_strings.dart';
 import '../models/file_collection.dart';
 import '../models/panel_side.dart';
 import '../providers/file_collection_provider.dart';
@@ -36,15 +37,19 @@ Future<void> reviewCollectionReplacements(
   final accepted = await showDialog<bool>(
     context: context,
     builder: (context) => AlertDialog(
-      title: Text('Use ${items.length} replacement item(s)?'),
+      title: Text(
+        context.commanderTr("Use {0} replacement item(s)?", [items.length]),
+      ),
       content: SizedBox(
         width: 620,
         height: 320,
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
-            const Text(
-              'Different items now occupy these saved paths. Accepting updates the collection references to the current items; file contents are unchanged.',
+            Text(
+              context.commanderTr(
+                "Different items now occupy these saved paths. Accepting updates the collection references to the current items; file contents are unchanged.",
+              ),
             ),
             const SizedBox(height: 12),
             Expanded(
@@ -54,8 +59,10 @@ Future<void> reviewCollectionReplacements(
                   title: Text(items[index].path ?? items[index].name),
                   subtitle: Text(
                     items[index].isFolder
-                        ? 'Folder'
-                        : '${items[index].size ?? 0} bytes',
+                        ? context.commanderTr("Folder")
+                        : context.commanderTr("{0} bytes", [
+                            items[index].size ?? 0,
+                          ]),
                   ),
                 ),
               ),
@@ -66,11 +73,11 @@ Future<void> reviewCollectionReplacements(
       actions: [
         TextButton(
           onPressed: () => Navigator.pop(context, false),
-          child: const Text('Cancel'),
+          child: Text(context.commanderTr("Cancel")),
         ),
         FilledButton(
           onPressed: () => Navigator.pop(context, true),
-          child: const Text('Accept current items'),
+          child: Text(context.commanderTr("Accept current items")),
         ),
       ],
     ),
@@ -132,7 +139,7 @@ class _FileCollectionsDialogState extends ConsumerState<FileCollectionsDialog> {
       return await showDialog<String>(
         context: context,
         builder: (context) => AlertDialog(
-          title: const Text('Collection name'),
+          title: Text(context.commanderTr("Collection name")),
           content: TextField(
             controller: controller,
             autofocus: true,
@@ -144,7 +151,7 @@ class _FileCollectionsDialogState extends ConsumerState<FileCollectionsDialog> {
           actions: [
             TextButton(
               onPressed: () => Navigator.pop(context),
-              child: const Text('Cancel'),
+              child: Text(context.commanderTr("Cancel")),
             ),
             FilledButton(
               onPressed: () {
@@ -152,7 +159,7 @@ class _FileCollectionsDialogState extends ConsumerState<FileCollectionsDialog> {
                   Navigator.pop(context, controller.text.trim());
                 }
               },
-              child: const Text('Save'),
+              child: Text(context.commanderTr("Save")),
             ),
           ],
         ),
@@ -270,7 +277,7 @@ class _FileCollectionsDialogState extends ConsumerState<FileCollectionsDialog> {
     final store = ref.watch(fileCollectionStoreProvider);
     final panel = ref.watch(panelProvider(widget.side));
     return AlertDialog(
-      title: const Text('File collections'),
+      title: Text(context.commanderTr("File collections")),
       content: SizedBox(
         width: 760,
         height: 540,
@@ -280,17 +287,19 @@ class _FileCollectionsDialogState extends ConsumerState<FileCollectionsDialog> {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.stretch,
                 children: [
-                  const Text(
-                    'Keep search results, imported lists, and marked files with their original accounts. Open checks saved paths; Rerun search uses the saved query.',
+                  Text(
+                    context.commanderTr(
+                      "Keep search results, imported lists, and marked files with their original accounts. Open checks saved paths; Rerun search uses the saved query.",
+                    ),
                   ),
                   const SizedBox(height: 12),
                   TextField(
                     key: const ValueKey('collection-name'),
                     controller: _name,
                     enabled: !_busy,
-                    decoration: const InputDecoration(
-                      labelText: 'Save current rows as',
-                      border: OutlineInputBorder(),
+                    decoration: InputDecoration(
+                      labelText: context.commanderTr("Save current rows as"),
+                      border: const OutlineInputBorder(),
                       isDense: true,
                     ),
                   ),
@@ -299,7 +308,7 @@ class _FileCollectionsDialogState extends ConsumerState<FileCollectionsDialog> {
                     spacing: 8,
                     children: [
                       FilterChip(
-                        label: const Text('Marked rows only'),
+                        label: Text(context.commanderTr("Marked rows only")),
                         selected: _selectedOnly,
                         onSelected: _busy
                             ? null
@@ -323,12 +332,12 @@ class _FileCollectionsDialogState extends ConsumerState<FileCollectionsDialog> {
                                 }
                               }),
                         icon: const Icon(Icons.save_outlined),
-                        label: const Text('Save collection'),
+                        label: Text(context.commanderTr("Save collection")),
                       ),
                       TextButton.icon(
                         onPressed: _busy ? null : () => _run(_import),
                         icon: const Icon(Icons.file_open_outlined),
-                        label: const Text('Import collection'),
+                        label: Text(context.commanderTr("Import collection")),
                       ),
                     ],
                   ),
@@ -351,7 +360,10 @@ class _FileCollectionsDialogState extends ConsumerState<FileCollectionsDialog> {
                   if (store.loadErrors.isNotEmpty)
                     ExpansionTile(
                       title: Text(
-                        '${store.loadErrors.length} saved records need attention',
+                        context.commanderTr(
+                          "{0} saved records need attention",
+                          [store.loadErrors.length],
+                        ),
                       ),
                       children: [SelectableText(store.loadErrors.join('\n'))],
                     ),
@@ -360,10 +372,14 @@ class _FileCollectionsDialogState extends ConsumerState<FileCollectionsDialog> {
               ),
             ),
             if (store.collections.isEmpty)
-              const SliverToBoxAdapter(
+              SliverToBoxAdapter(
                 child: Padding(
-                  padding: EdgeInsets.all(24),
-                  child: Center(child: Text('No saved collections yet.')),
+                  padding: const EdgeInsets.all(24),
+                  child: Center(
+                    child: Text(
+                      context.commanderTr("No saved collections yet."),
+                    ),
+                  ),
                 ),
               )
             else
@@ -390,45 +406,61 @@ class _FileCollectionsDialogState extends ConsumerState<FileCollectionsDialog> {
                     ),
                     title: Text(collection.name),
                     subtitle: Text(
-                      '${collection.entries.length} rows · ${sources.length} source(s)${unavailable == 0 ? '' : ' · $unavailable need checking'}',
+                      context.commanderTr("{0} rows · {1} source(s){2}", [
+                        collection.entries.length,
+                        sources.length,
+                        unavailable == 0 ? '' : ' · $unavailable need checking',
+                      ]),
                     ),
                     onTap: _busy
                         ? null
                         : () => _run(() => _action('open', collection)),
                     trailing: PopupMenuButton<String>(
-                      tooltip: 'Collection actions',
+                      tooltip: context.commanderTr("Collection actions"),
                       enabled: !_busy,
                       onSelected: (action) =>
                           _run(() => _action(action, collection)),
                       itemBuilder: (_) => [
-                        const PopupMenuItem(
+                        PopupMenuItem(
                           value: 'open',
-                          child: Text('Open and refresh items'),
+                          child: Text(
+                            context.commanderTr("Open and refresh items"),
+                          ),
                         ),
-                        const PopupMenuItem(
+                        PopupMenuItem(
                           value: 'tab',
-                          child: Text('Open in new tab'),
+                          child: Text(context.commanderTr("Open in new tab")),
                         ),
                         PopupMenuItem(
                           value: 'add',
                           enabled: panel.selection.isNotEmpty,
-                          child: const Text('Add current marked rows'),
+                          child: Text(
+                            context.commanderTr("Add current marked rows"),
+                          ),
                         ),
-                        const PopupMenuItem(
+                        PopupMenuItem(
                           value: 'rename',
-                          child: Text('Rename collection'),
+                          child: Text(context.commanderTr("Rename collection")),
                         ),
-                        const PopupMenuItem(
+                        PopupMenuItem(
                           value: 'export',
-                          child: Text('Export collection…'),
+                          child: Text(
+                            context.commanderTr("Export collection…"),
+                          ),
                         ),
-                        const PopupMenuItem(
+                        PopupMenuItem(
                           value: 'copy',
-                          child: Text('Copy collection JSON'),
+                          child: Text(
+                            context.commanderTr("Copy collection JSON"),
+                          ),
                         ),
-                        const PopupMenuItem(
+                        PopupMenuItem(
                           value: 'remove',
-                          child: Text('Remove collection (keep files)'),
+                          child: Text(
+                            context.commanderTr(
+                              "Remove collection (keep files)",
+                            ),
+                          ),
                         ),
                       ],
                     ),
@@ -441,7 +473,7 @@ class _FileCollectionsDialogState extends ConsumerState<FileCollectionsDialog> {
       actions: [
         TextButton(
           onPressed: _busy ? null : () => Navigator.pop(context),
-          child: const Text('Close'),
+          child: Text(context.commanderTr("Close")),
         ),
       ],
     );
