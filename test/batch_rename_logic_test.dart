@@ -159,7 +159,7 @@ void main() {
       );
       final result = await svc.undo(svc.history.first.id, const UndoContext());
       expect(result.success, false);
-      expect(result.message, contains('trash'));
+      expect(result.message, contains('not reversible'));
     });
 
     test('undo createFolder remote without remoteDelete callback fails', () async {

@@ -812,8 +812,8 @@ void _actionHistoryTests() {
       expect(svc.canUndo(_rec(ActionType.delete, 'local')), isFalse);
     });
 
-    test('delete on remote can be undone', () {
-      expect(svc.canUndo(_rec(ActionType.delete, 'filen')), isTrue);
+    test('a remote label alone does not make deletion undoable', () {
+      expect(svc.canUndo(_rec(ActionType.delete, 'filen')), isFalse);
     });
 
     test('rename on local can be undone', () {
@@ -857,31 +857,30 @@ void _actionHistoryTests() {
       expect(result.success, isFalse);
     });
 
-    test('undo delete without restoreFromTrash handler fails', () async {
+    test('undo delete without a captured receipt fails', () async {
       final id = svc.recordNew(
           type: ActionType.delete,
           originalPath: '/remote/file.txt',
           provider: 'filen');
       final result = await svc.undo(id, const UndoContext());
       expect(result.success, isFalse);
-      expect(result.message, contains('trash'));
+      expect(result.message, contains('not reversible'));
     });
 
-    test('undo delete with restoreFromTrash succeeds', () async {
-      String? restoredPath;
+    test('undo delete uses the captured restore action', () async {
+      var restored = false;
       final id = svc.recordNew(
-          type: ActionType.delete,
-          originalPath: '/remote/x.txt',
-          provider: 'filen');
-      final result = await svc.undo(
-          id,
-          UndoContext(
-              restoreFromTrash: (path) async {
-                restoredPath = path;
-              }));
+        type: ActionType.delete,
+        originalPath: '/remote/x.txt',
+        provider: 'filen',
+        undoAction: () async {
+          restored = true;
+          return const UndoResult.success('Restored captured item.');
+        },
+      );
+      final result = await svc.undo(id, const UndoContext());
       expect(result.success, isTrue);
-      expect(restoredPath, '/remote/x.txt');
-      // Action should be removed from history after successful undo
+      expect(restored, isTrue);
       expect(svc.history.any((a) => a.id == id), isFalse);
     });
 
