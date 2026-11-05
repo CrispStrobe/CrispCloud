@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import '../l10n/commander_strings.dart';
+import '../l10n/workspace_strings.dart';
 import '../models/file_view_configuration.dart';
 import '../models/panel_side.dart';
 import '../providers/panel_provider.dart';
@@ -68,12 +70,14 @@ class FileColumnHeader extends ConsumerWidget {
         onSecondaryTap: secondarySort,
         onLongPress: secondarySort,
         child: Tooltip(
-          message:
-              '${column.label}\nClick to sort; secondary click or long press for secondary sort.',
+          message: context.commanderTr(
+            "{0}\nClick to sort; secondary click or long press for secondary sort.",
+            [column.localizedLabel(context)],
+          ),
           child: SizedBox(
             width: view.widthFor(column),
             child: Text(
-              '${column.label}$arrow',
+              '${column.localizedLabel(context)}$arrow',
               style: style.copyWith(
                 color: primary ? theme.colorScheme.primary : null,
               ),
@@ -98,7 +102,9 @@ class FileColumnHeader extends ConsumerWidget {
       child: MouseRegion(
         cursor: SystemMouseCursors.resizeColumn,
         child: Tooltip(
-          message: 'Resize ${column.label}',
+          message: context.commanderTr("Resize {0}", [
+            column.localizedLabel(context),
+          ]),
           child: Container(
             width: 6,
             color: Colors.transparent,
@@ -139,7 +145,7 @@ class FileColumnHeader extends ConsumerWidget {
                     children: [
                       Expanded(
                         child: Text(
-                          '${panel.showingSearchResults ? 'Original path' : 'Name'}${namePrimary
+                          '${panel.showingSearchResults ? context.commanderTr('Original path') : context.commanderTr('Name')}${namePrimary
                               ? panel.sortOrder == SortOrder.ascending
                                     ? ' ↑'
                                     : ' ↓'
@@ -151,8 +157,16 @@ class FileColumnHeader extends ConsumerWidget {
                       ),
                       if (omitted.isNotEmpty)
                         Tooltip(
-                          message:
-                              'Widen this panel to show: ${omitted.map((column) => column.label).join(', ')}',
+                          message: context.commanderTr(
+                            "Widen this panel to show: {0}",
+                            [
+                              omitted
+                                  .map(
+                                    (column) => column.localizedLabel(context),
+                                  )
+                                  .join(', '),
+                            ],
+                          ),
                           child: const Icon(Icons.more_horiz, size: 14),
                         ),
                     ],
@@ -186,13 +200,13 @@ class FileColumnHeader extends ConsumerWidget {
           CheckedPopupMenuItem(
             value: column.id,
             checked: view.widthFor(column) > 0,
-            child: Text(column.label),
+            child: Text(column.localizedLabel(context)),
           ),
         if (onConfigure != null) ...[
           const PopupMenuDivider(),
-          const PopupMenuItem(
+          PopupMenuItem(
             value: ':configure',
-            child: Text('Configure columns and views…'),
+            child: Text(context.commanderTr("Configure columns and views…")),
           ),
         ],
       ],

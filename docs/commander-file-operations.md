@@ -107,6 +107,11 @@ flushed and atomically replaced; browser records use acknowledged updates.
 Failed persistence stops the next mutation. Undo is a checked reverse operation:
 changed files, occupied old names and disconnected accounts block unsafe reversal.
 
+One multi-rename batch belongs to one captured storage account. Files from
+several directories on that account may share a batch. A collection containing
+several accounts must be renamed in source-specific batches; copy/move can
+review multiple source groups against one captured destination.
+
 Native no-replace operations are used where available. Provider prechecks are
 identified as weaker when the API cannot enforce exclusion atomically.
 Individual object keys require exclusive version-conditional copy and delete;
@@ -129,6 +134,8 @@ groups against one fixed destination, protecting all selected sources.
 - SHA-256 verification, modification times and capability-gated permissions,
   ownership, extended attributes, ACLs and symbolic links.
 - Native/provider fast paths with explicit capabilities and completion checks.
+- Automatic, streamed or required copy-on-write methods and native preallocation
+  where supported. Required copy-on-write never silently becomes a full copy.
 - Stop/continue-on-error and separate content-copy versus metadata-failure results.
 
 Moves delete sources only after confirmed destination data. Failed, skipped,
@@ -179,12 +186,22 @@ corrupt/changed parts, traversal, cancellation and account changes stop the
 operation. Legacy numbered parts require consent because no original checksum
 is available.
 
-## Workspace and backend boundaries
+## Workspaces, commands and backend boundaries
 
 Tabs support labels, reordering, four lock modes and source-bound snapshots.
 Inactive-tab duplication uses the clicked tab. Locked result tabs retain their
-rows, and account switching cannot rebind a protected tab. See the
-[workspace guide](WORKSPACE.md).
+rows, and account switching cannot rebind a protected tab. The workspace manager
+saves/restores named tab groups, paired locations and view profiles. Bookmarks
+retain original source identity, and older unbound bookmarks require explicit
+binding. Profiles store display mode, ordered columns, widths, supplied metadata
+fields, sorting and manual filters. Built-in column labels follow the app locale;
+user-entered titles remain literal. See the [workspace guide](WORKSPACE.md).
+
+The [custom-command manager](COMMANDS.md) configures installed executables with
+literal argument templates, working directories and timeouts. It supports
+reviewed import/export, editing and reordering. Running a command requires a
+reviewed captured local context and provides bounded output and cancellation.
+Existing shell-string definitions remain visible but need conversion before use.
 
 Capabilities remain platform/provider-specific. Browser storage can be evicted
 and directory permission revoked. Metadata, links, clipboard actions, exclusive
@@ -195,7 +212,7 @@ proof of completion.
 Distributed atomic rollback across unrelated stores and all legacy binary
 Commander plugins are not universal guarantees. Recovery uses recorded evidence
 and fresh validation. The completion plan tracks remaining adapter,
-workspace-manager, extension and localization checkpoints; do not treat those
+extension and localization checkpoints; do not treat those
 unchecked items as complete.
 
 ## Verification

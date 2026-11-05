@@ -1,5 +1,7 @@
 // widgets/file_panel.dart
 
+import '../l10n/commander_strings.dart';
+
 import 'package:flutter/material.dart';
 import 'package:desktop_drop/desktop_drop.dart';
 import 'package:flutter/foundation.dart' show kIsWeb;
@@ -335,9 +337,13 @@ class _FilePanelState extends ConsumerState<FilePanel> {
               } catch (e) {
                 _log.warn('operation failed', e);
                 if (context.mounted) {
-                  ScaffoldMessenger.of(
-                    context,
-                  ).showSnackBar(SnackBar(content: Text('Upload failed: $e')));
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    SnackBar(
+                      content: Text(
+                        context.commanderTr("Upload failed: {0}", [e]),
+                      ),
+                    ),
+                  );
                 }
               }
             }
@@ -409,10 +415,18 @@ class _FilePanelState extends ConsumerState<FilePanel> {
           Expanded(
             child: Tooltip(
               message: panel.canOperateOnFileList
-                  ? 'Original paths are retained. Copy, move, rename, or remove rows from this list.'
-                  : 'The source account changed. Run the search or import again before file operations.',
+                  ? context.commanderTr(
+                      "Original paths are retained. Copy, move, rename, or remove rows from this list.",
+                    )
+                  : context.commanderTr(
+                      "The source account changed. Run the search or import again before file operations.",
+                    ),
               child: Text(
-                '${panel.fileListTitle} · ${panel.files?.length ?? 0} item(s)${panel.collectionBusy ? ' · ${panel.collectionProgress}' : ''}',
+                context.commanderTr("{0} · {1} item(s){2}", [
+                  panel.fileListTitle,
+                  panel.files?.length ?? 0,
+                  panel.collectionBusy ? ' · ${panel.collectionProgress}' : '',
+                ]),
                 style: TextStyle(
                   fontSize: 12,
                   color: colors.onSecondaryContainer,
@@ -425,7 +439,7 @@ class _FilePanelState extends ConsumerState<FilePanel> {
           IconButton(
             visualDensity: VisualDensity.compact,
             iconSize: 18,
-            tooltip: 'Open containing folder',
+            tooltip: context.commanderTr("Open containing folder"),
             onPressed: targets.length != 1 || !panel.canOperateOnFileList
                 ? null
                 : () async {
@@ -444,14 +458,14 @@ class _FilePanelState extends ConsumerState<FilePanel> {
           IconButton(
             visualDensity: VisualDensity.compact,
             iconSize: 18,
-            tooltip: 'Remove from list (keep files)',
+            tooltip: context.commanderTr("Remove from list (keep files)"),
             onPressed: targets.isEmpty
                 ? null
                 : () => panel.removeFromFileList(targets),
             icon: const Icon(Icons.playlist_remove),
           ),
           PopupMenuButton<String>(
-            tooltip: 'File list actions',
+            tooltip: context.commanderTr("File list actions"),
             iconSize: 18,
             onSelected: (value) async {
               try {
@@ -496,57 +510,57 @@ class _FilePanelState extends ConsumerState<FilePanel> {
               }
             },
             itemBuilder: (_) => [
-              const PopupMenuItem(
+              PopupMenuItem(
                 value: 'collections',
-                child: Text('Save / manage collections…'),
+                child: Text(context.commanderTr("Save / manage collections…")),
               ),
               PopupMenuItem(
                 value: 'refresh-items',
                 enabled: !panel.collectionBusy,
-                child: const Text('Refresh original items'),
+                child: Text(context.commanderTr("Refresh original items")),
               ),
               PopupMenuItem(
                 value: 'rerun',
                 enabled:
                     !panel.collectionBusy && panel.canRerunCollectionSearch,
-                child: const Text('Rerun saved search'),
+                child: Text(context.commanderTr("Rerun saved search")),
               ),
               PopupMenuItem(
                 value: 'replacements',
                 enabled:
                     !panel.collectionBusy &&
                     panel.collectionReplacements.isNotEmpty,
-                child: const Text('Review replacement items…'),
+                child: Text(context.commanderTr("Review replacement items…")),
               ),
               const PopupMenuDivider(),
-              const PopupMenuItem(
+              PopupMenuItem(
                 value: 'pattern',
-                child: Text('Select by pattern…'),
+                child: Text(context.commanderTr("Select by pattern…")),
               ),
-              const PopupMenuItem(
+              PopupMenuItem(
                 value: 'copy',
-                child: Text('Copy original paths'),
+                child: Text(context.commanderTr("Copy original paths")),
               ),
-              const PopupMenuItem(
+              PopupMenuItem(
                 value: 'export',
-                child: Text('Export file list…'),
+                child: Text(context.commanderTr("Export file list…")),
               ),
-              const PopupMenuItem(
+              PopupMenuItem(
                 value: 'import',
-                child: Text('Import file list…'),
+                child: Text(context.commanderTr("Import file list…")),
               ),
             ],
           ),
           if (panel.collectionBusy)
             IconButton(
-              tooltip: 'Cancel collection refresh',
+              tooltip: context.commanderTr("Cancel collection refresh"),
               onPressed: panel.cancelCollectionRefresh,
               icon: const Icon(Icons.stop),
             ),
           IconButton(
             visualDensity: VisualDensity.compact,
             iconSize: 18,
-            tooltip: 'Return to folder',
+            tooltip: context.commanderTr("Return to folder"),
             onPressed: () => panel.clearSearchResults(),
             icon: const Icon(Icons.close),
           ),
@@ -613,7 +627,7 @@ class _FilePanelState extends ConsumerState<FilePanel> {
                 ),
                 TextButton(
                   onPressed: panel.cancelCollectionRefresh,
-                  child: const Text('Cancel'),
+                  child: Text(context.commanderTr("Cancel")),
                 ),
               ],
             ),
@@ -649,7 +663,7 @@ class _FilePanelState extends ConsumerState<FilePanel> {
                             ],
                           )
                         : panel.showingSearchResults
-                        ? const Text('This file list is empty.')
+                        ? Text(context.commanderTr("This file list is empty."))
                         : widget.side == PanelSide.remote &&
                               !ref.read(authProvider).isConnected
                         ? Column(

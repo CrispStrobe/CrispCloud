@@ -229,13 +229,18 @@ class FileOperationPlan {
 class FileOperationControl {
   bool _cancelled = false;
   final Completer<void> _cancellation = Completer<void>();
+  final StreamController<bool> _cancelEvents = StreamController<bool>.broadcast(
+    sync: true,
+  );
   Future<void> get cancellationFuture => _cancellation.future;
   Completer<void>? _paused;
   bool get isCancelled => _cancelled;
   bool get isPaused => _paused != null;
   void cancel() {
+    if (_cancelled) return;
     _cancelled = true;
     if (!_cancellation.isCompleted) _cancellation.complete();
+    _cancelEvents.add(true);
     resume();
   }
 
@@ -253,6 +258,53 @@ class FileOperationControl {
     if (_cancelled) throw const FileOperationCancelled();
     await _paused?.future;
     if (_cancelled) throw const FileOperationCancelled();
+  }
+
+  /// Cancel a pending source read as well as a stream that is yielding chunks.
+  /// A provider's asynchronous cleanup cannot hold the queue cancellation open.
+  Stream<T> bind<T>(Stream<T> input) {
+    late StreamController<T> output;
+    StreamSubscription<T>? source;
+    StreamSubscription<bool>? cancelled;
+    void stopSource() {
+      final pending = source?.cancel();
+      if (pending != null) unawaited(pending.catchError((Object _) {}));
+      unawaited(cancelled?.cancel());
+    }
+
+    output = StreamController<T>(
+      onListen: () {
+        if (_cancelled) {
+          output.addError(const FileOperationCancelled());
+          unawaited(output.close());
+          return;
+        }
+        cancelled = _cancelEvents.stream.listen((_) {
+          if (!output.isClosed) {
+            output.addError(const FileOperationCancelled());
+            unawaited(output.close());
+          }
+          stopSource();
+        });
+        source = input.listen(
+          (value) {
+            if (!output.isClosed) output.add(value);
+          },
+          onError: (Object error, StackTrace stack) {
+            if (!output.isClosed) output.addError(error, stack);
+          },
+          onDone: () {
+            unawaited(cancelled?.cancel());
+            if (!output.isClosed) unawaited(output.close());
+          },
+        );
+        if (output.isPaused) source!.pause();
+      },
+      onPause: () => source?.pause(),
+      onResume: () => source?.resume(),
+      onCancel: stopSource,
+    );
+    return output.stream;
   }
 }
 
@@ -1156,7 +1208,7 @@ class FileOperationService {
             if (!nativeCopied) {
               Stream<List<int>> tracked() async* {
                 try {
-                  await for (final chunk in contents()) {
+                  await for (final chunk in control.bind(contents())) {
                     await control.checkpoint();
                     _checkSources(source, target);
                     sent += chunk.length;
@@ -1441,7 +1493,7 @@ class FileOperationService {
     }
     final hash = await sha256
         .bind(
-          backend.readFile(file).asyncMap((chunk) async {
+          control.bind(backend.readFile(file)).asyncMap((chunk) async {
             await control.checkpoint();
             _checkSources(backend, other);
             return chunk;
@@ -1521,7 +1573,7 @@ class FileOperationService {
     Stream<List<int>> prefix() async* {
       var remaining = length;
       if (remaining == 0) return;
-      await for (final chunk in source.readFile(original)) {
+      await for (final chunk in control.bind(source.readFile(original))) {
         await control.checkpoint();
         _checkSources(source, target);
         final part = chunk.length <= remaining
