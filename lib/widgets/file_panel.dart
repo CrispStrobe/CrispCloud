@@ -10,15 +10,17 @@ import '../services/log_service.dart';
 import '../models/panel_side.dart';
 import '../providers/providers.dart';
 import '../providers/panel_source_provider.dart' show panelSourceProvider;
-import '../providers/toolbar_provider.dart' show columnWidthsProvider, panelViewModeProvider;
+import '../providers/toolbar_provider.dart'
+    show columnWidthsProvider, panelViewModeProvider;
 import '../services/panel_source_service.dart' show RemotePanelSource;
 import '../services/panel_view_mode_service.dart' show PanelViewMode;
 import 'file_column_view.dart';
 import 'file_grid_view.dart';
 import 'file_list_view.dart' show FileListView, PanelDragData;
 import 'file_selection_bar.dart';
-import 'file_tree_view_stub.dart'
-    if (dart.library.io) 'file_tree_view.dart';
+import 'file_list_dialog.dart';
+import 'pattern_selection_dialog.dart';
+import 'file_tree_view_stub.dart' if (dart.library.io) 'file_tree_view.dart';
 import 'panel_tab_bar.dart';
 import 'panel_header.dart';
 import '../l10n/app_localizations.dart';
@@ -77,14 +79,15 @@ class _FilePanelState extends ConsumerState<FilePanel> {
         final messenger = ScaffoldMessenger.of(context);
         messenger.hideCurrentSnackBar();
         final panel = ref.read(panelProvider(widget.side));
-        final missingPath = lastError.contains('PathNotFound') ||
+        final missingPath =
+            lastError.contains('PathNotFound') ||
             lastError.contains('No such file') ||
             lastError.contains('not found');
         final actionLabel = panel.isInArchive
             ? 'Exit archive'
             : missingPath
-                ? 'Home'
-                : 'Grant access';
+            ? 'Home'
+            : 'Grant access';
         messenger.showSnackBar(
           SnackBar(
             content: Text(lastError),
@@ -117,14 +120,21 @@ class _FilePanelState extends ConsumerState<FilePanel> {
     final selection = panel.selection;
 
     // Web/empty state: show action buttons instead of spinner
-    if (kIsWeb && (files == null || files.isEmpty) && !panel.isLoading) {
+    if (kIsWeb &&
+        (files == null || files.isEmpty) &&
+        !panel.isLoading &&
+        !panel.showingSearchResults) {
       final auth = ref.watch(authProvider);
       final l = AppLocalizations.of(context)!;
       return Center(
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            Icon(Icons.folder_open, size: 64, color: Theme.of(context).colorScheme.primary),
+            Icon(
+              Icons.folder_open,
+              size: 64,
+              color: Theme.of(context).colorScheme.primary,
+            ),
             const SizedBox(height: 16),
             Text(l.noFolderSelected),
             const SizedBox(height: 12),
@@ -145,13 +155,15 @@ class _FilePanelState extends ConsumerState<FilePanel> {
                 icon: const Icon(Icons.cloud_done),
                 onPressed: () {
                   // Switch this panel to the connected remote source.
-                  ref.read(panelSourceProvider(widget.side).notifier).setSource(
-                    RemotePanelSource(
-                      providerName: auth.providerName,
-                      client: auth.client,
-                      path: '/',
-                    ),
-                  );
+                  ref
+                      .read(panelSourceProvider(widget.side).notifier)
+                      .setSource(
+                        RemotePanelSource(
+                          providerName: auth.providerName,
+                          client: auth.client,
+                          path: '/',
+                        ),
+                      );
                 },
                 label: Text(l.browseProvider(auth.providerName)),
               ),
@@ -161,20 +173,42 @@ class _FilePanelState extends ConsumerState<FilePanel> {
     }
 
     // Wrap in DragTarget for inter-panel file dragging
-    final panelContent = _buildPanelContent(context, panel, files, currentPath, selection);
+    final panelContent = _buildPanelContent(
+      context,
+      panel,
+      files,
+      currentPath,
+      selection,
+    );
 
     // Flutter DragTarget for cross-panel drops
     final Widget content = DragTarget<PanelDragData>(
       onWillAcceptWithDetails: (details) {
         // Accept drops from the OTHER panel only
-        return details.data.sourceSide != widget.side;
+        final source = ref.read(panelProvider(details.data.sourceSide));
+        return details.data.sourceSide != widget.side &&
+            !panel.showingSearchResults &&
+            source.canOperateOnFileList;
       },
       onAcceptWithDetails: (details) async {
         final data = details.data;
+        final sourcePanel = ref.read(panelProvider(data.sourceSide));
+        if (!sourcePanel.canOperateOnFileList || panel.showingSearchResults)
+          return;
+        if (sourcePanel.showingSearchResults) {
+          try {
+            sourcePanel.captureOperationOrigin(data.files);
+          } catch (error) {
+            ref.read(errorProvider).addError(error.toString());
+            return;
+          }
+        }
         final transfers = ref.read(transferProvider);
-        if (data.sourceSide == PanelSide.local && widget.side == PanelSide.remote) {
+        if (data.sourceSide == PanelSide.local &&
+            widget.side == PanelSide.remote) {
           await transfers.uploadFiles(data.files);
-        } else if (data.sourceSide == PanelSide.remote && widget.side == PanelSide.local) {
+        } else if (data.sourceSide == PanelSide.remote &&
+            widget.side == PanelSide.local) {
           await transfers.downloadFiles(data.files);
         }
       },
@@ -183,7 +217,8 @@ class _FilePanelState extends ConsumerState<FilePanel> {
         if (!isDropTarget) return panelContent;
 
         // Determine operation hint
-        final sourceIsLocal = candidateData.first?.sourceSide == PanelSide.local;
+        final sourceIsLocal =
+            candidateData.first?.sourceSide == PanelSide.local;
         final opIcon = sourceIsLocal ? Icons.upload : Icons.download;
         final opLabel = sourceIsLocal ? 'Upload' : 'Download';
         final fileCount = candidateData.first?.files.length ?? 0;
@@ -194,14 +229,22 @@ class _FilePanelState extends ConsumerState<FilePanel> {
             Positioned.fill(
               child: Container(
                 decoration: BoxDecoration(
-                  border: Border.all(color: Theme.of(context).colorScheme.primary, width: 2),
-                  color: Theme.of(context).colorScheme.primary.withValues(alpha: 0.08),
+                  border: Border.all(
+                    color: Theme.of(context).colorScheme.primary,
+                    width: 2,
+                  ),
+                  color: Theme.of(context).colorScheme.primary
+                      .withValues(alpha: 0.08),
                 ),
                 child: Center(
                   child: Column(
                     mainAxisSize: MainAxisSize.min,
                     children: [
-                      Icon(opIcon, size: 48, color: Theme.of(context).colorScheme.primary),
+                      Icon(
+                        opIcon,
+                        size: 48,
+                        color: Theme.of(context).colorScheme.primary,
+                      ),
                       const SizedBox(height: 8),
                       Text(
                         '$opLabel ${fileCount > 1 ? "$fileCount files" : "file"}',
@@ -224,49 +267,71 @@ class _FilePanelState extends ConsumerState<FilePanel> {
     return GestureDetector(
       onTap: widget.onTap,
       child: DropTarget(
-              onDragEntered: (_) => setState(() => _isDragging = true),
-              onDragExited: (_) => setState(() => _isDragging = false),
-              onDragDone: (details) async {
-                setState(() => _isDragging = false);
-                if (kIsWeb) {
-                  // Web: save dropped files to the current local folder.
-                  final localSvc = ref.read(localFileServiceProvider);
-                  for (final xFile in details.files) {
-                    try {
-                      final bytes = await xFile.readAsBytes();
-                      final targetPath = '${panel.currentPath}/${xFile.name}';
-                      await localSvc.saveFile(targetPath, bytes);
-                    } catch (e) {
-                      _log.warn('operation failed', e);
-                      }
-                  }
-                  panel.refresh();
-                } else {
-                  final auth = ref.read(authProvider);
-                  if (widget.side == PanelSide.remote && auth.isConnected) {
-                    try {
-                      final items = details.files.map((xFile) => FileItem(
+        onDragEntered: (_) => setState(() => _isDragging = true),
+        onDragExited: (_) => setState(() => _isDragging = false),
+        onDragDone: (details) async {
+          if (panel.showingSearchResults) {
+            setState(() => _isDragging = false);
+            ref
+                .read(errorProvider)
+                .addError(
+                  'Return to a real folder before dropping files into this panel.',
+                );
+            return;
+          }
+          setState(() => _isDragging = false);
+          if (kIsWeb) {
+            // Web: save dropped files to the current local folder.
+            final localSvc = ref.read(localFileServiceProvider);
+            for (final xFile in details.files) {
+              try {
+                final bytes = await xFile.readAsBytes();
+                final targetPath = '${panel.currentPath}/${xFile.name}';
+                await localSvc.saveFile(targetPath, bytes);
+              } catch (e) {
+                _log.warn('operation failed', e);
+              }
+            }
+            panel.refresh();
+          } else {
+            final auth = ref.read(authProvider);
+            if (widget.side == PanelSide.remote && auth.isConnected) {
+              try {
+                final items = details.files
+                    .map(
+                      (xFile) => FileItem(
                         name: xFile.name,
                         path: xFile.path,
                         isFolder: false,
-                      )).toList();
-                      await ref.read(transferProvider).uploadFiles(items);
-                    } catch (e) {
-                      _log.warn('operation failed', e);
-                      if (context.mounted) {
-                        ScaffoldMessenger.of(context).showSnackBar(
-                          SnackBar(content: Text('Upload failed: $e')));
-                      }
-                    }
-                  }
+                      ),
+                    )
+                    .toList();
+                await ref.read(transferProvider).uploadFiles(items);
+              } catch (e) {
+                _log.warn('operation failed', e);
+                if (context.mounted) {
+                  ScaffoldMessenger.of(
+                    context,
+                  ).showSnackBar(SnackBar(content: Text('Upload failed: $e')));
                 }
-              },
-              child: content,
-            ),
+              }
+            }
+          }
+        },
+        child: content,
+      ),
     );
   }
 
   Widget _buildFileView(PanelSide side, List<FileItem> files) {
+    // Result lists always show original paths, including duplicate basenames.
+    if (ref.watch(panelProvider(side)).showingSearchResults) {
+      return FileListView(
+        side: side,
+        files: files,
+        scrollController: _scrollController,
+      );
+    }
     // Tree mode overrides the list/grid/column choice (desktop only)
     final densityMode = ref.watch(panelViewModeProvider(side));
     if (densityMode == PanelViewMode.tree && !kIsWeb) {
@@ -295,6 +360,113 @@ class _FilePanelState extends ConsumerState<FilePanel> {
       side: side,
       files: files,
       scrollController: _scrollController,
+    );
+  }
+
+  Widget _buildFileListHeader(BuildContext context, PanelNotifier panel) {
+    final colors = Theme.of(context).colorScheme;
+    final targets = panel.selection.isNotEmpty
+        ? panel.selection.toList()
+        : [if (panel.cursorItem != null) panel.cursorItem!];
+    return Container(
+      color: colors.secondaryContainer,
+      padding: const EdgeInsets.only(left: 8),
+      child: Row(
+        children: [
+          Icon(
+            panel.canOperateOnFileList ? Icons.list_alt : Icons.warning_amber,
+            size: 16,
+            color: colors.onSecondaryContainer,
+          ),
+          const SizedBox(width: 6),
+          Expanded(
+            child: Tooltip(
+              message: panel.canOperateOnFileList
+                  ? 'Original paths are retained. Copy, move, rename, or remove rows from this list.'
+                  : 'The source account changed. Run the search or import again before file operations.',
+              child: Text(
+                '${panel.fileListTitle} · ${panel.files?.length ?? 0} item(s)',
+                style: TextStyle(
+                  fontSize: 12,
+                  color: colors.onSecondaryContainer,
+                ),
+                maxLines: 1,
+                overflow: TextOverflow.ellipsis,
+              ),
+            ),
+          ),
+          IconButton(
+            visualDensity: VisualDensity.compact,
+            iconSize: 18,
+            tooltip: 'Open containing folder',
+            onPressed: targets.length != 1 || !panel.canOperateOnFileList
+                ? null
+                : () async {
+                    try {
+                      await panel.openContainingFolder(targets.single);
+                    } catch (error) {
+                      if (context.mounted) {
+                        ScaffoldMessenger.of(context).showSnackBar(
+                          SnackBar(content: Text(error.toString())),
+                        );
+                      }
+                    }
+                  },
+            icon: const Icon(Icons.folder_open),
+          ),
+          IconButton(
+            visualDensity: VisualDensity.compact,
+            iconSize: 18,
+            tooltip: 'Remove from list (keep files)',
+            onPressed: targets.isEmpty
+                ? null
+                : () => panel.removeFromFileList(targets),
+            icon: const Icon(Icons.playlist_remove),
+          ),
+          PopupMenuButton<String>(
+            tooltip: 'File list actions',
+            iconSize: 18,
+            onSelected: (value) {
+              switch (value) {
+                case 'pattern':
+                  showPatternSelectionDialog(context, ref, widget.side);
+                case 'copy':
+                  copyFileListPaths(
+                    context,
+                    ref,
+                    widget.side,
+                    selectedOnly: panel.selection.isNotEmpty,
+                  );
+                case 'export':
+                  showFileListDialog(context, ref, widget.side);
+                case 'import':
+                  showFileListDialog(
+                    context,
+                    ref,
+                    widget.side,
+                    importMode: true,
+                  );
+              }
+            },
+            itemBuilder: (_) => const [
+              PopupMenuItem(
+                value: 'pattern',
+                child: Text('Select by pattern…'),
+              ),
+              PopupMenuItem(value: 'copy', child: Text('Copy original paths')),
+              PopupMenuItem(value: 'export', child: Text('Export file list…')),
+              PopupMenuItem(value: 'import', child: Text('Import file list…')),
+            ],
+          ),
+          IconButton(
+            visualDensity: VisualDensity.compact,
+            iconSize: 18,
+            tooltip: 'Return to folder',
+            onPressed: () => panel.clearSearchResults(),
+            icon: const Icon(Icons.close),
+          ),
+        ],
+      ),
     );
   }
 
@@ -329,142 +501,148 @@ class _FilePanelState extends ConsumerState<FilePanel> {
             isActive: widget.isActive,
             showSource: MediaQuery.sizeOf(context).width > 800,
           ),
-          // Search results header: shows when panel is displaying search results
-          if (panel.showingSearchResults)
-            Container(
-              color: Theme.of(context).colorScheme.secondaryContainer,
-              padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
-              child: Row(
-                children: [
-                  Icon(Icons.search, size: 14,
-                      color: Theme.of(context).colorScheme.onSecondaryContainer),
-                  const SizedBox(width: 6),
-                  Expanded(
-                    child: Text(
-                      'Search results — ${files?.length ?? 0} file(s)',
-                      style: TextStyle(fontSize: 12,
-                          color: Theme.of(context).colorScheme.onSecondaryContainer),
-                    ),
-                  ),
-                  GestureDetector(
-                    onTap: () => panel.clearSearchResults(),
-                    child: Icon(Icons.close, size: 14,
-                        color: Theme.of(context).colorScheme.onSecondaryContainer),
-                  ),
-                ],
-              ),
-            ),
+          if (panel.showingSearchResults) _buildFileListHeader(context, panel),
           // Selection bar: off by default (DC mode — info is in status bar).
           // Enable in settings for touch/tablet mode.
           if (ref.watch(showSelectionBarProvider) && selection.isNotEmpty)
-            FileSelectionBar(
-              side: widget.side,
-              selection: selection,
-            ),
-          if (ref.watch(panelViewModeProvider(widget.side)) == PanelViewMode.full)
+            FileSelectionBar(side: widget.side, selection: selection),
+          if (ref.watch(panelViewModeProvider(widget.side)) ==
+              PanelViewMode.full)
             _CompactColumnHeader(side: widget.side, panel: panel),
           // Loading indicator shown while directory listing is in progress
-          if (panel.isLoading)
-            const LinearProgressIndicator(minHeight: 2),
+          if (panel.isLoading) const LinearProgressIndicator(minHeight: 2),
           Expanded(
             child: files == null
                 ? const Center(child: CircularProgressIndicator())
                 : files.isEmpty
-                    ? Center(
-                        child: _isDragging && widget.side == PanelSide.remote
-                            ? Column(
-                                mainAxisAlignment: MainAxisAlignment.center,
-                                children: [
-                                  Icon(Icons.upload_file, size: 64, color: Theme.of(context).colorScheme.primary),
-                                  const SizedBox(height: 16),
-                                  Text(AppLocalizations.of(context)!.dropFilesToUpload, style: Theme.of(context).textTheme.titleMedium),
-                                ],
-                              )
-                            : widget.side == PanelSide.remote && !ref.read(authProvider).isConnected
-                                ? Column(
-                                    mainAxisAlignment: MainAxisAlignment.center,
-                                    children: [
-                                      Icon(Icons.cloud_off, size: 56,
-                                          color: Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.3)),
-                                      const SizedBox(height: 12),
-                                      Text(AppLocalizations.of(context)!.notConnected,
-                                          style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                                              color: Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.5))),
-                                      const SizedBox(height: 16),
-                                      ElevatedButton.icon(
-                                        icon: const Icon(Icons.login, size: 18),
-                                        label: Text(AppLocalizations.of(context)!.connectToCloudShort),
-                                        onPressed: () => showConnectionDialogScreen(context),
-                                      ),
-                                    ],
-                                  )
-                                : Text(AppLocalizations.of(context)!.emptyFolder),
-                      )
-                    // Pull-to-refresh on mobile, with type-ahead overlay
-                    : Stack(
-                        children: [
-                          RefreshIndicator(
-                            onRefresh: () => panel.refresh(),
-                            child: _buildFileView(widget.side, files),
-                          ),
-                          if (panel.isTypeahead)
-                            Positioned(
-                              left: 0, right: 0, bottom: 0,
-                              child: Container(
-                                color: Theme.of(context).colorScheme.inverseSurface.withValues(alpha: 0.9),
-                                padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
-                                child: Row(
-                                  children: [
-                                    Icon(
-                                      panel.isQuickFilterActive
-                                          ? Icons.filter_list
-                                          : Icons.search,
-                                      size: 16,
+                ? Center(
+                    child: _isDragging && widget.side == PanelSide.remote
+                        ? Column(
+                            mainAxisAlignment: MainAxisAlignment.center,
+                            children: [
+                              Icon(
+                                Icons.upload_file,
+                                size: 64,
+                                color: Theme.of(context).colorScheme.primary,
+                              ),
+                              const SizedBox(height: 16),
+                              Text(
+                                AppLocalizations.of(context)!.dropFilesToUpload,
+                                style: Theme.of(context).textTheme.titleMedium,
+                              ),
+                            ],
+                          )
+                        : widget.side == PanelSide.remote &&
+                              !ref.read(authProvider).isConnected
+                        ? Column(
+                            mainAxisAlignment: MainAxisAlignment.center,
+                            children: [
+                              Icon(
+                                Icons.cloud_off,
+                                size: 56,
+                                color: Theme.of(context).colorScheme.onSurface
+                                    .withValues(alpha: 0.3),
+                              ),
+                              const SizedBox(height: 12),
+                              Text(
+                                AppLocalizations.of(context)!.notConnected,
+                                style: Theme.of(context).textTheme.titleMedium
+                                    ?.copyWith(
+                                      color: Theme.of(context)
+                                          .colorScheme
+                                          .onSurface
+                                          .withValues(alpha: 0.5),
+                                    ),
+                              ),
+                              const SizedBox(height: 16),
+                              ElevatedButton.icon(
+                                icon: const Icon(Icons.login, size: 18),
+                                label: Text(
+                                  AppLocalizations.of(context)!
+                                      .connectToCloudShort,
+                                ),
+                                onPressed: () =>
+                                    showConnectionDialogScreen(context),
+                              ),
+                            ],
+                          )
+                        : Text(AppLocalizations.of(context)!.emptyFolder),
+                  )
+                // Pull-to-refresh on mobile, with type-ahead overlay
+                : Stack(
+                    children: [
+                      RefreshIndicator(
+                        onRefresh: () => panel.refresh(),
+                        child: _buildFileView(widget.side, files),
+                      ),
+                      if (panel.isTypeahead)
+                        Positioned(
+                          left: 0,
+                          right: 0,
+                          bottom: 0,
+                          child: Container(
+                            color: Theme.of(context).colorScheme.inverseSurface
+                                .withValues(alpha: 0.9),
+                            padding: const EdgeInsets.symmetric(
+                              horizontal: 12,
+                              vertical: 4,
+                            ),
+                            child: Row(
+                              children: [
+                                Icon(
+                                  panel.isQuickFilterActive
+                                      ? Icons.filter_list
+                                      : Icons.search,
+                                  size: 16,
+                                  color: Theme.of(context)
+                                      .colorScheme
+                                      .onInverseSurface,
+                                ),
+                                const SizedBox(width: 8),
+                                Expanded(
+                                  child: Text(
+                                    (panel.isQuickFilterActive
+                                            ? 'Filter: '
+                                            : 'Find: ') +
+                                        panel.filterQuery,
+                                    style: TextStyle(
+                                      fontSize: 13,
                                       color: Theme.of(context)
                                           .colorScheme
                                           .onInverseSurface,
                                     ),
-                                    const SizedBox(width: 8),
-                                    Expanded(
-                                      child: Text(
-                                        (panel.isQuickFilterActive
-                                                ? 'Filter: '
-                                                : 'Find: ') +
-                                            panel.filterQuery,
-                                        style: TextStyle(
-                                          fontSize: 13,
-                                          color: Theme.of(context)
-                                              .colorScheme
-                                              .onInverseSurface,
-                                        ),
-                                      ),
-                                    ),
-                                    if (panel.typeaheadMatchCount > 0)
-                                      Padding(
-                                        padding:
-                                            const EdgeInsets.only(right: 8),
-                                        child: Text(
-                                          '${panel.typeaheadMatchPosition}/'
-                                          '${panel.typeaheadMatchCount}',
-                                          style: TextStyle(
-                                            fontSize: 12,
-                                            color: Theme.of(context)
-                                                .colorScheme
-                                                .onInverseSurface,
-                                          ),
-                                        ),
-                                      ),
-                                    GestureDetector(
-                                      onTap: () => panel.clearTypeahead(),
-                                      child: Icon(Icons.close, size: 16,
-                                          color: Theme.of(context).colorScheme.onInverseSurface),
-                                    ),
-                                  ],
+                                  ),
                                 ),
-                              ),
+                                if (panel.typeaheadMatchCount > 0)
+                                  Padding(
+                                    padding: const EdgeInsets.only(right: 8),
+                                    child: Text(
+                                      '${panel.typeaheadMatchPosition}/'
+                                      '${panel.typeaheadMatchCount}',
+                                      style: TextStyle(
+                                        fontSize: 12,
+                                        color: Theme.of(context)
+                                            .colorScheme
+                                            .onInverseSurface,
+                                      ),
+                                    ),
+                                  ),
+                                GestureDetector(
+                                  onTap: () => panel.clearTypeahead(),
+                                  child: Icon(
+                                    Icons.close,
+                                    size: 16,
+                                    color: Theme.of(context)
+                                        .colorScheme
+                                        .onInverseSurface,
+                                  ),
+                                ),
+                              ],
                             ),
-                        ],
-                      ),
+                          ),
+                        ),
+                    ],
+                  ),
           ),
         ],
       ),
@@ -483,8 +661,11 @@ class _CompactColumnHeader extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final theme = Theme.of(context);
     final bg = theme.colorScheme.surfaceContainerHighest.withValues(alpha: 0.6);
-    final style = TextStyle(fontSize: 11, fontWeight: FontWeight.w600,
-        color: theme.colorScheme.onSurface.withValues(alpha: 0.7));
+    final style = TextStyle(
+      fontSize: 11,
+      fontWeight: FontWeight.w600,
+      color: theme.colorScheme.onSurface.withValues(alpha: 0.7),
+    );
     final colWidths = ref.watch(columnWidthsProvider(side));
     final colNotifier = ref.read(columnWidthsProvider(side).notifier);
     final sizeW = (colWidths['size'] ?? 62.0).abs();
@@ -498,19 +679,30 @@ class _CompactColumnHeader extends ConsumerWidget {
       final isPrimary = panel.sortBy == by;
       final isSecondary = panel.secondarySortBy == by;
       final primaryArrow = isPrimary
-          ? (panel.sortOrder == SortOrder.ascending ? ' ↑' : ' ↓') : '';
+          ? (panel.sortOrder == SortOrder.ascending ? ' ↑' : ' ↓')
+          : '';
       final secondaryArrow = isSecondary && !isPrimary
-          ? (panel.secondarySortOrder == SortOrder.ascending ? '↑' : '↓') : '';
+          ? (panel.secondarySortOrder == SortOrder.ascending ? '↑' : '↓')
+          : '';
       final cell = Row(
         mainAxisSize: MainAxisSize.min,
         children: [
-          Text(label + primaryArrow, style: style.copyWith(
-            color: isPrimary ? theme.colorScheme.primary : style.color,
-          ), maxLines: 1, overflow: TextOverflow.clip),
+          Text(
+            label + primaryArrow,
+            style: style.copyWith(
+              color: isPrimary ? theme.colorScheme.primary : style.color,
+            ),
+            maxLines: 1,
+            overflow: TextOverflow.clip,
+          ),
           if (secondaryArrow.isNotEmpty)
-            Text(secondaryArrow, style: style.copyWith(
-              fontSize: 9, color: theme.colorScheme.tertiary,
-            )),
+            Text(
+              secondaryArrow,
+              style: style.copyWith(
+                fontSize: 9,
+                color: theme.colorScheme.tertiary,
+              ),
+            ),
         ],
       );
       return GestureDetector(
@@ -544,11 +736,7 @@ class _CompactColumnHeader extends ConsumerWidget {
             width: 6,
             color: Colors.transparent,
             child: Center(
-              child: Container(
-                width: 1,
-                height: 12,
-                color: theme.dividerColor,
-              ),
+              child: Container(width: 1, height: 12, color: theme.dividerColor),
             ),
           ),
         ),
@@ -561,14 +749,28 @@ class _CompactColumnHeader extends ConsumerWidget {
       padding: const EdgeInsets.symmetric(horizontal: 4),
       child: Row(
         children: [
-          const SizedBox(width: 18 + 2 + 14 + 4), // icon space matches CompactFileTile
-          Expanded(child: GestureDetector(
-            onSecondaryTap: () => _showColumnMenu(context, ref, side, colNotifier),
-            child: colLabel('Name', SortBy.name),
-          )),
-          if (showSize) ...[dragHandle('size'), colLabel('Size', SortBy.size, width: sizeW)],
-          if (showDate) ...[dragHandle('date'), colLabel('Date', SortBy.date, width: dateW)],
-          if (showExt) ...[dragHandle('ext'), colLabel('Ext', SortBy.extension, width: extW)],
+          const SizedBox(
+            width: 18 + 2 + 14 + 4,
+          ), // icon space matches CompactFileTile
+          Expanded(
+            child: GestureDetector(
+              onSecondaryTap: () =>
+                  _showColumnMenu(context, ref, side, colNotifier),
+              child: colLabel('Name', SortBy.name),
+            ),
+          ),
+          if (showSize) ...[
+            dragHandle('size'),
+            colLabel('Size', SortBy.size, width: sizeW),
+          ],
+          if (showDate) ...[
+            dragHandle('date'),
+            colLabel('Date', SortBy.date, width: dateW),
+          ],
+          if (showExt) ...[
+            dragHandle('ext'),
+            colLabel('Ext', SortBy.extension, width: extW),
+          ],
           const SizedBox(width: 4),
         ],
       ),
@@ -578,9 +780,17 @@ class _CompactColumnHeader extends ConsumerWidget {
 
 /// Show column visibility menu on right-click of column header.
 void _showColumnMenu(
-    BuildContext context, WidgetRef ref, PanelSide side, dynamic colNotifier) {
+  BuildContext context,
+  WidgetRef ref,
+  PanelSide side,
+  dynamic colNotifier,
+) {
   final position = RelativeRect.fromLTRB(
-    MediaQuery.sizeOf(context).width / 2, 80, MediaQuery.sizeOf(context).width / 2 + 1, 81);
+    MediaQuery.sizeOf(context).width / 2,
+    80,
+    MediaQuery.sizeOf(context).width / 2 + 1,
+    81,
+  );
   showMenu<String>(
     context: context,
     position: position,

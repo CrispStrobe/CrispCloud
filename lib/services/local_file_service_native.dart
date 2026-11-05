@@ -124,7 +124,7 @@ Future<void> writeLocalEditorFile(
 }
 
 // --- macOS Implementation ---
-class MacosFileService implements LocalFileService, LocalFileSaveReporter {
+class MacosFileService implements LocalFileService, LocalFileSaveReporter, ScopedLocalFileOperations {
   String? _grantedBasePath;
   final _bookmarks = SecureBookmarks();
   List<FileSystemEntity> _resolvedBookmarks = <FileSystemEntity>[];

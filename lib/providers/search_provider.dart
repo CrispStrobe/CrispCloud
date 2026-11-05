@@ -5,13 +5,14 @@
 
 import 'package:flutter/foundation.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:path/path.dart' as p;
 
 import '../models/file_item.dart';
 import '../models/panel_side.dart';
 import '../services/internxt_client_adapter.dart';
 import '../services/log_service.dart';
 import '../services/saved_search_service.dart';
-import 'auth_provider.dart';
+import '../services/panel_source_service.dart';
 import 'error_provider.dart';
 import 'panel_provider.dart';
 
@@ -24,12 +25,97 @@ enum FileTypeCategory { documents, images, videos, audio, archives, code }
 
 /// Extensions belonging to each category.
 const Map<FileTypeCategory, List<String>> _categoryExtensions = {
-  FileTypeCategory.documents: ['pdf', 'doc', 'docx', 'xls', 'xlsx', 'ppt', 'pptx', 'odt', 'ods', 'odp', 'txt', 'rtf', 'md', 'csv'],
-  FileTypeCategory.images: ['jpg', 'jpeg', 'png', 'gif', 'bmp', 'svg', 'webp', 'tiff', 'ico', 'heic', 'heif'],
-  FileTypeCategory.videos: ['mp4', 'mkv', 'avi', 'mov', 'wmv', 'flv', 'webm', 'm4v', 'mpg', 'mpeg', '3gp'],
-  FileTypeCategory.audio: ['mp3', 'aac', 'wav', 'flac', 'ogg', 'm4a', 'wma', 'aiff', 'opus'],
-  FileTypeCategory.archives: ['zip', 'tar', 'gz', 'bz2', 'xz', '7z', 'rar', 'tgz', 'zst'],
-  FileTypeCategory.code: ['dart', 'js', 'ts', 'py', 'java', 'kt', 'swift', 'go', 'rs', 'c', 'cpp', 'h', 'hpp', 'cs', 'rb', 'php', 'html', 'css', 'json', 'yaml', 'yml', 'xml', 'sh', 'bash', 'sql'],
+  FileTypeCategory.documents: [
+    'pdf',
+    'doc',
+    'docx',
+    'xls',
+    'xlsx',
+    'ppt',
+    'pptx',
+    'odt',
+    'ods',
+    'odp',
+    'txt',
+    'rtf',
+    'md',
+    'csv',
+  ],
+  FileTypeCategory.images: [
+    'jpg',
+    'jpeg',
+    'png',
+    'gif',
+    'bmp',
+    'svg',
+    'webp',
+    'tiff',
+    'ico',
+    'heic',
+    'heif',
+  ],
+  FileTypeCategory.videos: [
+    'mp4',
+    'mkv',
+    'avi',
+    'mov',
+    'wmv',
+    'flv',
+    'webm',
+    'm4v',
+    'mpg',
+    'mpeg',
+    '3gp',
+  ],
+  FileTypeCategory.audio: [
+    'mp3',
+    'aac',
+    'wav',
+    'flac',
+    'ogg',
+    'm4a',
+    'wma',
+    'aiff',
+    'opus',
+  ],
+  FileTypeCategory.archives: [
+    'zip',
+    'tar',
+    'gz',
+    'bz2',
+    'xz',
+    '7z',
+    'rar',
+    'tgz',
+    'zst',
+  ],
+  FileTypeCategory.code: [
+    'dart',
+    'js',
+    'ts',
+    'py',
+    'java',
+    'kt',
+    'swift',
+    'go',
+    'rs',
+    'c',
+    'cpp',
+    'h',
+    'hpp',
+    'cs',
+    'rb',
+    'php',
+    'html',
+    'css',
+    'json',
+    'yaml',
+    'yml',
+    'xml',
+    'sh',
+    'bash',
+    'sql',
+  ],
 };
 
 /// Returns every extension that belongs to the given categories.
@@ -48,6 +134,26 @@ List<String> extensionsForCategories(Set<FileTypeCategory> categories) {
 class SearchNotifier extends ChangeNotifier {
   static const _log = Log('SearchNotifier');
   final Ref _ref;
+  final _resultOrigins = Expando<PanelFileOrigin>('search account origin');
+  PanelSide _resultsSide = PanelSide.remote;
+
+  PanelFileOrigin? originForResult(FileItem item) {
+    final origin = _resultOrigins[item];
+    return origin != null && origin.isCurrent ? origin : null;
+  }
+
+  void _recordResultOrigins(Iterable<FileItem> items, PanelFileOrigin origin) {
+    if (!origin.isCurrent) {
+      throw StateError(
+        'The cloud account changed during the search. Run it again.',
+      );
+    }
+    for (final item in items) {
+      if (item.path != null && p.posix.isAbsolute(item.path!)) {
+        _resultOrigins[item] = origin;
+      }
+    }
+  }
 
   // ---- Saved searches ----
   final _savedSearchService = SavedSearchService();
@@ -216,13 +322,27 @@ class SearchNotifier extends ChangeNotifier {
 
   /// Store [results] and, when [asFolder] is true, tell the remote panel to
   /// display them as a virtual folder.
-  void setSearchResults(List<FileItem> results, {bool asFolder = false}) {
+  void setSearchResults(
+    List<FileItem> results, {
+    bool asFolder = false,
+    PanelSide side = PanelSide.remote,
+    String title = 'Search results',
+  }) {
     _searchResults = List.of(results);
     _showResultsAsFolder = asFolder;
-    _log.info('Search results stored', {'count': results.length, 'asFolder': asFolder});
+    _resultsSide = side;
+    _log.info('Search results stored', {
+      'count': results.length,
+      'asFolder': asFolder,
+    });
     if (asFolder) {
-      final panel = _ref.read(panelProvider(PanelSide.remote));
-      panel.showSearchResults(results);
+      final panel = _ref.read(panelProvider(side));
+      panel.showSearchResults(
+        results,
+        title: title,
+        originForFile: (item) =>
+            originForResult(item) ?? panel.originForOperation(item),
+      );
     }
     notifyListeners();
   }
@@ -232,7 +352,7 @@ class SearchNotifier extends ChangeNotifier {
     _searchResults = [];
     if (_showResultsAsFolder) {
       _showResultsAsFolder = false;
-      _ref.read(panelProvider(PanelSide.remote)).clearSearchResults();
+      _ref.read(panelProvider(_resultsSide)).clearSearchResults();
     }
     notifyListeners();
   }
@@ -247,44 +367,60 @@ class SearchNotifier extends ChangeNotifier {
     notifyListeners();
 
     try {
-      final client = _ref.read(authProvider).client;
+      final origin = _ref
+          .read(panelProvider(PanelSide.remote))
+          .captureRemoteSearchOrigin();
+      final client = (origin.source as RemotePanelSource).client;
       if (client is InternxtClientAdapter) {
         final results = await client.search(query, detailed: true);
 
-        final folders = (results['folders'] as List<dynamic>?)
-            ?.map((item) => FileItem(
-                  name: item['fullPath'] ?? item['name'],
-                  isFolder: true,
-                  uuid: item['uuid'],
-                  path: item['fullPath'],
-                ))
-            .toList() ?? [];
+        final folders =
+            (results['folders'] as List<dynamic>?)
+                ?.map(
+                  (item) => FileItem(
+                    name: p.posix.basename(
+                      item['fullPath'] ?? item['name'] ?? 'Unknown',
+                    ),
+                    isFolder: true,
+                    uuid: item['uuid'],
+                    path: item['fullPath'],
+                  ),
+                )
+                .toList() ??
+            [];
 
-        final files = (results['files'] as List<dynamic>?)
-            ?.map((item) {
+        final files =
+            (results['files'] as List<dynamic>?)?.map((item) {
               final plainName = item['name'] ?? 'Unknown';
               final fileType = item['type'] ?? '';
-              final fullName = (fileType.isNotEmpty && !plainName.endsWith(fileType))
+              final fullName =
+                  (fileType.isNotEmpty &&
+                      !plainName.toLowerCase().endsWith(
+                        '.${fileType.toLowerCase()}',
+                      ))
                   ? '$plainName.$fileType'
                   : plainName;
               return FileItem(
-                name: item['fullPath'] ?? fullName,
+                name: p.posix.basename(item['fullPath'] ?? fullName),
                 isFolder: false,
                 uuid: item['uuid'],
                 path: item['fullPath'],
               );
-            })
-            .toList() ?? [];
+            }).toList() ??
+            [];
 
         // Apply client-side filters
         final filteredFolders = applyFilters(folders);
         final filteredFiles = applyFilters(files);
+        _recordResultOrigins([...filteredFolders, ...filteredFiles], origin);
 
         _isSearching = false;
         notifyListeners();
         return {'folders': filteredFolders, 'files': filteredFiles};
       } else {
-        throw UnsupportedError('Search not supported for ${client.providerName}');
+        throw UnsupportedError(
+          'Search not supported for ${client.providerName}',
+        );
       }
     } catch (e) {
       _ref.read(errorProvider).addError('Search failed: $e');
@@ -302,26 +438,37 @@ class SearchNotifier extends ChangeNotifier {
     notifyListeners();
 
     try {
-      final client = _ref.read(authProvider).client;
+      final origin = _ref
+          .read(panelProvider(PanelSide.remote))
+          .captureRemoteSearchOrigin();
+      final client = (origin.source as RemotePanelSource).client;
       final remotePath = _ref.read(panelProvider(PanelSide.remote)).currentPath;
 
       final results = await client.fullTextSearch(query, remotePath);
-      final files = results.map((map) => FileItem(
-        name: map['name'] as String? ?? 'Unknown',
-        isFolder: false,
-        uuid: map['uuid'] as String?,
-        size: map['size'] as int?,
-        path: map['path'] as String?,
-        updatedAt: DateTime.tryParse(map['lastModified'] ?? ''),
-      )).toList();
+      final files = results
+          .map(
+            (map) => FileItem(
+              name: p.posix.basename(
+                map['path'] as String? ?? map['name'] as String? ?? 'Unknown',
+              ),
+              isFolder: false,
+              uuid: map['uuid'] as String?,
+              size: map['size'] as int?,
+              path: map['path'] as String?,
+              updatedAt: DateTime.tryParse(map['lastModified'] ?? ''),
+            ),
+          )
+          .toList();
 
       // Apply client-side filters
       final filtered = applyFilters(files);
+      _recordResultOrigins(filtered, origin);
 
       // Store snippets for UI display (keyed by file path or name)
       _lastSnippets = {
         for (final map in results)
-          (map['path'] ?? map['name']) as String: (map['snippet'] ?? '') as String,
+          (map['path'] ?? map['name']) as String:
+              (map['snippet'] ?? '') as String,
       };
 
       _isSearching = false;
@@ -345,19 +492,30 @@ class SearchNotifier extends ChangeNotifier {
     notifyListeners();
 
     try {
-      final client = _ref.read(authProvider).client;
+      final origin = _ref
+          .read(panelProvider(PanelSide.remote))
+          .captureRemoteSearchOrigin();
+      final client = (origin.source as RemotePanelSource).client;
       final remotePath = _ref.read(panelProvider(PanelSide.remote)).currentPath;
 
       if (client is InternxtClientAdapter) {
-        final results = await client.findFiles(remotePath, pattern, maxDepth: -1);
+        final results = await client.findFiles(
+          remotePath,
+          pattern,
+          maxDepth: -1,
+        );
         final files = results.map((item) {
           final plainName = item['name'] ?? 'Unknown';
           final fileType = item['fileType'] ?? '';
-          final fullName = (fileType.isNotEmpty && !plainName.endsWith(fileType))
+          final fullName =
+              (fileType.isNotEmpty &&
+                  !plainName.toLowerCase().endsWith(
+                    '.${fileType.toLowerCase()}',
+                  ))
               ? '$plainName.$fileType'
               : plainName;
           return FileItem(
-            name: item['fullPath'] ?? fullName,
+            name: p.posix.basename(item['fullPath'] ?? fullName),
             isFolder: false,
             uuid: item['uuid'],
             size: item['size'] as int?,
@@ -368,6 +526,7 @@ class SearchNotifier extends ChangeNotifier {
 
         // Apply client-side filters
         final filtered = applyFilters(files);
+        _recordResultOrigins(filtered, origin);
 
         _isSearching = false;
         notifyListeners();

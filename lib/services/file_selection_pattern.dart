@@ -23,23 +23,31 @@ class FileSelectionPattern {
     this.includeFolders = true,
   }) {
     if (expression.trim().isEmpty) {
-      throw const FormatException('Enter a wildcard mask or regular expression.');
+      throw const FormatException(
+        'Enter a wildcard mask or regular expression.',
+      );
     }
     if (!includeFiles && !includeFolders) {
       throw const FormatException('Include files, folders, or both.');
     }
     if (expression.length > 4096) {
-      throw const FormatException('The expression is too long (maximum 4096 characters).');
+      throw const FormatException(
+        'The expression is too long (maximum 4096 characters).',
+      );
     }
     if (mode == FilePatternMode.regex) {
-      _includes = [RegExp(expression, caseSensitive: caseSensitive, unicode: true)];
+      _includes = [
+        RegExp(expression, caseSensitive: caseSensitive, unicode: true),
+      ];
       _excludes = const [];
       return;
     }
 
     final sections = expression.split('|');
     if (sections.length > 2) {
-      throw const FormatException('Use one | between included and excluded masks.');
+      throw const FormatException(
+        'Use one | between included and excluded masks.',
+      );
     }
     final includes = _masks(sections.first);
     final excludes = sections.length == 2 ? _masks(sections.last) : <String>[];
@@ -49,7 +57,9 @@ class FileSelectionPattern {
     if (includes.isEmpty && excludes.isEmpty) {
       throw const FormatException('Enter at least one wildcard mask.');
     }
-    _includes = (includes.isEmpty ? ['*'] : includes).map(_compileWildcard).toList();
+    _includes = (includes.isEmpty ? ['*'] : includes)
+        .map(_compileWildcard)
+        .toList();
     _excludes = excludes.map(_compileWildcard).toList();
   }
 
@@ -62,8 +72,11 @@ class FileSelectionPattern {
   late final List<RegExp> _includes;
   late final List<RegExp> _excludes;
 
-  static List<String> _masks(String text) =>
-      text.split(';').map((mask) => mask.trim()).where((mask) => mask.isNotEmpty).toList();
+  static List<String> _masks(String text) => text
+      .split(';')
+      .map((mask) => mask.trim())
+      .where((mask) => mask.isNotEmpty)
+      .toList();
 
   RegExp _compileWildcard(String mask) {
     if (mask == '*.*') mask = '*';
@@ -77,7 +90,11 @@ class FileSelectionPattern {
       });
     }
     pattern.write(r'$');
-    return RegExp(pattern.toString(), caseSensitive: caseSensitive, unicode: true);
+    return RegExp(
+      pattern.toString(),
+      caseSensitive: caseSensitive,
+      unicode: true,
+    );
   }
 
   /// Parent-directory entries never receive selection marks.

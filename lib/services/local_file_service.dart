@@ -8,10 +8,14 @@
 import 'dart:async';
 import 'dart:io';
 import 'dart:typed_data';
+
 import 'package:flutter/foundation.dart';
+
 import '../models/file_item.dart';
 
-import 'local_file_service_native.dart' if (dart.library.html) 'local_file_service_web.dart' as platform;
+import 'local_file_service_native.dart'
+    if (dart.library.html) 'local_file_service_web.dart'
+    as platform;
 
 /// Whether a local save wrote its destination or handed a copy to the browser.
 enum LocalFileSaveResult { written, downloadedCopy }
@@ -70,8 +74,11 @@ extension LocalFileEditorOperations on LocalFileService {
   }) async {
     final service = this;
     if (service is LocalFileSaveReporter) {
-      return (service as LocalFileSaveReporter)
-          .saveFileWithResult(path, bytes, overwrite: overwrite);
+      return (service as LocalFileSaveReporter).saveFileWithResult(
+        path,
+        bytes,
+        overwrite: overwrite,
+      );
     }
     if (!overwrite) {
       throw UnsupportedError('This filesystem cannot create a protected copy.');
@@ -81,6 +88,33 @@ extension LocalFileEditorOperations on LocalFileService {
     return kIsWeb
         ? LocalFileSaveResult.downloadedCopy
         : LocalFileSaveResult.written;
+  }
+}
+
+/// Optional per-invocation scope used by concurrent file operations.
+abstract interface class ScopedLocalFileOperations {
+  Future<T> withFileOperationAccess<T>(
+    String path,
+    Future<T> Function() action,
+  );
+}
+
+extension LocalFileOperationScopes on LocalFileService {
+  Future<T> withFileOperationAccess<T>(
+    String path,
+    Future<T> Function() action,
+  ) async {
+    final service = this;
+    if (service is ScopedLocalFileOperations) {
+      return (service as ScopedLocalFileOperations).withFileOperationAccess(
+        path,
+        action,
+      );
+    }
+    if (!await ensureAccess(path)) {
+      throw FileSystemException('Access to this path was not granted.', path);
+    }
+    return action();
   }
 }
 
@@ -109,17 +143,6 @@ abstract class LocalFileService {
   /// Release access acquired by [beginStreamAccess].
   Future<void> endStreamAccess() async {}
 
-  /// Hold a security scope for an entire file operation, including nested
-  /// streaming reads and writes. Implementations must keep the scope local to
-  /// this invocation rather than sharing one mutable stream-scope slot.
-  Future<T> withFileOperationAccess<T>(
-      String path, Future<T> Function() action) async {
-    if (!await ensureAccess(path)) {
-      throw FileSystemException('Access to this path was not granted.', path);
-    }
-    return action();
-  }
-
   /// File size, using the granted security scope where needed. Null when the
   /// file is missing or access was denied.
   Future<int?> fileLength(String path) async {
@@ -135,12 +158,7 @@ abstract class LocalFileService {
     String path, {
     bool includeHidden = false,
     int maxItems = 10000,
-  }) =>
-      walkLocalFiles(
-        path,
-        includeHidden: includeHidden,
-        maxItems: maxItems,
-      );
+  }) => walkLocalFiles(path, includeHidden: includeHidden, maxItems: maxItems);
 
   /// Save data to a file, handling platform-specific permissions
   Future<void> saveFile(String path, Uint8List data);
@@ -172,7 +190,6 @@ abstract class LocalFileService {
     return platform.createPlatformFileService();
   }
 }
-
 
 /// Recursive local file walk used by the flat view. Callers on macOS wrap it in
 /// a security scope (see MacosFileService.walkFiles).
@@ -208,13 +225,15 @@ Future<List<FileItem>> walkLocalFiles(
       } else if (type == FileSystemEntityType.file) {
         try {
           final stat = await entity.stat();
-          result.add(FileItem(
-            name: name,
-            path: entity.path,
-            isFolder: false,
-            size: stat.size,
-            updatedAt: stat.modified,
-          ));
+          result.add(
+            FileItem(
+              name: name,
+              path: entity.path,
+              isFolder: false,
+              size: stat.size,
+              updatedAt: stat.modified,
+            ),
+          );
         } catch (_) {
           // Skip entries that disappear mid-walk.
         }

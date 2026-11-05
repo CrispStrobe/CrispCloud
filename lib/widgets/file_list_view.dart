@@ -15,6 +15,7 @@ import '../services/log_service.dart';
 import '../services/panel_view_mode_service.dart' show PanelViewMode;
 import '../utils/formatters.dart';
 import 'file_context_menu.dart';
+import 'pattern_selection_dialog.dart';
 
 /// Tracks modifier keys from the most recent pointer-down event.
 /// Captured at pointer-down time (before GestureDetector.onTap fires),
@@ -135,7 +136,7 @@ class FileListView extends ConsumerWidget {
                 isCursor: isCursor,
                 selectedFiles: selectedFiles,
                 textStyle: listTextStyle,
-                showRelativePath: panel.isFlatView,
+                showRelativePath: panel.isFlatView || panel.showingSearchResults,
                 onTap: (shiftKey, ctrlKey) =>
                     handleTap(file, shiftKey, ctrlKey),
                 onDoubleTap: () => panel.navigateInto(file),
@@ -151,7 +152,7 @@ class FileListView extends ConsumerWidget {
               isCursor: isCursor,
               selectedFiles: selectedFiles,
               textStyle: listTextStyle,
-              showRelativePath: panel.isFlatView,
+              showRelativePath: panel.isFlatView || panel.showingSearchResults,
               onTap: (shiftKey, ctrlKey) => handleTap(file, shiftKey, ctrlKey),
               onDoubleTap: () => panel.navigateInto(file),
               onSecondaryTap: (details) => showFileContextMenu(context, ref, side, file, details.globalPosition),
@@ -200,6 +201,18 @@ class FileListView extends ConsumerWidget {
 
           final isShift = HardwareKeyboard.instance.isShiftPressed;
           final p = ref.read(panelProvider(side));
+
+          // Selection shortcuts must run before printable-character quick search.
+          if (event.logicalKey == LogicalKeyboardKey.numpadAdd ||
+              event.logicalKey == LogicalKeyboardKey.numpadSubtract) {
+            if (p.renamingItem != null) return KeyEventResult.ignored;
+            if (event is KeyDownEvent) {
+              showPatternSelectionDialog(context, ref, side,
+                initialAction: event.logicalKey == LogicalKeyboardKey.numpadAdd
+                    ? SelectionAction.select : SelectionAction.deselect);
+            }
+            return KeyEventResult.handled;
+          }
 
           if (event.logicalKey == LogicalKeyboardKey.arrowDown ||
               event.logicalKey == LogicalKeyboardKey.arrowUp) {
