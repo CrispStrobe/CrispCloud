@@ -172,32 +172,96 @@ void main() {
         Duration(milliseconds: 250),
         Duration(milliseconds: 1250),
       ];
-      final frames = await _frames(cropOutput.path, const Size(90, 80), timestamps);
+      final frames = await _frames(
+        cropOutput.path,
+        const Size(90, 80),
+        timestamps,
+      );
       if (keepOutput) {
         const sourceTimes = <Duration>[
           Duration(milliseconds: 1250),
           Duration(milliseconds: 2250),
         ];
-        final originals = await _frames(input.path, const Size(320, 180), sourceTimes);
+        final originals = await _frames(
+          input.path,
+          const Size(320, 180),
+          sourceTimes,
+        );
         for (var index = 0; index < originals.length; index++) {
-          _reportPixel(originals[index], input.path, sourceTimes[index], 80, 45);
-          _reportPixel(originals[index], input.path, sourceTimes[index], 80, 135);
-          _reportPixel(frames[index], cropOutput.path, timestamps[index], 20, 40);
-          _reportPixel(frames[index], cropOutput.path, timestamps[index], 70, 40);
+          _reportPixel(
+            originals[index],
+            input.path,
+            sourceTimes[index],
+            80,
+            45,
+          );
+          _reportPixel(
+            originals[index],
+            input.path,
+            sourceTimes[index],
+            80,
+            135,
+          );
+          _reportPixel(
+            frames[index],
+            cropOutput.path,
+            timestamps[index],
+            20,
+            40,
+          );
+          _reportPixel(
+            frames[index],
+            cropOutput.path,
+            timestamps[index],
+            70,
+            40,
+          );
         }
       }
       // Only the original left half survives. After clockwise rotation its
       // lower blue quadrant is on the left, and its upper quadrant is on the
       // right. The right color changes green -> yellow at output t=1s, proving
       // that trim starts at source t=1s instead of silently cutting from zero.
-      _expectColor(frames[0], 20, 40, 0, 0, 255,
-        path: cropOutput.path, timestamp: timestamps[0]);
-      _expectColor(frames[0], 70, 40, 0, 255, 0,
-        path: cropOutput.path, timestamp: timestamps[0]);
-      _expectColor(frames[1], 20, 40, 0, 0, 255,
-        path: cropOutput.path, timestamp: timestamps[1]);
-      _expectColor(frames[1], 70, 40, 255, 255, 0,
-        path: cropOutput.path, timestamp: timestamps[1]);
+      _expectColor(
+        frames[0],
+        20,
+        40,
+        0,
+        0,
+        255,
+        path: cropOutput.path,
+        timestamp: timestamps[0],
+      );
+      _expectColor(
+        frames[0],
+        70,
+        40,
+        0,
+        255,
+        0,
+        path: cropOutput.path,
+        timestamp: timestamps[0],
+      );
+      _expectColor(
+        frames[1],
+        20,
+        40,
+        0,
+        0,
+        255,
+        path: cropOutput.path,
+        timestamp: timestamps[1],
+      );
+      _expectColor(
+        frames[1],
+        70,
+        40,
+        255,
+        255,
+        0,
+        path: cropOutput.path,
+        timestamp: timestamps[1],
+      );
     },
     skip: !MediaVideoBackend.supportsPlatform(defaultTargetPlatform),
     timeout: const Timeout(Duration(minutes: 4)),
@@ -224,7 +288,9 @@ Future<List<image.Image>> _frames(
   for (var index = 0; index < bytes.length; index++) {
     final frame = bytes[index];
     if (const bool.fromEnvironment('MEDIA_TEST_KEEP_OUTPUT')) {
-      final thumbnail = File('$path.thumb-${timestamps[index].inMicroseconds}.png');
+      final thumbnail = File(
+        '$path.thumb-${timestamps[index].inMicroseconds}.png',
+      );
       await thumbnail.writeAsBytes(frame, flush: true);
       _reportFile(thumbnail, isExport: false);
     }
@@ -246,24 +312,44 @@ void _reportFile(File file, {bool isExport = true}) {
   if (!keepOutput) return;
   // Emit before later assertions so partial/failed runs still retain evidence.
   // ignore: avoid_print
-  print('MEDIA_VIDEO_${isExport ? 'EXPORT' : 'ARTIFACT'} ${jsonEncode(file.path)}');
+  print(
+    'MEDIA_VIDEO_${isExport ? 'EXPORT' : 'ARTIFACT'} ${jsonEncode(file.path)}',
+  );
 }
 
-void _reportPixel(image.Image frame, String path, Duration timestamp, int x, int y) {
+void _reportPixel(
+  image.Image frame,
+  String path,
+  Duration timestamp,
+  int x,
+  int y,
+) {
   final pixel = frame.getPixel(x, y);
   // ignore: avoid_print
-  print('MEDIA_VIDEO_SAMPLE ${jsonEncode({
-    'path': path, 'timeUs': timestamp.inMicroseconds, 'x': x, 'y': y,
-    'rgb': [pixel.r, pixel.g, pixel.b],
-  })}');
+  print(
+    'MEDIA_VIDEO_SAMPLE ${jsonEncode({
+      'path': path,
+      'timeUs': timestamp.inMicroseconds,
+      'x': x,
+      'y': y,
+      'rgb': [pixel.r, pixel.g, pixel.b],
+    })}',
+  );
 }
 
-void _expectColor(image.Image frame, int x, int y, int r, int g, int b, {
+void _expectColor(
+  image.Image frame,
+  int x,
+  int y,
+  int r,
+  int g,
+  int b, {
   required String path,
   required Duration timestamp,
 }) {
   final pixel = frame.getPixel(x, y);
-  final reason = '$path at ${timestamp.inMicroseconds}us, pixel ($x,$y): '
+  final reason =
+      '$path at ${timestamp.inMicroseconds}us, pixel ($x,$y): '
       'RGB (${pixel.r},${pixel.g},${pixel.b}), expected ($r,$g,$b).';
   // H.264/YUV conversion and platform color management can move values by a
   // few levels. This margin still rejects a wrong quadrant or rotation.

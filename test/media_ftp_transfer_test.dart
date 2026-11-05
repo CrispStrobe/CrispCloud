@@ -9,14 +9,15 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:ftpconnect/ftpconnect.dart';
 import 'package:path/path.dart' as p;
 
-FTPClientFactory _factory(_FTPConnection client) => (
-  String host, {
-  required int port,
-  required String user,
-  required String pass,
-  required SecurityType securityType,
-  required int timeout,
-}) => client;
+FTPClientFactory _factory(_FTPConnection client) =>
+    (
+      String host, {
+      required int port,
+      required String user,
+      required String pass,
+      required SecurityType securityType,
+      required int timeout,
+    }) => client;
 
 void main() {
   TestWidgetsFlutterBinding.ensureInitialized();
@@ -25,22 +26,40 @@ void main() {
   late FTPClientAdapter adapter;
 
   setUp(() async {
-    config = FTPConfigService(configPath: '', secureStorage: InMemorySecureStorage());
+    config = FTPConfigService(
+      configPath: '',
+      secureStorage: InMemorySecureStorage(),
+    );
     connection = _FTPConnection();
-    adapter = FTPClientAdapter(config: config, clientFactory: _factory(connection));
+    adapter = FTPClientAdapter(
+      config: config,
+      clientFactory: _factory(connection),
+    );
     await adapter.login('editor@fixture.invalid', 'synthetic-test-password');
   });
 
-  tearDown(() async { await adapter.logout(); });
+  tearDown(() async {
+    await adapter.logout();
+  });
 
   test('uploads pass complete root and nested paths without changing server directory', () async {
     connection.directory = '/unrelated';
     final progress = <(int, int)>[];
-    await adapter.uploadFile([1, 2], 'copy.wav', '/media/',
-      onProgress: (sent, total) => progress.add((sent, total)));
+    await adapter.uploadFile(
+      [1, 2],
+      'copy.wav',
+      '/media/',
+      onProgress: (sent, total) => progress.add((sent, total)),
+    );
     await adapter.uploadFile([3, 4], 'copy.wav', '/');
-    expect(connection.uploads.map((upload) => upload.$1), ['/media/copy.wav', '/copy.wav']);
-    expect(connection.uploads.map((upload) => upload.$2), [[1, 2], [3, 4]]);
+    expect(connection.uploads.map((upload) => upload.$1), [
+      '/media/copy.wav',
+      '/copy.wav',
+    ]);
+    expect(connection.uploads.map((upload) => upload.$2), [
+      [1, 2],
+      [3, 4],
+    ]);
     expect(connection.changedDirectories, isEmpty);
     expect(connection.directory, '/unrelated');
     expect(progress, [(2, 2)]);
@@ -51,7 +70,10 @@ void main() {
 
   test('same-basename downloads on independent FTP sessions retain their own temporary bytes', () async {
     final otherConnection = _FTPConnection();
-    final other = FTPClientAdapter(config: config, clientFactory: _factory(otherConnection));
+    final other = FTPClientAdapter(
+      config: config,
+      clientFactory: _factory(otherConnection),
+    );
     await other.login('editor@fixture.invalid', 'synthetic-test-password');
     addTearDown(other.logout);
     connection.files['/first/source.wav'] = [1, 1, 1];
@@ -64,13 +86,17 @@ void main() {
       await release.future;
       return true;
     }
+
     connection.afterDownloadWrite = holdDownload;
     otherConnection.afterDownloadWrite = holdDownload;
     final first = adapter.downloadFileBytes('/first/source.wav');
     final second = other.downloadFileBytes('/second/source.wav');
     try {
       await bothReady.future;
-      expect(connection.downloadFiles.single, isNot(otherConnection.downloadFiles.single));
+      expect(
+        connection.downloadFiles.single,
+        isNot(otherConnection.downloadFiles.single),
+      );
     } finally {
       release.complete();
     }
@@ -80,33 +106,52 @@ void main() {
     expect(otherConnection.downloadNames, ['/second/source.wav']);
     expect(connection.changedDirectories, isEmpty);
     expect(otherConnection.changedDirectories, isEmpty);
-    for (final path in [...connection.downloadFiles, ...otherConnection.downloadFiles]) {
+    for (final path in [
+      ...connection.downloadFiles,
+      ...otherConnection.downloadFiles,
+    ]) {
       expect(await Directory(p.dirname(path)).exists(), isFalse);
     }
   });
 
   for (final throwsError in [false, true]) {
-    test('a ${throwsError ? 'throwing' : 'rejected'} download cleans partial temporary files', () async {
-      connection.files['/media/source.wav'] = [1, 2, 3];
-      connection.afterDownloadWrite = (_, _) async {
-        if (throwsError) throw StateError('Interrupted transfer');
-        return false;
-      };
-      await expectLater(adapter.downloadFileBytes('/media/source.wav'), throwsA(anything));
-      expect(connection.downloadNames, ['/media/source.wav']);
-      expect(await Directory(p.dirname(connection.downloadFiles.single)).exists(), isFalse);
-    });
+    test(
+      'a ${throwsError ? 'throwing' : 'rejected'} download cleans partial temporary files',
+      () async {
+        connection.files['/media/source.wav'] = [1, 2, 3];
+        connection.afterDownloadWrite = (_, _) async {
+          if (throwsError) throw StateError('Interrupted transfer');
+          return false;
+        };
+        await expectLater(
+          adapter.downloadFileBytes('/media/source.wav'),
+          throwsA(anything),
+        );
+        expect(connection.downloadNames, ['/media/source.wav']);
+        expect(
+          await Directory(p.dirname(connection.downloadFiles.single)).exists(),
+          isFalse,
+        );
+      },
+    );
   }
 
   test('downloadFileByPath uses an absolute remote name and leaves the requested local output', () async {
-    final directory = await Directory.systemTemp.createTemp('ftp-local-output-test-');
-    addTearDown(() async { await directory.delete(recursive: true); });
+    final directory = await Directory.systemTemp.createTemp(
+      'ftp-local-output-test-',
+    );
+    addTearDown(() async {
+      await directory.delete(recursive: true);
+    });
     final output = File(p.join(directory.path, 'chosen.wav'));
     connection.directory = '/elsewhere';
     connection.files['/media/source.wav'] = [4, 5, 6];
     final progress = <(int, int)>[];
-    await adapter.downloadFileByPath('media/source.wav', output.path,
-      onProgress: (received, total) => progress.add((received, total)));
+    await adapter.downloadFileByPath(
+      'media/source.wav',
+      output.path,
+      onProgress: (received, total) => progress.add((received, total)),
+    );
     expect(await output.readAsBytes(), [4, 5, 6]);
     expect(connection.downloadNames, ['/media/source.wav']);
     expect(connection.changedDirectories, isEmpty);
@@ -141,7 +186,8 @@ class _FTPConnection implements FTPConnect {
   }
 
   @override
-  Future<bool> uploadFile(File file, {
+  Future<bool> uploadFile(
+    File file, {
     String sRemoteName = '',
     void Function(double, int, int)? onProgress,
   }) async {
@@ -151,7 +197,9 @@ class _FTPConnection implements FTPConnect {
   }
 
   @override
-  Future<bool> downloadFile(String? remoteName, File file, {
+  Future<bool> downloadFile(
+    String? remoteName,
+    File file, {
     void Function(double, int, int)? onProgress,
   }) async {
     downloadNames.add(remoteName);
