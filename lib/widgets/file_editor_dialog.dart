@@ -1,11 +1,15 @@
 // lib/widgets/file_editor_dialog.dart
 //
 // Built-in text/code editor for remote (and local) files.
-// Downloads the file, presents it in an editable text area with line numbers,
-// and re-uploads on save. Warns on unsaved changes.
+// Downloads the file, presents it in an editable code surface with line
+// numbers, syntax highlighting, folding and find/replace, and re-uploads on
+// save. Warns on unsaved changes.
+//
+// The editor widget is Re-Editor (MIT). Encoding and line-ending metadata are
+// retained by [EditorDocument] so a save does not silently rewrite a Latin-1
+// file as UTF-8 or convert CRLF to LF.
 
 import 'dart:async';
-import 'dart:convert';
 import 'dart:io';
 
 import 'package:flutter/foundation.dart' show kIsWeb;
@@ -13,22 +17,33 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:path/path.dart' as p;
+import 'package:re_editor/re_editor.dart';
 
+import '../l10n/app_localizations.dart';
 import '../models/file_item.dart';
 import '../models/panel_side.dart';
 import '../providers/providers.dart';
-import '../l10n/app_localizations.dart';
 import '../l10n/image_editor_strings.dart';
+import '../services/editor_document.dart';
+import '../services/editor_highlighting.dart';
 import '../services/image_edit_session.dart' show isEditableImageFileName;
 import '../services/log_service.dart';
+import '../services/save_coordinator.dart';
 import '../utils/file_editability.dart' show isTextEditableName;
+import 'code_editor_context_menu.dart';
+import 'code_editor_find_panel.dart';
+import 'code_editor_status_bar.dart';
 import 'image_editor_dialog.dart';
 import 'office_editor_dialog.dart';
 import 'pdf_editor_dialog.dart';
 
 /// Opens a full-screen editor dialog for the given file.
 Future<void> showFileEditorDialog(
-    BuildContext context, WidgetRef ref, FileItem file, PanelSide side) async {
+  BuildContext context,
+  WidgetRef ref,
+  FileItem file,
+  PanelSide side,
+) async {
   if (file.isFolder) return;
   try {
     if (isEditableImageFileName(file.name)) {
@@ -83,244 +98,111 @@ class _FileEditorPage extends ConsumerStatefulWidget {
   ConsumerState<_FileEditorPage> createState() => _FileEditorPageState();
 }
 
-/// Detect a language from file extension for syntax highlighting.
-String? _detectLanguage(String filename) {
-  final ext = filename.contains('.') ? filename.split('.').last.toLowerCase() : '';
-  const map = {
-    'dart': 'dart', 'js': 'javascript', 'ts': 'typescript',
-    'jsx': 'javascript', 'tsx': 'typescript',
-    'py': 'python', 'rs': 'rust', 'go': 'go', 'java': 'java',
-    'json': 'json', 'yaml': 'yaml', 'yml': 'yaml', 'xml': 'xml',
-    'html': 'html', 'css': 'css', 'sh': 'bash', 'bash': 'bash',
-    'md': 'markdown', 'sql': 'sql', 'cpp': 'cpp', 'c': 'c',
-    'h': 'cpp', 'hpp': 'cpp', 'kt': 'kotlin', 'swift': 'swift',
-    'php': 'php', 'rb': 'ruby', 'lua': 'lua', 'r': 'r',
-    'toml': 'toml', 'ini': 'ini',
-  };
-  return map[ext];
-}
-
-/// Keywords for common languages, used for basic syntax highlighting.
-const _languageKeywords = <String, List<String>>{
-  'dart': ['import', 'export', 'class', 'extends', 'implements', 'mixin', 'enum', 'abstract', 'final', 'const', 'var', 'late', 'static', 'void', 'return', 'if', 'else', 'for', 'while', 'do', 'switch', 'case', 'break', 'continue', 'try', 'catch', 'throw', 'async', 'await', 'Future', 'Stream', 'dynamic', 'int', 'double', 'String', 'bool', 'List', 'Map', 'Set', 'null', 'true', 'false', 'this', 'super', 'new', 'with', 'as', 'is', 'in', 'get', 'set', 'required', 'override'],
-  'javascript': ['import', 'export', 'from', 'class', 'extends', 'function', 'const', 'let', 'var', 'return', 'if', 'else', 'for', 'while', 'do', 'switch', 'case', 'break', 'continue', 'try', 'catch', 'throw', 'async', 'await', 'new', 'this', 'super', 'null', 'undefined', 'true', 'false', 'typeof', 'instanceof', 'in', 'of', 'default', 'yield'],
-  'typescript': ['import', 'export', 'from', 'class', 'extends', 'implements', 'interface', 'type', 'enum', 'function', 'const', 'let', 'var', 'return', 'if', 'else', 'for', 'while', 'do', 'switch', 'case', 'break', 'continue', 'try', 'catch', 'throw', 'async', 'await', 'new', 'this', 'super', 'null', 'undefined', 'true', 'false', 'typeof', 'instanceof', 'as', 'readonly', 'abstract', 'private', 'protected', 'public'],
-  'python': ['import', 'from', 'class', 'def', 'return', 'if', 'elif', 'else', 'for', 'while', 'break', 'continue', 'try', 'except', 'finally', 'raise', 'with', 'as', 'in', 'not', 'and', 'or', 'is', 'None', 'True', 'False', 'lambda', 'yield', 'async', 'await', 'pass', 'self', 'global', 'nonlocal'],
-  'go': ['package', 'import', 'func', 'var', 'const', 'type', 'struct', 'interface', 'return', 'if', 'else', 'for', 'range', 'switch', 'case', 'break', 'continue', 'defer', 'go', 'select', 'chan', 'map', 'nil', 'true', 'false', 'make', 'new', 'len', 'append', 'error', 'string', 'int', 'bool', 'byte'],
-  'rust': ['use', 'mod', 'pub', 'fn', 'struct', 'enum', 'impl', 'trait', 'let', 'mut', 'const', 'static', 'return', 'if', 'else', 'for', 'while', 'loop', 'match', 'break', 'continue', 'async', 'await', 'move', 'self', 'Self', 'super', 'true', 'false', 'Some', 'None', 'Ok', 'Err', 'unsafe', 'where', 'type', 'as', 'in', 'ref'],
-  'java': ['import', 'package', 'class', 'extends', 'implements', 'interface', 'enum', 'abstract', 'final', 'static', 'void', 'return', 'if', 'else', 'for', 'while', 'do', 'switch', 'case', 'break', 'continue', 'try', 'catch', 'throw', 'throws', 'new', 'this', 'super', 'null', 'true', 'false', 'public', 'private', 'protected', 'int', 'long', 'double', 'float', 'boolean', 'String', 'synchronized'],
-};
-
-/// A TextEditingController that applies basic syntax highlighting.
-class _HighlightingController extends TextEditingController {
-  final String? language;
-  late final Set<String> _keywords;
-  bool highlightEnabled;
-
-  _HighlightingController({this.language, this.highlightEnabled = true}) {
-    _keywords = (_languageKeywords[language] ?? []).toSet();
-  }
-
-  @override
-  TextSpan buildTextSpan({
-    required BuildContext context,
-    TextStyle? style,
-    required bool withComposing,
-  }) {
-    if (!highlightEnabled || language == null || _keywords.isEmpty) {
-      return super.buildTextSpan(context: context, style: style, withComposing: withComposing);
-    }
-
-    // Performance guard: skip highlighting for large files
-    if (text.length > 500000) {
-      return super.buildTextSpan(context: context, style: style, withComposing: withComposing);
-    }
-
-    final theme = Theme.of(context);
-    final isDark = theme.brightness == Brightness.dark;
-    final keywordColor = isDark ? const Color(0xFF569CD6) : const Color(0xFF0000FF);
-    final stringColor = isDark ? const Color(0xFFCE9178) : const Color(0xFFA31515);
-    final commentColor = isDark ? const Color(0xFF6A9955) : const Color(0xFF008000);
-    final numberColor = isDark ? const Color(0xFFB5CEA8) : const Color(0xFF098658);
-
-    final spans = <TextSpan>[];
-    final lines = text.split('\n');
-
-    for (var lineIdx = 0; lineIdx < lines.length; lineIdx++) {
-      if (lineIdx > 0) spans.add(TextSpan(text: '\n', style: style));
-
-      final line = lines[lineIdx];
-      var i = 0;
-
-      while (i < line.length) {
-        // Comment (// or #)
-        if ((i < line.length - 1 && line[i] == '/' && line[i + 1] == '/') ||
-            (line[i] == '#' && (language == 'python' || language == 'bash' || language == 'ruby'))) {
-          spans.add(TextSpan(text: line.substring(i), style: style?.copyWith(color: commentColor)));
-          i = line.length;
-          continue;
-        }
-
-        // String literal
-        if (line[i] == '"' || line[i] == "'") {
-          final quote = line[i];
-          var end = i + 1;
-          while (end < line.length && line[end] != quote) {
-            if (line[end] == '\\') end++; // Skip escaped char
-            end++;
-          }
-          if (end < line.length) end++; // Include closing quote
-          spans.add(TextSpan(text: line.substring(i, end), style: style?.copyWith(color: stringColor)));
-          i = end;
-          continue;
-        }
-
-        // Number literal
-        if (RegExp(r'[0-9]').hasMatch(line[i]) &&
-            (i == 0 || !RegExp(r'[a-zA-Z_]').hasMatch(line[i - 1]))) {
-          var end = i;
-          while (end < line.length && RegExp(r'[0-9.xXa-fA-F]').hasMatch(line[end])) {
-            end++;
-          }
-          spans.add(TextSpan(text: line.substring(i, end), style: style?.copyWith(color: numberColor)));
-          i = end;
-          continue;
-        }
-
-        // Word (potential keyword)
-        if (RegExp(r'[a-zA-Z_]').hasMatch(line[i])) {
-          var end = i;
-          while (end < line.length && RegExp(r'[a-zA-Z0-9_]').hasMatch(line[end])) {
-            end++;
-          }
-          final word = line.substring(i, end);
-          if (_keywords.contains(word)) {
-            spans.add(TextSpan(text: word, style: style?.copyWith(color: keywordColor, fontWeight: FontWeight.bold)));
-          } else {
-            spans.add(TextSpan(text: word, style: style));
-          }
-          i = end;
-          continue;
-        }
-
-        // Other character
-        spans.add(TextSpan(text: line[i], style: style));
-        i++;
-      }
-    }
-
-    return TextSpan(children: spans, style: style);
-  }
-}
-
 class _FileEditorPageState extends ConsumerState<_FileEditorPage> {
   static const _log = Log('FileEditor');
-  late final _HighlightingController _controller;
-  final _gutterScrollController = ScrollController();
-  final _editorScrollController = ScrollController();
-  final _focusNode = FocusNode();
-  bool _syncingScroll = false;
+  static const _autoSaveDelay = Duration(seconds: 30);
 
-  bool _loading = true;
-  bool _saving = false;
-  bool _modified = false;
-  bool _conflictDetected = false;
-  bool _highlightEnabled = true;
-  String? _error;
-  String? _language;
+  late final CodeLineEditingController _controller;
+  late final CodeFindController _findController;
+  final CodeScrollController _scrollController = CodeScrollController();
+  final SaveCoordinator<EditorDocument> _saveState =
+      SaveCoordinator<EditorDocument>();
+  final _focusNode = FocusNode();
+
+  EditorDocument? _document;
   Uint8List? _originalBytes;
-  int _lineCount = 1;
   Timer? _autoSaveTimer;
   DateTime? _loadedAt;
+  String? _language;
+  String? _error;
+  CodeLines? _lastCodeLines;
+  CodeLineSelection? _lastSelection;
+  bool _loading = true;
+  bool _suppressChange = false;
+  bool _conflictDetected = false;
+  bool _highlightEnabled = true;
+  bool _wordWrap = false;
+  int _cursorLine = 1;
+  int _cursorColumn = 1;
+  int _lineCount = 1;
 
-  static const _autoSaveDelay = Duration(seconds: 30);
+  CodeHighlightTheme? _cachedHighlightTheme;
+  String? _cachedHighlightKey;
 
   @override
   void initState() {
     super.initState();
-    _language = _detectLanguage(widget.file.name);
-    _controller = _HighlightingController(
-      language: _language,
-      highlightEnabled: _highlightEnabled,
+    _language = editorLanguageForFile(widget.file.name);
+    _controller = CodeLineEditingController(
+      options: const CodeLineOptions(lineBreak: TextLineBreak.lf),
     );
+    _findController = CodeFindController(_controller);
+    _controller.addListener(_onControllerChanged);
+    _saveState.addListener(_onSaveStateChanged);
     _loadFile();
-    _controller.addListener(_onTextChanged);
-    _gutterScrollController.addListener(_syncEditorFromGutter);
-    _editorScrollController.addListener(_syncGutterFromEditor);
   }
 
-  /// The gutter and the TextField each need their own ScrollController, so
-  /// mirror their offsets in both directions. Without this the line numbers
-  /// stay at the top when the text is scrolled (the F3 viewer does this by
-  /// sharing one scroll view; the F4 editor cannot).
-  void _syncGutterFromEditor() {
-    if (_syncingScroll ||
-        !_editorScrollController.hasClients ||
-        !_gutterScrollController.hasClients) {
-      return;
-    }
-    _syncingScroll = true;
-    final target = _editorScrollController.offset.clamp(
-      0.0,
-      _gutterScrollController.position.maxScrollExtent,
-    );
-    if ((_gutterScrollController.offset - target).abs() > 0.5) {
-      _gutterScrollController.jumpTo(target);
-    }
-    _syncingScroll = false;
+  @override
+  void dispose() {
+    _autoSaveTimer?.cancel();
+    _controller.removeListener(_onControllerChanged);
+    _saveState.removeListener(_onSaveStateChanged);
+    _findController.dispose();
+    _controller.dispose();
+    _scrollController.dispose();
+    _focusNode.dispose();
+    _saveState.dispose();
+    super.dispose();
   }
 
-  void _syncEditorFromGutter() {
-    if (_syncingScroll ||
-        !_editorScrollController.hasClients ||
-        !_gutterScrollController.hasClients) {
-      return;
-    }
-    _syncingScroll = true;
-    final target = _gutterScrollController.offset.clamp(
-      0.0,
-      _editorScrollController.position.maxScrollExtent,
-    );
-    if ((_editorScrollController.offset - target).abs() > 0.5) {
-      _editorScrollController.jumpTo(target);
-    }
-    _syncingScroll = false;
+  bool get _isModified => _saveState.isDirty;
+  bool get _isSaving => _saveState.isSaving;
+
+  void _onSaveStateChanged() {
+    if (!mounted) return;
+    setState(() {});
   }
 
-  void _onTextChanged() {
-    final nowModified = _controller.text !=
-        (_originalBytes != null
-            ? _tryDecode(_originalBytes!)
-            : '');
-    if (nowModified != _modified) {
-      setState(() => _modified = nowModified);
-    }
-    final newLineCount = '\n'.allMatches(_controller.text).length + 1;
-    if (newLineCount != _lineCount) {
-      setState(() => _lineCount = newLineCount);
-      WidgetsBinding.instance.addPostFrameCallback((_) {
-        if (mounted) _syncGutterFromEditor();
-      });
+  void _onControllerChanged() {
+    if (!mounted) return;
+
+    final codeLines = _controller.codeLines;
+    final textChanged = !identical(codeLines, _lastCodeLines);
+    if (textChanged) {
+      _lastCodeLines = codeLines;
+      if (!_suppressChange) {
+        _saveState.markChanged();
+        _scheduleAutoSave();
+      }
     }
 
-    // Reset auto-save timer on each change
-    if (nowModified) {
-      _autoSaveTimer?.cancel();
-      _autoSaveTimer = Timer(_autoSaveDelay, () {
-        if (_modified && !_saving && mounted) {
-          _autoSave();
-        }
-      });
+    final selection = _controller.selection;
+    final newLine = selection.extentIndex + 1;
+    final newColumn = selection.extentOffset + 1;
+    final newLineCount = _controller.lineCount;
+    final selectionChanged =
+        _lastSelection != selection ||
+        newLine != _cursorLine ||
+        newColumn != _cursorColumn ||
+        newLineCount != _lineCount;
+    _lastSelection = selection;
+    _cursorLine = newLine;
+    _cursorColumn = newColumn;
+    _lineCount = newLineCount;
+
+    if (textChanged || selectionChanged) {
+      setState(() {});
     }
   }
 
-  Future<void> _autoSave() async {
-    // Check for conflicts before auto-saving
-    if (await _checkForConflict()) {
-      setState(() => _conflictDetected = true);
-      return;
-    }
-    await _saveFile();
+  void _scheduleAutoSave() {
+    _autoSaveTimer?.cancel();
+    _autoSaveTimer = Timer(_autoSaveDelay, () {
+      if (!mounted) return;
+      if (_saveState.isDirty && !_saveState.isSaving) {
+        unawaited(_saveFile(manual: false));
+      }
+    });
   }
 
   /// Check if the remote file was modified since we loaded it.
@@ -351,17 +233,23 @@ class _FileEditorPageState extends ConsumerState<_FileEditorPage> {
     return false;
   }
 
-  String _tryDecode(Uint8List bytes) {
-    try {
-      return utf8.decode(bytes);
-    } catch (e) {
-      _log.warn('operation failed', e);
-      return String.fromCharCodes(bytes);
-    }
-  }
-
   Future<void> _loadFile() async {
-    _log.debug('loadFile: ${widget.file.name} side=${widget.side.name} web=$kIsWeb');
+    _log.debug(
+      'loadFile: ${widget.file.name} side=${widget.side.name} web=$kIsWeb',
+    );
+    _autoSaveTimer?.cancel();
+    // Reloading resets the revision counter. Do not do that in the middle of
+    // an upload, or the write would mark the freshly loaded document clean or
+    // dirty based on the previous document's revision.
+    if (_saveState.isSaving) {
+      await _saveState.idle;
+      if (!mounted) return;
+    }
+    setState(() {
+      _loading = true;
+      _error = null;
+      _document = null;
+    });
     try {
       final client = ref.read(authProvider).client;
       Uint8List bytes;
@@ -390,17 +278,14 @@ class _FileEditorPageState extends ConsumerState<_FileEditorPage> {
 
       if (!mounted) return;
 
-      final text = _tryDecode(bytes);
-      _originalBytes = bytes;
-      _controller.text = text;
-      _lineCount = '\n'.allMatches(text).length + 1;
-
+      final document = EditorDocument.decode(bytes);
+      _applyDocument(document, bytes);
       setState(() {
         _loading = false;
-        _modified = false;
+        _error = null;
         _loadedAt = DateTime.now();
+        _conflictDetected = false;
       });
-
       _focusNode.requestFocus();
     } catch (e) {
       _log.warn('operation failed', e);
@@ -412,14 +297,46 @@ class _FileEditorPageState extends ConsumerState<_FileEditorPage> {
     }
   }
 
+  void _applyDocument(EditorDocument document, Uint8List bytes) {
+    _suppressChange = true;
+    try {
+      _controller.text = document.text;
+      _controller.selection = const CodeLineSelection.collapsed(
+        index: 0,
+        offset: 0,
+      );
+      _controller.clearHistory();
+    } finally {
+      _suppressChange = false;
+    }
+    _lastCodeLines = _controller.codeLines;
+    _lastSelection = _controller.selection;
+    _lineCount = _controller.lineCount;
+    _cursorLine = 1;
+    _cursorColumn = 1;
+    _document = document;
+    _originalBytes = bytes;
+    _saveState.markLoaded();
+    _autoSaveTimer?.cancel();
+
+    if (_language == null) {
+      final detected = editorLanguageForContent(document.text);
+      if (detected != null) {
+        _language = detected;
+      }
+    }
+  }
+
   /// Save a local snapshot before overwriting (version backup).
   Future<void> _saveLocalSnapshot() async {
     if (kIsWeb || _originalBytes == null) return;
     try {
-      final snapshotDir = Directory(p.join(
-        Directory.systemTemp.path, 'crispcloud_snapshots',
-      ));
-      if (!await snapshotDir.exists()) await snapshotDir.create(recursive: true);
+      final snapshotDir = Directory(
+        p.join(Directory.systemTemp.path, 'crispcloud_snapshots'),
+      );
+      if (!await snapshotDir.exists()) {
+        await snapshotDir.create(recursive: true);
+      }
       final timestamp = DateTime.now().millisecondsSinceEpoch;
       final name = widget.file.name;
       final snapshotPath = p.join(snapshotDir.path, '${timestamp}_$name');
@@ -429,98 +346,276 @@ class _FileEditorPageState extends ConsumerState<_FileEditorPage> {
     }
   }
 
-  Future<void> _saveFile() async {
-    _log.debug('saveFile: ${widget.file.name} side=${widget.side.name} web=$kIsWeb');
-    setState(() => _saving = true);
-    try {
-      // Save a local snapshot before overwriting
-      await _saveLocalSnapshot();
+  /// Save the current document.
+  ///
+  /// All save entry points (toolbar, keyboard, autosave, conflict banner) go
+  /// through this method. It records the revision being written and leaves the
+  /// document dirty when the user typed while the upload was in flight.
+  Future<void> _saveFile({bool force = false, bool manual = true}) async {
+    final document = _document;
+    if (document == null || _loading) return;
 
-      final client = ref.read(authProvider).client;
-      final bytes = Uint8List.fromList(utf8.encode(_controller.text));
+    // Autosave must not queue extra saves behind a slow upload; a timer will
+    // fire again after the next edit. Manual saves are queued by the
+    // coordinator so Ctrl+S during an upload still saves the newest text.
+    if (!manual && _saveState.isSaving) return;
+    if (!force && !_saveState.isDirty && !_saveState.isSaving) return;
 
-      if (widget.side == PanelSide.local && widget.file.path != null) {
-        // Always go through the service: it maintains the macOS security
-        // scope for sandboxed paths (web uses the FSA bridge).
-        await ref
-            .read(localFileServiceProvider)
-            .saveFile(widget.file.path!, bytes);
-      } else {
-        final remotePath = widget.file.path ?? '/${widget.file.name}';
-        final fileName = p.basename(remotePath);
-        final targetDir = p.posix.dirname(remotePath);
-        await client.uploadFile(bytes, fileName, targetDir);
+    if (!force && await _checkForConflict()) {
+      if (!mounted) return;
+      setState(() => _conflictDetected = true);
+      return;
+    }
+    if (!mounted) return;
+
+    final result = await _saveState.save(
+      snapshot: () {
+        final current = _document;
+        if (current == null) {
+          throw StateError('The editor has no document to save.');
+        }
+        return SaveSnapshot<EditorDocument>(
+          revision: _saveState.revision,
+          value: current.copyWith(text: _controller.text),
+        );
+      },
+      write: (snapshot) async {
+        await _saveLocalSnapshot();
+        final bytes = snapshot.value.encode();
+        await _uploadBytes(bytes);
+        _originalBytes = bytes;
+        _loadedAt = DateTime.now();
+      },
+    );
+
+    if (!mounted) return;
+    if (!result.isSuccess) {
+      _showSaveError(result.error);
+      return;
+    }
+
+    if (result.isDirty) {
+      if (manual) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(
+              'Saved ${widget.file.name} — newer edits are still unsaved.',
+            ),
+          ),
+        );
       }
+      return;
+    }
 
-      _originalBytes = bytes;
-
-      if (!mounted) return;
-      setState(() {
-        _saving = false;
-        _modified = false;
-      });
-
-      // Refresh the panel to show updated file
-      ref.read(panelProvider(widget.side)).refreshFiles();
-
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Saved ${widget.file.name}')),
-      );
-    } catch (e) {
-      _log.warn('operation failed', e);
-      if (!mounted) return;
-      setState(() => _saving = false);
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text('Save failed: $e'),
-          backgroundColor: Theme.of(context).colorScheme.error,
-        ),
-      );
+    setState(() {
+      _document = _document?.copyWith(hadMixedLineEndings: false);
+      _conflictDetected = false;
+    });
+    ref.read(panelProvider(widget.side)).refreshFiles();
+    if (manual) {
+      ScaffoldMessenger.of(context)
+          .showSnackBar(SnackBar(content: Text('Saved ${widget.file.name}')));
     }
   }
 
+  Future<void> _uploadBytes(Uint8List bytes) async {
+    if (widget.side == PanelSide.local && widget.file.path != null) {
+      // Always go through the service: it maintains the macOS security
+      // scope for sandboxed paths (web uses the FSA bridge).
+      await ref
+          .read(localFileServiceProvider)
+          .saveFile(widget.file.path!, bytes);
+      return;
+    }
+    final client = ref.read(authProvider).client;
+    final remotePath = widget.file.path ?? '/${widget.file.name}';
+    final fileName = p.basename(remotePath);
+    final targetDir = p.posix.dirname(remotePath);
+    await client.uploadFile(bytes, fileName, targetDir);
+  }
+
+  void _showSaveError(Object? error) {
+    if (!mounted) return;
+    if (error is EditorEncodingException) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(error.message),
+          action: SnackBarAction(
+            label: 'Use UTF-8',
+            onPressed: () {
+              _setEncoding(EditorEncoding.utf8);
+              unawaited(_saveFile(force: true));
+            },
+          ),
+        ),
+      );
+      return;
+    }
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Text('Save failed: $error'),
+        backgroundColor: Theme.of(context).colorScheme.error,
+      ),
+    );
+  }
+
+  void _setEncoding(EditorEncoding encoding) {
+    final document = _document;
+    if (document == null || document.encoding == encoding) return;
+    setState(() => _document = document.copyWith(encoding: encoding));
+    _saveState.markChanged();
+    _scheduleAutoSave();
+  }
+
+  void _setLineEnding(EditorLineEnding lineEnding) {
+    final document = _document;
+    if (document == null || document.lineEnding == lineEnding) return;
+    setState(() => _document = document.copyWith(lineEnding: lineEnding));
+    _saveState.markChanged();
+    _scheduleAutoSave();
+  }
+
+  void _toggleHighlighting() {
+    setState(() => _highlightEnabled = !_highlightEnabled);
+  }
+
+  void _toggleWordWrap() {
+    setState(() => _wordWrap = !_wordWrap);
+  }
+
+  void _openFind({bool replace = false}) {
+    if (replace) {
+      _findController.replaceMode();
+    } else {
+      _findController.findMode();
+    }
+  }
+
+  void _closeFind() {
+    if (_findController.value != null) {
+      _findController.close();
+    }
+    _focusNode.requestFocus();
+  }
+
+  Future<void> _goToLine() async {
+    var input = '';
+    final line = await showDialog<int>(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        title: const Text('Go to line'),
+        content: TextField(
+          autofocus: true,
+          keyboardType: TextInputType.number,
+          inputFormatters: [FilteringTextInputFormatter.digitsOnly],
+          decoration: InputDecoration(
+            hintText: '1–$_lineCount',
+            border: const OutlineInputBorder(),
+          ),
+          onChanged: (value) => input = value,
+          onSubmitted: (value) {
+            Navigator.of(ctx).pop(int.tryParse(value));
+          },
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.of(ctx).pop(),
+            child: Text(AppLocalizations.of(context)!.cancel),
+          ),
+          FilledButton(
+            onPressed: () => Navigator.of(ctx).pop(int.tryParse(input)),
+            child: const Text('Go'),
+          ),
+        ],
+      ),
+    );
+    if (line == null || !mounted) return;
+    final index = (line - 1).clamp(0, _controller.lineCount - 1);
+    _controller.selection = CodeLineSelection.collapsed(
+      index: index,
+      offset: 0,
+    );
+    _scrollController.makeCenterIfInvisible(
+      CodeLinePosition(index: index, offset: 0),
+    );
+    _focusNode.requestFocus();
+  }
+
   Future<bool> _confirmDiscard() async {
-    if (!_modified) return true;
+    if (!_isModified) return true;
     final result = await showDialog<bool>(
       context: context,
       builder: (ctx) => AlertDialog(
         title: Text(AppLocalizations.of(context)!.unsavedChanges),
-        content: const Text(
-            'You have unsaved changes. Discard them?'),
+        content: const Text('You have unsaved changes. Discard them?'),
         actions: [
           TextButton(
-              onPressed: () => Navigator.pop(ctx, false),
-              child: Text(AppLocalizations.of(context)!.cancel)),
+            onPressed: () => Navigator.pop(ctx, false),
+            child: Text(AppLocalizations.of(context)!.cancel),
+          ),
           TextButton(
-              onPressed: () => Navigator.pop(ctx, true),
-              child: Text(AppLocalizations.of(context)!.discard)),
+            onPressed: () => Navigator.pop(ctx, true),
+            child: Text(AppLocalizations.of(context)!.discard),
+          ),
         ],
       ),
     );
     return result ?? false;
   }
 
-  @override
-  @override
-  void dispose() {
-    _autoSaveTimer?.cancel();
-    _controller.removeListener(_onTextChanged);
-    _controller.dispose();
-    _gutterScrollController.dispose();
-    _editorScrollController.dispose();
-    _focusNode.dispose();
-    super.dispose();
+  Map<ShortcutActivator, VoidCallback> get _shortcuts {
+    return <ShortcutActivator, VoidCallback>{
+      const SingleActivator(LogicalKeyboardKey.keyS, control: true): () {
+        unawaited(_saveFile());
+      },
+      const SingleActivator(LogicalKeyboardKey.keyS, meta: true): () {
+        unawaited(_saveFile());
+      },
+      const SingleActivator(LogicalKeyboardKey.keyF, control: true): _openFind,
+      const SingleActivator(LogicalKeyboardKey.keyF, meta: true): _openFind,
+      const SingleActivator(LogicalKeyboardKey.keyH, control: true): () {
+        _openFind(replace: true);
+      },
+      const SingleActivator(
+        LogicalKeyboardKey.keyF,
+        meta: true,
+        alt: true,
+      ): () {
+        _openFind(replace: true);
+      },
+      const SingleActivator(LogicalKeyboardKey.keyG, control: true): () {
+        unawaited(_goToLine());
+      },
+      const SingleActivator(LogicalKeyboardKey.keyG, meta: true): () {
+        unawaited(_goToLine());
+      },
+      const SingleActivator(LogicalKeyboardKey.escape): _closeFind,
+    };
+  }
+
+  CodeHighlightTheme? _highlightTheme(BuildContext context) {
+    final language = _language;
+    if (!_highlightEnabled || language == null) return null;
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    final key = '$language-${isDark ? 'dark' : 'light'}';
+    if (_cachedHighlightKey != key) {
+      _cachedHighlightKey = key;
+      _cachedHighlightTheme = buildEditorHighlightTheme(
+        language: language,
+        dark: isDark,
+        enabled: _highlightEnabled,
+      );
+    }
+    return _cachedHighlightTheme;
   }
 
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
-    final ext = widget.file.name.contains('.')
-        ? widget.file.name.split('.').last.toUpperCase()
-        : 'TXT';
+    final document = _document;
 
     return PopScope(
-      canPop: !_modified,
+      canPop: !_isModified,
       onPopInvokedWithResult: (didPop, _) async {
         if (didPop) return;
         if (await _confirmDiscard()) {
@@ -542,117 +637,162 @@ class _FileEditorPageState extends ConsumerState<_FileEditorPage> {
           ),
           title: Row(
             children: [
-              Text(widget.file.name,
-                  style: const TextStyle(fontSize: 14)),
-              if (_modified) ...[
+              Flexible(
+                child: Text(
+                  widget.file.name,
+                  overflow: TextOverflow.ellipsis,
+                  style: const TextStyle(fontSize: 14),
+                ),
+              ),
+              if (_isModified) ...[
                 const SizedBox(width: 6),
                 Container(
                   padding: const EdgeInsets.symmetric(
-                      horizontal: 6, vertical: 2),
+                    horizontal: 6,
+                    vertical: 2,
+                  ),
                   decoration: BoxDecoration(
                     color: theme.colorScheme.primary,
                     borderRadius: BorderRadius.circular(4),
                   ),
-                  child: Text('Modified',
-                      style: TextStyle(
-                          fontSize: 10,
-                          color: theme.colorScheme.onPrimary)),
+                  child: Text(
+                    'Modified',
+                    style: TextStyle(
+                      fontSize: 10,
+                      color: theme.colorScheme.onPrimary,
+                    ),
+                  ),
                 ),
               ],
             ],
           ),
           actions: [
-            // Syntax highlighting toggle
             if (_language != null)
               IconButton(
                 icon: Icon(
                   _highlightEnabled ? Icons.code : Icons.code_off,
                   size: 20,
                 ),
-                tooltip: _highlightEnabled ? 'Disable Highlighting' : 'Enable Highlighting',
-                onPressed: () {
-                  setState(() {
-                    _highlightEnabled = !_highlightEnabled;
-                    _controller.highlightEnabled = _highlightEnabled;
-                  });
-                },
+                tooltip: _highlightEnabled
+                    ? 'Disable syntax highlighting'
+                    : 'Enable syntax highlighting',
+                onPressed: _toggleHighlighting,
               ),
-            // File info
-            Padding(
-              padding: const EdgeInsets.only(right: 8),
-              child: Center(
-                child: Text(
-                  '${_language?.toUpperCase() ?? ext}  |  $_lineCount lines',
-                  style: TextStyle(
-                      fontSize: 12,
-                      color: theme.colorScheme.onSurfaceVariant),
-                ),
-              ),
-            ),
-            // Save button
-            _saving
+            _isSaving
                 ? const Padding(
                     padding: EdgeInsets.all(12),
                     child: SizedBox(
-                        width: 20,
-                        height: 20,
-                        child:
-                            CircularProgressIndicator(strokeWidth: 2)),
+                      width: 20,
+                      height: 20,
+                      child: CircularProgressIndicator(strokeWidth: 2),
+                    ),
                   )
                 : IconButton(
-                    icon: Icon(Icons.save,
-                        color: _modified
-                            ? theme.colorScheme.primary
-                            : null),
-                    tooltip: 'Save (Ctrl+S)',
-                    onPressed: _modified ? _saveFile : null,
+                    icon: Icon(
+                      Icons.save,
+                      color: _isModified ? theme.colorScheme.primary : null,
+                    ),
+                    tooltip: 'Save (Ctrl/Cmd+S)',
+                    onPressed: _isModified
+                        ? () => unawaited(_saveFile())
+                        : null,
                   ),
-          ],
-        ),
-        body: Column(children: [
-          if (_conflictDetected)
-            MaterialBanner(
-              content: const Text(
-                'This file was modified on the server since you opened it. '
-                'Saving will overwrite the remote version.',
-              ),
-              leading: const Icon(Icons.warning, color: Colors.orange),
-              actions: [
-                TextButton(
-                  onPressed: () {
-                    setState(() => _conflictDetected = false);
-                    _saveFile();
-                  },
-                  child: const Text('Save Anyway'),
+            PopupMenuButton<_EditorMenuAction>(
+              tooltip: 'Editor options',
+              onSelected: _handleMenuAction,
+              itemBuilder: (context) => const [
+                PopupMenuItem(
+                  value: _EditorMenuAction.find,
+                  child: Text('Find…'),
                 ),
-                TextButton(
-                  onPressed: () {
-                    setState(() => _conflictDetected = false);
-                    _loadFile();
-                  },
-                  child: Text(AppLocalizations.of(context)!.reload),
+                PopupMenuItem(
+                  value: _EditorMenuAction.replace,
+                  child: Text('Find and replace…'),
                 ),
-                TextButton(
-                  onPressed: () => setState(() => _conflictDetected = false),
-                  child: Text(AppLocalizations.of(context)!.cancel),
+                PopupMenuItem(
+                  value: _EditorMenuAction.goToLine,
+                  child: Text('Go to line…'),
+                ),
+                PopupMenuDivider(),
+                PopupMenuItem(
+                  value: _EditorMenuAction.wordWrap,
+                  child: Text('Toggle word wrap'),
+                ),
+                PopupMenuItem(
+                  value: _EditorMenuAction.highlight,
+                  child: Text('Toggle syntax highlighting'),
+                ),
+                PopupMenuDivider(),
+                PopupMenuItem(
+                  value: _EditorMenuAction.reload,
+                  child: Text('Reload from disk'),
                 ),
               ],
             ),
-          Expanded(child: KeyboardListener(
-          focusNode: FocusNode(),
-          onKeyEvent: (event) {
-            if (event is KeyDownEvent &&
-                event.logicalKey == LogicalKeyboardKey.keyS &&
-                (HardwareKeyboard.instance.isControlPressed ||
-                    HardwareKeyboard.instance.isMetaPressed)) {
-              if (_modified) _saveFile();
-            }
-          },
-          child: _buildBody(theme),
-        )),
-      ]),
-    ),
+          ],
+        ),
+        body: Column(
+          children: [
+            if (_conflictDetected)
+              MaterialBanner(
+                content: const Text(
+                  'This file was modified on the server since you opened it. '
+                  'Saving will overwrite the remote version.',
+                ),
+                leading: const Icon(Icons.warning, color: Colors.orange),
+                actions: [
+                  TextButton(
+                    onPressed: () {
+                      setState(() => _conflictDetected = false);
+                      unawaited(_saveFile(force: true));
+                    },
+                    child: const Text('Save Anyway'),
+                  ),
+                  TextButton(
+                    onPressed: () {
+                      setState(() => _conflictDetected = false);
+                      unawaited(_loadFile());
+                    },
+                    child: Text(AppLocalizations.of(context)!.reload),
+                  ),
+                  TextButton(
+                    onPressed: () => setState(() => _conflictDetected = false),
+                    child: Text(AppLocalizations.of(context)!.cancel),
+                  ),
+                ],
+              ),
+            Expanded(child: _buildBody(theme)),
+            if (!_loading && _error == null && document != null)
+              _buildStatusBar(document),
+          ],
+        ),
+      ),
     );
+  }
+
+  Future<void> _handleMenuAction(_EditorMenuAction action) async {
+    switch (action) {
+      case _EditorMenuAction.find:
+        _openFind();
+        break;
+      case _EditorMenuAction.replace:
+        _openFind(replace: true);
+        break;
+      case _EditorMenuAction.goToLine:
+        await _goToLine();
+        break;
+      case _EditorMenuAction.wordWrap:
+        _toggleWordWrap();
+        break;
+      case _EditorMenuAction.highlight:
+        _toggleHighlighting();
+        break;
+      case _EditorMenuAction.reload:
+        if (await _confirmDiscard()) {
+          await _loadFile();
+        }
+        break;
+    }
   }
 
   Widget _buildBody(ThemeData theme) {
@@ -667,67 +807,100 @@ class _FileEditorPageState extends ConsumerState<_FileEditorPage> {
           children: [
             Icon(Icons.error_outline, size: 48, color: theme.colorScheme.error),
             const SizedBox(height: 12),
-            Text(_error!, style: TextStyle(color: theme.colorScheme.error)),
+            Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 24),
+              child: Text(
+                _error!,
+                textAlign: TextAlign.center,
+                style: TextStyle(color: theme.colorScheme.error),
+              ),
+            ),
           ],
         ),
       );
     }
 
-    return Row(
-      children: [
-        // Line numbers gutter
-        Container(
-          width: 48,
-          color: theme.colorScheme.surfaceContainerHighest,
-          child: ListView.builder(
-            controller: _gutterScrollController,
-            padding: const EdgeInsets.only(top: 8),
-            itemCount: _lineCount,
-            // Must match the TextField's line height exactly.
-            itemExtent: 16.8,
-            itemBuilder: (_, i) => Padding(
-              padding: const EdgeInsets.only(right: 8),
-              child: Text(
-                '${i + 1}',
-                textAlign: TextAlign.right,
-                style: TextStyle(
-                  fontFamily: 'AppMono',
-                  fontSize: 12,
-                  height: 1.4,
-                  color: theme.colorScheme.onSurfaceVariant,
-                ),
-              ),
-            ),
-          ),
+    return CallbackShortcuts(
+      bindings: _shortcuts,
+      child: CodeEditor(
+        controller: _controller,
+        findController: _findController,
+        scrollController: _scrollController,
+        focusNode: _focusNode,
+        autofocus: true,
+        wordWrap: _wordWrap,
+        autocompleteSymbols: true,
+        toolbarController: const CodeEditorSelectionToolbarController(),
+        style: CodeEditorStyle(
+          fontSize: 13,
+          fontFamily: 'AppMono',
+          fontFamilyFallback: const ['Menlo', 'Consolas', 'monospace'],
+          fontHeight: 1.45,
+          textColor: theme.colorScheme.onSurface,
+          backgroundColor: theme.colorScheme.surface,
+          selectionColor: theme.colorScheme.primary.withValues(alpha: 0.24),
+          highlightColor: theme.colorScheme.primary.withValues(alpha: 0.36),
+          cursorColor: theme.colorScheme.primary,
+          cursorLineColor: theme.colorScheme.primary.withValues(alpha: 0.08),
+          chunkIndicatorColor: theme.colorScheme.onSurfaceVariant,
+          codeTheme: _highlightTheme(context),
         ),
-        Container(width: 1, color: theme.dividerColor),
-        // Editor area
-        Expanded(
-          child: TextField(
-            controller: _controller,
-            scrollController: _editorScrollController,
-            focusNode: _focusNode,
-            maxLines: null,
-            expands: true,
-            textAlignVertical: TextAlignVertical.top,
-            strutStyle: const StrutStyle(
-              fontFamily: 'AppMono',
-              fontSize: 12,
-              height: 1.4,
-              forceStrutHeight: true,
-            ),
-            decoration: const InputDecoration(
-              border: InputBorder.none,
-              contentPadding: EdgeInsets.all(8),
-            ),
-            style: const TextStyle(
-              fontFamily: 'AppMono',
-              fontSize: 12,
-              height: 1.4,
-            ),
-          ),
+        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+        indicatorBuilder:
+            (context, editingController, chunkController, notifier) {
+              return Row(
+                children: [
+                  DefaultCodeLineNumber(
+                    controller: editingController,
+                    notifier: notifier,
+                    textStyle: TextStyle(
+                      fontFamily: 'AppMono',
+                      fontSize: 12,
+                      height: 1.45,
+                      color: theme.colorScheme.onSurfaceVariant.withValues(
+                        alpha: 0.65,
+                      ),
+                    ),
+                    focusedTextStyle: TextStyle(
+                      fontFamily: 'AppMono',
+                      fontSize: 12,
+                      height: 1.45,
+                      color: theme.colorScheme.primary,
+                    ),
+                  ),
+                  DefaultCodeChunkIndicator(
+                    width: 20,
+                    controller: chunkController,
+                    notifier: notifier,
+                  ),
+                ],
+              );
+            },
+        leadingDivider: Container(width: 1, color: theme.dividerColor),
+        findBuilder: (context, controller, readOnly) => CodeEditorFindPanel(
+          controller: controller,
+          editingController: _controller,
+          readOnly: readOnly,
         ),
-      ],
+      ),
+    );
+  }
+
+  Widget _buildStatusBar(EditorDocument document) {
+    return CodeEditorStatusBar(
+      cursorLine: _cursorLine,
+      cursorColumn: _cursorColumn,
+      lineCount: _lineCount,
+      language: _language,
+      lineEnding: document.lineEnding,
+      encoding: document.encoding,
+      isModified: _isModified,
+      isSaving: _isSaving,
+      hadMixedLineEndings: document.hadMixedLineEndings,
+      onLineEndingSelected: _setLineEnding,
+      onEncodingSelected: _setEncoding,
     );
   }
 }
+
+enum _EditorMenuAction { find, replace, goToLine, wordWrap, highlight, reload }

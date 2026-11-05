@@ -20,8 +20,26 @@ List<String> _footnoteTexts(Uint8List bytes) {
           .whereType<xml.XmlElement>()
           .where((xml.XmlElement t) => t.name.local == 't')
           .map((xml.XmlElement t) => t.innerText)
-          .join())
+          .join()
+          .trim())
       .where((String text) => text.isNotEmpty)
+      .toList();
+}
+
+List<int> _footnoteIdsByType(Uint8List bytes, String type) {
+  final xmlText = utf8.decode(_parts(bytes)['word/footnotes.xml']!);
+  final doc = xml.XmlDocument.parse(xmlText);
+  return doc.descendants
+      .whereType<xml.XmlElement>()
+      .where((e) =>
+          e.name.local == 'footnote' &&
+          e.attributes.any((a) => a.name.local == 'type' && a.value == type))
+      .map((e) => int.tryParse(
+            e.attributes
+                    .firstWhere((a) => a.name.local == 'id')
+                    .value,
+          ) ??
+          0)
       .toList();
 }
 
@@ -52,6 +70,11 @@ void main() {
       'Second footnote text.',
     ]);
     expect(_footnoteTexts(original), _footnoteTexts(saved));
+    expect(_footnoteIdsByType(saved, 'separator'), contains(-1));
+    expect(_footnoteIdsByType(saved, 'continuationSeparator'), contains(0));
+    final footnotesXml = utf8.decode(_parts(saved)['word/footnotes.xml']!);
+    expect(footnotesXml, contains('w:footnoteRef'));
+    expect(footnotesXml, contains('xml:space="preserve"> </w:t>'));
 
     final WordEditorController reopened =
         WordEditorController.fromBytes(saved);

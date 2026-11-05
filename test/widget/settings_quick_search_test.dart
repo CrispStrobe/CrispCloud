@@ -9,6 +9,8 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 import 'package:crisp_cloud/providers/core_providers.dart';
+import 'package:crisp_cloud/providers/providers.dart';
+import 'package:crisp_cloud/services/theme_service.dart';
 import 'package:crisp_cloud/providers/quick_search_provider.dart';
 import 'package:crisp_cloud/widgets/settings_dialog.dart';
 
@@ -110,6 +112,31 @@ void main() {
     expect(container.read(localeProvider)?.languageCode, 'de');
     final prefs = await SharedPreferences.getInstance();
     expect(prefs.getString('app_locale'), 'de');
+  });
+
+
+  testWidgets('theme can be changed from Appearance', (tester) async {
+    await pumpSettings(tester);
+
+    await tester.ensureVisible(find.text('Nord'));
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('Nord'));
+    await tester.pumpAndSettle();
+
+    expect(container.read(themeProvider).currentMode, AppThemeMode.nord);
+  });
+
+  testWidgets('cache limit can be changed from unified settings', (
+    tester,
+  ) async {
+    await pumpSettings(tester);
+
+    await tester.ensureVisible(find.text('100 MB'));
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('100 MB'));
+    await tester.pumpAndSettle();
+
+    expect(container.read(fileCacheProvider).maxSize, 100 * 1024 * 1024);
   });
 
   testWidgets('prefix, case and arrow toggles persist to the provider', (
