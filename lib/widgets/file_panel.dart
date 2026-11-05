@@ -186,54 +186,52 @@ class _FilePanelState extends ConsumerState<FilePanel> {
     // Flutter DragTarget for cross-panel drops
     final Widget content = DragTarget<PanelDragData>(
       onWillAcceptWithDetails: (details) {
-        // Accept drops from the OTHER panel only
-        final source = ref.read(panelProvider(details.data.sourceSide));
-        return details.data.sourceSide != widget.side &&
-            !panel.showingSearchResults &&
-            source.canOperateOnFileList;
+        if (details.data.sourceSide == widget.side ||
+            panel.showingSearchResults) {
+          return false;
+        }
+        try {
+          ref.read(panelProvider(details.data.sourceSide))
+              .captureOperationOrigin(details.data.files);
+          panel.captureCurrentOrigin();
+          return true;
+        } catch (_) {
+          return false;
+        }
       },
       onAcceptWithDetails: (details) async {
         final data = details.data;
         final sourcePanel = ref.read(panelProvider(data.sourceSide));
-        if (!sourcePanel.canOperateOnFileList || panel.showingSearchResults) {
+        if (data.sourceSide == widget.side || panel.showingSearchResults) {
           return;
         }
-        if (sourcePanel.showingSearchResults) {
-          try {
-            sourcePanel.captureOperationOrigin(data.files);
-          } catch (error) {
-            ref.read(errorProvider).addError(error.toString());
-            return;
-          }
-        }
-        if (sourcePanel.showingSearchResults) {
-          showFileOperationDialog(
+        try {
+          // PanelSide is a visual position. Both normal folders and virtual
+          // lists must retain their actual storage/account through the dialog.
+          final source = sourcePanel.captureOperationOrigin(data.files);
+          final destination = panel.captureCurrentOrigin();
+          await showFileOperationDialog(
             context,
             ref,
             data.sourceSide,
             data.files,
             kind: FileOperationKind.copy,
+            sourceOrigin: source,
+            destinationOrigin: destination,
+            destinationPath: destination.source.currentPath,
           );
-          return;
-        }
-        final transfers = ref.read(transferProvider);
-        if (data.sourceSide == PanelSide.local &&
-            widget.side == PanelSide.remote) {
-          await transfers.uploadFiles(data.files);
-        } else if (data.sourceSide == PanelSide.remote &&
-            widget.side == PanelSide.local) {
-          await transfers.downloadFiles(data.files);
+        } catch (error) {
+          if (context.mounted) {
+            ref.read(errorProvider).addError(error.toString());
+          }
         }
       },
       builder: (context, candidateData, rejectedData) {
         final isDropTarget = candidateData.isNotEmpty;
         if (!isDropTarget) return panelContent;
 
-        // Determine operation hint
-        final sourceIsLocal =
-            candidateData.first?.sourceSide == PanelSide.local;
-        final opIcon = sourceIsLocal ? Icons.upload : Icons.download;
-        final opLabel = sourceIsLocal ? 'Upload' : 'Download';
+        const opIcon = Icons.copy_outlined;
+        const opLabel = 'Copy';
         final fileCount = candidateData.first?.files.length ?? 0;
 
         return Stack(

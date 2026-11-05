@@ -3,10 +3,13 @@ import 'dart:convert';
 import 'dart:io';
 
 import 'package:crisp_cloud/models/file_item.dart';
+import 'package:crisp_cloud/models/operation_progress.dart';
 import 'package:crisp_cloud/models/panel_side.dart';
 import 'package:crisp_cloud/providers/panel_source_provider.dart';
 import 'package:crisp_cloud/providers/providers.dart';
 import 'package:crisp_cloud/services/cloud_storage_interface.dart';
+import 'package:crisp_cloud/services/file_operation_backend.dart';
+import 'package:crisp_cloud/services/file_operation_profiles.dart';
 import 'package:crisp_cloud/services/file_operation_service.dart';
 import 'package:crisp_cloud/services/local_file_service.dart';
 import 'package:crisp_cloud/services/panel_source_service.dart';
@@ -292,6 +295,83 @@ void main() {
       isNull,
     );
     expect(cloud.uploads, isEmpty);
+  });
+
+  testWidgets('unsupported preservation settings from defaults can be cleared', (tester) async {
+    await FileOperationProfiles().save(
+      '@default:copy',
+      const FileOperationOptions(
+        preservePermissions: true,
+        preserveOwnership: true,
+        preserveExtendedAttributes: true,
+        preserveAcl: true,
+      ),
+    );
+    await open(tester);
+    await useCloudDestination(tester);
+    await tester.tap(find.text('Preview'));
+    await tester.pumpAndSettle();
+    expect(
+      tester.widget<FilledButton>(start(FileOperationKind.copy)).onPressed,
+      isNull,
+    );
+    expect(find.textContaining('Some selected preservation settings are unavailable'), findsOneWidget);
+    for (final label in [
+      'Preserve permissions',
+      'Preserve owner/group',
+      'Preserve extended attributes',
+      'Preserve ACL',
+    ]) {
+      final row = find.ancestor(of: find.text(label), matching: find.byType(Row)).first;
+      final checkbox = find.descendant(of: row, matching: find.byType(Checkbox));
+      expect(tester.widget<Checkbox>(checkbox).value, isTrue);
+      expect(tester.widget<Checkbox>(checkbox).onChanged, isNotNull);
+      await toggle(tester, label);
+      expect(tester.widget<Checkbox>(checkbox).value, isFalse);
+      expect(tester.widget<Checkbox>(checkbox).onChanged, isNull);
+    }
+    await tester.tap(find.text('Preview'));
+    await tester.pumpAndSettle();
+    expect(
+      tester.widget<FilledButton>(start(FileOperationKind.copy)).onPressed,
+      isNotNull,
+    );
+    expect(cloud.uploads, isEmpty);
+    // Clearing incompatible settings for this job does not rewrite a profile.
+    final defaults = (await FileOperationProfiles().load())['@default:copy']!;
+    expect(defaults.preservePermissions, isTrue);
+    expect(defaults.preserveOwnership, isTrue);
+    expect(defaults.preserveExtendedAttributes, isTrue);
+    expect(defaults.preserveAcl, isTrue);
+  });
+
+  test('an unanswered background conflict is reported as incomplete', () async {
+    cloud.files['/target/one.txt'] = utf8.encode('retain existing file');
+    final backend = CloudOperationBackend(cloud, isCurrent: () => true);
+    final plan = await const FileOperationService().prepare(
+      files: files,
+      source: backend,
+      destination: backend,
+      targetDirectory: '/target',
+    );
+    expect(plan.canExecute, isTrue);
+    final transfers = container.read(transferProvider);
+    await transfers.runFileOperation(
+      plan,
+      control: FileOperationControl(),
+    ).timeout(const Duration(seconds: 5));
+    final operation = transfers.operations.single;
+    expect(operation.status, OperationStatus.failed);
+    expect(operation.error, contains('Waiting for a conflict decision'));
+    expect(plan.entries.first.outcome, FileOperationOutcome.needsDecision);
+    expect(plan.entries.last.outcome, FileOperationOutcome.pending);
+    expect(operation.files!.first.statusLabel, 'Waiting for a conflict decision');
+    expect(operation.files!.last.statusLabel, 'Not started (awaiting conflict decision)');
+    expect(operation.files!.every((file) => !file.isComplete), isTrue);
+    expect(cloud.files['/target/one.txt'], utf8.encode('retain existing file'));
+    expect(cloud.files.containsKey('/target/two.bin'), isFalse);
+    expect(cloud.uploads, isEmpty);
+    expect(cloud.deleted, isEmpty);
   });
 
   testWidgets(

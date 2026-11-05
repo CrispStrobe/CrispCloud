@@ -436,6 +436,25 @@ class _FileOperationDialogState extends ConsumerState<FileOperationDialog> {
     final supportsLinks =
         (destinationBackend?.supportsSymbolicLinks ?? false) &&
         (sourceBackend?.supportsSymbolicLinks ?? false);
+    final supportsPermissions =
+        (sourceBackend?.capabilities.permissions ?? false) &&
+        (destinationBackend?.capabilities.permissions ?? false);
+    final supportsOwnership =
+        (sourceBackend?.capabilities.ownership ?? false) &&
+        (destinationBackend?.capabilities.ownership ?? false);
+    final supportsXattrs =
+        (sourceBackend?.capabilities.extendedAttributes ?? false) &&
+        (destinationBackend?.capabilities.extendedAttributes ?? false);
+    final supportsAcl =
+        (sourceBackend?.capabilities.accessControlLists ?? false) &&
+        (destinationBackend?.capabilities.accessControlLists ?? false);
+    final hasUnsupportedSettings =
+        (_preserveTime && !supportsTime) ||
+        (_copyLinks && !supportsLinks) ||
+        (_preservePermissions && !supportsPermissions) ||
+        (_preserveOwnership && !supportsOwnership) ||
+        (_preserveXattrs && !supportsXattrs) ||
+        (_preserveAcl && !supportsAcl);
     final plan = _plan;
     final completed =
         plan?.entries.where((entry) => entry.completed).length ?? 0;
@@ -842,45 +861,32 @@ class _FileOperationDialogState extends ConsumerState<FileOperationDialog> {
                       'Preserve permissions',
                       _preservePermissions,
                       (v) => _preservePermissions = v,
-                      enabled:
-                          (sourceBackend?.capabilities.permissions ?? false) &&
-                          (destinationBackend?.capabilities.permissions ??
-                              false),
+                      enabled: supportsPermissions,
                     ),
                     _toggle(
                       'Preserve owner/group',
                       _preserveOwnership,
                       (v) => _preserveOwnership = v,
-                      enabled:
-                          (sourceBackend?.capabilities.ownership ?? false) &&
-                          (destinationBackend?.capabilities.ownership ?? false),
+                      enabled: supportsOwnership,
                     ),
                     _toggle(
                       'Preserve extended attributes',
                       _preserveXattrs,
                       (v) => _preserveXattrs = v,
-                      enabled:
-                          (sourceBackend?.capabilities.extendedAttributes ??
-                              false) &&
-                          (destinationBackend
-                                  ?.capabilities
-                                  .extendedAttributes ??
-                              false),
+                      enabled: supportsXattrs,
                     ),
                     _toggle(
                       'Preserve ACL',
                       _preserveAcl,
                       (v) => _preserveAcl = v,
-                      enabled:
-                          (sourceBackend?.capabilities.accessControlLists ??
-                              false) &&
-                          (destinationBackend
-                                  ?.capabilities
-                                  .accessControlLists ??
-                              false),
+                      enabled: supportsAcl,
                     ),
                   ],
                 ),
+                if (hasUnsupportedSettings)
+                  const Text(
+                    'Some selected preservation settings are unavailable for these storages. Clear those settings or choose compatible storage before starting.',
+                  ),
                 Text(
                   'Links are never followed. SHA-256 verification reads both copies and can add cloud traffic.',
                   style: Theme.of(context).textTheme.bodySmall,
@@ -1049,16 +1055,31 @@ class _FileOperationDialogState extends ConsumerState<FileOperationDialog> {
     bool value,
     ValueChanged<bool> change, {
     bool enabled = true,
-  }) => Row(
-    mainAxisSize: MainAxisSize.min,
-    children: [
-      Checkbox(
-        value: value,
-        onChanged: _busy || !enabled
-            ? null
-            : (value) => _change(() => change(value!)),
-      ),
-      Flexible(child: Text(text, style: Theme.of(context).textTheme.bodySmall)),
-    ],
-  );
+  }) {
+    final row = Row(
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        Checkbox(
+          value: value,
+          // Profiles can request capabilities unavailable on the current
+          // storage. Keep those requests visible and allow clearing them;
+          // unchecked unsupported options remain unavailable.
+          onChanged: _busy || (!enabled && !value)
+              ? null
+              : (value) => _change(() => change(value!)),
+        ),
+        Flexible(
+          child: Text(text, style: Theme.of(context).textTheme.bodySmall),
+        ),
+      ],
+    );
+    return enabled
+        ? row
+        : Tooltip(
+            message: value
+                ? 'Unavailable for these storages. Clear this setting or choose compatible storage.'
+                : 'Unavailable for these storages.',
+            child: row,
+          );
+  }
 }

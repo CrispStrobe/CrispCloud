@@ -166,8 +166,14 @@ class TransferNotifier extends ChangeNotifier {
               onEntryComplete: (entry) {
                 final row = rows[entry]!;
                 row.isComplete = entry.completed;
-                row.error = entry.failed ? entry.message : null;
-                row.statusLabel = entry.outcome.name;
+                row.error = entry.failed ||
+                        entry.outcome == FileOperationOutcome.needsDecision
+                    ? entry.message
+                    : null;
+                row.statusLabel =
+                    entry.outcome == FileOperationOutcome.needsDecision
+                    ? 'Waiting for a conflict decision'
+                    : entry.outcome.name;
                 if (entry.completed && counted.add(entry)) {
                   completedBytes += row.size;
                 }
@@ -202,6 +208,21 @@ class TransferNotifier extends ChangeNotifier {
             }
             if (control.isCancelled) {
               operation.cancel();
+            } else if (plan.entries.any(
+              (entry) => entry.outcome == FileOperationOutcome.needsDecision,
+            )) {
+              // A background conflict stops the service with remaining rows
+              // still pending. Never report that partially executed plan as
+              // complete, or invite a retry of the already completed rows.
+              for (final entry in plan.entries.where(
+                (entry) => entry.outcome == FileOperationOutcome.pending,
+              )) {
+                rows[entry]!.statusLabel =
+                    'Not started (awaiting conflict decision)';
+              }
+              operation.fail(
+                'Waiting for a conflict decision. Remaining items were not started; review them before continuing.',
+              );
             } else if (plan.entries.any((entry) => entry.failed)) {
               operation.fail(
                 '${plan.entries.where((entry) => entry.failed).length} item(s) failed. Expand this transfer for details.',
