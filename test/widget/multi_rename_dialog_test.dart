@@ -409,7 +409,8 @@ void main() {
     expect(cloud.paths, {'/first_new.txt', '/second_new.txt'});
     final history = container.read(actionHistoryProvider);
     expect(history.history, hasLength(1));
-    final record = (await container.read(renameBatchStoreProvider).list()).single;
+    final record =
+        (await container.read(renameBatchStoreProvider).list()).single;
     expect(record.isComplete, isTrue);
     expect(history.history.single.metadata['renameBatchId'], record.id);
     expect((await history.undoLast(const UndoContext()))?.success, isTrue);
@@ -675,7 +676,7 @@ void main() {
       await tester.pumpAndSettle();
       await tester.tap(find.byKey(const ValueKey('rename-history')));
       await tester.pumpAndSettle();
-      await tester.tap(find.text('2 items · completed'));
+      await tester.tap(find.text('2 items · Completed'));
       await tester.pumpAndSettle();
       await tester.ensureVisible(find.text('Restore original names'));
       await tester.tap(find.text('Restore original names'));
@@ -748,7 +749,7 @@ void main() {
     await container.read(panelProvider(PanelSide.remote)).refresh();
     await tester.tap(find.byKey(const ValueKey('rename-history')));
     await tester.pumpAndSettle();
-    await tester.tap(find.text('2 items · completed'));
+    await tester.tap(find.text('2 items · Completed'));
     await tester.pumpAndSettle();
     final restore = find.widgetWithText(FilledButton, 'Restore original names');
     expect(tester.widget<FilledButton>(restore).onPressed, isNull);
@@ -793,7 +794,7 @@ void main() {
       await container.read(panelProvider(PanelSide.remote)).refresh();
       await tester.tap(find.byKey(const ValueKey('rename-history')));
       await tester.pumpAndSettle();
-      await tester.tap(find.text('2 items · completed'));
+      await tester.tap(find.text('2 items · Completed'));
       await tester.pumpAndSettle();
       await tester.ensureVisible(find.text('Restore original names'));
       await tester.tap(find.text('Restore original names'));

@@ -245,6 +245,9 @@ void main() {
       await tester.pumpAndSettle();
       expect(container.read(localViewModeProvider), ViewMode.gallery);
       expect(panel.selection, {row});
+      // The fixture created its preference futures before entering the widget
+      // test's fake clock; let that real microtask queue finish persistence.
+      await tester.runAsync(() => Future<void>.delayed(Duration.zero));
       expect(
         (await SharedPreferences.getInstance()).getString(
           'file_layout_local_v1',
