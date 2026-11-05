@@ -78,7 +78,7 @@ class FilenDrive {
       {String? creationTime, String? modificationTime}) async {
     if (baseFolderUUID.isEmpty) throw Exception("Not logged in");
 
-    var cleanPath = path.trim().replaceAll(RegExp(r'^/+|/+$'), '');
+    var cleanPath = path.replaceAll(RegExp(r'^/+|/+$'), '');
     if (cleanPath.isEmpty) {
       return {'uuid': baseFolderUUID, 'plainName': 'Root', 'path': '/'};
     }
@@ -346,7 +346,8 @@ class FilenDrive {
   Future<Map<String, dynamic>> resolvePath(String path) async {
     if (baseFolderUUID.isEmpty) throw Exception("Not logged in");
 
-    var cleanPath = path.trim();
+    // Whitespace is part of a remote item name, including at the path edges.
+    var cleanPath = path;
     if (cleanPath.startsWith('/')) cleanPath = cleanPath.substring(1);
     if (cleanPath.endsWith('/'))
       cleanPath = cleanPath.substring(0, cleanPath.length - 1);

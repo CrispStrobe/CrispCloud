@@ -1,53 +1,163 @@
 // lib/services/filen_client_adapter.dart
 import 'cloud_storage_interface.dart';
+
 import 'package:filen_client/filen_client.dart';
+
 import 'filen_config_service.dart';
+
 import 'package:flutter/foundation.dart'; // for kIsWeb
+
 import 'log_service.dart';
 import 'upload_temp_file.dart';
+import 'filen_stream_transfer.dart';
 
 class FilenClientAdapter extends CloudStorageClient
+    with CloudTransferOperations
     implements FreshCloudDirectoryReader {
+  @override
+  bool get supportsStreaming => true;
+  @override
+  StorageTransferCapabilities get transferCapabilities =>
+      const StorageTransferCapabilities(
+        boundedUpload: true,
+        boundedDownload: true,
+      );
   static const _log = Log('FilenClient');
 
   final FilenClient _client;
   final FilenConfigService filenConfig;
 
   FilenClientAdapter({required FilenConfigService config})
-      : filenConfig = config,
-        _client = FilenClient(config: ConfigService(configPath: config.configPath));
-  
+    : filenConfig = config,
+      _client = FilenClient(
+        config: ConfigService(configPath: config.configPath),
+      );
+
+  @visibleForTesting
+  FilenClientAdapter.withClient(
+    FilenClient client, {
+    required FilenConfigService config,
+  }) : _client = client,
+       filenConfig = config;
+
+  (String, List<String>, String, void Function()) _captureTransfer() {
+    final token = _client.apiKey;
+    final keys = List<String>.of(_client.masterKeys);
+    final email = _client.email ?? '';
+    final root = _client.baseFolderUUID;
+    if (token == null || token.isEmpty || keys.isEmpty) {
+      throw StateError('Sign in to Filen before transferring files.');
+    }
+    void check() {
+      if (_client.apiKey != token ||
+          (_client.email ?? '') != email ||
+          _client.baseFolderUUID != root ||
+          !listEquals(keys, _client.masterKeys)) {
+        throw StateError('The original Filen account is no longer available.');
+      }
+    }
+
+    return (token, keys, email, check);
+  }
+
+  @override
+  Stream<List<int>> downloadStream(
+    String remotePath, {
+    Function(int, int)? onProgress,
+  }) async* {
+    final captured = _captureTransfer();
+    final resolved = await _client.resolvePath(remotePath);
+    captured.$4();
+    if (resolved['type'] != 'file' || resolved['uuid'] is! String) {
+      throw StateError('The Filen source is not a file.');
+    }
+    yield* readFilenStream(
+      _client,
+      resolved['uuid'] as String,
+      token: captured.$1,
+      masterKeys: captured.$2,
+      checkCurrent: captured.$4,
+      onProgress: onProgress,
+    );
+  }
+
+  @override
+  Future<void> uploadStream(
+    Stream<List<int>> dataStream,
+    int length,
+    String fileName,
+    String targetPath, {
+    Function(int, int)? onProgress,
+  }) async {
+    if (fileName.isEmpty ||
+        fileName == '.' ||
+        fileName == '..' ||
+        fileName.contains('/') ||
+        fileName.contains(r'\') ||
+        fileName.contains('\u0000')) {
+      throw const FormatException('Enter a file name without path separators.');
+    }
+    final captured = _captureTransfer();
+    final parent = await _client.resolvePath(targetPath);
+    captured.$4();
+    if (parent['type'] != 'folder' || parent['uuid'] is! String) {
+      throw StateError('The Filen target is not a folder.');
+    }
+    await writeFilenStream(
+      _client,
+      dataStream,
+      length,
+      fileName,
+      parent['uuid'] as String,
+      token: captured.$1,
+      masterKeys: captured.$2,
+      email: captured.$3,
+      checkCurrent: captured.$4,
+      onProgress: onProgress,
+    );
+  }
+
   @override
   String get providerName => 'Filen';
-  
+
   @override
   String get rootPath => '/';
-  
+
   @override
-  bool get isAuthenticated => _client.apiKey != null && _client.apiKey!.isNotEmpty;
-  
+  bool get isAuthenticated =>
+      _client.apiKey != null && _client.apiKey!.isNotEmpty;
+
   @override
   String? get userId => _client.email;
-  
+
   @override
   String? get bucketId => null; // Filen doesn't use buckets in the same way Internxt does
-  
+
   // Expose for AppState to use
   bool debugMode = false;
-  
+
   // Expose client for direct access when needed
   FilenClient get client => _client;
-  
+
   @override
-  Future<void> login(String email, String password, {String? twoFactorCode}) async {
+  Future<void> login(
+    String email,
+    String password, {
+    String? twoFactorCode,
+  }) async {
     // Authenticate
-    final credentials = await _client.login(email, password, twoFactorCode: twoFactorCode ?? "");
-    
+    final credentials = await _client.login(
+      email,
+      password,
+      twoFactorCode: twoFactorCode ?? "",
+    );
+
     // Set auth on the client instance immediately
     _client.setAuth(credentials);
-    
+
     // Ensure we have the base folder UUID
-    if (credentials['baseFolderUUID'] == null || credentials['baseFolderUUID'].isEmpty) {
+    if (credentials['baseFolderUUID'] == null ||
+        credentials['baseFolderUUID'].isEmpty) {
       final rootUUID = await _client.fetchBaseFolderUUID();
       credentials['baseFolderUUID'] = rootUUID;
       _client.baseFolderUUID = rootUUID;
@@ -62,11 +172,11 @@ class FilenClientAdapter extends CloudStorageClient
       'userId': credentials['userId'] ?? '',
     });
   }
-  
+
   @override
   Future<bool> is2faNeeded(String email) async {
     // Filen API doesn't have a specific pre-check for 2FA status without attempting login
-    return false; 
+    return false;
   }
 
   @override
@@ -83,21 +193,21 @@ class FilenClientAdapter extends CloudStorageClient
 
     // 2. Download bytes directly
     // Note: FilenClient needs a method for this.
-    // Assuming you have added `downloadFileBytes(uuid)` to FilenClient as discussed, 
+    // Assuming you have added `downloadFileBytes(uuid)` to FilenClient as discussed,
     // or use the internal HTTP client logic here.
-    
+
     // If FilenClient doesn't support this yet, you must add it there.
     // Here is how you would call it:
     return await _client.downloadFileBytes(uuid, onProgress: onProgress);
   }
-  
+
   @override
   Future<void> logout() async {
     _client.apiKey = '';
     _client.masterKeys = [];
     await filenConfig.clearCredentials();
   }
-  
+
   @override
   Future<Map<String, dynamic>?> resolvePath(String path) async {
     try {
@@ -111,7 +221,7 @@ class FilenClientAdapter extends CloudStorageClient
       return null;
     }
   }
-  
+
   @override
   Future<Map<String, dynamic>> readDirectoryForEdit(String path) async {
     // Filen caches directory contents for ten minutes. Refresh only the path's
@@ -138,7 +248,7 @@ class FilenClientAdapter extends CloudStorageClient
     try {
       // 1. Resolve path to get the UUID
       final resolved = await _client.resolvePath(path);
-      
+
       if (resolved['type'] != 'folder') {
         throw Exception('Path is not a folder');
       }
@@ -149,11 +259,8 @@ class FilenClientAdapter extends CloudStorageClient
       // FilenClient separates these into two calls
       final folders = await _client.listFoldersAsync(uuid, detailed: true);
       final files = await _client.listFolderFiles(uuid, detailed: true);
-      
-      return {
-        'folders': folders,
-        'files': files,
-      };
+
+      return {'folders': folders, 'files': files};
     } catch (e) {
       _log.warn('Error listing path', e);
       // Return empty structure on error to prevent UI crash
@@ -163,7 +270,7 @@ class FilenClientAdapter extends CloudStorageClient
       };
     }
   }
-  
+
   @override
   Future<void> uploadFile(
     List<int> fileData,
@@ -192,17 +299,14 @@ class FilenClientAdapter extends CloudStorageClient
       // --- NATIVE PATH (Disk) ---
       // Wrapped in 'else' to ensure Directory.systemTemp is unreachable on Web
       await withTemporaryUploadFile(fileName, fileData, (tempFile) async {
-          await _client.uploadFile(
-            tempFile,
-            parentUuid,
-          );
-          if (onProgress != null) {
-            onProgress(fileData.length, fileData.length);
-          }
+        await _client.uploadFile(tempFile, parentUuid);
+        if (onProgress != null) {
+          onProgress(fileData.length, fileData.length);
+        }
       });
     }
   }
-  
+
   @override
   Future<void> downloadFileByPath(
     String remotePath,
@@ -217,7 +321,7 @@ class FilenClientAdapter extends CloudStorageClient
     final uuid = resolved['uuid'];
 
     // 2. Download using UUID to specific destination
-    // FilenClient.downloadFile signature: 
+    // FilenClient.downloadFile signature:
     // Future<Map<String, dynamic>> downloadFile(String uuid, {String? savePath, Function(int, int)? onProgress})
     await _client.downloadFile(
       uuid,
@@ -225,13 +329,13 @@ class FilenClientAdapter extends CloudStorageClient
       onProgress: onProgress,
     );
   }
-  
+
   @override
   Future<void> createFolderPath(String path) async {
     // Map to createFolderRecursive in FilenClient
     await _client.createFolderRecursive(path);
   }
-  
+
   @override
   Future<void> deletePath(String path) async {
     // 1. Resolve path to get UUID
@@ -239,14 +343,14 @@ class FilenClientAdapter extends CloudStorageClient
     if (resolved != null) {
       final uuid = resolved['uuid'] as String;
       final type = resolved['type'] as String;
-      
+
       // 2. Call trashItem
       await _client.trashItem(uuid, type);
     } else {
       throw Exception('Could not resolve path: $path');
     }
   }
-  
+
   @override
   Future<void> movePath(String sourcePath, String targetPath) async {
     // 1. Resolve Source
@@ -259,31 +363,31 @@ class FilenClientAdapter extends CloudStorageClient
     // Filen moveItem expects the UUID of the *destination folder*
     // If targetPath is the full new path (e.g. /Docs/NewName), we might need logic.
     // Usually move interface implies moving INTO targetPath.
-    
+
     final targetResolved = await resolvePath(targetPath);
     if (targetResolved == null || targetResolved['type'] != 'folder') {
-       throw Exception('Target path must be an existing folder: $targetPath');
+      throw Exception('Target path must be an existing folder: $targetPath');
     }
-    
+
     final sourceUuid = sourceResolved['uuid'] as String;
     final sourceType = sourceResolved['type'] as String;
     final targetUuid = targetResolved['uuid'] as String;
-    
+
     await _client.moveItem(sourceUuid, targetUuid, sourceType);
   }
-  
+
   @override
   Future<void> renamePath(String path, String newName) async {
     // 1. Resolve path to UUID
     final resolved = await resolvePath(path);
-    
+
     if (resolved == null) {
       throw Exception('Could not resolve path: $path');
     }
-    
+
     final uuid = resolved['uuid'] as String;
     final type = resolved['type'] as String;
-    
+
     // 2. Call renameItem
     await _client.renameItem(uuid, newName, type);
   }
