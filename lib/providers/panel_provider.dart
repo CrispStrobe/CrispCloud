@@ -1852,11 +1852,15 @@ class PanelNotifier extends ChangeNotifier {
 
   // --- Navigation ---
 
-  /// Refresh the current directory listing. Debounced to avoid rapid re-fetches
-  /// (e.g. from multiple filesystem events or repeated F5 presses).
+  /// Refresh the current directory listing, serializing overlapping requests.
+  /// Queued work must not outlive the panel that requested it.
   Future<void> refresh() async {
+    if (_isDisposed) return;
     _log.debug('refresh: side=$side archive=$isInArchive flat=$_isFlatView');
     await _refreshLock.synchronized(() async {
+      // A tab change can queue this callback while a previous listing is still
+      // pending. The container may be disposed before the lock is released.
+      if (_isDisposed) return;
       if (_showingSearchResults) {
         // Virtual lists are snapshots. Refresh must not replace them with the
         // directory behind the list; mutation callers update successful rows.
@@ -1891,6 +1895,7 @@ class PanelNotifier extends ChangeNotifier {
         } else {
           _localFileService.currentPath = _localPath;
           await _localFileService.refresh();
+          if (_isDisposed) return;
           await _loadLocalFiles();
         }
       }
@@ -1899,6 +1904,7 @@ class PanelNotifier extends ChangeNotifier {
 
   /// Debounced refresh — coalesces rapid refresh calls within [delay].
   void refreshDebounced({Duration delay = const Duration(milliseconds: 500)}) {
+    if (_isDisposed) return;
     _refreshDebounce?.cancel();
     _refreshDebounce = Timer(delay, () => refresh());
   }
