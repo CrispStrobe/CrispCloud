@@ -51,3 +51,14 @@ before opening and downloaded sizes afterward; an unknown or inaccurate size
 can still cause its existing whole-file download to exceed that memory limit.
 This is not an all-provider large-file guarantee. Provider changes during an
 open file are not a snapshot, and separate range requests may observe changes.
+
+## IPC input limits
+
+The Dart bridge rejects request payload lengths above 32 MiB plus the 16-byte
+write header as soon as it receives the frame header. It returns EINVAL and
+closes that connection, since the rejected frame body cannot safely be treated
+as a subsequent request. Path strings with truncated lengths, invalid UTF-8,
+or embedded NUL bytes also return EINVAL. These limits do not cap the number
+of concurrent requests, directory cache entries, or open handles; total bridge
+memory can still grow with those resources. The private IPC socket directory
+continues to restrict access to the current user.

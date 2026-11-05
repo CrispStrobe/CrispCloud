@@ -130,6 +130,9 @@ class FuseFilesystem {
   static const maxReadFileBytes = 64 * 1024 * 1024;
   // Match the native helper's existing maximum IPC reply size.
   static const maxReadRequestBytes = 32 * 1024 * 1024;
+  // Allow a maximum-sized write plus its handle/offset/length fields. Reject
+  // larger frames from their header, before waiting for an unbounded body.
+  static const maxRequestPayloadBytes = maxReadRequestBytes + 16;
 
   final CloudStorageClient client;
   final bool readOnly;
@@ -227,6 +230,12 @@ class FuseFilesystem {
         final opcode = _readUint32(buf, 0);
         final reqId = _readUint32(buf, 4);
         final payloadLen = _readUint32(buf, 8);
+        if (payloadLen > maxRequestPayloadBytes) {
+          _sendError(socket, reqId, errno: 22); // EINVAL
+          await socket.flush();
+          socket.destroy();
+          return; // Framing cannot be recovered without consuming the body.
+        }
         if (buf.length < 12 + payloadLen) break; // wait for more data
 
         final payload = Uint8List.fromList(buf.sublist(12, 12 + payloadLen));
@@ -844,8 +853,18 @@ class FuseFilesystem {
 
   /// Decode a length-prefixed UTF-8 string: [4B length][bytes...].
   String _decodeString(List<int> buf, int offset) {
+    if (offset < 0 || offset + 4 > buf.length) {
+      throw const _FuseError(22); // EINVAL
+    }
     final len = _readUint32(buf, offset);
-    return utf8.decode(buf.sublist(offset + 4, offset + 4 + len));
+    if (len > buf.length - offset - 4) throw const _FuseError(22);
+    try {
+      final value = utf8.decode(buf.sublist(offset + 4, offset + 4 + len));
+      if (value.contains('\x00')) throw const _FuseError(22);
+      return value;
+    } on FormatException {
+      throw const _FuseError(22);
+    }
   }
 
   // ---------------------------------------------------------------------------

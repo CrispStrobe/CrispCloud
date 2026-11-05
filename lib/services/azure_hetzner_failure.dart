@@ -11,6 +11,11 @@ enum AzureHetznerErrorCode {
   azureStreamContainer,
   azureStream,
   azureAccount,
+  azureReadRange,
+  azureReadRangeIgnored,
+  azureReadRangeInvalid,
+  azureReadRangeExceeded,
+  azureReadRangeTruncated,
   hetznerCredentials,
   hetznerDisconnected,
 }
@@ -21,9 +26,11 @@ abstract interface class AzureHetznerFailure {
 }
 
 class AzureHetznerException implements Exception, AzureHetznerFailure {
-  AzureHetznerException(this.code, this.message,
-      [Map<String, Object> arguments = const {}])
-      : arguments = Map.unmodifiable(arguments);
+  AzureHetznerException(
+    this.code,
+    this.message, [
+    Map<String, Object> arguments = const {},
+  ]) : arguments = Map.unmodifiable(arguments);
   @override
   final AzureHetznerErrorCode code;
   final String message;
@@ -35,10 +42,12 @@ class AzureHetznerException implements Exception, AzureHetznerFailure {
 
 class AzureHetznerArgumentError extends ArgumentError
     implements AzureHetznerFailure {
-  AzureHetznerArgumentError(this.code, String message,
-      [Map<String, Object> arguments = const {}])
-      : arguments = Map.unmodifiable(arguments),
-        super(message);
+  AzureHetznerArgumentError(
+    this.code,
+    String message, [
+    Map<String, Object> arguments = const {},
+  ]) : arguments = Map.unmodifiable(arguments),
+       super(message);
   @override
   final AzureHetznerErrorCode code;
   @override
@@ -46,10 +55,12 @@ class AzureHetznerArgumentError extends ArgumentError
 }
 
 class AzureHetznerStateError extends StateError implements AzureHetznerFailure {
-  AzureHetznerStateError(this.code, String message,
-      [Map<String, Object> arguments = const {}])
-      : arguments = Map.unmodifiable(arguments),
-        super(message);
+  AzureHetznerStateError(
+    this.code,
+    String message, [
+    Map<String, Object> arguments = const {},
+  ]) : arguments = Map.unmodifiable(arguments),
+       super(message);
   @override
   final AzureHetznerErrorCode code;
   @override
