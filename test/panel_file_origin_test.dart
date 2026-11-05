@@ -58,9 +58,6 @@ class _Cloud extends Fake implements CloudStorageClient {
   final created = <String>[];
   List<String> get createdPaths => created;
 
-  @override
-  Future<void> createFolderPath(String path) async => created.add(path);
-
   static Map<String, dynamic> get listing => {
     'folders': <Map<String, dynamic>>[],
     'files': [

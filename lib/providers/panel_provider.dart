@@ -3664,10 +3664,10 @@ class PanelNotifier extends ChangeNotifier {
         },
       );
       await refresh();
-    } catch (e) {
-      _log.warn('operation failed', e);
+    } catch (error) {
+      _log.warn('operation failed', error);
       if (!_isDisposed) {
-        _ref.read(errorProvider).addError('Create folder failed: $e');
+        _ref.read(errorProvider).addError('Create folder failed: $error');
       }
       await audit.logError(
         operation: AuditOperation.createFolder,
