@@ -580,6 +580,11 @@ class _FilePanelState extends ConsumerState<FilePanel> {
             onNewTab: () => panel.addTab(),
             onTabPinToggle: (id) => panel.toggleTabPin(id),
             onTabRenamed: (id, name) => panel.renameTab(id, name),
+            onTabLockChanged: (id, mode) => panel.setTabLock(id, mode),
+            onTabDuplicated: (id) => panel.duplicateTab(id),
+            onTabReordered: panel.reorderTabs,
+            onTabForceClosed: (id) => panel.closeTab(id, force: true),
+            onCloseDuplicates: () => panel.closeDuplicateTabs(),
           ),
           PanelHeader(
             side: widget.side,

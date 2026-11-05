@@ -6,6 +6,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../models/file_item.dart';
 import '../models/panel_side.dart';
 import '../models/storage_reference.dart';
+import '../models/file_search_query.dart';
 import '../providers/core_providers.dart';
 import '../providers/panel_provider.dart';
 import '../providers/transfer_provider.dart';
@@ -14,6 +15,7 @@ import '../services/file_operation_service.dart';
 import '../services/file_selection_pattern.dart';
 import '../services/file_operation_profiles.dart';
 import '../services/read_only_operation_backend.dart';
+import '../services/saved_search_service.dart';
 import 'file_operation_conflict_dialog.dart';
 
 /// Returns the completed foreground plan for callers that need to apply a
@@ -181,6 +183,7 @@ class _FileOperationDialogState extends ConsumerState<FileOperationDialog> {
   final _modifiedBefore = TextEditingController();
   final _excludedDirectories = TextEditingController();
   Map<String, FileOperationOptions> _profiles = {};
+  FileSearchQuery? _searchCriteria;
   bool _edited = false;
   bool _excludeEmpty = false;
   bool _includeHidden = true;
@@ -379,6 +382,7 @@ class _FileOperationDialogState extends ConsumerState<FileOperationDialog> {
     excludeEmptyDirectories: _excludeEmpty,
     includeHidden: _includeHidden,
     preferNative: _native,
+    searchCriteria: _searchCriteria,
     pattern: FileSelectionPattern(
       _mask.text,
       mode: _regex ? FilePatternMode.regex : FilePatternMode.wildcard,
@@ -413,6 +417,55 @@ class _FileOperationDialogState extends ConsumerState<FileOperationDialog> {
     _excludeEmpty = options.excludeEmptyDirectories;
     _includeHidden = options.includeHidden;
     _native = options.preferNative;
+    _searchCriteria = options.searchCriteria;
+  }
+
+  Future<void> _chooseSearchCriteria() async {
+    try {
+      final saved = await SavedSearchService().getAll(strict: true);
+      if (!mounted) return;
+      final selected = await showDialog<SavedSearch>(
+        context: context,
+        builder: (context) => SimpleDialog(
+          title: const Text('Saved search criteria'),
+          children: [
+            if (saved.isEmpty)
+              const Padding(
+                padding: EdgeInsets.all(24),
+                child: Text(
+                  'Save criteria in Search or Select by pattern first.',
+                ),
+              ),
+            for (final item in saved)
+              SimpleDialogOption(
+                onPressed: () => Navigator.pop(context, item),
+                child: Padding(
+                  padding: const EdgeInsets.symmetric(vertical: 6),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [Text(item.name), Text(item.filterSummary)],
+                  ),
+                ),
+              ),
+          ],
+        ),
+      );
+      if (!mounted || selected == null) return;
+      final query =
+          selected.settings ??
+          FileSearchQuery(
+            namePattern: selected.query.isEmpty ? '*' : selected.query,
+            extensions: selected.filterByType,
+            minSize: selected.filterByMinSize,
+            maxSize: selected.filterByMaxSize,
+            modifiedAfter: selected.filterByDateAfter,
+            modifiedBefore: selected.filterByDateBefore,
+          );
+      FileOperationOptions(searchCriteria: query).validateSearchCriteria();
+      _change(() => _searchCriteria = query);
+    } catch (error) {
+      if (mounted) setState(() => _error = error.toString());
+    }
   }
 
   Future<void> _loadProfiles() async {
@@ -857,6 +910,35 @@ class _FileOperationDialogState extends ConsumerState<FileOperationDialog> {
                   ],
                 ),
                 const SizedBox(height: 12),
+                Wrap(
+                  spacing: 8,
+                  runSpacing: 8,
+                  children: [
+                    OutlinedButton.icon(
+                      onPressed: _busy ? null : _chooseSearchCriteria,
+                      icon: const Icon(Icons.saved_search),
+                      label: const Text('Use saved search criteria'),
+                    ),
+                    if (_searchCriteria != null)
+                      TextButton.icon(
+                        onPressed: _busy
+                            ? null
+                            : () => _change(() => _searchCriteria = null),
+                        icon: const Icon(Icons.clear),
+                        label: const Text('Clear saved criteria'),
+                      ),
+                  ],
+                ),
+                if (_searchCriteria != null)
+                  Padding(
+                    padding: const EdgeInsets.only(bottom: 10),
+                    child: Text(
+                      'Additional criteria: ${_searchCriteria!.nameMode.name} '
+                      '${_searchCriteria!.namePattern}'
+                      '${_searchCriteria!.extensions.isEmpty ? "" : " · types: ${_searchCriteria!.extensions.join(", ")}"}. '
+                      'Applied together with the filters below. Selected items and Include subfolders define the scope.',
+                    ),
+                  ),
                 TextField(
                   controller: _mask,
                   enabled: !_busy,
