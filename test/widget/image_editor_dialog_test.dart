@@ -506,6 +506,20 @@ void main() {
         () => first.editor.activeLayers.whereType<WidgetLayer>().isNotEmpty,
         reason: 'image overlay insertion',
       );
+      final before = image.decodePng(raster.bytes)!;
+      await first.save();
+      final after = image.decodePng(raster.bytes)!;
+      expect(
+        after.any((pixel) {
+          final previous = before.getPixel(pixel.x, pixel.y);
+          return pixel.r != previous.r ||
+              pixel.g != previous.g ||
+              pixel.b != previous.b ||
+              pixel.a != previous.a;
+        }),
+        isTrue,
+        reason: 'The saved image must contain the overlay.',
+      );
       await tester.ensureVisible(_command(ImageEditorAction.saveProjectCopy));
       await tester.tap(_command(ImageEditorAction.saveProjectCopy));
       await _until(
@@ -516,13 +530,44 @@ void main() {
       final backing = _MemoryProjectStore(saved!);
       await tester.pumpWidget(const SizedBox.shrink());
       final reopened = _Harness(tester, raster);
-      await reopened.open(projectStore: ImageProjectStore(backing));
+      Uint8List? reopenedCopy;
+      await reopened.open(
+        projectStore: ImageProjectStore(backing),
+        exporter: (bytes, name, title, format) async {
+          reopenedCopy = bytes;
+          return ImageSaveOutcome.savedCopy;
+        },
+      );
       final layer = reopened.editor.activeLayers
           .whereType<WidgetLayer>()
           .single;
       expect(layer.exportConfigs.id, 'crispcloud.image-overlay.v1');
       expect(layer.exportConfigs.meta!['name'], 'overlay.png');
       expect(_saveEnabled(tester), isFalse);
+      await tester.ensureVisible(_command(ImageEditorAction.exportCopy));
+      await tester.tap(_command(ImageEditorAction.exportCopy));
+      await tester.pumpAndSettle();
+      await tester.tap(find.widgetWithText(FilledButton, 'Export'));
+      await _until(
+        tester,
+        () => reopenedCopy != null && !reopened.actions.busy,
+        reason: 'reopened overlay export',
+      );
+      final original = image.decodePng(
+        ImageEditProject.decode(backing.bytes).sourceBytes,
+      )!;
+      final reopenedImage = image.decodePng(reopenedCopy!)!;
+      expect(
+        reopenedImage.any((pixel) {
+          final previous = original.getPixel(pixel.x, pixel.y);
+          return pixel.r != previous.r ||
+              pixel.g != previous.g ||
+              pixel.b != previous.b ||
+              pixel.a != previous.a;
+        }),
+        isTrue,
+        reason: 'The reopened project must immediately render the overlay.',
+      );
     },
   );
 

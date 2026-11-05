@@ -249,12 +249,13 @@ class _ImageEditorDialogState extends ConsumerState<ImageEditorDialog> {
     try {
       _onHistory(editor.stateManager, editor);
       if (_project case final project?) {
+        final overlays = ImageProjectOverlayCache();
+        await overlays.precache(editor.context, project.history);
+        if (!mounted) return;
         await editor.importStateHistory(
           ImportStateHistory.fromMap(
             project.history,
-            configs: ImportEditorConfigs(
-              widgetLoader: imageProjectWidgetLoader,
-            ),
+            configs: ImportEditorConfigs(widgetLoader: overlays.load),
           ),
         );
         if (!mounted) return;
@@ -571,6 +572,15 @@ class _ImageEditorDialogState extends ConsumerState<ImageEditorDialog> {
       } finally {
         codec.dispose();
       }
+      if (!mounted) return;
+      Object? imageError;
+      await precacheImage(
+        MemoryImage(overlay.bytes),
+        editor.context,
+        onError: (error, _) => imageError = error,
+      );
+      if (imageError != null)
+        throw const ImageEditException(ImageEditFailure.invalidImage);
       if (!mounted) return;
       editor.addLayer(imageOverlayLayer(overlay));
     } catch (error, stack) {
