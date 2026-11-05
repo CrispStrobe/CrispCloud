@@ -8,6 +8,8 @@ import 'package:crisp_cloud/services/image_edit_session.dart';
 import 'package:crisp_cloud/services/image_edit_project.dart';
 import 'package:crisp_cloud/services/image_editor_menu.dart';
 import 'package:crisp_cloud/services/image_file_store.dart';
+import 'package:crisp_cloud/services/image_project_store.dart';
+import 'package:crisp_cloud/services/pdf_file_store.dart';
 import 'package:crisp_cloud/widgets/image_editor_dialog.dart';
 import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:flutter/gestures.dart' show kSecondaryMouseButton;
@@ -60,6 +62,32 @@ class _MemoryImageStore implements ImageFileStore {
     if (outcome == ImageSaveOutcome.savedOriginal) bytes = snapshot;
     return outcome;
   }
+}
+
+class _MemoryProjectStore implements PdfFileStore {
+  _MemoryProjectStore(this.bytes);
+  Uint8List bytes;
+  int writes = 0;
+  @override
+  String get documentId => 'test:project';
+  @override
+  String get displayName => 'sample.ccimage';
+  @override
+  String get path => '/sample.ccimage';
+  @override
+  bool get isRemote => false;
+  @override
+  Future<Uint8List> load() async => Uint8List.fromList(bytes);
+  @override
+  Future<PdfSaveOutcome> save(Uint8List data) async {
+    bytes = Uint8List.fromList(data);
+    writes++;
+    return PdfSaveOutcome.savedOriginal;
+  }
+
+  @override
+  Future<PdfSaveOutcome> saveCopy(Uint8List data, String name) =>
+      throw UnimplementedError();
 }
 
 class _RouteObserver extends NavigatorObserver {
@@ -130,6 +158,7 @@ class _Harness {
       ImageFileFormat,
     )?
     exporter,
+    ImageProjectStore? projectStore,
   }) async {
     tester.view.physicalSize = const Size(1280, 900);
     tester.view.devicePixelRatio = 1;
@@ -148,12 +177,18 @@ class _Harness {
                   barrierDismissible: false,
                   builder: (_) => Dialog.fullscreen(
                     child: ImageEditorDialog(
-                      file: FileItem(name: store.displayName, isFolder: false),
+                      file: FileItem(
+                        name: projectStore == null
+                            ? store.displayName
+                            : 'sample.ccimage',
+                        isFolder: false,
+                      ),
                       side: PanelSide.local,
                       storeOverride: store,
                       editorKey: key,
                       enableIsolateGeneration: enableIsolateGeneration,
                       deviceExporterOverride: exporter,
+                      projectStoreOverride: projectStore,
                     ),
                   ),
                 ),
@@ -341,6 +376,43 @@ void main() {
       expect(_saveEnabled(tester), isTrue);
     },
   );
+
+  _desktopTestWidgets('opening and saving a project retains editable history', (
+    tester,
+  ) async {
+    final raster = _MemoryImageStore();
+    final first = _Harness(tester, raster);
+    await first.open();
+    await first.addText('Stored layer');
+    final history = await tester.runAsync(
+      () async => (await first.editor.exportStateHistory()).toMap(),
+    );
+    final project = ImageEditProject(
+      sourceName: raster.displayName,
+      sourceBytes: raster.bytes,
+      history: history!,
+    );
+    final backing = _MemoryProjectStore(project.encode());
+    await tester.pumpWidget(const SizedBox.shrink());
+    final second = _Harness(tester, raster);
+    await second.open(projectStore: ImageProjectStore(backing));
+    expect(
+      second.editor.activeLayers.whereType<TextLayer>().single.text,
+      'Stored layer',
+    );
+    expect(_saveEnabled(tester), isFalse);
+    await second.addText('New layer');
+    await tester.tap(_save);
+    await _until(
+      tester,
+      () =>
+          backing.writes == 1 && !second.actions.busy && !_saveEnabled(tester),
+      reason: 'project save',
+    );
+    final saved = ImageEditProject.decode(backing.bytes);
+    expect(saved.sourceBytes, orderedEquals(raster.bytes));
+    expect(saved.history, isNotEmpty);
+  });
 
   _desktopTestWidgets('exporting a copy keeps the original dirty', (
     tester,

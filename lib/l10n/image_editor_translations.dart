@@ -38,6 +38,8 @@ const imageEditorInvariantFilterNames = <String, String>{
 const imageEditorTranslations = <String, Map<String, String>>{
   'en': <String, String>{
     ...imageEditorInvariantFilterNames,
+    'Projects retain editable layers. Exported images are flattened.':
+        'Projects retain editable layers. Exported images are flattened.',
     'Export image copy': 'Export image copy',
     'Format': 'Format',
     'Leave dimensions empty to keep the edited size.':
@@ -187,6 +189,7 @@ const imageEditorTranslations = <String, Map<String, String>>{
   },
   'de': <String, String>{
     ...imageEditorInvariantFilterNames,
+    'Projects retain editable layers. Exported images are flattened.': 'Projekte behalten bearbeitbare Ebenen. Exportierte Bilder werden zusammengeführt.',
     'Export image copy': 'Bildkopie exportieren',
     'Format': 'Format',
     'Leave dimensions empty to keep the edited size.':
@@ -331,6 +334,7 @@ const imageEditorTranslations = <String, Map<String, String>>{
   },
   'fr': <String, String>{
     ...imageEditorInvariantFilterNames,
+    'Projects retain editable layers. Exported images are flattened.': 'Les projets conservent les calques modifiables. Les images exportées sont aplaties.',
     'Export image copy': 'Exporter une copie de l’image',
     'Format': 'Format',
     'Leave dimensions empty to keep the edited size.':
@@ -478,6 +482,7 @@ const imageEditorTranslations = <String, Map<String, String>>{
   },
   'es': <String, String>{
     ...imageEditorInvariantFilterNames,
+    'Projects retain editable layers. Exported images are flattened.': 'Los proyectos conservan las capas editables. Las imágenes exportadas se acoplan.',
     'Export image copy': 'Exportar copia de imagen',
     'Format': 'Formato',
     'Leave dimensions empty to keep the edited size.':
@@ -623,6 +628,8 @@ const imageEditorTranslations = <String, Map<String, String>>{
   },
   'pt': <String, String>{
     ...imageEditorInvariantFilterNames,
+    'Projects retain editable layers. Exported images are flattened.':
+        'Projetos mantêm camadas editáveis. Imagens exportadas são mescladas.',
     'Export image copy': 'Exportar cópia da imagem',
     'Format': 'Formato',
     'Leave dimensions empty to keep the edited size.':
@@ -769,6 +776,8 @@ const imageEditorTranslations = <String, Map<String, String>>{
   },
   'zh': <String, String>{
     ...imageEditorInvariantFilterNames,
+    'Projects retain editable layers. Exported images are flattened.':
+        '项目保留可编辑图层。导出的图像会被合并。',
     'Export image copy': '导出图像副本',
     'Format': '格式',
     'Leave dimensions empty to keep the edited size.': '留空尺寸以保留编辑后的大小。',
@@ -911,6 +920,8 @@ const imageEditorTranslations = <String, Map<String, String>>{
   },
   'ja': <String, String>{
     ...imageEditorInvariantFilterNames,
+    'Projects retain editable layers. Exported images are flattened.':
+        'プロジェクトは編集可能なレイヤーを保持します。書き出した画像は統合されます。',
     'Export image copy': '画像のコピーを書き出す',
     'Format': '形式',
     'Leave dimensions empty to keep the edited size.':
@@ -1058,6 +1069,8 @@ const imageEditorTranslations = <String, Map<String, String>>{
   },
   'ko': <String, String>{
     ...imageEditorInvariantFilterNames,
+    'Projects retain editable layers. Exported images are flattened.':
+        '프로젝트는 편집 가능한 레이어를 유지합니다. 내보낸 이미지는 병합됩니다.',
     'Export image copy': '이미지 사본 내보내기',
     'Format': '형식',
     'Leave dimensions empty to keep the edited size.':
@@ -1206,6 +1219,8 @@ const imageEditorTranslations = <String, Map<String, String>>{
   },
   'ar': <String, String>{
     ...imageEditorInvariantFilterNames,
+    'Projects retain editable layers. Exported images are flattened.':
+        'تحتفظ المشاريع بالطبقات القابلة للتحرير. تُدمج طبقات الصور المصدّرة.',
     'Export image copy': 'تصدير نسخة من الصورة',
     'Format': 'التنسيق',
     'Leave dimensions empty to keep the edited size.':

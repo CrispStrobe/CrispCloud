@@ -7,6 +7,8 @@ import 'package:crisp_cloud/utils/file_editability.dart';
 void main() {
   test('text, raster images, PDF and OOXML files are editable', () {
     expect(isEditableInBuiltInEditor('notes.txt'), isTrue);
+    expect(isEditableInBuiltInEditor('work.CCIMAGE'), isTrue);
+    expect(isEditableInBuiltInEditor('work.ccimage.zip'), isFalse);
     expect(isEditableInBuiltInEditor('README'), isTrue);
     expect(isEditableInBuiltInEditor('main.dart'), isTrue);
     expect(isEditableInBuiltInEditor('photo.jpg'), isTrue);

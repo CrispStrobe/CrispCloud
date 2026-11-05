@@ -14,6 +14,9 @@ import '../models/panel_side.dart';
 import '../providers/panel_source_provider.dart';
 import '../providers/providers.dart';
 import '../services/image_device_export.dart';
+import '../services/image_edit_project.dart';
+import '../services/image_project_store.dart';
+import '../services/pdf_file_store.dart';
 import '../services/image_edit_session.dart';
 import '../services/image_export_options.dart';
 import '../services/image_editor_menu.dart';
@@ -48,6 +51,7 @@ class ImageEditorDialog extends ConsumerStatefulWidget {
     this.editorKey,
     this.enableIsolateGeneration = true,
     this.deviceExporterOverride,
+    this.projectStoreOverride,
   });
 
   final FileItem file;
@@ -58,6 +62,7 @@ class ImageEditorDialog extends ConsumerStatefulWidget {
   final GlobalKey<ProImageEditorState>? editorKey;
   final bool enableIsolateGeneration;
   final ImageDeviceExporter? deviceExporterOverride;
+  final ImageProjectStore? projectStoreOverride;
 
   @override
   ConsumerState<ImageEditorDialog> createState() => _ImageEditorDialogState();
@@ -72,6 +77,8 @@ class _ImageEditorDialogState extends ConsumerState<ImageEditorDialog> {
   EditorStateHistory? _originalHistory;
   int _nextToken = 1;
   ImageFileStore? _store;
+  ImageProjectStore? _projectStore;
+  ImageEditProject? _project;
   ImageEditSession? _session;
   Uint8List? _initialBytes;
   ImageFileInfo? _info;
@@ -80,6 +87,7 @@ class _ImageEditorDialogState extends ConsumerState<ImageEditorDialog> {
   bool _loading = true;
   bool _loadInProgress = false;
   bool _ready = false;
+  bool _restoringProject = false;
   bool _closing = false;
   bool _applying = false;
   bool _exporting = false;
@@ -177,6 +185,87 @@ class _ImageEditorDialogState extends ConsumerState<ImageEditorDialog> {
     );
   }
 
+  ImageProjectStore _captureProjectStore() {
+    if (widget.projectStoreOverride case final store?) return store;
+    final panel = ref.read(panelProvider(widget.side));
+    final selectedSource = ref.read(panelSourceProvider(widget.side));
+    if (panel.isInArchive ||
+        selectedSource.isArchive ||
+        selectedSource.isContainer) {
+      throw const _ImageOpenMessage(
+        'Extract this file from its archive or container before editing.',
+      );
+    }
+    final origin = panel.originForFile(widget.file);
+    if (origin == null) {
+      throw const _ImageOpenMessage(
+        'Refresh this folder before editing. The file’s source could not be verified.',
+      );
+    }
+    final source = origin.source;
+    if (source is LocalPanelSource) {
+      return ImageProjectStore(
+        PdfFileStore.local(
+          service: ref.read(localFileServiceProvider),
+          file: widget.file,
+          inputLimitBytes: ImageEditProject.maxBytes,
+          outputLimitBytes: ImageEditProject.maxBytes,
+        ),
+      );
+    }
+    if (source is! RemotePanelSource) {
+      throw const _ImageOpenMessage(
+        'Extract this file from its archive or container before editing.',
+      );
+    }
+    return ImageProjectStore(
+      PdfFileStore.remote(
+        client: source.client,
+        providerName: source.providerName,
+        cache: ref.read(fileCacheProvider),
+        file: widget.file.path == null
+            ? widget.file.copyWith(
+                path: p.posix.join(source.path, widget.file.name),
+              )
+            : widget.file,
+        isCurrentAccount: () => mounted && origin.isCurrent,
+        inputLimitBytes: ImageEditProject.maxBytes,
+        outputLimitBytes: ImageEditProject.maxBytes,
+      ),
+    );
+  }
+
+  Future<void> _finishImageLoad() async {
+    final editor = _editorKey.currentState;
+    if (editor == null || !mounted || _ready || _restoringProject) return;
+    _restoringProject = true;
+    try {
+      _onHistory(editor.stateManager, editor);
+      if (_project case final project?) {
+        await editor.importStateHistory(
+          ImportStateHistory.fromMap(project.history),
+        );
+        if (!mounted) return;
+        _onHistory(editor.stateManager, editor);
+        final revision = _session!.currentRevision;
+        _session!.removeListener(_scheduleRefresh);
+        _session!.dispose();
+        _session = ImageEditSession(
+          initialBytes: _initialBytes!,
+          format: _info!.format,
+          initialRevision: revision,
+        )..addListener(_scheduleRefresh);
+      }
+      _ready = true;
+    } catch (error, stack) {
+      _log.warn('Could not restore image project', error, stack);
+      if (mounted) setState(() => _errorKey = 'Could not open image');
+    } finally {
+      _restoringProject = false;
+      _scheduleRefresh();
+    }
+  }
+
   Future<void> _load() async {
     if (_loadInProgress) return;
     _loadInProgress = true;
@@ -184,18 +273,33 @@ class _ImageEditorDialogState extends ConsumerState<ImageEditorDialog> {
       setState(() {
         _loading = true;
         _ready = false;
+        _restoringProject = false;
         _errorKey = null;
       });
     }
     try {
       // Check listing size before touching storage (including unsupported origins).
-      if ((widget.file.size ?? 0) > kImageEditorInputLimitBytes) {
+      final isProject = isImageEditProjectName(widget.file.name);
+      if ((widget.file.size ?? 0) >
+          (isProject
+              ? ImageEditProject.maxBytes
+              : kImageEditorInputLimitBytes)) {
         throw const ImageEditException(ImageEditFailure.inputTooLarge);
       }
-      final store = _store ??= _captureStore();
-      final bytes = await store.load();
+      final Uint8List bytes;
+      if (isProject) {
+        final store = _projectStore ??= _captureProjectStore();
+        _project = await store.load();
+        bytes = _project!.sourceBytes;
+      } else {
+        final store = _store ??= _captureStore();
+        bytes = await store.load();
+      }
       if (!mounted) return;
-      final info = inspectEditableImage(bytes, fileName: widget.file.name);
+      final info = inspectEditableImage(
+        bytes,
+        fileName: _project?.sourceName ?? widget.file.name,
+      );
       // Validate compressed pixels with Flutter's real decoder before handing
       // them to a renderer which would otherwise stay on its loading surface.
       final codec = await ui.instantiateImageCodec(bytes);
@@ -337,7 +441,7 @@ class _ImageEditorDialogState extends ConsumerState<ImageEditorDialog> {
     final store = _store;
     final editor = _editorKey.currentState;
     if (session == null ||
-        store == null ||
+        (store == null && _projectStore == null) ||
         editor == null ||
         !_canEdit ||
         !session.isDirty) {
@@ -351,7 +455,18 @@ class _ImageEditorDialogState extends ConsumerState<ImageEditorDialog> {
           if (!mounted) throw StateError('Image editor disposed');
           return editor.captureEditorImage();
         },
-        write: store.save,
+        write: (bytes) async {
+          final projectStore = _projectStore;
+          if (projectStore == null) return store!.save(bytes);
+          final history = await (await editor.exportStateHistory()).toMap();
+          return projectStore.save(
+            ImageEditProject(
+              sourceName: _project!.sourceName,
+              sourceBytes: _initialBytes!,
+              history: history,
+            ),
+          );
+        },
       );
       if (!mounted) return false;
       if (outcome != ImageSaveOutcome.savedOriginal) {
@@ -364,7 +479,7 @@ class _ImageEditorDialogState extends ConsumerState<ImageEditorDialog> {
         session.isDirty ? 'New changes remain unsaved.' : 'Image saved',
       );
       // Refresh failures must not turn a completed write into a failed save.
-      if (widget.storeOverride == null) {
+      if (widget.storeOverride == null && widget.projectStoreOverride == null) {
         ref.read(panelProvider(widget.side)).refreshFiles();
       }
       return !session.isDirty;
@@ -534,9 +649,9 @@ class _ImageEditorDialogState extends ConsumerState<ImageEditorDialog> {
 
   String _messageFor(Object error, String fallback) => switch (error) {
     _ImageOpenMessage(:final key) => key,
-    ImageAccountChangedException() =>
+    ImageAccountChangedException() || PdfAccountChangedException() =>
       'The storage account changed. Reopen the image before saving.',
-    ImageSaveConflictException() => 'The original image changed or could not be verified. Reopen it before saving.',
+    ImageSaveConflictException() || PdfSaveConflictException() => 'The original image changed or could not be verified. Reopen it before saving.',
     ImageEditException(:final reason) => switch (reason) {
       ImageEditFailure.unsupportedFormat =>
         'Only PNG and JPEG images can be edited.',
@@ -775,12 +890,7 @@ class _ImageEditorDialogState extends ConsumerState<ImageEditorDialog> {
                   onLayerInteractionEnd: _onGestureEnd,
                   onScaleStart: (_) => _scheduleRefresh(),
                   onScaleEnd: (_) => _scheduleRefresh(),
-                  onImageDecoded: () {
-                    _ready = true;
-                    final editor = _editorKey.currentState;
-                    if (editor != null) _onHistory(editor.stateManager, editor);
-                    _scheduleRefresh();
-                  },
+                  onImageDecoded: () => unawaited(_finishImageLoad()),
                   onOpenSubEditor: (tool) {
                     _tool = tool;
                     _scheduleRefresh();
@@ -799,7 +909,9 @@ class _ImageEditorDialogState extends ConsumerState<ImageEditorDialog> {
           padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 5),
           child: Text(
             context.imageTr(
-              'Edited images are flattened. Metadata may be removed.',
+              _project == null
+                  ? 'Edited images are flattened. Metadata may be removed.'
+                  : 'Projects retain editable layers. Exported images are flattened.',
             ),
             style: Theme.of(context).textTheme.bodySmall,
           ),

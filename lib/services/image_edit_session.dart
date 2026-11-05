@@ -66,6 +66,10 @@ ImageFileFormat? imageFileFormatForName(String name) {
 bool isEditableImageFileName(String name) =>
     imageFileFormatForName(name) != null;
 
+/// Raster files and CrispCloud editable image projects share the F4 editor.
+bool isImageEditorFileName(String name) =>
+    isEditableImageFileName(name) || name.toLowerCase().endsWith('.ccimage');
+
 /// Inspect structure and dimensions without allocating a full pixel buffer.
 ///
 /// A filename alone is not evidence of its encoding. PNG animation chunks and

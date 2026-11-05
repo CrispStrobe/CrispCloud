@@ -1,6 +1,5 @@
 import 'image_edit_project.dart';
 import 'image_edit_session.dart';
-import 'pdf_edit_session.dart';
 import 'pdf_file_store.dart';
 
 /// Project storage uses the same captured-origin and conflict checks as other
