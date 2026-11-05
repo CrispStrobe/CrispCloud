@@ -318,7 +318,7 @@ class _ImageEditorDialogState extends ConsumerState<ImageEditorDialog> {
       final info = inspectEditableImage(bytes, fileName: sourceName);
       // Validate compressed pixels with Flutter's real decoder before handing
       // them to a renderer which would otherwise stay on its loading surface.
-      final codec = await ui.instantiateImageCodec(bytes);
+      final codec = await ui.instantiateImageCodec(Uint8List.fromList(bytes));
       try {
         if (codec.frameCount != 1) {
           throw const ImageEditException(ImageEditFailure.animatedImage);
