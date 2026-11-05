@@ -9,7 +9,9 @@ import 'package:flutter_test/flutter_test.dart';
 
 class _CloudClient implements CloudStorageClient {
   final int fileSize;
-  _CloudClient({this.fileSize = 5});
+  final Map<String, dynamic>? listing;
+  int downloadCount = 0;
+  _CloudClient({this.fileSize = 5, this.listing});
 
   @override
   String get providerName => 'Test';
@@ -21,7 +23,7 @@ class _CloudClient implements CloudStorageClient {
           : null;
 
   @override
-  Future<Map<String, dynamic>> listPath(String path) async => {
+  Future<Map<String, dynamic>> listPath(String path) async => listing ?? {
         'items': [
           {'name': 'café.txt', 'type': 'file', 'size': 5}
         ]
@@ -29,8 +31,10 @@ class _CloudClient implements CloudStorageClient {
 
   @override
   Future<Uint8List> downloadFileBytes(String remotePath,
-          {Function(int, int)? onProgress}) async =>
-      Uint8List.fromList(utf8.encode('hello'));
+      {Function(int, int)? onProgress}) async {
+    downloadCount++;
+    return Uint8List.fromList(utf8.encode('hello'));
+  }
 
   @override
   dynamic noSuchMethod(Invocation invocation) => super.noSuchMethod(invocation);
@@ -86,6 +90,96 @@ Uint8List _path(String path, [int? flags]) {
 }
 
 void main() {
+  test('IPC repeated reads across EOF reuse the cached file', () async {
+    final client = _CloudClient();
+    final fs = FuseFilesystem(client: client, remotePath: '/remote');
+    unawaited(fs.serveRequests());
+    final socketPath = await fs.ready;
+    final socket = await Socket.connect(
+        InternetAddress(socketPath, type: InternetAddressType.unix), 0);
+    final reader = _ResponseReader(socket);
+    addTearDown(() async {
+      await socket.close();
+      await fs.dispose();
+    });
+
+    final (openError, opened) = await reader.send(13, 1, _path('/café.txt', 0));
+    expect(openError, 0);
+    final readRequest = Uint8List(16);
+    ByteData.sublistView(readRequest)
+      ..setUint32(0, ByteData.sublistView(opened).getUint32(0, Endian.big), Endian.big)
+      ..setUint64(4, 3, Endian.big)
+      ..setUint32(12, 10, Endian.big);
+    for (var id = 2; id <= 3; id++) {
+      final (error, bytes) = await reader.send(3, id, readRequest);
+      expect(error, 0);
+      expect(utf8.decode(bytes), 'lo');
+    }
+    expect(client.downloadCount, 1);
+  });
+
+  test('IPC readdir preserves UTF-8 names and includes split folders', () async {
+    final fs = FuseFilesystem(
+      client: _CloudClient(listing: {
+        'folders': [
+          {'name': '旅行😀'},
+        ],
+        'files': [
+          {'name': 'café.txt', 'size': 5},
+        ],
+      }),
+      remotePath: '/remote',
+    );
+    unawaited(fs.serveRequests());
+    final socketPath = await fs.ready;
+    final socket = await Socket.connect(
+        InternetAddress(socketPath, type: InternetAddressType.unix), 0);
+    final reader = _ResponseReader(socket);
+    addTearDown(() async {
+      await socket.close();
+      await fs.dispose();
+    });
+
+    final (error, payload) = await reader.send(2, 1, _path('/'));
+    expect(error, 0);
+    final data = ByteData.sublistView(payload);
+    expect(data.getUint32(0, Endian.big), 2);
+    var offset = 4;
+    final names = <String, int>{};
+    for (var i = 0; i < 2; i++) {
+      final length = payload[offset++];
+      final name = utf8.decode(payload.sublist(offset, offset + length));
+      offset += length;
+      names[name] = data.getUint32(offset, Endian.big);
+      offset += 24;
+    }
+    expect(offset, payload.length);
+    expect(names['旅行😀']! & 0xf000, 0x4000);
+    expect(names['café.txt']! & 0xf000, 0x8000);
+  });
+
+  test('IPC readdir rejects names longer than the wire format', () async {
+    final fs = FuseFilesystem(
+      client: _CloudClient(listing: {
+        'items': [
+          {'name': '😀' * 64},
+        ],
+      }),
+      remotePath: '/remote',
+    );
+    unawaited(fs.serveRequests());
+    final socketPath = await fs.ready;
+    final socket = await Socket.connect(
+        InternetAddress(socketPath, type: InternetAddressType.unix), 0);
+    final reader = _ResponseReader(socket);
+    addTearDown(() async {
+      await socket.close();
+      await fs.dispose();
+    });
+    expect((await reader.send(2, 1, _path('/'))).$1,
+        Platform.isMacOS ? 63 : 36); // ENAMETOOLONG
+  });
+
   test('IPC opens and reads a UTF-8 cloud file, then releases the handle',
       () async {
     final fs = FuseFilesystem(client: _CloudClient(), remotePath: '/remote');

@@ -519,8 +519,11 @@ class FuseFilesystem {
       return Uint8List.fromList(buf.data.sublist(start, start + length));
     }
 
-    if (buf.eof && offset >= bufEnd) {
-      return Uint8List(0); // past end of file
+    if (buf.eof && offset >= buf.bufferOffset) {
+      if (offset >= bufEnd) return Uint8List(0); // past end of file
+      // A read that crosses EOF returns the cached suffix, not a fresh
+      // download of the same object.
+      return Uint8List.fromList(buf.data.sublist(offset - buf.bufferOffset));
     }
 
     // Download a fresh chunk (providers that support range requests would
@@ -609,6 +612,15 @@ class FuseFilesystem {
   /// Different provider adapters use different top-level keys. This method
   /// tries common ones and falls back to the raw map values.
   List<Map<String, dynamic>> _extractItems(Map<String, dynamic> result) {
+    // Most adapters split their listings into folders and files, and some
+    // omit the type from individual entries because the list supplies it.
+    if (result['folders'] is List && result['files'] is List) {
+      return [
+        for (final folder in (result['folders'] as List).cast<Map<String, dynamic>>())
+          {...folder, 'type': 'folder'},
+        ...(result['files'] as List).cast<Map<String, dynamic>>(),
+      ];
+    }
     for (final key in ['items', 'files', 'children', 'entries', 'contents']) {
       final v = result[key];
       if (v is List) {
@@ -685,7 +697,12 @@ class FuseFilesystem {
     final parts = <List<int>>[];
     for (final item in items) {
       final name = (item['name'] as String?) ?? '';
-      final nameBytes = name.codeUnits;
+      final nameBytes = utf8.encode(name);
+      // The IPC protocol stores the byte length in a single byte. Do not
+      // truncate either that length or a multi-byte UTF-8 sequence.
+      if (nameBytes.length > 255) {
+        throw _FuseError(Platform.isMacOS ? 63 : 36); // ENAMETOOLONG
+      }
       final attr = _attrFromItem(item);
       final entry = Uint8List(1 + nameBytes.length + 24);
       entry[0] = nameBytes.length;
