@@ -1424,7 +1424,9 @@ class _QudsReportDesignerState extends State<QudsReportDesigner> {
     }
     if (_c.mode == ReportDesignMode.data) {
       final ReportDataTableView t = _c.dataTable;
-      final StringBuffer d = StringBuffer('${_t('Data')}  ·  ${t.title}');
+      final StringBuffer d = StringBuffer(
+        '${_t('Data')}  ·  ${t.isFields ? _t('Fields') : t.title}',
+      );
       final int row = _c.dataRow;
       final int col = _c.dataColumn;
       if (row >= 0 && col >= 0) {
@@ -1449,7 +1451,7 @@ class _QudsReportDesignerState extends State<QudsReportDesigner> {
     if (sel.length == 1) {
       final ReportRect r = _c.physicalRect(sel.first);
       s.write(
-        '  ·  ${sel.first.displayName}  '
+        '  ·  ${_c.strings.elementTitle(sel.first)}  '
         '${ReportUnits.trimNumber(r.left / _mm, decimals: 1)}, '
         '${ReportUnits.trimNumber(r.top / _mm, decimals: 1)} mm  '
         '${ReportUnits.trimNumber(r.width / _mm, decimals: 1)} × '

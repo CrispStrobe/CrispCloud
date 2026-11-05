@@ -2313,10 +2313,21 @@ class RenderReportInspector extends RenderBox
     return s.isEmpty ? s : s[0].toUpperCase() + s.substring(1);
   }
 
-  String get _titleText => _s.inspectorTitle(
-        _controller.inspectorTitle,
-        objectSelected: _controller.selectedElements.length == 1,
-      );
+  String get _titleText {
+    final selected = _controller.selectedElements;
+    if (_controller.inspectorPage == ReportInspectorPage.properties &&
+        _controller.mode != ReportDesignMode.data &&
+        selected.length == 1) {
+      return _s.elementTitle(selected.first);
+    }
+    return _s.inspectorTitle(
+      _controller.inspectorTitle,
+      objectSelected: false,
+      dataFields:
+          _controller.mode == ReportDesignMode.data &&
+          _controller.dataTable.isFields,
+    );
+  }
 
   (ReportToolbarIcon, String) get _titleBadge {
     switch (_controller.inspectorPage) {
@@ -3491,7 +3502,7 @@ class RenderReportInspector extends RenderBox
     final String faces = dot < 0 ? card : card.substring(0, dot);
     final String bytes = dot < 0 ? '' : card.substring(dot + 3);
     final TextPainter info = _text(
-      bytes.isEmpty ? _tr(faces) : '${_tr(faces)} · $bytes',
+      bytes.isEmpty ? _s.fontFaces(faces) : '${_s.fontFaces(faces)} · $bytes',
       11,
       _muted,
       w,

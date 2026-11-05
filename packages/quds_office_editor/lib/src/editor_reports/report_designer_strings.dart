@@ -1,5 +1,7 @@
 import 'dart:ui';
 
+import 'package:quds_office_engine/quds_reports.dart';
+
 import 'report_asset_strings.dart';
 import 'report_notice_strings.dart';
 
@@ -228,8 +230,43 @@ class ReportDesignerStrings {
         return values.containsKey(name) ? '${values[name]}' : match.group(0)!;
       });
 
+  /// Localizes the generated element kind while leaving its document name intact.
+  String elementTitle(ReportElement element) {
+    final kind = element.type.name;
+    final label = t(kind[0].toUpperCase() + kind.substring(1));
+    final name = element.name;
+    return name == null || name.isEmpty ? label : '$label "$name"';
+  }
+
+  /// Localizes a list of generated font-face names.
+  String fontFaces(String faces) {
+    const boldItalic = <String, String>{
+      'en': 'Bold Italic',
+      'de': 'Fett kursiv',
+      'fr': 'Gras italique',
+      'es': 'Negrita cursiva',
+      'pt': 'Negrito itálico',
+      'ar': 'عريض مائل',
+      'ja': '太字斜体',
+      'ko': '굵은 기울임',
+      'zh': '粗斜体',
+    };
+    return faces
+        .split(' + ')
+        .map(
+          (face) => face == 'Bold Italic'
+              ? (boldItalic[languageCode] ?? boldItalic['en']!)
+              : t(face),
+        )
+        .join(' + ');
+  }
+
   /// Localizes generated inspector headings while preserving user names.
-  String inspectorTitle(String raw, {required bool objectSelected}) {
+  String inspectorTitle(
+    String raw, {
+    required bool objectSelected,
+    bool dataFields = false,
+  }) {
     if (objectSelected) return raw;
     final many = RegExp(r'^(\d+) elements$').firstMatch(raw);
     if (many != null) return count(int.parse(many[1]!), 'element');
@@ -237,6 +274,9 @@ class ReportDesignerStrings {
     if (colon <= 0) return t(raw);
     final head = raw.substring(0, colon);
     var tail = raw.substring(colon + 2);
+    if (head == 'Data' && dataFields && tail == 'Fields') {
+      tail = t('Fields');
+    }
     if (head == 'Band') {
       final spaced = tail.replaceAllMapped(
         RegExp(r'([a-z])([A-Z])'),

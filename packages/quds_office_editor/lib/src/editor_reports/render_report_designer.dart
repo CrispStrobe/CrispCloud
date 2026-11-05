@@ -1044,6 +1044,7 @@ class RenderReportDesigner extends RenderBox implements MouseTrackerAnnotation {
           hideText: e.id == editing,
           fonts: _controller.effectiveFonts,
           data: _controller.mockData,
+          strings: _controller.strings,
         );
       }
     }
@@ -1094,9 +1095,13 @@ class RenderReportDesigner extends RenderBox implements MouseTrackerAnnotation {
   };
 
   /// Caption text for [band].
-  static String captionOf(ReportBand band, {ReportDesignerStrings strings = ReportDesignerStrings.english}) {
+  static String captionOf(
+    ReportBand band, {
+    ReportDesignerStrings strings = ReportDesignerStrings.english,
+  }) {
     final String name = strings.t(bandName(band.kind));
-    String label(String key) => strings.languageCode == 'en' ? key.toLowerCase() : strings.t(key);
+    String label(String key) =>
+        strings.languageCode == 'en' ? key.toLowerCase() : strings.t(key);
     final List<String> notes = <String>[
       if (band.dataSet != null) '${label('Data')}: ${band.dataSet}',
       if (band.groupBy != null) '${label('Group')}: ${band.groupBy}',
@@ -1339,13 +1344,22 @@ class RenderReportDesigner extends RenderBox implements MouseTrackerAnnotation {
       }
     }
     canvas.restore();
-    canvas.drawLine(const Offset(ruler, ruler), Offset(size.width, ruler), edge);
-    canvas.drawLine(const Offset(ruler, ruler), Offset(ruler, size.height), edge);
+    canvas.drawLine(
+      const Offset(ruler, ruler),
+      Offset(size.width, ruler),
+      edge,
+    );
+    canvas.drawLine(
+      const Offset(ruler, ruler),
+      Offset(ruler, size.height),
+      edge,
+    );
     canvas.drawRect(const Rect.fromLTWH(0, 0, ruler, ruler), bg);
   }
 
   TextPainter _label(String text, double size, Color color, bool bold) {
-    final String key = '$text|$size|${color.toARGB32()}|$bold|${_controller.strings.direction.index}';
+    final String key =
+        '$text|$size|${color.toARGB32()}|$bold|${_controller.strings.direction.index}';
     final TextPainter? hit = _labels[key];
     if (hit != null) {
       return hit;
@@ -1391,9 +1405,17 @@ class RenderReportDesigner extends RenderBox implements MouseTrackerAnnotation {
       ..isSemanticBoundary = true
       ..textDirection = _controller.strings.direction
       ..label = _controller.strings.t('Report designer canvas')
-      ..value = _controller.strings.inspectorTitle(
-        _controller.inspectorTitle,
-        objectSelected: _controller.selectedElements.length == 1,
-      );
+      ..value =
+          _controller.inspectorPage == ReportInspectorPage.properties &&
+              _controller.mode != ReportDesignMode.data &&
+              _controller.selectedElements.length == 1
+          ? _controller.strings.elementTitle(_controller.selectedElements.first)
+          : _controller.strings.inspectorTitle(
+              _controller.inspectorTitle,
+              objectSelected: false,
+              dataFields:
+                  _controller.mode == ReportDesignMode.data &&
+                  _controller.dataTable.isFields,
+            );
   }
 }
