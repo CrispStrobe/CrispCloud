@@ -37,7 +37,44 @@ final directoryCacheProvider = Provider<DirectoryCacheService>((ref) {
 });
 
 /// User-selected locale override (null = use system locale).
-final localeProvider = StateProvider<Locale?>((ref) => null);
+///
+/// The choice is persisted so it survives app restarts and updates. Keeping
+/// this in Riverpod lets the whole MaterialApp rebuild immediately.
+final localeProvider =
+    StateNotifierProvider<LocaleNotifier, Locale?>((ref) => LocaleNotifier());
+
+class LocaleNotifier extends StateNotifier<Locale?> {
+  LocaleNotifier() : super(null) {
+    _load();
+  }
+
+  static const _prefsKey = 'app_locale';
+
+  Future<void> _load() async {
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      final code = prefs.getString(_prefsKey);
+      if (code == null || code == 'system' || code.isEmpty) return;
+      final parts = code.split(RegExp(r'[-_]'));
+      state = Locale(parts.first, parts.length > 1 ? parts[1] : null);
+    } catch (_) {
+      // A missing/broken preference simply means "system default".
+    }
+  }
+
+  Future<void> setLocale(Locale? locale) async {
+    state = locale;
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      await prefs.setString(
+        _prefsKey,
+        locale == null ? 'system' : locale.toLanguageTag(),
+      );
+    } catch (_) {
+      // The in-memory selection still applies for this session.
+    }
+  }
+}
 
 /// Application theme state. Riverpod is the sole ownership boundary.
 final themeProvider =

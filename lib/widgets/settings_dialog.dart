@@ -1,15 +1,20 @@
 // lib/widgets/settings_dialog.dart
 //
-// Unified settings dialog opened from the AppBar gear icon or main menu.
+// Unified settings dialog opened from the AppBar gear icon, the macOS app
+// menu, the Tools menu and the in-app overflow menu.
 // Sections:
-//   • General      — F-key bar toggle, toolbar customization link
-//   • Accessibility — High contrast toggle, Reduced motion toggle
-//   • Privacy      — Analytics opt-in toggle with explanation
-//   • Advanced     — Delta sync toggle, delta sync block size selector
+//   • General      — F-key bar, toolbar customization
+//   • Language     — system or explicit app locale
+//   • Appearance   — theme, accent colour, file-list font
+//   • Quick Search — Total Commander/Double Commander type-ahead behavior
+//   • Cache        — usage and size limit
+//   • Network      — proxy, TLS and provider request settings
+//   • Accessibility, Privacy, File Colors and Advanced
 
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import '../l10n/app_localizations.dart';
 import '../providers/accessibility_provider.dart';
 import '../providers/analytics_provider.dart';
 import '../providers/delta_sync_provider.dart';
@@ -17,6 +22,10 @@ import '../providers/file_type_color_provider.dart';
 import '../providers/panel_source_provider.dart';
 import '../providers/core_providers.dart';
 import '../providers/quick_search_provider.dart';
+import 'cache_settings_dialog.dart';
+import 'provider_settings_dialog.dart';
+import 'proxy_settings_dialog.dart';
+import 'theme_picker.dart';
 
 // ---------------------------------------------------------------------------
 // Public entry point
@@ -44,16 +53,22 @@ class SettingsDialog extends ConsumerWidget {
       scrollable: true,
       contentPadding: const EdgeInsets.fromLTRB(0, 0, 0, 0),
       content: SizedBox(
-        width: 440,
+        width: 560,
         child: Column(
           mainAxisSize: MainAxisSize.min,
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             _GeneralSection(),
             const Divider(height: 1),
-            _QuickSearchSection(),
+            _LanguageSection(),
             const Divider(height: 1),
             _AppearanceSection(),
+            const Divider(height: 1),
+            _QuickSearchSection(),
+            const Divider(height: 1),
+            _CacheSection(),
+            const Divider(height: 1),
+            _NetworkSection(),
             const Divider(height: 1),
             _AccessibilitySection(),
             const Divider(height: 1),
@@ -139,6 +154,7 @@ class _AppearanceSection extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final double fontSize = ref.watch(fontSizeProvider);
     final String family = ref.watch(fontFamilyProvider);
+    final themeService = ref.watch(themeProvider);
     const Map<String, String> families = <String, String>{
       'system': 'System default',
       'AppMono': 'Monospaced (Roboto Mono)',
@@ -154,6 +170,22 @@ class _AppearanceSection extends ConsumerWidget {
       title: 'Appearance',
       icon: Icons.text_fields,
       children: [
+        Padding(
+          padding: const EdgeInsets.fromLTRB(24, 4, 24, 0),
+          child: Text(
+            'Theme and accent',
+            style: Theme.of(context).textTheme.bodyMedium,
+          ),
+        ),
+        ThemeSettingsPanel(themeService: themeService),
+        const Divider(height: 16),
+        Padding(
+          padding: const EdgeInsets.fromLTRB(24, 0, 24, 0),
+          child: Text(
+            'File-list font',
+            style: Theme.of(context).textTheme.bodyMedium,
+          ),
+        ),
         ListTile(
           key: const Key('settings_font_family'),
           leading: const Icon(Icons.font_download_outlined),
@@ -332,6 +364,170 @@ class _QuickSearchSection extends ConsumerWidget {
           ),
           contentPadding: const EdgeInsets.symmetric(horizontal: 24),
           dense: true,
+        ),
+      ],
+    );
+  }
+}
+
+// ---------------------------------------------------------------------------
+// Section: Language
+// ---------------------------------------------------------------------------
+
+class _LanguageSection extends ConsumerWidget {
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final Locale? current = ref.watch(localeProvider);
+    const labels = <String, String>{
+      'system': 'System default',
+      'en': 'English',
+      'de': 'Deutsch',
+      'fr': 'Français',
+      'es': 'Español',
+      'pt': 'Português',
+      'zh': '中文',
+      'ja': '日本語',
+      'ko': '한국어',
+      'ar': 'العربية',
+    };
+    final locales = <String>{
+      'system',
+      ...AppLocalizations.supportedLocales.map((l) => l.languageCode),
+    }.toList()
+      ..sort((a, b) {
+        if (a == 'system') return -1;
+        if (b == 'system') return 1;
+        return a.compareTo(b);
+      });
+    final currentCode = current?.languageCode ?? 'system';
+
+    return _Section(
+      title: 'Language',
+      icon: Icons.language,
+      children: [
+        ListTile(
+          key: const Key('settings_language'),
+          leading: const Icon(Icons.translate),
+          title: const Text('App language'),
+          subtitle: Text(
+            current == null
+                ? 'Follows the system language'
+                : 'Applies immediately and is saved',
+          ),
+          trailing: SizedBox(
+            width: 190,
+            child: DropdownButton<String>(
+              value: locales.contains(currentCode) ? currentCode : 'system',
+              isExpanded: true,
+              underline: const SizedBox.shrink(),
+              items: [
+                for (final code in locales)
+                  DropdownMenuItem<String>(
+                    value: code,
+                    child: Text(
+                      labels[code] ?? code.toUpperCase(),
+                      overflow: TextOverflow.ellipsis,
+                    ),
+                  ),
+              ],
+              onChanged: (value) {
+                if (value == null) return;
+                ref.read(localeProvider.notifier).setLocale(
+                      value == 'system' ? null : Locale(value),
+                    );
+              },
+            ),
+          ),
+          contentPadding: const EdgeInsets.symmetric(horizontal: 24),
+          dense: true,
+        ),
+        Padding(
+          padding: const EdgeInsets.fromLTRB(24, 0, 24, 10),
+          child: Text(
+            'The selected language is stored locally and restored on the '
+            'next launch.',
+            style: Theme.of(context).textTheme.bodySmall,
+          ),
+        ),
+      ],
+    );
+  }
+}
+
+// ---------------------------------------------------------------------------
+// Section: Cache
+// ---------------------------------------------------------------------------
+
+class _CacheSection extends StatelessWidget {
+  @override
+  Widget build(BuildContext context) {
+    return _Section(
+      title: 'Cache',
+      icon: Icons.storage,
+      children: [
+        const Padding(
+          padding: EdgeInsets.symmetric(horizontal: 24),
+          child: CacheSettingsPanel(),
+        ),
+      ],
+    );
+  }
+}
+
+// ---------------------------------------------------------------------------
+// Section: Network
+// ---------------------------------------------------------------------------
+
+class _NetworkSection extends ConsumerStatefulWidget {
+  @override
+  ConsumerState<_NetworkSection> createState() => _NetworkSectionState();
+}
+
+class _NetworkSectionState extends ConsumerState<_NetworkSection> {
+  Future<void> _openProxy() async {
+    await showDialog<void>(
+      context: context,
+      builder: (_) => const ProxySettingsDialog(),
+    );
+    if (mounted) setState(() {});
+  }
+
+  Future<void> _openProvider() async {
+    showProviderSettingsDialog(context, ref);
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final config = ref.watch(proxyServiceProvider).config;
+    final proxySummary = config.isEnabled
+        ? '${config.type.name.toUpperCase()} ${config.host}:${config.port}'
+        : 'Direct connection';
+
+    return _Section(
+      title: 'Network',
+      icon: Icons.lan_outlined,
+      children: [
+        ListTile(
+          key: const Key('settings_proxy'),
+          leading: const Icon(Icons.vpn_lock_outlined),
+          title: const Text('Proxy and certificates'),
+          subtitle: Text(proxySummary),
+          trailing: const Icon(Icons.chevron_right),
+          contentPadding: const EdgeInsets.symmetric(horizontal: 24),
+          dense: true,
+          onTap: _openProxy,
+        ),
+        ListTile(
+          key: const Key('settings_provider'),
+          leading: const Icon(Icons.cloud_outlined),
+          title: const Text('Cloud provider request settings'),
+          subtitle: const Text(
+            'Timeout, headers, redirects and TLS verification',
+          ),
+          trailing: const Icon(Icons.chevron_right),
+          contentPadding: const EdgeInsets.symmetric(horizontal: 24),
+          dense: true,
+          onTap: _openProvider,
         ),
       ],
     );

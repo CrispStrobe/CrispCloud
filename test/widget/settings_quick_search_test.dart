@@ -44,6 +44,8 @@ void main() {
       QuickSearchMode.jump,
     );
 
+    await tester.ensureVisible(find.text('Filter'));
+    await tester.pumpAndSettle();
     await tester.tap(find.text('Filter'));
     await tester.pumpAndSettle();
 
@@ -56,6 +58,8 @@ void main() {
 
   testWidgets('typing mode can select matching files', (tester) async {
     await pumpSettings(tester);
+    await tester.ensureVisible(find.text('Select'));
+    await tester.pumpAndSettle();
     await tester.tap(find.text('Select'));
     await tester.pumpAndSettle();
 
@@ -71,7 +75,11 @@ void main() {
     await tester.ensureVisible(find.byKey(const Key('settings_font_family')));
     await tester.pumpAndSettle();
     expect(container.read(fontFamilyProvider), 'system');
-    await tester.tap(find.text('System default'));
+    final fontDropdown = find.descendant(
+      of: find.byKey(const Key('settings_font_family')),
+      matching: find.byType(DropdownButton<String>),
+    );
+    await tester.tap(fontDropdown);
     await tester.pumpAndSettle();
     await tester.tap(find.text('Monospaced (Roboto Mono)').last);
     await tester.pumpAndSettle();
@@ -83,6 +91,25 @@ void main() {
     await tester.drag(find.byType(Slider), const Offset(60, 0));
     await tester.pumpAndSettle();
     expect(container.read(fontSizeProvider), greaterThan(before));
+  });
+
+  testWidgets('language setting changes locale and persists', (tester) async {
+    await pumpSettings(tester);
+
+    await tester.ensureVisible(find.byKey(const Key('settings_language')));
+    await tester.pumpAndSettle();
+    final languageDropdown = find.descendant(
+      of: find.byKey(const Key('settings_language')),
+      matching: find.byType(DropdownButton<String>),
+    );
+    await tester.tap(languageDropdown);
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('Deutsch').last);
+    await tester.pumpAndSettle();
+
+    expect(container.read(localeProvider)?.languageCode, 'de');
+    final prefs = await SharedPreferences.getInstance();
+    expect(prefs.getString('app_locale'), 'de');
   });
 
   testWidgets('prefix, case and arrow toggles persist to the provider', (

@@ -35,7 +35,6 @@ import '../widgets/search_dialogs.dart' show showSearchDialog, showFindDialog;
 import '../widgets/file_toolbar.dart' show showPanelFilterDialog;
 import '../widgets/file_context_menu.dart' show showPropertiesDialog;
 import '../widgets/status_bar.dart';
-import '../widgets/cache_settings_dialog.dart';
 import '../widgets/duplicate_finder_dialog.dart';
 import '../widgets/key_management_dialog.dart';
 import '../widgets/multi_cloud_dialog.dart';
@@ -47,7 +46,6 @@ import '../l10n/office_editor_strings.dart';
 import '../widgets/lock_screen.dart';
 import '../widgets/command_palette.dart';
 import '../widgets/terminal_panel.dart';
-import '../widgets/theme_picker.dart';
 import '../providers/terminal_provider.dart';
 import '../main.dart' show appLockServiceProvider;
 import '../services/windows_integration_service.dart';
@@ -540,12 +538,6 @@ class _FileBrowserScreenState extends ConsumerState<FileBrowserScreen> {
       ]),
       PlatformMenuItemGroup(members: <PlatformMenuItem>[
         PlatformMenuItem(
-          label: 'Settings...',
-          shortcut:
-              const SingleActivator(LogicalKeyboardKey.comma, meta: true),
-          onSelected: () => showSettingsDialog(context),
-        ),
-        PlatformMenuItem(
           label: 'Command Palette...',
           onSelected: () => showCommandPalette(context, ref),
         ),
@@ -571,16 +563,10 @@ class _FileBrowserScreenState extends ConsumerState<FileBrowserScreen> {
           ]),
           PlatformMenuItemGroup(members: <PlatformMenuItem>[
             PlatformMenuItem(
-              label: 'Preferences...',
+              label: 'Settings...',
               shortcut:
                   const SingleActivator(LogicalKeyboardKey.comma, meta: true),
-              onSelected: () {
-                final themeService = ref.read(themeProvider);
-                showDialog(
-                  context: context,
-                  builder: (_) => ThemePickerDialog(themeService: themeService),
-                );
-              },
+              onSelected: () => showSettingsDialog(context),
             ),
           ]),
           const PlatformMenuItemGroup(members: <PlatformMenuItem>[
@@ -1313,8 +1299,6 @@ class _FileBrowserScreenState extends ConsumerState<FileBrowserScreen> {
             showAuditLogDialog(context);
           case 'syslog':
             showLogViewerDialog(context);
-          case 'cache':
-            showCacheSettingsDialog(context, ref);
           case 'settings':
             showSettingsDialog(context);
           case 'dual_panel':
@@ -1347,16 +1331,8 @@ class _FileBrowserScreenState extends ConsumerState<FileBrowserScreen> {
                       ? PanelViewMode.brief
                       : PanelViewMode.full,
                 );
-          case 'language':
-            _showLanguageDialog(context);
           case 'keys':
             showKeyManagementDialog(context, ref);
-          case 'theme':
-            final themeService = ref.read(themeProvider);
-            showDialog(
-              context: context,
-              builder: (_) => ThemePickerDialog(themeService: themeService),
-            );
           case 'shortcuts':
             showKeyboardShortcutsDialog(context);
           case 'about':
@@ -1394,9 +1370,6 @@ class _FileBrowserScreenState extends ConsumerState<FileBrowserScreen> {
             value: 'audit', child: _overflowItem(Icons.history, l.auditLog)),
         PopupMenuItem(
             value: 'syslog', child: _overflowItem(Icons.terminal, l.systemLog)),
-        PopupMenuItem(
-            value: 'cache',
-            child: _overflowItem(Icons.storage, l.cacheSettings)),
         PopupMenuItem(
             value: 'settings',
             child: _overflowItem(Icons.settings, 'Settings')),
@@ -1465,11 +1438,6 @@ class _FileBrowserScreenState extends ConsumerState<FileBrowserScreen> {
               value: 'keys', child: _overflowItem(Icons.key, 'Key Management')),
         const PopupMenuDivider(),
         PopupMenuItem(
-            value: 'theme', child: _overflowItem(Icons.palette, l.theme)),
-        PopupMenuItem(
-            value: 'language',
-            child: _overflowItem(Icons.language, 'Language')),
-        PopupMenuItem(
             value: 'shortcuts',
             child: _overflowItem(Icons.keyboard, l.keyboardShortcuts)),
         PopupMenuItem(
@@ -1513,42 +1481,6 @@ class _FileBrowserScreenState extends ConsumerState<FileBrowserScreen> {
     ref.read(panelProvider(PanelSide.remote)).refresh();
   }
 
-  void _showLanguageDialog(BuildContext context) {
-    final languages = {
-      null: 'System',
-      const Locale('en'): 'English',
-      const Locale('de'): 'Deutsch',
-      const Locale('fr'): 'Français',
-      const Locale('es'): 'Español',
-      const Locale('pt'): 'Português',
-      const Locale('zh'): '中文',
-      const Locale('ja'): '日本語',
-      const Locale('ko'): '한국어',
-      const Locale('ar'): 'العربية',
-    };
-    final current = ref.read(localeProvider);
-    showDialog(
-      context: context,
-      builder: (ctx) => SimpleDialog(
-        title: const Row(children: [
-          Icon(Icons.language),
-          SizedBox(width: 12),
-          Text('Language'),
-        ]),
-        children: languages.entries
-            .map((e) => RadioListTile<Locale?>(
-                  value: e.key,
-                  groupValue: current,
-                  title: Text(e.value),
-                  onChanged: (v) {
-                    ref.read(localeProvider.notifier).state = v;
-                    Navigator.pop(ctx);
-                  },
-                ))
-            .toList(),
-      ),
-    );
-  }
 
   void _handleFKeyAction(
       BuildContext context, WidgetRef ref, FKeyAction action) {
@@ -1707,11 +1639,11 @@ class _FileBrowserScreenState extends ConsumerState<FileBrowserScreen> {
               },
             ),
             ListTile(
-              leading: const Icon(Icons.storage),
-              title: const Text('Cache Settings'),
+              leading: const Icon(Icons.settings),
+              title: const Text('Settings'),
               onTap: () {
                 Navigator.pop(context);
-                showCacheSettingsDialog(context, ref);
+                showSettingsDialog(context);
               },
             ),
             // External editor preference

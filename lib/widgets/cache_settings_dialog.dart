@@ -1,6 +1,7 @@
 // lib/widgets/cache_settings_dialog.dart
 //
-// Dialog to view cache usage and configure the maximum cache size.
+// Cache usage/limit controls. The panel is embedded in the unified Settings
+// dialog; the standalone dialog remains for compatibility with older callers.
 // Options: 100 MB, 250 MB, 500 MB, 1 GB, 2 GB, Unlimited.
 
 import 'package:flutter/material.dart';
@@ -13,7 +14,22 @@ import '../l10n/app_localizations.dart';
 void showCacheSettingsDialog(BuildContext context, WidgetRef ref) {
   showDialog(
     context: context,
-    builder: (_) => const _CacheSettingsDialog(),
+    builder: (_) => AlertDialog(
+      title: const Row(
+        children: [
+          Icon(Icons.storage),
+          SizedBox(width: 8),
+          Text('Cache Settings'),
+        ],
+      ),
+      content: const SizedBox(width: 420, child: CacheSettingsPanel()),
+      actions: [
+        TextButton(
+          onPressed: () => Navigator.pop(context),
+          child: Text(AppLocalizations.of(context)!.close),
+        ),
+      ],
+    ),
   );
 }
 
@@ -27,14 +43,15 @@ const _cacheSizeOptions = <({String label, int bytes})>[
   (label: 'Unlimited', bytes: 0),
 ];
 
-class _CacheSettingsDialog extends ConsumerStatefulWidget {
-  const _CacheSettingsDialog();
+/// Cache controls without a dialog wrapper, suitable for the Settings page.
+class CacheSettingsPanel extends ConsumerStatefulWidget {
+  const CacheSettingsPanel({super.key});
 
   @override
-  ConsumerState<_CacheSettingsDialog> createState() => _CacheSettingsDialogState();
+  ConsumerState<CacheSettingsPanel> createState() => _CacheSettingsPanelState();
 }
 
-class _CacheSettingsDialogState extends ConsumerState<_CacheSettingsDialog> {
+class _CacheSettingsPanelState extends ConsumerState<CacheSettingsPanel> {
   bool _clearing = false;
 
   Future<void> _setMaxSize(int bytes) async {
@@ -48,12 +65,19 @@ class _CacheSettingsDialogState extends ConsumerState<_CacheSettingsDialog> {
       context: context,
       builder: (ctx) => AlertDialog(
         title: const Text('Clear Cache'),
-        content: const Text('Remove all cached files? They will be re-downloaded when needed.'),
+        content: const Text(
+          'Remove all cached files? They will be re-downloaded when needed.',
+        ),
         actions: [
-          TextButton(onPressed: () => Navigator.pop(ctx, false), child: Text(AppLocalizations.of(context)!.cancel)),
+          TextButton(
+            onPressed: () => Navigator.pop(ctx, false),
+            child: Text(AppLocalizations.of(context)!.cancel),
+          ),
           TextButton(
             onPressed: () => Navigator.pop(ctx, true),
-            style: TextButton.styleFrom(foregroundColor: Theme.of(ctx).colorScheme.error),
+            style: TextButton.styleFrom(
+              foregroundColor: Theme.of(ctx).colorScheme.error,
+            ),
             child: Text(AppLocalizations.of(context)!.clear),
           ),
         ],
@@ -71,88 +95,76 @@ class _CacheSettingsDialogState extends ConsumerState<_CacheSettingsDialog> {
     final totalSize = cache.totalSize;
     final maxSize = cache.maxSize;
     final entryCount = cache.entryCount;
-    final usagePercent = maxSize > 0 ? (totalSize / maxSize).clamp(0.0, 1.0) : 0.0;
+    final usagePercent =
+        maxSize > 0 ? (totalSize / maxSize).clamp(0.0, 1.0) : 0.0;
 
     final usageText = maxSize == 0
         ? '${fmt.formatBytes(totalSize)} used (Unlimited)'
         : '${fmt.formatBytes(totalSize)} / ${fmt.formatBytes(maxSize)} used';
 
-    return AlertDialog(
-      title: const Row(
-        children: [
-          Icon(Icons.storage),
-          SizedBox(width: 8),
-          Text('Cache Settings'),
-        ],
-      ),
-      content: SizedBox(
-        width: 420,
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          crossAxisAlignment: CrossAxisAlignment.start,
+    return Column(
+      mainAxisSize: MainAxisSize.min,
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text('Cache Usage', style: Theme.of(context).textTheme.titleSmall),
+        const SizedBox(height: 8),
+        if (maxSize > 0)
+          LinearProgressIndicator(
+            value: usagePercent,
+            backgroundColor:
+                Theme.of(context).colorScheme.surfaceContainerHighest,
+          ),
+        const SizedBox(height: 6),
+        Row(
+          mainAxisAlignment: MainAxisAlignment.spaceBetween,
           children: [
-            // Usage section
-            Text('Cache Usage', style: Theme.of(context).textTheme.titleSmall),
-            const SizedBox(height: 8),
-            if (maxSize > 0)
-              LinearProgressIndicator(
-                value: usagePercent,
-                backgroundColor: Theme.of(context).colorScheme.surfaceContainerHighest,
-              ),
-            const SizedBox(height: 6),
-            Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-              children: [
-                Text(usageText, style: Theme.of(context).textTheme.bodySmall),
-                Text(
-                  '$entryCount file${entryCount == 1 ? '' : 's'}',
-                  style: Theme.of(context).textTheme.bodySmall,
-                ),
-              ],
-            ),
-            const Divider(height: 24),
-
-            // Max size selector
-            Text('Maximum Cache Size', style: Theme.of(context).textTheme.titleSmall),
-            const SizedBox(height: 8),
-            Wrap(
-              spacing: 8,
-              runSpacing: 8,
-              children: _cacheSizeOptions.map((opt) {
-                final isSelected = opt.bytes == maxSize ||
-                    (opt.bytes == 0 && maxSize == 0) ||
-                    (opt.bytes == 0 && maxSize > 2 * 1024 * 1024 * 1024);
-                return ChoiceChip(
-                  label: Text(opt.label),
-                  selected: isSelected,
-                  onSelected: (_) => _setMaxSize(opt.bytes),
-                );
-              }).toList(),
-            ),
-            const SizedBox(height: 4),
+            Text(usageText, style: Theme.of(context).textTheme.bodySmall),
             Text(
-              'Least recently used files are evicted when the limit is reached.',
-              style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                    color: Theme.of(context).colorScheme.outline,
-                  ),
+              '$entryCount file${entryCount == 1 ? '' : 's'}',
+              style: Theme.of(context).textTheme.bodySmall,
             ),
           ],
         ),
-      ),
-      actions: [
+        const Divider(height: 24),
+        Text('Maximum Cache Size',
+            style: Theme.of(context).textTheme.titleSmall),
+        const SizedBox(height: 8),
+        Wrap(
+          spacing: 8,
+          runSpacing: 8,
+          children: _cacheSizeOptions.map((opt) {
+            final isSelected = opt.bytes == maxSize ||
+                (opt.bytes == 0 && maxSize == 0) ||
+                (opt.bytes == 0 && maxSize > 2 * 1024 * 1024 * 1024);
+            return ChoiceChip(
+              label: Text(opt.label),
+              selected: isSelected,
+              onSelected: (_) => _setMaxSize(opt.bytes),
+            );
+          }).toList(),
+        ),
+        const SizedBox(height: 4),
+        Text(
+          'Least recently used files are evicted when the limit is reached.',
+          style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                color: Theme.of(context).colorScheme.outline,
+              ),
+        ),
+        const SizedBox(height: 8),
         TextButton.icon(
           icon: _clearing
-              ? const SizedBox(width: 16, height: 16, child: CircularProgressIndicator(strokeWidth: 2))
-              : Icon(Icons.delete_sweep, size: 18, color: Theme.of(context).colorScheme.error),
+              ? const SizedBox(
+                  width: 16,
+                  height: 16,
+                  child: CircularProgressIndicator(strokeWidth: 2),
+                )
+              : Icon(Icons.delete_sweep,
+                  size: 18, color: Theme.of(context).colorScheme.error),
           label: Text(
             'Clear Cache',
             style: TextStyle(color: Theme.of(context).colorScheme.error),
           ),
           onPressed: _clearing ? null : _clearCache,
-        ),
-        TextButton(
-          onPressed: () => Navigator.pop(context),
-          child: Text(AppLocalizations.of(context)!.close),
         ),
       ],
     );

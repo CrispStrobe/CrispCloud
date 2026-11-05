@@ -1,6 +1,8 @@
 // lib/widgets/theme_picker.dart
 //
-// Theme selection dialog with preview swatches and accent color picker.
+// Theme selection panel with preview swatches and accent color picker.
+// The panel is embedded in the unified Settings dialog; ThemePickerDialog is
+// kept for callers that still need a standalone picker.
 
 import 'package:flutter/material.dart';
 import '../services/theme_service.dart';
@@ -17,72 +19,95 @@ class ThemePickerDialog extends StatelessWidget {
       scrollable: true,
       content: SizedBox(
         width: 340,
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            // Theme options
-            ...AppThemeMode.values.map((mode) {
-              final isSelected = themeService.currentMode == mode;
-              final label = mode == AppThemeMode.system
-                  ? 'System'
-                  : builtInThemes[mode]?.name ?? mode.name;
-              final swatch = _swatchColor(mode);
-
-              return ListTile(
-                dense: true,
-                leading: Container(
-                  width: 24,
-                  height: 24,
-                  decoration: BoxDecoration(
-                    color: swatch,
-                    borderRadius: BorderRadius.circular(4),
-                    border: Border.all(
-                      color: isSelected
-                          ? Theme.of(context).colorScheme.primary
-                          : Colors.grey.withValues(alpha: 0.3),
-                      width: isSelected ? 2 : 1,
-                    ),
-                  ),
-                ),
-                title: Text(label),
-                trailing: isSelected
-                    ? Icon(Icons.check, color: Theme.of(context).colorScheme.primary)
-                    : null,
-                onTap: () => themeService.setTheme(mode),
-              );
-            }),
-
-            const Divider(height: 24),
-
-            // Accent color picker
-            Text('Accent Color',
-                style: Theme.of(context).textTheme.titleSmall),
-            const SizedBox(height: 8),
-            Wrap(
-              spacing: 8,
-              runSpacing: 8,
-              children: [
-                _colorDot(context, null, 'Default'),
-                _colorDot(context, Colors.blue, 'Blue'),
-                _colorDot(context, Colors.indigo, 'Indigo'),
-                _colorDot(context, Colors.purple, 'Purple'),
-                _colorDot(context, Colors.pink, 'Pink'),
-                _colorDot(context, Colors.red, 'Red'),
-                _colorDot(context, Colors.orange, 'Orange'),
-                _colorDot(context, Colors.amber, 'Amber'),
-                _colorDot(context, Colors.green, 'Green'),
-                _colorDot(context, Colors.teal, 'Teal'),
-                _colorDot(context, Colors.cyan, 'Cyan'),
-              ],
-            ),
-          ],
-        ),
+        child: ThemeSettingsPanel(themeService: themeService),
       ),
       actions: [
         TextButton(
           onPressed: () => Navigator.pop(context),
           child: const Text('Done'),
         ),
+      ],
+    );
+  }
+}
+
+/// Theme and accent controls for embedding in Settings.
+class ThemeSettingsPanel extends StatelessWidget {
+  final ThemeService themeService;
+
+  const ThemeSettingsPanel({super.key, required this.themeService});
+
+  @override
+  Widget build(BuildContext context) {
+    return Column(
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        ...AppThemeMode.values.map((mode) {
+          final isSelected = themeService.currentMode == mode;
+          final label = mode == AppThemeMode.system
+              ? 'System'
+              : builtInThemes[mode]?.name ?? mode.name;
+          final swatch = _swatchColor(mode);
+
+          return ListTile(
+            dense: true,
+            contentPadding: const EdgeInsets.symmetric(horizontal: 24),
+            leading: Container(
+              width: 24,
+              height: 24,
+              decoration: BoxDecoration(
+                color: swatch,
+                borderRadius: BorderRadius.circular(4),
+                border: Border.all(
+                  color: isSelected
+                      ? Theme.of(context).colorScheme.primary
+                      : Colors.grey.withValues(alpha: 0.3),
+                  width: isSelected ? 2 : 1,
+                ),
+              ),
+            ),
+            title: Text(label),
+            trailing: isSelected
+                ? Icon(Icons.check,
+                    color: Theme.of(context).colorScheme.primary)
+                : null,
+            onTap: () => themeService.setTheme(mode),
+          );
+        }),
+
+        const Divider(height: 24),
+
+        // Accent color picker
+        Align(
+          alignment: Alignment.centerLeft,
+          child: Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 24),
+            child: Text('Accent Color',
+                style: Theme.of(context).textTheme.titleSmall),
+          ),
+        ),
+        const SizedBox(height: 8),
+        Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 24),
+          child: Wrap(
+            spacing: 8,
+            runSpacing: 8,
+            children: [
+              _colorDot(context, null, 'Default'),
+              _colorDot(context, Colors.blue, 'Blue'),
+              _colorDot(context, Colors.indigo, 'Indigo'),
+              _colorDot(context, Colors.purple, 'Purple'),
+              _colorDot(context, Colors.pink, 'Pink'),
+              _colorDot(context, Colors.red, 'Red'),
+              _colorDot(context, Colors.orange, 'Orange'),
+              _colorDot(context, Colors.amber, 'Amber'),
+              _colorDot(context, Colors.green, 'Green'),
+              _colorDot(context, Colors.teal, 'Teal'),
+              _colorDot(context, Colors.cyan, 'Cyan'),
+            ],
+          ),
+        ),
+        const SizedBox(height: 8),
       ],
     );
   }
