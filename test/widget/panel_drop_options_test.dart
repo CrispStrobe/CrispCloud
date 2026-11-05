@@ -77,7 +77,10 @@ void main() {
   setUp(() async {
     SharedPreferences.setMockInitialValues({});
     TestDefaultBinaryMessengerBinding.instance.defaultBinaryMessenger
-        .setMockMethodCallHandler(const MethodChannel('desktop_drop'), (_) async => null);
+        .setMockMethodCallHandler(
+          const MethodChannel('desktop_drop'),
+          (_) async => null,
+        );
     final cloud = _Cloud();
     container = ProviderContainer(
       overrides: [
@@ -88,14 +91,21 @@ void main() {
     );
     source = container.read(panelProvider(PanelSide.local));
     await Future<void>.delayed(Duration.zero);
-    container.read(panelSourceProvider(PanelSide.local).notifier).setSource(
-      RemotePanelSource(providerName: cloud.providerName, client: cloud, path: '/'),
-    );
+    container
+        .read(panelSourceProvider(PanelSide.local).notifier)
+        .setSource(
+          RemotePanelSource(
+            providerName: cloud.providerName,
+            client: cloud,
+            path: '/',
+          ),
+        );
     await source.refresh();
     file = source.files!.singleWhere((item) => !item.isFolder);
     destination = container.read(panelProvider(PanelSide.remote));
     await destination.refresh();
-    container.read(panelSourceProvider(PanelSide.remote).notifier)
+    container
+        .read(panelSourceProvider(PanelSide.remote).notifier)
         .setSource(const LocalPanelSource('/landing'));
     await destination.refresh();
   });
@@ -135,60 +145,78 @@ void main() {
     offset: Offset.zero,
   );
 
-  testWidgets('a normal-folder drop opens copy options with actual swapped sources', (
-    tester,
-  ) async {
-    expect(source.showingSearchResults, isFalse);
-    expect(source.captureCurrentOrigin().source, isA<RemotePanelSource>());
-    expect(destination.captureCurrentOrigin().source, isA<LocalPanelSource>());
-    await host(tester);
-    final target = tester.widget<DragTarget<PanelDragData>>(
-      find.byType(DragTarget<PanelDragData>),
-    );
-    expect(target.onWillAcceptWithDetails!(details(file)), isTrue);
-    target.onAcceptWithDetails!(details(file));
-    await tester.pumpAndSettle();
+  testWidgets(
+    'a normal-folder drop opens copy options with actual swapped sources',
+    (tester) async {
+      expect(source.showingSearchResults, isFalse);
+      expect(source.captureCurrentOrigin().source, isA<RemotePanelSource>());
+      expect(
+        destination.captureCurrentOrigin().source,
+        isA<LocalPanelSource>(),
+      );
+      await host(tester);
+      final target = tester.widget<DragTarget<PanelDragData>>(
+        find.byType(DragTarget<PanelDragData>).first,
+      );
+      expect(target.onWillAcceptWithDetails!(details(file)), isTrue);
+      target.onAcceptWithDetails!(details(file));
+      await tester.pumpAndSettle();
 
-    final dialog = tester.widget<FileOperationDialog>(find.byType(FileOperationDialog));
-    expect(dialog.files.single.path, '/source.txt');
-    expect(dialog.sourceOrigin!.source, isA<RemotePanelSource>());
-    expect(dialog.destinationOrigin!.source, isA<LocalPanelSource>());
-    expect(dialog.destinationPath, '/landing');
-    expect(find.text('Copy 1 selected item(s)'), findsOneWidget);
-    expect(
-      tester.widget<FilledButton>(find.widgetWithText(FilledButton, 'Start Copy')).onPressed,
-      isNull,
-    );
-    expect(container.read(transferProvider).operations, isEmpty);
+      final dialog = tester.widget<FileOperationDialog>(
+        find.byType(FileOperationDialog),
+      );
+      expect(dialog.files.single.path, '/source.txt');
+      expect(dialog.sourceOrigin!.source, isA<RemotePanelSource>());
+      expect(dialog.destinationOrigin!.source, isA<LocalPanelSource>());
+      expect(dialog.destinationPath, '/landing');
+      expect(find.text('Copy 1 selected item(s)'), findsOneWidget);
+      expect(
+        tester
+            .widget<FilledButton>(
+              find.widgetWithText(FilledButton, 'Start Copy'),
+            )
+            .onPressed,
+        isNull,
+      );
+      expect(container.read(transferProvider).operations, isEmpty);
 
-    container.read(panelSourceProvider(PanelSide.remote).notifier)
-        .setSource(const LocalPanelSource('/elsewhere'));
-    await tester.pumpAndSettle();
-    final destinationField = find.byWidgetPredicate(
-      (widget) => widget is TextField &&
-          widget.decoration?.labelText == 'Destination directory',
-    );
-    expect(tester.widget<TextField>(destinationField).controller!.text, '/landing');
-    await tester.tap(find.text('Cancel'));
-    await tester.pumpAndSettle();
-    expect(container.read(transferProvider).operations, isEmpty);
-    expect(tester.takeException(), isNull);
-    await tester.pumpWidget(const SizedBox.shrink());
-    await tester.pumpAndSettle();
-  });
+      container
+          .read(panelSourceProvider(PanelSide.remote).notifier)
+          .setSource(const LocalPanelSource('/elsewhere'));
+      await tester.pumpAndSettle();
+      final destinationField = find.byWidgetPredicate(
+        (widget) =>
+            widget is TextField &&
+            widget.decoration?.labelText == 'Destination directory',
+      );
+      expect(
+        tester.widget<TextField>(destinationField).controller!.text,
+        '/landing',
+      );
+      await tester.tap(find.text('Cancel'));
+      await tester.pumpAndSettle();
+      expect(container.read(transferProvider).operations, isEmpty);
+      expect(tester.takeException(), isNull);
+      await tester.pumpWidget(const SizedBox.shrink());
+      await tester.pumpAndSettle();
+    },
+  );
 
   testWidgets('stale drag rows and virtual-list destinations are rejected', (
     tester,
   ) async {
     await host(tester);
     var target = tester.widget<DragTarget<PanelDragData>>(
-      find.byType(DragTarget<PanelDragData>),
+      find.byType(DragTarget<PanelDragData>).first,
     );
     expect(target.onWillAcceptWithDetails!(details(file.copyWith())), isFalse);
-    destination.showSearchResults([], origin: destination.captureCurrentOrigin());
+    destination.showSearchResults(
+      [],
+      origin: destination.captureCurrentOrigin(),
+    );
     await tester.pumpAndSettle();
     target = tester.widget<DragTarget<PanelDragData>>(
-      find.byType(DragTarget<PanelDragData>),
+      find.byType(DragTarget<PanelDragData>).first,
     );
     expect(target.onWillAcceptWithDetails!(details(file)), isFalse);
     expect(find.byType(FileOperationDialog), findsNothing);

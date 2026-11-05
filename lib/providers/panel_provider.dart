@@ -2270,9 +2270,16 @@ class PanelNotifier extends ChangeNotifier {
     FileItem? cursor,
     FileItem? anchor,
   }) {
+    final visible = Set<FileItem>.identity()
+      ..addAll(displayedFiles ?? const <FileItem>[]);
     _selection
       ..clear()
-      ..addAll(items.where((item) => item.name != '..' && item.name != '.'));
+      ..addAll(
+        items.where(
+          (item) =>
+              visible.contains(item) && item.name != '..' && item.name != '.',
+        ),
+      );
     if (anchor != null) _lastSelected = anchor;
     if (cursor != null) {
       final idx = _indexOfIdentical(
