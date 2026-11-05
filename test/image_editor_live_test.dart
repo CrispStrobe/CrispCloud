@@ -9,6 +9,9 @@ import 'dart:ui' as ui;
 
 import 'package:crisp_cloud/models/file_item.dart';
 import 'package:crisp_cloud/services/image_edit_session.dart';
+import 'package:crisp_cloud/services/image_edit_project.dart';
+import 'package:crisp_cloud/services/image_project_store.dart';
+import 'package:crisp_cloud/services/pdf_file_store.dart';
 import 'package:crisp_cloud/services/image_file_store.dart';
 import 'package:crisp_cloud/services/local_file_service_native.dart';
 import 'package:flutter_test/flutter_test.dart';
@@ -86,6 +89,53 @@ void main() {
       );
     });
   }
+
+  test(
+    'real project saves preserve history and reject outside changes',
+    () async {
+      final file = File('${directory.path}/picture.ccimage');
+      final project = ImageEditProject(
+        sourceName: 'picture.png',
+        sourceBytes: buildImageEditorFixture(),
+        history: {'history': []},
+      );
+      await file.writeAsBytes(project.encode());
+      final store = ImageProjectStore(
+        PdfFileStore.local(
+          service: DesktopFileService(),
+          file: FileItem(
+            name: 'picture.ccimage',
+            path: file.path,
+            isFolder: false,
+          ),
+          inputLimitBytes: ImageEditProject.maxBytes,
+          outputLimitBytes: ImageEditProject.maxBytes,
+        ),
+      );
+      final opened = await store.load();
+      final updated = ImageEditProject(
+        sourceName: opened.sourceName,
+        sourceBytes: opened.sourceBytes,
+        history: {
+          'history': [
+            {'layers': []},
+          ],
+        },
+      );
+      expect(await store.save(updated), ImageSaveOutcome.savedOriginal);
+      expect(
+        ImageEditProject.decode(await file.readAsBytes()).history,
+        updated.history,
+      );
+      final external = project.encode();
+      await file.writeAsBytes(external);
+      await expectLater(
+        store.save(updated),
+        throwsA(isA<PdfSaveConflictException>()),
+      );
+      expect(await file.readAsBytes(), orderedEquals(external));
+    },
+  );
 
   test(
     'real WebP save and conflict check preserve the source contract',
