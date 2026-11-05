@@ -2033,7 +2033,7 @@ Future<void> _createChecksumFileDialog(
               : Text(FileOperationsStrings(context).value('created', snap.data)),
           actions: [
             TextButton(
-                onPressed: () => Navigator.pop(ctx), child: const Text('OK')),
+                onPressed: () => Navigator.pop(ctx), child: Text(MaterialLocalizations.of(context).okButtonLabel)),
           ],
         );
       },
@@ -2064,7 +2064,7 @@ Future<void> _verifyChecksumFileDialog(
             content: Text('${snap.error}'),
             actions: [
               TextButton(
-                  onPressed: () => Navigator.pop(ctx), child: const Text('OK'))
+                  onPressed: () => Navigator.pop(ctx), child: Text(MaterialLocalizations.of(context).okButtonLabel))
             ],
           );
         }
@@ -2138,7 +2138,7 @@ void _verifyAgainstRemote(
             content: Text('${snap.error}'),
             actions: [
               TextButton(
-                  onPressed: () => Navigator.pop(ctx), child: const Text('OK'))
+                  onPressed: () => Navigator.pop(ctx), child: Text(MaterialLocalizations.of(context).okButtonLabel))
             ],
           );
         }
