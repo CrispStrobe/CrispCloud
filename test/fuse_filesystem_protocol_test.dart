@@ -148,6 +148,51 @@ Uint8List _path(String path, [int? flags]) {
 }
 
 void main() {
+  test('IPC rejects oversized frames from the header alone', () async {
+    final fs = FuseFilesystem(client: _CloudClient(), remotePath: '/remote');
+    unawaited(fs.serveRequests());
+    final socket = await Socket.connect(
+        InternetAddress(await fs.ready, type: InternetAddressType.unix), 0);
+    final reader = _ResponseReader(socket);
+    addTearDown(() async {
+      socket.destroy();
+      await fs.dispose();
+    });
+    final header = ByteData(12)
+      ..setUint32(0, FuseOpcode.getattr, Endian.big)
+      ..setUint32(4, 77, Endian.big)
+      ..setUint32(8, FuseFilesystem.maxRequestPayloadBytes + 1, Endian.big);
+    // No body follows: the server must reject without waiting for it.
+    socket.add(header.buffer.asUint8List());
+    final response = ByteData.sublistView(await reader.take(12));
+    expect(response.getUint32(0, Endian.big), 77);
+    expect(response.getUint32(4, Endian.big), 22);
+    expect(response.getUint32(8, Endian.big), 0);
+  });
+
+  test('IPC rejects malformed path encodings and remains usable', () async {
+    final fs = FuseFilesystem(client: _CloudClient(), remotePath: '/remote');
+    unawaited(fs.serveRequests());
+    final socket = await Socket.connect(
+        InternetAddress(await fs.ready, type: InternetAddressType.unix), 0);
+    final reader = _ResponseReader(socket);
+    addTearDown(() async {
+      await socket.close();
+      await fs.dispose();
+    });
+    final malformed = <Uint8List>[
+      Uint8List(0),
+      Uint8List.fromList([0, 0, 0, 5, 47]), // Truncated path.
+      Uint8List.fromList([0, 0, 0, 1, 255]), // Invalid UTF-8.
+      _path('/bad\x00name'),
+    ];
+    var id = 1;
+    for (final payload in malformed) {
+      expect((await reader.send(FuseOpcode.getattr, id++, payload)).$1, 22);
+    }
+    expect((await reader.send(FuseOpcode.getattr, id, _path('/'))).$1, 0);
+  });
+
   test('IPC resolves normalized nested paths using original provider names', () async {
     final client = _UnicodeClient();
     final fs = FuseFilesystem(client: client, remotePath: '/remote');

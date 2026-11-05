@@ -848,7 +848,10 @@ class AzureBlobAdapter extends CloudStorageClient
     int length,
   ) async {
     if (offset < 0 || length < 0 || length > 256 * 1024) {
-      throw ArgumentError('Invalid bounded read range');
+      throw AzureHetznerArgumentError(
+        AzureHetznerErrorCode.azureReadRange,
+        'Invalid bounded read range',
+      );
     }
     if (length == 0) return Uint8List(0);
     final (:container, :blob) = _splitPath(remotePath);
@@ -876,23 +879,35 @@ class AzureBlobAdapter extends CloudStorageClient
       if (response.statusCode != 206 ||
           range == null ||
           int.parse(range[1]!) != offset) {
-        throw StateError('Azure did not honor the bounded read range');
+        throw AzureHetznerStateError(
+          AzureHetznerErrorCode.azureReadRangeIgnored,
+          'Azure did not honor the bounded read range',
+        );
       }
       final end = int.parse(range[2]!);
       final total = int.parse(range[3]!);
       final expectedEnd = (offset + length - 1).clamp(0, total - 1);
       if (total <= offset || end != expectedEnd) {
-        throw StateError('Azure returned an invalid read range');
+        throw AzureHetznerStateError(
+          AzureHetznerErrorCode.azureReadRangeInvalid,
+          'Azure returned an invalid read range',
+        );
       }
       final bytes = BytesBuilder(copy: false);
       await for (final chunk in response.stream) {
         if (bytes.length + chunk.length > end - offset + 1) {
-          throw StateError('Azure exceeded the requested read range');
+          throw AzureHetznerStateError(
+            AzureHetznerErrorCode.azureReadRangeExceeded,
+            'Azure exceeded the requested read range',
+          );
         }
         bytes.add(chunk);
       }
       if (bytes.length != end - offset + 1) {
-        throw StateError('Azure returned a truncated read range');
+        throw AzureHetznerStateError(
+          AzureHetznerErrorCode.azureReadRangeTruncated,
+          'Azure returned a truncated read range',
+        );
       }
       return bytes.takeBytes();
     } finally {
