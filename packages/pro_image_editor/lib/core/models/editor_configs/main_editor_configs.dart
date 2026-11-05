@@ -44,6 +44,7 @@ class MainEditorConfigs extends ZoomConfigs {
       // SubEditorMode.sticker,
     ],
     this.enableSubEditorPage = false,
+    this.hostOwnsNavigation = false,
     this.captureImageOnDone = true,
     this.captureLayersOnDone = false,
     this.enablePaintLayerRasterCache = false,
@@ -154,6 +155,14 @@ class MainEditorConfigs extends ZoomConfigs {
   /// Whether to use the sub-editor page without pushing a new route.
   final bool enableSubEditorPage;
 
+  /// Lets an embedding host own route pops and its unsaved-changes prompt.
+  ///
+  /// When true, the main editor does not register a pop scope on the host
+  /// route. Main close requests are sent to `onCloseEditor`; the host should
+  /// close an active tool with `closeSubEditor()` before closing itself.
+  /// This does not disable the sub-editors' own route handling.
+  final bool hostOwnsNavigation;
+
   /// Defines which sub-editors are available in the bottom-bar of the editor.
   ///
   /// The order of the tools in this list determines the order in the UI.
@@ -204,6 +213,7 @@ class MainEditorConfigs extends ZoomConfigs {
     EditorSafeArea? safeArea,
     List<SubEditorMode>? tools,
     bool? enableSubEditorPage,
+    bool? hostOwnsNavigation,
     bool? captureImageOnDone,
     bool? captureLayersOnDone,
     bool? enablePaintLayerRasterCache,
@@ -211,6 +221,7 @@ class MainEditorConfigs extends ZoomConfigs {
   }) {
     return MainEditorConfigs(
       enableSubEditorPage: enableSubEditorPage ?? this.enableSubEditorPage,
+      hostOwnsNavigation: hostOwnsNavigation ?? this.hostOwnsNavigation,
       captureImageOnDone: captureImageOnDone ?? this.captureImageOnDone,
       captureLayersOnDone: captureLayersOnDone ?? this.captureLayersOnDone,
       enablePaintLayerRasterCache:

@@ -13,6 +13,7 @@ class ExtendedPopScope<T> extends StatelessWidget {
     super.key,
     required this.child,
     this.canPop = true,
+    this.enabled = true,
     this.onPopInvokedWithResult,
   });
 
@@ -57,8 +58,15 @@ class ExtendedPopScope<T> extends StatelessWidget {
   /// {@endtemplate}
   final bool canPop;
 
+  /// Whether to register this scope on the containing route.
+  ///
+  /// Embedding hosts can own navigation without another scope vetoing or
+  /// responding to the same pop, including while a loading overlay is active.
+  final bool enabled;
+
   @override
   Widget build(BuildContext context) {
+    if (!enabled) return child;
     return ListenableBuilder(
       listenable: LoadingDialog.instance,
       builder: (_, _) {

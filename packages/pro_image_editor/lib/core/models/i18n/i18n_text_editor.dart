@@ -25,6 +25,7 @@ class I18nTextEditor {
     this.bottomNavigationBarText = 'Text',
     this.back = 'Back',
     this.cancel = 'Cancel',
+    this.reset = 'Reset',
     this.done = 'Done',
     this.textAlign = 'Align text',
     this.fontScale = 'Font scale',
@@ -49,6 +50,9 @@ class I18nTextEditor {
 
   /// Text for dismissing the text editor's overflow action sheet.
   final String cancel;
+
+  /// Tooltip and accessibility label for resetting the font scale.
+  final String reset;
 
   /// Text for the "Align text" setting.
   final String textAlign;

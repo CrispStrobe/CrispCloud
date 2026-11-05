@@ -216,8 +216,8 @@ class FilterEditorState extends State<FilterEditor>
 
   /// Handles the "Done" action, either by applying changes or closing the
   /// editor.
-  void done() async {
-    doneEditing(
+  Future<void> done() async {
+    final completed = await doneEditing(
       editorImage: widget.editorImage,
       returnValue: FilterState(
         name: selectedFilter.name,
@@ -230,7 +230,7 @@ class FilterEditorState extends State<FilterEditor>
           .toList(),
       transform: initialTransformConfigs,
     );
-    filterEditorCallbacks?.handleDone();
+    if (completed) filterEditorCallbacks?.handleDone();
   }
 
   FilterMatrix _getActiveFilters() {

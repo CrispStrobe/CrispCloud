@@ -210,8 +210,8 @@ class BlurEditorState extends State<BlurEditor>
 
   /// Handles the "Done" action, either by applying changes or closing the
   /// editor.
-  void done() async {
-    doneEditing(
+  Future<void> done() async {
+    final completed = await doneEditing(
       returnValue: blurFactor,
       editorImage: widget.editorImage,
       blur: blurFactor,
@@ -221,7 +221,7 @@ class BlurEditorState extends State<BlurEditor>
           .toList(),
       transform: initialTransformConfigs,
     );
-    blurEditorCallbacks?.handleDone();
+    if (completed) blurEditorCallbacks?.handleDone();
   }
 
   /// Set the blur factor and update the UI.

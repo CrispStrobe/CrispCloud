@@ -60,6 +60,7 @@ class _BottomSheetHeaderRowState extends State<BottomSheetHeaderRow> {
               ),
               widget.closeButton?.call(() => Navigator.pop(context)) ??
                   IconButton(
+                    tooltip: MaterialLocalizations.of(context).closeButtonTooltip,
                     icon: Container(
                       padding: const EdgeInsets.all(3),
                       decoration: BoxDecoration(

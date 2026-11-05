@@ -87,23 +87,25 @@ class DesktopInteractionManager {
   /// is written back to the keyframe there, so the change shows on screen.
   /// A [change] that leaves the layer where it was, such as a scroll while
   /// zooming is off, adds no keyframe.
-  void _transformLayer(Layer layer, void Function() change) {
+  bool _transformLayer(Layer layer, void Function() change) {
     final laidOutScale = layer.scale;
     final time = keyframeTime?.call();
     if (time == null || !layer.hasKeyframes) {
+      final before = layer.restPlacement;
       change();
       applyLayerLimits?.call(layer, laidOutScale);
-      return;
+      return layer.restPlacement != before;
     }
     layer.applyKeyframePlacement(time);
     final before = layer.restPlacement;
     change();
     applyLayerLimits?.call(layer, laidOutScale);
-    if (layer.restPlacement == before) return;
+    if (layer.restPlacement == before) return false;
     layer.setKeyframeAt(
       time,
       tolerance: configs.videoEditor.layerTimeline.keyframeTolerance,
     );
+    return true;
   }
 
   final _keyboard = KeyboardService();
@@ -214,17 +216,29 @@ class DesktopInteractionManager {
     onUpdateUI?.call();
   }
 
-  /// Handles mouse scroll events.
-  void mouseScroll(
+  /// Handles mouse scroll events and reports whether a layer changed.
+  ///
+  /// The caller supplies copies of the active layers and commits a history
+  /// entry only when this returns `true`, preserving the previous undo state.
+  bool mouseScroll(
     PointerSignalEvent event, {
     required List<Layer> selectedLayers,
     required ExtendedInteractiveViewerState? interactiveViewer,
   }) {
-    if (event is! PointerScrollEvent || selectedLayers.isEmpty) return;
+    if (event is! PointerScrollEvent ||
+        selectedLayers.isEmpty ||
+        event.scrollDelta.dy == 0) {
+      return false;
+    }
+    final rotate = _keyboard.isShiftPressed;
+    if (!rotate && interactiveViewer?.isInteractionEnabled != true) {
+      return false;
+    }
 
+    var changed = false;
     for (Layer layer in selectedLayers) {
-      _transformLayer(layer, () {
-        if (_keyboard.isShiftPressed) {
+      final layerChanged = _transformLayer(layer, () {
+        if (rotate) {
           if (event.scrollDelta.dy > 0) {
             layer.rotation -= 0.087266;
           } else if (event.scrollDelta.dy < 0) {
@@ -245,8 +259,11 @@ class DesktopInteractionManager {
           }
         }
       });
+      changed = changed || layerChanged;
     }
+    if (!changed) return false;
     setState(() {});
     onUpdateUI?.call();
+    return true;
   }
 }

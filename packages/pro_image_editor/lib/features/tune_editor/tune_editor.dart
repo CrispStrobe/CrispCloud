@@ -257,12 +257,12 @@ class TuneEditorState extends State<TuneEditor>
 
   /// Handles the "Done" action, either by applying changes or closing the
   /// editor.
-  void done() async {
+  Future<void> done() async {
     final adjustments = mergeTuneAdjustments(
       applied: appliedTuneAdjustments,
       sliders: tuneAdjustmentMatrix,
     );
-    doneEditing(
+    final completed = await doneEditing(
       editorImage: editorImage,
       returnValue: adjustments,
       blur: appliedBlurFactor,
@@ -272,7 +272,7 @@ class TuneEditorState extends State<TuneEditor>
           .toList(),
       transform: initialTransformConfigs,
     );
-    tuneEditorCallbacks?.handleDone();
+    if (completed) tuneEditorCallbacks?.handleDone();
   }
 
   /// Resets the tune editor state, clearing undo and redo stacks.

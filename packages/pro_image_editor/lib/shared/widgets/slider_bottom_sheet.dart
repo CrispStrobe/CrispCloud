@@ -4,6 +4,7 @@ import 'package:material_ui/material_ui.dart';
 
 import '/core/enums/design_mode.dart';
 import '/shared/styles/platform_text_styles.dart';
+import '/shared/utils/format_editor_number.dart';
 import '/shared/widgets/bottom_sheets_header_row.dart';
 import 'reactive_widgets/reactive_custom_widget.dart';
 
@@ -44,6 +45,7 @@ class SliderBottomSheet<T> extends StatefulWidget {
     required this.rebuildController,
     required this.onValueChanged,
     this.resetIcon,
+    this.resetLabel,
     this.showFactorInTitle = false,
   });
 
@@ -55,6 +57,9 @@ class SliderBottomSheet<T> extends StatefulWidget {
 
   /// An optional icon for resetting the slider's value.
   final IconData? resetIcon;
+
+  /// Localized tooltip and accessibility label for the reset control.
+  final String? resetLabel;
 
   /// A builder function for a custom close button.
   final Widget Function(T, dynamic Function())? closeButton;
@@ -136,7 +141,7 @@ class _SliderBottomSheetState<T> extends State<SliderBottomSheet<T>> {
 
   Widget _buildHeader() {
     String factorText = widget.showFactorInTitle
-        ? ' ${_value.toStringAsFixed(1)}x'
+        ? ' ${formatEditorNumber(context, _value, fractionDigits: 1)}×'
         : '';
 
     return BottomSheetHeaderRow(
@@ -166,6 +171,14 @@ class _SliderBottomSheetState<T> extends State<SliderBottomSheet<T>> {
                 min: widget.min,
                 divisions: widget.divisions,
                 value: _value,
+                semanticFormatterCallback: (value) {
+                  final number = formatEditorNumber(
+                    context,
+                    value,
+                    fractionDigits: widget.showFactorInTitle ? 1 : null,
+                  );
+                  return widget.showFactorInTitle ? '$number×' : number;
+                },
                 onChanged: updateValue,
               ),
             ),
@@ -185,12 +198,14 @@ class _SliderBottomSheetState<T> extends State<SliderBottomSheet<T>> {
         duration: const Duration(milliseconds: 150),
         child: _value != _presetValue
             ? IconButton(
+                tooltip: widget.resetLabel,
                 onPressed: () {
                   updateValue(_presetValue);
                 },
                 icon: Icon(widget.resetIcon),
               )
             : IconButton(
+                tooltip: widget.resetLabel,
                 color: Colors.transparent,
                 onPressed: null,
                 icon: Icon(widget.resetIcon),

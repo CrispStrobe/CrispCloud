@@ -3477,6 +3477,10 @@ class ProImageEditorState extends State<ProImageEditor>
   /// any changes or edits.
   /// It navigates back to the previous screen or closes the modal editor.
   void closeEditor() {
+    if (mainEditorConfigs.hostOwnsNavigation) {
+      onCloseEditor?.call(EditorMode.main);
+      return;
+    }
     if (!stateManager.canUndo) {
       if (onCloseEditor == null) {
         Navigator.pop(context);
@@ -3490,6 +3494,10 @@ class ProImageEditorState extends State<ProImageEditor>
 
   /// Displays a warning dialog before closing the image editor.
   void closeWarning() async {
+    if (mainEditorConfigs.hostOwnsNavigation) {
+      onCloseEditor?.call(EditorMode.main);
+      return;
+    }
     if (isPopScopeDisabled) {
       Navigator.pop(context);
       return;
@@ -3774,6 +3782,7 @@ class ProImageEditorState extends State<ProImageEditor>
     return RecordInvisibleWidget(
       controller: _controllers.screenshot,
       child: ExtendedPopScope(
+        enabled: !mainEditorConfigs.hostOwnsNavigation,
         canPop:
             (isPopScopeDisabled ||
                 !stateManager.canUndo ||
@@ -4005,13 +4014,22 @@ class ProImageEditorState extends State<ProImageEditor>
                           return;
                         }
 
-                        /// Otherwise, handle scroll as a layer scaling
-                        /// interaction.
-                        _desktopInteractionManager.mouseScroll(
+                        // Transform copies so a wheel gesture cannot mutate
+                        // the saved revision or its previous undo entry.
+                        final layers = _layerCopyManager.copyLayerList(
+                          activeLayers,
+                        );
+                        final selectedIds = selectedLayers
+                            .map((layer) => layer.id)
+                            .toSet();
+                        final changed = _desktopInteractionManager.mouseScroll(
                           event,
-                          selectedLayers: selectedLayers,
+                          selectedLayers: layers
+                              .where((layer) => selectedIds.contains(layer.id))
+                              .toList(),
                           interactiveViewer: interactiveViewer.currentState,
                         );
+                        if (changed) addHistory(layers: layers);
                       }
                     : null,
                 child: GestureDetector(

@@ -139,6 +139,7 @@ class _LayerWidgetState extends State<LayerWidget>
     i18nLayerInteraction: i18n.layerInteraction,
     layerInteractionIcons: layerInteraction.icons,
     onContextMenuToggled: widget.onContextMenuToggled,
+    contextMenuBuilder: layerInteraction.widgets.contextMenuBuilder,
     onEditTap: () => _layersService?.handleEditTap(_layer),
     onRemoveTap: () => _layersService?.handleRemoveLayer(_layer),
   );

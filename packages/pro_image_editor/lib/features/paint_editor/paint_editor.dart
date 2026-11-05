@@ -743,8 +743,8 @@ class PaintEditorState extends State<PaintEditor>
   /// a result.
   /// If no changes have been made, it closes the editor without returning any
   /// changes.
-  void done() async {
-    doneEditing(
+  Future<void> done() async {
+    final completed = await doneEditing(
       editorImage: widget.editorImage,
       onSetFakeHero: (bytes) {
         if (initConfigs.enableFakeHero) {
@@ -799,7 +799,7 @@ class PaintEditorState extends State<PaintEditor>
           .toList(),
       transform: initialTransformConfigs,
     );
-    paintEditorCallbacks?.handleDone();
+    if (completed) paintEditorCallbacks?.handleDone();
   }
 
   /// Adds a painted model as a new layer to the editor.

@@ -2,6 +2,7 @@ import 'package:flutter/foundation.dart';
 import 'package:material_ui/material_ui.dart';
 
 import '/pro_image_editor.dart';
+import '/shared/utils/format_editor_number.dart';
 import '/shared/widgets/layer/widgets/layer_widget_paint_item.dart';
 
 /// A widget that allows editing a [PaintLayer]'s properties such as
@@ -168,7 +169,9 @@ class _PaintEditorLayerEditorState extends State<PaintEditorLayerEditor> {
             min: _configs.paintEditor.minOpacity,
             divisions: _configs.paintEditor.divisionsOpacity,
             padding: const EdgeInsets.only(top: 12, bottom: 20),
-            label: _layer.opacity.toStringAsFixed(2),
+            label: formatEditorNumber(context, _layer.opacity, fractionDigits: 2),
+            semanticFormatterCallback: (value) =>
+                formatEditorNumber(context, value, fractionDigits: 2),
             onChanged: _setOpacity,
           ),
         ],
@@ -192,7 +195,9 @@ class _PaintEditorLayerEditorState extends State<PaintEditorLayerEditor> {
             min: _configs.paintEditor.minStrokeWidth,
             divisions: _configs.paintEditor.divisionsStrokeWidth,
             padding: const EdgeInsets.only(top: 12, bottom: 20),
-            label: _paintItem.strokeWidth.toStringAsFixed(1),
+            label: formatEditorNumber(context, _paintItem.strokeWidth, fractionDigits: 1),
+            semanticFormatterCallback: (value) =>
+                formatEditorNumber(context, value, fractionDigits: 1),
             onChanged: _paintItem.fill && _paintItem.canBeFilled
                 ? null
                 : _setStrokeWidth,

@@ -1,7 +1,30 @@
+import 'package:flutter/widgets.dart';
+
 import 'utils/custom_widgets_typedef.dart';
 
 export '/shared/widgets/layer/interaction_helper/text_layer_box_handles.dart';
 export '/shared/widgets/layer/models/layer_item_interaction.dart';
+
+/// An action returned by a host-rendered layer context menu.
+enum LayerContextMenuAction {
+  /// Edit the selected layer.
+  edit,
+
+  /// Remove the selected layer.
+  remove,
+}
+
+/// Opens a context menu using the embedding application's UI and navigator.
+///
+/// [globalPosition] is in screen coordinates. Return null when dismissed.
+/// The host should only offer actions enabled by [canEdit] and [canRemove].
+typedef LayerContextMenuBuilder =
+    Future<LayerContextMenuAction?> Function(
+      BuildContext context,
+      Offset globalPosition, {
+      required bool canEdit,
+      required bool canRemove,
+    });
 
 /// A class that defines a layer of interaction for custom widgets,
 /// allowing editing, removing, and rotating/scaling actions.
@@ -34,6 +57,7 @@ class LayerInteractionWidgets {
   /// layer.
   const LayerInteractionWidgets({
     this.overlayChildBuilder,
+    this.contextMenuBuilder,
     this.editButton,
     this.removeButton,
     this.rotateScaleButton,
@@ -43,6 +67,12 @@ class LayerInteractionWidgets {
 
   /// This will completely replace the existing overlay when editing a layer.
   final LayerOverlayBuilder? overlayChildBuilder;
+
+  /// Replaces the default layer context menu with the host's own menu.
+  ///
+  /// Useful when the editor is localized and themed inside a larger app:
+  /// popup routes on the host navigator must use that app's UI components.
+  final LayerContextMenuBuilder? contextMenuBuilder;
 
   /// The button for the edit interaction, represented by
   /// [LayerInteractionTapButton].
@@ -172,6 +202,7 @@ class LayerInteractionWidgets {
   /// * [border]: Updates the border of the interaction layer.
   LayerInteractionWidgets copyWith({
     LayerOverlayBuilder? overlayChildBuilder,
+    LayerContextMenuBuilder? contextMenuBuilder,
     LayerInteractionTapButton? editButton,
     LayerInteractionTapButton? removeButton,
     LayerInteractionScaleRotateButton? rotateScaleButton,
@@ -180,6 +211,7 @@ class LayerInteractionWidgets {
   }) {
     return LayerInteractionWidgets(
       overlayChildBuilder: overlayChildBuilder ?? this.overlayChildBuilder,
+      contextMenuBuilder: contextMenuBuilder ?? this.contextMenuBuilder,
       editButton: editButton ?? this.editButton,
       removeButton: removeButton ?? this.removeButton,
       rotateScaleButton: rotateScaleButton ?? this.rotateScaleButton,

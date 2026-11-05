@@ -3,6 +3,7 @@ import 'dart:async';
 import 'package:material_ui/material_ui.dart';
 
 import '/core/models/editor_configs/tune_editor_configs.dart';
+import '/shared/utils/format_editor_number.dart';
 import '/shared/widgets/editor_scrollbar.dart';
 import '/shared/widgets/flat_icon_text_button.dart';
 import '../models/tune_adjustment_matrix.dart';
@@ -134,9 +135,14 @@ class _TuneEditorBottombarState extends State<TuneEditorBottombar> {
                     min: activeOption.min,
                     max: activeOption.max,
                     divisions: activeOption.divisions,
-                    label: (value * activeOption.labelMultiplier)
-                        .round()
-                        .toString(),
+                    label: formatEditorNumber(
+                      context,
+                      (value * activeOption.labelMultiplier).round(),
+                    ),
+                    semanticFormatterCallback: (value) => formatEditorNumber(
+                      context,
+                      (value * activeOption.labelMultiplier).round(),
+                    ),
                     value: value,
                     onChangeStart: (val) {
                       _sliderValue.value = val;

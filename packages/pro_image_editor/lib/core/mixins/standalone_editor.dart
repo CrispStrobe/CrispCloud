@@ -104,6 +104,10 @@ mixin StandaloneEditorState<
   /// Indicates it create a screenshot or not.
   bool isGenerationActive = false;
 
+  // Keep an embedded completion locked until its route has been disposed.
+  // A second Apply during the reverse animation must not pop the host route.
+  bool _isCompleting = false;
+
   /// Indicates if the video editor is used
   bool get isVideoEditor => videoController != null;
 
@@ -139,7 +143,7 @@ mixin StandaloneEditorState<
   /// This function is for internal use only and is marked as protected.
   /// Please use the `done()` method instead.
   @protected
-  void doneEditing({
+  Future<bool> doneEditing({
     dynamic returnValue,
     EditorImage? editorImage,
     Function? onCloseWithValue,
@@ -149,103 +153,110 @@ mixin StandaloneEditorState<
     required List<List<double>> matrixTuneAdjustmentsList,
     required TransformConfigs? transform,
   }) async {
-    if (isGenerationActive) return;
+    if (!mounted || isGenerationActive || _isCompleting) return false;
+    _isCompleting = true;
+    var completed = false;
+    var loadingShown = false;
+    try {
+      if (initConfigs.convertToUint8List) {
+        initConfigs.callbacks.onImageEditingStarted?.call();
 
-    if (initConfigs.convertToUint8List) {
-      initConfigs.callbacks.onImageEditingStarted?.call();
-
-      isGenerationActive = true;
-      LoadingDialog.instance.show(
-        context,
-        configs: configs,
-        theme: theme,
-        message: i18n.doneLoadingMsg,
-      );
-
-      /// Ensure the image infos are read
-      if (imageInfos == null) await setImageInfos();
-      if (!mounted) {
-        LoadingDialog.instance.hide();
-        return;
-      }
-
-      /// Capture the final screenshot
-      bool screenshotIsCaptured =
-          screenshotHistoryPosition > 0 &&
-          screenshotHistoryPosition <= screenshotHistory.length;
-      Uint8List? bytes = await screenshotCtrl.captureFinalScreenshot(
-        imageInfos: imageInfos!,
-        backgroundScreenshot: screenshotIsCaptured
-            ? screenshotHistory[screenshotHistoryPosition - 1]
-            : null,
-        originalImageBytes: screenshotHistoryPosition > 0
-            ? null
-            : await editorImage!.safeByteArray(context),
-      );
-
-      isGenerationActive = false;
-
-      var imageBytes = bytes ?? Uint8List.fromList([]);
-
-      /// Return final image that the user can handle it but still with the
-      /// active loading dialog
-      await initConfigs.callbacks.onImageEditingComplete?.call(imageBytes);
-
-      /// Return complete parameters if requested
-      if (initConfigs.callbacks.onCompleteWithParameters != null) {
-        final isTransformed = transform?.isNotEmpty ?? false;
-
-        var decodedImage = await decodeImageFromList(imageBytes);
-        Size originalImageSize = Size(
-          decodedImage.width.toDouble(),
-          decodedImage.height.toDouble(),
+        isGenerationActive = true;
+        loadingShown = true;
+        LoadingDialog.instance.show(
+          context,
+          configs: configs,
+          theme: theme,
+          message: i18n.doneLoadingMsg,
         );
-        Size? outputSize = transform?.getCropSize(originalImageSize);
-        Offset? outputOffset = transform?.getCropStartOffset(originalImageSize);
 
-        await initConfigs.callbacks.onCompleteWithParameters?.call(
-          CompleteParameters(
-            blur: blur,
-            matrixFilterList: matrixFilterList,
-            matrixTuneAdjustmentsList: matrixTuneAdjustmentsList,
-            cropWidth: isTransformed ? outputSize!.width.round() : null,
-            cropHeight: isTransformed ? outputSize!.height.round() : null,
-            cropX: isTransformed ? outputOffset!.dx.round() : null,
-            cropY: isTransformed ? outputOffset!.dy.round() : null,
-            flipX: transform?.flipX ?? false,
-            flipY: transform?.flipY ?? false,
-            rotateTurns: transform?.angleToTurns() ?? 0,
-            startTime: null,
-            endTime: null,
-            image: imageBytes,
-            isTransformed: isTransformed,
-            layers: layers ?? [],
-            originalImageSize: null,
-            temporaryDecodedImageSize: null,
-            bodySize: null,
-            editorSize: null,
-          ),
+        /// Ensure the image infos are read
+        if (imageInfos == null) await setImageInfos();
+        if (!mounted) return false;
+
+        /// Capture the final screenshot
+        bool screenshotIsCaptured =
+            screenshotHistoryPosition > 0 &&
+            screenshotHistoryPosition <= screenshotHistory.length;
+        Uint8List? bytes = await screenshotCtrl.captureFinalScreenshot(
+          imageInfos: imageInfos!,
+          backgroundScreenshot: screenshotIsCaptured
+              ? screenshotHistory[screenshotHistoryPosition - 1]
+              : null,
+          originalImageBytes: screenshotHistoryPosition > 0
+              ? null
+              : await editorImage!.safeByteArray(context),
         );
-      }
 
-      /// Precache the image for the case the user require the hero animation
-      if (onSetFakeHero != null) {
-        if (bytes != null && mounted) {
-          await precacheImage(MemoryImage(bytes), context);
+        var imageBytes = bytes ?? Uint8List.fromList([]);
+
+        /// Return final image that the user can handle it but still with the
+        /// active loading dialog
+        await initConfigs.callbacks.onImageEditingComplete?.call(imageBytes);
+
+        /// Return complete parameters if requested
+        if (initConfigs.callbacks.onCompleteWithParameters != null) {
+          final isTransformed = transform?.isNotEmpty ?? false;
+
+          var decodedImage = await decodeImageFromList(imageBytes);
+          Size originalImageSize = Size(
+            decodedImage.width.toDouble(),
+            decodedImage.height.toDouble(),
+          );
+          Size? outputSize = transform?.getCropSize(originalImageSize);
+          Offset? outputOffset = transform?.getCropStartOffset(originalImageSize);
+
+          await initConfigs.callbacks.onCompleteWithParameters?.call(
+            CompleteParameters(
+              blur: blur,
+              matrixFilterList: matrixFilterList,
+              matrixTuneAdjustmentsList: matrixTuneAdjustmentsList,
+              cropWidth: isTransformed ? outputSize!.width.round() : null,
+              cropHeight: isTransformed ? outputSize!.height.round() : null,
+              cropX: isTransformed ? outputOffset!.dx.round() : null,
+              cropY: isTransformed ? outputOffset!.dy.round() : null,
+              flipX: transform?.flipX ?? false,
+              flipY: transform?.flipY ?? false,
+              rotateTurns: transform?.angleToTurns() ?? 0,
+              startTime: null,
+              endTime: null,
+              image: imageBytes,
+              isTransformed: isTransformed,
+              layers: layers ?? [],
+              originalImageSize: null,
+              temporaryDecodedImageSize: null,
+              bodySize: null,
+              editorSize: null,
+            ),
+          );
         }
-        onSetFakeHero.call(bytes);
-      }
 
-      /// Hide the loading dialog
-      LoadingDialog.instance.hide();
+        /// Precache the image for the case the user require the hero animation
+        if (onSetFakeHero != null) {
+          if (bytes != null && mounted) {
+            await precacheImage(MemoryImage(bytes), context);
+          }
+          onSetFakeHero.call(bytes);
+        }
 
-      initConfigs.callbacks.onCloseEditor?.call(editorMode);
-    } else {
-      if (onCloseWithValue == null) {
-        Navigator.pop(context, returnValue);
+        /// Hide the loading dialog
+        LoadingDialog.instance.hide();
+        loadingShown = false;
+
+        initConfigs.callbacks.onCloseEditor?.call(editorMode);
       } else {
-        onCloseWithValue.call();
+        if (onCloseWithValue == null) {
+          Navigator.pop(context, returnValue);
+        } else {
+          await onCloseWithValue.call();
+        }
       }
+      completed = true;
+      return true;
+    } finally {
+      isGenerationActive = false;
+      if (loadingShown) LoadingDialog.instance.hide();
+      if (initConfigs.convertToUint8List || !completed) _isCompleting = false;
     }
   }
 

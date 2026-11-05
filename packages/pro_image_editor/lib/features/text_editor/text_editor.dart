@@ -368,6 +368,7 @@ class TextEditorState extends State<TextEditor>
         title: i18n.textEditor.fontScale,
         headerTextStyle: textEditorConfigs.style.fontSizeBottomSheetTitle,
         resetIcon: textEditorConfigs.icons.resetFontScale,
+        resetLabel: i18n.textEditor.reset,
         max: textEditorConfigs.maxFontScale,
         min: textEditorConfigs.minFontScale,
         divisions:
