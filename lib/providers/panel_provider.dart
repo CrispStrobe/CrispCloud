@@ -2405,6 +2405,34 @@ class PanelNotifier extends ChangeNotifier {
     return restored.length;
   }
 
+  /// Select an explicit projection of the current listing (gallery filters,
+  /// visual sort/ranges). Hidden entries must never be added by a range or
+  /// Select all action. Only the exact listed objects are accepted.
+  void selectVisibleItems(
+    Iterable<FileItem> items, {
+    FileItem? cursor,
+    FileItem? anchor,
+  }) {
+    final listed = _files;
+    if (listed == null) return;
+    final valid = Set<FileItem>.identity()..addAll(listed);
+    final selected = items
+        .where((item) => item.name != '..' && valid.contains(item))
+        .toList();
+    _selection
+      ..clear()
+      ..addAll(selected);
+    if (cursor != null && valid.contains(cursor)) {
+      _cursorIndex = _indexOfIdentical(listed, cursor);
+      _itemToScrollTo = cursor;
+    }
+    _lastSelected = anchor != null && valid.contains(anchor) ? anchor : cursor;
+    if (_ref.read(activePanelProvider) != side) {
+      _ref.read(activePanelProvider.notifier).state = side;
+    }
+    notifyListeners();
+  }
+
   // --- Cursor (keyboard focus, separate from selection marks) ---
 
   /// Plain click: move the cursor and clear selection marks without marking
@@ -4837,7 +4865,10 @@ class PanelNotifier extends ChangeNotifier {
   /// Read one member of the currently opened archive for the internal viewer.
   /// The archive is reopened metadata-only, so F3 works for files inside ZIP,
   /// TAR, 7z and RAR archives that the panel is browsing.
-  Future<Uint8List> readArchiveMember(FileItem file) async {
+  Future<Uint8List> readArchiveMember(
+    FileItem file, {
+    int maxBytes = kArchiveReadLimit,
+  }) async {
     final source = _archiveSource;
     final bytes = _archiveBytes;
     if (source == null ||
@@ -4867,7 +4898,7 @@ class PanelNotifier extends ChangeNotifier {
           'Could not find "${file.name}" inside ${source.archiveName}.',
         );
       }
-      return await archive.readMember(match, maxBytes: kArchiveReadLimit);
+      return await archive.readMember(match, maxBytes: maxBytes);
     } finally {
       await archive?.close();
     }

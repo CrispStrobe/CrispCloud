@@ -122,8 +122,16 @@ class _FilePanelState extends ConsumerState<FilePanel> {
     final currentPath = panel.currentPath;
     final selection = panel.selection;
 
+    final layout = widget.side == PanelSide.local
+        ? ref.watch(localViewModeProvider)
+        : ref.watch(remoteViewModeProvider);
+    final visualLayout =
+        layout == ViewMode.grid ||
+        layout == ViewMode.tiles ||
+        layout == ViewMode.gallery;
     // Web/empty state: show action buttons instead of spinner
     if (kIsWeb &&
+        !visualLayout &&
         (files == null || files.isEmpty) &&
         !panel.isLoading &&
         !panel.showingSearchResults) {
@@ -356,11 +364,15 @@ class _FilePanelState extends ConsumerState<FilePanel> {
         ? ref.watch(localViewModeProvider)
         : ref.watch(remoteViewModeProvider);
 
-    if (viewMode == ViewMode.grid) {
+    if (viewMode == ViewMode.grid ||
+        viewMode == ViewMode.tiles ||
+        viewMode == ViewMode.gallery) {
       return FileGridView(
         side: side,
         files: files,
         scrollController: _scrollController,
+        galleryOnly: viewMode == ViewMode.gallery,
+        tileLayout: viewMode == ViewMode.tiles,
       );
     }
     if (viewMode == ViewMode.column) {
@@ -548,6 +560,13 @@ class _FilePanelState extends ConsumerState<FilePanel> {
     String currentPath,
     Set<FileItem> selection,
   ) {
+    final layout = widget.side == PanelSide.local
+        ? ref.watch(localViewModeProvider)
+        : ref.watch(remoteViewModeProvider);
+    final visualLayout =
+        layout == ViewMode.grid ||
+        layout == ViewMode.tiles ||
+        layout == ViewMode.gallery;
     return Container(
       decoration: BoxDecoration(
         color: widget.isActive ? null : Colors.black.withValues(alpha: 0.02),
@@ -600,14 +619,15 @@ class _FilePanelState extends ConsumerState<FilePanel> {
           if (ref.watch(showSelectionBarProvider) && selection.isNotEmpty)
             FileSelectionBar(side: widget.side, selection: selection),
           if (ref.watch(panelViewModeProvider(widget.side)) ==
-              PanelViewMode.full)
+                  PanelViewMode.full &&
+              layout == ViewMode.list)
             _CompactColumnHeader(side: widget.side, panel: panel),
           // Loading indicator shown while directory listing is in progress
           if (panel.isLoading) const LinearProgressIndicator(minHeight: 2),
           Expanded(
             child: files == null
                 ? const Center(child: CircularProgressIndicator())
-                : files.isEmpty
+                : files.isEmpty && !visualLayout
                 ? Center(
                     child: _isDragging && widget.side == PanelSide.remote
                         ? Column(

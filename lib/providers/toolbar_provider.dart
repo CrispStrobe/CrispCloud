@@ -98,7 +98,7 @@ class PanelViewModeNotifier extends StateNotifier<PanelViewMode> {
 
   Future<void> applyMode(PanelViewMode mode, {bool persist = false}) async {
     _revision++;
-    state = mode;
+    if (mounted) state = mode;
     if (persist) await _service.setMode(_side, mode);
   }
 
