@@ -743,11 +743,17 @@ class CloudOperationBackend extends FileOperationBackend {
     Future<void> Function(Map<String, dynamic> state)? checkpoint,
   }) async {
     _check();
-    if (!replace && await stat(path) != null) {
+    if (client is ObjectStorageNamespace && !_supportsExactRelocation) {
+      throw UnsupportedError(
+        '$label cannot commit a staged object without overwriting an '
+        'unreviewed destination. Exact conditional copy and deletion are required.',
+      );
+    }
+    final initialDestination = await stat(path);
+    if (!replace && initialDestination != null) {
       throw StateError('Destination already exists: $path');
     }
     final parent = paths.dirname(path);
-    final name = paths.basename(path);
     final token = const Uuid().v4();
     final stagedName = '.crisp-transfer-$token.tmp';
     final stagedPath = paths.join(parent, stagedName);
@@ -756,6 +762,10 @@ class CloudOperationBackend extends FileOperationBackend {
     var backupRenameAttempted = false;
     var originalBackedUp = false;
     var committed = false;
+    var commitAttempted = false;
+    FileItem? capturedStage;
+    FileItem? capturedBackup;
+    var backupVerified = false;
     var received = 0;
     await checkpoint?.call({
       'phase': 'uploading',
@@ -798,6 +808,7 @@ class CloudOperationBackend extends FileOperationBackend {
           (staged.size != null && staged.size != received)) {
         throw StateError('The staged cloud copy could not be verified.');
       }
+      capturedStage = staged;
       await verifyStaged?.call(staged);
       await checkpoint?.call({
         'phase': 'staged',
@@ -806,6 +817,9 @@ class CloudOperationBackend extends FileOperationBackend {
         'backupPath': backupPath,
       });
       final existing = await stat(path);
+      if (!_sameCapturedFile(initialDestination, existing)) {
+        throw StateError('Destination changed while uploading: $path');
+      }
       if (existing != null) {
         if (!replace || existing.isFolder || existing.isSymlink == true) {
           throw StateError(
@@ -820,7 +834,22 @@ class CloudOperationBackend extends FileOperationBackend {
           'stagedPath': stagedPath,
           'backupPath': backupPath,
         });
-        await client.renamePath(path, backupName);
+        capturedBackup = await _relocateStagedFile(
+          existing,
+          backupPath,
+          checkpoint: (state) async => checkpoint?.call({
+            'destination': path,
+            'stagedPath': stagedPath,
+            'backupPath': backupPath,
+            ...state,
+          }),
+          purpose: 'backup',
+          confirmedCopy: (file) {
+            capturedBackup = file;
+            backupVerified = true;
+          },
+        );
+        backupVerified = true;
         originalBackedUp = true;
         await checkpoint?.call({
           'phase': 'backedUp',
@@ -839,7 +868,18 @@ class CloudOperationBackend extends FileOperationBackend {
         'stagedPath': stagedPath,
         'backupPath': backupPath,
       });
-      await client.renamePath(stagedPath, name);
+      commitAttempted = true;
+      await _relocateStagedFile(
+        staged,
+        path,
+        checkpoint: (state) async => checkpoint?.call({
+          'destination': path,
+          'stagedPath': stagedPath,
+          'backupPath': originalBackedUp ? backupPath : null,
+          ...state,
+        }),
+        purpose: 'commit',
+      );
       _check();
       final written = await stat(path);
       if (written == null ||
@@ -858,7 +898,7 @@ class CloudOperationBackend extends FileOperationBackend {
         // Failure to remove the backup does not undo a verified transfer.
         try {
           _check();
-          await client.deletePath(backupPath);
+          await _deleteCapturedFile(capturedBackup!);
         } catch (_) {
           /* Preserve the old file as a recovery copy. */
         }
@@ -875,7 +915,8 @@ class CloudOperationBackend extends FileOperationBackend {
           );
         }
         try {
-          originalBackedUp = await stat(backupPath) != null;
+          capturedBackup = await stat(backupPath);
+          originalBackedUp = capturedBackup != null;
         } catch (_) {
           throw StateError(
             '$error. The backup rename could not be confirmed. '
@@ -883,11 +924,32 @@ class CloudOperationBackend extends FileOperationBackend {
           );
         }
       }
-      if (originalBackedUp && !committed && isCurrent) {
+      if (originalBackedUp && backupVerified && !committed && isCurrent) {
         try {
           if (await stat(path) == null) {
             _check();
-            await client.renamePath(backupPath, name);
+            capturedBackup ??= await stat(backupPath);
+            final backupToRestore = capturedBackup;
+            if (backupToRestore == null) {
+              throw StateError('The recovery backup disappeared.');
+            }
+            await checkpoint?.call({
+              'phase': 'restoringBackup',
+              'destination': path,
+              'stagedPath': stagedPath,
+              'backupPath': backupPath,
+            });
+            await _relocateStagedFile(
+              backupToRestore,
+              path,
+              checkpoint: (state) async => checkpoint?.call({
+                'destination': path,
+                'stagedPath': stagedPath,
+                'backupPath': backupPath,
+                ...state,
+              }),
+              purpose: 'restore',
+            );
             originalBackedUp = false;
           }
         } catch (_) {
@@ -896,23 +958,183 @@ class CloudOperationBackend extends FileOperationBackend {
       }
       if (originalBackedUp && !committed) {
         throw StateError(
-          '$error. The original destination is preserved at $backupPath',
+          backupVerified
+              ? '$error. The original destination is preserved at $backupPath'
+              : '$error. A possible recovery copy remains at $backupPath. '
+                    'Verify it before restoring.',
         );
       }
       rethrow;
     } finally {
       // Account changes prohibit even cleanup against the replacement account.
-      if (isCurrent && !committed) {
+      if (isCurrent && !committed && !commitAttempted) {
         try {
-          if (await stat(stagedPath) != null) {
+          final remaining = await stat(stagedPath);
+          if (remaining != null &&
+              (capturedStage == null ||
+                  _sameCapturedFile(capturedStage, remaining))) {
             _check();
-            await client.deletePath(stagedPath);
+            await _deleteCapturedFile(remaining);
           }
         } catch (_) {
           /* Preserve the original failure and any recoverable stage. */
         }
       }
     }
+  }
+
+  bool get _supportsExactRelocation =>
+      client is CloudTransferOperations &&
+      ((capabilities.nativeMove &&
+              capabilities.atomicMove &&
+              capabilities.noReplaceMove) ||
+          (capabilities.nativeCopy &&
+              capabilities.noReplaceCopy &&
+              capabilities.conditionalCopy &&
+              capabilities.conditionalDelete));
+
+  bool _sameCapturedFile(FileItem? before, FileItem? after) {
+    if (before == null || after == null) return before == after;
+    return before.isFolder == after.isFolder &&
+        (before.isSymlink == true) == (after.isSymlink == true) &&
+        before.size == after.size &&
+        _fileVersion(before) == _fileVersion(after) &&
+        before.uuid == after.uuid &&
+        (before.updatedAt == null
+            ? after.updatedAt == null
+            : after.updatedAt != null &&
+                  before.updatedAt!.isAtSameMomentAs(after.updatedAt!));
+  }
+
+  Future<void> _deleteCapturedFile(FileItem file) async {
+    _check();
+    final current = await stat(file.path!);
+    if (current == null) return;
+    if (!_sameCapturedFile(file, current)) {
+      throw StateError('File changed before cleanup: ${file.path}');
+    }
+    await deleteFile(file);
+  }
+
+  /// Object storage renames are two mutations. Confirm and durably record the
+  /// new object's version before conditionally deleting the captured source.
+  /// Every target is vacant: a concurrent writer must never be overwritten.
+  Future<FileItem> _relocateStagedFile(
+    FileItem source,
+    String destination, {
+    required String purpose,
+    Future<void> Function(Map<String, dynamic>)? checkpoint,
+    void Function(FileItem)? confirmedCopy,
+  }) async {
+    _check();
+    String? confirmedVersion;
+    String? confirmedId;
+    if (await stat(destination) != null) {
+      throw StateError('Destination changed while committing: $destination');
+    }
+    final current = await stat(source.path!);
+    if (!_sameCapturedFile(source, current)) {
+      throw StateError('File changed before $purpose: ${source.path}');
+    }
+    _check();
+    if (!_supportsExactRelocation) {
+      // Hierarchical legacy protocols keep their existing rename contract.
+      // Virtual object prefixes must never enter this compatibility path.
+      if (client is ObjectStorageNamespace) {
+        throw UnsupportedError(
+          'Exact conditional object relocation is unavailable.',
+        );
+      }
+      await client.renamePath(source.path!, paths.basename(destination));
+    } else {
+      final operations = client as CloudTransferOperations;
+      if (capabilities.nativeMove &&
+          capabilities.atomicMove &&
+          capabilities.noReplaceMove) {
+        final result = await operations.moveToExact(
+          source.path!,
+          destination,
+          checkpoint: () async => _check(),
+          expectedSourceVersion: capabilities.conditionalMove
+              ? _fileVersion(source)
+              : null,
+        );
+        if (destinationPathKey(result.path) !=
+            destinationPathKey(destination)) {
+          throw StateError('Provider moved the file to an unexpected path.');
+        }
+        confirmedVersion = result.version;
+        confirmedId = result.id;
+      } else {
+        final version = _fileVersion(source);
+        if (version == null) {
+          throw UnsupportedError(
+            'Conditional $purpose requires a captured object version.',
+          );
+        }
+        final result = await operations.copyToExact(
+          source.path!,
+          destination,
+          expectedSourceVersion: version,
+          checkpoint: () async => _check(),
+        );
+        _check();
+        if (destinationPathKey(result.path) !=
+                destinationPathKey(destination) ||
+            result.version == null) {
+          throw StateError(
+            'Provider did not confirm the exact copied object version.',
+          );
+        }
+        final copied = await stat(destination);
+        if (copied == null ||
+            copied.isFolder ||
+            copied.isSymlink == true ||
+            _fileVersion(copied) != result.version ||
+            (source.size != null && copied.size != source.size)) {
+          throw StateError(
+            'The copied $purpose object changed before source cleanup.',
+          );
+        }
+        confirmedVersion = result.version;
+        confirmedId = result.id;
+        confirmedCopy?.call(copied);
+        await checkpoint?.call({
+          'phase': '${purpose}Copied',
+          '${purpose}SourcePath': source.path,
+          '${purpose}SourceVersion': version,
+          '${purpose}CopyPath': destination,
+          '${purpose}CopyVersion': result.version,
+        });
+        _check();
+        try {
+          await operations.deleteTransferFile(
+            source.path!,
+            expectedVersion: version,
+          );
+        } catch (_) {
+          // A delete reply may be lost. Accept only absence and the exact
+          // confirmed destination revision; otherwise preserve both copies.
+          _check();
+          if (await stat(source.path!) != null ||
+              !_sameCapturedFile(copied, await stat(destination))) {
+            rethrow;
+          }
+        }
+      }
+    }
+    _check();
+    final moved = await stat(destination);
+    if (moved == null ||
+        moved.isFolder ||
+        moved.isSymlink == true ||
+        (confirmedVersion != null && _fileVersion(moved) != confirmedVersion) ||
+        (confirmedId != null && moved.uuid != confirmedId) ||
+        (source.size != null && moved.size != source.size)) {
+      throw StateError('The $purpose destination could not be verified.');
+    }
+    confirmedCopy?.call(moved);
+    return moved;
   }
 
   @override

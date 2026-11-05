@@ -970,6 +970,7 @@ class FileOperationService {
                 checkpoint: (state) async {
                   for (final key in [
                     'stagingPath',
+                    'stagedPath',
                     'backupPath',
                     'destination',
                   ]) {
