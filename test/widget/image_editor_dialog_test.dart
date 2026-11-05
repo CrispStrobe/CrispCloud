@@ -1,12 +1,19 @@
 import 'dart:async';
 import 'dart:typed_data';
-import 'dart:ui' show PointerDeviceKind;
+import 'dart:ui' show PointerDeviceKind, instantiateImageCodec;
 
 import 'package:crisp_cloud/models/file_item.dart';
 import 'package:crisp_cloud/models/panel_side.dart';
 import 'package:crisp_cloud/services/image_edit_session.dart';
+import 'package:crisp_cloud/services/image_export_options.dart';
+import 'package:crisp_cloud/services/image_edit_project.dart';
 import 'package:crisp_cloud/services/image_editor_menu.dart';
 import 'package:crisp_cloud/services/image_file_store.dart';
+import 'package:crisp_cloud/services/image_gif_codec.dart';
+import 'package:crisp_cloud/services/image_project_store.dart';
+import 'package:crisp_cloud/services/image_raster_codec.dart';
+import 'package:crisp_cloud/services/image_overlay.dart';
+import 'package:crisp_cloud/services/pdf_file_store.dart';
 import 'package:crisp_cloud/widgets/image_editor_dialog.dart';
 import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:flutter/gestures.dart' show kSecondaryMouseButton;
@@ -59,6 +66,32 @@ class _MemoryImageStore implements ImageFileStore {
     if (outcome == ImageSaveOutcome.savedOriginal) bytes = snapshot;
     return outcome;
   }
+}
+
+class _MemoryProjectStore implements PdfFileStore {
+  _MemoryProjectStore(this.bytes);
+  Uint8List bytes;
+  int writes = 0;
+  @override
+  String get documentId => 'test:project';
+  @override
+  String get displayName => 'sample.ccimage';
+  @override
+  String get path => '/sample.ccimage';
+  @override
+  bool get isRemote => false;
+  @override
+  Future<Uint8List> load() async => Uint8List.fromList(bytes);
+  @override
+  Future<PdfSaveOutcome> save(Uint8List data) async {
+    bytes = Uint8List.fromList(data);
+    writes++;
+    return PdfSaveOutcome.savedOriginal;
+  }
+
+  @override
+  Future<PdfSaveOutcome> saveCopy(Uint8List data, String name) =>
+      throw UnimplementedError();
 }
 
 class _RouteObserver extends NavigatorObserver {
@@ -120,7 +153,22 @@ class _Harness {
     listen: false,
   ).read(imageEditorMenuProvider)!;
 
-  Future<void> open({bool enableIsolateGeneration = false}) async {
+  Future<void> open({
+    bool enableIsolateGeneration = false,
+    Future<ImageSaveOutcome?> Function(
+      Uint8List,
+      String,
+      String,
+      ImageExportFormat,
+    )?
+    exporter,
+    ImageProjectStore? projectStore,
+    ImageFileStore? imageStore,
+    String? fileName,
+    ImageOverlayPicker? overlayPicker,
+    Future<ImageSaveOutcome?> Function(Uint8List, String, String)?
+    projectExporter,
+  }) async {
     tester.view.physicalSize = const Size(1280, 900);
     tester.view.devicePixelRatio = 1;
     addTearDown(tester.view.reset);
@@ -138,11 +186,22 @@ class _Harness {
                   barrierDismissible: false,
                   builder: (_) => Dialog.fullscreen(
                     child: ImageEditorDialog(
-                      file: FileItem(name: store.displayName, isFolder: false),
+                      file: FileItem(
+                        name:
+                            fileName ??
+                            (projectStore == null
+                                ? store.displayName
+                                : 'sample.ccimage'),
+                        isFolder: false,
+                      ),
                       side: PanelSide.local,
-                      storeOverride: store,
+                      storeOverride: imageStore ?? store,
                       editorKey: key,
                       enableIsolateGeneration: enableIsolateGeneration,
+                      deviceExporterOverride: exporter,
+                      projectStoreOverride: projectStore,
+                      overlayPickerOverride: overlayPicker,
+                      projectExporterOverride: projectExporter,
                     ),
                   ),
                 ),
@@ -262,6 +321,496 @@ void _desktopTestWidgets(
 void main() {
   installImageEditorBrowserDiagnostics();
   setUp(() => SharedPreferences.setMockInitialValues({}));
+
+  _desktopTestWidgets(
+    'zoom controls change the view without dirtying the image',
+    (tester) async {
+      final harness = _Harness(tester, _MemoryImageStore());
+      await harness.open();
+      expect(harness.editor.editorScaleFactor, closeTo(1, 0.001));
+      await tester.ensureVisible(_command(ImageEditorAction.zoomIn));
+      await tester.tap(_command(ImageEditorAction.zoomIn));
+      await tester.pump();
+      expect(harness.editor.editorScaleFactor, closeTo(1.25, 0.001));
+      expect(_saveEnabled(tester), isFalse);
+      await tester.ensureVisible(_command(ImageEditorAction.zoomOut));
+      await tester.tap(_command(ImageEditorAction.zoomOut));
+      await tester.pump();
+      expect(harness.editor.editorScaleFactor, closeTo(1, 0.001));
+      await tester.ensureVisible(_command(ImageEditorAction.zoomIn));
+      await tester.tap(_command(ImageEditorAction.zoomIn));
+      await tester.ensureVisible(_command(ImageEditorAction.zoomReset));
+      await tester.tap(_command(ImageEditorAction.zoomReset));
+      await tester.pump();
+      expect(harness.editor.editorScaleFactor, closeTo(1, 0.001));
+      expect(_saveEnabled(tester), isFalse);
+      await harness.addText('Zoom');
+      await tester.ensureVisible(_command(ImageEditorAction.zoomIn));
+      await tester.tap(_command(ImageEditorAction.zoomIn));
+      await tester.pump();
+      await harness.save();
+      final result = image.decodePng(harness.store.writes.single)!;
+      expect((result.width, result.height), (24, 16));
+    },
+  );
+
+  _desktopTestWidgets(
+    'project history restores editable text on the original image',
+    (tester) async {
+      final store = _MemoryImageStore();
+      final first = _Harness(tester, store);
+      await first.open();
+      await first.addText('Editable project');
+      final history = await tester.runAsync(
+        () async => (await first.editor.exportStateHistory()).toMap(),
+      );
+      expect(history, isNotNull);
+      final project = ImageEditProject.decode(
+        ImageEditProject(
+          sourceName: store.displayName,
+          sourceBytes: store.bytes,
+          history: history!,
+        ).encode(),
+      );
+      await tester.pumpWidget(const SizedBox.shrink());
+      final second = _Harness(
+        tester,
+        _MemoryImageStore(input: project.sourceBytes),
+      );
+      await second.open();
+      var imported = false;
+      unawaited(
+        second.editor
+            .importStateHistory(ImportStateHistory.fromMap(project.history))
+            .then((_) => imported = true),
+      );
+      await _until(tester, () => imported, reason: 'project history import');
+      expect(
+        second.editor.activeLayers.whereType<TextLayer>().single.text,
+        'Editable project',
+      );
+      expect(_saveEnabled(tester), isTrue);
+    },
+  );
+
+  _desktopTestWidgets('opening and saving a project retains editable history', (
+    tester,
+  ) async {
+    final raster = _MemoryImageStore();
+    final first = _Harness(tester, raster);
+    Uint8List? savedProject;
+    await first.open(
+      projectExporter: (bytes, name, title) async {
+        expect(name, 'sample.ccimage');
+        savedProject = bytes;
+        return ImageSaveOutcome.savedCopy;
+      },
+    );
+    await first.addText('Stored layer');
+    await tester.ensureVisible(_command(ImageEditorAction.saveProjectCopy));
+    await tester.tap(_command(ImageEditorAction.saveProjectCopy));
+    await _until(
+      tester,
+      () => savedProject != null && !first.actions.busy,
+      reason: 'project copy',
+    );
+    expect(_saveEnabled(tester), isTrue);
+    final backing = _MemoryProjectStore(savedProject!);
+    await tester.pumpWidget(const SizedBox.shrink());
+    final second = _Harness(tester, raster);
+    await second.open(projectStore: ImageProjectStore(backing));
+    expect(
+      second.editor.activeLayers.whereType<TextLayer>().single.text,
+      'Stored layer',
+    );
+    expect(_saveEnabled(tester), isFalse);
+    await second.addText('New layer');
+    await tester.tap(_save);
+    await _until(
+      tester,
+      () =>
+          backing.writes == 1 && !second.actions.busy && !_saveEnabled(tester),
+      reason: 'project save',
+    );
+    final saved = ImageEditProject.decode(backing.bytes);
+    expect(saved.sourceBytes, orderedEquals(raster.bytes));
+    expect(saved.history, isNotEmpty);
+  });
+
+  _desktopTestWidgets('layer panel reorders and removes layers with undo', (
+    tester,
+  ) async {
+    final harness = _Harness(tester, _MemoryImageStore());
+    await harness.open();
+    await harness.addText('Bottom layer');
+    await harness.addText('Top layer');
+    final bottomId = harness.editor.activeLayers.first.id;
+    final topId = harness.editor.activeLayers.last.id;
+    await tester.ensureVisible(_command(ImageEditorAction.layers));
+    await tester.tap(_command(ImageEditorAction.layers));
+    await tester.pump();
+    final bottom = find.byKey(ValueKey('image-layer-$bottomId'));
+    expect(bottom, findsOneWidget);
+    await tester.tap(
+      find.descendant(
+        of: bottom,
+        matching: find.byTooltip('Move layer forward'),
+      ),
+    );
+    await _until(
+      tester,
+      () => harness.editor.activeLayers.last.id == bottomId,
+      reason: 'layer reorder',
+    );
+    harness.actions.dispatch(ImageEditorAction.undo);
+    await _until(
+      tester,
+      () => harness.editor.activeLayers.last.id == topId,
+      reason: 'undo layer reorder',
+    );
+    await tester.tap(
+      find.descendant(of: bottom, matching: find.byTooltip('Remove')),
+    );
+    await _until(
+      tester,
+      () => harness.editor.activeLayers.length == 1,
+      reason: 'remove layer',
+    );
+    harness.actions.dispatch(ImageEditorAction.undo);
+    await _until(
+      tester,
+      () => harness.editor.activeLayers.length == 2,
+      reason: 'undo layer removal',
+    );
+  });
+
+  _desktopTestWidgets(
+    'image overlay remains editable after a project round trip',
+    (tester) async {
+      final raster = _MemoryImageStore();
+      final first = _Harness(tester, raster);
+      Uint8List? saved;
+      final overlay = ImageOverlay(
+        name: 'overlay.webp',
+        bytes: image.encodeWebP(
+          image.decodePng(buildImageEditorFixture(seed: 7))!,
+        ),
+      );
+      await first.open(
+        overlayPicker: (_) async => overlay,
+        projectExporter: (bytes, name, title) async {
+          saved = bytes;
+          return ImageSaveOutcome.savedCopy;
+        },
+      );
+      await tester.ensureVisible(_command(ImageEditorAction.addOverlay));
+      await tester.tap(_command(ImageEditorAction.addOverlay));
+      await _until(
+        tester,
+        () => first.editor.activeLayers.whereType<WidgetLayer>().isNotEmpty,
+        reason: 'image overlay insertion',
+      );
+      final before = image.decodePng(raster.bytes)!;
+      await first.save();
+      final after = image.decodePng(raster.bytes)!;
+      expect(
+        after.any((pixel) {
+          final previous = before.getPixel(pixel.x, pixel.y);
+          return pixel.r != previous.r ||
+              pixel.g != previous.g ||
+              pixel.b != previous.b ||
+              pixel.a != previous.a;
+        }),
+        isTrue,
+        reason: 'The saved image must contain the overlay.',
+      );
+      await tester.ensureVisible(_command(ImageEditorAction.saveProjectCopy));
+      await tester.tap(_command(ImageEditorAction.saveProjectCopy));
+      await _until(
+        tester,
+        () => saved != null && !first.actions.busy,
+        reason: 'overlay project export',
+      );
+      final backing = _MemoryProjectStore(saved!);
+      await tester.pumpWidget(const SizedBox.shrink());
+      final reopened = _Harness(tester, raster);
+      Uint8List? reopenedCopy;
+      await reopened.open(
+        projectStore: ImageProjectStore(backing),
+        exporter: (bytes, name, title, format) async {
+          reopenedCopy = bytes;
+          return ImageSaveOutcome.savedCopy;
+        },
+      );
+      final layer = reopened.editor.activeLayers
+          .whereType<WidgetLayer>()
+          .single;
+      expect(layer.exportConfigs.id, 'crispcloud.image-overlay.v1');
+      expect(layer.exportConfigs.meta!['name'], 'overlay.webp');
+      expect(_saveEnabled(tester), isFalse);
+      await tester.ensureVisible(_command(ImageEditorAction.exportCopy));
+      await tester.tap(_command(ImageEditorAction.exportCopy));
+      await tester.pumpAndSettle();
+      await tester.tap(find.widgetWithText(FilledButton, 'Export'));
+      await _until(
+        tester,
+        () => reopenedCopy != null && !reopened.actions.busy,
+        reason: 'reopened overlay export',
+      );
+      final original = image.decodePng(
+        ImageEditProject.decode(backing.bytes).sourceBytes,
+      )!;
+      final reopenedImage = image.decodePng(reopenedCopy!)!;
+      expect(
+        reopenedImage.any((pixel) {
+          final previous = original.getPixel(pixel.x, pixel.y);
+          return pixel.r != previous.r ||
+              pixel.g != previous.g ||
+              pixel.b != previous.b ||
+              pixel.a != previous.a;
+        }),
+        isTrue,
+        reason: 'The reopened project must immediately render the overlay.',
+      );
+    },
+  );
+
+  _desktopTestWidgets(
+    'emoji picker opens and cancel leaves the image unchanged',
+    (tester) async {
+      final harness = _Harness(tester, _MemoryImageStore());
+      await harness.open();
+      await tester.ensureVisible(_command(ImageEditorAction.addEmoji));
+      await tester.tap(_command(ImageEditorAction.addEmoji));
+      await _until(
+        tester,
+        () => find.byType(EmojiEditor).evaluate().isNotEmpty,
+        reason: 'emoji picker',
+      );
+      expect(harness.actions.busy, isTrue);
+      expect(_saveEnabled(tester), isFalse);
+      Navigator.of(tester.element(find.byType(EmojiEditor))).pop();
+      await _until(
+        tester,
+        () =>
+            find.byType(EmojiEditor).evaluate().isEmpty &&
+            !harness.actions.busy,
+        reason: 'close emoji picker',
+      );
+      expect(harness.editor.activeLayers, isEmpty);
+      expect(_saveEnabled(tester), isFalse);
+      await tester.tap(_command(ImageEditorAction.addEmoji));
+      await _until(
+        tester,
+        () => find.byType(EmojiEditor).evaluate().isNotEmpty,
+        reason: 'reopen emoji picker',
+      );
+      Navigator.of(tester.element(find.byType(EmojiEditor)))
+          .pop(EmojiLayer(emoji: '😀'));
+      await _until(
+        tester,
+        () =>
+            harness.editor.activeLayers.whereType<EmojiLayer>().isNotEmpty &&
+            !harness.actions.busy,
+        reason: 'emoji insertion',
+      );
+      expect(
+        harness.editor.activeLayers.whereType<EmojiLayer>().single.emoji,
+        '😀',
+      );
+      expect(_saveEnabled(tester), isTrue);
+    },
+  );
+
+  _desktopTestWidgets('WebP export reopens in the platform decoder', (
+    tester,
+  ) async {
+    final harness = _Harness(tester, _MemoryImageStore());
+    Uint8List? exported;
+    await harness.open(
+      exporter: (bytes, name, title, format) async {
+        expect(name, 'sample-edited.webp');
+        expect(format, ImageExportFormat.webp);
+        exported = bytes;
+        return ImageSaveOutcome.savedCopy;
+      },
+    );
+    await harness.addText('WebP');
+    await tester.ensureVisible(_command(ImageEditorAction.exportCopy));
+    await tester.tap(_command(ImageEditorAction.exportCopy));
+    await tester.pumpAndSettle();
+    await tester.tap(find.byType(DropdownButtonFormField<ImageExportFormat>));
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('WebP').last);
+    await tester.pumpAndSettle();
+    await tester.tap(find.widgetWithText(FilledButton, 'Export'));
+    await _until(
+      tester,
+      () => exported != null && !harness.actions.busy,
+      reason: 'WebP copy export',
+    );
+    final dimensions = await tester.runAsync(() async {
+      final codec = await instantiateImageCodec(exported!);
+      final frame = await codec.getNextFrame();
+      final size = (frame.image.width, frame.image.height);
+      frame.image.dispose();
+      codec.dispose();
+      return size;
+    });
+    expect(dimensions, (24, 16));
+    expect(_saveEnabled(tester), isTrue);
+  });
+
+  _desktopTestWidgets(
+    'static WebP edits save as WebP and projects retain the pixels',
+    (tester) async {
+      final pixels = image.decodePng(buildImageEditorFixture())!;
+      final backing = _MemoryProjectStore(image.encodeWebP(pixels));
+      final harness = _Harness(tester, _MemoryImageStore());
+      Uint8List? projectBytes;
+      await harness.open(
+        imageStore: WebPImageFileStore(backing),
+        fileName: 'photo.webp',
+        projectExporter: (bytes, name, title) async {
+          projectBytes = bytes;
+          return ImageSaveOutcome.savedCopy;
+        },
+      );
+      await harness.addText('WebP edit');
+      await tester.ensureVisible(_command(ImageEditorAction.saveProjectCopy));
+      await tester.tap(_command(ImageEditorAction.saveProjectCopy));
+      await _until(
+        tester,
+        () => projectBytes != null && !harness.actions.busy,
+        reason: 'WebP project copy',
+      );
+      final project = ImageEditProject.decode(projectBytes!);
+      expect(project.sourceName, 'photo.png');
+      expect(image.decodePng(project.sourceBytes), isNotNull);
+      expect(_saveEnabled(tester), isTrue);
+      await tester.tap(_save);
+      await _until(
+        tester,
+        () =>
+            backing.writes == 1 &&
+            !harness.actions.busy &&
+            !_saveEnabled(tester),
+        reason: 'WebP source save',
+      );
+      final saved = image.decodeWebP(backing.bytes)!;
+      expect((saved.width, saved.height), (24, 16));
+      expect(saved.getPixel(0, 0).a, 0);
+    },
+  );
+
+  _desktopTestWidgets(
+    'static GIF opens and exports a PNG copy without changing the source',
+    (tester) async {
+      final pixels = image.Image(width: 24, height: 16, numChannels: 4);
+      image.fill(pixels, color: image.ColorRgba8(10, 20, 30, 255));
+      pixels.setPixelRgba(0, 0, 0, 0, 0, 0);
+      final original = encodeExactGif(pixels);
+      final backing = _MemoryProjectStore(original);
+      final harness = _Harness(tester, _MemoryImageStore());
+      Uint8List? copied;
+      await harness.open(
+        imageStore: GifImageFileStore(backing),
+        fileName: 'photo.gif',
+        exporter: (bytes, name, title, format) async {
+          expect(name, 'photo-edited.png');
+          expect(format, ImageExportFormat.png);
+          copied = bytes;
+          return ImageSaveOutcome.savedCopy;
+        },
+      );
+      expect(
+        find.text(
+          'GIF saves require at most 256 colors and fully opaque or transparent pixels.',
+        ),
+        findsOneWidget,
+      );
+      await tester.ensureVisible(_command(ImageEditorAction.exportCopy));
+      await tester.tap(_command(ImageEditorAction.exportCopy));
+      await tester.pumpAndSettle();
+      await tester.tap(find.byType(DropdownButtonFormField<ImageExportFormat>));
+      await tester.pumpAndSettle();
+      await tester.tap(find.text('PNG').last);
+      await tester.pumpAndSettle();
+      await tester.tap(find.widgetWithText(FilledButton, 'Export'));
+      await _until(
+        tester,
+        () => copied != null && !harness.actions.busy,
+        reason: 'GIF PNG export',
+      );
+      expect(image.decodePng(copied!), isNotNull);
+      expect(backing.writes, 0);
+      expect(backing.bytes, orderedEquals(original));
+      expect(_saveEnabled(tester), isFalse);
+    },
+  );
+
+  for (final format in AdditionalRasterFormat.values) {
+    _desktopTestWidgets(
+      '$format opens, edits and saves its original container',
+      (tester) async {
+        final pixels = image.decodePng(buildImageEditorFixture())!;
+        final backing = _MemoryProjectStore(
+          encodeAdditionalRaster(pixels, format),
+        );
+        final harness = _Harness(tester, _MemoryImageStore());
+        final ImageFileStore store = format == AdditionalRasterFormat.bmp
+            ? BmpImageFileStore(backing)
+            : TiffImageFileStore(backing);
+        await harness.open(
+          imageStore: store,
+          fileName: format == AdditionalRasterFormat.bmp
+              ? 'photo.bmp'
+              : 'photo.tiff',
+        );
+        await harness.addText('Edit');
+        await tester.tap(_save);
+        await _until(
+          tester,
+          () =>
+              backing.writes == 1 &&
+              !harness.actions.busy &&
+              !_saveEnabled(tester),
+          reason: 'additional raster source save',
+        );
+        final decoded = decodeAdditionalRaster(backing.bytes, format);
+        expect((decoded.width, decoded.height), (24, 16));
+        expect(decoded.getPixel(0, 0).a, 0);
+      },
+    );
+  }
+
+  _desktopTestWidgets('exporting a copy keeps the original dirty', (
+    tester,
+  ) async {
+    final harness = _Harness(tester, _MemoryImageStore());
+    Uint8List? exported;
+    await harness.open(
+      exporter: (bytes, name, title, format) async {
+        exported = bytes;
+        expect(name, 'sample-edited.png');
+        expect(format, ImageExportFormat.png);
+        return ImageSaveOutcome.savedCopy;
+      },
+    );
+    await harness.addText('Export');
+    await tester.ensureVisible(_command(ImageEditorAction.exportCopy));
+    await tester.tap(_command(ImageEditorAction.exportCopy));
+    await tester.pumpAndSettle();
+    await tester.tap(find.widgetWithText(FilledButton, 'Export'));
+    await _until(
+      tester,
+      () => exported != null && !harness.actions.busy,
+      reason: 'copy export',
+    );
+    expect(image.decodePng(exported!), isNotNull);
+    expect(harness.store.writes, isEmpty);
+    expect(_saveEnabled(tester), isTrue);
+  });
 
   _desktopTestWidgets(
     'initial clean state and undo branches use real editor history',

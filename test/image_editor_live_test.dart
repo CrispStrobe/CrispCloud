@@ -9,7 +9,12 @@ import 'dart:ui' as ui;
 
 import 'package:crisp_cloud/models/file_item.dart';
 import 'package:crisp_cloud/services/image_edit_session.dart';
+import 'package:crisp_cloud/services/image_edit_project.dart';
+import 'package:crisp_cloud/services/image_project_store.dart';
+import 'package:crisp_cloud/services/pdf_file_store.dart';
 import 'package:crisp_cloud/services/image_file_store.dart';
+import 'package:crisp_cloud/services/image_gif_codec.dart';
+import 'package:crisp_cloud/services/image_raster_codec.dart';
 import 'package:crisp_cloud/services/local_file_service_native.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:image/image.dart' as image;
@@ -86,6 +91,174 @@ void main() {
       );
     });
   }
+
+  test(
+    'real project saves preserve history and reject outside changes',
+    () async {
+      final file = File('${directory.path}/picture.ccimage');
+      final project = ImageEditProject(
+        sourceName: 'picture.png',
+        sourceBytes: buildImageEditorFixture(),
+        history: {'history': []},
+      );
+      await file.writeAsBytes(project.encode());
+      final store = ImageProjectStore(
+        PdfFileStore.local(
+          service: DesktopFileService(),
+          file: FileItem(
+            name: 'picture.ccimage',
+            path: file.path,
+            isFolder: false,
+          ),
+          inputLimitBytes: ImageEditProject.maxBytes,
+          outputLimitBytes: ImageEditProject.maxBytes,
+        ),
+      );
+      final opened = await store.load();
+      final updated = ImageEditProject(
+        sourceName: opened.sourceName,
+        sourceBytes: opened.sourceBytes,
+        history: {
+          'history': [
+            {'layers': []},
+          ],
+        },
+      );
+      expect(await store.save(updated), ImageSaveOutcome.savedOriginal);
+      expect(
+        ImageEditProject.decode(await file.readAsBytes()).history,
+        updated.history,
+      );
+      final external = project.encode();
+      await file.writeAsBytes(external);
+      await expectLater(
+        store.save(updated),
+        throwsA(isA<PdfSaveConflictException>()),
+      );
+      expect(await file.readAsBytes(), orderedEquals(external));
+    },
+  );
+
+  test(
+    'real static GIF saves exact pixels and rejects unrepresentable edits',
+    () async {
+      final file = File('${directory.path}/picture.gif');
+      final pixels = image.Image(width: 4, height: 3, numChannels: 4);
+      image.fill(pixels, color: image.ColorRgba8(10, 20, 30, 255));
+      pixels.setPixelRgba(0, 0, 0, 0, 0, 0);
+      await file.writeAsBytes(encodeExactGif(pixels));
+      final store = ImageFileStore.local(
+        service: DesktopFileService(),
+        file: FileItem(name: 'picture.gif', path: file.path, isFolder: false),
+      );
+      final initial = await store.load();
+      final edited = image.decodePng(initial)!.convert(numChannels: 4);
+      edited.setPixelRgba(1, 1, 200, 30, 40, 255);
+      expect(
+        await store.save(image.encodePng(edited)),
+        ImageSaveOutcome.savedOriginal,
+      );
+      final written = await file.readAsBytes();
+      expect(await _engineDimensions(written), (4, 3));
+      expect(decodeStaticGif(written).getPixel(1, 1).r, 200);
+      edited.setPixelRgba(1, 1, 200, 30, 40, 128);
+      await expectLater(
+        store.save(image.encodePng(edited)),
+        throwsA(
+          isA<ImageEditException>().having(
+            (e) => e.reason,
+            'reason',
+            ImageEditFailure.gifColorLimit,
+          ),
+        ),
+      );
+      expect(await file.readAsBytes(), orderedEquals(written));
+    },
+  );
+
+  for (final format in AdditionalRasterFormat.values) {
+    test(
+      'real $format save preserves the container and detects conflict',
+      () async {
+        final extension = format == AdditionalRasterFormat.bmp ? 'bmp' : 'tiff';
+        final file = File('${directory.path}/picture.$extension');
+        final pixels = image.decodePng(buildImageEditorFixture())!;
+        await file.writeAsBytes(encodeAdditionalRaster(pixels, format));
+        final store = ImageFileStore.local(
+          service: DesktopFileService(),
+          file: FileItem(
+            name: 'picture.$extension',
+            path: file.path,
+            isFolder: false,
+          ),
+        );
+        final png = await store.load();
+        final edited = image.decodePng(png)!.convert(numChannels: 4);
+        edited.setPixelRgba(3, 3, 200, 30, 40, 255);
+        expect(
+          await store.save(image.encodePng(edited)),
+          ImageSaveOutcome.savedOriginal,
+        );
+        expect(
+          decodeAdditionalRaster(
+            await file.readAsBytes(),
+            format,
+          ).getPixel(3, 3).r,
+          200,
+        );
+        final external = encodeAdditionalRaster(pixels, format);
+        await file.writeAsBytes(external);
+        await expectLater(
+          store.save(image.encodePng(edited)),
+          throwsA(isA<ImageSaveConflictException>()),
+        );
+        expect(await file.readAsBytes(), orderedEquals(external));
+      },
+    );
+  }
+
+  test(
+    'real WebP save and conflict check preserve the source contract',
+    () async {
+      final original = File('${directory.path}/picture.webp');
+      final pixels = image.decodePng(buildImageEditorFixture())!;
+      await original.writeAsBytes(image.encodeWebP(pixels));
+      final store = ImageFileStore.local(
+        service: DesktopFileService(),
+        file: FileItem(
+          name: 'picture.webp',
+          path: original.path,
+          isFolder: false,
+        ),
+      );
+      final source = await store.load();
+      final session = ImageEditSession(
+        initialBytes: source,
+        format: ImageFileFormat.png,
+      );
+      addTearDown(session.dispose);
+      final rotated = image.encodePng(
+        image.copyRotate(image.decodePng(source)!, angle: 90),
+      );
+      session.updateRevision(1);
+      expect(
+        await session.save(export: () async => rotated, write: store.save),
+        ImageSaveOutcome.savedOriginal,
+      );
+      expect(await _engineDimensions(await original.readAsBytes()), (16, 24));
+      final external = image.encodeWebP(
+        image.decodePng(buildImageEditorFixture(seed: 9))!,
+      );
+      await original.writeAsBytes(external);
+      session.updateRevision(2);
+      await expectLater(
+        session.save(export: () async => rotated, write: store.save),
+        throwsA(isA<ImageSaveConflictException>()),
+      );
+      expect(await original.readAsBytes(), orderedEquals(external));
+      expect(session.isDirty, isTrue);
+    },
+  );
 
   test(
     'an external file change blocks overwrite and keeps edits recoverable',

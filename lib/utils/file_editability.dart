@@ -2,7 +2,7 @@
 //
 // Shared rules for deciding whether the built-in F4 editor can open a file.
 
-import '../services/image_edit_session.dart' show isEditableImageFileName;
+import '../services/image_edit_session.dart' show isImageEditorFileName;
 import '../services/media_capabilities.dart';
 
 /// Text/code extensions handled by the built-in text editor.
@@ -60,11 +60,7 @@ const Set<String> textEditableExtensions = <String>{
 };
 
 /// Office formats the built-in editor can actually save in place.
-const Set<String> editableOfficeExtensions = <String>{
-  'docx',
-  'xlsx',
-  'pptx',
-};
+const Set<String> editableOfficeExtensions = <String>{'docx', 'xlsx', 'pptx'};
 
 String _extensionOf(String name) {
   final dot = name.lastIndexOf('.');
@@ -83,7 +79,7 @@ bool isTextEditableName(String name) {
 bool isEditableInBuiltInEditor(String name) {
   final lower = name.toLowerCase();
   if (lower.endsWith('.pdf')) return true;
-  if (isEditableImageFileName(lower)) return true;
+  if (isImageEditorFileName(lower)) return true;
   final mediaKind = mediaKindForFileName(lower);
   if (mediaKind != null) return MediaCapabilities.canEdit(mediaKind);
   final ext = _extensionOf(lower);

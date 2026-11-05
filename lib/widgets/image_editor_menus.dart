@@ -32,6 +32,8 @@ List<PlatformMenuItem> buildImageEditorPlatformMenus(
           ImageEditorAction.save,
           shortcut: const SingleActivator(LogicalKeyboardKey.keyS, meta: true),
         ),
+        item('Export image copy', ImageEditorAction.exportCopy),
+        item('Save project copy', ImageEditorAction.saveProjectCopy),
         item(
           'Close editor',
           ImageEditorAction.close,
@@ -61,6 +63,12 @@ List<PlatformMenuItem> buildImageEditorPlatformMenus(
     PlatformMenu(
       label: context.imageTr('Image'),
       menus: <PlatformMenuItem>[
+        item('Emoji', ImageEditorAction.addEmoji),
+        item('Add image overlay', ImageEditorAction.addOverlay),
+        item('Layers', ImageEditorAction.layers),
+        item('Zoom in', ImageEditorAction.zoomIn),
+        item('Zoom out', ImageEditorAction.zoomOut),
+        item('Fit image', ImageEditorAction.zoomReset),
         item('Crop and rotate', ImageEditorAction.cropRotate),
         item('Draw', ImageEditorAction.paint),
         item('Text', ImageEditorAction.text),
