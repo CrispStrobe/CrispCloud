@@ -18,6 +18,7 @@ import 'package:crisp_cloud/widgets/file_list_view.dart';
 import 'package:crisp_cloud/widgets/file_collections_dialog.dart';
 import 'package:crisp_cloud/models/panel_tab.dart';
 import 'package:crisp_cloud/models/storage_reference.dart';
+import 'package:crisp_cloud/models/file_search_query.dart';
 import 'package:crisp_cloud/widgets/pattern_selection_dialog.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
@@ -38,6 +39,7 @@ class _Cloud extends Fake implements CloudStorageClient {
   @override
   bool get isAuthenticated => authenticated;
   final paths = <String>[];
+  final folders = <String, List<String>>{};
   final listings = <String, List<String>>{
     '/': ['a.txt', 'b.txt'],
     '/one': ['same.txt'],
@@ -72,7 +74,9 @@ class _Cloud extends Fake implements CloudStorageClient {
         for (final name in listings[path] ?? const <String>[])
           {'name': name, 'size': 10},
       ],
-      'folders': <Map<String, dynamic>>[],
+      'folders': [
+        for (final name in folders[path] ?? const <String>[]) {'name': name},
+      ],
     };
   }
 }
@@ -1013,4 +1017,84 @@ void main() {
       await tester.pumpWidget(const SizedBox.shrink());
     },
   );
+  test(
+    'branch view traverses the captured cloud source and exposes verified rows',
+    () async {
+      cloud.folders['/'] = ['one', 'two'];
+      final panel = await remote();
+      final reference = panel.captureCurrentOrigin().storageReference;
+      await panel.toggleFlatView();
+      expect(panel.isFlatView, isTrue);
+      expect(panel.showingSearchResults, isTrue);
+      expect(panel.files!.map((file) => file.path).toSet(), {
+        '/a.txt',
+        '/b.txt',
+        '/one/same.txt',
+        '/two/same.txt',
+      });
+      for (final file in panel.files!) {
+        expect(panel.originForOperation(file)!.storageReference, reference);
+        expect(file.storageId, reference.id);
+      }
+      expect(panel.canRerunCollectionSearch, isTrue);
+      await panel.toggleFlatView();
+      expect(panel.isFlatView, isFalse);
+      expect(panel.showingSearchResults, isFalse);
+      expect(panel.currentPath, '/');
+    },
+  );
+
+  test('cancelling a branch scan preserves the original listing', () async {
+    final panel = await remote();
+    final files = panel.files!.toList();
+    cloud.delay = Completer<void>();
+    final scan = panel.toggleFlatView();
+    await Future<void>.delayed(Duration.zero);
+    expect(panel.collectionBusy, isTrue);
+    panel.cancelCollectionRefresh();
+    cloud.delay!.complete();
+    await scan;
+    expect(panel.showingSearchResults, isFalse);
+    expect(panel.files, files);
+    expect(panel.collectionBusy, isFalse);
+  });
+
+  test('shared criteria combine wildcard, metadata, hidden names and visible scope', () async {
+    final panel = await remote();
+    final date = DateTime.utc(2026, 1, 2);
+    panel.showSearchResults([
+      item('/a.txt').copyWith(size: 20, updatedAt: date),
+      item('/b.txt').copyWith(size: 10, updatedAt: date),
+      item('/c.csv').copyWith(size: 20, updatedAt: date),
+      item('/.hidden.txt').copyWith(size: 20, updatedAt: date),
+    ], origin: panel.captureRemoteSearchOrigin());
+    final criteria = FileSearchQuery(
+      includeHidden: false,
+      includeFolders: false,
+      minSize: 15,
+      maxSize: 30,
+      modifiedAfter: DateTime.utc(2026),
+      extensions: ['txt'],
+    );
+    expect(panel.applyCriteriaSelection(criteria), 1);
+    expect(panel.selection.single.name, 'a.txt');
+    expect(
+      () => panel.applyCriteriaSelection(const FileSearchQuery(minSize: -1)),
+      throwsFormatException,
+    );
+    expect(panel.selection.single.name, 'a.txt');
+    expect(
+      () => panel.applyCriteriaSelection(
+        const FileSearchQuery(contentPattern: 'needle'),
+      ),
+      throwsFormatException,
+    );
+    expect(panel.selection.single.name, 'a.txt');
+    panel.setFilter('b');
+    expect(
+      panel.applyCriteriaSelection(criteria, action: SelectionAction.replace),
+      0,
+    );
+    expect(panel.selection, isEmpty);
+  });
 }

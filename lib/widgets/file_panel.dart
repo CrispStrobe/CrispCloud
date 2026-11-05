@@ -573,6 +573,23 @@ class _FilePanelState extends ConsumerState<FilePanel> {
             showSource: MediaQuery.sizeOf(context).width > 800,
           ),
           if (panel.showingSearchResults) _buildFileListHeader(context, panel),
+          if (panel.collectionBusy && !panel.showingSearchResults)
+            Row(
+              children: [
+                const SizedBox(width: 8),
+                Expanded(
+                  child: Text(
+                    panel.collectionProgress,
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                  ),
+                ),
+                TextButton(
+                  onPressed: panel.cancelCollectionRefresh,
+                  child: const Text('Cancel'),
+                ),
+              ],
+            ),
           // Selection bar: off by default (DC mode — info is in status bar).
           // Enable in settings for touch/tablet mode.
           if (ref.watch(showSelectionBarProvider) && selection.isNotEmpty)

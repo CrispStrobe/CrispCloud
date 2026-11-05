@@ -20,11 +20,15 @@ import '../models/panel_tab.dart';
 import '../models/sort.dart';
 import '../models/storage_reference.dart';
 import '../models/file_collection.dart';
+import '../models/file_search_query.dart';
+import '../services/recursive_search_service.dart';
 import '../services/file_collection_service.dart';
 import '../services/file_operation_service.dart' show FileOperationBackend;
 import '../services/captured_file_target.dart';
 import '../services/storage_identity.dart';
 import '../services/storage_trash.dart';
+import '../services/trash_history_store.dart';
+import 'trash_history_provider.dart';
 import '../services/native_file_operations.dart';
 import '../services/native_file_primitives.dart';
 import '../services/archive_service.dart';
@@ -818,9 +822,8 @@ class PanelNotifier extends ChangeNotifier {
     return PanelFileOrigin._(LocalPanelSource(parent), () => !_isDisposed);
   }
 
-  /// Origins for file operations are deliberately separate from editor origins.
-  /// A result can be copied/moved/renamed at its captured full path while
-  /// [originForFile] continues to reject virtual lists for editor writeback.
+  /// Only the exact verified row and its original account authorize operations.
+  /// Archive members and unresolved or replacement collection rows stay blocked.
   PanelFileOrigin? originForOperation(FileItem file) {
     if (_isDisposed ||
         _isLoading ||
@@ -1965,54 +1968,76 @@ class PanelNotifier extends ChangeNotifier {
   Future<void> toggleFlatView() async {
     if (_isFlatView) {
       _isFlatView = false;
-      await refresh();
+      await clearSearchResults();
     } else {
-      _isFlatView = true;
       await _loadFlatFiles();
     }
     notifyListeners();
   }
 
   Future<void> _loadFlatFiles() async {
-    final PanelSource source =
-        _currentDirectoryOrigin?.source ??
-        _ref.read<PanelSource>(panelSourceProvider(side));
-    if (kIsWeb || !source.isLocal) {
-      _ref
-          .read(errorProvider)
-          .addError('Flat view is only available for local directories');
-      _isFlatView = false;
-      return;
-    }
-    _leaveFileList();
-    final generation = ++_listingGeneration;
-    final path = _localPath;
-    final origin = PanelFileOrigin._(
-      LocalPanelSource(path),
-      () => !_isDisposed,
+    final origin = captureCurrentOrigin();
+    final backend = fileOperationBackend(
+      source: origin.source,
+      local: _localFileService,
+      isCurrent: () => origin.isCurrent,
     );
-    _isLoading = true;
+    final generation = _listingGeneration;
+    final tab = _activeTabId;
+    final request = ++_collectionRequest;
+    final query = FileSearchQuery(
+      includeFolders: false,
+      includeHidden: _showHiddenFiles,
+    );
+    _collectionBusy = true;
+    _collectionProgress = 'Reading branch…';
     notifyListeners();
+    bool cancelled() =>
+        _isDisposed ||
+        request != _collectionRequest ||
+        generation != _listingGeneration ||
+        tab != _activeTabId ||
+        !origin.isCurrent;
     try {
-      final items = await _localFileService.walkFiles(
-        path,
-        includeHidden: _showHiddenFiles,
-        maxItems: 10000,
+      final result = await RecursiveSearchService().search(
+        backend,
+        query,
+        currentDirectory: origin.source.currentPath,
+        isCancelled: cancelled,
+        onProgress: (count, path) {
+          if (!cancelled() && count % 100 == 0) {
+            _collectionProgress = '$count items scanned';
+            notifyListeners();
+          }
+        },
       );
-      if (_isDisposed || generation != _listingGeneration) return;
-      final prev = cursorItem;
-      _files = items;
-      _recordOrigins(items, origin);
-      _sortFiles();
-      _resetCursor(preserveItem: prev);
-    } catch (e) {
-      if (_isDisposed || generation != _listingGeneration) return;
-      _log.warn('operation failed', e);
-      _ref.read(errorProvider).addError('Flat view failed: $e');
-      _isFlatView = false;
+      if (cancelled() || result.cancelled) return;
+      if (result.errors.isNotEmpty) {
+        _ref
+            .read(errorProvider)
+            .addError(
+              'Branch view has ${result.errors.length} unreadable location(s): ${result.errors.take(3).join('; ')}',
+            );
+      }
+      showSearchResults(
+        result.matches.map((match) => match.file).toList(),
+        origin: origin,
+        title: 'Branch: ${origin.source.currentPath}',
+        search: CollectionSearch(
+          storage: origin.storageReference,
+          directory: origin.source.currentPath,
+          query: query,
+        ),
+      );
+      _isFlatView = true;
+    } catch (error) {
+      if (!cancelled()) {
+        _ref.read(errorProvider).addError('Branch view failed: $error');
+      }
     } finally {
-      if (!_isDisposed && generation == _listingGeneration) {
-        _isLoading = false;
+      if (!_isDisposed && request == _collectionRequest) {
+        _collectionBusy = false;
+        _collectionProgress = '';
         notifyListeners();
       }
     }
@@ -2438,6 +2463,48 @@ class PanelNotifier extends ChangeNotifier {
       case SelectionAction.invert:
         for (final item in matches) {
           if (!_selection.remove(item)) _selection.add(item);
+        }
+      case SelectionAction.replace:
+        _selection
+          ..clear()
+          ..addAll(matches);
+    }
+    _lastSelected = null;
+    notifyListeners();
+    return matches.length;
+  }
+
+  /// Reuse the search model for visible-row name and metadata criteria.
+  /// Content/archive searches require the search engine before feeding a list.
+  int applyCriteriaSelection(
+    FileSearchQuery criteria, {
+    SelectionAction action = SelectionAction.select,
+  }) {
+    criteria.validate();
+    if (criteria.contentPattern.isNotEmpty || criteria.searchArchives) {
+      throw const FormatException(
+        'Run a content or archive search first, then select its result rows.',
+      );
+    }
+    final pattern = criteria.nameMatcher;
+    final matches = (displayedFiles ?? const <FileItem>[])
+        .where(
+          (file) =>
+              file.name != '..' &&
+              file.name != '.' &&
+              (criteria.includeHidden || !file.name.startsWith('.')) &&
+              pattern.matches(file) &&
+              criteria.matchesMetadata(file),
+        )
+        .toList();
+    switch (action) {
+      case SelectionAction.select:
+        _selection.addAll(matches);
+      case SelectionAction.deselect:
+        _selection.removeAll(matches);
+      case SelectionAction.invert:
+        for (final file in matches) {
+          if (!_selection.remove(file)) _selection.add(file);
         }
       case SelectionAction.replace:
         _selection
@@ -2909,6 +2976,83 @@ class PanelNotifier extends ChangeNotifier {
     }
   }
 
+  Future<void> restoreTrashRecord(String id) async {
+    final store = _ref.read(trashHistoryProvider);
+    await store.ready;
+    final record = store.get(id);
+    if (record == null || record.receipt == null) {
+      throw StateError(
+        'No confirmed trash receipt is available. Inspect the original path and the system or provider trash.',
+      );
+    }
+    if (record.state == TrashRecordState.restored) return;
+    final origin = resolveStorageReference(
+      record.file.storage,
+      record.file.path,
+    );
+    if (origin == null) {
+      throw StateError(
+        'Reconnect the original storage account before restoring.',
+      );
+    }
+    final source = origin.source;
+    final backend = fileOperationBackend(
+      source: source,
+      local: _localFileService,
+      isCurrent: () => origin.isCurrent,
+    );
+    if (await backend.stat(record.file.path) != null) {
+      throw StateError(
+        'The original path is occupied. Inspect that item before moving it aside or retrying restore.',
+      );
+    }
+    if (!origin.isCurrent) {
+      throw StateError('The original source disconnected.');
+    }
+    Future<void> restore() async {
+      if (source is LocalPanelSource && NativeFileOperations.supported) {
+        final native = _ref.read(nativeFileOperationsProvider);
+        await _localFileService.withFileOperationAccess(
+          record.file.path,
+          () => native.restore(record.receipt!),
+        );
+      } else if (source is RemotePanelSource &&
+          source.client is StorageTrashOperations) {
+        await (source.client as StorageTrashOperations).restoreTrash(
+          record.receipt!,
+        );
+      } else {
+        throw UnsupportedError(
+          'This source does not support receipt-based restore.',
+        );
+      }
+    }
+
+    await store.save(record.withState(TrashRecordState.restoring));
+    try {
+      if (!origin.isCurrent) {
+        throw StateError('The original source disconnected.');
+      }
+      await restore();
+      if (!origin.isCurrent) {
+        throw StateError(
+          'Restore returned after the original source disconnected. Inspect it before retrying.',
+        );
+      }
+      await store.save(
+        record.withState(TrashRecordState.restored),
+        retainOnFailure: true,
+      );
+    } catch (error) {
+      await store.save(
+        record.withState(TrashRecordState.uncertain, detail: '$error'),
+        retainOnFailure: true,
+      );
+      rethrow;
+    }
+    if (!_isDisposed) await refresh();
+  }
+
   Future<int> deleteFiles(
     List<FileItem> files, {
     bool permanently = false,
@@ -2974,24 +3118,58 @@ class PanelNotifier extends ChangeNotifier {
         TrashReceipt? receipt;
         Future<void> Function()? restore;
         if (!permanently) {
-          if (source is LocalPanelSource) {
-            final native = _ref.read(nativeFileOperationsProvider);
-            receipt = await _localFileService.withFileOperationAccess(
-              path,
-              () => native.trash(path),
+          final trashStore = _ref.read(trashHistoryProvider);
+          final record = await trashStore.begin(
+            file: FileReference(
+              storage: origin.storageReference,
+              path: path,
+              objectId: file.uuid,
+            ),
+            name: file.name,
+            isFolder: file.isFolder,
+          );
+          try {
+            if (!origin.isCurrent) {
+              throw StateError(
+                'The original source disconnected before trashing.',
+              );
+            }
+            if (source is LocalPanelSource) {
+              final native = _ref.read(nativeFileOperationsProvider);
+              receipt = await _localFileService.withFileOperationAccess(
+                path,
+                () => native.trash(path),
+              );
+            } else if (source is RemotePanelSource &&
+                source.client is StorageTrashOperations) {
+              receipt = await (source.client as StorageTrashOperations)
+                  .trashPath(path);
+            }
+            if (receipt == null || receipt.originalPath != path) {
+              throw StateError(
+                'The source did not return a matching restore receipt. Inspect its trash before retrying.',
+              );
+            }
+          } catch (error) {
+            await trashStore.save(
+              record.withState(TrashRecordState.uncertain, detail: '$error'),
+              retainOnFailure: true,
             );
-            final capturedReceipt = receipt!;
-            restore = () => _localFileService.withFileOperationAccess(
-              path,
-              () => native.restore(capturedReceipt),
-            );
-          } else if (source is RemotePanelSource &&
-              source.client is StorageTrashOperations) {
-            final trash = source.client as StorageTrashOperations;
-            receipt = await trash.trashPath(path);
-            final capturedReceipt = receipt;
-            restore = () => trash.restoreTrash(capturedReceipt);
+            rethrow;
           }
+          try {
+            await trashStore.save(
+              record.withState(TrashRecordState.trashed, receipt: receipt),
+              retainOnFailure: true,
+            );
+          } catch (error) {
+            _ref
+                .read(errorProvider)
+                .addError(
+                  'The item was trashed, but its restore receipt could not be saved. Restore it before closing the app: $error',
+                );
+          }
+          restore = () => restoreTrashRecord(record.id);
         } else if (source is LocalPanelSource) {
           if (kIsWeb) {
             await _localFileService.deleteEntry(path, file.isFolder);

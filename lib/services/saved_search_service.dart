@@ -86,10 +86,11 @@ class SavedSearch {
       parts.add('${query.nameMode.name}: ${query.namePattern}');
       parts.add(query.recursive ? 'recursive' : 'current directory');
       if (query.maxDepth != null) parts.add('depth ${query.maxDepth}');
-      if (query.contentPattern.isNotEmpty)
+      if (query.contentPattern.isNotEmpty) {
         parts.add(
           'content${query.contentRegex ? " regex" : ""}: ${query.contentPattern}',
         );
+      }
       if (query.searchArchives) parts.add('inside archives');
       if (query.roots.isNotEmpty) parts.add(query.roots.join('; '));
     }
@@ -98,22 +99,28 @@ class SavedSearch {
         'type: ${filterByType.take(3).join(', ')}${filterByType.length > 3 ? '…' : ''}',
       );
     }
-    if (filterByMinSize != null)
+    if (filterByMinSize != null) {
       parts.add('min: ${_fmtSize(filterByMinSize!)}');
-    if (filterByMaxSize != null)
+    }
+    if (filterByMaxSize != null) {
       parts.add('max: ${_fmtSize(filterByMaxSize!)}');
-    if (filterByDateAfter != null)
+    }
+    if (filterByDateAfter != null) {
       parts.add('after: ${_fmtDate(filterByDateAfter!)}');
-    if (filterByDateBefore != null)
+    }
+    if (filterByDateBefore != null) {
       parts.add('before: ${_fmtDate(filterByDateBefore!)}');
+    }
     return parts.isEmpty ? 'No filters' : parts.join(' · ');
   }
 
   static String _fmtSize(int bytes) {
-    if (bytes >= 1024 * 1024 * 1024)
+    if (bytes >= 1024 * 1024 * 1024) {
       return '${(bytes / (1024 * 1024 * 1024)).toStringAsFixed(1)} GB';
-    if (bytes >= 1024 * 1024)
+    }
+    if (bytes >= 1024 * 1024) {
       return '${(bytes / (1024 * 1024)).toStringAsFixed(1)} MB';
+    }
     if (bytes >= 1024) return '${(bytes / 1024).toStringAsFixed(1)} KB';
     return '$bytes B';
   }
@@ -131,7 +138,7 @@ class SavedSearchService {
   static const _prefsKey = 'saved_searches';
 
   /// Load all saved searches from SharedPreferences.
-  Future<List<SavedSearch>> getAll() async {
+  Future<List<SavedSearch>> getAll({bool strict = false}) async {
     try {
       final prefs = await SharedPreferences.getInstance();
       final raw = prefs.getString(_prefsKey);
@@ -142,6 +149,7 @@ class SavedSearchService {
           .toList();
     } catch (e) {
       _log.error('Failed to load saved searches: $e');
+      if (strict) rethrow;
       return [];
     }
   }
@@ -150,17 +158,19 @@ class SavedSearchService {
   Future<void> save(SavedSearch search) async {
     try {
       final prefs = await SharedPreferences.getInstance();
-      final searches = await getAll();
+      final searches = await getAll(strict: true);
       // Remove existing with same name, then add new
       searches.removeWhere((s) => s.name == search.name);
       searches.add(search);
-      await prefs.setString(
+      final saved = await prefs.setString(
         _prefsKey,
         jsonEncode(searches.map((s) => s.toJson()).toList()),
       );
+      if (!saved) throw StateError('Saved criteria could not be persisted.');
       _log.info('Saved search "${search.name}"');
     } catch (e) {
       _log.error('Failed to save search "${search.name}": $e');
+      rethrow;
     }
   }
 
@@ -168,15 +178,17 @@ class SavedSearchService {
   Future<void> delete(String name) async {
     try {
       final prefs = await SharedPreferences.getInstance();
-      final searches = await getAll();
+      final searches = await getAll(strict: true);
       searches.removeWhere((s) => s.name == name);
-      await prefs.setString(
+      final saved = await prefs.setString(
         _prefsKey,
         jsonEncode(searches.map((s) => s.toJson()).toList()),
       );
+      if (!saved) throw StateError('Saved criteria could not be persisted.');
       _log.info('Deleted saved search "$name"');
     } catch (e) {
       _log.error('Failed to delete saved search "$name": $e');
+      rethrow;
     }
   }
 

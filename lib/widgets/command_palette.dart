@@ -23,6 +23,7 @@ import 'pattern_selection_dialog.dart';
 import 'file_list_dialog.dart';
 import 'file_collections_dialog.dart';
 import 'rename_history_dialog.dart';
+import 'trash_history_dialog.dart';
 import 'directory_comparison_dialog.dart';
 import 'file_clipboard_actions.dart';
 import 'pdf_editor_dialog.dart';
@@ -194,6 +195,11 @@ class _CommandPaletteState extends ConsumerState<CommandPalette> {
         name: 'Export File List',
         icon: Icons.playlist_play,
         action: () => showFileListDialog(widget.parentContext, ref, side),
+      ),
+      _Command(
+        name: 'Trash History and Restore Original Items',
+        icon: Icons.restore_from_trash,
+        action: () => showTrashHistoryDialog(widget.parentContext, ref, side),
       ),
       _Command(
         name: 'Rename History, Batch Undo and Recovery',
