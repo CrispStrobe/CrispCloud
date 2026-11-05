@@ -38,6 +38,9 @@ const imageEditorInvariantFilterNames = <String, String>{
 const imageEditorTranslations = <String, Map<String, String>>{
   'en': <String, String>{
     ...imageEditorInvariantFilterNames,
+    'Zoom in': 'Zoom in',
+    'Zoom out': 'Zoom out',
+    'Fit image': 'Fit image',
     'Edit Image': 'Edit Image',
     'File': 'File',
     'Edit': 'Edit',
@@ -170,6 +173,9 @@ const imageEditorTranslations = <String, Map<String, String>>{
   },
   'de': <String, String>{
     ...imageEditorInvariantFilterNames,
+    'Zoom in': 'Vergrößern',
+    'Zoom out': 'Verkleinern',
+    'Fit image': 'Bild einpassen',
     'Edit Image': 'Bild bearbeiten',
     'File': 'Datei',
     'Edit': 'Bearbeiten',
@@ -297,6 +303,9 @@ const imageEditorTranslations = <String, Map<String, String>>{
   },
   'fr': <String, String>{
     ...imageEditorInvariantFilterNames,
+    'Zoom in': 'Agrandir',
+    'Zoom out': 'Réduire',
+    'Fit image': 'Adapter l’image',
     'Edit Image': 'Modifier l’image',
     'File': 'Fichier',
     'Edit': 'Modifier',
@@ -427,6 +436,9 @@ const imageEditorTranslations = <String, Map<String, String>>{
   },
   'es': <String, String>{
     ...imageEditorInvariantFilterNames,
+    'Zoom in': 'Acercar',
+    'Zoom out': 'Alejar',
+    'Fit image': 'Ajustar imagen',
     'Edit Image': 'Editar imagen',
     'File': 'Archivo',
     'Edit': 'Editar',
@@ -555,6 +567,9 @@ const imageEditorTranslations = <String, Map<String, String>>{
   },
   'pt': <String, String>{
     ...imageEditorInvariantFilterNames,
+    'Zoom in': 'Ampliar',
+    'Zoom out': 'Reduzir',
+    'Fit image': 'Ajustar imagem',
     'Edit Image': 'Editar imagem',
     'File': 'Arquivo',
     'Edit': 'Editar',
@@ -683,6 +698,9 @@ const imageEditorTranslations = <String, Map<String, String>>{
   },
   'zh': <String, String>{
     ...imageEditorInvariantFilterNames,
+    'Zoom in': '放大',
+    'Zoom out': '缩小',
+    'Fit image': '适应图像',
     'Edit Image': '编辑图像',
     'File': '文件',
     'Edit': '编辑',
@@ -811,6 +829,9 @@ const imageEditorTranslations = <String, Map<String, String>>{
   },
   'ja': <String, String>{
     ...imageEditorInvariantFilterNames,
+    'Zoom in': '拡大',
+    'Zoom out': '縮小',
+    'Fit image': '画像を画面に合わせる',
     'Edit Image': '画像を編集',
     'File': 'ファイル',
     'Edit': '編集',
@@ -943,6 +964,9 @@ const imageEditorTranslations = <String, Map<String, String>>{
   },
   'ko': <String, String>{
     ...imageEditorInvariantFilterNames,
+    'Zoom in': '확대',
+    'Zoom out': '축소',
+    'Fit image': '이미지 맞춤',
     'Edit Image': '이미지 편집',
     'File': '파일',
     'Edit': '편집',
@@ -1076,6 +1100,9 @@ const imageEditorTranslations = <String, Map<String, String>>{
   },
   'ar': <String, String>{
     ...imageEditorInvariantFilterNames,
+    'Zoom in': 'تكبير',
+    'Zoom out': 'تصغير',
+    'Fit image': 'ملاءمة الصورة',
     'Edit Image': 'تحرير الصورة',
     'File': 'ملف',
     'Edit': 'تحرير',

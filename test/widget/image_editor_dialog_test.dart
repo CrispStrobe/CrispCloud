@@ -264,6 +264,28 @@ void main() {
   setUp(() => SharedPreferences.setMockInitialValues({}));
 
   _desktopTestWidgets(
+    'zoom controls change the view without dirtying the image',
+    (tester) async {
+      final harness = _Harness(tester, _MemoryImageStore());
+      await harness.open();
+      expect(harness.editor.editorScaleFactor, closeTo(1, 0.001));
+      await tester.tap(_command(ImageEditorAction.zoomIn));
+      await tester.pump();
+      expect(harness.editor.editorScaleFactor, closeTo(1.25, 0.001));
+      expect(_saveEnabled(tester), isFalse);
+      await tester.tap(_command(ImageEditorAction.zoomOut));
+      await tester.pump();
+      expect(harness.editor.editorScaleFactor, closeTo(1, 0.001));
+      await tester.tap(_command(ImageEditorAction.zoomIn));
+      await tester.ensureVisible(_command(ImageEditorAction.zoomReset));
+      await tester.tap(_command(ImageEditorAction.zoomReset));
+      await tester.pump();
+      expect(harness.editor.editorScaleFactor, closeTo(1, 0.001));
+      expect(_saveEnabled(tester), isFalse);
+    },
+  );
+
+  _desktopTestWidgets(
     'initial clean state and undo branches use real editor history',
     (tester) async {
       final harness = _Harness(tester, _MemoryImageStore());

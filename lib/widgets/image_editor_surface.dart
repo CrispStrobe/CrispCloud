@@ -66,6 +66,7 @@ class ImageEditorSurface extends StatelessWidget {
               enableIsolateGeneration: enableIsolateGeneration,
             ),
             mainEditor: MainEditorConfigs(
+              enableZoom: true,
               hostOwnsNavigation: true,
               enableKeyboardShortcuts: false,
               enableEscapeButton: false,

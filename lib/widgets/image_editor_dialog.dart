@@ -293,6 +293,20 @@ class _ImageEditorDialogState extends ConsumerState<ImageEditorDialog> {
         editor?.undoAction();
       case ImageEditorAction.redo:
         editor?.redoAction();
+      case ImageEditorAction.zoomIn:
+        if (editor != null) {
+          editor.zoomTo(
+            scale: (editor.editorScaleFactor * 1.25).clamp(1.0, 5.0),
+          );
+        }
+      case ImageEditorAction.zoomOut:
+        if (editor != null) {
+          editor.zoomTo(
+            scale: (editor.editorScaleFactor / 1.25).clamp(1.0, 5.0),
+          );
+        }
+      case ImageEditorAction.zoomReset:
+        editor?.resetZoom();
       case ImageEditorAction.cropRotate:
         editor?.openCropRotateEditor();
       case ImageEditorAction.paint:
@@ -738,6 +752,9 @@ class _ImageEditorDialogState extends ConsumerState<ImageEditorDialog> {
   static const _toolActions = <(ImageEditorAction, String, IconData)>[
     (ImageEditorAction.undo, 'Undo', Icons.undo),
     (ImageEditorAction.redo, 'Redo', Icons.redo),
+    (ImageEditorAction.zoomIn, 'Zoom in', Icons.zoom_in),
+    (ImageEditorAction.zoomOut, 'Zoom out', Icons.zoom_out),
+    (ImageEditorAction.zoomReset, 'Fit image', Icons.fit_screen),
     (ImageEditorAction.cropRotate, 'Crop and rotate', Icons.crop_rotate),
     (ImageEditorAction.paint, 'Draw', Icons.brush_outlined),
     (ImageEditorAction.text, 'Text', Icons.text_fields),
