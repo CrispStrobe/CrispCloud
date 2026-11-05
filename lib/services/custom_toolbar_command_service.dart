@@ -16,6 +16,7 @@ class CustomToolbarCommandService extends ChangeNotifier {
   final _lock = AsyncLock();
   final List<CustomToolbarCommand> _commands = [];
   bool _loaded = false, _disposed = false;
+  String? loadError;
   List<CustomToolbarCommand> get commands => List.unmodifiable(_commands);
   void _changed() {
     if (!_disposed) notifyListeners();
@@ -49,8 +50,52 @@ class CustomToolbarCommandService extends ChangeNotifier {
   }
 
   Future<void> load() => _lock.synchronized(() async {
+    try {
+      await _load();
+      loadError = null;
+    } catch (error) {
+      loadError = error.toString();
+      rethrow;
+    } finally {
+      _changed();
+    }
+  });
+
+  String exportConfiguration() =>
+      const JsonEncoder.withIndent('  ')
+          .convert(_commands.map((command) => command.toJson()).toList());
+
+  static List<CustomToolbarCommand> parseConfiguration(String raw) {
+    if (raw.length > 4 * 1024 * 1024) {
+      throw const FormatException('Command configuration is too large.');
+    }
+    final decoded = jsonDecode(raw);
+    if (decoded is! List || decoded.length > 256) {
+      throw const FormatException('Expected a list of commands.');
+    }
+    final commands = decoded
+        .map(
+          (entry) => CustomToolbarCommand.fromJson(
+            Map<String, dynamic>.from(entry as Map),
+          ),
+        )
+        .toList();
+    if (commands.map((c) => c.id).toSet().length != commands.length) {
+      throw const FormatException('Duplicate command identifiers.');
+    }
+    return List.unmodifiable(commands);
+  }
+
+  Future<void> importConfiguration(String raw) => _lock.synchronized(() async {
     await _load();
-    _changed();
+    final imported = parseConfiguration(raw);
+    if (_commands.length + imported.length > 256 ||
+        imported.any((c) => _commands.any((old) => old.id == c.id))) {
+      throw StateError(
+        'Import contains an existing command or exceeds the command limit.',
+      );
+    }
+    await _save([..._commands, ...imported]);
   });
   Future<void> _save(List<CustomToolbarCommand> next) async {
     final prefs = await SharedPreferences.getInstance();

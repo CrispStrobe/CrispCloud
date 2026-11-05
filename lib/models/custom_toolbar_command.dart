@@ -103,6 +103,69 @@ class CustomToolbarCommand {
         }
       }
     }
+    _validateInlineCode();
+  }
+
+  void _validateInlineCode() {
+    final program = p.posix
+        .basename(executable.replaceAll('\\', '/'))
+        .toLowerCase();
+    final shell = const {
+      'sh',
+      'bash',
+      'zsh',
+      'dash',
+      'ksh',
+      'fish',
+    }.contains(program);
+    final commandShell = const {
+      'cmd',
+      'cmd.exe',
+      'powershell',
+      'powershell.exe',
+      'pwsh',
+      'pwsh.exe',
+    }.contains(program);
+    final interpreter = RegExp(
+      r'^(?:python(?:\d+(?:\.\d+)*)?|node|nodejs|ruby|perl|php|lua)(?:\.exe)?$',
+    ).hasMatch(program);
+    if (!shell && !commandShell && !interpreter) return;
+    final placeholder = RegExp(r'\{[A-Z_]+\}');
+    for (var index = 0; index < arguments.length; index++) {
+      final argument = arguments[index].toLowerCase();
+      final codeFlag = commandShell
+          ? const {
+              '/c',
+              '/k',
+              '-command',
+              '-c',
+              '-encodedcommand',
+              '-enc',
+              '-commandwithargs',
+            }.contains(argument)
+          : shell
+          ? (RegExp(r'^-[a-z]*c[a-z]*$').hasMatch(argument) ||
+                argument == '--command')
+          : const {'-c', '-e', '--eval', '-r'}.contains(argument);
+      if ((argument.startsWith('--eval=') ||
+              argument.startsWith('--command=')) &&
+          placeholder.hasMatch(arguments[index])) {
+        throw const FormatException(
+          'Pass file placeholders as data arguments, not inline program code.',
+        );
+      }
+      if (!codeFlag) continue;
+      final last = commandShell
+          ? arguments.length
+          : (index + 2).clamp(0, arguments.length);
+      for (var codeIndex = index + 1; codeIndex < last; codeIndex++) {
+        if (placeholder.hasMatch(arguments[codeIndex])) {
+          throw const FormatException(
+            'Pass file placeholders as data arguments, not inline program code.',
+          );
+        }
+      }
+    }
   }
 }
 

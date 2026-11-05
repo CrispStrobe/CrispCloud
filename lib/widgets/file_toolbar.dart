@@ -8,7 +8,9 @@ import '../l10n/app_localizations.dart';
 import '../providers/providers.dart';
 import '../providers/panel_source_provider.dart' show panelSourceProvider;
 import '../providers/toolbar_provider.dart' show panelViewModeProvider;
-import '../services/custom_toolbar_command_service.dart';
+import '../providers/custom_command_provider.dart';
+import '../l10n/commander_strings.dart';
+import 'custom_command_dialog.dart';
 import '../services/panel_view_mode_service.dart' show PanelViewMode;
 import 'file_view_selector.dart';
 import 'search_dialogs.dart' show showSearchDialog, showFindDialog;
@@ -16,14 +18,7 @@ import 'search_dialogs.dart' show showSearchDialog, showFindDialog;
 // Re-export decomposed widgets for backward compatibility
 export 'file_breadcrumbs.dart';
 export 'file_selection_bar.dart';
-
-/// Provider for custom toolbar commands.
-final customToolbarCommandServiceProvider =
-    ChangeNotifierProvider<CustomToolbarCommandService>((ref) {
-  final service = CustomToolbarCommandService();
-  service.load();
-  return service;
-});
+export '../providers/custom_command_provider.dart';
 
 class FileToolbar extends ConsumerWidget {
   final PanelSide side;
@@ -43,6 +38,7 @@ class FileToolbar extends ConsumerWidget {
     final search = ref.watch(searchProvider);
     final sortBy = panel.sortBy;
     final sortOrder = panel.sortOrder;
+    final commands = ref.watch(customToolbarCommandServiceProvider).commands;
 
     // Show Browse button when panel is in local mode (either side).
     final panelSource = ref.watch(panelSourceProvider(side));
@@ -50,6 +46,14 @@ class FileToolbar extends ConsumerWidget {
 
     // Build the list of toolbar action buttons (scrollable section)
     final actionButtons = <Widget>[
+      for (final command in commands)
+        IconButton(icon: const Icon(Icons.terminal), tooltip: command.label,
+          onPressed: command.requiresReview
+              ? () => showCustomCommandsDialog(context, ref, side)
+              : () => showCustomCommandRunDialog(context, ref, side, command)),
+      IconButton(icon: const Icon(Icons.code),
+        tooltip: CommanderStrings.translate(context, 'Custom commands'),
+        onPressed: () => showCustomCommandsDialog(context, ref, side)),
       if (isLocalSource || (side == PanelSide.local))
         IconButton(
           icon: const Icon(Icons.folder_open),
@@ -290,8 +294,8 @@ class FileToolbar extends ConsumerWidget {
           controller: controller,
           decoration: InputDecoration(
             labelText: AppLocalizations.of(context)!.folderName,
-            border: OutlineInputBorder(),
-            prefixIcon: Icon(Icons.folder),
+            border: const OutlineInputBorder(),
+            prefixIcon: const Icon(Icons.folder),
           ),
           autofocus: true,
           onSubmitted: (value) async {
@@ -329,8 +333,8 @@ void showPanelFilterDialog(BuildContext context, PanelNotifier panel) {
         controller: controller,
         decoration: InputDecoration(
           labelText: AppLocalizations.of(context)!.typeToFilter,
-          border: OutlineInputBorder(),
-          prefixIcon: Icon(Icons.filter_list),
+          border: const OutlineInputBorder(),
+          prefixIcon: const Icon(Icons.filter_list),
         ),
         autofocus: true,
         onChanged: (value) => panel.setFilter(value),
