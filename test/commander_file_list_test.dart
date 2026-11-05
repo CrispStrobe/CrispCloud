@@ -118,13 +118,19 @@ class _Local extends Fake
   Future<String> getSafeFallbackDirectory() async => directory ?? '/';
   @override
   Future<bool> hasAccessToPath(String path) async => true;
+  final paths = <String>[];
+  Future<void> Function()? onRefresh;
   @override
-  Future<List<FileSystemEntity>?> listDirectory(String path) async =>
-      directory == null
-      ? []
-      : Directory(path).list(followLinks: false).toList();
+  Future<List<FileSystemEntity>?> listDirectory(String path) async {
+    paths.add(path);
+    return directory == null
+        ? []
+        : Directory(path).list(followLinks: false).toList();
+  }
   @override
-  Future<void> refresh() async {}
+  Future<void> refresh() async {
+    await onRefresh?.call();
+  }
   Future<void> Function(String)? onAccess;
   @override
   Future<T> withFileOperationAccess<T>(
@@ -603,6 +609,15 @@ void main() {
       // Append from an ordinary directory while this collection remains open
       // in the other pane and in two inactive tabs of this pane.
       panel.addTab(path: '/two');
+      expect(panel.activeTab!.storage, original.storageReference);
+      expect(
+        container.read(panelSourceProvider(PanelSide.remote)),
+        isA<RemotePanelSource>().having(
+          (source) => source.client,
+          'captured client',
+          same(cloud),
+        ),
+      );
       await panel.navigateToPath('/two', origin: original);
       panel.toggleSelection(
         panel.files!.singleWhere((file) => file.path == '/two/same.txt'),
@@ -647,6 +662,134 @@ void main() {
       expect(prefs.getStringList('commander_collections_v1'), isEmpty);
     },
   );
+
+  test(
+    'a delayed local refresh cannot replace a newer captured cloud navigation',
+    () async {
+      final panel = await remote();
+      final original = panel.captureCurrentOrigin();
+      container.read(panelSourceProvider(PanelSide.remote).notifier).setSource(
+        const LocalPanelSource('/local'),
+      );
+      await panel.refresh();
+      final localReads = local.paths.length;
+      final preparationStarted = Completer<void>();
+      final releasePreparation = Completer<void>();
+      addTearDown(() {
+        if (!releasePreparation.isCompleted) releasePreparation.complete();
+      });
+      local.onRefresh = () {
+        preparationStarted.complete();
+        return releasePreparation.future;
+      };
+
+      final staleRefresh = panel.refresh();
+      await preparationStarted.future;
+      await panel.navigateToPath('/two', origin: original);
+      expect(panel.files!.any((file) => file.path == '/two/same.txt'), isTrue);
+      releasePreparation.complete();
+      await staleRefresh;
+
+      expect(local.paths.length, localReads);
+      expect(panel.currentPath, '/two');
+      expect(panel.files!.any((file) => file.path == '/two/same.txt'), isTrue);
+      expect(panel.captureCurrentOrigin().storageReference, original.storageReference);
+    },
+  );
+
+  test('opening a collection in a new tab skips its interim directory load', () async {
+    final panel = await remote();
+    panel.showSearchResults(
+      [item('/two/same.txt')],
+      origin: panel.captureCurrentOrigin(),
+    );
+    final id = await panel.saveCurrentCollection('Nested item');
+    await panel.clearSearchResults();
+    final previousTab = panel.activeTabId;
+    cloud.paths.clear();
+    local.paths.clear();
+
+    await panel.openCollection(id, newTab: true);
+
+    expect(panel.activeTabId, isNot(previousTab));
+    expect(panel.activeCollectionId, id);
+    expect(panel.files!.single.path, '/two/same.txt');
+    expect(panel.captureOperationOrigin(panel.files!).source, isA<RemotePanelSource>());
+    expect(cloud.paths, contains('/two'));
+    expect(cloud.paths, isNot(contains('/')));
+    expect(local.paths, isEmpty);
+  });
+
+  test('a new tab keeps the cloud namespace and default path during a later refresh', () async {
+    final panel = await remote();
+    final original = panel.captureCurrentOrigin();
+    final path = panel.currentPath;
+    expect(
+      container.read(panelSourceProvider(PanelSide.remote)),
+      isA<LocalPanelSource>(),
+    );
+    final releaseCloud = Completer<void>();
+    cloud.delay = releaseCloud;
+    addTearDown(() {
+      if (!releaseCloud.isCompleted) releaseCloud.complete();
+    });
+    final refreshing = panel.refresh();
+    expect(panel.isLoading, isTrue);
+
+    panel.addTab();
+
+    final source = container.read(panelSourceProvider(PanelSide.remote));
+    expect(source, isA<RemotePanelSource>());
+    expect((source as RemotePanelSource).client, same(cloud));
+    expect(source.currentPath, path);
+    expect(panel.activeTab!.storage, original.storageReference);
+    releaseCloud.complete();
+    await refreshing;
+    await panel.refresh();
+    expect(panel.currentPath, path);
+    expect(panel.captureCurrentOrigin().storageReference, original.storageReference);
+    expect(panel.files!.map((file) => file.name).toSet(), {'a.txt', 'b.txt'});
+  });
+
+  for (final chooseLocal in [false, true]) {
+    test(
+      chooseLocal
+          ? 'a new tab during initial loading honors an explicit local source'
+          : 'a new tab during initial loading retains the legacy cloud source',
+      () async {
+        final panel = container.read(panelProvider(PanelSide.remote));
+        final releaseCloud = Completer<void>();
+        cloud.delay = releaseCloud;
+        addTearDown(() {
+          if (!releaseCloud.isCompleted) releaseCloud.complete();
+        });
+        final initialListing = panel.refresh();
+        expect(cloud.paths, contains('/'));
+        if (chooseLocal) {
+          container.read(panelSourceProvider(PanelSide.remote).notifier).setSource(
+            const LocalPanelSource('/local'),
+          );
+        }
+
+        panel.addTab(path: '/two');
+        final source = container.read(panelSourceProvider(PanelSide.remote));
+        expect(source.currentPath, '/two');
+        expect(source.isLocal, chooseLocal);
+        expect(panel.activeTab!.storage!.isLocal, chooseLocal);
+        releaseCloud.complete();
+        await initialListing;
+        await panel.refresh();
+
+        expect(panel.currentPath, '/two');
+        expect(panel.captureCurrentOrigin().source.isLocal, chooseLocal);
+        expect(
+          panel.files!.any((file) => file.path == '/two/same.txt'),
+          !chooseLocal,
+        );
+        if (chooseLocal) expect(cloud.paths, isNot(contains('/two')));
+      },
+    );
+  }
 
   test(
     'queued local autosaves preserve the later collection marks',

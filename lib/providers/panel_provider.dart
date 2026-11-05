@@ -89,6 +89,7 @@ class PanelNotifier extends ChangeNotifier {
   int _accountGeneration = 0;
   int _connectionGeneration = 0;
   PanelFileOrigin? _currentDirectoryOrigin;
+  bool _sourceWasSelected = false;
   final Set<FileItem> _selection = {};
   FileItem? _lastSelected;
   FileItem? _itemToScrollTo;
@@ -271,6 +272,7 @@ class PanelNotifier extends ChangeNotifier {
     }
     // Listen for panel source changes (e.g. user switches provider in dropdown).
     _ref.listen<PanelSource>(panelSourceProvider(side), (prev, next) {
+      _sourceWasSelected = true;
       if (prev == next) return;
       _pendingTabStorage = null;
       _leaveFileList();
@@ -1317,7 +1319,7 @@ class PanelNotifier extends ChangeNotifier {
     if (collection == null) {
       throw StateError('The saved collection no longer exists.');
     }
-    if (newTab) addTab();
+    if (newTab) _addTab(loadDirectory: false);
     showSearchResults(
       collection.entries.map((entry) => entry.file).toList(),
       collection: collection,
@@ -2790,13 +2792,26 @@ class PanelNotifier extends ChangeNotifier {
             (knownSource?.isRemote ??
                 (selectedSource.isRemote ||
                     (side == PanelSide.remote &&
-                        _currentDirectoryOrigin == null)));
+                        _currentDirectoryOrigin == null &&
+                        !_sourceWasSelected &&
+                        selectedSource == const LocalPanelSource('/'))));
         if (remote) {
           await _loadRemoteFiles();
         } else {
-          _localFileService.currentPath = _localPath;
+          final tabId = _activeTabId;
+          final generation = _listingGeneration;
+          final path = _localPath;
+          _localFileService.currentPath = path;
           await _localFileService.refresh();
-          if (_isDisposed) return;
+          // Preparing a local refresh must not start a new listing after a
+          // newer tab, source, or navigation has already taken over.
+          if (_isDisposed ||
+              tabId != _activeTabId ||
+              generation != _listingGeneration ||
+              path != _localPath ||
+              selectedSource != _ref.read(panelSourceProvider(side))) {
+            return;
+          }
           await _loadLocalFiles();
         }
       }
@@ -3979,27 +3994,99 @@ class PanelNotifier extends ChangeNotifier {
   }
 
   void addTab({String? path}) {
+    _addTab(path: path);
+  }
+
+  void _addTab({String? path, bool loadDirectory = true}) {
+    if (_isDisposed) return;
     _log.debug('addTab: path=${path ?? currentPath}');
-    final directory = path ?? currentPath;
+    final candidate = _showingSearchResults
+        ? _fileListOrigin
+        : _currentDirectoryOrigin;
+    final verifiedOrigin =
+        !_isLoading &&
+            !isInArchive &&
+            _verifiedListingGeneration == _listingGeneration &&
+            candidate?.isCurrent == true
+        ? candidate
+        : null;
+    final selected = _ref.read(panelSourceProvider(side));
+    // The legacy right pane can show cloud storage while its dropdown still
+    // has the default Local value. A reload invalidates rows, not that live
+    // namespace; retain it unless an explicit source choice superseded it.
+    final legacyAlias =
+        side == PanelSide.remote &&
+        !_sourceWasSelected &&
+        selected == const LocalPanelSource('/');
+    final retained = candidate ?? _currentDirectoryOrigin;
+    final fallback = legacyAlias
+        ? (retained?.isCurrent == true
+              ? retained!.source
+              : _remoteSourceForListing() ?? selected)
+        : selected;
+    final source =
+        verifiedOrigin?.source ?? fallback;
+    final directory =
+        path ??
+        (_pendingTabStorage != null ? activeTab?.path : null) ??
+        (isInArchive
+            ? currentPath
+            : _showingSearchResults && candidate?.isCurrent == true
+            ? candidate!.source.currentPath
+            : source.isRemote
+            ? _remotePath
+            : source.isLocal
+            ? _localPath
+            : currentPath);
+    final storage =
+        _pendingTabStorage ??
+        (isInArchive ? activeTab?.storage : null) ??
+        (source is LocalPanelSource || source is RemotePanelSource
+            ? storageReferenceForSource(source)
+            : activeTab?.storage);
     _rememberFileListTab();
     _leaveFileList(forget: false);
+    _listingGeneration++;
     final id = _nextTabId();
     _tabs.add(
       PanelTab(
         id: id,
         path: directory,
-        storage: _currentDirectoryOrigin?.storageReference,
+        storage: storage,
       ),
     );
     _activeTabId = id;
-    if (side == PanelSide.local) {
+    if (storage?.isLocal ?? source.isLocal) {
       _localPath = directory;
     } else {
       _remotePath = directory;
     }
     notifyListeners();
     _saveTabs();
-    refresh();
+    if (!loadDirectory) return;
+    if (isInArchive ||
+        _isFlatView ||
+        (source is! LocalPanelSource && source is! RemotePanelSource)) {
+      refresh();
+      return;
+    }
+    if (_pendingTabStorage != null ||
+        (source is RemotePanelSource && !_isConnectedClient(source.client))) {
+      _pendingTabStorage = storage;
+      _restoreSelectedTab();
+      return;
+    }
+    // Reserve the directory load now, using the captured storage rather than
+    // a pane-position/default-source guess after the previous list is gone.
+    // A newer collection or tab publication invalidates the loader generation.
+    final target = source.withPath(directory);
+    if (selected != target) {
+      _ref.read(panelSourceProvider(side).notifier).setSource(target);
+    } else if (source.isRemote) {
+      _loadRemoteFiles();
+    } else {
+      _loadLocalFiles();
+    }
   }
 
   void closeTab(String tabId) {
