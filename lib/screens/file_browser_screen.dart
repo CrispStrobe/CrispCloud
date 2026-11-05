@@ -20,8 +20,10 @@ import '../services/panel_swap_service.dart';
 import '../services/platform_diagnostics_service.dart';
 import '../services/crash_reporting_service.dart' show CrashReport;
 import '../services/panel_view_mode_service.dart' show PanelViewMode;
+import '../services/code_editor_menu.dart';
 import '../services/office_editor_menu.dart';
 import '../services/image_editor_menu.dart';
+import '../widgets/code_editor_menus.dart';
 import '../widgets/image_editor_menus.dart';
 import '../widgets/audit_log_dialog.dart';
 import '../widgets/log_viewer_dialog.dart';
@@ -75,6 +77,8 @@ class _FileBrowserScreenState extends ConsumerState<FileBrowserScreen> {
         ref.watch(officeEditorMenuProvider);
     final ImageEditorMenuActions? imageEditor =
         ref.watch(imageEditorMenuProvider);
+    final CodeEditorMenuActions? codeEditor =
+        ref.watch(codeEditorMenuProvider);
     final auth = ref.watch(authProvider);
     final showPreview = ref.watch(showPreviewProvider);
     // layoutPresetProvider kept for persistence but no longer drives layout.
@@ -165,7 +169,13 @@ class _FileBrowserScreenState extends ConsumerState<FileBrowserScreen> {
     // macOS: wrap with native menu bar
     if (!kIsWeb && defaultTargetPlatform == TargetPlatform.macOS) {
       return PlatformMenuBar(
-        menus: _buildMacMenus(context, ref, officeEditor, imageEditor),
+        menus: _buildMacMenus(
+          context,
+          ref,
+          officeEditor,
+          imageEditor,
+          codeEditor,
+        ),
         child: scaffold,
       );
     }
@@ -181,6 +191,7 @@ class _FileBrowserScreenState extends ConsumerState<FileBrowserScreen> {
     WidgetRef ref,
     OfficeEditorMenuActions? editor,
     ImageEditorMenuActions? imageEditor,
+    CodeEditorMenuActions? codeEditor,
   ) {
     final appMenu = PlatformMenu(
       label: 'CrispCloud',
@@ -216,6 +227,13 @@ class _FileBrowserScreenState extends ConsumerState<FileBrowserScreen> {
       return <PlatformMenuItem>[
         appMenu,
         ...buildImageEditorPlatformMenus(context, imageEditor),
+      ];
+    }
+
+    if (codeEditor != null) {
+      return <PlatformMenuItem>[
+        appMenu,
+        ...buildCodeEditorPlatformMenus(codeEditor),
       ];
     }
 
