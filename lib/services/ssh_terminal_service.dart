@@ -68,24 +68,24 @@ class SshSession {
   }
 
   Map<String, dynamic> toJson() => {
-        'id': id,
-        'host': host,
-        'port': port,
-        'username': username,
-        'connected': connected,
-        'startedAt': startedAt.toIso8601String(),
-        'lastActivityAt': lastActivityAt.toIso8601String(),
-      };
+    'id': id,
+    'host': host,
+    'port': port,
+    'username': username,
+    'connected': connected,
+    'startedAt': startedAt.toIso8601String(),
+    'lastActivityAt': lastActivityAt.toIso8601String(),
+  };
 
   factory SshSession.fromJson(Map<String, dynamic> json) => SshSession(
-        id: json['id'] as String,
-        host: json['host'] as String,
-        port: json['port'] as int,
-        username: json['username'] as String,
-        connected: json['connected'] as bool,
-        startedAt: DateTime.parse(json['startedAt'] as String),
-        lastActivityAt: DateTime.parse(json['lastActivityAt'] as String),
-      );
+    id: json['id'] as String,
+    host: json['host'] as String,
+    port: json['port'] as int,
+    username: json['username'] as String,
+    connected: json['connected'] as bool,
+    startedAt: DateTime.parse(json['startedAt'] as String),
+    lastActivityAt: DateTime.parse(json['lastActivityAt'] as String),
+  );
 
   @override
   bool operator ==(Object other) => other is SshSession && other.id == id;
@@ -136,8 +136,9 @@ class SshTerminalService {
   final Duration idleTimeout;
   HostKeyPrompt? confirmHostKey;
   late final SshKnownHosts _knownHosts = SshKnownHosts(
-      read: () => _secure.read('ssh_known_hosts_v1'),
-      write: (value) => _secure.write('ssh_known_hosts_v1', value));
+    read: () => _secure.read('ssh_known_hosts_v1'),
+    write: (value) => _secure.write('ssh_known_hosts_v1', value),
+  );
   final SecureStorage _secure;
 
   /// Internal session registry.
@@ -146,13 +147,15 @@ class SshTerminalService {
   /// Periodic idle-check timer.
   Timer? _idleTimer;
 
-  SshTerminalService(
-      {this.idleTimeout = defaultIdleTimeout,
-      SecureStorage? secureStorage,
-      this.confirmHostKey})
-      : _secure = secureStorage ?? PlatformSecureStorage() {
-    _idleTimer =
-        Timer.periodic(const Duration(minutes: 1), (_) => _sweepIdle());
+  SshTerminalService({
+    this.idleTimeout = defaultIdleTimeout,
+    SecureStorage? secureStorage,
+    this.confirmHostKey,
+  }) : _secure = secureStorage ?? PlatformSecureStorage() {
+    _idleTimer = Timer.periodic(
+      const Duration(minutes: 1),
+      (_) => _sweepIdle(),
+    );
   }
 
   // -------------------------------------------------------------------------
@@ -177,8 +180,10 @@ class SshTerminalService {
 
   void _checkPlatform() {
     if (!isSupported) {
-      throw TerminalMountUnsupportedError(TerminalMountCode.sshUnsupported,
-          'SSH terminal is not supported on web.');
+      throw TerminalMountUnsupportedError(
+        TerminalMountCode.sshUnsupported,
+        'SSH terminal is not supported on web.',
+      );
     }
   }
 
@@ -206,19 +211,29 @@ class SshTerminalService {
 
     SSHClient client;
     try {
-      final socket = await SSHSocket.connect(host, port,
-          timeout: const Duration(seconds: 15));
-      client = await openVerifiedSsh(socket,
-          username: username,
-          password: password,
-          verify: (_, fingerprint) => _knownHosts.verify(
-              SshKnownHosts.endpoint(host, port), utf8.decode(fingerprint),
-              prompt: confirmHostKey));
+      final socket = await SSHSocket.connect(
+        host,
+        port,
+        timeout: const Duration(seconds: 15),
+      );
+      client = await openVerifiedSsh(
+        socket,
+        username: username,
+        password: password,
+        verify: (_, fingerprint) => _knownHosts.verify(
+          SshKnownHosts.endpoint(host, port),
+          utf8.decode(fingerprint),
+          prompt: confirmHostKey,
+        ),
+      );
       await client.authenticated;
     } catch (e) {
       _log.error('SSH connect failed', e);
-      throw TerminalMountException(TerminalMountCode.sshConnection,
-          'SSH connection failed: $e', {'error': e});
+      throw TerminalMountException(
+        TerminalMountCode.sshConnection,
+        'SSH connection failed: $e',
+        {'error': e},
+      );
     }
 
     final session = SshSession(
@@ -265,21 +280,33 @@ class SshTerminalService {
       final keyPair = _parseKeyPair(privateKey);
       if (keyPair == null) {
         throw const TerminalMountFormatException(
-            TerminalMountCode.sshInvalidKey, 'Invalid SSH private key');
+          TerminalMountCode.sshInvalidKey,
+          'Invalid SSH private key',
+        );
       }
-      final socket = await SSHSocket.connect(host, port,
-          timeout: const Duration(seconds: 15));
-      client = await openVerifiedSsh(socket,
-          username: username,
-          identities: [keyPair],
-          verify: (_, fingerprint) => _knownHosts.verify(
-              SshKnownHosts.endpoint(host, port), utf8.decode(fingerprint),
-              prompt: confirmHostKey));
+      final socket = await SSHSocket.connect(
+        host,
+        port,
+        timeout: const Duration(seconds: 15),
+      );
+      client = await openVerifiedSsh(
+        socket,
+        username: username,
+        identities: [keyPair],
+        verify: (_, fingerprint) => _knownHosts.verify(
+          SshKnownHosts.endpoint(host, port),
+          utf8.decode(fingerprint),
+          prompt: confirmHostKey,
+        ),
+      );
       await client.authenticated;
     } catch (e) {
       _log.error('SSH key-connect failed', e);
-      throw TerminalMountException(TerminalMountCode.sshKeyConnection,
-          'SSH key-based connection failed: $e', {'error': e});
+      throw TerminalMountException(
+        TerminalMountCode.sshKeyConnection,
+        'SSH key-based connection failed: $e',
+        {'error': e},
+      );
     }
 
     final session = SshSession(
@@ -329,7 +356,11 @@ class SshTerminalService {
     final state = _requireSession(sessionId);
     final client = state.client;
     if (client == null || client.isClosed) {
-      throw StateError('Session $sessionId is not connected');
+      throw TerminalMountStateError(
+        TerminalMountCode.sshDisconnected,
+        'Session $sessionId is not connected',
+        {'session': sessionId},
+      );
     }
 
     _touch(sessionId);
@@ -341,8 +372,11 @@ class SshTerminalService {
       return output;
     } catch (e) {
       _log.error('execute error', e);
-      throw TerminalMountException(TerminalMountCode.sshCommand,
-          'Command execution failed: $e', {'error': e});
+      throw TerminalMountException(
+        TerminalMountCode.sshCommand,
+        'Command execution failed: $e',
+        {'error': e},
+      );
     }
   }
 
@@ -357,7 +391,11 @@ class SshTerminalService {
     final state = _requireSession(sessionId);
     final client = state.client;
     if (client == null || client.isClosed) {
-      throw StateError('Session $sessionId is not connected');
+      throw TerminalMountStateError(
+        TerminalMountCode.sshDisconnected,
+        'Session $sessionId is not connected',
+        {'session': sessionId},
+      );
     }
 
     _touch(sessionId);
@@ -370,11 +408,7 @@ class SshTerminalService {
     }
 
     final shell = await client.shell(
-      pty: const SSHPtyConfig(
-        type: 'xterm-256color',
-        width: 80,
-        height: 24,
-      ),
+      pty: const SSHPtyConfig(type: 'xterm-256color', width: 80, height: 24),
     );
 
     state.shellSession = shell;
@@ -383,25 +417,29 @@ class SshTerminalService {
     state.shellOutput = controller;
 
     // Pipe stdout.
-    shell.stdout.transform(const _BytesToStringTransformer()).listen(
-      (data) {
-        _touch(sessionId);
-        controller.add(data);
-      },
-      onError: controller.addError,
-      onDone: controller.close,
-      cancelOnError: false,
-    );
+    shell.stdout
+        .transform(const _BytesToStringTransformer())
+        .listen(
+          (data) {
+            _touch(sessionId);
+            controller.add(data);
+          },
+          onError: controller.addError,
+          onDone: controller.close,
+          cancelOnError: false,
+        );
 
     // Pipe stderr (if distinct).
-    shell.stderr.transform(const _BytesToStringTransformer()).listen(
-      (data) {
-        _touch(sessionId);
-        controller.add(data);
-      },
-      onError: (e) {},
-      cancelOnError: false,
-    );
+    shell.stderr
+        .transform(const _BytesToStringTransformer())
+        .listen(
+          (data) {
+            _touch(sessionId);
+            controller.add(data);
+          },
+          onError: (e) {},
+          cancelOnError: false,
+        );
 
     return controller.stream;
   }
@@ -411,7 +449,11 @@ class SshTerminalService {
     final state = _requireSession(sessionId);
     final shell = state.shellSession;
     if (shell == null) {
-      throw StateError('No active shell for session $sessionId');
+      throw TerminalMountStateError(
+        TerminalMountCode.sshNoShell,
+        'No active shell for session $sessionId',
+        {'session': sessionId},
+      );
     }
 
     _touch(sessionId);
@@ -421,11 +463,7 @@ class SshTerminalService {
   /// Notifies the remote host of a terminal resize to [width] × [height].
   ///
   /// Throws [ArgumentError] when dimensions are not positive.
-  Future<void> resizeTerminal(
-    String sessionId,
-    int width,
-    int height,
-  ) async {
+  Future<void> resizeTerminal(String sessionId, int width, int height) async {
     if (width <= 0 || height <= 0) {
       throw ArgumentError(
         'Terminal dimensions must be positive (got ${width}x$height)',
@@ -435,7 +473,11 @@ class SshTerminalService {
     final state = _requireSession(sessionId);
     final shell = state.shellSession;
     if (shell == null) {
-      throw StateError('No active shell for session $sessionId');
+      throw TerminalMountStateError(
+        TerminalMountCode.sshNoShell,
+        'No active shell for session $sessionId',
+        {'session': sessionId},
+      );
     }
 
     _touch(sessionId);
@@ -472,8 +514,10 @@ class SshTerminalService {
 
   void _checkPoolCapacity() {
     if (_sessions.length >= maxSessions) {
-      throw StateError(
+      throw TerminalMountStateError(
+        TerminalMountCode.sshPoolFull,
         'SSH session pool is full (max $maxSessions concurrent sessions).',
+        {'max': maxSessions},
       );
     }
   }
@@ -481,7 +525,11 @@ class SshTerminalService {
   _SessionState _requireSession(String sessionId) {
     final state = _sessions[sessionId];
     if (state == null) {
-      throw ArgumentError('Unknown session id: $sessionId');
+      throw TerminalMountArgumentError(
+        TerminalMountCode.sshUnknownSession,
+        'Unknown session id: $sessionId',
+        {'session': sessionId},
+      );
     }
     return state;
   }
@@ -489,12 +537,13 @@ class SshTerminalService {
   void _touch(String sessionId) {
     final state = _sessions[sessionId];
     if (state == null) return;
-    _sessions[sessionId] = _SessionState(
-      session: state.session.copyWith(lastActivityAt: DateTime.now()),
-      client: state.client,
-    )
-      ..shellSession = state.shellSession
-      ..shellOutput = state.shellOutput;
+    _sessions[sessionId] =
+        _SessionState(
+            session: state.session.copyWith(lastActivityAt: DateTime.now()),
+            client: state.client,
+          )
+          ..shellSession = state.shellSession
+          ..shellOutput = state.shellOutput;
   }
 
   Future<void> _closeState(_SessionState state) async {
