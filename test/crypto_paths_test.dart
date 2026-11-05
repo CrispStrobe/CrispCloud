@@ -35,6 +35,17 @@ class _MemInner implements CloudStorageClient {
   Uint8List? stored;
 
   @override
+  String get providerName => 'memory-crypto-fixture';
+  @override
+  String get rootPath => '/';
+  @override
+  bool get isAuthenticated => true;
+  @override
+  String? get userId => 'crypto-fixture-account';
+  @override
+  String? get bucketId => null;
+
+  @override
   Future<void> uploadFile(
       List<int> fileData, String fileName, String targetPath,
       {Function(int, int)? onProgress}) async {
