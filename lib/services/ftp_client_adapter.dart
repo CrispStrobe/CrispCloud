@@ -1,6 +1,8 @@
 import '../models/storage_reference.dart';
+
 // lib/services/ftp_client_adapter.dart
 import 'dart:io';
+
 import 'package:ftpconnect/ftpconnect.dart';
 import 'package:path/path.dart' as p;
 import 'package:flutter/foundation.dart';
@@ -10,9 +12,26 @@ import 'ftp_config_service.dart';
 import 'log_service.dart';
 import 'secure_storage_service.dart';
 
-class FTPClientAdapter extends CloudStorageClient implements StorageNamespaceIdentity {
+class FTPClientAdapter extends CloudStorageClient
+    with CloudTransferOperations
+    implements StorageNamespaceIdentity {
   @override
   String get storageNamespace => '${_host ?? ''}:$_port';
+
+  @override
+  StorageTransferCapabilities get transferCapabilities =>
+      const StorageTransferCapabilities(
+        nativeMove: true,
+        atomicMove: true,
+        deleteEmptyDirectory: true,
+      );
+
+  @override
+  Future<void> deleteDirectoryIfEmpty(String path) async {
+    await _ensureConnection();
+    final result = await _ftpClient!.deleteEmptyDirectory(path);
+    if (!result) throw StateError('FTP refused to remove the empty directory.');
+  }
 
   static const _log = Log('FTPClient');
 
@@ -30,9 +49,12 @@ class FTPClientAdapter extends CloudStorageClient implements StorageNamespaceIde
   bool _authenticated = false;
 
   FTPClientAdapter({required dynamic config})
-      : _config = (config is FTPConfigService)
-            ? config
-            : FTPConfigService(configPath: '', secureStorage: InMemorySecureStorage());
+    : _config = (config is FTPConfigService)
+          ? config
+          : FTPConfigService(
+              configPath: '',
+              secureStorage: InMemorySecureStorage(),
+            );
 
   @override
   String get providerName => 'FTP';
@@ -99,7 +121,11 @@ class FTPClientAdapter extends CloudStorageClient implements StorageNamespaceIde
   // --- Interface Implementation ---
 
   @override
-  Future<void> login(String email, String password, {String? twoFactorCode}) async {
+  Future<void> login(
+    String email,
+    String password, {
+    String? twoFactorCode,
+  }) async {
     if (kIsWeb) {
       throw UnsupportedError('FTP is not supported on Web');
     }
@@ -132,7 +158,9 @@ class FTPClientAdapter extends CloudStorageClient implements StorageNamespaceIde
         host = hostPart;
       }
     } else {
-      throw Exception('Format must be user@host[:port] (e.g. user@ftp.example.com:21)');
+      throw Exception(
+        'Format must be user@host[:port] (e.g. user@ftp.example.com:21)',
+      );
     }
 
     await _config.saveCredentials({
@@ -237,10 +265,7 @@ class FTPClientAdapter extends CloudStorageClient implements StorageNamespaceIde
       throw Exception('Failed to list path $path: $e');
     }
 
-    return {
-      'folders': folders,
-      'files': files,
-    };
+    return {'folders': folders, 'files': files};
   }
 
   @override
@@ -260,7 +285,10 @@ class FTPClientAdapter extends CloudStorageClient implements StorageNamespaceIde
       await tempFile.writeAsBytes(fileData);
 
       await _ftpClient!.changeDirectory(targetPath);
-      final success = await _ftpClient!.uploadFile(tempFile, sRemoteName: fileName);
+      final success = await _ftpClient!.uploadFile(
+        tempFile,
+        sRemoteName: fileName,
+      );
       if (!success) {
         throw Exception('FTP upload failed for $fileName');
       }
@@ -303,7 +331,9 @@ class FTPClientAdapter extends CloudStorageClient implements StorageNamespaceIde
     await _ensureConnection();
 
     final tempDir = Directory.systemTemp;
-    final tempFile = File(p.join(tempDir.path, 'ftp_dl_${p.basename(remotePath)}'));
+    final tempFile = File(
+      p.join(tempDir.path, 'ftp_dl_${p.basename(remotePath)}'),
+    );
 
     try {
       final dir = p.posix.dirname(remotePath);

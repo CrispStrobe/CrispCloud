@@ -14,15 +14,17 @@ import '../models/storage_reference.dart';
 import 'dart:async';
 import 'dart:convert';
 import 'dart:io';
-import 'dart:typed_data';
 
 import 'package:crypto/crypto.dart';
+import 'package:flutter/foundation.dart';
 import 'package:http/http.dart' as http;
+import 'package:uuid/uuid.dart';
 
 import 'azure_config_service.dart';
 import 'cloud_storage_interface.dart';
 import 'log_service.dart';
 import 'secure_storage_service.dart';
+import 'bounded_transfer_stream.dart';
 
 // ────────────────────────────────────────────────────────────────────────────
 // Auth mode enum
@@ -64,9 +66,107 @@ extension AzureBlobTierName on AzureBlobTier {
 // AzureBlobAdapter
 // ────────────────────────────────────────────────────────────────────────────
 
-class AzureBlobAdapter extends CloudStorageClient implements StorageNamespaceIdentity {
+class AzureBlobAdapter extends CloudStorageClient
+    with CloudTransferOperations
+    implements StorageNamespaceIdentity {
   @override
   String get storageNamespace => '${_accountName ?? ''}|${_container ?? ''}';
+
+  @override
+  StorageTransferCapabilities get transferCapabilities =>
+      const StorageTransferCapabilities(
+        caseSensitivity: StorageCaseSensitivity.sensitive,
+        nativeCopy: true,
+        noReplaceCopy: true,
+        conditionalCopy: true,
+        conditionalDelete: true,
+        boundedUpload: true,
+        boundedDownload: !kIsWeb,
+      );
+
+  @override
+  Future<CloudTransferResult> copyToExact(
+    String sourcePath,
+    String destinationPath, {
+    bool replace = false,
+    String? expectedSourceVersion,
+    String? expectedDestinationVersion,
+    TransferCheckpoint? checkpoint,
+    void Function(int, int)? onProgress,
+  }) async {
+    final src = _splitPath(sourcePath);
+    final dst = _splitPath(destinationPath);
+    if (src.blob.isEmpty || dst.blob.isEmpty) {
+      throw UnsupportedError('Azure container roots are not copyable objects.');
+    }
+    final sourceUri = _buildUri(
+      _effectiveContainer(src.container),
+      blob: src.blob,
+    );
+    final targetUri = _buildUri(
+      _effectiveContainer(dst.container),
+      blob: dst.blob,
+    );
+    await checkpoint?.call();
+    var response = await _put(
+      targetUri,
+      const [],
+      extraHeaders: {
+        'x-ms-copy-source': sourceUri.toString(),
+        if (!replace) 'If-None-Match': '*',
+        if (expectedDestinationVersion != null)
+          'If-Match': expectedDestinationVersion,
+        if (expectedSourceVersion != null)
+          'x-ms-source-if-match': expectedSourceVersion,
+      },
+    );
+    final copyId = response.headers['x-ms-copy-id'];
+    final deadline = DateTime.now().add(const Duration(minutes: 30));
+    while (response.headers['x-ms-copy-status'] == 'pending') {
+      await checkpoint?.call();
+      if (DateTime.now().isAfter(deadline)) {
+        throw StateError(
+          'Azure copy remains pending. Review the destination before retrying.',
+        );
+      }
+      await Future<void>.delayed(const Duration(seconds: 1));
+      response = await _head(targetUri);
+      _checkStatus(response);
+      if (copyId != null && response.headers['x-ms-copy-id'] != copyId) {
+        throw StateError('Another Azure copy replaced this destination.');
+      }
+    }
+    if (response.headers['x-ms-copy-status'] != 'success') {
+      throw StateError(
+        'Azure copy did not complete: ${response.headers['x-ms-copy-status'] ?? 'unconfirmed'}',
+      );
+    }
+    return CloudTransferResult(
+      path: destinationPath,
+      version: response.headers['etag'],
+      size: int.tryParse(response.headers['content-length'] ?? ''),
+    );
+  }
+
+  @override
+  Future<void> deleteTransferFile(
+    String path, {
+    String? expectedVersion,
+  }) async {
+    if (expectedVersion == null) {
+      throw UnsupportedError(
+        'Conditional Azure deletion requires a captured ETag.',
+      );
+    }
+    final value = _splitPath(path);
+    final uri = _buildUri(
+      _effectiveContainer(value.container),
+      blob: value.blob,
+    );
+    final headers = _baseHeaders(extra: {'If-Match': expectedVersion});
+    _addSharedKeyAuth(headers, 'DELETE', uri, const []);
+    _checkStatus(await http.delete(uri, headers: headers));
+  }
 
   static const _log = Log('AzureBlob');
 
@@ -86,9 +186,9 @@ class AzureBlobAdapter extends CloudStorageClient implements StorageNamespaceIde
   bool _authenticated = false;
 
   AzureBlobAdapter({required dynamic config})
-      : _config = (config is AzureConfigService)
-            ? config
-            : AzureConfigService(secureStorage: InMemorySecureStorage());
+    : _config = (config is AzureConfigService)
+          ? config
+          : AzureConfigService(secureStorage: InMemorySecureStorage());
 
   // ── CloudStorageClient identity ─────────────────────────────────────────────
 
@@ -144,12 +244,17 @@ class AzureBlobAdapter extends CloudStorageClient implements StorageNamespaceIde
   /// expected in the secure store or was injected via [loginWithKey],
   /// [loginWithSas], or [loginWithConnectionString].
   @override
-  Future<void> login(String email, String password,
-      {String? twoFactorCode}) async {
+  Future<void> login(
+    String email,
+    String password, {
+    String? twoFactorCode,
+  }) async {
     _log.info('login: loading saved Azure credentials');
     final creds = await _config.readCredentials();
     if (creds == null) {
-      throw Exception('No Azure credentials found. Call a loginWith* helper first.');
+      throw Exception(
+        'No Azure credentials found. Call a loginWith* helper first.',
+      );
     }
     _applyCredentialMap(creds);
   }
@@ -255,7 +360,9 @@ class AzureBlobAdapter extends CloudStorageClient implements StorageNamespaceIde
   String _effectiveContainer(String? pathContainer) {
     final c = pathContainer ?? _container;
     if (c == null || c.isEmpty) {
-      throw StateError('No container specified and no default container configured');
+      throw StateError(
+        'No container specified and no default container configured',
+      );
     }
     return c;
   }
@@ -297,7 +404,9 @@ class AzureBlobAdapter extends CloudStorageClient implements StorageNamespaceIde
 
     final uri = Uri.parse(sb.toString());
     if (allParams.isNotEmpty) {
-      return uri.replace(queryParameters: {...uri.queryParameters, ...allParams});
+      return uri.replace(
+        queryParameters: {...uri.queryParameters, ...allParams},
+      );
     }
     return uri;
   }
@@ -325,8 +434,18 @@ class AzureBlobAdapter extends CloudStorageClient implements StorageNamespaceIde
   static String _httpDate(DateTime dt) {
     const days = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'];
     const months = [
-      'Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun',
-      'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'
+      'Jan',
+      'Feb',
+      'Mar',
+      'Apr',
+      'May',
+      'Jun',
+      'Jul',
+      'Aug',
+      'Sep',
+      'Oct',
+      'Nov',
+      'Dec',
     ];
     return '${days[dt.weekday - 1]}, '
         '${dt.day.toString().padLeft(2, '0')} '
@@ -354,10 +473,11 @@ class AzureBlobAdapter extends CloudStorageClient implements StorageNamespaceIde
     const date = ''; // x-ms-date takes precedence; leave this empty
 
     // Canonicalized headers: sort x-ms-* headers (lowercase), newline-delimited
-    final msHeaders = headers.entries
-        .where((e) => e.key.toLowerCase().startsWith('x-ms-'))
-        .toList()
-      ..sort((a, b) => a.key.toLowerCase().compareTo(b.key.toLowerCase()));
+    final msHeaders =
+        headers.entries
+            .where((e) => e.key.toLowerCase().startsWith('x-ms-'))
+            .toList()
+          ..sort((a, b) => a.key.toLowerCase().compareTo(b.key.toLowerCase()));
     final canonicalizedHeaders = msHeaders
         .map((e) => '${e.key.toLowerCase()}:${e.value}')
         .join('\n');
@@ -374,6 +494,12 @@ class AzureBlobAdapter extends CloudStorageClient implements StorageNamespaceIde
       }
     }
 
+    String header(String name) =>
+        headers.entries
+            .where((entry) => entry.key.toLowerCase() == name)
+            .map((entry) => entry.value)
+            .firstOrNull ??
+        '';
     final stringToSign = [
       method.toUpperCase(),
       '', // Content-Encoding
@@ -382,25 +508,30 @@ class AzureBlobAdapter extends CloudStorageClient implements StorageNamespaceIde
       '', // Content-MD5
       contentType,
       date, // Date (empty — using x-ms-date)
-      '', // If-Modified-Since
-      '', // If-Match
-      '', // If-None-Match
-      '', // If-Unmodified-Since
-      '', // Range
+      header('if-modified-since'),
+      header('if-match'),
+      header('if-none-match'),
+      header('if-unmodified-since'),
+      header('range'),
       canonicalizedHeaders,
       canonicalizedResource.toString(),
     ].join('\n');
 
     final keyBytes = base64.decode(_accountKey!);
     final hmac = Hmac(sha256, keyBytes);
-    final signature = base64.encode(hmac.convert(utf8.encode(stringToSign)).bytes);
+    final signature = base64.encode(
+      hmac.convert(utf8.encode(stringToSign)).bytes,
+    );
 
     headers['Authorization'] = 'SharedKey $account:$signature';
   }
 
   // ── HTTP helpers ─────────────────────────────────────────────────────────────
 
-  Future<http.Response> _get(Uri uri, {Map<String, String>? extraHeaders}) async {
+  Future<http.Response> _get(
+    Uri uri, {
+    Map<String, String>? extraHeaders,
+  }) async {
     final headers = _baseHeaders(extra: extraHeaders);
     _addSharedKeyAuth(headers, 'GET', uri, const []);
     _log.debug('GET $uri');
@@ -420,8 +551,11 @@ class AzureBlobAdapter extends CloudStorageClient implements StorageNamespaceIde
     );
     _addSharedKeyAuth(headers, 'PUT', uri, body);
     _log.debug('PUT $uri (${body.length} bytes)');
-    final response =
-        await http.put(uri, headers: headers, body: Uint8List.fromList(body));
+    final response = await http.put(
+      uri,
+      headers: headers,
+      body: Uint8List.fromList(body),
+    );
     _checkStatus(response);
     return response;
   }
@@ -448,7 +582,8 @@ class AzureBlobAdapter extends CloudStorageClient implements StorageNamespaceIde
   void _checkStatus(http.Response resp) {
     if (resp.statusCode >= 400) {
       throw Exception(
-          'Azure Blob error ${resp.statusCode}: ${resp.reasonPhrase}\n${resp.body}');
+        'Azure Blob error ${resp.statusCode}: ${resp.reasonPhrase}\n${resp.body}',
+      );
     }
   }
 
@@ -479,13 +614,17 @@ class AzureBlobAdapter extends CloudStorageClient implements StorageNamespaceIde
     final folders = <Map<String, dynamic>>[];
 
     // ── Virtual directories (Prefix elements inside BlobPrefix) ──
-    final prefixPattern =
-        RegExp(r'<BlobPrefix>(.*?)</BlobPrefix>', dotAll: true);
+    final prefixPattern = RegExp(
+      r'<BlobPrefix>(.*?)</BlobPrefix>',
+      dotAll: true,
+    );
     for (final match in prefixPattern.allMatches(xml)) {
       final block = match.group(1) ?? '';
       final name = _xmlValue(block, 'Name') ?? '';
       // Remove trailing '/' from virtual directory name
-      final cleanName = name.endsWith('/') ? name.substring(0, name.length - 1) : name;
+      final cleanName = name.endsWith('/')
+          ? name.substring(0, name.length - 1)
+          : name;
       // Strip leading path to get the leaf segment
       final leaf = cleanName.contains('/')
           ? cleanName.split('/').last
@@ -512,6 +651,7 @@ class AzureBlobAdapter extends CloudStorageClient implements StorageNamespaceIde
         'name': leaf,
         'path': name,
         'size': int.tryParse(sizeStr) ?? 0,
+        if (_xmlValue(block, 'Etag') != null) 'etag': _xmlValue(block, 'Etag'),
         if (lastModified != null) 'lastModified': lastModified,
         if (contentType != null) 'contentType': contentType,
         if (tier != null) 'tier': tier,
@@ -525,8 +665,10 @@ class AzureBlobAdapter extends CloudStorageClient implements StorageNamespaceIde
   /// Parses a ListContainersResult XML blob into a list of container names.
   static List<Map<String, dynamic>> _parseContainerList(String xml) {
     final containers = <Map<String, dynamic>>[];
-    final containerPattern =
-        RegExp(r'<Container>(.*?)</Container>', dotAll: true);
+    final containerPattern = RegExp(
+      r'<Container>(.*?)</Container>',
+      dotAll: true,
+    );
     for (final match in containerPattern.allMatches(xml)) {
       final block = match.group(1) ?? '';
       final name = _xmlValue(block, 'Name') ?? '';
@@ -555,10 +697,7 @@ class AzureBlobAdapter extends CloudStorageClient implements StorageNamespaceIde
     if (blob.isEmpty) {
       // Container existence — GET ?restype=container
       try {
-        final uri = _buildUri(
-          container,
-          queryParams: {'restype': 'container'},
-        );
+        final uri = _buildUri(container, queryParams: {'restype': 'container'});
         await _get(uri);
         return {'name': container, 'isFolder': true, 'path': '/$container'};
       } catch (_) {
@@ -576,6 +715,7 @@ class AzureBlobAdapter extends CloudStorageClient implements StorageNamespaceIde
           'name': blob.contains('/') ? blob.split('/').last : blob,
           'path': '/$container/$blob',
           'size': int.tryParse(sizeStr) ?? 0,
+          if (resp.headers['etag'] != null) 'etag': resp.headers['etag'],
           'isFolder': false,
           if (resp.headers['last-modified'] != null)
             'lastModified': resp.headers['last-modified'],
@@ -651,9 +791,7 @@ class AzureBlobAdapter extends CloudStorageClient implements StorageNamespaceIde
         ? fileName
         : (blob.endsWith('/') ? '$blob$fileName' : blob);
 
-    final extraHeaders = <String, String>{
-      'x-ms-blob-type': 'BlockBlob',
-    };
+    final extraHeaders = <String, String>{'x-ms-blob-type': 'BlockBlob'};
     if (tier != null) {
       extraHeaders['x-ms-access-tier'] = tier.headerValue;
     }
@@ -683,7 +821,9 @@ class AzureBlobAdapter extends CloudStorageClient implements StorageNamespaceIde
   }) async {
     final (:container, :blob) = _splitPath(remotePath);
     final c = _effectiveContainer(container);
-    if (blob.isEmpty) throw ArgumentError('Cannot download a container as a file');
+    if (blob.isEmpty) {
+      throw ArgumentError('Cannot download a container as a file');
+    }
 
     final uri = _buildUri(c, blob: blob);
     final resp = await _get(uri);
@@ -766,30 +906,7 @@ class AzureBlobAdapter extends CloudStorageClient implements StorageNamespaceIde
   }
 
   Future<void> _serverCopyBlob(String sourcePath, String targetPath) async {
-    final srcParts = _splitPath(sourcePath);
-    final dstParts = _splitPath(targetPath);
-    final sourceBlob = srcParts.blob;
-    final destBlob = dstParts.blob;
-
-    final sc = _effectiveContainer(srcParts.container);
-    final dc = _effectiveContainer(dstParts.container);
-
-    if (sourceBlob.isEmpty || destBlob.isEmpty) {
-      throw ArgumentError('Source and target must be blob paths, not container roots');
-    }
-
-    // Build the copy-source URL (without auth — source must be accessible)
-    final sourceUri = _buildUri(sc, blob: sourceBlob);
-    final destUri = _buildUri(dc, blob: destBlob);
-
-    final headers = _baseHeaders(extra: {
-      'x-ms-copy-source': sourceUri.toString(),
-    });
-    _addSharedKeyAuth(headers, 'PUT', destUri, const []);
-
-    _log.debug('Copy blob $sourcePath → $targetPath');
-    final response = await http.put(destUri, headers: headers);
-    _checkStatus(response);
+    await copyToExact(sourcePath, targetPath, replace: true);
   }
 
   // ── Blob tier ─────────────────────────────────────────────────────────────────
@@ -801,15 +918,14 @@ class AzureBlobAdapter extends CloudStorageClient implements StorageNamespaceIde
     if (blob.isEmpty) throw ArgumentError('blobPath must point to a blob');
 
     final uri = _buildUri(c, blob: blob, queryParams: {'comp': 'tier'});
-    final headers = _baseHeaders(extra: {
-      'x-ms-access-tier': tier.headerValue,
-    });
+    final headers = _baseHeaders(extra: {'x-ms-access-tier': tier.headerValue});
     _addSharedKeyAuth(headers, 'PUT', uri, const []);
 
     final response = await http.put(uri, headers: headers);
     if (response.statusCode != 200 && response.statusCode != 202) {
       throw Exception(
-          'setBlobTier error ${response.statusCode}: ${response.body}');
+        'setBlobTier error ${response.statusCode}: ${response.body}',
+      );
     }
   }
 
@@ -852,14 +968,46 @@ class AzureBlobAdapter extends CloudStorageClient implements StorageNamespaceIde
     String targetPath, {
     Function(int, int)? onProgress,
   }) async {
-    // Buffer to memory (block blob max 5 GB fits in practice for most uploads;
-    // for very large files the caller should use block blob staging instead).
-    final builder = BytesBuilder(copy: false);
-    await for (final chunk in dataStream) {
-      builder.add(chunk);
+    final destination = targetPath.endsWith('/')
+        ? '$targetPath$fileName'
+        : '$targetPath/$fileName';
+    final target = _splitPath(destination);
+    final container = _effectiveContainer(target.container);
+    if (length < 0 || length > 50000 * 8 * 1024 * 1024) {
+      throw UnsupportedError(
+        'This upload exceeds the bounded Azure block limit.',
+      );
     }
-    await uploadFile(builder.takeBytes(), fileName, targetPath,
-        onProgress: onProgress);
+    final prefix = const Uuid().v4();
+    final blockIds = <String>[];
+    var received = 0;
+    await for (final part in transferParts(dataStream, 8 * 1024 * 1024)) {
+      final id = base64Encode(
+        utf8.encode('$prefix-${blockIds.length.toString().padLeft(6, '0')}'),
+      );
+      final uri = _buildUri(
+        container,
+        blob: target.blob,
+        queryParams: {'comp': 'block', 'blockid': id},
+      );
+      await _put(uri, part);
+      blockIds.add(id);
+      received += part.length;
+      if (received > length) throw StateError('Azure source length changed.');
+      onProgress?.call(received, length);
+    }
+    if (received != length) throw StateError('Azure source length changed.');
+    final body =
+        '<BlockList>${blockIds.map((id) => '<Latest>$id</Latest>').join()}</BlockList>';
+    await _put(
+      _buildUri(
+        container,
+        blob: target.blob,
+        queryParams: {'comp': 'blocklist'},
+      ),
+      utf8.encode(body),
+      extraHeaders: {'Content-Type': 'application/xml'},
+    );
   }
 
   // ── Private helpers ───────────────────────────────────────────────────────────
