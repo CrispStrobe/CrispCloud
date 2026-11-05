@@ -107,8 +107,32 @@ Flutter/Material UI localization delegates.
 
 The Python gate detects missing language keys, newly introduced engine fields,
 unmapped filter names, dynamic host messages, and hardcoded visible labels in
-the enabled engine surfaces. It intentionally excludes disabled emoji,
-sticker, audio, and video tools and unrelated pre-existing app screens.
+the enabled engine surfaces. It excludes disabled sticker, audio, and video
+tools and unrelated pre-existing app screens.
+
+## Extended editor work
+
+The host exposes canvas zoom and a layer panel for selection, ordering, and
+removal. View changes do not mark the source dirty; layer changes use the
+engine history. The emoji picker is localized in all app languages. Emoji
+keyword search is available for languages supported by the bundled dictionary;
+Korean and Arabic use localized category browsing without English search.
+Image overlays are selected from the device, validated as static PNG/JPEG, and
+stored as self-contained layer data in projects.
+
+Export Image Copy offers PNG/JPEG conversion, exact dimensions, and JPEG
+quality. JPEG composites transparent pixels on white. Exports are independent
+copies: they do not mark the source saved. Browser downloads report initiation,
+not successful persistence.
+
+Save Project Copy writes a `.ccimage` file containing the original raster and
+serialized editing history. F4 reopens the project and restores editable layers;
+subsequent Save writes the project through the existing origin-bound conflict
+checks. Project content is limited to 64 MiB and its source bytes have a SHA-256
+integrity check. External file, network, and asset layer references are rejected;
+CrispCloud image overlays carry their own bytes. Image exports remain flattened.
+Project history uses the maintained fork's history format and should be checked
+for compatibility when updating that fork.
 
 ## Reproducing verification
 
