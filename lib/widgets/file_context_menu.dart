@@ -11,6 +11,7 @@ import 'dart:io';
 import 'package:share_plus/share_plus.dart';
 import '../l10n/app_localizations.dart';
 import '../l10n/file_operations_strings.dart';
+import '../l10n/provider_operation_strings.dart';
 import '../l10n/link_operation_strings.dart';
 import '../models/file_item.dart';
 import '../models/panel_side.dart';
@@ -661,7 +662,7 @@ void showFileContextMenu(BuildContext context, WidgetRef ref, PanelSide side,
               _log.warn('operation failed', e);
               if (context.mounted) {
                 ScaffoldMessenger.of(context).showSnackBar(
-                  SnackBar(content: Text(FileOperationsStrings(context).value('extractError', e))),
+                  SnackBar(content: Text(FileOperationsStrings(context).value('extractError', localizedProviderError(context, e)))),
                 );
               }
             }
@@ -706,7 +707,7 @@ void showFileContextMenu(BuildContext context, WidgetRef ref, PanelSide side,
               _log.warn('operation failed', e);
               if (context.mounted) {
                 ScaffoldMessenger.of(context).showSnackBar(
-                  SnackBar(content: Text(FileOperationsStrings(context).value('zipError', e))),
+                  SnackBar(content: Text(FileOperationsStrings(context).value('zipError', localizedProviderError(context, e)))),
                 );
               }
             }
@@ -1760,7 +1761,7 @@ void _showSplitDialog(
                 _log.warn('operation failed', e);
                 if (context.mounted) {
                   ScaffoldMessenger.of(context).showSnackBar(
-                    SnackBar(content: Text(FileOperationsStrings(context).value('splitError', e))),
+                    SnackBar(content: Text(FileOperationsStrings(context).value('splitError', localizedProviderError(context, e)))),
                   );
                 }
               }
@@ -1824,7 +1825,7 @@ void _showCombineDialog(
               _log.warn('operation failed', e);
               if (context.mounted) {
                 ScaffoldMessenger.of(context).showSnackBar(
-                  SnackBar(content: Text(FileOperationsStrings(context).value('combineError', e))),
+                  SnackBar(content: Text(FileOperationsStrings(context).value('combineError', localizedProviderError(context, e)))),
                 );
               }
             }
@@ -1978,7 +1979,7 @@ void _showSecureWipeDialog(
                 _log.warn('operation failed', e);
                 if (context.mounted) {
                   ScaffoldMessenger.of(context).showSnackBar(
-                    SnackBar(content: Text(FileOperationsStrings(context).value('wipeError', e))),
+                    SnackBar(content: Text(FileOperationsStrings(context).value('wipeError', localizedProviderError(context, e)))),
                   );
                 }
               }

@@ -1,4 +1,6 @@
 import 'package:flutter/widgets.dart';
+import '../services/web_file_failure.dart';
+import 'web_file_error_strings.dart';
 import '../services/terminal_mount_failure.dart';
 import 'terminal_mount_error_strings.dart';
 import '../services/azure_hetzner_failure.dart';
@@ -37,6 +39,7 @@ String? localizedKnownProviderError(BuildContext context, Object error) =>
     localizedKnownProviderErrorForLanguage(Localizations.maybeLocaleOf(context)?.languageCode ?? 'en', error);
 
 String? localizedKnownProviderErrorForLanguage(String language, Object error) {
+  if (error is WebFileFailure) return localizedWebFileErrorForLanguage(language, error);
   if (error is TerminalMountFailure)
     return localizedTerminalMountErrorForLanguage(language, error);
   if (error is AzureHetznerFailure)

@@ -1,3 +1,4 @@
+import 'web_file_failure.dart';
 // lib/services/archive_service.dart
 //
 // Archive operations: extract and create .zip files.
@@ -14,7 +15,7 @@ class ArchiveService {
   /// Extract a .zip file to a target directory.
   /// Returns the list of extracted file paths.
   static Future<List<String>> extractZip(String zipPath, String targetDir) async {
-    if (kIsWeb) throw UnsupportedError('Archive extraction not supported on Web');
+    if (kIsWeb) throw WebFileUnsupportedError(WebFileFailureCode.extractUnsupported, 'Archive extraction not supported on Web');
 
     final bytes = await File(zipPath).readAsBytes();
     final archive = ZipDecoder().decodeBytes(bytes);
@@ -39,7 +40,7 @@ class ArchiveService {
   /// Extract a .zip from bytes (for remote files downloaded to memory).
   static Future<List<String>> extractZipBytes(
       Uint8List zipBytes, String targetDir) async {
-    if (kIsWeb) throw UnsupportedError('Archive extraction not supported on Web');
+    if (kIsWeb) throw WebFileUnsupportedError(WebFileFailureCode.extractUnsupported, 'Archive extraction not supported on Web');
 
     final archive = ZipDecoder().decodeBytes(zipBytes);
     final extracted = <String>[];
@@ -64,7 +65,7 @@ class ArchiveService {
   /// Returns the zip file bytes.
   static Future<Uint8List> createZip(List<String> filePaths,
       {String? basePath}) async {
-    if (kIsWeb) throw UnsupportedError('Archive creation not supported on Web');
+    if (kIsWeb) throw WebFileUnsupportedError(WebFileFailureCode.createUnsupported, 'Archive creation not supported on Web');
 
     final archive = Archive();
 
@@ -96,7 +97,7 @@ class ArchiveService {
 
   /// Create a .zip from a directory (recursive).
   static Future<Uint8List> createZipFromDirectory(String dirPath) async {
-    if (kIsWeb) throw UnsupportedError('Archive creation not supported on Web');
+    if (kIsWeb) throw WebFileUnsupportedError(WebFileFailureCode.createUnsupported, 'Archive creation not supported on Web');
 
     final dir = Directory(dirPath);
     final files = await dir
@@ -127,7 +128,7 @@ class ArchiveService {
     String archivePath,
     String innerPath,
   ) async {
-    if (kIsWeb) throw UnsupportedError('Use listArchiveContentsFromBytes on Web');
+    if (kIsWeb) throw WebFileUnsupportedError(WebFileFailureCode.listBytes, 'Use listArchiveContentsFromBytes on Web');
 
     final bytes = await File(archivePath).readAsBytes();
     return listArchiveContentsFromBytes(archivePath, bytes, innerPath);
@@ -210,7 +211,7 @@ class ArchiveService {
     String archivePath,
     String entryPath,
   ) async {
-    if (kIsWeb) throw UnsupportedError('Use extractArchiveEntryFromBytes on Web');
+    if (kIsWeb) throw WebFileUnsupportedError(WebFileFailureCode.extractBytes, 'Use extractArchiveEntryFromBytes on Web');
 
     final bytes = await File(archivePath).readAsBytes();
     return extractArchiveEntryFromBytes(archivePath, bytes, entryPath);

@@ -1,3 +1,4 @@
+import 'web_file_failure.dart';
 // lib/services/file_split_service.dart
 //
 // Split large files into parts and combine them back.
@@ -16,7 +17,7 @@ class FileSplitService {
     required int chunkSizeBytes,
     void Function(int bytesWritten, int totalBytes)? onProgress,
   }) async {
-    if (kIsWeb) throw UnsupportedError('File split not supported on Web');
+    if (kIsWeb) throw WebFileUnsupportedError(WebFileFailureCode.splitUnsupported, 'File split not supported on Web');
     if (chunkSizeBytes <= 0) throw ArgumentError('chunkSizeBytes must be positive');
 
     final sourceFile = File(sourcePath);
@@ -65,7 +66,7 @@ class FileSplitService {
     String outputPath, {
     void Function(int partsDone, int totalParts)? onProgress,
   }) async {
-    if (kIsWeb) throw UnsupportedError('File combine not supported on Web');
+    if (kIsWeb) throw WebFileUnsupportedError(WebFileFailureCode.combineUnsupported, 'File combine not supported on Web');
 
     final output = File(outputPath).openWrite();
     try {
