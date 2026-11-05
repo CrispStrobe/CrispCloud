@@ -323,13 +323,13 @@ void main() {
       await adapter.uploadStream(
         source(),
         128 * 1024 + 1,
-        'café #1.bin',
+        'café #1%20.bin',
         '/folder',
       );
       expect(transport.sizes, [64 * 1024, 64 * 1024, 1]);
       expect(
         Uri.decodeComponent(transport.destination!),
-        '/folder/café #1.bin',
+        '/folder/café #1%20.bin',
       );
       expect(Uri.parse(transport.destination!).fragment, isEmpty);
       expect(adapter.transferCapabilities.boundedUpload, isTrue);

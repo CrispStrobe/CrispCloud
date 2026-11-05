@@ -5,6 +5,7 @@ import 'dart:async';
 import 'dart:typed_data';
 
 import 'package:flutter/foundation.dart';
+import 'package:dio/dio.dart' as dio;
 import 'package:webdav_client/webdav_client.dart' as webdav;
 import 'package:path/path.dart' as p;
 
@@ -47,8 +48,7 @@ class WebDavClientAdapter extends CloudStorageClient
         'This WebDAV library cannot send conditional copy headers.',
       );
     }
-    await _client!.copy(sourcePath, destinationPath, replace);
-    return CloudTransferResult(path: destinationPath);
+    return _exactTransfer('COPY', sourcePath, destinationPath, replace);
   }
 
   @override
@@ -67,8 +67,68 @@ class WebDavClientAdapter extends CloudStorageClient
         'This WebDAV library cannot send conditional move headers.',
       );
     }
-    await _client!.rename(sourcePath, destinationPath, replace);
-    return CloudTransferResult(path: destinationPath);
+    return _exactTransfer('MOVE', sourcePath, destinationPath, replace);
+  }
+
+  Future<CloudTransferResult> _exactTransfer(
+    String method,
+    String source,
+    String destination,
+    bool replace,
+  ) async {
+    if (!p.posix.isAbsolute(source) || !p.posix.isAbsolute(destination)) {
+      throw ArgumentError('WebDAV transfer paths must be absolute.');
+    }
+    final client = _client!;
+    final base = Uri.parse(client.uri);
+    final target = base.replace(
+      pathSegments: [
+        ...base.pathSegments.where((segment) => segment.isNotEmpty),
+        ...destination.split('/').where((segment) => segment.isNotEmpty),
+      ],
+    );
+    var challenges = 0;
+    try {
+      // The library's copy/move helper treats every 207 as successful. A
+      // Multi-Status response may instead describe a partly failed operation.
+      final response = await client.c.req<dio.ResponseBody>(
+        client,
+        method,
+        Uri(pathSegments: source.split('/')).toString(),
+        optionsHandler: (options) {
+          options.responseType = dio.ResponseType.stream;
+          options.followRedirects = false;
+          options.headers!['destination'] = target.toString();
+          options.headers!['overwrite'] = replace ? 'T' : 'F';
+          options.validateStatus = (status) {
+            if (status == null || (status >= 300 && status < 400)) return false;
+            if (status == 401 && ++challenges > 2) return false;
+            return true;
+          };
+        },
+      );
+      var metadataBytes = 0;
+      if (response.data case final body?) {
+        await for (final bytes in body.stream) {
+          metadataBytes += bytes.length;
+          if (metadataBytes > 256 * 1024) {
+            throw StateError('WebDAV returned oversized transfer metadata.');
+          }
+        }
+      }
+      if (response.statusCode != 201 && response.statusCode != 204) {
+        throw StateError(
+          'WebDAV $method did not confirm complete success (${response.statusCode}). '
+          'Inspect the retained source and destination before retrying.',
+        );
+      }
+      return CloudTransferResult(path: destination);
+    } on dio.DioException catch (error) {
+      throw StateError(
+        'WebDAV $method was not confirmed (${error.response?.statusCode ?? 'connection interrupted'}). '
+        'No redirected destination was authorized.',
+      );
+    }
   }
 
   static const _log = Log('WebDAVClient');
@@ -308,7 +368,9 @@ class WebDavClientAdapter extends CloudStorageClient
       );
     }
     await _ensureClient();
-    final path = Uri(path: p.posix.join(targetPath, fileName)).toString();
+    final path = Uri(
+      pathSegments: p.posix.join(targetPath, fileName).split('/'),
+    ).toString();
     Stream<List<int>> checked = validatedTransferParts(
       dataStream,
       length,

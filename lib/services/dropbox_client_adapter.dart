@@ -432,11 +432,7 @@ class DropboxClientAdapter extends CloudStorageClient
       blockHashes.addAll(sha256.convert(block).bytes);
     }
 
-    // Handle empty data
-    if (data.isEmpty) {
-      blockHashes.addAll(sha256.convert(<int>[]).bytes);
-    }
-
+    // Zero bytes contain zero blocks; hash the empty concatenation directly.
     return sha256.convert(blockHashes).toString();
   }
 

@@ -85,6 +85,7 @@ dependencies:
   
   # Networking & Crypto
   http: ^1.2.0
+  dio: ^5.10.0
   args: ^2.4.2
   crypto: ^3.0.3
   web: ^1.1.1  # WebCrypto (crypto.subtle) for web secure storage
