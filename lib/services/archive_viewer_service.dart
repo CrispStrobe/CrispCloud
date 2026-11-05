@@ -56,6 +56,9 @@ class ViewerArchiveMember {
   final bool isFile;
   final bool isEncrypted;
 
+  /// Links, devices, and other entries that must never be materialized.
+  final bool isSpecial;
+
   /// True when the stored path tried to escape the archive root (`..`) and
   /// was sanitized by the parser.
   final bool pathEscapedRoot;
@@ -68,6 +71,7 @@ class ViewerArchiveMember {
     required this.size,
     required this.isFile,
     required this.isEncrypted,
+    this.isSpecial = false,
     required this.pathEscapedRoot,
     required this.index,
   });
@@ -79,7 +83,7 @@ class ViewerArchive {
   final List<ViewerArchiveMember> members;
 
   final Future<Uint8List> Function(ViewerArchiveMember member, int maxBytes)
-      _read;
+  _read;
   final Future<void> Function() _close;
   bool _closed = false;
 
@@ -89,10 +93,11 @@ class ViewerArchive {
     required Future<Uint8List> Function(
       ViewerArchiveMember member,
       int maxBytes,
-    ) read,
+    )
+    read,
     required Future<void> Function() close,
-  })  : _read = read,
-        _close = close;
+  }) : _read = read,
+       _close = close;
 
   /// A one-member archive over already-decompressed bytes.
   factory ViewerArchive.direct({
@@ -154,11 +159,7 @@ Future<ViewerArchive> openViewerArchive(
   // bzip2/xz/zstd containers are decoded here (bounded), then listed as TAR
   // when they contain one, or exposed as a single decompressed entry.
   if (_isPackageCompressed(lower)) {
-    final decompressed = _decompressContainer(
-      bytes,
-      lower,
-      maxMemberBytes,
-    );
+    final decompressed = _decompressContainer(bytes, lower, maxMemberBytes);
     if (_isTarContainerName(lower) || looksLikeTar(decompressed)) {
       return _openWithKoni(
         decompressed,
@@ -230,6 +231,7 @@ Future<ViewerArchive> _openWithKoni(
         size: entry.uncompressedSize,
         isFile: entry.isFile,
         isEncrypted: entry.isEncrypted,
+        isSpecial: !entry.isFile && !entry.isDirectory,
         pathEscapedRoot: entry.pathEscapedRoot,
         index: i,
       ),
@@ -240,12 +242,14 @@ Future<ViewerArchive> _openWithKoni(
     formatName: reader.format.name,
     members: List<ViewerArchiveMember>.unmodifiable(members),
     read: (member, requestedCap) async {
-      final limit =
-          requestedCap < maxMemberBytes ? requestedCap : maxMemberBytes;
+      final limit = requestedCap < maxMemberBytes
+          ? requestedCap
+          : maxMemberBytes;
       final entry = entries[member.index];
       if (entry.isEncrypted && password == null) {
         throw const ArchivePasswordRequiredException(
-            'This entry is encrypted.');
+          'This entry is encrypted.',
+        );
       }
       final builder = BytesBuilder(copy: false);
       try {

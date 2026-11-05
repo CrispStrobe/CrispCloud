@@ -793,7 +793,7 @@ void showFileContextMenu(
           onTap: () => Future.delayed(Duration.zero, () async {
             try {
               final dir = p.dirname(file.path!);
-              await ArchiveService.extractZip(file.path!, dir);
+              await ArchiveService.extractArchive(file.path!, dir);
               ref.read(panelProvider(PanelSide.local)).refresh();
               if (context.mounted) {
                 ScaffoldMessenger.of(context).showSnackBar(
@@ -829,7 +829,7 @@ void showFileContextMenu(
           onTap: () => Future.delayed(Duration.zero, () async {
             try {
               final paths = files
-                  .where((f) => f.path != null && !f.isFolder)
+                  .where((f) => f.path != null)
                   .map((f) => f.path!)
                   .toList();
               if (paths.isEmpty) return;
@@ -841,8 +841,18 @@ void showFileContextMenu(
               final zipName = isMultiSelect
                   ? 'archive.zip'
                   : '${p.basenameWithoutExtension(files.first.name)}.zip';
-              final zipPath = p.join(basePath, zipName);
-              await File(zipPath).writeAsBytes(zipBytes);
+              var zipPath = p.join(basePath, zipName);
+              var suffix = 2;
+              while (await FileSystemEntity.type(zipPath, followLinks: false) !=
+                  FileSystemEntityType.notFound) {
+                zipPath = p.join(
+                  basePath,
+                  '${p.basenameWithoutExtension(zipName)} ($suffix).zip',
+                );
+                suffix++;
+              }
+              await File(zipPath).create(exclusive: true);
+              await File(zipPath).writeAsBytes(zipBytes, flush: true);
               ref.read(panelProvider(PanelSide.local)).refresh();
               if (context.mounted) {
                 ScaffoldMessenger.of(context)
