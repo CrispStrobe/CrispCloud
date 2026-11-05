@@ -5,6 +5,7 @@ import 'package:flutter/foundation.dart';
 
 import '../models/storage_reference.dart';
 import 'cloud_storage_interface.dart';
+import 'installation_identity.dart';
 import 'panel_source_service.dart';
 
 final _anonymousSessions = Expando<String>('unidentified storage session');
@@ -12,10 +13,12 @@ int _nextAnonymousSession = 0;
 
 StorageReference storageReferenceForSource(PanelSource source) {
   if (source is LocalPanelSource) {
+    final installation = InstallationIdentityService.instance.current;
     return StorageReference(
       kind: 'local',
       provider: kIsWeb ? 'browser' : defaultTargetPlatform.name,
-      accountKey: 'device',
+      accountKey: installation.key,
+      persistent: installation.persistent,
     );
   }
   if (source is RemotePanelSource) {

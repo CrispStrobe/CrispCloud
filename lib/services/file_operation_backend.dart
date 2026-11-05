@@ -32,7 +32,7 @@ FileOperationBackend fileOperationBackend({
 class LocalOperationBackend extends FileOperationBackend {
   LocalOperationBackend(this.service, {required bool Function() isCurrent})
     : _isCurrent = isCurrent;
-  static final _reference = storageReferenceForSource(
+  static StorageReference get _reference => storageReferenceForSource(
     const LocalPanelSource('/'),
   );
   final LocalFileService service;
@@ -44,7 +44,7 @@ class LocalOperationBackend extends FileOperationBackend {
   @override
   StorageReference get storageReference => _reference;
   @override
-  bool get canRecover => !kIsWeb;
+  bool get canRecover => !kIsWeb && _reference.persistent;
   @override
   bool get supportsStagedVerification =>
       !kIsWeb || service is LocalTransferFileOperations;
