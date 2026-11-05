@@ -3,6 +3,32 @@ import 'package:crisp_cloud/models/file_item.dart';
 
 void main() {
   group('FileItem', () {
+    test(
+      'equal paths and object IDs from different accounts remain distinct',
+      () {
+        final a = FileItem(
+          name: 'a',
+          path: '/a',
+          uuid: 'same-id',
+          storageId: 'account-a',
+          isFolder: false,
+        );
+        final b = a.copyWith(storageId: 'account-b');
+        expect({a, b}.length, 2);
+        expect(a.copyWith(name: 'renamed').storageId, 'account-a');
+        expect(a, a.copyWith());
+      },
+    );
+
+    test('rows without identity do not collapse and equality is symmetric', () {
+      final a = FileItem(name: 'a', isFolder: false);
+      final b = FileItem(name: 'b', isFolder: false);
+      expect({a, b}.length, 2);
+      final pathOnly = a.copyWith(path: '/a');
+      final identified = pathOnly.copyWith(uuid: 'id');
+      expect(pathOnly == identified, isFalse);
+      expect(identified == pathOnly, isFalse);
+    });
     test('creates with required fields', () {
       final item = FileItem(
         name: 'test.txt',
@@ -41,9 +67,24 @@ void main() {
     });
 
     test('equality by path', () {
-      final a = FileItem(name: 'a.txt', path: '/a.txt', isFolder: false, size: 0);
-      final b = FileItem(name: 'a.txt', path: '/a.txt', isFolder: false, size: 0);
-      final c = FileItem(name: 'c.txt', path: '/c.txt', isFolder: false, size: 0);
+      final a = FileItem(
+        name: 'a.txt',
+        path: '/a.txt',
+        isFolder: false,
+        size: 0,
+      );
+      final b = FileItem(
+        name: 'a.txt',
+        path: '/a.txt',
+        isFolder: false,
+        size: 0,
+      );
+      final c = FileItem(
+        name: 'c.txt',
+        path: '/c.txt',
+        isFolder: false,
+        size: 0,
+      );
 
       expect(a, equals(b));
       expect(a, isNot(equals(c)));

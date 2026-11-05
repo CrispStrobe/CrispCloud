@@ -44,6 +44,7 @@ import 'panel_source_provider.dart';
 import 'quick_search_provider.dart';
 import 'recent_locations_provider.dart';
 import 'native_file_operations_provider.dart';
+import 'multi_cloud_provider.dart';
 
 // SortBy and SortOrder are defined in models/sort.dart
 export '../models/sort.dart';
@@ -77,6 +78,7 @@ class PanelNotifier extends ChangeNotifier {
   int _listingGeneration = 0;
   int _verifiedListingGeneration = -1;
   int _accountGeneration = 0;
+  int _connectionGeneration = 0;
   PanelFileOrigin? _currentDirectoryOrigin;
   final Set<FileItem> _selection = {};
   FileItem? _lastSelected;
@@ -119,7 +121,7 @@ class PanelNotifier extends ChangeNotifier {
   PanelFileOrigin? _fileListOrigin;
   final Map<String, _FileListSnapshot> _fileListTabs = {};
   final Map<String, Map<(StorageReference, String), _SelectionMemoryEntry>>
-      _selectionMemories = {};
+  _selectionMemories = {};
 
   bool get canOperateOnFileList =>
       !_showingSearchResults || (_fileListOrigin?.isCurrent ?? false);
@@ -190,6 +192,34 @@ class PanelNotifier extends ChangeNotifier {
       if (current != account) {
         _accountGeneration++;
         account = current;
+      }
+    });
+    var connections = _ref
+        .read(multiCloudProvider)
+        .connections
+        .map(
+          (entry) => (
+            entry.id,
+            entry.client,
+            storageReferenceForClient(entry.client),
+            entry.client.isAuthenticated,
+          ),
+        )
+        .toList();
+    _ref.listen<MultiCloudNotifier>(multiCloudProvider, (_, next) {
+      final current = next.connections
+          .map(
+            (entry) => (
+              entry.id,
+              entry.client,
+              storageReferenceForClient(entry.client),
+              entry.client.isAuthenticated,
+            ),
+          )
+          .toList();
+      if (!listEquals(connections, current)) {
+        connections = current;
+        _connectionGeneration++;
       }
     });
     _restoreTabs();
@@ -314,22 +344,96 @@ class PanelNotifier extends ChangeNotifier {
     String path,
   ) {
     final generation = _accountGeneration;
+    final connectionGeneration = _connectionGeneration;
     final email = _ref.read(authProvider).userEmail;
+    final primary = identical(_ref.read(authProvider).client, client);
+    final reference = storageReferenceForClient(client);
     final userId = client.userId;
     final bucketId = client.bucketId;
     return PanelFileOrigin._(
       RemotePanelSource(providerName: providerName, client: client, path: path),
       () {
-        if (_isDisposed || generation != _accountGeneration) return false;
+        if (_isDisposed ||
+            (primary
+                ? generation != _accountGeneration
+                : connectionGeneration != _connectionGeneration) ||
+            !client.isAuthenticated ||
+            storageReferenceForClient(client) != reference) {
+          return false;
+        }
         final auth = _ref.read(authProvider);
-        return auth.isConnected &&
-            identical(auth.client, client) &&
-            auth.userEmail == email &&
-            client.isAuthenticated &&
+        final connected = primary
+            ? auth.isConnected &&
+                  identical(auth.client, client) &&
+                  auth.userEmail == email
+            : _isRegisteredClient(client);
+        return connected &&
             client.userId == userId &&
             client.bucketId == bucketId;
       },
     );
+  }
+
+  bool _isRegisteredClient(CloudStorageClient client) =>
+      client.isAuthenticated &&
+      _ref
+          .read(multiCloudProvider)
+          .connections
+          .any((entry) => identical(entry.client, client));
+
+  bool _isConnectedClient(CloudStorageClient client) {
+    final auth = _ref.read(authProvider);
+    return client.isAuthenticated &&
+        ((auth.isConnected && identical(auth.client, client)) ||
+            _isRegisteredClient(client));
+  }
+
+  /// Reconnect a persisted location only to its exact account/namespace.
+  /// Provider labels and the currently selected account are never substitutes.
+  PanelFileOrigin? resolveStorageReference(
+    StorageReference reference,
+    String path,
+  ) {
+    if (_isDisposed || path.isEmpty || path.contains('\u0000')) return null;
+    final paths = reference.isLocal && !kIsWeb ? p.context : p.posix;
+    if (!paths.isAbsolute(path)) return null;
+    path = paths.normalize(path);
+    if (reference.isLocal) {
+      final source = LocalPanelSource(path);
+      if (storageReferenceForSource(source) != reference) return null;
+      return PanelFileOrigin._(source, () => !_isDisposed);
+    }
+    final auth = _ref.read(authProvider);
+    final clients = <CloudStorageClient>{
+      if (auth.isConnected) auth.client,
+      ..._ref.read(multiCloudProvider).connections.map((entry) => entry.client),
+    };
+    for (final client in clients) {
+      if (_isConnectedClient(client) &&
+          storageReferenceForClient(client) == reference) {
+        return _remoteOrigin(client, client.providerName, path);
+      }
+    }
+    return null;
+  }
+
+  RemotePanelSource? _remoteSourceForListing() {
+    final selected = _ref.read(panelSourceProvider(side));
+    if (selected is RemotePanelSource && _isConnectedClient(selected.client)) {
+      return selected;
+    }
+    final previous = _currentDirectoryOrigin?.source;
+    if (previous is RemotePanelSource && _isConnectedClient(previous.client)) {
+      return previous;
+    }
+    final auth = _ref.read(authProvider);
+    return auth.isConnected && auth.client.isAuthenticated
+        ? RemotePanelSource(
+            providerName: auth.providerName,
+            client: auth.client,
+            path: _remotePath,
+          )
+        : null;
   }
 
   Set<FileItem> get selection => _selection;
@@ -661,11 +765,11 @@ class PanelNotifier extends ChangeNotifier {
   /// Capture the account before an asynchronous provider search begins.
   /// Only SearchNotifier uses this for provider-returned result objects.
   PanelFileOrigin captureRemoteSearchOrigin() {
-    final auth = _ref.read(authProvider);
-    if (!auth.isConnected || !auth.client.isAuthenticated) {
+    final source = _remoteSourceForListing();
+    if (source == null) {
       throw StateError('Connect to a cloud account before searching.');
     }
-    return _remoteOrigin(auth.client, auth.providerName, _remotePath);
+    return _remoteOrigin(source.client, source.providerName, _remotePath);
   }
 
   /// The OS clipboard supplies paths; callers stat every item before planning.
@@ -2059,7 +2163,7 @@ class PanelNotifier extends ChangeNotifier {
             : null;
         final selectedSource = _ref.read(panelSourceProvider(side));
         final remote =
-            _ref.read(authProvider).isConnected &&
+            _remoteSourceForListing() != null &&
             (knownSource?.isRemote ??
                 (selectedSource.isRemote ||
                     (side == PanelSide.remote &&
@@ -2276,7 +2380,16 @@ class PanelNotifier extends ChangeNotifier {
       await _loadLocalFiles();
     } else {
       _remotePath = path;
-      if (!_ref.read(authProvider).isConnected ||
+      if (sourceOrigin?.source case final RemotePanelSource requested) {
+        final selected = _ref.read(panelSourceProvider(side));
+        if (selected is! RemotePanelSource ||
+            !identical(selected.client, requested.client)) {
+          _ref
+              .read(panelSourceProvider(side).notifier)
+              .setSource(requested.withPath(path));
+        }
+      }
+      if (_remoteSourceForListing() == null ||
           (sourceOrigin != null && !sourceOrigin.isCurrent)) {
         throw StateError('The cloud account is no longer connected.');
       }
@@ -3631,17 +3744,16 @@ class PanelNotifier extends ChangeNotifier {
 
     final generation = ++_listingGeneration;
     final auth = _ref.read(authProvider);
-    // This loader currently uses the primary auth adapter, even if the
-    // dropdown points elsewhere. Stamp the actual request, never the label.
-    final client = auth.client;
-    final providerName = auth.providerName;
+    final selected = _remoteSourceForListing();
+    final client = selected?.client ?? auth.client;
+    final providerName = selected?.providerName ?? auth.providerName;
     final listingPath = _remotePath;
     final origin = _remoteOrigin(client, providerName, listingPath);
 
     _isLoading = true;
     notifyListeners();
     try {
-      if (!client.isAuthenticated && !auth.isConnected) {
+      if (!_isConnectedClient(client)) {
         _files = [];
         _isLoading = false;
         notifyListeners();
@@ -3650,10 +3762,7 @@ class PanelNotifier extends ChangeNotifier {
 
       // Show cached listing immediately for smooth UX.
       final dirCache = _ref.read(directoryCacheProvider);
-      final cacheKey = DirectoryCacheService.key(
-        'remote:$providerName',
-        listingPath,
-      );
+      final cacheKey = DirectoryCacheService.key(origin.storageId, listingPath);
       final cached = dirCache.get(cacheKey);
       if (cached != null && _files == null) {
         _files = List.of(cached);

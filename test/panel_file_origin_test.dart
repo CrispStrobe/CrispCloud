@@ -4,6 +4,7 @@ import 'dart:io';
 import 'package:crisp_cloud/models/file_item.dart';
 import 'package:crisp_cloud/models/panel_side.dart';
 import 'package:crisp_cloud/providers/panel_source_provider.dart';
+import 'package:crisp_cloud/services/storage_identity.dart';
 import 'package:crisp_cloud/providers/providers.dart';
 import 'package:crisp_cloud/services/cloud_storage_interface.dart';
 import 'package:crisp_cloud/services/directory_cache_service.dart';
@@ -31,11 +32,12 @@ class _Local extends Fake implements LocalFileService {
 }
 
 class _Cloud extends Fake implements CloudStorageClient {
-  _Cloud(this.providerName);
+  _Cloud(this.providerName, {this.accountId = 'account-a'});
+  final String accountId;
   @override
   final String providerName;
   @override
-  String? get userId => 'account-a';
+  String? get userId => accountId;
   @override
   String? get bucketId => 'bucket-a';
   @override
@@ -43,6 +45,11 @@ class _Cloud extends Fake implements CloudStorageClient {
   bool authenticated = true;
   @override
   bool get isAuthenticated => authenticated;
+  @override
+  Future<void> logout() async {
+    authenticated = false;
+  }
+
   Completer<Map<String, dynamic>>? pending;
   final paths = <String>[];
 
@@ -285,7 +292,7 @@ void main() {
   );
 
   test(
-    'unverified account-shared cache entries stay uneditable after failure',
+    'unverified account-scoped cache entries stay uneditable after failure',
     () async {
       final cached = FileItem(
         name: 'sample.pdf',
@@ -293,7 +300,7 @@ void main() {
         uuid: 'pdf-id',
       );
       container.read(directoryCacheProvider).put(
-        DirectoryCacheService.key('remote:${actual.providerName}', '/'),
+        DirectoryCacheService.key(storageReferenceForClient(actual).id, '/'),
         [cached],
       );
       final request = Completer<Map<String, dynamic>>();
@@ -334,5 +341,90 @@ void main() {
     expect(panel.originForFile(original), isNull);
     expect(panel.selection.single, same(replacement));
     expect(panel.lastSelected, same(replacement));
+  });
+
+  test(
+    'registered secondary account drives listings and exact saved references',
+    () async {
+      final other = _Cloud(actual.providerName, accountId: 'account-b');
+      final registry = container.read(multiCloudProvider);
+      registry.addConnection(
+        id: 'second',
+        label: 'Same provider, second account',
+        provider: CloudProvider.s3,
+        client: other,
+      );
+      final panel = container.read(panelProvider(PanelSide.remote));
+      await panel.refresh();
+      final original = panel.captureCurrentOrigin();
+      container
+          .read(panelSourceProvider(PanelSide.remote).notifier)
+          .setSource(
+            RemotePanelSource(
+              providerName: other.providerName,
+              client: other,
+              path: '/other',
+            ),
+          );
+      await Future<void>.delayed(Duration.zero);
+      await panel.refresh();
+      final source = panel.captureCurrentOrigin();
+      expect((source.source as RemotePanelSource).client, same(other));
+      expect(other.paths.last, '/other');
+      expect(source.storageReference, isNot(original.storageReference));
+      final resolved = panel.resolveStorageReference(
+        original.storageReference,
+        '/saved',
+      );
+      expect((resolved!.source as RemotePanelSource).client, same(actual));
+      await panel.navigateToPath('/saved', origin: resolved);
+      expect(
+        (panel.captureCurrentOrigin().source as RemotePanelSource).client,
+        same(actual),
+      );
+      expect(actual.paths.last, '/saved');
+    },
+  );
+
+  test('secondary sessions work without primary login and old origins stay invalid after reconnect', () async {
+    final other = _Cloud('Secondary', accountId: 'account-b');
+    final registry = container.read(multiCloudProvider);
+    registry.addConnection(
+      id: 'second',
+      label: 'Second',
+      provider: CloudProvider.s3,
+      client: other,
+    );
+    final panel = container.read(panelProvider(PanelSide.remote));
+    await panel.refresh();
+    auth.connection(false);
+    container
+        .read(panelSourceProvider(PanelSide.remote).notifier)
+        .setSource(
+          RemotePanelSource(
+            providerName: other.providerName,
+            client: other,
+            path: '/',
+          ),
+        );
+    await Future<void>.delayed(Duration.zero);
+    await panel.refresh();
+    final origin = panel.captureCurrentOrigin();
+    expect(origin.isCurrent, isTrue);
+    await registry.removeConnection('second');
+    expect(origin.isCurrent, isFalse);
+    expect(panel.resolveStorageReference(origin.storageReference, '/'), isNull);
+    other.authenticated = true;
+    registry.addConnection(
+      id: 'second',
+      label: 'Second',
+      provider: CloudProvider.s3,
+      client: other,
+    );
+    expect(origin.isCurrent, isFalse);
+    expect(
+      panel.resolveStorageReference(origin.storageReference, '/')!.isCurrent,
+      isTrue,
+    );
   });
 }
