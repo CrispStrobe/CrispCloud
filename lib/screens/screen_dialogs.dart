@@ -26,6 +26,8 @@ import '../l10n/undo_presentation.dart';
 import '../l10n/screen_dialog_strings.dart';
 import '../l10n/shortcut_strings.dart';
 import '../l10n/viewer_action_strings.dart';
+import '../l10n/image_editor_strings.dart';
+import '../services/image_edit_session.dart' show isEditableImageFileName;
 import '../services/log_service.dart';
 
 const _log = Log('ScreenDialogs');
@@ -427,11 +429,11 @@ Future<void> _viewFile(
     }
   } catch (e) {
     if (context.mounted) {
-      ScaffoldMessenger.of(
-        context,
-      ).showSnackBar(
+      ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
-          content: Text(ViewerActionStrings(context).cannotView(target.name, e)),
+          content: Text(
+            ViewerActionStrings(context).cannotView(target.name, e),
+          ),
         ),
       );
     }
@@ -465,7 +467,13 @@ Future<void> _editFile(
       if (context.mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: Text(ViewerActionStrings(context).archiveEditingUnsupported),
+            content: Text(
+              isEditableImageFileName(target.name)
+                  ? context.imageTr(
+                      'Extract this file from its archive or container before editing.',
+                    )
+                  : ViewerActionStrings(context).archiveEditingUnsupported,
+            ),
           ),
         );
       }

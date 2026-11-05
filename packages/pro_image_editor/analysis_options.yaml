@@ -1,0 +1,94 @@
+include: package:flutter_lints/flutter.yaml
+
+analyzer:
+  exclude:
+    - build/**
+    - android/**
+  language:
+    strict-raw-types: true
+
+linter:
+  rules:
+    - use_null_aware_elements
+    - avoid_double_and_int_checks
+    - no_logic_in_create_state
+    - avoid_implementing_value_types
+    - avoid_type_to_string
+    - avoid_unnecessary_containers
+    - do_not_use_environment
+    - missing_whitespace_between_adjacent_strings
+    - no_runtimeType_toString
+    - prefer_const_constructors_in_immutables
+    - prefer_const_declarations
+    - prefer_const_literals_to_create_immutables
+    - prefer_is_not_operator
+    - prefer_iterable_whereType
+    - sized_box_for_whitespace
+    - use_full_hex_values_for_flutter_colors
+    - use_is_even_rather_than_modulo
+    - use_key_in_widget_constructors
+    - unnecessary_library_name
+    - public_member_api_docs
+    - annotate_overrides
+    - avoid_empty_else
+    - prefer_relative_imports
+    - avoid_function_literals_in_foreach_calls
+    - avoid_init_to_null
+    - avoid_renaming_method_parameters
+    - avoid_return_types_on_setters
+    - avoid_types_as_parameter_names
+    - avoid_unused_constructor_parameters
+    - await_only_futures
+    - camel_case_types
+    - cancel_subscriptions
+    - cascade_invocations
+    - constant_identifier_names
+    - control_flow_in_finally
+    - directives_ordering
+    - empty_catches
+    - empty_constructor_bodies
+    - empty_statements
+    - hash_and_equals
+    - implementation_imports
+    - collection_methods_unrelated_type
+    - library_names
+    - library_prefixes
+    - lines_longer_than_80_chars
+    - no_adjacent_strings_in_list
+    - no_duplicate_case_values
+    - non_constant_identifier_names
+    - null_closures
+    - only_throw_errors
+    - overridden_fields
+    - package_names
+    - package_prefixed_library_names
+    - prefer_adjacent_string_concatenation
+    - prefer_collection_literals
+    - prefer_conditional_assignment
+    - prefer_const_constructors
+    - prefer_contains
+    - prefer_final_fields
+    - prefer_initializing_formals
+    - prefer_interpolation_to_compose_strings
+    - prefer_is_empty
+    - prefer_is_not_empty
+    - prefer_single_quotes
+    - prefer_typing_uninitialized_variables
+    - recursive_getters
+    - slash_for_doc_comments
+    - sort_constructors_first
+    - test_types_in_equals
+    - throw_in_finally
+    - type_init_formals
+    - unawaited_futures
+    - unnecessary_brace_in_string_interps
+    - unnecessary_const
+    - unnecessary_getters_setters
+    - unnecessary_lambdas
+    - unnecessary_new
+    - unnecessary_null_aware_assignments
+    - unnecessary_statements
+    - unnecessary_this
+    - unrelated_type_equality_checks
+    - use_rethrow_when_possible
+    - valid_regexps

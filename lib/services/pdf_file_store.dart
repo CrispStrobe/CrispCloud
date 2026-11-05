@@ -55,6 +55,8 @@ abstract class PdfFileStore {
   factory PdfFileStore.local({
     required LocalFileService service,
     required FileItem file,
+    int inputLimitBytes,
+    int outputLimitBytes,
   }) = _LocalPdfFileStore;
 
   factory PdfFileStore.remote({
@@ -63,6 +65,8 @@ abstract class PdfFileStore {
     required FileCacheService cache,
     required FileItem file,
     bool Function()? isCurrentAccount,
+    int inputLimitBytes,
+    int outputLimitBytes,
   }) = _RemotePdfFileStore;
 
   String get documentId;
@@ -86,8 +90,17 @@ abstract class PdfFileStore {
 }
 
 abstract class _PdfFileStoreBase implements PdfFileStore {
-  _PdfFileStoreBase(this.file, this.path);
+  _PdfFileStoreBase(
+    this.file,
+    this.path, {
+    required this.inputLimitBytes,
+    required this.outputLimitBytes,
+  });
   final FileItem file;
+  // Other host editors can reuse the conflict/account/write contract without
+  // inheriting the PDF memory budget. PDF callers retain the original defaults.
+  final int inputLimitBytes;
+  final int outputLimitBytes;
   @override
   final String path;
 
@@ -154,14 +167,23 @@ abstract class _PdfFileStoreBase implements PdfFileStore {
   }
 
   Uint8List outputSnapshot(Uint8List bytes) {
-    assertSize(bytes.length, kPdfEditorOutputLimitBytes);
+    assertSize(bytes.length, outputLimitBytes);
     return Uint8List.fromList(bytes).asUnmodifiableView();
   }
 }
 
 class _LocalPdfFileStore extends _PdfFileStoreBase {
-  _LocalPdfFileStore({required this.service, required FileItem file})
-    : super(file, file.path ?? file.xFile?.path ?? file.name);
+  _LocalPdfFileStore({
+    required this.service,
+    required FileItem file,
+    int inputLimitBytes = kPdfEditorInputLimitBytes,
+    int outputLimitBytes = kPdfEditorOutputLimitBytes,
+  }) : super(
+         file,
+         file.path ?? file.xFile?.path ?? file.name,
+         inputLimitBytes: inputLimitBytes,
+         outputLimitBytes: outputLimitBytes,
+       );
 
   final LocalFileService service;
 
@@ -189,8 +211,8 @@ class _LocalPdfFileStore extends _PdfFileStoreBase {
   @override
   Future<Uint8List> load() => guardLoad(() async {
     // fileLength/readFileForEdit checks current size, including FSA handles.
-    final bytes = await _read(kPdfEditorInputLimitBytes);
-    _PdfFileStoreBase.assertSize(bytes.length, kPdfEditorInputLimitBytes);
+    final bytes = await _read(inputLimitBytes);
+    _PdfFileStoreBase.assertSize(bytes.length, inputLimitBytes);
     baselineDigest = _PdfFileStoreBase.digest(bytes);
     return Uint8List.fromList(bytes);
   });
@@ -201,7 +223,7 @@ class _LocalPdfFileStore extends _PdfFileStoreBase {
     final snapshot = outputSnapshot(bytes);
     Uint8List current;
     try {
-      current = await _read(kPdfEditorOutputLimitBytes);
+      current = await _read(outputLimitBytes);
     } catch (_) {
       throw const PdfSaveConflictException(
         'The original file could not be verified. Save a separate copy.',
@@ -254,9 +276,16 @@ class _RemotePdfFileStore extends _PdfFileStoreBase {
     required this.cache,
     required FileItem file,
     this.isCurrentAccount,
+    int inputLimitBytes = kPdfEditorInputLimitBytes,
+    int outputLimitBytes = kPdfEditorOutputLimitBytes,
   }) : _userId = client.userId,
        _bucketId = client.bucketId,
-       super(file, file.path ?? p.posix.join('/', file.name));
+       super(
+         file,
+         file.path ?? p.posix.join('/', file.name),
+         inputLimitBytes: inputLimitBytes,
+         outputLimitBytes: outputLimitBytes,
+       );
 
   static const _log = Log('PdfFileStore');
   final CloudStorageClient client;
@@ -321,9 +350,9 @@ class _RemotePdfFileStore extends _PdfFileStoreBase {
   @override
   Future<Uint8List> load() => guardLoad(() async {
     _assertAccount();
-    final before = await _metadata(kPdfEditorInputLimitBytes);
-    final bytes = await _download(kPdfEditorInputLimitBytes);
-    final after = await _metadata(kPdfEditorInputLimitBytes);
+    final before = await _metadata(inputLimitBytes);
+    final bytes = await _download(inputLimitBytes);
+    final after = await _metadata(inputLimitBytes);
     _assertAccount();
     if (_changed(before, after)) {
       throw const PdfSaveConflictException(
@@ -340,18 +369,18 @@ class _RemotePdfFileStore extends _PdfFileStoreBase {
     assertLoaded();
     _assertAccount();
     final snapshot = outputSnapshot(bytes);
-    final before = await _metadata(kPdfEditorOutputLimitBytes);
+    final before = await _metadata(outputLimitBytes);
     if (_changed(_revision, before)) _throwConflict();
     Uint8List current;
     try {
-      current = await _download(kPdfEditorOutputLimitBytes);
+      current = await _download(outputLimitBytes);
     } catch (_) {
       throw const PdfSaveConflictException(
         'The original PDF could not be verified. Save a separate copy.',
       );
     }
     if (_PdfFileStoreBase.digest(current) != baselineDigest) _throwConflict();
-    final after = await _metadata(kPdfEditorOutputLimitBytes);
+    final after = await _metadata(outputLimitBytes);
     if (_changed(before, after)) _throwConflict();
     _assertAccount();
 
@@ -367,7 +396,7 @@ class _RemotePdfFileStore extends _PdfFileStoreBase {
     // into a failed save and encourage a duplicate write.
     _revision = const {};
     try {
-      _revision = await _metadata(kPdfEditorOutputLimitBytes);
+      _revision = await _metadata(outputLimitBytes);
     } catch (error, stack) {
       _log.warn('Could not refresh PDF revision after upload', error, stack);
     }

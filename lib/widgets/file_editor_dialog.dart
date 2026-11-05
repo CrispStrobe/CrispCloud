@@ -28,13 +28,17 @@ import '../models/panel_side.dart';
 import '../providers/providers.dart';
 import '../l10n/file_editor_strings.dart';
 import '../l10n/code_document_ui_strings.dart';
+import '../l10n/image_editor_strings.dart';
 import '../services/editor_document.dart';
 import '../services/editor_highlighting.dart';
+import '../services/image_edit_session.dart' show isEditableImageFileName;
 import '../services/log_service.dart';
 import '../services/save_coordinator.dart';
+import '../utils/file_editability.dart' show isTextEditableName;
 import 'code_editor_context_menu.dart';
 import 'code_editor_find_panel.dart';
 import 'code_editor_status_bar.dart';
+import 'image_editor_dialog.dart';
 import 'office_editor_dialog.dart';
 import 'pdf_editor_dialog.dart';
 
@@ -47,6 +51,10 @@ Future<void> showFileEditorDialog(
 ) async {
   if (file.isFolder) return;
   try {
+    if (isEditableImageFileName(file.name)) {
+      await showImageEditorDialog(context, ref, file, side);
+      return;
+    }
     if (isPdfFileName(file.name)) {
       await showPdfEditorDialog(context, ref, file, side);
       return;
@@ -57,12 +65,22 @@ Future<void> showFileEditorDialog(
       await showOfficeEditorDialog(context, ref, file, side);
       return;
     }
-    await Navigator.of(context).push(
-      MaterialPageRoute(
-        fullscreenDialog: true,
-        builder: (_) => _FileEditorPage(file: file, side: side),
-      ),
-    );
+    // F4 and the native menu can be invoked even when the viewer's Edit button
+    // is disabled. Never decode an unsupported binary file as editable text.
+    if (!isTextEditableName(file.name)) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(context.imageTr(
+            'This file type cannot be edited here. Use F3 to view it.',
+          )),
+        ),
+      );
+      return;
+    }
+    await Navigator.of(context).push(MaterialPageRoute(
+      fullscreenDialog: true,
+      builder: (_) => _FileEditorPage(file: file, side: side),
+    ));
   } finally {
     // Returning from any editor should land back on the same file with the
     // panel ready for the next F3/F4, including when opened from a context

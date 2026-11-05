@@ -21,6 +21,8 @@ import '../services/platform_diagnostics_service.dart';
 import '../services/crash_reporting_service.dart' show CrashReport;
 import '../services/panel_view_mode_service.dart' show PanelViewMode;
 import '../services/office_editor_menu.dart';
+import '../services/image_editor_menu.dart';
+import '../widgets/image_editor_menus.dart';
 import '../widgets/audit_log_dialog.dart';
 import '../widgets/log_viewer_dialog.dart';
 import '../widgets/file_panel.dart';
@@ -72,6 +74,8 @@ class _FileBrowserScreenState extends ConsumerState<FileBrowserScreen> {
     final l = AppLocalizations.of(context)!;
     final OfficeEditorMenuActions? officeEditor =
         ref.watch(officeEditorMenuProvider);
+    final ImageEditorMenuActions? imageEditor =
+        ref.watch(imageEditorMenuProvider);
     final auth = ref.watch(authProvider);
     final showPreview = ref.watch(showPreviewProvider);
     // layoutPresetProvider kept for persistence but no longer drives layout.
@@ -162,7 +166,7 @@ class _FileBrowserScreenState extends ConsumerState<FileBrowserScreen> {
     // macOS: wrap with native menu bar
     if (!kIsWeb && defaultTargetPlatform == TargetPlatform.macOS) {
       return PlatformMenuBar(
-        menus: _buildMacMenus(context, ref, officeEditor),
+        menus: _buildMacMenus(context, ref, officeEditor, imageEditor),
         child: scaffold,
       );
     }
@@ -177,9 +181,43 @@ class _FileBrowserScreenState extends ConsumerState<FileBrowserScreen> {
     BuildContext context,
     WidgetRef ref,
     OfficeEditorMenuActions? editor,
+    ImageEditorMenuActions? imageEditor,
   ) {
     final l = AppLocalizations.of(context)!;
     final m = BrowserMenuStrings(context);
+    final appMenu = PlatformMenu(
+      label: 'CrispCloud',
+      menus: <PlatformMenuItem>[
+        PlatformMenuItemGroup(members: <PlatformMenuItem>[
+          PlatformMenuItem(
+            label: '${l.about} CrispCloud',
+            onSelected: () => showDialog(
+              context: context,
+              builder: (_) => const AboutAppDialog(),
+            ),
+          ),
+        ]),
+        PlatformMenuItemGroup(members: <PlatformMenuItem>[
+          PlatformMenuItem(
+            label: '${l.settings}…',
+            shortcut:
+                const SingleActivator(LogicalKeyboardKey.comma, meta: true),
+            onSelected: () => showSettingsDialog(context),
+          ),
+        ]),
+        const PlatformMenuItemGroup(members: <PlatformMenuItem>[
+          PlatformProvidedMenuItem(type: PlatformProvidedMenuItemType.quit),
+        ]),
+      ],
+    );
+
+    if (imageEditor != null) {
+      return <PlatformMenuItem>[
+        appMenu,
+        ...buildImageEditorPlatformMenus(context, imageEditor),
+      ];
+    }
+
     final PanelSide activeSide = ref.read(activePanelProvider);
     final bool localActive = activeSide == PanelSide.local;
 
@@ -553,31 +591,7 @@ class _FileBrowserScreenState extends ConsumerState<FileBrowserScreen> {
     ];
 
     return <PlatformMenuItem>[
-      PlatformMenu(
-        label: 'CrispCloud',
-        menus: <PlatformMenuItem>[
-          PlatformMenuItemGroup(members: <PlatformMenuItem>[
-            PlatformMenuItem(
-              label: '${l.about} CrispCloud',
-              onSelected: () => showDialog(
-                context: context,
-                builder: (_) => const AboutAppDialog(),
-              ),
-            ),
-          ]),
-          PlatformMenuItemGroup(members: <PlatformMenuItem>[
-            PlatformMenuItem(
-              label: '${l.settings}…',
-              shortcut:
-                  const SingleActivator(LogicalKeyboardKey.comma, meta: true),
-              onSelected: () => showSettingsDialog(context),
-            ),
-          ]),
-          const PlatformMenuItemGroup(members: <PlatformMenuItem>[
-            PlatformProvidedMenuItem(type: PlatformProvidedMenuItemType.quit),
-          ]),
-        ],
-      ),
+      appMenu,
       PlatformMenu(
         label: context.tr('File'),
         menus: editor != null

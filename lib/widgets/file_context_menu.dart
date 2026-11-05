@@ -10,6 +10,7 @@ import 'package:url_launcher/url_launcher.dart';
 import 'dart:io';
 import 'package:share_plus/share_plus.dart';
 import '../l10n/app_localizations.dart';
+import '../l10n/image_editor_strings.dart';
 import '../l10n/pdf_editor_strings.dart';
 import '../l10n/pdf_operations_strings.dart';
 import '../l10n/file_operations_strings.dart';
@@ -25,6 +26,7 @@ import '../services/checksum_service.dart'
 import '../services/cloud_storage_interface.dart'
     show CloudStorageClientCapabilities;
 import '../services/file_split_service.dart';
+import '../services/image_edit_session.dart' show isEditableImageFileName;
 import '../services/link_service.dart';
 import '../services/secure_wipe_service.dart';
 import '../services/log_service.dart';
@@ -127,9 +129,23 @@ void showFileContextMenu(BuildContext context, WidgetRef ref, PanelSide side,
     );
   }
 
-  // Edit (single text/code file, not folder) — submenu: built-in vs system editor
+  // Specialized editors and text/code editing for a single file.
   if (!isMultiSelect && !isSingleFolder) {
     final preferExternal = ref.read(preferExternalEditorProvider);
+    if (isEditableImageFileName(file.name)) {
+      items.add(PopupMenuItem(
+        child: Row(
+          children: [
+            const Icon(Icons.edit_outlined),
+            const SizedBox(width: 8),
+            Text(context.imageTr('Edit Image')),
+          ],
+        ),
+        onTap: () => Future.delayed(Duration.zero, () {
+          if (context.mounted) showFileEditorDialog(context, ref, file, side);
+        }),
+      ));
+    }
     if (isPdfFileName(file.name)) {
       items.add(PopupMenuItem(
         child: Row(
