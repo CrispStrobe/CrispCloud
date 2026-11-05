@@ -38,6 +38,10 @@ const imageEditorInvariantFilterNames = <String, String>{
 const imageEditorTranslations = <String, Map<String, String>>{
   'en': <String, String>{
     ...imageEditorInvariantFilterNames,
+    'Multi-page images cannot be overwritten by this editor.':
+        'Multi-page images cannot be overwritten by this editor.',
+    'This format cannot preserve the edited pixels. Export as PNG or WebP.':
+        'This format cannot preserve the edited pixels. Export as PNG or WebP.',
     'GIF saves require at most 256 colors and fully opaque or transparent pixels.': 'GIF saves require at most 256 colors and fully opaque or transparent pixels.',
     'GIF cannot preserve these colors or transparency. Export as PNG or WebP.': 'GIF cannot preserve these colors or transparency. Export as PNG or WebP.',
     'Could not add emoji': 'Could not add emoji',
@@ -213,6 +217,8 @@ const imageEditorTranslations = <String, Map<String, String>>{
   },
   'de': <String, String>{
     ...imageEditorInvariantFilterNames,
+    'Multi-page images cannot be overwritten by this editor.': 'Mehrseitige Bilder können mit diesem Editor nicht überschrieben werden.',
+    'This format cannot preserve the edited pixels. Export as PNG or WebP.': 'Dieses Format kann die bearbeiteten Pixel nicht erhalten. Als PNG oder WebP exportieren.',
     'GIF saves require at most 256 colors and fully opaque or transparent pixels.': 'GIF-Dateien unterstützen höchstens 256 Farben und nur vollständig deckende oder transparente Pixel.',
     'GIF cannot preserve these colors or transparency. Export as PNG or WebP.': 'GIF kann diese Farben oder Transparenz nicht erhalten. Als PNG oder WebP exportieren.',
     'Could not add emoji': 'Emoji konnte nicht hinzugefügt werden',
@@ -384,6 +390,9 @@ const imageEditorTranslations = <String, Map<String, String>>{
   },
   'fr': <String, String>{
     ...imageEditorInvariantFilterNames,
+    'Multi-page images cannot be overwritten by this editor.':
+        'Cet éditeur ne peut pas remplacer les images multipages.',
+    'This format cannot preserve the edited pixels. Export as PNG or WebP.': 'Ce format ne peut pas préserver les pixels modifiés. Exportez en PNG ou WebP.',
     'GIF saves require at most 256 colors and fully opaque or transparent pixels.': 'Les GIF prennent en charge au maximum 256 couleurs et des pixels opaques ou transparents.',
     'GIF cannot preserve these colors or transparency. Export as PNG or WebP.': 'GIF ne peut pas préserver ces couleurs ou cette transparence. Exportez en PNG ou WebP.',
     'Could not add emoji': 'Impossible d’ajouter l’emoji',
@@ -557,6 +566,9 @@ const imageEditorTranslations = <String, Map<String, String>>{
   },
   'es': <String, String>{
     ...imageEditorInvariantFilterNames,
+    'Multi-page images cannot be overwritten by this editor.':
+        'Este editor no puede sobrescribir imágenes de varias páginas.',
+    'This format cannot preserve the edited pixels. Export as PNG or WebP.': 'Este formato no puede conservar los píxeles editados. Exporta como PNG o WebP.',
     'GIF saves require at most 256 colors and fully opaque or transparent pixels.': 'Los GIF admiten hasta 256 colores y píxeles totalmente opacos o transparentes.',
     'GIF cannot preserve these colors or transparency. Export as PNG or WebP.': 'GIF no puede conservar estos colores o la transparencia. Exporta como PNG o WebP.',
     'Could not add emoji': 'No se pudo añadir el emoji',
@@ -727,6 +739,9 @@ const imageEditorTranslations = <String, Map<String, String>>{
   },
   'pt': <String, String>{
     ...imageEditorInvariantFilterNames,
+    'Multi-page images cannot be overwritten by this editor.':
+        'Este editor não pode sobrescrever imagens com várias páginas.',
+    'This format cannot preserve the edited pixels. Export as PNG or WebP.': 'Este formato não consegue preservar os pixels editados. Exporte como PNG ou WebP.',
     'GIF saves require at most 256 colors and fully opaque or transparent pixels.': 'GIFs aceitam até 256 cores e pixels totalmente opacos ou transparentes.',
     'GIF cannot preserve these colors or transparency. Export as PNG or WebP.': 'GIF não consegue preservar essas cores ou transparência. Exporte como PNG ou WebP.',
     'Could not add emoji': 'Não foi possível adicionar o emoji',
@@ -900,6 +915,9 @@ const imageEditorTranslations = <String, Map<String, String>>{
   },
   'zh': <String, String>{
     ...imageEditorInvariantFilterNames,
+    'Multi-page images cannot be overwritten by this editor.': '此编辑器无法覆盖多页图像。',
+    'This format cannot preserve the edited pixels. Export as PNG or WebP.':
+        '此格式无法保留编辑后的像素。请导出为 PNG 或 WebP。',
     'GIF saves require at most 256 colors and fully opaque or transparent pixels.':
         'GIF 最多支持 256 种颜色，像素必须完全不透明或完全透明。',
     'GIF cannot preserve these colors or transparency. Export as PNG or WebP.':
@@ -1073,6 +1091,10 @@ const imageEditorTranslations = <String, Map<String, String>>{
   },
   'ja': <String, String>{
     ...imageEditorInvariantFilterNames,
+    'Multi-page images cannot be overwritten by this editor.':
+        'このエディターでは複数ページの画像を上書きできません。',
+    'This format cannot preserve the edited pixels. Export as PNG or WebP.':
+        'この形式では編集したピクセルを保持できません。PNG または WebP として書き出してください。',
     'GIF saves require at most 256 colors and fully opaque or transparent pixels.':
         'GIF は最大 256 色で、ピクセルは完全に不透明か透明である必要があります。',
     'GIF cannot preserve these colors or transparency. Export as PNG or WebP.':
@@ -1250,6 +1272,10 @@ const imageEditorTranslations = <String, Map<String, String>>{
   },
   'ko': <String, String>{
     ...imageEditorInvariantFilterNames,
+    'Multi-page images cannot be overwritten by this editor.':
+        '이 편집기에서는 여러 페이지 이미지를 덮어쓸 수 없습니다.',
+    'This format cannot preserve the edited pixels. Export as PNG or WebP.':
+        '이 형식은 편집한 픽셀을 보존할 수 없습니다. PNG 또는 WebP로 내보내세요.',
     'GIF saves require at most 256 colors and fully opaque or transparent pixels.':
         'GIF는 최대 256색과 완전 불투명 또는 완전 투명 픽셀을 지원합니다.',
     'GIF cannot preserve these colors or transparency. Export as PNG or WebP.':
@@ -1428,6 +1454,9 @@ const imageEditorTranslations = <String, Map<String, String>>{
   },
   'ar': <String, String>{
     ...imageEditorInvariantFilterNames,
+    'Multi-page images cannot be overwritten by this editor.':
+        'لا يمكن لهذا المحرر استبدال الصور متعددة الصفحات.',
+    'This format cannot preserve the edited pixels. Export as PNG or WebP.': 'لا يمكن لهذا التنسيق الحفاظ على البكسلات المعدّلة. صدّر بصيغة PNG أو WebP.',
     'GIF saves require at most 256 colors and fully opaque or transparent pixels.':
         'تدعم ملفات GIF حتى 256 لونًا وبكسلات معتمة أو شفافة بالكامل.',
     'GIF cannot preserve these colors or transparency. Export as PNG or WebP.': 'لا يمكن لـ GIF الحفاظ على هذه الألوان أو الشفافية. صدّر بصيغة PNG أو WebP.',
