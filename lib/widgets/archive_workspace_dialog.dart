@@ -5,6 +5,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:path/path.dart' as p;
 
+import '../l10n/commander_strings.dart';
 import '../models/file_item.dart';
 import '../models/panel_side.dart';
 import '../providers/providers.dart';
@@ -131,7 +132,7 @@ class _ArchiveWorkspaceDialogState
   bool _cancelled = false;
   bool _replaceOnAdd = false;
   String? _error;
-  String? _message;
+  String Function(BuildContext)? _message;
 
   @override
   void initState() {
@@ -150,7 +151,11 @@ class _ArchiveWorkspaceDialogState
       if (_workspace!.canUpdate) {
         await _moveOut();
       } else {
-        setState(() => _message = _workspace!.updateSupport);
+        setState(
+          () =>
+              _message = (context) =>
+                  context.commanderTr(_workspace!.updateSupport),
+        );
       }
     } else if (widget.initialAction == ArchiveWorkspaceAction.edit &&
         _selection.length == 1) {
@@ -158,7 +163,9 @@ class _ArchiveWorkspaceDialogState
         await _edit();
       } else {
         setState(
-          () => _message = 'Copy this member out, edit it, then add it with replacement enabled.',
+          () => _message = (context) => context.commanderTr(
+            "Copy this member out, edit it, then add it with replacement enabled.",
+          ),
         );
       }
     }
@@ -177,8 +184,11 @@ class _ArchiveWorkspaceDialogState
     bool password = false,
   }) => showDialog<String>(
     context: context,
-    builder: (_) =>
-        _ArchiveTextDialog(title: title, text: initial, password: password),
+    builder: (_) => _ArchiveTextDialog(
+      title: context.commanderTr(title),
+      text: initial,
+      password: password,
+    ),
   );
 
   Future<void> _open() async {
@@ -298,7 +308,7 @@ class _ArchiveWorkspaceDialogState
         context: context,
         barrierDismissible: false,
         builder: (_) => _ArchiveTextDialog(
-          title: 'Edit ${file.name}',
+          title: context.commanderTr("Edit {0}", [file.name]),
           text: document.text,
           multiline: true,
           detail: '${document.encoding.label} · ${document.lineEnding.label}',
@@ -313,7 +323,10 @@ class _ArchiveWorkspaceDialogState
   Future<void> _rename() async {
     final selected = _selection;
     if (selected.length != 1) {
-      setState(() => _error = 'Select an available archive member.');
+      setState(
+        () =>
+            _error = context.commanderTr("Select an available archive member."),
+      );
       return;
     }
     final file = selected.single;
@@ -332,18 +345,24 @@ class _ArchiveWorkspaceDialogState
     final approved = await showDialog<bool>(
       context: context,
       builder: (ctx) => AlertDialog(
-        title: Text('Remove ${_selected.length} selected member(s)?'),
-        content: const Text(
-          'This changes the working archive. Save archive applies the changes to the original file.',
+        title: Text(
+          context.commanderTr("Remove {0} selected member(s)?", [
+            _selected.length,
+          ]),
+        ),
+        content: Text(
+          context.commanderTr(
+            "This changes the working archive. Save archive applies the changes to the original file.",
+          ),
         ),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(ctx, false),
-            child: const Text('Cancel'),
+            child: Text(context.commanderTr("Cancel")),
           ),
           FilledButton(
             onPressed: () => Navigator.pop(ctx, true),
-            child: const Text('Remove members'),
+            child: Text(context.commanderTr("Remove members")),
           ),
         ],
       ),
@@ -386,8 +405,10 @@ class _ArchiveWorkspaceDialogState
       );
       if (mounted) {
         setState(
-          () => _message =
-              'Added ${files.length} selected item(s). Save archive to apply.',
+          () => _message = (context) => context.commanderTr(
+            "Added {0} selected item(s). Save archive to apply.",
+            [files.length],
+          ),
         );
       }
     });
@@ -412,18 +433,20 @@ class _ArchiveWorkspaceDialogState
     final proceed = await showDialog<bool>(
       context: context,
       builder: (ctx) => AlertDialog(
-        title: const Text('Move members out of this archive?'),
-        content: const Text(
-          'Choose copy options next. Only successfully copied and verified members are removed from the working archive. Save archive to commit the removal.',
+        title: Text(context.commanderTr("Move members out of this archive?")),
+        content: Text(
+          context.commanderTr(
+            "Choose copy options next. Only successfully copied and verified members are removed from the working archive. Save archive to commit the removal.",
+          ),
         ),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(ctx, false),
-            child: const Text('Cancel'),
+            child: Text(context.commanderTr("Cancel")),
           ),
           FilledButton(
             onPressed: () => Navigator.pop(ctx, true),
-            child: const Text('Continue'),
+            child: Text(context.commanderTr("Continue")),
           ),
         ],
       ),
@@ -448,9 +471,12 @@ class _ArchiveWorkspaceDialogState
       if (mounted) {
         setState(() {
           _selected.clear();
-          _message = count == 0
-              ? 'No copied members were removed.'
-              : 'Moved $count member(s) in the working copy. Save archive to commit removal.';
+          _message = (context) => count == 0
+              ? context.commanderTr("No copied members were removed.")
+              : context.commanderTr(
+                  "Moved {0} member(s) in the working copy. Save archive to commit removal.",
+                  [count],
+                );
         });
       }
     });
@@ -458,7 +484,13 @@ class _ArchiveWorkspaceDialogState
 
   Future<void> _save() async => _run(() async {
     await _workspace!.save(isCancelled: () => _cancelled || !mounted);
-    if (mounted) setState(() => _message = 'Archive saved and verified.');
+    if (mounted) {
+      setState(
+        () =>
+            _message = (context) =>
+                context.commanderTr("Archive saved and verified."),
+      );
+    }
   });
 
   Future<void> _close() async {
@@ -467,15 +499,15 @@ class _ArchiveWorkspaceDialogState
       final discard = await showDialog<bool>(
         context: context,
         builder: (ctx) => AlertDialog(
-          title: const Text('Discard unsaved archive changes?'),
+          title: Text(context.commanderTr("Discard unsaved archive changes?")),
           actions: [
             TextButton(
               onPressed: () => Navigator.pop(ctx, false),
-              child: const Text('Keep editing'),
+              child: Text(context.commanderTr("Keep editing")),
             ),
             FilledButton(
               onPressed: () => Navigator.pop(ctx, true),
-              child: const Text('Discard changes'),
+              child: Text(context.commanderTr("Discard changes")),
             ),
           ],
         ),
@@ -505,171 +537,217 @@ class _ArchiveWorkspaceDialogState
           height: size.height * .9,
           child: Column(
             children: [
-              Padding(
-                padding: const EdgeInsets.all(16),
-                child: Row(
-                  children: [
-                    const Icon(Icons.archive_outlined),
-                    const SizedBox(width: 8),
-                    Expanded(
-                      child: Text(
-                        widget.file.name,
-                        style: Theme.of(context).textTheme.titleLarge,
-                        overflow: TextOverflow.ellipsis,
+              Expanded(
+                child: CustomScrollView(
+                  slivers: [
+                    SliverToBoxAdapter(
+                      child: Column(
+                        children: [
+                          Padding(
+                            padding: const EdgeInsets.all(16),
+                            child: Row(
+                              children: [
+                                const Icon(Icons.archive_outlined),
+                                const SizedBox(width: 8),
+                                Expanded(
+                                  child: Text(
+                                    widget.file.name,
+                                    style: Theme.of(context)
+                                        .textTheme
+                                        .titleLarge,
+                                    overflow: TextOverflow.ellipsis,
+                                  ),
+                                ),
+                                IconButton(
+                                  tooltip: context.commanderTr("Close archive"),
+                                  onPressed: _busy ? null : _close,
+                                  icon: const Icon(Icons.close),
+                                ),
+                              ],
+                            ),
+                          ),
+                          if (workspace?.dirty == true)
+                            Text(context.commanderTr("Unsaved changes")),
+                          if (workspace != null)
+                            Padding(
+                              padding: const EdgeInsets.symmetric(
+                                horizontal: 16,
+                              ),
+                              child: Text(
+                                '${workspace.format.toUpperCase()} · ${context.commanderTr(workspace.updateSupport)}',
+                              ),
+                            ),
+                          Padding(
+                            padding: const EdgeInsets.all(8),
+                            child: Wrap(
+                              spacing: 8,
+                              runSpacing: 4,
+                              children: [
+                                TextButton.icon(
+                                  onPressed: enabled && _path != '/'
+                                      ? () => setState(() {
+                                          _path = p.posix.dirname(_path);
+                                          _selected.clear();
+                                        })
+                                      : null,
+                                  icon: const Icon(Icons.arrow_upward),
+                                  label: Text(context.commanderTr("Up")),
+                                ),
+                                TextButton(
+                                  onPressed: enabled
+                                      ? () => setState(() {
+                                          _selected
+                                            ..clear()
+                                            ..addAll(
+                                              files.map((file) => file.path!),
+                                            );
+                                        })
+                                      : null,
+                                  child: Text(
+                                    context.commanderTr("Select all"),
+                                  ),
+                                ),
+                                TextButton.icon(
+                                  onPressed: enabled && selected.isNotEmpty
+                                      ? _copyOut
+                                      : null,
+                                  icon: const Icon(Icons.copy),
+                                  label: Text(
+                                    context.commanderTr(
+                                      "Copy out with options…",
+                                    ),
+                                  ),
+                                ),
+                                TextButton.icon(
+                                  onPressed: editable && selected.isNotEmpty
+                                      ? _moveOut
+                                      : null,
+                                  icon: const Icon(
+                                    Icons.drive_file_move_outline,
+                                  ),
+                                  label: Text(
+                                    context.commanderTr(
+                                      "Move out with options…",
+                                    ),
+                                  ),
+                                ),
+                                TextButton.icon(
+                                  onPressed: editable ? _add : null,
+                                  icon: const Icon(Icons.add),
+                                  label: Text(
+                                    context.commanderTr("Add from other panel"),
+                                  ),
+                                ),
+                                FilterChip(
+                                  label: Text(
+                                    context.commanderTr(
+                                      "Replace members on add",
+                                    ),
+                                  ),
+                                  selected: _replaceOnAdd,
+                                  onSelected: editable
+                                      ? (value) => setState(
+                                          () => _replaceOnAdd = value,
+                                        )
+                                      : null,
+                                ),
+                                TextButton(
+                                  onPressed:
+                                      editable &&
+                                          selected.length == 1 &&
+                                          !selected.single.isFolder &&
+                                          isTextEditableName(
+                                            selected.single.name,
+                                          )
+                                      ? _edit
+                                      : null,
+                                  child: Text(context.commanderTr("Edit text")),
+                                ),
+                                TextButton(
+                                  onPressed: editable && selected.length == 1
+                                      ? _rename
+                                      : null,
+                                  child: Text(context.commanderTr("Rename")),
+                                ),
+                                TextButton(
+                                  onPressed: editable && selected.isNotEmpty
+                                      ? _remove
+                                      : null,
+                                  child: Text(context.commanderTr("Remove")),
+                                ),
+                              ],
+                            ),
+                          ),
+                          SelectableText(_path),
+                          if (_error != null)
+                            Padding(
+                              padding: const EdgeInsets.all(8),
+                              child: Text(
+                                _error!,
+                                style: TextStyle(
+                                  color: Theme.of(context).colorScheme.error,
+                                ),
+                              ),
+                            ),
+                          if (_message != null)
+                            Padding(
+                              padding: const EdgeInsets.all(8),
+                              child: Semantics(
+                                liveRegion: true,
+                                child: Text(_message!(context)),
+                              ),
+                            ),
+                          if (_busy) const LinearProgressIndicator(),
+                          if (workspace != null && !workspace.isCurrent)
+                            Padding(
+                              padding: const EdgeInsets.all(8),
+                              child: Text(
+                                context.commanderTr(
+                                  "The original account is unavailable. Reconnect and reopen this archive.",
+                                ),
+                              ),
+                            ),
+                        ],
                       ),
                     ),
-                    if (workspace?.dirty == true) const Text('Unsaved changes'),
-                    IconButton(
-                      tooltip: 'Close archive',
-                      onPressed: _busy ? null : _close,
-                      icon: const Icon(Icons.close),
-                    ),
-                  ],
-                ),
-              ),
-              if (workspace != null)
-                Padding(
-                  padding: const EdgeInsets.symmetric(horizontal: 16),
-                  child: Text(
-                    '${workspace.format.toUpperCase()} · ${workspace.updateSupport}',
-                  ),
-                ),
-              Padding(
-                padding: const EdgeInsets.all(8),
-                child: Wrap(
-                  spacing: 8,
-                  runSpacing: 4,
-                  children: [
-                    TextButton.icon(
-                      onPressed: enabled && _path != '/'
-                          ? () => setState(() {
-                              _path = p.posix.dirname(_path);
-                              _selected.clear();
-                            })
-                          : null,
-                      icon: const Icon(Icons.arrow_upward),
-                      label: const Text('Up'),
-                    ),
-                    TextButton(
-                      onPressed: enabled
-                          ? () => setState(() {
-                              _selected
-                                ..clear()
-                                ..addAll(files.map((file) => file.path!));
-                            })
-                          : null,
-                      child: const Text('Select all'),
-                    ),
-                    TextButton.icon(
-                      onPressed: enabled && selected.isNotEmpty
-                          ? _copyOut
-                          : null,
-                      icon: const Icon(Icons.copy),
-                      label: const Text('Copy out with options…'),
-                    ),
-                    TextButton.icon(
-                      onPressed: editable && selected.isNotEmpty
-                          ? _moveOut
-                          : null,
-                      icon: const Icon(Icons.drive_file_move_outline),
-                      label: const Text('Move out with options…'),
-                    ),
-                    TextButton.icon(
-                      onPressed: editable ? _add : null,
-                      icon: const Icon(Icons.add),
-                      label: const Text('Add from other panel'),
-                    ),
-                    FilterChip(
-                      label: const Text('Replace members on add'),
-                      selected: _replaceOnAdd,
-                      onSelected: editable
-                          ? (value) => setState(() => _replaceOnAdd = value)
-                          : null,
-                    ),
-                    TextButton(
-                      onPressed:
-                          editable &&
-                              selected.length == 1 &&
-                              !selected.single.isFolder &&
-                              isTextEditableName(selected.single.name)
-                          ? _edit
-                          : null,
-                      child: const Text('Edit text'),
-                    ),
-                    TextButton(
-                      onPressed: editable && selected.length == 1
-                          ? _rename
-                          : null,
-                      child: const Text('Rename'),
-                    ),
-                    TextButton(
-                      onPressed: editable && selected.isNotEmpty
-                          ? _remove
-                          : null,
-                      child: const Text('Remove'),
-                    ),
-                  ],
-                ),
-              ),
-              SelectableText(_path),
-              if (_error != null)
-                Padding(
-                  padding: const EdgeInsets.all(8),
-                  child: Text(
-                    _error!,
-                    style: TextStyle(
-                      color: Theme.of(context).colorScheme.error,
-                    ),
-                  ),
-                ),
-              if (_message != null)
-                Padding(
-                  padding: const EdgeInsets.all(8),
-                  child: Text(_message!),
-                ),
-              if (_busy) const LinearProgressIndicator(),
-              if (workspace != null && !workspace.isCurrent)
-                const Padding(
-                  padding: EdgeInsets.all(8),
-                  child: Text(
-                    'The original account is unavailable. Reconnect and reopen this archive.',
-                  ),
-                ),
-              Expanded(
-                child: ListView.builder(
-                  itemCount: files.length,
-                  itemBuilder: (context, index) {
-                    final file = files[index];
-                    return Row(
-                      children: [
-                        Checkbox(
-                          value: _selected.contains(file.path),
-                          onChanged: enabled
-                              ? (value) => setState(() {
-                                  value!
-                                      ? _selected.add(file.path!)
-                                      : _selected.remove(file.path);
-                                })
-                              : null,
-                          semanticLabel: 'Select ${file.name}',
-                        ),
-                        Expanded(
-                          child: ListTile(
-                            leading: Icon(
-                              file.isFolder
-                                  ? Icons.folder_outlined
-                                  : Icons.insert_drive_file_outlined,
+                    SliverList.builder(
+                      itemCount: files.length,
+                      itemBuilder: (context, index) {
+                        final file = files[index];
+                        return Row(
+                          children: [
+                            Checkbox(
+                              value: _selected.contains(file.path),
+                              onChanged: enabled
+                                  ? (value) => setState(() {
+                                      value!
+                                          ? _selected.add(file.path!)
+                                          : _selected.remove(file.path);
+                                    })
+                                  : null,
+                              semanticLabel: context.commanderTr("Select {0}", [
+                                file.name,
+                              ]),
                             ),
-                            title: Text(file.name),
-                            subtitle: file.isFolder
-                                ? null
-                                : Text(formatBytes(file.size ?? 0)),
-                            onTap: enabled ? () => _view(file) : null,
-                          ),
-                        ),
-                      ],
-                    );
-                  },
+                            Expanded(
+                              child: ListTile(
+                                leading: Icon(
+                                  file.isFolder
+                                      ? Icons.folder_outlined
+                                      : Icons.insert_drive_file_outlined,
+                                ),
+                                title: Text(file.name),
+                                subtitle: file.isFolder
+                                    ? null
+                                    : Text(formatBytes(file.size ?? 0)),
+                                onTap: enabled ? () => _view(file) : null,
+                              ),
+                            ),
+                          ],
+                        );
+                      },
+                    ),
+                  ],
                 ),
               ),
               Padding(
@@ -680,16 +758,16 @@ class _ArchiveWorkspaceDialogState
                     if (_busy)
                       TextButton(
                         onPressed: () => setState(() => _cancelled = true),
-                        child: const Text('Stop'),
+                        child: Text(context.commanderTr("Stop")),
                       ),
                     TextButton(
                       onPressed: _busy ? null : _close,
-                      child: const Text('Close'),
+                      child: Text(context.commanderTr("Close")),
                     ),
                     FilledButton.icon(
                       onPressed: editable && workspace.dirty ? _save : null,
                       icon: const Icon(Icons.save),
-                      label: const Text('Save archive'),
+                      label: Text(context.commanderTr("Save archive")),
                     ),
                   ],
                 ),
@@ -749,11 +827,15 @@ class _ArchiveTextDialogState extends State<_ArchiveTextDialog> {
     actions: [
       TextButton(
         onPressed: () => Navigator.pop(context),
-        child: const Text('Cancel'),
+        child: Text(context.commanderTr("Cancel")),
       ),
       FilledButton(
         onPressed: () => Navigator.pop(context, _controller.text),
-        child: Text(widget.multiline ? 'Apply to working archive' : 'OK'),
+        child: Text(
+          widget.multiline
+              ? context.commanderTr("Apply to working archive")
+              : context.commanderTr("OK"),
+        ),
       ),
     ],
   );

@@ -5,6 +5,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import '../l10n/commander_strings.dart';
 import '../models/file_item.dart';
 import '../models/panel_side.dart';
 import '../providers/providers.dart';
@@ -95,7 +96,7 @@ class _ChecksumDialogState extends ConsumerState<_ChecksumDialog> {
   bool _running = false;
   bool _cancelled = false;
   String? _error;
-  String? _status;
+  String Function(BuildContext)? _status;
   double? _progress;
   bool get _singleAccount =>
       widget.files.map((file) => file.origin.storageId).toSet().length == 1;
@@ -122,7 +123,7 @@ class _ChecksumDialogState extends ConsumerState<_ChecksumDialog> {
   void _update(String phase, int bytes, int? total) {
     if (mounted) {
       setState(() {
-        _status =
+        _status = (_) =>
             '$phase · ${formatBytes(bytes)}${total == null ? '' : ' / ${formatBytes(total)}'}';
         _progress = total == null || total == 0
             ? null
@@ -176,8 +177,10 @@ class _ChecksumDialogState extends ConsumerState<_ChecksumDialog> {
     }
     if (mounted) {
       setState(
-        () => _status =
-            'Calculated ${_results.length} ${_algorithm.label} checksum(s).',
+        () => _status = (context) => context.commanderTr(
+          "Calculated {0} {1} checksum(s).",
+          [_results.length, _algorithm.label],
+        ),
       );
     }
   });
@@ -216,7 +219,13 @@ class _ChecksumDialogState extends ConsumerState<_ChecksumDialog> {
       isCancelled: () => _cancelled || !mounted,
       onProgress: (file, bytes, total) => _update(file.name, bytes, total),
     );
-    if (mounted) setState(() => _status = 'Created and verified $output');
+    if (mounted) {
+      setState(
+        () =>
+            _status = (context) =>
+                context.commanderTr("Created and verified {0}", [output]),
+      );
+    }
   });
   Future<void> _verify() => _run(() async {
     if (!_canVerify) {
@@ -240,7 +249,11 @@ class _ChecksumDialogState extends ConsumerState<_ChecksumDialog> {
                 digest: result.actual,
                 detail:
                     result.error ??
-                    (result.ok ? null : 'Expected ${result.expected}'),
+                    (result.ok
+                        ? null
+                        : context.commanderTr("Expected {0}", [
+                            result.expected,
+                          ])),
                 ok: result.ok,
               ),
             ),
@@ -250,9 +263,12 @@ class _ChecksumDialogState extends ConsumerState<_ChecksumDialog> {
     }
     if (mounted) {
       setState(
-        () => _status =
-            '${_results.where((result) => result.ok == true).length} verified; '
-            '${_results.where((result) => result.ok == false).length} failed.',
+        () =>
+            _status = (context) =>
+                context.commanderTr("{0} verified; {1} failed.", [
+                  _results.where((result) => result.ok == true).length,
+                  _results.where((result) => result.ok == false).length,
+                ]),
       );
     }
   });
@@ -263,7 +279,9 @@ class _ChecksumDialogState extends ConsumerState<_ChecksumDialog> {
       canPop: !_running,
       child: AlertDialog(
         scrollable: true,
-        title: Text('Checksums · ${widget.files.length} file(s)'),
+        title: Text(
+          context.commanderTr("Checksums · {0} file(s)", [widget.files.length]),
+        ),
         content: SizedBox(
           width: math.min(760, size.width - 48),
           child: Column(
@@ -272,7 +290,9 @@ class _ChecksumDialogState extends ConsumerState<_ChecksumDialog> {
             children: [
               DropdownButtonFormField<ChecksumAlgorithm>(
                 initialValue: _algorithm,
-                decoration: const InputDecoration(labelText: 'Algorithm'),
+                decoration: InputDecoration(
+                  labelText: context.commanderTr("Algorithm"),
+                ),
                 isExpanded: true,
                 items: [
                   for (final algorithm in ChecksumAlgorithm.values)
@@ -296,21 +316,28 @@ class _ChecksumDialogState extends ConsumerState<_ChecksumDialog> {
               TextField(
                 controller: _output,
                 enabled: !_running && _singleAccount,
-                decoration: const InputDecoration(
-                  labelText: 'Checksum filename',
-                  helperText: 'Created in the common source directory; existing files are preserved.',
+                decoration: InputDecoration(
+                  labelText: context.commanderTr("Checksum filename"),
+                  helperText: context.commanderTr(
+                    "Created in the common source directory; existing files are preserved.",
+                  ),
                   helperMaxLines: 3,
                 ),
               ),
               if (!_singleAccount)
-                const Text(
-                  'Mixed accounts: calculate or verify each source. Select one account to create a manifest.',
+                Text(
+                  context.commanderTr(
+                    "Mixed accounts: calculate or verify each source. Select one account to create a manifest.",
+                  ),
                 ),
               if (_running) LinearProgressIndicator(value: _progress),
               if (_status != null)
                 Padding(
                   padding: const EdgeInsets.symmetric(vertical: 8),
-                  child: Text(_status!),
+                  child: Semantics(
+                    liveRegion: true,
+                    child: Text(_status!(context)),
+                  ),
                 ),
               if (_error != null)
                 Padding(
@@ -350,7 +377,7 @@ class _ChecksumDialogState extends ConsumerState<_ChecksumDialog> {
                           ),
                         ),
                         trailing: IconButton(
-                          tooltip: 'Copy checksum',
+                          tooltip: context.commanderTr("Copy checksum"),
                           icon: const Icon(Icons.copy, size: 18),
                           onPressed: () => Clipboard.setData(
                             ClipboardData(text: result.digest),
@@ -367,22 +394,25 @@ class _ChecksumDialogState extends ConsumerState<_ChecksumDialog> {
           if (_running)
             TextButton(
               onPressed: () => setState(() => _cancelled = true),
-              child: const Text('Cancel operation'),
+              child: Text(context.commanderTr("Cancel operation")),
             )
           else ...[
             TextButton(
               onPressed: () => Navigator.pop(context),
-              child: const Text('Close'),
+              child: Text(context.commanderTr("Close")),
             ),
             TextButton(
               onPressed: _canVerify ? _verify : null,
-              child: const Text('Verify selected manifests'),
+              child: Text(context.commanderTr("Verify selected manifests")),
             ),
             OutlinedButton(
               onPressed: _singleAccount ? _create : null,
-              child: const Text('Create checksum file'),
+              child: Text(context.commanderTr("Create checksum file")),
             ),
-            FilledButton(onPressed: _calculate, child: const Text('Calculate')),
+            FilledButton(
+              onPressed: _calculate,
+              child: Text(context.commanderTr("Calculate")),
+            ),
           ],
         ],
       ),
@@ -391,10 +421,12 @@ class _ChecksumDialogState extends ConsumerState<_ChecksumDialog> {
 }
 
 class _IntegrityDestination {
-  const _IntegrityDestination(this.origin, this.path, this.label);
+  const _IntegrityDestination(this.origin, this.path, this.isSource);
   final PanelFileOrigin origin;
   final String path;
-  final String label;
+  final bool isSource;
+  String label(BuildContext context) =>
+      '${origin.source.displayName} · ${context.commanderTr(isSource ? "Source folder" : "Opposite panel")}';
 }
 
 Future<void> showSplitFileDialog(
@@ -429,7 +461,7 @@ Future<void> _showSplitCombineDialog(
       _IntegrityDestination(
         origin,
         backend.paths.dirname(files.first.path!),
-        '${origin.source.displayName} · source folder',
+        true,
       ),
     ];
     try {
@@ -441,11 +473,7 @@ Future<void> _showSplitCombineDialog(
           )
           .captureCurrentOrigin();
       destinations.add(
-        _IntegrityDestination(
-          other,
-          other.source.currentPath,
-          '${other.source.displayName} · other panel',
-        ),
+        _IntegrityDestination(other, other.source.currentPath, false),
       );
     } catch (_) {
       /* An unavailable or virtual panel cannot be a destination. */
@@ -502,7 +530,7 @@ class _SplitCombineDialogState extends ConsumerState<_SplitCombineDialog> {
   SplitManifest? _manifest;
   List<FileItem> _legacy = [];
   String? _error;
-  String? _status;
+  String Function(BuildContext)? _status;
   double? _progress;
   FileOperationBackend _backend(PanelFileOrigin origin) => fileOperationBackend(
     source: origin.source,
@@ -604,10 +632,15 @@ class _SplitCombineDialogState extends ConsumerState<_SplitCombineDialog> {
     try {
       final source = _backend(widget.files.first.origin);
       final destination = _backend(widget.destinations[_destination].origin);
-      void progress(String phase, int bytes, int total) {
+      void progress(String _, int bytes, int total) {
         if (mounted) {
           setState(() {
-            _status = '$phase · ${formatBytes(bytes)} / ${formatBytes(total)}';
+            _status = (context) => context.commanderTr(
+              widget.combining
+                  ? "Combining and verifying parts… {0} / {1}"
+                  : "Splitting and verifying parts… {0} / {1}",
+              [formatBytes(bytes), formatBytes(total)],
+            );
             _progress = total == 0 ? null : (bytes / total).clamp(0.0, 1.0);
           });
         }
@@ -650,7 +683,12 @@ class _SplitCombineDialogState extends ConsumerState<_SplitCombineDialog> {
         }
         if (mounted) {
           setState(() {
-            _status = 'Combined and verified: $output';
+            _status = (context) => context.commanderTr(
+              manifest == null
+                  ? "Combined legacy parts: {0}"
+                  : "Combined and verified: {0}",
+              [output],
+            );
             _finished = true;
           });
         }
@@ -670,8 +708,10 @@ class _SplitCombineDialogState extends ConsumerState<_SplitCombineDialog> {
         );
         if (mounted) {
           setState(() {
-            _status =
-                'Created ${result.partPaths.length} verified part(s). Keep ${result.manifestPath} with the parts.';
+            _status = (context) => context.commanderTr(
+              "Created {0} verified part(s). Keep {1} with the parts.",
+              [result.partPaths.length, result.manifestPath],
+            );
             _finished = true;
           });
         }
@@ -696,8 +736,10 @@ class _SplitCombineDialogState extends ConsumerState<_SplitCombineDialog> {
       child: AlertDialog(
         title: Text(
           widget.combining
-              ? 'Combine file parts'
-              : 'Split ${widget.files.single.file.name}',
+              ? context.commanderTr("Combine file parts")
+              : context.commanderTr("Split {0}", [
+                  widget.files.single.file.name,
+                ]),
         ),
         content: SizedBox(
           width: math.min(640, MediaQuery.sizeOf(context).width - 48),
@@ -709,8 +751,8 @@ class _SplitCombineDialogState extends ConsumerState<_SplitCombineDialog> {
                 DropdownButtonFormField<int>(
                   initialValue: _destination,
                   isExpanded: true,
-                  decoration: const InputDecoration(
-                    labelText: 'Destination account',
+                  decoration: InputDecoration(
+                    labelText: context.commanderTr("Destination account"),
                   ),
                   items: [
                     for (
@@ -720,7 +762,11 @@ class _SplitCombineDialogState extends ConsumerState<_SplitCombineDialog> {
                     )
                       DropdownMenuItem(
                         value: index,
-                        child: Text(widget.destinations[index].label),
+                        child: Text(
+                          widget.destinations[index].label(context),
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                        ),
                       ),
                   ],
                   onChanged: busy || _finished
@@ -737,8 +783,8 @@ class _SplitCombineDialogState extends ConsumerState<_SplitCombineDialog> {
                 TextField(
                   controller: _directory,
                   enabled: !busy && !_finished,
-                  decoration: const InputDecoration(
-                    labelText: 'Destination directory',
+                  decoration: InputDecoration(
+                    labelText: context.commanderTr("Destination directory"),
                   ),
                 ),
                 if (!widget.combining) ...[
@@ -746,29 +792,37 @@ class _SplitCombineDialogState extends ConsumerState<_SplitCombineDialog> {
                     controller: _partSize,
                     enabled: !busy && !_finished,
                     keyboardType: TextInputType.number,
-                    decoration: const InputDecoration(
-                      labelText: 'Part size (MiB)',
+                    decoration: InputDecoration(
+                      labelText: context.commanderTr("Part size (MiB)"),
                     ),
                   ),
-                  const Padding(
-                    padding: EdgeInsets.symmetric(vertical: 10),
+                  Padding(
+                    padding: const EdgeInsets.symmetric(vertical: 10),
                     child: Text(
-                      'Each part and the original file receive a SHA-256 checksum. Keep the .split.json manifest with the numbered parts. Cancelling keeps completed parts and an incomplete manifest.',
+                      context.commanderTr(
+                        "Each part and the original file receive a SHA-256 checksum. Keep the .split.json manifest with the numbered parts. Cancelling keeps completed parts and an incomplete manifest.",
+                      ),
                     ),
                   ),
                 ] else ...[
                   TextField(
                     controller: _outputName,
                     enabled: !busy && !_finished,
-                    decoration: const InputDecoration(
-                      labelText: 'Combined filename',
+                    decoration: InputDecoration(
+                      labelText: context.commanderTr("Combined filename"),
                     ),
                   ),
                   if (_manifest != null)
                     Padding(
                       padding: const EdgeInsets.symmetric(vertical: 10),
                       child: Text(
-                        '${_manifest!.expectedParts} parts · ${formatBytes(_manifest!.totalBytes)} · original SHA-256 verified before commit',
+                        context.commanderTr(
+                          "{0} parts · {1} · original SHA-256 verified before commit",
+                          [
+                            _manifest!.expectedParts,
+                            formatBytes(_manifest!.totalBytes),
+                          ],
+                        ),
                       ),
                     ),
                   if (!_loading && _manifestFile == null && _legacy.isNotEmpty)
@@ -781,10 +835,15 @@ class _SplitCombineDialogState extends ConsumerState<_SplitCombineDialog> {
                               () => _legacyConfirmed = value ?? false,
                             ),
                       title: Text(
-                        'Combine ${_legacy.length} legacy parts without an original checksum',
+                        context.commanderTr(
+                          "Combine {0} legacy parts without an original checksum",
+                          [_legacy.length],
+                        ),
                       ),
-                      subtitle: const Text(
-                        'A missing final part cannot be detected without a manifest.',
+                      subtitle: Text(
+                        context.commanderTr(
+                          "A missing final part cannot be detected without a manifest.",
+                        ),
                       ),
                     ),
                 ],
@@ -792,7 +851,10 @@ class _SplitCombineDialogState extends ConsumerState<_SplitCombineDialog> {
                 if (_status != null)
                   Padding(
                     padding: const EdgeInsets.symmetric(vertical: 10),
-                    child: SelectableText(_status!),
+                    child: Semantics(
+                      liveRegion: true,
+                      child: SelectableText(_status!(context)),
+                    ),
                   ),
                 if (_error != null)
                   Text(
@@ -801,8 +863,10 @@ class _SplitCombineDialogState extends ConsumerState<_SplitCombineDialog> {
                       color: Theme.of(context).colorScheme.error,
                     ),
                   ),
-                const Text(
-                  'Existing files are preserved. Choose a new filename or destination when a collision is reported.',
+                Text(
+                  context.commanderTr(
+                    "Existing files are preserved. Choose a new filename or destination when a collision is reported.",
+                  ),
                 ),
               ],
             ),
@@ -812,12 +876,12 @@ class _SplitCombineDialogState extends ConsumerState<_SplitCombineDialog> {
           if (_running)
             TextButton(
               onPressed: () => setState(() => _cancelled = true),
-              child: const Text('Cancel operation'),
+              child: Text(context.commanderTr("Cancel operation")),
             )
           else ...[
             TextButton(
               onPressed: _loading ? null : () => Navigator.pop(context),
-              child: const Text('Close'),
+              child: Text(context.commanderTr("Close")),
             ),
             if (!_finished)
               FilledButton(
@@ -829,7 +893,9 @@ class _SplitCombineDialogState extends ConsumerState<_SplitCombineDialog> {
                     ? null
                     : _start,
                 child: Text(
-                  widget.combining ? 'Verify and combine' : 'Split and verify',
+                  widget.combining
+                      ? context.commanderTr("Verify and combine")
+                      : context.commanderTr("Split and verify"),
                 ),
               ),
           ],
