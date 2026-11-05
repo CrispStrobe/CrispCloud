@@ -26,6 +26,8 @@ class _FixtureClient implements CloudStorageClient {
           'files': [
             {'name': 'café.txt', 'size': 5},
             {'name': 'offline.txt', 'size': 5},
+            for (var i = 0; i < 1200; i++)
+              {'name': 'entry-${i.toString().padLeft(4, '0')}.txt', 'size': 0},
           ],
         }
       : {'folders': [], 'files': []};
@@ -169,6 +171,8 @@ void main() {
                 (item) => item.uri.pathSegments.where((s) => s.isNotEmpty).last,
               )
               .toList();
+          expect(names.length, 1203);
+          expect(names, containsAll(['entry-0000.txt', 'entry-1199.txt']));
           expect(names.map(unorm.nfc), containsAll(['café.txt', '旅行']));
           final cafeName = names.singleWhere((name) => unorm.nfc(name) == 'café.txt');
           expect(await File('${mount.path}/$cafeName').readAsString(), 'hello');

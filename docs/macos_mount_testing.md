@@ -40,6 +40,7 @@ CRISPCLOUD_FUSE_TEST_BACKEND=macfuse-fskit \
 Repeat with `CRISPCLOUD_FUSE_TEST_BACKEND=fuse-t` for FUSE-T NFS, or
 `fuse-t-smb` for its SMB backend, after installing FUSE-T. The test checks
 listing, Unicode names, reading, rejection of writes, and unmount.
+The fixture includes a 1,200-file directory to exercise paged directory reads.
 It is skipped in ordinary test runs. A passing helper test does not establish
 that the signed, sandboxed application can start the helper or load the FUSE
 runtime. Validate those separately in the signed app, including Finder access,
@@ -64,3 +65,11 @@ NFS configuration change. The bridge resolves Unicode-equivalent path names
 back to the spelling stored by the provider. If a directory contains two
 canonically equivalent names, it returns `EEXIST` rather than risking access to
 the wrong object. Finder, cloud-provider and signed-sandbox testing remain open.
+
+The native directory filler can also be tested without a FUSE runtime:
+
+```sh
+clang -std=c11 -O2 -Wall -Wextra -Werror -I macos/vendor \
+  test/fuse_bridge_readdir_test.c -o /tmp/crispcloud-fuse-readdir-test
+/tmp/crispcloud-fuse-readdir-test
+```

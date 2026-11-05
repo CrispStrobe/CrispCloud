@@ -106,12 +106,14 @@ static int cc_getattr(const char *path, struct stat *st) {
 }
 static int cc_readdir(const char *path, void *buffer, fuse_fill_dir_t fill,
                       off_t offset, struct fuse_file_info *info) {
-  (void)offset; (void)info;
+  (void)info;
+  if (offset < 0) return -EINVAL;
   uint8_t *reply; size_t len;
   int result = path_request(2, path, &reply, &len);
   if (result) return result;
   if (len < 4) { free(reply); return -EIO; }
-  fill(buffer, ".", NULL, 0); fill(buffer, "..", NULL, 0);
+  if (offset < 1 && fill(buffer, ".", NULL, 1)) { free(reply); return 0; }
+  if (offset < 2 && fill(buffer, "..", NULL, 2)) { free(reply); return 0; }
   uint32_t count = get32(reply); size_t at = 4;
   for (uint32_t i = 0; i < count; i++) {
     if (at >= len || at + 1 + reply[at] + 24 > len) { result = -EIO; break; }
@@ -119,7 +121,9 @@ static int cc_readdir(const char *path, void *buffer, fuse_fill_dir_t fill,
     char name[256]; memcpy(name, reply + at, name_len); name[name_len] = 0;
     at += name_len;
     struct stat st; decode_attr(reply + at, &st); at += 24;
-    if (fill(buffer, name, &st, 0)) break;
+    // Each entry supplies the offset at which the next call should resume.
+    // A full kernel buffer must not cause later calls to repeat from the top.
+    if (offset <= (off_t)i + 2 && fill(buffer, name, &st, (off_t)i + 3)) break;
   }
   free(reply); return result;
 }
