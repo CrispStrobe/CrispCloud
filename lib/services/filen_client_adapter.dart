@@ -3,7 +3,6 @@ import 'cloud_storage_interface.dart';
 import 'package:filen_client/filen_client.dart';
 import 'filen_config_service.dart';
 import 'filen_operation_failure.dart';
-import 'dart:io';
 import 'package:flutter/foundation.dart'; // for kIsWeb
 import 'log_service.dart';
 import 'upload_temp_file.dart';

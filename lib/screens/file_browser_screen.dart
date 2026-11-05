@@ -52,6 +52,7 @@ import '../widgets/tree_sidebar.dart';
 import '../l10n/browser_menu_strings.dart';
 import '../l10n/browser_drawer_strings.dart';
 import '../l10n/app_localizations.dart';
+import '../l10n/image_editor_strings.dart';
 import '../l10n/office_editor_strings.dart';
 import '../widgets/lock_screen.dart';
 import '../widgets/command_palette.dart';
