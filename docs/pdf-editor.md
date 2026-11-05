@@ -115,6 +115,12 @@ widget/origin tests, a release web build, and an independent parser check.
 The existing CI retains its full suite, desktop crypto gates and platform
 build matrix. Nothing in this feature workflow deploys the application.
 
+On 5 November 2026, the Chrome host tests for the PDF editor and shared PDF
+operations passed locally (27 tests). The `v1.1.0` CI run also produced the
+release web build and uploaded it as a GitHub release asset. Production hosting
+and a real browser file-picker flow still need to be exercised against the
+deployed build; the automated tests do not substitute for that.
+
 The independent tests start with ReportLab/pypdf-generated fixtures. Dart
 edits form values, adds an annotation, reorders rotated pages, and saves both
 plain and AES-256-protected inputs. Python/pypdf then checks the saved document

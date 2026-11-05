@@ -1618,6 +1618,28 @@ class WordSerializer {
     );
   }
 
+  void _writeNoteChrome(XmlWriter w, String item) {
+    const chrome = <({int id, String type, String element})>[
+      (id: -1, type: 'separator', element: 'separator'),
+      (
+        id: 0,
+        type: 'continuationSeparator',
+        element: 'continuationSeparator',
+      ),
+    ];
+    for (final entry in chrome) {
+      w.writeStartElement(item, prefix: 'w');
+      w.writeAttribute('w:type', entry.type);
+      w.writeAttribute('w:id', '${entry.id}');
+      w.writeStartElement('p', prefix: 'w');
+      w.writeStartElement('r', prefix: 'w');
+      w.writeEmptyElement(entry.element, prefix: 'w');
+      w.writeEndElement();
+      w.writeEndElement();
+      w.writeEndElement();
+    }
+  }
+
   void _writeNotesPart(
     OpcPackage package,
     List<WmlNote> notes,
@@ -1632,6 +1654,10 @@ class WordSerializer {
     w.writeStartDocument();
     w.writeStartElement(root, prefix: 'w');
     w.writeNamespace('w', OfficeNamespaces.w);
+    // Word treats these two notes as footnote/endnote chrome. They are not
+    // part of the editable model, but Word and LibreOffice expect them in the
+    // package; recreate the standard pair rather than dropping them on save.
+    _writeNoteChrome(w, item);
     for (final WmlNote note in notes) {
       w.writeStartElement(item, prefix: 'w');
       w.writeAttribute('w:id', '${note.id}');

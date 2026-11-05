@@ -18,15 +18,29 @@ cd packages/quds_office_engine && dart pub get && dart test
 cd packages/quds_office_editor && flutter pub get && flutter test
 ```
 
-Baseline on the `crispcloud` fork (4 Nov 2026):
+Local baseline (5 Nov 2026):
 
-- engine: 456 passed, 3 skipped, 1 pre-existing failure
-- editor: 214 passed, 1 skipped, 3 pre-existing failures in report/font tests
-- CrispCloud regressions: 5 passed
-  (`test/office_editor_fixes_test.dart`, `test/office_roundtrip_preservation_test.dart`,
-  and the fork's `crispcloud_regressions_test.dart`)
+- engine: 454 passed, 6 skipped, 1 failure
+  (`pdf_widgets_test.dart: RTL MultiPage short line starts on the right`;
+  outside the DOCX save path, but still open)
+- editor: 220 passed, 1 skipped, 0 failures when the editor tests use the
+  patched local engine
+- CrispCloud regressions: green
 
-The pre-existing failures are recorded, not hidden. See
+The editor package can resolve the published `quds_office_engine` when its
+tests are run directly. Create a temporary `pubspec_overrides.yaml` before the
+editor test run so the fork patches are actually exercised:
+
+```bash
+cd packages/quds_office_editor
+printf 'dependency_overrides:\n  quds_office_engine:\n    path: ../quds_office_engine\n' \
+  > pubspec_overrides.yaml
+flutter pub get
+flutter test
+rm pubspec_overrides.yaml
+```
+
+`pubspec_overrides.yaml` is gitignored intentionally. See
 `docs/office-engine-strategy.md` for the save-preservation gate and the
 BetterOffice proof-of-concept criteria.
 
@@ -36,6 +50,8 @@ BetterOffice proof-of-concept criteria.
 
 - footnote/endnote reference marks are imported as superscript,
 - footnotes attach only to the page containing the reference glyph,
+- footnote/endnote separator and continuationSeparator chrome is recreated on
+  save instead of being dropped,
 - PDF watermarks rotate as one marked line and survive missing-script faces,
 - the feature-showcase template detail band fits its item table.
 

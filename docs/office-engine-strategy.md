@@ -33,20 +33,34 @@ flutter pub get
 flutter test
 ```
 
-Baseline observed on the `crispcloud` fork (4 November 2026):
+Local verification on 5 November 2026:
 
-- engine: 458 passed, 3 skipped, 0 failures
-- editor: 220 passed, 1 skipped, 0 failures
-- CrispCloud regression tests: 5 passed
-  (footnote superscript, header relayout, select all, and two round-trip tests)
+- engine: **454 passed, 6 skipped, 1 failure** — the failure is
+  `pdf_widgets_test.dart: RTL MultiPage short line starts on the right`, a PDF
+  layout assertion (`lastLeft` 90.9 vs expected >200). It is outside the DOCX
+  save path but should be investigated before any engine update.
+- editor: **220 passed, 1 skipped, 0 failures** when run against the patched
+  local engine. The editor's own `pubspec.lock` can otherwise resolve the
+  published engine and produce a false footnote regression; use a temporary
+  `pubspec_overrides.yaml` pointing `quds_office_engine` at
+  `../quds_office_engine` as documented in `packages/QUDS_FORKS.md`.
+- CrispCloud regression tests: green.
 
-The remaining skips are environment-only: three engine font tests and one
-editor test that needs an external PDF compare tool.
+The earlier preservation probe found that Quds rewrote `word/footnotes.xml`
+and dropped the separator/continuationSeparator chrome notes while preserving
+the actual footnote text. The vendored serializer now recreates the standard
+Word chrome. Independent checks on 5 November 2026 re-opened untouched and
+minimal-edit outputs with Pandoc and python-docx:
 
-A first preservation probe found that Quds rewrites `word/footnotes.xml` and
-drops the separator/continuationSeparator chrome notes while preserving the
-actual footnote text. That is exactly the kind of finding the preservation gate
-must track and verify in Word/LibreOffice before declaring save safety.
+- paragraph text survived;
+- both real footnotes survived;
+- `w:type="separator"` (`id=-1`) and
+  `w:type="continuationSeparator"` (`id=0`) are present again;
+- the minimal edit (`X` inserted at the start) survived.
+
+Microsoft Word and LibreOffice are not installed on this machine, so those two
+independent consumers remain to be run. Pandoc/python-docx are independent
+parsers, not substitutes for a Word/LibreOffice reopen test.
 
 ## Hard gate: save preservation
 
@@ -70,9 +84,15 @@ Tests should:
 
 ## BetterOffice proof of concept
 
-BetterOffice is Apache-2.0 and has substantial Rust OOXML engines, but no
-Dart/Flutter package. The experiment must prove the integration, not just the
-demo.
+Status 5 November 2026: the upstream project is active and Apache-2.0, with
+Rust crates, npm packages (framework-free cores and React editors), Python
+wheels, and WASM builds. There is still **no Dart/Flutter package**. A real
+PoC therefore requires a host-owned WebView, an offline bundle of JS/WASM,
+workers, fonts and dynamic chunks, plus a byte/save bridge. No PoC was run in
+this environment because iOS hardware was unavailable and the browser runtime
+has not been packaged for the app.
+
+The experiment must prove the integration, not just the demo.
 
 ### Gate 1 — packaged offline runtime
 
