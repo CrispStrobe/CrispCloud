@@ -14,12 +14,21 @@ dependencies:
   flutter_localizations:
     sdk: flutter
 
+  # Host-controlled image editing; pinned, maintained fork and provenance below.
+  pro_image_editor: 14.24.0
+  image: ^4.12.0
+  material_ui: ^1.1.1
+
   # State Management
   flutter_riverpod: ^2.5.1
   provider: ^6.1.1  # kept during incremental migration
   
   # UI
   desktop_drop: ^0.7.1
+  # Code editor surface (line numbers, folding, find/replace, undo history)
+  # and its syntax-highlighting engine. Both are MIT licensed.
+  re_editor: ^0.10.0
+  re_highlight: ^0.0.3
 
   # Web specific
   universal_html: ^2.2.4
@@ -153,6 +162,8 @@ dev_dependencies:
   covfuzz: ^0.1.1
 
 dependency_overrides:
+  pro_image_editor:
+    path: packages/pro_image_editor
   # Maintained core for form-preserving extraction and Unicode OCR.
   pdf_document:
     path: packages/pdf_document

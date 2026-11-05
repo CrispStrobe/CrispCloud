@@ -2,6 +2,8 @@
 //
 // Shared rules for deciding whether the built-in F4 editor can open a file.
 
+import '../services/image_edit_session.dart' show isEditableImageFileName;
+
 /// Text/code extensions handled by the built-in text editor.
 const Set<String> textEditableExtensions = <String>{
   'txt',
@@ -71,13 +73,16 @@ String _extensionOf(String name) {
 bool isTextEditableName(String name) {
   final ext = _extensionOf(name);
   // Extension-less text files (README, Makefile, ...) are editable too.
-  return ext.isEmpty || textEditableExtensions.contains(ext);
+  // A trailing dot is not evidence of text: photo.jpg. must not be decoded as
+  // text merely because its final extension is empty.
+  return !name.contains('.') || textEditableExtensions.contains(ext);
 }
 
 /// True when F4 can open [name] in an editor with save support.
 bool isEditableInBuiltInEditor(String name) {
   final lower = name.toLowerCase();
   if (lower.endsWith('.pdf')) return true;
+  if (isEditableImageFileName(lower)) return true;
   final ext = _extensionOf(lower);
   return editableOfficeExtensions.contains(ext) || isTextEditableName(lower);
 }

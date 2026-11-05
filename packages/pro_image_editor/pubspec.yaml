@@ -1,0 +1,76 @@
+name: pro_image_editor
+publish_to: none
+description: "A Flutter image editor: Seamlessly enhance your images with user-friendly editing features."
+version: 14.24.0
+homepage: https://github.com/hm21/pro_image_editor/
+repository: https://github.com/hm21/pro_image_editor/
+documentation: https://github.com/hm21/pro_image_editor/
+funding:
+  - https://github.com/sponsors/hm21
+
+topics:
+  - image-editor
+  - image
+  - photo
+  - picture
+  - editor
+
+platforms:
+  android:
+  ios:
+  linux:
+  macos:
+  web:
+  windows:
+
+environment:
+  sdk: '>=3.12.0 <4.0.0'
+  flutter: ">=3.44.0"
+
+dependencies:
+  flutter:
+    sdk: flutter
+
+  cupertino_ui: ^1.0.2
+  http: ^1.6.0
+  intl: ^0.20.2
+  material_ui: ^1.1.1
+  plugin_platform_interface: ^2.1.8
+  shared_preferences: ^2.5.4
+  vector_math: ^2.2.0
+  web: ^1.1.1
+
+dev_dependencies:
+  flutter_test:
+    sdk: flutter
+
+  build_runner: ^2.11.1
+  flutter_lints: ^6.0.0
+  import_sorter: ^4.6.0
+  mockito: ^5.6.3
+  network_image_mock: ^2.1.1
+
+flutter:
+  plugin:
+    platforms:
+      android:
+        package: ch.waio.pro_image_editor
+        pluginClass: ProImageEditorPlugin
+      ios:
+        pluginClass: ProImageEditorPlugin
+        sharedDarwinSource: true
+      macos:
+        pluginClass: ProImageEditorPlugin
+        sharedDarwinSource: true
+  assets:
+    - path: lib/web/web_worker.dart.js
+      platforms: [web]
+    - path: lib/web/web_worker.dart.js.map
+      platforms: [web]
+  shaders:
+    - lib/shared/shaders/pixelate.frag
+    - lib/shared/shaders/pixelate_areas.frag
+  fonts:
+   - family: ProImageEditorIcons
+     fonts:
+      - asset: assets/fonts/ProImageEditorIcons.ttf

@@ -34,6 +34,10 @@ migrate_working_dir/
 /packages/dart_pdf_editor_secure_storage/pubspec.lock
 /packages/dart_pdf_editor/build/
 /packages/dart_pdf_editor_secure_storage/build/
+/packages/pro_image_editor/pubspec.lock
+/packages/pro_image_editor/build/
+# Flutter's browser test server serves test/ directly instead of built assets.
+/test/widget/assets/packages/pro_image_editor/
 
 # Symbolication related
 app.*.symbols

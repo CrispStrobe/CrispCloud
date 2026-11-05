@@ -1,0 +1,744 @@
+import 'dart:async';
+import 'dart:math';
+import 'dart:typed_data';
+
+import 'package:flutter_test/flutter_test.dart';
+import 'package:material_ui/material_ui.dart';
+import 'package:pro_image_editor/pro_image_editor.dart';
+
+import '../../../mock/layers/emoji_layer_mock.dart';
+import '../../../mock/layers/paint_layer_mock.dart';
+import '../../../mock/layers/text_layer_mock.dart';
+import '../../../mock/layers/widget_layer_mock.dart';
+import '../../../mock/mock_image.dart';
+
+void main() {
+  const exportConfigs = ExportEditorConfigs(
+    enableMinify: true,
+    historySpan: ExportHistorySpan.current,
+    maxDecimalPlaces: 16,
+  );
+  final importConfigs = ImportEditorConfigs(
+    mergeMode: ImportEditorMergeMode.replace,
+    widgetLoader: (id, {meta}) {
+      if (id == 'widget-mock-container') {
+        return widgetLayerMock.widget;
+      }
+      return Container();
+    },
+  );
+
+  Future<ProImageEditorState> pumpTestEditor(
+    WidgetTester tester, {
+    ProImageEditorConfigs configs = const ProImageEditorConfigs(
+      progressIndicatorConfigs: ProgressIndicatorConfigs(
+        widgets: ProgressIndicatorWidgets(
+          circularProgressIndicator: SizedBox.shrink(),
+        ),
+      ),
+      imageGeneration: ImageGenerationConfigs(
+        enableBackgroundGeneration: false,
+        enableIsolateGeneration: false,
+      ),
+    ),
+    ProImageEditorCallbacks callbacks = const ProImageEditorCallbacks(),
+  }) async {
+    final key = GlobalKey<ProImageEditorState>();
+
+    await tester.pumpWidget(
+      MaterialApp(
+        home: ProImageEditor.memory(
+          mockMemoryImage,
+          key: key,
+          configs: configs,
+          callbacks: callbacks,
+        ),
+      ),
+    );
+
+    expect(find.byType(ProImageEditor), findsOneWidget);
+    return key.currentState!;
+  }
+
+  Future<void> runExportImport(
+    ProImageEditorState editor, {
+    Function()? onAfterImport,
+  }) async {
+    // Export current state
+    final history = await editor.exportStateHistory(configs: exportConfigs);
+    final historyJson = await history.toJson();
+
+    // Import the exported state
+    final importHistory = ImportStateHistory.fromJson(
+      historyJson,
+      configs: importConfigs,
+    );
+
+    onAfterImport?.call();
+
+    await editor.importStateHistory(importHistory);
+  }
+
+  /// Resolves [future] while pumping frames; the recorder that rasterizes a
+  /// widget layer only reports ready from a build.
+  Future<T> pumpUntilDone<T>(WidgetTester tester, Future<T> future) async {
+    T? result;
+    bool isDone = false;
+    unawaited(
+      future.then((value) {
+        result = value;
+        isDone = true;
+      }),
+    );
+    for (var i = 0; i < 200 && !isDone; i++) {
+      await tester.pump();
+      await tester.runAsync(
+        () => Future<void>.delayed(const Duration(milliseconds: 10)),
+      );
+    }
+    expect(isDone, isTrue, reason: 'did not finish while pumping frames');
+    return result as T;
+  }
+
+  group('ProImageEditor import/export', () {
+    testWidgets('restores all layers correctly after export/import', (
+      WidgetTester tester,
+    ) async {
+      await tester.runAsync(() async {
+        final editor = await pumpTestEditor(tester);
+
+        // Add one of each layer type
+        editor
+          ..addLayer(emojiLayerMock)
+          ..addLayer(textLayerMock)
+          ..addLayer(paintLayerMock)
+          ..addLayer(widgetLayerMock);
+
+        expect(editor.activeLayers.length, 4);
+        expect(editor.stateManager.historyPointer, 4);
+
+        await runExportImport(
+          editor,
+          onAfterImport: () {
+            editor.removeAllLayers();
+            expect(editor.activeLayers.length, 0);
+          },
+        );
+
+        expect(editor.activeLayers.length, 4);
+        expect(editor.stateManager.historyPointer, 1);
+      });
+    });
+
+    testWidgets(
+      'writes a stroke once while later steps copy it, and restores it',
+      (WidgetTester tester) async {
+        await tester.runAsync(() async {
+          final editor = await pumpTestEditor(tester);
+          final stroke = PaintLayer(
+            item: PaintedModel(
+              mode: PaintMode.freeStyle,
+              offsets: const [Offset(12.5, 40.25), Offset(80.75, 3.5)],
+              erasedOffsets: [],
+              color: const Color(0xFF00897B),
+              strokeWidth: 6,
+              opacity: 1,
+            ),
+            rawSize: const Size(70, 40),
+            opacity: 1,
+          );
+          // Each later step copies every layer, giving the stroke a new id.
+          editor
+            ..addLayer(stroke)
+            ..addLayer(emojiLayerMock)
+            ..addLayer(textLayerMock);
+
+          final exported = await (await editor.exportStateHistory(
+            configs: const ExportEditorConfigs(
+              historySpan: ExportHistorySpan.all,
+              enableMinify: false,
+            ),
+          )).toMap();
+
+          final steps = exported['history'] as List;
+          final strokeEntries = [
+            for (final step in steps)
+              for (final layer in (step['layers'] as List? ?? const []))
+                if (layer['id'] == stroke.id) layer as Map,
+          ];
+          expect(strokeEntries, hasLength(3));
+          expect(
+            strokeEntries.where((layer) => layer.containsKey('item')),
+            isEmpty,
+            reason: 'the stroke is written once, in the references',
+          );
+
+          final imported = ImportStateHistory.fromMap(
+            exported,
+            configs: importConfigs,
+          );
+          final restored = imported.stateHistory.last.layers
+              .whereType<PaintLayer>()
+              .single;
+          expect(restored.item.offsets, stroke.item.offsets);
+          expect(restored.item.drawsSameAs(stroke.item), isTrue);
+        });
+      },
+    );
+
+    testWidgets('rounds the changes of later steps like the references', (
+      WidgetTester tester,
+    ) async {
+      await tester.runAsync(() async {
+        final editor = await pumpTestEditor(tester);
+        final emoji = EmojiLayer(emoji: '🙂', offset: const Offset(10, 20));
+        editor
+          ..addLayer(emoji)
+          ..replaceLayer(
+            index: 0,
+            layer: emoji.copyWith(offset: const Offset(12.3456789, 20)),
+          );
+
+        final exported = await (await editor.exportStateHistory(
+          configs: const ExportEditorConfigs(
+            historySpan: ExportHistorySpan.all,
+            enableMinify: false,
+            maxDecimalPlaces: 2,
+          ),
+        )).toMap();
+
+        final lastLayers = (exported['history'] as List).last['layers'] as List;
+        expect(lastLayers.single['x'], 12.35);
+      });
+    });
+
+    testWidgets('restores blur correctly after export/import', (
+      WidgetTester tester,
+    ) async {
+      await tester.runAsync(() async {
+        final editor = await pumpTestEditor(tester);
+
+        const blurFactor = 7.0;
+        editor.addHistory(blur: blurFactor);
+
+        expect(editor.stateManager.activeBlur, blurFactor);
+        expect(editor.stateManager.historyPointer, 1);
+
+        await runExportImport(
+          editor,
+          onAfterImport: () {
+            editor.addHistory(blur: 1);
+            expect(editor.stateManager.activeBlur, 1);
+          },
+        );
+
+        expect(editor.stateManager.activeBlur, blurFactor);
+        expect(editor.stateManager.historyPointer, 1);
+      });
+    });
+
+    testWidgets('restores filters correctly after export/import', (
+      WidgetTester tester,
+    ) async {
+      await tester.runAsync(() async {
+        final editor = await pumpTestEditor(tester);
+
+        final testFilters = PresetFilters.addictiveRed.filters;
+        editor.addHistory(
+          filters: [FilterState(name: 'filter', matrices: testFilters)],
+        );
+
+        expect(editor.stateManager.activeFilters.allMatrices, testFilters);
+        expect(editor.stateManager.historyPointer, 1);
+
+        await runExportImport(
+          editor,
+          onAfterImport: () {
+            editor.addHistory(filters: const []);
+            expect(editor.stateManager.activeFilters.allMatrices.length, 0);
+          },
+        );
+
+        expect(editor.stateManager.activeFilters.allMatrices, testFilters);
+        expect(editor.stateManager.historyPointer, 1);
+      });
+    });
+
+    testWidgets('restores tune-adjustments correctly after export/import', (
+      WidgetTester tester,
+    ) async {
+      await tester.runAsync(() async {
+        final editor = await pumpTestEditor(tester);
+
+        final tuneMatrix = TuneAdjustmentMatrix(
+          id: 'brightness',
+          value: 10,
+          matrix: ColorFilterAddons.brightness(10),
+        );
+
+        editor.addHistory(tuneAdjustments: [tuneMatrix.copy()]);
+
+        expect(editor.stateManager.activeTuneAdjustments, [tuneMatrix.copy()]);
+        expect(editor.stateManager.historyPointer, 1);
+
+        await runExportImport(
+          editor,
+          onAfterImport: () {
+            editor.addHistory(tuneAdjustments: []);
+            expect(editor.stateManager.activeTuneAdjustments.length, 0);
+          },
+        );
+
+        expect(editor.stateManager.activeTuneAdjustments, [tuneMatrix.copy()]);
+        expect(editor.stateManager.historyPointer, 1);
+      });
+    });
+
+    testWidgets('restores transformations correctly after export/import', (
+      WidgetTester tester,
+    ) async {
+      await tester.runAsync(() async {
+        final editor = await pumpTestEditor(tester);
+
+        final transformConfigs = TransformConfigs(
+          angle: pi / 2,
+          cropRect: Rect.zero,
+          originalSize: Size.zero,
+          cropEditorScreenRatio: 0,
+          scaleUser: 1,
+          scaleRotation: 1,
+          aspectRatio: 1,
+          flipX: false,
+          flipY: false,
+          offset: Offset.zero,
+        );
+
+        editor.addHistory(transformConfigs: transformConfigs);
+
+        expect(editor.stateManager.transformConfigs, transformConfigs);
+        expect(editor.stateManager.historyPointer, 1);
+
+        await runExportImport(
+          editor,
+          onAfterImport: () {
+            editor.addHistory(transformConfigs: TransformConfigs.empty());
+            expect(editor.stateManager.transformConfigs.isEmpty, isTrue);
+          },
+        );
+
+        expect(editor.stateManager.transformConfigs, transformConfigs);
+        expect(editor.stateManager.historyPointer, 1);
+      });
+    });
+
+    testWidgets(
+      'rescales a slide animation\'s start point with the offset when the '
+      'history was recorded at another size',
+      (WidgetTester tester) async {
+        await tester.runAsync(() async {
+          final editor = await pumpTestEditor(tester);
+
+          const slideFrom = Offset(50, 100);
+          editor.addLayer(
+            TextLayer(
+              text: 'slides in',
+              offset: const Offset(20, 40),
+              animations: const [
+                LayerAnimation(
+                  type: LayerAnimationType.slide,
+                  phase: AnimationPhase.animateIn,
+                  duration: Duration(milliseconds: 400),
+                  slideFrom: slideFrom,
+                ),
+              ],
+            ),
+          );
+
+          final history = await editor.exportStateHistory(
+            configs: const ExportEditorConfigs(
+              enableMinify: false,
+              historySpan: ExportHistorySpan.current,
+            ),
+          );
+          final map = await history.toMap();
+          // Pretend the history was recorded on a canvas half this size, so
+          // the import has to scale every layer up by 2 on both axes.
+          final recorded = map['lastRenderedImgSize'] as Map<String, dynamic>;
+          map['lastRenderedImgSize'] = {
+            'width': (recorded['width'] as num) / 2,
+            'height': (recorded['height'] as num) / 2,
+          };
+
+          editor.removeAllLayers();
+          await editor.importStateHistory(
+            ImportStateHistory.fromMap(map, configs: importConfigs),
+          );
+
+          final imported = editor.activeLayers.single;
+          expect(imported.offset, const Offset(40, 80));
+          expect(imported.animations.single.slideFrom, slideFrom * 2);
+        });
+      },
+    );
+
+    for (final minify in [false, true]) {
+      testWidgets('keeps keyframes and rescales them with the offset when the '
+          'history was recorded at another size '
+          '(${minify ? 'minified' : 'not minified'})', (
+        WidgetTester tester,
+      ) async {
+        await tester.runAsync(() async {
+          final editor = await pumpTestEditor(tester);
+
+          editor.addLayer(
+            TextLayer(
+              text: 'moves',
+              offset: const Offset(20, 40),
+              opacity: 0.6,
+              keyframes: const [
+                LayerKeyframe(
+                  time: Duration.zero,
+                  offset: Offset(10, 20),
+                  scale: 1.5,
+                  curve: AnimationCurve.easeInOut,
+                ),
+                LayerKeyframe(
+                  time: Duration(seconds: 2),
+                  offset: Offset(-5, 0),
+                  rotation: 1,
+                  opacity: 0.5,
+                ),
+              ],
+            ),
+          );
+
+          final history = await editor.exportStateHistory(
+            configs: ExportEditorConfigs(
+              enableMinify: minify,
+              historySpan: ExportHistorySpan.current,
+            ),
+          );
+          final map = await history.toMap();
+          // Pretend the history was recorded on a canvas half this size, so
+          // the import has to scale every layer up by 2 on both axes.
+          final sizeKey = minify ? 'l' : 'lastRenderedImgSize';
+          final recorded = Map<String, dynamic>.from(map[sizeKey] as Map);
+          map[sizeKey] = {
+            for (final MapEntry(:key, :value) in recorded.entries)
+              key: (value as num) / 2,
+          };
+
+          editor.removeAllLayers();
+          await editor.importStateHistory(
+            ImportStateHistory.fromMap(map, configs: importConfigs),
+          );
+
+          final imported = editor.activeLayers.single;
+          expect(imported.opacity, 0.6);
+          expect(imported.keyframes, const [
+            LayerKeyframe(
+              time: Duration.zero,
+              offset: Offset(20, 40),
+              scale: 3,
+              curve: AnimationCurve.easeInOut,
+            ),
+            LayerKeyframe(
+              time: Duration(seconds: 2),
+              offset: Offset(-10, 0),
+              scale: 2,
+              rotation: 1,
+              opacity: 0.5,
+            ),
+          ]);
+        });
+      });
+    }
+
+    for (final minify in [false, true]) {
+      testWidgets('keeps a mask, and its removal, across history steps '
+          '(${minify ? 'minified' : 'not minified'})', (
+        WidgetTester tester,
+      ) async {
+        await tester.runAsync(() async {
+          const mask = LayerMask(
+            shape: LayerMaskShape.linear,
+            center: Offset(0.4, 0.6),
+            rotation: 0.3,
+            feather: 0.2,
+          );
+          final editor = await pumpTestEditor(tester);
+          editor
+            ..addLayer(TextLayer(text: 'masked', mask: mask))
+            ..replaceLayer(
+              index: 0,
+              layer: editor.activeLayers.single.copyWith()..mask = null,
+            );
+
+          final history = await editor.exportStateHistory(
+            configs: ExportEditorConfigs(
+              enableMinify: minify,
+              historySpan: ExportHistorySpan.all,
+            ),
+          );
+          final map = await history.toMap();
+
+          editor.removeAllLayers();
+          await editor.importStateHistory(
+            ImportStateHistory.fromMap(map, configs: importConfigs),
+          );
+
+          expect(editor.activeLayers.single.mask, isNull);
+          editor.undoAction();
+          expect(editor.activeLayers.single.mask, mask);
+        });
+      });
+    }
+
+    for (final minify in [false, true]) {
+      testWidgets('keeps a blend mode, and its removal, across history steps '
+          '(${minify ? 'minified' : 'not minified'})', (
+        WidgetTester tester,
+      ) async {
+        await tester.runAsync(() async {
+          final editor = await pumpTestEditor(tester);
+          editor
+            ..addLayer(
+              TextLayer(text: 'blended', blendMode: BlendMode.difference),
+            )
+            ..replaceLayer(
+              index: 0,
+              layer: editor.activeLayers.single.copyWith()
+                ..blendMode = BlendMode.srcOver,
+            );
+
+          final history = await editor.exportStateHistory(
+            configs: ExportEditorConfigs(
+              enableMinify: minify,
+              historySpan: ExportHistorySpan.all,
+            ),
+          );
+          final map = await history.toMap();
+
+          editor.removeAllLayers();
+          await editor.importStateHistory(
+            ImportStateHistory.fromMap(map, configs: importConfigs),
+          );
+
+          expect(editor.activeLayers.single.blendMode, BlendMode.srcOver);
+          editor.undoAction();
+          expect(editor.activeLayers.single.blendMode, BlendMode.difference);
+        });
+      });
+    }
+
+    testWidgets(
+      'rasterizes a widget layer without export configs when background '
+      'generation is off',
+      (WidgetTester tester) async {
+        final editor = await pumpTestEditor(tester);
+        await tester.pumpAndSettle();
+
+        editor.addLayer(
+          WidgetLayer(
+            widget: Container(width: 40, height: 40, color: Colors.red),
+          ),
+        );
+        await tester.pumpAndSettle();
+
+        final map = await pumpUntilDone(
+          tester,
+          editor
+              .exportStateHistory(
+                configs: const ExportEditorConfigs(
+                  enableMinify: false,
+                  historySpan: ExportHistorySpan.current,
+                ),
+              )
+              .then((history) => history.toMap()),
+        );
+
+        final records = map['widgetRecords'] as List<Uint8List>;
+        expect(records, hasLength(1));
+        // PNG signature, so a transparent widget stays transparent.
+        expect(records.single.take(4), [0x89, 0x50, 0x4E, 0x47]);
+        final reference =
+            (map['references'] as Map<String, dynamic>).values.single;
+        expect(reference['recordPosition'], 0);
+
+        editor.removeAllLayers();
+        await pumpUntilDone(
+          tester,
+          editor.importStateHistory(
+            ImportStateHistory.fromMap(map, configs: importConfigs),
+          ),
+        );
+
+        final imported = editor.activeLayers.single as WidgetLayer;
+        final image = (imported.widget as ConstrainedBox).child as Image;
+        expect((image.image as MemoryImage).bytes, records.single);
+      },
+    );
+
+    testWidgets(
+      'restores a text layer outline and drops shadows removed in a later step',
+      (WidgetTester tester) async {
+        final editor = await pumpTestEditor(tester);
+        await tester.pumpAndSettle();
+
+        final layer = TextLayer(
+          text: 'Outlined',
+          textStyle: const TextStyle(
+            shadows: [
+              Shadow(
+                color: Color(0x80000000),
+                blurRadius: 4,
+                offset: Offset(1, 2),
+              ),
+            ],
+          ),
+          outlineWidth: 2,
+          outlineColor: const Color(0xFFFF0000),
+        );
+        editor.addLayer(layer);
+        await tester.pumpAndSettle();
+        editor.replaceLayer(
+          index: 0,
+          layer: layer.copyWith(textStyle: const TextStyle(), outlineWidth: 3),
+        );
+        await tester.pumpAndSettle();
+
+        // Both steps are exported, so the second one is stored as a diff
+        // against the first, which the import merges over it again.
+        final json = await pumpUntilDone(
+          tester,
+          editor
+              .exportStateHistory(
+                configs: const ExportEditorConfigs(
+                  enableMinify: true,
+                  historySpan: ExportHistorySpan.all,
+                ),
+              )
+              .then((history) => history.toJson()),
+        );
+        await pumpUntilDone(
+          tester,
+          editor.importStateHistory(
+            ImportStateHistory.fromJson(json, configs: importConfigs),
+          ),
+        );
+        await tester.pumpAndSettle();
+
+        final imported = editor.activeLayers.single as TextLayer;
+        expect(imported.textStyle?.shadows ?? const [], isEmpty);
+        expect(imported.outlineWidth, 3);
+        expect(imported.outlineColor, const Color(0xFFFF0000));
+      },
+    );
+
+    testWidgets(
+      'restores widget layer export configs changed in a later step',
+      (WidgetTester tester) async {
+        final editor = await pumpTestEditor(tester);
+        await tester.pumpAndSettle();
+
+        final layer = WidgetLayer(
+          widget: const SizedBox(),
+          exportConfigs: const WidgetLayerExportConfigs(
+            id: 'clip',
+            meta: {'file': 'a.mp4'},
+          ),
+        );
+        editor.addLayer(layer);
+        await tester.pumpAndSettle();
+        editor.replaceLayer(
+          index: 0,
+          layer: layer.copyWith(
+            exportConfigs: const WidgetLayerExportConfigs(
+              id: 'clip',
+              meta: {'file': 'a.mp4', 'keyed': true},
+            ),
+          ),
+        );
+        await tester.pumpAndSettle();
+        editor.replaceLayer(
+          index: 0,
+          layer: editor.activeLayers.single.copyWith(
+            offset: const Offset(12, 34),
+          ),
+        );
+        await tester.pumpAndSettle();
+
+        final json = await pumpUntilDone(
+          tester,
+          editor
+              .exportStateHistory(
+                configs: const ExportEditorConfigs(
+                  enableMinify: true,
+                  historySpan: ExportHistorySpan.all,
+                ),
+              )
+              .then((history) => history.toJson()),
+        );
+        final loadedMeta = <Map<String, dynamic>?>[];
+        await pumpUntilDone(
+          tester,
+          editor.importStateHistory(
+            ImportStateHistory.fromJson(
+              json,
+              configs: ImportEditorConfigs(
+                mergeMode: ImportEditorMergeMode.replace,
+                widgetLoader: (id, {meta}) {
+                  loadedMeta.add(meta);
+                  return const SizedBox();
+                },
+              ),
+            ),
+          ),
+        );
+        await tester.pumpAndSettle();
+
+        // One load per history step: added, keyed, moved.
+        expect(loadedMeta, [
+          {'file': 'a.mp4'},
+          {'file': 'a.mp4', 'keyed': true},
+          {'file': 'a.mp4', 'keyed': true},
+        ]);
+        final imported = editor.activeLayers.single as WidgetLayer;
+        expect(imported.exportConfigs.meta, {'file': 'a.mp4', 'keyed': true});
+        expect(imported.offset, const Offset(12, 34));
+      },
+    );
+
+    testWidgets(
+      'rasterizes a widget layer once when it spans several history steps',
+      (WidgetTester tester) async {
+        final editor = await pumpTestEditor(tester);
+        await tester.pumpAndSettle();
+
+        editor
+          ..addLayer(
+            WidgetLayer(
+              widget: Container(width: 40, height: 40, color: Colors.red),
+            ),
+          )
+          ..addLayer(emojiLayerMock);
+        await tester.pumpAndSettle();
+
+        final map = await pumpUntilDone(
+          tester,
+          editor
+              .exportStateHistory(
+                configs: const ExportEditorConfigs(
+                  enableMinify: false,
+                  historySpan: ExportHistorySpan.all,
+                ),
+              )
+              .then((history) => history.toMap()),
+        );
+
+        expect(map['history'], hasLength(2));
+        expect(map['widgetRecords'], hasLength(1));
+      },
+    );
+  });
+}
