@@ -11,7 +11,9 @@ import 'dart:typed_data';
 import 'package:flutter/foundation.dart';
 import '../models/file_item.dart';
 
-import 'local_file_service_native.dart' if (dart.library.html) 'local_file_service_web.dart' as platform;
+import 'local_file_service_native.dart'
+    if (dart.library.html) 'local_file_service_web.dart'
+    as platform;
 
 /// Whether a local save wrote its destination or handed a copy to the browser.
 enum LocalFileSaveResult { written, downloadedCopy }
@@ -51,6 +53,13 @@ abstract interface class LocalMediaFileAccess {
   });
 }
 
+/// Optional identity for a granted virtual filesystem root. A path alone
+/// cannot distinguish two different browser folders both named "Photos".
+/// New grants must return a new opaque token; ordinary file refreshes keep it.
+abstract interface class LocalFileSourceIdentity {
+  Object? sourceIdentityForPath(String path);
+}
+
 extension LocalFileEditorOperations on LocalFileService {
   Future<Uint8List> readFileForEdit(
     String path, {
@@ -85,8 +94,11 @@ extension LocalFileEditorOperations on LocalFileService {
   }) async {
     final service = this;
     if (service is LocalFileSaveReporter) {
-      return (service as LocalFileSaveReporter)
-          .saveFileWithResult(path, bytes, overwrite: overwrite);
+      return (service as LocalFileSaveReporter).saveFileWithResult(
+        path,
+        bytes,
+        overwrite: overwrite,
+      );
     }
     if (!overwrite) {
       throw UnsupportedError('This filesystem cannot create a protected copy.');
@@ -139,12 +151,7 @@ abstract class LocalFileService {
     String path, {
     bool includeHidden = false,
     int maxItems = 10000,
-  }) =>
-      walkLocalFiles(
-        path,
-        includeHidden: includeHidden,
-        maxItems: maxItems,
-      );
+  }) => walkLocalFiles(path, includeHidden: includeHidden, maxItems: maxItems);
 
   /// Save data to a file, handling platform-specific permissions
   Future<void> saveFile(String path, Uint8List data);
@@ -176,7 +183,6 @@ abstract class LocalFileService {
     return platform.createPlatformFileService();
   }
 }
-
 
 /// Recursive local file walk used by the flat view. Callers on macOS wrap it in
 /// a security scope (see MacosFileService.walkFiles).
@@ -212,13 +218,15 @@ Future<List<FileItem>> walkLocalFiles(
       } else if (type == FileSystemEntityType.file) {
         try {
           final stat = await entity.stat();
-          result.add(FileItem(
-            name: name,
-            path: entity.path,
-            isFolder: false,
-            size: stat.size,
-            updatedAt: stat.modified,
-          ));
+          result.add(
+            FileItem(
+              name: name,
+              path: entity.path,
+              isFolder: false,
+              size: stat.size,
+              updatedAt: stat.modified,
+            ),
+          );
         } catch (_) {
           // Skip entries that disappear mid-walk.
         }

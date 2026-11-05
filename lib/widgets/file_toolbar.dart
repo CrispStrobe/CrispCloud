@@ -10,6 +10,7 @@ import '../providers/panel_source_provider.dart' show panelSourceProvider;
 import '../providers/toolbar_provider.dart' show panelViewModeProvider;
 import '../services/custom_toolbar_command_service.dart';
 import '../services/panel_view_mode_service.dart' show PanelViewMode;
+import 'file_view_selector.dart';
 import 'search_dialogs.dart' show showSearchDialog, showFindDialog;
 
 // Re-export decomposed widgets for backward compatibility
@@ -113,48 +114,10 @@ class FileToolbar extends ConsumerWidget {
         );
       }),
 
-      // View mode toggle (cycles: list -> grid -> column -> list)
-      Builder(builder: (context) {
-        final viewMode = side == PanelSide.local
-            ? ref.watch(localViewModeProvider)
-            : ref.watch(remoteViewModeProvider);
-        IconData icon;
-        String tooltip;
-        switch (viewMode) {
-          case ViewMode.list:
-            icon = Icons.grid_view;
-            tooltip = l.gridView;
-            break;
-          case ViewMode.grid:
-            icon = Icons.view_column;
-            tooltip = l.columnView;
-            break;
-          case ViewMode.column:
-            icon = Icons.view_list;
-            tooltip = l.listView;
-            break;
-        }
-        return IconButton(
-          icon: Icon(icon, color: Theme.of(context).colorScheme.onPrimaryContainer),
-          tooltip: tooltip,
-          onPressed: () {
-            final notifier = side == PanelSide.local
-                ? ref.read(localViewModeProvider.notifier)
-                : ref.read(remoteViewModeProvider.notifier);
-            switch (viewMode) {
-              case ViewMode.list:
-                notifier.state = ViewMode.grid;
-                break;
-              case ViewMode.grid:
-                notifier.state = ViewMode.column;
-                break;
-              case ViewMode.column:
-                notifier.state = ViewMode.list;
-                break;
-            }
-          },
-        );
-      }),
+      FileViewSelector(
+        side: side,
+        color: Theme.of(context).colorScheme.onPrimaryContainer,
+      ),
 
       // Incremental filter toggle
       IconButton(
