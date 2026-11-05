@@ -195,6 +195,7 @@ def check() -> tuple[int, int]:
     paths = [
         "lib/widgets/image_editor_dialog.dart",
         "lib/widgets/image_editor_surface.dart",
+        "lib/widgets/image_export_dialog.dart",
         "lib/widgets/image_editor_menus.dart",
         "lib/widgets/file_editor_dialog.dart",
         "lib/widgets/file_context_menu.dart",
