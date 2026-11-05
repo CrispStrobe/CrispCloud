@@ -1144,7 +1144,7 @@ class _ImageEditorDialogState extends ConsumerState<ImageEditorDialog> {
           child: Text(
             context.imageTr(
               _project == null
-                  ? 'Edited images are flattened. Metadata may be removed.'
+                  ? 'Edited images are flattened. Metadata and color precision may change.'
                   : 'Projects retain editable layers. Exported images are flattened.',
             ),
             style: Theme.of(context).textTheme.bodySmall,

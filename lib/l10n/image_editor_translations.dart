@@ -139,8 +139,8 @@ const imageEditorTranslations = <String, Map<String, String>>{
     'Refresh this folder before editing. The file’s source could not be verified.': 'Refresh this folder before editing. The file’s source could not be verified.',
     'A copy was downloaded. The original image has not been updated.':
         'A copy was downloaded. The original image has not been updated.',
-    'Edited images are flattened. Metadata may be removed.':
-        'Edited images are flattened. Metadata may be removed.',
+    'Edited images are flattened. Metadata and color precision may change.':
+        'Edited images are flattened. Metadata and color precision may change.',
     'New changes remain unsaved.': 'New changes remain unsaved.',
     'Image saved': 'Image saved',
     'Remove': 'Remove',
@@ -307,7 +307,7 @@ const imageEditorTranslations = <String, Map<String, String>>{
     'Extract this file from its archive or container before editing.': 'Entpacken Sie diese Datei vor dem Bearbeiten aus ihrem Archiv oder Container.',
     'Refresh this folder before editing. The file’s source could not be verified.': 'Aktualisieren Sie diesen Ordner vor dem Bearbeiten. Die Quelle der Datei konnte nicht verifiziert werden.',
     'A copy was downloaded. The original image has not been updated.': 'Eine Kopie wurde heruntergeladen. Das Originalbild wurde nicht aktualisiert.',
-    'Edited images are flattened. Metadata may be removed.': 'Bearbeitete Bilder werden auf eine Ebene reduziert. Metadaten können entfernt werden.',
+    'Edited images are flattened. Metadata and color precision may change.': 'Bearbeitete Bilder werden zusammengeführt. Metadaten und Farbpräzision können sich ändern.',
     'New changes remain unsaved.':
         'Neue Änderungen sind noch nicht gespeichert.',
     'Image saved': 'Bild gespeichert',
@@ -478,7 +478,7 @@ const imageEditorTranslations = <String, Map<String, String>>{
     'Extract this file from its archive or container before editing.': 'Extrayez ce fichier de son archive ou de son conteneur avant de le modifier.',
     'Refresh this folder before editing. The file’s source could not be verified.': 'Actualisez ce dossier avant de modifier le fichier. Sa source n’a pas pu être vérifiée.',
     'A copy was downloaded. The original image has not been updated.': 'Une copie a été téléchargée. L’image d’origine n’a pas été mise à jour.',
-    'Edited images are flattened. Metadata may be removed.': 'Les images modifiées sont aplaties. Les métadonnées peuvent être supprimées.',
+    'Edited images are flattened. Metadata and color precision may change.': 'Les images modifiées sont aplaties. Les métadonnées et la précision des couleurs peuvent changer.',
     'New changes remain unsaved.':
         'De nouvelles modifications restent non enregistrées.',
     'Image saved': 'Image enregistrée',
@@ -648,7 +648,7 @@ const imageEditorTranslations = <String, Map<String, String>>{
     'Refresh this folder before editing. The file’s source could not be verified.': 'Actualiza esta carpeta antes de editar. No se pudo verificar el origen del archivo.',
     'A copy was downloaded. The original image has not been updated.':
         'Se descargó una copia. La imagen original no se ha actualizado.',
-    'Edited images are flattened. Metadata may be removed.': 'Las imágenes editadas se acoplan. Es posible que se eliminen los metadatos.',
+    'Edited images are flattened. Metadata and color precision may change.': 'Las imágenes editadas se acoplan. Los metadatos y la precisión del color pueden cambiar.',
     'New changes remain unsaved.': 'Quedan cambios nuevos sin guardar.',
     'Image saved': 'Imagen guardada',
     'Remove': 'Eliminar',
@@ -819,7 +819,7 @@ const imageEditorTranslations = <String, Map<String, String>>{
     'Refresh this folder before editing. The file’s source could not be verified.': 'Atualize esta pasta antes de editar. Não foi possível verificar a origem do arquivo.',
     'A copy was downloaded. The original image has not been updated.':
         'Uma cópia foi baixada. A imagem original não foi atualizada.',
-    'Edited images are flattened. Metadata may be removed.': 'As imagens editadas são achatadas em uma única camada. Os metadados podem ser removidos.',
+    'Edited images are flattened. Metadata and color precision may change.': 'As imagens editadas são mescladas. Os metadados e a precisão das cores podem mudar.',
     'New changes remain unsaved.': 'Novas alterações ainda não foram salvas.',
     'Image saved': 'Imagem salva',
     'Remove': 'Remover',
@@ -987,8 +987,8 @@ const imageEditorTranslations = <String, Map<String, String>>{
         '编辑前请刷新此文件夹。无法验证文件来源。',
     'A copy was downloaded. The original image has not been updated.':
         '已下载副本。原始图像尚未更新。',
-    'Edited images are flattened. Metadata may be removed.':
-        '编辑后的图像会合并图层。元数据可能被移除。',
+    'Edited images are flattened. Metadata and color precision may change.':
+        '编辑后的图像会被合并。元数据和颜色精度可能发生变化。',
     'New changes remain unsaved.': '新更改尚未保存。',
     'Image saved': '图像已保存',
     'Remove': '移除',
@@ -1160,8 +1160,8 @@ const imageEditorTranslations = <String, Map<String, String>>{
         '編集する前にこのフォルダーを更新してください。ファイルの保存元を確認できませんでした。',
     'A copy was downloaded. The original image has not been updated.':
         'コピーをダウンロードしました。元の画像は更新されていません。',
-    'Edited images are flattened. Metadata may be removed.':
-        '編集した画像は単一のレイヤーに統合されます。メタデータは削除される場合があります。',
+    'Edited images are flattened. Metadata and color precision may change.':
+        '編集した画像は統合されます。メタデータと色精度が変わる場合があります。',
     'New changes remain unsaved.': '新しい変更が未保存のままです。',
     'Image saved': '画像を保存しました',
     'Remove': '削除',
@@ -1334,8 +1334,8 @@ const imageEditorTranslations = <String, Map<String, String>>{
         '편집하기 전에 이 폴더를 새로 고치세요. 파일의 원본 위치를 확인할 수 없습니다.',
     'A copy was downloaded. The original image has not been updated.':
         '사본을 다운로드했습니다. 원본 이미지는 업데이트되지 않았습니다.',
-    'Edited images are flattened. Metadata may be removed.':
-        '편집한 이미지는 하나의 레이어로 합쳐집니다. 메타데이터가 제거될 수 있습니다.',
+    'Edited images are flattened. Metadata and color precision may change.':
+        '편집한 이미지는 병합됩니다. 메타데이터와 색상 정밀도가 변경될 수 있습니다.',
     'New changes remain unsaved.': '새 변경 사항이 아직 저장되지 않았습니다.',
     'Image saved': '이미지가 저장되었습니다',
     'Remove': '제거',
@@ -1509,8 +1509,8 @@ const imageEditorTranslations = <String, Map<String, String>>{
         'حدّث هذا المجلد قبل التحرير. تعذّر التحقق من مصدر الملف.',
     'A copy was downloaded. The original image has not been updated.':
         'تم تنزيل نسخة. لم يتم تحديث الصورة الأصلية.',
-    'Edited images are flattened. Metadata may be removed.':
-        'تُدمج طبقات الصور المعدّلة في طبقة واحدة. قد تُحذف البيانات الوصفية.',
+    'Edited images are flattened. Metadata and color precision may change.':
+        'تُدمج طبقات الصور المعدّلة. قد تتغير البيانات الوصفية ودقة الألوان.',
     'New changes remain unsaved.': 'ما زالت هناك تغييرات جديدة غير محفوظة.',
     'Image saved': 'تم حفظ الصورة',
     'Remove': 'إزالة',
