@@ -15,9 +15,12 @@ Future<http.Response> uploadSpooledHttpBody(
   required void Function() checkCurrent,
   String method = 'PUT',
   Map<String, String> headers = const {},
+  bool allowHttp = false,
   void Function(int, int)? onProgress,
 }) async {
-  if (uri.scheme != 'https' || uri.host.isEmpty || uri.userInfo.isNotEmpty) {
+  if ((uri.scheme != 'https' && !(allowHttp && uri.scheme == 'http')) ||
+      uri.host.isEmpty ||
+      uri.userInfo.isNotEmpty) {
     throw StateError('$operation requires a secure upload address.');
   }
   final blob = spool.webUploadBody;
@@ -64,6 +67,27 @@ Future<http.Response> uploadSpooledHttpBody(
       throw StateError('$operation connection failed; completion is unknown.');
     }
     checkCurrent();
+    // Keep only the response headers the browser exposes through CORS. In
+    // particular, multipart services must expose ETag for verified completion.
+    final responseHeaders = <String, String>{};
+    final entries = js.callMethod(
+      js.getProperty(response, 'headers'),
+      'entries',
+      [],
+    );
+    var headerBytes = 0;
+    while (true) {
+      final next = js.callMethod(entries, 'next', []);
+      if (js.getProperty(next, 'done') == true) break;
+      final pair = js.getProperty(next, 'value');
+      final name = js.getProperty(pair, '0') as String;
+      final value = js.getProperty(pair, '1') as String;
+      headerBytes += name.length + value.length;
+      if (responseHeaders.length >= 256 || headerBytes > 64 * 1024) {
+        throw StateError('$operation returned oversized response headers.');
+      }
+      responseHeaders[name.toLowerCase()] = value;
+    }
     final body = js.getProperty(response, 'body');
     final bytes = BytesBuilder(copy: false);
     if (body != null) {
@@ -88,7 +112,11 @@ Future<http.Response> uploadSpooledHttpBody(
     }
     final status = (js.getProperty(response, 'status') as num).toInt();
     onProgress?.call(spool.length, spool.length);
-    return http.Response.bytes(bytes.takeBytes(), status);
+    return http.Response.bytes(
+      bytes.takeBytes(),
+      status,
+      headers: responseHeaders,
+    );
   } finally {
     js.callMethod(abort, 'abort', []);
     if (reader != null) {

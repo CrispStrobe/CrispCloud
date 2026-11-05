@@ -9,5 +9,6 @@ Future<http.Response> uploadSpooledHttpBody(
   required void Function() checkCurrent,
   String method = 'PUT',
   Map<String, String> headers = const {},
+  bool allowHttp = false,
   void Function(int, int)? onProgress,
 }) async => throw UnsupportedError('Browser file upload is unavailable.');
