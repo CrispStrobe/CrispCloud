@@ -15,6 +15,7 @@ import '../l10n/pdf_operations_strings.dart';
 import '../l10n/file_operations_strings.dart';
 import '../l10n/provider_operation_strings.dart';
 import '../l10n/link_operation_strings.dart';
+import '../l10n/checksum_error_strings.dart';
 import '../models/file_item.dart';
 import '../models/panel_side.dart';
 import '../providers/providers.dart';
@@ -2011,7 +2012,7 @@ Future<void> _createChecksumFileDialog(
               ? Text(FileOperationsStrings(context).text('error'))
               : Text(FileOperationsStrings(context).text('checksumCreated')),
           content: error != null
-              ? Text(FileOperationsStrings(context).value('failed', error))
+              ? Text(FileOperationsStrings(context).value('failed', localizedChecksumError(context, error)))
               : Text(FileOperationsStrings(context).value('created', snap.data)),
           actions: [
             TextButton(
@@ -2043,7 +2044,7 @@ Future<void> _verifyChecksumFileDialog(
         if (snap.error != null) {
           return AlertDialog(
             title: Text(FileOperationsStrings(context).text('verifyFailed')),
-            content: Text('${snap.error}'),
+            content: Text(localizedChecksumError(context, snap.error!)),
             actions: [
               TextButton(
                   onPressed: () => Navigator.pop(ctx), child: Text(MaterialLocalizations.of(context).okButtonLabel))
@@ -2074,7 +2075,7 @@ Future<void> _verifyChecksumFileDialog(
                             ? null
                             : Text(
                                 r.error != null
-                                    ? AppLocalizations.of(context)!.operationFailed(r.error.toString())
+                                    ? AppLocalizations.of(context)!.operationFailed(localizedChecksumError(context, r.error!))
                                     : '${FileOperationsStrings(context).value('expected', r.expected.substring(0, r.expected.length.clamp(0, 8)))}…\n${FileOperationsStrings(context).value('got', r.actual.substring(0, r.actual.length.clamp(0, 8)))}…',
                                 style: const TextStyle(fontSize: 11)),
                       ))
@@ -2117,7 +2118,7 @@ void _verifyAgainstRemote(
         if (snap.error != null) {
           return AlertDialog(
             title: Text(FileOperationsStrings(context).text('verifyFailed')),
-            content: Text('${snap.error}'),
+            content: Text(localizedChecksumError(context, snap.error!)),
             actions: [
               TextButton(
                   onPressed: () => Navigator.pop(ctx), child: Text(MaterialLocalizations.of(context).okButtonLabel))

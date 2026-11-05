@@ -17,6 +17,7 @@ import 'azure_connection_dialog.dart';
 import 'b2_connection_dialog.dart';
 import 'proxy_settings_dialog.dart';
 import '../l10n/app_localizations.dart';
+import '../l10n/s3_storage_class_strings.dart';
 import '../l10n/connection_dialog_extra_strings.dart';
 import '../l10n/connection_strings.dart';
 import '../l10n/connection_failure_strings.dart';
@@ -848,7 +849,7 @@ class _ConnectionDialogState extends ConsumerState<ConnectionDialog> {
                 items: S3StorageClass.values
                     .map((sc) => DropdownMenuItem(
                           value: sc,
-                          child: Text(sc.displayName),
+                          child: Text(S3StorageClassStrings(context).label(sc)),
                         ))
                     .toList(),
                 onChanged: _isLoading

@@ -6,8 +6,11 @@
 
 import 'dart:io';
 import 'dart:typed_data';
+
 import 'package:crypto/crypto.dart' as crypto;
 import 'package:path/path.dart' as p;
+
+import 'checksum_file_failure.dart';
 
 /// Result of a checksum verification for a single file.
 class ChecksumVerifyResult {
@@ -15,7 +18,8 @@ class ChecksumVerifyResult {
   final String expected;
   final String actual;
   final Object? error;
-  bool get ok => error == null && expected.toLowerCase() == actual.toLowerCase();
+  bool get ok =>
+      error == null && expected.toLowerCase() == actual.toLowerCase();
 
   const ChecksumVerifyResult({
     required this.filename,
@@ -27,8 +31,7 @@ class ChecksumVerifyResult {
 
 class ChecksumService {
   /// Compute the MD5 hex digest of [data].
-  static String md5Hash(Uint8List data) =>
-      crypto.md5.convert(data).toString();
+  static String md5Hash(Uint8List data) => crypto.md5.convert(data).toString();
 
   /// Compute the SHA-256 hex digest of [data].
   static String sha256Hash(Uint8List data) =>
@@ -36,14 +39,38 @@ class ChecksumService {
 
   /// Compute the MD5 hex digest of the file at [path].
   static Future<String> md5File(String path) async {
-    final bytes = await File(path).readAsBytes();
+    final bytes = await _readInput(path);
     return md5Hash(bytes);
   }
 
   /// Compute the SHA-256 hex digest of the file at [path].
   static Future<String> sha256File(String path) async {
-    final bytes = await File(path).readAsBytes();
+    final bytes = await _readInput(path);
     return sha256Hash(bytes);
+  }
+
+  static Future<Uint8List> _readInput(String path) async {
+    try {
+      return await File(path).readAsBytes();
+    } on FileSystemException catch (error) {
+      throw ChecksumFileException(ChecksumFileAction.read, path, error);
+    }
+  }
+
+  static Future<List<String>> _readSidecar(String path) async {
+    try {
+      return await File(path).readAsLines();
+    } on FileSystemException catch (error) {
+      throw ChecksumFileException(ChecksumFileAction.read, path, error);
+    }
+  }
+
+  static Future<void> _writeSidecar(String path, String content) async {
+    try {
+      await File(path).writeAsString(content);
+    } on FileSystemException catch (error) {
+      throw ChecksumFileException(ChecksumFileAction.write, path, error);
+    }
   }
 
   // --- MD5 sidecar file generation/verification (md5sum format) ---
@@ -62,7 +89,7 @@ class ChecksumService {
       buf.writeln('$hash  $name');
     }
     final outPath = p.join(dirPath, outputName ?? 'checksums.md5');
-    await File(outPath).writeAsString(buf.toString());
+    await _writeSidecar(outPath, buf.toString());
     return outPath;
   }
 
@@ -79,7 +106,7 @@ class ChecksumService {
       buf.writeln('$hash  $name');
     }
     final outPath = p.join(dirPath, outputName ?? 'checksums.sha256');
-    await File(outPath).writeAsString(buf.toString());
+    await _writeSidecar(outPath, buf.toString());
     return outPath;
   }
 
@@ -91,7 +118,7 @@ class ChecksumService {
   ) async {
     final dir = p.dirname(checksumFilePath);
     final ext = p.extension(checksumFilePath).toLowerCase();
-    final lines = await File(checksumFilePath).readAsLines();
+    final lines = await _readSidecar(checksumFilePath);
     final results = <ChecksumVerifyResult>[];
 
     for (final line in lines) {
@@ -103,7 +130,10 @@ class ChecksumService {
       if (parts.length < 2) continue;
       final expected = parts[0];
       final filename = parts.sublist(1).join(' ');
-      final filePath = p.join(dir, filename.startsWith('*') ? filename.substring(1) : filename);
+      final filePath = p.join(
+        dir,
+        filename.startsWith('*') ? filename.substring(1) : filename,
+      );
 
       String actual;
       Object? error;
@@ -116,12 +146,14 @@ class ChecksumService {
         actual = '(file not found)';
       }
 
-      results.add(ChecksumVerifyResult(
-        filename: filename,
-        expected: expected,
-        actual: actual,
-        error: error,
-      ));
+      results.add(
+        ChecksumVerifyResult(
+          filename: filename,
+          expected: expected,
+          actual: actual,
+          error: error,
+        ),
+      );
     }
     return results;
   }
