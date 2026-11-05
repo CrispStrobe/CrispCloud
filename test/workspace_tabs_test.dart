@@ -1,10 +1,15 @@
 import 'dart:io';
 
 import 'package:crisp_cloud/models/panel_side.dart';
+import 'package:crisp_cloud/models/file_view_configuration.dart';
+import 'package:crisp_cloud/models/file_item.dart';
 import 'package:crisp_cloud/models/panel_tab.dart';
 import 'package:crisp_cloud/models/storage_reference.dart';
+import 'package:crisp_cloud/models/workspace_configuration.dart';
 import 'package:crisp_cloud/providers/panel_source_provider.dart';
 import 'package:crisp_cloud/providers/providers.dart';
+import 'package:crisp_cloud/providers/toolbar_provider.dart';
+import 'package:crisp_cloud/providers/workspace_provider.dart';
 import 'package:crisp_cloud/services/cloud_storage_interface.dart';
 import 'package:crisp_cloud/services/local_file_service.dart';
 import 'package:crisp_cloud/services/panel_source_service.dart';
@@ -100,6 +105,187 @@ void main() {
     await panel.refresh();
   });
   tearDown(() => container.dispose());
+
+  test(
+    'workspace captures and restores both pane layouts and active views',
+    () async {
+      final left = container.read(panelProvider(PanelSide.local));
+      await left.refresh();
+      final controller = container.read(workspaceControllerProvider);
+      await panel.navigateToPath('/one');
+      await panel.applyViewConfiguration(
+        FileViewConfiguration(display: FileViewDisplay.grid),
+      );
+      container.read(panelSplitRatioProvider.notifier).state = 0.63;
+      final group = await controller.captureGroup('Saved work');
+      await panel.navigateToPath('/two');
+      await panel.applyViewConfiguration(FileViewConfiguration());
+      container.read(panelSplitRatioProvider.notifier).state = 0.5;
+      await controller.openGroup(group, replace: true, keepProtected: false);
+      expect(panel.currentPath, '/one');
+      expect(panel.captureViewConfiguration().display, FileViewDisplay.grid);
+      expect(container.read(panelSplitRatioProvider), 0.63);
+      expect(left.currentPath, group.left.tabs.single.path);
+    },
+  );
+
+  test(
+    'paired bookmarks preflight both accounts before changing either pane',
+    () async {
+      final left = container.read(panelProvider(PanelSide.local));
+      await left.refresh();
+      final originalLeft = left.currentPath;
+      final originalRight = panel.currentPath;
+      final account = panel.captureCurrentOrigin().storageReference;
+      final pair = PairedBookmark(
+        id: 'pair',
+        name: 'Unavailable account',
+        left: WorkspaceTabSnapshot.fromJson({
+          'path': '/one',
+          'storage': account.toJson(),
+        }),
+        right: WorkspaceTabSnapshot.fromJson({
+          'path': '/two',
+          'storage': const StorageReference(
+            kind: 'remote',
+            provider: 'Workspace cloud',
+            accountKey: 'missing',
+          ).toJson(),
+        }),
+      );
+      await expectLater(
+        container.read(workspaceControllerProvider).openPair(pair),
+        throwsStateError,
+      );
+      expect(left.currentPath, originalLeft);
+      expect(panel.currentPath, originalRight);
+    },
+  );
+
+  test(
+    'paired locations use captured account in either pane and preserve locks',
+    () async {
+      final left = container.read(panelProvider(PanelSide.local));
+      await left.refresh();
+      final account = panel.captureCurrentOrigin().storageReference;
+      final pair = PairedBookmark(
+        id: 'pair',
+        name: 'Same account both sides',
+        left: WorkspaceTabSnapshot.fromJson({
+          'path': '/one',
+          'storage': account.toJson(),
+        }),
+        right: WorkspaceTabSnapshot.fromJson({
+          'path': '/two',
+          'storage': account.toJson(),
+        }),
+      );
+      final lockedId = panel.activeTabId;
+      panel.setTabLock(lockedId, TabLockMode.locked);
+      await container.read(workspaceControllerProvider).openPair(pair);
+      expect(left.currentPath, '/one');
+      expect(left.captureCurrentOrigin().storageId, account.id);
+      expect(panel.currentPath, '/two');
+      expect(panel.tabs.firstWhere((tab) => tab.id == lockedId).path, '/');
+      expect(panel.activeTabId, isNot(lockedId));
+    },
+  );
+
+  test(
+    'tabs retain independent views, filters, columns and sort direction',
+    () async {
+      final first = panel.activeTabId;
+      await panel.applyViewConfiguration(
+        FileViewConfiguration(
+          display: FileViewDisplay.grid,
+          sortBy: SortBy.size,
+          sortOrder: SortOrder.descending,
+          filter: 'account',
+          widths: {'size': 115, 'date': -78, 'ext': 40},
+        ),
+        profileId: 'reports',
+      );
+      panel.addTab(path: '/one');
+      await panel.refresh();
+      final second = panel.activeTabId;
+      await panel.applyViewConfiguration(
+        FileViewConfiguration(display: FileViewDisplay.brief),
+      );
+      await panel.selectTab(first);
+      expect(panel.captureViewConfiguration().display, FileViewDisplay.grid);
+      expect(panel.filterQuery, 'account');
+      expect(panel.sortOrder, SortOrder.descending);
+      expect(
+        container.read(columnWidthsProvider(PanelSide.remote))['size'],
+        115,
+      );
+      expect(panel.activeTab!.viewProfileId, 'reports');
+      await panel.selectTab(second);
+      expect(panel.captureViewConfiguration().display, FileViewDisplay.brief);
+      expect(panel.filterQuery, '');
+    },
+  );
+
+  test(
+    'replacing tabs and closing active tabs never overwrites destination views',
+    () async {
+      await panel.applyViewConfiguration(
+        FileViewConfiguration(display: FileViewDisplay.grid),
+      );
+      final saved = (await panel.exportTabs()).single;
+      await panel.applyViewConfiguration(
+        FileViewConfiguration(display: FileViewDisplay.brief),
+      );
+      await panel.restoreTabs([saved], replace: true, keepProtected: false);
+      expect(panel.captureViewConfiguration().display, FileViewDisplay.grid);
+      final first = panel.activeTabId;
+      panel.addTab(path: '/one');
+      await panel.refresh();
+      await panel.applyViewConfiguration(
+        FileViewConfiguration(display: FileViewDisplay.brief),
+      );
+      panel.closeTab(panel.activeTabId);
+      await panel.refresh();
+      expect(panel.activeTabId, first);
+      expect(panel.captureViewConfiguration().display, FileViewDisplay.grid);
+    },
+  );
+
+  test(
+    'metadata profiles sort virtual result rows by supplied numeric values',
+    () async {
+      panel.showSearchResults([
+        FileItem(
+          name: 'ten',
+          path: '/ten',
+          isFolder: false,
+          metadata: {'rating': 10},
+        ),
+        FileItem(
+          name: 'two',
+          path: '/two',
+          isFolder: false,
+          metadata: {'rating': 2},
+        ),
+      ], origin: panel.captureCurrentOrigin());
+      const rating = FileColumnDefinition(
+        id: 'rating',
+        label: 'Rating',
+        kind: FileColumnKind.metadata,
+        metadataKey: 'rating',
+      );
+      await panel.applyViewConfiguration(
+        FileViewConfiguration(
+          columns: [rating],
+          widths: {'rating': 80},
+          sortColumnId: 'rating',
+        ),
+      );
+      expect(panel.files!.map((file) => file.name), ['two', 'ten']);
+      panel.setColumnSort('rating');
+      expect(panel.files!.map((file) => file.name), ['ten', 'two']);
+    },
+  );
 
   test('custom titles survive folder navigation and serialization', () async {
     panel.renameTab(panel.activeTabId, 'My project');

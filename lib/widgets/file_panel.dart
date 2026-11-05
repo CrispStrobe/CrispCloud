@@ -10,11 +10,11 @@ import '../services/log_service.dart';
 import '../models/panel_side.dart';
 import '../providers/providers.dart';
 import '../providers/panel_source_provider.dart' show panelSourceProvider;
-import '../providers/toolbar_provider.dart'
-    show columnWidthsProvider, panelViewModeProvider;
+import '../providers/toolbar_provider.dart' show panelViewModeProvider;
 import '../services/panel_source_service.dart' show RemotePanelSource;
 import '../services/panel_view_mode_service.dart' show PanelViewMode;
 import 'file_column_view.dart';
+import 'file_column_header.dart';
 import 'file_grid_view.dart';
 import 'file_list_view.dart' show FileListView, PanelDragData;
 import 'file_selection_bar.dart';
@@ -745,164 +745,12 @@ class _FilePanelState extends ConsumerState<FilePanel> {
   }
 }
 
-/// Sortable column headers for compact ("Full") view, matching CompactFileTile layout.
-/// Supports drag-to-resize Size and Date columns (DC-11).
 class _CompactColumnHeader extends ConsumerWidget {
+  const _CompactColumnHeader({required this.side, required this.panel});
   final PanelSide side;
   final PanelNotifier panel;
-  const _CompactColumnHeader({required this.side, required this.panel});
 
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
-    final theme = Theme.of(context);
-    final bg = theme.colorScheme.surfaceContainerHighest.withValues(alpha: 0.6);
-    final style = TextStyle(
-      fontSize: 11,
-      fontWeight: FontWeight.w600,
-      color: theme.colorScheme.onSurface.withValues(alpha: 0.7),
-    );
-    final colWidths = ref.watch(columnWidthsProvider(side));
-    final colNotifier = ref.read(columnWidthsProvider(side).notifier);
-    final sizeW = (colWidths['size'] ?? 62.0).abs();
-    final dateW = (colWidths['date'] ?? 78.0).abs();
-    final extW = (colWidths['ext'] ?? 40.0).abs();
-    final showSize = colNotifier.isVisible('size');
-    final showDate = colNotifier.isVisible('date');
-    final showExt = colNotifier.isVisible('ext');
-
-    Widget colLabel(String label, SortBy by, {double? width}) {
-      final isPrimary = panel.sortBy == by;
-      final isSecondary = panel.secondarySortBy == by;
-      final primaryArrow = isPrimary
-          ? (panel.sortOrder == SortOrder.ascending ? ' ↑' : ' ↓')
-          : '';
-      final secondaryArrow = isSecondary && !isPrimary
-          ? (panel.secondarySortOrder == SortOrder.ascending ? '↑' : '↓')
-          : '';
-      final cell = Row(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          Text(
-            label + primaryArrow,
-            style: style.copyWith(
-              color: isPrimary ? theme.colorScheme.primary : style.color,
-            ),
-            maxLines: 1,
-            overflow: TextOverflow.clip,
-          ),
-          if (secondaryArrow.isNotEmpty)
-            Text(
-              secondaryArrow,
-              style: style.copyWith(
-                fontSize: 9,
-                color: theme.colorScheme.tertiary,
-              ),
-            ),
-        ],
-      );
-      return GestureDetector(
-        onTap: () => isPrimary ? panel.toggleSortOrder() : panel.setSortBy(by),
-        onSecondaryTap: () => isSecondary && !isPrimary
-            ? panel.setSecondarySortBy(null)
-            : panel.setSecondarySortBy(by),
-        onLongPress: () => isSecondary && !isPrimary
-            ? panel.setSecondarySortBy(null)
-            : panel.setSecondarySortBy(by),
-        child: Tooltip(
-          message: isSecondary
-              ? 'Secondary sort (right-click/long-press to clear)'
-              : 'Right-click/long-press to set as secondary sort',
-          child: width != null ? SizedBox(width: width, child: cell) : cell,
-        ),
-      );
-    }
-
-    // Drag handle between columns
-    Widget dragHandle(String colKey) {
-      return GestureDetector(
-        onHorizontalDragUpdate: (details) {
-          final current = colWidths[colKey] ?? 62.0;
-          final newW = (current + details.delta.dx).clamp(36.0, 200.0);
-          ref.read(columnWidthsProvider(side).notifier).setWidth(colKey, newW);
-        },
-        child: MouseRegion(
-          cursor: SystemMouseCursors.resizeColumn,
-          child: Container(
-            width: 6,
-            color: Colors.transparent,
-            child: Center(
-              child: Container(width: 1, height: 12, color: theme.dividerColor),
-            ),
-          ),
-        ),
-      );
-    }
-
-    return Container(
-      height: 20,
-      color: bg,
-      padding: const EdgeInsets.symmetric(horizontal: 4),
-      child: Row(
-        children: [
-          const SizedBox(
-            width: 18 + 2 + 14 + 4,
-          ), // icon space matches CompactFileTile
-          Expanded(
-            child: GestureDetector(
-              onSecondaryTap: () =>
-                  _showColumnMenu(context, ref, side, colNotifier),
-              child: colLabel(
-                panel.showingSearchResults ? 'Original path' : 'Name',
-                SortBy.name,
-              ),
-            ),
-          ),
-          if (showSize) ...[
-            dragHandle('size'),
-            colLabel('Size', SortBy.size, width: sizeW),
-          ],
-          if (showDate) ...[
-            dragHandle('date'),
-            colLabel('Date', SortBy.date, width: dateW),
-          ],
-          if (showExt) ...[
-            dragHandle('ext'),
-            colLabel('Ext', SortBy.extension, width: extW),
-          ],
-          const SizedBox(width: 4),
-        ],
-      ),
-    );
-  }
-}
-
-/// Show column visibility menu on right-click of column header.
-void _showColumnMenu(
-  BuildContext context,
-  WidgetRef ref,
-  PanelSide side,
-  dynamic colNotifier,
-) {
-  final position = RelativeRect.fromLTRB(
-    MediaQuery.sizeOf(context).width / 2,
-    80,
-    MediaQuery.sizeOf(context).width / 2 + 1,
-    81,
-  );
-  showMenu<String>(
-    context: context,
-    position: position,
-    items: [
-      for (final col in ['size', 'date', 'ext'])
-        CheckedPopupMenuItem<String>(
-          value: col,
-          checked: colNotifier.isVisible(col),
-          child: Text(col[0].toUpperCase() + col.substring(1)),
-        ),
-    ],
-  ).then((selected) {
-    if (selected != null) {
-      ref.read(columnWidthsProvider(side).notifier).toggleVisibility(selected);
-    }
-  });
+  Widget build(BuildContext context, WidgetRef ref) =>
+      FileColumnHeader(side: side, panel: panel);
 }
