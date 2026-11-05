@@ -24,6 +24,7 @@ import 'file_list_dialog.dart';
 import 'file_collections_dialog.dart';
 import 'rename_history_dialog.dart';
 import 'trash_history_dialog.dart';
+import 'transfer_history_dialog.dart';
 import 'directory_comparison_dialog.dart';
 import 'file_clipboard_actions.dart';
 import 'pdf_editor_dialog.dart';
@@ -205,6 +206,11 @@ class _CommandPaletteState extends ConsumerState<CommandPalette> {
         name: 'Rename History, Batch Undo and Recovery',
         icon: Icons.history,
         action: () => showRenameHistoryDialog(widget.parentContext, ref, side),
+      ),
+      _Command(
+        name: 'Transfer Queue, History and Recovery',
+        icon: Icons.pending_actions,
+        action: () => showTransferHistoryDialog(widget.parentContext, ref),
       ),
       _Command(
         name: 'Save or Manage File Collections',

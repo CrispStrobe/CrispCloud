@@ -45,6 +45,7 @@ import '../widgets/file_list_dialog.dart';
 import '../widgets/file_collections_dialog.dart';
 import '../widgets/rename_history_dialog.dart';
 import '../widgets/trash_history_dialog.dart';
+import '../widgets/transfer_history_dialog.dart';
 import '../widgets/directory_comparison_dialog.dart';
 import '../widgets/file_clipboard_actions.dart';
 import '../widgets/file_toolbar.dart' show showPanelFilterDialog;
@@ -410,6 +411,10 @@ class _FileBrowserScreenState extends ConsumerState<FileBrowserScreen> {
       PlatformMenuItem(
         label: 'Rename History and Recovery...',
         onSelected: () => showRenameHistoryDialog(context, ref, activeSide),
+      ),
+      PlatformMenuItem(
+        label: 'Transfer Queue and Recovery...',
+        onSelected: () => showTransferHistoryDialog(context, ref),
       ),
       PlatformMenuItem(
         label: 'Import File List...',
@@ -1789,6 +1794,8 @@ class _FileBrowserScreenState extends ConsumerState<FileBrowserScreen> {
             showFileListDialog(context, ref, ref.read(activePanelProvider));
           case 'trash_history':
             showTrashHistoryDialog(context, ref, ref.read(activePanelProvider));
+          case 'transfer_history':
+            showTransferHistoryDialog(context, ref);
           case 'rename_history':
             showRenameHistoryDialog(
               context,
@@ -1891,6 +1898,13 @@ class _FileBrowserScreenState extends ConsumerState<FileBrowserScreen> {
         PopupMenuItem(
           value: 'rename_history',
           child: _overflowItem(Icons.history, 'Rename history and recovery…'),
+        ),
+        PopupMenuItem(
+          value: 'transfer_history',
+          child: _overflowItem(
+            Icons.pending_actions,
+            'Transfer queue and recovery…',
+          ),
         ),
         PopupMenuItem(
           value: 'pattern_selection',

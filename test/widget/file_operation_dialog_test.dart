@@ -4,6 +4,7 @@ import 'dart:io';
 
 import 'package:crisp_cloud/models/file_item.dart';
 import 'package:crisp_cloud/models/panel_side.dart';
+import 'package:crisp_cloud/models/file_search_query.dart';
 import 'package:crisp_cloud/providers/panel_source_provider.dart';
 import 'package:crisp_cloud/providers/providers.dart';
 import 'package:crisp_cloud/services/cloud_storage_interface.dart';
@@ -11,6 +12,7 @@ import 'package:crisp_cloud/services/file_operation_service.dart';
 import 'package:crisp_cloud/services/file_operation_backend.dart';
 import 'package:crisp_cloud/services/local_file_service.dart';
 import 'package:crisp_cloud/services/panel_source_service.dart';
+import 'package:crisp_cloud/services/saved_search_service.dart';
 import 'package:crisp_cloud/widgets/file_operation_dialog.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -310,6 +312,63 @@ void main() {
     expect(cloud.reads, isNot(contains('/member.txt')));
     expect(find.text('Queue in background'), findsNothing);
   });
+
+  testWidgets('saved search metadata criteria filter the reviewed transfer', (
+    tester,
+  ) async {
+    await SavedSearchService().save(
+      SavedSearch(
+        name: 'Small text files',
+        query: '*',
+        createdAt: DateTime.utc(2026),
+        settings: const FileSearchQuery(extensions: ['txt'], maxSize: 8),
+      ),
+    );
+    await open(tester);
+    await useCloudDestination(tester);
+    final choose = find.widgetWithText(
+      OutlinedButton,
+      'Use saved search criteria',
+    );
+    await tester.ensureVisible(choose);
+    await tester.tap(choose);
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('Small text files'));
+    await tester.pumpAndSettle();
+    await tester.ensureVisible(find.widgetWithText(OutlinedButton, 'Preview'));
+    await tester.tap(find.widgetWithText(OutlinedButton, 'Preview'));
+    await tester.pumpAndSettle();
+    await runOperation(tester, FileOperationKind.copy);
+    expect(cloud.files['/target/one.txt'], utf8.encode('one\n'));
+    expect(cloud.files.containsKey('/target/two.bin'), isFalse);
+  });
+
+  testWidgets(
+    'content criteria remain explicit instead of being silently omitted',
+    (tester) async {
+      await SavedSearchService().save(
+        SavedSearch(
+          name: 'Search file contents',
+          query: '*',
+          createdAt: DateTime.utc(2026),
+          settings: const FileSearchQuery(contentPattern: 'needle'),
+        ),
+      );
+      await open(tester);
+      final choose = find.widgetWithText(
+        OutlinedButton,
+        'Use saved search criteria',
+      );
+      await tester.ensureVisible(choose);
+      await tester.tap(choose);
+      await tester.pumpAndSettle();
+      await tester.tap(find.text('Search file contents'));
+      await tester.pumpAndSettle();
+      expect(find.textContaining('content'), findsWidgets);
+      expect(find.text('Clear saved criteria'), findsNothing);
+      expect(cloud.uploads, isEmpty);
+    },
+  );
 
   testWidgets('snapshot override cannot authorize a move or omit its account', (
     tester,
