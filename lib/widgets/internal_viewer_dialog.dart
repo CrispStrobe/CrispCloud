@@ -43,6 +43,7 @@ import 'package:video_player/video_player.dart';
 import '../l10n/internal_viewer_strings.dart';
 import '../l10n/office_preview_strings.dart';
 import '../l10n/office_pdf_error_strings.dart';
+import '../l10n/native_preview_error_strings.dart';
 import '../l10n/file_bytes_error_strings.dart';
 import '../l10n/archive_viewer_error_strings.dart';
 import '../models/file_item.dart';
@@ -2049,7 +2050,9 @@ class _InternalViewerDialogState extends ConsumerState<InternalViewerDialog> {
     try {
       await _systemPreviewService.show(data, _viewName);
     } catch (e) {
-      _showSnack(InternalViewerStrings(context).withNumber('previewError', e));
+      if (!mounted) return;
+      _showSnack(InternalViewerStrings(context).withNumber(
+          'previewError', localizedNativePreviewError(context, e)));
     }
   }
 
@@ -2297,7 +2300,8 @@ class _InternalViewerDialogState extends ConsumerState<InternalViewerDialog> {
       if (!mounted) return;
       setState(() {
         _pdfTextLoading = false;
-        _pdfTextError = InternalViewerStrings(context).withNumber('pdfError', e);
+        _pdfTextError = InternalViewerStrings(context).withNumber(
+            'pdfError', localizedNativePreviewError(context, e));
       });
     }
   }

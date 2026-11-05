@@ -30,7 +30,8 @@ class PdfTextService {
         'path': path,
       });
     } on PlatformException catch (e) {
-      throw PdfTextException(e.message ?? 'PDF text extraction failed');
+      throw PdfTextException(e.message ?? 'PDF text extraction failed',
+          code: e.message == null ? 'pdf_generic' : e.code);
     } finally {
       try {
         if (await file.exists()) await file.delete();
@@ -43,7 +44,8 @@ class PdfTextService {
 
 class PdfTextException implements Exception {
   final String message;
-  const PdfTextException(this.message);
+  final String? code;
+  const PdfTextException(this.message, {this.code});
 
   @override
   String toString() => message;
