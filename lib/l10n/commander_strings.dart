@@ -52,6 +52,15 @@ abstract final class CommanderStrings {
     arguments,
   );
 
+  /// Only enum identifiers enter this formatter; user filenames never do.
+  static String labelForEnum(Enum value) {
+    final words = value.name.replaceAllMapped(
+      RegExp(r'[A-Z]'),
+      (match) => ' ${match[0]!.toLowerCase()}',
+    );
+    return '${words[0].toUpperCase()}${words.substring(1)}';
+  }
+
   static bool contains(String english) {
     final key = _normalize(english);
     return _custom.containsKey(key) ||
@@ -193,4 +202,7 @@ abstract final class CommanderStrings {
 extension CommanderBuildContext on BuildContext {
   String commanderTr(String english, [List<Object?> arguments = const []]) =>
       CommanderStrings.translate(this, english, arguments);
+
+  String commanderEnum(Enum value) =>
+      commanderTr(CommanderStrings.labelForEnum(value));
 }

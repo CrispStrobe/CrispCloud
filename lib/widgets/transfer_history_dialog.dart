@@ -3,6 +3,7 @@ import 'dart:math' as math;
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import '../l10n/commander_strings.dart';
 import '../models/file_item.dart';
 import '../models/panel_side.dart';
 import '../models/storage_reference.dart';
@@ -230,18 +231,20 @@ class _TransferHistoryState extends ConsumerState<TransferHistoryDialog> {
     final confirmed = await showDialog<bool>(
       context: context,
       builder: (context) => AlertDialog(
-        title: const Text('Remove saved transfer?'),
-        content: const Text(
-          'This removes its recovery instructions and history. Files and saved staging or backup copies stay where they are.',
+        title: Text(context.commanderTr("Remove saved transfer?")),
+        content: Text(
+          context.commanderTr(
+            "This removes its recovery instructions and history. Files and saved staging or backup copies stay where they are.",
+          ),
         ),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(context, false),
-            child: const Text('Keep history'),
+            child: Text(context.commanderTr("Keep history")),
           ),
           FilledButton(
             onPressed: () => Navigator.pop(context, true),
-            child: const Text('Remove history entry'),
+            child: Text(context.commanderTr("Remove history entry")),
           ),
         ],
       ),
@@ -285,10 +288,10 @@ class _TransferHistoryState extends ConsumerState<TransferHistoryDialog> {
               children: [
                 Row(
                   children: [
-                    const Expanded(
+                    Expanded(
                       child: Text(
-                        'Transfer history and recovery',
-                        style: TextStyle(
+                        context.commanderTr("Transfer history and recovery"),
+                        style: const TextStyle(
                           fontSize: 21,
                           fontWeight: FontWeight.w600,
                         ),
@@ -296,7 +299,7 @@ class _TransferHistoryState extends ConsumerState<TransferHistoryDialog> {
                     ),
                     IconButton(
                       onPressed: _busy ? null : () => Navigator.pop(context),
-                      tooltip: 'Close',
+                      tooltip: context.commanderTr("Close"),
                       icon: const Icon(Icons.close),
                     ),
                   ],
@@ -306,15 +309,19 @@ class _TransferHistoryState extends ConsumerState<TransferHistoryDialog> {
                 if (transfers.recoveryWarnings.isNotEmpty)
                   Tooltip(
                     message: transfers.recoveryWarnings.join('\n'),
-                    child: const Text(
-                      'History recovered an incomplete last checkpoint. The previous journal was retained.',
+                    child: Text(
+                      context.commanderTr(
+                        "History recovered an incomplete last checkpoint. The previous journal was retained.",
+                      ),
                     ),
                   ),
                 if (jobs.isEmpty)
-                  const Expanded(
+                  Expanded(
                     child: Center(
                       child: Text(
-                        'Reviewed copy and move jobs appear here, including every file and its result.',
+                        context.commanderTr(
+                          "Reviewed copy and move jobs appear here, including every file and its result.",
+                        ),
                       ),
                     ),
                   ),
@@ -328,15 +335,17 @@ class _TransferHistoryState extends ConsumerState<TransferHistoryDialog> {
                               key: ValueKey(job.id),
                               initialValue: job.id,
                               isExpanded: true,
-                              decoration: const InputDecoration(
-                                labelText: 'Saved transfer',
+                              decoration: InputDecoration(
+                                labelText: context.commanderTr(
+                                  "Saved transfer",
+                                ),
                               ),
                               items: jobs
                                   .map(
                                     (saved) => DropdownMenuItem(
                                       value: saved.id,
                                       child: Text(
-                                        '${saved.created.toLocal().toString().split('.').first} · ${saved.options.kind.name} · ${saved.sourceLabel} → ${saved.destinationLabel} · ${transferStatusLabel(saved.status)}',
+                                        '${saved.created.toLocal().toString().split('.').first} · ${context.commanderEnum(saved.options.kind)} · ${saved.sourceLabel} → ${saved.destinationLabel} · ${context.commanderTr(transferStatusLabel(saved.status))}',
                                         maxLines: 1,
                                         overflow: TextOverflow.ellipsis,
                                       ),
@@ -347,7 +356,16 @@ class _TransferHistoryState extends ConsumerState<TransferHistoryDialog> {
                             ),
                             const SizedBox(height: 10),
                             Text(
-                              '${job.entries.length} of ${job.expectedEntries} items saved · ${transferStatusLabel(job.status)}',
+                              context.commanderTr(
+                                "{0} of {1} items saved · {2}",
+                                [
+                                  job.entries.length,
+                                  job.expectedEntries,
+                                  context.commanderTr(
+                                    transferStatusLabel(job.status),
+                                  ),
+                                ],
+                              ),
                             ),
                             SelectableText(
                               '${job.sourceLabel} → ${job.destinationLabel}: ${job.targetDirectory}',
@@ -388,15 +406,19 @@ class _TransferHistoryState extends ConsumerState<TransferHistoryDialog> {
                                         >(
                                           initialValue: _mode,
                                           isExpanded: true,
-                                          decoration: const InputDecoration(
-                                            labelText: 'Recovery action',
+                                          decoration: InputDecoration(
+                                            labelText: context.commanderTr(
+                                              "Recovery action",
+                                            ),
                                           ),
-                                          items: const [
+                                          items: [
                                             DropdownMenuItem(
                                               value: TransferRecoveryMode
                                                   .retryRemaining,
                                               child: Text(
-                                                'Resume / retry remaining',
+                                                context.commanderTr(
+                                                  "Resume / retry remaining",
+                                                ),
                                                 maxLines: 1,
                                                 overflow: TextOverflow.ellipsis,
                                               ),
@@ -405,7 +427,9 @@ class _TransferHistoryState extends ConsumerState<TransferHistoryDialog> {
                                               value: TransferRecoveryMode
                                                   .restartIncomplete,
                                               child: Text(
-                                                'Restart incomplete',
+                                                context.commanderTr(
+                                                  "Restart incomplete",
+                                                ),
                                                 maxLines: 1,
                                                 overflow: TextOverflow.ellipsis,
                                               ),
@@ -425,7 +449,9 @@ class _TransferHistoryState extends ConsumerState<TransferHistoryDialog> {
                                         ? null
                                         : () => _review(job),
                                     icon: const Icon(Icons.fact_check_outlined),
-                                    label: const Text('Review saved plan'),
+                                    label: Text(
+                                      context.commanderTr("Review saved plan"),
+                                    ),
                                   ),
                                 ],
                               ),
@@ -433,8 +459,12 @@ class _TransferHistoryState extends ConsumerState<TransferHistoryDialog> {
                                 padding: const EdgeInsets.only(top: 8),
                                 child: Text(
                                   _mode == TransferRecoveryMode.retryRemaining
-                                      ? 'Verify original accounts and file contents, reuse confirmed copies, and resume matching staged bytes.'
-                                      : 'Keep completed items. Re-copy incomplete items and ask again before replacing an occupied destination.',
+                                      ? context.commanderTr(
+                                          "Verify original accounts and file contents, reuse confirmed copies, and resume matching staged bytes.",
+                                        )
+                                      : context.commanderTr(
+                                          "Keep completed items. Re-copy incomplete items and ask again before replacing an occupied destination.",
+                                        ),
                                   style: Theme.of(context).textTheme.bodySmall,
                                 ),
                               ),
@@ -448,8 +478,13 @@ class _TransferHistoryState extends ConsumerState<TransferHistoryDialog> {
                               ),
                               Text(
                                 _running
-                                    ? 'Running the reviewed transfer…'
-                                    : 'Checking $_checked of ${job.expectedEntries} items…',
+                                    ? context.commanderTr(
+                                        "Running the reviewed transfer…",
+                                      )
+                                    : context.commanderTr(
+                                        "Checking {0} of {1} items…",
+                                        [_checked, job.expectedEntries],
+                                      ),
                               ),
                             ],
                             if (_error != null) _notice(_error!, error: true),
@@ -479,7 +514,9 @@ class _TransferHistoryState extends ConsumerState<TransferHistoryDialog> {
                     children: [
                       TextButton(
                         onPressed: _busy || live ? null : () => _remove(job),
-                        child: const Text('Remove history entry'),
+                        child: Text(
+                          context.commanderTr("Remove history entry"),
+                        ),
                       ),
                       TextButton(
                         onPressed: _busy
@@ -494,12 +531,14 @@ class _TransferHistoryState extends ConsumerState<TransferHistoryDialog> {
                                   }
                                 }
                               },
-                        child: const Text('Clear completed history'),
+                        child: Text(
+                          context.commanderTr("Clear completed history"),
+                        ),
                       ),
                       if (_busy)
                         OutlinedButton(
                           onPressed: _control.cancel,
-                          child: const Text('Stop'),
+                          child: Text(context.commanderTr("Stop")),
                         ),
                       if (preview != null && !_busy && !live)
                         FilledButton.icon(
@@ -516,13 +555,17 @@ class _TransferHistoryState extends ConsumerState<TransferHistoryDialog> {
                                           entry.outcome ==
                                           FileOperationOutcome.pending,
                                     )
-                                ? 'Run reviewed remaining items'
-                                : 'Record recovered completion',
+                                ? context.commanderTr(
+                                    "Run reviewed remaining items",
+                                  )
+                                : context.commanderTr(
+                                    "Record recovered completion",
+                                  ),
                           ),
                         ),
                       TextButton(
                         onPressed: _busy ? null : () => Navigator.pop(context),
-                        child: const Text('Close'),
+                        child: Text(context.commanderTr("Close")),
                       ),
                     ],
                   ),
@@ -555,7 +598,9 @@ class _TransferHistoryState extends ConsumerState<TransferHistoryDialog> {
         saved.recovery['backupPath'] ?? saved.recovery['renamedExistingPath'];
     final staged = saved.recovery['stagedPath'];
     final action =
-        preview?.actions[index] ?? saved.message ?? saved.outcome.name;
+        preview?.actions[index] ??
+        saved.message ??
+        context.commanderEnum(saved.outcome);
     return Padding(
       padding: const EdgeInsets.symmetric(vertical: 7),
       child: Row(
@@ -573,7 +618,9 @@ class _TransferHistoryState extends ConsumerState<TransferHistoryDialog> {
                         _excluded.remove(index);
                       }
                     }),
-              semanticLabel: 'Exclude ${saved.source.name} from recovery',
+              semanticLabel: context.commanderTr("Exclude {0} from recovery", [
+                saved.source.name,
+              ]),
             )
           else
             Padding(
@@ -594,7 +641,9 @@ class _TransferHistoryState extends ConsumerState<TransferHistoryDialog> {
                   style: const TextStyle(fontWeight: FontWeight.w500),
                 ),
                 Text(
-                  excluded ? 'Excluded from this recovery' : issue ?? action,
+                  excluded
+                      ? context.commanderTr("Excluded from this recovery")
+                      : issue ?? action,
                   style: TextStyle(
                     color: issue != null && !excluded
                         ? Theme.of(context).colorScheme.error
@@ -608,12 +657,12 @@ class _TransferHistoryState extends ConsumerState<TransferHistoryDialog> {
                   ),
                 if (staged != null)
                   SelectableText(
-                    'Saved staging file: $staged',
+                    context.commanderTr("Saved staging file: {0}", [staged]),
                     style: Theme.of(context).textTheme.bodySmall,
                   ),
                 if (backup != null)
                   SelectableText(
-                    'Recovery copy: $backup',
+                    context.commanderTr("Recovery copy: {0}", [backup]),
                     style: Theme.of(context).textTheme.bodySmall,
                   ),
               ],
@@ -626,7 +675,7 @@ class _TransferHistoryState extends ConsumerState<TransferHistoryDialog> {
               onPressed: _busy || live
                   ? null
                   : () => _restoreBackup(job, index),
-              child: const Text('Restore backup'),
+              child: Text(context.commanderTr("Restore backup")),
             ),
         ],
       ),

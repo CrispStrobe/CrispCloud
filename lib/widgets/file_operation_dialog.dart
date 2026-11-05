@@ -3,6 +3,7 @@ import 'dart:math' as math;
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import '../l10n/commander_strings.dart';
 import '../models/file_item.dart';
 import '../models/panel_side.dart';
 import '../models/storage_reference.dart';
@@ -66,14 +67,17 @@ Future<FileOperationPlan?> showFileOperationDialog(
         await showDialog<void>(
           context: context,
           builder: (context) => AlertDialog(
-            title: const Text('Choose a destination folder'),
+            title: Text(context.commanderTr("Choose a destination folder")),
             content: Text(
-              'Open a verified destination in the other panel before transferring a mixed collection. $error',
+              context.commanderTr(
+                "Open a verified destination in the other panel before transferring a mixed collection. {0}",
+                [error],
+              ),
             ),
             actions: [
               TextButton(
                 onPressed: () => Navigator.pop(context),
-                child: const Text('Close'),
+                child: Text(context.commanderTr("Close")),
               ),
             ],
           ),
@@ -188,6 +192,8 @@ class _FileOperationDialogState extends ConsumerState<FileOperationDialog> {
   bool _excludeEmpty = false;
   bool _includeHidden = true;
   bool _native = true;
+  FileCopyMethod _copyMethod = FileCopyMethod.automatic;
+  bool _preallocate = false;
   bool _preservePermissions = false;
   bool _preserveOwnership = false;
   bool _preserveXattrs = false;
@@ -214,11 +220,15 @@ class _FileOperationDialogState extends ConsumerState<FileOperationDialog> {
   bool _finished = false;
   String? _error;
   String? _current;
+  int _planningScanned = 0;
+  String? _planningPath;
   int _bytes = 0;
   int? _total;
   FileOperationPlan? _plan;
 
-  String get _verb => widget.kind == FileOperationKind.copy ? 'Copy' : 'Move';
+  String get _verb => context.commanderTr(
+    widget.kind == FileOperationKind.copy ? 'Copy' : 'Move',
+  );
   bool get _busy => _preparing || _running;
 
   @override
@@ -320,7 +330,11 @@ class _FileOperationDialogState extends ConsumerState<FileOperationDialog> {
       _error = null;
       _plan = null;
       _finished = false;
+      _planningScanned = 0;
+      _planningPath = null;
     });
+    final progressClock = Stopwatch()..start();
+    var lastProgressMillis = 0;
     try {
       final plan = await const FileOperationService().prepare(
         files: widget.files,
@@ -328,6 +342,18 @@ class _FileOperationDialogState extends ConsumerState<FileOperationDialog> {
         destination: _backend(destinationOrigin),
         targetDirectory: _destination.text,
         control: _control,
+        maxEntries: 200000,
+        maxDepth: 256,
+        onPlanningProgress: (scanned, path) {
+          if (!mounted) return;
+          _planningScanned = scanned;
+          _planningPath = path;
+          if (scanned == 1 ||
+              progressClock.elapsedMilliseconds - lastProgressMillis >= 100) {
+            lastProgressMillis = progressClock.elapsedMilliseconds;
+            setState(() {});
+          }
+        },
         options: _options(),
         protectedDestinationPaths: [
           for (final file in widget.protectedSources)
@@ -382,6 +408,8 @@ class _FileOperationDialogState extends ConsumerState<FileOperationDialog> {
     excludeEmptyDirectories: _excludeEmpty,
     includeHidden: _includeHidden,
     preferNative: _native,
+    copyMethod: _copyMethod,
+    preallocate: _preallocate,
     searchCriteria: _searchCriteria,
     pattern: FileSelectionPattern(
       _mask.text,
@@ -417,6 +445,8 @@ class _FileOperationDialogState extends ConsumerState<FileOperationDialog> {
     _excludeEmpty = options.excludeEmptyDirectories;
     _includeHidden = options.includeHidden;
     _native = options.preferNative;
+    _copyMethod = options.copyMethod;
+    _preallocate = options.preallocate;
     _searchCriteria = options.searchCriteria;
   }
 
@@ -427,13 +457,15 @@ class _FileOperationDialogState extends ConsumerState<FileOperationDialog> {
       final selected = await showDialog<SavedSearch>(
         context: context,
         builder: (context) => SimpleDialog(
-          title: const Text('Saved search criteria'),
+          title: Text(context.commanderTr("Saved search criteria")),
           children: [
             if (saved.isEmpty)
-              const Padding(
-                padding: EdgeInsets.all(24),
+              Padding(
+                padding: const EdgeInsets.all(24),
                 child: Text(
-                  'Save criteria in Search or Select by pattern first.',
+                  context.commanderTr(
+                    "Save criteria in Search or Select by pattern first.",
+                  ),
                 ),
               ),
             for (final item in saved)
@@ -495,20 +527,22 @@ class _FileOperationDialogState extends ConsumerState<FileOperationDialog> {
         name = await showDialog<String>(
           context: context,
           builder: (context) => AlertDialog(
-            title: const Text('Save transfer profile'),
+            title: Text(context.commanderTr("Save transfer profile")),
             content: TextField(
               controller: controller,
               autofocus: true,
-              decoration: const InputDecoration(labelText: 'Profile name'),
+              decoration: InputDecoration(
+                labelText: context.commanderTr("Profile name"),
+              ),
             ),
             actions: [
               TextButton(
                 onPressed: () => Navigator.pop(context),
-                child: const Text('Cancel'),
+                child: Text(context.commanderTr("Cancel")),
               ),
               FilledButton(
                 onPressed: () => Navigator.pop(context, controller.text),
-                child: const Text('Save'),
+                child: Text(context.commanderTr("Save")),
               ),
             ],
           ),
@@ -636,6 +670,13 @@ class _FileOperationDialogState extends ConsumerState<FileOperationDialog> {
         (_preserveOwnership && !supportsOwnership) ||
         (_preserveXattrs && !supportsXattrs) ||
         (_preserveAcl && !supportsAcl);
+    final supportsClone =
+        sourceBackend != null &&
+        destinationBackend != null &&
+        sourceBackend.identity == destinationBackend.identity &&
+        destinationBackend.capabilities.copyOnWrite;
+    final supportsAllocation =
+        destinationBackend?.capabilities.preallocate ?? false;
     final plan = _plan;
     final completed =
         plan?.entries.where((entry) => entry.completed).length ?? 0;
@@ -652,7 +693,12 @@ class _FileOperationDialogState extends ConsumerState<FileOperationDialog> {
     return PopScope(
       canPop: !_busy,
       child: AlertDialog(
-        title: Text('$_verb ${widget.files.length} selected item(s)'),
+        title: Text(
+          context.commanderTr("{0} {1} selected item(s)", [
+            _verb,
+            widget.files.length,
+          ]),
+        ),
         content: SizedBox(
           width: math.min(920, math.max(280, size.width - 96)),
           height: math.min(700, math.max(240, size.height - 190)),
@@ -670,15 +716,17 @@ class _FileOperationDialogState extends ConsumerState<FileOperationDialog> {
                   ),
                 if (_sourceOrigin != null)
                   Text(
-                    'From ${sourceBackend?.label ?? _sourceOrigin!.source.displayName} · original item paths',
+                    context.commanderTr("From {0} · original item paths", [
+                      sourceBackend?.label ?? _sourceOrigin!.source.displayName,
+                    ]),
                   ),
                 const SizedBox(height: 12),
                 DropdownButtonFormField<PanelSide>(
                   isExpanded: true,
                   initialValue: _destinationSide,
-                  decoration: const InputDecoration(
-                    labelText: 'Destination storage',
-                    border: OutlineInputBorder(),
+                  decoration: InputDecoration(
+                    labelText: context.commanderTr("Destination storage"),
+                    border: const OutlineInputBorder(),
                     isDense: true,
                   ),
                   items: _origins.entries
@@ -686,7 +734,7 @@ class _FileOperationDialogState extends ConsumerState<FileOperationDialog> {
                         (entry) => DropdownMenuItem(
                           value: entry.key,
                           child: Text(
-                            '${entry.key == widget.side ? 'This panel' : 'Opposite panel'} · ${entry.value.source.displayName}',
+                            '${context.commanderTr(entry.key == widget.side ? 'This panel' : 'Opposite panel')} · ${entry.value.source.displayName}',
                             maxLines: 1,
                             overflow: TextOverflow.ellipsis,
                           ),
@@ -707,9 +755,9 @@ class _FileOperationDialogState extends ConsumerState<FileOperationDialog> {
                 TextField(
                   controller: _destination,
                   enabled: !_busy,
-                  decoration: const InputDecoration(
-                    labelText: 'Destination directory',
-                    border: OutlineInputBorder(),
+                  decoration: InputDecoration(
+                    labelText: context.commanderTr("Destination directory"),
+                    border: const OutlineInputBorder(),
                     isDense: true,
                   ),
                   onChanged: (_) => _change(() {}),
@@ -723,7 +771,7 @@ class _FileOperationDialogState extends ConsumerState<FileOperationDialog> {
                       (name) => !name.startsWith('@default:'),
                     ))
                       PopupMenuButton<String>(
-                        tooltip: 'Load transfer profile',
+                        tooltip: context.commanderTr("Load transfer profile"),
                         onSelected: (name) =>
                             _change(() => _applyProfile(_profiles[name]!)),
                         itemBuilder: (_) => _profiles.keys
@@ -733,20 +781,20 @@ class _FileOperationDialogState extends ConsumerState<FileOperationDialog> {
                                   PopupMenuItem(value: name, child: Text(name)),
                             )
                             .toList(),
-                        child: const Padding(
-                          padding: EdgeInsets.all(8),
-                          child: Text('Load profile'),
+                        child: Padding(
+                          padding: const EdgeInsets.all(8),
+                          child: Text(context.commanderTr("Load profile")),
                         ),
                       ),
                     TextButton(
                       onPressed: _busy ? null : () => _saveProfile(),
-                      child: const Text('Save profile'),
+                      child: Text(context.commanderTr("Save profile")),
                     ),
                     TextButton(
                       onPressed: _busy
                           ? null
                           : () => _saveProfile(defaults: true),
-                      child: const Text('Save as defaults'),
+                      child: Text(context.commanderTr("Save as defaults")),
                     ),
                   ],
                 ),
@@ -754,10 +802,14 @@ class _FileOperationDialogState extends ConsumerState<FileOperationDialog> {
                   TextField(
                     controller: _targetName,
                     enabled: !_busy,
-                    decoration: const InputDecoration(
-                      labelText: 'Destination item name (optional)',
-                      helperText: 'A new name for the selected file or folder.',
-                      border: OutlineInputBorder(),
+                    decoration: InputDecoration(
+                      labelText: context.commanderTr(
+                        "Destination item name (optional)",
+                      ),
+                      helperText: context.commanderTr(
+                        "A new name for the selected file or folder.",
+                      ),
+                      border: const OutlineInputBorder(),
                       isDense: true,
                     ),
                     onChanged: (_) => _change(() {}),
@@ -766,11 +818,13 @@ class _FileOperationDialogState extends ConsumerState<FileOperationDialog> {
                 TextField(
                   controller: _nameMask,
                   enabled: !_busy,
-                  decoration: const InputDecoration(
-                    labelText: 'Destination filename mask',
-                    helperText: '*.* keeps names · *.bak changes extension · *.*.bak appends · [N]_[C:000].[E]',
+                  decoration: InputDecoration(
+                    labelText: context.commanderTr("Destination filename mask"),
+                    helperText: context.commanderTr(
+                      "*.* keeps names · *.bak changes extension · *.*.bak appends · [N]_[C:000].[E]",
+                    ),
                     helperMaxLines: 2,
-                    border: OutlineInputBorder(),
+                    border: const OutlineInputBorder(),
                     isDense: true,
                   ),
                   onChanged: (_) => _change(() {}),
@@ -785,16 +839,16 @@ class _FileOperationDialogState extends ConsumerState<FileOperationDialog> {
                       child: DropdownButtonFormField<FileConflictPolicy>(
                         isExpanded: true,
                         initialValue: _fileConflict,
-                        decoration: const InputDecoration(
-                          labelText: 'Existing files',
-                          border: OutlineInputBorder(),
+                        decoration: InputDecoration(
+                          labelText: context.commanderTr("Existing files"),
+                          border: const OutlineInputBorder(),
                           isDense: true,
                         ),
-                        items: const [
+                        items: [
                           DropdownMenuItem(
                             value: FileConflictPolicy.ask,
                             child: Text(
-                              'Ask for each conflict',
+                              context.commanderTr("Ask for each conflict"),
                               maxLines: 1,
                               overflow: TextOverflow.ellipsis,
                             ),
@@ -802,7 +856,7 @@ class _FileOperationDialogState extends ConsumerState<FileOperationDialog> {
                           DropdownMenuItem(
                             value: FileConflictPolicy.skip,
                             child: Text(
-                              'Skip existing files',
+                              context.commanderTr("Skip existing files"),
                               maxLines: 1,
                               overflow: TextOverflow.ellipsis,
                             ),
@@ -810,7 +864,7 @@ class _FileOperationDialogState extends ConsumerState<FileOperationDialog> {
                           DropdownMenuItem(
                             value: FileConflictPolicy.replace,
                             child: Text(
-                              'Replace existing files',
+                              context.commanderTr("Replace existing files"),
                               maxLines: 1,
                               overflow: TextOverflow.ellipsis,
                             ),
@@ -818,7 +872,9 @@ class _FileOperationDialogState extends ConsumerState<FileOperationDialog> {
                           DropdownMenuItem(
                             value: FileConflictPolicy.replaceIfNewer,
                             child: Text(
-                              'Replace only if source is newer',
+                              context.commanderTr(
+                                "Replace only if source is newer",
+                              ),
                               maxLines: 1,
                               overflow: TextOverflow.ellipsis,
                             ),
@@ -826,35 +882,45 @@ class _FileOperationDialogState extends ConsumerState<FileOperationDialog> {
                           DropdownMenuItem(
                             value: FileConflictPolicy.replaceIfLarger,
                             child: Text(
-                              'Replace if source is larger',
+                              context.commanderTr(
+                                "Replace if source is larger",
+                              ),
                               overflow: TextOverflow.ellipsis,
                             ),
                           ),
                           DropdownMenuItem(
                             value: FileConflictPolicy.replaceIfSmaller,
                             child: Text(
-                              'Replace if source is smaller',
+                              context.commanderTr(
+                                "Replace if source is smaller",
+                              ),
                               overflow: TextOverflow.ellipsis,
                             ),
                           ),
                           DropdownMenuItem(
                             value: FileConflictPolicy.resumeVerified,
                             child: Text(
-                              'Resume after prefix verification',
+                              context.commanderTr(
+                                "Resume after prefix verification",
+                              ),
                               overflow: TextOverflow.ellipsis,
                             ),
                           ),
                           DropdownMenuItem(
                             value: FileConflictPolicy.append,
                             child: Text(
-                              'Append source to destination',
+                              context.commanderTr(
+                                "Append source to destination",
+                              ),
                               overflow: TextOverflow.ellipsis,
                             ),
                           ),
                           DropdownMenuItem(
                             value: FileConflictPolicy.keepBoth,
                             child: Text(
-                              'Keep both (number new copies)',
+                              context.commanderTr(
+                                "Keep both (number new copies)",
+                              ),
                               maxLines: 1,
                               overflow: TextOverflow.ellipsis,
                             ),
@@ -870,16 +936,16 @@ class _FileOperationDialogState extends ConsumerState<FileOperationDialog> {
                       child: DropdownButtonFormField<DirectoryConflictPolicy>(
                         isExpanded: true,
                         initialValue: _directoryConflict,
-                        decoration: const InputDecoration(
-                          labelText: 'Existing folders',
-                          border: OutlineInputBorder(),
+                        decoration: InputDecoration(
+                          labelText: context.commanderTr("Existing folders"),
+                          border: const OutlineInputBorder(),
                           isDense: true,
                         ),
-                        items: const [
+                        items: [
                           DropdownMenuItem(
                             value: DirectoryConflictPolicy.merge,
                             child: Text(
-                              'Merge contents',
+                              context.commanderTr("Merge contents"),
                               maxLines: 1,
                               overflow: TextOverflow.ellipsis,
                             ),
@@ -887,7 +953,7 @@ class _FileOperationDialogState extends ConsumerState<FileOperationDialog> {
                           DropdownMenuItem(
                             value: DirectoryConflictPolicy.skip,
                             child: Text(
-                              'Skip whole folder',
+                              context.commanderTr("Skip whole folder"),
                               maxLines: 1,
                               overflow: TextOverflow.ellipsis,
                             ),
@@ -895,7 +961,7 @@ class _FileOperationDialogState extends ConsumerState<FileOperationDialog> {
                           DropdownMenuItem(
                             value: DirectoryConflictPolicy.ask,
                             child: Text(
-                              'Ask for each folder',
+                              context.commanderTr("Ask for each folder"),
                               maxLines: 1,
                               overflow: TextOverflow.ellipsis,
                             ),
@@ -917,7 +983,9 @@ class _FileOperationDialogState extends ConsumerState<FileOperationDialog> {
                     OutlinedButton.icon(
                       onPressed: _busy ? null : _chooseSearchCriteria,
                       icon: const Icon(Icons.saved_search),
-                      label: const Text('Use saved search criteria'),
+                      label: Text(
+                        context.commanderTr("Use saved search criteria"),
+                      ),
                     ),
                     if (_searchCriteria != null)
                       TextButton.icon(
@@ -925,7 +993,9 @@ class _FileOperationDialogState extends ConsumerState<FileOperationDialog> {
                             ? null
                             : () => _change(() => _searchCriteria = null),
                         icon: const Icon(Icons.clear),
-                        label: const Text('Clear saved criteria'),
+                        label: Text(
+                          context.commanderTr("Clear saved criteria"),
+                        ),
                       ),
                   ],
                 ),
@@ -933,21 +1003,29 @@ class _FileOperationDialogState extends ConsumerState<FileOperationDialog> {
                   Padding(
                     padding: const EdgeInsets.only(bottom: 10),
                     child: Text(
-                      'Additional criteria: ${_searchCriteria!.nameMode.name} '
-                      '${_searchCriteria!.namePattern}'
-                      '${_searchCriteria!.extensions.isEmpty ? "" : " · types: ${_searchCriteria!.extensions.join(", ")}"}. '
-                      'Applied together with the filters below. Selected items and Include subfolders define the scope.',
+                      context.commanderTr(
+                        "Additional criteria: {0} {1}{2}. Applied together with the filters below. Selected items and Include subfolders define the scope.",
+                        [
+                          _searchCriteria!.nameMode.name,
+                          _searchCriteria!.namePattern,
+                          _searchCriteria!.extensions.isEmpty
+                              ? ""
+                              : " · types: ${_searchCriteria!.extensions.join(", ")}",
+                        ],
+                      ),
                     ),
                   ),
                 TextField(
                   controller: _mask,
                   enabled: !_busy,
-                  decoration: const InputDecoration(
-                    labelText: 'File filter',
-                    hintText: '*.jpg;*.png|thumb*',
-                    helperText: 'Filters files within selected folders. Excluded files stay in the source.',
+                  decoration: InputDecoration(
+                    labelText: context.commanderTr("File filter"),
+                    hintText: context.commanderTr("*.jpg;*.png|thumb*"),
+                    helperText: context.commanderTr(
+                      "Filters files within selected folders. Excluded files stay in the source.",
+                    ),
                     helperMaxLines: 2,
-                    border: OutlineInputBorder(),
+                    border: const OutlineInputBorder(),
                     isDense: true,
                   ),
                   onChanged: (_) => _change(() {}),
@@ -957,16 +1035,24 @@ class _FileOperationDialogState extends ConsumerState<FileOperationDialog> {
                   spacing: 12,
                   runSpacing: 10,
                   children: [
-                    _field(_minimumSize, 'Minimum size (bytes)', width: 190),
-                    _field(_maximumSize, 'Maximum size (bytes)', width: 190),
+                    _field(
+                      _minimumSize,
+                      context.commanderTr("Minimum size (bytes)"),
+                      width: 190,
+                    ),
+                    _field(
+                      _maximumSize,
+                      context.commanderTr("Maximum size (bytes)"),
+                      width: 190,
+                    ),
                     _field(
                       _modifiedAfter,
-                      'Modified on/after (ISO date)',
+                      context.commanderTr("Modified on/after (ISO date)"),
                       width: 250,
                     ),
                     _field(
                       _modifiedBefore,
-                      'Modified on/before (ISO date)',
+                      context.commanderTr("Modified on/before (ISO date)"),
                       width: 250,
                     ),
                   ],
@@ -974,26 +1060,33 @@ class _FileOperationDialogState extends ConsumerState<FileOperationDialog> {
                 const SizedBox(height: 10),
                 _field(
                   _excludedDirectories,
-                  'Exclude directories (wildcards; optional)',
+                  context.commanderTr(
+                    "Exclude directories (wildcards; optional)",
+                  ),
                   width: 800,
                 ),
                 Wrap(
                   spacing: 8,
                   children: [
                     _toggle(
-                      'Exclude empty folders after filtering',
+                      context.commanderTr(
+                        "Exclude empty folders after filtering",
+                      ),
                       _excludeEmpty,
                       (v) => _excludeEmpty = v,
                     ),
                     _toggle(
-                      'Include hidden names',
+                      context.commanderTr("Include hidden names"),
                       _includeHidden,
                       (v) => _includeHidden = v,
                     ),
                     _toggle(
-                      'Use native/server operations when supported',
+                      context.commanderTr(
+                        "Use native/server operations when supported",
+                      ),
                       _native,
                       (v) => _native = v,
+                      enabled: _copyMethod == FileCopyMethod.automatic,
                     ),
                   ],
                 ),
@@ -1001,17 +1094,17 @@ class _FileOperationDialogState extends ConsumerState<FileOperationDialog> {
                   spacing: 8,
                   children: [
                     _toggle(
-                      'Regular expression',
+                      context.commanderTr("Regular expression"),
                       _regex,
                       (value) => _regex = value,
                     ),
                     _toggle(
-                      'Case sensitive',
+                      context.commanderTr("Case sensitive"),
                       _caseSensitive,
                       (value) => _caseSensitive = value,
                     ),
                     _toggle(
-                      'Match full source path',
+                      context.commanderTr("Match full source path"),
                       _matchPath,
                       (value) => _matchPath = value,
                     ),
@@ -1021,17 +1114,17 @@ class _FileOperationDialogState extends ConsumerState<FileOperationDialog> {
                   spacing: 8,
                   children: [
                     _toggle(
-                      'Include subfolders',
+                      context.commanderTr("Include subfolders"),
                       _recursive,
                       (value) => _recursive = value,
                     ),
                     _toggle(
-                      'Preserve relative paths',
+                      context.commanderTr("Preserve relative paths"),
                       _relative,
                       (value) => _relative = value,
                     ),
                     _toggle(
-                      'Stop on first error',
+                      context.commanderTr("Stop on first error"),
                       _stopOnError,
                       (value) => _stopOnError = value,
                     ),
@@ -1041,11 +1134,14 @@ class _FileOperationDialogState extends ConsumerState<FileOperationDialog> {
                   TextField(
                     controller: _relativeBase,
                     enabled: !_busy,
-                    decoration: const InputDecoration(
-                      labelText: 'Relative to source directory',
-                      helperText:
-                          'All selected paths must be below this directory.',
-                      border: OutlineInputBorder(),
+                    decoration: InputDecoration(
+                      labelText: context.commanderTr(
+                        "Relative to source directory",
+                      ),
+                      helperText: context.commanderTr(
+                        "All selected paths must be below this directory.",
+                      ),
+                      border: const OutlineInputBorder(),
                       isDense: true,
                     ),
                     onChanged: (_) => _change(() {}),
@@ -1054,18 +1150,18 @@ class _FileOperationDialogState extends ConsumerState<FileOperationDialog> {
                   spacing: 8,
                   children: [
                     _toggle(
-                      'Verify contents (SHA-256)',
+                      context.commanderTr("Verify contents (SHA-256)"),
                       _verify,
                       (value) => _verify = value,
                     ),
                     _toggle(
-                      'Preserve file modification times',
+                      context.commanderTr("Preserve file modification times"),
                       _preserveTime,
                       (value) => _preserveTime = value,
                       enabled: supportsTime,
                     ),
                     _toggle(
-                      'Copy symbolic links as links',
+                      context.commanderTr("Copy symbolic links as links"),
                       _copyLinks,
                       (value) => _copyLinks = value,
                       enabled: supportsLinks,
@@ -1076,25 +1172,25 @@ class _FileOperationDialogState extends ConsumerState<FileOperationDialog> {
                   spacing: 8,
                   children: [
                     _toggle(
-                      'Preserve permissions',
+                      context.commanderTr("Preserve permissions"),
                       _preservePermissions,
                       (v) => _preservePermissions = v,
                       enabled: supportsPermissions,
                     ),
                     _toggle(
-                      'Preserve owner/group',
+                      context.commanderTr("Preserve owner/group"),
                       _preserveOwnership,
                       (v) => _preserveOwnership = v,
                       enabled: supportsOwnership,
                     ),
                     _toggle(
-                      'Preserve extended attributes',
+                      context.commanderTr("Preserve extended attributes"),
                       _preserveXattrs,
                       (v) => _preserveXattrs = v,
                       enabled: supportsXattrs,
                     ),
                     _toggle(
-                      'Preserve ACL',
+                      context.commanderTr("Preserve ACL"),
                       _preserveAcl,
                       (v) => _preserveAcl = v,
                       enabled: supportsAcl,
@@ -1105,21 +1201,104 @@ class _FileOperationDialogState extends ConsumerState<FileOperationDialog> {
                   const Text(
                     'Some selected preservation settings are unavailable for these storages. Clear those settings or choose compatible storage before starting.',
                   ),
+                DropdownButtonFormField<FileCopyMethod>(
+                  key: const ValueKey('transfer-copy-method'),
+                  initialValue: _copyMethod,
+                  isExpanded: true,
+                  decoration: InputDecoration(
+                    labelText: context.commanderTr("Copy method"),
+                    helperText: supportsClone
+                        ? context.commanderTr(
+                            "A required clone fails if the filesystem cannot create it; it never falls back to a full copy.",
+                          )
+                        : context.commanderTr(
+                            "Copy-on-write clones require both paths on the same supported native storage.",
+                          ),
+                    helperMaxLines: 4,
+                    border: const OutlineInputBorder(),
+                    isDense: true,
+                  ),
+                  items: [
+                    DropdownMenuItem(
+                      value: FileCopyMethod.automatic,
+                      child: Text(
+                        context.commanderTr("Automatic"),
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                      ),
+                    ),
+                    DropdownMenuItem(
+                      value: FileCopyMethod.stream,
+                      child: Text(
+                        context.commanderTr("Stream all data"),
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                      ),
+                    ),
+                    DropdownMenuItem(
+                      value: FileCopyMethod.copyOnWrite,
+                      enabled: supportsClone,
+                      child: Text(
+                        context.commanderTr("Require copy-on-write clone"),
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                      ),
+                    ),
+                  ],
+                  onChanged: _busy
+                      ? null
+                      : (value) {
+                          if (value == null) return;
+                          _change(() {
+                            _copyMethod = value;
+                            if (value == FileCopyMethod.copyOnWrite) {
+                              _preallocate = false;
+                            }
+                          });
+                        },
+                ),
+                _toggle(
+                  context.commanderTr(
+                    "Reserve destination disk space before copying",
+                  ),
+                  _preallocate,
+                  (value) => _preallocate = value,
+                  enabled:
+                      supportsAllocation &&
+                      _copyMethod != FileCopyMethod.copyOnWrite,
+                ),
                 Text(
-                  'Links are never followed. SHA-256 verification reads both copies and can add cloud traffic.',
+                  supportsAllocation
+                      ? context.commanderTr(
+                          "Physical allocation requires known file sizes and cannot be combined with a required clone.",
+                        )
+                      : context.commanderTr(
+                          "This destination cannot reserve physical disk space.",
+                        ),
+                  style: Theme.of(context).textTheme.bodySmall,
+                ),
+                const SizedBox(height: 12),
+                Text(
+                  context.commanderTr(
+                    "Links are never followed. SHA-256 verification reads both copies and can add cloud traffic.",
+                  ),
                   style: Theme.of(context).textTheme.bodySmall,
                 ),
                 if (!supportsTime)
                   Text(
-                    'The destination does not expose modification-time preservation.',
+                    context.commanderTr(
+                      "The destination does not expose modification-time preservation.",
+                    ),
                     style: Theme.of(context).textTheme.bodySmall,
                   ),
                 if (widget.kind == FileOperationKind.move &&
                         sourceBackend is! LocalOperationBackend ||
                     (widget.kind == FileOperationKind.move &&
                         !(sourceBackend?.supportsSymbolicLinks ?? false)))
-                  const Text(
-                    'Empty source folders are retained where storage lacks a safe empty-folder delete.',
+                  Text(
+                    context.commanderTr(
+                      "Empty source folders are retained where storage lacks a safe empty-folder delete.",
+                    ),
                   ),
                 if (_error != null)
                   Padding(
@@ -1131,17 +1310,40 @@ class _FileOperationDialogState extends ConsumerState<FileOperationDialog> {
                       ),
                     ),
                   ),
-                if (_preparing)
+                if (_preparing) ...[
                   const Padding(
-                    padding: EdgeInsets.all(16),
+                    padding: EdgeInsets.symmetric(vertical: 16),
                     child: LinearProgressIndicator(),
                   ),
+                  Semantics(
+                    container: true,
+                    child: Text(
+                      context.commanderTr(
+                        "Preparing preview · {0} items checked",
+                        [_planningScanned],
+                      ),
+                    ),
+                  ),
+                  if (_planningPath != null)
+                    Text(
+                      _planningPath!,
+                      maxLines: 2,
+                      overflow: TextOverflow.ellipsis,
+                      textDirection: TextDirection.ltr,
+                    ),
+                ],
                 if (plan != null) ...[
                   const Divider(height: 24),
                   Text(
                     _finished
-                        ? '$completed completed · $skipped skipped/filtered · $failed failed'
-                        : '${plan.fileCount} files in preview · ${plan.entries.length} total rows',
+                        ? context.commanderTr(
+                            "{0} completed · {1} skipped/filtered · {2} failed",
+                            [completed, skipped, failed],
+                          )
+                        : context.commanderTr(
+                            "{0} files in preview · {1} total rows",
+                            [plan.fileCount, plan.entries.length],
+                          ),
                   ),
                   for (final error in plan.errors)
                     Padding(
@@ -1176,10 +1378,12 @@ class _FileOperationDialogState extends ConsumerState<FileOperationDialog> {
                           subtitle: Text(
                             entry.message ??
                                 (entry.outcome != FileOperationOutcome.pending
-                                    ? entry.outcome.name
+                                    ? context.commanderEnum(entry.outcome)
                                     : entry.existing == null
-                                    ? 'New destination'
-                                    : 'Destination exists'),
+                                    ? context.commanderTr("New destination")
+                                    : context.commanderTr(
+                                        "Destination exists",
+                                      )),
                             style: TextStyle(
                               color: entry.failed
                                   ? Theme.of(context).colorScheme.error
@@ -1198,7 +1402,8 @@ class _FileOperationDialogState extends ConsumerState<FileOperationDialog> {
                         : null,
                   ),
                   Text(
-                    _current ?? 'Waiting for the transfer queue…',
+                    _current ??
+                        context.commanderTr("Waiting for the transfer queue…"),
                     maxLines: 2,
                     overflow: TextOverflow.ellipsis,
                   ),
@@ -1208,27 +1413,35 @@ class _FileOperationDialogState extends ConsumerState<FileOperationDialog> {
           ),
         ),
         actions: [
-          if (_running) ...[
+          if (_busy) ...[
             TextButton(
               onPressed: () => setState(() {
                 _control.isPaused ? _control.resume() : _control.pause();
               }),
-              child: Text(_control.isPaused ? 'Resume' : 'Pause'),
+              child: Text(
+                _control.isPaused
+                    ? context.commanderTr("Resume")
+                    : context.commanderTr("Pause"),
+              ),
             ),
             TextButton(
               onPressed: () => setState(_control.cancel),
-              child: const Text('Cancel operation'),
+              child: Text(context.commanderTr("Cancel operation")),
             ),
           ] else ...[
             TextButton(
               onPressed: _preparing
                   ? null
                   : () => Navigator.pop(context, _finished ? _plan : null),
-              child: Text(_finished ? 'Close' : 'Cancel'),
+              child: Text(
+                _finished
+                    ? context.commanderTr("Close")
+                    : context.commanderTr("Cancel"),
+              ),
             ),
             OutlinedButton(
               onPressed: _preparing || _sourceOrigin == null ? null : _preview,
-              child: const Text('Preview'),
+              child: Text(context.commanderTr("Preview")),
             ),
             if (widget.allowBackground &&
                 widget.sourceBackend == null &&
@@ -1239,14 +1452,14 @@ class _FileOperationDialogState extends ConsumerState<FileOperationDialog> {
                     !_finished && (plan?.canExecute ?? false) && !_preparing
                     ? () => _start(background: true)
                     : null,
-                child: const Text('Queue in background'),
+                child: Text(context.commanderTr("Queue in background")),
               ),
             FilledButton(
               onPressed:
                   !_finished && (plan?.canExecute ?? false) && !_preparing
                   ? _start
                   : null,
-              child: Text('Start $_verb'),
+              child: Text(context.commanderTr("Start {0}", [_verb])),
             ),
           ],
         ],

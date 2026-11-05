@@ -84,6 +84,24 @@ class _Local extends Fake implements LocalFileService, LocalFileSourceIdentity {
 void main() {
   setUp(() => SharedPreferences.setMockInitialValues({}));
 
+  testWidgets('an unverified collection row cannot borrow the selected cloud account', (tester) async {
+    final cloud = _Cloud('SMB');
+    final container = ProviderContainer(overrides: [
+      authProvider.overrideWith((_) => _Auth(cloud)),
+    ]);
+    addTearDown(container.dispose);
+    late WidgetRef ref;
+    await tester.pumpWidget(UncontrolledProviderScope(container: container,
+      child: Consumer(builder: (_, value, __) { ref = value; return const SizedBox(); })));
+    final panel = container.read(panelProvider(PanelSide.remote));
+    container.read(panelSourceProvider(PanelSide.remote).notifier)
+      .setSource(RemotePanelSource(client: cloud, providerName: cloud.providerName, path: '/'));
+    await tester.runAsync(panel.refresh);
+    panel.showSearchResults([FileItem(name: 'photo.png', path: '/photo.png', isFolder: false)]);
+    expect(tryCaptureGalleryMediaRequest(ref, PanelSide.remote, panel.files!.single), isNull);
+    await tester.pumpWidget(const SizedBox());
+  });
+
   testWidgets('an unknown-revision cloud listing refresh invalidates only thumbnails', (tester) async {
     final cloud = _Cloud('SMB');
     final auth = _Auth(cloud);

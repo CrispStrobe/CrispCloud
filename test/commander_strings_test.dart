@@ -4,10 +4,36 @@ import 'dart:io';
 import 'package:crisp_cloud/l10n/app_localizations.dart';
 import 'package:crisp_cloud/l10n/commander_strings.dart';
 import 'package:crisp_cloud/l10n/commander_translations.dart';
+import 'package:crisp_cloud/models/rename_batch.dart';
+import 'package:crisp_cloud/models/transfer_job.dart';
+import 'package:crisp_cloud/services/file_operation_options.dart';
 import 'package:flutter/widgets.dart';
 import 'package:flutter_test/flutter_test.dart';
 
 void main() {
+  test(
+    'operation and recovery states never expose untranslated enum identifiers',
+    () {
+      for (final value in <Enum>[
+        ...FileOperationKind.values,
+        ...FileOperationOutcome.values,
+        ...RenameBatchState.values,
+      ]) {
+        expect(
+          CommanderStrings.contains(CommanderStrings.labelForEnum(value)),
+          isTrue,
+          reason: value.toString(),
+        );
+      }
+      for (final status in TransferJobStatus.values) {
+        expect(
+          CommanderStrings.contains(transferStatusLabel(status)),
+          isTrue,
+          reason: status.name,
+        );
+      }
+    },
+  );
   test('Commander catalog covers every application language and parameter', () {
     expect(
       CommanderStrings.supportedLanguageCodes.toSet(),
@@ -94,6 +120,12 @@ void main() {
         'rename_text_dialog',
         'pattern_selection_dialog',
         'file_list_dialog',
+        'file_operation_dialog',
+        'file_operation_conflict_dialog',
+        'transfer_history_dialog',
+        'rename_history_dialog',
+        'trash_history_dialog',
+        'file_collections_dialog',
       ]) {
         final source = File('lib/widgets/$name.dart').readAsStringSync();
         final matches = calls.allMatches(source).toList();

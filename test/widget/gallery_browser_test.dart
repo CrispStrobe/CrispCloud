@@ -93,6 +93,9 @@ void main() {
       ),
     ];
     panel.showSearchResults(files);
+    // File-list ingestion binds fresh rendered rows to their original source.
+    // Commands accept those exact rows rather than the pre-ingestion fixtures.
+    files = [FileItem(name: '..', path: '/', isFolder: true), ...panel.files!];
   });
   tearDown(() => container.dispose());
 

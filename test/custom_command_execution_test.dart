@@ -64,6 +64,63 @@ class _Process extends Fake implements Process {
 void main() {
   TestWidgetsFlutterBinding.ensureInitialized();
   setUp(() => SharedPreferences.setMockInitialValues({}));
+  test('configuration imports validate the whole list before saving', () async {
+    final service = CustomToolbarCommandService();
+    await service.addCommand(command(['{SELECTED}']));
+    final before = service.exportConfiguration();
+    await expectLater(
+      service.importConfiguration(
+        jsonEncode([
+          const CustomToolbarCommand(
+            id: 'new',
+            label: 'New',
+            executable: '/tool',
+          ).toJson(),
+          {
+            'id': 'invalid',
+            'label': 'Bad',
+            'executable': '/tool',
+            'arguments': ['{UNKNOWN}'],
+          },
+        ]),
+      ),
+      throwsFormatException,
+    );
+    expect(service.exportConfiguration(), before);
+    await expectLater(service.importConfiguration(before), throwsStateError);
+    final prefs = await SharedPreferences.getInstance();
+    final stored = prefs.getString('custom_toolbar_commands_v1');
+    expect(jsonDecode(stored!) as List, hasLength(1));
+  });
+  test('inline interpreter code cannot contain file-derived placeholders', () {
+    for (final (executable, arguments) in [
+      ('sh', ['-c', 'echo "{FILE}"']),
+      ('bash', ['-lc', 'echo {NAME}']),
+      ('cmd.exe', ['/c', 'echo', '{FILE}']),
+      ('pwsh', ['-Command', 'Write-Output', '{FILE}']),
+      ('python3', ['-c', 'print("{NAME}")']),
+      ('node', ['--eval=console.log("{FILE}")']),
+    ]) {
+      expect(
+        () => CustomToolbarCommand(
+          id: 'x',
+          label: 'X',
+          executable: executable,
+          arguments: arguments,
+        ).validate(),
+        throwsFormatException,
+      );
+    }
+    expect(
+      () => const CustomToolbarCommand(
+        id: 'x',
+        label: 'X',
+        executable: 'sh',
+        arguments: ['-c', 'printf "%s\\n" "\$@"', 'tool', '{SELECTED}'],
+      ).validate(),
+      returnsNormally,
+    );
+  });
   test(
     'selected names are separate literal arguments and never expanded twice',
     () {

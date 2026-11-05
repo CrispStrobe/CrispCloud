@@ -2302,38 +2302,6 @@ class PanelNotifier extends ChangeNotifier {
     }
   }
 
-  /// Replace the selection with the visible rows chosen by a visual layout.
-  /// The caller supplies identity-stable rows from the current projection.
-  void selectVisibleItems(
-    Iterable<FileItem> items, {
-    FileItem? cursor,
-    FileItem? anchor,
-  }) {
-    final listed = _files;
-    if (listed == null) return;
-    final valid = Set<FileItem>.identity()..addAll(listed);
-    _selection
-      ..clear()
-      ..addAll(
-        items.where(
-          (item) =>
-              valid.contains(item) && item.name != '..' && item.name != '.',
-        ),
-      );
-    if (cursor != null && valid.contains(cursor)) {
-      final idx = _indexOfIdentical(listed, cursor);
-      if (idx != -1) {
-        _cursorIndex = idx;
-        _itemToScrollTo = cursor;
-      }
-    }
-    _lastSelected = anchor != null && valid.contains(anchor) ? anchor : cursor;
-    if (_ref.read(activePanelProvider) != side) {
-      _ref.read(activePanelProvider.notifier).state = side;
-    }
-    notifyListeners();
-  }
-
   void invertSelection() {
     _log.debug('invertSelection (was ${_selection.length} selected)');
     final displayed = displayedFiles;
@@ -2435,6 +2403,34 @@ class PanelNotifier extends ChangeNotifier {
     _rememberFileListTab();
     notifyListeners();
     return restored.length;
+  }
+
+  /// Select an explicit projection of the current listing (gallery filters,
+  /// visual sort/ranges). Hidden entries must never be added by a range or
+  /// Select all action. Only the exact listed objects are accepted.
+  void selectVisibleItems(
+    Iterable<FileItem> items, {
+    FileItem? cursor,
+    FileItem? anchor,
+  }) {
+    final listed = _files;
+    if (listed == null) return;
+    final valid = Set<FileItem>.identity()..addAll(listed);
+    final selected = items
+        .where((item) => item.name != '..' && valid.contains(item))
+        .toList();
+    _selection
+      ..clear()
+      ..addAll(selected);
+    if (cursor != null && valid.contains(cursor)) {
+      _cursorIndex = _indexOfIdentical(listed, cursor);
+      _itemToScrollTo = cursor;
+    }
+    _lastSelected = anchor != null && valid.contains(anchor) ? anchor : cursor;
+    if (_ref.read(activePanelProvider) != side) {
+      _ref.read(activePanelProvider.notifier).state = side;
+    }
+    notifyListeners();
   }
 
   // --- Cursor (keyboard focus, separate from selection marks) ---
@@ -3885,15 +3881,11 @@ class PanelNotifier extends ChangeNotifier {
       _secondarySortColumnId = null;
     }
     return FileViewConfiguration(
-      display: mode == ViewMode.grid
-          ? FileViewDisplay.grid
-          : mode == ViewMode.column
-          ? FileViewDisplay.column
-          : density == PanelViewMode.tree
-          ? FileViewDisplay.tree
-          : density == PanelViewMode.brief
-          ? FileViewDisplay.brief
-          : FileViewDisplay.full,
+      display: FileViewDisplay.values.firstWhere(
+        (display) =>
+            display.name == (mode == ViewMode.list ? density.name : mode.name),
+        orElse: () => FileViewDisplay.full,
+      ),
       columns: columns,
       widths: _ref.read(columnWidthsProvider(side)),
       sortBy: _sortBy,
@@ -3956,11 +3948,10 @@ class PanelNotifier extends ChangeNotifier {
                     : remoteViewModeProvider)
                 .notifier,
           )
-          .state = view.display == FileViewDisplay.grid
-          ? ViewMode.grid
-          : view.display == FileViewDisplay.column
-          ? ViewMode.column
-          : ViewMode.list;
+          .state = ViewMode.values.firstWhere(
+        (mode) => mode.name == view.display.name,
+        orElse: () => ViewMode.list,
+      );
     } finally {
       _applyingTabView = false;
     }
@@ -4218,10 +4209,18 @@ class PanelNotifier extends ChangeNotifier {
   Future<void> _restoreSelectedTab() async {
     final tab = activeTab;
     if (tab == null || _isDisposed) return;
-    _applyTabView(tab.view);
+    final savedView = tab.view;
+    _applyTabView(savedView);
     try {
       if (tab.collectionId != null) {
         await openCollection(tab.collectionId!);
+        if (!_isDisposed && _activeTabId == tab.id && savedView != null) {
+          _applyTabView(savedView);
+          _sortFiles();
+          _captureTabView();
+          notifyListeners();
+          await _saveTabs();
+        }
         return;
       }
       final storage = tab.storage;
@@ -4667,7 +4666,14 @@ class PanelNotifier extends ChangeNotifier {
       final cached = dirCache.get(cacheKey);
       if (cached != null && cached.isNotEmpty) {
         final prev = cursorItem;
-        _files = List.of(cached);
+        _files = cached
+            .where(
+              (file) =>
+                  _showHiddenFiles ||
+                  !file.name.startsWith('.') ||
+                  file.name == '..',
+            )
+            .toList();
         _sortFiles();
         _resetCursor(preserveItem: prev);
         notifyListeners();
@@ -5149,7 +5155,9 @@ class PanelNotifier extends ChangeNotifier {
           [];
 
       // Prepend ".." for cloud paths that aren't root
-      final allItems = [...folders, ...files];
+      final allItems = [...folders, ...files]
+          .where((file) => _showHiddenFiles || !file.name.startsWith('.'))
+          .toList();
       if (listingPath != '/' && listingPath.isNotEmpty) {
         final parentRemote = p.posix.dirname(listingPath);
         allItems.insert(

@@ -1,6 +1,5 @@
 import 'dart:async';
 import 'dart:math' as math;
-import 'dart:typed_data';
 
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
@@ -486,7 +485,9 @@ class _GalleryViewerDialogState extends State<GalleryViewerDialog>
         !_lifecycleActive ||
         !_routeIsCurrent ||
         _active?.data == null ||
-        _active!.loading) return;
+        _active!.loading) {
+      return;
+    }
     _slideshowTimer = Timer(Duration(seconds: _slideshow.seconds), () {
       if (!mounted || !_isSourceCurrent || !_playing || !_routeIsCurrent) return;
       int? next;
@@ -1210,7 +1211,9 @@ class _ImageViewController extends ChangeNotifier {
   void setGeometry(Size viewport, Size source, double devicePixelRatio) {
     if (_viewport == viewport &&
         _source == source &&
-        _devicePixelRatio == devicePixelRatio) return;
+        _devicePixelRatio == devicePixelRatio) {
+      return;
+    }
     final preservePixels = _viewport != null && _source == source &&
         (scale - 1).abs() > 0.00001;
     final oldPixelScale = pixelScale;

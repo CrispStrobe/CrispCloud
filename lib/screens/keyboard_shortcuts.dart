@@ -23,6 +23,7 @@ import 'package:path/path.dart' as p;
 import '../services/archive_service.dart';
 
 import '../widgets/command_palette.dart';
+import '../widgets/bookmark_actions.dart';
 import '../widgets/pattern_selection_dialog.dart';
 import '../widgets/file_list_dialog.dart';
 import '../widgets/file_clipboard_actions.dart';
@@ -533,15 +534,7 @@ KeyEventResult handleKeyEvent(
 
   // Ctrl+B - Toggle bookmark for current directory
   if (isCtrl && !isShift && event.logicalKey == LogicalKeyboardKey.keyB) {
-    final bm = ref.read(bookmarksProvider);
-    final currentPath = panel.currentPath;
-    final p = panel.currentPath.split('/').last;
-    final name = p.isEmpty ? '/' : p;
-    if (bm.isBookmarked(currentPath, activePanel)) {
-      bm.remove(currentPath, activePanel);
-    } else {
-      bm.add(name, currentPath, activePanel);
-    }
+    togglePanelBookmark(context, ref, activePanel);
     return KeyEventResult.handled;
   }
 

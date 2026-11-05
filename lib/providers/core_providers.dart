@@ -142,8 +142,6 @@ class FileViewModeController extends StateController<ViewMode> {
     }).catchError((Object _) {});
   }
 
-  @override
-  ViewMode get state => super.state;
 }
 
 final localViewModeProvider = StateNotifierProvider<FileViewModeController, ViewMode>(

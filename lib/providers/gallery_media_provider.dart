@@ -131,31 +131,16 @@ GalleryMediaRequest captureGalleryMediaRequest(
   }
 
   final origin = panel.originForFile(file);
-  PanelSource? source = origin?.source;
-  bool Function()? originGuard = origin == null ? null : () => origin.isCurrent;
-  if (source == null && !panel.isLoading && listed()) {
-    // Flat-view files are produced by LocalFileService.walkFiles. Search
-    // results may be read only with an explicit matching primary connection;
-    // neither fallback grants the stronger editor/write provenance contract.
-    if (panel.isFlatView && selectedSource is LocalPanelSource) {
-      source = selectedSource;
-    } else if (panel.showingSearchResults && selectedSource is RemotePanelSource &&
-        identical(selectedSource.client, ref.read(authProvider).client)) {
-      source = selectedSource;
-    }
-    if (source != null) {
-      final capturedSource = source;
-      originGuard = () => !panel.isLoading && listed() &&
-          _sameSource(ref.read(panelSourceProvider(side)), capturedSource!);
-    }
-  }
+  final source = origin?.source;
+  // Search/collection rows and branch-view entries carry verified origins.
+  // A panel dropdown cannot authorize reading an unresolved or stale row.
   if (source == null) {
     throw const GalleryMediaException(
       'Refresh this folder before previewing. The image source could not be verified.',
     );
   }
   final accountGuard = _captureSourceGuard(ref, source);
-  bool current() => (originGuard?.call() ?? false) && accountGuard();
+  bool current() => origin!.isCurrent && accountGuard();
 
   if (source is LocalPanelSource) {
     final path = file.path ?? file.xFile?.path ??
@@ -196,15 +181,6 @@ GalleryMediaRequest captureGalleryMediaRequest(
     readBytes: (limit) => readGalleryRemoteBytes(client, path, file, limit,
         isCurrent: current),
   );
-}
-
-bool _sameSource(PanelSource a, PanelSource b) {
-  if (a is LocalPanelSource && b is LocalPanelSource) return a.path == b.path;
-  if (a is RemotePanelSource && b is RemotePanelSource) {
-    return identical(a.client, b.client) && a.path == b.path &&
-        a.providerName == b.providerName;
-  }
-  return false;
 }
 
 bool Function() _captureSourceGuard(WidgetRef ref, PanelSource source) {

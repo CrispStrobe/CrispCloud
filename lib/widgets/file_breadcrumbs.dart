@@ -7,6 +7,7 @@ import 'dart:io';
 
 import '../models/panel_side.dart';
 import '../providers/providers.dart';
+import 'bookmark_actions.dart';
 
 class FileBreadcrumbs extends ConsumerWidget {
   final PanelSide side;
@@ -65,7 +66,7 @@ class FileBreadcrumbs extends ConsumerWidget {
     final canBack = panel.canNavigateBack;
     final canForward = panel.canNavigateForward;
     final bm = ref.watch(bookmarksProvider);
-    final isBookmarked = bm.isBookmarked(currentPath, side);
+    final isBookmarked = isPanelBookmarked(bm, panel);
     final platform = Theme.of(context).platform;
     final isMobile = platform == TargetPlatform.android || platform == TargetPlatform.iOS;
     final minTap = isMobile ? 48.0 : 24.0;
@@ -133,14 +134,7 @@ class FileBreadcrumbs extends ConsumerWidget {
           ConstrainedBox(
             constraints: BoxConstraints(minWidth: minTap, minHeight: minTap),
             child: InkWell(
-              onTap: () {
-                if (isBookmarked) {
-                  bm.remove(currentPath, side);
-                } else {
-                  final name = currentPath.split('/').where((s) => s.isNotEmpty).lastOrNull ?? '/';
-                  bm.add(name, currentPath, side);
-                }
-              },
+              onTap: () => togglePanelBookmark(context, ref, side),
               child: Center(
                 child: Icon(
                   isBookmarked ? Icons.star : Icons.star_border,
@@ -162,17 +156,9 @@ class FileBreadcrumbs extends ConsumerWidget {
                 Icon(Icons.chevron_right, size: 16, color: Theme.of(context).colorScheme.onSurfaceVariant),
                 InkWell(
                   onTap: isLast ? null : () => panel.navigateToPath(crumb['path']!),
-                  onLongPress: isLast ? null : () {
-                    // Long-press on breadcrumb = bookmark that path
-                    final bmNotifier = ref.read(bookmarksProvider);
-                    final p = crumb['path']!;
-                    final name = crumb['name']!;
-                    if (bmNotifier.isBookmarked(p, side)) {
-                      bmNotifier.remove(p, side);
-                    } else {
-                      bmNotifier.add(name.isEmpty ? '/' : name, p, side);
-                    }
-                  },
+                  onLongPress: isLast ? null : () => togglePanelBookmark(
+                    context, ref, side, path: crumb['path'], label: crumb['name']!.isEmpty ? '/' : crumb['name'],
+                  ),
                   child: Padding(
                     padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 2),
                     child: Text(

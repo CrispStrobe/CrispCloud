@@ -29,6 +29,7 @@ import '../services/panel_view_mode_service.dart';
 import '../services/panel_source_service.dart';
 import '../screens/screen_dialogs.dart';
 import '../widgets/command_palette.dart';
+import 'bookmark_actions.dart';
 import '../widgets/file_context_menu.dart' show showPropertiesDialog;
 import '../widgets/file_toolbar.dart' show showPanelFilterDialog;
 import '../widgets/search_dialogs.dart' show showSearchDialog, showFindDialog;
@@ -320,18 +321,14 @@ class _PanelHeaderState extends ConsumerState<PanelHeader> {
     final ThemeData theme = Theme.of(context);
     if (!isLocal) {
       final bookmarks = ref.watch(bookmarksProvider);
-      return PopupMenuButton<DriveEntry>(
+      return PopupMenuButton<Bookmark>(
         tooltip: 'Bookmarks',
         padding: EdgeInsets.zero,
-        onSelected: (DriveEntry entry) => panel.navigateToPath(entry.path),
-        itemBuilder: (BuildContext context) => <PopupMenuEntry<DriveEntry>>[
+        onSelected: (Bookmark bookmark) => openBookmark(context, ref, bookmark, side: widget.side),
+        itemBuilder: (BuildContext context) => <PopupMenuEntry<Bookmark>>[
           for (final bookmark in bookmarks.bookmarks)
-            PopupMenuItem<DriveEntry>(
-              value: DriveEntry(
-                path: bookmark.path,
-                label: bookmark.name,
-                icon: Icons.bookmark_outline,
-              ),
+            PopupMenuItem<Bookmark>(
+              value: bookmark,
               child: Row(
                 children: <Widget>[
                   const Icon(Icons.bookmark_outline, size: 17),
@@ -572,17 +569,7 @@ class _PanelHeaderState extends ConsumerState<PanelHeader> {
       case 'flat':
         panel.toggleFlatView();
       case 'bookmark':
-        final BookmarksNotifier bm = ref.read(bookmarksProvider);
-        if (bm.isBookmarked(panel.currentPath, widget.side)) {
-          bm.remove(panel.currentPath, widget.side);
-        } else {
-          final name = panel.currentPath
-                  .split('/')
-                  .where((String s) => s.isNotEmpty)
-                  .lastOrNull ??
-              '/';
-          bm.add(name, panel.currentPath, widget.side);
-        }
+        await togglePanelBookmark(context, ref, widget.side);
       case 'grant_access':
         await panel.grantAccessToCurrentPath();
       case 'goto_path':
@@ -632,11 +619,6 @@ class _PanelHeaderState extends ConsumerState<PanelHeader> {
   }
 
   void _toggleBookmark(PanelNotifier panel, String path, String label) {
-    final BookmarksNotifier bm = ref.read(bookmarksProvider);
-    if (bm.isBookmarked(path, widget.side)) {
-      bm.remove(path, widget.side);
-    } else {
-      bm.add(label.isEmpty ? '/' : label, path, widget.side);
-    }
+    togglePanelBookmark(context, ref, widget.side, path: path, label: label.isEmpty ? '/' : label);
   }
 }

@@ -15,6 +15,8 @@ import '../services/panel_source_service.dart' show RemotePanelSource;
 import '../services/panel_view_mode_service.dart' show PanelViewMode;
 import 'file_column_view.dart';
 import 'file_column_header.dart';
+import 'file_view_editor_dialog.dart';
+import 'workspace_dialog.dart';
 import 'file_grid_view.dart';
 import 'file_list_view.dart' show FileListView, PanelDragData;
 import 'file_selection_bar.dart';
@@ -365,7 +367,9 @@ class _FilePanelState extends ConsumerState<FilePanel> {
         ? ref.watch(localViewModeProvider)
         : ref.watch(remoteViewModeProvider);
 
-    if (viewMode == ViewMode.grid) {
+    if (viewMode == ViewMode.grid ||
+        viewMode == ViewMode.tiles ||
+        viewMode == ViewMode.gallery) {
       return FileGridView(
         side: side,
         files: files,
@@ -588,6 +592,7 @@ class _FilePanelState extends ConsumerState<FilePanel> {
             onTabReordered: panel.reorderTabs,
             onTabForceClosed: (id) => panel.closeTab(id, force: true),
             onCloseDuplicates: () => panel.closeDuplicateTabs(),
+            onWorkspace: () => showWorkspaceDialog(context, ref, widget.side),
           ),
           PanelHeader(
             side: widget.side,
@@ -618,10 +623,7 @@ class _FilePanelState extends ConsumerState<FilePanel> {
             FileSelectionBar(side: widget.side, selection: selection),
           if (ref.watch(panelViewModeProvider(widget.side)) ==
                   PanelViewMode.full &&
-              (widget.side == PanelSide.local
-                      ? ref.watch(localViewModeProvider)
-                      : ref.watch(remoteViewModeProvider)) ==
-                  ViewMode.list)
+              layout == ViewMode.list)
             _CompactColumnHeader(side: widget.side, panel: panel),
           // Loading indicator shown while directory listing is in progress
           if (panel.isLoading) const LinearProgressIndicator(minHeight: 2),
@@ -775,6 +777,9 @@ class _CompactColumnHeader extends ConsumerWidget {
   final PanelNotifier panel;
 
   @override
-  Widget build(BuildContext context, WidgetRef ref) =>
-      FileColumnHeader(side: side, panel: panel);
+  Widget build(BuildContext context, WidgetRef ref) => FileColumnHeader(
+    side: side,
+    panel: panel,
+    onConfigure: () => showPanelViewDialog(context, ref, side),
+  );
 }

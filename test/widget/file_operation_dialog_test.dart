@@ -2,6 +2,7 @@ import 'dart:async';
 import 'dart:convert';
 import 'dart:io';
 
+import 'package:crisp_cloud/l10n/app_localizations.dart';
 import 'package:crisp_cloud/models/file_item.dart';
 import 'package:crisp_cloud/models/operation_progress.dart';
 import 'package:crisp_cloud/models/panel_side.dart';
@@ -13,6 +14,7 @@ import 'package:crisp_cloud/services/file_operation_backend.dart';
 import 'package:crisp_cloud/services/file_operation_profiles.dart';
 import 'package:crisp_cloud/services/file_operation_service.dart';
 import 'package:crisp_cloud/services/file_operation_backend.dart';
+import 'package:crisp_cloud/services/file_operation_profiles.dart';
 import 'package:crisp_cloud/services/local_file_service.dart';
 import 'package:crisp_cloud/services/panel_source_service.dart';
 import 'package:crisp_cloud/services/saved_search_service.dart';
@@ -51,6 +53,7 @@ class _Cloud extends Fake implements CloudStorageClient {
   final deleted = <String>[];
   final renamed = <String>[];
   Future<void> Function(String)? beforeDelete;
+  Future<void> Function(String)? beforeList;
   String account = 'first-account';
 
   @override
@@ -66,6 +69,7 @@ class _Cloud extends Fake implements CloudStorageClient {
 
   @override
   Future<Map<String, dynamic>> listPath(String path) async {
+    await beforeList?.call(path);
     if (!folders.contains(path)) throw StateError('No such folder: $path');
     return {
       'folders': [
@@ -199,6 +203,8 @@ void main() {
     WidgetTester tester, {
     FileOperationKind kind = FileOperationKind.copy,
     Size size = const Size(1100, 1000),
+    Locale locale = const Locale('en'),
+    double textScale = 1,
     FileOperationBackend? sourceBackend,
     PanelFileOrigin? sourceOrigin,
   }) async {
@@ -210,6 +216,14 @@ void main() {
       UncontrolledProviderScope(
         container: container,
         child: MaterialApp(
+          locale: locale,
+          localizationsDelegates: AppLocalizations.localizationsDelegates,
+          supportedLocales: AppLocalizations.supportedLocales,
+          builder: (context, child) => MediaQuery(
+            data: MediaQuery.of(context)
+                .copyWith(textScaler: TextScaler.linear(textScale)),
+            child: child!,
+          ),
           home: Scaffold(
             body: FileOperationDialog(
               side: PanelSide.remote,
@@ -233,6 +247,117 @@ void main() {
     await tester.enterText(field('Destination directory'), '/target');
     await tester.pumpAndSettle();
   }
+
+  testWidgets(
+    'translated transfer controls remain scrollable with large RTL text',
+    (tester) async {
+      await open(
+        tester,
+        size: const Size(320, 740),
+        locale: const Locale('ar'),
+        textScale: 1.8,
+      );
+      expect(tester.takeException(), isNull);
+      final method = find.byKey(const ValueKey('transfer-copy-method'));
+      await tester.ensureVisible(method);
+      await tester.pumpAndSettle();
+      expect(Directionality.of(tester.element(method)), TextDirection.rtl);
+      expect(find.text('طريقة النسخ'), findsOneWidget);
+      expect(tester.takeException(), isNull);
+      final filters = field('فلتر الملفات');
+      await tester.ensureVisible(filters);
+      await tester.enterText(filters, '*.txt|Cancel.txt');
+      expect(
+        tester.widget<TextField>(filters).controller!.text,
+        '*.txt|Cancel.txt',
+      );
+      expect(tester.takeException(), isNull);
+    },
+  );
+
+  testWidgets(
+    'copy method options explain capabilities and survive profile saving',
+    (tester) async {
+      await open(tester);
+      await useCloudDestination(tester);
+      final method = find.byKey(const ValueKey('transfer-copy-method'));
+      await tester.ensureVisible(method);
+      final dropdown = tester.widget<DropdownButton<FileCopyMethod>>(
+        find.descendant(
+          of: method,
+          matching: find.byType(DropdownButton<FileCopyMethod>),
+        ),
+      );
+      expect(
+        dropdown.items!
+            .singleWhere((item) => item.value == FileCopyMethod.copyOnWrite)
+            .enabled,
+        isFalse,
+      );
+      expect(
+        find.text('This destination cannot reserve physical disk space.'),
+        findsOneWidget,
+      );
+      final allocationRow = find
+          .ancestor(
+            of: find.text('Reserve destination disk space before copying'),
+            matching: find.byType(Row),
+          )
+          .first;
+      final allocation = tester.widget<Checkbox>(
+        find.descendant(of: allocationRow, matching: find.byType(Checkbox)),
+      );
+      expect(allocation.onChanged, isNull);
+
+      await tester.tap(method);
+      await tester.pumpAndSettle();
+      await tester.tap(find.text('Stream all data').last);
+      await tester.pumpAndSettle();
+      await tester.ensureVisible(find.text('Save as defaults'));
+      await tester.tap(find.text('Save as defaults'));
+      await tester.pumpAndSettle();
+      final saved = await FileOperationProfiles().load();
+      expect(saved['@default:copy']!.copyMethod, FileCopyMethod.stream);
+      expect(saved['@default:copy']!.preallocate, isFalse);
+      expect(cloud.uploads, isEmpty);
+      expect(tester.takeException(), isNull);
+    },
+  );
+
+  testWidgets(
+    'planning reports progress and supports pause and cancellation before writes',
+    (tester) async {
+      cloud.folders.add('/large');
+      cloud.files['/large/nested.txt'] = [1, 2, 3];
+      final panel = container.read(panelProvider(PanelSide.remote));
+      await panel.refresh();
+      files = [panel.files!.singleWhere((file) => file.path == '/large')];
+      await open(tester);
+      await useCloudDestination(tester);
+      final listing = Completer<void>();
+      cloud.beforeList = (path) async {
+        if (path == '/large') await listing.future;
+      };
+      await tester.tap(find.widgetWithText(OutlinedButton, 'Preview'));
+      await tester.pump();
+      await tester.pump(const Duration(milliseconds: 100));
+      expect(find.text('Preparing preview · 1 items checked'), findsOneWidget);
+      expect(find.text('/large'), findsWidgets);
+      await tester.tap(find.widgetWithText(TextButton, 'Pause'));
+      await tester.pump();
+      expect(find.widgetWithText(TextButton, 'Resume'), findsOneWidget);
+      await tester.tap(find.widgetWithText(TextButton, 'Cancel operation'));
+      listing.complete();
+      await tester.pumpAndSettle();
+      expect(
+        tester.widget<FilledButton>(start(FileOperationKind.copy)).onPressed,
+        isNull,
+      );
+      expect(cloud.uploads, isEmpty);
+      expect(cloud.deleted, isEmpty);
+      expect(tester.takeException(), isNull);
+    },
+  );
 
   Future<void> toggle(WidgetTester tester, String label) async {
     final row = find

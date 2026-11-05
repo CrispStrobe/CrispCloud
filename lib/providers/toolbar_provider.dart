@@ -98,7 +98,7 @@ class PanelViewModeNotifier extends StateNotifier<PanelViewMode> {
 
   Future<void> applyMode(PanelViewMode mode, {bool persist = false}) async {
     _revision++;
-    state = mode;
+    if (mounted) state = mode;
     if (persist) await _service.setMode(_side, mode);
   }
 
@@ -195,8 +195,8 @@ class _ColumnWidthsNotifier extends StateNotifier<Map<String, double>> {
 
   bool isVisible(String col) => (state[col] ?? 0) > 0;
 
-  void toggleVisibility(String col) {
-    final current = state[col] ?? 0;
+  void toggleVisibility(String col, {double? defaultWidth}) {
+    final current = state[col] ?? defaultWidth ?? 0;
     if (current <= 0) {
       // Restore to default
       final defaults = {'size': 62.0, 'date': 78.0, 'ext': 40.0};
