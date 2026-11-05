@@ -51,7 +51,7 @@ class _FileOperationDialogState extends ConsumerState<FileOperationDialog> {
   final _destination = TextEditingController();
   final _relativeBase = TextEditingController();
   final _mask = TextEditingController(text: '*');
-  final _control = FileOperationControl();
+  FileOperationControl _control = FileOperationControl();
   final _origins = <PanelSide, PanelFileOrigin>{};
   late final PanelNotifier _panel;
   PanelFileOrigin? _sourceOrigin;
@@ -144,6 +144,7 @@ class _FileOperationDialogState extends ConsumerState<FileOperationDialog> {
     final destinationOrigin = _origins[_destinationSide];
     if (origin == null || destinationOrigin == null) return;
     setState(() {
+      _control = FileOperationControl();
       _preparing = true;
       _error = null;
       _plan = null;
@@ -253,12 +254,13 @@ class _FileOperationDialogState extends ConsumerState<FileOperationDialog> {
       control: _control,
       resolveConflict: background ? null : _resolve,
       onProgress: (entry, bytes, total) {
-        if (mounted)
+        if (mounted) {
           setState(() {
             _current = entry.source.path;
             _bytes = bytes;
             _total = total;
           });
+        }
       },
       onEntryComplete: (entry) {
         if (entry.outcome == FileOperationOutcome.moved) {
@@ -272,19 +274,21 @@ class _FileOperationDialogState extends ConsumerState<FileOperationDialog> {
       await future;
       await _panel.refresh();
       if (!identical(_panel, targetPanel)) await targetPanel.refresh();
-      if (mounted)
+      if (mounted) {
         setState(() {
           _running = false;
           _finished = true;
           _current = null;
         });
+      }
     } catch (error) {
-      if (mounted)
+      if (mounted) {
         setState(() {
           _running = false;
           _finished = true;
           _error = error.toString();
         });
+      }
     }
   }
 
@@ -332,6 +336,7 @@ class _FileOperationDialogState extends ConsumerState<FileOperationDialog> {
                   ),
                 const SizedBox(height: 12),
                 DropdownButtonFormField<PanelSide>(
+                  isExpanded: true,
                   initialValue: _destinationSide,
                   decoration: const InputDecoration(
                     labelText: 'Destination storage',
@@ -344,6 +349,8 @@ class _FileOperationDialogState extends ConsumerState<FileOperationDialog> {
                           value: entry.key,
                           child: Text(
                             '${entry.key == widget.side ? 'This panel' : 'Opposite panel'} · ${entry.value.source.displayName}',
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
                           ),
                         ),
                       )
@@ -377,6 +384,7 @@ class _FileOperationDialogState extends ConsumerState<FileOperationDialog> {
                     SizedBox(
                       width: 270,
                       child: DropdownButtonFormField<FileConflictPolicy>(
+                        isExpanded: true,
                         initialValue: _fileConflict,
                         decoration: const InputDecoration(
                           labelText: 'Existing files',
@@ -386,23 +394,43 @@ class _FileOperationDialogState extends ConsumerState<FileOperationDialog> {
                         items: const [
                           DropdownMenuItem(
                             value: FileConflictPolicy.ask,
-                            child: Text('Ask for each conflict'),
+                            child: Text(
+                              'Ask for each conflict',
+                              maxLines: 1,
+                              overflow: TextOverflow.ellipsis,
+                            ),
                           ),
                           DropdownMenuItem(
                             value: FileConflictPolicy.skip,
-                            child: Text('Skip existing files'),
+                            child: Text(
+                              'Skip existing files',
+                              maxLines: 1,
+                              overflow: TextOverflow.ellipsis,
+                            ),
                           ),
                           DropdownMenuItem(
                             value: FileConflictPolicy.replace,
-                            child: Text('Replace existing files'),
+                            child: Text(
+                              'Replace existing files',
+                              maxLines: 1,
+                              overflow: TextOverflow.ellipsis,
+                            ),
                           ),
                           DropdownMenuItem(
                             value: FileConflictPolicy.replaceIfNewer,
-                            child: Text('Replace only if source is newer'),
+                            child: Text(
+                              'Replace only if source is newer',
+                              maxLines: 1,
+                              overflow: TextOverflow.ellipsis,
+                            ),
                           ),
                           DropdownMenuItem(
                             value: FileConflictPolicy.keepBoth,
-                            child: Text('Keep both (number new copies)'),
+                            child: Text(
+                              'Keep both (number new copies)',
+                              maxLines: 1,
+                              overflow: TextOverflow.ellipsis,
+                            ),
                           ),
                         ],
                         onChanged: _busy
@@ -413,6 +441,7 @@ class _FileOperationDialogState extends ConsumerState<FileOperationDialog> {
                     SizedBox(
                       width: 245,
                       child: DropdownButtonFormField<DirectoryConflictPolicy>(
+                        isExpanded: true,
                         initialValue: _directoryConflict,
                         decoration: const InputDecoration(
                           labelText: 'Existing folders',
@@ -422,15 +451,27 @@ class _FileOperationDialogState extends ConsumerState<FileOperationDialog> {
                         items: const [
                           DropdownMenuItem(
                             value: DirectoryConflictPolicy.merge,
-                            child: Text('Merge contents'),
+                            child: Text(
+                              'Merge contents',
+                              maxLines: 1,
+                              overflow: TextOverflow.ellipsis,
+                            ),
                           ),
                           DropdownMenuItem(
                             value: DirectoryConflictPolicy.skip,
-                            child: Text('Skip whole folder'),
+                            child: Text(
+                              'Skip whole folder',
+                              maxLines: 1,
+                              overflow: TextOverflow.ellipsis,
+                            ),
                           ),
                           DropdownMenuItem(
                             value: DirectoryConflictPolicy.ask,
-                            child: Text('Ask for each folder'),
+                            child: Text(
+                              'Ask for each folder',
+                              maxLines: 1,
+                              overflow: TextOverflow.ellipsis,
+                            ),
                           ),
                         ],
                         onChanged: _busy

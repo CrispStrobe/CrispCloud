@@ -65,13 +65,18 @@ class OperationProgress implements TransferOperation {
   int get transferredBytes => currentBytes;
 
   // Cancellation support
+  @override
   bool get isCancelled => _isCancelled;
+  @override
   Future<void> get cancellationFuture => _cancellationCompleter.future;
 
   // Pause/Resume getters
+  @override
   bool get isPaused => _isPaused;
+  @override
   Future<void>? get pauseFuture => _pauseCompleter?.future;
 
+  @override
   void cancel() {
     if (!_isCancelled && !isComplete) {
       _isCancelled = true;
@@ -153,7 +158,7 @@ class OperationProgress implements TransferOperation {
   double get averageSpeed {
     if (_transferStartTime == null) return 0;
     final elapsed = DateTime.now()
-        .difference(_transferStartTime!)
+        .difference(_transferStartTime)
         .inMilliseconds;
     if (elapsed <= 0) return 0;
     return currentBytes / (elapsed / 1000);

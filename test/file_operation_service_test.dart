@@ -41,6 +41,92 @@ void main() {
   );
 
   group('selection and destination planning', () {
+    test('same-directory Keep both creates a distinct copy and preserves the source', () async {
+      source.file('/tree/a.txt', 'original');
+      source.file('/tree/a (1).txt', 'earlier copy');
+      final plan = await prepare(
+        ['/tree/a.txt'],
+        targetBackend: source,
+        destination: '/tree',
+        options: const FileOperationOptions(
+          fileConflict: FileConflictPolicy.keepBoth,
+        ),
+      );
+      expect(plan.canExecute, isTrue);
+      expect(plan.entries.single.destination, '/tree/a (2).txt');
+      await execute(plan);
+      expect(source.text('/tree/a.txt'), 'original');
+      expect(source.text('/tree/a (1).txt'), 'earlier copy');
+      expect(source.text('/tree/a (2).txt'), 'original');
+      expect(plan.entries.single.outcome, FileOperationOutcome.copied);
+    });
+
+    test('case-insensitive aliases cannot move a file onto itself', () async {
+      source = _CaseInsensitiveMemoryBackend('case-insensitive source');
+      source.file('/Tree/Name.txt', 'retain');
+      final plan = await prepare(
+        ['/Tree/Name.txt'],
+        targetBackend: source,
+        destination: '/tree',
+        options: const FileOperationOptions(
+          kind: FileOperationKind.move,
+          fileConflict: FileConflictPolicy.keepBoth,
+        ),
+      );
+      expect(plan.canExecute, isFalse);
+      expect(plan.errors.join(), contains('into itself'));
+      expect(source.text('/Tree/Name.txt'), 'retain');
+      expect(source.writeAttempts, isEmpty);
+    });
+
+    test(
+      'case-insensitive aliases cannot copy a folder inside itself',
+      () async {
+        source = _CaseInsensitiveMemoryBackend('case-insensitive source');
+        source.file('/Tree/Name.txt', 'retain');
+        final plan = await prepare(
+          ['/Tree'],
+          targetBackend: source,
+          destination: '/tree/archive',
+        );
+        expect(plan.canExecute, isFalse);
+        expect(plan.errors.join(), contains('into itself'));
+        expect(source.writeAttempts, isEmpty);
+      },
+    );
+
+    test(
+      'case-insensitive destination reservations prevent flattened collisions',
+      () async {
+        source.file('/one/Name.txt', 'one');
+        source.file('/two/name.txt', 'two');
+        target = _CaseInsensitiveMemoryBackend('case-insensitive destination')
+          ..directory('/target');
+        final collision = await prepare(['/one/Name.txt', '/two/name.txt']);
+        expect(collision.canExecute, isFalse);
+        final keepBoth = await prepare(
+          ['/one/Name.txt', '/two/name.txt'],
+          options: const FileOperationOptions(
+            fileConflict: FileConflictPolicy.keepBoth,
+          ),
+        );
+        expect(keepBoth.canExecute, isTrue);
+        await execute(keepBoth);
+        expect(
+          keepBoth.entries
+              .map((entry) => target.pathKey(entry.destination))
+              .toSet(),
+          hasLength(2),
+        );
+        expect(
+          keepBoth.entries
+              .map((entry) => target.text(entry.destination))
+              .toSet(),
+          {'one', 'two'},
+        );
+      },
+    );
+
     test(
       'copies a list spanning source directories without changing sources',
       () async {
@@ -81,6 +167,13 @@ void main() {
         source.file('/one/same.txt', 'one');
         source.file('/two/same.txt', 'two');
         target.file('/target/same.txt', 'original');
+        final firstPreview = await prepare(
+          ['/one/same.txt'],
+          options: const FileOperationOptions(
+            fileConflict: FileConflictPolicy.keepBoth,
+          ),
+        );
+        expect(firstPreview.entries.single.destination, '/target/same (1).txt');
         target.file('/target/same (1).txt', 'earlier copy');
         final plan = await prepare(
           ['/one/same.txt', '/two/same.txt'],
@@ -88,6 +181,10 @@ void main() {
             fileConflict: FileConflictPolicy.keepBoth,
           ),
         );
+        expect(plan.entries.map((entry) => entry.destination), [
+          '/target/same (2).txt',
+          '/target/same (3).txt',
+        ]);
         await execute(plan);
 
         expect(target.text('/target/same.txt'), 'original');
@@ -660,6 +757,22 @@ class _MemoryNode {
   _MemoryNode(this.item, [this.bytes = const []]);
   FileItem item;
   final List<int> bytes;
+}
+
+class _CaseInsensitiveMemoryBackend extends _MemoryBackend {
+  _CaseInsensitiveMemoryBackend(super.label);
+
+  @override
+  String pathKey(String path) => super.pathKey(path).toLowerCase();
+
+  @override
+  Future<FileItem?> stat(String path) async {
+    _check();
+    for (final entry in nodes.entries) {
+      if (pathKey(entry.key) == pathKey(path)) return entry.value.item;
+    }
+    return null;
+  }
 }
 
 /// Models the backend's staged-write contract and records externally visible

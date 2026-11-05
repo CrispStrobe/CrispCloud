@@ -171,20 +171,22 @@ void showSearchResultsDialog(
                               ? allItems
                               : selected;
                           final paths = targets.map((item) {
-                            if (item.path == null)
+                            if (item.path == null) {
                               throw StateError(
                                 'A result has no original path.',
                               );
+                            }
                             return item.path!;
                           });
                           await Clipboard.setData(
                             ClipboardData(text: FileListPaths.encode(paths)),
                           );
                         } catch (error) {
-                          if (ctx.mounted)
+                          if (ctx.mounted) {
                             ScaffoldMessenger.of(ctx).showSnackBar(
                               SnackBar(content: Text(error.toString())),
                             );
+                          }
                         }
                       },
                     ),

@@ -112,8 +112,9 @@ class TransferNotifier extends ChangeNotifier {
     void Function(FileOperationEntry, int, int?)? onProgress,
     void Function(FileOperationEntry)? onEntryComplete,
   }) async {
-    if (!plan.canExecute)
+    if (!plan.canExecute) {
       throw StateError('Review a valid operation plan first.');
+    }
     final rows = {
       for (final entry in plan.entries)
         entry: FileProgress(
@@ -137,6 +138,7 @@ class TransferNotifier extends ChangeNotifier {
       files: rows.values.toList(),
     );
     final done = Completer<void>();
+    final audit = _ref.read(auditServiceProvider);
     _operations.add(operation);
     _fileOperationControls[operation.id] = control;
     notifyListeners();
@@ -164,22 +166,49 @@ class TransferNotifier extends ChangeNotifier {
                 row.isComplete = entry.completed;
                 row.error = entry.failed ? entry.message : null;
                 row.statusLabel = entry.outcome.name;
-                if (entry.completed && counted.add(entry))
+                if (entry.completed && counted.add(entry)) {
                   completedBytes += row.size;
+                }
                 operation.currentBytes = completedBytes;
                 onEntryComplete?.call(entry);
                 notifyListeners();
               },
             );
+            for (final entry in plan.entries) {
+              final auditOperation = entry.outcome == FileOperationOutcome.moved
+                  ? AuditOperation.move
+                  : AuditOperation.copy;
+              if (entry.completed) {
+                await audit.logSuccess(
+                  operation: auditOperation,
+                  sourcePath: entry.source.path!,
+                  targetPath: entry.destination,
+                  provider: plan.destination.label,
+                  sizeBytes: entry.source.size,
+                );
+              } else if (entry.failed) {
+                await audit.logError(
+                  operation: plan.options.kind == FileOperationKind.move
+                      ? AuditOperation.move
+                      : AuditOperation.copy,
+                  sourcePath: entry.source.path!,
+                  targetPath: entry.destination,
+                  provider: plan.destination.label,
+                  error: entry.message ?? 'Operation failed',
+                );
+              }
+            }
             if (control.isCancelled) {
               operation.cancel();
             } else if (plan.entries.any((entry) => entry.failed)) {
               operation.fail(
-                '${plan.entries.where((entry) => entry.failed).length} item(s) failed. Open the result list for details.',
+                '${plan.entries.where((entry) => entry.failed).length} item(s) failed. Expand this transfer for details.',
               );
             } else {
               // complete() would incorrectly mark skipped rows as copied.
               operation.status = OperationStatus.completed;
+              operation.totalBytes = completedBytes;
+              operation.currentBytes = completedBytes;
             }
           } catch (error) {
             operation.fail(error.toString());

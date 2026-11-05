@@ -251,11 +251,12 @@ class _FileListDialogState extends ConsumerState<_FileListDialog> {
                                     final clipboard = await Clipboard.getData(
                                       Clipboard.kTextPlain,
                                     );
-                                    if (mounted)
+                                    if (mounted) {
                                       setState(
                                         () =>
                                             _input.text = clipboard?.text ?? '',
                                       );
+                                    }
                                   },
                             icon: const Icon(Icons.content_paste),
                             label: const Text('Paste paths'),
@@ -269,11 +270,12 @@ class _FileListDialogState extends ConsumerState<_FileListDialog> {
                                     await Clipboard.setData(
                                       ClipboardData(text: _output.text),
                                     );
-                                    if (mounted)
+                                    if (mounted) {
                                       setState(
                                         () =>
                                             _message = 'Original paths copied.',
                                       );
+                                    }
                                   },
                             icon: const Icon(Icons.copy),
                             label: const Text('Copy paths'),

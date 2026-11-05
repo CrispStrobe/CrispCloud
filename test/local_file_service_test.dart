@@ -65,8 +65,11 @@ void main() {
 
     test('listDirectory returns list for valid path', () async {
       final service = LocalFileService();
-      // /tmp should exist on Linux
-      final entities = await service.listDirectory('/tmp');
+      final directory = await Directory.systemTemp.createTemp(
+        'crisp_list_test_',
+      );
+      addTearDown(() => directory.delete(recursive: true));
+      final entities = await service.listDirectory(directory.path);
       expect(entities, isNotNull);
       expect(entities, isA<List>());
     });
@@ -94,18 +97,19 @@ void main() {
       final service = DesktopFileService();
       expect(
         () => service.readFile('/non/existent/path/file.txt'),
-        throwsA(isA<Exception>().having(
-          (e) => e.toString(),
-          'message',
-          contains(''),
-        )),
+        throwsA(
+          isA<Exception>().having((e) => e.toString(), 'message', contains('')),
+        ),
       );
     });
 
     test('saveFile creates file at given path', () async {
       final service = DesktopFileService();
-      final testPath =
-          '/tmp/crisp_cloud_test_${DateTime.now().millisecondsSinceEpoch}.txt';
+      final directory = await Directory.systemTemp.createTemp(
+        'crisp_save_test_',
+      );
+      addTearDown(() => directory.delete(recursive: true));
+      final testPath = '${directory.path}${Platform.pathSeparator}file.txt';
       final data = [72, 101, 108, 108, 111]; // "Hello"
 
       await service.saveFile(testPath, Uint8List.fromList(data));
@@ -113,11 +117,6 @@ void main() {
       // Verify we can read it back
       final readBack = await service.readFile(testPath);
       expect(readBack, equals(data));
-
-      // Clean up
-      try {
-        await File(testPath).delete();
-      } catch (_) {}
     });
   });
 }

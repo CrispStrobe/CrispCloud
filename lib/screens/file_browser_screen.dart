@@ -40,7 +40,6 @@ import '../widgets/settings_dialog.dart' show showSettingsDialog;
 import '../widgets/search_dialogs.dart' show showSearchDialog, showFindDialog;
 import '../widgets/pattern_selection_dialog.dart';
 import '../widgets/file_list_dialog.dart';
-import '../services/file_selection_pattern.dart';
 import '../widgets/file_toolbar.dart' show showPanelFilterDialog;
 import '../widgets/file_context_menu.dart' show showPropertiesDialog;
 import '../widgets/status_bar.dart';

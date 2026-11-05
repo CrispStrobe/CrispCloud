@@ -347,8 +347,9 @@ void main() {
           service.execute(
             preview,
             exists: (path) async {
-              if (path == '/b/second_new.txt')
+              if (path == '/b/second_new.txt') {
                 throw StateError('access denied');
+              }
               return paths.contains(path);
             },
             rename: rename,

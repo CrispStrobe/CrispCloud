@@ -124,6 +124,7 @@ class _PatternSelectionDialogState
               ),
               const SizedBox(height: 16),
               DropdownButtonFormField<SelectionAction>(
+                isExpanded: true,
                 initialValue: _action,
                 decoration: const InputDecoration(
                   labelText: 'Action',
@@ -132,25 +133,42 @@ class _PatternSelectionDialogState
                 items: const [
                   DropdownMenuItem(
                     value: SelectionAction.select,
-                    child: Text('Add matches to selection'),
+                    child: Text(
+                      'Add matches to selection',
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                    ),
                   ),
                   DropdownMenuItem(
                     value: SelectionAction.deselect,
-                    child: Text('Remove matches from selection'),
+                    child: Text(
+                      'Remove matches from selection',
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                    ),
                   ),
                   DropdownMenuItem(
                     value: SelectionAction.invert,
-                    child: Text('Invert matching marks'),
+                    child: Text(
+                      'Invert matching marks',
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                    ),
                   ),
                   DropdownMenuItem(
                     value: SelectionAction.replace,
-                    child: Text('Replace selection with matches'),
+                    child: Text(
+                      'Replace selection with matches',
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                    ),
                   ),
                 ],
                 onChanged: (value) => setState(() => _action = value!),
               ),
               const SizedBox(height: 12),
               DropdownButtonFormField<String>(
+                isExpanded: true,
                 initialValue: _kind,
                 decoration: const InputDecoration(
                   labelText: 'Include',
@@ -159,12 +177,27 @@ class _PatternSelectionDialogState
                 items: const [
                   DropdownMenuItem(
                     value: 'all',
-                    child: Text('Files and folders'),
+                    child: Text(
+                      'Files and folders',
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                    ),
                   ),
-                  DropdownMenuItem(value: 'files', child: Text('Files only')),
+                  DropdownMenuItem(
+                    value: 'files',
+                    child: Text(
+                      'Files only',
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                    ),
+                  ),
                   DropdownMenuItem(
                     value: 'folders',
-                    child: Text('Folders only'),
+                    child: Text(
+                      'Folders only',
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                    ),
                   ),
                 ],
                 onChanged: (value) => setState(() => _kind = value!),

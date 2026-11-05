@@ -7,7 +7,10 @@ import '../models/file_item.dart';
 import '../models/panel_side.dart';
 import '../providers/providers.dart';
 import '../utils/formatters.dart' show formatBytes;
-import 'file_context_menu.dart' show showCopyDialog, showMoveDialog, confirmDelete;
+import '../services/file_operation_service.dart';
+import 'file_operation_dialog.dart';
+import 'file_context_menu.dart'
+    show showCopyDialog, showMoveDialog, confirmDelete;
 
 class FileSelectionBar extends ConsumerWidget {
   final PanelSide side;
@@ -25,7 +28,10 @@ class FileSelectionBar extends ConsumerWidget {
     final auth = ref.watch(authProvider);
     final transfers = ref.read(transferProvider);
 
-    final totalSize = selection.fold<int>(0, (sum, file) => sum + (file.size ?? 0));
+    final totalSize = selection.fold<int>(
+      0,
+      (sum, file) => sum + (file.size ?? 0),
+    );
     final files = selection.toList();
     final theme = Theme.of(context);
 
@@ -41,7 +47,9 @@ class FileSelectionBar extends ConsumerWidget {
           icon: Icon(icon, size: 18),
           label: Text(label),
           onPressed: onPressed,
-          style: TextButton.styleFrom(foregroundColor: theme.colorScheme.onSecondaryContainer),
+          style: TextButton.styleFrom(
+            foregroundColor: theme.colorScheme.onSecondaryContainer,
+          ),
         );
       } else {
         return IconButton(
@@ -64,27 +72,62 @@ class FileSelectionBar extends ConsumerWidget {
             return Row(
               mainAxisSize: MainAxisSize.min,
               children: [
-                Icon(Icons.check_circle, size: 20, color: theme.colorScheme.onSecondaryContainer),
+                Icon(
+                  Icons.check_circle,
+                  size: 20,
+                  color: theme.colorScheme.onSecondaryContainer,
+                ),
                 const SizedBox(width: 8),
-                Text('${selection.length} selected',
-                    style: TextStyle(fontWeight: FontWeight.bold, color: theme.colorScheme.onSecondaryContainer)),
+                Text(
+                  '${selection.length} selected',
+                  style: TextStyle(
+                    fontWeight: FontWeight.bold,
+                    color: theme.colorScheme.onSecondaryContainer,
+                  ),
+                ),
                 if (totalSize > 0) ...[
                   const SizedBox(width: 8),
-                  Text('• ${formatBytes(totalSize)}',
-                      style: TextStyle(color: theme.colorScheme.onSecondaryContainer)),
+                  Text(
+                    '• ${formatBytes(totalSize)}',
+                    style: TextStyle(
+                      color: theme.colorScheme.onSecondaryContainer,
+                    ),
+                  ),
                 ],
                 const SizedBox(width: 16),
 
                 if (side == PanelSide.local && auth.isConnected)
                   responsiveButton(
-                    icon: Icons.upload, label: 'Upload', tooltip: 'Upload', showLabel: showLabels,
-                    onPressed: () => transfers.uploadFiles(files),
+                    icon: Icons.upload,
+                    label: 'Upload',
+                    tooltip: 'Upload',
+                    showLabel: showLabels,
+                    onPressed: () => panel.showingSearchResults
+                        ? showFileOperationDialog(
+                            context,
+                            ref,
+                            side,
+                            files,
+                            kind: FileOperationKind.copy,
+                          )
+                        : transfers.uploadFiles(files),
                   ),
 
                 if (side == PanelSide.remote)
                   responsiveButton(
-                    icon: Icons.download, label: 'Download', tooltip: 'Download', showLabel: showLabels,
-                    onPressed: () => transfers.downloadFiles(files),
+                    icon: Icons.download,
+                    label: 'Download',
+                    tooltip: 'Download',
+                    showLabel: showLabels,
+                    onPressed: () => panel.showingSearchResults
+                        ? showFileOperationDialog(
+                            context,
+                            ref,
+                            side,
+                            files,
+                            kind: FileOperationKind.copy,
+                          )
+                        : transfers.downloadFiles(files),
                   ),
 
                 const SizedBox(width: 8),
@@ -93,13 +136,29 @@ class FileSelectionBar extends ConsumerWidget {
                   icon: const Icon(Icons.content_copy, size: 20),
                   tooltip: 'Copy to...',
                   color: theme.colorScheme.onSecondaryContainer,
-                  onPressed: () => showCopyDialog(context, ref, side, files),
+                  onPressed: () => panel.showingSearchResults
+                      ? showFileOperationDialog(
+                          context,
+                          ref,
+                          side,
+                          files,
+                          kind: FileOperationKind.copy,
+                        )
+                      : showCopyDialog(context, ref, side, files),
                 ),
                 IconButton(
                   icon: const Icon(Icons.drive_file_move, size: 20),
                   tooltip: 'Move to...',
                   color: theme.colorScheme.onSecondaryContainer,
-                  onPressed: () => showMoveDialog(context, ref, side, files),
+                  onPressed: () => panel.showingSearchResults
+                      ? showFileOperationDialog(
+                          context,
+                          ref,
+                          side,
+                          files,
+                          kind: FileOperationKind.move,
+                        )
+                      : showMoveDialog(context, ref, side, files),
                 ),
                 IconButton(
                   icon: const Icon(Icons.delete, size: 20),
@@ -110,7 +169,10 @@ class FileSelectionBar extends ConsumerWidget {
 
                 const SizedBox(width: 16),
                 responsiveButton(
-                  icon: Icons.clear, label: 'Clear', tooltip: 'Clear selection', showLabel: showLabels,
+                  icon: Icons.clear,
+                  label: 'Clear',
+                  tooltip: 'Clear selection',
+                  showLabel: showLabels,
                   onPressed: () => panel.clearSelection(),
                 ),
               ],

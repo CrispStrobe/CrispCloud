@@ -19,6 +19,8 @@ import 'file_grid_view.dart';
 import 'file_list_view.dart' show FileListView, PanelDragData;
 import 'file_selection_bar.dart';
 import 'file_list_dialog.dart';
+import 'file_operation_dialog.dart';
+import '../services/file_operation_service.dart';
 import 'pattern_selection_dialog.dart';
 import 'file_tree_view_stub.dart' if (dart.library.io) 'file_tree_view.dart';
 import 'panel_tab_bar.dart';
@@ -193,8 +195,9 @@ class _FilePanelState extends ConsumerState<FilePanel> {
       onAcceptWithDetails: (details) async {
         final data = details.data;
         final sourcePanel = ref.read(panelProvider(data.sourceSide));
-        if (!sourcePanel.canOperateOnFileList || panel.showingSearchResults)
+        if (!sourcePanel.canOperateOnFileList || panel.showingSearchResults) {
           return;
+        }
         if (sourcePanel.showingSearchResults) {
           try {
             sourcePanel.captureOperationOrigin(data.files);
@@ -202,6 +205,16 @@ class _FilePanelState extends ConsumerState<FilePanel> {
             ref.read(errorProvider).addError(error.toString());
             return;
           }
+        }
+        if (sourcePanel.showingSearchResults) {
+          showFileOperationDialog(
+            context,
+            ref,
+            data.sourceSide,
+            data.files,
+            kind: FileOperationKind.copy,
+          );
+          return;
         }
         final transfers = ref.read(transferProvider);
         if (data.sourceSide == PanelSide.local &&
@@ -532,6 +545,8 @@ class _FilePanelState extends ConsumerState<FilePanel> {
                               ),
                             ],
                           )
+                        : panel.showingSearchResults
+                        ? const Text('This file list is empty.')
                         : widget.side == PanelSide.remote &&
                               !ref.read(authProvider).isConnected
                         ? Column(
@@ -756,7 +771,10 @@ class _CompactColumnHeader extends ConsumerWidget {
             child: GestureDetector(
               onSecondaryTap: () =>
                   _showColumnMenu(context, ref, side, colNotifier),
-              child: colLabel('Name', SortBy.name),
+              child: colLabel(
+                panel.showingSearchResults ? 'Original path' : 'Name',
+                SortBy.name,
+              ),
             ),
           ),
           if (showSize) ...[

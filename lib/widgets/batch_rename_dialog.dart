@@ -300,39 +300,55 @@ class _BatchRenameDialogState extends ConsumerState<BatchRenameDialog> {
                                   _firstMatch,
                                   (value) => _firstMatch = value,
                                 ),
-                                DropdownButton<RenameReplaceScope>(
-                                  value: _scope,
-                                  items: const [
-                                    DropdownMenuItem(
-                                      value: RenameReplaceScope.fullName,
-                                      child: Text('Replace in full name'),
-                                    ),
-                                    DropdownMenuItem(
-                                      value: RenameReplaceScope.name,
-                                      child: Text('Replace in name only'),
-                                    ),
-                                    DropdownMenuItem(
-                                      value: RenameReplaceScope.extension,
-                                      child: Text('Replace in extension'),
-                                    ),
-                                  ],
-                                  onChanged: !_editable
-                                      ? null
-                                      : (value) {
-                                          if (value == null) return;
-                                          _scope = value;
-                                          _changed();
-                                        },
+                                SizedBox(
+                                  width: math.min(360.0, constraints.maxWidth),
+                                  child: DropdownButton<RenameReplaceScope>(
+                                    value: _scope,
+                                    isExpanded: true,
+                                    items: const [
+                                      DropdownMenuItem(
+                                        value: RenameReplaceScope.fullName,
+                                        child: Text(
+                                          'Replace in full name',
+                                          maxLines: 1,
+                                          overflow: TextOverflow.ellipsis,
+                                        ),
+                                      ),
+                                      DropdownMenuItem(
+                                        value: RenameReplaceScope.name,
+                                        child: Text(
+                                          'Replace in name only',
+                                          maxLines: 1,
+                                          overflow: TextOverflow.ellipsis,
+                                        ),
+                                      ),
+                                      DropdownMenuItem(
+                                        value: RenameReplaceScope.extension,
+                                        child: Text(
+                                          'Replace in extension',
+                                          maxLines: 1,
+                                          overflow: TextOverflow.ellipsis,
+                                        ),
+                                      ),
+                                    ],
+                                    onChanged: !_editable
+                                        ? null
+                                        : (value) {
+                                            if (value == null) return;
+                                            _scope = value;
+                                            _changed();
+                                          },
+                                  ),
                                 ),
                               ],
                             ),
-                            ExpansionTile(
+                            const ExpansionTile(
                               tilePadding: EdgeInsets.zero,
-                              title: const Text(
+                              title: Text(
                                 'Mask reference',
                                 style: TextStyle(fontSize: 13),
                               ),
-                              children: const [
+                              children: [
                                 Align(
                                   alignment: Alignment.centerLeft,
                                   child: Padding(
@@ -524,6 +540,7 @@ class _BatchRenameDialogState extends ConsumerState<BatchRenameDialog> {
     ValueChanged<RenameCase> changed,
   ) => DropdownButtonFormField<RenameCase>(
     initialValue: selected,
+    isExpanded: true,
     key: ValueKey('$label-${selected.name}'),
     decoration: InputDecoration(
       labelText: label,
@@ -534,13 +551,17 @@ class _BatchRenameDialogState extends ConsumerState<BatchRenameDialog> {
       for (final value in RenameCase.values)
         DropdownMenuItem(
           value: value,
-          child: Text(switch (value) {
-            RenameCase.unchanged => 'Keep case',
-            RenameCase.lower => 'lowercase',
-            RenameCase.upper => 'UPPERCASE',
-            RenameCase.title => 'Title Case',
-            RenameCase.sentence => 'First letter uppercase',
-          }),
+          child: Text(
+            switch (value) {
+              RenameCase.unchanged => 'Keep case',
+              RenameCase.lower => 'lowercase',
+              RenameCase.upper => 'UPPERCASE',
+              RenameCase.title => 'Title Case',
+              RenameCase.sentence => 'First letter uppercase',
+            },
+            maxLines: 1,
+            overflow: TextOverflow.ellipsis,
+          ),
         ),
     ],
     onChanged: !_editable

@@ -1,6 +1,8 @@
 import 'dart:async';
 import 'dart:io';
 
+import 'package:archive/archive.dart';
+
 import 'package:crisp_cloud/models/file_item.dart';
 import 'package:crisp_cloud/models/panel_side.dart';
 import 'package:crisp_cloud/providers/panel_source_provider.dart';
@@ -9,7 +11,6 @@ import 'package:crisp_cloud/services/cloud_storage_interface.dart';
 import 'package:crisp_cloud/services/file_selection_pattern.dart';
 import 'package:crisp_cloud/services/local_file_service.dart';
 import 'package:crisp_cloud/services/panel_source_service.dart';
-import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:crisp_cloud/widgets/file_list_view.dart';
@@ -37,6 +38,24 @@ class _Cloud extends Fake implements CloudStorageClient {
     '/two': ['same.txt'],
   };
   Completer<void>? delay;
+  Completer<Uint8List>? pendingDownload;
+  final downloads = <String>[];
+  Uint8List archiveBytes = Uint8List.fromList(
+    ZipEncoder().encode(
+      Archive()..addFile(ArchiveFile('hello.txt', 5, [72, 101, 108, 108, 111])),
+    ),
+  );
+
+  @override
+  Future<Uint8List> downloadFileBytes(
+    String remotePath, {
+    Function(int, int)? onProgress,
+  }) async {
+    downloads.add(remotePath);
+    return pendingDownload == null
+        ? archiveBytes
+        : await pendingDownload!.future;
+  }
 
   @override
   Future<Map<String, dynamic>> listPath(String path) async {
@@ -411,6 +430,7 @@ void main() {
     });
     expect(tester.takeException(), isNull);
     await tester.pumpWidget(const SizedBox.shrink());
+    await tester.pumpAndSettle();
   });
 
   testWidgets('numpad plus opens selection instead of entering quick search', (
@@ -450,5 +470,93 @@ void main() {
     await tester.pumpAndSettle();
     expect(tester.takeException(), isNull);
     await tester.pumpWidget(const SizedBox.shrink());
+    await tester.pumpAndSettle();
+  });
+
+  test(
+    'remote archives in a left-pane result list use captured cloud storage',
+    () async {
+      final panel = container.read(panelProvider(PanelSide.local));
+      await Future<void>.delayed(Duration.zero);
+      container
+          .read(panelSourceProvider(PanelSide.local).notifier)
+          .setSource(
+            RemotePanelSource(
+              providerName: cloud.providerName,
+              client: cloud,
+              path: '/',
+            ),
+          );
+      await Future<void>.delayed(Duration.zero);
+      panel.showSearchResults([
+        item('/two/archive.zip'),
+      ], origin: panel.captureRemoteSearchOrigin());
+      await panel.navigateInto(panel.files!.single);
+      expect(cloud.downloads, ['/two/archive.zip']);
+      expect(panel.isInArchive, isTrue);
+      expect(panel.archiveSource!.parent, isA<RemotePanelSource>());
+      final member = panel.files!.single;
+      expect(panel.originForFile(member), isNull);
+      expect(
+        String.fromCharCodes(await panel.readArchiveMember(member)),
+        'Hello',
+      );
+      panel.exitArchive();
+      await Future<void>.delayed(Duration.zero);
+      expect(panel.isInArchive, isFalse);
+      expect(cloud.paths.last, '/two');
+      expect(panel.currentPath, '/two');
+    },
+  );
+
+  test(
+    'account change during archive download cannot publish old-account members',
+    () async {
+      final panel = await remote();
+      panel.showSearchResults([
+        item('/two/archive.zip'),
+      ], origin: panel.captureRemoteSearchOrigin());
+      cloud.pendingDownload = Completer<Uint8List>();
+      final opening = panel.enterArchive(panel.files!.single);
+      await Future<void>.delayed(Duration.zero);
+      auth.connection(false);
+      auth.connection(true);
+      cloud.pendingDownload!.complete(cloud.archiveBytes);
+      await opening;
+      expect(panel.isInArchive, isFalse);
+      expect(cloud.downloads, ['/two/archive.zip']);
+    },
+  );
+
+  test('refresh follows actual storage in either pane', () async {
+    final left = container.read(panelProvider(PanelSide.local));
+    await Future<void>.delayed(Duration.zero);
+    container
+        .read(panelSourceProvider(PanelSide.local).notifier)
+        .setSource(
+          RemotePanelSource(
+            providerName: cloud.providerName,
+            client: cloud,
+            path: '/two',
+          ),
+        );
+    await Future<void>.delayed(Duration.zero);
+    await left.refresh();
+    expect(left.captureCurrentOrigin().source, isA<RemotePanelSource>());
+    expect(
+      left.files!.where((file) => file.name != '..').single.path,
+      '/two/same.txt',
+    );
+
+    final right = await remote();
+    container
+        .read(panelSourceProvider(PanelSide.remote).notifier)
+        .setSource(const LocalPanelSource('/tmp'));
+    await Future<void>.delayed(Duration.zero);
+    final requests = cloud.paths.length;
+    await right.refresh();
+    expect(right.captureCurrentOrigin().source, isA<LocalPanelSource>());
+    expect(cloud.paths.length, requests);
+    expect(right.currentPath, '/tmp');
   });
 }

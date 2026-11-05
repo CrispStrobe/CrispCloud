@@ -7,7 +7,6 @@ import 'dart:async';
 
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:universal_html/html.dart' as html;
 import 'package:path/path.dart' as p;
 
 import '../models/file_item.dart';
@@ -214,8 +213,13 @@ void uploadSelected(BuildContext context, WidgetRef ref) {
   final panel = ref.read(panelProvider(PanelSide.local));
   if (panel.selection.isEmpty) return;
   if (panel.showingSearchResults) {
-    showFileOperationDialog(context, ref, PanelSide.local,
-        panel.selection.toList(), kind: FileOperationKind.copy);
+    showFileOperationDialog(
+      context,
+      ref,
+      PanelSide.local,
+      panel.selection.toList(),
+      kind: FileOperationKind.copy,
+    );
     return;
   }
   ref.read(transferProvider).uploadFiles(panel.selection.toList());
@@ -225,8 +229,13 @@ void downloadSelected(BuildContext context, WidgetRef ref) {
   final panel = ref.read(panelProvider(PanelSide.remote));
   if (panel.selection.isEmpty) return;
   if (panel.showingSearchResults) {
-    showFileOperationDialog(context, ref, PanelSide.remote,
-        panel.selection.toList(), kind: FileOperationKind.copy);
+    showFileOperationDialog(
+      context,
+      ref,
+      PanelSide.remote,
+      panel.selection.toList(),
+      kind: FileOperationKind.copy,
+    );
     return;
   }
   ref.read(transferProvider).downloadFiles(panel.selection.toList());
@@ -254,15 +263,17 @@ void confirmDeleteSelected(BuildContext context, WidgetRef ref) {
         ElevatedButton(
           onPressed: () async {
             final files = targets;
-            await panel.deleteFiles(files);
+            final deleted = await panel.deleteFiles(files);
             if (context.mounted) {
               Navigator.pop(context);
-              _showUndoSnackBar(
-                context,
-                ref,
-                activePanel,
-                'Deleted ${files.length} item(s)',
-              );
+              final message =
+                  'Deleted $deleted of ${files.length} selected item(s)';
+              if (deleted > 0) {
+                _showUndoSnackBar(context, ref, activePanel, message);
+              } else {
+                ScaffoldMessenger.of(context)
+                    .showSnackBar(SnackBar(content: Text(message)));
+              }
             }
           },
           style: ElevatedButton.styleFrom(

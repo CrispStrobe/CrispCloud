@@ -19,8 +19,9 @@ Future<String?> exportFileListText(String text) async {
     lockParentWindow: true,
   );
   if (path == null) return null;
-  if (path.isEmpty)
+  if (path.isEmpty) {
     throw StateError('The save dialog returned no destination.');
+  }
   if (mobile) return 'File list saved.';
   final files = LocalFileService();
   Future<void> write() async {

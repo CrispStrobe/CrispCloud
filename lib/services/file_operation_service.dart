@@ -60,7 +60,12 @@ abstract class FileOperationBackend {
   String get label;
   p.Context get paths;
   String pathKey(String path) => paths.normalize(path);
-  bool samePath(String first, String second) => pathKey(first) == pathKey(second);
+
+  /// Collision comparison may be more conservative than source identity.
+  /// Never use this key to discard case-distinct selected source items.
+  String destinationPathKey(String path) => pathKey(path);
+  bool samePath(String first, String second) =>
+      pathKey(first) == pathKey(second);
   bool isWithin(String parent, String child) =>
       paths.isWithin(pathKey(parent), pathKey(child));
   bool get isCurrent;
@@ -271,8 +276,11 @@ class FileOperationService {
           !file.isFolder &&
           options.kind == FileOperationKind.copy &&
           options.fileConflict == FileConflictPolicy.keepBoth) {
-        output = await _availableName(output, destination,
-            reserved: destinations.keys.toSet());
+        output = await _availableName(
+          output,
+          destination,
+          reserved: destinations.keys.toSet(),
+        );
       }
       if (identical(source.identity, destination.identity) &&
           (source.samePath(path, output) ||
@@ -297,7 +305,7 @@ class FileOperationService {
         entry.message = 'Excluded by the file filter.';
         return;
       }
-      final previous = destinations[destination.pathKey(output)];
+      final previous = destinations[destination.destinationPathKey(output)];
       if (previous != null && !(previous.source.isFolder && file.isFolder)) {
         if (options.fileConflict == FileConflictPolicy.keepBoth &&
             !file.isFolder) {
@@ -313,16 +321,46 @@ class FileOperationService {
           );
         }
       }
-      destinations[destination.pathKey(output)] = entry;
       entry.existing = await destination.stat(output);
       _checkSources(source, destination);
+      final actualDestination = entry.existing?.path;
+      if (actualDestination != null) {
+        // Providers may resolve a differently-cased request to the source
+        // itself. Use the actual listed path before authorizing any move.
+        final isSource =
+            identical(source.identity, destination.identity) &&
+            source.samePath(path, actualDestination);
+        final canDuplicateSource =
+            !file.isFolder &&
+            options.kind == FileOperationKind.copy &&
+            options.fileConflict == FileConflictPolicy.keepBoth;
+        if (isSource && !canDuplicateSource) {
+          errors.add('Cannot copy or move an item into itself: $path');
+          return;
+        }
+        output = destination.paths.normalize(actualDestination);
+        entry.destination = output;
+      }
       if (entry.existing != null &&
           (entry.existing!.isFolder != file.isFolder ||
               entry.existing!.isSymlink == true)) {
         errors.add(
           'Destination has an incompatible type or is a symbolic link: $output',
         );
+      } else if (entry.existing != null &&
+          !file.isFolder &&
+          options.fileConflict == FileConflictPolicy.keepBoth) {
+        // Show the actual planned copy name, including names already reserved
+        // by earlier entries. execute still rechecks for changes after preview.
+        output = await _availableName(
+          output,
+          destination,
+          reserved: destinations.keys.toSet(),
+        );
+        entry.destination = output;
+        entry.existing = null;
       }
+      destinations[destination.destinationPathKey(output)] = entry;
       if (file.isFolder && file.isSymlink != true) {
         final children = await source.list(path);
         children.sort((a, b) => a.name.compareTo(b.name));
@@ -397,7 +435,9 @@ class FileOperationService {
     final target = plan.destination;
     final options = plan.options;
     final skippedDirectories = <String>[];
-    final reserved = plan.entries.map((entry) => target.pathKey(entry.destination)).toSet();
+    final reserved = plan.entries
+        .map((entry) => target.destinationPathKey(entry.destination))
+        .toSet();
     var stopped = false;
     for (final entry in plan.entries) {
       if (entry.outcome != FileOperationOutcome.pending) continue;
@@ -452,8 +492,9 @@ class FileOperationService {
           if (decision == FileConflictDecision.skip) {
             entry.outcome = FileOperationOutcome.skipped;
             entry.message = 'Destination exists; skipped.';
-            if (entry.source.isFolder)
+            if (entry.source.isFolder) {
               skippedDirectories.add(entry.destination);
+            }
             onEntryComplete?.call(entry);
             continue;
           }
@@ -463,7 +504,7 @@ class FileOperationService {
               target,
               reserved: reserved,
             );
-            reserved.add(target.pathKey(entry.destination));
+            reserved.add(target.destinationPathKey(entry.destination));
             existing = null;
           } else if (!entry.source.isFolder) {
             replace = true;
@@ -525,10 +566,11 @@ class FileOperationService {
                 target,
               );
               final after = await _digest(target, written, control, source);
-              if (before != after)
+              if (before != after) {
                 throw StateError(
                   'SHA-256 verification failed; source retained.',
                 );
+              }
             }
             if (options.preserveModified && entry.source.updatedAt != null) {
               await target.setModified(
@@ -667,9 +709,10 @@ class FileOperationService {
         backend.paths.dirname(original),
         '$stem ($index)$extension',
       );
-      if (!reserved.contains(backend.pathKey(candidate)) &&
-          await backend.stat(candidate) == null)
+      if (!reserved.contains(backend.destinationPathKey(candidate)) &&
+          await backend.stat(candidate) == null) {
         return candidate;
+      }
     }
     throw StateError('Cannot find a free filename for $original');
   }
@@ -689,8 +732,9 @@ class FileOperationService {
       return;
     }
     final parent = backend.paths.dirname(path);
-    if (parent == path)
+    if (parent == path) {
       throw StateError('Destination root is unavailable: $path');
+    }
     await _ensureDirectory(backend, parent);
     if (!backend.isCurrent) throw StateError('The storage account changed.');
     await backend.createDirectory(path);

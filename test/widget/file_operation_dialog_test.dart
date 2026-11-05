@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'dart:convert';
 import 'dart:io';
 
@@ -231,6 +232,39 @@ void main() {
     await tester.pumpAndSettle();
   }
 
+  Future<void> runOperation(WidgetTester tester, FileOperationKind kind) async {
+    final transfers = container.read(transferProvider);
+    // Streaming jobs can advance outside the widget clock. Await the actual
+    // transfer notification instead of mistaking a settled UI for completion.
+    await tester.runAsync(() async {
+      final completed = Completer<void>();
+      void check() {
+        if (transfers.operations.isNotEmpty &&
+            !transfers.hasActiveOperations &&
+            !completed.isCompleted) {
+          completed.complete();
+        }
+      }
+
+      transfers.addListener(check);
+      try {
+        await tester.tap(start(kind));
+        check();
+        await completed.future.timeout(const Duration(seconds: 5));
+      } finally {
+        transfers.removeListener(check);
+      }
+    });
+    await tester.pumpAndSettle();
+    expect(
+      transfers.hasActiveOperations,
+      isFalse,
+      reason:
+          'Transfer states: ${transfers.operations.map((op) => '${op.status}/${op.currentBytes}/${op.error}')}; '
+          'reads: ${cloud.reads}; uploads: ${cloud.uploads}; renames: ${cloud.renamed}',
+    );
+  }
+
   testWidgets('default destination is the verified opposite storage and path', (
     tester,
   ) async {
@@ -322,8 +356,7 @@ void main() {
       await toggle(tester, 'Verify contents (SHA-256)');
       await tester.tap(find.text('Preview'));
       await tester.pumpAndSettle();
-      await tester.tap(start(FileOperationKind.copy));
-      await tester.pumpAndSettle();
+      await runOperation(tester, FileOperationKind.copy);
       expect(cloud.files['/target/one.txt'], existing);
       expect(cloud.files['/target/one (1).txt'], utf8.encode('one\n'));
       expect(cloud.files.containsKey('/target/two.bin'), isFalse);
@@ -345,8 +378,7 @@ void main() {
     await tester.enterText(field('File filter'), '*.txt');
     await tester.tap(find.text('Preview'));
     await tester.pumpAndSettle();
-    await tester.tap(start(FileOperationKind.move));
-    await tester.pumpAndSettle();
+    await runOperation(tester, FileOperationKind.move);
     expect(cloud.files.containsKey('/one.txt'), isFalse);
     expect(cloud.files['/target/one.txt'], utf8.encode('one\n'));
     expect(cloud.files['/two.bin'], [0, 1, 2, 3]);
@@ -367,8 +399,7 @@ void main() {
     await tester.pumpAndSettle();
     auth.changeAccount();
     await tester.pumpAndSettle();
-    await tester.tap(start(FileOperationKind.copy));
-    await tester.pumpAndSettle();
+    await runOperation(tester, FileOperationKind.copy);
     expect(cloud.uploads, isEmpty);
     expect(cloud.renamed, isEmpty);
     expect(cloud.deleted, isEmpty);

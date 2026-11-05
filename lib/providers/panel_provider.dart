@@ -108,8 +108,8 @@ class PanelNotifier extends ChangeNotifier {
   PanelFileOrigin? _fileListOrigin;
   final Map<String, _FileListSnapshot> _fileListTabs = {};
 
-  bool get canOperateOnFileList => !_showingSearchResults ||
-      (_fileListOrigin?.isCurrent ?? false);
+  bool get canOperateOnFileList =>
+      !_showingSearchResults || (_fileListOrigin?.isCurrent ?? false);
 
   /// When non-null, the panel is browsing inside a compressed archive.
   ArchivePanelSource? _archiveSource;
@@ -154,7 +154,7 @@ class PanelNotifier extends ChangeNotifier {
   String _localPath = '/';
 
   PanelNotifier(this._ref, this.side)
-      : _localFileService = _ref.read(localFileServiceProvider) {
+    : _localFileService = _ref.read(localFileServiceProvider) {
     listFocusNode = FocusNode(debugLabel: 'panel-${side.name}');
     // ChangeNotifier listeners cannot compare prev/next objects: both can be
     // the same mutated notifier. Retain a value snapshot for account changes.
@@ -201,7 +201,8 @@ class PanelNotifier extends ChangeNotifier {
       _leaveFileList();
       _listingGeneration++;
       _log.info(
-          'Source switched: ${prev?.displayName} → ${next.displayName} (path=${next.currentPath})');
+        'Source switched: ${prev?.displayName} → ${next.displayName} (path=${next.currentPath})',
+      );
       if (next.isLocal) {
         _localPath = next.currentPath;
         _loadLocalFiles();
@@ -222,10 +223,13 @@ class PanelNotifier extends ChangeNotifier {
   PanelFileOrigin? originForFile(FileItem file) {
     if (_isDisposed) return null;
     final selectedSource = _ref.read(panelSourceProvider(side));
-    if (_isLoading || _showingSearchResults ||
+    if (_isLoading ||
+        _showingSearchResults ||
         _verifiedListingGeneration != _listingGeneration ||
-        selectedSource.isArchive || selectedSource.isContainer ||
-        isInArchive || _isFlatView ||
+        selectedSource.isArchive ||
+        selectedSource.isContainer ||
+        isInArchive ||
+        _isFlatView ||
         !(_files?.any((item) => identical(item, file)) ?? false)) {
       return null;
     }
@@ -243,7 +247,9 @@ class PanelNotifier extends ChangeNotifier {
     FileItem? replacement(FileItem? previous) {
       if (previous == null) return null;
       final before = _fileOrigins[previous];
-      if (before == null || !before.isCurrent || !origin.isCurrent ||
+      if (before == null ||
+          !before.isCurrent ||
+          !origin.isCurrent ||
           !_sameFileSource(before.source, origin.source)) {
         return null;
       }
@@ -253,8 +259,8 @@ class PanelNotifier extends ChangeNotifier {
         final matches = previous.uuid != null
             ? candidate.uuid == previous.uuid
             : previous.path != null
-                ? candidate.path == previous.path
-                : candidate.name == previous.name;
+            ? candidate.path == previous.path
+            : candidate.name == previous.name;
         if (!matches) continue;
         // Duplicate identifiers are ambiguous; require a new user selection.
         if (match != null) return null;
@@ -270,7 +276,9 @@ class PanelNotifier extends ChangeNotifier {
     for (final file in listed) {
       _fileOrigins[file] = origin;
     }
-    _selection..clear()..addAll(selected);
+    _selection
+      ..clear()
+      ..addAll(selected);
     _lastSelected = lastSelected;
     _itemToScrollTo = scrollTarget;
   }
@@ -281,13 +289,17 @@ class PanelNotifier extends ChangeNotifier {
     }
     if (before is RemotePanelSource && after is RemotePanelSource) {
       return identical(before.client, after.client) &&
-          before.providerName == after.providerName && before.path == after.path;
+          before.providerName == after.providerName &&
+          before.path == after.path;
     }
     return false;
   }
 
   PanelFileOrigin _remoteOrigin(
-      CloudStorageClient client, String providerName, String path) {
+    CloudStorageClient client,
+    String providerName,
+    String path,
+  ) {
     final generation = _accountGeneration;
     final email = _ref.read(authProvider).userEmail;
     final userId = client.userId;
@@ -297,12 +309,16 @@ class PanelNotifier extends ChangeNotifier {
       () {
         if (_isDisposed || generation != _accountGeneration) return false;
         final auth = _ref.read(authProvider);
-        return auth.isConnected && identical(auth.client, client) &&
-            auth.userEmail == email && client.isAuthenticated &&
-            client.userId == userId && client.bucketId == bucketId;
+        return auth.isConnected &&
+            identical(auth.client, client) &&
+            auth.userEmail == email &&
+            client.isAuthenticated &&
+            client.userId == userId &&
+            client.bucketId == bucketId;
       },
     );
   }
+
   Set<FileItem> get selection => _selection;
   FileItem? get lastSelected => _lastSelected;
   FileItem? get itemToScrollTo => _itemToScrollTo;
@@ -325,8 +341,8 @@ class PanelNotifier extends ChangeNotifier {
       _indexOfIdentical(items, item) >= 0;
   FileItem? get cursorItem =>
       (_files != null && _cursorIndex >= 0 && _cursorIndex < _files!.length)
-          ? _files![_cursorIndex]
-          : null;
+      ? _files![_cursorIndex]
+      : null;
 
   SortBy get sortBy => _sortBy;
   SortOrder get sortOrder => _sortOrder;
@@ -612,12 +628,19 @@ class PanelNotifier extends ChangeNotifier {
   /// that label must never redirect an operation to another filesystem.
   PanelFileOrigin captureCurrentOrigin() {
     if (_isDisposed || _isLoading || isInArchive) {
-      throw StateError('Wait for a real filesystem listing before starting an operation.');
+      throw StateError(
+        'Wait for a real filesystem listing before starting an operation.',
+      );
     }
-    final origin = _showingSearchResults ? _fileListOrigin : _currentDirectoryOrigin;
-    if (origin == null || !origin.isCurrent ||
+    final origin = _showingSearchResults
+        ? _fileListOrigin
+        : _currentDirectoryOrigin;
+    if (origin == null ||
+        !origin.isCurrent ||
         _verifiedListingGeneration != _listingGeneration) {
-      throw StateError('The source is no longer current. Refresh the folder or run the search again.');
+      throw StateError(
+        'The source is no longer current. Refresh the folder or run the search again.',
+      );
     }
     return origin;
   }
@@ -636,9 +659,12 @@ class PanelNotifier extends ChangeNotifier {
   /// A result can be copied/moved/renamed at its captured full path while
   /// [originForFile] continues to reject virtual lists for editor writeback.
   PanelFileOrigin? originForOperation(FileItem file) {
-    if (_isDisposed || _isLoading || isInArchive ||
+    if (_isDisposed ||
+        _isLoading ||
+        isInArchive ||
         _verifiedListingGeneration != _listingGeneration ||
-        file.name == '..' || file.name == '.' ||
+        file.name == '..' ||
+        file.name == '.' ||
         !(_files?.any((candidate) => identical(candidate, file)) ?? false)) {
       return null;
     }
@@ -654,27 +680,49 @@ class PanelNotifier extends ChangeNotifier {
   /// The returned guard stays false after account disconnection/reconnection.
   PanelFileOrigin captureOperationOrigin(List<FileItem> files) {
     if (files.isEmpty) throw StateError('Select at least one file or folder.');
+    if (_showingSearchResults && !canOperateOnFileList) {
+      throw StateError(
+        'The file list source changed. Run the search or import again.',
+      );
+    }
     final origins = <PanelFileOrigin>[];
     for (final file in files) {
       final origin = originForOperation(file);
       if (origin == null) {
-        throw StateError('The source of "${file.name}" is not verified. Refresh its folder or run the search again.');
+        throw StateError(
+          'The source of "${file.name}" is not verified. Refresh its folder or run the search again.',
+        );
       }
-      if (origins.isNotEmpty && !_sameStorage(origins.first.source, origin.source)) {
-        throw StateError('A single operation cannot mix files from different storage accounts.');
+      if (origins.isNotEmpty &&
+          !_sameStorage(origins.first.source, origin.source)) {
+        throw StateError(
+          'A single operation cannot mix files from different storage accounts.',
+        );
       }
       origins.add(origin);
     }
-    final source = _showingSearchResults
-        ? (_fileListOrigin?.source ?? origins.first.source)
-        : origins.first.source;
-    return PanelFileOrigin._(source, () => origins.every((origin) => origin.isCurrent));
+    final listOrigin = _showingSearchResults ? _fileListOrigin : null;
+    if (listOrigin != null &&
+        !_sameStorage(listOrigin.source, origins.first.source)) {
+      throw StateError(
+        'These results belong to a different storage source. Open separate lists for each source.',
+      );
+    }
+    final source = listOrigin?.source ?? origins.first.source;
+    return PanelFileOrigin._(
+      source,
+      () =>
+          (listOrigin == null || listOrigin.isCurrent) &&
+          origins.every((origin) => origin.isCurrent),
+    );
   }
 
   static bool _sameStorage(PanelSource a, PanelSource b) =>
       (a is LocalPanelSource && b is LocalPanelSource) ||
-      (a is RemotePanelSource && b is RemotePanelSource &&
-          identical(a.client, b.client) && a.providerName == b.providerName);
+      (a is RemotePanelSource &&
+          b is RemotePanelSource &&
+          identical(a.client, b.client) &&
+          a.providerName == b.providerName);
 
   static PanelFileOrigin _originAt(PanelFileOrigin origin, String path) =>
       PanelFileOrigin._(origin.source.withPath(path), () => origin.isCurrent);
@@ -694,22 +742,33 @@ class PanelNotifier extends ChangeNotifier {
     PanelFileOrigin? commonOrigin = origin;
     for (final result in results) {
       if (result.name == '..' || result.name == '.') continue;
-      final verified = originForFile?.call(result) ?? origin ?? originForOperation(result);
+      final verified =
+          originForFile?.call(result) ?? origin ?? originForOperation(result);
       var path = result.path;
-      if ((path == null || path.isEmpty) && verified != null &&
+      if ((path == null || path.isEmpty) &&
+          verified != null &&
           _files?.any((item) => identical(item, result)) == true) {
         final paths = verified.source.isRemote ? p.posix : p.context;
         path = paths.join(verified.source.currentPath, result.name);
       }
       final paths = verified?.source.isRemote == true ? p.posix : p.context;
-      final normalized = path == null || path.isEmpty ? null : paths.normalize(path);
-      final key = normalized == null ? 'id:${result.uuid ?? identityHashCode(result)}' : 'path:$normalized';
+      final normalized = path == null || path.isEmpty
+          ? null
+          : paths.normalize(path);
+      final key = normalized == null
+          ? 'id:${result.uuid ?? identityHashCode(result)}'
+          : 'path:$normalized';
       if (!seen.add(key)) continue;
       final item = result.copyWith(
-        name: normalized == null ? paths.basename(result.name) : paths.basename(normalized),
+        name: normalized == null
+            ? paths.basename(result.name)
+            : paths.basename(normalized),
         path: normalized,
       );
-      if (verified != null && verified.isCurrent && normalized != null && paths.isAbsolute(normalized)) {
+      if (verified != null &&
+          verified.isCurrent &&
+          normalized != null &&
+          paths.isAbsolute(normalized)) {
         _fileOrigins[item] = _originAt(verified, paths.dirname(normalized));
         commonOrigin ??= verified;
       }
@@ -724,6 +783,7 @@ class PanelNotifier extends ChangeNotifier {
     _isLoading = false;
     _isFlatView = false;
     _archiveSource = null;
+    _archiveOrigin = null;
     _archiveBytes = null;
     _selection.clear();
     _lastSelected = null;
@@ -766,7 +826,11 @@ class PanelNotifier extends ChangeNotifier {
     final origin = _fileListOrigin;
     _leaveFileList();
     if (origin != null && origin.isCurrent) {
-      await navigateToPath(origin.source.currentPath, origin: origin, recordHistory: false);
+      await navigateToPath(
+        origin.source.currentPath,
+        origin: origin,
+        recordHistory: false,
+      );
     } else {
       await refresh();
     }
@@ -794,7 +858,9 @@ class PanelNotifier extends ChangeNotifier {
     final updated = <FileItem>[];
     final selected = <FileItem>{};
     for (final old in _files ?? const <FileItem>[]) {
-      final item = replacements.containsKey(old.path) ? replacements[old.path] : old;
+      final item = replacements.containsKey(old.path)
+          ? replacements[old.path]
+          : old;
       if (item == null) continue;
       if (!identical(old, item)) {
         final origin = _fileOrigins[old];
@@ -809,29 +875,45 @@ class PanelNotifier extends ChangeNotifier {
       if (identical(_itemToScrollTo, old)) _itemToScrollTo = item;
     }
     _files = updated;
-    _selection..clear()..addAll(selected);
-    if (_lastSelected != null && !updated.any((item) => identical(item, _lastSelected))) _lastSelected = null;
-    if (_itemToScrollTo != null && !updated.any((item) => identical(item, _itemToScrollTo))) _itemToScrollTo = null;
+    _selection
+      ..clear()
+      ..addAll(selected);
+    if (_lastSelected != null &&
+        !updated.any((item) => identical(item, _lastSelected)))
+      _lastSelected = null;
+    if (_itemToScrollTo != null &&
+        !updated.any((item) => identical(item, _itemToScrollTo)))
+      _itemToScrollTo = null;
     _sortFiles();
-    _resetCursor(preserveItem: replacements[previousCursor?.path] ?? previousCursor);
+    _resetCursor(
+      preserveItem: replacements[previousCursor?.path] ?? previousCursor,
+    );
     _rememberFileListTab();
     notifyListeners();
   }
 
   String exportFileListPaths({bool selectedOnly = false}) {
     final files = selectedOnly ? _selection : (_files ?? const <FileItem>[]);
-    return FileListPaths.encode(files.where((item) => item.name != '..').map((item) {
-      if (item.path != null && item.path!.isNotEmpty) return item.path!;
-      final origin = originForOperation(item);
-      if (origin == null) throw StateError('The original path of "${item.name}" is unavailable.');
-      final paths = origin.source.isRemote ? p.posix : p.context;
-      return paths.join(origin.source.currentPath, item.name);
-    }));
+    return FileListPaths.encode(
+      files.where((item) => item.name != '..').map((item) {
+        if (item.path != null && item.path!.isNotEmpty) return item.path!;
+        final origin = originForOperation(item);
+        if (origin == null)
+          throw StateError(
+            'The original path of "${item.name}" is unavailable.',
+          );
+        final paths = origin.source.isRemote ? p.posix : p.context;
+        return paths.join(origin.source.currentPath, item.name);
+      }),
+    );
   }
 
   Future<void> openContainingFolder(FileItem item) async {
     final origin = originForOperation(item);
-    if (origin == null) throw StateError('This result no longer has a verified source. Run the search again.');
+    if (origin == null)
+      throw StateError(
+        'This result no longer has a verified source. Run the search again.',
+      );
     final paths = origin.source.isRemote ? p.posix : p.context;
     final path = item.path ?? paths.join(origin.source.currentPath, item.name);
     _leaveFileList();
@@ -842,15 +924,19 @@ class PanelNotifier extends ChangeNotifier {
   /// Resolve an imported path list through the current source. Every imported
   /// row must be present in a real parent-directory listing before it gains an
   /// operation origin. The panel/account may not change during the import.
-  Future<FileListImportResult> importFileListPaths(String text, {
+  Future<FileListImportResult> importFileListPaths(
+    String text, {
     String title = 'File list',
     bool Function()? isCancelled,
   }) async {
     final origin = captureCurrentOrigin();
     final generation = _listingGeneration;
     final paths = origin.source.isRemote ? p.posix : p.context;
-    final requested = FileListPaths.parse(text,
-      basePath: origin.source.currentPath, local: origin.source.isLocal);
+    final requested = FileListPaths.parse(
+      text,
+      basePath: origin.source.currentPath,
+      local: origin.source.isLocal,
+    );
     final byParent = <String, List<String>>{};
     for (final path in requested) {
       (byParent[paths.dirname(path)] ??= []).add(path);
@@ -858,38 +944,61 @@ class PanelNotifier extends ChangeNotifier {
     final found = <String, FileItem>{};
     final failures = <String, String>{};
     for (final entry in byParent.entries) {
-      if (isCancelled?.call() == true) throw StateError('File list import cancelled.');
+      if (isCancelled?.call() == true)
+        throw StateError('File list import cancelled.');
       if (!origin.isCurrent || generation != _listingGeneration) {
-        throw StateError('The panel or account changed during import. Open the list again.');
+        throw StateError(
+          'The panel or account changed during import. Open the list again.',
+        );
       }
       try {
         final listed = <FileItem>[];
         if (origin.source is RemotePanelSource) {
-          final result = await (origin.source as RemotePanelSource).client.listPath(entry.key);
+          final result = await (origin.source as RemotePanelSource).client
+              .listPath(entry.key);
           for (final kind in const ['folders', 'files']) {
             for (final value in (result[kind] as List? ?? const [])) {
               final map = Map<String, dynamic>.from(value as Map);
               var name = map['name']?.toString() ?? '';
-              if (name.isEmpty || name == '..' || name == '.' || name.contains('/')) continue;
+              if (name.isEmpty ||
+                  name == '..' ||
+                  name == '.' ||
+                  name.contains('/'))
+                continue;
               if (kind == 'files') {
-                final extension = (map['fileType'] ?? map['type'] ?? '').toString();
-                if (extension.isNotEmpty && extension.toLowerCase() != 'file' &&
-                    !name.toLowerCase().endsWith('.${extension.toLowerCase()}')) {
+                final extension = (map['fileType'] ?? map['type'] ?? '')
+                    .toString();
+                if (extension.isNotEmpty &&
+                    extension.toLowerCase() != 'file' &&
+                    !name.toLowerCase().endsWith(
+                      '.${extension.toLowerCase()}',
+                    )) {
                   name = '$name.$extension';
                 }
               }
-              final modified = map['lastModified'] ?? map['modificationTime'] ?? map['updatedAt'];
-              listed.add(FileItem(name: name, path: paths.join(entry.key, name),
-                isFolder: kind == 'folders', uuid: map['uuid']?.toString(),
-                size: (map['size'] as num?)?.toInt(),
-                updatedAt: modified is int ? DateTime.fromMillisecondsSinceEpoch(modified)
-                    : DateTime.tryParse(modified?.toString() ?? ''),
-                metadata: map));
+              final modified =
+                  map['lastModified'] ??
+                  map['modificationTime'] ??
+                  map['updatedAt'];
+              listed.add(
+                FileItem(
+                  name: name,
+                  path: paths.join(entry.key, name),
+                  isFolder: kind == 'folders',
+                  uuid: map['uuid']?.toString(),
+                  size: (map['size'] as num?)?.toInt(),
+                  updatedAt: modified is int
+                      ? DateTime.fromMillisecondsSinceEpoch(modified)
+                      : DateTime.tryParse(modified?.toString() ?? ''),
+                  metadata: map,
+                ),
+              );
             }
           }
         } else {
           final entities = await _localFileService.listDirectory(entry.key);
-          if (entities == null) throw StateError('This folder could not be listed.');
+          if (entities == null)
+            throw StateError('This folder could not be listed.');
           for (final entity in entities) {
             if (!entry.value.contains(paths.normalize(entity.path))) continue;
             var folder = entity is Directory;
@@ -906,12 +1015,25 @@ class PanelNotifier extends ChangeNotifier {
               folder = stat.type == FileSystemEntityType.directory;
               size = folder ? null : stat.size;
               modified = stat.modified;
-              symlink = await FileSystemEntity.type(entity.path, followLinks: false) == FileSystemEntityType.link;
+              symlink =
+                  await FileSystemEntity.type(
+                    entity.path,
+                    followLinks: false,
+                  ) ==
+                  FileSystemEntityType.link;
               if (symlink) symlinkTarget = await Link(entity.path).target();
             }
-            listed.add(FileItem(name: paths.basename(entity.path), path: paths.normalize(entity.path),
-              isFolder: folder, size: size, updatedAt: modified,
-              isSymlink: symlink, symlinkTarget: symlinkTarget));
+            listed.add(
+              FileItem(
+                name: paths.basename(entity.path),
+                path: paths.normalize(entity.path),
+                isFolder: folder,
+                size: size,
+                updatedAt: modified,
+                isSymlink: symlink,
+                symlinkTarget: symlinkTarget,
+              ),
+            );
           }
         }
         for (final path in entry.value) {
@@ -919,7 +1041,9 @@ class PanelNotifier extends ChangeNotifier {
           if (candidates.length == 1) {
             found[path] = candidates.single;
           } else {
-            failures[path] = candidates.isEmpty ? 'Not found or inaccessible' : 'Ambiguous directory entry';
+            failures[path] = candidates.isEmpty
+                ? 'Not found or inaccessible'
+                : 'Ambiguous directory entry';
           }
         }
       } catch (e) {
@@ -928,17 +1052,28 @@ class PanelNotifier extends ChangeNotifier {
         }
       }
     }
-    if (isCancelled?.call() == true) throw StateError('File list import cancelled.');
+    if (isCancelled?.call() == true)
+      throw StateError('File list import cancelled.');
     if (!origin.isCurrent || generation != _listingGeneration) {
-      throw StateError('The panel or account changed during import. Open the list again.');
+      throw StateError(
+        'The panel or account changed during import. Open the list again.',
+      );
     }
     if (found.isEmpty) {
-      throw StateError('None of the listed paths could be found in ${origin.source.displayName}. '
-          '${failures.isEmpty ? '' : failures.values.first}');
+      throw StateError(
+        'None of the listed paths could be found in ${origin.source.displayName}. '
+        '${failures.isEmpty ? '' : failures.values.first}',
+      );
     }
-    final ordered = requested.map((path) => found[path]).whereType<FileItem>().toList();
+    final ordered = requested
+        .map((path) => found[path])
+        .whereType<FileItem>()
+        .toList();
     showSearchResults(ordered, origin: origin, title: title);
-    return FileListImportResult(loaded: ordered.length, failures: Map.unmodifiable(failures));
+    return FileListImportResult(
+      loaded: ordered.length,
+      failures: Map.unmodifiable(failures),
+    );
   }
 
   // --- Archive navigation ---
@@ -946,41 +1081,65 @@ class PanelNotifier extends ChangeNotifier {
   /// Enter a compressed archive for browsing.
   /// Cached archive bytes for web browsing (native reads from disk each time).
   Uint8List? _archiveBytes;
+  PanelFileOrigin? _archiveOrigin;
 
   Future<void> enterArchive(FileItem file) async {
     if (file.path == null && file.name.isEmpty) return;
-    final archivePath = file.path ?? p.posix.join(_remotePath, file.name);
-    final parentSource = side == PanelSide.local
-        ? LocalPanelSource(currentPath)
-        : LocalPanelSource(currentPath);
-    _log.info('enterArchive: $archivePath');
-    _archiveSource =
-        const PanelSourceService().enterArchive(archivePath, parentSource);
-
-    // Load the archive through the platform service so macOS security-scoped
-    // bookmarks are honoured; the listing is decoded from these bytes.
-    _archiveBytes = null;
+    int? requestGeneration;
     try {
-      if (side == PanelSide.local) {
-        await _localFileService.ensureAccess(archivePath);
-        _archiveBytes = await _localFileService.readFile(
-          archivePath,
-          fileItem: file,
-        );
+      // A list entry must be the exact captured result. For a regular folder,
+      // read-only archive callers may provide a same-path FileItem wrapper.
+      final origin = _showingSearchResults
+          ? captureOperationOrigin([file])
+          : (originForOperation(file) ?? captureCurrentOrigin());
+      final paths = origin.source.isRemote ? p.posix : p.context;
+      final archivePath =
+          file.path ?? paths.join(origin.source.currentPath, file.name);
+      final parentSource = origin.source.withPath(paths.dirname(archivePath));
+      _leaveFileList();
+      final generation = ++_listingGeneration;
+      requestGeneration = generation;
+      _archiveSource = const PanelSourceService().enterArchive(
+        archivePath,
+        parentSource,
+      );
+      _archiveOrigin = origin;
+      _archiveBytes = null;
+      _isLoading = true;
+      notifyListeners();
+      _log.info('enterArchive: $archivePath (${parentSource.displayName})');
+      Uint8List bytes;
+      if (origin.source is RemotePanelSource) {
+        bytes = await (origin.source as RemotePanelSource).client
+            .downloadFileBytes(archivePath);
       } else {
-        final client = _ref.read(authProvider).client;
-        _archiveBytes = await client.downloadFileBytes(archivePath);
+        if (!await _localFileService.ensureAccess(archivePath)) {
+          throw StateError('Access to the archive was not granted.');
+        }
+        bytes = await _localFileService.readFile(archivePath, fileItem: file);
       }
+      if (_isDisposed || generation != _listingGeneration) return;
+      if (!origin.isCurrent)
+        throw StateError(
+          'The storage account changed while opening the archive.',
+        );
+      _archiveBytes = bytes;
+      _isLoading = false;
+      await _loadArchiveFiles();
+      if (!_isDisposed) notifyListeners();
     } catch (e) {
+      if (_isDisposed ||
+          (requestGeneration != null &&
+              requestGeneration != _listingGeneration))
+        return;
       _log.warn('archive open failed', e);
       _archiveSource = null;
+      _archiveOrigin = null;
+      _archiveBytes = null;
+      _isLoading = false;
       _ref.read(errorProvider).addError('Cannot open archive: $e');
       notifyListeners();
-      return;
     }
-
-    await _loadArchiveFiles();
-    notifyListeners();
   }
 
   /// Navigate deeper into a folder within the archive.
@@ -1000,8 +1159,9 @@ class PanelNotifier extends ChangeNotifier {
       return;
     }
     // Go up one directory level within the archive
-    var parent =
-        inner.endsWith('/') ? inner.substring(0, inner.length - 1) : inner;
+    var parent = inner.endsWith('/')
+        ? inner.substring(0, inner.length - 1)
+        : inner;
     final lastSlash = parent.lastIndexOf('/');
     parent = lastSlash > 0 ? parent.substring(0, lastSlash + 1) : '';
     _archiveSource = _archiveSource!.withPath(parent);
@@ -1012,19 +1172,36 @@ class PanelNotifier extends ChangeNotifier {
   /// Exit the archive and restore the parent directory listing.
   void exitArchive() {
     final source = _archiveSource;
+    final origin = _archiveOrigin;
     _archiveSource = null;
+    _archiveOrigin = null;
     _archiveBytes = null;
     if (source != null) {
-      if (side == PanelSide.local) {
-        _localPath = p.dirname(source.archivePath);
-      } else {
+      if (source.parent.isRemote) {
         _remotePath = p.posix.dirname(source.archivePath);
+      } else {
+        _localPath = p.dirname(source.archivePath);
       }
     }
-    _syncTabPath();
-    unawaited(refresh().then((_) {
-      if (!_isDisposed) focusList();
-    }));
+    final restore = source != null && origin != null && origin.isCurrent
+        ? navigateToPath(
+            source.parent.currentPath,
+            origin: origin,
+            recordHistory: false,
+          )
+        : refresh();
+    unawaited(
+      restore
+          .then((_) {
+            if (!_isDisposed) focusList();
+          })
+          .catchError((Object error) {
+            if (!_isDisposed)
+              _ref
+                  .read(errorProvider)
+                  .addError('Could not return to the archive folder: $error');
+          }),
+    );
   }
 
   /// Leave an archive and go to the home directory. Used by the error banner
@@ -1034,21 +1211,37 @@ class PanelNotifier extends ChangeNotifier {
       exitArchive();
       return;
     }
-    final path = kIsWeb
-        ? '/'
-        : (Platform.environment['HOME'] ?? '/');
+    final path = kIsWeb ? '/' : (Platform.environment['HOME'] ?? '/');
     await navigateToPath(path);
     if (!_isDisposed) focusList();
   }
 
   Future<void> _loadArchiveFiles() async {
-    _listingGeneration++;
+    final generation = ++_listingGeneration;
     final source = _archiveSource;
     if (source == null) return;
+    if (_archiveOrigin != null && !_archiveOrigin!.isCurrent) {
+      _files = [];
+      _ref
+          .read(errorProvider)
+          .addError(
+            'The archive source account changed. Open the archive again.',
+          );
+      return;
+    }
     final bytes = _archiveBytes;
     if (bytes == null) {
       // Fallback for sources without cached bytes (legacy path).
-      _files = await const PanelSourceService().listFiles(source);
+      if (source.parent.isRemote) {
+        _files = [];
+        _ref
+            .read(errorProvider)
+            .addError('Open this remote archive again to read its contents.');
+        return;
+      }
+      final files = await const PanelSourceService().listFiles(source);
+      if (_isDisposed || generation != _listingGeneration) return;
+      _files = files;
       _sortFiles();
       return;
     }
@@ -1059,8 +1252,8 @@ class PanelNotifier extends ChangeNotifier {
       final prefix = source.innerPath.isEmpty
           ? ''
           : (source.innerPath.endsWith('/')
-              ? source.innerPath
-              : '${source.innerPath}/');
+                ? source.innerPath
+                : '${source.innerPath}/');
       final items = <FileItem>[];
       final folders = <String>{};
       for (final member in archive.members) {
@@ -1073,33 +1266,40 @@ class PanelNotifier extends ChangeNotifier {
         final slash = relative.indexOf('/');
         if (slash == -1) {
           if (member.isFile) {
-            items.add(FileItem(
-              name: relative,
-              path: '$prefix$relative',
-              isFolder: false,
-              size: member.size,
-            ));
+            items.add(
+              FileItem(
+                name: relative,
+                path: '$prefix$relative',
+                isFolder: false,
+                size: member.size,
+              ),
+            );
           }
         } else {
           final folder = relative.substring(0, slash);
           if (folders.add(folder)) {
-            items.add(FileItem(
-              name: folder,
-              path: '$prefix$folder/',
-              isFolder: true,
-            ));
+            items.add(
+              FileItem(name: folder, path: '$prefix$folder/', isFolder: true),
+            );
           }
         }
       }
+      if (_isDisposed ||
+          generation != _listingGeneration ||
+          !identical(_archiveSource, source))
+        return;
       _files = items;
       _sortFiles();
     } on ArchivePasswordRequiredException {
+      if (_isDisposed || generation != _listingGeneration) return;
       _files = [];
       _ref.read(errorProvider).addError('This archive is password-protected.');
     } on ArchiveViewException catch (e) {
+      if (_isDisposed || generation != _listingGeneration) return;
       _files = [];
       _ref.read(errorProvider).addError('Failed to read archive: ${e.message}');
     } catch (e) {
+      if (_isDisposed || generation != _listingGeneration) return;
       _log.warn('archive listing failed', e);
       _files = [];
       _ref.read(errorProvider).addError('Failed to read archive: $e');
@@ -1107,7 +1307,6 @@ class PanelNotifier extends ChangeNotifier {
       await archive?.close();
     }
   }
-
 
   // --- Multi-key sort ---
 
@@ -1139,21 +1338,31 @@ class PanelNotifier extends ChangeNotifier {
   }
 
   Future<void> _loadFlatFiles() async {
-    final source = _currentDirectoryOrigin?.source ?? _ref.read(panelSourceProvider(side));
+    final PanelSource source =
+        _currentDirectoryOrigin?.source ??
+        _ref.read<PanelSource>(panelSourceProvider(side));
     if (kIsWeb || !source.isLocal) {
-      _ref.read(errorProvider).addError('Flat view is only available for local directories');
+      _ref
+          .read(errorProvider)
+          .addError('Flat view is only available for local directories');
       _isFlatView = false;
       return;
     }
     _leaveFileList();
     final generation = ++_listingGeneration;
     final path = _localPath;
-    final origin = PanelFileOrigin._(LocalPanelSource(path), () => !_isDisposed);
+    final origin = PanelFileOrigin._(
+      LocalPanelSource(path),
+      () => !_isDisposed,
+    );
     _isLoading = true;
     notifyListeners();
     try {
-      final items = await _localFileService.walkFiles(path,
-        includeHidden: _showHiddenFiles, maxItems: 10000);
+      final items = await _localFileService.walkFiles(
+        path,
+        includeHidden: _showHiddenFiles,
+        maxItems: 10000,
+      );
       if (_isDisposed || generation != _listingGeneration) return;
       final prev = cursorItem;
       _files = items;
@@ -1182,7 +1391,9 @@ class PanelNotifier extends ChangeNotifier {
     }
     if (_currentDirectoryOrigin != null &&
         _verifiedListingGeneration == _listingGeneration) {
-      return _currentDirectoryOrigin!.source.isRemote ? _remotePath : _localPath;
+      return _currentDirectoryOrigin!.source.isRemote
+          ? _remotePath
+          : _localPath;
     }
     final source = _ref.read(panelSourceProvider(side));
     return source.isRemote ? _remotePath : _localPath;
@@ -1222,14 +1433,17 @@ class PanelNotifier extends ChangeNotifier {
       case SortBy.size:
         return (a.size ?? 0).compareTo(b.size ?? 0);
       case SortBy.date:
-        return (a.updatedAt ?? DateTime(1970))
-            .compareTo(b.updatedAt ?? DateTime(1970));
+        return (a.updatedAt ?? DateTime(1970)).compareTo(
+          b.updatedAt ?? DateTime(1970),
+        );
       case SortBy.extension:
         if (a.isFolder || b.isFolder) return 0;
-        final extA =
-            a.name.contains('.') ? a.name.split('.').last.toLowerCase() : '';
-        final extB =
-            b.name.contains('.') ? b.name.split('.').last.toLowerCase() : '';
+        final extA = a.name.contains('.')
+            ? a.name.split('.').last.toLowerCase()
+            : '';
+        final extB = b.name.contains('.')
+            ? b.name.split('.').last.toLowerCase()
+            : '';
         return extA.compareTo(extB);
     }
   }
@@ -1250,8 +1464,9 @@ class PanelNotifier extends ChangeNotifier {
       // Secondary sort key when primary ties
       if (comparison == 0 && _secondarySortBy != null) {
         final int secondary = compareSortKey(a, b, _secondarySortBy!);
-        comparison =
-            _secondarySortOrder == SortOrder.ascending ? secondary : -secondary;
+        comparison = _secondarySortOrder == SortOrder.ascending
+            ? secondary
+            : -secondary;
       }
 
       if (comparison == 0 && (_showingSearchResults || _isFlatView)) {
@@ -1265,10 +1480,14 @@ class PanelNotifier extends ChangeNotifier {
   // --- Selection ---
   bool isSelected(FileItem item) => _selection.contains(item);
 
-  void toggleSelection(FileItem item,
-      {bool shiftKey = false, bool ctrlKey = false}) {
+  void toggleSelection(
+    FileItem item, {
+    bool shiftKey = false,
+    bool ctrlKey = false,
+  }) {
     _log.debug(
-        'toggleSelection: ${item.name} shift=$shiftKey ctrl=$ctrlKey lastSelected=${_lastSelected?.name} side=$side');
+      'toggleSelection: ${item.name} shift=$shiftKey ctrl=$ctrlKey lastSelected=${_lastSelected?.name} side=$side',
+    );
     // Ensure this panel is the active panel (drives F-key context).
     if (_ref.read(activePanelProvider) != side) {
       _ref.read(activePanelProvider.notifier).state = side;
@@ -1319,8 +1538,9 @@ class PanelNotifier extends ChangeNotifier {
   void invertSelection() {
     _log.debug('invertSelection (was ${_selection.length} selected)');
     if (_files == null) return;
-    final newSel =
-        _files!.where((f) => f.name != '..' && !_selection.contains(f)).toSet();
+    final newSel = _files!
+        .where((f) => f.name != '..' && !_selection.contains(f))
+        .toSet();
     _selection
       ..clear()
       ..addAll(newSel);
@@ -1415,9 +1635,11 @@ class PanelNotifier extends ChangeNotifier {
 
   /// Calculate folder size in a background isolate and update the file list entry.
   void _calculateFolderSizeInBackground(FileItem folder) {
-    _computeFolderSize(folder.path!).then((size) {
-      updateItemCalculatedSize(folder, size);
-    }).catchError((_) {});
+    _computeFolderSize(folder.path!)
+        .then((size) {
+          updateItemCalculatedSize(folder, size);
+        })
+        .catchError((_) {});
   }
 
   Future<int> _computeFolderSize(String path) async {
@@ -1476,7 +1698,8 @@ class PanelNotifier extends ChangeNotifier {
     SelectionAction action = SelectionAction.select,
   }) {
     final matches = (displayedFiles ?? const <FileItem>[])
-        .where(pattern.matches).toList();
+        .where(pattern.matches)
+        .toList();
     switch (action) {
       case SelectionAction.select:
         _selection.addAll(matches);
@@ -1487,7 +1710,9 @@ class PanelNotifier extends ChangeNotifier {
           if (!_selection.remove(item)) _selection.add(item);
         }
       case SelectionAction.replace:
-        _selection..clear()..addAll(matches);
+        _selection
+          ..clear()
+          ..addAll(matches);
     }
     _lastSelected = null;
     notifyListeners();
@@ -1499,7 +1724,9 @@ class PanelNotifier extends ChangeNotifier {
       applyPatternSelection(FileSelectionPattern(glob));
 
   void deselectByPattern(String glob) => applyPatternSelection(
-      FileSelectionPattern(glob), action: SelectionAction.deselect);
+    FileSelectionPattern(glob),
+    action: SelectionAction.deselect,
+  );
 
   /// Jump cursor to the first file whose name starts with [char] (case-insensitive).
   /// Searches within the currently displayed (filtered) list and cycles.
@@ -1566,23 +1793,38 @@ class PanelNotifier extends ChangeNotifier {
         // Virtual lists are snapshots. Refresh must not replace them with the
         // directory behind the list; mutation callers update successful rows.
         if (!canOperateOnFileList) {
-          _ref.read(errorProvider).addError('The list source is disconnected or changed. Run the search or import again.');
+          _ref
+              .read(errorProvider)
+              .addError(
+                'The list source is disconnected or changed. Run the search or import again.',
+              );
         }
         notifyListeners();
       } else if (isInArchive) {
         await _loadArchiveFiles();
       } else if (_isFlatView) {
         await _loadFlatFiles();
-      } else if (side == PanelSide.local) {
-        _localFileService.currentPath = _localPath;
-        await _localFileService.refresh();
-        await _loadLocalFiles();
-      } else if (_ref.read(authProvider).isConnected) {
-        await _loadRemoteFiles();
       } else {
-        _localFileService.currentPath = _localPath;
-        await _localFileService.refresh();
-        await _loadLocalFiles();
+        // Panel position is not storage identity: either pane can show a
+        // cloud account or local files. Reconnect refreshes a fresh listing
+        // from the active account; old origins never authorize its writes.
+        final knownSource = _verifiedListingGeneration == _listingGeneration
+            ? _currentDirectoryOrigin?.source
+            : null;
+        final selectedSource = _ref.read(panelSourceProvider(side));
+        final remote =
+            _ref.read(authProvider).isConnected &&
+            (knownSource?.isRemote ??
+                (selectedSource.isRemote ||
+                    (side == PanelSide.remote &&
+                        _currentDirectoryOrigin == null)));
+        if (remote) {
+          await _loadRemoteFiles();
+        } else {
+          _localFileService.currentPath = _localPath;
+          await _localFileService.refresh();
+          await _loadLocalFiles();
+        }
       }
     });
   }
@@ -1598,7 +1840,8 @@ class PanelNotifier extends ChangeNotifier {
 
   Future<void> navigateUp() async {
     _log.info(
-        'navigateUp: currentPath=$currentPath archive=$isInArchive flat=$_isFlatView');
+      'navigateUp: currentPath=$currentPath archive=$isInArchive flat=$_isFlatView',
+    );
     if (_showingSearchResults) {
       await clearSearchResults();
       return;
@@ -1633,6 +1876,7 @@ class PanelNotifier extends ChangeNotifier {
     if (side != PanelSide.local && !kIsWeb) return false;
     if (isInArchive) {
       _archiveSource = null;
+      _archiveOrigin = null;
       _archiveBytes = null;
     }
     var target = path.isEmpty ? currentPath : path;
@@ -1647,7 +1891,9 @@ class PanelNotifier extends ChangeNotifier {
     );
     if (granted == null) return false;
     if (!await _localFileService.hasAccessToPath(target)) {
-      _ref.read(errorProvider).addError(
+      _ref
+          .read(errorProvider)
+          .addError(
             'Access to "$target" was not granted. Choose the folder itself '
             'or one of its parent folders.',
           );
@@ -1661,8 +1907,7 @@ class PanelNotifier extends ChangeNotifier {
     return true;
   }
 
-  Future<bool> grantAccessToCurrentPath() =>
-      grantAccessToPath(currentPath);
+  Future<bool> grantAccessToCurrentPath() => grantAccessToPath(currentPath);
 
   /// Normalise user-entered paths and repair the common macOS failure where
   /// an absolute path was appended to the current directory by a non-selecting
@@ -1702,30 +1947,45 @@ class PanelNotifier extends ChangeNotifier {
     return path;
   }
 
-  Future<void> navigateToPath(String path, {FileItem? selectItem, PanelFileOrigin? origin, bool recordHistory = true}) async {
+  Future<void> navigateToPath(
+    String path, {
+    FileItem? selectItem,
+    PanelFileOrigin? origin,
+    bool recordHistory = true,
+  }) async {
     _log.info('navigateToPath: $path (side=$side, web=$kIsWeb)');
-    final sourceOrigin = origin ?? (_showingSearchResults ? _fileListOrigin :
-        (_verifiedListingGeneration == _listingGeneration ? _currentDirectoryOrigin : null));
+    final sourceOrigin =
+        origin ??
+        (_showingSearchResults
+            ? _fileListOrigin
+            : (_verifiedListingGeneration == _listingGeneration
+                  ? _currentDirectoryOrigin
+                  : null));
     if (sourceOrigin != null && !sourceOrigin.isCurrent) {
-      throw StateError('The storage account changed. Refresh the folder or run the search again.');
+      throw StateError(
+        'The storage account changed. Refresh the folder or run the search again.',
+      );
     }
     final selectedSource = _ref.read(panelSourceProvider(side));
-    final isRemote = sourceOrigin?.source.isRemote ?? (selectedSource.isRemote ||
-        (side == PanelSide.remote && _ref.read(authProvider).isConnected));
+    final isRemote =
+        sourceOrigin?.source.isRemote ??
+        (selectedSource.isRemote ||
+            (side == PanelSide.remote && _ref.read(authProvider).isConnected));
     _leaveFileList();
     // Any explicit path navigation leaves archive mode. Previously the stale
     // ArchivePanelSource kept currentPath virtual and Home/breadcrumbs tried
     // to list "archive.zip:/inner/".
     if (isInArchive) {
       _archiveSource = null;
+      _archiveOrigin = null;
       _archiveBytes = null;
     }
     if (path.contains(':/')) {
       final archive = path.split(':/').first;
       path = !isRemote
           ? (archive.contains('/')
-              ? p.dirname(archive)
-              : (kIsWeb ? '/' : (Platform.environment['HOME'] ?? '/')))
+                ? p.dirname(archive)
+                : (kIsWeb ? '/' : (Platform.environment['HOME'] ?? '/')))
           : p.posix.dirname(archive);
     }
     if (!isRemote) {
@@ -1745,13 +2005,15 @@ class PanelNotifier extends ChangeNotifier {
           initialDirectory: p.dirname(target),
         );
         if (granted == null) {
-          _ref.read(errorProvider).addError(
-                'Access to "$target" was not granted.',
-              );
+          _ref
+              .read(errorProvider)
+              .addError('Access to "$target" was not granted.');
           return;
         }
         if (!await _localFileService.hasAccessToPath(target)) {
-          _ref.read(errorProvider).addError(
+          _ref
+              .read(errorProvider)
+              .addError(
                 'Access to "$target" was not granted. '
                 'Choose the folder that contains it.',
               );
@@ -1766,7 +2028,8 @@ class PanelNotifier extends ChangeNotifier {
       await _loadLocalFiles();
     } else {
       _remotePath = path;
-      if (!_ref.read(authProvider).isConnected || (sourceOrigin != null && !sourceOrigin.isCurrent)) {
+      if (!_ref.read(authProvider).isConnected ||
+          (sourceOrigin != null && !sourceOrigin.isCurrent)) {
         throw StateError('The cloud account is no longer connected.');
       }
       await _loadRemoteFiles();
@@ -1775,7 +2038,8 @@ class PanelNotifier extends ChangeNotifier {
     if (selectItem != null && _files != null) {
       try {
         final found = _files!.firstWhere(
-          (f) => (selectItem.path != null && f.path == selectItem.path) ||
+          (f) =>
+              (selectItem.path != null && f.path == selectItem.path) ||
               (selectItem.uuid != null && f.uuid == selectItem.uuid),
         );
         _selection.clear();
@@ -1795,10 +2059,17 @@ class PanelNotifier extends ChangeNotifier {
 
   Future<void> navigateInto(FileItem item) async {
     _log.info(
-        'navigateInto: ${item.name} isFolder=${item.isFolder} path=${item.path}');
-    final operationOrigin = _showingSearchResults ? originForOperation(item) : null;
+      'navigateInto: ${item.name} isFolder=${item.isFolder} path=${item.path}',
+    );
+    final operationOrigin = _showingSearchResults
+        ? originForOperation(item)
+        : null;
     if (_showingSearchResults && operationOrigin == null) {
-      _ref.read(errorProvider).addError('This result no longer has a verified source. Run the search again.');
+      _ref
+          .read(errorProvider)
+          .addError(
+            'This result no longer has a verified source. Run the search again.',
+          );
       return;
     }
     // If we're inside an archive, navigate within it
@@ -1855,29 +2126,44 @@ class PanelNotifier extends ChangeNotifier {
     final replacement = item.copyWith(calculatedSize: size);
     _fileOrigins[replacement] = _fileOrigins[item];
     _files![idx] = replacement;
-    final selected = _selection.map(
-      (entry) => identical(entry, item) ? replacement : entry,
-    ).toList();
-    _selection..clear()..addAll(selected);
+    final selected = _selection
+        .map((entry) => identical(entry, item) ? replacement : entry)
+        .toList();
+    _selection
+      ..clear()
+      ..addAll(selected);
     if (identical(_lastSelected, item)) _lastSelected = replacement;
     if (identical(_itemToScrollTo, item)) _itemToScrollTo = replacement;
     notifyListeners();
   }
 
   // --- File operations (local panel helpers) ---
-  Future<void> deleteFiles(List<FileItem> files) async {
+  Future<int> deleteFiles(List<FileItem> files) async {
     final audit = _ref.read(auditServiceProvider);
     final history = _ref.read(actionHistoryProvider.notifier);
     var providerName = 'unknown';
     final removed = <String, FileItem?>{};
+    var deletedCount = 0;
     try {
       final origin = captureOperationOrigin(files);
       final source = origin.source;
       final paths = source.isLocal && !kIsWeb ? p.context : p.posix;
-      providerName = source is RemotePanelSource ? source.providerName : 'local';
-      final roots = files.where((file) => !files.any((parent) =>
-          parent.isFolder && parent.isSymlink != true && !identical(file, parent) &&
-          parent.path != null && file.path != null && paths.isWithin(parent.path!, file.path!))).toList();
+      providerName = source is RemotePanelSource
+          ? source.providerName
+          : 'local';
+      final roots = files
+          .where(
+            (file) => !files.any(
+              (parent) =>
+                  parent.isFolder &&
+                  parent.isSymlink != true &&
+                  !identical(file, parent) &&
+                  parent.path != null &&
+                  file.path != null &&
+                  paths.isWithin(parent.path!, file.path!),
+            ),
+          )
+          .toList();
       for (final file in roots) {
         if (!origin.isCurrent) throw StateError('The storage account changed.');
         final path = file.path;
@@ -1887,10 +2173,14 @@ class PanelNotifier extends ChangeNotifier {
             await _localFileService.deleteEntry(path, file.isFolder);
           } else {
             await _localFileService.withFileOperationAccess(path, () async {
-              if (!origin.isCurrent) throw StateError('The source is no longer available.');
-              if (file.isSymlink == true) await Link(path).delete();
-              else if (file.isFolder) await Directory(path).delete(recursive: true);
-              else await File(path).delete();
+              if (!origin.isCurrent)
+                throw StateError('The source is no longer available.');
+              if (file.isSymlink == true)
+                await Link(path).delete();
+              else if (file.isFolder)
+                await Directory(path).delete(recursive: true);
+              else
+                await File(path).delete();
             });
           }
         } else if (source is RemotePanelSource) {
@@ -1899,15 +2189,25 @@ class PanelNotifier extends ChangeNotifier {
           throw UnsupportedError('This source cannot be deleted from here.');
         }
         removed[path] = null;
+        deletedCount++;
         if (file.isFolder) {
           for (final child in _files ?? const <FileItem>[]) {
-            if (child.path != null && paths.isWithin(path, child.path!)) removed[child.path!] = null;
+            if (child.path != null && paths.isWithin(path, child.path!))
+              removed[child.path!] = null;
           }
         }
-        await audit.logSuccess(operation: AuditOperation.delete,
-          sourcePath: path, provider: providerName, sizeBytes: file.size);
-        history.record(type: ActionType.delete, originalPath: path,
-          provider: providerName, metadata: {'name': file.name, 'isFolder': file.isFolder});
+        await audit.logSuccess(
+          operation: AuditOperation.delete,
+          sourcePath: path,
+          provider: providerName,
+          sizeBytes: file.size,
+        );
+        history.record(
+          type: ActionType.delete,
+          originalPath: path,
+          provider: providerName,
+          metadata: {'name': file.name, 'isFolder': file.isFolder},
+        );
       }
     } catch (error) {
       _log.warn('Delete failed', error);
@@ -1917,6 +2217,7 @@ class PanelNotifier extends ChangeNotifier {
       await refresh();
       clearSelection();
     }
+    return deletedCount;
   }
 
   // --- In-place rename ---
@@ -1955,9 +2256,12 @@ class PanelNotifier extends ChangeNotifier {
     return item != null;
   }
 
-  Future<void> renameFile(FileItem file, String newName, {
+  Future<void> renameFile(
+    FileItem file,
+    String newName, {
     bool refreshAfter = true,
     bool rethrowErrors = false,
+    bool recordHistory = true,
     PanelFileOrigin? operationOrigin,
   }) async {
     _log.info('renameFile: ${file.name} → $newName');
@@ -1967,20 +2271,29 @@ class PanelNotifier extends ChangeNotifier {
     final src = file.path ?? file.name;
     try {
       if (newName == file.name) return;
-      if (newName.trim().isEmpty || newName == '.' || newName == '..' ||
+      if (newName.trim().isEmpty ||
+          newName == '.' ||
+          newName == '..' ||
           RegExp(r'[/\\\x00-\x1f\x7f]').hasMatch(newName)) {
-        throw const FormatException('Enter a filename without path separators or control characters.');
+        throw const FormatException(
+          'Enter a filename without path separators or control characters.',
+        );
       }
       final origin = operationOrigin ?? captureOperationOrigin([file]);
       if (!origin.isCurrent) throw StateError('The storage account changed.');
       final source = origin.source;
       final isLocalSource = source is LocalPanelSource;
-      providerName = source is RemotePanelSource ? source.providerName : 'local';
-      if (file.path == null) throw StateError('The original file path is unavailable.');
+      providerName = source is RemotePanelSource
+          ? source.providerName
+          : 'local';
+      if (file.path == null)
+        throw StateError('The original file path is unavailable.');
       final paths = isLocalSource && !kIsWeb ? p.context : p.posix;
       final target = paths.join(paths.dirname(src), newName);
       if (await operationPathExists(target, origin)) {
-        throw StateError('A destination already exists: $target. For case-only renames, use an unused temporary name first.');
+        throw StateError(
+          'A destination already exists: $target. For case-only renames, use an unused temporary name first.',
+        );
       }
       if (!origin.isCurrent) throw StateError('The storage account changed.');
       String computedNewPath;
@@ -1989,22 +2302,33 @@ class PanelNotifier extends ChangeNotifier {
         final oldPath = file.path!;
         computedNewPath = p.posix.join(p.posix.dirname(oldPath), newName);
         if (!file.isFolder) {
-          final bytes =
-              await _localFileService.readFile(oldPath, fileItem: file);
+          final bytes = await _localFileService.readFile(
+            oldPath,
+            fileItem: file,
+          );
           final saved = await _localFileService.saveFileReportingResult(
-            computedNewPath, bytes, overwrite: false);
+            computedNewPath,
+            bytes,
+            overwrite: false,
+          );
           if (saved != LocalFileSaveResult.written) {
-            throw StateError('The browser downloaded a copy; the source was retained.');
+            throw StateError(
+              'The browser downloaded a copy; the source was retained.',
+            );
           }
-          if (!origin.isCurrent) throw StateError('The source is no longer available.');
+          if (!origin.isCurrent)
+            throw StateError('The source is no longer available.');
           await _localFileService.deleteEntry(oldPath, false);
         } else {
-          throw UnsupportedError('Folder rename requires a native filesystem or cloud provider.');
+          throw UnsupportedError(
+            'Folder rename requires a native filesystem or cloud provider.',
+          );
         }
       } else if (isLocalSource) {
         computedNewPath = p.join(p.dirname(file.path!), newName);
         await _localFileService.withFileOperationAccess(src, () async {
-          if (!origin.isCurrent) throw StateError('The source is no longer available.');
+          if (!origin.isCurrent)
+            throw StateError('The source is no longer available.');
           if (file.isSymlink == true) {
             await Link(src).rename(computedNewPath);
           } else if (file.isFolder) {
@@ -2014,7 +2338,8 @@ class PanelNotifier extends ChangeNotifier {
           }
         });
       } else {
-        if (source is! RemotePanelSource) throw UnsupportedError('This source cannot be renamed.');
+        if (source is! RemotePanelSource)
+          throw UnsupportedError('This source cannot be renamed.');
         final client = source.client;
         final sourcePath = src;
         computedNewPath = p.posix.join(p.posix.dirname(sourcePath), newName);
@@ -2026,15 +2351,35 @@ class PanelNotifier extends ChangeNotifier {
         targetPath: newName,
         provider: providerName,
       );
-      actionHistory.record(
-        type: ActionType.rename,
-        originalPath: src,
-        newPath: computedNewPath,
-        provider: providerName,
-        metadata: {'oldName': file.name, 'newName': newName},
-      );
+      if (recordHistory)
+        actionHistory.record(
+          type: ActionType.rename,
+          originalPath: src,
+          newPath: computedNewPath,
+          provider: providerName,
+          metadata: {'oldName': file.name, 'newName': newName},
+          isCurrent: () => origin.isCurrent,
+          undoAction: () async {
+            if (!origin.isCurrent)
+              return const UndoResult.failure('The storage account changed.');
+            final renamed = file.copyWith(name: newName, path: computedNewPath);
+            await renameFile(
+              renamed,
+              file.name,
+              operationOrigin: origin,
+              refreshAfter: false,
+              rethrowErrors: true,
+              recordHistory: false,
+            );
+            applyFileListChanges({computedNewPath: file});
+            await refresh();
+            return UndoResult.success('Renamed $newName back to ${file.name}.');
+          },
+        );
       if (refreshAfter) {
-        applyFileListChanges({src: file.copyWith(name: newName, path: computedNewPath)});
+        applyFileListChanges({
+          src: file.copyWith(name: newName, path: computedNewPath),
+        });
         await refresh();
       }
     } catch (e) {
@@ -2057,8 +2402,9 @@ class PanelNotifier extends ChangeNotifier {
     final actionHistory = _ref.read(actionHistoryProvider.notifier);
     final isLocalSource =
         _ref.read(panelSourceProvider(side)).isLocal || side == PanelSide.local;
-    final providerName =
-        isLocalSource ? 'local' : _ref.read(authProvider).client.providerName;
+    final providerName = isLocalSource
+        ? 'local'
+        : _ref.read(authProvider).client.providerName;
     final folderPath = isLocalSource
         ? p.posix.join(currentPath, name)
         : p.posix.join(_remotePath, name);
@@ -2097,13 +2443,15 @@ class PanelNotifier extends ChangeNotifier {
 
   Future<void> moveFiles(List<FileItem> files, String targetPath) async {
     _log.info(
-        'moveFiles: ${files.length} items → $targetPath (web=$kIsWeb, side=$side)');
+      'moveFiles: ${files.length} items → $targetPath (web=$kIsWeb, side=$side)',
+    );
     final audit = _ref.read(auditServiceProvider);
     final actionHistory = _ref.read(actionHistoryProvider.notifier);
     final isLocalSource =
         _ref.read(panelSourceProvider(side)).isLocal || side == PanelSide.local;
-    final providerName =
-        isLocalSource ? 'local' : _ref.read(authProvider).client.providerName;
+    final providerName = isLocalSource
+        ? 'local'
+        : _ref.read(authProvider).client.providerName;
     try {
       for (final file in files) {
         final src = file.path ?? p.posix.join(_remotePath, file.name);
@@ -2112,8 +2460,10 @@ class PanelNotifier extends ChangeNotifier {
           // Web: move = copy bytes to target + delete source
           movedToPath = p.posix.join(targetPath, file.name);
           if (file.path != null && !file.isFolder) {
-            final bytes =
-                await _localFileService.readFile(file.path!, fileItem: file);
+            final bytes = await _localFileService.readFile(
+              file.path!,
+              fileItem: file,
+            );
             await _localFileService.saveFile(movedToPath, bytes);
             await _localFileService.deleteEntry(file.path!, false);
           } else if (file.path != null && file.isFolder) {
@@ -2169,13 +2519,15 @@ class PanelNotifier extends ChangeNotifier {
 
   Future<void> copyFiles(List<FileItem> files, String targetPath) async {
     _log.info(
-        'copyFiles: ${files.length} items → $targetPath (web=$kIsWeb, side=$side)');
+      'copyFiles: ${files.length} items → $targetPath (web=$kIsWeb, side=$side)',
+    );
     final audit = _ref.read(auditServiceProvider);
     final actionHistory = _ref.read(actionHistoryProvider.notifier);
     final isLocalSource =
         _ref.read(panelSourceProvider(side)).isLocal || side == PanelSide.local;
-    final providerName =
-        isLocalSource ? 'local' : _ref.read(authProvider).client.providerName;
+    final providerName = isLocalSource
+        ? 'local'
+        : _ref.read(authProvider).client.providerName;
     try {
       for (final file in files) {
         final src = file.path ?? p.posix.join(_remotePath, file.name);
@@ -2185,8 +2537,10 @@ class PanelNotifier extends ChangeNotifier {
           // Web: copy within virtual filesystem
           copyPath = p.posix.join(targetPath, file.name);
           if (file.path != null) {
-            final bytes =
-                await _localFileService.readFile(file.path!, fileItem: file);
+            final bytes = await _localFileService.readFile(
+              file.path!,
+              fileItem: file,
+            );
             await _localFileService.saveFile(copyPath, bytes);
           }
         } else if (isLocalSource) {
@@ -2229,7 +2583,7 @@ class PanelNotifier extends ChangeNotifier {
           metadata: {
             'name': file.name,
             'sourceDir': p.dirname(src),
-            'targetDir': targetPath
+            'targetDir': targetPath,
           },
         );
       }
@@ -2262,7 +2616,9 @@ class PanelNotifier extends ChangeNotifier {
         await entity.copy(p.join(target, p.basename(entity.path)));
       } else if (entity is Directory) {
         await _copyDirectory(
-            entity.path, p.join(target, p.basename(entity.path)));
+          entity.path,
+          p.join(target, p.basename(entity.path)),
+        );
       }
     }
   }
@@ -2321,11 +2677,9 @@ class PanelNotifier extends ChangeNotifier {
                   : (Platform.environment['HOME'] ?? '/');
               if (path.isEmpty) path = '/';
             }
-            _tabs.add(PanelTab(
-              id: id,
-              path: path,
-              isPinned: item['pinned'] == true,
-            ));
+            _tabs.add(
+              PanelTab(id: id, path: path, isPinned: item['pinned'] == true),
+            );
           }
           final savedActiveIdx = prefs.getInt('${_tabStorageKey}_active') ?? 0;
           _activeTabId = _tabs[savedActiveIdx.clamp(0, _tabs.length - 1)].id;
@@ -2362,14 +2716,16 @@ class PanelNotifier extends ChangeNotifier {
     if (!kIsWeb && Platform.environment.containsKey('FLUTTER_TEST')) return;
     try {
       final prefs = await SharedPreferences.getInstance();
-      final list =
-          _tabs.map((t) => {'path': t.path, 'pinned': t.isPinned}).toList();
+      final list = _tabs
+          .map((t) => {'path': t.path, 'pinned': t.isPinned})
+          .toList();
       await prefs.setString(_tabStorageKey, json.encode(list));
       await prefs.setInt(
-          '${_tabStorageKey}_active',
-          _tabs
-              .indexWhere((t) => t.id == _activeTabId)
-              .clamp(0, _tabs.length - 1));
+        '${_tabStorageKey}_active',
+        _tabs
+            .indexWhere((t) => t.id == _activeTabId)
+            .clamp(0, _tabs.length - 1),
+      );
     } catch (e) {
       _log.warn('Tab save failed', e);
     }
@@ -2396,8 +2752,10 @@ class PanelNotifier extends ChangeNotifier {
   void closeTab(String tabId) {
     _log.debug('closeTab: $tabId');
     if (_tabs.length <= 1) return;
-    final tab =
-        _tabs.firstWhere((t) => t.id == tabId, orElse: () => _tabs.first);
+    final tab = _tabs.firstWhere(
+      (t) => t.id == tabId,
+      orElse: () => _tabs.first,
+    );
     if (tab.isPinned) return;
     final idx = _tabs.indexOf(tab);
     _tabs.remove(tab);
@@ -2432,7 +2790,9 @@ class PanelNotifier extends ChangeNotifier {
       _fileListTitle = list.title;
       _fileListOrigin = list.origin;
       _files = List.of(list.files);
-      _selection..clear()..addAll(list.selection);
+      _selection
+        ..clear()
+        ..addAll(list.selection);
       _listingGeneration++;
       _verifiedListingGeneration = _listingGeneration;
       _isLoading = false;
@@ -2463,16 +2823,20 @@ class PanelNotifier extends ChangeNotifier {
   }
 
   void toggleTabPin(String tabId) {
-    final tab =
-        _tabs.firstWhere((t) => t.id == tabId, orElse: () => _tabs.first);
+    final tab = _tabs.firstWhere(
+      (t) => t.id == tabId,
+      orElse: () => _tabs.first,
+    );
     tab.isPinned = !tab.isPinned;
     notifyListeners();
     _saveTabs();
   }
 
   void renameTab(String tabId, String newLabel) {
-    final tab =
-        _tabs.firstWhere((t) => t.id == tabId, orElse: () => _tabs.first);
+    final tab = _tabs.firstWhere(
+      (t) => t.id == tabId,
+      orElse: () => _tabs.first,
+    );
     tab.label = newLabel;
     notifyListeners();
     _saveTabs();
@@ -2483,13 +2847,15 @@ class PanelNotifier extends ChangeNotifier {
     if (tab != null) {
       // Never persist archive virtual paths (e.g. "file.zip:/"): they are not
       // real directories and would break restart/restore.
-      var titlePath = _currentDirectoryOrigin?.source.isRemote == true ? _remotePath : _localPath;
+      var titlePath = _currentDirectoryOrigin?.source.isRemote == true
+          ? _remotePath
+          : _localPath;
       if (titlePath.contains(':/')) {
         final archive = titlePath.split(':/').first;
         titlePath = side == PanelSide.local
             ? (archive.contains('/')
-                ? p.dirname(archive)
-                : (kIsWeb ? '/' : (Platform.environment['HOME'] ?? '/')))
+                  ? p.dirname(archive)
+                  : (kIsWeb ? '/' : (Platform.environment['HOME'] ?? '/')))
             : p.posix.dirname(archive);
       }
       tab.path = titlePath;
@@ -2506,7 +2872,9 @@ class PanelNotifier extends ChangeNotifier {
       if (!kIsWeb &&
           Platform.isMacOS &&
           _localFileService.grantedBasePath == null) {
-        _ref.read(errorProvider).addError(
+        _ref
+            .read(errorProvider)
+            .addError(
               'Please select a base directory to grant access (e.g., your home folder)',
             );
         final grantedPath = await _localFileService.requestDirectoryAccess(
@@ -2546,6 +2914,7 @@ class PanelNotifier extends ChangeNotifier {
     if (_archiveSource != null) {
       final archivePath = _archiveSource!.archivePath;
       _archiveSource = null;
+      _archiveOrigin = null;
       _archiveBytes = null;
       if (side == PanelSide.local && archivePath.contains('/')) {
         _localPath = p.dirname(archivePath);
@@ -2768,7 +3137,8 @@ class PanelNotifier extends ChangeNotifier {
       _log.warn('operation failed', e);
       _isLoading = false;
       final description = e.toString();
-      final missing = e is PathNotFoundException ||
+      final missing =
+          e is PathNotFoundException ||
           description.contains('No such file') ||
           description.contains('PathNotFoundException') ||
           description.contains('Not a directory') ||
@@ -2811,7 +3181,9 @@ class PanelNotifier extends ChangeNotifier {
   Future<Uint8List> readArchiveMember(FileItem file) async {
     final source = _archiveSource;
     final bytes = _archiveBytes;
-    if (source == null || bytes == null) {
+    if (source == null ||
+        bytes == null ||
+        (_archiveOrigin != null && !_archiveOrigin!.isCurrent)) {
       throw const ArchiveViewException(
         'This archive is no longer open. Return to the archive and try again.',
       );
@@ -2852,9 +3224,13 @@ class PanelNotifier extends ChangeNotifier {
   void restoreCursorAndFocus(FileItem item) {
     final files = _files;
     if (files != null) {
-      final index = files.indexWhere((candidate) =>
-          item.path != null ? candidate.path == item.path :
-          item.uuid != null ? candidate.uuid == item.uuid : candidate.name == item.name);
+      final index = files.indexWhere(
+        (candidate) => item.path != null
+            ? candidate.path == item.path
+            : item.uuid != null
+            ? candidate.uuid == item.uuid
+            : candidate.name == item.name,
+      );
       if (index != -1) {
         _cursorIndex = index;
         _itemToScrollTo = files[index];
@@ -2880,19 +3256,21 @@ class PanelNotifier extends ChangeNotifier {
     }
     _lastFreeSpacePath = path;
     _lastFreeSpaceTime = now;
-    Process.run('df', ['-k', path]).then((result) {
-      final lines = result.stdout.toString().trim().split('\n');
-      if (lines.length >= 2) {
-        final parts = lines.last.trim().split(RegExp(r'\s+'));
-        if (parts.length >= 4) {
-          final kb = int.tryParse(parts[3]);
-          if (kb != null) {
-            _freeBytes = kb * 1024;
-            notifyListeners();
+    Process.run('df', ['-k', path])
+        .then((result) {
+          final lines = result.stdout.toString().trim().split('\n');
+          if (lines.length >= 2) {
+            final parts = lines.last.trim().split(RegExp(r'\s+'));
+            if (parts.length >= 4) {
+              final kb = int.tryParse(parts[3]);
+              if (kb != null) {
+                _freeBytes = kb * 1024;
+                notifyListeners();
+              }
+            }
           }
-        }
-      }
-    }).catchError((_) {});
+        })
+        .catchError((_) {});
   }
 
   Future<void> _loadRemoteFiles() async {
@@ -2937,9 +3315,11 @@ class PanelNotifier extends ChangeNotifier {
         for (final file in _files!) {
           final previous = _fileOrigins[file];
           final source = previous?.source;
-          if (previous == null || !previous.isCurrent ||
+          if (previous == null ||
+              !previous.isCurrent ||
               source is! RemotePanelSource ||
-              !identical(source.client, client) || source.path != listingPath) {
+              !identical(source.client, client) ||
+              source.path != listingPath) {
             _fileOrigins[file] = null;
           }
         }
@@ -2956,10 +3336,12 @@ class PanelNotifier extends ChangeNotifier {
         return;
       }
 
-      final folders = (result['folders'] as List<dynamic>?)?.map((item) {
+      final folders =
+          (result['folders'] as List<dynamic>?)?.map((item) {
             final map = item as Map<String, dynamic>;
             DateTime? folderDate;
-            final rawDate = map['modificationTime'] ??
+            final rawDate =
+                map['modificationTime'] ??
                 map['lastModified'] ??
                 map['timestamp'];
             if (rawDate != null) {
@@ -2974,24 +3356,28 @@ class PanelNotifier extends ChangeNotifier {
               }
             }
             final meta = Map<String, dynamic>.from(map)
-              ..removeWhere((k, _) => const {
-                    'name',
-                    'uuid',
-                    'modificationTime',
-                    'lastModified',
-                    'timestamp'
-                  }.contains(k));
+              ..removeWhere(
+                (k, _) => const {
+                  'name',
+                  'uuid',
+                  'modificationTime',
+                  'lastModified',
+                  'timestamp',
+                }.contains(k),
+              );
             return FileItem(
-                name: map['name'] ?? 'Unknown',
-                path: p.posix.join(listingPath, map['name'] ?? 'Unknown'),
-                isFolder: true,
-                uuid: map['uuid'],
-                updatedAt: folderDate,
-                metadata: meta.isNotEmpty ? meta : null);
+              name: map['name'] ?? 'Unknown',
+              path: p.posix.join(listingPath, map['name'] ?? 'Unknown'),
+              isFolder: true,
+              uuid: map['uuid'],
+              updatedAt: folderDate,
+              metadata: meta.isNotEmpty ? meta : null,
+            );
           }).toList() ??
           [];
 
-      final files = (result['files'] as List<dynamic>?)?.map((item) {
+      final files =
+          (result['files'] as List<dynamic>?)?.map((item) {
             final map = item as Map<String, dynamic>;
             final fileName = map['name'] ?? 'Unknown';
             final rawType = map['fileType'] ?? map['type'] ?? '';
@@ -3016,24 +3402,27 @@ class PanelNotifier extends ChangeNotifier {
               }
             }
             final meta = Map<String, dynamic>.from(map)
-              ..removeWhere((k, _) => const {
-                    'name',
-                    'uuid',
-                    'size',
-                    'modificationTime',
-                    'lastModified',
-                    'fileType',
-                    'type',
-                    'timestamp'
-                  }.contains(k));
+              ..removeWhere(
+                (k, _) => const {
+                  'name',
+                  'uuid',
+                  'size',
+                  'modificationTime',
+                  'lastModified',
+                  'fileType',
+                  'type',
+                  'timestamp',
+                }.contains(k),
+              );
             return FileItem(
-                name: fullName,
-                path: p.posix.join(listingPath, fullName),
-                isFolder: false,
-                size: map['size'] as int?,
-                uuid: map['uuid'],
-                updatedAt: fileDate,
-                metadata: meta.isNotEmpty ? meta : null);
+              name: fullName,
+              path: p.posix.join(listingPath, fullName),
+              isFolder: false,
+              size: map['size'] as int?,
+              uuid: map['uuid'],
+              updatedAt: fileDate,
+              metadata: meta.isNotEmpty ? meta : null,
+            );
           }).toList() ??
           [];
 
@@ -3042,12 +3431,13 @@ class PanelNotifier extends ChangeNotifier {
       if (listingPath != '/' && listingPath.isNotEmpty) {
         final parentRemote = p.posix.dirname(listingPath);
         allItems.insert(
-            0,
-            FileItem(
-              name: '..',
-              path: parentRemote.isEmpty ? '/' : parentRemote,
-              isFolder: true,
-            ));
+          0,
+          FileItem(
+            name: '..',
+            path: parentRemote.isEmpty ? '/' : parentRemote,
+            isFolder: true,
+          ),
+        );
       }
       final prev = cursorItem;
       _files = allItems;
@@ -3091,8 +3481,13 @@ class FileListImportResult {
 }
 
 class _FileListSnapshot {
-  const _FileListSnapshot({required this.files, required this.title, required this.origin,
-    required this.selection, required this.cursor});
+  const _FileListSnapshot({
+    required this.files,
+    required this.title,
+    required this.origin,
+    required this.selection,
+    required this.cursor,
+  });
   final List<FileItem> files;
   final String title;
   final PanelFileOrigin? origin;
@@ -3100,8 +3495,10 @@ class _FileListSnapshot {
   final FileItem? cursor;
 }
 
-final panelProvider =
-    ChangeNotifierProvider.family<PanelNotifier, PanelSide>((ref, side) {
+final panelProvider = ChangeNotifierProvider.family<PanelNotifier, PanelSide>((
+  ref,
+  side,
+) {
   return PanelNotifier(ref, side);
 });
 

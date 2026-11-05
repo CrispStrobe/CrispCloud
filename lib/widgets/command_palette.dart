@@ -16,10 +16,11 @@ import '../screens/screen_dialogs.dart'
         showGoToDialog,
         showMultiRenameFromSelection,
         showCopyDialogFromSelection,
-        showMoveDialogFromSelection, uploadSelected, downloadSelected;
+        showMoveDialogFromSelection,
+        uploadSelected,
+        downloadSelected;
 import 'pattern_selection_dialog.dart';
 import 'file_list_dialog.dart';
-import '../services/file_selection_pattern.dart';
 import 'pdf_editor_dialog.dart';
 import 'pdf_operations_dialog.dart';
 

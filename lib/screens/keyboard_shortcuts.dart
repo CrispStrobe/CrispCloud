@@ -25,7 +25,6 @@ import '../services/archive_service.dart';
 import '../widgets/command_palette.dart';
 import '../widgets/pattern_selection_dialog.dart';
 import '../widgets/file_list_dialog.dart';
-import '../services/file_selection_pattern.dart';
 import '../widgets/file_context_menu.dart'
     show openWithSystemEditor, showPropertiesDialog, showFileContextMenu;
 import '../widgets/file_toolbar.dart' show showPanelFilterDialog;

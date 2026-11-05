@@ -27,8 +27,7 @@ FileOperationBackend fileOperationBackend({
 }
 
 class LocalOperationBackend extends FileOperationBackend {
-  LocalOperationBackend(this.service, {required bool Function() isCurrent})
-    : _isCurrent = isCurrent;
+  LocalOperationBackend(this.service, {required this._isCurrent});
   static final Object _localIdentity = Object();
   final LocalFileService service;
   final bool Function() _isCurrent;
@@ -44,8 +43,10 @@ class LocalOperationBackend extends FileOperationBackend {
     // Conservatively reject case aliases on platforms commonly backed by a
     // case-insensitive volume, rather than risk moving an item onto itself.
     return !kIsWeb && (Platform.isWindows || Platform.isMacOS)
-        ? normalized.toLowerCase() : normalized;
+        ? normalized.toLowerCase()
+        : normalized;
   }
+
   @override
   bool get isCurrent => _isCurrent();
   @override
@@ -65,8 +66,9 @@ class LocalOperationBackend extends FileOperationBackend {
         throw FileSystemException('Directory access is unavailable.', path);
       }
       final entities = await service.listDirectory(path);
-      if (entities == null)
+      if (entities == null) {
         throw FileSystemException('Cannot list directory.', path);
+      }
       return entities.map((entity) {
         final metadata = service.getWebMetadata(entity.path);
         return FileItem(
@@ -167,10 +169,11 @@ class LocalOperationBackend extends FileOperationBackend {
 
   @override
   Stream<List<int>> readFile(FileItem file) {
-    if (kIsWeb)
+    if (kIsWeb) {
       return Stream.fromFuture(
         service.readFileForEdit(file.path!, fileItem: file),
       );
+    }
     // Keep the scoped callback alive until the stream finishes or is cancelled.
     late StreamController<List<int>> controller;
     StreamSubscription<List<int>>? subscription;
@@ -220,8 +223,9 @@ class LocalOperationBackend extends FileOperationBackend {
         _check();
         bytes.add(chunk);
       }
-      if (length != null && bytes.length != length)
+      if (length != null && bytes.length != length) {
         throw StateError('Source length changed.');
+      }
       final result = await service.saveFileReportingResult(
         path,
         bytes.takeBytes(),
@@ -275,9 +279,17 @@ class LocalOperationBackend extends FileOperationBackend {
         try {
           await sink.addStream(data);
           await sink.flush();
-        } finally {
-          await sink.close();
+        } catch (_) {
+          // addStream may already close the file after a read/write failure.
+          // Closing it again must not hide the original transfer error.
+          try {
+            await sink.close();
+          } catch (_) {
+            /* Preserve the first read or write failure. */
+          }
+          rethrow;
         }
+        await sink.close();
         if (length != null && await staged.length() != length) {
           throw StateError(
             'Source length changed; destination was not replaced.',
@@ -364,15 +376,18 @@ class LocalOperationBackend extends FileOperationBackend {
     required bool replace,
   }) async {
     _check();
-    if (kIsWeb)
+    if (kIsWeb) {
       throw UnsupportedError('Symbolic links require native storage.');
-    if (replace)
+    }
+    if (replace) {
       throw UnsupportedError(
         'Existing files are never replaced by symbolic links.',
       );
+    }
     final linkTarget = source.symlinkTarget;
-    if (linkTarget == null)
+    if (linkTarget == null) {
       throw StateError('Symbolic link target is unavailable.');
+    }
     await service.withFileOperationAccess(paths.dirname(destination), () async {
       _check();
       await Link(destination).create(linkTarget);
@@ -381,8 +396,7 @@ class LocalOperationBackend extends FileOperationBackend {
 }
 
 class CloudOperationBackend extends FileOperationBackend {
-  CloudOperationBackend(this.client, {required bool Function() isCurrent})
-    : _isCurrent = isCurrent;
+  CloudOperationBackend(this.client, {required this._isCurrent});
   final CloudStorageClient client;
   final bool Function() _isCurrent;
   @override
@@ -392,10 +406,13 @@ class CloudOperationBackend extends FileOperationBackend {
   @override
   p.Context get paths => p.posix;
   @override
+  String destinationPathKey(String path) => paths.normalize(path).toLowerCase();
+  @override
   bool get isCurrent => _isCurrent() && client.isAuthenticated;
   void _check() {
-    if (!isCurrent)
+    if (!isCurrent) {
       throw StateError('The cloud account changed. Reopen the operation.');
+    }
   }
 
   @override
@@ -412,8 +429,9 @@ class CloudOperationBackend extends FileOperationBackend {
         if (group == 'files' &&
             fileType.isNotEmpty &&
             fileType.toLowerCase() != 'file' &&
-            !name.toLowerCase().endsWith('.${fileType.toLowerCase()}'))
+            !name.toLowerCase().endsWith('.${fileType.toLowerCase()}')) {
           name = '$name.$fileType';
+        }
         if (name.isEmpty ||
             name == '.' ||
             name == '..' ||
@@ -426,12 +444,13 @@ class CloudOperationBackend extends FileOperationBackend {
             item['lastModified'] ??
             item['timestamp'];
         DateTime? modified;
-        if (rawDate is DateTime)
+        if (rawDate is DateTime) {
           modified = rawDate;
-        else if (rawDate is num)
+        } else if (rawDate is num) {
           modified = DateTime.fromMillisecondsSinceEpoch(rawDate.toInt());
-        else if (rawDate != null)
+        } else if (rawDate != null) {
           modified = DateTime.tryParse(rawDate.toString());
+        }
         entries.add(
           FileItem(
             name: name,
@@ -456,17 +475,23 @@ class CloudOperationBackend extends FileOperationBackend {
     if (path == '/' || path == client.rootPath) {
       return FileItem(name: path, path: path, isFolder: true);
     }
-    final parent = paths.dirname(path);
+    var parent = paths.dirname(path);
     // Resolve parents without converting permission/API errors into absence.
-    if (parent != '/' &&
-        parent != client.rootPath &&
-        await stat(parent) == null)
-      return null;
+    if (parent != '/' && parent != client.rootPath) {
+      final existingParent = await stat(parent);
+      if (existingParent == null) return null;
+      if (!existingParent.isFolder || existingParent.isSymlink == true) {
+        throw StateError('Cloud parent is not a regular directory: $parent');
+      }
+      parent = existingParent.path ?? parent;
+    }
+    final requestedName = paths.basename(path).toLowerCase();
     final matches = (await list(parent))
-        .where((file) => file.name == paths.basename(path))
+        .where((file) => file.name.toLowerCase() == requestedName)
         .toList();
-    if (matches.length > 1)
-      throw StateError('Several cloud items have the same path: $path');
+    if (matches.length > 1) {
+      throw StateError('Several cloud items have case-ambiguous paths: $path');
+    }
     return matches.isEmpty ? null : matches.single;
   }
 
@@ -503,6 +528,7 @@ class CloudOperationBackend extends FileOperationBackend {
     final stagedPath = paths.join(parent, stagedName);
     final backupName = '.crisp-replaced-$token.bak';
     final backupPath = paths.join(parent, backupName);
+    var backupRenameAttempted = false;
     var originalBackedUp = false;
     var committed = false;
     var received = 0;
@@ -532,8 +558,9 @@ class CloudOperationBackend extends FileOperationBackend {
         parent,
       );
       _check();
-      if (length != null && received != length)
+      if (received != length) {
         throw StateError('Source length changed.');
+      }
       final staged = await stat(stagedPath);
       if (staged == null ||
           staged.isFolder ||
@@ -548,12 +575,14 @@ class CloudOperationBackend extends FileOperationBackend {
           );
         }
         _check();
+        backupRenameAttempted = true;
         await client.renamePath(path, backupName);
         originalBackedUp = true;
       }
       _check();
-      if (await stat(path) != null)
+      if (await stat(path) != null) {
         throw StateError('Destination changed while committing: $path');
+      }
       await client.renamePath(stagedPath, name);
       _check();
       final written = await stat(path);
@@ -573,6 +602,25 @@ class CloudOperationBackend extends FileOperationBackend {
         }
       }
     } catch (error) {
+      if (backupRenameAttempted && !originalBackedUp && !committed) {
+        // A remote rename can complete before its acknowledgement is lost.
+        // Discover that backup before deciding whether there is anything to
+        // restore; never omit its possible recovery location on an API error.
+        if (!isCurrent) {
+          throw StateError(
+            '$error. The backup rename could not be confirmed. '
+            'Check $path and $backupPath before retrying.',
+          );
+        }
+        try {
+          originalBackedUp = await stat(backupPath) != null;
+        } catch (_) {
+          throw StateError(
+            '$error. The backup rename could not be confirmed. '
+            'Check $path and $backupPath before retrying.',
+          );
+        }
+      }
       if (originalBackedUp && !committed && isCurrent) {
         try {
           if (await stat(path) == null) {

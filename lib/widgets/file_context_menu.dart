@@ -1,5 +1,7 @@
 // widgets/file_context_menu.dart
 
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart' show Clipboard, ClipboardData;
 
@@ -96,15 +98,22 @@ void _showResultListContextMenu(
   PopupMenuItem<void> command(
     String label,
     IconData icon,
-    VoidCallback action, {
+    FutureOr<void> Function() action, {
     bool requiresSource = true,
   }) => PopupMenuItem<void>(
     enabled: !requiresSource || verified,
     child: Row(
       children: [Icon(icon, size: 18), const SizedBox(width: 10), Text(label)],
     ),
-    onTap: () => Future<void>.delayed(Duration.zero, () {
-      if (context.mounted) action();
+    onTap: () => Future<void>.delayed(Duration.zero, () async {
+      if (!context.mounted) return;
+      try {
+        await action();
+      } catch (error) {
+        if (context.mounted)
+          ScaffoldMessenger.of(context)
+              .showSnackBar(SnackBar(content: Text(error.toString())));
+      }
     }),
   );
   showMenu<void>(

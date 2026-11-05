@@ -42,6 +42,8 @@ class ActionHistoryNotifier extends ChangeNotifier {
     String? newPath,
     required String provider,
     Map<String, dynamic> metadata = const {},
+    bool Function()? isCurrent,
+    Future<UndoResult> Function()? undoAction,
   }) {
     final id = _service.recordNew(
       type: type,
@@ -49,6 +51,8 @@ class ActionHistoryNotifier extends ChangeNotifier {
       newPath: newPath,
       provider: provider,
       metadata: metadata,
+      isCurrent: isCurrent,
+      undoAction: undoAction,
     );
     notifyListeners();
     return id;
@@ -85,7 +89,8 @@ class ActionHistoryNotifier extends ChangeNotifier {
 // Provider
 // ---------------------------------------------------------------------------
 
-final actionHistoryProvider =
-    ChangeNotifierProvider<ActionHistoryNotifier>((ref) {
+final actionHistoryProvider = ChangeNotifierProvider<ActionHistoryNotifier>((
+  ref,
+) {
   return ActionHistoryNotifier();
 });
