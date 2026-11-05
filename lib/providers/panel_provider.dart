@@ -2309,26 +2309,27 @@ class PanelNotifier extends ChangeNotifier {
     FileItem? cursor,
     FileItem? anchor,
   }) {
-    final visible = Set<FileItem>.identity()
-      ..addAll(displayedFiles ?? const <FileItem>[]);
+    final listed = _files;
+    if (listed == null) return;
+    final valid = Set<FileItem>.identity()..addAll(listed);
     _selection
       ..clear()
       ..addAll(
         items.where(
           (item) =>
-              visible.contains(item) && item.name != '..' && item.name != '.',
+              valid.contains(item) && item.name != '..' && item.name != '.',
         ),
       );
-    if (anchor != null) _lastSelected = anchor;
-    if (cursor != null) {
-      final idx = _indexOfIdentical(
-        displayedFiles ?? const <FileItem>[],
-        cursor,
-      );
+    if (cursor != null && valid.contains(cursor)) {
+      final idx = _indexOfIdentical(listed, cursor);
       if (idx != -1) {
         _cursorIndex = idx;
         _itemToScrollTo = cursor;
       }
+    }
+    _lastSelected = anchor != null && valid.contains(anchor) ? anchor : cursor;
+    if (_ref.read(activePanelProvider) != side) {
+      _ref.read(activePanelProvider.notifier).state = side;
     }
     notifyListeners();
   }

@@ -210,20 +210,22 @@ void main() {
   test(
     'explicit projection ignores forged same-path objects and parent entries',
     () {
+      final rows = panel.files!;
       panel.selectVisibleItems([
         files[0],
-        files[1].copyWith(),
-        files[3],
-      ], cursor: files[3]);
-      expect(panel.selection, {files[3]});
-      expect(panel.cursorItem, same(files[3]));
+        rows[1].copyWith(),
+        rows[2],
+      ], cursor: rows[2]);
+      expect(panel.selection, {rows[2]});
+      expect(panel.cursorItem, same(rows[2]));
     },
   );
 
   testWidgets(
     'view selector exposes Gallery and Tiles without changing selection',
     (tester) async {
-      panel.selectVisibleItems([files[1]], cursor: files[1]);
+      final row = panel.files![1];
+      panel.selectVisibleItems([row], cursor: row);
       await tester.pumpWidget(
         UncontrolledProviderScope(
           container: container,
@@ -239,7 +241,7 @@ void main() {
       await tester.tap(find.text('Gallery'));
       await tester.pumpAndSettle();
       expect(container.read(localViewModeProvider), ViewMode.gallery);
-      expect(panel.selection, {files[1]});
+      expect(panel.selection, {row});
       expect(
         (await SharedPreferences.getInstance()).getString(
           'file_layout_local_v1',
