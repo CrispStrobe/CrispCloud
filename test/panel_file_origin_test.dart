@@ -416,21 +416,25 @@ void main() {
           actual.providerName,
           accountId: 'account-b',
         );
-        container.read(multiCloudProvider).addConnection(
-          id: 'second',
-          label: 'Second account',
-          provider: CloudProvider.s3,
-          client: other,
-        );
+        container
+            .read(multiCloudProvider)
+            .addConnection(
+              id: 'second',
+              label: 'Second account',
+              provider: CloudProvider.s3,
+              client: other,
+            );
         final panel = container.read(panelProvider(side));
         await Future<void>.delayed(Duration.zero);
-        container.read(panelSourceProvider(side).notifier).setSource(
-          RemotePanelSource(
-            providerName: other.providerName,
-            client: other,
-            path: '/documents',
-          ),
-        );
+        container
+            .read(panelSourceProvider(side).notifier)
+            .setSource(
+              RemotePanelSource(
+                providerName: other.providerName,
+                client: other,
+                path: '/documents',
+              ),
+            );
         await Future<void>.delayed(Duration.zero);
         await panel.refresh();
         final original = panel.captureCurrentOrigin();
@@ -440,13 +444,15 @@ void main() {
         await Future<void>.delayed(Duration.zero);
         expect(other.createdPaths, ['/documents/new-folder']);
         expect(actual.createdPaths, isEmpty);
-        container.read(panelSourceProvider(side).notifier).setSource(
-          RemotePanelSource(
-            providerName: actual.providerName,
-            client: actual,
-            path: '/elsewhere',
-          ),
-        );
+        container
+            .read(panelSourceProvider(side).notifier)
+            .setSource(
+              RemotePanelSource(
+                providerName: actual.providerName,
+                client: actual,
+                path: '/elsewhere',
+              ),
+            );
         await Future<void>.delayed(Duration.zero);
         await panel.refresh();
         other.pendingCreate!.complete();
@@ -470,18 +476,24 @@ void main() {
     );
   }
 
-  test('new folder rejects virtual lists without mutating their source', () async {
-    final panel = container.read(panelProvider(PanelSide.remote));
-    await panel.refresh();
-    panel.showSearchResults(
-      panel.files!,
-      origin: panel.captureCurrentOrigin(),
-    );
-    await panel.createFolder('not-a-list-item');
-    expect(actual.createdPaths, isEmpty);
-    expect(container.read(actionHistoryProvider).history, isEmpty);
-    expect(container.read(errorProvider).lastError, contains('real directory'));
-  });
+  test(
+    'new folder rejects virtual lists without mutating their source',
+    () async {
+      final panel = container.read(panelProvider(PanelSide.remote));
+      await panel.refresh();
+      panel.showSearchResults(
+        panel.files!,
+        origin: panel.captureCurrentOrigin(),
+      );
+      await panel.createFolder('not-a-list-item');
+      expect(actual.createdPaths, isEmpty);
+      expect(container.read(actionHistoryProvider).history, isEmpty);
+      expect(
+        container.read(errorProvider).lastError,
+        contains('real directory'),
+      );
+    },
+  );
 
   test('new folder undo requires safe empty-directory deletion', () async {
     final panel = container.read(panelProvider(PanelSide.remote));

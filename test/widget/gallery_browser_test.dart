@@ -72,7 +72,9 @@ void main() {
       FileItem(name: 'photo2.raw', path: '/gallery-test/photo2.raw', isFolder: false),
       FileItem(name: 'photo3.raw', path: '/gallery-test/photo3.raw', isFolder: false),
     ];
-    panel.showSearchResults(files);
+    panel.showSearchResults(files, origin: panel.captureCurrentOrigin());
+    // Search publication normalizes rows; selection accepts these exact objects.
+    files = panel.files!;
   });
   tearDown(() => container.dispose());
 
@@ -140,25 +142,63 @@ void main() {
     await tester.pumpWidget(const SizedBox());
   });
 
-  test('explicit projection ignores forged same-path objects and parent entries', () {
-    panel.selectVisibleItems([files[0], files[1].copyWith(), files[3]], cursor: files[3]);
-    expect(panel.selection, {files[3]});
-    expect(panel.cursorItem, same(files[3]));
-  });
+  test(
+    'explicit projection ignores forged same-path objects and parent entries',
+    () {
+      final selected = files.singleWhere((file) => file.name == 'photo2.raw');
+      final other = files.singleWhere((file) => file.name == 'photo10.raw');
+      final forged = other.copyWith();
+      expect(forged, equals(other));
+      expect(forged, isNot(same(other)));
+      expect(panel.originForOperation(selected), isNotNull);
+      expect(panel.originForOperation(forged), isNull);
+      panel.selectVisibleItems([
+        FileItem(name: '..', path: '/', isFolder: true),
+        forged,
+        selected,
+      ], cursor: selected);
+      expect(panel.selection, {selected});
+      expect(panel.cursorItem, same(selected));
+    },
+  );
 
-  testWidgets('view selector exposes Gallery and Tiles without changing selection', (tester) async {
-    panel.selectVisibleItems([files[1]], cursor: files[1]);
-    await tester.pumpWidget(UncontrolledProviderScope(container: container,
-      child: const MaterialApp(home: Scaffold(body: FileViewSelector(side: PanelSide.local)))));
-    await tester.tap(find.byTooltip('View'));
-    await tester.pumpAndSettle();
-    expect(find.text('Gallery'), findsOneWidget);
-    expect(find.text('Tiles'), findsOneWidget);
-    await tester.tap(find.text('Gallery'));
-    await tester.pumpAndSettle();
-    expect(container.read(localViewModeProvider), ViewMode.gallery);
-    expect(panel.selection, {files[1]});
-    expect((await SharedPreferences.getInstance()).getString('file_layout_local_v1'), 'gallery');
-    await tester.pumpWidget(const SizedBox());
-  });
+  testWidgets(
+    'view selector exposes Gallery and Tiles without changing selection',
+    (tester) async {
+      final selected = files.singleWhere((file) => file.name == 'photo10.raw');
+      expect(panel.originForOperation(selected), isNotNull);
+      panel.selectVisibleItems([selected], cursor: selected);
+      expect(panel.selection, {selected});
+      await tester.pumpWidget(
+        UncontrolledProviderScope(
+          container: container,
+          child: const MaterialApp(
+            home: Scaffold(
+              body: Align(
+                alignment: Alignment.topLeft,
+                child: FileViewSelector(side: PanelSide.local),
+              ),
+            ),
+          ),
+        ),
+      );
+      await tester.tap(find.byTooltip('View'));
+      await tester.pumpAndSettle();
+      expect(find.text('Gallery'), findsOneWidget);
+      expect(find.text('Tiles'), findsOneWidget);
+      final galleryItem = find.widgetWithText(
+        CheckedPopupMenuItem<ViewMode>,
+        'Gallery',
+      );
+      await tester.tap(galleryItem.hitTestable());
+      await tester.pumpAndSettle();
+      expect(container.read(localViewModeProvider), ViewMode.gallery);
+      expect(panel.selection, {selected});
+      expect(
+        (await SharedPreferences.getInstance()).getString('file_layout_local_v1'),
+        'gallery',
+      );
+      await tester.pumpWidget(const SizedBox());
+    },
+  );
 }

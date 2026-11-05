@@ -209,9 +209,13 @@ void main() {
     );
     await host(tester);
 
+    // The name column includes the active sort-direction indicator.
+    final originalPathHeader = find.textContaining(
+      RegExp(r'^Original path(?: [↑↓])?$'),
+    );
     expect(container.read(remoteViewModeProvider), ViewMode.gallery);
     expect(find.byType(FileListView), findsOneWidget);
-    expect(find.text('Original path'), findsOneWidget);
+    expect(originalPathHeader, findsOneWidget);
     expect(find.byTooltip('File list actions'), findsOneWidget);
 
     await tester.tap(find.byTooltip('Remove from list (keep files)'));
@@ -219,7 +223,7 @@ void main() {
 
     expect(destination.files, isEmpty);
     expect(destination.showingSearchResults, isTrue);
-    expect(find.text('Original path'), findsOneWidget);
+    expect(originalPathHeader, findsOneWidget);
     expect(find.text('This file list is empty.'), findsOneWidget);
     expect(find.byTooltip('File list actions'), findsOneWidget);
     expect(find.byTooltip('Return to folder'), findsOneWidget);

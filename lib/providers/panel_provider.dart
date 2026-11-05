@@ -1262,7 +1262,9 @@ class PanelNotifier extends ChangeNotifier {
 
   Future<void> _synchronizeCollectionPanels(String id) async {
     final panels = [
-      for (final side in PanelSide.values) _ref.read(panelProvider(side)),
+      for (final panelSide in PanelSide.values)
+        // Reading our own provider would create a Riverpod self-dependency.
+        panelSide == side ? this : _ref.read(panelProvider(panelSide)),
     ];
     // Cancel existing refreshes before any panel starts its replacement read.
     for (final panel in panels) {

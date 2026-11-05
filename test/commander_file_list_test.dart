@@ -627,7 +627,9 @@ void main() {
       });
       expect(store.get(id)!.name, 'Renamed collection');
 
-      await panel.removeSavedCollection(id);
+      // Manager actions can originate from either visual pane. Rename and
+      // Add above use the right pane; removal exercises the left pane.
+      await otherPanel.removeSavedCollection(id);
       expect(panel.activeCollectionId, isNull);
       expect(otherPanel.activeCollectionId, isNull);
       expect(panel.tabs.any((tab) => tab.collectionId == id), isFalse);
