@@ -306,6 +306,55 @@ void main() {
       utf8.encode('original'),
     );
     expect(workspace.dirty, isFalse);
+    final archiveBeforeMove = Uint8List.fromList(client.files['/work.zip']!);
+    expect(await workspace.stageCopiedMemberRemoval(plan), 1);
+    expect(workspace.list('/folder'), isEmpty);
+    expect(workspace.dirty, isTrue);
+    expect(
+      client.files['/work.zip'],
+      archiveBeforeMove,
+      reason: 'Member removal is staged until the user saves the archive.',
+    );
+    expect(await workspace.read('/remove.txt'), [1, 2]);
+  });
+
+  test('archive move-out retains skipped members and refuses changed destinations atomically', () async {
+    final client = WorkflowFakeClient()
+      ..put('/work.zip', await _archive(const koni.ZipWriteFormat()))
+      ..put('/out/remove.txt', [9]);
+    final backend = CloudOperationBackend(client, isCurrent: () => true);
+    final workspace = await ArchiveWorkspace.open(
+      backend,
+      (await backend.stat('/work.zip'))!,
+    );
+    addTearDown(workspace.close);
+    final plan = await const FileOperationService().prepare(
+      files: workspace.list(),
+      source: workspace.backend,
+      destination: backend,
+      targetDirectory: '/out',
+      options: const FileOperationOptions(
+        fileConflict: FileConflictPolicy.skip,
+      ),
+    );
+    await const FileOperationService().execute(
+      plan,
+      control: FileOperationControl(),
+    );
+    client.put('/out/folder/original.txt', 'changed'.codeUnits);
+    await expectLater(
+      workspace.stageCopiedMemberRemoval(plan),
+      throwsStateError,
+    );
+    expect(workspace.dirty, false);
+    expect(
+      await workspace.read('/folder/original.txt'),
+      utf8.encode('original'),
+    );
+    client.put('/out/folder/original.txt', utf8.encode('original'));
+    await workspace.stageCopiedMemberRemoval(plan);
+    expect(await workspace.read('/remove.txt'), [1, 2]);
+    expect(workspace.list().map((file) => file.name), ['remove.txt']);
   });
 
   test('unsafe hierarchy changes are rejected atomically', () async {
