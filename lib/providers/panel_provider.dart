@@ -269,6 +269,18 @@ class PanelNotifier extends ChangeNotifier {
     // Listen for panel source changes (e.g. user switches provider in dropdown).
     _ref.listen<PanelSource>(panelSourceProvider(side), (prev, next) {
       if (prev == next) return;
+      if (next.isLocal || next.isRemote) {
+        final reference = storageReferenceForSource(next);
+        final tab = activeTab;
+        if (tab != null &&
+            (tab.lockMode == TabLockMode.locked ||
+                tab.lockMode == TabLockMode.newTab) &&
+            _tabLocationDiffers(tab, next.currentPath, reference)) {
+          // A source picker changes the source before this callback. Preserve
+          // the locked tab's exact account and open the chosen source beside it.
+          _createTabLocation(next.currentPath, reference);
+        }
+      }
       _pendingTabStorage = null;
       _leaveFileList();
       _listingGeneration++;
@@ -298,6 +310,21 @@ class PanelNotifier extends ChangeNotifier {
 
   void _recordOrigins(Iterable<FileItem> files, PanelFileOrigin origin) {
     _currentDirectoryOrigin = origin;
+    final previousTab = activeTab;
+    if (previousTab != null &&
+        (previousTab.lockMode == TabLockMode.locked ||
+            previousTab.lockMode == TabLockMode.newTab) &&
+        _tabLocationDiffers(
+          previousTab,
+          origin.source.currentPath,
+          origin.storageReference,
+        )) {
+      _createTabLocation(
+        origin.source.currentPath,
+        origin.storageReference,
+        keepListing: true,
+      );
+    }
     final tab = activeTab;
     if (tab != null &&
         !_showingSearchResults &&
@@ -1039,6 +1066,17 @@ class PanelNotifier extends ChangeNotifier {
       items.add(item);
     }
     _log.info('Showing ${items.length} items in $title');
+    final tab = activeTab;
+    if (tab != null &&
+        (tab.lockMode == TabLockMode.locked ||
+            tab.lockMode == TabLockMode.newTab) &&
+        (collection == null || collection.id != tab.collectionId)) {
+      _createTabLocation(
+        commonOrigin?.source.currentPath ?? currentPath,
+        commonOrigin?.storageReference ??
+            _currentDirectoryOrigin?.storageReference,
+      );
+    }
     _showingSearchResults = true;
     _fileListTitle = collection?.name ?? title;
     _fileListOrigin = mixed ? null : commonOrigin;
@@ -1321,7 +1359,6 @@ class PanelNotifier extends ChangeNotifier {
   Future<void> clearSearchResults() async {
     if (!_showingSearchResults) return;
     final origin = _fileListOrigin;
-    _leaveFileList();
     if (origin != null && origin.isCurrent) {
       await navigateToPath(
         origin.source.currentPath,
@@ -1329,6 +1366,14 @@ class PanelNotifier extends ChangeNotifier {
         recordHistory: false,
       );
     } else {
+      final directory = _currentDirectoryOrigin;
+      if (!_allowTabNavigation(
+        directory?.source.currentPath ?? currentPath,
+        directory?.storageReference,
+      )) {
+        return;
+      }
+      _leaveFileList();
       await refresh();
     }
   }
@@ -1539,7 +1584,6 @@ class PanelNotifier extends ChangeNotifier {
     }
     final paths = origin.source.isRemote ? p.posix : p.context;
     final path = item.path ?? paths.join(origin.source.currentPath, item.name);
-    _leaveFileList();
     await navigateToPath(paths.dirname(path), selectItem: item, origin: origin);
     focusList();
   }
@@ -1731,6 +1775,18 @@ class PanelNotifier extends ChangeNotifier {
       final archivePath =
           file.path ?? paths.join(origin.source.currentPath, file.name);
       final parentSource = origin.source.withPath(paths.dirname(archivePath));
+      final tab = activeTab;
+      if (tab?.lockMode == TabLockMode.locked) {
+        _ref
+            .read(errorProvider)
+            .addError(
+              'The tab "${tab!.label}" is locked. Open the archive in a new tab or unlock it.',
+            );
+        return;
+      }
+      if (tab?.lockMode == TabLockMode.newTab) {
+        _createTabLocation(parentSource.currentPath, origin.storageReference);
+      }
       _leaveFileList();
       final generation = ++_listingGeneration;
       requestGeneration = generation;
@@ -2758,6 +2814,7 @@ class PanelNotifier extends ChangeNotifier {
     FileItem? selectItem,
     PanelFileOrigin? origin,
     bool recordHistory = true,
+    bool bypassTabLock = false,
   }) async {
     _log.info('navigateToPath: $path (side=$side, web=$kIsWeb)');
     final sourceOrigin =
@@ -2785,6 +2842,18 @@ class PanelNotifier extends ChangeNotifier {
         sourceOrigin?.source.isRemote ??
         (selectedSource.isRemote ||
             (side == PanelSide.remote && _ref.read(authProvider).isConnected));
+    if (!isRemote) {
+      path = _normaliseLocalPath(path);
+      if (path.isEmpty) return;
+    }
+    final requestedStorage =
+        sourceOrigin?.storageReference ??
+        (isRemote
+            ? (_remoteSourceForListing() == null
+                  ? null
+                  : storageReferenceForSource(_remoteSourceForListing()!))
+            : storageReferenceForSource(LocalPanelSource(path)));
+    if (!bypassTabLock && !_allowTabNavigation(path, requestedStorage)) return;
     _leaveFileList();
     // Any explicit path navigation leaves archive mode. Previously the stale
     // ArchivePanelSource kept currentPath virtual and Home/breadcrumbs tried
@@ -2801,10 +2870,6 @@ class PanelNotifier extends ChangeNotifier {
                 ? p.dirname(archive)
                 : (kIsWeb ? '/' : (Platform.environment['HOME'] ?? '/')))
           : p.posix.dirname(archive);
-    }
-    if (!isRemote) {
-      path = _normaliseLocalPath(path);
-      if (path.isEmpty) return;
     }
     _selection.clear();
     _lastSelected = null;
@@ -3708,6 +3773,65 @@ class PanelNotifier extends ChangeNotifier {
 
   String get _tabStorageKey => 'panel_tabs_${side.name}';
 
+  bool _tabLocationDiffers(
+    PanelTab tab,
+    String path,
+    StorageReference? storage,
+  ) {
+    final paths = storage?.isLocal == true && !kIsWeb ? p.context : p.posix;
+    return tab.collectionId != null ||
+        _fileListTabs.containsKey(tab.id) ||
+        tab.storage != storage ||
+        paths.normalize(tab.path) != paths.normalize(path);
+  }
+
+  void _departTab() {
+    _rememberFileListTab();
+    final tab = activeTab;
+    if (tab != null && tab.resetToLockedLocation()) {
+      _fileListTabs.remove(tab.id);
+    }
+  }
+
+  PanelTab _createTabLocation(
+    String path,
+    StorageReference? storage, {
+    bool keepListing = false,
+  }) {
+    _departTab();
+    _leaveFileList(forget: false);
+    final tab = PanelTab(id: _nextTabId(), path: path, storage: storage);
+    final index = _tabs.indexWhere((value) => value.id == _activeTabId);
+    _tabs.insert(index < 0 ? _tabs.length : index + 1, tab);
+    _activeTabId = tab.id;
+    _pendingTabStorage = null;
+    if (!keepListing) {
+      _files = null;
+      _selection.clear();
+      _lastSelected = null;
+      _listingGeneration++;
+      _verifiedListingGeneration = -1;
+    }
+    return tab;
+  }
+
+  bool _allowTabNavigation(String path, StorageReference? storage) {
+    final tab = activeTab;
+    if (tab == null || !_tabLocationDiffers(tab, path, storage)) return true;
+    if (tab.lockMode == TabLockMode.locked) {
+      _ref
+          .read(errorProvider)
+          .addError(
+            'The tab "${tab.label}" is locked. Unlock it or open the location in a new tab.',
+          );
+      return false;
+    }
+    if (tab.lockMode == TabLockMode.newTab) {
+      _createTabLocation(path, storage);
+    }
+    return true;
+  }
+
   void _initFirstTab() {
     final id = _nextTabId();
     final path = side == PanelSide.local ? _localPath : _remotePath;
@@ -3785,8 +3909,13 @@ class PanelNotifier extends ChangeNotifier {
   }
 
   /// Persist current tabs to SharedPreferences.
-  Future<void> _saveTabs() async {
-    if (!kIsWeb && Platform.environment.containsKey('FLUTTER_TEST')) return;
+  Future<void> _saveTabs({
+    bool force = false,
+    bool rethrowErrors = false,
+  }) async {
+    if (!force && !kIsWeb && Platform.environment.containsKey('FLUTTER_TEST')) {
+      return;
+    }
     await _tabSaveLock.synchronized(() async {
       if (_isDisposed) return;
       try {
@@ -3822,19 +3951,24 @@ class PanelNotifier extends ChangeNotifier {
             );
           } catch (error) {
             _log.warn('Could not persist unverified list tab', error);
+            if (rethrowErrors) rethrow;
           }
         }
         final prefs = await SharedPreferences.getInstance();
         final list = _tabs.map((t) => t.toJson()).toList();
-        await prefs.setString(_tabStorageKey, json.encode(list));
-        await prefs.setInt(
+        final saved = await prefs.setString(_tabStorageKey, json.encode(list));
+        final savedActive = await prefs.setInt(
           '${_tabStorageKey}_active',
           _tabs
               .indexWhere((t) => t.id == _activeTabId)
               .clamp(0, _tabs.length - 1),
         );
+        if (!saved || !savedActive) {
+          throw StateError('The tab configuration could not be saved.');
+        }
       } catch (e) {
         _log.warn('Tab save failed', e);
+        if (rethrowErrors) rethrow;
       }
     });
   }
@@ -3871,7 +4005,12 @@ class PanelNotifier extends ChangeNotifier {
         return;
       }
       _pendingTabStorage = null;
-      await navigateToPath(tab.path, origin: origin, recordHistory: false);
+      await navigateToPath(
+        tab.path,
+        origin: origin,
+        recordHistory: false,
+        bypassTabLock: true,
+      );
     } catch (error) {
       if (!_isDisposed) {
         _ref.read(errorProvider).addError('Could not reopen tab: $error');
@@ -3882,17 +4021,14 @@ class PanelNotifier extends ChangeNotifier {
   void addTab({String? path}) {
     _log.debug('addTab: path=${path ?? currentPath}');
     final directory = path ?? currentPath;
-    _rememberFileListTab();
-    _leaveFileList(forget: false);
-    final id = _nextTabId();
-    _tabs.add(
-      PanelTab(
-        id: id,
-        path: directory,
-        storage: _currentDirectoryOrigin?.storageReference,
-      ),
+    if (path == null && activeTab != null) {
+      duplicateTab(activeTab!.id);
+      return;
+    }
+    _createTabLocation(
+      directory,
+      _currentDirectoryOrigin?.storageReference ?? activeTab?.storage,
     );
-    _activeTabId = id;
     if (side == PanelSide.local) {
       _localPath = directory;
     } else {
@@ -3900,17 +4036,16 @@ class PanelNotifier extends ChangeNotifier {
     }
     notifyListeners();
     _saveTabs();
-    refresh();
+    _restoreSelectedTab();
   }
 
-  void closeTab(String tabId) {
+  void closeTab(String tabId, {bool force = false}) {
     _log.debug('closeTab: $tabId');
     if (_tabs.length <= 1) return;
-    final tab = _tabs.firstWhere(
-      (t) => t.id == tabId,
-      orElse: () => _tabs.first,
-    );
-    if (tab.isPinned) return;
+    final index = _tabs.indexWhere((tab) => tab.id == tabId);
+    if (index < 0) return;
+    final tab = _tabs[index];
+    if (tab.isProtected && !force) return;
     final idx = _tabs.indexOf(tab);
     _tabs.remove(tab);
     _fileListTabs.remove(tabId);
@@ -3924,10 +4059,14 @@ class PanelNotifier extends ChangeNotifier {
     _saveTabs();
   }
 
-  void selectTab(String tabId) {
+  Future<void> selectTab(String tabId) async {
     _log.debug('selectTab: $tabId');
     if (!_tabs.any((tab) => tab.id == tabId)) return;
-    _rememberFileListTab();
+    if (tabId != _activeTabId) {
+      _departTab();
+    } else {
+      _rememberFileListTab();
+    }
     _leaveFileList(forget: false);
     _activeTabId = tabId;
     _pendingTabStorage = null;
@@ -3961,7 +4100,7 @@ class PanelNotifier extends ChangeNotifier {
     }
     notifyListeners();
     _saveTabs();
-    _restoreSelectedTab();
+    await _restoreSelectedTab();
   }
 
   /// Cycle to the next tab. Wraps around.
@@ -3981,23 +4120,157 @@ class PanelNotifier extends ChangeNotifier {
   }
 
   void toggleTabPin(String tabId) {
-    final tab = _tabs.firstWhere(
-      (t) => t.id == tabId,
-      orElse: () => _tabs.first,
-    );
+    final index = _tabs.indexWhere((tab) => tab.id == tabId);
+    if (index < 0) return;
+    final tab = _tabs[index];
     tab.isPinned = !tab.isPinned;
     notifyListeners();
     _saveTabs();
   }
 
   void renameTab(String tabId, String newLabel) {
-    final tab = _tabs.firstWhere(
-      (t) => t.id == tabId,
-      orElse: () => _tabs.first,
-    );
-    tab.label = newLabel;
+    final index = _tabs.indexWhere((tab) => tab.id == tabId);
+    if (index < 0) return;
+    final tab = _tabs[index];
+    tab.renameLabel(newLabel);
     notifyListeners();
     _saveTabs();
+  }
+
+  void setTabLock(String tabId, TabLockMode mode) {
+    final index = _tabs.indexWhere((tab) => tab.id == tabId);
+    if (index < 0) return;
+    final tab = _tabs[index];
+    if (mode == TabLockMode.resetOnLeave &&
+        _fileListTabs.containsKey(tabId) &&
+        tab.collectionId == null) {
+      _ref
+          .read(errorProvider)
+          .addError(
+            'Save this file list as a collection before using a return-to-location lock.',
+          );
+      return;
+    }
+    tab.setLock(mode);
+    notifyListeners();
+    _saveTabs();
+  }
+
+  void reorderTabs(int oldIndex, int newIndex) {
+    if (oldIndex < 0 ||
+        oldIndex >= _tabs.length ||
+        newIndex < 0 ||
+        newIndex > _tabs.length) {
+      return;
+    }
+    if (newIndex > oldIndex) newIndex--;
+    if (oldIndex == newIndex) return;
+    final tab = _tabs.removeAt(oldIndex);
+    _tabs.insert(newIndex, tab);
+    notifyListeners();
+    _saveTabs();
+  }
+
+  void duplicateTab(String tabId) {
+    final index = _tabs.indexWhere((tab) => tab.id == tabId);
+    if (index < 0) return;
+    _rememberFileListTab();
+    final original = _tabs[index];
+    final snapshot = _fileListTabs[tabId];
+    final duplicate = PanelTab(
+      id: _nextTabId(),
+      path: original.path,
+      label: original.label,
+      customLabel: original.customLabel,
+      storage: original.storage,
+      collectionId: original.collectionId,
+    );
+    _tabs.insert(index + 1, duplicate);
+    if (snapshot != null) _fileListTabs[duplicate.id] = snapshot;
+    selectTab(duplicate.id);
+  }
+
+  int closeDuplicateTabs() {
+    final survivors = <String, PanelTab>{};
+    final remove = <String>[];
+    int priority(PanelTab tab) =>
+        (tab.isPinned ? 4 : 0) +
+        (tab.isLocked ? 2 : 0) +
+        (tab.customLabel != null ? 1 : 0);
+    for (final tab in _tabs) {
+      if (tab.storage == null && tab.collectionId == null) continue;
+      final paths = tab.storage?.isLocal == true && !kIsWeb
+          ? p.context
+          : p.posix;
+      final key = tab.collectionId == null
+          ? '${tab.storage!.id}\u0000${paths.normalize(tab.path)}'
+          : 'collection:${tab.collectionId}';
+      final other = survivors[key];
+      if (other == null) {
+        survivors[key] = tab;
+      } else if (priority(tab) > priority(other) && !other.isProtected) {
+        remove.add(other.id);
+        survivors[key] = tab;
+      } else if (!tab.isProtected) {
+        remove.add(tab.id);
+      }
+    }
+    for (final id in remove) {
+      closeTab(id);
+    }
+    return remove.length;
+  }
+
+  /// Captures only serializable, source-bound locations. Virtual lists are
+  /// first persisted as collections so a saved group never becomes a folder
+  /// belonging to whichever account happens to be active on restoration.
+  Future<List<Map<String, dynamic>>> exportTabs() async {
+    await _saveTabs(force: true, rethrowErrors: true);
+    return _tabs.map((tab) => tab.toJson()).toList(growable: false);
+  }
+
+  Future<void> restoreTabs(
+    List<Map<String, dynamic>> saved, {
+    int activeIndex = 0,
+    bool replace = false,
+    bool keepProtected = true,
+  }) async {
+    if (saved.isEmpty || saved.length > 500) {
+      throw const FormatException('A panel group must contain 1–500 tabs.');
+    }
+    final incoming = [
+      for (final value in saved) PanelTab.fromJson(_nextTabId(), value),
+    ];
+    for (final tab in incoming) {
+      if (tab.storage == null && tab.collectionId == null) {
+        throw const FormatException(
+          'Saved tabs must identify their storage account.',
+        );
+      }
+      final paths = tab.storage?.isLocal == true && !kIsWeb
+          ? p.context
+          : p.posix;
+      if (!paths.isAbsolute(tab.path) || _isArchiveVirtualPath(tab.path)) {
+        throw const FormatException(
+          'Saved tabs must use absolute storage paths.',
+        );
+      }
+    }
+    _departTab();
+    _leaveFileList(forget: false);
+    if (replace) {
+      final removed = _tabs
+          .where((tab) => !keepProtected || !tab.isProtected)
+          .toList();
+      for (final tab in removed) {
+        _tabs.remove(tab);
+        _fileListTabs.remove(tab.id);
+        _selectionMemories.remove(tab.id);
+      }
+    }
+    _tabs.addAll(incoming);
+    await selectTab(incoming[activeIndex.clamp(0, incoming.length - 1)].id);
+    await _saveTabs(force: true, rethrowErrors: true);
   }
 
   void _syncTabPath() {
