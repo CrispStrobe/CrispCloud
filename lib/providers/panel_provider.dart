@@ -24,7 +24,7 @@ import '../models/file_collection.dart';
 import '../models/file_search_query.dart';
 import '../services/recursive_search_service.dart';
 import '../services/file_collection_service.dart';
-import '../services/file_operation_service.dart' show FileOperationBackend;
+import '../services/file_operation_service.dart';
 import '../services/captured_file_target.dart';
 import '../services/storage_identity.dart';
 import '../services/storage_trash.dart';
@@ -35,8 +35,7 @@ import '../services/native_file_primitives.dart';
 import '../services/archive_service.dart';
 import '../services/archive_viewer_service.dart';
 import '../services/audit_service.dart';
-import '../services/cloud_storage_interface.dart'
-    show CloudStorageClient, CloudStorageClientCapabilities;
+import '../services/cloud_storage_interface.dart' show CloudStorageClient;
 import '../services/directory_cache_service.dart';
 import '../services/file_operation_backend.dart';
 import '../services/file_selection_pattern.dart';
@@ -57,6 +56,7 @@ import 'native_file_operations_provider.dart';
 import 'multi_cloud_provider.dart';
 import 'file_collection_provider.dart';
 import 'toolbar_provider.dart';
+import 'transfer_provider.dart';
 
 // SortBy and SortOrder are defined in models/sort.dart
 export '../models/sort.dart';
@@ -3587,245 +3587,149 @@ class PanelNotifier extends ChangeNotifier {
   }
 
   Future<void> createFolder(String name) async {
-    _log.info('createFolder: $name in $currentPath');
     final audit = _ref.read(auditServiceProvider);
-    final actionHistory = _ref.read(actionHistoryProvider.notifier);
-    final isLocalSource =
-        _ref.read(panelSourceProvider(side)).isLocal || side == PanelSide.local;
-    final providerName = isLocalSource
-        ? 'local'
-        : _ref.read(authProvider).client.providerName;
-    final folderPath = isLocalSource
-        ? p.posix.join(currentPath, name)
-        : p.posix.join(_remotePath, name);
+    String? folderPath;
+    String? providerName;
     try {
-      if (isLocalSource && kIsWeb) {
-        await _localFileService.createDirectory(folderPath);
-      } else if (isLocalSource) {
-        await Directory(p.join(currentPath, name)).create();
-      } else {
-        final client = _ref.read(authProvider).client;
-        await client.createFolderPath(p.posix.join(_remotePath, name));
+      if (_showingSearchResults) {
+        throw StateError(
+          'Open the destination folder before creating a folder.',
+        );
+      }
+      if (name.isEmpty ||
+          name == '.' ||
+          name == '..' ||
+          name.contains('/') ||
+          name.contains(r'\') ||
+          name.contains('\u0000')) {
+        throw const FormatException(
+          'Enter a folder name without path separators.',
+        );
+      }
+      final origin = captureCurrentOrigin();
+      final backend = fileOperationBackend(
+        source: origin.source,
+        local: _localFileService,
+        isCurrent: () => origin.isCurrent,
+      );
+      providerName = backend.label;
+      folderPath = backend.paths.join(origin.source.currentPath, name);
+      if (await backend.stat(folderPath) != null) {
+        throw StateError('An item already exists with that name.');
+      }
+      if (!origin.isCurrent) {
+        throw StateError('The original storage disconnected.');
+      }
+      await backend.createDirectory(folderPath);
+      if (!origin.isCurrent) {
+        throw StateError(
+          'The original storage changed while creating the folder.',
+        );
       }
       await audit.logSuccess(
         operation: AuditOperation.createFolder,
         sourcePath: folderPath,
         provider: providerName,
       );
-      actionHistory.record(
-        type: ActionType.createFolder,
-        originalPath: folderPath,
-        provider: providerName,
-        metadata: {'name': name},
-      );
-      await refresh();
-    } catch (e) {
-      _log.warn('operation failed', e);
-      _ref.read(errorProvider).addError('Create folder failed: $e');
+      _ref
+          .read(actionHistoryProvider.notifier)
+          .record(
+            type: ActionType.createFolder,
+            originalPath: folderPath,
+            provider: providerName,
+            metadata: {
+              'name': name,
+              'storage': origin.storageReference.toJson(),
+            },
+            isCurrent: () => origin.isCurrent,
+          );
+      if (!_isDisposed) await refresh();
+    } catch (error) {
+      _log.warn('create folder failed', error);
+      if (!_isDisposed) {
+        _ref.read(errorProvider).addError('Create folder failed: $error');
+      }
       await audit.logError(
         operation: AuditOperation.createFolder,
-        sourcePath: folderPath,
+        sourcePath: folderPath ?? name,
         provider: providerName,
-        error: e.toString(),
+        error: error.toString(),
       );
     }
   }
 
-  Future<void> moveFiles(List<FileItem> files, String targetPath) async {
-    _log.info(
-      'moveFiles: ${files.length} items → $targetPath (web=$kIsWeb, side=$side)',
-    );
-    final audit = _ref.read(auditServiceProvider);
-    final actionHistory = _ref.read(actionHistoryProvider.notifier);
-    final isLocalSource =
-        _ref.read(panelSourceProvider(side)).isLocal || side == PanelSide.local;
-    final providerName = isLocalSource
-        ? 'local'
-        : _ref.read(authProvider).client.providerName;
+  /// Non-interactive compatibility entry points share the same captured-source
+  /// planner, staged writes and durable queue as the foreground operation dialog.
+  /// Existing targets are skipped; callers needing a decision use the dialog.
+  Future<void> moveFiles(List<FileItem> files, String targetPath) =>
+      _transferFiles(files, targetPath, FileOperationKind.move);
+
+  Future<void> copyFiles(List<FileItem> files, String targetPath) =>
+      _transferFiles(files, targetPath, FileOperationKind.copy);
+
+  Future<void> _transferFiles(
+    List<FileItem> files,
+    String targetPath,
+    FileOperationKind kind,
+  ) async {
+    if (files.isEmpty) return;
     try {
-      for (final file in files) {
-        final src = file.path ?? p.posix.join(_remotePath, file.name);
-        final String movedToPath;
-        if (isLocalSource && kIsWeb) {
-          // Web: move = copy bytes to target + delete source
-          movedToPath = p.posix.join(targetPath, file.name);
-          if (file.path != null && !file.isFolder) {
-            final bytes = await _localFileService.readFile(
-              file.path!,
-              fileItem: file,
+      final targetOrigin = captureCurrentOrigin();
+      final groups = captureOperationGroups(files);
+      FileOperationBackend backend(PanelFileOrigin origin) =>
+          fileOperationBackend(
+            source: origin.source,
+            local: _localFileService,
+            isCurrent: () => origin.isCurrent,
+          );
+      final destination = backend(targetOrigin);
+      final plans = <(PanelFileOrigin, FileOperationPlan)>[];
+      // Validate every selected source before starting any mutation.
+      for (final group in groups.entries) {
+        final plan = await const FileOperationService().prepare(
+          files: group.value,
+          source: backend(group.key),
+          destination: destination,
+          targetDirectory: targetPath,
+          options: FileOperationOptions(
+            kind: kind,
+            fileConflict: FileConflictPolicy.skip,
+          ),
+          protectedDestinationPaths: [
+            for (final file in files)
+              if (originForOperation(file)?.storageId ==
+                      targetOrigin.storageId &&
+                  file.path != null)
+                file.path!,
+          ],
+        );
+        if (plan.errors.isNotEmpty) throw StateError(plan.errors.join('\n'));
+        plans.add((group.key, plan));
+      }
+      for (final (origin, plan) in plans) {
+        if (!plan.canExecute) continue;
+        await _ref
+            .read(transferProvider)
+            .runFileOperation(
+              plan,
+              control: FileOperationControl(),
+              onEntryComplete: (entry) {
+                if (entry.outcome == FileOperationOutcome.moved) {
+                  applyFileListChanges({
+                    entry.source.path!: null,
+                  }, origin: origin);
+                }
+              },
             );
-            await _localFileService.saveFile(movedToPath, bytes);
-            await _localFileService.deleteEntry(file.path!, false);
-          } else if (file.path != null && file.isFolder) {
-            await _copyDirectoryWeb(file.path!, movedToPath);
-            await _localFileService.deleteEntry(file.path!, true);
-          }
-        } else if (isLocalSource) {
-          movedToPath = p.join(targetPath, file.name);
-          if (file.isFolder) {
-            await Directory(file.path!).rename(movedToPath);
-          } else {
-            await File(file.path!).rename(movedToPath);
-          }
-        } else {
-          final client = _ref.read(authProvider).client;
-          final sourcePath = file.path ?? p.posix.join(_remotePath, file.name);
-          movedToPath = p.posix.join(targetPath, file.name);
-          await client.movePath(sourcePath, targetPath);
-        }
-        await audit.logSuccess(
-          operation: AuditOperation.move,
-          sourcePath: src,
-          targetPath: targetPath,
-          provider: providerName,
-          sizeBytes: file.size,
-        );
-        actionHistory.record(
-          type: ActionType.move,
-          originalPath: src,
-          newPath: movedToPath,
-          provider: providerName,
-          metadata: {'name': file.name, 'targetDir': targetPath},
-        );
       }
-      await refresh();
-      clearSelection();
-    } catch (e) {
-      _log.warn('operation failed', e);
-      _ref.read(errorProvider).addError('Move failed: $e');
-      for (final file in files) {
-        final src = file.path ?? p.posix.join(_remotePath, file.name);
-        await audit.logError(
-          operation: AuditOperation.move,
-          sourcePath: src,
-          targetPath: targetPath,
-          provider: providerName,
-          error: e.toString(),
-        );
+      if (!_isDisposed) {
+        await refresh();
+        if (kind == FileOperationKind.move) clearSelection();
       }
-      await refresh();
-    }
-  }
-
-  Future<void> copyFiles(List<FileItem> files, String targetPath) async {
-    _log.info(
-      'copyFiles: ${files.length} items → $targetPath (web=$kIsWeb, side=$side)',
-    );
-    final audit = _ref.read(auditServiceProvider);
-    final actionHistory = _ref.read(actionHistoryProvider.notifier);
-    final isLocalSource =
-        _ref.read(panelSourceProvider(side)).isLocal || side == PanelSide.local;
-    final providerName = isLocalSource
-        ? 'local'
-        : _ref.read(authProvider).client.providerName;
-    try {
-      for (final file in files) {
-        final src = file.path ?? p.posix.join(_remotePath, file.name);
-        // copyPath is the new file that was created — used for undo (delete the copy)
-        final String copyPath;
-        if (isLocalSource && kIsWeb) {
-          // Web: copy within virtual filesystem
-          copyPath = p.posix.join(targetPath, file.name);
-          if (file.path != null) {
-            final bytes = await _localFileService.readFile(
-              file.path!,
-              fileItem: file,
-            );
-            await _localFileService.saveFile(copyPath, bytes);
-          }
-        } else if (isLocalSource) {
-          copyPath = p.join(targetPath, file.name);
-          if (file.isFolder) {
-            await _copyDirectory(file.path!, copyPath);
-          } else {
-            await File(file.path!).copy(copyPath);
-          }
-        } else {
-          if (kIsWeb) {
-            throw UnsupportedError('Remote copy not supported on web');
-          }
-          final client = _ref.read(authProvider).client;
-          final sourcePath = file.path ?? p.posix.join(_remotePath, file.name);
-          copyPath = p.posix.join(targetPath, file.name);
-          if (client.capabilities.serverSideCopy) {
-            _log.info('Using server-side copy for ${file.name}');
-            await client.copyPath(sourcePath, targetPath);
-          } else {
-            final tempPath = p.join(Directory.systemTemp.path, file.name);
-            await client.downloadFileByPath(sourcePath, tempPath);
-            final data = await File(tempPath).readAsBytes();
-            await client.uploadFile(data, file.name, targetPath);
-            await File(tempPath).delete();
-          }
-        }
-        await audit.logSuccess(
-          operation: AuditOperation.copy,
-          sourcePath: src,
-          targetPath: targetPath,
-          provider: providerName,
-          sizeBytes: file.size,
-        );
-        // For copy: originalPath = the new copy, newPath = source (for display)
-        actionHistory.record(
-          type: ActionType.copy,
-          originalPath: copyPath,
-          newPath: src,
-          provider: providerName,
-          metadata: {
-            'name': file.name,
-            'sourceDir': p.dirname(src),
-            'targetDir': targetPath,
-          },
-        );
-      }
-      await refresh();
-    } catch (e) {
-      _log.warn('operation failed', e);
-      _ref.read(errorProvider).addError('Copy failed: $e');
-      for (final file in files) {
-        final src = file.path ?? p.posix.join(_remotePath, file.name);
-        await audit.logError(
-          operation: AuditOperation.copy,
-          sourcePath: src,
-          targetPath: targetPath,
-          provider: providerName,
-          error: e.toString(),
-        );
-      }
-    }
-  }
-
-  Future<void> _copyDirectory(String source, String target) async {
-    if (kIsWeb) {
-      await _copyDirectoryWeb(source, target);
-      return;
-    }
-    await Directory(target).create(recursive: true);
-    final entities = await Directory(source).list().toList();
-    for (final entity in entities) {
-      if (entity is File) {
-        await entity.copy(p.join(target, p.basename(entity.path)));
-      } else if (entity is Directory) {
-        await _copyDirectory(
-          entity.path,
-          p.join(target, p.basename(entity.path)),
-        );
-      }
-    }
-  }
-
-  /// Recursively copy a directory on web using the virtual filesystem.
-  Future<void> _copyDirectoryWeb(String source, String target) async {
-    await _localFileService.createDirectory(target);
-    final entities = await _localFileService.listDirectory(source);
-    if (entities == null) return;
-    for (final entity in entities) {
-      final name = p.posix.basename(entity.path);
-      if (entity is Directory) {
-        await _copyDirectoryWeb(entity.path, p.posix.join(target, name));
-      } else {
-        final bytes = await _localFileService.readFile(entity.path);
-        await _localFileService.saveFile(p.posix.join(target, name), bytes);
+    } catch (error) {
+      _log.warn('file transfer failed', error);
+      if (!_isDisposed) {
+        _ref.read(errorProvider).addError('File transfer failed: $error');
       }
     }
   }
