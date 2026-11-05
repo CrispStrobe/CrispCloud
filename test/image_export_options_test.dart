@@ -11,7 +11,7 @@ void main() {
       buildImageEditorFixture(),
       ImageFileFormat.png,
       const ImageExportOptions(
-        format: ImageFileFormat.png,
+        format: ImageExportFormat.png,
         width: 12,
         height: 8,
       ),
@@ -27,7 +27,7 @@ void main() {
     final bytes = encodeImageExport(
       image.encodePng(pixels),
       ImageFileFormat.png,
-      const ImageExportOptions(format: ImageFileFormat.jpeg, jpegQuality: 95),
+      const ImageExportOptions(format: ImageExportFormat.jpeg, jpegQuality: 95),
     );
     final pixel = image.decodeJpg(bytes)!.getPixel(0, 0);
     expect(pixel.r, greaterThan(245));
@@ -35,11 +35,31 @@ void main() {
     expect(pixel.b, greaterThan(245));
   });
 
+  test('WebP export preserves transparency and validates its container', () {
+    final output = encodeImageExport(
+      buildImageEditorFixture(),
+      ImageFileFormat.png,
+      const ImageExportOptions(format: ImageExportFormat.webp),
+    );
+    final decoded = image.decodeWebP(output)!;
+    expect((decoded.width, decoded.height), (24, 16));
+    expect(decoded.getPixel(0, 0).a, 0);
+    expect(
+      () => validateImageExport(output, ImageExportFormat.webp),
+      returnsNormally,
+    );
+    final truncated = output.sublist(0, output.length - 1);
+    expect(
+      () => validateImageExport(truncated, ImageExportFormat.webp),
+      throwsA(isA<ImageEditException>()),
+    );
+  });
+
   test('one dimension preserves the edited aspect ratio', () {
     final bytes = encodeImageExport(
       buildImageEditorFixture(),
       ImageFileFormat.png,
-      const ImageExportOptions(format: ImageFileFormat.png, width: 12),
+      const ImageExportOptions(format: ImageExportFormat.png, width: 12),
     );
     final result = image.decodePng(bytes)!;
     expect((result.width, result.height), (12, 8));
@@ -49,13 +69,13 @@ void main() {
     final source = buildImageEditorFixture();
     for (final options in [
       const ImageExportOptions(
-        format: ImageFileFormat.png,
+        format: ImageExportFormat.png,
         width: 0,
         height: 1,
       ),
-      const ImageExportOptions(format: ImageFileFormat.jpeg, jpegQuality: 0),
+      const ImageExportOptions(format: ImageExportFormat.jpeg, jpegQuality: 0),
       const ImageExportOptions(
-        format: ImageFileFormat.png,
+        format: ImageExportFormat.png,
         width: 16384,
         height: 16384,
       ),

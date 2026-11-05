@@ -1,10 +1,11 @@
 import 'dart:async';
 import 'dart:typed_data';
-import 'dart:ui' show PointerDeviceKind;
+import 'dart:ui' show PointerDeviceKind, instantiateImageCodec;
 
 import 'package:crisp_cloud/models/file_item.dart';
 import 'package:crisp_cloud/models/panel_side.dart';
 import 'package:crisp_cloud/services/image_edit_session.dart';
+import 'package:crisp_cloud/services/image_export_options.dart';
 import 'package:crisp_cloud/services/image_edit_project.dart';
 import 'package:crisp_cloud/services/image_editor_menu.dart';
 import 'package:crisp_cloud/services/image_file_store.dart';
@@ -156,7 +157,7 @@ class _Harness {
       Uint8List,
       String,
       String,
-      ImageFileFormat,
+      ImageExportFormat,
     )?
     exporter,
     ImageProjectStore? projectStore,
@@ -568,6 +569,45 @@ void main() {
     },
   );
 
+  _desktopTestWidgets('WebP export reopens in the platform decoder', (
+    tester,
+  ) async {
+    final harness = _Harness(tester, _MemoryImageStore());
+    Uint8List? exported;
+    await harness.open(
+      exporter: (bytes, name, title, format) async {
+        expect(name, 'sample-edited.webp');
+        expect(format, ImageExportFormat.webp);
+        exported = bytes;
+        return ImageSaveOutcome.savedCopy;
+      },
+    );
+    await harness.addText('WebP');
+    await tester.ensureVisible(_command(ImageEditorAction.exportCopy));
+    await tester.tap(_command(ImageEditorAction.exportCopy));
+    await tester.pumpAndSettle();
+    await tester.tap(find.byType(DropdownButtonFormField<ImageExportFormat>));
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('WebP').last);
+    await tester.pumpAndSettle();
+    await tester.tap(find.widgetWithText(FilledButton, 'Export'));
+    await _until(
+      tester,
+      () => exported != null && !harness.actions.busy,
+      reason: 'WebP copy export',
+    );
+    final dimensions = await tester.runAsync(() async {
+      final codec = await instantiateImageCodec(exported!);
+      final frame = await codec.getNextFrame();
+      final size = (frame.image.width, frame.image.height);
+      frame.image.dispose();
+      codec.dispose();
+      return size;
+    });
+    expect(dimensions, (24, 16));
+    expect(_saveEnabled(tester), isTrue);
+  });
+
   _desktopTestWidgets('exporting a copy keeps the original dirty', (
     tester,
   ) async {
@@ -577,7 +617,7 @@ void main() {
       exporter: (bytes, name, title, format) async {
         exported = bytes;
         expect(name, 'sample-edited.png');
-        expect(format, ImageFileFormat.png);
+        expect(format, ImageExportFormat.png);
         return ImageSaveOutcome.savedCopy;
       },
     );

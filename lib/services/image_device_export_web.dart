@@ -4,17 +4,22 @@ import 'dart:typed_data';
 import 'package:universal_html/html.dart' as html;
 
 import 'image_edit_session.dart';
+import 'image_export_options.dart';
 
 Future<ImageSaveOutcome?> exportImageCopy(
   Uint8List bytes,
   String suggestedName,
   String dialogTitle,
-  ImageFileFormat format,
+  ImageExportFormat format,
 ) async {
   return _exportCopy(
     bytes,
     suggestedName,
-    format == ImageFileFormat.png ? 'image/png' : 'image/jpeg',
+    format == ImageExportFormat.png
+        ? 'image/png'
+        : format == ImageExportFormat.jpeg
+        ? 'image/jpeg'
+        : 'image/webp',
   );
 }
 

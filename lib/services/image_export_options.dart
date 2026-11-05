@@ -4,6 +4,19 @@ import 'package:image/image.dart' as image;
 
 import 'image_edit_session.dart';
 
+enum ImageExportFormat { png, jpeg, webp }
+
+ImageExportFormat imageExportFormatForSource(ImageFileFormat format) =>
+    format == ImageFileFormat.png
+    ? ImageExportFormat.png
+    : ImageExportFormat.jpeg;
+
+String imageExportExtension(ImageExportFormat format) => switch (format) {
+  ImageExportFormat.png => 'png',
+  ImageExportFormat.jpeg => 'jpg',
+  ImageExportFormat.webp => 'webp',
+};
+
 /// Options for an independent raster copy. The source save format is unchanged.
 class ImageExportOptions {
   const ImageExportOptions({
@@ -13,7 +26,7 @@ class ImageExportOptions {
     this.jpegQuality = 90,
   });
 
-  final ImageFileFormat format;
+  final ImageExportFormat format;
   final int? width;
   final int? height;
   final int jpegQuality;
@@ -72,7 +85,7 @@ Uint8List encodeImageExport(
     );
   }
   final Uint8List output;
-  if (options.format == ImageFileFormat.jpeg) {
+  if (options.format == ImageExportFormat.jpeg) {
     final opaque = image.Image(
       width: pixels.width,
       height: pixels.height,
@@ -81,9 +94,52 @@ Uint8List encodeImageExport(
     image.fill(opaque, color: image.ColorRgb8(255, 255, 255));
     image.compositeImage(opaque, pixels);
     output = image.encodeJpg(opaque, quality: options.jpegQuality);
+  } else if (options.format == ImageExportFormat.webp) {
+    output = image.encodeWebP(pixels);
   } else {
     output = image.encodePng(pixels);
   }
-  validateImageEditorOutput(output, options.format);
+  validateImageExport(output, options.format);
   return output;
+}
+
+/// Validate exported WebP independently, including the RIFF length and frame
+/// count. Other export formats use the existing strict raster validator.
+void validateImageExport(Uint8List bytes, ImageExportFormat format) {
+  if (format != ImageExportFormat.webp) {
+    validateImageEditorOutput(
+      bytes,
+      format == ImageExportFormat.png
+          ? ImageFileFormat.png
+          : ImageFileFormat.jpeg,
+    );
+    return;
+  }
+  if (bytes.length > kImageEditorOutputLimitBytes)
+    throw const ImageEditException(ImageEditFailure.outputTooLarge);
+  if (bytes.length < 12 ||
+      String.fromCharCodes(bytes.sublist(0, 4)) != 'RIFF' ||
+      String.fromCharCodes(bytes.sublist(8, 12)) != 'WEBP' ||
+      ByteData.sublistView(bytes).getUint32(4, Endian.little) + 8 !=
+          bytes.length) {
+    throw const ImageEditException(ImageEditFailure.invalidImage);
+  }
+  try {
+    final decoder = image.WebPDecoder()..maxPixels = kImageEditorMaxPixels;
+    final info = decoder.startDecode(bytes);
+    if (info == null ||
+        info.width <= 0 ||
+        info.height <= 0 ||
+        info.width > kImageEditorMaxDimension ||
+        info.height > kImageEditorMaxDimension ||
+        info.width * info.height > kImageEditorMaxPixels ||
+        info.hasAnimation ||
+        decoder.decode(bytes) == null) {
+      throw const ImageEditException(ImageEditFailure.invalidImage);
+    }
+  } on ImageEditException {
+    rethrow;
+  } catch (_) {
+    throw const ImageEditException(ImageEditFailure.invalidImage);
+  }
 }

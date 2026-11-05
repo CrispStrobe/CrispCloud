@@ -14,7 +14,9 @@ class ImageExportDialog extends StatefulWidget {
 }
 
 class _ImageExportDialogState extends State<ImageExportDialog> {
-  late ImageFileFormat format = widget.initialFormat;
+  late ImageExportFormat format = imageExportFormatForSource(
+    widget.initialFormat,
+  );
   final width = TextEditingController();
   final height = TextEditingController();
   final quality = TextEditingController(text: '90');
@@ -56,14 +58,21 @@ class _ImageExportDialogState extends State<ImageExportDialog> {
       child: Column(
         mainAxisSize: MainAxisSize.min,
         children: [
-          DropdownButtonFormField<ImageFileFormat>(
+          DropdownButtonFormField<ImageExportFormat>(
             initialValue: format,
             decoration: InputDecoration(labelText: context.imageTr('Format')),
             items: const [
-              DropdownMenuItem(value: ImageFileFormat.png, child: Text('PNG')),
               DropdownMenuItem(
-                value: ImageFileFormat.jpeg,
+                value: ImageExportFormat.png,
+                child: Text('PNG'),
+              ),
+              DropdownMenuItem(
+                value: ImageExportFormat.jpeg,
                 child: Text('JPEG'),
+              ),
+              DropdownMenuItem(
+                value: ImageExportFormat.webp,
+                child: Text('WebP'),
               ),
             ],
             onChanged: (value) {
@@ -89,7 +98,7 @@ class _ImageExportDialogState extends State<ImageExportDialog> {
               labelText: context.imageTr('Height in pixels'),
             ),
           ),
-          if (format == ImageFileFormat.jpeg)
+          if (format == ImageExportFormat.jpeg)
             TextField(
               controller: quality,
               keyboardType: TextInputType.number,
@@ -102,7 +111,7 @@ class _ImageExportDialogState extends State<ImageExportDialog> {
               context.imageTr('Enter valid dimensions and quality.'),
               style: TextStyle(color: Theme.of(context).colorScheme.error),
             ),
-          if (format == ImageFileFormat.jpeg)
+          if (format == ImageExportFormat.jpeg)
             Text(context.imageTr('Transparent areas become white in JPEG.')),
         ],
       ),

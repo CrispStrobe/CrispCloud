@@ -120,8 +120,8 @@ Korean and Arabic use localized category browsing without English search.
 Image overlays are selected from the device, validated as static PNG/JPEG, and
 stored as self-contained layer data in projects.
 
-Export Image Copy offers PNG/JPEG conversion, exact dimensions, and JPEG
-quality. JPEG composites transparent pixels on white. Exports are independent
+Export Image Copy offers PNG/JPEG/WebP conversion, optional proportional or
+exact dimensions, and JPEG quality. WebP export is lossless. JPEG composites transparent pixels on white. Exports are independent
 copies: they do not mark the source saved. Browser downloads report initiation,
 not successful persistence.
 

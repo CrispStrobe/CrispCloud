@@ -5,20 +5,30 @@ import 'package:file_picker/file_picker.dart';
 
 import '../utils/path_access.dart';
 import 'image_edit_session.dart';
+import 'image_export_options.dart';
 import 'local_file_service.dart';
 
 Future<ImageSaveOutcome?> exportImageCopy(
   Uint8List bytes,
   String suggestedName,
   String dialogTitle,
-  ImageFileFormat format,
+  ImageExportFormat format,
 ) async {
   return _exportCopy(
     bytes,
     suggestedName,
     dialogTitle,
-    format == ImageFileFormat.png ? ['png'] : ['jpg', 'jpeg'],
-    (path) => imageFileFormatForName(path) == format,
+    format == ImageExportFormat.png
+        ? ['png']
+        : format == ImageExportFormat.jpeg
+        ? ['jpg', 'jpeg']
+        : ['webp'],
+    (path) => format == ImageExportFormat.webp
+        ? path.toLowerCase().endsWith('.webp')
+        : imageFileFormatForName(path) ==
+              (format == ImageExportFormat.png
+                  ? ImageFileFormat.png
+                  : ImageFileFormat.jpeg),
   );
 }
 

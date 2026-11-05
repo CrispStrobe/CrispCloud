@@ -4,6 +4,7 @@ import 'image_device_export_native.dart'
     if (dart.library.html) 'image_device_export_web.dart'
     as platform;
 import 'image_edit_session.dart';
+import 'image_export_options.dart';
 import 'image_edit_project.dart';
 
 typedef ImageProjectExporter = Future<ImageSaveOutcome?> Function(
@@ -16,7 +17,7 @@ typedef ImageDeviceExporter = Future<ImageSaveOutcome?> Function(
   Uint8List bytes,
   String suggestedName,
   String dialogTitle,
-  ImageFileFormat format,
+  ImageExportFormat format,
 );
 
 /// Writes an independent copy; a browser download never marks the source saved.
@@ -24,7 +25,7 @@ Future<ImageSaveOutcome?> exportImageCopy(
   Uint8List bytes,
   String suggestedName,
   String dialogTitle,
-  ImageFileFormat format,
+  ImageExportFormat format,
 ) => ImageDeviceExport().exportCopy(bytes, suggestedName, dialogTitle, format);
 
 class ImageDeviceExport {
@@ -37,9 +38,9 @@ class ImageDeviceExport {
     Uint8List bytes,
     String suggestedName,
     String dialogTitle,
-    ImageFileFormat format,
+    ImageExportFormat format,
   ) async {
-    validateImageEditorOutput(bytes, format);
+    validateImageExport(bytes, format);
     return _exporter(
       Uint8List.fromList(bytes).asUnmodifiableView(),
       suggestedName,

@@ -2,6 +2,7 @@ import 'dart:typed_data';
 
 import 'package:crisp_cloud/services/image_device_export.dart';
 import 'package:crisp_cloud/services/image_edit_session.dart';
+import 'package:crisp_cloud/services/image_export_options.dart';
 import 'package:flutter_test/flutter_test.dart';
 
 import 'support/image_editor_fixture.dart';
@@ -14,7 +15,7 @@ void main() {
       exporter: (bytes, name, title, format) async {
         captured = bytes;
         expect(name, 'copy.png');
-        expect(format, ImageFileFormat.png);
+        expect(format, ImageExportFormat.png);
         return ImageSaveOutcome.downloadedCopy;
       },
     );
@@ -22,7 +23,7 @@ void main() {
       input,
       'copy.png',
       'Export',
-      ImageFileFormat.png,
+      ImageExportFormat.png,
     );
     input[0] = 0;
     expect(captured![0], 137);
@@ -43,7 +44,7 @@ void main() {
         buildImageEditorFixture(),
         'copy.jpg',
         'Export',
-        ImageFileFormat.jpeg,
+        ImageExportFormat.jpeg,
       ),
       throwsA(isA<ImageEditException>()),
     );

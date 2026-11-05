@@ -650,7 +650,7 @@ class _ImageEditorDialogState extends ConsumerState<ImageEditorDialog> {
         options,
       ));
       if (!mounted) return;
-      final extension = options.format == ImageFileFormat.png ? '.png' : '.jpg';
+      final extension = '.${imageExportExtension(options.format)}';
       final name =
           '${p.basenameWithoutExtension(widget.file.name)}-edited$extension';
       final title = context.imageTr('Export image copy');
