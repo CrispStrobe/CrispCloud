@@ -6,6 +6,7 @@ enum ImageEditorAction {
   exportCopy,
   saveProjectCopy,
   addOverlay,
+  addEmoji,
   close,
   undo,
   redo,

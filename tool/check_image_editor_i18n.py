@@ -19,10 +19,10 @@ LANGUAGES = {"en", "de", "fr", "es", "pt", "zh", "ja", "ko", "ar"}
 VISIBLE_CLASSES = {
     "I18n", "I18nVarious", "I18nLayerInteraction", "I18nPaintEditor",
     "I18nTextEditor", "I18nCropRotateEditor", "I18nTuneEditor",
-    "I18nFilterEditor", "I18nFilters", "I18nBlurEditor",
+    "I18nFilterEditor", "I18nFilters", "I18nBlurEditor", "I18nEmojiEditor",
 }
 DISABLED_CLASSES = {
-    "I18nEmojiEditor", "I18nStickerEditor", "I18nAudioEditor", "I18nClipsEditor",
+    "I18nStickerEditor", "I18nAudioEditor", "I18nClipsEditor",
 }
 DART_STRING = r'''(?:'(?:\\.|[^'\\])*'|"(?:\\.|[^"\\])*")'''
 
@@ -85,7 +85,7 @@ def check_visible_literals() -> None:
     paths = set()
     for feature in (
         "main_editor", "paint_editor", "text_editor", "crop_rotate_editor",
-        "tune_editor", "filter_editor", "blur_editor",
+        "tune_editor", "filter_editor", "blur_editor", "emoji_editor",
     ):
         paths.update((package / "features" / feature).rglob("*.dart"))
     paths.update((package / "shared/widgets").rglob("*.dart"))

@@ -321,13 +321,16 @@ void main() {
       final harness = _Harness(tester, _MemoryImageStore());
       await harness.open();
       expect(harness.editor.editorScaleFactor, closeTo(1, 0.001));
+      await tester.ensureVisible(_command(ImageEditorAction.zoomIn));
       await tester.tap(_command(ImageEditorAction.zoomIn));
       await tester.pump();
       expect(harness.editor.editorScaleFactor, closeTo(1.25, 0.001));
       expect(_saveEnabled(tester), isFalse);
+      await tester.ensureVisible(_command(ImageEditorAction.zoomOut));
       await tester.tap(_command(ImageEditorAction.zoomOut));
       await tester.pump();
       expect(harness.editor.editorScaleFactor, closeTo(1, 0.001));
+      await tester.ensureVisible(_command(ImageEditorAction.zoomIn));
       await tester.tap(_command(ImageEditorAction.zoomIn));
       await tester.ensureVisible(_command(ImageEditorAction.zoomReset));
       await tester.tap(_command(ImageEditorAction.zoomReset));
@@ -515,6 +518,53 @@ void main() {
       expect(layer.exportConfigs.id, 'crispcloud.image-overlay.v1');
       expect(layer.exportConfigs.meta!['name'], 'overlay.png');
       expect(_saveEnabled(tester), isFalse);
+    },
+  );
+
+  _desktopTestWidgets(
+    'emoji picker opens and cancel leaves the image unchanged',
+    (tester) async {
+      final harness = _Harness(tester, _MemoryImageStore());
+      await harness.open();
+      await tester.ensureVisible(_command(ImageEditorAction.addEmoji));
+      await tester.tap(_command(ImageEditorAction.addEmoji));
+      await _until(
+        tester,
+        () => find.byType(EmojiEditor).evaluate().isNotEmpty,
+        reason: 'emoji picker',
+      );
+      expect(harness.actions.busy, isTrue);
+      expect(_saveEnabled(tester), isFalse);
+      Navigator.of(tester.element(find.byType(EmojiEditor))).pop();
+      await _until(
+        tester,
+        () =>
+            find.byType(EmojiEditor).evaluate().isEmpty &&
+            !harness.actions.busy,
+        reason: 'close emoji picker',
+      );
+      expect(harness.editor.activeLayers, isEmpty);
+      expect(_saveEnabled(tester), isFalse);
+      await tester.tap(_command(ImageEditorAction.addEmoji));
+      await _until(
+        tester,
+        () => find.byType(EmojiEditor).evaluate().isNotEmpty,
+        reason: 'reopen emoji picker',
+      );
+      Navigator.of(tester.element(find.byType(EmojiEditor)))
+          .pop(EmojiLayer(emoji: '😀'));
+      await _until(
+        tester,
+        () =>
+            harness.editor.activeLayers.whereType<EmojiLayer>().isNotEmpty &&
+            !harness.actions.busy,
+        reason: 'emoji insertion',
+      );
+      expect(
+        harness.editor.activeLayers.whereType<EmojiLayer>().single.emoji,
+        '😀',
+      );
+      expect(_saveEnabled(tester), isTrue);
     },
   );
 

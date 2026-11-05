@@ -7,8 +7,8 @@ import 'image_editor_translations.dart';
 ///
 /// Supported locales never fall through to an English package default.
 /// The source coverage test fails when the fork gains a visible I18n field
-/// without an explicit host mapping. Emoji, sticker, audio and video tools
-/// are disabled by the host and are intentionally outside this surface.
+/// without an explicit host mapping. Sticker, audio and video tools are
+/// disabled by the host and are intentionally outside this surface.
 abstract final class ImageEditorStrings {
   static const catalog = imageEditorTranslations;
   static const supportedLanguageCodes = <String>{
@@ -41,9 +41,9 @@ abstract final class ImageEditorStrings {
       editorI18nForLocale(Localizations.localeOf(context));
 
   static I18n editorI18nForLocale(Locale locale) =>
-      _main((english) => forLanguage(locale.languageCode, english));
+      _main((english) => forLanguage(locale.languageCode, english), locale);
 
-  static I18n _main(String Function(String) t) {
+  static I18n _main(String Function(String) t, Locale locale) {
     return I18n(
       various: _various(t),
       layerInteraction: _layerInteraction(t),
@@ -53,6 +53,7 @@ abstract final class ImageEditorStrings {
       tuneEditor: _tuneEditor(t),
       filterEditor: _filterEditor(t),
       blurEditor: _blurEditor(t),
+      emojiEditor: _emojiEditor(t, locale),
       importStateHistoryMsg: t('Loading image…'),
       cancel: t('Cancel'),
       undo: t('Undo'),
@@ -60,6 +61,27 @@ abstract final class ImageEditorStrings {
       done: t('Apply'),
       remove: t('Remove'),
       doneLoadingMsg: t('Applying changes…'),
+    );
+  }
+
+  static I18nEmojiEditor _emojiEditor(
+    String Function(String) t,
+    Locale locale,
+  ) {
+    return I18nEmojiEditor(
+      bottomNavigationBarText: t('Emoji'),
+      search: t('Search emoji'),
+      categoryRecent: t('Recent'),
+      categorySmileys: t('Smileys and people'),
+      categoryAnimals: t('Animals and nature'),
+      categoryFood: t('Food and drink'),
+      categoryActivities: t('Activities'),
+      categoryTravel: t('Travel and places'),
+      categoryObjects: t('Objects'),
+      categorySymbols: t('Symbols'),
+      categoryFlags: t('Flags'),
+      locale: locale,
+      enableSearchAutoI18n: true,
     );
   }
 

@@ -180,9 +180,19 @@ class ImageEditorSurface extends StatelessWidget {
                 appBarForegroundColor: colors.onSurface,
               ),
             ),
-            // The tools whitelist excludes emoji and stickers. Do not preload
-            // an unused emoji web font or request it over the network.
-            emojiEditor: const EmojiEditorConfigs(enablePreloadWebFont: false),
+            // Korean and Arabic emoji keywords are not supplied by the fork;
+            // keep category browsing localized without offering English search.
+            emojiEditor: EmojiEditorConfigs(
+              enablePreloadWebFont: false,
+              style: EmojiEditorStyle(
+                bottomActionBarConfig: BottomActionBarConfig(
+                  enabled: !const {
+                    'ko',
+                    'ar',
+                  }.contains(Localizations.localeOf(context).languageCode),
+                ),
+              ),
+            ),
           ),
         ),
       ),

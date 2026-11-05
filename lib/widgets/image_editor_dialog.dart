@@ -5,6 +5,7 @@ import 'package:flutter/foundation.dart' show compute;
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:material_ui/material_ui.dart' as material;
 import 'package:path/path.dart' as p;
 import 'package:pro_image_editor/pro_image_editor.dart';
 
@@ -409,6 +410,8 @@ class _ImageEditorDialogState extends ConsumerState<ImageEditorDialog> {
     switch (action) {
       case ImageEditorAction.save:
         unawaited(_save());
+      case ImageEditorAction.addEmoji:
+        unawaited(_addEmoji());
       case ImageEditorAction.addOverlay:
         unawaited(_addOverlay());
       case ImageEditorAction.saveProjectCopy:
@@ -507,6 +510,41 @@ class _ImageEditorDialogState extends ConsumerState<ImageEditorDialog> {
       }
       return false;
     } finally {
+      _scheduleRefresh();
+    }
+  }
+
+  Future<void> _addEmoji() async {
+    final editor = _editorKey.currentState;
+    if (editor == null || !_canEdit) return;
+    setState(() => _exporting = true);
+    _scheduleRefresh();
+    try {
+      final layer = await showModalBottomSheet<EmojiLayer>(
+        context: editor.context,
+        isScrollControlled: true,
+        useSafeArea: true,
+        builder: (_) => Localizations.override(
+          context: editor.context,
+          delegates: material.GlobalMaterialLocalizations.delegates,
+          child: material.Theme(
+            data: editor.widget.configs.theme!,
+            child: SizedBox(
+              height: 420,
+              child: EmojiEditor(configs: editor.widget.configs),
+            ),
+          ),
+        ),
+      );
+      if (mounted && layer != null) {
+        layer.scale = editor.widget.configs.emojiEditor.initScale;
+        editor.addLayer(layer);
+      }
+    } catch (error, stack) {
+      _log.warn('Could not add emoji', error, stack);
+      if (mounted) _showMessage('Could not add emoji', error: true);
+    } finally {
+      if (mounted) setState(() => _exporting = false);
       _scheduleRefresh();
     }
   }
@@ -1101,14 +1139,15 @@ class _ImageEditorDialogState extends ConsumerState<ImageEditorDialog> {
   }
 
   static const _toolActions = <(ImageEditorAction, String, IconData)>[
-    (
-      ImageEditorAction.saveProjectCopy,
-      'Save project copy',
-      Icons.layers_outlined,
-    ),
-    (ImageEditorAction.exportCopy, 'Export image copy', Icons.ios_share),
     (ImageEditorAction.undo, 'Undo', Icons.undo),
     (ImageEditorAction.redo, 'Redo', Icons.redo),
+    (ImageEditorAction.cropRotate, 'Crop and rotate', Icons.crop_rotate),
+    (ImageEditorAction.paint, 'Draw', Icons.brush_outlined),
+    (ImageEditorAction.text, 'Text', Icons.text_fields),
+    (ImageEditorAction.tune, 'Adjust', Icons.tune),
+    (ImageEditorAction.filter, 'Filters', Icons.filter_outlined),
+    (ImageEditorAction.blur, 'Blur', Icons.blur_on),
+    (ImageEditorAction.addEmoji, 'Emoji', Icons.emoji_emotions_outlined),
     (
       ImageEditorAction.addOverlay,
       'Add image overlay',
@@ -1118,12 +1157,12 @@ class _ImageEditorDialogState extends ConsumerState<ImageEditorDialog> {
     (ImageEditorAction.zoomIn, 'Zoom in', Icons.zoom_in),
     (ImageEditorAction.zoomOut, 'Zoom out', Icons.zoom_out),
     (ImageEditorAction.zoomReset, 'Fit image', Icons.fit_screen),
-    (ImageEditorAction.cropRotate, 'Crop and rotate', Icons.crop_rotate),
-    (ImageEditorAction.paint, 'Draw', Icons.brush_outlined),
-    (ImageEditorAction.text, 'Text', Icons.text_fields),
-    (ImageEditorAction.tune, 'Adjust', Icons.tune),
-    (ImageEditorAction.filter, 'Filters', Icons.filter_outlined),
-    (ImageEditorAction.blur, 'Blur', Icons.blur_on),
+    (
+      ImageEditorAction.saveProjectCopy,
+      'Save project copy',
+      Icons.layers_outlined,
+    ),
+    (ImageEditorAction.exportCopy, 'Export image copy', Icons.ios_share),
   ];
 }
 
