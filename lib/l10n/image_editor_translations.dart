@@ -38,6 +38,20 @@ const imageEditorInvariantFilterNames = <String, String>{
 const imageEditorTranslations = <String, Map<String, String>>{
   'en': <String, String>{
     ...imageEditorInvariantFilterNames,
+    'Export image copy': 'Export image copy',
+    'Format': 'Format',
+    'Leave dimensions empty to keep the edited size.':
+        'Leave dimensions empty to keep the edited size.',
+    'Width in pixels': 'Width in pixels',
+    'Height in pixels': 'Height in pixels',
+    'JPEG quality (1–100)': 'JPEG quality (1–100)',
+    'Enter valid dimensions and quality.':
+        'Enter valid dimensions and quality.',
+    'Transparent areas become white in JPEG.':
+        'Transparent areas become white in JPEG.',
+    'Export': 'Export',
+    'Image copy exported.': 'Image copy exported.',
+    'Could not export image copy': 'Could not export image copy',
     'Zoom in': 'Zoom in',
     'Zoom out': 'Zoom out',
     'Fit image': 'Fit image',
@@ -173,6 +187,20 @@ const imageEditorTranslations = <String, Map<String, String>>{
   },
   'de': <String, String>{
     ...imageEditorInvariantFilterNames,
+    'Export image copy': 'Bildkopie exportieren',
+    'Format': 'Format',
+    'Leave dimensions empty to keep the edited size.':
+        'Maße leer lassen, um die bearbeitete Größe beizubehalten.',
+    'Width in pixels': 'Breite in Pixeln',
+    'Height in pixels': 'Höhe in Pixeln',
+    'JPEG quality (1–100)': 'JPEG-Qualität (1–100)',
+    'Enter valid dimensions and quality.':
+        'Gültige Maße und Qualität eingeben.',
+    'Transparent areas become white in JPEG.':
+        'Transparente Bereiche werden in JPEG weiß.',
+    'Export': 'Exportieren',
+    'Image copy exported.': 'Bildkopie exportiert.',
+    'Could not export image copy': 'Bildkopie konnte nicht exportiert werden',
     'Zoom in': 'Vergrößern',
     'Zoom out': 'Verkleinern',
     'Fit image': 'Bild einpassen',
@@ -303,6 +331,20 @@ const imageEditorTranslations = <String, Map<String, String>>{
   },
   'fr': <String, String>{
     ...imageEditorInvariantFilterNames,
+    'Export image copy': 'Exporter une copie de l’image',
+    'Format': 'Format',
+    'Leave dimensions empty to keep the edited size.':
+        'Laissez les dimensions vides pour conserver la taille modifiée.',
+    'Width in pixels': 'Largeur en pixels',
+    'Height in pixels': 'Hauteur en pixels',
+    'JPEG quality (1–100)': 'Qualité JPEG (1–100)',
+    'Enter valid dimensions and quality.':
+        'Saisissez des dimensions et une qualité valides.',
+    'Transparent areas become white in JPEG.':
+        'Les zones transparentes deviennent blanches en JPEG.',
+    'Export': 'Exporter',
+    'Image copy exported.': 'Copie de l’image exportée.',
+    'Could not export image copy': 'Impossible d’exporter la copie de l’image',
     'Zoom in': 'Agrandir',
     'Zoom out': 'Réduire',
     'Fit image': 'Adapter l’image',
@@ -436,6 +478,20 @@ const imageEditorTranslations = <String, Map<String, String>>{
   },
   'es': <String, String>{
     ...imageEditorInvariantFilterNames,
+    'Export image copy': 'Exportar copia de imagen',
+    'Format': 'Formato',
+    'Leave dimensions empty to keep the edited size.':
+        'Deja las dimensiones vacías para conservar el tamaño editado.',
+    'Width in pixels': 'Ancho en píxeles',
+    'Height in pixels': 'Alto en píxeles',
+    'JPEG quality (1–100)': 'Calidad JPEG (1–100)',
+    'Enter valid dimensions and quality.':
+        'Introduce dimensiones y calidad válidas.',
+    'Transparent areas become white in JPEG.':
+        'Las áreas transparentes serán blancas en JPEG.',
+    'Export': 'Exportar',
+    'Image copy exported.': 'Copia de imagen exportada.',
+    'Could not export image copy': 'No se pudo exportar la copia de imagen',
     'Zoom in': 'Acercar',
     'Zoom out': 'Alejar',
     'Fit image': 'Ajustar imagen',
@@ -567,6 +623,21 @@ const imageEditorTranslations = <String, Map<String, String>>{
   },
   'pt': <String, String>{
     ...imageEditorInvariantFilterNames,
+    'Export image copy': 'Exportar cópia da imagem',
+    'Format': 'Formato',
+    'Leave dimensions empty to keep the edited size.':
+        'Deixe as dimensões vazias para manter o tamanho editado.',
+    'Width in pixels': 'Largura em pixels',
+    'Height in pixels': 'Altura em pixels',
+    'JPEG quality (1–100)': 'Qualidade JPEG (1–100)',
+    'Enter valid dimensions and quality.':
+        'Insira dimensões e qualidade válidas.',
+    'Transparent areas become white in JPEG.':
+        'As áreas transparentes ficam brancas em JPEG.',
+    'Export': 'Exportar',
+    'Image copy exported.': 'Cópia da imagem exportada.',
+    'Could not export image copy':
+        'Não foi possível exportar a cópia da imagem',
     'Zoom in': 'Ampliar',
     'Zoom out': 'Reduzir',
     'Fit image': 'Ajustar imagem',
@@ -698,6 +769,17 @@ const imageEditorTranslations = <String, Map<String, String>>{
   },
   'zh': <String, String>{
     ...imageEditorInvariantFilterNames,
+    'Export image copy': '导出图像副本',
+    'Format': '格式',
+    'Leave dimensions empty to keep the edited size.': '留空尺寸以保留编辑后的大小。',
+    'Width in pixels': '宽度（像素）',
+    'Height in pixels': '高度（像素）',
+    'JPEG quality (1–100)': 'JPEG 质量（1–100）',
+    'Enter valid dimensions and quality.': '请输入有效的尺寸和质量。',
+    'Transparent areas become white in JPEG.': '透明区域在 JPEG 中变为白色。',
+    'Export': '导出',
+    'Image copy exported.': '图像副本已导出。',
+    'Could not export image copy': '无法导出图像副本',
     'Zoom in': '放大',
     'Zoom out': '缩小',
     'Fit image': '适应图像',
@@ -829,6 +911,18 @@ const imageEditorTranslations = <String, Map<String, String>>{
   },
   'ja': <String, String>{
     ...imageEditorInvariantFilterNames,
+    'Export image copy': '画像のコピーを書き出す',
+    'Format': '形式',
+    'Leave dimensions empty to keep the edited size.':
+        '編集後のサイズを維持するには寸法を空欄にします。',
+    'Width in pixels': '幅（ピクセル）',
+    'Height in pixels': '高さ（ピクセル）',
+    'JPEG quality (1–100)': 'JPEG 品質（1–100）',
+    'Enter valid dimensions and quality.': '有効な寸法と品質を入力してください。',
+    'Transparent areas become white in JPEG.': 'JPEG では透明な部分が白になります。',
+    'Export': '書き出す',
+    'Image copy exported.': '画像のコピーを書き出しました。',
+    'Could not export image copy': '画像のコピーを書き出せませんでした',
     'Zoom in': '拡大',
     'Zoom out': '縮小',
     'Fit image': '画像を画面に合わせる',
@@ -964,6 +1058,18 @@ const imageEditorTranslations = <String, Map<String, String>>{
   },
   'ko': <String, String>{
     ...imageEditorInvariantFilterNames,
+    'Export image copy': '이미지 사본 내보내기',
+    'Format': '형식',
+    'Leave dimensions empty to keep the edited size.':
+        '편집한 크기를 유지하려면 크기를 비워 두세요.',
+    'Width in pixels': '너비(픽셀)',
+    'Height in pixels': '높이(픽셀)',
+    'JPEG quality (1–100)': 'JPEG 품질(1–100)',
+    'Enter valid dimensions and quality.': '올바른 크기와 품질을 입력하세요.',
+    'Transparent areas become white in JPEG.': 'JPEG에서 투명한 영역은 흰색이 됩니다.',
+    'Export': '내보내기',
+    'Image copy exported.': '이미지 사본을 내보냈습니다.',
+    'Could not export image copy': '이미지 사본을 내보내지 못했습니다',
     'Zoom in': '확대',
     'Zoom out': '축소',
     'Fit image': '이미지 맞춤',
@@ -1100,6 +1206,19 @@ const imageEditorTranslations = <String, Map<String, String>>{
   },
   'ar': <String, String>{
     ...imageEditorInvariantFilterNames,
+    'Export image copy': 'تصدير نسخة من الصورة',
+    'Format': 'التنسيق',
+    'Leave dimensions empty to keep the edited size.':
+        'اترك الأبعاد فارغة للاحتفاظ بالحجم المعدل.',
+    'Width in pixels': 'العرض بالبكسل',
+    'Height in pixels': 'الارتفاع بالبكسل',
+    'JPEG quality (1–100)': 'جودة JPEG ‏(1–100)',
+    'Enter valid dimensions and quality.': 'أدخل أبعادًا وجودة صالحة.',
+    'Transparent areas become white in JPEG.':
+        'تصبح المناطق الشفافة بيضاء في JPEG.',
+    'Export': 'تصدير',
+    'Image copy exported.': 'تم تصدير نسخة الصورة.',
+    'Could not export image copy': 'تعذر تصدير نسخة الصورة',
     'Zoom in': 'تكبير',
     'Zoom out': 'تصغير',
     'Fit image': 'ملاءمة الصورة',

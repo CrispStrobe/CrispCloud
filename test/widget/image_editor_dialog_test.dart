@@ -120,7 +120,16 @@ class _Harness {
     listen: false,
   ).read(imageEditorMenuProvider)!;
 
-  Future<void> open({bool enableIsolateGeneration = false}) async {
+  Future<void> open({
+    bool enableIsolateGeneration = false,
+    Future<ImageSaveOutcome?> Function(
+      Uint8List,
+      String,
+      String,
+      ImageFileFormat,
+    )?
+    exporter,
+  }) async {
     tester.view.physicalSize = const Size(1280, 900);
     tester.view.devicePixelRatio = 1;
     addTearDown(tester.view.reset);
@@ -143,6 +152,7 @@ class _Harness {
                       storeOverride: store,
                       editorKey: key,
                       enableIsolateGeneration: enableIsolateGeneration,
+                      deviceExporterOverride: exporter,
                     ),
                   ),
                 ),
@@ -284,6 +294,34 @@ void main() {
       expect(_saveEnabled(tester), isFalse);
     },
   );
+
+  _desktopTestWidgets('exporting a copy keeps the original dirty', (
+    tester,
+  ) async {
+    final harness = _Harness(tester, _MemoryImageStore());
+    Uint8List? exported;
+    await harness.open(
+      exporter: (bytes, name, title, format) async {
+        exported = bytes;
+        expect(name, 'sample-edited.png');
+        expect(format, ImageFileFormat.png);
+        return ImageSaveOutcome.savedCopy;
+      },
+    );
+    await harness.addText('Export');
+    await tester.ensureVisible(_command(ImageEditorAction.exportCopy));
+    await tester.tap(_command(ImageEditorAction.exportCopy));
+    await tester.pumpAndSettle();
+    await tester.tap(find.widgetWithText(FilledButton, 'Export'));
+    await _until(
+      tester,
+      () => exported != null && !harness.actions.busy,
+      reason: 'copy export',
+    );
+    expect(image.decodePng(exported!), isNotNull);
+    expect(harness.store.writes, isEmpty);
+    expect(_saveEnabled(tester), isTrue);
+  });
 
   _desktopTestWidgets(
     'initial clean state and undo branches use real editor history',

@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 /// Commands shared by the image editor's host toolbar and native menu bar.
 enum ImageEditorAction {
   save,
+  exportCopy,
   close,
   undo,
   redo,

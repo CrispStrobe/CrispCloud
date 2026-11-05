@@ -1,6 +1,7 @@
 import 'dart:async';
 import 'dart:ui' as ui;
 
+import 'package:flutter/foundation.dart' show compute;
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -12,12 +13,15 @@ import '../models/file_item.dart';
 import '../models/panel_side.dart';
 import '../providers/panel_source_provider.dart';
 import '../providers/providers.dart';
+import '../services/image_device_export.dart';
 import '../services/image_edit_session.dart';
+import '../services/image_export_options.dart';
 import '../services/image_editor_menu.dart';
 import '../services/image_file_store.dart';
 import '../services/log_service.dart';
 import '../services/panel_source_service.dart';
 import 'image_editor_surface.dart';
+import 'image_export_dialog.dart';
 
 const _log = Log('ImageEditor');
 
@@ -43,6 +47,7 @@ class ImageEditorDialog extends ConsumerStatefulWidget {
     this.storeOverride,
     this.editorKey,
     this.enableIsolateGeneration = true,
+    this.deviceExporterOverride,
   });
 
   final FileItem file;
@@ -52,6 +57,7 @@ class ImageEditorDialog extends ConsumerStatefulWidget {
   final ImageFileStore? storeOverride;
   final GlobalKey<ProImageEditorState>? editorKey;
   final bool enableIsolateGeneration;
+  final ImageDeviceExporter? deviceExporterOverride;
 
   @override
   ConsumerState<ImageEditorDialog> createState() => _ImageEditorDialogState();
@@ -76,13 +82,14 @@ class _ImageEditorDialogState extends ConsumerState<ImageEditorDialog> {
   bool _ready = false;
   bool _closing = false;
   bool _applying = false;
+  bool _exporting = false;
   bool _allowPop = false;
   bool _refreshScheduled = false;
   SubEditor? _tool;
   String? _errorKey;
 
   bool get _saving => _session?.isSaving ?? false;
-  bool get _busy => _saving || _closing || _applying || _allowPop;
+  bool get _busy => _saving || _exporting || _closing || _applying || _allowPop;
   bool get _dirty => _session?.isDirty ?? false;
   bool get _routeIsCurrent => ModalRoute.of(context)?.isCurrent ?? true;
   bool get _toolOpen =>
@@ -287,6 +294,8 @@ class _ImageEditorDialogState extends ConsumerState<ImageEditorDialog> {
     switch (action) {
       case ImageEditorAction.save:
         unawaited(_save());
+      case ImageEditorAction.exportCopy:
+        unawaited(_exportCopy());
       case ImageEditorAction.close:
         unawaited(_close());
       case ImageEditorAction.undo:
@@ -366,6 +375,56 @@ class _ImageEditorDialogState extends ConsumerState<ImageEditorDialog> {
       }
       return false;
     } finally {
+      _scheduleRefresh();
+    }
+  }
+
+  Future<void> _exportCopy() async {
+    final session = _session;
+    final editor = _editorKey.currentState;
+    if (session == null || editor == null || !_canEdit) return;
+    final options = await showDialog<ImageExportOptions>(
+      context: context,
+      builder: (_) => ImageExportDialog(initialFormat: session.format),
+    );
+    if (!mounted || options == null || !_canEdit) return;
+    final revision = session.currentRevision;
+    setState(() => _exporting = true);
+    _scheduleRefresh();
+    try {
+      await WidgetsBinding.instance.endOfFrame;
+      final capture = await editor.captureEditorImage();
+      if (!mounted || session.currentRevision != revision) {
+        throw const ImageEditException(ImageEditFailure.staleExport);
+      }
+      final output = await compute(_encodeExport, (
+        capture,
+        session.format,
+        options,
+      ));
+      if (!mounted) return;
+      final extension = options.format == ImageFileFormat.png ? '.png' : '.jpg';
+      final name =
+          '${p.basenameWithoutExtension(widget.file.name)}-edited$extension';
+      final title = context.imageTr('Export image copy');
+      final exporter = widget.deviceExporterOverride ?? exportImageCopy;
+      final outcome = await exporter(output, name, title, options.format);
+      if (mounted && outcome != null) {
+        _showMessage(
+          outcome == ImageSaveOutcome.downloadedCopy
+              ? 'A copy was downloaded. The original image has not been updated.'
+              : 'Image copy exported.',
+        );
+      }
+    } catch (error, stack) {
+      _log.warn('Could not export image copy', error, stack);
+      if (mounted)
+        _showMessage(
+          _messageFor(error, 'Could not export image copy'),
+          error: true,
+        );
+    } finally {
+      if (mounted) setState(() => _exporting = false);
       _scheduleRefresh();
     }
   }
@@ -695,7 +754,7 @@ class _ImageEditorDialogState extends ConsumerState<ImageEditorDialog> {
       children: [
         Expanded(
           child: AbsorbPointer(
-            absorbing: _saving || _closing || _applying,
+            absorbing: _saving || _exporting || _closing || _applying,
             child: ImageEditorSurface(
               bytes: _initialBytes!,
               info: _info!,
@@ -750,6 +809,7 @@ class _ImageEditorDialogState extends ConsumerState<ImageEditorDialog> {
   }
 
   static const _toolActions = <(ImageEditorAction, String, IconData)>[
+    (ImageEditorAction.exportCopy, 'Export image copy', Icons.ios_share),
     (ImageEditorAction.undo, 'Undo', Icons.undo),
     (ImageEditorAction.redo, 'Redo', Icons.redo),
     (ImageEditorAction.zoomIn, 'Zoom in', Icons.zoom_in),
@@ -768,3 +828,7 @@ class _ImageOpenMessage implements Exception {
   const _ImageOpenMessage(this.key);
   final String key;
 }
+
+Uint8List _encodeExport(
+  (Uint8List, ImageFileFormat, ImageExportOptions) args,
+) => encodeImageExport(args.$1, args.$2, args.$3);
