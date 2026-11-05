@@ -1,0 +1,143 @@
+import 'package:material_ui/material_ui.dart';
+
+import '/core/mixins/converted_configs.dart';
+import '/core/mixins/editor_configs_mixin.dart';
+import '/core/utils/size_utils.dart';
+import '/designs/grounded/grounded_design.dart';
+import '/pro_image_editor.dart';
+import '/shared/widgets/editor_scrollbar.dart';
+
+/// A widget that represents a filter bar in the image editor.
+///
+/// The [GroundedFilterBar] is designed to be used as part of the ProImageEditor
+/// package, offering filtering capabilities for images. It works in conjunction
+/// with the `GroundedBottomWrapper` and `GroundedBottomBar` to provide a
+/// consistent UI for editing tasks.
+class GroundedFilterBar extends StatefulWidget with SimpleConfigsAccess {
+  /// Constructor for the [GroundedFilterBar].
+  ///
+  /// Accepts the required [configs], [callbacks], and [editor] parameters.
+  const GroundedFilterBar({
+    super.key,
+    required this.configs,
+    required this.callbacks,
+    required this.editor,
+    this.image,
+  });
+
+  /// The editor state that holds filter and editing information.
+  final FilterEditorState editor;
+
+  @override
+  final ProImageEditorConfigs configs;
+
+  @override
+  final ProImageEditorCallbacks callbacks;
+
+  /// A custom background image which can be used instant of the editorImage
+  final Widget? image;
+
+  @override
+  State<GroundedFilterBar> createState() => _GroundedFilterBarState();
+}
+
+/// State class for [GroundedFilterBar].
+///
+/// This state manages the internal state of the filter bar, including the
+/// scroll controller for the horizontal list of filters and the opacity slider.
+class _GroundedFilterBarState extends State<GroundedFilterBar>
+    with ImageEditorConvertedConfigs, SimpleConfigsAccessState {
+  /// Controller for managing the scroll of the horizontal filter list.
+  late final ScrollController _bottomBarScrollCtrl;
+
+  @override
+  void initState() {
+    super.initState();
+    _bottomBarScrollCtrl = ScrollController();
+  }
+
+  @override
+  void dispose() {
+    _bottomBarScrollCtrl.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return GroundedBottomWrapper(
+      theme: configs.theme,
+      children: (constraints) => [
+        EditorScrollbar(
+          controller: _bottomBarScrollCtrl,
+          child: _buildFunctions(constraints),
+        ),
+        GroundedBottomBar(
+          configs: configs,
+          done: widget.editor.done,
+          close: widget.editor.close,
+        ),
+      ],
+    );
+  }
+
+  Widget _buildFunctions(BoxConstraints constraints) {
+    return Container(
+      color: mainEditorConfigs.style.bottomBarBackground,
+      padding: const EdgeInsets.only(bottom: 8),
+      child: Column(
+        children: [
+          AnimatedSwitcher(
+            duration: const Duration(milliseconds: 200),
+            transitionBuilder: (child, animation) => FadeTransition(
+              opacity: animation,
+              child: SizeTransition(sizeFactor: animation, child: child),
+            ),
+            child: widget.editor.selectedFilter.filters.isNotEmpty
+                ? StatefulBuilder(
+                    builder: (context, setState) {
+                      return Slider(
+                        min: 0,
+                        max: 1,
+                        divisions: 100,
+                        value: widget.editor.filterOpacity,
+                        onChanged: (value) {
+                          widget.editor.setFilterOpacity(value);
+                          setState(() {});
+                        },
+                      );
+                    },
+                  )
+                : const SizedBox(height: 8),
+          ),
+          SingleChildScrollView(
+            controller: _bottomBarScrollCtrl,
+            scrollDirection: Axis.horizontal,
+            clipBehavior: Clip.none,
+            padding: const EdgeInsets.symmetric(horizontal: 12.0),
+            child: FilterEditorItemList(
+              listHeight: kGroundedSubBarHeight,
+              previewImageSize: const Size(48, 48),
+              borderRadius: BorderRadius.circular(2),
+              mainBodySize: getValidSizeOrDefault(
+                widget.editor.mainBodySize,
+                widget.editor.editorBodySize,
+              ),
+              mainImageSize: getValidSizeOrDefault(
+                widget.editor.mainImageSize,
+                widget.editor.editorBodySize,
+              ),
+              editorImage: widget.editor.editorImage,
+              image: widget.image,
+              activeFilters: widget.editor.appliedFilters,
+              blurFactor: widget.editor.appliedBlurFactor,
+              configs: configs,
+              transformConfigs: widget.editor.initialTransformConfigs,
+              selectedFilter: widget.editor.selectedFilter.filters,
+              onSelectFilter: widget.editor.setFilter,
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}

@@ -1,0 +1,1404 @@
+import 'dart:async';
+import 'dart:math';
+
+// Flutter imports:
+import 'package:flutter/foundation.dart';
+import 'package:flutter/services.dart';
+import 'package:material_ui/material_ui.dart';
+
+import '/core/constants/image_constants.dart';
+import '/core/mixins/converted_callbacks.dart';
+import '/core/mixins/converted_configs.dart';
+import '/core/mixins/standalone_editor.dart';
+import '/core/models/transform_helper.dart';
+import '/core/utils/size_utils.dart';
+import '/features/paint_editor/widgets/paint_editor_appbar.dart';
+import '/features/paint_editor/widgets/paint_editor_bottombar.dart';
+import '/features/paint_editor/widgets/paint_editor_color_picker.dart';
+import '/pro_image_editor.dart';
+import '/shared/mixins/editor_zoom.mixin.dart';
+import '/shared/services/content_recorder/widgets/content_recorder.dart';
+import '/shared/services/shader_manager.dart';
+import '/shared/styles/platform_text_styles.dart';
+import '/shared/utils/file_constructor_utils.dart';
+import '/shared/widgets/auto_image.dart';
+import '/shared/widgets/extended/interactive_viewer/extended_interactive_viewer.dart';
+import '/shared/widgets/layer/layer_stack.dart';
+import '/shared/widgets/slider_bottom_sheet.dart';
+import '/shared/widgets/transform/transformed_content_generator.dart';
+import '../main_editor/services/layer_copy_manager.dart';
+import 'controllers/paint_controller.dart';
+import 'models/eraser_model.dart';
+import 'models/paint_editor_response_model.dart';
+import 'models/paint_mode_helper_model.dart';
+import 'services/paint_desktop_interaction_manager.dart';
+import 'widgets/paint_canvas.dart';
+
+export 'enums/paint_editor_enum.dart';
+export 'models/paint_bottom_bar_item.dart';
+export 'models/painted_model.dart';
+export 'widgets/draw_paint_item.dart';
+
+/// The `PaintEditor` widget allows users to editing images with paint
+/// tools.
+///
+/// You can create a `PaintEditor` using one of the factory methods provided:
+/// - `PaintEditor.file`: Loads an image from a file.
+/// - `PaintEditor.asset`: Loads an image from an asset.
+/// - `PaintEditor.network`: Loads an image from a network URL.
+/// - `PaintEditor.memory`: Loads an image from memory as a `Uint8List`.
+/// - `PaintEditor.autoSource`: Automatically selects the source based on
+/// provided parameters.
+class PaintEditor extends StatefulWidget
+    with StandaloneEditor<PaintEditorInitConfigs> {
+  /// Constructs a `PaintEditor` widget.
+  ///
+  /// The [key] parameter is used to provide a key for the widget.
+  /// The [editorImage] parameter specifies the image to be edited.
+  /// The [videoController] parameter specifies the video to be edited.
+  /// The [initConfigs] parameter specifies the initialization configurations
+  /// for the editor.
+  const PaintEditor._({
+    super.key,
+    required this.initConfigs,
+    this.paintOnly = false,
+    this.editorImage,
+    this.videoController,
+  });
+
+  /// Constructs a `PaintEditor` widget with image data loaded from memory.
+  factory PaintEditor.memory(
+    Uint8List byteArray, {
+    Key? key,
+    required PaintEditorInitConfigs initConfigs,
+  }) {
+    return PaintEditor._(
+      key: key,
+      editorImage: EditorImage(byteArray: byteArray),
+      initConfigs: initConfigs,
+    );
+  }
+
+  /// Constructs a `PaintEditor` widget with an image loaded from a file.
+  factory PaintEditor.file(
+    dynamic file, {
+    Key? key,
+    required PaintEditorInitConfigs initConfigs,
+  }) {
+    return PaintEditor._(
+      key: key,
+      editorImage: EditorImage(file: ensureFileInstance(file)),
+      initConfigs: initConfigs,
+    );
+  }
+
+  /// Constructs a `PaintEditor` widget with an image loaded from an asset.
+  factory PaintEditor.asset(
+    String assetPath, {
+    Key? key,
+    required PaintEditorInitConfigs initConfigs,
+  }) {
+    return PaintEditor._(
+      key: key,
+      editorImage: EditorImage(assetPath: assetPath),
+      initConfigs: initConfigs,
+    );
+  }
+
+  /// Constructs a `PaintEditor` widget with an image loaded from a network
+  /// URL.
+  factory PaintEditor.network(
+    String networkUrl, {
+    Key? key,
+    required PaintEditorInitConfigs initConfigs,
+  }) {
+    return PaintEditor._(
+      key: key,
+      editorImage: EditorImage(networkUrl: networkUrl),
+      initConfigs: initConfigs,
+    );
+  }
+
+  /// Constructs a `PaintEditor` widget optimized for drawing purposes.
+  factory PaintEditor.drawing({
+    Key? key,
+    required PaintEditorInitConfigs initConfigs,
+  }) {
+    assert(
+      !initConfigs.configs.imageGeneration.cropToImageBounds,
+      '`cropToImageBounds` must be set to false in `imageGeneration` when '
+      'using `PaintEditor.drawing`.',
+    );
+
+    return PaintEditor._(
+      key: key,
+      editorImage: EditorImage(byteArray: kImageEditorTransparentBytes),
+      initConfigs: initConfigs,
+      paintOnly: true,
+    );
+  }
+
+  /// Constructs a `PaintEditor` widget with an image loaded automatically
+  /// based on the provided source.
+  ///
+  /// Either [byteArray], [file], [networkUrl], or [assetPath] must be provided.
+  factory PaintEditor.autoSource({
+    Key? key,
+    Uint8List? byteArray,
+    dynamic file,
+    String? assetPath,
+    String? networkUrl,
+    EditorImage? editorImage,
+    ProVideoController? videoController,
+    required PaintEditorInitConfigs initConfigs,
+  }) {
+    return PaintEditor._(
+      key: key,
+      editorImage: videoController != null
+          ? null
+          : editorImage ??
+                EditorImage(
+                  byteArray: byteArray,
+                  file: file,
+                  networkUrl: networkUrl,
+                  assetPath: assetPath,
+                ),
+      videoController: videoController,
+      initConfigs: initConfigs,
+    );
+  }
+
+  /// Constructs a `PaintEditor` widget with an video player.
+  factory PaintEditor.video(
+    ProVideoController videoController, {
+    Key? key,
+    required PaintEditorInitConfigs initConfigs,
+  }) {
+    return PaintEditor._(
+      key: key,
+      videoController: videoController,
+      initConfigs: initConfigs,
+    );
+  }
+
+  @override
+  final PaintEditorInitConfigs initConfigs;
+  @override
+  final EditorImage? editorImage;
+  @override
+  final ProVideoController? videoController;
+
+  /// A flag indicating whether only paint operations are allowed.
+  final bool paintOnly;
+
+  @override
+  State<PaintEditor> createState() => PaintEditorState();
+}
+
+/// State class for managing the paint editor, handling user interactions
+/// and paint operations.
+class PaintEditorState extends State<PaintEditor>
+    with
+        ImageEditorConvertedConfigs,
+        ImageEditorConvertedCallbacks,
+        StandaloneEditorState<PaintEditor, PaintEditorInitConfigs>,
+        EditorZoomMixin {
+  final _paintCanvas = GlobalKey<PaintCanvasState>();
+  @override
+  final interactiveViewer = GlobalKey<ExtendedInteractiveViewerState>();
+
+  /// Controller for managing paint operations within the widget's context.
+  late final PaintController paintCtrl;
+
+  /// Update the color picker.
+  late final StreamController<void> uiPickerStream;
+
+  /// Update the appbar icons.
+  late final StreamController<void> _uiAppbarStream;
+
+  /// Update the layer stack.
+  late final StreamController<void> _layerStackStream;
+
+  /// A ScrollController for controlling the scrolling behavior of the bottom
+  /// navigation bar.
+  late ScrollController _bottomBarScrollCtrl;
+
+  /// A boolean flag representing whether the fill mode is enabled or disabled.
+  bool _isFillMode = false;
+
+  /// Get the fillBackground status.
+  bool get fillBackground => _isFillMode;
+
+  /// Determines whether the user draw something.
+  bool get isActive => paintCtrl.busy;
+
+  /// Manager class for handling desktop interactions.
+  late final PaintDesktopInteractionManager _desktopInteractionManager;
+
+  /// Get the current PaintMode.
+  PaintMode get paintMode => paintCtrl.mode;
+
+  /// Get the current strokeWidth.
+  double get strokeWidth => paintCtrl.strokeWidth;
+
+  /// Get the active selected color.
+  Color get activeColor => paintCtrl.color;
+
+  /// Indicates the eraser mode.
+  late EraserMode eraserMode = configs.paintEditor.eraserMode;
+
+  /// The size of the eraser tool in pixels.
+  late double eraserRadius = configs.paintEditor.eraserSize;
+
+  /// A list of [PaintModeBottomBarItem] representing the available drawing
+  /// modes in the paint editor.
+  /// The list is dynamically generated based on the configuration settings in
+  /// the [PaintEditorConfigs] object.
+  final List<PaintModeBottomBarItem> tools = [];
+
+  /// The Uint8List from the fake hero image, which is drawn when finish
+  /// editing.
+  Uint8List? _fakeHeroBytes;
+
+  /// Indicates whether the editor supports zoom functionality.
+  bool get _enableZoom => paintEditorConfigs.enableZoom;
+
+  /// A pointer to track the current position in the history stack.
+  /// This is used to manage undo and redo operations in the paint editor.
+  int historyPointer = 0;
+
+  /// A list that maintains the history of layer states in the paint editor.
+  ///
+  /// This list is initialized with the current layers if
+  /// `paintEditorConfigs.showLayers` is true; otherwise, it starts as an
+  ///  empty list. Each entry in the list represents a snapshot of the layer
+  /// states at a specific point in time.
+  late final List<PaintEditorResponse> stateHistory = [
+    PaintEditorResponse(
+      layers: paintEditorConfigs.showLayers ? [...(layers ?? [])] : [],
+      removedLayers: [],
+    ),
+  ];
+
+  /// A getter that retrieves the list of active layers from the current state
+  /// in the history stack, based on the current `historyPointer`.
+  ///
+  /// The `_stateHistory` is a list of states, where each state contains a list
+  /// of `Layer` objects. The `historyPointer` determines which state in the
+  /// history is currently active.
+  PaintEditorResponse get activeHistory => stateHistory[historyPointer];
+
+  /// Determines whether undo can be performed on the current state.
+  bool get canUndo => historyPointer > 0;
+
+  /// Determines whether redo can be performed on the current state.
+  bool get canRedo => historyPointer + 1 < stateHistory.length;
+
+  @override
+  void initState() {
+    super.initState();
+    paintCtrl = PaintController(
+      fill: paintEditorConfigs.isInitiallyFilled,
+      mode: paintEditorConfigs.initialPaintMode,
+      strokeWidth: paintEditorConfigs.style.initialStrokeWidth,
+      color: paintEditorConfigs.style.initialColor,
+      opacity: paintEditorConfigs.style.initialOpacity,
+      strokeMultiplier: 1,
+      freeStyleCustomModes: paintEditorConfigs.freeStyleCustomModes,
+    );
+
+    _isFillMode = paintEditorConfigs.isInitiallyFilled;
+
+    initStreamControllers();
+    setTools(paintEditorConfigs.tools);
+
+    _bottomBarScrollCtrl = ScrollController();
+    _desktopInteractionManager = PaintDesktopInteractionManager(
+      context: context,
+    );
+
+    /// Important to set state after view init to set action icons
+    paintEditorCallbacks?.onInit?.call();
+    WidgetsBinding.instance.addPostFrameCallback((timeStamp) {
+      paintEditorCallbacks?.onAfterViewInit?.call();
+      setState(() {});
+      paintEditorCallbacks?.handleUpdateUI();
+    });
+
+    /// Preload pixelate shader if enabled and supported
+    if (paintEditorConfigs.tools.contains(PaintMode.pixelate) &&
+        ShaderManager.instance.isShaderFilterSupported) {
+      ShaderManager.instance.loadShader(
+        paintEditorConfigs.censorConfigs.pixelateInLayerSpace
+            ? ShaderMode.pixelateAreas
+            : ShaderMode.pixelate,
+      );
+    }
+  }
+
+  @override
+  void dispose() {
+    paintCtrl.dispose();
+    _bottomBarScrollCtrl.dispose();
+    uiPickerStream.close();
+    _uiAppbarStream.close();
+    _layerStackStream.close();
+    screenshotCtrl.destroy();
+    super.dispose();
+  }
+
+  @override
+  void setState(void Function() fn) {
+    if (!mounted) return;
+    rebuildController.add(null);
+    super.setState(fn);
+  }
+
+  /// Sets the available painting tools for the paint editor.
+  ///
+  /// This method configures the available painting modes based on the provided
+  /// [tools] list and the current paint editor configuration settings. Only
+  /// tools that are both included in the [tools] parameter and enabled in
+  /// [paintEditorConfigs] will be added to the tool list.
+  void setTools(List<PaintMode> tools) {
+    PaintModeHelper? buildPaintModeHelper(PaintMode mode) {
+      switch (mode) {
+        case PaintMode.freeStyle:
+          return PaintModeHelper(
+            icon: paintEditorConfigs.icons.freeStyle,
+            label: i18n.paintEditor.freestyle,
+          );
+        case PaintMode.freeStyleArrowStart:
+          return PaintModeHelper(
+            icon: paintEditorConfigs.icons.freeStyleArrowStart,
+            label: i18n.paintEditor.freestyleArrowStart,
+          );
+        case PaintMode.freeStyleArrowEnd:
+          return PaintModeHelper(
+            icon: paintEditorConfigs.icons.freeStyleArrowEnd,
+            label: i18n.paintEditor.freestyleArrowEnd,
+          );
+        case PaintMode.freeStyleArrowStartEnd:
+          return PaintModeHelper(
+            icon: paintEditorConfigs.icons.freeStyleArrowStartEnd,
+            label: i18n.paintEditor.freestyleArrowStartEnd,
+          );
+
+        case PaintMode.arrow:
+          return PaintModeHelper(
+            icon: paintEditorConfigs.icons.arrow,
+            label: i18n.paintEditor.arrow,
+          );
+
+        case PaintMode.line:
+          return PaintModeHelper(
+            icon: paintEditorConfigs.icons.line,
+            label: i18n.paintEditor.line,
+          );
+
+        case PaintMode.rect:
+          return PaintModeHelper(
+            icon: paintEditorConfigs.icons.rectangle,
+            label: i18n.paintEditor.rectangle,
+          );
+
+        case PaintMode.circle:
+          return PaintModeHelper(
+            icon: paintEditorConfigs.icons.circle,
+            label: i18n.paintEditor.circle,
+          );
+
+        case PaintMode.dashLine:
+          return PaintModeHelper(
+            icon: paintEditorConfigs.icons.dashLine,
+            label: i18n.paintEditor.dashLine,
+          );
+
+        case PaintMode.dashDotLine:
+          return PaintModeHelper(
+            icon: paintEditorConfigs.icons.dashDotLine,
+            label: i18n.paintEditor.dashDotLine,
+          );
+
+        case PaintMode.hexagon:
+          return PaintModeHelper(
+            icon: paintEditorConfigs.icons.hexagon,
+            label: i18n.paintEditor.hexagon,
+          );
+
+        case PaintMode.polygon:
+          return PaintModeHelper(
+            icon: paintEditorConfigs.icons.polygon,
+            label: i18n.paintEditor.polygon,
+          );
+
+        case PaintMode.pixelate:
+          if (!ShaderManager.instance.isShaderFilterSupported) {
+            return null;
+          }
+          return PaintModeHelper(
+            icon: paintEditorConfigs.icons.pixelate,
+            label: i18n.paintEditor.pixelate,
+          );
+
+        case PaintMode.blur:
+          return PaintModeHelper(
+            icon: paintEditorConfigs.icons.blur,
+            label: i18n.paintEditor.blur,
+          );
+
+        case PaintMode.eraser:
+          return PaintModeHelper(
+            icon: paintEditorConfigs.icons.eraser,
+            label: i18n.paintEditor.eraser,
+          );
+        case PaintMode.moveAndZoom:
+          if (!paintEditorConfigs.enableZoom) return null;
+          return PaintModeHelper(
+            icon: paintEditorConfigs.icons.moveAndZoom,
+            label: i18n.paintEditor.moveAndZoom,
+          );
+
+        case PaintMode.custom1:
+          if (!paintEditorConfigs.customPathBuilders.containsKey(
+            PaintMode.custom1,
+          )) {
+            return null;
+          }
+          return PaintModeHelper(
+            icon: paintEditorConfigs.icons.custom1,
+            label: i18n.paintEditor.custom1,
+          );
+
+        case PaintMode.custom2:
+          if (!paintEditorConfigs.customPathBuilders.containsKey(
+            PaintMode.custom2,
+          )) {
+            return null;
+          }
+          return PaintModeHelper(
+            icon: paintEditorConfigs.icons.custom2,
+            label: i18n.paintEditor.custom2,
+          );
+
+        case PaintMode.custom3:
+          if (!paintEditorConfigs.customPathBuilders.containsKey(
+            PaintMode.custom3,
+          )) {
+            return null;
+          }
+          return PaintModeHelper(
+            icon: paintEditorConfigs.icons.custom3,
+            label: i18n.paintEditor.custom3,
+          );
+      }
+    }
+
+    this.tools.clear();
+    for (final tool in tools) {
+      final element = buildPaintModeHelper(tool);
+
+      if (element == null) continue;
+
+      this.tools.add(
+        PaintModeBottomBarItem(
+          mode: tool,
+          icon: element.icon,
+          label: element.label,
+        ),
+      );
+    }
+  }
+
+  /// Initializes stream controllers for managing UI updates.
+  void initStreamControllers() {
+    uiPickerStream = StreamController.broadcast();
+    _uiAppbarStream = StreamController.broadcast();
+    _layerStackStream = StreamController.broadcast();
+
+    uiPickerStream.stream.listen((_) => rebuildController.add(null));
+    _uiAppbarStream.stream.listen((_) => rebuildController.add(null));
+    _layerStackStream.stream.listen((_) => rebuildController.add(null));
+  }
+
+  @override
+  bool get enableKeyboardShortcuts =>
+      paintEditorConfigs.enableKeyboardShortcuts;
+
+  @override
+  PaintEditorCallbacks? get standaloneEditorCallbacks => paintEditorCallbacks;
+
+  /// Handle keyboard events
+  @override
+  bool onCustomKeyEvent(KeyEvent event) {
+    return _desktopInteractionManager.onKey(
+      event,
+      onUndoRedo: (undo) {
+        if (undo) {
+          undoAction();
+        } else {
+          redoAction();
+        }
+      },
+    );
+  }
+
+  /// Opens a bottom sheet to adjust the line weight when drawing.
+  void openLinWidthBottomSheet() {
+    showModalBottomSheet(
+      context: context,
+      backgroundColor: paintEditorConfigs.style.lineWidthBottomSheetBackground,
+      builder: (BuildContext context) => SliderBottomSheet<PaintEditorState>(
+        title: i18n.paintEditor.lineWidth,
+        headerTextStyle: paintEditorConfigs.style.lineWidthBottomSheetTitle,
+        max: configs.paintEditor.maxStrokeWidth,
+        min: configs.paintEditor.minStrokeWidth,
+        divisions: configs.paintEditor.divisionsStrokeWidth,
+        closeButton: paintEditorConfigs.widgets.lineWidthCloseButton,
+        customSlider: paintEditorConfigs.widgets.sliderLineWidth,
+        state: this,
+        value: paintCtrl.strokeWidth,
+        designMode: designMode,
+        theme: theme,
+        rebuildController: rebuildController,
+        onValueChanged: (value) {
+          setStrokeWidth(value);
+        },
+      ),
+    );
+  }
+
+  /// Opens a bottom sheet to adjust the opacity when drawing.
+  void openOpacityBottomSheet() {
+    showModalBottomSheet(
+      context: context,
+      backgroundColor: paintEditorConfigs.style.opacityBottomSheetBackground,
+      builder: (BuildContext context) => SliderBottomSheet<PaintEditorState>(
+        title: i18n.paintEditor.changeOpacity,
+        headerTextStyle: paintEditorConfigs.style.opacityBottomSheetTitle,
+        max: paintEditorConfigs.maxOpacity,
+        min: paintEditorConfigs.minOpacity,
+        divisions: paintEditorConfigs.divisionsOpacity,
+        closeButton: paintEditorConfigs.widgets.changeOpacityCloseButton,
+        customSlider: paintEditorConfigs.widgets.sliderChangeOpacity,
+        state: this,
+        value: paintCtrl.opacity,
+        designMode: designMode,
+        theme: theme,
+        rebuildController: rebuildController,
+        onValueChanged: (value) {
+          setOpacity(value);
+        },
+      ),
+    );
+  }
+
+  /// Sets the fill mode for drawing elements.
+  /// When the `fill` parameter is `true`, drawing elements will be filled;
+  /// otherwise, they will be outlined.
+  void setFill(bool fill) {
+    _isFillMode = fill;
+    paintCtrl.setFill(fill);
+    _uiAppbarStream.add(null);
+    paintEditorCallbacks?.handleToggleFill(fill);
+  }
+
+  /// Sets the opacity for drawing elements.
+  ///
+  /// The opacity must be between 0 and 1.
+  void setOpacity(double value) {
+    paintCtrl.setOpacity(value);
+    _uiAppbarStream.add(null);
+    paintEditorCallbacks?.handleOpacity(value);
+  }
+
+  /// Gets the current opacity value from the paint controller.
+  double get opacity => paintCtrl.opacity;
+
+  /// Sets the opacity value using the [setOpacity] method.
+  ///
+  /// The [value] parameter specifies the new opacity to be set.
+  set opacity(double value) => setOpacity(value);
+
+  /// Toggles the fill mode.
+  void toggleFill() {
+    _isFillMode = !_isFillMode;
+    setFill(_isFillMode);
+    rebuildController.add(null);
+  }
+
+  /// Set the PaintMode for the current state and trigger an update if provided.
+  void setMode(PaintMode mode) {
+    paintCtrl.setMode(mode);
+    paintEditorCallbacks?.handlePaintModeChanged(mode);
+    rebuildController.add(null);
+    _syncViewerInteraction();
+    _paintCanvas.currentState?.setState(() {});
+    setState(() {});
+  }
+
+  bool get _viewerPanEnabled =>
+      _enableZoom && paintMode == PaintMode.moveAndZoom;
+
+  bool get _viewerScaleEnabled {
+    if (!_enableZoom) return false;
+    if (paintMode == PaintMode.moveAndZoom) return true;
+    return paintEditorConfigs.enableZoomWhileDrawing;
+  }
+
+  void _syncViewerInteraction() {
+    interactiveViewer.currentState?.setPanAndScaleEnabled(
+      pan: _viewerPanEnabled,
+      scale: _viewerScaleEnabled,
+    );
+  }
+
+  void _onPaintViewerMatrixChanged(Matrix4 value) {
+    _paintCanvas.currentState?.cancelActiveDrawing();
+    callbacks.paintEditorCallbacks?.onEditorZoomMatrix4Change?.call(value);
+    final isZoomed = _isViewerZoomed;
+    if (isZoomed != _wasViewerZoomed) {
+      _wasViewerZoomed = isZoomed;
+      _layerStackStream.add(null);
+    }
+  }
+
+  /// Whether the viewer is zoomed away from its resting scale.
+  ///
+  /// A cached paint-layer raster is rendered for scale 1; zoomed in, it would
+  /// be upscaled, so the layer stack renders live while this holds.
+  bool get _isViewerZoomed => interactiveViewer.currentState?.isZoomed ?? false;
+
+  bool _wasViewerZoomed = false;
+
+  /// Whether a partial erase is in progress. The eraser mutates strokes on
+  /// every pointer move, so the layer stack renders live until it ends
+  /// instead of re-rendering a cached raster per move.
+  bool _isPartialErasing = false;
+
+  /// Whether the gesture the viewer is currently reporting can move the view.
+  bool _viewerGestureNavigates = false;
+
+  /// While a drawing tool is active the viewer keeps its gesture detector
+  /// alive so pinch may still zoom, but it reports every one-finger drag too -
+  /// and those drags are strokes, not navigation. Only gestures the viewer can
+  /// act on count: any gesture while panning is enabled, or a real multi-finger
+  /// pinch.
+  bool _isNavigationGesture(int pointerCount) =>
+      _viewerPanEnabled || pointerCount > 1;
+
+  void _onPaintViewerInteractionStart(ScaleStartDetails details) {
+    _viewerGestureNavigates = _isNavigationGesture(details.pointerCount);
+    if (!_viewerGestureNavigates) return;
+    callbacks.paintEditorCallbacks?.onEditorZoomScaleStart?.call(details);
+    setState(() {});
+  }
+
+  void _onPaintViewerInteractionUpdate(ScaleUpdateDetails details) {
+    if (!_viewerGestureNavigates) {
+      // A second finger joined a stroke, so the viewer takes the gesture over
+      // from here. Report the start it never got.
+      if (!_isNavigationGesture(details.pointerCount)) return;
+      _onPaintViewerInteractionStart(
+        ScaleStartDetails(
+          focalPoint: details.focalPoint,
+          localFocalPoint: details.localFocalPoint,
+          pointerCount: details.pointerCount,
+        ),
+      );
+    }
+    callbacks.paintEditorCallbacks?.onEditorZoomScaleUpdate?.call(details);
+  }
+
+  void _onPaintViewerInteractionEnd(ScaleEndDetails details) {
+    if (!_viewerGestureNavigates) return;
+    _viewerGestureNavigates = false;
+    callbacks.paintEditorCallbacks?.onEditorZoomScaleEnd?.call(details);
+    setState(() {});
+  }
+
+  /// Undoes the last action performed in the paint editor.
+  void undoAction() {
+    if (canUndo) {
+      screenshotHistoryPosition--;
+      historyPointer--;
+    }
+    _uiAppbarStream.add(null);
+    setState(() {});
+    paintEditorCallbacks?.handleUndo();
+  }
+
+  /// Redoes the previously undone action in the paint editor.
+  void redoAction() {
+    if (canRedo) {
+      screenshotHistoryPosition++;
+      historyPointer++;
+    }
+    _uiAppbarStream.add(null);
+    setState(() {});
+    paintEditorCallbacks?.handleRedo();
+  }
+
+  /// Finishes editing in the paint editor and returns the painted items as
+  /// a result.
+  /// If no changes have been made, it closes the editor without returning any
+  /// changes.
+  void done() async {
+    doneEditing(
+      editorImage: widget.editorImage,
+      onSetFakeHero: (bytes) {
+        if (initConfigs.enableFakeHero) {
+          setState(() {
+            _fakeHeroBytes = bytes;
+          });
+        }
+      },
+      onCloseWithValue: () {
+        if (!canUndo) return Navigator.pop(context);
+        final scale = _layerStackTransformHelper.scale;
+
+        // Build a map for O(1) lookup instead of O(N) indexWhere. Collect the
+        // erased offsets of every stroke so a merged (multi-stroke) layer is
+        // compared across all its items, not just the first.
+        List<ErasedOffset> allErased(PaintLayer layer) => [
+          for (final item in layer.items) ...item.erasedOffsets,
+        ];
+
+        final originalErasedMap = <String, List<ErasedOffset>>{};
+        for (final layer
+            in (widget.initConfigs.layers ?? []).whereType<PaintLayer>()) {
+          originalErasedMap[layer.id] = allErased(layer);
+        }
+
+        final newLayers = activeHistory.layers.whereType<PaintLayer>().where((
+          layer,
+        ) {
+          final originalErased = originalErasedMap[layer.id];
+          if (originalErased == null) return true;
+          return !listEquals(originalErased, allErased(layer));
+        });
+
+        void rescale(Layer placement) => placement
+          ..offset *= scale
+          ..scale *= scale;
+        final transformedLayers = newLayers.map((layer) {
+          rescale(layer);
+          return layer..transformKeyframes(rescale);
+        }).toList();
+        Navigator.of(context).pop(
+          PaintEditorResponse(
+            layers: transformedLayers,
+            removedLayers: activeHistory.removedLayers,
+          ),
+        );
+      },
+      blur: appliedBlurFactor,
+      matrixFilterList: appliedFilters,
+      matrixTuneAdjustmentsList: appliedTuneAdjustments
+          .map((item) => item.matrix)
+          .toList(),
+      transform: initialTransformConfigs,
+    );
+    paintEditorCallbacks?.handleDone();
+  }
+
+  /// Adds a painted model as a new layer to the editor.
+  ///
+  /// Transforms the given [item] into a layer and adds it to the editor.
+  void addPainting(PaintedModel item) {
+    addLayer(_transformPaintedModelToLayer(item));
+  }
+
+  /// Adds a new layer to the active layers and updates the state history.
+  /// Clears any redo history before adding the new layer.
+  ///
+  /// [layer] The layer to be added.
+  void addLayer(Layer layer) {
+    while (canRedo) {
+      stateHistory.removeLast();
+    }
+
+    stateHistory.add(
+      PaintEditorResponse(
+        layers: [...activeHistory.layers, layer],
+        removedLayers: [...activeHistory.removedLayers],
+      ),
+    );
+    historyPointer++;
+    _layerStackStream.add(null);
+  }
+
+  TransformHelper get _layerStackTransformHelper {
+    return TransformHelper(
+      mainBodySize: getValidSizeOrDefault(mainBodySize, editorBodySize),
+      mainImageSize: getValidSizeOrDefault(mainImageSize, editorBodySize),
+      editorBodySize: editorBodySize,
+      transformConfigs: initialTransformConfigs,
+    );
+  }
+
+  PaintLayer _transformPaintedModelToLayer(PaintedModel rawLayer) {
+    Rect findRenderedLayerRect(List<Offset?> points) {
+      if (points.isEmpty) return Rect.zero;
+
+      double leftmostX = double.infinity;
+      double topmostY = double.infinity;
+      double rightmostX = double.negativeInfinity;
+      double bottommostY = double.negativeInfinity;
+
+      for (final point in points) {
+        if (point != null) {
+          if (point.dx < leftmostX) {
+            leftmostX = point.dx;
+          }
+          if (point.dy < topmostY) {
+            topmostY = point.dy;
+          }
+          if (point.dx > rightmostX) {
+            rightmostX = point.dx;
+          }
+          if (point.dy > bottommostY) {
+            bottommostY = point.dy;
+          }
+        }
+      }
+
+      return Rect.fromPoints(
+        Offset(leftmostX, topmostY),
+        Offset(rightmostX, bottommostY),
+      );
+    }
+
+    final mainEditorSizeFactor = 1 / _layerStackTransformHelper.scale;
+
+    PaintedModel layer = PaintedModel(
+      mode: rawLayer.mode,
+      offsets: [...rawLayer.offsets],
+      erasedOffsets: [...rawLayer.erasedOffsets],
+      color: rawLayer.color,
+      strokeWidth: rawLayer.strokeWidth,
+      fill: rawLayer.fill,
+      opacity: rawLayer.opacity,
+      censorStrength: rawLayer.censorStrength,
+    );
+
+    // Find extreme points of the paint layer
+    Rect? layerRect = findRenderedLayerRect(rawLayer.offsets);
+
+    Size size = layerRect.size;
+
+    bool onlyStrokeMode =
+        paintEditorConfigs.isFreeStyleMode(rawLayer.mode) ||
+        rawLayer.mode == PaintMode.line ||
+        rawLayer.mode == PaintMode.dashLine ||
+        rawLayer.mode == PaintMode.dashDotLine ||
+        rawLayer.mode == PaintMode.arrow ||
+        ((rawLayer.mode == PaintMode.polygon ||
+                rawLayer.mode == PaintMode.rect ||
+                rawLayer.mode == PaintMode.circle ||
+                rawLayer.mode == PaintMode.hexagon) &&
+            !rawLayer.fill);
+
+    // Scale and offset the offsets of the paint layer
+    double strokeHelperWidth = onlyStrokeMode ? rawLayer.strokeWidth : 0;
+
+    // Assigned as a whole rather than patched in place, so the model can drop
+    // its cached `bounds` for the moved points.
+    layer.offsets = [
+      for (final point in layer.offsets)
+        if (point == null)
+          null
+        else
+          Offset(
+            point.dx - layerRect.left + strokeHelperWidth / 2,
+            point.dy - layerRect.top + strokeHelperWidth / 2,
+          ),
+    ];
+
+    // Calculate the final offset of the paint layer
+    Offset finalOffset = Offset(
+      layerRect.center.dx - editorBodySize.width / 2,
+      layerRect.center.dy - editorBodySize.height / 2,
+    );
+
+    if (onlyStrokeMode) {
+      size = Size(
+        size.width + strokeHelperWidth,
+        size.height + strokeHelperWidth,
+      );
+    }
+
+    // Create and return a PaintLayer instance for the exported layer
+    return PaintLayer(
+      id: layer.id,
+      item: layer.copy(),
+      rawSize: Size(
+        max(size.width, layer.strokeWidth),
+        max(size.height, layer.strokeWidth),
+      ),
+      opacity: layer.opacity,
+      offset: finalOffset * mainEditorSizeFactor,
+      scale: mainEditorSizeFactor,
+    );
+  }
+
+  /// Sets the strength of the censor areas drawn next; see
+  /// [PaintedModel.censorStrength]. `null` goes back to
+  /// `PaintEditorConfigs.censorConfigs`.
+  ///
+  /// The area drawn last in this session takes it as well when it was drawn
+  /// in the current mode, so a slider shows its effect on that area right
+  /// away. The change is not a history step of its own.
+  void setCensorStrength(double? value) {
+    paintCtrl.setCensorStrength(value);
+    final last = activeHistory.layers.lastOrNull;
+    if (last is PaintLayer &&
+        last.item.isCensorArea &&
+        last.item.mode == paintMode &&
+        !stateHistory.first.layers.any((layer) => layer.id == last.id) &&
+        last.item.censorStrength != value) {
+      last.item.censorStrength = value;
+      _layerStackStream.add(null);
+    }
+  }
+
+  /// Set the stroke width.
+  void setStrokeWidth(double value) {
+    paintCtrl.setStrokeWidth(value);
+    rebuildController.add(null);
+    callbacks.paintEditorCallbacks?.handleLineWidthChanged(value);
+    setState(() {});
+  }
+
+  /// Sets the current color for the paint editor.
+  ///
+  /// This method updates the color in the paint controller, triggers the
+  /// UI picker stream to notify listeners, and invokes the callback
+  /// for handling color changes if it is defined.
+  ///
+  /// - Parameters:
+  ///   - color: The new color to be set.
+  void setColor(Color color) {
+    paintCtrl.setColor(color);
+    uiPickerStream.add(null);
+    paintEditorCallbacks?.handleColorChanged();
+    setState(() {});
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return AnnotatedRegion<SystemUiOverlayStyle>(
+      value: paintEditorConfigs.style.uiOverlayStyle,
+      child: ExtendedPopScope(
+        canPop: paintEditorConfigs.enableGesturePop,
+        child: Theme(
+          data: theme.copyWith(
+            tooltipTheme: theme.tooltipTheme.copyWith(preferBelow: true),
+          ),
+          child: SafeArea(
+            top: paintEditorConfigs.safeArea.top,
+            bottom: paintEditorConfigs.safeArea.bottom,
+            left: paintEditorConfigs.safeArea.left,
+            right: paintEditorConfigs.safeArea.right,
+            child: RecordInvisibleWidget(
+              controller: screenshotCtrl,
+              child: LayoutBuilder(
+                builder: (context, constraints) {
+                  return MediaQuery.removePadding(
+                    context: context,
+                    removeBottom: !paintEditorConfigs.safeArea.bottom,
+                    child: Scaffold(
+                      resizeToAvoidBottomInset: false,
+                      backgroundColor: paintEditorConfigs.style.background,
+                      appBar: _buildAppBar(constraints),
+                      body: _buildBody(),
+                      bottomNavigationBar: _buildBottomBar(),
+                    ),
+                  );
+                },
+              ),
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+
+  /// Builds the app bar for the paint editor.
+  /// Returns a [PreferredSizeWidget] representing the app bar.
+  PreferredSizeWidget? _buildAppBar(BoxConstraints constraints) {
+    if (paintEditorConfigs.widgets.appBar != null) {
+      return paintEditorConfigs.widgets.appBar!.call(
+        this,
+        rebuildController.stream,
+      );
+    }
+
+    return ReactiveAppbar(
+      stream: _uiAppbarStream.stream,
+      builder: (context) => PaintEditorAppBar(
+        paintEditorConfigs: paintEditorConfigs,
+        i18n: i18n.paintEditor,
+        constraints: constraints,
+        onUndo: undoAction,
+        onRedo: redoAction,
+        onToggleFill: toggleFill,
+        onTapMenuFill: () {
+          _isFillMode = !_isFillMode;
+          setFill(_isFillMode);
+          if (designMode == ImageEditorDesignMode.cupertino) {
+            Navigator.pop(context);
+          }
+        },
+        onDone: done,
+        onClose: close,
+        canRedo: canRedo,
+        canUndo: canUndo,
+        isFillMode: _isFillMode,
+        onOpenOpacityBottomSheet: openOpacityBottomSheet,
+        onOpenLineWeightBottomSheet: openLinWidthBottomSheet,
+        designMode: designMode,
+      ),
+    );
+  }
+
+  /// Builds the main body of the paint editor.
+  /// Returns a [Widget] representing the editor's body.
+  Widget _buildBody() {
+    return LayoutBuilder(
+      builder: (context, constraints) {
+        editorBodySize = constraints.biggest;
+        return Theme(
+          data: theme,
+          child: Material(
+            color:
+                initConfigs.convertToUint8List && initConfigs.convertToUint8List
+                ? paintEditorConfigs.style.background
+                : Colors.transparent,
+            textStyle: platformTextStyle(context, designMode),
+            child: Stack(
+              alignment: Alignment.center,
+              fit: StackFit.expand,
+              children: _fakeHeroBytes != null
+                  ? _buildFakeHero()
+                  : _buildInteractiveContent(),
+            ),
+          ),
+        );
+      },
+    );
+  }
+
+  List<Widget> _buildFakeHero() {
+    return [
+      Hero(
+        tag: configs.heroTag,
+        child: AutoImage(
+          EditorImage(byteArray: _fakeHeroBytes),
+          configs: configs,
+        ),
+      ),
+    ];
+  }
+
+  List<Widget> _buildInteractiveContent() {
+    return [
+      Listener(
+        behavior: HitTestBehavior.translucent,
+        onPointerDown: (details) {
+          bool isDoubleTap = detectDoubleTap(details);
+          if (!isDoubleTap) return;
+
+          handleDoubleTap(context, details, paintEditorConfigs);
+          paintEditorCallbacks?.onDoubleTap?.call();
+        },
+        onPointerUp: onPointerUp,
+        child: ExtendedInteractiveViewer(
+          key: interactiveViewer,
+          initialMatrix4: paintEditorConfigs.enableShareZoomMatrix
+              ? initConfigs.initialZoomMatrix
+              : null,
+          zoomConfigs: paintEditorConfigs,
+          enableInteraction: _viewerPanEnabled || _viewerScaleEnabled,
+          panEnabled: _viewerPanEnabled,
+          scaleEnabled: _viewerScaleEnabled,
+          onInteractionStart: _onPaintViewerInteractionStart,
+          onInteractionUpdate: _onPaintViewerInteractionUpdate,
+          onInteractionEnd: _onPaintViewerInteractionEnd,
+          onMatrix4Change: _onPaintViewerMatrixChanged,
+          child: Stack(
+            alignment: Alignment.center,
+            fit: StackFit.expand,
+            children: [
+              if (initConfigs.convertToUint8List && isVideoEditor)
+                _buildBackground(),
+              ContentRecorder(
+                autoDestroyController: false,
+                controller: screenshotCtrl,
+                child: Stack(
+                  alignment: Alignment.center,
+                  fit: StackFit.expand,
+                  children: [
+                    if (!widget.paintOnly)
+                      if (!initConfigs.convertToUint8List || !isVideoEditor)
+                        _buildBackground()
+                      else
+                        SizedBox(
+                          width: configs.imageGeneration.maxOutputSize.width,
+                          height: configs.imageGeneration.maxOutputSize.height,
+                        ),
+
+                    /// Build layers
+                    StreamBuilder(
+                      stream: _layerStackStream.stream,
+                      builder: (context, asyncSnapshot) {
+                        if (!paintEditorConfigs.showLayers ||
+                            activeHistory.layers.isEmpty) {
+                          return const SizedBox.shrink();
+                        }
+
+                        return LayerStack(
+                          configs: configs,
+                          layers: activeHistory.layers,
+                          transformHelper: _layerStackTransformHelper,
+                          overlayColor: paintEditorConfigs.style.background,
+                          clipBehavior: Clip.none,
+                          enableLayerKey: true,
+                          suspendPaintLayerRasterCache:
+                              _isPartialErasing || _isViewerZoomed,
+                        );
+                      },
+                    ),
+                    _buildPainter(),
+                    if (paintEditorConfigs.widgets.bodyItemsRecorded != null)
+                      ...paintEditorConfigs.widgets.bodyItemsRecorded!(
+                        this,
+                        rebuildController.stream,
+                      ),
+                  ],
+                ),
+              ),
+            ],
+          ),
+        ),
+      ),
+
+      /// Build Color picker
+      PaintEditorColorPicker(
+        state: this,
+        configs: configs,
+        rebuildController: rebuildController,
+      ),
+      if (paintEditorConfigs.widgets.bodyItems != null)
+        ...paintEditorConfigs.widgets.bodyItems!(
+          this,
+          rebuildController.stream,
+        ),
+    ];
+  }
+
+  Widget _buildBackground() {
+    return TransformedContentGenerator(
+      isVideoPlayer: videoController != null,
+      configs: configs,
+      transformConfigs: initialTransformConfigs ?? TransformConfigs.empty(),
+      child: FilteredWidget(
+        width: getValidSizeOrDefault(mainImageSize, editorBodySize).width,
+        height: getValidSizeOrDefault(mainImageSize, editorBodySize).height,
+        configs: configs,
+        image: editorImage,
+        videoPlayer: videoController?.videoPlayer,
+        blankSize: initConfigs.mainImageSize,
+        filters: appliedFilters,
+        tuneAdjustments: appliedTuneAdjustments,
+        blurFactor: appliedBlurFactor,
+      ),
+    );
+  }
+
+  /// Builds the bottom navigation bar of the paint editor.
+  /// Returns a [Widget] representing the bottom navigation bar.
+  Widget? _buildBottomBar() {
+    if (paintEditorConfigs.widgets.bottomBar != null) {
+      return paintEditorConfigs.widgets.bottomBar!.call(
+        this,
+        rebuildController.stream,
+      );
+    }
+
+    if (tools.length <= 1) return const SizedBox.shrink();
+
+    return PaintEditorBottombar(
+      configs: configs.paintEditor,
+      paintMode: paintMode,
+      i18n: i18n.paintEditor,
+      theme: theme,
+      enableZoom: _enableZoom,
+      tools: tools,
+      setMode: setMode,
+      bottomBarScrollCtrl: _bottomBarScrollCtrl,
+    );
+  }
+
+  /// Builds the paint canvas for the editor.
+  /// Returns a [Widget] representing the paint canvas.
+  Widget _buildPainter() {
+    return PaintCanvas(
+      key: _paintCanvas,
+      paintCtrl: paintCtrl,
+      paintEditorConfigs: paintEditorConfigs,
+      drawAreaSize: mainBodySize ?? editorBodySize,
+      editorBodySize: editorBodySize,
+      layerStackScaleFactor: _layerStackTransformHelper.scale,
+      layers: activeHistory.layers,
+      eraserMode: eraserMode,
+      eraserRadius: eraserRadius,
+      onTap: (details) =>
+          callbacks.paintEditorCallbacks?.onTap?.call(this, details),
+      onRemoveLayer: (removeIdList) {
+        final removeIdSet = removeIdList.toSet();
+        final updatedList = <Layer>[];
+        final removedLayers = <Layer>[];
+
+        for (final layer in activeHistory.layers) {
+          if (removeIdSet.contains(layer.id)) {
+            removedLayers.add(layer);
+          } else {
+            updatedList.add(layer);
+          }
+        }
+
+        if (updatedList.length == activeHistory.layers.length) return;
+
+        while (canRedo) {
+          stateHistory.removeLast();
+        }
+
+        stateHistory.add(
+          PaintEditorResponse(
+            layers: [...updatedList],
+            removedLayers: [...activeHistory.removedLayers, ...removedLayers],
+          ),
+        );
+        historyPointer++;
+        setState(() {});
+
+        WidgetsBinding.instance.addPostFrameCallback((_) async {
+          takeScreenshot();
+        });
+      },
+      onRemovePartialStart: () {
+        _isPartialErasing = true;
+        LayerCopyManager copyManager = LayerCopyManager();
+
+        final updatedList = activeHistory.layers.map((layer) {
+          return copyManager.copyLayer(layer);
+        });
+
+        while (canRedo) {
+          stateHistory.removeLast();
+        }
+        stateHistory.add(
+          PaintEditorResponse(
+            layers: [...updatedList],
+            removedLayers: [...activeHistory.removedLayers],
+          ),
+        );
+        historyPointer++;
+        setState(() {});
+        WidgetsBinding.instance.drawFrame();
+      },
+      onRemovePartialEnd: (hasRemovedAreas) {
+        _isPartialErasing = false;
+        _layerStackStream.add(null);
+        if (!hasRemovedAreas) {
+          historyPointer--;
+          stateHistory.removeLast();
+          return;
+        }
+        WidgetsBinding.instance.addPostFrameCallback((_) async {
+          takeScreenshot();
+        });
+      },
+      onRefresh: () {
+        rebuildController.add(null);
+        _layerStackStream.add(null);
+      },
+      onCreated: (rawLayer) {
+        _uiAppbarStream.add(null);
+        uiPickerStream.add(null);
+        paintEditorCallbacks?.handleDrawingDone();
+
+        final layer = _transformPaintedModelToLayer(rawLayer);
+        addLayer(layer);
+
+        WidgetsBinding.instance.addPostFrameCallback((_) async {
+          takeScreenshot();
+        });
+      },
+    );
+  }
+
+  @override
+  void debugFillProperties(DiagnosticPropertiesBuilder properties) {
+    super.debugFillProperties(properties);
+
+    properties
+      ..add(
+        DiagnosticsProperty<EditorImage?>('editorImage', widget.editorImage),
+      )
+      ..add(
+        DiagnosticsProperty<ProVideoController?>(
+          'videoController',
+          widget.videoController,
+        ),
+      )
+      ..add(
+        DiagnosticsProperty<PaintEditorInitConfigs>(
+          'initConfigs',
+          widget.initConfigs,
+        ),
+      )
+      ..add(
+        FlagProperty(
+          'paintOnly',
+          value: widget.paintOnly,
+          ifTrue: 'paint-only mode',
+        ),
+      )
+      ..add(DiagnosticsProperty<PaintController>('paintCtrl', paintCtrl))
+      ..add(
+        FlagProperty(
+          '_isFillMode',
+          value: _isFillMode,
+          ifTrue: 'fill mode enabled',
+        ),
+      )
+      ..add(FlagProperty('isActive', value: isActive, ifTrue: 'drawing active'))
+      ..add(EnumProperty<PaintMode>('paintMode', paintMode))
+      ..add(ColorProperty('activeColor', activeColor))
+      ..add(DoubleProperty('strokeWidth', strokeWidth))
+      ..add(DoubleProperty('opacity', opacity))
+      ..add(IntProperty('historyPointer', historyPointer))
+      ..add(IntProperty('stateHistoryLength', stateHistory.length))
+      ..add(FlagProperty('canUndo', value: canUndo, ifTrue: 'can undo'))
+      ..add(FlagProperty('canRedo', value: canRedo, ifTrue: 'can redo'))
+      ..add(
+        FlagProperty('_enableZoom', value: _enableZoom, ifTrue: 'zoom enabled'),
+      )
+      ..add(
+        FlagProperty(
+          'enableZoomWhileDrawing',
+          value: paintEditorConfigs.enableZoomWhileDrawing,
+          ifTrue: 'zoom while drawing',
+        ),
+      )
+      ..add(
+        FlagProperty(
+          'hasFakeHeroBytes',
+          value: _fakeHeroBytes != null,
+          ifTrue: 'fake hero set',
+        ),
+      );
+  }
+}

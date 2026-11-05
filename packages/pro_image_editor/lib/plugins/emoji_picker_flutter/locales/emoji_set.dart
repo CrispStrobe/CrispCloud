@@ -1,0 +1,10 @@
+export 'emoji_set_de.dart';
+export 'emoji_set_en.dart';
+export 'emoji_set_es.dart';
+export 'emoji_set_fr.dart';
+export 'emoji_set_hi.dart';
+export 'emoji_set_it.dart';
+export 'emoji_set_ja.dart';
+export 'emoji_set_pt.dart';
+export 'emoji_set_ru.dart';
+export 'emoji_set_zh.dart';

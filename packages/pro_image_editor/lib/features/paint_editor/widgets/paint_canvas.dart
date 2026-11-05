@@ -1,0 +1,639 @@
+// Dart imports:
+import 'dart:async';
+import 'dart:math';
+
+// Flutter imports:
+import 'package:flutter/gestures.dart';
+import 'package:material_ui/material_ui.dart';
+
+import '/core/models/editor_configs/paint_editor/paint_editor_configs.dart';
+import '/core/models/layers/layer.dart';
+import '/shared/widgets/censor/blur_area_item.dart';
+import '/shared/widgets/censor/censor_scope.dart';
+import '/shared/widgets/censor/pixelate_area_item.dart';
+import '../controllers/paint_controller.dart';
+import '../enums/paint_editor_enum.dart';
+import '../models/eraser_model.dart';
+import '../services/paint_item_hit_test_manager.dart';
+import 'draw_paint_item.dart';
+
+/// A widget for creating a canvas for paint on images.
+///
+/// This widget allows you to create a canvas for paint on images loaded
+/// from various sources, including network URLs, asset paths, files, or memory
+/// (Uint8List).
+/// It provides customization options for appearance and behavior.
+class PaintCanvas extends StatefulWidget {
+  /// Constructs a `PaintCanvas` widget.
+  const PaintCanvas({
+    super.key,
+    required this.onRefresh,
+    required this.onCreated,
+    required this.onRemoveLayer,
+    required this.onRemovePartialStart,
+    required this.onRemovePartialEnd,
+    required this.onTap,
+    required this.drawAreaSize,
+    required this.editorBodySize,
+    required this.paintCtrl,
+    required this.paintEditorConfigs,
+    required this.layers,
+    required this.layerStackScaleFactor,
+    required this.eraserMode,
+    required this.eraserRadius,
+  });
+
+  /// Callback function when the active paint is done.
+  final Function(PaintedModel item) onCreated;
+
+  /// Callback invoked when layers are removed.
+  ///
+  /// Receives a list of layer identifiers that have been removed.
+  final ValueChanged<List<String>> onRemoveLayer;
+
+  /// Callback triggered when the user begins a partial erase action.
+  final Function() onRemovePartialStart;
+
+  /// Callback triggered when the user finishes a partial erase action.
+  ///
+  /// [hasRemovedAreas] is `true` if at least one area was erased during
+  /// the action, otherwise `false`.
+  final Function(bool hasRemovedAreas) onRemovePartialEnd;
+
+  /// Callback function that is triggered when a tap down event occurs on the
+  /// canvas.
+  ///
+  /// The [details] parameter provides information about the position and
+  /// characteristics of the tap event. This callback can be used to handle
+  /// custom tap interactions within the paint editor.
+  final Function(TapDownDetails details) onTap;
+
+  /// Callback to refresh the current state or view.
+  final VoidCallback onRefresh;
+
+  /// Size of the image.
+  final Size drawAreaSize;
+
+  /// Size of the paint editor body.
+  final Size editorBodySize;
+
+  /// The scale factor applied to the layer stack, used to adjust the size
+  /// of the canvas layers relative to their original dimensions.
+  final double layerStackScaleFactor;
+
+  /// The `PaintController` class is responsible for managing and controlling
+  /// the paint state.
+  final PaintController paintCtrl;
+
+  /// Configuration settings for the paint editor.
+  /// This field holds an instance of [PaintEditorConfigs] which contains
+  /// various settings and options used to customize the behavior and
+  /// appearance of the paint editor.
+  final PaintEditorConfigs paintEditorConfigs;
+
+  /// A list of layers that make up the paint canvas.
+  final List<Layer> layers;
+
+  /// The current eraser mode used in the paint canvas.
+  ///
+  /// Determines how the eraser tool behaves when removing paint strokes,
+  /// such as whether it erases pixel by pixel or removes entire stroke paths.
+  final EraserMode eraserMode;
+
+  /// The radius of the eraser tool in logical pixels.
+  ///
+  /// This value determines the size of the eraser when removing painted content
+  /// from the canvas. A larger radius creates a bigger eraser area.
+  final double eraserRadius;
+
+  @override
+  PaintCanvasState createState() => PaintCanvasState();
+}
+
+/// State class for managing the paint canvas.
+class PaintCanvasState extends State<PaintCanvas> {
+  /// Getter for accessing the [PaintController] instance provided by the
+  /// parent widget.
+  PaintController get _paintCtrl => widget.paintCtrl;
+
+  /// Stream controller for updating paint events.
+  late final StreamController<void> _activePaintStreamCtrl;
+  TapDownDetails? _tapDownDetails;
+  final _hitTestManager = PaintItemHitTestManager();
+
+  bool _hasPartialErasedAreas = false;
+
+  /// Tracks the number of active pointers to detect multi-touch gestures.
+  /// When more than one pointer is active, drawing is disabled to allow
+  /// pinch-to-zoom gestures.
+  int _activePointerCount = 0;
+
+  /// Tracks whether the current gesture started as a multi-touch gesture.
+  /// Used to prevent drawing when the user is performing a pinch-to-zoom.
+  bool _isMultiTouch = false;
+
+  /// Tracks the position of the first pointer for tap detection.
+  Offset? _pointerDownPosition;
+
+  /// Maximum distance in logical pixels between pointer down and up positions
+  /// for the interaction to be considered a tap rather than a drag gesture.
+  static const double _tapDistanceThreshold = 10.0;
+
+  final Set<int> _navigationPointers = <int>{};
+
+  /// Whether a partial-erase session is open:
+  /// [PaintCanvas.onRemovePartialStart] has been reported and
+  /// [PaintCanvas.onRemovePartialEnd] has not.
+  bool _isPartialEraseActive = false;
+
+  bool get _isPartialEraser => widget.eraserMode == EraserMode.partial;
+  bool get _isFreeStyleMode =>
+      widget.paintEditorConfigs.isFreeStyleMode(_paintCtrl.mode);
+
+  @override
+  void initState() {
+    super.initState();
+    _activePaintStreamCtrl = StreamController.broadcast();
+  }
+
+  @override
+  void dispose() {
+    _activePaintStreamCtrl.close();
+    super.dispose();
+  }
+
+  /// Discards the in-progress stroke so a viewport change cannot mix
+  /// coordinate spaces in a single path.
+  ///
+  /// Remaining pointers are ignored until they are released, matching the
+  /// multi-touch pinch behavior.
+  void cancelActiveDrawing() {
+    _discardActiveStroke();
+    if (_activePointerCount > 0) {
+      _isMultiTouch = true;
+    }
+  }
+
+  void _discardActiveStroke() {
+    _endPartialErase();
+    if (_paintCtrl.busy || _paintCtrl.start != null) {
+      _paintCtrl
+        ..setInProgress(false)
+        ..reset();
+      _activePaintStreamCtrl.add(null);
+    }
+  }
+
+  /// Closes the partial-erase session, if one is open.
+  ///
+  /// Reported from the normal pointer-up as well as from every path that
+  /// discards a gesture — a second finger, a pointer cancel, a viewport
+  /// change — so the editor never waits for an end that is not coming. The
+  /// spots erased so far stay erased.
+  void _endPartialErase() {
+    if (!_isPartialEraseActive) return;
+    _isPartialEraseActive = false;
+    widget.onRemovePartialEnd(_hasPartialErasedAreas);
+  }
+
+  bool get _auxiliaryMousePansView =>
+      widget.paintEditorConfigs.enableZoom &&
+      widget.paintEditorConfigs.enableZoomWhileDrawing;
+
+  bool _isAuxiliaryMousePan(PointerEvent event) {
+    if (!_auxiliaryMousePansView) return false;
+    if (event.kind != PointerDeviceKind.mouse) return false;
+    return (event.buttons & kSecondaryMouseButton) != 0 ||
+        (event.buttons & kMiddleMouseButton) != 0;
+  }
+
+  /// Handles the pointer down event for immediate response to touch/stylus
+  /// input.
+  ///
+  /// This uses the low-level [Listener] widget instead of [GestureDetector]
+  /// to eliminate gesture disambiguation delays, significantly reducing drawing
+  /// latency on devices like iPad with Apple Pencil.
+  void _onPointerDown(PointerDownEvent event) {
+    if (_isAuxiliaryMousePan(event)) {
+      _navigationPointers.add(event.pointer);
+      _discardActiveStroke();
+      if (_activePointerCount > 0) {
+        _isMultiTouch = true;
+      }
+      return;
+    }
+    if (_navigationPointers.isNotEmpty) {
+      _activePointerCount++;
+      _isMultiTouch = true;
+      _discardActiveStroke();
+      return;
+    }
+    _activePointerCount++;
+    if (_activePointerCount > 1) {
+      // Multi-touch detected - disable drawing to allow pinch-to-zoom
+      _isMultiTouch = true;
+      _discardActiveStroke();
+      return;
+    }
+
+    _pointerDownPosition = event.localPosition;
+    final offset = event.localPosition;
+
+    switch (widget.paintCtrl.mode) {
+      case PaintMode.moveAndZoom:
+        return;
+      case PaintMode.eraser:
+        // Only the partial eraser mutates strokes and needs the pre-erase
+        // copy; a full-stroke erase records its removals as it goes.
+        if (_isPartialEraser) {
+          _hasPartialErasedAreas = false;
+          _isPartialEraseActive = true;
+          widget.onRemovePartialStart();
+        }
+        setState(() {});
+        return;
+      case PaintMode.polygon:
+        // Only add the point on pointer down; completion check happens on
+        // pointer up when we can verify this was a tap (not a drag gesture)
+        _addPolygonPoint(offset);
+        return;
+      default:
+        _paintCtrl
+          ..setStart(offset)
+          ..addOffsets(offset);
+        _activePaintStreamCtrl.add(null);
+        break;
+    }
+  }
+
+  /// Handles the pointer move event for continuous drawing updates.
+  ///
+  /// This provides immediate response to pointer movement without the
+  /// gesture disambiguation delay that occurs with [GestureDetector].
+  void _onPointerMove(PointerMoveEvent event) {
+    if (_navigationPointers.contains(event.pointer)) return;
+    if (_isAuxiliaryMousePan(event)) {
+      // A mouse button pressed mid-stroke arrives as a move event, not a new
+      // pointer. Drop the stroke instead of pausing it, which would otherwise
+      // resume with a straight jump once the button is released again.
+      _isMultiTouch = true;
+      _discardActiveStroke();
+      return;
+    }
+    // Skip if multi-touch gesture is active (pinch-to-zoom)
+    if (_isMultiTouch || _activePointerCount > 1) return;
+
+    final offset = event.localPosition;
+
+    switch (widget.paintCtrl.mode) {
+      case PaintMode.moveAndZoom:
+      case PaintMode.polygon:
+        return;
+      case PaintMode.eraser:
+        _processEraserInputAt(offset);
+        break;
+      default:
+        if (!_paintCtrl.busy) {
+          widget.onRefresh();
+          _paintCtrl.setInProgress(true);
+        }
+
+        if (_paintCtrl.start == null) {
+          _paintCtrl.setStart(offset);
+        }
+
+        if (_isFreeStyleMode) {
+          _paintCtrl.addOffsets(offset);
+        }
+
+        _paintCtrl.setEnd(offset);
+
+        _activePaintStreamCtrl.add(null);
+    }
+  }
+
+  /// Handles the pointer up event to finalize drawing.
+  void _onPointerUp(PointerUpEvent event) {
+    if (_navigationPointers.remove(event.pointer)) return;
+    _activePointerCount = max(0, _activePointerCount - 1);
+
+    // If this was part of a multi-touch gesture, reset and return
+    if (_isMultiTouch) {
+      if (_activePointerCount == 0) {
+        _isMultiTouch = false;
+      }
+      return;
+    }
+
+    final offset = event.localPosition;
+
+    // Handle tap detection for polygon and other modes
+    if (_pointerDownPosition != null) {
+      final distance = (offset - _pointerDownPosition!).distance;
+      // If movement was minimal, treat as a tap
+      if (distance < _tapDistanceThreshold) {
+        _tapDownDetails = TapDownDetails(
+          globalPosition: event.position,
+          localPosition: event.localPosition,
+        );
+        // For polygon mode, check if the shape should be completed on tap
+        if (_paintCtrl.mode == PaintMode.polygon) {
+          _checkPolygonIsComplete();
+        }
+        widget.onTap(_tapDownDetails!);
+        _tapDownDetails = null;
+      }
+    }
+    _pointerDownPosition = null;
+
+    if (widget.paintCtrl.mode == PaintMode.moveAndZoom) {
+      return;
+    } else if (widget.paintCtrl.mode == PaintMode.eraser) {
+      // Eraser mode doesn't create paintings - it only removes existing ones.
+      // The removal is handled during pointer move via _processEraserInputAt.
+      _endPartialErase();
+      return;
+    }
+
+    List<Offset?>? offsets;
+
+    if (_paintCtrl.start != null && _paintCtrl.end != null) {
+      if (_isFreeStyleMode) {
+        offsets = [..._paintCtrl.offsets];
+      } else if (_paintCtrl.start != null && _paintCtrl.end != null) {
+        offsets = [_paintCtrl.start, _paintCtrl.end];
+      }
+    } else if (_paintCtrl.mode == PaintMode.polygon) {
+      _checkPolygonIsComplete();
+      return;
+    }
+    _createPainting(offsets);
+  }
+
+  /// Handles the pointer cancel event to clean up state.
+  void _onPointerCancel(PointerCancelEvent event) {
+    if (_navigationPointers.remove(event.pointer)) return;
+    _activePointerCount = max(0, _activePointerCount - 1);
+    _pointerDownPosition = null;
+
+    if (_activePointerCount == 0) {
+      _isMultiTouch = false;
+    }
+
+    // Reset any ongoing drawing
+    _discardActiveStroke();
+  }
+
+  Offset _rotatePoint(Offset point, Offset center, double angle) {
+    if (angle == 0) return point;
+
+    final double cosAngle = cos(angle);
+    final double sinAngle = sin(angle);
+
+    final Offset translated = point - center;
+
+    return Offset(
+          translated.dx * cosAngle - translated.dy * sinAngle,
+          translated.dx * sinAngle + translated.dy * cosAngle,
+        ) +
+        center;
+  }
+
+  /// Processes eraser input at the given position.
+  ///
+  /// This method handles both full stroke and partial erasing based on
+  /// the current [EraserMode].
+  void _processEraserInputAt(Offset focalPoint) {
+    List<String> removeIds = [];
+    final double stackScale = widget.layerStackScaleFactor;
+    final Offset editorHalfSize =
+        Offset(widget.editorBodySize.width, widget.editorBodySize.height) / 2;
+    final bool useRoundCensor =
+        widget.paintEditorConfigs.censorConfigs.enableRoundArea;
+
+    for (var layer in widget.layers) {
+      if (!layer.isPaintLayer) continue;
+      final paintLayer = layer as PaintLayer;
+      final layerScale = paintLayer.scale;
+      Offset position = focalPoint - editorHalfSize;
+
+      final Size scaledRawSize = paintLayer.rawSize * stackScale * layerScale;
+
+      position += Offset(scaledRawSize.width, scaledRawSize.height) / 2;
+      position -= paintLayer.offset * stackScale;
+
+      if (_isPartialEraser) {
+        // Apply inverse rotation to get the correct position in layer space
+        final double rotation = paintLayer.rotation;
+        final Offset center =
+            Offset(scaledRawSize.width, scaledRawSize.height) / 2;
+        final Offset rotatedPosition = _rotatePoint(
+          position,
+          center,
+          -rotation,
+        );
+
+        // The layer is drawn scaled by its own scale and the layer stack's,
+        // so both the pointer and the on-screen eraser radius map back into
+        // the strokes' coordinates through both.
+        final double itemScale = layerScale * stackScale;
+        final erased = ErasedOffset(
+          offset: rotatedPosition / itemScale,
+          radius: widget.eraserRadius / itemScale,
+        );
+
+        // Erase across every stroke of the layer, not just the first. A merged
+        // layer holds several strokes in this same coordinate space, all of
+        // which must be erased at the touched point.
+        for (var i = 0; i < paintLayer.items.length; i++) {
+          paintLayer.items[i].erasedOffsets.add(erased);
+          paintLayer.items[i] = paintLayer.items[i].copy();
+        }
+        _hasPartialErasedAreas = true;
+      } else {
+        // A full-stroke eraser removes the layer if it hits any of its strokes.
+        final bool hasHit = paintLayer.items.any(
+          (item) => _hitTestManager.hitTest(
+            item: item,
+            position: position,
+            scaleFactor: stackScale * layerScale,
+            isRoundCensorArea: useRoundCensor,
+            paintEditorConfigs: widget.paintEditorConfigs,
+          ),
+        );
+        if (hasHit) {
+          removeIds.add(layer.id);
+        }
+      }
+    }
+
+    if (_isPartialEraser) {
+      widget.onRefresh();
+    } else if (removeIds.isNotEmpty) {
+      widget.onRemoveLayer(removeIds);
+    }
+  }
+
+  void _addPolygonPoint(Offset offset) {
+    if (_paintCtrl.offsets.isEmpty) {
+      _paintCtrl
+        ..setStart(offset)
+        ..setInProgress(true);
+      widget.onRefresh();
+    }
+    _paintCtrl.addOffsets(offset);
+    _activePaintStreamCtrl.add(null);
+  }
+
+  void _checkPolygonIsComplete() {
+    List<Offset?> rawOffsets = [..._paintCtrl.offsets];
+
+    if (rawOffsets.length >= 2 &&
+        rawOffsets.first != null &&
+        rawOffsets.last != null) {
+      final p1 = rawOffsets.first!;
+      final p2 = rawOffsets.last!;
+
+      final threshold = widget.paintEditorConfigs.polygonConnectionThreshold;
+
+      if ((p1 - p2).distance < threshold) {
+        // Connect them by replacing the last point with the first one
+        rawOffsets[rawOffsets.length - 1] = rawOffsets.first;
+
+        if (rawOffsets.isNotEmpty) _createPainting(rawOffsets);
+      }
+    }
+  }
+
+  void _createPainting(List<Offset?>? offsets) {
+    if (offsets != null) {
+      final rawLayer = PaintedModel(
+        offsets: offsets,
+        erasedOffsets: [],
+        mode: _paintCtrl.mode,
+        color: _paintCtrl.color,
+        strokeWidth: _paintCtrl.scaledStrokeWidth,
+        fill: _paintCtrl.fill,
+        opacity: _paintCtrl.opacity,
+        censorStrength: _paintCtrl.mode.isCensorMode
+            ? _paintCtrl.censorStrength
+            : null,
+      );
+      widget.onCreated(rawLayer);
+    }
+
+    _paintCtrl
+      ..setInProgress(false)
+      ..reset();
+    setState(() {});
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return AbsorbPointer(
+      absorbing: _paintCtrl.mode == PaintMode.moveAndZoom,
+      child: Stack(fit: StackFit.expand, children: [_buildActiveItem()]),
+    );
+  }
+
+  Widget _buildActiveItem() {
+    return StreamBuilder(
+      stream: _activePaintStreamCtrl.stream,
+      builder: (context, snapshot) {
+        // Use Listener instead of GestureDetector for immediate pointer
+        // response. This significantly reduces drawing latency on devices
+        // like iPad with Apple Pencil by eliminating gesture disambiguation
+        // delays.
+        return Listener(
+          behavior: HitTestBehavior.translucent,
+          onPointerDown: _onPointerDown,
+          onPointerMove: _onPointerMove,
+          onPointerUp: _onPointerUp,
+          onPointerCancel: _onPointerCancel,
+          child: _paintCtrl.busy
+              ? _paintCtrl.mode == PaintMode.blur ||
+                        _paintCtrl.mode == PaintMode.pixelate
+                    ? CensorScope(
+                        child: Stack(
+                          fit: StackFit.expand,
+                          children: [_buildCensorItem(_paintCtrl.paintedModel)],
+                        ),
+                      )
+                    : _buildActiveStroke()
+              : const SizedBox.expand(),
+        );
+      },
+    );
+  }
+
+  /// Paints the stroke that is currently being drawn.
+  ///
+  /// The opacity goes into the painter instead of an `Opacity` widget so the
+  /// in-progress stroke does not run through an offscreen buffer on every
+  /// pointer move. A custom path builder may draw more than once, where that
+  /// shortcut would blend the calls against each other, so it keeps the
+  /// wrapper.
+  Widget _buildActiveStroke() {
+    final item = _paintCtrl.paintedModel;
+    final bool canBakeOpacity = !widget.paintEditorConfigs.customPathBuilders
+        .containsKey(item.mode);
+
+    final Widget painter = CustomPaint(
+      size: widget.drawAreaSize,
+      willChange: true,
+      isComplex: true,
+      painter: DrawPaintItem(
+        item: item,
+        opacity: canBakeOpacity ? _paintCtrl.opacity : 1.0,
+        paintEditorConfigs: widget.paintEditorConfigs,
+      ),
+    );
+
+    if (canBakeOpacity) return painter;
+
+    return Opacity(opacity: _paintCtrl.opacity, child: painter);
+  }
+
+  Widget _buildCensorItem(PaintedModel item) {
+    List<Offset?> offsets = item.offsets;
+    if (offsets.length != 2) return const SizedBox.shrink();
+
+    var topLeft = offsets[0];
+    if (topLeft == null) return const SizedBox.shrink();
+
+    var bottomRight = offsets[1];
+    if (bottomRight == null) return const SizedBox.shrink();
+
+    double width = (bottomRight.dx - topLeft.dx);
+    double height = (bottomRight.dy - topLeft.dy);
+
+    double left = width >= 0 ? topLeft.dx : topLeft.dx + width;
+    double top = height >= 0 ? topLeft.dy : topLeft.dy + height;
+
+    var censorConfigs = widget.paintEditorConfigs.censorConfigs;
+
+    return Positioned(
+      left: left,
+      top: top,
+      width: width.abs(),
+      height: height.abs(),
+      child: MouseRegion(
+        onEnter: (event) {
+          item.hit = true;
+        },
+        onExit: (event) {
+          item.hit = false;
+        },
+        child: item.mode == PaintMode.pixelate
+            ? PixelateAreaItem(
+                censorConfigs: censorConfigs,
+                strength: item.censorStrength,
+              )
+            : BlurAreaItem(
+                censorConfigs: censorConfigs,
+                strength: item.censorStrength,
+              ),
+      ),
+    );
+  }
+}

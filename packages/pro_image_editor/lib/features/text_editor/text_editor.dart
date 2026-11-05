@@ -1,0 +1,713 @@
+// Dart imports:
+import 'dart:async';
+
+import 'package:flutter/foundation.dart';
+import 'package:flutter/services.dart';
+import 'package:material_ui/material_ui.dart';
+
+import '/core/mixins/converted_callbacks.dart';
+import '/core/mixins/converted_configs.dart';
+import '/core/mixins/editor_configs_mixin.dart';
+import '/features/text_editor/widgets/text_editor_appbar.dart';
+import '/features/text_editor/widgets/text_editor_color_picker.dart';
+import '/features/text_editor/widgets/text_editor_input.dart';
+import '/pro_image_editor.dart';
+import '/shared/extensions/color_extension.dart';
+import '/shared/widgets/slider_bottom_sheet.dart';
+import 'widgets/text_editor_bottom_bar.dart';
+
+/// A StatefulWidget that provides a text editing interface for adding and
+/// editing text layers.
+class TextEditor extends StatefulWidget with SimpleConfigsAccess {
+  /// Creates a `TextEditor` widget.
+  ///
+  /// The [heroTag], [layer], [i18n], [customWidgets], and [imageEditorTheme]
+  /// parameters are required.
+  const TextEditor({
+    super.key,
+    this.heroTag,
+    this.layer,
+    this.callbacks = const ProImageEditorCallbacks(),
+    this.configs = const ProImageEditorConfigs(),
+    this.scaleFactor = 1.0,
+    this.imageSize = Size.zero,
+    required this.theme,
+  });
+  @override
+  final ProImageEditorConfigs configs;
+
+  @override
+  final ProImageEditorCallbacks callbacks;
+
+  /// A unique hero tag for the image.
+  final String? heroTag;
+
+  /// The theme configuration for the editor.
+  final ThemeData theme;
+
+  /// The text layer data to be edited, if any.
+  final TextLayer? layer;
+
+  /// The size of the image being edited, used for boundary text wrapping.
+  final Size imageSize;
+
+  /// A factor by which the textfield is scaled.
+  ///
+  /// This value is used to adjust the size of the text in the editor.
+  /// A value of 1.0 means no scaling, while values greater than 1.0
+  /// increase the size and values less than 1.0 decrease the size.
+  final double scaleFactor;
+
+  @override
+  TextEditorState createState() => TextEditorState();
+}
+
+/// The state class for the `TextEditor` widget.
+class TextEditorState extends State<TextEditor>
+    with
+        ImageEditorConvertedConfigs,
+        ImageEditorConvertedCallbacks,
+        SimpleConfigsAccessState {
+  late final StreamController<void> _rebuildController;
+
+  /// Controller for managing text input.
+  /// Uses a custom controller that applies the configured composing text
+  /// decoration (default: no underline).
+  late final TextEditingController textCtrl;
+
+  /// Node for managing focus on the text input.
+  final FocusNode focusNode = FocusNode();
+
+  /// Alignment of the text.
+  late TextAlign align;
+
+  /// Style applied to the selected text.
+  late TextStyle selectedTextStyle;
+
+  /// Mode for managing the background color of the text layer.
+  late LayerBackgroundMode backgroundColorMode;
+
+  /// Represents the dimensions of the body.
+  Size editorBodySize = Size.infinite;
+
+  late double _fontScale;
+  final double _cursorWidth = 2.0;
+
+  /// The thickness of the outline around each glyph, measured at a font
+  /// scale of 1. `0` draws no outline. See [TextLayer.outlineWidth].
+  double get outlineWidth => _outlineWidth;
+  double _outlineWidth = 0;
+
+  /// The color of the outline. See [TextLayer.outlineColor].
+  Color get outlineColor => _outlineColor;
+  Color _outlineColor = const Color(0xFF000000);
+
+  /// The color gradient that fills the glyphs in place of the text color, or
+  /// `null` when they are filled with the text color. See
+  /// [TextLayer.gradient].
+  TextGradient? get gradient => _gradient;
+  TextGradient? _gradient;
+
+  /// Fills the glyphs with [gradient] in place of the text color, or with the
+  /// text color again when it is `null`.
+  void setGradient(TextGradient? gradient) {
+    setState(() => _gradient = gradient);
+  }
+
+  /// Whether the text goes into a fixed box (see [TextLayer.box]) when
+  /// editing is done.
+  bool get boxEnabled => _boxEnabled;
+  late bool _boxEnabled = widget.layer?.box != null;
+
+  /// Puts the text into a box, or takes it out of one, when editing is done.
+  ///
+  /// A layer that already has a box keeps its size. Otherwise the box is
+  /// sized to hold the text as it shows without one, so turning the box on
+  /// changes nothing until it is resized.
+  void setBoxEnabled(bool enabled) {
+    setState(() => _boxEnabled = enabled);
+  }
+
+  /// The box the edited layer gets for [text], wrapped at [maxTextWidth].
+  TextLayerBox? _resultBox(String text, double? maxTextWidth) {
+    if (!_boxEnabled) return null;
+    final original = widget.layer;
+    if (original?.box case final box?) return box;
+    final scale = original?.scale ?? 1;
+    return TextLayerBox.fit(
+      text: text,
+      style: selectedTextStyle.copyWith(
+        fontSize: _textFontSize,
+        shadows: selectedTextStyle.shadows
+            ?.map((shadow) => shadow.scale(_fontScale))
+            .toList(),
+      ),
+      maxTextWidth: maxTextWidth,
+      align: align,
+      outlineWidth: _outlineWidth * _fontScale,
+      // About two pixels on screen, whatever the layer's scale.
+      slack: 2 / (scale <= 0 ? 1 : scale),
+      overflow: textEditorConfigs.boxOverflow,
+    );
+  }
+
+  /// Whether the edited layer wraps its lines at
+  /// [TextEditorConfigs.layerBounds]. See [TextLayer.wrapAtLayerBounds].
+  bool get wrapAtLayerBounds => _wrapAtLayerBounds;
+  late bool _wrapAtLayerBounds = widget.layer?.wrapAtLayerBounds ?? true;
+
+  /// Sets whether the edited layer wraps its lines at
+  /// [TextEditorConfigs.layerBounds] or may reach past them.
+  void setWrapAtLayerBounds(bool wrap) {
+    setState(() => _wrapAtLayerBounds = wrap);
+  }
+
+  /// Sets the outline drawn around each glyph; a [width] of `0` removes it.
+  ///
+  /// Omitted values keep their current setting.
+  void setOutline({double? width, Color? color}) {
+    setState(() {
+      if (width != null) _outlineWidth = width;
+      if (color != null) _outlineColor = color;
+    });
+  }
+
+  double? get _maxTextWidth {
+    if (textEditorConfigs.enableImageBoundaryTextWrap &&
+        widget.imageSize != Size.zero) {
+      return widget.imageSize.width - 32 - _cursorWidth;
+    }
+    return textEditorConfigs.enableAutoOverflow
+        ? editorBodySize.width - 32 - _cursorWidth
+        : null;
+  }
+
+  /// Gets the primary color.
+  Color get primaryColor => _primaryColor;
+  late Color _primaryColor = textEditorConfigs.initialPrimaryColor;
+  set primaryColor(Color color) {
+    setState(() {
+      _primaryColor = color;
+      textEditorCallbacks?.handleColorChanged(color.toHex());
+    });
+  }
+
+  /// Gets the secondary color.
+  Color get secondaryColor => _secondaryColor ?? getContrastColor(primaryColor);
+  late Color? _secondaryColor = textEditorConfigs.initialSecondaryColor;
+  set secondaryColor(Color color) {
+    setState(() {
+      _secondaryColor = color;
+    });
+  }
+
+  @override
+  void initState() {
+    super.initState();
+    textCtrl = _ComposingStyleTextEditingController(
+      composingTextDecoration: textEditorConfigs.composingTextDecoration,
+    );
+    _rebuildController = StreamController.broadcast();
+    align = textEditorConfigs.initialTextAlign;
+    _fontScale = textEditorConfigs.initFontScale;
+    backgroundColorMode = textEditorConfigs.initialBackgroundColorMode;
+
+    selectedTextStyle =
+        widget.layer?.textStyle ??
+        textEditorConfigs.customTextStyles?.first ??
+        textEditorConfigs.defaultTextStyle;
+    _initializeFromLayer();
+
+    textEditorCallbacks?.onInit?.call();
+    WidgetsBinding.instance.addPostFrameCallback((timeStamp) {
+      textEditorCallbacks?.onAfterViewInit?.call();
+    });
+  }
+
+  @override
+  void dispose() {
+    _rebuildController.close();
+    textCtrl.dispose();
+    focusNode.dispose();
+    super.dispose();
+  }
+
+  @override
+  void setState(void Function() fn) {
+    if (!mounted) return;
+    _rebuildController.add(null);
+    textEditorCallbacks?.handleUpdateUI();
+    super.setState(fn);
+  }
+
+  /// Initializes the text editor from the provided text layer data.
+  void _initializeFromLayer() {
+    if (widget.layer != null) {
+      textCtrl.text = widget.layer!.text;
+      align = widget.layer!.align;
+      _fontScale = widget.layer!.fontScale;
+      _outlineWidth = widget.layer!.outlineWidth;
+      _outlineColor = widget.layer!.outlineColor;
+      _gradient = widget.layer!.gradient;
+      backgroundColorMode = widget.layer!.colorMode;
+      if (widget.layer!.customSecondaryColor) {
+        _primaryColor = widget.layer!.color;
+        _secondaryColor = widget.layer!.background;
+      } else {
+        _primaryColor = backgroundColorMode == LayerBackgroundMode.background
+            ? widget.layer!.background
+            : widget.layer!.color;
+      }
+    }
+  }
+
+  /// Calculates the contrast color for a given color.
+  Color getContrastColor(Color color) {
+    int d = color.computeLuminance() > 0.5 ? 0 : 255;
+
+    return Color.fromRGBO(d, d, d, color.a);
+  }
+
+  /// Gets the text color based on the selected color mode.
+  Color get _textColor {
+    switch (backgroundColorMode) {
+      case LayerBackgroundMode.onlyColor:
+      case LayerBackgroundMode.backgroundAndColor:
+        return primaryColor;
+      case LayerBackgroundMode.background:
+        return secondaryColor;
+      default:
+        return primaryColor;
+    }
+  }
+
+  /// Gets the background color based on the selected color mode.
+  Color get _backgroundColor {
+    switch (backgroundColorMode) {
+      case LayerBackgroundMode.onlyColor:
+        return Colors.transparent;
+      case LayerBackgroundMode.backgroundAndColor:
+        return secondaryColor;
+      case LayerBackgroundMode.background:
+        return primaryColor;
+      default:
+        return secondaryColor.withValues(alpha: 0.5);
+    }
+  }
+
+  /// Gets the text font size based on the selected font scale.
+  double get _textFontSize {
+    return textEditorConfigs.initFontSize * _fontScale;
+  }
+
+  /// Toggles the text alignment between left, center, and right.
+  void toggleTextAlign() {
+    TextAlign nextTextAlign(TextAlign currentAlign) {
+      switch (currentAlign) {
+        case TextAlign.left:
+          return TextAlign.center;
+        case TextAlign.center:
+          return TextAlign.right;
+        case TextAlign.right:
+        default:
+          return TextAlign.left;
+      }
+    }
+
+    align = nextTextAlign(align);
+    textEditorCallbacks?.handleTextAlignChanged(align);
+    setState(() {});
+  }
+
+  /// Toggles the background mode between various color modes.
+  void toggleBackgroundMode() {
+    LayerBackgroundMode nextBackgroundMode(LayerBackgroundMode currentMode) {
+      switch (currentMode) {
+        case LayerBackgroundMode.onlyColor:
+          return LayerBackgroundMode.backgroundAndColor;
+        case LayerBackgroundMode.backgroundAndColor:
+          return LayerBackgroundMode.background;
+        case LayerBackgroundMode.background:
+          return LayerBackgroundMode.backgroundAndColorWithOpacity;
+        case LayerBackgroundMode.backgroundAndColorWithOpacity:
+          return LayerBackgroundMode.onlyColor;
+      }
+    }
+
+    backgroundColorMode = nextBackgroundMode(backgroundColorMode);
+    textEditorCallbacks?.handleBackgroundModeChanged(backgroundColorMode);
+    setState(() {});
+  }
+
+  /// Gets the current font scale.
+  double get fontScale => _fontScale;
+
+  /// Sets the font scale to a new value.
+  ///
+  /// The new value is adjusted to one decimal place before being set.
+  /// After setting the new value, the state is updated and the
+  /// [textEditorCallbacks] are notified of the change.
+  ///
+  /// [value] - The new font scale value.
+  set fontScale(double value) {
+    _fontScale = (value * 10).ceilToDouble() / 10;
+    setState(() {});
+    textEditorCallbacks?.handleFontScaleChanged(value);
+  }
+
+  /// Displays a range slider for adjusting the line width of the paint tool.
+  ///
+  /// This method shows a range slider in a modal bottom sheet for adjusting the
+  /// line width of the paint tool.
+  void openFontScaleBottomSheet() {
+    showModalBottomSheet(
+      context: context,
+      backgroundColor: textEditorConfigs.style.fontScaleBottomSheetBackground,
+      builder: (BuildContext context) => SliderBottomSheet<TextEditorState>(
+        value: _fontScale,
+        title: i18n.textEditor.fontScale,
+        headerTextStyle: textEditorConfigs.style.fontSizeBottomSheetTitle,
+        resetIcon: textEditorConfigs.icons.resetFontScale,
+        max: textEditorConfigs.maxFontScale,
+        min: textEditorConfigs.minFontScale,
+        divisions:
+            (textEditorConfigs.maxFontScale - textEditorConfigs.minFontScale) ~/
+            0.1,
+        state: this,
+        showFactorInTitle: true,
+        closeButton: textEditorConfigs.widgets.fontSizeCloseButton,
+        customSlider: textEditorConfigs.widgets.sliderFontSize,
+        designMode: designMode,
+        theme: widget.theme,
+        rebuildController: _rebuildController,
+        onValueChanged: (value) {
+          fontScale = value;
+        },
+      ),
+    );
+  }
+
+  /// Update the current text style.
+  void setTextStyle(TextStyle style) {
+    setState(() {
+      selectedTextStyle = style;
+    });
+  }
+
+  /// Closes the editor without applying changes.
+  void close() {
+    Navigator.pop(context);
+    textEditorCallbacks?.handleCloseEditor();
+  }
+
+  /// Handles the "Done" action, either by applying changes or closing the
+  /// editor.
+  void done() {
+    if (textCtrl.text.trim().isNotEmpty || widget.layer != null) {
+      final original = widget.layer;
+      final text = textCtrl.text.trim();
+      final maxTextWidth =
+          (textEditorConfigs.enableAutoWrapOnLayer ||
+              textEditorConfigs.enableImageBoundaryTextWrap)
+          ? _maxTextWidth
+          : null;
+      TextLayer layer = TextLayer(
+        text: text,
+        background: _backgroundColor,
+        color: _textColor,
+        align: align,
+        fontScale: _fontScale,
+        colorMode: backgroundColorMode,
+        textStyle: selectedTextStyle,
+        outlineWidth: _outlineWidth,
+        outlineColor: _outlineColor,
+        gradient: _gradient,
+        wrapAtLayerBounds: _wrapAtLayerBounds,
+        customSecondaryColor: _secondaryColor != null,
+        maxTextWidth: maxTextWidth,
+        // The editor changes how the text looks, not when it shows.
+        startTime: original?.startTime,
+        endTime: original?.endTime,
+        enterDuration: original?.enterDuration,
+        exitDuration: original?.exitDuration,
+        enterCurve: original?.enterCurve,
+        exitCurve: original?.exitCurve,
+        transitionBuilder: original?.transitionBuilder,
+        animations: original?.animations,
+        // Its placement over time and its opacity are not the editor's to
+        // change either.
+        keyframes: original?.keyframes,
+        opacity: original?.opacity ?? 1,
+        // A mask is measured in the layer's own box, so it fits the edited
+        // text as well.
+        mask: original?.mask,
+        blendMode: original?.blendMode ?? BlendMode.srcOver,
+        box: _resultBox(text, maxTextWidth ?? original?.maxTextWidth),
+        // Highlights point into the text, so they only fit the text they
+        // were made for.
+        highlights: original?.text == text ? original?.highlights : null,
+        highlightColor: original?.highlightColor ?? kDefaultTextHighlightColor,
+      );
+
+      Navigator.of(context).pop(layer);
+    } else {
+      Navigator.of(context).pop();
+    }
+    textEditorCallbacks?.handleDone();
+  }
+
+  /// Ctrl+Enter or Cmd+Enter calls [done]. Plain Enter is left to the text
+  /// field so it still inserts a new line.
+  late final Map<ShortcutActivator, VoidCallback> _submitShortcuts = {
+    for (final key in [
+      LogicalKeyboardKey.enter,
+      LogicalKeyboardKey.numpadEnter,
+    ])
+      for (final activator in [
+        SingleActivator(key, control: true, includeRepeats: false),
+        SingleActivator(key, meta: true, includeRepeats: false),
+      ])
+        activator: done,
+  };
+
+  Widget _withSubmitShortcut(Widget child) {
+    if (!textEditorConfigs.enableSubmitShortcut) return child;
+    return CallbackShortcuts(bindings: _submitShortcuts, child: child);
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return LayoutBuilder(
+      builder: (context, constraints) {
+        return ExtendedPopScope(
+          canPop: textEditorConfigs.enableGesturePop,
+          child: Theme(
+            data: widget.theme.copyWith(
+              tooltipTheme: widget.theme.tooltipTheme.copyWith(
+                preferBelow: true,
+              ),
+            ),
+            child: SafeArea(
+              top: textEditorConfigs.safeArea.top,
+              bottom: textEditorConfigs.safeArea.bottom,
+              left: textEditorConfigs.safeArea.left,
+              right: textEditorConfigs.safeArea.right,
+              child: MediaQuery.removePadding(
+                context: context,
+                removeBottom: !textEditorConfigs.safeArea.bottom,
+                child: _withSubmitShortcut(
+                  Scaffold(
+                    resizeToAvoidBottomInset:
+                        textEditorConfigs.resizeToAvoidBottomInset,
+                    backgroundColor: textEditorConfigs.style.background,
+                    appBar: _buildAppBar(constraints),
+                    body: _buildBody(),
+                    bottomNavigationBar: _buildBottomBar(),
+                  ),
+                ),
+              ),
+            ),
+          ),
+        );
+      },
+    );
+  }
+
+  /// Builds the app bar for the text editor.
+  PreferredSizeWidget? _buildAppBar(BoxConstraints constraints) {
+    if (textEditorConfigs.widgets.appBar != null) {
+      return textEditorConfigs.widgets.appBar!.call(
+        this,
+        _rebuildController.stream,
+      );
+    }
+
+    return TextEditorAppBar(
+      textEditorConfigs: textEditorConfigs,
+      i18n: i18n.textEditor,
+      onClose: close,
+      onDone: done,
+      align: align,
+      onToggleTextAlign: toggleTextAlign,
+      onOpenFontScaleBottomSheet: openFontScaleBottomSheet,
+      onToggleBackgroundMode: toggleBackgroundMode,
+      designMode: designMode,
+      constraints: constraints,
+    );
+  }
+
+  /// Builds the bottom navigation bar of the paint editor.
+  /// Returns a [Widget] representing the bottom navigation bar.
+  Widget? _buildBottomBar() {
+    if (textEditorConfigs.widgets.bottomBar != null) {
+      return textEditorConfigs.widgets.bottomBar!.call(
+        this,
+        _rebuildController.stream,
+      );
+    }
+
+    if (isDesktop &&
+        widget.configs.textEditor.customTextStyles?.isNotEmpty == false) {
+      return const SizedBox(height: kBottomNavigationBarHeight);
+    }
+
+    return null;
+  }
+
+  /// Builds the body of the text editor.
+  Widget _buildBody() {
+    return LayoutBuilder(
+      builder: (_, constraints) {
+        editorBodySize = constraints.biggest;
+
+        return GestureDetector(
+          behavior: HitTestBehavior.translucent,
+          onTap: textEditorConfigs.enableTapOutsideToSave ? done : null,
+          child: Stack(
+            children: [
+              if (textEditorConfigs.widgets.bodyItems != null)
+                ...textEditorConfigs.widgets.bodyItems!(
+                  this,
+                  _rebuildController.stream,
+                ),
+              _buildTextField(),
+              _buildColorPicker(),
+              if (textEditorConfigs.showSelectFontStyleBottomBar)
+                Positioned(
+                  bottom: 0,
+                  left: 0,
+                  right: 0,
+                  height: kBottomNavigationBarHeight,
+                  child: TextEditorBottomBar(
+                    configs: widget.configs,
+                    selectedStyle: selectedTextStyle,
+                    onFontChange: setTextStyle,
+                  ),
+                ),
+              if (textEditorConfigs.widgets.bodyItemsOverlay != null)
+                ...textEditorConfigs.widgets.bodyItemsOverlay!(
+                  this,
+                  _rebuildController.stream,
+                ),
+            ],
+          ),
+        );
+      },
+    );
+  }
+
+  Widget _buildColorPicker() {
+    return TextEditorColorPicker(
+      state: this,
+      configs: configs,
+      primaryColor: primaryColor,
+      rebuildController: _rebuildController,
+      selectedTextStyle: selectedTextStyle,
+      onUpdateColor: (color) {
+        primaryColor = color;
+      },
+    );
+  }
+
+  /// Builds the text field for text input.
+  Widget _buildTextField() {
+    return TextEditorInput(
+      callbacks: textEditorCallbacks,
+      configs: textEditorConfigs,
+      heroTag: widget.heroTag,
+      align: align,
+      backgroundColor: _backgroundColor,
+      textCtrl: textCtrl,
+      scaleFactor: widget.scaleFactor,
+      focusNode: focusNode,
+      i18n: i18n.textEditor,
+      layer: widget.layer,
+      selectedTextStyle: selectedTextStyle,
+      textColor: _textColor,
+      textFontSize: _textFontSize,
+      maxWidth: _maxTextWidth ?? double.infinity,
+      cursorWidth: _cursorWidth,
+      outlineWidth: _outlineWidth * _fontScale,
+      outlineColor: _outlineColor,
+      gradient: _gradient,
+    );
+  }
+
+  @override
+  void debugFillProperties(DiagnosticPropertiesBuilder properties) {
+    super.debugFillProperties(properties);
+
+    properties
+      ..add(StringProperty('heroTag', widget.heroTag))
+      ..add(DoubleProperty('scaleFactor', widget.scaleFactor))
+      ..add(DiagnosticsProperty<TextLayer?>('layer', widget.layer))
+      ..add(DiagnosticsProperty<Size>('imageSize', widget.imageSize))
+      ..add(DiagnosticsProperty<ThemeData>('theme', widget.theme))
+      ..add(DiagnosticsProperty<TextAlign>('align', align))
+      ..add(
+        DiagnosticsProperty<TextStyle>('selectedTextStyle', selectedTextStyle),
+      )
+      ..add(
+        EnumProperty<LayerBackgroundMode>(
+          'backgroundColorMode',
+          backgroundColorMode,
+        ),
+      )
+      ..add(DoubleProperty('fontScale', _fontScale))
+      ..add(DoubleProperty('outlineWidth', _outlineWidth))
+      ..add(ColorProperty('outlineColor', _outlineColor))
+      ..add(DiagnosticsProperty<TextGradient>('gradient', _gradient))
+      ..add(ColorProperty('primaryColor', primaryColor))
+      ..add(ColorProperty('secondaryColor', secondaryColor))
+      ..add(DiagnosticsProperty<Size>('editorBodySize', editorBodySize));
+  }
+}
+
+/// A [TextEditingController] that applies a custom [TextDecoration] to the
+/// composing region instead of the default underline.
+class _ComposingStyleTextEditingController extends TextEditingController {
+  _ComposingStyleTextEditingController({required this.composingTextDecoration});
+
+  final TextDecoration composingTextDecoration;
+
+  @override
+  TextSpan buildTextSpan({
+    required BuildContext context,
+    TextStyle? style,
+    required bool withComposing,
+  }) {
+    // When there is no composing or decoration is none, skip composing
+    // entirely to avoid the default underline.
+    if (composingTextDecoration == TextDecoration.none) {
+      return super.buildTextSpan(
+        context: context,
+        style: style,
+        withComposing: false,
+      );
+    }
+
+    // Build with composing enabled, then override the decoration.
+    final span = super.buildTextSpan(
+      context: context,
+      style: style,
+      withComposing: withComposing,
+    );
+
+    return _applyDecoration(span);
+  }
+
+  TextSpan _applyDecoration(TextSpan span) {
+    return TextSpan(
+      text: span.text,
+      style:
+          span.style?.copyWith(decoration: composingTextDecoration) ??
+          TextStyle(decoration: composingTextDecoration),
+      children: span.children?.map((child) {
+        if (child is TextSpan) return _applyDecoration(child);
+        return child;
+      }).toList(),
+      recognizer: span.recognizer,
+      semanticsLabel: span.semanticsLabel,
+    );
+  }
+}

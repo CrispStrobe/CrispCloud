@@ -1,0 +1,6 @@
+// ignore_for_file: public_member_api_docs
+
+import 'dart:typed_data';
+
+Uint8List castToUint8List<T>(T data) =>
+    data is Uint8List ? data : data as Uint8List;

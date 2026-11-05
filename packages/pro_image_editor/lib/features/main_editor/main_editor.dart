@@ -1,0 +1,4166 @@
+import 'dart:async';
+import 'dart:ui' as ui;
+
+import 'package:flutter/foundation.dart';
+import 'package:flutter/rendering.dart' show RenderEditable;
+import 'package:flutter/services.dart';
+import 'package:material_ui/material_ui.dart';
+
+import '/core/constants/editor_various_constants.dart';
+import '/core/constants/image_constants.dart';
+import '/core/mixins/converted_configs.dart';
+import '/core/mixins/editor_callbacks_mixin.dart';
+import '/core/mixins/editor_configs_mixin.dart';
+import '/core/models/styles/draggable_sheet_style.dart';
+import '/core/services/gesture_manager.dart';
+import '/core/services/mouse_service.dart';
+import '/features/main_editor/widgets/main_editor_appbar.dart';
+import '/features/main_editor/widgets/main_editor_background_image.dart';
+import '/features/main_editor/widgets/main_editor_background_video.dart';
+import '/features/main_editor/widgets/main_editor_bottombar.dart';
+import '/features/main_editor/widgets/main_editor_helper_lines.dart';
+import '/features/main_editor/widgets/main_editor_layers.dart';
+import '/features/main_editor/widgets/main_editor_remove_layer_area.dart';
+import '/pro_image_editor.dart';
+import '/shared/mixins/editor_zoom.mixin.dart';
+import '/shared/services/content_recorder/widgets/content_recorder.dart';
+import '/shared/services/import_export/export_state_history.dart';
+import '/shared/services/layer_transform_generator.dart';
+import '/shared/utils/default_editor_theme.dart';
+import '/shared/utils/file_constructor_utils.dart';
+import '/shared/utils/transparent_image_generator_utils.dart';
+import '/shared/widgets/adaptive_dialog.dart';
+import '/shared/widgets/extended/interactive_viewer/extended_interactive_viewer.dart';
+import '/shared/widgets/layer/widgets/layer_widget_text_item.dart';
+import '/shared/widgets/screen_resize_detector.dart';
+import '../audio_editor/audio_editor_page.dart';
+import '../audio_editor/models/audio_editor_response.dart';
+import '../audio_editor/widgets/audio_main_bottom_bar.dart';
+import '../clips_editor/models/video_clip_editor_response.dart';
+import '../clips_editor/pages/clips_editor_page.dart';
+import '../filter_editor/utils/merge_filter_states.dart';
+import '../filter_editor/widgets/filter_generator.dart';
+import '../paint_editor/models/paint_editor_response_model.dart';
+import '../paint_editor/widgets/paint_editor_layer_editor.dart';
+import 'controllers/main_editor_controllers.dart';
+import 'mixins/main_editor_global_keys.dart';
+import 'providers/image_infos_provider.dart';
+import 'services/desktop_interaction_manager.dart';
+import 'services/image_layer_frame.dart';
+import 'services/layer_copy_manager.dart';
+import 'services/layer_drag_selection_service.dart';
+import 'services/layer_interaction_manager.dart';
+import 'services/main_editor_state_history_service.dart';
+import 'services/paint_layer_merge_manager.dart';
+import 'services/sizes_manager.dart';
+import 'widgets/main_editor_interactive_content.dart';
+
+/// A widget for image editing using ProImageEditor.
+///
+/// `ProImageEditor` provides a versatile image editing widget for Flutter
+/// applications.
+/// It allows you to edit images from various sources like memory, files,
+/// assets, or network URLs.
+///
+/// You can use one of the specific constructors, such as `memory`, `file`,
+/// `asset`, or `network`,
+/// to create an instance of this widget based on your image source.
+/// Additionally, you can provide
+/// custom configuration settings through the `configs` parameter.
+///
+/// Example usage:
+///
+/// ```dart
+/// ProImageEditor.memory(Uint8List.fromList(imageBytes));
+/// ProImageEditor.file(File('path/to/image.jpg'));
+/// ProImageEditor.file('path/to/image.jpg');
+/// ProImageEditor.asset('assets/images/image.png');
+/// ProImageEditor.network('https://example.com/image.jpg');
+/// ```
+///
+/// To handle image editing, you can use the callbacks provided by the
+/// `EditorConfigs` instance
+/// passed through the `configs` parameter.
+///
+/// See also:
+/// - [ProImageEditorConfigs] for configuring image editing options.
+/// - [ProImageEditorCallbacks] for callbacks.
+class ProImageEditor extends StatefulWidget
+    with SimpleConfigsAccess, SimpleCallbacksAccess {
+  /// Creates a `ProImageEditor` widget for image editing.
+  ///
+  /// Use one of the specific constructors like `memory`, `file`, `asset`, or
+  /// `network`
+  /// to create an instance of this widget based on your image source.
+  ///
+  /// {@template mainEditorConfigs}
+  /// ### Parameters
+  /// - `key` *(optional)*: A [Key] used to uniquely identify the widget and
+  ///   preserve its state during rebuilds.
+  /// - `configs` *(optional)*: Defines customization options for the editor.
+  ///   If omitted, default settings are applied.
+  /// - `callbacks` *(required)*: Provides handlers for editor events and
+  ///   user interactions.
+  /// {@endtemplate}
+  const ProImageEditor._({
+    super.key,
+    required this.callbacks,
+    this.blankSize,
+    this.editorImage,
+    this.videoController,
+    this.configs = const ProImageEditorConfigs(),
+  }) : assert(
+         editorImage != null || videoController != null || blankSize != null,
+         'Either editorImage or videoController or blankSize must be '
+         'provided.',
+       );
+
+  /// This constructor creates a `ProImageEditor` widget configured to edit an
+  /// image loaded from the specified `byteArray`.
+  ///
+  ///
+  /// {@macro mainEditorConfigs}
+  /// - `byteArray` *(required)*: The image data as a `Uint8List`.
+  ///
+  /// Example usage:
+  /// ```dart
+  /// ProImageEditor.memory(
+  ///   bytes,
+  /// {@template mainEditorDemoTemplateCode}
+  ///   configs: ProImageEditorConfigs(),
+  ///   callbacks: ProImageEditorCallbacks(
+  ///      onImageEditingComplete: (Uint8List bytes) async {
+  ///        /*
+  ///          `Your code to handle the edited image. Upload it to your server
+  ///           as an example.
+  ///
+  ///           You can choose to use await, so that the load dialog remains
+  ///           visible until your code is ready,
+  ///           or no async, so that the load dialog closes immediately.
+  ///        */
+  ///        Navigator.pop(context);
+  ///      },
+  ///   ),
+  /// {@endtemplate}
+  /// )
+  /// ```
+  factory ProImageEditor.memory(
+    Uint8List byteArray, {
+    Key? key,
+    required ProImageEditorCallbacks callbacks,
+    ProImageEditorConfigs configs = const ProImageEditorConfigs(),
+  }) {
+    return ProImageEditor._(
+      key: key,
+      editorImage: EditorImage(byteArray: byteArray),
+      configs: configs,
+      callbacks: callbacks,
+    );
+  }
+
+  /// This constructor creates a `ProImageEditor` widget configured to edit an
+  /// image loaded from the specified `file`.
+  ///
+  /// {@macro mainEditorConfigs}
+  /// - `file` *(required)*: The image data as a `File` or a `String` which is
+  /// the path to the file.
+  ///
+  /// Example usage:
+  /// ```dart
+  /// ProImageEditor.file(
+  ///   File(pathToMyFile),
+  ///   {@macro mainEditorDemoTemplateCode}
+  /// )
+  /// ```
+  factory ProImageEditor.file(
+    dynamic file, {
+    Key? key,
+    ProImageEditorConfigs configs = const ProImageEditorConfigs(),
+    required ProImageEditorCallbacks callbacks,
+  }) {
+    return ProImageEditor._(
+      key: key,
+      editorImage: EditorImage(file: ensureFileInstance(file)),
+      configs: configs,
+      callbacks: callbacks,
+    );
+  }
+
+  /// This constructor creates a `ProImageEditor` widget configured to edit an
+  /// image loaded from the specified `assetPath`.
+  ///
+  /// {@macro mainEditorConfigs}
+  /// - `assetPath` *(required)*: The path to the image data in the local
+  /// assets folder.
+  ///
+  /// Example usage:
+  /// ```dart
+  /// ProImageEditor.asset(
+  ///   'assets/demo.png',
+  ///   {@macro mainEditorDemoTemplateCode}
+  /// )
+  /// ```
+  factory ProImageEditor.asset(
+    String assetPath, {
+    Key? key,
+    ProImageEditorConfigs configs = const ProImageEditorConfigs(),
+    required ProImageEditorCallbacks callbacks,
+  }) {
+    return ProImageEditor._(
+      key: key,
+      editorImage: EditorImage(assetPath: assetPath),
+      configs: configs,
+      callbacks: callbacks,
+    );
+  }
+
+  /// This constructor creates a `ProImageEditor` widget configured to edit an
+  /// image loaded from the specified `networkUrl`.
+  ///
+  /// {@macro mainEditorConfigs}
+  /// - `networkUrl` *(required)*: The URL from which the image should be
+  /// loaded.
+  /// - `networkHeaders` *(optional)*: HTTP headers to include when fetching
+  /// the image (e.g., for authentication).
+  ///
+  /// Example usage:
+  /// ```dart
+  /// ProImageEditor.network(
+  ///   'https://example.com/image.jpg',
+  ///   {@macro mainEditorDemoTemplateCode}
+  /// )
+  /// ```
+  factory ProImageEditor.network(
+    String networkUrl, {
+    Key? key,
+    Map<String, String>? networkHeaders,
+    ProImageEditorConfigs configs = const ProImageEditorConfigs(),
+    required ProImageEditorCallbacks callbacks,
+  }) {
+    return ProImageEditor._(
+      key: key,
+      editorImage: EditorImage(
+        networkUrl: networkUrl,
+        networkHeaders: networkHeaders,
+      ),
+      configs: configs,
+      callbacks: callbacks,
+    );
+  }
+
+  /// Creates a `ProImageEditor` instance by automatically determining the
+  /// image source.
+  ///
+  /// This factory constructor intelligently selects the appropriate image
+  /// loading method based on the provided parameters. It allows for seamless
+  /// integration without requiring users to manually specify whether the image
+  /// is from memory, a file, a network URL, or an asset.
+  ///
+  /// The selection is based on the first non-null parameter in the following
+  /// order of priority:
+  /// 1. `byteArray` (raw image data in memory)
+  /// 2. `file` (local file system)
+  /// 3. `networkUrl` (image from a remote URL)
+  /// 4. `assetPath` (image stored as an app asset)
+  ///
+  /// Additionally, an `EditorImage` instance can be provided, which may contain
+  /// any of the above sources, and will be processed in the same priority
+  /// order.
+  ///
+  /// {@macro mainEditorConfigs}
+  ///
+  /// Example usage:
+  /// ```dart
+  /// ProImageEditor.autoSource(
+  ///   byteArray: imageData,
+  ///   callbacks: editorCallbacks,
+  ///   configs: ProImageEditorConfigs(),
+  /// )
+  ///
+  /// ProImageEditor.autoSource(
+  ///   file: File('path/to/image.jpg'),
+  ///   callbacks: editorCallbacks,
+  /// )
+  ///
+  /// ProImageEditor.autoSource(
+  ///   networkUrl: 'https://example.com/image.jpg',
+  ///   callbacks: editorCallbacks,
+  /// )
+  ///
+  /// ProImageEditor.autoSource(
+  ///   assetPath: 'assets/images/sample.jpg',
+  ///   callbacks: editorCallbacks,
+  /// )
+  ///
+  /// ProImageEditor.autoSource(
+  ///   editorImage: EditorImage(file: File('path/to/image.jpg')),
+  ///   callbacks: editorCallbacks,
+  /// )
+  /// ```
+  ///
+  /// Throws an [ArgumentError] if no valid image source is provided.
+  factory ProImageEditor.autoSource({
+    Key? key,
+    Uint8List? byteArray,
+    dynamic file,
+    String? assetPath,
+    String? networkUrl,
+    Map<String, String>? networkHeaders,
+    EditorImage? editorImage,
+    ProVideoController? videoController,
+    ProImageEditorConfigs configs = const ProImageEditorConfigs(),
+    required ProImageEditorCallbacks callbacks,
+  }) {
+    return ProImageEditor._(
+      key: key,
+      editorImage:
+          editorImage ??
+          EditorImage(
+            byteArray: byteArray,
+            file: file,
+            networkUrl: networkUrl,
+            networkHeaders: networkHeaders,
+            assetPath: assetPath,
+          ),
+      videoController: videoController,
+      configs: configs,
+      callbacks: callbacks,
+    );
+  }
+
+  /// Creates a blank ProImageEditor with the specified size.
+  ///
+  /// This constructor initializes a `ProImageEditor` with a blank canvas
+  /// of the given [size].
+  ///
+  /// The [size] is also used to set the maximum output size for
+  /// image generation in the editor configuration.
+  ///
+  /// {@macro mainEditorConfigs}
+  ///
+  /// Example usage:
+  /// ```dart
+  /// ProImageEditor.blank(
+  ///   Size(1080, 1920),
+  ///   {@macro mainEditorDemoTemplateCode}
+  /// )
+  /// ```
+  factory ProImageEditor.blank(
+    Size size, {
+    Key? key,
+    ProImageEditorConfigs configs = const ProImageEditorConfigs(),
+    required ProImageEditorCallbacks callbacks,
+  }) {
+    return ProImageEditor._(
+      key: key,
+      blankSize: size,
+      configs: configs.copyWith(
+        imageGeneration: configs.imageGeneration.copyWith(maxOutputSize: size),
+      ),
+      callbacks: callbacks,
+    );
+  }
+
+  /// This constructor creates a `ProImageEditor` widget configured to edit an
+  /// video.
+  ///
+  /// {@macro mainEditorConfigs}
+  /// - `videoController` *(required)*: The video-controller to control the
+  /// video.
+  ///
+  /// Example usage:
+  ///
+  /// - [Example with video_player](https://github.com/hm21/pro_image_editor/blob/stable/example/lib/features/video_examples/pages/video_player_example.dart)
+  /// - [Example with media_kit](https://github.com/hm21/pro_image_editor/blob/stable/example/lib/features/video_examples/pages/video_media_kit_example.dart)
+  /// - [Example with chewie_player](https://github.com/hm21/pro_image_editor/blob/stable/example/lib/features/video_examples/pages/chewie_player_example.dart)
+  /// - [Example with flick_video_player](https://github.com/hm21/pro_image_editor/blob/stable/example/lib/features/video_examples/pages/flick_video_player_example.dart)
+  factory ProImageEditor.video(
+    ProVideoController videoController, {
+    Key? key,
+    ProImageEditorConfigs configs = const ProImageEditorConfigs(),
+    required ProImageEditorCallbacks callbacks,
+  }) {
+    return ProImageEditor._(
+      key: key,
+      videoController: videoController,
+      configs: configs,
+      callbacks: callbacks,
+    );
+  }
+
+  @override
+  final ProImageEditorConfigs configs;
+  @override
+  final ProImageEditorCallbacks callbacks;
+
+  /// The image being edited in the editor.
+  final EditorImage? editorImage;
+
+  /// The controller for the video editor.
+  final ProVideoController? videoController;
+
+  /// The size of the blank canvas when no image/video is present.
+  final Size? blankSize;
+
+  @override
+  State<ProImageEditor> createState() => ProImageEditorState();
+}
+
+/// State class for the ProImageEditor widget, handling configurations
+/// and user interactions for image editing.
+class ProImageEditorState extends State<ProImageEditor>
+    with
+        ImageEditorConvertedConfigs,
+        SimpleConfigsAccessState,
+        SimpleCallbacksAccessState,
+        MainEditorGlobalKeys,
+        EditorZoomMixin {
+  final _bottomBarKey = GlobalKey();
+  final _removeAreaKey = GlobalKey();
+  final _navigatorKey = GlobalKey<NavigatorState>();
+  final _backgroundImageColorFilterKey = GlobalKey<ColorFilterGeneratorState>();
+  @override
+  final interactiveViewer = GlobalKey<ExtendedInteractiveViewerState>();
+  late final StreamController<void> _rebuildController;
+
+  /// Helper class for managing sizes and layout calculations.
+  late final SizesManager sizesManager;
+
+  /// Manager class for handling desktop interactions in the image editor.
+  late final DesktopInteractionManager _desktopInteractionManager;
+
+  /// Manager class to copy layers.
+  final LayerCopyManager _layerCopyManager = LayerCopyManager();
+
+  /// Helper class for managing interactions with layers in the editor.
+  late final LayerInteractionManager layerInteractionManager =
+      LayerInteractionManager(
+        onSelectedLayerChanged: mainEditorCallbacks?.onSelectedLayerChanged,
+        onSelectedLayersChanged: mainEditorCallbacks?.onSelectedLayersChanged,
+        helperLinesCallbacks: mainEditorCallbacks?.helperLines,
+        configs: configs,
+        keyframeTime: () => _videoController?.playTimeNotifier.value,
+      );
+  late final _mouseService = MouseService(
+    configs: configs,
+    interactionManager: layerInteractionManager,
+  );
+
+  /// Manager class for managing the state of the editor.
+  late final StateManager stateManager = StateManager(
+    activeBackgroundImage: widget.editorImage,
+    onStateHistoryChange: () =>
+        mainEditorCallbacks?.onStateHistoryChange?.call(stateManager, this),
+  );
+
+  late final _stateHistoryService = MainEditorStateHistoryService(
+    sizesManager: sizesManager,
+    stateManager: stateManager,
+    controllers: _controllers,
+    configs: configs,
+    mainEditorCallbacks: mainEditorCallbacks,
+    takeScreenshot: _takeScreenshot,
+  );
+
+  /// Controller instances for managing various aspects of the main editor.
+  late final MainEditorControllers _controllers;
+
+  late final _layerDragSelectionService = LayerDragSelectionService(
+    layerInteractionManager: layerInteractionManager,
+    activeLayers: () => activeLayers,
+    bodySize: () => sizesManager.bodySize,
+    configs: configs,
+    onUpdateLayers: () => _controllers.uiLayerCtrl.add(null),
+    interactiveViewer: () => interactiveViewer.currentState,
+    playTime: () => _videoController?.playTimeNotifier.value,
+  );
+
+  /// The current theme used by the image editor.
+  late ThemeData _theme;
+
+  /// Flag indicating if the editor has been initialized.
+  bool _isInitialized = false;
+
+  /// Flag indicating if the image needs decoding.
+  bool _isImageNotDecoded = true;
+
+  /// Flag to track if editing is completed.
+  bool _isProcessingFinalImage = false;
+
+  /// The pixel ratio of the device's screen.
+  ImageInfos? _imageInfos;
+
+  /// Indicates whether a sub-editor is currently open.
+  bool isSubEditorOpen = false;
+
+  /// The text layer being typed into on the canvas, when
+  /// [TextEditorConfigs.enableInlineEditing] is on.
+  InlineTextEditSession? get inlineTextEdit => _inlineTextEdit;
+  InlineTextEditSession? _inlineTextEdit;
+
+  /// The history entry that added the layer of [_inlineTextEdit] when the
+  /// edit made that layer, or `null` when it edits a layer that was there.
+  EditorStateHistory? _inlineTextEditAddedEntry;
+
+  /// The last pointer-down on the body landed on the inline field or its
+  /// format bar, or ended the inline edit, so the gesture it starts must not
+  /// move a layer or the canvas.
+  bool _holdInlineGesture = false;
+
+  /// The current scale gesture is held by [_holdInlineGesture], so its
+  /// updates and its end are ignored.
+  bool _ignoreInlineScale = false;
+
+  /// Indicates whether a sub-editor is in the process of closing.
+  bool isSubEditorClosing = false;
+
+  /// Whether a dialog is currently open.
+  bool _isDialogOpen = false;
+
+  /// Whether a context menu is currently open.
+  bool _isContextMenuOpen = false;
+
+  /// Indicates whether the `onScaleUpdate` function can be triggered to
+  /// interact with the layers.
+  bool blockOnScaleUpdateFunction = false;
+
+  /// Indicates whether the browser's context menu was enabled before any
+  /// changes.
+  bool _browserContextMenuBeforeEnabled = false;
+
+  /// Indicates whether PopScope is disabled.
+  bool isPopScopeDisabled = false;
+
+  bool _isVideoPlayerReady = true;
+
+  /// Whether a layer is currently being transformed
+  /// (e.g., moved, scaled, or rotated).
+  bool isLayerBeingTransformed = false;
+
+  /// Returns `true` if one or more layers are currently selected.
+  bool get hasSelectedLayers => layerInteractionManager.hasSelectedLayers;
+
+  /// Returns the most recently selected layer, or `null` if no layer is
+  /// selected.
+  Layer? get selectedLayer => hasSelectedLayers
+      ? () {
+          final mostRecentSelectedLayerIndex = activeLayers.lastIndexWhere(
+            (layer) =>
+                layerInteractionManager.selectedLayerIds.contains(layer.id),
+          );
+          return mostRecentSelectedLayerIndex >= 0
+              ? activeLayers[mostRecentSelectedLayerIndex]
+              : null;
+        }()
+      : null;
+
+  /// Returns a list of all currently selected layers.
+  List<Layer> get selectedLayers => activeLayers
+      .where(
+        (layer) => layerInteractionManager.selectedLayerIds.contains(layer.id),
+      )
+      .toList();
+
+  /// Get the list of layers from the current image editor changes.
+  List<Layer> get activeLayers => stateManager.activeLayers;
+
+  /// List to store the history of image editor changes.
+  List<EditorStateHistory> get stateHistory => stateManager.stateHistory;
+
+  /// Determines whether undo actions can be performed on the current state.
+  bool get canUndo => stateManager.canUndo;
+
+  /// Determines whether redo actions can be performed on the current state.
+  bool get canRedo => stateManager.canRedo;
+
+  ProVideoController? get _videoController => widget.videoController;
+
+  /// Indicates whether video editor is enabled.
+  late final bool _isVideoEditor = _videoController != null;
+
+  /// Determines whether multi-select mode is always enabled.
+  ///
+  /// If set to `true`, multi-select mode will be active without requiring
+  /// the user to hold down CTRL/ SHIFT keys or long-press. This allows
+  /// for easier selection of multiple items.
+  bool get enableMultiSelectMode => _enableMultiSelectMode;
+  bool _enableMultiSelectMode = false;
+  set enableMultiSelectMode(bool value) {
+    _enableMultiSelectMode = value;
+    setState(() {});
+  }
+
+  /// Get the current background image.
+  EditorImage? get editorImage => stateManager.activeBackgroundImage;
+
+  /// A [Completer] used to track the completion of a page open operation.
+  ///
+  /// The completer is initialized and can be used to await the page open
+  /// operation.
+  Completer<bool> _pageOpenCompleter = Completer();
+
+  /// A [Completer] used to track the completion of an image decoding operation.
+  ///
+  /// The completer is initialized and can be used to await the image
+  /// decoding operation.
+  final Completer<bool> _decodeImageCompleter = Completer();
+
+  PointerEvent? _lastDownEvent;
+  DateTime _tapDownTimestamp = DateTime.now();
+  final _audioBottomBarNotifier = ValueNotifier(false);
+
+  /// Whether the editor is in the tree. A deactivated editor stays [mounted]
+  /// until the end of the frame but can no longer look up inherited widgets.
+  bool _isActive = true;
+
+  @override
+  void initState() {
+    super.initState();
+    initializeVideoEditor();
+    _videoController?.resolutionNotifier.addListener(_onVideoResolutionChanged);
+
+    _rebuildController = StreamController.broadcast();
+    _controllers = MainEditorControllers(configs, callbacks, _isVideoEditor);
+    _desktopInteractionManager = DesktopInteractionManager(
+      configs: configs,
+      callbacks: callbacks,
+      context: context,
+      onUpdateUI: mainEditorCallbacks?.handleUpdateUI,
+      setState: setState,
+      keyframeTime: () => _videoController?.playTimeNotifier.value,
+      applyLayerLimits: (layer, laidOutScale) =>
+          layerInteractionManager.applyLayerLimits(
+            layer,
+            editorBodySize: sizesManager.bodySize,
+            laidOutScale: laidOutScale,
+          ),
+    );
+    sizesManager = SizesManager(configs: configs, context: context);
+    layerInteractionManager.scaleDebounce = Debounce(
+      const Duration(milliseconds: 100),
+    );
+
+    /// For the case the user add transformConfigs we initialize the editor with
+    /// this configurations and not the empty history
+    if (mainEditorConfigs.transformSetup != null) {
+      _initializeWithTransformations();
+    } else {
+      stateManager.addHistory(
+        EditorStateHistory(
+          transformConfigs: TransformConfigs.empty().copyWith(
+            cropMode: cropRotateEditorConfigs.initialCropMode,
+          ),
+          blur: 0,
+          layers: [],
+          tuneAdjustments: [],
+        ),
+      );
+    }
+
+    ServicesBinding.instance.keyboard.addHandler(_onKeyEvent);
+    if (kIsWeb) {
+      _browserContextMenuBeforeEnabled = BrowserContextMenu.enabled;
+      BrowserContextMenu.disableContextMenu();
+    }
+    mainEditorCallbacks?.onInit?.call();
+    WidgetsBinding.instance.addPostFrameCallback((timeStamp) {
+      mainEditorCallbacks?.onAfterViewInit?.call();
+      _calcAppBarHeight();
+    });
+  }
+
+  @override
+  void dispose() {
+    final session = _inlineTextEdit;
+    _inlineTextEdit = null;
+    session?.finish(false);
+    session?.dispose();
+    _videoController?.resolutionNotifier.removeListener(
+      _onVideoResolutionChanged,
+    );
+    _rebuildController.close();
+    _controllers.dispose();
+    _audioBottomBarNotifier.dispose();
+    layerInteractionManager.scaleDebounce.dispose();
+    SystemChrome.setSystemUIOverlayStyle(
+      _theme.brightness == Brightness.dark
+          ? SystemUiOverlayStyle.light
+          : SystemUiOverlayStyle.dark,
+    );
+    SystemChrome.restoreSystemUIOverlays();
+    ServicesBinding.instance.keyboard.removeHandler(_onKeyEvent);
+    if (kIsWeb && _browserContextMenuBeforeEnabled) {
+      BrowserContextMenu.enableContextMenu();
+    }
+    super.dispose();
+  }
+
+  @override
+  void activate() {
+    super.activate();
+    _isActive = true;
+  }
+
+  @override
+  void deactivate() {
+    _isActive = false;
+    super.deactivate();
+  }
+
+  @override
+  void setState(void Function() fn) {
+    if (!mounted) return;
+    _rebuildController.add(null);
+    super.setState(fn);
+  }
+
+  void _checkInteractiveViewer() {
+    if (mainEditorConfigs.canZoomWhenLayerSelected) return;
+    interactiveViewer.currentState?.setEnableInteraction(!hasSelectedLayers);
+  }
+
+  /// Handle keyboard events
+  bool _onKeyEvent(KeyEvent event) {
+    final session = _inlineTextEdit;
+    if (session != null) {
+      // The field owns the keys. Escape drops the edit after this event, so
+      // it is not also the editor's close shortcut.
+      if (event is KeyDownEvent &&
+          event.logicalKey == LogicalKeyboardKey.escape) {
+        WidgetsBinding.instance.addPostFrameCallback((_) {
+          if (!mounted || !identical(_inlineTextEdit, session)) return;
+          endInlineTextEdit(save: false);
+        });
+        return true;
+      }
+      return false;
+    }
+    return _desktopInteractionManager.onKey(
+      event,
+      selectedLayers: selectedLayers,
+      onEscape: () {
+        if (!_isDialogOpen && !_isContextMenuOpen) {
+          if (isSubEditorOpen) {
+            if (!mainEditorConfigs.style.subEditorPage.barrierDismissible) {
+              if (cropRotateEditor.currentState != null) {
+                // Important to close the crop-editor like that cuz we need to
+                // set the fake hero first
+                cropRotateEditor.currentState!.close();
+              } else {
+                Navigator.pop(context);
+              }
+            }
+          } else {
+            closeEditor();
+          }
+        }
+      },
+      onUndoRedo: (undo) {
+        if (_isDialogOpen || isSubEditorOpen) return;
+
+        undo ? undoAction() : redoAction();
+      },
+    );
+  }
+
+  Map<String, dynamic> _deepCopyMeta(Map<String, dynamic> source) {
+    return source.map((key, value) => MapEntry(key, _deepCopyValue(value)));
+  }
+
+  dynamic _deepCopyValue(dynamic value) {
+    if (value is Map) {
+      return Map<String, dynamic>.fromEntries(
+        value.entries.map(
+          (entry) =>
+              MapEntry(entry.key.toString(), _deepCopyValue(entry.value)),
+        ),
+      );
+    }
+    if (value is List) {
+      return value.map(_deepCopyValue).toList();
+    }
+    if (value is Set) {
+      return value.map(_deepCopyValue).toSet();
+    }
+    return value;
+  }
+
+  /// Adds a new state to the history with the given configuration and updates
+  /// the state manager.
+  ///
+  /// This method is responsible for capturing the current state of the editor,
+  /// including layers, transformations, filters, and blur settings. It then
+  /// adds this state to the history, enabling undo and redo functionality.
+  /// Additionally, it can take a screenshot if required.
+  ///
+  /// - [layers]: An optional list of layers to be included in the new state.
+  /// - [newLayer]: An optional new layer to be added to the current layers.
+  /// - [transformConfigs]: Optional transformation configurations for the new
+  /// state.
+  /// - [filters]: An optional list of filter states to be included in the new
+  /// state.
+  /// - [tuneAdjustments]: An optional list of tune adjustments states to be
+  /// included in the new state.
+  /// - [blur]: An optional blur state to be included in the new state.
+  /// - [heroScreenshotRequired]: A flag indicating whether a hero screenshot
+  /// is required.
+  ///
+  /// Example usage:
+  /// ```dart
+  /// addHistory(
+  ///   layers: currentLayers,
+  ///   newLayer: additionalLayer,
+  ///   transformConfigs: currentTransformConfigs,
+  ///   filters: currentFilters,
+  ///   tuneAdjustments: currentTuneAdjustments
+  ///   blur: currentBlurState,
+  ///   heroScreenshotRequired: false,
+  /// );
+  /// ```
+  void addHistory({
+    List<Layer>? layers,
+    Layer? newLayer,
+    TransformConfigs? transformConfigs,
+    List<FilterState>? filters,
+    List<TuneAdjustmentMatrix>? tuneAdjustments,
+    double? blur,
+    Map<String, dynamic>? meta,
+    bool heroScreenshotRequired = false,
+    bool blockCaptureScreenshot = false,
+  }) {
+    List<Layer> activeLayerList = _layerCopyManager.copyLayerList(activeLayers);
+    final resolvedFilters = (filters ?? stateManager.activeFilters)
+        .map((item) => item.copy())
+        .toList();
+    final resolvedTuneAdjustments =
+        (tuneAdjustments ?? stateManager.activeTuneAdjustments)
+            .map((item) => item.copy())
+            .toList();
+    final resolvedMeta = _deepCopyMeta(meta ?? stateManager.activeMeta);
+
+    stateManager.addHistory(
+      EditorStateHistory(
+        transformConfigs: transformConfigs,
+        blur: blur,
+        layers:
+            layers ??
+            (newLayer != null
+                ? [...activeLayerList, newLayer]
+                : activeLayerList),
+        filters: resolvedFilters,
+        tuneAdjustments: resolvedTuneAdjustments,
+        meta: resolvedMeta,
+      ),
+      historyLimit: stateHistoryConfigs.stateHistoryLimit,
+      enableScreenshotLimit: imageGenerationConfigs.enableBackgroundGeneration,
+    );
+    if (!blockCaptureScreenshot) {
+      if (!heroScreenshotRequired) {
+        _takeScreenshot();
+      } else {
+        stateManager.heroScreenshotRequired = true;
+      }
+    } else {
+      _controllers.screenshot.addEmptyScreenshot(
+        screenshots: stateManager.screenshots,
+      );
+    }
+    setState(() {});
+  }
+
+  /// Replaces a layer at the specified index with a new layer.
+  ///
+  /// This method updates the current layer at the given [index] in the list of
+  /// active layers with the specified [layer]. It also resets the
+  /// `selectedLayerId` in the `layerInteractionManager` to an empty string,
+  /// effectively deselecting any currently selected layer. Additionally, it
+  /// adds the updated list of layers to the history, enabling undo/redo
+  /// functionality, and triggers a UI update by sending a null event to the
+  /// UI layer controller.
+  ///
+  /// This is useful when you need to modify an existing layer while maintaining
+  /// the rest of the layer order and history tracking.
+  ///
+  /// Parameters:
+  /// - [index]: The index of the layer to be replaced. Must be within the
+  ///   bounds of the current list of active layers.
+  /// - [layer]: The new `Layer` instance that will replace the existing layer
+  ///   at the specified index.
+  ///
+  /// Pass [skipUpdateHistory] to show [layer] without recording a history
+  /// step, e.g. while a slider previews a value: the current step then holds
+  /// [layer] itself and the selection is kept, as with [setLayerTimeline].
+  /// To record the final value, first put the original layer back with the
+  /// flag, then replace it once more without it; otherwise the step before
+  /// the recorded one already holds the last preview and undo changes
+  /// nothing.
+  ///
+  /// Example usage:
+  /// ```dart
+  /// replaceLayer(index: 2, layer: newLayer);
+  /// ```
+  void replaceLayer({
+    required int index,
+    required Layer layer,
+    bool skipUpdateHistory = false,
+  }) {
+    if (skipUpdateHistory) {
+      activeLayers[index] = layer;
+      _controllers.uiLayerCtrl.add(null);
+      return;
+    }
+    layerInteractionManager.clearSelectedLayers();
+
+    addHistory(
+      layers: _layerCopyManager.copyLayerList(activeLayers)
+        ..removeAt(index)
+        ..insert(index, layer),
+    );
+
+    _controllers.uiLayerCtrl.add(null);
+  }
+
+  /// Updates the [startTime] and/or [endTime] of the layer at the given
+  /// [index] and records the change in the state history.
+  ///
+  /// Both [startTime] and [endTime] are optional. Only non-null values are
+  /// applied. This is primarily used by the video editor to define when a
+  /// layer is visible on the timeline.
+  ///
+  /// Pass [animations] to set the per-layer enter/leave animations (fade /
+  /// slide / scale). When non-empty, they take over from the legacy
+  /// [enterDuration] / [exitDuration] fade convenience.
+  ///
+  /// Pass [keyframes] to set the layer's placement over time (see
+  /// [Layer.keyframes]); an empty list removes them. Their times are measured
+  /// from the layer's start, so a new [startTime] alone moves them along with
+  /// the layer. So are the keyframes of a [Layer.mask]; pass [mask] to set
+  /// one rebased onto a new start.
+  void setLayerTimeline({
+    required int index,
+    Duration? startTime,
+    Duration? endTime,
+    Duration? enterDuration,
+    Duration? exitDuration,
+    Curve? enterCurve,
+    Curve? exitCurve,
+    LayerTimelineTransitionBuilder? transitionBuilder,
+    List<LayerAnimation>? animations,
+    List<LayerKeyframe>? keyframes,
+    LayerMask? mask,
+    Map<String, dynamic>? meta,
+    bool skipUpdateHistory = false,
+  }) {
+    final current = activeLayers[index];
+
+    // Early return if nothing would change.
+    if ((startTime == null || startTime == current.startTime) &&
+        (endTime == null || endTime == current.endTime) &&
+        (enterDuration == null || enterDuration == current.enterDuration) &&
+        (exitDuration == null || exitDuration == current.exitDuration) &&
+        (enterCurve == null || enterCurve == current.enterCurve) &&
+        (exitCurve == null || exitCurve == current.exitCurve) &&
+        (transitionBuilder == null ||
+            transitionBuilder == current.transitionBuilder) &&
+        (animations == null || listEquals(animations, current.animations)) &&
+        (keyframes == null || listEquals(keyframes, current.keyframes)) &&
+        (mask == null || mask == current.mask) &&
+        meta == null) {
+      return;
+    }
+
+    final List<Layer> layers;
+    final Layer layer;
+
+    if (skipUpdateHistory) {
+      layer = _layerCopyManager.copyLayer(activeLayers[index]);
+      activeLayers[index] = layer;
+      layers = activeLayers;
+    } else {
+      layers = _layerCopyManager.copyLayerList(activeLayers);
+      layer = layers[index];
+    }
+
+    if (startTime != null) layer.startTime = startTime;
+    if (endTime != null) layer.endTime = endTime;
+    if (enterDuration != null) layer.enterDuration = enterDuration;
+    if (exitDuration != null) layer.exitDuration = exitDuration;
+    if (enterCurve != null) layer.enterCurve = enterCurve;
+    if (exitCurve != null) layer.exitCurve = exitCurve;
+    if (transitionBuilder != null) layer.transitionBuilder = transitionBuilder;
+    if (animations != null) {
+      layer.animations = List<LayerAnimation>.of(animations);
+    }
+    if (keyframes != null) layer.keyframes = keyframes;
+    if (mask != null) layer.mask = mask;
+    if (meta != null) layer.meta = {...layer.meta ?? {}, ...meta};
+
+    if (!skipUpdateHistory) {
+      addHistory(layers: layers);
+    }
+    _controllers.uiLayerCtrl.add(null);
+  }
+
+  /// Add a new layer to the image editor.
+  ///
+  /// This method adds a new layer to the image editor and updates the editing
+  /// state.
+  void addLayer(
+    Layer layer, {
+    int removeLayerIndex = -1,
+    bool blockSelectLayer = false,
+    bool blockCaptureScreenshot = false,
+    bool autoCorrectZoomOffset = true,
+    bool autoCorrectZoomScale = true,
+  }) {
+    // Applied to the layer and to every keyframe, which place it alike.
+    var shift = Offset.zero;
+    var shrink = 1.0;
+
+    void correctOffset() {
+      Offset fractionalOffset = const Offset(-0.5, -0.5);
+      if (layer.isTextLayer) {
+        fractionalOffset = textEditorConfigs.layerFractionalOffset;
+      } else if (layer.isEmojiLayer) {
+        fractionalOffset = emojiEditorConfigs.layerFractionalOffset;
+      } else if (layer.isPaintLayer) {
+        fractionalOffset = paintEditorConfigs.layerFractionalOffset;
+      } else if (layer.isWidgetLayer) {
+        fractionalOffset = stickerEditorConfigs.layerFractionalOffset;
+      }
+
+      if (fractionalOffset != const Offset(-0.5, -0.5)) {
+        final overlayPadding = layerInteraction.style.overlayPadding;
+        double dxCorrected = 0;
+        double dyCorrected = 0;
+
+        if (fractionalOffset.dx == 0) {
+          dxCorrected = -overlayPadding.left;
+        } else if (fractionalOffset.dx == 1) {
+          dxCorrected = overlayPadding.right;
+        }
+        if (fractionalOffset.dy == 0) {
+          dyCorrected = -overlayPadding.top;
+        } else if (fractionalOffset.dy == 1) {
+          dyCorrected = overlayPadding.bottom;
+        }
+
+        shift += Offset(dxCorrected, dyCorrected);
+      }
+    }
+
+    correctOffset();
+
+    final viewer = interactiveViewer.currentState;
+    if (viewer != null) {
+      final scaleDelta = viewer.scaleFactor;
+
+      if (autoCorrectZoomScale) {
+        shrink = scaleDelta;
+      }
+      if (autoCorrectZoomOffset) {
+        final bodySize = sizesManager.bodySize;
+
+        final scaledSize = bodySize * scaleDelta;
+
+        final zoomOffset =
+            Offset(
+              scaledSize.width - bodySize.width,
+              scaledSize.height - bodySize.height,
+            ) /
+            2;
+
+        shift -= (viewer.offset + zoomOffset) / viewer.scaleFactor;
+      }
+    }
+
+    void place(Layer placement) => placement
+      ..offset += shift
+      ..scale /= shrink;
+    place(layer);
+    layer.transformKeyframes(place);
+
+    addHistory(newLayer: layer, blockCaptureScreenshot: blockCaptureScreenshot);
+
+    if (removeLayerIndex >= 0) {
+      activeLayers.removeAt(removeLayerIndex);
+    }
+    if (!blockSelectLayer && layer.interaction.enableSelection) {
+      layerInteractionManager.addSelectedLayer(layer.id);
+    }
+    _checkInteractiveViewer();
+
+    mainEditorCallbacks?.handleAddLayer(layer);
+    setState(() {});
+  }
+
+  /// Remove a layer from the editor.
+  ///
+  /// This method removes a layer from the editor and updates the editing state.
+  void removeLayer(Layer layer, {bool blockCaptureScreenshot = false}) {
+    if (_inlineTextEdit?.layerId == layer.id) {
+      endInlineTextEdit(save: false);
+    }
+    int layerPos = activeLayers.indexOf(layer);
+    if (layerPos < 0) return;
+
+    mainEditorCallbacks?.handleRemoveLayer(layer);
+
+    var layers = _layerCopyManager.copyLayerList(activeLayers)
+      ..removeAt(layerPos);
+
+    addHistory(layers: layers, blockCaptureScreenshot: blockCaptureScreenshot);
+    setState(() {});
+  }
+
+  /// Remove all layers from the editor.
+  ///
+  /// This method removes all layers from the editor and updates the editing
+  /// state.
+  void removeAllLayers() {
+    if (_inlineTextEdit != null) endInlineTextEdit(save: false);
+    addHistory(layers: []);
+    setState(() {});
+  }
+
+  /// Removes the [FilterState] at the given [index] from the active filters
+  /// and records the change in the state history.
+  ///
+  /// Does nothing if [filter] is not found in the active filter list or
+  /// [index] is out of range.
+  ///
+  /// Either [filter] or [index] must be provided. If both are given, [index]
+  /// takes precedence.
+  ///
+  /// - [filter]: The [FilterState] instance to remove.
+  /// - [index]: Zero-based index of the filter to remove.
+  void removeFilter({FilterState? filter, int? index}) {
+    assert(
+      filter != null || index != null,
+      'Either filter or index must be provided.',
+    );
+    final filters = List<FilterState>.from(stateManager.activeFilters);
+    final i = index ?? (filter != null ? filters.indexOf(filter) : -1);
+    if (i < 0 || i >= filters.length) return;
+    filters.removeAt(i);
+    addHistory(filters: filters);
+    setState(() {});
+  }
+
+  /// Removes all active filters and records the change in the state history.
+  void clearFilters() {
+    addHistory(filters: []);
+    setState(() {});
+  }
+
+  /// Whether the active filters can be flattened into a single [FilterState].
+  ///
+  /// True when at least two filters are active and none carry video-timeline
+  /// scheduling metadata (which a static combined matrix cannot reproduce).
+  /// Host apps can use this to enable/disable a "Combine filters" action.
+  bool get canMergeFilters => canMergeFilterStates(stateManager.activeFilters);
+
+  /// Flattens all active filters into a single [FilterState] and records it as
+  /// a single history entry.
+  ///
+  /// Filters are pure color matrices that the editor already renders as one
+  /// combined `ColorFilter.matrix`, so the merged result is appearance-
+  /// identical to the original stack. Tune adjustments are left untouched and
+  /// keep composing on top unchanged. Returns the merged [FilterState], or
+  /// `null` when [canMergeFilters] is `false`.
+  FilterState? mergeFilters() {
+    final filters = stateManager.activeFilters;
+    if (!canMergeFilterStates(filters)) return null;
+
+    final merged = mergeFilterStates(filters);
+    addHistory(filters: [merged]);
+    setState(() {});
+
+    return merged;
+  }
+
+  /// Updates the timeline properties and/or metadata of the filter at the
+  /// given [index] and records the change in the state history.
+  ///
+  /// Only non-null values are applied. This mirrors [setLayerTimeline] but
+  /// operates on the active filter list instead of the layer list.
+  void setFilterTimeline({
+    required int index,
+    Duration? startTime,
+    Duration? endTime,
+    Duration? enterDuration,
+    Duration? exitDuration,
+    Curve? enterCurve,
+    Curve? exitCurve,
+    Map<String, dynamic>? meta,
+    bool skipUpdateHistory = false,
+  }) {
+    final filters = skipUpdateHistory
+        ? stateManager.activeFilters
+        : List<FilterState>.from(stateManager.activeFilters);
+    if (index < 0 || index >= filters.length) return;
+
+    filters[index] = filters[index].copyWith(
+      startTime: startTime,
+      endTime: endTime,
+      enterDuration: enterDuration,
+      exitDuration: exitDuration,
+      enterCurve: enterCurve,
+      exitCurve: exitCurve,
+      meta: meta != null ? {...filters[index].meta, ...meta} : null,
+    );
+
+    if (!skipUpdateHistory) {
+      addHistory(filters: filters);
+    }
+    setState(() {});
+  }
+
+  /// Updates the timeline properties and/or metadata of the tune adjustment
+  /// at the given [index] and records the change in the state history.
+  ///
+  /// Only non-null values are applied. This mirrors [setFilterTimeline] but
+  /// operates on the active tune adjustments list.
+  void setTuneTimeline({
+    required int index,
+    Duration? startTime,
+    Duration? endTime,
+    Duration? enterDuration,
+    Duration? exitDuration,
+    Curve? enterCurve,
+    Curve? exitCurve,
+    Map<String, dynamic>? meta,
+    bool skipUpdateHistory = false,
+  }) {
+    final tunes = skipUpdateHistory
+        ? stateManager.activeTuneAdjustments
+        : List<TuneAdjustmentMatrix>.from(stateManager.activeTuneAdjustments);
+    if (index < 0 || index >= tunes.length) return;
+
+    tunes[index] = tunes[index].copyWith(
+      startTime: startTime,
+      endTime: endTime,
+      enterDuration: enterDuration,
+      exitDuration: exitDuration,
+      enterCurve: enterCurve,
+      exitCurve: exitCurve,
+      meta: meta != null ? {...tunes[index].meta, ...meta} : null,
+    );
+
+    if (!skipUpdateHistory) {
+      addHistory(tuneAdjustments: tunes);
+    }
+    setState(() {});
+  }
+
+  /// Initializes the video editor functionality.
+  void initializeVideoEditor() async {
+    if (!_isVideoEditor) return;
+
+    _isVideoPlayerReady = false;
+
+    _videoController!.initialize(
+      configsFunction: () => configs.videoEditor,
+      callbacksAudioFunction: () =>
+          audioEditorCallbacks ?? const AudioEditorCallbacks(),
+      callbacksFunction: () =>
+          callbacks.videoEditorCallbacks ?? VideoEditorCallbacks(),
+    );
+
+    final resolution = _videoController!.initialResolution;
+    stateManager.activeBackgroundImage = EditorImage(
+      byteArray: await createTransparentImage(resolution),
+    );
+
+    if (!mounted) return;
+
+    setState(() {});
+    await decodeImage();
+    _isVideoPlayerReady = true;
+    setState(() {});
+  }
+
+  /// Called when the video resolution changes (e.g., after merging clips).
+  void _onVideoResolutionChanged() {
+    final newSize = _videoController!.initialResolution;
+    _imageInfos = ImageInfos(
+      rawSize: newSize,
+      renderedSize: newSize,
+      originalRenderedSize: newSize,
+      cropRectSize: newSize,
+      pixelRatio: newSize.width / sizesManager.editorSize.width,
+      isRotated: false,
+    );
+    sizesManager.originalImageSize = newSize;
+    sizesManager.decodedImageSize = newSize;
+    if (mounted) setState(() {});
+  }
+
+  void _initializeWithTransformations() {
+    var transformSetup = mainEditorConfigs.transformSetup!;
+
+    /// Add the initial history
+    stateManager.addHistory(
+      EditorStateHistory(
+        transformConfigs: transformSetup.transformConfigs,
+        blur: 0,
+        layers: [],
+        tuneAdjustments: [],
+      ),
+    );
+
+    /// Set the decoded image infos for the case they are not empty
+    if (transformSetup.imageInfos != null) {
+      _imageInfos = transformSetup.imageInfos!;
+      decodeImage(transformSetup.transformConfigs, transformSetup.imageInfos);
+    }
+  }
+
+  /// Decode the image being edited.
+  ///
+  /// This method decodes the image if it hasn't been decoded yet and updates
+  /// its properties.
+  Future<void> decodeImage([
+    TransformConfigs? transformConfigs,
+    ImageInfos? imageInfos,
+  ]) async {
+    if (widget.blankSize != null) {
+      final blankSize = widget.blankSize!;
+      imageInfos ??= ImageInfos(
+        rawSize: blankSize,
+        renderedSize: blankSize,
+        originalRenderedSize: blankSize,
+        cropRectSize: blankSize,
+        pixelRatio: blankSize.width / sizesManager.editorSize.width,
+        isRotated: false,
+      );
+    }
+    if (!_isVideoPlayerReady && _isVideoEditor) {
+      var initSize = _videoController!.initialResolution;
+      _imageInfos = ImageInfos(
+        rawSize: initSize,
+        renderedSize: initSize,
+        originalRenderedSize: initSize,
+        cropRectSize: initSize,
+        pixelRatio: initSize.width / sizesManager.editorSize.width,
+        isRotated: false,
+      );
+
+      sizesManager.originalImageSize ??= _imageInfos!.rawSize;
+      sizesManager.decodedImageSize = _imageInfos!.renderedSize;
+
+      bool shouldImportHistory =
+          stateHistoryConfigs.initStateHistory != null && !_isInitialized;
+      _isInitialized = true;
+      _isImageNotDecoded = false;
+      if (mounted) setState(() {});
+
+      if (shouldImportHistory) {
+        bool showLoadingDialog = i18n.importStateHistoryMsg.isNotEmpty;
+
+        if (showLoadingDialog) {
+          LoadingDialog.instance.show(
+            context,
+            theme: _theme,
+            configs: configs,
+            message: i18n.importStateHistoryMsg,
+          );
+        }
+        await importStateHistory(stateHistoryConfigs.initStateHistory!);
+        if (showLoadingDialog) {
+          WidgetsBinding.instance.addPostFrameCallback((_) async {
+            LoadingDialog.instance.hide();
+          });
+        }
+      }
+
+      return;
+    }
+
+    bool shouldImportStateHistory =
+        _isImageNotDecoded && stateHistoryConfigs.initStateHistory != null;
+    _isImageNotDecoded = false;
+
+    if (shouldImportStateHistory && i18n.importStateHistoryMsg.isNotEmpty) {
+      LoadingDialog.instance.show(
+        context,
+        theme: _theme,
+        configs: configs,
+        message: i18n.importStateHistoryMsg,
+      );
+    }
+
+    _imageInfos =
+        imageInfos ??
+        await decodeImageInfos(
+          bytes: await editorImage!.safeByteArray(context),
+          screenSize: Size(
+            sizesManager.lastScreenSize.width,
+            sizesManager.bodySize.height,
+          ),
+          configs: transformConfigs ?? stateManager.transformConfigs,
+        );
+    sizesManager.originalImageSize ??= _imageInfos!.rawSize;
+    sizesManager.decodedImageSize = _imageInfos!.renderedSize;
+
+    _isInitialized = true;
+    if (!_decodeImageCompleter.isCompleted) {
+      _decodeImageCompleter.complete(true);
+    }
+    mainEditorCallbacks?.onImageDecoded?.call();
+
+    if (shouldImportStateHistory) {
+      await importStateHistory(stateHistoryConfigs.initStateHistory!);
+      if (i18n.importStateHistoryMsg.isNotEmpty) {
+        WidgetsBinding.instance.addPostFrameCallback((_) async {
+          LoadingDialog.instance.hide();
+        });
+      }
+    }
+    if (mounted) setState(() {});
+    mainEditorCallbacks?.handleUpdateUI();
+  }
+
+  void _calcAppBarHeight() {
+    double? renderedBottomBarHeight =
+        _bottomBarKey.currentContext?.size?.height;
+    if (renderedBottomBarHeight != null) {
+      sizesManager
+        ..bottomBarHeight = renderedBottomBarHeight
+        ..appBarHeight =
+            sizesManager.editorSize.height -
+            sizesManager.bodySize.height -
+            sizesManager.bottomBarHeight;
+    }
+  }
+
+  /// Updates the background image in the editor.
+  ///
+  /// If [updateHistory] is `false`, marks all background-captured images that
+  /// use the old-background image as "broken" so they will be recaptured with
+  /// the new image, and set the active background image to [image].
+  ///
+  /// If [updateHistory] is `true`, updates the background images in the
+  /// state manager, replaces the old image with [image], and adds the change
+  /// to the history.
+  ///
+  /// After updating, decodes the new image asynchronously.
+  ///
+  /// [image]: The new background image to set.
+  /// [updateHistory]: Whether to update the history with this change
+  /// (default is `true`).
+  Future<void> updateBackgroundImage(
+    EditorImage image, {
+    bool updateHistory = true,
+  }) async {
+    if (!updateHistory) {
+      /// Mark all background-captured images that use the old background
+      /// image as "broken" so the editor captures them again with the new
+      /// image.
+      for (var item in stateManager.screenshots) {
+        item.broken = true;
+      }
+      stateManager.activeBackgroundImage = image;
+
+      await decodeImage();
+      _rebuildController.add(null);
+    } else {
+      addHistory();
+
+      /// Ensure the screenshot is already added to the task list.
+      WidgetsBinding.instance.addPostFrameCallback((_) async {
+        WidgetsBinding.instance.addPostFrameCallback((_) async {
+          stateManager.updateBackgroundImages(
+            oldImage: editorImage ?? widget.editorImage!,
+            newImage: image,
+          );
+          await decodeImage();
+          _rebuildController.add(null);
+        });
+      });
+    }
+  }
+
+  @override
+  void resetZoom() {
+    super.resetZoom();
+    _controllers.cropLayerPainterCtrl.add(null);
+  }
+
+  /// Handle the start of a scaling operation.
+  ///
+  /// This method is called when a scaling operation begins and initializes the
+  /// necessary variables.
+  void _onScaleStart(ScaleStartDetails details) {
+    _ignoreInlineScale = _holdInlineGesture;
+    if (_ignoreInlineScale) return;
+
+    final int pointerCount = details.pointerCount;
+    if (sizesManager.bodySize != sizesManager.editorSize) {
+      _calcAppBarHeight();
+    }
+
+    if (!isDesktop) {
+      if (pointerCount >= 2) {
+        /// On mobile devices, multi-finger gestures should trigger zoom or
+        /// pan when layer-pinch-interactions are disabled.
+        if (mainEditorConfigs.enableZoom &&
+            !layerInteraction.enableMobilePinchRotate &&
+            !layerInteraction.enableMobilePinchScale) {
+          interactiveViewer.currentState?.onScaleStart(details);
+          return;
+        }
+      } else {
+        /// Handle drag selection for mobile single-finger gestures.
+        if (_mouseService.validateDragAction() &&
+            mainEditorConfigs.mobilePanInteraction ==
+                MobilePanInteraction.dragSelect &&
+            layerInteractionManager.activeInteractionLayer == null) {
+          layerInteractionManager.clearSelectedLayers();
+          _layerDragSelectionService.startDragging(details.localFocalPoint);
+          return;
+        }
+      }
+    }
+
+    /// Handle pan action
+    if (_mouseService.validatePanAction()) {
+      interactiveViewer.currentState?.onScaleStart(details);
+      return;
+    }
+
+    /// Handle drag selection for desktop or fallback
+    if (_mouseService.validateDragAction() &&
+        layerInteractionManager.activeInteractionLayer == null) {
+      layerInteractionManager.clearSelectedLayers();
+      _layerDragSelectionService.startDragging(details.localFocalPoint);
+      return;
+    }
+
+    /// We add a new history entry that will be updated live during layer
+    /// interaction.
+    /// Important: No screenshot is taken at this point; it will be captured
+    /// after the layer interaction is completed.
+    ///
+    /// The `!isLayerBeingTransformed` guard prevents a second history entry
+    /// when Flutter's [ScaleGestureRecognizer] restarts the gesture after a
+    /// mid-gesture pointer change (e.g. a third finger touching down), which
+    /// would otherwise corrupt the history/screenshot stack (issue #850).
+    if (hasSelectedLayers && !isLayerBeingTransformed) {
+      // Before the history step copies the layers, which are laid out only a
+      // frame later, and before keyframes place them elsewhere.
+      layerInteractionManager.measureLayerSizes(selectedLayers);
+      addHistory(blockCaptureScreenshot: true);
+      _startKeyframeEdit();
+    }
+    _checkInteractiveViewer();
+    isLayerBeingTransformed = hasSelectedLayers;
+    layerInteractionManager.onScaleStart(
+      details: details,
+      selectedLayers: selectedLayers,
+    );
+
+    setState(() {});
+    mainEditorCallbacks?.handleScaleStart(details);
+  }
+
+  /// Handle updates during scaling.
+  ///
+  /// This method is called during a scaling operation and updates the selected
+  /// layer's position and properties.
+  void _onScaleUpdate(ScaleUpdateDetails details) {
+    if (_ignoreInlineScale) return;
+    final int pointerCount = details.pointerCount;
+
+    mainEditorCallbacks?.handleScaleUpdate(details);
+    if (blockOnScaleUpdateFunction) return;
+
+    if (!isDesktop) {
+      if (pointerCount >= 2) {
+        /// On mobile, multi-finger gestures should always trigger zoom/pan
+        if (mainEditorConfigs.enableZoom &&
+            !layerInteraction.enableMobilePinchRotate &&
+            !layerInteraction.enableMobilePinchScale) {
+          interactiveViewer.currentState?.onScaleUpdate(details);
+          return;
+        }
+      } else {
+        /// Handle active drag selection on mobile
+        if (_layerDragSelectionService.isActive) {
+          _layerDragSelectionService.updateSize(details.localFocalPoint);
+          return;
+        }
+      }
+    }
+
+    /// Handle pan action
+    if (_mouseService.validatePanAction()) {
+      interactiveViewer.currentState?.onScaleUpdate(details);
+      return;
+    }
+
+    /// Handle drag selection updates
+    if (_layerDragSelectionService.isActive &&
+        _mouseService.validateDragAction()) {
+      _layerDragSelectionService.updateSize(details.localFocalPoint);
+      return;
+    }
+
+    bool beforeShowHorizontalHelperLine =
+        layerInteractionManager.showHorizontalHelperLine;
+    bool beforeShowVerticalHelperLine =
+        layerInteractionManager.showVerticalHelperLine;
+    bool beforeShowRotationHelperLine =
+        layerInteractionManager.showRotationHelperLine;
+
+    void checkUpdateHelperLineUI() {
+      if (beforeShowHorizontalHelperLine !=
+              layerInteractionManager.showHorizontalHelperLine ||
+          beforeShowVerticalHelperLine !=
+              layerInteractionManager.showVerticalHelperLine ||
+          beforeShowRotationHelperLine !=
+              layerInteractionManager.showRotationHelperLine) {
+        _controllers.helperLineCtrl.add(null);
+      }
+    }
+
+    if (!hasSelectedLayers) return;
+
+    if (layerInteractionManager.isResizingTextBox) {
+      final layer = layerInteractionManager.calculateTextBoxResize(
+        details: details,
+        editorScaleFactor: interactiveViewer.currentState?.scaleFactor ?? 1.0,
+        layers: activeLayers,
+      );
+      if (layer != null) {
+        _recordKeyframeEdit();
+        mainEditorCallbacks?.handleUpdateLayer(layer);
+        layer.key.currentState?.setState(() {});
+      }
+      return;
+    }
+
+    if (layerInteractionManager.rotateScaleLayerSizeHelper != null) {
+      layerInteractionManager.calculateInteractiveButtonScaleRotate(
+        configs: configs,
+        selectedLayers: selectedLayers,
+        details: details,
+        editorSize: sizesManager.bodySize,
+        layerTheme: layerInteraction.style,
+        editorScaleFactor: interactiveViewer.currentState?.scaleFactor ?? 1.0,
+        editorScaleOffset:
+            interactiveViewer.currentState?.offset ?? Offset.zero,
+      );
+      _recordKeyframeEdit();
+      for (Layer layer in selectedLayers) {
+        layer.key.currentState!.setState(() {});
+      }
+      checkUpdateHelperLineUI();
+      return;
+    }
+
+    double editorScaleFactor =
+        interactiveViewer.currentState?.scaleFactor ?? 1.0;
+
+    layerInteractionManager.enabledHitDetection = false;
+    if (pointerCount == 1) {
+      layerInteractionManager.calculateMovement(
+        editorScaleFactor: editorScaleFactor,
+        removeAreaKey: _removeAreaKey,
+        selectedLayers: selectedLayers,
+        layerList: activeLayers,
+        context: context,
+        detail: details,
+        onHoveredRemoveChanged: (value) {
+          _controllers.removeBtnCtrl.add(null);
+          mainEditorCallbacks?.onHoverRemoveAreaChange?.call(value);
+        },
+        helperLineCtrl: _controllers.helperLineCtrl,
+        editorBodySize: sizesManager.bodySize,
+      );
+    } else if (pointerCount == 2) {
+      /// If multi-selection is active and the editor is zoomable, treat
+      /// two-finger gestures as zooming the editor instead of scaling a layer.
+      final hasMultiSelection = selectedLayers.length > 1;
+
+      if (hasMultiSelection && mainEditorConfigs.enableZoom) {
+        interactiveViewer.currentState?.onScaleUpdate(details);
+        return;
+      }
+      // Layer scaling (original logic)
+      layerInteractionManager.calculateScaleRotate(
+        configs: configs,
+        selectedLayers: selectedLayers,
+        detail: details,
+        editorSize: sizesManager.bodySize,
+        screenPaddingHelper: sizesManager.imageMargin,
+        editorScaleFactor: editorScaleFactor,
+      );
+    }
+    _recordKeyframeEdit();
+    for (Layer layer in selectedLayers) {
+      mainEditorCallbacks?.handleUpdateLayer(layer);
+      layer.key.currentState?.setState(() {});
+    }
+    checkUpdateHelperLineUI();
+  }
+
+  /// The playback position a transform gesture writes to the keyframes of the
+  /// layers it moves, or `null` when no gesture runs or outside the video
+  /// editor.
+  ///
+  /// Taken when the gesture starts, so a video that keeps playing does not
+  /// spread one gesture over many keyframes.
+  Duration? _keyframeEditTime;
+
+  /// The placement each selected layer with keyframes was shown at when the
+  /// gesture started, until the gesture moves it.
+  final Map<String, LayerPlacement> _keyframeEditStart = {};
+
+  /// Lays every selected layer with keyframes out at the placement they give
+  /// it at the playback position, so the gesture moves what the user sees.
+  void _startKeyframeEdit() {
+    final time = _videoController?.playTimeNotifier.value;
+    _keyframeEditTime = time;
+    _keyframeEditStart.clear();
+    if (time == null) return;
+    for (final layer in selectedLayers) {
+      if (!layer.hasKeyframes) continue;
+      layer.applyKeyframePlacement(time);
+      _keyframeEditStart[layer.id] = layer.restPlacement;
+    }
+  }
+
+  /// Writes the placement of every selected layer with keyframes to its
+  /// keyframe at [_keyframeEditTime], adding one there when there is none.
+  ///
+  /// A layer the gesture has not moved yet, e.g. one that cannot be moved,
+  /// keeps its keyframes: an extra one would change its easing.
+  void _recordKeyframeEdit() {
+    final time = _keyframeEditTime;
+    if (time == null) return;
+    final tolerance = configs.videoEditor.layerTimeline.keyframeTolerance;
+    for (final layer in selectedLayers) {
+      if (!layer.hasKeyframes) continue;
+      final start = _keyframeEditStart[layer.id];
+      if (start != null) {
+        if (layer.restPlacement == start) continue;
+        _keyframeEditStart.remove(layer.id);
+      }
+      layer.setKeyframeAt(time, tolerance: tolerance);
+    }
+  }
+
+  /// Handle the end of a scaling operation.
+  ///
+  /// This method is called when a scaling operation ends and resets helper
+  /// lines and flags.
+  void _onScaleEnd(ScaleEndDetails details) async {
+    if (_ignoreInlineScale) {
+      _ignoreInlineScale = false;
+      return;
+    }
+    mainEditorCallbacks?.handleScaleEnd(details);
+
+    /// Flutter's [ScaleGestureRecognizer] fires a spurious `onScaleEnd`
+    /// (immediately followed by a fresh `onScaleStart`) whenever the number of
+    /// active pointers changes mid-gesture — for example when a third finger
+    /// touches the screen while two fingers are still rotating a layer. In that
+    /// case the fingers are not actually lifted ([details.pointerCount] > 0),
+    /// so we must not run the destructive finish logic below (removing the last
+    /// screenshot, mutating the history stack and clearing the selection).
+    /// Doing so corrupts the history/screenshot stack and, on iOS, crashes the
+    /// editor with a `_dependents.isEmpty` framework assertion (issue #850).
+    ///
+    /// The interactive viewer still needs the event to keep its own
+    /// start/end pairing balanced.
+    if (details.pointerCount > 0) {
+      if (!hasSelectedLayers && !_layerDragSelectionService.isActive) {
+        interactiveViewer.currentState?.onScaleEnd(details);
+      }
+      return;
+    }
+
+    if (selectedLayers.isNotEmpty) {
+      mainEditorCallbacks?.handleLayerInteractionEnd(List.of(selectedLayers));
+    }
+    layerInteractionManager.activeInteractionLayer = null;
+
+    /// Check if layers should be removed.
+    if (layerInteractionManager.hoverRemoveBtn) {
+      for (Layer layer in layerInteractionManager.selectedLayersScaleStart) {
+        activeLayers.remove(layer);
+        mainEditorCallbacks?.handleRemoveLayer(layer);
+        if (_inlineTextEdit?.layerId == layer.id) {
+          endInlineTextEdit(save: false);
+        }
+      }
+      layerInteractionManager.clearSelectedLayers();
+    }
+
+    if (!hasSelectedLayers) {
+      if (!_layerDragSelectionService.isActive) {
+        interactiveViewer.currentState?.onScaleEnd(details);
+      }
+
+      /// On mobile when layers are not selectable we check if a layer was
+      /// transformed.
+      if (!isDesktop &&
+          layerInteractionManager.layerWasTransformed &&
+          layerInteraction.selectable != LayerInteractionSelectable.enabled) {
+        _takeScreenshot(replaceLastScreenshot: true);
+      }
+    } else if (!isLayerBeingTransformed) {
+      /// The layers stayed selected through a canvas pan or zoom, or a drag
+      /// selection picked them. [_onScaleStart] added no history entry for
+      /// either, so there is no screenshot to replace.
+      interactiveViewer.currentState?.onScaleEnd(details);
+    } else {
+      /// At this point, we only create a screenshot since the new history
+      /// entry was already added in [_onScaleStart].
+      _takeScreenshot(replaceLastScreenshot: true);
+      if (!layerInteraction.keepSelectionOnInteraction) {
+        layerInteractionManager.clearSelectedLayers();
+      }
+    }
+
+    isLayerBeingTransformed = false;
+    _keyframeEditTime = null;
+    _keyframeEditStart.clear();
+    _checkInteractiveViewer();
+    _controllers.uiLayerCtrl.add(null);
+    layerInteractionManager.onScaleEnd();
+    _layerDragSelectionService.endDragging();
+    setState(() {});
+  }
+
+  /// Whether [TextEditorConfigs.layerBounds] wrap [layer] onto more lines
+  /// than it takes without them, as the canvas lays it out now.
+  ///
+  /// A host can offer to turn [TextLayer.wrapAtLayerBounds] off only while
+  /// that changes anything. Always `false` for a layer that does not wrap at
+  /// the bounds, before the editor body has a size, and while the editor is
+  /// out of the tree, even when it is still [mounted].
+  bool textLayerWrapsAtBounds(TextLayer layer) {
+    if (!_isActive) return false;
+    return LayerWidgetTextItem.wrapsAtLayerBounds(
+      context,
+      layer: layer,
+      textEditorConfigs: textEditorConfigs,
+      mainBodySize: sizesManager.bodySize,
+    );
+  }
+
+  /// Opens the text editor to modify an existing [TextLayer].
+  ///
+  /// If [MainEditorCallbacks.onEditTextLayer] is set, the custom callback is
+  /// invoked instead of navigating to the built-in [TextEditor]. In both cases
+  /// a deep copy of [layerData] is passed so the original is never mutated
+  /// before the user confirms the edit.
+  ///
+  /// After the editor returns the updated layer, all identity and transform
+  /// properties (`id`, `key`, `offset`, `scale`, `rotation`, etc.) are
+  /// restored from the original [layerData] to prevent unintended drift.
+  ///
+  /// If the returned text is empty, the layer is removed via [removeLayer],
+  /// unless it keeps a [TextLayer.box] (see [applyTextLayerChanges]).
+  /// Otherwise the layer is replaced in place via [replaceLayer].
+  ///
+  /// - [layerData]: The existing [TextLayer] to edit.
+  void editTextLayer(TextLayer layerData) async {
+    if (textEditorConfigs.enableInlineEditing) {
+      beginInlineTextEdit(layerData);
+      return;
+    }
+    final customCallback = mainEditorCallbacks?.onEditTextLayer;
+    TextLayer? updatedLayer;
+
+    if (customCallback != null) {
+      updatedLayer = await customCallback(
+        _layerCopyManager.copyLayer(layerData) as TextLayer,
+      );
+    } else {
+      updatedLayer = await openPage(
+        TextEditor(
+          key: textEditor,
+          layer: _layerCopyManager.copyLayer(layerData) as TextLayer,
+          heroTag: layerData.id,
+          configs: configs,
+          theme: _theme,
+          callbacks: callbacks,
+          scaleFactor: textEditorConfigs.enableMainEditorZoomFactor
+              ? interactiveViewer.currentState?.scaleFactor ?? 1.0
+              : 1.0,
+          imageSize: sizesManager.decodedImageSize,
+        ),
+
+        /// Small Duration is important for a smooth hero animation
+        duration: const Duration(milliseconds: 250),
+      );
+    }
+
+    if (!mounted || updatedLayer == null) return;
+
+    applyTextLayerChanges(layerData, updatedLayer);
+  }
+
+  /// Applies the result of a text editor session back to the layer stack.
+  ///
+  /// Restores all identity and transform properties (`id`, `key`, `offset`,
+  /// `scale`, `rotation`, `keyframes`, `opacity`, etc.) from [original] onto
+  /// [updatedLayer] so the layer keeps its position in the editor.
+  ///
+  /// If [updatedLayer.text] is empty the layer is removed via [removeLayer],
+  /// unless both layers have a [TextLayer.box]: a box keeps its size and
+  /// stays where it is, like an empty field on a form. Otherwise the layer
+  /// is replaced in place via [replaceLayer].
+  ///
+  /// This method is called internally by [editTextLayer] but is also exposed
+  /// publicly so custom [MainEditorCallbacks.onEditTextLayer] implementations
+  /// can reuse the same commit logic.
+  ///
+  /// - [original]: The original [TextLayer] before editing.
+  /// - [updatedLayer]: The [TextLayer] returned by the editor.
+  void applyTextLayerChanges(TextLayer original, TextLayer updatedLayer) {
+    _keepTextLayerPlacement(original, updatedLayer);
+
+    if (updatedLayer.text.isEmpty && !_keepsEmptyBox(original, updatedLayer)) {
+      removeLayer(original);
+      return;
+    }
+
+    int i = activeLayers.indexWhere((element) => element.id == original.id);
+    replaceLayer(index: i, layer: updatedLayer);
+  }
+
+  /// Whether a text layer emptied by an edit stays: it had a box before the
+  /// edit and still has one.
+  bool _keepsEmptyBox(TextLayer original, TextLayer updatedLayer) =>
+      original.box != null && updatedLayer.box != null;
+
+  /// Copies the identity and the placement of [original] onto [updatedLayer].
+  void _keepTextLayerPlacement(TextLayer original, TextLayer updatedLayer) {
+    updatedLayer
+      ..id = original.id
+      ..key = original.key
+      ..keyInternalSize = original.keyInternalSize
+      ..flipX = original.flipX
+      ..flipY = original.flipY
+      ..offset = original.offset
+      ..scale = original.scale
+      ..rotation = original.rotation
+      ..boxConstraints = original.boxConstraints
+      ..groupId = original.groupId
+      ..interaction = original.interaction
+      ..meta = original.meta
+      ..keyframes = original.keyframes
+      ..opacity = original.opacity
+      ..mask = original.mask
+      ..blendMode = original.blendMode;
+  }
+
+  /// Types into [layer] where it sits, instead of opening the text editor.
+  ///
+  /// Does nothing when [TextEditorConfigs.enableInlineEditing] is off, so the
+  /// full-screen editor stays the way in. [selectAll] selects the current
+  /// text, which a new layer uses for its placeholder.
+  ///
+  /// An edit already in progress on another layer is saved first; one on
+  /// [layer] stays open. [done] on the session writes the text back through
+  /// [applyTextLayerChanges]; [cancel] leaves the layer as it was. Empty text
+  /// removes the layer, as the full-screen editor does, unless the layer had
+  /// a box before the edit and still has one.
+  void beginInlineTextEdit(TextLayer layer, {bool selectAll = false}) {
+    _beginInlineTextEdit(layer, selectAll: selectAll);
+  }
+
+  void _beginInlineTextEdit(
+    TextLayer layer, {
+    required bool selectAll,
+    EditorStateHistory? addedEntry,
+  }) {
+    if (!textEditorConfigs.enableInlineEditing || !mounted) return;
+    final open = _inlineTextEdit;
+    if (open != null && open.layerId == layer.id) {
+      open.focusNode.requestFocus();
+      return;
+    }
+    _saveInlineTextEdit();
+    final live = activeLayers
+        .whereType<TextLayer>()
+        .where((item) => item.id == layer.id)
+        .firstOrNull;
+    if (live == null) return;
+
+    late final InlineTextEditSession session;
+    TextLayer? current() => activeLayers
+        .whereType<TextLayer>()
+        .where((item) => item.id == session.layerId)
+        .firstOrNull;
+    session = InlineTextEditSession.start(
+      layer: live,
+      configs: textEditorConfigs,
+      onChanged: () {
+        if (!mounted || !identical(_inlineTextEdit, session)) return;
+        if (current() case final layer?) session.showBoxOn(layer);
+        setState(() {});
+      },
+      onTextChanged: () {
+        if (!mounted || !identical(_inlineTextEdit, session)) return;
+        final layer = current();
+        if (layer != null && session.showBoxOn(layer)) setState(() {});
+      },
+      onDone: () => endInlineTextEdit(save: true),
+      onCancel: () => endInlineTextEdit(save: false),
+    );
+    _inlineTextEdit = session;
+    _inlineTextEditAddedEntry = addedEntry;
+    selectLayerById(live.id);
+    setState(() {});
+    mainEditorCallbacks?.handleUpdateUI();
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (!mounted || !identical(_inlineTextEdit, session)) return;
+      session.focusNode.requestFocus();
+      final text = session.textCtrl.text;
+      session.textCtrl.selection = selectAll
+          ? TextSelection(baseOffset: 0, extentOffset: text.length)
+          : TextSelection.collapsed(offset: text.length);
+    });
+  }
+
+  /// Ends the inline text edit.
+  ///
+  /// [save] writes the session onto the layer. Otherwise the layer stays as
+  /// it was when editing began, because the session never changes it. A
+  /// save that changes nothing records no history step.
+  ///
+  /// A layer the edit added itself, through [openTextEditor], goes away
+  /// again when the edit is dropped or its text is empty. As long as nothing
+  /// else was recorded meanwhile, its text is written into the history step
+  /// that added it, so one undo removes the new text.
+  void endInlineTextEdit({required bool save}) {
+    final session = _inlineTextEdit;
+    if (session == null || session.closed) return;
+    final addedEntry = _inlineTextEditAddedEntry;
+    _inlineTextEdit = null;
+    _inlineTextEditAddedEntry = null;
+
+    final isNew = addedEntry != null;
+    final history = stateManager.stateHistory;
+    final untouched =
+        isNew &&
+        identical(history.last, addedEntry) &&
+        stateManager.historyPointer == history.length - 1;
+    final index = activeLayers.indexWhere((item) => item.id == session.layerId);
+    final live = index < 0 ? null : activeLayers[index];
+
+    var saved = false;
+    session.hideShownBox(live is TextLayer ? live : null);
+    if (live is TextLayer) {
+      final result = save ? session.buildResult(live) : null;
+      saved = result != null;
+      final emptied =
+          result != null &&
+          result.text.isEmpty &&
+          (isNew || !_keepsEmptyBox(live, result));
+      if (result == null || emptied) {
+        if (untouched) {
+          _dropAddedTextLayer(live);
+        } else if (isNew || result != null) {
+          removeLayer(live);
+        }
+      } else if (untouched) {
+        _keepTextLayerPlacement(live, result);
+        replaceLayer(index: index, layer: result, skipUpdateHistory: true);
+        _takeScreenshot(replaceLastScreenshot: true);
+      } else if (session.hasChanges(live)) {
+        applyTextLayerChanges(live, result);
+      }
+    }
+    session.finish(saved);
+    if (mounted) {
+      setState(() {});
+      mainEditorCallbacks?.handleUpdateUI();
+      // The field stays in the tree until the next frame and may still get
+      // input until then.
+      WidgetsBinding.instance.addPostFrameCallback((_) => session.dispose());
+    } else {
+      session.dispose();
+    }
+  }
+
+  /// Drops the history step that added [layer] for an inline edit, which
+  /// is the last one, so neither undo nor redo shows the placeholder.
+  void _dropAddedTextLayer(TextLayer layer) {
+    mainEditorCallbacks?.handleRemoveLayer(layer);
+    layerInteractionManager.clearSelectedLayers();
+    stateManager.stateHistory.removeLast();
+    stateManager
+      ..historyPointer = stateManager.stateHistory.length - 1
+      ..updateActiveItems();
+    // The step was added with an empty screenshot.
+    final screenshots = stateManager.screenshots;
+    if (screenshots.isNotEmpty) screenshots.removeLast();
+    _checkInteractiveViewer();
+    _controllers.uiLayerCtrl.add(null);
+  }
+
+  /// Saves an open inline text edit before something else reads or replaces
+  /// the layers, such as undo or a sub-editor.
+  void _saveInlineTextEdit() {
+    if (_inlineTextEdit != null) endInlineTextEdit(save: true);
+  }
+
+  /// Handles a pointer-down on the editor body for the open inline edit.
+  ///
+  /// Saves the edit when the pointer landed off the layer, the field, and any
+  /// [InlineTextEditChrome]. Returns whether the gesture the pointer starts
+  /// must leave the layers and the canvas alone: one that ended the edit, or
+  /// one on the field that selects text instead.
+  bool _onInlinePointerDown(Offset position) {
+    final session = _inlineTextEdit;
+    if (session == null) return false;
+    final onField =
+        session.pointerOnText ||
+        session.pointerOnChrome ||
+        (!session.pointerOnLayer && _tapInlineTextPastBox(session, position));
+    final inside = onField || session.pointerOnLayer;
+    session
+      ..pointerOnText = false
+      ..pointerOnLayer = false
+      ..pointerOnChrome = false;
+    if (inside) return onField;
+    if (!textEditorConfigs.enableTapOutsideToSave) return false;
+    endInlineTextEdit(save: true);
+    return true;
+  }
+
+  /// Puts the caret where [position], a global position, lands on a line
+  /// the box of the layer being typed shows past itself
+  /// ([TextLayerBoxOverflow.visible]), and returns whether it landed there.
+  ///
+  /// Hit testing stops at the box, so a pointer on those lines reaches
+  /// neither the field nor the layer.
+  bool _tapInlineTextPastBox(InlineTextEditSession session, Offset position) {
+    // A box handle the pointer went down on resizes the box instead.
+    if (layerInteractionManager.isResizingTextBox ||
+        layerInteractionManager.rotateScaleLayerSizeHelper != null) {
+      return false;
+    }
+    RenderEditable? editable;
+    void visit(RenderObject child) {
+      if (editable != null) return;
+      if (child is RenderEditable) {
+        editable = child;
+      } else {
+        child.visitChildren(visit);
+      }
+    }
+
+    final root = session.focusNode.context?.findRenderObject();
+    if (root == null) return false;
+    visit(root);
+    final field = editable;
+    if (field == null || !field.attached || !field.hasSize) return false;
+    if (!(Offset.zero & field.size).contains(field.globalToLocal(position))) {
+      return false;
+    }
+    field.selectPositionAt(from: position, cause: SelectionChangedCause.tap);
+    return true;
+  }
+
+  /// Lets the gestures that follow a released pointer move layers again,
+  /// such as a trackpad pinch, which starts without a pointer-down.
+  ///
+  /// Cleared once the recognizers have handled the release, so a gesture
+  /// that restarts as one of several fingers lifts stays held.
+  void _releaseInlineGesture() {
+    if (!_holdInlineGesture) return;
+    scheduleMicrotask(() => _holdInlineGesture = false);
+  }
+
+  /// Writes the open inline edit onto its layer and waits until the field
+  /// has left the tree.
+  ///
+  /// Capture, export, and done all call this first. The typed text is only
+  /// in the session until then, so a dirty check or a screenshot taken
+  /// earlier would keep the previous layer and could record the caret.
+  /// Does nothing when no edit is open. Callers that must keep their old
+  /// synchronous start check [_inlineTextEdit] before awaiting this.
+  Future<void> commitInlineTextEdit() async {
+    if (_inlineTextEdit == null || !mounted) return;
+    endInlineTextEdit(save: true);
+    if (!mounted) return;
+    await WidgetsBinding.instance.endOfFrame;
+  }
+
+  /// Opens the paint editor to modify an existing [PaintLayer].
+  ///
+  /// Censor-area layers are not editable and return immediately without
+  /// opening the editor.
+  ///
+  /// If [PaintEditorCallbacks.onEditLayer] is set, the custom callback is
+  /// invoked instead of showing the built-in bottom-sheet editor.
+  ///
+  /// If the user dismisses without saving, the result is `null` and no change
+  /// is made. Otherwise the layer is replaced in place via [replaceLayer].
+  ///
+  /// - [layer]: The existing [PaintLayer] to edit.
+  void editPaintLayer(PaintLayer layer) async {
+    if (layer.isPaintLayer && layer.isCensor) return;
+
+    PaintLayer? result =
+        await (callbacks.paintEditorCallbacks?.onEditLayer?.call(layer) ??
+            showModalBottomSheet<PaintLayer>(
+              context: context,
+              backgroundColor:
+                  paintEditorConfigs.style.editSheetBackgroundColor,
+              showDragHandle: paintEditorConfigs.style.editSheetShowDragHandle,
+              isScrollControlled: true,
+              useSafeArea: true,
+              builder: (context) =>
+                  paintEditorConfigs.widgets.editBottomSheet?.call(layer) ??
+                  SafeArea(
+                    child: PaintEditorLayerEditor(
+                      layer:
+                          _layerCopyManager.duplicateLayer(
+                                layer,
+                                offset: Offset.zero,
+                              )
+                              as PaintLayer,
+                      configs: configs,
+                    ),
+                  ),
+            ));
+
+    if (result == null) return;
+
+    replaceLayer(index: getLayerStackIndex(layer), layer: result);
+  }
+
+  /// Initializes the key event listener by adding a handler to the keyboard
+  /// service.
+  void initKeyEventListener() {
+    ServicesBinding.instance.keyboard.addHandler(_onKeyEvent);
+  }
+
+  /// Removes the key event listener by removing the handler from the keyboard
+  /// service.
+  void removeKeyEventListener() {
+    ServicesBinding.instance.keyboard.removeHandler(_onKeyEvent);
+  }
+
+  void _selectLayerAfterHeroIsDone(String id) async {
+    if (layerInteractionManager.layersAreSelectable(configs) &&
+        layerInteraction.initialSelected) {
+      if (isSubEditorOpen) await _pageOpenCompleter.future;
+      layerInteractionManager.addSelectedLayer(id);
+      _checkInteractiveViewer();
+      _controllers.uiLayerCtrl.add(null);
+    }
+  }
+
+  /// Open a new page on top of the current page.
+  ///
+  /// This method navigates to a new page using a fade transition animation.
+  Future<T?> openPage<T>(
+    Widget page, {
+    Duration duration = const Duration(milliseconds: 300),
+  }) {
+    _saveInlineTextEdit();
+    layerInteractionManager.clearSelectedLayers();
+    _checkInteractiveViewer();
+    isSubEditorOpen = true;
+
+    setState(() {});
+
+    SubEditor editorName = SubEditor.unknown;
+    // The tune editor is pushed inside a [HeroMode].
+    final editor = page is HeroMode ? page.child : page;
+
+    if (editor is PaintEditor) {
+      editorName = SubEditor.paint;
+    } else if (editor is TextEditor) {
+      editorName = SubEditor.text;
+    } else if (editor is CropRotateEditor) {
+      editorName = SubEditor.cropRotate;
+    } else if (editor is TuneEditor) {
+      editorName = SubEditor.tune;
+    } else if (editor is FilterEditor) {
+      editorName = SubEditor.filter;
+    } else if (editor is BlurEditor) {
+      editorName = SubEditor.blur;
+    } else if (editor is EmojiEditor) {
+      editorName = SubEditor.emoji;
+    } else if (editor is AudioEditorPage) {
+      editorName = SubEditor.audio;
+    } else if (editor is ClipsEditorPage) {
+      editorName = SubEditor.clips;
+    }
+
+    mainEditorCallbacks?.handleOpenSubEditor(editorName);
+    _pageOpenCompleter = Completer();
+
+    final subEditorStyle = mainEditorConfigs.style.subEditorPage;
+    var route = PageRouteBuilder<T?>(
+      opaque: false,
+      barrierColor: subEditorStyle.barrierColor,
+      barrierDismissible: subEditorStyle.barrierDismissible,
+      transitionDuration: duration,
+      reverseTransitionDuration: duration,
+      transitionsBuilder:
+          subEditorStyle.transitionsBuilder ??
+          (context, animation, secondaryAnimation, child) {
+            return FadeTransition(opacity: animation, child: child);
+          },
+      pageBuilder: (context, animation, secondaryAnimation) {
+        void animationStatusListener(AnimationStatus status) {
+          switch (status) {
+            case AnimationStatus.completed:
+              if (cropRotateEditor.currentState != null) {
+                cropRotateEditor.currentState!.hideFakeHero();
+              }
+              break;
+            case AnimationStatus.dismissed:
+              setState(() {
+                isSubEditorOpen = false;
+                isSubEditorClosing = false;
+                if (!_pageOpenCompleter.isCompleted) {
+                  _pageOpenCompleter.complete(true);
+                }
+
+                if (stateManager.heroScreenshotRequired) {
+                  stateManager.heroScreenshotRequired = false;
+                  _takeScreenshot();
+                }
+              });
+
+              animation.removeStatusListener(animationStatusListener);
+              mainEditorCallbacks?.handleEndCloseSubEditor(editorName);
+              break;
+            case AnimationStatus.reverse:
+              isSubEditorClosing = true;
+              mainEditorCallbacks?.handleStartCloseSubEditor(editorName);
+
+              break;
+            case AnimationStatus.forward:
+              break;
+          }
+        }
+
+        animation.addStatusListener(animationStatusListener);
+
+        if (!subEditorStyle.requireReposition) return page;
+
+        return SafeArea(
+          child: Stack(
+            fit: StackFit.expand,
+            children: [
+              Positioned(
+                top: subEditorStyle.positionTop,
+                left: subEditorStyle.positionLeft,
+                right: subEditorStyle.positionRight,
+                bottom: subEditorStyle.positionBottom,
+                child: Center(
+                  child: Container(
+                    width: subEditorStyle.enforceSizeFromMainEditor
+                        ? sizesManager.editorSize.width
+                        : null,
+                    height: subEditorStyle.enforceSizeFromMainEditor
+                        ? sizesManager.editorSize.height
+                        : null,
+                    clipBehavior: Clip.hardEdge,
+                    decoration: BoxDecoration(
+                      borderRadius: subEditorStyle.borderRadius,
+                    ),
+                    child: page,
+                  ),
+                ),
+              ),
+            ],
+          ),
+        );
+      },
+    );
+    if (mainEditorConfigs.enableSubEditorPage) {
+      return _navigatorKey.currentState!.push<T?>(route);
+    }
+    return Navigator.push<T?>(context, route);
+  }
+
+  /// Opens the paint editor.
+  ///
+  /// This method opens the paint editor and allows the user to draw on the
+  /// current image.
+  /// After closing the paint editor, any changes made are applied to the
+  /// image's layers.
+  void openPaintEditor() async {
+    _saveInlineTextEdit();
+    var paintCallbacks =
+        callbacks.paintEditorCallbacks ?? const PaintEditorCallbacks();
+    var overridenPaintCallbacks = paintCallbacks.copyWith(
+      onEditorZoomMatrix4Change: (value) {
+        callbacks.paintEditorCallbacks?.onEditorZoomMatrix4Change?.call(value);
+        if (paintEditorConfigs.enableShareZoomMatrix) {
+          interactiveViewer.currentState?.transformMatrix4 = value;
+        }
+      },
+    );
+
+    PaintEditorResponse? result = await openPage<PaintEditorResponse>(
+      PaintEditor.autoSource(
+        key: paintEditor,
+        editorImage: widget.blankSize == null
+            ? editorImage
+            : EditorImage(byteArray: kImageEditorTransparentBytes),
+        videoController: _videoController,
+        initConfigs: PaintEditorInitConfigs(
+          configs: configs,
+          callbacks: callbacks.copyWith(
+            paintEditorCallbacks: overridenPaintCallbacks,
+          ),
+          layers: _layerCopyManager.duplicateLayerList(
+            activeLayers,
+            offset: Offset.zero,
+            enableCopyId: true,
+          ),
+          theme: _theme,
+          mainImageSize: widget.blankSize ?? sizesManager.decodedImageSize,
+          mainBodySize: sizesManager.bodySize,
+          transformConfigs: stateManager.transformConfigs,
+          appliedBlurFactor: stateManager.activeBlur,
+          appliedFilters: stateManager.activeFilters.allMatrices,
+          appliedTuneAdjustments: stateManager.activeTuneAdjustments,
+          initialZoomMatrix: interactiveViewer.currentState?.transformMatrix4,
+        ),
+      ),
+      duration: const Duration(milliseconds: 150),
+    );
+
+    if (result == null) return;
+
+    // Deep-copy active layers ONCE, then build history entries incrementally.
+    // This avoids the O(N²) cost of copyLayerList on every addLayer call.
+    final runningLayers = _layerCopyManager.copyLayerList(activeLayers);
+    final historyLimit = stateHistoryConfigs.stateHistoryLimit;
+    final enableScreenshotLimit =
+        imageGenerationConfigs.enableBackgroundGeneration;
+    final preservedFilters = stateManager.activeFilters
+        .map((item) => item.copy())
+        .toList(growable: false);
+    final preservedTuneAdjustments = stateManager.activeTuneAdjustments
+        .map((item) => item.copy())
+        .toList(growable: false);
+    final preservedMeta = _deepCopyMeta(stateManager.activeMeta);
+
+    String lastLayerId = '';
+    for (var i = 0; i < result.layers.length; i++) {
+      final layer = result.layers[i];
+      final oldIndex = runningLayers.indexWhere((el) => el.id == layer.id);
+
+      final duplicatedLayer = _layerCopyManager.duplicateLayer(
+        layer,
+        offset: Offset.zero,
+      );
+      lastLayerId = duplicatedLayer.id;
+
+      if (oldIndex >= 0) {
+        runningLayers.removeAt(oldIndex);
+      }
+      runningLayers.add(duplicatedLayer);
+
+      // Add individual history entry (for per-layer undo) with a shallow
+      // snapshot — the layer objects themselves are already independent copies.
+      stateManager.addHistory(
+        EditorStateHistory(
+          layers: List<Layer>.of(runningLayers),
+          filters: preservedFilters,
+          tuneAdjustments: preservedTuneAdjustments,
+          meta: _deepCopyMeta(preservedMeta),
+        ),
+        historyLimit: historyLimit,
+        enableScreenshotLimit: enableScreenshotLimit,
+        skipUpdateActiveItems: true,
+      );
+      _controllers.screenshot.addEmptyScreenshot(
+        screenshots: stateManager.screenshots,
+      );
+    }
+
+    for (Layer layer in result.removedLayers) {
+      final layerPos = runningLayers.indexWhere((el) => el.id == layer.id);
+      if (layerPos < 0) continue;
+      runningLayers.removeAt(layerPos);
+      stateManager.addHistory(
+        EditorStateHistory(
+          layers: List<Layer>.of(runningLayers),
+          filters: preservedFilters,
+          tuneAdjustments: preservedTuneAdjustments,
+          meta: _deepCopyMeta(preservedMeta),
+        ),
+        historyLimit: historyLimit,
+        enableScreenshotLimit: enableScreenshotLimit,
+        skipUpdateActiveItems: true,
+      );
+      _controllers.screenshot.addEmptyScreenshot(
+        screenshots: stateManager.screenshots,
+      );
+    }
+
+    stateManager.updateActiveItems();
+
+    if (lastLayerId.isNotEmpty) {
+      _selectLayerAfterHeroIsDone(lastLayerId);
+    }
+
+    _takeScreenshot(replaceLastScreenshot: true);
+    setState(() {});
+    mainEditorCallbacks?.handleUpdateUI();
+  }
+
+  /// Opens the text editor.
+  ///
+  /// This method opens the text editor, allowing the user to add or edit text
+  /// layers on the image.
+  void openTextEditor({
+    /// Small Duration is important for a smooth hero animation
+    Duration duration = const Duration(milliseconds: 150),
+  }) async {
+    if (textEditorConfigs.enableInlineEditing) {
+      _openInlineTextEditor();
+      return;
+    }
+    final customCallback = mainEditorCallbacks?.onCreateTextLayer;
+    TextLayer? layer;
+
+    if (customCallback != null) {
+      layer = await customCallback();
+    } else {
+      layer = await openPage(
+        TextEditor(
+          key: textEditor,
+          configs: configs,
+          theme: _theme,
+          callbacks: callbacks,
+          scaleFactor: textEditorConfigs.enableMainEditorZoomFactor
+              ? interactiveViewer.currentState?.scaleFactor ?? 1.0
+              : 1.0,
+          imageSize: sizesManager.decodedImageSize,
+        ),
+        duration: duration,
+      );
+    }
+
+    if (layer == null || !mounted) return;
+
+    addLayer(layer, blockSelectLayer: true);
+    _selectLayerAfterHeroIsDone(layer.id);
+
+    setState(() {});
+    mainEditorCallbacks?.handleUpdateUI();
+  }
+
+  /// Adds a text layer and types into it on the canvas.
+  void _openInlineTextEditor() {
+    // Saved first, so nothing is recorded after the step that adds the text.
+    _saveInlineTextEdit();
+    final secondary = textEditorConfigs.initialSecondaryColor;
+    final layer = TextLayer(
+      text: i18n.textEditor.inputHintText,
+      maxTextWidth: _newInlineTextMaxWidth,
+      align: textEditorConfigs.initialTextAlign,
+      fontScale: textEditorConfigs.initFontScale,
+      colorMode: textEditorConfigs.initialBackgroundColorMode,
+      color: textEditorConfigs.initialPrimaryColor,
+      background: secondary ?? const Color(0xFFFFFFFF),
+      customSecondaryColor: secondary != null,
+      textStyle:
+          textEditorConfigs.customTextStyles?.first ??
+          textEditorConfigs.defaultTextStyle,
+    );
+    // The screenshot is taken once the text is written.
+    addLayer(layer, blockCaptureScreenshot: true);
+    _beginInlineTextEdit(
+      layer,
+      selectAll: true,
+      addedEntry: stateManager.stateHistory[stateManager.historyPointer],
+    );
+  }
+
+  /// The width a new inline text wraps at, the one the text editor gives a
+  /// new layer.
+  double? get _newInlineTextMaxWidth {
+    if (!textEditorConfigs.enableAutoWrapOnLayer &&
+        !textEditorConfigs.enableImageBoundaryTextWrap) {
+      return null;
+    }
+    // The text editor leaves 16 on each side and room for the cursor.
+    const inset = 32 + 2.0;
+    final imageSize = sizesManager.decodedImageSize;
+    if (textEditorConfigs.enableImageBoundaryTextWrap &&
+        imageSize != Size.zero) {
+      return imageSize.width - inset;
+    }
+    return textEditorConfigs.enableAutoOverflow
+        ? sizesManager.bodySize.width - inset
+        : null;
+  }
+
+  /// Opens the crop rotate editor.
+  ///
+  /// This method opens the crop editor, allowing the user to crop and rotate
+  /// the image.
+  void openCropRotateEditor() async {
+    _saveInlineTextEdit();
+    if (!_isInitialized) await _decodeImageCompleter.future;
+
+    await openPage<TransformConfigs?>(
+      CropRotateEditor.autoSource(
+        key: cropRotateEditor,
+        editorImage: widget.blankSize == null
+            ? editorImage
+            : EditorImage(byteArray: kImageEditorTransparentBytes),
+        videoController: _videoController,
+        initConfigs: CropRotateEditorInitConfigs(
+          configs: configs,
+          callbacks: callbacks,
+          theme: _theme,
+          layers: _layerCopyManager.copyLayerList(activeLayers),
+          transformConfigs: stateManager.transformConfigs,
+          mainImageSize: widget.blankSize ?? sizesManager.decodedImageSize,
+          mainBodySize: sizesManager.bodySize,
+          enableFakeHero: true,
+          appliedBlurFactor: stateManager.activeBlur,
+          appliedFilters: stateManager.activeFilters.allMatrices,
+          appliedTuneAdjustments: stateManager.activeTuneAdjustments,
+          onDone: (transformConfigs, fitToScreenFactor, imageInfos) async {
+            List<Layer> updatedLayers = LayerTransformGenerator(
+              layers: stateManager.activeLayers,
+              activeTransformConfigs: stateManager.transformConfigs,
+              newTransformConfigs: transformConfigs,
+              layerDrawAreaSize: sizesManager.bodySize,
+              undoChanges: false,
+              fitToScreenFactor: fitToScreenFactor,
+            ).updatedLayers;
+            // The generator still provides rotation and flips. Its offsets
+            // are derived from crop editor units and drift when the crop and
+            // the body stick to different sides.
+            ImageLayerFrame.keepLayersOnImagePoint(
+              sources: stateManager.activeLayers,
+              targets: updatedLayers,
+              from: stateManager.transformConfigs,
+              to: transformConfigs,
+              bodySize: sizesManager.bodySize,
+              renderedImageSize:
+                  _imageInfos?.originalRenderedSize ??
+                  sizesManager.decodedImageSize,
+            );
+
+            _imageInfos = null;
+            unawaited(decodeImage(transformConfigs));
+            addHistory(
+              transformConfigs: transformConfigs,
+              layers: updatedLayers,
+              heroScreenshotRequired: true,
+            );
+
+            /// Important to reset the layer hero positions
+            if (activeLayers.isNotEmpty) {
+              _controllers.layerHeroResetCtrl.add(true);
+              await Future.delayed(const Duration(milliseconds: 60));
+              _controllers.layerHeroResetCtrl.add(false);
+            }
+
+            setState(() {});
+          },
+        ),
+      ),
+    ).then((transformConfigs) async {
+      if (transformConfigs != null) {
+        setState(() {});
+        mainEditorCallbacks?.handleUpdateUI();
+      }
+    });
+  }
+
+  /// Opens the tune editor.
+  ///
+  /// This method opens the Tune Editor page, allowing the user to make tune
+  /// adjustments (such as brightness, contrast, etc.) to the current image.
+  ///
+  /// If tune adjustments are made, they are added to the editor's history
+  /// and the UI is updated accordingly. If the operation is canceled or no
+  /// adjustments are made, the current state remains unchanged.
+  void openTuneEditor({bool enableHero = true}) async {
+    _saveInlineTextEdit();
+    if (!mounted) return;
+    List<TuneAdjustmentMatrix>? tuneAdjustments = await openPage(
+      HeroMode(
+        enabled: enableHero,
+        child: TuneEditor.autoSource(
+          key: tuneEditor,
+          editorImage: widget.blankSize == null
+              ? editorImage
+              : EditorImage(byteArray: kImageEditorTransparentBytes),
+          videoController: _videoController,
+          initConfigs: TuneEditorInitConfigs(
+            theme: _theme,
+            configs: configs,
+            callbacks: callbacks,
+            transformConfigs: stateManager.transformConfigs,
+            layers: _layerCopyManager.copyLayerList(activeLayers),
+            mainImageSize: widget.blankSize ?? sizesManager.decodedImageSize,
+            mainBodySize: sizesManager.bodySize,
+            convertToUint8List: false,
+            appliedBlurFactor: stateManager.activeBlur,
+            appliedFilters: stateManager.activeFilters.allMatrices,
+            appliedTuneAdjustments: stateManager.activeTuneAdjustments,
+          ),
+        ),
+      ),
+    );
+
+    if (tuneAdjustments == null) return;
+
+    // The tune editor already merged its sliders into the applied list, so
+    // timed and custom entries survive without appending the whole list again.
+    addHistory(tuneAdjustments: tuneAdjustments, heroScreenshotRequired: true);
+
+    setState(() {});
+    mainEditorCallbacks?.handleUpdateUI();
+  }
+
+  /// Opens the filter editor.
+  ///
+  /// This method allows the user to apply filters to the current image and
+  /// replaces the image
+  /// with the filtered version if a filter is applied.
+  ///
+  /// The filter editor is opened as a page, and the resulting filtered image
+  /// is received as a
+  /// `Uint8List`. If no filter is applied or the operation is canceled, the
+  /// original image is retained.
+  void openFilterEditor() async {
+    _saveInlineTextEdit();
+    if (!mounted) return;
+    FilterState? filterState = await openPage(
+      FilterEditor.autoSource(
+        key: filterEditor,
+        editorImage: widget.blankSize == null
+            ? editorImage
+            : EditorImage(byteArray: kImageEditorTransparentBytes),
+        videoController: _videoController,
+        initConfigs: FilterEditorInitConfigs(
+          theme: _theme,
+          configs: configs,
+          callbacks: callbacks,
+          transformConfigs: stateManager.transformConfigs,
+          layers: _layerCopyManager.copyLayerList(activeLayers),
+          mainImageSize: widget.blankSize ?? sizesManager.decodedImageSize,
+          mainBodySize: sizesManager.bodySize,
+          convertToUint8List: false,
+          appliedBlurFactor: stateManager.activeBlur,
+          appliedFilters: stateManager.activeFilters.allMatrices,
+          appliedTuneAdjustments: stateManager.activeTuneAdjustments,
+        ),
+      ),
+    );
+
+    if (filterState == null) return;
+
+    addHistory(
+      filters: [
+        ...stateManager.activeFilters.map((item) => item.copy()),
+        filterState,
+      ],
+      heroScreenshotRequired: true,
+    );
+
+    setState(() {});
+    mainEditorCallbacks?.handleUpdateUI();
+  }
+
+  /// Opens the blur editor as a modal bottom sheet.
+  void openBlurEditor() async {
+    _saveInlineTextEdit();
+    if (!mounted) return;
+    double? blur = await openPage(
+      BlurEditor.autoSource(
+        key: blurEditor,
+        editorImage: widget.blankSize == null
+            ? editorImage
+            : EditorImage(byteArray: kImageEditorTransparentBytes),
+        videoController: _videoController,
+        initConfigs: BlurEditorInitConfigs(
+          theme: _theme,
+          mainImageSize: widget.blankSize ?? sizesManager.decodedImageSize,
+          mainBodySize: sizesManager.bodySize,
+          layers: _layerCopyManager.copyLayerList(activeLayers),
+          configs: configs,
+          callbacks: callbacks,
+          transformConfigs: stateManager.transformConfigs,
+          convertToUint8List: false,
+          appliedBlurFactor: stateManager.activeBlur,
+          appliedFilters: stateManager.activeFilters.allMatrices,
+          appliedTuneAdjustments: stateManager.activeTuneAdjustments,
+        ),
+      ),
+    );
+
+    if (blur == null) return;
+
+    addHistory(blur: blur, heroScreenshotRequired: true);
+
+    setState(() {});
+    mainEditorCallbacks?.handleUpdateUI();
+  }
+
+  /// Opens the emoji editor.
+  ///
+  /// This method opens the emoji editor as a modal bottom sheet, allowing the
+  /// user to add emoji
+  /// layers to the current image. The selected emoji layer's properties, such
+  /// as scale and offset,
+  /// are adjusted before adding it to the image's layers.
+  ///
+  /// Keyboard event handlers are temporarily removed while the emoji editor is
+  /// active and restored
+  /// after its closure.
+  void openEmojiEditor() async {
+    _saveInlineTextEdit();
+    setState(() => layerInteractionManager.clearSelectedLayers());
+    _checkInteractiveViewer();
+    ServicesBinding.instance.keyboard.removeHandler(_onKeyEvent);
+    final effectiveBoxConstraints = emojiEditorConfigs
+        .style
+        .editorBoxConstraintsBuilder
+        ?.call(context, configs);
+
+    DraggableSheetStyle sheetTheme =
+        emojiEditorConfigs.style.themeDraggableSheet;
+    bool useDraggableSheet = sheetTheme.maxChildSize != sheetTheme.minChildSize;
+    EmojiLayer? layer = await showModalBottomSheet(
+      context: context,
+      backgroundColor: emojiEditorConfigs.style.backgroundColor,
+      constraints: effectiveBoxConstraints,
+      showDragHandle: emojiEditorConfigs.style.showDragHandle,
+      isScrollControlled: true,
+      useSafeArea: true,
+      builder: (BuildContext context) => SafeArea(
+        child: !useDraggableSheet
+            ? ConstrainedBox(
+                constraints:
+                    effectiveBoxConstraints ??
+                    BoxConstraints(
+                      maxHeight: 300 + MediaQuery.viewInsetsOf(context).bottom,
+                    ),
+                child: EmojiEditor(configs: configs),
+              )
+            : DraggableScrollableSheet(
+                expand: sheetTheme.expand,
+                initialChildSize: sheetTheme.initialChildSize,
+                maxChildSize: sheetTheme.maxChildSize,
+                minChildSize: sheetTheme.minChildSize,
+                shouldCloseOnMinExtent: sheetTheme.shouldCloseOnMinExtent,
+                snap: sheetTheme.snap,
+                snapAnimationDuration: sheetTheme.snapAnimationDuration,
+                snapSizes: sheetTheme.snapSizes,
+                builder: (_, controller) {
+                  return EmojiEditor(
+                    configs: configs,
+                    scrollController: controller,
+                  );
+                },
+              ),
+      ),
+    );
+    ServicesBinding.instance.keyboard.addHandler(_onKeyEvent);
+    if (layer == null || !mounted) return;
+    layer.scale = emojiEditorConfigs.initScale;
+
+    addLayer(layer);
+
+    setState(() {});
+    mainEditorCallbacks?.handleUpdateUI();
+  }
+
+  /// Opens the sticker editor as a modal bottom sheet.
+  void openStickerEditor() async {
+    _saveInlineTextEdit();
+    setState(() => layerInteractionManager.selectedLayerId = '');
+    _checkInteractiveViewer();
+    ServicesBinding.instance.keyboard.removeHandler(_onKeyEvent);
+    final effectiveBoxConstraints = stickerEditorConfigs
+        .style
+        .editorBoxConstraintsBuilder
+        ?.call(context, configs);
+    var sheetTheme = stickerEditorConfigs.style.draggableSheetStyle;
+    WidgetLayer? layer = await showModalBottomSheet(
+      context: context,
+      backgroundColor: stickerEditorConfigs.style.bottomSheetBackgroundColor,
+      constraints: effectiveBoxConstraints,
+      showDragHandle: stickerEditorConfigs.style.showDragHandle,
+      isScrollControlled: true,
+      useSafeArea: true,
+      builder: (_) => SafeArea(
+        child: DraggableScrollableSheet(
+          expand: sheetTheme.expand,
+          initialChildSize: sheetTheme.initialChildSize,
+          maxChildSize: sheetTheme.maxChildSize,
+          minChildSize: sheetTheme.minChildSize,
+          shouldCloseOnMinExtent: sheetTheme.shouldCloseOnMinExtent,
+          snap: sheetTheme.snap,
+          snapAnimationDuration: sheetTheme.snapAnimationDuration,
+          snapSizes: sheetTheme.snapSizes,
+          builder: (_, controller) {
+            return StickerEditor(
+              configs: configs,
+              scrollController: controller,
+            );
+          },
+        ),
+      ),
+    );
+    ServicesBinding.instance.keyboard.addHandler(_onKeyEvent);
+    if (layer == null || !mounted) return;
+
+    addLayer(layer);
+
+    setState(() {});
+    mainEditorCallbacks?.handleUpdateUI();
+  }
+
+  /// Opens the audio editor page to select or adjust an audio track.
+  ///
+  /// Throws an [ArgumentError] if called while editing an image
+  /// instead of a video.
+  ///
+  /// After the editor closes, updates the current video controller
+  /// with the selected [AudioTrack] and its start time.
+  void openAudioEditor({bool enforceChooseTrackPage = false}) async {
+    _saveInlineTextEdit();
+    if (!_isVideoEditor) {
+      throw ArgumentError(
+        'This editor can only be opened when editing videos, not images.',
+      );
+    }
+
+    bool isEditSheetAvailable =
+        audioEditorConfigs.enableEditBalance ||
+        audioEditorConfigs.enableEditStartTime;
+
+    if (!enforceChooseTrackPage &&
+        _videoController!.audioTrack != null &&
+        isEditSheetAvailable) {
+      _audioBottomBarNotifier.value = true;
+      return;
+    }
+
+    _videoController!.pause();
+
+    if (!mounted) return;
+    AudioEditorResponse? response = await openPage(
+      AudioEditorPage(
+        key: audioEditor,
+        configs: configs,
+        callbacks: callbacks,
+        theme: _theme,
+        initialSelectedTrack: _videoController!.audioTrack,
+        videoDuration: _videoController!.videoDuration,
+      ),
+      duration: Duration.zero,
+    );
+
+    if (response == null) {
+      return;
+    }
+
+    _videoController!.audioTrack = response.track;
+    if (_audioBottomBarNotifier.value) {
+      setState(() {});
+    } else if (isEditSheetAvailable) {
+      _audioBottomBarNotifier.value = true;
+    }
+
+    if (_videoController!.isPlayingNotifier.value && response.track != null) {
+      await audioEditorCallbacks!.onPlay!(response.track!);
+    }
+  }
+
+  /// Opens the clips editor page to trim or merge video segments.
+  ///
+  /// Allows users to adjust the start and end times of the video
+  /// and optionally merge multiple clips or audio tracks into one.
+  ///
+  /// Throws an [ArgumentError] if called while editing an image
+  /// instead of a video.
+  ///
+  /// After the editor closes, updates the current video configuration
+  /// with the trimmed or merged result.
+  void openClipsEditor() async {
+    _saveInlineTextEdit();
+    if (!_isVideoEditor) {
+      throw ArgumentError(
+        'This editor can only be opened when editing videos, not images.',
+      );
+    }
+    _videoController!.pause();
+
+    if (!mounted) return;
+    VideoClipEditorResponse? response = await openPage(
+      ClipsEditorPage(
+        key: audioEditor,
+        configs: configs,
+        callbacks: callbacks,
+        theme: _theme,
+        videoDuration: _videoController!.videoDuration,
+        initialClips: _videoController!.clips,
+      ),
+      duration: Duration.zero,
+    );
+
+    if (response == null) {
+      return;
+    }
+
+    _videoController!.clips = response.videoClips;
+  }
+
+  /// Moves a layer in the list to a new position.
+  ///
+  /// - `oldIndex` is the current index of the layer.
+  /// - `newIndex` is the index the layer ends up at, counted after it is
+  ///   removed. An index outside the layer list is ignored.
+  ///
+  /// Pass [skipUpdateHistory] to reorder the current history step instead of
+  /// recording a new one, e.g. when a drag already recorded its step when it
+  /// started, as with [setLayerTimeline]. The layers are redrawn in their new
+  /// order either way.
+  void moveLayerListPosition({
+    required int oldIndex,
+    required int newIndex,
+    bool skipUpdateHistory = false,
+  }) {
+    if (oldIndex == newIndex || oldIndex < 0 || newIndex < 0) return;
+    if (oldIndex >= activeLayers.length || newIndex >= activeLayers.length) {
+      return;
+    }
+
+    final layers = skipUpdateHistory
+        ? activeLayers
+        : _layerCopyManager.copyLayerList(activeLayers);
+
+    // Insert directly at newIndex, no adjustment needed
+    layers.insert(newIndex, layers.removeAt(oldIndex));
+
+    if (skipUpdateHistory) {
+      // The step's background screenshot still shows the old order, so let
+      // the final capture take a new one.
+      stateManager.activeScreenshot?.broken = true;
+      _controllers.uiLayerCtrl.add(null);
+      return;
+    }
+    addHistory(layers: layers);
+    setState(() {});
+  }
+
+  /// Moves the given layer one step forward in the stack.
+  /// Does nothing if the layer is already at the top.
+  void moveLayerForward(Layer layer) {
+    int oldIndex = getLayerStackIndex(layer);
+    if (oldIndex >= activeLayers.length - 1) return;
+    moveLayerListPosition(oldIndex: oldIndex, newIndex: oldIndex + 1);
+  }
+
+  /// Moves the given layer one step backward in the stack.
+  /// Does nothing if the layer is already at the bottom.
+  void moveLayerBackward(Layer layer) {
+    int oldIndex = getLayerStackIndex(layer);
+    if (oldIndex <= 0) return;
+    moveLayerListPosition(oldIndex: oldIndex, newIndex: oldIndex - 1);
+  }
+
+  /// Moves the given layer to the top of the stack.
+  /// Does nothing if the layer is already at the top.
+  void moveLayerToFront(Layer layer) {
+    int oldIndex = getLayerStackIndex(layer);
+    if (oldIndex == -1 || oldIndex == activeLayers.length - 1) return;
+    moveLayerListPosition(
+      oldIndex: oldIndex,
+      newIndex: activeLayers.length - 1,
+    );
+  }
+
+  /// Moves the given layer to the bottom of the stack.
+  /// Does nothing if the layer is already at the bottom.
+  void moveLayerToBack(Layer layer) {
+    int oldIndex = getLayerStackIndex(layer);
+    if (oldIndex <= 0) return;
+    moveLayerListPosition(oldIndex: oldIndex, newIndex: 0);
+  }
+
+  /// Returns the index of the given layer in the active layer stack.
+  /// Returns -1 if the layer is not found.
+  int getLayerStackIndex(Layer layer) {
+    return activeLayers.indexWhere((item) => item.id == layer.id);
+  }
+
+  /// Undo the last editing action.
+  ///
+  /// This function allows the user to undo the most recent editing action
+  /// performed on the image.
+  /// It decreases the edit position, and the image is decoded to reflect
+  /// the previous state.
+  void undoAction() {
+    GestureManager.instance.stopPropagation();
+    _saveInlineTextEdit();
+    if (stateManager.canUndo) {
+      setState(() {
+        layerInteractionManager.clearSelectedLayers();
+        _checkInteractiveViewer();
+        stateManager.undo();
+        decodeImage();
+      });
+      mainEditorCallbacks?.handleUndo();
+    }
+  }
+
+  /// Redo the previously undone editing action.
+  ///
+  /// This function allows the user to redo an editing action that was
+  /// previously undone using the
+  /// `undoAction` function. It increases the edit position, and the image is
+  /// decoded to reflect
+  /// the next state.
+  void redoAction() {
+    _saveInlineTextEdit();
+    if (stateManager.canRedo) {
+      setState(() {
+        layerInteractionManager.clearSelectedLayers();
+        _checkInteractiveViewer();
+        stateManager.redo();
+        decodeImage();
+      });
+      mainEditorCallbacks?.handleRedo();
+    }
+  }
+
+  /// Takes a screenshot of the current editor state.
+  ///
+  /// This method is intended to be used for capturing the current state of the
+  /// editor and saving it as an image.
+  ///
+  /// - If a subeditor is currently open, the method waits until it is fully
+  ///   loaded.
+  /// - The screenshot is taken in a post-frame callback to ensure the UI is
+  ///   fully rendered.
+  void _takeScreenshot({bool replaceLastScreenshot = false}) async {
+    // Wait for the editor to be fully open, if it is currently opening
+    if (isSubEditorOpen) await _pageOpenCompleter.future;
+
+    if (replaceLastScreenshot) {
+      // With background generation off, capture() appends nothing, so there
+      // may be no screenshot to replace.
+      if (stateManager.screenshots.isEmpty) return;
+      stateManager.screenshots.removeLast();
+    }
+
+    // Capture the screenshot in a post-frame callback to ensure the UI is fully
+    // rendered
+    WidgetsBinding.instance.addPostFrameCallback((_) async {
+      if (_imageInfos == null && mounted) await decodeImage();
+
+      if (!mounted) return;
+
+      await _controllers.screenshot.capture(
+        imageInfos: _imageInfos!,
+        screenshots: stateManager.screenshots,
+      );
+    });
+  }
+
+  /// Complete the editing process and return the edited image.
+  ///
+  /// This function is called when the user is done editing the image. If no
+  /// changes have been made or if the image has no additional layers, it
+  /// cancels the editing process and closes the editor. Otherwise, it captures
+  /// the current state of the image, including any applied changes or layers,
+  /// and returns it as a byte array.
+  ///
+  /// Before returning the edited image, a loading dialog is displayed to
+  /// indicate that the operation is in progress.
+  void doneEditing() async {
+    if (_inlineTextEdit != null) {
+      await commitInlineTextEdit();
+      if (!mounted) return;
+    }
+    mainEditorCallbacks?.handleDone();
+    if (_isProcessingFinalImage) return;
+    if (!stateManager.canUndo && activeLayers.isEmpty) {
+      if (!imageGenerationConfigs.allowEmptyEditingCompletion) {
+        return closeEditor();
+      }
+    }
+    callbacks.onImageEditingStarted?.call();
+
+    /// Hide every unnecessary element that Screenshot Controller will capture
+    /// a correct image.
+    setState(() {
+      _isProcessingFinalImage = true;
+      layerInteractionManager.clearSelectedLayers();
+      _checkInteractiveViewer();
+    });
+
+    /// Ensure hero animations finished
+    if (isSubEditorOpen) await _pageOpenCompleter.future;
+
+    /// For the case the user add initial transformConfigs but there are no
+    /// changes we need to ensure the editor will generate the image.
+    if (mainEditorConfigs.transformSetup != null && !stateManager.canUndo) {
+      addHistory();
+    }
+
+    WidgetsBinding.instance.addPostFrameCallback((_) async {
+      LoadingDialog.instance.show(
+        context,
+        theme: _theme,
+        configs: configs,
+        message: i18n.doneLoadingMsg,
+      );
+
+      try {
+        if (callbacks.onThumbnailGenerated != null) {
+          if (_imageInfos == null) await decodeImage();
+
+          final Uint8List imageBytes = mainEditorConfigs.captureImageOnDone
+              ? await captureEditorImage()
+              : Uint8List.fromList([]);
+
+          final results = await Future.wait([
+            Future.value(imageBytes),
+            _controllers.screenshot.getRawRenderedImage(
+              imageInfos: _imageInfos!,
+              useThumbnailSize: false,
+            ),
+          ]);
+
+          await callbacks.onThumbnailGenerated!(
+            imageBytes,
+            results[1] as ui.Image,
+          );
+        } else {
+          Uint8List? bytes = mainEditorConfigs.captureImageOnDone
+              ? await captureEditorImage()
+              : null;
+          if (bytes != null) {
+            await onImageEditingComplete?.call(bytes);
+          }
+
+          final capturedLayers = mainEditorConfigs.captureLayersOnDone
+              ? await captureAllLayersWithMeta(
+                  applyTransforms: true,
+                  basePixelRatio: configs.imageGeneration.customPixelRatio,
+                )
+              : <ExportedLayer>[];
+
+          final transform = stateManager.transformConfigs;
+          final isTransformed = transform.isNotEmpty;
+
+          Size originalImageSize = _imageInfos!.rawSize;
+          Size outputSize = transform.getCropSize(originalImageSize);
+          Offset outputOffset = transform.getCropStartOffset(originalImageSize);
+
+          await onCompleteWithParameters?.call(
+            CompleteParameters(
+              blur: stateManager.activeBlur,
+              matrixFilterList: stateManager.activeFilters.allMatrices,
+              filterStates: stateManager.activeFilters,
+              tuneAdjustments: stateManager.activeTuneAdjustments,
+              matrixTuneAdjustmentsList: stateManager.activeTuneAdjustments
+                  .map((item) => item.matrix)
+                  .toList(),
+              startTime: _videoController?.startTime,
+              endTime: _videoController?.endTime,
+              cropWidth: isTransformed ? outputSize.width.round() : null,
+              cropHeight: isTransformed ? outputSize.height.round() : null,
+              cropX: isTransformed ? outputOffset.dx.round() : null,
+              cropY: isTransformed ? outputOffset.dy.round() : null,
+              flipX: transform.is90DegRotated
+                  ? transform.flipY
+                  : transform.flipX,
+              flipY: transform.is90DegRotated
+                  ? transform.flipX
+                  : transform.flipY,
+              rotateTurns: transform.angleToTurns(),
+              tiltRotate: transform.tiltRotate,
+              tiltHorizontal: transform.tiltHorizontal,
+              tiltVertical: transform.tiltVertical,
+              image: bytes ?? Uint8List.fromList([]),
+              isTransformed: isTransformed,
+              layers: activeLayers,
+              capturedLayers: capturedLayers,
+              customAudioTrack: _videoController?.audioTrack,
+              audioTracks: _videoController?.audioTrack != null
+                  ? [_videoController!.audioTrack!]
+                  : [],
+              videoClips: _videoController?.clips ?? [],
+              originalImageSize: sizesManager.originalImageSize,
+              temporaryDecodedImageSize: sizesManager.temporaryDecodedImageSize,
+              bodySize: sizesManager.bodySize,
+              editorSize: sizesManager.editorSize,
+              meta: stateManager.activeMeta,
+            ),
+          );
+        }
+
+        onCloseEditor?.call(EditorMode.main);
+      } finally {
+        LoadingDialog.instance.hide();
+
+        /// Allow users to continue editing if they didn't close the editor.
+        _isProcessingFinalImage = false;
+        if (mounted) setState(() {});
+      }
+    });
+  }
+
+  /// Captures the final editor image.
+  ///
+  /// This method generates the final image of the editor content, taking
+  /// into account the pixel ratio for high-resolution images. If
+  /// `generateOnlyImageBounds` is set in `imageGenerationConfigs`, it uses the
+  /// base pixel ratio; otherwise, it uses the maximum of the base pixel ratio
+  /// and the device's pixel ratio.
+  ///
+  /// Returns a [Uint8List] representing the final image.
+  ///
+  /// Returns an empty [Uint8List] if the screenshot capture fails.
+  Future<Uint8List> captureEditorImage() async {
+    if (_inlineTextEdit != null) {
+      await commitInlineTextEdit();
+      if (!mounted) return Uint8List.fromList([]);
+    }
+
+    if (isSubEditorOpen) {
+      Navigator.pop(context);
+      if (!_pageOpenCompleter.isCompleted) await _pageOpenCompleter.future;
+      if (!mounted) return Uint8List.fromList([]);
+    }
+
+    if (_imageInfos == null) await decodeImage();
+
+    if (!mounted) return Uint8List.fromList([]);
+
+    bool hasChanges = stateManager.canUndo;
+    bool useOriginalImage =
+        !_isVideoEditor &&
+        !hasChanges &&
+        imageGenerationConfigs.enableUseOriginalBytes;
+
+    if (!hasChanges && !imageGenerationConfigs.enableUseOriginalBytes) {
+      addHistory();
+    }
+
+    return await _controllers.screenshot.captureFinalScreenshot(
+          imageInfos: _imageInfos!,
+          backgroundScreenshot: useOriginalImage
+              ? null
+              : stateManager.activeScreenshot,
+          originalImageBytes: useOriginalImage
+              ? await editorImage!.safeByteArray(context)
+              : null,
+        ) ??
+        Uint8List.fromList([]);
+  }
+
+  /// Captures all active layers in one batch.
+  ///
+  /// For PNG exports, this method reuses the editor's existing
+  /// [ContentRecorderController] so isolate resources stay warm and can be
+  /// processed efficiently across all layers.
+  Future<List<Uint8List?>> captureAllLayers({
+    double? pixelRatio,
+    double? basePixelRatio,
+    bool applyTransforms = true,
+    ui.ImageByteFormat format = ui.ImageByteFormat.png,
+  }) async {
+    final exported = await captureAllLayersWithMeta(
+      pixelRatio: pixelRatio,
+      basePixelRatio: basePixelRatio,
+      applyTransforms: applyTransforms,
+      format: format,
+    );
+    return exported.map((e) => e.bytes).toList();
+  }
+
+  /// Captures all active layers in one batch and returns metadata per layer.
+  ///
+  /// For PNG exports, this method reuses the editor's existing
+  /// [ContentRecorderController] so isolate resources stay warm and can be
+  /// processed efficiently across all layers.
+  ///
+  /// Each layer is captured at the pixel ratio
+  /// `ImageGenerationConfigs.layerCapturePixelRatio` returns for it, when set.
+  Future<List<ExportedLayer>> captureAllLayersWithMeta({
+    double? pixelRatio,
+    double? basePixelRatio,
+    bool applyTransforms = true,
+    ui.ImageByteFormat format = ui.ImageByteFormat.png,
+  }) async {
+    if (_inlineTextEdit != null) {
+      await commitInlineTextEdit();
+      if (!mounted) return <ExportedLayer>[];
+    }
+
+    if (isSubEditorOpen) {
+      Navigator.pop(context);
+      if (!_pageOpenCompleter.isCompleted) await _pageOpenCompleter.future;
+      if (!mounted) return <ExportedLayer>[];
+    }
+
+    // Ensure the current frame with layers is fully rendered before capture.
+    await WidgetsBinding.instance.endOfFrame;
+    if (!mounted) return <ExportedLayer>[];
+
+    return Layer.captureAllLayers(
+      layers: activeLayers,
+      pixelRatio: pixelRatio,
+      basePixelRatio: basePixelRatio,
+      applyTransforms: applyTransforms,
+      format: format,
+      recorder: format == ui.ImageByteFormat.png
+          ? _controllers.screenshot
+          : null,
+      capturePixelRatio: configs.imageGeneration.layerCapturePixelRatio,
+    );
+  }
+
+  /// Closes all active sub-editors within the main editor, including paint,
+  /// text, crop/rotate, filter, tune, and emoji editors.
+  /// This ensures that any open sub-editor is properly closed and the main
+  /// editor returns to its default state.
+  void closeSubEditor() {
+    paintEditor.currentState?.close();
+    textEditor.currentState?.close();
+    cropRotateEditor.currentState?.close();
+    filterEditor.currentState?.close();
+    tuneEditor.currentState?.close();
+    emojiEditor.currentState?.close();
+  }
+
+  /// Close the image editor.
+  ///
+  /// This function allows the user to close the image editor without saving
+  /// any changes or edits.
+  /// It navigates back to the previous screen or closes the modal editor.
+  void closeEditor() {
+    if (!stateManager.canUndo) {
+      if (onCloseEditor == null) {
+        Navigator.pop(context);
+      } else {
+        onCloseEditor!.call(EditorMode.main);
+      }
+    } else {
+      closeWarning();
+    }
+  }
+
+  /// Displays a warning dialog before closing the image editor.
+  void closeWarning() async {
+    if (isPopScopeDisabled) {
+      Navigator.pop(context);
+      return;
+    }
+    _isDialogOpen = true;
+
+    bool close = false;
+
+    if (!mounted) return;
+
+    if (mainEditorConfigs.widgets.closeWarningDialog != null) {
+      close = await mainEditorConfigs.widgets.closeWarningDialog!(this);
+    } else {
+      await showAdaptiveDialog(
+        context: context,
+        builder: (BuildContext context) => Theme(
+          data: _theme,
+          child: AdaptiveDialog(
+            designMode: designMode,
+            brightness: _theme.brightness,
+            style: configs.dialogConfigs.style.adaptiveDialog,
+            title: Text(i18n.various.closeEditorWarningTitle),
+            content: Text(i18n.various.closeEditorWarningMessage),
+            actions: <AdaptiveDialogAction>[
+              AdaptiveDialogAction(
+                designMode: designMode,
+                onPressed: () => Navigator.pop(context, 'Cancel'),
+                child: Text(i18n.various.closeEditorWarningCancelBtn),
+              ),
+              AdaptiveDialogAction(
+                designMode: designMode,
+                onPressed: () {
+                  close = true;
+                  Navigator.pop(context, 'OK');
+                },
+                child: Text(i18n.various.closeEditorWarningConfirmBtn),
+              ),
+            ],
+          ),
+        ),
+      );
+    }
+
+    if (close) {
+      if (onCloseEditor == null) {
+        if (mounted) Navigator.pop(context);
+      } else {
+        onCloseEditor!.call(EditorMode.main);
+      }
+    }
+
+    _isDialogOpen = false;
+  }
+
+  /// Imports state history and performs necessary recalculations.
+  ///
+  /// If [ImportStateHistory.configs.recalculateSizeAndPosition] is `true`, it
+  /// recalculates the position and size of layers.
+  /// It adjusts the scale and offset of each layer based on the image size and
+  /// the editor's dimensions.
+  ///
+  /// If [ImportStateHistory.configs.mergeMode] is
+  /// [ImportEditorMergeMode.replace], it replaces the current state history
+  /// with the imported one.
+  /// Otherwise, it merges the imported state history with the current one
+  /// based on the merge mode.
+  ///
+  /// After importing, it updates the UI by calling [setState()] and the
+  /// optional [onUpdateUI] callback.
+  Future<void> importStateHistory(ImportStateHistory import) async {
+    mainEditorCallbacks?.onImportHistoryStart?.call(this, import);
+
+    await _stateHistoryService.importStateHistory(
+      import,
+      context,
+      () => setState(() {}),
+    );
+    await decodeImage();
+
+    mainEditorCallbacks?.onImportHistoryEnd?.call(this, import);
+  }
+
+  /// Exports the current state history.
+  ///
+  /// `configs` specifies the export configurations, such as whether to include
+  /// filters or layers.
+  ///
+  /// Returns an [ExportStateHistory] object containing the exported state
+  /// history, image state history, image size, edit position, and export
+  /// configurations.
+  Future<ExportStateHistory> exportStateHistory({
+    ExportEditorConfigs configs = const ExportEditorConfigs(),
+  }) async {
+    if (_inlineTextEdit != null) {
+      await commitInlineTextEdit();
+      if (!mounted) throw ArgumentError('Context unmounted');
+    }
+    if (_imageInfos == null) await decodeImage();
+    if (_imageInfos == null) throw ArgumentError('Failed to decode the image');
+    if (!mounted) throw ArgumentError('Context unmounted');
+
+    return _stateHistoryService.exportStateHistory(
+      imageInfos: _imageInfos!,
+      configs: configs,
+      context: context,
+    );
+  }
+
+  /// Locks all layers in the editor.
+  ///
+  /// If [onlyCurrentHistory] is set to `true`, only the layers in the current
+  /// history state will be locked.
+  ///
+  /// Parameters:
+  /// - [onlyCurrentHistory]: A boolean value indicating whether to lock only
+  ///   the layers in the current history state. Defaults to `false`.
+  ///
+  /// See also:
+  /// - [unlockAllLayers] to unlock all layers.
+  void lockAllLayers({bool onlyCurrentHistory = false}) {
+    stateManager.updateLayerInteraction(
+      enableInteraction: false,
+      onlyCurrentHistory: onlyCurrentHistory,
+    );
+    clearLayerSelection();
+  }
+
+  /// Unlocks all layers in the editor.
+  ///
+  /// If [onlyCurrentHistory] is set to `true`, only the layers in the current
+  /// history state will be unlocked.
+  ///
+  /// Parameters:
+  /// - [onlyCurrentHistory]: A boolean value indicating whether to unlock only
+  ///   the layers in the current history state. Defaults to `false`.
+  ///
+  /// See also:
+  /// - [lockAllLayers] to lock all layers.
+  void unlockAllLayers({bool onlyCurrentHistory = false}) {
+    stateManager.updateLayerInteraction(
+      enableInteraction: true,
+      onlyCurrentHistory: onlyCurrentHistory,
+    );
+  }
+
+  /// Clears the currently selected layer by:
+  /// - Clearing the selected layer ID in the [layerInteractionManager]
+  /// - Notifying listeners via [_controllers.uiLayerCtrl]
+  void clearLayerSelection() {
+    layerInteractionManager.clearSelectedLayers();
+    _controllers.uiLayerCtrl.add(null);
+  }
+
+  /// Selects a layer by its index in [activeLayers].
+  ///
+  /// If the index is out of bounds, the selection is cleared and `null` is
+  /// returned.
+  /// Otherwise, the corresponding layer is marked as selected and listeners
+  /// are notified.
+  ///
+  /// Returns the selected [Layer] or `null` if the index is invalid.
+  Layer? selectLayerByIndex(int index, {bool enableMultiSelect = false}) {
+    if (index < 0 || index >= activeLayers.length) {
+      clearLayerSelection();
+      return null;
+    }
+
+    var layer = activeLayers[index];
+
+    return selectLayerById(layer.id, enableMultiSelect: enableMultiSelect);
+  }
+
+  /// Selects a layer by its unique [id].
+  ///
+  /// Internally uses [selectLayerByIndex] after finding the layer's index.
+  ///
+  /// Returns the selected [Layer] or `null` if the ID does not match any
+  /// active layer.
+  Layer? selectLayerById(String id, {bool enableMultiSelect = false}) {
+    int index = activeLayers.indexWhere((layer) => layer.id == id);
+    if (index == -1) return null;
+
+    Layer? layer = activeLayers[index];
+
+    // Check if the layer allows selection
+    if (!layer.interaction.enableSelection) return null;
+
+    if (!enableMultiSelect) layerInteractionManager.clearSelectedLayers();
+
+    layerInteractionManager.addSelectedLayer(id);
+    _controllers.uiLayerCtrl.add(null);
+    return layer;
+  }
+
+  /// Selects all available layers.
+  void selectAllLayers() {
+    layerInteractionManager.setSelectedLayers(
+      activeLayers
+          .where((layer) => layer.interaction.enableSelection)
+          .map((layer) => layer.id),
+    );
+    _controllers.uiLayerCtrl.add(null);
+  }
+
+  /// Deselects all currently selected layers.
+  void unselectAllLayers() {
+    layerInteractionManager.clearSelectedLayers();
+    _controllers.uiLayerCtrl.add(null);
+  }
+
+  /// Whether the current selection can be combined into a single paint layer.
+  ///
+  /// Returns `true` when at least two of the selected layers are non-censor
+  /// [PaintLayer]s. Host apps can use this to enable/disable a "Combine"
+  /// action. See [mergeSelectedLayers].
+  bool get canMergeSelectedLayers =>
+      PaintLayerMergeManager.canMerge(selectedLayers);
+
+  /// Combines the currently selected non-censor paint layers into a single
+  /// [PaintLayer].
+  ///
+  /// Every selected [PaintLayer] that is not a censor area is baked (offset,
+  /// scale, rotation, flip and layer opacity) into one merged layer that keeps
+  /// each stroke's own color/mode/stroke width/opacity, so the drawing looks
+  /// identical before and after merging. The merged layer is inserted at the
+  /// z-index of the top-most source layer, the originals are removed, the new
+  /// layer is selected and the whole operation is recorded as a single
+  /// undo entry.
+  ///
+  /// Non-paint and censor layers in the selection are ignored. Returns the
+  /// merged [PaintLayer], or `null` when fewer than two mergeable layers are
+  /// selected.
+  PaintLayer? mergeSelectedLayers() {
+    final selectedIds = layerInteractionManager.selectedLayerIds;
+
+    // Collect the mergeable source layers in z-order (bottom-most first) so the
+    // stroke stacking order is preserved inside the merged layer.
+    final List<PaintLayer> sources = activeLayers
+        .whereType<PaintLayer>()
+        .where(
+          (layer) =>
+              selectedIds.contains(layer.id) &&
+              PaintLayerMergeManager.isMergeable(layer),
+        )
+        .toList();
+
+    if (sources.length < 2) return null;
+
+    final PaintLayer mergedLayer = PaintLayerMergeManager.merge(sources);
+
+    final Set<String> sourceIds = sources.map((layer) => layer.id).toSet();
+    final String topMostSourceId = sources.last.id;
+
+    // Rebuild the layer list: drop every source and drop the merged layer in at
+    // the position the top-most source occupied. All other layers are copied so
+    // the previous history entry keeps its own instances (clean undo).
+    final List<Layer> newLayers = [];
+    for (final layer in activeLayers) {
+      if (layer.id == topMostSourceId) {
+        newLayers.add(mergedLayer);
+      } else if (sourceIds.contains(layer.id)) {
+        // Skip the remaining source layers.
+        continue;
+      } else {
+        newLayers.add(_layerCopyManager.copyLayer(layer));
+      }
+    }
+
+    layerInteractionManager.clearSelectedLayers();
+    addHistory(layers: newLayers);
+    layerInteractionManager.addSelectedLayer(mergedLayer.id);
+    _controllers.uiLayerCtrl.add(null);
+    setState(() {});
+
+    return mergedLayer;
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    _theme = configs.theme ?? defaultEditorTheme();
+
+    return RecordInvisibleWidget(
+      controller: _controllers.screenshot,
+      child: ExtendedPopScope(
+        canPop:
+            (isPopScopeDisabled ||
+                !stateManager.canUndo ||
+                _isProcessingFinalImage) &&
+            (!mainEditorConfigs.enableSubEditorPage || !isSubEditorOpen),
+        onPopInvokedWithResult: (didPop, result) {
+          if (mainEditorConfigs.enableSubEditorPage && isSubEditorOpen) {
+            if (_navigatorKey.currentState?.canPop() == true) {
+              _navigatorKey.currentState?.pop();
+              return;
+            }
+          }
+          if (!didPop &&
+              !isPopScopeDisabled &&
+              stateManager.canUndo &&
+              !_isProcessingFinalImage) {
+            closeWarning();
+          }
+          mainEditorCallbacks?.onPopInvoked?.call(didPop, result);
+        },
+        child: ImageInfosProvider(
+          infos: _imageInfos,
+          imageFitToWidth:
+              _imageInfos?.renderedSize.width == sizesManager.bodySize.width,
+          child: ScreenResizeDetector(
+            ignoreSafeArea: false,
+            onResizeUpdate: (event) {
+              sizesManager
+                ..recalculateLayerPosition(
+                  history: stateManager.stateHistory,
+                  resizeEvent: ResizeEvent(
+                    oldContentSize: Size(
+                      event.oldContentSize.width,
+                      event.oldContentSize.height -
+                          sizesManager.allToolbarHeight,
+                    ),
+                    newContentSize: Size(
+                      event.newContentSize.width,
+                      event.newContentSize.height -
+                          sizesManager.allToolbarHeight,
+                    ),
+                  ),
+                )
+                ..lastScreenSize = event.newContentSize;
+            },
+            onResizeEnd: (event) async {
+              await decodeImage();
+            },
+            child: AnnotatedRegion<SystemUiOverlayStyle>(
+              value: mainEditorConfigs.style.uiOverlayStyle,
+              child: Theme(
+                data: _theme,
+                child: SafeArea(
+                  top: mainEditorConfigs.safeArea.top,
+                  bottom: mainEditorConfigs.safeArea.bottom,
+                  left: mainEditorConfigs.safeArea.left,
+                  right: mainEditorConfigs.safeArea.right,
+                  child: LayoutBuilder(
+                    builder: (context, constraints) {
+                      sizesManager.editorSize = constraints.biggest;
+                      var scaffold = Scaffold(
+                        backgroundColor: mainEditorConfigs.style.background,
+                        resizeToAvoidBottomInset: false,
+                        appBar: _buildAppBar(),
+                        body: _buildBody(),
+                        bottomNavigationBar: ValueListenableBuilder(
+                          valueListenable: _audioBottomBarNotifier,
+                          builder: (_, showAudioBar, _) {
+                            return AnimatedSwitcher(
+                              duration: const Duration(milliseconds: 220),
+                              switchInCurve: Curves.ease,
+                              switchOutCurve: Curves.ease,
+                              transitionBuilder: (child, animation) {
+                                return SizeTransition(
+                                  sizeFactor: animation,
+                                  alignment: Alignment.topCenter,
+                                  child: child,
+                                );
+                              },
+                              layoutBuilder: (currentChild, previousChildren) {
+                                return Stack(
+                                  alignment: .bottomCenter,
+                                  children: [
+                                    ...previousChildren,
+                                    ?currentChild,
+                                  ],
+                                );
+                              },
+                              child: showAudioBar
+                                  ? AudioMainBottomBar(
+                                      configs: configs,
+                                      controller: _videoController!,
+                                      audioEditorCallbacks:
+                                          audioEditorCallbacks,
+                                      onSelectAudioTrack: () => openAudioEditor(
+                                        enforceChooseTrackPage: true,
+                                      ),
+                                      onConfirmChanges: () {
+                                        _audioBottomBarNotifier.value = false;
+                                      },
+                                    )
+                                  : _buildBottomNavBar() ??
+                                        const SizedBox.shrink(),
+                            );
+                          },
+                        ),
+                      );
+
+                      if (mainEditorConfigs.enableSubEditorPage) {
+                        return Stack(
+                          children: [
+                            scaffold,
+                            Positioned.fill(
+                              child: IgnorePointer(
+                                ignoring: !isSubEditorOpen,
+                                child: Navigator(
+                                  key: _navigatorKey,
+                                  onGenerateRoute: (settings) =>
+                                      PageRouteBuilder(
+                                        opaque: false,
+                                        pageBuilder: (context, _, _) =>
+                                            const SizedBox.shrink(),
+                                      ),
+                                ),
+                              ),
+                            ),
+                          ],
+                        );
+                      }
+
+                      return scaffold;
+                    },
+                  ),
+                ),
+              ),
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+
+  PreferredSizeWidget? _buildAppBar() {
+    if (mainEditorConfigs.widgets.appBar != null) {
+      return mainEditorConfigs.widgets.appBar!.call(
+        this,
+        _rebuildController.stream,
+      );
+    }
+
+    return hasSelectedLayers &&
+            configs.layerInteraction.hideToolbarOnInteraction
+        ? null
+        : MainEditorAppBar(
+            i18n: i18n,
+            configs: configs,
+            closeEditor: closeEditor,
+            undoAction: undoAction,
+            redoAction: redoAction,
+            doneEditing: doneEditing,
+            isInitialized: _isInitialized,
+            stateManager: stateManager,
+          );
+  }
+
+  Widget _buildBody() {
+    return LayoutBuilder(
+      builder: (context, constraints) {
+        sizesManager.bodySize = constraints.biggest;
+        return !_isVideoPlayerReady
+            ? _buildVideoSetupSpinner()
+            : Listener(
+                behavior: HitTestBehavior.translucent,
+                onPointerDown: (details) {
+                  _holdInlineGesture = _onInlinePointerDown(details.position);
+                  _lastDownEvent = details;
+                  _tapDownTimestamp = DateTime.now();
+                  _mouseService.onPointerDown(details);
+                  if (layerInteractionManager.selectedLayerId.isNotEmpty ||
+                      GestureManager.instance.isBlocked) {
+                    return;
+                  }
+                  bool isDoubleTap = detectDoubleTap(details);
+                  if (!isDoubleTap) return;
+
+                  handleDoubleTap(context, details, mainEditorConfigs);
+                  mainEditorCallbacks?.onDoubleTap?.call();
+                },
+                onPointerUp: (event) {
+                  _releaseInlineGesture();
+                  if (GestureManager.instance.isBlocked) return;
+
+                  _mouseService.onPointerUp(event);
+                  onPointerUp(event);
+
+                  WidgetsBinding.instance.addPostFrameCallback((_) {
+                    final offsetDistance =
+                        (event.position - _lastDownEvent!.position).distance;
+                    final timeElapsed = DateTime.now()
+                        .difference(_tapDownTimestamp)
+                        .inMilliseconds;
+
+                    // Ignore if pointer moved too much (exceeds tap slop)
+                    if (offsetDistance >= tapSlop) return;
+
+                    // Ignore if tap took too long (not a quick tap)
+                    if (timeElapsed > tapTimeElapsed) return;
+
+                    if (!configs.videoEditor.enablePlayButton) {
+                      _videoController?.togglePlayState();
+                    }
+                    mainEditorCallbacks?.onTap?.call();
+                  });
+                },
+                onPointerCancel: (_) => _releaseInlineGesture(),
+                onPointerSignal: isDesktop && hasSelectedLayers
+                    ? (event) {
+                        final hasMultiSelection = selectedLayers.length > 1;
+
+                        final zoomEnabled = mainEditorConfigs.enableZoom;
+                        final zoomGestureActive =
+                            interactiveViewer
+                                .currentState
+                                ?.isInteractionEnabled ==
+                            true;
+
+                        if ((hasMultiSelection && zoomEnabled) ||
+                            (zoomEnabled && zoomGestureActive)) {
+                          return;
+                        }
+
+                        /// Otherwise, handle scroll as a layer scaling
+                        /// interaction.
+                        _desktopInteractionManager.mouseScroll(
+                          event,
+                          selectedLayers: selectedLayers,
+                          interactiveViewer: interactiveViewer.currentState,
+                        );
+                      }
+                    : null,
+                child: GestureDetector(
+                  behavior: HitTestBehavior.translucent,
+                  onTap: () {
+                    /// That function is required so that multiselect works
+                    /// correctly, even when it’s empty.
+                  },
+                  onLongPress: mainEditorCallbacks?.onLongPress,
+                  onScaleStart: _onScaleStart,
+                  onScaleUpdate: _onScaleUpdate,
+                  onScaleEnd: _onScaleEnd,
+                  child:
+                      mainEditorConfigs.widgets.wrapBody?.call(
+                        this,
+                        _rebuildController.stream,
+                        _buildInteractiveContent(),
+                      ) ??
+                      _buildInteractiveContent(),
+                ),
+              );
+      },
+    );
+  }
+
+  Widget _buildInteractiveContent() {
+    return MainEditorInteractiveContent(
+      buildImage: _buildImage,
+      buildVideo: _buildVideo,
+      buildLayers: _buildLayers,
+      buildHelperLines: _buildHelperLines,
+      buildRemoveArea: _buildRemoveArea,
+      callbacks: callbacks,
+      sizesManager: sizesManager,
+      configs: configs,
+      layerInteractionManager: layerInteractionManager,
+      controllers: _controllers,
+      processFinalImage: _isProcessingFinalImage,
+      rebuildController: _rebuildController,
+      stateManager: stateManager,
+      interactiveViewerKey: interactiveViewer,
+      state: this,
+      videoController: _videoController,
+      isVideoEditor: _isVideoEditor,
+      layerDragSelectionService: _layerDragSelectionService,
+    );
+  }
+
+  Widget? _buildBottomNavBar() {
+    if (mainEditorConfigs.widgets.bottomBar != null) {
+      return mainEditorConfigs.widgets.bottomBar!.call(
+        this,
+        _rebuildController.stream,
+        _bottomBarKey,
+      );
+    }
+
+    return hasSelectedLayers &&
+            configs.layerInteraction.hideToolbarOnInteraction
+        ? null
+        : MainEditorBottombar(
+            controllers: _controllers,
+            configs: configs,
+            sizesManager: sizesManager,
+            bottomBarKey: _bottomBarKey,
+            theme: _theme,
+            openPaintEditor: openPaintEditor,
+            openTextEditor: openTextEditor,
+            openCropRotateEditor: openCropRotateEditor,
+            openTuneEditor: openTuneEditor,
+            openFilterEditor: openFilterEditor,
+            openBlurEditor: openBlurEditor,
+            openEmojiEditor: openEmojiEditor,
+            openStickerEditor: openStickerEditor,
+            openAudioEditor: openAudioEditor,
+            openClipsEditor: openClipsEditor,
+          );
+  }
+
+  Widget _buildLayers() {
+    return MainEditorLayers(
+      controllers: _controllers,
+      layerInteractionManager: layerInteractionManager,
+      configs: configs,
+      callbacks: callbacks,
+      sizesManager: sizesManager,
+      activeLayers: activeLayers,
+      isSubEditorOpen: isSubEditorOpen,
+      onCheckInteractiveViewer: _checkInteractiveViewer,
+      onTextLayerTap: editTextLayer,
+      onEditPaintLayer: editPaintLayer,
+      state: this,
+      dragSelectionService: _layerDragSelectionService,
+      mouseService: _mouseService,
+      playTimeNotifier: _videoController?.playTimeNotifier,
+      onContextMenuToggled: (isOpen) {
+        _isContextMenuOpen = isOpen;
+      },
+      onDuplicateLayer: (layer) {
+        var duplication = _layerCopyManager.duplicateLayer(layer);
+        addLayer(
+          duplication,
+          autoCorrectZoomOffset: false,
+          autoCorrectZoomScale: false,
+        );
+      },
+    );
+  }
+
+  Widget _buildHelperLines() {
+    return MainEditorHelperLines(
+      sizesManager: sizesManager,
+      layerInteractionManager: layerInteractionManager,
+      controllers: _controllers,
+      interactiveViewer: interactiveViewer,
+      helperLines: helperLines,
+      configs: configs,
+    );
+  }
+
+  Widget _buildRemoveArea() {
+    return MainEditorRemoveLayerArea(
+      layerInteraction: layerInteraction,
+      layerInteractionManager: layerInteractionManager,
+      mainEditorConfigs: mainEditorConfigs,
+      state: this,
+      controllers: _controllers,
+      removeAreaKey: _removeAreaKey,
+      isLayerBeingTransformed: isLayerBeingTransformed,
+    );
+  }
+
+  Widget _buildVideoSetupSpinner() {
+    return configs.videoEditor.widgets.videoSetupLoadingIndicator ??
+        Center(
+          child: SizedBox(
+            width: 48,
+            height: 48,
+            child: FittedBox(
+              child: PlatformCircularProgressIndicator(configs: configs),
+            ),
+          ),
+        );
+  }
+
+  Widget _buildImage() {
+    return MainEditorBackgroundImage(
+      backgroundImageColorFilterKey: _isVideoEditor
+          ? GlobalKey()
+          : _backgroundImageColorFilterKey,
+      heroTag: _isVideoEditor ? 'image-${configs.heroTag}' : configs.heroTag,
+      configs: configs,
+      editorImage: editorImage,
+      isInitialized:
+          _isInitialized ||
+          stateHistoryConfigs.initStateHistory != null ||
+          _stateHistoryService.isImportInProgress,
+      sizesManager: sizesManager,
+      stateManager: stateManager,
+      blankSize: widget.blankSize,
+    );
+  }
+
+  Widget _buildVideo() {
+    return MainEditorBackgroundVideo(
+      backgroundImageColorFilterKey: _backgroundImageColorFilterKey,
+      configs: configs,
+      isInitialized: _isInitialized,
+      sizesManager: sizesManager,
+      stateManager: stateManager,
+      videoPlayer: _videoController!.videoPlayer,
+      playTimeNotifier: _videoController?.playTimeNotifier,
+    );
+  }
+}

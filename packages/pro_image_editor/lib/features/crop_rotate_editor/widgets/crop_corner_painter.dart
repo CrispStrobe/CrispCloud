@@ -1,0 +1,527 @@
+// Dart imports:
+import 'dart:math';
+
+// Flutter imports:
+import 'package:material_ui/material_ui.dart';
+
+// Project imports:
+import '/core/models/styles/crop_rotate_editor_style.dart';
+import '/shared/extensions/matrix_extension.dart';
+
+/// Screen-space margin (in logical pixels) by which the darkened overlay is
+/// expanded beyond the image bounds.
+///
+/// The overlay is painted on top of the image and its outer edge is
+/// mathematically identical to the rendered image edge. When the image is
+/// panned so that one of its edges floats inside the viewport, anti-aliasing
+/// along that shared edge leaves a ~1px partially-transparent seam that reveals
+/// a thin line of the image (see #776). A small overscan moves that seam off
+/// the image and onto the surrounding background, where it is invisible.
+const double _kOverlayEdgeOverscan = 1;
+
+/// A custom painter for drawing crop corners and interaction elements.
+///
+/// This class extends [CustomPainter] and is used to draw the crop corners,
+/// guide lines, and other interaction elements for a crop and rotate editor.
+/// It takes into account the current view rectangle, crop rectangle, and
+/// various style settings provided by the image editor theme.
+class CropCornerPainter extends CustomPainter {
+  /// Creates an instance of [CropCornerPainter].
+  ///
+  /// The constructor initializes various parameters needed to draw the crop
+  /// corners and interaction elements, such as the crop rectangle, view
+  /// rectangle, and other style configurations.
+  ///
+  /// Example:
+  /// ```
+  /// CropCornerPainter(
+  ///   drawCircle: true,
+  ///   offset: Offset.zero,
+  ///   cropRect: myCropRect,
+  ///   fadeInOpacity: 0.5,
+  ///   interactionOpacity: 1.0,
+  ///   viewRect: myViewRect,
+  ///   screenSize: myScreenSize,
+  ///   scaleFactor: 1.0,
+  ///   imageEditorTheme: myImageEditorTheme,
+  ///   cornerLength: 10.0,
+  ///   cornerThickness: 2.0,
+  ///   rotationScaleFactor: 1.0,
+  /// )
+  /// ```
+  CropCornerPainter({
+    required this.drawCircle,
+    required this.offset,
+    required this.cropRect,
+    required this.fadeInOpacity,
+    required this.interactionOpacity,
+    required this.viewRect,
+    required this.screenSize,
+    required this.scaleFactor,
+    required this.style,
+    required this.rotationScaleFactor,
+    this.frameOpacity = 1,
+    this.tiltRotate = 0,
+    this.tiltHorizontal = 0,
+    this.tiltVertical = 0,
+  });
+
+  /// The perspective tilt (rotation) in radians around the Z axis.
+  final double tiltRotate;
+
+  /// The perspective tilt in radians around the Y axis (left/right).
+  final double tiltHorizontal;
+
+  /// The perspective tilt in radians around the X axis (up/down).
+  final double tiltVertical;
+
+  /// The rectangle defining the crop area.
+  ///
+  /// This [Rect] represents the area of the image currently being cropped,
+  /// used to draw the crop corners and other elements.
+  final Rect cropRect;
+
+  /// The rectangle representing the current viewable area.
+  ///
+  /// This [Rect] is used to determine the position and scaling of elements
+  /// relative to the viewable area of the editor.
+  final Rect viewRect;
+
+  /// The size of the screen or canvas.
+  ///
+  /// This [Size] object represents the dimensions of the entire editing area,
+  /// affecting how elements are drawn and scaled.
+  final Size screenSize;
+
+  /// The theme settings for the image editor.
+  ///
+  /// This [CropRotateEditorStyle] object provides style configurations for the
+  /// elements drawn by this painter, such as colors and line thicknesses.
+  final CropRotateEditorStyle style;
+
+  /// Whether to draw circles at the crop corners.
+  ///
+  /// This boolean flag determines whether circular elements should be drawn at
+  /// the corners of the crop rectangle for visual guidance.
+  final bool drawCircle;
+
+  /// The offset for positioning elements.
+  ///
+  /// This [Offset] is used to adjust the positioning of elements drawn by this
+  /// painter, allowing for dynamic placement based on user interactions.
+  final Offset offset;
+
+  /// The opacity for fade-in effects.
+  ///
+  /// This double value represents the opacity level for fade-in effects,
+  /// allowing for smooth visual transitions when the crop corners appear.
+  final double fadeInOpacity;
+
+  /// The opacity for interaction effects.
+  ///
+  /// This double value represents the opacity level for interaction effects,
+  /// such as highlighting or accentuating elements during user actions.
+  final double interactionOpacity;
+
+  /// The scale factor for resizing elements.
+  ///
+  /// This double value determines how much the elements are scaled, allowing
+  /// for dynamic resizing based on zoom levels or screen sizes.
+  final double scaleFactor;
+
+  /// The factor for scaling elements based on rotation.
+  ///
+  /// This double value influences how elements are scaled when the image is
+  /// rotated, ensuring that elements remain proportionate.
+  final double rotationScaleFactor;
+
+  /// Overall opacity multiplier for the whole crop overlay (darkened area,
+  /// corners and helper lines).
+  ///
+  /// Unlike [fadeInOpacity] - which blends the outside area towards the
+  /// background color (hero state) - this simply fades the entire crop UI
+  /// towards fully transparent. It is used to briefly hide and show the crop
+  /// frame while a locked aspect-ratio rotation runs. A value of `1` keeps the
+  /// default behavior.
+  final double frameOpacity;
+
+  double get _cropOffsetLeft => cropRect.left;
+  double get _cropOffsetRight => cropRect.right;
+  double get _cropOffsetTop => cropRect.top;
+  double get _cropOffsetBottom => cropRect.bottom;
+
+  @override
+  void paint(Canvas canvas, Size size) {
+    if (size.isInfinite) return;
+    _drawDarkenOutside(canvas: canvas, size: size);
+    if (fadeInOpacity > 0) _drawHelperAreas(canvas: canvas, size: size);
+    _drawCorners(canvas: canvas, size: size);
+  }
+
+  void _drawDarkenOutside({required Canvas canvas, required Size size}) {
+    /// Draw outline darken layers
+    double cropWidth = _cropOffsetRight - _cropOffsetLeft;
+    double cropHeight = _cropOffsetBottom - _cropOffsetTop;
+
+    /// Convert the fixed screen-space overscan into the painter's local space
+    /// (which is scaled by [rotationScaleFactor] before being rendered) so the
+    /// margin stays visually constant regardless of zoom.
+    final double overscan = rotationScaleFactor.abs() > 0.001
+        ? _kOverlayEdgeOverscan / rotationScaleFactor.abs()
+        : _kOverlayEdgeOverscan;
+
+    Path path = Path()
+      // FillType "evenOdd" is important for the canvas web renderer
+      ..fillType = PathFillType.evenOdd;
+
+    if (tiltRotate != 0 || tiltHorizontal != 0 || tiltVertical != 0) {
+      // The image is rendered as a perspective-tilted quad, so the darkened
+      // area must follow that quad. Using an axis-aligned rect here would leave
+      // parts of the tilted image outside the crop un-darkened.
+      path.addPolygon(
+        _tiltedImageOutline(size: size, overscan: overscan),
+        true,
+      );
+    } else {
+      path.addRect(
+        Rect.fromCenter(
+          center: Offset(
+            size.width / 2 + offset.dx * scaleFactor,
+            size.height / 2 + offset.dy * scaleFactor,
+          ),
+          width: size.width * scaleFactor,
+          height: size.height * scaleFactor,
+        ).inflate(overscan),
+      );
+    }
+    if (drawCircle) {
+      /// Create a path for the current rectangle
+      Path circlePath = Path()
+        ..addOval(
+          Rect.fromCenter(
+            center: Offset(
+              cropWidth / 2 + _cropOffsetLeft,
+              cropHeight / 2 + _cropOffsetTop,
+            ),
+            width: cropWidth,
+            height: cropHeight,
+          ),
+        );
+
+      /// Subtract the area of the current rectangle from the path for the
+      /// entire canvas
+      path = Path.combine(PathOperation.difference, path, circlePath);
+    } else {
+      /// Create a path for the current rectangle
+      Path rectPath = Path()
+        ..addRect(
+          Rect.fromCenter(
+            center: Offset(
+              cropWidth / 2 + _cropOffsetLeft,
+              cropHeight / 2 + _cropOffsetTop,
+            ),
+            width: cropWidth,
+            height: cropHeight,
+          ),
+        );
+
+      /// Subtract the area of the current rectangle from the path for the
+      /// entire canvas
+      path = Path.combine(PathOperation.difference, path, rectPath);
+    }
+
+    Color interpolatedColor = Color.lerp(
+      style.background,
+      style.cropOverlayColor,
+      fadeInOpacity,
+    )!;
+
+    double opacity =
+        style.cropOverlayOpacity -
+        style.cropOverlayInteractionOpacity * interactionOpacity;
+
+    double fadeInFactor = (1 - opacity) * (1 - fadeInOpacity);
+
+    /// Draw the darkened area
+    canvas.drawPath(
+      path,
+      Paint()
+        ..color = interpolatedColor.withValues(
+          alpha: ((opacity + fadeInFactor).clamp(0, 1)) * frameOpacity,
+        )
+        ..style = PaintingStyle.fill,
+    );
+  }
+
+  /// Returns the four corners of the perspective-tilted image in the painter's
+  /// local coordinate space.
+  ///
+  /// Mirrors the transform applied to the rendered image (tilt about the
+  /// center, then translate and scale), so the darkened overlay follows the
+  /// exact same quad the user sees. The source rectangle is expanded by
+  /// [overscan] first to keep the #776 anti-aliasing seam off the image.
+  List<Offset> _tiltedImageOutline({
+    required Size size,
+    required double overscan,
+  }) {
+    final Offset center = Offset(size.width / 2, size.height / 2);
+    final Matrix4 tiltMatrix = Matrix4.identity().tilt(
+      rotate: tiltRotate,
+      vertical: tiltVertical,
+      horizontal: tiltHorizontal,
+    );
+
+    Offset toScreen(Offset p) {
+      final Offset tilted = MatrixUtils.transformPoint(tiltMatrix, p - center);
+      return Offset(
+        center.dx + (tilted.dx + offset.dx) * scaleFactor,
+        center.dy + (tilted.dy + offset.dy) * scaleFactor,
+      );
+    }
+
+    return [
+      toScreen(Offset(-overscan, -overscan)),
+      toScreen(Offset(size.width + overscan, -overscan)),
+      toScreen(Offset(size.width + overscan, size.height + overscan)),
+      toScreen(Offset(-overscan, size.height + overscan)),
+    ];
+  }
+
+  void _drawCorners({required Canvas canvas, required Size size}) {
+    Path path = Path();
+
+    double width = style.cropCornerThickness / rotationScaleFactor;
+    if (!drawCircle) {
+      double length = style.cropCornerLength / rotationScaleFactor;
+
+      /// Top-Left
+      path
+        ..addRect(Rect.fromLTWH(_cropOffsetLeft, _cropOffsetTop, length, width))
+        ..addRect(Rect.fromLTWH(_cropOffsetLeft, _cropOffsetTop, width, length))
+        /// Top-Right
+        ..addRect(
+          Rect.fromLTWH(
+            _cropOffsetRight - length,
+            _cropOffsetTop,
+            length,
+            width,
+          ),
+        )
+        ..addRect(
+          Rect.fromLTWH(
+            _cropOffsetRight - width,
+            _cropOffsetTop,
+            width,
+            length,
+          ),
+        )
+        /// Bottom-Left
+        ..addRect(
+          Rect.fromLTWH(
+            0 + _cropOffsetLeft,
+            _cropOffsetBottom - width,
+            length,
+            width,
+          ),
+        )
+        ..addRect(
+          Rect.fromLTWH(
+            0 + _cropOffsetLeft,
+            _cropOffsetBottom - length,
+            width,
+            length,
+          ),
+        )
+        /// Bottom-Right
+        ..addRect(
+          Rect.fromLTWH(
+            _cropOffsetRight - length,
+            _cropOffsetBottom - width,
+            length,
+            width,
+          ),
+        )
+        ..addRect(
+          Rect.fromLTWH(
+            _cropOffsetRight - width,
+            _cropOffsetBottom - length,
+            width,
+            length,
+          ),
+        );
+
+      canvas.drawPath(
+        path,
+        Paint()
+          ..color = style.cropCornerColor.withValues(
+            alpha: fadeInOpacity * frameOpacity,
+          )
+          ..style = PaintingStyle.fill,
+      );
+    } else {
+      double calculateAngleFromArcLength(
+        double circumference,
+        double arcLength,
+      ) {
+        if (circumference <= 0 || arcLength <= 0) {
+          throw ArgumentError(
+            'Circumference and arc length must be positive values.',
+          );
+        }
+        return circumference / 360 * arcLength * pi / 180;
+      }
+
+      double angleRadians = calculateAngleFromArcLength(
+        cropRect.width,
+        width * 2,
+      );
+
+      /// Top
+      path
+        ..addArc(
+          Rect.fromCenter(
+            center: cropRect.center,
+            width: cropRect.width,
+            height: cropRect.height,
+          ),
+          3 * pi / 2 - angleRadians / 2,
+          angleRadians,
+        )
+        /// Left
+        ..addArc(
+          Rect.fromCenter(
+            center: cropRect.center,
+            width: cropRect.width,
+            height: cropRect.height,
+          ),
+          pi - angleRadians / 2,
+          angleRadians,
+        )
+        /// Right
+        ..addArc(
+          Rect.fromCenter(
+            center: cropRect.center,
+            width: cropRect.width,
+            height: cropRect.height,
+          ),
+          pi / 2 - angleRadians / 2,
+          angleRadians,
+        )
+        /// Right
+        ..addArc(
+          Rect.fromCenter(
+            center: cropRect.center,
+            width: cropRect.width,
+            height: cropRect.height,
+          ),
+          -angleRadians / 2,
+          angleRadians,
+        );
+
+      canvas.drawPath(
+        path,
+        Paint()
+          ..color = style.cropCornerColor.withValues(
+            alpha: fadeInOpacity * frameOpacity,
+          )
+          ..strokeWidth = width
+          ..strokeCap = StrokeCap.round
+          ..style = PaintingStyle.stroke,
+      );
+    }
+  }
+
+  void _drawHelperAreas({required Canvas canvas, required Size size}) {
+    final lineWidth = style.helperLineWidth;
+    if (lineWidth <= 0) return;
+
+    Path path = Path();
+
+    double cropWidth = _cropOffsetRight - _cropOffsetLeft;
+    double cropHeight = _cropOffsetBottom - _cropOffsetTop;
+
+    double cropAreaSpaceW = cropWidth / 3;
+    double cropAreaSpaceH = cropHeight / 3;
+
+    /// Calculation is important for the round-cropper
+    double drawWidth = !drawCircle
+        ? cropWidth
+        : sqrt(pow(cropWidth, 2) - pow(cropAreaSpaceW, 2));
+    double drawHeight = !drawCircle
+        ? cropHeight
+        : sqrt(pow(cropHeight, 2) - pow(cropAreaSpaceH, 2));
+
+    double gapW = (cropWidth - drawWidth) / 2;
+    double gapH = (cropHeight - drawHeight) / 2;
+
+    for (var i = 1; i < 3; i++) {
+      path
+        ..addRect(
+          Rect.fromLTWH(
+            cropAreaSpaceW * i + _cropOffsetLeft,
+            gapH + _cropOffsetTop,
+            lineWidth,
+            drawHeight,
+          ),
+        )
+        ..addRect(
+          Rect.fromLTWH(
+            gapW + _cropOffsetLeft,
+            cropAreaSpaceH * i + _cropOffsetTop,
+            drawWidth,
+            lineWidth,
+          ),
+        );
+    }
+
+    final cornerPaint = Paint()
+      ..color = style.helperLineColor.withValues(
+        alpha:
+            style.helperLineColor.a *
+            fadeInOpacity *
+            interactionOpacity *
+            frameOpacity,
+      )
+      ..style = PaintingStyle.fill;
+    canvas.drawPath(path, cornerPaint);
+  }
+
+  @override
+  bool shouldRepaint(covariant CustomPainter oldDelegate) {
+    return oldDelegate is! CropCornerPainter ||
+        oldDelegate.drawCircle != drawCircle ||
+        oldDelegate.offset != offset ||
+        oldDelegate.cropRect != cropRect ||
+        oldDelegate.fadeInOpacity != fadeInOpacity ||
+        oldDelegate.interactionOpacity != interactionOpacity ||
+        oldDelegate.viewRect != viewRect ||
+        oldDelegate.screenSize != screenSize ||
+        oldDelegate.scaleFactor != scaleFactor ||
+        oldDelegate.style != style ||
+        oldDelegate.rotationScaleFactor != rotationScaleFactor ||
+        oldDelegate.frameOpacity != frameOpacity ||
+        oldDelegate.tiltRotate != tiltRotate ||
+        oldDelegate.tiltHorizontal != tiltHorizontal ||
+        oldDelegate.tiltVertical != tiltVertical;
+  }
+
+  /// Create a copy of the [CropCornerPainter].
+  CropCornerPainter copy() {
+    return CropCornerPainter(
+      drawCircle: drawCircle,
+      offset: offset,
+      cropRect: cropRect,
+      fadeInOpacity: fadeInOpacity,
+      interactionOpacity: interactionOpacity,
+      viewRect: viewRect,
+      screenSize: screenSize,
+      scaleFactor: scaleFactor,
+      style: style,
+      rotationScaleFactor: rotationScaleFactor,
+      frameOpacity: frameOpacity,
+      tiltRotate: tiltRotate,
+      tiltHorizontal: tiltHorizontal,
+      tiltVertical: tiltVertical,
+    );
+  }
+}
