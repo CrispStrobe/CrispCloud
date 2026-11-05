@@ -2460,7 +2460,14 @@ class OfficeEditorRibbonState extends State<OfficeEditorRibbon> {
       p.spacingBefore = choice.spacingBefore;
       p.spacingAfter = choice.spacingAfter;
       p.lineSpacing = choice.lineSpacing;
-      p.lineSpacingRule = WmlLineSpacingRule.auto;
+      p.lineSpacingRule = choice.lineSpacingRule;
+      p.dropCapLines = choice.dropCapLines;
+      p.borderColor =
+          choice.borderColor.isEmpty ? null : choice.borderColor;
+      p.tabs = <WmlTabStop>[
+        for (final double position in choice.tabStops)
+          WmlTabStop(position: position),
+      ];
       p.keepTogether = choice.keepTogether;
       p.pageBreakBefore = choice.pageBreakBefore;
     });

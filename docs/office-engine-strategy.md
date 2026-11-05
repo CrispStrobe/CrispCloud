@@ -127,9 +127,22 @@ Use layers, fastest first:
 | Package diff | canonical XML diff | Detect loss without false whole-ZIP hashes |
 | Cross-suite | LibreOffice headless (`soffice`) if installed | Extra independent converter/rendering check |
 
-Word/Excel 16.111 and PowerPoint 16.100 are installed on this machine. LibreOffice is
-not. `docx2pdf` is not installed and is unnecessary now that the AppleScript
-path works.
+Word/Excel 16.111 and PowerPoint 16.100 are installed on this machine.
+LibreOffice 26.8 is now installed and works headless. `docx2pdf` is not
+installed and is unnecessary now that the AppleScript path works.
+
+For strict package validation without Word:
+
+```bash
+~/miniconda3/bin/python tool/verify_ooxml_order.py file.docx
+```
+
+The Open XML SDK (`DocumentFormat.OpenXml`) is the definitive schema oracle
+when a local .NET runtime is available. It caught corruption that LibreOffice
+and XML parsers accepted. The current generated DOCX fixtures pass it with zero errors. The fixes it
+drove were: `w:pPr`/`w:rPr`/`w:sectPr` child order, `w:lvlRestart` and
+`w:numbering` order, and mapping `w:highlight` hex values to Word's named
+highlight enum.
 
 ### Precedents from other Crisp repos
 

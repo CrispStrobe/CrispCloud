@@ -779,19 +779,93 @@ class WordSerializer {
     WmlSection? sectionBreak,
   }) {
     w.writeStartElement('pPr', prefix: 'w');
-    w.writeEmptyElement(
-      'jc',
-      prefix: 'w',
-      attributes: <String, String>{
-        'w:val': switch (p.justification) {
-          WmlJustification.center => 'center',
-          WmlJustification.right => 'right',
-          WmlJustification.justify => 'both',
-          WmlJustification.distributed => 'distribute',
-          WmlJustification.left => 'left',
+
+    // OOXML schema order for w:pPr is significant. Word reports files as
+    // corrupt when pBdr/shd/framePr/tabs are emitted after spacing/jc.
+    if (p.styleId != null && p.styleId!.isNotEmpty) {
+      w.writeEmptyElement(
+        'pStyle',
+        prefix: 'w',
+        attributes: <String, String>{'w:val': p.styleId!},
+      );
+    }
+    if (p.keepTogether) {
+      w.writeEmptyElement('keepLines', prefix: 'w');
+    }
+    if (p.pageBreakBefore) {
+      w.writeEmptyElement('pageBreakBefore', prefix: 'w');
+    }
+    if (p.dropCapLines > 0) {
+      w.writeEmptyElement(
+        'framePr',
+        prefix: 'w',
+        attributes: <String, String>{
+          'w:dropCap': 'drop',
+          'w:lines': '${p.dropCapLines}',
         },
-      },
-    );
+      );
+    }
+    if (p.numId != null) {
+      w.writeStartElement('numPr', prefix: 'w');
+      w.writeEmptyElement(
+        'ilvl',
+        prefix: 'w',
+        attributes: <String, String>{'w:val': '${p.ilvl}'},
+      );
+      w.writeEmptyElement(
+        'numId',
+        prefix: 'w',
+        attributes: <String, String>{'w:val': '${p.numId}'},
+      );
+      w.writeEndElement();
+    }
+    if (p.borderColor != null && p.borderColor!.isNotEmpty) {
+      w.writeStartElement('pBdr', prefix: 'w');
+      for (final String edge in <String>['top', 'left', 'bottom', 'right']) {
+        w.writeEmptyElement(
+          edge,
+          prefix: 'w',
+          attributes: <String, String>{
+            'w:val': 'single',
+            'w:sz': '4',
+            'w:color': p.borderColor!,
+          },
+        );
+      }
+      w.writeEndElement();
+    }
+    if (p.shadingFill != null && p.shadingFill!.isNotEmpty) {
+      w.writeEmptyElement(
+        'shd',
+        prefix: 'w',
+        attributes: <String, String>{
+          'w:val': 'clear',
+          'w:fill': p.shadingFill!,
+        },
+      );
+    }
+    if (p.tabs.isNotEmpty) {
+      w.writeStartElement('tabs', prefix: 'w');
+      for (final WmlTabStop tab in p.tabs) {
+        w.writeStartElement('tab', prefix: 'w');
+        w.writeAttribute('w:val', tab.alignment.name);
+        w.writeAttribute('w:pos', '${pointsToTwips(tab.position)}');
+        if (tab.leader != WmlTabLeader.none) {
+          w.writeAttribute('w:leader', tab.leader.name);
+        }
+        w.writeEndElement();
+      }
+      w.writeEndElement();
+    }
+    if (p.rightToLeft == true) {
+      w.writeEmptyElement('bidi', prefix: 'w');
+    } else if (p.rightToLeft == false) {
+      w.writeEmptyElement(
+        'bidi',
+        prefix: 'w',
+        attributes: <String, String>{'w:val': '0'},
+      );
+    }
     w.writeStartElement('spacing', prefix: 'w');
     w.writeAttribute('w:before', '${pointsToTwips(p.spacingBefore)}');
     w.writeAttribute('w:after', '${pointsToTwips(p.spacingAfter)}');
@@ -816,95 +890,24 @@ class WordSerializer {
       w.writeAttribute('w:hanging', '${pointsToTwips(p.indent.hanging)}');
     }
     w.writeEndElement();
-    if (p.tabs.isNotEmpty) {
-      w.writeStartElement('tabs', prefix: 'w');
-      for (final WmlTabStop tab in p.tabs) {
-        w.writeStartElement('tab', prefix: 'w');
-        w.writeAttribute('w:val', tab.alignment.name);
-        w.writeAttribute('w:pos', '${pointsToTwips(tab.position)}');
-        if (tab.leader != WmlTabLeader.none) {
-          w.writeAttribute('w:leader', tab.leader.name);
-        }
-        w.writeEndElement();
-      }
-      w.writeEndElement();
-    }
-    if (p.keepTogether) {
-      w.writeEmptyElement('keepLines', prefix: 'w');
-    }
-    if (p.pageBreakBefore) {
-      w.writeEmptyElement('pageBreakBefore', prefix: 'w');
-    }
-    if (p.styleId != null && p.styleId!.isNotEmpty) {
-      w.writeEmptyElement(
-        'pStyle',
-        prefix: 'w',
-        attributes: <String, String>{'w:val': p.styleId!},
-      );
-    }
+    w.writeEmptyElement(
+      'jc',
+      prefix: 'w',
+      attributes: <String, String>{
+        'w:val': switch (p.justification) {
+          WmlJustification.center => 'center',
+          WmlJustification.right => 'right',
+          WmlJustification.justify => 'both',
+          WmlJustification.distributed => 'distribute',
+          WmlJustification.left => 'left',
+        },
+      },
+    );
     if (p.headingLevel != null && p.headingLevel! >= 1) {
       w.writeEmptyElement(
         'outlineLvl',
         prefix: 'w',
         attributes: <String, String>{'w:val': '${p.headingLevel! - 1}'},
-      );
-    }
-    if (p.rightToLeft == true) {
-      w.writeEmptyElement('bidi', prefix: 'w');
-    } else if (p.rightToLeft == false) {
-      w.writeEmptyElement(
-        'bidi',
-        prefix: 'w',
-        attributes: <String, String>{'w:val': '0'},
-      );
-    }
-    if (p.numId != null) {
-      w.writeStartElement('numPr', prefix: 'w');
-      w.writeEmptyElement(
-        'ilvl',
-        prefix: 'w',
-        attributes: <String, String>{'w:val': '${p.ilvl}'},
-      );
-      w.writeEmptyElement(
-        'numId',
-        prefix: 'w',
-        attributes: <String, String>{'w:val': '${p.numId}'},
-      );
-      w.writeEndElement();
-    }
-    if (p.shadingFill != null && p.shadingFill!.isNotEmpty) {
-      w.writeEmptyElement(
-        'shd',
-        prefix: 'w',
-        attributes: <String, String>{
-          'w:val': 'clear',
-          'w:fill': p.shadingFill!,
-        },
-      );
-    }
-    if (p.borderColor != null && p.borderColor!.isNotEmpty) {
-      w.writeStartElement('pBdr', prefix: 'w');
-      for (final String edge in <String>['top', 'left', 'bottom', 'right']) {
-        w.writeEmptyElement(
-          edge,
-          prefix: 'w',
-          attributes: <String, String>{
-            'w:val': 'single',
-            'w:sz': '4',
-            'w:color': p.borderColor!,
-          },
-        );
-      }
-      w.writeEndElement();
-    }
-    if (p.dropCapLines > 0) {
-      w.writeEmptyElement(
-        'framePr',
-        prefix: 'w',
-        attributes: <String, String>{
-          'w:dropCap': 'drop',
-          'w:lines': '${p.dropCapLines}',
-        },
       );
     }
     if (sectionBreak != null) {
@@ -915,6 +918,21 @@ class WordSerializer {
 
   void _writeRPr(XmlWriter w, WmlRunProps r) {
     w.writeStartElement('rPr', prefix: 'w');
+    // OOXML CT_RPr order is strict: rFonts, b, i, strike, color, sz,
+    // highlight, u, vertAlign. Word reports the package as corrupt when these
+    // appear in a different order.
+    if (r.asciiFont.isNotEmpty || r.csFont.isNotEmpty) {
+      final String latin = r.asciiFont.isEmpty ? r.csFont : r.asciiFont;
+      w.writeEmptyElement(
+        'rFonts',
+        prefix: 'w',
+        attributes: <String, String>{
+          'w:ascii': latin,
+          'w:hAnsi': latin,
+          if (r.csFont.isNotEmpty) 'w:cs': r.csFont,
+        },
+      );
+    }
     if (r.bold) {
       w.writeEmptyElement('b', prefix: 'w');
     }
@@ -923,6 +941,24 @@ class WordSerializer {
     }
     if (r.strike) {
       w.writeEmptyElement('strike', prefix: 'w');
+    }
+    w.writeEmptyElement(
+      'color',
+      prefix: 'w',
+      attributes: <String, String>{'w:val': r.color},
+    );
+    w.writeEmptyElement(
+      'sz',
+      prefix: 'w',
+      attributes: <String, String>{'w:val': '${r.fontSizeHalfPoints}'},
+    );
+    final String? highlight = WmlHighlight.toName(r.highlight);
+    if (highlight != null) {
+      w.writeEmptyElement(
+        'highlight',
+        prefix: 'w',
+        attributes: <String, String>{'w:val': highlight},
+      );
     }
     if (r.underline != WmlUnderline.none) {
       w.writeEmptyElement(
@@ -938,32 +974,6 @@ class WordSerializer {
         },
       );
     }
-    w.writeEmptyElement(
-      'color',
-      prefix: 'w',
-      attributes: <String, String>{'w:val': r.color},
-    );
-    if (r.highlight != null) {
-      w.writeEmptyElement(
-        'highlight',
-        prefix: 'w',
-        attributes: <String, String>{'w:val': r.highlight!},
-      );
-    }
-    w.writeEmptyElement(
-      'sz',
-      prefix: 'w',
-      attributes: <String, String>{'w:val': '${r.fontSizeHalfPoints}'},
-    );
-    w.writeEmptyElement(
-      'rFonts',
-      prefix: 'w',
-      attributes: <String, String>{
-        'w:ascii': r.asciiFont,
-        'w:hAnsi': r.asciiFont,
-        'w:cs': r.csFont,
-      },
-    );
     if (r.vertAlign != WmlVertAlign.baseline) {
       w.writeEmptyElement(
         'vertAlign',
@@ -1115,6 +1125,38 @@ class WordSerializer {
 
   void _writeSectPr(XmlWriter w, WmlSection section) {
     w.writeStartElement('sectPr', prefix: 'w');
+    final _HeaderFooterIds? ids = _headerFooterIds[section];
+    if (ids != null) {
+      void ref(String? rid, String kind, String type) {
+        if (rid == null) {
+          return;
+        }
+        w.writeEmptyElement(
+          kind,
+          prefix: 'w',
+          attributes: <String, String>{'r:id': rid, 'w:type': type},
+        );
+      }
+
+      ref(ids.header, 'headerReference', 'default');
+      ref(ids.footer, 'footerReference', 'default');
+      ref(ids.firstHeader, 'headerReference', 'first');
+      ref(ids.firstFooter, 'footerReference', 'first');
+      ref(ids.evenHeader, 'headerReference', 'even');
+      ref(ids.evenFooter, 'footerReference', 'even');
+    }
+    w.writeEmptyElement(
+      'type',
+      prefix: 'w',
+      attributes: <String, String>{
+        'w:val': switch (section.breakKind) {
+          WmlSectionBreakKind.continuous => 'continuous',
+          WmlSectionBreakKind.oddPage => 'oddPage',
+          WmlSectionBreakKind.evenPage => 'evenPage',
+          WmlSectionBreakKind.nextPage => 'nextPage',
+        },
+      },
+    );
     w.writeEmptyElement(
       'pgSz',
       prefix: 'w',
@@ -1136,6 +1178,13 @@ class WordSerializer {
         'w:footer': '${pointsToTwips(section.margins.footer)}',
       },
     );
+    if (section.lineNumbers) {
+      w.writeEmptyElement(
+        'lnNumType',
+        prefix: 'w',
+        attributes: <String, String>{'w:countBy': '1'},
+      );
+    }
     w.writeEmptyElement(
       'cols',
       prefix: 'w',
@@ -1145,47 +1194,8 @@ class WordSerializer {
         if (section.columnSep) 'w:sep': '1',
       },
     );
-    w.writeEmptyElement(
-      'type',
-      prefix: 'w',
-      attributes: <String, String>{
-        'w:val': switch (section.breakKind) {
-          WmlSectionBreakKind.continuous => 'continuous',
-          WmlSectionBreakKind.oddPage => 'oddPage',
-          WmlSectionBreakKind.evenPage => 'evenPage',
-          WmlSectionBreakKind.nextPage => 'nextPage',
-        },
-      },
-    );
     if (section.differentFirstPage) {
       w.writeEmptyElement('titlePg', prefix: 'w');
-    }
-    if (section.lineNumbers) {
-      w.writeEmptyElement(
-        'lnNumType',
-        prefix: 'w',
-        attributes: <String, String>{'w:countBy': '1'},
-      );
-    }
-    final _HeaderFooterIds? ids = _headerFooterIds[section];
-    if (ids != null) {
-      void ref(String? rid, String kind, String type) {
-        if (rid == null) {
-          return;
-        }
-        w.writeEmptyElement(
-          kind,
-          prefix: 'w',
-          attributes: <String, String>{'r:id': rid, 'w:type': type},
-        );
-      }
-
-      ref(ids.header, 'headerReference', 'default');
-      ref(ids.footer, 'footerReference', 'default');
-      ref(ids.firstHeader, 'headerReference', 'first');
-      ref(ids.firstFooter, 'footerReference', 'first');
-      ref(ids.evenHeader, 'headerReference', 'even');
-      ref(ids.evenFooter, 'footerReference', 'even');
     }
     w.writeEndElement();
   }
@@ -1475,11 +1485,6 @@ class WordSerializer {
                   ? '◦'
                   : '▪')
             : List<String>.generate(ilvl + 1, (int i) => '%${i + 1}').join('.');
-        w.writeEmptyElement(
-          'lvlText',
-          prefix: 'w',
-          attributes: <String, String>{'w:val': lvlText},
-        );
         if (ilvl > 0) {
           w.writeEmptyElement(
             'lvlRestart',
@@ -1487,6 +1492,11 @@ class WordSerializer {
             attributes: <String, String>{'w:val': '$ilvl'},
           );
         }
+        w.writeEmptyElement(
+          'lvlText',
+          prefix: 'w',
+          attributes: <String, String>{'w:val': lvlText},
+        );
         w.writeStartElement('pPr', prefix: 'w');
         w.writeStartElement('ind', prefix: 'w');
         w.writeAttribute('w:left', '${(ilvl + 1) * 360}');
@@ -1496,6 +1506,8 @@ class WordSerializer {
         w.writeEndElement();
       }
       w.writeEndElement();
+    }
+    for (final int id in <int>[1, 2]) {
       w.writeStartElement('num', prefix: 'w');
       w.writeAttribute('w:numId', '$id');
       w.writeEmptyElement(
@@ -1561,6 +1573,10 @@ class WordSerializer {
         );
       }
       w.writeStartElement('pPr', prefix: 'w');
+      w.writeStartElement('spacing', prefix: 'w');
+      w.writeAttribute('w:before', '${pointsToTwips(style.spacingBefore)}');
+      w.writeAttribute('w:after', '${pointsToTwips(style.spacingAfter)}');
+      w.writeEndElement();
       w.writeEmptyElement(
         'jc',
         prefix: 'w',
@@ -1574,10 +1590,6 @@ class WordSerializer {
           },
         },
       );
-      w.writeStartElement('spacing', prefix: 'w');
-      w.writeAttribute('w:before', '${pointsToTwips(style.spacingBefore)}');
-      w.writeAttribute('w:after', '${pointsToTwips(style.spacingAfter)}');
-      w.writeEndElement();
       if (style.headingLevel != null) {
         w.writeEmptyElement(
           'outlineLvl',
@@ -1587,6 +1599,18 @@ class WordSerializer {
       }
       w.writeEndElement();
       w.writeStartElement('rPr', prefix: 'w');
+      if (style.font != null && style.font!.isNotEmpty) {
+        w.writeEmptyElement(
+          'rFonts',
+          prefix: 'w',
+          attributes: <String, String>{
+            'w:ascii': style.font!,
+            'w:hAnsi': style.font!,
+            if (style.csFont != null && style.csFont!.isNotEmpty)
+              'w:cs': style.csFont!,
+          },
+        );
+      }
       if (style.bold) {
         w.writeEmptyElement('b', prefix: 'w');
       }
@@ -1605,18 +1629,6 @@ class WordSerializer {
           'w:val': '${(style.fontSizePoints * 2).round()}',
         },
       );
-      if (style.font != null && style.font!.isNotEmpty) {
-        w.writeEmptyElement(
-          'rFonts',
-          prefix: 'w',
-          attributes: <String, String>{
-            'w:ascii': style.font!,
-            'w:hAnsi': style.font!,
-            if (style.csFont != null && style.csFont!.isNotEmpty)
-              'w:cs': style.csFont!,
-          },
-        );
-      }
       w.writeEndElement();
       w.writeEndElement();
     }
