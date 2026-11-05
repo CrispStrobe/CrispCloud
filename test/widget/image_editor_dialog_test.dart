@@ -23,10 +23,8 @@ import '../support/image_editor_fixture.dart';
 /// Only storage is substituted: decode, editing, capture, encoding, and host
 /// command handling all use the shipped editor and Flutter rendering engine.
 class _MemoryImageStore implements ImageFileStore {
-  _MemoryImageStore({
-    this.format = ImageFileFormat.png,
-    Uint8List? input,
-  }) : bytes = input ?? buildImageEditorFixture(format: format);
+  _MemoryImageStore({this.format = ImageFileFormat.png, Uint8List? input})
+    : bytes = input ?? buildImageEditorFixture(format: format);
 
   final ImageFileFormat format;
   Uint8List bytes;
@@ -35,7 +33,8 @@ class _MemoryImageStore implements ImageFileStore {
   int loads = 0;
 
   @override
-  String get displayName => format == ImageFileFormat.png ? 'sample.png' : 'sample.jpg';
+  String get displayName =>
+      format == ImageFileFormat.png ? 'sample.png' : 'sample.jpg';
   @override
   String get documentId => 'test:$displayName';
   @override
@@ -75,10 +74,12 @@ Finder get _close => find.byKey(const ValueKey('image-close'));
 Finder get _apply => find.byKey(const ValueKey('image-apply-tool'));
 Finder get _cancelTool => find.byKey(const ValueKey('image-cancel-tool'));
 Finder get _unsaved => find.byKey(const ValueKey('image-unsaved-dialog'));
-Finder _command(ImageEditorAction action) => find.byKey(ValueKey('image-${action.name}'));
+Finder _command(ImageEditorAction action) =>
+    find.byKey(ValueKey('image-${action.name}'));
 
 bool _saveEnabled(WidgetTester tester) =>
-    _save.evaluate().isNotEmpty && tester.widget<FilledButton>(_save).onPressed != null;
+    _save.evaluate().isNotEmpty &&
+    tester.widget<FilledButton>(_save).onPressed != null;
 
 /// Engine codecs, toImage(), and the browser worker complete outside the fake
 /// widget-test clock. Give them real event turns while advancing bounded frames;
@@ -92,7 +93,9 @@ Future<void> _until(
   final clock = Stopwatch()..start();
   while (clock.elapsed < timeout) {
     await tester.pump(const Duration(milliseconds: 20));
-    await tester.runAsync(() => Future<void>.delayed(const Duration(milliseconds: 5)));
+    await tester.runAsync(
+      () => Future<void>.delayed(const Duration(milliseconds: 5)),
+    );
     final exception = tester.takeException();
     if (exception != null) throw exception;
     if (condition()) {
@@ -156,9 +159,13 @@ class _Harness {
     await tester.tap(find.text('Open image'));
     await _until(
       tester,
-      () => key.currentState != null &&
+      () =>
+          key.currentState != null &&
           _command(ImageEditorAction.cropRotate).evaluate().isNotEmpty &&
-          tester.widget<TextButton>(_command(ImageEditorAction.cropRotate)).onPressed != null,
+          tester
+                  .widget<TextButton>(_command(ImageEditorAction.cropRotate))
+                  .onPressed !=
+              null,
       reason: 'image decode and host command availability',
     );
   }
@@ -176,7 +183,11 @@ class _Harness {
       autoCorrectZoomOffset: false,
       autoCorrectZoomScale: false,
     );
-    await _until(tester, () => _saveEnabled(tester), reason: 'text layer history');
+    await _until(
+      tester,
+      () => _saveEnabled(tester),
+      reason: 'text layer history',
+    );
   }
 
   Future<void> rotate() async {
@@ -195,7 +206,11 @@ class _Harness {
       () => crop.canUndo && !crop.rotateCtrl.isAnimating,
       reason: 'quarter-turn animation and crop history',
     );
-    expect(_saveEnabled(tester), isFalse, reason: 'Pending tool changes must be applied first.');
+    expect(
+      _saveEnabled(tester),
+      isFalse,
+      reason: 'Pending tool changes must be applied first.',
+    );
     await tester.ensureVisible(_apply);
     await tester.tap(_apply);
     await _until(
@@ -210,15 +225,21 @@ class _Harness {
     await tester.tap(_save);
     await _until(
       tester,
-      () => store.writes.length == expectedWrites &&
-          !actions.busy && !_saveEnabled(tester),
+      () =>
+          store.writes.length == expectedWrites &&
+          !actions.busy &&
+          !_saveEnabled(tester),
       reason: 'real image capture and successful source save',
     );
   }
 
   Future<void> closeCleanly() async {
     await tester.tap(_close);
-    await _until(tester, () => key.currentState == null, reason: 'host close transition');
+    await _until(
+      tester,
+      () => key.currentState == null,
+      reason: 'host close transition',
+    );
     expect(find.byType(ImageEditorDialog), findsNothing);
   }
 }
@@ -226,7 +247,9 @@ class _Harness {
 void main() {
   setUp(() => SharedPreferences.setMockInitialValues({}));
 
-  testWidgets('initial clean state and undo branches use real editor history', (tester) async {
+  testWidgets('initial clean state and undo branches use real editor history', (
+    tester,
+  ) async {
     final harness = _Harness(tester, _MemoryImageStore());
     await harness.open();
     expect(_saveEnabled(tester), isFalse);
@@ -236,192 +259,300 @@ void main() {
     await harness.addText('First');
     expect(harness.actions.isEnabled(ImageEditorAction.undo), isTrue);
     await tester.tap(_command(ImageEditorAction.undo));
-    await _until(tester, () => !_saveEnabled(tester), reason: 'undo to opened image');
+    await _until(
+      tester,
+      () => !_saveEnabled(tester),
+      reason: 'undo to opened image',
+    );
     expect(harness.editor.activeLayers, isEmpty);
     expect(harness.actions.isEnabled(ImageEditorAction.redo), isTrue);
 
     await tester.tap(_command(ImageEditorAction.redo));
     await _until(tester, () => _saveEnabled(tester), reason: 'redo text edit');
-    expect(harness.editor.activeLayers.whereType<TextLayer>().single.text, 'First');
+    expect(
+      harness.editor.activeLayers.whereType<TextLayer>().single.text,
+      'First',
+    );
     await tester.tap(_command(ImageEditorAction.undo));
-    await _until(tester, () => !_saveEnabled(tester), reason: 'undo before branch');
+    await _until(
+      tester,
+      () => !_saveEnabled(tester),
+      reason: 'undo before branch',
+    );
     await harness.addText('Different branch');
     expect(harness.actions.isEnabled(ImageEditorAction.redo), isFalse);
-    expect(harness.editor.activeLayers.whereType<TextLayer>().single.text, 'Different branch');
+    expect(
+      harness.editor.activeLayers.whereType<TextLayer>().single.text,
+      'Different branch',
+    );
     expect(harness.store.writes, isEmpty);
   });
 
-  testWidgets('PNG rotate, repeated save, undo and reopen preserve alpha and dimensions', (tester) async {
-    final store = _MemoryImageStore();
-    final harness = _Harness(tester, store);
-    await harness.open();
-    await harness.rotate();
-    await harness.save();
-    final first = image.decodePng(store.bytes)!;
-    expect((first.width, first.height), (16, 24));
-    expect(first.any((pixel) => pixel.a < 255), isTrue, reason: 'PNG transparency must survive flattening.');
-
-    await harness.rotate();
-    await harness.save();
-    expect(store.writes, hasLength(2));
-    final second = image.decodePng(store.bytes)!;
-    expect((second.width, second.height), (24, 16));
-    expect(second.any((pixel) => pixel.a < 255), isTrue);
-    expect(store.writes.last, isNot(orderedEquals(store.writes.first)));
-
-    await tester.tap(_command(ImageEditorAction.undo));
-    await _until(tester, () => _saveEnabled(tester), reason: 'undo away from saved revision');
-    await tester.tap(_command(ImageEditorAction.redo));
-    await _until(tester, () => !_saveEnabled(tester), reason: 'redo to saved revision');
-    await harness.closeCleanly();
-    await harness.reopen();
-    expect(store.loads, 2);
-    expect(_saveEnabled(tester), isFalse);
-    expect(harness.editor.canUndo, isFalse);
-    expect(harness.editor.activeLayers, isEmpty);
-    expect(image.decodePng(store.bytes)!.getBytes(), orderedEquals(second.getBytes()));
-  });
-
-  testWidgets('large-aspect JPEG rotate exports and reopens beyond the upstream 2000px cap', (tester) async {
-    final store = _MemoryImageStore(
-      format: ImageFileFormat.jpeg,
-      input: buildImageEditorFixture(format: ImageFileFormat.jpeg, width: 2401, height: 32),
-    );
-    final harness = _Harness(tester, store);
-    await harness.open();
-    await harness.rotate();
-    await harness.save();
-    expect(store.bytes.take(2), orderedEquals([0xff, 0xd8]));
-    final decoded = image.decodeJpg(store.bytes)!;
-    expect((decoded.width, decoded.height), (32, 2401));
-    await harness.closeCleanly();
-    await harness.reopen();
-    expect(store.loads, 2);
-    expect(_saveEnabled(tester), isFalse);
-    expect(harness.editor.canUndo, isFalse);
-  });
-
-  testWidgets('failed source save retains edits and close can retry the real capture', (tester) async {
-    final store = _MemoryImageStore();
-    final original = Uint8List.fromList(store.bytes);
-    var failWrite = true;
-    store.writer = (_) async {
-      if (failWrite) throw StateError('upload failed');
-      return ImageSaveOutcome.savedOriginal;
-    };
-    final harness = _Harness(tester, store);
-    await harness.open();
-    await harness.rotate();
-    await tester.tap(_save);
-    await _until(
-      tester,
-      () => store.writes.length == 1 && !harness.actions.busy,
-      reason: 'failed write returned to an editable session',
-    );
-    expect(_saveEnabled(tester), isTrue);
-    expect(find.text('Could not save image'), findsOneWidget);
-    expect(find.byType(ImageEditorDialog), findsOneWidget);
-    expect(store.bytes, orderedEquals(original));
-    failWrite = false;
-    await tester.tap(_close);
-    await tester.pumpAndSettle();
-    await tester.tap(find.descendant(of: _unsaved, matching: find.text('Save')));
-    await _until(tester, () => harness.key.currentState == null, reason: 'retry-save before close');
-    expect(store.writes, hasLength(2));
-    expect((image.decodePng(store.bytes)!.width, image.decodePng(store.bytes)!.height), (16, 24));
-  });
-
-  for (final modifier in [LogicalKeyboardKey.controlLeft, LogicalKeyboardKey.metaLeft]) {
-    testWidgets('${modifier.keyLabel}+S saves exactly once and leaves the editor open', (tester) async {
+  testWidgets(
+    'PNG rotate, repeated save, undo and reopen preserve alpha and dimensions',
+    (tester) async {
       final store = _MemoryImageStore();
       final harness = _Harness(tester, store);
       await harness.open();
-      await harness.addText('Saved with keyboard');
-      await tester.sendKeyDownEvent(modifier);
-      await tester.sendKeyEvent(LogicalKeyboardKey.keyS);
-      await tester.sendKeyUpEvent(modifier);
+      await harness.rotate();
+      await harness.save();
+      final first = image.decodePng(store.bytes)!;
+      expect((first.width, first.height), (16, 24));
+      expect(
+        first.any((pixel) => pixel.a < 255),
+        isTrue,
+        reason: 'PNG transparency must survive flattening.',
+      );
+
+      await harness.rotate();
+      await harness.save();
+      expect(store.writes, hasLength(2));
+      final second = image.decodePng(store.bytes)!;
+      expect((second.width, second.height), (24, 16));
+      expect(second.any((pixel) => pixel.a < 255), isTrue);
+      expect(store.writes.last, isNot(orderedEquals(store.writes.first)));
+
+      await tester.tap(_command(ImageEditorAction.undo));
       await _until(
         tester,
-        () => store.writes.length == 1 && !harness.actions.busy && !_saveEnabled(tester),
-        reason: 'host keyboard save',
+        () => _saveEnabled(tester),
+        reason: 'undo away from saved revision',
       );
+      await tester.tap(_command(ImageEditorAction.redo));
+      await _until(
+        tester,
+        () => !_saveEnabled(tester),
+        reason: 'redo to saved revision',
+      );
+      await harness.closeCleanly();
+      await harness.reopen();
+      expect(store.loads, 2);
+      expect(_saveEnabled(tester), isFalse);
+      expect(harness.editor.canUndo, isFalse);
+      expect(harness.editor.activeLayers, isEmpty);
+      expect(
+        image.decodePng(store.bytes)!.getBytes(),
+        orderedEquals(second.getBytes()),
+      );
+    },
+  );
+
+  testWidgets(
+    'large-aspect JPEG rotate exports and reopens beyond the upstream 2000px cap',
+    (tester) async {
+      final store = _MemoryImageStore(
+        format: ImageFileFormat.jpeg,
+        input: buildImageEditorFixture(
+          format: ImageFileFormat.jpeg,
+          width: 2401,
+          height: 32,
+        ),
+      );
+      final harness = _Harness(tester, store);
+      await harness.open();
+      await harness.rotate();
+      await harness.save();
+      expect(store.bytes.take(2), orderedEquals([0xff, 0xd8]));
+      final decoded = image.decodeJpg(store.bytes)!;
+      expect((decoded.width, decoded.height), (32, 2401));
+      await harness.closeCleanly();
+      await harness.reopen();
+      expect(store.loads, 2);
+      expect(_saveEnabled(tester), isFalse);
+      expect(harness.editor.canUndo, isFalse);
+    },
+  );
+
+  testWidgets(
+    'failed source save retains edits and close can retry the real capture',
+    (tester) async {
+      final store = _MemoryImageStore();
+      final original = Uint8List.fromList(store.bytes);
+      var failWrite = true;
+      store.writer = (_) async {
+        if (failWrite) throw StateError('upload failed');
+        return ImageSaveOutcome.savedOriginal;
+      };
+      final harness = _Harness(tester, store);
+      await harness.open();
+      await harness.rotate();
+      await tester.tap(_save);
+      await _until(
+        tester,
+        () => store.writes.length == 1 && !harness.actions.busy,
+        reason: 'failed write returned to an editable session',
+      );
+      expect(_saveEnabled(tester), isTrue);
+      expect(find.text('Could not save image'), findsOneWidget);
       expect(find.byType(ImageEditorDialog), findsOneWidget);
-      expect(image.decodePng(store.bytes), isNotNull);
-      expect(store.bytes, isNot(orderedEquals(buildImageEditorFixture())));
-    });
+      expect(store.bytes, orderedEquals(original));
+      failWrite = false;
+      await tester.tap(_close);
+      await tester.pumpAndSettle();
+      await tester.tap(
+        find.descendant(of: _unsaved, matching: find.text('Save')),
+      );
+      await _until(
+        tester,
+        () => harness.key.currentState == null,
+        reason: 'retry-save before close',
+      );
+      expect(store.writes, hasLength(2));
+      expect(
+        (
+          image.decodePng(store.bytes)!.width,
+          image.decodePng(store.bytes)!.height,
+        ),
+        (16, 24),
+      );
+    },
+  );
+
+  for (final modifier in [
+    LogicalKeyboardKey.controlLeft,
+    LogicalKeyboardKey.metaLeft,
+  ]) {
+    testWidgets(
+      '${modifier.keyLabel}+S saves exactly once and leaves the editor open',
+      (tester) async {
+        final store = _MemoryImageStore();
+        final harness = _Harness(tester, store);
+        await harness.open();
+        await harness.addText('Saved with keyboard');
+        await tester.sendKeyDownEvent(modifier);
+        await tester.sendKeyEvent(LogicalKeyboardKey.keyS);
+        await tester.sendKeyUpEvent(modifier);
+        await _until(
+          tester,
+          () =>
+              store.writes.length == 1 &&
+              !harness.actions.busy &&
+              !_saveEnabled(tester),
+          reason: 'host keyboard save',
+        );
+        expect(find.byType(ImageEditorDialog), findsOneWidget);
+        expect(image.decodePng(store.bytes), isNotNull);
+        expect(store.bytes, isNot(orderedEquals(buildImageEditorFixture())));
+      },
+    );
   }
 
-  testWidgets('nested blur Cancel and Apply preserve the host and pending save boundary', (tester) async {
-    final harness = _Harness(tester, _MemoryImageStore());
-    await harness.open();
-    await tester.tap(_command(ImageEditorAction.blur));
-    await _until(tester, () => harness.editor.blurEditor.currentState != null, reason: 'blur tool');
-    harness.editor.blurEditor.currentState!.setBlurFactor(5);
-    expect(_saveEnabled(tester), isFalse);
-    expect(harness.actions.isEnabled(ImageEditorAction.undo), isFalse);
-    await tester.ensureVisible(_cancelTool);
-    await tester.tap(_cancelTool);
-    await _until(tester, () => !harness.editor.isSubEditorOpen, reason: 'blur cancellation');
-    expect(harness.editor.stateManager.activeBlur, 0);
-    expect(harness.editor.canUndo, isFalse);
-    expect(find.byType(ImageEditorDialog), findsOneWidget);
+  testWidgets(
+    'nested blur Cancel and Apply preserve the host and pending save boundary',
+    (tester) async {
+      final harness = _Harness(tester, _MemoryImageStore());
+      await harness.open();
+      await tester.tap(_command(ImageEditorAction.blur));
+      await _until(
+        tester,
+        () => harness.editor.blurEditor.currentState != null,
+        reason: 'blur tool',
+      );
+      harness.editor.blurEditor.currentState!.setBlurFactor(5);
+      expect(_saveEnabled(tester), isFalse);
+      expect(harness.actions.isEnabled(ImageEditorAction.undo), isFalse);
+      await tester.ensureVisible(_cancelTool);
+      await tester.tap(_cancelTool);
+      await _until(
+        tester,
+        () => !harness.editor.isSubEditorOpen,
+        reason: 'blur cancellation',
+      );
+      expect(harness.editor.stateManager.activeBlur, 0);
+      expect(harness.editor.canUndo, isFalse);
+      expect(find.byType(ImageEditorDialog), findsOneWidget);
 
-    await tester.tap(_command(ImageEditorAction.blur));
-    await _until(tester, () => harness.editor.blurEditor.currentState != null, reason: 'second blur tool');
-    harness.editor.blurEditor.currentState!.setBlurFactor(5);
-    await tester.ensureVisible(_apply);
-    await tester.tap(_apply);
-    await _until(tester, () => !harness.editor.isSubEditorOpen && _saveEnabled(tester), reason: 'blur apply');
-    expect(harness.editor.stateManager.activeBlur, 5);
-    expect(harness.actions.isEnabled(ImageEditorAction.undo), isTrue);
-    expect(find.byType(ImageEditorDialog), findsOneWidget);
-  });
+      await tester.tap(_command(ImageEditorAction.blur));
+      await _until(
+        tester,
+        () => harness.editor.blurEditor.currentState != null,
+        reason: 'second blur tool',
+      );
+      harness.editor.blurEditor.currentState!.setBlurFactor(5);
+      await tester.ensureVisible(_apply);
+      await tester.tap(_apply);
+      await _until(
+        tester,
+        () => !harness.editor.isSubEditorOpen && _saveEnabled(tester),
+        reason: 'blur apply',
+      );
+      expect(harness.editor.stateManager.activeBlur, 5);
+      expect(harness.actions.isEnabled(ImageEditorAction.undo), isTrue);
+      expect(find.byType(ImageEditorDialog), findsOneWidget);
+    },
+  );
 
-  testWidgets('system Back creates one host unsaved prompt and cancel keeps edits', (tester) async {
-    final harness = _Harness(tester, _MemoryImageStore());
-    await harness.open();
-    await harness.addText('Unsaved');
-    final pushesBeforeBack = harness.observer.pushes;
-    await tester.binding.handlePopRoute();
-    await tester.pumpAndSettle();
-    expect(_unsaved, findsOneWidget);
-    expect(harness.observer.pushes, pushesBeforeBack + 1);
-    expect(find.byType(ImageEditorDialog), findsOneWidget);
-    await tester.tap(find.descendant(of: _unsaved, matching: find.text('Cancel')));
-    await tester.pumpAndSettle();
-    expect(_saveEnabled(tester), isTrue);
-    expect(harness.editor.activeLayers, hasLength(1));
-  });
+  testWidgets(
+    'system Back creates one host unsaved prompt and cancel keeps edits',
+    (tester) async {
+      final harness = _Harness(tester, _MemoryImageStore());
+      await harness.open();
+      await harness.addText('Unsaved');
+      final pushesBeforeBack = harness.observer.pushes;
+      await tester.binding.handlePopRoute();
+      await tester.pumpAndSettle();
+      expect(_unsaved, findsOneWidget);
+      expect(harness.observer.pushes, pushesBeforeBack + 1);
+      expect(find.byType(ImageEditorDialog), findsOneWidget);
+      await tester.tap(
+        find.descendant(of: _unsaved, matching: find.text('Cancel')),
+      );
+      await tester.pumpAndSettle();
+      expect(_saveEnabled(tester), isTrue);
+      expect(harness.editor.activeLayers, hasLength(1));
+    },
+  );
 
-  testWidgets('secondary-click layer menu uses host UI and blocks background commands', (tester) async {
-    final harness = _Harness(tester, _MemoryImageStore());
-    await harness.open();
-    await harness.addText('Context menu target');
-    await tester.tap(
-      find.text('Context menu target'),
-      buttons: kSecondaryMouseButton,
-      kind: PointerDeviceKind.mouse,
-    );
-    await tester.pumpAndSettle();
-    expect(find.widgetWithText(PopupMenuItem<LayerContextMenuAction>, 'Remove'), findsOneWidget);
-    expect(harness.actions.isEnabled(ImageEditorAction.save), isFalse);
-    harness.actions.dispatch(ImageEditorAction.close);
-    await tester.pump();
-    expect(find.widgetWithText(PopupMenuItem<LayerContextMenuAction>, 'Remove'), findsOneWidget);
-    expect(find.byType(ImageEditorDialog), findsOneWidget);
-    await tester.tap(find.widgetWithText(PopupMenuItem<LayerContextMenuAction>, 'Remove'));
-    await _until(tester, () => harness.editor.activeLayers.isEmpty, reason: 'host menu removes layer');
-    expect(find.byType(ImageEditorDialog), findsOneWidget);
-  });
+  testWidgets(
+    'secondary-click layer menu uses host UI and blocks background commands',
+    (tester) async {
+      final harness = _Harness(tester, _MemoryImageStore());
+      await harness.open();
+      await harness.addText('Context menu target');
+      await tester.tap(
+        find.byKey(harness.editor.activeLayers.single.keyInternalSize),
+        buttons: kSecondaryMouseButton,
+        kind: PointerDeviceKind.mouse,
+      );
+      await tester.pumpAndSettle();
+      expect(
+        find.widgetWithText(PopupMenuItem<LayerContextMenuAction>, 'Remove'),
+        findsOneWidget,
+      );
+      expect(harness.actions.isEnabled(ImageEditorAction.save), isFalse);
+      harness.actions.dispatch(ImageEditorAction.close);
+      await tester.pump();
+      expect(
+        find.widgetWithText(PopupMenuItem<LayerContextMenuAction>, 'Remove'),
+        findsOneWidget,
+      );
+      expect(find.byType(ImageEditorDialog), findsOneWidget);
+      await tester.tap(
+        find.widgetWithText(PopupMenuItem<LayerContextMenuAction>, 'Remove'),
+      );
+      await _until(
+        tester,
+        () => harness.editor.activeLayers.isEmpty,
+        reason: 'host menu removes layer',
+      );
+      expect(find.byType(ImageEditorDialog), findsOneWidget);
+    },
+  );
 
-  testWidgets('pending source write locks commands and duplicate saves', (tester) async {
+  testWidgets('pending source write locks commands and duplicate saves', (
+    tester,
+  ) async {
     final upload = Completer<ImageSaveOutcome>();
     final store = _MemoryImageStore()..writer = (_) => upload.future;
     final harness = _Harness(tester, store);
     await harness.open();
     await harness.addText('One write');
     await tester.tap(_save);
-    await _until(tester, () => store.writes.length == 1, reason: 'capture before pending upload');
+    await _until(
+      tester,
+      () => store.writes.length == 1,
+      reason: 'capture before pending upload',
+    );
     expect(tester.widget<IconButton>(_close).onPressed, isNull);
     expect(harness.actions.isEnabled(ImageEditorAction.save), isFalse);
     expect(harness.actions.isEnabled(ImageEditorAction.undo), isFalse);
@@ -431,7 +562,11 @@ void main() {
     expect(store.writes, hasLength(1));
     expect(find.byType(ImageEditorDialog), findsOneWidget);
     upload.complete(ImageSaveOutcome.savedOriginal);
-    await _until(tester, () => !harness.actions.busy && !_saveEnabled(tester), reason: 'successful upload unlock');
+    await _until(
+      tester,
+      () => !harness.actions.busy && !_saveEnabled(tester),
+      reason: 'successful upload unlock',
+    );
     expect(store.writes, hasLength(1));
   });
 

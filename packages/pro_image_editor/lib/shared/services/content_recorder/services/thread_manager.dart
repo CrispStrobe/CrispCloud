@@ -130,12 +130,19 @@ abstract class ThreadManager<T extends Thread> {
       );
     }
 
-    thread.send(data);
-
-    Uint8List? bytes = await task.bytes$.future;
-    tasks.remove(task);
-
-    return bytes;
+    try {
+      try {
+        thread.send(data);
+      } catch (_) {
+        if (thread.activeTasks > 0) thread.activeTasks--;
+        rethrow;
+      }
+      return await task.bytes$.future;
+    } finally {
+      // Worker load/message errors complete the task with an error. Remove it
+      // on that path as well, so a later capture can retry or fall back.
+      tasks.remove(task);
+    }
   }
 
   /// Gets the thread that is currently the least busy.

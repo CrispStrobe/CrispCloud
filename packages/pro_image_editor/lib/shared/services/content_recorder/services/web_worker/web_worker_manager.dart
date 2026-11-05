@@ -1,49 +1,65 @@
-import 'dart:js_interop' as js;
+import 'dart:typed_data';
 
 import 'package:web/web.dart' as web;
 
 import '/core/constants/editor_web_constants.dart';
+import '/core/models/multi_threading/thread_request_model.dart';
 import '../../models/web_worker_thread.dart';
 import '../../utils/processor_helper.dart';
-import '../../utils/web_worker_utils.dart';
 import '../thread_manager.dart';
 
-/// Manages web workers for background processing tasks.
-///
-/// Extends [ThreadManager] to initialize and handle web worker threads.
-/// Uses the browser's Web Worker API to offload tasks.
+/// Manages browser image workers and propagates failures to the converter's
+/// existing main-thread fallback.
 class WebWorkerManager extends ThreadManager<WebWorkerThread> {
-  /// Constructs an instance of `WebWorkerManager` with the provided
-  /// configuration.
-  WebWorkerManager(super.configs);
+  /// Creates a manager using the normal bundled worker by default.
+  ///
+  /// [workerScriptUrl] also permits a host with a custom asset base to supply
+  /// the URL of the same compiled worker.
+  WebWorkerManager(
+    super.configs, {
+    this.workerScriptUrl = kImageEditorWebWorkerPath,
+  });
 
-  /// Indicates whether web workers are supported by the browser.
+  /// The URL used by all workers owned by this manager.
+  final String workerScriptUrl;
+
+  /// A supported, non-failed worker already owned by this manager is available.
+  /// Checking support must not create an extra worker or leak its resources.
   @override
-  bool get isSupported =>
-      web.Worker(jsify(kImageEditorWebWorkerPath)!).isDefinedAndNotNull;
+  bool get isSupported => !isDestroyed && threads.any((thread) => thread.isReady);
 
   @override
   void initialize() {
-    int processors = getNumberOfProcessors(
+    final processors = getNumberOfProcessors(
       configs: configs.processorConfigs,
-      deviceNumberOfProcessors: _deviceNumberOfProcessors(),
+      deviceNumberOfProcessors: web.window.navigator.hardwareConcurrency,
     );
-
     for (var i = 0; i < processors && !isDestroyed; i++) {
       threads.add(
         WebWorkerThread(
           coreNumber: i + 1,
+          scriptUrl: workerScriptUrl,
           onMessage: (message) {
-            int i = tasks.indexWhere((el) => el.taskId == message.id);
-            if (i >= 0) tasks[i].bytes$.complete(message.bytes);
+            final index = tasks.indexWhere((task) => task.taskId == message.id);
+            if (index >= 0 && !tasks[index].bytes$.isCompleted) {
+              tasks[index].bytes$.complete(message.bytes);
+            }
+          },
+          onError: (thread, error, stack) {
+            for (final task in tasks.where((task) => task.threadId == thread.id)) {
+              if (!task.bytes$.isCompleted) task.bytes$.completeError(error, stack);
+            }
           },
         ),
       );
     }
   }
 
-  /// Retrieves the number of processors available on the device.
-  int _deviceNumberOfProcessors() {
-    return web.window.navigator.hardwareConcurrency;
+  @override
+  Future<Uint8List?> send(ThreadRequest data) {
+    if (!isSupported) {
+      return Future<Uint8List?>.error(StateError('No image worker is available.'));
+    }
+    return super.send(data);
   }
 }

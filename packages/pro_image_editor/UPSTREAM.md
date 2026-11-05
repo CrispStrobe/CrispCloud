@@ -42,6 +42,7 @@ upstream tests comprise 822 files before local changes.
 | `lib/core/models/custom_widgets/layer_interaction_widgets.dart`, layer widget/context-menu service | Expose an optional typed host context-menu builder; preserve enabled actions, dismiss/error cleanup, and the upstream fallback. |
 | `lib/shared/widgets/overlays/editor_bottom_sheet.dart` | Preserve the scoped editor localizations around the complete popup route, including its sheet chrome, while retaining host navigator ownership. |
 | Image converter/render service and recorder controller | Preserve transparent image borders and source resolution when capturing image bounds; retain explicit drawing/layer crop overrides. The worker receives the corrected flag before conversion, so its bundled JavaScript needs no changes. |
+| Browser worker manager/thread and shared task manager | Reject pending work on script, execution, or message errors so the existing main-thread encoder can recover; clean failed tasks, count each task once, and inspect existing workers without creating leaked probes. The manager accepts an optional script URL while retaining the published default. |
 | `lib/core/services/keyboard_service.dart` | Recognize both physical Command keys with Flutter's `isMetaPressed` modifier state. |
 | `lib/core/models/i18n/i18n_text_editor.dart` | Expose overflow Cancel, font-style sample, and font-size Reset labels. |
 | `lib/shared/widgets/platform/platform_popup_menu.dart` and paint/text appbars | Supply translated overflow Cancel labels, with a localized Cupertino fallback. |
@@ -56,7 +57,9 @@ awaited completion failure and retry, apply/undo/redo, wheel history and
 branching, host navigation and menu contracts, scoped popup localization,
 Command-key recognition, translated overflow/font controls, and localized
 visible and spoken numbers, transparent image-border preservation, intentional
-drawing-only trimming, and the request passed to a worker.
+drawing-only trimming, and the request passed to a worker. Browser-only
+regressions use real workers to verify recovery from script execution errors,
+malformed responses, and a missing worker asset without leaving Save pending.
 
 The application owns its editor menus, save workflow, file-format checks,
 and translations; they do not belong in upstream defaults. Its real-renderer
@@ -83,13 +86,17 @@ cd packages/pro_image_editor
 flutter pub get
 flutter analyze
 flutter test test/crispcloud
+flutter test --platform chrome test/crispcloud/web_worker_failure_test.dart
 flutter test
 ```
 
 Package-local lockfiles and generated `.dart_tool/` or `build/` directories are
 not committed. The application's root lockfile records the shipped dependency
 resolution. Run CrispCloud's image edit session, widget, and live integration
-tests in addition to the focused package regressions whenever this fork changes.
+tests in addition to the focused package regressions whenever this fork
+changes. The browser widget harness serves a copy of the
+unchanged bundled worker at its normal relative asset URL because Flutter's
+browser test server does not serve a production `build/web/assets` tree.
 
 The runtime patch uses paths relative to the upstream package. From the
 CrispCloud repository root, apply it with:
@@ -101,5 +108,7 @@ git apply --directory=packages/pro_image_editor \
 
 The new provenance document and local tests are maintained separately from
 that patch. The new runtime helpers are included, so the patch applies to the
-pristine package without relying on files outside the patch. No browser-worker code is changed, so the shipped workers remain
-byte-identical to the verified archive.
+pristine package without relying on files outside the patch. The worker
+entrypoint and its codecs remain unchanged, so the compiled worker and source
+map remain byte-identical to the verified archive. Dispatch and error handling
+changes execute on the host UI side.

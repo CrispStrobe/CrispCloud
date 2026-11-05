@@ -93,11 +93,18 @@ class ImageEditorSurface extends StatelessWidget {
             ),
             layerInteraction: LayerInteractionConfigs(
               widgets: LayerInteractionWidgets(
-                contextMenuBuilder: (_, position, {
-                  required bool canEdit,
-                  required bool canRemove,
-                }) => _showLayerMenu(context, position,
-                    canEdit: canEdit, canRemove: canRemove),
+                contextMenuBuilder:
+                    (
+                      _,
+                      position, {
+                      required bool canEdit,
+                      required bool canRemove,
+                    }) => _showLayerMenu(
+                      context,
+                      position,
+                      canEdit: canEdit,
+                      canRemove: canRemove,
+                    ),
               ),
             ),
             paintEditor: PaintEditorConfigs(
@@ -189,8 +196,12 @@ class ImageEditorSurface extends StatelessWidget {
   }) {
     // Use CrispCloud's Flutter Material popup on the host navigator. A package
     // Material UI popup would lose its scoped localizations on that overlay.
-    final overlay = Navigator.of(context, rootNavigator: true)
-        .overlay!.context.findRenderObject()! as RenderBox;
+    final overlay =
+        Navigator.of(
+              context,
+              rootNavigator: true,
+            ).overlay!.context.findRenderObject()!
+            as RenderBox;
     final position = overlay.globalToLocal(globalPosition);
     return showMenu<LayerContextMenuAction>(
       context: context,
@@ -200,24 +211,26 @@ class ImageEditorSurface extends StatelessWidget {
         Offset.zero & overlay.size,
       ),
       items: [
-        if (canEdit) PopupMenuItem(
-          value: LayerContextMenuAction.edit,
-          child: ListTile(
-            leading: const Icon(Icons.edit_outlined),
-            title: Text(context.imageTr('Edit')),
-            contentPadding: EdgeInsets.zero,
-            dense: true,
+        if (canEdit)
+          PopupMenuItem(
+            value: LayerContextMenuAction.edit,
+            child: ListTile(
+              leading: const Icon(Icons.edit_outlined),
+              title: Text(context.imageTr('Edit')),
+              contentPadding: EdgeInsets.zero,
+              dense: true,
+            ),
           ),
-        ),
-        if (canRemove) PopupMenuItem(
-          value: LayerContextMenuAction.remove,
-          child: ListTile(
-            leading: const Icon(Icons.delete_outline),
-            title: Text(context.imageTr('Remove')),
-            contentPadding: EdgeInsets.zero,
-            dense: true,
+        if (canRemove)
+          PopupMenuItem(
+            value: LayerContextMenuAction.remove,
+            child: ListTile(
+              leading: const Icon(Icons.delete_outline),
+              title: Text(context.imageTr('Remove')),
+              contentPadding: EdgeInsets.zero,
+              dense: true,
+            ),
           ),
-        ),
       ],
     );
   }

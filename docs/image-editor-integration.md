@@ -124,6 +124,7 @@ flutter test --concurrency=2 \
   test/pdf_file_store_test.dart test/widget/image_editor_menus_test.dart \
   test/widget/image_editor_routing_test.dart
 flutter test --concurrency=1 test/widget/image_editor_dialog_test.dart
+python3 tool/prepare_image_editor_browser_test.py
 flutter test --platform chrome --concurrency=1 \
   test/widget/image_editor_menus_test.dart \
   test/widget/image_editor_routing_test.dart \
@@ -144,6 +145,12 @@ suite substitutes only storage: real codecs, editor commands, rendering, image
 capture, and encoding run in both the VM and Chrome. Its browser-only case also
 uses the production web-worker generation path. Existing credential-dependent
 provider tests remain separately opt-in.
+
+Flutter's browser test server serves the `test/` tree and package sources,
+without building the application's asset bundle. The preparation command
+copies the unchanged bundled worker into its expected relative URL beneath
+the browser test page. These generated test assets are ignored by Git; real
+application builds continue to use the package's declared assets.
 
 The `Image editor` workflow runs these gates on this feature branch, relevant
 main pushes, and pull requests. It records the exact formatting/dependency

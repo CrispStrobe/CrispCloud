@@ -1,7 +1,7 @@
 diff --git a/CHANGELOG.md b/CHANGELOG.md
 --- a/CHANGELOG.md
 +++ b/CHANGELOG.md
-@@ -1,4 +1,26 @@
+@@ -1,4 +1,29 @@
  # Changelog
 +
 +## Unreleased (CrispCloud)
@@ -19,6 +19,9 @@ diff --git a/CHANGELOG.md b/CHANGELOG.md
 +- Preserve transparent image borders when image-bound export is enabled;
 +  retain intentional drawing-only crops and apply the same flag before worker
 +  dispatch without changing the bundled worker.
++- Recover from browser worker load, execution, and message failures through
++  the existing encoder fallback; clear failed pending tasks and avoid leaking
++  worker probes or double-counting active tasks.
 +- Recognize left and right Command keys for desktop editing shortcuts.
 +- Localize Cupertino overflow cancellation and expose text font-style samples
 +  for the current script, font-size Reset, and localized numeric slider labels
@@ -28,7 +31,7 @@ diff --git a/CHANGELOG.md b/CHANGELOG.md
  
  ## 14.24.0
  - **FEAT**(paint-editor): Add `PaintEditorConfigs.freeStyleCustomModes` so a custom paint mode records the whole stroke, like `PaintMode.freeStyle`, and its custom path builder can draw a brush.
-@@ -1761,4 +1783,4 @@
+@@ -1761,4 +1786,4 @@
  - **FEAT**: TextEditor
  - **FEAT**: CropRotateEditor
  - **FEAT**: FilterEditor
@@ -924,6 +927,202 @@ diff --git a/lib/shared/services/content_recorder/controllers/content_recorder_c
        outputRatio = max(
          imageInfos.pixelRatio,
          MediaQuery.devicePixelRatioOf(context),
+diff --git a/lib/shared/services/content_recorder/models/web_worker_thread.dart b/lib/shared/services/content_recorder/models/web_worker_thread.dart
+--- a/lib/shared/services/content_recorder/models/web_worker_thread.dart
++++ b/lib/shared/services/content_recorder/models/web_worker_thread.dart
+@@ -1,8 +1,6 @@
+ // Dart imports:
+-import 'dart:async';
+ import 'dart:js_interop' as js;
+ 
+-import 'package:flutter/foundation.dart';
+ import 'package:web/web.dart' as web;
+ 
+ import '/core/constants/editor_web_constants.dart';
+@@ -11,87 +9,119 @@
+ import '../utils/web_worker_utils.dart';
+ import 'thread.dart';
+ 
+-/// A class representing a web worker thread.
+-///
+-/// Extends [Thread] to handle web worker operations including
+-/// sending messages, receiving responses, and managing the worker's lifecycle.
++/// A browser worker which reports load, execution, and message failures to its
++/// manager so pending image captures can fall back instead of waiting forever.
+ class WebWorkerThread extends Thread {
+-  /// Creates an instance of [WebWorkerThread].
+-  ///
+-  /// The [onMessage] callback is required to handle messages received
+-  /// from the web worker.
+-  WebWorkerThread({required super.onMessage, required super.coreNumber});
++  /// Creates a worker using the published asset path unless explicitly supplied.
++  WebWorkerThread({
++    required super.onMessage,
++    required super.coreNumber,
++    this.onError,
++    this.scriptUrl = kImageEditorWebWorkerPath,
++  });
+ 
+-  /// The [web.Worker] instance managing the web worker.
+-  ///
+-  /// This is the web worker instance that executes the worker script
+-  /// and communicates with the main thread.
+-  late final web.Worker worker;
++  /// The URL of the compiled worker script.
++  final String scriptUrl;
++
++  /// Reports failures for every pending task assigned to this worker.
++  final void Function(WebWorkerThread thread, Object error, StackTrace stack)?
++  onError;
++
++  web.Worker? _worker;
++  Object? _failure;
++  bool _isDestroyed = false;
++
++  /// The underlying worker, available after successful construction.
++  web.Worker get worker => _worker!;
+ 
+   @override
+   void init() {
+     try {
+-      worker = web.Worker(
+-        kImageEditorWebWorkerPath.toJS,
++      final instance = _worker = web.Worker(
++        scriptUrl.toJS,
+         web.WorkerOptions(name: '$debugThreadName-$coreNumber'),
+       );
++      instance.onerror = (web.Event event) {
++        // The failed task is reported through its Future below. Do not also
++        // surface it as an unhandled browser error after fallback succeeds.
++        event.preventDefault();
++        _fail(StateError('Image worker failed to load or execute: $scriptUrl'));
++      }.toJS;
++      instance.onmessageerror = (web.Event event) {
++        event.preventDefault();
++        _fail(StateError('Image worker returned an unreadable message.'));
++      }.toJS;
++      instance.onmessage = (web.MessageEvent event) {
++        if (_failure != null || _isDestroyed) return;
++        try {
++          final jsObj = event.data as js.JSObject?;
++          if (jsObj == null) {
++            throw StateError('Image worker returned an empty message.');
++          }
++          final dartId = (jsGetProperty(jsObj, 'id') as js.JSString).toDart;
++          final jsBytes = jsGetProperty(jsObj, 'bytes');
++          final dartBytes = (jsBytes as js.JSArrayBuffer?)?.toDart;
++          if (activeTasks > 0) activeTasks--;
++          activeTaskIds.remove(dartId);
++          onMessage(ThreadResponse(bytes: dartBytes?.asUint8List(), id: dartId));
++        } catch (error, stack) {
++          _fail(error, stack);
++        }
++      }.toJS;
++      // Worker.postMessage queues work while the script is loading. A later
++      // network/CSP/script error is handled by onerror and rejects that work.
++      readyState.complete(true);
++      isReady = true;
++    } catch (error, stack) {
++      _fail(error, stack);
++    }
++  }
+ 
+-      if (worker.isDefinedAndNotNull) {
+-        worker.onmessage = (web.MessageEvent event) {
+-          try {
+-            final jsObj = event.data as js.JSObject?;
++  void _fail(Object error, [StackTrace? stack]) {
++    if (_failure != null || _isDestroyed) return;
++    _failure = error;
++    isReady = false;
++    activeTasks = 0;
++    activeTaskIds.clear();
++    if (!readyState.isCompleted) readyState.complete(false);
++    _worker?.terminate();
++    onError?.call(this, error, stack ?? StackTrace.current);
++  }
+ 
+-            if (jsObj == null) return;
+-
+-            /// Grab the "id" property as a JSString and convert to Dart String
+-            final jsId = jsGetProperty(jsObj, 'id');
+-            final dartId = (jsId as js.JSString).toDart; // String
+-
+-            /// Grab the "bytes" property as a JSArrayBuffer and convert to
+-            /// Dart ByteBuffer
+-            final jsBytes = jsGetProperty(jsObj, 'bytes');
+-            final dartBytes = (jsBytes as js.JSArrayBuffer?)?.toDart;
+-
+-            activeTasks--;
+-            onMessage(
+-              ThreadResponse(bytes: dartBytes?.asUint8List(), id: dartId),
+-            );
+-          } catch (e) {
+-            debugPrint(e.toString());
+-          }
+-        }.toJS;
+-
+-        readyState.complete(true);
+-        isReady = true;
+-      } else {
+-        debugPrint('Your browser doesn\'t support web workers.');
+-        readyState.complete(false);
+-      }
+-    } catch (e) {
+-      if (readyState.isCompleted) readyState = Completer();
+-      readyState.complete(false);
++  @override
++  void send(ThreadRequest data) {
++    if (!isReady || _isDestroyed || _failure != null) {
++      throw StateError('Image worker is unavailable.');
++    }
++    activeTaskIds.add(data.id);
++    try {
++      // ThreadManager already counted this task. Counting twice makes normal
++      // successive exports appear to exceed the concurrency limit.
++      worker.postMessage(jsify(data.toMap()));
++    } catch (error, stack) {
++      // The manager completes its pending Future with this failure. Returning
++      // here lets it attach the awaiting handler before that error is delivered.
++      _fail(error, stack);
+     }
+   }
+ 
+   @override
+-  void send(ThreadRequest data) {
+-    activeTasks++;
+-    var convertedData = jsify(data.toMap());
+-
+-    worker.postMessage(convertedData);
+-  }
+-
+-  @override
+-  void destroyActiveTasks(String ignoreTaskId) async {
+-    worker.postMessage(
+-      jsify({'mode': 'destroyActiveTasks', 'ignoreTaskId': ignoreTaskId}),
+-    );
++  void destroyActiveTasks(String ignoreTaskId) {
++    if (!isReady || _isDestroyed) return;
++    try {
++      worker.postMessage(
++        jsify({'mode': 'destroyActiveTasks', 'ignoreTaskId': ignoreTaskId}),
++      );
++    } catch (error, stack) {
++      _fail(error, stack);
++    }
+   }
+ 
+   @override
+   void destroy() {
+-    worker
+-      ..postMessage(jsify({'mode': 'kill'}))
+-      ..terminate();
++    if (_isDestroyed) return;
++    _isDestroyed = true;
++    isReady = false;
++    _worker?.terminate();
+   }
+ }
 diff --git a/lib/shared/services/content_recorder/services/image_converter_service.dart b/lib/shared/services/content_recorder/services/image_converter_service.dart
 --- a/lib/shared/services/content_recorder/services/image_converter_service.dart
 +++ b/lib/shared/services/content_recorder/services/image_converter_service.dart
@@ -954,6 +1153,124 @@ diff --git a/lib/shared/services/content_recorder/services/image_render_service.
          outputRatio = max(
            imageInfos.pixelRatio,
            MediaQuery.devicePixelRatioOf(context),
+diff --git a/lib/shared/services/content_recorder/services/thread_manager.dart b/lib/shared/services/content_recorder/services/thread_manager.dart
+--- a/lib/shared/services/content_recorder/services/thread_manager.dart
++++ b/lib/shared/services/content_recorder/services/thread_manager.dart
+@@ -130,12 +130,19 @@
+       );
+     }
+ 
+-    thread.send(data);
+-
+-    Uint8List? bytes = await task.bytes$.future;
+-    tasks.remove(task);
+-
+-    return bytes;
++    try {
++      try {
++        thread.send(data);
++      } catch (_) {
++        if (thread.activeTasks > 0) thread.activeTasks--;
++        rethrow;
++      }
++      return await task.bytes$.future;
++    } finally {
++      // Worker load/message errors complete the task with an error. Remove it
++      // on that path as well, so a later capture can retry or fall back.
++      tasks.remove(task);
++    }
+   }
+ 
+   /// Gets the thread that is currently the least busy.
+diff --git a/lib/shared/services/content_recorder/services/web_worker/web_worker_manager.dart b/lib/shared/services/content_recorder/services/web_worker/web_worker_manager.dart
+--- a/lib/shared/services/content_recorder/services/web_worker/web_worker_manager.dart
++++ b/lib/shared/services/content_recorder/services/web_worker/web_worker_manager.dart
+@@ -1,49 +1,65 @@
+-import 'dart:js_interop' as js;
++import 'dart:typed_data';
+ 
+ import 'package:web/web.dart' as web;
+ 
+ import '/core/constants/editor_web_constants.dart';
++import '/core/models/multi_threading/thread_request_model.dart';
+ import '../../models/web_worker_thread.dart';
+ import '../../utils/processor_helper.dart';
+-import '../../utils/web_worker_utils.dart';
+ import '../thread_manager.dart';
+ 
+-/// Manages web workers for background processing tasks.
+-///
+-/// Extends [ThreadManager] to initialize and handle web worker threads.
+-/// Uses the browser's Web Worker API to offload tasks.
++/// Manages browser image workers and propagates failures to the converter's
++/// existing main-thread fallback.
+ class WebWorkerManager extends ThreadManager<WebWorkerThread> {
+-  /// Constructs an instance of `WebWorkerManager` with the provided
+-  /// configuration.
+-  WebWorkerManager(super.configs);
++  /// Creates a manager using the normal bundled worker by default.
++  ///
++  /// [workerScriptUrl] also permits a host with a custom asset base to supply
++  /// the URL of the same compiled worker.
++  WebWorkerManager(
++    super.configs, {
++    this.workerScriptUrl = kImageEditorWebWorkerPath,
++  });
+ 
+-  /// Indicates whether web workers are supported by the browser.
++  /// The URL used by all workers owned by this manager.
++  final String workerScriptUrl;
++
++  /// A supported, non-failed worker already owned by this manager is available.
++  /// Checking support must not create an extra worker or leak its resources.
+   @override
+-  bool get isSupported =>
+-      web.Worker(jsify(kImageEditorWebWorkerPath)!).isDefinedAndNotNull;
++  bool get isSupported => !isDestroyed && threads.any((thread) => thread.isReady);
+ 
+   @override
+   void initialize() {
+-    int processors = getNumberOfProcessors(
++    final processors = getNumberOfProcessors(
+       configs: configs.processorConfigs,
+-      deviceNumberOfProcessors: _deviceNumberOfProcessors(),
++      deviceNumberOfProcessors: web.window.navigator.hardwareConcurrency,
+     );
+-
+     for (var i = 0; i < processors && !isDestroyed; i++) {
+       threads.add(
+         WebWorkerThread(
+           coreNumber: i + 1,
++          scriptUrl: workerScriptUrl,
+           onMessage: (message) {
+-            int i = tasks.indexWhere((el) => el.taskId == message.id);
+-            if (i >= 0) tasks[i].bytes$.complete(message.bytes);
++            final index = tasks.indexWhere((task) => task.taskId == message.id);
++            if (index >= 0 && !tasks[index].bytes$.isCompleted) {
++              tasks[index].bytes$.complete(message.bytes);
++            }
++          },
++          onError: (thread, error, stack) {
++            for (final task in tasks.where((task) => task.threadId == thread.id)) {
++              if (!task.bytes$.isCompleted) task.bytes$.completeError(error, stack);
++            }
+           },
+         ),
+       );
+     }
+   }
+ 
+-  /// Retrieves the number of processors available on the device.
+-  int _deviceNumberOfProcessors() {
+-    return web.window.navigator.hardwareConcurrency;
++  @override
++  Future<Uint8List?> send(ThreadRequest data) {
++    if (!isSupported) {
++      return Future<Uint8List?>.error(StateError('No image worker is available.'));
++    }
++    return super.send(data);
+   }
+ }
 diff --git a/lib/shared/widgets/bottom_sheets_header_row.dart b/lib/shared/widgets/bottom_sheets_header_row.dart
 --- a/lib/shared/widgets/bottom_sheets_header_row.dart
 +++ b/lib/shared/widgets/bottom_sheets_header_row.dart

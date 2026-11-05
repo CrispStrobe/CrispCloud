@@ -1,8 +1,6 @@
 // Dart imports:
-import 'dart:async';
 import 'dart:js_interop' as js;
 
-import 'package:flutter/foundation.dart';
 import 'package:web/web.dart' as web;
 
 import '/core/constants/editor_web_constants.dart';
@@ -11,87 +9,119 @@ import '/core/models/multi_threading/thread_response_model.dart';
 import '../utils/web_worker_utils.dart';
 import 'thread.dart';
 
-/// A class representing a web worker thread.
-///
-/// Extends [Thread] to handle web worker operations including
-/// sending messages, receiving responses, and managing the worker's lifecycle.
+/// A browser worker which reports load, execution, and message failures to its
+/// manager so pending image captures can fall back instead of waiting forever.
 class WebWorkerThread extends Thread {
-  /// Creates an instance of [WebWorkerThread].
-  ///
-  /// The [onMessage] callback is required to handle messages received
-  /// from the web worker.
-  WebWorkerThread({required super.onMessage, required super.coreNumber});
+  /// Creates a worker using the published asset path unless explicitly supplied.
+  WebWorkerThread({
+    required super.onMessage,
+    required super.coreNumber,
+    this.onError,
+    this.scriptUrl = kImageEditorWebWorkerPath,
+  });
 
-  /// The [web.Worker] instance managing the web worker.
-  ///
-  /// This is the web worker instance that executes the worker script
-  /// and communicates with the main thread.
-  late final web.Worker worker;
+  /// The URL of the compiled worker script.
+  final String scriptUrl;
+
+  /// Reports failures for every pending task assigned to this worker.
+  final void Function(WebWorkerThread thread, Object error, StackTrace stack)?
+  onError;
+
+  web.Worker? _worker;
+  Object? _failure;
+  bool _isDestroyed = false;
+
+  /// The underlying worker, available after successful construction.
+  web.Worker get worker => _worker!;
 
   @override
   void init() {
     try {
-      worker = web.Worker(
-        kImageEditorWebWorkerPath.toJS,
+      final instance = _worker = web.Worker(
+        scriptUrl.toJS,
         web.WorkerOptions(name: '$debugThreadName-$coreNumber'),
       );
-
-      if (worker.isDefinedAndNotNull) {
-        worker.onmessage = (web.MessageEvent event) {
-          try {
-            final jsObj = event.data as js.JSObject?;
-
-            if (jsObj == null) return;
-
-            /// Grab the "id" property as a JSString and convert to Dart String
-            final jsId = jsGetProperty(jsObj, 'id');
-            final dartId = (jsId as js.JSString).toDart; // String
-
-            /// Grab the "bytes" property as a JSArrayBuffer and convert to
-            /// Dart ByteBuffer
-            final jsBytes = jsGetProperty(jsObj, 'bytes');
-            final dartBytes = (jsBytes as js.JSArrayBuffer?)?.toDart;
-
-            activeTasks--;
-            onMessage(
-              ThreadResponse(bytes: dartBytes?.asUint8List(), id: dartId),
-            );
-          } catch (e) {
-            debugPrint(e.toString());
+      instance.onerror = (web.Event event) {
+        // The failed task is reported through its Future below. Do not also
+        // surface it as an unhandled browser error after fallback succeeds.
+        event.preventDefault();
+        _fail(StateError('Image worker failed to load or execute: $scriptUrl'));
+      }.toJS;
+      instance.onmessageerror = (web.Event event) {
+        event.preventDefault();
+        _fail(StateError('Image worker returned an unreadable message.'));
+      }.toJS;
+      instance.onmessage = (web.MessageEvent event) {
+        if (_failure != null || _isDestroyed) return;
+        try {
+          final jsObj = event.data as js.JSObject?;
+          if (jsObj == null) {
+            throw StateError('Image worker returned an empty message.');
           }
-        }.toJS;
-
-        readyState.complete(true);
-        isReady = true;
-      } else {
-        debugPrint('Your browser doesn\'t support web workers.');
-        readyState.complete(false);
-      }
-    } catch (e) {
-      if (readyState.isCompleted) readyState = Completer();
-      readyState.complete(false);
+          final dartId = (jsGetProperty(jsObj, 'id') as js.JSString).toDart;
+          final jsBytes = jsGetProperty(jsObj, 'bytes');
+          final dartBytes = (jsBytes as js.JSArrayBuffer?)?.toDart;
+          if (activeTasks > 0) activeTasks--;
+          activeTaskIds.remove(dartId);
+          onMessage(ThreadResponse(bytes: dartBytes?.asUint8List(), id: dartId));
+        } catch (error, stack) {
+          _fail(error, stack);
+        }
+      }.toJS;
+      // Worker.postMessage queues work while the script is loading. A later
+      // network/CSP/script error is handled by onerror and rejects that work.
+      readyState.complete(true);
+      isReady = true;
+    } catch (error, stack) {
+      _fail(error, stack);
     }
+  }
+
+  void _fail(Object error, [StackTrace? stack]) {
+    if (_failure != null || _isDestroyed) return;
+    _failure = error;
+    isReady = false;
+    activeTasks = 0;
+    activeTaskIds.clear();
+    if (!readyState.isCompleted) readyState.complete(false);
+    _worker?.terminate();
+    onError?.call(this, error, stack ?? StackTrace.current);
   }
 
   @override
   void send(ThreadRequest data) {
-    activeTasks++;
-    var convertedData = jsify(data.toMap());
-
-    worker.postMessage(convertedData);
+    if (!isReady || _isDestroyed || _failure != null) {
+      throw StateError('Image worker is unavailable.');
+    }
+    activeTaskIds.add(data.id);
+    try {
+      // ThreadManager already counted this task. Counting twice makes normal
+      // successive exports appear to exceed the concurrency limit.
+      worker.postMessage(jsify(data.toMap()));
+    } catch (error, stack) {
+      // The manager completes its pending Future with this failure. Returning
+      // here lets it attach the awaiting handler before that error is delivered.
+      _fail(error, stack);
+    }
   }
 
   @override
-  void destroyActiveTasks(String ignoreTaskId) async {
-    worker.postMessage(
-      jsify({'mode': 'destroyActiveTasks', 'ignoreTaskId': ignoreTaskId}),
-    );
+  void destroyActiveTasks(String ignoreTaskId) {
+    if (!isReady || _isDestroyed) return;
+    try {
+      worker.postMessage(
+        jsify({'mode': 'destroyActiveTasks', 'ignoreTaskId': ignoreTaskId}),
+      );
+    } catch (error, stack) {
+      _fail(error, stack);
+    }
   }
 
   @override
   void destroy() {
-    worker
-      ..postMessage(jsify({'mode': 'kill'}))
-      ..terminate();
+    if (_isDestroyed) return;
+    _isDestroyed = true;
+    isReady = false;
+    _worker?.terminate();
   }
 }

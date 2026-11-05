@@ -15,6 +15,9 @@
 - Preserve transparent image borders when image-bound export is enabled;
   retain intentional drawing-only crops and apply the same flag before worker
   dispatch without changing the bundled worker.
+- Recover from browser worker load, execution, and message failures through
+  the existing encoder fallback; clear failed pending tasks and avoid leaking
+  worker probes or double-counting active tasks.
 - Recognize left and right Command keys for desktop editing shortcuts.
 - Localize Cupertino overflow cancellation and expose text font-style samples
   for the current script, font-size Reset, and localized numeric slider labels

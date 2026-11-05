@@ -10,6 +10,7 @@ on:
       - 'packages/pro_image_editor/**'
       - 'test/**'
       - 'tool/check_image_editor_i18n.py'
+      - 'tool/prepare_image_editor_browser_test.py'
   pull_request:
     branches: [main]
   workflow_dispatch:
@@ -107,6 +108,8 @@ jobs:
           flutter-version: ${{ env.FLUTTER_VERSION }}
           cache: true
       - run: flutter pub get
+      - name: Serve the production image worker in the Flutter test harness
+        run: python3 tool/prepare_image_editor_browser_test.py
       - name: Browser routing and native-menu bridge
         run: >-
           flutter test --reporter expanded --platform chrome --concurrency=1
@@ -131,4 +134,8 @@ jobs:
           flutter-version: ${{ env.FLUTTER_VERSION }}
           cache: true
       - run: flutter pub get
+      - name: Analyze maintained engine
+        run: flutter analyze --no-fatal-infos --no-fatal-warnings lib test/crispcloud
       - run: flutter test --reporter expanded test/crispcloud
+      - name: Real browser worker failures remain recoverable
+        run: flutter test --reporter expanded --platform chrome test/crispcloud/web_worker_failure_test.dart
