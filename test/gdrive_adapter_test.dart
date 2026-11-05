@@ -5,6 +5,8 @@
 // config service, and credential lifecycle.
 
 import 'package:flutter_test/flutter_test.dart';
+import 'package:http/http.dart' as http;
+import 'package:http/testing.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 import 'package:crisp_cloud/services/gdrive_client_adapter.dart';
@@ -72,8 +74,8 @@ void main() {
       expect(adapter.supportsTrash, isTrue);
     });
 
-    test('does not support streaming (default)', () {
-      expect(adapter.supportsStreaming, isFalse);
+    test('supports bounded streaming', () {
+      expect(adapter.supportsStreaming, isTrue);
     });
 
     test('does not support multipart (default)', () {
@@ -91,7 +93,13 @@ void main() {
     test('login throws on empty client ID', () async {
       expect(
         () => adapter.login('', ''),
-        throwsA(isA<Exception>().having((e) => e.toString(), 'message', contains('Client ID is required'))),
+        throwsA(
+          isA<Exception>().having(
+            (e) => e.toString(),
+            'message',
+            contains('Client ID is required'),
+          ),
+        ),
       );
     });
 
@@ -167,11 +175,20 @@ void main() {
       await configService.saveCredentials({
         'client_id': 'test-id',
         'refresh_token': 'invalid-token',
-        'email': 'user@gmail.com',
+        'email': 'user@example.invalid',
       });
-      // restoreCredentials should catch the network error and return false
-      final result = await adapter.restoreCredentials();
-      expect(result, isFalse);
+      await http.runWithClient(
+        () async {
+          expect(await adapter.restoreCredentials(), isFalse);
+        },
+        () => MockClient((request) async {
+          expect(request.url.host, 'oauth2.googleapis.com');
+          return http.Response(
+            '{"result":2000,"error":"Test authentication rejected"}',
+            401,
+          );
+        }),
+      );
     });
   });
 
@@ -197,10 +214,7 @@ void main() {
 
   group('GDriveClientAdapter - shared drives', () {
     test('listSharedDrives throws when not authenticated', () {
-      expect(
-        () => adapter.listSharedDrives(),
-        throwsA(isA<Exception>()),
-      );
+      expect(() => adapter.listSharedDrives(), throwsA(isA<Exception>()));
     });
 
     test('listSharedDrivePath throws when not authenticated', () {
@@ -221,10 +235,7 @@ void main() {
 
   group('GDriveClientAdapter - starred files', () {
     test('listStarredFiles throws when not authenticated', () {
-      expect(
-        () => adapter.listStarredFiles(),
-        throwsA(isA<Exception>()),
-      );
+      expect(() => adapter.listStarredFiles(), throwsA(isA<Exception>()));
     });
 
     test('setStarred throws when not authenticated', () {
@@ -244,10 +255,7 @@ void main() {
 
   group('GDriveClientAdapter - unauthenticated operations', () {
     test('listPath throws when not authenticated', () {
-      expect(
-        () => adapter.listPath('/'),
-        throwsA(isA<Exception>()),
-      );
+      expect(() => adapter.listPath('/'), throwsA(isA<Exception>()));
     });
 
     test('uploadFile throws when not authenticated', () {
@@ -265,10 +273,7 @@ void main() {
     });
 
     test('deletePath throws when not authenticated', () {
-      expect(
-        () => adapter.deletePath('/test.txt'),
-        throwsA(isA<Exception>()),
-      );
+      expect(() => adapter.deletePath('/test.txt'), throwsA(isA<Exception>()));
     });
 
     test('createFolderPath throws when not authenticated', () {
@@ -284,32 +289,80 @@ void main() {
   // ===========================================================================
   group('Google Docs MIME type detection', () {
     test('isGoogleDocsMimeType returns true for Google Docs', () {
-      expect(GDriveClientAdapter.isGoogleDocsMimeType('application/vnd.google-apps.document'), isTrue);
+      expect(
+        GDriveClientAdapter.isGoogleDocsMimeType(
+          'application/vnd.google-apps.document',
+        ),
+        isTrue,
+      );
     });
 
     test('isGoogleDocsMimeType returns true for Google Sheets', () {
-      expect(GDriveClientAdapter.isGoogleDocsMimeType('application/vnd.google-apps.spreadsheet'), isTrue);
+      expect(
+        GDriveClientAdapter.isGoogleDocsMimeType(
+          'application/vnd.google-apps.spreadsheet',
+        ),
+        isTrue,
+      );
     });
 
     test('isGoogleDocsMimeType returns true for Google Slides', () {
-      expect(GDriveClientAdapter.isGoogleDocsMimeType('application/vnd.google-apps.presentation'), isTrue);
+      expect(
+        GDriveClientAdapter.isGoogleDocsMimeType(
+          'application/vnd.google-apps.presentation',
+        ),
+        isTrue,
+      );
     });
 
     test('isGoogleDocsMimeType returns true for Google Drawings', () {
-      expect(GDriveClientAdapter.isGoogleDocsMimeType('application/vnd.google-apps.drawing'), isTrue);
+      expect(
+        GDriveClientAdapter.isGoogleDocsMimeType(
+          'application/vnd.google-apps.drawing',
+        ),
+        isTrue,
+      );
     });
 
     test('isGoogleDocsMimeType returns false for regular files', () {
-      expect(GDriveClientAdapter.isGoogleDocsMimeType('application/pdf'), isFalse);
+      expect(
+        GDriveClientAdapter.isGoogleDocsMimeType('application/pdf'),
+        isFalse,
+      );
       expect(GDriveClientAdapter.isGoogleDocsMimeType('image/png'), isFalse);
-      expect(GDriveClientAdapter.isGoogleDocsMimeType('application/vnd.google-apps.folder'), isFalse);
+      expect(
+        GDriveClientAdapter.isGoogleDocsMimeType(
+          'application/vnd.google-apps.folder',
+        ),
+        isFalse,
+      );
     });
 
     test('getExportExtension returns correct extensions', () {
-      expect(GDriveClientAdapter.getExportExtension('application/vnd.google-apps.document'), equals('.docx'));
-      expect(GDriveClientAdapter.getExportExtension('application/vnd.google-apps.spreadsheet'), equals('.xlsx'));
-      expect(GDriveClientAdapter.getExportExtension('application/vnd.google-apps.presentation'), equals('.pptx'));
-      expect(GDriveClientAdapter.getExportExtension('application/vnd.google-apps.drawing'), equals('.pdf'));
+      expect(
+        GDriveClientAdapter.getExportExtension(
+          'application/vnd.google-apps.document',
+        ),
+        equals('.docx'),
+      );
+      expect(
+        GDriveClientAdapter.getExportExtension(
+          'application/vnd.google-apps.spreadsheet',
+        ),
+        equals('.xlsx'),
+      );
+      expect(
+        GDriveClientAdapter.getExportExtension(
+          'application/vnd.google-apps.presentation',
+        ),
+        equals('.pptx'),
+      );
+      expect(
+        GDriveClientAdapter.getExportExtension(
+          'application/vnd.google-apps.drawing',
+        ),
+        equals('.pdf'),
+      );
     });
 
     test('getExportExtension returns null for non-Google types', () {
@@ -323,7 +376,9 @@ void main() {
   // ===========================================================================
   group('Google Docs export formats', () {
     test('Google Docs has 6 export formats', () {
-      final formats = GDriveClientAdapter.getExportFormats('application/vnd.google-apps.document');
+      final formats = GDriveClientAdapter.getExportFormats(
+        'application/vnd.google-apps.document',
+      );
       expect(formats.length, equals(6));
       expect(formats.any((f) => f['label'] == 'Word'), isTrue);
       expect(formats.any((f) => f['label'] == 'PDF'), isTrue);
@@ -332,21 +387,27 @@ void main() {
     });
 
     test('Google Sheets has 4 export formats', () {
-      final formats = GDriveClientAdapter.getExportFormats('application/vnd.google-apps.spreadsheet');
+      final formats = GDriveClientAdapter.getExportFormats(
+        'application/vnd.google-apps.spreadsheet',
+      );
       expect(formats.length, equals(4));
       expect(formats.any((f) => f['label'] == 'Excel'), isTrue);
       expect(formats.any((f) => f['label'] == 'CSV'), isTrue);
     });
 
     test('Google Slides has 3 export formats', () {
-      final formats = GDriveClientAdapter.getExportFormats('application/vnd.google-apps.presentation');
+      final formats = GDriveClientAdapter.getExportFormats(
+        'application/vnd.google-apps.presentation',
+      );
       expect(formats.length, equals(3));
       expect(formats.any((f) => f['label'] == 'PowerPoint'), isTrue);
       expect(formats.any((f) => f['label'] == 'PDF'), isTrue);
     });
 
     test('Google Drawings has 3 export formats', () {
-      final formats = GDriveClientAdapter.getExportFormats('application/vnd.google-apps.drawing');
+      final formats = GDriveClientAdapter.getExportFormats(
+        'application/vnd.google-apps.drawing',
+      );
       expect(formats.length, equals(3));
       expect(formats.any((f) => f['label'] == 'PDF'), isTrue);
       expect(formats.any((f) => f['label'] == 'PNG'), isTrue);
@@ -366,10 +427,26 @@ void main() {
         'application/vnd.google-apps.drawing',
       ]) {
         for (final fmt in GDriveClientAdapter.getExportFormats(docType)) {
-          expect(fmt.containsKey('mimeType'), isTrue, reason: '$docType format missing mimeType');
-          expect(fmt.containsKey('ext'), isTrue, reason: '$docType format missing ext');
-          expect(fmt.containsKey('label'), isTrue, reason: '$docType format missing label');
-          expect(fmt['ext']!.startsWith('.'), isTrue, reason: '$docType ext should start with dot');
+          expect(
+            fmt.containsKey('mimeType'),
+            isTrue,
+            reason: '$docType format missing mimeType',
+          );
+          expect(
+            fmt.containsKey('ext'),
+            isTrue,
+            reason: '$docType format missing ext',
+          );
+          expect(
+            fmt.containsKey('label'),
+            isTrue,
+            reason: '$docType format missing label',
+          );
+          expect(
+            fmt['ext']!.startsWith('.'),
+            isTrue,
+            reason: '$docType ext should start with dot',
+          );
         }
       }
     });

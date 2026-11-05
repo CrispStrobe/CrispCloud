@@ -4,12 +4,14 @@
 // MacosFileService, DesktopFileService, MobileFileService
 
 import 'dart:io';
+
 import 'package:flutter/foundation.dart';
 import 'package:file_picker/file_picker.dart';
 import 'package:path/path.dart' as p;
 import 'package:path_provider/path_provider.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:macos_secure_bookmarks/macos_secure_bookmarks.dart';
+
 import '../models/file_item.dart';
 import 'bookmark_service.dart';
 import 'local_file_service.dart';

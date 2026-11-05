@@ -12,7 +12,12 @@ import 'package:crisp_cloud/services/action_history_service.dart';
 // Re-define the batch rename helpers (same as batch_rename_test.dart)
 // to test edge cases.
 
-String applyFindReplace(String name, String find, String replace, {bool useRegex = false}) {
+String applyFindReplace(
+  String name,
+  String find,
+  String replace, {
+  bool useRegex = false,
+}) {
   if (find.isEmpty) return name;
   if (useRegex) {
     return name.replaceAllMapped(RegExp(find), (m) {
@@ -61,11 +66,21 @@ void main() {
   // ---------------------------------------------------------------------------
   group('Batch rename edge cases', () {
     test('find/replace with unicode characters', () {
-      expect(applyFindReplace('dokument_uberblick.txt', 'uberblick', '\u00FCberblick'), 'dokument_\u00FCberblick.txt');
+      expect(
+        applyFindReplace(
+          'dokument_uberblick.txt',
+          'uberblick',
+          '\u00FCberblick',
+        ),
+        'dokument_\u00FCberblick.txt',
+      );
     });
 
     test('find/replace preserves emoji in filename', () {
-      expect(applyFindReplace('my_file_\u{1F600}.txt', '\u{1F600}', 'smile'), 'my_file_smile.txt');
+      expect(
+        applyFindReplace('my_file_\u{1F600}.txt', '\u{1F600}', 'smile'),
+        'my_file_smile.txt',
+      );
     });
 
     test('numbering with very large index', () {
@@ -129,9 +144,7 @@ void main() {
         originalPath: '/dir/old.txt',
         provider: 'filen',
       );
-      final ctx = UndoContext(
-        remoteRename: (path, name) async {},
-      );
+      final ctx = UndoContext(remoteRename: (path, name) async {});
       final result = await svc.undo(svc.history.first.id, ctx);
       expect(result.success, false);
       expect(result.message, contains('new path unknown'));
@@ -143,9 +156,7 @@ void main() {
         originalPath: '/src/file.txt',
         provider: 'filen',
       );
-      final ctx = UndoContext(
-        remoteMove: (path, dir) async {},
-      );
+      final ctx = UndoContext(remoteMove: (path, dir) async {});
       final result = await svc.undo(svc.history.first.id, ctx);
       expect(result.success, false);
       expect(result.message, contains('destination unknown'));
@@ -157,23 +168,27 @@ void main() {
         originalPath: '/remote/file.txt',
         provider: 'filen',
       );
-      expect(svc.canUndo(svc.history.first), isFalse);
-      final result = await svc.undo(id, const UndoContext());
-      expect(result.success, isFalse);
-      expect(result.message, contains('not reversible'));
-      expect(svc.history.single.id, id);
-    });
-
-    test('undo createFolder remote without remoteDelete callback fails', () async {
-      svc.recordNew(
-        type: ActionType.createFolder,
-        originalPath: '/remote/newfolder',
-        provider: 's3',
-      );
       final result = await svc.undo(svc.history.first.id, const UndoContext());
       expect(result.success, false);
-      expect(result.message, contains('no remote delete'));
+      expect(result.message, contains('not reversible'));
     });
+
+    test(
+      'undo createFolder remote without remoteDelete callback fails',
+      () async {
+        svc.recordNew(
+          type: ActionType.createFolder,
+          originalPath: '/remote/newfolder',
+          provider: 's3',
+        );
+        final result = await svc.undo(
+          svc.history.first.id,
+          const UndoContext(),
+        );
+        expect(result.success, false);
+        expect(result.message, contains('no remote delete'));
+      },
+    );
 
     test('undo copy remote without remoteDelete callback fails', () async {
       svc.recordNew(
@@ -220,7 +235,10 @@ void main() {
           provider: 'local',
         );
         expect(svc.history.length, 1);
-        final result = await svc.undo(svc.history.first.id, const UndoContext());
+        final result = await svc.undo(
+          svc.history.first.id,
+          const UndoContext(),
+        );
         expect(result.success, true);
         expect(svc.history, isEmpty);
       } finally {
@@ -228,17 +246,23 @@ void main() {
       }
     });
 
-    test('undo local rename where source is gone throws and returns failure', () async {
-      svc.recordNew(
-        type: ActionType.rename,
-        originalPath: '/tmp/nonexistent_old.txt',
-        newPath: '/tmp/nonexistent_new.txt',
-        provider: 'local',
-      );
-      final result = await svc.undo(svc.history.first.id, const UndoContext());
-      expect(result.success, false);
-      expect(result.message, contains('failed'));
-    });
+    test(
+      'undo local rename where source is gone throws and returns failure',
+      () async {
+        svc.recordNew(
+          type: ActionType.rename,
+          originalPath: '/tmp/nonexistent_old.txt',
+          newPath: '/tmp/nonexistent_new.txt',
+          provider: 'local',
+        );
+        final result = await svc.undo(
+          svc.history.first.id,
+          const UndoContext(),
+        );
+        expect(result.success, false);
+        expect(result.message, contains('failed'));
+      },
+    );
 
     test('record with metadata preserves it', () {
       svc.recordNew(

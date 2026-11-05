@@ -243,20 +243,26 @@ void main() {
   }
 
   Future<void> runOperation(WidgetTester tester, FileOperationKind kind) async {
-    final transfers = container.read(transferProvider);
+    // Provider startup loads its durable journal. Initialize it in the real
+    // async zone used by stream jobs, not the widget's suspended fake clock.
+    final transfers = await tester.runAsync(() async {
+      final notifier = container.read(transferProvider);
+      await notifier.ready;
+      return notifier;
+    });
     // Streaming jobs can advance outside the widget clock. Await the actual
     // transfer notification instead of mistaking a settled UI for completion.
     await tester.runAsync(() async {
       final completed = Completer<void>();
       void check() {
-        if (transfers.operations.isNotEmpty &&
+        if (transfers!.operations.isNotEmpty &&
             !transfers.hasActiveOperations &&
             !completed.isCompleted) {
           completed.complete();
         }
       }
 
-      transfers.addListener(check);
+      transfers!.addListener(check);
       try {
         await tester.tap(start(kind));
         check();
@@ -267,7 +273,7 @@ void main() {
     });
     await tester.pumpAndSettle();
     expect(
-      transfers.hasActiveOperations,
+      transfers!.hasActiveOperations,
       isFalse,
       reason:
           'Transfer states: ${transfers.operations.map((op) => '${op.status}/${op.currentBytes}/${op.error}')}; '

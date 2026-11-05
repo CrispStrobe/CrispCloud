@@ -131,6 +131,21 @@ class TransferJournal {
           }
           job.ready = true;
         }
+      case 'queue':
+        final job = _jobs[id];
+        if (job == null) {
+          throw const FormatException('Transfer header is missing.');
+        }
+        job.priority = event['priority'] as int? ?? job.priority;
+        job.queueOrder = event['queueOrder'] as int? ?? job.queueOrder;
+      case 'options':
+        final job = _jobs[id];
+        if (job == null) {
+          throw const FormatException('Transfer header is missing.');
+        }
+        job.options = FileOperationOptions.fromJson(
+          Map<String, dynamic>.from(event['options'] as Map),
+        );
       case 'dismiss':
         _jobs.remove(id);
       default:
@@ -227,16 +242,40 @@ class TransferJournal {
     );
   }
 
+  Future<void> updateQueue(String id, {int? priority, int? queueOrder}) async {
+    await initialize();
+    await _lock.synchronized(
+      () => _append({
+        'kind': 'queue',
+        'id': id,
+        'priority': priority,
+        'queueOrder': queueOrder,
+      }),
+    );
+  }
+
+  Future<void> saveReviewedOptions(
+    String id,
+    FileOperationOptions options,
+  ) async {
+    await initialize();
+    await _lock.synchronized(
+      () => _append({'kind': 'options', 'id': id, 'options': options.toJson()}),
+    );
+  }
+
   Future<void> setStatus(
     String id,
     TransferJobStatus status, {
     String? message,
     int? priority,
     int? queueOrder,
+    Set<TransferJobStatus>? onlyIf,
   }) async {
     await initialize();
-    await _lock.synchronized(
-      () => _append({
+    await _lock.synchronized(() async {
+      if (onlyIf != null && !onlyIf.contains(_jobs[id]?.status)) return;
+      await _append({
         'kind': 'state',
         'id': id,
         'status': status.name,
@@ -244,8 +283,8 @@ class TransferJournal {
         'priority': priority,
         'queueOrder': queueOrder,
         'updated': DateTime.now().toUtc().toIso8601String(),
-      }),
-    );
+      });
+    });
   }
 
   /// Explicit history maintenance keeps the write-ahead log bounded without

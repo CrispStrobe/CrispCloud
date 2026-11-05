@@ -58,6 +58,8 @@ Every physical move has a saved intent before it runs and a saved completion aft
 
 The persistent batch history has no 50-item truncation. It keeps original, intended and last-confirmed current paths for the entire batch, including temporary names. Reports can be copied or exported as JSON.
 
+Local storage references include a random installation identity saved before the app opens its panels. A report or collection from another computer cannot bind to an unrelated file merely because its absolute path is identical. If the installation identity cannot be saved, references remain session-only and cross-restart recovery is unavailable. The identity contains no hardware serial number or credentials.
+
 After reconnecting the same storage account, open **History / recovery** to resume a batch or restore its completed work. Native files are hashed as streams; directory manifests hash names and contents without following symlinks. Those digests, or stable provider object IDs, allow an interrupted move to be reconciled without blindly repeating it. Path-shaped UUID fields used by some protocol adapters are not accepted as stable object identities.
 
 When a provider supplies neither a stable identity nor a digest, an interrupted request may be ambiguous. The history view displays both paths and offers explicit verification of the observed destination. This only accepts a missing original and one destination whose available fingerprint still agrees; a known mismatch or two existing paths remains blocked. Manual verification is recorded in the report. Browser history durability follows the browser's storage policy. Content hashing and provider checks add I/O, particularly for large folders or remote listings.

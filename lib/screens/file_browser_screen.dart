@@ -44,6 +44,7 @@ import '../widgets/pattern_selection_dialog.dart';
 import '../widgets/file_list_dialog.dart';
 import '../widgets/file_collections_dialog.dart';
 import '../widgets/rename_history_dialog.dart';
+import '../widgets/trash_history_dialog.dart';
 import '../widgets/directory_comparison_dialog.dart';
 import '../widgets/file_clipboard_actions.dart';
 import '../widgets/file_toolbar.dart' show showPanelFilterDialog;
@@ -401,6 +402,10 @@ class _FileBrowserScreenState extends ConsumerState<FileBrowserScreen> {
         label: 'Multi-Rename...',
         shortcut: const SingleActivator(LogicalKeyboardKey.keyM, control: true),
         onSelected: () => showMultiRenameFromSelection(context, ref),
+      ),
+      PlatformMenuItem(
+        label: 'Trash History and Restore...',
+        onSelected: () => showTrashHistoryDialog(context, ref, activeSide),
       ),
       PlatformMenuItem(
         label: 'Rename History and Recovery...',
@@ -1782,6 +1787,8 @@ class _FileBrowserScreenState extends ConsumerState<FileBrowserScreen> {
             );
           case 'export_file_list':
             showFileListDialog(context, ref, ref.read(activePanelProvider));
+          case 'trash_history':
+            showTrashHistoryDialog(context, ref, ref.read(activePanelProvider));
           case 'rename_history':
             showRenameHistoryDialog(
               context,
@@ -1872,6 +1879,13 @@ class _FileBrowserScreenState extends ConsumerState<FileBrowserScreen> {
           child: _overflowItem(
             Icons.drive_file_rename_outline,
             'Multi-Rename (Ctrl+M)',
+          ),
+        ),
+        PopupMenuItem(
+          value: 'trash_history',
+          child: _overflowItem(
+            Icons.restore_from_trash,
+            'Trash history and restore…',
           ),
         ),
         PopupMenuItem(

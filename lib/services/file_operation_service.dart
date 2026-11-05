@@ -192,11 +192,14 @@ class FileOperationPlan {
 
 class FileOperationControl {
   bool _cancelled = false;
+  final Completer<void> _cancellation = Completer<void>();
+  Future<void> get cancellationFuture => _cancellation.future;
   Completer<void>? _paused;
   bool get isCancelled => _cancelled;
   bool get isPaused => _paused != null;
   void cancel() {
     _cancelled = true;
+    if (!_cancellation.isCompleted) _cancellation.complete();
     resume();
   }
 
@@ -1185,14 +1188,15 @@ class FileOperationService {
 
   bool _sameVersion(FileItem before, FileItem after) =>
       before.isFolder == after.isFolder &&
-      before.isSymlink == after.isSymlink &&
+      (before.isSymlink == true) == (after.isSymlink == true) &&
       before.symlinkTarget == after.symlinkTarget &&
       _version(before) == _version(after) &&
       (before.uuid == null || before.uuid == after.uuid) &&
       (before.isFolder ||
           ((before.size == null || before.size == after.size) &&
               (before.updatedAt == null ||
-                  before.updatedAt == after.updatedAt)));
+                  (after.updatedAt != null &&
+                      before.updatedAt!.isAtSameMomentAs(after.updatedAt!)))));
 
   Future<String> _digest(
     FileOperationBackend backend,

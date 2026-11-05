@@ -4,6 +4,8 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../models/panel_side.dart';
+import '../models/file_search_query.dart';
+import '../services/saved_search_service.dart';
 import '../providers/panel_provider.dart';
 import '../services/file_selection_pattern.dart';
 import '../services/log_service.dart';
@@ -45,6 +47,14 @@ class _PatternSelectionDialogState
   static const _log = Log('PatternSelectionDialog');
   final _controller = TextEditingController(text: '*');
   final _history = SelectionPatternHistory();
+  final _minimum = TextEditingController();
+  final _maximum = TextEditingController();
+  final _after = TextEditingController();
+  final _before = TextEditingController();
+  final _extensions = TextEditingController();
+  bool _includeHidden = true;
+  List<SavedSearch> _presets = const [];
+
   List<FileSelectionPattern> _recentPatterns = const [];
   FilePatternMode _mode = FilePatternMode.wildcard;
   late SelectionAction _action = widget.initialAction;
@@ -62,7 +72,13 @@ class _PatternSelectionDialogState
   Future<void> _loadHistory() async {
     try {
       final patterns = await _history.load();
-      if (mounted) setState(() => _recentPatterns = patterns);
+      final presets = await SavedSearchService().getAll();
+      if (mounted) {
+        setState(() {
+          _recentPatterns = patterns;
+          _presets = presets;
+        });
+      }
     } catch (error) {
       _log.warn('Selection pattern history could not be loaded', error);
     }
@@ -83,6 +99,9 @@ class _PatternSelectionDialogState
   @override
   void dispose() {
     _controller.dispose();
+    for (final c in [_minimum, _maximum, _after, _before, _extensions]) {
+      c.dispose();
+    }
     super.dispose();
   }
 
@@ -95,12 +114,160 @@ class _PatternSelectionDialogState
     includeFolders: _kind != 'files',
   );
 
+  FileSearchQuery _criteria() {
+    int? size(String raw) {
+      if (raw.trim().isEmpty) return null;
+      final value = int.tryParse(raw.trim());
+      if (value == null || value < 0) {
+        throw const FormatException('Enter a nonnegative size in bytes.');
+      }
+      return value;
+    }
+
+    DateTime? date(String raw) {
+      if (raw.trim().isEmpty) return null;
+      final value = DateTime.tryParse(raw.trim());
+      if (value == null) {
+        throw const FormatException('Enter an ISO date or date and time.');
+      }
+      return value;
+    }
+
+    final query = FileSearchQuery(
+      namePattern: _controller.text,
+      nameMode: _mode,
+      caseSensitive: _caseSensitive,
+      matchFullPath: _matchFullPath,
+      includeFiles: _kind != 'folders',
+      includeFolders: _kind != 'files',
+      includeHidden: _includeHidden,
+      minSize: size(_minimum.text),
+      maxSize: size(_maximum.text),
+      modifiedAfter: date(_after.text),
+      modifiedBefore: date(_before.text),
+      extensions: _extensions.text
+          .split(RegExp(r'[,;\s]+'))
+          .map((s) => s.replaceFirst(RegExp(r'^\.'), '').toLowerCase())
+          .where((s) => s.isNotEmpty)
+          .toList(),
+    );
+    query.validate();
+    return query;
+  }
+
+  void _loadPreset(SavedSearch saved) {
+    final query =
+        saved.settings ??
+        FileSearchQuery(
+          namePattern: saved.query.isEmpty ? '*' : saved.query,
+          extensions: saved.filterByType,
+          minSize: saved.filterByMinSize,
+          maxSize: saved.filterByMaxSize,
+          modifiedAfter: saved.filterByDateAfter,
+          modifiedBefore: saved.filterByDateBefore,
+        );
+    if (query.contentPattern.isNotEmpty || query.searchArchives) {
+      setState(
+        () => _memoryMessage = 'Run this content or archive search first, then select its result rows.',
+      );
+      return;
+    }
+    _recall(query.nameMatcher);
+    setState(() {
+      _minimum.text = query.minSize?.toString() ?? '';
+      _maximum.text = query.maxSize?.toString() ?? '';
+      _after.text = query.modifiedAfter?.toIso8601String() ?? '';
+      _before.text = query.modifiedBefore?.toIso8601String() ?? '';
+      _extensions.text = query.extensions.join('; ');
+      _includeHidden = query.includeHidden;
+      _memoryMessage =
+          'Loaded ${saved.name}. Selection applies to visible rows only.';
+    });
+  }
+
+  Future<void> _savePreset() async {
+    final criteria = _criteria();
+    final name = TextEditingController();
+    final value = await showDialog<String>(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: const Text('Save shared criteria'),
+        content: TextField(
+          controller: name,
+          autofocus: true,
+          maxLength: 100,
+          decoration: const InputDecoration(labelText: 'Preset name'),
+          onSubmitted: (value) {
+            if (value.trim().isNotEmpty) Navigator.pop(context, value.trim());
+          },
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context),
+            child: const Text('Cancel'),
+          ),
+          FilledButton(
+            onPressed: () {
+              if (name.text.trim().isNotEmpty) {
+                Navigator.pop(context, name.text.trim());
+              }
+            },
+            child: const Text('Save'),
+          ),
+        ],
+      ),
+    );
+    name.dispose();
+    if (value == null) return;
+    try {
+      await SavedSearchService().save(
+        SavedSearch(
+          name: value,
+          query: criteria.namePattern,
+          settings: criteria,
+          createdAt: DateTime.now(),
+        ),
+      );
+      await _loadHistory();
+      if (mounted) {
+        setState(
+          () => _memoryMessage =
+              'Saved $value for search, selection, and transfer filters.',
+        );
+      }
+    } catch (error) {
+      if (mounted) {
+        setState(() => _memoryMessage = 'Could not save criteria: $error');
+      }
+    }
+  }
+
+  Widget _criterionField(
+    TextEditingController controller,
+    String label,
+    String key,
+  ) => SizedBox(
+    width: 230,
+    child: TextField(
+      key: ValueKey(key),
+      controller: controller,
+      decoration: InputDecoration(
+        labelText: label,
+        border: const OutlineInputBorder(),
+        isDense: true,
+      ),
+      onChanged: (_) => setState(() {}),
+    ),
+  );
+
   @override
   Widget build(BuildContext context) {
     final panel = ref.watch(panelProvider(widget.side));
     FileSelectionPattern? pattern;
+    FileSearchQuery? criteria;
     String? error;
     try {
+      criteria = _criteria();
       pattern = _pattern();
     } on FormatException catch (e) {
       error = e.message;
@@ -108,7 +275,15 @@ class _PatternSelectionDialogState
     final displayed = panel.displayedFiles ?? [];
     final matches = pattern == null
         ? 0
-        : displayed.where(pattern.matches).length;
+        : displayed
+              .where(
+                (file) =>
+                    file.name != '..' &&
+                    pattern!.matches(file) &&
+                    criteria!.matchesMetadata(file) &&
+                    (criteria.includeHidden || !file.name.startsWith('.')),
+              )
+              .length;
     final restorable = panel.restorableSelectionCount;
 
     return AlertDialog(
@@ -271,6 +446,76 @@ class _PatternSelectionDialogState
                 onChanged: (value) => setState(() => _matchFullPath = value!),
                 controlAffinity: ListTileControlAffinity.leading,
               ),
+              ExpansionTile(
+                tilePadding: EdgeInsets.zero,
+                title: const Text('Shared criteria and presets'),
+                children: [
+                  Wrap(
+                    spacing: 8,
+                    runSpacing: 10,
+                    children: [
+                      _criterionField(
+                        _minimum,
+                        'Minimum size (bytes)',
+                        'selection-minimum',
+                      ),
+                      _criterionField(
+                        _maximum,
+                        'Maximum size (bytes)',
+                        'selection-maximum',
+                      ),
+                      _criterionField(
+                        _after,
+                        'Modified on or after (ISO)',
+                        'selection-after',
+                      ),
+                      _criterionField(
+                        _before,
+                        'Modified on or before (ISO)',
+                        'selection-before',
+                      ),
+                      _criterionField(
+                        _extensions,
+                        'Extensions (; separated)',
+                        'selection-extensions',
+                      ),
+                    ],
+                  ),
+                  CheckboxListTile(
+                    contentPadding: EdgeInsets.zero,
+                    title: const Text('Include hidden names'),
+                    value: _includeHidden,
+                    onChanged: (value) =>
+                        setState(() => _includeHidden = value!),
+                  ),
+                  Wrap(
+                    spacing: 8,
+                    children: [
+                      PopupMenuButton<SavedSearch>(
+                        tooltip: 'Load saved search criteria',
+                        enabled: _presets.isNotEmpty,
+                        onSelected: _loadPreset,
+                        itemBuilder: (_) => _presets
+                            .map(
+                              (saved) => PopupMenuItem(
+                                value: saved,
+                                child: Text(saved.name),
+                              ),
+                            )
+                            .toList(),
+                        child: const Padding(
+                          padding: EdgeInsets.all(12),
+                          child: Text('Load shared criteria'),
+                        ),
+                      ),
+                      TextButton(
+                        onPressed: criteria == null ? null : _savePreset,
+                        child: const Text('Save shared criteria'),
+                      ),
+                    ],
+                  ),
+                ],
+              ),
               Text(
                 '$matches matching item(s) in the visible list',
                 style: Theme.of(context).textTheme.bodySmall,
@@ -302,7 +547,8 @@ class _PatternSelectionDialogState
                         : () {
                             final count = panel.restoreSelection();
                             setState(() {
-                              _memoryMessage = 'Restored $count selected item(s).';
+                              _memoryMessage =
+                                  'Restored $count selected item(s).';
                             });
                           },
                     icon: const Icon(Icons.restore),
@@ -337,7 +583,7 @@ class _PatternSelectionDialogState
   void _apply(FileSelectionPattern pattern) {
     ref
         .read(panelProvider(widget.side))
-        .applyPatternSelection(pattern, action: _action);
+        .applyCriteriaSelection(_criteria(), action: _action);
     unawaited(
       _history.remember(pattern).catchError((Object error) {
         _log.warn('Selection pattern history could not be saved', error);

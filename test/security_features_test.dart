@@ -139,10 +139,10 @@ void main() {
       await service.clear();
       expect(service.config.isEnabled, false);
 
-      // New instance should also be disabled
+      // Clearing an override restores environment discovery at startup.
       final service2 = ProxyService();
       await service2.load();
-      expect(service2.config.isEnabled, false);
+      expect(service2.config.toJson(), ProxyConfig.fromEnvironment().toJson());
     });
 
     test('createHttpClient returns a client', () {

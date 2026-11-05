@@ -162,10 +162,10 @@ void main() {
       expect(svc.config.port, 1111);
     });
 
-    test('load with empty prefs uses default disabled config', () async {
+    test('load with empty prefs uses the environment default', () async {
       final svc = ProxyService();
       await svc.load();
-      expect(svc.config.isEnabled, false);
+      expect(svc.config.toJson(), ProxyConfig.fromEnvironment().toJson());
     });
 
     test('load with corrupted prefs falls back gracefully', () async {

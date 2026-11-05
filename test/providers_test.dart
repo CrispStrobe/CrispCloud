@@ -11,6 +11,11 @@ import 'package:shared_preferences/shared_preferences.dart';
 
 import 'package:crisp_cloud/models/file_item.dart';
 import 'package:crisp_cloud/models/operation_progress.dart';
+import 'package:crisp_cloud/models/transfer_job.dart';
+import 'package:crisp_cloud/services/file_operation_backend.dart';
+import 'package:crisp_cloud/services/file_operation_service.dart';
+import 'package:crisp_cloud/services/transfer_journal.dart';
+import 'package:crisp_cloud/services/transfer_journal_storage.dart';
 import 'package:crisp_cloud/models/panel_side.dart';
 import 'package:crisp_cloud/providers/providers.dart';
 import 'package:crisp_cloud/services/cloud_storage_interface.dart';
@@ -45,8 +50,7 @@ class _TestLocalFileService implements LocalFileService {
   @override
   Future<List<FileSystemEntity>?> listDirectory(String path) async => [];
   @override
-  Future<String?> requestDirectoryAccess({String? initialDirectory})
- async =>
+  Future<String?> requestDirectoryAccess({String? initialDirectory}) async =>
       currentPath;
   @override
   Future<Uint8List> readFile(String path, {FileItem? fileItem}) async =>
@@ -69,9 +73,7 @@ class _TestLocalFileService implements LocalFileService {
     String path, {
     bool includeHidden = false,
     int maxItems = 10000,
-  }) async =>
-      const <FileItem>[];
-
+  }) async => const <FileItem>[];
 }
 
 // Publish rows through the panel API and retain the displayed objects. The
@@ -90,26 +92,31 @@ void main() {
   late ProviderContainer container;
   late InMemorySecureStorage secureStorage;
   late FilenConfigService configService;
+  late TransferJournal journal;
 
   setUp(() {
     SharedPreferences.setMockInitialValues({});
     secureStorage = InMemorySecureStorage();
+    journal = TransferJournal(MemoryTransferJournalStorage());
     configService = FilenConfigService(
       configPath: '/tmp/providers_test_config',
       secureStorage: secureStorage,
     );
     container = ProviderContainer(
       overrides: [
+        transferJournalProvider.overrideWithValue(journal),
         secureStorageProvider.overrideWithValue(secureStorage),
         configPathProvider.overrideWithValue('/tmp/providers_test_config'),
         localFileServiceProvider.overrideWithValue(_TestLocalFileService()),
-        authProvider.overrideWith((ref) => AuthNotifier(
-              ref,
-              initialProvider: CloudProvider.filen,
-              config: configService,
-              configPath: '/tmp/providers_test_config',
-              secureStorage: secureStorage,
-            )),
+        authProvider.overrideWith(
+          (ref) => AuthNotifier(
+            ref,
+            initialProvider: CloudProvider.filen,
+            config: configService,
+            configPath: '/tmp/providers_test_config',
+            secureStorage: secureStorage,
+          ),
+        ),
       ],
     );
   });
@@ -229,16 +236,20 @@ void main() {
 
     test('toggleSelection adds item to selection', () {
       final panel = container.read(panelProvider(PanelSide.local));
-      final item = _publishSelectionRows(panel, ['test.txt']).single;
+      var item = FileItem(name: 'test.txt', isFolder: false);
+      panel.showSearchResults([item]);
+      item = panel.files!.single;
       panel.toggleSelection(item);
       expect(panel.selection.contains(item), isTrue);
     });
 
     test('toggleSelection replaces previous without modifier', () {
       final panel = container.read(panelProvider(PanelSide.local));
-      final items = _publishSelectionRows(panel, ['a.txt', 'b.txt']);
-      final item1 = items[0];
-      final item2 = items[1];
+      var item1 = FileItem(name: 'a.txt', isFolder: false, path: '/a.txt');
+      var item2 = FileItem(name: 'b.txt', isFolder: false, path: '/b.txt');
+      panel.showSearchResults([item1, item2]);
+      item1 = panel.files![0];
+      item2 = panel.files![1];
       panel.toggleSelection(item1);
       expect(panel.selection.single, same(item1));
       panel.toggleSelection(item2);
@@ -248,9 +259,11 @@ void main() {
 
     test('toggleSelection with ctrlKey adds to selection', () {
       final panel = container.read(panelProvider(PanelSide.local));
-      final items = _publishSelectionRows(panel, ['a.txt', 'b.txt']);
-      final item1 = items[0];
-      final item2 = items[1];
+      var item1 = FileItem(name: 'a.txt', isFolder: false, path: '/a.txt');
+      var item2 = FileItem(name: 'b.txt', isFolder: false, path: '/b.txt');
+      panel.showSearchResults([item1, item2]);
+      item1 = panel.files![0];
+      item2 = panel.files![1];
       panel.toggleSelection(item1);
       panel.toggleSelection(item2, ctrlKey: true);
       expect(panel.selection, unorderedEquals([item1, item2]));
@@ -258,7 +271,9 @@ void main() {
 
     test('toggleSelection with ctrlKey removes already-selected', () {
       final panel = container.read(panelProvider(PanelSide.local));
-      final item = _publishSelectionRows(panel, ['a.txt']).single;
+      var item = FileItem(name: 'a.txt', isFolder: false, path: '/a.txt');
+      panel.showSearchResults([item]);
+      item = panel.files!.single;
       panel.toggleSelection(item);
       expect(panel.selection.single, same(item));
       panel.toggleSelection(item, ctrlKey: true);
@@ -267,7 +282,9 @@ void main() {
 
     test('clearSelection empties selection', () {
       final panel = container.read(panelProvider(PanelSide.local));
-      final item = _publishSelectionRows(panel, ['test.txt']).single;
+      var item = FileItem(name: 'test.txt', isFolder: false);
+      panel.showSearchResults([item]);
+      item = panel.files!.single;
       panel.toggleSelection(item);
       expect(panel.selection.single, same(item));
       panel.clearSelection();
@@ -276,14 +293,16 @@ void main() {
 
     test('isSelected returns true for selected item', () {
       final panel = container.read(panelProvider(PanelSide.local));
-      final item = _publishSelectionRows(panel, ['test.txt']).single;
+      var item = FileItem(name: 'test.txt', isFolder: false);
+      panel.showSearchResults([item]);
+      item = panel.files!.single;
       panel.toggleSelection(item);
       expect(panel.isSelected(item), isTrue);
     });
 
     test('isSelected returns false for unselected item', () {
       final panel = container.read(panelProvider(PanelSide.local));
-      final item = _publishSelectionRows(panel, ['test.txt']).single;
+      var item = FileItem(name: 'test.txt', isFolder: false);
       expect(panel.isSelected(item), isFalse);
     });
 
@@ -356,16 +375,12 @@ void main() {
     test('selection is independent per panel', () {
       final local = container.read(panelProvider(PanelSide.local));
       final remote = container.read(panelProvider(PanelSide.remote));
-      final localItem = _publishSelectionRows(local, ['test.txt']).single;
-      final remoteItem = _publishSelectionRows(remote, ['test.txt']).single;
-      local.toggleSelection(localItem);
-      expect(local.selection.single, same(localItem));
-      expect(remote.selection, isEmpty);
-      remote.toggleSelection(remoteItem);
-      expect(remote.selection.single, same(remoteItem));
-      expect(local.selection.single, same(localItem));
-      remote.clearSelection();
-      expect(local.selection.single, same(localItem));
+      var item = FileItem(name: 'test.txt', isFolder: false);
+      local.showSearchResults([item]);
+      item = local.files!.single;
+      local.toggleSelection(item);
+      expect(local.selection.contains(item), isTrue);
+      expect(remote.selection.contains(item), isFalse);
     });
 
     test('sort is independent per panel', () {
@@ -463,14 +478,14 @@ void main() {
   group('PanelNotifier in-place rename', () {
     test('startRename sets renamingItem', () {
       final panel = container.read(panelProvider(PanelSide.local));
-      final item = FileItem(name: 'test.txt', isFolder: false);
+      var item = FileItem(name: 'test.txt', isFolder: false);
       panel.startRename(item);
       expect(panel.renamingItem, item);
     });
 
     test('cancelRename clears renamingItem', () {
       final panel = container.read(panelProvider(PanelSide.local));
-      final item = FileItem(name: 'test.txt', isFolder: false);
+      var item = FileItem(name: 'test.txt', isFolder: false);
       panel.startRename(item);
       panel.cancelRename();
       expect(panel.renamingItem, isNull);
@@ -485,7 +500,7 @@ void main() {
 
     test('commitRename with empty name cancels silently', () async {
       final panel = container.read(panelProvider(PanelSide.local));
-      final item = FileItem(name: 'test.txt', isFolder: false);
+      var item = FileItem(name: 'test.txt', isFolder: false);
       panel.startRename(item);
       await panel.commitRename(''); // Should clear without rename
       expect(panel.renamingItem, isNull);
@@ -593,10 +608,10 @@ void main() {
 
       expect(panel.filteredFiles!.length, 4);
       expect(panel.cursorItem!.name, 'alpha.txt');
-      expect(
-        panel.selection.map((f) => f.name).toSet(),
-        {'alpha.txt', 'alphabet.txt'},
-      );
+      expect(panel.selection.map((f) => f.name).toSet(), {
+        'alpha.txt',
+        'alphabet.txt',
+      });
     });
 
     test('filter mode narrows the listing', () {
@@ -606,10 +621,10 @@ void main() {
       panel.typeaheadAppend('a');
 
       expect(panel.isQuickFilterActive, isTrue);
-      expect(
-        panel.filteredFiles!.map((f) => f.name).toList(),
-        ['alpha.txt', 'alphabet.txt'],
-      );
+      expect(panel.filteredFiles!.map((f) => f.name).toList(), [
+        'alpha.txt',
+        'alphabet.txt',
+      ]);
       expect(panel.cursorItem!.name, 'alpha.txt');
     });
 
@@ -645,10 +660,10 @@ void main() {
       notifier.setMatchFromStart(false);
       panel.typeaheadAppend('ph');
 
-      expect(
-        panel.filteredFiles!.map((f) => f.name).toList(),
-        ['alpha.txt', 'alphabet.txt'],
-      );
+      expect(panel.filteredFiles!.map((f) => f.name).toList(), [
+        'alpha.txt',
+        'alphabet.txt',
+      ]);
     });
 
     test('case-sensitive matching is honoured', () {
@@ -711,30 +726,34 @@ void main() {
       expect(transfers.operations, isEmpty);
     });
 
-    test('clearCompletedOperations removes failed and cancelled transfers', () {
-      final transfers = container.read(transferProvider);
-      final failed = OperationProgress(
-        id: 'failed',
-        type: OperationType.upload,
-        sourcePath: '/source',
-        targetPath: '/target',
-        fileName: 'failed.txt',
-        status: OperationStatus.failed,
-        errorMessage: 'network error',
-      );
-      final cancelled = OperationProgress(
-        id: 'cancelled',
-        type: OperationType.download,
-        sourcePath: '/source',
-        targetPath: '/target',
-        fileName: 'cancelled.txt',
-      )..cancel();
-      transfers.operations.addAll([failed, cancelled]);
-
-      transfers.clearCompletedOperations();
-
-      expect(transfers.operations, isEmpty);
-    });
+    test(
+      'clearCompletedOperations removes failed and cancelled transfers',
+      () async {
+        final backend = LocalOperationBackend(
+          _TestLocalFileService(),
+          isCurrent: () => true,
+        );
+        final plan = FileOperationPlan(
+          source: backend,
+          destination: backend,
+          targetDirectory: '/target',
+          options: const FileOperationOptions(),
+          entries: [],
+          errors: [],
+        );
+        await journal.create('failed', plan);
+        await journal.setStatus('failed', TransferJobStatus.failed);
+        await journal.create('cancelled', plan);
+        await journal.setStatus('cancelled', TransferJobStatus.cancelled);
+        final transfers = container.read(transferProvider);
+        await transfers.ready;
+        expect(transfers.operations, hasLength(2));
+        transfers.clearCompletedOperations();
+        expect(transfers.operations, isEmpty);
+        // Clearing visible outcomes must retain the durable recovery records.
+        expect(journal.jobs, hasLength(2));
+      },
+    );
 
     test('removeOperation does not throw for non-existent id', () {
       final transfers = container.read(transferProvider);

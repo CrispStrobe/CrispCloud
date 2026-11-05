@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'dart:convert';
 import 'dart:io';
 
@@ -11,6 +12,10 @@ import 'package:crisp_cloud/services/transfer_journal_storage.dart';
 import 'package:crisp_cloud/services/transfer_journal_storage_io.dart';
 import 'package:crisp_cloud/services/transfer_recovery_service.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:shared_preferences/shared_preferences.dart';
+import 'package:crisp_cloud/providers/transfer_provider.dart';
+import 'package:crisp_cloud/models/operation_progress.dart';
 import 'package:path/path.dart' as p;
 
 class _MemoryBackend extends FileOperationBackend {
@@ -203,6 +208,8 @@ class _FailWritingIntent extends MemoryTransferJournalStorage {
 }
 
 void main() {
+  TestWidgetsFlutterBinding.ensureInitialized();
+  setUp(() => SharedPreferences.setMockInitialValues({}));
   Future<FileOperationPlan> plan(
     _MemoryBackend source,
     _MemoryBackend target, {
@@ -218,6 +225,207 @@ void main() {
     ],
     targetDirectory: '/target',
     options: options,
+  );
+
+  Future<void> waitFor(
+    TransferNotifier notifier,
+    bool Function() condition,
+  ) async {
+    if (condition()) return;
+    final done = Completer<void>();
+    void changed() {
+      if (condition() && !done.isCompleted) done.complete();
+    }
+
+    notifier.addListener(changed);
+    try {
+      await done.future.timeout(const Duration(seconds: 5));
+    } finally {
+      notifier.removeListener(changed);
+    }
+  }
+
+  test('queued work is saved before execution; cancellation and order survive restart', () async {
+    final store = MemoryTransferJournalStorage();
+    final journal = TransferJournal(store);
+    final container = ProviderContainer(
+      overrides: [transferJournalProvider.overrideWithValue(journal)],
+    );
+    addTearDown(container.dispose);
+    final transfers = container.read(transferProvider);
+    await transfers.ready;
+    await transfers.setConcurrency(0);
+    final running = <Future<void>>[];
+    final destinations = <_MemoryBackend>[];
+    final controls = <FileOperationControl>[];
+    for (var i = 0; i < 3; i++) {
+      final source = _MemoryBackend('source-$i')
+        ..file('/file-$i', 'contents-$i');
+      final target = _MemoryBackend('target-$i');
+      destinations.add(target);
+      final prepared = await plan(source, target);
+      final control = FileOperationControl();
+      controls.add(control);
+      running.add(transfers.runFileOperation(prepared, control: control));
+      await waitFor(transfers, () => transfers.queuedCount == i + 1);
+    }
+    final ids = transfers.queuedIds;
+    expect(
+      journal.jobs.every((job) => job.ready && job.entries.length == 1),
+      isTrue,
+    );
+    expect(destinations.every((target) => target.writes == 0), isTrue);
+    await transfers.setPriority(ids[1], 10);
+    expect(transfers.queuedIds.first, ids[1]);
+    await transfers.moveQueuedFirst(ids[2]);
+    expect(transfers.queuedIds.first, ids[2]);
+    expect(journal.job(ids[2])!.queueOrder, 0);
+    controls.first.cancel();
+    await running.first;
+    expect(transfers.queuedCount, 2);
+    transfers.cancelAllOperations();
+    await Future.wait(running);
+    expect(
+      journal.jobs.every((job) => job.status == TransferJobStatus.cancelled),
+      isTrue,
+    );
+    final reloaded = TransferJournal(store);
+    final restarted = ProviderContainer(
+      overrides: [transferJournalProvider.overrideWithValue(reloaded)],
+    );
+    addTearDown(restarted.dispose);
+    final second = restarted.read(transferProvider);
+    await second.ready;
+    expect(second.operations, hasLength(3));
+    expect(second.queuedCount, 0);
+    expect(second.maxConcurrent, 0);
+    expect(second.savedJob(ids[1])!.priority, 10);
+    expect(destinations.every((target) => target.writes == 0), isTrue);
+  });
+
+  test(
+    'queue exposes waiting conflicts and resumes the same saved job',
+    () async {
+      final journal = TransferJournal(MemoryTransferJournalStorage());
+      final container = ProviderContainer(
+        overrides: [transferJournalProvider.overrideWithValue(journal)],
+      );
+      addTearDown(container.dispose);
+      final source = _MemoryBackend('a')..file('/a', 'new');
+      final target = _MemoryBackend('b')..file('/target/a', 'old');
+      final transfers = container.read(transferProvider);
+      await transfers.runFileOperation(
+        await plan(source, target),
+        control: FileOperationControl(),
+      );
+      final job = transfers.savedJobs.single;
+      expect(job.status, TransferJobStatus.waitingForDecision);
+      expect(transfers.operations.single.status, OperationStatus.failed);
+      expect(target.writes, 0);
+      final preview = await const TransferRecoveryService().prepare(
+        job,
+        source: source,
+        destination: target,
+        control: FileOperationControl(),
+      );
+      await transfers.runFileOperation(
+        preview.excluding({}),
+        recoveryJobId: job.id,
+        control: FileOperationControl(),
+        resolveConflict: (_, __) async => FileConflictDecision.keepBoth,
+      );
+      expect(transfers.savedJobs, hasLength(1));
+      expect(job.status, TransferJobStatus.completed);
+      expect(target.bytes['/target/a'], utf8.encode('old'));
+      expect(target.bytes['/target/a (1)'], utf8.encode('new'));
+    },
+  );
+
+  test(
+    'read-only reconciliation completes without re-running a lost-ack move',
+    () async {
+      final storage = _MemoryBackend('a')
+        ..file('/a', 'contents')
+        ..loseMoveReply = true;
+      final journal = TransferJournal(MemoryTransferJournalStorage());
+      final prepared = await plan(
+        storage,
+        storage,
+        options: const FileOperationOptions(kind: FileOperationKind.move),
+      );
+      await journal.create('lostmove', prepared);
+      await JournaledTransferRunner(journal)
+          .execute('lostmove', prepared, control: FileOperationControl());
+      final container = ProviderContainer(
+        overrides: [transferJournalProvider.overrideWithValue(journal)],
+      );
+      addTearDown(container.dispose);
+      final transfers = container.read(transferProvider);
+      await transfers.ready;
+      final preview = await const TransferRecoveryService().prepare(
+        journal.job('lostmove')!,
+        source: storage,
+        destination: storage,
+        control: FileOperationControl(),
+      );
+      expect(preview.plan.canExecute, isFalse);
+      await transfers.runFileOperation(
+        preview.excluding({}),
+        recoveryJobId: 'lostmove',
+        control: FileOperationControl(),
+      );
+      expect(journal.job('lostmove')!.status, TransferJobStatus.completed);
+      expect(storage.writes, 0);
+      expect(transfers.operations.single.status, OperationStatus.completed);
+    },
+  );
+
+  test(
+    'backup restoration checkpoints and reconciles a lost native reply',
+    () async {
+      final source = _MemoryBackend('a')..file('/a', 'new');
+      final target = _MemoryBackend('b')
+        ..file('/target/backup', 'old')
+        ..loseMoveReply = true;
+      final prepared = await plan(source, target);
+      prepared.entries.single.outcome = FileOperationOutcome.failed;
+      prepared.entries.single.recovery = {
+        'backupPath': '/target/backup',
+        'backupSha256': await transferDigest(
+          target,
+          (await target.stat('/target/backup'))!,
+          FileOperationControl(),
+        ),
+      };
+      final journal = TransferJournal(MemoryTransferJournalStorage());
+      await journal.create('backup', prepared);
+      await journal.setStatus('backup', TransferJobStatus.failed);
+      final container = ProviderContainer(
+        overrides: [transferJournalProvider.overrideWithValue(journal)],
+      );
+      addTearDown(container.dispose);
+      final transfers = container.read(transferProvider);
+      await expectLater(
+        transfers.restoreSavedBackup(
+          'backup',
+          0,
+          target,
+          FileOperationControl(),
+        ),
+        throwsStateError,
+      );
+      expect(journal.job('backup')!.entries.single.phase, 'restoringBackup');
+      expect(target.bytes['/target/a'], utf8.encode('old'));
+      expect(target.bytes.containsKey('/target/backup'), isFalse);
+      await transfers.restoreSavedBackup(
+        'backup',
+        0,
+        target,
+        FileOperationControl(),
+      );
+      expect(journal.job('backup')!.entries.single.phase, 'backupRestored');
+      expect(source.bytes['/a'], utf8.encode('new'));
+    },
   );
 
   test(

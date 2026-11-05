@@ -170,10 +170,11 @@ class ArchivePanelSource extends PanelSource {
       identical(this, other) ||
       other is ArchivePanelSource &&
           other.archivePath == archivePath &&
-          other.innerPath == innerPath;
+          other.innerPath == innerPath &&
+          other.parent == parent;
 
   @override
-  int get hashCode => Object.hash('archive', archivePath, innerPath);
+  int get hashCode => Object.hash('archive', archivePath, innerPath, parent);
 }
 
 // --------------- Container ---------------------------------------------------
@@ -234,10 +235,18 @@ class ContainerPanelSource extends PanelSource {
       identical(this, other) ||
       other is ContainerPanelSource &&
           other.containerPath == containerPath &&
-          other.innerPath == innerPath;
+          other.innerPath == innerPath &&
+          other.parent == parent &&
+          identical(other.unlockSession, unlockSession);
 
   @override
-  int get hashCode => Object.hash('container', containerPath, innerPath);
+  int get hashCode => Object.hash(
+    'container',
+    containerPath,
+    innerPath,
+    parent,
+    identityHashCode(unlockSession),
+  );
 }
 
 // ---------------------------------------------------------------------------
