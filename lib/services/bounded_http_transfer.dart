@@ -35,6 +35,7 @@ Stream<List<int>> streamHttpDownload(
   required String operation,
   Map<String, String> headers = const {},
   int? expectedLength,
+  int? Function(Map<String, String>)? responseLength,
   void Function(int, int)? onProgress,
 }) async* {
   if (uri.scheme != 'https' || uri.host.isEmpty || uri.userInfo.isNotEmpty) {
@@ -47,7 +48,10 @@ Stream<List<int>> streamHttpDownload(
     if (response.statusCode != 200) {
       throw StateError('$operation failed (${response.statusCode}).');
     }
-    final length = expectedLength ?? response.contentLength;
+    final length =
+        expectedLength ??
+        responseLength?.call(response.headers) ??
+        response.contentLength;
     var received = 0;
     await for (final chunk in response.stream) {
       received += chunk.length;

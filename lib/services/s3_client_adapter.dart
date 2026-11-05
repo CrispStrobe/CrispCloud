@@ -167,13 +167,23 @@ class S3ClientAdapter extends CloudStorageClient
       throw StateError('S3 source metadata unavailable.');
     }
     final size = int.tryParse(head.headers['content-length'] ?? '');
-    if (size == null ||
-        head.headers['etag'] == null ||
-        size > 5 * 1024 * 1024 * 1024) {
-      throw UnsupportedError('Large S3 copies use the bounded streaming path.');
+    if (size == null || size < 0 || head.headers['etag'] == null) {
+      throw StateError('S3 did not confirm source length and version.');
     }
     final source =
         '/${Uri.encodeComponent(_bucket!)}/${sourceKey.split('/').map(Uri.encodeComponent).join('/')}';
+    if (size > 5 * 1024 * 1024 * 1024) {
+      return _copyMultipartExact(
+        source,
+        destinationPath,
+        size,
+        expectedSourceVersion ?? head.headers['etag']!,
+        replace: replace,
+        expectedDestinationVersion: expectedDestinationVersion,
+        checkpoint: checkpoint,
+        onProgress: onProgress,
+      );
+    }
     final response = await _signedRequest(
       'PUT',
       _buildUri(_pathToKey(destinationPath)),
@@ -199,6 +209,120 @@ class S3ClientAdapter extends CloudStorageClient
               ?.innerText ??
           response.headers['etag'],
     );
+  }
+
+  /// UploadPartCopy keeps large staged commits server-side. Every part is bound
+  /// to the captured source ETag, and the completed destination is conditional.
+  /// https://docs.aws.amazon.com/AmazonS3/latest/API/API_UploadPartCopy.html
+  /// https://docs.aws.amazon.com/AmazonS3/latest/API/API_CompleteMultipartUpload.html
+  Future<CloudTransferResult> _copyMultipartExact(
+    String source,
+    String destination,
+    int size,
+    String sourceVersion, {
+    required bool replace,
+    String? expectedDestinationVersion,
+    TransferCheckpoint? checkpoint,
+    void Function(int, int)? onProgress,
+  }) async {
+    const preferredPartSize = 512 * 1024 * 1024;
+    final capturedStorage = storageReferenceForClient(this).id;
+    void checkAccount() {
+      _ensureAuth();
+      if (capturedStorage != storageReferenceForClient(this).id) {
+        throw StateError('The original S3 account changed during copy.');
+      }
+    }
+
+    final minimumPartSize = (size + 9999) ~/ 10000;
+    final partSize = minimumPartSize > preferredPartSize
+        ? minimumPartSize
+        : preferredPartSize;
+    if (partSize > 5 * 1024 * 1024 * 1024) {
+      throw UnsupportedError('The object exceeds S3 multipart copy limits.');
+    }
+    final key = _pathToKey(destination);
+    await checkpoint?.call();
+    checkAccount();
+    final uploadId = await _initiateMultipartUpload(key);
+    var confirmed = false;
+    try {
+      final parts = <PartETag>[];
+      for (var offset = 0; offset < size; offset += partSize) {
+        await checkpoint?.call();
+        checkAccount();
+        final end = offset + partSize < size ? offset + partSize - 1 : size - 1;
+        final number = parts.length + 1;
+        final response = await _signedRequest(
+          'PUT',
+          _buildUri(
+            key,
+            queryParams: {'partNumber': '$number', 'uploadId': uploadId},
+          ),
+          extraHeaders: {
+            'x-amz-copy-source': source,
+            'x-amz-copy-source-if-match': sourceVersion,
+            'x-amz-copy-source-range': 'bytes=$offset-$end',
+          },
+          body: const [],
+        );
+        if (response.statusCode != 200) {
+          throw StateError(
+            'S3 part copy failed (HTTP ${response.statusCode}).',
+          );
+        }
+        final document = xml.XmlDocument.parse(response.body);
+        final etag = document.findAllElements('ETag').firstOrNull?.innerText;
+        if (document.rootElement.name.local != 'CopyPartResult' ||
+            etag == null ||
+            etag.isEmpty ||
+            document.findAllElements('Error').isNotEmpty) {
+          throw StateError('S3 did not confirm the copied part.');
+        }
+        parts.add(PartETag(number, etag));
+        onProgress?.call(end + 1, size);
+      }
+      await checkpoint?.call();
+      checkAccount();
+      final response = await _completeMultipartUpload(
+        key,
+        uploadId,
+        parts,
+        headers: {
+          if (!replace) 'if-none-match': '*',
+          if (expectedDestinationVersion != null)
+            'if-match': expectedDestinationVersion,
+        },
+      );
+      final version = xml.XmlDocument.parse(response.body)
+          .findAllElements('ETag')
+          .firstOrNull
+          ?.innerText;
+      if (version == null || version.isEmpty) {
+        throw StateError('S3 did not confirm the copied object version.');
+      }
+      confirmed = true;
+      return CloudTransferResult(
+        path: destination,
+        version: version,
+        size: size,
+      );
+    } finally {
+      if (!confirmed &&
+          _authenticated &&
+          capturedStorage == storageReferenceForClient(this).id) {
+        try {
+          // Abort only this unfinished session. A lost completion response can
+          // leave a completed object; aborting its upload ID cannot delete it.
+          await _signedRequest(
+            'DELETE',
+            _buildUri(key, queryParams: {'uploadId': uploadId}),
+          );
+        } catch (_) {
+          /* Preserve the transfer failure and any server-side recovery state. */
+        }
+      }
+    }
   }
 
   void _requireCopyCompletion(http.Response response) {
@@ -1176,11 +1300,12 @@ class S3ClientAdapter extends CloudStorageClient
   }
 
   /// Complete a multipart upload with the list of part ETags.
-  Future<void> _completeMultipartUpload(
+  Future<http.Response> _completeMultipartUpload(
     String key,
     String uploadId,
-    List<PartETag> parts,
-  ) async {
+    List<PartETag> parts, {
+    Map<String, String> headers = const {},
+  }) async {
     final xmlParts = parts
         .map(
           (p) =>
@@ -1193,7 +1318,7 @@ class S3ClientAdapter extends CloudStorageClient
     final response = await _signedRequest(
       'POST',
       uri,
-      extraHeaders: {'content-type': 'application/xml'},
+      extraHeaders: {'content-type': 'application/xml', ...headers},
       body: utf8.encode(body),
     );
 
@@ -1204,6 +1329,7 @@ class S3ClientAdapter extends CloudStorageClient
         'S3 did not confirm multipart completion (HTTP ${response.statusCode}).',
       );
     }
+    return response;
   }
 
   /// In-memory uploads use the same verified multipart path as streams.

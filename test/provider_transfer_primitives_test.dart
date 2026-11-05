@@ -137,6 +137,111 @@ void main() {
     );
   });
 
+  test('large S3 copies condition every source range and the final destination', () async {
+    final adapter = await s3();
+    const size = 5 * 1024 * 1024 * 1024 + 3;
+    final ranges = <String>[];
+    var completed = false;
+    await http.runWithClient(
+      () async {
+        final result = await adapter.copyToExact(
+          '/large',
+          '/target',
+          expectedSourceVersion: 'reviewed',
+        );
+        expect(result.size, size);
+        expect(result.version, 'complete-version');
+      },
+      () => MockClient((request) async {
+        if (request.method == 'HEAD') {
+          return http.Response(
+            '',
+            200,
+            headers: {'content-length': '$size', 'etag': 'current'},
+          );
+        }
+        if (request.url.queryParameters.containsKey('uploads')) {
+          return http.Response(
+            '<InitiateMultipartUploadResult><UploadId>copy-session</UploadId></InitiateMultipartUploadResult>',
+            200,
+          );
+        }
+        expect(request.url.queryParameters['uploadId'], 'copy-session');
+        if (request.method == 'PUT') {
+          expect(request.headers['x-amz-copy-source-if-match'], 'reviewed');
+          expect(request.headers['x-amz-copy-source'], '/bucket/large');
+          expect(request.bodyBytes, isEmpty);
+          ranges.add(request.headers['x-amz-copy-source-range']!);
+          return http.Response(
+            '<CopyPartResult><ETag>part-${ranges.length}</ETag></CopyPartResult>',
+            200,
+          );
+        }
+        expect(request.method, 'POST');
+        expect(request.headers['if-none-match'], '*');
+        expect(request.body, contains('<PartNumber>11</PartNumber>'));
+        completed = true;
+        return http.Response(
+          '<CompleteMultipartUploadResult><ETag>complete-version</ETag></CompleteMultipartUploadResult>',
+          200,
+        );
+      }),
+    );
+    expect(completed, isTrue);
+    expect(ranges, hasLength(11));
+    expect(ranges.first, 'bytes=0-536870911');
+    expect(ranges.last, 'bytes=5368709120-5368709122');
+  });
+
+  test(
+    'an S3 multipart copy conflict aborts only its upload session',
+    () async {
+      final adapter = await s3();
+      var aborted = false;
+      await http.runWithClient(
+        () => expectLater(
+          adapter.copyToExact('/large', '/target'),
+          throwsStateError,
+        ),
+        () => MockClient((request) async {
+          if (request.method == 'HEAD') {
+            return http.Response(
+              '',
+              200,
+              headers: {
+                'content-length': '${6 * 1024 * 1024 * 1024}',
+                'etag': 'source',
+              },
+            );
+          }
+          if (request.url.queryParameters.containsKey('uploads')) {
+            return http.Response(
+              '<InitiateMultipartUploadResult><UploadId>copy</UploadId></InitiateMultipartUploadResult>',
+              200,
+            );
+          }
+          if (request.method == 'PUT') {
+            return http.Response(
+              '<CopyPartResult><ETag>part</ETag></CopyPartResult>',
+              200,
+            );
+          }
+          if (request.method == 'POST') {
+            return http.Response(
+              '<Error><Code>PreconditionFailed</Code></Error>',
+              412,
+            );
+          }
+          expect(request.method, 'DELETE');
+          expect(request.url.queryParameters, {'uploadId': 'copy'});
+          aborted = true;
+          return http.Response('', 204);
+        }),
+      );
+      expect(aborted, isTrue);
+    },
+  );
+
   test(
     'S3 range reads reject a server that ignores the requested range',
     () async {

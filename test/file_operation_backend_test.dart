@@ -584,7 +584,11 @@ void main() {
         client.failCommit = true;
         await expectLater(write('replacement'), throwsStateError);
         expect(client.text('/target/a.txt'), 'original');
-        expect(client.files.keys, ['/target/a.txt']);
+        final stage = client.files.keys.singleWhere(
+          (path) => path.contains('.crisp-transfer-'),
+        );
+        expect(client.text(stage), 'replacement');
+        expect(client.files.keys, hasLength(2));
         expect(client.renames.last.$1, contains('/.crisp-replaced-'));
         expect(client.renames.last.$2, 'a.txt');
       },
@@ -665,6 +669,260 @@ void main() {
       expect(client.deleted, isEmpty);
     });
   });
+
+  group('conditional object commit', () {
+    late _ExactObjectClient client;
+    late CloudOperationBackend backend;
+    setUp(() {
+      client = _ExactObjectClient();
+      backend = CloudOperationBackend(client, isCurrent: () => true);
+    });
+
+    Future<void> write({
+      bool replace = false,
+      Future<void> Function(Map<String, dynamic>)? checkpoint,
+    }) => backend.writePreparedFile(
+      '/target/a.txt',
+      Stream.value(utf8.encode('new')),
+      3,
+      replace: replace,
+      checkpoint: checkpoint,
+    );
+
+    test('replacement uses conditional copy and version-specific cleanup throughout', () async {
+      client.put('/target/a.txt', 'original');
+      final checkpoints = <Map<String, dynamic>>[];
+      await write(
+        replace: true,
+        checkpoint: (state) async {
+          checkpoints.add(state);
+        },
+      );
+      expect(client.renames, isEmpty);
+      expect(client.text('/target/a.txt'), 'new');
+      expect(client.files.keys, ['/target/a.txt']);
+      expect(client.copies, hasLength(2));
+      expect(client.conditionalDeletes, hasLength(3));
+      expect(
+        checkpoints.map((state) => state['phase']),
+        containsAllInOrder([
+          'backupCopied',
+          'backedUp',
+          'commitCopied',
+          'committed',
+        ]),
+      );
+      expect(
+        checkpoints.firstWhere(
+          (state) => state['phase'] == 'commitCopied',
+        )['commitCopyVersion'],
+        isNotNull,
+      );
+    });
+
+    test(
+      'a target created inside the exact commit is never overwritten',
+      () async {
+        client.beforeCopy = (source, target) {
+          if (target == '/target/a.txt') client.put(target, 'concurrent');
+        };
+        await expectLater(write(), throwsStateError);
+        expect(client.text('/target/a.txt'), 'concurrent');
+        expect(client.conditionalDeletes, isEmpty);
+        expect(
+          client.files.keys.where((path) => path.contains('.crisp-transfer-')),
+          hasLength(1),
+        );
+      },
+    );
+
+    test(
+      'a changed original is retained after its backup copy completes',
+      () async {
+        client.put('/target/a.txt', 'original');
+        client.beforeConditionalDelete = (path) {
+          if (path == '/target/a.txt') client.put(path, 'changed original');
+        };
+        await expectLater(write(replace: true), throwsStateError);
+        expect(client.text('/target/a.txt'), 'changed original');
+        final backup = client.files.keys.singleWhere(
+          (path) => path.contains('.crisp-replaced-'),
+        );
+        expect(client.text(backup), 'original');
+        expect(client.renames, isEmpty);
+      },
+    );
+
+    test('a failed copy checkpoint preserves both confirmed copy and original stage', () async {
+      await expectLater(
+        write(
+          checkpoint: (state) async {
+            if (state['phase'] == 'commitCopied') {
+              throw StateError('Journal unavailable');
+            }
+          },
+        ),
+        throwsStateError,
+      );
+      expect(client.text('/target/a.txt'), 'new');
+      expect(client.conditionalDeletes, isEmpty);
+      final stage = client.files.keys.singleWhere(
+        (path) => path.contains('.crisp-transfer-'),
+      );
+      expect(client.text(stage), 'new');
+    });
+
+    test(
+      'a lost conditional delete reply reconciles exact destination version',
+      () async {
+        client.loseDeleteReply = true;
+        await write();
+        expect(client.text('/target/a.txt'), 'new');
+        expect(client.files.keys, ['/target/a.txt']);
+      },
+    );
+
+    test('a failed commit restores the original through exact conditional primitives', () async {
+      client.put('/target/a.txt', 'original');
+      client.beforeCopy = (source, target) {
+        if (source.contains('.crisp-transfer-')) {
+          throw StateError('Copy refused');
+        }
+      };
+      await expectLater(write(replace: true), throwsStateError);
+      expect(client.text('/target/a.txt'), 'original');
+      expect(client.renames, isEmpty);
+      expect(
+        client.files.keys.where((path) => path.contains('.crisp-replaced-')),
+        isEmpty,
+      );
+    });
+
+    test(
+      'unsupported object stores fail before upload or source consumption',
+      () async {
+        final unsupported = _UnsupportedObjectClient();
+        var consumed = false;
+        Stream<List<int>> content() async* {
+          consumed = true;
+          yield [1];
+        }
+
+        await expectLater(
+          CloudOperationBackend(
+            unsupported,
+            isCurrent: () => true,
+          ).writePreparedFile('/target/a.txt', content(), 1, replace: false),
+          throwsUnsupportedError,
+        );
+        expect(consumed, isFalse);
+        expect(unsupported.uploads, isEmpty);
+      },
+    );
+  });
+}
+
+class _UnsupportedObjectClient extends _CloudClient
+    implements ObjectStorageNamespace {}
+
+class _ExactObjectClient extends _CloudClient
+    with CloudTransferOperations
+    implements ObjectStorageNamespace {
+  final versions = <String, String>{};
+  final copies = <(String, String)>[];
+  final conditionalDeletes = <(String, String?)>[];
+  int nextVersion = 0;
+  bool loseDeleteReply = false;
+  void Function(String, String)? beforeCopy;
+  void Function(String)? beforeConditionalDelete;
+  @override
+  StorageTransferCapabilities get transferCapabilities =>
+      const StorageTransferCapabilities(
+        caseSensitivity: StorageCaseSensitivity.sensitive,
+        nativeCopy: true,
+        noReplaceCopy: true,
+        conditionalCopy: true,
+        conditionalDelete: true,
+      );
+  @override
+  void put(String path, String text) {
+    super.put(path, text);
+    versions[path] = '${++nextVersion}';
+  }
+
+  @override
+  Future<void> uploadStream(
+    Stream<List<int>> dataStream,
+    int length,
+    String fileName,
+    String targetPath, {
+    Function(int, int)? onProgress,
+  }) async {
+    await super.uploadStream(
+      dataStream,
+      length,
+      fileName,
+      targetPath,
+      onProgress: onProgress,
+    );
+    versions[p.posix.join(targetPath, fileName)] = '${++nextVersion}';
+  }
+
+  @override
+  Future<Map<String, dynamic>> listPath(String path) async {
+    final result = await super.listPath(path);
+    for (final file in result['files'] as List) {
+      file['eTag'] = versions[p.posix.join(path, file['name'] as String)];
+    }
+    return result;
+  }
+
+  @override
+  Future<CloudTransferResult> copyToExact(
+    String sourcePath,
+    String destinationPath, {
+    bool replace = false,
+    String? expectedSourceVersion,
+    String? expectedDestinationVersion,
+    TransferCheckpoint? checkpoint,
+    void Function(int, int)? onProgress,
+  }) async {
+    expect(replace, isFalse);
+    beforeCopy?.call(sourcePath, destinationPath);
+    if (expectedSourceVersion == null ||
+        versions[sourcePath] != expectedSourceVersion ||
+        files.containsKey(destinationPath)) {
+      throw StateError('Conditional copy refused');
+    }
+    copies.add((sourcePath, destinationPath));
+    files[destinationPath] = Uint8List.fromList(files[sourcePath]!);
+    final version = versions[destinationPath] = '${++nextVersion}';
+    return CloudTransferResult(
+      path: destinationPath,
+      version: version,
+      size: files[destinationPath]!.length,
+    );
+  }
+
+  @override
+  Future<void> deleteTransferFile(
+    String path, {
+    String? expectedVersion,
+  }) async {
+    beforeConditionalDelete?.call(path);
+    if (expectedVersion == null || versions[path] != expectedVersion) {
+      throw StateError('Conditional delete refused');
+    }
+    conditionalDeletes.add((path, expectedVersion));
+    files.remove(path);
+    versions.remove(path);
+    if (loseDeleteReply) throw StateError('Delete reply lost');
+  }
+
+  @override
+  Future<void> renamePath(String path, String newName) async {
+    throw StateError('Legacy rename must not be used for object commits');
+  }
 }
 
 /// Deliberately models destructive streaming uploads. The adapter must stage
