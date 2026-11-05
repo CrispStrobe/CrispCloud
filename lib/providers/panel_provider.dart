@@ -1331,6 +1331,14 @@ class PanelNotifier extends ChangeNotifier {
   Uint8List? _archiveBytes;
   PanelFileOrigin? _archiveOrigin;
 
+  PanelFileOrigin captureArchiveOrigin() {
+    final origin = _archiveOrigin;
+    if (_isDisposed || !isInArchive || origin == null || !origin.isCurrent) {
+      throw StateError('Reopen the archive from its original storage account.');
+    }
+    return origin;
+  }
+
   Future<void> enterArchive(FileItem file) async {
     if (file.path == null && file.name.isEmpty) return;
     int? requestGeneration;
