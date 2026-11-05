@@ -29,3 +29,25 @@ full dependency and binary license review for each shipped build.
 Runtime license terms are independent of CrispCloud's source license. See the
 [FUSE-T license](https://github.com/macos-fuse-t/fuse-t/blob/main/License.txt)
 and [macFUSE licensing information](https://github.com/macfuse/macfuse/wiki/Open-Source-Status).
+
+## Read limits
+
+The experimental built-in mount remains read-only. Azure Blob now supports
+files larger than 64 MiB through validated HTTP byte-range reads. Its read
+cache holds at most 256 KiB per open file handle; the server must honor the
+requested range, and ignored, oversized or truncated responses fail with EIO.
+IPC read requests are capped at 32 MiB, matching the native helper's existing
+reply limit, and assembled from bounded windows. A response temporarily uses
+memory proportional to its requested size (up to that cap).
+Random reads fetch only the requested windows; no whole-file download or local
+spool is needed. Each open handle has its own cache, so total cache memory
+still scales with the number of open files.
+
+Other providers, including encrypted wrappers, retain the 64 MiB whole-file
+fallback limit. The explicit `CloudStorageRangeReader` capability is required
+to bypass it: `supportsStreaming` is insufficient because several adapters
+inherit a buffered stream implementation. The fallback checks known sizes
+before opening and downloaded sizes afterward; an unknown or inaccurate size
+can still cause its existing whole-file download to exceed that memory limit.
+This is not an all-provider large-file guarantee. Provider changes during an
+open file are not a snapshot, and separate range requests may observe changes.

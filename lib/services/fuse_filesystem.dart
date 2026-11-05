@@ -128,6 +128,8 @@ abstract class FuseOpcode {
 class FuseFilesystem {
   static const _log = Log('FuseFilesystem');
   static const maxReadFileBytes = 64 * 1024 * 1024;
+  // Match the native helper's existing maximum IPC reply size.
+  static const maxReadRequestBytes = 32 * 1024 * 1024;
 
   final CloudStorageClient client;
   final bool readOnly;
@@ -360,8 +362,15 @@ class FuseFilesystem {
     final buf = _readBuffers[handleId];
     if (buf == null) throw const _FuseError(9); // EBADF
 
-    final data = await _satisfyRead(buf, readOffset, readLen);
-    return data;
+    if (readLen > maxReadRequestBytes) throw const _FuseError(22); // EINVAL
+    final result = BytesBuilder(copy: false);
+    while (result.length < readLen) {
+      final length = (readLen - result.length).clamp(0, _ReadBuffer.chunkSize);
+      final bytes = await _satisfyRead(buf, readOffset + result.length, length);
+      result.add(bytes);
+      if (bytes.length < length) break; // True EOF, not a window boundary.
+    }
+    return result.takeBytes();
   }
 
   Future<Uint8List> _opOpen(Uint8List payload) async {
@@ -374,7 +383,8 @@ class FuseFilesystem {
     if (_isDirectory(info)) {
       throw const _FuseError(21); // EISDIR
     }
-    if (info['size'] is num && (info['size'] as num) > maxReadFileBytes) {
+    if (client is! CloudStorageRangeReader &&
+        info['size'] is num && (info['size'] as num) > maxReadFileBytes) {
       throw const _FuseError(27); // EFBIG
     }
     final handleId = _nextHandle++;
@@ -527,9 +537,31 @@ class FuseFilesystem {
       return Uint8List.fromList(buf.data.sublist(offset - buf.bufferOffset));
     }
 
-    // Download a fresh chunk (providers that support range requests would
-    // use offset + _ReadBuffer.chunkSize; we download the whole file here
-    // since the CloudStorageClient API does not expose range fetches).
+    if (length == 0) return Uint8List(0);
+
+    // Range readers explicitly promise bounded downloads. Streaming alone does
+    // not imply this: several providers inherit a whole-file buffered default.
+    final rangeReader = client;
+    if (rangeReader is CloudStorageRangeReader) {
+      try {
+        final bytes = await (rangeReader as CloudStorageRangeReader).readFileRange(
+          buf.remotePath,
+          offset,
+          _ReadBuffer.chunkSize,
+        );
+        if (bytes.length > _ReadBuffer.chunkSize) throw const _FuseError(5);
+        buf.bufferOffset = offset;
+        buf.data = bytes;
+        buf.eof = bytes.length < _ReadBuffer.chunkSize;
+        return Uint8List.fromList(
+          bytes.sublist(0, length.clamp(0, bytes.length)),
+        );
+      } catch (e) {
+        throw const _FuseError(5); // EIO
+      }
+    }
+
+    // Legacy providers retain the bounded-size whole-file fallback.
     try {
       final rawBytes = await client.downloadFileBytes(buf.remotePath);
       if (rawBytes.length > maxReadFileBytes) {

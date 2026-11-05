@@ -407,6 +407,11 @@ jobs:
           test/finder_extension_test.dart
           test/local_file_service_test.dart
           test/xdg_test.dart
+          test/azure_range_read_test.dart
+          test/fuse_filesystem_protocol_test.dart
+          test/fuse_mount_test.dart
+          test/sftp_operation_localization_test.dart
+          test/native_preview_error_localization_test.dart
       - run: flutter build macos --release
 
       - name: Launch release bundle

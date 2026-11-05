@@ -64,7 +64,8 @@ extension AzureBlobTierName on AzureBlobTier {
 // AzureBlobAdapter
 // ────────────────────────────────────────────────────────────────────────────
 
-class AzureBlobAdapter extends CloudStorageClient {
+class AzureBlobAdapter extends CloudStorageClient
+    implements CloudStorageRangeReader {
   static const _log = Log('AzureBlob');
 
   /// Azure REST API version used in every request.
@@ -397,7 +398,7 @@ class AzureBlobAdapter extends CloudStorageClient {
       '', // If-Match
       '', // If-None-Match
       '', // If-Unmodified-Since
-      '', // Range
+      headers['Range'] ?? '', // Range
       canonicalizedHeaders,
       canonicalizedResource.toString(),
     ].join('\n');
@@ -837,6 +838,65 @@ class AzureBlobAdapter extends CloudStorageClient {
           AzureHetznerErrorCode.azureTier,
           'setBlobTier error ${response.statusCode}: ${response.body}',
           {'status': response.statusCode, 'body': response.body});
+    }
+  }
+
+  @override
+  Future<Uint8List> readFileRange(
+    String remotePath,
+    int offset,
+    int length,
+  ) async {
+    if (offset < 0 || length < 0 || length > 256 * 1024) {
+      throw ArgumentError('Invalid bounded read range');
+    }
+    if (length == 0) return Uint8List(0);
+    final (:container, :blob) = _splitPath(remotePath);
+    final uri = _buildUri(_effectiveContainer(container), blob: blob);
+    final headers = _baseHeaders()
+      ..['Range'] = 'bytes=$offset-${offset + length - 1}';
+    _addSharedKeyAuth(headers, 'GET', uri, const []);
+    final transport = http.Client();
+    try {
+      final response = await transport.send(
+        http.Request('GET', uri)..headers.addAll(headers),
+      );
+      if (response.statusCode == 416 &&
+          RegExp(
+            r'^bytes \*/[0-9]+$',
+          ).hasMatch(response.headers['content-range'] ?? '')) {
+        final size = int.parse(
+          response.headers['content-range']!.split('/').last,
+        );
+        if (offset >= size) return Uint8List(0);
+      }
+      final range = RegExp(
+        r'^bytes ([0-9]+)-([0-9]+)/([0-9]+)$',
+      ).firstMatch(response.headers['content-range'] ?? '');
+      if (response.statusCode != 206 ||
+          range == null ||
+          int.parse(range[1]!) != offset) {
+        throw StateError('Azure did not honor the bounded read range');
+      }
+      final end = int.parse(range[2]!);
+      final total = int.parse(range[3]!);
+      final expectedEnd = (offset + length - 1).clamp(0, total - 1);
+      if (total <= offset || end != expectedEnd) {
+        throw StateError('Azure returned an invalid read range');
+      }
+      final bytes = BytesBuilder(copy: false);
+      await for (final chunk in response.stream) {
+        if (bytes.length + chunk.length > end - offset + 1) {
+          throw StateError('Azure exceeded the requested read range');
+        }
+        bytes.add(chunk);
+      }
+      if (bytes.length != end - offset + 1) {
+        throw StateError('Azure returned a truncated read range');
+      }
+      return bytes.takeBytes();
+    } finally {
+      transport.close();
     }
   }
 

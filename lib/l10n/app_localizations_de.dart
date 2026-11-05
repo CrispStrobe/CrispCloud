@@ -1,5 +1,6 @@
 // ignore: unused_import
 import 'package:intl/intl.dart' as intl;
+
 import 'app_localizations.dart';
 
 // ignore_for_file: type=lint
@@ -1046,10 +1047,10 @@ class AppLocalizationsDe extends AppLocalizations {
   String get connectToB2 => 'Mit Backblaze B2 verbinden';
 
   @override
-  String get applicationKeyId => 'Application Key ID';
+  String get applicationKeyId => 'Anwendungsschlüssel-ID';
 
   @override
-  String get applicationKey => 'Application Key';
+  String get applicationKey => 'Anwendungsschlüssel';
 
   @override
   String get bucketNameOptional => 'Bucket-Name (optional)';

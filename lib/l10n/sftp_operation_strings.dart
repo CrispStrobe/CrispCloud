@@ -1,6 +1,7 @@
 import 'package:flutter/widgets.dart';
 import 'remote_transport_strings.dart';
 import '../services/sftp_operation_failure.dart';
+import 'sftp_key_strings.dart';
 
 /// Localize app-authored SFTP text and retain the server's error detail.
 String localizedSftpOperationError(BuildContext context, Object error) =>
@@ -8,6 +9,9 @@ String localizedSftpOperationError(BuildContext context, Object error) =>
 
 String localizedSftpOperationErrorForLanguage(String language, Object error) {
   if (error is! SftpOperationFailure) return error.toString();
+  if (error.code == SftpOperationCode.invalidPrivateKey) {
+    return SftpKeyStrings.forLanguage(language).invalidKey;
+  }
   final template = (_messages[language] ?? _messages['en']!)[error.code.name];
   if (template == null) return error.toString();
   return template.replaceAllMapped(RegExp(r'\{([A-Za-z]+)\}'), (match) {

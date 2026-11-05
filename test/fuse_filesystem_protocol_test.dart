@@ -17,6 +17,10 @@ class _CloudClient implements CloudStorageClient {
   @override
   String get providerName => 'Test';
 
+  // A legacy adapter may advertise streaming yet buffer its default stream.
+  @override
+  bool get supportsStreaming => true;
+
   @override
   Future<Map<String, dynamic>?> resolvePath(String path) async =>
       resolveFiles && path == '/remote/café.txt'
@@ -39,6 +43,24 @@ class _CloudClient implements CloudStorageClient {
 
   @override
   dynamic noSuchMethod(Invocation invocation) => super.noSuchMethod(invocation);
+}
+
+class _RangeClient extends _CloudClient implements CloudStorageRangeReader {
+  final calls = <(int, int)>[];
+  _RangeClient() : super(fileSize: 1024 * 1024 * 1024 + 7);
+
+  // Deliberately false: FUSE must use the explicit range capability.
+  @override
+  bool get supportsStreaming => false;
+
+  @override
+  Future<Uint8List> readFileRange(String path, int offset, int length) async {
+    calls.add((offset, length));
+    final count = (fileSize - offset).clamp(0, length);
+    return Uint8List.fromList(
+      List.generate(count, (index) => (offset + index) % 251),
+    );
+  }
 }
 
 class _UnicodeClient implements CloudStorageClient {
@@ -361,7 +383,7 @@ void main() {
     expect((await reader.send(7, 3, _path('/café.txt'))).$1, 30);
   });
 
-  test('IPC rejects a file over the in-memory read limit before download',
+  test('IPC ignores streaming flag and rejects large buffered files',
       () async {
     final fs = FuseFilesystem(
         client: _CloudClient(fileSize: FuseFilesystem.maxReadFileBytes + 1),
@@ -377,4 +399,79 @@ void main() {
     });
     expect((await reader.send(13, 1, _path('/café.txt', 0))).$1, 27);
   });
+  test(
+    'IPC range reads large files with bounded random access and cached EOF',
+    () async {
+      final client = _RangeClient();
+      final fs = FuseFilesystem(client: client, remotePath: '/remote');
+      unawaited(fs.serveRequests());
+      final socketPath = await fs.ready;
+      final socket = await Socket.connect(
+        InternetAddress(socketPath, type: InternetAddressType.unix),
+        0,
+      );
+      final reader = _ResponseReader(socket);
+      addTearDown(() async {
+        await socket.close();
+        await fs.dispose();
+      });
+      final (openError, opened) = await reader.send(
+        13,
+        1,
+        _path('/café.txt', 0),
+      );
+      expect(openError, 0);
+      final handle = ByteData.sublistView(opened).getUint32(0, Endian.big);
+      var id = 2;
+      Future<Uint8List> read(int offset, int length) async {
+        final request = Uint8List(16);
+        ByteData.sublistView(request)
+          ..setUint32(0, handle, Endian.big)
+          ..setUint64(4, offset, Endian.big)
+          ..setUint32(12, length, Endian.big);
+        final (error, bytes) = await reader.send(3, id++, request);
+        expect(error, 0);
+        return bytes;
+      }
+
+      const offset = FuseFilesystem.maxReadFileBytes + 29;
+      expect(
+        await read(offset, 8),
+        List.generate(8, (index) => (offset + index) % 251),
+      );
+      expect(
+        await read(offset + 2, 3),
+        List.generate(3, (index) => (offset + 2 + index) % 251),
+      );
+      expect(client.calls, [(offset, 256 * 1024)]);
+      final end = client.fileSize - 3;
+      expect(
+        await read(end, 100),
+        List.generate(3, (index) => (end + index) % 251),
+      );
+      // Even the maximum legal request may finish early at genuine EOF.
+      expect(await read(end, FuseFilesystem.maxReadRequestBytes),
+          List.generate(3, (index) => (end + index) % 251));
+      expect(await read(client.fileSize, 100), isEmpty);
+      expect(client.calls.length, 2);
+      // Seeking backward must fetch the requested bytes, even after cached EOF.
+      expect(await read(0, 4), [0, 1, 2, 3]);
+      expect(client.calls.last, (0, 256 * 1024));
+      // Native FUSE may request more than 1 MiB. Assemble the full response
+      // from bounded provider reads rather than returning a short non-EOF read.
+      final across = await read(256 * 1024 - 2, 2 * 1024 * 1024 + 4);
+      expect(across.length, 2 * 1024 * 1024 + 4);
+      expect(across, List.generate(across.length,
+          (index) => (256 * 1024 - 2 + index) % 251));
+      expect(client.calls.every((call) => call.$2 <= 256 * 1024), isTrue);
+      expect(client.downloadCount, 0);
+      final oversized = Uint8List(16);
+      ByteData.sublistView(oversized)
+        ..setUint32(0, handle, Endian.big)
+        ..setUint64(4, 0, Endian.big)
+        ..setUint32(12, FuseFilesystem.maxReadRequestBytes + 1, Endian.big);
+      expect((await reader.send(3, id++, oversized)).$1, 22);
+      expect((await reader.send(13, id++, _path('/café.txt', 1))).$1, 30);
+    },
+  );
 }

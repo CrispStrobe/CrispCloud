@@ -158,6 +158,20 @@ class AuthNotifier extends ChangeNotifier {
     notifyListeners();
   }
 
+  /// Key material never enters the generic password/2FA flow or logs.
+  Future<void> loginSftpWithPrivateKey(
+      String identity, String privateKey, String? passphrase) async {
+    final client = _cloudClient;
+    if (client is! SFTPClientAdapter) {
+      throw StateError('SFTP provider is not selected');
+    }
+    await client.loginWithPrivateKey(identity, privateKey, passphrase);
+    _userEmail = identity;
+    _isConnected = true;
+    _ref.read(errorProvider).clearErrors();
+    notifyListeners();
+  }
+
   Future<void> logout() async {
     _log.info('logout: provider=$providerName');
     await _cloudClient.logout();

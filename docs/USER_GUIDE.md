@@ -66,7 +66,7 @@ To connect to a second provider simultaneously, click the **+** button in the re
 |----------|------|-----------|------------|---------|------------------|
 | **Filen** | Email + password | Yes | No | No | No |
 | **Internxt** | Email + password | No | No | No | No |
-| **SFTP** | Password or key | Yes (native) | No | No | No |
+| **SFTP** | Password or SSH private key | Yes (native) | No | No | No |
 | **WebDAV** | Username + password | No | No | No | No |
 | **S3 / S3-compatible** | Access key + secret | Yes | No | No | No |
 | **FTP / FTPS** | Username + password | No | No | No | No |
@@ -514,7 +514,7 @@ Mounted drives are experimental and read-only. On macOS, open **Mount as Drive**
 - **FUSE-T** must be installed and selected explicitly. Choose its NFS or SMB backend; CrispCloud asks you to confirm non-commercial FUSE-T use for each mount. Review [FUSE-T's license](https://github.com/macos-fuse-t/fuse-t/blob/main/License.txt). System-wide NFS options can interfere with the NFS backend; SMB is an alternative.
 - **rclone NFS** uses a separately installed rclone and its own configured remote, such as `work:documents`; it does not reuse CrispCloud connections. The read-only NFS endpoint listens on the local machine and can be accessed by local processes.
 
-The macFUSE and FUSE-T bridge downloads a whole file into memory on first read and rejects files over 64 MiB. If a provider does not report the size in advance, the download may briefly exceed that limit before rejection. The limit does not apply to rclone's independent NFS backend.
+The macFUSE and FUSE-T bridge supports files over 64 MiB for Azure Blob using bounded range reads. Other providers and encrypted connections, including encrypted Azure connections, use a whole-file download and retain the 64 MiB limit. If a provider does not report the size in advance, that fallback may briefly exceed the limit before rejection. Separate Azure range requests do not provide a snapshot if the remote file changes while open. The limit does not apply to rclone's independent NFS backend.
 
 Live local-fixture tests passed for macFUSE FSKit, FUSE-T NFS and SMB, and rclone NFS. Finder, real cloud remotes, and the signed sandboxed app still need end-to-end testing. Linux and Windows mounting is not implemented. See the [developer mount test guide](macos_mount_testing.md) for details.
 

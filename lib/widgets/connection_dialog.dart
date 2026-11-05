@@ -1,5 +1,7 @@
 import '../services/sftp_client_adapter.dart';
 import '../services/smb_client_adapter.dart';
+import 'dart:convert';
+import 'package:file_picker/file_picker.dart';
 import 'package:flutter/foundation.dart';
 // lib/widgets/connection_dialog.dart
 import 'package:flutter/material.dart';
@@ -19,6 +21,7 @@ import '../l10n/connection_dialog_extra_strings.dart';
 import '../l10n/connection_strings.dart';
 import '../l10n/connection_failure_strings.dart';
 import '../l10n/provider_operation_strings.dart';
+import '../l10n/sftp_key_strings.dart';
 import '../services/nextcloud_client_adapter.dart';
 
 class ConnectionDialog extends ConsumerStatefulWidget {
@@ -41,6 +44,10 @@ class _ConnectionDialogState extends ConsumerState<ConnectionDialog> {
   final _portController =
       TextEditingController(text: '22'); // Default SFTP port
   final _sftpUserController = TextEditingController();
+  final _sftpKeyPassphraseController = TextEditingController();
+  bool _sftpUsePrivateKey = false;
+  String? _sftpPrivateKey;
+  String? _sftpPrivateKeyName;
 
   // FTP Specific Controllers
   final _ftpHostController = TextEditingController();
@@ -955,6 +962,43 @@ class _ConnectionDialogState extends ConsumerState<ConnectionDialog> {
                 ),
                 enabled: !_isLoading,
               ),
+              const SizedBox(height: 16),
+              DropdownButtonFormField<bool>(
+                initialValue: _sftpUsePrivateKey,
+                decoration: InputDecoration(
+                  labelText: SftpKeyStrings(context).authentication,
+                  border: const OutlineInputBorder(),
+                ),
+                items: [
+                  DropdownMenuItem(value: false, child: Text(SftpKeyStrings(context).password)),
+                  DropdownMenuItem(value: true, child: Text(SftpKeyStrings(context).privateKey)),
+                ],
+                onChanged: _isLoading ? null : (value) {
+                  if (value != null) setState(() => _sftpUsePrivateKey = value);
+                },
+              ),
+              if (_sftpUsePrivateKey) ...[
+                const SizedBox(height: 12),
+                OutlinedButton.icon(
+                  onPressed: _isLoading ? null : _chooseSftpPrivateKey,
+                  icon: const Icon(Icons.key),
+                  label: Text(SftpKeyStrings(context).chooseKey),
+                ),
+                if (_sftpPrivateKeyName != null)
+                  Text('${SftpKeyStrings(context).keySelected}: $_sftpPrivateKeyName'),
+                const SizedBox(height: 12),
+                TextField(
+                  controller: _sftpKeyPassphraseController,
+                  obscureText: true,
+                  enabled: !_isLoading,
+                  decoration: InputDecoration(
+                    labelText: SftpKeyStrings(context).passphrase,
+                    helperText: SftpKeyStrings(context).storageHelp,
+                    helperMaxLines: 3,
+                    border: const OutlineInputBorder(),
+                  ),
+                ),
+              ],
             ] else if (isWebDav || isSmb) ...[
               // WebDAV Fields
               TextField(
@@ -1024,7 +1068,7 @@ class _ConnectionDialogState extends ConsumerState<ConnectionDialog> {
             const SizedBox(height: 16),
 
             // --- 4. Password (Common — hidden for S3/OAuth providers which use own auth) ---
-            if (!isS3 && !isOAuth) ...[
+            if (!isS3 && !isOAuth && !(isSftp && _sftpUsePrivateKey)) ...[
               TextField(
                 controller: _passwordController,
                 decoration: InputDecoration(
@@ -1129,8 +1173,44 @@ class _ConnectionDialogState extends ConsumerState<ConnectionDialog> {
     );
   }
 
+  Future<void> _chooseSftpPrivateKey() async {
+    try {
+      final result = await FilePicker.platform.pickFiles(withData: true);
+      if (!mounted || result == null) return;
+      final file = result.files.single;
+      final bytes = file.bytes;
+      if (bytes == null || bytes.isEmpty || bytes.length > 1024 * 1024) {
+        setState(() {
+          _sftpPrivateKey = null;
+          _sftpPrivateKeyName = null;
+          _error = SftpKeyStrings(context).readFailed;
+        });
+        return;
+      }
+      final pem = utf8.decode(bytes);
+      setState(() {
+        _sftpPrivateKey = pem;
+        _sftpPrivateKeyName = file.name;
+        _error = null;
+      });
+    } catch (_) {
+      if (mounted) {
+        setState(() {
+          _sftpPrivateKey = null;
+          _sftpPrivateKeyName = null;
+          _error = SftpKeyStrings(context).readFailed;
+        });
+      }
+    }
+  }
+
   Future<void> _handleLogin() async {
     final t = ConnectionDialogExtraStrings(context);
+    if (_selectedProvider == CloudProvider.sftp &&
+        _sftpUsePrivateKey && _sftpPrivateKey == null) {
+      setState(() => _error = SftpKeyStrings(context).keyRequired);
+      return;
+    }
     setState(() {
       _isLoading = true;
       _error = null;
@@ -1248,7 +1328,7 @@ class _ConnectionDialogState extends ConsumerState<ConnectionDialog> {
         password = _passwordController.text;
       } else if (_selectedProvider == CloudProvider.sftp) {
         // SFTP Validation
-        if (_hostController.text.isEmpty || _sftpUserController.text.isEmpty) {
+        if (_hostController.text.trim().isEmpty || _sftpUserController.text.trim().isEmpty) {
           throw Exception(t.text('hostUserRequired'));
         }
 
@@ -1259,9 +1339,12 @@ class _ConnectionDialogState extends ConsumerState<ConnectionDialog> {
         if (portNum == null || portNum < 1 || portNum > 65535) {
           throw Exception(t.text('portInvalid'));
         }
-        // Construct composite identity for SFTP Adapter: "username@host:port"
-        identity =
-            '${_sftpUserController.text}@${_hostController.text}:$portStr';
+        identity = SFTPClientAdapter.identityFromFields(
+          username: _sftpUserController.text,
+          host: _hostController.text,
+          port: portNum,
+          web: kIsWeb,
+        );
         password = _passwordController.text;
       } else if (_selectedProvider == CloudProvider.smb) {
         if (_hostController.text.trim().isEmpty || _emailController.text.trim().isEmpty) {
@@ -1359,11 +1442,16 @@ class _ConnectionDialogState extends ConsumerState<ConnectionDialog> {
       if (auth.client is SmbClientAdapter) {
         (auth.client as SmbClientAdapter).requireEncryption = _smbRequireEncryption;
       }
-      await auth.login(
-        identity,
-        password,
-        _tfaController.text.isEmpty ? null : _tfaController.text,
-      );
+      if (_selectedProvider == CloudProvider.sftp && _sftpUsePrivateKey) {
+        await auth.loginSftpWithPrivateKey(identity, _sftpPrivateKey!,
+            _sftpKeyPassphraseController.text.isEmpty ? null : _sftpKeyPassphraseController.text);
+      } else {
+        await auth.login(
+          identity,
+          password,
+          _tfaController.text.isEmpty ? null : _tfaController.text,
+        );
+      }
 
       // 5. Apply S3-specific settings after login
       if (_selectedProvider == CloudProvider.s3) {
@@ -1411,6 +1499,7 @@ class _ConnectionDialogState extends ConsumerState<ConnectionDialog> {
     _hostController.dispose();
     _portController.dispose();
     _sftpUserController.dispose();
+    _sftpKeyPassphraseController.dispose();
     _ftpHostController.dispose();
     _ftpPortController.dispose();
     _ftpUserController.dispose();

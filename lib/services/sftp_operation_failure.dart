@@ -1,6 +1,6 @@
 /// App-authored SFTP failures, without changing legacy exception text.
 enum SftpOperationCode {
-  notLoggedIn, incompleteCredentials, invalidAddress, invalidIdentity,
+  notLoggedIn, incompleteCredentials, invalidAddress, invalidIdentity, invalidPrivateKey,
   listFailed, chmodFailed, chownFailed, invalidPayload,
 }
 

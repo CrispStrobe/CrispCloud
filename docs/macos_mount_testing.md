@@ -1,8 +1,9 @@
 # macOS mount testing
 
 The macOS mount options are experimental and read-only. The macFUSE/FUSE-T
-bridge downloads whole files into memory and refuses files larger than 64 MiB;
-this limit does not apply to the independent rclone NFS option. Run native tests
+bridge supports files above 64 MiB for Azure Blob using bounded range reads;
+other providers retain the whole-file limit. Independent rclone NFS mounts do
+not use that limit. Run native tests
 only with disposable mount points; they use a local fixture and do not need
 cloud credentials.
 

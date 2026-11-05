@@ -3,6 +3,7 @@ import 'dart:convert';
 import 'dart:io';
 import 'package:crisp_cloud/services/sftp_client_adapter.dart';
 import 'package:crisp_cloud/services/sftp_config_service.dart';
+import 'package:crisp_cloud/services/connection_failure.dart';
 import 'package:crisp_cloud/services/secure_storage_service.dart';
 import 'package:crisp_cloud/services/webdav_client_adapter.dart';
 import 'package:crisp_cloud/services/webdav_config_service.dart';
@@ -66,6 +67,59 @@ void main() {
     }
   });
   final python = Platform.environment['CRISPER_SFTP_PYTHON'];
+  test('SFTP key login verifies host, persists securely and reconnects', () async {
+    final root = await Directory.systemTemp.createTemp('crispcloud_ssh_key_');
+    await File('${root.path}/book.txt').writeAsString('fixture');
+    final process = await Process.start(
+        python!, ['test/support/sftp_fixture.py', root.path, 'publickey']);
+    final stderr = process.stderr.drain<void>();
+    final info = jsonDecode(await process.stdout.transform(utf8.decoder)
+        .transform(const LineSplitter()).first.timeout(const Duration(seconds: 15))) as Map;
+    final store = InMemorySecureStorage();
+    final client = SFTPClientAdapter(config: SFTPConfigService(configPath: '', secureStorage: store));
+    final identity = 'reader@127.0.0.1:${info['port']}';
+    final pem = await File('${root.path}/fixture-key').readAsString();
+    try {
+      await expectLater(client.loginWithPrivateKey(identity, pem, 'wrong'), throwsFormatException);
+      expect(await File('${root.path}/auth-count').exists(), isFalse);
+      await expectLater(client.loginWithPrivateKey(identity, pem, 'fixture-passphrase'),
+          throwsA(isA<SftpHostKeyException>()));
+      expect(await File('${root.path}/auth-count').exists(), isFalse);
+      client.confirmHostKey = (_, __) async => true;
+      final untrusted = await File('${root.path}/fixture-key-untrusted').readAsString();
+      await expectLater(client.loginWithPrivateKey(identity, untrusted, null),
+          throwsA(isA<SftpConnectionFailure>()));
+      expect(await store.readMap('sftp_credentials'), isNull);
+      await client.loginWithPrivateKey(identity, pem, 'fixture-passphrase');
+      expect(await client.downloadFileBytes('/book.txt'), utf8.encode('fixture'));
+      final saved = await store.readMap('sftp_credentials');
+      expect(saved?['privateKey'], pem);
+      expect(saved?['keyPassphrase'], 'fixture-passphrase');
+      expect(saved?.containsKey('password'), isFalse);
+      await client.logout();
+      await store.writeMap('sftp_credentials', saved!);
+      final restored = SFTPClientAdapter(config: SFTPConfigService(configPath: '', secureStorage: store));
+      try {
+        expect(await restored.downloadFileBytes('/book.txt'), utf8.encode('fixture'));
+      } finally {
+        await restored.logout();
+      }
+      final plain = SFTPClientAdapter(config: SFTPConfigService(configPath: '', secureStorage: store));
+      try {
+        final plainPem = await File('${root.path}/fixture-key-plain').readAsString();
+        await plain.loginWithPrivateKey(identity, plainPem, null);
+        expect(await plain.downloadFileBytes('/book.txt'), utf8.encode('fixture'));
+      } finally {
+        await plain.logout();
+      }
+    } finally {
+      await client.logout();
+      process.kill();
+      await process.exitCode;
+      await stderr;
+      await root.delete(recursive: true);
+    }
+  }, skip: python == null ? 'Set CRISPER_SFTP_PYTHON to a Python with paramiko' : false);
   test('SFTP accepts password authentication over keyboard-interactive',
       () async {
     final root = await Directory.systemTemp.createTemp('crispcloud_ssh_pam_');

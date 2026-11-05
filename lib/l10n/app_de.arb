@@ -366,8 +366,8 @@
   "sasToken": "SAS-Token",
 
   "connectToB2": "Mit Backblaze B2 verbinden",
-  "applicationKeyId": "Application Key ID",
-  "applicationKey": "Application Key",
+  "applicationKeyId": "Anwendungsschlüssel-ID",
+  "applicationKey": "Anwendungsschlüssel",
   "bucketNameOptional": "Bucket-Name (optional)",
 
   "mount": "Einbinden",

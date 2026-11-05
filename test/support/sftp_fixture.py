@@ -10,7 +10,14 @@ import threading
 import paramiko
 
 root = Path(sys.argv[1]).resolve()
-interactive = len(sys.argv) > 2 and sys.argv[2] == 'interactive'
+auth_mode = sys.argv[2] if len(sys.argv) > 2 else 'password'
+interactive = auth_mode == 'interactive'
+client_key = None
+if auth_mode == 'publickey':
+    client_key = paramiko.RSAKey.generate(2048)
+    client_key.write_private_key_file(str(root / 'fixture-key'), password='fixture-passphrase')
+    client_key.write_private_key_file(str(root / 'fixture-key-plain'))
+    paramiko.RSAKey.generate(2048).write_private_key_file(str(root / 'fixture-key-untrusted'))
 key = paramiko.RSAKey.generate(2048)
 listener = socket.socket()
 listener.bind(('127.0.0.1', 0))
@@ -26,7 +33,13 @@ class Auth(paramiko.ServerInterface):
             (root / 'auth-count').write_text(str(auth_requests))
         return paramiko.AUTH_SUCCESSFUL if username == 'reader' and password == 'fixture-password' else paramiko.AUTH_FAILED
     def get_allowed_auths(self, username):
-        return 'keyboard-interactive' if interactive else 'password'
+        return 'keyboard-interactive' if interactive else auth_mode
+    def check_auth_publickey(self, username, offered):
+        global auth_requests
+        with lock:
+            auth_requests += 1
+            (root / 'auth-count').write_text(str(auth_requests))
+        return paramiko.AUTH_SUCCESSFUL if username == 'reader' and client_key is not None and offered.asbytes() == client_key.asbytes() else paramiko.AUTH_FAILED
     def check_auth_interactive(self, username, submethods):
         self.username = username
         return paramiko.InteractiveQuery('', '', ('Password: ', False))

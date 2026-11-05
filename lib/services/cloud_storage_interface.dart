@@ -20,6 +20,16 @@ import 'smb_client_adapter.dart';
 import 'smb_config_service.dart';
 import 'secure_storage_service.dart';
 
+/// Optional capability for genuinely bounded random-access downloads.
+///
+/// Implementations must fetch at most [length] bytes without buffering the whole
+/// remote object. Return fewer bytes only at EOF; offsets beyond EOF return an
+/// empty list. This is deliberately independent of supportsStreaming, whose
+/// default download implementation buffers the whole object.
+abstract interface class CloudStorageRangeReader {
+  Future<Uint8List> readFileRange(String remotePath, int offset, int length);
+}
+
 /// Abstract interface for cloud storage providers
 abstract class CloudStorageClient {
   // Authentication
