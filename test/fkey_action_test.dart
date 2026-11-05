@@ -93,11 +93,13 @@ FKeyContext _ctx({
   PanelSource? active,
   PanelSource? opposite,
   List<FileItem>? selected,
+  FileItem? cursor,
 }) =>
     FKeyContext(
       activePanel: active ?? _localLeft,
       oppositePanel: opposite ?? _localRight,
       selectedFiles: selected ?? const [],
+      cursorFile: cursor,
     );
 
 // ---------------------------------------------------------------------------
@@ -225,6 +227,47 @@ void main() {
     test('mkdir always available regardless of selection', () {
       expect(_service.isActionAvailable(FKeyAction.mkdir, ctxOneFile), isTrue);
       expect(_service.isActionAvailable(FKeyAction.mkdir, ctxMultiple), isTrue);
+    });
+  });
+
+
+  // ---- Availability: cursor fallback --------------------------------------
+
+  group('Action availability — cursor fallback', () {
+    final file = _file('readme.txt');
+    final folder = _file('docs', isFolder: true);
+    final parent = _file('..', isFolder: true);
+
+    test('F3/F4 use the cursor when nothing is selected', () {
+      final ctx = _ctx(cursor: file);
+      expect(_service.isActionAvailable(FKeyAction.view, ctx), isTrue);
+      expect(_service.isActionAvailable(FKeyAction.edit, ctx), isTrue);
+      final view = _service.executeAction(FKeyAction.view, ctx) as FKeyOpenViewer;
+      final edit = _service.executeAction(FKeyAction.edit, ctx) as FKeyOpenEditor;
+      expect(view.file, file);
+      expect(edit.file, file);
+    });
+
+    test('F5/F6/F8 use the cursor when nothing is selected', () {
+      final ctx = _ctx(cursor: file);
+      expect(_service.isActionAvailable(FKeyAction.copy, ctx), isTrue);
+      expect(_service.isActionAvailable(FKeyAction.move, ctx), isTrue);
+      expect(_service.isActionAvailable(FKeyAction.delete, ctx), isTrue);
+      final copy = _service.executeAction(FKeyAction.copy, ctx) as FKeyNeedsConfirm;
+      expect(copy.message, contains('1 file'));
+    });
+
+    test('cursor folders cannot be viewed or edited', () {
+      final ctx = _ctx(cursor: folder);
+      expect(_service.isActionAvailable(FKeyAction.view, ctx), isFalse);
+      expect(_service.isActionAvailable(FKeyAction.edit, ctx), isFalse);
+      expect(_service.isActionAvailable(FKeyAction.delete, ctx), isTrue);
+    });
+
+    test('parent entry never becomes an action target', () {
+      final ctx = _ctx(cursor: parent);
+      expect(_service.isActionAvailable(FKeyAction.view, ctx), isFalse);
+      expect(_service.isActionAvailable(FKeyAction.delete, ctx), isFalse);
     });
   });
 

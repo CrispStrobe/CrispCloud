@@ -48,6 +48,18 @@ FKeyContext _singleFileContext() => FKeyContext(
       ],
     );
 
+/// A context with only the cursor row, as happens in a freshly opened panel.
+FKeyContext _cursorContext() => FKeyContext(
+      activePanel: const LocalPanelSource('/'),
+      oppositePanel: const LocalPanelSource('/tmp'),
+      selectedFiles: const [],
+      cursorFile: FileItem(
+        name: 'readme.txt',
+        path: '/readme.txt',
+        isFolder: false,
+      ),
+    );
+
 /// A [FKeyContext] with multiple files selected.
 FKeyContext _multiFileContext() => FKeyContext(
       activePanel: const LocalPanelSource('/'),
@@ -181,6 +193,40 @@ void main() {
       await tester.pump();
 
       expect(tapped, contains(FKeyAction.mkdir));
+    });
+
+    testWidgets('F3/F4/F5/F6/F8 are enabled from the cursor alone',
+        (tester) async {
+      final tapped = <FKeyAction>[];
+      await tester.pumpWidget(
+        _wrap(FKeyBar(
+          overrideContext: _cursorContext(),
+          onAction: tapped.add,
+        )),
+      );
+      await tester.pump();
+
+      for (final tooltip in <String>[
+        'F3 — View',
+        'F4 — Edit',
+        'F5 — Copy',
+        'F6 — Move',
+        'F8 — Delete',
+      ]) {
+        await tester.tap(_buttonByTooltip(tooltip));
+        await tester.pump();
+      }
+
+      expect(
+        tapped,
+        containsAll(<FKeyAction>[
+          FKeyAction.view,
+          FKeyAction.edit,
+          FKeyAction.copy,
+          FKeyAction.move,
+          FKeyAction.delete,
+        ]),
+      );
     });
 
     testWidgets('F5 Copy is disabled (no onTap) when selection is empty',

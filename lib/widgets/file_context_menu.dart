@@ -25,6 +25,7 @@ import '../services/secure_wipe_service.dart';
 import '../services/log_service.dart';
 import '../services/sftp_client_adapter.dart';
 import '../services/share_service.dart';
+import '../utils/file_editability.dart';
 import '../utils/formatters.dart' show formatBytes, formatDateFull;
 import 'package:path/path.dart' as p;
 import 'batch_rename_dialog.dart' show showBatchRenameDialog;
@@ -37,59 +38,8 @@ import 'version_history_dialog.dart' show showVersionHistoryDialog;
 
 const _log = Log('FileContextMenu');
 
-/// Text/code file extensions that can be edited in the built-in editor.
-const _editableExts = <String>{
-  'txt',
-  'json',
-  'yaml',
-  'yml',
-  'xml',
-  'csv',
-  'log',
-  'ini',
-  'cfg',
-  'conf',
-  'toml',
-  'env',
-  'gitignore',
-  'dockerfile',
-  'md',
-  'markdown',
-  'dart',
-  'js',
-  'ts',
-  'jsx',
-  'tsx',
-  'py',
-  'rb',
-  'go',
-  'rs',
-  'java',
-  'kt',
-  'swift',
-  'c',
-  'cpp',
-  'h',
-  'hpp',
-  'cs',
-  'php',
-  'html',
-  'css',
-  'scss',
-  'less',
-  'sql',
-  'sh',
-  'bash',
-  'zsh',
-  'ps1',
-  'bat',
-  'r',
-  'lua',
-  'vim',
-  'makefile',
-  'properties',
-  'gradle',
-};
+/// Text/code files are editable via the built-in F4 editor.
+
 
 /// Open a local file with the OS default application via a file:// URI.
 Future<void> openWithSystemEditor(BuildContext context, String path) async {
@@ -174,7 +124,7 @@ void showFileContextMenu(BuildContext context, WidgetRef ref, PanelSide side,
         }),
       ));
     }
-    if (_editableExts.contains(ext) || !file.name.contains('.')) {
+    if (isTextEditableName(file.name)) {
       // Primary "Edit" action respects the user's editor preference
       items.add(
         PopupMenuItem(
@@ -231,7 +181,7 @@ void showFileContextMenu(BuildContext context, WidgetRef ref, PanelSide side,
       !kIsWeb &&
       side == PanelSide.local &&
       file.path != null &&
-      !_editableExts.contains(file.extension)) {
+      !isTextEditableName(file.name)) {
     items.add(
       PopupMenuItem(
         child: const Row(children: [

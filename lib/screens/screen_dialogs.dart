@@ -18,11 +18,22 @@ import '../widgets/azure_connection_dialog.dart';
 import '../widgets/b2_connection_dialog.dart';
 import '../widgets/connection_dialog.dart';
 import '../widgets/file_editor_dialog.dart' show showFileEditorDialog;
-import '../widgets/internal_viewer_dialog.dart' show showInternalViewer;
+import '../widgets/internal_viewer_dialog.dart'
+    show InternalViewerAction, showInternalViewer;
 import '../l10n/app_localizations.dart';
 import '../services/log_service.dart';
 
 const _log = Log('ScreenDialogs');
+
+/// Explicit selection, or the cursor item when nothing is marked. This mirrors
+/// Total Commander: F5/F6/F8 operate on the item under the cursor when there
+/// is no multi-selection.
+List<FileItem> _selectedOrCursor(PanelNotifier panel) {
+  if (panel.selection.isNotEmpty) return panel.selection.toList();
+  final cursor = panel.cursorItem;
+  if (cursor != null && cursor.name != '..') return <FileItem>[cursor];
+  return const <FileItem>[];
+}
 void showConnectionDialogScreen(BuildContext context) {
   showDialog(
     context: context,
@@ -198,19 +209,20 @@ void downloadSelected(BuildContext context, WidgetRef ref) {
 void confirmDeleteSelected(BuildContext context, WidgetRef ref) {
   final activePanel = ref.read(activePanelProvider);
   final panel = ref.read(panelProvider(activePanel));
-  _log.debug('confirmDeleteSelected: ${panel.selection.length} items, side=${activePanel.name}');
-  if (panel.selection.isEmpty) return;
+  final targets = _selectedOrCursor(panel);
+  _log.debug('confirmDeleteSelected: ${targets.length} items, side=${activePanel.name}');
+  if (targets.isEmpty) return;
 
   showDialog(
     context: context,
     builder: (context) => AlertDialog(
       title: const Text('Confirm Delete'),
-      content: Text('Delete ${panel.selection.length} item(s)?'),
+      content: Text('Delete ${targets.length} item(s)?'),
       actions: [
         TextButton(onPressed: () => Navigator.pop(context), child: Text(AppLocalizations.of(context)!.cancel)),
         ElevatedButton(
           onPressed: () async {
-            final files = panel.selection.toList();
+            final files = targets;
             await panel.deleteFiles(files);
             if (context.mounted) {
               Navigator.pop(context);
@@ -236,9 +248,10 @@ void confirmDeleteSelected(BuildContext context, WidgetRef ref) {
 void showRenameDialog(BuildContext context, WidgetRef ref) {
   final activePanel = ref.read(activePanelProvider);
   final panel = ref.read(panelProvider(activePanel));
-  if (panel.selection.length != 1) return;
+  final targets = _selectedOrCursor(panel);
+  if (targets.length != 1) return;
 
-  final file = panel.selection.first;
+  final file = targets.first;
   final controller = TextEditingController(text: file.name);
 
   Future<void> doRename(String value) async {
@@ -293,6 +306,7 @@ Future<void> _viewFile(
   FileItem target,
 ) async {
   try {
+    InternalViewerAction action = InternalViewerAction.close;
     if (panel.isInArchive) {
       // Archive members have no host-file path; extract them first and hand
       // the bytes to the viewer. This is what makes F3 work inside ZIPs.
@@ -306,7 +320,10 @@ Future<void> _viewFile(
         displayName: target.name,
       );
     } else {
-      await showInternalViewer(context, file: target, side: side);
+      action = await showInternalViewer(context, file: target, side: side);
+    }
+    if (action == InternalViewerAction.edit && context.mounted) {
+      await _editFile(context, ref, panel, side, target);
     }
   } catch (e) {
     if (context.mounted) {
@@ -361,7 +378,8 @@ Future<void> _editFile(
 void showCopyDialogFromSelection(BuildContext context, WidgetRef ref) {
   final activePanel = ref.read(activePanelProvider);
   final panel = ref.read(panelProvider(activePanel));
-  if (panel.selection.isEmpty) return;
+  final targets = _selectedOrCursor(panel);
+  if (targets.isEmpty) return;
 
   // On web: if the opposite panel has a local folder open, copy there.
   // Otherwise download via browser.
@@ -369,21 +387,21 @@ void showCopyDialogFromSelection(BuildContext context, WidgetRef ref) {
     final opposite = activePanel == PanelSide.local ? PanelSide.remote : PanelSide.local;
     final oppositePanel = ref.read(panelProvider(opposite));
     final oppPath = oppositePanel.currentPath;
-    _log.debug('web copy: active=${activePanel.name} oppPath=$oppPath selection=${panel.selection.length}');
+    _log.debug('web copy: active=${activePanel.name} oppPath=$oppPath selection=${targets.length}');
 
     // If the opposite panel has a local folder open (not just '/'), copy there.
     if (oppPath.length > 1) {
-      panel.copyFiles(panel.selection.toList(), oppPath).then((_) {
+      panel.copyFiles(targets, oppPath).then((_) {
         oppositePanel.refresh();
       });
       return;
     }
     // Fallback: download via browser.
-    _downloadFilesOnWeb(ref, panel.selection.toList());
+    _downloadFilesOnWeb(ref, targets);
     return;
   }
 
-  _showPathDialog(context, ref, activePanel, panel, panel.selection.toList(), 'Copy', panel.copyFiles);
+  _showPathDialog(context, ref, activePanel, panel, targets, 'Copy', panel.copyFiles);
 }
 
 /// Download local files via browser on web.
@@ -405,25 +423,26 @@ void _downloadFilesOnWeb(WidgetRef ref, List<FileItem> files) {
 void showMoveDialogFromSelection(BuildContext context, WidgetRef ref) {
   final activePanel = ref.read(activePanelProvider);
   final panel = ref.read(panelProvider(activePanel));
-  _log.debug('showMoveDialogFromSelection: ${panel.selection.length} items, side=${activePanel.name}');
-  if (panel.selection.isEmpty) return;
+  final targets = _selectedOrCursor(panel);
+  _log.debug('showMoveDialogFromSelection: ${targets.length} items, side=${activePanel.name}');
+  if (targets.isEmpty) return;
 
   // On web: move to opposite panel's directory automatically.
   if (kIsWeb) {
     final opposite = activePanel == PanelSide.local ? PanelSide.remote : PanelSide.local;
     final oppositePanel = ref.read(panelProvider(opposite));
     final oppPath = oppositePanel.currentPath;
-    _log.debug('web move: active=${activePanel.name} oppPath=$oppPath selection=${panel.selection.length}');
+    _log.debug('web move: active=${activePanel.name} oppPath=$oppPath selection=${targets.length}');
 
     if (oppPath.length > 1) {
-      panel.moveFiles(panel.selection.toList(), oppPath).then((_) {
+      panel.moveFiles(targets, oppPath).then((_) {
         oppositePanel.refresh();
       });
       return;
     }
   }
 
-  _showPathDialog(context, ref, activePanel, panel, panel.selection.toList(), 'Move', panel.moveFiles);
+  _showPathDialog(context, ref, activePanel, panel, targets, 'Move', panel.moveFiles);
 }
 
 void _showPathDialog(

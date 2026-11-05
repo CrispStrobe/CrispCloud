@@ -255,5 +255,6 @@ final activeFKeyContextProvider = Provider<FKeyContext?>((ref) {
     activePanel: activeSrc,
     oppositePanel: oppositeSrc,
     selectedFiles: selected,
+    cursorFile: panel.cursorItem,
   );
 });

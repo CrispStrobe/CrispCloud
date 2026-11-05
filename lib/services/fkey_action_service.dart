@@ -45,17 +45,41 @@ class FKeyContext {
   /// Files currently selected in the active panel.
   final List<FileItem> selectedFiles;
 
+  /// The item under the cursor. Total/Double Commander operate on this item
+  /// when no explicit selection is marked.
+  final FileItem? cursorFile;
+
   const FKeyContext({
     required this.activePanel,
     required this.oppositePanel,
     required this.selectedFiles,
+    this.cursorFile,
   });
 
-  bool get hasSelection => selectedFiles.isNotEmpty;
+  /// Explicit selection, or the cursor item when nothing is marked.
+  List<FileItem> get files {
+    if (selectedFiles.isNotEmpty) return selectedFiles;
+    final cursor = cursorFile;
+    if (cursor == null || cursor.name == '..') return const <FileItem>[];
+    return <FileItem>[cursor];
+  }
 
-  /// True when exactly one non-folder file is selected.
-  bool get hasSingleFile =>
-      selectedFiles.length == 1 && !selectedFiles.first.isFolder;
+  bool get hasSelection => files.isNotEmpty;
+
+  /// F3/F4 always prefer the file under the cursor, as Total Commander does,
+  /// even when other rows are marked.
+  FileItem? get singleFileTarget {
+    final cursor = cursorFile;
+    if (cursor != null && cursor.name != '..' && !cursor.isFolder) {
+      return cursor;
+    }
+    if (selectedFiles.length == 1 && !selectedFiles.first.isFolder) {
+      return selectedFiles.first;
+    }
+    return null;
+  }
+
+  bool get hasSingleFile => singleFileTarget != null;
 }
 
 // ---------------------------------------------------------------------------
@@ -224,21 +248,21 @@ class FKeyActionService {
   // ---- F3 View --------------------------------------------------------------
 
   FKeyActionResult _handleView(FKeyContext context) {
-    final file = context.selectedFiles.first;
+    final file = context.singleFileTarget!;
     return FKeyOpenViewer(file, context.activePanel);
   }
 
   // ---- F4 Edit --------------------------------------------------------------
 
   FKeyActionResult _handleEdit(FKeyContext context) {
-    final file = context.selectedFiles.first;
+    final file = context.singleFileTarget!;
     return FKeyOpenEditor(file, context.activePanel);
   }
 
   // ---- F5 Copy --------------------------------------------------------------
 
   FKeyActionResult _handleCopy(FKeyContext context) {
-    final files = List<FileItem>.unmodifiable(context.selectedFiles);
+    final files = List<FileItem>.unmodifiable(context.files);
     final destination = context.oppositePanel;
     final destDesc = destination.displayName;
     final count = files.length;
@@ -259,7 +283,7 @@ class FKeyActionService {
   // ---- F6 Move --------------------------------------------------------------
 
   FKeyActionResult _handleMove(FKeyContext context) {
-    final files = List<FileItem>.unmodifiable(context.selectedFiles);
+    final files = List<FileItem>.unmodifiable(context.files);
     final destination = context.oppositePanel;
     final destDesc = destination.displayName;
     final count = files.length;
@@ -294,7 +318,7 @@ class FKeyActionService {
   // ---- F8 Delete ------------------------------------------------------------
 
   FKeyActionResult _handleDelete(FKeyContext context) {
-    final files = List<FileItem>.unmodifiable(context.selectedFiles);
+    final files = List<FileItem>.unmodifiable(context.files);
     final count = files.length;
     final noun = count == 1 ? 'file' : 'files';
     final names = count <= 3

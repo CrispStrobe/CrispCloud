@@ -52,6 +52,7 @@ import '../services/office_document_service.dart';
 import '../services/office_pdf_service.dart';
 import '../services/pdf_text_service.dart';
 import '../services/system_preview_service.dart';
+import '../utils/file_editability.dart';
 import '../utils/formatters.dart';
 import 'code_highlighting.dart';
 import 'hex_viewer.dart';
@@ -83,14 +84,17 @@ const int _kFontPreviewCap = 32 * 1024 * 1024;
 const InternalViewerService _viewerService = InternalViewerService();
 
 /// Open the internal viewer for [file] as a full-screen dialog.
-Future<void> showInternalViewer(
+/// Result requested by the viewer when it closes.
+enum InternalViewerAction { close, edit }
+
+Future<InternalViewerAction> showInternalViewer(
   BuildContext context, {
   required FileItem file,
   required PanelSide side,
   Uint8List? bytesOverride,
   String? displayName,
-}) {
-  return showDialog<void>(
+}) async {
+  final result = await showDialog<InternalViewerAction>(
     context: context,
     barrierDismissible: false,
     builder: (_) => Dialog.fullscreen(
@@ -102,6 +106,7 @@ Future<void> showInternalViewer(
       ),
     ),
   );
+  return result ?? InternalViewerAction.close;
 }
 
 class InternalViewerDialog extends ConsumerStatefulWidget {
@@ -221,6 +226,13 @@ class _InternalViewerDialogState extends ConsumerState<InternalViewerDialog> {
   }
 
   bool get _isStreamed => _source?.isStreamed ?? false;
+
+  /// Archive members and test byte overrides have no host path to save to, so
+  /// they stay view-only. Otherwise show Edit for formats F4 can save.
+  bool get _canEdit =>
+      widget.bytesOverride == null &&
+      !widget.file.isFolder &&
+      isEditableInBuiltInEditor(_viewName);
 
   int get _dataSize => _source?.size ?? widget.file.size ?? 0;
 
@@ -1501,6 +1513,13 @@ class _InternalViewerDialogState extends ConsumerState<InternalViewerDialog> {
             titleTextStyle: theme.textTheme.titleMedium,
             actions: [
               if (!_loading && _error == null) ...[
+                if (_canEdit)
+                  IconButton(
+                    tooltip: 'Edit (F4)',
+                    icon: const Icon(Icons.edit_outlined),
+                    onPressed: () => Navigator.of(context)
+                        .pop(InternalViewerAction.edit),
+                  ),
                 IconButton(
                   tooltip: 'Search (Ctrl+F)',
                   icon: const Icon(Icons.search),
