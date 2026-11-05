@@ -127,13 +127,15 @@ void validateImageExport(Uint8List bytes, ImageExportFormat format) {
   try {
     final decoder = image.WebPDecoder()..maxPixels = kImageEditorMaxPixels;
     final info = decoder.startDecode(bytes);
+    if (info?.hasAnimation == true) {
+      throw const ImageEditException(ImageEditFailure.animatedImage);
+    }
     if (info == null ||
         info.width <= 0 ||
         info.height <= 0 ||
         info.width > kImageEditorMaxDimension ||
         info.height > kImageEditorMaxDimension ||
         info.width * info.height > kImageEditorMaxPixels ||
-        info.hasAnimation ||
         decoder.decode(bytes) == null) {
       throw const ImageEditException(ImageEditFailure.invalidImage);
     }
