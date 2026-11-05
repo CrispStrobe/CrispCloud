@@ -15,7 +15,9 @@ import '../services/file_operation_profiles.dart';
 import '../services/read_only_operation_backend.dart';
 import 'file_operation_conflict_dialog.dart';
 
-Future<void> showFileOperationDialog(
+/// Returns the completed foreground plan for callers that need to apply a
+/// follow-up operation to successful entries. Cancellation/background is null.
+Future<FileOperationPlan?> showFileOperationDialog(
   BuildContext context,
   WidgetRef ref,
   PanelSide side,
@@ -26,8 +28,8 @@ Future<void> showFileOperationDialog(
   String? destinationPath,
   FileOperationBackend? sourceBackend,
 }) async {
-  if (files.isEmpty) return;
-  await showDialog<void>(
+  if (files.isEmpty) return null;
+  final result = await showDialog<FileOperationPlan>(
     context: context,
     barrierDismissible: false,
     builder: (_) => FileOperationDialog(
@@ -41,6 +43,7 @@ Future<void> showFileOperationDialog(
     ),
   );
   if (context.mounted) ref.read(panelProvider(side)).focusList();
+  return result;
 }
 
 class FileOperationDialog extends ConsumerStatefulWidget {
@@ -1018,7 +1021,9 @@ class _FileOperationDialogState extends ConsumerState<FileOperationDialog> {
             ),
           ] else ...[
             TextButton(
-              onPressed: _preparing ? null : () => Navigator.pop(context),
+              onPressed: _preparing
+                  ? null
+                  : () => Navigator.pop(context, _finished ? _plan : null),
               child: Text(_finished ? 'Close' : 'Cancel'),
             ),
             OutlinedButton(
