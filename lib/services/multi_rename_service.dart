@@ -418,6 +418,8 @@ class MultiRenameService {
               name: newName,
               path: paths.join(paths.dirname(source), newName),
             );
+            // Manual names can replace missing per-file metadata, but they
+            // must not hide invalid masks, variables or later pipeline steps.
             newName = _transform(
               current,
               index,

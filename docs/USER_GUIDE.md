@@ -180,6 +180,8 @@ Right-click a file on an SFTP connection → **Permissions** to open the permiss
 
 Use **Ctrl+Z** or Edit → **Undo Last Action** for a reversible action in the history. The history keeps the last 50 actions for the current session. Multi-Rename records the completed batch as one action, including batches of more than 50 files, and binds undo to the original storage account. Undo refuses occupied original names and can retry the remaining items after a partial failure. Copy/move with options reports each completed, skipped, or failed item; it does not offer whole-batch rollback. Delete recovery depends on the provider and available trash support.
 
+Multi-Rename also has **History / recovery**, which keeps its batch records across restarts. Reconnect the original storage account to inspect, resume, or restore a recorded batch. Its checks still apply to the current files and occupied names; recovery is a sequence of checked operations, not an atomic rollback. See [Multi-rename and recovery](MULTI_RENAME.md).
+
 ---
 
 ## Tabbed Interface

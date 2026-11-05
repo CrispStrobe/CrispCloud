@@ -10,12 +10,14 @@ import 'package:flutter_test/flutter_test.dart';
 
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
-import 'package:crisp_cloud/models/file_item.dart';
 import 'package:crisp_cloud/models/panel_side.dart';
 import 'package:crisp_cloud/providers/providers.dart';
 import 'package:crisp_cloud/services/file_bytes_loader.dart';
 import 'package:crisp_cloud/services/local_file_service.dart';
+
+import 'support/workflow_fake_client.dart';
 
 void main() {
   group('ViewBytesSource.memory', () {
@@ -38,14 +40,21 @@ void main() {
   testWidgets('local read retries once after access is granted', (
     tester,
   ) async {
+    SharedPreferences.setMockInitialValues({});
+    final dir = (await tester.runAsync(() async {
+      final directory = await Directory.systemTemp.createTemp('viewer_retry_');
+      await File('${directory.path}/x.zip').writeAsBytes(<int>[1, 2, 3]);
+      return directory;
+    }))!;
+    addTearDown(() => dir.delete(recursive: true));
     late WidgetRef captured;
-    final fake = _RetryLocalService();
-    final dir = Directory.systemTemp.createTempSync('retry_bytes_');
-    addTearDown(() => dir.deleteSync(recursive: true));
-    final file = File('${dir.path}/x.zip')..writeAsBytesSync(<int>[1, 2, 3]);
+    final fake = _RetryLocalService('${dir.path}/x.zip');
     await tester.pumpWidget(
       ProviderScope(
-        overrides: [localFileServiceProvider.overrideWithValue(fake)],
+        overrides: [
+          authProvider.overrideWith((_) => _LocalTestAuth()),
+          localFileServiceProvider.overrideWithValue(fake),
+        ],
         child: Consumer(
           builder: (context, ref, _) {
             captured = ref;
@@ -55,21 +64,20 @@ void main() {
       ),
     );
 
-    final origin = captured
-        .read(panelProvider(PanelSide.local))
-        .captureLocalClipboardOrigin(dir.path);
-    final bytes = await tester.runAsync(
-      () => loadFileBytes(
-        captured,
-        FileItem(name: 'x.zip', path: file.path, isFolder: false, size: 3),
-        PanelSide.local,
-        origin: origin,
-      ),
-    );
+    final bytes = await tester.runAsync(() async {
+      final panel = captured.read(panelProvider(PanelSide.local));
+      await panel.navigateToPath(dir.path);
+      final file = panel.files!.singleWhere(
+        (item) => item.path == fake.filePath,
+      );
+      expect(panel.originForOperation(file), isNotNull);
+      return loadFileBytes(captured, file, PanelSide.local);
+    });
 
     expect(bytes, <int>[1, 2, 3]);
     expect(fake.reads, 2);
     expect(fake.accessRequests, 1);
+    await tester.pumpWidget(const SizedBox());
   });
 
   group('ViewBytesSource.file', () {
@@ -123,31 +131,75 @@ void main() {
   });
 }
 
-class _RetryLocalService implements LocalFileService {
+class _LocalTestAuth extends ChangeNotifier implements AuthNotifier {
+  @override
+  final WorkflowFakeClient client = WorkflowFakeClient()..current = false;
+
+  @override
+  bool get isConnected => false;
+
+  @override
+  String? get userEmail => null;
+
+  @override
+  String get providerName => client.providerName;
+
+  @override
+  dynamic noSuchMethod(Invocation invocation) => super.noSuchMethod(invocation);
+}
+
+class _RetryLocalService
+    implements LocalFileService, ScopedLocalFileOperations {
+  _RetryLocalService(this.filePath) : currentPath = File(filePath).parent.path;
+
+  final String filePath;
   int reads = 0;
   int accessRequests = 0;
+  bool _accessGranted = false;
 
   @override
-  String currentPath = '/';
+  String currentPath;
 
   @override
-  String? get grantedBasePath => '/';
+  String? get grantedBasePath => currentPath;
 
   @override
-  Future<Uint8List> readFile(String path, {FileItem? fileItem}) async {
-    reads++;
-    if (reads == 1) {
-      throw PathAccessException(
-        path,
-        const OSError('Operation not permitted', 1),
-      );
+  Future<String> getInitialPath() async => currentPath;
+
+  @override
+  Future<String> getSafeFallbackDirectory() async => currentPath;
+
+  @override
+  Future<List<FileSystemEntity>?> listDirectory(String path) async =>
+      path == currentPath ? <FileSystemEntity>[File(filePath)] : [];
+
+  @override
+  Future<bool> hasAccessToPath(String path) async => true;
+
+  @override
+  Future<T> withFileOperationAccess<T>(
+    String path,
+    Future<T> Function() action,
+  ) async {
+    // The native loader streams through a scoped operation rather than the
+    // old whole-file readFile API. Directory stat/list access remains valid.
+    if (path == filePath) {
+      reads++;
+      if (!_accessGranted) {
+        throw PathAccessException(
+          path,
+          const OSError('Operation not permitted', 1),
+        );
+      }
     }
-    return Uint8List.fromList(<int>[1, 2, 3]);
+    return action();
   }
 
   @override
   Future<bool> ensureAccess(String path) async {
+    expect(path, filePath);
     accessRequests++;
+    _accessGranted = true;
     return true;
   }
 
