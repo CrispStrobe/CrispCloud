@@ -3,5 +3,7 @@ import 'file_list_export_native.dart'
     as platform;
 
 /// Save/download a UTF-8 list. Null means the native save dialog was cancelled.
-Future<String?> exportFileListText(String text) =>
-    platform.exportFileListText(text);
+Future<String?> exportFileListText(
+  String text, {
+  String fileName = 'file-list.txt',
+}) => platform.exportFileListText(text, fileName: fileName);

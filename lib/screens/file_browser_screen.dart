@@ -40,6 +40,9 @@ import '../widgets/settings_dialog.dart' show showSettingsDialog;
 import '../widgets/search_dialogs.dart' show showSearchDialog, showFindDialog;
 import '../widgets/pattern_selection_dialog.dart';
 import '../widgets/file_list_dialog.dart';
+import '../widgets/file_collections_dialog.dart';
+import '../widgets/rename_history_dialog.dart';
+import '../widgets/directory_comparison_dialog.dart';
 import '../widgets/file_clipboard_actions.dart';
 import '../widgets/file_toolbar.dart' show showPanelFilterDialog;
 import '../widgets/file_context_menu.dart' show showPropertiesDialog;
@@ -386,6 +389,10 @@ class _FileBrowserScreenState extends ConsumerState<FileBrowserScreen> {
         onSelected: () => showMultiRenameFromSelection(context, ref),
       ),
       PlatformMenuItem(
+        label: 'Rename History and Recovery...',
+        onSelected: () => showRenameHistoryDialog(context, ref, activeSide),
+      ),
+      PlatformMenuItem(
         label: 'Import File List...',
         onSelected: () =>
             showFileListDialog(context, ref, activeSide, importMode: true),
@@ -393,6 +400,22 @@ class _FileBrowserScreenState extends ConsumerState<FileBrowserScreen> {
       PlatformMenuItem(
         label: 'Export File List...',
         onSelected: () => showFileListDialog(context, ref, activeSide),
+      ),
+      PlatformMenuItem(
+        label: 'File Collections...',
+        onSelected: () => showFileCollectionsDialog(
+          context,
+          ref,
+          ref.read(activePanelProvider),
+        ),
+      ),
+      PlatformMenuItem(
+        label: 'Remember Selection',
+        onSelected: () => _activePanel(ref).rememberSelection(),
+      ),
+      PlatformMenuItem(
+        label: 'Restore Selection',
+        onSelected: () => _activePanel(ref).restoreSelection(),
       ),
 
       PlatformMenuItem(
@@ -620,6 +643,10 @@ class _FileBrowserScreenState extends ConsumerState<FileBrowserScreen> {
       PlatformMenuItemGroup(
         members: <PlatformMenuItem>[
           PlatformMenuItem(
+            label: 'Compare Folders...',
+            onSelected: () => showDirectoryComparisonDialog(context, ref),
+          ),
+          PlatformMenuItem(
             label: 'Sync Manager',
             onSelected: () => showSyncDialog(context),
           ),
@@ -705,6 +732,10 @@ class _FileBrowserScreenState extends ConsumerState<FileBrowserScreen> {
       ),
       PlatformMenuItemGroup(
         members: <PlatformMenuItem>[
+          PlatformMenuItem(
+            label: 'Compare Folders...',
+            onSelected: () => showDirectoryComparisonDialog(context, ref),
+          ),
           PlatformMenuItem(
             label: 'Sync Manager',
             onSelected: () => showSyncDialog(context),
@@ -1737,6 +1768,20 @@ class _FileBrowserScreenState extends ConsumerState<FileBrowserScreen> {
             );
           case 'export_file_list':
             showFileListDialog(context, ref, ref.read(activePanelProvider));
+          case 'rename_history':
+            showRenameHistoryDialog(
+              context,
+              ref,
+              ref.read(activePanelProvider),
+            );
+          case 'collections':
+            showFileCollectionsDialog(
+              context,
+              ref,
+              ref.read(activePanelProvider),
+            );
+          case 'compare_folders':
+            showDirectoryComparisonDialog(context, ref);
           case 'copy_options':
             showCopyDialogFromSelection(context, ref);
           case 'move_options':
@@ -1816,6 +1861,10 @@ class _FileBrowserScreenState extends ConsumerState<FileBrowserScreen> {
           ),
         ),
         PopupMenuItem(
+          value: 'rename_history',
+          child: _overflowItem(Icons.history, 'Rename history and recovery…'),
+        ),
+        PopupMenuItem(
           value: 'pattern_selection',
           child: _overflowItem(Icons.rule, 'Select by wildcard or regex'),
         ),
@@ -1855,6 +1904,17 @@ class _FileBrowserScreenState extends ConsumerState<FileBrowserScreen> {
         PopupMenuItem(
           value: 'sync',
           child: _overflowItem(Icons.sync, l.syncManager),
+        ),
+        PopupMenuItem(
+          value: 'compare_folders',
+          child: _overflowItem(Icons.compare_arrows, 'Compare folders…'),
+        ),
+        PopupMenuItem(
+          value: 'collections',
+          child: _overflowItem(
+            Icons.collections_bookmark_outlined,
+            'File collections…',
+          ),
         ),
         if (isDesktopPlatform)
           PopupMenuItem(

@@ -12,12 +12,16 @@ import 'package:flutter/widgets.dart' show FocusNode;
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:path/path.dart' as p;
 import 'package:shared_preferences/shared_preferences.dart';
+import 'package:uuid/uuid.dart';
 
 import '../models/file_item.dart';
 import '../models/panel_side.dart';
 import '../models/panel_tab.dart';
 import '../models/sort.dart';
 import '../models/storage_reference.dart';
+import '../models/file_collection.dart';
+import '../services/file_collection_service.dart';
+import '../services/file_operation_service.dart' show FileOperationBackend;
 import '../services/captured_file_target.dart';
 import '../services/storage_identity.dart';
 import '../services/storage_trash.dart';
@@ -45,6 +49,7 @@ import 'quick_search_provider.dart';
 import 'recent_locations_provider.dart';
 import 'native_file_operations_provider.dart';
 import 'multi_cloud_provider.dart';
+import 'file_collection_provider.dart';
 
 // SortBy and SortOrder are defined in models/sort.dart
 export '../models/sort.dart';
@@ -108,6 +113,8 @@ class PanelNotifier extends ChangeNotifier {
   String _activeTabId = '';
 
   final _refreshLock = AsyncLock();
+  final _tabSaveLock = AsyncLock();
+  StorageReference? _pendingTabStorage;
   Timer? _refreshDebounce;
   late final FocusNode listFocusNode;
   bool _isDisposed = false;
@@ -120,11 +127,28 @@ class PanelNotifier extends ChangeNotifier {
   String get fileListTitle => _fileListTitle;
   PanelFileOrigin? _fileListOrigin;
   final Map<String, _FileListSnapshot> _fileListTabs = {};
+  final _collectionEntries = Expando<FileCollectionEntry>(
+    'saved collection row',
+  );
+  String? _collectionId;
+  CollectionSearch? _collectionSearch;
+  int _collectionRequest = 0;
+  bool _collectionBusy = false;
+  String _collectionProgress = '';
+  String? get activeCollectionId =>
+      _showingSearchResults ? _collectionId : null;
+  bool get collectionBusy => _collectionBusy;
+  String get collectionProgress => _collectionProgress;
+  bool get canRerunCollectionSearch => _collectionSearch != null;
+  List<FileItem> get collectionReplacements => (_files ?? const <FileItem>[])
+      .where((file) => _collectionEntries[file]?.replacement == true)
+      .toList();
   final Map<String, Map<(StorageReference, String), _SelectionMemoryEntry>>
   _selectionMemories = {};
 
   bool get canOperateOnFileList =>
-      !_showingSearchResults || (_fileListOrigin?.isCurrent ?? false);
+      !_showingSearchResults ||
+      (_files?.any((file) => _fileOrigins[file]?.isCurrent == true) ?? false);
 
   /// When non-null, the panel is browsing inside a compressed archive.
   ArchivePanelSource? _archiveSource;
@@ -241,6 +265,7 @@ class PanelNotifier extends ChangeNotifier {
     // Listen for panel source changes (e.g. user switches provider in dropdown).
     _ref.listen<PanelSource>(panelSourceProvider(side), (prev, next) {
       if (prev == next) return;
+      _pendingTabStorage = null;
       _leaveFileList();
       _listingGeneration++;
       _log.info(
@@ -264,24 +289,22 @@ class PanelNotifier extends ChangeNotifier {
   /// listing. A same-path object from search, an archive, an old listing, or
   /// another account must never authorize an editor write.
   PanelFileOrigin? originForFile(FileItem file) {
-    if (_isDisposed) return null;
-    final selectedSource = _ref.read(panelSourceProvider(side));
-    if (_isLoading ||
-        _showingSearchResults ||
-        _verifiedListingGeneration != _listingGeneration ||
-        selectedSource.isArchive ||
-        selectedSource.isContainer ||
-        isInArchive ||
-        _isFlatView ||
-        !(_files?.any((item) => identical(item, file)) ?? false)) {
-      return null;
-    }
-    final origin = _fileOrigins[file];
-    return origin != null && origin.isCurrent ? origin : null;
+    return originForOperation(file);
   }
 
   void _recordOrigins(Iterable<FileItem> files, PanelFileOrigin origin) {
     _currentDirectoryOrigin = origin;
+    final tab = activeTab;
+    if (tab != null &&
+        !_showingSearchResults &&
+        (tab.storage != origin.storageReference ||
+            tab.path != origin.source.currentPath)) {
+      tab.storage = origin.storageReference;
+      tab.path = origin.source.currentPath;
+      tab.collectionId = null;
+      tab.updateLabel();
+      _saveTabs();
+    }
     final listed = files.toList(growable: false);
     // The preview uses selection.first; keeping the old object here would
     // leave it permanently outside the exact-identity origin gate after a
@@ -386,6 +409,21 @@ class PanelNotifier extends ChangeNotifier {
     return client.isAuthenticated &&
         ((auth.isConnected && identical(auth.client, client)) ||
             _isRegisteredClient(client));
+  }
+
+  String storageDisplayName(StorageReference storage) {
+    if (storage.isLocal) return 'Local';
+    for (final connection in _ref.read(multiCloudProvider).connections) {
+      if (storageReferenceForClient(connection.client) == storage) {
+        return '${connection.label} (${storage.provider})';
+      }
+    }
+    final auth = _ref.read(authProvider);
+    if (storageReferenceForClient(auth.client) == storage &&
+        auth.userEmail?.isNotEmpty == true) {
+      return '${storage.provider} · ${auth.userEmail}';
+    }
+    return '${storage.provider} · ${storage.accountKey.substring(0, storage.accountKey.length.clamp(0, 8))}';
   }
 
   /// Reconnect a persisted location only to its exact account/namespace.
@@ -893,6 +931,28 @@ class PanelNotifier extends ChangeNotifier {
     );
   }
 
+  /// Mixed collections are split into independently captured account groups.
+  /// Every row must be verified before any group is allowed to start.
+  Map<PanelFileOrigin, List<FileItem>> captureOperationGroups(
+    List<FileItem> files,
+  ) {
+    if (files.isEmpty) throw StateError('Select at least one item.');
+    final groups = <String, List<FileItem>>{};
+    for (final file in files) {
+      final origin = originForOperation(file);
+      if (origin == null) {
+        throw StateError(
+          'Refresh or reconnect the original source of "${file.name}".',
+        );
+      }
+      groups.putIfAbsent(origin.storageId, () => []).add(file);
+    }
+    return {
+      for (final group in groups.values)
+        captureOperationOrigin(group): List.unmodifiable(group),
+    };
+  }
+
   static bool _sameStorage(PanelSource a, PanelSource b) =>
       (a is LocalPanelSource && b is LocalPanelSource) ||
       (a is RemotePanelSource &&
@@ -912,10 +972,17 @@ class PanelNotifier extends ChangeNotifier {
     PanelFileOrigin? origin,
     PanelFileOrigin? Function(FileItem)? originForFile,
     String title = 'Search results',
+    FileCollection? collection,
+    CollectionSearch? search,
   }) {
     final items = <FileItem>[];
     final seen = <String>{};
     PanelFileOrigin? commonOrigin = origin;
+    var mixed = false;
+    final saved = {
+      for (final entry in collection?.entries ?? const <FileCollectionEntry>[])
+        entry.key: entry,
+    };
     for (final result in results) {
       if (result.name == '..' || result.name == '.') continue;
       final verified =
@@ -924,9 +991,7 @@ class PanelNotifier extends ChangeNotifier {
           commonOrigin != null &&
           (!_sameStorage(commonOrigin.source, verified.source) ||
               commonOrigin.storageReference != verified.storageReference)) {
-        throw StateError(
-          'A file list cannot mix storage accounts. Open a separate list for each source.',
-        );
+        mixed = true;
       }
       var path = result.path;
       if ((path == null || path.isEmpty) &&
@@ -939,16 +1004,28 @@ class PanelNotifier extends ChangeNotifier {
       final normalized = path == null || path.isEmpty
           ? null
           : paths.normalize(path);
-      final key = normalized == null
-          ? 'id:${result.uuid ?? identityHashCode(result)}'
-          : 'path:$normalized';
+      final storageId = verified?.storageId ?? result.storageId;
+      final key =
+          '${storageId ?? 'unverified'}\u0000${normalized ?? 'id:${result.uuid ?? identityHashCode(result)}'}';
       if (!seen.add(key)) continue;
       final item = result.copyWith(
         name: normalized == null
             ? paths.basename(result.name)
             : paths.basename(normalized),
         path: normalized,
+        storageId: storageId,
+        metadata: {
+          ...?result.metadata,
+          if (verified != null)
+            'collectionSource': storageDisplayName(verified.storageReference)
+          else if (saved[key] != null)
+            'collectionSource': storageDisplayName(
+              saved[key]!.reference.storage,
+            ),
+        },
       );
+      final savedEntry = saved[key];
+      if (savedEntry != null) _collectionEntries[item] = savedEntry;
       if (verified != null &&
           verified.isCurrent &&
           normalized != null &&
@@ -960,8 +1037,10 @@ class PanelNotifier extends ChangeNotifier {
     }
     _log.info('Showing ${items.length} items in $title');
     _showingSearchResults = true;
-    _fileListTitle = title;
-    _fileListOrigin = commonOrigin;
+    _fileListTitle = collection?.name ?? title;
+    _fileListOrigin = mixed ? null : commonOrigin;
+    _collectionId = collection?.id;
+    _collectionSearch = collection?.search ?? search;
     _listingGeneration++;
     _verifiedListingGeneration = _listingGeneration;
     _isLoading = false;
@@ -976,9 +1055,19 @@ class PanelNotifier extends ChangeNotifier {
     _isTypeahead = false;
     _typeaheadResetTimer?.cancel();
     _files = items;
+    if (collection != null) {
+      _selection.addAll(
+        items.where(
+          (file) => collection.selectedKeys.contains(
+            '${file.storageId}\u0000${file.path}',
+          ),
+        ),
+      );
+    }
     _sortFiles();
     _cursorIndex = items.isEmpty ? -1 : 0;
     _rememberFileListTab();
+    _saveTabs();
     notifyListeners();
   }
 
@@ -990,14 +1079,235 @@ class PanelNotifier extends ChangeNotifier {
       origin: _fileListOrigin,
       selection: Set.of(_selection),
       cursor: cursorItem,
+      collectionId: _collectionId,
+      search: _collectionSearch,
     );
   }
 
+  FileCollection _collectionSnapshot({
+    required String id,
+    required String name,
+    required Iterable<FileItem> files,
+    required Set<FileItem> selection,
+    CollectionSearch? search,
+  }) {
+    final entries = <FileCollectionEntry>[];
+    final selected = <String>{};
+    for (final file in files) {
+      if (file.name == '..' || file.name == '.') continue;
+      var entry = _collectionEntries[file];
+      if (entry == null) {
+        final origin = _fileOrigins[file];
+        if (origin == null) {
+          throw StateError(
+            'The original source of "${file.name}" was never verified.',
+          );
+        }
+        final paths = origin.source.isRemote || kIsWeb ? p.posix : p.context;
+        entry = FileCollectionService.capture(
+          file.copyWith(
+            path: file.path ?? paths.join(origin.source.currentPath, file.name),
+          ),
+          origin.storageReference,
+        );
+      }
+      entries.add(entry);
+      if (selection.contains(file)) selected.add(entry.key);
+    }
+    return FileCollection(
+      id: id,
+      name: name,
+      entries: entries,
+      selectedKeys: selected,
+      search: search,
+    );
+  }
+
+  /// Save the current rows and marks. Authentication and live clients are never serialized.
+  Future<String> saveCurrentCollection(
+    String name, {
+    bool selectedOnly = false,
+    bool createNew = false,
+  }) async {
+    final tabId = _activeTabId;
+    final id = !selectedOnly && !createNew
+        ? _collectionId ?? const Uuid().v4()
+        : const Uuid().v4();
+    final collection = _collectionSnapshot(
+      id: id,
+      name: name.trim(),
+      files: selectedOnly ? _selection : _files ?? const [],
+      selection: _selection,
+      search: selectedOnly ? null : _collectionSearch,
+    );
+    await _ref.read(fileCollectionStoreProvider).save(collection);
+    if (!_isDisposed &&
+        tabId == _activeTabId &&
+        _showingSearchResults &&
+        !selectedOnly) {
+      _collectionId = id;
+      _fileListTitle = collection.name;
+      activeTab?.collectionId = id;
+      _rememberFileListTab();
+      _saveTabs();
+      notifyListeners();
+    }
+    return id;
+  }
+
+  Future<void> appendToCollection(String id, {bool selectedOnly = true}) async {
+    final additions = _collectionSnapshot(
+      id: 'pending',
+      name: 'Pending',
+      files: selectedOnly ? _selection : _files ?? const [],
+      selection: _selection,
+    );
+    await _ref.read(fileCollectionStoreProvider).update(id, (current) {
+      final entries = {
+        for (final entry in current.entries) entry.key: entry,
+        for (final entry in additions.entries) entry.key: entry,
+      };
+      return current.copyWith(
+        entries: entries.values.toList(),
+        selectedKeys: {...current.selectedKeys, ...additions.selectedKeys},
+        clearSearch: true,
+      );
+    });
+  }
+
+  Future<void> openCollection(String id, {bool newTab = false}) async {
+    final store = _ref.read(fileCollectionStoreProvider);
+    await store.ready;
+    if (_isDisposed) return;
+    final collection = store.get(id);
+    if (collection == null) {
+      throw StateError('The saved collection no longer exists.');
+    }
+    if (newTab) addTab();
+    showSearchResults(
+      collection.entries.map((entry) => entry.file).toList(),
+      collection: collection,
+    );
+    activeTab?.collectionId = id;
+    await refreshCollectionItems();
+  }
+
+  void cancelCollectionRefresh() {
+    _collectionRequest++;
+    _collectionBusy = false;
+    notifyListeners();
+  }
+
+  /// Refresh saved paths. Rerunning a saved query is an explicit separate action.
+  Future<void> refreshCollectionItems({
+    bool rerunSearch = false,
+    bool acceptReplacements = false,
+  }) async {
+    if (!_showingSearchResults || _isDisposed) return;
+    final request = ++_collectionRequest;
+    final tabId = _activeTabId;
+    final generation = _listingGeneration;
+    final collection = _collectionSnapshot(
+      id: _collectionId ?? const Uuid().v4(),
+      name: _fileListTitle,
+      files: _files ?? const [],
+      selection: _selection,
+      search: _collectionSearch,
+    );
+    final sources = <String, PanelFileOrigin>{};
+    final backends = <String, FileOperationBackend>{};
+    FileOperationBackend? resolve(StorageReference storage, String path) {
+      if (backends.containsKey(storage.id)) return backends[storage.id];
+      final origin = resolveStorageReference(storage, path);
+      if (origin == null) return null;
+      sources[storage.id] = origin;
+      return backends[storage.id] = fileOperationBackend(
+        source: origin.source,
+        local: _localFileService,
+        isCurrent: () => origin.isCurrent,
+      );
+    }
+
+    bool cancelled() =>
+        _isDisposed ||
+        request != _collectionRequest ||
+        tabId != _activeTabId ||
+        generation != _listingGeneration;
+    _collectionBusy = true;
+    _collectionProgress = '';
+    notifyListeners();
+    try {
+      const service = FileCollectionService();
+      final result = rerunSearch
+          ? await service.rerun(
+              collection,
+              resolve,
+              isCancelled: cancelled,
+              onProgress: (scanned, _) {
+                if (!cancelled()) {
+                  _collectionProgress = '$scanned scanned';
+                  notifyListeners();
+                }
+              },
+            )
+          : await service.refresh(
+              collection,
+              resolve,
+              isCancelled: cancelled,
+              acceptReplacements: acceptReplacements,
+              onProgress: (done, total) {
+                if (!cancelled()) {
+                  _collectionProgress = '$done / $total';
+                  notifyListeners();
+                }
+              },
+            );
+      if (cancelled()) return;
+      await _ref.read(fileCollectionStoreProvider).save(result.collection);
+      if (cancelled()) return;
+      showSearchResults(
+        result.collection.entries
+            .map(
+              (entry) => entry.file.copyWith(
+                metadata: {
+                  ...?entry.file.metadata,
+                  'collectionState': entry.state.name,
+                  if (entry.detail != null) 'collectionDetail': entry.detail,
+                  'collectionReplacement': entry.replacement,
+                },
+              ),
+            )
+            .toList(),
+        collection: result.collection,
+        originForFile: (file) {
+          final key = '${file.storageId}\u0000${file.path}';
+          final source = sources[file.storageId];
+          return result.verifiedKeys.contains(key) && source?.isCurrent == true
+              ? source
+              : null;
+        },
+      );
+      activeTab?.collectionId = result.collection.id;
+    } finally {
+      if (!_isDisposed && request == _collectionRequest) {
+        _collectionBusy = false;
+        notifyListeners();
+      }
+    }
+  }
+
   void _leaveFileList({bool forget = true}) {
-    if (forget) _fileListTabs.remove(_activeTabId);
+    if (forget) {
+      _fileListTabs.remove(_activeTabId);
+      activeTab?.collectionId = null;
+    }
     if (!_showingSearchResults) return;
     _showingSearchResults = false;
     _fileListOrigin = null;
+    _collectionId = null;
+    _collectionSearch = null;
+    _collectionRequest++;
+    _collectionBusy = false;
     _selection.clear();
     _lastSelected = null;
     _itemToScrollTo = null;
@@ -1031,6 +1341,18 @@ class PanelNotifier extends ChangeNotifier {
     if (removed.contains(_itemToScrollTo)) _itemToScrollTo = null;
     _resetCursor(preserveItem: cursor);
     _rememberFileListTab();
+    if (_collectionId != null) {
+      unawaited(
+        saveCurrentCollection(_fileListTitle).catchError((Object error) {
+          if (!_isDisposed) {
+            _ref
+                .read(errorProvider)
+                .addError('Could not save collection changes: $error');
+          }
+          return '';
+        }),
+      );
+    }
     notifyListeners();
   }
 
@@ -1042,6 +1364,7 @@ class PanelNotifier extends ChangeNotifier {
   void applyFileListChanges(
     Map<String, FileItem?> replacements, {
     PanelFileOrigin? origin,
+    Set<String> removedDirectories = const {},
   }) {
     if (_isDisposed ||
         replacements.isEmpty ||
@@ -1054,17 +1377,69 @@ class PanelNotifier extends ChangeNotifier {
             candidate.isCurrent &&
             _sameStorage(origin.source, candidate.source));
 
+    final folderMoves =
+        replacements.entries
+            .where(
+              (entry) =>
+                  entry.value?.isFolder == true &&
+                  entry.value?.isSymlink != true &&
+                  entry.value?.path != null,
+            )
+            .toList()
+          ..sort((a, b) => b.key.length.compareTo(a.key.length));
+    if (origin != null) {
+      unawaited(
+        _ref
+            .read(fileCollectionStoreProvider)
+            .applyFileChanges(
+              origin.storageReference,
+              replacements,
+              removedDirectories: removedDirectories,
+            )
+            .catchError((Object error) {
+              if (!_isDisposed) {
+                _ref
+                    .read(errorProvider)
+                    .addError('Could not update saved collections: $error');
+              }
+            }),
+      );
+    }
+
     FileItem? replacementFor(FileItem? old) {
-      if (old == null || !replacements.containsKey(old.path)) return old;
+      if (old == null || old.path == null) return old;
       final oldOrigin = _fileOrigins[old];
       if (origin != null && !matchesOrigin(oldOrigin)) return old;
-      final item = replacements[old.path];
+      final paths = oldOrigin?.source.isRemote == true ? p.posix : p.context;
+      FileItem? item;
+      if (replacements.containsKey(old.path)) {
+        item = replacements[old.path]?.copyWith(storageId: old.storageId);
+      } else if (removedDirectories.any(
+        (parent) => paths.isWithin(parent, old.path!),
+      )) {
+        return null;
+      } else {
+        for (final folder in folderMoves) {
+          if (!paths.isWithin(folder.key, old.path!)) continue;
+          item = old.copyWith(
+            path: paths.join(
+              folder.value!.path!,
+              paths.relative(old.path!, from: folder.key),
+            ),
+          );
+          break;
+        }
+        if (item == null) return old;
+      }
       if (item != null &&
           !identical(old, item) &&
           oldOrigin != null &&
           item.path != null) {
-        final paths = oldOrigin.source.isRemote ? p.posix : p.context;
         _fileOrigins[item] = _originAt(oldOrigin, paths.dirname(item.path!));
+        _collectionEntries[item] = FileCollectionService.capture(
+          item,
+          oldOrigin.storageReference,
+        );
       }
       return item;
     }
@@ -1076,7 +1451,6 @@ class PanelNotifier extends ChangeNotifier {
       for (final entry in _fileListTabs.entries.toList()) {
         if (_showingSearchResults && entry.key == _activeTabId) continue;
         final snapshot = entry.value;
-        if (!matchesOrigin(snapshot.origin)) continue;
         final updated = <FileItem>[];
         final selected = <FileItem>{};
         var tabChanged = false;
@@ -1094,12 +1468,14 @@ class PanelNotifier extends ChangeNotifier {
           origin: snapshot.origin,
           selection: selected,
           cursor: replacementFor(snapshot.cursor),
+          collectionId: snapshot.collectionId,
+          search: snapshot.search,
         );
         changed = true;
       }
     }
 
-    if (!_showingSearchResults || !matchesOrigin(_fileListOrigin)) {
+    if (!_showingSearchResults) {
       if (changed) notifyListeners();
       return;
     }
@@ -2142,22 +2518,25 @@ class PanelNotifier extends ChangeNotifier {
   /// Queued work must not outlive the panel that requested it.
   Future<void> refresh() async {
     if (_isDisposed) return;
+    if (_pendingTabStorage != null) {
+      await _restoreSelectedTab();
+      return;
+    }
     _log.debug('refresh: side=$side archive=$isInArchive flat=$_isFlatView');
     await _refreshLock.synchronized(() async {
       // A tab change can queue this callback while a previous listing is still
       // pending. The container may be disposed before the lock is released.
       if (_isDisposed) return;
       if (_showingSearchResults) {
-        // Virtual lists are snapshots. Refresh must not replace them with the
-        // directory behind the list; mutation callers update successful rows.
-        if (!canOperateOnFileList) {
-          _ref
-              .read(errorProvider)
-              .addError(
-                'The list source is disconnected or changed. Run the search or import again.',
-              );
+        try {
+          await refreshCollectionItems();
+        } catch (error) {
+          if (!_isDisposed) {
+            _ref
+                .read(errorProvider)
+                .addError('Collection refresh failed: $error');
+          }
         }
-        notifyListeners();
       } else if (isInArchive) {
         await _loadArchiveFiles();
       } else if (_isFlatView) {
@@ -2240,7 +2619,7 @@ class PanelNotifier extends ChangeNotifier {
       _archiveBytes = null;
     }
     var target = path.isEmpty ? currentPath : path;
-    if (target.contains(':/')) {
+    if (_isArchiveVirtualPath(target)) {
       final archive = target.split(':/').first;
       target = archive.contains('/')
           ? p.dirname(archive)
@@ -2316,11 +2695,19 @@ class PanelNotifier extends ChangeNotifier {
     _log.info('navigateToPath: $path (side=$side, web=$kIsWeb)');
     final sourceOrigin =
         origin ??
+        (_pendingTabStorage == null
+            ? null
+            : resolveStorageReference(_pendingTabStorage!, path)) ??
         (_showingSearchResults
             ? _fileListOrigin
             : (_verifiedListingGeneration == _listingGeneration
                   ? _currentDirectoryOrigin
                   : null));
+    if (_pendingTabStorage != null && sourceOrigin == null) {
+      throw StateError(
+        'Reconnect the original account for this tab or choose a different source.',
+      );
+    }
     if (sourceOrigin != null && !sourceOrigin.isCurrent) {
       throw StateError(
         'The storage account changed. Refresh the folder or run the search again.',
@@ -2340,7 +2727,7 @@ class PanelNotifier extends ChangeNotifier {
       _archiveOrigin = null;
       _archiveBytes = null;
     }
-    if (path.contains(':/')) {
+    if (_isArchiveVirtualPath(path)) {
       final archive = path.split(':/').first;
       path = !isRemote
           ? (archive.contains('/')
@@ -2494,6 +2881,7 @@ class PanelNotifier extends ChangeNotifier {
     if (idx == -1) return;
     final replacement = item.copyWith(calculatedSize: size);
     _fileOrigins[replacement] = _fileOrigins[item];
+    _collectionEntries[replacement] = _collectionEntries[item];
     _files![idx] = replacement;
     final selected = _selection
         .map((entry) => identical(entry, item) ? replacement : entry)
@@ -2509,11 +2897,13 @@ class PanelNotifier extends ChangeNotifier {
   // --- File operations (local panel helpers) ---
   bool canTrashFiles(List<FileItem> files) {
     try {
-      final source = captureOperationOrigin(files).source;
-      return source is LocalPanelSource
-          ? NativeFileOperations.supported
-          : source is RemotePanelSource &&
-                source.client is StorageTrashOperations;
+      return captureOperationGroups(files).keys.every((origin) {
+        final source = origin.source;
+        return source is LocalPanelSource
+            ? NativeFileOperations.supported
+            : source is RemotePanelSource &&
+                  source.client is StorageTrashOperations;
+      });
     } catch (_) {
       return false;
     }
@@ -2523,20 +2913,42 @@ class PanelNotifier extends ChangeNotifier {
     List<FileItem> files, {
     bool permanently = false,
   }) async {
+    var deleted = 0;
+    try {
+      final groups = captureOperationGroups(files);
+      if (!permanently && !canTrashFiles(files)) {
+        throw UnsupportedError(
+          'Trash is unavailable for one or more original sources. Choose Delete without restore explicitly.',
+        );
+      }
+      for (final group in groups.entries) {
+        deleted += await _deleteCapturedFiles(
+          group.value,
+          group.key,
+          permanently: permanently,
+        );
+      }
+    } catch (error) {
+      _ref.read(errorProvider).addError('Delete failed: $error');
+    } finally {
+      await refresh();
+      clearSelection();
+    }
+    return deleted;
+  }
+
+  Future<int> _deleteCapturedFiles(
+    List<FileItem> files,
+    PanelFileOrigin origin, {
+    required bool permanently,
+  }) async {
     final audit = _ref.read(auditServiceProvider);
     final history = _ref.read(actionHistoryProvider.notifier);
     var providerName = 'unknown';
     final removed = <String, FileItem?>{};
-    PanelFileOrigin? operationOrigin;
+    final removedDirectories = <String>{};
     var deletedCount = 0;
     try {
-      final origin = captureOperationOrigin(files);
-      if (!permanently && !canTrashFiles(files)) {
-        throw UnsupportedError(
-          'Trash is unavailable for this source. Choose Delete without restore explicitly.',
-        );
-      }
-      operationOrigin = origin;
       final source = origin.source;
       final paths = source.isLocal && !kIsWeb ? p.context : p.posix;
       providerName = source is RemotePanelSource
@@ -2609,7 +3021,8 @@ class PanelNotifier extends ChangeNotifier {
         }
         removed[path] = null;
         deletedCount++;
-        if (file.isFolder) {
+        if (file.isFolder && file.isSymlink != true) {
+          removedDirectories.add(path);
           for (final child in _files ?? const <FileItem>[]) {
             if (child.path != null && paths.isWithin(path, child.path!)) {
               removed[child.path!] = null;
@@ -2654,11 +3067,11 @@ class PanelNotifier extends ChangeNotifier {
       _log.warn('Delete failed', error);
       _ref.read(errorProvider).addError('Delete failed: $error');
     } finally {
-      if (operationOrigin != null) {
-        applyFileListChanges(removed, origin: operationOrigin);
-      }
-      await refresh();
-      clearSelection();
+      applyFileListChanges(
+        removed,
+        origin: origin,
+        removedDirectories: removedDirectories,
+      );
     }
     return deletedCount;
   }
@@ -3107,6 +3520,11 @@ class PanelNotifier extends ChangeNotifier {
     }
   }
 
+  static bool _isArchiveVirtualPath(String path) => RegExp(
+    r'\.(?:zip|7z|rar|tar|tar\.gz|tgz|tar\.bz2|tbz2|tar\.xz|txz):/',
+    caseSensitive: false,
+  ).hasMatch(path);
+
   // --- Tabs ---
   String _nextTabId() => 'tab_${_tabIdCounter++}';
 
@@ -3136,7 +3554,7 @@ class PanelNotifier extends ChangeNotifier {
           for (final item in list) {
             final id = _nextTabId();
             var path = (item['path'] as String?) ?? '/';
-            if (path.contains(':/')) {
+            if (_isArchiveVirtualPath(path)) {
               // Old tab saved while browsing an archive: fall back to the
               // real parent path (or home) instead of a virtual path.
               final archive = path.split(':/').first;
@@ -3145,9 +3563,18 @@ class PanelNotifier extends ChangeNotifier {
                   : (Platform.environment['HOME'] ?? '/');
               if (path.isEmpty) path = '/';
             }
-            _tabs.add(
-              PanelTab(id: id, path: path, isPinned: item['pinned'] == true),
+            final restored = PanelTab.fromJson(
+              id,
+              Map<String, dynamic>.from(item as Map)..['path'] = path,
             );
+            if (restored.storage == null && restored.collectionId == null) {
+              restored.storage = const StorageReference(
+                kind: 'remote',
+                provider: 'Original source',
+                accountKey: 'legacy-unscoped-tab',
+              );
+            }
+            _tabs.add(restored);
           }
           final savedActiveIdx = prefs.getInt('${_tabStorageKey}_active') ?? 0;
           _activeTabId = _tabs[savedActiveIdx.clamp(0, _tabs.length - 1)].id;
@@ -3161,7 +3588,7 @@ class PanelNotifier extends ChangeNotifier {
             if (tab != null) _remotePath = tab.path;
           }
           notifyListeners();
-          if (side == PanelSide.remote) refresh();
+          await _restoreSelectedTab();
           return;
         }
       }
@@ -3182,20 +3609,95 @@ class PanelNotifier extends ChangeNotifier {
   /// Persist current tabs to SharedPreferences.
   Future<void> _saveTabs() async {
     if (!kIsWeb && Platform.environment.containsKey('FLUTTER_TEST')) return;
+    await _tabSaveLock.synchronized(() async {
+      if (_isDisposed) return;
+      try {
+        _rememberFileListTab();
+        for (final tab in List.of(_tabs)) {
+          final snapshot = _fileListTabs[tab.id];
+          if (snapshot == null) continue;
+          final id =
+              snapshot.collectionId ?? tab.collectionId ?? const Uuid().v4();
+          try {
+            final collection = _collectionSnapshot(
+              id: id,
+              name: snapshot.title,
+              files: snapshot.files,
+              selection: snapshot.selection,
+              search: snapshot.search,
+            );
+            await _ref.read(fileCollectionStoreProvider).save(collection);
+            if (_isDisposed) return;
+            if (!identical(_fileListTabs[tab.id], snapshot)) continue;
+            tab.collectionId = id;
+            if (tab.id == _activeTabId && _showingSearchResults) {
+              _collectionId = id;
+            }
+            _fileListTabs[tab.id] = _FileListSnapshot(
+              files: snapshot.files,
+              title: snapshot.title,
+              origin: snapshot.origin,
+              selection: snapshot.selection,
+              cursor: snapshot.cursor,
+              collectionId: id,
+              search: snapshot.search,
+            );
+          } catch (error) {
+            _log.warn('Could not persist unverified list tab', error);
+          }
+        }
+        final prefs = await SharedPreferences.getInstance();
+        final list = _tabs.map((t) => t.toJson()).toList();
+        await prefs.setString(_tabStorageKey, json.encode(list));
+        await prefs.setInt(
+          '${_tabStorageKey}_active',
+          _tabs
+              .indexWhere((t) => t.id == _activeTabId)
+              .clamp(0, _tabs.length - 1),
+        );
+      } catch (e) {
+        _log.warn('Tab save failed', e);
+      }
+    });
+  }
+
+  Future<void> _restoreSelectedTab() async {
+    final tab = activeTab;
+    if (tab == null || _isDisposed) return;
     try {
-      final prefs = await SharedPreferences.getInstance();
-      final list = _tabs
-          .map((t) => {'path': t.path, 'pinned': t.isPinned})
-          .toList();
-      await prefs.setString(_tabStorageKey, json.encode(list));
-      await prefs.setInt(
-        '${_tabStorageKey}_active',
-        _tabs
-            .indexWhere((t) => t.id == _activeTabId)
-            .clamp(0, _tabs.length - 1),
-      );
-    } catch (e) {
-      _log.warn('Tab save failed', e);
+      if (tab.collectionId != null) {
+        await openCollection(tab.collectionId!);
+        return;
+      }
+      final storage = tab.storage;
+      if (storage == null) {
+        await refresh();
+        return;
+      }
+      final origin = resolveStorageReference(storage, tab.path);
+      if (origin == null) {
+        _pendingTabStorage = storage;
+        _files = [];
+        _selection.clear();
+        _currentDirectoryOrigin = null;
+        _listingGeneration++;
+        _verifiedListingGeneration = -1;
+        _ref
+            .read(errorProvider)
+            .addError(
+              storage.accountKey == 'legacy-unscoped-tab'
+                  ? 'Choose a source for the older saved tab "${tab.label}". Its previous format did not identify the account.'
+                  : 'Reconnect ${storage.provider} for the saved tab "${tab.label}". Its original account is unavailable.',
+            );
+        notifyListeners();
+        return;
+      }
+      _pendingTabStorage = null;
+      await navigateToPath(tab.path, origin: origin, recordHistory: false);
+    } catch (error) {
+      if (!_isDisposed) {
+        _ref.read(errorProvider).addError('Could not reopen tab: $error');
+      }
     }
   }
 
@@ -3205,7 +3707,13 @@ class PanelNotifier extends ChangeNotifier {
     _rememberFileListTab();
     _leaveFileList(forget: false);
     final id = _nextTabId();
-    _tabs.add(PanelTab(id: id, path: directory));
+    _tabs.add(
+      PanelTab(
+        id: id,
+        path: directory,
+        storage: _currentDirectoryOrigin?.storageReference,
+      ),
+    );
     _activeTabId = id;
     if (side == PanelSide.local) {
       _localPath = directory;
@@ -3244,9 +3752,10 @@ class PanelNotifier extends ChangeNotifier {
     _rememberFileListTab();
     _leaveFileList(forget: false);
     _activeTabId = tabId;
+    _pendingTabStorage = null;
     final tab = activeTab;
     if (tab != null) {
-      if (tab.path.contains(':/')) return;
+      if (_isArchiveVirtualPath(tab.path)) return;
       if (side == PanelSide.local) {
         _localPath = tab.path;
       } else {
@@ -3258,6 +3767,8 @@ class PanelNotifier extends ChangeNotifier {
       _showingSearchResults = true;
       _fileListTitle = list.title;
       _fileListOrigin = list.origin;
+      _collectionId = list.collectionId;
+      _collectionSearch = list.search;
       _files = List.of(list.files);
       _selection
         ..clear()
@@ -3272,7 +3783,7 @@ class PanelNotifier extends ChangeNotifier {
     }
     notifyListeners();
     _saveTabs();
-    refresh();
+    _restoreSelectedTab();
   }
 
   /// Cycle to the next tab. Wraps around.
@@ -3319,7 +3830,7 @@ class PanelNotifier extends ChangeNotifier {
       var titlePath = _currentDirectoryOrigin?.source.isRemote == true
           ? _remotePath
           : _localPath;
-      if (titlePath.contains(':/')) {
+      if (_isArchiveVirtualPath(titlePath)) {
         final archive = titlePath.split(':/').first;
         titlePath = side == PanelSide.local
             ? (archive.contains('/')
@@ -3328,6 +3839,8 @@ class PanelNotifier extends ChangeNotifier {
             : p.posix.dirname(archive);
       }
       tab.path = titlePath;
+      tab.storage = _currentDirectoryOrigin?.storageReference;
+      tab.collectionId = _showingSearchResults ? _collectionId : null;
       tab.updateLabel();
     }
     _saveTabs();
@@ -3389,7 +3902,7 @@ class PanelNotifier extends ChangeNotifier {
         _localPath = p.dirname(archivePath);
       }
     }
-    if (!kIsWeb && _localPath.contains(':/')) {
+    if (!kIsWeb && _isArchiveVirtualPath(_localPath)) {
       _localPath = await _localFileService.getSafeFallbackDirectory();
     }
     if (_isDisposed || generation != _listingGeneration) return;
@@ -3964,12 +4477,16 @@ class _FileListSnapshot {
     required this.origin,
     required this.selection,
     required this.cursor,
+    this.collectionId,
+    this.search,
   });
   final List<FileItem> files;
   final String title;
   final PanelFileOrigin? origin;
   final Set<FileItem> selection;
   final FileItem? cursor;
+  final String? collectionId;
+  final CollectionSearch? search;
 }
 
 final panelProvider = ChangeNotifierProvider.family<PanelNotifier, PanelSide>((

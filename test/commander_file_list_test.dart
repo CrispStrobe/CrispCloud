@@ -15,16 +15,21 @@ import 'package:crisp_cloud/services/panel_source_service.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:crisp_cloud/widgets/file_list_view.dart';
+import 'package:crisp_cloud/widgets/file_collections_dialog.dart';
+import 'package:crisp_cloud/models/panel_tab.dart';
+import 'package:crisp_cloud/models/storage_reference.dart';
 import 'package:crisp_cloud/widgets/pattern_selection_dialog.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 class _Cloud extends Fake implements CloudStorageClient {
+  _Cloud({this.account = 'account-a'});
+  final String account;
   @override
   String get providerName => 'Test cloud';
   @override
-  String? get userId => 'account-a';
+  String? get userId => account;
   @override
   String? get bucketId => 'bucket-a';
   @override
@@ -334,7 +339,7 @@ void main() {
   });
 
   test(
-    'mixed-storage same-path results are rejected without losing current rows',
+    'mixed-storage same-path results retain distinct verified account groups',
     () async {
       final remotePanel = await remote();
       final localPanel = container.read(panelProvider(PanelSide.local));
@@ -343,33 +348,37 @@ void main() {
       final localOrigin = localPanel.captureCurrentOrigin();
       final cloudFile = item('/one/same.txt');
       final localFile = item('/one/same.txt');
-      final before = List<FileItem>.of(remotePanel.files!);
+      remotePanel.showSearchResults(
+        [cloudFile, localFile],
+        originForFile: (file) =>
+            identical(file, cloudFile) ? cloudOrigin : localOrigin,
+      );
+      expect(remotePanel.files!.toSet().length, 2);
+      remotePanel.selectAll();
+      final groups = remotePanel.captureOperationGroups(
+        remotePanel.selection.toList(),
+      );
+      expect(groups.length, 2);
+      expect(groups.keys.map((origin) => origin.storageId).toSet().length, 2);
       expect(
-        () => remotePanel.showSearchResults(
-          [cloudFile, localFile],
-          originForFile: (file) =>
-              identical(file, cloudFile) ? cloudOrigin : localOrigin,
-        ),
+        () => remotePanel.captureOperationOrigin(remotePanel.files!),
         throwsStateError,
       );
-      expect(remotePanel.files, before);
-      expect(remotePanel.showingSearchResults, isFalse);
+      expect(remotePanel.showingSearchResults, isTrue);
     },
   );
 
-  test(
-    'feed to panel keeps paths while editor writeback stays restricted',
-    () async {
-      final panel = await remote();
-      final listed = panel.files!.first;
-      panel.showSearchResults([listed]);
-      final result = panel.files!.single;
-      expect(result.path, '/a.txt');
-      expect(panel.captureOperationOrigin([result]).isCurrent, isTrue);
-      expect(panel.originForFile(result), isNull);
-      expect(panel.originForFile(listed), isNull);
-    },
-  );
+  test('verified result rows retain original editor targets and reject copied stale objects', () async {
+    final panel = await remote();
+    final listed = panel.files!.first;
+    panel.showSearchResults([listed]);
+    final result = panel.files!.single;
+    expect(result.path, '/a.txt');
+    expect(panel.captureOperationOrigin([result]).isCurrent, isTrue);
+    expect(panel.originForFile(result)!.isCurrent, isTrue);
+    expect(panel.originForFile(result.copyWith()), isNull);
+    expect(panel.originForFile(listed), isNull);
+  });
 
   test(
     'result snapshot survives refresh and duplicate basenames remain distinct',
@@ -384,12 +393,75 @@ void main() {
       panel.selectAll();
       expect(panel.selection.length, 2);
       await panel.refresh();
-      expect(cloud.paths.length, requests);
+      expect(cloud.paths.length, requests + 2);
       expect(panel.files!.length, 2);
       expect(panel.exportFileListPaths().split('\n').toSet(), {
         '/one/same.txt',
         '/two/same.txt',
       });
+    },
+  );
+
+  test(
+    'saved collection reopens after restart with marks and missing rows intact',
+    () async {
+      final panel = await remote();
+      panel.showSearchResults([
+        item('/one/same.txt'),
+        item('/two/same.txt'),
+      ], origin: panel.captureRemoteSearchOrigin());
+      panel.toggleSelection(panel.files!.first);
+      final id = await panel.saveCurrentCollection('Named results');
+      container.dispose();
+      cloud = _Cloud();
+      cloud.listings['/two'] = [];
+      auth = _Auth(cloud);
+      container = ProviderContainer(
+        overrides: [
+          authProvider.overrideWith((_) => auth),
+          localFileServiceProvider.overrideWithValue(local),
+        ],
+      );
+      final reopened = await remote();
+      await reopened.openCollection(id);
+      expect(reopened.activeCollectionId, id);
+      expect(reopened.files!.length, 2);
+      expect(reopened.selection.single.path, '/one/same.txt');
+      final missing = reopened.files!.singleWhere(
+        (file) => file.path == '/two/same.txt',
+      );
+      expect(missing.metadata?['collectionState'], 'missing');
+      expect(reopened.originForOperation(missing), isNull);
+      final ready = reopened.files!.singleWhere(
+        (file) => file.path == '/one/same.txt',
+      );
+      expect(reopened.originForOperation(ready), isNotNull);
+    },
+  );
+
+  test(
+    'reopening a collection never substitutes the currently connected account',
+    () async {
+      final panel = await remote();
+      panel.showSearchResults([
+        item('/one/same.txt'),
+      ], origin: panel.captureRemoteSearchOrigin());
+      final id = await panel.saveCurrentCollection('Original account');
+      container.dispose();
+      cloud = _Cloud(account: 'different-account');
+      auth = _Auth(cloud);
+      container = ProviderContainer(
+        overrides: [
+          authProvider.overrideWith((_) => auth),
+          localFileServiceProvider.overrideWithValue(local),
+        ],
+      );
+      final reopened = await remote();
+      final before = cloud.paths.length;
+      await reopened.openCollection(id);
+      expect(cloud.paths.length, before);
+      expect(reopened.files!.single.metadata?['collectionState'], 'offline');
+      expect(reopened.originForOperation(reopened.files!.single), isNull);
     },
   );
 
@@ -886,4 +958,59 @@ void main() {
     expect(cloud.paths.length, requests);
     expect(right.currentPath, '/tmp');
   });
+  test('saved tab JSON preserves source namespace and collection labels', () {
+    const storage = StorageReference(
+      kind: 'remote',
+      provider: 'Cloud',
+      accountKey: 'original-account',
+      root: '/',
+    );
+    final tab = PanelTab(
+      id: 'tab-a',
+      path: '/same',
+      label: 'Review set',
+      isPinned: true,
+      storage: storage,
+      collectionId: 'saved-collection',
+    );
+    final restored = PanelTab.fromJson('tab-b', tab.toJson());
+    expect(restored.storage, storage);
+    expect(restored.collectionId, 'saved-collection');
+    expect(restored.isPinned, isTrue);
+    expect(restored.copyWith().label, 'Review set');
+  });
+
+  testWidgets(
+    'collections remain scrollable on a narrow screen with large text',
+    (tester) async {
+      tester.view.physicalSize = const Size(320, 480);
+      tester.view.devicePixelRatio = 1;
+      addTearDown(tester.view.resetPhysicalSize);
+      addTearDown(tester.view.resetDevicePixelRatio);
+      await tester.runAsync(() async {
+        await remote();
+      });
+      await tester.pumpWidget(
+        UncontrolledProviderScope(
+          container: container,
+          child: MaterialApp(
+            builder: (context, child) => MediaQuery(
+              data: MediaQuery.of(context)
+                  .copyWith(textScaler: const TextScaler.linear(1.6)),
+              child: child!,
+            ),
+            home: const Scaffold(
+              body: FileCollectionsDialog(side: PanelSide.remote),
+            ),
+          ),
+        ),
+      );
+      await tester.pumpAndSettle();
+      expect(tester.takeException(), isNull);
+      await tester.ensureVisible(find.byKey(const ValueKey('collection-save')));
+      expect(tester.takeException(), isNull);
+      expect(find.text('Close'), findsOneWidget);
+      await tester.pumpWidget(const SizedBox.shrink());
+    },
+  );
 }

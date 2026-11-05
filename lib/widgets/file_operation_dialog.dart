@@ -5,6 +5,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../models/file_item.dart';
 import '../models/panel_side.dart';
+import '../models/storage_reference.dart';
 import '../providers/core_providers.dart';
 import '../providers/panel_provider.dart';
 import '../providers/transfer_provider.dart';
@@ -27,8 +28,98 @@ Future<FileOperationPlan?> showFileOperationDialog(
   PanelFileOrigin? destinationOrigin,
   String? destinationPath,
   FileOperationBackend? sourceBackend,
+  Map<PanelFileOrigin, List<FileItem>>? sourceGroups,
 }) async {
   if (files.isEmpty) return null;
+  var groups = sourceGroups;
+  if (groups == null && sourceOrigin == null && sourceBackend == null) {
+    try {
+      groups = ref.read(panelProvider(side)).captureOperationGroups(files);
+    } catch (_) {
+      /* The single dialog displays the precise validation error. */
+    }
+  }
+  if (groups != null && groups.length > 1) {
+    if (sourceBackend != null) {
+      throw ArgumentError('A snapshot copy uses one captured source.');
+    }
+    if (!groups.keys.every((origin) => origin.isCurrent)) {
+      throw StateError(
+        'An original source disconnected. Copy the items again.',
+      );
+    }
+    PanelFileOrigin destination;
+    try {
+      destination =
+          destinationOrigin ??
+          ref
+              .read(
+                panelProvider(
+                  side == PanelSide.local ? PanelSide.remote : PanelSide.local,
+                ),
+              )
+              .captureCurrentOrigin();
+    } catch (error) {
+      if (context.mounted) {
+        await showDialog<void>(
+          context: context,
+          builder: (context) => AlertDialog(
+            title: const Text('Choose a destination folder'),
+            content: Text(
+              'Open a verified destination in the other panel before transferring a mixed collection. $error',
+            ),
+            actions: [
+              TextButton(
+                onPressed: () => Navigator.pop(context),
+                child: const Text('Close'),
+              ),
+            ],
+          ),
+        );
+      }
+      return null;
+    }
+    final protected = [
+      for (final group in groups.entries)
+        for (final file in group.value)
+          FileReference(
+            storage: group.key.storageReference,
+            path: file.path!,
+            objectId: file.uuid,
+          ),
+    ];
+    FileOperationPlan? last;
+    var index = 0;
+    for (final group in groups.entries) {
+      if (!context.mounted) return last;
+      index++;
+      last = await showDialog<FileOperationPlan>(
+        context: context,
+        barrierDismissible: false,
+        builder: (_) => FileOperationDialog(
+          side: side,
+          files: group.value,
+          kind: kind,
+          sourceOrigin: group.key,
+          destinationOrigin: destination,
+          destinationPath: destinationPath ?? destination.source.currentPath,
+          protectedSources: protected,
+          allowBackground: false,
+          reviewGroup:
+              'Account $index of ${groups!.length}: ${ref.read(panelProvider(side)).storageDisplayName(group.key.storageReference)}',
+        ),
+      );
+      if (last == null ||
+          last.entries.any(
+            (entry) => entry.outcome == FileOperationOutcome.cancelled,
+          )) {
+        return last;
+      }
+    }
+    if (context.mounted) ref.read(panelProvider(side)).focusList();
+    return last;
+  }
+  sourceOrigin ??= groups?.keys.firstOrNull;
   final result = await showDialog<FileOperationPlan>(
     context: context,
     barrierDismissible: false,
@@ -56,6 +147,9 @@ class FileOperationDialog extends ConsumerStatefulWidget {
     this.destinationOrigin,
     this.destinationPath,
     this.sourceBackend,
+    this.protectedSources = const [],
+    this.allowBackground = true,
+    this.reviewGroup,
   });
   final PanelSide side;
   final List<FileItem> files;
@@ -67,6 +161,9 @@ class FileOperationDialog extends ConsumerStatefulWidget {
   /// Read-only snapshot source, e.g. archive members. Requires [sourceOrigin]
   /// for the original account guard. These copies finish in this dialog.
   final FileOperationBackend? sourceBackend;
+  final List<FileReference> protectedSources;
+  final bool allowBackground;
+  final String? reviewGroup;
   @override
   ConsumerState<FileOperationDialog> createState() =>
       _FileOperationDialogState();
@@ -229,6 +326,10 @@ class _FileOperationDialogState extends ConsumerState<FileOperationDialog> {
         targetDirectory: _destination.text,
         control: _control,
         options: _options(),
+        protectedDestinationPaths: [
+          for (final file in widget.protectedSources)
+            if (file.storage == destinationOrigin.storageReference) file.path,
+        ],
       );
       if (mounted) setState(() => _plan = plan);
     } catch (error) {
@@ -393,7 +494,10 @@ class _FileOperationDialogState extends ConsumerState<FileOperationDialog> {
   }
 
   Future<void> _start({bool background = false}) async {
-    if (background && widget.sourceBackend != null) return;
+    if (background &&
+        (widget.sourceBackend != null || !widget.allowBackground)) {
+      return;
+    }
     final plan = _plan;
     final sourceOrigin = _sourceOrigin;
     if (plan == null || !plan.canExecute || sourceOrigin == null) return;
@@ -484,6 +588,14 @@ class _FileOperationDialogState extends ConsumerState<FileOperationDialog> {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
+                if (widget.reviewGroup != null)
+                  Padding(
+                    padding: const EdgeInsets.only(bottom: 8),
+                    child: Text(
+                      widget.reviewGroup!,
+                      style: Theme.of(context).textTheme.titleSmall,
+                    ),
+                  ),
                 if (_sourceOrigin != null)
                   Text(
                     'From ${sourceBackend?.label ?? _sourceOrigin!.source.displayName} · original item paths',
@@ -1030,7 +1142,8 @@ class _FileOperationDialogState extends ConsumerState<FileOperationDialog> {
               onPressed: _preparing || _sourceOrigin == null ? null : _preview,
               child: const Text('Preview'),
             ),
-            if (widget.sourceBackend == null &&
+            if (widget.allowBackground &&
+                widget.sourceBackend == null &&
                 _fileConflict != FileConflictPolicy.ask &&
                 _directoryConflict != DirectoryConflictPolicy.ask)
               TextButton(

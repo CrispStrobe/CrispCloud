@@ -9,6 +9,7 @@ import 'package:path/path.dart' as p;
 
 import '../models/file_item.dart';
 import '../models/file_search_query.dart';
+import '../models/file_collection.dart';
 import '../services/file_selection_pattern.dart';
 import '../services/file_operation_backend.dart';
 import '../services/recursive_search_service.dart';
@@ -138,6 +139,9 @@ class SearchNotifier extends ChangeNotifier {
   static const _log = Log('SearchNotifier');
   final Ref _ref;
   final _resultOrigins = Expando<PanelFileOrigin>('search account origin');
+  final _resultQueries = Expando<CollectionSearch>(
+    'search definition for result',
+  );
   PanelSide _resultsSide = PanelSide.remote;
   PanelSide get resultsSide => _resultsSide;
   bool _disposed = false;
@@ -369,11 +373,17 @@ class SearchNotifier extends ChangeNotifier {
     });
     if (asFolder) {
       final panel = _ref.read(panelProvider(side));
+      final query = results.isEmpty ? null : _resultQueries[results.first];
       panel.showSearchResults(
         results,
         title: title,
         originForFile: (item) =>
             originForResult(item) ?? panel.originForOperation(item),
+        search:
+            query != null &&
+                results.every((file) => identical(_resultQueries[file], query))
+            ? query
+            : null,
       );
     }
     notifyListeners();
@@ -450,6 +460,11 @@ class SearchNotifier extends ChangeNotifier {
     try {
       final panel = _ref.read(panelProvider(_resultsSide));
       final origin = panel.captureCurrentOrigin();
+      final savedQuery = CollectionSearch(
+        storage: origin.storageReference,
+        directory: origin.source.currentPath,
+        query: query,
+      );
       final source = fileOperationBackend(
         source: origin.source,
         local: _ref.read(localFileServiceProvider),
@@ -486,6 +501,7 @@ class SearchNotifier extends ChangeNotifier {
             _searchResults[index] = file;
           }
           _recordResultOrigins([file], origin);
+          _resultQueries[file] = savedQuery;
           if (snippet.isNotEmpty) _lastSnippets[file.path!] = snippet;
           notifyListeners();
         },

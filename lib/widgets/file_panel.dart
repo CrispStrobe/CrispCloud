@@ -19,6 +19,7 @@ import 'file_grid_view.dart';
 import 'file_list_view.dart' show FileListView, PanelDragData;
 import 'file_selection_bar.dart';
 import 'file_list_dialog.dart';
+import 'file_collections_dialog.dart';
 import 'file_operation_dialog.dart';
 import '../services/file_operation_service.dart';
 import 'pattern_selection_dialog.dart';
@@ -398,7 +399,7 @@ class _FilePanelState extends ConsumerState<FilePanel> {
                   ? 'Original paths are retained. Copy, move, rename, or remove rows from this list.'
                   : 'The source account changed. Run the search or import again before file operations.',
               child: Text(
-                '${panel.fileListTitle} · ${panel.files?.length ?? 0} item(s)',
+                '${panel.fileListTitle} · ${panel.files?.length ?? 0} item(s)${panel.collectionBusy ? ' · ${panel.collectionProgress}' : ''}',
                 style: TextStyle(
                   fontSize: 12,
                   color: colors.onSecondaryContainer,
@@ -439,38 +440,95 @@ class _FilePanelState extends ConsumerState<FilePanel> {
           PopupMenuButton<String>(
             tooltip: 'File list actions',
             iconSize: 18,
-            onSelected: (value) {
-              switch (value) {
-                case 'pattern':
-                  showPatternSelectionDialog(context, ref, widget.side);
-                case 'copy':
-                  copyFileListPaths(
-                    context,
-                    ref,
-                    widget.side,
-                    selectedOnly: panel.selection.isNotEmpty,
-                  );
-                case 'export':
-                  showFileListDialog(context, ref, widget.side);
-                case 'import':
-                  showFileListDialog(
-                    context,
-                    ref,
-                    widget.side,
-                    importMode: true,
-                  );
+            onSelected: (value) async {
+              try {
+                switch (value) {
+                  case 'collections':
+                    await showFileCollectionsDialog(context, ref, widget.side);
+                  case 'refresh-items':
+                    await panel.refreshCollectionItems();
+                  case 'rerun':
+                    await panel.refreshCollectionItems(rerunSearch: true);
+                  case 'replacements':
+                    await reviewCollectionReplacements(
+                      context,
+                      ref,
+                      widget.side,
+                    );
+                  case 'pattern':
+                    showPatternSelectionDialog(context, ref, widget.side);
+                  case 'copy':
+                    copyFileListPaths(
+                      context,
+                      ref,
+                      widget.side,
+                      selectedOnly: panel.selection.isNotEmpty,
+                    );
+                  case 'export':
+                    showFileListDialog(context, ref, widget.side);
+                  case 'import':
+                    showFileListDialog(
+                      context,
+                      ref,
+                      widget.side,
+                      importMode: true,
+                    );
+                }
+              } catch (error) {
+                if (context.mounted) {
+                  ScaffoldMessenger.of(context)
+                      .showSnackBar(SnackBar(content: Text('$error')));
+                }
               }
             },
-            itemBuilder: (_) => const [
+            itemBuilder: (_) => [
+              const PopupMenuItem(
+                value: 'collections',
+                child: Text('Save / manage collections…'),
+              ),
               PopupMenuItem(
+                value: 'refresh-items',
+                enabled: !panel.collectionBusy,
+                child: const Text('Refresh original items'),
+              ),
+              PopupMenuItem(
+                value: 'rerun',
+                enabled:
+                    !panel.collectionBusy && panel.canRerunCollectionSearch,
+                child: const Text('Rerun saved search'),
+              ),
+              PopupMenuItem(
+                value: 'replacements',
+                enabled:
+                    !panel.collectionBusy &&
+                    panel.collectionReplacements.isNotEmpty,
+                child: const Text('Review replacement items…'),
+              ),
+              const PopupMenuDivider(),
+              const PopupMenuItem(
                 value: 'pattern',
                 child: Text('Select by pattern…'),
               ),
-              PopupMenuItem(value: 'copy', child: Text('Copy original paths')),
-              PopupMenuItem(value: 'export', child: Text('Export file list…')),
-              PopupMenuItem(value: 'import', child: Text('Import file list…')),
+              const PopupMenuItem(
+                value: 'copy',
+                child: Text('Copy original paths'),
+              ),
+              const PopupMenuItem(
+                value: 'export',
+                child: Text('Export file list…'),
+              ),
+              const PopupMenuItem(
+                value: 'import',
+                child: Text('Import file list…'),
+              ),
             ],
           ),
+          if (panel.collectionBusy)
+            IconButton(
+              tooltip: 'Cancel collection refresh',
+              onPressed: panel.cancelCollectionRefresh,
+              icon: const Icon(Icons.stop),
+            ),
           IconButton(
             visualDensity: VisualDensity.compact,
             iconSize: 18,

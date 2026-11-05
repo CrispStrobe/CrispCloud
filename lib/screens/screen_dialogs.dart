@@ -24,11 +24,6 @@ import '../services/file_operation_service.dart';
 import '../widgets/internal_viewer_dialog.dart'
     show InternalViewerAction, showInternalViewer;
 import '../l10n/app_localizations.dart';
-import '../l10n/image_editor_strings.dart';
-import '../services/image_edit_session.dart' show isEditableImageFileName;
-import '../services/log_service.dart';
-
-const _log = Log('ScreenDialogs');
 
 /// Explicit selection, or the cursor item when nothing is marked. This mirrors
 /// Total Commander: F5/F6/F8 operate on the item under the cursor when there

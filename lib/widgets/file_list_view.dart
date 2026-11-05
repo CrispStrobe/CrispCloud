@@ -17,6 +17,44 @@ import '../utils/formatters.dart';
 import 'file_context_menu.dart';
 import 'pattern_selection_dialog.dart';
 
+String _collectionPathLabel(FileItem file) {
+  final source = file.metadata?['collectionSource'];
+  return '${source == null ? '' : '$source · '}${file.path ?? file.name}';
+}
+
+String _collectionStatusLabel(FileItem file) {
+  final state = file.metadata?['collectionState'];
+  return switch (state) {
+    'missing' => 'Missing at original path',
+    'offline' => 'Original account unavailable',
+    'changed' => file.metadata?['collectionReplacement'] == true
+        ? 'Replacement requires review'
+        : 'Item changed since it was saved',
+    _ => '',
+  };
+}
+
+Widget _collectionStatus(BuildContext context, FileItem file) {
+  final label = _collectionStatusLabel(file);
+  final detail = file.metadata?['collectionDetail'];
+  return Tooltip(
+    message: '$label${detail == null ? '' : ': $detail'}',
+    child: Padding(
+      padding: const EdgeInsets.only(right: 4),
+      child: Icon(
+        file.metadata?['collectionState'] == 'offline'
+            ? Icons.cloud_off_outlined
+            : file.metadata?['collectionState'] == 'missing'
+            ? Icons.broken_image_outlined
+            : Icons.info_outline,
+        semanticLabel: label,
+        color: Theme.of(context).colorScheme.error,
+        size: 16,
+      ),
+    ),
+  );
+}
+
 /// Tracks modifier keys from the most recent pointer-down event.
 /// Captured at pointer-down time (before GestureDetector.onTap fires),
 /// which is more reliable on web than checking HardwareKeyboard in onTap.
@@ -367,7 +405,9 @@ class FileListTile extends ConsumerWidget {
     final type = f.isFolder ? 'Folder' : 'File';
     final size = f.isFolder ? '' : ', ${formatBytes(f.size ?? 0)}';
     final sel = selected ? ', selected' : '';
-    return '$type ${f.name}$size$sel';
+    final collection = f.metadata?['collectionSource'];
+    final status = _collectionStatusLabel(f);
+    return '$type ${f.name}$size$sel${collection == null ? '' : ', $collection, ${f.path}'}${status.isEmpty ? '' : ', $status'}';
   }
 
   @override
@@ -452,10 +492,12 @@ class FileListTile extends ConsumerWidget {
           ),
           subtitle: file.name == '..' ? null : Row(
             children: [
+              if (_collectionStatusLabel(file).isNotEmpty)
+                _collectionStatus(context, file),
               if (showRelativePath && file.path != null) ...[
                 Expanded(
                   child: Text(
-                    file.path!,
+                    _collectionPathLabel(file),
                     maxLines: 1,
                     overflow: TextOverflow.ellipsis,
                     style: (textStyle ?? const TextStyle()).copyWith(
@@ -632,7 +674,9 @@ class CompactFileTile extends ConsumerWidget {
     final semanticType = file.isFolder ? 'Folder' : 'File';
     final semanticSize = file.isFolder ? '' : ', ${sizeStr.isNotEmpty ? sizeStr : 'unknown size'}';
     final semanticSel = isSelected ? ', selected' : '';
-    final semanticLabel = '$semanticType ${file.name}$semanticSize$semanticSel';
+    final collection = file.metadata?['collectionSource'];
+    final status = _collectionStatusLabel(file);
+    final semanticLabel = '$semanticType ${file.name}$semanticSize$semanticSel${collection == null ? '' : ', $collection, ${file.path}'}${status.isEmpty ? '' : ', $status'}';
 
     return Semantics(
       label: semanticLabel,
@@ -671,12 +715,14 @@ class CompactFileTile extends ConsumerWidget {
             const SizedBox(width: 4),
             Expanded(
               child: Text(
-                showRelativePath && file.path != null ? file.path! : file.name,
+                showRelativePath && file.path != null ? _collectionPathLabel(file) : file.name,
                 style: nameStyle,
                 maxLines: 1,
                 overflow: TextOverflow.ellipsis,
               ),
             ),
+            if (_collectionStatusLabel(file).isNotEmpty)
+              _collectionStatus(context, file),
             if (showSize && sizeStr.isNotEmpty) ...[
               const SizedBox(width: 8),
               SizedBox(

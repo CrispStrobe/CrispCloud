@@ -17,6 +17,7 @@ class FileClipboardSelection {
     required this.cut,
     required this.marker,
     required this.native,
+    required this.groups,
   });
   final PanelFileOrigin origin;
   final List<FileItem> files;
@@ -24,6 +25,8 @@ class FileClipboardSelection {
   final bool cut;
   final String marker;
   final bool native;
+  final Map<PanelFileOrigin, List<FileItem>> groups;
+  bool get isCurrent => groups.keys.every((origin) => origin.isCurrent);
 }
 
 class FileClipboardNotifier extends ChangeNotifier {
@@ -36,9 +39,13 @@ class FileClipboardNotifier extends ChangeNotifier {
     NativeFileOperations native, {
     required bool cut,
   }) async {
-    final origin = panel.captureOperationOrigin(files);
+    final groups = panel.captureOperationGroups(files);
+    final origin = groups.keys.first;
     final marker = 'crispcloud://file-selection/${const Uuid().v4()}';
-    final useNative = origin.source.isLocal && NativeFileOperations.supported;
+    final useNative =
+        groups.length == 1 &&
+        origin.source.isLocal &&
+        NativeFileOperations.supported;
     if (useNative) {
       await native.writeClipboard(
         files.map((file) => file.path!).toList(),
@@ -56,6 +63,7 @@ class FileClipboardNotifier extends ChangeNotifier {
       cut: cut,
       marker: marker,
       native: useNative,
+      groups: Map.unmodifiable(groups),
     );
     notifyListeners();
   }
