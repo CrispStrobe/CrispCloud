@@ -39,7 +39,7 @@ implementation status, not a claim of universal Total/Double Commander parity.
 - [x] Batch rename history, reverse preview and complete-batch undo.
 - [x] Named collections with original source identity and missing/offline states.
 - [x] Refresh collection items separately from rerunning saved search definitions.
-- [ ] Saved tabs/bookmarks retain storage identity; selection save/restore.
+- [x] Saved tabs/bookmarks retain storage identity; selection save/restore.
 
 ## 3. Rename and selection completion
 
@@ -58,7 +58,7 @@ implementation status, not a claim of universal Total/Double Commander parity.
 - [x] Additional size/date/content decisions and filter templates.
 - [x] Native and provider-side exact-destination fast paths with completion checks.
 - [x] Safe empty-directory cleanup and empty-result exclusion.
-- [ ] Capability-based metadata, link, allocation and copy-on-write behavior.
+- [x] Capability-based metadata, link, allocation and copy-on-write behavior.
 - [x] Separate data-copy and metadata-failure outcomes.
 
 ## 5. Recovery, queue and scale
@@ -78,7 +78,7 @@ implementation status, not a claim of universal Total/Double Commander parity.
 - [x] Native file clipboard copy/cut/paste integration.
 - [x] Selected-file viewer navigation, reload/tail and remote read capabilities.
 - [ ] Functional custom-command configuration/execution and extension lifecycle.
-- [ ] Tab groups/locks, paired source-aware locations and column profiles.
+- [x] Tab groups/locks, paired source-aware locations and column profiles.
 - [x] Checksum/split manifests, missing-part checks and cancellation.
 - [ ] Keyboard/accessibility/localization completion for the added workflows.
 
@@ -101,12 +101,17 @@ implementation status, not a claim of universal Total/Double Commander parity.
   rename pipelines/cycles/history, persistent collections, branch/search/selection,
   transfer profiles/decisions, durable queue/recovery, clipboard, viewer playlist/
   tail, checksums and verified split/combine are integrated and pushed.
-- Tab lock/order/label/source snapshots are integrated; named groups, paired
-  bookmarks, profiles, custom commands and extension lifecycle are in progress.
-- Native allocation/copy-on-write, bounded planning and the remaining legacy
-  adapter streams are in progress. Conditional object-store staging and bounded
-  Drive/Dropbox/WebDAV stream checkpoints are integrated.
-- Commander localization/accessibility is in progress. Final broad tests, web
-  build and platform CI follow integration.
+- Tab lock/order/label/source snapshots, named groups, paired bookmarks, editable
+  column/view profiles and their managers are integrated. Custom command editing,
+  review and bounded execution are integrated; extension lifecycle and the active
+  file-panel command bar are in progress.
+- Native allocation/copy-on-write and cancellable bounded planning are integrated.
+  Conditional object-store staging, Drive/Dropbox/WebDAV bounded streams, dedicated
+  FTP/FTPS transfer sessions and disk/OPFS spooling are integrated. The remaining
+  pCloud/B2 streams and persisted S3 session binding are in progress.
+- Rename, selection, lists, transfer/recovery and workspace screens are localized
+  across all nine app languages, with narrow German/Arabic layout regressions.
+  Viewer/archive/comparison/integrity menus and extension UI are being finished.
+  Final broad tests, web build and platform CI follow integration.
 - Parallel lanes use isolated worktrees. Finished checkpoints are integrated and
   pushed separately. Unchecked items are not represented as complete.
