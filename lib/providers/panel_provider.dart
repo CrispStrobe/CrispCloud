@@ -2879,22 +2879,27 @@ class PanelNotifier extends ChangeNotifier {
     _log.info('createFolder: $name in $currentPath');
     final audit = _ref.read(auditServiceProvider);
     final actionHistory = _ref.read(actionHistoryProvider.notifier);
-    final isLocalSource =
-        _ref.read(panelSourceProvider(side)).isLocal || side == PanelSide.local;
-    final providerName = isLocalSource
-        ? 'local'
-        : _ref.read(authProvider).client.providerName;
-    final folderPath = isLocalSource
-        ? p.posix.join(currentPath, name)
-        : p.posix.join(_remotePath, name);
+    var providerName = 'unknown';
+    var folderPath = name;
     try {
-      if (isLocalSource && kIsWeb) {
-        await _localFileService.createDirectory(folderPath);
-      } else if (isLocalSource) {
-        await Directory(p.join(currentPath, name)).create();
-      } else {
-        final client = _ref.read(authProvider).client;
-        await client.createFolderPath(p.posix.join(_remotePath, name));
+      if (_showingSearchResults) {
+        throw StateError('Open a real directory before creating a folder.');
+      }
+      final origin = captureCurrentOrigin();
+      final source = origin.source;
+      providerName = source is RemotePanelSource
+          ? source.providerName
+          : 'local';
+      final backend = fileOperationBackend(
+        source: source,
+        local: _localFileService,
+        isCurrent: () => origin.isCurrent,
+      );
+      final createdPath = backend.paths.join(source.currentPath, name);
+      folderPath = createdPath;
+      await backend.createDirectory(createdPath);
+      if (!origin.isCurrent) {
+        throw StateError('The storage account changed while creating the folder.');
       }
       await audit.logSuccess(
         operation: AuditOperation.createFolder,
@@ -2905,12 +2910,25 @@ class PanelNotifier extends ChangeNotifier {
         type: ActionType.createFolder,
         originalPath: folderPath,
         provider: providerName,
-        metadata: {'name': name},
+        metadata: {'name': name, 'storage': origin.storageReference.toJson()},
+        // Undo must use the same captured account and must never fall back to
+        // deleting a remote directory recursively through the active client.
+        isCurrent: () =>
+            origin.isCurrent && backend.capabilities.deleteEmptyDirectory,
+        undoAction: () async {
+          if (!origin.isCurrent) {
+            return const UndoResult.failure('The storage account changed.');
+          }
+          await backend.deleteEmptyDirectory(createdPath);
+          return UndoResult.success('Deleted folder $name.');
+        },
       );
       await refresh();
     } catch (e) {
       _log.warn('operation failed', e);
-      _ref.read(errorProvider).addError('Create folder failed: $e');
+      if (!_isDisposed) {
+        _ref.read(errorProvider).addError('Create folder failed: $e');
+      }
       await audit.logError(
         operation: AuditOperation.createFolder,
         sourcePath: folderPath,

@@ -138,10 +138,12 @@ class FileCollectionService {
         CollectionItemState state,
         String reason, {
         bool replacement = false,
-        FileItem? file,
       }) => FileCollectionEntry(
         reference: reference,
-        file: file ?? entry.file,
+        // Preserve the original snapshot until a replacement is accepted.
+        // Otherwise a type-only replacement becomes the comparison baseline
+        // and a second refresh silently verifies it without consent.
+        file: entry.file,
         state: state,
         detail: reason,
         replacement: replacement,
@@ -204,7 +206,6 @@ class FileCollectionService {
                   CollectionItemState.changed,
                   'A different item now occupies this path. Review and accept it before operating.',
                   replacement: true,
-                  file: current,
                 ),
               );
             } else {

@@ -142,6 +142,54 @@ void main() {
     },
   );
 
+  test(
+    'a type-only replacement stays blocked after refresh and persistence',
+    () async {
+      final backend = _Backend()
+        ..items['/same'] = FileItem(
+          name: 'same',
+          path: '/same',
+          isFolder: true,
+        );
+      final original = FileCollectionService.capture(file('/same'), a);
+      expect(original.reference.objectId, isNull);
+      final blocked = await service.refresh(
+        collection([original]),
+        (_, _) => backend,
+      );
+      expect(blocked.verifiedKeys, isEmpty);
+      expect(blocked.collection.entries.single.replacement, isTrue);
+      expect(blocked.collection.entries.single.file, same(original.file));
+
+      final repeated = await service.refresh(
+        blocked.collection,
+        (_, _) => backend,
+      );
+      expect(repeated.verifiedKeys, isEmpty);
+      expect(repeated.collection.entries.single.replacement, isTrue);
+      expect(repeated.collection.entries.single.file.isFolder, isFalse);
+
+      final restored = FileCollection.fromJson(
+        jsonDecode(jsonEncode(repeated.collection.toJson()))
+            as Map<String, dynamic>,
+      );
+      final reopened = await service.refresh(restored, (_, _) => backend);
+      expect(reopened.verifiedKeys, isEmpty);
+      expect(reopened.collection.entries.single.replacement, isTrue);
+      expect(reopened.collection.entries.single.file.isFolder, isFalse);
+
+      final accepted = await service.refresh(
+        reopened.collection,
+        (_, _) => backend,
+        acceptReplacements: true,
+      );
+      expect(accepted.verifiedKeys, {original.key});
+      expect(accepted.collection.entries.single.file.isFolder, isTrue);
+      expect(accepted.collection.entries.single.replacement, isFalse);
+      expect(original.file.isFolder, isFalse);
+    },
+  );
+
   test('metadata changes are visible and path-valued provider IDs are not opaque identities', () async {
     final backend = _Backend()
       ..items['/same'] = file('/same', id: '/same', size: 9);

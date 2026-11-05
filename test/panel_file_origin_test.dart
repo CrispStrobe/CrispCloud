@@ -51,7 +51,9 @@ class _Cloud extends Fake implements CloudStorageClient {
   }
 
   Completer<Map<String, dynamic>>? pending;
+  Completer<void>? pendingCreate;
   final paths = <String>[];
+  final createdPaths = <String>[];
 
   static Map<String, dynamic> get listing => {
     'folders': <Map<String, dynamic>>[],
@@ -64,6 +66,26 @@ class _Cloud extends Fake implements CloudStorageClient {
   Future<Map<String, dynamic>> listPath(String path) async {
     paths.add(path);
     return pending == null ? listing : await pending!.future;
+  }
+
+  @override
+  Future<void> createFolderPath(String path) async {
+    createdPaths.add(path);
+    await pendingCreate?.future;
+  }
+}
+
+class _WritableCloud extends _Cloud with CloudTransferOperations {
+  _WritableCloud(super.providerName, {super.accountId});
+  final deletedEmptyPaths = <String>[];
+
+  @override
+  StorageTransferCapabilities get transferCapabilities =>
+      const StorageTransferCapabilities(deleteEmptyDirectory: true);
+
+  @override
+  Future<void> deleteDirectoryIfEmpty(String path) async {
+    deletedEmptyPaths.add(path);
   }
 }
 
@@ -385,6 +407,98 @@ void main() {
       expect(actual.paths.last, '/saved');
     },
   );
+
+  for (final side in PanelSide.values) {
+    test(
+      'new folder and undo keep the captured secondary account in ${side.name} pane',
+      () async {
+        final other = _WritableCloud(
+          actual.providerName,
+          accountId: 'account-b',
+        );
+        container.read(multiCloudProvider).addConnection(
+          id: 'second',
+          label: 'Second account',
+          provider: CloudProvider.s3,
+          client: other,
+        );
+        final panel = container.read(panelProvider(side));
+        await Future<void>.delayed(Duration.zero);
+        container.read(panelSourceProvider(side).notifier).setSource(
+          RemotePanelSource(
+            providerName: other.providerName,
+            client: other,
+            path: '/documents',
+          ),
+        );
+        await Future<void>.delayed(Duration.zero);
+        await panel.refresh();
+        final original = panel.captureCurrentOrigin();
+
+        other.pendingCreate = Completer<void>();
+        final pending = panel.createFolder('new-folder');
+        await Future<void>.delayed(Duration.zero);
+        expect(other.createdPaths, ['/documents/new-folder']);
+        expect(actual.createdPaths, isEmpty);
+        container.read(panelSourceProvider(side).notifier).setSource(
+          RemotePanelSource(
+            providerName: actual.providerName,
+            client: actual,
+            path: '/elsewhere',
+          ),
+        );
+        await Future<void>.delayed(Duration.zero);
+        await panel.refresh();
+        other.pendingCreate!.complete();
+        await pending;
+
+        final history = container.read(actionHistoryProvider);
+        final action = history.lastAction!;
+        expect(action.originalPath, '/documents/new-folder');
+        expect(action.metadata['storage'], original.storageReference.toJson());
+        expect(history.canUndo(action), isTrue);
+        final fallbackDeletes = <String>[];
+        final undone = await history.undo(
+          action.id,
+          UndoContext(remoteDelete: (path) async => fallbackDeletes.add(path)),
+        );
+        expect(undone.success, isTrue);
+        expect(other.deletedEmptyPaths, ['/documents/new-folder']);
+        expect(fallbackDeletes, isEmpty);
+        expect(actual.createdPaths, isEmpty);
+      },
+    );
+  }
+
+  test('new folder rejects virtual lists without mutating their source', () async {
+    final panel = container.read(panelProvider(PanelSide.remote));
+    await panel.refresh();
+    panel.showSearchResults(
+      panel.files!,
+      origin: panel.captureCurrentOrigin(),
+    );
+    await panel.createFolder('not-a-list-item');
+    expect(actual.createdPaths, isEmpty);
+    expect(container.read(actionHistoryProvider).history, isEmpty);
+    expect(container.read(errorProvider).lastError, contains('real directory'));
+  });
+
+  test('new folder undo requires safe empty-directory deletion', () async {
+    final panel = container.read(panelProvider(PanelSide.remote));
+    await panel.refresh();
+    await panel.createFolder('new-folder');
+    expect(actual.createdPaths, ['/new-folder']);
+    final history = container.read(actionHistoryProvider);
+    final action = history.lastAction!;
+    expect(history.canUndo(action), isFalse);
+    final fallbackDeletes = <String>[];
+    final result = await history.undo(
+      action.id,
+      UndoContext(remoteDelete: (path) async => fallbackDeletes.add(path)),
+    );
+    expect(result.success, isFalse);
+    expect(fallbackDeletes, isEmpty);
+  });
 
   test('secondary sessions work without primary login and old origins stay invalid after reconnect', () async {
     final other = _Cloud('Secondary', accountId: 'account-b');

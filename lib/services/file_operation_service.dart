@@ -945,7 +945,7 @@ class FileOperationService {
                 replace: replace,
                 checkpoint: (state) async {
                   for (final key in [
-                    'stagingPath',
+                    'stagedPath',
                     'backupPath',
                     'destination',
                   ]) {
