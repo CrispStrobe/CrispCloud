@@ -25,4 +25,10 @@ void main() {
     await prefs.setString(LocalePreference.key, 'invalid');
     expect(await LocalePreference.read(), isNull);
   });
+  test('migrates the previous locale and respects a later system choice', () async {
+    SharedPreferences.setMockInitialValues({'app_locale': 'de-DE'});
+    expect(await LocalePreference.read(), const Locale('de'));
+    await LocalePreference.write(null);
+    expect(await LocalePreference.read(), isNull);
+  });
 }

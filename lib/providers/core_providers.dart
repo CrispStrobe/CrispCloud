@@ -44,8 +44,8 @@ final localeProvider =
     StateNotifierProvider<LocaleNotifier, Locale?>((ref) => LocaleNotifier());
 
 class LocaleNotifier extends StateNotifier<Locale?> {
-  LocaleNotifier() : super(null) {
-    _load();
+  LocaleNotifier({Locale? initialLocale, bool load = true}) : super(initialLocale) {
+    if (load) _load();
   }
 
   static const _prefsKey = 'app_locale';

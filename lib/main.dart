@@ -185,7 +185,7 @@ Future<void> main() async {
       final savedLocale = await LocalePreference.read();
       runApp(ProviderScope(
         overrides: [
-          localeProvider.overrideWith((ref) => savedLocale),
+          localeProvider.overrideWith((ref) => LocaleNotifier(initialLocale: savedLocale, load: false)),
           secureStorageProvider.overrideWithValue(secureStorage),
           configPathProvider.overrideWithValue(configPath),
           proxyServiceProvider.overrideWithValue(proxyService),

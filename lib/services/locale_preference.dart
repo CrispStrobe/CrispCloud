@@ -14,7 +14,8 @@ class LocalePreference {
     try {
       final prefs = await SharedPreferences.getInstance();
       if (refresh) await prefs.reload();
-      final code = prefs.getString(key);
+      final stored = prefs.getString(key) ?? prefs.getString('app_locale');
+      final code = stored?.split(RegExp(r'[-_]')).first;
       return code != null && supported.contains(code) ? Locale(code) : null;
     } catch (_) {
       // Preferences are optional: startup and background sync use system locale.
@@ -29,7 +30,9 @@ class LocalePreference {
         final prefs = await SharedPreferences.getInstance();
         final code = locale?.languageCode;
         if (code == null || !supported.contains(code)) {
-          await prefs.remove(key);
+          // Keep an explicit system choice so an older preference cannot
+          // resurrect a previously selected language during migration.
+          await prefs.setString(key, 'system');
         } else {
           await prefs.setString(key, code);
         }
