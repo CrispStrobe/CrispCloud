@@ -1,3 +1,4 @@
+import '../models/storage_reference.dart';
 // lib/services/ftp_client_adapter.dart
 import 'dart:io';
 import 'package:ftpconnect/ftpconnect.dart';
@@ -9,7 +10,10 @@ import 'ftp_config_service.dart';
 import 'log_service.dart';
 import 'secure_storage_service.dart';
 
-class FTPClientAdapter extends CloudStorageClient {
+class FTPClientAdapter extends CloudStorageClient implements StorageNamespaceIdentity {
+  @override
+  String get storageNamespace => '${_host ?? ''}:$_port';
+
   static const _log = Log('FTPClient');
 
   final FTPConfigService _config;

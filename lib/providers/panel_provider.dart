@@ -17,6 +17,9 @@ import '../models/file_item.dart';
 import '../models/panel_side.dart';
 import '../models/panel_tab.dart';
 import '../models/sort.dart';
+import '../models/storage_reference.dart';
+import '../services/captured_file_target.dart';
+import '../services/storage_identity.dart';
 import '../services/archive_service.dart';
 import '../services/archive_viewer_service.dart';
 import '../services/audit_service.dart';
@@ -44,13 +47,17 @@ export '../models/sort.dart';
 /// The storage source that actually produced a listed file, captured before
 /// the listing request. It is independent of the pane's label or dropdown.
 class PanelFileOrigin {
-  const PanelFileOrigin._(this.source, this._isCurrent);
+  PanelFileOrigin._(this.source, this._isCurrent)
+    : storageReference = storageReferenceForSource(source);
 
   final PanelSource source;
   final bool Function() _isCurrent;
 
   /// Remains false after the captured account disconnects or changes.
   bool get isCurrent => _isCurrent();
+
+  final StorageReference storageReference;
+  String get storageId => storageReference.id;
 }
 
 class PanelNotifier extends ChangeNotifier {
@@ -674,6 +681,57 @@ class PanelNotifier extends ChangeNotifier {
       return null;
     }
     return origin;
+  }
+
+  /// Capture once when an editor opens, including verified collection rows.
+  /// Later tab/account changes never choose a new save destination.
+  CapturedFileTarget captureFileTarget(
+    FileItem file, {
+    int maxBytes = 64 * 1024 * 1024,
+  }) {
+    final origin = originForOperation(file);
+    if (origin == null || file.isFolder) {
+      throw StateError(
+        'Refresh or reopen the original file before editing. Its storage could not be verified.',
+      );
+    }
+    final source = origin.source;
+    final path =
+        file.path ??
+        (source.isLocal && !kIsWeb
+            ? p.join(source.currentPath, file.name)
+            : p.posix.join(source.currentPath, file.name));
+    final original = file.copyWith(path: path);
+    final reference = FileReference(
+      storage: origin.storageReference,
+      path: path,
+      objectId: file.uuid,
+      version:
+          (file.metadata?['etag'] ??
+                  file.metadata?['versionId'] ??
+                  file.metadata?['revision'])
+              ?.toString(),
+    );
+    if (source is LocalPanelSource) {
+      return CapturedFileTarget.local(
+        reference: reference,
+        service: _localFileService,
+        file: original,
+        isCurrent: () => origin.isCurrent,
+        maxBytes: maxBytes,
+      );
+    }
+    if (source is RemotePanelSource) {
+      return CapturedFileTarget.remote(
+        reference: reference,
+        client: source.client,
+        cache: _ref.read(fileCacheProvider),
+        file: original,
+        isCurrent: () => origin.isCurrent,
+        maxBytes: maxBytes,
+      );
+    }
+    throw UnsupportedError('Extract this file before editing it.');
   }
 
   /// Pin all selected items to one storage/account snapshot before mutation.

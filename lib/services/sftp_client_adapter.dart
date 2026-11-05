@@ -1,3 +1,4 @@
+import '../models/storage_reference.dart';
 import 'package:crisp_storage/crisp_storage.dart'
     show
         SshKnownHosts,
@@ -20,7 +21,10 @@ import 'log_service.dart';
 import 'secure_storage_service.dart';
 import 'sftp_config_service.dart';
 
-class SFTPClientAdapter extends CloudStorageClient {
+class SFTPClientAdapter extends CloudStorageClient implements StorageNamespaceIdentity {
+  @override
+  String get storageNamespace => '${_host ?? ''}:$_port';
+
   static const _log = Log('SFTPClient');
 
   final SFTPConfigService _config;

@@ -1,3 +1,5 @@
+import '../models/storage_reference.dart';
+import 'storage_identity.dart';
 // lib/services/encrypted_storage_wrapper.dart
 import 'dart:io';
 import 'dart:typed_data';
@@ -25,7 +27,10 @@ import 'web_crypto_factory_io.dart'
 ///   encryptionKey: key,
 /// );
 /// ```
-class EncryptedStorageWrapper implements CloudStorageClient {
+class EncryptedStorageWrapper implements CloudStorageClient, StorageNamespaceIdentity {
+  @override
+  String get storageNamespace => 'encrypted:${storageReferenceForClient(_inner).id}';
+
   final CloudStorageClient _inner;
   final Uint8List _key;
 

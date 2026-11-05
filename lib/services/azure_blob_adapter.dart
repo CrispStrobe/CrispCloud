@@ -1,3 +1,4 @@
+import '../models/storage_reference.dart';
 // lib/services/azure_blob_adapter.dart
 //
 // Azure Blob Storage provider adapter.
@@ -63,7 +64,10 @@ extension AzureBlobTierName on AzureBlobTier {
 // AzureBlobAdapter
 // ────────────────────────────────────────────────────────────────────────────
 
-class AzureBlobAdapter extends CloudStorageClient {
+class AzureBlobAdapter extends CloudStorageClient implements StorageNamespaceIdentity {
+  @override
+  String get storageNamespace => '${_accountName ?? ''}|${_container ?? ''}';
+
   static const _log = Log('AzureBlob');
 
   /// Azure REST API version used in every request.

@@ -1,3 +1,4 @@
+import '../models/storage_reference.dart';
 // lib/services/s3_client_adapter.dart
 //
 // S3-compatible cloud storage adapter. Works with AWS S3, MinIO, Backblaze B2,
@@ -112,7 +113,10 @@ extension S3StorageClassX on S3StorageClass {
   }
 }
 
-class S3ClientAdapter extends CloudStorageClient {
+class S3ClientAdapter extends CloudStorageClient implements StorageNamespaceIdentity {
+  @override
+  String get storageNamespace => '${_endpoint ?? ''}|${_region ?? ''}|${_bucket ?? ''}';
+
   static const _log = Log('S3Client');
   final S3ConfigService _config;
 

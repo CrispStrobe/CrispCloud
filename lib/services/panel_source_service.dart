@@ -65,8 +65,7 @@ class LocalPanelSource extends PanelSource {
 
   @override
   bool operator ==(Object other) =>
-      identical(this, other) ||
-      other is LocalPanelSource && other.path == path;
+      identical(this, other) || other is LocalPanelSource && other.path == path;
 
   @override
   int get hashCode => Object.hash('local', path);
@@ -92,18 +91,15 @@ class RemotePanelSource extends PanelSource {
   String get currentPath => path;
 
   @override
-  RemotePanelSource withPath(String path) => RemotePanelSource(
-        providerName: providerName,
-        client: client,
-        path: path,
-      );
+  RemotePanelSource withPath(String path) =>
+      RemotePanelSource(providerName: providerName, client: client, path: path);
 
   @override
   Map<String, dynamic> toJson() => {
-        'type': 'remote',
-        'providerName': providerName,
-        'path': path,
-      };
+    'type': 'remote',
+    'providerName': providerName,
+    'path': path,
+  };
 
   @override
   String toString() => 'RemotePanelSource($providerName, $path)';
@@ -112,11 +108,13 @@ class RemotePanelSource extends PanelSource {
   bool operator ==(Object other) =>
       identical(this, other) ||
       other is RemotePanelSource &&
+          identical(other.client, client) &&
           other.providerName == providerName &&
           other.path == path;
 
   @override
-  int get hashCode => Object.hash('remote', providerName, path);
+  int get hashCode =>
+      Object.hash('remote', providerName, identityHashCode(client), path);
 }
 
 // --------------- Archive -----------------------------------------------------
@@ -151,18 +149,18 @@ class ArchivePanelSource extends PanelSource {
 
   @override
   ArchivePanelSource withPath(String path) => ArchivePanelSource(
-        archivePath: archivePath,
-        innerPath: path,
-        parent: parent,
-      );
+    archivePath: archivePath,
+    innerPath: path,
+    parent: parent,
+  );
 
   @override
   Map<String, dynamic> toJson() => {
-        'type': 'archive',
-        'archivePath': archivePath,
-        'innerPath': innerPath,
-        'parent': parent.toJson(),
-      };
+    'type': 'archive',
+    'archivePath': archivePath,
+    'innerPath': innerPath,
+    'parent': parent.toJson(),
+  };
 
   @override
   String toString() => 'ArchivePanelSource($archivePath, inner=$innerPath)';
@@ -213,24 +211,23 @@ class ContainerPanelSource extends PanelSource {
 
   @override
   ContainerPanelSource withPath(String path) => ContainerPanelSource(
-        containerPath: containerPath,
-        innerPath: path,
-        parent: parent,
-        unlockSession: unlockSession,
-      );
+    containerPath: containerPath,
+    innerPath: path,
+    parent: parent,
+    unlockSession: unlockSession,
+  );
 
   @override
   Map<String, dynamic> toJson() => {
-        'type': 'container',
-        'containerPath': containerPath,
-        'innerPath': innerPath,
-        'parent': parent.toJson(),
-        // unlockSession is intentionally omitted (ephemeral / sensitive)
-      };
+    'type': 'container',
+    'containerPath': containerPath,
+    'innerPath': innerPath,
+    'parent': parent.toJson(),
+    // unlockSession is intentionally omitted (ephemeral / sensitive)
+  };
 
   @override
-  String toString() =>
-      'ContainerPanelSource($containerPath, inner=$innerPath)';
+  String toString() => 'ContainerPanelSource($containerPath, inner=$innerPath)';
 
   @override
   bool operator ==(Object other) =>
@@ -248,7 +245,16 @@ class ContainerPanelSource extends PanelSource {
 // ---------------------------------------------------------------------------
 
 /// Extensions treated as browsable compressed archives.
-const _archiveExtensions = {'.zip', '.tar', '.tar.gz', '.tgz', '.tar.bz2', '.tbz2', '.7z', '.rar'};
+const _archiveExtensions = {
+  '.zip',
+  '.tar',
+  '.tar.gz',
+  '.tgz',
+  '.tar.bz2',
+  '.tbz2',
+  '.7z',
+  '.rar',
+};
 
 /// Filenames / extensions treated as encrypted containers.
 const _containerExtensions = {'.vc', '.hc'};
@@ -270,11 +276,7 @@ class PanelSourceService {
     CloudStorageClient client,
     String path,
   ) =>
-      RemotePanelSource(
-        providerName: providerName,
-        client: client,
-        path: path,
-      );
+      RemotePanelSource(providerName: providerName, client: client, path: path);
 
   // ---- Archive navigation ---------------------------------------------------
 
@@ -284,12 +286,11 @@ class PanelSourceService {
   ArchivePanelSource enterArchive(
     String archivePath,
     PanelSource parentSource,
-  ) =>
-      ArchivePanelSource(
-        archivePath: archivePath,
-        innerPath: '',
-        parent: parentSource,
-      );
+  ) => ArchivePanelSource(
+    archivePath: archivePath,
+    innerPath: '',
+    parent: parentSource,
+  );
 
   /// Unlock and enter an encrypted container.
   ///
@@ -354,11 +355,13 @@ class PanelSourceService {
   Future<List<FileItem>> _listRemote(RemotePanelSource source) async {
     try {
       final result = await source.client.listPath(source.path);
-      final folders = (result['folders'] as List<dynamic>?)
+      final folders =
+          (result['folders'] as List<dynamic>?)
               ?.map((m) => _folderItemFromMap(m as Map<String, dynamic>))
               .toList() ??
           [];
-      final files = (result['files'] as List<dynamic>?)
+      final files =
+          (result['files'] as List<dynamic>?)
               ?.map((m) => _fileItemFromMap(m as Map<String, dynamic>))
               .toList() ??
           [];
@@ -451,19 +454,21 @@ class PanelSourceService {
   // ---- Private helpers ------------------------------------------------------
 
   static FileItem _folderItemFromMap(Map<String, dynamic> m) => FileItem(
-        name: m['name'] as String? ?? 'Unknown',
-        isFolder: true,
-        uuid: m['uuid'] as String?,
-        updatedAt: _parseDate(m['modificationTime'] ?? m['lastModified']),
-      );
+    name: m['name'] as String? ?? 'Unknown',
+    isFolder: true,
+    uuid: m['uuid'] as String?,
+    updatedAt: _parseDate(m['modificationTime'] ?? m['lastModified']),
+  );
 
   static FileItem _fileItemFromMap(Map<String, dynamic> m) {
     final rawName = m['name'] as String? ?? 'Unknown';
     final rawType = (m['fileType'] ?? m['type'] ?? '').toString().toLowerCase();
     final fullName =
-        (rawType.isNotEmpty && rawType != 'file' && !rawName.toLowerCase().endsWith('.$rawType'))
-            ? '$rawName.$rawType'
-            : rawName;
+        (rawType.isNotEmpty &&
+            rawType != 'file' &&
+            !rawName.toLowerCase().endsWith('.$rawType'))
+        ? '$rawName.$rawType'
+        : rawName;
     return FileItem(
       name: fullName,
       isFolder: false,
@@ -492,7 +497,10 @@ class PanelSourceService {
 class _ContainerSession {
   final String containerPath;
   final DateTime openedAt;
-  const _ContainerSession({required this.containerPath, required this.openedAt});
+  const _ContainerSession({
+    required this.containerPath,
+    required this.openedAt,
+  });
 }
 
 /// Thin wrapper so [_listLocal] can be tested without dart:io on web.
@@ -517,13 +525,15 @@ class _DartIoDirectory {
           final stat = await entity.stat();
           final type = stat.type.toString();
           final isFolder = type.contains('directory');
-          items.add(FileItem(
-            name: name,
-            path: ep,
-            isFolder: isFolder,
-            size: isFolder ? null : (stat.size as int?),
-            updatedAt: stat.modified as DateTime?,
-          ));
+          items.add(
+            FileItem(
+              name: name,
+              path: ep,
+              isFolder: isFolder,
+              size: isFolder ? null : (stat.size as int?),
+              updatedAt: stat.modified as DateTime?,
+            ),
+          );
         } catch (_) {
           continue;
         }
