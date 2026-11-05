@@ -3,6 +3,11 @@ import 'dart:typed_data';
 /// Filesystem semantics are independent of a pane's position or provider label.
 enum StorageCaseSensitivity { sensitive, insensitive, unknown }
 
+/// Object keys form a flat namespace. Displayed folders are prefixes, and a
+/// rename requires individually tracked copy/delete operations rather than a
+/// native directory move. This marker never implies conditional-write support.
+abstract interface class ObjectStorageNamespace {}
+
 /// Conservative capabilities of a connection. An absent capability never
 /// authorizes an operation by emulating it with a more destructive operation.
 class StorageTransferCapabilities {

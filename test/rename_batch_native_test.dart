@@ -139,4 +139,52 @@ void main() {
     );
     expect(await target.readAsString(), 'target remains');
   }, skip: !supportsNativeExclusiveRename || Platform.isWindows);
+
+  test(
+    'native nested folder and child restore preserves content preconditions',
+    () async {
+      final folder = await Directory(p.join(directory.path, 'folder')).create();
+      await File(p.join(folder.path, 'child.txt'))
+          .writeAsString('original content');
+      final service = RenameBatchService(MemoryRenameBatchStore());
+      final record = await service.prepare(
+        await makePlan({'folder': 'renamed', 'folder/child.txt': 'new.txt'}),
+        storage,
+      );
+      await service.run(record, storage);
+      expect(record.isComplete, isTrue);
+      await service.restore(record, storage);
+      expect(record.isRestored, isTrue);
+      expect(
+        await File(p.join(folder.path, 'child.txt')).readAsString(),
+        'original content',
+      );
+    },
+    skip: !supportsNativeExclusiveRename,
+  );
+
+  test(
+    'a replaced native directory cannot be restored under the original name',
+    () async {
+      final folder = await Directory(p.join(directory.path, 'folder')).create();
+      await File(p.join(folder.path, 'child.txt'))
+          .writeAsString('original content');
+      final service = RenameBatchService(MemoryRenameBatchStore());
+      final record = await service.prepare(
+        await makePlan({'folder': 'renamed'}),
+        storage,
+      );
+      await service.run(record, storage);
+      final renamed = Directory(p.join(directory.path, 'renamed'));
+      await renamed.delete(recursive: true);
+      await renamed.create();
+      await File(p.join(renamed.path, 'different.txt'))
+          .writeAsString('replacement');
+      await service.restore(record, storage);
+      expect(record.isRestored, isFalse);
+      expect(await renamed.exists(), isTrue);
+      expect(await folder.exists(), isFalse);
+    },
+    skip: !supportsNativeExclusiveRename,
+  );
 }

@@ -41,7 +41,8 @@ const int _defaultPartSize = 10 * 1024 * 1024; // 10 MB
 /// Maximum number of auto-retries on 429 / 503.
 const int _maxRetries = 5;
 
-class B2ClientAdapter extends CloudStorageClient {
+class B2ClientAdapter extends CloudStorageClient
+    implements ObjectStorageNamespace {
   static const _log = Log('B2Client');
 
   final B2ConfigService _config;

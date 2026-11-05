@@ -410,22 +410,25 @@ class MultiRenameService {
       var newName = file.name;
       if (errors.isEmpty) {
         try {
-          for (var stepIndex = 0; stepIndex < steps.length; stepIndex++) {
-            final current = file.copyWith(
-              name: newName,
-              path: paths.join(paths.dirname(source), newName),
-            );
-            newName = _transform(
-              current,
-              index,
-              steps[stepIndex],
-              patterns[stepIndex],
-              current.path!,
-              paths,
-              capturedTime,
-            );
+          if (targetNames.containsKey(source)) {
+            newName = targetNames[source]!;
+          } else {
+            for (var stepIndex = 0; stepIndex < steps.length; stepIndex++) {
+              final current = file.copyWith(
+                name: newName,
+                path: paths.join(paths.dirname(source), newName),
+              );
+              newName = _transform(
+                current,
+                index,
+                steps[stepIndex],
+                patterns[stepIndex],
+                current.path!,
+                paths,
+                capturedTime,
+              );
+            }
           }
-          newName = targetNames[source] ?? newName;
           if (newName != file.name) {
             final invalid = validateName(newName);
             if (invalid != null) problems.add(invalid);
@@ -596,6 +599,8 @@ class MultiRenameService {
             (row) =>
                 row.changed &&
                 (key(row.sourcePath) == key(row.targetPath) ||
+                    row.sourcePath.toLowerCase() ==
+                        row.targetPath.toLowerCase() ||
                     rows.any(
                       (other) =>
                           !identical(row, other) &&

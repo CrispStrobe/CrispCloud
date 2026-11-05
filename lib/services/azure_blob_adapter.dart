@@ -68,7 +68,7 @@ extension AzureBlobTierName on AzureBlobTier {
 
 class AzureBlobAdapter extends CloudStorageClient
     with CloudTransferOperations
-    implements StorageNamespaceIdentity {
+    implements StorageNamespaceIdentity, ObjectStorageNamespace {
   @override
   String get storageNamespace => '${_accountName ?? ''}|${_container ?? ''}';
 
