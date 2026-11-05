@@ -338,6 +338,123 @@ void main() {
     },
   );
 
+  test('completion updates the saved source list without changing same-path rows in another storage', () async {
+    final panel = await remote();
+    panel.showSearchResults([
+      item('/one/same.txt'),
+      item('/two/same.txt'),
+    ], origin: panel.captureRemoteSearchOrigin());
+    panel.selectAll();
+    final originalTab = panel.activeTabId;
+    final operationOrigin = panel.captureOperationOrigin(panel.files!);
+    panel.addTab(path: '/two');
+    await panel.refresh();
+    container
+        .read(panelSourceProvider(PanelSide.remote).notifier)
+        .setSource(const LocalPanelSource('/local'));
+    await panel.refresh();
+    final localOrigin = panel.captureCurrentOrigin();
+    expect(localOrigin.source, isA<LocalPanelSource>());
+    panel.showSearchResults([
+      item('/one/same.txt'),
+      item('/two/same.txt'),
+    ], origin: localOrigin);
+    panel.selectAll();
+    final localTab = panel.activeTabId;
+    final localRows = List<FileItem>.of(panel.files!);
+
+    expect(operationOrigin.isCurrent, isTrue);
+    panel.applyFileListChanges({
+      '/one/same.txt': null,
+      '/two/same.txt': item('/two/renamed.txt'),
+    }, origin: operationOrigin);
+
+    expect(panel.files, localRows);
+    expect(panel.selection.length, 2);
+    panel.selectTab(originalTab);
+    expect(panel.files!.single.path, '/two/renamed.txt');
+    expect(panel.selection.single.path, '/two/renamed.txt');
+    expect(
+      panel.captureOperationOrigin(panel.files!).source,
+      isA<RemotePanelSource>(),
+    );
+    panel.selectTab(localTab);
+    expect(panel.files, localRows);
+    expect(panel.selection.length, 2);
+  });
+
+  test(
+    'completion updates an inactive list while a directory tab is active',
+    () async {
+      final panel = await remote();
+      panel.showSearchResults([
+        item('/one/same.txt'),
+        item('/two/same.txt'),
+      ], origin: panel.captureRemoteSearchOrigin());
+      final originalTab = panel.activeTabId;
+      final operationOrigin = panel.captureOperationOrigin(panel.files!);
+      panel.addTab(path: '/two');
+      await panel.refresh();
+      expect(panel.showingSearchResults, isFalse);
+      final activeDirectory = panel.currentPath;
+      final directoryRows = List<FileItem>.of(panel.files!);
+
+      panel.applyFileListChanges({
+        '/one/same.txt': null,
+      }, origin: operationOrigin);
+
+      expect(panel.showingSearchResults, isFalse);
+      expect(panel.currentPath, activeDirectory);
+      expect(panel.files, directoryRows);
+      panel.selectTab(originalTab);
+      expect(panel.files!.single.path, '/two/same.txt');
+      expect(panel.captureOperationOrigin(panel.files!).isCurrent, isTrue);
+    },
+  );
+
+  test(
+    'captured source updates remain applicable after same-storage navigation',
+    () async {
+      final panel = await remote();
+      panel.showSearchResults([
+        item('/one/same.txt'),
+      ], origin: panel.captureRemoteSearchOrigin());
+      final operationOrigin = panel.captureOperationOrigin(panel.files!);
+      await panel.navigateToPath('/two');
+      final currentOrigin = panel.captureCurrentOrigin();
+      expect(operationOrigin.source.currentPath, '/');
+      expect(currentOrigin.source.currentPath, '/two');
+      panel.showSearchResults([item('/one/same.txt')], origin: currentOrigin);
+
+      panel.applyFileListChanges({
+        '/one/same.txt': item('/one/renamed.txt'),
+      }, origin: operationOrigin);
+
+      expect(panel.files!.single.path, '/one/renamed.txt');
+      expect(panel.captureOperationOrigin(panel.files!).isCurrent, isTrue);
+    },
+  );
+
+  test('old-account completion cannot change a new session list on the same client', () async {
+    final panel = await remote();
+    panel.showSearchResults([
+      item('/one/same.txt'),
+    ], origin: panel.captureRemoteSearchOrigin());
+    final operationOrigin = panel.captureOperationOrigin(panel.files!);
+    auth.connection(false);
+    auth.connection(true);
+    panel.showSearchResults([
+      item('/one/same.txt'),
+    ], origin: panel.captureRemoteSearchOrigin());
+
+    panel.applyFileListChanges({
+      '/one/same.txt': null,
+    }, origin: operationOrigin);
+
+    expect(panel.files!.single.path, '/one/same.txt');
+    expect(panel.captureOperationOrigin(panel.files!).isCurrent, isTrue);
+  });
+
   test(
     'open containing folder uses the result path and selects that exact file',
     () async {

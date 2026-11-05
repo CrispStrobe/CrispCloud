@@ -44,6 +44,7 @@ class _Cloud extends Fake implements CloudStorageClient {
   final uploads = <String>[];
   final deleted = <String>[];
   final renamed = <String>[];
+  Future<void> Function(String)? beforeDelete;
   String account = 'first-account';
 
   @override
@@ -123,6 +124,7 @@ class _Cloud extends Fake implements CloudStorageClient {
 
   @override
   Future<void> deletePath(String path) async {
+    await beforeDelete?.call(path);
     files.remove(path);
     deleted.add(path);
   }
@@ -388,6 +390,57 @@ void main() {
       findsOneWidget,
     );
   });
+
+  testWidgets(
+    'move completion updates its saved list and preserves another storage same-path row',
+    (tester) async {
+      final panel = container.read(panelProvider(PanelSide.remote));
+      panel.showSearchResults(
+        files,
+        origin: panel.captureOperationOrigin(files),
+      );
+      files = List<FileItem>.of(panel.files!);
+      final originalTab = panel.activeTabId;
+      String? localTab;
+      cloud.beforeDelete = (path) async {
+        if (path != '/one.txt') return;
+        panel.addTab(path: '/');
+        await panel.refresh();
+        final localOrigin = container
+            .read(panelProvider(PanelSide.local))
+            .captureCurrentOrigin();
+        panel.showSearchResults([
+          FileItem(
+            name: 'one.txt',
+            path: '/one.txt',
+            isFolder: false,
+            size: 77,
+          ),
+        ], origin: localOrigin);
+        panel.selectAll();
+        localTab = panel.activeTabId;
+      };
+      await open(tester, kind: FileOperationKind.move);
+      await useCloudDestination(tester);
+      await tester.enterText(field('File filter'), '*.txt');
+      await tester.tap(find.text('Preview'));
+      await tester.pumpAndSettle();
+      await runOperation(tester, FileOperationKind.move);
+
+      expect(cloud.deleted, ['/one.txt']);
+      expect(cloud.files['/target/one.txt'], utf8.encode('one\n'));
+      expect(panel.files!.single.path, '/one.txt');
+      expect(panel.files!.single.size, 77);
+      expect(panel.selection.single.path, '/one.txt');
+      expect(panel.captureCurrentOrigin().source, isA<LocalPanelSource>());
+      panel.selectTab(originalTab);
+      expect(panel.files!.single.path, '/two.bin');
+      panel.selectTab(localTab!);
+      expect(panel.files!.single.path, '/one.txt');
+      expect(panel.files!.single.size, 77);
+      expect(container.read(transferProvider).operations.single.error, isNull);
+    },
+  );
 
   testWidgets('a single-panel plan is blocked after its account changes', (
     tester,

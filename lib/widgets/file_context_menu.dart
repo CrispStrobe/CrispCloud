@@ -110,9 +110,10 @@ void _showResultListContextMenu(
       try {
         await action();
       } catch (error) {
-        if (context.mounted)
+        if (context.mounted) {
           ScaffoldMessenger.of(context)
               .showSnackBar(SnackBar(content: Text(error.toString())));
+        }
       }
     }),
   );
@@ -235,8 +236,8 @@ void showFileContextMenu(
       PopupMenuItem(
         child: Row(
           children: [
-            Icon(Icons.folder_open),
-            SizedBox(width: 8),
+            const Icon(Icons.folder_open),
+            const SizedBox(width: 8),
             Text(AppLocalizations.of(context)!.open),
           ],
         ),
@@ -514,8 +515,8 @@ void showFileContextMenu(
         PopupMenuItem(
           child: Row(
             children: [
-              Icon(Icons.link),
-              SizedBox(width: 8),
+              const Icon(Icons.link),
+              const SizedBox(width: 8),
               Text(AppLocalizations.of(context)!.shareLink),
             ],
           ),
@@ -541,8 +542,8 @@ void showFileContextMenu(
       PopupMenuItem(
         child: Row(
           children: [
-            Icon(Icons.share),
-            SizedBox(width: 8),
+            const Icon(Icons.share),
+            const SizedBox(width: 8),
             Text(AppLocalizations.of(context)!.shareLink),
           ],
         ),
@@ -570,8 +571,9 @@ void showFileContextMenu(
                 file.path ?? p.posix.join(panel.currentPath, file.name);
             final tempPath = p.join(Directory.systemTemp.path, file.name);
             await client.downloadFileByPath(remotePath, tempPath);
-            if (context.mounted)
+            if (context.mounted) {
               ScaffoldMessenger.of(context).hideCurrentSnackBar();
+            }
             await Share.shareXFiles([XFile(tempPath)], text: file.name);
           } catch (e) {
             _log.warn('operation failed', e);
@@ -649,8 +651,8 @@ void showFileContextMenu(
       PopupMenuItem(
         child: Row(
           children: [
-            Icon(Icons.edit),
-            SizedBox(width: 8),
+            const Icon(Icons.edit),
+            const SizedBox(width: 8),
             Text('${AppLocalizations.of(context)!.rename} (F2)'),
           ],
         ),
@@ -695,8 +697,8 @@ void showFileContextMenu(
         PopupMenuItem(
           child: Row(
             children: [
-              Icon(Icons.link),
-              SizedBox(width: 8),
+              const Icon(Icons.link),
+              const SizedBox(width: 8),
               Text(AppLocalizations.of(context)!.shareLink),
             ],
           ),
@@ -764,8 +766,8 @@ void showFileContextMenu(
         PopupMenuItem(
           child: Row(
             children: [
-              Icon(Icons.folder_zip),
-              SizedBox(width: 8),
+              const Icon(Icons.folder_zip),
+              const SizedBox(width: 8),
               Text(AppLocalizations.of(context)!.browseArchive),
             ],
           ),
@@ -783,8 +785,8 @@ void showFileContextMenu(
         PopupMenuItem(
           child: Row(
             children: [
-              Icon(Icons.unarchive),
-              SizedBox(width: 8),
+              const Icon(Icons.unarchive),
+              const SizedBox(width: 8),
               Text(AppLocalizations.of(context)!.extractHere),
             ],
           ),
@@ -902,8 +904,8 @@ void showFileContextMenu(
       PopupMenuItem(
         child: Row(
           children: [
-            Icon(Icons.info_outline),
-            SizedBox(width: 8),
+            const Icon(Icons.info_outline),
+            const SizedBox(width: 8),
             Text(AppLocalizations.of(context)!.properties),
           ],
         ),
@@ -1528,18 +1530,20 @@ class _PropertiesDialogState extends State<_PropertiesDialog> {
     setState(() => _computingMd5 = true);
     try {
       final hash = await ChecksumService.md5File(widget.file.path!);
-      if (mounted)
+      if (mounted) {
         setState(() {
           _md5 = hash;
           _computingMd5 = false;
         });
+      }
     } catch (e) {
       _log.warn('operation failed', e);
-      if (mounted)
+      if (mounted) {
         setState(() {
           _md5 = 'Error: $e';
           _computingMd5 = false;
         });
+      }
     }
   }
 

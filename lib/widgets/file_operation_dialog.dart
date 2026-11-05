@@ -242,7 +242,8 @@ class _FileOperationDialogState extends ConsumerState<FileOperationDialog> {
 
   Future<void> _start({bool background = false}) async {
     final plan = _plan;
-    if (plan == null || !plan.canExecute) return;
+    final sourceOrigin = _sourceOrigin;
+    if (plan == null || !plan.canExecute || sourceOrigin == null) return;
     final notifier = ref.read(transferProvider);
     final targetPanel = ref.read(panelProvider(_destinationSide!));
     setState(() {
@@ -264,7 +265,9 @@ class _FileOperationDialogState extends ConsumerState<FileOperationDialog> {
       },
       onEntryComplete: (entry) {
         if (entry.outcome == FileOperationOutcome.moved) {
-          _panel.applyFileListChanges({entry.source.path!: null});
+          _panel.applyFileListChanges({
+            entry.source.path!: null,
+          }, origin: sourceOrigin);
         }
         if (mounted) setState(() {});
       },

@@ -239,13 +239,14 @@ class _CommandPaletteState extends ConsumerState<CommandPalette> {
           name: widget.parentContext.pdfOpTr('Edit PDF'),
           icon: Icons.edit_document,
           action: () {
-            if (widget.parentContext.mounted)
+            if (widget.parentContext.mounted) {
               showPdfEditorDialog(
                 widget.parentContext,
                 ref,
                 pdfFiles.single,
                 side,
               );
+            }
           },
         ),
       for (final action in pdfOperationsForSelection(pdfFiles))
@@ -253,7 +254,7 @@ class _CommandPaletteState extends ConsumerState<CommandPalette> {
           name: widget.parentContext.pdfOpTr(action.label),
           icon: action.icon,
           action: () {
-            if (widget.parentContext.mounted)
+            if (widget.parentContext.mounted) {
               showPdfOperationsDialog(
                 widget.parentContext,
                 ref,
@@ -261,6 +262,7 @@ class _CommandPaletteState extends ConsumerState<CommandPalette> {
                 side,
                 action,
               );
+            }
           },
         ),
       _Command(

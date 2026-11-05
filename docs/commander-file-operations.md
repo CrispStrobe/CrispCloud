@@ -12,15 +12,21 @@ of whether that source is shown in the left or right panel.
 | Multi-Rename | Ctrl+M | More actions, Edit menu, command palette, selection context menu |
 | Select by wildcard or regex | Numpad + | More actions, Edit menu, command palette, file-list toolbar |
 | Deselect by wildcard or regex | Numpad - | Edit menu, command palette |
-| Invert selection | Numpad * | Existing Edit menu |
+| Invert selection | Numpad * | Edit menu |
 | Copy with options | F5 / Ctrl+C | More actions, context menu, selection bar, command palette |
 | Move with options | F6 / Ctrl+X | More actions, context menu, selection bar, command palette |
 | Import a file list | Ctrl+Shift+L | More actions, Edit menu, command palette, file-list toolbar |
 | Export a file list | — | More actions, Edit menu, command palette, file-list toolbar |
 
+These shortcuts apply while the file browser has focus. **More actions** is the
+three-dot toolbar menu; the native **Edit** menu is available on macOS. The
+file-list toolbar appears after feeding search results or importing a list;
+its three-dot menu is **File list actions**. The normal multi-selection context
+menu labels Multi-Rename as **Batch Rename**.
+
 The keyboard handler also accepts Meta in place of Ctrl on macOS. Shift+F5
-opens copy options; it no longer opens a rename operation. For a same-folder
-file duplicate, choose that folder and **Keep both**.
+opens copy options. For a same-folder file duplicate, choose that folder and
+**Keep both**.
 
 ## Multi-rename
 
@@ -72,11 +78,22 @@ masks require an available modified timestamp rather than substituting today.
 
 ## Pattern selection
 
-The selection dialog changes selection marks without filtering out panel rows.
-Choose **Select**, **Deselect**, **Invert matches**, or **Replace selection**,
-then wildcard or regex matching, case sensitivity, filename/full-path matching,
-and files/folders/both. It previews the matching count. Invalid expressions
-cannot be applied and leave the existing selection unchanged.
+The **Select by pattern** dialog changes selection marks without filtering out
+panel rows. Choose **Wildcards** or **Regular expression**, enter a pattern, and
+choose an **Action**:
+
+- **Add matches to selection** marks matching items.
+- **Remove matches from selection** clears matching marks.
+- **Invert matching marks** toggles matching items.
+- **Replace selection with matches** clears the previous selection and marks
+  only matches.
+
+The first three actions preserve marks on nonmatching items. **Include** limits
+matching to **Files and folders**, **Files only**, or **Folders only**. Enable
+**Case sensitive** or **Match full original paths** when needed; otherwise the
+pattern matches filenames without regard to case. The dialog previews the
+matching count before **Apply**. Invalid expressions cannot be applied and
+leave the existing selection unchanged.
 
 Wildcard rules:
 
@@ -94,23 +111,32 @@ traversed according to the recursion option.
 
 ## Search results and reusable file lists
 
-Use **Feed all to panel** or **Feed selected to panel** in search results to keep
-hits as a virtual file list. Each row retains its original full path and the
-storage/account that returned it. Same-named files from different directories
-remain distinct. The result dialog can copy paths or reveal the original
-containing folder.
+Use **Feed all to panel** in search results to keep hits as a virtual file list
+in the source panel. Mark result checkboxes to change the button to **Feed
+selected to panel** and retain only those hits. Each row retains its original
+full path and the storage/account that returned it. Same-named files from
+different directories remain distinct. The result dialog also offers **Copy
+paths** and an **Open containing folder** button on each result.
 
 A list panel supports pattern selection, Multi-Rename, copy/move options,
-original-path display, and opening the containing folder. **Remove from list**
-only removes rows; **Delete files** is a separate command that operates on the
-actual stored source. The toolbar can return to the real directory. Lists
-survive refresh and tab switches within the current app session. They are not
-silently reloaded as unrelated directory contents.
+original-path display, and opening the containing folder. **Remove from list
+(keep files)** only removes rows; **Delete files…** is a separate command that
+operates on the actual stored source. Use the toolbar's **Return to folder**
+close button to leave the list. Lists survive refresh and tab switches within
+the current app session. Completed operations update matching list tabs even
+while another tab or storage source is active. They are not silently reloaded
+as unrelated directory contents.
+
+Choose **Import file list** to open the **Import paths** view. Use **Open .txt /
+.lst**, **Paste paths**, or type paths into the text area, then choose **Load
+into panel**. Choose **Export file list** for the **Export paths** view, optionally
+enable **Selected items only**, and use **Save list…** or **Copy paths**. Both
+commands are also available in the list toolbar's **File list actions** menu.
 
 Import/export uses UTF-8 `.txt` or `.lst` files with one original path per line.
-Clipboard import/export is available too. Local import accepts local file URLs;
-relative paths resolve against the chosen panel source. Paths are normalized
-and deduplicated. Imports reject filesystem roots, unrelated URLs, malformed
+Local import accepts local file URLs; relative paths resolve against the current
+directory in the chosen panel's storage source. Paths are normalized and
+deduplicated. Imports reject filesystem roots, unrelated URLs, malformed
 lines, more than 10,000 entries, and text larger than 4 MiB. Every imported item
 is verified by listing its parent through the selected storage source; missing
 or ambiguous entries are reported, and no unverified path gains mutation

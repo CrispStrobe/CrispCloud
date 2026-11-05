@@ -292,10 +292,10 @@ class FileListView extends ConsumerWidget {
             }
             // Printable char: quick search / quick filter.
             final String? rawChar = event.character;
-            final String? label = event.logicalKey.keyLabel;
+            final String label = event.logicalKey.keyLabel;
             final String? char = (rawChar != null && rawChar.isNotEmpty)
                 ? rawChar
-                : (label != null && label.length == 1 ? label : null);
+                : (label.length == 1 ? label : null);
             if (char != null && char.isNotEmpty) {
               final settings = ref.read(quickSearchSettingsProvider);
               if (settings.mode != QuickSearchMode.off) {

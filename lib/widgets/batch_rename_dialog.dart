@@ -842,7 +842,7 @@ class _BatchRenameDialogState extends ConsumerState<BatchRenameDialog> {
       );
       if (mounted) setState(() => _result = result);
       if (origin.isCurrent && result.changes.isNotEmpty) {
-        _panel.applyFileListChanges(result.changes);
+        _panel.applyFileListChanges(result.changes, origin: origin);
         await _panel.refresh();
       }
     } on MultiRenamePreflightException catch (error) {
