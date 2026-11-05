@@ -115,6 +115,14 @@ original feature branch. Because that branch was receiving concurrent work,
 the final pass continues on `feature/commander-workflow-polish`, forked from
 `cb58160` with the incoming synchronization, clipboard and rename-journal work
 preserved. The broader unchecked roadmap above remains separate from the
-completed user-facing integration; in particular, the new journal engine has
-its own contracts and tests, while this dialog currently executes independent
-renames and uses session-bound batch undo.
+completed user-facing integration. Subsequent integration through `9d818d3`
+connects the rename journal, dependent rename plans, persistent history/recovery,
+and named collection screens. The normal action menu remains session-bound;
+rename records and saved collections have their own persistent stores. The
+broader transfer-recovery and desktop roadmap still requires its own acceptance
+review and is not implied complete by these integrations.
+
+The fixed review branch `feature/commander-review-20261105` starts from
+`c9e348d` and includes the final collection consistency repairs. It provides a
+stable CI target while the original integration branches continue receiving
+separate work. Their later commits remain preserved on those branches.

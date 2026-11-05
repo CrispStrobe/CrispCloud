@@ -76,7 +76,7 @@ Future<void> reviewCollectionReplacements(
     ),
   );
   if (accepted == true) {
-    await panel.refreshCollectionItems(acceptReplacements: true);
+    await panel.acceptCollectionReplacements(items);
   }
 }
 
@@ -214,7 +214,6 @@ class _FileCollectionsDialogState extends ConsumerState<FileCollectionsDialog> {
 
   Future<void> _action(String action, FileCollection collection) async {
     final panel = ref.read(panelProvider(widget.side));
-    final store = ref.read(fileCollectionStoreProvider);
     switch (action) {
       case 'open':
       case 'tab':
@@ -231,10 +230,7 @@ class _FileCollectionsDialogState extends ConsumerState<FileCollectionsDialog> {
       case 'rename':
         final name = await _askName(collection.name);
         if (name != null) {
-          await store.update(
-            collection.id,
-            (current) => current.copyWith(name: name),
-          );
+          await panel.renameSavedCollection(collection.id, name);
         }
       case 'export':
         final message = await exportFileListText(
@@ -255,7 +251,7 @@ class _FileCollectionsDialogState extends ConsumerState<FileCollectionsDialog> {
           );
         }
       case 'remove':
-        await store.remove(collection.id);
+        await panel.removeSavedCollection(collection.id);
         if (mounted) {
           setState(
             () =>

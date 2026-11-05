@@ -114,13 +114,16 @@ class FileCollectionService {
     );
   }
 
+  /// Only replacements whose account/path keys were reviewed may be accepted.
+  /// Other replacements discovered by this refresh retain their original evidence.
   Future<CollectionRefreshResult> refresh(
     FileCollection collection,
     CollectionBackendResolver resolve, {
-    bool acceptReplacements = false,
+    Set<String> acceptedReplacementKeys = const {},
     bool Function()? isCancelled,
     void Function(int complete, int total)? onProgress,
   }) async {
+    final accepted = Set<String>.unmodifiable(acceptedReplacementKeys);
     final directories = <String, Future<List<FileItem>>>{};
     final entries = <FileCollectionEntry>[];
     final verified = <String>{};
@@ -200,7 +203,8 @@ class FileCollectionService {
             final differentType =
                 current.isFolder != entry.file.isFolder ||
                 (current.isSymlink == true) != (entry.file.isSymlink == true);
-            if ((differentObject || differentType) && !acceptReplacements) {
+            if ((differentObject || differentType) &&
+                !accepted.contains(entry.key)) {
               entries.add(
                 unavailable(
                   CollectionItemState.changed,

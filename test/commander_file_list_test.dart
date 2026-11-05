@@ -1,13 +1,16 @@
 import 'dart:async';
+import 'dart:convert';
 import 'dart:io';
 
 import 'package:archive/archive.dart';
 
 import 'package:crisp_cloud/models/file_item.dart';
 import 'package:crisp_cloud/models/panel_side.dart';
+import 'package:crisp_cloud/providers/file_collection_provider.dart';
 import 'package:crisp_cloud/providers/panel_source_provider.dart';
 import 'package:crisp_cloud/providers/providers.dart';
 import 'package:crisp_cloud/services/cloud_storage_interface.dart';
+import 'package:crisp_cloud/services/file_collection_store.dart';
 import 'package:crisp_cloud/services/file_selection_pattern.dart';
 import 'package:crisp_cloud/services/local_file_service.dart';
 import 'package:crisp_cloud/services/native_file_primitives.dart';
@@ -38,6 +41,7 @@ class _Cloud extends Fake implements CloudStorageClient {
   @override
   bool get isAuthenticated => authenticated;
   final paths = <String>[];
+  final objectIds = <String, String>{};
   final listings = <String, List<String>>{
     '/': ['a.txt', 'b.txt'],
     '/one': ['same.txt'],
@@ -70,7 +74,11 @@ class _Cloud extends Fake implements CloudStorageClient {
     return {
       'files': [
         for (final name in listings[path] ?? const <String>[])
-          {'name': name, 'size': 10},
+          {
+            'name': name,
+            'size': 10,
+            'uuid': objectIds['${path == '/' ? '' : path}/$name'],
+          },
       ],
       'folders': <Map<String, dynamic>>[],
     };
@@ -465,6 +473,246 @@ void main() {
       expect(cloud.paths.length, before);
       expect(reopened.files!.single.metadata?['collectionState'], 'offline');
       expect(reopened.originForOperation(reopened.files!.single), isNull);
+    },
+  );
+
+  test(
+    'collection replacement approval is limited to the exact reviewed rows',
+    () async {
+      cloud.objectIds.addAll({
+        '/a.txt': 'original-a',
+        '/b.txt': 'original-b',
+      });
+      final panel = await remote();
+      panel.showSearchResults(
+        panel.files!,
+        origin: panel.captureCurrentOrigin(),
+      );
+      panel.selectAll();
+      cloud.objectIds['/a.txt'] = 'replacement-a';
+      await panel.refreshCollectionItems();
+      final reviewed = panel.collectionReplacements;
+      expect(reviewed.single.path, '/a.txt');
+
+      // This replacement was absent from the review the user approved.
+      cloud.objectIds['/b.txt'] = 'unreviewed-replacement-b';
+      await panel.acceptCollectionReplacements(reviewed);
+      final rows = {for (final file in panel.files!) file.path: file};
+      expect(rows['/a.txt']!.uuid, 'replacement-a');
+      expect(panel.originForOperation(rows['/a.txt']!), isNotNull);
+      expect(rows['/b.txt']!.uuid, 'original-b');
+      expect(rows['/b.txt']!.metadata?['collectionReplacement'], isTrue);
+      expect(panel.originForOperation(rows['/b.txt']!), isNull);
+      expect(panel.selection.map((file) => file.path).toSet(), {
+        '/a.txt',
+        '/b.txt',
+      });
+      expect(
+        () => panel.captureOperationGroups(panel.selection.toList()),
+        throwsStateError,
+      );
+      await expectLater(
+        panel.acceptCollectionReplacements([rows['/b.txt']!.copyWith()]),
+        throwsStateError,
+      );
+      await expectLater(
+        panel.acceptCollectionReplacements(reviewed),
+        throwsStateError,
+      );
+    },
+  );
+
+  test(
+    'return from a refreshed collection uses its cloud parent in the local pane',
+    () async {
+      final remotePanel = await remote();
+      final original = remotePanel.captureRemoteSearchOrigin();
+      final panel = container.read(panelProvider(PanelSide.local));
+      await panel.refresh();
+      panel.showSearchResults([item('/one/same.txt')], origin: original);
+      await panel.refreshCollectionItems();
+      await panel.clearSearchResults();
+      expect(panel.showingSearchResults, isFalse);
+      expect(panel.currentPath, '/one');
+      expect(cloud.paths.last, '/one');
+      expect(cloud.paths, isNot(contains('/one/same.txt')));
+      final reopened = panel.captureCurrentOrigin();
+      expect((reopened.source as RemotePanelSource).client, same(cloud));
+      expect(reopened.storageReference, original.storageReference);
+    },
+  );
+
+  test(
+    'collection manager changes survive open tabs and automatic persistence',
+    () async {
+      container.dispose();
+      auth = _Auth(cloud);
+      container = ProviderContainer(
+        overrides: [
+          authProvider.overrideWith((_) => auth),
+          localFileServiceProvider.overrideWithValue(local),
+          panelProvider(PanelSide.remote).overrideWith(
+            (ref) => PanelNotifier(ref, PanelSide.remote, persistTabs: true),
+          ),
+        ],
+      );
+      final panel = container.read(panelProvider(PanelSide.remote));
+      await Future<void>.delayed(Duration.zero);
+      await panel.refresh();
+      final original = panel.captureCurrentOrigin();
+      panel.toggleSelection(
+        panel.files!.singleWhere((file) => file.path == '/a.txt'),
+      );
+      final id = await panel.saveCurrentCollection(
+        'Original name',
+        selectedOnly: true,
+      );
+      await panel.openCollection(id);
+      final firstTab = panel.activeTabId;
+      await panel.openCollection(id, newTab: true);
+      final secondTab = panel.activeTabId;
+      expect(secondTab, isNot(firstTab));
+      final otherPanel = container.read(panelProvider(PanelSide.local));
+      await otherPanel.refresh();
+      await otherPanel.openCollection(id);
+      final store = container.read(fileCollectionStoreProvider);
+      final prefs = await SharedPreferences.getInstance();
+      await Future<void>.delayed(Duration.zero);
+      final savedTabs = jsonDecode(prefs.getString('panel_tabs_remote')!) as List;
+      expect(
+        savedTabs.where((tab) => (tab as Map)['collectionId'] == id).length,
+        2,
+      );
+
+      Future<void> selectAndSave(String tabId) async {
+        panel.selectTab(tabId);
+        await Future<void>.delayed(Duration.zero);
+      }
+
+      await panel.renameSavedCollection(id, 'Renamed collection');
+      expect(otherPanel.fileListTitle, 'Renamed collection');
+      await selectAndSave(firstTab);
+      expect(panel.fileListTitle, 'Renamed collection');
+      expect(store.get(id)!.name, 'Renamed collection');
+      expect(
+        (jsonDecode(prefs.getString('commander_collection_v1_$id')!)
+            as Map<String, dynamic>)['name'],
+        'Renamed collection',
+      );
+
+      // Append from an ordinary directory while this collection remains open
+      // in the other pane and in two inactive tabs of this pane.
+      panel.addTab(path: '/two');
+      await panel.navigateToPath('/two', origin: original);
+      panel.toggleSelection(
+        panel.files!.singleWhere((file) => file.path == '/two/same.txt'),
+      );
+      await panel.appendToCollection(id);
+      expect(otherPanel.files!.map((file) => file.path).toSet(), {
+        '/a.txt',
+        '/two/same.txt',
+      });
+      for (final tabId in [firstTab, secondTab]) {
+        await selectAndSave(tabId);
+        expect(panel.activeCollectionId, id);
+        expect(panel.fileListTitle, 'Renamed collection');
+        expect(panel.files!.map((file) => file.path).toSet(), {
+          '/a.txt',
+          '/two/same.txt',
+        });
+      }
+      expect(store.get(id)!.entries.map((entry) => entry.reference.path).toSet(), {
+        '/a.txt',
+        '/two/same.txt',
+      });
+      expect(store.get(id)!.name, 'Renamed collection');
+
+      await panel.removeSavedCollection(id);
+      expect(panel.activeCollectionId, isNull);
+      expect(otherPanel.activeCollectionId, isNull);
+      expect(panel.tabs.any((tab) => tab.collectionId == id), isFalse);
+      expect(otherPanel.tabs.any((tab) => tab.collectionId == id), isFalse);
+      // Saving every formerly linked tab must not recreate the removed record.
+      for (final tabId in [firstTab, secondTab]) {
+        if (panel.tabs.any((tab) => tab.id == tabId)) {
+          await selectAndSave(tabId);
+        }
+      }
+      otherPanel.selectTab(otherPanel.activeTabId);
+      await Future<void>.delayed(Duration.zero);
+      expect(store.collections, isEmpty);
+      expect(prefs.getString('commander_collection_v1_$id'), isNull);
+      expect(prefs.getStringList('commander_collections_v1'), isEmpty);
+    },
+  );
+
+  test(
+    'queued local autosaves preserve the later collection marks',
+    () async {
+      container.dispose();
+      auth = _Auth(cloud);
+      final prefs = await SharedPreferences.getInstance();
+      final firstSaveStarted = Completer<void>();
+      final releaseFirstSave = Completer<SharedPreferences>();
+      var pauseNextSave = false;
+      final store = FileCollectionStore(
+        preferences: () {
+          if (pauseNextSave) {
+            pauseNextSave = false;
+            firstSaveStarted.complete();
+            return releaseFirstSave.future;
+          }
+          return Future.value(prefs);
+        },
+      );
+      addTearDown(() {
+        if (!releaseFirstSave.isCompleted) releaseFirstSave.complete(prefs);
+      });
+      await store.ready;
+      container = ProviderContainer(
+        overrides: [
+          authProvider.overrideWith((_) => auth),
+          localFileServiceProvider.overrideWithValue(local),
+          fileCollectionStoreProvider.overrideWith((_) => store),
+          panelProvider(PanelSide.remote).overrideWith(
+            (ref) => PanelNotifier(ref, PanelSide.remote, persistTabs: true),
+          ),
+        ],
+      );
+      final panel = container.read(panelProvider(PanelSide.remote));
+      await Future<void>.delayed(Duration.zero);
+      await panel.refresh();
+      final id = await panel.saveCurrentCollection('Rapid marks');
+      await panel.openCollection(id);
+      await Future<void>.delayed(Duration.zero);
+      final a = panel.files!.singleWhere((file) => file.path == '/a.txt');
+      final b = panel.files!.singleWhere((file) => file.path == '/b.txt');
+      final keyB = store
+          .get(id)!
+          .entries
+          .singleWhere((entry) => entry.reference.path == '/b.txt')
+          .key;
+
+      panel.toggleSelection(a);
+      pauseNextSave = true;
+      panel.toggleTabPin(panel.activeTabId);
+      await Future<void>.delayed(Duration.zero);
+      expect(firstSaveStarted.isCompleted, isTrue);
+      await firstSaveStarted.future;
+
+      // The first save has captured A and is waiting for persistence. B must
+      // survive when its queued save follows the first save's new baseline.
+      panel.toggleSelection(b);
+      panel.toggleTabPin(panel.activeTabId);
+      expect(panel.selection.single, same(b));
+      releaseFirstSave.complete(prefs);
+      await Future<void>.delayed(Duration.zero);
+
+      expect(store.get(id)!.selectedKeys, {keyB});
+      final persisted =
+          jsonDecode(prefs.getString('commander_collection_v1_$id')!)
+              as Map<String, dynamic>;
+      expect(Set<String>.from(persisted['selectedKeys'] as List), {keyB});
     },
   );
 

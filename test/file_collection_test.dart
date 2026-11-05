@@ -132,13 +132,59 @@ void main() {
       final accepted = await service.refresh(
         blocked.collection,
         (_, _) => backend,
-        acceptReplacements: true,
+        acceptedReplacementKeys: {blocked.collection.entries.single.key},
       );
       expect(accepted.verifiedKeys.length, 1);
       expect(
         accepted.collection.entries.single.reference.objectId,
         'new-object',
       );
+    },
+  );
+
+  test(
+    'accepting reviewed replacements does not accept a newly changed row',
+    () async {
+      final reviewed = FileCollectionService.capture(
+        file('/reviewed', id: 'original-reviewed'),
+        a,
+      );
+      final later = FileCollectionService.capture(
+        file('/later', id: 'original-later'),
+        a,
+      );
+      final backend = _Backend()
+        ..items['/reviewed'] = file('/reviewed', id: 'reviewed-replacement')
+        ..items['/later'] = file('/later', id: 'original-later');
+      final before = collection([reviewed, later]).copyWith(
+        selectedKeys: {reviewed.key, later.key},
+      );
+      final review = await service.refresh(before, (_, _) => backend);
+      final reviewedKeys = review.collection.entries
+          .where((entry) => entry.replacement)
+          .map((entry) => entry.key)
+          .toSet();
+      expect(reviewedKeys, {reviewed.key});
+      expect(review.verifiedKeys, {later.key});
+
+      // Another saved row changes while the first replacement is reviewed.
+      backend.items['/later'] = file('/later', id: 'unreviewed-replacement');
+      final accepted = await service.refresh(
+        review.collection,
+        (_, _) => backend,
+        acceptedReplacementKeys: reviewedKeys,
+      );
+      final entries = {
+        for (final entry in accepted.collection.entries) entry.key: entry,
+      };
+      expect(accepted.verifiedKeys, {reviewed.key});
+      expect(entries[reviewed.key]!.reference.objectId, 'reviewed-replacement');
+      expect(entries[reviewed.key]!.replacement, isFalse);
+      expect(entries[later.key]!.reference.objectId, 'original-later');
+      expect(entries[later.key]!.file.uuid, 'original-later');
+      expect(entries[later.key]!.state, CollectionItemState.changed);
+      expect(entries[later.key]!.replacement, isTrue);
+      expect(accepted.collection.selectedKeys, {reviewed.key, later.key});
     },
   );
 
@@ -181,7 +227,7 @@ void main() {
       final accepted = await service.refresh(
         reopened.collection,
         (_, _) => backend,
-        acceptReplacements: true,
+        acceptedReplacementKeys: {original.key},
       );
       expect(accepted.verifiedKeys, {original.key});
       expect(accepted.collection.entries.single.file.isFolder, isTrue);

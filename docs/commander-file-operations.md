@@ -19,6 +19,7 @@ of whether that source is shown in the left or right panel.
 | Paste files through copy/move options | Ctrl+V | Edit menu, context menu, command palette |
 | Import a file list | Ctrl+Shift+L | More actions, Edit menu, command palette, file-list toolbar |
 | Export a file list | — | More actions, Edit menu, command palette, file-list toolbar |
+| Save or manage file collections | — | File Collections menu, More actions, command palette, file-list actions |
 
 These shortcuts apply while the file browser has focus. **More actions** is the
 three-dot toolbar menu; the native **Edit** menu is available on macOS. The
@@ -74,11 +75,12 @@ regular-expression matching support case sensitivity and first/all matches.
 Regex replacements expand numbered captures such as `$1`, named captures such
 as `${name}`, and `$$` for a literal dollar sign. Separate case controls support
 unchanged, lower, upper, title, and sentence case. Named presets persist the
-settings between sessions.
+settings between sessions. **Import / export presets** exchanges versioned JSON;
+importing replaces saved presets with the same names.
 
 Use **Add transformation** to apply another mask/replacement/case step to the
 preceding proposed names without renaming anything in between. Earlier steps
-can be removed individually and the complete pipeline can be saved as a preset.
+can be edited, reordered, or removed and the complete pipeline can be saved as a preset.
 **Multiple literal pairs** applies `red|blue` → `blue|green` simultaneously,
 without cascading replacements.
 
@@ -89,26 +91,37 @@ included row in preview order. Manual names stay attached to the original path
 when rows are reordered. **Clear manual names** returns to the rules and enables
 adding further transformation steps. **Check existing names** reads the original
 parent folders; **Number colliding targets** allocates numbered alternatives in
-the preview, accounting for both selected and existing names.
+the preview, accounting for both selected and existing names. **Export names**
+copies or saves the proposed names for use in an external editor.
 
 The full preview includes original paths, proposed names, and validation
-messages. A batch is blocked for invalid names, duplicate destinations in one
-parent, source/target overlaps, or conflicting selected folders and descendants.
-Execution checks all sources and destinations before the first rename, then
-checks again before each item. An occupied destination is never intentionally
-overwritten. Cancel and stop/continue-on-error report completed, unchanged,
-failed, and unattempted rows separately.
+messages. Invalid names, duplicate final destinations, and unrelated occupied
+targets block execution. Independent changes use direct sibling renames. Case-only
+names, swaps, chains, and selected parent/child folders use planned temporary
+names on supported storage; the preview shows the complete final paths. Every
+physical step records its intent before mutation and its completion afterwards.
+Execution rechecks sources and destinations rather than relying on the preview.
+Cancel and stop/continue-on-error report completed, failed, untouched, and
+intermediate recovery paths separately; dependent batches stop on their first error.
 
 Successful renames update file lists at their original paths. After closing the
-tool, **Edit → Undo** restores the completed batch as one history action, including
-batches larger than the history's 50-action limit. Undo checks the entire reverse
-plan before changing files, retains the original storage/account guard, and
-refuses occupied original names. A failed partial undo retains only the remaining
-rows for retry. History is session-only. The batch is not a transaction:
-cancellation or a later failure retains successful earlier renames. Cycles and
-occupied case-only renames require an unused intermediate name; parent/child
-renames require separate batches. Date masks require the selected timestamp
-rather than silently substituting today.
+tool, **Edit → Undo** restores completed work as one history action, including
+batches larger than the history menu's 50-action limit. **Undo batch** uses the
+same checked restoration. Closing an active dialog retains undo for its completed
+work. The action menu is session-bound; **History / recovery** keeps batch records
+across restarts and can resume or restore work after reconnecting the same account.
+Occupied originals, changed file fingerprints, missing paths, or disconnected
+sources block unsafe reversal. The batch is not an atomic transaction: cancellation
+or a later failure can leave completed work and intermediate paths to restore.
+
+Native rename operations enforce exclusive destinations where supported. The
+dialog identifies providers that only offer a destination precheck. Object-storage
+files require suitable conditional copy/delete contracts; unsupported providers
+and virtual-folder prefixes are rejected. Content hashing and recovery checks can
+add I/O. **Continue with these items** rereads the actual results for another batch.
+See [Multi-rename and recovery](MULTI_RENAME.md) for the full mask table, journal
+behavior, and recovery limits. Date masks require the selected timestamp rather
+than silently substituting today.
 
 ## Pattern selection
 
@@ -165,10 +178,11 @@ A list panel supports pattern selection, Multi-Rename, copy/move options,
 original-path display, and opening the containing folder. **Remove from list
 (keep files)** only removes rows; **Delete files…** is a separate command that
 operates on the actual stored source. Use the toolbar's **Return to folder**
-close button to leave the list. Lists survive refresh and tab switches within
-the current app session. Completed operations update matching list tabs even
-while another tab or storage source is active. They are not silently reloaded
-as unrelated directory contents.
+close button to leave the list. Lists survive refresh and tab switches. Saved
+collection tabs can reopen across restarts, then verify their original accounts
+and paths. Completed operations update matching list tabs even while another
+tab or storage source is active. They are not silently reloaded as unrelated
+directory contents.
 
 Choose **Import file list** to open the **Import paths** view. Use **Open .txt /
 .lst**, **Paste paths**, or type paths into the text area, then choose **Load
@@ -186,11 +200,34 @@ or ambiguous entries are reported, and no unverified path gains mutation
 permission. Exported lists contain paths, not credentials or account identities.
 Choose the correct source before importing a saved list.
 
-Export a list to retain it across app restarts. Session-only list tabs keep
-account provenance in memory; saved path lists are verified again when loaded.
-An account disconnect/change invalidates old result operations. Editors retain
-their stronger existing origin checks; opening a list does not authorize editor
-writeback to unverified data.
+For persistent names, account provenance, marks, and saved search queries, open
+**File collections…** or **Save / manage collections…** in the list menu.
+**Save collection** creates a named collection from all rows or **Marked rows
+only**. Existing collections offer **Open and refresh items**, **Open in new
+tab**, **Add current marked rows**, **Rename collection**, **Export collection…**,
+and **Copy collection JSON**. **Remove collection (keep files)** removes the
+saved collection without deleting its stored files. Appending marked rows clears
+the saved search query, since the collection is then a manually assembled list.
+
+Collection JSON preserves source references and supports up to 100,000 rows,
+32 MiB of imported text, and 256-character names. It contains no credentials.
+Plain path-list export remains useful when another program expects one path per
+line; select the original account before importing that simpler format.
+
+**Refresh original items** verifies each saved row at its original location.
+**Rerun saved search** reruns the recorded query; **Cancel collection refresh**
+stops verification. Missing, offline, and replaced rows remain visible with status
+information but cannot be operated on. **Review replacement items…** explicitly
+accepts the reviewed replacement rows. An account disconnect or replacement
+invalidates previous permissions; restoring a saved list does not authorize writes
+before its items are checked again.
+
+Mixed collections distinguish identical paths from different accounts. Copy,
+move, and clipboard paste review each account group in sequence against the
+captured destination; background execution is disabled for that combined flow.
+Delete also groups items by account. Multi-rename and drag-and-drop currently
+require a selection from one account. Editors retain their existing origin and
+content checks when opened from a collection.
 
 ## Copy and move options
 
