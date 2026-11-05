@@ -42,7 +42,16 @@ Repeat with `CRISPCLOUD_FUSE_TEST_BACKEND=fuse-t` for FUSE-T NFS, or
 `fuse-t-smb` for its SMB backend, after installing FUSE-T. The test checks
 listing, Unicode names, reading, rejection of writes, and unmount.
 The fixture includes a 1,200-file directory to exercise paged directory reads.
-It is skipped in ordinary test runs. A passing helper test does not establish
+It is skipped in ordinary test runs. This is a standalone, unsandboxed helper
+fixture. If the supplied helper has the sandbox-inherit entitlement, the fixture
+copies it into a disposable directory and ad-hoc signs only that copy with an
+empty entitlement set. The original executable and its signature are unchanged.
+An inherit-entitled helper launched directly from the unsandboxed Flutter runner
+otherwise traps in sandbox initialization before `main`. The regression test
+`test/macos_fuse_helper_fixture_test.dart` checks preservation of the source
+binary and standalone startup without mounting anything.
+
+A passing standalone helper test does not establish
 that the signed, sandboxed application can start the helper or load the FUSE
 runtime. Validate those separately in the signed app, including Finder access,
 network disconnection, remounting, and the actual cloud providers to be shipped.

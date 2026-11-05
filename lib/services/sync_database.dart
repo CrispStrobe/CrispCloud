@@ -138,7 +138,14 @@ class SyncDatabase extends _$SyncDatabase {
           .getSingleOrNull();
 
   Future<int> upsertEntry(SyncEntriesCompanion entry) =>
-      into(syncEntries).insertOnConflictUpdate(entry);
+      into(syncEntries).insert(
+        entry,
+        // Sync scans identify entries by pair + path, without the database id.
+        onConflict: DoUpdate(
+          (_) => entry,
+          target: [syncEntries.pairId, syncEntries.relativePath],
+        ),
+      );
 
   Future<int> deleteEntriesForPair(int pairId) =>
       (delete(syncEntries)..where((t) => t.pairId.equals(pairId))).go();

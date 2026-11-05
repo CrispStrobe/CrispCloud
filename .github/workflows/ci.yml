@@ -62,6 +62,12 @@ jobs:
       - name: Show Flutter version
         run: flutter --version
 
+      - name: Install trusted distro SQLite for tests
+        run: sudo apt-get update && sudo apt-get install -y libsqlite3-dev
+
+      - name: Verify CI SQLite wrapper restoration
+        run: python3 -m unittest discover -s tool -p test_with_ci_system_sqlite.py
+
       - name: Install dependencies
         run: flutter pub get
 
@@ -130,7 +136,7 @@ jobs:
           CRISPER_SFTP_PYTHON: ${{ runner.temp }}/storage-fixture/bin/python
           CRISPER_SMB_PYTHON: ${{ runner.temp }}/storage-fixture/bin/python
         run: >-
-          flutter test --coverage --concurrency=4
+          python3 tool/with_ci_system_sqlite.py flutter test --coverage --concurrency=4
           --exclude-tags=benchmark,live,deploy,mock_server,integration,connection_dialog,golden
 
       - name: Upload coverage report
@@ -170,10 +176,17 @@ jobs:
       - name: Configure git auth for private deps
         run: git config --global url."https://x-access-token:${{ secrets.GH_PAT || github.token }}@github.com/".insteadOf "https://github.com/"
 
+      - name: Install trusted distro SQLite (Linux tests only)
+        if: runner.os == 'Linux'
+        run: sudo apt-get update && sudo apt-get install -y libsqlite3-dev
+
+      - name: Verify CI SQLite wrapper restoration
+        run: python3 -m unittest discover -s tool -p test_with_ci_system_sqlite.py
+
       - run: flutter pub get
 
       - name: Headless crypto tests (native FFI assertions + cross-path interop)
-        run: flutter test test/native_ffi_crypto_test.dart test/crypto_paths_test.dart
+        run: python3 tool/with_ci_system_sqlite.py flutter test test/ci_sqlite_runtime_test.dart test/native_ffi_crypto_test.dart test/crypto_paths_test.dart
 
   # ---------- Multi-platform builds (matrix) ----------
   # Linux, Android, and Web build on ubuntu-latest.
@@ -416,6 +429,7 @@ jobs:
           test/azure_range_read_test.dart
           test/fuse_filesystem_protocol_test.dart
           test/fuse_mount_test.dart
+          test/macos_fuse_helper_fixture_test.dart
           test/sftp_operation_localization_test.dart
           test/native_preview_error_localization_test.dart
       - run: flutter build macos --release

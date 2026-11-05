@@ -12,6 +12,8 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:unorm_dart/unorm_dart.dart' as unorm;
 
+import 'support/standalone_fuse_helper.dart';
+
 class _FixtureClient implements CloudStorageClient {
   @override
   String get providerName => 'Fixture';
@@ -117,8 +119,11 @@ void main() {
         : false,
   );
   test(
-    'native mount lists, reads, rejects writes and unmounts',
+    'standalone native mount lists, reads, rejects writes and unmounts',
     () async {
+      final helperDirectory = await Directory.systemTemp.createTemp('cc_fuse_helper_');
+      addTearDown(() => helperDirectory.delete(recursive: true));
+      final standaloneHelper = await prepareStandaloneFuseHelper(helper!, helperDirectory);
       for (var cycle = 0; cycle < 2; cycle++) {
         final dir = await Directory.systemTemp.createTemp('cc_fuse_live_');
         final mount = Directory('${dir.path}/mount');
@@ -129,7 +134,7 @@ void main() {
         );
         unawaited(fs.serveRequests());
         final socket = await fs.ready;
-        final process = await Process.start(helper!, [
+        final process = await Process.start(standaloneHelper, [
           mount.path,
           socket,
           backend!,

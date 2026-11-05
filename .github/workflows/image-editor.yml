@@ -39,6 +39,10 @@ jobs:
           channel: stable
           flutter-version: ${{ env.FLUTTER_VERSION }}
           cache: true
+      - name: Install trusted distro SQLite for host tests
+        run: sudo apt-get update && sudo apt-get install -y libsqlite3-dev
+      - name: Verify CI SQLite wrapper restoration
+        run: python3 -m unittest discover -s tool -p test_with_ci_system_sqlite.py
       - run: flutter pub get
       - name: Format image integration
         run: >-
@@ -56,6 +60,7 @@ jobs:
           lib/widgets/image_editor_surface.dart lib/widgets/image_editor_menus.dart
           lib/widgets/file_editor_dialog.dart lib/utils/file_editability.dart
           lib/screens/screen_dialogs.dart
+          test/ci_sqlite_runtime_test.dart
           test/image_edit_session_test.dart test/image_file_store_test.dart
           test/image_editor_live_test.dart test/image_editor_menu_test.dart
           test/widget/image_editor_menus_test.dart
@@ -68,7 +73,8 @@ jobs:
       - name: Session, source, disk, routing, and menu regressions
         if: success() || failure()
         run: >-
-          flutter test --reporter expanded --concurrency=2
+          python3 tool/with_ci_system_sqlite.py flutter test --reporter expanded --concurrency=2
+          test/ci_sqlite_runtime_test.dart
           test/image_edit_session_test.dart test/image_file_store_test.dart
           test/image_editor_live_test.dart test/image_editor_menu_test.dart
           test/file_editability_test.dart test/pdf_file_store_test.dart
@@ -76,11 +82,11 @@ jobs:
           test/widget/image_editor_routing_test.dart
       - name: Localization coverage
         if: success() || failure()
-        run: flutter test --reporter expanded test/image_editor_strings_test.dart
+        run: python3 tool/with_ci_system_sqlite.py flutter test --reporter expanded test/image_editor_strings_test.dart
       - name: Real image editor lifecycle
         if: success() || failure()
         run: >-
-          flutter test --reporter expanded --concurrency=1
+          python3 tool/with_ci_system_sqlite.py flutter test --reporter expanded --concurrency=1
           test/widget/image_editor_dialog_test.dart
           test/widget/image_editor_apply_lifecycle_test.dart
       - name: Record formatting and dependency changes for review
