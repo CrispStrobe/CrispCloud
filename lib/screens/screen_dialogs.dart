@@ -22,7 +22,7 @@ import '../widgets/internal_viewer_dialog.dart'
     show InternalViewerAction, showInternalViewer;
 import '../l10n/app_localizations.dart';
 import '../l10n/image_editor_strings.dart';
-import '../services/image_edit_session.dart' show isEditableImageFileName;
+import '../services/image_edit_session.dart' show isImageEditorFileName;
 import '../services/log_service.dart';
 
 const _log = Log('ScreenDialogs');
@@ -363,7 +363,7 @@ Future<void> _editFile(
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
             content: Text(
-              isEditableImageFileName(target.name)
+              isImageEditorFileName(target.name)
                   ? context.imageTr(
                       'Extract this file from its archive or container before editing.',
                     )

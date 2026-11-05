@@ -58,6 +58,9 @@ void main() {
       expect(i18n.filterEditor.filters.none, expected('No filter'));
       expect(i18n.filterEditor.filters.getFilterI18n('Moon'), expected('Moon'));
       expect(i18n.blurEditor.done, expected('Apply'));
+      expect(i18n.emojiEditor.locale, Locale(language));
+      expect(i18n.emojiEditor.categorySmileys, expected('Smileys and people'));
+      expect(i18n.emojiEditor.search, expected('Search emoji'));
     }
   });
 

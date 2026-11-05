@@ -1,0 +1,91 @@
+import 'dart:io';
+import 'dart:typed_data';
+
+import 'package:file_picker/file_picker.dart';
+
+import '../utils/path_access.dart';
+import 'image_edit_session.dart';
+import 'image_export_options.dart';
+import 'local_file_service.dart';
+
+Future<ImageSaveOutcome?> exportImageCopy(
+  Uint8List bytes,
+  String suggestedName,
+  String dialogTitle,
+  ImageExportFormat format,
+) async {
+  return _exportCopy(
+    bytes,
+    suggestedName,
+    dialogTitle,
+    format == ImageExportFormat.png
+        ? ['png']
+        : format == ImageExportFormat.jpeg
+        ? ['jpg', 'jpeg']
+        : format == ImageExportFormat.webp
+        ? ['webp']
+        : ['gif'],
+    (path) => format == ImageExportFormat.gif
+        ? path.toLowerCase().endsWith('.gif')
+        : format == ImageExportFormat.webp
+        ? path.toLowerCase().endsWith('.webp')
+        : imageFileFormatForName(path) ==
+              (format == ImageExportFormat.png
+                  ? ImageFileFormat.png
+                  : ImageFileFormat.jpeg),
+  );
+}
+
+Future<ImageSaveOutcome?> exportProjectCopy(
+  Uint8List bytes,
+  String suggestedName,
+  String dialogTitle,
+) => _exportCopy(bytes, suggestedName, dialogTitle, [
+  'ccimage',
+], (path) => path.toLowerCase().endsWith('.ccimage'));
+
+Future<ImageSaveOutcome?> _exportCopy(
+  Uint8List bytes,
+  String suggestedName,
+  String dialogTitle,
+  List<String> extensions,
+  bool Function(String) validPath,
+) async {
+  final mobile = Platform.isAndroid || Platform.isIOS;
+  final path = await FilePicker.platform.saveFile(
+    dialogTitle: dialogTitle,
+    fileName: suggestedName,
+    type: FileType.custom,
+    allowedExtensions: extensions,
+    bytes: mobile ? bytes : null,
+    lockParentWindow: true,
+  );
+  if (path == null) return null;
+  if (path.isEmpty) throw StateError('Empty export destination');
+  if (mobile) return ImageSaveOutcome.savedCopy;
+  // Do not alter the approved path or silently write mismatched image bytes.
+  if (!validPath(path)) {
+    throw const ImageEditException(ImageEditFailure.formatMismatch);
+  }
+  final files = LocalFileService();
+  Future<LocalFileSaveResult> write() =>
+      files.saveFileReportingResult(path, bytes);
+  LocalFileSaveResult result;
+  try {
+    result = await write();
+  } on FileSystemException catch (error) {
+    final code = error.osError?.errorCode;
+    if (!Platform.isMacOS ||
+        (error is! PathAccessException && code != 1 && code != 13))
+      rethrow;
+    final grant = await files.requestDirectoryAccess(
+      initialDirectory: File(path).parent.path,
+    );
+    if (grant == null) return null;
+    if (!isSameOrUnderPath(path, grant)) rethrow;
+    result = await write();
+  }
+  return result == LocalFileSaveResult.written
+      ? ImageSaveOutcome.savedCopy
+      : ImageSaveOutcome.downloadedCopy;
+}

@@ -21,6 +21,9 @@ enum ImageEditFailure {
   outputTooLarge,
   dimensionsTooLarge,
   staleExport,
+  gifColorLimit,
+  multiPageImage,
+  rasterEncodingLoss,
 }
 
 /// Machine-readable failures are translated by the host, never shown verbatim.
@@ -65,6 +68,22 @@ ImageFileFormat? imageFileFormatForName(String name) {
 /// Animated and mismatched inputs are rejected after reading their bytes.
 bool isEditableImageFileName(String name) =>
     imageFileFormatForName(name) != null;
+
+/// Formats decoded into a PNG editing surface and restored on save.
+bool isTranscodedRasterFileName(String name) {
+  final lower = name.toLowerCase();
+  return lower.endsWith('.webp') ||
+      lower.endsWith('.gif') ||
+      lower.endsWith('.bmp') ||
+      lower.endsWith('.tif') ||
+      lower.endsWith('.tiff');
+}
+
+/// Raster files and CrispCloud editable image projects share the F4 editor.
+bool isImageEditorFileName(String name) =>
+    isEditableImageFileName(name) ||
+    isTranscodedRasterFileName(name) ||
+    name.toLowerCase().endsWith('.ccimage');
 
 /// Inspect structure and dimensions without allocating a full pixel buffer.
 ///
