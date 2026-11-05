@@ -12,6 +12,11 @@ import 'package:crisp_cloud/providers/panel_source_provider.dart';
 import 'package:crisp_cloud/services/local_file_service.dart';
 import 'package:crisp_cloud/services/panel_source_service.dart';
 import 'package:crisp_cloud/widgets/internal_viewer_dialog.dart';
+import 'package:crisp_cloud/widgets/integrity_dialogs.dart';
+import 'package:crisp_cloud/widgets/preview_pane.dart';
+import 'package:crisp_cloud/widgets/file_context_menu.dart'
+    show showPropertiesDialog;
+import 'package:crisp_cloud/l10n/app_localizations.dart';
 
 import '../support/workflow_fake_client.dart';
 
@@ -218,4 +223,192 @@ void main() {
     await tester.pumpAndSettle();
     expect(find.byTooltip('Edit (F4)'), findsNothing);
   });
+  testWidgets(
+    'captured cloud checksum and split dialogs produce verified outputs',
+    (tester) async {
+      await tester.pumpWidget(
+        UncontrolledProviderScope(
+          container: container,
+          child: MaterialApp(
+            home: Consumer(
+              builder: (context, ref, _) => Scaffold(
+                body: Column(
+                  children: [
+                    TextButton(
+                      onPressed: () => showChecksumToolsDialog(
+                        context,
+                        ref,
+                        PanelSide.remote,
+                        [item('a.txt')],
+                      ),
+                      child: const Text('Checksums'),
+                    ),
+                    TextButton(
+                      onPressed: () => showSplitFileDialog(
+                        context,
+                        ref,
+                        PanelSide.remote,
+                        item('a.txt'),
+                      ),
+                      child: const Text('Split'),
+                    ),
+                    TextButton(
+                      onPressed: () => showCombinePartsDialog(
+                        context,
+                        ref,
+                        PanelSide.remote,
+                        [item('a.txt.split.json')],
+                      ),
+                      child: const Text('Combine'),
+                    ),
+                  ],
+                ),
+              ),
+            ),
+          ),
+        ),
+      );
+      await tester.tap(find.text('Checksums'));
+      await tester.pumpAndSettle();
+      await tester.tap(find.text('Calculate'));
+      await tester.pumpAndSettle();
+      expect(find.textContaining('Calculated 1 SHA-256'), findsOneWidget);
+      await tester.tap(find.text('Create checksum file'));
+      await tester.pumpAndSettle();
+      expect(cloud.files.containsKey('/checksums.sha256'), true);
+      await tester.tap(find.text('Close'));
+      await tester.pumpAndSettle();
+      await tester.tap(find.text('Split'));
+      await tester.pumpAndSettle();
+      await tester.tap(find.text('Split and verify'));
+      for (
+        var attempt = 0;
+        attempt < 100 && find.text('Close').evaluate().isEmpty;
+        attempt++
+      ) {
+        await tester.pump(const Duration(milliseconds: 50));
+      }
+      await tester.pumpAndSettle();
+      expect(cloud.files.containsKey('/a.txt.split.json'), true);
+      expect(cloud.files['/a.txt.part001'], cloud.files['/a.txt']);
+      await tester.tap(find.text('Close'));
+      await tester.pumpAndSettle();
+      await tester.tap(find.text('Combine'));
+      await tester.pumpAndSettle();
+      await tester.tap(find.text('Verify and combine'));
+      for (
+        var attempt = 0;
+        attempt < 100 && find.text('Close').evaluate().isEmpty;
+        attempt++
+      ) {
+        await tester.pump(const Duration(milliseconds: 50));
+      }
+      await tester.pumpAndSettle();
+      expect(cloud.files['/a.txt.combined'], cloud.files['/a.txt']);
+      await tester.tap(find.text('Close'));
+      await tester.pumpAndSettle();
+    },
+  );
+
+  testWidgets(
+    'preview reloads fresh row identity and Properties hashes its captured cloud source',
+    (tester) async {
+      Widget app(FileItem file) => UncontrolledProviderScope(
+        container: container,
+        child: MaterialApp(
+          localizationsDelegates: AppLocalizations.localizationsDelegates,
+          supportedLocales: AppLocalizations.supportedLocales,
+          home: Builder(
+            builder: (context) => Scaffold(
+              body: Column(
+                children: [
+                  TextButton(
+                    onPressed: () => showPropertiesDialog(context, file),
+                    child: const Text('Properties'),
+                  ),
+                  Expanded(
+                    child: PreviewPane(file: file, side: PanelSide.remote),
+                  ),
+                ],
+              ),
+            ),
+          ),
+        ),
+      );
+      await tester.pumpWidget(app(item('a.txt')));
+      await tester.pumpAndSettle();
+      expect(
+        find.textContaining('first file', findRichText: true),
+        findsWidgets,
+      );
+      cloud.put('/a.txt', 'updated preview'.codeUnits);
+      await panel.refresh();
+      await tester.pumpWidget(app(item('a.txt')));
+      await tester.pumpAndSettle();
+      expect(
+        find.textContaining('updated preview', findRichText: true),
+        findsWidgets,
+      );
+      expect(
+        find.textContaining('first file', findRichText: true),
+        findsNothing,
+      );
+      await tester.tap(find.text('Properties'));
+      await tester.pumpAndSettle();
+      await tester.ensureVisible(find.text('Compute MD5'));
+      await tester.pumpAndSettle();
+      await tester.tap(find.text('Compute MD5'));
+      await tester.pumpAndSettle();
+      expect(find.text('MD5'), findsOneWidget);
+      expect(find.textContaining('Error:'), findsNothing);
+      await tester.tap(find.text('Close'));
+      await tester.pumpAndSettle();
+    },
+  );
+
+  testWidgets(
+    'checksum dialog stays usable in a narrow window with enlarged text',
+    (tester) async {
+      tester.view.resetPhysicalSize();
+      tester.view.physicalSize = const Size(320, 740);
+      tester.view.devicePixelRatio = 1;
+      addTearDown(tester.view.resetPhysicalSize);
+      addTearDown(tester.view.resetDevicePixelRatio);
+      await tester.pumpWidget(
+        UncontrolledProviderScope(
+          container: container,
+          child: MaterialApp(
+            builder: (context, child) => MediaQuery(
+              data: MediaQuery.of(context)
+                  .copyWith(textScaler: const TextScaler.linear(1.8)),
+              child: child!,
+            ),
+            home: Consumer(
+              builder: (context, ref, _) => Scaffold(
+                body: TextButton(
+                  onPressed: () => showChecksumToolsDialog(
+                    context,
+                    ref,
+                    PanelSide.remote,
+                    [item('a.txt')],
+                  ),
+                  child: const Text('Open'),
+                ),
+              ),
+            ),
+          ),
+        ),
+      );
+      await tester.tap(find.text('Open'));
+      await tester.pumpAndSettle();
+      expect(tester.takeException(), isNull);
+      await tester.ensureVisible(find.text('Calculate'));
+      await tester.tap(find.text('Calculate'));
+      await tester.pumpAndSettle();
+      expect(tester.takeException(), isNull);
+      await tester.ensureVisible(find.text('Close'));
+      await tester.tap(find.text('Close'));
+      await tester.pumpAndSettle();
+    },
+  );
 }

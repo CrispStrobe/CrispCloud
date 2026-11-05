@@ -26,10 +26,10 @@ import '../models/panel_side.dart';
 import '../providers/providers.dart';
 import '../services/archive_service.dart';
 import '../services/checksum_service.dart'
-    show ChecksumService, ChecksumVerifyResult;
+    show ChecksumService, ChecksumAlgorithm;
+import '../services/file_operation_backend.dart';
 import '../services/cloud_storage_interface.dart'
     show CloudStorageClientCapabilities;
-import '../services/file_split_service.dart';
 import '../services/image_edit_session.dart' show isEditableImageFileName;
 import '../services/link_service.dart';
 import '../services/secure_wipe_service.dart';
@@ -45,6 +45,7 @@ import 'batch_rename_dialog.dart' show showBatchRenameDialog;
 import 'file_operation_dialog.dart';
 import 'file_clipboard_actions.dart';
 import 'archive_workspace_dialog.dart';
+import 'integrity_dialogs.dart';
 import '../services/file_operation_service.dart';
 import 'diff_viewer_dialog.dart' show showDiffViewerDialog;
 import 'file_editor_dialog.dart' show showFileEditorDialog;
@@ -145,6 +146,37 @@ void _showResultListContextMenu(
           Icons.archive_outlined,
           () => showArchiveWorkspaceDialog(context, ref, side, files.single),
         ),
+      if (files.every((file) => !file.isFolder && file.path != null)) ...[
+        command(
+          'Checksums…',
+          Icons.fingerprint,
+          () => showChecksumToolsDialog(context, ref, side, files),
+        ),
+        if (files.every((file) => isChecksumManifest(file.name)))
+          command(
+            'Verify checksum file',
+            Icons.verified,
+            () => showChecksumToolsDialog(
+              context,
+              ref,
+              side,
+              files,
+              verifyInitially: true,
+            ),
+          ),
+        if (files.length == 1)
+          command(
+            'Split file with integrity manifest…',
+            Icons.call_split,
+            () => showSplitFileDialog(context, ref, side, files.single),
+          ),
+        if (files.every((file) => isSplitPartOrManifest(file.name)))
+          command(
+            'Verify and combine parts…',
+            Icons.merge_type,
+            () => showCombinePartsDialog(context, ref, side, files),
+          ),
+      ],
       if (files.length == 1)
         command(
           'Open containing folder',
@@ -1068,121 +1100,61 @@ void showFileContextMenu(
     ),
   );
 
-  // Checksum (local files only, not folders, not on web)
-  if (!isMultiSelect &&
-      !file.isFolder &&
-      !kIsWeb &&
-      side == PanelSide.local &&
-      file.path != null) {
+  // Integrity tools route through the storage account that produced each row.
+  if (!panel.isInArchive &&
+      files.every((entry) => !entry.isFolder && entry.path != null)) {
+    PopupMenuItem<void> integrityCommand(
+      String label,
+      IconData icon,
+      Future<void> Function() action,
+    ) => PopupMenuItem<void>(
+      child: Row(
+        children: [Icon(icon, size: 20), const SizedBox(width: 8), Text(label)],
+      ),
+      onTap: () => Future<void>.delayed(Duration.zero, () async {
+        if (context.mounted) await action();
+      }),
+    );
     items.add(
-      PopupMenuItem(
-        child: const Row(
-          children: [
-            Icon(Icons.fingerprint),
-            SizedBox(width: 8),
-            Text('Checksum'),
-          ],
-        ),
-        onTap: () => Future.delayed(Duration.zero, () {
-          if (!context.mounted) return;
-          _showChecksumDialog(context, file);
-        }),
+      integrityCommand(
+        'Checksums…',
+        Icons.fingerprint,
+        () => showChecksumToolsDialog(context, ref, side, files),
       ),
     );
-  }
-
-  // Create/verify .md5 checksum files (local files, not web)
-  if (!kIsWeb && side == PanelSide.local) {
-    final selectedFiles = panel.selection.isEmpty
-        ? [file]
-        : panel.selection.toList();
-    final localFiles = selectedFiles
-        .where((f) => !f.isFolder && f.path != null && f.name != '..')
-        .toList();
-    if (localFiles.isNotEmpty) {
+    if (files.every((entry) => isChecksumManifest(entry.name))) {
       items.add(
-        PopupMenuItem(
-          child: const Row(
-            children: [
-              Icon(Icons.playlist_add_check, size: 20),
-              SizedBox(width: 8),
-              Text('Create .md5 file'),
-            ],
+        integrityCommand(
+          'Verify checksum file',
+          Icons.verified,
+          () => showChecksumToolsDialog(
+            context,
+            ref,
+            side,
+            files,
+            verifyInitially: true,
           ),
-          onTap: () => Future.delayed(Duration.zero, () {
-            if (!context.mounted) return;
-            _createChecksumFileDialog(context, localFiles, 'md5');
-          }),
         ),
       );
     }
-    // Verify if single .md5/.sha256 file selected
-    if (!isMultiSelect && !file.isFolder && file.path != null) {
-      final ext = file.name.toLowerCase();
-      if (ext.endsWith('.md5') || ext.endsWith('.sha256')) {
-        items.add(
-          PopupMenuItem(
-            child: const Row(
-              children: [
-                Icon(Icons.verified, size: 20),
-                SizedBox(width: 8),
-                Text('Verify checksum file'),
-              ],
-            ),
-            onTap: () => Future.delayed(Duration.zero, () {
-              if (!context.mounted) return;
-              _verifyChecksumFileDialog(context, file.path!);
-            }),
-          ),
-        );
-      }
+    if (files.length == 1) {
+      items.add(
+        integrityCommand(
+          'Split file with integrity manifest…',
+          Icons.call_split,
+          () => showSplitFileDialog(context, ref, side, files.single),
+        ),
+      );
     }
-  }
-
-  // Split file (local, single file > 1 MB, not web)
-  if (!kIsWeb &&
-      side == PanelSide.local &&
-      !isMultiSelect &&
-      !file.isFolder &&
-      file.path != null &&
-      (file.size ?? 0) > 1024 * 1024) {
-    items.add(
-      PopupMenuItem(
-        child: const Row(
-          children: [
-            Icon(Icons.call_split, size: 20),
-            SizedBox(width: 8),
-            Text('Split File'),
-          ],
+    if (files.every((entry) => isSplitPartOrManifest(entry.name))) {
+      items.add(
+        integrityCommand(
+          'Verify and combine parts…',
+          Icons.merge_type,
+          () => showCombinePartsDialog(context, ref, side, files),
         ),
-        onTap: () => Future.delayed(Duration.zero, () {
-          if (!context.mounted) return;
-          _showSplitDialog(context, ref, side, file);
-        }),
-      ),
-    );
-  }
-
-  // Combine parts (local, multi-select with .partNNN files)
-  if (!kIsWeb &&
-      side == PanelSide.local &&
-      isMultiSelect &&
-      files.any((f) => RegExp(r'\.part\d{3}$').hasMatch(f.name))) {
-    items.add(
-      PopupMenuItem(
-        child: const Row(
-          children: [
-            Icon(Icons.merge_type, size: 20),
-            SizedBox(width: 8),
-            Text('Combine Parts'),
-          ],
-        ),
-        onTap: () => Future.delayed(Duration.zero, () {
-          if (!context.mounted) return;
-          _showCombineDialog(context, ref, side, files);
-        }),
-      ),
-    );
+      );
+    }
   }
 
   // Create symlink (local or SFTP, single file, desktop only)
@@ -1487,30 +1459,41 @@ void showPropertiesDialog(BuildContext context, FileItem file) {
   );
 }
 
-class _PropertiesDialog extends StatefulWidget {
+class _PropertiesDialog extends ConsumerStatefulWidget {
   final FileItem file;
   const _PropertiesDialog({required this.file});
 
   @override
-  State<_PropertiesDialog> createState() => _PropertiesDialogState();
+  ConsumerState<_PropertiesDialog> createState() => _PropertiesDialogState();
 }
 
-class _PropertiesDialogState extends State<_PropertiesDialog> {
+class _PropertiesDialogState extends ConsumerState<_PropertiesDialog> {
   FileStat? _stat;
   String? _md5;
   bool _computingMd5 = false;
+  PanelFileOrigin? _origin;
 
   @override
   void initState() {
     super.initState();
+    final origins = [
+      for (final side in PanelSide.values)
+        ref.read(panelProvider(side)).originForOperation(widget.file),
+    ].whereType<PanelFileOrigin>().toList();
+    if (origins.map((origin) => origin.storageId).toSet().length == 1) {
+      _origin = origins.first;
+    }
     _loadStat();
   }
 
   Future<void> _loadStat() async {
-    if (widget.file.path != null && !kIsWeb) {
+    if (_origin?.isCurrent == true &&
+        _origin!.source.isLocal &&
+        widget.file.path != null &&
+        !kIsWeb) {
       try {
         final stat = await FileStat.stat(widget.file.path!);
-        if (mounted) setState(() => _stat = stat);
+        if (mounted && _origin?.isCurrent == true) setState(() => _stat = stat);
       } catch (e) {
         _log.warn('initState failed', e);
       }
@@ -1533,7 +1516,21 @@ class _PropertiesDialogState extends State<_PropertiesDialog> {
     if (widget.file.path == null) return;
     setState(() => _computingMd5 = true);
     try {
-      final hash = await ChecksumService.md5File(widget.file.path!);
+      final origin = _origin;
+      if (origin == null || !origin.isCurrent) {
+        throw StateError('The original file source is unavailable.');
+      }
+      final backend = fileOperationBackend(
+        source: origin.source,
+        local: ref.read(localFileServiceProvider),
+        isCurrent: () => mounted && origin.isCurrent,
+      );
+      final hash = await ChecksumService.hashFile(
+        backend,
+        widget.file,
+        ChecksumAlgorithm.md5,
+        isCancelled: () => !mounted,
+      );
       if (mounted) {
         setState(() {
           _md5 = hash;
@@ -1554,7 +1551,7 @@ class _PropertiesDialogState extends State<_PropertiesDialog> {
   @override
   Widget build(BuildContext context) {
     final file = widget.file;
-    final isLocal = file.path != null && !kIsWeb;
+    final canRead = _origin?.isCurrent == true && file.path != null;
     final mimeType = file.isFolder
         ? 'Directory'
         : file.extension.isNotEmpty
@@ -1605,7 +1602,11 @@ class _PropertiesDialogState extends State<_PropertiesDialog> {
                 formatDateFull(file.updatedAt!),
               ),
             if (_stat != null) ...[
-              _propertyRow(context, 'Created', formatDateFull(_stat!.changed)),
+              _propertyRow(
+                context,
+                'Metadata changed',
+                formatDateFull(_stat!.changed),
+              ),
               _propertyRow(
                 context,
                 'Accessed',
@@ -1623,8 +1624,8 @@ class _PropertiesDialogState extends State<_PropertiesDialog> {
               ...file.metadata!.entries.map(
                 (e) => _propertyRow(context, e.key, '${e.value}', mono: true),
               ),
-            // MD5 on demand (local files only)
-            if (isLocal && !file.isFolder) ...[
+            // Hashing stays bound to the original verified local or cloud source.
+            if (canRead && !file.isFolder) ...[
               const Divider(),
               if (_md5 != null)
                 _propertyRow(context, 'MD5', _md5!, mono: true)
@@ -1760,251 +1761,6 @@ void _showFolderSize(BuildContext context, FileItem file) {
         },
       );
     },
-  );
-}
-
-void _showChecksumDialog(BuildContext context, FileItem file) {
-  if (file.path == null) return;
-
-  showDialog(
-    context: context,
-    barrierDismissible: false,
-    builder: (ctx) {
-      return FutureBuilder<Map<String, String>>(
-        future: () async {
-          final md5 = await ChecksumService.md5File(file.path!);
-          final sha256 = await ChecksumService.sha256File(file.path!);
-          return {'MD5': md5, 'SHA-256': sha256};
-        }(),
-        builder: (context, snapshot) {
-          if (snapshot.connectionState == ConnectionState.waiting) {
-            return AlertDialog(
-              title: Row(
-                children: [
-                  const Icon(Icons.fingerprint),
-                  const SizedBox(width: 8),
-                  Expanded(
-                    child: Text(file.name, overflow: TextOverflow.ellipsis),
-                  ),
-                ],
-              ),
-              content: const Row(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  CircularProgressIndicator(),
-                  SizedBox(width: 16),
-                  Text('Calculating checksums...'),
-                ],
-              ),
-            );
-          }
-
-          if (snapshot.hasError) {
-            return AlertDialog(
-              title: const Text('Checksum Error'),
-              content: Text('Failed to calculate checksum: ${snapshot.error}'),
-              actions: [
-                TextButton(
-                  onPressed: () => Navigator.pop(ctx),
-                  child: const Text('Close'),
-                ),
-              ],
-            );
-          }
-
-          final checksums = snapshot.data!;
-          return AlertDialog(
-            title: Row(
-              children: [
-                const Icon(Icons.fingerprint),
-                const SizedBox(width: 8),
-                Expanded(
-                  child: Text(file.name, overflow: TextOverflow.ellipsis),
-                ),
-              ],
-            ),
-            content: SingleChildScrollView(
-              child: Column(
-                mainAxisSize: MainAxisSize.min,
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: checksums.entries
-                    .map(
-                      (e) => _propertyRow(context, e.key, e.value, mono: true),
-                    )
-                    .toList(),
-              ),
-            ),
-            actions: [
-              TextButton(
-                onPressed: () => Navigator.pop(ctx),
-                child: const Text('Close'),
-              ),
-            ],
-          );
-        },
-      );
-    },
-  );
-}
-
-// --- Split / Combine / Link / Secure Wipe dialogs ---
-
-void _showSplitDialog(
-  BuildContext context,
-  WidgetRef ref,
-  PanelSide side,
-  FileItem file,
-) {
-  int chunkSize = 10 * 1024 * 1024; // 10 MB default
-  showDialog(
-    context: context,
-    builder: (context) => StatefulBuilder(
-      builder: (context, setState) => AlertDialog(
-        title: const Text('Split File'),
-        content: Column(
-          mainAxisSize: MainAxisSize.min,
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Text('File: ${file.name}'),
-            if (file.size != null) Text('Size: ${formatBytes(file.size!)}'),
-            const SizedBox(height: 16),
-            DropdownButtonFormField<int>(
-              initialValue: chunkSize,
-              decoration: const InputDecoration(
-                labelText: 'Chunk size',
-                border: OutlineInputBorder(),
-              ),
-              items: const [
-                DropdownMenuItem(value: 1024 * 1024, child: Text('1 MB')),
-                DropdownMenuItem(value: 10 * 1024 * 1024, child: Text('10 MB')),
-                DropdownMenuItem(value: 50 * 1024 * 1024, child: Text('50 MB')),
-                DropdownMenuItem(
-                  value: 100 * 1024 * 1024,
-                  child: Text('100 MB'),
-                ),
-                DropdownMenuItem(
-                  value: 500 * 1024 * 1024,
-                  child: Text('500 MB'),
-                ),
-              ],
-              onChanged: (v) => setState(() => chunkSize = v!),
-            ),
-            if (file.size != null)
-              Padding(
-                padding: const EdgeInsets.only(top: 8),
-                child: Text(
-                  'Will create ${((file.size! + chunkSize - 1) / chunkSize).ceil()} parts',
-                  style: Theme.of(context).textTheme.bodySmall,
-                ),
-              ),
-          ],
-        ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(context),
-            child: Text(AppLocalizations.of(context)!.cancel),
-          ),
-          ElevatedButton(
-            onPressed: () async {
-              Navigator.pop(context);
-              try {
-                final dir = p.dirname(file.path!);
-                await FileSplitService.splitFile(
-                  file.path!,
-                  dir,
-                  chunkSizeBytes: chunkSize,
-                );
-                ref.read(panelProvider(side)).refresh();
-                if (context.mounted) {
-                  ScaffoldMessenger.of(context).showSnackBar(
-                    const SnackBar(content: Text('File split successfully')),
-                  );
-                }
-              } catch (e) {
-                _log.warn('operation failed', e);
-                if (context.mounted) {
-                  ScaffoldMessenger.of(
-                    context,
-                  ).showSnackBar(SnackBar(content: Text('Split failed: $e')));
-                }
-              }
-            },
-            child: const Text('Split'),
-          ),
-        ],
-      ),
-    ),
-  );
-}
-
-void _showCombineDialog(
-  BuildContext context,
-  WidgetRef ref,
-  PanelSide side,
-  List<FileItem> files,
-) {
-  // Find the base name from the first part file
-  final partFile = files.firstWhere(
-    (f) => RegExp(r'\.part\d{3}$').hasMatch(f.name),
-  );
-  final baseName = partFile.name.replaceAll(RegExp(r'\.part\d{3}$'), '');
-  final dir = p.dirname(partFile.path ?? '');
-
-  showDialog(
-    context: context,
-    builder: (context) => AlertDialog(
-      title: const Text('Combine Parts'),
-      content: Column(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          Text('Base name: $baseName'),
-          const SizedBox(height: 8),
-          const Text('Will scan for all .partNNN files in the directory.'),
-        ],
-      ),
-      actions: [
-        TextButton(
-          onPressed: () => Navigator.pop(context),
-          child: Text(AppLocalizations.of(context)!.cancel),
-        ),
-        ElevatedButton(
-          onPressed: () async {
-            Navigator.pop(context);
-            try {
-              final parts = FileSplitService.detectParts(dir, baseName);
-              if (parts.isEmpty) {
-                if (context.mounted) {
-                  ScaffoldMessenger.of(context).showSnackBar(
-                    const SnackBar(content: Text('No parts found')),
-                  );
-                }
-                return;
-              }
-              final outputPath = p.join(dir, baseName);
-              await FileSplitService.combineFiles(parts, outputPath);
-              ref.read(panelProvider(side)).refresh();
-              if (context.mounted) {
-                ScaffoldMessenger.of(context).showSnackBar(
-                  SnackBar(
-                    content: Text(
-                      'Combined ${parts.length} parts into $baseName',
-                    ),
-                  ),
-                );
-              }
-            } catch (e) {
-              _log.warn('operation failed', e);
-              if (context.mounted) {
-                ScaffoldMessenger.of(
-                  context,
-                ).showSnackBar(SnackBar(content: Text('Combine failed: $e')));
-              }
-            }
-          },
-          child: const Text('Combine'),
-        ),
-      ],
-    ),
   );
 }
 
@@ -2188,148 +1944,6 @@ void _showSecureWipeDialog(
 
 // showSearchDialog, showFindDialog, showSearchResultsDialog moved to search_dialogs.dart
 
-Future<void> _createChecksumFileDialog(
-  BuildContext context,
-  List<FileItem> files,
-  String format,
-) async {
-  if (files.isEmpty) return;
-  final dir = p.dirname(files.first.path!);
-  final defaultName = 'checksums.$format';
-
-  showDialog(
-    context: context,
-    barrierDismissible: false,
-    builder: (ctx) => FutureBuilder<String>(
-      future: format == 'md5'
-          ? ChecksumService.generateMd5File(
-              files.map((f) => f.path!).toList(),
-              dir,
-              outputName: defaultName,
-            )
-          : ChecksumService.generateSha256File(
-              files.map((f) => f.path!).toList(),
-              dir,
-              outputName: defaultName,
-            ),
-      builder: (context, snap) {
-        if (snap.connectionState != ConnectionState.done) {
-          return const AlertDialog(
-            content: Row(
-              children: [
-                CircularProgressIndicator(),
-                SizedBox(width: 16),
-                Text('Generating checksums...'),
-              ],
-            ),
-          );
-        }
-        final error = snap.error;
-        return AlertDialog(
-          title: error != null
-              ? const Text('Error')
-              : const Text('Checksum file created'),
-          content: error != null
-              ? Text('Failed: $error')
-              : Text('Created: ${snap.data}'),
-          actions: [
-            TextButton(
-              onPressed: () => Navigator.pop(ctx),
-              child: const Text('OK'),
-            ),
-          ],
-        );
-      },
-    ),
-  );
-}
-
-Future<void> _verifyChecksumFileDialog(
-  BuildContext context,
-  String checksumPath,
-) async {
-  showDialog(
-    context: context,
-    barrierDismissible: false,
-    builder: (ctx) => FutureBuilder<List<ChecksumVerifyResult>>(
-      future: ChecksumService.verifyChecksumFile(checksumPath),
-      builder: (context, snap) {
-        if (snap.connectionState != ConnectionState.done) {
-          return const AlertDialog(
-            content: Row(
-              children: [
-                CircularProgressIndicator(),
-                SizedBox(width: 16),
-                Text('Verifying...'),
-              ],
-            ),
-          );
-        }
-        if (snap.error != null) {
-          return AlertDialog(
-            title: const Text('Verify failed'),
-            content: Text('${snap.error}'),
-            actions: [
-              TextButton(
-                onPressed: () => Navigator.pop(ctx),
-                child: const Text('OK'),
-              ),
-            ],
-          );
-        }
-        final results = snap.data ?? [];
-        final failed = results.where((r) => !r.ok).toList();
-        return AlertDialog(
-          title: Row(
-            children: [
-              Icon(
-                failed.isEmpty ? Icons.check_circle : Icons.error,
-                color: failed.isEmpty ? Colors.green : Colors.red,
-              ),
-              const SizedBox(width: 8),
-              Text(failed.isEmpty ? 'All OK' : '${failed.length} mismatch(es)'),
-            ],
-          ),
-          content: SizedBox(
-            width: 400,
-            child: ListView(
-              shrinkWrap: true,
-              children: results
-                  .map(
-                    (r) => ListTile(
-                      dense: true,
-                      leading: Icon(
-                        r.ok ? Icons.check : Icons.close,
-                        color: r.ok ? Colors.green : Colors.red,
-                        size: 16,
-                      ),
-                      title: Text(
-                        r.filename,
-                        style: const TextStyle(fontSize: 12),
-                      ),
-                      subtitle: r.ok
-                          ? null
-                          : Text(
-                              'Expected: ${r.expected.substring(0, 8)}…\nGot: ${r.actual.substring(0, 8)}…',
-                              style: const TextStyle(fontSize: 11),
-                            ),
-                    ),
-                  )
-                  .toList(),
-            ),
-          ),
-          actions: [
-            TextButton(
-              onPressed: () => Navigator.pop(ctx),
-              child: const Text('Close'),
-            ),
-          ],
-        );
-      },
-    ),
-  );
-}
-
 /// DC-15: Compare local file MD5 against a remote file's size (or MD5 if downloadable).
 void _verifyAgainstRemote(
   BuildContext context,
@@ -2435,12 +2049,42 @@ Future<Map<String, dynamic>> _computeVerification(
   FileItem remoteFile,
   WidgetRef ref,
 ) async {
-  final localMd5 = await ChecksumService.md5File(localFile.path!);
-  final localSize = localFile.size ?? 0;
+  final left = ref
+      .read(panelProvider(PanelSide.local))
+      .originForOperation(localFile);
+  final right = ref
+      .read(panelProvider(PanelSide.remote))
+      .originForOperation(remoteFile);
+  if (left == null || right == null || !left.isCurrent || !right.isCurrent) {
+    throw StateError(
+      'Refresh both original sources before verifying their contents.',
+    );
+  }
+  final local = ref.read(localFileServiceProvider);
+  final leftBackend = fileOperationBackend(
+    source: left.source,
+    local: local,
+    isCurrent: () => left.isCurrent,
+  );
+  final rightBackend = fileOperationBackend(
+    source: right.source,
+    local: local,
+    isCurrent: () => right.isCurrent,
+  );
+  final localMd5 = await ChecksumService.hashFile(
+    leftBackend,
+    localFile,
+    ChecksumAlgorithm.md5,
+  );
+  final remoteMd5 = await ChecksumService.hashFile(
+    rightBackend,
+    remoteFile,
+    ChecksumAlgorithm.md5,
+  );
   return {
     'localMd5': localMd5,
-    'localSize': localSize,
-    'remoteSize': remoteFile.size,
-    'remoteMd5': null, // Remote MD5 not available without download; size is enough for quick verify
+    'remoteMd5': remoteMd5,
+    'localSize': (await leftBackend.stat(localFile.path!))!.size ?? 0,
+    'remoteSize': (await rightBackend.stat(remoteFile.path!))!.size,
   };
 }
