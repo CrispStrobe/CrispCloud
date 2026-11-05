@@ -22,6 +22,7 @@ import '../models/editor_image.dart';
 import '../models/init_configs/editor_init_configs.dart';
 import '../models/layers/layer.dart';
 import '../models/multi_threading/thread_capture_model.dart';
+import '../../shared/widgets/editor_localization_scope.dart';
 import 'converted_configs.dart';
 
 /// A mixin providing access to standalone editor configurations and image.
@@ -58,7 +59,18 @@ mixin StandaloneEditorState<
       (widget as StandaloneEditor<I>).videoController;
 
   @override
-  ProImageEditorConfigs get configs => initConfigs.configs;
+  ProImageEditorConfigs get configs =>
+      EditorLocalizationScope.maybeOf(
+        context,
+        listen: false,
+      )?.localize(initConfigs.configs) ??
+      initConfigs.configs;
+
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    EditorLocalizationScope.maybeOf(context);
+  }
 
   @override
   ProImageEditorCallbacks get callbacks => initConfigs.callbacks;
@@ -204,7 +216,9 @@ mixin StandaloneEditorState<
             decodedImage.height.toDouble(),
           );
           Size? outputSize = transform?.getCropSize(originalImageSize);
-          Offset? outputOffset = transform?.getCropStartOffset(originalImageSize);
+          Offset? outputOffset = transform?.getCropStartOffset(
+            originalImageSize,
+          );
 
           await initConfigs.callbacks.onCompleteWithParameters?.call(
             CompleteParameters(
@@ -265,7 +279,8 @@ mixin StandaloneEditorState<
     // CrispCloud: the main editor's close callback belongs to the host dialog.
     // An embedded sub-editor must dismiss its own route, not the host.
     final isEmbedded =
-        configs.mainEditor.enableSubEditorPage && !initConfigs.convertToUint8List;
+        configs.mainEditor.enableSubEditorPage &&
+        !initConfigs.convertToUint8List;
     if (isEmbedded || initConfigs.callbacks.onCloseEditor == null) {
       Navigator.pop(context);
     } else {

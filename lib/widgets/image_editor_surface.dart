@@ -38,7 +38,16 @@ class ImageEditorSurface extends StatelessWidget {
     );
     final longestSide = (info.width > info.height ? info.width : info.height)
         .toDouble();
-    return Localizations.override(
+    final aspectRatios = [
+      AspectRatioItem(text: context.imageTr('Free'), value: -1),
+      AspectRatioItem(text: context.imageTr('Original'), value: 0),
+      const AspectRatioItem(text: '1:1', value: 1),
+      const AspectRatioItem(text: '4:3', value: 4 / 3),
+      const AspectRatioItem(text: '3:4', value: 3 / 4),
+      const AspectRatioItem(text: '16:9', value: 16 / 9),
+      const AspectRatioItem(text: '9:16', value: 9 / 16),
+    ];
+    final surface = Localizations.override(
       context: context,
       delegates: material.GlobalMaterialLocalizations.delegates,
       child: material.Theme(
@@ -133,15 +142,7 @@ class ImageEditorSurface extends StatelessWidget {
               ),
             ),
             cropRotateEditor: CropRotateEditorConfigs(
-              aspectRatios: [
-                AspectRatioItem(text: context.imageTr('Free'), value: -1),
-                AspectRatioItem(text: context.imageTr('Original'), value: 0),
-                const AspectRatioItem(text: '1:1', value: 1),
-                const AspectRatioItem(text: '4:3', value: 4 / 3),
-                const AspectRatioItem(text: '3:4', value: 3 / 4),
-                const AspectRatioItem(text: '16:9', value: 16 / 9),
-                const AspectRatioItem(text: '9:16', value: 9 / 16),
-              ],
+              aspectRatios: aspectRatios,
               style: CropRotateEditorStyle(
                 background: colors.surfaceContainerLowest,
                 appBarBackground: colors.surface,
@@ -185,6 +186,11 @@ class ImageEditorSurface extends StatelessWidget {
           ),
         ),
       ),
+    );
+    return EditorLocalizationScope(
+      i18n: ImageEditorStrings.editorI18n(context),
+      aspectRatios: aspectRatios,
+      child: surface,
     );
   }
 

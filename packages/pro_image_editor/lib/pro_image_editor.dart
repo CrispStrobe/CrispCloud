@@ -84,3 +84,5 @@ export 'shared/widgets/flat_icon_text_button.dart';
 export 'shared/widgets/gesture/gesture_interceptor_widget.dart';
 export 'shared/widgets/overlays/loading_dialog/loading_dialog.dart';
 export 'shared/widgets/platform/platform_circular_progress_indicator.dart';
+
+export 'shared/widgets/editor_localization_scope.dart';

@@ -3,6 +3,7 @@ import 'package:material_ui/material_ui.dart';
 
 import '../models/editor_callbacks/pro_image_editor_callbacks.dart';
 import '../models/editor_configs/pro_image_editor_configs.dart';
+import '../../shared/widgets/editor_localization_scope.dart';
 import 'converted_configs.dart';
 
 /// A mixin providing access to simple editor configurations.
@@ -20,7 +21,18 @@ mixin SimpleConfigsAccessState<T extends StatefulWidget>
   SimpleConfigsAccess get _widget => (widget as SimpleConfigsAccess);
 
   @override
-  ProImageEditorConfigs get configs => _widget.configs;
+  ProImageEditorConfigs get configs =>
+      EditorLocalizationScope.maybeOf(
+        context,
+        listen: false,
+      )?.localize(_widget.configs) ??
+      _widget.configs;
+
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    EditorLocalizationScope.maybeOf(context);
+  }
 
   /// Returns the callbacks for the editor.
   ProImageEditorCallbacks get callbacks => _widget.callbacks;
