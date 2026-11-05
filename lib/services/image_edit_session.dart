@@ -21,6 +21,7 @@ enum ImageEditFailure {
   outputTooLarge,
   dimensionsTooLarge,
   staleExport,
+  gifColorLimit,
 }
 
 /// Machine-readable failures are translated by the host, never shown verbatim.

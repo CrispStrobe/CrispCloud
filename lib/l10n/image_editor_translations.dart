@@ -38,6 +38,7 @@ const imageEditorInvariantFilterNames = <String, String>{
 const imageEditorTranslations = <String, Map<String, String>>{
   'en': <String, String>{
     ...imageEditorInvariantFilterNames,
+    'GIF cannot preserve these colors or transparency. Export as PNG or WebP.': 'GIF cannot preserve these colors or transparency. Export as PNG or WebP.',
     'Could not add emoji': 'Could not add emoji',
     'Emoji': 'Emoji',
     'Search emoji': 'Search emoji',
@@ -211,6 +212,7 @@ const imageEditorTranslations = <String, Map<String, String>>{
   },
   'de': <String, String>{
     ...imageEditorInvariantFilterNames,
+    'GIF cannot preserve these colors or transparency. Export as PNG or WebP.': 'GIF kann diese Farben oder Transparenz nicht erhalten. Als PNG oder WebP exportieren.',
     'Could not add emoji': 'Emoji konnte nicht hinzugefügt werden',
     'Emoji': 'Emoji',
     'Search emoji': 'Emoji suchen',
@@ -380,6 +382,7 @@ const imageEditorTranslations = <String, Map<String, String>>{
   },
   'fr': <String, String>{
     ...imageEditorInvariantFilterNames,
+    'GIF cannot preserve these colors or transparency. Export as PNG or WebP.': 'GIF ne peut pas préserver ces couleurs ou cette transparence. Exportez en PNG ou WebP.',
     'Could not add emoji': 'Impossible d’ajouter l’emoji',
     'Emoji': 'Emoji',
     'Search emoji': 'Rechercher un emoji',
@@ -551,6 +554,7 @@ const imageEditorTranslations = <String, Map<String, String>>{
   },
   'es': <String, String>{
     ...imageEditorInvariantFilterNames,
+    'GIF cannot preserve these colors or transparency. Export as PNG or WebP.': 'GIF no puede conservar estos colores o la transparencia. Exporta como PNG o WebP.',
     'Could not add emoji': 'No se pudo añadir el emoji',
     'Emoji': 'Emoji',
     'Search emoji': 'Buscar emoji',
@@ -719,6 +723,7 @@ const imageEditorTranslations = <String, Map<String, String>>{
   },
   'pt': <String, String>{
     ...imageEditorInvariantFilterNames,
+    'GIF cannot preserve these colors or transparency. Export as PNG or WebP.': 'GIF não consegue preservar essas cores ou transparência. Exporte como PNG ou WebP.',
     'Could not add emoji': 'Não foi possível adicionar o emoji',
     'Emoji': 'Emoji',
     'Search emoji': 'Pesquisar emoji',
@@ -890,6 +895,8 @@ const imageEditorTranslations = <String, Map<String, String>>{
   },
   'zh': <String, String>{
     ...imageEditorInvariantFilterNames,
+    'GIF cannot preserve these colors or transparency. Export as PNG or WebP.':
+        'GIF 无法保留这些颜色或透明度。请导出为 PNG 或 WebP。',
     'Could not add emoji': '无法添加表情符号',
     'Emoji': '表情符号',
     'Search emoji': '搜索表情符号',
@@ -1059,6 +1066,8 @@ const imageEditorTranslations = <String, Map<String, String>>{
   },
   'ja': <String, String>{
     ...imageEditorInvariantFilterNames,
+    'GIF cannot preserve these colors or transparency. Export as PNG or WebP.':
+        'GIF ではこの色や透明度を保持できません。PNG または WebP として書き出してください。',
     'Could not add emoji': '絵文字を追加できませんでした',
     'Emoji': '絵文字',
     'Search emoji': '絵文字を検索',
@@ -1232,6 +1241,8 @@ const imageEditorTranslations = <String, Map<String, String>>{
   },
   'ko': <String, String>{
     ...imageEditorInvariantFilterNames,
+    'GIF cannot preserve these colors or transparency. Export as PNG or WebP.':
+        'GIF는 이 색상이나 투명도를 보존할 수 없습니다. PNG 또는 WebP로 내보내세요.',
     'Could not add emoji': '이모지를 추가하지 못했습니다',
     'Emoji': '이모지',
     'Search emoji': '이모지 검색',
@@ -1406,6 +1417,7 @@ const imageEditorTranslations = <String, Map<String, String>>{
   },
   'ar': <String, String>{
     ...imageEditorInvariantFilterNames,
+    'GIF cannot preserve these colors or transparency. Export as PNG or WebP.': 'لا يمكن لـ GIF الحفاظ على هذه الألوان أو الشفافية. صدّر بصيغة PNG أو WebP.',
     'Could not add emoji': 'تعذرت إضافة الرمز التعبيري',
     'Emoji': 'رموز تعبيرية',
     'Search emoji': 'البحث عن رمز تعبيري',

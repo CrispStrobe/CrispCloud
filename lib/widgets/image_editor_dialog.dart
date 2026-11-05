@@ -815,6 +815,7 @@ class _ImageEditorDialogState extends ConsumerState<ImageEditorDialog> {
         'The edited image exceeds the 64 MiB save limit.',
       ImageEditFailure.dimensionsTooLarge =>
         'This image exceeds the 40 megapixel or 16384 pixel dimension limit.',
+      ImageEditFailure.gifColorLimit => 'GIF cannot preserve these colors or transparency. Export as PNG or WebP.',
       ImageEditFailure.staleExport =>
         'The image changed during export. Please save again.',
     },
