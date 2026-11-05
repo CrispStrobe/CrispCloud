@@ -9,7 +9,7 @@ import 'transfer_spool.dart';
 
 const _chunkSize = 64 * 1024;
 // AES-GCM's existing single-message format permits at most 2^39 - 256 bits.
-const maxGcmPlaintextBytes = (1 << 36) - 32;
+const maxGcmPlaintextBytes = 68719476704;
 
 Stream<List<int>> encryptGcmTransfer(
   Stream<List<int>> source,
