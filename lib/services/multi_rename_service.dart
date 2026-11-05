@@ -3,13 +3,19 @@ import 'dart:convert';
 import 'package:path/path.dart' as p;
 
 import '../models/file_item.dart';
+import 'rename_mask.dart';
 import 'search_replace.dart';
+
+export 'rename_mask.dart'
+    show RenameMaskDialect, RenameDateSource, RenameDateZone;
 
 /// Changes are applied after masks and search/replace, independently for the
 /// name and extension. Directories always use the name settings only.
 enum RenameCase { unchanged, lower, upper, title, sentence }
 
 enum RenameReplaceScope { fullName, name, extension }
+
+enum RenameCollisionPolicy { error, number }
 
 class MultiRenameOptions {
   const MultiRenameOptions({
@@ -26,6 +32,14 @@ class MultiRenameOptions {
     this.counterStart = 1,
     this.counterStep = 1,
     this.counterWidth = 3,
+    this.dialect = RenameMaskDialect.crispCloud,
+    this.dateSource = RenameDateSource.modified,
+    this.dateZone = RenameDateZone.original,
+    this.dateOffsetMinutes = 0,
+    this.variables = const {},
+    this.multipleLiteralPairs = false,
+    this.additionalSteps = const [],
+    this.collisionPolicy = RenameCollisionPolicy.error,
   });
 
   final String nameMask;
@@ -41,8 +55,17 @@ class MultiRenameOptions {
   final int counterStart;
   final int counterStep;
   final int counterWidth;
+  final RenameMaskDialect dialect;
+  final RenameDateSource dateSource;
+  final RenameDateZone dateZone;
+  final int dateOffsetMinutes;
+  final Map<String, String> variables;
+  final bool multipleLiteralPairs;
+  final List<MultiRenameOptions> additionalSteps;
+  final RenameCollisionPolicy collisionPolicy;
 
   Map<String, Object> toJson() => {
+    'version': 2,
     'nameMask': nameMask,
     'extensionMask': extensionMask,
     'find': find,
@@ -56,6 +79,14 @@ class MultiRenameOptions {
     'counterStart': counterStart,
     'counterStep': counterStep,
     'counterWidth': counterWidth,
+    'dialect': dialect.name,
+    'dateSource': dateSource.name,
+    'dateZone': dateZone.name,
+    'dateOffsetMinutes': dateOffsetMinutes,
+    'variables': variables,
+    'multipleLiteralPairs': multipleLiteralPairs,
+    'additionalSteps': additionalSteps.map((step) => step.toJson()).toList(),
+    'collisionPolicy': collisionPolicy.name,
   };
 
   factory MultiRenameOptions.fromJson(Map<String, dynamic> value) {
@@ -95,8 +126,92 @@ class MultiRenameOptions {
       counterStart: number('counterStart', 1),
       counterStep: number('counterStep', 1),
       counterWidth: number('counterWidth', 3),
+      dialect: choice(
+        RenameMaskDialect.values,
+        'dialect',
+        RenameMaskDialect.crispCloud,
+      ),
+      dateSource: choice(
+        RenameDateSource.values,
+        'dateSource',
+        RenameDateSource.modified,
+      ),
+      dateZone: choice(
+        RenameDateZone.values,
+        'dateZone',
+        RenameDateZone.original,
+      ),
+      dateOffsetMinutes: number('dateOffsetMinutes', 0),
+      variables: value['variables'] is Map
+          ? {
+              for (final entry in (value['variables'] as Map).entries)
+                entry.key.toString(): entry.value.toString(),
+            }
+          : const {},
+      multipleLiteralPairs: flag('multipleLiteralPairs', false),
+      additionalSteps: value['additionalSteps'] is List
+          ? (value['additionalSteps'] as List)
+                .whereType<Map>()
+                .map(
+                  (step) => MultiRenameOptions.fromJson(
+                    Map<String, dynamic>.from(step),
+                  ),
+                )
+                .toList()
+          : const [],
+      collisionPolicy: choice(
+        RenameCollisionPolicy.values,
+        'collisionPolicy',
+        RenameCollisionPolicy.error,
+      ),
     );
   }
+
+  MultiRenameOptions copyWith({
+    String? nameMask,
+    String? extensionMask,
+    String? find,
+    String? replace,
+    bool? useRegex,
+    bool? caseSensitive,
+    bool? firstMatchOnly,
+    RenameReplaceScope? replaceScope,
+    RenameCase? nameCase,
+    RenameCase? extensionCase,
+    int? counterStart,
+    int? counterStep,
+    int? counterWidth,
+    RenameMaskDialect? dialect,
+    RenameDateSource? dateSource,
+    RenameDateZone? dateZone,
+    int? dateOffsetMinutes,
+    Map<String, String>? variables,
+    bool? multipleLiteralPairs,
+    List<MultiRenameOptions>? additionalSteps,
+    RenameCollisionPolicy? collisionPolicy,
+  }) => MultiRenameOptions(
+    nameMask: nameMask ?? this.nameMask,
+    extensionMask: extensionMask ?? this.extensionMask,
+    find: find ?? this.find,
+    replace: replace ?? this.replace,
+    useRegex: useRegex ?? this.useRegex,
+    caseSensitive: caseSensitive ?? this.caseSensitive,
+    firstMatchOnly: firstMatchOnly ?? this.firstMatchOnly,
+    replaceScope: replaceScope ?? this.replaceScope,
+    nameCase: nameCase ?? this.nameCase,
+    extensionCase: extensionCase ?? this.extensionCase,
+    counterStart: counterStart ?? this.counterStart,
+    counterStep: counterStep ?? this.counterStep,
+    counterWidth: counterWidth ?? this.counterWidth,
+    dialect: dialect ?? this.dialect,
+    dateSource: dateSource ?? this.dateSource,
+    dateZone: dateZone ?? this.dateZone,
+    dateOffsetMinutes: dateOffsetMinutes ?? this.dateOffsetMinutes,
+    variables: variables ?? this.variables,
+    multipleLiteralPairs: multipleLiteralPairs ?? this.multipleLiteralPairs,
+    additionalSteps: additionalSteps ?? this.additionalSteps,
+    collisionPolicy: collisionPolicy ?? this.collisionPolicy,
+  );
 }
 
 class MultiRenameEntry {
@@ -114,19 +229,35 @@ class MultiRenameEntry {
   final String newName;
   final List<String> errors;
 
-  bool get changed => file.name != newName;
+  bool get changed => sourcePath != targetPath;
+  bool get directChange => file.name != newName;
   bool get isValid => errors.isEmpty;
 
   FileItem get renamedFile => file.copyWith(name: newName, path: targetPath);
 }
 
 class MultiRenamePlan {
-  MultiRenamePlan._(List<MultiRenameEntry> entries, List<String> errors)
-    : entries = List.unmodifiable(entries),
-      errors = List.unmodifiable(errors);
+  MultiRenamePlan._(
+    List<MultiRenameEntry> entries,
+    List<String> errors, {
+    required this.pathContext,
+    required this.referenceTime,
+    required this.caseSensitivePaths,
+    this.requiresStaging = false,
+  }) : entries = List.unmodifiable(entries),
+       errors = List.unmodifiable(errors);
 
   final List<MultiRenameEntry> entries;
   final List<String> errors;
+  final p.Context pathContext;
+  final DateTime referenceTime;
+  final bool caseSensitivePaths;
+  final bool requiresStaging;
+
+  String pathKey(String path) {
+    final normalized = pathContext.normalize(path);
+    return caseSensitivePaths ? normalized : normalized.toLowerCase();
+  }
 
   int get changeCount => entries.where((entry) => entry.changed).length;
   bool get isValid => errors.isEmpty && entries.every((entry) => entry.isValid);
@@ -191,16 +322,11 @@ class MultiRenameProgress {
 
 /// Commander-style multi-rename planning, independent of a provider or widget.
 ///
-/// Masks support [N], [E], [C], [C:4], [P], [N1-4], [N3-], [N-4--1],
-/// [Y], [M], [D], [h], [m], and [s]. Positions are one-based Unicode code
-/// points; negative positions count from the end. Date tokens use the item's
-/// modified time, never the current clock. Escape brackets with [[ and ]].
-///
-/// Planning is conservative about case collisions because a remote provider's
-/// case rules may differ from the host's. Existing destinations, rename cycles,
-/// and parent/child batches are blocked instead of replacing any file. The
-/// execution callback must also refuse overwrites; remote APIs cannot generally
-/// offer a transaction spanning an entire batch.
+/// Masks, metadata and ordered transformations are pure preview operations.
+/// The selected dialect and a fixed reference time make presets reproducible.
+/// Optional dependency planning resolves case changes, cycles and selected
+/// ancestors; those plans must use the recoverable batch executor. The legacy
+/// callback executor intentionally accepts only independent, direct renames.
 class MultiRenameService {
   const MultiRenameService();
 
@@ -209,29 +335,59 @@ class MultiRenameService {
     MultiRenameOptions options, {
     required String directory,
     p.Context? pathContext,
+    Map<String, String> targetNames = const {},
+    Iterable<String> existingPaths = const [],
+    bool caseSensitivePaths = false,
+    bool allowDependencies = false,
+    DateTime? referenceTime,
   }) {
     final paths = pathContext ?? p.posix;
+    final capturedTime = referenceTime ?? DateTime.now();
     final errors = <String>[];
-    if (options.counterStart < 0 || options.counterStart > 999999999999) {
-      errors.add('Counter start must be between 0 and 999999999999.');
+    final steps = [options, ...options.additionalSteps];
+    if (steps.length > 101 ||
+        options.additionalSteps.any(
+          (step) => step.additionalSteps.isNotEmpty,
+        )) {
+      errors.add(
+        'A pipeline supports up to 100 flat additional transformation steps.',
+      );
     }
-    if (options.counterStep.abs() > 999999999999) {
-      errors.add('Counter step is too large.');
-    }
-    if (options.counterWidth < 1 || options.counterWidth > 12) {
-      errors.add('Counter width must be between 1 and 12.');
-    }
-    RegExp? pattern;
-    if (options.find.isNotEmpty) {
-      try {
-        pattern = RegExp(
-          options.useRegex ? options.find : RegExp.escape(options.find),
-          caseSensitive: options.caseSensitive,
-          unicode: true,
-        );
-      } on FormatException catch (error) {
-        errors.add('Invalid regular expression: ${error.message}');
+    final patterns = <RegExp?>[];
+    for (var stepIndex = 0; stepIndex < steps.length; stepIndex++) {
+      final step = steps[stepIndex];
+      void problem(String message) => errors.add(
+        stepIndex == 0 ? message : 'Step ${stepIndex + 1}: $message',
+      );
+      if (step.counterStart.abs() > 999999999999 ||
+          (step.counterStart < 0 &&
+              step.dialect == RenameMaskDialect.crispCloud)) {
+        problem('Counter start is outside the supported range.');
       }
+      if (step.counterStep.abs() > 999999999999) {
+        problem('Counter step is too large.');
+      }
+      if (step.counterWidth < 1 || step.counterWidth > 12) {
+        problem('Counter width must be between 1 and 12.');
+      }
+      if (step.multipleLiteralPairs && step.useRegex) {
+        problem(
+          'Multiple literal pairs and regular expressions are separate modes.',
+        );
+      }
+      RegExp? pattern;
+      if (step.find.isNotEmpty) {
+        try {
+          pattern = RegExp(
+            step.useRegex ? step.find : RegExp.escape(step.find),
+            caseSensitive: step.caseSensitive,
+            unicode: true,
+          );
+        } on FormatException catch (error) {
+          problem('Invalid regular expression: ${error.message}');
+        }
+      }
+      patterns.add(pattern);
     }
 
     final rows = <MultiRenameEntry>[];
@@ -254,7 +410,22 @@ class MultiRenameService {
       var newName = file.name;
       if (errors.isEmpty) {
         try {
-          newName = _transform(file, index, options, pattern, source, paths);
+          for (var stepIndex = 0; stepIndex < steps.length; stepIndex++) {
+            final current = file.copyWith(
+              name: newName,
+              path: paths.join(paths.dirname(source), newName),
+            );
+            newName = _transform(
+              current,
+              index,
+              steps[stepIndex],
+              patterns[stepIndex],
+              current.path!,
+              paths,
+              capturedTime,
+            );
+          }
+          newName = targetNames[source] ?? newName;
           if (newName != file.name) {
             final invalid = validateName(newName);
             if (invalid != null) problems.add(invalid);
@@ -274,15 +445,100 @@ class MultiRenameService {
       rowErrors.add(problems);
     }
 
-    String key(String path) => paths.normalize(path).toLowerCase();
+    String key(String path) => caseSensitivePaths
+        ? paths.normalize(path)
+        : paths.normalize(path).toLowerCase();
+    if (options.collisionPolicy == RenameCollisionPolicy.number) {
+      final vacated = rows
+          .where((row) => row.directChange)
+          .map((row) => key(row.sourcePath))
+          .toSet();
+      final occupied = existingPaths
+          .map(key)
+          .where((path) => !vacated.contains(path))
+          .toSet();
+      final reserved = rows
+          .where((row) => !row.directChange)
+          .map((row) => key(row.targetPath))
+          .toSet();
+      for (var index = 0; index < rows.length; index++) {
+        final row = rows[index];
+        if (!row.directChange) continue;
+        var name = row.newName;
+        var target = row.targetPath;
+        final parts = _parts(name, row.file.isFolder);
+        var suffix = 1;
+        while (reserved.contains(key(target)) ||
+            occupied.contains(key(target))) {
+          name = _join('${parts.$1} (${suffix++})', parts.$2);
+          target = paths.join(paths.dirname(row.sourcePath), name);
+        }
+        reserved.add(key(target));
+        rows[index] = MultiRenameEntry._(
+          file: row.file,
+          sourcePath: row.sourcePath,
+          targetPath: target,
+          newName: name,
+        );
+        final invalid = validateName(name);
+        if (invalid != null) rowErrors[index].add(invalid);
+      }
+    }
+    final directTargets = rows.map((row) => row.targetPath).toList();
+    if (allowDependencies) {
+      final ancestors =
+          rows
+              .where(
+                (row) =>
+                    row.file.isFolder &&
+                    row.file.isSymlink != true &&
+                    row.directChange,
+              )
+              .toList()
+            ..sort(
+              (a, b) => b.sourcePath.length.compareTo(a.sourcePath.length),
+            );
+      for (var index = 0; index < rows.length; index++) {
+        final row = rows[index];
+        var target = row.targetPath;
+        for (final ancestor in ancestors) {
+          if (paths.isWithin(key(ancestor.sourcePath), key(row.sourcePath))) {
+            target = paths.join(
+              paths.dirname(ancestor.sourcePath),
+              ancestor.newName,
+              paths.relative(target, from: ancestor.sourcePath),
+            );
+          }
+        }
+        rows[index] = MultiRenameEntry._(
+          file: row.file,
+          sourcePath: row.sourcePath,
+          targetPath: target,
+          newName: row.newName,
+        );
+      }
+    }
     final sources = <String, List<int>>{};
     final targets = <String, List<int>>{};
+    final vacated = rows
+        .where((row) => row.directChange)
+        .map((row) => key(row.sourcePath))
+        .toSet();
+    final occupied = existingPaths
+        .map(key)
+        .where((path) => !vacated.contains(path))
+        .toSet();
     for (var index = 0; index < rows.length; index++) {
       sources.putIfAbsent(key(rows[index].sourcePath), () => []).add(index);
       targets.putIfAbsent(key(rows[index].targetPath), () => []).add(index);
     }
     for (var index = 0; index < rows.length; index++) {
       final row = rows[index];
+      if (row.directChange && occupied.contains(key(directTargets[index]))) {
+        rowErrors[index].add(
+          'The destination already exists. Choose another name or enable collision numbering.',
+        );
+      }
       if (sources[key(row.sourcePath)]!.length > 1) {
         rowErrors[index].add(
           'The selection contains duplicate or case-ambiguous paths.',
@@ -294,12 +550,15 @@ class MultiRenameService {
         );
       }
       if (row.changed &&
-          (sources[key(row.targetPath)] ?? []).any((other) => other != index)) {
+          !allowDependencies &&
+          (sources[key(directTargets[index])] ?? []).any(
+            (other) => other != index,
+          )) {
         rowErrors[index].add(
           'This name belongs to another selected item. Use an intermediate name first.',
         );
       }
-      if (row.changed && row.file.isFolder) {
+      if (!allowDependencies && row.changed && row.file.isFolder) {
         for (var other = 0; other < rows.length; other++) {
           if (other == index) continue;
           if (paths.isWithin(
@@ -316,16 +575,47 @@ class MultiRenameService {
         }
       }
     }
-    return MultiRenamePlan._([
-      for (var index = 0; index < rows.length; index++)
-        MultiRenameEntry._(
-          file: rows[index].file,
-          sourcePath: rows[index].sourcePath,
-          targetPath: rows[index].targetPath,
-          newName: rows[index].newName,
-          errors: rowErrors[index],
-        ),
-    ], errors);
+    return MultiRenamePlan._(
+      [
+        for (var index = 0; index < rows.length; index++)
+          MultiRenameEntry._(
+            file: rows[index].file,
+            sourcePath: rows[index].sourcePath,
+            targetPath: rows[index].targetPath,
+            newName: rows[index].newName,
+            errors: rowErrors[index],
+          ),
+      ],
+      errors,
+      pathContext: paths,
+      referenceTime: capturedTime,
+      caseSensitivePaths: caseSensitivePaths,
+      requiresStaging:
+          allowDependencies &&
+          rows.any(
+            (row) =>
+                row.changed &&
+                (key(row.sourcePath) == key(row.targetPath) ||
+                    rows.any(
+                      (other) =>
+                          !identical(row, other) &&
+                          (key(
+                                    paths.join(
+                                      paths.dirname(row.sourcePath),
+                                      row.newName,
+                                    ),
+                                  ) ==
+                                  key(other.sourcePath) ||
+                              (other.file.isFolder &&
+                                  other.file.isSymlink != true &&
+                                  other.directChange &&
+                                  paths.isWithin(
+                                    key(other.sourcePath),
+                                    key(row.sourcePath),
+                                  ))),
+                    )),
+          ),
+    );
   }
 
   /// Return a portable-name validation error, or null. Checking names before
@@ -368,6 +658,11 @@ class MultiRenameService {
     bool continueOnError = false,
     void Function(MultiRenameProgress progress)? onProgress,
   }) async {
+    if (plan.requiresStaging) {
+      throw MultiRenamePreflightException({
+        '': 'This plan requires the recoverable batch rename executor.',
+      });
+    }
     if (!plan.isValid) {
       throw MultiRenamePreflightException({
         if (plan.errors.isNotEmpty) '': plan.errors.join('\n'),
@@ -474,23 +769,61 @@ class MultiRenameService {
     RegExp? pattern,
     String source,
     p.Context paths,
+    DateTime referenceTime,
   ) {
     final original = _parts(file.name, file.isFolder);
-    final counter = options.counterStart + index * options.counterStep;
-    String mask(String value) => _mask(
+    String mask(String value) => expandRenameMask(
       value,
-      original.$1,
-      original.$2,
-      counter,
-      options.counterWidth,
-      file.updatedAt,
-      paths.basename(paths.dirname(source)),
+      RenameMaskContext(
+        file: file,
+        name: original.$1,
+        extension: original.$2,
+        sourcePath: source,
+        paths: paths,
+        index: index,
+        counterStart: options.counterStart,
+        counterStep: options.counterStep,
+        counterWidth: options.counterWidth,
+        referenceTime: referenceTime,
+        dialect: options.dialect,
+        dateSource: options.dateSource,
+        dateZone: options.dateZone,
+        dateOffsetMinutes: options.dateOffsetMinutes,
+        variables: options.variables,
+      ),
     );
     var name = mask(options.nameMask);
     var extension = file.isFolder ? '' : mask(options.extensionMask);
 
     String replace(String value) {
       if (pattern == null) return value;
+      if (options.multipleLiteralPairs) {
+        final from = options.find.split('|');
+        final to = options.replace.split('|');
+        if (from.any((word) => word.isEmpty) ||
+            (to.length != 1 && to.length != from.length)) {
+          throw const FormatException(
+            'Enter nonempty search pairs and one replacement or a matching number of replacements.',
+          );
+        }
+        final expression = RegExp(
+          from.map(RegExp.escape).join('|'),
+          caseSensitive: options.caseSensitive,
+          unicode: true,
+        );
+        String substitute(Match match) {
+          final index = from.indexWhere(
+            (word) => options.caseSensitive
+                ? word == match[0]
+                : word.toLowerCase() == match[0]!.toLowerCase(),
+          );
+          return to.length == 1 ? to.single : to[index];
+        }
+
+        return options.firstMatchOnly
+            ? value.replaceFirstMapped(expression, substitute)
+            : value.replaceAllMapped(expression, substitute);
+      }
       String replacement(Match match) => options.useRegex
           ? expandReplacementTemplate(options.replace, match)
           : options.replace;
@@ -547,117 +880,5 @@ class MultiRenameService {
         return String.fromCharCode(points.first).toUpperCase() +
             String.fromCharCodes(points.skip(1));
     }
-  }
-
-  String _mask(
-    String mask,
-    String name,
-    String extension,
-    int counter,
-    int width,
-    DateTime? modified,
-    String parent,
-  ) {
-    final result = StringBuffer();
-    var position = 0;
-    while (position < mask.length) {
-      if (mask.startsWith('[[', position)) {
-        result.write('[');
-        position += 2;
-      } else if (mask.startsWith(']]', position)) {
-        result.write(']');
-        position += 2;
-      } else if (mask[position] == '[') {
-        final end = mask.indexOf(']', position + 1);
-        if (end < 0) {
-          throw const FormatException('A mask token is missing its closing ].');
-        }
-        final token = mask.substring(position + 1, end);
-        result.write(
-          _token(token, name, extension, counter, width, modified, parent),
-        );
-        position = end + 1;
-      } else {
-        result.write(mask[position]);
-        position++;
-      }
-    }
-    return result.toString();
-  }
-
-  String _token(
-    String token,
-    String name,
-    String extension,
-    int counter,
-    int width,
-    DateTime? modified,
-    String parent,
-  ) {
-    if (token == 'N') return name;
-    if (token == 'E') return extension;
-    if (token == 'P') return parent;
-    final count = RegExp(r'^C(?::([0-9]+))?$').firstMatch(token);
-    if (count != null) {
-      final digits = count[1] == null ? width : int.tryParse(count[1]!) ?? 0;
-      if (digits < 1 || digits > 12) {
-        throw const FormatException('Counter width must be between 1 and 12.');
-      }
-      if (counter < 0 || counter > 999999999999) {
-        throw const FormatException(
-          'A counter value is outside 0–999999999999.',
-        );
-      }
-      return counter.toString().padLeft(digits, '0');
-    }
-    if (const {'Y', 'M', 'D', 'h', 'm', 's'}.contains(token)) {
-      if (modified == null) {
-        throw const FormatException(
-          'This item has no modified time for the date mask.',
-        );
-      }
-      final value = switch (token) {
-        'Y' => modified.year,
-        'M' => modified.month,
-        'D' => modified.day,
-        'h' => modified.hour,
-        'm' => modified.minute,
-        _ => modified.second,
-      };
-      return value.toString().padLeft(token == 'Y' ? 4 : 2, '0');
-    }
-    final slice = RegExp(r'^([NE])(-?[1-9][0-9]*)(?:-(-?[1-9][0-9]*)?)?$')
-        .firstMatch(token);
-    if (slice != null) {
-      final points = (slice[1] == 'N' ? name : extension).runes.toList();
-      final startPosition = int.tryParse(slice[2]!);
-      if (startPosition == null) {
-        throw const FormatException('The mask position is too large.');
-      }
-      int offset(int n) => n < 0 ? points.length + n : n - 1;
-      final start = offset(startPosition).clamp(0, points.length);
-      final hasRange = token.substring(1 + slice[2]!.length).startsWith('-');
-      final int end;
-      if (!hasRange) {
-        // An out-of-range single position produces no characters.
-        if (offset(startPosition) < 0 ||
-            offset(startPosition) >= points.length) {
-          return '';
-        }
-        end = start + 1;
-      } else if (slice[3] == null) {
-        end = points.length;
-      } else {
-        final endPosition = int.tryParse(slice[3]!);
-        if (endPosition == null) {
-          throw const FormatException('The mask position is too large.');
-        }
-        end = (offset(endPosition) + 1).clamp(0, points.length);
-      }
-      return end < start
-          ? ''
-          : String.fromCharCodes(points.sublist(start, end));
-    }
-    throw FormatException('Unknown mask token [$token].');
   }
 }
