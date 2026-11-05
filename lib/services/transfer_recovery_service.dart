@@ -60,7 +60,7 @@ Future<String> transferDigest(
   var count = 0;
   Stream<List<int>> contents() async* {
     if (prefixLength == 0) return;
-    await for (final chunk in backend.readFile(file)) {
+    await for (final chunk in control.bind(backend.readFile(file))) {
       await control.checkpoint();
       _check(backend, control);
       final remaining = prefixLength == null

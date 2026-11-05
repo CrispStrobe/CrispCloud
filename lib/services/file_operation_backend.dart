@@ -14,6 +14,7 @@ import 'local_file_service.dart';
 import 'panel_source_service.dart';
 import 'native_file_primitives.dart';
 import 'storage_identity.dart';
+import 'transfer_spool.dart';
 
 FileOperationBackend fileOperationBackend({
   required PanelSource source,
@@ -983,6 +984,7 @@ class CloudOperationBackend extends FileOperationBackend {
     FileItem? capturedBackup;
     var backupVerified = false;
     var received = 0;
+    TransferSpool? spool;
     await checkpoint?.call({
       'phase': 'uploading',
       'destination': path,
@@ -991,16 +993,12 @@ class CloudOperationBackend extends FileOperationBackend {
     });
     try {
       if (length == null) {
-        // Cloud upload contracts require a real content length. Unknown-size
-        // sources are buffered rather than falsely advertised as empty files.
-        final buffered = BytesBuilder(copy: false);
-        await for (final chunk in data) {
-          _check();
-          buffered.add(chunk);
-        }
-        final bytes = buffered.takeBytes();
-        length = bytes.length;
-        data = Stream.value(bytes);
+        spool = await createTransferSpool(
+          data,
+          checkpoint: () async => _check(),
+        );
+        length = spool.length;
+        data = spool.openRead();
       }
       // Never stream into an existing destination: FTP/SFTP and some web APIs
       // truncate as soon as upload begins. Stage alongside it first.
@@ -1182,6 +1180,7 @@ class CloudOperationBackend extends FileOperationBackend {
       }
       rethrow;
     } finally {
+      await spool?.dispose();
       // Account changes prohibit even cleanup against the replacement account.
       if (isCurrent && !committed && !commitAttempted) {
         try {
