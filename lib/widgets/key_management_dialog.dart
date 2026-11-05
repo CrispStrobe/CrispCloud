@@ -6,6 +6,8 @@
 
 
 import 'package:flutter/material.dart';
+
+import '../l10n/access_and_fkey_strings.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../providers/providers.dart';
@@ -418,7 +420,7 @@ class _KeyManagementDialogState extends ConsumerState<_KeyManagementDialog>
             maxLines: 2,
             decoration: InputDecoration(
               border: const OutlineInputBorder(),
-              hintText: 'word1 word2 word3 ... word24',
+              hintText: AccessAndFKeyStrings(Localizations.localeOf(context)).mnemonicHint,
               isDense: true,
             ),
             style: const TextStyle(fontSize: 12),

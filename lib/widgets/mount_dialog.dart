@@ -12,6 +12,8 @@
 import 'package:file_selector/file_selector.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
+
+import '../l10n/access_and_fkey_strings.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../providers/mount_provider.dart';
@@ -189,7 +191,7 @@ class _AddMountDialogState extends ConsumerState<_AddMountDialog> {
                 controller: _remoteController,
                 decoration: InputDecoration(
                   labelText: MountDialogStrings(context).text('remotePath'),
-                  hintText: '/ or /Documents',
+                  hintText: AccessAndFKeyStrings(Localizations.localeOf(context)).remotePathHint,
                   border: const OutlineInputBorder(),
                   prefixIcon: const Icon(Icons.cloud),
                 ),

@@ -7,6 +7,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../providers/panel_source_provider.dart';
+import '../l10n/access_and_fkey_strings.dart';
 import '../services/fkey_action_service.dart';
 
 // ---------------------------------------------------------------------------
@@ -75,7 +76,7 @@ class _FKeyBarContent extends StatelessWidget {
                 service.isActionAvailable(action, fkeyContext!);
             return _FKeyButton(
               action: action,
-              label: service.getActionLabel(action),
+              label: AccessAndFKeyStrings(Localizations.localeOf(context)).action(action.index),
               shortcut: service.getActionShortcut(action),
               available: available,
               isNarrow: isNarrow,
