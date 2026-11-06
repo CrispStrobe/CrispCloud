@@ -95,16 +95,18 @@ Future<NativeJournalLease?> tryAcquireNativeJournalLease(String path) async {
   int errno() => lib.lookupFunction<_ErrnoN, _ErrnoD>(errnoName)().value;
   final name = path.toNativeUtf8();
   late final int fd;
+  var openError = 0;
   try {
     final arm32 =
         Abi.current() == Abi.androidArm || Abi.current() == Abi.linuxArm;
     // RDWR | CREAT | NONBLOCK | NOFOLLOW | CLOEXEC; never truncate the file.
     final flags = mac ? 0x1000306 : 0x80842 | (arm32 ? 0x8000 : 0x20000);
     fd = lib.lookupFunction<_OpenN, _OpenD>('open')(name, flags, 0x180);
+    if (fd < 0) openError = errno();
   } finally {
     calloc.free(name);
   }
-  if (fd < 0) _failure(path, errno());
+  if (fd < 0) _failure(path, openError);
   var owned = true;
   try {
     // Verify the opened object, not just the pre-open pathname.
@@ -122,12 +124,14 @@ Future<NativeJournalLease?> tryAcquireNativeJournalLease(String path) async {
     }
     final mode = 'r+'.toNativeUtf8();
     late final Pointer<Void> stream;
+    var streamError = 0;
     try {
       stream = lib.lookupFunction<_FdOpenN, _FdOpenD>('fdopen')(fd, mode);
+      if (stream == nullptr) streamError = errno();
     } finally {
       calloc.free(mode);
     }
-    if (stream == nullptr) _failure(path, errno());
+    if (stream == nullptr) _failure(path, streamError);
     owned = false; // fclose now owns the descriptor, including its OS lease.
     final release = lib.lookupFunction<_ReleaseN, _ReleaseD>('fclose');
     final finalizer = NativeFinalizer(
@@ -151,6 +155,7 @@ NativeJournalLease? _windows(String path) {
       : r'\\?\' + absolute;
   final name = longPath.toNativeUtf16();
   late final Pointer<Void> handle;
+  late final int openError;
   try {
     handle = lib.lookupFunction<_CreateN, _CreateD>('CreateFileW')(
       name,
@@ -161,13 +166,16 @@ NativeJournalLease? _windows(String path) {
       0x00200080,
       nullptr,
     );
+    // Native frees and other FFI calls may overwrite thread-local last-error.
+    // Preserve the CreateFileW result before releasing the path allocation.
+    openError = error();
   } finally {
     calloc.free(name);
   }
   if (handle.address == -1 ||
       handle.address ==
           (sizeOf<IntPtr>() == 8 ? 0xffffffffffffffff : 0xffffffff)) {
-    final code = error();
+    final code = openError;
     if (code == 32 || code == 33) return null;
     _failure(path, code);
   }
