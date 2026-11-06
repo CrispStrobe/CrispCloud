@@ -51,7 +51,7 @@ Future<BackgroundTransferJournalRun> createBackgroundTransferJournalRun({
       journal: journal,
       directoryPath: directory.path,
       close: () {
-        return closing ??= journal.flushPending().whenComplete(() {
+        return closing ??= journal.closeWrites().whenComplete(() {
           open = false;
           lease.close();
         });

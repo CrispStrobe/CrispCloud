@@ -141,10 +141,20 @@ void main() {
       for (var i = 0; i < 20; i++)
         run.journal.updateQueue('sync-job', priority: i),
     ];
-    // Let all calls enter the journal queue while native disk flushes remain
-    // outstanding. Closing must drain accepted work before dropping the lease.
-    await Future<void>.delayed(Duration.zero);
-    await run.close();
+    // Close immediately: these admitted calls may still be awaiting initialize
+    // and have not entered the lock. They must complete under the held lease.
+    final closing = run.close();
+    await expectLater(
+      run.journal.updateQueue('sync-job', priority: 1000),
+      throwsStateError,
+    );
+    expect(
+      await tryAcquireNativeJournalLease(
+        p.join(run.directoryPath, 'owner.lock'),
+      ),
+      isNull,
+    );
+    await closing;
     await Future.wait(checkpoints);
     await run.close();
     await expectLater(
@@ -211,6 +221,149 @@ void main() {
     expect(target.jobs.single.status, TransferJobStatus.completed);
     expect(target.jobs.single.message, 'Reviewed and finished');
   });
+
+  for (final failedAppend in [3, 4]) {
+    test(
+      'dismissing an import after append $failedAppend fails survives restart and compaction',
+      () async {
+        final run = await createBackgroundTransferJournalRun(
+          rootPath: root.path,
+        );
+        await _save(run, 'dismiss-before-receipt');
+        await run.close();
+        final storage = _FailingStorage()..failAt = failedAppend;
+        final target = TransferJournal(storage);
+        final attempt = await importBackgroundTransferJournals(
+          target,
+          rootPath: root.path,
+        );
+        expect(attempt.warnings, isNotEmpty);
+        expect(await Directory(run.directoryPath).exists(), isTrue);
+        expect(target.jobs.single.ready, failedAppend == 4);
+        storage.failAt = null;
+        await target.dismiss(target.jobs.single.id);
+        await target.compact();
+        final reopened = TransferJournal(storage);
+        final retry = await importBackgroundTransferJournals(
+          reopened,
+          rootPath: root.path,
+        );
+        expect(retry.importedJobs, 0);
+        expect(retry.warnings, isEmpty);
+        expect(reopened.jobs, isEmpty);
+        expect(await Directory(run.directoryPath).exists(), isFalse);
+      },
+    );
+  }
+
+  for (final failedAppend in [1, 2, 3, 4]) {
+    test(
+      'an acknowledgement failure after import event $failedAppend cannot corrupt a retry',
+      () async {
+        final run = await createBackgroundTransferJournalRun(
+          rootPath: root.path,
+        );
+        await _save(run, 'durable-before-error');
+        await run.close();
+        final storage = _FailingStorage();
+        final target = TransferJournal(storage);
+        await _save(
+          BackgroundTransferJournalRun(
+            journal: target,
+            directoryPath: root.path,
+            close: () async {},
+          ),
+          'live-foreground',
+        );
+        storage
+          ..failAt = storage.writes + failedAppend
+          ..failAfterWrite = true;
+        final failed = await importBackgroundTransferJournals(
+          target,
+          rootPath: root.path,
+        );
+        expect(failed.warnings, isNotEmpty);
+        expect(await Directory(run.directoryPath).exists(), isTrue);
+        storage.failAt = null;
+        final retried = await importBackgroundTransferJournals(
+          target,
+          rootPath: root.path,
+        );
+        expect(retried.warnings, isEmpty);
+        expect(retried.importedJobs, failedAppend == 4 ? 0 : 1);
+        expect(target.job('sync-job')!.status, TransferJobStatus.running);
+        final reopened = TransferJournal(storage);
+        await reopened.initialize();
+        expect(reopened.warnings, isEmpty);
+        expect(reopened.jobs, hasLength(2));
+        final imported = reopened.jobs.singleWhere(
+          (job) => job.id != 'sync-job',
+        );
+        expect(imported.ready, isTrue);
+        expect(
+          imported.entries.single.recovery['backupPath'],
+          '/target/original.backup',
+        );
+        expect(await Directory(run.directoryPath).exists(), isFalse);
+      },
+    );
+  }
+
+  test('a compaction acknowledgement failure reloads the installed sequence before the next mutation', () async {
+    final run = await createBackgroundTransferJournalRun(rootPath: root.path);
+    await _save(run, 'compact-ack');
+    await run.close();
+    final storage = _FailingStorage();
+    final target = TransferJournal(storage);
+    await importBackgroundTransferJournals(target, rootPath: root.path);
+    final id = target.jobs.single.id;
+    for (var i = 0; i < 5; i++) {
+      await target.updateQueue(id, priority: i);
+    }
+    storage.failRewriteAfterWrite = true;
+    await expectLater(target.compact(), throwsStateError);
+    storage.failRewriteAfterWrite = false;
+    await target.updateQueue(id, priority: 17);
+    final reopened = TransferJournal(storage);
+    await reopened.initialize();
+    expect(reopened.warnings, isEmpty);
+    expect(reopened.jobs.single.priority, 17);
+    expect(reopened.jobs.single.ready, isTrue);
+    await reopened.dismiss(id);
+    await reopened.compact();
+    expect(
+      await reopened.importRecord(target.jobs.single, importedId: id),
+      isFalse,
+    );
+  });
+
+  test(
+    'reconciling a failed import keeps previously interrupted jobs stopped',
+    () async {
+      final run = await createBackgroundTransferJournalRun(rootPath: root.path);
+      await _save(run, 'new-import');
+      await run.close();
+      final storage = _FailingStorage();
+      await _save(
+        BackgroundTransferJournalRun(
+          journal: TransferJournal(storage),
+          directoryPath: root.path,
+          close: () async {},
+        ),
+        'previous-process',
+      );
+      final target = TransferJournal(storage);
+      await target.initialize();
+      expect(target.job('sync-job')!.status, TransferJobStatus.interrupted);
+      storage
+        ..failAt = storage.writes + 1
+        ..failAfterWrite = true;
+      await importBackgroundTransferJournals(target, rootPath: root.path);
+      storage.failAt = null;
+      await importBackgroundTransferJournals(target, rootPath: root.path);
+      expect(target.job('sync-job')!.status, TransferJobStatus.interrupted);
+    },
+  );
 
   test('import receipts survive dismissal and compaction without resurrecting jobs', () async {
     final run = await createBackgroundTransferJournalRun(rootPath: root.path);
@@ -288,10 +441,24 @@ Future<void> _save(BackgroundTransferJournalRun run, String account) async {
 class _FailingStorage extends MemoryTransferJournalStorage {
   int? failAt;
   int writes = 0;
+  bool failAfterWrite = false;
+  bool failRewriteAfterWrite = false;
   @override
   Future<void> append(String line) async {
-    if (++writes == failAt) throw StateError('Injected durable write failure');
+    final fail = ++writes == failAt;
+    if (fail && !failAfterWrite) {
+      throw StateError('Injected durable write failure');
+    }
     await super.append(line);
+    if (fail) throw StateError('Injected acknowledgement failure');
+  }
+
+  @override
+  Future<void> rewrite(List<String> lines) async {
+    await super.rewrite(lines);
+    if (failRewriteAfterWrite) {
+      throw StateError('Injected compaction acknowledgement failure');
+    }
   }
 }
 

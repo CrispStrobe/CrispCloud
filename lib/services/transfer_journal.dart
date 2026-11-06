@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'dart:convert';
 
 import 'package:crypto/crypto.dart';
@@ -22,6 +23,10 @@ class TransferJournal {
   final List<String> warnings = [];
   Future<void>? _initializing;
   int _sequence = 0;
+  bool _writesClosed = false;
+  int _pendingWrites = 0;
+  Completer<void>? _writesDrained;
+  bool _reloadAfterFailure = false;
 
   List<TransferJobRecord> get jobs =>
       _jobs.values.toList()..sort((a, b) => b.created.compareTo(a.created));
@@ -29,8 +34,62 @@ class TransferJournal {
   Future<void> initialize() => _initializing ??= _load();
   Future<void> flushPending() => _lock.synchronized(() async {});
 
-  Future<void> _load() async {
+  /// Stop accepting writes synchronously and wait for every admitted mutation,
+  /// including calls still awaiting initialization or their place in the lock.
+  /// A leased writer must finish this before releasing its OS lease.
+  Future<void> closeWrites() {
+    _writesClosed = true;
+    return _pendingWrites == 0
+        ? Future<void>.value()
+        : (_writesDrained ??= Completer<void>()).future;
+  }
+
+  Future<T> _mutate<T>(Future<T> Function() action) {
+    if (_writesClosed) {
+      return Future<T>.error(StateError('The transfer journal has closed.'));
+    }
+    // Admission happens before the first await. A lock sentinel alone could
+    // overtake a public method that is still awaiting initialize().
+    _pendingWrites++;
+    return Future<T>.sync(() async {
+      await initialize();
+      return _lock.synchronized(() async {
+        if (_reloadAfterFailure) {
+          // An append/replace can reach disk before its acknowledgement fails.
+          // Reconcile the actual log before allocating another sequence or
+          // retrying an import, preserving statuses of live foreground jobs.
+          await _load(
+            liveJobs: {
+              for (final job in _jobs.values)
+                if (_activeStatus(job.status)) job.id,
+            },
+          );
+          _reloadAfterFailure = false;
+        }
+        try {
+          return await action();
+        } catch (_) {
+          _reloadAfterFailure = true;
+          rethrow;
+        }
+      });
+    }).whenComplete(() {
+      _pendingWrites--;
+      if (_pendingWrites == 0) _writesDrained?.complete();
+    });
+  }
+
+  static bool _activeStatus(TransferJobStatus status) => const [
+    TransferJobStatus.running,
+    TransferJobStatus.queued,
+    TransferJobStatus.paused,
+  ].contains(status);
+
+  Future<void> _load({Set<String> liveJobs = const {}}) async {
     final lines = await storage.readLines();
+    _jobs.clear();
+    _imported.clear();
+    _sequence = 0;
     final valid = <String>[];
     for (var i = 0; i < lines.length; i++) {
       try {
@@ -68,11 +127,7 @@ class TransferJournal {
             'The saved plan is incomplete. Retained entries require review.';
         warnings.add('Transfer ${job.id} is missing saved plan entries.');
       }
-      if (const [
-        TransferJobStatus.running,
-        TransferJobStatus.queued,
-        TransferJobStatus.paused,
-      ].contains(job.status)) {
+      if (_activeStatus(job.status) && !liveJobs.contains(job.id)) {
         job.status = TransferJobStatus.interrupted;
         job.message = 'Interrupted. Review the saved plan to resume.';
       }
@@ -158,6 +213,10 @@ class TransferJournal {
         );
       case 'dismiss':
         _jobs.remove(id);
+        // The final imported state can be visible even if appending its receipt
+        // failed. A durable dismissal must still prevent later rediscovery
+        // from resurrecting that import, including after compaction.
+        if (RegExp(r'^bg_[a-f0-9]{64}$').hasMatch(id)) _imported.add(id);
       case 'imported':
         _imported.add(id);
       default:
@@ -170,8 +229,7 @@ class TransferJournal {
     FileOperationPlan plan, {
     int priority = 0,
   }) async {
-    await initialize();
-    return _lock.synchronized(() async {
+    return _mutate(() async {
       final now = DateTime.now().toUtc();
       final record = TransferJobRecord(
         id: id,
@@ -234,8 +292,7 @@ class TransferJournal {
   }
 
   Future<void> saveEntries(String id, List<FileOperationEntry> entries) async {
-    await initialize();
-    await _lock.synchronized(() => _saveEntries(id, entries));
+    return _mutate(() => _saveEntries(id, entries));
   }
 
   Future<void> checkpoint(
@@ -244,8 +301,7 @@ class TransferJournal {
     FileOperationEntry entry,
     String phase,
   ) async {
-    await initialize();
-    await _lock.synchronized(
+    return _mutate(
       () => _append({
         'kind': 'entries',
         'id': id,
@@ -255,8 +311,7 @@ class TransferJournal {
   }
 
   Future<void> updateQueue(String id, {int? priority, int? queueOrder}) async {
-    await initialize();
-    await _lock.synchronized(
+    return _mutate(
       () => _append({
         'kind': 'queue',
         'id': id,
@@ -270,8 +325,7 @@ class TransferJournal {
     String id,
     FileOperationOptions options,
   ) async {
-    await initialize();
-    await _lock.synchronized(
+    return _mutate(
       () => _append({'kind': 'options', 'id': id, 'options': options.toJson()}),
     );
   }
@@ -284,8 +338,7 @@ class TransferJournal {
     int? queueOrder,
     Set<TransferJobStatus>? onlyIf,
   }) async {
-    await initialize();
-    await _lock.synchronized(() async {
+    return _mutate(() async {
       if (onlyIf != null && !onlyIf.contains(_jobs[id]?.status)) return;
       await _append({
         'kind': 'state',
@@ -309,8 +362,7 @@ class TransferJournal {
     if (!RegExp(r'^bg_[a-f0-9]{64}$').hasMatch(importedId)) {
       throw const FormatException('Invalid imported transfer identifier.');
     }
-    await initialize();
-    return _lock.synchronized(() async {
+    return _mutate(() async {
       if (_imported.contains(importedId)) return false;
       final existing = _jobs[importedId];
       if (existing != null &&
@@ -370,8 +422,7 @@ class TransferJournal {
   /// Explicit history maintenance keeps the write-ahead log bounded without
   /// losing any unfinished entry or replacing it with a summary.
   Future<void> compact() async {
-    await initialize();
-    await _lock.synchronized(() async {
+    return _mutate(() async {
       var sequence = 0;
       final lines = <String>[];
       void add(Map<String, dynamic> event) {
@@ -416,8 +467,7 @@ class TransferJournal {
   }
 
   Future<void> dismiss(String id) async {
-    await initialize();
-    await _lock.synchronized(() => _append({'kind': 'dismiss', 'id': id}));
+    return _mutate(() => _append({'kind': 'dismiss', 'id': id}));
   }
 }
 
