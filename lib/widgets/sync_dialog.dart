@@ -99,7 +99,7 @@ class _SyncManagerDialog extends ConsumerWidget {
             ],
             // Background sync toggle (Android / iOS only)
             if (BackgroundSyncService.isSupported) ...[
-              _BackgroundSyncTile(sync: sync),
+              const BackgroundSyncSettings(),
               const Divider(height: 20),
             ],
             // Auto-evict setting (applies to all pairs with placeholders)
@@ -411,22 +411,46 @@ class _SyncManagerDialog extends ConsumerWidget {
 // Background sync tile
 // ---------------------------------------------------------------------------
 
-class _BackgroundSyncTile extends ConsumerStatefulWidget {
-  final SyncNotifier sync;
-  const _BackgroundSyncTile({required this.sync});
+/// Mobile background scheduling controls, reflecting acknowledged service state.
+class BackgroundSyncSettings extends ConsumerStatefulWidget {
+  const BackgroundSyncSettings({super.key});
 
   @override
-  ConsumerState<_BackgroundSyncTile> createState() =>
-      _BackgroundSyncTileState();
+  ConsumerState<BackgroundSyncSettings> createState() =>
+      _BackgroundSyncSettingsState();
 }
 
-class _BackgroundSyncTileState extends ConsumerState<_BackgroundSyncTile> {
-  late int _intervalMinutes;
+class _BackgroundSyncSettingsState
+    extends ConsumerState<BackgroundSyncSettings> {
+  bool _updating = false;
 
-  @override
-  void initState() {
-    super.initState();
-    _intervalMinutes = widget.sync.backgroundSyncIntervalMinutes;
+  Future<void> _changeSchedule({bool? enabled, int? interval}) async {
+    if (_updating) return;
+    setState(() => _updating = true);
+    try {
+      final sync = ref.read(syncProvider);
+      if (enabled == false) {
+        await sync.disableBackgroundSync();
+      } else {
+        await sync.enableBackgroundSync(
+          intervalMinutes: interval ?? sync.backgroundSyncIntervalMinutes,
+        );
+      }
+    } catch (error) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(
+              context.commanderTr("Background sync could not be updated: {0}", [
+                error,
+              ]),
+            ),
+          ),
+        );
+      }
+    } finally {
+      if (mounted) setState(() => _updating = false);
+    }
   }
 
   @override
@@ -442,37 +466,43 @@ class _BackgroundSyncTileState extends ConsumerState<_BackgroundSyncTile> {
           title: Text(context.commanderTr("Background Sync")),
           subtitle: Text(
             enabled
-                ? context.commanderTr("Syncing every {0} min", [
-                    _intervalMinutes,
-                  ])
+                ? context.commanderTr(
+                    "Background sync requested every {0} min",
+                    [sync.backgroundSyncIntervalMinutes],
+                  )
                 : context.commanderTr("Sync only when the app is open"),
             style: const TextStyle(fontSize: 12),
           ),
           value: enabled,
           contentPadding: EdgeInsets.zero,
-          onChanged: (v) async {
-            if (v) {
-              await ref
-                  .read(syncProvider)
-                  .enableBackgroundSync(intervalMinutes: _intervalMinutes);
-            } else {
-              await ref.read(syncProvider).disableBackgroundSync();
-            }
-          },
+          onChanged: _updating
+              ? null
+              : (value) => _changeSchedule(enabled: value),
+        ),
+        Padding(
+          padding: const EdgeInsets.only(bottom: 8),
+          child: Text(
+            context.commanderTr(
+              "FTP/FTPS and WebDAV only. The operating system decides when tasks run.",
+            ),
+            style: Theme.of(context).textTheme.bodySmall,
+          ),
         ),
         if (enabled)
           Padding(
-            padding: const EdgeInsets.only(left: 4, bottom: 4),
-            child: Row(
+            padding: const EdgeInsetsDirectional.only(start: 4, bottom: 4),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text(
                   context.commanderTr("Interval:"),
                   style: const TextStyle(fontSize: 12),
                 ),
-                const SizedBox(width: 8),
+                const SizedBox(height: 8),
                 DropdownButton<int>(
-                  value: _intervalMinutes,
+                  value: sync.backgroundSyncIntervalMinutes,
                   isDense: true,
+                  isExpanded: true,
                   items: [
                     DropdownMenuItem(
                       value: 15,
@@ -491,13 +521,11 @@ class _BackgroundSyncTileState extends ConsumerState<_BackgroundSyncTile> {
                       child: Text(context.commanderTr("2 hours")),
                     ),
                   ],
-                  onChanged: (v) async {
-                    if (v == null) return;
-                    setState(() => _intervalMinutes = v);
-                    await ref
-                        .read(syncProvider)
-                        .enableBackgroundSync(intervalMinutes: v);
-                  },
+                  onChanged: _updating
+                      ? null
+                      : (value) {
+                          if (value != null) _changeSchedule(interval: value);
+                        },
                 ),
               ],
             ),
