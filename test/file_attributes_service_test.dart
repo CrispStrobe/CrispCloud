@@ -78,6 +78,100 @@ void main() {
     expect(plan.entries.single.message, contains('changed since preview'));
   });
 
+  test('provider revision changes invalidate a reviewed file', () async {
+    final original = backend.items['/root/sub/file']!.copyWith(
+      metadata: {'revision': 'one'},
+    );
+    backend.items[original.path!] = original;
+    final plan = await preview(
+      targets: [FileAttributesTarget(backend, original)],
+    );
+    backend.items[original.path!] = original.copyWith(
+      metadata: {'revision': 'two'},
+    );
+    await service.apply(plan);
+    expect(backend.writes, isEmpty);
+    expect(plan.entries.single.outcome, FileAttributesOutcome.failed);
+  });
+
+  test(
+    'recursive listing captures directory access times after its own reads',
+    () async {
+      backend.touchAccessedOnList = true;
+      final requested = DateTime.utc(2023, 7, 8);
+      final plan = await preview(
+        recursive: true,
+        patch: FileAttributesPatch(accessed: requested),
+      );
+      expect(plan.ready, 3);
+      expect(
+        plan.entries
+            .firstWhere((e) => e.target.file.path == '/root')
+            .before!
+            .accessed,
+        DateTime.utc(2026),
+      );
+      await service.apply(plan);
+      expect(plan.changed, 3);
+      expect(backend.writes, ['/root/sub/file', '/root/sub', '/root']);
+      for (final path in backend.writes) {
+        expect(backend.metadata[path]!.accessed, requested);
+      }
+    },
+  );
+
+  test(
+    'Windows edits change only their selected flags and support creation time',
+    () async {
+      backend = _Backend(supportsWindows: true);
+      final created = DateTime.utc(2022, 3, 4);
+      final plan = await preview(
+        patch: FileAttributesPatch(
+          windowsAttributes: 2,
+          windowsAttributesMask: 3,
+          created: created,
+        ),
+      );
+      await service.apply(plan);
+      expect(plan.changed, 1);
+      expect(backend.metadata['/root']!.windowsAttributes, 0x26);
+      expect(backend.metadata['/root']!.created, created);
+      expect(backend.metadata['/root']!.modified, DateTime.utc(2024));
+    },
+  );
+
+  test('unrequested Windows flags can change without stale selected flags being ignored', () async {
+    backend = _Backend(supportsWindows: true);
+    final plan = await preview(
+      patch: const FileAttributesPatch(
+        windowsAttributes: 2,
+        windowsAttributesMask: 2,
+      ),
+    );
+    backend.metadata['/root'] = const TransferMetadata(windowsAttributes: 0x21);
+    await service.apply(plan);
+    expect(plan.changed, 1);
+    expect(backend.metadata['/root']!.windowsAttributes, 0x23);
+  });
+
+  test(
+    'creation time and Windows attributes are blocked when unsupported',
+    () async {
+      for (final patch in [
+        FileAttributesPatch(created: DateTime.utc(2024)),
+        const FileAttributesPatch(
+          windowsAttributes: 2,
+          windowsAttributesMask: 2,
+        ),
+      ]) {
+        final plan = await preview(patch: patch);
+        expect(plan.ready, 0);
+        expect(plan.entries.single.outcome, FileAttributesOutcome.blocked);
+      }
+      expect(backend.writes, isEmpty);
+    },
+  );
+
   test(
     'changes to reviewed attributes do not get silently overwritten',
     () async {
@@ -164,7 +258,7 @@ void main() {
       );
       expect(
         backend.readFields,
-        everyElement([false, true, false, false, false, false]),
+        everyElement([false, true, false, false, false, false, false, false]),
       );
       await service.apply(plan);
       expect(plan.changed, 1);
@@ -205,12 +299,24 @@ void main() {
         preview(patch: const FileAttributesPatch(mode: 0x1000)),
         throwsFormatException,
       );
+      for (final patch in [
+        const FileAttributesPatch(
+          windowsAttributes: 2,
+          windowsAttributesMask: 1,
+        ),
+        const FileAttributesPatch(
+          windowsAttributes: 0,
+          windowsAttributesMask: 0x80,
+        ),
+      ]) {
+        await expectLater(preview(patch: patch), throwsFormatException);
+      }
     },
   );
 }
 
 class _Backend extends FileOperationBackend {
-  _Backend({this.supportsMode = true}) {
+  _Backend({this.supportsMode = true, this.supportsWindows = false}) {
     for (final item in [
       FileItem(name: 'root', path: '/root', isFolder: true),
       FileItem(name: 'sub', path: '/root/sub', isFolder: true),
@@ -236,10 +342,14 @@ class _Backend extends FileOperationBackend {
         group: '1000',
         modified: DateTime.utc(2024),
         accessed: DateTime.utc(2024),
+        created: DateTime.utc(2020),
+        windowsAttributes: 0x25,
       );
     }
   }
   final bool supportsMode;
+  final bool supportsWindows;
+  bool touchAccessedOnList = false;
   bool current = true;
   bool ignoreWrites = false;
   String? failPath;
@@ -262,21 +372,40 @@ class _Backend extends FileOperationBackend {
     ownership: true,
     setModifiedTime: true,
     setAccessedTime: true,
+    setCreatedTime: supportsWindows,
+    windowsAttributes: supportsWindows,
   );
   @override
   Future<FileItem?> stat(String path) async => items[path];
   @override
-  Future<List<FileItem>> list(String path) async => [
-    for (final item in items.values)
-      if (p.posix.dirname(item.path!) == path && item.path != path) item,
-    if (path == '/root' && badChild != null) badChild!,
-  ];
+  Future<List<FileItem>> list(String path) async {
+    if (touchAccessedOnList) {
+      final old = metadata[path]!;
+      metadata[path] = TransferMetadata(
+        mode: old.mode,
+        owner: old.owner,
+        group: old.group,
+        modified: old.modified,
+        accessed: DateTime.utc(2026),
+        created: old.created,
+        windowsAttributes: old.windowsAttributes,
+      );
+    }
+    return [
+      for (final item in items.values)
+        if (p.posix.dirname(item.path!) == path && item.path != path) item,
+      if (path == '/root' && badChild != null) badChild!,
+    ];
+  }
+
   @override
   Future<TransferMetadata> readMetadataFields(
     String path, {
     bool permissions = true,
     bool modified = true,
     bool accessed = true,
+    bool created = true,
+    bool windowsAttributes = true,
     bool ownership = true,
     bool extendedAttributes = true,
     bool acl = true,
@@ -288,6 +417,8 @@ class _Backend extends FileOperationBackend {
       ownership,
       extendedAttributes,
       acl,
+      created,
+      windowsAttributes,
     ]);
     final m = metadata[path]!;
     return TransferMetadata(
@@ -296,6 +427,8 @@ class _Backend extends FileOperationBackend {
       accessed: accessed ? m.accessed : null,
       owner: ownership ? m.owner : null,
       group: ownership ? m.group : null,
+      created: created ? m.created : null,
+      windowsAttributes: windowsAttributes ? m.windowsAttributes : null,
     );
   }
 
@@ -311,6 +444,11 @@ class _Backend extends FileOperationBackend {
       group: m.group ?? old.group,
       modified: m.modified ?? old.modified,
       accessed: m.accessed ?? old.accessed,
+      created: m.created ?? old.created,
+      windowsAttributes: m.windowsAttributes == null
+          ? old.windowsAttributes
+          : ((old.windowsAttributes! & ~m.windowsAttributesMask) |
+                m.windowsAttributes!),
     );
   }
 

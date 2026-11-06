@@ -81,6 +81,8 @@ class _FileAttributesDialogState extends State<FileAttributesDialog> {
   final _group = TextEditingController();
   final _modified = TextEditingController();
   final _accessed = TextEditingController();
+  final _created = TextEditingController();
+  final _windowsFlags = <int, bool?>{1: null, 2: null, 4: null, 0x20: null};
   bool _recursive = false;
   bool _files = true;
   bool _folders = true;
@@ -95,7 +97,14 @@ class _FileAttributesDialogState extends State<FileAttributesDialog> {
   @override
   void dispose() {
     _cancelled = true;
-    for (final controller in [_mode, _owner, _group, _modified, _accessed]) {
+    for (final controller in [
+      _mode,
+      _owner,
+      _group,
+      _modified,
+      _accessed,
+      _created,
+    ]) {
       controller.dispose();
     }
     super.dispose();
@@ -114,12 +123,21 @@ class _FileAttributesDialogState extends State<FileAttributesDialog> {
         context.commanderTr("Permissions must be 3 or 4 octal digits."),
       );
     }
+    var windowsMask = 0;
+    var windowsValue = 0;
+    for (final flag in _windowsFlags.entries) {
+      if (flag.value != null) windowsMask |= flag.key;
+      if (flag.value == true) windowsValue |= flag.key;
+    }
     return FileAttributesPatch(
       mode: mode.isEmpty ? null : int.parse(mode, radix: 8),
       owner: _owner.text.trim().isEmpty ? null : _owner.text.trim(),
       group: _group.text.trim().isEmpty ? null : _group.text.trim(),
       modified: parseFileAttributeTime(_modified.text, utc: _utc),
       accessed: parseFileAttributeTime(_accessed.text, utc: _utc),
+      created: parseFileAttributeTime(_created.text, utc: _utc),
+      windowsAttributes: windowsMask == 0 ? null : windowsValue,
+      windowsAttributesMask: windowsMask,
     );
   }
 
@@ -223,8 +241,31 @@ class _FileAttributesDialogState extends State<FileAttributesDialog> {
         context.commanderTr("Accessed: {0}", [time(metadata.accessed!)]),
       );
     }
+    if (metadata.created != null) {
+      result.add(
+        context.commanderTr("Created: {0}", [time(metadata.created!)]),
+      );
+    }
+    if (metadata.windowsAttributes != null) {
+      final flags = <String>[];
+      for (final flag in _windowsFlags.keys) {
+        if ((metadata.windowsAttributesMask & flag) == 0) continue;
+        final state = (metadata.windowsAttributes! & flag) != 0 ? '+' : '−';
+        flags.add('$state${_flagLabel(flag)}');
+      }
+      result.add(
+        context.commanderTr("Windows attributes: {0}", [flags.join(', ')]),
+      );
+    }
     return result.join(' · ');
   }
+
+  String _flagLabel(int flag) => context.commanderTr(switch (flag) {
+    1 => 'Read-only',
+    2 => 'Hidden',
+    4 => 'System',
+    _ => 'Archive attribute',
+  });
 
   String _status(FileAttributesOutcome status) =>
       context.commanderTr(switch (status) {
@@ -239,6 +280,22 @@ class _FileAttributesDialogState extends State<FileAttributesDialog> {
   @override
   Widget build(BuildContext context) {
     final plan = _plan;
+    final capabilities = widget.targets.map(
+      (target) => target.backend.capabilities,
+    );
+    final hasMode = capabilities.any((c) => c.permissions);
+    final hasOwner = capabilities.any((c) => c.ownership);
+    final hasModified = capabilities.any((c) => c.setModifiedTime);
+    final hasAccessed = capabilities.any((c) => c.setAccessedTime);
+    final hasCreated = capabilities.any((c) => c.setCreatedTime);
+    final hasWindowsFlags = capabilities.any((c) => c.windowsAttributes);
+    final hasChanges =
+        hasMode ||
+        hasOwner ||
+        hasModified ||
+        hasAccessed ||
+        hasCreated ||
+        hasWindowsFlags;
     return PopScope(
       canPop: !_busy,
       child: CommanderReviewDialog(
@@ -254,42 +311,84 @@ class _FileAttributesDialogState extends State<FileAttributesDialog> {
                   ),
                 ),
                 const SizedBox(height: 16),
-                _field(
-                  _mode,
-                  'attributes-mode',
-                  context.commanderTr("Permissions (octal)"),
-                  hint: '0755',
-                ),
-                _field(
-                  _owner,
-                  'attributes-owner',
-                  context.commanderTr("Owner ID"),
-                ),
-                _field(
-                  _group,
-                  'attributes-group',
-                  context.commanderTr("Group ID"),
-                ),
-                _field(
-                  _modified,
-                  'attributes-modified',
-                  context.commanderTr("Modified time"),
-                  hint: 'YYYY-MM-DD HH:mm:ss',
-                ),
-                _field(
-                  _accessed,
-                  'attributes-accessed',
-                  context.commanderTr("Accessed time"),
-                  hint: 'YYYY-MM-DD HH:mm:ss',
-                ),
-                SwitchListTile(
-                  contentPadding: EdgeInsets.zero,
-                  title: Text(context.commanderTr("Use UTC timestamps")),
-                  value: _utc,
-                  onChanged: _busy
-                      ? null
-                      : (value) => _edit(() => _utc = value),
-                ),
+                if (!hasChanges)
+                  Text(
+                    context.commanderTr(
+                      "This source does not support attribute changes.",
+                    ),
+                  ),
+                if (hasMode)
+                  _field(
+                    _mode,
+                    'attributes-mode',
+                    context.commanderTr("Permissions (octal)"),
+                    hint: '0755',
+                  ),
+                if (hasOwner)
+                  _field(
+                    _owner,
+                    'attributes-owner',
+                    context.commanderTr("Owner ID"),
+                  ),
+                if (hasOwner)
+                  _field(
+                    _group,
+                    'attributes-group',
+                    context.commanderTr("Group ID"),
+                  ),
+                if (hasModified)
+                  _field(
+                    _modified,
+                    'attributes-modified',
+                    context.commanderTr("Modified time"),
+                    hint: 'YYYY-MM-DD HH:mm:ss',
+                  ),
+                if (hasAccessed)
+                  _field(
+                    _accessed,
+                    'attributes-accessed',
+                    context.commanderTr("Accessed time"),
+                    hint: 'YYYY-MM-DD HH:mm:ss',
+                  ),
+                if (hasCreated)
+                  _field(
+                    _created,
+                    'attributes-created',
+                    context.commanderTr("Created time"),
+                    hint: 'YYYY-MM-DD HH:mm:ss',
+                  ),
+                if (hasWindowsFlags) ...[
+                  Text(
+                    context.commanderTr("Windows attributes"),
+                    style: Theme.of(context).textTheme.titleSmall,
+                  ),
+                  Text(
+                    context.commanderTr(
+                      "Dash: keep • Checked: set • Empty: clear",
+                    ),
+                  ),
+                  for (final flag in _windowsFlags.keys)
+                    CheckboxListTile(
+                      key: ValueKey('attributes-windows-$flag'),
+                      contentPadding: EdgeInsets.zero,
+                      controlAffinity: ListTileControlAffinity.leading,
+                      title: Text(_flagLabel(flag)),
+                      tristate: true,
+                      value: _windowsFlags[flag],
+                      onChanged: _busy
+                          ? null
+                          : (value) => _edit(() => _windowsFlags[flag] = value),
+                    ),
+                ],
+                if (hasModified || hasAccessed || hasCreated)
+                  SwitchListTile(
+                    contentPadding: EdgeInsets.zero,
+                    title: Text(context.commanderTr("Use UTC timestamps")),
+                    value: _utc,
+                    onChanged: _busy
+                        ? null
+                        : (value) => _edit(() => _utc = value),
+                  ),
                 CheckboxListTile(
                   contentPadding: EdgeInsets.zero,
                   controlAffinity: ListTileControlAffinity.leading,
@@ -389,7 +488,7 @@ class _FileAttributesDialogState extends State<FileAttributesDialog> {
             ),
           OutlinedButton(
             key: const ValueKey('attributes-preview'),
-            onPressed: _busy ? null : _preview,
+            onPressed: _busy || !hasChanges ? null : _preview,
             child: Text(context.commanderTr("Preview")),
           ),
           FilledButton(

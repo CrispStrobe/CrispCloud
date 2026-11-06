@@ -45,6 +45,9 @@ class FileAttributesPatch {
     this.group,
     this.modified,
     this.accessed,
+    this.created,
+    this.windowsAttributes,
+    this.windowsAttributesMask = 0x27,
   });
 
   final int? mode;
@@ -52,17 +55,31 @@ class FileAttributesPatch {
   final String? group;
   final DateTime? modified;
   final DateTime? accessed;
+  final DateTime? created;
+  final int? windowsAttributes;
+  final int windowsAttributesMask;
 
   void validate() {
     if (mode == null &&
         owner == null &&
         group == null &&
         modified == null &&
-        accessed == null) {
+        accessed == null &&
+        created == null &&
+        windowsAttributes == null) {
       throw const FormatException('Choose at least one attribute to change.');
     }
     if (mode != null && (mode! < 0 || mode! > 0xfff)) {
       throw const FormatException('Permissions must be 0000 through 7777.');
+    }
+    if (windowsAttributes != null &&
+        (windowsAttributesMask <= 0 ||
+            (windowsAttributesMask & ~0x27) != 0 ||
+            windowsAttributes! < 0 ||
+            (windowsAttributes! & ~windowsAttributesMask) != 0)) {
+      throw const FormatException(
+        'Windows flags require an explicit supported mask and value.',
+      );
     }
     for (final value in [owner, group]) {
       if (value != null && (value.isEmpty || value.contains('\u0000'))) {
@@ -77,6 +94,9 @@ class FileAttributesPatch {
     group: group,
     modified: modified,
     accessed: accessed,
+    created: created,
+    windowsAttributes: windowsAttributes,
+    windowsAttributesMask: windowsAttributesMask,
   );
 
   void requireSupported(FileOperationBackend backend) {
@@ -84,7 +104,9 @@ class FileAttributesPatch {
     if ((mode != null && !c.permissions) ||
         ((owner != null || group != null) && !c.ownership) ||
         (modified != null && !c.setModifiedTime) ||
-        (accessed != null && !c.setAccessedTime)) {
+        (accessed != null && !c.setAccessedTime) ||
+        (created != null && !c.setCreatedTime) ||
+        (windowsAttributes != null && !c.windowsAttributes)) {
       throw UnsupportedError(
         'This source cannot change all the requested attributes.',
       );
@@ -98,6 +120,8 @@ class FileAttributesPatch {
         ownership: owner != null || group != null,
         modified: modified != null,
         accessed: accessed != null,
+        created: created != null,
+        windowsAttributes: windowsAttributes != null,
         extendedAttributes: false,
         acl: false,
       );
@@ -110,7 +134,13 @@ class FileAttributesPatch {
       (owner == null || expected.owner == actual.owner) &&
       (group == null || expected.group == actual.group) &&
       (modified == null || _sameTime(expected.modified, actual.modified)) &&
-      (accessed == null || _sameTime(expected.accessed, actual.accessed));
+      (accessed == null || _sameTime(expected.accessed, actual.accessed)) &&
+      (created == null || _sameTime(expected.created, actual.created)) &&
+      (windowsAttributes == null ||
+          (expected.windowsAttributes != null &&
+              actual.windowsAttributes != null &&
+              (expected.windowsAttributes! & windowsAttributesMask) ==
+                  (actual.windowsAttributes! & windowsAttributesMask)));
 
   // SFTP v3 and several filesystems store timestamps with second precision.
   static bool _sameTime(DateTime? a, DateTime? b) =>
@@ -243,6 +273,7 @@ class FileAttributesService {
         return;
       }
       final captured = FileAttributesTarget(backend, current);
+      int? attributesIndex;
       if (current.isFolder ? includeFolders : includeFiles) {
         try {
           patch.requireSupported(backend);
@@ -252,13 +283,17 @@ class FileAttributesService {
               (patch.owner != null && before.owner == null) ||
               (patch.group != null && before.group == null) ||
               (patch.modified != null && before.modified == null) ||
-              (patch.accessed != null && before.accessed == null)) {
+              (patch.accessed != null && before.accessed == null) ||
+              (patch.created != null && before.created == null) ||
+              (patch.windowsAttributes != null &&
+                  before.windowsAttributes == null)) {
             throw StateError('The requested attributes could not be read.');
           }
           if (!_sameFile(current, await backend.stat(path))) {
             throw StateError('The item changed while reading its attributes.');
           }
           check(backend);
+          attributesIndex = entries.length;
           entries.add(
             FileAttributesEntry(target: captured, depth: depth, before: before),
           );
@@ -289,6 +324,21 @@ class FileAttributesService {
               );
             }
             await visit(FileAttributesTarget(backend, child), depth + 1);
+          }
+          if (patch.accessed != null && attributesIndex != null) {
+            // Enumeration may update the directory's own access time. Capture
+            // the reviewed value after our reads rather than rejecting them
+            // later as an external change.
+            final before = await patch.read(backend, path);
+            check(backend);
+            if (before.accessed == null) {
+              throw StateError('The directory access time could not be read.');
+            }
+            entries[attributesIndex] = FileAttributesEntry(
+              target: captured,
+              depth: depth,
+              before: before,
+            );
           }
         } on FileAttributesCancelled {
           rethrow;
@@ -429,6 +479,7 @@ class FileAttributesService {
         'eTag',
         'etag',
         'rev',
+        'revision',
         'cTag',
       ].every((key) => before.metadata?[key] == after.metadata?[key]);
 }

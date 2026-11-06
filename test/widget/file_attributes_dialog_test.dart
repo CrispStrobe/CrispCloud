@@ -57,6 +57,71 @@ void main() {
     );
   }
 
+  testWidgets(
+    'Windows flags keep unselected values and preview creation time before writes',
+    (tester) async {
+      tester.view.physicalSize = const Size(360, 740);
+      tester.view.devicePixelRatio = 1;
+      addTearDown(tester.view.resetPhysicalSize);
+      addTearDown(tester.view.resetDevicePixelRatio);
+      final backend = _AttributesBackend(windows: true);
+      await tester.pumpWidget(
+        MaterialApp(
+          locale: const Locale('ar'),
+          localizationsDelegates: AppLocalizations.localizationsDelegates,
+          supportedLocales: AppLocalizations.supportedLocales,
+          builder: (context, child) => MediaQuery(
+            data: MediaQuery.of(context)
+                .copyWith(textScaler: const TextScaler.linear(2)),
+            child: child!,
+          ),
+          home: Scaffold(
+            body: FileAttributesDialog(
+              targets: [FileAttributesTarget(backend, backend.file)],
+            ),
+          ),
+        ),
+      );
+      expect(find.byKey(const ValueKey('attributes-mode')), findsNothing);
+      final created = find.byKey(const ValueKey('attributes-created'));
+      await tester.enterText(created, '2022-03-04 05:06:07');
+      FocusManager.instance.primaryFocus?.unfocus();
+      await tester.pumpAndSettle();
+      final readOnly = find.byKey(const ValueKey('attributes-windows-1'));
+      final hidden = find.byKey(const ValueKey('attributes-windows-2'));
+      expect(tester.widget<CheckboxListTile>(readOnly).value, isNull);
+      await Scrollable.ensureVisible(tester.element(readOnly), alignment: 0.4);
+      await tester.pumpAndSettle();
+      await tester.tap(
+        find.descendant(of: readOnly, matching: find.byType(Checkbox)),
+      );
+      await tester.pumpAndSettle();
+      expect(tester.widget<CheckboxListTile>(readOnly).value, isFalse);
+      await Scrollable.ensureVisible(tester.element(hidden), alignment: 0.4);
+      await tester.pumpAndSettle();
+      await tester.tap(
+        find.descendant(of: hidden, matching: find.byType(Checkbox)),
+      );
+      await tester.pump();
+      await tester.tap(
+        find.descendant(of: hidden, matching: find.byType(Checkbox)),
+      );
+      await tester.pump();
+      expect(tester.widget<CheckboxListTile>(hidden).value, isTrue);
+      await tester.tap(find.byKey(const ValueKey('attributes-preview')));
+      await tester.pumpAndSettle();
+      expect(backend.writes, 0);
+      final apply = find.byKey(const ValueKey('attributes-apply'));
+      expect(tester.widget<FilledButton>(apply).onPressed, isNotNull);
+      await tester.tap(apply);
+      await tester.pumpAndSettle();
+      expect(backend.flags, 0x26);
+      expect(backend.created, DateTime(2022, 3, 4, 5, 6, 7));
+      expect(backend.writes, 1);
+      expect(tester.takeException(), isNull);
+    },
+  );
+
   test('timestamps reject normalized invalid dates instead of changing another date', () {
     expect(
       () => parseFileAttributeTime('2025-02-31 12:00:00', utc: true),
@@ -75,6 +140,8 @@ void main() {
 }
 
 class _AttributesBackend extends FileOperationBackend {
+  _AttributesBackend({this.windows = false});
+  final bool windows;
   final file = FileItem(
     name: 'document.txt',
     path: '/documents/document.txt',
@@ -83,6 +150,8 @@ class _AttributesBackend extends FileOperationBackend {
   );
   int mode = 0x1ed;
   int writes = 0;
+  int flags = 0x25;
+  DateTime created = DateTime.utc(2020);
   @override
   Object get identity => 'captured-attributes-test';
   @override
@@ -92,16 +161,25 @@ class _AttributesBackend extends FileOperationBackend {
   @override
   p.Context get paths => p.posix;
   @override
-  StorageTransferCapabilities get capabilities =>
-      const StorageTransferCapabilities(permissions: true);
+  StorageTransferCapabilities get capabilities => StorageTransferCapabilities(
+    permissions: !windows,
+    windowsAttributes: windows,
+    setCreatedTime: windows,
+  );
   @override
   Future<FileItem?> stat(String path) async => file;
   @override
   Future<TransferMetadata> readMetadata(String path) async =>
-      TransferMetadata(mode: mode);
+      TransferMetadata(mode: mode, windowsAttributes: flags, created: created);
   @override
   Future<void> writeMetadata(String path, TransferMetadata metadata) async {
-    mode = metadata.mode!;
+    mode = metadata.mode ?? mode;
+    created = metadata.created ?? created;
+    if (metadata.windowsAttributes != null) {
+      flags =
+          (flags & ~metadata.windowsAttributesMask) |
+          metadata.windowsAttributes!;
+    }
     writes++;
   }
 
