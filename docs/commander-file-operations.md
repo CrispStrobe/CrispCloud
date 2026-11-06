@@ -462,9 +462,13 @@ flutter build web --no-pub --release --no-wasm-dry-run
 ```
 
 CI separately runs shared-storage and CLI contracts, desktop crypto checks on
-Linux/Windows/macOS, and native platform builds. Analysis follows the repository's
-errors-only policy; a successful check does not mean all existing lint notices
-have been removed.
+Linux/Windows/macOS, real IndexedDB collection persistence in Chrome, and native
+platform builds. The desktop gates also exercise collection CAS/restart and
+process-exit integrity recovery. Analysis follows the repository's errors-only
+policy; a successful check does not mean all existing lint notices have been
+removed. Follow-up checkpoint results and current acceptance are recorded in
+[PR #15](https://github.com/CrispStrobe/CrispCloud/pull/15) and its
+[checks](https://github.com/CrispStrobe/CrispCloud/pull/15/checks).
 
 At merged commit `0b35b16`, the
 [main CI run](https://github.com/CrispStrobe/CrispCloud/actions/runs/42139152722)

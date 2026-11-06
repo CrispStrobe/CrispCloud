@@ -2,13 +2,18 @@ import 'dart:async';
 import 'dart:io';
 
 import 'package:crisp_cloud/l10n/app_localizations.dart';
+import 'package:crisp_cloud/models/file_collection.dart';
 import 'package:crisp_cloud/models/file_item.dart';
 import 'package:crisp_cloud/models/panel_side.dart';
 import 'package:crisp_cloud/models/rename_batch.dart';
+import 'package:crisp_cloud/models/storage_reference.dart';
 import 'package:crisp_cloud/providers/providers.dart';
-import 'package:crisp_cloud/providers/action_history_provider.dart';
+import 'package:crisp_cloud/providers/file_collection_provider.dart';
 import 'package:crisp_cloud/providers/panel_source_provider.dart';
 import 'package:crisp_cloud/services/cloud_storage_interface.dart';
+import 'package:crisp_cloud/services/file_collection_service.dart';
+import 'package:crisp_cloud/services/file_collection_storage.dart';
+import 'package:crisp_cloud/services/file_collection_store.dart';
 import 'package:crisp_cloud/services/local_file_service.dart';
 import 'package:crisp_cloud/services/panel_source_service.dart';
 import 'package:crisp_cloud/services/rename_batch_store.dart';
@@ -98,11 +103,44 @@ class _Auth extends ChangeNotifier implements AuthNotifier {
   dynamic noSuchMethod(Invocation invocation) => super.noSuchMethod(invocation);
 }
 
+class _PausingCollectionStore extends FileCollectionStore {
+  _PausingCollectionStore() : super(storage: MemoryFileCollectionStorage());
+
+  Completer<void>? entered;
+  Completer<void>? release;
+  bool _pauseNext = false;
+
+  void pauseNextUpdate() {
+    entered = Completer<void>();
+    release = Completer<void>();
+    _pauseNext = true;
+  }
+
+  @override
+  Future<void> applyFileChanges(
+    StorageReference storage,
+    Map<String, FileItem?> replacements, {
+    Set<String> removedDirectories = const {},
+  }) async {
+    if (_pauseNext) {
+      _pauseNext = false;
+      entered!.complete();
+      await release!.future;
+    }
+    await super.applyFileChanges(
+      storage,
+      replacements,
+      removedDirectories: removedDirectories,
+    );
+  }
+}
+
 void main() {
   TestWidgetsFlutterBinding.ensureInitialized();
   late _Cloud cloud;
   late ProviderContainer container;
   late List<FileItem> files;
+  late _PausingCollectionStore collections;
 
   setUp(() async {
     SharedPreferences.setMockInitialValues({});
@@ -120,6 +158,71 @@ void main() {
   });
 
   tearDown(() => container.dispose());
+
+  Future<T> completeOperation<T>(
+    WidgetTester tester,
+    Future<T> operation,
+  ) async {
+    // Saved collections cross real persistence futures and Flutter's fake
+    // clock. Drive both queues while retaining the operation's completion
+    // contract; pumpAndSettle alone only waits for scheduled frames.
+    var done = false;
+    T? value;
+    Object? failure;
+    StackTrace? failureStack;
+    unawaited(
+      operation.then<void>(
+        (result) {
+          value = result;
+          done = true;
+        },
+        onError: (Object error, StackTrace stack) {
+          failure = error;
+          failureStack = stack;
+          done = true;
+        },
+      ),
+    );
+    for (var attempt = 0; attempt < 200 && !done; attempt++) {
+      await tester.runAsync(() => Future<void>.delayed(Duration.zero));
+      await tester.pump(const Duration(milliseconds: 1));
+    }
+    expect(done, isTrue, reason: 'The captured operation did not complete.');
+    if (failure != null) Error.throwWithStackTrace(failure!, failureStack!);
+    return value as T;
+  }
+
+  Future<void> saveOriginalReferences() async {
+    container.dispose();
+    collections = _PausingCollectionStore();
+    await collections.ready;
+    container = ProviderContainer(
+      overrides: [
+        authProvider.overrideWith((_) => _Auth(cloud)),
+        localFileServiceProvider.overrideWithValue(_Local()),
+        renameBatchStoreProvider.overrideWithValue(MemoryRenameBatchStore()),
+        fileCollectionStoreProvider.overrideWith((_) => collections),
+      ],
+    );
+    final panel = container.read(panelProvider(PanelSide.remote));
+    await panel.refresh();
+    files = panel.files!.where((file) => !file.isFolder).toList();
+    final source = panel.captureOperationOrigin(files).storageReference;
+    await collections.save(
+      FileCollection(
+        id: 'saved',
+        name: 'Saved originals',
+        entries: [
+          for (final file in files) FileCollectionService.capture(file, source),
+        ],
+      ),
+    );
+  }
+
+  Future<Set<String>> savedPaths() async => {
+    for (final entry in (await collections.load('saved')).entries)
+      entry.reference.path,
+  };
 
   Future<void> open(
     WidgetTester tester, {
@@ -350,6 +453,81 @@ void main() {
     expect(cloud.paths, {'/first.txt', '/second.txt'});
     expect(history.history, isEmpty);
   });
+
+  testWidgets('undo waits for saved references after the dialog closes', (
+    tester,
+  ) async {
+    await completeOperation(tester, saveOriginalReferences());
+    await open(tester);
+    await tester.enterText(
+      find.byKey(const ValueKey('rename-name-mask')),
+      '[N]_new',
+    );
+    await tester.pumpAndSettle();
+    await tester.tap(find.byKey(const ValueKey('rename-apply')));
+    await tester.pumpAndSettle();
+    await completeOperation(
+      tester,
+      container.read(panelProvider(PanelSide.remote)).refresh(),
+    );
+    expect(await completeOperation(tester, savedPaths()), {
+      '/first_new.txt',
+      '/second_new.txt',
+    });
+    final history = container.read(actionHistoryProvider);
+    await tester.pumpWidget(const SizedBox.shrink());
+
+    collections.pauseNextUpdate();
+    var completed = false;
+    final pending = history.undoLast(const UndoContext()).then((result) {
+      completed = true;
+      return result;
+    });
+    await completeOperation(tester, collections.entered!.future);
+    expect(cloud.paths, {'/first.txt', '/second.txt'});
+    expect(await completeOperation(tester, savedPaths()), {
+      '/first_new.txt',
+      '/second_new.txt',
+    });
+    expect(completed, isFalse);
+    expect(history.history, hasLength(1));
+
+    collections.release!.complete();
+    expect((await completeOperation(tester, pending))?.success, isTrue);
+    expect(await completeOperation(tester, savedPaths()), {
+      '/first.txt',
+      '/second.txt',
+    });
+    expect(history.history, isEmpty);
+  });
+
+  test(
+    'refresh waits for an accepted update when its caller ignores the future',
+    () async {
+      await saveOriginalReferences();
+      final panel = container.read(panelProvider(PanelSide.remote));
+      final source = panel.captureOperationOrigin(files);
+      await cloud.renamePath('/first.txt', 'first_new.txt');
+      collections.pauseNextUpdate();
+      final updating = panel.applyFileListChanges({
+        '/first.txt': files.first.copyWith(
+          name: 'first_new.txt',
+          path: '/first_new.txt',
+        ),
+      }, origin: source);
+      var refreshed = false;
+      final refreshing = panel.refresh().then((_) => refreshed = true);
+      await collections.entered!.future;
+      expect(refreshed, isFalse);
+      expect(await savedPaths(), {'/first.txt', '/second.txt'});
+
+      collections.release!.complete();
+      await refreshing;
+      await updating;
+      expect(await savedPaths(), {'/first_new.txt', '/second.txt'});
+      expect(panel.files!.map((file) => file.path), contains('/first_new.txt'));
+    },
+  );
 
   testWidgets('disposing an active dialog retains undo for completed rows', (
     tester,

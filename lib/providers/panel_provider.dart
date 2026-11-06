@@ -175,6 +175,7 @@ class PanelNotifier extends ChangeNotifier {
   int _collectionSelectionMemoryBytes = 0;
   CollectionMarkSession? _collectionMarks;
   FileCollectionStore? _collectionStoreForMarks;
+  Future<void>? _pendingCollectionChanges;
   bool _suppressCollectionMarks = false;
   Timer? _collectionMarksTimer;
   String? _collectionLoadError;
@@ -2275,7 +2276,9 @@ class PanelNotifier extends ChangeNotifier {
   /// Async callers pass their captured [origin] so results cannot affect a
   /// same-path row in another storage account after the pane changes sources.
   /// Matching saved list tabs are updated even while another tab is active.
-  void applyFileListChanges(
+  /// Visible list changes remain immediate; the returned future acknowledges
+  /// saved-reference persistence and any resulting paged collection reload.
+  Future<void> applyFileListChanges(
     Map<String, FileItem?> replacements, {
     PanelFileOrigin? origin,
     Set<String> removedDirectories = const {},
@@ -2283,7 +2286,7 @@ class PanelNotifier extends ChangeNotifier {
     if (_isDisposed ||
         replacements.isEmpty ||
         (origin != null && !origin.isCurrent)) {
-      return;
+      return Future<void>.value();
     }
     bool matchesOrigin(PanelFileOrigin? candidate) =>
         origin == null ||
@@ -2301,7 +2304,16 @@ class PanelNotifier extends ChangeNotifier {
             )
             .toList()
           ..sort((a, b) => b.key.length.compareTo(a.key.length));
+    var completion = Future<void>.value();
     if (origin != null) {
+      // Capture the persistence service and account before yielding. The
+      // operation already completed on this source; a later panel disposal
+      // must not replace or invalidate its accepted saved-reference update.
+      final store = _ref.read(fileCollectionStoreProvider);
+      final storage = origin.storageReference;
+      final changes = Map<String, FileItem?>.of(replacements);
+      final removed = Set<String>.of(removedDirectories);
+      final previous = _pendingCollectionChanges;
       final pagedId = isPagedCollection ? _collectionId : null;
       final pageIndex = collectionPageIndex;
       final session = _collectionMarks;
@@ -2309,14 +2321,14 @@ class PanelNotifier extends ChangeNotifier {
         _collectionBusy = true;
         notifyListeners();
       }
-      unawaited(
-        Future<void>(() async {
-          final store = _ref.read(fileCollectionStoreProvider);
+      completion = () async {
+        try {
+          if (previous != null) await previous;
           if (session != null) await session.flush(store);
           await store.applyFileChanges(
-            origin.storageReference,
-            replacements,
-            removedDirectories: removedDirectories,
+            storage,
+            changes,
+            removedDirectories: removed,
           );
           if (!_isDisposed &&
               pagedId != null &&
@@ -2326,7 +2338,7 @@ class PanelNotifier extends ChangeNotifier {
             _collectionPage = null;
             await openCollection(pagedId, pageIndex: pageIndex);
           }
-        }).catchError((Object error) {
+        } catch (error) {
           if (!_isDisposed) {
             if (pagedId != null && _collectionId == pagedId) {
               _collectionBusy = false;
@@ -2337,9 +2349,18 @@ class PanelNotifier extends ChangeNotifier {
                 .read(errorProvider)
                 .addError('Could not update saved collections: $error');
           }
+        }
+      }();
+      _pendingCollectionChanges = completion;
+      final accepted = completion;
+      unawaited(
+        accepted.whenComplete(() {
+          if (identical(_pendingCollectionChanges, accepted)) {
+            _pendingCollectionChanges = null;
+          }
         }),
       );
-      if (pagedId != null) return;
+      if (pagedId != null) return completion;
     }
 
     FileItem? replacementFor(FileItem? old) {
@@ -2413,7 +2434,7 @@ class PanelNotifier extends ChangeNotifier {
 
     if (!_showingSearchResults) {
       if (changed) notifyListeners();
-      return;
+      return completion;
     }
     final previousCursor = cursorItem;
     final updated = <FileItem>[];
@@ -2427,7 +2448,7 @@ class PanelNotifier extends ChangeNotifier {
       if (identical(_lastSelected, old)) _lastSelected = item;
       if (identical(_itemToScrollTo, old)) _itemToScrollTo = item;
     }
-    if (!changed) return;
+    if (!changed) return completion;
     _files = updated;
     if (isPagedCollection) {
       final visibleKeys = _collectionPage!.collection.entries
@@ -2454,6 +2475,7 @@ class PanelNotifier extends ChangeNotifier {
     _resetCursor(preserveItem: replacementFor(previousCursor));
     _rememberFileListTab();
     notifyListeners();
+    return completion;
   }
 
   String exportFileListPaths({bool selectedOnly = false}) {
@@ -4438,6 +4460,13 @@ class PanelNotifier extends ChangeNotifier {
   /// Queued work must not outlive the panel that requested it.
   Future<void> refresh() async {
     if (_isDisposed) return;
+    // Transfer callbacks may deliberately ignore applyFileListChanges's
+    // Future. Their following refresh still acknowledges every accepted saved
+    // reference update before it reloads rows or reports the operation done.
+    while (_pendingCollectionChanges != null) {
+      await _pendingCollectionChanges;
+      if (_isDisposed) return;
+    }
     if (_pendingTabStorage != null) {
       await _restoreSelectedTab();
       return;
@@ -5106,7 +5135,7 @@ class PanelNotifier extends ChangeNotifier {
       _log.warn('Delete failed', error);
       _ref.read(errorProvider).addError('Delete failed: $error');
     } finally {
-      applyFileListChanges(
+      await applyFileListChanges(
         removed,
         origin: origin,
         removedDirectories: removedDirectories,
@@ -5304,7 +5333,7 @@ class PanelNotifier extends ChangeNotifier {
                       );
               } finally {
                 if (captured.isCurrent) {
-                  applyFileListChanges({
+                  await applyFileListChanges({
                     for (final item in latest.items)
                       if (before[item.sourcePath] != item.currentPath)
                         before[item.sourcePath]!: item.asFile(
@@ -5319,7 +5348,7 @@ class PanelNotifier extends ChangeNotifier {
           );
         }
         if (refreshAfter && captured.isCurrent) {
-          applyFileListChanges(
+          await applyFileListChanges(
             RenameBatchService.changes(completed),
             origin: captured,
           );

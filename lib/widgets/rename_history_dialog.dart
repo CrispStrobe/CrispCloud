@@ -199,7 +199,7 @@ class _RenameHistoryDialogState extends ConsumerState<RenameHistoryDialog> {
                 storageId: record.storage.id,
               ),
         };
-        _panel.applyFileListChanges(changes, origin: _origin);
+        await _panel.applyFileListChanges(changes, origin: _origin);
         await _panel.refresh();
       }
       await _load();
@@ -253,7 +253,7 @@ class _RenameHistoryDialogState extends ConsumerState<RenameHistoryDialog> {
       await _service.acknowledgeObservedDestination(record, _storage!);
       _lastChanged = record;
       if (_origin?.isCurrent == true) {
-        _panel.applyFileListChanges({
+        await _panel.applyFileListChanges({
           for (final item in record.items)
             if (before[item.sourcePath] != item.currentPath)
               before[item.sourcePath]!: item.asFile(

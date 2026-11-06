@@ -1598,7 +1598,7 @@ class _BatchRenameDialogState extends ConsumerState<BatchRenameDialog> {
         }
         if (mounted) setState(() => _result = _resultFor(plan, record));
         if (origin.isCurrent) {
-          _panel.applyFileListChanges(
+          await _panel.applyFileListChanges(
             RenameBatchService.changes(record),
             origin: origin,
           );
@@ -1671,7 +1671,7 @@ class _BatchRenameDialogState extends ConsumerState<BatchRenameDialog> {
                 );
         } finally {
           if (origin.isCurrent) {
-            panel.applyFileListChanges({
+            await panel.applyFileListChanges({
               for (final item in latest.items)
                 if (before[item.sourcePath] != item.currentPath)
                   before[item.sourcePath]!: item.asFile(
@@ -1719,7 +1719,7 @@ class _BatchRenameDialogState extends ConsumerState<BatchRenameDialog> {
       if (mounted) setState(() => _message = 'Restore stopped: $error');
     } finally {
       if (_origin?.isCurrent == true) {
-        _panel.applyFileListChanges({
+        await _panel.applyFileListChanges({
           for (final item in record.items)
             if (before[item.sourcePath] != item.currentPath)
               before[item.sourcePath]!: item.asFile(
