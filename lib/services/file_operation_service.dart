@@ -1110,6 +1110,41 @@ class FileOperationService {
         } else {
           entry.recovery = {...?entry.recovery, 'append': append};
           await checkpoint?.call(entry, 'writing');
+          Future<void> recordWriteState(
+            Map<String, dynamic> state, {
+            String? contentSha256,
+          }) async {
+            for (final key in [
+              'stagingPath',
+              'stagedPath',
+              'backupPath',
+              'destination',
+            ]) {
+              final path = state[key];
+              if (path is String) plan.assertDestinationUnprotected(path);
+            }
+            entry.recovery = {
+              ...?entry.recovery,
+              ...state,
+              if (contentSha256 != null) 'contentSha256': contentSha256,
+            };
+            final phase = state['phase'] as String;
+            // Record completed mutations and recovery paths even after the
+            // original source disconnects or the user cancels. Restoring an
+            // old destination uses the backend's own captured account checks.
+            await checkpoint?.call(entry, phase);
+            if (phase == 'committed' ||
+                phase == 'restoringBackup' ||
+                phase == 'restoreCopied') {
+              return;
+            }
+            // A provider may consume the entire source into a private spool
+            // long before its upload ends. Input-stream checks no longer run
+            // then, so each subsequent forward phase needs a fresh gate.
+            await control.checkpoint();
+            _checkSources(source, target);
+          }
+
           var nativeMoved = false;
           var nativeCopied = false;
           if (options.preferNative &&
@@ -1142,17 +1177,7 @@ class FileOperationService {
                 entry.source,
                 entry.destination,
                 replace: replace,
-                checkpoint: (state) async {
-                  await control.checkpoint();
-                  _checkSources(source, target);
-                  for (final key in ['stagedPath', 'destination']) {
-                    if (state[key] is String) {
-                      plan.assertDestinationUnprotected(state[key] as String);
-                    }
-                  }
-                  entry.recovery = {...?entry.recovery, ...state};
-                  await checkpoint?.call(entry, state['phase'] as String);
-                },
+                checkpoint: recordWriteState,
                 verifyStaged: (staged) async {
                   await control.checkpoint();
                   _checkSources(source, target);
@@ -1245,24 +1270,10 @@ class FileOperationService {
                 replace: replace,
                 preallocate: options.preallocate,
                 resumeUploadPath: recoveredUploadPath,
-                checkpoint: (state) async {
-                  for (final key in [
-                    'stagingPath',
-                    'stagedPath',
-                    'backupPath',
-                    'destination',
-                  ]) {
-                    final path = state[key];
-                    if (path is String) plan.assertDestinationUnprotected(path);
-                  }
-                  entry.recovery = {
-                    ...?entry.recovery,
-                    ...state,
-                    if (inputDigest.value != null)
-                      'contentSha256': inputDigest.value!.toString(),
-                  };
-                  await checkpoint?.call(entry, state['phase'] as String);
-                },
+                checkpoint: (state) => recordWriteState(
+                  state,
+                  contentSha256: inputDigest.value?.toString(),
+                ),
                 verifyStaged:
                     options.verifyContents || append || resumeOffset > 0
                     ? (staged) async {
