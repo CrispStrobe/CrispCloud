@@ -51,6 +51,7 @@ import '../services/file_operation_backend.dart';
 import '../services/file_operation_service.dart';
 import '../services/viewer_spool.dart';
 import '../services/viewer_tail_service.dart';
+import '../services/viewer_search_service.dart';
 import '../services/internal_viewer_service.dart';
 import '../services/local_file_service.dart';
 import '../services/log_service.dart';
@@ -77,7 +78,6 @@ const int kAutoFullLoadBytes = 16 * 1024 * 1024;
 const int kViewerFullDataCap = 64 * 1024 * 1024;
 
 const int _kSearchMaxMatches = 2000;
-const int _kStreamSearchCap = 64 * 1024 * 1024;
 const int _kHighlightMaxChars = 400 * 1024;
 
 /// Rich rendered modes (markdown/CSV/office) are truncated above this size so
@@ -297,6 +297,9 @@ class _InternalViewerDialogState extends ConsumerState<InternalViewerDialog> {
   final FocusNode _searchFocus = FocusNode();
   Timer? _searchDebounce;
   bool _searchOpen = false;
+  bool _searching = false;
+  int _searchGeneration = 0;
+  int _searchBytesScanned = 0;
   bool _isByteSearch = false;
   Uint8List? _searchBytes;
   List<int> _matches = const [];
@@ -355,11 +358,10 @@ class _InternalViewerDialogState extends ConsumerState<InternalViewerDialog> {
       (_mode == ViewerMode.text && _isStreamed);
 
   bool get _canChangeEncoding =>
-      !_isStreamed &&
       (_mode == ViewerMode.text ||
-          _mode == ViewerMode.markdown ||
-          _mode == ViewerMode.csv ||
-          _mode == ViewerMode.office);
+      _mode == ViewerMode.markdown ||
+      _mode == ViewerMode.csv ||
+      _mode == ViewerMode.office);
 
   bool get _usingHighlightView =>
       _mode == ViewerMode.text &&
@@ -389,6 +391,7 @@ class _InternalViewerDialogState extends ConsumerState<InternalViewerDialog> {
 
   @override
   void dispose() {
+    _searchGeneration++;
     ++_loadToken;
     ++_prepareToken;
     _tailTimer?.cancel();
@@ -1268,6 +1271,8 @@ class _InternalViewerDialogState extends ConsumerState<InternalViewerDialog> {
   // ---------------------------------------------------------------------------
 
   void _toggleSearch() {
+    _searchGeneration++;
+    _searching = false;
     if (_searchOpen) {
       _searchDebounce?.cancel();
       setState(() {
@@ -1297,6 +1302,8 @@ class _InternalViewerDialogState extends ConsumerState<InternalViewerDialog> {
   }
 
   void _onSearchChanged(String value) {
+    _searchGeneration++;
+    _searching = false;
     _searchDebounce?.cancel();
     if (_isStreamed) {
       setState(() {
@@ -1316,7 +1323,8 @@ class _InternalViewerDialogState extends ConsumerState<InternalViewerDialog> {
     _runSearch(value);
   }
 
-  void _runSearch(String raw) {
+  Future<void> _runSearch(String raw) async {
+    final generation = ++_searchGeneration;
     final query = raw.trim();
     if (!mounted) return;
 
@@ -1334,14 +1342,80 @@ class _InternalViewerDialogState extends ConsumerState<InternalViewerDialog> {
     }
 
     if (_isByteMode) {
-      final pattern = _patternFor(query);
+      final Uint8List pattern;
+      try {
+        pattern = _patternFor(query);
+      } catch (error) {
+        setState(() {
+          _matches = const [];
+          _matchIndex = -1;
+          _searchNote = '$error';
+        });
+        return;
+      }
       if (pattern.isEmpty) return;
       _searchBytes = pattern;
       _isByteSearch = true;
 
       List<int> found;
+      String? scanNote;
       if (_isStreamed) {
-        found = _scanSource(pattern);
+        final source = _source;
+        if (source == null) return;
+        setState(() {
+          _searching = true;
+          _searchBytesScanned = 0;
+        });
+        try {
+          final result = await searchViewerBytes(
+            source,
+            pattern,
+            maximumOffsets: _kSearchMaxMatches,
+            alignment:
+                _mode == ViewerMode.text &&
+                    !query.toLowerCase().startsWith('0x')
+                ? viewerCodeUnitBytes(
+                    viewerSourceEncoding(source, override: _encodingOverride),
+                  )
+                : 1,
+            isCancelled: () => !mounted || generation != _searchGeneration,
+            checkSource: () {
+              if (_origin?.isCurrent == false) {
+                throw StateError('The viewed source is unavailable.');
+              }
+            },
+            onProgress: (bytes, total) {
+              if (mounted && generation == _searchGeneration) {
+                setState(() => _searchBytesScanned = bytes);
+              }
+            },
+          );
+          if (!mounted || generation != _searchGeneration) return;
+          found = result.offsets;
+          scanNote = result.totalMatches > found.length
+              ? context.commanderTr("Showing first {0} of {1} matches", [
+                  found.length,
+                  result.totalMatches,
+                ])
+              : context.commanderTr("Searched entire file ({0})", [
+                  formatBytes(result.scannedBytes),
+                ]);
+        } on ViewerSearchCancelled {
+          return;
+        } catch (error) {
+          if (mounted && generation == _searchGeneration) {
+            setState(() {
+              _matches = const [];
+              _matchIndex = -1;
+              _searchNote = '$error';
+            });
+          }
+          return;
+        } finally {
+          if (mounted && generation == _searchGeneration) {
+            setState(() => _searching = false);
+          }
+        }
       } else {
         final data = _fullData;
         if (data == null) return;
@@ -1355,11 +1429,7 @@ class _InternalViewerDialogState extends ConsumerState<InternalViewerDialog> {
       setState(() {
         _matches = found;
         _matchIndex = found.isEmpty ? -1 : 0;
-        _searchNote = _isStreamed
-            ? context.commanderTr("Searched first {0}", [
-                formatBytes(_kStreamSearchCap),
-              ])
-            : null;
+        _searchNote = scanNote;
         _cachedSafeMatchIndex = null;
         _cachedSafeMatchBinary = null;
         _cachedSafeMatchOffset = null;
@@ -1401,41 +1471,12 @@ class _InternalViewerDialogState extends ConsumerState<InternalViewerDialog> {
       final parsed = InternalViewerService.parseHexPattern(query);
       if (parsed != null) return parsed;
     }
-    return Uint8List.fromList(utf8.encode(query));
-  }
-
-  List<int> _scanSource(Uint8List pattern) {
-    final source = _source;
-    final out = <int>[];
-    if (source == null) return out;
-    final limit = source.size < _kStreamSearchCap
-        ? source.size
-        : _kStreamSearchCap;
-    const chunk = 1 << 20;
-    var position = 0;
-    while (position < limit && out.length < _kSearchMaxMatches) {
-      final remaining = limit - position;
-      final readLength = remaining > chunk + pattern.length - 1
-          ? chunk + pattern.length - 1
-          : remaining;
-      if (readLength <= 0) break;
-      final data = source.readSync(position, readLength);
-      if (data.isEmpty) break;
-      final hits = InternalViewerService.findBytes(
-        data,
-        pattern,
-        maxMatches: _kSearchMaxMatches - out.length,
-      );
-      for (final hit in hits) {
-        final absolute = position + hit;
-        if (absolute >= limit) continue;
-        // Skip matches re-found in the previous chunk's overlap tail.
-        if (out.isNotEmpty && absolute <= out.last) continue;
-        out.add(absolute);
-      }
-      position += chunk;
-    }
-    return out;
+    return _mode == ViewerMode.text && _isStreamed && _source != null
+        ? encodeViewerSearchText(
+            query,
+            viewerSourceEncoding(_source!, override: _encodingOverride),
+          )
+        : Uint8List.fromList(utf8.encode(query));
   }
 
   void _gotoMatch(int step) {
@@ -1936,6 +1977,14 @@ class _InternalViewerDialogState extends ConsumerState<InternalViewerDialog> {
                                 child: Text(context.commanderTr("UTF-16 BE")),
                               ),
                               PopupMenuItem(
+                                value: 'utf32le',
+                                child: Text(context.commanderTr("UTF-32 LE")),
+                              ),
+                              PopupMenuItem(
+                                value: 'utf32be',
+                                child: Text(context.commanderTr("UTF-32 BE")),
+                              ),
+                              PopupMenuItem(
                                 value: 'latin1',
                                 child: Text(context.commanderTr("Latin-1")),
                               ),
@@ -2282,6 +2331,17 @@ class _InternalViewerDialogState extends ConsumerState<InternalViewerDialog> {
                 color: theme.colorScheme.onSurfaceVariant,
               ),
             ),
+            if (_searching)
+              IconButton(
+                tooltip: context.commanderTr("Stop search"),
+                icon: const Icon(Icons.stop_circle_outlined, size: 18),
+                onPressed: () => setState(() {
+                  _searchGeneration++;
+                  _searching = false;
+                  _searchNote = context.commanderTr("Search cancelled");
+                }),
+                visualDensity: VisualDensity.compact,
+              ),
             IconButton(
               tooltip: context.commanderTr("Previous match (Shift+F3)"),
               icon: const Icon(Icons.keyboard_arrow_up, size: 18),
@@ -2386,6 +2446,7 @@ class _InternalViewerDialogState extends ConsumerState<InternalViewerDialog> {
         child: StreamingSafeView(
           source: source,
           rawText: true,
+          encoding: viewerSourceEncoding(source, override: _encodingOverride),
           fontScale: _zoom,
           controller: _vScroll,
           matchStart: _isByteSearch ? _matchHighlightStart : null,
@@ -2506,6 +2567,7 @@ class _InternalViewerDialogState extends ConsumerState<InternalViewerDialog> {
         return StreamingSafeView(
           source: source,
           rawText: true,
+          encoding: viewerSourceEncoding(source, override: _encodingOverride),
           fontScale: _zoom,
           controller: _vScroll,
         );
@@ -3083,6 +3145,12 @@ class _InternalViewerDialogState extends ConsumerState<InternalViewerDialog> {
 
   String? get _searchStatusText {
     if (!_searchOpen && _matches.isEmpty) return null;
+    if (_searching) {
+      return context.commanderTr("Searching {0} of {1}", [
+        formatBytes(_searchBytesScanned),
+        formatBytes(_dataSize),
+      ]);
+    }
     final base = _matches.isEmpty
         ? context.commanderTr("No matches")
         : '${_matchIndex + 1}/${_matches.length}';

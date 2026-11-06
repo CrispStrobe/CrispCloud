@@ -82,13 +82,7 @@ void main() {
   });
 
   group('byte modes', () {
-    final bytes = Uint8List.fromList(<int>[
-      0x41,
-      0x00,
-      0x42,
-      0x0A,
-      0x43,
-    ]);
+    final bytes = Uint8List.fromList(<int>[0x41, 0x00, 0x42, 0x0A, 0x43]);
 
     testWidgets('ASCII mode keeps control bytes visible as dots', (
       tester,
@@ -159,10 +153,7 @@ void main() {
 
       // The member opens in a nested viewer; .txt uses the highlighted
       // (RichText) renderer, so search inside rich text.
-      expect(
-        find.textContaining('hello', findRichText: true),
-        findsOneWidget,
-      );
+      expect(find.textContaining('hello', findRichText: true), findsOneWidget);
     });
 
     testWidgets('7z lists members and opens them', (tester) async {
@@ -185,9 +176,8 @@ void main() {
     testWidgets('encrypted 7z asks for a password and opens members', (
       tester,
     ) async {
-      final bytes = File(
-        'test/fixtures/archives/header_encrypted.7z',
-      ).readAsBytesSync();
+      final bytes = File('test/fixtures/archives/header_encrypted.7z')
+          .readAsBytesSync();
       await _pumpViewer(tester, bytes, name: 'locked.7z');
 
       expect(find.text('Password required'), findsOneWidget);
@@ -243,7 +233,10 @@ void main() {
 
       // Default view: Markdown (formatted).
       expect(find.byType(Markdown), findsOneWidget);
-      expect(find.textContaining('Hello office', findRichText: true), findsWidgets);
+      expect(
+        find.textContaining('Hello office', findRichText: true),
+        findsWidgets,
+      );
 
       // Text tab shows the plain-text rendering.
       await tester.ensureVisible(find.text('Text').last);
@@ -264,9 +257,11 @@ void main() {
     testWidgets('HTML renders and can switch to source', (tester) async {
       await _pumpViewer(
         tester,
-        Uint8List.fromList(utf8.encode(
-          '<html><body><h1>Hello HTML</h1><p>Body text</p></body></html>',
-        )),
+        Uint8List.fromList(
+          utf8.encode(
+            '<html><body><h1>Hello HTML</h1><p>Body text</p></body></html>',
+          ),
+        ),
         name: 'page.html',
       );
 
@@ -308,10 +303,12 @@ void main() {
     });
 
     testWidgets('PPTX opens the slide viewer by default', (tester) async {
-      const presentation = '<p:presentation '
+      const presentation =
+          '<p:presentation '
           'xmlns:p="http://schemas.openxmlformats.org/presentationml/2006/main">'
           '<p:sldSz cx="12192000" cy="6858000"/></p:presentation>';
-      const slide = '<p:sld '
+      const slide =
+          '<p:sld '
           'xmlns:p="http://schemas.openxmlformats.org/presentationml/2006/main" '
           'xmlns:a="http://schemas.openxmlformats.org/drawingml/2006/main">'
           '<p:cSld><p:spTree><p:sp><p:spPr><a:xfrm>'
@@ -320,10 +317,12 @@ void main() {
           '<a:t>Hello slide</a:t></a:r></a:p></p:txBody></p:sp>'
           '</p:spTree></p:cSld></p:sld>';
       final archive = Archive()
-        ..addFile(ArchiveFile.bytes(
-            'ppt/presentation.xml', utf8.encode(presentation)))
         ..addFile(
-            ArchiveFile.bytes('ppt/slides/slide1.xml', utf8.encode(slide)));
+          ArchiveFile.bytes('ppt/presentation.xml', utf8.encode(presentation)),
+        )
+        ..addFile(
+          ArchiveFile.bytes('ppt/slides/slide1.xml', utf8.encode(slide)),
+        );
       final bytes = Uint8List.fromList(ZipEncoder().encode(archive));
 
       await _pumpViewer(tester, bytes, name: 'deck.pptx');
@@ -347,10 +346,13 @@ void main() {
       expect(text, contains('Legacy PowerPoint'));
     });
 
-    testWidgets('PNG auto-detects image mode', (tester) async {      final png = Uint8List.fromList(base64Decode(
-        'iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mP8z8BQ'
-        'DwAEhQGAhKmMIQAAAABJRU5ErkJggg==',
-      ));
+    testWidgets('PNG auto-detects image mode', (tester) async {
+      final png = Uint8List.fromList(
+        base64Decode(
+          'iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mP8z8BQ'
+          'DwAEhQGAhKmMIQAAAABJRU5ErkJggg==',
+        ),
+      );
 
       await _pumpViewer(tester, png, name: 'pixel.png');
 
@@ -388,6 +390,71 @@ void main() {
       expect(find.text('00000004'), findsOneWidget);
       expect(find.text('00000008'), findsOneWidget);
     });
+  });
+
+  testWidgets(
+    'text goto reaches a match beyond 64 MiB without indexing the prefix',
+    (tester) async {
+      const offset = 65 * 1024 * 1024;
+      final data = Uint8List(offset + 64);
+      final marker = utf8.encode('\nfar away text match\n');
+      data.setRange(offset - 1, offset - 1 + marker.length, marker);
+      final source = ViewBytesSource.memory(data);
+      await source.open();
+      final controller = ScrollController();
+      addTearDown(controller.dispose);
+      addTearDown(source.dispose);
+      await tester.pumpWidget(
+        _wrap(
+          Scaffold(
+            body: StreamingSafeView(
+              source: source,
+              rawText: true,
+              fontScale: 1,
+              controller: controller,
+              scrollToByte: offset,
+              matchStart: offset,
+              matchEnd: offset + 18,
+            ),
+          ),
+        ),
+      );
+      await tester.pumpAndSettle();
+      expect(
+        find.text('far away text match', findRichText: true),
+        findsOneWidget,
+      );
+      expect(find.textContaining('Previous text window'), findsOneWidget);
+      expect(tester.takeException(), isNull);
+      await tester.pumpWidget(const SizedBox());
+    },
+  );
+
+  testWidgets('streamed UTF-16 text retains encoding and newline alignment', (
+    tester,
+  ) async {
+    final bytes = Uint8List.fromList([
+      for (final c in 'one\ntwo café\n'.codeUnits) ...[c & 255, c >> 8],
+    ]);
+    final source = ViewBytesSource.memory(bytes);
+    await source.open();
+    await tester.pumpWidget(
+      _wrap(
+        Scaffold(
+          body: StreamingSafeView(
+            source: source,
+            rawText: true,
+            encoding: 'utf16le',
+            fontScale: 1,
+          ),
+        ),
+      ),
+    );
+    await tester.pumpAndSettle();
+    expect(find.text('one'), findsOneWidget);
+    expect(find.text('two café'), findsOneWidget);
+    expect(find.text('00000008'), findsOneWidget);
+    expect(tester.takeException(), isNull);
   });
 
   group('mode bar', () {
