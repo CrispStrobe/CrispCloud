@@ -242,8 +242,18 @@ void confirmDeleteSelected(BuildContext context, WidgetRef ref) {
 Future<void> showRenameDialog(BuildContext context, WidgetRef ref) async {
   final activePanel = ref.read(activePanelProvider);
   final panel = ref.read(panelProvider(activePanel));
-  final targets = _selectedOrCursor(panel);
+  var targets = _selectedOrCursor(panel);
   if (targets.length != 1) return;
+  try {
+    targets = await panel.prepareOperationFiles(targets);
+  } catch (error) {
+    if (context.mounted) {
+      ScaffoldMessenger.of(context)
+          .showSnackBar(SnackBar(content: Text('$error')));
+    }
+    return;
+  }
+  if (!context.mounted) return;
   final file = targets.first;
   final name = await showCapturedRenameDialog(context, panel, file);
   if (name != null && name != file.name && context.mounted) {
@@ -402,11 +412,7 @@ void showMoveDialogFromSelection(BuildContext context, WidgetRef ref) {
 void showMultiRenameFromSelection(BuildContext context, WidgetRef ref) {
   final side = ref.read(activePanelProvider);
   final panel = ref.read(panelProvider(side));
-  final files = panel.selection.isEmpty
-      ? _selectedOrCursor(panel)
-      : (panel.displayedFiles ?? const <FileItem>[])
-            .where((item) => panel.selection.contains(item))
-            .toList();
+  final files = _selectedOrCursor(panel);
   if (files.isNotEmpty) showBatchRenameDialog(context, ref, side, files);
 }
 

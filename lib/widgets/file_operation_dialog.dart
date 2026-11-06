@@ -37,11 +37,18 @@ Future<FileOperationPlan?> showFileOperationDialog(
   var groups = sourceGroups;
   if (groups == null && sourceOrigin == null && sourceBackend == null) {
     try {
-      groups = ref.read(panelProvider(side)).captureOperationGroups(files);
-    } catch (_) {
-      /* The single dialog displays the precise validation error. */
+      final panel = ref.read(panelProvider(side));
+      files = await panel.prepareOperationFiles(files);
+      groups = panel.captureOperationGroups(files);
+    } catch (error) {
+      if (context.mounted) {
+        ScaffoldMessenger.of(context)
+            .showSnackBar(SnackBar(content: Text('$error')));
+      }
+      return null;
     }
   }
+  if (!context.mounted) return null;
   if (groups != null && groups.length > 1) {
     if (sourceBackend != null) {
       throw ArgumentError('A snapshot copy uses one captured source.');

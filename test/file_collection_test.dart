@@ -89,7 +89,7 @@ void main() {
       store.dispose();
       final reopened = FileCollectionStore();
       await reopened.ready;
-      final restored = reopened.get('saved')!;
+      final restored = await reopened.load('saved');
       expect(restored.entries.length, 2);
       expect(restored.entries.map((entry) => entry.file).toSet().length, 2);
       expect(restored.selectedKeys.length, 2);

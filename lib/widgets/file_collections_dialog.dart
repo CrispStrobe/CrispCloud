@@ -9,6 +9,7 @@ import 'package:uuid/uuid.dart';
 
 import '../l10n/commander_strings.dart';
 import '../models/file_collection.dart';
+import '../models/file_collection_page.dart';
 import '../models/panel_side.dart';
 import '../providers/file_collection_provider.dart';
 import '../providers/panel_provider.dart';
@@ -83,7 +84,12 @@ Future<void> reviewCollectionReplacements(
     ),
   );
   if (accepted == true) {
-    await panel.refreshCollectionItems(acceptReplacements: true);
+    await panel.refreshCollectionItems(
+      acceptReplacements: true,
+      acceptedReplacementKeys: items
+          .map((item) => '${item.storageId}\u0000${item.path}')
+          .toSet(),
+    );
   }
 }
 
@@ -219,7 +225,7 @@ class _FileCollectionsDialogState extends ConsumerState<FileCollectionsDialog> {
     }
   }
 
-  Future<void> _action(String action, FileCollection collection) async {
+  Future<void> _action(String action, FileCollectionSummary collection) async {
     final panel = ref.read(panelProvider(widget.side));
     final store = ref.read(fileCollectionStoreProvider);
     switch (action) {
@@ -238,22 +244,20 @@ class _FileCollectionsDialogState extends ConsumerState<FileCollectionsDialog> {
       case 'rename':
         final name = await _askName(collection.name);
         if (name != null) {
-          await store.update(
-            collection.id,
-            (current) => current.copyWith(name: name),
-          );
+          await store.rename(collection.id, name);
         }
       case 'export':
+        final loaded = await store.load(collection.id);
         final message = await exportFileListText(
-          const JsonEncoder.withIndent('  ').convert(collection.toJson()),
+          const JsonEncoder.withIndent('  ').convert(loaded.toJson()),
           fileName: 'crispcloud-collection.json',
         );
         if (mounted) setState(() => _message = message);
       case 'copy':
+        final loaded = await store.load(collection.id);
         await Clipboard.setData(
           ClipboardData(
-            text: const JsonEncoder.withIndent('  ')
-                .convert(collection.toJson()),
+            text: const JsonEncoder.withIndent('  ').convert(loaded.toJson()),
           ),
         );
         if (mounted) {
@@ -275,6 +279,7 @@ class _FileCollectionsDialogState extends ConsumerState<FileCollectionsDialog> {
   @override
   Widget build(BuildContext context) {
     final store = ref.watch(fileCollectionStoreProvider);
+    final collections = store.collections;
     final panel = ref.watch(panelProvider(widget.side));
     return AlertDialog(
       title: Text(context.commanderTr("File collections")),
@@ -327,7 +332,7 @@ class _FileCollectionsDialogState extends ConsumerState<FileCollectionsDialog> {
                                 if (mounted) {
                                   setState(
                                     () => _message =
-                                        'Saved ${store.get(id)?.entries.length ?? 0} rows.',
+                                        'Saved ${store.get(id)?.itemCount ?? 0} rows.',
                                   );
                                 }
                               }),
@@ -341,7 +346,8 @@ class _FileCollectionsDialogState extends ConsumerState<FileCollectionsDialog> {
                       ),
                     ],
                   ),
-                  if (_busy) const LinearProgressIndicator(),
+                  if (_busy || store.isLoading) const LinearProgressIndicator(),
+                  if (store.loadProgress != null) Text(store.loadProgress!),
                   if (_error != null)
                     Padding(
                       padding: const EdgeInsets.symmetric(vertical: 8),
@@ -365,13 +371,21 @@ class _FileCollectionsDialogState extends ConsumerState<FileCollectionsDialog> {
                           [store.loadErrors.length],
                         ),
                       ),
-                      children: [SelectableText(store.loadErrors.join('\n'))],
+                      children: [
+                        SelectableText(store.loadErrors.join('\n')),
+                        TextButton(
+                          onPressed: _busy ? null : () => _run(store.reload),
+                          child: Text(
+                            context.commanderTr("Reload collections"),
+                          ),
+                        ),
+                      ],
                     ),
                   const Divider(),
                 ],
               ),
             ),
-            if (store.collections.isEmpty)
+            if (collections.isEmpty && !store.isLoading)
               SliverToBoxAdapter(
                 child: Padding(
                   padding: const EdgeInsets.all(24),
@@ -385,30 +399,20 @@ class _FileCollectionsDialogState extends ConsumerState<FileCollectionsDialog> {
             else
               SliverList(
                 delegate: SliverChildBuilderDelegate((context, index) {
-                  final collection = store.collections[index];
-                  final sources = collection.entries
-                      .map((entry) => entry.reference.storage.id)
-                      .toSet();
-                  final unavailable = collection.entries
-                      .where(
-                        (entry) =>
-                            entry.state == CollectionItemState.missing ||
-                            entry.state == CollectionItemState.offline ||
-                            entry.replacement,
-                      )
-                      .length;
+                  final collection = collections[index];
+                  final unavailable = collection.unavailableCount;
                   return ListTile(
                     key: ValueKey('collection-${collection.id}'),
                     leading: Icon(
-                      collection.search == null
-                          ? Icons.list_alt
-                          : Icons.saved_search,
+                      collection.hasSearch
+                          ? Icons.saved_search
+                          : Icons.list_alt,
                     ),
                     title: Text(collection.name),
                     subtitle: Text(
                       context.commanderTr("{0} rows · {1} source(s){2}", [
-                        collection.entries.length,
-                        sources.length,
+                        collection.itemCount,
+                        collection.sourceCount,
                         unavailable == 0 ? '' : ' · $unavailable need checking',
                       ]),
                     ),
@@ -465,7 +469,7 @@ class _FileCollectionsDialogState extends ConsumerState<FileCollectionsDialog> {
                       ],
                     ),
                   );
-                }, childCount: store.collections.length),
+                }, childCount: collections.length),
               ),
           ],
         ),

@@ -206,9 +206,10 @@ class _FilePanelState extends ConsumerState<FilePanel> {
           return false;
         }
         try {
-          ref
-              .read(panelProvider(details.data.sourceSide))
-              .captureOperationOrigin(details.data.files);
+          final source = ref.read(panelProvider(details.data.sourceSide));
+          if (!source.recognizesCollectionRows(details.data.files)) {
+            source.captureOperationGroups(details.data.files);
+          }
           panel.captureCurrentOrigin();
           return true;
         } catch (_) {
@@ -224,15 +225,17 @@ class _FilePanelState extends ConsumerState<FilePanel> {
         try {
           // PanelSide is a visual position. Both normal folders and virtual
           // lists must retain their actual storage/account through the dialog.
-          final source = sourcePanel.captureOperationOrigin(data.files);
           final destination = panel.captureCurrentOrigin();
+          final files = await sourcePanel.prepareOperationFiles(data.files);
+          if (!context.mounted) return;
+          final groups = sourcePanel.captureOperationGroups(files);
           await showFileOperationDialog(
             context,
             ref,
             data.sourceSide,
-            data.files,
+            files,
             kind: FileOperationKind.copy,
-            sourceOrigin: source,
+            sourceGroups: groups,
             destinationOrigin: destination,
             destinationPath: destination.source.currentPath,
           );
@@ -260,9 +263,8 @@ class _FilePanelState extends ConsumerState<FilePanel> {
                     color: Theme.of(context).colorScheme.primary,
                     width: 2,
                   ),
-                  color: Theme.of(
-                    context,
-                  ).colorScheme.primary.withValues(alpha: 0.08),
+                  color: Theme.of(context).colorScheme.primary
+                      .withValues(alpha: 0.08),
                 ),
                 child: Center(
                   child: Column(
@@ -405,169 +407,302 @@ class _FilePanelState extends ConsumerState<FilePanel> {
     return Container(
       color: colors.secondaryContainer,
       padding: const EdgeInsets.only(left: 8),
-      child: Row(
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
         children: [
-          Icon(
-            panel.canOperateOnFileList ? Icons.list_alt : Icons.warning_amber,
-            size: 16,
-            color: colors.onSecondaryContainer,
-          ),
-          const SizedBox(width: 6),
-          Expanded(
-            child: Tooltip(
-              message: panel.canOperateOnFileList
-                  ? context.commanderTr(
-                      "Original paths are retained. Copy, move, rename, or remove rows from this list.",
-                    )
-                  : context.commanderTr(
-                      "The source account changed. Run the search or import again before file operations.",
+          Row(
+            children: [
+              Icon(
+                panel.canOperateOnFileList
+                    ? Icons.list_alt
+                    : Icons.warning_amber,
+                size: 16,
+                color: colors.onSecondaryContainer,
+              ),
+              const SizedBox(width: 6),
+              Expanded(
+                child: Tooltip(
+                  message: panel.canOperateOnFileList
+                      ? context.commanderTr(
+                          "Original paths are retained. Copy, move, rename, or remove rows from this list.",
+                        )
+                      : context.commanderTr(
+                          "The source account changed. Run the search or import again before file operations.",
+                        ),
+                  child: Text(
+                    context.commanderTr("{0} · {1} item(s){2}", [
+                      panel.fileListTitle,
+                      panel.collectionTotalCount,
+                      panel.collectionBusy
+                          ? ' · ${panel.collectionProgress}'
+                          : '',
+                    ]),
+                    style: TextStyle(
+                      fontSize: 12,
+                      color: colors.onSecondaryContainer,
                     ),
-              child: Text(
-                context.commanderTr("{0} · {1} item(s){2}", [
-                  panel.fileListTitle,
-                  panel.files?.length ?? 0,
-                  panel.collectionBusy ? ' · ${panel.collectionProgress}' : '',
-                ]),
-                style: TextStyle(
-                  fontSize: 12,
-                  color: colors.onSecondaryContainer,
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                  ),
                 ),
-                maxLines: 1,
-                overflow: TextOverflow.ellipsis,
               ),
-            ),
-          ),
-          IconButton(
-            visualDensity: VisualDensity.compact,
-            iconSize: 18,
-            tooltip: context.commanderTr("Open containing folder"),
-            onPressed: targets.length != 1 || !panel.canOperateOnFileList
-                ? null
-                : () async {
-                    try {
-                      await panel.openContainingFolder(targets.single);
-                    } catch (error) {
-                      if (context.mounted) {
-                        ScaffoldMessenger.of(context).showSnackBar(
-                          SnackBar(content: Text(error.toString())),
+              IconButton(
+                visualDensity: VisualDensity.compact,
+                iconSize: 18,
+                tooltip: context.commanderTr("Open containing folder"),
+                onPressed: targets.length != 1 || !panel.canOperateOnFileList
+                    ? null
+                    : () async {
+                        try {
+                          await panel.openContainingFolder(targets.single);
+                        } catch (error) {
+                          if (context.mounted) {
+                            ScaffoldMessenger.of(context).showSnackBar(
+                              SnackBar(content: Text(error.toString())),
+                            );
+                          }
+                        }
+                      },
+                icon: const Icon(Icons.folder_open),
+              ),
+              IconButton(
+                visualDensity: VisualDensity.compact,
+                iconSize: 18,
+                tooltip: context.commanderTr("Remove from list (keep files)"),
+                onPressed: targets.isEmpty
+                    ? null
+                    : () => panel.removeFromFileList(targets),
+                icon: const Icon(Icons.playlist_remove),
+              ),
+              PopupMenuButton<String>(
+                tooltip: context.commanderTr("File list actions"),
+                iconSize: 18,
+                onSelected: (value) async {
+                  try {
+                    switch (value) {
+                      case 'collections':
+                        await showFileCollectionsDialog(
+                          context,
+                          ref,
+                          widget.side,
                         );
-                      }
+                      case 'refresh-items':
+                        await panel.refreshCollectionItems();
+                      case 'rerun':
+                        await panel.refreshCollectionItems(rerunSearch: true);
+                      case 'replacements':
+                        await reviewCollectionReplacements(
+                          context,
+                          ref,
+                          widget.side,
+                        );
+                      case 'pattern':
+                        showPatternSelectionDialog(context, ref, widget.side);
+                      case 'copy':
+                        copyFileListPaths(
+                          context,
+                          ref,
+                          widget.side,
+                          selectedOnly: panel.selection.isNotEmpty,
+                        );
+                      case 'export':
+                        showFileListDialog(context, ref, widget.side);
+                      case 'import':
+                        showFileListDialog(
+                          context,
+                          ref,
+                          widget.side,
+                          importMode: true,
+                        );
                     }
-                  },
-            icon: const Icon(Icons.folder_open),
-          ),
-          IconButton(
-            visualDensity: VisualDensity.compact,
-            iconSize: 18,
-            tooltip: context.commanderTr("Remove from list (keep files)"),
-            onPressed: targets.isEmpty
-                ? null
-                : () => panel.removeFromFileList(targets),
-            icon: const Icon(Icons.playlist_remove),
-          ),
-          PopupMenuButton<String>(
-            tooltip: context.commanderTr("File list actions"),
-            iconSize: 18,
-            onSelected: (value) async {
-              try {
-                switch (value) {
-                  case 'collections':
-                    await showFileCollectionsDialog(context, ref, widget.side);
-                  case 'refresh-items':
-                    await panel.refreshCollectionItems();
-                  case 'rerun':
-                    await panel.refreshCollectionItems(rerunSearch: true);
-                  case 'replacements':
-                    await reviewCollectionReplacements(
-                      context,
-                      ref,
-                      widget.side,
-                    );
-                  case 'pattern':
-                    showPatternSelectionDialog(context, ref, widget.side);
-                  case 'copy':
-                    copyFileListPaths(
-                      context,
-                      ref,
-                      widget.side,
-                      selectedOnly: panel.selection.isNotEmpty,
-                    );
-                  case 'export':
-                    showFileListDialog(context, ref, widget.side);
-                  case 'import':
-                    showFileListDialog(
-                      context,
-                      ref,
-                      widget.side,
-                      importMode: true,
-                    );
-                }
-              } catch (error) {
-                if (context.mounted) {
-                  ScaffoldMessenger.of(
-                    context,
-                  ).showSnackBar(SnackBar(content: Text('$error')));
-                }
-              }
-            },
-            itemBuilder: (_) => [
-              PopupMenuItem(
-                value: 'collections',
-                child: Text(context.commanderTr("Save / manage collections…")),
+                  } catch (error) {
+                    if (context.mounted) {
+                      ScaffoldMessenger.of(context)
+                          .showSnackBar(SnackBar(content: Text('$error')));
+                    }
+                  }
+                },
+                itemBuilder: (_) => [
+                  PopupMenuItem(
+                    value: 'collections',
+                    child: Text(
+                      context.commanderTr("Save / manage collections…"),
+                    ),
+                  ),
+                  PopupMenuItem(
+                    value: 'refresh-items',
+                    enabled: !panel.collectionBusy,
+                    child: Text(context.commanderTr("Refresh original items")),
+                  ),
+                  PopupMenuItem(
+                    value: 'rerun',
+                    enabled:
+                        !panel.collectionBusy && panel.canRerunCollectionSearch,
+                    child: Text(context.commanderTr("Rerun saved search")),
+                  ),
+                  PopupMenuItem(
+                    value: 'replacements',
+                    enabled:
+                        !panel.collectionBusy &&
+                        panel.collectionReplacements.isNotEmpty,
+                    child: Text(
+                      context.commanderTr("Review replacement items…"),
+                    ),
+                  ),
+                  const PopupMenuDivider(),
+                  PopupMenuItem(
+                    value: 'pattern',
+                    child: Text(context.commanderTr("Select by pattern…")),
+                  ),
+                  PopupMenuItem(
+                    value: 'copy',
+                    child: Text(context.commanderTr("Copy original paths")),
+                  ),
+                  PopupMenuItem(
+                    value: 'export',
+                    child: Text(context.commanderTr("Export file list…")),
+                  ),
+                  PopupMenuItem(
+                    value: 'import',
+                    child: Text(context.commanderTr("Import file list…")),
+                  ),
+                ],
               ),
-              PopupMenuItem(
-                value: 'refresh-items',
-                enabled: !panel.collectionBusy,
-                child: Text(context.commanderTr("Refresh original items")),
-              ),
-              PopupMenuItem(
-                value: 'rerun',
-                enabled:
-                    !panel.collectionBusy && panel.canRerunCollectionSearch,
-                child: Text(context.commanderTr("Rerun saved search")),
-              ),
-              PopupMenuItem(
-                value: 'replacements',
-                enabled:
-                    !panel.collectionBusy &&
-                    panel.collectionReplacements.isNotEmpty,
-                child: Text(context.commanderTr("Review replacement items…")),
-              ),
-              const PopupMenuDivider(),
-              PopupMenuItem(
-                value: 'pattern',
-                child: Text(context.commanderTr("Select by pattern…")),
-              ),
-              PopupMenuItem(
-                value: 'copy',
-                child: Text(context.commanderTr("Copy original paths")),
-              ),
-              PopupMenuItem(
-                value: 'export',
-                child: Text(context.commanderTr("Export file list…")),
-              ),
-              PopupMenuItem(
-                value: 'import',
-                child: Text(context.commanderTr("Import file list…")),
+              if (panel.collectionBusy)
+                IconButton(
+                  tooltip: context.commanderTr("Cancel collection refresh"),
+                  onPressed: panel.cancelCollectionRefresh,
+                  icon: const Icon(Icons.stop),
+                ),
+              IconButton(
+                visualDensity: VisualDensity.compact,
+                iconSize: 18,
+                tooltip: context.commanderTr("Return to folder"),
+                onPressed: () => panel.clearSearchResults(),
+                icon: const Icon(Icons.close),
               ),
             ],
           ),
-          if (panel.collectionBusy)
-            IconButton(
-              tooltip: context.commanderTr("Cancel collection refresh"),
-              onPressed: panel.cancelCollectionRefresh,
-              icon: const Icon(Icons.stop),
+          if (panel.isPagedCollection &&
+              (panel.collectionPageCount > 1 ||
+                  panel.collectionTotalCount > 500))
+            Row(
+              children: [
+                IconButton(
+                  key: const ValueKey('collection-first-page'),
+                  visualDensity: VisualDensity.compact,
+                  tooltip: context.commanderTr("First collection page"),
+                  icon: const Icon(Icons.first_page),
+                  onPressed:
+                      panel.collectionBusy || panel.collectionPageIndex == 0
+                      ? null
+                      : () => _collectionAction(
+                          () => panel.loadCollectionPage(0),
+                        ),
+                ),
+                IconButton(
+                  key: const ValueKey('collection-previous-page'),
+                  visualDensity: VisualDensity.compact,
+                  tooltip: context.commanderTr("Previous collection page"),
+                  icon: const Icon(Icons.chevron_left),
+                  onPressed:
+                      panel.collectionBusy || panel.collectionPageIndex == 0
+                      ? null
+                      : () => _collectionAction(
+                          () => panel.loadCollectionPage(
+                            panel.collectionPageIndex - 1,
+                          ),
+                        ),
+                ),
+                Expanded(
+                  child: Tooltip(
+                    message: context.commanderTr(
+                      "Sorting, filtering, and marks include every collection page.",
+                    ),
+                    child: Text(
+                      context.commanderTr("{0}–{1} of {2} · {3} marked", [
+                        panel.collectionMatchingCount == 0
+                            ? 0
+                            : panel.collectionPageStart + 1,
+                        panel.collectionPageStart + (panel.files?.length ?? 0),
+                        panel.collectionMatchingCount,
+                        panel.selection.length,
+                      ]),
+                      style: const TextStyle(fontSize: 12),
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                    ),
+                  ),
+                ),
+                IconButton(
+                  key: const ValueKey('collection-next-page'),
+                  visualDensity: VisualDensity.compact,
+                  tooltip: context.commanderTr("Next collection page"),
+                  icon: const Icon(Icons.chevron_right),
+                  onPressed:
+                      panel.collectionBusy ||
+                          panel.collectionPageIndex + 1 >=
+                              panel.collectionPageCount
+                      ? null
+                      : () => _collectionAction(
+                          () => panel.loadCollectionPage(
+                            panel.collectionPageIndex + 1,
+                          ),
+                        ),
+                ),
+                IconButton(
+                  key: const ValueKey('collection-last-page'),
+                  visualDensity: VisualDensity.compact,
+                  tooltip: context.commanderTr("Last collection page"),
+                  icon: const Icon(Icons.last_page),
+                  onPressed:
+                      panel.collectionBusy ||
+                          panel.collectionPageIndex + 1 >=
+                              panel.collectionPageCount
+                      ? null
+                      : () => _collectionAction(
+                          () => panel.loadCollectionPage(
+                            panel.collectionPageCount - 1,
+                          ),
+                        ),
+                ),
+              ],
             ),
-          IconButton(
-            visualDensity: VisualDensity.compact,
-            iconSize: 18,
-            tooltip: context.commanderTr("Return to folder"),
-            onPressed: () => panel.clearSearchResults(),
-            icon: const Icon(Icons.close),
-          ),
+          if (panel.collectionLoadError != null)
+            Row(
+              children: [
+                Expanded(
+                  child: Text(
+                    panel.collectionLoadError!,
+                    maxLines: 3,
+                    style: TextStyle(color: colors.error),
+                  ),
+                ),
+                IconButton(
+                  tooltip: context.commanderTr(
+                    "Reload saved collection; unsaved marks are discarded",
+                  ),
+                  onPressed: panel.collectionBusy
+                      ? null
+                      : () => _collectionAction(panel.reloadSavedCollection),
+                  icon: const Icon(Icons.refresh),
+                ),
+              ],
+            ),
         ],
       ),
     );
+  }
+
+  Future<void> _collectionAction(Future<void> Function() action) async {
+    try {
+      await action();
+    } catch (error) {
+      if (mounted) {
+        ScaffoldMessenger.of(context)
+            .showSnackBar(SnackBar(content: Text('$error')));
+      }
+    }
   }
 
   Widget _buildPanelContent(
@@ -674,9 +809,8 @@ class _FilePanelState extends ConsumerState<FilePanel> {
                               Icon(
                                 Icons.cloud_off,
                                 size: 56,
-                                color: Theme.of(
-                                  context,
-                                ).colorScheme.onSurface.withValues(alpha: 0.3),
+                                color: Theme.of(context).colorScheme.onSurface
+                                    .withValues(alpha: 0.3),
                               ),
                               const SizedBox(height: 12),
                               Text(
@@ -693,9 +827,8 @@ class _FilePanelState extends ConsumerState<FilePanel> {
                               ElevatedButton.icon(
                                 icon: const Icon(Icons.login, size: 18),
                                 label: Text(
-                                  AppLocalizations.of(
-                                    context,
-                                  )!.connectToCloudShort,
+                                  AppLocalizations.of(context)!
+                                      .connectToCloudShort,
                                 ),
                                 onPressed: () =>
                                     showConnectionDialogScreen(context),
@@ -717,9 +850,8 @@ class _FilePanelState extends ConsumerState<FilePanel> {
                           right: 0,
                           bottom: 0,
                           child: Container(
-                            color: Theme.of(
-                              context,
-                            ).colorScheme.inverseSurface.withValues(alpha: 0.9),
+                            color: Theme.of(context).colorScheme.inverseSurface
+                                .withValues(alpha: 0.9),
                             padding: const EdgeInsets.symmetric(
                               horizontal: 12,
                               vertical: 4,
@@ -731,9 +863,9 @@ class _FilePanelState extends ConsumerState<FilePanel> {
                                       ? Icons.filter_list
                                       : Icons.search,
                                   size: 16,
-                                  color: Theme.of(
-                                    context,
-                                  ).colorScheme.onInverseSurface,
+                                  color: Theme.of(context)
+                                      .colorScheme
+                                      .onInverseSurface,
                                 ),
                                 const SizedBox(width: 8),
                                 Expanded(
@@ -744,9 +876,9 @@ class _FilePanelState extends ConsumerState<FilePanel> {
                                         panel.filterQuery,
                                     style: TextStyle(
                                       fontSize: 13,
-                                      color: Theme.of(
-                                        context,
-                                      ).colorScheme.onInverseSurface,
+                                      color: Theme.of(context)
+                                          .colorScheme
+                                          .onInverseSurface,
                                     ),
                                   ),
                                 ),
@@ -758,9 +890,9 @@ class _FilePanelState extends ConsumerState<FilePanel> {
                                       '${panel.typeaheadMatchCount}',
                                       style: TextStyle(
                                         fontSize: 12,
-                                        color: Theme.of(
-                                          context,
-                                        ).colorScheme.onInverseSurface,
+                                        color: Theme.of(context)
+                                            .colorScheme
+                                            .onInverseSurface,
                                       ),
                                     ),
                                   ),
@@ -769,9 +901,9 @@ class _FilePanelState extends ConsumerState<FilePanel> {
                                   child: Icon(
                                     Icons.close,
                                     size: 16,
-                                    color: Theme.of(
-                                      context,
-                                    ).colorScheme.onInverseSurface,
+                                    color: Theme.of(context)
+                                        .colorScheme
+                                        .onInverseSurface,
                                   ),
                                 ),
                               ],

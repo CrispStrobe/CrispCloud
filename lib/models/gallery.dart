@@ -49,11 +49,13 @@ class GalleryRecord {
       orElse: () => GalleryColor.none,
     ),
     favorite: json['favorite'] == true,
-    tags: List.unmodifiable(normalizeGalleryTags(
-      json['tags'] is List
-          ? (json['tags'] as List).whereType<String>()
-          : const <String>[],
-    )),
+    tags: List.unmodifiable(
+      normalizeGalleryTags(
+        json['tags'] is List
+            ? (json['tags'] as List).whereType<String>()
+            : const <String>[],
+      ),
+    ),
   );
 }
 
@@ -71,12 +73,50 @@ List<String> normalizeGalleryTags(Iterable<String> tags) {
 
 /// Includes recognizable photo formats even when the platform lacks a decoder.
 /// Such files retain catalog/file actions and display an honest placeholder.
-bool isGalleryImage(FileItem file) => !file.isFolder && const {
-  'jpg', 'jpeg', 'jpe', 'png', 'apng', 'gif', 'webp', 'bmp', 'ico', 'cur',
-  'svg', 'tif', 'tiff', 'tga', 'psd', 'psb', 'exr', 'hdr', 'heic', 'heif',
-  'avif', 'jxl', 'jp2', 'j2k', 'ppm', 'pgm', 'pbm', 'pcx', 'raw', 'dng',
-  'cr2', 'cr3', 'nef', 'nrw', 'arw', 'raf', 'orf', 'rw2', 'pef', 'srw',
-}.contains(file.extension);
+bool isGalleryImage(FileItem file) =>
+    !file.isFolder &&
+    const {
+      'jpg',
+      'jpeg',
+      'jpe',
+      'png',
+      'apng',
+      'gif',
+      'webp',
+      'bmp',
+      'ico',
+      'cur',
+      'svg',
+      'tif',
+      'tiff',
+      'tga',
+      'psd',
+      'psb',
+      'exr',
+      'hdr',
+      'heic',
+      'heif',
+      'avif',
+      'jxl',
+      'jp2',
+      'j2k',
+      'ppm',
+      'pgm',
+      'pbm',
+      'pcx',
+      'raw',
+      'dng',
+      'cr2',
+      'cr3',
+      'nef',
+      'nrw',
+      'arw',
+      'raf',
+      'orf',
+      'rw2',
+      'pef',
+      'srw',
+    }.contains(file.extension);
 
 /// Numeric filename ordering without parsing arbitrarily large integers.
 int compareGalleryNames(String left, String right) {
@@ -124,9 +164,14 @@ class GalleryQuery {
   final GallerySort sort;
   final bool descending;
 
-  bool get hasFilters => text.trim().isNotEmpty || extension.isNotEmpty ||
-      minimumRating > 0 || color != null || favoritesOnly ||
-      after != null || before != null;
+  bool get hasFilters =>
+      text.trim().isNotEmpty ||
+      extension.isNotEmpty ||
+      minimumRating > 0 ||
+      color != null ||
+      favoritesOnly ||
+      after != null ||
+      before != null;
 
   GalleryQuery copyWith({
     String? text,
@@ -152,49 +197,97 @@ class GalleryQuery {
     descending: descending ?? this.descending,
   );
 
+  bool get needsCatalogRecords =>
+      minimumRating > 0 ||
+      color != null ||
+      favoritesOnly ||
+      text.trim().isNotEmpty ||
+      sort == GallerySort.rating;
+
+  /// Compile once for either an ordinary listing or streamed collection pages.
+  /// Callers supply annotations using the row's captured source identity.
+  bool Function(FileItem, GalleryRecord) matcher({bool imagesOnly = false}) {
+    final words = text.toLowerCase().trim().split(RegExp(r'\s+'));
+    final end = before == null
+        ? null
+        : DateTime(before!.year, before!.month, before!.day + 1);
+    final start = after == null
+        ? null
+        : DateTime(after!.year, after!.month, after!.day);
+    return (file, record) {
+      // Keep navigation available while filtering photographs.
+      if (file.isFolder) return true;
+      if (imagesOnly && !isGalleryImage(file)) return false;
+      if (extension.isNotEmpty && file.extension != extension) return false;
+      if (record.rating < minimumRating) return false;
+      if (color != null && record.color != color) return false;
+      if (favoritesOnly && !record.favorite) return false;
+      if (start != null &&
+          (file.updatedAt == null || file.updatedAt!.isBefore(start))) {
+        return false;
+      }
+      if (end != null &&
+          (file.updatedAt == null || !file.updatedAt!.isBefore(end))) {
+        return false;
+      }
+      final haystack = '${file.name} ${record.tags.join(' ')}'.toLowerCase();
+      return words.every(haystack.contains);
+    };
+  }
+
+  int compareFiles(
+    FileItem a,
+    FileItem b, {
+    GalleryRecord aRecord = const GalleryRecord(),
+    GalleryRecord bRecord = const GalleryRecord(),
+  }) {
+    if (a.name == '..') return b.name == '..' ? 0 : -1;
+    if (b.name == '..') return 1;
+    if (a.isFolder != b.isFolder) return a.isFolder ? -1 : 1;
+    final comparison = switch (sort) {
+      GallerySort.name => compareGalleryNames(a.name, b.name),
+      GallerySort.extension => a.extension.compareTo(b.extension),
+      GallerySort.modified =>
+        (a.updatedAt?.millisecondsSinceEpoch ?? -1).compareTo(
+          b.updatedAt?.millisecondsSinceEpoch ?? -1,
+        ),
+      GallerySort.size => (a.size ?? -1).compareTo(b.size ?? -1),
+      GallerySort.rating => aRecord.rating.compareTo(bRecord.rating),
+    };
+    final stable = comparison != 0
+        ? comparison
+        : compareGalleryNames(a.name, b.name);
+    return descending ? -stable : stable;
+  }
+
   List<FileItem> apply(
     Iterable<FileItem> files,
     GalleryRecord Function(FileItem) recordFor, {
     bool imagesOnly = false,
   }) {
-    final words = text.toLowerCase().trim().split(RegExp(r'\s+'));
-    final end = before == null ? null :
-        DateTime(before!.year, before!.month, before!.day + 1);
-    final start = after == null ? null :
-        DateTime(after!.year, after!.month, after!.day);
-    final result = files.where((file) {
-      // Keep navigation available while filtering photographs.
-      if (file.isFolder) return true;
-      if (imagesOnly && !isGalleryImage(file)) return false;
-      if (extension.isNotEmpty && file.extension != extension) return false;
-      final needsRecord = minimumRating > 0 || color != null ||
-          favoritesOnly || text.trim().isNotEmpty;
-      final record = needsRecord ? recordFor(file) : const GalleryRecord();
-      if (record.rating < minimumRating) return false;
-      if (color != null && record.color != color) return false;
-      if (favoritesOnly && !record.favorite) return false;
-      if (start != null && (file.updatedAt == null ||
-          file.updatedAt!.isBefore(start))) return false;
-      if (end != null && (file.updatedAt == null ||
-          !file.updatedAt!.isBefore(end))) return false;
-      final haystack = '${file.name} ${record.tags.join(' ')}'.toLowerCase();
-      return words.every(haystack.contains);
-    }).toList();
-    result.sort((a, b) {
-      if (a.name == '..') return b.name == '..' ? 0 : -1;
-      if (b.name == '..') return 1;
-      if (a.isFolder != b.isFolder) return a.isFolder ? -1 : 1;
-      final comparison = switch (sort) {
-        GallerySort.name => compareGalleryNames(a.name, b.name),
-        GallerySort.extension => a.extension.compareTo(b.extension),
-        GallerySort.modified => (a.updatedAt?.millisecondsSinceEpoch ?? -1)
-            .compareTo(b.updatedAt?.millisecondsSinceEpoch ?? -1),
-        GallerySort.size => (a.size ?? -1).compareTo(b.size ?? -1),
-        GallerySort.rating => recordFor(a).rating.compareTo(recordFor(b).rating),
-      };
-      final stable = comparison != 0 ? comparison : compareGalleryNames(a.name, b.name);
-      return descending ? -stable : stable;
-    });
+    final matches = matcher(imagesOnly: imagesOnly);
+    final result = files
+        .where(
+          (file) => matches(
+            file,
+            needsCatalogRecords && !file.isFolder
+                ? recordFor(file)
+                : const GalleryRecord(),
+          ),
+        )
+        .toList();
+    result.sort(
+      (a, b) => compareFiles(
+        a,
+        b,
+        aRecord: sort == GallerySort.rating
+            ? recordFor(a)
+            : const GalleryRecord(),
+        bRecord: sort == GallerySort.rating
+            ? recordFor(b)
+            : const GalleryRecord(),
+      ),
+    );
     return result;
   }
 }
@@ -212,7 +305,10 @@ class GalleryPreferences {
   final bool showDetails;
 
   GalleryPreferences copyWith({
-    double? thumbnailSize, bool? fill, bool? showNames, bool? showDetails,
+    double? thumbnailSize,
+    bool? fill,
+    bool? showNames,
+    bool? showDetails,
   }) => GalleryPreferences(
     thumbnailSize: (thumbnailSize ?? this.thumbnailSize).clamp(120, 360),
     fill: fill ?? this.fill,
@@ -221,8 +317,10 @@ class GalleryPreferences {
   );
 
   String encode() => jsonEncode({
-    'size': thumbnailSize, 'fill': fill,
-    'names': showNames, 'details': showDetails,
+    'size': thumbnailSize,
+    'fill': fill,
+    'names': showNames,
+    'details': showDetails,
   });
 
   factory GalleryPreferences.decode(String raw) {
@@ -231,7 +329,8 @@ class GalleryPreferences {
       final size = value['size'];
       return GalleryPreferences(
         thumbnailSize: size is num && size.isFinite
-            ? size.toDouble().clamp(120, 360) : 200,
+            ? size.toDouble().clamp(120, 360)
+            : 200,
         fill: value['fill'] == true,
         showNames: value['names'] != false,
         showDetails: value['details'] != false,

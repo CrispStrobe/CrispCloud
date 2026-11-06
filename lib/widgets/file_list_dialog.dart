@@ -36,9 +36,9 @@ Future<void> copyFileListPaths(
   bool selectedOnly = false,
 }) async {
   try {
-    final text = ref
+    final text = await ref
         .read(panelProvider(side))
-        .exportFileListPaths(selectedOnly: selectedOnly);
+        .exportAllFileListPaths(selectedOnly: selectedOnly);
     await Clipboard.setData(ClipboardData(text: text));
     if (context.mounted) {
       ScaffoldMessenger.of(context).showSnackBar(
@@ -81,6 +81,7 @@ class _FileListDialogState extends ConsumerState<_FileListDialog> {
   String? _error;
   String? _message;
   FileListImportResult? _result;
+  int _exportRequest = 0;
 
   @override
   void initState() {
@@ -100,14 +101,24 @@ class _FileListDialogState extends ConsumerState<_FileListDialog> {
     super.dispose();
   }
 
-  void _refreshExport() {
+  Future<void> _refreshExport() async {
+    final request = ++_exportRequest;
+    setState(() => _busy = true);
     try {
-      _output.text = ref
+      final text = await ref
           .read(panelProvider(widget.side))
-          .exportFileListPaths(selectedOnly: _selectedOnly);
-      _error = null;
+          .exportAllFileListPaths(selectedOnly: _selectedOnly);
+      if (!mounted || request != _exportRequest) return;
+      setState(() {
+        _output.text = text;
+        _error = null;
+      });
     } catch (error) {
-      _error = error.toString();
+      if (mounted && request == _exportRequest) {
+        setState(() => _error = error.toString());
+      }
+    } finally {
+      if (mounted && request == _exportRequest) setState(() => _busy = false);
     }
   }
 
@@ -151,10 +162,11 @@ class _FileListDialogState extends ConsumerState<_FileListDialog> {
         );
       }
       final result = _selectionMode
-          ? panel.selectPathsFromList(
+          ? await panel.selectPathsFromListAsync(
               _input.text,
               source: _source,
               action: _selectionAction,
+              isCancelled: () => _cancelled || !mounted,
             )
           : await panel.importFileListPaths(
               _input.text,

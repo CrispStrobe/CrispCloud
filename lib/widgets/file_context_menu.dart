@@ -131,6 +131,7 @@ void _showResultListContextMenu(
   } catch (_) {
     verified = false;
   }
+  if (panel.isPagedCollection && !panel.collectionBusy) verified = true;
   final overlay = Overlay.of(context).context.findRenderObject() as RenderBox;
   PopupMenuItem<void> command(
     String label,
@@ -151,6 +152,8 @@ void _showResultListContextMenu(
         return;
       }
       try {
+        if (requiresSource) files = await panel.prepareOperationFiles(files);
+        if (!context.mounted) return;
         await action();
       } catch (error) {
         if (context.mounted) {
@@ -1088,7 +1091,7 @@ void showFileContextMenu(
         ],
       ),
       onTap: () => Future.delayed(Duration.zero, () {
-        if (context.mounted)
+        if (context.mounted) {
           showFileAttributesDialog(
             context,
             ref,
@@ -1096,6 +1099,7 @@ void showFileContextMenu(
             files,
             sourceOrigin: origin,
           );
+        }
       }),
     ),
   );

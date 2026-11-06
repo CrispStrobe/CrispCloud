@@ -1,7 +1,6 @@
 import 'dart:async';
 import 'dart:collection';
 import 'dart:convert';
-import 'dart:typed_data';
 import 'dart:ui' as ui;
 
 import 'package:crypto/crypto.dart';
@@ -39,7 +38,7 @@ class GalleryMediaRequest {
     this.isArchive = false,
     String revisionSalt = '',
   }) : _isCurrent = isCurrent ?? _alwaysCurrent,
-       assetId = _digest([namespaceId, file.uuid ?? path]),
+       assetId = catalogAssetId(namespaceId, path, objectId: file.uuid),
        revisionKey = _digest([
          namespaceId,
          path,
@@ -48,14 +47,18 @@ class GalleryMediaRequest {
          file.size,
          file.updatedAt?.microsecondsSinceEpoch,
          revisionSalt,
-         for (final key in _revisionFields) [key, '${file.metadata?[key] ?? ''}'],
+         for (final key in _revisionFields)
+           [key, '${file.metadata?[key] ?? ''}'],
        ]);
 
   final FileItem file;
+
   /// Stable account/source scope when storage exposes an account identity.
   final String namespaceId;
+
   /// Stable catalog identity; deliberately excludes mutable image revisions.
   final String assetId;
+
   /// Includes account, path, size, modification time and provider revisions.
   final String revisionKey;
   final String path;
@@ -66,7 +69,11 @@ class GalleryMediaRequest {
   final bool Function() _isCurrent;
 
   bool get isCurrent {
-    try { return _isCurrent(); } catch (_) { return false; }
+    try {
+      return _isCurrent();
+    } catch (_) {
+      return false;
+    }
   }
 
   void assertCurrent() {
@@ -78,16 +85,35 @@ class GalleryMediaRequest {
   }
 
   static bool _alwaysCurrent() => true;
-  static bool hasRevisionMetadata(FileItem file) => file.updatedAt != null ||
+  static bool hasRevisionMetadata(FileItem file) =>
+      file.updatedAt != null ||
       _revisionFields.any((key) {
         final value = file.metadata?[key];
         return value != null && '$value'.isNotEmpty;
       });
   static const _revisionFields = [
-    'etag', 'eTag', 'version', 'versionId', 'revision', 'rev',
-    'contentHash', 'content_hash', 'md5Checksum', 'sha1Hash',
-    'updatedAt', 'modificationTime', 'lastModified', 'lastModifiedDateTime',
+    'etag',
+    'eTag',
+    'version',
+    'versionId',
+    'revision',
+    'rev',
+    'contentHash',
+    'content_hash',
+    'md5Checksum',
+    'sha1Hash',
+    'updatedAt',
+    'modificationTime',
+    'lastModified',
+    'lastModifiedDateTime',
   ];
+
+  /// Metadata-only catalog identity. This grants no ability to read the file.
+  static String catalogAssetId(
+    String namespaceId,
+    String path, {
+    String? objectId,
+  }) => _digest([namespaceId, objectId ?? path]);
   static String _digest(Object value) =>
       sha256.convert(utf8.encode(jsonEncode(value))).toString();
 }
@@ -121,7 +147,7 @@ class GalleryImageData {
 /// only three loads/decodes can run at once; full-size user requests go first.
 class GalleryMediaService {
   GalleryMediaService({required this.thumbnails, this.maxConcurrentLoads = 3})
-      : assert(maxConcurrentLoads > 0);
+    : assert(maxConcurrentLoads > 0);
 
   final ThumbnailService thumbnails;
   final int maxConcurrentLoads;
@@ -133,31 +159,61 @@ class GalleryMediaService {
   final Set<String> _unpreviewable = {};
 
   static const _rawExtensions = {
-    'raw', 'dng', 'cr2', 'cr3', 'crw', 'nef', 'nrw', 'arw', 'srf', 'sr2',
-    'raf', 'orf', 'rw2', 'pef', 'x3f', '3fr', 'fff', 'iiq', 'kdc', 'mos',
-    'mrw', 'rwl', 'srw', 'erf',
+    'raw',
+    'dng',
+    'cr2',
+    'cr3',
+    'crw',
+    'nef',
+    'nrw',
+    'arw',
+    'srf',
+    'sr2',
+    'raf',
+    'orf',
+    'rw2',
+    'pef',
+    'x3f',
+    '3fr',
+    'fff',
+    'iiq',
+    'kdc',
+    'mos',
+    'mrw',
+    'rwl',
+    'srw',
+    'erf',
   };
 
   /// Gallery candidates include camera RAW files even when only a provider
   /// thumbnail is available. Unsupported originals remain visible as files.
-  static bool isImageFile(FileItem file) => !file.isFolder &&
-      (ThumbnailService.isSupported(file.name) || file.extension == 'svg' ||
+  static bool isImageFile(FileItem file) =>
+      !file.isFolder &&
+      (ThumbnailService.isSupported(file.name) ||
+          file.extension == 'svg' ||
           _rawExtensions.contains(file.extension));
 
-  static bool isSupported(FileItem file) => !file.isFolder &&
+  static bool isSupported(FileItem file) =>
+      !file.isFolder &&
       (ThumbnailService.isSupported(file.name) || file.extension == 'svg');
 
   /// Provider thumbnails for SVG files can be raster PNGs; extension-based
   /// dispatch alone is insufficient. Our raster thumbnails are always PNG.
   static bool bytesAreSvg(Uint8List bytes) {
-    final prefix = utf8.decode(bytes.sublist(0,
-        bytes.length < 256 ? bytes.length : 256), allowMalformed: true)
-        .replaceFirst('\ufeff', '').trimLeft();
+    final prefix = utf8
+        .decode(
+          bytes.sublist(0, bytes.length < 256 ? bytes.length : 256),
+          allowMalformed: true,
+        )
+        .replaceFirst('\ufeff', '')
+        .trimLeft();
     return prefix.startsWith('<');
   }
 
-  Future<Uint8List> loadOriginal(GalleryMediaRequest request,
-      {int? maxBytes}) async {
+  Future<Uint8List> loadOriginal(
+    GalleryMediaRequest request, {
+    int? maxBytes,
+  }) async {
     final limit = maxBytes ?? kGalleryInputLimitBytes;
     if (limit < 1 || limit > kGalleryInputLimitBytes) {
       throw RangeError.range(limit, 1, kGalleryInputLimitBytes, 'maxBytes');
@@ -187,7 +243,8 @@ class GalleryMediaService {
     if (future == null) {
       future = _withSlot(() async {
         final limit = request.file.extension == 'svg'
-            ? 4 * 1024 * 1024 : kGalleryInputLimitBytes;
+            ? 4 * 1024 * 1024
+            : kGalleryInputLimitBytes;
         final bytes = await _readOriginal(request, limit);
         final image = request.file.extension == 'svg'
             ? await _inspectSvg(bytes)
@@ -208,8 +265,11 @@ class GalleryMediaService {
 
   /// Returns PNG thumbnails, except SVGs which keep their bounded vector
   /// bytes for SvgPicture. A null result means this format cannot be decoded.
-  Future<Uint8List?> loadThumbnail(GalleryMediaRequest request,
-      {int size = 256, bool retry = false}) async {
+  Future<Uint8List?> loadThumbnail(
+    GalleryMediaRequest request, {
+    int size = 256,
+    bool retry = false,
+  }) async {
     request.assertCurrent();
     if (!isImageFile(request.file)) return null;
     if (size < 1 || size > 2048) throw RangeError.range(size, 1, 2048, 'size');
@@ -231,11 +291,18 @@ class GalleryMediaService {
         final provider = request.readProviderThumbnail;
         if (provider != null) {
           Uint8List? providerBytes;
-          try { providerBytes = await provider(); } catch (_) { /* Fall back. */ }
+          try {
+            providerBytes = await provider();
+          } catch (_) {
+            /* Fall back. */
+          }
           request.assertCurrent();
-          if (providerBytes != null && providerBytes.length <= 4 * 1024 * 1024) {
+          if (providerBytes != null &&
+              providerBytes.length <= 4 * 1024 * 1024) {
             final thumbnail = await thumbnails.generate(
-              request.revisionKey, providerBytes, size: size,
+              request.revisionKey,
+              providerBytes,
+              size: size,
             );
             request.assertCurrent();
             if (thumbnail != null) return thumbnail;
@@ -243,17 +310,25 @@ class GalleryMediaService {
         }
         if (!isSupported(request.file)) return null;
         final isSvg = request.file.extension == 'svg';
-        final bytes = await _readOriginal(request,
-            isSvg ? 4 * 1024 * 1024 : kGalleryInputLimitBytes);
+        final bytes = await _readOriginal(
+          request,
+          isSvg ? 4 * 1024 * 1024 : kGalleryInputLimitBytes,
+        );
         if (isSvg) {
           await _inspectSvg(bytes);
           request.assertCurrent();
-          await thumbnails.cacheProviderThumbnail(request.revisionKey, bytes,
-              size: size);
+          await thumbnails.cacheProviderThumbnail(
+            request.revisionKey,
+            bytes,
+            size: size,
+          );
           return bytes;
         }
         final thumbnail = await thumbnails.generate(
-          request.revisionKey, bytes, size: size, fileName: request.file.name,
+          request.revisionKey,
+          bytes,
+          size: size,
+          fileName: request.file.name,
         );
         request.assertCurrent();
         return thumbnail;
@@ -275,14 +350,19 @@ class GalleryMediaService {
     }
   }
 
-  Future<Uint8List> _readOriginal(GalleryMediaRequest request, int limit) async {
+  Future<Uint8List> _readOriginal(
+    GalleryMediaRequest request,
+    int limit,
+  ) async {
     request.assertCurrent();
     _checkFile(request.file, limit);
     try {
       final bytes = await request.readBytes(limit);
       request.assertCurrent();
       if (bytes.length > limit) throw _tooLarge(limit);
-      if (bytes.isEmpty) throw const GalleryMediaException('This image is empty.');
+      if (bytes.isEmpty) {
+        throw const GalleryMediaException('This image is empty.');
+      }
       return bytes.asUnmodifiableView();
     } on GalleryMediaException {
       rethrow;
@@ -293,8 +373,10 @@ class GalleryMediaService {
     }
   }
 
-  Future<T> _withSlot<T>(Future<T> Function() operation,
-      {bool priority = false}) async {
+  Future<T> _withSlot<T>(
+    Future<T> Function() operation, {
+    bool priority = false,
+  }) async {
     if (_activeLoads >= maxConcurrentLoads) {
       final waiter = Completer<void>();
       priority ? _waiting.addFirst(waiter) : _waiting.addLast(waiter);
@@ -314,7 +396,9 @@ class GalleryMediaService {
   }
 
   static void _checkFile(FileItem file, int limit) {
-    if (file.isFolder) throw const GalleryMediaException('Choose an image file.');
+    if (file.isFolder) {
+      throw const GalleryMediaException('Choose an image file.');
+    }
     if ((file.size ?? 0) > limit) throw _tooLarge(limit);
   }
 
@@ -322,7 +406,10 @@ class GalleryMediaService {
     'This image exceeds the ${(limit / (1024 * 1024)).ceil()} MiB preview limit.',
   );
 
-  static Future<GalleryImageData> _decodeImage(Uint8List bytes, String name) async {
+  static Future<GalleryImageData> _decodeImage(
+    Uint8List bytes,
+    String name,
+  ) async {
     final metadata = readGalleryExif(bytes);
     ui.ImmutableBuffer? buffer;
     ui.ImageDescriptor? descriptor;
@@ -331,9 +418,12 @@ class GalleryMediaService {
     try {
       buffer = await ui.ImmutableBuffer.fromUint8List(bytes);
       descriptor = await ui.ImageDescriptor.encoded(buffer);
-      if (descriptor.width < 1 || descriptor.height < 1 ||
+      if (descriptor.width < 1 ||
+          descriptor.height < 1 ||
           descriptor.width * descriptor.height > kGalleryMaxPixels) {
-        throw const GalleryMediaException('This image exceeds the 40 megapixel preview limit.');
+        throw const GalleryMediaException(
+          'This image exceeds the 40 megapixel preview limit.',
+        );
       }
       codec = await descriptor.instantiateCodec();
       firstFrame = (await codec.getNextFrame()).image;
@@ -354,8 +444,10 @@ class GalleryMediaService {
       descriptor?.dispose();
       buffer?.dispose();
     }
-    final decoded = await compute(decodeGalleryRaster,
-        GalleryDecodeRequest(bytes, fileName: name));
+    final decoded = await compute(
+      decodeGalleryRaster,
+      GalleryDecodeRequest(bytes, fileName: name),
+    );
     if (decoded == null) {
       throw const GalleryMediaException(
         'This image format is unsupported on this device, damaged, or too large to decode.',
@@ -369,7 +461,9 @@ class GalleryMediaService {
       isConverted: true,
       metadata: Map.unmodifiable({
         ...metadata,
-        'Preview': decoded.frameCount > 1 ? 'First frame / page' : 'Converted PNG preview',
+        'Preview': decoded.frameCount > 1
+            ? 'First frame / page'
+            : 'Converted PNG preview',
       }),
     );
   }
@@ -379,20 +473,34 @@ class GalleryMediaService {
       final document = XmlDocument.parse(utf8.decode(bytes));
       final root = document.rootElement;
       if (root.name.local != 'svg') throw const FormatException('Not SVG');
-      final viewBox = root.getAttribute('viewBox')?.trim()
-          .split(RegExp(r'[\s,]+')).map(double.tryParse).toList();
+      final viewBox = root
+          .getAttribute('viewBox')
+          ?.trim()
+          .split(RegExp(r'[\s,]+'))
+          .map(double.tryParse)
+          .toList();
       double? dimension(String name) {
         final value = root.getAttribute(name)?.trim();
         if (value == null || value.endsWith('%')) return null;
         return double.tryParse(value.replaceFirst(RegExp(r'px$'), ''));
       }
-      final width = dimension('width') ??
-          (viewBox?.length == 4 ? viewBox![2] : null) ?? 300;
-      final height = dimension('height') ??
-          (viewBox?.length == 4 ? viewBox![3] : null) ?? 150;
-      if (!width.isFinite || !height.isFinite || width <= 0 || height <= 0 ||
+
+      final width =
+          dimension('width') ??
+          (viewBox?.length == 4 ? viewBox![2] : null) ??
+          300;
+      final height =
+          dimension('height') ??
+          (viewBox?.length == 4 ? viewBox![3] : null) ??
+          150;
+      if (!width.isFinite ||
+          !height.isFinite ||
+          width <= 0 ||
+          height <= 0 ||
           width * height > kGalleryMaxPixels) {
-        throw const GalleryMediaException('This SVG has invalid or excessive dimensions.');
+        throw const GalleryMediaException(
+          'This SVG has invalid or excessive dimensions.',
+        );
       }
       // A tiny outer viewBox can embed a compressed, enormous raster image.
       // Check those headers before handing SVG bytes to vector_graphics,
@@ -402,17 +510,28 @@ class GalleryMediaService {
       var embeddedImages = 0;
       for (final node in root.descendants.whereType<XmlElement>()) {
         if (++elements > 10000) {
-          throw const GalleryMediaException('This SVG has too many elements to preview.');
+          throw const GalleryMediaException(
+            'This SVG has too many elements to preview.',
+          );
         }
-        if (node.name.local != 'image' && node.name.local != 'feImage') continue;
+        if (node.name.local != 'image' && node.name.local != 'feImage') {
+          continue;
+        }
         if (++embeddedImages > 64) {
-          throw const GalleryMediaException('This SVG has too many embedded images to preview.');
+          throw const GalleryMediaException(
+            'This SVG has too many embedded images to preview.',
+          );
         }
-        final href = node.getAttribute('href') ??
-            node.getAttribute('href', namespace: 'http://www.w3.org/1999/xlink');
+        final href =
+            node.getAttribute('href') ??
+            node.getAttribute(
+              'href',
+              namespace: 'http://www.w3.org/1999/xlink',
+            );
         if (href == null || href.isEmpty) continue;
         final data = Uri.tryParse(href)?.data;
-        if (data == null || !data.mimeType.toLowerCase().startsWith('image/') ||
+        if (data == null ||
+            !data.mimeType.toLowerCase().startsWith('image/') ||
             data.mimeType.toLowerCase().contains('svg')) {
           throw const GalleryMediaException(
             'This SVG contains linked or nested SVG images. Use a self-contained raster export to preview it.',
@@ -420,7 +539,9 @@ class GalleryMediaService {
         }
         final embedded = Uint8List.fromList(data.contentAsBytes());
         if (embedded.length > 4 * 1024 * 1024) {
-          throw const GalleryMediaException('An embedded SVG image exceeds the preview limit.');
+          throw const GalleryMediaException(
+            'An embedded SVG image exceeds the preview limit.',
+          );
         }
         ui.ImmutableBuffer? buffer;
         ui.ImageDescriptor? descriptor;
@@ -428,20 +549,27 @@ class GalleryMediaService {
           buffer = await ui.ImmutableBuffer.fromUint8List(embedded);
           descriptor = await ui.ImageDescriptor.encoded(buffer);
           if (descriptor.width < 1 || descriptor.height < 1) {
-            throw const GalleryMediaException('An embedded SVG image has invalid dimensions.');
+            throw const GalleryMediaException(
+              'An embedded SVG image has invalid dimensions.',
+            );
           }
           pixels += descriptor.width * descriptor.height;
           if (pixels > kGalleryMaxPixels) {
-            throw const GalleryMediaException('The embedded SVG images exceed the 40 megapixel preview limit.');
+            throw const GalleryMediaException(
+              'The embedded SVG images exceed the 40 megapixel preview limit.',
+            );
           }
         } finally {
           descriptor?.dispose();
           buffer?.dispose();
         }
       }
-      return GalleryImageData(bytes: bytes,
-          width: width.round().clamp(1, kGalleryMaxPixels),
-          height: height.round().clamp(1, kGalleryMaxPixels), isSvg: true);
+      return GalleryImageData(
+        bytes: bytes,
+        width: width.round().clamp(1, kGalleryMaxPixels),
+        height: height.round().clamp(1, kGalleryMaxPixels),
+        isSvg: true,
+      );
     } on GalleryMediaException {
       rethrow;
     } catch (_) {
