@@ -139,17 +139,24 @@ class SyncPlan {
     this._adopted,
     this.localSource,
     this.remoteSource,
+    this.compareContents,
+    this._fingerprintedPaths,
   );
   final SyncPair pair;
   final CloudStorageClient client;
   final FileOperationBackend localSource;
   final FileOperationBackend remoteSource;
+
+  /// True when all included file contents were read, including rows whose
+  /// size, timestamp and provider hash looked unchanged.
+  final bool compareContents;
   final List<SyncAction> actions;
   final Map<String, _FileInfo> _local;
   final Map<String, _FileInfo> _remote;
   final Map<String, String> _fingerprints;
   final bool Function() _isCurrent;
   final List<String> _adopted;
+  final List<String> _fingerprintedPaths;
   bool get isCurrent => _isCurrent();
 
   List<SyncActionType> choicesFor(SyncAction action) {
@@ -177,6 +184,7 @@ class SyncPlan {
 
 class SyncEngine {
   static const _log = Log('SyncEngine');
+  static final _sha256Pattern = RegExp(r'^[0-9a-fA-F]{64}$');
 
   final SyncDatabase db;
 
@@ -252,6 +260,8 @@ class SyncEngine {
     bool Function()? isCurrent,
     bool Function()? isCancelled,
     bool verifyContents = true,
+    bool compareContents = false,
+    void Function(int completed, int total, String path)? onCompareProgress,
   }) async {
     final binding = SyncSourceBinding.require(pair, client);
     await _assertSavedPair(pair);
@@ -318,53 +328,97 @@ class SyncEngine {
       ...dbMap.keys,
     };
 
+    final selectedPaths = allPaths
+        .where(
+          (path) =>
+              !hasFilters ||
+              passesFilter(path, includePatterns, excludePatterns),
+        )
+        .toList(growable: false);
+    var fingerprints = <String, String>{};
+    if (compareContents) {
+      fingerprints = await _fingerprint(
+        pair,
+        localSource,
+        remoteSource,
+        localFiles,
+        remoteFiles,
+        selectedPaths,
+        check,
+        onProgress: onCompareProgress,
+      );
+    }
+
     final actions = <SyncAction>[];
-    for (final path in allPaths) {
-      // Apply selective sync filters
-      if (hasFilters && !passesFilter(path, includePatterns, excludePatterns)) {
-        continue;
-      }
+    for (final path in selectedPaths) {
       final local = localFiles[path];
       final remote = remoteFiles[path];
       final known = dbMap[path];
+      final localDigest = fingerprints['local:$path'];
+      final remoteDigest = fingerprints['remote:$path'];
 
-      final action = _computeAction(
+      var action = _computeAction(
         path,
         local,
         remote,
         known,
         policy: policy,
         direction: direction,
+        compareContents: compareContents,
+        localDigest: localDigest,
+        remoteDigest: remoteDigest,
       );
+      // A one-way pair may intentionally ignore edits on its receiving side.
+      // Full comparison still exposes those unequal bytes for review, with
+      // only the directions allowed by this pair offered as choices.
+      if (compareContents &&
+          localDigest != null &&
+          remoteDigest != null &&
+          localDigest != remoteDigest &&
+          action.type == SyncActionType.skip) {
+        action = _resolveConflict(
+          path,
+          local,
+          remote,
+          known,
+          ConflictPolicy.manual,
+        );
+      }
       if (action.type != SyncActionType.skip) {
         actions.add(action);
       }
     }
 
     check();
-    final fingerprints = verifyContents
-        ? await _fingerprint(
-            pair,
-            localSource,
-            remoteSource,
-            localFiles,
-            remoteFiles,
-            actions.map((action) => action.relativePath),
-            check,
-          )
-        : <String, String>{};
-    final adopted = <String>[];
-    if (verifyContents) {
-      actions.removeWhere((action) {
-        final local = fingerprints['local:${action.relativePath}'];
-        final remote = fingerprints['remote:${action.relativePath}'];
-        if (local != null && local == remote) {
-          adopted.add(action.relativePath);
-          return true;
-        }
-        return false;
-      });
+    final fingerprintedPaths = compareContents
+        ? selectedPaths
+        : actions.map((action) => action.relativePath).toList(growable: false);
+    if (verifyContents && !compareContents) {
+      fingerprints = await _fingerprint(
+        pair,
+        localSource,
+        remoteSource,
+        localFiles,
+        remoteFiles,
+        fingerprintedPaths,
+        check,
+        onProgress: onCompareProgress,
+      );
     }
+    final adopted = <String>[];
+    if (verifyContents || compareContents) {
+      for (final path in fingerprintedPaths) {
+        final local = fingerprints['local:$path'];
+        final remote = fingerprints['remote:$path'];
+        if (local != null && local == remote) {
+          adopted.add(path);
+        }
+      }
+      final equalPaths = adopted.toSet();
+      actions.removeWhere((action) => equalPaths.contains(action.relativePath));
+    }
+    check();
+    await _assertSavedPair(pair);
     return SyncPlan._(
       pair,
       client,
@@ -376,6 +430,8 @@ class SyncEngine {
       adopted,
       localSource,
       remoteSource,
+      compareContents,
+      List.unmodifiable(fingerprintedPaths),
     );
   }
 
@@ -427,10 +483,7 @@ class SyncEngine {
           plan.remoteSource,
           local,
           remote,
-          [
-            ...plan.actions.map((action) => action.relativePath),
-            ...plan._adopted,
-          ],
+          plan._fingerprintedPaths,
           check,
           operationControl: control,
         );
@@ -595,6 +648,7 @@ class SyncEngine {
     Iterable<String> paths,
     void Function() check, {
     FileOperationControl? operationControl,
+    void Function(int completed, int total, String path)? onProgress,
   }) async {
     final result = <String, String>{};
     final control = operationControl ?? _SyncOperationControl(check);
@@ -608,18 +662,29 @@ class SyncEngine {
           })
         : null;
     try {
-      for (final path in paths.toSet()) {
+      final uniquePaths = paths.toSet();
+      final total = uniquePaths.fold<int>(
+        0,
+        (count, path) =>
+            count +
+            (local[path] != null && !local[path]!.isFolder ? 1 : 0) +
+            (remote[path] != null && !remote[path]!.isFolder ? 1 : 0),
+      );
+      var completed = 0;
+      for (final path in uniquePaths) {
         for (final (label, source, info) in [
           ('local', localSource, local[path]),
           ('remote', remoteSource, remote[path]),
         ]) {
           check();
           if (info != null && !info.isFolder) {
+            onProgress?.call(completed, total, path);
             result['$label:$path'] = await transferDigest(
               source,
               info.file!,
               control,
             );
+            onProgress?.call(++completed, total, path);
           }
         }
       }
@@ -650,6 +715,9 @@ class SyncEngine {
     SyncEntry? known, {
     required ConflictPolicy policy,
     required SyncDirection direction,
+    bool compareContents = false,
+    String? localDigest,
+    String? remoteDigest,
   }) {
     final existsLocal = local != null;
     final existsRemote = remote != null;
@@ -677,6 +745,29 @@ class SyncEngine {
           relativePath: relativePath,
         );
       }
+      if (compareContents &&
+          localDigest != null &&
+          localDigest == remoteDigest) {
+        return SyncAction(
+          type: SyncActionType.skip,
+          relativePath: relativePath,
+        );
+      }
+    }
+
+    // The persisted local digest is the SHA-256 of the last verified equal
+    // local/cloud contents. Provider hashes use different algorithms and
+    // cannot serve as a cross-provider content baseline. Older baselines
+    // without this evidence require a choice when the two copies differ.
+    final recordedHash = known?.localHash;
+    final baselineDigest =
+        recordedHash != null && _sha256Pattern.hasMatch(recordedHash)
+        ? recordedHash.toLowerCase()
+        : null;
+    if (compareContents &&
+        baselineDigest == null &&
+        policy == ConflictPolicy.newestWins) {
+      policy = ConflictPolicy.manual;
     }
 
     if (known?.status == 'pendingUpload' && local != null && !local.isFolder) {
@@ -782,9 +873,12 @@ class SyncEngine {
         );
       }
       // Check if remote was also modified since last sync
-      if (known.remoteModified != null &&
-          remote.modified != null &&
-          remote.modified!.isAfter(known.remoteModified!)) {
+      final remoteChanged = compareContents && !remote.isFolder
+          ? baselineDigest == null || remoteDigest != baselineDigest
+          : known.remoteModified != null &&
+                remote.modified != null &&
+                remote.modified!.isAfter(known.remoteModified!);
+      if (remoteChanged) {
         // Remote changed after our last sync — conflict
         return _resolveConflict(relativePath, local, remote, known, policy);
       }
@@ -804,9 +898,12 @@ class SyncEngine {
           localModified: local.modified,
         );
       }
-      if (known.localModified != null &&
-          local.modified != null &&
-          local.modified!.isAfter(known.localModified!)) {
+      final localChanged = compareContents && !local.isFolder
+          ? baselineDigest == null || localDigest != baselineDigest
+          : known.localModified != null &&
+                local.modified != null &&
+                local.modified!.isAfter(known.localModified!);
+      if (localChanged) {
         return _resolveConflict(relativePath, local, remote, known, policy);
       }
       return SyncAction(
@@ -817,17 +914,17 @@ class SyncEngine {
     }
 
     // Both exist — check for modifications
-    final localChanged = _isModified(
-      local!,
-      known.localModified,
-      known.localSize,
-    );
-    final remoteChanged = _isRemoteModified(
-      remote!,
-      known.remoteModified,
-      known.remoteSize,
-      knownHash: known.remoteHash,
-    );
+    final localChanged = compareContents
+        ? baselineDigest == null || localDigest != baselineDigest
+        : _isModified(local!, known.localModified, known.localSize);
+    final remoteChanged = compareContents
+        ? baselineDigest == null || remoteDigest != baselineDigest
+        : _isRemoteModified(
+            remote!,
+            known.remoteModified,
+            known.remoteSize,
+            knownHash: known.remoteHash,
+          );
 
     if (!localChanged && !remoteChanged) {
       return SyncAction(type: SyncActionType.skip, relativePath: relativePath);
@@ -843,7 +940,7 @@ class SyncEngine {
       return SyncAction(
         type: SyncActionType.upload,
         relativePath: relativePath,
-        localModified: local.modified,
+        localModified: local!.modified,
       );
     }
 
@@ -857,13 +954,23 @@ class SyncEngine {
       return SyncAction(
         type: SyncActionType.download,
         relativePath: relativePath,
-        remoteModified: remote.modified,
+        remoteModified: remote!.modified,
         remoteContentHash: remote.contentHash,
         remoteSize: remote.size,
       );
     }
 
     // Both changed → conflict
+    if (compareContents &&
+        policy == ConflictPolicy.newestWins &&
+        (local!.modified == null ||
+            remote!.modified == null ||
+            local.modified!.difference(remote.modified!).inMilliseconds.abs() <=
+                1000)) {
+      // An equal or coarse timestamp is not evidence that either set of
+      // different bytes is newer. Keep this visible as an unresolved row.
+      policy = ConflictPolicy.manual;
+    }
     return _resolveConflict(relativePath, local, remote, known, policy);
   }
 

@@ -113,8 +113,12 @@ class _Sync extends ChangeNotifier implements SyncNotifier {
   @override
   bool isPairBound(SyncPair pair) => true;
   @override
-  Future<SyncPlan> planOne(int pairId, {bool Function()? isCancelled}) async =>
-      _Plan();
+  Future<SyncPlan> planOne(
+    int pairId, {
+    bool Function()? isCancelled,
+    bool compareContents = false,
+    void Function(int completed, int total, String path)? onCompareProgress,
+  }) async => _Plan();
   @override
   dynamic noSuchMethod(Invocation invocation) => super.noSuchMethod(invocation);
 }

@@ -463,7 +463,12 @@ class SyncNotifier extends ChangeNotifier {
 
   /// Compare without changing files or database state. The returned plan
   /// retains the connection that was active at the start of comparison.
-  Future<SyncPlan> planOne(int pairId, {bool Function()? isCancelled}) async {
+  Future<SyncPlan> planOne(
+    int pairId, {
+    bool Function()? isCancelled,
+    bool compareContents = false,
+    void Function(int completed, int total, String path)? onCompareProgress,
+  }) async {
     if (_disposed || _isSyncing) throw StateError('Synchronization is busy.');
     _isSyncing = true;
     notifyListeners();
@@ -483,6 +488,8 @@ class SyncNotifier extends ChangeNotifier {
         pair,
         client,
         isCancelled: isCancelled,
+        compareContents: compareContents,
+        onCompareProgress: onCompareProgress,
         isCurrent: () =>
             !_disposed &&
             identical(_ref.read(authProvider).client, client) &&
