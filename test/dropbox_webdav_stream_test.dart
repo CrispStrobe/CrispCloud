@@ -46,9 +46,13 @@ http.Response? setupDropbox(http.Request request) {
 
 class _StreamDio extends Fake implements webdav.WdDio {
   final sizes = <int>[];
+  final closeRequests = <bool>[];
   int uploaded = 0;
   String? destination;
   Future<void> Function()? firstPart;
+  @override
+  void close({bool force = false}) => closeRequests.add(force);
+
   @override
   Future<void> wdWriteWithStream(
     webdav.Client self,
@@ -311,7 +315,12 @@ void main() {
     () async {
       final transport = _StreamDio();
       final adapter = await _dav(transport);
-      addTearDown(adapter.logout);
+      addTearDown(() async {
+        await adapter.logout();
+        expect(transport.closeRequests, [true]);
+        await adapter.logout();
+        expect(transport.closeRequests, [true]);
+      });
       var readTail = false;
       transport.firstPart = () async => expect(readTail, isFalse);
       Stream<List<int>> source() async* {
@@ -341,7 +350,12 @@ void main() {
     () async {
       final transport = _StreamDio();
       final adapter = await _dav(transport);
-      addTearDown(adapter.logout);
+      addTearDown(() async {
+        await adapter.logout();
+        expect(transport.closeRequests, [true]);
+        await adapter.logout();
+        expect(transport.closeRequests, [true]);
+      });
       await expectLater(
         adapter.uploadStream(Stream.value([1, 2, 3]), 2, 'x.bin', '/'),
         throwsStateError,
