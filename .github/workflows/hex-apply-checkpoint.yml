@@ -1,4 +1,4 @@
-name: Apply verified hex integration checkpoint
+name: Finish and validate hex integration checkpoint
 on:
   push:
     branches: [feature/madedit2-hex-editor]
@@ -22,87 +22,53 @@ jobs:
       - uses: actions/checkout@fbc6f3992d24b796d5a048ff273f7fcc4a7b6c09
         with:
           ref: ${{ github.sha }}
-      - name: Validate and apply the exact preserved source patch
+      - name: Repair the verified viewport delimiter
         run: |
           python3 - <<'PY'
-          import base64, hashlib, lzma, pathlib, re, subprocess
-          encoded = ''.join(pathlib.Path(f'tool/hex-checkpoint-01.part{i}').read_text().strip() for i in range(1, 5))
-          data = base64.b64decode(encoded, validate=True)
-          assert hashlib.sha256(data).hexdigest() == '6636115853d1cc1558a7578db357c8b485ef5745817084d472d55e5c7e267e03', 'Checkpoint checksum mismatch'
-          patch = lzma.decompress(data)
-          assert len(patch) == 147397, 'Unexpected checkpoint length'
-          allowed = set('''docs/code-editor.md
-          docs/hex-editor-integration.md
-          lib/services/editor_document.dart
-          lib/services/editor_document_history.dart
-          lib/services/hex_file_session.dart
-          lib/services/hex_file_source.dart
-          lib/services/hex_file_source_io.dart
-          lib/services/hex_file_source_stub.dart
-          lib/widgets/code_editor_status_bar.dart
-          lib/widgets/file_context_menu.dart
-          lib/widgets/file_editor_dialog.dart
-          lib/widgets/hex_editor_dialog.dart
-          lib/widgets/internal_viewer_dialog.dart
-          packages/madedit2_hex/UPSTREAM.md
-          packages/madedit2_hex/lib/hex_controller.dart
-          packages/madedit2_hex/lib/hex_document.dart
-          packages/madedit2_hex/lib/hex_editor.dart
-          packages/madedit2_hex/lib/hex_layout.dart
-          packages/madedit2_hex/lib/madedit2_hex.dart
-          packages/madedit2_hex/test/hex_regression_test.dart
-          pubspec.yaml
-          test/editor_document_test.dart
-          test/editor_line_endings_regression_test.dart
-          test/hex_file_session_test.dart'''.split())
-          pairs = re.findall(r'^diff --git a/(\S+) b/(\S+)$', patch.decode(), re.M)
-          assert len(pairs) == len(allowed) and {b for a,b in pairs} == allowed
-          assert all(a == b and a in allowed for a,b in pairs)
-          assert b'new file mode 120000' not in patch and b'deleted file mode' not in patch
-          pathlib.Path('/tmp/hex-integration.patch').write_bytes(patch)
-          subprocess.run(['git','apply','--check','--index','/tmp/hex-integration.patch'], check=True)
-          subprocess.run(['git','apply','--index','/tmp/hex-integration.patch'], check=True)
-          pathlib.Path('/tmp/hex-dart-paths').write_text('\n'.join(sorted(p for p in allowed if p.endswith('.dart'))))
-          print('Verified and applied 24 integration files.')
+          from pathlib import Path
+          p = Path('packages/madedit2_hex/lib/hex_editor.dart')
+          text = p.read_text()
+          old = '                    })))))))),\n'
+          new = '                    }))))))))),\n'
+          assert text.count(old) == 1, 'Unexpected source; do not apply a guessed fix'
+          p.write_text(text.replace(old, new))
           PY
-      - name: Save implementation on the feature branch before testing
-        run: |
           git config user.name 'CrispCloud integration'
           git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
-          git commit -m 'feat(editor): integrate native hex editing, staged saves and newline sidecars'
+          git add packages/madedit2_hex/lib/hex_editor.dart
+          git commit -m 'fix(hex): close the scrollable viewport widget tree'
           git push origin HEAD:refs/heads/feature/madedit2-hex-editor
-          echo "Implementation checkpoint: $(git rev-parse HEAD)" >> "$GITHUB_STEP_SUMMARY"
       - uses: subosito/flutter-action@1a449444c387b1966244ae4d4f8c696479add0b2
         id: flutter
         with:
           channel: stable
           flutter-version: ${{ env.FLUTTER_VERSION }}
           cache: true
-      - name: Format new source and resolve dependencies
+      - name: Resolve dependencies and format integration
         id: resolve
         run: |
-          xargs -d '\n' dart format < /tmp/hex-dart-paths
           (cd packages/madedit2_hex && flutter pub get)
           flutter pub get
-      - name: Preserve formatter and dependency changes
-        if: steps.resolve.outcome == 'success'
+          dart format packages/madedit2_hex/lib packages/madedit2_hex/test lib/services/editor_document.dart lib/services/editor_document_history.dart lib/services/hex_file_session.dart lib/services/hex_file_source.dart lib/services/hex_file_source_io.dart lib/services/hex_file_source_stub.dart lib/widgets/code_editor_status_bar.dart lib/widgets/file_context_menu.dart lib/widgets/file_editor_dialog.dart lib/widgets/hex_editor_dialog.dart lib/widgets/internal_viewer_dialog.dart test/editor_document_test.dart test/editor_line_endings_regression_test.dart test/hex_file_session_test.dart
+      - name: Preserve formatted source and resolved lockfile
+        if: ${{ !cancelled() && steps.resolve.outcome == 'success' }}
         run: |
           git add -- '*.dart' pubspec.lock packages/madedit2_hex/analysis_options.yaml
           if ! git diff --cached --quiet; then
-            git commit -m 'chore(editor): format integration and resolve local hex package'
+            git commit -m 'chore(editor): format native integration and resolve hex dependency'
             git push origin HEAD:refs/heads/feature/madedit2-hex-editor
           fi
           echo "Validation source: $(git rev-parse HEAD)" >> "$GITHUB_STEP_SUMMARY"
       - name: Analyze hex package
-        if: success() || failure()
+        if: ${{ !cancelled() && steps.resolve.outcome == 'success' }}
         working-directory: packages/madedit2_hex
         run: flutter analyze --no-fatal-infos
-      - name: Test hex model, interactions and widget
-        if: steps.resolve.outcome == 'success'
+      - name: Test hex model and widget on the VM
+        if: ${{ !cancelled() && steps.resolve.outcome == 'success' }}
         working-directory: packages/madedit2_hex
         run: flutter test --reporter expanded
       - name: Analyze host integration
-        if: steps.resolve.outcome == 'success'
+        if: ${{ !cancelled() && steps.resolve.outcome == 'success' }}
         run: >-
           flutter analyze --no-fatal-infos --no-fatal-warnings
           lib/services/editor_document.dart lib/services/editor_document_history.dart
@@ -113,14 +79,23 @@ jobs:
           lib/widgets/internal_viewer_dialog.dart
           test/editor_document_test.dart test/editor_line_endings_regression_test.dart
           test/hex_file_session_test.dart
-      - name: Test text, newline history, storage safety and existing code editor
-        if: steps.resolve.outcome == 'success'
+      - name: Test text, newline history, staged storage and existing routes
+        if: ${{ !cancelled() && steps.resolve.outcome == 'success' }}
         run: >-
           flutter test --reporter expanded --concurrency=2
           test/editor_document_test.dart test/editor_line_endings_regression_test.dart
           test/hex_file_session_test.dart test/editor_save_coordinator_test.dart
           test/code_editor_widget_test.dart test/code_editor_status_bar_test.dart
-      - name: Preserve reviewable source regardless of test outcome
+          test/captured_file_target_test.dart test/file_editability_test.dart
+          test/hex_viewer_test.dart test/internal_viewer_test.dart
+      - name: Test hex in Chrome
+        if: ${{ !cancelled() && steps.resolve.outcome == 'success' }}
+        working-directory: packages/madedit2_hex
+        run: flutter test --platform chrome --reporter expanded
+      - name: Test encoding and newline behavior in Chrome
+        if: ${{ !cancelled() && steps.resolve.outcome == 'success' }}
+        run: flutter test --platform chrome --reporter expanded test/editor_document_test.dart test/editor_line_endings_regression_test.dart
+      - name: Preserve current reviewable source
         if: always()
         run: |
           mkdir -p build/hex-checkpoint-review
