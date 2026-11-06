@@ -1,5 +1,7 @@
 import 'dart:convert';
 
+import 'package:archive/archive.dart';
+
 import 'package:crisp_cloud/models/file_collection.dart';
 import 'package:crisp_cloud/models/file_item.dart';
 import 'package:crisp_cloud/models/file_search_query.dart';
@@ -13,6 +15,7 @@ import 'package:shared_preferences/shared_preferences.dart';
 
 class _Backend extends Fake implements FileOperationBackend {
   final Map<String, FileItem> items = {};
+  final Map<String, List<int>> content = {};
   final List<String> listed = [];
   @override
   bool isCurrent = true;
@@ -34,7 +37,7 @@ class _Backend extends Fake implements FileOperationBackend {
   Future<FileItem?> stat(String path) async => items[path];
   @override
   Stream<List<int>> readFile(FileItem file) =>
-      Stream.value(utf8.encode(file.name));
+      Stream.value(content[file.path] ?? utf8.encode(file.name));
 }
 
 void main() {
@@ -265,6 +268,63 @@ void main() {
     );
     expect(value.entries.single.state, CollectionItemState.ready);
   });
+
+  test(
+    'archive match evidence survives rerun and restart, and expires on change',
+    () async {
+      final bytes = ZipEncoder().encode(
+        Archive()
+          ..addFile(ArchiveFile('one.txt', 6, 'needle'.codeUnits))
+          ..addFile(ArchiveFile('sub/two.txt', 6, 'needle'.codeUnits)),
+      );
+      final backend = _Backend()
+        ..items['/docs.zip'] = file('/docs.zip', size: bytes.length)
+        ..content['/docs.zip'] = bytes;
+      final value = collection(
+        [],
+        search: const CollectionSearch(
+          storage: a,
+          directory: '/',
+          query: FileSearchQuery(
+            searchArchives: true,
+            contentPattern: 'needle',
+            namePattern: '*.txt',
+          ),
+        ),
+      );
+      final result = await service.rerun(value, (_, _) => backend);
+      final reopened = FileCollection.fromJson(
+        jsonDecode(jsonEncode(result.collection.toJson()))
+            as Map<String, dynamic>,
+      );
+      expect(reopened.entries, hasLength(1));
+      expect(reopened.entries.single.file.metadata?['matchingArchiveMembers'], [
+        'one.txt',
+        'sub/two.txt',
+      ]);
+      final refreshed = await service.refresh(reopened, (_, _) => backend);
+      expect(
+        refreshed
+            .collection
+            .entries
+            .single
+            .file
+            .metadata?['matchingArchiveMembers'],
+        ['one.txt', 'sub/two.txt'],
+      );
+      backend.items['/docs.zip'] = file('/docs.zip', size: bytes.length + 1);
+      final changed = await service.refresh(reopened, (_, _) => backend);
+      expect(
+        changed
+            .collection
+            .entries
+            .single
+            .file
+            .metadata?['matchingArchiveMembers'],
+        isNull,
+      );
+    },
+  );
 
   test('malformed persisted collections are reported and preserved', () async {
     SharedPreferences.setMockInitialValues({

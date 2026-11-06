@@ -215,7 +215,19 @@ class FileCollectionService {
                   current.size != entry.file.size ||
                   current.updatedAt != entry.file.updatedAt ||
                   version(current) != reference.version;
-              final captured = capture(current, reference.storage);
+              final captured = capture(
+                !changed &&
+                        entry.file.metadata?['matchingArchiveMembers'] is List
+                    ? current.copyWith(
+                        metadata: {
+                          ...?current.metadata,
+                          'matchingArchiveMembers':
+                              entry.file.metadata!['matchingArchiveMembers'],
+                        },
+                      )
+                    : current,
+                reference.storage,
+              );
               entries.add(
                 FileCollectionEntry(
                   reference: captured.reference,
@@ -283,7 +295,11 @@ class FileCollectionService {
     }
     final unique = <String, FileCollectionEntry>{};
     for (final match in result.matches) {
-      final entry = capture(match.file, search.storage);
+      final key = '${search.storage.id}\u0000${match.file.path}';
+      final entry = capture(
+        match.groupedFile(unique[key]?.file),
+        search.storage,
+      );
       unique[entry.key] = entry;
     }
     return CollectionRefreshResult(
